@@ -17,7 +17,7 @@ import { useLabel } from "../🏷️Label/🟦️.tsx";
 import { useShellScopeOptional, NULL_SHELL_ROOT_REF, useShellKeydown } from "../🐚️ShellScope/🟦️.tsx";
 import { SurfaceScope, isSurfaceActiveBackgroundPointer, getLevelZClass } from "../🌈️Surface/🟦️.tsx";
 import { measureWindowChromeScrollClearancePx, windowChromeScrollClearanceVar, windowContentDeadLineVar } from "../🚧️WindowContentDeadLine/🟦️.tsx";
-import { type UiStatus, type EngagementSpec, type SearchSpec, UI_WINDOW_SEARCH, useUiMobile, routeWindowSearchEscape, shouldRouteKeysToWindowSearch, windowMeasuresDefaultWidthPx, windowMeasuresMinWidthPx, windowMeasuresMaxWidthPx, uiSpacingPx, useShellDockRightColumnLeftPx, dockColumnInlineReservePx, ExternalLinkIcon, GhostRegionShell, PaneHost, Pane, WINDOW_PANE_MEASURES_ICON, WINDOW_PANE_ACTIONS_ICON, WINDOW_PANE_SEARCH_ICON, WINDOW_PANE_UTILITIES_ICON, Engagement, Search, panelResizeEdgeAccentClass, windowMeasuresBodyClass, windowEngagementBodyClass, utilityBarBodyClass, focusActiveSearchInput, windowChromeClearedTopOffset } from "../../🎯️targets/⚛️react/🟦️";
+import { type UiStatus, type EngagementSpec, type SearchSpec, UI_WINDOW_SEARCH, useUiMobile, routeWindowSearchEscape, shouldRouteKeysToWindowSearch, windowMeasuresDefaultWidthPx, windowMeasuresMinWidthPx, windowMeasuresMaxWidthPx, uiSpacingPx, type ChromePanelOccupancy, useShellChromePanelBoxes, useChromePanelSafeArea, chromePanelSafeArea, chromePanelSafeAreaStyle, safeAreaBoxFromRect, ExternalLinkIcon, GhostRegionShell, PaneHost, Pane, WINDOW_PANE_MEASURES_ICON, WINDOW_PANE_ACTIONS_ICON, WINDOW_PANE_SEARCH_ICON, WINDOW_PANE_UTILITIES_ICON, Engagement, Search, panelResizeEdgeAccentClass, windowMeasuresBodyClass, windowEngagementBodyClass, utilityBarBodyClass, focusActiveSearchInput, windowChromeClearedTopOffset } from "../../🎯️targets/⚛️react/🟦️";
 import { Minimize2Icon, Maximize2Icon, CloseIcon } from "../🔣️Icons/🟦️.tsx";
 // #endregion 🔌️Adapters
 
@@ -74,6 +74,10 @@ interface WindowProps extends WindowConfig {
 /**
  * DefaultErrorDisplay holds the data fields for a DefaultErrorDisplay record.
  **/
+/** @emoji 📱️ The mobile chrome docks ONE full-width panel sheet instead of a side column, so a window's
+ * right-edge chrome has nothing to reserve against there — see the safe-area read in {@link Window}. */
+const NO_WINDOW_CHROME_PANEL_BOXES: readonly ChromePanelOccupancy[] = Object.freeze([]);
+
 const DefaultErrorDisplay: React.FC<{ error: Error }> = ({ error }) => {
   // 🎨️ Transparent — rendered inside the Window body, which already paints the window-level surface.
   const bgClass = "bg-transparent";
@@ -200,22 +204,25 @@ const Window: React.FC<WindowProps> = ({
     return Math.max(windowMeasuresMinWidthPx, Math.min(windowMeasuresMaxWidthPx, Math.round(bodyWidth) - 8));
   }, []);
   const measuresMaxWidthPx = readMeasuresMaxWidthPx();
-  // ↔️ A window reaching under an open right-hand dock column shares that column with the panel body,
-  // which paints at `z-panel` and takes every press meant for this window's own right-edge chrome — the
-  // Projection group of wave B47 §1.3. The window yields exactly the overlap (and only what it can
-  // actually spare), so a window that stops short of the column keeps its rail flush.
+  // 🛟️ A window reaching under an open anchored chrome panel shares that corner with the panel body,
+  // which paints at `z-panel` in the app root's stacking context and takes every press meant for this
+  // window's own right-edge chrome — the Projection group of wave B47 §1.3. The chrome column is pinned
+  // to the top of its window, so it declares `"inline"`: it yields exactly the overlap on its own edge,
+  // and a window that stops short of the panel keeps its rail flush.
   // 📱️ Desktop only: the mobile chrome docks ONE full-width panel sheet instead of a side column, so
   // there is no column for a window's right-edge chrome to yield to — and yielding to a full-width sheet
   // would push the rail across its own window. The store is still subscribed unconditionally (hook order).
-  const publishedDockRightColumnLeftPx = useShellDockRightColumnLeftPx(shellScope?.rootRef.current ?? undefined);
-  const dockRightColumnLeftPx = mobile ? null : publishedDockRightColumnLeftPx;
+  const publishedChromePanelBoxes = useShellChromePanelBoxes(shellScope?.rootRef.current ?? undefined);
+  const chromePanelBoxes = mobile ? NO_WINDOW_CHROME_PANEL_BOXES : publishedChromePanelBoxes;
   const [rightChromeReservePx, setRightChromeReservePx] = reactHostPort.useState(0);
   reactHostPort.useLayoutEffect(() => {
     const body = windowBodyRef.current;
     if (!body) return;
+    const boxes = chromePanelBoxes.map((panel) => panel.box);
     const sync = () => {
-      const bodyRect = body.getBoundingClientRect();
-      setRightChromeReservePx(dockColumnInlineReservePx(bodyRect.right, dockRightColumnLeftPx, bodyRect.width - windowMeasuresMinWidthPx));
+      const host = safeAreaBoxFromRect(body.getBoundingClientRect());
+      const column = { left: host.right - windowMeasuresMinWidthPx, top: host.top, right: host.right, bottom: host.bottom };
+      setRightChromeReservePx(chromePanelSafeArea(column, host, "top-right", boxes, "inline", 0).inlinePx);
     };
     sync();
     const resizeObserver = typeof ResizeObserver !== "undefined" ? new ResizeObserver(sync) : null;
@@ -225,7 +232,12 @@ const Window: React.FC<WindowProps> = ({
       resizeObserver?.disconnect();
       window.removeEventListener("resize", sync);
     };
-  }, [dockRightColumnLeftPx]);
+  }, [chromePanelBoxes]);
+  // 🛟️ The folded engagement's quick-action rail is window CONTENT anchored into the top-LEFT corner, the
+  // same corner a `top-left` chrome panel occupies — so it reads its own safe area instead of painting
+  // under one. It floats, so it yields on whichever axis costs less.
+  const quickActionsRef = reactHostPort.useRef<HTMLDivElement | null>(null);
+  const quickActionsSafeArea = useChromePanelSafeArea({ hostRef: windowBodyRef, affordanceRef: quickActionsRef, anchor: "top-left", yieldAxis: "either", gapPx: uiSpacingPx(1), enabled: !mobile });
   const engagementVisible = !measuresExpanded && !!(engagement || actionPane);
   const engagementExpanded = engagementVisible && !actionsFolded;
   const searchVisible = !measuresExpanded && !!search;
@@ -392,9 +404,12 @@ const Window: React.FC<WindowProps> = ({
           ) : null}
           {engagementVisible && !engagementExpanded && engagement?.options?.length ? (
             <div
+              ref={quickActionsRef}
               data-slot="window-engagement-quick-actions"
+              data-safe-area-block={quickActionsSafeArea.blockPx || undefined}
+              data-safe-area-inline={quickActionsSafeArea.inlinePx || undefined}
               className={cn("pointer-events-auto absolute flex min-w-0 items-stretch", getLevelZClass("pane"))}
-              style={{ top: windowChromeClearedTopOffset, left: "var(--spacing-single)" }}
+              style={chromePanelSafeAreaStyle("top-left", quickActionsSafeArea, { block: windowChromeClearedTopOffset })}
             >
               <ActionGroup id={childElementId("framework.window", id, "engagement", "quick")}>
                 {engagement.options.map((option) => (

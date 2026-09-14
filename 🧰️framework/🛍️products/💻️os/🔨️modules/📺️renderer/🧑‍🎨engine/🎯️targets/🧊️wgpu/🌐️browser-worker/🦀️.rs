@@ -262,6 +262,7 @@ impl BrowserRendererWorker {
                 || host.scheduler.next_deadline().is_some()
                 || host.runtime.has_pending_text_work()
                 || host.runtime.has_pending_world3d_work()
+                || host.runtime.has_pending_settle()
                 || host.runtime.has_pending_applies()
                 || host.frame_build.has_live_session()
                 || host.presenter.has_pending_presentation(),

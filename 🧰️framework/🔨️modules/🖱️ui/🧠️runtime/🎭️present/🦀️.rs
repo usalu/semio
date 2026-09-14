@@ -251,6 +251,19 @@ impl ComponentTreeProducer {
         self.fault
     }
 
+    /// 🔑️ The `(parent key, duplicate key)` a [`ComponentTreeProducerFault::DuplicateSiblingKey`]
+    /// refused. The refused child stays in its frame's `pending` slot and the frame is the parent
+    /// that already admitted the twin, so the pair is still readable after the fault — without it a
+    /// host can only report WHICH SURFACE failed, and an author hunting a duplicate in a hundred-node
+    /// panel has nothing to go on (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, the ToolRun panel).
+    pub fn duplicate_sibling(&self) -> Option<(&str, &str)> {
+        if !matches!(self.fault, Some(ComponentTreeProducerFault::DuplicateSiblingKey)) {
+            return None;
+        }
+        let frame = self.stack.get(self.stack.len().checked_sub(1)?)?;
+        Some((frame.node.key.as_str(), frame.pending.as_ref()?.key.as_str()))
+    }
+
     /// 🧹️ Releases one owned unit per call, then retires one queued built-child page and completes
     /// once the retire queue is empty — pages still reserved by other live trees are not waited for
     /// (that condition never holds while surfaces are mounted; the reactor turn drains the queue too).

@@ -371,6 +371,11 @@ pub const SELECTION_CLICK_MAX_DISTANCE_PX: f64 = ui_styling::metrics::board::SEL
 pub const SELECTION_LASSO_MIN_POINT_DISTANCE_PX: f64 = ui_styling::metrics::board::SELECTION_LASSO_MIN_POINT_DISTANCE_PX;
 pub const SELECTION_MARQUEE_DRAG_THRESHOLD_PX: f64 = ui_styling::metrics::board::SELECTION_MARQUEE_MAX_DISTANCE_PX;
 
+/// 🚫️ How near a refused port a wire drag must come before the surface names the refusal. A snap
+/// tolerance of zero (proximity connection off) must still explain the port the pointer is on, so
+/// this floor is independent of `proximity_distance_world`.
+pub const DRAW_EDGE_TYPE_REFUSAL_WORLD_TOLERANCE: f64 = 12.0;
+
 /// 🎯️ Normalizes `default` to `replace` for merge-mode strings.
 pub fn normalize_selection_mode(mode: &str) -> String {
     if mode == "default" {
@@ -808,7 +813,7 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
 
     pub fn create_handle(&mut self, id: HandleId, node_id: NodeId, angle: f64) {
         if P::HAS_PORTS {
-            self.handles.insert(id, Handle { angle, id, node_id, radius: ui_styling::radii::HANDLE_DEFAULT, role: HandleRole::Any, kind: None, properties: PropertyBag::new() });
+            self.handles.insert(id, Handle { angle, id, node_id, radius: ui_styling::radii::HANDLE_DEFAULT, role: HandleRole::Any, kind: None, value_types: Vec::new(), properties: PropertyBag::new() });
         }
     }
 
@@ -816,6 +821,34 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
         if let Some(handle) = self.handles.get_mut(&id) {
             handle.role = role;
         }
+    }
+
+    /// 🔤️ Declares the value schemas a port carries, so `is_valid_connection` can refuse a wire the
+    /// target port could never read. The board never invents these — they arrive with the port.
+    ///
+    /// @see `🧫️fixtures/🔌️port-types/🔣️.json` — the law both node-graph renderers answer
+    pub fn set_handle_value_types(&mut self, id: HandleId, value_types: Vec<String>) {
+        if let Some(handle) = self.handles.get_mut(&id) {
+            handle.value_types = value_types;
+        }
+    }
+
+    /// 🔌️ The ONE port-compatibility rule the board enforces: refuse only when both ends declare and
+    /// the declared sets are disjoint.
+    pub fn port_value_types_compatible(source: &[String], target: &[String]) -> bool {
+        if source.is_empty() || target.is_empty() {
+            return true;
+        }
+        source.iter().any(|provided| target.iter().any(|accepted| accepted == provided))
+    }
+
+    /// 🔌️ Whether a wire drawn from `source_hid` may land on `target_hid` given only the declared
+    /// port types — the predicate a drag preview asks to paint a snap target as not-droppable.
+    pub fn handles_type_compatible(&self, source_hid: HandleId, target_hid: HandleId) -> bool {
+        let (Some(source), Some(target)) = (self.handles.get(&source_hid), self.handles.get(&target_hid)) else {
+            return true;
+        };
+        Self::port_value_types_compatible(&source.value_types, &target.value_types)
     }
 
     pub fn create_edge(&mut self, id: EdgeId, source: P::Endpoint, target: P::Endpoint) {
@@ -1652,7 +1685,11 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
         self.edges.values().find(|edge| Some(edge.id) != reconnecting && P::endpoint_as_u64(edge.target) == target_hid).map(|edge| edge.id)
     }
 
-    fn is_valid_connection(&self, source_hid: HandleId, target_hid: HandleId, reconnecting: Option<EdgeId>, allow_target_replace: bool) -> bool {
+    /// 🔌️ Every connection rule EXCEPT the declared port types — role, self-node, duplicate edge,
+    /// single-incoming and acyclicity. Split out so a drag can tell "this port could never take a
+    /// wire" apart from "this port takes wires, but not one carrying THIS value", which is the only
+    /// refusal a user can act on and therefore the only one worth naming on screen.
+    fn is_structurally_valid_connection(&self, source_hid: HandleId, target_hid: HandleId, reconnecting: Option<EdgeId>, allow_target_replace: bool) -> bool {
         if source_hid == target_hid {
             return false;
         }
@@ -1686,6 +1723,58 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
             }
         }
         true
+    }
+
+    fn is_valid_connection(&self, source_hid: HandleId, target_hid: HandleId, reconnecting: Option<EdgeId>, allow_target_replace: bool) -> bool {
+        self.is_structurally_valid_connection(source_hid, target_hid, reconnecting, allow_target_replace) && self.handles_type_compatible(source_hid, target_hid)
+    }
+
+    /// 🚫️ The port pair the live wire drag is hovering that ONLY the port-type rule refuses — the
+    /// evidence a surface paints a snap target as not-droppable with, and names in the user's own
+    /// language. `None` while the drag is over open canvas, over a port it can legally take, or over
+    /// one refused for a structural reason a hint could not help with.
+    pub fn wire_drag_type_refusal(&self) -> Option<(HandleId, HandleId)> {
+        let InteractionMode::DrawEdge { anchor_handle, anchor_is_source, fixed_target, cursor, reconnecting, .. } = self.interaction else {
+            return None;
+        };
+        self.nearest_type_refused_pair(anchor_handle, anchor_is_source, fixed_target, reconnecting, cursor)
+    }
+
+    fn nearest_type_refused_pair(&self, anchor_handle: HandleId, anchor_is_source: bool, fixed_target: Option<HandleId>, reconnecting: Option<EdgeId>, cursor: Point) -> Option<(HandleId, HandleId)> {
+        if !P::HAS_PORTS {
+            return None;
+        }
+        let mut best: Option<(f64, HandleId, HandleId)> = None;
+        for handle in self.handles.values() {
+            let candidate = handle.id;
+            if candidate == anchor_handle {
+                continue;
+            }
+            let (source_hid, target_hid) = if let Some(fixed) = fixed_target {
+                if anchor_is_source {
+                    (candidate, fixed)
+                } else {
+                    (fixed, candidate)
+                }
+            } else if anchor_is_source {
+                (anchor_handle, candidate)
+            } else {
+                (candidate, anchor_handle)
+            };
+            if !self.is_structurally_valid_connection(source_hid, target_hid, reconnecting, true) || self.handles_type_compatible(source_hid, target_hid) {
+                continue;
+            }
+            let Some(node) = self.nodes.get(&handle.node_id) else {
+                continue;
+            };
+            let pos = handle_position(node, handle);
+            let d = distance(cursor, pos);
+            let tol = self.active_proximity_distance_world().max(DRAW_EDGE_TYPE_REFUSAL_WORLD_TOLERANCE) + handle.radius;
+            if d <= tol && best.as_ref().is_none_or(|(best_d, _, _)| d < *best_d) {
+                best = Some((d, source_hid, target_hid));
+            }
+        }
+        best.map(|(_, source, target)| (source, target))
     }
 
     fn try_connect_handles(&mut self, source_hid: HandleId, target_hid: HandleId, reconnecting: Option<EdgeId>) -> bool {

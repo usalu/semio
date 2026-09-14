@@ -26,7 +26,7 @@ import { type ControlIcon, renderControlIcon } from "../🔣️Icons/🟦️.tsx
 /**
  * buttonGroupItemVariants holds the data fields for a buttonGroupItemVariants record.
  **/
-const buttonGroupItemVariants = styleVariants(cn(chromeControlItemClass, "aspect-square"), {
+const buttonGroupItemVariants = styleVariants(chromeControlItemClass, {
   variants: {
     variant: {
       default: "",
@@ -126,7 +126,7 @@ function ButtonGroupItem({ className, children, id, icon, text, asChild = false,
     "data-level": context.level || level,
     className: cn(
       buttonGroupItemVariants({ variant }),
-      inlineText ? "w-auto shrink-0 focus:z-panel focus-visible:z-panel" : "min-w-0 flex-1 shrink-0 focus:z-panel focus-visible:z-panel",
+      inlineText ? "w-auto shrink-0 focus:z-panel focus-visible:z-panel" : "min-w-medium flex-1 shrink-0 focus:z-panel focus-visible:z-panel",
       inlineText && "flex items-center gap-single py-single px-double w-auto aspect-auto",
       className,
     ),

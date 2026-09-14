@@ -1109,6 +1109,22 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
         }
     }
 
+    // 🧹️ The SECOND publication retirement of this turn, and the one that matters for the crossing
+    // count: the first ran before the events, so every `Event::PatchAck` this turn carried left its
+    // slot `Acknowledged` with nothing to retire it until the NEXT turn — one host round trip per
+    // published surface whose only work was freeing a slot (the `<n>:ea---` half of the two-state
+    // ping-pong, `📓️reactor-reconcile-spin-2026-09-14.md` §1). Bounded by the same units and the same
+    // wall deadline as the first run, so a turn cut short still answers `MoreWork` through
+    // `PendingPatchAuthority::has_retiring` and finishes on the next one.
+    for unit in 0..PATCH_CLOSE_UNITS_PER_TURN {
+        if unit > 0 && unit % PATCH_CLOSE_DEADLINE_STRIDE == 0 && std::time::Instant::now() >= retirement_deadline {
+            break;
+        }
+        if with_pending_patches(|pending| pending.borrow_mut().close_step(PATCH_RETIREMENT_ITEMS_PER_UNIT, PATCH_RETIREMENT_BYTES_PER_UNIT)).map_err(reactor_close_fault)? {
+            break;
+        }
+    }
+
     trace_turn_phase_retention("ingress");
     let (continuation, typed_operation_scan) = crate::plugin_runtime::plugin_continue_typed_operations(runtime, crate::plugin_runtime::TypedOperationGrant::turn(budget)).await?;
     let typed_operation_contended = typed_operation_scan.contended;
@@ -1206,41 +1222,12 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
     }
     let reconcile_work = PATCHES
         .with(|patches| -> Result<bool, &'static str> {
-            let opportunities = reconcile_step_opportunities(budget.fuel);
-            let deadline = std::time::Instant::now() + std::time::Duration::from_millis(u64::from(budget.deadline_ms));
-            let mut more = patches.has_publishable_work();
-            for opportunity in 0..opportunities {
-                if !more {
-                    break;
-                }
-                if opportunity > 0 && opportunity % 64 == 0 && std::time::Instant::now() >= deadline {
-                    break;
-                }
-                patches.drive_one();
-                more = patches.has_publishable_work();
-                let can_publish = with_pending_patches(|pending| pending.borrow().has_capacity());
-                if can_publish {
-                    if let Some((key, generation)) = patches.ready_patch_key()? {
-                        let mut target = None;
-                        if patches.take_ready_patch_into(key, generation, &mut target, semio_framework_ui_runtime::SURFACE_RECONCILE_PAGE_BYTES)? {
-                            if let Some(patch) = target {
-                                // 🩹️ `take_ready_patch_into` already committed this output to its closing
-                                // lifecycle; there is no `return_ready_patch` any more, so losing this
-                                // capacity race simply drops the extracted page instead of re-queueing it.
-                                match with_pending_patches(|pending| pending.borrow_mut().push_reconcile(patch)) {
-                                    Ok(()) => {}
-                                    Err(_dropped) => {}
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            Ok(more || patches.has_publishable_work() || with_pending_patches(|pending| pending.borrow().has_unpublished()))
+            drive_reconcile_within(patches, reconcile_step_opportunities(budget.fuel), std::time::Instant::now() + std::time::Duration::from_millis(u64::from(budget.deadline_ms)))?;
+            Ok(reconcile_arms_turn(patches))
         })
         .map_err(|reason| semio_framework::Fault::new(semio_framework::FaultOrigin::Os, semio_framework::FaultCode::new("ui.patch-reconcile-authority"), reason))?;
     if let Some((instance, message)) = PATCHES.with(patches::PatchTracker::take_render_fault) {
-        effects.push(shell_fault_effect(instance, &semio_framework::Fault::new(semio_framework::FaultOrigin::Os, semio_framework::FaultCode::new("ui.surface-render"), message)));
+        effects.push(shell_fault_effect(instance, &semio_framework::Fault::new(semio_framework::FaultOrigin::Os, semio_framework::FaultCode::new(SURFACE_RENDER_FAULT_CODE), message)));
     }
 
     // 🚫️async: E5 executor bridge (× 2) — `LocalExecutor::{run_until_idle,has_ready}` stay
@@ -1492,7 +1479,7 @@ const REACTOR_CLOSE_UNITS_PER_TURN: usize = 4_096;
 /// wall-clock budget, exactly like the reconcile loop above it.
 ///
 /// This is NOT background cleanup that a slow drip can be indifferent to: an acknowledged publication
-/// keeps `PendingPatchAuthority::has_unpublished` — and therefore the whole turn — in `MoreWork` until
+/// keeps `PendingPatchAuthority::has_retiring` — and therefore the whole turn — in `MoreWork` until
 /// it is retired, and the host answers every `MoreWork` with another turn ROUND TRIP. One 180-object
 /// world-3d publication takes 1 092 retirement units; at the previous 8 units per turn that is 137
 /// round trips per published surface, and it is why the Nakagin example switch took 24.3 s and 8 799
@@ -1515,6 +1502,86 @@ const PROCESS_POOL_PUMPS_PER_TURN: usize = 64;
 /// ⏱️ Wall-clock bound on process-pool pumping per reactor turn on wasm.
 #[cfg(target_arch = "wasm32")]
 const PROCESS_POOL_WALL_MS: u64 = 2;
+
+/// 🔁️ Drives the retained-surface reconcile ladder inside ONE turn: steps whatever the guest can step
+/// by itself, extracts every ready output a free publication slot will take, and answers how many
+/// opportunities it actually spent.
+///
+/// Three stops, in order, and the first two are the correction this function exists for:
+///
+/// 1. **nothing to do** — neither drivable work nor (a ready output AND a free publication slot). The
+///    loop used to test `has_publishable_work()` alone, so a ready output with a FULL pending
+///    authority kept it spinning `drive_one` on a tracker with nothing to drive for the whole
+///    1 024-step budget or the whole wall deadline, at 6 ms of guest per crossing;
+/// 2. **no progress** — an opportunity that neither drove a producer/job nor extracted a ready page
+///    cannot be followed by one that does, so the loop ends rather than burning the rest of the
+///    budget re-asking;
+/// 3. **the hold** — the turn's own wall deadline, re-read every 64 opportunities, unchanged.
+///
+/// See `📓️reactor-reconcile-spin-2026-09-14.md` §1-§3.
+pub(crate) fn drive_reconcile_within(patches: &patches::PatchTracker, opportunities: usize, deadline: std::time::Instant) -> Result<usize, &'static str> {
+    let mut spent = 0usize;
+    for opportunity in 0..opportunities {
+        let drivable = patches.has_drivable_work();
+        let can_publish = with_pending_patches(|pending| pending.borrow().has_capacity());
+        if !drivable && !(can_publish && patches.has_publishable_work()) {
+            break;
+        }
+        if opportunity > 0 && opportunity % 64 == 0 && std::time::Instant::now() >= deadline {
+            break;
+        }
+        spent += 1;
+        if drivable {
+            patches.drive_one();
+        }
+        let mut extracted = false;
+        if can_publish {
+            if let Some((key, generation)) = patches.ready_patch_key()? {
+                let mut target = None;
+                if patches.take_ready_patch_into(key, generation, &mut target, semio_framework_ui_runtime::SURFACE_RECONCILE_PAGE_BYTES)? {
+                    extracted = true;
+                    if let Some(patch) = target {
+                        // 🩹️ `take_ready_patch_into` already committed this output to its closing
+                        // lifecycle; there is no `return_ready_patch` any more, so losing this
+                        // capacity race simply drops the extracted page instead of re-queueing it.
+                        match with_pending_patches(|pending| pending.borrow_mut().push_reconcile(patch)) {
+                            Ok(()) => {}
+                            Err(_dropped) => {}
+                        }
+                    }
+                }
+            }
+        }
+        if !drivable && !extracted {
+            break;
+        }
+    }
+    Ok(spent)
+}
+
+/// 🔁️ Whether the retained-surface reconcile drive owes ANOTHER host turn, stated as three named
+/// terms instead of "anything is non-empty".
+///
+/// 1. the tracker can advance by itself (a producer, a job, an admissible deferred surface, an
+///    unadmitted surface, a closing instance, a pending output fault) — the guest's own work;
+/// 2. a patch is queued for a later turn to hand out, or a retirement run was cut short by this
+///    turn's wall deadline — also the guest's own work;
+/// 3. a ready output exists AND there is a free publication slot for it — publishable NEXT turn.
+///
+/// What is deliberately absent is the fourth state the measurement found: a ready output with NO free
+/// publication slot. That is HOST-blocked — the slot frees on an acknowledgement, the acknowledgement
+/// arrives as its own event-carrying turn, and arming for it bought exactly one round trip per turn
+/// that carried nothing (`📓️reactor-reconcile-spin-2026-09-14.md` §1). Same family as
+/// `📓️host-reconcile-silence-2026-09-12.md`, one layer out.
+pub(crate) fn reconcile_arms_turn(patches: &patches::PatchTracker) -> bool {
+    if patches.has_drivable_work() {
+        return true;
+    }
+    with_pending_patches(|pending| {
+        let pending = pending.borrow();
+        pending.has_undelivered() || pending.has_retiring() || (pending.has_capacity() && patches.has_publishable_work())
+    })
+}
 
 fn live_patch_receipt<PA: crate::app::PluginApp>(runtime: &crate::plugin_runtime::PluginRuntime<PA>, receipt: ActorUiPatchReceipt) -> bool {
     runtime.guest_lifetimes.borrow().get(receipt.lifetime.instance_id).is_some_and(|slot| slot.cell.is_live() && slot.cell.lifetime() == receipt.lifetime)

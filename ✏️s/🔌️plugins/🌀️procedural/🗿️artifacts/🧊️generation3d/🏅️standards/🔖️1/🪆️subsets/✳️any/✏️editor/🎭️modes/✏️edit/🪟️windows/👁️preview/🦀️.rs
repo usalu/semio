@@ -40,26 +40,26 @@ pub fn definition() -> WindowKindDefinition {
 /// 👁️ One show-mode row's picker id and human label. Keyed off the tag so
 /// [`crate::editor::generation3d::config::GENERATION_3D_SHOW_MODES`] stays the single ladder both
 /// this picker and `cycleShowMode` walk.
-fn show_mode_row(mode: &str) -> (&'static str, &'static str) {
+fn show_mode_row(mode: &str, is_de: bool) -> (&'static str, &'static str) {
     match mode {
-        "shaded+edges" => ("generation3d-measure-show-edges", "Shaded + edges"),
-        "wireframe" => ("generation3d-measure-show-wireframe", "Wireframe"),
-        "points" => ("generation3d-measure-show-points", "Points"),
-        _ => ("generation3d-measure-show-shaded", "Shaded"),
+        "shaded+edges" => ("generation3d-measure-show-edges", if is_de { "Schattiert + Kanten" } else { "Shaded + edges" }),
+        "wireframe" => ("generation3d-measure-show-wireframe", if is_de { "Drahtgitter" } else { "Wireframe" }),
+        "points" => ("generation3d-measure-show-points", if is_de { "Punkte" } else { "Points" }),
+        _ => ("generation3d-measure-show-shaded", if is_de { "Schattiert" } else { "Shaded" }),
     }
 }
 
 /// 👁️ Preview shading mode for the world-3d window.
-pub fn show_mode_measure(show_mode: &str, procedural_action: impl Fn(&str, Option<serde_json::Value>) -> ActionDescriptor) -> WindowMeasure {
+pub fn show_mode_measure(show_mode: &str, is_de: bool, procedural_action: impl Fn(&str, Option<serde_json::Value>) -> ActionDescriptor) -> WindowMeasure {
     let current = if show_mode.is_empty() { "shaded" } else { show_mode };
     WindowMeasure::Select {
         id: "generation3d-measure-show".into(),
-        label: Some("Show".into()),
+        label: Some(if is_de { "Anzeige" } else { "Show" }.into()),
         value: current.into(),
         items: crate::editor::generation3d::config::GENERATION_3D_SHOW_MODES
             .iter()
             .map(|mode| {
-                let (id, label) = show_mode_row(mode);
+                let (id, label) = show_mode_row(mode, is_de);
                 MeasureSelectItem { id: id.into(), value: (*mode).into(), label: label.into() }
             })
             .collect(),
@@ -69,9 +69,9 @@ pub fn show_mode_measure(show_mode: &str, procedural_action: impl Fn(&str, Optio
 
 /// 🎚️ Shared preview-window chrome measures (show-mode toggle + sun group) — reused by both preview
 /// windows (edit mode's 3D preview and generate mode's generation preview).
-pub fn preview_window_measures(config: &Generation3dConfig, procedural_action: impl Fn(&str, Option<serde_json::Value>) -> ActionDescriptor + Copy) -> Vec<WindowMeasure> {
+pub fn preview_window_measures(config: &Generation3dConfig, is_de: bool, procedural_action: impl Fn(&str, Option<serde_json::Value>) -> ActionDescriptor + Copy) -> Vec<WindowMeasure> {
     let sun = config.sun();
-    vec![show_mode_measure(&config.show_mode, procedural_action), world3d_sun_measures("generation3d", &sun, procedural_action)]
+    vec![show_mode_measure(&config.show_mode, is_de, procedural_action), world3d_sun_measures("generation3d", &sun, is_de, procedural_action)]
 }
 //#endregion 🔖️Definition
 

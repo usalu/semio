@@ -48,10 +48,12 @@ pub struct FlowEvalTick {}
 /// 🧮️ Advance evaluation with the admitted window configuration.
 pub(crate) fn tick_result(snapshot: &FlowSnapshot, config: &FlowMainWindowConfig, session: &mut FlowEvalSession) -> Emit<FlowMutation, NoConfigMutation> {
     let mut host = host_from_snapshot(snapshot, config, session);
-    let more = session.tick(&mut host);
+    let more = session.tick(&mut host, None);
     let effects = if more { vec![eval_tick_effect()] } else { Vec::new() };
     let mut extension_invocations = Vec::new();
-    if let Some(pending) = host.take_pending_extension_eval() {
+    // 🌊️ ONE WAVE, ONE HOP — every request the walk parked is independent of the others by
+    // construction, so the whole dependency level crosses to its plugin on this one tick.
+    for pending in host.take_pending_extension_evals() {
         let request_json = serde_json::json!({
             "operatorId": pending.operator_id,
             "inputJson": pending.input_json,

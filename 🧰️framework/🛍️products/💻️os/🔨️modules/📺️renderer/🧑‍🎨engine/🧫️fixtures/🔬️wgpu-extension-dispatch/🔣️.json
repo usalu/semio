@@ -55,8 +55,9 @@
       ]
     },
     "commandIngress": {
-      "maximumPages": 64,
+      "maximumPages": 2048,
       "pageBytes": 4096,
+      "fatViewChars": 8388609,
       "encoding": "pack",
       "crossings": 1,
       "slimView": {

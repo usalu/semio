@@ -35,6 +35,13 @@ export const EXAMPLE_FIXTURE_PATH = join("🧫️fixtures", "🧩️example", "�
  */
 export const EXAMPLE_GEOMETRY_KERNEL_STATUSES = ["green"];
 
+/**
+ * 🏷️ Every role a published preview mesh may declare, mirroring `🧵️preview-eval/🦀️.rs`'s
+ * `PREVIEW_MESH_ROLES` exactly: a body with triangles, a body that is only a polyline, the axis
+ * cross of a point channel, the arrow of a vector channel.
+ */
+export const EXAMPLE_PREVIEW_MESH_ROLES = ["solid", "wire", "point", "vector"];
+
 /** 📐️ One example's committed expected-geometry statement. */
 export type ExampleGeometryFixture = {
   schema: string;
@@ -91,6 +98,12 @@ export type ExampleDeliveryExpectation = {
   /** 🕸️ The EXACT number of meshes this example's preview publishes — a floor lets a preview lose
    * a mesh while every node still reports `ok`, which paints less and passes. */
   meshes: number;
+  /** 🏷️ How many of those meshes carry each ROLE, hand-written per example. A preview publishes one
+   * mesh per geometry-bearing output channel, so a document that previews three nodes publishes a
+   * solid beside the wire it was extruded from and the vector that drove it — the bare count cannot
+   * tell "the solid is on screen" from "the solid vanished and its companions remain", and it is
+   * this row the browser mesh census compares against, role by role. */
+  meshRoles: Record<string, number>;
   minTriangles: number;
   minEdgeSegments: number;
   maxRoundTrips: number;
@@ -232,6 +245,15 @@ export function assertDeliveryContract(fixture: ExampleGeometryFixture): void {
   expect(typeof delivery.lodMode).toBe("string");
   expect(delivery.meshes).toBeGreaterThanOrEqual(1);
   expect(Number.isInteger(delivery.meshes)).toBe(true);
+  const roles = Object.entries(delivery.meshRoles);
+  expect(roles.length).toBeGreaterThan(0);
+  for (const [role, count] of roles) {
+    expect(EXAMPLE_PREVIEW_MESH_ROLES).toContain(role);
+    expect(Number.isInteger(count)).toBe(true);
+    expect(count).toBeGreaterThan(0);
+  }
+  expect(roles.reduce((total, [, count]) => total + count, 0)).toBe(delivery.meshes);
+  expect(delivery.meshRoles[fixture.preview.kind]).toBeGreaterThanOrEqual(1);
   expect(delivery.minTriangles + delivery.minEdgeSegments).toBeGreaterThan(0);
   expect(delivery.maxRoundTrips).toBeGreaterThanOrEqual(1);
   expect(delivery.maxRoundTrips).toBeLessThanOrEqual(EXAMPLE_DELIVERY_ROUND_TRIP_CEILING);

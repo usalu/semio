@@ -46,3 +46,50 @@ fn an_app_selection_write_retires_the_leftover_overlay_of_the_domains_it_names()
     let (retired, kept) = leftover_after_app_selection_write_v1(None, &[], &cleared, &["vortex".to_string()]);
     assert!(retired.is_none() && kept.is_empty(), "no overlay in flight means nothing to retire");
 }
+
+/// 🔬️ Ticket 26/09/09/PROCEDURAL-3D-END-TO-END, lane `selection-prune-interact` — a selection made in
+/// one bundled example must not survive into the next one. Two examples, two documents: `shell@solid`
+/// is picked in `Box Shell Preview`, then `Sphere Cut With Torus` is loaded and only ITS handles are
+/// in topology, so `validate_state` empties the declared `graph` domain. Everything the pick left
+/// behind has to go with it — the undeclared `vortex` mirror `overlay_leftover_ids_into_vortex` wrote,
+/// the leftover cover, and the flat leftover ids — or the very next
+/// `interaction_selection_snapshot` lays the dead id straight back over the empty store.
+#[test]
+fn a_document_change_prunes_the_vortex_mirror_and_the_leftover_cover_with_the_selection() {
+    let selection = |ids: &[&str]| protocol::DomainSelection { granularity: "object".to_string(), ids: ids.iter().map(|id| id.to_string()).collect(), anchor_id: ids.last().map(|id| id.to_string()) };
+    let state = |entries: &[(&str, &[&str])]| protocol::InteractionState {
+        selection: entries.iter().map(|(domain, ids)| (domain.to_string(), selection(ids))).collect(),
+        hover: BTreeMap::new(),
+        active_mode: BTreeMap::new(),
+        active_granularity: BTreeMap::new(),
+    };
+    let declared = vec!["graph".to_string()];
+
+    let validated = state(&[("graph", &[]), ("vortex", &["shell@solid"])]);
+    let overlay = state(&[("graph", &["shell@solid"]), ("vortex", &["shell@solid"])]);
+    let leftover_ids = vec!["shell@solid".to_string()];
+    let (pruned, retired, kept) = interaction_after_document_change_v1(&validated, &declared, Some(&overlay), &leftover_ids);
+    assert_eq!(pruned.selection.get("vortex").map(|domain| domain.ids.clone()), Some(Vec::new()), "the mirror may only name what a declared domain still names");
+    assert_eq!(pruned.selection.get("vortex").and_then(|domain| domain.anchor_id.clone()), None, "an anchor whose id is gone is gone with it");
+    let retired = retired.expect("an overlay that existed stays present");
+    assert_eq!(retired.selection.get("graph").map(|domain| domain.ids.clone()), Some(Vec::new()), "the cover may not outlive the ids it was covering");
+    assert_eq!(retired.selection.get("vortex").map(|domain| domain.ids.clone()), Some(Vec::new()), "nor may the mirror's own cover");
+    assert!(kept.is_empty(), "the flat leftover ids keep only what the new document still offers");
+
+    let survived = state(&[("graph", &["brep_bool_cut_5@solid"]), ("vortex", &["brep_bool_cut_5@solid", "shell@solid"])]);
+    let (pruned, retired, kept) = interaction_after_document_change_v1(&survived, &declared, Some(&overlay), &leftover_ids);
+    assert_eq!(pruned.selection.get("graph").map(|domain| domain.ids.clone()), Some(vec!["brep_bool_cut_5@solid".to_string()]), "a declared domain keeps exactly what validate_state left it");
+    assert_eq!(pruned.selection.get("vortex").map(|domain| domain.ids.clone()), Some(vec!["brep_bool_cut_5@solid".to_string()]), "the mirror drops the id no declared domain names any more");
+    assert_eq!(retired.expect("overlay").selection.get("graph").map(|domain| domain.ids.clone()), Some(Vec::new()), "the cover of a pick the new document lost is retired even when another id survived");
+    assert!(kept.is_empty(), "and its flat id with it");
+
+    let untouched = state(&[("graph", &["shell@solid"]), ("vortex", &["shell@solid"])]);
+    let (pruned, retired, kept) = interaction_after_document_change_v1(&untouched, &declared, Some(&overlay), &leftover_ids);
+    assert_eq!(pruned, untouched, "a document edit that touched nothing selected changes nothing");
+    assert_eq!(retired.expect("overlay").selection.get("graph").map(|domain| domain.ids.clone()), Some(vec!["shell@solid".to_string()]), "an in-flight pick during an unrelated edit keeps its cover");
+    assert_eq!(kept, leftover_ids, "and its flat id");
+
+    let flat_only = protocol::InteractionState { selection: [("nodes".to_string(), selection(&["widget-3"]))].into_iter().collect(), hover: BTreeMap::new(), active_mode: BTreeMap::new(), active_granularity: BTreeMap::new() };
+    let (pruned, _, _) = interaction_after_document_change_v1(&flat_only, &["nodes".to_string()], None, &[]);
+    assert_eq!(pruned.selection.get("nodes").map(|domain| domain.ids.clone()), Some(vec!["widget-3".to_string()]), "a DECLARED domain the topology has no entry for (Flat) has no membership information and keeps every id");
+}

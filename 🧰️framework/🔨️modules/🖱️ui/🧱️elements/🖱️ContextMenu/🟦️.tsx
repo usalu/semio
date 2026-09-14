@@ -13,7 +13,7 @@ import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.t
 import { type UiLabel, uiDataLabel } from "../🎗️UiLabel/🟦️.tsx";
 import { Icon, type ControlIcon, type IconSource } from "../🔣️Icons/🟦️.tsx";
 import { useLabel } from "../🏷️Label/🟦️.tsx";
-import { useShellScopeOptional } from "../🐚️ShellScope/🟦️.tsx";
+import { useShellFloatingSurfaceHost } from "../🐚️ShellScope/🟦️.tsx";
 import { useFlow } from "../../🔨️modules/🧭️flow-direction-context/🟦️.tsx";
 import { formatKeybindingShortcut } from "../../🔨️modules/🔤️keybinding-text-interpretation/🟦️.ts";
 import { floatingMenuItemClass, ContextMenuChrome } from "../../🎯️targets/⚛️react/🟦️";
@@ -101,10 +101,6 @@ export function createDOMEventBinding() {
       while (cleanups.length > 0) cleanups.pop()?.();
     },
   };
-}
-
-function getDocumentBody(): HTMLElement | null {
-  return typeof document === "undefined" ? null : document.body;
 }
 
 export function getElementById<T extends HTMLElement = HTMLElement>(id: string): T | null {
@@ -555,8 +551,8 @@ export function findCheckedContextMenuItem(items: readonly ContextMenuItem[]): C
 export const ContextMenuController: React.FC<ContextMenuControllerProps> = ({ open, position, items, onOpenChange, title, titleIcon = "list", closeOnSelect = true }) => {
   const close = reactHostPort.useCallback(() => onOpenChange(false), [onOpenChange]);
   // 🐚️ Falls back to `document.body` outside any shell — inside one, portals into that shell's own
-  // overlay layer so a context menu never visually escapes into another mounted shell's stacking context.
-  const shellScope = useShellScopeOptional();
+  // overlay layer so a context menu never escapes that shell's stacking context OR its appearance scope.
+  const floatingHost = useShellFloatingSurfaceHost();
   const flow = useFlow();
   const menuRef = reactHostPort.useRef<HTMLDivElement | null>(null);
   const chromeRef = reactHostPort.useRef<HTMLDivElement | null>(null);
@@ -722,7 +718,7 @@ export const ContextMenuController: React.FC<ContextMenuControllerProps> = ({ op
         {renderFixedContextMenuItems(items, [], renderOptions)}
       </div>
     </ContextMenuChrome>,
-    shellScope?.portalLayerRef.current ?? getDocumentBody(),
+    floatingHost,
   );
 };
 

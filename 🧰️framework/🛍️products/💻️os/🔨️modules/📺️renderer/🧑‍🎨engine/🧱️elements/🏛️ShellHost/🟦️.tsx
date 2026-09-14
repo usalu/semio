@@ -104,6 +104,8 @@ import {
   resolvePluginHostConfig,
   resolvePluginRegistryId,
   resolveUiDirtyScope,
+  windowLayoutWindowIdsV1,
+  partitionRefreshWindowInstancesV1,
   resolveWindowActions,
   SET_ACTIVE_TOOL_ACTION_ID,
   SET_ACTIVE_UTILITY_ACTION_ID,
@@ -460,6 +462,8 @@ import {
   createUiRefreshCoalescerV1,
   type UiRefreshCoalescerV1,
   hostEffectRefreshScopeV1,
+  hostEffectsRewriteGuestRenderInputsV1,
+  uiRefreshAlreadyAnsweredV1,
   captureCurrentFrameworkLayout,
   captureTutorialUiSnapshot,
   categoryTabIcon,
@@ -579,6 +583,7 @@ import {
   type UiRefreshCache,
 } from "../🛠️ShellHelpers/🟦️.tsx";
 import { toolRunPanelReveal } from "../🛠️ShellHelpers/⏯️tool-run-panel/🟦️.ts";
+import { TOOL_RUN_VISIBLE_UNITS_PER_SECOND } from "../../../../../../../🔨️modules/⏯️tool-run/🟦️.ts";
 import { createContributionsPublisher, type ContributionsOperatorScope, type ContributionsPublishOutcome, type ContributionsSessionKey } from "../🛠️ShellHelpers/🧩️contributions/🟦️.ts";
 
 import { aProjectOfLuhUdkFooterItem, fundedByZukunftBauFooterItem } from "../../../../../../../../♻️mit-bestand/🧺️demonstrator/⚛️footer.tsx";
@@ -604,13 +609,14 @@ import {
   ShellRouteNotFoundPage,
   useNamedLayoutHost,
 } from "../📌️ChromePanels/🟦️.tsx";
-import { onPluginInstancesLost, PluginBootShardLostError, leftoverInspectionRefreshScope, leftoverInspectionPanelHash, type PluginWasmHandle, type PluginExtensionCompletion, serializePerActor, setPluginRuntimeActor } from "../🔌️PluginRuntime/🟦️.tsx";
+import { guestIngressGenerationV1, onPluginInstancesLost, PluginBootShardLostError, leftoverInspectionRefreshScope, leftoverInspectionPanelHash, type PluginWasmHandle, type PluginExtensionCompletion, serializePerActor, setPluginRuntimeActor } from "../🔌️PluginRuntime/🟦️.tsx";
 import { documentBackboneEffectV1, type ActorDocumentMessagePortV1 } from "../../../../🔌️plugin/📡️backbone/🔗️binding/🟦️.ts";
 import { BrowserActorActionMailboxV1 } from "../../../../🔌️plugin/🌐️browser-bundle/🎯️action-handoff/📮️requests/🟦️.ts";
 import { BROWSER_ACTOR_ACTION_APP_CHANNEL_VERSION } from "../../../../🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🟦️.ts";
 import { publishBrowserActorHostEffectsV1 } from "../../../../🔌️plugin/🌐️browser-bundle/🎯️action-handoff/📤️publication/🟦️.ts";
 import { InferencePortOpeningMailboxV1 } from "../../../../💡️inference/🚪️opening/🟦️.ts";
 import { isShardLostError } from "../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
+import { hopTrace, type HopTraceDetail } from "../../../../../../../🔨️modules/⏱️trace/🟦️.ts";
 import { type WindowFault, type WindowFaultClass, windowFaultFromError } from "./🩺️fault/🟦️.ts";
 import { EXTENSION_TARGETS } from "../../../../🔌️plugin/📇️registry/🤖️generated/🧩️plugins/🟦️.ts";
 import { PLUGIN_CATALOG } from "../../../../🔌️plugin/📇️registry/🟦️.ts";
@@ -1666,6 +1672,16 @@ export const RUNTIME_DIAGNOSTICS_KEY = "SEMIO_RUNTIME_DIAGNOSTICS";
 /** @emoji 🩺️ Armed by `1`/`true`/`on`/`yes`; anything else, including absent, leaves it off. */
 function runtimeDiagnosticsArmed(value: unknown): boolean {
   return typeof value === "string" && ["1", "true", "on", "yes"].includes(value.trim().toLowerCase());
+}
+
+/** @emoji 🖼️ Publishes the `commit` stage of one hop: from the moment a refresh's React state is
+ * dispatched to the frame the compositor next runs, which is the only interval that contains React's
+ * own reconcile/commit plus layout and paint. A host with no frame clock (test/SSR) publishes
+ * nothing rather than inventing a number. */
+function traceCommitToNextFrame(detail: HopTraceDetail): void {
+  if (typeof requestAnimationFrame !== "function") return;
+  const close = hopTrace.open("commit", detail);
+  requestAnimationFrame(() => close());
 }
 
 let runtimeDiagnosticsOverride: boolean | undefined;
@@ -4312,6 +4328,8 @@ function FrameworkOsShellInner({
           windowInstances: sessionWindowInstances(targetSession.app, extraWindowInstancesRef.current).map((instance) => ({ id: instance.id, windowKindId: instance.windowKindId })),
           activeUtilityByWindowId: buildActiveUtilityByWindowId(activeUtilityByWindowIdRef.current),
           activeUtilityId: undefined,
+          toolRunUnitsPerSecond: TOOL_RUN_VISIBLE_UNITS_PER_SECOND,
+          toolRunTraceCursorByWindowId: toolRunTraceCursorViewState(sessionWindowInstances(targetSession.app, extraWindowInstancesRef.current).map((instance) => instance.id)),
         }),
       ),
     [injectActiveTool, uiLocale, uiTerminology],
@@ -4676,6 +4694,14 @@ function FrameworkOsShellInner({
   }, [session?.instanceId]);
   //#endregion 🧩️ContributionsPush
 
+  /** 🪟️ The window ids the CURRENT mode layout mounts — assigned every render from
+   * `effectiveModeLayout` (declared far below, where the layout itself is resolved). A refresh pass
+   * asks the guest only for these; see {@link partitionRefreshWindowInstancesV1}. */
+  const mountedWindowIdsRef = useRef<ReadonlySet<string>>(new Set<string>());
+  /** 🪟️ Windows a pass skipped because the layout did not mount them. The effect beside
+   * `effectiveModeLayout` fetches any of these the moment the layout DOES mount them, so a mode switch
+   * that races a refresh cannot leave a freshly mounted pane on a pending body. */
+  const unmountedSkippedWindowBodiesRef = useRef<ReadonlyMap<string, string>>(new Map<string, string>());
   const runUiRefreshPass = useCallback(
     // 🪟️ `extraInstancesOverride` lets a caller that just synchronously computed a NEW extra-window list
     // (split/drop, layout/mode switch) hand it straight to this fetch instead of reading `extraWindowInstances`
@@ -4764,9 +4790,24 @@ function FrameworkOsShellInner({
       // 🐢️ One batched, hash-conditional round trip replaces the old ~12 sequential
       // render/utilities/windowEngagements/windowMeasures/appLabels calls — the plugin omits payloads for
       // any section whose hash still matches what `cache` already holds.
-      const request = buildUiRefreshRequest(scope, windowInstances, panelTabLeaves, viewState, cache);
+      // 🪟️ Only the windows the mode layout mounts are fetched. A declared-but-unmounted window is a
+      // whole guest render per pass — in edit mode that meant re-serializing the generate-mode preview,
+      // meshes included, twice per `flowEvalTick` hop. Its cached body is dropped so nothing can serve
+      // it stale, and the effect beside `effectiveModeLayout` re-fetches it the moment it is mounted.
+      const { fetched: fetchWindowInstances, skipped: unmountedWindowInstances } = partitionRefreshWindowInstancesV1(windowInstances, isSessionSwitch ? new Set<string>() : mountedWindowIdsRef.current);
+      if (unmountedWindowInstances.length) {
+        const skipped = new Map(unmountedSkippedWindowBodiesRef.current);
+        for (const instance of unmountedWindowInstances) {
+          cache.delete(`window:${instance.id}`);
+          skipped.set(instance.id, instance.bodyKey);
+        }
+        unmountedSkippedWindowBodiesRef.current = skipped;
+      }
+      const request = buildUiRefreshRequest(scope, fetchWindowInstances, panelTabLeaves, viewState, cache);
       if (request) {
-        const response = await program.refreshUi(nextSession.instanceId, request);
+        const response = await hopTrace.timeAsync("refresh.guest", { instanceId: nextSession.instanceId, scope: scope.kind, windows: (request.windows ?? []).length, panels: (request.panels ?? []).length }, () =>
+          program.refreshUi(nextSession.instanceId, request),
+        );
         if (generation !== refreshGenerationRef.current && !(replaceBodies && generation === replaceBodiesGenerationRef.current)) return;
         // 🩹️ `resolveExternalSlots`/`ensureContributorInstance`'s `PluginWasmHandle` (kernel/component.ts,
         // `manifest: () => Promise<Uint8Array>`/`enqueue`/`outcomes`/`dispose` — an actor/turn handle) is
@@ -4800,7 +4841,9 @@ function FrameworkOsShellInner({
         // Resolve external slots on freshly-changed window/panel bodies only, before caching them, so a
         // later no-operation refresh reuses the already-resolved cached value instead of re-resolving.
         const resolveIfChanged = async (entry: PluginUiRefreshSectionResponse): Promise<PluginUiRefreshSectionResponse> => (entry.value !== undefined ? { ...entry, value: await resolveExternalSlots(entry.value as BuiltNode, slotContext) } : entry);
-        const [resolvedWindows, resolvedPanels] = await Promise.all([Promise.all((response.windows ?? []).map(resolveIfChanged)), Promise.all((response.panels ?? []).map(resolveIfChanged))]);
+        const [resolvedWindows, resolvedPanels] = await hopTrace.timeAsync("refresh.slots", { instanceId: nextSession.instanceId, scope: scope.kind }, () =>
+          Promise.all([Promise.all((response.windows ?? []).map(resolveIfChanged)), Promise.all((response.panels ?? []).map(resolveIfChanged))]),
+        );
         if (generation !== refreshGenerationRef.current && !(replaceBodies && generation === replaceBodiesGenerationRef.current)) return;
         applyUiRefreshResponseToCache(cache, { ...response, windows: resolvedWindows, panels: resolvedPanels });
         // 🩺️ Which sections this pass ASKED for and which the guest actually re-serialized — the one
@@ -4815,6 +4858,7 @@ function FrameworkOsShellInner({
       // reference already in `cache` (dispatched from a prior refresh), so `mergeRecordPreservingIdentity`
       // bails on them via reference equality — this is what lets `InterpretedUiNode`'s `React.memo` (and
       // `modeWindows`'s `useMemo`) skip reconciling the whole shell on every interaction.
+      const closeApplySpan = hopTrace.open("refresh.apply", { instanceId: nextSession.instanceId, scope: scope.kind });
       dispatch({
         type: "SET_WINDOW_UI_BY_WINDOW_ID",
         value: (current) => {
@@ -4859,6 +4903,10 @@ function FrameworkOsShellInner({
         },
       });
       if (replaceBodies) forceReloadLiveUiStoresV1(cache);
+      closeApplySpan();
+      // 🖼️ React commit + paint: the state above is dispatched, not yet reconciled, so the cost of
+      // turning it into pixels is the interval from here to the next frame the compositor runs.
+      traceCommitToNextFrame({ instanceId: nextSession.instanceId, scope: scope.kind });
       if (isSessionSwitch && layoutSeed) {
         layoutSeedKeyRef.current = layoutSeedKey;
         extraWindowInstancesRef.current = layoutSeed.extraInstances;
@@ -4901,7 +4949,11 @@ function FrameworkOsShellInner({
   );
 
   //#region 🤝️UiRefreshCoalescing
-  type UiRefreshLaneRequest = { readonly session: ActiveSession; readonly scope: UiDirtyScope; readonly extraInstances?: readonly ExtraWindowInstance[]; readonly replaceBodies: boolean };
+  /** 🚪️ `hostInputs` says this request carries a render input the GUEST has not seen — view state, an
+   * armed utility, a locale switch, a newly mounted window. It is the default, because a request that
+   * cannot prove otherwise must never be joined onto a pass that crossed before it; only the
+   * completion path, which knows whether its own effects rewrote a guest render input, lowers it. */
+  type UiRefreshLaneRequest = { readonly session: ActiveSession; readonly scope: UiDirtyScope; readonly extraInstances?: readonly ExtraWindowInstance[]; readonly replaceBodies: boolean; readonly hostInputs: boolean };
   // 🧰️ The lane is built ONCE (it owns the owed slot and the drain loop, which no render may reset), so
   // it reaches the current pass and the current effect applier through refs rather than through a
   // closure — the same reason `runUiRefreshPass` itself reads `loadedPluginsRef`.
@@ -4924,23 +4976,40 @@ function FrameworkOsShellInner({
    * request waits on itself. */
   const owedPassEffectsRef = useRef<{ effects: readonly Effect[]; session: ActiveSession; owner: ReturnType<typeof captureEffectOwner> } | null>(null);
   const uiRefreshLaneRef = useRef<UiRefreshCoalescerV1<UiRefreshLaneRequest> | null>(null);
+  /** 🚪️ The guest ingress generation the pass in flight submitted its own turn under, `null` while no
+   * pass is running. It is captured INSIDE the pass, immediately before the guest crossing, because
+   * that instant — not the instant the request was made — is what a joiner must be compared against. */
+  const passIngressRef = useRef<number | null>(null);
   if (!uiRefreshLaneRef.current) {
     uiRefreshLaneRef.current = createUiRefreshCoalescerV1<UiRefreshLaneRequest>(
       async (request) => {
-        await runUiRefreshPassRef.current(request.session, request.scope, request.extraInstances, request.replaceBodies);
+        passIngressRef.current = guestIngressGenerationV1(request.session.instanceId);
+        try {
+          await hopTrace.timeAsync("refresh", { instanceId: request.session.instanceId, scope: request.scope.kind }, () =>
+            runUiRefreshPassRef.current(request.session, request.scope, request.extraInstances, request.replaceBodies),
+          );
+        } finally {
+          passIngressRef.current = null;
+        }
         const owedEffects = owedPassEffectsRef.current;
         owedPassEffectsRef.current = null;
         if (owedEffects) void applyHostEffectsRef.current(owedEffects.effects, owedEffects.session, { kind: "full" }, owedEffects.owner).catch((error) => console.error("refresh-owed host effects failed", error));
       },
-      (owed, next) => ({ session: next.session, scope: mergeUiDirtyScopeV1(owed.scope, next.scope), extraInstances: next.extraInstances ?? owed.extraInstances, replaceBodies: owed.replaceBodies || next.replaceBodies }),
+      (owed, next) => ({ session: next.session, scope: mergeUiDirtyScopeV1(owed.scope, next.scope), extraInstances: next.extraInstances ?? owed.extraInstances, replaceBodies: owed.replaceBodies || next.replaceBodies, hostInputs: owed.hostInputs || next.hostInputs }),
       (decision, scope, passes) => {
         if (runtimeDiagnosticsEnabled()) console.warn("[DEBUG] refreshUi lane", JSON.stringify({ decision, scope, passes }));
       },
+      (running, next) =>
+        uiRefreshAlreadyAnsweredV1(
+          { instanceId: running.session.instanceId, scope: running.scope, replaceBodies: running.replaceBodies, ingressAtSubmit: passIngressRef.current },
+          { instanceId: next.session.instanceId, scope: next.scope, replaceBodies: next.replaceBodies, hostInputs: next.hostInputs },
+          guestIngressGenerationV1(next.session.instanceId),
+        ),
     );
   }
   const refreshUi = useCallback(
-    async (nextSession: ActiveSession, scopeArg: UiDirtyScope = { kind: "full" }, extraInstancesOverride?: readonly ExtraWindowInstance[], replaceBodies = false) =>
-      uiRefreshLaneRef.current!.request({ session: nextSession, scope: scopeArg, extraInstances: extraInstancesOverride, replaceBodies }),
+    async (nextSession: ActiveSession, scopeArg: UiDirtyScope = { kind: "full" }, extraInstancesOverride?: readonly ExtraWindowInstance[], replaceBodies = false, hostInputs = true) =>
+      uiRefreshLaneRef.current!.request({ session: nextSession, scope: scopeArg, extraInstances: extraInstancesOverride, replaceBodies, hostInputs }),
     [],
   );
   //#endregion 🤝️UiRefreshCoalescing
@@ -5719,7 +5788,7 @@ function FrameworkOsShellInner({
         if (spawned) await refreshSpawnedUi(spawned, nextViewState, refreshScope);
       } else if (shellDialogSessionIsCurrentV1(shellStateRef.current.pluginRuntime.session, nextSession)) {
         if (runtimeDiagnosticsEnabled()) console.warn("[DEBUG] applyHostEffects refresh", JSON.stringify({ declared: uiScope, scope: refreshScope, viewStateSame: nextViewState === baseSession.viewState }));
-        await refreshUi(nextSession, refreshScope, undefined, leftoverReplaceRefreshBodiesV1());
+        await refreshUi(nextSession, refreshScope, undefined, leftoverReplaceRefreshBodiesV1(), hostEffectsRewriteGuestRenderInputsV1(effects) || nextViewState !== baseSession.viewState);
       } else {
         if (runtimeDiagnosticsEnabled()) console.warn("[DEBUG] applyHostEffects skipped refresh: session not current", JSON.stringify({ spawned: isSpawnedPluginSession, scope: refreshScope }));
       }
@@ -6497,6 +6566,8 @@ function FrameworkOsShellInner({
         windowInstances: sessionWindowInstances(targetSession.app, extraWindowInstancesRef.current).map((instance) => ({ id: instance.id, windowKindId: instance.windowKindId })),
         activeUtilityByWindowId: buildActiveUtilityByWindowId(activeUtilityByWindowIdRef.current),
         focusedWindowId: activeWindowIdRef.current ?? undefined,
+        toolRunUnitsPerSecond: TOOL_RUN_VISIBLE_UNITS_PER_SECOND,
+        toolRunTraceCursorByWindowId: toolRunTraceCursorViewState(sessionWindowInstances(targetSession.app, extraWindowInstancesRef.current).map((instance) => instance.id)),
       };
       const dispatchViewState = hostArmedViewContext(baseDispatchViewState, activeToolIdRef.current, dispatchWindowId);
       if (!dispatchViewState) {
@@ -10128,6 +10199,21 @@ function FrameworkOsShellInner({
     [appLabelsOverlay, session, shellLayout, uiTerminology, uiLocale],
   );
   effectiveModeLayoutRef.current = effectiveModeLayout;
+  mountedWindowIdsRef.current = useMemo(() => windowLayoutWindowIdsV1(effectiveModeLayout), [effectiveModeLayout]);
+  // 🪟️ The other half of the mounted-window fetch law: a window the layout has just started mounting
+  // owns no cached body (the pass that skipped it dropped one), so it is fetched here, once, in a scope
+  // that names exactly it. Without this a mode switch whose refresh ran against the previous layout
+  // would leave the newly mounted pane on its pending body until some unrelated pass came along.
+  useEffect(() => {
+    const live = sessionRef.current;
+    const skipped = unmountedSkippedWindowBodiesRef.current;
+    if (!live || skipped.size === 0) return;
+    const mounted = mountedWindowIdsRef.current;
+    const windowBodies = [...skipped].filter(([windowId]) => mounted.has(windowId)).map(([, bodyKey]) => bodyKey);
+    if (windowBodies.length === 0) return;
+    unmountedSkippedWindowBodiesRef.current = new Map([...skipped].filter(([windowId]) => !mounted.has(windowId)));
+    void refreshUi(live, { kind: "partial", windowBodies }).catch((error) => console.error("[os-shell] remounted window refresh failed", error));
+  }, [effectiveModeLayout, refreshUi]);
 
   const handleActiveWindowChange = useCallback(
     (value: string | null) => {

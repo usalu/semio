@@ -84,7 +84,7 @@
     "anUnknownPhaseIsComputing": "A phase tag the surface's vocabulary does not know reads as `computing`, never as `idle`: the envelope that carried it said the job is still working.",
     "aBareDictionaryIsAFinishedEvaluation": "A response body that is not an envelope at all is read as a finished evaluation whose output IS that body. It is the only reading that cannot lose an answer.",
     "theBudgetKeepsTheWorkerAlive": "The wall allowance is chosen below the host's shard liveness window, not merely below its termination threshold: a guest turn that never yields blocks the worker's event loop and its progress ticker with it, so a long turn and a dead worker are indistinguishable to the host. Returning between steps is what makes them distinguishable.",
-    "answersArmNothing": "A fold never dispatches a hop itself. It settles the window's outstanding answer and leaves the window owing a hop exactly when the evaluation continues; the `previewEval` run job schedules that hop."
+    "answersArmNothing": "A fold never DISPATCHES a hop. It settles the window's outstanding answer and leaves the window owing a hop exactly when the evaluation continues. What it may do — and now does — is RUN that owed hop itself, inline, inside the answer's own guest turn: the answer routes are addressed at the same preview window the hop is, so the fold already holds the retained session, the document, the config and that window's transient. The admission question is the run job's own scheduling question, so the chain's shape cannot change; only who runs the hop. A fold that declines leaves the latch untouched and the run job dispatches the round trip exactly as before."
   },
   "rows": [
     {
@@ -232,5 +232,149 @@
     ],
     "steppedEqualsOneShot": "Driving the job one unit at a time must produce the SAME out dictionary as the one-shot evaluation of the same input. The stepped path IS the algorithm; there is no second implementation to drift from.",
     "cancelMidWay": "Cancelling between steps terminates the job with phase `cancelled`; a job that already produced its output is never retired by a later cancel."
+  },
+  "inlineContinuation": {
+    "why": "The last removable round trip of the preview chain. After wave coalescing every example still paid one `flowEvalResolve` -> `flowEvalTick` pair per dependency LEVEL — 1 391 ms apiece on React (`react-hop-latency-2026-09-14.md` section 2.1). The pair exists only because the fold and the hop used to live on different routes. They do not any more.",
+    "owningPublicationLayer": "`flowEvalTick`, `flowEvalResolve` and `flowTessellateResolve` are ONE window-addressed work with ONE publication lane (`WindowTransient`). A continuation that advanced the chain without publishing would buy hops by going blind, and intermediate geometry plus the monotone status pill are exactly what a user cancels out of. `flowEvalRelease` and `flowTessellateCancelResolve` stay off that layer: they address an extension actor, not a window, and must still reach it once the window is gone.",
+    "admission": {
+      "owedHopOnly": "A fold may only take over a hop the scheduler would have dispatched — the window owes one, nothing is armed, and no sibling answer of its wave is still in flight. It may never invent a hop.",
+      "neverResumesACancelledChain": "A cancelled session refuses every continuation. Beginning a tick retires the cancelled banner, so a continuation on a cancelled chain would un-cancel the run the user stopped.",
+      "oneTurnOneDeadline": "Every dag walk of one guest turn shares ONE wall deadline. An inline walk inherits the turn's deadline instead of opening a fresh allowance, which is what stops a chained continuation from stretching the interactive hold one ceiling per wave.",
+      "aSpentTurnParks": "A turn with less than the reserve of its evaluation allowance left runs no further walk. Park is not a state — it is the absence of the continuation: the latch is untouched and the run job dispatches the round trip.",
+      "oneWavePerTurn": "A continuation that parks extension work stops there. The answers have to cross to the host before the next wave can be walked at all, so one turn can never run two waves of the same chain."
+    },
+    "statusStillAdvancesPerWave": "The census the status pill prints is published by the walk, so it advances once per WAVE exactly as it did when each wave cost a hop. The user sees the same monotone sequence (`preview-cancel.json` chainCensus), sooner.",
+    "hopsPerExampleNote": "`hops` is `flowEvalTick` actions the host dispatches for one cold-cache example load in the edit lane. `beforeCoalescing` is the measured u64-journey column of `react-perf-ceilings-audit-2026-09-14.md` section 1; `afterCoalescing` is the modelled levels+1 of `flow-tick-coalescing-2026-09-14.md` section 3; `afterInline` is 1 for every example, because the gesture arms the first hop and every wave after it runs inside an answer's own turn. Extra hops are possible and are each a declined continuation.",
+    "examples": [
+      {
+        "id": "rectangle-wire-preview",
+        "contributedNodes": 1,
+        "waveWidths": [
+          1
+        ],
+        "beforeCoalescing": 3,
+        "afterCoalescing": 2,
+        "afterInline": 1
+      },
+      {
+        "id": "hexagonal-mushroom-column",
+        "contributedNodes": 3,
+        "waveWidths": [
+          2,
+          1
+        ],
+        "beforeCoalescing": 3,
+        "afterCoalescing": 3,
+        "afterInline": 1
+      },
+      {
+        "id": "box-fillet-preview",
+        "contributedNodes": 2,
+        "waveWidths": [
+          1,
+          1
+        ],
+        "beforeCoalescing": 6,
+        "afterCoalescing": 3,
+        "afterInline": 1
+      },
+      {
+        "id": "box-shell-preview",
+        "contributedNodes": 2,
+        "waveWidths": [
+          1,
+          1
+        ],
+        "beforeCoalescing": 6,
+        "afterCoalescing": 3,
+        "afterInline": 1
+      },
+      {
+        "id": "sphere-box-fuse",
+        "contributedNodes": 3,
+        "waveWidths": [
+          2,
+          1
+        ],
+        "beforeCoalescing": 7,
+        "afterCoalescing": 3,
+        "afterInline": 1
+      },
+      {
+        "id": "rectangle-extrude-volume",
+        "contributedNodes": 4,
+        "waveWidths": [
+          2,
+          1,
+          1
+        ],
+        "beforeCoalescing": 7,
+        "afterCoalescing": 4,
+        "afterInline": 1
+      },
+      {
+        "id": "sphere-cut-with-torus",
+        "contributedNodes": 4,
+        "waveWidths": [
+          2,
+          1,
+          1
+        ],
+        "beforeCoalescing": 7,
+        "afterCoalescing": 4,
+        "afterInline": 1
+      },
+      {
+        "id": "face-sweep-extrude",
+        "contributedNodes": 4,
+        "waveWidths": [
+          2,
+          1,
+          1
+        ],
+        "beforeCoalescing": 8,
+        "afterCoalescing": 4,
+        "afterInline": 1
+      }
+    ],
+    "rows": [
+      {
+        "id": "cancel-between-waves-stops-the-chain",
+        "why": "The affordance the whole publication argument exists for: a gesture landing between two waves must still stop the chain, and every answer already crossing when it landed must continue nothing.",
+        "waveWidths": [
+          2,
+          1,
+          1
+        ],
+        "expectedDispatchedHops": 1,
+        "expectedInlineWaves": 0,
+        "expectedContinuationsAfterCancel": 0,
+        "cancelBeforeHop": 2
+      },
+      {
+        "id": "a-spent-turn-parks-and-the-host-round-trip-happens",
+        "why": "A wave whose turn has no wall left must hand the round trip back to the host rather than overrun the interactive hold.",
+        "waveWidths": [
+          2,
+          1,
+          1
+        ],
+        "expectedDispatchedHops": 2,
+        "expectedInlineWaves": 2,
+        "spentTurnBeforeHop": 2
+      },
+      {
+        "id": "an-unadmitted-fold-leaves-the-latch-exactly-as-it-found-it",
+        "why": "Park is the absence of the continuation, never a state of its own: a one-wave chain whose terminal walk is refused leaves the window owing exactly the hop it owed, and the run job dispatches it.",
+        "waveWidths": [
+          1
+        ],
+        "expectedDispatchedHops": 2,
+        "expectedInlineWaves": 0,
+        "spentTurnBeforeHop": 2
+      }
+    ],
+    "hopLadder": "One chain of N waves is N+1 hops: one per wave plus a terminal walk that owes nothing and records the window finished. With the continuation admitted throughout, hop 1 is dispatched by the host and hops 2..N+1 all run inline, so `afterInline` is 1 and the inline-wave count is N. Each declined continuation moves exactly one hop back to the host.",
+    "hopIndexing": "`cancelBeforeHop` / `spentTurnBeforeHop` are 1-based positions in the hop ladder. Hop 1 is always the one the host dispatches; hop i+1 is the walk the last answer of wave i unblocks; hop N+1 is the terminal walk that owes nothing. Naming hop i means the interference lands in the guest turn that would have run hop i inline."
   }
 }

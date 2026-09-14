@@ -112,6 +112,11 @@ pub fn computation_node_height(input_count: usize, output_count: usize, variadic
 
 
 
+/// 🔤️ Splits a port's declared, comma-joined value schemas into the list the board intersects.
+fn port_value_types(port: &IoPortSpec) -> Vec<String> {
+    port.value_type.as_deref().map(|declared| declared.split(',').filter(|entry| !entry.is_empty()).map(str::to_string).collect()).unwrap_or_default()
+}
+
 fn io_port_column_width(ports: &[IoPortSpec], _px: f64) -> f64 {
     if ports.is_empty() {
         0.0
@@ -2460,8 +2465,11 @@ impl DagPayloadRetirement {
                 DagRetirementStep::Pending { released_items: 1, credited_bytes: 0, released_bytes: 0 }
             }
             DagRetirementOwner::EngineHandle(value) => {
-                let Handle { angle: _, id: _, node_id: _, radius: _, role: _, kind, properties } = value;
+                let Handle { angle: _, id: _, node_id: _, radius: _, role: _, kind, value_types, properties } = value;
                 if let Some(value) = kind {
+                    self.text(value);
+                }
+                for value in value_types {
                     self.text(value);
                 }
                 self.push(DagRetirementOwner::Properties(properties));
@@ -3541,11 +3549,42 @@ impl DagHost {
         os_pack::json::to_json_string(&self.selected_channels())
     }
 
-    /// 🔌️ Hovered fixture channel as JSON, or `null`.
+    /// 🚫️ The refusal a live wire drag is hovering, as JSON, or `null` — the port pair the declared
+    /// port types forbid, with both declared type lists so a surface can name them in the user's own
+    /// language. Structural refusals (role, cycle, self-node) are NOT reported: a hint can only help
+    /// with the one a user can act on.
+    ///
+    /// @see `🧫️fixtures/🔌️port-types/🔣️.json` — the law both node-graph renderers answer
+    pub fn wire_type_refusal_json(&self) -> String {
+        let Some((source_hid, target_hid)) = self.engine.wire_drag_type_refusal() else {
+            return "null".into();
+        };
+        let (Some(source_key), Some(target_key)) = (self.handle_key_map.get(&source_hid), self.handle_key_map.get(&target_hid)) else {
+            return "null".into();
+        };
+        let types = |handle_id: u64| self.engine.handles.get(&handle_id).map(|handle| handle.value_types.clone()).unwrap_or_default();
+        format!(
+            "{{\"source\":{},\"sourceTypes\":{},\"target\":{},\"targetTypes\":{}}}",
+            os_pack::json::to_json_string(source_key),
+            os_pack::json::to_json_string(&types(source_hid)),
+            os_pack::json::to_json_string(target_key),
+            os_pack::json::to_json_string(&types(target_hid))
+        )
+    }
+
+    /// 🔌️ Hovered fixture channel as JSON, or `null` — carrying the live wire drag's type refusal
+    /// alongside it when there is one, so one poll answers both "what is under the pointer" and "why
+    /// will it not take this wire".
     pub fn hovered_channel_json(&self) -> String {
-        match self.hovered_channel() {
-            Some(channel) => os_pack::json::to_json_string(&channel),
-            None => "null".into(),
+        let refusal = self.wire_type_refusal_json();
+        match (self.hovered_channel(), refusal.as_str()) {
+            (None, "null") => "null".into(),
+            (None, _) => format!("{{\"refusal\":{refusal}}}"),
+            (Some(channel), "null") => os_pack::json::to_json_string(&channel),
+            (Some(channel), _) => {
+                let encoded = os_pack::json::to_json_string(&channel);
+                format!("{}{}{}", &encoded[..encoded.len().saturating_sub(1)], format_args!(",\"refusal\":{refusal}"), "}")
+            }
         }
     }
 
@@ -4657,6 +4696,7 @@ impl DagHost {
                     handle.radius = DAG_HANDLE_WORLD_RADIUS;
                 }
                 self.engine.set_handle_role(hid, HandleRole::Target);
+                self.engine.set_handle_value_types(hid, port_value_types(port));
             }
             for (port_idx, port) in outputs.iter().enumerate() {
                 let out_a = io_node_rect_port_angle_for_node(node, port_idx, false);
@@ -4672,6 +4712,7 @@ impl DagHost {
                     handle.radius = DAG_HANDLE_WORLD_RADIUS;
                 }
                 self.engine.set_handle_role(hid, HandleRole::Source);
+                self.engine.set_handle_value_types(hid, port_value_types(port));
             }
         }
         let existing: Vec<(String, String)> = self

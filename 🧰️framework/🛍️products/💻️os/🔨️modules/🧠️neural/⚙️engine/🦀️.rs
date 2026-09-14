@@ -609,12 +609,46 @@ fn schema_field_output_cardinality(value: &ValueType) -> Cardinality {
     }
 }
 
+/// 🔤️ The value schemas a declared schema FIELD carries, in `ChannelSpec::value_types` vocabulary.
+/// `Integer` and `Decimal` collapse to one `number` port type — whether a number is whole is an
+/// input-validation concern, never a wiring one — and `Any` declares nothing, which stays connectable.
+fn field_channel_value_types(value: &ValueType) -> Vec<String> {
+    match value {
+        ValueType::Any => Vec::new(),
+        ValueType::List(_) => vec![VALUE_TYPE_LIST.into()],
+        ValueType::Integer | ValueType::Decimal => vec![VALUE_TYPE_NUMBER.into()],
+        _ => vec![value.id()],
+    }
+}
+
 fn field_channel_operators(value: &ValueType) -> Vec<String> {
     match value {
         ValueType::List(inner) => vec![inner.id()],
         _ => vec![value.id()],
     }
 }
+
+/// 🔢️ The port type every numeric channel carries — one `Dictionary::with_schema("number")`.
+pub const VALUE_TYPE_NUMBER: &str = "number";
+
+/// 🔤️ The port type every text channel carries.
+pub const VALUE_TYPE_TEXT: &str = "text";
+
+/// ☑️ The port type every boolean channel carries.
+pub const VALUE_TYPE_BOOLEAN: &str = "boolean";
+
+/// 📃️ The port type every list channel carries — `Dictionary::with_schema("list")`, whatever the items are.
+pub const VALUE_TYPE_LIST: &str = "list";
+
+/// 🧭️ The port type a `math` vector carries.
+pub const VALUE_TYPE_VECTOR: &str = "vector";
+
+/// 📍️ The port type a `math` point carries.
+pub const VALUE_TYPE_POINT: &str = "point";
+
+/// 🔷️ The port type every brep kernel handle carries — `Dictionary::with_schema("geometry")`, whether
+/// the handle is a vertex, a wire, a face, a surface, a solid or a compound.
+pub const VALUE_TYPE_GEOMETRY: &str = "geometry";
 
 /// 🏷️ The id an OUTPUT channel takes when it carries the same noun as one of its operator's own
 /// INPUTS. An operator's input ids and output ids are disjoint, because `"{nodeId}@{portId}"` is the
@@ -631,16 +665,16 @@ pub fn produced_channel_id(input_id: &str) -> String {
 /// 🧩️ Builds construct/deconstruct/modify operator metadata for a schema.
 pub fn schema_component_info(schema: &Schema) -> OperatorInfo {
     let operator_id = schema_component_operator_id(schema);
-    let mut inputs = vec![ChannelSpec::requires(&schema.id, &[schema.id.as_str()]).with_cardinality(Cardinality::ZeroOrOne)];
+    let mut inputs = vec![ChannelSpec::requires(&schema.id, &[schema.id.as_str()]).with_value_types(&[schema.id.as_str()]).with_cardinality(Cardinality::ZeroOrOne)];
     for field in &schema.fields {
         let operators = field_channel_operators(&field.value);
-        inputs.push(ChannelSpec::requires(&field.key, &operators).with_cardinality(schema_field_input_cardinality(&field.value)));
+        inputs.push(ChannelSpec::requires(&field.key, &operators).with_value_types(&field_channel_value_types(&field.value)).with_cardinality(schema_field_input_cardinality(&field.value)));
     }
     let (instance_code, instance_abbreviation, instance_full_name) = derive_channel_names(&schema.id);
-    let mut outputs = vec![ChannelSpec::named(instance_code, instance_abbreviation, produced_channel_id(&schema.id), instance_full_name).with_operators(vec![schema.id.clone()])];
+    let mut outputs = vec![ChannelSpec::named(instance_code, instance_abbreviation, produced_channel_id(&schema.id), instance_full_name).with_operators(vec![schema.id.clone()]).with_value_types(&[schema.id.as_str()])];
     for field in &schema.fields {
         let (code, abbreviation, full_name) = derive_channel_names(&field.key);
-        outputs.push(ChannelSpec::named(code, abbreviation, produced_channel_id(&field.key), full_name).with_operators(field_channel_operators(&field.value)).with_cardinality(schema_field_output_cardinality(&field.value)));
+        outputs.push(ChannelSpec::named(code, abbreviation, produced_channel_id(&field.key), full_name).with_operators(field_channel_operators(&field.value)).with_value_types(&field_channel_value_types(&field.value)).with_cardinality(schema_field_output_cardinality(&field.value)));
     }
     outputs.push(ChannelSpec::list_output("errors", vec![]));
     OperatorInfo {
@@ -1235,6 +1269,8 @@ pub struct ChannelSpec {
     pub full_name: String,
     #[cfg_attr(test, serde(default, skip_serializing_if = "Vec::is_empty"))]
     pub operators: Vec<String>,
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Vec::is_empty"))]
+    pub value_types: Vec<String>,
     #[cfg_attr(test, serde(skip_serializing_if = "Option::is_none"))]
     pub default: Option<Value>,
     #[cfg_attr(test, serde(skip_serializing_if = "Option::is_none"))]
@@ -1251,6 +1287,7 @@ impl ToValue for ChannelSpec {
             ("name".into(), self.name.to_value()),
             ("fullName".into(), self.full_name.to_value()),
             ("operators".into(), self.operators.to_value()),
+            ("valueTypes".into(), self.value_types.to_value()),
             ("default".into(), self.default.to_value()),
             ("label".into(), self.label.to_value()),
             ("cardinality".into(), self.cardinality.to_value()),
@@ -1267,6 +1304,7 @@ impl FromValue for ChannelSpec {
             name: value.get("name").cloned().map(String::from_value).transpose()?.ok_or_else(|| ValueError::new("name"))?,
             full_name: value.get("fullName").cloned().map(String::from_value).transpose()?.ok_or_else(|| ValueError::new("fullName"))?,
             operators: value.get("operators").cloned().map(Vec::<String>::from_value).transpose()?.unwrap_or_default(),
+            value_types: value.get("valueTypes").cloned().map(Vec::<String>::from_value).transpose()?.unwrap_or_default(),
             default: value.get("default").cloned().map(Option::<Value>::from_value).transpose()?.unwrap_or_default(),
             label: value.get("label").cloned().map(Option::<String>::from_value).transpose()?.unwrap_or_default(),
             cardinality: value.get("cardinality").cloned().map(Cardinality::from_value).transpose()?.unwrap_or_default(),
@@ -1299,23 +1337,35 @@ fn derive_channel_names(name: &str) -> (String, String, String) {
 
 impl ChannelSpec {
     pub fn named(code: impl Into<String>, abbreviation: impl Into<String>, name: impl Into<String>, full_name: impl Into<String>) -> Self {
-        Self { code: code.into(), abbreviation: abbreviation.into(), name: name.into(), full_name: full_name.into(), operators: Vec::new(), default: None, label: None, cardinality: Cardinality::ExactlyOne }
+        Self { code: code.into(), abbreviation: abbreviation.into(), name: name.into(), full_name: full_name.into(), operators: Vec::new(), value_types: Vec::new(), default: None, label: None, cardinality: Cardinality::ExactlyOne }
     }
 
     pub fn requires(name: impl Into<String>, operators: &[impl AsRef<str>]) -> Self {
         let name = name.into();
         let (code, abbreviation, full_name) = derive_channel_names(&name);
-        Self { code, abbreviation, name, full_name, operators: operators.iter().map(|entry| entry.as_ref().to_string()).collect(), default: None, label: None, cardinality: Cardinality::ExactlyOne }
+        Self { code, abbreviation, name, full_name, operators: operators.iter().map(|entry| entry.as_ref().to_string()).collect(), value_types: Vec::new(), default: None, label: None, cardinality: Cardinality::ExactlyOne }
     }
 
     pub fn provides(name: impl Into<String>, operators: Vec<String>) -> Self {
         let name = name.into();
         let (code, abbreviation, full_name) = derive_channel_names(&name);
-        Self { code, abbreviation, name, full_name, operators, default: None, label: None, cardinality: Cardinality::ExactlyOne }
+        Self { code, abbreviation, name, full_name, operators, value_types: Vec::new(), default: None, label: None, cardinality: Cardinality::ExactlyOne }
     }
 
     pub fn with_operators(mut self, operators: Vec<String>) -> Self {
         self.operators = operators;
+        self
+    }
+
+    /// 🔤️ Declares the VALUE SCHEMAS this channel carries — the `Dictionary::schema()` a value on
+    /// this wire actually has (`"geometry"`, `"vector"`, `"point"`, `"number"`, `"text"`, `"list"`),
+    /// not the operator ids `operators` holds. An input lists every schema it accepts, an output
+    /// every schema it may produce, and `Registry::channel_compatible` refuses a pair whose declared
+    /// sets are disjoint. Empty means undeclared, which stays connectable.
+    ///
+    /// @see `🧫️fixtures/🔌️port-types/🔣️.json` — the catalogue-wide law
+    pub fn with_value_types(mut self, value_types: &[impl AsRef<str>]) -> Self {
+        self.value_types = value_types.iter().map(|entry| entry.as_ref().to_string()).collect();
         self
     }
 
@@ -1335,31 +1385,31 @@ impl ChannelSpec {
     }
 
     pub fn number(name: impl Into<String>, operators: &[impl AsRef<str>]) -> Self {
-        Self::requires(name, operators)
+        Self::requires(name, operators).with_value_types(&[VALUE_TYPE_NUMBER])
     }
 
     pub fn number_default(name: impl Into<String>, default: f64, operators: &[impl AsRef<str>]) -> Self {
-        Self::requires(name, operators).with_default(Value::Dictionary(Dictionary::with_schema("number").insert("value", Value::Atom(Atom::Decimal(default)))))
+        Self::requires(name, operators).with_value_types(&[VALUE_TYPE_NUMBER]).with_default(Value::Dictionary(Dictionary::with_schema("number").insert("value", Value::Atom(Atom::Decimal(default)))))
     }
 
     pub fn integer_default(name: impl Into<String>, default: i64, operators: &[impl AsRef<str>]) -> Self {
-        Self::requires(name, operators).with_default(Value::Atom(Atom::Integer(default)))
+        Self::requires(name, operators).with_value_types(&[VALUE_TYPE_NUMBER]).with_default(Value::Atom(Atom::Integer(default)))
     }
 
     pub fn boolean_default(name: impl Into<String>, default: bool, operators: &[impl AsRef<str>]) -> Self {
-        Self::requires(name, operators).with_default(Value::Dictionary(Dictionary::with_schema("boolean").insert("value", Value::Atom(Atom::Boolean(default)))))
+        Self::requires(name, operators).with_value_types(&[VALUE_TYPE_BOOLEAN]).with_default(Value::Dictionary(Dictionary::with_schema("boolean").insert("value", Value::Atom(Atom::Boolean(default)))))
     }
 
     pub fn text_default(name: impl Into<String>, default: impl Into<String>, operators: &[impl AsRef<str>]) -> Self {
-        Self::requires(name, operators).with_default(Value::Dictionary(Dictionary::with_schema("text").insert("value", Value::Atom(Atom::String(default.into())))))
+        Self::requires(name, operators).with_value_types(&[VALUE_TYPE_TEXT]).with_default(Value::Dictionary(Dictionary::with_schema("text").insert("value", Value::Atom(Atom::String(default.into())))))
     }
 
     pub fn list(name: impl Into<String>, operators: &[impl AsRef<str>]) -> Self {
-        Self::requires(name, operators).with_cardinality(Cardinality::ZeroOrMore)
+        Self::requires(name, operators).with_value_types(&[VALUE_TYPE_LIST]).with_cardinality(Cardinality::ZeroOrMore)
     }
 
     pub fn list_output(name: impl Into<String>, operators: Vec<String>) -> Self {
-        Self::provides(name, operators).with_cardinality(Cardinality::ZeroOrMore)
+        Self::provides(name, operators).with_value_types(&[VALUE_TYPE_LIST]).with_cardinality(Cardinality::ZeroOrMore)
     }
 
     pub fn dictionary(name: impl Into<String>, operators: &[impl AsRef<str>]) -> Self {
@@ -1535,11 +1585,17 @@ impl Registry {
         operators
     }
 
+    /// 🔌️ Whether a wire may carry `output` into `input` — the ONE port-compatibility oracle every
+    /// node-graph surface answers to. Declared VALUE SCHEMAS decide it: a pair is refused only when
+    /// both sides declare and the declared sets are disjoint, so an undeclared channel stays
+    /// connectable and no shipped graph is retro-refused.
+    ///
+    /// @see `🧫️fixtures/🔌️port-types/🔣️.json` — the fixture that owns the compatible/incompatible pairs
     pub fn channel_compatible(output: &ChannelSpec, input: &ChannelSpec) -> bool {
-        if input.operators.is_empty() {
+        if output.value_types.is_empty() || input.value_types.is_empty() {
             return true;
         }
-        input.operators.iter().all(|required| output.operators.iter().any(|provided| provided == required))
+        output.value_types.iter().any(|provided| input.value_types.iter().any(|accepted| accepted == provided))
     }
 
     pub fn schema(&self, schema_id: &str) -> Option<&Schema> {
@@ -1990,9 +2046,31 @@ pub fn compute_dirty_set(previous: Option<&TreeSnapshot>, current: &TreeSnapshot
 // #endregion 🔖️DirtyPropagation
 
 // #region 🔖️Evaluator
-/// ⏳️ Topo-ordered neuron ids still needing work when a budgeted walk stops at `from_index`.
-fn budgeted_remaining_from(order: &[String], from_index: usize, dirty: &HashSet<String>) -> Vec<String> {
-    order[from_index..].iter().filter(|id| dirty.is_empty() || dirty.contains(*id)).cloned().collect()
+/// ⏳️ Topo-ordered neuron ids still needing work when a budgeted walk stops at `from_index` having
+/// `parked` the extension requests of one wave.
+///
+/// ⛓️ A parked neuron sits BEFORE `from_index` — the walk went past it to gather the rest of its
+/// wave — so it is named explicitly and unconditionally: a neuron whose answer has not landed is
+/// still owed whatever the dirty set says about it, and dropping it here would make the chain call
+/// itself converged while an answer is still crossing.
+fn budgeted_remaining(order: &[String], from_index: usize, parked: &HashSet<String>, dirty: &HashSet<String>) -> Vec<String> {
+    order
+        .iter()
+        .enumerate()
+        .filter(|(index, id)| parked.contains(id.as_str()) || (*index >= from_index && (dirty.is_empty() || dirty.contains(id.as_str()))))
+        .map(|(_, id)| id.clone())
+        .collect()
+}
+
+/// ⛓️ Whether `neuron_id` draws an input from a neuron THIS walk could not produce — one whose
+/// extension request is parked, or one already blocked behind such a request.
+///
+/// 🚨️ [`collect_neuron_input`] SILENTLY SKIPS a source with no output (`else { continue }`), so a
+/// neuron downstream of a parked request would otherwise be dispatched against a half-built input
+/// and cache a wrong answer under a hash that claims to describe the real one. Waiting is not an
+/// optimisation here; it is the only correct answer.
+fn waits_on_parked(tree: &Tree, parked: &HashSet<String>, neuron_id: &str) -> bool {
+    !parked.is_empty() && tree.synapses.iter().any(|synapse| synapse.to == neuron_id && parked.contains(&synapse.from))
 }
 
 /// 📡️ Resolved neuron inputs and outputs from one evaluation pass.
@@ -2004,11 +2082,17 @@ pub struct EvalChannels {
 
 /// ⏳️ Result of a budget-limited evaluation pass — `remaining` (in topo order) is empty once the
 /// whole dirty set has been walked; a non-empty `remaining` means resume with another budgeted call.
+///
+/// 🌊️ `pending_extensions` is ONE TOPOLOGICAL WAVE: every neuron whose inputs were ready in this
+/// walk and whose operator lives in a plugin, not in this process. They are gathered together
+/// because they are independent by construction — no member of a wave consumes another member's
+/// output — so they can all be in flight at once and the chain costs ONE round trip per
+/// dependency LEVEL instead of one per node (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct BudgetedEval {
     pub channels: EvalChannels,
     pub remaining: Vec<String>,
-    pub pending_extension: Option<PendingExtensionEval>,
+    pub pending_extensions: Vec<PendingExtensionEval>,
 }
 
 /// ⏱️ A wall-clock guard a budgeted walk consults BETWEEN neurons. Carried as a plain `fn` pointer
@@ -2065,6 +2149,20 @@ impl EvalStepBudget {
         EvalStepBudget { dispatches, deadline: Some(EvalStepDeadline { now_us, deadline_us }) }
     }
 
+    /// ⏱️ The wall instant this budget preempts at, if any.
+    ///
+    /// 🔁️ Readable because a guest TURN may now run more than one dag walk — a fold that continues
+    /// its chain inline runs the next wave inside the answer's own turn — and the rule that keeps
+    /// the 8 ms interactive hold is that every walk of one turn shares ONE deadline instead of
+    /// opening a fresh allowance apiece. A law can only state that if the deadline is observable
+    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    pub const fn deadline_us(&self) -> Option<u64> {
+        match self.deadline {
+            Some(deadline) => Some(deadline.deadline_us),
+            None => None,
+        }
+    }
+
     /// 🛑️ Whether the walk must yield before dispatching another cache-missed neuron.
     fn exhausted(&self, spent: usize) -> bool {
         spent >= self.dispatches || (spent != 0 && self.deadline.is_some_and(|deadline| deadline.expired()))
@@ -2072,8 +2170,12 @@ impl EvalStepBudget {
 }
 
 /// ⏳️ One contributed operator that must be evaluated in its owning plugin before the graph can resume.
+///
+/// 🪪️ `neuron_id` names the node the request BELONGS to, so a census can say which nodes of a wave
+/// are actually outstanding at their plugin instead of guessing from the head of a remaining list.
 #[derive(Clone, Debug, PartialEq)]
 pub struct PendingExtensionEval {
+    pub neuron_id: String,
     pub extension_id: String,
     pub operator_id: String,
     pub node_hash: u64,
@@ -2160,6 +2262,9 @@ impl<'a> Evaluator<'a> {
         let mut outputs = ColdOwner::new(seeds.iter().map(|(key, value)| (key.clone(), value.clone())).collect::<BTreeMap<String, Dictionary>>());
         let mut inputs = ColdOwner::new(BTreeMap::<String, Dictionary>::new());
         let mut spent = 0usize;
+        let mut parked: HashSet<String> = HashSet::new();
+        let mut pending_extensions: Vec<PendingExtensionEval> = Vec::new();
+        let mut stopped_at = order.len();
         for (index, neuron_id) in order.iter().enumerate() {
             if !dirty.contains(neuron_id) {
                 if let Some(prev) = previous {
@@ -2169,6 +2274,10 @@ impl<'a> Evaluator<'a> {
                         continue;
                     }
                 }
+            }
+            if waits_on_parked(tree, &parked, neuron_id) {
+                parked.insert(neuron_id.clone());
+                continue;
             }
             let neuron = tree.neurons.iter().find(|n| n.id == *neuron_id).ok_or_else(|| EvalError::InvalidInput(format!("missing neuron {neuron_id}")))?;
             let operator_info = operator_info_for_neuron(neuron, operator_infos, self.registry.operator_info(&neuron.kind));
@@ -2189,7 +2298,8 @@ impl<'a> Evaluator<'a> {
             // cluster is conservatively always charged as a miss.
             if let Some(sub_tree) = neuron.tree.as_deref() {
                 if budget.exhausted(spent) {
-                    return Ok(BudgetedEval { channels: EvalChannels { outputs: outputs.into_inner(), inputs: inputs.into_inner() }, remaining: budgeted_remaining_from(&order, index, dirty), pending_extension: None });
+                    stopped_at = index;
+                    break;
                 }
                 let out = self.evaluate_cluster_sequential(sub_tree, &input, operator_infos, dispatch, cache)?;
                 outputs.insert(neuron_id.clone(), out).retire_cold();
@@ -2200,19 +2310,22 @@ impl<'a> Evaluator<'a> {
             let key = node_hash(&neuron.kind, &merged);
             let is_miss = !cache.contains(key);
             if is_miss && budget.exhausted(spent) {
-                return Ok(BudgetedEval { channels: EvalChannels { outputs: outputs.into_inner(), inputs: inputs.into_inner() }, remaining: budgeted_remaining_from(&order, index, dirty), pending_extension: None });
+                stopped_at = index;
+                break;
             }
             let out = if let Some(cached) = cache.get(key) {
                 cached
             } else {
                 match dispatch(&neuron.kind, &merged) {
                     Err(EvalError::PendingExtension { extension_id, operator_id, node_hash }) => {
-                        let input_json = pack::json::to_json_string(&*merged);
-                        return Ok(BudgetedEval {
-                            channels: EvalChannels { outputs: outputs.into_inner(), inputs: inputs.into_inner() },
-                            remaining: budgeted_remaining_from(&order, index, dirty),
-                            pending_extension: Some(PendingExtensionEval { extension_id, operator_id, node_hash, input_json }),
-                        });
+                        // 🌊️ The wave gathers rather than returns: this neuron's answer has to come
+                        // from its plugin, but every LATER neuron that does not depend on it can
+                        // still be walked in this same call, so its own request rides the same round
+                        // trip instead of costing a whole further hop.
+                        pending_extensions.push(PendingExtensionEval { neuron_id: neuron_id.clone(), extension_id, operator_id, node_hash, input_json: pack::json::to_json_string(&*merged) });
+                        parked.insert(neuron_id.clone());
+                        spent += 1;
+                        continue;
                     }
                     Err(err) => eval_error_dictionary(&err),
                     Ok(dict) => {
@@ -2226,7 +2339,8 @@ impl<'a> Evaluator<'a> {
                 spent += 1;
             }
         }
-        Ok(BudgetedEval { channels: EvalChannels { outputs: outputs.into_inner(), inputs: inputs.into_inner() }, remaining: Vec::new(), pending_extension: None })
+        let remaining = budgeted_remaining(&order, stopped_at, &parked, dirty);
+        Ok(BudgetedEval { channels: EvalChannels { outputs: outputs.into_inner(), inputs: inputs.into_inner() }, remaining, pending_extensions })
     }
 
     pub fn evaluate_channels_with(

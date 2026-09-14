@@ -60,6 +60,15 @@ pub enum FlowCoreError {
     NoOutputPort(String),
     NoInputPort(String),
     SelfConnection,
+    /// 🔌️ The drawn wire would carry a value the target port does not accept — the source port's
+    /// declared value schemas and the target's are disjoint. Both sides are carried so a surface can
+    /// name them in the user's own language.
+    IncompatiblePortTypes {
+        source: String,
+        source_type: String,
+        target: String,
+        target_type: String,
+    },
     SelfInsertion,
     CycleWouldBeCreated,
     ConnectionAlreadyExists,
@@ -93,6 +102,7 @@ impl std::fmt::Display for FlowCoreError {
             Self::NoOutputPort(id) => write!(formatter, "{id} has no output port"),
             Self::NoInputPort(id) => write!(formatter, "{id} has no input port"),
             Self::SelfConnection => formatter.write_str("cannot connect widget to itself"),
+            Self::IncompatiblePortTypes { source, source_type, target, target_type } => write!(formatter, "{source} carries {source_type}, {target} accepts {target_type}"),
             Self::SelfInsertion => formatter.write_str("cannot insert widget between itself"),
             Self::CycleWouldBeCreated => formatter.write_str("connection would create cycle"),
             Self::ConnectionAlreadyExists => formatter.write_str("connection already exists"),
@@ -193,7 +203,17 @@ pub struct FlowHost {
     /// 🖐️ `true` while a coalescing gesture (drag, inline note edit) is in progress — guards
     /// `begin_change` from checkpointing mid-gesture; see `begin_gesture`/`commit_gesture_history`.
     gesture_active: bool,
-    pending_extension_eval: Option<neural::PendingExtensionEval>,
+    /// 🪶 Whether the gesture that most recently RELEASED changed the fixture's content — the same
+    /// predicate `commit_gesture_history` already decides an undo entry by, published so the renderer
+    /// can decide a DISPATCH by it. A plain click, a marquee, a pan and a press that grabbed nothing
+    /// all leave it `false`, and a renderer that commits the whole fixture anyway spends a retained
+    /// command — and, when the guest's diff finds any drift at all, re-arms the entire preview
+    /// evaluation — on a shell nobody touched.
+    gesture_changed_content: bool,
+    /// 🌊️ The contributed-operator requests the last budgeted step parked — ONE topological wave,
+    /// never one node: every member's inputs were ready in the same walk, so they are independent by
+    /// construction and all cross to their plugins on the same hop.
+    pending_extension_evals: Vec<neural::PendingExtensionEval>,
     interaction_revision: u64,
     interaction_projection: Option<dag::DagInteractionProjection>,
     /// 🧹️ Cold owner for neural values this host DISPLACES while it is live — the previous tick's
@@ -255,7 +275,8 @@ impl FlowHost {
             pending_history_baseline: None,
             pending_change: false,
             gesture_active: false,
-            pending_extension_eval: None,
+            gesture_changed_content: false,
+            pending_extension_evals: Vec::new(),
             interaction_revision: 0,
             interaction_projection: None,
             displaced: neural::ValueRetirement::default(),
@@ -804,6 +825,16 @@ impl FlowHost {
         if self.fixture.synapses.iter().any(|s| s.from == from_id && s.from_port == from_port && s.to == to_id && s.to_port == to_port) {
             return Err(FlowCoreError::ConnectionAlreadyExists);
         }
+        let source_types = widget_port_value_types(from_id, from_port, PortSide::Output, &self.fixture.widgets, &self.fixture.synapses, &self.kind_infos);
+        let target_types = widget_port_value_types(to_id, to_port, PortSide::Input, &self.fixture.widgets, &self.fixture.synapses, &self.kind_infos);
+        if !port_value_types_compatible(&source_types, &target_types) {
+            return Err(FlowCoreError::IncompatiblePortTypes {
+                source: format!("{from_id}@{from_port}"),
+                source_type: source_types.join(","),
+                target: format!("{to_id}@{to_port}"),
+                target_type: target_types.join(","),
+            });
+        }
         self.fixture.synapses.retain(|s| !(s.to == to_id && s.to_port == to_port));
         self.next_synapse_serial += 1;
         let synapse_id = format!("s{}", self.next_synapse_serial);
@@ -1133,10 +1164,18 @@ impl FlowHost {
     }
 
     /// 🔗️ Drains the wire edits the last gesture performed, in the GUEST's own sub-operation
-    /// vocabulary: `{"operations":[{"operation":"connect",…}|{"operation":"disconnect","synapseId":…}]}`.
-    /// The renderer dispatches exactly this as a `nodeGraphEdit`, instead of re-publishing the whole
-    /// fixture — a narrow intent the guest replays, not a state blob it adopts. Empty when the gesture
-    /// touched no wire, which is the renderer's signal to fall back to its fixture commit.
+    /// vocabulary: `{"operations":[{"operation":"connect",…}|{"operation":"disconnect","synapseId":…}],"fixtureChanged":bool}`.
+    /// The renderer dispatches exactly those operations as a `nodeGraphEdit`, instead of re-publishing
+    /// the whole fixture — a narrow intent the guest replays, not a state blob it adopts.
+    ///
+    /// 🪶 `fixtureChanged` is the answer to the OTHER half of the question, and the renderer has no
+    /// way to derive it: a gesture that moved a node or dragged an inline slider changed content the
+    /// narrow vocabulary does not carry, so the fixture commit is still owed — while a plain click, a
+    /// marquee, a pan and a press that grabbed nothing changed nothing and are owed NOTHING. Reading an
+    /// empty `operations` as "fall back to the fixture commit" made every click on the graph dispatch a
+    /// whole-fixture `nodeGraphEdit`, which is what put `nodeGraphEdit` + two `flowEvalTick`s on a QUIET
+    /// shell (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
+    /// `📓️generate-add-flow-wire-quiet-tick-2026-09-14.md`).
     pub fn take_graph_edits_json(&mut self) -> String {
         let operations: Vec<crate::os_pack::json::Value> = self
             .dag
@@ -1159,18 +1198,18 @@ impl FlowHost {
                     ("x".to_string(), crate::os_pack::json::Value::Number(x.into())),
                     ("y".to_string(), crate::os_pack::json::Value::Number(y.into())),
                 ]),
-                // 🧷️ Fixed forward for the wire-drag lane: `move` is the third row of `DagGraphEdit`
-                // and the guest's `nodeGraphEdit` already decodes exactly these three keys
-                // (`🎮️commands/✏️node-graph-edit/🦀️.rs`'s `"move"` arm).
-                dag::DagGraphEdit::Move { node_id, x, y } => crate::os_pack::json::object([
-                    ("operation".to_string(), crate::os_pack::json::Value::String("move".to_string())),
-                    ("nodeId".to_string(), crate::os_pack::json::Value::String(node_id)),
-                    ("x".to_string(), crate::os_pack::json::Value::from(x)),
-                    ("y".to_string(), crate::os_pack::json::Value::from(y)),
-                ]),
             })
             .collect();
-        crate::os_pack::json::to_string(&crate::os_pack::json::object([("operations".to_string(), crate::os_pack::json::array(operations))]))
+        crate::os_pack::json::to_string(&crate::os_pack::json::object([
+            ("operations".to_string(), crate::os_pack::json::array(operations)),
+            ("fixtureChanged".to_string(), crate::os_pack::json::Value::Bool(self.gesture_changed_content)),
+        ]))
+    }
+
+    /// 🪶 Whether the gesture that most recently released changed the fixture's content — the one
+    /// predicate a renderer may gate a document write on. @see [`Self::take_graph_edits_json`]
+    pub fn gesture_changed_content(&self) -> bool {
+        self.gesture_changed_content
     }
 
     pub fn set_selection_options(&mut self, method: &str, mode: &str) {
@@ -1247,7 +1286,7 @@ impl FlowHost {
     /// extra work, never a wrong result.
     pub fn evaluate_step(&mut self, budget: EvalStepBudget) -> Vec<String> {
         self.drain_displaced();
-        self.pending_extension_eval = None;
+        self.pending_extension_evals.clear();
         let tree = self.build_tree();
         let seeds = self.build_seeds();
         let snapshot = TreeSnapshot::capture(&tree, &seeds);
@@ -1276,8 +1315,8 @@ impl FlowHost {
         tree.retire_cold();
         seeds.retire_cold();
         match budgeted {
-            Ok(BudgetedEval { channels, remaining, pending_extension }) => {
-                self.pending_extension_eval = pending_extension;
+            Ok(BudgetedEval { channels, remaining, pending_extensions }) => {
+                self.pending_extension_evals = pending_extensions;
                 let displaced_outputs = std::mem::replace(&mut self.outputs, channels.outputs.clone());
                 self.displaced.push_dictionaries(displaced_outputs);
                 self.apply_preview_outputs(&channels.outputs);
@@ -1312,9 +1351,10 @@ impl FlowHost {
         }
     }
 
-    /// 🔌️ Consumes the last budgeted step's contributed-extension eval request, if any.
-    pub fn take_pending_extension_eval(&mut self) -> Option<neural::PendingExtensionEval> {
-        self.pending_extension_eval.take()
+    /// 🔌️ Consumes the wave of contributed-extension eval requests the last budgeted step parked.
+    /// Empty when nothing is owed; otherwise every member may be invoked at once.
+    pub fn take_pending_extension_evals(&mut self) -> Vec<neural::PendingExtensionEval> {
+        std::mem::take(&mut self.pending_extension_evals)
     }
 
     /// 👀️ Probes which widget ids still need evaluation without computing anything (`budget = 0`) —
@@ -2303,6 +2343,7 @@ impl FlowHost {
     /// A no-op baseline is therefore RETIRED, exactly as `history_store_from_baseline` retires the
     /// surplus clone it does not need.
     fn commit_gesture_history(&mut self) {
+        self.gesture_changed_content = false;
         if self.gesture_active {
             self.gesture_active = false;
             let baseline = self.pending_history_baseline.take().unwrap_or_else(|| self.fixture.clone());
@@ -2310,6 +2351,7 @@ impl FlowHost {
                 baseline.retire_cold();
                 return;
             }
+            self.gesture_changed_content = true;
             let fixture = self.fixture.clone();
             if let Some(store) = self.history_store_from_baseline(baseline) {
                 let _ = resolve_ready(store.dispatch(ArtifactCommand::Apply { mutations: vec![FlowMutation::ReplaceFlowFixture(ReplaceFlowFixture { fixture })], description: None }));
@@ -2382,7 +2424,7 @@ pub struct FlowHostRetirementState {
     previous_channels: Option<EvalChannels>,
     history_store: Option<FlowStore>,
     pending_history_baseline: Option<FlowFixture>,
-    pending_extension_eval: Option<neural::PendingExtensionEval>,
+    pending_extension_evals: Vec<neural::PendingExtensionEval>,
     interaction_projection: Option<dag::DagInteractionProjection>,
     domain: crate::retained::FlowRetirement,
     neural: neural::ValueRetirement,
@@ -2438,7 +2480,8 @@ impl FlowHostRetirement {
             pending_history_baseline,
             pending_change: _,
             gesture_active: _,
-            pending_extension_eval,
+            gesture_changed_content: _,
+            pending_extension_evals,
             interaction_revision: _,
             interaction_projection,
             displaced,
@@ -2462,7 +2505,7 @@ impl FlowHostRetirement {
                 previous_channels,
                 history_store,
                 pending_history_baseline,
-                pending_extension_eval,
+                pending_extension_evals,
                 interaction_projection,
                 domain: crate::retained::FlowRetirement::default(),
                 neural: displaced,
@@ -2548,7 +2591,8 @@ impl FlowHostRetirement {
             state.neural.push_channels(channels);
         } else if let Some(fixture) = state.pending_history_baseline.take() {
             state.domain.push(FlowOwner::Fixture(fixture));
-        } else if let Some(pending) = state.pending_extension_eval.take() {
+        } else if let Some(pending) = state.pending_extension_evals.pop() {
+            state.neural.text(pending.neuron_id);
             state.neural.text(pending.extension_id);
             state.neural.text(pending.operator_id);
             state.neural.text(pending.input_json);
@@ -2597,7 +2641,7 @@ impl FlowHostRetirement {
             && self.previous_channels.is_none()
             && self.history_store.is_none()
             && self.pending_history_baseline.is_none()
-            && self.pending_extension_eval.is_none()
+            && self.pending_extension_evals.is_empty()
             && self.interaction_projection.is_none()
             && self.domain.is_empty()
             && self.neural.terminal_is_empty()
@@ -2664,13 +2708,45 @@ pub const FLOW_EVAL_TICK_STEP_BUDGET: usize = 512;
 /// ceiling still converges — one node per tick — instead of re-arming forever with no progress.
 pub const FLOW_EVAL_TICK_ELAPSED_CEILING_US: u64 = semio_framework_job::INTERACTIVE_STEP_CEILING_US / 4 * 3;
 
+/// ⏱️ Wall a guest turn must still have UNSPENT of [`FLOW_EVAL_TICK_ELAPSED_CEILING_US`] before a
+/// fold may run the next wave of its chain inline rather than park it for a host round trip.
+///
+/// 🔁️ A fold that continues inline saves a whole `flowEvalResolve` → `flowEvalTick` pair — measured
+/// at 1 391 ms on React (`📓️react-hop-latency-2026-09-14.md` §2.1) — but it spends that saving
+/// inside the answer's OWN turn, on top of whatever the fold already cost. Without a reserve the
+/// two additions are exactly how an 8 ms hold becomes a 14 ms one. A third of the allowance is the
+/// floor a walk needs to be worth starting at all: `EvalStepBudget::exhausted` always dispatches at
+/// least one node before a deadline can stop it, so a continuation admitted with a sliver left
+/// would overrun by one whole operator rather than yield (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+pub const FLOW_EVAL_INLINE_CONTINUATION_RESERVE_US: u64 = FLOW_EVAL_TICK_ELAPSED_CEILING_US / 3;
+
 /// ⏱️ The budget ONE `flowEvalTick` dag walk runs under: [`FLOW_EVAL_TICK_STEP_BUDGET`] nodes,
 /// preempted after [`FLOW_EVAL_TICK_ELAPSED_CEILING_US`] on the process clock. Falls back to the
 /// node count alone when no clock is installed (bare wasm), which is the pre-existing behaviour.
-pub fn flow_eval_tick_budget() -> EvalStepBudget {
-    match semio_framework_job::default_now_us() {
-        Some(now_us) => EvalStepBudget::until(FLOW_EVAL_TICK_STEP_BUDGET, semio_framework_job::default_now_us, now_us.saturating_add(FLOW_EVAL_TICK_ELAPSED_CEILING_US)),
+///
+/// 🔁️ `turn_started_us` is when the GUEST TURN this walk belongs to began. A walk that opens its own
+/// turn passes `None` and gets the whole allowance; one running inline inside a fold's turn passes
+/// that turn's start and shares the SAME deadline, which is the entire reason an inline continuation
+/// cannot stretch the interactive hold however many waves it chains.
+pub fn flow_eval_tick_budget(turn_started_us: Option<u64>) -> EvalStepBudget {
+    let started_us = turn_started_us.or_else(semio_framework_job::default_now_us);
+    match started_us {
+        Some(started_us) => EvalStepBudget::until(FLOW_EVAL_TICK_STEP_BUDGET, semio_framework_job::default_now_us, started_us.saturating_add(FLOW_EVAL_TICK_ELAPSED_CEILING_US)),
         None => EvalStepBudget::dispatches(FLOW_EVAL_TICK_STEP_BUDGET),
+    }
+}
+
+/// ⏱️ Whether a turn that began at `turn_started_us` and is now at `now_us` still has
+/// [`FLOW_EVAL_INLINE_CONTINUATION_RESERVE_US`] of its evaluation allowance left — the WALL half of
+/// [`FlowEvalSession::inline_continuation_admitted`], pure in both instants so a law can state the
+/// park boundary in microseconds instead of racing a clock.
+///
+/// 🕰️ An uninstrumented process (no clock at all, bare wasm) admits the continuation: the node
+/// budget still bounds the walk, and that is precisely the fallback [`flow_eval_tick_budget`] takes.
+pub fn flow_eval_inline_continuation_fits(turn_started_us: Option<u64>, now_us: Option<u64>) -> bool {
+    match (turn_started_us, now_us) {
+        (Some(turn_started_us), Some(now_us)) => now_us.saturating_sub(turn_started_us).saturating_add(FLOW_EVAL_INLINE_CONTINUATION_RESERVE_US) <= FLOW_EVAL_TICK_ELAPSED_CEILING_US,
+        _ => true,
     }
 }
 
@@ -3038,8 +3114,11 @@ impl FlowEvalSession {
         true
     }
 
-    pub fn tick(&mut self, host: &mut FlowHost) -> bool {
-        let remaining = host.evaluate_step(flow_eval_tick_budget());
+    /// ⏱️ One budgeted dag walk. `turn_started_us` is when the guest turn this walk belongs to began
+    /// — `None` for a walk that opens its own turn, `Some` for one running inline inside a fold's
+    /// turn, which then shares that turn's single deadline (see [`flow_eval_tick_budget`]).
+    pub fn tick(&mut self, host: &mut FlowHost, turn_started_us: Option<u64>) -> bool {
+        let remaining = host.evaluate_step(flow_eval_tick_budget(turn_started_us));
         self.eval_json = host.last_eval_json.clone();
         self.status_json = build_flow_status_json(host, &remaining);
         if remaining.is_empty() {
@@ -3201,6 +3280,33 @@ impl FlowEvalSession {
             return true;
         }
         false
+    }
+
+    /// 🔁️ Whether the fold that just settled `window_id`'s answer may run that window's next wave
+    /// INLINE, inside the answer's own guest turn, instead of leaving the `previewEval` run job to
+    /// dispatch a `flowEvalTick` hop for it.
+    ///
+    /// 🪜️ The question is deliberately the run job's OWN scheduling question
+    /// ([`FlowEvalSession::window_tick_owed`]): a fold may only take over a hop the scheduler would
+    /// otherwise have dispatched, never invent one. So the hop count can fall but the chain's shape
+    /// cannot change — and a fold that declines simply leaves the latch alone, which IS the park:
+    /// the run job's next step reads the same debt and dispatches the round trip as before. There is
+    /// no parked-continuation state anywhere, because "not inline" is the pre-existing behaviour.
+    ///
+    /// 🛑 A CANCELLED session is refused outright. `begin_window_tick` retires the `cancelled` banner
+    /// (work resuming is the one thing that may), so an inline continuation on a cancelled chain
+    /// would not merely compute one wave too many — it would un-cancel the run the user stopped. A
+    /// cancel also defaults every latch, so `window_tick_owed` already answers `false`; the explicit
+    /// guard is kept because the two facts must not be one accident apart
+    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    ///
+    /// ⏱️ The wall half is [`flow_eval_inline_continuation_fits`]: a turn with less than
+    /// [`FLOW_EVAL_INLINE_CONTINUATION_RESERVE_US`] of its evaluation allowance left parks. BOTH
+    /// instants are the caller's, so the rule is pure and a law states the park boundary in
+    /// microseconds instead of racing a clock — and so a native test, which installs no clock at all,
+    /// can still drive the branch a browser turn takes.
+    pub fn inline_continuation_admitted(&self, window_id: &str, turn_started_us: Option<u64>, now_us: Option<u64>) -> bool {
+        !self.preview_cancelled() && self.window_tick_owed(window_id) && flow_eval_inline_continuation_fits(turn_started_us, now_us)
     }
 
     /// 🔎️ How many extension answers `window_id` is still waiting for — readable so a law can state
@@ -4167,12 +4273,26 @@ fn node_eval_status_json(status: &NodeEvalStatus) -> crate::os_pack::json::Value
     crate::os_pack::json::from_dsl_value(&crate::os_dsl::ToValue::to_value(status))
 }
 
+/// 📊️ The per-node census one evaluation publishes — the ONE quantity that only ever grows inside a
+/// chain, and therefore the only honest denominator a progress ratio may use
+/// ([`FlowEvalSession::preview_chain_status`]).
+///
+/// 🌊️ `Computing` is EVERY node whose request is outstanding at its plugin right now, not the head
+/// of `remaining`: a coalesced tick parks a whole topological wave, and naming one of them would
+/// leave the rest of a live wave painted as merely queued.
+///
+/// 📈 A dirty node the walk has already passed is `Ok`, never `Stale`. `dirty` is measured against
+/// the chain's FROZEN baseline — it advances only when the chain completes — so every node this
+/// evaluation recomputed stays in it until the very last hop. Calling those nodes stale held
+/// `nodes_done` at the count of untouched nodes for the whole evaluation: monotone, and flat at the
+/// same fraction from the first hop to the last, which is a progress bar that never moves
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). A node leaves `remaining` exactly once per chain and
+/// never returns to it, which is what makes the census monotone.
 fn build_flow_status_json(host: &FlowHost, remaining: &[String]) -> String {
     let eval = crate::os_pack::json::parse(&host.last_eval_json).unwrap_or_else(|_| crate::os_pack::json::Value::Object(crate::os_pack::json::Object::new()));
     let tree = host.build_tree_for_status();
     let seeds = host.build_seeds_for_status();
-    let snapshot = TreeSnapshot::capture(&tree, &seeds);
-    let dirty = compute_dirty_set(host.eval_baseline_snapshot(), &snapshot);
+    let wave: BTreeSet<&str> = host.pending_extension_evals.iter().map(|pending| pending.neuron_id.as_str()).collect();
     let active = remaining.first().map(String::as_str);
     let mut widgets = crate::os_pack::json::Object::new();
     for widget in &host.fixture.widgets {
@@ -4192,16 +4312,12 @@ fn build_flow_status_json(host: &FlowHost, remaining: &[String]) -> String {
             widgets.insert(id.to_string(), node_eval_status_json(&NodeEvalStatus::Blocked { ports: blocked }));
             continue;
         }
-        if active == Some(id) {
+        if wave.contains(id) || (wave.is_empty() && active == Some(id)) {
             widgets.insert(id.to_string(), node_eval_status_json(&NodeEvalStatus::Computing));
             continue;
         }
         if remaining.iter().any(|entry| entry == id) {
             widgets.insert(id.to_string(), node_eval_status_json(&NodeEvalStatus::Queued));
-            continue;
-        }
-        if dirty.contains(id) && !remaining.is_empty() {
-            widgets.insert(id.to_string(), node_eval_status_json(&NodeEvalStatus::Stale));
             continue;
         }
         widgets.insert(id.to_string(), node_eval_status_json(&NodeEvalStatus::Ok));
@@ -4218,6 +4334,37 @@ fn dedupe_fixture_widgets(fixture: &mut FlowFixture) {
 }
 
 
+
+/// 🔌️ Which side of a node a port sits on — the ONE thing that decides whether a port id is looked
+/// up in a widget's inputs or its outputs, since `"{nodeId}@{portId}"` carries no direction.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum PortSide {
+    Input,
+    Output,
+}
+
+/// 🔤️ The value schemas one endpoint declares, read straight off the port the operator catalogue
+/// published — an undeclared port answers with an empty list, which stays connectable.
+pub fn widget_port_value_types(widget_id: &str, port_id: &str, side: PortSide, widgets: &[Widget], synapses: &[SynapseSpec], kind_infos: &HashMap<String, OperatorInfo>) -> Vec<String> {
+    let Some(widget) = widgets.iter().find(|widget| widget_id_for(widget) == widget_id) else {
+        return Vec::new();
+    };
+    let (inputs, outputs, _, _) = widget_io_ports(widget, synapses, kind_infos);
+    let ports = if side == PortSide::Output { outputs } else { inputs };
+    ports.iter().find(|port| port.id == port_id).and_then(|port| port.value_type.clone()).map(|declared| declared.split(',').filter(|entry| !entry.is_empty()).map(str::to_string).collect()).unwrap_or_default()
+}
+
+/// 🔌️ The ONE port-compatibility rule the flow graph enforces, over the value schemas both ends
+/// declare: a pair is refused only when both sides declare and the sets are disjoint.
+///
+/// @see `🧫️fixtures/🔌️port-types/🔣️.json` — the fixture that owns the pairs
+/// @see `neural_engine::Registry::channel_compatible` — the same rule over two `ChannelSpec`s
+pub fn port_value_types_compatible(source: &[String], target: &[String]) -> bool {
+    if source.is_empty() || target.is_empty() {
+        return true;
+    }
+    source.iter().any(|provided| target.iter().any(|accepted| accepted == provided))
+}
 
 fn widget_has_output(widget_id: &str, widgets: &[Widget], synapses: &[SynapseSpec], kind_infos: &HashMap<String, OperatorInfo>) -> bool {
     widgets.iter().any(|w| widget_id_for(w) == widget_id && !widget_io_ports(w, synapses, kind_infos).1.is_empty())

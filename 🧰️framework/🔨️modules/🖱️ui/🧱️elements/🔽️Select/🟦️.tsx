@@ -18,6 +18,7 @@ import { type ElementProps } from "../../🔨️modules/🆔️element-identity/
 import { useFlow } from "../../🔨️modules/🧭️flow-direction-context/🟦️.tsx";
 import { glassClass } from "../../🔨️modules/🌈️surface-presentation/🟦️.ts";
 import { Label } from "../🏷️Label/🟦️.tsx";
+import { useShellFloatingSurfaceHost } from "../🐚️ShellScope/🟦️.tsx";
 import { SurfaceScope, useLevel } from "../🌈️Surface/🟦️.tsx";
 import { CheckIconAlt, ChevronDownIconAlt, ChevronUpIcon, type IconSource, Icon } from "../🔣️Icons/🟦️.tsx";
 // #endregion 🔌️Adapters
@@ -491,6 +492,7 @@ const SelectContent = React.forwardRef<HTMLDivElement, SelectContentProps>(funct
   const context = useSelectContext();
   const [placement, setPlacement] = React.useState<SelectPlacement>();
   const modalLayer = useDialogLayer(context.open, context.contentRef);
+  const floatingHost = useShellFloatingSurfaceHost();
   const typeaheadRef = React.useRef("");
   const typeaheadTimerRef = React.useRef<number | undefined>(undefined);
   const openAutoFocusRef = React.useRef(onOpenAutoFocus);
@@ -592,6 +594,8 @@ const SelectContent = React.forwardRef<HTMLDivElement, SelectContentProps>(funct
   }, [context, modalLayer.isolationRoot, onEscapeKeyDown, onFocusOutside, onInteractOutside, onPointerDownOutside]);
 
   if (!context.open || !modalLayer.ready || typeof document === "undefined") return null;
+  const host = modalLayer.container ?? container ?? floatingHost;
+  if (!host) return null;
   return createPortal(
     <div
       {...props}
@@ -611,7 +615,7 @@ const SelectContent = React.forwardRef<HTMLDivElement, SelectContentProps>(funct
       data-select-token={context.token}
       data-select-boundary={context.boundary}
       className={cn(
-        "text-popover-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=top]:slide-in-from-bottom-2 relative z-menu max-h-(--semio-select-content-available-height) min-w-32 origin-(--semio-select-content-transform-origin) overflow-hidden border outline-hidden",
+        "pointer-events-auto text-popover-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=top]:slide-in-from-bottom-2 relative z-menu max-h-(--semio-select-content-available-height) min-w-32 origin-(--semio-select-content-transform-origin) overflow-hidden border outline-hidden",
         glassClass,
         position === "popper" && "data-[side=bottom]:translate-y-1 data-[side=top]:-translate-y-1",
         className,
@@ -675,7 +679,7 @@ const SelectContent = React.forwardRef<HTMLDivElement, SelectContentProps>(funct
         <SelectScrollDownButton />
       </SurfaceScope>
     </div>,
-    modalLayer.container ?? container ?? document.body,
+    host,
   );
 });
 // #endregion 📍️Content

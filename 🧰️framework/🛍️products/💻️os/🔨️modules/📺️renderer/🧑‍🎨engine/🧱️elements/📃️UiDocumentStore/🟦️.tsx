@@ -531,6 +531,84 @@ export function actionIdForTrigger(record: UiNodeRecord, trigger: UiTrigger): Ui
 }
 //#endregion 🔖️Store
 
+//#region 👥️GuestPresence
+/** 👥️ One `(surface, node key)`'s own render-plane presence, as the guest published it. */
+export type GuestPresenceMarkV1 = {
+  readonly selected: boolean;
+  readonly hovered: boolean;
+  readonly previewed: boolean;
+  readonly color: number | null;
+};
+
+/** 👥️ The guest's whole live presence table, keyed by node key — the shape
+ * `UiPresenceOverlayContext` consumes. */
+export type GuestPresenceTableV1 = { readonly byKey: ReadonlyMap<string, GuestPresenceMarkV1> };
+
+const EMPTY_GUEST_PRESENCE: GuestPresenceTableV1 = { byKey: new Map() };
+const guestPresenceBySurface = new Map<string, Map<string, GuestPresenceMarkV1>>();
+const guestPresenceListeners = new Set<() => void>();
+let guestPresenceTable: GuestPresenceTableV1 = EMPTY_GUEST_PRESENCE;
+
+function rebuildGuestPresenceTable(): void {
+  const byKey = new Map<string, GuestPresenceMarkV1>();
+  for (const marks of guestPresenceBySurface.values()) for (const [key, mark] of marks) byKey.set(key, mark);
+  guestPresenceTable = byKey.size === 0 ? EMPTY_GUEST_PRESENCE : { byKey };
+}
+
+function guestPresenceMarkEquals(left: GuestPresenceMarkV1 | undefined, right: GuestPresenceMarkV1): boolean {
+  return left !== undefined && left.selected === right.selected && left.hovered === right.hovered && left.previewed === right.previewed && left.color === right.color;
+}
+
+/**
+ * 👥️ Records what the guest's `turn-result.presence` said, and notifies every subscribed reader.
+ *
+ * The guest's `PresenceHub` reports only keys that moved, and `retire_dropped_presence`
+ * (`🔌️plugin/🦀️.rs`) publishes an explicitly CLEARED mark for a key that lost its mark — so a
+ * fully-idle mark is a deletion here, never a stored `selected: false`. Anything else would leave the
+ * table growing one entry per row the user ever touched.
+ *
+ * Presence is deliberately NOT a document revision: it changes at input frequency, so it carries no
+ * patch, no undo group and no store notification — only this table and its own listener set.
+ */
+export function publishGuestPresenceV1(updates: readonly { readonly surface: string; readonly nodeKey: string; readonly own: GuestPresenceMarkV1 }[]): void {
+  let changed = false;
+  for (const update of updates) {
+    const idle = !update.own.selected && !update.own.hovered && !update.own.previewed;
+    const marks = guestPresenceBySurface.get(update.surface);
+    if (idle) {
+      if (marks?.delete(update.nodeKey)) changed = true;
+      if (marks && marks.size === 0) guestPresenceBySurface.delete(update.surface);
+      continue;
+    }
+    const target = marks ?? new Map<string, GuestPresenceMarkV1>();
+    if (guestPresenceMarkEquals(target.get(update.nodeKey), update.own)) continue;
+    target.set(update.nodeKey, update.own);
+    guestPresenceBySurface.set(update.surface, target);
+    changed = true;
+  }
+  if (!changed) return;
+  rebuildGuestPresenceTable();
+  for (const listener of guestPresenceListeners) listener();
+}
+
+/** 👥️ The current table — a stable reference between publications, as `useSyncExternalStore` requires. */
+export function guestPresenceTableV1(): GuestPresenceTableV1 {
+  return guestPresenceTable;
+}
+
+export function subscribeGuestPresenceV1(listener: () => void): () => void {
+  guestPresenceListeners.add(listener);
+  return () => guestPresenceListeners.delete(listener);
+}
+
+/** 🧹️ Forgets one surface's marks — a surface whose instance went away must not keep painting rows. */
+export function forgetGuestPresenceSurfaceV1(surface: string): void {
+  if (!guestPresenceBySurface.delete(surface)) return;
+  rebuildGuestPresenceTable();
+  for (const listener of guestPresenceListeners) listener();
+}
+//#endregion 👥️GuestPresence
+
 //#region 🔖️Hooks
 /** 🪝️ Subscribes to exactly node `id` — re-renders only when THAT node's record reference changes. */
 export function useUiNode(store: UiDocumentStore, id: UiNodeId): UiNodeRecord | undefined {

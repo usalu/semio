@@ -89,3 +89,53 @@ fn kind_tags_match_the_ui_node_wire_format_tag() {
     let json = serde_json::to_value(&node).unwrap();
     assert_eq!(json.get("type").and_then(|v| v.as_str()), Some(ui_node_kind_tag(&node)));
 }
+/// 🧊️ `dumpMeshStats` answers the PRODUCER's publication — one row per `meshes_json` entry, its own
+/// role stamp, its array lengths and its bounds — and never the renderer's mesh store, which is what
+/// made a live census incomparable with a committed `delivery.meshes`
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+#[test]
+fn mesh_stats_publish_one_row_per_published_mesh_with_its_role_and_bounds() {
+    let meshes_json = serde_json::json!([
+        {"id": "eval-extrude@solid#0", "role": "solid", "data": {"positions": [0.0, 0.0, 0.0, 2.0, 2.0, 3.0], "indices": [0, 1, 2], "edgePositions": []}},
+        {"id": "eval-profile@wire#0", "role": "wire", "data": {"positions": [], "indices": [], "edgePositions": [-1.0, 0.0, 0.0, 1.0, 0.5, 0.0]}},
+        {"id": "eval-axis@vector#0", "data": {"positions": [0.0, 0.0, 0.0], "indices": [], "edgePositions": []}}
+    ])
+    .to_string();
+    let instances_json = serde_json::json!([{"id": "extrude@solid#0", "meshId": "eval-extrude@solid#0", "interactionId": "extrude@solid"}]).to_string();
+    let selection_json = serde_json::json!({"ids": ["extrude@solid#0"], "hoveredId": "extrude@solid#0"}).to_string();
+    let node = ui_wgpu::wgpu::build_world_3d_scene("procedural-preview", "controller", ui_wgpu::wgpu::World3dScene::base("{\"position\": [4.0, 4.0, 4.0]}".into(), meshes_json, instances_json, selection_json));
+    let UiNode::ComponentScene(scene) = &node else { unreachable!("build_world_3d_scene answers a component scene") };
+
+    let surface = mesh_stats_for_scene(scene, [10.0, 20.0, 400.0, 300.0]).expect("a world3d scene publishes mesh stats");
+    assert_eq!(surface.surface_id, "procedural-preview");
+    assert_eq!(surface.rect, [10.0, 20.0, 400.0, 300.0], "the rect is the page rect a pointer probe aims with");
+    assert_eq!(surface.meshes.len(), 3, "one row per published mesh, companions included");
+    assert_eq!(surface.roles, [("solid".to_string(), 1), ("wire".to_string(), 1), ("(unstamped)".to_string(), 1)].into_iter().collect(), "an unstamped producer is reported as such rather than defaulted into a role");
+    assert_eq!(surface.meshes[0].indices, 3);
+    assert_eq!(surface.meshes[0].positions, 6);
+    assert_eq!(surface.meshes[1].edge_positions, 6);
+    assert_eq!(surface.meshes[1].bbox_min, Some([-1.0, 0.0, 0.0]), "a wire body with no vertices is bounded by its edge polyline");
+    assert_eq!(surface.bbox_min, Some([-1.0, 0.0, 0.0]), "the surface bounds are the union a camera fit must frame");
+    assert_eq!(surface.bbox_max, Some([2.0, 2.0, 3.0]));
+    assert_eq!(surface.instances.iter().map(|instance| instance.interaction_id.as_str()).collect::<Vec<_>>(), vec!["extrude@solid"], "the topology target a hover/select observation is addressed by");
+    assert_eq!(surface.selected, vec!["extrude@solid#0".to_string()]);
+    assert_eq!(surface.hovered.as_deref(), Some("extrude@solid#0"));
+}
+
+/// 🚶️ The walk finds a preview scene wherever the dock nested it, and reports its ABSOLUTE page
+/// rect — a rect reported parent-relative aims every pointer probe at the wrong pane.
+#[test]
+fn walk_mesh_stats_finds_nested_world3d_surfaces_at_their_absolute_rect() {
+    let scene = ui_wgpu::wgpu::build_world_3d_scene("procedural-preview", "controller", ui_wgpu::wgpu::World3dScene::base("{}".into(), "[]".into(), "[]".into(), "{}".into()));
+    let mut tree = ui_wgpu::wgpu::UiTree::new();
+    let root_id = tree.insert_child(None, Node::new(NodeKey::Explicit("root".into()), WidgetSpec(stack_node(Some("root"), vec![]))));
+    let scene_id = tree.insert_child(Some(root_id), Node::new(NodeKey::Explicit("procedural-preview".into()), WidgetSpec(scene)));
+    tree.node_mut(root_id).unwrap().layout = LayoutBucket { x: 10.0, y: 20.0, width: 900.0, height: 800.0, ..Default::default() };
+    tree.node_mut(scene_id).unwrap().layout = LayoutBucket { x: 5.0, y: 6.0, width: 400.0, height: 300.0, ..Default::default() };
+
+    let mut surfaces = Vec::new();
+    walk_mesh_stats(&tree, root_id, 0.0, 0.0, &mut surfaces);
+    assert_eq!(surfaces.len(), 1, "the nested preview is found");
+    assert_eq!(surfaces[0].rect, [15.0, 26.0, 400.0, 300.0]);
+    assert!(surfaces[0].meshes.is_empty(), "an empty publication is an empty row list, never a missing surface");
+}

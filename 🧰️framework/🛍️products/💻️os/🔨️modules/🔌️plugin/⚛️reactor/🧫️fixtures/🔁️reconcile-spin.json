@@ -1,0 +1,8 @@
+{
+  "$comment": "🔁️ Language-agnostic crossing budget of the retained-surface publication ladder. A crossing is one host↔guest round trip; in the browser it is a worker POST + poll + structured clone + main-thread pickup, which is why the count — not the width — is the cost. Owner: 📓️reactor-reconcile-spin-2026-09-14.md.",
+  "surfaceCounts": [1, 3, 8],
+  "crossingsPerSurface": 2,
+  "idleCrossingsAllowed": 0,
+  "deadlineStride": 64,
+  "silentHoldMs": 8
+}

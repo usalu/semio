@@ -82,6 +82,8 @@ import {
   DEFAULT_UI_DOCUMENT_LIMITS,
   UiDocumentStore,
   emitIntent,
+  guestPresenceTableV1,
+  subscribeGuestPresenceV1,
   useUiDocumentRevision,
   useUiDocumentRoot,
   useUiNode,
@@ -161,6 +163,21 @@ export const UiPresenceOverlayContext = createContext<UiPresenceOverlayValue>(EM
 export function usePresenceOverlayEntry(key: string): UiPresenceOverlayEntry {
   const overlay = useContext(UiPresenceOverlayContext);
   return overlay.byKey.get(key) ?? {};
+}
+
+/** 👥️ The overlay a rendered tree actually reads: whatever a caller provided through
+ * {@link UiPresenceOverlayContext} (the component tests' own channel), overlaid by the live table the
+ * plugin runtime fills from each turn's `presence` array. Without the live half the context had no
+ * production provider at all and every retained row rendered `aria-selected="false"` however the
+ * guest's interaction domain moved (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, gap F1). */
+export function useUiPresenceOverlay(): UiPresenceOverlayValue {
+  const provided = useContext(UiPresenceOverlayContext);
+  const guest = useSyncExternalStore(subscribeGuestPresenceV1, guestPresenceTableV1, guestPresenceTableV1);
+  return useMemo(() => {
+    if (guest.byKey.size === 0) return provided;
+    if (provided.byKey.size === 0) return guest;
+    return { byKey: new Map([...provided.byKey, ...guest.byKey]) };
+  }, [provided, guest]);
 }
 //#endregion PresenceOverlay
 
@@ -1366,6 +1383,7 @@ function treeItemToTreeData(store: UiDocumentStore, state: UiDocumentState, node
     icon: props.icon ? resolveControlIconNode(props.icon, 12) : undefined,
     defaultOpen: props.defaultOpen ?? undefined,
     isSelected: Boolean(presence.selected) || leftoverTreeItemSelectedV1(record.key, leftoverIds),
+    isHighlighted: presence.hovered === true || presence.previewed === true ? true : undefined,
     loading: record.activity === "loading",
     waiting: record.activity === "waiting",
     isHidden: props.dimmed ?? undefined,
@@ -1381,7 +1399,7 @@ function treeItemToTreeData(store: UiDocumentStore, state: UiDocumentState, node
 
 function TreeView({ store, record, context }: { readonly store: UiDocumentStore; readonly record: UiNodeRecord; readonly context: UiInterpreterContext }) {
   const revision = useUiDocumentRevision(store);
-  const overlay = useContext(UiPresenceOverlayContext);
+  const overlay = useUiPresenceOverlay();
   const leftover = useSyncExternalStore(subscribeLeftoverWorldSelectionV1, leftoverWorldSelectionOverlayV1, leftoverWorldSelectionOverlayV1);
   const leftoverIds = leftover?.ids;
   const sections = useMemo((): TreeDataSection[] => {

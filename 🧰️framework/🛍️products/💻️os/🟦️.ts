@@ -34,6 +34,7 @@ import { decodeCausalEnvelopeBatch, decodeDocumentBackboneEnvelopeBatchExact, en
 import { parseBrowserActorUiPatchOfferV1, parseBrowserActorUiPatchResultV1, type BrowserActorUiPatchOfferV1, type BrowserActorUiPatchResultV1 } from "./🔨️modules/🔌️plugin/🌐️browser-bundle/🩹️patch-handoff/🟦️.ts";
 import { parseBrowserActorActionRequestV1, parseBrowserActorActionResultV1, type BrowserActorActionRequestV1, type BrowserActorActionResultV1 } from "./🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🟦️.ts";
 import { parseBrowserActorViewStateRequest, type BrowserActorViewStateRequest } from "./🔨️modules/🔌️plugin/🌐️browser-bundle/🪟️view-context/🟦️.ts";
+import { GUEST_HOST_ANSWER_CEILING_BYTES } from "../../🔨️modules/⏱️trace/🧮️memory/🟦️.ts";
 export type { BrowserActorUiPatchOfferV1, BrowserActorUiPatchResultV1 };
 
 const replicationPackCodec = { encode: encodePackValue, decode: decodePackValue };
@@ -2607,7 +2608,10 @@ export type OperationCompletionV1 = Readonly<{
   historyPatch: unknown;
 }>;
 
-export const INVOCATION_RESULT_PACK_MAXIMUM_BYTES = 4_096 * 64;
+/** 📦️ Largest packed invocation-result field the command transport carries — the twin of
+ * `INVOCATION_RESULT_PACK_MAXIMUM_BYTES` in `📡️spr/🧵️channel/🦀️.rs`, which reads the one declared
+ * assembled host-answer budget rather than a page count of its own. */
+export const INVOCATION_RESULT_PACK_MAXIMUM_BYTES = GUEST_HOST_ANSWER_CEILING_BYTES;
 //#endregion 🔖️Types
 
 //#region 🔖️Combinators

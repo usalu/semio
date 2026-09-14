@@ -46,15 +46,13 @@ const snap = () => page.evaluate(() => {
     shells,
     activeRole: document.activeElement?.getAttribute?.("role") ?? null,
     activeLabel: document.activeElement?.getAttribute?.("aria-label") ?? null,
-    inspection: (() => {
-      const body = document.body.innerText.replace(/\s+/gu, " ");
-      const from = body.lastIndexOf("Inspection Collapse");
-      if (from < 0) return null;
-      const rest = body.slice(from + "Inspection Collapse".length);
-      const to = rest.indexOf("Display");
-      return (to < 0 ? rest : rest.slice(0, to)).trim().slice(0, 240);
-    })(),
-    outlineSelected: [...document.querySelectorAll('[aria-selected="true"],[data-selected="true"]')].map(text).filter(Boolean).slice(0, 12),
+    // 🔍️ The Inspection panel's OWN Id field, by element id. It is fed by the framework-owned `graph`
+    // selection (`marks.graph_selection_ids()`), so it names WHICH node is selected — the one reading
+    // that tells an arrow key that moved the selection from one that merely dispatched an action.
+    // Scraping the panel's body text instead answered `null` on every step and made the step vacuous.
+    inspection: [...document.querySelectorAll('[id$="procedural-play-inspector.id"], [id$="procedural-play-inspector.value"], [id$="procedural-play-inspector.range"]')].map((el) => `${el.id.split("/").pop()}=${text(el)}`).join(" ") || null,
+    inspectorPresent: document.querySelectorAll('[id*="procedural-play-inspector"]').length,
+    outlineSelected: [...document.querySelectorAll('[data-slot="window"][id="procedural-main"] [aria-selected="true"], [data-slot="window"][id="procedural-main"] [data-selected="true"], [data-slot="panel"] [aria-selected="true"]')].map(text).filter(Boolean).slice(0, 12),
     historyJson: (() => { const el = document.querySelector("[data-history-json]"); try { return el ? JSON.parse(el.getAttribute("data-history-json")) : null; } catch { return null; } })(),
   };
 });
@@ -69,7 +67,7 @@ const step = async (label, key) => {
     await page.waitForTimeout(2200);
   }
   const s = await snap();
-  const entry = { label, key: key ?? null, at: Date.now() - t0, invoked: invocationsSince(mark), activeRole: s.activeRole, activeLabel: s.activeLabel, inspection: s.inspection, outlineSelected: s.outlineSelected, history: s.historyJson };
+  const entry = { label, key: key ?? null, at: Date.now() - t0, invoked: invocationsSince(mark), activeRole: s.activeRole, activeLabel: s.activeLabel, inspection: s.inspection, inspectorPresent: s.inspectorPresent, outlineSelected: s.outlineSelected, history: s.historyJson };
   results.push(entry);
   console.log(`[DEBUG] ${label} ${JSON.stringify(entry).slice(0, 800)}`);
   await page.screenshot({ path: join(outDir, `${results.length}-${label.replace(/[^a-z0-9]+/gi, "-")}.png`) });
@@ -92,7 +90,14 @@ await page.waitForTimeout(6000);
  * not change which window kind owns the chords. */
 const inspectionButton = page.locator("button#framework\\.panel\\.inspection");
 if (await inspectionButton.count()) {
-  await inspectionButton.first().click();
+  /** 🎯️ Clicked at the tab's LEFT edge, not its centre: hovering the top-right panel's cap row reveals
+   * the `Collapse` fold control (`button#framework.panel.top-right.fold`) over the trailing ~2/3 of this
+   * tab, so a centre click collapses the dock instead of opening Inspection — measured with
+   * `elementsFromPoint` in `🐍️panel-tab-occlusion-recon.mjs` and reported as an unfixed chrome defect.
+   * The left edge is the tab's own label and resolves to the tab. */
+  const box = await inspectionButton.first().boundingBox();
+  console.log(`[DEBUG] inspection tab box ${JSON.stringify(box)}`);
+  await inspectionButton.first().click({ position: { x: 8, y: Math.round((box?.height ?? 22) / 2) } });
   await page.waitForTimeout(2500);
   console.log("[DEBUG] opened the Inspection panel");
 } else console.log("[DEBUG] no Inspection panel button found");

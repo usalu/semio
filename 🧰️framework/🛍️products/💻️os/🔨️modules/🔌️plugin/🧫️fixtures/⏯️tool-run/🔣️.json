@@ -316,5 +316,49 @@
     "mutatingToolId": "toyFill",
     "secondMutatingToolId": "toyFreeze",
     "busy": "toolRun.busy"
+  },
+  "verdictRevisions": {
+    "toolId": "toyWait",
+    "upserts": [
+      [
+        1,
+        "testing"
+      ],
+      [
+        1,
+        "success"
+      ],
+      [
+        2,
+        "testing"
+      ],
+      [
+        2,
+        "danger"
+      ],
+      [
+        3,
+        "testing"
+      ]
+    ],
+    "traceRows": [
+      3,
+      2,
+      1
+    ]
+  },
+  "readyGroup": {
+    "toolId": "toyWait",
+    "groupId": "framework.toolRun.ready",
+    "startButtonId": "framework.toolRun.ready.toolRunStart",
+    "status": "Ready to start",
+    "startLabel": "Start"
+  },
+  "pace": {
+    "toolId": "toyFill",
+    "target": 5,
+    "unitsPerSecond": 2,
+    "delayMs": 500,
+    "opsPerUnit": 2
   }
 }

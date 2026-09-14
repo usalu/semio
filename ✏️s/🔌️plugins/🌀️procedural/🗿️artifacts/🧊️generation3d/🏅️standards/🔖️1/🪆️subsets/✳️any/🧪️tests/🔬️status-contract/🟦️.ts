@@ -82,7 +82,44 @@ interface StatusContract {
   states: StatusState[];
 }
 
+interface ChainCensusStep {
+  step: string;
+  working: boolean;
+  nodesDone: number;
+  nodesTotal: number;
+  inFlight: number;
+  wave: string[];
+  unitsDone: number;
+  unitsTotal: number;
+  ratio: number;
+}
+
+interface ChainCensus {
+  monotone: boolean;
+  sequence: ChainCensusStep[];
+}
+
 const CANCELLABLE_PHASES = new Set(["samplingEdges", "meshingFaces", "packingEdges", "transferring"]);
+
+/** ⛓️️ The independent model of the CHAIN ledger — the only one of the three ledgers that is live at
+ * a hop boundary, and therefore the only honest source of a progress fraction. Rebuilt from the
+ * fixture's own `unitsRule` prose, never from the guest's code: a WORKING chain publishes
+ * `(nodesDone, max(nodesTotal, nodesDone + 1))` so it can never claim `1.0` while an answer is still
+ * crossing, and a settled one publishes `(nodesTotal, nodesTotal)`. Outstanding round trips are
+ * deliberately absent from the denominator — counting them made the fraction oscillate with every
+ * park and fold (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). */
+class ChainLedger {
+  static units(step: ChainCensusStep): [number, number] {
+    if (!step.working) return [step.nodesTotal, step.nodesTotal];
+    return [step.nodesDone, Math.max(step.nodesTotal, step.nodesDone + 1)];
+  }
+
+  static ratio(step: ChainCensusStep): number {
+    const [done, total] = ChainLedger.units(step);
+    if (total === 0) return 1;
+    return Math.min(1, Math.max(0, done / total));
+  }
+}
 
 /** 🏁️ The independent model of the SETTLE PATH — the per-window arming latch every preview window
  * shares, rebuilt from the fixture's own prose rather than from the guest's code. A window is
@@ -224,6 +261,7 @@ export function testGeneration3dPreviewStatusContract(): void {
     cancelAction: string;
     phaseLabels: Record<string, { en: string; de: string }>;
     statusContract: StatusContract;
+    chainCensus: ChainCensus;
     settlePath: SettlePath;
   };
   assert.equal(fixture.format, "semio.generation3d.preview-cancel");
@@ -350,6 +388,32 @@ export function testGeneration3dPreviewStatusContract(): void {
   finished.noteTickOutcome(SettleLatch.tickIsUnfinished(false, 0));
   finished.noteExtensionsInFlight(1);
   assert.equal(finished.settleAnswer(false), 0, "a stale answer on a finished window may never spin the chain back up");
+
+  // ⛓️️ The CHAIN CENSUS: the published ratio is monotone within one evaluation AND actually moves.
+  // A ledger that aggregates only its LIVE rows shrinks both halves of its fraction when a node
+  // finishes, which is how a pill counted DOWN from `7/7 (100%)` to `2/6 (33%)` across one
+  // evaluation (`📓️wgpu-progress-visibility-2026-09-14.md` §4.3).
+  const census = fixture.chainCensus;
+  assert.equal(census.monotone, true, "the fixture declares the law this twin replays");
+  const ratios: number[] = [];
+  for (const step of census.sequence) {
+    const [done, total] = ChainLedger.units(step);
+    assert.equal(done, step.unitsDone, `${step.step}: unitsDone`);
+    assert.equal(total, step.unitsTotal, `${step.step}: unitsTotal`);
+    assert.ok(Math.abs(ChainLedger.ratio(step) - step.ratio) < 1e-12, `${step.step}: ratio`);
+    assert.equal(step.wave.length, step.inFlight, `${step.step}: every parked node of a wave is one answer in flight`);
+    if (step.working) assert.ok(ChainLedger.ratio(step) < 1, `${step.step}: a working chain may never publish 1.0`);
+    ratios.push(ChainLedger.ratio(step));
+  }
+  for (let index = 1; index < ratios.length; index += 1) {
+    assert.ok(ratios[index]! >= ratios[index - 1]! - 1e-12, `the published ratio went BACKWARDS: ${ratios.join(" ")}`);
+  }
+  assert.ok(ratios[ratios.length - 1]! > ratios[0]!, `a monotone ratio that never moves is a bar that reads "nothing yet" then "done": ${ratios.join(" ")}`);
+  assert.deepEqual(
+    census.sequence.filter((step) => step.wave.length > 0).map((step) => step.wave.length),
+    [2, 1, 1],
+    "four contributed nodes across three dependency levels cost THREE waves, not four hops",
+  );
 
   // 🛑️ A declared `cancellable` with no action to dispatch is a dead button — worse than none.
   assert.equal(world3dComputeStatusV1('{"cancellable":true}').cancellable, false);

@@ -106,3 +106,9 @@ web-sys = { version = "0.3.98", features = ["HtmlCanvasElement"] }
 [[test]]
 name = "flow_mesh_pack_wire"
 path = "../../🧪️tests/🎒️mesh-pack-wire/🦀️.rs"
+
+# 🔌️ Port-type laws (which wires a node graph may accept) — ticket 26/09/09/PROCEDURAL-3D-END-TO-END.
+# Declared as its own `[[test]]` so the rule stays runnable from this crate's PUBLIC surface alone.
+[[test]]
+name = "flow_port_types"
+path = "../../🧪️tests/🔌️port-types/🦀️.rs"

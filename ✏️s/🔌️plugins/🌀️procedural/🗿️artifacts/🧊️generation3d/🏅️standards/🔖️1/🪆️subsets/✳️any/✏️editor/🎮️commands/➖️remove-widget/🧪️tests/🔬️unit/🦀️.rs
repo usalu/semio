@@ -34,7 +34,7 @@ async fn patch_flow_widgets_recomputes_preview_geometry() {
     let mut before_session = FlowEvalSession::new();
     let mut before_host = semio_framework_os_flow::flow_host_with_session(&before_fixture, &before_session);
     before_session.sync(&before_host);
-    while before_session.tick(&mut before_host) {}
+    while before_session.tick(&mut before_host, None) {}
     before_host.retire_cold();
     let before_eval = before_session.eval_json().to_string();
     let (before_meshes, _) = crate::editor::generation3d::preview_payload_from_eval(&before_eval, &before_fixture, &Generation3dConfig::default());
@@ -44,7 +44,7 @@ async fn patch_flow_widgets_recomputes_preview_geometry() {
     let mut after_session = FlowEvalSession::new();
     let mut after_host = semio_framework_os_flow::flow_host_with_session(&after_fixture, &after_session);
     after_session.sync(&after_host);
-    while after_session.tick(&mut after_host) {}
+    while after_session.tick(&mut after_host, None) {}
     after_host.retire_cold();
     let after_eval = after_session.eval_json().to_string();
     let (after_meshes, _) = crate::editor::generation3d::preview_payload_from_eval(&after_eval, &after_fixture, &Generation3dConfig::default());

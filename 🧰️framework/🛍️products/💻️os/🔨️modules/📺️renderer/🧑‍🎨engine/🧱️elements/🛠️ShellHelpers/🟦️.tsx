@@ -119,7 +119,8 @@ import {
 import { type UiPreferencesConfigMutation, setAppearance, setDriver, setLayout, setLocale, setTerminology, setTheme } from "../../../../../🎚️config/🧬️schema/🧬️mutations/🟦️.ts";
 import type { DomainSelection, InteractionState } from "../../../../../../../🔨️modules/🕹️interaction/🟦️.ts";
 import { hostContinuations, type ContinuationCancel, type ContinuationScheduler } from "../../../../../../../🔨️modules/⏳️async/🪃️continuation/🟦️.ts";
-import { mediaExportBytes, IMPORT_CHUNK_BYTES, importPayloadChunks, importChunkArguments, type ImportChunk, mergeUiDirtyScopes, uiDirtyScopeWantsWindowBody, uiDirtyScopeWantsPanelBody, uiDirtyScopeWantsSection, uiDirtyScopeWantsCatalogue } from "../../../../../../../🔨️modules/🎠️kernel/🟦️.ts";
+import { hopTrace } from "../../../../../../../🔨️modules/⏱️trace/🟦️.ts";
+import { mediaExportBytes, IMPORT_CHUNK_BYTES, importPayloadChunks, importChunkArguments, type ImportChunk, type UiDirtySection, mergeUiDirtyScopes, uiDirtyScopeWantsWindowBody, uiDirtyScopeWantsPanelBody, uiDirtyScopeWantsSection, uiDirtyScopeWantsCatalogue } from "../../../../../../../🔨️modules/🎠️kernel/🟦️.ts";
 import { wireMediaExportEncoding } from "../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🟦️.ts";
 import {
   decodeWorldProjectionTemplateId,
@@ -826,7 +827,9 @@ export function scheduleDispatchAction(
   dispatchOne: EffectDispatchOne,
   scheduler: ContinuationScheduler = hostContinuations,
 ): ContinuationCancel {
+  const closeArm = hopTrace.open("arm", { action, delayMs });
   return scheduler.schedule(() => {
+    closeArm();
     void dispatchOne(action, args).catch((error: unknown) => console.error(`scheduled dispatch of "${action}" failed`, error));
   }, delayMs);
 }
@@ -3626,9 +3629,11 @@ export function renderStagedArgControl(def: ResolvedActionArgDef, value: unknown
   }
 }
 
-/** 🧰️ True when an action carries arguments and therefore stages a form instead of firing immediately (P1–P4). */
+/** 🧰️ True when an action carries a user-facing argument and therefore stages a form instead of firing immediately
+ * (P1–P4). Hidden arguments are never entered by a user — the framework ToolRun verbs resolve their run or active
+ * tool when a chord fires them bare — so an action whose every argument is hidden fires. */
 export function actionRequiresStagedForm(action: Pick<ActionDefinition, "args">): boolean {
-  return (action.args?.length ?? 0) > 0;
+  return (action.args ?? []).some((arg) => arg.presentation?.kind !== "hidden");
 }
 
 /** 🧰️ The decision a bound hotkey makes for one action (P4). */
@@ -4747,6 +4752,66 @@ export function mergeUiDirtyScopeV1(first: UiDirtyScope, second: UiDirtyScope): 
   return mergeUiDirtyScopes(first, second);
 }
 
+/** 🐢️ Whether `inner` asks for nothing `outer` does not already ask for — the ordering that makes
+ * "this pass already covers that request" decidable. `none` is covered by anything, `full` covers
+ * everything, and two partials compare field by field: every window body, every panel body and every
+ * section flag `inner` names must be named by `outer` too.
+ *
+ * Deliberately conservative in the one direction that matters: an UNKNOWN field, or a `full` inner
+ * against a `partial` outer, answers false. Answering true wrongly under-refreshes the shell, which
+ * is a stale pane with no fault anywhere; answering false wrongly costs one extra pass. */
+export function uiDirtyScopeCoveredByV1(inner: UiDirtyScope, outer: UiDirtyScope): boolean {
+  if (inner.kind === "none") return true;
+  if (outer.kind === "full") return true;
+  if (inner.kind === "full" || outer.kind !== "partial" || inner.kind !== "partial") return false;
+  const bodies = (values: readonly string[] | undefined) => values ?? [];
+  const outerWindows = new Set(bodies(outer.windowBodies));
+  const outerPanels = new Set(bodies(outer.panelBodies));
+  if (!bodies(inner.windowBodies).every((body) => outerWindows.has(body))) return false;
+  if (!bodies(inner.panelBodies).every((body) => outerPanels.has(body))) return false;
+  return UI_DIRTY_SECTIONS_V1.every((section) => inner[section] !== true || outer[section] === true);
+}
+
+/** 🔖️ The flag-addressed sections a partial scope can name, read once so a new section cannot be
+ * added to the scope type and silently escape {@link uiDirtyScopeCoveredByV1}. */
+const UI_DIRTY_SECTIONS_V1 = ["utilities", "tools", "engagements", "measures", "labels"] as const satisfies readonly UiDirtySection[];
+
+/** 🚪️ Whether the pass currently in flight has ALREADY answered `next`, so the lane may join it
+ * instead of owing a second guest turn.
+ *
+ * The measured redundancy (`📓️react-hop-latency-2026-09-14.md` §3.2/§4): one `flowEvalTick` hop paid
+ * THREE serialized guest turns — one dispatch and two full refresh passes at ~420 ms each — because a
+ * converging preview arms one chain per flow window and each chain's completion demands a pass of its
+ * own. The second request arrives a few milliseconds after the first pass has already submitted its
+ * guest turn, and both completions are host-side callbacks of turns that had already settled: nothing
+ * crossed into the guest in between, so the pass in flight is re-rendering exactly the state the
+ * second request wants re-rendered.
+ *
+ * The four conditions are each a way the join could be WRONG, and every one of them is a refusal:
+ *
+ * 1. `ingressAtSubmit === ingressNow` — no dispatch and no extension-completion publication has
+ *    crossed into this instance since the running pass submitted its own turn
+ *    (`PluginRuntime.guestIngressGenerationV1`, which a refresh turn deliberately does not bump).
+ * 2. `!next.hostInputs` — a request that carries a HOST-owned render input the guest has not seen
+ *    (view state, an armed utility, a locale switch, a newly mounted window) is never covered by a
+ *    pass that crossed before it, no matter what the guest did.
+ * 3. the scope must be covered ({@link uiDirtyScopeCoveredByV1}) and the running pass must already be
+ *    replacing bodies if this one asks to.
+ * 4. same instance — two sessions never answer for each other.
+ */
+export function uiRefreshAlreadyAnsweredV1(
+  running: { readonly instanceId: number; readonly scope: UiDirtyScope; readonly replaceBodies: boolean; readonly ingressAtSubmit: number | null },
+  next: { readonly instanceId: number; readonly scope: UiDirtyScope; readonly replaceBodies: boolean; readonly hostInputs: boolean },
+  ingressNow: number,
+): boolean {
+  if (running.ingressAtSubmit === null) return false;
+  if (running.instanceId !== next.instanceId) return false;
+  if (next.hostInputs) return false;
+  if (next.replaceBodies && !running.replaceBodies) return false;
+  if (running.ingressAtSubmit !== ingressNow) return false;
+  return uiDirtyScopeCoveredByV1(next.scope, running.scope);
+}
+
 /** 🤝️ One ui-refresh lane: at most ONE pass running, at most ONE owed follow-up carrying the union of
  * everything asked for while it ran, and a follow-up that is NEVER lost — whatever the pass did.
  *
@@ -4782,37 +4847,59 @@ export interface UiRefreshCoalescerV1<TRequest> {
   readonly owedScope: () => UiDirtyScope | null;
   /** 🩺️ Passes this lane has run, ever — the no-storm counter every coalescing law measures. */
   readonly passes: () => number;
+  /** 🩺️ Requests joined onto a pass already in flight because it had provably already answered them. */
+  readonly answered: () => number;
 }
 
 export function createUiRefreshCoalescerV1<TRequest extends { readonly scope: UiDirtyScope }>(
   run: (request: TRequest) => Promise<void>,
   merge: (owed: TRequest, next: TRequest) => TRequest,
-  onDecision?: (decision: "owed" | "merged" | "pass" | "failed", scope: UiDirtyScope, passes: number) => void,
+  onDecision?: (decision: "owed" | "merged" | "pass" | "failed" | "answered", scope: UiDirtyScope, passes: number) => void,
+  alreadyAnswered?: (running: TRequest, next: TRequest) => boolean,
 ): UiRefreshCoalescerV1<TRequest> {
   let owed: TRequest | null = null;
   let waiters: { resolve: () => void; reject: (error: unknown) => void }[] = [];
+  let running: TRequest | null = null;
+  let runningWaiters: { resolve: () => void; reject: (error: unknown) => void }[] = [];
   let draining = false;
   let passes = 0;
+  let answered = 0;
   const drain = async (): Promise<void> => {
     while (owed) {
       const pending = owed;
-      const covered = waiters;
       owed = null;
+      running = pending;
+      runningWaiters = waiters;
       waiters = [];
       passes += 1;
       onDecision?.("pass", pending.scope, passes);
+      let failure: { error: unknown } | null = null;
       try {
         await run(pending);
-        for (const waiter of covered) waiter.resolve();
       } catch (error) {
+        failure = { error };
         onDecision?.("failed", pending.scope, passes);
-        for (const waiter of covered) waiter.reject(error);
       }
+      // 🤝️ Read AFTER the pass: a request the gate joined while this pass ran settles with it, and
+      // both the success and the failure path must reach the joiners too — a joiner was told this
+      // pass answers for it, so it inherits this pass's verdict, whichever it is.
+      const covered = runningWaiters;
+      running = null;
+      runningWaiters = [];
+      for (const waiter of covered) (failure ? waiter.reject(failure.error) : waiter.resolve());
     }
   };
   return {
     request: (next: TRequest): Promise<void> => {
       if (next.scope.kind === "none") return Promise.resolve();
+      // 🚪️ The pass in flight may have already answered this request — see
+      // {@link uiRefreshAlreadyAnsweredV1} for the four conditions and what each one refuses. Joining
+      // it is what turns a converging hop's three serialized guest turns into two.
+      if (running && alreadyAnswered?.(running, next)) {
+        answered += 1;
+        onDecision?.("answered", next.scope, passes);
+        return new Promise<void>((resolve, reject) => runningWaiters.push({ resolve, reject }));
+      }
       onDecision?.(owed ? "merged" : "owed", next.scope, passes);
       owed = owed ? merge(owed, next) : next;
       const joined = new Promise<void>((resolve, reject) => waiters.push({ resolve, reject }));
@@ -4830,6 +4917,7 @@ export function createUiRefreshCoalescerV1<TRequest extends { readonly scope: Ui
     busy: () => draining,
     owedScope: () => owed?.scope ?? null,
     passes: () => passes,
+    answered: () => answered,
   };
 }
 

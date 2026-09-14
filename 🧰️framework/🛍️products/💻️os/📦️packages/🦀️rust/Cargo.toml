@@ -63,6 +63,11 @@ serde_json = "1.0.140"
 ureq = { version = "2", optional = true }
 semio-framework-hash = { path = "../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
 semio-framework-job = { workspace = true }
+# 🧮️ `GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES`/`GUEST_HOST_ANSWER_CEILING_BYTES` — the one declared
+# linear-memory budget `📡️spr/🧵️channel`'s paged command ingress derives its page and byte
+# authorities from, so no transport here re-chooses a ceiling the guest allocator already fixes.
+# Zero-dependency, pure std, wasm32-wasip2-safe (the guest plugin crate already links it).
+semio-framework-trace = { workspace = true }
 
 # 🌉️ Browser-only bridges reached through this crate's mounted modules (`🪪️identity`'s
 # `crypto.getRandomValues` entropy arm, `📇️directory/🔌️client`'s experimental `browser` transport,

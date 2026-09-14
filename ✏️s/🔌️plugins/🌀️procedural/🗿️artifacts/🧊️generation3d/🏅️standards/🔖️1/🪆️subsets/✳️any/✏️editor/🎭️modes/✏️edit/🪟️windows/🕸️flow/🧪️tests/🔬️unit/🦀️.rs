@@ -138,10 +138,9 @@ fn flow_graph_node_status_is_localized() {
     assert_eq!(node_status_label(None, "height", english), None);
 }
 
-/// 🧱️ The rendered body of the live app — the rows the browser actually receives, with the graph the
-/// open document declares, not a fixture assembled in-test.
+/// 🧱️ The Flow window body is the node-graph canvas only — the artifact tree lives on the Artifact panel.
 #[semio_framework_async_macros::async_test]
-async fn main_body_carries_the_documents_graph_as_semantic_rows() {
+async fn main_body_is_canvas_only_without_an_embedded_artifact_tree() {
     let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
     let mut app = app_with_registry().await;
     let projection: serde_json::Value = serde_json::from_str(&render_body(&mut app, GENERATION_3D_PLAY_BODY_MAIN).await).expect("body projection json");
@@ -151,17 +150,8 @@ async fn main_body_carries_the_documents_graph_as_semantic_rows() {
         }
         node["children"].as_array().and_then(|children| children.iter().find_map(find_tree))
     }
-    let tree = find_tree(&projection).expect("the flow body carries the graph outline tree");
-    assert_eq!(tree["component"]["interactionDomain"].as_str(), Some(GENERATION_3D_INTERACTION_DOMAIN));
-    let sections = tree["children"].as_array().cloned().unwrap_or_default();
-    assert_eq!(sections.len(), 2, "nodes and wires");
-    let node_rows = sections[0]["children"].as_array().cloned().unwrap_or_default();
-    assert!(!node_rows.is_empty(), "the open document's nodes must reach the body as rows");
-    for row in &node_rows {
-        let triggers: Vec<String> = row["bindings"].as_array().cloned().unwrap_or_default().iter().filter_map(|binding| binding["trigger"].as_str().map(str::to_string)).collect();
-        assert!(triggers.iter().any(|trigger| trigger == "activate"), "row {} is inert: {triggers:?}", row["key"]);
-        assert!(triggers.iter().any(|trigger| trigger == "hoverPreview"), "row {} has no hover: {triggers:?}", row["key"]);
-    }
+    assert!(find_tree(&projection).is_none(), "the flow window must not embed an artifact tree");
+    assert!(projection.to_string().contains("node-graph"), "the flow window body must carry the node-graph surface");
 }
 //#endregion 🔖️GraphOutline
 

@@ -14,7 +14,37 @@ import { build, type Plugin } from "esbuild";
 import picomatch from "picomatch";
 import { describe, expect, it } from "vitest";
 import { stripExecutableShebang } from "../../🧹️executable-source/🟦️.ts";
-import { UNWATCHED_REPOSITORY_SEGMENTS, repositorySourceWatchRoots, semioSourceWatchVitePlugin, unwatchedRepositoryPathMatcher } from "../../🔌️vite-plugins/🟦️.ts";
+import { UNWATCHED_REPOSITORY_SEGMENTS, repositorySourceWatchRoots, semioPlaygroundReactRefreshCoherenceVitePlugin, semioSourceWatchVitePlugin, unwatchedRepositoryPathMatcher } from "../../🔌️vite-plugins/🟦️.ts";
+
+describe("semioPlaygroundReactRefreshCoherenceVitePlugin", () => {
+  const plugin = semioPlaygroundReactRefreshCoherenceVitePlugin();
+  const injectPreamble = plugin.transformIndexHtml.handler;
+
+  it("injects the react-refresh preamble after semio-host-html when HMR is enabled", () => {
+    const result = injectPreamble("<!doctype html><html><head></head><body></body></html>", {
+      server: { config: { server: { hmr: true }, base: "/" } },
+    });
+    expect(result).toEqual([
+      expect.objectContaining({
+        tag: "script",
+        attrs: { type: "module" },
+        children: expect.stringContaining("injectIntoGlobalHook"),
+      }),
+    ]);
+  });
+
+  it("skips preamble injection when HMR is disabled", () => {
+    expect(injectPreamble("<!doctype html><html></html>", { server: { config: { server: { hmr: false }, base: "/" } } })).toBeUndefined();
+  });
+
+  it("disables OXC / esbuild JSX refresh when HMR is disabled", () => {
+    expect(plugin.config({ server: { hmr: false } }, { command: "serve" })).toEqual({
+      esbuild: { jsxDev: false },
+      oxc: { jsx: { refresh: false } },
+      optimizeDeps: { esbuildOptions: { jsxDev: false } },
+    });
+  });
+});
 
 describe("executable source transformation", () => {
   it.each([

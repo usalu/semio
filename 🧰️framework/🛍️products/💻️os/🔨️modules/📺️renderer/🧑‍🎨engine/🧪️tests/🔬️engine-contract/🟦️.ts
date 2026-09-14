@@ -3,7 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { flushSync } from "react-dom";
 import type { BackboneWorkerResponse } from "@semio-tech/framework-os";
 import { applyPatch } from "fast-json-patch";
-import { Layout, UIDialog, childElementId, createTutorialClock, isElementId, singleTreeLeaf, uiI18n } from "@semio-tech/ui-react";
+import { Layout, UIDialog, chromePanelSafeArea, childElementId, createTutorialClock, isElementId, singleTreeLeaf, uiI18n, type Anchor, type SafeAreaYield } from "@semio-tech/ui-react";
 import { createWorldProjectionTemplates, worldProjectionSwitchTreeItems } from "@semio-tech/infinite-world-r3f";
 import { resolvePluginCanvasStatus, type PluginSupervisorState } from "../../🧱️elements/🐚️Shell/🟦️.tsx";
 import bootCanvasFixture from "../../🧱️elements/🐚️Shell/🧫️fixtures/🔣️.json";
@@ -1778,6 +1778,11 @@ import {
   nodeGraphViewportActionArgs,
   parseNodeGraphSessionViewport,
   nodeGraphPickChannel,
+  nodeGraphConnectionIsValid,
+  parseDagWireTypeRefusalJson,
+  portValueTypes,
+  portValueTypesCompatible,
+  wireRefusalLabelOptions,
   dagContentBounds,
   dagContentCoverage,
   dagEllipsizeByMeasure,
@@ -7742,9 +7747,12 @@ describe("palette redirect and keybinding rule (P3/P4)", () => {
   const argAction: ActionDefinition = { id: "extrude", label: "Extrude", iconId: "box", semantics: actionSemanticsForKind("mutation"), kind: "mutation", inPalette: true, args: [{ id: "depth", label: "Depth", schema: { kind: "number", integer: false }, required: true }] };
   const zeroAction: ActionDefinition = { id: "flatten", label: "Flatten", iconId: "box", semantics: actionSemanticsForKind("mutation"), kind: "mutation", inPalette: true, args: [] };
 
-  it("only arg-carrying actions redirect to a staged form (P3 decision)", () => {
+  it("only actions with a user-facing arg redirect to a staged form (P3 decision)", () => {
+    const hiddenAction: ActionDefinition = { ...zeroAction, id: "toolRunStart", args: [{ id: "toolId", label: "Tool", schema: { kind: "string" }, presentation: { kind: "hidden" }, required: true }] };
     expect(actionRequiresStagedForm(argAction)).toBe(true);
     expect(actionRequiresStagedForm(zeroAction)).toBe(false);
+    expect(actionRequiresStagedForm(hiddenAction)).toBe(false);
+    expect(actionRequiresStagedForm({ args: [...hiddenAction.args!, ...argAction.args!] })).toBe(true);
   });
 
   it("matches chord key tokens against event.key verbatim per ⌨️chord-key-tokens fixture", () => {
@@ -8773,6 +8781,55 @@ describe("shell option locks (SEMIO_LOCKED_*)", () => {
     expect(hoverOnly.ids).toEqual([]);
     expect(leftoverSelectIdsMustNameHoverPickV1(hoverOnly.ids, hoverOnly.hoveredId)).toBe(false);
     console.warn("[DEBUG] leftover empty-target select ids", JSON.stringify({ selectedIds: published?.selectedIds, hoverId: published?.hoverTarget?.id, hoverOnlyIds: hoverOnly.ids }));
+  });
+
+  it("retires a stale selection overlay against the pane's own document, and keeps the pick it exists for", async () => {
+    // 🧹️ Ticket 26/09/09/PROCEDURAL-3D-END-TO-END, lane `selection-prune-interact`. Loading another
+    // bundled example replaces the whole document and the guest's own lane goes correctly empty, but
+    // the host's leftover overlay is written only by the pick route and no document-replacing command
+    // can retire it — a job-routed command answers through `TypedOperationCompletion`, which has no
+    // leftover `output` field. Measured on generation3d 2026-09-14: `data-guest-selection-json` `[]`
+    // against `data-selection-json` `["shell@solid"]` for six of eight examples, and the next plain
+    // REPLACE click then read back `["fuse@solid","shell@solid"]`.
+    const world = await import("../../🧱️elements/🌐️World3dHost/🟦️.tsx");
+    const previewWindow = "generation3d-play-window-preview#1";
+    world.publishLeftoverWorldSelectionV1(null, { kind: "allWindows" });
+    const picked = interactionViewFromLeftoverOutput({
+      interactionView: { selectedIds: ["shell@solid"], hoverTarget: null, locked: {}, gumball: { active: false, anchorId: null }, selection: { graph: { granularity: "object", ids: ["shell@solid"] } }, hover: {}, activeMode: {}, activeGranularity: {}, windowId: previewWindow },
+    });
+    expect(picked?.selectedIds).toEqual(["shell@solid"]);
+    world.publishLeftoverWorldSelectionV1(leftoverOverlayCarryingSelectionV1({ ids: picked!.selectedIds, hoveredId: null, hoveredDomain: null, gumballActive: false, gumballAnchorId: null }, null, false), { kind: "window", windowId: previewWindow });
+
+    // 🎯️ The pick's OWN document: the overlay is exactly the cover it exists for, so it must stand
+    // even though the guest's lane has not answered yet.
+    const boxShell = [{ id: "shell@solid#0", interactionId: "shell@solid", meshId: "eval-shell@solid#0" }];
+    const guestSilent = { ids: [] as string[], activeObjectId: null };
+    const covered = mergeWorldSelectionWithLeftoverV1(guestSilent, world.leftoverWorldWindowOverlayV1(previewWindow), boxShell);
+    expect(covered.ids, "the cover the overlay exists for").toEqual(["shell@solid"]);
+    expect(covered.activeObjectId).toBe("shell@solid");
+
+    // 🧹️ The NEXT example's document offers none of those ids, so the same overlay is covering nothing.
+    const sphereCut = [{ id: "brep_bool_cut_5@solid#0", interactionId: "brep_bool_cut_5@solid", meshId: "eval-brep_bool_cut_5@solid#0" }];
+    expect(world.leftoverWorldOverlayIdsInDocumentV1(["shell@solid"], sphereCut)).toEqual([]);
+    const afterSwitch = mergeWorldSelectionWithLeftoverV1(guestSilent, world.leftoverWorldWindowOverlayV1(previewWindow), sphereCut);
+    expect(afterSwitch.ids, "a selection made in another document is not this pane's").toEqual([]);
+    expect(afterSwitch.activeObjectId).toBeNull();
+    const published = world.worldSurfaceSelectionDomV1(afterSwitch, mergeWorldInteractionWithLeftoverV1({ activeUtility: "select" }, world.leftoverWorldWindowOverlayV1(previewWindow)));
+    expect(published.selectedIds).toEqual([]);
+    expect(published.activeObjectId).toBeNull();
+
+    // 🎯️ A plain click REPLACES: the new pick is the whole selection, the dead id does not ride along.
+    const repicked = leftoverOverlayCarryingSelectionV1({ ids: ["brep_bool_cut_5@solid", "shell@solid"], hoveredId: null, hoveredDomain: null, gumballActive: false, gumballAnchorId: null }, world.leftoverWorldWindowOverlayV1(previewWindow), false);
+    world.publishLeftoverWorldSelectionV1(repicked, { kind: "window", windowId: previewWindow });
+    const afterRepick = mergeWorldSelectionWithLeftoverV1(guestSilent, world.leftoverWorldWindowOverlayV1(previewWindow), sphereCut);
+    expect(afterRepick.ids).toEqual(["brep_bool_cut_5@solid"]);
+    expect(afterRepick.activeObjectId).toBe("brep_bool_cut_5@solid");
+
+    // 🕳️ A pane that has drawn nothing yet has no membership information and keeps every id, the same
+    // rule the guest's topology pruning uses for a domain it has no entry for.
+    expect(world.leftoverWorldOverlayIdsInDocumentV1(["shell@solid"], [])).toEqual(["shell@solid"]);
+    world.publishLeftoverWorldSelectionV1(null, { kind: "allWindows" });
+    console.warn("[DEBUG] leftover cover in document", JSON.stringify({ covered: covered.ids, afterSwitch: afterSwitch.ids, afterRepick: afterRepick.ids }));
   });
 
   it("dirties the whole shell when a direct browser-actor dispatch applied a mutation", () => {
@@ -11068,6 +11125,7 @@ describe("example switch — the completion's scope is what re-takes the flow wi
 //#region 📷️CameraAndLabelFitTwins
 import cameraFitFixture from "../../../../♾️infinite/🖼️canvas/🧫️fixtures/📷️camera-fit/🔣️.json" with { type: "json" };
 import portSidesFixture from "../../../../🧠️neural/⚙️engine/🧫️fixtures/🔌️port-sides/🔣️.json" with { type: "json" };
+import portTypesFixture from "../../../../🌊️flow/🧫️fixtures/🔌️port-types/🔣️.json" with { type: "json" };
 import labelFitFixture from "../../../../♾️infinite/🖼️canvas/🧫️fixtures/🏷️label-fit/🔣️.json" with { type: "json" };
 
 /** 📏️ The fixture's own synthetic advance — the ONE measure both implementations are driven with, so
@@ -11406,6 +11464,73 @@ describe("🛑️ world3d cancel contract", () => {
 });
 //#endregion 🛑️SurfaceControlCancelTwin
 
+//#region 🛟️ChromePanelSafeAreaTwin
+/** 🛟️ The TypeScript half of the chrome-panel SAFE AREA: the SAME
+ * `🐚️Shell/🧫️fixtures/🛑️surface-controls/🔣️.json` `chromePanelSafeArea` rows the Rust
+ * `🔬️wgpu-shell-chrome-parity` law answers through `chrome_panel_safe_area`, answered here by the shipped
+ * `chromePanelSafeArea` the React world pane's overlay rail and every window's right-edge chrome read —
+ * two independent implementations, one fixture, so neither renderer can drift into painting an anchored
+ * chrome panel over an affordance a user has to press. The defect it exists for is
+ * `📓️react-oracle-hardening-2026-09-14.md` §4.3: the `top-right` Tool runs panel at (1137, 3) 300×120
+ * swallowing `Frame visible` and the preview `Cancel`. Ticket 26/09/09/PROCEDURAL-3D-END-TO-END. */
+describe("🛟️ chrome panel safe area", () => {
+  const ajv = new Ajv({ allErrors: true, strict: false });
+  const validate = ajv.compile({
+    type: "object",
+    required: ["chromePanelSafeAreaNote", "chromePanelSafeArea"],
+    properties: {
+      chromePanelSafeAreaNote: { type: "string" },
+      chromePanelSafeArea: {
+        type: "array",
+        minItems: 6,
+        items: {
+          type: "object",
+          required: ["id", "affordance", "host", "anchor", "panels", "yield", "gap", "expected"],
+          properties: {
+            id: { type: "string" },
+            affordance: { type: "array", minItems: 4, maxItems: 4, items: { type: "number" } },
+            host: { type: "array", minItems: 4, maxItems: 4, items: { type: "number" } },
+            anchor: { type: "string" },
+            panels: { type: "array", items: { type: "array", minItems: 4, maxItems: 4, items: { type: "number" } } },
+            yield: { enum: ["inline", "block", "either"] },
+            gap: { type: "number" },
+            expected: { type: "object", required: ["inline", "block"], properties: { inline: { type: "number" }, block: { type: "number" } } },
+          },
+        },
+      },
+    },
+  });
+  const box = ([x, y, w, h]: readonly number[]) => ({ left: x, top: y, right: x + w, bottom: y + h });
+
+  it("validates the shared safe-area corpus against its own declared schema", () => {
+    expect(validate(surfaceControlsFixture)).toBe(true);
+  });
+
+  it("reserves every shared fixture row exactly the way the wgpu shell does", () => {
+    for (const row of surfaceControlsFixture.chromePanelSafeArea) {
+      const safeArea = chromePanelSafeArea(box(row.affordance), box(row.host), row.anchor as Anchor, row.panels.map(box), row.yield as SafeAreaYield, row.gap);
+      expect(safeArea.inlinePx, `${row.id}: inline reserve`).toBe(row.expected.inline);
+      expect(safeArea.blockPx, `${row.id}: block reserve`).toBe(row.expected.block);
+    }
+    console.log("[DEBUG] chrome panel safe area reproduced all %s shared fixture rows", surfaceControlsFixture.chromePanelSafeArea.length);
+  });
+
+  it("leaves every reserved affordance clear of the panels it yielded to", () => {
+    for (const row of surfaceControlsFixture.chromePanelSafeArea) {
+      const affordance = box(row.affordance);
+      const safeArea = chromePanelSafeArea(affordance, box(row.host), row.anchor as Anchor, row.panels.map(box), row.yield as SafeAreaYield, row.gap);
+      if (safeArea.inlinePx === 0 && safeArea.blockPx === 0) continue;
+      const inlineShift = row.anchor.endsWith("right") ? -safeArea.inlinePx : safeArea.inlinePx;
+      const blockShift = row.anchor.startsWith("bottom") ? -safeArea.blockPx : safeArea.blockPx;
+      const cleared = { left: affordance.left + inlineShift, right: affordance.right + inlineShift, top: affordance.top + blockShift, bottom: affordance.bottom + blockShift };
+      for (const panel of row.panels.map(box)) {
+        expect(cleared.left < panel.right && cleared.right > panel.left && cleared.top < panel.bottom && cleared.bottom > panel.top, `${row.id}: still covered by a panel`).toBe(false);
+      }
+    }
+  });
+});
+//#endregion 🛟️ChromePanelSafeAreaTwin
+
 //#region ⏳️ComputeStatusPaneTwin
 /** ⏳️ The TypeScript half of the World3d compute-status PROGRESS laws: the same
  * `🐚️Shell/🧫️fixtures/🛑️surface-controls/🔣️.json` `statusPane` rows the Rust
@@ -11512,3 +11637,68 @@ describe("⏳️ world3d compute status pane", () => {
   });
 });
 //#endregion ⏳️ComputeStatusPaneTwin
+
+//#region 🔌️PortTypeTwin
+/** 🔌️ The renderer's half of the port-type law. The oracle is
+ * `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🧫️fixtures/🔌️port-types/🔣️.json`; the Rust half
+ * (`🌊️flow/🧪️tests/🔌️port-types/🦀️.rs`) checks those declared types against the LIVE extension
+ * registry and drives a real `FlowHost`, and this half checks that the renderer's own predicate —
+ * the one React Flow asks before it paints a snap target as droppable — answers the same rows.
+ * Neither implementation owns the verdicts, so a drift on either side fails on both. */
+describe("node-graph port types", () => {
+  type Channel = { readonly ref: string; readonly side: string; readonly valueTypes: readonly string[] };
+  type Row = { readonly source: string; readonly target: string; readonly compatible: boolean; readonly examples?: readonly string[] };
+  const fixture = portTypesFixture as unknown as { readonly channels: readonly Channel[]; readonly rows: readonly Row[] };
+  const declared = new Map(fixture.channels.map((channel) => [channel.ref, channel.valueTypes] as const));
+  const typesOf = (reference: string) => declared.get(reference) ?? (() => { throw new Error(`fixture declares no channel ${reference}`); })();
+
+  it("accepts or refuses every fixture pair exactly as the fixture says", () => {
+    expect(fixture.rows.length).toBeGreaterThanOrEqual(30);
+    expect(fixture.rows.some((row) => row.compatible)).toBe(true);
+    expect(fixture.rows.some((row) => !row.compatible)).toBe(true);
+    for (const row of fixture.rows) {
+      expect([row.source, row.target, portValueTypesCompatible(typesOf(row.source), typesOf(row.target))]).toEqual([row.source, row.target, row.compatible]);
+    }
+    console.log("[DEBUG] port-type twin answered %s rows", fixture.rows.length);
+  });
+
+  it("refuses the drag the defect accepted, on the node records a surface actually holds", () => {
+    const records = [
+      { id: "extrusion-axis", x: 0, y: 0, width: 80, height: 40, inputs: [], outputs: [{ id: "extrusion-axis@vectorOut", label: "V", valueType: typesOf("math.vector@vectorOut").join(",") }] },
+      { id: "profile", x: 0, y: 100, width: 80, height: 40, inputs: [], outputs: [{ id: "profile@wire", label: "W", valueType: typesOf("brep.curve.polygon@wire").join(",") }] },
+      {
+        id: "extrude",
+        x: 200,
+        y: 0,
+        width: 80,
+        height: 40,
+        inputs: [
+          { id: "extrude@wire", label: "W", valueType: typesOf("brep.solid.extrude@wire").join(",") },
+          { id: "extrude@vector", label: "V", valueType: typesOf("brep.solid.extrude@vector").join(",") },
+        ],
+        outputs: [],
+      },
+    ];
+    expect(nodeGraphConnectionIsValid(records, { source: "extrusion-axis", sourceHandle: "vectorOut", target: "extrude", targetHandle: "wire" })).toBe(false);
+    expect(nodeGraphConnectionIsValid(records, { source: "extrusion-axis", sourceHandle: "vectorOut", target: "extrude", targetHandle: "vector" })).toBe(true);
+    expect(nodeGraphConnectionIsValid(records, { source: "profile", sourceHandle: "wire", target: "extrude", targetHandle: "wire" })).toBe(true);
+  });
+
+  it("leaves an undeclared port connectable", () => {
+    expect(portValueTypes(undefined)).toEqual([]);
+    expect(portValueTypes({ id: "x", valueType: "" })).toEqual([]);
+    expect(portValueTypes({ id: "x", valueType: "point,vector" })).toEqual(["point", "vector"]);
+    expect(portValueTypesCompatible([], ["geometry"])).toBe(true);
+    expect(portValueTypesCompatible(["geometry"], [])).toBe(true);
+  });
+
+  it("names both ports and both declared types in the refusal a surface shows", () => {
+    const refusal = parseDagWireTypeRefusalJson(JSON.stringify({ refusal: { source: "extrusion-axis@vectorOut", sourceTypes: ["vector"], target: "extrude@wire", targetTypes: ["geometry"] } }));
+    expect(refusal).not.toBeNull();
+    expect(parseDagWireTypeRefusalJson("null")).toBeNull();
+    expect(parseDagWireTypeRefusalJson('{"widgetId":"extrude","port":"wire","direction":"in"}')).toBeNull();
+    const options = wireRefusalLabelOptions(refusal, { vector: "Vektor", geometry: "Geometrie" });
+    expect(options).toEqual({ source: "extrusion-axis@vectorOut", sourceType: "Vektor", target: "extrude@wire", targetType: "Geometrie" });
+  });
+});
+//#endregion 🔌️PortTypeTwin

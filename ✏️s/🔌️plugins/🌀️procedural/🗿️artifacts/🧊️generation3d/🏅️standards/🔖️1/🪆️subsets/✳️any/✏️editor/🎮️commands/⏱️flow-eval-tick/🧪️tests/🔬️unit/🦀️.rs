@@ -120,7 +120,7 @@ fn an_uncontributed_graph_arms_no_tick_while_a_served_one_keeps_its_chain() {
         assert_eq!(crate::preview_eval::may_rearm(&graph), case.may_rearm, "{}: may_rearm disagrees with the fixture", case.id);
 
         let mut session = semio_framework_os_flow::FlowEvalSession::new();
-        let outcome = crate::preview_eval::evaluate_tick("procedural-preview-gate", crate::editor::generation3d::modes::edit::windows::preview::GENERATION_3D_PLAY_WINDOW_PREVIEW, &graph, 0.1, &mut session, None);
+        let outcome = crate::preview_eval::evaluate_tick("procedural-preview-gate", crate::editor::generation3d::modes::edit::windows::preview::GENERATION_3D_PLAY_WINDOW_PREVIEW, &graph, 0.1, &mut session, None, None);
         assert_eq!(session.pending(), case.unfinished_tick, "{}: the graph must be big enough that one tick cannot finish it", case.id);
         assert!(outcome.extension_invocations.is_empty(), "{}: an in-guest graph parks no extension work", case.id);
         let owed = usize::from(session.window_tick_owed("procedural-preview-gate"));

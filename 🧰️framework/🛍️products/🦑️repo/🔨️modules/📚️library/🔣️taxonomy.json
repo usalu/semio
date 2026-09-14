@@ -28290,6 +28290,7 @@
           "sourceModulePaths": [
             "🧰️framework/📦️packages/🟦️typescript/🟦️.ts",
             "🧰️framework/🔨️modules/⏯️tool-run/🟦️.ts",
+            "🧰️framework/🔨️modules/⏱️trace/🟦️.ts",
             "🧰️framework/🔨️modules/⏱️trace/🧮️memory/🟦️.ts",
             "🧰️framework/🔨️modules/⏳️async/🎟️lease-pool/🟦️.ts",
             "🧰️framework/🔨️modules/⏳️async/🔁️jittered-backoff/🟦️.ts",
@@ -28402,6 +28403,7 @@
         "📋️project.json",
         "🧰️framework/📦️packages/🟦️typescript/package.json",
         "🧰️framework/📦️packages/🟦️typescript/🟦️.ts",
+        "🧰️framework/🔨️modules/⏱️trace/🟦️.ts",
         "🧰️framework/🔨️modules/⏱️trace/🧮️memory/🟦️.ts",
         "🧰️framework/🔨️modules/⏳️async/🎟️lease-pool/🟦️.ts",
         "🧰️framework/🔨️modules/⏳️async/🔁️jittered-backoff/🟦️.ts",

@@ -1,0 +1,66 @@
+{
+  "contract": {
+    "unknownLayoutFetchesEverything": true,
+    "skippedWindowCacheIsDropped": true,
+    "tabsCountAsMounted": true
+  },
+  "layouts": [
+    {
+      "name": "the generation3d edit mode mounts the flow and preview panes only",
+      "layout": {
+        "kind": "row",
+        "children": [
+          { "kind": "stack", "children": [{ "kind": "window", "id": "procedural-main" }] },
+          { "kind": "stack", "children": [{ "kind": "window", "id": "procedural-preview" }] }
+        ]
+      },
+      "windowIds": ["procedural-main", "procedural-preview"]
+    },
+    {
+      "name": "a stack's background tabs are mounted too",
+      "layout": {
+        "kind": "stack",
+        "activeId": "a",
+        "children": [
+          { "kind": "window", "id": "a" },
+          { "kind": "window", "id": "b" }
+        ]
+      },
+      "windowIds": ["a", "b"]
+    },
+    { "name": "an empty layout mounts nothing", "layout": { "kind": "stack", "children": [] }, "windowIds": [] },
+    { "name": "a missing layout mounts nothing", "layout": null, "windowIds": [] }
+  ],
+  "cases": [
+    {
+      "name": "the three generate-mode windows are not fetched while the edit layout is mounted",
+      "declared": [
+        { "id": "procedural-main", "bodyKey": "procedural.body.main" },
+        { "id": "procedural-preview", "bodyKey": "procedural.body.preview" },
+        { "id": "generation3d-generations", "bodyKey": "generation3d.body.generations" },
+        { "id": "generation3d-generate-form", "bodyKey": "generation3d.body.generateForm" },
+        { "id": "generation3d-generate-preview", "bodyKey": "generation3d.body.generatePreview" }
+      ],
+      "mounted": ["procedural-main", "procedural-preview"],
+      "expect": {
+        "fetched": ["procedural-main", "procedural-preview"],
+        "skipped": ["generation3d-generations", "generation3d-generate-form", "generation3d-generate-preview"]
+      }
+    },
+    {
+      "name": "an unknown layout fetches every declared window",
+      "declared": [
+        { "id": "procedural-main", "bodyKey": "procedural.body.main" },
+        { "id": "procedural-preview", "bodyKey": "procedural.body.preview" }
+      ],
+      "mounted": [],
+      "expect": { "fetched": ["procedural-main", "procedural-preview"], "skipped": [] }
+    },
+    {
+      "name": "a mounted id the app never declared changes nothing",
+      "declared": [{ "id": "procedural-main", "bodyKey": "procedural.body.main" }],
+      "mounted": ["procedural-main", "ghost-window"],
+      "expect": { "fetched": ["procedural-main"], "skipped": [] }
+    }
+  ]
+}

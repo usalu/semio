@@ -57,7 +57,10 @@ describe("node graph gestures", () => {
   it("declares a rule for every case, and a case for every rule", () => {
     for (const testCase of law.cases) expect(law.rules[testCase.rule], testCase.name).toBeTruthy();
     const covered = new Set(law.cases.map((testCase) => testCase.rule));
-    expect([...Object.keys(law.rules)].filter((rule) => !covered.has(rule) && rule !== "aChangedMovePublishesOnlyWhatChanged")).toEqual([]);
+    // 🪶 Two rules are about a SHAPE no wgpu gesture case can express — what a changed move publishes,
+    // and what the SCREEN path's release dispatches when nothing changed — so each is pinned by its own
+    // `it` below instead of by a case row.
+    expect([...Object.keys(law.rules)].filter((rule) => !covered.has(rule) && rule !== "aChangedMovePublishesOnlyWhatChanged" && rule !== "aContentlessGestureDispatchesNothing")).toEqual([]);
   });
 
   it("names every sub-operation with the very fields the guest reads back", () => {
@@ -143,6 +146,31 @@ describe("node graph gestures", () => {
     expect(body).toContain("DagProjectionGesture::Idle");
     expect(law.rules.aReleasedDragPublishesMove).toContain("once, on release");
     expect(law.rules.aClickIsNotAMove).toContain("zero-delta");
+  });
+
+  it("lets the HOST decide whether a released screen gesture owes a document write at all", () => {
+    // 🩸️ React read an empty `operations` as permission to re-publish the WHOLE fixture, so every plain
+    // click on the graph canvas dispatched a `setFixture` `nodeGraphEdit` — and since a landed document
+    // mutation owes every attached preview a fresh evaluation, a QUIET shell invoked
+    // `["nodeGraphEdit","flowEvalTick","flowEvalTick"]` against a preview already settled at 7/7 nodes.
+    // The predicate exists and always did: `commit_gesture_history` decides an undo entry by
+    // `content_changed`; it is now published as `fixtureChanged` and is the only thing that authorises
+    // the commit (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️generate-add-flow-wire-quiet-tick-2026-09-14.md`).
+    const flowHost = readFileSync(resolve(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🦀️.rs"), "utf8");
+    const answer = flowHost.slice(flowHost.indexOf("pub fn take_graph_edits_json"));
+    expect(answer.slice(0, answer.indexOf("\n    }\n"))).toContain('("fixtureChanged".to_string(), crate::os_pack::json::Value::Bool(self.gesture_changed_content))');
+    const commit = flowHost.slice(flowHost.indexOf("fn commit_gesture_history"));
+    const commitBody = commit.slice(0, commit.indexOf("\n    }\n"));
+    expect(commitBody).toContain("self.gesture_changed_content = false;");
+    expect(commitBody).toContain("if !Self::content_changed(&baseline, &self.fixture)");
+    expect(commitBody).toContain("self.gesture_changed_content = true;");
+
+    const reactGraph = readFileSync(resolve(engineRoot, "🧱️elements/🕸️NodeGraph/🟦️.tsx"), "utf8");
+    expect(reactGraph).toContain("fixtureChanged: parsed?.fixtureChanged === true");
+    expect(reactGraph).toContain("const { operations, fixtureChanged } = graphGestureAnswer(value);");
+    expect(reactGraph).toContain("else if (fixtureChanged) commitFixture();");
+    expect(reactGraph).not.toContain("else commitFixture();");
+    expect(law.rules.aContentlessGestureDispatchesNothing).toContain("dispatches NOTHING");
   });
 
   it("classifies a surface point exactly once, and routes the gesture by that same answer", () => {

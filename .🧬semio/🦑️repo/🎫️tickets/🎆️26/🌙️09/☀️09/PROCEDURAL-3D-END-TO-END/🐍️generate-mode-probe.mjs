@@ -67,10 +67,19 @@ await waitFor("2-generate-mode", (h) => h.some((x) => x.id === "window:generatio
 
 //#region ➕️Add two generations
 const addRow = () => page.locator(':text-is("Add Generation")').first();
+/** ⏱️ How long one `addGeneration` may take to paint its row. A FIXED 2.5 s wait graded the SECOND add
+ * red on a run whose own later `add` step then found both rows — the generation had arrived, just after
+ * the wait (`🗑️generated/react-oracle/generate-mode/results.json`: `add-2` false, `add` true with two
+ * rows). A dropped add and a slow add are different findings, so the row polls for the roster it
+ * requires and REPORTS the seconds it took (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
+ * `📓️generate-add-flow-wire-quiet-tick-2026-09-14.md`). */
+const addRowSeconds = Number(process.env.SEMIO_PROBE_ADD_WAIT ?? 60);
 for (const round of [1, 2]) {
   if (await addRow().count()) { await addRow().click({ timeout: 4000 }); } else { note(`add-${round}`, false, "Add Generation row not found"); break; }
-  await page.waitForTimeout(2500);
-  note(`add-${round}`, (await roster()).rowIds.length === round, await roster());
+  const clickedAt = Date.now();
+  let current = await roster();
+  for (let i = 0; i < addRowSeconds * 2 && current.rowIds.length !== round; i++) { await page.waitForTimeout(500); current = await roster(); }
+  note(`add-${round}`, current.rowIds.length === round, { seconds: Math.round((Date.now() - clickedAt) / 100) / 10, ...current });
 }
 await waitFor("3-added", (h) => h.some((x) => x.id === "window:generation3d-generate-preview" && x.meshes > 0), 120);
 const afterAdd = await roster();

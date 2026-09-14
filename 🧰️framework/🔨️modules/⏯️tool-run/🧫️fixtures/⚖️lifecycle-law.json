@@ -1953,6 +1953,11 @@
       "de": "Verfügbar, sobald der Lauf fertig ist"
     },
     {
+      "key": "readyToStart",
+      "en": "Ready to start",
+      "de": "Bereit zum Starten"
+    },
+    {
       "key": "rebasingStep",
       "en": "Document changed, re-applying provisional result",
       "de": "Dokument geändert, vorläufiges Ergebnis wird neu angewendet"

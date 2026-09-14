@@ -5636,6 +5636,7 @@ dependencies = [
  "semio-framework-os-services",
  "semio-framework-pack",
  "semio-framework-replication",
+ "semio-framework-trace",
  "semio-framework-ui-viewport",
  "semio-framework-value-derive",
  "serde",

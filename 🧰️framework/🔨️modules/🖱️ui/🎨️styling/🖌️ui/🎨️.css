@@ -6532,6 +6532,14 @@
   border-color: var(--border-normal-color);
 }
 
+[data-slot="button-group"] > [data-slot="button-group-item"]:not(:last-child),
+[data-slot="toggle-group"] > :is([data-slot="toggle-group-item"], [data-slot="toggle-group-item-shell"]):not(:last-child),
+[data-slot="action-group"] > [data-slot="action-group-item"]:not(:last-child) {
+  border-inline-end-width: var(--stroke-hairline);
+  border-inline-end-style: solid;
+  border-inline-end-color: var(--border-normal-color);
+}
+
 @utility gap-single {
   gap: var(--spacing-single);
 }
@@ -7135,7 +7143,9 @@
   box-shadow: inset var(--stroke-hairline) 0 0 0 var(--border-normal-color);
 }
 
-[data-slot="panel-tabs"] > [data-slot="panel-tab-button"] {
+[data-slot="panel-tabs"] > [data-slot="panel-tab-button"]:not(:last-child) {
+  border-inline-end-width: var(--stroke-hairline);
+  border-inline-end-style: solid;
   border-inline-end-color: var(--border-normal-color) !important;
 }
 

@@ -454,11 +454,14 @@ fn neural_value_to_dsl_value(value: &NeuralValue) -> crate::os_dsl::DslValue {
     crate::os_dsl::to_dsl_value(value).unwrap_or(crate::os_dsl::DslValue::Null)
 }
 
-fn channel_spec_value_type(spec: &ChannelSpec) -> String {
-    if spec.operators.is_empty() {
-        "value".into()
+/// 🔤️ The port type a node-graph surface publishes for a channel: the DECLARED value schemas,
+/// comma-joined, never the operator-id list `operators` holds. `None` is an undeclared port, which
+/// `Registry::channel_compatible` leaves connectable.
+fn channel_spec_value_type(spec: &ChannelSpec) -> Option<String> {
+    if spec.value_types.is_empty() {
+        None
     } else {
-        spec.operators.join(",")
+        Some(spec.value_types.join(","))
     }
 }
 
@@ -466,10 +469,17 @@ fn is_port_connected(synapses: &[SynapseSpec], neuron_id: &str, port_id: &str) -
     synapses.iter().any(|syn| syn.to == neuron_id && syn.to_port == port_id)
 }
 
+/// 🔤️ Stamps a port type onto a hand-built widget port, so a slider, a note or an image declares the
+/// same value schema a registered operator channel would.
+fn io_port_typed(mut port: IoPortSpec, value_type: &str) -> IoPortSpec {
+    port.value_type = Some(value_type.to_string());
+    port
+}
+
 fn channel_spec_to_output_port(spec: &ChannelSpec) -> IoPortSpec {
     let mut port = IoPortSpec::named(&spec.code, &spec.abbreviation, &spec.name, &spec.full_name);
     port.label = spec.label.clone().unwrap_or_else(|| spec.code.clone());
-    port.value_type = Some(channel_spec_value_type(spec));
+    port.value_type = channel_spec_value_type(spec);
     port.default = spec.default.as_ref().map(neural_value_to_dsl_value);
     port.cardinality = spec.cardinality.symbol();
     port
@@ -479,7 +489,7 @@ fn input_spec_to_port(spec: &ChannelSpec, params: &Dictionary, connected: bool) 
     let value = params.get(&spec.name).or(spec.default.as_ref()).map(neural_value_to_dsl_value);
     let mut port = IoPortSpec::named(&spec.code, &spec.abbreviation, &spec.name, &spec.full_name);
     port.label = spec.label.clone().unwrap_or_else(|| spec.code.clone());
-    port.value_type = Some(channel_spec_value_type(spec));
+    port.value_type = channel_spec_value_type(spec);
     port.default = spec.default.as_ref().map(neural_value_to_dsl_value);
     port.value = value;
     port.connected = Some(connected);
@@ -609,8 +619,8 @@ pub fn neuron_io_layout(
 pub fn widget_io_ports(widget: &Widget, synapses: &[SynapseSpec], kind_infos: &HashMap<String, OperatorInfo>) -> (Vec<IoPortSpec>, Vec<IoPortSpec>, bool, bool) {
     match widget {
         Widget::Neuron { id, neuron_kind, params, input_ports, output_ports, .. } => neuron_io_layout(id, neuron_kind, input_ports, output_ports, params, synapses, kind_infos),
-        Widget::InputSlider { .. } => (vec![], vec![IoPortSpec::named("N", "Num", "number", "Number")], false, false),
-        Widget::InputNote { .. } => (vec![], vec![IoPortSpec::named("T", "Txt", "text", "Text")], false, false),
+        Widget::InputSlider { .. } => (vec![], vec![io_port_typed(IoPortSpec::named("N", "Num", "number", "Number"), neural::VALUE_TYPE_NUMBER)], false, false),
+        Widget::InputNote { .. } => (vec![], vec![io_port_typed(IoPortSpec::named("T", "Txt", "text", "Text"), neural::VALUE_TYPE_TEXT)], false, false),
         Widget::InputImage { .. } => (vec![], vec![IoPortSpec::named("I", "Img", "image", "Image")], false, false),
         Widget::Variable { name, schema, .. } => {
             let (inputs, outputs) = variable_io_ports(name, schema);
@@ -729,10 +739,10 @@ pub fn widget_to_dag_node(widget: &Widget, index: usize, layout: &OrderedMap<Wid
             height,
             operator_kind: None,
             properties: PropertyBag::new(),
-            kind: DagNodeKind::Slider { min: *min, max: *max, step: *step, value: *value, output: IoPortSpec::named("N", "Num", "number", "Number") },
+            kind: DagNodeKind::Slider { min: *min, max: *max, step: *step, value: *value, output: io_port_typed(IoPortSpec::named("N", "Num", "number", "Number"), neural::VALUE_TYPE_NUMBER) },
         },
         Widget::InputNote { text, .. } => {
-            DagNodeSpec { id, name, abbreviation, icon, x, y, width, height, operator_kind: None, properties: PropertyBag::new(), kind: DagNodeKind::Note { text: text.clone(), output: IoPortSpec::named("T", "Txt", "text", "Text") } }
+            DagNodeSpec { id, name, abbreviation, icon, x, y, width, height, operator_kind: None, properties: PropertyBag::new(), kind: DagNodeKind::Note { text: text.clone(), output: io_port_typed(IoPortSpec::named("T", "Txt", "text", "Text"), neural::VALUE_TYPE_TEXT) } }
         }
         Widget::InputImage { src, .. } => {
             DagNodeSpec { id, name, abbreviation, icon, x, y, width, height, operator_kind: None, properties: PropertyBag::new(), kind: DagNodeKind::Image { src: src.clone(), output: IoPortSpec::named("I", "Img", "image", "Image") } }

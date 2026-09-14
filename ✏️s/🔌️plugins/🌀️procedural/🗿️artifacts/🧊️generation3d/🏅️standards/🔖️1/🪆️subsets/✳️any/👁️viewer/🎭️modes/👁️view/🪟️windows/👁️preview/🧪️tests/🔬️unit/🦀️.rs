@@ -115,7 +115,7 @@ fn render_uses_the_configured_preview_camera() {
 #[test]
 fn the_window_chrome_binds_show_mode_lod_and_sun_to_viewer_actions() {
     let config = Generation3dViewConfig::default();
-    let measures = preview_window_measures(&config, crate::viewer::generation3d::generation3d_view_action);
+    let measures = preview_window_measures(&config, false, crate::viewer::generation3d::generation3d_view_action);
     assert_eq!(measures.len(), 3, "show mode, LOD and the sun group");
     let rendered = format!("{measures:?}");
     for action in ["setShowMode", "setLodMode", "toggleSun", "setSunAzimuth", "setSunElevation", "setSunIntensity"] {

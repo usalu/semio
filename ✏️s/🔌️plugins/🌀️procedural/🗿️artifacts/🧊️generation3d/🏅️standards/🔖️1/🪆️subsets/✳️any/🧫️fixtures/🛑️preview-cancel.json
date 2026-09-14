@@ -550,6 +550,20 @@
       }
     ]
   },
+  "chainCensus": {
+    "note": "The CHAIN ledger a preview window publishes progress from, replayed hop by hop over the `sphere-cut-with-torus` graph (four contributed nodes across three dependency levels). Language-agnostic: an implementation in any language replays this sequence and reaches the same `unitsDone`/`unitsTotal`/`ratio`, and the ratio it reaches never goes backwards.",
+    "censusRule": "A node leaves `queued`/`computing`/`stale` exactly once per chain and never returns to it, so `nodesDone` only grows while one evaluation runs. A node this chain has already recomputed is `ok`, never `stale` — `dirty` is measured against the chain's frozen baseline and would otherwise call every touched node stale until the very last hop.",
+    "unitsRule": "A WORKING chain publishes (nodesDone, max(nodesTotal, nodesDone + 1)) so it can never claim 1.0 while an answer is still crossing; a settled chain publishes (nodesTotal, nodesTotal). Outstanding round trips are deliberately NOT in the denominator: counting them made the fraction oscillate with every park and fold.",
+    "waveRule": "One hop parks EVERY contributed node whose inputs are ready — a whole topological wave — and never one behind a parked answer, so the chain costs one round trip per dependency LEVEL rather than one per contributed node.",
+    "monotone": true,
+    "sequence": [
+      { "step": "armed", "working": true, "nodesDone": 2, "nodesTotal": 6, "inFlight": 0, "wave": [], "unitsDone": 2, "unitsTotal": 6, "ratio": 0.3333333333333333 },
+      { "step": "wave-1-parked", "working": true, "nodesDone": 2, "nodesTotal": 6, "inFlight": 2, "wave": ["brep_prim3d_sphere_3", "brep_prim3d_torus_4"], "unitsDone": 2, "unitsTotal": 6, "ratio": 0.3333333333333333 },
+      { "step": "wave-2-parked", "working": true, "nodesDone": 4, "nodesTotal": 6, "inFlight": 1, "wave": ["brep_bool_cut_5"], "unitsDone": 4, "unitsTotal": 6, "ratio": 0.6666666666666666 },
+      { "step": "wave-3-parked", "working": true, "nodesDone": 5, "nodesTotal": 6, "inFlight": 1, "wave": ["brep_measure_volume_2"], "unitsDone": 5, "unitsTotal": 6, "ratio": 0.8333333333333334 },
+      { "step": "settled", "working": false, "nodesDone": 6, "nodesTotal": 6, "inFlight": 0, "wave": [], "unitsDone": 6, "unitsTotal": 6, "ratio": 1.0 }
+    ]
+  },
   "settlePath": {
     "note": "The one settle path all three preview windows share. Language-agnostic: an implementation in any language replays these rows and answers the same `unfinished`, and replays the latch sequence and reaches the same terminal arm.",
     "unfinishedRows": [

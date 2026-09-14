@@ -3819,11 +3819,14 @@ async fn fill_run_finalize_publishes_one_edit_with_every_provisional_placement()
     assert_eq!(placed, 3, "the run places exactly what was requested");
     assert_eq!(committed_document(&app), committed, "a complete run has committed nothing yet");
     assert_eq!(rendered_object_count(&mut app).await, objects + placed, "the viewport renders committed ⊕ provisional");
+    let provisional_instances = |node: &Value| instances_of(node).iter().filter(|instance| instance["provisional"] == json!(true)).count();
+    assert_eq!(provisional_instances(&render_composite(&mut app).await), placed, "exactly the provisional placements carry the provisional instance style");
     let identity = fill_run_identity(&mut app).await.expect("a complete run is live until it is finalized");
     assert_eq!(tool_run_action(&mut app, TOOL_RUN_FINALIZE_ACTION_ID, identity).await["toolRun"], json!("beginFinalize"));
     pump_fill_run(&mut app, "finalize publishes", |presence| presence.state == protocol::PresenceToolRunState::Finalized).await;
     assert_eq!(object_count(&app), objects + placed, "finalize publishes every provisional placement");
     assert_eq!(rendered_object_count(&mut app).await, objects + placed, "the overlay is released onto the committed document");
+    assert_eq!(provisional_instances(&render_composite(&mut app).await), 0, "finalized placements render as committed objects");
     assert!(fill_run_identity(&mut app).await.is_none(), "a finalized run is terminal, so Escape no longer aborts it");
     let finalized = committed_document(&app);
     dispatch(&mut app, "undo", None, None).await.expect("undo");
@@ -5261,7 +5264,7 @@ fn a_second_call_on_one_instance_reuses_the_geometry_cache_instead_of_reserializ
     let fingerprint = main::fixture_geometry_fingerprint(&fixture);
     let session = Some((4_001_u32, Some("document-geometry".to_string())));
     let cold = PUZZLE3D_GEOMETRY_SERIALIZATIONS.with(std::cell::Cell::get);
-    let first = with_puzzle3d_app_for(session.clone(), &config, |app| app.geometry_jsons(&fixture));
+    let first = with_puzzle3d_app_for(session.clone(), &config, |app| app.geometry_jsons(&fixture, &std::collections::BTreeSet::new()));
     let after_first = PUZZLE3D_GEOMETRY_SERIALIZATIONS.with(std::cell::Cell::get);
     assert_eq!(after_first - cold, 1, "the first call for a cold instance serializes exactly once");
     let second = with_puzzle3d_app_for(session, &config, |app| {
@@ -5269,7 +5272,7 @@ fn a_second_call_on_one_instance_reuses_the_geometry_cache_instead_of_reserializ
         assert_eq!(cached.as_ref().map(|(cached, _)| *cached), Some(fingerprint), "the session slot handed the warm cache to a brand-new app object");
         drop(cached);
         assert_eq!(app.instance_residency.lock().expect("instance residency").as_ref().map(|residency| residency.revision()), Some(1), "the per-object instance residency came back with the slot too");
-        app.geometry_jsons(&fixture)
+        app.geometry_jsons(&fixture, &std::collections::BTreeSet::new())
     });
     assert_eq!(PUZZLE3D_GEOMETRY_SERIALIZATIONS.with(std::cell::Cell::get), after_first, "the second call on the same instance must not re-serialize anything");
     assert_eq!(first, second, "a cache hit returns byte-identical instance and mesh json");

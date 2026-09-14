@@ -57,6 +57,26 @@ export const SEGMENTED_DOWNLOAD_CHUNK_BYTES = 4096;
 export const SHARD_RUNTIME_DIAGNOSTICS_KEY = "SEMIO_RUNTIME_DIAGNOSTICS";
 export const SHARD_WORKER_DIAGNOSTICS_PARAM = "diagnostics";
 
+/** 🤫️ Wall-clock budget the generated worker may spend re-polling a guest that answered `more-work`
+ * while carrying NOTHING, before it crosses back anyway.
+ *
+ * Its owner is the reactor's own executor hold — `⚛️reactor/🔄️turn/🦀️.rs`'s
+ * `run_until_deadline(64, 256 KiB, now + 8 ms)`: the guest already promises to hand control back
+ * within that slice, so a worker that re-enters it for at most the same 8 ms adds no new latency
+ * class, and one message can still be waiting behind it for at most one hold.
+ *
+ * 🐛️ The reason it exists: in the browser the host round trip IS the guest's pump — there is no
+ * self-driving loop on the far side of the worker boundary — so every `more-work` answer that
+ * published nothing cost a full POST + poll + structured clone + main-thread pickup. Measured on the
+ * procedural 3d React door, 2026-09-14: **89 of 111 crossings per `flowEvalTick` hop posted no events
+ * and returned no patch**, carrying 80 % of the worker's busy time
+ * (`📓️reactor-reconcile-spin-2026-09-14.md` §2). Held equal to {@link driveShardTurnSilentHoldV1}'s
+ * default by the shard-worker suite, which reads this literal straight out of this file. */
+export const SHARD_TURN_SILENT_HOLD_MS = 8;
+/** 🤫️ Hard cap on re-polls inside one {@link SHARD_TURN_SILENT_HOLD_MS} hold, so a guest whose turn
+ * costs microseconds cannot spin the worker's whole message queue behind an unbounded loop. */
+export const SHARD_TURN_SILENT_HOLD_POLLS = 512;
+
 export type PluginWebMaterializeContext = {
   readonly repoRoot: string;
   readonly preview2VendorDir: string;
@@ -263,6 +283,11 @@ const SEGMENTED_DOWNLOAD_CHUNK_BYTES = ${SEGMENTED_DOWNLOAD_CHUNK_BYTES};
 // (\`🎭️actor/📮️shard-client/🧫️fixtures/🔣️.json\`'s \`policy\`, mirrored by \`SHARD_LIVENESS_POLICY\`) the
 // host watchdog reads — never a literal of this worker's own.
 const PROGRESS_HEARTBEAT_INTERVAL_MS = ${SHARD_PROGRESS_HEARTBEAT_INTERVAL_MS};
+// 🤫️ The silent-turn hold, interpolated from \`SHARD_TURN_SILENT_HOLD_MS\`/\`SHARD_TURN_SILENT_HOLD_POLLS\`
+// — the reactor's own 8 ms executor hold, re-entered here rather than paid for as a host round trip.
+// Twin of \`🎭️actor/🖼️wire-turn/🟦️.ts\`'s \`driveShardTurnSilentHoldV1\`, which owns the law.
+const SILENT_HOLD_MS = ${SHARD_TURN_SILENT_HOLD_MS};
+const SILENT_HOLD_POLLS = ${SHARD_TURN_SILENT_HOLD_POLLS};
 let progressHandle = null;
 let inFlightRequests = 0;
 
@@ -327,9 +352,51 @@ function endRequest() {
   progressHandle = null;
 }
 
-function reply(requestId, value) {
-  self.postMessage({ kind: "result", requestId, ok: true, value });
+// ⏱️ The ONE clock this worker shares with the page. A Worker's \`performance.now()\` counts from its
+// OWN \`timeOrigin\`, so only \`timeOrigin + now()\` — the same Unix-epoch millisecond on both sides at
+// sub-millisecond resolution — lets the CROSSINGS be measured (post → receive, reply → receive)
+// rather than inferred by subtracting the parts from the whole. Twin of
+// \`🔨️modules/⏱️trace/🟦️.ts\`'s \`hopTraceEpochNowMs\`, which is what reads these back on the page.
+const hopEpochNow = () => (typeof performance === "object" && typeof performance.now === "function" ? (typeof performance.timeOrigin === "number" ? performance.timeOrigin : 0) + performance.now() : Date.now());
+
+// 🏷️ The ONE spelling of a turn status. jco lifts \`more-work\` kebab-cased, the host's own fixtures
+// spell it \`moreWork\`, and \`🖼️wire-turn/🟦️.ts\`'s \`wireTurnStatusTag\` reconciles both — this is its
+// verbatim twin, because a hold that misreads the status would hand back a turn nobody asked for.
+function shardTurnStatusTag(result) {
+  const tag = result && typeof result === "object" && result.status && typeof result.status === "object" ? result.status.tag : undefined;
+  return typeof tag === "string" ? tag.replace(/([a-z])([A-Z])/g, "$1-$2").toLowerCase() : "";
 }
+
+// 🤫️ Whether ONE reactor turn result carried nothing the host could act on: no ui patch, no effect,
+// no presence, no wake, neither receipt, and both ingress lanes idle. Every field of \`turn-result\`
+// (\`🔌️plugin/🧬️schema/📜️.wit\`) is named here on purpose — a carrier this predicate forgot would be
+// DROPPED by the hold below, so the list is exhaustive by construction and asserted as such by
+// \`🎭️actor/🖼️wire-turn/🟦️.ts\`'s law. \`fuelUsed\` is the one field with no host reader.
+function shardTurnCarriesNothing(result) {
+  if (!result || typeof result !== "object") return false;
+  if (!Array.isArray(result.uiPatches) || result.uiPatches.length !== 0) return false;
+  if (!Array.isArray(result.effects) || result.effects.length !== 0) return false;
+  if (result.presence !== undefined && (!Array.isArray(result.presence) || result.presence.length !== 0)) return false;
+  if (result.nextWake !== null && result.nextWake !== undefined) return false;
+  if (result.lifecycleReceipt !== undefined && result.lifecycleReceipt !== null) return false;
+  if (result.uiPatchReceipt !== undefined && result.uiPatchReceipt !== null) return false;
+  if (!result.commandIngress || result.commandIngress.tag !== "idle") return false;
+  if (!result.coldPairIngress || result.coldPairIngress.tag !== "idle") return false;
+  return true;
+}
+
+function reply(requestId, value, timings) {
+  if (!timings) { self.postMessage({ kind: "result", requestId, ok: true, value }); return; }
+  timings.repliedAtEpochMs = hopEpochNow();
+  self.postMessage({ kind: "result", requestId, ok: true, value, timings });
+  // ⏱️ Written AFTER the post so the host can separate the two halves of the reply: the structured
+  // CLONE this call performs synchronously (\`clonedAtEpochMs\` − \`repliedAtEpochMs\`, mutated on the
+  // object the clone already took a copy of, so the host reads it from the NEXT reply's carry) from
+  // the main thread's own pickup latency. A worker cannot amend a message it already posted, so the
+  // clone cost of turn N is carried on turn N+1 — one turn of lag, exact either way.
+  lastReplyCloneMs = hopEpochNow() - timings.repliedAtEpochMs;
+}
+let lastReplyCloneMs = 0;
 
 // 🩺️ \`frames\` is the request's own bulk payload (the \`turn\` message's \`events\` array — the largest,
 // most recursion-prone field a request carries) — sized WITHOUT ever JSON.stringify-ing it first
@@ -485,6 +552,11 @@ function retryableLifecycleTurn(error, events, commandPage) {
 }
 
 self.addEventListener("message", async (event) => {
+  // ⏱️ FIRST statement of the handler: everything after it is already this worker's own cost, and
+  // \`postedAtEpochMs\` − this instant is the post crossing nobody could see from outside (the CDP
+  // \`Performance\` domain answers nothing on a worker target —
+  // \`📓️react-hop-latency-2026-09-14.md\` §1). Twin vocabulary: \`semio.hop.worker.*\`.
+  const receivedAtEpochMs = hopEpochNow();
   const msg = event.data ?? {};
   const { kind } = msg;
   if (kind === "attachHeartbeatSab") {
@@ -510,6 +582,7 @@ self.addEventListener("message", async (event) => {
   }
   const { requestId, actorId } = msg;
   if (!requestId || !actorId) return;
+  const timings = { postedAtEpochMs: typeof msg.postedAtEpochMs === "number" ? msg.postedAtEpochMs : null, receivedAtEpochMs, guestEnteredAtEpochMs: null, guestLeftAtEpochMs: null, repliedAtEpochMs: null, previousReplyCloneMs: lastReplyCloneMs, events: Array.isArray(msg.events) ? msg.events.length : 0, eventKinds: Array.isArray(msg.events) ? [...new Set(msg.events.map((entry) => (entry && typeof entry.kind === "string" ? entry.kind : "?")))].slice(0, 4).join("+") : "", patches: 0, commandPageBytes: msg.commandPage && msg.commandPage.bytes ? msg.commandPage.bytes.byteLength ?? msg.commandPage.bytes.length ?? 0 : 0 };
   heartbeat();
   beginRequest();
   faultPhase = kind;
@@ -539,7 +612,33 @@ self.addEventListener("message", async (event) => {
         faultPhase = (actor.turns ?? 0) === 0 ? "first-step" : "turn";
         actor.turns = (actor.turns ?? 0) + 1;
         try {
-          const result = await actor.api.poll(spliceInstanceOpenAssets(actor, msg.events), msg.commandPage, undefined, msg.budget);
+          const admitted = spliceInstanceOpenAssets(actor, msg.events);
+          timings.guestEnteredAtEpochMs = hopEpochNow();
+          let result = await actor.api.poll(admitted, msg.commandPage, undefined, msg.budget);
+          // 🤫️ THE silent-turn hold. A \`more-work\` answer that carried nothing is not a message for
+          // the host — it is the guest asking to be pumped, and in the browser the host round trip IS
+          // the pump. So pump it HERE, inside the reactor's own 8 ms hold, and cross only to deliver
+          // something or when the hold is spent. Every discarded result satisfied
+          // \`shardTurnCarriesNothing\`, so the hold is lossless by construction; the loop re-reads the
+          // actor registry and its activation generation on every lap so a dispose or a re-activation
+          // that landed before the hold began ends it at once.
+          const holdDeadline = hopEpochNow() + SILENT_HOLD_MS;
+          let holdPolls = 0;
+          while (
+            shardTurnStatusTag(result) === "more-work" &&
+            shardTurnCarriesNothing(result) &&
+            holdPolls < SILENT_HOLD_POLLS &&
+            hopEpochNow() < holdDeadline &&
+            actors.get(actorId) === actor &&
+            actor.activationGeneration === msg.activationGeneration
+          ) {
+            result = await actor.api.poll([], undefined, undefined, msg.budget);
+            holdPolls += 1;
+          }
+          timings.guestLeftAtEpochMs = hopEpochNow();
+          timings.holdPolls = holdPolls;
+          timings.patches = result && Array.isArray(result.uiPatches) ? result.uiPatches.length : 0;
+          timings.status = result && result.status && typeof result.status.tag === "string" ? result.status.tag : String(result && result.status);
           // 🫀️ THE step boundary. A guest running a BUDGETED job (a resumable tessellation, a
           // resumable boolean) crosses this point once per step and blocks the event loop in
           // between, so the while-busy ticker cannot fire and the only thing that distinguishes it
@@ -548,7 +647,7 @@ self.addEventListener("message", async (event) => {
           // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
           // \`📓️extension-evaluate-budget-2026-09-12.md\`).
           heartbeat("turn-step");
-          reply(requestId, result);
+          reply(requestId, result, timings);
         } finally {
           inFlightTurnActors.delete(actorId);
         }
@@ -613,7 +712,11 @@ self.addEventListener("message", async (event) => {
         inFlightTurnActors.add(actorId);
         try {
           const events = spliceInstanceOpenAssets(actor, result.envelopes.map((envelope) => envelope.payload));
-          reply(requestId, await actor.api.poll(events, undefined, undefined, result.budget));
+          timings.events = events.length;
+          timings.guestEnteredAtEpochMs = hopEpochNow();
+          const polled = await actor.api.poll(events, undefined, undefined, result.budget);
+          timings.guestLeftAtEpochMs = hopEpochNow();
+          reply(requestId, polled, timings);
         } finally {
           inFlightTurnActors.delete(actorId);
         }

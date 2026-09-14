@@ -1,0 +1,25 @@
+{
+  "note": "📥️ The paged command-ingress contract, shared by the TypeScript host writer (🎭️actor/📮️shard-client's createShardCommandIngressPages) and the Rust guest reader (📡️spr/🧵️channel's CommandPageSet/PagedCommand/PagedCommandReader). A command crosses as a stream of pageBytes-sized pages, one page per actor turn, reassembled in arrival order with exact accounting. No row is a chosen ceiling: pageBytes is the page extent, commandMaximumBytes is the guest linear-memory budget's own hostAnswerCeilingBytes (⏱️trace/🧮️memory/🧬️schema/🔣️.json), and maximumPages is one over the other.",
+  "pageBytes": 4096,
+  "commandMaximumBytes": 8388608,
+  "maximumPages": 2048,
+  "rows": [
+    { "name": "one-byte", "bytes": 1, "pages": 1 },
+    { "name": "one-full-page", "bytes": 4096, "pages": 1 },
+    { "name": "one-page-plus-one-byte", "bytes": 4097, "pages": 2 },
+    { "name": "former-fixed-ceiling", "bytes": 262144, "pages": 64 },
+    { "name": "former-fixed-ceiling-plus-one-byte", "bytes": 262145, "pages": 65 },
+    { "name": "contributions-pack-2026-09-14", "bytes": 272089, "pages": 67 },
+    { "name": "assembled-maximum", "bytes": 8388608, "pages": 2048 }
+  ],
+  "refusals": [
+    { "name": "empty-command", "bytes": 0 },
+    { "name": "over-assembled-maximum", "bytes": 8388609 }
+  ],
+  "disorder": [
+    { "name": "duplicate-first-page", "pages": 3, "deliver": [0, 0], "rejectedDelivery": 1 },
+    { "name": "skipped-middle-page", "pages": 3, "deliver": [0, 2], "rejectedDelivery": 1 },
+    { "name": "reversed-tail", "pages": 3, "deliver": [0, 2, 1], "rejectedDelivery": 1 },
+    { "name": "replayed-middle-page", "pages": 3, "deliver": [0, 1, 1], "rejectedDelivery": 2 }
+  ]
+}

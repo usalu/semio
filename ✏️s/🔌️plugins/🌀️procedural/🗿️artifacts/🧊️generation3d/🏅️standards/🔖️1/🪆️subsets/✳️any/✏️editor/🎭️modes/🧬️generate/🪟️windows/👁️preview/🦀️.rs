@@ -42,9 +42,9 @@ pub fn definition() -> WindowKindDefinition {
 }
 
 /// 🎚️ Shares the same show-mode + sun measures as the edit-mode 3D preview window.
-pub fn window_measures(config: &Generation3dConfig, procedural_action: impl Fn(&str, Option<serde_json::Value>) -> semio_framework_plugin::ActionDescriptor + Copy) -> Vec<WindowMeasure> {
+pub fn window_measures(config: &Generation3dConfig, is_de: bool, procedural_action: impl Fn(&str, Option<serde_json::Value>) -> semio_framework_plugin::ActionDescriptor + Copy) -> Vec<WindowMeasure> {
     let sun = config.sun();
-    vec![show_mode_measure(&config.show_mode, procedural_action), world3d_sun_measures("generation3d", &sun, procedural_action)]
+    vec![show_mode_measure(&config.show_mode, is_de, procedural_action), world3d_sun_measures("generation3d", &sun, is_de, procedural_action)]
 }
 //#endregion 🔖️Definition
 

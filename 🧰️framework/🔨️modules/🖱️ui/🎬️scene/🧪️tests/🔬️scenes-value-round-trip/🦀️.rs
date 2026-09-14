@@ -49,7 +49,7 @@ fn missing_required_field_reports_the_field_name() {
 /// the record family also has its own round-trip law below (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
 #[test]
 fn node_graph_scene_round_trips_through_every_nested_record_type() {
-    let port = NodeGraphPortRecord { id: "a".into(), label: Some("A".into()), code: None, abbreviation: None, full_name: None, artifact_kind: None };
+    let port = NodeGraphPortRecord { id: "a".into(), label: Some("A".into()), code: None, abbreviation: None, full_name: None, artifact_kind: None, value_type: Some("geometry".into()) };
     let node = NodeGraphNodeRecord { id: "n1".into(), label: Some("Node".into()), x: 1.0, y: 2.0, width: 100.0, height: 50.0, inputs: vec![port], outputs: Vec::new(), instance_id: Some("i1".into()), plugin_id: None, app_id: None, icon: None };
     let edge = NodeGraphEdgeRecord { id: "e1".into(), source_node_id: "n1".into(), source_port_id: "a".into(), target_node_id: "n1".into(), target_port_id: "a".into(), label: None };
     let mut scene = NodeGraphScene::base(vec![node], vec![edge], semio_framework_ui_viewport::Viewport2d { x: 1.0, y: 2.0, zoom: 1.5 });
@@ -68,7 +68,7 @@ fn node_graph_scene_round_trips_through_every_nested_record_type() {
 fn node_graph_operator_catalogue_records_round_trip() {
     let variadic = NodeGraphOperatorVariadicRecord { slot_key: "vs".into(), min: 1, max: Some(4) };
     let channel =
-        NodeGraphOperatorChannelRecord { code: "c".into(), abbreviation: "C".into(), name: "Chan".into(), full_name: "Channel".into(), operators: vec!["op".into()], default_json: Some("null".into()), label: None, cardinality: "one".into() };
+        NodeGraphOperatorChannelRecord { code: "c".into(), abbreviation: "C".into(), name: "Chan".into(), full_name: "Channel".into(), operators: vec!["op".into()], value_types: vec!["geometry".into()], default_json: Some("null".into()), label: None, cardinality: "one".into() };
     let operator = NodeGraphOperatorRecord {
         id: "op1".into(),
         extension: "core".into(),

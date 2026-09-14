@@ -100,7 +100,7 @@ mod tests {
         };
         let action = |action: &str, args: Option<serde_json::Value>| ActionDescriptor { controller_id: "t".into(), action: action.into(), args: semio_framework::optional_json_to_dsl(args) };
 
-        let sun_ids = ids_of(&world3d_sun_measures("puzzle3d", &WorldSunConfig::default(), action));
+        let sun_ids = ids_of(&world3d_sun_measures("puzzle3d", &WorldSunConfig::default(), false, action));
         assert!(sun_ids.contains(&"puzzle3d-measure-sun".to_string()), "{sun_ids:?}");
         assert!(sun_ids.contains(&"puzzle3d-measure-sun-enabled".to_string()), "the Sun enable toggle must mount without a second disclosure click: {sun_ids:?}");
         for axis in ["azimuth", "elevation", "intensity"] {

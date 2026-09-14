@@ -38,6 +38,7 @@ import type { ThreeEvent } from "@semio-tech/ui-react";
 import { useFrame, useLoader, useThree } from "@react-three/fiber";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { meshAssetTransportUrl } from "../../../../../../../🔨️modules/🖼️assets/🥽️mesh/🟦️.ts";
+import { hopTrace } from "../../../../../../../🔨️modules/⏱️trace/🟦️.ts";
 import { clearColorResolveCache, resolveColorHex, semanticVar, themeColorVar, tokenVar } from "@semio-tech/ui-styling";
 import {
   CATALOGUE_DRAG_MIME,
@@ -62,11 +63,14 @@ import {
   Spinner,
   sunPositionFromAzimuthElevation,
   UnifiedGumball,
+  chromePanelSafeAreaStyle,
   useCanvasAppearanceSync,
+  useChromePanelSafeArea,
   useLabel,
   usePaneSlot,
   useShellScopeOptional,
   useUiDriver,
+  uiSpacingPx,
   windowChromeClearedTopOffset,
   windowMeasuresBodyClass,
   type Anchor,
@@ -797,6 +801,30 @@ export function world3dCameraDomJson(camera: WorldCameraState & { readonly fov?:
  * attribute, fine enough that a real orbit/pan/zoom gesture always changes it. */
 const WORLD_CAMERA_DOM_PRECISION = 4;
 
+/** 🌞️ The LIGHT this surface is lit with, published on the DOM beside the camera it is seen from —
+ * exactly the values handed to the scene's `<directionalLight>`, `position` included, so the sun's
+ * own `position` is derived here once and read rather than recomputed by every reader.
+ *
+ * Without this the sun group's four controls were unobservable from outside React: the measures rail's
+ * `data-published-value` proves the guest ACCEPTED an azimuth, and nothing at all proved the scene was
+ * then lit with it — a slider wired to a config field no light reads would have passed every check
+ * there was (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️window-coverage-audit-2026-09-14.md` §5.4).
+ * `enabled:false` still publishes the whole record: what a reader needs is which sun the scene is NOT
+ * using, not an absent attribute. */
+export function world3dSunDomJson(environment: { readonly sun?: { readonly enabled?: boolean; readonly azimuth?: number; readonly elevation?: number; readonly intensity?: number; readonly color?: string } } | null | undefined): string {
+  const sun = environment?.sun;
+  const azimuth = sun?.azimuth ?? 45;
+  const elevation = sun?.elevation ?? 35;
+  return JSON.stringify({
+    enabled: sun?.enabled === true,
+    azimuth,
+    elevation,
+    intensity: sun?.intensity ?? 0.85,
+    color: sun?.color ?? "#ffffff",
+    position: sunPositionFromAzimuthElevation(azimuth, elevation).map((value) => Number(value.toFixed(WORLD_CAMERA_DOM_PRECISION))),
+  });
+}
+
 /** 📷️ True when `scene.cameraJson` changed from outside this viewport (view preset, focus, example load) —
  * false both for a byte-identical string and for one that merely echoes `lastDispatchedCamera` (this
  * component's own just-sent `setCamera` pose, within {@link worldCameraPoseApproxEqual} float-noise
@@ -1136,13 +1164,101 @@ export function meshDataFromKind(kind: string): WorldMeshData {
   return data;
 }
 
+function resolveMeshRecord(record: WorldMeshRecord): WorldMeshRecord {
+  return record.data || !record.kind ? record : { ...record, data: meshDataFromKind(record.kind) };
+}
+
 function parseMeshes(meshesJson: string): WorldMeshRecord[] {
   try {
     const parsed = JSON.parse(meshesJson);
     if (!Array.isArray(parsed)) return [];
-    return (parsed as WorldMeshRecord[]).map((record) => (record.data || !record.kind ? record : { ...record, data: meshDataFromKind(record.kind) }));
+    return (parsed as WorldMeshRecord[]).map(resolveMeshRecord);
   } catch {
     return [];
+  }
+}
+
+/** @emoji 🔪️ Splits a JSON array's TEXT into its element texts without parsing any of them — a
+ * balanced scan over strings/escapes/nesting. `null` means "this is not a flat JSON array I can
+ * account for", which every caller answers by falling back to a whole-document parse.
+ *
+ * 🪪️ This exists so mesh identity can be decided on the wire text: `meshesJson` is one string, and
+ * re-parsing it hands back brand-new record objects for meshes whose bytes never moved. */
+export function splitJsonArrayElements(json: string): readonly string[] | null {
+  const text = json.trim();
+  if (!text.startsWith("[") || !text.endsWith("]")) return null;
+  const elements: string[] = [];
+  let depth = 0;
+  let inString = false;
+  let escaped = false;
+  let start = -1;
+  for (let index = 1; index < text.length - 1; index += 1) {
+    const character = text[index]!;
+    if (inString) {
+      if (escaped) escaped = false;
+      else if (character === "\\") escaped = true;
+      else if (character === '"') inString = false;
+      continue;
+    }
+    if (character === '"') {
+      if (start < 0) start = index;
+      inString = true;
+      continue;
+    }
+    if (character === "{" || character === "[") {
+      if (start < 0) start = index;
+      depth += 1;
+      continue;
+    }
+    if (character === "}" || character === "]") {
+      depth -= 1;
+      if (depth < 0) return null;
+      continue;
+    }
+    if (character === "," && depth === 0) {
+      if (start < 0) return null;
+      elements.push(text.slice(start, index).trim());
+      start = -1;
+      continue;
+    }
+    if (start < 0 && character.trim() !== "") start = index;
+  }
+  if (inString || depth !== 0) return null;
+  if (start >= 0) elements.push(text.slice(start, text.length - 1).trim());
+  else if (elements.length > 0) return null;
+  return elements;
+}
+
+/** 🧾️ One consumer's retained mesh set and the element texts it was decoded from — the texts are the
+ * identity key, so a refresh that republishes an unchanged mesh hands back the SAME record object. */
+export type WorldMeshResidencyV1 = {
+  readonly sources: readonly string[];
+  readonly records: readonly WorldMeshRecord[];
+};
+
+/** @emoji 🧊️ Advances a retained mesh set to `meshesJson`, keeping the object IDENTITY of every mesh
+ * whose wire text is unchanged. That identity is what lets the instanced-mesh layer rebuild the
+ * `BufferGeometry` of exactly the meshes that moved instead of all of them: before this, a 3-mesh
+ * surface re-tessellated all three whenever one upstream node re-evaluated, because the memo boundary
+ * was the whole `meshesJson` string (`📓️react-perf-ceilings-audit-2026-09-14.md` §2c).
+ *
+ * 🪃️ A payload this cannot split is not an error — it falls back to the whole-document parse, which
+ * is always correct and merely rebuilds everything, exactly as the instance-delta lane's own
+ * `advanceWorldInstanceResidency` fallback does. */
+export function advanceWorldMeshResidency(previous: WorldMeshResidencyV1 | null, meshesJson: string): WorldMeshResidencyV1 {
+  const sources = splitJsonArrayElements(meshesJson);
+  if (sources === null) return { sources: [], records: parseMeshes(meshesJson) };
+  const retained = new Map<string, WorldMeshRecord>();
+  const previousSources = previous?.sources ?? [];
+  for (let index = 0; index < previousSources.length; index += 1) {
+    const source = previousSources[index]!;
+    const record = previous?.records[index];
+    if (record && !retained.has(source)) retained.set(source, record);
+  }
+  try {
+    return { sources, records: sources.map((source) => retained.get(source) ?? resolveMeshRecord(JSON.parse(source) as WorldMeshRecord)) };
+  } catch {
+    return { sources: [], records: parseMeshes(meshesJson) };
   }
 }
 
@@ -1356,9 +1472,16 @@ export function subscribeLeftoverWorldSelectionV1(listener: () => void): () => v
   return () => leftoverWorldSelectionListeners.delete(listener);
 }
 
-/** Hover-only leftover still overlays — selectedIds empty is the interactionHover leftover shape. */
+/** Hover-only leftover still overlays — selectedIds empty is the interactionHover leftover shape.
+ *
+ * 🧹️ `selectionCleared` is the one overlay whose whole content is an ABSENCE: the guest's own
+ * retirement of a selection, published either by an emptying pick or by a document change
+ * (`interaction_after_document_change_v1`, `🔌️plugin/🦀️.rs`). Without it in this guard a retirement
+ * carrying no ids, no hover and no utility answered "nothing to overlay" and
+ * {@link mergeWorldSelectionWithLeftoverV1} returned the pane's base record untouched — so the one
+ * publication that exists to REMOVE a selection was the one the host could not act on. */
 export function leftoverWorldOverlayAppliesV1(leftover: LeftoverWorldSelectionOverlayV1 | null | undefined): boolean {
-  return Boolean(leftover && (leftover.ids.length > 0 || leftover.hoveredId || leftover.activeUtility || leftover.activeToolId));
+  return Boolean(leftover && (leftover.ids.length > 0 || leftover.hoveredId || leftover.activeUtility || leftover.activeToolId || leftover.selectionCleared));
 }
 
 /** Vortex-domain leftover hover id (`objectId:vortexId`) for hoveredVortexFullId. */
@@ -1375,8 +1498,41 @@ export function leftoverBrushRetainGuestHoverV1(activeUtility: string | null | u
   return leftoverOverlayArmedBrushUtilityV1(activeUtility ?? leftover?.activeUtility) ? leftoverHoveredVortexFullIdV1(leftover) : undefined;
 }
 
+/** 🧹️ The overlay ids this pane's CURRENT document can still be covering.
+ *
+ * The leftover overlay exists to carry a pick for the one window between the dispatch and the
+ * guest's own lane answering — so it is a cover over the document the pick was made in, and nothing
+ * beyond it. Nothing retires it: it is written only by the pick route and by a utility arm
+ * (`publishLeftoverWorldSelectionV1` callers in `🏛️ShellHost/🟦️.tsx`), and an app command that
+ * REPLACES the whole document cannot publish one either — a job-routed command answers through
+ * `TypedOperationCompletion`, which carries revision, ui scope and history patch and has no leftover
+ * `output` field at all. Measured on the generation3d React playground 2026-09-14: after picking
+ * `shell@solid` in `Box Shell Preview`, `data-guest-selection-json` was `[]` for every later example
+ * — the guest had pruned — while `data-selection-json` still painted `["shell@solid"]`, and the next
+ * plain REPLACE click read back `["fuse@solid","shell@solid"]`.
+ *
+ * The pane owns the answer without asking anyone: it knows which objects it is drawing. An id no
+ * instance of this pane offers — neither as its own `id` nor as the coarser `interactionId` the
+ * topology declares nor as the mesh it draws — is covering nothing. A pane with NO instances yet has
+ * no membership information and keeps every id, the same rule the guest's own topology pruning uses
+ * for a domain it has no entry for. A just-picked id is always among them, because the pick landed
+ * on that instance's geometry — so the cover the overlay exists for is never the one dropped. */
+export function leftoverWorldOverlayIdsInDocumentV1(ids: readonly string[], instances: readonly WorldInstanceRecord[]): readonly string[] {
+  if (!instances.length || !ids.length) return ids;
+  const offered = new Set<string>();
+  for (const instance of instances) {
+    if (instance.id) offered.add(instance.id);
+    if (instance.interactionId) offered.add(instance.interactionId);
+    if (instance.meshId) offered.add(instance.meshId);
+  }
+  return ids.filter((id) => offered.has(id));
+}
+
 export function mergeWorldSelectionWithLeftoverV1(base: WorldSelectionRecord, leftover: LeftoverWorldSelectionOverlayV1 | null, instances: readonly WorldInstanceRecord[] = []): WorldSelectionRecord {
   if (!leftoverWorldOverlayAppliesV1(leftover) || !leftover) return base;
+  const covered = leftoverWorldOverlayIdsInDocumentV1(leftover.ids, instances);
+  if (covered.length !== leftover.ids.length) leftover = { ...leftover, ids: covered, gumballAnchorId: leftover.gumballAnchorId && covered.includes(leftover.gumballAnchorId) ? leftover.gumballAnchorId : covered[0] ?? null };
+  if (!leftoverWorldOverlayAppliesV1(leftover)) return base;
   const pose = leftoverWorldGumballPoseV1(leftover, instances);
   if (leftover.selectionCleared) {
     return {
@@ -1449,6 +1605,8 @@ export function worldSurfaceSelectionDomV1(selection: WorldSelectionRecord, inte
     gumballTarget: selection.gumballTarget ?? null,
     transformMode: selection.transformMode ?? null,
     activeUtility: interaction.activeUtility ?? "select",
+    showEdges: selection.showEdges ?? null,
+    selectionMode: selection.selectionMode ?? selection.granularity ?? null,
   };
 }
 
@@ -1675,6 +1833,34 @@ function buildVertexPickData(mesh: WorldMeshData): VertexPickData | null {
   const geometry = new BufferGeometry();
   geometry.setAttribute("position", new BufferAttribute(new Float32Array(positions), 3));
   return { geometry, vertexIds };
+}
+
+/** 🧊️ Everything one mesh id owns on the GPU side, built once per mesh CONTENT and disposed as one. */
+export type MeshVisuals = {
+  readonly record: WorldMeshRecord;
+  readonly geometry: BufferGeometry | null;
+  readonly border: EdgesGeometry | null;
+  readonly vertexPick: VertexPickData | null;
+  readonly edge: BufferGeometry | null;
+};
+
+/** 🧊️ Builds one mesh id's visuals. A record with no `data` (an unresolved url reference) owns
+ * nothing, and says so, rather than being absent from the cache and rebuilt on every render. */
+export function buildMeshVisuals(record: WorldMeshRecord): MeshVisuals {
+  if (!record.data) return { record, geometry: null, border: null, vertexPick: null, edge: null };
+  const geometry = geometryFromMesh(record.data);
+  return { record, geometry, border: new EdgesGeometry(geometry), vertexPick: buildVertexPickData(record.data), edge: buildEdgeGeometry(record.data) };
+}
+
+/** 🧹️ The dispose law of {@link buildMeshVisuals}: every buffer it allocated is released exactly
+ * once. Before this pair existed the instanced layer allocated a `BufferGeometry`, an
+ * `EdgesGeometry`, a vertex-pick buffer and an edge buffer for every mesh of every refresh and
+ * disposed none of them. */
+export function disposeMeshVisuals(visuals: MeshVisuals): void {
+  visuals.geometry?.dispose();
+  visuals.border?.dispose();
+  visuals.vertexPick?.geometry.dispose();
+  visuals.edge?.dispose();
 }
 
 function buildEdgeGeometry(mesh: WorldMeshData): BufferGeometry | null {
@@ -2840,33 +3026,68 @@ function WorldInstancesLayer({
   readonly environment?: WorldEnvironmentRecord | null;
 }) {
   const meshById = useMemo(() => new Map(meshes.map((mesh) => [mesh.id, mesh])), [meshes]);
+  // 🧊️ Per-mesh-id visuals, keyed on the mesh RECORD's identity (`advanceWorldMeshResidency` keeps
+  // that identity across a refresh that did not touch the mesh), so an N-mesh surface with one moved
+  // mesh allocates one `BufferGeometry` instead of N — and every retired one is disposed.
+  const meshVisualsRef = useRef(new Map<string, MeshVisuals>());
+  const retiredMeshVisualsRef = useRef<MeshVisuals[]>([]);
+  const meshVisuals = useMemo(() => {
+    const held = meshVisualsRef.current;
+    const next = new Map<string, MeshVisuals>();
+    const closeSpan = hopTrace.open("mesh.decode", { meshes: meshes.length });
+    let built = 0;
+    for (const mesh of meshes) {
+      const existing = held.get(mesh.id);
+      if (existing && existing.record === mesh) {
+        next.set(mesh.id, existing);
+        continue;
+      }
+      if (existing) retiredMeshVisualsRef.current.push(existing);
+      next.set(mesh.id, buildMeshVisuals(mesh));
+      built += 1;
+    }
+    for (const [meshId, existing] of held) if (!next.has(meshId)) retiredMeshVisualsRef.current.push(existing);
+    meshVisualsRef.current = next;
+    closeSpan({ built, kept: meshes.length - built });
+    return next;
+  }, [meshes]);
+  // 🧹️ Dispose-on-remove, after the commit that stopped referencing them: a geometry retired during
+  // render is still in the mounted scene until React commits the new one.
+  useEffect(() => {
+    const retired = retiredMeshVisualsRef.current;
+    retiredMeshVisualsRef.current = [];
+    for (const entry of retired) disposeMeshVisuals(entry);
+  }, [meshVisuals]);
+  useEffect(
+    () => () => {
+      for (const entry of meshVisualsRef.current.values()) disposeMeshVisuals(entry);
+      meshVisualsRef.current = new Map();
+      for (const entry of retiredMeshVisualsRef.current) disposeMeshVisuals(entry);
+      retiredMeshVisualsRef.current = [];
+    },
+    [],
+  );
   const geometries = useMemo(() => {
     const map = new Map<string, BufferGeometry>();
-    for (const mesh of meshes) {
-      if (mesh.data) map.set(mesh.id, geometryFromMesh(mesh.data));
-    }
+    for (const [meshId, entry] of meshVisuals) if (entry.geometry) map.set(meshId, entry.geometry);
     return map;
-  }, [meshes]);
+  }, [meshVisuals]);
   /** 🎨️ Per-meshId border outline geometry, shared by every instance of that mesh — never rebuilt per instance. */
   const borderGeometries = useMemo(() => {
     const map = new Map<string, EdgesGeometry>();
-    for (const [meshId, geometry] of geometries) map.set(meshId, new EdgesGeometry(geometry));
+    for (const [meshId, entry] of meshVisuals) if (entry.border) map.set(meshId, entry.border);
     return map;
-  }, [geometries]);
+  }, [meshVisuals]);
   const vertexPickByMeshId = useMemo(() => {
     const map = new Map<string, VertexPickData | null>();
-    for (const mesh of meshes) {
-      if (mesh.data) map.set(mesh.id, buildVertexPickData(mesh.data));
-    }
+    for (const [meshId, entry] of meshVisuals) if (entry.record.data) map.set(meshId, entry.vertexPick);
     return map;
-  }, [meshes]);
+  }, [meshVisuals]);
   const edgeGeometryByMeshId = useMemo(() => {
     const map = new Map<string, BufferGeometry | null>();
-    for (const mesh of meshes) {
-      if (mesh.data) map.set(mesh.id, buildEdgeGeometry(mesh.data));
-    }
+    for (const [meshId, entry] of meshVisuals) if (entry.record.data) map.set(meshId, entry.edge);
     return map;
-  }, [meshes]);
+  }, [meshVisuals]);
   const targets = useMemo(() => selection.targets ?? { mesh: true, vertex: false, edge: false, face: false }, [selection.targets]);
   const selectionMode = selection.selectionMode ?? selection.granularity ?? "mesh";
   const currentComponentIds = new Set(selection.componentIds ?? []);
@@ -5002,7 +5223,14 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
     };
     return registerTutorialCameraDriver(windowInstanceId, driver);
   }, [windowInstanceId]);
-  const meshes = useMemo(() => parseMeshes(scene?.meshesJson ?? "[]"), [scene?.meshesJson]);
+  // 🧊️ The retained mesh set advances per mesh, so a refresh that republishes an unchanged mesh keeps
+  // that record's object identity and the instanced layer keeps its already-built buffers.
+  const meshResidencyRef = useRef<WorldMeshResidencyV1 | null>(null);
+  const meshes = useMemo(() => {
+    const advanced = advanceWorldMeshResidency(meshResidencyRef.current, scene?.meshesJson ?? "[]");
+    meshResidencyRef.current = advanced;
+    return advanced.records as WorldMeshRecord[];
+  }, [scene?.meshesJson]);
   const leftoverSelectionEpoch = useSyncExternalStore((listener) => {
     leftoverWorldSelectionListeners.add(listener);
     return () => leftoverWorldSelectionListeners.delete(listener);
@@ -5034,6 +5262,8 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
   const relocateMode = activeUtility === "worldRelocate";
   const volumeLayersInteractive = !brushMode && !volumeBrushMode;
   const hostRef = useRef<HTMLDivElement | null>(null);
+  const overlayRailRef = useRef<HTMLDivElement | null>(null);
+  const overlayRailSafeArea = useChromePanelSafeArea({ hostRef, affordanceRef: overlayRailRef, anchor: "top-right", yieldAxis: "either", gapPx: uiSpacingPx(1) });
   const instancesGroupRef = useRef<Group | null>(null);
   const lodRef = useRef(DEFAULT_MANUAL_LOD);
   const [marqueePath, setMarqueePath] = useState<readonly SelectionMarqueePoint[]>([]);
@@ -5681,15 +5911,26 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
     [dispatchInstanceHover],
   );
 
+  // 🧭️ `setHover` is the DOMAINLESS hover lane. An app that declares an interaction domain declares
+  // `interactionHover` instead and never `setHover`, so dispatching it there is an action no window
+  // kind owns: the shell drops it and logs `dropped action "setHover" dispatched from window kind
+  // "procedural-preview"` on every component hit, while the hover the user made is simply lost
+  // (measured on the generation3d edit preview, ticket 26/09/09/PROCEDURAL-3D-END-TO-END). The
+  // instance dispatcher already carries the domain, the window's declared granularity and the
+  // coalescing gate, so a component hit publishes through it on the id it names.
   const handleComponentHover = useCallback(
     (args: { objectId: string; mode: string; id: number } | null) => {
+      if (interactionDomainId) {
+        dispatchInstanceHover(args?.objectId ?? null);
+        return;
+      }
       if (!args) {
         dispatch("setHover", {});
         return;
       }
       dispatch("setHover", args);
     },
-    [dispatch],
+    [dispatch, dispatchInstanceHover, interactionDomainId],
   );
 
   const handleVortexHover = useCallback(
@@ -6500,6 +6741,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
       data-suggestion-menu-json={interaction.suggestionMenu ? JSON.stringify(interaction.suggestionMenu) : ""}
       data-interaction-json={JSON.stringify(interaction)}
       data-status-json={scene.statusJson ?? undefined}
+      data-sun-json={world3dSunDomJson(environment)}
       {...toolRunTraceDataAttributes(toolRunTrace.store)}
       onContextMenu={(event) => {
         const alt = world3dSuggestionsAltHeld(event.altKey, altHeldRef.current);
@@ -6559,10 +6801,18 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
                 control row ({@link windowChromeClearedTopOffset}) and stay out of the top-left corner the
                 folded engagement's quick-action rail owns — a control painted into that band covers the
                 pane toggles and, at `z-40`, swallows their pointer events outright. */}
+            {/* 🛟️ The window's own chrome is only half the corner: an anchored chrome PANEL paints over
+                this rail from the app root's stacking context (`z-panel` vs this `z-40` inside the
+                window's `z-window`), so `Frame visible` and the compute `Cancel` were unreachable at
+                every press. The rail reserves the panel's published box ({@link useChromePanelSafeArea})
+                and steps clear on whichever axis costs less — the framework rule, not a restack. */}
             <div
+              ref={overlayRailRef}
               data-slot="world-view-overlay-rail"
+              data-safe-area-block={overlayRailSafeArea.blockPx || undefined}
+              data-safe-area-inline={overlayRailSafeArea.inlinePx || undefined}
               className="pointer-events-none absolute z-40 flex flex-col items-end gap-single"
-              style={{ top: windowChromeClearedTopOffset, right: "var(--spacing-single)" }}
+              style={chromePanelSafeAreaStyle("top-right", overlayRailSafeArea, { block: windowChromeClearedTopOffset })}
             >
               {frameVisibleOverlayOffered ? (
                 <button

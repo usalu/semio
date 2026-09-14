@@ -428,6 +428,34 @@ pub fn mesh_has_preview_geometry(data: &MeshData) -> bool {
     (!data.indices.is_empty() && data.positions.len() >= 9) || data.edge_positions.len() >= 6 || (data.positions.len() >= 3 && data.indices.is_empty())
 }
 
+/// 🏷️ Every role a published preview mesh may declare, in the order a reader ranks them: a body
+/// with triangles, a body that is only a polyline, the axis cross of a point channel, the arrow of
+/// a vector channel.
+pub const PREVIEW_MESH_ROLES: [&str; 4] = ["solid", "wire", "point", "vector"];
+
+/// 🏷️ What ONE published preview mesh is, stamped into the payload beside its geometry so a reader
+/// never has to re-derive it from the arrays.
+///
+/// ⚖️ A preview publishes one mesh per geometry-bearing output CHANNEL, so a document whose graph
+/// previews three nodes publishes a solid beside the wire it was extruded from and the vector that
+/// drove it — three meshes for one visible body. Counting entries therefore says nothing about how
+/// many solids are on screen, which is exactly the reconciliation the runtime oracles could not
+/// make (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-mesh-oracle-2026-09-14.md`).
+///
+/// 🎨️ The role is what the payload CARRIES, not what the channel was named: `apply_show_mode_mesh`
+/// strips triangles in `wireframe` mode, and a solid published without them really is a wire on
+/// screen. The inline markers keep their own role because their arrays are indistinguishable from a
+/// tessellated polyline.
+pub fn preview_mesh_role(inline: Option<&PreviewInlineGeometry>, data: &MeshData) -> &'static str {
+    match inline {
+        Some(PreviewInlineGeometry::Point { .. }) => "point",
+        Some(PreviewInlineGeometry::Vector { .. }) => "vector",
+        None if !data.indices.is_empty() => "solid",
+        None if !data.edge_positions.is_empty() => "wire",
+        None => "point",
+    }
+}
+
 /// 🔌️ Half-extent (world units) of the axis cross drawn for a [`PreviewInlineGeometry::Point`].
 const PREVIEW_POINT_MARKER_HALF_EXTENT: f64 = 0.05;
 
@@ -601,6 +629,11 @@ pub fn tick_is_unfinished(more: bool, parked_extension_invocations: usize) -> bo
 ///
 /// 📤️ `retained_eval` is the evaluation the addressed window ALREADY holds — the tick republishes
 /// only when it differs, so redispatch ticks that move no node allocate and retire nothing.
+///
+/// 🔁️ `turn_started_us` is when the guest turn this walk belongs to began. A tick the host
+/// dispatched opens its own turn and passes `None`; a tick an answer's fold runs INLINE passes the
+/// fold's own turn start, so every walk of one turn shares one wall deadline
+/// ([`semio_framework_os_flow::flow_eval_tick_budget`]).
 pub fn evaluate_tick(
     window_id: &str,
     window_kind_id: &str,
@@ -608,16 +641,24 @@ pub fn evaluate_tick(
     tolerance: f64,
     session: &mut FlowEvalSession,
     retained_eval: Option<&str>,
+    turn_started_us: Option<u64>,
 ) -> FlowEvalTickOutcome {
     let started_us = semio_framework_job::runtime_diagnostics_enabled().then(semio_framework_job::default_now_us).flatten();
     // ▶️ The armed tick is now RUNNING, so its latch is free for whatever THIS tick decides to arm.
     session.begin_window_tick(window_id);
     let mut host = flow_host_with_session(fixture, session);
-    let more = session.tick(&mut host);
-    let pending_extension_eval = host.take_pending_extension_eval();
+    let more = session.tick(&mut host, turn_started_us);
+    let pending_extension_evals = host.take_pending_extension_evals();
     host.retire_cold();
     let mut extension_invocations = Vec::new();
-    if let Some(pending) = pending_extension_eval {
+    // 🌊️ ONE WAVE, ONE HOP: every request the walk parked had its inputs ready in the same tick, so
+    // no member consumes another member's output and all of them may be outstanding at once. The
+    // per-window latch already counts a fan-out and hands the re-arm to whichever answer lands LAST
+    // (`FlowEvalSession::settle_window_extension`), so the chain now costs one round trip per
+    // dependency LEVEL rather than one per contributed node — which is what made a four-operator
+    // example spend seven `flowEvalTick` hops at roughly a second apiece
+    // (`📓️react-perf-ceilings-audit-2026-09-14.md` §1, §3 item 3).
+    for pending in pending_extension_evals {
         // 🪪️ `extensionId` is CORRELATION, not payload: `reactor::extension_response_args` echoes the
         // request's own fields back onto `flowEvalResolve`, and a refused answer has to be able to
         // name which extension refused it — the tick's geometry address is a different extension
@@ -637,7 +678,8 @@ pub fn evaluate_tick(
             ("extensionId".to_string(), dsl::DslValue::String(pending.extension_id.clone())),
         ]));
         extension_invocations.push(ExtensionInvocation::new(pending.extension_id, "evaluate", request_json, "flowEvalResolve"));
-    } else if !more {
+    }
+    if extension_invocations.is_empty() && !more {
         extension_invocations.extend(preview_tessellate_invocations(window_id, window_kind_id, session, fixture, tolerance));
     }
     // ⏳️ A tick that parked extension work is emphatically NOT FINISHED, whatever the evaluation's own
@@ -658,7 +700,17 @@ pub fn evaluate_tick(
 }
 
 /// ✅️ Folds one `evaluate` answer into the retained session and settles the window's outstanding
-/// answer; the caller wakes the run job, which schedules the next hop off the latch.
+/// answer.
+///
+/// 🔁️ The fold itself still arms and dispatches NOTHING. What changed is who runs the hop the settle
+/// leaves owed: the answer's own route is window-addressed, so once the LAST answer of a wave lands
+/// it holds everything the next wave needs — the retained session, the document, the config and the
+/// addressed window's transient — and runs that wave INLINE inside this turn rather than costing a
+/// `flowEvalResolve` → `flowEvalTick` pair (1 391 ms on React,
+/// `📓️react-hop-latency-2026-09-14.md` §2.1). The decision is
+/// [`FlowEvalSession::inline_continuation_admitted`] and the surface makes it after this fold; a
+/// declined continuation leaves the latch exactly as this fold left it, which is the park — the
+/// `previewEval` run job reads the same debt on its next step and dispatches the round trip.
 ///
 /// 🚧️ An answer that could NOT be folded is a fault settle, not slow work: the host answers a
 /// faulted `invokeExtension` with an empty `outputJson`, the node cache keeps no entry, and the next
@@ -730,8 +782,13 @@ pub fn resolve_tessellate_cancel(payload: &FlowTessellateCancelResolve, session:
 
 /// ✅️ Folds one budgeted `tessellate` round trip into the retained session and settles the window's
 /// outstanding answer. The tick that parked it left the window unfinished, so once its LAST answer
-/// lands the run job schedules the terminal hop — the one that finds whatever handle is still
-/// untessellated, or finds nothing and records the window finished.
+/// lands the terminal hop is owed — the one that finds whatever handle is still untessellated, or
+/// finds nothing and records the window finished.
+///
+/// 🔁️ That hop is the one a mesh body pays PER CHUNK, so it is the same round trip
+/// [`resolve_eval`] now runs inline and for the same reason: this route is window-addressed too, and
+/// the surface continues the chain here whenever
+/// [`FlowEvalSession::inline_continuation_admitted`] says the turn still has room.
 pub fn resolve_tessellate(payload: &FlowTessellateResolve, session: &mut FlowEvalSession) {
     session.resolve_preview_tessellate(payload.node_hash, &payload.output_json);
     session.settle_window_extension(&payload.window_id);

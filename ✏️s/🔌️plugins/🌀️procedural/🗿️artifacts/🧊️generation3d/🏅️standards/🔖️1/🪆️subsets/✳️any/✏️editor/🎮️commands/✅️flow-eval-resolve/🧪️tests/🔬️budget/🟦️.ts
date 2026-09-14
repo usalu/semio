@@ -46,6 +46,31 @@ interface Fixture {
   jobPhaseTags: Record<string, string>;
   rows: Row[];
   steppedOperator: { operatorId: string; minimumRoundTripsUnderATightBudget: number; phaseOrder: string[] };
+  inlineContinuation: InlineContinuation;
+}
+
+interface InlineContinuationExample {
+  id: string;
+  contributedNodes: number;
+  waveWidths: number[];
+  beforeCoalescing: number;
+  afterCoalescing: number;
+  afterInline: number;
+}
+
+interface InlineContinuationRow {
+  id: string;
+  waveWidths: number[];
+  cancelBeforeHop?: number;
+  spentTurnBeforeHop?: number;
+  expectedDispatchedHops: number;
+  expectedInlineWaves: number;
+  expectedContinuationsAfterCancel?: number;
+}
+
+interface InlineContinuation {
+  examples: InlineContinuationExample[];
+  rows: InlineContinuationRow[];
 }
 
 /** 🏷️ The surface's own phase vocabulary, written out from the fixture's `laws` rather than read
@@ -104,14 +129,26 @@ class BudgetSession {
     return "complete";
   }
 
-  /** 📈️ The status a preview window publishes right now. */
+  /** 📈️ The status a preview window publishes right now.
+   *
+   * ⛓️️ TWO ledgers, one object. The budgeted-eval ledger names the PHASE and carries
+   * `evalUnitsDone`/`evalUnitsTotal` while a round trip is parked. The moment it is empty — which is
+   * every hop boundary of a chain — the CHAIN ledger still knows the window owes a hop, and it owns
+   * the published phase and fraction there. A session with no node census of its own (no `FlowHost`
+   * synced, which is exactly these rows) has no denominator, so a working chain publishes `0.0` and
+   * NEVER `1.0`: "done" is the one answer live work may not give. Saying `idle` for a window that
+   * owes another hop is the defect this fixture exists to forbid
+   * (`📓️wgpu-progress-visibility-2026-09-14.md`). */
   status(): { phase: string; inFlight: number; evalUnitsDone: number; evalUnitsTotal: number; ratio: number } {
     const inFlight = this.progress ? 1 : 0;
     const unitsDone = this.progress?.unitsDone ?? 0;
     const unitsTotal = this.progress?.unitsTotal ?? 0;
-    const ratio = unitsTotal === 0 ? (inFlight === 0 ? 1 : 0) : Math.min(1, Math.max(0, unitsDone / unitsTotal));
-    const phase = this.progress ? this.progress.phase : "idle";
-    return { phase, inFlight, evalUnitsDone: unitsDone, evalUnitsTotal: unitsTotal, ratio };
+    const chainWorking = this.owesHop;
+    if (this.progress) {
+      const ratio = unitsTotal === 0 ? 0 : Math.min(1, Math.max(0, unitsDone / unitsTotal));
+      return { phase: this.progress.phase, inFlight, evalUnitsDone: unitsDone, evalUnitsTotal: unitsTotal, ratio };
+    }
+    return { phase: chainWorking ? "computing" : "idle", inFlight, evalUnitsDone: 0, evalUnitsTotal: 0, ratio: chainWorking ? 0 : 1 };
   }
 }
 
@@ -181,5 +218,135 @@ export function testGeneration3dEvaluateBudgetContract(): void {
       previousDone = status.evalUnitsDone;
     }
     assert.equal(session.owesHop, true, `${phase} owes exactly one continuation`);
+  }
+}
+
+/** 🔒️ The independent model of ONE preview window's tick latch, written from the fixture's
+ * `inlineContinuation.admission` prose alone. `armed` is the single outstanding hop, `inFlight`
+ * counts the answers the last hop parked, `unfinished` is what that hop reported, and `cancelled` is
+ * the banner a gesture raised. Nothing here is shared with the Rust `FlowEvalSession`. */
+class WindowLatch {
+  armed = false;
+  inFlight = 0;
+  unfinished = true;
+  cancelled = false;
+  everTicked = false;
+
+  /** 🔎️ `owedHopOnly`: a window owes a hop nothing is chasing when it has never ticked, or its own
+   * last hop reported more work and neither a hop nor an answer is outstanding. */
+  owesHop(): boolean {
+    if (!this.everTicked) return true;
+    return this.unfinished && !this.armed && this.inFlight === 0;
+  }
+
+  /** 🔁️ The admission rule, all three clauses. */
+  continuationAdmitted(turnSpent: boolean): boolean {
+    return !this.cancelled && this.owesHop() && !turnSpent;
+  }
+
+  claim(): void {
+    this.armed = true;
+  }
+
+  /** ▶️ One hop runs: it begins (retiring the cancelled banner and freeing the latch) and parks
+   * `width` answers, or parks none and records the window finished. */
+  runHop(width: number | null): void {
+    this.armed = false;
+    this.everTicked = true;
+    this.cancelled = false;
+    if (width === null) {
+      this.unfinished = false;
+      return;
+    }
+    this.unfinished = true;
+    this.inFlight += width;
+  }
+
+  settle(): void {
+    this.inFlight = Math.max(0, this.inFlight - 1);
+  }
+
+  /** 🛑 A cancel defaults the latch and raises the banner, so every answer still crossing settles
+   * into a window that owes nothing. */
+  cancel(): void {
+    this.armed = false;
+    this.inFlight = 0;
+    this.unfinished = false;
+    this.cancelled = true;
+  }
+}
+
+interface ChainLadder {
+  dispatchedHops: number;
+  inlineWaves: number;
+  continuationsAfterCancel: number;
+}
+
+/** ⛓️ The hop ladder of one chain, driven through the independent latch exactly as the run job and
+ * the two window-addressed folds drive the real one. */
+function replayChain(waveWidths: number[], cancelBeforeHop?: number, spentTurnBeforeHop?: number): ChainLadder {
+  const latch = new WindowLatch();
+  const ladder: ChainLadder = { dispatchedHops: 0, inlineWaves: 0, continuationsAfterCancel: 0 };
+  assert.ok(latch.owesHop(), "the gesture leaves the window owing its first hop");
+  latch.claim();
+  ladder.dispatchedHops += 1;
+  let cancelled = false;
+  for (const [index, width] of waveWidths.entries()) {
+    const hop = index + 1;
+    latch.runHop(width);
+    let continued = false;
+    for (let answer = 0; answer < width; answer += 1) {
+      const last = answer + 1 === width;
+      if (last && cancelBeforeHop === hop + 1) {
+        latch.cancel();
+        cancelled = true;
+      }
+      latch.settle();
+      const turnSpent = last && spentTurnBeforeHop === hop + 1;
+      if (latch.continuationAdmitted(turnSpent)) {
+        latch.claim();
+        continued = true;
+        ladder.inlineWaves += 1;
+        if (cancelled) ladder.continuationsAfterCancel += 1;
+      }
+    }
+    if (cancelled) break;
+    if (!continued) {
+      assert.ok(latch.owesHop(), "a declined continuation leaves the debt where the scheduler reads it");
+      latch.claim();
+      ladder.dispatchedHops += 1;
+    }
+  }
+  if (!cancelled) {
+    latch.runHop(null);
+    assert.ok(!latch.owesHop(), "the terminal walk owes nothing and the run settles");
+  }
+  return ladder;
+}
+
+/** ⚖️ LAW: the inline-continuation section of the same fixture, answered by the independent model —
+ * one dispatched hop per example however deep the graph, and one handed back per declined
+ * continuation (a cancel between waves, a turn with no wall left). */
+export function testGeneration3dInlineContinuationContract(): void {
+  const loaded = fixture();
+  const inline = loaded.inlineContinuation;
+  assert.equal(inline.examples.length, 8, "all eight bundled examples declare their wave shape");
+  for (const example of inline.examples) {
+    assert.equal(example.contributedNodes, example.waveWidths.reduce((total, width) => total + width, 0), `${example.id}: the waves account for every contributed node`);
+    assert.equal(example.afterCoalescing, example.waveWidths.length + 1, `${example.id}: coalescing bottoms out at one hop per level plus a terminal one`);
+    assert.ok(example.beforeCoalescing >= example.afterCoalescing, `${example.id}: coalescing never made an example worse`);
+    const ladder = replayChain(example.waveWidths);
+    assert.equal(ladder.dispatchedHops, example.afterInline, `${example.id}: dispatched hops`);
+    assert.equal(ladder.dispatchedHops, 1, `${example.id}: one gesture, one hop, however deep the graph`);
+    assert.equal(ladder.inlineWaves, example.waveWidths.length, `${example.id}: every wave after the first hop runs inside an answer's own turn`);
+  }
+  assert.equal(inline.rows.length, 3, "the fixture declares all three interference rows");
+  for (const row of inline.rows) {
+    const ladder = replayChain(row.waveWidths, row.cancelBeforeHop, row.spentTurnBeforeHop);
+    assert.equal(ladder.dispatchedHops, row.expectedDispatchedHops, `${row.id}: dispatched hops`);
+    assert.equal(ladder.inlineWaves, row.expectedInlineWaves, `${row.id}: inline waves`);
+    if (row.expectedContinuationsAfterCancel !== undefined) {
+      assert.equal(ladder.continuationsAfterCancel, row.expectedContinuationsAfterCancel, `${row.id}: a cancelled chain admits no continuation at all`);
+    }
   }
 }

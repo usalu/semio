@@ -403,7 +403,7 @@ fn a_live_surface_offers_exactly_the_overlay_controls_the_shared_fixture_declare
             .collect();
         let graphs: Vec<(&str, Rect)> = graph_rows.iter().map(|(id, bounds)| (id.as_str(), *bounds)).collect();
         let worlds: Vec<(&str, Rect, Option<&str>)> = world_rows.iter().map(|(id, bounds, status)| (id.as_str(), *bounds, status.as_deref())).collect();
-        let controls = surface_overlay_controls_for(&graphs, &worlds, &theme, false);
+        let controls = surface_overlay_controls_for(&graphs, &worlds, &[], &theme, false);
         let expected: Vec<&str> = case["expected"].as_array().expect("fixture expectation").iter().map(|id| id.as_str().expect("control id")).collect();
         assert_eq!(controls.iter().map(|(control, _)| control.control_id.as_str()).collect::<Vec<_>>(), expected, "{}", case["id"]);
         for ((control, anchor), source) in controls.iter().zip(graphs.iter().map(|(_, bounds)| *bounds).chain(worlds.iter().map(|(_, bounds, _)| *bounds))) {
@@ -489,16 +489,16 @@ fn the_status_pill_leads_the_row_the_cancel_control_follows() {
     let computing = "{\"computing\":true,\"phase\":\"meshingFaces\",\"phaseLabel\":{\"en\":\"Meshing faces\",\"de\":\"Flächen werden vernetzt\"},\"cancellable\":true,\"cancelAction\":\"cancelPreviewEval\",\"progress\":{\"unitsDone\":3,\"unitsTotal\":8}}";
     let bounds = Rect::new(480.0, 40.0, 480.0, 320.0);
     let worlds = [("window:procedural-view-preview", bounds, Some(computing))];
-    let pills = surface_status_pills_for(&worlds, &theme, false);
+    let pills = surface_status_pills_for(&worlds, &[], &theme, false);
     assert_eq!(pills.len(), 1, "one live computing surface asks for one pill");
     let (pill, rect) = &pills[0];
     assert_eq!(pill.surface_id, "window:procedural-view-preview");
     assert!(rect.x >= bounds.x && rect.y >= bounds.y && rect.x + rect.w <= bounds.x + bounds.w, "the pill paints inside the surface it annotates");
-    let controls = surface_overlay_controls_for(&[], &worlds, &theme, false);
+    let controls = surface_overlay_controls_for(&[], &worlds, &[], &theme, false);
     assert_eq!(controls.len(), 1, "the same surface still offers its cancel");
     assert!(controls[0].1[0] >= rect.x + rect.w, "the cancel control starts after the pill, never over it");
     let tiny = [("window:procedural-view-preview", Rect::new(24.0, 40.0, 24.0, 12.0), Some(computing))];
-    assert!(surface_status_pills_for(&tiny, &theme, false).is_empty(), "a collapsed pane carries no pill either");
+    assert!(surface_status_pills_for(&tiny, &[], &theme, false).is_empty(), "a collapsed pane carries no pill either");
     eprintln!("[DEBUG] wgpu world3d status pill: leads the overlay row at {:?}, cancel anchored at {:?}", [rect.x, rect.y], controls[0].1);
 }
 
@@ -526,8 +526,8 @@ fn a_long_evaluation_publishes_a_monotone_run_of_non_idle_frames_and_then_settle
             assert_eq!(status.phase, expected["phase"].as_str().expect("frame phase"), "{lane}/{id}: phase");
             assert!((status.ratio - expected["ratio"].as_f64().expect("frame ratio")).abs() < 1e-9, "{lane}/{id}: ratio is {}", status.ratio);
             assert_eq!(world3d_status_is_visible(&status), expected["visible"].as_bool().expect("frame visible"), "{lane}/{id}: visibility");
-            let pills = surface_status_pills_for(&[("window:procedural-preview", bounds, frame["statusJson"].as_str())], &theme, false);
-            let controls = surface_overlay_controls_for(&[], &[("window:procedural-preview", bounds, frame["statusJson"].as_str())], &theme, false);
+            let pills = surface_status_pills_for(&[("window:procedural-preview", bounds, frame["statusJson"].as_str())], &[], &theme, false);
+            let controls = surface_overlay_controls_for(&[], &[("window:procedural-preview", bounds, frame["statusJson"].as_str())], &[], &theme, false);
             if !expected["visible"].as_bool().expect("frame visible") {
                 assert!(pills.is_empty() && controls.is_empty(), "{lane}/{id}: a settled frame annotates nothing");
                 continue;
@@ -563,7 +563,7 @@ fn a_press_on_the_overlay_chrome_over_a_surface_belongs_to_the_shell() {
     let theme = crate::resolve_theme("light");
     let bounds = Rect::new(480.0, 40.0, 480.0, 320.0);
     let computing = "{\"computing\":true,\"phase\":\"meshingFaces\",\"phaseLabel\":{\"en\":\"Meshing faces\",\"de\":\"Flächen werden vernetzt\"},\"cancellable\":true,\"cancelAction\":\"toolRunAbort\",\"progress\":{\"unitsDone\":3,\"unitsTotal\":8}}";
-    let controls = surface_overlay_controls_for(&[], &[("procedural-preview", bounds, Some(computing))], &theme, false);
+    let controls = surface_overlay_controls_for(&[], &[("procedural-preview", bounds, Some(computing))], &[], &theme, false);
     let (control, anchor) = controls.first().expect("a computing surface offers its cancel");
     assert!(control.control_id.starts_with("shell.world3d.cancel::"));
     assert!(anchor[0] > bounds.x && anchor[0] < bounds.x + bounds.w && anchor[1] > bounds.y && anchor[1] < bounds.y + bounds.h, "the control is painted INSIDE the surface it annotates — which is why the press path must ask");
@@ -914,3 +914,74 @@ fn the_shells_own_accelerator_chords_are_reserved_from_the_app_keybinding_loop()
 }
 
 //#endregion ⌨️WindowScope
+
+/// 🛟️ The chrome-panel SAFE AREA, from the shared `chromePanelSafeArea` rows — the rule that keeps a
+/// live surface's overlay row (the World3d compute pill and its `Cancel`, the node-graph `Fit graph`)
+/// reachable while an anchored chrome panel paints over the same corner. React's `chromePanelSafeArea`
+/// answers the identical rows; the defect it exists for is `📓️react-oracle-hardening-2026-09-14.md` §4.3,
+/// where the `top-right` Tool runs panel at (1137, 3) 300×120 swallowed every press meant for
+/// `Frame visible` and the preview `Cancel`.
+#[test]
+fn a_chrome_panel_reserves_a_safe_area_for_the_surface_overlay_row() {
+    let fixture: Value = serde_json::from_str(SURFACE_CONTROLS_FIXTURE).expect("🛟️ the surface-controls fixture parses");
+    let rows = fixture["chromePanelSafeArea"].as_array().expect("🛟️ chromePanelSafeArea rows");
+    assert!(!rows.is_empty(), "🛟️ the safe-area corpus is not empty");
+    let read_rect = |value: &Value| {
+        let box_ = value.as_array().expect("🛟️ a box is [x, y, w, h]");
+        Rect::new(box_[0].as_f64().unwrap() as f32, box_[1].as_f64().unwrap() as f32, box_[2].as_f64().unwrap() as f32, box_[3].as_f64().unwrap() as f32)
+    };
+    for row in rows {
+        let id = row["id"].as_str().expect("🛟️ every row names itself");
+        let affordance = read_rect(&row["affordance"]);
+        let host = read_rect(&row["host"]);
+        let panels: Vec<Rect> = row["panels"].as_array().expect("🛟️ panels").iter().map(read_rect).collect();
+        let anchor = PanelAnchor::ALL.iter().copied().find(|candidate| candidate.as_str() == row["anchor"].as_str().unwrap()).expect("🛟️ a known anchor");
+        let yield_axis = match row["yield"].as_str().unwrap() {
+            "inline" => SafeAreaYield::Inline,
+            "block" => SafeAreaYield::Block,
+            _ => SafeAreaYield::Either,
+        };
+        let gap = row["gap"].as_f64().unwrap() as f32;
+        let safe_area = chrome_panel_safe_area(affordance, host, anchor, &panels, yield_axis, gap);
+        assert_eq!(safe_area.inline, row["expected"]["inline"].as_f64().unwrap() as f32, "🛟️ {id}: inline reserve");
+        assert_eq!(safe_area.block, row["expected"]["block"].as_f64().unwrap() as f32, "🛟️ {id}: block reserve");
+        let cleared = Rect::new(affordance.x - if anchor.horizontal() == "right" { safe_area.inline } else { -safe_area.inline }, affordance.y - if anchor.vertical() == "bottom" { safe_area.block } else { -safe_area.block }, affordance.w, affordance.h);
+        if safe_area.inline > 0.0 || safe_area.block > 0.0 {
+            for panel in &panels {
+                assert!(!(cleared.x < panel.x + panel.w && cleared.x + cleared.w > panel.x && cleared.y < panel.y + panel.h && cleared.y + cleared.h > panel.y), "🛟️ {id}: the reserved affordance clears every panel it yielded to");
+            }
+        }
+    }
+}
+
+/// 🛟️ The same rule where the shell actually places chrome: an open LEFT floating panel covers a dock
+/// window's top-left corner, which is exactly where `surface_overlay_controls_for` anchors the World3d
+/// `Cancel` and the node-graph `Fit graph` — so the whole overlay row moves right past the panel instead
+/// of painting under it, and moves back the moment the panel closes.
+#[test]
+fn the_overlay_row_steps_clear_of_an_open_floating_panel() {
+    let theme = crate::resolve_theme("light");
+    let computing = "{\"computing\":true,\"phase\":\"meshingFaces\",\"cancellable\":true,\"cancelAction\":\"cancelPreviewEval\",\"progress\":{\"unitsDone\":3,\"unitsTotal\":8}}";
+    let bounds = Rect::new(4.0, 44.0, 952.0, 592.0);
+    let worlds = [("window:procedural-preview", bounds, Some(computing))];
+    let graphs = [("window:procedural-flow", bounds)];
+    let panel = Rect::new(4.0, 44.0, 300.0, 592.0);
+
+    let flush_pills = surface_status_pills_for(&worlds, &[], &theme, false);
+    let flush_controls = surface_overlay_controls_for(&graphs, &worlds, &[], &theme, false);
+    assert_eq!(flush_pills[0].1.x, bounds.x + theme.gap_standard, "🛟️ with no panel open the row stays flush in its own corner");
+    assert_eq!(flush_controls[0].1[0], bounds.x + theme.gap_standard, "🛟️ the node-graph fit control stays flush too");
+
+    let reserved_pills = surface_status_pills_for(&worlds, &[panel], &theme, false);
+    let reserved_controls = surface_overlay_controls_for(&graphs, &worlds, &[panel], &theme, false);
+    let pill_rect = reserved_pills[0].1;
+    assert!(pill_rect.x >= panel.x + panel.w, "🛟️ the status pill starts past the open panel's right edge");
+    assert_eq!(pill_rect.y, flush_pills[0].1.y, "🛟️ a full-height column is cleared inline, never by dropping the row");
+    assert!(pill_rect.x + pill_rect.w <= bounds.x + bounds.w, "🛟️ the reserved pill still paints inside its own surface");
+    for (control, anchor) in &reserved_controls {
+        assert!(anchor[0] >= panel.x + panel.w, "🛟️ {} starts past the open panel's right edge", control.control_id);
+    }
+    let cancel = reserved_controls.iter().find(|(control, _)| control.control_id.starts_with("shell.world3d.cancel")).expect("🛟️ the cancel control is offered");
+    assert!(cancel.1[0] >= pill_rect.x + pill_rect.w, "🛟️ the cancel still follows the pill on the reserved row");
+    eprintln!("[DEBUG] wgpu overlay row safe area: flush x={} reserved x={} panel right={}", flush_pills[0].1.x, pill_rect.x, panel.x + panel.w);
+}

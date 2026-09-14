@@ -1721,6 +1721,10 @@ pub struct Handle {
     pub radius: f64,
     pub role: HandleRole,
     pub kind: Option<String>,
+    /// 🔤️ Value schemas this port declares — an output lists what it may carry, an input what it
+    /// accepts, and a board refuses a wire whose two declared sets are disjoint. Empty is undeclared,
+    /// which stays connectable.
+    pub value_types: Vec<String>,
     pub properties: PropertyBag,
 }
 

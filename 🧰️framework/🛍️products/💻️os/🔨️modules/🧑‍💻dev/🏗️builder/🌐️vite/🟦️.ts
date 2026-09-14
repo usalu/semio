@@ -10,7 +10,7 @@ import { EXTENSION_TARGETS, PLUGIN_BUILD_TARGETS } from "../../../🔌️plugin/
 import { MODULE_PLUGIN_ROUTE, MODULE_EXTENSION_ROUTE, moduleDirectoryName, MODULE_VENDOR_DIRECTORY, MODULE_SHARD_DIRECTORY } from "../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
 import { isHostPlaygroundFilter } from "../../../🔌️plugin/📇️registry/🟦️.ts";
 import { resolveShellBrandById } from "../../🏷️brand/🟦️.ts";
-import { semioBackboneVitePlugin, semioBlobVitePlugin, semioDescriptorRouteGuardVitePlugin, semioActivationVitePlugin, semioProductionTestBoundaryVitePlugin, semioSourceWatchVitePlugin } from "../../🔌️vite-plugins/🟦️.ts";
+import { semioBackboneVitePlugin, semioBlobVitePlugin, semioDescriptorRouteGuardVitePlugin, semioActivationVitePlugin, semioPlaygroundReactRefreshCoherenceVitePlugin, semioProductionTestBoundaryVitePlugin, semioSourceWatchVitePlugin } from "../../🔌️vite-plugins/🟦️.ts";
 import { semioExtensionStoreVitePlugin } from "../../../🔌️plugin/🏪️store/📥️installation/🟦️.ts";
 import { developmentRuntimeRoot, playgroundSessionViteAlias, pluginModulesRoot, readActivationReceipt } from "../../♻️activation/🟦️.ts";
 import { resolveTestBrowserHostRootsV1 } from "../../♻️activation/🌐️browser-host/🟦️.ts";
@@ -197,7 +197,7 @@ return {
     ...(brand?.assetsDir ? staticDirVitePlugin(repoRoot, { kind: "static-dir", route: `/${brand.assetsDir}`, root: brand.assetsDir }) : []),
     ...semioBrandHtmlVitePlugins(repoRoot, brand),
     ...playgroundAssetVitePlugins(repoRoot, resolvedPlaygroundAssets, resolveGisMapTileServeMode(process.env.GIS_MAP_TILE_SERVE_MODE)),
-    ...(renderer === "wgpu" ? [tailwindcss()] : [react(), tailwindcss()]),
+    ...(renderer === "wgpu" ? [tailwindcss()] : [react(), semioPlaygroundReactRefreshCoherenceVitePlugin(), tailwindcss()]),
   ],
   optimizeDeps: {
     entries: [path.join(playDir, "🌐️.html")],

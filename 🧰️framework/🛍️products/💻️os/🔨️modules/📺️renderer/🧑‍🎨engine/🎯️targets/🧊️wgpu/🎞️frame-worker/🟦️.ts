@@ -43,6 +43,8 @@ type RendererBindings = {
   dumpFrameStats?: (windowId?: string) => string;
   /** ♿️ The window's accessibility tree, for the UI isolate's ARIA mirror — production, not a probe. */
   dumpAccessibility?: (windowId?: string) => string;
+  /** 🧊️ Every World3d surface's PUBLISHED mesh payload, per role — the oracle a committed fixture is compared against. */
+  dumpMeshStats?: (windowId?: string) => string;
   semioWgpuSetAppRole?: (role: string) => void;
   semioWgpuSetBootMode?: (mode: string) => void;
   semioWgpuSetBootExample?: (exampleId: string) => void;
@@ -320,7 +322,7 @@ function answerIntrospection(message: Extract<BrowserFrameUiMessage, { kind: "in
     respond(null, "renderer bindings are not mounted in this Worker");
     return;
   }
-  const hook = message.probe === "structure" ? bindings.dumpStructure : message.probe === "accessibility" ? bindings.dumpAccessibility : bindings.dumpFrameStats;
+  const hook = message.probe === "structure" ? bindings.dumpStructure : message.probe === "accessibility" ? bindings.dumpAccessibility : message.probe === "mesh-stats" ? bindings.dumpMeshStats : bindings.dumpFrameStats;
   if (!hook) {
     respond(null, `renderer bindings expose no ${message.probe} introspection export`);
     return;

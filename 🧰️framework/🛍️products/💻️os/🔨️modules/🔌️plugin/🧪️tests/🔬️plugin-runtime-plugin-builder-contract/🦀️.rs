@@ -2663,8 +2663,11 @@ mod plugin_builder_contract_tests {
     }
     
     /// 🧱️ Page counts the page-set law drives. The host splits at `COMMAND_PAGE_MAXIMUM_BYTES`, so an
-    /// 8-page command is the shape a `registerBrushMesh`-scale payload reaches.
-    const INGRESS_PAGE_SETS: [usize; 4] = [1, 2, 4, 8];
+    /// 8-page command is the shape a `registerBrushMesh`-scale payload reaches — and 67 is the
+    /// 272 089-char scoped contributions pack the procedural plugin pushed on 2026-09-14, which a
+    /// fixed 64-page ceiling refused outright (`command ingress exceeds 64 pages`), and 80 is past it
+    /// by a margin no constant explains.
+    const INGRESS_PAGE_SETS: [usize; 6] = [1, 2, 4, 8, 67, 80];
     
     /// ⏱️ Turns a page set may spend beyond one per page. The reactor wire admits exactly ONE page per
     /// turn, so `pages` is the protocol's own floor; the slack covers a single instance-authority
@@ -2760,7 +2763,7 @@ mod plugin_builder_contract_tests {
             assert!(measured >= reserved, "a {declared}-page authority must actually reserve its {reserved} B; the witness saw {measured} B");
             assert!(
                 measured < semio_framework::kernel::CommandPageSet::reservation_bytes(semio_framework::kernel::COMMAND_MAXIMUM_PAGES) as isize || declared == semio_framework::kernel::COMMAND_MAXIMUM_PAGES,
-                "a {declared}-page authority reserved {measured} B — the 64-page ceiling, not its own declaration"
+                "a {declared}-page authority reserved {measured} B — the whole page ceiling, not its own declaration"
             );
             drop(pages);
         }
@@ -2770,9 +2773,11 @@ mod plugin_builder_contract_tests {
             "a one-page command's ingress reservation is {one_page} B, over the {} B a routine guest path may ask a fixed linear memory for",
             semio_framework_trace::GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES
         );
+        let ceiling_spine = semio_framework::kernel::CommandPageSet::reservation_bytes(semio_framework::kernel::COMMAND_MAXIMUM_PAGES);
         assert!(
-            semio_framework::kernel::CommandPageSet::reservation_bytes(semio_framework::kernel::COMMAND_MAXIMUM_PAGES) > semio_framework_trace::GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES,
-            "the 64-page ceiling is over that bound — which is why it may not be reserved for every command"
+            ceiling_spine <= semio_framework_trace::GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES,
+            "a ceiling-sized page authority reserves {ceiling_spine} B — over the {} B bound, which is what a page held INLINE in its slot costs and why it forced a fixed page ceiling",
+            semio_framework_trace::GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES
         );
     }
     
@@ -2810,6 +2815,95 @@ mod plugin_builder_contract_tests {
         assert_eq!(wire.code.0, fault.code.0, "the refusal survives the exact wire the ingress status carries it on");
         assert_eq!(wire.message, fault.message);
         assert!(!wire.retryable, "a refusal the guest cannot serve is not something the host should retry");
+    }
+    
+    /// 📥️ The cross-language paged command-ingress contract — the rows the kernel's own reassembly law
+    /// and the TypeScript host writer's twin read.
+    #[derive(serde::Deserialize)]
+    struct CommandIngressDisorderFixture {
+        disorder: Vec<CommandIngressDisorderRow>,
+    }
+    
+    #[derive(serde::Deserialize)]
+    struct CommandIngressDisorderRow {
+        name: String,
+        pages: usize,
+        deliver: Vec<usize>,
+        #[serde(rename = "rejectedDelivery")]
+        rejected_delivery: usize,
+    }
+    
+    /// 📤️ Every page of one command with the cursor the host stamps on it — the bytes come from the real
+    /// `encode_app_command`, cut at the page extent exactly as `CommandBatchDriver` cuts them, so a law
+    /// may deliver them in an order no production owner would.
+    async fn command_ingress_pages_of(instance: u32, seq: u64, command: &protocol::AppCommand) -> Vec<(semio_framework::kernel::CommandPageCursor, semio_framework::kernel::FixedCommandPage)> {
+        let encoded = protocol::encode_app_command(command).await.expect("the fixture command encodes");
+        let byte_len = encoded.byte_len();
+        let mut reader = semio_framework::kernel::PagedCommandReader::new(encoded);
+        let mut body = Vec::with_capacity(byte_len);
+        for _ in 0..byte_len {
+            body.push(reader.read_byte().expect("the encoded command reads back"));
+        }
+        let page_count = body.len().div_ceil(semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES);
+        body.chunks(semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES)
+            .enumerate()
+            .map(|(index, chunk)| {
+                let cursor = semio_framework::kernel::CommandPageCursor {
+                    owner: u64::from(instance),
+                    generation: 1,
+                    command_index: 0,
+                    command_count: 1,
+                    instance,
+                    seq,
+                    kind: body[0],
+                    page_index: index as u32,
+                    page_count: page_count as u32,
+                    item_count: 0,
+                    metadata: 0,
+                };
+                (cursor, semio_framework::kernel::FixedCommandPage::try_copy_from(chunk).expect("a cut page"))
+            })
+            .collect()
+    }
+    
+    /// ⚖️ LAW: the guest reassembles a multi-page command in ARRIVAL ORDER and refuses every page that is
+    /// not the next one — a duplicate, a skip and a swap all answer `plugin.command-page-order`.
+    ///
+    /// 🧨️ A stream with no page ceiling is only safe if the reassembly is exact: the ingress admits one
+    /// page per turn over an unbounded number of turns, so a retried or reordered turn must not be able
+    /// to splice a command together out of the wrong bytes.
+    #[semio_framework_async_macros::async_test]
+    async fn a_command_page_that_is_not_the_next_one_is_refused_by_its_order() {
+        let fixture: CommandIngressDisorderFixture =
+            serde_json::from_str(include_str!("../../../../../../🔨️modules/🎭️actor/🧫️fixtures/📥️command-ingress-pages/🔣️.json")).expect("📥️command-ingress-pages fixture parses");
+        let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new();
+        crate::plugin_runtime::install_plugin_bundle(&runtime, __semio_plugin_bundle().await.unwrap());
+        let instance = 4_031;
+        let captured = reactor_native_lifecycle_poll(&runtime, vec![reactor_native_lifecycle_open(instance, 8, "command-page-order".into())]).await.lifecycle_receipt.expect("Captured receipt");
+        let semio_framework::kernel::ActorInstanceLifecycleReceipt::Captured { lifetime, .. } = captured else { panic!("open must emit Captured") };
+        reactor_native_lifecycle_ack(&runtime, captured).await;
+        for (index, row) in fixture.disorder.iter().enumerate() {
+            let seq = 1_024 + index as u64;
+            let line = "p".repeat((row.pages - 1) * semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES + 1);
+            let pages = command_ingress_pages_of(instance, seq, &protocol::AppCommand::CommandText { seq, line }).await;
+            assert_eq!(pages.len(), row.pages, "row {} must cut into {} pages", row.name, row.pages);
+            for (delivery, page_index) in row.deliver.iter().copied().enumerate() {
+                let (cursor, page) = pages[page_index].clone();
+                let result = crate::reactor::poll_kernel(&runtime, Vec::new(), Some((cursor, page)), None, command_page_authority_budget()).await.expect("one native ingress turn");
+                match (&result.command_ingress, delivery == row.rejected_delivery) {
+                    (semio_framework::kernel::CommandIngressStatus::Fault { fault, .. }, true) => {
+                        assert_eq!(fault.as_slice(), b"plugin.command-page-order", "row {} delivery {delivery} must be refused by its order", row.name);
+                    }
+                    (semio_framework::kernel::CommandIngressStatus::PageAccepted(_), false) => {}
+                    (observed, _) => panic!("row {} delivery {delivery} (page {page_index}) answered {observed:?}", row.name),
+                }
+                if delivery == row.rejected_delivery {
+                    break;
+                }
+            }
+            assert_eq!(crate::reactor::retained_command_ingress_occupancy(), 0, "row {} must leave no retained ingress owner behind", row.name);
+        }
+        reactor_native_lifecycle_finish(&runtime, lifetime, 9).await;
     }
     
     /// ⚖️ LAW: a long command stream leaves the guest's retained ingress authority empty. Every command
@@ -5688,6 +5782,65 @@ mod plugin_builder_contract_tests {
         assert_eq!(update.peers[0].color, Some(3));
         assert!(update.peers[0].selected);
         assert!(!update.peers[0].hovered);
+    }
+
+    /// 🧹️ A selection a later render DROPS must be retired on the render plane. `derive_node_presence`
+    /// reports only marked nodes and `PresenceHub::record_own` holds own presence until it is
+    /// overwritten, so without `retire_dropped_presence` the first selected row stays painted selected
+    /// for the life of the session on BOTH renderers — the row the user deselected never hears about it.
+    #[semio_framework_async_macros::async_test]
+    async fn a_dropped_selection_publishes_a_cleared_presence_update() {
+        let mut app = interaction_app_under_test().await;
+        let row = |key: &str, label: &str| {
+            TreeNode::try_new(
+                key,
+                Component::TreeItem(TreeItemProps {
+                    label: Label(UiText::try_from_str(label).expect("bounded fixture")),
+                    description: None,
+                    icon: None,
+                    default_open: None,
+                    draggable: None,
+                    drag_data: None,
+                    dimmed: None,
+                    row_actions: UiFixedList::default(),
+                }),
+            )
+            .expect("bounded fixture")
+        };
+        let tree = || {
+            let section = TreeNode::try_new("sec", Component::TreeSection(TreeSectionProps { label: None, default_open: None }))
+                .expect("bounded fixture")
+                .try_with_children([row("item-1", "Item 1"), row("item-2", "Item 2")])
+                .unwrap_or_else(|_| panic!("bounded fixture"));
+            let root = TreeNode::try_new("root", Component::Tree(TreeProps { interaction_domain: Some(UiText::try_from_str("items").expect("bounded fixture")) }))
+                .expect("bounded fixture")
+                .try_with_children([section])
+                .unwrap_or_else(|_| panic!("bounded fixture"));
+            ComponentTree { root }
+        };
+
+        reserved_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1"))).await;
+        let state = app.interaction_state().await;
+        app.stamp_and_cache_interaction_ui(&tree(), &state, "window").await.expect("bounded fixture");
+        let first: Vec<(String, bool)> = app.pending_presence.drain(..).map(|update| (update.node_key, update.own.selected)).collect();
+        println!("[DEBUG] presence after selecting item-1: {first:?}");
+        assert_eq!(first, vec![("item-1".to_string(), true)]);
+
+        reserved_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-2"))).await;
+        let state = app.interaction_state().await;
+        app.stamp_and_cache_interaction_ui(&tree(), &state, "window").await.expect("bounded fixture");
+        let second: Vec<(String, bool)> = app.pending_presence.drain(..).map(|update| (update.node_key, update.own.selected)).collect();
+        println!("[DEBUG] presence after moving the selection to item-2: {second:?}");
+        assert!(second.contains(&("item-2".to_string(), true)), "the newly selected row must be marked: {second:?}");
+        assert!(second.contains(&("item-1".to_string(), false)), "the row that LOST the selection must be retired, not left marked: {second:?}");
+
+        reserved_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-2"))).await;
+        let state = app.interaction_state().await;
+        app.stamp_and_cache_interaction_ui(&tree(), &state, "window").await.expect("bounded fixture");
+        let third: Vec<(String, bool)> = app.pending_presence.drain(..).map(|update| (update.node_key, update.own.selected)).collect();
+        println!("[DEBUG] presence on an unchanged selection: {third:?}");
+        assert_eq!(third, vec![("item-2".to_string(), true)], "an unchanged selection must cost exactly its own mark, never a repeated retirement");
+        close_reserved_app(&mut app);
     }
 
     /// 🧪 W-G3 §8.21 — `interactionSelect` leftover `Invocation.output` carries InteractionView selected ids + lock.

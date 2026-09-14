@@ -259,6 +259,16 @@ class PackBuffer {
   }
 }
 /* owned-wgpu:🧰️framework/🔨️modules/🛂️manifest/🟦️.ts */
+function viewContextWithIntegerCarriers(view, mint) {
+  const cursors = view.toolRunTraceCursorByWindowId;
+  if (cursors === undefined)
+    return view;
+  const carried = {};
+  for (const [windowId, cursor] of Object.entries(cursors)) {
+    carried[windowId] = { run: mint(cursor.run), generation: mint(cursor.generation), page: mint(cursor.page) };
+  }
+  return { ...view, toolRunTraceCursorByWindowId: carried };
+}
 if (undefined) {}
 /* owned-wgpu:🧰️framework/🔨️modules/🔏️hash/🟦️.ts */
 var BLAKE3_IV = new Uint32Array([1779033703, 3144134277, 1013904242, 2773480762, 1359893119, 2600822924, 528734635, 1541459225]);
@@ -15653,6 +15663,72 @@ class OwnedUiInstance {
   }
 }
 
+/* owned-wgpu:🧰️framework/🔨️modules/⏱️trace/🟦️.ts */
+var HOP_TRACE_MEASURE_PREFIX = "semio.hop.";
+var HOP_TRACE_RING_CAPACITY = 20000;
+function defaultHopTracePorts() {
+  const clock = typeof performance === "object" && typeof performance.now === "function" ? () => performance.now() : () => Date.now();
+  return {
+    now: clock,
+    measure: (name, startMs, endMs, detail) => performance.measure(name, { start: startMs, end: endMs, detail })
+  };
+}
+function hopTraceEpochNowMs() {
+  if (typeof performance !== "object" || typeof performance.now !== "function")
+    return Date.now();
+  return (typeof performance.timeOrigin === "number" ? performance.timeOrigin : 0) + performance.now();
+}
+function hopTraceEpochToTimeline(epochMs) {
+  return Math.max(0, epochMs - (typeof performance === "object" && typeof performance.timeOrigin === "number" ? performance.timeOrigin : 0));
+}
+function createHopTracer(ports = defaultHopTracePorts()) {
+  const ring = [];
+  const publish2 = (stage, startMs, endMs, detail) => {
+    const span = { stage, startMs, durationMs: Math.max(0, endMs - startMs), detail };
+    ring.push(span);
+    if (ring.length > HOP_TRACE_RING_CAPACITY)
+      ring.splice(0, ring.length - HOP_TRACE_RING_CAPACITY);
+    try {
+      ports.measure(`${HOP_TRACE_MEASURE_PREFIX}${stage}`, startMs, endMs, detail);
+    } catch {}
+  };
+  const open = (stage, detail) => {
+    const startMs = ports.now();
+    let closed = false;
+    return (extraDetail) => {
+      if (closed)
+        return;
+      closed = true;
+      publish2(stage, startMs, ports.now(), { ...detail, ...extraDetail });
+    };
+  };
+  return {
+    open,
+    record: (stage, startMs, durationMs, detail) => publish2(stage, startMs, startMs + Math.max(0, durationMs), { ...detail }),
+    time: (stage, detail, run) => {
+      const close = open(stage, detail);
+      try {
+        return run();
+      } finally {
+        close();
+      }
+    },
+    timeAsync: async (stage, detail, run) => {
+      const close = open(stage, detail);
+      try {
+        return await run();
+      } finally {
+        close();
+      }
+    },
+    spans: () => ring,
+    reset: () => {
+      ring.length = 0;
+    }
+  };
+}
+var hopTrace = createHopTracer();
+
 /* owned-wgpu:🧰️framework/🔨️modules/🎭️actor/📮️shard-client/📤️segmented-download/🟦️.ts */
 var SEGMENTED_DOWNLOAD_CONTRACT = Object.freeze({
   chunkBytes: 4096,
@@ -15702,7 +15778,7 @@ function residentChild(current, grant) {
     return residentStep("rejected", "actor-resident.child-grant");
   return current.kind === "complete" || current.kind === "ready" ? { ...current, kind: "pending" } : current;
 }
-var SHARD_COMMAND_MAXIMUM_PAGES = 64;
+var SHARD_COMMAND_MAXIMUM_PAGES = GUEST_HOST_ANSWER_CEILING_BYTES / ACTOR_BYTE_PAGE_BYTES;
 function createShardCommandIngressPages(input) {
   if (input.command.length === 0)
     throw new Error("[DEBUG] command ingress cannot encode an empty command");
@@ -15743,6 +15819,22 @@ function orderEnvelopesByLane(envelopes) {
 }
 function formatQuotaBreachMessage(breach) {
   return `outstanding effect quota exceeded: ${breach.quota} limit=${breach.limit} actual=${breach.actual}`;
+}
+function publishShardWorkerTurnSpans(timings, answeredAtEpochMs, actorId) {
+  const finite2 = (value) => typeof value === "number" && Number.isFinite(value);
+  if (!finite2(timings.receivedAtEpochMs))
+    return;
+  const detail = { actorId, events: finite2(timings.events) ? timings.events : 0, eventKinds: typeof timings.eventKinds === "string" ? timings.eventKinds : "", replyCloneMs: finite2(timings.previousReplyCloneMs) ? Math.round(timings.previousReplyCloneMs * 100) / 100 : -1, patches: finite2(timings.patches) ? timings.patches : 0, status: typeof timings.status === "string" ? timings.status : "", commandPageBytes: finite2(timings.commandPageBytes) ? timings.commandPageBytes : 0 };
+  const span = (stage, fromEpochMs, toEpochMs) => {
+    if (!finite2(fromEpochMs) || !finite2(toEpochMs) || toEpochMs < fromEpochMs)
+      return;
+    hopTrace.record(stage, hopTraceEpochToTimeline(fromEpochMs), toEpochMs - fromEpochMs, detail);
+  };
+  span("worker.receive", timings.postedAtEpochMs, timings.receivedAtEpochMs);
+  span("worker.decode", timings.receivedAtEpochMs, timings.guestEnteredAtEpochMs);
+  span("worker.guest", timings.guestEnteredAtEpochMs, timings.guestLeftAtEpochMs);
+  span("worker.reply", timings.guestLeftAtEpochMs, answeredAtEpochMs);
+  span("worker.turn", timings.receivedAtEpochMs, timings.repliedAtEpochMs);
 }
 var SHARD_LIVENESS_POLICY = Object.freeze({
   heartbeatTimeoutMs: 5000,
@@ -16740,6 +16832,7 @@ class ShardClient {
     return slot;
   }
   handleMessage(slot, message) {
+    const answeredAtEpochMs = hopTraceEpochNowMs();
     if (!slot.available || this.shards[slot.index] !== slot)
       return;
     this.noteLiveness(slot, this.now());
@@ -16767,6 +16860,8 @@ class ShardClient {
     const entry = this.pending.get(message.requestId);
     if (!entry || entry.slot !== slot || this.shards[slot.index] !== slot)
       return;
+    if (message.kind === "result" && message.ok && message.timings)
+      publishShardWorkerTurnSpans(message.timings, answeredAtEpochMs, entry.actorId);
     if (entry.output && !entry.output.captureResponse(message)) {
       entry.reject(new Error("actor-output.response-refused"));
       return;
@@ -16898,7 +16993,7 @@ class ShardClient {
       if (slot.heartbeat.oldestPendingStartedAtMs === null)
         slot.heartbeat.oldestPendingStartedAtMs = startedAtMs;
       try {
-        slot.worker.postMessage(message);
+        slot.worker.postMessage(message.kind === "turn" ? { ...message, postedAtEpochMs: hopTraceEpochNowMs() } : message);
         posted?.();
       } catch (error) {
         this.pending.delete(requestId);
@@ -20106,7 +20201,7 @@ var PLUGIN_BUILD_TARGETS = [
   { pluginId: "norm", packageId: "semio:norm", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83D\uDCD5️norm/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", wasmOut: "semio_s_plugin_norm.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: [], activationEvents: ["on-artifact-kind:computation.norm.din4108", "on-artifact-kind:computation.norm.din16798", "on-artifact-kind:computation.norm.din18599", "on-artifact-kind:computation.norm.en1990", "on-artifact-kind:computation.norm.en1991", "on-artifact-kind:computation.norm.en1992", "on-artifact-kind:computation.norm.en1993", "on-artifact-kind:computation.norm.en1994", "on-artifact-kind:computation.norm.en1995", "on-artifact-kind:computation.norm.en1996", "on-artifact-kind:computation.norm.en1997", "on-artifact-kind:computation.norm.en1998", "on-artifact-kind:computation.norm.en1999", "on-artifact-kind:computation.norm.iso16757", "on-artifact-kind:computation.norm.vdi3805"], extensionPoints: [], executionMode: "isolated" },
   { pluginId: "note", packageId: "semio:note", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83D\uDDD2️note/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", wasmOut: "semio_s_plugin_note.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: [], activationEvents: ["on-artifact-kind:2d.note"], extensionPoints: [], executionMode: "isolated" },
   { pluginId: "playbook", packageId: "semio:playbook", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83D\uDCD6️playbook/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", wasmOut: "semio_s_plugin_playbook.wasm", role: "plugin", capabilities: [], contributes: [], consumes: ["playbook.blockKind"], dependsOn: [], activationEvents: [], extensionPoints: [] },
-  { pluginId: "procedural", packageId: "semio:procedural", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83C\uDF00️procedural/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", wasmOut: "semio_s_plugin_procedural.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: ["forms.questionKind", "flow.extension"], dependsOn: [], activationEvents: ["on-artifact-kind:2d.generation", "on-artifact-kind:3d.generation"], extensionPoints: [], executionMode: "isolated" },
+  { pluginId: "procedural", packageId: "semio:procedural", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83C\uDF00️procedural/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", wasmOut: "semio_s_plugin_procedural.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: ["forms.questionKind", "flow.extension"], dependsOn: [], activationEvents: ["on-artifact-kind:data.assembly", "on-artifact-kind:2d.generation", "on-artifact-kind:3d.generation"], extensionPoints: [], executionMode: "isolated" },
   { pluginId: "process", packageId: "semio:process", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83C\uDFED️process/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", wasmOut: "semio_s_plugin_process.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: ["process.machines"], dependsOn: [], activationEvents: ["on-artifact-kind:3d.process"], extensionPoints: [], executionMode: "isolated" },
   { pluginId: "puzzle", packageId: "semio:puzzle", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83E\uDDE9️puzzle/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", wasmOut: "semio_s_plugin_puzzle.wasm", role: "plugin", capabilities: ["documents.write", "ui.dialog", "shell.clipboard"], contributes: [], consumes: [], dependsOn: [], activationEvents: ["on-artifact-kind:2d.puzzle", "on-artifact-kind:3d.puzzle", "on-artifact-kind:5d.puzzle"], extensionPoints: [], executionMode: "isolated" },
   { pluginId: "raster", packageId: "semio:raster", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83D\uDDA8️raster/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", wasmOut: "semio_s_plugin_raster.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: [], activationEvents: ["on-artifact-kind:2d.raster"], extensionPoints: [], executionMode: "isolated" },
@@ -20117,7 +20212,7 @@ var PLUGIN_BUILD_TARGETS = [
   { pluginId: "sourcing", packageId: "semio:sourcing", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83E\uDEB5️sourcing/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", wasmOut: "semio_s_plugin_sourcing.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: [], activationEvents: ["on-artifact-kind:catalogue.sourcing"], extensionPoints: [], executionMode: "isolated" },
   { pluginId: "space", packageId: "semio:space", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83E\uDE90️space/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", wasmOut: "semio_s_plugin_space.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: [], activationEvents: ["on-artifact-kind:space.shome", "on-artifact-kind:space.sspace"], extensionPoints: [], host: { landingAppId: "home", hostAppId: "studio" }, executionMode: "isolated" },
   { pluginId: "stdio", packageId: "semio:stdio", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83D\uDDC4️stdio/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", wasmOut: "semio_s_plugin_stdio.wasm", role: "plugin", capabilities: [], contributes: [], consumes: [], dependsOn: [], activationEvents: [], extensionPoints: [] },
-  { pluginId: "trinity", packageId: "semio:trinity", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83D\uDD31️trinity/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", wasmOut: "semio_s_plugin_trinity.wasm", role: "plugin", capabilities: [], contributes: [], consumes: [], dependsOn: [], activationEvents: [], extensionPoints: [] },
+  { pluginId: "trinity", packageId: "semio:trinity", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83D\uDD31️trinity/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", wasmOut: "semio_s_plugin_trinity.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: [], activationEvents: ["on-artifact-kind:graph.trinity", "on-artifact-kind:text.rewriting"], extensionPoints: [], executionMode: "isolated" },
   { pluginId: "vcs", packageId: "semio:vcs", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83C\uDF3F️vcs/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", wasmOut: "semio_s_plugin_vcs.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: [], activationEvents: ["on-artifact-kind:vcs.document"], extensionPoints: [], executionMode: "isolated" },
   { pluginId: "writer", packageId: "semio:writer", cratePath: "✏️s/\uD83D\uDD0C️plugins/✒️writer/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", wasmOut: "semio_s_plugin_writer.wasm", role: "plugin", capabilities: ["documents.write"], contributes: [], consumes: [], dependsOn: [], activationEvents: ["on-artifact-kind:text.document"], extensionPoints: [], executionMode: "isolated" }
 ];
@@ -20189,8 +20284,8 @@ var PLAYGROUND_BUILD_TARGETS = [
   { variant: "fem3d", pluginId: "fem", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83C\uDFD7️fem/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", app: "s.fem.fem3d@1/*#editor", aliases: ["fem 3d"], ports: { react: 6087, wgpu: 6187 }, examples: ["\uD83C\uDFAC️demo"], engines: [], assets: [] },
   { variant: "flow", pluginId: "flow", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83C\uDF0A️flow/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", aliases: [], ports: { react: 6016, wgpu: 6116 }, examples: ["\uD83C\uDFAC️demo", "\uD83C\uDFAC️demo-session"], engines: ["./\uD83E\uDDF0️framework/\uD83D\uDECD️products/\uD83D\uDCBB️os/\uD83D\uDD28️modules/\uD83C\uDF0A️flow/\uD83E\uDEC0️core/\uD83D\uDCE6️packages/\uD83E\uDD80️rust"], assets: [] },
   { variant: "forms", pluginId: "forms", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83D\uDCCB️forms/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", aliases: [], ports: { react: 6058, wgpu: 6158 }, examples: ["\uD83C\uDFAC️demo"], engines: [], assets: [] },
-  { variant: "generation2d", pluginId: "procedural", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83C\uDF00️procedural/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", app: "s.procedural.generation2d@1/*#editor", aliases: ["procedural 2d"], ports: { react: 6021, wgpu: 6121 }, examples: ["\uD83C\uDFAC️demo"], engines: [], assets: [] },
-  { variant: "generation3d", pluginId: "procedural", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83C\uDF00️procedural/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", app: "s.procedural.generation3d@1/*#editor", aliases: ["procedural 3d"], ports: { react: 6018, wgpu: 6118 }, examples: ["\uD83C\uDF44️hexagonal-mushroom-column", "\uD83C\uDF69️sphere-cut-with-torus", "\uD83D\uDC1A️box-shell-preview", "\uD83D\uDCD0️box-fillet-preview", "\uD83D\uDCE6️rectangle-extrude-volume", "\uD83E\uDDF2️sphere-box-fuse", "\uD83E\uDDF9️face-sweep-extrude", "\uD83E\uDEA2️rectangle-wire-preview"], engines: [], assets: [] },
+  { variant: "generation2d", pluginId: "procedural", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83C\uDF00️procedural/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", app: "s.procedural.generation2d@1/*#editor", aliases: ["procedural 2d"], ports: { react: 6021, wgpu: 6121 }, examples: ["\uD83C\uDF44️hexagonal-mushroom-column", "\uD83C\uDF69️sphere-cut-with-torus", "\uD83C\uDFAC️demo", "\uD83C\uDFAC️demo-session", "\uD83D\uDC1A️box-shell-preview", "\uD83D\uDCD0️box-fillet-preview", "\uD83D\uDCE6️rectangle-extrude-volume", "\uD83D\uDEAA️two-room-corridor", "\uD83E\uDDF1️wall-roof-facade-strip", "\uD83E\uDDF2️sphere-box-fuse", "\uD83E\uDDF9️face-sweep-extrude", "\uD83E\uDEA2️rectangle-wire-preview"], engines: [], assets: [] },
+  { variant: "generation3d", pluginId: "procedural", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83C\uDF00️procedural/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", app: "s.procedural.generation3d@1/*#editor", aliases: ["procedural 3d"], ports: { react: 6018, wgpu: 6118 }, examples: ["\uD83C\uDF44️hexagonal-mushroom-column", "\uD83C\uDF69️sphere-cut-with-torus", "\uD83C\uDFAC️demo", "\uD83C\uDFAC️demo-session", "\uD83D\uDC1A️box-shell-preview", "\uD83D\uDCD0️box-fillet-preview", "\uD83D\uDCE6️rectangle-extrude-volume", "\uD83D\uDEAA️two-room-corridor", "\uD83E\uDDF1️wall-roof-facade-strip", "\uD83E\uDDF2️sphere-box-fuse", "\uD83E\uDDF9️face-sweep-extrude", "\uD83E\uDEA2️rectangle-wire-preview"], engines: [], assets: [] },
   { variant: "generator", pluginId: "demonstrator", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83C\uDFAA️demonstrator/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", app: "s.procedural.generation3d@1/*#editor", brand: "entwerfen-mit-bestand-generator", aliases: ["entwerfen-mit-bestand-generator"], ports: { react: 6027, wgpu: 6127 }, examples: ["\uD83C\uDFAC️demo"], engines: [], assets: [] },
   { variant: "gis2d", pluginId: "gis", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83C\uDF0D️gis/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", app: "s.gis.gismap@1/*#editor", aliases: ["gis 2d"], ports: { react: 6040, wgpu: 6140 }, examples: ["\uD83C\uDFAC️demo", "\uD83C\uDFAC️demo-session"], engines: ["./\uD83E\uDDF0️framework/\uD83D\uDD28️modules/\uD83D\uDDFA️surface/\uD83D\uDCE6️packages/\uD83E\uDD80️rust"], assets: [{ kind: "tile-proxy", route: "/osm", upstream: "https://tile.openstreetmap.org/{z}/{x}/{y}.png", cache: "osm-tiles" }, { kind: "tile-proxy", route: "/vt", upstream: "https://tiles.openfreemap.org/planet", cache: "openfreemap-vt" }] },
   { variant: "gis3d", pluginId: "gis", cratePath: "✏️s/\uD83D\uDD0C️plugins/\uD83C\uDF0D️gis/\uD83D\uDCE6️packages/\uD83E\uDD80️rust", app: "s.gis.gisterrain@1/*#editor", aliases: ["gis 3d"], ports: { react: 6083, wgpu: 6183 }, examples: ["\uD83C\uDFAC️demo", "\uD83C\uDFAC️demo-session"], engines: ["./\uD83E\uDDF0️framework/\uD83D\uDD28️modules/\uD83D\uDDFA️surface/\uD83D\uDCE6️packages/\uD83E\uDD80️rust"], assets: [{ kind: "tile-proxy", route: "/dem", upstream: "https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png", cache: "terrarium-dem" }] },
@@ -23120,6 +23215,11 @@ function encodePackValue(value) {
   packEncodeValue(value, symbolIndex, out);
   return new Uint8Array(out);
 }
+function viewContextWireValue(view) {
+  if (view === null || typeof view !== "object" || Array.isArray(view))
+    return view;
+  return viewContextWithIntegerCarriers(view, (value) => isPackInteger(value) ? value : packUInt(BigInt(value)));
+}
 function decodePackValue(bytes) {
   const pos = [0];
   const decoder = new TextDecoder;
@@ -23279,7 +23379,7 @@ function decodeInvocationResultPacks(frame) {
 }
 var SCENE_PACK_UNIT = Symbol("scene-pack-unit");
 if (undefined) {}
-var INVOCATION_RESULT_PACK_MAXIMUM_BYTES = 262144;
+var INVOCATION_RESULT_PACK_MAXIMUM_BYTES = GUEST_HOST_ANSWER_CEILING_BYTES;
 function readOptU64(bytes, pos) {
   return readBool(bytes, pos) ? readVarintU64(bytes, pos) : null;
 }
@@ -24098,7 +24198,7 @@ class AppChannelClient {
   }
   async command(commandBytes, viewState) {
     return this.sendCommand({
-      Command: { seq: this.nextSeq(), command: Array.from(commandBytes), view_state: Array.from(encodePackValue(viewState)) }
+      Command: { seq: this.nextSeq(), command: Array.from(commandBytes), view_state: Array.from(encodePackValue(viewContextWireValue(viewState))) }
     });
   }
   async configure(config) {
@@ -26678,7 +26778,7 @@ function answerIntrospection(message) {
     respond(null, "renderer bindings are not mounted in this Worker");
     return;
   }
-  const hook = message.probe === "structure" ? bindings.dumpStructure : message.probe === "accessibility" ? bindings.dumpAccessibility : bindings.dumpFrameStats;
+  const hook = message.probe === "structure" ? bindings.dumpStructure : message.probe === "accessibility" ? bindings.dumpAccessibility : message.probe === "mesh-stats" ? bindings.dumpMeshStats : bindings.dumpFrameStats;
   if (!hook) {
     respond(null, `renderer bindings expose no ${message.probe} introspection export`);
     return;

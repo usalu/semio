@@ -30,6 +30,21 @@ mkdirSync(outRoot, { recursive: true });
 const browser = await chromium.launch({ headless: true, args: ["--enable-unsafe-webgpu", "--ignore-gpu-blocklist", "--use-angle=metal"] });
 const results = [];
 
+/** 🩺️ WHY the row was unreachable, from the state the scan actually found — never a bare
+ * `blocked-no-row`. Each answer names a different defect and a different owner: a shell still in boot,
+ * a window the dock never planned, a generations body that published no ACTIONS section, a row whose
+ * rect collapsed, or a faulted surface. */
+function blockedVerdict(found) {
+  if (!found.bootLeft) return "blocked-still-booting";
+  const generations = found.scanned.find((window) => window.windowId.includes("generations"));
+  if (!generations) return found.windowIds.length === 0 ? "blocked-no-windows" : "blocked-no-generations-window";
+  if (!generations.planned) return "blocked-generations-window-unplanned";
+  if (generations.nodes === 0) return found.generationsRendered > 0 ? "blocked-generations-body-empty" : "blocked-generations-never-rendered";
+  if (found.needleAnywhere === 0) return "blocked-actions-section-absent";
+  if (generations.zeroRects > 0) return "blocked-row-rect-collapsed";
+  return "blocked-no-row";
+}
+
 for (const example of examples) {
   const outDir = join(outRoot, example);
   mkdirSync(outDir, { recursive: true });
@@ -117,12 +132,22 @@ for (const example of examples) {
   const plan = dockPlan();
   lines.push(`${at()} PROBE windowIds ${JSON.stringify(windowIds)} dockPlan ${JSON.stringify(plan)}`);
 
-  /** 🎯️ Every retained node whose published path or text names the row, in PAGE coordinates. */
+  /** 🎯️ Every retained node whose published path or text names the row, in PAGE coordinates.
+   *
+   * 🩺️ The scan also KEEPS what it walked past. `blocked-no-row` used to be the whole answer when the
+   * needle missed, and a bare "the row is not there" cannot tell a shell that never left boot from a
+   * window the dock never planned, from a generations body that published an empty ACTIONS section,
+   * from a row whose rect collapsed to zero — four different defects that all read identically.
+   * Every one of them is now named in `found`, from the shell's own published evidence. */
   const targets = [];
+  const scanned = [];
   for (const id of windowIds) {
     const body = plan[id];
     const sample = await dump(id);
-    for (const node of sample?.structure?.nodes ?? []) {
+    const nodes = sample?.structure?.nodes ?? [];
+    const sections = [...new Set(nodes.map((node) => String(node.path ?? "").split("/").map((step) => step.split("#")[1]).filter(Boolean).at(-1)).filter(Boolean))];
+    scanned.push({ windowId: id, planned: Boolean(body), nodes: nodes.length, sections: sections.slice(0, 24), zeroRects: nodes.filter((node) => (node.rect?.[2] ?? 0) <= 0 || (node.rect?.[3] ?? 0) <= 0).length });
+    for (const node of nodes) {
       const path = String(node.path ?? "");
       const text = String(node.text ?? "");
       const matches = path.includes(rowNeedle) || text.toLowerCase().includes("add generation");
@@ -132,7 +157,20 @@ for (const example of examples) {
       targets.push({ windowId: id, path, text: node.text ?? null, rect: node.rect, page: [body.x + rx + rw / 2, body.y + ry + rh / 2] });
     }
   }
-  lines.push(`${at()} PROBE targets ${JSON.stringify(targets)}`);
+  /** 🩺️ What the shell itself said about the state this scan found. */
+  const found = {
+    bootLeft: has("boot_shell leave").length > 0,
+    windowIds,
+    dockPlanned: Object.keys(plan),
+    scanned,
+    needle: rowNeedle,
+    needleAnywhere: has(rowNeedle).length,
+    generationsRendered: has("render begin surface=generation3d-generations").length,
+    surfaceFaults: [...new Set(has("wgpu-shell surface fault").map((line) => line.slice(line.indexOf("surface="), line.indexOf("surface=") + 160)))].slice(0, 4),
+    frameFaults: [...new Set(has("frame fault recorded").map((line) => line.slice(line.indexOf("frame fault"), line.indexOf("frame fault") + 140)))].slice(0, 4),
+    alert: await page.evaluate(() => document.querySelector('[role="alert"]')?.textContent?.trim()?.slice(0, 160) ?? null).catch(() => null),
+  };
+  lines.push(`${at()} PROBE targets ${JSON.stringify(targets)} found ${JSON.stringify(found)}`);
 
   await page.evaluate(() => {
     const canvas = document.querySelector("canvas") ?? document.body;
@@ -188,9 +226,10 @@ for (const example of examples) {
     url,
     targetsFound: targets.length,
     target: targets[0] ?? null,
+    found,
     clicked,
     dispatched: has("addGeneration").length - generationsBefore,
-    verdict: after.ok ? "pass" : targets.length === 0 ? "blocked-no-row" : clicked && clicked.delivered === 0 ? "blocked-no-pointer" : "fail",
+    verdict: after.ok ? "pass" : targets.length === 0 ? blockedVerdict(found) : clicked && clicked.delivered === 0 ? "blocked-no-pointer" : "fail",
     timeToMeshSeconds: firstMs === null ? null : Math.round(firstMs / 10) / 100,
     before: { ok: before.ok, meshy: before.meshy },
     after: { ok: after.ok, meshy: after.meshy, geometry: after.geometry, alert: after.alert },

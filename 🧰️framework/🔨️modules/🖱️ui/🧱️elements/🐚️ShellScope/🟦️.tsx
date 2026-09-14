@@ -120,6 +120,27 @@ export function useShellScopeOptional(): ShellScope | null {
 export function shellScopeStorageOrBrowserFallback(scope: ShellScope | null): StoragePort {
   return scope?.storage ?? createBrowserStoragePort();
 }
+
+/** @emoji 🪟️ The ONE host every floating surface (select/dropdown/context menu, popover, tooltip hint,
+ * dialog, command palette, drag ghost) mounts into. It MUST be the enclosing shell's own portal layer,
+ * because appearance is a SCOPE, not a document flag: `applyElementsSurfaceChromeAppearanceDom` paints
+ * `.dark` (and `--base`/`--foreground`) on the shell's `.semio-scope` root and leaves
+ * `document.documentElement` on the light palette, so a surface portaled to `document.body` inherits
+ * the light appearance's `--foreground`/`--base` and paints light-on-dark — measured at 1.19:1 on the
+ * navbar example picker over the dark generation3d shell (ticket 26/09/09 PROCEDURAL-3D-END-TO-END,
+ * `📓️popover-contrast-2026-09-14.md`). `document.body` stays the fallback ONLY for a surface rendered
+ * outside any shell (storybook, a single-element unit test), where `documentElement` IS the scope.
+ * @see https://drafts.csswg.org/css-variables/#cycles — inherited custom properties resolve against the
+ * computed value of the DOM parent, so the portal target alone decides which appearance a surface reads. */
+export function useShellFloatingSurfaceHost(): HTMLElement | null {
+  const scope = useShellScopeOptional();
+  const layer = scope?.portalLayerRef.current ?? null;
+  const [, resolveAfterAttach] = React.useState(0);
+  React.useEffect(() => {
+    if ((scope?.portalLayerRef.current ?? null) !== layer) resolveAfterAttach((generation) => generation + 1);
+  }, [layer, scope]);
+  return layer ?? (typeof document === "undefined" ? null : document.body);
+}
 // #endregion 🐚️ShellScope
 
 // #region 🐚️ShellActivity

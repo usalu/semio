@@ -1,7 +1,7 @@
 type TestSource = { readonly directory: string; readonly url: string };
 
 export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, testSource: TestSource): Promise<void> {
-  const { App, Button, CELEBRATE_STAMP_DURATION_MS, COMPACT_UI_DRIVER, COMPOSE_WINDOW_TEMPLATE_MIME, Canvas, CanvasPickMenu, ContextMenu, ContextMenuController, DEFAULT_GUMBALL_CONFIG, DEFAULT_UI_DRIVER, Engagement, FlowProvider, Footer, GLASS_OVERLAY_BOX_CLASS, GUMBALL_DEFAULT_SHIFT_ROTATION_SNAP, GUMBALL_DEFAULT_SHIFT_SCALE_SNAP, GUMBALL_PLANE_OFFSET, GUMBALL_PLANE_SIZE, GUMBALL_PREVIEW_DISK_RADIUS, GUMBALL_PREVIEW_MIN_EXTENT, GUMBALL_PREVIEW_RING_RADIUS, GUMBALL_RING_RADIUS, ICONS, INTRODUCTION_DEMO_IDLE_THRESHOLD_MS, INTRODUCTION_INFO_BOX_GAP_PX, Icon, Input, LEVELS, Label, Layout, LevelProvider, MODE_CANVAS_INSET_CLASS, Mode, Navbar, NotFound, OrthographicCamera, Pane, PaneHost, Panel, PanelChromeTabBar, PanelDockProvider, PanelTabBar, PerspectiveCamera, Popover, PopoverContent, PopoverTrigger, React, RouteLink, Scrollable, Search, ShellScopeProvider, SortableTreeItems, Surface, THREE, TREE_SECTION_REORDER_MIME, TextSelectionContextMenuHost, Toggle, Tree, TreeContext, TreeItem, UIIntroduction, UI_CHROME_LOCALE_STORAGE_KEY, UI_ELEMENT_REGISTRY, Ui, UiDriverProvider, UiMobileProvider, WINDOW_SILHOUETTE_BORDER_KINDS, WINDOW_SILHOUETTE_GEOMETRY_SCHEMA, WINDOW_SILHOUETTE_PATH_INSET, Window, WindowChrome, WindowMeasureTreeGroup, WindowMeasureTreeLeaf, WindowMeasuresTree, applyAxisGroupLayoutDelta, applyModeDrop, applyModeJoinCornerResize, applySearchSpaceAction, assertUniqueIconConceptAssignments, beginWindowTemplateDrag, beginWindowTemplatePointerDrag, borderNormalClass, buildTextSelectionContextMenuItems, cancelWindowTemplatePointerDrag, celebrateAllElements, celebrateElement, celebrateElements, childElementId, chromeHostedOpenPanelPositionStyle, chromeStatusBorderClass, clampIntroductionInfoBoxPosition, clampSliderValuesToReady, classifyIconSelectorMode, cn, computeModeDropZone, computeModeSplitPreviewInBody, computeTabDockDropZone, computeTabInsertPreview, createDOMEventBinding, createDiagramForceSimulation, createEvenWindowLayout, createMemoryStoragePort, createShellScope, createWindowSilhouetteGeometry, decodeIcon, defaultDiagramForceConfig, detectShellLocale, elementIdSegment, elementIdSelector, encodeIcon, endWindowTemplateDrag, engagementActionTokenEquals, filterSearchPossibles, flowFromAnchor, formatNumber, glassClass, gumballApplyHandleVisualMaterial, gumballAxisRotateAngle, gumballAxisScaleFactor, gumballConfigVisible, gumballEffectiveSnapValue, gumballHandleAllowedByPlane, gumballHandleEnabled, gumballHandleKindToTransformMode, gumballHandleRaycast, gumballHandleVisualState, gumballKindFromRaycastObject, gumballPlaneScaleCorner, gumballPlaneScaleFactors, gumballPointerConsumesCanvasEventRef, gumballPreviewWorldExtent, gumballProjectRayOntoAxis, gumballRayAxisParameter, gumballRayFromNdc, gumballRayPlanePoint, gumballRaycastOwnedAtClientPoint, gumballResolveDragSnaps, gumballResolveHandleVisual, gumballScaleAxisOffset, gumballScalePlaneAxisIndices, gumballSnapScalar, iconShotFrameClass, iconShotFrameStyle, iconSvgMarkup, initUiLocaleSync, insertWindowAsTabAtCorner, insertWindowAtDropZone, installElementsSurfaceBrowserDefaultSuppression, introductionDemoArcPoint, introductionDemoResolveVisual, introductionPointRelativeToHost, introductionRectRelativeToHost, isContextMenuPointerTarget, isElementId, isPointerEventOnDomTextSelection, isSearchSuggestionActionTarget, isUiTypingTarget, isWindowChromeIntroducedTarget, measureWindowSilhouetteMetrics, mergeTreeSectionOrder, modeCollectWindowIds, modeDockChromeGridPlacement, modeDockOutLayout, modeDockTabLabelClassName, modeDockTabsWithInsertPreview, modeJoinCornerSpecsForCrossSeparator, modeJoinCornerSpecsForSeparator, modePerpendicularJoinSeparators, modeStackTabsByCorner, navigateOwnedRoute, ndcToViewportPoint, nearestAnchor, normalizeEngagementActionText, normalizeWindowSilhouetteChips, normalizeWindowSilhouetteMetrics, parseOwnedRouteTarget, parseUiTheme, polylinePointAt, progressPanelTabSelection, publishShellNavbarTrailingEndWidthPx, rankFuzzyItems, reactHostPort, readActiveWindowTemplateDragSession, readDomTextSelection, readResizableJoinCornerSpec, readScrollerContentOverflows, reconcileWindows, referenceMediaKindFromUrl, registerIntroductionSurfaceResolver, removeWindowFromLayout, renderToStaticMarkup, resolveCatalogIconSvg, resolveGumballConfig, resolveGumballVisualPalette, resolveIntroductionPlacement, resolveIntroductionPoint, resolveJoinCornerPeerCrossAxes, resolveModeSplitSideInBody, resolveSliderDraftClear, resolveTranslationLabel, resolveWindowSilhouetteBorderKind, routeWindowSearchEscape, routeWindowSearchSpace, sampleBezierSegments, searchActiveInlineCompletion, searchControlledLineV1, searchInlineCompletion, semioTheme, setActiveUiTheme, shellFloorFillClass, shellFloorPaints, shellNavbarTrailingEndWidthByRoot, shortcodeCatalogKey, shortcodeEmoji, shouldActivateSearchPossibleOnConfirm, shouldRouteKeysToWindowSearch, singleTreeLeaf, sliderValuesMatch, splitIntroductionBodyParagraphs, splitWithWindow, sunPositionFromAzimuthElevation, surfaceClass, uiDataLabel, uiI18n, uiSpacingPx, useFirstDraggableElementAlias, useFlow, useIntroductionPointerIdle, useLevel, usePaneSlot, useSurface, windowChromeTitleChipClass, windowMeasuresDefaultWidthPx, windowMeasuresMinWidthPx, publishShellDockRightColumnLeftPx, dockColumnInlineReservePx, anchorInlineEdgeReserveStyle, windowSilhouetteBorderPaint, windowSilhouetteContains, windowSilhouetteOutline, windowSilhouetteOutlineViolations, windowSilhouettePath, windowTemplatePaletteTreeDragController, windowTemplatePointerDragRef } = dependencies;
+  const { App, Button, CELEBRATE_STAMP_DURATION_MS, COMPACT_UI_DRIVER, COMPOSE_WINDOW_TEMPLATE_MIME, Canvas, CanvasPickMenu, ContextMenu, ContextMenuController, DEFAULT_GUMBALL_CONFIG, DEFAULT_UI_DRIVER, Engagement, FlowProvider, Footer, GLASS_OVERLAY_BOX_CLASS, GUMBALL_DEFAULT_SHIFT_ROTATION_SNAP, GUMBALL_DEFAULT_SHIFT_SCALE_SNAP, GUMBALL_PLANE_OFFSET, GUMBALL_PLANE_SIZE, GUMBALL_PREVIEW_DISK_RADIUS, GUMBALL_PREVIEW_MIN_EXTENT, GUMBALL_PREVIEW_RING_RADIUS, GUMBALL_RING_RADIUS, ICONS, INTRODUCTION_DEMO_IDLE_THRESHOLD_MS, INTRODUCTION_INFO_BOX_GAP_PX, Icon, Input, LEVELS, Label, Layout, LevelProvider, MODE_CANVAS_INSET_CLASS, Mode, Navbar, NotFound, OrthographicCamera, Pane, PaneHost, Panel, PanelChromeTabBar, PanelDockProvider, PanelTabBar, PerspectiveCamera, Popover, PopoverContent, PopoverTrigger, React, RouteLink, Scrollable, Search, ShellScopeProvider, SortableTreeItems, Surface, THREE, TREE_SECTION_REORDER_MIME, TextSelectionContextMenuHost, Toggle, Tree, TreeContext, TreeItem, UIIntroduction, UI_CHROME_LOCALE_STORAGE_KEY, UI_ELEMENT_REGISTRY, Ui, UiDriverProvider, UiMobileProvider, WINDOW_SILHOUETTE_BORDER_KINDS, WINDOW_SILHOUETTE_GEOMETRY_SCHEMA, WINDOW_SILHOUETTE_PATH_INSET, Window, WindowChrome, WindowMeasureTreeGroup, WindowMeasureTreeLeaf, WindowMeasuresTree, applyAxisGroupLayoutDelta, applyModeDrop, applyModeJoinCornerResize, applySearchSpaceAction, assertUniqueIconConceptAssignments, beginWindowTemplateDrag, beginWindowTemplatePointerDrag, borderNormalClass, buildTextSelectionContextMenuItems, cancelWindowTemplatePointerDrag, celebrateAllElements, celebrateElement, celebrateElements, childElementId, chromeHostedOpenPanelPositionStyle, chromeStatusBorderClass, clampIntroductionInfoBoxPosition, clampSliderValuesToReady, classifyIconSelectorMode, cn, computeModeDropZone, computeModeSplitPreviewInBody, computeTabDockDropZone, computeTabInsertPreview, createDOMEventBinding, createDiagramForceSimulation, createEvenWindowLayout, createMemoryStoragePort, createShellScope, createWindowSilhouetteGeometry, decodeIcon, defaultDiagramForceConfig, detectShellLocale, elementIdSegment, elementIdSelector, encodeIcon, endWindowTemplateDrag, engagementActionTokenEquals, filterSearchPossibles, flowFromAnchor, formatNumber, glassClass, gumballApplyHandleVisualMaterial, gumballAxisRotateAngle, gumballAxisScaleFactor, gumballConfigVisible, gumballEffectiveSnapValue, gumballHandleAllowedByPlane, gumballHandleEnabled, gumballHandleKindToTransformMode, gumballHandleRaycast, gumballHandleVisualState, gumballKindFromRaycastObject, gumballPlaneScaleCorner, gumballPlaneScaleFactors, gumballPointerConsumesCanvasEventRef, gumballPreviewWorldExtent, gumballProjectRayOntoAxis, gumballRayAxisParameter, gumballRayFromNdc, gumballRayPlanePoint, gumballRaycastOwnedAtClientPoint, gumballResolveDragSnaps, gumballResolveHandleVisual, gumballScaleAxisOffset, gumballScalePlaneAxisIndices, gumballSnapScalar, iconShotFrameClass, iconShotFrameStyle, iconSvgMarkup, initUiLocaleSync, insertWindowAsTabAtCorner, insertWindowAtDropZone, installElementsSurfaceBrowserDefaultSuppression, introductionDemoArcPoint, introductionDemoResolveVisual, introductionPointRelativeToHost, introductionRectRelativeToHost, isContextMenuPointerTarget, isElementId, isPointerEventOnDomTextSelection, isSearchSuggestionActionTarget, isUiTypingTarget, isWindowChromeIntroducedTarget, measureWindowSilhouetteMetrics, mergeTreeSectionOrder, modeCollectWindowIds, modeDockChromeGridPlacement, modeDockOutLayout, modeDockTabLabelClassName, modeDockTabsWithInsertPreview, modeJoinCornerSpecsForCrossSeparator, modeJoinCornerSpecsForSeparator, modePerpendicularJoinSeparators, modeStackTabsByCorner, navigateOwnedRoute, ndcToViewportPoint, nearestAnchor, normalizeEngagementActionText, normalizeWindowSilhouetteChips, normalizeWindowSilhouetteMetrics, parseOwnedRouteTarget, parseUiTheme, polylinePointAt, progressPanelTabSelection, publishShellNavbarTrailingEndWidthPx, rankFuzzyItems, reactHostPort, readActiveWindowTemplateDragSession, readDomTextSelection, readResizableJoinCornerSpec, readScrollerContentOverflows, reconcileWindows, referenceMediaKindFromUrl, registerIntroductionSurfaceResolver, removeWindowFromLayout, renderToStaticMarkup, resolveCatalogIconSvg, resolveGumballConfig, resolveGumballVisualPalette, resolveIntroductionPlacement, resolveIntroductionPoint, resolveJoinCornerPeerCrossAxes, resolveModeSplitSideInBody, resolveSliderDraftClear, resolveTranslationLabel, resolveWindowSilhouetteBorderKind, routeWindowSearchEscape, routeWindowSearchSpace, sampleBezierSegments, searchActiveInlineCompletion, searchControlledLineV1, searchInlineCompletion, semioTheme, setActiveUiTheme, shellFloorFillClass, shellFloorPaints, shellNavbarTrailingEndWidthByRoot, shortcodeCatalogKey, shortcodeEmoji, shouldActivateSearchPossibleOnConfirm, shouldRouteKeysToWindowSearch, singleTreeLeaf, sliderValuesMatch, splitIntroductionBodyParagraphs, splitWithWindow, sunPositionFromAzimuthElevation, surfaceClass, uiDataLabel, uiI18n, uiSpacingPx, useFirstDraggableElementAlias, useFlow, useIntroductionPointerIdle, useLevel, usePaneSlot, useSurface, windowChromeTitleChipClass, windowMeasuresDefaultWidthPx, windowMeasuresMinWidthPx, publishShellChromePanelBox, chromePanelSafeArea, chromePanelSafeAreaStyle, safeAreaBoxFromRect, useChromePanelSafeArea, windowSilhouetteBorderPaint, windowSilhouetteContains, windowSilhouetteOutline, windowSilhouetteOutlineViolations, windowSilhouettePath, windowTemplatePaletteTreeDragController, windowTemplatePointerDragRef } = dependencies;
   type Anchor = any;
   type Camera = any;
   type CanvasPickTarget = any;
@@ -443,6 +443,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(css).toContain("[data-window-silhouette-gap]");
       expect(css).toContain("[data-window-silhouette-chip]");
       expect(css).not.toMatch(/\[data-slot="mode-dock-stack"\]\s*\[data-slot="window"\]\[data-introduced="true"\]/);
+      expect(css).toMatch(/\[data-slot="button-group"\] > \[data-slot="button-group-item"\]:not\(:last-child\)/);
+      expect(css).toMatch(/\[data-slot="panel-tabs"\] > \[data-slot="panel-tab-button"\]:not\(:last-child\)/);
     });
   });
 
@@ -3837,17 +3839,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(container.querySelector('[data-slot="panel-fold"]')).toBeTruthy();
     });
 
-    it("open corner Panel pins the opposite vertical edge so viewport-filling tree bodies receive height", () => {
-      const StubIcon = (): null => null;
-      const tabs: PanelTabNode[] = [singleTreeLeaf({ id: "tab-a", icon: StubIcon, name: "Tab A", tree: { sections: [] } })];
-      const { container } = render(<Panel anchor="top-right" tabBarHost="chrome" visible tabs={tabs} onVisibleChange={() => undefined} />);
-      const panel = container.querySelector('[data-slot="panel"]') as HTMLElement;
-      expect(panel.style.bottom).toBe("var(--spacing-single)");
-      const { container: middleContainer } = render(<Panel anchor="top-middle" visible tabs={tabs} onSizeChange={() => {}} />);
-      const middlePanel = middleContainer.querySelector('[data-slot="panel"]') as HTMLElement;
-      expect(middlePanel.style.bottom).toBe("");
-    });
-
     it("chromeHostedOpenPanelPositionStyle pulls top/bottom caps into the shell chrome band and leaves side-middle canvas insets alone", () => {
       const top = chromeHostedOpenPanelPositionStyle("top-left");
       expect(top.top).toBe("calc(-1 * (var(--size-large) + var(--size-medium)) / 2)");
@@ -7091,21 +7082,48 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(engagement.style.top).toBe("var(--spacing-single)");
     });
 
-    it("yields a window's right-edge chrome to an open right-hand dock column instead of sharing it", () => {
-      // ↔️ B47 §1.3 measured the Inspection panel body at x 1137‑1437 over the perspective window's
-      // measures rail at x 1130‑1430: the same 300 px column, the panel painting above it, so every press
-      // in the Projection group landed on an Inspection tree row. The reserve is the overlap and nothing
-      // more — a window that stops short of the column keeps its rail flush.
-      expect(dockColumnInlineReservePx(1440, null, 800)).toBe(0);
-      expect(dockColumnInlineReservePx(470, 1137, 800)).toBe(0);
-      expect(dockColumnInlineReservePx(1440, 1137, 800)).toBe(303);
-      expect(dockColumnInlineReservePx(1440, 1137, 120)).toBe(120);
-      expect(dockColumnInlineReservePx(1440, 1137, -50)).toBe(0);
-      expect(anchorInlineEdgeReserveStyle("top-right", 303)).toEqual({ right: "calc(var(--spacing-single) + 303px)" });
-      expect(anchorInlineEdgeReserveStyle("top-left", 303)).toEqual({ left: "calc(var(--spacing-single) + 303px)" });
-      expect(anchorInlineEdgeReserveStyle("top-middle", 303)).toBeUndefined();
-      expect(anchorInlineEdgeReserveStyle("top-right", 0)).toBeUndefined();
+    it("reserves an in-window affordance against the box an anchored chrome panel occupies", () => {
+      // 🛟️ B47 §1.3 measured the Inspection panel body at x 1137‑1437 over the perspective window's
+      // measures rail at x 1130‑1430, and the generation3d world pane measured the Tool runs panel at
+      // (1137, 3) 300×120 over its own top-right overlay rail at (1355, 83) 75×16 — `Frame visible`
+      // and the compute `Cancel` unreachable at every press. The reserve is the overlap and nothing
+      // more; an affordance a panel does not cover keeps its flush inset exactly as authored.
+      const worldPane = { left: 493, top: 26, right: 1440, bottom: 840 };
+      const toolRunPanel = { left: 1137, top: 3, right: 1437, bottom: 123 };
+      const overlayRail = { left: 1355, top: 83, right: 1430, bottom: 99 };
+      const windowRightChromeColumn = { left: 1440 - windowMeasuresMinWidthPx, top: 26, right: 1440, bottom: 840 };
 
+      expect(chromePanelSafeArea(overlayRail, worldPane, "top-right", [], "either", 8)).toEqual({ inlinePx: 0, blockPx: 0 });
+      expect(chromePanelSafeArea(overlayRail, worldPane, "top-right", [{ left: 0, top: 3, right: 300, bottom: 123 }], "either", 8)).toEqual({ inlinePx: 0, blockPx: 0 });
+      // 🛟️ Dropping below the panel costs 48 px, moving in past its left edge 301 — `"either"` takes the cheaper axis.
+      expect(chromePanelSafeArea(overlayRail, worldPane, "top-right", [toolRunPanel], "either", 8)).toEqual({ inlinePx: 0, blockPx: 48 });
+      expect(chromePanelSafeArea(overlayRail, worldPane, "top-right", [toolRunPanel], "block", 8)).toEqual({ inlinePx: 0, blockPx: 48 });
+      expect(chromePanelSafeArea(overlayRail, worldPane, "top-right", [toolRunPanel], "inline", 8)).toEqual({ inlinePx: 301, blockPx: 0 });
+      // 🛟️ A full-height right column has no bottom edge to drop under, so the block axis is not viable.
+      expect(chromePanelSafeArea(overlayRail, worldPane, "top-right", [{ left: 1137, top: 3, right: 1437, bottom: 900 }], "either", 8)).toEqual({ inlinePx: 301, blockPx: 0 });
+      // 🛟️ Two panels sharing the corner reserve their union, not one of them.
+      expect(chromePanelSafeArea(overlayRail, worldPane, "top-right", [toolRunPanel, { left: 1300, top: 3, right: 1437, bottom: 240 }], "either", 8)).toEqual({ inlinePx: 0, blockPx: 165 });
+      // 🛟️ The window's own right-edge chrome is pinned to its window's top and only yields inline.
+      expect(chromePanelSafeArea(windowRightChromeColumn, worldPane, "top-right", [toolRunPanel], "inline", 0)).toEqual({ inlinePx: 303, blockPx: 0 });
+      expect(chromePanelSafeArea(windowRightChromeColumn, worldPane, "top-right", [{ left: 300, top: 26, right: 470, bottom: 840 }], "inline", 0)).toEqual({ inlinePx: 0, blockPx: 0 });
+      // 🛟️ An affordance a panel covers with no room to clear inside its host does not move at all —
+      // a half-step frees nothing, and the answer there is a re-anchoring, not a clamp.
+      expect(chromePanelSafeArea(windowRightChromeColumn, { left: 1300, top: 26, right: 1440, bottom: 840 }, "top-right", [toolRunPanel], "inline", 0)).toEqual({ inlinePx: 0, blockPx: 0 });
+      // 🛟️ A middle anchor has no edge on that axis to reserve against.
+      expect(chromePanelSafeArea(overlayRail, worldPane, "top-middle", [toolRunPanel], "either", 8)).toEqual({ inlinePx: 0, blockPx: 48 });
+      expect(chromePanelSafeArea(overlayRail, worldPane, "right-middle", [toolRunPanel], "either", 8)).toEqual({ inlinePx: 301, blockPx: 0 });
+      // 🛟️ A bottom-left affordance clears a bottom-left panel on its own two edges.
+      expect(chromePanelSafeArea({ left: 500, top: 800, right: 620, bottom: 830 }, worldPane, "bottom-left", [{ left: 493, top: 700, right: 793, bottom: 840 }], "either", 8)).toEqual({ inlinePx: 0, blockPx: 138 });
+      expect(chromePanelSafeArea({ left: 500, top: 800, right: 620, bottom: 830 }, worldPane, "bottom-left", [{ left: 493, top: 700, right: 793, bottom: 840 }], "inline", 8)).toEqual({ inlinePx: 301, blockPx: 0 });
+
+      expect(chromePanelSafeAreaStyle("top-right", { inlinePx: 303, blockPx: 0 })).toEqual({ top: "var(--spacing-single)", right: "calc(var(--spacing-single) + 303px)" });
+      expect(chromePanelSafeAreaStyle("top-right", { inlinePx: 0, blockPx: 48 }, { block: "var(--chrome)" })).toEqual({ top: "calc(var(--chrome) + 48px)", right: "var(--spacing-single)" });
+      expect(chromePanelSafeAreaStyle("top-left", { inlinePx: 303, blockPx: 0 })).toEqual({ top: "var(--spacing-single)", left: "calc(var(--spacing-single) + 303px)" });
+      expect(chromePanelSafeAreaStyle("top-middle", { inlinePx: 303, blockPx: 0 })).toEqual({ top: "var(--spacing-single)" });
+      expect(safeAreaBoxFromRect({ left: 1136.6, top: 3.4, right: 1437.2, bottom: 122.8 } as DOMRect)).toEqual({ left: 1137, top: 3, right: 1437, bottom: 123 });
+    });
+
+    it("yields a window's right-edge chrome to an open anchored chrome panel instead of sharing it", () => {
       const originalRect = Element.prototype.getBoundingClientRect;
       Element.prototype.getBoundingClientRect = function stubbedRect(this: Element): DOMRect {
         if (this.getAttribute("data-slot") !== "window-body") return originalRect.call(this);
@@ -7120,17 +7138,99 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         const overlay = container.querySelector('[data-slot="window-measures-overlay"]') as HTMLElement;
         expect(overlay.style.right).toBe("var(--spacing-single)");
         act(() => {
-          publishShellDockRightColumnLeftPx(undefined, "panel:top-right", 1137);
+          publishShellChromePanelBox(undefined, "panel:top-right", "top-right", { left: 1137, top: 26, right: 1437, bottom: 840 });
         });
         expect(overlay.style.right).toBe(`calc(var(--spacing-single) + ${1440 - 1137}px)`);
         act(() => {
-          publishShellDockRightColumnLeftPx(undefined, "panel:top-right", null);
+          publishShellChromePanelBox(undefined, "panel:top-right", "top-right", null);
         });
         expect(overlay.style.right).toBe("var(--spacing-single)");
         expect(windowMeasuresMinWidthPx).toBeGreaterThan(0);
       } finally {
         Element.prototype.getBoundingClientRect = originalRect;
-        publishShellDockRightColumnLeftPx(undefined, "panel:top-right", null);
+        publishShellChromePanelBox(undefined, "panel:top-right", "top-right", null);
+      }
+    });
+
+    it("keeps a window content overlay rail hit-testable under an anchored chrome panel", async () => {
+      // 🛟️ The generation3d defect as its own law. A `z-panel` chrome panel in the app root's stacking
+      // context always paints above `z-window` window content, so while the two boxes overlap the rail can
+      // never take a press — `document.elementFromPoint` on `Frame visible`'s own centre returns the panel,
+      // which is what made `fit` 0/8 and the preview `Cancel` unreachable. jsdom runs no layout, so the
+      // geometry is stubbed and that stacking premise is modelled directly: the point resolves to the
+      // chrome panel wherever it covers it, and to the rail's button otherwise. Runtime `elementFromPoint`
+      // evidence is the ticket's own browser battery on :6022.
+      const panelBox = { x: 1137, y: 3, width: 300, height: 120, top: 3, right: 1437, bottom: 123, left: 1137 };
+      const hostBox = { x: 493, y: 26, width: 947, height: 814, top: 26, right: 1440, bottom: 840, left: 493 };
+      const railTopBase = 57;
+      const railTopBaseVar = "var(--safe-area-rail-base)";
+      let rail: HTMLElement | null = null;
+      const railBox = () => {
+        const top = railTopBase + Number(rail?.getAttribute("data-safe-area-block") ?? 0);
+        return { x: 1355, y: top, width: 75, height: 16, top, right: 1430, bottom: top + 16, left: 1355 };
+      };
+      const originalRect = Element.prototype.getBoundingClientRect;
+      Element.prototype.getBoundingClientRect = function stubbedRect(this: Element): DOMRect {
+        const slot = this.getAttribute("data-slot");
+        if (slot === "safe-area-panel") return { ...panelBox, toJSON: () => ({}) } as DOMRect;
+        if (slot === "safe-area-host") return { ...hostBox, toJSON: () => ({}) } as DOMRect;
+        if (slot === "world-view-overlay-rail" || slot === "world-frame-instances") return { ...railBox(), toJSON: () => ({}) } as DOMRect;
+        return originalRect.call(this);
+      };
+      const covers = (box: { left: number; right: number; top: number; bottom: number }, x: number, y: number) => x >= box.left && x <= box.right && y >= box.top && y <= box.bottom;
+      const elementFromPoint = (x: number, y: number): Element | null => {
+        const panel = document.querySelector('[data-slot="safe-area-panel"]');
+        if (panel && covers(panelBox, x, y)) return panel;
+        const button = document.querySelector('[data-slot="world-frame-instances"]');
+        if (button && covers(railBox(), x, y)) return button;
+        return null;
+      };
+      const SafeAreaRail: React.FC = () => {
+        const hostRef = reactHostPort.useRef<HTMLDivElement | null>(null);
+        const railRef = reactHostPort.useRef<HTMLDivElement | null>(null);
+        const safeArea = useChromePanelSafeArea({ hostRef, affordanceRef: railRef, anchor: "top-right", yieldAxis: "either", gapPx: uiSpacingPx(1) });
+        return (
+          <div ref={hostRef} data-slot="safe-area-host">
+            <div data-slot="safe-area-panel">Tool runs</div>
+            <div ref={railRef} data-slot="world-view-overlay-rail" data-safe-area-block={safeArea.blockPx || undefined} data-safe-area-inline={safeArea.inlinePx || undefined} style={chromePanelSafeAreaStyle("top-right", safeArea, { block: railTopBaseVar })}>
+              <button type="button" data-slot="world-frame-instances">
+                Frame visible
+              </button>
+            </div>
+          </div>
+        );
+      };
+      try {
+        const { container } = render(
+          <Window id="safe-area-window">
+            <SafeAreaRail />
+          </Window>,
+        );
+        rail = container.querySelector('[data-slot="world-view-overlay-rail"]') as HTMLElement;
+        const panel = container.querySelector('[data-slot="safe-area-panel"]') as HTMLElement;
+        const button = container.querySelector('[data-slot="world-frame-instances"]') as HTMLElement;
+        const unreserved = railBox();
+        expect(rail.style.top).toBe(railTopBaseVar);
+        expect(elementFromPoint((unreserved.left + unreserved.right) / 2, (unreserved.top + unreserved.bottom) / 2)).toBe(panel);
+        act(() => {
+          publishShellChromePanelBox(undefined, "panel:top-right", "top-right", { left: panelBox.left, top: panelBox.top, right: panelBox.right, bottom: panelBox.bottom });
+        });
+        const reserve = Math.ceil(panelBox.bottom + uiSpacingPx(1) - railTopBase);
+        await waitFor(() => expect(rail!.getAttribute("data-safe-area-block")).toBe(String(reserve)));
+        expect(rail.style.top).toBe(`calc(${railTopBaseVar} + ${reserve}px)`);
+        expect(rail.getAttribute("data-safe-area-inline")).toBeNull();
+        const reserved = railBox();
+        expect(reserved.top).toBeGreaterThan(panelBox.bottom);
+        expect(elementFromPoint((reserved.left + reserved.right) / 2, (reserved.top + reserved.bottom) / 2)).toBe(button);
+        act(() => {
+          publishShellChromePanelBox(undefined, "panel:top-right", "top-right", null);
+        });
+        await waitFor(() => expect(rail!.getAttribute("data-safe-area-block")).toBeNull());
+        expect(rail.style.top).toBe(railTopBaseVar);
+        expect(elementFromPoint((unreserved.left + unreserved.right) / 2, (unreserved.top + unreserved.bottom) / 2)).toBe(panel);
+      } finally {
+        Element.prototype.getBoundingClientRect = originalRect;
+        publishShellChromePanelBox(undefined, "panel:top-right", "top-right", null);
       }
     });
 

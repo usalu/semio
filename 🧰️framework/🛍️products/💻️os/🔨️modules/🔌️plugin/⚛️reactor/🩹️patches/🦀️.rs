@@ -696,11 +696,38 @@ impl PatchTracker {
             || state.ready.iter().flatten().any(|ready| ready.published && !ready.closing)
     }
 
+    /// 🚗️ Work this guest can advance BY ITSELF — [`Self::has_publishable_work`] minus the one term
+    /// that is not the guest's to advance: a ready output already marked published, whose extraction
+    /// needs a free publication slot and therefore the host's acknowledgement of an earlier one.
+    ///
+    /// 🐛️ The reactor's reconcile loop used to spin on `has_publishable_work` alone, so a turn with a
+    /// ready output and a full [`super::pending::PendingPatchAuthority`] burnt its whole 1 024-step
+    /// opportunity budget (or the turn's wall deadline) calling `drive_one` on a tracker with nothing
+    /// to drive, answered `MoreWork`, and the host paid a round trip to watch it do that again —
+    /// 6.0 ms of guest per empty crossing, 59 such crossings per `flowEvalTick` hop
+    /// (`📓️reactor-reconcile-spin-2026-09-14.md` §1, family 2).
+    pub fn has_drivable_work(&self) -> bool {
+        let state = self.state.borrow();
+        state.output_fault.is_some()
+            || state.slots.iter().flatten().any(|slot| slot.producer.is_some() || slot.job.is_some())
+            || state.deferred.iter().flatten().any(|surface| deferred_surface_ready(&state, surface))
+            || state.unadmitted.iter().any(Option::is_some)
+            || state.closing_instances.iter().any(Option::is_some)
+    }
+
     pub fn has_work(&self) -> bool {
         has_work(&self.state.borrow())
     }
 
     /// 🚨️ Returns one mounted surface failure while retaining its incremental cleanup owner.
+    ///
+    /// 🔎️ The message names the AUTHORITY that reported the fault, because the two authorities know
+    /// their surface differently: a producer terminal carries its own `SurfaceId`, while a reconcile
+    /// terminal is matched back to a slot BY GENERATION and names `unknown surface` once that slot is
+    /// gone. A reader that cannot tell the two apart cannot tell an exact attribution from a derived
+    /// one. A `DuplicateSiblingKey` additionally names the parent and the key it refused
+    /// ([`ComponentTreeProducer::duplicate_sibling`]), so the author is pointed at the node rather
+    /// than at the whole surface.
     pub fn take_render_fault(&self) -> Option<(u32, String)> {
         let mut state = self.state.borrow_mut();
         if let Some((key, fault, reported)) = state.output_fault.as_mut() {
@@ -711,8 +738,9 @@ impl PatchTracker {
         }
         for terminal in state.producer_terminals.iter_mut().flatten().filter(|terminal| !terminal.close) {
             if let Some(fault) = terminal.authority.as_ref().and_then(|authority| authority.fault()) {
+                let detail = terminal.authority.as_ref().and_then(|authority| authority.duplicate_sibling()).map_or_else(String::new, |(parent, key)| format!(" parent={parent} key={key}"));
                 terminal.close = true;
-                return Some((terminal.instance.unwrap_or(0), format!("{}: {fault:?}", terminal.surface.as_ref())));
+                return Some((terminal.instance.unwrap_or(0), format!("{} [producer]: {fault:?}{detail}", terminal.surface.as_ref())));
             }
         }
         let terminal = state.terminals.iter_mut().flatten().find(|terminal| !terminal.close && terminal.authority.fault().is_some())?;
@@ -721,7 +749,7 @@ impl PatchTracker {
         let instance = terminal.instance.unwrap_or(0);
         terminal.close = true;
         let surface = state.slots.iter().flatten().find(|slot| slot.generation == generation).map_or("unknown surface", |slot| slot.surface.as_ref());
-        Some((instance, format!("{surface}: {fault:?}")))
+        Some((instance, format!("{surface} [reconciler g{generation}]: {fault:?}")))
     }
 
     pub(crate) fn ready_patch_key(&self) -> Result<Option<(NativeCloseKey, u64)>, &'static str> {

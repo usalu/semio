@@ -871,8 +871,12 @@ pub fn scene_lane_hash(payload: &str) -> String {
 //#endregion 🔖️World3dSceneLanes
 
 //#region 🔖️NodeGraphRecords
-/// 🔌️ One port on a node-graph node: identity + display label. Direction is implied by whether the
-/// record lives in the owning node's `inputs` or `outputs` list, not carried as a field.
+/// 🔌️ One port on a node-graph node: identity, display label and the value schemas it declares.
+/// Direction is implied by whether the record lives in the owning node's `inputs` or `outputs` list,
+/// not carried as a field. `value_type` is the comma-joined declared schema list a renderer
+/// intersects to decide whether a drawn wire may land — undeclared means connectable.
+///
+/// @see `🧫️fixtures/🔌️port-types/🔣️.json` — the law both node-graph renderers answer
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct NodeGraphPortRecord {
@@ -887,6 +891,8 @@ pub struct NodeGraphPortRecord {
     pub full_name: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none", rename = "resourceKind")]
     pub artifact_kind: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub value_type: Option<String>,
 }
 
 /// 🕸️ One node-graph node: identity, label, layout rect, typed input/output ports.
@@ -968,6 +974,10 @@ pub struct NodeGraphOperatorChannelRecord {
     pub full_name: String,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub operators: Vec<String>,
+    /// 🔤️ Value schemas this channel declares — what a wire on it carries, the vocabulary the
+    /// port-compatibility oracle intersects. Empty is undeclared, which stays connectable.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub value_types: Vec<String>,
     /// 🕳️ Opaque JSON-encoded default value — was `Option<serde_json::Value>`; this crate depends
     /// on nothing beyond `ui_contract`/`serde`, so the arbitrary-shaped default rides as a JSON
     /// string like every sibling `_json` field on these scene structs already does.
@@ -1023,6 +1033,7 @@ impl FromValue for NodeGraphPortRecord {
             abbreviation: opt("abbreviation")?,
             full_name: opt("fullName")?,
             artifact_kind: opt("resourceKind")?,
+            value_type: opt("valueType")?,
         })
     }
 }
@@ -1105,6 +1116,7 @@ impl FromValue for NodeGraphOperatorChannelRecord {
             name: String::from_value(field("name")?)?,
             full_name: String::from_value(field("fullName")?)?,
             operators: get("operators").map(Vec::from_value).transpose()?.unwrap_or_default(),
+            value_types: get("valueTypes").map(Vec::from_value).transpose()?.unwrap_or_default(),
             default_json: opt("defaultJson")?,
             label: opt("label")?,
             cardinality: get("cardinality").map(String::from_value).transpose()?.unwrap_or_default(),
@@ -1147,6 +1159,7 @@ impl ToValue for NodeGraphPortRecord {
         value_push_option(&mut entries, "abbreviation", &self.abbreviation);
         value_push_option(&mut entries, "fullName", &self.full_name);
         value_push_option(&mut entries, "resourceKind", &self.artifact_kind);
+        value_push_option(&mut entries, "valueType", &self.value_type);
         DslValue::Object(entries)
     }
 }
@@ -1227,6 +1240,7 @@ impl ToValue for NodeGraphOperatorChannelRecord {
         value_push(&mut entries, "name", &self.name);
         value_push(&mut entries, "fullName", &self.full_name);
         value_push_if_nonempty(&mut entries, "operators", &self.operators);
+        value_push_if_nonempty(&mut entries, "valueTypes", &self.value_types);
         value_push_option(&mut entries, "defaultJson", &self.default_json);
         value_push_option(&mut entries, "label", &self.label);
         value_push(&mut entries, "cardinality", &self.cardinality);

@@ -9,7 +9,7 @@
 //! 🕹️ Selection is framework-owned (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM), so a
 //! step emits ONE `InteractionWrite` and touches nothing else: `VcsArtifactApp` applies it through
 //! the very same `protocol::next_selection` machine a pointer pick goes through, which is what makes
-//! the outline tree's highlight, the inspection panel and the preview gumball follow an arrow key
+//! the Artifact panel tree's highlight, the inspection panel and the preview gumball follow an arrow key
 //! exactly as they follow a click. Declared `ArtifactToolPublicationLane::Interaction`, no document
 //! and no config lane — a traversal is not an edit and must never enter undo.
 //!

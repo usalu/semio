@@ -689,15 +689,22 @@ fn retained_route_dispositions_are_exact_and_exhaustive() {
     }
 }
 
-/// ⚖️ LAW: the contributions route's declared wire ceiling is REACHABLE — the largest page the
-/// framework's own public-invocation envelope admits still fits it, and the ceiling is not so wide
-/// that it could never be reached (`📓️extension-addressing-2026-09-10.md` §6.3 proposed 512 KiB,
-/// which is 42× the largest page that can exist).
+/// 📏️ The scoped contributions pack the procedural plugin actually pushed on 2026-09-14, measured in
+/// the browser (`[DEBUG] contributions scoped pack {"chars":272089,…}`) — the size a declared ceiling
+/// has to admit, not a round number.
+const GENERATION3D_MEASURED_CONTRIBUTIONS_PACK_CHARS: usize = 272_089;
+
+/// ⚖️ LAW: the contributions route's declared wire ceiling ADMITS the pack the host really pushes and
+/// is the transport's own assembled-command authority, not the JSON entry point's body cap.
 #[test]
 fn contributions_route_declares_a_reachable_wire_ceiling() {
     let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
-    assert_eq!(GENERATION3D_CONTRIBUTIONS_RAW_BYTES, semio_framework::PUBLIC_INVOCATION_BODY_BYTES);
-    let pack: String = std::iter::repeat_n('x', 190_719).collect();
+    assert_eq!(GENERATION3D_CONTRIBUTIONS_RAW_BYTES, semio_framework::kernel::COMMAND_MAXIMUM_BYTES, "the contributions route is bound by what the paged command ingress can assemble, not by the JSON entry point's body cap");
+    assert!(
+        GENERATION3D_CONTRIBUTIONS_RAW_BYTES > semio_framework::PUBLIC_INVOCATION_BODY_BYTES,
+        "a pack-encoded push does not pass through the JSON body cap, and declaring that cap here refused a 273 136-byte contributions command the transport had already delivered"
+    );
+    let pack: String = std::iter::repeat_n('x', GENERATION3D_MEASURED_CONTRIBUTIONS_PACK_CHARS).collect();
     let wire = protocol::json::to_json_string(&("setContributions", Some(dsl::DslValue::object([
         ("json".to_string(), dsl::DslValue::String(pack)),
         ("page".to_string(), dsl::DslValue::uint(0)),
@@ -1427,6 +1434,103 @@ fn no_pointer_down_route_survives_the_framework_owned_selection_domain() {
     assert!(!json.contains("PointerDown"), "pointer-down routes are framework-owned now");
     assert!(GENERATION3D_RETAINED_TOOL_IDS.iter().chain(GENERATION3D_FLOW_EVAL_TOOL_IDS).all(|id| !id.ends_with("PointerDown")), "a retained tool id outlived its action");
     assert!(definition.interactions.iter().any(|interaction| interaction.id == "graph"), "the graph domain is what replaced them");
+}
+
+/// 🗂️ Every `menu.group.<category>` row this app emits names a category the SHELL can label.
+///
+/// A group row travels with `label: None` by contract and the shell resolves it from the closed
+/// `RIBBON_PARENT_CATEGORIES` taxonomy; a category outside that table falls back to the raw id, and a
+/// user saw a context-menu row reading literally `menu.group.io` (measured on the React serve
+/// 2026-09-14, ticket 26/09/09/PROCEDURAL-3D-END-TO-END). The menu is asked with AND without a
+/// selection because the `targets` group only exists with one.
+#[semio_framework_async_macros::async_test]
+async fn context_menu_groups_are_taxonomy_categories() {
+    let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
+    let mut app = app_with_registry().await;
+    let request = semio_framework_plugin::ContextMenuRequest { menu: semio_framework_plugin::UiMenuRef { id: "nodeGraph".into(), args: None }, surface: None, window_instance_id: None, point: None };
+    let mut categories: Vec<String> = Vec::new();
+    for selection in [Vec::new(), vec!["extrude"]] {
+        if !selection.is_empty() {
+            context::select_graph(&mut app, "node", &selection).await;
+        }
+        for item in app.context_menu(&request, &semio_framework_plugin::ViewModel::default()).await {
+            let Some(category) = item.id.strip_prefix("menu.group.") else { continue };
+            assert!(item.label.is_none(), "a taxonomy group row carries no label of its own: {item:?}");
+            categories.push(category.to_string());
+        }
+    }
+    assert!(!categories.is_empty(), "the menu is built out of taxonomy groups; none was emitted");
+    for category in &categories {
+        assert!(
+            semio_framework_ui::wgpu::ribbon_parent_label(category, false).is_some() && semio_framework_ui::wgpu::ribbon_parent_label(category, true).is_some(),
+            "`menu.group.{category}` is outside the closed ribbon-parent taxonomy, so the shell renders its raw id to the user"
+        );
+    }
+    eprintln!("[DEBUG] generation3d context-menu groups: {categories:?}");
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
+}
+
+/// 🌞️ Every window-chrome measure label this app paints is TRANSLATED, group headers and picker rows
+/// included.
+///
+/// The Show picker, the LOD picker and the whole Sun group were hardcoded English strings sitting
+/// outside `Generation3dLabels` entirely, so a German-locale user read `Sun / Enabled / Azimuth /
+/// Elevation / Intensity` beside a correctly-translated palette entry for the identical verb
+/// (`📓️window-coverage-audit-2026-09-14.md` §4). Comparing the two locales' label trees is what makes
+/// the next added measure fail here rather than in front of a user.
+#[semio_framework_async_macros::async_test]
+async fn window_measure_labels_are_localized() {
+    let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
+    let mut app = app().await;
+    let view_for = |locale| semio_framework_plugin::ViewModel {
+        locale,
+        window_instances: vec![
+            semio_framework_plugin::ViewWindowInstance { id: flow_window::GENERATION_3D_PLAY_WINDOW_MAIN.into(), window_kind_id: flow_window::GENERATION_3D_PLAY_WINDOW_MAIN.into() },
+            semio_framework_plugin::ViewWindowInstance { id: edit_preview::GENERATION_3D_PLAY_WINDOW_PREVIEW.into(), window_kind_id: edit_preview::GENERATION_3D_PLAY_WINDOW_PREVIEW.into() },
+        ],
+        ..Default::default()
+    };
+    let labelled = |measures: &std::collections::HashMap<String, Vec<semio_framework_plugin::WindowMeasure>>| -> Vec<(String, String)> {
+        fn walk(measure: &semio_framework_plugin::WindowMeasure, out: &mut Vec<(String, String)>) {
+            match measure {
+                semio_framework_plugin::WindowMeasure::Group { id, label, children, .. } => {
+                    out.push((id.clone(), label.clone()));
+                    for child in children {
+                        walk(child, out);
+                    }
+                }
+                semio_framework_plugin::WindowMeasure::Select { id, label, items, .. } => {
+                    out.push((id.clone(), label.clone().unwrap_or_default()));
+                    for item in items {
+                        out.push((item.id.clone(), item.label.clone()));
+                    }
+                }
+                semio_framework_plugin::WindowMeasure::Slider { id, label, .. } | semio_framework_plugin::WindowMeasure::Number { id, label, .. } => out.push((id.clone(), label.clone().unwrap_or_default())),
+                semio_framework_plugin::WindowMeasure::Toggle { id, label, text, .. } => out.push((id.clone(), label.clone().or_else(|| text.clone()).unwrap_or_default())),
+            }
+        }
+        let mut out = Vec::new();
+        let mut kinds: Vec<&String> = measures.keys().collect();
+        kinds.sort();
+        for kind in kinds {
+            for measure in &measures[kind] {
+                walk(measure, &mut out);
+            }
+        }
+        out
+    };
+    let english = labelled(&app.window_measures(&view_for(semio_framework_plugin::Locale::En)).await);
+    let german = labelled(&app.window_measures(&view_for(semio_framework_plugin::Locale::De)).await);
+    assert!(!english.is_empty(), "both preview and flow windows publish measures");
+    assert_eq!(english.len(), german.len(), "the two locales must paint the same measure tree");
+    let untranslated: Vec<&str> = english
+        .iter()
+        .zip(&german)
+        .filter(|((id, en), (de_id, de))| id == de_id && !en.is_empty() && en == de)
+        .map(|((id, _), _)| id.as_str())
+        .collect();
+    assert!(untranslated.is_empty(), "window-chrome measure labels a German user still reads in English: {untranslated:?}");
+    eprintln!("[DEBUG] generation3d localized {} window-chrome measure labels", english.len());
 }
 
 #[semio_framework_async_macros::async_test]
@@ -2506,7 +2610,7 @@ async fn measure_hex_column_boot(app: &mut context::Generation3dApp, view: &semi
         if app.has_pending_typed_operations() {
             owed.extend(context::settle(app).await.effects);
         }
-        let answered = crate::brep_extension::settle(app, action_meta.instance_id).await;
+        let answered = crate::brep_extension::settle(app, action_meta.instance_id, &action_meta).await.answered;
         budget.round_trips += answered;
         let dispatches: Vec<(String, Option<dsl::DslValue>)> = std::mem::take(&mut owed).into_iter().filter_map(|effect| match effect {
             Effect::DispatchAction { action, args, .. } => Some((action, args)),
@@ -2636,10 +2740,10 @@ async fn hex_column_boot_stays_inside_the_interactive_turn_budget() {
         semio_framework_job::INTERACTIVE_STEP_CEILING_US
     );
     assert!(
-        semio_framework_os_flow::flow_eval_tick_budget().deadline.is_some(),
+        semio_framework_os_flow::flow_eval_tick_budget(None).deadline.is_some(),
         "a target with an installed monotonic clock must run the dag walk under a wall-clock deadline — a node count alone cannot preempt one slow operator"
     );
-    assert_eq!(semio_framework_os_flow::flow_eval_tick_budget().dispatches, semio_framework_os_flow::FLOW_EVAL_TICK_STEP_BUDGET, "the wall-clock deadline is added to the node budget, never instead of it");
+    assert_eq!(semio_framework_os_flow::flow_eval_tick_budget(None).dispatches, semio_framework_os_flow::FLOW_EVAL_TICK_STEP_BUDGET, "the wall-clock deadline is added to the node budget, never instead of it");
 }
 //#endregion 📈️HotPathBudget
 

@@ -3436,6 +3436,23 @@ export interface WorldOrbitGatedProps {
 const WORLD_ORBIT_CONSTRAINTS_DEFAULT: NonNullable<WorldOrbitGatedProps["constraints"]> = { rotate: true };
 
 /** @emoji 🛰️ Canvas-local Three orbit-control binding that never crosses the optional Drei runtime boundary. */
+/** @emoji 🖱️ The element a world canvas actually RECEIVES pointer and wheel events on.
+ *
+ * A `<Canvas eventSource={…}>` hands its own events to that source element and stamps
+ * `pointer-events: none` on the canvas itself (`@react-three/fiber` `events.connected`, and
+ * `pointerEvents = eventSource ? 'none' : 'auto'` in its canvas style) — so anything bound to
+ * `gl.domElement` on such a canvas is bound to an element the browser never routes an event to.
+ * `WorldCanvas` passes an `eventSource`, which is how camera navigation came to be dead in EVERY
+ * react world3d window: orbit, pan and wheel zoom were all listening on the canvas
+ * (ticket 26/09/09/PROCEDURAL-3D-END-TO-END — no gesture moved `data-viewport-camera-json` off its
+ * seed pose on the generation3d preview, measured for wheel, alt+right, shift+right and middle).
+ */
+export function useWorldPointerTarget(): HTMLElement {
+  const gl = useThree((state) => state.gl);
+  const connected = useThree((state) => state.events.connected);
+  return (connected instanceof HTMLElement ? connected : gl.domElement) as HTMLElement;
+}
+
 function WorldOrbitControlsBridge({
   camera,
   enabled,
@@ -3455,7 +3472,7 @@ function WorldOrbitControlsBridge({
   readonly onStart: () => void;
   readonly onEnd: () => void;
 }): null {
-  const { gl } = useThree();
+  const pointerTarget = useWorldPointerTarget();
   const set = useThree((state) => state.set);
   const get = useThree((state) => state.get);
   const controlsRef = reactHostPort.useRef<ThreeOrbitControls | null>(null);
@@ -3463,7 +3480,7 @@ function WorldOrbitControlsBridge({
   callbacksRef.current = { onChange, onStart, onEnd };
   const resolvedConstraints = constraints ?? WORLD_ORBIT_CONSTRAINTS_DEFAULT;
   reactHostPort.useEffect(() => {
-    const controls = new ThreeOrbitControls(camera, gl.domElement);
+    const controls = new ThreeOrbitControls(camera, pointerTarget);
     controls.enableDamping = false;
     controls.enablePan = true;
     controls.enableZoom = true;
@@ -3486,7 +3503,7 @@ function WorldOrbitControlsBridge({
       controlsRef.current = null;
       if (get().controls === controls) set({ controls: null });
     };
-  }, [camera, controlsKey, get, gl.domElement, set]);
+  }, [camera, controlsKey, get, pointerTarget, set]);
   reactHostPort.useEffect(() => {
     const controls = controlsRef.current;
     if (!controls) return;
@@ -3502,7 +3519,8 @@ function WorldOrbitControlsBridge({
 
 /** @emoji 🛰️ Orbit controls with injectable gate (specializations disable during drag/tools). */
 export function WorldOrbitGated(props: WorldOrbitGatedProps): ReactElement | null {
-  const { camera: sceneCamera, gl } = useThree();
+  const sceneCamera = useThree((state) => state.camera);
+  const pointerTarget = useWorldPointerTarget();
   const camera = props.camera === undefined ? sceneCamera : props.camera;
   const controls = useThree((s) => s.controls as OrbitControlsBinding | null);
   const targetScratch = reactHostPort.useMemo(() => new Vector3(), []);
@@ -3512,7 +3530,7 @@ export function WorldOrbitGated(props: WorldOrbitGatedProps): ReactElement | nul
   const projection = props.projection ?? (camera instanceof ThreeOrthographicCamera ? "orthographic" : "perspective");
   const rotateEnabled = props.constraints?.rotate ?? true;
   const mouseButtonsIdle = reactHostPort.useMemo(() => resolveWorldOrbitMouseButtonsIdle(projection, rotateEnabled), [projection, rotateEnabled]);
-  useWorldOrbitRightMouseBindings(controls, gl.domElement, { projection, rotateEnabled, onRightPointerDown: props.onRightPointerDown });
+  useWorldOrbitRightMouseBindings(controls, pointerTarget, { projection, rotateEnabled, onRightPointerDown: props.onRightPointerDown });
   const navigationSnapshotRef = reactHostPort.useRef<WorldNavigationSnapshot | null>(null);
   reactHostPort.useEffect(() => {
     invalidate();
@@ -3641,10 +3659,19 @@ export function WorldCanvas(props: WorldCanvasProps): ReactElement {
   const cameraUp = props.cameraUp ?? ([0, 0, 1] as Vec3);
   const ownedCamera = props.cameraPosition !== undefined;
   const onWheelRef = reactHostPort.useRef(props.onWheel);
-  const wheelCleanupRef = reactHostPort.useRef<(() => void) | null>(null);
   const [canvasEventSource, setCanvasEventSource] = reactHostPort.useState<HTMLDivElement | null>(null);
   onWheelRef.current = props.onWheel;
-  reactHostPort.useEffect(() => () => wheelCleanupRef.current?.(), []);
+  /** 🖱️ The wheel hook belongs on the EVENT SOURCE, not on the canvas: a `<Canvas eventSource>`
+   * stamps `pointer-events: none` on its canvas, so a wheel listener bound there is never called. */
+  reactHostPort.useEffect(() => {
+    if (!canvasEventSource) return;
+    const onWheel = (event: WheelEvent) => {
+      event.preventDefault();
+      onWheelRef.current?.(event);
+    };
+    canvasEventSource.addEventListener("wheel", onWheel, { passive: false });
+    return () => canvasEventSource.removeEventListener("wheel", onWheel);
+  }, [canvasEventSource]);
   const setRootRef = reactHostPort.useCallback(
     (element: HTMLDivElement | null) => {
       const external = props.rootRef;
@@ -3694,15 +3721,7 @@ export function WorldCanvas(props: WorldCanvasProps): ReactElement {
             onLostPointerCapture={(event) => props.onLostPointerCapture?.(event.nativeEvent)}
             onPointerMissed={props.onPointerMissed}
             onCreated={({ camera, gl: renderer }) => {
-              wheelCleanupRef.current?.();
-              const canvas = renderer.domElement;
-              const onWheel = (event: WheelEvent) => {
-                event.preventDefault();
-                onWheelRef.current?.(event);
-              };
-              canvas.addEventListener("wheel", onWheel, { passive: false });
-              wheelCleanupRef.current = () => canvas.removeEventListener("wheel", onWheel);
-              props.onCanvasReady?.({ camera, domElement: canvas });
+              props.onCanvasReady?.({ camera, domElement: renderer.domElement });
             }}
           >
             {frameloop === "demand" ? <DemandFrameloopKick /> : null}

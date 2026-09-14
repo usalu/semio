@@ -77,6 +77,11 @@
         }
       }
     },
+    "toolRunUnitsPerSecond": {
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "maximum": 1000
+    },
     "toolRunTraceCursorByWindowId": {
       "type": "object",
       "maxProperties": 64,

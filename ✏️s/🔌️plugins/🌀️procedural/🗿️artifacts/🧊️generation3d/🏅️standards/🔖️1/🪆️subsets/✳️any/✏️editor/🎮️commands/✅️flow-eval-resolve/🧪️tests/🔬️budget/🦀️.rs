@@ -261,3 +261,165 @@ fn the_kernel_release_reaches_the_evaluation_registry_too() {
     assert!(capabilities.contains(&fixture.cancel_capability.as_str()), "the release emits the fixture's evaluation-cancel capability, got {capabilities:?}");
     assert!(capabilities.contains(&"tessellateCancel"), "the release still emits the mesh-job cancel, got {capabilities:?}");
 }
+
+//#region 🔁️InlineContinuation
+#[derive(serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct InlineContinuationFixture {
+    examples: Vec<InlineContinuationExample>,
+    rows: Vec<InlineContinuationRow>,
+}
+
+#[derive(serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct InlineContinuationExample {
+    id: String,
+    contributed_nodes: usize,
+    wave_widths: Vec<usize>,
+    before_coalescing: usize,
+    after_coalescing: usize,
+    after_inline: usize,
+}
+
+#[derive(serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct InlineContinuationRow {
+    id: String,
+    wave_widths: Vec<usize>,
+    #[serde(default)]
+    cancel_before_hop: Option<usize>,
+    #[serde(default)]
+    spent_turn_before_hop: Option<usize>,
+    expected_dispatched_hops: usize,
+    expected_inline_waves: usize,
+    #[serde(default)]
+    expected_continuations_after_cancel: Option<usize>,
+}
+
+fn inline_continuation_fixture() -> InlineContinuationFixture {
+    let root: serde_json::Value = serde_json::from_str(EVALUATE_BUDGET_FIXTURE_JSON).expect("evaluate budget fixture");
+    serde_json::from_value(root["inlineContinuation"].clone()).expect("the fixture declares its inline-continuation law")
+}
+
+/// 🔢️ What one replayed chain cost: hops the HOST dispatched, waves a fold ran inline, and
+/// continuations a cancelled session nevertheless admitted (which must always be zero).
+#[derive(Debug, Default, PartialEq, Eq)]
+struct ChainLadder {
+    dispatched_hops: usize,
+    inline_waves: usize,
+    continuations_after_cancel: usize,
+}
+
+/// 🕰️ The instant a replayed guest turn began, and the instant its fold asks the admission question —
+/// stated in microseconds, never read off a clock, so the branch a browser turn takes is drivable in a
+/// native test (which installs no clock at all).
+const REPLAY_TURN_STARTED_US: u64 = 1_000_000;
+
+fn replay_now_us(spent: bool) -> Option<u64> {
+    Some(if spent { REPLAY_TURN_STARTED_US + semio_framework_os_flow::FLOW_EVAL_TICK_ELAPSED_CEILING_US } else { REPLAY_TURN_STARTED_US })
+}
+
+/// ⛓️ The hop ladder of ONE chain, driven through the real latch exactly as the run job and the two
+/// window-addressed folds drive it: the scheduler dispatches a hop only for a debt no fold took over,
+/// a hop parks its wave, and each answer of that wave asks
+/// [`FlowEvalSession::inline_continuation_admitted`] in its own guest turn.
+fn replay_chain(wave_widths: &[usize], cancel_before_hop: Option<usize>, spent_turn_before_hop: Option<usize>) -> ChainLadder {
+    let mut session = FlowEvalSession::new();
+    let mut ladder = ChainLadder::default();
+    let mut cancelled = false;
+    assert!(session.window_tick_owed(BUDGET_WINDOW_ID), "the gesture that changed the document left the window owing its first hop");
+    assert!(session.arm_window_tick(BUDGET_WINDOW_ID), "the run job dispatches that first hop");
+    ladder.dispatched_hops += 1;
+    for (index, width) in wave_widths.iter().enumerate() {
+        let hop = index + 1;
+        session.begin_window_tick(BUDGET_WINDOW_ID);
+        session.note_window_tick_outcome(BUDGET_WINDOW_ID, crate::preview_eval::tick_is_unfinished(false, *width));
+        session.note_window_extensions_in_flight(BUDGET_WINDOW_ID, *width);
+        let mut continued = false;
+        for answer in 0..*width {
+            let last = answer + 1 == *width;
+            if last && cancel_before_hop == Some(hop + 1) {
+                session.cancel_preview_evaluation(BUDGET_WINDOW_ID);
+                cancelled = true;
+            }
+            session.settle_window_extension(BUDGET_WINDOW_ID);
+            let spent = last && spent_turn_before_hop == Some(hop + 1);
+            if session.inline_continuation_admitted(BUDGET_WINDOW_ID, Some(REPLAY_TURN_STARTED_US), replay_now_us(spent)) {
+                assert!(session.arm_window_tick(BUDGET_WINDOW_ID), "a continuation CLAIMS the hop it takes over");
+                continued = true;
+                ladder.inline_waves += 1;
+                if cancelled {
+                    ladder.continuations_after_cancel += 1;
+                }
+            }
+        }
+        if cancelled {
+            break;
+        }
+        if !continued {
+            assert!(session.window_tick_owed(BUDGET_WINDOW_ID), "a declined continuation leaves the debt exactly where the scheduler reads it");
+            assert!(session.arm_window_tick(BUDGET_WINDOW_ID), "so the run job dispatches the round trip instead");
+            ladder.dispatched_hops += 1;
+        }
+    }
+    if !cancelled {
+        session.begin_window_tick(BUDGET_WINDOW_ID);
+        session.note_window_tick_outcome(BUDGET_WINDOW_ID, false);
+        assert!(!session.window_tick_owed(BUDGET_WINDOW_ID), "the terminal walk owes nothing and the run settles");
+    }
+    retire_flow_eval_session(session);
+    ladder
+}
+
+/// ⚖️ LAW: every bundled example's chain costs ONE dispatched `flowEvalTick` hop, whatever its depth —
+/// the wave coalescing removed the per-NODE hop, and the inline continuation removes the per-LEVEL one.
+///
+/// 📐️ Fixture-driven and honest about what it is: the wave shapes come from each example's own graph,
+/// and the claim asserted here is about the LATCH ladder, not about a browser. The browser count is
+/// `performInvocation settled {"actionId":"flowEvalTick"}` per example in
+/// `📓️flow-inline-continuation-2026-09-14.md`.
+#[test]
+fn every_example_chain_costs_one_dispatched_hop_once_the_folds_continue_it_inline() {
+    let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
+    let fixture = inline_continuation_fixture();
+    assert_eq!(fixture.examples.len(), 8, "all eight bundled examples declare their wave shape");
+    let mut ladders = Vec::new();
+    for example in &fixture.examples {
+        assert_eq!(example.contributed_nodes, example.wave_widths.iter().sum::<usize>(), "{}: the waves account for every contributed node", example.id);
+        assert_eq!(example.after_coalescing, example.wave_widths.len() + 1, "{}: coalescing bottoms out at one hop per LEVEL plus a terminal one", example.id);
+        assert!(example.before_coalescing >= example.after_coalescing, "{}: the coalescing lane never made an example worse", example.id);
+        let ladder = replay_chain(&example.wave_widths, None, None);
+        assert_eq!(ladder.dispatched_hops, example.after_inline, "{}: dispatched hops", example.id);
+        assert_eq!(ladder.dispatched_hops, 1, "{}: one gesture, one hop, however deep the graph", example.id);
+        assert_eq!(ladder.inline_waves, example.wave_widths.len(), "{}: every wave after the first hop runs inside an answer's own turn", example.id);
+        ladders.push((example.id.clone(), example.before_coalescing, example.after_coalescing, ladder.dispatched_hops));
+    }
+    let total_before: usize = fixture.examples.iter().map(|example| example.before_coalescing).sum();
+    let total_after: usize = fixture.examples.iter().map(|example| example.after_inline).sum();
+    assert!(total_after * 4 < total_before, "the eight example loads must fall by far more than a quarter: {total_before} -> {total_after}");
+    eprintln!("[DEBUG] inline hop ladder (id, before, afterCoalescing, afterInline): {ladders:?}");
+    eprintln!("[DEBUG] eight example loads: {total_before} dispatched hops -> {total_after}");
+}
+
+/// ⚖️ LAW: the fixture's interference rows — a cancel landing between two waves, and a turn with no
+/// wall left — each answered by the real latch.
+///
+/// 🚨️ These are the two ways the continuation must give the round trip back. A cancel must stop the
+/// chain even though the answer that would have continued it was already crossing when the gesture
+/// landed; a spent turn must park rather than stretch the 8 ms interactive hold by another ceiling.
+#[test]
+fn a_cancel_between_waves_and_a_spent_turn_each_hand_the_round_trip_back_to_the_host() {
+    let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
+    let fixture = inline_continuation_fixture();
+    assert_eq!(fixture.rows.len(), 3, "the fixture declares all three interference rows");
+    for row in &fixture.rows {
+        let ladder = replay_chain(&row.wave_widths, row.cancel_before_hop, row.spent_turn_before_hop);
+        assert_eq!(ladder.dispatched_hops, row.expected_dispatched_hops, "{}: dispatched hops", row.id);
+        assert_eq!(ladder.inline_waves, row.expected_inline_waves, "{}: inline waves", row.id);
+        if let Some(expected) = row.expected_continuations_after_cancel {
+            assert_eq!(ladder.continuations_after_cancel, expected, "{}: a cancelled chain admits no continuation at all", row.id);
+        }
+        eprintln!("[DEBUG] inline continuation row {}: {ladder:?}", row.id);
+    }
+}
+//#endregion 🔁️InlineContinuation

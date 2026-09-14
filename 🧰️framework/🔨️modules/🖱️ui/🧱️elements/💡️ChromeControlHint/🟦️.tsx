@@ -11,7 +11,7 @@ import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.t
 import { glassClass } from "../../🔨️modules/🌈️surface-presentation/🟦️.ts";
 import { useFlow } from "../../🔨️modules/🧭️flow-direction-context/🟦️.tsx";
 import { useControlAccessibleLabel, useControlTooltipText } from "../🏷️Label/🟦️.tsx";
-import { useShellScopeOptional } from "../🐚️ShellScope/🟦️.tsx";
+import { useShellFloatingSurfaceHost } from "../🐚️ShellScope/🟦️.tsx";
 import { SurfaceScope } from "../🌈️Surface/🟦️.tsx";
 import { resolvePopoverPlacement } from "../🗨️Popover/🟦️.tsx";
 // #endregion 🔌️Adapters
@@ -30,7 +30,7 @@ export function ChromeControlHint({ id, text, always = false, children }: { read
   const accessibleLabel = useControlAccessibleLabel(id, text);
   const tooltipText = useControlTooltipText(id, text, { always });
   const flow = useFlow();
-  const shellScope = useShellScopeOptional();
+  const floatingHost = useShellFloatingSurfaceHost();
   const tooltipId = React.useId().replace(/[^A-Za-z0-9_-]/g, "");
   const triggerRef = React.useRef<HTMLSpanElement>(null);
   const contentRef = React.useRef<HTMLDivElement>(null);
@@ -83,7 +83,7 @@ export function ChromeControlHint({ id, text, always = false, children }: { read
     "aria-describedby": describedBy,
   } as Record<string, unknown>);
 
-  const portalTarget = shellScope?.portalLayerRef.current ?? (typeof document !== "undefined" ? document.body : null);
+  const portalTarget = floatingHost;
   const tooltipPortal =
     open && tooltipText && portalTarget
       ? createPortal(

@@ -65,7 +65,7 @@ pub fn definition(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels) -> WindowKi
 /// 🎚️ The live chrome measures for this window: its own sun group plus the mode-level brush/fill
 /// Utility Options groups it shares with the 2D window.
 pub fn window_measures(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels, tool_run: Option<&ToolRunView>) -> Vec<WindowMeasure> {
-    vec![options::sun::measure(&envelope.runtime), mode_options::fill::measure(envelope, labels, tool_run), mode_options::brush::measure(envelope, labels)]
+    vec![options::sun::measure(&envelope.runtime, labels.is_de()), mode_options::fill::measure(envelope, labels, tool_run), mode_options::brush::measure(envelope, labels)]
 }
 
 pub fn engagement(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels) -> WindowEngagement {

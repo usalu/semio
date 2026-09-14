@@ -553,7 +553,7 @@ fn frame_deferred_cursor_advances_one_owned_operation_in_order() {
     let mut actions = FrameActionOwners::default();
     assert!(actions.try_push(ActionDescriptor { controller_id: "a".to_string(), action: "one".to_string(), args: None }).is_ok());
     assert!(actions.try_push(ActionDescriptor { controller_id: "b".to_string(), action: "two".to_string(), args: None }).is_ok());
-    let mut cursor = FrameDeferredCursor::new(actions, true, true, true, 1, semio_framework_job::root_cancel_token());
+    let mut cursor = FrameDeferredCursor::new(actions, true, true, true, false, 1, semio_framework_job::root_cancel_token());
     assert!(matches!(cursor.take_next(), Some(FrameDeferredWork::ShellMaintenance)));
     assert!(matches!(cursor.take_next(), Some(FrameDeferredWork::PumpSync)));
     assert!(matches!(cursor.take_next(), Some(FrameDeferredWork::Action(action)) if action.action == "one"));
@@ -569,7 +569,7 @@ fn frame_deferred_cancel_retires_one_action_per_step() {
     for index in 0..WORLD3D_DEADLINE_CAPACITY {
         assert!(actions.try_push(ActionDescriptor { controller_id: index.to_string(), action: "cancel".to_string(), args: None }).is_ok());
     }
-    let mut cursor = FrameDeferredCursor::new(actions, false, true, false, 1, semio_framework_job::root_cancel_token());
+    let mut cursor = FrameDeferredCursor::new(actions, false, true, false, false, 1, semio_framework_job::root_cancel_token());
     for _ in 0..WORLD3D_DEADLINE_CAPACITY {
         assert!(!cursor.close_step());
     }
@@ -583,7 +583,7 @@ fn frame_deferred_cancel_token_closes_one_exact_owner_per_grant() {
     let cancel = semio_framework_job::root_cancel_token();
     let mut actions = FrameActionOwners::default();
     assert!(actions.try_push(ActionDescriptor { controller_id: "cancel-owner".to_string(), action: "one".to_string(), args: None }).is_ok());
-    let mut cursor = FrameDeferredCursor::new(actions, true, true, true, 17, cancel.clone());
+    let mut cursor = FrameDeferredCursor::new(actions, true, true, true, false, 17, cancel.clone());
     cancel.cancel_now();
     assert!(cursor.cancel.is_cancelled_now());
     cursor.begin_close();
@@ -631,7 +631,7 @@ fn frame_maintenance_cancel_and_stale_each_close_one_populated_owner_per_grant()
     let cancel = semio_framework_job::root_cancel_token();
     let mut cancelled_actions = FrameActionOwners::default();
     assert!(cancelled_actions.try_push(ActionDescriptor { controller_id: "cancelled".to_string(), action: "one".to_string(), args: None }).is_ok());
-    let mut cancelled = FrameDeferredCursor::new(cancelled_actions, false, false, false, 81, cancel.clone());
+    let mut cancelled = FrameDeferredCursor::new(cancelled_actions, false, false, false, false, 81, cancel.clone());
     cancel.cancel_now();
     assert_eq!(frame_maintenance_terminal_fault(cancelled.cancel.is_cancelled_now(), false, false), Some("frame maintenance cancelled"));
     cancelled.begin_close();
@@ -646,7 +646,7 @@ fn frame_maintenance_cancel_and_stale_each_close_one_populated_owner_per_grant()
     assert!(authority.release(82));
     let mut stale_actions = FrameActionOwners::default();
     assert!(stale_actions.try_push(ActionDescriptor { controller_id: "stale".to_string(), action: "one".to_string(), args: None }).is_ok());
-    let mut stale = FrameDeferredCursor::new(stale_actions, false, false, false, 82, semio_framework_job::root_cancel_token());
+    let mut stale = FrameDeferredCursor::new(stale_actions, false, false, false, false, 82, semio_framework_job::root_cancel_token());
     assert_eq!(frame_maintenance_terminal_fault(false, !authority.is_live(stale.generation), false), Some("frame maintenance generation became stale"));
     stale.begin_close();
     let before = stale.actions.len;
@@ -683,7 +683,7 @@ fn frame_maintenance_test_owner(generation: u64, actions: usize) -> FrameMainten
         text_cancel_pending: false,
         last_sync_pump_ms: 0.0,
     };
-    FrameMaintenanceOwner { interaction: Some(interaction), cursor: Some(FrameDeferredCursor::new(action_owners, true, true, true, generation, semio_framework_job::root_cancel_token())), deadline_ms: Some(u64::MAX) }
+    FrameMaintenanceOwner { interaction: Some(interaction), cursor: Some(FrameDeferredCursor::new(action_owners, true, true, true, false, generation, semio_framework_job::root_cancel_token())), deadline_ms: Some(u64::MAX) }
 }
 
 #[cfg(not(target_arch = "wasm32"))]

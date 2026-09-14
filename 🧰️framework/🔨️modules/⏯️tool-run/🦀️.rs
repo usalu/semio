@@ -2029,6 +2029,8 @@ pub const TOOL_RUN_DISMISS_ACTION_ID: &str = "toolRunDismiss";
 pub const TOOL_RUN_ACTION_IDS: [&str; 7] = [TOOL_RUN_START_ACTION_ID, TOOL_RUN_PAUSE_ACTION_ID, TOOL_RUN_RESUME_ACTION_ID, TOOL_RUN_STEP_ACTION_ID, TOOL_RUN_ABORT_ACTION_ID, TOOL_RUN_FINALIZE_ACTION_ID, TOOL_RUN_DISMISS_ACTION_ID];
 
 /// 🎹️ Chord of `toolRunStart`.
+/// 🐢️ The viewer's default tool run pace: visible algorithm units per second, so every attempt is on screen before the next.
+pub const TOOL_RUN_VISIBLE_UNITS_PER_SECOND: f64 = 20.0;
 pub const TOOL_RUN_START_CHORD: &str = "mod+enter";
 /// 🔀️ Toggle chord shared by `toolRunPause` and `toolRunResume`.
 pub const TOOL_RUN_PAUSE_RESUME_CHORD: &str = "mod+alt+enter";
@@ -2146,6 +2148,7 @@ pub enum ToolRunLabel {
     ActionFinalize,
     ActionDismiss,
     FinalizeDisabled,
+    ReadyToStart,
     RebasingStep,
     ConflictStep,
     TraceTruncatedStep,
@@ -2154,7 +2157,7 @@ pub enum ToolRunLabel {
 }
 
 impl ToolRunLabel {
-    pub const ALL: [Self; 22] = [
+    pub const ALL: [Self; 23] = [
         Self::StateStarting,
         Self::StateRunning,
         Self::StatePaused,
@@ -2172,6 +2175,7 @@ impl ToolRunLabel {
         Self::ActionFinalize,
         Self::ActionDismiss,
         Self::FinalizeDisabled,
+        Self::ReadyToStart,
         Self::RebasingStep,
         Self::ConflictStep,
         Self::TraceTruncatedStep,
@@ -2199,6 +2203,7 @@ impl ToolRunLabel {
             Self::ActionFinalize => ("actionFinalize", "Finalize", "Abschließen"),
             Self::ActionDismiss => ("actionDismiss", "Dismiss", "Schließen"),
             Self::FinalizeDisabled => ("finalizeDisabled", "Available once the run is complete", "Verfügbar, sobald der Lauf fertig ist"),
+            Self::ReadyToStart => ("readyToStart", "Ready to start", "Bereit zum Starten"),
             Self::RebasingStep => ("rebasingStep", "Document changed, re-applying provisional result", "Dokument geändert, vorläufiges Ergebnis wird neu angewendet"),
             Self::ConflictStep => ("conflictStep", "{0} provisional changes conflict with the current document", "{0} vorläufige Änderungen stehen im Konflikt mit dem aktuellen Dokument"),
             Self::TraceTruncatedStep => ("traceTruncatedStep", "Oldest {0} rejected attempts are no longer shown", "Die ältesten {0} verworfenen Versuche werden nicht mehr angezeigt"),

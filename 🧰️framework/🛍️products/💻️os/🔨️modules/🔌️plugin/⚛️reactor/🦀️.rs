@@ -66,6 +66,11 @@ use std::collections::VecDeque;
 const RECONCILE_STEP_OPPORTUNITY_LIMIT: u64 = 1_024;
 
 //#region 📬️ShellFaultFrame
+/// 🖼️ Code of the fault ONE mounted surface publishes when its own retained render terminated. The
+/// host reads it to scope the report to that surface instead of failing the turn that happened to
+/// carry it (`🔌️PluginRuntime/🟦️.tsx`, `SURFACE_RENDER_FAULT`).
+pub const SURFACE_RENDER_FAULT_CODE: &str = "ui.surface-render";
+
 fn shell_fault_effect(instance: u32, fault: &semio_framework::Fault) -> Effect {
     let fault = store::pack_rt::encode_wire_value(&dsl::to_dsl_value(fault).expect("shell diagnostic must serialize"));
     let frame = protocol::AppFrame::Error { in_reply_to: None, fault, report: Vec::new() };
@@ -1766,6 +1771,15 @@ mod m1_m2_reactor_tests;
 #[cfg(test)]
 #[path = "🧪️tests/🔬️reconcile-budget/🦀️.rs"]
 mod reconcile_budget_tests;
+
+//#region 🧪️ReconcileSpinTests
+/// 🔁️ The crossing-count laws of the retained-surface publication ladder: what arms a turn, how many
+/// host round trips N pending surfaces cost, and that neither the wall hold nor a cancellation mid
+/// drive is violated. See `📓️reactor-reconcile-spin-2026-09-14.md`.
+#[cfg(test)]
+#[path = "🧪️tests/🔬️reconcile-spin/🦀️.rs"]
+mod reconcile_spin_tests;
+//#endregion 🧪️ReconcileSpinTests
 
 //#region 🧪️ExtensionContinuationTests
 #[cfg(test)]

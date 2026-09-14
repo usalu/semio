@@ -1598,4 +1598,154 @@ async fn tool_run_panel_of_a_running_run_is_the_shell_fixture() {
     app.tool_runs.port().expect("the run's port").wake();
     abort_and_close(&mut app).await;
 }
+
+/// 🔁️ Every sibling key list under `node` names each key once — the admission law a retained UI surface enforces.
+fn assert_unique_sibling_keys(node: &Value) {
+    let children = node["children"].as_array().map(Vec::as_slice).unwrap_or_default();
+    let mut keys: Vec<&str> = children.iter().filter_map(|child| child["key"].as_str()).collect();
+    keys.sort_unstable();
+    let before = keys.len();
+    keys.dedup();
+    assert_eq!(keys.len(), before, "duplicate sibling keys under {}", node["key"]);
+    children.iter().for_each(assert_unique_sibling_keys);
+}
+
+/// ⚖️ LAW: a trace key the run re-upserts with a new verdict (testing → success/danger, the shape of every
+/// collision-tested candidate) is one attempt row, moved to the newest position — never a duplicate sibling that
+/// makes the panel unadmittable.
+#[semio_framework_async_macros::async_test]
+async fn tool_run_panel_lists_a_re_upserted_trace_key_once_at_its_newest_position() {
+    let fixture = fixture();
+    let expected = &fixture["verdictRevisions"];
+    let mut app = toy_app(1).await;
+    start(&mut app, text(&expected["toolId"])).await;
+    pump_until(&mut app, "the run waits on its first hop", |app| app.tool_runs.port().is_some_and(ToolRunJobPort::is_waiting)).await;
+    while app.take_typed_operation_effect().is_some() {}
+    let identity = app.tool_runs.identity().expect("identity");
+    let mut writer = ToolRunTickWriter::new(identity);
+    for upsert in expected["upserts"].as_array().expect("upserts") {
+        let key = number(&upsert[0]);
+        writer.upsert(key, ToolRunVerdict::parse(text(&upsert[1])).expect("verdict"), 1, ToolRunTraceSubject::Entity { entity: key });
+        app.tool_runs.apply_tick(writer.finish().expect("an upsert tick")).expect("the upsert tick applies");
+    }
+    let tree = app.render(FRAMEWORK_TOOL_RUN_BODY_KEY, None, &ViewModel::default()).await.expect("render the panel");
+    let panel = artifact_app_laws::observe_and_retire_fixture_tree(tree, built_node_wire);
+    assert_unique_sibling_keys(&panel);
+    let scope = semio_framework_tool_run::tool_run_panel_group_id(identity.id.run);
+    let rows: Vec<&str> = find_node(&panel, &format!("{scope}.trace")).expect("the attempts tree")["children"].as_array().expect("rows").iter().filter_map(|row| row["key"].as_str()).collect();
+    let expected_rows: Vec<String> = expected["traceRows"].as_array().expect("trace rows").iter().map(|key| format!("{scope}.trace.{}", number(key))).collect();
+    assert_eq!(rows, expected_rows, "one attempt row per trace key, newest first");
+    app.tool_runs.port().expect("the run's port").wake();
+    abort_and_close(&mut app).await;
+}
+
+/// ⚖️ LAW: while the active tool declares a run and this instance holds none of it, the panel offers a ready group
+/// whose enabled Start dispatches `toolRunStart` with the tool id; once the run exists its own group replaces it.
+#[semio_framework_async_macros::async_test]
+async fn tool_run_panel_offers_start_for_the_active_run_tool_until_its_run_exists() {
+    let fixture = fixture();
+    let expected = &fixture["readyGroup"];
+    let mut app = toy_app(1).await;
+    let view = ViewModel { active_tool_id: Some(text(&expected["toolId"]).to_string()), ..ViewModel::default() };
+    let tree = app.render(FRAMEWORK_TOOL_RUN_BODY_KEY, None, &view).await.expect("render the idle panel");
+    let panel = artifact_app_laws::observe_and_retire_fixture_tree(tree, built_node_wire);
+    assert_unique_sibling_keys(&panel);
+    let group = find_node(&panel, text(&expected["groupId"])).expect("the ready group");
+    assert_eq!(group["children"][0]["component"]["value"], expected["status"], "the ready status");
+    let start_button = find_node(group, text(&expected["startButtonId"])).expect("the ready Start button");
+    assert_eq!(start_button["component"]["label"], expected["startLabel"]);
+    assert_eq!(start_button["disabled"], false, "Start is enabled with no run");
+    assert_eq!(start_button["bindings"][0]["action"]["name"], "toolRunStart");
+    assert_eq!(start_button["bindings"][0]["args"]["toolId"], expected["toolId"], "Start names the active tool");
+    start(&mut app, text(&expected["toolId"])).await;
+    pump_until(&mut app, "the run waits on its first hop", |app| app.tool_runs.port().is_some_and(ToolRunJobPort::is_waiting)).await;
+    while app.take_typed_operation_effect().is_some() {}
+    let tree = app.render(FRAMEWORK_TOOL_RUN_BODY_KEY, None, &view).await.expect("render the running panel");
+    let panel = artifact_app_laws::observe_and_retire_fixture_tree(tree, built_node_wire);
+    assert!(find_node(&panel, text(&expected["groupId"])).is_none(), "the run's group replaces the ready group");
+    app.tool_runs.port().expect("the run's port").wake();
+    abort_and_close(&mut app).await;
+}
+
+/// 🪃️ The one pace wake a turn handed the host: its `(args, delay_ms)`; panics unless there is exactly one.
+fn one_pace_wake(app: &mut ToyApp, what: &str) -> (Option<DslValue>, u64) {
+    let effects: Vec<Effect> = std::iter::from_fn(|| app.take_typed_operation_effect()).collect();
+    match effects.as_slice() {
+        [Effect::DispatchAction { action, args, delay_ms, .. }] if action == tool_run::TOOL_RUN_PACE_ACTION_ID => (args.clone(), *delay_ms),
+        _ => panic!("{what}: exactly one pace wake reaches the host, got {effects:?}"),
+    }
+}
+
+/// ⚖️ LAW: a run started under the viewer's pace (`ViewModel::tool_run_units_per_second`) shows one visible unit per
+/// pace interval — after each unit the run is no driver work and hands the host exactly one `toolRunPace` wake delayed
+/// by the interval; a wake that arrives early re-arms once for the remainder and shows nothing, and the wake after the
+/// interval itself shows the next unit (so its action result carries the refresh) and arms the next wake.
+#[semio_framework_async_macros::async_test]
+async fn a_paced_run_shows_one_unit_per_interval_and_waits_for_the_host_wake() {
+    let fixture = fixture();
+    let expected = &fixture["pace"];
+    let ops_per_unit = number(&expected["opsPerUnit"]) as usize;
+    let delay = number(&expected["delayMs"]);
+    let target = number(&expected["target"]) as usize;
+    let mut app = toy_app(target as u64).await;
+    let paced = ActionMeta { view_state: Some(ViewModel { tool_run_units_per_second: expected["unitsPerSecond"].as_f64(), ..ViewModel::default() }), ..toy_meta() };
+    let started = app.handle_action("toolRunStart", Some(&DslValue::Object(vec![("toolId".into(), DslValue::String(text(&expected["toolId"]).into()))])), &paced).await.expect("paced start").output;
+    assert_eq!(started.get("toolRun").and_then(DslValue::as_str), Some("spawnJob"));
+    pump_until(&mut app, "the first paced unit is shown", |app| app.tool_runs.provisional().len() == ops_per_unit).await;
+    let (mut wake, first_delay) = one_pace_wake(&mut app, "unit 1");
+    assert_eq!(first_delay, delay, "the wake is delayed by one pace interval");
+    for unit in 2..=target {
+        assert!(!app.tool_runs.has_pending_work(), "unit {unit}: a paced run idles until its interval elapsed");
+        app.advance_typed_operation_publication().await.expect("an idle turn");
+        assert_eq!(app.tool_runs.provisional().len(), (unit - 1) * ops_per_unit, "unit {unit}: an idle turn shows nothing more");
+        if unit == 2 {
+            app.handle_action(tool_run::TOOL_RUN_PACE_ACTION_ID, wake.as_ref(), &paced).await.expect("an early wake");
+            let (rearmed, remainder) = one_pace_wake(&mut app, "an early wake");
+            assert!(remainder > 0 && remainder <= delay, "an early wake re-arms for the remainder, got {remainder} ms");
+            assert_eq!(app.tool_runs.provisional().len(), ops_per_unit, "an early wake shows nothing");
+            wake = rearmed;
+        }
+        std::thread::sleep(std::time::Duration::from_millis(delay));
+        app.handle_action(tool_run::TOOL_RUN_PACE_ACTION_ID, wake.as_ref(), &paced).await.expect("the host wake");
+        assert_eq!(app.tool_runs.provisional().len(), unit * ops_per_unit, "unit {unit}: the wake after the interval shows the next unit");
+        let (next, next_delay) = one_pace_wake(&mut app, &format!("unit {unit}"));
+        assert_eq!(next_delay, delay, "unit {unit}: the next wake is one interval away");
+        wake = next;
+    }
+    std::thread::sleep(std::time::Duration::from_millis(delay));
+    app.handle_action(tool_run::TOOL_RUN_PACE_ACTION_ID, wake.as_ref(), &paced).await.expect("the last wake");
+    pump_until(&mut app, "the paced run completes", |app| app.tool_runs.state() == Some(ToolRunState::Complete)).await;
+    abort_and_close(&mut app).await;
+}
+
+/// ⚖️ LAW: a paced run shows its next unit only once every scene window its trace reaches has echoed the last one —
+/// with the interval elapsed but the renderer's cursor behind, the run stays idle and its wake re-arms at the
+/// presentation retry; the echo the next wake carries in its view state releases it, and that wake shows the next unit.
+#[semio_framework_async_macros::async_test]
+async fn a_paced_run_waits_until_its_renderer_presented_the_last_unit() {
+    let fixture = fixture();
+    let expected = &fixture["pace"];
+    let delay = number(&expected["delayMs"]);
+    let ops_per_unit = number(&expected["opsPerUnit"]) as usize;
+    let mut app = toy_app(number(&expected["target"])).await;
+    let paced = ActionMeta { view_state: Some(ViewModel { tool_run_units_per_second: expected["unitsPerSecond"].as_f64(), ..ViewModel::default() }), ..toy_meta() };
+    app.handle_action("toolRunStart", Some(&DslValue::Object(vec![("toolId".into(), DslValue::String(text(&expected["toolId"]).into()))])), &paced).await.expect("paced start");
+    pump_until(&mut app, "the first paced unit is shown", |app| app.tool_runs.provisional().len() == ops_per_unit).await;
+    let (wake, _) = one_pace_wake(&mut app, "unit 1");
+    let (_, delta) = render_world(&mut app, None).await;
+    let delta = delta.expect("the renderer receives the unit's trace page");
+    std::thread::sleep(std::time::Duration::from_millis(delay));
+    assert!(!app.tool_runs.has_pending_work(), "the interval elapsed but no renderer presented the unit");
+    app.handle_action(tool_run::TOOL_RUN_PACE_ACTION_ID, wake.as_ref(), &paced).await.expect("the host wake");
+    let (retry, retry_delay) = one_pace_wake(&mut app, "an unpresented unit");
+    assert_eq!(retry_delay, tool_run::TOOL_RUN_PACE_PRESENTATION_RETRY_MS, "an unpresented unit re-arms the wake at the presentation retry");
+    assert_eq!(app.tool_runs.provisional().len(), ops_per_unit, "an unpresented unit holds the run");
+    let lane = &fixture["traceLane"];
+    let echoing = ActionMeta { view_state: Some(ViewModel { tool_run_trace_cursor_by_window_id: [(text(&lane["windowId"]).to_string(), cursor_after(&delta))].into_iter().collect(), ..paced.view_state.clone().expect("paced view") }), ..toy_meta() };
+    let released = app.handle_action(tool_run::TOOL_RUN_PACE_ACTION_ID, retry.as_ref(), &echoing).await.expect("the echoing wake");
+    assert_eq!(app.tool_runs.provisional().len(), 2 * ops_per_unit, "the echo the wake carries presents the unit and the wake shows the next one");
+    assert!(!matches!(released.ui_scope, UiDirtyScope::None), "the releasing wake carries the refresh of the unit it showed");
+    one_pace_wake(&mut app, "the next unit");
+    abort_and_close(&mut app).await;
+}
 //#endregion 🎯️RetargetAndSettings

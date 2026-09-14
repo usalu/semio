@@ -3,7 +3,8 @@
   "$comment": "🖱️ A wheel is applied at the point ITS OWN events carried, never at wherever the pointer has since moved. `🎮️wgpu-browser-input-wire/🔣️.json` already pins that a DOM wheel's position survives both hops into `DispatchEvent::Scroll { x, y, delta_x, delta_y }`; this oracle pins the hop AFTER it — what the frame does with that position. The wgpu tick is input-driven, so a wheel is normally drained by a LATER event, and the frame's scene-surface gate plus `World3dState::bounds.contains` both answer for whatever point it applies at.",
   "rule": {
     "id": "appWheelApplicationPoint",
-    "statement": "Scroll events coalesce their deltas between frames; the newest scroll's own point is where the whole coalesced delta is applied. A pointer event moves the pointer and never the pending wheel's point. Taking the wheel leaves none, and a frame with no pending wheel applies nothing.",
+    "statement": "Every wheel notch is applied at its own point. Consecutive notches coalesce their deltas only while the point does not move; a notch at a NEW point opens a new pending application, and a frame drains the pending applications oldest first. A pointer event moves the pointer and never a pending notch. Draining leaves none, a notch whose deltas cancel applies nothing, and a stream longer than the pending capacity coalesces into its newest application rather than growing.",
+    "capacity": 8,
     "rust": "🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs::AppWheel",
     "producer": "🎯️targets/🧊️wgpu/🪟️winit-app/🦀️.rs::dispatch_normalized_event",
     "consumer": "🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs::AppFrameTransactionPhase::WheelStart",
@@ -14,11 +15,11 @@
       "name": "one-notch-applies-at-its-own-point",
       "why": "The baseline: a single wheel over the preview centre.",
       "events": [{ "kind": "scroll", "x": 1207.5, "y": 461, "deltaY": -120 }],
-      "applied": { "x": 1207.5, "y": 461, "delta": -120 }
+      "applications": [{ "x": 1207.5, "y": 461, "delta": -120 }]
     },
     {
       "name": "a-later-pointer-move-does-not-move-the-pending-wheel",
-      "why": "The live defect, verbatim. The probe wheels over the preview centre and then nudges the pointer to the top-left corner to make the input-driven tick run. Measured on 6118 before the fix: `wheel gate x=5 y=5 delta=-480 hit=None control=None propagates=true worlds=[(\"procedural-preview\", false)]` — four notches coalesced and applied 1200 px away from where the user scrolled, so the World3d authority saw `wheel=0` on every one of its 335 intents and the camera was byte-identical before and after (📓️wgpu-end-to-end-verification-2026-09-14.md §5.1).",
+      "why": "The first defect of this family, verbatim. The probe wheels over the preview centre and then nudges the pointer to the top-left corner to make the input-driven tick run. Measured on 6118 before the fix: `wheel gate x=5 y=5 delta=-480 hit=None control=None propagates=true worlds=[(\"procedural-preview\", false)]` — four notches applied 1200 px away from where the user scrolled, so the World3d authority saw `wheel=0` on every one of its 335 intents and the camera was byte-identical before and after (📓️wgpu-end-to-end-verification-2026-09-14.md §5.1).",
       "events": [
         { "kind": "scroll", "x": 1207.5, "y": 461, "deltaY": -120 },
         { "kind": "scroll", "x": 1207.5, "y": 461, "deltaY": -120 },
@@ -26,25 +27,55 @@
         { "kind": "scroll", "x": 1207.5, "y": 461, "deltaY": -120 },
         { "kind": "pointer-move", "x": 5, "y": 5 }
       ],
-      "applied": { "x": 1207.5, "y": 461, "delta": -480 },
-      "baselineApplied": { "x": 5, "y": 5, "delta": -480 }
+      "applications": [{ "x": 1207.5, "y": 461, "delta": -480 }],
+      "baselineApplications": [{ "x": 5, "y": 5, "delta": -480 }]
     },
     {
-      "name": "coalesced-notches-apply-at-the-newest-point",
-      "why": "A wheel stream that genuinely travels — trackpad momentum under a moving cursor. The newest event's point is where the whole coalesced delta lands, which is what a browser's own wheel stream means.",
+      "name": "notches-at-two-points-are-two-applications",
+      "why": "The RESIDUAL defect this oracle was widened for, verbatim from the battery's own `world3d-editor / h7_wheel_zoom`. The probe scrolls once over the preview centre and then nudges the pointer 1 px into the top-left corner between notches, so the browser's wheel stream genuinely carries five points. Keeping only the NEWEST point coalesced all five into one application in the corner: measured on 6118 (2026-09-14 15:30 battery), five `Scroll { x: 1208, y: 461 }` … `{ x: 6, y: 6 }` events produced `wheel=0` on all 337 world3d intents and the camera stayed `[4,-4,3]->[0,0,0]/45deg` while hover answered `Some(\"extrude@solid\")`. A notch over the geometry and a notch in the corner are not one gesture.",
+      "events": [
+        { "kind": "scroll", "x": 1207.5, "y": 461, "deltaY": 200 },
+        { "kind": "pointer-move", "x": 3, "y": 3 },
+        { "kind": "scroll", "x": 3, "y": 3, "deltaY": 200 },
+        { "kind": "pointer-move", "x": 4, "y": 4 },
+        { "kind": "scroll", "x": 4, "y": 4, "deltaY": 200 }
+      ],
+      "applications": [
+        { "x": 1207.5, "y": 461, "delta": 200 },
+        { "x": 3, "y": 3, "delta": 200 },
+        { "x": 4, "y": 4, "delta": 200 }
+      ],
+      "baselineApplications": [{ "x": 4, "y": 4, "delta": 600 }]
+    },
+    {
+      "name": "a-travelling-wheel-stream-applies-each-point-once",
+      "why": "Trackpad momentum under a moving cursor. Each point is its own zoom anchor, so the stream is two applications and not one at the end of the travel.",
       "events": [
         { "kind": "scroll", "x": 100, "y": 100, "deltaY": 40 },
         { "kind": "pointer-move", "x": 140, "y": 160 },
         { "kind": "scroll", "x": 140, "y": 160, "deltaY": 40 }
       ],
-      "applied": { "x": 140, "y": 160, "delta": 80 }
+      "applications": [
+        { "x": 100, "y": 100, "delta": 40 },
+        { "x": 140, "y": 160, "delta": 40 }
+      ],
+      "baselineApplications": [{ "x": 140, "y": 160, "delta": 80 }]
+    },
+    {
+      "name": "a-stationary-burst-is-one-application",
+      "why": "The common case a reader must not pay per notch for: a user holding the pointer still over the preview and spinning the wheel. The point never moves, so the whole burst coalesces into ONE application at that point.",
+      "events": [
+        { "kind": "scroll", "x": 640, "y": 400, "deltaY": 40 },
+        { "kind": "scroll", "x": 640, "y": 400, "deltaY": 40 },
+        { "kind": "scroll", "x": 640, "y": 400, "deltaY": 40 }
+      ],
+      "applications": [{ "x": 640, "y": 400, "delta": 120 }]
     },
     {
       "name": "taking-the-wheel-leaves-none",
       "why": "A second frame with no new scroll applies nothing — the accumulator is not a level, it is a pending delta.",
       "events": [{ "kind": "scroll", "x": 300, "y": 220, "deltaY": 120 }],
-      "applied": { "x": 300, "y": 220, "delta": 120 },
-      "appliedAgain": null
+      "applications": [{ "x": 300, "y": 220, "delta": 120 }]
     },
     {
       "name": "opposite-notches-cancel-and-apply-nothing",
@@ -53,7 +84,7 @@
         { "kind": "scroll", "x": 300, "y": 220, "deltaY": 120 },
         { "kind": "scroll", "x": 300, "y": 220, "deltaY": -120 }
       ],
-      "applied": null
+      "applications": []
     },
     {
       "name": "pointer-events-alone-apply-nothing",
@@ -62,7 +93,32 @@
         { "kind": "pointer-move", "x": 700, "y": 400 },
         { "kind": "pointer-move", "x": 5, "y": 5 }
       ],
-      "applied": null
+      "applications": []
+    },
+    {
+      "name": "a-stream-longer-than-the-capacity-coalesces-into-its-newest-application",
+      "why": "Fixed credits: nine notches at nine distinct points may not grow an unbounded queue inside a frame. The first eight keep their own points and the ninth merges into the eighth, which then carries the newest point — the same tail rule the pre-fix accumulator applied to the whole stream.",
+      "events": [
+        { "kind": "scroll", "x": 10, "y": 10, "deltaY": 10 },
+        { "kind": "scroll", "x": 20, "y": 20, "deltaY": 10 },
+        { "kind": "scroll", "x": 30, "y": 30, "deltaY": 10 },
+        { "kind": "scroll", "x": 40, "y": 40, "deltaY": 10 },
+        { "kind": "scroll", "x": 50, "y": 50, "deltaY": 10 },
+        { "kind": "scroll", "x": 60, "y": 60, "deltaY": 10 },
+        { "kind": "scroll", "x": 70, "y": 70, "deltaY": 10 },
+        { "kind": "scroll", "x": 80, "y": 80, "deltaY": 10 },
+        { "kind": "scroll", "x": 90, "y": 90, "deltaY": 10 }
+      ],
+      "applications": [
+        { "x": 10, "y": 10, "delta": 10 },
+        { "x": 20, "y": 20, "delta": 10 },
+        { "x": 30, "y": 30, "delta": 10 },
+        { "x": 40, "y": 40, "delta": 10 },
+        { "x": 50, "y": 50, "delta": 10 },
+        { "x": 60, "y": 60, "delta": 10 },
+        { "x": 70, "y": 70, "delta": 10 },
+        { "x": 90, "y": 90, "delta": 20 }
+      ]
     }
   ]
 }

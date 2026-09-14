@@ -51,6 +51,9 @@ pub struct GraphPortRecord {
     #[serde(rename = "resourceKind", default)]
     #[value(rename = "resourceKind", default)]
     artifact_kind: Option<String>,
+    #[serde(rename = "valueType", default)]
+    #[value(rename = "valueType", default)]
+    value_type: Option<String>,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, FromValue)]
@@ -173,6 +176,9 @@ fn port_to_io(port: &GraphPortRecord) -> IoPortSpec {
     }
     if let Some(kind) = &port.artifact_kind {
         spec.artifact_kind = Some(kind.clone());
+    }
+    if let Some(value_type) = &port.value_type {
+        spec.value_type = Some(value_type.clone());
     }
     spec
 }

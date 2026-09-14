@@ -13,6 +13,7 @@ import { Slot } from "../../🔨️modules/🏷️class-name-composition/🪆️
 import { veilClass, glassClass } from "../../🔨️modules/🌈️surface-presentation/🟦️.ts";
 import { useFlow } from "../../🔨️modules/🧭️flow-direction-context/🟦️.tsx";
 import { useLabel } from "../🏷️Label/🟦️.tsx";
+import { useShellFloatingSurfaceHost } from "../🐚️ShellScope/🟦️.tsx";
 import { SurfaceScope } from "../🌈️Surface/🟦️.tsx";
 import { CloseIconAlt } from "../🔣️Icons/🟦️.tsx";
 // #endregion 🔌️Adapters
@@ -388,12 +389,15 @@ const DialogClose = React.forwardRef<HTMLElement, DialogCloseProps>(function Dia
 /** 🪟️ Portals owned modal parts into an isolated root with automatic cleanup. */
 function DialogPortal({ children, container }: DialogPortalProps) {
   const context = useDialogContext();
+  const floatingHost = useShellFloatingSurfaceHost();
   if (!context.open || typeof document === "undefined") return null;
+  const host = container ?? context.isolationRoot ?? floatingHost;
+  if (!host) return null;
   return createPortal(
     <div ref={context.portalRef} className={cn("pointer-events-auto", context.isolationRoot && "absolute inset-0")} data-slot="dialog-portal" data-dialog-boundary={context.boundary} data-dialog-token={context.token} data-dialog-isolation={context.isolationRoot ? "scoped" : "page"}>
       <DialogPortalContext.Provider value={{ inside: true, isolationRoot: context.isolationRoot }}>{children}</DialogPortalContext.Provider>
     </div>,
-    container ?? context.isolationRoot ?? document.body,
+    host,
   );
 }
 

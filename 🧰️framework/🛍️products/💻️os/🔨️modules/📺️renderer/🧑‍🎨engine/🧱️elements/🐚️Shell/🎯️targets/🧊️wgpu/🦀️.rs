@@ -2363,6 +2363,155 @@ const SHELL_SETTLE_ROUNDS: usize = 64;
 /// the panels and the GPU present — forever.
 const SHELL_WINDOW_PAINT_OPPORTUNITIES: usize = 1 << 20;
 
+/// 📏️ Pump steps ONE live producer may publish the same progress reading for before the pump stops
+/// believing the guest will arm another hop and drives that run to a terminal state.
+///
+/// ⚖️ A step is one frame, so this is a wall-clock patience measured in frames rather than in
+/// milliseconds: a solve that is genuinely advancing moves its `unitsDone`/`facesDone`/`inFlight`
+/// witness and resets the count, and only a producer whose witness is frozen — `meshingFaces 36/56`
+/// for 200 s on 6118, deaf to `setActiveExample` — ever reaches it
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-progress-visibility-2026-09-14.md` §8.2).
+pub(crate) const SHELL_SETTLE_STALL_STEPS: u32 = 240;
+
+/// 📏️ Terminal drives the pump may aim at ONE wedged surface before it leaves the run alone. The
+/// abort is the producer's OWN published `cancelAction`, and the run it retires is commonly restarted
+/// by the producer's own restart policy — so this is bounded to keep a producer that answers an abort
+/// with a fresh wedge from becoming an abort storm.
+pub(crate) const SHELL_SETTLE_TERMINAL_DRIVES: u32 = 3;
+
+/// 📏️ Steps between two settle-pump heartbeat traces. A converging edit alternates `Drained` and
+/// `Crossed` every frame, so the trace reports class TRANSITIONS plus one heartbeat per this many
+/// steps — enough for a probe to prove the lane is live and running, few enough to read.
+const SHELL_SETTLE_HEARTBEAT_STEPS: u64 = 64;
+
+/// ⏳️ What one [`ShellState::settle_pump_step`] did — the frame loop traces it so a step that cost a
+/// guest crossing can be told from one that only drained an already-armed action.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ShellSettleStep {
+    /// ♻️ The step executed armed work (deferred actions, extension answers, file opens) and took the
+    /// refresh pass that work owed.
+    Drained,
+    /// 🫀️ Nothing was armed and a producer is still working, so the step spent ONE guest crossing on
+    /// exactly the window bodies whose producers report `computing`.
+    Crossed,
+    /// 🧯 A producer published the same witness for [`SHELL_SETTLE_STALL_STEPS`] steps, so the step
+    /// drove its run to a terminal state through the producer's own published `cancelAction`.
+    Wedged,
+    /// 🏁️ Nothing is armed and nothing is working — the chain has settled and the pump stands down.
+    Quiescent,
+}
+
+/// ⏳️ One live producer's progress witness, as the pump watches it across frames.
+#[derive(Default)]
+pub(crate) struct ShellSettleWatch {
+    signature: String,
+    stalled_steps: u32,
+    terminal_drives: u32,
+    standing: bool,
+}
+
+/// 🫀️ What the watchdog decided about ONE live producer this step.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum ShellSettleVerdict {
+    /// 🫀️ Spend this step's crossing on the producer's own window body.
+    Fund,
+    /// 🧯 The witness has been frozen for [`SHELL_SETTLE_STALL_STEPS`] steps: drive the run to a
+    /// terminal state through the producer's own published `cancelAction`.
+    Terminal,
+    /// 🏁️ The witness is frozen and there is nothing left to try — the producer published no way to
+    /// end its own run, or the terminal-drive budget is spent. Crossings are not helping it, so the
+    /// pump stops paying for them until the witness moves again.
+    ///
+    /// ⚖️ This is the term that keeps a producer which reports `computing` FOREVER from pinning the
+    /// host at one guest crossing per frame. The generation3d preview does exactly that on the served
+    /// guest — 560 consecutive samples of `computing:true phase:"idle" inFlight:0 ratio:1.0`, over a
+    /// window in which nothing was evaluating at all (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
+    /// `📓️wgpu-progress-visibility-2026-09-14.md` §3.1) — and a pump that believed it would never
+    /// stand down.
+    Stand,
+}
+
+/// 🫀️ Whether the frame loop owes the shell a settle step — the whole predicate, over the parts a
+/// frame can see, so it is drivable without a live guest.
+///
+/// ⚖️ Derived from five independent terms, never from the arm alone: a step that forgot to re-arm
+/// cannot park a live chain, and a chain nobody armed cannot pin the pump awake.
+pub(crate) fn settle_pump_owes(settling: bool, has_session: bool, armed_work: bool, owed_scope: &UiDirtyScope, armed: bool, computing: bool) -> bool {
+    if settling || !has_session {
+        return false;
+    }
+    armed_work || !owed_scope.asks_for_nothing() || armed || computing
+}
+
+/// 🧯 The watchdog's verdict for ONE live producer, and the only place the stall is counted.
+///
+/// A witness that MOVED resets everything — including the terminal-drive count, so a producer that
+/// recovered after an abort is watched from scratch. A witness that is frozen counts up, and the step
+/// that crosses [`SHELL_SETTLE_STALL_STEPS`] asks for a terminal drive at most
+/// [`SHELL_SETTLE_TERMINAL_DRIVES`] times — a producer that answers an abort with a fresh wedge is a
+/// producer defect, not a reason for the host to abort forever.
+///
+/// ⚠️ A producer that offers no `cancelAction` is never driven: this shell learns no domain verb from
+/// code, so a run it has no published way to end is left to the user.
+pub(crate) fn settle_watch_verdict(watch: &mut ShellSettleWatch, status: &World3dComputeStatus) -> ShellSettleVerdict {
+    let signature = settle_progress_signature(status);
+    if watch.signature != signature {
+        watch.signature = signature;
+        watch.stalled_steps = 0;
+        watch.terminal_drives = 0;
+        watch.standing = false;
+        return ShellSettleVerdict::Fund;
+    }
+    watch.stalled_steps = watch.stalled_steps.saturating_add(1);
+    if watch.stalled_steps < SHELL_SETTLE_STALL_STEPS {
+        return ShellSettleVerdict::Fund;
+    }
+    if watch.terminal_drives >= SHELL_SETTLE_TERMINAL_DRIVES || !status.cancellable {
+        watch.stalled_steps = SHELL_SETTLE_STALL_STEPS;
+        watch.standing = true;
+        return ShellSettleVerdict::Stand;
+    }
+    watch.stalled_steps = 0;
+    watch.terminal_drives = watch.terminal_drives.saturating_add(1);
+    ShellSettleVerdict::Terminal
+}
+
+/// 🫀️ The shell's half of the runtime-owned settle pump — the wgpu twin of React's
+/// `createUiRefreshCoalescerV1` drain loop (`🛠️ShellHelpers/🟦️.tsx`).
+///
+/// React's shell never converges a chain inside one call either: a pass DECLARES what it still owes
+/// and the lane's own loop runs the next pass, so the browser paints between them. This is that lane,
+/// with the loop owned by the frame runtime instead of by a promise chain — `settle_boot` arms it and
+/// returns, `🧊️renderer/🦀️.rs`'s `FrameDeferredWork::Settle` takes exactly one step per frame, and the
+/// step's own verdict says whether another is owed.
+///
+/// Two things only this layer can own live here:
+///
+/// * **the guest crossing that funds a background solve.** A window body's render is also the turn
+///   that pumps the guest's worker pool, which is why narrowing `refresh_ui` on `UiDirtyScope` alone
+///   froze 14 of 16 examples mid-solve (`📓️wgpu-dirty-scope-refresh-2026-09-14.md` §4). The pump makes
+///   that crossing per FRAME, on exactly the surfaces whose producers report `computing`, so the
+///   refresh may narrow without withdrawing compute from a solve the UI has nothing to do with.
+/// * **the wedge watchdog.** A producer that stops arming hops leaves a non-terminal run standing, and
+///   a non-terminal run refuses every restart — the preview then ignores `setActiveExample` forever
+///   (`📓️wgpu-progress-visibility-2026-09-14.md` §8.2). The pump watches each producer's own witness
+///   and, when it freezes, dispatches the producer's own published `cancelAction`, which is the one
+///   gesture measured to unblock it (§7.1 of the same report).
+#[derive(Default)]
+pub struct ShellSettlePump {
+    owed: bool,
+    steps: u64,
+    crossings: u64,
+    traced: Option<ShellSettleStep>,
+    watches: HashMap<String, ShellSettleWatch>,
+}
+
+/// ⏳️ The progress witness the wedge watchdog compares across frames — every counter a producer moves
+/// while it is genuinely advancing, and nothing that changes on its own.
+fn settle_progress_signature(status: &World3dComputeStatus) -> String {
+    format!("{}|{}|{}|{}|{}|{}", status.phase, status.units_done, status.units_total, status.faces_done, status.faces_total, status.in_flight)
+}
+
 /// 📥️ One parked `Effect::InvokeExtension`, awaiting the flush that can publish its answer.
 #[cfg(target_arch = "wasm32")]
 struct PendingExtensionInvocation {
@@ -2515,6 +2664,9 @@ pub struct ShellState {
     /// one place that takes it. Starts [`UiDirtyScope::None`], so a refresh nobody owes anything to
     /// re-renders nothing at all.
     owed_refresh_scope: UiDirtyScope,
+    /// 🫀️ The runtime-owned settle lane's shell half — see [`ShellSettlePump`]. Producers only ARM it
+    /// ([`Self::owe_settle`]); the frame loop is the one caller of [`Self::settle_pump_step`].
+    settle_pump: ShellSettlePump,
     /// 📥️ Extension invocations the guest asked for, parked until a flush that owns `&mut self`
     /// can run them AND fold their answers' own effects back in — see `flush_deferred_actions`.
     #[cfg(target_arch = "wasm32")]
@@ -2770,6 +2922,24 @@ impl PanelAnchor {
             PanelAnchor::BottomMiddle => "bottom-middle",
             PanelAnchor::BottomLeft => "bottom-left",
             PanelAnchor::LeftMiddle => "left-middle",
+        }
+    }
+
+    /// 🧭️ `"top"`/`"middle"`/`"bottom"` row of this anchor — the Rust twin of React's `anchorVertical`.
+    pub fn vertical(&self) -> &'static str {
+        match self {
+            PanelAnchor::TopLeft | PanelAnchor::TopMiddle | PanelAnchor::TopRight => "top",
+            PanelAnchor::BottomLeft | PanelAnchor::BottomMiddle | PanelAnchor::BottomRight => "bottom",
+            PanelAnchor::LeftMiddle | PanelAnchor::RightMiddle => "middle",
+        }
+    }
+
+    /// 🧭️ `"left"`/`"middle"`/`"right"` column of this anchor — the Rust twin of React's `anchorHorizontal`.
+    pub fn horizontal(&self) -> &'static str {
+        match self {
+            PanelAnchor::TopLeft | PanelAnchor::BottomLeft | PanelAnchor::LeftMiddle => "left",
+            PanelAnchor::TopRight | PanelAnchor::BottomRight | PanelAnchor::RightMiddle => "right",
+            PanelAnchor::TopMiddle | PanelAnchor::BottomMiddle => "middle",
         }
     }
 
@@ -3444,6 +3614,7 @@ impl ShellState {
             deferred_actions: Vec::new(),
             settling: false,
             owed_refresh_scope: UiDirtyScope::None,
+            settle_pump: ShellSettlePump::default(),
             #[cfg(target_arch = "wasm32")]
             pending_extension_invocations: Vec::new(),
             #[cfg(target_arch = "wasm32")]
@@ -3821,6 +3992,7 @@ impl ShellState {
                 active_tool_id: None,
                 active_utility_by_window_id: HashMap::new(),
                 tool_run_trace_cursor_by_window_id: HashMap::new(),
+                tool_run_units_per_second: None,
             };
             self.active_window_id = Some(s_app.window_kinds.first().id.clone());
             let session = ActiveSession { plugin_id: host_plugin_id, instance_id, app: s_app, view_state };
@@ -3863,6 +4035,7 @@ impl ShellState {
                     active_tool_id: None,
                     active_utility_by_window_id: HashMap::new(),
                     tool_run_trace_cursor_by_window_id: HashMap::new(),
+                    tool_run_units_per_second: None,
                 },
             });
         }
@@ -4011,10 +4184,15 @@ impl ShellState {
         let refresh_started = Self::instant_now_ms();
         self.refresh_ui(UiDirtyScope::Full).await?;
         Self::declare_boot_subphase("shell-boot:refresh-ui", "leave", (Self::instant_now_ms() - refresh_started).max(0.0));
-        Self::declare_boot_subphase("shell-boot:flush-deferred", "enter", 0.0);
-        let flush_started = Self::instant_now_ms();
-        self.flush_deferred_actions().await?;
-        Self::declare_boot_subphase("shell-boot:flush-deferred", "leave", (Self::instant_now_ms() - flush_started).max(0.0));
+        // 🫀️ The boot ARMS the settle lane and returns; it does not converge. `flush_deferred_actions`
+        // used to run the whole chain to a fixed point right here, so an `?example=` boot spent its
+        // entire evaluation INSIDE `boot_shell` — measured on 6118 as `boot_shell leave 7 226 ms` with
+        // the first chrome at 9 212 ms against 1 880 ms / 4 101 ms for the same build with no example,
+        // i.e. 5.3 s of convergence with nothing painted and no status pill to show it
+        // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-progress-visibility-2026-09-14.md` §8.1).
+        // The frame loop takes it from here, one [`Self::settle_pump_step`] per frame, which is what
+        // React's refresh lane has always done with its owed slot.
+        self.owe_settle();
         Ok(())
     }
 
@@ -4282,40 +4460,29 @@ impl ShellState {
     /// 🐢️ One refresh pass. `ask` is the [`UiDirtyScope`] the dispatch that caused it declared,
     /// unioned with everything owed since the last pass ([`Self::owe_refresh`]).
     ///
-    /// **The scope is threaded, measured and traced here — and deliberately NOT yet used to skip a
-    /// surface.** React narrows its own refresh on exactly this field (`🛠️ShellHelpers/🟦️.tsx`'s
-    /// `uiRefreshWants*` + `buildUiRefreshRequest`, over the same kernel predicates and the same
-    /// fixture as this shell), and on this renderer the same narrowing is a STALL, because a window
-    /// body's render is also the guest CROSSING that funds the guest's own background evaluation:
-    /// `render_with_document` submits a turn, and that turn is what pumps the guest's worker pool, so
-    /// the brep solve advances roughly in proportion to how many surfaces the host re-renders.
+    /// **The scope is honoured**: a window body, a panel body, the engagements section and the
+    /// measures section are re-rendered exactly when the union names them, over the same kernel
+    /// predicates ([`UiDirtyScope::wants_window_body`] and siblings) whose TypeScript twins React's
+    /// `🛠️ShellHelpers/🟦️.tsx` runs against the same fixture — one selection law per language, never
+    /// one per renderer.
     ///
-    /// Measured on 6118, one build apart, nothing else changed (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
-    /// `📓️wgpu-dirty-scope-refresh-2026-09-14.md` §4):
+    /// ⚖️ Narrowing was measured as a product STALL before the settle pump existed, and the reason is
+    /// worth keeping: a window body's render is also the guest CROSSING that funds the guest's own
+    /// background evaluation (`render_with_document` submits a turn, and that turn is what pumps the
+    /// guest's worker pool), so a refresh that skips every surface withdraws compute from a brep solve
+    /// the UI has nothing to do with — 14 of 16 battery examples froze mid-solve, `box-fillet-preview`
+    /// never converging in 180 s at 36 renders against 21.13 s at 96 with the scope forced to `Full`
+    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-dirty-scope-refresh-2026-09-14.md` §4).
     ///
-    /// * honouring the scope took a converging edit from 137 renders to 48 and the hexagonal column
-    ///   from 13.49 s to 8.46 s — and froze **14 of 16 battery examples mid-solve** (`ratio` 0.19-0.8,
-    ///   `facesDone < facesTotal`, `scenePasses=1`, no fault and no alert anywhere: they simply never
-    ///   finished). `box-fillet-preview` did not converge in 180 s at 36 renders
-    ///   (`🗑️generated/wgpu-dirty-scope/solo-fillet-long/`); the same build with the scope forced to
-    ///   `Full` converged it in 21.13 s at 96 renders (`…/ab-fillet-fullscope/`).
-    /// * narrowing per surface instead — keeping the render turn of whichever preview is still
-    ///   computing — does not help (`…/owes-box-fillet-preview/`, 36 renders, still no convergence):
-    ///   the solve is funded by crossings to ANY surface, not only to the one that is working.
-    /// * stepping aside while a producer reports `computing` does not help either, because most
-    ///   examples never publish that status at all (`…/aside-box-fillet-preview/`: `evaluating=false`
-    ///   on every pass, zero `"computing":true` lines in the whole run).
-    ///
-    /// So the blocking dependency is named rather than papered over: the guest's evaluation needs a
-    /// pump of its own — the frame loop's, not the refresh's. The moment it has one, the three
-    /// predicates below ([`UiDirtyScope::wants_window_body`] and siblings, whose TypeScript twins
-    /// React already runs) are what this loop should gate on, and the `[DEBUG] wgpu-shell refresh
-    /// scope=` / `dispatch … scope=` traces are the evidence that it is safe: on a converging edit
-    /// the guest declares `none` for all seven `flowEvalTick` hops and `full` only for `toolRunStart`.
+    /// That funding is no longer this function's job. [`ShellSettlePump`] owns it: the frame loop
+    /// takes one settle step per frame and, whenever nothing is armed and a producer still reports
+    /// `computing`, spends exactly one crossing on that producer's own window body. The refresh is
+    /// therefore free to render only what a settle actually dirtied, which on a converging edit is
+    /// nothing at all for all seven `flowEvalTick` hops and the whole shell only for `toolRunStart`.
     ///
     /// ⚠️ A surface's retirement (`window_ui` remove → `retire_one_surface_document`) stays INSIDE the
-    /// per-surface loop, never ahead of it, so the day this does narrow, a skipped surface keeps the
-    /// exact document it already owns instead of being retired and never re-minted.
+    /// per-surface loop, never ahead of it, so a skipped surface keeps the exact document it already
+    /// owns instead of being retired and never re-minted.
     pub async fn refresh_ui(&mut self, ask: UiDirtyScope) -> Result<(), String> {
         let scope = core::mem::replace(&mut self.owed_refresh_scope, UiDirtyScope::None).merged_with(ask);
         let Some(session) = self.session.clone() else {
@@ -4336,6 +4503,9 @@ impl ShellState {
             self.retire_documents_outside(&retained, true)?;
             for (window_id, window_kind_id) in live_windows {
                 let kind = session.app.window_kinds.iter().find(|kind| kind.id == window_kind_id).ok_or_else(|| format!("window kind '{}' is absent from the app", window_kind_id))?;
+                if !scope.wants_window_body(&kind.body_key) {
+                    continue;
+                }
                 let window_view = view_state.for_window_instance(&window_id).ok_or_else(|| format!("window '{}' is absent from the live view", window_id))?;
                 let previous = self.window_ui.remove(&window_id);
                 self.retire_one_surface_document(previous)?;
@@ -4361,6 +4531,9 @@ impl ShellState {
         let retained: Vec<String> = panel_leaves.iter().map(|(id, _)| id.clone()).collect();
         self.retire_documents_outside(&retained, false)?;
         for (tab_id, body_key) in panel_leaves {
+            if !scope.wants_panel_body(&body_key) {
+                continue;
+            }
             let previous = self.panel_documents.remove(&tab_id);
             self.retire_one_surface_document(previous)?;
             rendered += 1;
@@ -4392,10 +4565,14 @@ impl ShellState {
         // the moment a surface minted by THIS pass gets its palette. Skipping that on a partial scope
         // is how a spotlight silently opens empty.
         self.refresh_app_catalogue(&program, session.instance_id, &panel_view).await;
-        self.window_engagements = program.window_engagements(session.instance_id, &view_state).await.unwrap_or_default();
-        visited.push(semio_framework::UiRefreshSection::Measures.body_key().to_string());
-        visited.extend(measure_windows.iter().map(|window_id| window_measures_surface_id(window_id)));
-        self.refresh_window_measures(&program, session.instance_id, &view_state, &measure_windows, &mut faults).await?;
+        if scope.wants_section(UiDirtySection::Engagements) {
+            self.window_engagements = program.window_engagements(session.instance_id, &view_state).await.unwrap_or_default();
+        }
+        if scope.wants_section(UiDirtySection::Measures) {
+            visited.push(semio_framework::UiRefreshSection::Measures.body_key().to_string());
+            visited.extend(measure_windows.iter().map(|window_id| window_measures_surface_id(window_id)));
+            self.refresh_window_measures(&program, session.instance_id, &view_state, &measure_windows, &mut faults).await?;
+        }
         if self.space_mode {
             if let Some(panel) = Self::panel_state_from_view(&session.view_state)? {
                 if let Some(spawned) = panel.active_spawned_id.as_ref().and_then(|id| panel.spawned_apps.iter().find(|app| &app.id == id)) {
@@ -4417,6 +4594,7 @@ impl ShellState {
                                 active_tool_id: None,
                                 active_utility_by_window_id: HashMap::new(),
                                 tool_run_trace_cursor_by_window_id: HashMap::new(),
+                                tool_run_units_per_second: None,
                             };
                             if let Some(document) = self.spawned_ui.take() {
                                 if let Err(document) = self.retain_document_for_close(document) {
@@ -6603,7 +6781,13 @@ impl ShellState {
                 return Ok(());
             }
         }
-        let scope = if panel_rewritten { UiDirtyScope::Full } else { scope };
+        // 🐢️ A `setDocument` is the widest dirt there is: every body that reads the artifact is stale,
+        // whatever the dispatch declared. The generation3d editor's own `setActiveExample` is the
+        // measured case — it replaces the whole fixture through artifact mutations and declares
+        // `UiDirtyScope::None` (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
+        // `📓️wgpu-dirty-scope-refresh-2026-09-14.md` §3.4) — so a shell that honours the scope must
+        // widen here or an example switch would leave every window painting the previous document.
+        let scope = if panel_rewritten || document_changed { UiDirtyScope::Full } else { scope };
         if let (Some(mut session), Some(vs)) = (self.session.take(), view_state) {
             session.view_state = vs;
             self.session = Some(session);
@@ -6671,6 +6855,7 @@ impl ShellState {
             active_tool_id: None,
             active_utility_by_window_id: HashMap::new(),
             tool_run_trace_cursor_by_window_id: HashMap::new(),
+            tool_run_units_per_second: None,
         };
         let next_view_state = view_state.unwrap_or(default_view_state);
         self.active_window_id = Some(app.window_kinds.first().id.clone());
@@ -6732,6 +6917,7 @@ impl ShellState {
             active_tool_id: None,
             active_utility_by_window_id: HashMap::new(),
             tool_run_trace_cursor_by_window_id: HashMap::new(),
+            tool_run_units_per_second: None,
         };
         self.layout_override = None;
         self.active_window_id = Some(landing_window_id);
@@ -6835,6 +7021,7 @@ impl ShellState {
             active_tool_id: None,
             active_utility_by_window_id: HashMap::new(),
             tool_run_trace_cursor_by_window_id: HashMap::new(),
+            tool_run_units_per_second: None,
         };
         self.active_window_id = Some(app.window_kinds.first().id.clone());
         self.session = Some(ActiveSession { plugin_id: plugin_id.to_string(), instance_id, app, view_state });
@@ -6976,6 +7163,17 @@ fn ui_event_from_key_action(action: &ui_wgpu::wgpu::KeyAction, modifiers: &Point
 }
 
 impl ShellState {
+    /// 🖱️ One chrome pointer button, dispatched and RETURNED — the chain it armed converges on the
+    /// frame loop's settle lane ([`Self::settle_pump_step`]), never inside this turn.
+    ///
+    /// 🩸️ This used to end in `flush_deferred_actions`, whose `settle_ui_chain` runs up to
+    /// `SHELL_SETTLE_ROUNDS` whole-shell refresh passes to a fixed point. The renderer lends its ONE
+    /// interaction state to a dispatch for the length of the dispatch's future, so a gesture whose
+    /// chain re-solved the graph held that state for the whole convergence and no later input was
+    /// dispatched at all. Measured on 6118 (`📓️wgpu-generate-add-port-fit-2026-09-14.md`): a stray
+    /// port drag rewired the graph, one pointer move then held `dispatch-event` for **8 515 ms**
+    /// across 6 refresh passes, and the `F` the user pressed 1.1 s later reached
+    /// `fit_node_graph_camera` **7 632 ms** after the key went down.
     pub async fn handle_pointer_button(&mut self, x: f32, y: f32, down: bool, button: i16, input: &mut InputState<ActionDescriptor>, theme: &Theme) -> Result<(), String> {
         Self::debug_log(&format!("[DEBUG] wgpu-shell pointer button x={x} y={y} down={down} button={button} targets={} staged={} gen={} hit={:?}", input.hits().len(), input.staged_hits().len(), input.hit_generation(), input.hit_at(x, y).map(|target| (target.kind, target.control_id.clone(), target.event.as_ref().map(|descriptor| descriptor.action.clone())))));
         input.pointer_x = x;
@@ -7005,7 +7203,7 @@ impl ShellState {
             } else if let Some((item_id, _)) = self.pending_tree_drag.take() {
                 if let Some(hit) = input.hit_at(x, y) {
                     if hit.control_id.as_deref() == Some(&format!("tree.label.{item_id}")) {
-                        self.dispatch_tree_selection(&item_id).await?;
+                        self.dispatch_tree_selection(&item_id);
                         if let Some(action) = hit.event.clone() {
                             self.dispatch_action(action).await?;
                         }
@@ -7179,7 +7377,7 @@ impl ShellState {
                 }
             }
         }
-        self.flush_deferred_actions().await?;
+        self.owe_settle();
         Ok(())
     }
 
@@ -7449,7 +7647,8 @@ impl ShellState {
                 self.dispatch_action(action).await?;
             }
         }
-        self.flush_deferred_actions().await
+        self.owe_settle();
+        Ok(())
     }
     //#endregion 🎯️RetainedPointerRouting
 
@@ -7965,9 +8164,11 @@ impl ShellState {
         self.deferred_actions.push(ActionDescriptor { controller_id: action.controller_id, action: action.action, args: crate::action_args_json!({ "ids": [item_id] }) });
     }
 
-    async fn dispatch_tree_selection(&mut self, item_id: &str) -> Result<(), String> {
+    /// 🌳️ Arms one tree-selection dispatch on the settle lane — a selection is a pointer gesture, and
+    /// a gesture never converges its own chain (see [`Self::handle_pointer_button`]).
+    fn dispatch_tree_selection(&mut self, item_id: &str) {
         self.queue_tree_selection(item_id);
-        self.flush_deferred_actions().await
+        self.owe_settle();
     }
 
     /// 🔁️ Drains the deferred halves AND re-enters the window bodies until nothing new is armed.
@@ -8066,6 +8267,164 @@ impl ShellState {
             worked = worked.saturating_add(1);
         }
         Ok(worked)
+    }
+
+    /// 🫀️ Arms the runtime-owned settle lane — the settle twin of [`Self::owe_refresh`], and the ONE
+    /// way a producer says "there is a chain here to converge". Declaring is all a producer may do:
+    /// the frame loop is the only caller of [`Self::settle_pump_step`], so nothing converges inside a
+    /// boot, a dispatch or a pointer handler any more.
+    pub fn owe_settle(&mut self) {
+        self.settle_pump.owed = true;
+    }
+
+    /// 🫀️ Whether the frame loop owes this shell a settle step. Derived, never a latch alone: armed
+    /// work, an owed refresh scope and a producer that reports `computing` each keep the pump running
+    /// on their own, so a step that forgot to re-arm cannot silently park a live chain.
+    ///
+    /// ⚠️ A synchronous flush (`flush_deferred_actions`, still the door a native/winit host and the
+    /// tests use) owns the chain while it runs; the pump stands aside rather than crossing into the
+    /// same guest from two places.
+    pub fn settle_pump_pending(&self) -> bool {
+        #[cfg(target_arch = "wasm32")]
+        let parked = !self.pending_extension_invocations.is_empty() || !self.pending_file_opens.is_empty();
+        #[cfg(not(target_arch = "wasm32"))]
+        let parked = false;
+        let armed_work = !self.deferred_actions.is_empty() || self.pending_shell_uri_apply || parked;
+        // 🏁️ A producer the watchdog has stood down from is NOT "computing" as far as the frame loop
+        // is concerned: its witness is frozen, crossings were measured not to move it, and believing
+        // its own flag would pin the host at one settle step per frame forever — which the served
+        // generation3d preview does, publishing `computing:true` on every sample of a 140 s window in
+        // which nothing evaluated at all (`📓️wgpu-progress-visibility-2026-09-14.md` §3.1).
+        let computing = self.live_compute_surfaces().any(|(surface_id, _)| !self.settle_pump.watches.get(&surface_id).is_some_and(|watch| watch.standing));
+        settle_pump_owes(self.settling, self.session.is_some(), armed_work, &self.owed_refresh_scope, self.settle_pump.owed, computing)
+    }
+
+    /// ⏳️ Every live World3d surface whose own published status says its producer is working, with
+    /// that status — the one input both halves of a pump step read.
+    fn live_compute_surfaces(&self) -> impl Iterator<Item = (String, World3dComputeStatus)> + '_ {
+        self.world3d_status.iter().filter(|(surface_id, _)| self.world3d_states.contains_key(surface_id.as_str())).filter_map(|(surface_id, json)| {
+            let status = world3d_compute_status(Some(json.as_str()));
+            status.computing.then(|| (surface_id.clone(), status))
+        })
+    }
+
+    /// 🫀️ ONE settle step, and the whole of what the frame loop asks of this shell per frame.
+    ///
+    /// The order is the lane's own law: **armed work first, a crossing only when nothing is armed.**
+    /// A step that executed something takes the refresh pass that work owed and stops there — the next
+    /// frame takes the next step, which is what lets the chrome, the GPU present and the status pill
+    /// stay live through a convergence that used to run to a fixed point inside `boot_shell`.
+    ///
+    /// A step that found nothing armed is the interesting one: the guest is off computing, and on this
+    /// renderer a background solve only advances on a host crossing, so the step spends exactly one —
+    /// scoped to the window bodies whose producers report `computing`, never the whole shell. That is
+    /// what pays for [`Self::refresh_ui`] honouring `UiDirtyScope` without withdrawing compute from a
+    /// solve the UI has nothing to do with.
+    pub async fn settle_pump_step(&mut self) -> ShellSettleStep {
+        let step = self.settle_pump_step_inner().await;
+        // 🩺️ One line per CLASS transition plus a heartbeat, never one per step: `Drained` and
+        // `Crossed` alternate every frame of a converging edit and a line apiece would bury the
+        // console the probes read.
+        let entering = matches!(step, ShellSettleStep::Wedged | ShellSettleStep::Quiescent) || matches!(self.settle_pump.traced, None | Some(ShellSettleStep::Quiescent));
+        if (entering && self.settle_pump.traced != Some(step)) || self.settle_pump.steps % SHELL_SETTLE_HEARTBEAT_STEPS == 0 {
+            self.settle_pump.traced = Some(step);
+            Self::debug_log(&format!(
+                "[DEBUG] wgpu-shell settle pump {}",
+                serde_json::json!({ "step": format!("{step:?}"), "steps": self.settle_pump.steps, "crossings": self.settle_pump.crossings, "watching": self.settle_pump.watches.len() })
+            ));
+        }
+        step
+    }
+
+    async fn settle_pump_step_inner(&mut self) -> ShellSettleStep {
+        self.settle_pump.steps = self.settle_pump.steps.saturating_add(1);
+        if self.session.is_none() {
+            self.settle_pump.owed = false;
+            return ShellSettleStep::Quiescent;
+        }
+        let worked = match self.drain_deferred_actions().await {
+            Ok(worked) => worked,
+            Err(error) => {
+                Self::debug_log(&format!("[DEBUG] wgpu-shell settle pump drain failed: {error}"));
+                0
+            }
+        };
+        if worked > 0 || !self.owed_refresh_scope.asks_for_nothing() {
+            if !self.owed_refresh_scope.asks_for_nothing() {
+                if let Err(error) = self.refresh_ui(UiDirtyScope::None).await {
+                    Self::debug_log(&format!("[DEBUG] wgpu-shell settle pump refresh failed: {error}"));
+                }
+            }
+            self.settle_pump.owed = true;
+            return ShellSettleStep::Drained;
+        }
+        self.settle_pump_cross().await
+    }
+
+    /// 🫀️ The crossing half of a step: fund every producer that is still advancing, and drive a
+    /// producer whose own witness has frozen to a terminal state.
+    async fn settle_pump_cross(&mut self) -> ShellSettleStep {
+        let live: Vec<(String, World3dComputeStatus)> = self.live_compute_surfaces().collect();
+        if live.is_empty() {
+            self.settle_pump.watches.clear();
+            self.settle_pump.owed = false;
+            return ShellSettleStep::Quiescent;
+        }
+        let mut wedged: Vec<(String, World3dComputeStatus)> = Vec::new();
+        let mut funded: Vec<String> = Vec::new();
+        for (surface_id, status) in live {
+            let watch = self.settle_pump.watches.entry(surface_id.clone()).or_default();
+            match settle_watch_verdict(watch, &status) {
+                ShellSettleVerdict::Terminal => wedged.push((surface_id, status)),
+                ShellSettleVerdict::Fund => funded.push(surface_id),
+                ShellSettleVerdict::Stand => {}
+            }
+        }
+        let watched: Vec<String> = self.world3d_states.keys().cloned().collect();
+        self.settle_pump.watches.retain(|surface_id, _| watched.contains(surface_id));
+        for (surface_id, status) in wedged {
+            let Some(controller_id) = self.world3d_states.get(&surface_id).map(|world| world.controller_id.clone()) else { continue };
+            Self::debug_log(&format!(
+                "[DEBUG] wgpu-shell settle pump wedge {}",
+                serde_json::json!({ "surface": surface_id, "phase": status.phase, "unitsDone": status.units_done, "unitsTotal": status.units_total, "inFlight": status.in_flight, "action": status.cancel_action, "steps": SHELL_SETTLE_STALL_STEPS })
+            ));
+            let mut args = status.cancel_args;
+            args.insert("surfaceId".to_string(), Value::String(surface_id));
+            let descriptor = ActionDescriptor { controller_id, action: status.cancel_action, args: semio_framework::optional_json_to_dsl(Some(Value::Object(args))) };
+            if let Err(error) = self.dispatch_action(descriptor).await {
+                Self::debug_log(&format!("[DEBUG] wgpu-shell settle pump terminal drive failed: {error}"));
+            }
+            self.settle_pump.owed = true;
+            return ShellSettleStep::Wedged;
+        }
+        let bodies: Vec<String> = funded.iter().filter_map(|surface_id| self.window_body_key(surface_id)).collect();
+        if bodies.is_empty() {
+            // 🏁️ A working producer this shell has no window body to render is a producer it cannot
+            // fund at all, so it stands down instead of asking the frame loop for a step per frame it
+            // has no way to spend.
+            for surface_id in funded {
+                if let Some(watch) = self.settle_pump.watches.get_mut(&surface_id) {
+                    watch.standing = true;
+                }
+            }
+            self.settle_pump.owed = false;
+            return ShellSettleStep::Quiescent;
+        }
+        self.settle_pump.crossings = self.settle_pump.crossings.saturating_add(1);
+        let scope = UiDirtyScope::Partial { window_bodies: bodies, panel_bodies: Vec::new(), utilities: false, tools: false, engagements: false, measures: false, labels: false };
+        if let Err(error) = self.refresh_ui(scope).await {
+            Self::debug_log(&format!("[DEBUG] wgpu-shell settle pump crossing failed: {error}"));
+        }
+        self.settle_pump.owed = true;
+        ShellSettleStep::Crossed
+    }
+
+    /// 🪟️ The body key one live window instance renders — the address a scoped refresh names a window
+    /// by, resolved through the dock plan and the app's own window kinds.
+    fn window_body_key(&self, window_id: &str) -> Option<String> {
+        let session = self.session.as_ref()?;
+        let kind_id = self.dock.window_instances().into_iter().find(|(id, _)| id == window_id).map(|(_, kind_id)| kind_id)?;
+        session.app.window_kinds.iter().find(|kind| kind.id == kind_id).map(|kind| kind.body_key.clone())
     }
 
     /// 📤️ One file-open round trip: opens a REAL browser picker, then dispatches the picked files as
@@ -10196,18 +10555,103 @@ fn surface_fits_overlay(theme: &Theme, bounds: Rect) -> bool {
     bounds.w >= theme.control_height * 4.0 && bounds.h >= theme.control_height * 2.0
 }
 
+/// 🛟️ Which axis an in-surface affordance is free to yield on — the Rust twin of React's `SafeAreaYield`.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum SafeAreaYield {
+    Inline,
+    Block,
+    Either,
+}
+
+/// 🛟️ How far an affordance must move off its anchor's own two edges to clear the chrome panels painted
+/// over it — at most one axis is ever non-zero. The Rust twin of React's `ChromePanelSafeArea`.
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
+pub(crate) struct ChromePanelSafeArea {
+    pub inline: f32,
+    pub block: f32,
+}
+
+fn rects_overlap(a: Rect, b: Rect) -> bool {
+    a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y
+}
+
+/// 🛟️ The safe area an affordance anchored inside `host` keeps from the chrome panels painted over it —
+/// the Rust twin of React's `chromePanelSafeArea` (`🖱️ui/🎯️targets/⚛️react/🟦️.tsx`), answering the same
+/// `🛑️surface-controls/🔣️.json` `chromePanelSafeArea` rows.
+///
+/// A floating panel paints over the dock's whole body on this target (`render_panel_step` draws
+/// `floating_panel_rect` after `plan_dock_windows` laid the windows out across the same body), exactly as
+/// a `z-panel` chrome panel paints over `z-window` content in React — so a surface's own overlay row
+/// under an open panel takes no press at all. The affordance yields instead, by the least it can: only
+/// panels that actually cover it reserve anything, the displacement is measured off the union of those
+/// panels on the affordance's OWN anchor edges, `yield_axis` states which of the two its layout can give
+/// (`Either` takes the smaller, ties going to the block axis), and an axis that cannot clear inside
+/// `host` is not taken at all — moving an affordance without freeing it is pure harm.
+pub(crate) fn chrome_panel_safe_area(affordance: Rect, host: Rect, anchor: PanelAnchor, panels: &[Rect], yield_axis: SafeAreaYield, gap: f32) -> ChromePanelSafeArea {
+    let occluders: Vec<Rect> = panels.iter().copied().filter(|panel| rects_overlap(*panel, affordance)).collect();
+    if occluders.is_empty() {
+        return ChromePanelSafeArea::default();
+    }
+    let union_left = occluders.iter().fold(f32::INFINITY, |acc, panel| acc.min(panel.x));
+    let union_top = occluders.iter().fold(f32::INFINITY, |acc, panel| acc.min(panel.y));
+    let union_right = occluders.iter().fold(f32::NEG_INFINITY, |acc, panel| acc.max(panel.x + panel.w));
+    let union_bottom = occluders.iter().fold(f32::NEG_INFINITY, |acc, panel| acc.max(panel.y + panel.h));
+    let block_room = (host.h - affordance.h).max(0.0);
+    let inline_room = (host.w - affordance.w).max(0.0);
+    let block_push = match anchor.vertical() {
+        "top" => union_bottom + gap - affordance.y,
+        "bottom" => affordance.y + affordance.h + gap - union_top,
+        _ => 0.0,
+    };
+    let inline_push = match anchor.horizontal() {
+        "right" => affordance.x + affordance.w + gap - union_left,
+        "left" => union_right + gap - affordance.x,
+        _ => 0.0,
+    };
+    let block = if anchor.vertical() != "middle" && yield_axis != SafeAreaYield::Inline { block_push.ceil() } else { 0.0 };
+    let inline = if anchor.horizontal() != "middle" && yield_axis != SafeAreaYield::Block { inline_push.ceil() } else { 0.0 };
+    let block_viable = block > 0.0 && block <= block_room;
+    let inline_viable = inline > 0.0 && inline <= inline_room;
+    if block_viable && (!inline_viable || block <= inline) {
+        return ChromePanelSafeArea { inline: 0.0, block };
+    }
+    if inline_viable {
+        return ChromePanelSafeArea { inline, block: 0.0 };
+    }
+    ChromePanelSafeArea::default()
+}
+
+/// 🛟️ The box a live surface's overlay row claims at its own top-left corner — the smallest row
+/// `surface_fits_overlay` ever admits (`surfaceControlMinimum` in `🛑️surface-controls/🔣️.json`), so the
+/// claim is stated before a single label has been measured. A chrome panel covering THAT box reserves.
+pub(crate) fn surface_overlay_row_box(theme: &Theme, bounds: Rect) -> Rect {
+    Rect::new(bounds.x + theme.gap_standard, bounds.y + theme.gap_standard, theme.control_height * 4.0, theme.control_height)
+}
+
+/// 🛟️ Where a live surface's overlay row actually starts once the open floating panels over it are
+/// reserved — the wgpu twin of the React world pane's `useChromePanelSafeArea` rail offset. The status
+/// pill and the cancel control that follows it share this one origin, so the row moves as one affordance.
+pub(crate) fn surface_overlay_row_origin(theme: &Theme, bounds: Rect, panels: &[Rect]) -> [f32; 2] {
+    let row = surface_overlay_row_box(theme, bounds);
+    let safe_area = chrome_panel_safe_area(row, bounds, PanelAnchor::TopLeft, panels, SafeAreaYield::Either, theme.gap_standard);
+    [row.x + safe_area.inline, row.y + safe_area.block]
+}
+
+
 /// ⏳️🖼️ The compute-status pills a set of live World3d surfaces asks for, each with the rect it is
 /// painted in — pure over the surfaces' own bounds and status, so the laws drive it without a
 /// `ShellState`. The pill leads the surface's overlay row; `surface_overlay_controls_for` anchors
 /// the cancel control after it, which is the same left-to-right order React's pane lays out.
-pub(crate) fn surface_status_pills_for(worlds: &[(&str, Rect, Option<&str>)], theme: &Theme, is_de: bool) -> Vec<(World3dStatusPill, Rect)> {
+pub(crate) fn surface_status_pills_for(worlds: &[(&str, Rect, Option<&str>)], panels: &[Rect], theme: &Theme, is_de: bool) -> Vec<(World3dStatusPill, Rect)> {
     worlds
         .iter()
         .filter(|(_, bounds, _)| surface_fits_overlay(theme, *bounds))
         .filter_map(|(surface_id, bounds, status_json)| {
             let pill = world3d_status_pill_for(surface_id, &world3d_compute_status(*status_json), is_de)?;
-            let width = world3d_status_pill_width(theme, &pill).min((bounds.w - theme.gap_standard * 2.0).max(theme.control_height));
-            Some((pill, Rect::new(bounds.x + theme.gap_standard, bounds.y + theme.gap_standard, width, theme.control_height)))
+            let origin = surface_overlay_row_origin(theme, *bounds, panels);
+            let room = (bounds.x + bounds.w - theme.gap_standard - origin[0]).max(theme.control_height);
+            let width = world3d_status_pill_width(theme, &pill).min(room);
+            Some((pill, Rect::new(origin[0], origin[1], width, theme.control_height)))
         })
         .collect()
 }
@@ -10216,11 +10660,11 @@ pub(crate) fn surface_status_pills_for(worlds: &[(&str, Rect, Option<&str>)], th
 /// at — pure over the surfaces' own bounds and status, so the laws drive it without a `ShellState`.
 /// A surface too small to carry a control offers none, which is what keeps a collapsed dock pane from
 /// painting chrome over its whole body.
-pub(crate) fn surface_overlay_controls_for(graphs: &[(&str, Rect)], worlds: &[(&str, Rect, Option<&str>)], theme: &Theme, is_de: bool) -> Vec<(ShellNavbarControl, [f32; 2])> {
+pub(crate) fn surface_overlay_controls_for(graphs: &[(&str, Rect)], worlds: &[(&str, Rect, Option<&str>)], panels: &[Rect], theme: &Theme, is_de: bool) -> Vec<(ShellNavbarControl, [f32; 2])> {
     let mut controls = Vec::new();
     for (surface_id, bounds) in graphs.iter().filter(|(_, bounds)| surface_fits_overlay(theme, *bounds)) {
         let control = ShellNavbarControl { control_id: format!("shell.nodeGraph.fit::{surface_id}"), icon_id: Some("maximize-2"), label: shell_chrome_string("nodeGraph.fitGraph", is_de).to_string(), active: false };
-        controls.push((control, [bounds.x + theme.gap_standard, bounds.y + theme.gap_standard]));
+        controls.push((control, surface_overlay_row_origin(theme, *bounds, panels)));
     }
     for (surface_id, bounds, status_json) in worlds.iter().filter(|(_, bounds, _)| surface_fits_overlay(theme, *bounds)) {
         let status = world3d_compute_status(*status_json);
@@ -10229,7 +10673,8 @@ pub(crate) fn surface_overlay_controls_for(graphs: &[(&str, Rect)], worlds: &[(&
         }
         let lead = world3d_status_pill_for(surface_id, &status, is_de).map(|pill| world3d_status_pill_width(theme, &pill) + theme.gap_standard).unwrap_or(0.0);
         let control = ShellNavbarControl { control_id: format!("shell.world3d.cancel::{surface_id}"), icon_id: Some("x"), label: shell_chrome_string("common.cancel", is_de).to_string(), active: false };
-        controls.push((control, [bounds.x + theme.gap_standard + lead, bounds.y + theme.gap_standard]));
+        let origin = surface_overlay_row_origin(theme, *bounds, panels);
+        controls.push((control, [origin[0] + lead, origin[1]]));
     }
     controls
 }
@@ -13324,7 +13769,23 @@ impl ShellState {
         let graphs: Vec<(&str, Rect)> = self.node_graph_states.iter().map(|(surface_id, surface)| (surface_id.as_str(), surface.bounds)).collect();
         let worlds = self.world3d_status_rows();
         let worlds: Vec<(&str, Rect, Option<&str>)> = worlds.iter().map(|(id, bounds, status)| (*id, *bounds, *status)).collect();
-        surface_overlay_controls_for(&graphs, &worlds, theme, self.locale_id == "de")
+        surface_overlay_controls_for(&graphs, &worlds, &self.open_floating_panel_rects(theme), theme, self.locale_id == "de")
+    }
+
+    /// 🛟️ The boxes this frame's OPEN floating panels occupy, in the same screen space the dock lays its
+    /// windows out in — the wgpu twin of React's `publishShellChromePanelBox`. A panel paints over the
+    /// whole body (`render_panel_step` runs after `plan_dock_windows` over the same rect), so this is the
+    /// one publication a surface's overlay row reserves against (`chrome_panel_safe_area`).
+    fn open_floating_panel_rects(&self, theme: &Theme) -> Vec<Rect> {
+        let body = self.body_rect(theme);
+        let mut rects = Vec::new();
+        if self.left_panel_open && self.has_left_tabs() {
+            rects.push(self.floating_panel_rect(true, body, theme));
+        }
+        if self.right_panel_open && self.has_right_tabs() {
+            rects.push(self.floating_panel_rect(false, body, theme));
+        }
+        rects
     }
 
     /// ⏳️🖼️ Each live World3d surface with the compute-status document it published — the one input
@@ -13340,7 +13801,7 @@ impl ShellState {
     fn surface_status_pills(&mut self, theme: &Theme) -> Vec<(World3dStatusPill, Rect)> {
         let worlds = self.world3d_status_rows();
         let worlds: Vec<(&str, Rect, Option<&str>)> = worlds.iter().map(|(id, bounds, status)| (*id, *bounds, *status)).collect();
-        let pills = surface_status_pills_for(&worlds, theme, self.locale_id == "de");
+        let pills = surface_status_pills_for(&worlds, &self.open_floating_panel_rects(theme), theme, self.locale_id == "de");
         let live: Vec<&str> = pills.iter().map(|(pill, _)| pill.surface_id.as_str()).collect();
         for (pill, rect) in &pills {
             let label = pill.label();

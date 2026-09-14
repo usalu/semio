@@ -67,6 +67,11 @@ export type WireTurnResult = {
   readonly uiPatchReceipt?: Uint8Array;
   readonly uiPatches: readonly WireUiPatch[];
   readonly effects: readonly WireVariant[];
+  /** 👥️ WIT `turn-result.presence` — one `{ update: pack }` per `(surface, node key)` whose own/peer
+   * selection or hover moved this turn. Carried through the coercion because selection deliberately
+   * never rides a revisioned `UiPatch`: this array is the ONLY channel by which a guest-owned
+   * selection reaches a rendered row, on either renderer. */
+  readonly presence?: readonly { readonly update?: unknown }[];
   readonly nextWake: number | null;
   readonly status?: unknown;
   readonly commandIngress?: WireVariant;
@@ -80,6 +85,7 @@ export function coerceTurnResult(raw: unknown): WireTurnResult {
   const record = (raw && typeof raw === "object" ? raw : {}) as Record<string, unknown>;
   const uiPatches = Array.isArray(record.uiPatches) ? (record.uiPatches as WireUiPatch[]) : [];
   const effects = Array.isArray(record.effects) ? (record.effects as WireVariant[]) : [];
+  const presence = Array.isArray(record.presence) ? (record.presence as { readonly update?: unknown }[]) : [];
   const nextWake = typeof record.nextWake === "number" ? record.nextWake : null;
   const lifecycleReceipt = record.lifecycleReceipt;
   if (lifecycleReceipt !== undefined && lifecycleReceipt !== null && !(lifecycleReceipt instanceof Uint8Array)) throw new Error("actor-lifecycle.receipt-bytes");
@@ -93,6 +99,7 @@ export function coerceTurnResult(raw: unknown): WireTurnResult {
     uiPatchReceipt: uiPatchReceipt ?? undefined,
     uiPatches,
     effects,
+    presence,
     nextWake,
     status: record.status,
     commandIngress,
@@ -488,6 +495,84 @@ export function wireTurnStatusTag(status: unknown): string {
         : "";
   return raw.replace(/([a-z])([A-Z])/g, "$1-$2").toLowerCase();
 }
+
+//#region 🤫️SilentTurnHold
+/** 🤫️ Every field of WIT `turn-result` (`🔌️plugin/🧬️schema/📜️.wit`) a host reads, as one shape. It is
+ * spelled out rather than reused from {@link WireTurnResult} because {@link shardTurnCarriesNothingV1}
+ * decides whether a result may be DROPPED, and a carrier it forgot would be dropped silently. */
+export type ShardTurnCarriers = {
+  readonly uiPatches?: unknown;
+  readonly effects?: unknown;
+  readonly presence?: unknown;
+  readonly nextWake?: unknown;
+  readonly lifecycleReceipt?: unknown;
+  readonly uiPatchReceipt?: unknown;
+  readonly commandIngress?: unknown;
+  readonly coldPairIngress?: unknown;
+  readonly status?: unknown;
+};
+
+/** 🤫️ Whether one reactor turn result carried NOTHING the host could act on — no ui patch, no
+ * effect, no presence, no wake, neither receipt, and both ingress lanes idle.
+ *
+ * This is the whole safety argument of the shard worker's silent-turn hold: a result this predicate
+ * admits may be discarded without telling anyone, because the ONLY thing it said was `more-work`, and
+ * `more-work` on the far side of a Worker boundary means "pump me again" — which the worker can do
+ * itself. `fuelUsed` is the single `turn-result` field with no host reader and is therefore the one
+ * omission, stated rather than implied. */
+export function shardTurnCarriesNothingV1(result: ShardTurnCarriers | null | undefined): boolean {
+  if (!result || typeof result !== "object") return false;
+  if (!Array.isArray(result.uiPatches) || result.uiPatches.length !== 0) return false;
+  if (!Array.isArray(result.effects) || result.effects.length !== 0) return false;
+  if (result.presence !== undefined && (!Array.isArray(result.presence) || result.presence.length !== 0)) return false;
+  if (result.nextWake !== null && result.nextWake !== undefined) return false;
+  if (result.lifecycleReceipt !== undefined && result.lifecycleReceipt !== null) return false;
+  if (result.uiPatchReceipt !== undefined && result.uiPatchReceipt !== null) return false;
+  if (!isIdleIngress(result.commandIngress)) return false;
+  if (!isIdleIngress(result.coldPairIngress)) return false;
+  return true;
+}
+
+function isIdleIngress(status: unknown): boolean {
+  return Boolean(status) && typeof status === "object" && (status as { readonly tag?: unknown }).tag === "idle";
+}
+
+/** 🤫️ The shard worker's silent-turn hold, as a law rather than as inlined worker text.
+ *
+ * In the browser the host round trip IS the guest's pump: there is no self-driving loop on the far
+ * side of the worker boundary, so a reactor that answers `more-work` while publishing nothing costs a
+ * POST, a poll, a structured clone and a main-thread pickup to be asked again. Measured on the
+ * procedural 3d React door, 2026-09-14: **89 of 111 worker crossings per `flowEvalTick` hop posted no
+ * events and returned no patch** (`📓️reactor-reconcile-spin-2026-09-14.md` §2).
+ *
+ * The hold re-enters the guest inside the reactor's OWN executor hold — `holdMs`, whose owner is
+ * `⚛️reactor/🔄️turn/🦀️.rs`'s 8 ms `run_until_deadline` — and crosses back the moment the guest
+ * produces anything, stops answering `more-work`, runs out of hold, exceeds `maxPolls`, or stops
+ * being live. `poll`/`now`/`live` are injected so the stop conditions are assertable without a Worker
+ * and so the generated worker (`🔌️plugin/🌐️browser-bundle/🏗️materialization/🟦️.ts`, whose inline twin
+ * this owns) and any future target drive the identical loop. */
+export async function driveShardTurnSilentHoldV1(drive: {
+  readonly first: ShardTurnCarriers;
+  readonly poll: () => Promise<ShardTurnCarriers>;
+  readonly now: () => number;
+  readonly live: () => boolean;
+  readonly holdMs: number;
+  readonly maxPolls: number;
+}): Promise<{ readonly result: ShardTurnCarriers; readonly polls: number; readonly stopped: "carried" | "idle" | "hold" | "polls" | "closed" }> {
+  const deadline = drive.now() + drive.holdMs;
+  let result = drive.first;
+  let polls = 0;
+  for (;;) {
+    if (wireTurnStatusTag(result.status) !== "more-work") return { result, polls, stopped: "idle" };
+    if (!shardTurnCarriesNothingV1(result)) return { result, polls, stopped: "carried" };
+    if (polls >= drive.maxPolls) return { result, polls, stopped: "polls" };
+    if (drive.now() >= deadline) return { result, polls, stopped: "hold" };
+    if (!drive.live()) return { result, polls, stopped: "closed" };
+    result = await drive.poll();
+    polls += 1;
+  }
+}
+//#endregion 🤫️SilentTurnHold
 
 //#region 📥️InboundRequest
 /** ⏱️ How many guest turns ONE inbound `request` may take to produce its `respond` — the ABI's own

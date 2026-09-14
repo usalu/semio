@@ -1152,6 +1152,8 @@ export const TOOL_RUN_DISMISS_ACTION_ID = "toolRunDismiss";
 export const TOOL_RUN_ACTION_IDS = [TOOL_RUN_START_ACTION_ID, TOOL_RUN_PAUSE_ACTION_ID, TOOL_RUN_RESUME_ACTION_ID, TOOL_RUN_STEP_ACTION_ID, TOOL_RUN_ABORT_ACTION_ID, TOOL_RUN_FINALIZE_ACTION_ID, TOOL_RUN_DISMISS_ACTION_ID] as const;
 export type ToolRunActionId = (typeof TOOL_RUN_ACTION_IDS)[number];
 
+/** 🐢️ The viewer's default tool run pace: visible algorithm units per second, so every attempt is on screen before the next. */
+export const TOOL_RUN_VISIBLE_UNITS_PER_SECOND = 20;
 export const TOOL_RUN_START_CHORD = "mod+enter";
 export const TOOL_RUN_PAUSE_RESUME_CHORD = "mod+alt+enter";
 export const TOOL_RUN_STEP_CHORD = "mod+alt+arrowright";
@@ -1230,6 +1232,7 @@ export const TOOL_RUN_LABELS = {
   actionFinalize: { en: "Finalize", de: "Abschließen" },
   actionDismiss: { en: "Dismiss", de: "Schließen" },
   finalizeDisabled: { en: "Available once the run is complete", de: "Verfügbar, sobald der Lauf fertig ist" },
+  readyToStart: { en: "Ready to start", de: "Bereit zum Starten" },
   rebasingStep: { en: "Document changed, re-applying provisional result", de: "Dokument geändert, vorläufiges Ergebnis wird neu angewendet" },
   conflictStep: { en: "{0} provisional changes conflict with the current document", de: "{0} vorläufige Änderungen stehen im Konflikt mit dem aktuellen Dokument" },
   traceTruncatedStep: { en: "Oldest {0} rejected attempts are no longer shown", de: "Die ältesten {0} verworfenen Versuche werden nicht mehr angezeigt" },

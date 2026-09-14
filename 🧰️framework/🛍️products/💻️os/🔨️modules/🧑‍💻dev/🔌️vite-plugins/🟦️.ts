@@ -874,6 +874,46 @@ export function unwatchedRepositoryPathMatcher(): RegExp {
  * Emitting only `add` served the pre-edit transform for the life of the server, and
  * `SEMIO_VITE_HMR=0` (`hmr: false`) removes the HMR pass that would otherwise have hidden it
  * (`📓️2026-09-13-wave-B53-nakagin-export-full-run.md` §4.2). */
+const REACT_REFRESH_RUNTIME = "/@react-refresh";
+
+/** @emoji ⚛️ Preamble copied from `@vitejs/plugin-react` — semio-host-html replaces the whole document in
+ * `transformIndexHtml` `order: "pre"`, so the react plugin's own preamble injection must be reinforced in
+ * `order: "post"` or `@react-three/fiber` (and every other JSX dep) throws "can't detect preamble". */
+function semioReactRefreshPreambleScript(base: string): string {
+  const root = base.endsWith("/") ? base.slice(0, -1) : base;
+  return `import { injectIntoGlobalHook } from "${root}${REACT_REFRESH_RUNTIME}";
+injectIntoGlobalHook(window);
+window.$RefreshReg$ = () => {};
+window.$RefreshSig$ = () => (type) => type;`;
+}
+
+/** @emoji ⚛️ Aligns Vite 7 / Rolldown OXC JSX refresh with `server.hmr` — `SEMIO_VITE_HMR=0` must not emit
+ * `$RefreshReg$` wrappers without the HTML preamble, and HMR-on serves must always ship that preamble even
+ * after {@link semioHostHtmlVitePlugin} rebuilds `index.html`. */
+export function semioPlaygroundReactRefreshCoherenceVitePlugin() {
+  return {
+    name: "semio-playground-react-refresh-coherence",
+    enforce: "post" as const,
+    config(userConfig, { command }) {
+      if (command !== "serve" || userConfig.server?.hmr !== false) return;
+      return {
+        esbuild: { jsxDev: false },
+        oxc: { jsx: { refresh: false } },
+        optimizeDeps: { esbuildOptions: { jsxDev: false } },
+      };
+    },
+    transformIndexHtml: {
+      order: "post" as const,
+      handler(html, ctx) {
+        if (ctx.server?.config.server.hmr === false) return;
+        if (html.includes("injectIntoGlobalHook")) return;
+        const base = ctx.server?.config.base ?? "/";
+        return [{ tag: "script", attrs: { type: "module" }, children: semioReactRefreshPreambleScript(base) }];
+      },
+    },
+  };
+}
+
 export function semioSourceWatchVitePlugin(options: { readonly repoRoot: string }) {
   return {
     name: "semio-source-watch",

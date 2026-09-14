@@ -1,0 +1,87 @@
+{
+  "contract": {
+    "refreshTurnDoesNotBumpIngress": true,
+    "dispatchBumpsIngress": true,
+    "extensionCompletionPublicationBumpsIngress": true,
+    "hostInputsNeverJoin": true,
+    "unknownCoverageRefuses": true,
+    "joinerInheritsThePassVerdict": true
+  },
+  "coverage": [
+    { "name": "none is covered by anything", "inner": { "kind": "none" }, "outer": { "kind": "none" }, "covered": true },
+    { "name": "none is covered by a partial", "inner": { "kind": "none" }, "outer": { "kind": "partial", "windowBodies": ["a"] }, "covered": true },
+    { "name": "full covers full", "inner": { "kind": "full" }, "outer": { "kind": "full" }, "covered": true },
+    { "name": "full covers a partial", "inner": { "kind": "partial", "windowBodies": ["a"], "tools": true }, "outer": { "kind": "full" }, "covered": true },
+    { "name": "a partial never covers full", "inner": { "kind": "full" }, "outer": { "kind": "partial", "windowBodies": ["a"] }, "covered": false },
+    { "name": "a partial covers a narrower partial", "inner": { "kind": "partial", "windowBodies": ["a"] }, "outer": { "kind": "partial", "windowBodies": ["a", "b"] }, "covered": true },
+    { "name": "a partial misses a window body it does not name", "inner": { "kind": "partial", "windowBodies": ["c"] }, "outer": { "kind": "partial", "windowBodies": ["a", "b"] }, "covered": false },
+    { "name": "a partial misses a panel body it does not name", "inner": { "kind": "partial", "panelBodies": ["p"] }, "outer": { "kind": "partial", "windowBodies": ["a"] }, "covered": false },
+    { "name": "a partial misses a section flag it does not arm", "inner": { "kind": "partial", "tools": true }, "outer": { "kind": "partial", "windowBodies": ["a"], "utilities": true }, "covered": false },
+    { "name": "a partial covers the same section flag", "inner": { "kind": "partial", "measures": true }, "outer": { "kind": "partial", "measures": true, "labels": true }, "covered": true }
+  ],
+  "cases": [
+    {
+      "name": "the measured redundancy: a second flowEvalTick completion with no ingress since joins the pass in flight",
+      "running": { "instanceId": 1, "scope": { "kind": "full" }, "replaceBodies": false, "ingressAtSubmit": 7 },
+      "next": { "instanceId": 1, "scope": { "kind": "full" }, "replaceBodies": false, "hostInputs": false },
+      "ingressNow": 7,
+      "answered": true
+    },
+    {
+      "name": "a dispatch that crossed after the pass submitted is never answered by it",
+      "running": { "instanceId": 1, "scope": { "kind": "full" }, "replaceBodies": false, "ingressAtSubmit": 7 },
+      "next": { "instanceId": 1, "scope": { "kind": "full" }, "replaceBodies": false, "hostInputs": false },
+      "ingressNow": 8,
+      "answered": false
+    },
+    {
+      "name": "a host-owned render input is never answered by a pass that crossed before it",
+      "running": { "instanceId": 1, "scope": { "kind": "full" }, "replaceBodies": false, "ingressAtSubmit": 7 },
+      "next": { "instanceId": 1, "scope": { "kind": "full" }, "replaceBodies": false, "hostInputs": true },
+      "ingressNow": 7,
+      "answered": false
+    },
+    {
+      "name": "a wider scope than the pass in flight is never answered by it",
+      "running": { "instanceId": 1, "scope": { "kind": "partial", "windowBodies": ["a"] }, "replaceBodies": false, "ingressAtSubmit": 7 },
+      "next": { "instanceId": 1, "scope": { "kind": "full" }, "replaceBodies": false, "hostInputs": false },
+      "ingressNow": 7,
+      "answered": false
+    },
+    {
+      "name": "a narrower scope than the pass in flight is answered by it",
+      "running": { "instanceId": 1, "scope": { "kind": "partial", "windowBodies": ["a", "b"], "tools": true }, "replaceBodies": false, "ingressAtSubmit": 2 },
+      "next": { "instanceId": 1, "scope": { "kind": "partial", "windowBodies": ["b"] }, "replaceBodies": false, "hostInputs": false },
+      "ingressNow": 2,
+      "answered": true
+    },
+    {
+      "name": "a request that must replace bodies is never answered by a hash-conditional pass",
+      "running": { "instanceId": 1, "scope": { "kind": "full" }, "replaceBodies": false, "ingressAtSubmit": 7 },
+      "next": { "instanceId": 1, "scope": { "kind": "full" }, "replaceBodies": true, "hostInputs": false },
+      "ingressNow": 7,
+      "answered": false
+    },
+    {
+      "name": "a body-replacing pass answers a hash-conditional request",
+      "running": { "instanceId": 1, "scope": { "kind": "full" }, "replaceBodies": true, "ingressAtSubmit": 7 },
+      "next": { "instanceId": 1, "scope": { "kind": "full" }, "replaceBodies": false, "hostInputs": false },
+      "ingressNow": 7,
+      "answered": true
+    },
+    {
+      "name": "two instances never answer for each other",
+      "running": { "instanceId": 1, "scope": { "kind": "full" }, "replaceBodies": false, "ingressAtSubmit": 7 },
+      "next": { "instanceId": 2, "scope": { "kind": "full" }, "replaceBodies": false, "hostInputs": false },
+      "ingressNow": 7,
+      "answered": false
+    },
+    {
+      "name": "no pass has submitted its guest turn yet, so nothing is answered",
+      "running": { "instanceId": 1, "scope": { "kind": "full" }, "replaceBodies": false, "ingressAtSubmit": null },
+      "next": { "instanceId": 1, "scope": { "kind": "full" }, "replaceBodies": false, "hostInputs": false },
+      "ingressNow": 0,
+      "answered": false
+    }
+  ]
+}

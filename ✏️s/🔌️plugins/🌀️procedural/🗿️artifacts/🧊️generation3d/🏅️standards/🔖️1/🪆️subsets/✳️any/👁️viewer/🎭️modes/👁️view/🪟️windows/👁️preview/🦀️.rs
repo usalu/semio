@@ -61,42 +61,42 @@ pub fn definition() -> WindowKindDefinition {
 }
 
 /// 👁️ Preview shading mode selector — the read-only twin of the sibling surface's own chrome.
-pub fn show_mode_measure(show_mode: &str, viewer_action: impl Fn(&str, Option<serde_json::Value>) -> ActionDescriptor) -> WindowMeasure {
+pub fn show_mode_measure(show_mode: &str, is_de: bool, viewer_action: impl Fn(&str, Option<serde_json::Value>) -> ActionDescriptor) -> WindowMeasure {
     let current = if show_mode.is_empty() { "shaded" } else { show_mode };
     WindowMeasure::Select {
         id: "generation3d-view-measure-show".into(),
-        label: Some("Show".into()),
+        label: Some(if is_de { "Anzeige" } else { "Show" }.into()),
         value: current.into(),
         items: vec![
-            MeasureSelectItem { id: "generation3d-view-measure-show-shaded".into(), value: "shaded".into(), label: "Shaded".into() },
-            MeasureSelectItem { id: "generation3d-view-measure-show-edges".into(), value: "shaded+edges".into(), label: "Shaded + edges".into() },
-            MeasureSelectItem { id: "generation3d-view-measure-show-wireframe".into(), value: "wireframe".into(), label: "Wireframe".into() },
-            MeasureSelectItem { id: "generation3d-view-measure-show-points".into(), value: "points".into(), label: "Points".into() },
+            MeasureSelectItem { id: "generation3d-view-measure-show-shaded".into(), value: "shaded".into(), label: if is_de { "Schattiert" } else { "Shaded" }.into() },
+            MeasureSelectItem { id: "generation3d-view-measure-show-edges".into(), value: "shaded+edges".into(), label: if is_de { "Schattiert + Kanten" } else { "Shaded + edges" }.into() },
+            MeasureSelectItem { id: "generation3d-view-measure-show-wireframe".into(), value: "wireframe".into(), label: if is_de { "Drahtgitter" } else { "Wireframe" }.into() },
+            MeasureSelectItem { id: "generation3d-view-measure-show-points".into(), value: "points".into(), label: if is_de { "Punkte" } else { "Points" }.into() },
         ],
         on_change: viewer_action("setShowMode", None),
     }
 }
 
 /// 🔬️ Level-of-detail selector — coarser LOD is the viewer's only mesh-payload size lever.
-pub fn lod_mode_measure(lod_mode: &str, viewer_action: impl Fn(&str, Option<serde_json::Value>) -> ActionDescriptor) -> WindowMeasure {
+pub fn lod_mode_measure(lod_mode: &str, is_de: bool, viewer_action: impl Fn(&str, Option<serde_json::Value>) -> ActionDescriptor) -> WindowMeasure {
     let current = if lod_mode.is_empty() { "medium" } else { lod_mode };
     WindowMeasure::Select {
         id: "generation3d-view-measure-lod".into(),
-        label: Some("Detail".into()),
+        label: Some(if is_de { "Detailgrad" } else { "Detail" }.into()),
         value: current.into(),
         items: vec![
-            MeasureSelectItem { id: "generation3d-view-measure-lod-coarse".into(), value: "coarse".into(), label: "Coarse".into() },
-            MeasureSelectItem { id: "generation3d-view-measure-lod-medium".into(), value: "medium".into(), label: "Medium".into() },
-            MeasureSelectItem { id: "generation3d-view-measure-lod-fine".into(), value: "fine".into(), label: "Fine".into() },
+            MeasureSelectItem { id: "generation3d-view-measure-lod-coarse".into(), value: "coarse".into(), label: if is_de { "Grob" } else { "Coarse" }.into() },
+            MeasureSelectItem { id: "generation3d-view-measure-lod-medium".into(), value: "medium".into(), label: if is_de { "Mittel" } else { "Medium" }.into() },
+            MeasureSelectItem { id: "generation3d-view-measure-lod-fine".into(), value: "fine".into(), label: if is_de { "Fein" } else { "Fine" }.into() },
         ],
         on_change: viewer_action("setLodMode", None),
     }
 }
 
 /// 🎚️ The Preview window's whole chrome row: show mode, LOD and the sun group.
-pub fn preview_window_measures(config: &Generation3dViewConfig, viewer_action: impl Fn(&str, Option<serde_json::Value>) -> ActionDescriptor + Copy) -> Vec<WindowMeasure> {
+pub fn preview_window_measures(config: &Generation3dViewConfig, is_de: bool, viewer_action: impl Fn(&str, Option<serde_json::Value>) -> ActionDescriptor + Copy) -> Vec<WindowMeasure> {
     let sun = config.sun();
-    vec![show_mode_measure(&config.show_mode, viewer_action), lod_mode_measure(&config.lod_mode, viewer_action), world3d_sun_measures("generation3d-view", &sun, viewer_action)]
+    vec![show_mode_measure(&config.show_mode, is_de, viewer_action), lod_mode_measure(&config.lod_mode, is_de, viewer_action), world3d_sun_measures("generation3d-view", &sun, is_de, viewer_action)]
 }
 //#endregion 🔖️Definition
 

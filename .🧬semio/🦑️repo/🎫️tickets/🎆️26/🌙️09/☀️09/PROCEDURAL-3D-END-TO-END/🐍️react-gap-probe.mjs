@@ -43,8 +43,12 @@ mkdirSync(outDir, { recursive: true });
 
 const SURFACE = "window:procedural-main";
 const PREVIEW = "window:procedural-preview";
-/** 🇩🇪️ The English/German label pairs `✏️editor/🦀️.rs` declares for the palette-visible verbs. */
+/** 🇩🇪️ Spot-checks against the exact German `✏️editor/🦀️.rs` declares — a guard that the comparison
+ * below is reading real labels and not, say, two identical fallback strings. */
 const ACTION_DE = { addWidget: ["Add Widget", "Element hinzufügen"], exportDocument: ["Export Document", "Dokument exportieren"], importDocumentRequest: ["Import Document…", "Dokument importieren…"], reorganize: ["Reorganize", "Neu anordnen"], deleteSelection: ["Delete Selection", "Auswahl löschen"] };
+/** 🟰️ Action ids whose German is legitimately the same text as the English — proper nouns and
+ * international terms. Everything else in the pane must differ between the two passes. */
+const ACTION_DE_IDENTICAL_BY_DESIGN = [];
 
 const lines = [];
 const t0 = Date.now();
@@ -372,7 +376,28 @@ const slider = afterBoot.widgets.find((w) => /slider/i.test(String(w.kind ?? "")
   const trim = (s) => s.replace(/…$/, "").trim();
   const checks = Object.entries(ACTION_DE).map(([id, [en, de]]) => { const row = german.rows.find((r) => r.id === `action.${id}`); return { id, en, de, seen: row?.label ?? null, ok: row ? trim(row.label) === trim(de) : null }; });
   const decided = checks.filter((c) => c.ok !== null);
-  await note("actions-pane-de", settings && decided.length > 0 && decided.every((c) => c.ok), { settings, english, german, checks, decided: decided.length, stillEnglish: checks.filter((c) => c.ok === false).map((c) => `${c.id}=${c.seen}`) });
+  // 🇩🇪️ EVERY row the pane paints, not the five this probe used to name. Hardcoding pairs meant a
+  // verb added later was never checked in German at all — 5 of ~38 were (`📓️window-coverage-audit-
+  // 2026-09-14.md` §5 item 6). The English pass is the oracle: a row whose German text is byte-equal
+  // to its English text was never translated, and a row that vanished between the passes is a
+  // different defect again.
+  const englishById = Object.fromEntries(english.rows.map((r) => [r.id, trim(r.label)]));
+  const germanById = Object.fromEntries(german.rows.map((r) => [r.id, trim(r.label)]));
+  const ids = Object.keys(englishById);
+  const stillEnglish = ids.filter((id) => englishById[id] && germanById[id] === englishById[id] && !ACTION_DE_IDENTICAL_BY_DESIGN.includes(id.replace(/^action\./, "")));
+  const vanished = ids.filter((id) => !(id in germanById));
+  const unlabelled = ids.filter((id) => !englishById[id] || englishById[id] === id.replace(/^action\./, ""));
+  await note("actions-pane-de", settings && ids.length > 0 && decided.length > 0 && decided.every((c) => c.ok) && stillEnglish.length === 0 && vanished.length === 0 && unlabelled.length === 0, {
+    settings,
+    rows: ids.length,
+    spotChecks: checks,
+    spotDecided: decided.length,
+    stillEnglish: stillEnglish.map((id) => `${id}=${germanById[id]}`),
+    vanished,
+    unlabelled,
+    english,
+    german,
+  });
 }
 
 // ── 8. Window focus ──────────────────────────────────────────────────────────

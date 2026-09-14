@@ -7,7 +7,7 @@
 //! 🔷️ Flow brep module: native geometry operators.
 
 use base64::Engine;
-use neural_engine::{Atom, Cardinality, ChannelSpec, Dictionary, EvalError, FieldSpec, Operator, OperatorImpl, OperatorInfo, Registry, Schema, Value, ValueType};
+use neural_engine::{Atom, Cardinality, ChannelSpec, Dictionary, EvalError, FieldSpec, Operator, OperatorImpl, OperatorInfo, Registry, Schema, Value, ValueType, VALUE_TYPE_GEOMETRY, VALUE_TYPE_NUMBER, VALUE_TYPE_POINT, VALUE_TYPE_VECTOR};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::engine::{Brep, BrepKernel, GeometryHandle, GeometryKind, ParamDomain, PointClassification, Vec3};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::inferences::tessellation::{TessellationJob, TessellationStep};
 use std::collections::{HashMap, HashSet};
@@ -88,8 +88,11 @@ pub fn point_dictionary(point: Vec3) -> Dictionary {
     Dictionary::with_schema("point").insert("x", Value::Atom(Atom::Decimal(point[0]))).insert("y", Value::Atom(Atom::Decimal(point[1]))).insert("z", Value::Atom(Atom::Decimal(point[2])))
 }
 
+/// 🧭️ A three-axis input. `read_xyz` only asks for `x`/`y`/`z`, so a `point` satisfies a `vector`
+/// channel and the declaration says so — the accepted set, not one nominal type, is what the
+/// port-compatibility oracle intersects.
 pub fn vector_channel(id: &str, operator_id: &str, default: Vec3) -> ChannelSpec {
-    ChannelSpec::requires(id, &["math.vector", operator_id]).with_default(Value::Dictionary(vector_dictionary(default)))
+    ChannelSpec::requires(id, &["math.vector", operator_id]).with_value_types(&[VALUE_TYPE_VECTOR, VALUE_TYPE_POINT]).with_default(Value::Dictionary(vector_dictionary(default)))
 }
 
 pub fn vector_dictionary(vector: Vec3) -> Dictionary {
@@ -242,32 +245,35 @@ pub fn number_channel(id: &str, operator_id: &str, default: f64) -> ChannelSpec 
     ChannelSpec::number_default(id, default, &[operator_id])
 }
 
+/// 🔷️ A brep kernel handle input — `read_geometry` reads `handle` off a `geometry` dictionary, so
+/// every wire, face, surface, solid and compound is the SAME port type.
 pub fn geometry_channel(id: &str, operator_id: &str) -> ChannelSpec {
-    ChannelSpec::requires(id, &[operator_id])
+    ChannelSpec::requires(id, &[operator_id]).with_value_types(&[VALUE_TYPE_GEOMETRY])
 }
 
 pub fn list_channel(id: &str, operator_id: &str) -> ChannelSpec {
     ChannelSpec::list(id, &[operator_id])
 }
 
+/// 📍️ A three-axis input read through `read_xyz` — see [`vector_channel`] for why both schemas count.
 pub fn point_channel(id: &str, operator_id: &str) -> ChannelSpec {
-    ChannelSpec::requires(id, &[operator_id])
+    ChannelSpec::requires(id, &[operator_id]).with_value_types(&[VALUE_TYPE_POINT, VALUE_TYPE_VECTOR])
 }
 
 pub fn out_solid(full_name: &str) -> ChannelSpec {
-    ChannelSpec::named("S", "Sld", "solid", full_name)
+    ChannelSpec::named("S", "Sld", "solid", full_name).with_value_types(&[VALUE_TYPE_GEOMETRY])
 }
 
 pub fn out_wire(full_name: &str) -> ChannelSpec {
-    ChannelSpec::named("W", "Wre", "wire", full_name)
+    ChannelSpec::named("W", "Wre", "wire", full_name).with_value_types(&[VALUE_TYPE_GEOMETRY])
 }
 
 pub fn out_curve(full_name: &str) -> ChannelSpec {
-    ChannelSpec::named("C", "Crv", "curve", full_name)
+    ChannelSpec::named("C", "Crv", "curve", full_name).with_value_types(&[VALUE_TYPE_GEOMETRY])
 }
 
 pub fn out_face(full_name: &str) -> ChannelSpec {
-    ChannelSpec::named("F", "Fce", "face", full_name)
+    ChannelSpec::named("F", "Fce", "face", full_name).with_value_types(&[VALUE_TYPE_GEOMETRY])
 }
 
 /// 📤️ The `face` an operator MAKES, for the operators that are also GIVEN a `face` — one operator's
@@ -276,57 +282,57 @@ pub fn out_face(full_name: &str) -> ChannelSpec {
 ///
 /// @see `🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🦀️.rs` — `produced_channel_id`
 pub fn out_face_result(full_name: &str) -> ChannelSpec {
-    ChannelSpec::named("F", "Fce", neural_engine::produced_channel_id("face"), full_name)
+    ChannelSpec::named("F", "Fce", neural_engine::produced_channel_id("face"), full_name).with_value_types(&[VALUE_TYPE_GEOMETRY])
 }
 
 pub fn out_surface(full_name: &str) -> ChannelSpec {
-    ChannelSpec::named("S", "Srf", "surface", full_name)
+    ChannelSpec::named("S", "Srf", "surface", full_name).with_value_types(&[VALUE_TYPE_GEOMETRY])
 }
 
 pub fn out_geometry(full_name: &str) -> ChannelSpec {
-    ChannelSpec::named("G", "Geo", "geometry", full_name)
+    ChannelSpec::named("G", "Geo", "geometry", full_name).with_value_types(&[VALUE_TYPE_GEOMETRY])
 }
 
 /// 📤️ The `geometry` an operator MAKES — see [`out_face_result`].
 pub fn out_geometry_result(full_name: &str) -> ChannelSpec {
-    ChannelSpec::named("G", "Geo", neural_engine::produced_channel_id("geometry"), full_name)
+    ChannelSpec::named("G", "Geo", neural_engine::produced_channel_id("geometry"), full_name).with_value_types(&[VALUE_TYPE_GEOMETRY])
 }
 
 pub fn out_compound(full_name: &str) -> ChannelSpec {
-    ChannelSpec::named("C", "Cmp", "compound", full_name)
+    ChannelSpec::named("C", "Cmp", "compound", full_name).with_value_types(&[VALUE_TYPE_GEOMETRY])
 }
 
 pub fn out_point(full_name: &str) -> ChannelSpec {
-    ChannelSpec::named("P", "Pnt", "point", full_name)
+    ChannelSpec::named("P", "Pnt", "point", full_name).with_value_types(&[VALUE_TYPE_POINT])
 }
 
 /// 📤️ The `point` an operator FINDS, for the operators that are also GIVEN a `point` — see [`out_face_result`].
 pub fn out_point_result(full_name: &str) -> ChannelSpec {
-    ChannelSpec::named("P", "Pnt", neural_engine::produced_channel_id("point"), full_name)
+    ChannelSpec::named("P", "Pnt", neural_engine::produced_channel_id("point"), full_name).with_value_types(&[VALUE_TYPE_POINT])
 }
 
 pub fn out_normal(full_name: &str) -> ChannelSpec {
-    ChannelSpec::named("N", "Nrm", "normal", full_name)
+    ChannelSpec::named("N", "Nrm", "normal", full_name).with_value_types(&[VALUE_TYPE_VECTOR])
 }
 
 pub fn out_span() -> ChannelSpec {
-    ChannelSpec::named("S", "Spn", "span", "DomainSpan")
+    ChannelSpec::named("S", "Spn", "span", "DomainSpan").with_value_types(&[VALUE_TYPE_NUMBER])
 }
 
 pub fn out_curvature() -> ChannelSpec {
-    ChannelSpec::named("K", "Cur", "curvature", "CurveCurvature")
+    ChannelSpec::named("K", "Cur", "curvature", "CurveCurvature").with_value_types(&[VALUE_TYPE_NUMBER])
 }
 
 pub fn out_volume() -> ChannelSpec {
-    ChannelSpec::named("V", "Vol", "volume", "MeasuredVolume")
+    ChannelSpec::named("V", "Vol", "volume", "MeasuredVolume").with_value_types(&[VALUE_TYPE_NUMBER])
 }
 
 pub fn out_area() -> ChannelSpec {
-    ChannelSpec::named("A", "Are", "area", "MeasuredArea")
+    ChannelSpec::named("A", "Are", "area", "MeasuredArea").with_value_types(&[VALUE_TYPE_NUMBER])
 }
 
 pub fn out_length() -> ChannelSpec {
-    ChannelSpec::named("L", "Len", "length", "MeasuredLength")
+    ChannelSpec::named("L", "Len", "length", "MeasuredLength").with_value_types(&[VALUE_TYPE_NUMBER])
 }
 
 pub fn out_center() -> ChannelSpec {

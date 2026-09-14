@@ -18,14 +18,12 @@ export type AgentChatPanelProps = AgentPresenceProps;
 export function AgentChatPanel({ status, presence }: AgentChatPanelProps): ReactElement {
   const title = useLabel(agentUiLabel("os.agent.chat.panelTitle"));
   return (
-    <div data-semio-agent-chat-panel="" className="flex h-full min-h-0 flex-col gap-single">
+    <div data-semio-agent-chat-panel="" className="flex w-full min-w-0 flex-col gap-single">
       <div className="flex shrink-0 items-center justify-between gap-double border-b border-border px-single py-single">
         <span className="text-sm font-medium">{title}</span>
         <AgentPresence status={status} presence={presence} />
       </div>
-      <div className="flex h-full min-h-0 flex-1 flex-col">
-        <BasicChatPanel id="framework.chat" title={title} />
-      </div>
+      <BasicChatPanel id="framework.chat" title={title} />
     </div>
   );
 }

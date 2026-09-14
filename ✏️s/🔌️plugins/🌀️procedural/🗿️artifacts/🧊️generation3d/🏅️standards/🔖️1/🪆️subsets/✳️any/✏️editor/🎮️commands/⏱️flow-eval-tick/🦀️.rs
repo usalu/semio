@@ -36,6 +36,7 @@ pub fn evaluate(
     cfg: &ConfigView<'_, Generation3dConfig>,
     session: &mut FlowEvalSession,
     retained_eval: Option<&str>,
+    turn_started_us: Option<u64>,
 ) -> Result<(Emit<Generation3dMutation, Generation3dConfigMutation>, FlowEvalPublication), Fault> {
     let generate = window_kind_id == crate::editor::generation3d::modes::generate::windows::preview::GENERATION_3D_PLAY_WINDOW_GENERATE_PREVIEW;
     let mut patched = None;
@@ -54,15 +55,43 @@ pub fn evaluate(
         patched = Some(crate::standards::v1::subsets::any::schema::generation_fixture_for(&doc.snapshot.fixture, &state, state.selected_generation_id.as_deref()));
     }
     let fixture = patched.as_ref().unwrap_or(&doc.snapshot.fixture);
-    let outcome = preview_eval::evaluate_tick(window_id, window_kind_id, fixture, preview_eval::preview_tolerance(&cfg.snapshot.lod_mode), session, retained_eval);
+    let outcome = preview_eval::evaluate_tick(window_id, window_kind_id, fixture, preview_eval::preview_tolerance(&cfg.snapshot.lod_mode), session, retained_eval, turn_started_us);
     if let Some(fixture) = patched {
         fixture.retire_cold();
     }
     Ok((Emit { extension_invocations: outcome.extension_invocations, ..Default::default() }, outcome.publication))
 }
 
+/// 🔁️ The wave a just-folded extension answer unblocked, run INLINE inside that answer's own guest
+/// turn — the `flowEvalResolve` → `flowEvalTick` pair this chain used to pay per dependency LEVEL.
+///
+/// 🪟️ It is the very same [`evaluate`] the dispatched hop runs, publishing into the very same
+/// addressed window transient, because the answer routes are window-addressed exactly as the tick
+/// is. That is the whole point: intermediate geometry and the monotone status pill are what a user
+/// cancels out of, so a continuation that advanced the chain without publishing them would have
+/// bought hops by going blind (`📓️flow-tick-coalescing-2026-09-14.md` §7 item 4).
+///
+/// 🅿️ A refused continuation publishes nothing and touches no latch: the window still owes the hop
+/// it owed, and the `previewEval` run job dispatches it on its next step. "Park" is not a state —
+/// it is the absence of this call.
+pub fn continue_inline(
+    window_id: &str,
+    window_kind_id: &str,
+    doc: &ArtifactView<'_, Generation3dSnapshot>,
+    cfg: &ConfigView<'_, Generation3dConfig>,
+    session: &mut FlowEvalSession,
+    retained_eval: Option<&str>,
+    turn_started_us: Option<u64>,
+) -> Result<(Emit<Generation3dMutation, Generation3dConfigMutation>, FlowEvalPublication), Fault> {
+    if !session.inline_continuation_admitted(window_id, turn_started_us, semio_framework_job::default_now_us()) {
+        return Ok((Emit::default(), FlowEvalPublication::Retained));
+    }
+    session.arm_window_tick(window_id);
+    evaluate(window_id, window_kind_id, doc, cfg, session, retained_eval, turn_started_us)
+}
+
 pub fn handle(payload: &FlowEvalTick, doc: &ArtifactView<'_, Generation3dSnapshot>, cfg: &ConfigView<'_, Generation3dConfig>, session: &mut FlowEvalSession) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation>, Fault> {
-    evaluate(&payload.window_id, &payload.window_kind_id, doc, cfg, session, None).map(|(emit, _)| emit)
+    evaluate(&payload.window_id, &payload.window_kind_id, doc, cfg, session, None, None).map(|(emit, _)| emit)
 }
 
 //#region 🧪️Tests

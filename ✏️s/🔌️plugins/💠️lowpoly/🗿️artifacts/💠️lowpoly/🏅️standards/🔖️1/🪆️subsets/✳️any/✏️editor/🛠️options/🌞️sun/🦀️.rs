@@ -7,8 +7,8 @@ use crate::editor::lowpoly::terminology::LowpolyLabels;
 use semio_framework_plugin::{world3d_sun_measures, WindowMeasure};
 
 /// 🎛️ The live chrome measure for this option.
-pub fn measure(config: &LowpolyConfig, _labels: &LowpolyLabels) -> WindowMeasure {
-    world3d_sun_measures("lowpoly", &lowpoly_sun_config(config), lowpoly_window_action)
+pub fn measure(config: &LowpolyConfig, labels: &LowpolyLabels) -> WindowMeasure {
+    world3d_sun_measures("lowpoly", &lowpoly_sun_config(config), labels.is_de(), lowpoly_window_action)
 }
 
 //#region 🧪️Tests

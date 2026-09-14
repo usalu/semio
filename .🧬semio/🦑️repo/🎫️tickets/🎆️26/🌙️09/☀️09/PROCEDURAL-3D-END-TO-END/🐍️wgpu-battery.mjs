@@ -27,7 +27,12 @@ import { join } from "node:path";
 
 const T = import.meta.dir;
 const GEN = join(T, "🗑️generated");
-const ROOT = join(GEN, "wgpu-verify");
+/** 📂️ Which folder under `🗑️generated/` this run owns. Several lanes run this battery against the
+ * same 6118 at different hours, and a run that clobbers another lane's published evidence destroys
+ * the very thing a scoreboard is read for — so the root is nameable
+ * (`SEMIO_BATTERY_ROOT=wgpu-oracle bun 🐍️wgpu-battery.mjs …`). */
+const ROOT_NAME = process.env.SEMIO_BATTERY_ROOT ?? "wgpu-verify";
+const ROOT = join(GEN, ROOT_NAME);
 const URL = process.env.SEMIO_BATTERY_URL ?? "http://127.0.0.1:6118/?plugin=generation3d";
 const ORIGIN = URL.split("/?")[0];
 const argv = process.argv.slice(2);
@@ -51,7 +56,7 @@ const EXAMPLES = ["hexagonal-mushroom-column", "rectangle-extrude-volume", "rect
 const PROBES = [
   {
     name: "boot", script: "🐍️wgpu-journey-probe.mjs", dir: "boot", minutes: 8,
-    env: { SEMIO_PROBE_OUT: "wgpu-verify/boot", SEMIO_PROBE_ONLY: "boot", SEMIO_PROBE_BOOT: "150" },
+    env: { SEMIO_PROBE_OUT: `${ROOT_NAME}/boot`, SEMIO_PROBE_ONLY: "boot", SEMIO_PROBE_BOOT: "150" },
     verdict: (dir) => {
       const r = readJson(join(dir, "results.json")) ?? {};
       const console_ = readText(join(dir, "console.txt"));
@@ -77,21 +82,32 @@ const PROBES = [
      * carries a drawable, and generation3d publishes its port-preview WIRES ~7 s before the guest
      * finishes tessellating the solid, so a run that stops at first convergence reports a census the
      * user has not finished seeing (hex measured `meshes 2 → 3` at 30.2 s → 37.1 s). */
-    env: { SEMIO_PROBE_OUT: "wgpu-verify/examples", SEMIO_PROBE_ORIGIN: ORIGIN, SEMIO_PROBE_LANES: "edit,viewer", SEMIO_PROBE_EXAMPLES: EXAMPLES.join(","), SEMIO_PROBE_BUDGET: "200", SEMIO_PROBE_MIN_SECONDS: "75" },
+    env: { SEMIO_PROBE_OUT: `${ROOT_NAME}/examples`, SEMIO_PROBE_ORIGIN: ORIGIN, SEMIO_PROBE_LANES: "edit,viewer", SEMIO_PROBE_EXAMPLES: EXAMPLES.join(","), SEMIO_PROBE_BUDGET: "200", SEMIO_PROBE_MIN_SECONDS: "75" },
     verdict: (dir) => {
       const r = readJson(join(dir, "results.json")) ?? {};
       const rows = r.results ?? [];
       const meshes = (row) => (row.meshSurfaces ?? []).reduce((n, s) => Math.max(n, s.meshes ?? 0), 0);
-      const steps = rows.map((row) => ({
-        step: `${row.lane}: ${row.example}`, ok: row.verdict === "pass",
-        detail: { seconds: row.timeToMeshSeconds, meshes: meshes(row), instances: (row.meshSurfaces ?? [])[0]?.instances ?? 0, lines: (row.meshSurfaces ?? [])[0]?.lines ?? 0, body: row.geometry?.body ?? null, alert: row.alert },
-      }));
+      const steps = rows.flatMap((row) => [
+        {
+          step: `${row.lane}: ${row.example}`, ok: row.verdict === "pass",
+          detail: { seconds: row.timeToMeshSeconds, meshes: meshes(row), instances: (row.meshSurfaces ?? [])[0]?.instances ?? 0, lines: (row.meshSurfaces ?? [])[0]?.lines ?? 0, body: row.geometry?.body ?? null, alert: row.alert },
+        },
+        /** 🧾️ The oracle half: the PUBLISHED payload (`dumpMeshStats`) against the committed
+         * `delivery.meshRoles` and `expect.boundingBox*` of the very fixture the native
+         * `example-geometry` lane asserts. `meshes` above is the renderer's own mesh STORE
+         * (`state-meshes`, face overlay and placeholder included) and was never comparable with it —
+         * which is why every non-hex example read 2-3 against an oracle of 1
+         * (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-mesh-oracle-2026-09-14.md`). */
+        { step: `${row.lane}: ${row.example} publishes the committed meshes and box`, ok: Boolean(row.oracle?.ok), detail: { failures: row.oracle?.failures ?? ["no fixture found for this example"], observed: row.oracle?.observed ?? null, expected: row.oracle?.expected ?? null } },
+      ]);
       return {
         steps,
         key: {
           rows: rows.length, passed: rows.filter((row) => row.verdict === "pass").length,
+          oracleGreen: rows.filter((row) => row.oracle?.ok).length,
           perExampleSeconds: Object.fromEntries(rows.map((row) => [`${row.lane}:${row.example}`, row.timeToMeshSeconds])),
           meshesByLane: Object.fromEntries(rows.map((row) => [`${row.lane}:${row.example}`, meshes(row)])),
+          publishedRoles: Object.fromEntries(rows.map((row) => [`${row.lane}:${row.example}`, row.oracle?.observed?.roles ?? null])),
         },
         pageerrors: 0, faults: [],
       };
@@ -102,7 +118,7 @@ const PROBES = [
     /** 🕳️ React's own `No example` row: the plugin booted with no `?example=` at all must paint a
      * preview that carries NOTHING. The matrix probe's `converged` predicate demands a drawable, so
      * here the PASS is its refusal — inverted below, never read as a failure. */
-    env: { SEMIO_PROBE_OUT: "wgpu-verify/no-example", SEMIO_PROBE_ORIGIN: ORIGIN, SEMIO_PROBE_LANES: "edit,viewer", SEMIO_PROBE_EXAMPLES: "(none)", SEMIO_PROBE_BUDGET: "60" },
+    env: { SEMIO_PROBE_OUT: `${ROOT_NAME}/no-example`, SEMIO_PROBE_ORIGIN: ORIGIN, SEMIO_PROBE_LANES: "edit,viewer", SEMIO_PROBE_EXAMPLES: "(none)", SEMIO_PROBE_BUDGET: "60" },
     verdict: (dir) => {
       const rows = (readJson(join(dir, "results.json")) ?? {}).results ?? [];
       return {
@@ -123,14 +139,20 @@ const PROBES = [
     /** 🔤️ `SEMIO_PROBE_ROW` is the PATH needle, and the published path spells the row
      * `procedural3d-play-generate.add-generation` — the probe's own `addGeneration` default matches
      * neither that path nor the row's (absent) text. */
-    env: { SEMIO_PROBE_OUT: "wgpu-verify/generate-add", SEMIO_PROBE_ORIGIN: ORIGIN, SEMIO_PROBE_ROW: "add-generation", SEMIO_PROBE_EXAMPLES: "hexagonal-mushroom-column,box-shell-preview", SEMIO_PROBE_SETTLE: "60", SEMIO_PROBE_AFTER: "120" },
+    env: { SEMIO_PROBE_OUT: `${ROOT_NAME}/generate-add`, SEMIO_PROBE_ORIGIN: ORIGIN, SEMIO_PROBE_ROW: "add-generation", SEMIO_PROBE_EXAMPLES: "hexagonal-mushroom-column,box-shell-preview", SEMIO_PROBE_SETTLE: "60", SEMIO_PROBE_AFTER: "120" },
     verdict: (dir) => {
       const rows = (readJson(join(dir, "results.json")) ?? {}).results ?? [];
       const console_ = rows.map((row) => readText(join(dir, row.example, "console.txt"))).join("\n");
       return {
         steps: rows.map((row) => ({
           step: `Add Generation → mesh: ${row.example}`, ok: row.verdict === "pass",
-          detail: { verdict: row.verdict, dispatched: row.dispatched, seconds: row.timeToMeshSeconds, after: row.after?.meshy ?? null, target: row.target?.path ?? null },
+          /** 🩺️ A blocked row carries the state the probe FOUND — which windows the dock planned, what
+           * the generations body published, whether the shell had even left boot — so a red row names a
+           * defect instead of only naming an absence. */
+          detail: {
+            verdict: row.verdict, dispatched: row.dispatched, seconds: row.timeToMeshSeconds, after: row.after?.meshy ?? null, target: row.target?.path ?? null,
+            found: row.verdict === "pass" ? null : { bootLeft: row.found?.bootLeft, windows: row.found?.windowIds, planned: row.found?.dockPlanned, scanned: row.found?.scanned, needleAnywhere: row.found?.needleAnywhere, surfaceFaults: row.found?.surfaceFaults, alert: row.found?.alert },
+          },
         })),
         key: { rows: rows.length, passed: rows.filter((row) => row.verdict === "pass").length },
         pageerrors: countPageErrors(console_), faults: faultLines(console_),
@@ -139,7 +161,7 @@ const PROBES = [
   },
   {
     name: "generation-roster", script: "🐍️wgpu-generation-publication-probe.mjs", dir: "generation-roster", minutes: 14,
-    env: { SEMIO_PROBE_OUT: "wgpu-verify/generation-roster", SEMIO_PROBE_ORIGIN: ORIGIN, SEMIO_PROBE_GUEST_DIAGNOSTICS: "1", SEMIO_PROBE_JOURNEY: "1" },
+    env: { SEMIO_PROBE_OUT: `${ROOT_NAME}/generation-roster`, SEMIO_PROBE_ORIGIN: ORIGIN, SEMIO_PROBE_GUEST_DIAGNOSTICS: "1", SEMIO_PROBE_JOURNEY: "1" },
     verdict: (dir) => {
       const v = readJson(join(dir, "verdicts.json")) ?? {};
       const console_ = readText(join(dir, "console.txt"));
@@ -160,7 +182,7 @@ const PROBES = [
   },
   {
     name: "deferred-commit", script: "🐍️wgpu-deferred-commit-probe.mjs", dir: "deferred-commit", minutes: 20,
-    env: { SEMIO_PROBE_OUT: "wgpu-verify/deferred-commit", SEMIO_PROBE_ORIGIN: ORIGIN, SEMIO_PROBE_SETTLE: "60" },
+    env: { SEMIO_PROBE_OUT: `${ROOT_NAME}/deferred-commit`, SEMIO_PROBE_ORIGIN: ORIGIN, SEMIO_PROBE_SETTLE: "60" },
     verdict: (dir) => {
       const v = readJson(join(dir, "verdicts.json")) ?? {};
       const console_ = readText(join(dir, "console.txt"));
@@ -178,22 +200,22 @@ const PROBES = [
     },
   },
   {
-    name: "world3d-editor", script: "🐍️wgpu-world3d-interaction-probe.mjs", dir: "world3d-editor", minutes: 16,
+    name: "world3d-editor", script: "🐍️wgpu-world3d-interaction-probe.mjs", dir: "world3d-editor", minutes: 90,
     /** ⏳️ SETTLE is 60 s, not the probe's 15 s default, and the example is on the url. Boot now leaves
      * in ~6 s where the lane that wrote this probe measured ~27 s, so a short settle starts gesturing at
      * a preview whose guest has published NO geometry yet (measured: `lanes.meshes=2` bytes,
      * `Pick[Hover hit=false]`) and every pick legitimately misses. Edit-mode time-to-mesh is 10-36 s. */
-    env: { SEMIO_PROBE_OUT: "wgpu-verify/world3d-editor", SEMIO_PROBE_URL: `${ORIGIN}/?plugin=generation3d&example=hexagonal-mushroom-column`, SEMIO_PROBE_BOOT: "150", SEMIO_PROBE_SETTLE: "60" },
+    env: { SEMIO_PROBE_OUT: `${ROOT_NAME}/world3d-editor`, SEMIO_PROBE_URL: `${ORIGIN}/?plugin=generation3d`, SEMIO_PROBE_EXAMPLES: EXAMPLES.join(","), SEMIO_PROBE_BOOT: "150", SEMIO_PROBE_SETTLE: "60" },
     verdict: (dir) => world3dVerdict(dir),
   },
   {
-    name: "world3d-viewer", script: "🐍️wgpu-world3d-interaction-probe.mjs", dir: "world3d-viewer", minutes: 16,
-    env: { SEMIO_PROBE_OUT: "wgpu-verify/world3d-viewer", SEMIO_PROBE_URL: `${ORIGIN}/?plugin=generation3d&role=viewer&example=hexagonal-mushroom-column`, SEMIO_PROBE_BOOT: "150", SEMIO_PROBE_SETTLE: "60" },
+    name: "world3d-viewer", script: "🐍️wgpu-world3d-interaction-probe.mjs", dir: "world3d-viewer", minutes: 90,
+    env: { SEMIO_PROBE_OUT: `${ROOT_NAME}/world3d-viewer`, SEMIO_PROBE_URL: `${ORIGIN}/?plugin=generation3d&role=viewer`, SEMIO_PROBE_EXAMPLES: EXAMPLES.join(","), SEMIO_PROBE_BOOT: "150", SEMIO_PROBE_SETTLE: "60" },
     verdict: (dir) => world3dVerdict(dir),
   },
   {
     name: "spawn-job", script: "🐍️wgpu-spawn-job-probe.mjs", dir: "spawn-job", minutes: 16,
-    env: { SEMIO_PROBE_OUT: "wgpu-verify/spawn-job", SEMIO_PROBE_URL: `${ORIGIN}/?plugin=generation3d&example=hexagonal-mushroom-column`, SEMIO_PROBE_BOOT: "150", SEMIO_PROBE_SETTLE: "60" },
+    env: { SEMIO_PROBE_OUT: `${ROOT_NAME}/spawn-job`, SEMIO_PROBE_URL: `${ORIGIN}/?plugin=generation3d&example=hexagonal-mushroom-column`, SEMIO_PROBE_BOOT: "150", SEMIO_PROBE_SETTLE: "60" },
     /** 🧵️ A selection is delivered as `Effect::SpawnJob{framework.reserved.tool}`; the verdict is that
      * the bridge PUMPED it (`wgpu-bridge spawn-job …`) and dropped none, not that a wire line exists. */
     verdict: (dir) => {
@@ -211,7 +233,7 @@ const PROBES = [
   },
   {
     name: "frame-loop", script: "🐍️wgpu-frame-loop-probe.mjs", dir: "frame-loop", minutes: 25,
-    env: { SEMIO_PROBE_OUT: "wgpu-verify/frame-loop", SEMIO_PROBE_URL: URL, SEMIO_PROBE_GESTURES: "20", SEMIO_PROBE_BOOT: "150", SEMIO_PROBE_GESTURE_SETTLE: "4" },
+    env: { SEMIO_PROBE_OUT: `${ROOT_NAME}/frame-loop`, SEMIO_PROBE_URL: URL, SEMIO_PROBE_GESTURES: "20", SEMIO_PROBE_BOOT: "150", SEMIO_PROBE_GESTURE_SETTLE: "4" },
     verdict: (dir) => {
       const r = readJson(join(dir, "results.json")) ?? {};
       const console_ = readText(join(dir, "console.txt"));
@@ -238,7 +260,7 @@ const PROBES = [
   },
   {
     name: "node-gestures", script: "🐍️wgpu-node-gestures-probe.mjs", dir: "node-gestures", minutes: 25,
-    env: { SEMIO_PROBE_OUT: "wgpu-verify/node-gestures", SEMIO_PROBE_URL: `${ORIGIN}/?plugin=generation3d&example=hexagonal-mushroom-column` },
+    env: { SEMIO_PROBE_OUT: `${ROOT_NAME}/node-gestures`, SEMIO_PROBE_URL: `${ORIGIN}/?plugin=generation3d&example=hexagonal-mushroom-column` },
     verdict: (dir) => {
       const v = readJson(join(dir, "verdict.json")) ?? {};
       const console_ = readText(join(dir, "console.txt"));
@@ -261,7 +283,7 @@ const PROBES = [
   },
   {
     name: "chrome", script: "🐍️wgpu-input-deliverables-probe.mjs", dir: "chrome", minutes: 16,
-    env: { SEMIO_PROBE_OUT: "wgpu-verify/chrome", SEMIO_PROBE_URL: `${ORIGIN}/?plugin=generation3d&example=box-fillet-preview`, SEMIO_PROBE_BOOT: "150", SEMIO_PROBE_SETTLE: "45" },
+    env: { SEMIO_PROBE_OUT: `${ROOT_NAME}/chrome`, SEMIO_PROBE_URL: `${ORIGIN}/?plugin=generation3d&example=box-fillet-preview`, SEMIO_PROBE_BOOT: "150", SEMIO_PROBE_SETTLE: "45" },
     /** 🖱️ A mode/role chord is a SHELL state transition, not a guest command, so the honest witness is
      * the dock REPLAN it causes (`📓️wgpu-input-hit-runtime-2026-09-13.md` §10.4), never a settled command. */
     verdict: (dir) => {
@@ -306,7 +328,7 @@ const PROBES = [
   },
   {
     name: "status-a11y-i18n", script: "🐍️wgpu-status-a11y-i18n-probe.mjs", dir: "status-a11y-i18n", minutes: 22,
-    env: { SEMIO_PROBE_OUT: "wgpu-verify/status-a11y-i18n", SEMIO_PROBE_URL: URL, SEMIO_PROBE_BOOT: "200", SEMIO_PROBE_SETTLE: "60" },
+    env: { SEMIO_PROBE_OUT: `${ROOT_NAME}/status-a11y-i18n`, SEMIO_PROBE_URL: URL, SEMIO_PROBE_BOOT: "200", SEMIO_PROBE_SETTLE: "60" },
     verdict: (dir) => {
       const r = readJson(join(dir, "report.json")) ?? {};
       const german = readJson(join(dir, "german.json")) ?? {};
@@ -326,7 +348,7 @@ const PROBES = [
   },
   {
     name: "io", script: "🐍️wgpu-io-probe.mjs", dir: "io", minutes: 14,
-    env: { SEMIO_PROBE_OUT: "wgpu-verify/io", SEMIO_PROBE_URL: `${ORIGIN}/?plugin=generation3d&example=hexagonal-mushroom-column`, SEMIO_PROBE_BOOT: "150" },
+    env: { SEMIO_PROBE_OUT: `${ROOT_NAME}/io`, SEMIO_PROBE_URL: `${ORIGIN}/?plugin=generation3d&example=hexagonal-mushroom-column`, SEMIO_PROBE_BOOT: "150" },
     verdict: (dir) => {
       const r = readJson(join(dir, "results.json")) ?? {};
       const console_ = readText(join(dir, "console.txt"));
@@ -360,7 +382,7 @@ const PROBES = [
   },
   {
     name: "port-fit", script: "🐍️port-fit-probe.mjs", dir: "port-fit", minutes: 14,
-    env: { SEMIO_PROBE_OUT: "wgpu-verify/port-fit", SEMIO_PROBE_TARGET: "wgpu", SEMIO_PROBE_SETTLE: "60", SEMIO_PROBE_URL: `${ORIGIN}/?plugin=generation3d&example=hexagonal-mushroom-column` },
+    env: { SEMIO_PROBE_OUT: `${ROOT_NAME}/port-fit`, SEMIO_PROBE_TARGET: "wgpu", SEMIO_PROBE_SETTLE: "60", SEMIO_PROBE_URL: `${ORIGIN}/?plugin=generation3d&example=hexagonal-mushroom-column` },
     verdict: (dir) => {
       const findings = readJson(join(dir, "findings.json")) ?? [];
       const console_ = readText(join(dir, "console.txt"));
@@ -373,39 +395,84 @@ const PROBES = [
   },
 ];
 
-/** 🕹️ Both world3d lanes read the same nine hops: a gesture is green when the frame PUBLISHED an
- * action for it, which is the authority's own `[DEBUG] frame input action` line and nothing weaker. */
+/** 🕹️ Both world3d lanes read the same nine hops, ONCE PER EXAMPLE: a gesture is green when the
+ * frame published the right action for it AND the state it moved is the one the example's own
+ * publication says it should be.
+ *
+ * 🩸️ The weaker rule this replaces scored a hop on the ACTION NAME alone (`actions.some(a => a ===
+ * "interactionHover")`), which cannot tell a ray that hit the body from a ray that hit whatever
+ * happened to be under the centre pixel, and it ran on `hexagonal-mushroom-column` only. Every hop
+ * below now names the value it read: the hovered/selected TARGET against the interaction ids the
+ * example itself published (`dumpMeshStats`), the selection SET growing on a shift-click, and the
+ * camera FRAMING the committed bounding box rather than merely differing from its previous string
+ * (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-mesh-oracle-2026-09-14.md`).
+ */
 function world3dVerdict(dir) {
   const r = readJson(join(dir, "results.json")) ?? {};
   const console_ = readText(join(dir, "console.txt"));
-  const s = r.steps ?? {};
-  const acted = (name, needle) => {
-    const step = s[name];
-    if (!step) return { step: name, ok: false, detail: { missing: true } };
-    const actions = (step.newActions ?? []).map((line) => String(line).split("/args=")[0].split("/").at(-1));
-    return { step: name, ok: actions.some((action) => action === needle), detail: { actions: [...new Set(actions)], camera: step.authorityAfter?.camera ?? null, hover: step.authorityAfter?.hover ?? null } };
-  };
-  const counts = s.counts ?? {};
-  const steps = [
-    acted("h1_hover_centre", "interactionHover"),
-    acted("h2_hover_empty", "interactionHover"),
-    acted("h3_click_select", "interactionSelect"),
-    /** 🔶️ A shift-click lands ADDITIVELY unless the click point is on the gumball a previous selection
-     * put there, in which case the shell publishes that gumball's own verb — so this hop is green for
-     * either, and the gumball answer is recorded rather than scored as a miss. */
-    (() => {
-      const additive = acted("h4_shift_add", "interactionSelect");
-      const gumball = acted("h4_shift_add", "translateSelection");
-      return additive.ok ? additive : { ...gumball, step: "h4_shift_add" };
-    })(),
-    acted("h5_empty_clear", "interactionSelect"),
-    acted("h6_marquee", "interactionSelect"),
-    acted("h7_wheel_zoom", "setCamera"),
-    acted("h8_right_drag_orbit", "setCamera"),
-    acted("h9_right_drag_pan", "setCamera"),
-    { step: "no authority fault, no panic, no dropped effect", ok: (counts["world3d retained interaction authority faulted"] ?? 0) === 0 && (counts.panicked ?? 0) === 0 && (counts["wgpu-worker panicked"] ?? 0) === 0 && (counts["frame deferred action failed"] ?? 0) === 0 && (counts["unmapped effect"] ?? 0) === 0, detail: counts },
-  ];
-  return { steps, key: { ...counts, previewLanes: s.preview?.lanes ?? null, bootMs: s.boot?.bootShellLeaveMs ?? null }, pageerrors: countPageErrors(console_), faults: faultLines(console_) };
+  const runs = r.runs ?? [];
+  const steps = [];
+  const key = { examples: runs.length, byExample: {} };
+  if (runs.length === 0) return { steps: [{ step: "the probe published runs", ok: false, detail: { results: Object.keys(r) } }], key, pageerrors: countPageErrors(console_), faults: faultLines(console_) };
+  for (const run of runs) {
+    const label = run.example || "(none)";
+    const s_ = run.steps ?? {};
+    const oracle = s_.oracle ?? {};
+    /** 🎯️ The topology ids a centre ray may report for THIS example — derived from its own published
+     * solid meshes, so a wire-only example legitimately has none and is scored on that. */
+    const targets = oracle.expectedTargets ?? [];
+    const actionsOf = (name) => ((s_[name]?.newActions ?? []).map((line) => String(line).split("/args=")[0].split("/").at(-1)));
+    const acted = (name, needle) => actionsOf(name).some((action) => action === needle);
+    /** 👆️ `hover=Some("id")` as the authority reports it, unquoted. */
+    const hoverTarget = (name) => /Some\("(.*?)"\)/.exec(s_[name]?.authorityAfter?.hover ?? "")?.[1] ?? null;
+    const selectedCount = (name, side) => Number(s_[name]?.[side]?.selected ?? -1);
+    const push = (step, ok, detail) => steps.push({ step: `${label}: ${step}`, ok, detail });
+
+    push("the example publishes exactly its committed meshes", (oracle.fixture ?? null) !== null && JSON.stringify(oracle.publishedRoles ?? {}) === JSON.stringify(oracle.fixture?.meshRoles ?? null), { published: oracle.publishedRoles, committed: oracle.fixture?.meshRoles ?? null, ids: (oracle.publishedMeshes ?? []).map((mesh) => mesh.id) });
+    push("the boot camera frames the committed bounding box", Boolean(oracle.bootCameraFit?.ok), oracle.bootCameraFit ?? null);
+    /** 🩸️ A pick ray only ever hits triangles, so an example that publishes no solid cannot report a
+     * hovered target and the honest predicate for it is "the hover is empty", not "a hover fired". */
+    if (targets.length === 0) {
+      push("h1 hovering the centre of a wire-only body reports no target", hoverTarget("h1_hover_centre") === null, { hover: s_.h1_hover_centre?.authorityAfter?.hover ?? null, actions: [...new Set(actionsOf("h1_hover_centre"))] });
+    } else {
+      push("h1 hovering the centre reports the example's own target", acted("h1_hover_centre", "interactionHover") && targets.includes(hoverTarget("h1_hover_centre")), { hover: hoverTarget("h1_hover_centre"), expected: targets, actions: [...new Set(actionsOf("h1_hover_centre"))] });
+    }
+    push("h2 hovering the empty corner reports no target", hoverTarget("h2_hover_empty") === null, { hover: s_.h2_hover_empty?.authorityAfter?.hover ?? null });
+    if (targets.length === 0) {
+      push("h3 clicking a wire-only body selects nothing", selectedCount("h3_click_select", "authorityAfter") === 0, { selected: selectedCount("h3_click_select", "authorityAfter"), actions: [...new Set(actionsOf("h3_click_select"))] });
+    } else {
+      push("h3 clicking the body selects that target", acted("h3_click_select", "interactionSelect") && selectedCount("h3_click_select", "authorityAfter") > 0, { before: selectedCount("h3_click_select", "authorityBefore"), after: selectedCount("h3_click_select", "authorityAfter"), actions: [...new Set(actionsOf("h3_click_select"))] });
+      /** 🔍️ A selection the guest accepted but nothing renders is one the user cannot see: the
+       * guest's own `selection_json` must carry it back into the published payload. */
+      push("h3 the selection reaches the published document", (s_.h3_click_select?.publishedAfter?.selected ?? []).length > 0, { published: s_.h3_click_select?.publishedAfter ?? null, inspector: s_.h3_click_select?.inspector ?? null });
+      /** 🔍️ …and the SHELL must show it: the retained document has to mark something selected that it
+       * did not mark before the click. Counting nodes whose text merely contains the widget id would
+       * be vacuous — the node graph always draws every node's id. */
+      push("h3 the selection shows in the shell", (s_.h3_click_select?.inspector?.selected ?? []).length > (s_.h3_click_select?.inspectorBefore?.selected ?? []).length, { before: (s_.h3_click_select?.inspectorBefore?.selected ?? []).length, after: (s_.h3_click_select?.inspector?.selected ?? []).length, nodes: (s_.h3_click_select?.inspector?.selected ?? []).slice(0, 6), needle: s_.h3_click_select?.needle ?? null, needleHits: s_.h3_click_select?.inspector?.needleHits ?? 0 });
+      /** 🔶️ No gumball escape hatch. `translateSelection` used to count as a pass for this hop, which
+       * let a broken additive select hide behind a coincidental gumball hit — so the gesture must be
+       * carried by `interactionSelect` and nothing else.
+       *
+       * ⚖️ What "added" MEANS depends on the example, and saying "the set grew" for all of them would
+       * be a law no correct app can pass: seven of the eight bundled examples publish exactly ONE
+       * pickable instance, and the second shift-click lands on that same body. So an example with
+       * several targets must GROW, and an example with one must still HOLD its target — what neither
+       * may do is come back empty, which is what a replacing (non-additive) select looks like. */
+      push("h4 shift-clicking adds to the selection rather than replacing it", actionsOf("h4_shift_add").includes("interactionSelect") && (targets.length > 1 ? selectedCount("h4_shift_add", "authorityAfter") > selectedCount("h4_shift_add", "authorityBefore") : selectedCount("h4_shift_add", "authorityAfter") >= Math.max(1, selectedCount("h4_shift_add", "authorityBefore"))), { targets: targets.length, before: selectedCount("h4_shift_add", "authorityBefore"), after: selectedCount("h4_shift_add", "authorityAfter"), actions: [...new Set(actionsOf("h4_shift_add"))] });
+      push("h5 clicking empty space clears the selection", selectedCount("h5_empty_clear", "authorityAfter") === 0, { before: selectedCount("h5_empty_clear", "authorityBefore"), after: selectedCount("h5_empty_clear", "authorityAfter"), actions: [...new Set(actionsOf("h5_empty_clear"))] });
+      push("h6 a crossing marquee takes the body", acted("h6_marquee", "interactionSelect") && selectedCount("h6_marquee", "authorityAfter") > 0, { after: selectedCount("h6_marquee", "authorityAfter"), actions: [...new Set(actionsOf("h6_marquee"))] });
+    }
+    for (const [name, label_] of [["h7_wheel_zoom", "h7 the wheel moves the camera"], ["h8_right_drag_orbit", "h8 an alt-right-drag orbits"], ["h9_right_drag_pan", "h9 a shift-right-drag pans"]]) {
+      push(label_, acted(name, "setCamera") && Boolean(s_[name]?.localCameraChanged || s_[name]?.guestCameraChanged), { actions: [...new Set(actionsOf(name))], localCameraChanged: s_[name]?.localCameraChanged, guestCameraChanged: s_[name]?.guestCameraChanged });
+    }
+    /** 📦️ After the camera gestures the body must still be framed — a zoom that flies past the
+     * geometry leaves a blank viewport with a perfectly healthy `setCamera` trace behind it. */
+    push("the camera still frames the body after the camera gestures", Boolean(s_.h9_right_drag_pan?.cameraFit?.ok ?? false), s_.h9_right_drag_pan?.cameraFit ?? null);
+    const counts = s_.counts ?? {};
+    push("no authority fault, no panic, no dropped effect", (counts["world3d retained interaction authority faulted"] ?? 0) === 0 && (counts.panicked ?? 0) === 0 && (counts["wgpu-worker panicked"] ?? 0) === 0 && (counts["frame deferred action failed"] ?? 0) === 0 && (counts["unmapped effect"] ?? 0) === 0, counts);
+    key.byExample[label] = { targets, roles: oracle.publishedRoles ?? {}, bootCameraFit: oracle.bootCameraFit?.ok ?? null, bootMs: s_.boot?.bootShellLeaveMs ?? null };
+  }
+  return { steps, key, pageerrors: countPageErrors(console_), faults: faultLines(console_) };
 }
 
 if (argv.includes("--list")) { console.log(PROBES.map((p) => p.name).join("\n")); process.exit(0); }
@@ -448,7 +515,7 @@ for (const probe of selected) {
   const decided = v.steps.filter((s) => s.ok !== undefined);
   const ok = !verdictError && decided.length > 0 && decided.every((s) => s.ok);
   board.probes.push({
-    probe: probe.name, script: probe.script, out: `🗑️generated/wgpu-verify/${probe.dir}/`,
+    probe: probe.name, script: probe.script, out: `🗑️generated/${ROOT_NAME}/${probe.dir}/`,
     seconds, exit: run.status, timedOut: run.signal === "SIGTERM" || Boolean(run.error && /ETIMEDOUT|timed/i.test(String(run.error))),
     ok, verdictError,
     steps: v.steps, key: v.key,

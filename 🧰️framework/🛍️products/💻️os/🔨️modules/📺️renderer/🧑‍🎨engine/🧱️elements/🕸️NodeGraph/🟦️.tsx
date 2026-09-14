@@ -133,6 +133,86 @@ function parseDagChannelRefJson(json: string): { readonly nodeId: string; readon
   }
 }
 
+/** 🔤️ The value schemas a port declares, as the comma-joined `valueType` the scene carries them in.
+ * An empty list is an undeclared port, which stays connectable. */
+export function portValueTypes(port: NodeGraphPortRecord | undefined): readonly string[] {
+  return port?.valueType ? port.valueType.split(",").filter((entry) => entry.length > 0) : [];
+}
+
+/** 🔌️ The ONE port-compatibility rule, in TypeScript — the twin of
+ * `neural_engine::Registry::channel_compatible` and `semio_framework_os_flow::port_value_types_compatible`.
+ * A pair is refused only when both sides declare and the declared sets are disjoint, so an
+ * undeclared channel is never retro-refused.
+ *
+ * @see `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🧫️fixtures/🔌️port-types/🔣️.json` — the oracle
+ */
+export function portValueTypesCompatible(source: readonly string[], target: readonly string[]): boolean {
+  if (source.length === 0 || target.length === 0) return true;
+  return source.some((provided) => target.includes(provided));
+}
+
+/** 🔌️ Whether the wire a drag would draw between two node records may land — the predicate React
+ * Flow asks before it paints a snap target as droppable, and again before it fires `onConnect`. */
+export function nodeGraphConnectionIsValid(records: readonly NodeGraphNodeRecord[], connection: { readonly source?: string | null; readonly target?: string | null; readonly sourceHandle?: string | null; readonly targetHandle?: string | null }): boolean {
+  const sourceNode = records.find((record) => record.id === connection.source);
+  const targetNode = records.find((record) => record.id === connection.target);
+  const sourcePort = sourceNode?.outputs.find((port) => portHandleId(port) === connection.sourceHandle);
+  const targetPort = targetNode?.inputs.find((port) => portHandleId(port) === connection.targetHandle);
+  return portValueTypesCompatible(portValueTypes(sourcePort), portValueTypes(targetPort));
+}
+
+/** 🚫️ The port pair a live wire drag is hovering that the declared port types forbid, as the board
+ * publishes it alongside the hovered channel. */
+export type DagWireTypeRefusal = {
+  readonly source: string;
+  readonly sourceTypes: readonly string[];
+  readonly target: string;
+  readonly targetTypes: readonly string[];
+};
+
+/** 🚫️ Decodes the `refusal` the board rides on `hoveredChannelJson()` — `null` whenever the drag is
+ * over open canvas or over a port it may legally land on. */
+export function parseDagWireTypeRefusalJson(json: string): DagWireTypeRefusal | null {
+  try {
+    const parsed = JSON.parse(json) as { readonly refusal?: unknown } | null;
+    const refusal = parsed?.refusal as Partial<DagWireTypeRefusal> | undefined;
+    if (!refusal || typeof refusal.source !== "string" || typeof refusal.target !== "string") return null;
+    return {
+      source: refusal.source,
+      sourceTypes: Array.isArray(refusal.sourceTypes) ? refusal.sourceTypes.filter((entry): entry is string => typeof entry === "string") : [],
+      target: refusal.target,
+      targetTypes: Array.isArray(refusal.targetTypes) ? refusal.targetTypes.filter((entry): entry is string => typeof entry === "string") : [],
+    };
+  } catch {
+    return null;
+  }
+}
+
+/** 🏷️ The localized noun for each declared port type, so a refusal reads in the user's own language
+ * instead of echoing the schema id. An id the table does not carry falls back to the id itself. */
+function usePortTypeLabels(): Readonly<Record<string, string>> {
+  const geometry = useLabel("ui.nodeGraph.portType.geometry");
+  const vector = useLabel("ui.nodeGraph.portType.vector");
+  const point = useLabel("ui.nodeGraph.portType.point");
+  const numberLabel = useLabel("ui.nodeGraph.portType.number");
+  const text = useLabel("ui.nodeGraph.portType.text");
+  const booleanLabel = useLabel("ui.nodeGraph.portType.boolean");
+  const list = useLabel("ui.nodeGraph.portType.list");
+  return useMemo(() => ({ geometry, vector, point, number: numberLabel, text, boolean: booleanLabel, list }), [booleanLabel, geometry, list, numberLabel, point, text, vector]);
+}
+
+/** 🚫️ The interpolation a refusal hint needs: both port names and both declared type lists, each
+ * type spelled in the reader's language. */
+export function wireRefusalLabelOptions(refusal: DagWireTypeRefusal | null, portTypeLabels: Readonly<Record<string, string>>): Record<string, string> {
+  const spell = (types: readonly string[]) => types.map((entry) => portTypeLabels[entry] ?? entry).join(" / ");
+  return {
+    source: refusal?.source ?? "",
+    sourceType: spell(refusal?.sourceTypes ?? []),
+    target: refusal?.target ?? "",
+    targetType: spell(refusal?.targetTypes ?? []),
+  };
+}
+
 function syncOptionalGraphCanvasTheme(session: FrameworkGraphSession | null): void {
   if (session?.setCanvasThemeJson) syncSessionCanvasTheme({ setCanvasThemeJson: session.setCanvasThemeJson.bind(session) });
 }
@@ -1028,6 +1108,7 @@ function DiagramGraphFallback({
         nodesDraggable={editable}
         nodesConnectable={editable}
         edgesReconnectable={editable}
+        isValidConnection={(connection) => nodeGraphConnectionIsValid(parsedNodes, connection)}
         onNodesChange={(nextNodes) => setNodes(nextNodes as Node<WorkflowNodeData>[])}
         onEdgesChange={(nextEdges) => setEdges(nextEdges)}
         onNodeDragStop={
@@ -1043,6 +1124,10 @@ function DiagramGraphFallback({
           editable
             ? (connection) => {
                 if (!connection.source || !connection.target || !connection.sourceHandle || !connection.targetHandle) return;
+                if (!nodeGraphConnectionIsValid(parsedNodes, connection)) {
+                  console.log("[DEBUG] node graph refused an incompatible wire %s@%s -> %s@%s", connection.source, connection.sourceHandle, connection.target, connection.targetHandle);
+                  return;
+                }
                 dispatch(nodeGraphActions.edit, {
                   operations: [
                     {
@@ -1108,6 +1193,21 @@ function PresencePeersOverlay({ peers }: { readonly peers: readonly PresencePeer
     </div>
   );
 }
+/**
+ * 🪜️ The graph host's root class. `isolate` is load-bearing: it keeps this host's OWN layer numbers —
+ * the full-bleed pointer overlay at `z-30`, the label canvas at `z-40`, the marquee at `z-50` — inside
+ * its own stacking context.
+ *
+ * Without it those raw numbers competed directly with the shell's z ladder (`--z-pane: 20`,
+ * `🖌️ui/🎨️.css`), so the pointer overlay painted ON TOP of the window's floating pane chrome and ate
+ * every click on `Window Options` (which is where the LOD picker lives), `Actions` and `Utilities`.
+ * The chips stayed visible and focusable and were completely dead to a pointer, while the same chips
+ * on a sibling `World3dHost` window worked — that host has no such overlay. Measured on the React
+ * serve 2026-09-14: `elementsFromPoint` over the chip's centre answered the graph overlay, and a
+ * programmatic `.click()` opened the rail the pointer could not reach
+ * (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+ */
+export const NODE_GRAPH_HOST_CLASS = "semio-node-graph-host isolate relative h-full min-h-0 w-full overflow-hidden";
 //#endregion Helpers
 
 //#region Component
@@ -1154,7 +1254,7 @@ export function NodeGraphHost({ node, onAction, requestContextMenu }: ComponentS
 
   return (
     <div
-      className="semio-node-graph-host relative h-full min-h-0 w-full overflow-hidden"
+      className={NODE_GRAPH_HOST_CLASS}
       data-surface-id={node.surfaceId}
       data-status-json={scene.statusJson ?? undefined}
       data-fixture-json={scene.fixtureJson ?? undefined}
@@ -2156,6 +2256,9 @@ export function FlowGraphCanvasHost({
   } | null>(null);
   const contextMenuTitleLabel = useLabel(contextMenu?.titleKey ?? "ui.surfaceContextMenu.flow");
   const fitGraphLabel = useLabel("ui.nodeGraph.fitGraph");
+  const [wireRefusal, setWireRefusal] = useState<DagWireTypeRefusal | null>(null);
+  const portTypeLabels = usePortTypeLabels();
+  const wireRefusalText = useLabel("ui.nodeGraph.incompatiblePorts", wireRefusalLabelOptions(wireRefusal, portTypeLabels));
   const [selectionBounds, setSelectionBounds] = useState<ReturnType<typeof parseDagSelectionUnionBoundsScreen>>(null);
   const [marquee, setMarquee] = useState<ReturnType<typeof computeDagMarqueeOverlay>>(null);
   const [labelStateJson, setLabelStateJson] = useState("{}");
@@ -2248,19 +2351,21 @@ export function FlowGraphCanvasHost({
     });
   }, [dispatch]);
 
-  /** 🔗️ The wire edits a released gesture performed, read out of `pointerUpScreen`'s own result —
-   * the gesture answers with what it did, so there is no second round trip and no window in which a
-   * later read could drain the journal first. Shape: `{operations:[…]}` in the guest's own
+  /** 🔗️ What a released gesture did, read out of `pointerUpScreen`'s own result — the gesture answers
+   * for itself, so there is no second round trip and no window in which a later read could drain the
+   * journal first. Shape: `{operations:[…],fixtureChanged:boolean}` — `operations` in the guest's own
    * `nodeGraphEdit` sub-operation vocabulary (`connect` with four ids, `disconnect` with a synapse
    * id), the identical payload the wgpu renderer writes (`⚙️EngineCanvas/🎯️targets/🧊️wgpu`'s
-   * `write_graph_edit_action`). */
-  const graphEditOperations = useCallback((value: unknown): readonly Record<string, unknown>[] => {
+   * `write_graph_edit_action`); `fixtureChanged` the host's own content predicate
+   * (`🌊️flow/🖥️host/🦀️.rs`'s `commit_gesture_history`), which is the ONLY thing that may authorise the
+   * whole-fixture commit. A gesture with neither changed nothing and is owed no dispatch at all. */
+  const graphGestureAnswer = useCallback((value: unknown): { readonly operations: readonly Record<string, unknown>[]; readonly fixtureChanged: boolean } => {
     try {
-      const parsed = JSON.parse(flowJsonText(value)) as { readonly operations?: unknown } | null;
+      const parsed = JSON.parse(flowJsonText(value)) as { readonly operations?: unknown; readonly fixtureChanged?: unknown } | null;
       const operations = parsed?.operations;
-      return Array.isArray(operations) ? (operations as readonly Record<string, unknown>[]) : [];
+      return { operations: Array.isArray(operations) ? (operations as readonly Record<string, unknown>[]) : [], fixtureChanged: parsed?.fixtureChanged === true };
     } catch {
-      return [];
+      return { operations: [], fixtureChanged: false };
     }
   }, []);
 
@@ -3049,6 +3154,9 @@ export function FlowGraphCanvasHost({
           const client = { x: event.clientX, y: event.clientY };
           pickInteraction.onCanvasPointerMove(client);
           observeFlowTask(session, "pointerMoveScreen", session.pointerMoveScreen(event.clientX - rect.left, event.clientY - rect.top, event.shiftKey, event.metaKey || event.ctrlKey, event.altKey));
+          readObservedFlowTask(session, "hoveredChannelJson:drag", session.hoveredChannelJson())
+            .then((value) => setWireRefusal(parseDagWireTypeRefusalJson(flowJsonText(value))))
+            .catch(() => {});
           renderFlow();
           paintOverlays();
         }}
@@ -3064,19 +3172,29 @@ export function FlowGraphCanvasHost({
             /* nothing was captured */
           }
           pickInteraction.onCanvasPointerUp(client, { shift: event.shiftKey, ctrlOrMeta: event.metaKey || event.ctrlKey, alt: event.altKey });
+          setWireRefusal(null);
           observeFlowTask(session, "pointerUpScreen", session.pointerUpScreen(event.clientX - rect.left, event.clientY - rect.top, event.shiftKey, event.metaKey || event.ctrlKey, event.altKey), (value) => {
             // 🔗️ A gesture that wired or cut dispatches THAT — four ids, or one synapse id — and never
             // the whole fixture on top of it: the guest replays the narrow intent and re-publishes the
             // graph itself, so a second `setFixture` would only race its own result.
-            const operations = graphEditOperations(value);
+            //
+            // 🪶 A gesture that wired nothing dispatches the whole fixture only when the HOST says its
+            // content moved (a node drag, an inline slider, a port insert). A plain click, a marquee, a
+            // pan and a press that grabbed nothing change nothing, and used to dispatch a whole-fixture
+            // `nodeGraphEdit` all the same — a retained command per click, and a re-armed preview
+            // evaluation on a shell nobody touched.
+            const { operations, fixtureChanged } = graphGestureAnswer(value);
             if (operations.length > 0) console.log("[DEBUG] node graph wire edit dispatch", JSON.stringify(operations));
             if (operations.length > 0) dispatch(nodeGraphActions.edit, { operations });
-            else commitFixture();
+            else if (fixtureChanged) commitFixture();
           });
           renderFlow();
           emitInteractionState();
         }}
-        onPointerLeave={() => pickInteraction.onCanvasPointerLeave()}
+        onPointerLeave={() => {
+          setWireRefusal(null);
+          pickInteraction.onCanvasPointerLeave();
+        }}
         onDoubleClick={onCanvasDoubleClick}
         onWheel={(event) => {
           event.preventDefault();
@@ -3092,6 +3210,16 @@ export function FlowGraphCanvasHost({
           paintOverlays();
         }}
       />
+      {wireRefusal ? (
+        <div
+          role="status"
+          aria-live="polite"
+          data-wire-refusal-json={JSON.stringify(wireRefusal)}
+          className="pointer-events-none absolute bottom-2 left-1/2 z-30 -translate-x-1/2 rounded border border-destructive bg-panel px-2 py-1 text-[11px] text-destructive shadow-sm"
+        >
+          {wireRefusalText}
+        </div>
+      ) : null}
       <CanvasPickMenu request={pickInteraction.pickMenu} hoveredKey={pickInteraction.menuHoveredKey} onHoverKey={pickInteraction.onMenuHoverKey} onPick={pickInteraction.onMenuPick} onDismiss={pickInteraction.dismissPickMenu} />
       {spotlight ? (
         <FlowSpotlight state={spotlight} sections={spotlightSections} onPreview={previewSpotlightItem} onCommit={commitSpotlightItem} onClose={closeSpotlight} />

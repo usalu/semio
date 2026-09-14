@@ -1627,6 +1627,48 @@ export function uiDirtyScopeAsksForNothing(scope: UiDirtyScope): boolean {
   return scope.kind === "none";
 }
 
+/** 🪟️ Structural shape of a mode-layout node, read here so a caller that only asks "which windows are
+ * mounted?" does not take a dependency on a renderer's whole layout type surface. */
+type ModeLayoutNodeLikeV1 = { readonly kind: string; readonly id?: string; readonly children?: readonly ModeLayoutNodeLikeV1[] };
+
+/** @emoji 🪟️ Every window id the mode layout actually mounts, background tabs of a stack included.
+ *
+ * 🐢️ This is the difference between the windows an app DECLARES and the windows the user is looking
+ * at. Asking the guest to re-render all of the declared ones on every `refresh-ui` made a converging
+ * generation3d edit re-render the three generate-mode windows — the generate preview's mesh payload
+ * included — twice per `flowEvalTick` hop while the user sat in edit mode
+ * (`📓️react-hop-latency-2026-09-14.md`). It lives beside the dirty-scope predicates because both
+ * shells owe the same rule: the wgpu `refresh_ui` window walk has the identical choice to make. */
+export function windowLayoutWindowIdsV1(layout: unknown): ReadonlySet<string> {
+  const ids = new Set<string>();
+  const walk = (node: ModeLayoutNodeLikeV1 | null | undefined): void => {
+    if (!node || typeof node !== "object") return;
+    if (node.kind === "window" && typeof node.id === "string") {
+      ids.add(node.id);
+      return;
+    }
+    for (const child of node.children ?? []) walk(child);
+  };
+  walk(layout as ModeLayoutNodeLikeV1 | null | undefined);
+  return ids;
+}
+
+/** @emoji 🪟️ Splits the declared window instances into the ones a refresh pass must fetch and the ones
+ * the layout does not mount. A skipped window's CACHED body must be dropped by the caller, and that is
+ * what makes the skip safe: nothing can later serve a stale body, and the pass that fetches the window
+ * once it IS mounted asks with no hash and gets a whole one back. An empty `mounted` set means the
+ * layout is not known yet (first pass, session switch) — then everything is fetched. */
+export function partitionRefreshWindowInstancesV1<T extends { readonly id: string }>(
+  windowInstances: readonly T[],
+  mounted: ReadonlySet<string>,
+): { readonly fetched: readonly T[]; readonly skipped: readonly T[] } {
+  if (mounted.size === 0) return { fetched: windowInstances, skipped: [] };
+  const fetched: T[] = [];
+  const skipped: T[] = [];
+  for (const instance of windowInstances) (mounted.has(instance.id) ? fetched : skipped).push(instance);
+  return { fetched, skipped };
+}
+
 /** @emoji 🤝️ Twin of Rust `UiDirtyScope::merged_with` — the union one coalesced pass owes, in first-seen body-key order. */
 export function mergeUiDirtyScopes(first: UiDirtyScope, second: UiDirtyScope): UiDirtyScope {
   if (first.kind === "full" || second.kind === "full") return { kind: "full" };

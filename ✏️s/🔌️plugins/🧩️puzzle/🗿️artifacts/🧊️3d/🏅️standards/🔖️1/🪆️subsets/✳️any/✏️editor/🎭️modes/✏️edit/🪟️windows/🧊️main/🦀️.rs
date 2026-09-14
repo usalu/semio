@@ -73,7 +73,7 @@ pub fn window_measures(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels) -> Vec
         options::lod::measure(&envelope.runtime, labels),
         options::grid::measure(&envelope.runtime, labels),
         options::select::measure(&envelope.runtime, labels),
-        options::sun::measure(&envelope.runtime),
+        options::sun::measure(&envelope.runtime, labels.is_de()),
         utilities::transform::options(&envelope.runtime, labels),
         utilities::brush::options(envelope, labels),
         utilities::volume_brush::options(&envelope.runtime, labels),
@@ -205,12 +205,13 @@ pub fn frame_unset_camera(scene: &mut Puzzle3dScene, window_id: &str) {
 /// Selection/hover paint is driven by `selectionJson` on the host — never baked here so instance geometry stays stable across picks.
 pub fn world_instances_geometry_json(fixture: &Puzzle3dFixture) -> String {
     let mut residency = Puzzle3dInstanceResidency::default();
-    residency.refresh(fixture);
+    residency.refresh(fixture, &std::collections::BTreeSet::new());
     residency.instances_json().to_string()
 }
 
-/// 🧱️ ONE instance record, exactly the shape [`world_instances_geometry_json`] publishes.
-fn instance_record_json(object: &Puzzle3dObject, mesh_id: &str) -> String {
+/// 🧱️ ONE instance record, exactly the shape [`world_instances_geometry_json`] publishes; `provisional` marks an
+/// object a running tool placed and has not finalized (the `provisional` mesh style, never pickable).
+fn instance_record_json(object: &Puzzle3dObject, mesh_id: &str, provisional: bool) -> String {
     let scale = if object.hidden { json!([0.0, 0.0, 0.0]) } else { json!(object_scale_json(object)) };
     let mut instance = json!({
         "id": object.id,
@@ -228,6 +229,9 @@ fn instance_record_json(object: &Puzzle3dObject, mesh_id: &str) -> String {
     if let Some(kind) = &object.object_kind {
         instance["objectKind"] = json!(kind);
     }
+    if provisional {
+        instance["provisional"] = json!(true);
+    }
     serde_json::to_string(&instance).unwrap_or_else(|_| "{}".into())
 }
 
@@ -236,9 +240,10 @@ fn instance_record_json(object: &Puzzle3dObject, mesh_id: &str) -> String {
 /// per-object key that costs a handful of `Hash::hash` calls and the whole-document
 /// `format!`-then-hash [`fixture_geometry_fingerprint`] used to be (measured 20 716 µs on the
 /// 180-object Nakagin document, ticket 26/09/02 wave B44 §1).
-fn instance_record_fingerprint(object: &Puzzle3dObject, mesh_id: &str) -> u64 {
+fn instance_record_fingerprint(object: &Puzzle3dObject, mesh_id: &str, provisional: bool) -> u64 {
     let mut hasher = std::collections::hash_map::DefaultHasher::new();
     object.id.hash(&mut hasher);
+    provisional.hash(&mut hasher);
     mesh_id.hash(&mut hasher);
     for axis in object.origin {
         axis.to_bits().hash(&mut hasher);
@@ -322,18 +327,20 @@ pub struct Puzzle3dInstanceResidency {
 }
 
 impl Puzzle3dInstanceResidency {
-    /// 🔄️ Reconciles the residency against one fixture. Answers whether the published text changed —
-    /// `false` means every record and the order are bit-identical and no consumer owes any work.
-    pub fn refresh(&mut self, fixture: &Puzzle3dFixture) -> bool {
+    /// 🔄️ Reconciles the residency against one fixture and the running tool's provisional entities
+    /// (`ArtifactView::tool_run().provisional_entities`, keyed by `fill_run_entity(object.id)`). Answers whether the
+    /// published text changed — `false` means every record and the order are bit-identical and no consumer owes any work.
+    pub fn refresh(&mut self, fixture: &Puzzle3dFixture, provisional: &std::collections::BTreeSet<u64>) -> bool {
         let kind_meshes = Puzzle3dKindMeshIndex::of(&fixture.meta);
         let mut order = Vec::with_capacity(fixture.objects.len());
         let mut changed = Vec::new();
         let mut rebuilt = 0_u32;
         for object in &fixture.objects {
             let mesh_id = kind_meshes.resolve(object).map_or_else(|| PUZZLE3D_FALLBACK_MESH_KIND.into(), world3d_mesh_id_from_url);
-            let fingerprint = instance_record_fingerprint(object, &mesh_id);
+            let placed = !provisional.is_empty() && provisional.contains(&crate::editor::puzzle3d::precompute::fill::fill_run_entity(&object.id));
+            let fingerprint = instance_record_fingerprint(object, &mesh_id, placed);
             if self.entries.get(&object.id).is_none_or(|(cached, _)| *cached != fingerprint) {
-                self.entries.insert(object.id.clone(), (fingerprint, instance_record_json(object, &mesh_id)));
+                self.entries.insert(object.id.clone(), (fingerprint, instance_record_json(object, &mesh_id, placed)));
                 changed.push(object.id.clone());
                 rebuilt += 1;
             }

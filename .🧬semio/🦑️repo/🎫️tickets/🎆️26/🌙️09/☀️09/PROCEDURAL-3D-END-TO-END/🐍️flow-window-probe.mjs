@@ -89,25 +89,39 @@ if (mode === "wire") {
   }, surface);
   const wires = (value) => (value?.synapses ?? []).map((s) => `${s.from}@${s.fromPort ?? s.from_port} -> ${s.to}@${s.toPort ?? s.to_port}`);
 
-  /** 🔌️ The rect the HOST publishes for a port, read FRESH. `dagIntroductionResolver` answers from a
-   * cache and starts the real read in the background, so the first answer after any camera change is
-   * the pre-change rect — the trap the 2026-09-13 run fell into when it zoomed and then aimed. Two
-   * consecutive equal reads, a beat apart, is the geometry the host holds now. */
+  /** 🔌️ The rect the HOST publishes for a port, read FRESH. `dagIntroductionResolver`
+   * (`🕸️NodeGraph/🟦️.tsx:1638`) answers from an UNDATED cache and starts the real read in the
+   * background, so an answer can be any number of frames old and says nothing about its own age.
+   *
+   * 🩸️ TWO equal reads 400 ms apart is not enough: both can be the same stale cache entry. Measured —
+   * the 18:28 run aimed at a `height@number` rect 6.4 px above where the graph then was (and a
+   * `extrusion-axis@z` rect 19.2 px wide against the 11.9 px the same port published a run later, i.e.
+   * a different port-row draw state entirely); the press landed on empty canvas, panned the camera, and
+   * the row read as "redraw does not restore the wire" when no wire draw had ever STARTED. THREE equal
+   * reads spanning 1.2 s is the geometry the host holds now (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
+   * `📓️generate-add-flow-wire-quiet-tick-2026-09-14.md`). */
   const publishedPort = async (portId) => {
     let previous = null;
-    for (let attempt = 0; attempt < 24; attempt++) {
+    let repeats = 0;
+    for (let attempt = 0; attempt < 30; attempt++) {
       const geometry = await page.evaluate(([id, port]) => {
         const probe = window.__semioFlowGraphProbe?.[id];
         const resolved = probe?.entity?.("handle", port) ?? null;
         return resolved?.visible ? { point: resolved.point, rect: resolved.rect ?? null } : null;
       }, [surface, portId]);
       const key = geometry ? JSON.stringify(geometry) : null;
-      if (key && key === previous) return geometry;
+      repeats = key && key === previous ? repeats + 1 : 0;
+      if (key && repeats >= 2) return geometry;
       previous = key;
       await page.waitForTimeout(400);
     }
     return null;
   };
+
+  /** 🎯️ Whether the host's own press log says the gesture that just ran ENTERED a wire draw at `portId`.
+   * A press that never reached a port cannot be evidence about wiring, and used to be indistinguishable
+   * from a refusal to wire — the row simply read red. */
+  const pressEnteredWireDraw = (portId, since) => lines.slice(since).some((line) => line.includes("dag port press") && line.includes(`"${portId}"`) && line.includes("interaction=draw-edge"));
   /** 🎯️ The centre of the published rect — the ONE point a caller that trusts the host can derive. */
   const centreOf = (geometry) => (geometry?.rect ? { x: geometry.rect.x + geometry.rect.width / 2, y: geometry.rect.y + geometry.rect.height / 2 } : geometry?.point ?? null);
 
@@ -194,11 +208,28 @@ if (mode === "wire") {
       await page.screenshot({ path: join(outDir, "5-wire-cut.png") });
 
       // 2️⃣ CONNECT: redraw it from the output's published centre to the input's.
-      const sourceAgain = await publishedPort(fromPort);
-      const sinkAgain = await publishedPort(toPort);
-      await drag(centreOf(sourceAgain ?? source), centreOf(sinkAgain ?? sink), wires(before).length);
-      const redrawn = await fixture();
-      steps.push({ phase: "connect", from: centreOf(sourceAgain ?? source), to: centreOf(sinkAgain ?? sink), wires: wires(redrawn) });
+      // 🎯️ A press that never entered a wire draw is the HOST's published rect missing the port it
+      // names, not a refusal to wire — so it is re-aimed at freshly published geometry once and the
+      // miss is REPORTED (`staleAim`), never silently graded as "the redraw does not restore the wire".
+      const staleAim = [];
+      let redrawn = null;
+      let aimedFrom = centreOf(source);
+      let aimedTo = centreOf(sink);
+      let redrawPressLanded = false;
+      for (let aim = 0; aim < 2; aim++) {
+        const sourceAgain = await publishedPort(fromPort);
+        const sinkAgain = await publishedPort(toPort);
+        aimedFrom = centreOf(sourceAgain ?? source);
+        aimedTo = centreOf(sinkAgain ?? sink);
+        const mark = lines.length;
+        await drag(aimedFrom, aimedTo, wires(before).length);
+        redrawn = await fixture();
+        redrawPressLanded = pressEnteredWireDraw(fromPort, mark);
+        if (redrawPressLanded || wires(redrawn).length === wires(before).length) break;
+        staleAim.push({ aim, aimedAt: aimedFrom, publishedSource: sourceAgain, publishedSink: sinkAgain });
+        console.log("[DEBUG] wire: the press did not enter a wire draw — the published rect is stale, re-aiming", JSON.stringify(staleAim.at(-1)));
+      }
+      steps.push({ phase: "connect", from: aimedFrom, to: aimedTo, wires: wires(redrawn) });
       console.log("[DEBUG] wires after redraw", JSON.stringify(wires(redrawn)));
       await page.screenshot({ path: join(outDir, "6-wire-redrawn.png") });
       await page.waitForTimeout(6000);
@@ -211,6 +242,8 @@ if (mode === "wire") {
         afterRedraw: wires(redrawn),
         cutRemovedTheWire: wires(cut).length === wires(before).length - 1,
         redrawRestoredTheWire: wires(redrawn).sort().join("|") === wires(before).sort().join("|"),
+        redrawPressLanded,
+        staleAim,
         dispatched,
         preview: { before: previewBefore, afterCut: previewCut, afterRedraw: previewAfter },
         published: { source, sink },

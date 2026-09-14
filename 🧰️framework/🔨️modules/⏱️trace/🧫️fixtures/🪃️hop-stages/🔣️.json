@@ -1,0 +1,119 @@
+{
+  "measurePrefix": "semio.hop.",
+  "ringCapacity": 20000,
+  "stages": [
+    {
+      "id": "encode",
+      "owner": "PluginRuntime.performInvocation",
+      "covers": "pack-encoding the invocation and admitting the crossing view context"
+    },
+    {
+      "id": "channel",
+      "owner": "PluginRuntime.performInvocation",
+      "covers": "the worker crossing: post, guest turn, reply frames"
+    },
+    {
+      "id": "decode",
+      "owner": "PluginRuntime.performInvocation",
+      "covers": "reassembling the reply frames into an InvocationResponse"
+    },
+    {
+      "id": "invoke",
+      "owner": "PluginRuntime.performInvocation",
+      "covers": "the whole dispatch, encode through decode"
+    },
+    {
+      "id": "refresh.guest",
+      "owner": "ShellHost.refreshUi",
+      "covers": "the guest's own ui re-render for the dirtied sections"
+    },
+    {
+      "id": "refresh.turn",
+      "owner": "PluginRuntime.refreshUi",
+      "covers": "the serialized actor ingress plus the guest turn that re-renders the dirtied sections"
+    },
+    {
+      "id": "refresh.project",
+      "owner": "PluginRuntime.ownedUiRefreshResponse",
+      "covers": "projecting the retained surfaces back into the bodies the shell asked for"
+    },
+    {
+      "id": "refresh.slots",
+      "owner": "ShellHost.refreshUi",
+      "covers": "host-side external slot resolution on changed bodies"
+    },
+    {
+      "id": "refresh.apply",
+      "owner": "ShellHost.refreshUi",
+      "covers": "the React state dispatches that apply a refresh response"
+    },
+    {
+      "id": "refresh",
+      "owner": "ShellHost.refreshUi",
+      "covers": "the whole refresh pass"
+    },
+    {
+      "id": "commit",
+      "owner": "ShellHost",
+      "covers": "React commit and paint after a refresh apply"
+    },
+    {
+      "id": "arm",
+      "owner": "ShellHelpers.scheduleDispatchAction",
+      "covers": "from scheduling the next dispatch to it running"
+    },
+    {
+      "id": "mesh.decode",
+      "owner": "World3dHost.WorldInstancesLayer",
+      "covers": "building the three.js buffers of the meshes a scene changed"
+    },
+    {
+      "id": "turn.accept",
+      "owner": "PluginRuntime.settlePluginTurn",
+      "covers": "admitting one continuation's published ui patches, including the ack turns that admission itself submits"
+    },
+    {
+      "id": "turn.decide",
+      "owner": "PluginRuntime.settlePluginTurn",
+      "covers": "the loop's own bookkeeping between two continuations: required-surface accounting and progress"
+    },
+    {
+      "id": "turn.yield",
+      "owner": "PluginRuntime.settlePluginTurn",
+      "covers": "the macrotask yield the continuation loop takes every batch"
+    },
+    {
+      "id": "worker.turn",
+      "owner": "shard-worker.onmessage",
+      "covers": "the whole shard-worker side of one turn request: handler entry through reply post"
+    },
+    {
+      "id": "worker.receive",
+      "owner": "ShardClient.send to shard-worker.onmessage",
+      "covers": "the post crossing: the host's postMessage instant to the worker handler's entry"
+    },
+    {
+      "id": "worker.decode",
+      "owner": "shard-worker.onmessage",
+      "covers": "command page and event admission before the guest is entered, plus the request heartbeat"
+    },
+    {
+      "id": "worker.guest",
+      "owner": "shard-worker actor.api.poll",
+      "covers": "the reactor turn itself: command page staging, the guest wasm poll, and receipt normalization"
+    },
+    {
+      "id": "worker.reply",
+      "owner": "shard-worker reply to ShardClient.handleMessage",
+      "covers": "the reply crossing: structured clone of the turn result and the host handler's entry"
+    }
+  ],
+  "invariants": {
+    "tracerNeverThrows": true,
+    "closeIsIdempotent": true,
+    "oldestDropsWhenFull": true,
+    "interHopGapIsMeasuredBetweenInvokeSpans": true,
+    "workerStagesShareTheEpochClockNotTheTimeline": true,
+    "workerTurnEqualsDecodePlusGuest": true
+  }
+}

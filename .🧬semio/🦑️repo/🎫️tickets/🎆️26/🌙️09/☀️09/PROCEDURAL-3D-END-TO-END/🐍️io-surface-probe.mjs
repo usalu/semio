@@ -59,9 +59,13 @@ const main = (s) => s.hosts.find((h) => h.surfaceId === "window:procedural-main"
 const preview = (s) => s.hosts.find((h) => h.surfaceId && h.surfaceId.endsWith("-preview"));
 
 const results = [];
-const record = async (label, extra) => {
+/** ⚖️ Every row states its OWN verdict. Without an `ok` the battery's reader
+ * (`🐍️react-battery.mjs`) fell through to `!x.error` on a field this probe never set, so all six
+ * rows of the P0 import/export gate were structurally incapable of failing whatever the probe saw
+ * (`📓️window-coverage-audit-2026-09-14.md` §3). */
+const record = async (label, ok, extra) => {
   const s = await snap();
-  const row = { label, t: Date.now() - t0, widgetIds: main(s)?.widgetIds ?? null, previewPhase: preview(s)?.phase ?? null, meshes: s.hosts.reduce((n, h) => n + h.meshes, 0), faults: s.faults, ...extra };
+  const row = { label, ok, t: Date.now() - t0, widgetIds: main(s)?.widgetIds ?? null, previewPhase: preview(s)?.phase ?? null, meshes: s.hosts.reduce((n, h) => n + h.meshes, 0), faults: s.faults, ...extra };
   results.push(row);
   console.log(`[DEBUG] ${label}: ${JSON.stringify(row)}`);
   await page.screenshot({ path: join(outDir, `${results.length}-${label.replace(/[^a-z0-9]+/gi, "-")}.png`) });
@@ -79,7 +83,7 @@ for (let i = 0; i < bootWait; i++) {
   }
 }
 await page.waitForTimeout(6000);
-await record("boot", { booted });
+await record("boot", booted, { booted });
 
 // 🪟️ Focus the flow window. The shell resolves a chord and an action row against the FOCUSED
 // window kind's own action table (`🏛️ShellHost/🟦️.tsx:8364-8366`), so an unfocused shell has no
@@ -96,14 +100,16 @@ const published = await page.evaluate(() => ({
   importLabel: document.getElementById("action.importDocumentRequest")?.innerText?.replace(/\s+/g, " ").trim() ?? null,
   exportLabel: document.getElementById("action.exportDocument")?.innerText?.replace(/\s+/g, " ").trim() ?? null,
 }));
-await record("published", { published });
+await record("published", published.importRow && published.exportRow && Boolean(published.importLabel) && Boolean(published.exportLabel), { published });
 
 // 2️⃣ EXPORT — click the row, pick a format in the staged form, and take the shell's real download.
 let exported = null;
+let formatControl = false;
 try {
   await page.locator("#action\\.exportDocument").click({ timeout: 8000 });
   await page.waitForTimeout(1500);
-  await record("export-form-open", {});
+  formatControl = await page.locator("#format").count().then((n) => n > 0).catch(() => false);
+  await record("export-form-open", formatControl, { formatControl });
   // 📝️ The staged form publishes the `format` arg as a combobox seeded with this artifact's OWN
   // roster (`#format`, defaulting to the declared "STL Mesh"), and an `Execute` button — the real
   // controls a user meets, not a synthetic dispatch.
@@ -119,7 +125,7 @@ try {
 } catch (error) {
   exported = { error: String(error).slice(0, 300) };
 }
-await record("export", { exported });
+await record("export", Boolean(exported && !exported.error && (exported.bytes ?? 0) > 0), { exported });
 
 // 3️⃣ IMPORT — click the row, answer the REAL file picker with a real `.stl`, and watch the flow
 // window's published graph become the three-widget import fixture.
@@ -139,9 +145,10 @@ try {
 } catch (error) {
   imported = { pickerOpened: false, error: String(error).slice(0, 300) };
 }
-await record("import", { imported });
+await record("import", Boolean(imported?.pickerOpened && (imported.planted ?? []).includes("imported-geometry")), { imported });
 await page.waitForTimeout(8000);
-await record("import-settled", {});
+const settledSnap = await snap();
+await record("import-settled", (main(settledSnap)?.widgetIds ?? []).includes("imported-geometry") && settledSnap.faults.length === 0, { widgetIdsAfter: main(settledSnap)?.widgetIds ?? null });
 
 writeFileSync(join(outDir, "console.txt"), lines.join("\n"));
 writeFileSync(join(outDir, "results.json"), JSON.stringify({ url, results }, null, 2));

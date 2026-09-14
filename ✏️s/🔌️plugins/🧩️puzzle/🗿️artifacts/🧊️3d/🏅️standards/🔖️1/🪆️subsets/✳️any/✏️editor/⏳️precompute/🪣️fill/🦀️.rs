@@ -2595,6 +2595,7 @@ pub(crate) struct FillRunJob {
     mesh_lane: Vec<String>,
     mesh_index: HashMap<String, u32>,
     events: Vec<FillRunEvent>,
+    deferred: Vec<FillRunEvent>,
     live: Option<(u64, ToolRunTraceSubject)>,
     next_key: u64,
     placement_keys: Vec<(u64, ToolRunTraceSubject)>,
@@ -2676,6 +2677,7 @@ impl FillRunJob {
             mesh_lane,
             mesh_index,
             events: Vec::with_capacity(4),
+            deferred: Vec::new(),
             live: None,
             next_key: 0,
             placement_keys: Vec::new(),
@@ -2806,11 +2808,21 @@ impl FillRunJob {
         Some((key, subject))
     }
 
+    /// 🔭️ Folds the planner's observations into the tick. A constructed candidate is one visible unit of fuel, like its
+    /// verdict: when it exhausts the step's fuel, the observations after it wait in `deferred` for the next step, so a
+    /// one-unit step (a paced run, a single step) publishes the candidate under test before the verdict that marks it.
     fn observe(&mut self, context: &mut StepContext<'_>) -> Result<bool, &'static [u8]> {
-        self.builder.swap_run_events(&mut self.events);
-        let events = std::mem::take(&mut self.events);
+        if self.deferred.is_empty() {
+            self.builder.swap_run_events(&mut self.events);
+        } else {
+            std::mem::swap(&mut self.events, &mut self.deferred);
+            self.deferred.clear();
+        }
+        let mut events = std::mem::take(&mut self.events);
         let mut accepted = false;
-        for event in &events {
+        let mut cursor = 0;
+        while let Some(event) = events.get(cursor) {
+            cursor += 1;
             match event {
                 FillRunEvent::Constructed { mesh_url, origin, orientation, scale } => {
                     let key = self.next_key;
@@ -2822,6 +2834,13 @@ impl FillRunJob {
                     #[cfg(test)]
                     {
                         self.live_record = Some(FillRunVerdictRecord { key, reason: FillRunReason::Fits, mesh_url: mesh_url.clone(), origin: *origin, orientation: *orientation, host: self.builder.current_target.as_ref().map(|target| target.object_id.clone()), placements_before: self.builder.sequence.len() });
+                    }
+                    if self.replay.is_none() {
+                        context.consume_fuel(1);
+                        if context.fuel_exhausted() && cursor < events.len() {
+                            self.deferred = events.split_off(cursor);
+                            break;
+                        }
                     }
                 }
                 FillRunEvent::Refused(reason) => {
@@ -3001,7 +3020,7 @@ impl InteractiveJob for FillRunJob {
                     return StepOutcome::Fault(JobFault { detail: FillStepContext::fault_payload(context, detail) });
                 }
             }
-            if self.replay.is_none() && matches!(self.builder.stage, FillJobStage::Complete(_)) {
+            if self.replay.is_none() && self.deferred.is_empty() && matches!(self.builder.stage, FillJobStage::Complete(_)) {
                 if let Err(detail) = self.settle() {
                     return StepOutcome::Fault(JobFault { detail: FillStepContext::fault_payload(context, detail) });
                 }
@@ -3011,7 +3030,7 @@ impl InteractiveJob for FillRunJob {
                 return if self.replay.is_some() { StepOutcome::Yield } else { self.flush(context).unwrap_or(StepOutcome::Yield) };
             }
             let operation = self.builder.operation;
-            let outcome = self.builder.advance(&mut FillRunTransitionContext { outer: context, operation });
+            let outcome = self.deferred.is_empty().then(|| self.builder.advance(&mut FillRunTransitionContext { outer: context, operation }));
             let accepted = match self.observe(context) {
                 Ok(accepted) => accepted,
                 Err(detail) => {
@@ -3020,8 +3039,8 @@ impl InteractiveJob for FillRunJob {
                 }
             };
             match outcome {
-                StepOutcome::Cancelled => return StepOutcome::Cancelled,
-                fault @ StepOutcome::Fault(_) => return fault,
+                Some(StepOutcome::Cancelled) => return StepOutcome::Cancelled,
+                Some(fault @ StepOutcome::Fault(_)) => return fault,
                 _ => {}
             }
             if self.replay.is_some() {

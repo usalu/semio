@@ -12,6 +12,7 @@
 //! @see ../../../../../../📓️kernel-and-preview-audit-2026-09-09.md — the op chain per example.
 //! @see ../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🦀️.rs — `FlowHost::evaluate`.
 
+use std::collections::BTreeMap;
 use std::sync::{Mutex, MutexGuard, OnceLock};
 
 use semio_framework_os_flow::neural::Registry;
@@ -66,6 +67,14 @@ struct BudgetExpectation {
 #[serde(rename_all = "camelCase")]
 struct DeliveryExpectation {
     lod_mode: String,
+    /// 🏷️ How many of those meshes carry each ROLE, hand-written per example. `meshes` alone cannot
+    /// separate "the solid is on screen" from "the solid vanished and its two companion channels
+    /// remain": every published mesh stamps a `role` (`preview_eval::preview_mesh_role`) and a
+    /// preview that loses its only solid still publishes the wire it was extruded from and the
+    /// vector that drove it. The runtime oracles compare against THIS row, per role, which is what
+    /// makes a browser mesh census comparable to the native one at all
+    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-mesh-oracle-2026-09-14.md`).
+    mesh_roles: BTreeMap<String, usize>,
     /// 🕸️ The EXACT number of meshes this example's preview publishes. A floor is not enough: a
     /// preview that loses one of three meshes still reports every node `ok`, and the surface simply
     /// paints less — which is how a renamed operator port that stopped feeding `extrude` its axis
@@ -746,6 +755,8 @@ struct DeliveryRun {
     payload_instances: usize,
     payload_edge_segments: usize,
     payload_triangles: usize,
+    /// 🏷️ How many published meshes carry each role, keyed by the payload's own `role` stamp.
+    payload_mesh_roles: BTreeMap<String, usize>,
     step_micros: Vec<u64>,
 }
 
@@ -817,11 +828,16 @@ fn run_delivery(dsl: &str, fixture: &ExampleGeometryFixture, lod_mode: &str) -> 
     let published = payload_meshes.as_array().cloned().unwrap_or_default();
     let payload_triangles = published.iter().map(|entry| entry.pointer("/data/indices").and_then(serde_json::Value::as_array).map(Vec::len).unwrap_or_default() / 3).sum::<usize>();
     let payload_edge_segments = published.iter().map(|entry| entry.pointer("/data/edgePositions").and_then(serde_json::Value::as_array).map(Vec::len).unwrap_or_default() / 6).sum::<usize>();
+    let mut payload_mesh_roles: BTreeMap<String, usize> = BTreeMap::new();
+    for entry in &published {
+        *payload_mesh_roles.entry(entry.get("role").and_then(serde_json::Value::as_str).unwrap_or("(unstamped)").to_string()).or_default() += 1;
+    }
     let run = DeliveryRun {
         payload_meshes: published.len(),
         payload_instances: payload_instances.as_array().map(Vec::len).unwrap_or_default(),
         payload_edge_segments,
         payload_triangles,
+        payload_mesh_roles,
         step_micros,
         round_trips,
         chunks,
@@ -842,7 +858,7 @@ fn assert_delivery(dsl: &str, fixture_json: &str) {
     let fixture: ExampleGeometryFixture = serde_json::from_str(fixture_json).expect("expected-stats fixture parses");
     assert_budget_contract(&fixture);
     let run = run_delivery(dsl, &fixture, &fixture.delivery.lod_mode.clone());
-    println!("[DELIVERY] {} roundTrips={} chunks={} packBase64Bytes={} triangles={} edgeSegments={} phase={} diagnostics={:?} payloadMeshes={} payloadInstances={} payloadTriangles={} payloadEdgeSegments={} stepMicros={:?} totalMicros={}", fixture.example, run.round_trips, run.chunks, run.pack_base64_bytes, run.triangles, run.edge_segments, run.phase, run.diagnostics, run.payload_meshes, run.payload_instances, run.payload_triangles, run.payload_edge_segments, run.step_micros, run.step_micros.iter().sum::<u64>());
+    println!("[DELIVERY] {} roundTrips={} chunks={} packBase64Bytes={} triangles={} edgeSegments={} phase={} diagnostics={:?} payloadMeshes={} payloadInstances={} payloadTriangles={} payloadEdgeSegments={} payloadMeshRoles={:?} stepMicros={:?} totalMicros={}", fixture.example, run.round_trips, run.chunks, run.pack_base64_bytes, run.triangles, run.edge_segments, run.phase, run.diagnostics, run.payload_meshes, run.payload_instances, run.payload_triangles, run.payload_edge_segments, run.payload_mesh_roles, run.step_micros, run.step_micros.iter().sum::<u64>());
     let delivery = &fixture.delivery;
     assert_eq!(run.diagnostics, None, "{}: the validate gate rejected the preview solid", fixture.example);
     assert_eq!(run.phase, "complete", "{}: the delivery ended in phase {:?}", fixture.example, run.phase);
@@ -853,6 +869,12 @@ fn assert_delivery(dsl: &str, fixture_json: &str) {
     assert!(run.triangles > 0 || run.edge_segments > 0, "{}: the delivered mesh is empty", fixture.example);
     assert_eq!(run.payload_meshes, delivery.meshes, "{}: the preview published {} meshes, the example delivers exactly {}", fixture.example, run.payload_meshes, delivery.meshes);
     assert_eq!(run.payload_instances, delivery.meshes, "{}: every published mesh owes exactly one preview instance", fixture.example);
+    assert_eq!(run.payload_mesh_roles, delivery.mesh_roles, "{}: the preview published {:?} mesh roles, the example delivers {:?}", fixture.example, run.payload_mesh_roles, delivery.mesh_roles);
+    assert_eq!(delivery.mesh_roles.values().sum::<usize>(), delivery.meshes, "{}: the committed role counts {:?} do not add up to the committed mesh count {}", fixture.example, delivery.mesh_roles, delivery.meshes);
+    assert!(delivery.mesh_roles.get(&fixture.preview.kind).copied().unwrap_or_default() >= 1, "{}: the fixture's own preview kind {:?} carries no published mesh", fixture.example, fixture.preview.kind);
+    for role in delivery.mesh_roles.keys() {
+        assert!(semio_s_artifact_procedural_generation3d::preview_eval::PREVIEW_MESH_ROLES.contains(&role.as_str()), "{}: {role:?} is not a declared preview mesh role", fixture.example);
+    }
     assert!(run.payload_triangles >= delivery.min_triangles, "{}: the published payload carries {} triangles, expected at least {}", fixture.example, run.payload_triangles, delivery.min_triangles);
     assert!(run.payload_edge_segments >= delivery.min_edge_segments, "{}: the published payload carries {} edge segments, expected at least {}", fixture.example, run.payload_edge_segments, delivery.min_edge_segments);
     assert!(run.chunks <= delivery.max_chunks, "{}: the mesh body crossed in {} chunks, budget {}", fixture.example, run.chunks, delivery.max_chunks);

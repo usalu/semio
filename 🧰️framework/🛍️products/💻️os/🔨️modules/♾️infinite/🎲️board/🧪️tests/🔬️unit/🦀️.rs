@@ -490,3 +490,51 @@ fn acyclic_rejects_back_edge() {
     engine.pointer_up(0.0, 0.0);
     assert_eq!(engine.edges.len(), 1);
 }
+
+/// 🚫️ A wire whose two ends declare disjoint value schemas never snaps, never connects, and never
+/// displaces the wire already on that target port — the board half of the port-type law
+/// (`🌊️flow/🧫️fixtures/🔌️port-types/🔣️.json`). The pair is the defect's own:
+/// `extrusion-axis@vectorOut` (a `vector`) dropped on `extrude@wire` (a `geometry`).
+#[test]
+fn a_wire_whose_ends_declare_disjoint_value_types_never_snaps_and_never_connects() {
+    let mut engine = GraphEngine::<Ported, Directed>::new();
+    engine.enforce_acyclic = true;
+    engine.set_camera(0.0, 0.0, 1.0);
+    engine.create_rect_node(1, 0.0, 0.0, 160.0, 72.0, true);
+    engine.create_rect_node(2, 280.0, 0.0, 160.0, 72.0, true);
+    engine.create_rect_node(3, 0.0, 200.0, 160.0, 72.0, true);
+    engine.create_handle(10, 1, 3.0 * std::f64::consts::FRAC_PI_2);
+    engine.create_handle(11, 2, std::f64::consts::FRAC_PI_2);
+    engine.create_handle(12, 3, 3.0 * std::f64::consts::FRAC_PI_2);
+    engine.set_handle_role(10, HandleRole::Source);
+    engine.set_handle_role(11, HandleRole::Target);
+    engine.set_handle_role(12, HandleRole::Source);
+    engine.set_handle_value_types(10, vec!["vector".into()]);
+    engine.set_handle_value_types(11, vec!["geometry".into()]);
+    engine.set_handle_value_types(12, vec!["geometry".into()]);
+    engine.create_edge(100, 12, 11);
+
+    let out = handle_position_on_rectangle(Point::new(0.0, 0.0), 160.0, 72.0, 3.0 * std::f64::consts::FRAC_PI_2);
+    let inp = handle_position_on_rectangle(Point::new(280.0, 0.0), 160.0, 72.0, std::f64::consts::FRAC_PI_2);
+    engine.pointer_down(out.x, out.y, false);
+    engine.pointer_move(inp.x, inp.y);
+    let InteractionMode::DrawEdge { snap_target, .. } = engine.interaction else {
+        panic!("expected draw-edge interaction");
+    };
+    assert_eq!(snap_target, None, "an incompatible port must never be a snap target");
+    assert_eq!(engine.wire_drag_type_refusal(), Some((10, 11)), "the drag must name the pair it is refusing");
+    engine.pointer_up(inp.x, inp.y);
+    assert_eq!(engine.edges.len(), 1, "a refused drop adds no edge");
+    let edge = engine.edges.values().next().expect("edge");
+    assert_eq!(Ported::endpoint_as_u64(edge.source), 12, "the wire already on that port survives");
+    assert_eq!(Ported::endpoint_as_u64(edge.target), 11);
+
+    engine.set_handle_value_types(10, vec!["geometry".into()]);
+    engine.pointer_down(out.x, out.y, false);
+    engine.pointer_move(inp.x, inp.y);
+    assert_eq!(engine.wire_drag_type_refusal(), None, "a compatible pair is not a refusal");
+    engine.pointer_up(inp.x, inp.y);
+    assert_eq!(engine.edges.len(), 1, "the compatible drop replaces the incoming wire");
+    let edge = engine.edges.values().next().expect("edge");
+    assert_eq!(Ported::endpoint_as_u64(edge.source), 10, "and it is the drawn wire that stands");
+}

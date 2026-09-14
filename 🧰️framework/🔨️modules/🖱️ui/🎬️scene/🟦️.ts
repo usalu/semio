@@ -572,6 +572,7 @@ export type NodeGraphPortRecord = {
   readonly abbreviation?: string;
   readonly fullName?: string;
   readonly resourceKind?: string;
+  readonly valueType?: string;
 };
 
 /** 🕸️ One node-graph node: identity, label, layout rect, typed ports. `instanceId`/`pluginId`/`appId`/
@@ -630,6 +631,7 @@ export type NodeGraphOperatorChannelRecord = {
   readonly name: string;
   readonly fullName: string;
   readonly operators?: readonly string[];
+  readonly valueTypes?: readonly string[];
   readonly default?: unknown;
   readonly label?: string;
   readonly cardinality: string;

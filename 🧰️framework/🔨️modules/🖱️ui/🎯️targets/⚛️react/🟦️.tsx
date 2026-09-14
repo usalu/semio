@@ -18,6 +18,7 @@ import "@xyflow/react/dist/style.css";
 import {
   activeUiTheme,
   builtinUiThemes,
+  clearStylingAppearanceRoot,
   domSizePx,
   elementStateAttributes,
   parseUiTheme,
@@ -31,7 +32,10 @@ import {
   semioTheme,
   serializeUiTheme,
   setActiveUiTheme,
+  setStylingAppearanceRoot,
   sizeVar,
+  stylingAppearanceRootElement,
+  subscribeStylingAppearanceRoot,
   STYLING_COMPACT_ROOT_PX,
   STYLING_DOM,
   subscribeActiveUiTheme,
@@ -233,8 +237,8 @@ export function configureHostPorts(overrides: HostPortOverrides): () => void {
 // #endregion 🔌️PortWiring
 
 // #region 🐚️ShellScope
-import { type SelectionModeStore, type ShellScope, createShellScope, ShellScopeContext, ShellScopeProvider, useShellScope, useShellScopeOptional, shellScopeStorageOrBrowserFallback } from "../../🧱️elements/🐚️ShellScope/🟦️.tsx";
-export { type SelectionModeStore, type ShellScope, createShellScope, ShellScopeContext, ShellScopeProvider, useShellScope, useShellScopeOptional, shellScopeStorageOrBrowserFallback };
+import { type SelectionModeStore, type ShellScope, createShellScope, ShellScopeContext, ShellScopeProvider, useShellFloatingSurfaceHost, useShellScope, useShellScopeOptional, shellScopeStorageOrBrowserFallback } from "../../🧱️elements/🐚️ShellScope/🟦️.tsx";
+export { type SelectionModeStore, type ShellScope, createShellScope, ShellScopeContext, ShellScopeProvider, useShellFloatingSurfaceHost, useShellScope, useShellScopeOptional, shellScopeStorageOrBrowserFallback };
 // #endregion 🐚️ShellScope
 
 import { registerShellActivityRoot, activeShellRoot, useShellKeydown, useIsActiveShellRoot, NULL_SHELL_ROOT_REF } from "../../🧱️elements/🐚️ShellScope/🟦️.tsx";
@@ -1722,6 +1726,7 @@ function syncUiChromeRevealController(root: HTMLElement, chrome: UiDriverReveal)
 // #endregion 🫥️ChromeReveal
 
 function clearElementsSurfaceChromeDom(root: HTMLElement): void {
+  clearStylingAppearanceRoot(root);
   root.classList.remove("dark");
   root.classList.remove("touch");
   delete root.dataset.uiDevice;
@@ -1735,6 +1740,7 @@ function applyElementsSurfaceChromeAppearanceDom(root: HTMLElement, appearance: 
   root.classList.toggle("dark", dark);
   root.dataset.uiAppearance = dark ? "dark" : "light";
   applyElementsSurfaceChromeBaseColors(root, dark ? "dark" : "light");
+  setStylingAppearanceRoot(root);
 }
 
 /** @emoji 🌓️ Applies `.dark`/`color-scheme` to a root (`document.documentElement` by default) before
@@ -1869,15 +1875,21 @@ export function useElementsSurfaceChrome({ appearance, device, driver }: Element
 export function useCanvasAppearanceSync(sync: () => void, enabled = true, root?: HTMLElement): void {
   const syncRef = reactHostPort.useRef(sync);
   syncRef.current = sync;
+  const [appearanceRoot, setAppearanceRoot] = reactHostPort.useState<HTMLElement | null>(() => root ?? stylingAppearanceRootElement());
   reactHostPort.useEffect(() => {
-    const observedRoot = resolveElementsSurfaceChromeRoot(root);
+    const read = () => setAppearanceRoot(root ?? stylingAppearanceRootElement());
+    read();
+    return subscribeStylingAppearanceRoot(read);
+  }, [root]);
+  reactHostPort.useEffect(() => {
+    const observedRoot = appearanceRoot ?? resolveElementsSurfaceChromeRoot(root);
     if (!enabled || !observedRoot || typeof MutationObserver === "undefined") return;
     const run = () => syncRef.current();
     run();
     const observer = new MutationObserver(run);
     observer.observe(observedRoot, { attributes: true, attributeFilter: ["class", "style", "data-ui-appearance", "data-ui-theme"] });
     return () => observer.disconnect();
-  }, [enabled, root]);
+  }, [appearanceRoot, enabled, root]);
 }
 
 /** @emoji 🧪️ Clears every surface-chrome root's leases and DOM overrides between vitest cases (tests only
@@ -2882,6 +2894,16 @@ export const uiChromeTranslationBundles = {
         },
         nodeGraph: {
           fitGraph: { label: { normal: "Graph einpassen", beginner: "Ganzen Graph zeigen" } },
+          incompatiblePorts: { label: { normal: "{{source}} führt {{sourceType}}, {{target}} nimmt {{targetType}}", beginner: "Diese beiden Anschlüsse passen nicht zusammen: {{source}} führt {{sourceType}}, {{target}} nimmt {{targetType}}." } },
+          portType: {
+            geometry: { label: { normal: "Geometrie", beginner: "Geometrie" } },
+            vector: { label: { normal: "Vektor", beginner: "Vektor" } },
+            point: { label: { normal: "Punkt", beginner: "Punkt" } },
+            number: { label: { normal: "Zahl", beginner: "Zahl" } },
+            text: { label: { normal: "Text", beginner: "Text" } },
+            boolean: { label: { normal: "Ja/Nein", beginner: "Ja/Nein" } },
+            list: { label: { normal: "Liste", beginner: "Liste" } },
+          },
         },
         sync: {
           attach: { label: { normal: "Verbinden", beginner: "Verbinden" } },
@@ -3712,6 +3734,16 @@ export const uiChromeTranslationBundles = {
         },
         nodeGraph: {
           fitGraph: { label: { normal: "Fit graph", beginner: "Show the whole graph" } },
+          incompatiblePorts: { label: { normal: "{{source}} carries {{sourceType}}, {{target}} takes {{targetType}}", beginner: "These two ports do not fit: {{source}} carries {{sourceType}}, {{target}} takes {{targetType}}." } },
+          portType: {
+            geometry: { label: { normal: "geometry", beginner: "geometry" } },
+            vector: { label: { normal: "vector", beginner: "vector" } },
+            point: { label: { normal: "point", beginner: "point" } },
+            number: { label: { normal: "number", beginner: "number" } },
+            text: { label: { normal: "text", beginner: "text" } },
+            boolean: { label: { normal: "yes/no", beginner: "yes/no" } },
+            list: { label: { normal: "list", beginner: "list" } },
+          },
         },
         sync: {
           attach: { label: { normal: "Attach", beginner: "Attach" } },
@@ -8943,87 +8975,224 @@ export function shellNavbarTrailingEndReserveStyle(widthPx: number): React.CSSPr
   return { paddingInlineStart: `${widthPx + uiSpacingPx(1)}px` };
 }
 
-// #region ↔️DockColumnReserve
-// 🐚️ Keyed by shell root (falling back to `document.documentElement` outside any shell), one entry per
-// open right-hand dock anchor — `top-right`, `right` and `bottom-right` can be open at once, and two
-// shells on one page must never overwrite each other's measured column.
-const shellDockRightColumnLeftByRoot = ephemeralMap<HTMLElement, Map<string, number>>("framework.modules.ui.packages.typescript.targets.react.index.tsx.shellDockRightColumnLeftByRoot");
-const shellDockRightColumnListenersByRoot = ephemeralMap<HTMLElement, Set<() => void>>("framework.modules.ui.packages.typescript.targets.react.index.tsx.shellDockRightColumnListenersByRoot");
-
-/** @emoji ↔️ Publishes (or, with `leftPx: null`, retracts) the viewport x of one open right-hand dock
- * panel's left edge. The dock column floats OVER the canvas region (see {@link anchorPositionStyle} and
- * `📐️Layout`), so it is the only party that knows where that column starts — a window under it cannot
- * derive the value from its own layout. */
-export function publishShellDockRightColumnLeftPx(root: HTMLElement | undefined, key: string, leftPx: number | null): void {
-  const rootKey = resolveElementsSurfaceChromeRoot(root);
-  if (!rootKey) return;
-  let entries = shellDockRightColumnLeftByRoot.get(rootKey);
-  if (!entries) {
-    if (leftPx === null) return;
-    entries = new Map();
-    shellDockRightColumnLeftByRoot.set(rootKey, entries);
-  }
-  if (leftPx === null) {
-    if (!entries.delete(key)) return;
-  } else {
-    if (entries.get(key) === leftPx) return;
-    entries.set(key, leftPx);
-  }
-  for (const listener of shellDockRightColumnListenersByRoot.get(rootKey) ?? []) listener();
+// #region 🛟️ChromePanelSafeArea
+/** @emoji 🛟️ An axis-aligned viewport box in CSS pixels — the one geometry currency of the safe area,
+ * so a caller can state a box it has not laid out yet ({@link Window}'s right-edge chrome column) as
+ * readily as one it measured ({@link safeAreaBoxFromRect}). */
+export interface SafeAreaBox {
+  readonly left: number;
+  readonly top: number;
+  readonly right: number;
+  readonly bottom: number;
 }
 
-/** @emoji ↔️ Leftmost open right-hand dock panel edge for this shell, or `null` when the dock's right
- * column is closed — the single observable a window's own right-edge chrome offsets itself against. */
-export function useShellDockRightColumnLeftPx(root?: HTMLElement): number | null {
+/** @emoji 🛟️ One open anchored chrome {@link Panel}'s occupied viewport box, with the anchor it grew from. */
+export interface ChromePanelOccupancy {
+  readonly key: string;
+  readonly anchor: Anchor;
+  readonly box: SafeAreaBox;
+}
+
+/** @emoji 🛟️ Which axis an in-window affordance is free to yield on. A window's own right-edge chrome
+ * row is pinned to the top of its window and may only move `"inline"`; a scene overlay rail floats and
+ * takes `"either"`, i.e. whichever single axis clears the chrome panel with the smaller displacement. */
+export type SafeAreaYield = "inline" | "block" | "either";
+
+/** @emoji 🛟️ How far an affordance must move off its anchor's own two edges to clear the chrome panels
+ * over it — at most one axis is ever non-zero. */
+export interface ChromePanelSafeArea {
+  readonly inlinePx: number;
+  readonly blockPx: number;
+}
+
+const CHROME_PANEL_SAFE_AREA_CLEAR: ChromePanelSafeArea = Object.freeze({ inlinePx: 0, blockPx: 0 });
+const NO_CHROME_PANEL_OCCUPANCIES: readonly ChromePanelOccupancy[] = Object.freeze([]);
+
+/** @emoji 🛟️ A measured DOM rect as a {@link SafeAreaBox}, rounded to whole pixels so a sub-pixel
+ * reflow of an unchanged panel never re-publishes and never re-renders its readers. */
+export function safeAreaBoxFromRect(rect: DOMRect): SafeAreaBox {
+  return { left: Math.round(rect.left), top: Math.round(rect.top), right: Math.round(rect.right), bottom: Math.round(rect.bottom) };
+}
+
+function safeAreaBoxesEqual(a: SafeAreaBox, b: SafeAreaBox): boolean {
+  return a.left === b.left && a.top === b.top && a.right === b.right && a.bottom === b.bottom;
+}
+
+function safeAreaBoxesOverlap(a: SafeAreaBox, b: SafeAreaBox): boolean {
+  return a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top;
+}
+
+// 🐚️ Keyed by shell root (falling back to `document.documentElement` outside any shell), one entry per
+// open anchored chrome panel — all eight anchors can be open at once, and two shells on one page must
+// never overwrite each other's measured boxes.
+const shellChromePanelBoxesByRoot = ephemeralMap<HTMLElement, Map<string, ChromePanelOccupancy>>("framework.modules.ui.packages.typescript.targets.react.index.tsx.shellChromePanelBoxesByRoot");
+const shellChromePanelSnapshotByRoot = ephemeralMap<HTMLElement, readonly ChromePanelOccupancy[]>("framework.modules.ui.packages.typescript.targets.react.index.tsx.shellChromePanelSnapshotByRoot");
+const shellChromePanelListenersByRoot = ephemeralMap<HTMLElement, Set<() => void>>("framework.modules.ui.packages.typescript.targets.react.index.tsx.shellChromePanelListenersByRoot");
+
+/** @emoji 🛟️ Publishes (or, with `box: null`, retracts) one open anchored chrome panel's occupied
+ * viewport box. An anchored panel floats OVER the canvas region in the app root's stacking context (see
+ * {@link anchorPositionStyle} and `📐️Layout`), so it is the only party that knows the box it occupies —
+ * window content painted under it cannot derive that from its own layout, and cannot win the corner back
+ * on z-index either, since the two live in different stacking contexts. This registry is the single
+ * publication of that geometry; {@link chromePanelSafeArea} is the single rule read off it. */
+export function publishShellChromePanelBox(root: HTMLElement | undefined, key: string, anchor: Anchor, box: SafeAreaBox | null): void {
+  const rootKey = resolveElementsSurfaceChromeRoot(root);
+  if (!rootKey) return;
+  let entries = shellChromePanelBoxesByRoot.get(rootKey);
+  if (!entries) {
+    if (box === null) return;
+    entries = new Map();
+    shellChromePanelBoxesByRoot.set(rootKey, entries);
+  }
+  if (box === null) {
+    if (!entries.delete(key)) return;
+  } else {
+    const published = entries.get(key);
+    if (published && published.anchor === anchor && safeAreaBoxesEqual(published.box, box)) return;
+    entries.set(key, { key, anchor, box });
+  }
+  shellChromePanelSnapshotByRoot.set(rootKey, entries.size === 0 ? NO_CHROME_PANEL_OCCUPANCIES : Object.freeze([...entries.values()]));
+  for (const listener of shellChromePanelListenersByRoot.get(rootKey) ?? []) listener();
+}
+
+/** @emoji 🛟️ Every open anchored chrome panel of this shell, as the boxes they occupy — the single
+ * observable any in-window affordance reserves itself against. */
+export function useShellChromePanelBoxes(root?: HTMLElement): readonly ChromePanelOccupancy[] {
   const rootKey = resolveElementsSurfaceChromeRoot(root);
   return reactHostPort.useSyncExternalStore(
     (onStoreChange) => {
       if (!rootKey) return () => {};
-      let listeners = shellDockRightColumnListenersByRoot.get(rootKey);
+      let listeners = shellChromePanelListenersByRoot.get(rootKey);
       if (!listeners) {
         listeners = new Set();
-        shellDockRightColumnListenersByRoot.set(rootKey, listeners);
+        shellChromePanelListenersByRoot.set(rootKey, listeners);
       }
       listeners.add(onStoreChange);
       return () => listeners.delete(onStoreChange);
     },
-    () => {
-      const entries = rootKey ? shellDockRightColumnLeftByRoot.get(rootKey) : undefined;
-      if (!entries || entries.size === 0) return null;
-      return Math.min(...entries.values());
-    },
-    () => null,
+    () => (rootKey ? (shellChromePanelSnapshotByRoot.get(rootKey) ?? NO_CHROME_PANEL_OCCUPANCIES) : NO_CHROME_PANEL_OCCUPANCIES),
+    () => NO_CHROME_PANEL_OCCUPANCIES,
   );
 }
 
-/** @emoji ↔️ How far a window's own right-edge chrome must move inward so an open right-hand dock column
- * never lands on top of it.
+/**
+ * @emoji 🛟️ The safe area an affordance anchored inside `host` keeps from the chrome panels painted
+ * over it — the ONE rule both renderers obey (its wgpu twin is `chrome_panel_safe_area`, and both answer
+ * `🐚️Shell/🧫️fixtures/🛑️surface-controls/🔣️.json`'s `chromePanelSafeArea` rows).
  *
- * A docked panel body (`z-panel`) and a window's measures rail (`z-pane` inside the window's own
- * stacking context) are the same right-hand column when the window reaches under the dock: the panel wins
- * and every press in the rail's band hits a panel row instead — measured as `x 1137‑1437` over
- * `x 1130‑1430` in wave B47 §1.3, where the Projection group of an open Inspection panel was unusable.
- * Restacking cannot fix it (raising the rail only buries the panel's own rows), so the window yields
- * exactly the overlap and nothing more: a window whose right edge stops short of the column keeps its
- * rail flush at `var(--spacing-single)`. `availableWidthPx` is what the window can actually give up
- * (its body width minus the rail's own minimum), so a window entirely under the column clamps instead of
- * pushing its chrome off its own left edge. */
-export function dockColumnInlineReservePx(chromeRightEdgeX: number, dockColumnLeftEdgeX: number | null, availableWidthPx: number): number {
-  if (dockColumnLeftEdgeX === null) return 0;
-  const overlap = Math.round(chromeRightEdgeX - dockColumnLeftEdgeX);
-  if (overlap <= 0) return 0;
-  return Math.max(0, Math.min(overlap, Math.floor(availableWidthPx)));
+ * A docked panel body (`z-panel`, app root) and window content (`z-window`) are different stacking
+ * contexts, so an overlay rail under an anchored panel can never win the corner back by restacking, and
+ * making the panel click-through would only bury its own rows. The affordance yields instead, by the
+ * least it can:
+ * - only panels that actually cover `affordance` reserve anything, so a closed or distant panel costs
+ *   nothing and the flush inset stays exactly as authored;
+ * - the displacement is measured off the union of those panels, on the affordance's OWN anchor edges —
+ *   a top anchor drops below the union, a right anchor moves in past its left edge;
+ * - `yieldAxis` states which of the two the affordance's layout can actually give, and `"either"` takes
+ *   the smaller of the two (ties go to the block axis, which keeps the affordance on its own column);
+ * - an axis that cannot clear within `host` is not taken at all — moving an affordance without freeing
+ *   it is pure harm, and the answer there is a re-anchoring, not a half-step.
+ */
+export function chromePanelSafeArea(affordance: SafeAreaBox, host: SafeAreaBox, anchor: Anchor, panels: readonly SafeAreaBox[], yieldAxis: SafeAreaYield, gapPx: number): ChromePanelSafeArea {
+  const occluders = panels.filter((panel) => safeAreaBoxesOverlap(panel, affordance));
+  if (occluders.length === 0) return CHROME_PANEL_SAFE_AREA_CLEAR;
+  const union: SafeAreaBox = {
+    left: Math.min(...occluders.map((panel) => panel.left)),
+    top: Math.min(...occluders.map((panel) => panel.top)),
+    right: Math.max(...occluders.map((panel) => panel.right)),
+    bottom: Math.max(...occluders.map((panel) => panel.bottom)),
+  };
+  const vertical = anchorVertical(anchor);
+  const horizontal = anchorHorizontal(anchor);
+  const blockRoom = Math.max(0, host.bottom - host.top - (affordance.bottom - affordance.top));
+  const inlineRoom = Math.max(0, host.right - host.left - (affordance.right - affordance.left));
+  const blockPush = vertical === "top" ? union.bottom + gapPx - affordance.top : vertical === "bottom" ? affordance.bottom + gapPx - union.top : 0;
+  const inlinePush = horizontal === "right" ? affordance.right + gapPx - union.left : horizontal === "left" ? union.right + gapPx - affordance.left : 0;
+  const block = vertical !== "middle" && yieldAxis !== "inline" ? Math.ceil(blockPush) : 0;
+  const inline = horizontal !== "middle" && yieldAxis !== "block" ? Math.ceil(inlinePush) : 0;
+  const blockViable = block > 0 && block <= blockRoom;
+  const inlineViable = inline > 0 && inline <= inlineRoom;
+  if (blockViable && (!inlineViable || block <= inline)) return { inlinePx: 0, blockPx: block };
+  if (inlineViable) return { inlinePx: inline, blockPx: 0 };
+  return CHROME_PANEL_SAFE_AREA_CLEAR;
 }
 
-/** @emoji ↔️ {@link anchorPositionStyle}'s edge inset, moved inward by a {@link dockColumnInlineReservePx}
- * reserve on this anchor's own horizontal edge — a middle anchor has no edge to reserve against, and a
- * zero reserve leaves the flush `var(--spacing-single)` inset exactly as authored. */
-export function anchorInlineEdgeReserveStyle(anchor: Anchor, reservePx: number): React.CSSProperties | undefined {
+/** @emoji 🛟️ {@link anchorPositionStyle}'s two edge insets, moved inward by a {@link chromePanelSafeArea}
+ * — the flush `var(--spacing-single)` inset (or the caller's own `base`, e.g. a window content rail's
+ * {@link windowChromeClearedTopOffset}) when the safe area is clear, so a shell with no open panel lays
+ * out byte-for-byte as authored. A middle anchor has no edge to reserve on that axis. */
+export function chromePanelSafeAreaStyle(anchor: Anchor, safeArea: ChromePanelSafeArea, base?: { readonly block?: string; readonly inline?: string }): React.CSSProperties {
+  const vertical = anchorVertical(anchor);
   const horizontal = anchorHorizontal(anchor);
-  if (horizontal === "middle" || reservePx <= 0) return undefined;
-  return { [horizontal]: `calc(var(--spacing-single) + ${reservePx}px)` };
+  const blockBase = base?.block ?? "var(--spacing-single)";
+  const inlineBase = base?.inline ?? "var(--spacing-single)";
+  const style: React.CSSProperties = {};
+  if (vertical !== "middle") style[vertical] = safeArea.blockPx > 0 ? `calc(${blockBase} + ${safeArea.blockPx}px)` : blockBase;
+  if (horizontal !== "middle") style[horizontal] = safeArea.inlinePx > 0 ? `calc(${inlineBase} + ${safeArea.inlinePx}px)` : inlineBase;
+  return style;
 }
-// #endregion ↔️DockColumnReserve
+
+/** @emoji 🛟️ Live {@link chromePanelSafeArea} for one mounted affordance, measured against every open
+ * anchored chrome panel of the enclosing shell.
+ *
+ * The affordance is graded on its UNRESERVED box — its measured rect with the offset this hook currently
+ * applies taken back off — so a rail that has already stepped clear of a panel does not read as clear,
+ * drop its offset and step back under it. */
+export function useChromePanelSafeArea({
+  hostRef,
+  affordanceRef,
+  anchor,
+  yieldAxis,
+  gapPx = 0,
+  enabled = true,
+}: {
+  readonly hostRef: React.RefObject<HTMLElement | null>;
+  readonly affordanceRef: React.RefObject<HTMLElement | null>;
+  readonly anchor: Anchor;
+  readonly yieldAxis: SafeAreaYield;
+  readonly gapPx?: number;
+  readonly enabled?: boolean;
+}): ChromePanelSafeArea {
+  const shellScope = useShellScopeOptional();
+  const panels = useShellChromePanelBoxes(shellScope?.rootRef.current ?? undefined);
+  const [safeArea, setSafeArea] = reactHostPort.useState<ChromePanelSafeArea>(CHROME_PANEL_SAFE_AREA_CLEAR);
+  const appliedRef = reactHostPort.useRef<ChromePanelSafeArea>(CHROME_PANEL_SAFE_AREA_CLEAR);
+  reactHostPort.useLayoutEffect(() => {
+    const host = hostRef.current;
+    const affordance = affordanceRef.current;
+    const commit = (next: ChromePanelSafeArea) => {
+      if (next.inlinePx === appliedRef.current.inlinePx && next.blockPx === appliedRef.current.blockPx) return;
+      appliedRef.current = next;
+      setSafeArea(next);
+    };
+    if (!enabled || !host || !affordance || panels.length === 0) {
+      commit(CHROME_PANEL_SAFE_AREA_CLEAR);
+      return;
+    }
+    const boxes = panels.map((panel) => panel.box);
+    const vertical = anchorVertical(anchor);
+    const horizontal = anchorHorizontal(anchor);
+    const sync = () => {
+      const applied = appliedRef.current;
+      const rect = affordance.getBoundingClientRect();
+      const blockShift = vertical === "top" ? -applied.blockPx : vertical === "bottom" ? applied.blockPx : 0;
+      const inlineShift = horizontal === "right" ? applied.inlinePx : horizontal === "left" ? -applied.inlinePx : 0;
+      const unreserved: SafeAreaBox = { left: rect.left + inlineShift, top: rect.top + blockShift, right: rect.right + inlineShift, bottom: rect.bottom + blockShift };
+      commit(chromePanelSafeArea(unreserved, safeAreaBoxFromRect(host.getBoundingClientRect()), anchor, boxes, yieldAxis, gapPx));
+    };
+    sync();
+    const resizeObserver = typeof ResizeObserver !== "undefined" ? new ResizeObserver(sync) : null;
+    resizeObserver?.observe(host);
+    resizeObserver?.observe(affordance);
+    window.addEventListener("resize", sync);
+    return () => {
+      resizeObserver?.disconnect();
+      window.removeEventListener("resize", sync);
+    };
+  }, [affordanceRef, anchor, enabled, gapPx, hostRef, panels, yieldAxis]);
+  return safeArea;
+}
+// #endregion 🛟️ChromePanelSafeArea
 
 function NavbarFullscreenToggle({ onToggle }: { readonly onToggle?: () => void }) {
   const shellScope = useShellScopeOptional();
@@ -9537,7 +9706,7 @@ export interface PaneProps {
   readonly onResizeActiveChange?: (active: boolean) => void;
   /** @emoji 🗂️ Stacking order among panes sharing one anchor — lower first, in this anchor's flow direction. */
   readonly order?: number;
-  /** @emoji ↔️ Extra inline inset on this anchor's own edge — see {@link dockColumnInlineReservePx}. */
+  /** @emoji 🛟️ Extra inline inset on this anchor's own edge — see {@link chromePanelSafeArea}. */
   readonly inlineEdgeReservePx?: number;
   readonly zIndex?: 10 | 20 | 30 | 40;
   readonly className?: string;
@@ -9637,7 +9806,7 @@ export const Pane: React.FC<PaneProps> = ({
         ...(zIndex !== undefined ? { zIndex } : {}),
         width: !mobile && !effectiveFolded ? `${size}px` : undefined,
         maxWidth: !mobile && !effectiveFolded ? `min(100% - (var(--spacing-single) * 2)${inlineEdgeReservePx > 0 ? ` - ${inlineEdgeReservePx}px` : ""}, ${size}px)` : undefined,
-        ...anchorInlineEdgeReserveStyle(anchor, inlineEdgeReservePx),
+        ...chromePanelSafeAreaStyle(anchor, { inlinePx: inlineEdgeReservePx, blockPx: 0 }),
       };
   const paneFoldControl =
     !effectiveFolded && onFoldToggle
@@ -11053,7 +11222,7 @@ export {
 
 if (import.meta.vitest) {
   const { registerTests1 } = await import("../../🧪️tests/🧪️owned-locale-detector-retirement/🟦️.tsx");
-  await registerTests1(import.meta.vitest, { App, Button, CELEBRATE_STAMP_DURATION_MS, COMPACT_UI_DRIVER, COMPOSE_WINDOW_TEMPLATE_MIME, Canvas, CanvasPickMenu, ContextMenu, ContextMenuController, DEFAULT_GUMBALL_CONFIG, DEFAULT_UI_DRIVER, Engagement, FlowProvider, Footer, GLASS_OVERLAY_BOX_CLASS, GUMBALL_DEFAULT_SHIFT_ROTATION_SNAP, GUMBALL_DEFAULT_SHIFT_SCALE_SNAP, GUMBALL_PLANE_OFFSET, GUMBALL_PLANE_SIZE, GUMBALL_PREVIEW_DISK_RADIUS, GUMBALL_PREVIEW_MIN_EXTENT, GUMBALL_PREVIEW_RING_RADIUS, GUMBALL_RING_RADIUS, ICONS, INTRODUCTION_DEMO_IDLE_THRESHOLD_MS, INTRODUCTION_INFO_BOX_GAP_PX, Icon, Input, LEVELS, Label, Layout, LevelProvider, MODE_CANVAS_INSET_CLASS, Mode, Navbar, NotFound, OrthographicCamera, Pane, PaneHost, Panel, PanelChromeTabBar, PanelDockProvider, PanelTabBar, PerspectiveCamera, Popover, PopoverContent, PopoverTrigger, React, RouteLink, Scrollable, Search, ShellScopeProvider, SortableTreeItems, Surface, THREE, TREE_SECTION_REORDER_MIME, TextSelectionContextMenuHost, Toggle, Tree, TreeContext, TreeItem, UIIntroduction, UI_CHROME_LOCALE_STORAGE_KEY, UI_ELEMENT_REGISTRY, Ui, UiDriverProvider, UiMobileProvider, WINDOW_SILHOUETTE_BORDER_KINDS, WINDOW_SILHOUETTE_GEOMETRY_SCHEMA, WINDOW_SILHOUETTE_PATH_INSET, Window, WindowChrome, WindowMeasureTreeGroup, WindowMeasureTreeLeaf, WindowMeasuresTree, applyAxisGroupLayoutDelta, applyModeDrop, applyModeJoinCornerResize, applySearchSpaceAction, assertUniqueIconConceptAssignments, beginWindowTemplateDrag, beginWindowTemplatePointerDrag, borderNormalClass, buildTextSelectionContextMenuItems, cancelWindowTemplatePointerDrag, celebrateAllElements, celebrateElement, celebrateElements, childElementId, chromeHostedOpenPanelPositionStyle, chromeStatusBorderClass, clampIntroductionInfoBoxPosition, clampSliderValuesToReady, classifyIconSelectorMode, cn, computeModeDropZone, computeModeSplitPreviewInBody, computeTabDockDropZone, computeTabInsertPreview, createDOMEventBinding, createDiagramForceSimulation, createEvenWindowLayout, createMemoryStoragePort, createShellScope, createWindowSilhouetteGeometry, decodeIcon, defaultDiagramForceConfig, detectShellLocale, elementIdSegment, elementIdSelector, encodeIcon, endWindowTemplateDrag, engagementActionTokenEquals, filterSearchPossibles, flowFromAnchor, formatNumber, glassClass, gumballApplyHandleVisualMaterial, gumballAxisRotateAngle, gumballAxisScaleFactor, gumballConfigVisible, gumballEffectiveSnapValue, gumballHandleAllowedByPlane, gumballHandleEnabled, gumballHandleKindToTransformMode, gumballHandleRaycast, gumballHandleVisualState, gumballKindFromRaycastObject, gumballPlaneScaleCorner, gumballPlaneScaleFactors, gumballPointerConsumesCanvasEventRef, gumballPreviewWorldExtent, gumballProjectRayOntoAxis, gumballRayAxisParameter, gumballRayFromNdc, gumballRayPlanePoint, gumballRaycastOwnedAtClientPoint, gumballResolveDragSnaps, gumballResolveHandleVisual, gumballScaleAxisOffset, gumballScalePlaneAxisIndices, gumballSnapScalar, iconShotFrameClass, iconShotFrameStyle, iconSvgMarkup, initUiLocaleSync, insertWindowAsTabAtCorner, insertWindowAtDropZone, installElementsSurfaceBrowserDefaultSuppression, introductionDemoArcPoint, introductionDemoResolveVisual, introductionPointRelativeToHost, introductionRectRelativeToHost, isContextMenuPointerTarget, isElementId, isPointerEventOnDomTextSelection, isSearchSuggestionActionTarget, isUiTypingTarget, isWindowChromeIntroducedTarget, measureWindowSilhouetteMetrics, mergeTreeSectionOrder, modeCollectWindowIds, modeDockChromeGridPlacement, modeDockOutLayout, modeDockTabLabelClassName, modeDockTabsWithInsertPreview, modeJoinCornerSpecsForCrossSeparator, modeJoinCornerSpecsForSeparator, modePerpendicularJoinSeparators, modeStackTabsByCorner, navigateOwnedRoute, ndcToViewportPoint, nearestAnchor, normalizeEngagementActionText, normalizeWindowSilhouetteChips, normalizeWindowSilhouetteMetrics, parseOwnedRouteTarget, parseUiTheme, polylinePointAt, progressPanelTabSelection, publishShellNavbarTrailingEndWidthPx, rankFuzzyItems, reactHostPort, readActiveWindowTemplateDragSession, readDomTextSelection, readResizableJoinCornerSpec, readScrollerContentOverflows, reconcileWindows, referenceMediaKindFromUrl, registerIntroductionSurfaceResolver, removeWindowFromLayout, renderToStaticMarkup, resolveCatalogIconSvg, resolveGumballConfig, resolveGumballVisualPalette, resolveIntroductionPlacement, resolveIntroductionPoint, resolveJoinCornerPeerCrossAxes, resolveModeSplitSideInBody, resolveSliderDraftClear, resolveTranslationLabel, resolveWindowSilhouetteBorderKind, routeWindowSearchEscape, routeWindowSearchSpace, sampleBezierSegments, searchActiveInlineCompletion, searchControlledLineV1, searchInlineCompletion, semioTheme, setActiveUiTheme, shellFloorFillClass, shellFloorPaints, shellNavbarTrailingEndWidthByRoot, shortcodeCatalogKey, shortcodeEmoji, shouldActivateSearchPossibleOnConfirm, shouldRouteKeysToWindowSearch, singleTreeLeaf, sliderValuesMatch, splitIntroductionBodyParagraphs, splitWithWindow, sunPositionFromAzimuthElevation, surfaceClass, uiDataLabel, uiI18n, uiSpacingPx, useFirstDraggableElementAlias, useFlow, useIntroductionPointerIdle, useLevel, usePaneSlot, useSurface, windowChromeTitleChipClass, windowMeasuresDefaultWidthPx, windowMeasuresMinWidthPx, publishShellDockRightColumnLeftPx, dockColumnInlineReservePx, anchorInlineEdgeReserveStyle, windowSilhouetteBorderPaint, windowSilhouetteContains, windowSilhouetteOutline, windowSilhouetteOutlineViolations, windowSilhouettePath, windowTemplatePaletteTreeDragController, windowTemplatePointerDragRef }, { directory: import.meta.dir, url: import.meta.url });
+  await registerTests1(import.meta.vitest, { App, Button, CELEBRATE_STAMP_DURATION_MS, COMPACT_UI_DRIVER, COMPOSE_WINDOW_TEMPLATE_MIME, Canvas, CanvasPickMenu, ContextMenu, ContextMenuController, DEFAULT_GUMBALL_CONFIG, DEFAULT_UI_DRIVER, Engagement, FlowProvider, Footer, GLASS_OVERLAY_BOX_CLASS, GUMBALL_DEFAULT_SHIFT_ROTATION_SNAP, GUMBALL_DEFAULT_SHIFT_SCALE_SNAP, GUMBALL_PLANE_OFFSET, GUMBALL_PLANE_SIZE, GUMBALL_PREVIEW_DISK_RADIUS, GUMBALL_PREVIEW_MIN_EXTENT, GUMBALL_PREVIEW_RING_RADIUS, GUMBALL_RING_RADIUS, ICONS, INTRODUCTION_DEMO_IDLE_THRESHOLD_MS, INTRODUCTION_INFO_BOX_GAP_PX, Icon, Input, LEVELS, Label, Layout, LevelProvider, MODE_CANVAS_INSET_CLASS, Mode, Navbar, NotFound, OrthographicCamera, Pane, PaneHost, Panel, PanelChromeTabBar, PanelDockProvider, PanelTabBar, PerspectiveCamera, Popover, PopoverContent, PopoverTrigger, React, RouteLink, Scrollable, Search, ShellScopeProvider, SortableTreeItems, Surface, THREE, TREE_SECTION_REORDER_MIME, TextSelectionContextMenuHost, Toggle, Tree, TreeContext, TreeItem, UIIntroduction, UI_CHROME_LOCALE_STORAGE_KEY, UI_ELEMENT_REGISTRY, Ui, UiDriverProvider, UiMobileProvider, WINDOW_SILHOUETTE_BORDER_KINDS, WINDOW_SILHOUETTE_GEOMETRY_SCHEMA, WINDOW_SILHOUETTE_PATH_INSET, Window, WindowChrome, WindowMeasureTreeGroup, WindowMeasureTreeLeaf, WindowMeasuresTree, applyAxisGroupLayoutDelta, applyModeDrop, applyModeJoinCornerResize, applySearchSpaceAction, assertUniqueIconConceptAssignments, beginWindowTemplateDrag, beginWindowTemplatePointerDrag, borderNormalClass, buildTextSelectionContextMenuItems, cancelWindowTemplatePointerDrag, celebrateAllElements, celebrateElement, celebrateElements, childElementId, chromeHostedOpenPanelPositionStyle, chromeStatusBorderClass, clampIntroductionInfoBoxPosition, clampSliderValuesToReady, classifyIconSelectorMode, cn, computeModeDropZone, computeModeSplitPreviewInBody, computeTabDockDropZone, computeTabInsertPreview, createDOMEventBinding, createDiagramForceSimulation, createEvenWindowLayout, createMemoryStoragePort, createShellScope, createWindowSilhouetteGeometry, decodeIcon, defaultDiagramForceConfig, detectShellLocale, elementIdSegment, elementIdSelector, encodeIcon, endWindowTemplateDrag, engagementActionTokenEquals, filterSearchPossibles, flowFromAnchor, formatNumber, glassClass, gumballApplyHandleVisualMaterial, gumballAxisRotateAngle, gumballAxisScaleFactor, gumballConfigVisible, gumballEffectiveSnapValue, gumballHandleAllowedByPlane, gumballHandleEnabled, gumballHandleKindToTransformMode, gumballHandleRaycast, gumballHandleVisualState, gumballKindFromRaycastObject, gumballPlaneScaleCorner, gumballPlaneScaleFactors, gumballPointerConsumesCanvasEventRef, gumballPreviewWorldExtent, gumballProjectRayOntoAxis, gumballRayAxisParameter, gumballRayFromNdc, gumballRayPlanePoint, gumballRaycastOwnedAtClientPoint, gumballResolveDragSnaps, gumballResolveHandleVisual, gumballScaleAxisOffset, gumballScalePlaneAxisIndices, gumballSnapScalar, iconShotFrameClass, iconShotFrameStyle, iconSvgMarkup, initUiLocaleSync, insertWindowAsTabAtCorner, insertWindowAtDropZone, installElementsSurfaceBrowserDefaultSuppression, introductionDemoArcPoint, introductionDemoResolveVisual, introductionPointRelativeToHost, introductionRectRelativeToHost, isContextMenuPointerTarget, isElementId, isPointerEventOnDomTextSelection, isSearchSuggestionActionTarget, isUiTypingTarget, isWindowChromeIntroducedTarget, measureWindowSilhouetteMetrics, mergeTreeSectionOrder, modeCollectWindowIds, modeDockChromeGridPlacement, modeDockOutLayout, modeDockTabLabelClassName, modeDockTabsWithInsertPreview, modeJoinCornerSpecsForCrossSeparator, modeJoinCornerSpecsForSeparator, modePerpendicularJoinSeparators, modeStackTabsByCorner, navigateOwnedRoute, ndcToViewportPoint, nearestAnchor, normalizeEngagementActionText, normalizeWindowSilhouetteChips, normalizeWindowSilhouetteMetrics, parseOwnedRouteTarget, parseUiTheme, polylinePointAt, progressPanelTabSelection, publishShellNavbarTrailingEndWidthPx, rankFuzzyItems, reactHostPort, readActiveWindowTemplateDragSession, readDomTextSelection, readResizableJoinCornerSpec, readScrollerContentOverflows, reconcileWindows, referenceMediaKindFromUrl, registerIntroductionSurfaceResolver, removeWindowFromLayout, renderToStaticMarkup, resolveCatalogIconSvg, resolveGumballConfig, resolveGumballVisualPalette, resolveIntroductionPlacement, resolveIntroductionPoint, resolveJoinCornerPeerCrossAxes, resolveModeSplitSideInBody, resolveSliderDraftClear, resolveTranslationLabel, resolveWindowSilhouetteBorderKind, routeWindowSearchEscape, routeWindowSearchSpace, sampleBezierSegments, searchActiveInlineCompletion, searchControlledLineV1, searchInlineCompletion, semioTheme, setActiveUiTheme, shellFloorFillClass, shellFloorPaints, shellNavbarTrailingEndWidthByRoot, shortcodeCatalogKey, shortcodeEmoji, shouldActivateSearchPossibleOnConfirm, shouldRouteKeysToWindowSearch, singleTreeLeaf, sliderValuesMatch, splitIntroductionBodyParagraphs, splitWithWindow, sunPositionFromAzimuthElevation, surfaceClass, uiDataLabel, uiI18n, uiSpacingPx, useFirstDraggableElementAlias, useFlow, useIntroductionPointerIdle, useLevel, usePaneSlot, useSurface, windowChromeTitleChipClass, windowMeasuresDefaultWidthPx, windowMeasuresMinWidthPx, publishShellChromePanelBox, chromePanelSafeArea, chromePanelSafeAreaStyle, safeAreaBoxFromRect, useChromePanelSafeArea, windowSilhouetteBorderPaint, windowSilhouetteContains, windowSilhouetteOutline, windowSilhouetteOutlineViolations, windowSilhouettePath, windowTemplatePaletteTreeDragController, windowTemplatePointerDragRef }, { directory: import.meta.dir, url: import.meta.url });
 }
 
 // #endregion 🔍️Window Components

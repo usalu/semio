@@ -6208,7 +6208,8 @@ pub mod app {
     ) => {
         $(#[$meta])*
         $vis struct $Name {
-            $( $vis $field: $crate::LabelText ),+
+            $( $vis $field: $crate::LabelText ),+ ,
+            locale: $crate::Locale,
         }
 
         impl $Name {
@@ -6219,10 +6220,10 @@ pub mod app {
             // pilot never hit this because it never referenced the const cross-module). Additive:
             // only widens visibility, never narrows it, so every existing `app_labels!` caller is
             // unaffected.
-            $vis const NATIVE_EN: Self = Self { $( $field: $crate::LabelText::__from_app_labels($nen) ),+ };
-            $vis const NATIVE_DE: Self = Self { $( $field: $crate::LabelText::__from_app_labels($nde) ),+ };
-            $vis const REUSE_EN: Self = Self { $( $field: $crate::LabelText::__from_app_labels($ren) ),+ };
-            $vis const REUSE_DE: Self = Self { $( $field: $crate::LabelText::__from_app_labels($rde) ),+ };
+            $vis const NATIVE_EN: Self = Self { $( $field: $crate::LabelText::__from_app_labels($nen) ),+ , locale: $crate::Locale::En };
+            $vis const NATIVE_DE: Self = Self { $( $field: $crate::LabelText::__from_app_labels($nde) ),+ , locale: $crate::Locale::De };
+            $vis const REUSE_EN: Self = Self { $( $field: $crate::LabelText::__from_app_labels($ren) ),+ , locale: $crate::Locale::En };
+            $vis const REUSE_DE: Self = Self { $( $field: $crate::LabelText::__from_app_labels($rde) ),+ , locale: $crate::Locale::De };
 
             /// 🗣️ Every label field's own name, in declaration order.
             ///
@@ -6238,6 +6239,24 @@ pub mod app {
             /// so a guest can run the same walk a native test does.
             $vis fn for_each_label(&self, mut visit: impl FnMut(&'static str, &$crate::LabelText)) {
                 $( visit(stringify!($field), &self.$field); )+
+            }
+
+            /// 🗣️ The locale THIS resolved set was resolved for.
+            ///
+            /// A resolved label set is the only locale-bearing thing most render paths hold: window
+            /// chrome built by shared framework helpers (`world3d_sun_measures`, the show-mode and
+            /// LOD pickers) sits far below the `ViewModel` and would otherwise have to thread a
+            /// `Locale` through every `window_measures` signature in every app to say "Sonne" instead
+            /// of "Sun". Those helpers were hardcoded English for exactly that reason
+            /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
+            /// `📓️window-coverage-audit-2026-09-14.md` §4).
+            $vis fn locale(&self) -> $crate::Locale {
+                self.locale
+            }
+
+            /// 🇩🇪️ [`Self::locale`] as the `is_de` flag every chrome helper in this codebase takes.
+            $vis fn is_de(&self) -> bool {
+                matches!(self.locale, $crate::Locale::De)
             }
         }
 
@@ -20110,6 +20129,13 @@ pub mod app {
         /// revision — this lane has no op log, no undo group, no command-log row, mirroring
         /// `presence_store`/`transient_store`'s own ephemeral treatment above.
         pub(crate) pending_presence: Vec<PresenceUpdate>,
+        /// 🧹️ Node keys this body's LAST render marked, per body key. `derive_node_presence` skips an
+        /// idle node entirely, and `PresenceHub::record_own` keeps own presence until it is explicitly
+        /// overwritten — so without this ledger a node that loses the selection is never written back to
+        /// idle and every renderer keeps painting it selected for the life of the session. Each render
+        /// diffs the keys it marked against this set and pushes one cleared `PresenceUpdate` per key it
+        /// dropped, which is the ONLY thing that retires a selection on the render plane.
+        pub(crate) presence_marked_keys: std::collections::BTreeMap<String, std::collections::BTreeSet<String>>,
         /// ⏯️ The ephemeral local-only tool run ledger (contract §3.3): provisional document ops folded
         /// into an overlay the renderer reads, never touching `store` until the one-edit finalize.
         pub(crate) tool_runs: ToolRunLedger<A>,
@@ -20287,6 +20313,66 @@ pub mod app {
         });
         let live: Vec<&String> = next.selection.values().flat_map(|selection| selection.ids.iter()).collect();
         (retired, leftover_ids.iter().filter(|id| live.contains(id)).cloned().collect())
+    }
+
+    /// 🧹️ What a DOCUMENT CHANGE leaves of the just-validated interaction state, of the leftover
+    /// cover laid over it, and of the flat leftover ids — the ONE rule that makes a whole-document
+    /// replacement (loading another bundled example, importing a file, reverting) drop the ids the
+    /// new document does not have.
+    ///
+    /// Two holes, both measured on the generation3d React playground 2026-09-14 (ticket
+    /// 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️selection-prune-interact-2026-09-14.md`), let a pick
+    /// made in one example outlive it into every later one:
+    ///
+    /// 1. [`protocol::validate_state`] can only prune a domain the topology has an entry for, and
+    ///    [`VcsArtifactApp::build_full_interaction_topology`] builds entries for DECLARED domains
+    ///    only. The `vortex` mirror [`VcsArtifactApp::overlay_leftover_ids_into_vortex`] writes for
+    ///    the panels that read that name is not a declared domain of an app like generation3d, so it
+    ///    was never checked against anything and carried `shell@solid` through all eight examples.
+    ///    A mirror is a PROJECTION of the real domains, so it may only name what a declared domain
+    ///    still names after validation.
+    /// 2. The leftover cover exists to carry a pick the interaction store has not answered with yet
+    ///    ([`VcsArtifactApp::interaction_selection_snapshot`] lays it over an EMPTY store selection).
+    ///    A document change empties that store selection legitimately — so the cover papered straight
+    ///    over the prune and put the stale ids back on the very next read. A cover may not outlive
+    ///    the ids it was covering.
+    ///
+    /// A document edit that touches nothing selected leaves all three untouched, so an in-flight pick
+    /// during an unrelated edit keeps its cover.
+    pub(crate) fn interaction_after_document_change_v1(
+        validated: &protocol::InteractionState,
+        declared_domains: &[String],
+        overlay: Option<&protocol::InteractionState>,
+        leftover_ids: &[String],
+    ) -> (protocol::InteractionState, Option<protocol::InteractionState>, Vec<String>) {
+        let declared_live: Vec<String> = validated.selection.iter().filter(|(domain, _)| declared_domains.contains(domain)).flat_map(|(_, selection)| selection.ids.iter().cloned()).collect();
+        let mut pruned = validated.clone();
+        for (domain, selection) in pruned.selection.iter_mut() {
+            if declared_domains.contains(domain) {
+                continue;
+            }
+            selection.ids.retain(|id| declared_live.contains(id));
+            if selection.anchor_id.as_ref().is_some_and(|anchor| !selection.ids.contains(anchor)) {
+                selection.anchor_id = None;
+            }
+        }
+        for (domain, hover) in pruned.hover.iter_mut() {
+            if declared_domains.contains(domain) {
+                continue;
+            }
+            hover.ids.retain(|id| declared_live.contains(id));
+        }
+        let retired = overlay.map(|overlay| {
+            let mut retired = overlay.clone();
+            for selection in retired.selection.values_mut() {
+                selection.ids.retain(|id| declared_live.contains(id));
+                if selection.anchor_id.as_ref().is_some_and(|anchor| !selection.ids.contains(anchor)) {
+                    selection.anchor_id = None;
+                }
+            }
+            retired
+        });
+        (pruned, retired, leftover_ids.iter().filter(|id| declared_live.contains(id)).cloned().collect())
     }
 
     /// 🕳️ Records one selection loss on a channel the BROWSER actually shows.
@@ -20897,6 +20983,7 @@ pub mod app {
                 pending_transaction: None,
                 pending_transaction_proposal: None,
                 pending_presence: Vec::new(),
+                presence_marked_keys: std::collections::BTreeMap::new(),
                 tool_runs: ToolRunLedger::default(),
             }
         }
@@ -23612,13 +23699,22 @@ pub mod app {
         /// [`InteractionRevalidateOrigin::DocumentChange`] pass exists precisely to prune ids the document
         /// no longer has, while a [`InteractionRevalidateOrigin::Pick`] pass carries ids a user or an app
         /// just named and may never drop them silently — see [`interaction_selection_loss_v1`].
-        async fn revalidate_and_persist_interaction_state(&mut self, combined: protocol::InteractionState, meta: &ActionMeta, origin: InteractionRevalidateOrigin) -> Result<(), Fault> {
+        async fn revalidate_and_persist_interaction_state(&mut self, combined: protocol::InteractionState, meta: &ActionMeta, origin: InteractionRevalidateOrigin) -> Result<protocol::InteractionState, Fault> {
             let mut outlines: Vec<protocol::InteractionOutline> = Vec::new();
             for def in self.registry.interactions().await {
                 outlines.push(def.outline().await);
             }
             let topology = self.build_full_interaction_topology(&combined).await?;
             let validated = protocol::validate_state(&outlines, &topology, &combined).await;
+            let validated = if origin == InteractionRevalidateOrigin::DocumentChange {
+                let declared: Vec<String> = self.registry.interactions().await.map(|def| def.id.clone()).collect();
+                let (pruned, overlay, leftover_ids) = interaction_after_document_change_v1(&validated, &declared, self.interaction_leftover_selection.as_ref(), &self.interaction_leftover_ids);
+                self.interaction_leftover_selection = overlay;
+                self.interaction_leftover_ids = leftover_ids;
+                pruned
+            } else {
+                validated
+            };
             self.interaction_hover = validated.hover.clone();
             let persisted_before = self.interaction_store.snapshot().unwrap_or_default();
             let persisted = protocol::InteractionState { selection: validated.selection, hover: BTreeMap::new(), active_mode: validated.active_mode, active_granularity: validated.active_granularity };
@@ -23627,7 +23723,7 @@ pub mod app {
             let minted = persisted != persisted_before;
             if minted {
                 self.interaction_store.set_local_actor_id(Some(meta.actor.clone())).map_err(|error| error.into_fault())?;
-                self.interaction_store.dispatch(ArtifactCommand::ApplyInLane { mutations: vec![InteractionConfigMutation::set_state(persisted)], description: None, lane: HistoryLane::Interaction }).await.map_err(|error| error.into_fault())?;
+                self.interaction_store.dispatch(ArtifactCommand::ApplyInLane { mutations: vec![InteractionConfigMutation::set_state(persisted.clone())], description: None, lane: HistoryLane::Interaction }).await.map_err(|error| error.into_fault())?;
             }
             if origin == InteractionRevalidateOrigin::Pick {
                 let readback = Self::interaction_selection_witness(&self.interaction_selection_snapshot());
@@ -23635,18 +23731,23 @@ pub mod app {
                     report_interaction_selection_loss(reason, &dispatched, &requested, &readback, &topology);
                 }
             }
-            Ok(())
+            Ok(persisted)
         }
 
         /// 🕹️ Task 4: called after every artifact (document) dispatch so an id deleted elsewhere in the
         /// document drops out of selection/hover automatically. Skips the topology/validate work
         /// entirely when the app declares no interaction domains at all (the overwhelming majority of
         /// dispatches, for an app mid-migration or with no interactions yet).
+        /// 🧹️ The prune covers the leftover cache the guest lays over an empty store selection too
+        /// ([`interaction_after_document_change_v1`]), so a whole-document replacement cannot leave the
+        /// replaced document's pick standing in `interaction.selection(..)` — which is what every app
+        /// command that reads a selection (`deleteSelection`, the transform verbs) would then act on.
         async fn revalidate_interaction_state_after_document_change(&mut self, meta: &ActionMeta) -> Result<(), Fault> {
             if self.registry.interactions().await.next().is_none() {
                 return Ok(());
             }
-            self.revalidate_and_persist_interaction_state(self.interaction_state().await, meta, InteractionRevalidateOrigin::DocumentChange).await
+            self.revalidate_and_persist_interaction_state(self.interaction_state().await, meta, InteractionRevalidateOrigin::DocumentChange).await?;
+            Ok(())
         }
 
         /// 🕹️ Applies an emit's [`InteractionWrite`]s through the SAME single-writer machine
@@ -23678,7 +23779,8 @@ pub mod app {
             let (overlay, leftover_ids) = leftover_after_app_selection_write_v1(self.interaction_leftover_selection.as_ref(), &self.interaction_leftover_ids, &state, &domains);
             self.interaction_leftover_selection = overlay;
             self.interaction_leftover_ids = leftover_ids;
-            self.revalidate_and_persist_interaction_state(state, meta, InteractionRevalidateOrigin::Pick).await
+            self.revalidate_and_persist_interaction_state(state, meta, InteractionRevalidateOrigin::Pick).await?;
+            Ok(())
         }
 
         /// 🕹️ The actual body of `dispatch_action`'s interception for the six framework interaction verbs
@@ -23918,6 +24020,7 @@ pub mod app {
                 domain: Option<UiText>,
             }
             let mut stack: UiFixedList<Frame<'_>, { semio_framework_ui_runtime::COMPONENT_TREE_PRODUCER_DEPTH }> = UiFixedList::default();
+            let mut marked: std::collections::BTreeSet<String> = std::collections::BTreeSet::new();
             stack.try_push(Frame { node: &tree.root, next: 0, entered: false, domain: None }).map_err(|_| ui_assembly_error("interaction-walk.depth"))?;
             while let Some(mut frame) = stack.pop() {
                 if !frame.entered {
@@ -23931,7 +24034,9 @@ pub mod app {
                         }
                     }
                     if let Some(domain_id) = frame.domain.as_ref() {
-                        self.derive_node_presence(frame.node, state, &interaction, domain_id.as_str(), body_key, own_color).await?;
+                        if self.derive_node_presence(frame.node, state, &interaction, domain_id.as_str(), body_key, own_color).await? {
+                            marked.insert(frame.node.key.to_string());
+                        }
                     }
                     frame.entered = true;
                 }
@@ -23941,21 +24046,42 @@ pub mod app {
                 stack.try_push(frame).map_err(|_| ui_assembly_error("interaction-walk.depth"))?;
                 stack.try_push(Frame { node: child, next: 0, entered: false, domain: child_domain }).map_err(|_| ui_assembly_error("interaction-walk.depth"))?;
             }
+            self.retire_dropped_presence(body_key, &marked)?;
+            Ok(())
+        }
+
+        /// 🧹️ Pushes one CLEARED `PresenceUpdate` per node key this body marked last render and did not
+        /// mark this render, then records `marked` as the new set. `derive_node_presence` reports only
+        /// nodes with something to say and `PresenceHub::record_own` holds own presence until it is
+        /// overwritten, so this diff is the only write that ever says "this row is no longer selected" —
+        /// without it a deselect is invisible and every renderer keeps the stale mark.
+        fn retire_dropped_presence(&mut self, body_key: &str, marked: &std::collections::BTreeSet<String>) -> UiAssemblyResult<()> {
+            let previous = self.presence_marked_keys.get(body_key).cloned().unwrap_or_default();
+            let surface = SurfaceId::try_from(body_key).map_err(|_| ui_assembly_error("presence.surface"))?;
+            for key in previous.difference(marked) {
+                self.pending_presence.push(PresenceUpdate { surface: surface.clone(), node_key: key.clone(), own: OwnPresence::default(), peers: Vec::new(), ttl_ms: PRESENCE_TTL_MS });
+            }
+            if marked.is_empty() {
+                self.presence_marked_keys.remove(body_key);
+            } else {
+                self.presence_marked_keys.insert(body_key.to_string(), marked.clone());
+            }
             Ok(())
         }
 
         /// 👥️ M2: derives `node`'s `PresenceUpdate` (if it has any own/peer selection or hover on
-        /// `domain_id`) and pushes it onto `self.pending_presence`. A node with nothing to report is
-        /// skipped entirely — an idle node costs no outbox entry, matching `PresenceHub::flush`'s own
-        /// "only dirty keys" contract downstream.
-        async fn derive_node_presence(&mut self, node: &TreeNode, state: &protocol::InteractionState, interaction: &InteractionView<'_>, domain_id: &str, body_key: &str, own_color: Option<u8>) -> UiAssemblyResult<()> {
+        /// `domain_id`) and pushes it onto `self.pending_presence`, answering whether it marked the node.
+        /// A node with nothing to report is skipped entirely — an idle node costs no outbox entry,
+        /// matching `PresenceHub::flush`'s own "only dirty keys" contract downstream; the `false` answer
+        /// is what `retire_dropped_presence` diffs against to retire a mark this render dropped.
+        async fn derive_node_presence(&mut self, node: &TreeNode, state: &protocol::InteractionState, interaction: &InteractionView<'_>, domain_id: &str, body_key: &str, own_color: Option<u8>) -> UiAssemblyResult<bool> {
             let key = node.key.as_str();
             let own_selected = state.selection.get(domain_id).is_some_and(|selection| selection.ids.iter().any(|id| id == key));
             let own_hovered = self.interaction_hover.get(domain_id).is_some_and(|hover| hover.ids.iter().any(|id| id == key));
             let selecting = interaction.peers_selecting(domain_id, key);
             let hovering = interaction.peers_hovering(domain_id, key);
             if !own_selected && !own_hovered && selecting.is_empty() && hovering.is_empty() {
-                return Ok(());
+                return Ok(false);
             }
             let mut marks: UiFixedList<ui::PeerMark> = UiFixedList::default();
             for mark in &selecting {
@@ -23985,7 +24111,7 @@ pub mod app {
                 peers: marks.into_iter().collect(),
                 ttl_ms: PRESENCE_TTL_MS,
             });
-            Ok(())
+            Ok(true)
         }
         //#endregion 🔖️InteractionDispatch
 
@@ -28367,7 +28493,8 @@ pub mod app {
             }
             if body_key == FRAMEWORK_TOOL_RUN_BODY_KEY {
                 let (registry, locale) = (&self.registry, view_state.locale);
-                let root = self.tool_runs.panel(&registry.controller_id, locale, |tool_id| registry.tool_run(tool_id).map(|(label, _)| label.resolve(Terminology::Native, locale).to_string())).map_err(|error| plugin_sdk_fault(error.to_string()))?;
+                let ready_tool = [view_state.active_utility_id.as_deref(), view_state.active_tool_id.as_deref()].into_iter().flatten().find(|tool_id| registry.tool_run(tool_id).is_some());
+                let root = self.tool_runs.panel(&registry.controller_id, locale, ready_tool, |tool_id| registry.tool_run(tool_id).map(|(label, _)| label.resolve(Terminology::Native, locale).to_string())).map_err(|error| plugin_sdk_fault(error.to_string()))?;
                 return Ok(built_to_component_tree(root));
             }
             // 🕹️ Task 5: materialized once, before either branch, then used to stamp EVERY
@@ -34953,7 +35080,22 @@ pub mod plugin_runtime {
         let mut frames: Vec<protocol::AppFrame> = Vec::new();
         let mut effect_bytes: Vec<Vec<u8>> = Vec::new();
         let mut event_bytes: Vec<Vec<u8>> = Vec::new();
-        let meta = ActionMeta { actor: instance_actor(runtime, instance_id).await, instance_id, view_state: None };
+        // 🪟️ A continuation carries the instance's LAST HOST VIEW, exactly like `pending_effects`
+        // does. A response action is a window-addressed route whenever the request it answers was one
+        // — `reactor::extension_response_args` echoes the request's own `windowId`/`windowKindId` back
+        // onto it — and `ArtifactApp::retained_window_transient_target` validates that address against
+        // the trusted roster. Dispatching it with no view made every `flowEvalResolve` fault
+        // `targeted window transient capture requires an exact ViewModel roster`, so no extension
+        // answer ever folded back and the preview never converged
+        // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+        let view_state = with_instances_mut(runtime, |list| {
+            let instance = find_instance(list, instance_id)?;
+            Ok(instance.surface_contexts.view().cloned())
+        })
+        .await
+        .ok()
+        .flatten();
+        let meta = ActionMeta { actor: instance_actor(runtime, instance_id).await, instance_id, view_state };
         let plugin_id = runtime.plugin.borrow().as_ref().map(|program| program.manifest.plugin_id.clone()).unwrap_or_default();
         let arguments = match args {
             DslValue::Object(entries) => entries.iter().cloned().collect(),
@@ -36713,16 +36855,16 @@ pub mod world3d_host {
      * Open by default like every sibling group (grid/LOD/select): `WindowMeasureTreeGroup` does not render a
      * collapsed group's children at all, so a closed-by-default Sun group put `<prefix>-measure-sun-enabled`
      * outside the DOM entirely and the toggle read as missing rather than merely folded. */
-    pub fn world3d_sun_measures(id_prefix: &str, sun: &WorldSunConfig, action: impl Fn(&str, Option<Value>) -> ActionDescriptor) -> WindowMeasure {
+    pub fn world3d_sun_measures(id_prefix: &str, sun: &WorldSunConfig, is_de: bool, action: impl Fn(&str, Option<Value>) -> ActionDescriptor) -> WindowMeasure {
         measure_group_with_open(
             format!("{id_prefix}-measure-sun"),
-            "Sun",
+            if is_de { "Sonne" } else { "Sun" },
             Some(true),
             vec![
-                WindowMeasure::Toggle { id: format!("{id_prefix}-measure-sun-enabled"), icon_id: "sun".into(), label: Some("Enabled".into()), pressed: sun.enabled, text: None, on_change: action("toggleSun", None) },
+                WindowMeasure::Toggle { id: format!("{id_prefix}-measure-sun-enabled"), icon_id: "sun".into(), label: Some(if is_de { "Aktiviert" } else { "Enabled" }.into()), pressed: sun.enabled, text: None, on_change: action("toggleSun", None) },
                 WindowMeasure::Slider {
                     id: format!("{id_prefix}-measure-sun-azimuth"),
-                    label: Some("Azimuth".into()),
+                    label: Some(if is_de { "Azimut" } else { "Azimuth" }.into()),
                     value: sun.azimuth,
                     min: 0.0,
                     max: 360.0,
@@ -36735,7 +36877,7 @@ pub mod world3d_host {
                 },
                 WindowMeasure::Slider {
                     id: format!("{id_prefix}-measure-sun-elevation"),
-                    label: Some("Elevation".into()),
+                    label: Some(if is_de { "Höhe" } else { "Elevation" }.into()),
                     value: sun.elevation,
                     min: 0.0,
                     max: 90.0,
@@ -36748,7 +36890,7 @@ pub mod world3d_host {
                 },
                 WindowMeasure::Slider {
                     id: format!("{id_prefix}-measure-sun-intensity"),
-                    label: Some("Intensity".into()),
+                    label: Some(if is_de { "Intensität" } else { "Intensity" }.into()),
                     value: sun.intensity,
                     min: 0.0,
                     max: 4.0,

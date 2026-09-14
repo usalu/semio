@@ -83,12 +83,12 @@ function canvasElement(): HTMLCanvasElement {
  * a page error. */
 export const WGPU_INTROSPECTION_GLOBAL = "semioWgpuIntrospection";
 
-type WgpuIntrospection = { readonly dumpStructure: (windowId?: string) => Promise<string>; readonly dumpFrameStats: (windowId?: string) => Promise<string>; readonly dumpAccessibility: (windowId?: string) => Promise<string> };
+type WgpuIntrospection = { readonly dumpStructure: (windowId?: string) => Promise<string>; readonly dumpFrameStats: (windowId?: string) => Promise<string>; readonly dumpAccessibility: (windowId?: string) => Promise<string>; readonly dumpMeshStats: (windowId?: string) => Promise<string> };
 
 function attachIntrospectionBindings(transport: BrowserFrameTransport): () => void {
   const probe = (kind: BrowserFrameIntrospectionProbe) => async (windowId?: string) => (await transport.introspect(kind, windowId)) ?? "";
   const host = window as unknown as { semioWgpuIntrospection?: WgpuIntrospection };
-  host.semioWgpuIntrospection = { dumpStructure: probe("structure"), dumpFrameStats: probe("frame-stats"), dumpAccessibility: probe("accessibility") };
+  host.semioWgpuIntrospection = { dumpStructure: probe("structure"), dumpFrameStats: probe("frame-stats"), dumpAccessibility: probe("accessibility"), dumpMeshStats: probe("mesh-stats") };
   return () => delete host.semioWgpuIntrospection;
 }
 

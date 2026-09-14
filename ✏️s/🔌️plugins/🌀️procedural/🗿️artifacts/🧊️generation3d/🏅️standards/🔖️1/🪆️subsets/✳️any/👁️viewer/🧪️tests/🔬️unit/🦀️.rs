@@ -370,7 +370,7 @@ async fn every_emitted_action_is_declared_on_the_preview_window_kind() {
     drop(app);
     // 🎛️ `ArtifactViewer::window_measures` is an associated function over borrowed views, not a
     // `PluginApp` method, so the chrome half of the law reads the SAME builder the trait impl calls.
-    emitted.extend(crate::measure_action_ids(&preview::preview_window_measures(&Generation3dViewConfig::default(), generation3d_view_action)));
+    emitted.extend(crate::measure_action_ids(&preview::preview_window_measures(&Generation3dViewConfig::default(), false, generation3d_view_action)));
     // 📷️ `setCamera` is dispatched by the world host's own viewport gesture (`World3dHost/🟦️.tsx`), not by
     // a measure or a `UiNode` binding, so the render/measure walk can never observe it — it is asserted
     // against the declaration directly instead of being dropped from the law.

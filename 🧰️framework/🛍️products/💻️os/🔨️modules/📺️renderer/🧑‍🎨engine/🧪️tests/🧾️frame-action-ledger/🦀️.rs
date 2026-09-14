@@ -75,7 +75,7 @@ impl Replay {
                     return;
                 }
                 let actions = std::mem::take(self.queue());
-                self.deferred = Some(FrameDeferredCursor::new(actions, false, false, false, 1, semio_framework_job::root_cancel_token()));
+                self.deferred = Some(FrameDeferredCursor::new(actions, false, false, false, false, 1, semio_framework_job::root_cancel_token()));
             }
             "dispatch" => {
                 let expected = step["action"].as_str();

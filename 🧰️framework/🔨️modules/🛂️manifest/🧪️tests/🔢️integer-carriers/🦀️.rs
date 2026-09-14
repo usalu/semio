@@ -71,6 +71,8 @@ async fn the_guest_decodes_every_integer_field_exactly() {
         }
         assert!(matches!(cursor, DslValue::Number(Number::UInt(_))), "{path:?} must cross as an exact integer carrier, found {cursor:?}");
     }
+    let ingress = <ViewModel as dsl::FromValue>::from_value(value.clone()).expect("actor ingress decodes the carried context");
+    assert_eq!(ingress.tool_run_trace_cursor_by_window_id.get("procedural-preview"), Some(&ToolRunTraceCursor { run: 1, generation: 0, page: 0 }), "actor ingress (`decode_wire_serialized`) keeps every echoed cursor");
     let view: ViewModel = dsl::from_dsl_value(value).expect("the carried context decodes in the guest");
     assert_eq!(view.tool_run_trace_cursor_by_window_id.get("procedural-preview"), Some(&ToolRunTraceCursor { run: 1, generation: 0, page: 0 }));
 }

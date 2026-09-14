@@ -9051,6 +9051,12 @@ mod async_boundary_tests;
 mod frame_action_ledger_tests;
 //#endregion 🔖️FrameActionLedgerTests
 
+//#region 🫀️SettlePumpTests
+#[cfg(test)]
+#[path = "../../../🧪️tests/🫀️settle-pump/🦀️.rs"]
+mod settle_pump_tests;
+//#endregion 🫀️SettlePumpTests
+
 //#region 🔖️WheelApplicationPointTests
 #[cfg(test)]
 #[path = "../../../🧪️tests/🖱️wheel-application-point/🦀️.rs"]
@@ -9162,6 +9168,7 @@ struct FrameDeferredCursor {
     pump_sync: bool,
     flush_tutorial: bool,
     shell_maintenance: bool,
+    settle: bool,
     phase: u8,
     generation: u64,
     cancel: semio_framework_async::CancelToken,
@@ -9173,11 +9180,15 @@ enum FrameDeferredWork {
     PumpSync,
     Action(ActionDescriptor),
     FlushTutorial,
+    /// 🫀️ ONE step of the shell's settle lane — the runtime's half of the pump. It comes LAST in a
+    /// frame's deferred order because an input action the same frame carries is what the user is
+    /// waiting on, and a settle step may spend a guest crossing.
+    Settle,
 }
 
 impl FrameDeferredCursor {
-    fn new(actions: FrameActionOwners, pump_sync: bool, flush_tutorial: bool, shell_maintenance: bool, generation: u64, cancel: semio_framework_async::CancelToken) -> Self {
-        Self { actions, pump_sync, flush_tutorial, shell_maintenance, phase: 0, generation, cancel, closing: false }
+    fn new(actions: FrameActionOwners, pump_sync: bool, flush_tutorial: bool, shell_maintenance: bool, settle: bool, generation: u64, cancel: semio_framework_async::CancelToken) -> Self {
+        Self { actions, pump_sync, flush_tutorial, shell_maintenance, settle, phase: 0, generation, cancel, closing: false }
     }
 
     fn take_next(&mut self) -> Option<FrameDeferredWork> {
@@ -9202,11 +9213,22 @@ impl FrameDeferredCursor {
                 return Some(FrameDeferredWork::FlushTutorial);
             }
         }
+        if self.phase == 3 {
+            self.phase = 4;
+            if self.settle {
+                return Some(FrameDeferredWork::Settle);
+            }
+        }
         None
     }
 
     fn terminal_is_empty(&self) -> bool {
-        !self.closing && self.actions.is_empty() && (self.phase > 0 || !self.shell_maintenance) && (self.phase > 1 || !self.pump_sync) && (self.phase > 2 || !self.flush_tutorial)
+        !self.closing
+            && self.actions.is_empty()
+            && (self.phase > 0 || !self.shell_maintenance)
+            && (self.phase > 1 || !self.pump_sync)
+            && (self.phase > 2 || !self.flush_tutorial)
+            && (self.phase > 3 || !self.settle)
     }
 
     fn close_step(&mut self) -> bool {
@@ -9225,7 +9247,11 @@ impl FrameDeferredCursor {
             self.flush_tutorial = false;
             return false;
         }
-        self.phase = 3;
+        if self.settle {
+            self.settle = false;
+            return false;
+        }
+        self.phase = 4;
         self.closing = false;
         true
     }
@@ -9632,6 +9658,9 @@ impl RuntimeApply {
                     }
                 }
                 FrameDeferredWork::FlushTutorial => interaction.shell.tutorial_flush_pending_document_ops().await,
+                FrameDeferredWork::Settle => {
+                    interaction.shell.settle_pump_step().await;
+                }
             }
             (interaction, cursor_value)
         });
@@ -10482,6 +10511,23 @@ impl RuntimeMailbox {
             .unwrap_or(false)
     }
 
+    /// 🫀️ Whether the shell's settle lane still owes a step — the per-frame predicate that keeps an
+    /// event-driven shell ticking through a convergence nobody is touching.
+    ///
+    /// ⚖️ This is what makes the settle pump real on this target. `settle_boot` now ARMS the lane and
+    /// returns instead of driving the chain to a fixed point before the first paint, and every input
+    /// gesture only declares; without this term the browser shell would settle the instant the last
+    /// apply drained, and a booted example would converge only for a user who kept moving the mouse —
+    /// which is exactly the hole `refresh_ui`'s own measurements named
+    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-progress-visibility-2026-09-14.md` §8.1).
+    ///
+    /// A checked-out interaction answers `false` on purpose: its owner is a live apply, and
+    /// [`Self::has_pending_applies`] already owes the frame.
+    #[cfg(target_arch = "wasm32")]
+    fn has_pending_settle(&self) -> bool {
+        self.try_lock().ok().and_then(|runtime| runtime.interaction.as_ref().map(|interaction| interaction.shell.settle_pump_pending())).unwrap_or(false)
+    }
+
     #[cfg(target_arch = "wasm32")]
     fn take_text_fault(&self) -> Option<String> {
         self.try_lock().ok()?.interaction.as_mut()?.text_fault.take()
@@ -10822,8 +10868,21 @@ struct AppRuntime {
     native_reload_pending: bool,
 }
 
-/// 🖱️ The wheel a frame has yet to apply, AT THE POINT the wheel events carried — never at wherever
-/// the pointer has since wandered.
+/// 🖱️ One pending wheel application: a delta and the point the notches that made it were scrolled at.
+#[derive(Clone, Copy, Default)]
+struct AppWheelNotch {
+    delta: f32,
+    x: f32,
+    y: f32,
+}
+
+/// 🎟️ How many distinct wheel POINTS one frame may owe before the stream coalesces into its newest
+/// application. Fixed credits, like every other per-frame queue in this transaction: a browser can
+/// deliver an unbounded wheel stream and a frame may not grow with it.
+const WHEEL_PENDING_APPLICATIONS: usize = 8;
+
+/// 🖱️ The wheel a frame has yet to apply, AT THE POINTS the wheel events carried — never at wherever
+/// the pointer has since wandered, and never merged across points.
 ///
 /// 🩸️ `DispatchEvent::Scroll { x, y, delta_x, delta_y }` carries its own position all the way from
 /// the browser wire (`🎮️input-wire`) and from winit, and `dispatch_normalized_event` dropped it
@@ -10835,27 +10894,60 @@ struct AppRuntime {
 /// false)]`, so the World3d authority saw `wheel=0` on every one of its intents and the camera never
 /// moved (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
 /// `📓️wgpu-end-to-end-verification-2026-09-14.md` §5.1).
+///
+/// 🩸️ Carrying only the NEWEST point left exactly the same hole one notch wide: a stream that
+/// travels — the battery's own `h7_wheel_zoom` scrolls over the preview centre and nudges the
+/// pointer 1 px into the corner between notches, and every browser wheel stream travels when the
+/// user moves while scrolling — still collapsed into ONE application, in the corner. Measured on
+/// 6118 (2026-09-14 15:30 battery, `world3d-editor`): `Scroll { x: 1208, y: 461 }` followed by
+/// `{ x: 3, y: 3 }`, `{ x: 4, y: 4 }`, `{ x: 5, y: 5 }`, `{ x: 6, y: 6 }` published `wheel=0` on all
+/// 337 world3d intents and left the camera at `[4,-4,3]->[0,0,0]/45deg`. A notch over the geometry
+/// and a notch in the corner are two gestures, so they are two applications.
 #[derive(Clone, Copy, Default)]
 pub(crate) struct AppWheel {
-    delta: f32,
-    x: f32,
-    y: f32,
+    notches: [AppWheelNotch; WHEEL_PENDING_APPLICATIONS],
+    len: usize,
 }
 
 impl AppWheel {
-    /// 🖱️ Coalesces one wheel event into the pending wheel; the newest event's point is the point the
-    /// whole coalesced delta is applied at, which is what a browser's own wheel stream means.
+    /// 🖱️ Coalesces one wheel event into the pending applications: into the newest one while the
+    /// point has not moved (a stationary burst is one zoom), otherwise as a new application at its
+    /// own point. A stream longer than the credits merges into its newest application.
     pub(crate) fn accumulate(&mut self, x: f32, y: f32, delta_y: f32) {
-        self.delta += delta_y;
-        self.x = x;
-        self.y = y;
+        let saturated = self.len >= WHEEL_PENDING_APPLICATIONS;
+        if let Some(newest) = self.len.checked_sub(1).and_then(|index| self.notches.get_mut(index)) {
+            if saturated || (newest.x == x && newest.y == y) {
+                newest.delta += delta_y;
+                newest.x = x;
+                newest.y = y;
+                return;
+            }
+        }
+        if let Some(slot) = self.notches.get_mut(self.len) {
+            *slot = AppWheelNotch { delta: delta_y, x, y };
+            self.len += 1;
+        }
     }
 
-    /// 🖱️ Takes the pending wheel and its point, leaving none. `None` when nothing is pending.
+    /// 🖱️ Takes the OLDEST pending application and its point, leaving the rest. Applications whose
+    /// notches cancelled out are dropped on the way — a zero delta is not a wheel. `None` when
+    /// nothing is pending.
     pub(crate) fn take(&mut self) -> Option<(f32, f32, f32)> {
-        let pending = (self.delta, self.x, self.y);
-        *self = Self::default();
-        (pending.0.abs() > 0.0).then_some(pending)
+        while self.len > 0 {
+            let oldest = self.notches[0];
+            self.notches.copy_within(1..self.len, 0);
+            self.len -= 1;
+            if oldest.delta.abs() > 0.0 {
+                return Some((oldest.delta, oldest.x, oldest.y));
+            }
+        }
+        None
+    }
+
+    /// 🖱️ Whether another application is still owed, so the frame's wheel ladder runs again for it
+    /// instead of leaving a notch for the next input event that happens to arrive.
+    pub(crate) fn pending(&self) -> bool {
+        self.notches.iter().take(self.len).any(|notch| notch.delta.abs() > 0.0)
     }
 }
 
@@ -11241,6 +11333,7 @@ struct FrameFinishCursor {
     pump_sync: bool,
     flush_tutorial: bool,
     shell_maintenance: bool,
+    settle: bool,
     glyph_started: bool,
     glyph_pages: Option<ui_wgpu::wgpu::PreparedAtlasPages>,
 }
@@ -11258,7 +11351,7 @@ enum FrameFinishPhase {
 
 impl Default for FrameFinishCursor {
     fn default() -> Self {
-        Self { phase: FrameFinishPhase::Inputs, cursor: SemioCursor::Default, pump_sync: false, flush_tutorial: false, shell_maintenance: false, glyph_started: false, glyph_pages: None }
+        Self { phase: FrameFinishPhase::Inputs, cursor: SemioCursor::Default, pump_sync: false, flush_tutorial: false, shell_maintenance: false, settle: false, glyph_started: false, glyph_pages: None }
     }
 }
 
@@ -11820,11 +11913,23 @@ impl FrameTransaction {
                     return AppFrameTransactionStep::Pending;
                 };
                 let ctrl = app.modifiers.ctrl;
+                let owes_another_application = app.interaction.as_ref().is_some_and(|interaction| interaction.wheel.pending());
                 let Some(interaction) = app.interaction.as_mut() else { return AppFrameTransactionStep::Pending };
                 interaction.shell.handle_pointer_wheel(x, y, delta, &interaction.input);
-                if !ShellState::wheel_propagates_to_scene_surface(interaction.input.hit_at(x, y)) {
-                    self.stage = FrameTransactionStage::ReconcileTree;
-                    self.phase = AppFrameTransactionPhase::RasterUploads;
+                let gate = interaction.input.hit_at(x, y);
+                let propagates = ShellState::wheel_propagates_to_scene_surface(gate);
+                log_debug(&format!(
+                    "[DEBUG] wheel apply x={x:.1} y={y:.1} delta={delta} hit={:?} control={:?} propagates={propagates} owed={owes_another_application}",
+                    gate.map(|hit| hit.kind),
+                    gate.and_then(|hit| hit.control_id.as_deref())
+                ));
+                if !propagates {
+                    self.phase = if owes_another_application {
+                        AppFrameTransactionPhase::WheelStart
+                    } else {
+                        self.stage = FrameTransactionStage::ReconcileTree;
+                        AppFrameTransactionPhase::RasterUploads
+                    };
                     return AppFrameTransactionStep::Pending;
                 }
                 let surface_fault =
@@ -11944,11 +12049,16 @@ impl FrameTransaction {
                     self.phase = AppFrameTransactionPhase::Terminal;
                     return AppFrameTransactionStep::Fault;
                 };
+                let owes_another_application = app.interaction.as_ref().is_some_and(|interaction| interaction.wheel.pending());
                 let Some(interaction) = app.interaction.as_mut() else { return AppFrameTransactionStep::Pending };
                 let Some(surface_id) = interaction.shell.board2d_states.id_at(wheel.index).map(str::to_owned) else {
                     self.wheel = None;
-                    self.stage = FrameTransactionStage::ReconcileTree;
-                    self.phase = AppFrameTransactionPhase::RasterUploads;
+                    self.phase = if owes_another_application {
+                        AppFrameTransactionPhase::WheelStart
+                    } else {
+                        self.stage = FrameTransactionStage::ReconcileTree;
+                        AppFrameTransactionPhase::RasterUploads
+                    };
                     return AppFrameTransactionStep::Pending;
                 };
                 wheel.index += 1;
@@ -13589,6 +13699,11 @@ impl AppRuntime {
             FrameFinishPhase::Deferred => {
                 cursor.flush_tutorial = !self.shell.tutorial_pending_document_ops.is_empty();
                 cursor.shell_maintenance = self.shell.chrome_maintenance_pending();
+                // 🫀️ The settle lane is re-read every frame, never latched across one: the shell's own
+                // predicate answers over armed work, an owed refresh scope and whichever producers
+                // report `computing`, so a frame owes a settle step exactly while there is a chain to
+                // converge (`🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs`'s `ShellSettlePump`).
+                cursor.settle = self.shell.settle_pump_pending();
                 #[cfg(not(target_arch = "wasm32"))]
                 {
                     cursor.pump_sync = app_now_ms() - self.last_sync_pump_ms >= 100.0;
@@ -13666,7 +13781,7 @@ impl AppRuntime {
                 cursor.phase = FrameFinishPhase::Complete;
             }
             FrameFinishPhase::Complete => {
-                let has_deferred = cursor.pump_sync || !self.frame_actions.is_empty() || cursor.flush_tutorial || cursor.shell_maintenance;
+                let has_deferred = cursor.pump_sync || !self.frame_actions.is_empty() || cursor.flush_tutorial || cursor.shell_maintenance || cursor.settle;
                 // 🧾️ A refusal here COSTS NOTHING any more: the ledger is the runtime's, so it simply
                 // stays put and the next frame that completes installs it.
                 if has_deferred && self.pending_frame_deferred.is_some() {
@@ -13690,7 +13805,7 @@ impl AppRuntime {
                     if !deferred_actions.is_empty() {
                         log_debug("[DEBUG] frame deferred install carries an action");
                     }
-                    self.pending_frame_deferred = Some(FrameDeferredCursor::new(deferred_actions, cursor.pump_sync, cursor.flush_tutorial, cursor.shell_maintenance, input.preview_generation, cancel));
+                    self.pending_frame_deferred = Some(FrameDeferredCursor::new(deferred_actions, cursor.pump_sync, cursor.flush_tutorial, cursor.shell_maintenance, cursor.settle, input.preview_generation, cancel));
                 }
                 return FrameFinishBoundaryStep::Complete(AppFrameBuild {
                     generation: semio_framework_trace::Generation(input.preview_generation),
@@ -13956,9 +14071,6 @@ impl AppInteractionState {
         self.modifiers = modifiers.clone();
         self.shell.handle_pointer_move(x, y, down, &mut self.input, &self.theme);
         log_debug(&format!("[DEBUG] os_host pointer hit x={x} y={y} targets={} staged={} gen={} hit={:?}", self.input.hits().len(), self.input.staged_hits().len(), self.input.hit_generation(), self.input.hit_at(x, y).map(|target| (target.kind, target.control_id.clone()))));
-        if let Err(err) = self.shell.flush_deferred_actions().await {
-            log_debug(&format!("deferred actions: {err}"));
-        }
         for state in self.shell.world3d_states.values_mut() {
             if !state.bounds.contains(x, y) {
                 continue;

@@ -1,0 +1,308 @@
+{
+  "title": "the wgpu host's runtime-owned settle pump",
+  "why": "A guest chain used to converge INSIDE the call that started it. `settle_boot` drove `flush_deferred_actions` to a fixed point before the first frame, so an `?example=` boot spent its whole evaluation with nothing painted — `boot_shell leave 7 226 ms`, first chrome at 9 212 ms, against 1 880 ms / 4 101 ms for the same build with no example (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-progress-visibility-2026-09-14.md` §8.1). Post-boot the same chain was driven only from input handlers, so a booted example would never converge for a user who does not move the mouse. And a window body's render is ALSO the guest crossing that funds the guest's own background solve, which is why narrowing `refresh_ui` on `UiDirtyScope` alone froze 14 of 16 battery examples mid-solve (`📓️wgpu-dirty-scope-refresh-2026-09-14.md` §4). One lane owns all three: the shell DECLARES that a chain is live, the frame loop takes exactly one step per frame, and a step that finds nothing armed spends its crossing on the producers that are still working.",
+  "authority": "The shell never converges a chain; it only declares one. `settlePumpOwes` is the whole predicate a frame asks, over five independent terms — a synchronous flush owns the chain (the pump stands aside), there is a session, there is armed work, there is an owed refresh scope, the lane was armed, a producer reports `computing`. One step per frame, armed work before any crossing, and a producer whose own progress witness has been frozen for `stallSteps` steps is driven to a terminal state through the `cancelAction` that producer itself published — never through a verb the shell knows. An INPUT GESTURE is bound by the same authority: it dispatches, declares and returns, so the renderer's single interaction state comes home within one dispatch and the next key or click is never queued behind a convergence.",
+  "consumers": [
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🫀️settle-pump/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🫀️settle-pump/🟦️.ts"
+  ],
+  "stallSteps": 240,
+  "terminalDrives": 3,
+  "operations": {
+    "owes": "One frame asking the shell whether it owes a settle step. `settling` is a synchronous flush holding the chain; `session` is an open app; `armedWork` is a deferred action, a parked extension invocation, a parked file-open or an owed shell URI; `scope` is the union owed to the next refresh pass; `armed` is the lane's own declaration (`owe_settle`); `computing` is any live producer whose published status says it is working.",
+    "watch": "One live producer, step by step. Each entry is the `World3dScene.statusJson` that producer published on that step, read by the SAME parser the status pill reads. The verdict is `fund` (spend this step's crossing on that producer's window body), `terminal` (drive the run to a terminal state through the action the producer itself published) or `stand` (the witness is frozen and there is nothing left to try, so the pump stops paying for crossings until it moves again).",
+    "frame": "One frame's deferred cursor, built from the flags the frame-finish boundary computed, drained one work item at a time exactly as the runtime drains it.",
+    "gesture": "One input entry point, read as source. `owns` is the function whose body the law reads; `forbids` is the symbol that body may not name, because naming it converges the chain inside the turn that holds the renderer's single interaction state; `declares` is the arming call the body must make instead. A gesture is measured on the SOURCE rather than on a live shell because the defect is structural: any body that can reach the synchronous door can starve every later input, whatever that particular gesture happened to arm."
+  },
+  "owesRows": [
+    {
+      "id": "a-boot-that-armed-the-lane-owes-a-step-before-anything-else-exists",
+      "why": "`settle_boot` arms and returns. Nothing is deferred yet and no producer is working, so ONLY the arm can keep the chain alive — this is the row that makes boot-before-convergence possible at all.",
+      "settling": false,
+      "session": true,
+      "armedWork": false,
+      "scope": "none",
+      "armed": true,
+      "computing": false,
+      "expect": true
+    },
+    {
+      "id": "a-live-producer-owes-a-step-even-with-nothing-armed",
+      "why": "The crossing half. A guest off computing has armed nothing for the host to drain, and it is exactly then that it needs the host's turn.",
+      "settling": false,
+      "session": true,
+      "armedWork": false,
+      "scope": "none",
+      "armed": false,
+      "computing": true,
+      "expect": true
+    },
+    {
+      "id": "armed-work-owes-a-step",
+      "why": "A deferred action, a parked extension answer or a parked file-open is a chain nobody else will drive now that boot does not.",
+      "settling": false,
+      "session": true,
+      "armedWork": true,
+      "scope": "none",
+      "armed": false,
+      "computing": false,
+      "expect": true
+    },
+    {
+      "id": "an-owed-refresh-scope-owes-a-step",
+      "why": "A producer declared dirt and no pass has taken it. Without this term a narrowed shell would keep a stale body forever.",
+      "settling": false,
+      "session": true,
+      "armedWork": false,
+      "scope": "partial",
+      "armed": false,
+      "computing": false,
+      "expect": true
+    },
+    {
+      "id": "a-synchronous-flush-owns-the-chain-and-the-pump-stands-aside",
+      "why": "`flush_deferred_actions` is the synchronous door an embedding host may still take. Two drivers crossing into the same guest at once is the livelock this lane exists to avoid — and no input path takes that door any more (`gestureRows`).",
+      "settling": true,
+      "session": true,
+      "armedWork": true,
+      "scope": "full",
+      "armed": true,
+      "computing": true,
+      "expect": false
+    },
+    {
+      "id": "no-session-owes-nothing",
+      "why": "A shell between sessions has no guest to cross into.",
+      "settling": false,
+      "session": false,
+      "armedWork": true,
+      "scope": "full",
+      "armed": true,
+      "computing": true,
+      "expect": false
+    },
+    {
+      "id": "a-settled-shell-owes-nothing",
+      "why": "The non-vacuity guard: a pump that always says yes would burn one guest crossing per frame forever. Nothing armed, nothing owed, nothing computing must be silence.",
+      "settling": false,
+      "session": true,
+      "armedWork": false,
+      "scope": "none",
+      "armed": false,
+      "computing": false,
+      "expect": false
+    }
+  ],
+  "watchRows": [
+    {
+      "id": "a-producer-that-is-advancing-is-funded-every-step-and-never-driven",
+      "why": "The normal case. Every step moves the witness, so the stall count never accumulates and the host keeps paying for the solve.",
+      "statuses": [
+        {
+          "json": "{\"computing\":true,\"phase\":\"meshingFaces\",\"progress\":{\"unitsDone\":10,\"unitsTotal\":56,\"facesDone\":10,\"facesTotal\":56,\"inFlight\":1,\"ratio\":0.17},\"cancellable\":true,\"cancelAction\":\"toolRunAbort\"}"
+        },
+        {
+          "json": "{\"computing\":true,\"phase\":\"meshingFaces\",\"progress\":{\"unitsDone\":20,\"unitsTotal\":56,\"facesDone\":20,\"facesTotal\":56,\"inFlight\":1,\"ratio\":0.35},\"cancellable\":true,\"cancelAction\":\"toolRunAbort\"}"
+        },
+        {
+          "json": "{\"computing\":true,\"phase\":\"meshingFaces\",\"progress\":{\"unitsDone\":36,\"unitsTotal\":56,\"facesDone\":36,\"facesTotal\":56,\"inFlight\":1,\"ratio\":0.64912283},\"cancellable\":true,\"cancelAction\":\"toolRunAbort\"}"
+        },
+        {
+          "json": "{\"computing\":true,\"phase\":\"meshingFaces\",\"progress\":{\"unitsDone\":56,\"unitsTotal\":56,\"facesDone\":56,\"facesTotal\":56,\"inFlight\":0,\"ratio\":1},\"cancellable\":true,\"cancelAction\":\"toolRunAbort\"}"
+        }
+      ],
+      "expect": {
+        "funds": 4,
+        "terminals": 0,
+        "stands": 0,
+        "firstTerminalAtStep": null
+      }
+    },
+    {
+      "id": "a-frozen-witness-is-driven-to-a-terminal-state-on-the-step-after-the-stall-budget",
+      "why": "The 6118 wedge, verbatim: `meshingFaces 36/56 ratio=0.64912283` unchanged for 200 s and deaf to `setActiveExample`, because the non-terminal run standing on the surface refuses every restart. The host waits `stallSteps` frames and then dispatches the producer's OWN published `cancelAction`, which is the one gesture measured to unblock it.",
+      "statuses": [
+        {
+          "json": "{\"computing\":true,\"phase\":\"meshingFaces\",\"progress\":{\"unitsDone\":36,\"unitsTotal\":56,\"facesDone\":36,\"facesTotal\":56,\"inFlight\":1,\"ratio\":0.64912283},\"cancellable\":true,\"cancelAction\":\"toolRunAbort\",\"cancelArgs\":{\"runId\":\"1\"}}",
+          "repeat": 260
+        }
+      ],
+      "expect": {
+        "funds": 259,
+        "terminals": 1,
+        "stands": 0,
+        "firstTerminalAtStep": 241
+      }
+    },
+    {
+      "id": "a-witness-that-moves-again-clears-the-stall",
+      "why": "Patience is per-freeze, not per-run: a solve that goes quiet for a while and then advances must not inherit the previous stall's count, or a slow example would be aborted mid-solve.",
+      "statuses": [
+        {
+          "json": "{\"computing\":true,\"phase\":\"meshingFaces\",\"progress\":{\"unitsDone\":36,\"unitsTotal\":56,\"facesDone\":36,\"facesTotal\":56,\"inFlight\":1,\"ratio\":0.64912283},\"cancellable\":true,\"cancelAction\":\"toolRunAbort\"}",
+          "repeat": 239
+        },
+        {
+          "json": "{\"computing\":true,\"phase\":\"meshingFaces\",\"progress\":{\"unitsDone\":37,\"unitsTotal\":56,\"facesDone\":37,\"facesTotal\":56,\"inFlight\":1,\"ratio\":0.66},\"cancellable\":true,\"cancelAction\":\"toolRunAbort\"}"
+        },
+        {
+          "json": "{\"computing\":true,\"phase\":\"meshingFaces\",\"progress\":{\"unitsDone\":37,\"unitsTotal\":56,\"facesDone\":37,\"facesTotal\":56,\"inFlight\":1,\"ratio\":0.66},\"cancellable\":true,\"cancelAction\":\"toolRunAbort\"}",
+          "repeat": 100
+        }
+      ],
+      "expect": {
+        "funds": 340,
+        "terminals": 0,
+        "stands": 0,
+        "firstTerminalAtStep": null
+      }
+    },
+    {
+      "id": "a-producer-that-published-no-cancel-action-is-never-driven",
+      "why": "This shell learns no domain verb from code. A run the producer offered no published way to end is left to the user, however long it is frozen.",
+      "statuses": [
+        {
+          "json": "{\"computing\":true,\"phase\":\"meshingFaces\",\"progress\":{\"unitsDone\":36,\"unitsTotal\":56,\"facesDone\":36,\"facesTotal\":56,\"inFlight\":1,\"ratio\":0.64912283},\"cancellable\":false}",
+          "repeat": 600
+        }
+      ],
+      "expect": {
+        "funds": 240,
+        "terminals": 0,
+        "stands": 360,
+        "firstTerminalAtStep": null
+      }
+    },
+    {
+      "id": "a-producer-that-answers-every-abort-with-a-fresh-wedge-is-driven-at-most-three-times",
+      "why": "An abort storm is worse than a wedge. Three terminal drives against one unchanged witness is the whole budget; after that the run is the producer's problem and the host keeps funding it.",
+      "statuses": [
+        {
+          "json": "{\"computing\":true,\"phase\":\"meshingFaces\",\"progress\":{\"unitsDone\":36,\"unitsTotal\":56,\"facesDone\":36,\"facesTotal\":56,\"inFlight\":1,\"ratio\":0.64912283},\"cancellable\":true,\"cancelAction\":\"toolRunAbort\"}",
+          "repeat": 2000
+        }
+      ],
+      "expect": {
+        "funds": 957,
+        "terminals": 3,
+        "stands": 1040,
+        "firstTerminalAtStep": 241
+      }
+    }
+  ],
+  "frameRows": [
+    {
+      "id": "a-frame-that-owes-a-settle-runs-its-input-actions-first",
+      "why": "A settle step may spend a guest crossing; the action the user just pressed may not wait behind it.",
+      "actions": 2,
+      "pumpSync": false,
+      "flushTutorial": false,
+      "shellMaintenance": false,
+      "settle": true,
+      "expect": {
+        "order": [
+          "action",
+          "action",
+          "settle"
+        ],
+        "terminalIsEmpty": true
+      }
+    },
+    {
+      "id": "the-settle-step-comes-last-among-every-deferred-kind",
+      "why": "Maintenance, sync and the tutorial flush are chrome the frame already promised; the settle is the work the next frame can equally well carry.",
+      "actions": 1,
+      "pumpSync": true,
+      "flushTutorial": true,
+      "shellMaintenance": true,
+      "settle": true,
+      "expect": {
+        "order": [
+          "shellMaintenance",
+          "pumpSync",
+          "action",
+          "flushTutorial",
+          "settle"
+        ],
+        "terminalIsEmpty": true
+      }
+    },
+    {
+      "id": "a-frame-that-owes-a-settle-and-nothing-else-still-installs-a-cursor",
+      "why": "The whole point: with boot no longer converging, a shell with no input at all must still take one step per frame, or a booted example never finishes for a user who does not move the mouse.",
+      "actions": 0,
+      "pumpSync": false,
+      "flushTutorial": false,
+      "shellMaintenance": false,
+      "settle": true,
+      "expect": {
+        "order": [
+          "settle"
+        ],
+        "terminalIsEmpty": true
+      }
+    },
+    {
+      "id": "a-frame-that-owes-no-settle-carries-none",
+      "why": "The non-vacuity guard on the frame half: a settled shell installs no settle work, so an idle app costs no guest crossings.",
+      "actions": 1,
+      "pumpSync": false,
+      "flushTutorial": false,
+      "shellMaintenance": false,
+      "settle": false,
+      "expect": {
+        "order": [
+          "action"
+        ],
+        "terminalIsEmpty": true
+      }
+    }
+  ],
+  "laws": [
+    "a-shell-that-armed-the-settle-lane-owes-a-step-with-nothing-else-pending",
+    "a-live-producer-owes-a-settle-step-even-when-nothing-is-armed",
+    "a-settled-shell-owes-no-settle-step-at-all",
+    "a-synchronous-flush-owns-the-chain-and-the-pump-stands-aside",
+    "a-producer-that-is-advancing-is-funded-every-step-and-never-driven-to-a-terminal-state",
+    "a-producer-whose-own-witness-is-frozen-is-driven-to-a-terminal-state-through-the-action-it-published",
+    "a-producer-that-published-no-cancel-action-is-never-driven",
+    "a-producer-whose-witness-stays-frozen-after-its-terminal-drives-stops-costing-crossings",
+    "a-frame-drains-its-input-actions-before-it-takes-a-settle-step",
+    "an-input-gesture-declares-the-chain-and-never-converges-it-inside-its-own-dispatch",
+    "a-pointer-move-returns-the-interaction-state-within-its-own-dispatch"
+  ],
+  "gestureRows": [
+    {
+      "id": "a-chrome-pointer-button-declares-and-returns",
+      "why": "The measured defect: this body ended in `flush_deferred_actions`, whose `settle_ui_chain` runs whole-shell refresh passes to a fixed point. On 6118 one gesture's chain held the `dispatch-event` checkout for 8 515 ms across 6 refresh passes, and the `F` pressed 1.1 s later reached the node-graph fit 7 632 ms after the key went down (`📓️wgpu-generate-add-port-fit-2026-09-14.md`).",
+      "source": "shell",
+      "owns": "pub async fn handle_pointer_button",
+      "forbids": "flush_deferred_actions",
+      "declares": "self.owe_settle();"
+    },
+    {
+      "id": "a-retained-pointer-press-declares-and-returns",
+      "why": "The retained half of the same gesture — a tree row, a form control, a node-graph press — dispatches its action and hands the chain to the lane.",
+      "source": "shell",
+      "owns": "async fn route_retained_pointer_press",
+      "forbids": "flush_deferred_actions",
+      "declares": "self.owe_settle();"
+    },
+    {
+      "id": "a-tree-selection-declares-and-returns",
+      "why": "A selection is a pointer gesture; it queues its change action on the lane rather than converging it.",
+      "source": "shell",
+      "owns": "fn dispatch_tree_selection",
+      "forbids": "flush_deferred_actions",
+      "declares": "self.owe_settle();"
+    },
+    {
+      "id": "a-pointer-move-never-converges-anything",
+      "why": "The hover that paid for the whole re-solve. A move dispatched on the renderer's interaction state must return it; the settle lane, not the mouse, is what funds a guest chain.",
+      "source": "renderer",
+      "owns": "async fn handle_pointer_move",
+      "forbids": "flush_deferred_actions",
+      "declares": null
+    }
+  ]
+}

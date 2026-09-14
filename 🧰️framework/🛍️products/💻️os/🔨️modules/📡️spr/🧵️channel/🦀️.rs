@@ -135,14 +135,53 @@ pub struct WindowConfigPackEntry {
 
 //#region 🔖️PagedCommandIngress
 pub const COMMAND_PAGE_MAXIMUM_BYTES: usize = 4_096;
-pub const COMMAND_MAXIMUM_PAGES: usize = 64;
-pub const COMMAND_MAXIMUM_BYTES: usize = COMMAND_PAGE_MAXIMUM_BYTES * COMMAND_MAXIMUM_PAGES;
+
+/// 📥️ Largest ASSEMBLED command the host may deliver into a guest.
+///
+/// 🧊️ A command is a host answer like any other, so it is bound by the one declared budget for an
+/// assembled host answer rather than by a transport constant of its own. Nothing here chooses a
+/// ceiling: [`semio_framework_trace::GUEST_HOST_ANSWER_CEILING_BYTES`] already says what a guest may
+/// be handed for ONE outstanding request before it answers with a typed fault instead of allocating.
+pub const COMMAND_MAXIMUM_BYTES: usize = semio_framework_trace::GUEST_HOST_ANSWER_CEILING_BYTES;
+
+/// 📄️ Pages that budget occupies — the assembled ceiling over the page extent, not a chosen number.
+///
+/// 🧊️ A page authority's spine is `COMMAND_MAXIMUM_PAGES * size_of::<FixedCommandPage>()`, and a
+/// page slot is a POINTER to its own 4 KiB block (see [`FixedCommandPage`]), never the block itself
+/// — so the spine stays inside [`semio_framework_trace::GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES`]
+/// while the command it assembles is free to be as long as the host-answer budget allows. Storing
+/// the blocks INLINE is what forced a 64-page ceiling: 64 inline pages are 262 272 contiguous bytes,
+/// four times what a fragmented guest can be relied on to serve, and the ceiling that bought that
+/// reservation also refused every command past 262 144 bytes — a 272 089-char contributions pack
+/// among them (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+pub const COMMAND_MAXIMUM_PAGES: usize = COMMAND_MAXIMUM_BYTES / COMMAND_PAGE_MAXIMUM_BYTES;
 pub const COMMAND_BATCH_MAXIMUM_ITEMS: usize = 64;
 pub const INVOCATION_RESULT_PACK_MAXIMUM_BYTES: usize = COMMAND_MAXIMUM_BYTES;
 
+/// 🧱️ One command page's own 4 KiB block, reserved fallibly so an exhausted guest heap answers with
+/// a `Fault` the host can display rather than `handle_alloc_error` → `unreachable`.
+fn try_reserve_command_page_block() -> Result<Box<[u8; COMMAND_PAGE_MAXIMUM_BYTES]>, crate::Fault> {
+    let mut block = Vec::new();
+    block
+        .try_reserve_exact(COMMAND_PAGE_MAXIMUM_BYTES)
+        .map_err(|_| crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-page-allocation"), "a command page could not reserve its exact 4096-byte block"))?;
+    block.resize(COMMAND_PAGE_MAXIMUM_BYTES, 0);
+    block
+        .into_boxed_slice()
+        .try_into()
+        .map_err(|_| crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-page-allocation"), "a command page block is not its exact 4096-byte extent"))
+}
+
+/// 📄️ One 4 KiB command page, holding its block BEHIND a pointer.
+///
+/// 🧊️ The indirection is the whole reason a command has no page ceiling: every collection of pages
+/// on this path (`CommandPageSet`, `PagedCommand`, `CommandEnvelopeSet`, `CommandBatch`) reserves a
+/// spine of `size_of::<FixedCommandPage>()`-byte slots, so assembling a 272 KB command asks the
+/// guest allocator for 67 separate 4 KiB blocks — each one a routine request — instead of one
+/// quarter-megabyte contiguous block it is the first to refuse.
 #[derive(Clone, Debug, PartialEq)]
 pub struct FixedCommandPage {
-    bytes: [u8; COMMAND_PAGE_MAXIMUM_BYTES],
+    bytes: Box<[u8; COMMAND_PAGE_MAXIMUM_BYTES]>,
     len: u16,
 }
 
@@ -155,16 +194,18 @@ impl FixedCommandPage {
         if bytes[len..].iter().any(|byte| *byte != 0) {
             return Err(crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-page-padding"), "command page carries nonzero bytes outside its declared authority"));
         }
-        Ok(Self { bytes, len: len as u16 })
+        let mut block = try_reserve_command_page_block()?;
+        block.copy_from_slice(&bytes);
+        Ok(Self { bytes: block, len: len as u16 })
     }
 
     pub fn try_copy_from(bytes: &[u8]) -> Result<Self, crate::Fault> {
         if bytes.len() > COMMAND_PAGE_MAXIMUM_BYTES {
             return Err(crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-page-length"), "command page length exceeds its fixed 4096-byte authority"));
         }
-        let mut fixed = [0; COMMAND_PAGE_MAXIMUM_BYTES];
-        fixed[..bytes.len()].copy_from_slice(bytes);
-        Ok(Self { bytes: fixed, len: bytes.len() as u16 })
+        let mut block = try_reserve_command_page_block()?;
+        block[..bytes.len()].copy_from_slice(bytes);
+        Ok(Self { bytes: block, len: bytes.len() as u16 })
     }
 
     pub fn as_slice(&self) -> &[u8] {
@@ -227,12 +268,17 @@ impl<'de> serde::Deserialize<'de> for FixedCommandPage {
 ///
 /// 🧊️ The reservation is `declared * size_of::<FixedCommandPage>()` contiguous bytes and it is taken
 /// on the guest's own fixed linear memory, once per command, on the reactor's command-ingress
-/// prologue. Reserving the 64-page ceiling regardless of the declared count asked for 262 272 B for
+/// prologue. Reserving the page ceiling regardless of the declared count asked for 262 272 B for
 /// a one-page command — the single largest routine allocation on a 4 Hz command stream, and the
 /// first request a fragmented or exhausted guest heap refuses (`plugin.command-page-allocation`,
 /// ticket 26/09/02 build #29). The declared count is validated `1..=COMMAND_MAXIMUM_PAGES` by the
 /// caller's cursor and is identical for every page of one command, so an exact reservation still
 /// admits every page without a second allocation.
+///
+/// 📐️ A slot holds a POINTER to its page's own 4 KiB block, so the whole ceiling's spine is
+/// `COMMAND_MAXIMUM_PAGES * size_of::<FixedCommandPage>()` — inside
+/// [`semio_framework_trace::GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES`], which is the law that decides
+/// how many pages a command may declare at all.
 #[derive(Debug, PartialEq)]
 pub struct CommandPageSet {
     pages: std::collections::VecDeque<FixedCommandPage>,
@@ -245,7 +291,7 @@ pub struct CommandPageSet {
 impl CommandPageSet {
     pub fn try_new(declared: usize) -> Result<Self, crate::Fault> {
         if declared == 0 || declared > COMMAND_MAXIMUM_PAGES {
-            return Err(crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-page-count"), "a command page authority is declared for 1..=64 pages"));
+            return Err(crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-page-count"), "a command page authority is declared for 1..=COMMAND_MAXIMUM_PAGES pages"));
         }
         let mut pages = std::collections::VecDeque::new();
         pages.try_reserve_exact(declared).map_err(|_| crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-page-allocation"), "declared command page authority could not reserve its exact page slots"))?;
@@ -267,7 +313,7 @@ impl CommandPageSet {
             return Err((crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-page-count"), "command page authority is saturated"), page));
         }
         let Some(byte_len) = self.byte_len.checked_add(page.len()).filter(|total| *total <= COMMAND_MAXIMUM_BYTES) else {
-            return Err((crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-byte-cap"), "command exceeds its fixed 262144-byte authority"), page));
+            return Err((crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-byte-cap"), "command exceeds the assembled host-answer authority a guest may be handed"), page));
         };
         if page.is_empty() {
             self.generic_shape_valid = false;
@@ -316,7 +362,7 @@ pub struct PagedCommand {
 impl PagedCommand {
     pub fn try_from_pages(pages: CommandPageSet) -> Result<Self, (crate::Fault, CommandPageSet)> {
         if pages.is_empty() || pages.len() > COMMAND_MAXIMUM_PAGES {
-            return Err((crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-page-count"), "command requires 1..=64 admitted pages"), pages));
+            return Err((crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-page-count"), "command requires 1..=COMMAND_MAXIMUM_PAGES admitted pages"), pages));
         }
         if !pages.generic_shape_valid {
             return Err((crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-page-shape"), "command pages must be nonempty, at most 4096 bytes, and every nonterminal page must be full"), pages));
@@ -494,11 +540,7 @@ impl CommandEnvelopeSet {
         commands
             .try_reserve_exact(COMMAND_BATCH_MAXIMUM_ITEMS)
             .map_err(|_| crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-batch-allocation"), "fixed command batch authority could not reserve its exact 64 slots"))?;
-        let mut page_storage = std::collections::VecDeque::new();
-        page_storage
-            .try_reserve_exact(COMMAND_MAXIMUM_PAGES)
-            .map_err(|_| crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-batch-page-allocation"), "fixed command batch authority could not reserve its exact 64 page slots"))?;
-        Ok(Self { commands, page_storage, pages: 0, bytes: 0 })
+        Ok(Self { commands, page_storage: std::collections::VecDeque::new(), pages: 0, bytes: 0 })
     }
 
     pub fn try_push(&mut self, command: CommandEnvelope) -> Result<(), (crate::Fault, CommandEnvelope)> {
@@ -507,12 +549,15 @@ impl CommandEnvelopeSet {
         }
         let pages = match self.pages.checked_add(command.command.page_len()) {
             Some(pages) if pages <= COMMAND_MAXIMUM_PAGES => pages,
-            _ => return Err((crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-batch-page-cap"), "command batch exceeds its aggregate 64-page authority"), command)),
+            _ => return Err((crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-batch-page-cap"), "command batch exceeds its aggregate page authority"), command)),
         };
         let bytes = match self.bytes.checked_add(command.command.byte_len()) {
             Some(bytes) if bytes <= COMMAND_MAXIMUM_BYTES => bytes,
-            _ => return Err((crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-batch-byte-cap"), "command batch exceeds its aggregate 262144-byte authority"), command)),
+            _ => return Err((crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-batch-byte-cap"), "command batch exceeds its aggregate assembled-byte authority"), command)),
         };
+        if self.page_storage.try_reserve_exact(command.command.page_len()).is_err() {
+            return Err((crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-batch-page-allocation"), "command batch could not reserve the exact page slots this command declares"), command));
+        }
         let CommandEnvelope { instance, seq, command } = command;
         let PagedCommand { pages: mut command_pages, kind, metadata, item_count, .. } = command;
         let page_count = u32::try_from(command_pages.len()).expect("admitted command page count is u32-bounded");

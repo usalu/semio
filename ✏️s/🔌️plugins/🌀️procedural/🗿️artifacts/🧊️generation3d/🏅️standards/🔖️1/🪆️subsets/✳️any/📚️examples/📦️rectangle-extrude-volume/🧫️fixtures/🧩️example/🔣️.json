@@ -39,6 +39,9 @@
   "delivery": {
     "lodMode": "",
     "meshes": 1,
+    "meshRoles": {
+      "solid": 1
+    },
     "minTriangles": 12,
     "minEdgeSegments": 12,
     "maxRoundTrips": 1,

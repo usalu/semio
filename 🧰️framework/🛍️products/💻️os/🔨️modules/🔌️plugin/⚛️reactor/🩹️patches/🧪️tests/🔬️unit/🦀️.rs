@@ -628,6 +628,8 @@ fn mounted_catalogue_reports_producer_failure_once_before_cleanup() {
     assert_eq!(instance as u64, failure["instance"].as_u64().unwrap());
     assert!(reason.contains(failure["surface"].as_str().unwrap()));
     assert!(reason.contains(failure["reason"].as_str().unwrap()));
+    assert!(reason.contains(failure["authority"].as_str().unwrap()), "the report names the authority that read the fault, so an exact attribution is distinguishable from a generation-derived one: {reason}");
+    assert!(reason.contains(&format!("parent={} key={}", failure["parent"].as_str().unwrap(), failure["key"].as_str().unwrap())), "a duplicate sibling key names the parent and the key it refused, not only the surface: {reason}");
 }
 
 #[test]
@@ -743,7 +745,6 @@ fn issued_obsolete_reconcile_feedback_retires_only_the_old_pending_owner() {
             }
         }
         pending.push_reconcile(ready.expect("real reconcile publication")).unwrap_or_else(|_| panic!("empty pending slot"));
-        assert!(pending.take_one(65536).unwrap().is_none());
         let patch = pending.take_one(65536).unwrap().unwrap();
         let issued = ActorUiPatchReceipt { lifetime: ActorInstanceLifetime { activation_generation: 41, instance_id: 7, guest_lifetime: 3 }, patch_sequence: 8 };
         pending.stage_emission(issued, &patch).unwrap();

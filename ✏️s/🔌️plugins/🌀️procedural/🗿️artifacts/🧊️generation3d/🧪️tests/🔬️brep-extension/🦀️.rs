@@ -51,16 +51,16 @@ pub fn serve(pending: &PendingExtensionInvocation) -> Result<Vec<u8>, Fault> {
     }
 }
 
-/// 🔁️ Answers every invocation this app has queued, redispatching each response action back into it.
-pub async fn settle<P: PluginApp>(app: &mut P, receiver: u32) -> usize {
-    settle_with_meta(app, receiver, &semio_framework_plugin::artifact_app_laws::meta("local")).await.answered
-}
-
-/// 🔁️ The same round trip under an explicit `ActionMeta` — the shell answers a continuation with its
-/// own live view attached, and the effects those response actions emit (a re-armed `flowEvalTick`
-/// among them) come back to the caller instead of being dropped
-/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-pub async fn settle_with_meta<P: PluginApp>(app: &mut P, receiver: u32, action_meta: &ActionMeta) -> SettledExtensionInvocations {
+/// 🔁️ Answers every invocation this app has queued, redispatching each response action back into it
+/// under the CALLER'S OWN `ActionMeta` — the shell answers a continuation with its live view
+/// attached, and the effects those response actions emit (a re-armed `flowEvalTick` among them) come
+/// back to the caller instead of being dropped (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+///
+/// 🪟️ The view is not optional. `flowEvalResolve` and `flowTessellateResolve` are window-addressed
+/// routes — they publish the wave they continue into the addressed preview window's transient — so a
+/// fixture that answered them with a viewless meta would be modelling a shell that does not exist and
+/// would fault `targeted window transient capture requires an exact ViewModel roster`.
+pub async fn settle<P: PluginApp>(app: &mut P, receiver: u32, action_meta: &ActionMeta) -> SettledExtensionInvocations {
     settle_extension_invocations(app, receiver, action_meta, &mut |pending| {
         let outcome = serve(pending);
         eprintln!("[DEBUG] extension runner received extension={} capability={} ok={}", pending.extension_id, pending.capability, outcome.is_ok());

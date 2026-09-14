@@ -19,7 +19,7 @@ export const chromeControlItemBaseClass = cn(
   "cursor-selectable disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed",
   "[&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-small [&_svg]:shrink-0",
   formControlFocusBorderClass,
-  "whitespace-nowrap h-medium p-single overflow-hidden leading-none",
+  "whitespace-nowrap min-h-medium h-full p-single leading-none",
 );
 
 /** @emoji 🎛️ Interactive chrome control cell. */
@@ -40,7 +40,7 @@ export const windowPaneChromeToggleClass = cn(
 );
 
 /** @emoji 🎛️ Shared outer chrome control shell. */
-export const chromeControlGroupShellClass = cn("flex items-center border divide-x overflow-hidden w-fit shrink-0", borderNormalClass, "divide-normal", glassClass);
+export const chromeControlGroupShellClass = cn("flex items-stretch border divide-x overflow-hidden w-fit shrink-0", borderNormalClass, "divide-normal", glassClass);
 
 /** @emoji 🎛️ Standard chrome control group height. */
 export const chromeControlGroupClass = cn(chromeControlGroupShellClass, "h-medium");

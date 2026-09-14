@@ -476,6 +476,16 @@ export type UiTranslationSchema = {
     };
     readonly nodeGraph: {
       readonly fitGraph: UiLabelValue;
+      readonly incompatiblePorts: UiLabelValue;
+      readonly portType: {
+        readonly geometry: UiLabelValue;
+        readonly vector: UiLabelValue;
+        readonly point: UiLabelValue;
+        readonly number: UiLabelValue;
+        readonly text: UiLabelValue;
+        readonly boolean: UiLabelValue;
+        readonly list: UiLabelValue;
+      };
     };
     readonly sync: {
       readonly attach: UiLabelValue;

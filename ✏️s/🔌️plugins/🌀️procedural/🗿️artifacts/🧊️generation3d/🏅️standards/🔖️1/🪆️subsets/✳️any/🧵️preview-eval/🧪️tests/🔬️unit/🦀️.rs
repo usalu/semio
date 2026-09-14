@@ -479,12 +479,12 @@ fn a_live_evaluation_publishes_non_idle_frames_with_a_monotone_ratio_and_an_offe
         session.begin_window_tick("preview-1");
         session.note_window_extensions_in_flight("preview-1", 1);
         frames.push(published(&session, run.as_ref()));
-        let more = if round + 1 == minimum { session.tick(&mut host) } else { true };
+        let more = if round + 1 == minimum { session.tick(&mut host, None) } else { true };
         session.settle_window_extension("preview-1");
         session.note_window_tick_outcome("preview-1", more);
         frames.push(published(&session, run.as_ref()));
     }
-    while session.tick(&mut host) {
+    while session.tick(&mut host, None) {
         frames.push(published(&session, run.as_ref()));
     }
     session.note_window_tick_outcome("preview-1", false);

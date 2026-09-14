@@ -987,6 +987,7 @@
         "actionFinalize",
         "actionDismiss",
         "finalizeDisabled",
+        "readyToStart",
         "rebasingStep",
         "conflictStep",
         "traceTruncatedStep",
@@ -1277,8 +1278,8 @@
         },
         "labels": {
           "type": "array",
-          "minItems": 22,
-          "maxItems": 22,
+          "minItems": 23,
+          "maxItems": 23,
           "items": {
             "type": "object",
             "additionalProperties": false,

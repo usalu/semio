@@ -1199,17 +1199,18 @@ fn fill_run_job_step_and_overlay_append_stay_below_the_interactive_ceiling_for_n
     assert!(worst < budget, "fill run job worst drive_step {worst:?} at turn {turn} of {} exceeds {budget:?}", best.len());
 }
 
-/// ⚖️ LAW: with one unit of fuel a run job step reaches exactly one candidate verdict — the tick carries
-/// that candidate's `testing` and final upsert under one key — except the final tick of a completed run.
+/// ⚖️ LAW: with one unit of fuel a run job step publishes exactly one visible unit — the `testing` upsert of the
+/// candidate it just constructed, or that candidate's final verdict — so every tested candidate is on screen as
+/// `testing` in a tick of its own before the tick that marks it (collision, fit or refusal).
 #[test]
-fn fill_run_job_step_with_one_unit_of_fuel_reaches_exactly_one_candidate_verdict() {
+fn fill_run_job_step_with_one_unit_of_fuel_shows_each_candidate_before_its_verdict() {
     let mut job = FillRunJob::new(FillBuilder::begin_preparation(nakagin_scale_roots(), Operation::new(OperationId(73), RevisionId(1), Generation(1), 43), 24), fill_run_identity(), vec![NAKAGIN_MESH_URL.to_string()], [0; 32]);
     let mut sequence = 0;
-    let (mut ticks, mut verdicts) = (0usize, 0u64);
+    let (mut shown, mut verdicts) = (0u64, 0u64);
+    let mut under_test: Option<u64> = None;
     for _ in 0..1_000_000 {
         match fill_run_turn(&mut job, 1, &mut sequence) {
             FillRunTurn::Tick(tick) => {
-                ticks += 1;
                 let ops: Vec<&ToolRunTraceOp> = tick.trace.iter().flat_map(|page| &page.ops).collect();
                 let finals: Vec<u64> = ops.iter().filter_map(|op| match op {
                     ToolRunTraceOp::Upsert { key, verdict, .. } if *verdict != ToolRunVerdict::Testing => Some(*key),
@@ -1219,20 +1220,22 @@ fn fill_run_job_step_with_one_unit_of_fuel_reaches_exactly_one_candidate_verdict
                     ToolRunTraceOp::Upsert { key, verdict: ToolRunVerdict::Testing, .. } => Some(*key),
                     _ => None,
                 }).collect();
-                let complete = tick.progress.as_ref().is_some_and(|progress| progress.state == ToolRunState::Complete);
-                if complete && finals.is_empty() {
-                    continue;
+                assert!(finals.len() + testing.len() <= 1, "one fuel unit is one visible unit, tick {} carried testing {testing:?} and verdicts {finals:?}", tick.sequence);
+                if let Some(&key) = testing.first() {
+                    under_test = Some(key);
+                    shown += 1;
                 }
-                assert_eq!(finals.len(), 1, "one fuel unit is one candidate verdict, tick {} carried {finals:?}", tick.sequence);
-                assert!(testing.is_empty() || testing == finals, "the verdict closes the candidate this step tested: {testing:?} vs {finals:?}");
-                verdicts += 1;
+                if let Some(&key) = finals.first() {
+                    assert_eq!(under_test.take(), Some(key), "tick {} marks a candidate an earlier tick showed under test", tick.sequence);
+                    verdicts += 1;
+                }
             }
             FillRunTurn::Checkpoint(_) | FillRunTurn::Yield => {}
             FillRunTurn::Complete => break,
         }
     }
-    assert_eq!(verdicts, job.counters()[0], "every tested candidate took exactly one fuel-one step");
-    assert!(ticks as u64 >= verdicts && job.counters()[1] == 24);
+    assert_eq!((shown, verdicts), (job.counters()[0], job.counters()[0]), "every tested candidate was shown, then marked");
+    assert_eq!(job.counters()[1], 24);
 }
 
 fn nakagin_scale_run(requested: usize) -> (FillRunJob, FillRunMirror) {

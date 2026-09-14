@@ -2,7 +2,9 @@
 import { act } from "react";
 import { fireEvent, render } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
+import { renderToStaticMarkup } from "react-dom/server";
 import { ToggleGroup } from "../../🟦️.tsx";
+import { chromeControlGroupShellClass, chromeControlItemBaseClass } from "../../../../🔨️modules/🎛️chrome-control-presentation/🟦️.ts";
 // #endregion 🔌️Adapters
 
 // #region 🎛️Fixture
@@ -160,6 +162,35 @@ describe("ToggleGroup", () => {
     act(() => actionButton.click());
     expect(action).toHaveBeenCalledTimes(1);
     expect(changes).not.toHaveBeenCalled();
+  });
+
+  it("keeps chrome group cells stretchable without clipping overflow", () => {
+    expect(chromeControlItemBaseClass).toContain("h-full");
+    expect(chromeControlItemBaseClass).not.toContain("overflow-hidden");
+    expect(chromeControlGroupShellClass).toContain("items-stretch");
+  });
+
+  it("renders toggle group items without aspect-square", () => {
+    const labeledMarkup = renderToStaticMarkup(
+      <ToggleGroup
+        items={[
+          { value: "a", icon: "check", text: "A" },
+          { value: "b", icon: "x", text: "B" },
+        ]}
+      />,
+    );
+    expect(labeledMarkup).not.toContain("aspect-square");
+
+    const iconOnlyMarkup = renderToStaticMarkup(
+      <ToggleGroup
+        items={[
+          { value: "a", icon: "check" },
+          { value: "b", icon: "x" },
+        ]}
+      />,
+    );
+    expect(iconOnlyMarkup).not.toContain("aspect-square");
+    expect(iconOnlyMarkup).toContain("min-w-medium");
   });
 });
 // #endregion 🎛️ToggleGroupMatrix

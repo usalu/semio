@@ -1,20 +1,21 @@
 /* tslint:disable */
 /* eslint-disable */
 export const memory: WebAssembly.Memory;
-export const flowAttachSurfaceCanvas: (a: number, b: any, c: number, d: number, e: number) => any;
-export const flowDetachSurfaceCanvas: (a: number) => void;
-export const flowResizeSurfaceCanvas: (a: number, b: number, c: number, d: number) => void;
-export const flowSurfaceCanvasPresentsOnGpu: (a: number) => number;
-export const brep_invoke: (a: number, b: number, c: number, d: number) => [number, number];
-export const dispose: (a: number, b: number) => void;
-export const tessellate: (a: number, b: number, c: number) => [number, number];
 export const flow_bridge_allocate: (a: number) => number;
 export const flow_bridge_begin_close: () => void;
 export const flow_bridge_poll: (a: number, b: number, c: number, d: bigint, e: bigint) => number;
 export const flow_bridge_release: (a: number, b: number) => void;
 export const flow_bridge_send: (a: number, b: number, c: number, d: bigint, e: bigint) => number;
 export const flow_bridge_terminal_is_empty: () => number;
+export const brep_invoke: (a: number, b: number, c: number, d: number) => [number, number];
+export const dispose: (a: number, b: number) => void;
+export const flowAttachSurfaceCanvas: (a: number, b: any, c: number, d: number, e: number) => any;
+export const flowDetachSurfaceCanvas: (a: number) => void;
+export const flowResizeSurfaceCanvas: (a: number, b: number, c: number, d: number) => void;
+export const flowSurfaceCanvasPresentsOnGpu: (a: number) => number;
+export const tessellate: (a: number, b: number, c: number) => [number, number];
 export const __wbg_dagsession_free: (a: number, b: number) => void;
+export const __wbg_dagsnapshotvcs_free: (a: number, b: number) => void;
 export const dagsession_attachCanvas: (a: number, b: any, c: number, d: number, e: number) => any;
 export const dagsession_drawLodLabel: (a: number) => [number, number];
 export const dagsession_fixtureJson: (a: number) => [number, number, number, number];
@@ -37,7 +38,6 @@ export const dagsession_setForcedDrawLodLabel: (a: number, b: number, c: number)
 export const dagsession_setSize: (a: number, b: number, c: number, d: number) => void;
 export const dagsession_setWheelZoomActive: (a: number, b: number) => void;
 export const dagsession_takePendingOpenInstanceId: (a: number) => [number, number];
-export const __wbg_dagsnapshotvcs_free: (a: number, b: number) => void;
 export const dagsnapshotvcs_create: () => any;
 export const dagsnapshotvcs_dispatchBinary: (a: number, b: number, c: number) => any;
 export const dagsnapshotvcs_dispatchText: (a: number, b: number, c: number) => any;

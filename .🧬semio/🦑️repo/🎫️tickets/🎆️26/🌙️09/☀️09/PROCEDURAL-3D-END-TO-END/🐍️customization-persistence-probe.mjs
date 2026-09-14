@@ -11,6 +11,13 @@ mkdirSync(outDir, { recursive: true });
 const browser = await chromium.launch({ headless: true });
 const context = await browser.newContext({ viewport: { width: 1600, height: 1000 } });
 const page = await context.newPage();
+/** 🧯 This probe published `pageerrors: 0` without ever listening for one, so its zero meant "not
+ * observed" rather than "none occurred" (`📓️window-coverage-audit-2026-09-14.md` §3). The battery
+ * gates every probe on a clean page, so the count has to be real. */
+const lines = [];
+const t0 = Date.now();
+page.on("console", (m) => lines.push(`${Date.now() - t0} ${m.type()} ${m.text().slice(0, 1200)}`));
+page.on("pageerror", (e) => lines.push(`${Date.now() - t0} pageerror ${String(e).slice(0, 1200)}`));
 
 async function boot(p, tag = "") {
   let hit = false;
@@ -84,5 +91,6 @@ console.log("=== VERDICT ===");
 console.log("localeSurvivedReload", localeKept);
 console.log("appearanceSurvivedReload", appearanceKept, `(baseline=${before.scopeAppearance} customized=${after.scopeAppearance} reloaded=${reloaded.scopeAppearance})`);
 writeFileSync(join(outDir, "verdict.json"), JSON.stringify({ localeKept, appearanceKept, okLang, okAppearance, appearanceBefore: before.scopeAppearance, appearanceAfter: after.scopeAppearance, appearanceReloaded: reloaded.scopeAppearance, before: before.bg, after: after.bg, reloaded: reloaded.bg, lsKeysAfter: after.localStorageKeys, lsKeysReloaded: reloaded.localStorageKeys, lsDumpAfter: after.localStorageDump }, null, 2));
+writeFileSync(join(outDir, "console.txt"), lines.join("\n"));
 console.log("DONE");
 await browser.close();

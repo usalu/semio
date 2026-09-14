@@ -23,6 +23,7 @@ import { actorInstanceCapturedReceiptMatches, actorInstanceCloseReceiptMatches, 
 import { actorUiPatchReceiptEquals, decodeActorUiPatchReceipt, encodeActorUiPatchReceipt, validateActorUiPatchPairing, type ActorUiPatchReceipt } from "../🚪️lifetime/🩹️patch/🟦️.ts";
 import { OwnedActorTurnOutputs, OwnedActorTurnOutput } from "../🪪️activation/🚪️instance/📥️output/🟦️.ts";
 import { ACTOR_BYTE_PAGE_BYTES, createActorBytePage, type ActorBytePage } from "../📃️page/🟦️.ts";
+import { GUEST_HOST_ANSWER_CEILING_BYTES } from "../../⏱️trace/🧮️memory/🟦️.ts";
 import { encodeActorReturnDrive, decodeActorReturnResult, type ActorReturnOrigin, type ActorReturnIdentity, type ActorReturnPageReceipt, type ActorReturnDrive, type ActorReturnResult } from "../📤️return/🟦️.ts";
 export { encodeActorReturnDrive, decodeActorReturnDrive, encodeActorReturnResult, decodeActorReturnResult, ACTOR_RETURN_RESULT_MAXIMUM_BYTES, type ActorReturnOrigin, type ActorReturnIdentity, type ActorReturnPageReceipt, type ActorReturnControl, type ActorReturnDrive, type ActorReturnResult, type ActorReturnFault } from "../📤️return/🟦️.ts";
 import { OwnedUiInstance, OwnedUiInstanceRetirement, OwnedUiPatchAcknowledgement, OwnedUiPatchInputAcceptance, OwnedUiPatchInputRetirement } from "../../🖱️ui/🧬️contract/🧵️retained/🏘️instance/🟦️.ts";
@@ -30,6 +31,7 @@ import { OwnedKernelReturnContent } from "../../🎠️kernel/📤️return/📦
 import { OwnedResidentLedger, OwnedResidentRecordDetachment, OwnedResidentRetirement, type OwnedResidentAdmission, type OwnedResidentRecord, type ResidentGrant, type ResidentStep } from "../../🌱️value/💾️resident/🟦️.ts";
 import { OwnedUiResidentPool, OwnedUiResidentPoolRetirement, type OwnedUiResidentInstance, type OwnedUiResidentPayload, type OwnedUiResidentPayloadSourceRelease as UiResidentSourceProof } from "../../🖱️ui/🧬️contract/🧵️retained/💾️resident/🟦️.ts";
 import { uiResidentMetadataEnvelope } from "../../🖱️ui/🧬️contract/🧵️retained/💾️resident/🪪️metadata/🟦️.ts";
+import { hopTrace, hopTraceEpochNowMs, hopTraceEpochToTimeline } from "../../⏱️trace/🟦️.ts";
 import { admitSegmentedDownloadChunk, admitSegmentedDownloadOperationId, SEGMENTED_DOWNLOAD_CONTRACT, SEGMENTED_DOWNLOAD_REFUSAL } from "./📤️segmented-download/🟦️.ts";
 export { admitSegmentedDownloadChunk, admitSegmentedDownloadOperationId, SEGMENTED_DOWNLOAD_CONTRACT, SEGMENTED_DOWNLOAD_REFUSAL } from "./📤️segmented-download/🟦️.ts";
 /** 🧬️ Brand-check accessor for {@link OwnedResidentLedger}, resolved LAZILY on first use.
@@ -111,7 +113,13 @@ export interface ShardCommandPageCursor {
 
 export type ShardCommandIngressPage = { readonly cursor: ShardCommandPageCursor; readonly bytes: Uint8Array; readonly page: ActorBytePage };
 
-export const SHARD_COMMAND_MAXIMUM_PAGES = 64;
+/** 📄️ Pages one command may cross in, derived — never chosen — from the same budget
+ * `COMMAND_MAXIMUM_PAGES` in `📡️spr/🧵️channel/🦀️.rs` reads: the assembled host-answer ceiling over
+ * the page extent. The guest reassembles a command page by page, each page its own 4 KiB block, so
+ * the only bound left is what a guest may be handed for ONE outstanding request. A 64-page ceiling
+ * (262 144 B) refused a 272 089-char contributions pack outright — ticket
+ * 26/09/09/PROCEDURAL-3D-END-TO-END. */
+export const SHARD_COMMAND_MAXIMUM_PAGES = GUEST_HOST_ANSWER_CEILING_BYTES / ACTOR_BYTE_PAGE_BYTES;
 
 /** 📥️ Splits channel command bytes into the `reactor.stage-command-page` pages shared with Rust — a
  * cursor and the page's live bytes, never a fixed 4 KiB block record. */
@@ -366,7 +374,7 @@ export type CreateShardWorker = (shardIndex: number) => ShardWorkerLike;
 //#region 📨️WireMessages
 type OutboundMessage =
   | { readonly kind: "activate"; readonly requestId: string; readonly actorId: string; readonly activationGeneration: bigint; readonly moduleUrl: string; readonly caps: readonly ShardCapabilityGrant[]; readonly budget: ShardBudget; readonly assets: readonly ShardAsset[] }
-  | { readonly kind: "turn"; readonly requestId: string; readonly actorId: string; readonly activationGeneration: bigint; readonly events: readonly ShardEventEnvelope[]; readonly commandPage?: ShardCommandIngressPage; readonly budget: ShardBudget }
+  | { readonly kind: "turn"; readonly requestId: string; readonly actorId: string; readonly activationGeneration: bigint; readonly events: readonly ShardEventEnvelope[]; readonly commandPage?: ShardCommandIngressPage; readonly budget: ShardBudget; readonly postedAtEpochMs?: number }
   | { readonly kind: "startJob"; readonly requestId: string; readonly actorId: string; readonly job: bigint; readonly jobKind: string; readonly input: Uint8Array }
   | { readonly kind: "stepJob"; readonly requestId: string; readonly actorId: string; readonly job: bigint; readonly budget: ShardJobBudget }
   | { readonly kind: "cancelJob"; readonly requestId: string; readonly actorId: string; readonly job: bigint }
@@ -381,8 +389,50 @@ type OutboundMessage =
    * keeps working unmodified for this kind too. */
   | { readonly kind: "frame"; readonly requestId: string; readonly actorId: string; readonly activationGeneration: bigint; readonly frame: ShardFrame };
 
+/** ⏱️ What the generated `🟨️shard-worker.js` says about its OWN side of one turn, on the shared
+ * epoch clock (`hopTraceEpochNowMs`): when the host posted, when the handler entered, when the guest
+ * was entered and left, and when the reply was posted. Every field is a pure accounting read — a
+ * missing or malformed one publishes no span and changes nothing about the turn. */
+type ShardWorkerTurnTimings = Readonly<{
+  readonly postedAtEpochMs: number | null;
+  readonly receivedAtEpochMs: number;
+  readonly guestEnteredAtEpochMs: number | null;
+  readonly guestLeftAtEpochMs: number | null;
+  readonly repliedAtEpochMs: number | null;
+  readonly events: number;
+  readonly eventKinds: string;
+  readonly previousReplyCloneMs: number;
+  readonly patches: number;
+  readonly status?: string;
+  readonly commandPageBytes: number;
+}>;
+
+/** 📮️ Places the worker's four stages on the PAGE's own hop timeline, where `channel`, `refresh.turn`
+ * and every other stage already live, so one probe read returns a breakdown that adds up:
+ * `worker.receive + worker.decode + worker.guest + worker.reply` is exactly the host-observed
+ * crossing (post → answer), and `worker.turn` is the worker's own busy span inside it.
+ *
+ * 🩺️ This is the split `📓️react-hop-latency-2026-09-14.md` §10 had to leave unmeasured — the CDP
+ * `Performance` domain answers nothing on a shard-worker target, so the only instrument that can see
+ * it is one the worker carries itself. Accounting only: a malformed timings record publishes nothing.
+ */
+function publishShardWorkerTurnSpans(timings: ShardWorkerTurnTimings, answeredAtEpochMs: number, actorId: string): void {
+  const finite = (value: unknown): value is number => typeof value === "number" && Number.isFinite(value);
+  if (!finite(timings.receivedAtEpochMs)) return;
+  const detail = { actorId, events: finite(timings.events) ? timings.events : 0, eventKinds: typeof timings.eventKinds === "string" ? timings.eventKinds : "", replyCloneMs: finite(timings.previousReplyCloneMs) ? Math.round(timings.previousReplyCloneMs * 100) / 100 : -1, patches: finite(timings.patches) ? timings.patches : 0, status: typeof timings.status === "string" ? timings.status : "", commandPageBytes: finite(timings.commandPageBytes) ? timings.commandPageBytes : 0 };
+  const span = (stage: "worker.turn" | "worker.receive" | "worker.decode" | "worker.guest" | "worker.reply", fromEpochMs: unknown, toEpochMs: unknown): void => {
+    if (!finite(fromEpochMs) || !finite(toEpochMs) || toEpochMs < fromEpochMs) return;
+    hopTrace.record(stage, hopTraceEpochToTimeline(fromEpochMs), toEpochMs - fromEpochMs, detail);
+  };
+  span("worker.receive", timings.postedAtEpochMs, timings.receivedAtEpochMs);
+  span("worker.decode", timings.receivedAtEpochMs, timings.guestEnteredAtEpochMs);
+  span("worker.guest", timings.guestEnteredAtEpochMs, timings.guestLeftAtEpochMs);
+  span("worker.reply", timings.guestLeftAtEpochMs, answeredAtEpochMs);
+  span("worker.turn", timings.receivedAtEpochMs, timings.repliedAtEpochMs);
+}
+
 type InboundMessage =
-  | { readonly kind: "result"; readonly requestId: string; readonly ok: true; readonly value: unknown }
+  | { readonly kind: "result"; readonly requestId: string; readonly ok: true; readonly value: unknown; readonly timings?: ShardWorkerTurnTimings }
   | { readonly kind: "result"; readonly requestId: string; readonly ok: false; readonly error: string; readonly stack?: string; readonly type?: string; readonly framesBytes?: number; readonly retryableLifecycle?: boolean }
   /** 🫀️ `phase` names the generated worker's await boundary this beat was emitted at
    * (`module-fetch`/`module-ready`/`actor-ready`, or `progress` from its while-busy ticker); absent on
@@ -1378,6 +1428,7 @@ export class ShardClient {
    * never an answer this class is waiting on, so falling through to the generic path would look up a
    * `requestId` nothing ever registered and silently no-op, masking a real effect-request. */
   private handleMessage(slot: ShardSlot, message: InboundMessage): void {
+    const answeredAtEpochMs = hopTraceEpochNowMs();
     if (!slot.available || this.shards[slot.index] !== slot) return;
     this.noteLiveness(slot, this.now());
     if (message.kind === "heartbeat") {
@@ -1401,6 +1452,7 @@ export class ShardClient {
     }
     const entry = this.pending.get(message.requestId);
     if (!entry || entry.slot !== slot || this.shards[slot.index] !== slot) return;
+    if (message.kind === "result" && message.ok && message.timings) publishShardWorkerTurnSpans(message.timings, answeredAtEpochMs, entry.actorId);
     if (entry.output && !entry.output.captureResponse(message)) { entry.reject(new Error("actor-output.response-refused")); return; }
     try {
       this.pending.delete(message.requestId);
@@ -1538,7 +1590,7 @@ export class ShardClient {
       this.pending.set(requestId, { resolve: resolve as (value: unknown) => void, reject, slot, startedAtMs, actorId, kind: message.kind, firstTurn, output });
       slot.pendingRequestIds.add(requestId);
       if (slot.heartbeat.oldestPendingStartedAtMs === null) slot.heartbeat.oldestPendingStartedAtMs = startedAtMs;
-      try { slot.worker.postMessage(message); posted?.(); }
+      try { slot.worker.postMessage(message.kind === "turn" ? { ...message, postedAtEpochMs: hopTraceEpochNowMs() } : message); posted?.(); }
       catch (error) {
         this.pending.delete(requestId);
         slot.pendingRequestIds.delete(requestId);
@@ -2435,7 +2487,7 @@ export class ShardClient {
 //#region 🧪️Tests
 export type { InboundMessage, OutboundMessage, PendingEntry, ShardInstanceOwner, ShardSlot };
 export type ShardClientTestDependenciesV1 = ReturnType<typeof shardClientTestDependenciesV1>;
-const shardClientTestDependenciesV1 = () => ({ ACTOR_BYTE_PAGE_BYTES, MAINTENANCE_LANE_DEFAULT_BUDGET, NO_RESIDENT_FAULT, SEGMENTED_DOWNLOAD_CONTRACT, SEGMENTED_DOWNLOAD_REFUSAL, admitSegmentedDownloadChunk, OwnedActorTurnOutput, OwnedActorTurnOutputs, OwnedKernelReturnContent, OwnedNativeUiPatchAuthority, OwnedNativeUiPatchSubmissionReceipt, OwnedResidentLedger, OwnedResidentRetirement, OwnedShardReturn, OwnedShardReturnPage, OwnedUiInstance, OwnedUiInstanceRetirement, OwnedUiPatchAcknowledgement, OwnedUiPatchInputRetirement, OwnedUiResidentPool, SHARD_FRAME_VARIANT_FIELDS, SHARD_JSPI_FAULT_CODE, SHARD_LIVENESS_POLICY, ShardClient, ShardJspiUnavailableError, assertShardJspiAvailable, capturedReturnState, createActorBytePage, createGrantedBudgetTracker, createShardCommandIngressPages, describeShardMessageError, describeShardSilence, describeShardWorkerError, encodeActorInstanceLifecycle, encodeActorUiPatchReceipt, evaluateShardLiveness, interpretShardFrame, isShardLostError, orderEnvelopesByLane, poolControllerEnvelope, poolUiEnvelope, settleFailedInstanceOpen, shardJspiAvailable, uiResidentMetadataEnvelope });
+const shardClientTestDependenciesV1 = () => ({ ACTOR_BYTE_PAGE_BYTES, SHARD_COMMAND_MAXIMUM_PAGES, MAINTENANCE_LANE_DEFAULT_BUDGET, NO_RESIDENT_FAULT, SEGMENTED_DOWNLOAD_CONTRACT, SEGMENTED_DOWNLOAD_REFUSAL, admitSegmentedDownloadChunk, OwnedActorTurnOutput, OwnedActorTurnOutputs, OwnedKernelReturnContent, OwnedNativeUiPatchAuthority, OwnedNativeUiPatchSubmissionReceipt, OwnedResidentLedger, OwnedResidentRetirement, OwnedShardReturn, OwnedShardReturnPage, OwnedUiInstance, OwnedUiInstanceRetirement, OwnedUiPatchAcknowledgement, OwnedUiPatchInputRetirement, OwnedUiResidentPool, SHARD_FRAME_VARIANT_FIELDS, SHARD_JSPI_FAULT_CODE, SHARD_LIVENESS_POLICY, ShardClient, ShardJspiUnavailableError, assertShardJspiAvailable, capturedReturnState, createActorBytePage, createGrantedBudgetTracker, createShardCommandIngressPages, describeShardMessageError, describeShardSilence, describeShardWorkerError, encodeActorInstanceLifecycle, encodeActorUiPatchReceipt, evaluateShardLiveness, interpretShardFrame, isShardLostError, orderEnvelopesByLane, poolControllerEnvelope, poolUiEnvelope, settleFailedInstanceOpen, shardJspiAvailable, uiResidentMetadataEnvelope });
 
 export type ShardClientRetryableLifecycleTestDependenciesV1 = ReturnType<typeof shardClientRetryableLifecycleTestDependenciesV1>;
 const shardClientRetryableLifecycleTestDependenciesV1 = () => ({ RETRYABLE_LIFECYCLE_TURN, RETRYABLE_LIFECYCLE_TURN_ATTEMPTS, graftWorkerStack, isRetryableLifecycleTurn });
@@ -2448,5 +2500,7 @@ if (import.meta.vitest) {
   await registerRetryableLifecycleDeadlineTests(import.meta.vitest, shardClientRetryableLifecycleTestDependenciesV1(), testSource);
   const { registerCancelJobReplyTests } = await import("./🧪️tests/🛑️cancel-job-reply/🟦️.ts");
   await registerCancelJobReplyTests(import.meta.vitest, shardClientTestDependenciesV1(), testSource);
+  const { registerCommandIngressPageTests } = await import("./🧪️tests/📥️command-ingress-pages/🟦️.ts");
+  await registerCommandIngressPageTests(import.meta.vitest, shardClientTestDependenciesV1(), testSource);
 }
 //#endregion 🧪️Tests

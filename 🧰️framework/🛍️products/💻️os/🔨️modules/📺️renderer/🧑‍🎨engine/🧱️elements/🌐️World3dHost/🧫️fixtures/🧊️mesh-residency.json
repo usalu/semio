@@ -1,0 +1,62 @@
+{
+  "field": "meshesJson",
+  "contract": {
+    "identityKey": "the element TEXT of a mesh inside meshesJson",
+    "fallbackIsAlwaysCorrect": true,
+    "fallbackRebuildsEverything": true,
+    "disposeOnRemove": true
+  },
+  "cases": [
+    {
+      "name": "a first parse retains nothing and builds every mesh",
+      "previousMeshesJson": null,
+      "meshesJson": "[{\"id\":\"a\",\"data\":{\"positions\":[0,0,0],\"normals\":[0,1,0],\"indices\":[0]}},{\"id\":\"b\",\"data\":{\"positions\":[1,0,0],\"normals\":[0,1,0],\"indices\":[0]}}]",
+      "expect": { "ids": ["a", "b"], "reusedIds": [], "built": 2 }
+    },
+    {
+      "name": "an unchanged payload reuses every record",
+      "previousMeshesJson": "[{\"id\":\"a\",\"data\":{\"positions\":[0,0,0],\"normals\":[0,1,0],\"indices\":[0]}},{\"id\":\"b\",\"data\":{\"positions\":[1,0,0],\"normals\":[0,1,0],\"indices\":[0]}}]",
+      "meshesJson": "[{\"id\":\"a\",\"data\":{\"positions\":[0,0,0],\"normals\":[0,1,0],\"indices\":[0]}},{\"id\":\"b\",\"data\":{\"positions\":[1,0,0],\"normals\":[0,1,0],\"indices\":[0]}}]",
+      "expect": { "ids": ["a", "b"], "reusedIds": ["a", "b"], "built": 0 }
+    },
+    {
+      "name": "one moved mesh of three reuses the other two",
+      "previousMeshesJson": "[{\"id\":\"a\",\"data\":{\"positions\":[0,0,0],\"normals\":[0,1,0],\"indices\":[0]}},{\"id\":\"b\",\"data\":{\"positions\":[1,0,0],\"normals\":[0,1,0],\"indices\":[0]}},{\"id\":\"c\",\"data\":{\"positions\":[2,0,0],\"normals\":[0,1,0],\"indices\":[0]}}]",
+      "meshesJson": "[{\"id\":\"a\",\"data\":{\"positions\":[0,0,0],\"normals\":[0,1,0],\"indices\":[0]}},{\"id\":\"b\",\"data\":{\"positions\":[9,0,0],\"normals\":[0,1,0],\"indices\":[0]}},{\"id\":\"c\",\"data\":{\"positions\":[2,0,0],\"normals\":[0,1,0],\"indices\":[0]}}]",
+      "expect": { "ids": ["a", "b", "c"], "reusedIds": ["a", "c"], "built": 1 }
+    },
+    {
+      "name": "a removed mesh drops out and retires its visuals",
+      "previousMeshesJson": "[{\"id\":\"a\",\"data\":{\"positions\":[0,0,0],\"normals\":[0,1,0],\"indices\":[0]}},{\"id\":\"b\",\"data\":{\"positions\":[1,0,0],\"normals\":[0,1,0],\"indices\":[0]}}]",
+      "meshesJson": "[{\"id\":\"a\",\"data\":{\"positions\":[0,0,0],\"normals\":[0,1,0],\"indices\":[0]}}]",
+      "expect": { "ids": ["a"], "reusedIds": ["a"], "built": 0 }
+    },
+    {
+      "name": "an empty payload retains nothing",
+      "previousMeshesJson": "[{\"id\":\"a\",\"data\":{\"positions\":[0,0,0],\"normals\":[0,1,0],\"indices\":[0]}}]",
+      "meshesJson": "[]",
+      "expect": { "ids": [], "reusedIds": [], "built": 0 }
+    },
+    {
+      "name": "a malformed payload falls back to the whole-document parse",
+      "previousMeshesJson": "[{\"id\":\"a\",\"data\":{\"positions\":[0,0,0],\"normals\":[0,1,0],\"indices\":[0]}}]",
+      "meshesJson": "not json",
+      "expect": { "ids": [], "reusedIds": [], "built": 0 }
+    },
+    {
+      "name": "a mesh whose text carries a bracket inside a string still splits",
+      "previousMeshesJson": null,
+      "meshesJson": "[{\"id\":\"a],[\",\"data\":{\"positions\":[0,0,0],\"normals\":[0,1,0],\"indices\":[0]}}]",
+      "expect": { "ids": ["a],["], "reusedIds": [], "built": 1 }
+    }
+  ],
+  "splitCases": [
+    { "json": "[]", "elements": [] },
+    { "json": "[1,2,3]", "elements": ["1", "2", "3"] },
+    { "json": "[{\"a\":[1,2]},{\"b\":\"x,y\"}]", "elements": ["{\"a\":[1,2]}", "{\"b\":\"x,y\"}"] },
+    { "json": "[\"a\\\"b\",\"c\"]", "elements": ["\"a\\\"b\"", "\"c\""] },
+    { "json": "{\"a\":1}", "elements": null },
+    { "json": "[1,]", "elements": null },
+    { "json": "[1,2", "elements": null }
+  ]
+}

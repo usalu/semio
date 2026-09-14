@@ -26,6 +26,30 @@ struct PreviewCancelFixture {
     cancel_action: String,
     phase_labels: std::collections::BTreeMap<String, PhaseLabel>,
     status_contract: StatusContract,
+    chain_census: ChainCensus,
+}
+
+/// ⛓️ The chain ledger's own fixture section: the hop-by-hop census a preview window prices its
+/// progress off, and the two rules that make that price monotone.
+#[derive(serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct ChainCensus {
+    monotone: bool,
+    sequence: Vec<ChainCensusStep>,
+}
+
+#[derive(serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct ChainCensusStep {
+    step: String,
+    working: bool,
+    nodes_done: u32,
+    nodes_total: u32,
+    in_flight: u32,
+    wave: Vec<String>,
+    units_done: u32,
+    units_total: u32,
+    ratio: f64,
 }
 
 #[derive(serde::Deserialize)]
@@ -264,6 +288,49 @@ fn the_viewer_preview_status_obeys_the_shared_contract_in_every_state() {
     assert_eq!(contract.evaluate_fault_code, semio_framework_os_flow::ExtensionEvaluateFault::CODE);
     assert_eq!(contract.address_miss_code, semio_framework_os_flow::FlowExtensionAddressMiss::CODE);
     assert!(!contract.debug_keys.is_empty());
+}
+
+/// ⚖️ LAW: the progress ratio a preview window publishes is MONOTONE within one evaluation, and it
+/// actually MOVES — the hop-by-hop census in `🧫️fixtures/🛑️preview-cancel.json` (`chainCensus`),
+/// replayed through the ONE owning ledger both renderers read (`World3dComputeStatusV1`).
+///
+/// 🩸️ The budgeted-eval ledger aggregates its LIVE rows only, so a finishing node shrank both halves
+/// of its fraction and the published pill counted DOWN — measured as `Computing 7/7 (100%)` →
+/// `4/6 (67%)` → `3/6 (50%)` → `2/6 (33%)` across one evaluation
+/// (`📓️wgpu-progress-visibility-2026-09-14.md` §4.3). A bar that runs backwards is the top
+/// perceived-stall defect in the whole surface: on the longest example the user watches the
+/// percentage fall and concludes the app is looping.
+///
+/// 🌊️ The sequence is the COALESCED chain's: four contributed nodes across three dependency levels
+/// park in three waves, not four hops (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+#[test]
+fn the_published_progress_ratio_is_monotone_and_advances_across_one_evaluation() {
+    let fixture = preview_cancel_fixture();
+    let census = &fixture.chain_census;
+    assert!(census.monotone, "the fixture declares the law it is replaying");
+    let mut ratios = Vec::new();
+    let mut nodes_done = Vec::new();
+    for step in &census.sequence {
+        let status = semio_framework_os_flow::PreviewChainStatus { nodes_done: step.nodes_done, nodes_total: step.nodes_total, in_flight: step.in_flight, working: step.working };
+        assert_eq!(status.units(), (step.units_done, step.units_total), "{}: the chain ledger owes the fixture's units", step.step);
+        assert!((status.ratio() - step.ratio).abs() < 1e-12, "{}: ratio {} is not the fixture's {}", step.step, status.ratio(), step.ratio);
+        assert_eq!(step.in_flight as usize, step.wave.len(), "{}: every parked node of a wave is one answer in flight", step.step);
+        if step.working {
+            assert!(status.ratio() < 1.0, "{}: a working chain may never publish 1.0 — \"done\" is the one answer live work may not give", step.step);
+        }
+        ratios.push(status.ratio());
+        nodes_done.push(step.nodes_done);
+    }
+    for pair in ratios.windows(2) {
+        assert!(pair[1] >= pair[0] - 1e-12, "the published ratio went BACKWARDS: {ratios:?}");
+    }
+    for pair in nodes_done.windows(2) {
+        assert!(pair[1] >= pair[0], "the node census shrank: {nodes_done:?}");
+    }
+    assert!(ratios.last().copied().unwrap_or_default() > ratios.first().copied().unwrap_or_default(), "a monotone ratio that never moves is a bar that reads \"nothing yet\" and then \"done\": {ratios:?}");
+    let waves: Vec<usize> = census.sequence.iter().filter(|step| !step.wave.is_empty()).map(|step| step.wave.len()).collect();
+    assert_eq!(waves, vec![2, 1, 1], "four contributed nodes across three dependency levels cost THREE waves, not four hops");
+    eprintln!("[DEBUG] chain census ratios={ratios:?} nodesDone={nodes_done:?} waves={waves:?}");
 }
 
 /// ⚖️ LAW: a preview window rendered WITHOUT a retained session still publishes the whole contract —

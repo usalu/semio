@@ -158,10 +158,13 @@ pub fn tick_is_unfinished(more: bool, parked_extension_invocations: usize) -> bo
 pub fn evaluate_tick(window_id: &str, window_kind_id: &str, fixture: &semio_framework_artifact_flow_flow::FlowFixture, session: &mut FlowEvalSession, retained_eval: Option<&str>) -> FlowEvalTickOutcome {
     session.begin_window_tick(window_id);
     let mut host = flow_host_with_session(fixture, session);
-    let more = session.tick(&mut host);
-    let pending_extension_eval = host.take_pending_extension_eval();
+    let more = session.tick(&mut host, None);
+    let pending_extension_evals = host.take_pending_extension_evals();
     host.retire_cold();
-    let extension_invocations: Vec<ExtensionInvocation> = pending_extension_eval
+    // 🌊️ ONE WAVE, ONE HOP — see the generation3d twin: every parked request had its inputs ready in
+    // the same walk, so the whole level crosses to its plugin together.
+    let extension_invocations: Vec<ExtensionInvocation> = pending_extension_evals
+        .into_iter()
         .map(|pending| {
             let request_json = dsl::json::to_json_string(&dsl::DslValue::object([
                 ("operatorId".to_string(), dsl::DslValue::String(pending.operator_id.clone())),
@@ -173,7 +176,6 @@ pub fn evaluate_tick(window_id: &str, window_kind_id: &str, fixture: &semio_fram
             ]));
             ExtensionInvocation::new(pending.extension_id, "evaluate", request_json, "flowEvalResolve")
         })
-        .into_iter()
         .collect();
     session.note_window_tick_outcome(window_id, tick_is_unfinished(more, extension_invocations.len()));
     if !extension_invocations.is_empty() {

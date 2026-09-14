@@ -602,13 +602,14 @@ impl<A: ArtifactApp> ToolRunEntry<A> {
                 match op {
                     ToolRunTraceOp::Upsert { key, .. } => {
                         self.trace_keys.observe(*key);
+                        self.recent_trace.retain(|recent| recent != key);
                         if self.recent_trace.len() == TOOL_RUN_PANEL_TRACE_ROWS {
                             self.recent_trace.pop_front();
                         }
                         self.recent_trace.push_back(*key);
                     }
                     ToolRunTraceOp::Clear => self.recent_trace.clear(),
-                    ToolRunTraceOp::Retire { .. } => {}
+                    ToolRunTraceOp::Retire { key } => self.recent_trace.retain(|recent| recent != key),
                 }
             }
         }
@@ -1821,17 +1822,51 @@ fn tool_run_state_label(state: ToolRunState) -> ToolRunLabel {
 }
 
 impl<A: ArtifactApp> ToolRunLedger<A> {
-    /// 🪧️ The framework ToolRun panel (§2.6) as a `ComponentTree` root `framework.toolRun`: one group
-    /// `framework.toolRun.<run>` per run this instance holds, oldest first, labelled by `tool_label` of its tool.
-    pub fn panel(&mut self, controller_id: &str, locale: Locale, tool_label: impl Fn(&str) -> Option<String>) -> UiAssemblyResult<BuiltNode> {
+    /// 🪧️ The framework ToolRun panel (§2.6) as a `ComponentTree` root `framework.toolRun`: a ready group
+    /// `framework.toolRun.ready` with an enabled Start for `ready_tool` (the active run-declaring tool) while this
+    /// instance holds no run of it, then one group `framework.toolRun.<run>` per run, oldest first, labelled by
+    /// `tool_label` of its tool.
+    pub fn panel(&mut self, controller_id: &str, locale: Locale, ready_tool: Option<&str>, tool_label: impl Fn(&str) -> Option<String>) -> UiAssemblyResult<BuiltNode> {
         let error = ui_assembly_error;
         let mut groups = BuiltChildren::default();
+        if let Some(tool_id) = ready_tool.filter(|tool_id| !self.entries.iter().any(|entry| entry.tool_id == *tool_id)) {
+            let label = tool_label(tool_id).unwrap_or_else(|| tool_id.to_string());
+            groups.try_push(tool_run_panel_ready_group(tool_id, controller_id, locale, &label)?).map_err(|_| error("tool-run-panel.groups"))?;
+        }
         for entry in &mut self.entries {
             let label = tool_label(&entry.tool_id).unwrap_or_else(|| entry.tool_id.clone());
             groups.try_push(tool_run_panel_group(entry, controller_id, locale, &label)?).map_err(|_| error("tool-run-panel.groups"))?;
         }
         column().try_label(if locale == Locale::De { "Werkzeugläufe" } else { "Tool runs" }).map_err(|_| error("tool-run-panel.label"))?.try_id(semio_framework_tool_run::TOOL_RUN_PANEL_ID).map_err(|_| error("tool-run-panel.id"))?.try_children(groups).map_err(|_| error("tool-run-panel.groups"))?.try_build().map_err(|_| error("tool-run-panel.build"))
     }
+}
+
+/// ▶️ The ready group of a run-declaring tool with no run yet: its status and a real Start button carrying the tool id.
+fn tool_run_panel_ready_group(tool_id: &str, controller_id: &str, locale: Locale, label: &str) -> UiAssemblyResult<BuiltNode> {
+    let error = ui_assembly_error;
+    let scope = format!("{}.ready", semio_framework_tool_run::TOOL_RUN_PANEL_ID);
+    let status = text(Label(UiText::clipped(ToolRunLabel::ReadyToStart.text(locale)))).live(Liveness::Polite).try_id(format!("{scope}.status")).map_err(|_| error("tool-run-panel.ready-status-id"))?.try_build().map_err(|_| error("tool-run-panel.ready-status"))?;
+    let mut arguments = UiMapBuilder::try_new().ok_or_else(|| error("tool-run-panel.ready-args"))?;
+    arguments.push(TOOL_RUN_ARG_TOOL_ID.to_string(), UiValue::Text(UiText::clipped(tool_id))).map_err(|_| error("tool-run-panel.ready-args"))?;
+    let action = ToolRunAction::Start;
+    let action_id = ActionId::try_v1(controller_id, action.id()).ok_or_else(|| error("tool-run-panel.action-id"))?;
+    let start = button(Label(UiText::clipped(action.label().text(locale))))
+        .try_id(format!("{scope}.{}", action.id()))
+        .map_err(|_| error("tool-run-panel.button-id"))?
+        .try_shortcut(action.chord())
+        .map_err(|_| error("tool-run-panel.button-shortcut"))?
+        .try_on_with(Trigger::Activate, action_id, UiValue::Map(arguments.finish()))
+        .map_err(|_| error("tool-run-panel.button-binding"))?
+        .try_build()
+        .map_err(|_| error("tool-run-panel.button"))?;
+    let mut buttons = BuiltChildren::default();
+    buttons.try_push(start).map_err(|_| error("tool-run-panel.buttons"))?;
+    let toolbar = row().try_id(format!("{scope}.actions")).map_err(|_| error("tool-run-panel.actions-id"))?.try_children(buttons).map_err(|_| error("tool-run-panel.actions"))?.try_build().map_err(|_| error("tool-run-panel.actions-build"))?;
+    let mut children = BuiltChildren::default();
+    for child in [status, toolbar] {
+        children.try_push(child).map_err(|_| error("tool-run-panel.children"))?;
+    }
+    column().try_label(label).map_err(|_| error("tool-run-panel.label"))?.try_id(scope).map_err(|_| error("tool-run-panel.id"))?.try_children(children).map_err(|_| error("tool-run-panel.children"))?.try_build().map_err(|_| error("tool-run-panel.build"))
 }
 
 /// 🪧️ One run's panel group (§2.6): polite status, progressbar, real buttons with `aria-keyshortcuts` addressing the
@@ -1844,15 +1879,25 @@ fn tool_run_panel_group<A: ArtifactApp>(entry: &mut ToolRunEntry<A>, controller_
         let stage_label = entry.definition.stage(entry.stage).map_or_else(String::new, |stage| stage.label.resolve(Terminology::Native, locale).to_string());
         let status = format!("{} · {stage_label} ({}/{stage_count})", tool_run_state_label(state).text(locale), usize::from(entry.stage) + 1);
         let now_ms = semio_framework_job::default_now_ms().unwrap_or(0);
+        // 👁️ The throttle belongs to the ANNOUNCEMENT, never to the text. Publishing the last ANNOUNCED
+        // string froze the visible pill at whatever stage the run was in when it was first announced:
+        // a `Finalized` run still read `Evaluating nodes (1/2)` on 6021 at 18:28 while its own progress
+        // bar had moved on (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). A sighted reader is watching the
+        // same string a reader hears, so the string is always current and only `live` is rationed.
         let announce = match entry.announced.as_ref() {
-            Some((announced_state, at, _)) => *announced_state != state || now_ms.saturating_sub(*at) >= TOOL_RUN_STATUS_ANNOUNCE_INTERVAL_MS,
+            Some((announced_state, at, announced)) => *announced_state != state || (*announced != status && now_ms.saturating_sub(*at) >= TOOL_RUN_STATUS_ANNOUNCE_INTERVAL_MS),
             None => true,
         };
         if announce {
-            entry.announced = Some((state, now_ms, status));
+            entry.announced = Some((state, now_ms, status.clone()));
         }
-        let status = entry.announced.as_ref().map(|(_, _, text)| text.clone()).unwrap_or_default();
-        let live = if state == ToolRunState::Faulted || entry.conflicts > 0 { Liveness::Assertive } else { Liveness::Polite };
+        let live = if !announce {
+            Liveness::Off
+        } else if state == ToolRunState::Faulted || entry.conflicts > 0 {
+            Liveness::Assertive
+        } else {
+            Liveness::Polite
+        };
         let status_node = text(Label(UiText::clipped(&status))).live(live).try_id(format!("{scope}.status")).map_err(|_| error("tool-run-panel.status-id"))?.try_build().map_err(|_| error("tool-run-panel.status"))?;
         let unit = entry.definition.unit.resolve(Terminology::Native, locale).to_string();
         let value_text = match entry.total {

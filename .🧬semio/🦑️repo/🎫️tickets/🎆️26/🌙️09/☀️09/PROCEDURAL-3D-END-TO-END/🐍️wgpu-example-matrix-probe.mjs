@@ -34,7 +34,7 @@
  *   SEMIO_PROBE_LANES=edit,viewer,generate   SEMIO_PROBE_EXAMPLES=<id>,<id>   SEMIO_PROBE_BUDGET=<seconds>
  */
 import { chromium } from "playwright";
-import { writeFileSync, mkdirSync } from "node:fs";
+import { writeFileSync, mkdirSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
 const origin = process.env.SEMIO_PROBE_ORIGIN ?? "http://127.0.0.1:6118";
@@ -61,6 +61,94 @@ const LANES = {
   edit: (example) => `${origin}/?plugin=generation3d&mode=edit${axis(example)}`,
   viewer: (example) => `${origin}/?plugin=generation3d&role=viewer${axis(example)}`,
   generate: (example) => `${origin}/?plugin=generation3d&mode=generate${axis(example)}`,
+};
+
+/** 📚️ Where the committed per-example oracle lives — the SAME `🔣️.json` the native `example-geometry`
+ * lane asserts against, read here so a runtime census and a native one are two readings of one
+ * statement instead of two independently invented numbers. Directory names carry an emoji prefix, so
+ * the slug is matched against the tail of each entry. */
+const EXAMPLES_ROOT = join(import.meta.dir, "..", "..", "..", "..", "..", "..", "..", "✏️s", "🔌️plugins", "🌀️procedural", "🗿️artifacts", "🧊️generation3d", "🏅️standards", "🔖️1", "🪆️subsets", "✳️any", "📚️examples");
+
+const fixtureFor = (example) => {
+  try {
+    const dir = readdirSync(EXAMPLES_ROOT).find((entry) => entry.endsWith(example));
+    if (!dir) return null;
+    return JSON.parse(readFileSync(join(EXAMPLES_ROOT, dir, "🧫️fixtures", "🧩️example", "🔣️.json"), "utf8"));
+  } catch {
+    return null;
+  }
+};
+
+/** 📐️ How far a LIVE preview's bounding box may sit from the committed one. The fixture's own
+ * `boundingBoxTolerance` is measured at its `tessellationTolerance`; the playground asks the kernel
+ * for the LOD deflection instead (`preview_eval::preview_tolerance`, 0.05 for the unset lod mode),
+ * and a tessellated hull is inscribed in the true surface by at most that chord deviation. So the
+ * runtime band is the looser of the two — stated, not fudged. */
+const PREVIEW_LOD_TOLERANCE = { coarse: 0.15, fine: 0.02 };
+const bboxTolerance = (fixture) => Math.max(fixture.expect.boundingBoxTolerance, PREVIEW_LOD_TOLERANCE[fixture.delivery.lodMode] ?? 0.05);
+
+/** 🌍️ The surface a preview lane publishes into — the one `dumpMeshStats` walked that carries a
+ * `preview` in its id. A lane with several World3d surfaces (the generate layout) still has exactly
+ * one the example's geometry lands in, so the richest publication wins the tie. */
+const previewSurface = (published) => {
+  const surfaces = (published?.surfaces ?? []).filter((surface) => surface.surfaceId.includes("preview"));
+  if (surfaces.length === 0) return null;
+  return surfaces.reduce((best, surface) => ((surface.meshes ?? []).length > (best.meshes ?? []).length ? surface : best), surfaces[0]);
+};
+
+/** ✅️ Holds ONE lane's live publication to the committed fixture, role by role and axis by axis.
+ *
+ * ⚖️ Three separate readings used to be conflated. `state-meshes` in the surface census counts the
+ * RENDERER's mesh store (face overlay and placeholder included) — which is why every non-hex example
+ * read 2-3 against an oracle of 1 and nobody could say whether that was a companion wire or a
+ * duplication. `dumpMeshStats` answers the PRODUCER's own `meshes_json`, one row per published mesh
+ * with the role the payload stamps, which is exactly what `delivery.meshes`/`delivery.meshRoles`
+ * state (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-mesh-oracle-2026-09-14.md`).
+ *
+ * 📐️ The box is taken over the meshes whose role IS the fixture's own `preview.kind`, never over the
+ * union: a preview publishes the wire it extruded and the vector that drove it beside its solid, and
+ * the committed box is the preview target's.
+ */
+const publicationVerdict = (example, published) => {
+  const fixture = fixtureFor(example);
+  if (!fixture) return null;
+  const surface = previewSurface(published);
+  const failures = [];
+  /** 🩺️ Two different absences a reader must be able to tell apart: a renderer whose wasm predates
+   * `dumpMeshStats` answers nothing at all, while a live renderer with a blank preview answers a
+   * surface with no meshes. */
+  if (published === null) failures.push("the served renderer exposes no dumpMeshStats export — rebuild @semio-tech/framework-renderer-wgpu:wasm and reload");
+  else if (!surface) failures.push("no world3d preview surface published a mesh payload");
+  const meshes = surface?.meshes ?? [];
+  const roles = surface?.roles ?? {};
+  const expectedRoles = fixture.delivery.meshRoles;
+  if (surface) {
+    if (meshes.length !== fixture.delivery.meshes) failures.push(`published ${meshes.length} meshes, the fixture delivers exactly ${fixture.delivery.meshes}`);
+    if (roles["(unstamped)"]) failures.push(`${roles["(unstamped)"]} published meshes carry no role stamp — the staged guest predates preview_mesh_role`);
+    for (const role of new Set([...Object.keys(expectedRoles), ...Object.keys(roles)])) {
+      if ((roles[role] ?? 0) !== (expectedRoles[role] ?? 0)) failures.push(`role ${role}: published ${roles[role] ?? 0}, the fixture delivers ${expectedRoles[role] ?? 0}`);
+    }
+  }
+  const targets = meshes.filter((mesh) => mesh.role === fixture.preview.kind && mesh.bboxMin);
+  let box = null;
+  if (surface && targets.length === 0) failures.push(`no published mesh carries the fixture's own preview role ${fixture.preview.kind} with bounds`);
+  if (targets.length > 0) {
+    box = {
+      min: [0, 1, 2].map((axis) => Math.min(...targets.map((mesh) => mesh.bboxMin[axis]))),
+      max: [0, 1, 2].map((axis) => Math.max(...targets.map((mesh) => mesh.bboxMax[axis]))),
+    };
+    const tolerance = bboxTolerance(fixture);
+    for (let axis = 0; axis < 3; axis += 1) {
+      if (Math.abs(box.min[axis] - fixture.expect.boundingBoxMin[axis]) > tolerance) failures.push(`bboxMin[${axis}] ${box.min[axis]} vs committed ${fixture.expect.boundingBoxMin[axis]} (tolerance ${tolerance})`);
+      if (Math.abs(box.max[axis] - fixture.expect.boundingBoxMax[axis]) > tolerance) failures.push(`bboxMax[${axis}] ${box.max[axis]} vs committed ${fixture.expect.boundingBoxMax[axis]} (tolerance ${tolerance})`);
+    }
+  }
+  return {
+    ok: failures.length === 0,
+    failures,
+    expected: { meshes: fixture.delivery.meshes, meshRoles: expectedRoles, boundingBoxMin: fixture.expect.boundingBoxMin, boundingBoxMax: fixture.expect.boundingBoxMax, tolerance: bboxTolerance(fixture), previewKind: fixture.preview.kind },
+    observed: { surfaceId: surface?.surfaceId ?? null, rect: surface?.rect ?? null, meshes: meshes.length, roles, box, ids: meshes.map((mesh) => mesh.id), instances: (surface?.instances ?? []).map((instance) => instance.interactionId), selected: surface?.selected ?? [], hovered: surface?.hovered ?? null },
+  };
 };
 
 const examples = (process.env.SEMIO_PROBE_EXAMPLES ?? ALL_EXAMPLES.join(",")).split(",").filter(Boolean);
@@ -140,7 +228,7 @@ for (const lane of lanes) {
               return null;
             }
           };
-          return { structure: await parse(() => beacon.dumpStructure(id)), stats: await parse(() => beacon.dumpFrameStats(id)) };
+          return { structure: await parse(() => beacon.dumpStructure(id)), stats: await parse(() => beacon.dumpFrameStats(id)), meshStats: typeof beacon.dumpMeshStats === "function" ? await parse(() => beacon.dumpMeshStats(id)) : null };
         }, windowId)
         .catch(() => null);
 
@@ -166,6 +254,7 @@ for (const lane of lanes) {
         quadCount = Math.max(quadCount, stats?.quadCount ?? 0);
       }
       const dom = await domSignals();
+      const published = (await dump(undefined))?.meshStats ?? null;
       const traces = world3dTraces();
       const geometry = geometryEvidence();
       const progress = guestProgress();
@@ -180,6 +269,7 @@ for (const lane of lanes) {
         progress,
         geometry,
         meshSurfaces: meshy.map(([id, trace]) => ({ surface: id, instances: trace.instances, lines: trace.lines, meshes: trace.stateMeshes, draws: trace.draws })),
+        published,
         converged: scenePasses > 0 && meshy.length > 0 && geometry !== null && !dom.alert,
       };
     };
@@ -187,7 +277,7 @@ for (const lane of lanes) {
     const url = LANES[lane](example);
     await page.goto(url, { waitUntil: "domcontentloaded" }).catch((error) => lines.push(`${at()} gotoerror ${String(error).slice(0, 300)}`));
 
-    let sample = { windowIds: [], sceneInstances: 0, sceneDraws: 0, scenePasses: 0, quadCount: 0, dom: { status: null, alert: null }, progress: null, geometry: null, meshSurfaces: [], converged: false };
+    let sample = { windowIds: [], sceneInstances: 0, sceneDraws: 0, scenePasses: 0, quadCount: 0, dom: { status: null, alert: null }, progress: null, geometry: null, meshSurfaces: [], published: null, converged: false };
     let stable = 0;
     let firstConvergedMs = null;
     let flip = 0;
@@ -205,7 +295,9 @@ for (const lane of lanes) {
     }
 
     const bootExample = has("wgpu-shell boot example").at(-1) ?? null;
+    const oracle = publicationVerdict(example, sample.published);
     const row = {
+      oracle,
       example,
       lane,
       url,
@@ -229,7 +321,7 @@ for (const lane of lanes) {
       faults: has("invokeExtension faulted").length,
     };
     results.push(row);
-    console.log(`[DEBUG] ${lane}/${example}: ${row.verdict} t=${row.timeToMeshSeconds}s meshes=${JSON.stringify(row.meshSurfaces)} progress=${JSON.stringify(row.guestProgress)} quads=${row.quadCount} status=${JSON.stringify(row.status)} alert=${JSON.stringify(row.alert)} bootExample=${JSON.stringify(row.bootExampleTrace)}`);
+    console.log(`[DEBUG] ${lane}/${example}: ${row.verdict} oracle=${oracle === null ? "n/a" : oracle.ok} ${oracle === null ? "" : JSON.stringify(oracle.failures)} published=${JSON.stringify(oracle?.observed ?? null)} t=${row.timeToMeshSeconds}s meshes=${JSON.stringify(row.meshSurfaces)} progress=${JSON.stringify(row.guestProgress)} quads=${row.quadCount} status=${JSON.stringify(row.status)} alert=${JSON.stringify(row.alert)} bootExample=${JSON.stringify(row.bootExampleTrace)}`);
     await page.screenshot({ path: join(outDir, "final.png") }).catch(() => {});
     writeFileSync(join(outDir, "console.txt"), lines.join("\n"));
     writeFileSync(join(outDir, "result.json"), JSON.stringify(row, null, 2));

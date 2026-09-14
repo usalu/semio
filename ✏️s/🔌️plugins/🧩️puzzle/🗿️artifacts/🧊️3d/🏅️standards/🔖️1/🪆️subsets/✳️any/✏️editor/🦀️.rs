@@ -3148,11 +3148,11 @@ impl Puzzle3dPlayApp {
     /// `instance_record_fingerprint` moved are re-serialized; the mesh declarations and the outliner
     /// memo stay keyed on the (now allocation-free) whole-fixture `fixture_geometry_fingerprint`, which
     /// is what actually changes when the catalogs or the mesh set do.
-    fn geometry_jsons(&self, fixture: &Puzzle3dFixture) -> (String, String, Option<String>) {
+    fn geometry_jsons(&self, fixture: &Puzzle3dFixture, provisional: &std::collections::BTreeSet<u64>) -> (String, String, Option<String>) {
         let fingerprint = main::fixture_geometry_fingerprint(fixture);
         let mut residency = self.instance_residency.lock().expect("instance residency");
         let residency = residency.get_or_insert_with(Box::<main::Puzzle3dInstanceResidency>::default);
-        let republished = residency.refresh(fixture);
+        let republished = residency.refresh(fixture, provisional);
         let mut meshes = self.mesh_cache.lock().expect("mesh cache");
         let mesh_miss = meshes.as_ref().is_none_or(|(cached, _)| *cached != fingerprint);
         if mesh_miss {
@@ -8107,7 +8107,8 @@ impl Puzzle3dPlayApp {
             let labels = puzzle3d_labels(view_state).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.localization.unsupported", "puzzle3d has no authored label set for the host's locale/terminology axes"))?;
             match base_body_key {
                 main::BODY_KEY => {
-                    let (instances_json, meshes_json, instances_delta_json) = app.geometry_jsons(&envelope.fixture);
+                    let provisional = doc.tool_run().map(|run| std::sync::Arc::clone(&run.provisional_entities)).unwrap_or_default();
+                    let (instances_json, meshes_json, instances_delta_json) = app.geometry_jsons(&envelope.fixture, &provisional);
                     let menu_target = envelope.runtime.suggestion_menu.as_ref().map(|menu| menu.vortex_full_id.as_str());
                     let suggestions = menu_target.and_then(|target| owner?.with_mut::<Puzzle3dInstanceOperationOwner, _>(|owner| Ok(owner.brush_suggestions.found(target).cloned())).ok().flatten());
                     main::render(&envelope, &precompute, instances_json, meshes_json, instances_delta_json, interaction, suggestions.as_ref())

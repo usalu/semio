@@ -22,7 +22,7 @@ import { FlowProvider, useFlow } from "../../🔨️modules/🧭️flow-directio
 import { LevelProvider, getLevelZClass, useSurfaceActive } from "../🌈️Surface/🟦️.tsx";
 import { useLabel } from "../🏷️Label/🟦️.tsx";
 import { useShellScopeOptional } from "../🐚️ShellScope/🟦️.tsx";
-import { type Anchor, PANEL_TREE_UNIT_MIME, PanelGhostRoot, WindowChrome, anchorHorizontal, anchorPositionStyle, anchorVertical, beginPanelTreeUnitDrag, chromeHostedOpenPanelPositionStyle, endPanelTreeUnitDrag, flowFromAnchor, publishShellDockRightColumnLeftPx, readActivePanelTreeUnitDrag, shellNavbarTrailingEndReserveStyle, useNativeDragArm, usePanelDockContext, usePanelTreeUnitDragActive, useShellNavbarTrailingEndWidthPx, useUiDriverDragSurface, type UiStatus } from "../../🎯️targets/⚛️react/🟦️";
+import { type Anchor, PANEL_TREE_UNIT_MIME, PanelGhostRoot, WindowChrome, anchorHorizontal, anchorPositionStyle, beginPanelTreeUnitDrag, chromeHostedOpenPanelPositionStyle, endPanelTreeUnitDrag, flowFromAnchor, publishShellChromePanelBox, readActivePanelTreeUnitDrag, safeAreaBoxFromRect, shellNavbarTrailingEndReserveStyle, useNativeDragArm, usePanelDockContext, usePanelTreeUnitDragActive, useShellNavbarTrailingEndWidthPx, useUiDriverDragSurface, type UiStatus } from "../../🎯️targets/⚛️react/🟦️";
 import { PanelTabBar, type PanelTabNode, type PanelTabSelectionOptions, type PanelTreeUnit, findPanelTabNode, progressPanelTabSelection, resolvePanelBranchBodyLeaf, usePanelTabSelection } from "../🧭️PanelTabBar/🟦️.tsx";
 import { CloseIcon, Icon } from "../🔣️Icons/🟦️.tsx";
 import { DragHandle } from "../🧱️DragHandle/🟦️.tsx";
@@ -429,18 +429,19 @@ const Panel: React.FC<PanelProps> = ({
   const flow = flowFromAnchor(anchor);
   const horizontal = anchorHorizontal(anchor);
   const panelShellRoot = panelShellScope?.rootRef.current ?? undefined;
-  // ↔️ The dock's right column floats OVER the canvas region, so a window reaching under it cannot derive
-  // where the column starts — this panel is the only party that knows, and publishes its own left edge for
-  // `🪟️Window`'s right-edge chrome to yield to (see `dockColumnInlineReservePx`). Retracted on close and on
-  // unmount so a closed dock leaves every window's rail flush again.
+  // 🛟️ An anchored panel floats OVER the canvas region in the app root's stacking context, so window
+  // content under it can neither derive the box it occupies nor win the corner back by restacking — this
+  // panel is the only party that knows, and publishes its own box for every in-window affordance that
+  // anchors into the same corner to reserve against (see `chromePanelSafeArea`). Retracted on close and
+  // on unmount so a closed dock leaves every rail flush again.
   reactHostPort.useLayoutEffect(() => {
     const key = `panel:${anchor}`;
     const root = panelRootRef.current;
-    if (!root || horizontal !== "right" || !visible) {
-      publishShellDockRightColumnLeftPx(panelShellRoot, key, null);
-      return () => publishShellDockRightColumnLeftPx(panelShellRoot, key, null);
+    if (!root || !visible) {
+      publishShellChromePanelBox(panelShellRoot, key, anchor, null);
+      return () => publishShellChromePanelBox(panelShellRoot, key, anchor, null);
     }
-    const sync = () => publishShellDockRightColumnLeftPx(panelShellRoot, key, Math.round(root.getBoundingClientRect().left));
+    const sync = () => publishShellChromePanelBox(panelShellRoot, key, anchor, safeAreaBoxFromRect(root.getBoundingClientRect()));
     sync();
     const resizeObserver = typeof ResizeObserver !== "undefined" ? new ResizeObserver(sync) : null;
     resizeObserver?.observe(root);
@@ -448,9 +449,9 @@ const Panel: React.FC<PanelProps> = ({
     return () => {
       resizeObserver?.disconnect();
       window.removeEventListener("resize", sync);
-      publishShellDockRightColumnLeftPx(panelShellRoot, key, null);
+      publishShellChromePanelBox(panelShellRoot, key, anchor, null);
     };
-  }, [anchor, horizontal, panelShellRoot, size, visible]);
+  }, [anchor, panelShellRoot, size, visible]);
   const isBottom = flow.block === "up";
   const isChromeHosted = tabBarHost === "chrome";
   const { resolvedPath, handlePathChange } = usePanelTabSelection({ tabs, visible, onVisibleChange, activeTabPath, onActiveTabPathChange, pathMemory, onPathMemoryChange, drillOnOpen });
@@ -461,17 +462,12 @@ const Panel: React.FC<PanelProps> = ({
   useFirstDraggableElementAlias(panelContentRef, firstDraggableAlias);
 
   // Positioned within the region between navbar and footer (Layout's middle flex row), not the whole display — spacing is relative to that region's edges only, like a window's options rail over its canvas.
-  // Corner panels pin both vertical edges while open so viewport-filling bodies (chat feed, interpreted trees) get a definite height; edge-middle panels stay content-sized and centered on their middle axis.
-  const positionStyle: React.CSSProperties = {
+  // Height hugs content up to that same region bound (`maxHeight`, not a fixed `bottom`) — taller content scrolls internally instead of forcing the box to fill the region. A corner or edge-middle panel grows in one horizontal direction and is resizable only on its inner (canvas-facing) edge; a top/bottom-middle panel is centered and grows both ways, resizable from either edge.
+  const positionStyle = {
     ...(isChromeHosted && visible ? chromeHostedOpenPanelPositionStyle(anchor) : anchorPositionStyle(anchor)),
     width: visible ? `${size}px` : undefined,
     ...(zIndex !== undefined ? { zIndex } : {}),
   };
-  const cornerAnchor = anchorHorizontal(anchor) !== "middle" && anchorVertical(anchor) !== "middle";
-  if (visible && cornerAnchor) {
-    if (anchorVertical(anchor) === "top") positionStyle.bottom = "var(--spacing-single)";
-    else if (anchorVertical(anchor) === "bottom") positionStyle.top = "var(--spacing-single)";
-  }
   const panelZClass = getLevelZClass("panel");
   const panelFoldControl =
     visible && onVisibleChange
@@ -549,10 +545,7 @@ const Panel: React.FC<PanelProps> = ({
                 body={
                   <div data-slot="panel-body-stack" className={cn("relative flex min-h-0 min-w-0 w-full flex-1", isBottom ? "flex-col-reverse" : "flex-col")}>
                     <PanelTabBar anchor={anchor} activePath={resolvedPath} onActivePathChange={handlePathChange} tabs={tabs} variant="panel" direction={flow.block} startDepth={1} showActiveColor={visible} />
-                    <Scrollable
-                      className="relative flex-1 min-h-0"
-                      viewportClassName={isBottom ? "flex min-h-full flex-col justify-end" : "flex min-h-full flex-col"}
-                    >
+                    <Scrollable className="relative flex-1 min-h-0" viewportClassName={isBottom ? "flex min-h-full flex-col justify-end" : undefined}>
                       {activeTabTrees && bodyLeaf ? (
                         <PanelTreeUnitsPane anchor={anchor} tabId={bodyLeaf.id} units={activeTabTrees} treeOpenStates={treeOpenStates} onTreeOpenStateChange={onTreeOpenStateChange} treeContentRevision={treeContentRevision} />
                       ) : null}

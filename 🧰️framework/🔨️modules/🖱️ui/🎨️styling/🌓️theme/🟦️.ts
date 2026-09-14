@@ -537,16 +537,17 @@ function cssProbeAvailable(): boolean {
 }
 
 function probeCssComputed(property: "color" | "backgroundColor", value: string): string {
-  if (typeof document === "undefined") {
+  const host = stylingAppearanceRootElement();
+  if (!host) {
     return "";
   }
   const el = document.createElement("span");
   const key = property === "color" ? "color" : "background-color";
   el.setAttribute("style", `${key}:${value};position:absolute;left:0;top:0;visibility:hidden;pointer-events:none`);
-  if (document.documentElement.classList.contains("dark")) {
+  if (host.classList.contains("dark")) {
     el.classList.add("dark");
   }
-  document.documentElement.appendChild(el);
+  host.appendChild(el);
   const out = getComputedStyle(el)[property];
   el.remove();
   return out;
@@ -692,9 +693,59 @@ export function readableForegroundHex(backgroundRef: string, lightKey: StylingTo
   return result;
 }
 
-/** @emoji 🌓️ Resolves the active styling appearance name from the document root class list. */
+const _stylingAppearanceRoot = ephemeralBox<HTMLElement | null>("framework.modules.ui.styling.packages.typescript.index.ts._stylingAppearanceRoot", null);
+const _stylingAppearanceRootSubscribers = ephemeralSet<() => void>("framework.modules.ui.styling.packages.typescript.index.ts._stylingAppearanceRootSubscribers");
+
+/** @emoji 🌓️ Registers the element that carries the active appearance class and the appearance's
+ * `--base`/`--foreground` values — a mounted shell's own `.semio-scope` root, NOT `documentElement`.
+ * `applyElementsSurfaceChromeAppearanceDom` paints `.dark` on that root and leaves `documentElement`
+ * on the light palette, so every canvas/WASM surface that resolves paints through this module read the
+ * LIGHT palette while the shell rendered dark (measured 2026-09-14 on the generation3d React playground:
+ * the flow node graph painted dark-on-cream inside a dark shell). Pass `null` to fall back to
+ * `documentElement`, which IS the appearance root for a page that owns itself. */
+export function setStylingAppearanceRoot(root: HTMLElement | null): void {
+  if (_stylingAppearanceRoot.current === root) {
+    return;
+  }
+  _stylingAppearanceRoot.current = root;
+  clearColorResolveCache();
+  for (const subscriber of _stylingAppearanceRootSubscribers) {
+    subscriber();
+  }
+}
+
+/** @emoji 🌓️ Notifies when the appearance root changes, so a canvas surface that mounted before the
+ * shell registered its `.semio-scope` root re-observes and re-resolves instead of keeping the paints it
+ * resolved against `documentElement`'s light palette. Returns an unsubscribe function. */
+export function subscribeStylingAppearanceRoot(callback: () => void): () => void {
+  _stylingAppearanceRootSubscribers.add(callback);
+  return () => {
+    _stylingAppearanceRootSubscribers.delete(callback);
+  };
+}
+
+/** @emoji 🌓️ Unregisters `root` — and ONLY `root`. A page whose `documentElement` lease is released
+ * moments after a shell registered its own `.semio-scope` root must not drag the live registration down
+ * with it, which an unconditional `setStylingAppearanceRoot(null)` did (measured: the flow canvas
+ * re-resolved the light palette ~40 s after the shell had already gone dark). */
+export function clearStylingAppearanceRoot(root: HTMLElement): void {
+  if (_stylingAppearanceRoot.current === root) {
+    setStylingAppearanceRoot(null);
+  }
+}
+
+/** @emoji 🌓️ The registered appearance root while it is still in the document, else `documentElement`. */
+export function stylingAppearanceRootElement(): HTMLElement | null {
+  if (typeof document === "undefined") {
+    return null;
+  }
+  const registered = _stylingAppearanceRoot.current;
+  return registered?.isConnected ? registered : document.documentElement;
+}
+
+/** @emoji 🌓️ Resolves the active styling appearance name from the registered appearance root. */
 export function currentStylingAppearanceName(): StylingAppearanceName {
-  if (typeof document !== "undefined" && document.documentElement.classList.contains("dark")) {
+  if (stylingAppearanceRootElement()?.classList.contains("dark")) {
     return "dark";
   }
   return "light";

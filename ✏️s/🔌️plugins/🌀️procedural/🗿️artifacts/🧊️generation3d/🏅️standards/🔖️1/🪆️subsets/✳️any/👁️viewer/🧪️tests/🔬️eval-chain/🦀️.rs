@@ -128,7 +128,7 @@ async fn a_viewer_tick_emits_extension_work_or_re_arms_but_never_settles_silentl
     context::dispatch_effect_command(&mut app, "flowEvalTick", Some(&args), &action_meta).await.expect("viewer preview tick");
     let tick = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut *app, action_meta.instance_id).await.expect("retained publication");
     assert!(!tick.lanes.contains(&TypedOperationResultLane::Fault), "viewer preview tick faulted: {:?}", tick.lanes);
-    let answered = crate::brep_extension::settle(&mut *app, action_meta.instance_id).await;
+    let answered = crate::brep_extension::settle(&mut *app, action_meta.instance_id, &action_meta).await.answered;
     let owed = context::owed_run_actions(&mut app, &view).await;
     eprintln!("[DEBUG] viewer preview tick: owed={owed:?} answered={answered}");
     assert!(answered > 0 || !owed.is_empty(), "the viewer evaluation must emit ExtensionInvocation or owe the run another hop, not a dead sync tick");

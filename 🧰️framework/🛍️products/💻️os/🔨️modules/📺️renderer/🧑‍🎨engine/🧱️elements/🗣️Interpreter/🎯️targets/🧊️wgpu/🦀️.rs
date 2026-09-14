@@ -1801,6 +1801,76 @@ struct DumpFrameStats {
     scene_draws: usize,
     scene_instances: usize,
 }
+/// 🧊️ One published preview mesh of one `World3d` surface, as the PAYLOAD states it — never as the
+/// renderer's own mesh store counts it.
+///
+/// ⚖️ `state-meshes` in the surface census counts the mesh3d authority's store, which also holds the
+/// face overlay, the placeholder and whatever a retirement has not yet dropped; it is therefore not
+/// comparable with a producer's committed `delivery.meshes`. These rows are the producer's own
+/// `meshes_json` entries, one per published mesh, so a probe can hold a live surface to the very
+/// fixture the native lane asserts (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
+/// `📓️wgpu-mesh-oracle-2026-09-14.md`).
+#[cfg(any(target_arch = "wasm32", test))]
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+struct DumpMesh {
+    id: String,
+    /// 🏷️ The producer's own `role` stamp (`solid`/`wire`/`point`/`vector`), or `(unstamped)` for a
+    /// producer that publishes none — an absence a reader must see rather than have defaulted away.
+    role: String,
+    indices: usize,
+    positions: usize,
+    edge_positions: usize,
+    /// 📦️ The mesh's own axis-aligned bounds over `positions`, falling back to `edgePositions` for a
+    /// wire body that carries no vertices at all. `None` when the entry carries neither.
+    bbox_min: Option<[f64; 3]>,
+    bbox_max: Option<[f64; 3]>,
+}
+
+/// 🎯️ One published instance of one mesh — the id every hover/select observation is addressed by,
+/// beside the topology target it stands for.
+#[cfg(any(target_arch = "wasm32", test))]
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+struct DumpMeshInstance {
+    id: String,
+    mesh_id: String,
+    interaction_id: String,
+}
+
+/// 🌍️ One `World3d` surface's whole published payload: where it sits on the page, what it publishes,
+/// and what the producer says is hovered and selected in it.
+#[cfg(any(target_arch = "wasm32", test))]
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+struct DumpMeshSurface {
+    surface_id: String,
+    pane_id: Option<String>,
+    rect: [f32; 4],
+    meshes: Vec<DumpMesh>,
+    instances: Vec<DumpMeshInstance>,
+    /// 🏷️ How many published meshes carry each role — the row a fixture's own `delivery.meshRoles`
+    /// is compared against.
+    roles: std::collections::BTreeMap<String, usize>,
+    /// 📦️ The union of every published mesh's bounds, which is what a camera fit must frame.
+    bbox_min: Option<[f64; 3]>,
+    bbox_max: Option<[f64; 3]>,
+    camera: Option<Value>,
+    selected: Vec<String>,
+    hovered: Option<String>,
+}
+
+/// 🧊️ The wire shape `dumpMeshStats()` answers. Every live window is walked when no window is named,
+/// because a mode layout paints its preview into a pane that is never the largest one.
+#[cfg(any(target_arch = "wasm32", test))]
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+struct DumpMeshStats {
+    window_id: Option<String>,
+    window_ids: Vec<String>,
+    surfaces: Vec<DumpMeshSurface>,
+}
+
 //#endregion 🔬️IntrospectionTypes
 
 //#region 🔬️IntrospectionPathGrammar
@@ -2155,6 +2225,135 @@ fn build_frame_stats(engine: &ui_wgpu::wgpu::Ui, requested: Option<&str>) -> Dum
         .sum();
     DumpFrameStats { window_id: Some(window_id), window_ids, draw_calls, quad_count, glyph_count, scene_passes, scene_draws, scene_instances }
 }
+//#region 🔬️MeshStats
+/// 🔢️ One published-mesh array's length, or zero when the entry omits it.
+#[cfg(any(target_arch = "wasm32", test))]
+fn mesh_array_len(data: Option<&Value>, key: &str) -> usize {
+    data.and_then(|data| data.get(key)).and_then(Value::as_array).map(Vec::len).unwrap_or_default()
+}
+
+/// 📦️ Axis-aligned bounds over a flat `[x, y, z, x, y, z, …]` array.
+#[cfg(any(target_arch = "wasm32", test))]
+fn mesh_bounds(data: Option<&Value>, key: &str) -> Option<([f64; 3], [f64; 3])> {
+    let flat = data.and_then(|data| data.get(key)).and_then(Value::as_array)?;
+    if flat.len() < 3 {
+        return None;
+    }
+    let mut min = [f64::INFINITY; 3];
+    let mut max = [f64::NEG_INFINITY; 3];
+    for point in flat.chunks_exact(3) {
+        for axis in 0..3 {
+            let value = point[axis].as_f64()?;
+            min[axis] = min[axis].min(value);
+            max[axis] = max[axis].max(value);
+        }
+    }
+    Some((min, max))
+}
+
+/// 🧊️ One `World3d` scene's published payload, parsed. Pure over the scene and its page rect, so the
+/// native law exercises exactly what the browser export answers.
+#[cfg(any(target_arch = "wasm32", test))]
+fn mesh_stats_for_scene(scene: &UiComponentSceneNode, rect: [f32; 4]) -> Option<DumpMeshSurface> {
+    let world = scene.world_3d.as_ref()?;
+    let published = serde_json::from_str::<Value>(&world.meshes_json).ok();
+    let entries = published.as_ref().and_then(Value::as_array).cloned().unwrap_or_default();
+    let mut meshes = Vec::new();
+    let mut roles: std::collections::BTreeMap<String, usize> = std::collections::BTreeMap::new();
+    let mut union: Option<([f64; 3], [f64; 3])> = None;
+    for entry in &entries {
+        let data = entry.get("data");
+        let bounds = mesh_bounds(data, "positions").or_else(|| mesh_bounds(data, "edgePositions"));
+        if let Some((min, max)) = bounds {
+            union = Some(match union {
+                None => (min, max),
+                Some((have_min, have_max)) => ([have_min[0].min(min[0]), have_min[1].min(min[1]), have_min[2].min(min[2])], [have_max[0].max(max[0]), have_max[1].max(max[1]), have_max[2].max(max[2])]),
+            });
+        }
+        let role = entry.get("role").and_then(Value::as_str).unwrap_or("(unstamped)").to_string();
+        *roles.entry(role.clone()).or_default() += 1;
+        meshes.push(DumpMesh {
+            id: entry.get("id").and_then(Value::as_str).unwrap_or_default().to_string(),
+            role,
+            indices: mesh_array_len(data, "indices"),
+            positions: mesh_array_len(data, "positions"),
+            edge_positions: mesh_array_len(data, "edgePositions"),
+            bbox_min: bounds.map(|(min, _)| min),
+            bbox_max: bounds.map(|(_, max)| max),
+        });
+    }
+    let instance_json = serde_json::from_str::<Value>(&world.instances_json).ok();
+    let instances = instance_json
+        .as_ref()
+        .and_then(Value::as_array)
+        .map(|entries| {
+            entries
+                .iter()
+                .map(|entry| {
+                    let id = entry.get("id").and_then(Value::as_str).unwrap_or_default().to_string();
+                    DumpMeshInstance {
+                        interaction_id: entry.get("interactionId").and_then(Value::as_str).unwrap_or(id.as_str()).to_string(),
+                        mesh_id: entry.get("meshId").and_then(Value::as_str).unwrap_or_default().to_string(),
+                        id,
+                    }
+                })
+                .collect()
+        })
+        .unwrap_or_default();
+    let selection = serde_json::from_str::<Value>(&world.selection_json).ok();
+    Some(DumpMeshSurface {
+        surface_id: scene.surface_id.clone(),
+        pane_id: scene.pane_id.clone(),
+        rect,
+        meshes,
+        instances,
+        roles,
+        bbox_min: union.map(|(min, _)| min),
+        bbox_max: union.map(|(_, max)| max),
+        camera: serde_json::from_str::<Value>(&world.camera_json).ok(),
+        selected: selection.as_ref().and_then(|selection| selection.get("ids")).and_then(Value::as_array).map(|ids| ids.iter().filter_map(Value::as_str).map(str::to_string).collect()).unwrap_or_default(),
+        hovered: selection.as_ref().and_then(|selection| selection.get("hoveredId")).and_then(Value::as_str).map(str::to_string),
+    })
+}
+
+/// 🚶️ Same depth-first walk `walk_dump` runs, collecting only the `World3d` component scenes and
+/// the absolute page rect each one was laid out at — the rect a pointer probe aims with.
+#[cfg(any(target_arch = "wasm32", test))]
+fn walk_mesh_stats(tree: &ui_wgpu::wgpu::UiTree, id: NodeId, origin_x: f32, origin_y: f32, surfaces: &mut Vec<DumpMeshSurface>) {
+    let Some(node) = tree.node(id) else { return };
+    let (layout_x, layout_y, layout_w, layout_h) = tree.mounted_layout(id).unwrap_or((node.layout.x, node.layout.y, node.layout.width, node.layout.height));
+    let abs_x = origin_x + layout_x;
+    let abs_y = origin_y + layout_y;
+    if let UiNode::ComponentScene(scene) = &node.spec.0 {
+        if let Some(surface) = mesh_stats_for_scene(scene, [abs_x, abs_y, layout_w, layout_h]) {
+            surfaces.push(surface);
+        }
+    }
+    for child in tree.children(id) {
+        walk_mesh_stats(tree, child, abs_x, abs_y, surfaces);
+    }
+}
+
+#[cfg(target_arch = "wasm32")]
+fn build_mesh_stats(engine: &ui_wgpu::wgpu::Ui, requested: Option<&str>) -> DumpMeshStats {
+    let window_ids = dump_window_ids(engine);
+    let named = requested.filter(|id| !id.is_empty()).map(str::to_string);
+    let walked: Vec<String> = match &named {
+        Some(id) => window_ids.iter().filter(|live| *live == id).cloned().collect(),
+        None => window_ids.clone(),
+    };
+    let mut surfaces = Vec::new();
+    for window_id in &walked {
+        if let Some(tree) = engine.tree(window_id) {
+            if let Some(root) = tree.root {
+                walk_mesh_stats(tree, root, 0.0, 0.0, &mut surfaces);
+            }
+        }
+    }
+    DumpMeshStats { window_id: named, window_ids, surfaces }
+}
+//#endregion 🔬️MeshStats
+
 //#endregion 🔬️IntrospectionBuilders
 
 //#region 🔬️IntrospectionExports
@@ -2179,6 +2378,23 @@ pub fn dump_structure(window_id: Option<String>) -> String {
 #[wasm_bindgen(js_name = dumpFrameStats)]
 pub fn dump_frame_stats(window_id: Option<String>) -> String {
     let stats = UI_ENGINE.with(|cell| build_frame_stats(&cell.borrow(), window_id.as_deref()));
+    serde_json::to_string(&stats).unwrap_or_else(|_| "{}".to_string())
+}
+
+/// 🧊️📤️ `dumpMeshStats()` — every `World3d` surface's PUBLISHED mesh payload, per window: one row
+/// per `meshes_json` entry with its producer-stamped role, its array lengths and its own bounds,
+/// plus the instances, the camera, the selection and the surface's page rect.
+///
+/// ⚖️ Its two neighbours cannot answer the question this one exists for. `dumpFrameStats` counts
+/// what the frame DREW (`sceneInstances`), and the World3d surface census counts what the renderer's
+/// mesh store HOLDS (`state-meshes`, which also carries the face overlay and the placeholder) — so
+/// neither is comparable with a producer's committed `delivery.meshes`/`delivery.meshRoles`. This
+/// export answers the producer's own publication, which is the only number both sides state
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-mesh-oracle-2026-09-14.md`).
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen(js_name = dumpMeshStats)]
+pub fn dump_mesh_stats(window_id: Option<String>) -> String {
+    let stats = UI_ENGINE.with(|cell| build_mesh_stats(&cell.borrow(), window_id.as_deref()));
     serde_json::to_string(&stats).unwrap_or_else(|_| "{}".to_string())
 }
 

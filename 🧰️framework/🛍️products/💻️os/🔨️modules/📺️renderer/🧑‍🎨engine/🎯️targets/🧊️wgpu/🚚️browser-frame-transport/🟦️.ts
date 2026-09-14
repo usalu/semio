@@ -196,7 +196,7 @@ export type BrowserFrameWireLosslessEvent =
  * tree out of the isolate so the UI thread can mirror it into a real ARIA subtree beside the canvas.
  * A DOM renderer writes those attributes onto the elements it already renders; a GPU canvas has no
  * elements, so the tree has to cross this seam as data (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). */
-export type BrowserFrameIntrospectionProbe = "structure" | "frame-stats" | "accessibility";
+export type BrowserFrameIntrospectionProbe = "structure" | "frame-stats" | "accessibility" | "mesh-stats";
 
 export type BrowserFrameWorkerIntrospect = { readonly kind: "introspect"; readonly lifecycle: number; readonly requestId: number; readonly probe: BrowserFrameIntrospectionProbe; readonly windowId?: string };
 

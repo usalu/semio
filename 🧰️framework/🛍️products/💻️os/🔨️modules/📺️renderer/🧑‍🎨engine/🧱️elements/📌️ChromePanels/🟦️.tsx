@@ -1382,8 +1382,8 @@ export function createFrameworkChatPanelTab(renderPanel: () => ReactElement): Pa
     tree: {
       resolveTree: () => ({
         sections: [],
-        emptyState: <div className="flex h-full min-h-0 min-w-0 w-full flex-1 flex-col">{renderPanel()}</div>,
-        className: "flex h-full min-h-0 min-w-0 w-full flex-1 flex-col",
+        emptyState: renderPanel(),
+        className: "min-h-0 min-w-0 w-full",
         sortableSections: false,
       }),
     },

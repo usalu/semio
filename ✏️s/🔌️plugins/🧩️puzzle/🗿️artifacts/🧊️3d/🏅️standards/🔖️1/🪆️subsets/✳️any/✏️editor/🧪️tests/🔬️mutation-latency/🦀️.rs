@@ -30,18 +30,18 @@ fn a_pose_edit_reserializes_and_names_exactly_the_objects_that_moved() {
     let fixture = NAKAGIN_EXAMPLE_FIXTURE.clone();
     assert!(fixture.objects.len() >= 100, "the law needs a document large enough for O(n) and O(changed) to differ; got {}", fixture.objects.len());
     let mut residency = main::Puzzle3dInstanceResidency::default();
-    assert!(residency.refresh(&fixture), "the first refresh publishes the whole set");
+    assert!(residency.refresh(&fixture, &std::collections::BTreeSet::new()), "the first refresh publishes the whole set");
     assert_eq!(residency.rebuilt_records() as usize, fixture.objects.len(), "a cold residency serializes every record exactly once");
     assert!(residency.delta_json().is_none(), "a COLD publication carries no delta lane at all — a consumer with nothing retained must read the full set anyway, and the second copy is pure wire cost");
     let full_bytes = residency.instances_json().len();
 
-    assert!(!residency.refresh(&fixture), "an unchanged fixture republishes nothing at all");
+    assert!(!residency.refresh(&fixture, &std::collections::BTreeSet::new()), "an unchanged fixture republishes nothing at all");
     assert_eq!(residency.rebuilt_records(), 0, "an unchanged fixture re-serializes no record");
 
     let mut moved = fixture.clone();
     let victim = moved.objects[7].id.clone();
     moved.objects[7].origin[0] += 1.5;
-    assert!(residency.refresh(&moved), "a moved object republishes");
+    assert!(residency.refresh(&moved, &std::collections::BTreeSet::new()), "a moved object republishes");
     assert_eq!(residency.rebuilt_records(), 1, "exactly one record was re-serialized");
     assert_eq!(residency.changed_ids(), [victim.clone()], "the delta names exactly the moved id");
     assert!(residency.removed_ids().is_empty(), "a pose edit removes nothing");
@@ -67,23 +67,23 @@ fn a_pose_edit_reserializes_and_names_exactly_the_objects_that_moved() {
 fn the_incremental_residency_assembles_byte_identically_to_the_whole_set_encode() {
     for fixture in [CONCRETE_FOREST_EXAMPLE_FIXTURE.clone(), NAKAGIN_EXAMPLE_FIXTURE.clone()] {
         let mut residency = main::Puzzle3dInstanceResidency::default();
-        residency.refresh(&fixture);
+        residency.refresh(&fixture, &std::collections::BTreeSet::new());
         assert_eq!(residency.instances_json(), main::world_instances_geometry_json(&fixture), "a cold residency matches the whole-set encode");
         let mut edited = fixture.clone();
         if let Some(object) = edited.objects.first_mut() {
             object.origin[2] += 3.25;
             object.hidden = !object.hidden;
         }
-        residency.refresh(&edited);
+        residency.refresh(&edited, &std::collections::BTreeSet::new());
         assert_eq!(residency.instances_json(), main::world_instances_geometry_json(&edited), "an incrementally updated residency matches the whole-set encode");
         let mut shortened = edited.clone();
         shortened.objects.pop();
-        residency.refresh(&shortened);
+        residency.refresh(&shortened, &std::collections::BTreeSet::new());
         assert_eq!(residency.instances_json(), main::world_instances_geometry_json(&shortened), "a removal matches the whole-set encode");
         assert_eq!(residency.removed_ids().len(), 1, "and the removal is named in the delta");
         let mut grown = shortened.clone();
         grown.objects.push(edited.objects.last().expect("an object to re-add").clone());
-        residency.refresh(&grown);
+        residency.refresh(&grown, &std::collections::BTreeSet::new());
         assert_eq!(residency.instances_json(), main::world_instances_geometry_json(&grown), "an addition matches the whole-set encode");
     }
 }

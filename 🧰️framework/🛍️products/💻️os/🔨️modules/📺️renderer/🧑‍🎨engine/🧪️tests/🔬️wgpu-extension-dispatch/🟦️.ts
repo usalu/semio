@@ -3,6 +3,7 @@ import laws from "../../🧫️fixtures/🔬️wgpu-extension-dispatch/🔣️.j
 import { GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES, GUEST_HOST_ANSWER_CEILING_BYTES, guestAnswerPages } from "../../../../../../../🔨️modules/⏱️trace/🧮️memory/🟦️.ts";
 import { wgpuBuildScopedContributionsPack, wgpuContributionsIngressSize, wgpuGuestAnswerPages, wgpuHostAnswerCeilingBytes, wgpuSetContributionsCommand, wgpuSlimContributionsView, WGPU_CONTRIBUTIONS_SLIM_VIEW } from "../../🎯️targets/🧊️wgpu/🐚️plugin-bridge/🟦️.ts";
 import { FRAME_WORKER_BOOT_LIVENESS_POLICY, bootPhaseCeilingMs, evaluateBrowserBootLiveness } from "../../🎯️targets/🧊️wgpu/🫀️boot-liveness/🟦️.ts";
+import { SHARD_COMMAND_MAXIMUM_PAGES } from "../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
 import { PUBLIC_INVOCATION_BODY_BYTES, PUBLIC_INVOCATION_STRING_BYTES, publicInvocationStringPages } from "../../../../../../../🔨️modules/🛂️manifest/🟦️.ts";
 
 describe("wgpu extension-answer paging", () => {
@@ -80,17 +81,19 @@ describe("wgpu scoped contributions pack", () => {
 });
 
 describe("wgpu contributions command ingress", () => {
-  it("crosses one slim-view pack under the 64-page shard ceiling", () => {
+  it("crosses one slim-view pack under the derived shard page ceiling", () => {
     const json = `[{"pluginId":"flow-extension-brep","pad":"${"p".repeat(190700)}"}]`;
     const command = wgpuSetContributionsCommand("procedural", "s.procedural.generation3d@1/*#editor", json);
     // 📌️ `panelJson` is the ONE long field a view context still carries (contributions left the
     // contract entirely — `🪟️view-context/🧬️schema/🔣️.json`), so it is what a slim view must drop.
-    const live = { locale: "en", terminology: "native", panelJson: "n".repeat(laws.laws.commandIngress.payloadChars) };
+    const live = { locale: "en", terminology: "native", panelJson: "n".repeat(laws.laws.commandIngress.fatViewChars) };
     const slim = wgpuContributionsIngressSize(command, wgpuSlimContributionsView(live));
     const fat = wgpuContributionsIngressSize(command, live);
     expect(wgpuSlimContributionsView(live).panelJson).toBeUndefined();
     expect(wgpuSlimContributionsView(live).contributionsJson).toBeUndefined();
     expect(json.length).toBeGreaterThan(laws.laws.commandIngress.payloadChars);
+    expect(laws.laws.commandIngress.maximumPages).toBe(SHARD_COMMAND_MAXIMUM_PAGES);
+    expect(SHARD_COMMAND_MAXIMUM_PAGES * laws.laws.commandIngress.pageBytes).toBe(GUEST_HOST_ANSWER_CEILING_BYTES);
     expect(slim.ingressPages).toBeGreaterThan(0);
     expect(slim.ingressPages).toBeLessThanOrEqual(laws.laws.commandIngress.maximumPages);
     expect(slim.ingressBytes).toBeLessThanOrEqual(laws.laws.commandIngress.maximumPages * laws.laws.commandIngress.pageBytes);

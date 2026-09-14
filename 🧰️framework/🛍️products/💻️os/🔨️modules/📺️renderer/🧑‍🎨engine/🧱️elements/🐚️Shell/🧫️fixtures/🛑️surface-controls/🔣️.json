@@ -535,5 +535,277 @@
         }
       }
     ]
-  }
+  },
+  "chromePanelSafeAreaNote": "🛟️ The safe area an in-surface affordance keeps from the anchored chrome PANELS painted over it. A docked panel body and a window's own content live in different stacking contexts (React: `z-panel` in the app root vs `z-window`; wgpu: `render_panel_step` paints `floating_panel_rect` after `plan_dock_windows` laid the windows out over the same body), so an overlay rail under a panel can never win the corner back by restacking — it reserves the panel's box instead. Only panels that actually cover the affordance reserve anything; the displacement is measured off the UNION of those panels on the affordance's own anchor edges; `yield` states which axis its layout can give (`either` takes the smaller, ties going to the block axis); an axis that cannot clear inside `host` is not taken at all. Boxes are `[x, y, w, h]` in the surface's own screen space. The Rust law answers through `chrome_panel_safe_area` (`🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs`), the TypeScript twin through `chromePanelSafeArea` (`🔨️modules/🖱️ui/🎯️targets/⚛️react/🟦️.tsx`). Ticket 26/09/09/PROCEDURAL-3D-END-TO-END.",
+  "chromePanelSafeArea": [
+    {
+      "id": "no-panel-leaves-the-rail-flush",
+      "affordance": [
+        1355,
+        83,
+        75,
+        16
+      ],
+      "host": [
+        493,
+        26,
+        947,
+        814
+      ],
+      "anchor": "top-right",
+      "panels": [],
+      "yield": "either",
+      "gap": 8,
+      "expected": {
+        "inline": 0,
+        "block": 0
+      }
+    },
+    {
+      "id": "a-panel-that-does-not-cover-the-rail-reserves-nothing",
+      "affordance": [
+        1355,
+        83,
+        75,
+        16
+      ],
+      "host": [
+        493,
+        26,
+        947,
+        814
+      ],
+      "anchor": "top-right",
+      "panels": [
+        [
+          0,
+          3,
+          300,
+          120
+        ]
+      ],
+      "yield": "either",
+      "gap": 8,
+      "expected": {
+        "inline": 0,
+        "block": 0
+      }
+    },
+    {
+      "id": "the-tool-run-panel-over-the-generation3d-rail-drops-it-below",
+      "affordance": [
+        1355,
+        83,
+        75,
+        16
+      ],
+      "host": [
+        493,
+        26,
+        947,
+        814
+      ],
+      "anchor": "top-right",
+      "panels": [
+        [
+          1137,
+          3,
+          300,
+          120
+        ]
+      ],
+      "yield": "either",
+      "gap": 8,
+      "expected": {
+        "inline": 0,
+        "block": 48
+      }
+    },
+    {
+      "id": "the-same-corner-yielded-inline-costs-301",
+      "affordance": [
+        1355,
+        83,
+        75,
+        16
+      ],
+      "host": [
+        493,
+        26,
+        947,
+        814
+      ],
+      "anchor": "top-right",
+      "panels": [
+        [
+          1137,
+          3,
+          300,
+          120
+        ]
+      ],
+      "yield": "inline",
+      "gap": 8,
+      "expected": {
+        "inline": 301,
+        "block": 0
+      }
+    },
+    {
+      "id": "a-full-height-column-has-no-bottom-edge-to-drop-under",
+      "affordance": [
+        1355,
+        83,
+        75,
+        16
+      ],
+      "host": [
+        493,
+        26,
+        947,
+        814
+      ],
+      "anchor": "top-right",
+      "panels": [
+        [
+          1137,
+          3,
+          300,
+          897
+        ]
+      ],
+      "yield": "either",
+      "gap": 8,
+      "expected": {
+        "inline": 301,
+        "block": 0
+      }
+    },
+    {
+      "id": "two-panels-sharing-a-corner-reserve-their-union",
+      "affordance": [
+        1355,
+        83,
+        75,
+        16
+      ],
+      "host": [
+        493,
+        26,
+        947,
+        814
+      ],
+      "anchor": "top-right",
+      "panels": [
+        [
+          1137,
+          3,
+          300,
+          120
+        ],
+        [
+          1300,
+          3,
+          137,
+          237
+        ]
+      ],
+      "yield": "either",
+      "gap": 8,
+      "expected": {
+        "inline": 0,
+        "block": 165
+      }
+    },
+    {
+      "id": "a-left-floating-panel-moves-a-wgpu-overlay-row-right",
+      "affordance": [
+        8,
+        48,
+        90,
+        22
+      ],
+      "host": [
+        0,
+        40,
+        960,
+        600
+      ],
+      "anchor": "top-left",
+      "panels": [
+        [
+          4,
+          44,
+          300,
+          592
+        ]
+      ],
+      "yield": "either",
+      "gap": 8,
+      "expected": {
+        "inline": 304,
+        "block": 0
+      }
+    },
+    {
+      "id": "a-window-right-edge-chrome-column-yields-only-inline",
+      "affordance": [
+        1240,
+        26,
+        200,
+        814
+      ],
+      "host": [
+        493,
+        26,
+        947,
+        814
+      ],
+      "anchor": "top-right",
+      "panels": [
+        [
+          1137,
+          3,
+          300,
+          120
+        ]
+      ],
+      "yield": "inline",
+      "gap": 0,
+      "expected": {
+        "inline": 303,
+        "block": 0
+      }
+    },
+    {
+      "id": "an-affordance-with-no-room-to-clear-does-not-move-at-all",
+      "affordance": [
+        1240,
+        26,
+        200,
+        814
+      ],
+      "host": [
+        1300,
+        26,
+        140,
+        814
+      ],
+      "anchor": "top-right",
+      "panels": [
+        [
+          1137,
+          3,
+          300,
+          120
+        ]
+      ],
+      "yield": "inline",
+      "gap": 0,
+      "expected": {
+        "inline": 0,
+        "block": 0
+      }
+    }
+  ]
 }

@@ -13,6 +13,7 @@ import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.t
 import { Slot } from "../../🔨️modules/🏷️class-name-composition/🪆️slot/🟦️.tsx";
 import { glassClass } from "../../🔨️modules/🌈️surface-presentation/🟦️.ts";
 import { useFlow } from "../../🔨️modules/🧭️flow-direction-context/🟦️.tsx";
+import { useShellFloatingSurfaceHost } from "../🐚️ShellScope/🟦️.tsx";
 import { SurfaceScope } from "../🌈️Surface/🟦️.tsx";
 // #endregion 🔌️Adapters
 
@@ -310,6 +311,7 @@ const PopoverContent = React.forwardRef<HTMLDivElement, PopoverContentProps>(fun
   const flow = useFlow();
   const contentRef = React.useRef<HTMLDivElement | null>(null);
   const modalLayer = useDialogLayer(context.open, contentRef);
+  const floatingHost = useShellFloatingSurfaceHost();
   const [placement, setPlacement] = React.useState<PopoverPlacement | null>(null);
   const dismissedRef = React.useRef(false);
   const ref = React.useMemo(() => composedRef(forwardedRef, contentRef), [forwardedRef]);
@@ -396,6 +398,8 @@ const PopoverContent = React.forwardRef<HTMLDivElement, PopoverContentProps>(fun
   }, [context, onEscapeKeyDown, onFocusOutside, onInteractOutside, onPointerDownOutside]);
 
   if (!context.open || !modalLayer.ready || typeof document === "undefined") return null;
+  const host = modalLayer.container ?? floatingHost;
+  if (!host) return null;
   const resolvedSide = placement?.side ?? side;
   return createPortal(
     <div
@@ -412,7 +416,7 @@ const PopoverContent = React.forwardRef<HTMLDivElement, PopoverContentProps>(fun
       data-align={align}
       data-popover-boundary={context.boundary}
       className={cn(
-        "text-popover-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-menu w-72 origin-(--radix-popover-content-transform-origin) border p-1 outline-hidden",
+        "pointer-events-auto text-popover-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-menu w-72 origin-(--radix-popover-content-transform-origin) border p-1 outline-hidden",
         glassClass,
         className,
       )}
@@ -431,7 +435,7 @@ const PopoverContent = React.forwardRef<HTMLDivElement, PopoverContentProps>(fun
         {children}
       </SurfaceScope>
     </div>,
-    modalLayer.container ?? document.body,
+    host,
   );
 });
 // #endregion 🪟️Content

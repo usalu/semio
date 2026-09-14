@@ -75,7 +75,7 @@ interface ToggleGroupContextValue {
 // #endregion 🎛️Contracts
 
 // #region 🎛️ToggleGroup
-const toggleVariants = styleVariants(cn(chromeControlItemClass, chromeControlItemOnClass, "aspect-square"));
+const toggleVariants = styleVariants(cn(chromeControlItemClass, chromeControlItemOnClass));
 const ToggleGroupContext = reactHostPort.createContext<ToggleGroupContextValue | null>(null);
 
 /** 🎛️ Owns exact single/multiple selection and independent roving focus. */
@@ -202,7 +202,7 @@ function ToggleGroupItem({ className, id, icon, text, action, value, disabled = 
         data-orientation={context.orientation}
         className={cn(
           toggleVariants(),
-          inlineText ? "w-auto shrink-0 focus:z-panel focus-visible:z-panel" : "min-w-0 flex-1 shrink-0 focus:z-panel focus-visible:z-panel",
+          inlineText ? "w-auto shrink-0 focus:z-panel focus-visible:z-panel" : "min-w-medium flex-1 shrink-0 focus:z-panel focus-visible:z-panel",
           (inlineText || action) && "flex items-center gap-single py-single px-double aspect-auto",
           inlineText && "w-auto",
           className,

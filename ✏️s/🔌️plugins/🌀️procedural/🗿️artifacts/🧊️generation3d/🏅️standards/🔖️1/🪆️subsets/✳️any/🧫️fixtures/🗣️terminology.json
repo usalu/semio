@@ -182,9 +182,9 @@
     },
     "status_computing": {
       "nativeEn": "Computing",
-      "nativeDe": "Berechnet",
+      "nativeDe": "Berechnen",
       "reuseEn": "Computing",
-      "reuseDe": "Berechnet"
+      "reuseDe": "Berechnen"
     },
     "status_error": {
       "nativeEn": "Error",

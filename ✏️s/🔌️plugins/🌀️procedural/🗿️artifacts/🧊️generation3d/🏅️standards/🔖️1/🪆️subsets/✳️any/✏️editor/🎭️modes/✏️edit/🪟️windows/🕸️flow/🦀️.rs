@@ -44,21 +44,24 @@ pub fn definition() -> WindowKindDefinition {
 }
 
 /// 🎚️ The LOD chrome measure for this window — collected fresh per frame, never frozen into the manifest.
-pub fn window_measures(lod_mode: &str, on_change: impl Fn(&str, Option<serde_json::Value>) -> semio_framework_plugin::ActionDescriptor) -> Vec<WindowMeasure> {
+pub fn window_measures(lod_mode: &str, is_de: bool, on_change: impl Fn(&str, Option<serde_json::Value>) -> semio_framework_plugin::ActionDescriptor) -> Vec<WindowMeasure> {
     let current = if lod_mode.is_empty() { "medium" } else { lod_mode };
     vec![WindowMeasure::Select {
         id: "generation3d-measure-lod".into(),
-        label: Some("LOD".into()),
+        label: Some(if is_de { "Detailgrad" } else { "LOD" }.into()),
         value: current.into(),
         // 🎚️ Rows come from the ONE ladder `cycleLodMode` walks, so the keyboard cycle and the
         // picker can never disagree (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
         items: crate::editor::generation3d::config::GENERATION_3D_LOD_MODES
             .iter()
             .map(|mode| {
-                let label = match *mode {
-                    "coarse" => "Coarse",
-                    "fine" => "Fine",
-                    _ => "Medium",
+                let label = match (*mode, is_de) {
+                    ("coarse", true) => "Grob",
+                    ("coarse", false) => "Coarse",
+                    ("fine", true) => "Fein",
+                    ("fine", false) => "Fine",
+                    (_, true) => "Mittel",
+                    (_, false) => "Medium",
                 };
                 semio_framework_plugin::MeasureSelectItem { id: format!("generation3d-measure-lod-{mode}"), value: (*mode).into(), label: label.into() }
             })
@@ -151,11 +154,10 @@ fn wire_row(edge: &NodeGraphEdgeRecord) -> UiAssemblyResult<BuiltNode> {
     tree_item(&edge.id, format!("{}@{} → {}@{}", edge.source_node_id, edge.source_port_id, edge.target_node_id, edge.target_port_id))
 }
 
-/// 🕸️ The flow graph as semantic UI: every node of the open document with its ports, plus every wire
-/// between them. The node-graph surface beside it paints the same records on the GPU, which no
-/// screen-reader, no accessibility tree, and no headless probe can read — this tree is the graph's
-/// renderer-neutral body, and the one the framework's `graph` interaction domain drives.
-fn graph_outline(nodes: &[NodeGraphNodeRecord], edges: &[NodeGraphEdgeRecord], status_json: Option<&String>, labels: &Generation3dLabels) -> UiAssemblyResult<BuiltNode> {
+/// 🕸️ The flow graph as semantic UI for the Artifact panel: every node with its ports and every wire.
+/// The Flow window paints the same records on the GPU; this tree is what keyboard and screen-reader
+/// users traverse under the framework's `graph` interaction domain.
+pub(crate) fn graph_outline(nodes: &[NodeGraphNodeRecord], edges: &[NodeGraphEdgeRecord], status_json: Option<&String>, labels: &Generation3dLabels) -> UiAssemblyResult<BuiltNode> {
     let factory = ActionFactory::new(GENERATION_3D_PLAY_APP_ID);
     let node_rows = crate::ui_node_list(nodes.iter().map(|node| node_row(node, node_status_label(status_json, &node.id, labels), labels, &factory)))?;
     let wire_rows = crate::ui_node_list(edges.iter().map(wire_row))?;
@@ -184,6 +186,7 @@ fn operator_channel(code: &str, label: &str) -> NodeGraphOperatorChannelRecord {
         name: label.to_string(),
         full_name: label.to_string(),
         operators: Vec::new(),
+        value_types: Vec::new(),
         default_json: None,
         label: Some(label.to_string()),
         cardinality: "!".into(),
@@ -275,7 +278,6 @@ pub fn render(document: &Generation3dSnapshot, config: &Generation3dConfig, sess
     let viewport = Viewport2d { x: fixture.camera.x, y: fixture.camera.y, zoom: fixture.camera.zoom };
     let flow_extras = flow_backed_node_graph_extras(fixture, &config.lod_mode, 0.0, true, false, semio_framework_ui_styling::metrics::board::GRID_FACTOR_DEFAULT, Some(session));
     let hover = marks.hovered_graph_target().map(|(node_id, port_id)| NodeGraphHover { node_id: Some(node_id), port_id });
-    let outline = graph_outline(&nodes, &edges, flow_extras.status_json.as_ref(), labels)?;
     let surface = crate::accessible_scene_surface(
         GENERATION_3D_PLAY_SURFACE_MAIN,
         semio_framework_ui_contract::SurfaceKind::NodeGraph,
@@ -303,22 +305,12 @@ pub fn render(document: &Generation3dSnapshot, config: &Generation3dConfig, sess
     // focused canvas and `preventDefault`s it, whereas an `enter` chord in the app keybinding table
     // would fire on every focused button in the shell.
     let surface = crate::activatable_scene_surface(surface, crate::editor::generation3d::GENERATION_3D_PLAY_APP_ID, "activateSelection", "Enter")?;
-    let canvas = semio_framework_ui_contract::column()
-        .grow(true)
-        .try_id("procedural-play-main.canvas")
-        .map_err(|_| outline_error("body.canvas-id"))?
-        .try_child(surface)
-        .map_err(|_| outline_error("body.canvas-child"))?
-        .try_build()
-        .map_err(|_| outline_error("body.canvas"))?;
-    semio_framework_ui_contract::row()
+    semio_framework_ui_contract::column()
         .grow(true)
         .try_id("procedural-play-main.body")
         .map_err(|_| outline_error("body.id"))?
-        .try_child(outline)
-        .map_err(|_| outline_error("body.outline"))?
-        .try_child(canvas)
-        .map_err(|_| outline_error("body.canvas-slot"))?
+        .try_child(surface)
+        .map_err(|_| outline_error("body.canvas-child"))?
         .try_build()
         .map_err(|_| outline_error("body.build"))
 }

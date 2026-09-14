@@ -38,6 +38,54 @@ struct PendingPatchSlot {
     rejection_requested: bool,
 }
 
+/// 📨️ The exact publication phase ONE pending slot is in, so "does the guest owe another turn for
+/// this slot" is a property of a named state rather than a re-derived conjunction of five booleans.
+///
+/// 🐛️ Until 2026-09-14 the reactor read the booleans directly and the two states the alternation
+/// actually visits ([`Self::Delivered`] and [`Self::Acknowledged`]) were indistinguishable from
+/// [`Self::Queued`] — so a slot whose patch was already in the host's hands, and a slot the host had
+/// already acknowledged, both answered `MoreWork` and each cost one host ROUND TRIP that carried
+/// nothing (`📓️reactor-reconcile-spin-2026-09-14.md` §1: 46 of 115 reconcile-armed turns were this
+/// two-state ping-pong with every retained-surface family empty).
+///
+/// The law: [`Self::Queued`], [`Self::Acknowledged`] and [`Self::Rejecting`] are the guest's own work
+/// and arm the turn; [`Self::Issued`] is HOST-blocked and must not, because the answer arrives as its
+/// own event-carrying turn; [`Self::Delivered`] is this very turn's output and is over by the time the
+/// status is decided.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub(super) enum PendingPatchPhase {
+    Queued,
+    Delivered,
+    Issued,
+    Acknowledged,
+    Rejecting,
+}
+
+impl PendingPatchPhase {
+    #[cfg(test)]
+    pub(super) const fn guest_owes_turn(self) -> bool {
+        matches!(self, Self::Queued | Self::Acknowledged | Self::Rejecting)
+    }
+}
+
+impl PendingPatchSlot {
+    fn phase(&self) -> PendingPatchPhase {
+        if self.acknowledged {
+            return PendingPatchPhase::Acknowledged;
+        }
+        if self.rejection_requested {
+            return PendingPatchPhase::Rejecting;
+        }
+        if !self.emitted {
+            return PendingPatchPhase::Queued;
+        }
+        if self.issued.is_some() {
+            return PendingPatchPhase::Issued;
+        }
+        PendingPatchPhase::Delivered
+    }
+}
+
 #[derive(Clone, Copy)]
 struct ClosingPending {
     key: super::instance_lifetime::NativeCloseKey,
@@ -105,6 +153,15 @@ impl PendingPatchAuthority {
         Ok(())
     }
 
+    /// 📤️ Hands THIS turn the one patch it may carry, publishing it out of its slot in the same call.
+    ///
+    /// 🐛️ The reconcile and external arms used to `publish_into` the turn handback and answer `None`,
+    /// so the patch left the guest only on the NEXT call — one whole host round trip per published
+    /// surface whose only work was moving a patch from `turn_handback` into `UiTurnPatches`, measured
+    /// as the `<n>:e---p / handback_sequence=Some(n)` half of the two-state ping-pong in
+    /// `📓️reactor-reconcile-spin-2026-09-14.md` §1. `publish_into` is atomic (it moves the whole
+    /// source or nothing), so the extraction belongs to the same call; the handback slot keeps its
+    /// role for [`Self::hand_back_turn`], which is what a REFUSED output returns through.
     pub(super) fn take_one(&mut self, admitted_bytes: usize) -> Result<Option<UiPatch>, &'static str> {
         if !self.turn_handback.terminal_is_empty() && self.closing_instances.iter().flatten().any(|closing| Some(closing.key.instance()) == self.turn_handback_instance) {
             return Ok(None);
@@ -134,7 +191,7 @@ impl PendingPatchAuthority {
                 self.turn_handback_instance = slot.instance;
                 self.turn_handback_sequence = Some(slot.sequence);
                 slot.emitted = true;
-                Ok(None)
+                self.turn_handback.source_mut()?.take().map_or(Ok(None), |patch| Ok(Some(patch)))
             }
             PendingPatchOwner::External(patch) => {
                 if admitted_bytes < size_of::<UiPatch>() {
@@ -144,7 +201,7 @@ impl PendingPatchAuthority {
                 self.turn_handback_instance = slot.instance;
                 self.turn_handback_sequence = Some(slot.sequence);
                 slot.emitted = true;
-                Ok(None)
+                self.turn_handback.source_mut()?.take().map_or(Ok(None), |patch| Ok(Some(patch)))
             }
         }
     }
@@ -336,7 +393,7 @@ impl PendingPatchAuthority {
 
     /// 🧹️ Retires one unit of the oldest acknowledged publication, or of a closing instance, against
     /// the caller's grant. The grant is the whole point: an acknowledged slot keeps
-    /// [`Self::has_unpublished`] TRUE, which keeps the reactor turn in `MoreWork`, which costs the
+    /// [`Self::has_retiring`] TRUE, which keeps the reactor turn in `MoreWork`, which costs the
     /// host one turn ROUND TRIP per unit — so a unit priced at one item retires a document-scaled
     /// world-3d patch (≈ 460 `UiText` slices across 11 lane carriers) one host round trip at a time.
     /// Measured 2026-09-10 (W-S2): 24.3 s and 8 799 worker messages between the Nakagin example click
@@ -360,13 +417,37 @@ impl PendingPatchAuthority {
             .slots
             .iter()
             .flatten()
-            .map(|slot| format!("{}:{}{}{}{}{}", slot.sequence, if slot.emitted { "e" } else { "-" }, if slot.acknowledged { "a" } else { "-" }, match &slot.issued { Some(issued) if issued.committed => "c", Some(_) => "i", None => "-" }, if slot.rejection_requested { "r" } else { "-" }, if slot.published.is_some() { "p" } else { "-" }))
+            .map(|slot| format!("{}:{:?}:{}{}{}{}{}", slot.sequence, slot.phase(), if slot.emitted { "e" } else { "-" }, if slot.acknowledged { "a" } else { "-" }, match &slot.issued { Some(issued) if issued.committed => "c", Some(_) => "i", None => "-" }, if slot.rejection_requested { "r" } else { "-" }, if slot.published.is_some() { "p" } else { "-" }))
             .collect();
         format!("slots=[{}] handback_empty={} handback_sequence={:?} exhausted={} closing={}", slots.join(","), self.turn_handback.terminal_is_empty(), self.turn_handback_sequence, self.exhausted, self.closing_instances.iter().flatten().count())
     }
 
+    /// 📬️ Whether a patch is queued for a FUTURE turn to hand out. A [`PendingPatchPhase::Issued`]
+    /// slot is deliberately NOT one: it is waiting on the host, whose answer arrives as its own
+    /// event-carrying turn, so counting it here only buys a round trip that carries nothing.
+    pub(super) fn has_undelivered(&self) -> bool {
+        !self.turn_handback.terminal_is_empty() || self.slots.iter().flatten().any(|slot| slot.phase() == PendingPatchPhase::Queued)
+    }
+
+    /// 🧹️ Whether a slot or a closing instance still owes RETIREMENT. The turn drives this itself
+    /// (`PATCH_CLOSE_UNITS_PER_TURN` units, twice per turn since 2026-09-14 — once before the events
+    /// and once after the acknowledgements they carry), so it is true here only when a retirement run
+    /// was cut short by the turn's own wall deadline.
+    pub(super) fn has_retiring(&self) -> bool {
+        self.slots.iter().flatten().any(|slot| matches!(slot.phase(), PendingPatchPhase::Acknowledged | PendingPatchPhase::Rejecting)) || self.closing_instances.iter().any(Option::is_some)
+    }
+
+    /// 📨️ The union of the two, stated independently through [`PendingPatchPhase::guest_owes_turn`]
+    /// so the partition itself is assertable: every publication state whose progress is the GUEST's
+    /// own is exactly [`Self::has_undelivered`] ∪ [`Self::has_retiring`], and nothing else arms.
+    #[cfg(test)]
     pub(super) fn has_unpublished(&self) -> bool {
-        !self.turn_handback.terminal_is_empty() || self.slots.iter().flatten().any(|slot| !slot.emitted || slot.acknowledged || slot.rejection_requested) || self.closing_instances.iter().any(Option::is_some)
+        !self.turn_handback.terminal_is_empty() || self.slots.iter().flatten().any(|slot| slot.phase().guest_owes_turn()) || self.closing_instances.iter().any(Option::is_some)
+    }
+
+    #[cfg(test)]
+    pub(super) fn phases(&self) -> Vec<PendingPatchPhase> {
+        self.slots.iter().flatten().map(PendingPatchSlot::phase).collect()
     }
 }
 

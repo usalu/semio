@@ -1,17 +1,21 @@
-# Chat panel height fill
+# Chat panel height (revised)
 
 ## Problem
 
-After docking chat on `top-right`, the panel body looked vertically squeezed: the message feed collapsed while the composer stayed visible. `BasicChatPanel` and `AgentChatPanel` use `h-full` / `flex-1`, but open corner panels only sized to intrinsic content height, so the flex chain never received a definite block size.
+Pinning open corner panels to full region height made **every** dock panel stretch navbar-to-footer. Chat still looked squeezed because `BasicChatPanel` relied on `h-full` / `flex-1` without a definite parent height in content-sized panels.
+
+## Intended behavior
+
+- Panels **grow with content** until they hit the layout region `maxHeight`, then the panel body **scrolls**.
+- Chat message feed keeps a **minimum readable height** and grows with messages; it scrolls inside the feed when messages overflow the feed box; the whole panel scrolls when total chrome exceeds region max.
 
 ## Fix
 
-- Pin open **corner** panels (`top-left`, `top-right`, `bottom-left`, `bottom-right`) with the opposite vertical inset (`bottom` for top corners, `top` for bottom corners) so they fill the layout region between navbar and footer.
-- Use a flex column scroll viewport for all panel bodies (not only bottom-anchored panels).
-- Align `createFrameworkChatPanelTab` empty-state hosting with `uiNodeToTreePanelConfig` (full-height flex wrapper + tree className).
-- Give `AgentChatPanel`'s chat host `h-full` so the feed expands inside the pinned panel.
+- Reverted corner panel top/bottom pinning and non-bottom scroll viewport flex stretch.
+- `BasicChatPanel`: content-driven column layout; feed uses `min-h-huge` + `overflow-y-auto` instead of `flex-1` / `h-full`.
+- `AgentChatPanel` / `createFrameworkChatPanelTab`: removed full-height flex wrappers.
 
 ## Verification
 
-- UI: `owned-locale-detector-retirement` — open corner panel pins opposite vertical edge.
-- Contract: `🧫️fixtures/🧭️shell-chat-navbar-toggle/🔣️.json` fields `openCornerPanelPinsOppositeVerticalEdge`, `chatTreeEmptyStateHostClassName`.
+- Contract: `🧫️fixtures/🧭️shell-chat-navbar-toggle/🔣️.json` — `panelVerticalSizing`, `chatFeedMinHeightClass`.
+- Storybook: `BasicChatPanel` stories still wrap with explicit height for isolated preview.

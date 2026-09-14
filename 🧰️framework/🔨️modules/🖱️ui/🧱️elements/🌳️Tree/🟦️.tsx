@@ -46,7 +46,7 @@ import {
 import { useLabel, Label, resolveTranslationLabel, useIdLabel, useUiTranslation, useControlAccessibleLabel, useControlInlineText, useControlTooltipText } from "../🏷️Label/🟦️.tsx";
 import { useFlow, FlowProvider, type FlowBlock, type FlowInline } from "../../🔨️modules/🧭️flow-direction-context/🟦️.tsx";
 import { type ElementProps } from "../../🔨️modules/🆔️element-identity/🟦️.ts";
-import { useShellScopeOptional } from "../🐚️ShellScope/🟦️.tsx";
+import { useShellFloatingSurfaceHost, useShellScopeOptional } from "../🐚️ShellScope/🟦️.tsx";
 import { usePanelGhost, useUiDriverDragSurface, TREE_SECTION_REORDER_MIME, interactionMergeFromModifiers } from "../../🎯️targets/⚛️react/🟦️";
 import { Icon, renderControlIcon, type ControlIcon, CheckIcon, ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, ChevronUpIcon, CloseIcon, DocumentIcon, FolderIcon } from "../🔣️Icons/🟦️.tsx";
 import { DragHandle } from "../🧱️DragHandle/🟦️.tsx";
@@ -800,7 +800,7 @@ function TreeReorderDropPreview(props: { readonly preview: { readonly targetId: 
     const row = searchRoot.querySelector(`[id=${JSON.stringify(props.preview.targetId)}]`);
     setFrame(row?.getBoundingClientRect() ?? null);
   }, [props.preview, shellScope]);
-  const portalTarget = shellScope?.portalLayerRef.current ?? (typeof document !== "undefined" ? document.body : null);
+  const portalTarget = useShellFloatingSurfaceHost();
   if (!props.preview || !frame || !portalTarget) return null;
   if (props.preview.position === "before") {
     return createPortal(<div data-slot="tree-drop-preview" className="pointer-events-none fixed z-tutorial h-0.5 bg-primary" style={{ left: frame.left, top: frame.top, width: frame.width }} />, portalTarget);
@@ -1802,6 +1802,8 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
             data-draggable={isDragHandle ? "true" : undefined}
             role="treeitem"
             aria-selected={isSelected}
+            data-selected={isSelected ? "true" : undefined}
+            data-highlighted={isHighlighted ? "true" : undefined}
             id={id}
             ref={setNodeRef}
             style={style}
@@ -1872,6 +1874,8 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
           data-tree-group
           role="treeitem"
           aria-selected={isSelected}
+          data-selected={isSelected ? "true" : undefined}
+          data-highlighted={isHighlighted ? "true" : undefined}
           id={id}
           ref={setNodeRef}
           style={style}
@@ -1945,6 +1949,8 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
         data-tree-row-kind="property"
         role="treeitem"
         aria-selected={isSelected}
+        data-selected={isSelected ? "true" : undefined}
+        data-highlighted={isHighlighted ? "true" : undefined}
         id={id}
         ref={setNodeRef}
         style={style}
@@ -1985,6 +1991,8 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
       data-tree-row-kind="leaf"
       role="treeitem"
       aria-selected={isSelected}
+      data-selected={isSelected ? "true" : undefined}
+      data-highlighted={isHighlighted ? "true" : undefined}
       id={id}
       ref={setNodeRef}
       style={style}
@@ -2210,6 +2218,8 @@ export const TreeItem: React.FC<TreeItemProps> = ({
         data-activatable={activatable ? "true" : undefined}
         role="treeitem"
         aria-selected={isSelected}
+        data-selected={isSelected ? "true" : undefined}
+        data-highlighted={isHighlighted ? "true" : undefined}
         id={id}
         data-state={open ? "open" : "closed"}
         className={cn("min-w-0 w-full", treeRowChromeShellClasses(isSelected, isHighlighted, isHidden), isDropReady && dropZoneReadyTextClass, className)}
@@ -2344,6 +2354,8 @@ export const TreeItem: React.FC<TreeItemProps> = ({
               {...treeRowDragPayloadAttributes(dragData)}
               role="treeitem"
               aria-selected={isSelected}
+              data-selected={isSelected ? "true" : undefined}
+              data-highlighted={isHighlighted ? "true" : undefined}
               id={id}
               className={itemShellClasses}
               draggable={effectiveDraggable}
@@ -2473,6 +2485,8 @@ export const TreeItem: React.FC<TreeItemProps> = ({
         {...treeRowDragPayloadAttributes(dragData)}
         role="treeitem"
         aria-selected={isSelected}
+        data-selected={isSelected ? "true" : undefined}
+        data-highlighted={isHighlighted ? "true" : undefined}
         id={id}
         className={itemShellClasses}
         draggable={effectiveDraggable}
@@ -3669,9 +3683,9 @@ export const BasicChatPanel: React.FC<BasicChatPanelProps> = ({ id, title }) => 
   }, [id, createBasicChatMessages]);
 
   return (
-    <div id={id} className="flex h-full min-h-0 flex-col gap-single">
+    <div id={id} data-semio-basic-chat-panel="" className="flex w-full min-w-0 flex-col gap-single">
       <HelperRow>{instructionsLabel}</HelperRow>
-      <div id={childElementId(id, "feed")} className={cn("min-h-0 flex-1 overflow-y-auto rounded-sm border", borderClass)}>
+      <div id={childElementId(id, "feed")} data-semio-basic-chat-feed="" className={cn("min-h-huge overflow-y-auto rounded-sm border", borderClass)}>
         <div className="flex min-w-0 flex-col p-single">
           {messages.map((message) => (
             <TreeRow key={message.id}>

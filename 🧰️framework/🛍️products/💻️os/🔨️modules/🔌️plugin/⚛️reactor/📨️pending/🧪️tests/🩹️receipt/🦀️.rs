@@ -11,8 +11,10 @@ fn patch(row: &serde_json::Value) -> UiPatch {
     UiPatch { surface: ui_contract::SurfaceId::try_from(row["surface"].as_str().unwrap()).unwrap(), base_revision: ui_contract::UiRevision(0), revision: ui_contract::UiRevision(row["revision"].as_u64().unwrap()), ops: Default::default() }
 }
 
+/// 📤️ One turn's publication. It is ONE call: a patch that reached the turn handback leaves the guest
+/// on the same turn that put it there (`📓️reactor-reconcile-spin-2026-09-14.md` §3), so a second call
+/// here would be a second host round trip in production.
 fn take(pending: &mut PendingPatchAuthority) -> UiPatch {
-    assert!(pending.take_one(65536).unwrap().is_none());
     pending.take_one(65536).unwrap().unwrap()
 }
 

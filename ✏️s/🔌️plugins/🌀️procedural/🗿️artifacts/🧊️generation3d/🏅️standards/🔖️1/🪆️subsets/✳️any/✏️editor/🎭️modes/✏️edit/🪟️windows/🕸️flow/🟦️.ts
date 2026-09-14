@@ -46,7 +46,7 @@ export interface Generation3dFlowOutlineWire {
   targetPortId: string;
 }
 
-/** 🕸️ The graph as semantic rows — the Flow window's renderer-neutral body, beside the GPU canvas that
+/** 🕸️ The graph as semantic rows on the Artifact panel — beside the Flow window's GPU canvas that
  * paints the same records. Bound to the `graph` interaction domain, so a row's hover and a row's click
  * are the very same targets the canvas picks into. */
 export interface Generation3dFlowOutline {

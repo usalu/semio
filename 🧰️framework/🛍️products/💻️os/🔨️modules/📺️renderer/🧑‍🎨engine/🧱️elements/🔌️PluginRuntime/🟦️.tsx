@@ -65,7 +65,7 @@ import {
   type LocalInteractionCapture,
 } from "@semio-tech/framework-replication";
 import { type BuiltNode, type Component, type UiNodeRecord, type UiPatchOp, type UiSnapshot } from "@semio-tech/framework";
-import { applyUiPatch, DEFAULT_UI_DOCUMENT_LIMITS, emptyUiDocumentState, type UiDocumentState } from "../📃️UiDocumentStore/🟦️.tsx";
+import { applyUiPatch, DEFAULT_UI_DOCUMENT_LIMITS, emptyUiDocumentState, publishGuestPresenceV1, type GuestPresenceMarkV1, type UiDocumentState } from "../📃️UiDocumentStore/🟦️.tsx";
 import { OwnedUiPatchIntake, retainedUiIntakeStepCeiling } from "../📃️UiDocumentStore/📥️intake/🟦️.ts";
 import {
   ActivationRegistry,
@@ -103,6 +103,7 @@ import { OwnedUiInstance, type OwnedUiInstanceRetirement, type OwnedUiInstanceSu
 import type { RetainedUiNodeRecord } from "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧾️typed/🟦️.ts";
 import { TurnScheduler, type Lane } from "../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🟦️.ts";
 import { hostContinuations } from "../../../../../../../🔨️modules/⏳️async/🪃️continuation/🟦️.ts";
+import { hopTrace } from "../../../../../../../🔨️modules/⏱️trace/🟦️.ts";
 import { drainTypedOperationTurns as driveTypedOperationDrain, driveInboundRequest, INBOUND_REQUEST_TURN_BUDGET, isRoutedWireSendMessage, shellFrameBytes as wireShellFrameBytes, TYPED_OPERATION_ACK_MAGIC, TYPED_OPERATION_LANE_FAULT, TYPED_OPERATION_LANE_TERMINAL, TYPED_OPERATION_PAGE_MAGIC, typedOperationAcknowledgements as wireTypedOperationAcknowledgements, typedOperationResult as wireTypedOperationResult, WIRE_SEND_MESSAGE_ROUTED_TARGETS, wireDownloadMediaExport, wireExtensionInvocation, wireOptionValue, wireRespondAnswer, wireSendMessageTargetTag, wireTurnStatusTag } from "../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🟦️.ts";
 import { type PluginManifest, type ViewModel } from "../🐚️Shell/🟦️.tsx";
 import { SEGMENTED_DOWNLOAD_MARKER_PREFIX } from "../📤️SegmentedDownload/🟦️.ts";
@@ -1472,6 +1473,21 @@ const PLUGIN_UI_INTAKE_STEP_CEILING = retainedUiIntakeStepCeiling(DEFAULT_UI_DOC
  * scene-lane surface patch`), so that cadence spent 83 675 macrotasks — dwarfing the work itself. A
  * 1024-step stride is a ~3.5 ms slice, still well inside one frame, and 653 macrotasks for that patch. */
 const PLUGIN_UI_INTAKE_YIELD_STRIDE = 1_024;
+
+/** 🪃️ Whether THIS intake step owes the macrotask yield — a SYNCHRONOUS predicate on purpose.
+ *
+ * 🐛️ It used to be an `async` helper every intake step awaited, so a drive that yields once per
+ * {@link PLUGIN_UI_INTAKE_YIELD_STRIDE} steps still allocated a promise and spent two microtask ticks
+ * on each of the other 1 023. An intake step is a wire phase costing ~3.4 µs and a world-3d surface
+ * publication takes hundreds of thousands of them, so the wrapper was a constant multiplier on the
+ * whole retained-UI admission — measured on the React door at 222 ms per `flowEvalTick` hop under the
+ * `turn.accept` span (`📓️react-guest-turn-cost-2026-09-14.md`). The wgpu shell's frame worker carried
+ * the identical defect on its own intake drive (`📓️wgpu-edit-convergence-perf-2026-09-14.md`:
+ * "allocated a promise per decoder phase"). The yield CADENCE is unchanged — this is the same stride,
+ * asked without paying for a promise to answer "no". */
+export function uiIntakeOwesYieldV1(step: number): boolean {
+  return step % PLUGIN_UI_INTAKE_YIELD_STRIDE === 0;
+}
 type PluginPatchAcceptance = Readonly<{
   acknowledgements: readonly ShardEventEnvelope[];
   turns: readonly WireTurnResult[];
@@ -1517,6 +1533,7 @@ async function settlePluginTurn(actorId: string, initial: WireTurnResult, lane: 
   const results: WireTurnResult[] = [initial];
   const acknowledge = async (result: WireTurnResult): Promise<readonly ShardEventEnvelope[]> => {
     activation?.assertActive();
+    retainTurnPresence(result);
     const accepted = await acceptPatches?.(result) ?? [];
     if (!isPluginPatchAcceptance(accepted)) return [...accepted, ...typedOperationAcknowledgements(result)];
     results.push(...accepted.turns);
@@ -1524,21 +1541,22 @@ async function settlePluginTurn(actorId: string, initial: WireTurnResult, lane: 
   };
   const hasWork = () => (drainOperations || !hasRequiredUiPatches(results, requiredSurfaceIds)) && wireTurnStatusTag(results.at(-1)?.status) === "more-work";
   const outstanding = () => !hasRequiredUiPatches(results, requiredSurfaceIds);
-  let acknowledgements = await acknowledge(initial);
+  let acknowledgements = await hopTrace.timeAsync("turn.accept", { actorId, patches: initial.uiPatches.length }, () => acknowledge(initial));
   let quiesced = false;
   let zeroProgress = 0;
   for (let continuation = 0; !quiesced && (acknowledgements.length > 0 || hasWork()) && continuation < PLUGIN_UI_CONTINUATION_LIMIT; continuation += 1) {
     const collected = results.length;
     const continued = await submitPluginTurn(actorId, acknowledgements, lane, undefined, undefined, activation);
     results.push(continued);
-    acknowledgements = await acknowledge(continued);
+    acknowledgements = await hopTrace.timeAsync("turn.accept", { actorId, patches: continued.uiPatches.length }, () => acknowledge(continued));
+    const closeDecide = hopTrace.open("turn.decide", { actorId, results: results.length });
     const progressed = acknowledgements.length > 0 || results.slice(collected).some((turn) => turn.uiPatches.length > 0 || turn.effects.length > 0);
     zeroProgress = progressed ? 0 : zeroProgress + 1;
     if (zeroProgress >= PLUGIN_UI_QUIESCENT_CONTINUATIONS && !outstanding()) quiesced = true;
-    else if (zeroProgress >= PLUGIN_UI_ZERO_PROGRESS_CONTINUATION_LIMIT) throw pluginTurnStalledError(actorId, results, requiredSurfaceIds, zeroProgress, continuation + 1, call);
-    if (!quiesced && (continuation + 1) % PLUGIN_UI_CONTINUATION_BATCH_SIZE === 0 && hasWork()) {
-      await yieldPluginUiContinuation();
-    }
+    else if (zeroProgress >= PLUGIN_UI_ZERO_PROGRESS_CONTINUATION_LIMIT) { closeDecide(); throw pluginTurnStalledError(actorId, results, requiredSurfaceIds, zeroProgress, continuation + 1, call); }
+    const yielding = !quiesced && (continuation + 1) % PLUGIN_UI_CONTINUATION_BATCH_SIZE === 0 && hasWork();
+    closeDecide();
+    if (yielding) await hopTrace.timeAsync("turn.yield", { actorId }, () => yieldPluginUiContinuation());
   }
   if (!quiesced && (acknowledgements.length > 0 || hasWork())) {
     const published = results.flatMap((result) => result.uiPatches.map(wirePatchSurfaceId).filter((surface): surface is string => surface !== null));
@@ -1563,6 +1581,7 @@ async function settlePluginTurn(actorId: string, initial: WireTurnResult, lane: 
   };
 }
 async function settleAcknowledgedPluginTurns(actorId: string, results: readonly WireTurnResult[], acknowledgements: readonly ShardEventEnvelope[], acceptPatches?: (result: WireTurnResult) => PluginPatchAcceptance | Promise<PluginPatchAcceptance>, activation?: ShardActorActivationLease, call?: TypedOperationCall): Promise<WireTurnResult> {
+  for (const settled of results) retainTurnPresence(settled);
   const initial: WireTurnResult = {
     uiPatches: [],
     effects: [],
@@ -1753,7 +1772,22 @@ function uiRefreshSurfaceEvents(instanceId: number, request: PluginUiRefreshRequ
   return [...windows, ...panels, ...sections];
 }
 
-/** 🏛️ Projects one turn's host effects without borrowing any retained UI owner. */
+/** 🖼️ The typed fault one MOUNTED SURFACE publishes when its own retained render terminated — the
+ * guest's `PatchTracker::take_render_fault` reported through `shell_fault_effect`
+ * (`🔌️plugin/⚛️reactor/🔄️turn/🦀️.rs`, `SURFACE_RENDER_FAULT_CODE`). Its message is
+ * `"<instance>:<surface>: <fault>"`, so it names its own owner and nobody else's. */
+export const SURFACE_RENDER_FAULT = "ui.surface-render";
+
+/** 🏛️ Projects one turn's host effects without borrowing any retained UI owner.
+ *
+ * 🧯️ A {@link SURFACE_RENDER_FAULT} is scoped to the ONE surface it names and never becomes this
+ * turn's answer. The guest emits it on whatever turn its reconciler happened to terminate on, which
+ * is almost never the turn that caused it: a `DuplicateSiblingKey` in the framework ToolRun panel
+ * aborted `applyHostEffects` for every unrelated `flow-extension-brep` completion, so no evaluation
+ * result ever landed and the preview never converged (2026-09-14, boot console
+ * `🗑️generated/react-s5/boot`). The surface's own terminal is already closed by the guest and the
+ * surface re-produces on its next dirty pass, so the honest host answer is to report it and keep
+ * the turn's remaining effects. Every OTHER `Error` frame IS this turn's answer and still throws. */
 function retainedUiRefreshEffects(instanceId: number, effects: readonly WireVariant[]): Effect[] {
   const requestedEffects: Effect[] = [];
   for (const effect of effects) {
@@ -1762,6 +1796,10 @@ function retainedUiRefreshEffects(instanceId: number, effects: readonly WireVari
       const frame = decodeAppFrame(bytes);
       if ("Error" in frame) {
         const fault = decodeFaultFromWire(frame.Error.fault, decodePackValue);
+        if (fault?.code === SURFACE_RENDER_FAULT) {
+          console.error(`retained surface render fault, scoped to that surface: ${fault.message}`);
+          continue;
+        }
         if (fault) throw new SemioFaultError(fault);
         throw new Error(`refresh failed: ${faultDisplayMessage(frame.Error.fault, decodePackValue)}`);
       }
@@ -1848,14 +1886,13 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
    * 4 096-item ceiling on a single surface patch (a 180-object world scene exhausts it); 256 items /
    * 64 KiB per step keeps each slice sub-millisecond while the budget bounds a patch at ~1 M items. */
   const uiGrant = Object.freeze({ maxItems: 256, maxBytes: 65_536 });
-  const yieldUi = async (step: number): Promise<void> => { if (step % PLUGIN_UI_INTAKE_YIELD_STRIDE === 0) await yieldPluginUiContinuation(); };
   const closeIntake = async (instanceId: number, intake: OwnedUiPatchIntake): Promise<void> => {
     intake.beginClose();
     for (let step = 1; !intake.terminalIsEmpty(); step += 1) {
       if (step > PLUGIN_UI_CONTINUATION_LIMIT) throw new Error("plugin-ui.intake-close-budget-exhausted");
       const current = intake.closeStep(uiGrant);
       if (current.kind === "blocked" || current.kind === "rejected") throw new Error(`plugin-ui.intake-close-${current.kind}:${current.phase}`);
-      await yieldUi(step);
+      if (uiIntakeOwesYieldV1(step)) await yieldPluginUiContinuation();
     }
     uiIntakesByInstance.get(instanceId)?.delete(intake);
   };
@@ -1880,7 +1917,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
         token = intake.peekAcknowledgement();
         if (current.kind === "rejected") throw new Error(`plugin-ui.intake-rejected:${current.phase}:${intake.failure ?? "unknown"}`);
         if (current.kind === "blocked" && token === null) throw new Error(`plugin-ui.intake-blocked:${current.phase}`);
-        await yieldUi(step);
+        if (uiIntakeOwesYieldV1(step)) await yieldPluginUiContinuation();
       }
       const acknowledged = await submitPluginLifecycleTurn(lease, { kind: "issued-ui-ack", source, token }, "Interactive");
       if (!intake.acceptAcknowledgement(acknowledged.submission)) throw new Error("plugin-ui.acknowledgement-refused");
@@ -1889,7 +1926,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
         const current = intake.advance(uiGrant);
         if (current.kind === "ready") break;
         if (current.kind === "blocked" || current.kind === "rejected") throw new Error(`plugin-ui.intake-${current.kind}:${current.phase}`);
-        await yieldUi(step);
+        if (uiIntakeOwesYieldV1(step)) await yieldPluginUiContinuation();
       }
       const surface = intake.takeSurface();
       if (!surface) throw new Error("plugin-ui.surface-missing");
@@ -1908,7 +1945,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
       if (++budget.steps > DEFAULT_UI_DOCUMENT_LIMITS.maxNodes * 64) throw new Error(`plugin-ui.${phase}-budget-exhausted`);
       const current = owner.advanceMaintenance(uiGrant);
       if (current.kind === "blocked" || current.kind === "rejected") throw new Error(`plugin-ui.${phase}-${current.kind}:${current.phase}`);
-      await yieldUi(budget.steps);
+      if (uiIntakeOwesYieldV1(budget.steps)) await yieldPluginUiContinuation();
     }
   };
   const projectOwnedUiSurface = async (instanceId: number, actorId: string, lease: ShardInstanceLifecycleLease, owner: OwnedUiInstance, surface: OwnedUiInstanceSurface): Promise<{ readonly hash: string; readonly value: BuiltNode } | null> => {
@@ -2009,7 +2046,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
       if (step > PLUGIN_UI_CONTINUATION_LIMIT) throw new Error("plugin-ui.owner-close-budget-exhausted");
       const current = owner.closeStep(uiGrant);
       if (current.kind === "blocked" || current.kind === "rejected") throw new Error(`plugin-ui.owner-close-${current.kind}:${current.phase}`);
-      await yieldUi(step);
+      if (uiIntakeOwesYieldV1(step)) await yieldPluginUiContinuation();
     }
     const witness = owner.takeRetirementWitness();
     if (!witness) throw new Error("plugin-ui.retirement-witness-missing");
@@ -2044,7 +2081,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
           : await submitPluginLifecycleTurn(lease, { kind: "poll" }, "Interactive");
         assertClosingTurn(current.turn);
       }
-      await yieldUi(step);
+      if (uiIntakeOwesYieldV1(step)) await yieldPluginUiContinuation();
     }
     lease.dispose();
   };
@@ -2056,6 +2093,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
   };
   const releaseInstanceMaps = (instanceId: number, actorId: string): void => {
     forgetInstanceForRecovery(actorId);
+    guestIngressGenerationByInstance.delete(instanceId);
     documentBindings.delete(instanceId);
     documentBindingGenerations.delete(instanceId);
     actorIdByInstance.delete(instanceId);
@@ -2359,10 +2397,12 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
             seq: BigInt(eventSeq),
             command: events[commandIndex]!,
           });
+          const crossingStartedMs = performance.now();
           for (const commandPage of pages) {
             const pageTurn = await submitTurn(actorId, acknowledgements, { commandPage, activation });
             await acceptTurn(pageTurn);
           }
+          console.warn("[DEBUG] command ingress crossed", JSON.stringify({ actionId: inspected.actionId, bytes: events[commandIndex]!.length, pages: pages.length, ms: Math.round(performance.now() - crossingStartedMs) }));
           let terminal = results.at(-1)?.commandIngress?.tag;
           const observedStatuses = new Set([terminal ?? "missing"]);
           for (let continuation = 0; terminal !== "command-complete" && continuation < 1_024; continuation += 1) {
@@ -2584,7 +2624,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
       const surface = surfaces?.get(surfaceId);
       return !surface || surface.view.root === null;
     }));
-    const result = await withTypedOperationCall(actorId, `refresh-ui#${instanceId}`, (call) => serializeCommandIngressForActor(actorId, async () => {
+    const result = await hopTrace.timeAsync("refresh.turn", { instanceId, events: events.length }, () => withTypedOperationCall(actorId, `refresh-ui#${instanceId}`, (call) => serializeCommandIngressForActor(actorId, async () => {
       const settled = await settlePluginTurn(
         actorId,
         await submitTurn(
@@ -2600,10 +2640,12 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
         call,
       );
       return settled;
-    }));
+    })));
     requireActorId(instanceId);
     activation.assertActive();
-    return ownedUiRefreshResponse(instanceId, actorId, request, routeHostEffects(instanceId, result.effects, documentPort));
+    return hopTrace.timeAsync("refresh.project", { instanceId, windows: (request.windows ?? []).length, panels: (request.panels ?? []).length }, () =>
+      ownedUiRefreshResponse(instanceId, actorId, request, routeHostEffects(instanceId, result.effects, documentPort)),
+    );
   };
 
   /** 🔁️ Retains one completion's exact activation across evaluation, queueing and publication. */
@@ -2637,6 +2679,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
         { kind: "completed" as const, payload: { req, outcome: "ok" in outcome ? { tag: "ok", val: Array.from(terminal) } : { tag: "fault", val: Array.from(terminal) } } },
       ];
       console.debug("[DEBUG] extension completion submitted", { instanceId, req, status: "ok" in outcome ? "ok" : "fault", bytes: answer.byteLength, pages: events.length });
+      noteGuestIngressV1(instanceId);
       return withTypedOperationCall(actorId, `extension-completion#${instanceId}`, (call) => serializeCommandIngressForActor(actorId, async () => {
         assertActive();
         const settled = await settlePluginTurn(
@@ -2823,6 +2866,50 @@ function retainTurnUiPatches(actorId: string, result: Pick<WireTurnResult, "uiPa
   return result.uiPatches.length > 0 ? applyRetainedWindowPatches(actorId, result.uiPatches) : [];
 }
 
+/** 👥️ One WIT `presence-update` decoded into the host's own mark, or `null` for a carrier this host
+ * cannot read. Every field the guest omits is its serde default — `OwnPresence` skips its own `false`
+ * flags on the wire, so an ABSENT flag is idle, never unknown. */
+export function decodeGuestPresenceUpdateV1(decoded: unknown): { readonly surface: string; readonly nodeKey: string; readonly own: GuestPresenceMarkV1 } | null {
+  if (decoded === null || typeof decoded !== "object") return null;
+  const record = decoded as Record<string, unknown>;
+  const surface = record.surface;
+  const nodeKey = record.nodeKey;
+  if (typeof surface !== "string" || typeof nodeKey !== "string" || nodeKey.length === 0) return null;
+  const own = record.own !== null && typeof record.own === "object" ? (record.own as Record<string, unknown>) : {};
+  const color = typeof own.color === "number" ? own.color : typeof own.color === "bigint" ? Number(own.color) : null;
+  return { surface, nodeKey, own: { selected: own.selected === true, hovered: own.hovered === true, previewed: own.previewed === true, color } };
+}
+
+/**
+ * 👥️ Hands one turn's `presence` array to the renderer's presence table.
+ *
+ * Selection and hover deliberately never ride a `UiPatch` (they change at input frequency, and a patch
+ * is revisioned), so this array is the ONLY channel by which a guest-owned selection reaches a rendered
+ * row. Before this call site existed the host read `turn-result.presence` in exactly one place — the
+ * "did this turn carry anything" predicate — and then dropped it, so `UiPresenceOverlayContext` had no
+ * production provider at all and every retained tree row rendered `aria-selected="false"` however the
+ * guest's `graph` domain moved (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, gap F1).
+ */
+function retainTurnPresence(result: { readonly presence?: unknown }): void {
+  console.log(`[DEBUG] retainTurnPresence seen type=${Array.isArray(result.presence) ? `array:${result.presence.length}` : typeof result.presence} keys=${Object.keys(result as object).join(",")}`);
+  if (!Array.isArray(result.presence) || result.presence.length === 0) return;
+  const updates: { readonly surface: string; readonly nodeKey: string; readonly own: GuestPresenceMarkV1 }[] = [];
+  for (const entry of result.presence) {
+    const packed = entry !== null && typeof entry === "object" ? (entry as { readonly update?: unknown }).update : undefined;
+    if (packed === undefined) continue;
+    let decoded: unknown;
+    try {
+      decoded = decodePackValue(coerceWireBytes(packed));
+    } catch {
+      continue;
+    }
+    const update = decodeGuestPresenceUpdateV1(decoded);
+    if (update) updates.push(update);
+  }
+  console.log(`[DEBUG] retainTurnPresence carriers=${result.presence.length} decoded=${updates.length} ${JSON.stringify(updates.slice(0, 4))}`);
+  if (updates.length > 0) publishGuestPresenceV1(updates);
+}
+
 //#region 🔖️ChannelAdapter
 /** 🎯️ DslValue may ship `Vec<u8>` as a number array, a Uint8Array, or a `{ kind:"bytes", value }`
  * object — used both for the old DSL-pack byte fields AND (H1-react) for `pack`-typed fields inside a
@@ -2881,6 +2968,31 @@ export function coerceWireBytes(raw: unknown): Uint8Array {
  * `Events` frames) back into the `InvocationResponse` shape the rest of this file already consumes.
  * `events` has no wire counterpart in this wave (an honest gap `🌉️ProgramBridge/🎯️targets/🧊️wgpu/🦀️.rs`'s
  * native `invocation_from_frames` already flags identically). */
+/** 🚪️ Per-instance count of GUEST-MUTATING ingress this renderer has submitted — a dispatch, or the
+ * publication of an extension completion's answer. It is deliberately NOT bumped by a `refresh-ui`
+ * turn: a refresh asks the guest to re-render what it already holds, so one refresh pass cannot
+ * invalidate another refresh pass's answer.
+ *
+ * 🤝️ This is the ONE thing the shell's ui-refresh lane cannot know on its own
+ * (`📓️react-hop-latency-2026-09-14.md` §4). A converging `flowEvalTick` arms one chain per flow
+ * window, so two completions demand a refresh per hop; the second arrives a few milliseconds after
+ * the first pass has already submitted its own guest turn, and BOTH are host-side callbacks of turns
+ * that had already settled — nothing crossed into the guest in between. Read against the generation
+ * the in-flight pass submitted under, that second pass is provably already answered, and a hop pays
+ * two serialized guest turns instead of three. See `uiRefreshAlreadyAnsweredV1`.
+ */
+const guestIngressGenerationByInstance = new Map<number, number>();
+
+export function guestIngressGenerationV1(instanceId: number): number {
+  return guestIngressGenerationByInstance.get(instanceId) ?? 0;
+}
+
+/** 🚪️ Records one guest-mutating ingress. Called BEFORE the crossing, never after: a pass that starts
+ * while a dispatch is in flight must see the bump, or it would hold an answer taken before it. */
+function noteGuestIngressV1(instanceId: number): void {
+  guestIngressGenerationByInstance.set(instanceId, guestIngressGenerationV1(instanceId) + 1);
+}
+
 async function performInvocation(client: AppChannelClient, instanceId: number, invocation: unknown, invocationKind: "action" | "command", viewState: unknown): Promise<InvocationResponse> {
   assertAddressedInvocation(invocation, invocationKind, instanceId);
   const invocationRecord = invocation as { readonly address?: { readonly actionId?: unknown; readonly commandId?: unknown }; readonly arguments?: Record<string, unknown> } | null;
@@ -2897,10 +3009,22 @@ async function performInvocation(client: AppChannelClient, instanceId: number, i
       argKeys: args ? Object.keys(args) : [],
     }));
   }
-  const frames = await client.command(encodePackValue(invocation), admitCrossingViewContext(`${invocationKind} ${String(actionId)}`, viewState));
-  const leftover = pendingTurnEffects.get(instanceId) ?? [];
-  pendingTurnEffects.delete(instanceId);
-  const response = invocationFromFrames(frames, leftover, invocationKind);
+  noteGuestIngressV1(instanceId);
+  const hopDetail = { instanceId, actionId: String(actionId), invocationKind };
+  const closeInvoke = hopTrace.open("invoke", hopDetail);
+  let response: InvocationResponse;
+  let frames: readonly AppFrameValue[];
+  try {
+    const wire = hopTrace.time("encode", hopDetail, () => ({ command: encodePackValue(invocation), view: admitCrossingViewContext(`${invocationKind} ${String(actionId)}`, viewState) }));
+    frames = await hopTrace.timeAsync("channel", hopDetail, () => client.command(wire.command, wire.view));
+    const leftover = pendingTurnEffects.get(instanceId) ?? [];
+    pendingTurnEffects.delete(instanceId);
+    response = hopTrace.time("decode", { ...hopDetail, frames: frames.length }, () => invocationFromFrames(frames, leftover, invocationKind));
+  } catch (error) {
+    closeInvoke({ failed: true });
+    throw error;
+  }
+  closeInvoke({ frames: frames.length, effects: (response.requestedEffects ?? []).length });
   console.warn("[DEBUG] performInvocation settled", JSON.stringify({ invocationKind, instanceId, actionId, frames: frames.length, frameKinds: frames.map((frame) => Object.keys(frame)[0] ?? "?"), historyCursor: response.historyPatch?.cursor ?? null, historyUpserts: response.historyPatch?.upserts?.length ?? 0, historyCanUndo: response.historyPatch?.canUndo ?? null, effects: (response.requestedEffects ?? []).length }));
   return response;
 }
@@ -3655,7 +3779,7 @@ function pluginRuntimeTestDependenciesV1() {
     get sharedShardClient() { return sharedShardClient; },
     set sharedShardClient(value: typeof sharedShardClient) { sharedShardClient = value; },
   };
-  return { testState, leftoverShellInvocationFrames, promoteShellSendMessages, leftoverInspectionRefreshScope, leftoverInspectionPanelHash, windowHostContextBindings, isolatedJobStepsPerSerializedAdmission, isolatedJobUiPollEverySteps, ActivationRegistry, ActorDocumentBindingV1, adaptPluginHandle, assertAddressedInvocation, AppChannelClient, AppChannelRequestSequence, applyRetainedWindowPatches, applyUiPatch, applyUiPatchToRetained, ArtifactMutationRouter, assertShardJspiAvailable, BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES, buildShardClientOptions, coerceTurnResult, coerceWireBytes, commandIngressFaultDisplay, computeDependencyLevels, consumeTypedOperationEffects, createShardCommandIngressPages, createTurnOutcomeBroadcast, currentPluginRuntimeActor, decodeActorUiPatchReceipt, decodeAppFrame, decodeBackboneMessage, decodeConflictsFromWire, decodeFaultFromWire, decodeForeignStep, decodeInvocationResultPacks, decodeLocalInteractionCaptureJson, decodeMergeReportFromWire, decodeMutationEnvelopesPack, decodePackValue, decodePackWire, decodeWirePack, decodeWirePatchOps, DEFAULT_SHARD_BUDGET, drainTypedOperationTurns, DIRECTORY_PROJECTION_RECEIPT_SCHEMA, emptyUiDocumentState, encodeActorUiPatchReceipt, encodeDocumentBackboneControlV1, encodeMutationOrigin, encodePackValue, enqueuePluginTurn, faultDisplayMessage, fetchDescriptorManifest, fnv1aHex, getActivationRegistry, getPluginTurnScheduler, getShardClient, getThunkScheduler, handlePluginShardLost, forgetInstanceForRecovery, onPluginInstancesLost, PLUGIN_ACTOR_INSTANCE_LOST_FAULT, rememberInstanceForRecovery, hasRequiredUiPatches, InstanceDirectory, invocationFromFrames, isShardLostError, loadPluginModule, loadPluginModulesInDependencyOrder, LOCAL_INTERACTION_CAPTURE_MAX_BYTES, localInteractionIdentityEquals, MAX_TRANSACTION_DEPTH, nextGlobalInstanceId, normalizeWireUiNodeRecord, notePluginLoadProgress, orderPluginRegistryEntries, OwnedResidentLedger, packWireNatural, patchAckEvents, pendingCoalescedTurns, pendingCompletionEffects, pendingLifecycleTurns, pendingTurnEffects, performContextMenu, performInvocation, PLUGIN_BOOT_SHARD_LOST_FAULT, PLUGIN_OPERATION_DRAIN_BUDGET, PLUGIN_OPERATION_EFFECT_CAPACITY, PLUGIN_OPERATION_WAKE_MAX_MS, PLUGIN_TURN_MAILBOX_CAPACITY, PLUGIN_UI_CONTINUATION_BATCH_SIZE, PLUGIN_UI_CONTINUATION_LIMIT, PLUGIN_UI_QUIESCENT_CONTINUATIONS, PLUGIN_UI_ZERO_PROGRESS_CONTINUATION_LIMIT, PLUGIN_UI_INTAKE_STEP_CEILING, PLUGIN_UI_INTAKE_YIELD_STRIDE, retainedUiIntakeStepCeiling, PluginBootShardLostError, pluginLoadProgress, pluginLoadProgressAt, pluginSurfaceRef, poolConcurrency, rejectionCodeFromBytes, releasePendingLifecycleTurn, rendererResidentLedger, resolveDescriptorBeforeRuntime, retainedSurfaceHash, retainedSurfaceId, retainedSurfacesForActor, retainedSurfaceToBuiltNode, retainedSurfaceToSnapshot, retainedUiRefreshResponse, uiRefreshSectionUnchanged, retainedWindowByActor, retainTurnUiPatches, runBounded, sectionValueFromBuiltNode, runPluginLifecycleTurn, SEGMENTED_DOWNLOAD_MARKER_PREFIX, SemioFaultError, SERIALIZE_PER_ACTOR_MAILBOX_CAPACITY, serializeCommandIngressForActor, serializePerActor, commandIngressLaneForActionV1, commandIngressNeedsReplyStampV1, setPluginRuntimeActor, settleAcknowledgedPluginTurns, settlePluginTurn, SHARD_LIVENESS_POLICY, SHARD_WORKER_URL, ShardClient, sharedPluginTurnScheduler, sharedThunkScheduler, shellFrameBytes, submitPluginLifecycleTurn, submitPluginTurn, teardownPluginActor, tearingDownPluginActors, TransactionCoordinator, TurnScheduler, TYPED_OPERATION_ACK_MAGIC, TYPED_OPERATION_PAGE_MAGIC, TYPED_OPERATION_PARK_CAPACITY, TYPED_OPERATION_PARK_EVICTION_FAULT, TYPED_OPERATION_PENDING_OUTPUT, TYPED_OPERATION_TERMINAL_OUTPUT, TYPED_OPERATION_TERMINAL_SEEN, TYPED_OPERATION_UNATTRIBUTED_FAULT, typedOperationAcknowledgements, TypedOperationCall, TypedOperationRouter, typedOperationResult, uiRefreshBodyKeys, uiRefreshSectionTargets, uiRefreshSurfaceEvents, wireEffectToFriendly, wireExtensionInvocation, wireNatural, wirePatchSurfaceId, wireTurnStatusTag, withTypedOperationCall, yieldPluginUiContinuation };
+  return { testState, guestIngressGenerationV1, leftoverShellInvocationFrames, promoteShellSendMessages, leftoverInspectionRefreshScope, leftoverInspectionPanelHash, windowHostContextBindings, isolatedJobStepsPerSerializedAdmission, isolatedJobUiPollEverySteps, ActivationRegistry, ActorDocumentBindingV1, adaptPluginHandle, assertAddressedInvocation, AppChannelClient, AppChannelRequestSequence, applyRetainedWindowPatches, applyUiPatch, applyUiPatchToRetained, ArtifactMutationRouter, assertShardJspiAvailable, BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES, buildShardClientOptions, coerceTurnResult, coerceWireBytes, commandIngressFaultDisplay, computeDependencyLevels, consumeTypedOperationEffects, createShardCommandIngressPages, createTurnOutcomeBroadcast, currentPluginRuntimeActor, decodeActorUiPatchReceipt, decodeAppFrame, decodeBackboneMessage, decodeConflictsFromWire, decodeFaultFromWire, decodeForeignStep, decodeInvocationResultPacks, decodeLocalInteractionCaptureJson, decodeMergeReportFromWire, decodeMutationEnvelopesPack, decodePackValue, decodePackWire, decodeWirePack, decodeWirePatchOps, DEFAULT_SHARD_BUDGET, drainTypedOperationTurns, DIRECTORY_PROJECTION_RECEIPT_SCHEMA, emptyUiDocumentState, encodeActorUiPatchReceipt, encodeDocumentBackboneControlV1, encodeMutationOrigin, encodePackValue, enqueuePluginTurn, faultDisplayMessage, fetchDescriptorManifest, fnv1aHex, getActivationRegistry, getPluginTurnScheduler, getShardClient, getThunkScheduler, handlePluginShardLost, forgetInstanceForRecovery, onPluginInstancesLost, PLUGIN_ACTOR_INSTANCE_LOST_FAULT, rememberInstanceForRecovery, hasRequiredUiPatches, InstanceDirectory, invocationFromFrames, isShardLostError, loadPluginModule, loadPluginModulesInDependencyOrder, LOCAL_INTERACTION_CAPTURE_MAX_BYTES, localInteractionIdentityEquals, MAX_TRANSACTION_DEPTH, nextGlobalInstanceId, normalizeWireUiNodeRecord, notePluginLoadProgress, orderPluginRegistryEntries, OwnedResidentLedger, packWireNatural, patchAckEvents, pendingCoalescedTurns, pendingCompletionEffects, pendingLifecycleTurns, pendingTurnEffects, performContextMenu, performInvocation, PLUGIN_BOOT_SHARD_LOST_FAULT, PLUGIN_OPERATION_DRAIN_BUDGET, PLUGIN_OPERATION_EFFECT_CAPACITY, PLUGIN_OPERATION_WAKE_MAX_MS, PLUGIN_TURN_MAILBOX_CAPACITY, PLUGIN_UI_CONTINUATION_BATCH_SIZE, PLUGIN_UI_CONTINUATION_LIMIT, PLUGIN_UI_QUIESCENT_CONTINUATIONS, PLUGIN_UI_ZERO_PROGRESS_CONTINUATION_LIMIT, PLUGIN_UI_INTAKE_STEP_CEILING, PLUGIN_UI_INTAKE_YIELD_STRIDE, retainedUiIntakeStepCeiling, PluginBootShardLostError, pluginLoadProgress, pluginLoadProgressAt, pluginSurfaceRef, poolConcurrency, rejectionCodeFromBytes, releasePendingLifecycleTurn, rendererResidentLedger, resolveDescriptorBeforeRuntime, retainedSurfaceHash, retainedSurfaceId, retainedSurfacesForActor, retainedSurfaceToBuiltNode, retainedSurfaceToSnapshot, retainedUiRefreshResponse, uiRefreshSectionUnchanged, retainedWindowByActor, retainTurnUiPatches, runBounded, sectionValueFromBuiltNode, runPluginLifecycleTurn, SEGMENTED_DOWNLOAD_MARKER_PREFIX, SemioFaultError, SURFACE_RENDER_FAULT, SERIALIZE_PER_ACTOR_MAILBOX_CAPACITY, serializeCommandIngressForActor, serializePerActor, commandIngressLaneForActionV1, commandIngressNeedsReplyStampV1, setPluginRuntimeActor, settleAcknowledgedPluginTurns, settlePluginTurn, SHARD_LIVENESS_POLICY, SHARD_WORKER_URL, ShardClient, sharedPluginTurnScheduler, sharedThunkScheduler, shellFrameBytes, submitPluginLifecycleTurn, submitPluginTurn, teardownPluginActor, tearingDownPluginActors, TransactionCoordinator, TurnScheduler, TYPED_OPERATION_ACK_MAGIC, TYPED_OPERATION_PAGE_MAGIC, TYPED_OPERATION_PARK_CAPACITY, TYPED_OPERATION_PARK_EVICTION_FAULT, TYPED_OPERATION_PENDING_OUTPUT, TYPED_OPERATION_TERMINAL_OUTPUT, TYPED_OPERATION_TERMINAL_SEEN, TYPED_OPERATION_UNATTRIBUTED_FAULT, typedOperationAcknowledgements, TypedOperationCall, TypedOperationRouter, typedOperationResult, uiRefreshBodyKeys, uiRefreshSectionTargets, uiRefreshSurfaceEvents, wireEffectToFriendly, wireExtensionInvocation, wireNatural, wirePatchSurfaceId, wireTurnStatusTag, withTypedOperationCall, yieldPluginUiContinuation };
 }
 
 export type PluginRuntimeTestDependenciesV1 = ReturnType<typeof pluginRuntimeTestDependenciesV1>;
