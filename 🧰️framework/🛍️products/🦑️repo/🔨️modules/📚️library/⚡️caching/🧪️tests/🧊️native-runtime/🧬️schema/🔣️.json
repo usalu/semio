@@ -4,7 +4,7 @@
   "additionalProperties": false,
   "required": ["variant", "profiles", "pluginId", "componentHex", "asset", "cycles", "paths", "manifestLimitBytes"],
   "properties": {
-    "variant": {"const": "fixture"},
+    "variant": {"const": "hostDocument"},
     "profiles": {"const": ["dev", "release"]},
     "pluginId": {"const": "sample"},
     "componentHex": {"const": "0061736d0d000100"},

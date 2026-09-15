@@ -7,10 +7,10 @@
 //! composed child, never exposed on this struct), the mirror and its derive are both gone.
 //!
 //! ⚠️ **The WIRE FORMAT still carries the real `nodes`/`edges` data** (JSON-blob-encoded), not just
-//! the opaque handle — matching flow's own `<semio_framework_artifact_flow_flow::FlowFixture as ArtifactDsl>::parse_dsl(text).map(
-//! Self::from_fixture)` precedent exactly. Reasoning: no `LinkResolver`/child-dispatch seam exists
+//! the opaque handle — matching flow's own `<semio_framework_artifact_flow_flow::FlowHostDocument as ArtifactDsl>::parse_dsl(text).map(
+//! Self::from_host_document)` precedent exactly. Reasoning: no `LinkResolver`/child-dispatch seam exists
 //! yet (see `🔖️WorkingScene` in the artifact root), so the exact child's local owner is populated
-//! in-process by whatever call sets the `content` field (a mutation diff, `from_fixture`, …). A
+//! in-process by whatever call sets the `content` field (a mutation diff, `from_host_document`, …). A
 //! codec that persisted only the bare handle would produce an UNRECOVERABLE snapshot the instant a
 //! fresh process parses it (confirmed by a real test failure during this migration: `default_snapshot
 //! ()` came back with an empty scene on every fresh run, silently vacuous-passing several inverse-law
@@ -24,7 +24,7 @@
 //! (design.md §1 CORRECTION) — this file keeps only the struct, its pure defaults, and the
 //! framework bridge; no codec logic remains here.
 
-use crate::{DagContentChild, DagFixtureEdge, DagNodeSpec};
+use crate::{DagContentChild, DagHostDocumentEdge, DagNodeSpec};
 use framework_schema::ArtifactSchema;
 
 //#region 🔖️Snapshot
@@ -82,7 +82,7 @@ pub fn default_snapshot() -> DagSnapshot {
 
 //#region 🔖️FrameworkBridge
 /// 🌉 `semio_framework_artifact_infinite_dag::DagSnapshot` is the FRAMEWORK's own separate persisted
-/// projection (backs `DagFixture`/`DagHost`), unrelated to and unaware of this plugin's composed
+/// projection (backs `DagHostDocument`/`DagHost`), unrelated to and unaware of this plugin's composed
 /// child — the bridge goes through the working-scene converter, never through `nodes`/`edges` fields
 /// (this struct no longer has any).
 impl From<DagSnapshot> for semio_framework_artifact_infinite_dag::DagSnapshot {
@@ -112,7 +112,7 @@ impl DagSnapshot {
     pub fn nodes(&self) -> Vec<DagNodeSpec> {
         crate::dag_working_scene(self).nodes
     }
-    pub fn edges(&self) -> Vec<DagFixtureEdge> {
+    pub fn edges(&self) -> Vec<DagHostDocumentEdge> {
         crate::dag_working_scene(self).edges
     }
 }

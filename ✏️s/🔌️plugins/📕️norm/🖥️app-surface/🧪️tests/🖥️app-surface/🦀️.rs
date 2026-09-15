@@ -33,8 +33,8 @@ async fn check_surface<A: PluginApp>(app: &mut A, definition: &AppDefinition, fi
     if app.app_id().await != fixture.app_id {
         return Err(format!("{} factory returned the wrong app identity", fixture.app_id));
     }
-    let document_schema = app.document_schema().await;
-    if document_schema != format!("semio.norm.{}/v1", fixture.variant) || definition.io.document_schema != document_schema {
+    let artifact_schema = app.artifact_schema().await;
+    if artifact_schema != format!("semio.norm.{}/v1", fixture.variant) || definition.io.artifact_schema != artifact_schema {
         return Err(format!("{} factory returned the wrong document schema", fixture.app_id));
     }
     let mut keys: BTreeSet<String> = definition.window_kinds.iter().map(|window| window.body_key.clone()).collect();
@@ -118,7 +118,7 @@ struct RetainedRouteRow {
 struct RetainedAppRow {
     variant: String,
     controller: String,
-    document_schema: String,
+    artifact_schema: String,
 }
 
 #[derive(serde::Deserialize)]
@@ -180,7 +180,7 @@ async fn every_norm_editor_action_is_migrated_onto_the_shared_owned_factory() {
     let mut identities = 0usize;
     for app in &fixture.apps {
         let definition = plugin.manifest.apps.iter().find(|entry| entry.id == app.controller).unwrap_or_else(|| panic!("{} is not a registered norm editor", app.controller));
-        assert_eq!(definition.io.document_schema, app.document_schema);
+        assert_eq!(definition.io.artifact_schema, app.artifact_schema);
         assert_eq!(definition.dialect.artifact_kind, format!("s.norm.{}", app.variant));
         for window in definition.window_kinds.iter() {
             for route in &fixture.routes {

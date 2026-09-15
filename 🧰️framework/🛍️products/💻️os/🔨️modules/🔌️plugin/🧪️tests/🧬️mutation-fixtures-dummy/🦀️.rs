@@ -238,7 +238,7 @@ impl ArtifactApp for DummyApp {
     type Command = DummyCommand;
 
     crate::bounded_first_step_tool_proofs! {
-        owner: DummyApp, owner_file: "plugin/🧪️tests/🧬️mutation-fixtures-dummy/🦀️.rs", controller: "testkit-dummy", document_schema: "semio.testkit/v1",
+        owner: DummyApp, owner_file: "plugin/🧪️tests/🧬️mutation-fixtures-dummy/🦀️.rs", controller: "testkit-dummy", artifact_schema: "semio.testkit/v1",
         factory: "DummyFixtureFactory", factory_type: DummyFixtureFactory,
         contract: ToolExecutionContract::resumable(4_096, 1, 1, 4_096, 500, 1, 1), tools: ["increment"]
     }

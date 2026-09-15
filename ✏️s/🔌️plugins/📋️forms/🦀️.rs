@@ -41,6 +41,6 @@ pub fn plugin() -> Result<Plugin<FormsApps>, PluginAssemblyError> {
         .viewer_mutation_roster::<crate::viewer::forms::FormsViewer>()
         .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::forms::artifact_kind().id })
         .execution(ExecutionMode::Isolated)
-        .requests(CapabilityRequest { id: CapabilityId("documents.write".into()), scope: "plugin".into(), reason: "persist form dictionary edits to the open document".into(), optional: false })
+        .requests(CapabilityRequest { id: CapabilityId("artifacts.write".into()), scope: "plugin".into(), reason: "persist form dictionary edits to the open document".into(), optional: false })
         .try_build()
 }

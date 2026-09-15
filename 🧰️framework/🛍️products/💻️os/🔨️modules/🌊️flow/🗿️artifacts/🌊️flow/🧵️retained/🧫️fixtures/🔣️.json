@@ -32,10 +32,10 @@
       "secondCapacityBytes": 12289,
       "ownerCount": 2,
       "laws": {
-        "missingAdmissionReturnsOwner": true,
+        "missingAdmissionRecordsFault": true,
         "subexactAdmissionUnchanged": true,
         "preflightBeforeMovement": true,
-        "retryTransfersOnce": true,
+        "exactAdmissionThenPush": true,
         "explicitCloseReleasesAll": true
       }
     },
@@ -50,8 +50,8 @@
       "coldUsesDemand": true
     }
   },
-  "fixture": {
-    "schema": "flow.fixture",
+  "hostDocument": {
+    "schema": "flow.hostDocument",
     "camera": {
       "x": 0,
       "y": 0,

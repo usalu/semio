@@ -1078,7 +1078,7 @@ impl ArtifactEditor for EnergyModelEditor {
         owner: EditorApp<EnergyModelEditor>,
         owner_file: "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.energy.model@1/*#editor",
-        document_schema: "energy.model",
+        artifact_schema: "energy.model",
         factory: "EnergyModelCommandJobFactory",
         factory_type: EnergyModelCommandJobFactory,
         contract: ToolExecutionContract::bounded_first_step(65_536, 65_536, 1, 262_144, 7_500),

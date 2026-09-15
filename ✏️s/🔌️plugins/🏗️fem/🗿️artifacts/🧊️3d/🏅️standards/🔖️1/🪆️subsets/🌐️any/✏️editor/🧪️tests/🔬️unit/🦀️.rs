@@ -407,9 +407,9 @@ async fn fem3d_io_matches_declared_artifact_identity_3d() {
 #[semio_framework_async_macros::async_test]
 async fn fem3d_io_declares_geometry_in_and_results_out_ports() {
     let io = fem3d_io();
-    assert_eq!(io.document_schema, crate::FEM_3D_SCHEMA);
-    assert_eq!(io.document_media_type.class, MediaClass::ThreeD);
-    assert_eq!(io.document_media_type.form, MediaForm::Any);
+    assert_eq!(io.artifact_schema, crate::FEM_3D_SCHEMA);
+    assert_eq!(io.artifact_media_type.class, MediaClass::ThreeD);
+    assert_eq!(io.artifact_media_type.form, MediaForm::Any);
     assert_eq!(io.artifact.id, "3d.fem");
     assert_eq!(io.artifact.component_kind, "fem3d");
 

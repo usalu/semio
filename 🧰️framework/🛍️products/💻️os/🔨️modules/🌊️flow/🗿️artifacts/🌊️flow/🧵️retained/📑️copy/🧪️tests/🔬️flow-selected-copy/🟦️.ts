@@ -8,7 +8,7 @@ export function flowSelectedCopySelfTests(): number {
   const base = join(WORKSPACE_ROOT, "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧵️retained");
   const schema = JSON.parse(readFileSync(join(base, "📑️copy/🧬️schema/🔣️.json"), "utf8"));
   const fixture = JSON.parse(readFileSync(join(base, "📑️copy/🧫️fixtures/🔣️.json"), "utf8"));
-  const document = JSON.parse(readFileSync(join(base, "🧫️fixtures/🔣️.json"), "utf8")).fixture;
+  const document = JSON.parse(readFileSync(join(base, "🧫️fixtures/🔣️.json"), "utf8")).hostDocument;
   const requireTest = createRequire(import.meta.url);
   const Ajv = requireTest("ajv");
   const stable = requireTest("fast-json-stable-stringify");
@@ -18,7 +18,7 @@ export function flowSelectedCopySelfTests(): number {
   const hostiles = [{ ...fixture, extra: true }, malformed, { ...fixture, expected: { ...fixture.expected, framesBeforeRoot: false } }];
   for (const value of hostiles) if (validate(value)) throw new Error("Flow selected copy accepted hostile schema");
   for (const test of fixture.cases) {
-    const selected = test.kind === "fixture" ? document : document[test.kind === "widget" ? "widgets" : "synapses"][test.index];
+    const selected = test.kind === "hostDocument" ? document : document[test.kind === "widget" ? "widgets" : "synapses"][test.index];
     const copied = structuredClone(selected);
     if (stable(copied) !== stable(JSON.parse(JSON.stringify(selected)))) throw new Error("Flow selected copy third-party canonical oracle disagrees");
     const pointer = test.pointer === "" ? document : test.pointer.slice(1).split("/").reduce((value: any, key: string) => value[key], document);

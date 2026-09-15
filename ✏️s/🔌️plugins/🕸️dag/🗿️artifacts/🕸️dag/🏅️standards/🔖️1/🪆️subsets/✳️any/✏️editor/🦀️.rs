@@ -42,7 +42,7 @@ pub const DAG_PLAY_APP_ID: &str = "s.dag.dag@1/*#editor";
 pub const DAG_PLAY_INTERACTION_DOMAIN: &str = "graph";
 pub use catalogue_panel::DAG_PLAY_BODY_CATALOGUE;
 pub use compiled::{DAG_PLAY_BODY_COMPILED, DAG_PLAY_WINDOW_COMPILED};
-pub use document_panel::DAG_PLAY_BODY_DOCUMENT;
+pub use document_panel::DAG_PLAY_BODY_ARTIFACT;
 pub use inspection_panel::DAG_PLAY_BODY_INSPECTOR;
 pub use main::{DAG_PLAY_BODY_MAIN, DAG_PLAY_WINDOW_MAIN};
 
@@ -454,7 +454,7 @@ impl ArtifactEditor for DagPlayApp {
         owner: EditorApp<DagPlayApp>,
         owner_file: "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.dag.dag@1/*#editor",
-        document_schema: "dag.dag",
+        artifact_schema: "dag.dag",
         factory: "DagConfigCommandJobFactory",
         factory_type: DagConfigCommandJobFactory,
         tools: {
@@ -618,7 +618,7 @@ impl ArtifactEditor for DagPlayApp {
         let node = match body_key {
             DAG_PLAY_BODY_MAIN => main::render(document, &camera, labels),
             DAG_PLAY_BODY_COMPILED => compiled::render(document, &camera),
-            DAG_PLAY_BODY_DOCUMENT => document_panel::render(document, labels),
+            DAG_PLAY_BODY_ARTIFACT => document_panel::render(document, labels),
             DAG_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels),
             DAG_PLAY_BODY_INSPECTOR => inspection_panel::render(document, &[], labels),
             _ => return semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
@@ -647,7 +647,7 @@ impl ArtifactEditor for DagPlayApp {
         let document = doc.snapshot;
         let nodes = document.nodes();
         let edges = document.edges();
-        // 🧵️ `DagFixtureEdge.source`/`.target` are "nodeId@portId" endpoint strings (defaulting to the
+        // 🧵️ `DagHostDocumentEdge.source`/`.target` are "nodeId@portId" endpoint strings (defaulting to the
         // "out" port when bare) — `split_endpoint` peels the node id back off before it can be matched
         // against a plain `DagNodeSpec.id`.
         let node_id_of = |endpoint: &str| crate::schema::split_endpoint(endpoint).0;

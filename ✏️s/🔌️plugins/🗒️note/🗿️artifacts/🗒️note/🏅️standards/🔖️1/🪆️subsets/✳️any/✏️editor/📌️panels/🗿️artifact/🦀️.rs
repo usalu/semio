@@ -10,16 +10,16 @@ use semio_framework_plugin::{
 };
 
 //#region 🔖️Constants
-pub const NOTE_PLAY_BODY_DOCUMENT: &str = "note.play.document";
+pub const NOTE_PLAY_BODY_ARTIFACT: &str = "note.play.artifact";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
 pub fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_ARTIFACT_ID.into()),
-        label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Dokument"),
+        label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Artefakt"),
         group: PanelGroup::Workbench,
-        body_key: Some(NOTE_PLAY_BODY_DOCUMENT.into()),
+        body_key: Some(NOTE_PLAY_BODY_ARTIFACT.into()),
         children: Vec::new(),
     }
 }
@@ -85,7 +85,7 @@ pub fn render(document: &NoteSnapshot, labels: &NotePlayLabels) -> semio_framewo
             items.try_push(block_tree_item(block)?).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "note block list admission failed"))?;
         }
     }
-    PanelTreeBuilder::new("note-play-blocks")?.section("note-play-blocks", Some(ui_label(labels.document.as_str())?), true, items)?.interaction_domain(NOTE_INTERACTION_BLOCKS)?.build()
+    PanelTreeBuilder::new("note-play-blocks")?.section("note-play-blocks", Some(ui_label(labels.artifact.as_str())?), true, items)?.interaction_domain(NOTE_INTERACTION_BLOCKS)?.build()
 }
 //#endregion 🔖️Render
 

@@ -505,7 +505,7 @@
           "properties": {
             "value": {
               "const": {
-                "surface": "document",
+                "surface": "artifact",
                 "nodeKey": "item:根,1",
                 "own": {
                   "hovered": true,

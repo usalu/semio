@@ -8,7 +8,7 @@ use crate::Generation3dSnapshot;
 
 /// ↩️ No prior position in `base` ⇒ the upsert created the entry, so undo removes it.
 pub fn inverse(payload: &MoveWidget, base: &Generation3dSnapshot) -> Vec<Generation3dMutation> {
-    match base.fixture.layout.get(&payload.id) {
+    match base.host_document.layout.get(&payload.id) {
         Some(previous) => vec![Generation3dMutation::MoveWidget(MoveWidget { id: payload.id.clone(), layout: previous.clone() })],
         None => vec![Generation3dMutation::DeleteWidgetPosition(DeleteWidgetPosition { id: payload.id.clone() })],
     }

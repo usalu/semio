@@ -675,6 +675,17 @@ fn world_context_menu_cursor_is_revisioned_and_right_drag_suppresses_publication
 }
 
 #[test]
+fn world_marquee_overlay_points_reads_authority_gesture() {
+    let mut state = World3dState::new("surface".into(), "controller".into());
+    let mut gesture = WorldMarqueeGesture::new(1, 1, [10.0, 20.0]);
+    assert!(gesture.push([100.0, 80.0]));
+    state.interaction_authority.as_mut().unwrap().marquee = Some(gesture);
+    assert!(!state.marquee_active);
+    let points = world_marquee_overlay_points(&state).expect("overlay points");
+    assert_eq!(points, vec![[10.0, 20.0], [100.0, 80.0]]);
+}
+
+#[test]
 fn world_marquee_gesture_has_fixed_points_generation_and_cursorized_close() {
     let mut gesture = WorldMarqueeGesture::new(7, 11, [0.0, 0.0]);
     for index in 1..WORLD_INTERACTION_MARQUEE_POINT_CAPACITY {
@@ -1068,7 +1079,7 @@ fn world_gumball_update_validates_one_selected_aba_token_per_turn() {
     assert!(gesture.close_step());
 }
 
-fn world_gumball_commit_fixture() -> (World3dState, WorldGumballGesture) {
+fn world_gumball_commit_host_document() -> (World3dState, WorldGumballGesture) {
     let mut state = World3dState::new("surface".into(), "controller".into());
     state.interaction_revision = 3;
     state.interaction_objects.revision = 3;
@@ -1096,7 +1107,7 @@ fn world_gumball_commit_fixture() -> (World3dState, WorldGumballGesture) {
 
 #[test]
 fn world_gumball_commit_builds_one_flat_node_per_grant_then_retires_tokens() {
-    let (state, gesture) = world_gumball_commit_fixture();
+    let (state, gesture) = world_gumball_commit_host_document();
     let mut job = WorldGumballCommitJob::new(8, gesture);
     let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
     assert_eq!(with_world_step_context(0, |context| job.step(&state, 8, &mut input, context)).unwrap(), WorldInteractionStep::Pending);
@@ -1122,7 +1133,7 @@ fn world_gumball_commit_builds_one_flat_node_per_grant_then_retires_tokens() {
 
 #[test]
 fn world_gumball_commit_saturation_aba_and_interrupted_close_retain_claim_authority() {
-    let (mut state, gesture) = world_gumball_commit_fixture();
+    let (mut state, gesture) = world_gumball_commit_host_document();
     let mut job = WorldGumballCommitJob::new(8, gesture);
     let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
     let mut blockers = Vec::new();
@@ -1160,7 +1171,7 @@ fn world_gumball_commit_saturation_aba_and_interrupted_close_retain_claim_author
 
 #[test]
 fn world_gumball_fixed_gesture_projects_preview_without_mutating_source_draw() {
-    let (mut state, gesture) = world_gumball_commit_fixture();
+    let (mut state, gesture) = world_gumball_commit_host_document();
     state.interaction_authority.as_mut().unwrap().gumball = Some(gesture);
     let source = Mat4::identity();
     let preview = retained_gumball_preview_model(&state, 0, 0, source);
@@ -1170,7 +1181,7 @@ fn world_gumball_fixed_gesture_projects_preview_without_mutating_source_draw() {
     assert_eq!(unmatched.cols, source.cols);
 }
 
-fn world_brush_commit_fixture(target: String) -> World3dState {
+fn world_brush_commit_host_document(target: String) -> World3dState {
     let mut state = World3dState::new("surface".into(), "controller".into());
     state.interaction_revision = 4;
     state.brush_preview = Some(WorldBrushPreviewRecord {
@@ -1187,7 +1198,7 @@ fn world_brush_commit_fixture(target: String) -> World3dState {
 
 #[test]
 fn world_brush_commit_copies_and_revalidates_fixed_chunks_before_claimed_publication() {
-    let state = world_brush_commit_fixture("v".repeat(WORLD_BRUSH_COPY_CHUNK_BYTES * 2 + 1));
+    let state = world_brush_commit_host_document("v".repeat(WORLD_BRUSH_COPY_CHUNK_BYTES * 2 + 1));
     let mut job = WorldBrushCommitJob::new(&state, 9).unwrap().expect("brush job");
     let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
     let mut turns = 0;
@@ -1208,7 +1219,7 @@ fn world_brush_commit_copies_and_revalidates_fixed_chunks_before_claimed_publica
 
 #[test]
 fn world_brush_validation_detects_same_length_replacement_and_close_releases_draft_claim() {
-    let mut state = world_brush_commit_fixture("first".into());
+    let mut state = world_brush_commit_host_document("first".into());
     let mut stale = WorldBrushCommitJob::new(&state, 9).unwrap().expect("brush job");
     while !stale.validating {
         assert_eq!(with_world_step_context(1, |context| stale.step(&state, 9, &mut ui_wgpu::wgpu::InputState::default(), context)).unwrap(), WorldInteractionStep::Pending);
@@ -1216,7 +1227,7 @@ fn world_brush_validation_detects_same_length_replacement_and_close_releases_dra
     state.brush_preview.as_mut().unwrap().target_vortex_full_id = Some("other".into());
     assert!(matches!(with_world_step_context(1, |context| stale.step(&state, 9, &mut ui_wgpu::wgpu::InputState::default(), context)), Err(ui_wgpu::wgpu::BoundedActionFault::Structure)));
 
-    let state = world_brush_commit_fixture("target".into());
+    let state = world_brush_commit_host_document("target".into());
     let mut interrupted = WorldBrushCommitJob::new(&state, 10).unwrap().expect("brush job");
     let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
     while !interrupted.complete {
@@ -1589,6 +1600,21 @@ fn scene_with_selection_and_domain(selection_json: &str, domain: Option<(&str, &
         event_feed: None,
         menu: None,
     }
+}
+
+#[test]
+fn sync_parses_scene_reference_lanes() {
+    let references = r#"[{"id":"ref-masterarbeit","url":"/infinite-assets/plan.jpg","origin":[7.0,0.0,0.01],"widthWorld":50.0,"locked":true,"hidden":false}]"#;
+    let mut scene = scene_with_selection("{}");
+    if let Some(world) = scene.world_3d.as_mut() {
+        world.references_json = Some(references.into());
+    }
+    let mut state = World3dState::new("surface-1".into(), "controller-1".into());
+    sync_world3d_state(&mut state, &scene, Rect { x: 0.0, y: 0.0, w: 400.0, h: 400.0 });
+    assert_eq!(state.references.len(), 1);
+    assert_eq!(state.references[0].url.as_deref(), Some("/infinite-assets/plan.jpg"));
+    assert_eq!(state.references[0].width_world, Some(50.0));
+    assert!(!state.references[0].hidden.unwrap_or(true));
 }
 
 #[test]
@@ -2929,6 +2955,30 @@ fn scene_bridge_renders_the_generation3d_preview_payload_into_a_snapshot() {
     for id in expect["wireOnlyMeshesDropped"].as_array().expect("dropped meshes") {
         assert!(!state.meshes.contains_key(id.as_str().expect("mesh id")), "a wire-only preview mesh carries no triangles and must not become a draw");
     }
+}
+
+/// 🎯️ The delivery that arrives WITH a first framing must still publish its draws.
+///
+/// ⚖️ `sync_world3d_scene_fit` frames the camera and advances `interaction_revision`; the very same
+/// `sync_world3d_state` call then admits the delivery's snapshot apply, whose mesh items stamp their
+/// `WorldDrawRebuildDescriptor` with whatever `interaction_revision` reads at that moment. If the
+/// apply's own completion moves the revision AGAIN, the rebuild it just sealed answers
+/// `WorldDrawRebuildStep::Stale`, its host closes it, and nothing ever begins another — the surface
+/// keeps its meshes and zero draws for the life of the document. Measured on 6118 as
+/// `state-meshes=3 apply=false rebuild=false state-draws=0 draws=0` on every generation3d example in
+/// both roles, with `world3d-editor` falling 75/115 → 62/115 the hour the fit lane landed
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-regressions-sweep-2026-09-15.md`).
+#[test]
+fn a_first_framing_never_strands_the_deliverys_own_draw_rebuild() {
+    let fixture = scene_bridge_fixture();
+    let mut scene = scene_from_bridge_fixture(&fixture);
+    scene.world_3d.as_mut().expect("world scene").fit_json = Some(BOOT_FRAME_FIT_JSON.to_string());
+    let mut state = World3dState::new("surface-1".into(), "controller-1".into());
+    drive_scene_bridge(&mut state, &scene, Rect { x: 0.0, y: 0.0, w: 1600.0, h: 900.0 });
+    assert_eq!(state.snapshot_fault, None, "a framed delivery must apply without faulting");
+    assert_eq!(state.fit_framed_revision, Some(7), "the delivery's own fit lane framed this document once");
+    assert_eq!(state.draws.iter().count(), fixture["expect"]["draws"].as_u64().expect("draws") as usize, "the framing must not strand the delivery's draw rebuild");
+    assert_eq!(state.interaction_revision, state.snapshot_lease.expect("applied lease").revision, "the applied delivery owns the surface's interaction revision");
 }
 
 /// 🟩️ A `provisional: true` instance record — the producer's stamp from `ArtifactView::tool_run()` (tool run

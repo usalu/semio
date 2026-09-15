@@ -374,7 +374,7 @@ impl ArtifactEditor for HomeApp {
         owner: EditorApp<HomeApp>,
         owner_file: "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.space.home@1/*#editor",
-        document_schema: "s.home",
+        artifact_schema: "s.home",
         factory: "HomeRetainedCommandJobFactory",
         factory_type: HomeRetainedCommandJobFactory,
         contract: home_retained_contract(),

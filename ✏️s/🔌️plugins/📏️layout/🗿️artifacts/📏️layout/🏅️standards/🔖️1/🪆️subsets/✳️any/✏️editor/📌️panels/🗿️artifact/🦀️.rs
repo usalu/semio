@@ -11,16 +11,16 @@ use semio_framework_plugin::{
 };
 
 //#region 🔖️Constants
-pub const LAYOUT_PLAY_BODY_DOCUMENT: &str = "layout.play.document";
+pub const LAYOUT_PLAY_BODY_ARTIFACT: &str = "layout.play.artifact";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
 pub fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_ARTIFACT_ID.into()),
-        label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Dokument"),
+        label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Artefakt"),
         group: PanelGroup::Workbench,
-        body_key: Some(LAYOUT_PLAY_BODY_DOCUMENT.into()),
+        body_key: Some(LAYOUT_PLAY_BODY_ARTIFACT.into()),
         children: Vec::new(),
     }
 }
@@ -192,7 +192,7 @@ pub fn render(doc: &LayoutSnapshot, _config: &LayoutWindowConfig, labels: &Layou
     PanelTreeBuilder::new("layout-document")?
         .section(
             "layout-document.document",
-            Some(crate::editor::layout::ui_label(labels.document.as_str())?),
+            Some(crate::editor::layout::ui_label(labels.artifact.as_str())?),
             true,
             ui_node_list([layout_tree_item("layout-document.document.root", Label::data(doc.name.clone()), Some(LAYOUT_DOCUMENT_SCHEMA.into()), Some("file-text".into()), None)])?,
         )?

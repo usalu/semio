@@ -33,7 +33,7 @@
       "pointer": "/synapses/0"
     },
     {
-      "kind": "fixture",
+      "kind": "hostDocument",
       "index": 0,
       "pointer": ""
     }

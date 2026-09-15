@@ -7,6 +7,8 @@ fn dsl_asset_parses_and_round_trips() {
     let projection = crate::standards::v1::subsets::any::schema::snapshot::text::parse_dsl(text).expect("example dsl parses");
     semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&projection);
     semio_framework_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&projection);
+    let object_kinds = projection.meta.kind_catalogs.as_ref().map(|catalogs| catalogs.objects.len()).unwrap_or(0);
+    assert_eq!(object_kinds, 2, "Concrete Forest ships mirrored left and right hexagonal-cut object kinds for Aggregator");
 }
 
 #[test]

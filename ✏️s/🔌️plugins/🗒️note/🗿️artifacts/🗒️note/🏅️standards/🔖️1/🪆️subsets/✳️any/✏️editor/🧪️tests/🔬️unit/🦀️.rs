@@ -208,7 +208,7 @@ async fn the_manifest_stitches_every_taxonomy_node() {
     for id in [NOTE_PLAY_WINDOW_COMPOSITE, NOTE_PLAY_WINDOW_NAVIGATOR] {
         assert!(json.contains(id), "window kind {id} missing from the manifest: {json}");
     }
-    for body in [NOTE_PLAY_BODY_DOCUMENT, NOTE_PLAY_BODY_CATALOGUE, NOTE_PLAY_BODY_PROPERTIES] {
+    for body in [NOTE_PLAY_BODY_ARTIFACT, NOTE_PLAY_BODY_CATALOGUE, NOTE_PLAY_BODY_PROPERTIES] {
         assert!(json.contains(body), "panel body {body} missing from the manifest");
     }
     assert!(json.contains("2d.note"), "artifact kind missing from the manifest");
@@ -288,7 +288,7 @@ async fn delete_selection_deletes_the_blocks_picked_via_interaction_select() {
 #[semio_framework_async_macros::async_test]
 async fn note_labels_resolve_native_by_default() {
     let mut app = note_app().await;
-    let document_json = crate::editor::note::unit_tests::context::render(&mut app, NOTE_PLAY_BODY_DOCUMENT).await;
+    let document_json = crate::editor::note::unit_tests::context::render(&mut app, NOTE_PLAY_BODY_ARTIFACT).await;
     assert!(document_json.contains("Add Text"));
     let catalogue_json = crate::editor::note::unit_tests::context::render(&mut app, NOTE_PLAY_BODY_CATALOGUE).await;
     assert!(catalogue_json.contains("Block kinds"));

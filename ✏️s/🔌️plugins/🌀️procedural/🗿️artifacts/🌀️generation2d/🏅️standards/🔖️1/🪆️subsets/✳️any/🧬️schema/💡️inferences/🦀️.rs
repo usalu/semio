@@ -27,7 +27,7 @@ impl protocol::Inference<Generation2dSnapshot> for Generation2dInference {
 }
 
 /// 🌱 Hand-fixed to agree with `infer(&Generation2dSnapshot::default())` rather than a naive
-/// `#[derive(Default)]` — the snapshot's `fixture` is `semio_framework_artifact_flow_flow::FlowFixture::default()`,
+/// `#[derive(Default)]` — the snapshot's `fixture` is `semio_framework_artifact_flow_flow::FlowHostDocument::default()`,
 /// which ships a non-empty three-widget starter graph, so a structural default would name a
 /// topology no document ever has. Same trick as `FlowInference`'s hand-written `Default`
 /// (`🧰️framework/…/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/💡️inferences/🦀️.rs`).

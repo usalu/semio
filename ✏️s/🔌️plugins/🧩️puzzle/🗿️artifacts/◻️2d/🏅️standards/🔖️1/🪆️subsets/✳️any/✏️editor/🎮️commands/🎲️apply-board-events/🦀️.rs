@@ -1,8 +1,8 @@
 //! 🎲️ `apply-board-events` command.
 
 use crate::editor::puzzle2d::modes::edit::windows::{detail, overview, selection};
-use crate::editor::puzzle2d::panels::{document, inspection};
-use crate::editor::puzzle2d::{apply_brush_place_payload, delete_selection_from_fixture, patch_inspector_nodes, set_runtime_camera, Puzzle2dActionCtx, Puzzle2dScene};
+use crate::editor::puzzle2d::panels::{artifact, inspection};
+use crate::editor::puzzle2d::{apply_brush_place_payload, delete_selection_from_host_document, patch_inspector_nodes, set_runtime_camera, Puzzle2dActionCtx, Puzzle2dScene};
 use semio_framework::kernel::UiDirtyScope;
 use serde_json::{json, Value};
 
@@ -58,7 +58,7 @@ fn puzzle2d_board_events_scope(events: &[Value]) -> UiDirtyScope {
     }
     let mut panel_bodies = Vec::new();
     if panel_layers {
-        panel_bodies.push(document::PUZZLE2D_PLAY_BODY_LAYERS.to_string());
+        panel_bodies.push(artifact::PUZZLE2D_PLAY_BODY_LAYERS.to_string());
     }
     if panel_properties {
         panel_bodies.push(inspection::PUZZLE2D_PLAY_BODY_PROPERTIES.to_string());
@@ -119,7 +119,7 @@ pub fn apply_board_events_from_json(events_json: &str, envelope: &mut Puzzle2dSc
             }
             "nodeDelete" => {
                 if let Some(id) = payload.get("id").and_then(|value| value.as_str()) {
-                    delete_selection_from_fixture(&mut envelope.fixture, &[id.to_string()]);
+                    delete_selection_from_host_document(&mut envelope.fixture, &[id.to_string()]);
                 }
             }
             "edgeDelete" => {

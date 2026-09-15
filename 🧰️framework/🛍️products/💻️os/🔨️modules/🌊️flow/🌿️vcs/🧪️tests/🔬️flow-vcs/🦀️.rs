@@ -416,7 +416,7 @@ fn flow_hostile_actual_fingerprint(fingerprint: FlowVcsResourceFingerprint) -> F
 
 fn flow_hostile_actual_state(session: &FlowRetainedVcs) -> FlowHostileState {
     let fingerprint = session.resource_fingerprint();
-    let document = crate::os_pack::json::from_dsl_value(&crate::os_dsl::ToValue::to_value(session.document.as_ref().expect("hostile retained document").fixture()));
+    let document = crate::os_pack::json::from_dsl_value(&crate::os_dsl::ToValue::to_value(session.document.as_ref().expect("hostile retained document").host_document()));
     let page = session.operations[0]
         .as_ref()
         .and_then(|operation| operation.page)
@@ -532,7 +532,7 @@ fn flow_hostile_assert_every_scalar_is_signed(value: &crate::os_pack::json::Valu
 
 fn flow_oracle_actual_case(feature: &str, session: &FlowRetainedVcs, page: FlowVcsPage) -> FlowOracleCase {
     let fingerprint = session.resource_fingerprint();
-    let document = crate::os_pack::json::from_dsl_value(&crate::os_dsl::ToValue::to_value(session.document.as_ref().expect("oracle retained document").fixture()));
+    let document = crate::os_pack::json::from_dsl_value(&crate::os_dsl::ToValue::to_value(session.document.as_ref().expect("oracle retained document").host_document()));
     FlowOracleCase {
         feature: feature.to_owned(),
         document: flow_oracle_canonical_json(&document),
@@ -618,7 +618,7 @@ fn flow_oracle_begin_operation(session: &mut FlowRetainedVcs, operation: &crate:
             session.begin_set_layout(authority, &mut source).expect("oracle set layout")
         }
         "replaceDocument" => {
-            let mut source = FlowVcsSource::new(<FlowFixture as crate::os_dsl::FromValue>::from_value(crate::os_pack::json::to_dsl_value(&input.get("document").expect("oracle replacement").clone())).expect("oracle replacement document"));
+            let mut source = FlowVcsSource::new(<FlowHostDocument as crate::os_dsl::FromValue>::from_value(crate::os_pack::json::to_dsl_value(&input.get("document").expect("oracle replacement").clone())).expect("oracle replacement document"));
             session.begin_replace_document(authority, &mut source).expect("oracle replace document")
         }
         "undo" => session.begin_undo(authority).expect("oracle undo"),
@@ -636,7 +636,7 @@ fn flow_hostile_named_grant(lifecycle: &crate::os_pack::json::Value, name: &str)
 fn flow_hostile_session(lifecycle: &crate::os_pack::json::Value, oracle: &crate::os_pack::json::Value, protocol: &crate::os_pack::json::Value) -> FlowRetainedVcs {
     let document_reference = protocol.get("document").and_then(crate::os_pack::json::Value::as_str).expect("hostile protocol document");
     assert_eq!(document_reference, "oracle.initial");
-    let document = <FlowFixture as crate::os_dsl::FromValue>::from_value(crate::os_pack::json::to_dsl_value(&oracle.get("initial").expect("hostile oracle initial").clone())).expect("hostile initial Flow fixture");
+    let document = <FlowHostDocument as crate::os_dsl::FromValue>::from_value(crate::os_pack::json::to_dsl_value(&oracle.get("initial").expect("hostile oracle initial").clone())).expect("hostile initial Flow fixture");
     let session = protocol.get("session").expect("hostile protocol session");
     let _ = lifecycle;
     FlowRetainedVcs::new(document, u32::try_from(flow_oracle_u64(session, "generation")).expect("hostile session generation"), flow_oracle_u64(session, "revision"), flow_oracle_u64(session, "parentRevision"))
@@ -700,7 +700,7 @@ fn flow_hostile_begin_operation(session: &mut FlowRetainedVcs, lifecycle: &crate
         "replaceDocument" => {
             let reference = operation.get("input").and_then(|value| value.get("document")).expect("hostile replacement reference");
             let document = flow_hostile_resolve_document(lifecycle, oracle, reference);
-            let mut source = FlowVcsSource::new(<FlowFixture as crate::os_dsl::FromValue>::from_value(crate::os_pack::json::to_dsl_value(&document.clone())).expect("hostile replacement document"));
+            let mut source = FlowVcsSource::new(<FlowHostDocument as crate::os_dsl::FromValue>::from_value(crate::os_pack::json::to_dsl_value(&document.clone())).expect("hostile replacement document"));
             session.begin_replace_document(authority, &mut source).expect("hostile replace document")
         }
         _ => panic!("unsupported hostile operation {feature}"),
@@ -853,8 +853,8 @@ fn rejected_control_grants() -> [FlowVcsGrant; 4] {
     [zero_fuel, interrupted, expired, over_window]
 }
 
-fn retained_fixture() -> FlowFixture {
-    let mut fixture = FlowFixture::default();
+fn retained_fixture() -> FlowHostDocument {
+    let mut fixture = FlowHostDocument::default();
     fixture.widgets.push(Widget::InputNote { id: "source".into(), text: "retained".into() });
     fixture.widgets.push(Widget::OutputPreview { id: "preview".into(), preview: Dictionary::new(), expanded: crate::OrderedSet::from(["value".into()]) });
     fixture.synapses.push(SynapseSpec { id: "source-preview".into(), from: "source".into(), to: "preview".into(), from_port: "text".into(), to_port: String::new() });
@@ -885,7 +885,7 @@ fn publish_and_close(session: &mut FlowRetainedVcs, handle: FlowVcsHandle) -> Fl
 #[test]
 fn retained_vcs_shared_snapshot_readers_retire_without_waiting_on_each_other() {
     let fixture: crate::os_pack::json::Value = crate::os_pack::json::parse(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
-    let snapshot = Arc::new(<FlowFixture as crate::os_dsl::FromValue>::from_value(crate::os_pack::json::to_dsl_value(&fixture["initial"].clone())).unwrap());
+    let snapshot = Arc::new(<FlowHostDocument as crate::os_dsl::FromValue>::from_value(crate::os_pack::json::to_dsl_value(&fixture["initial"].clone())).unwrap());
     let mut readers = [std::mem::ManuallyDrop::new(FlowSnapshotRetirementFactory.retire(Arc::clone(&snapshot))), std::mem::ManuallyDrop::new(FlowSnapshotRetirementFactory.retire(snapshot))];
     for reader in &mut readers {
         assert!(matches!(reader.close_step(0, 256).unwrap(), SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }));
@@ -936,13 +936,13 @@ fn retained_vcs_ordered_layout_edits_undo_redo_match_json_oracle() {
         let mut source = FlowVcsSource::new(<FlowLayoutEntry as crate::os_dsl::FromValue>::from_value(crate::os_pack::json::to_dsl_value(&edit.clone())).unwrap());
         let handle = session.begin_set_layout(session.authority(), &mut source).unwrap();
         publish_and_close(&mut session, handle);
-        assert_eq!(crate::os_pack::json::from_dsl_value(&crate::os_dsl::ToValue::to_value(&session.document.as_ref().unwrap().fixture().layout)), expected);
+        assert_eq!(crate::os_pack::json::from_dsl_value(&crate::os_dsl::ToValue::to_value(&session.document.as_ref().unwrap().host_document().layout)), expected);
         let undo = session.begin_undo(session.authority()).unwrap();
         publish_and_close(&mut session, undo);
-        assert_eq!(crate::os_pack::json::from_dsl_value(&crate::os_dsl::ToValue::to_value(&session.document.as_ref().unwrap().fixture().layout)), previous);
+        assert_eq!(crate::os_pack::json::from_dsl_value(&crate::os_dsl::ToValue::to_value(&session.document.as_ref().unwrap().host_document().layout)), previous);
         let redo = session.begin_redo(session.authority()).unwrap();
         publish_and_close(&mut session, redo);
-        assert_eq!(crate::os_pack::json::from_dsl_value(&crate::os_dsl::ToValue::to_value(&session.document.as_ref().unwrap().fixture().layout)), expected);
+        assert_eq!(crate::os_pack::json::from_dsl_value(&crate::os_dsl::ToValue::to_value(&session.document.as_ref().unwrap().host_document().layout)), expected);
         while !session.close_retired_step(retained_grant()).unwrap() {}
     }
     close_layout_session(&mut session);
@@ -971,7 +971,7 @@ fn retained_vcs_ordered_layout_cancel_at_each_unpublished_boundary_retires_exact
             }
             while !session.close_operation_step(handle, retained_grant()).unwrap() {}
             if !published {
-                assert_eq!(crate::os_pack::json::from_dsl_value(&crate::os_dsl::ToValue::to_value(&session.document.as_ref().unwrap().fixture().layout)), fixture["initial"]["layout"], "cancel boundary {boundary}");
+                assert_eq!(crate::os_pack::json::from_dsl_value(&crate::os_dsl::ToValue::to_value(&session.document.as_ref().unwrap().host_document().layout)), fixture["initial"]["layout"], "cancel boundary {boundary}");
                 assert_eq!(session.credits(), FlowVcsCredits::default());
             }
             close_layout_session(&mut session);
@@ -1003,7 +1003,7 @@ fn retained_vcs_repeated_rejection_preserves_source_and_credits_then_valid_contr
 fn retained_vcs_stale_aba_cancel_ack_and_incremental_close_are_fail_closed() {
     let mut session = FlowRetainedVcs::new(retained_fixture(), 3, 2, 1);
     session.bind_surface(41, 73, 5).expect("surface owner");
-    let before_digest = flow_vcs_fixture_scalar_digest(session.document.as_ref().expect("document").fixture());
+    let before_digest = flow_vcs_host_document_scalar_digest(session.document.as_ref().expect("document").host_document());
     let stale = FlowVcsAuthority { base_revision: 1, ..session.authority() };
     let mut source = FlowVcsSource::new("source".to_owned());
     let handle = session.begin_remove_widget(stale, &mut source).expect("stale work may be admitted but not published");
@@ -1013,7 +1013,7 @@ fn retained_vcs_stale_aba_cancel_ack_and_incremental_close_are_fail_closed() {
     assert_eq!(session.poll(handle, retained_grant()), Err(FlowVcsFault::StaleAuthority));
     assert_eq!(session.poll(handle, retained_grant()), Err(FlowVcsFault::StaleAuthority));
     assert_eq!(session.credits(), credits);
-    assert_eq!(flow_vcs_fixture_scalar_digest(session.document.as_ref().expect("document").fixture()), before_digest);
+    assert_eq!(flow_vcs_host_document_scalar_digest(session.document.as_ref().expect("document").host_document()), before_digest);
     session.cancel(handle, retained_grant()).expect("valid cancel follows rejection");
     assert_eq!(session.cancel(handle, retained_grant()), Err(FlowVcsFault::DuplicateControl));
     while !session.close_operation_step(handle, retained_grant()).expect("incremental close") {}
@@ -1031,7 +1031,7 @@ fn retained_vcs_all_thirteen_fixture_operations_match_independent_third_party_or
     assert_eq!(expected.len(), FLOW_VCS_FEATURES.len());
 
     let root: crate::os_pack::json::Value = crate::os_pack::json::parse(source).expect("retained oracle fixture");
-    let initial = <FlowFixture as crate::os_dsl::FromValue>::from_value(crate::os_pack::json::to_dsl_value(&root.get("initial").expect("oracle initial document").clone())).expect("oracle initial Flow fixture");
+    let initial = <FlowHostDocument as crate::os_dsl::FromValue>::from_value(crate::os_pack::json::to_dsl_value(&root.get("initial").expect("oracle initial document").clone())).expect("oracle initial Flow fixture");
     let operations = root.get("operations").and_then(crate::os_pack::json::Value::as_array).expect("oracle operation ledger");
     let mut session = FlowRetainedVcs::new(initial, 77, 1, 0);
     let mut actual = Vec::new();
@@ -1505,8 +1505,8 @@ fn retained_vcs_scan_and_shift_advance_only_one_semantic_unit_per_grant() {
 fn retained_vcs_cancel_during_adjacent_transfer_rolls_back_exact_document() {
     let mut session = FlowRetainedVcs::new(retained_fixture(), 43, 1, 0);
     let before = session.resource_fingerprint();
-    let before_digest = flow_vcs_fixture_scalar_digest(session.document.as_ref().expect("document").fixture());
-    let before_ids: Vec<String> = session.document.as_ref().expect("document").fixture().widgets.iter().map(|widget| widget_id_for(widget).to_owned()).collect();
+    let before_digest = flow_vcs_host_document_scalar_digest(session.document.as_ref().expect("document").host_document());
+    let before_ids: Vec<String> = session.document.as_ref().expect("document").host_document().widgets.iter().map(|widget| widget_id_for(widget).to_owned()).collect();
     let mut source = FlowVcsSource::new(Widget::InputNote { id: "rollback-item".into(), text: "owned".into() });
     let handle = session.begin_add_widget(session.authority(), 0, &mut source).expect("cursor admission");
     session.poll(handle, retained_grant()).expect("progress");
@@ -1518,8 +1518,8 @@ fn retained_vcs_cancel_during_adjacent_transfer_rolls_back_exact_document() {
     session.cancel(handle, retained_grant()).expect("cancel between transfers");
     while !session.close_operation_step(handle, retained_grant()).expect("incremental rollback close") {}
     while !session.close_retired_step(retained_grant()).expect("retire cancelled source") {}
-    assert_eq!(flow_vcs_fixture_scalar_digest(session.document.as_ref().expect("document").fixture()), before_digest);
-    let after_ids: Vec<String> = session.document.as_ref().expect("document").fixture().widgets.iter().map(|widget| widget_id_for(widget).to_owned()).collect();
+    assert_eq!(flow_vcs_host_document_scalar_digest(session.document.as_ref().expect("document").host_document()), before_digest);
+    let after_ids: Vec<String> = session.document.as_ref().expect("document").host_document().widgets.iter().map(|widget| widget_id_for(widget).to_owned()).collect();
     assert_eq!(after_ids, before_ids);
     let after = session.resource_fingerprint();
     assert_eq!(after, before);
@@ -1542,7 +1542,7 @@ fn retained_vcs_replace_document_uses_persistent_owner_transfer_phases() {
     session.poll(handle, retained_grant()).expect("transfer schema only");
     assert_eq!(session.document.as_ref().expect("document").versions.get(1).expect("candidate").widgets.len(), 0);
     drive_to_preview(&mut session, handle);
-    assert_eq!(session.document.as_ref().expect("document").fixture().widgets.len(), expected_widgets);
+    assert_eq!(session.document.as_ref().expect("document").host_document().widgets.len(), expected_widgets);
     assert_eq!(session.operations[slot].as_ref().expect("operation").stage, FlowVcsStage::PageReady);
 }
 
@@ -1567,7 +1567,7 @@ fn retained_vcs_cancel_restores_every_partially_retired_redo_owner() {
     while !session.close_operation_step(handle, retained_grant()).expect("restore redo and semantic owner") {}
     while !session.close_retired_step(retained_grant()).expect("retire cancelled request") {}
     assert_eq!(session.resource_fingerprint(), before);
-    assert_eq!(session.document.as_ref().expect("document").fixture().layout.get("source"), Some(&WidgetLayout { x: 1.0, y: 2.0 }));
+    assert_eq!(session.document.as_ref().expect("document").host_document().layout.get("source"), Some(&WidgetLayout { x: 1.0, y: 2.0 }));
 }
 
 #[test]
@@ -1597,7 +1597,7 @@ fn retained_vcs_cancel_restores_each_split_publication_boundary() {
         }
         while !session.close_retired_step(retained_grant()).expect("retire cancelled request") {}
         assert_eq!(session.resource_fingerprint(), before);
-        assert_eq!(session.document.as_ref().expect("document").fixture().layout.get("source"), Some(&WidgetLayout { x: 1.0, y: 2.0 }));
+        assert_eq!(session.document.as_ref().expect("document").host_document().layout.get("source"), Some(&WidgetLayout { x: 1.0, y: 2.0 }));
     }
 }
 
@@ -1678,7 +1678,7 @@ fn retained_vcs_complete_route_rejects_hidden_scans_whole_apply_combined_publish
         assert!(mutation.contains(token), "hostile mutation must be observable");
     }
     for required in [
-        "flow_vcs_fixture_scalar_digest",
+        "flow_vcs_host_document_scalar_digest",
         "flow_vcs_fixture_census",
         "transfer_history_cursor",
         "transfer_surface_cursor",
@@ -1698,7 +1698,7 @@ fn sample_widget(id: &str) -> Widget {
     Widget::InputNote { id: id.into(), text: format!("note {id}") }
 }
 
-fn round_trip(fixture: &FlowFixture, operation: &FlowMutation) -> FlowFixture {
+fn round_trip(fixture: &FlowHostDocument, operation: &FlowMutation) -> FlowHostDocument {
     let forward = operation.diff(fixture).diff().apply(fixture).expect("valid flow diff");
     let inverse = operation.inverse(fixture);
     let mut restored = forward.clone();
@@ -1714,7 +1714,7 @@ fn round_trip(fixture: &FlowFixture, operation: &FlowMutation) -> FlowFixture {
 
 #[test]
 fn widget_add_patch_remove_round_trip() {
-    let fixture = FlowFixture { widgets: Vec::new(), synapses: Vec::new(), ..FlowFixture::default() };
+    let fixture = FlowHostDocument { widgets: Vec::new(), synapses: Vec::new(), ..FlowHostDocument::default() };
     let add = FlowMutation::AddWidget(AddWidget { index: 0, widget: sample_widget("w1") });
     let with_widget = round_trip(&fixture, &add);
     assert_eq!(with_widget.widgets.len(), 1);
@@ -1730,7 +1730,7 @@ fn widget_add_patch_remove_round_trip() {
 
 #[test]
 fn set_layout_round_trip() {
-    let fixture = FlowFixture::default();
+    let fixture = FlowHostDocument::default();
     let operation = FlowMutation::ChangeLayout(ChangeLayout { entries: vec![FlowLayoutEntry { id: "slider".into(), layout: Some(WidgetLayout { x: 12.0, y: 34.0 }) }] });
     let next = round_trip(&fixture, &operation);
     assert_eq!(next.layout.get("slider"), Some(&WidgetLayout { x: 12.0, y: 34.0 }));
@@ -1740,12 +1740,12 @@ fn set_layout_round_trip() {
 
 #[test]
 fn flow_fixture_ops_diffs_widgets_synapses_layout() {
-    let before = FlowFixture { widgets: vec![sample_widget("a"), sample_widget("b")], synapses: Vec::new(), ..FlowFixture::default() };
+    let before = FlowHostDocument { widgets: vec![sample_widget("a"), sample_widget("b")], synapses: Vec::new(), ..FlowHostDocument::default() };
     let mut after = before.clone();
     after.widgets.retain(|widget| Identified::id(widget) != "a");
     after.widgets.push(sample_widget("c"));
     after.layout.insert("c".into(), WidgetLayout { x: 1.0, y: 2.0 });
-    let operations = flow_fixture_operations(&before, &after).expect("wire-representable flow fixture");
+    let operations = flow_host_document_operations(&before, &after).expect("wire-representable flow fixture");
     let materialized = operations.iter().fold(before.clone(), |acc, operation| {
         let next = operation.diff(&acc).diff().apply(&acc).expect("valid flow replay diff");
         acc.retire_cold();
@@ -1767,7 +1767,7 @@ async fn coalesced_layout_drag_produces_one_edit() {
     // without one — the refusal drops the replayed projection on its error path, so the law reports
     // `ordered-map root must be explicitly retired before drop` from inside `amend_command` instead
     // of the validation that caused it (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-    store.install_document_store_owners_exact(<FlowFixture as crate::os_store::MemberStoreOwner<FlowMutation>>::member_store_owners());
+    store.install_document_store_owners_exact(<FlowHostDocument as crate::os_store::MemberStoreOwner<FlowMutation>>::member_store_owners());
     for y in [10.0, 20.0, 30.0] {
         store
             .dispatch(ArtifactCommand::AmendLast {
@@ -1786,10 +1786,10 @@ async fn coalesced_layout_drag_produces_one_edit() {
 
 /// 📜️ Exercises every `Widget` variant (including `Cluster`'s nested `Tree`/`flow` payload,
 /// `Dictionary`-bearing `params`/`preview`, and `BTreeSet` `expanded`) through the `crate::os_dsl::` derive
-/// layer — the ground-truth proof for the `🔖️Dsl` region built on top of `FlowFixture`.
+/// layer — the ground-truth proof for the `🔖️Dsl` region built on top of `FlowHostDocument`.
 #[test]
 fn flow_fixture_dsl_round_trips_including_cluster_widget() {
-    let mut fixture = FlowFixture::default();
+    let mut fixture = FlowHostDocument::default();
     fixture.widgets.push(Widget::Cluster {
         id: "cluster-1".into(),
         name: "Cluster One".into(),
@@ -1827,15 +1827,15 @@ fn flow_operation_op_text_round_trips_every_variant() {
     crate::os_store::test_support::assert_op_line_round_trip(&FlowMutation::ChangeSynapse(ChangeSynapse { id: "s1".into(), synapse }));
     crate::os_store::test_support::assert_op_line_round_trip(&FlowMutation::ChangeLayout(ChangeLayout { entries: vec![FlowLayoutEntry { id: "w1".into(), layout: Some(WidgetLayout { x: 1.0, y: 2.0 }) }] }));
     crate::os_store::test_support::assert_op_line_round_trip(&FlowMutation::ChangeLayout(ChangeLayout { entries: vec![FlowLayoutEntry { id: "w1".into(), layout: None }] }));
-    crate::os_store::test_support::assert_op_line_round_trip(&FlowMutation::ReplaceFlowFixture(ReplaceFlowFixture { fixture: FlowFixture::default() }));
+    crate::os_store::test_support::assert_op_line_round_trip(&FlowMutation::ReplaceFlowHostDocument(ReplaceFlowHostDocument { host_document: FlowHostDocument::default() }));
 }
 
-/// 📜️ `crate::os_store::test_support::assert_store_roundtrip` over a real `ArtifactStore<FlowFixture,
+/// 📜️ `crate::os_store::test_support::assert_store_roundtrip` over a real `ArtifactStore<FlowHostDocument,
 /// FlowMutation>` — proves the `Mutation`/`MutationDiff` (`🔖️Mutations`) and `OpText`
 /// (`🔖️OpText`) layers semio_compose_rs correctly end to end, matching every other converted crate's test.
 #[test]
 fn flow_fixture_satisfies_vcs_test_support_store_roundtrip() {
-    let document = FlowFixture::default();
+    let document = FlowHostDocument::default();
     let operation = FlowMutation::AddWidget(AddWidget { index: 0, widget: sample_widget("w1") });
     crate::os_store::test_support::assert_store_roundtrip(document, operation);
 }
@@ -1844,10 +1844,10 @@ fn flow_fixture_satisfies_vcs_test_support_store_roundtrip() {
 /// binary pack must round-trip before any Flow-backed app can open its initial store.
 #[test]
 fn flow_fixture_default_pack_uses_canonical_envelope_and_round_trips() {
-    let fixture = FlowFixture::default();
-    assert_eq!(<FlowFixture as crate::os_store::ArtifactDsl>::envelope_id(), "flow.flow");
-    let encoded = <FlowFixture as crate::os_store::ArtifactPack>::encode_pack_with(&fixture, &crate::os_store::PackEncodeOptions::default()).expect("default flow fixture pack");
-    let decoded = <FlowFixture as crate::os_store::ArtifactPack>::decode_pack_with(&encoded, &crate::os_store::PackDecodeOptions::default()).expect("default flow fixture unpack");
+    let fixture = FlowHostDocument::default();
+    assert_eq!(<FlowHostDocument as crate::os_store::ArtifactDsl>::envelope_id(), "flow.flow");
+    let encoded = <FlowHostDocument as crate::os_store::ArtifactPack>::encode_pack_with(&fixture, &crate::os_store::PackEncodeOptions::default()).expect("default flow fixture pack");
+    let decoded = <FlowHostDocument as crate::os_store::ArtifactPack>::decode_pack_with(&encoded, &crate::os_store::PackDecodeOptions::default()).expect("default flow fixture unpack");
     assert_eq!(decoded, fixture);
 }
 
@@ -1857,20 +1857,20 @@ fn flow_fixture_default_pack_uses_canonical_envelope_and_round_trips() {
 /// codec.
 #[semio_framework_async_macros::async_test]
 async fn command_envelope_round_trip_holds_for_an_applied_operation() {
-    let envelope = create_document_envelope("test/v1", "test", FlowFixture::default(), None);
+    let envelope = create_document_envelope("test/v1", "test", FlowHostDocument::default(), None);
     let mut store = ArtifactStore::new(envelope).await.expect("valid artifact store fixture");
     let operation = FlowMutation::AddWidget(AddWidget { index: 0, widget: sample_widget("w1") });
     store.dispatch(ArtifactCommand::Apply { mutations: vec![operation], description: None }).await.expect("apply");
     let envelope = store.envelope();
     let edit: &Edit<FlowMutation> = envelope.vcs.edits.last().expect("dispatch must have recorded an edit");
-    crate::os_store::test_support::assert_command_envelope_round_trip::<FlowFixture, FlowMutation>(edit, &ArtifactId(envelope.id.clone()), &SchemaId(envelope.schema.clone()));
+    crate::os_store::test_support::assert_command_envelope_round_trip::<FlowHostDocument, FlowMutation>(edit, &ArtifactId(envelope.id.clone()), &SchemaId(envelope.schema.clone()));
 }
 
 /// 📜️ The handcrafted default Flow DSL preserves typed slider content, both synapses, and canonical pack parity.
 #[test]
 fn default_flow_example_dsl_round_trips() {
     let text = include_str!("../../../📚️examples/🗣️.dsl.semio");
-    let fixture = <FlowFixture as crate::os_store::ArtifactDsl>::parse_dsl(text).expect("🌊️default.flow must parse");
+    let fixture = <FlowHostDocument as crate::os_store::ArtifactDsl>::parse_dsl(text).expect("🌊️default.flow must parse");
     crate::os_store::test_support::assert_dsl_round_trip(&fixture);
     crate::os_store::test_support::assert_dsl_pack_equivalence(&fixture);
     fixture.retire_cold();

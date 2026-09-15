@@ -529,7 +529,7 @@
         "sharpSz"
       ]
     },
-    "DagFixtureEdge": {
+    "DagHostDocumentEdge": {
       "type": "object",
       "required": [
         "id",
@@ -569,7 +569,7 @@
         "edges": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/DagFixtureEdge"
+            "$ref": "#/$defs/DagHostDocumentEdge"
           }
         }
       }

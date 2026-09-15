@@ -9,7 +9,7 @@ async fn move_widgets_inverse_restores_base() {
         entries: vec![semio_framework_artifact_flow_flow::FlowLayoutEntry { id: "slider".into(), layout: Some(semio_framework_artifact_flow_flow::WidgetLayout { x: 10.0, y: 20.0 }) }],
     });
     let forward = mutation.diff(&base).diff().apply(&base).expect("valid mutation diff");
-    assert_eq!(forward.to_fixture().layout.get("slider"), Some(&semio_framework_artifact_flow_flow::WidgetLayout { x: 10.0, y: 20.0 }));
+    assert_eq!(forward.to_host_document().layout.get("slider"), Some(&semio_framework_artifact_flow_flow::WidgetLayout { x: 10.0, y: 20.0 }));
     let restored = mutation.inverse(&base).iter().fold(forward, |snapshot, inverse| inverse.diff(&snapshot).diff().apply(&snapshot).expect("valid mutation diff"));
     assert_eq!(restored, base);
 }
@@ -18,9 +18,9 @@ async fn move_widgets_inverse_restores_base() {
 async fn create_widget_then_delete_widget_round_trips_to_base() {
     let base = FlowSnapshot::default();
     let widget = semio_framework_artifact_flow_flow::Widget::InputNote { id: "note-1".into(), text: "hello".into() };
-    let create = FlowMutation::CreateWidget(crate::schema::mutations::create_widget::CreateWidget { index: base.to_fixture().widgets.len(), widget });
+    let create = FlowMutation::CreateWidget(crate::schema::mutations::create_widget::CreateWidget { index: base.to_host_document().widgets.len(), widget });
     let after_create = create.diff(&base).diff().apply(&base).expect("valid mutation diff");
-    assert!(after_create.to_fixture().widgets.iter().any(|widget| widget.id() == "note-1"));
+    assert!(after_create.to_host_document().widgets.iter().any(|widget| widget.id() == "note-1"));
 
     let delete = FlowMutation::DeleteWidget(crate::schema::mutations::delete_widget::DeleteWidget { id: "note-1".into() });
     let after_delete = delete.diff(&after_create).diff().apply(&after_create).expect("valid mutation diff");
@@ -34,9 +34,9 @@ async fn create_widget_then_delete_widget_round_trips_to_base() {
 async fn connect_widgets_then_disconnect_widgets_round_trips_to_base() {
     let base = FlowSnapshot::default();
     let connect =
-        FlowMutation::ConnectWidgets(crate::schema::mutations::connect_widgets::ConnectWidgets { index: base.to_fixture().synapses.len(), id: "s3".into(), from: "slider".into(), from_port: "number".into(), to: "add".into(), to_port: "b".into() });
+        FlowMutation::ConnectWidgets(crate::schema::mutations::connect_widgets::ConnectWidgets { index: base.to_host_document().synapses.len(), id: "s3".into(), from: "slider".into(), from_port: "number".into(), to: "add".into(), to_port: "b".into() });
     let after_connect = connect.diff(&base).diff().apply(&base).expect("valid mutation diff");
-    assert!(after_connect.to_fixture().synapses.iter().any(|synapse| synapse.id == "s3"));
+    assert!(after_connect.to_host_document().synapses.iter().any(|synapse| synapse.id == "s3"));
 
     let disconnect = FlowMutation::DisconnectWidgets(crate::schema::mutations::disconnect_widgets::DisconnectWidgets { id: "s3".into() });
     let after_disconnect = disconnect.diff(&after_connect).diff().apply(&after_connect).expect("valid mutation diff");
@@ -53,7 +53,7 @@ async fn connect_widgets_then_disconnect_widgets_round_trips_to_base() {
 async fn duplicate_widget_composite_round_trips_to_base() {
     let base = FlowSnapshot::default();
     let widget = semio_framework_artifact_flow_flow::Widget::InputNote { id: "note-1".into(), text: "hello".into() };
-    let create = FlowMutation::CreateWidget(crate::schema::mutations::create_widget::CreateWidget { index: base.to_fixture().widgets.len(), widget });
+    let create = FlowMutation::CreateWidget(crate::schema::mutations::create_widget::CreateWidget { index: base.to_host_document().widgets.len(), widget });
     let after_create = create.diff(&base).diff().apply(&base).expect("valid mutation diff");
 
     let duplicate = FlowMutation::DuplicateWidget(crate::schema::mutations::duplicate_widget::mutation::DuplicateWidget {
@@ -64,8 +64,8 @@ async fn duplicate_widget_composite_round_trips_to_base() {
         to_port: "in".into(),
     });
     let after_duplicate = duplicate.diff(&after_create).diff().apply(&after_create).expect("valid mutation diff");
-    assert!(after_duplicate.to_fixture().widgets.iter().any(|widget| widget.id() == "note-2"));
-    assert!(after_duplicate.to_fixture().synapses.iter().any(|synapse| synapse.id == "note-1-to-note-2"));
+    assert!(after_duplicate.to_host_document().widgets.iter().any(|widget| widget.id() == "note-2"));
+    assert!(after_duplicate.to_host_document().synapses.iter().any(|synapse| synapse.id == "note-1-to-note-2"));
 
     let restored = duplicate.inverse(&after_create).iter().fold(after_duplicate, |snapshot, inverse| inverse.diff(&snapshot).diff().apply(&snapshot).expect("valid mutation diff"));
     assert_eq!(restored, after_create);

@@ -15,7 +15,7 @@
 use crate::editor::puzzle3d::terminology::Puzzle3dLabels;
 use std::collections::BTreeMap;
 use crate::editor::puzzle3d::{
-    puzzle3d_vortex_full_id, ui_label, Puzzle3dAttraction, Puzzle3dFixture, Puzzle3dObject, Puzzle3dReference, Puzzle3dTargetVolume, Puzzle3dVortex, PUZZLE3D_GRANULARITY_ATTRACTION, PUZZLE3D_GRANULARITY_OBJECT, PUZZLE3D_GRANULARITY_REFERENCE,
+    puzzle3d_object_display_label, puzzle3d_vortex_full_id, ui_label, Puzzle3dAttraction, Puzzle3dFixture, Puzzle3dObject, Puzzle3dReference, Puzzle3dTargetVolume, Puzzle3dVortex, PUZZLE3D_GRANULARITY_ATTRACTION, PUZZLE3D_GRANULARITY_OBJECT, PUZZLE3D_GRANULARITY_REFERENCE,
     PUZZLE3D_GRANULARITY_TARGET_VOLUME, PUZZLE3D_GRANULARITY_VORTEX, PUZZLE3D_INTERACTION_DOMAIN, PUZZLE3D_PLAY_CONTROLLER_ID,
 };
 use semio_framework_plugin::plugin_app_close_prelude::{ActionBinding, Buildable, BuiltNode, HasBase, HasChildren, RowAction, RowActionPlacement, Trigger};
@@ -26,7 +26,7 @@ use semio_framework_plugin::{
 use semio_framework_ui_contract as ui;
 
 //#region 🔖️Constants
-pub const BODY_KEY: &str = "puzzle.3d.play.document";
+pub const BODY_KEY: &str = "puzzle.3d.play.artifact";
 const ROOT: &str = "puzzle3d-play-document";
 /// 🗂️ Rows one section of this page materialises before it truncates: a built node admits
 /// `UI_BUILT_CHILDREN_MAX` children and the last of them carries the section's continuation row.
@@ -43,7 +43,7 @@ pub const PANEL_RECONCILE_NODE_BUDGET: usize = 16;
 pub fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_ARTIFACT_ID.into()),
-        label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Dokument"),
+        label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Artefakt"),
         group: PanelGroup::Workbench,
         body_key: Some(BODY_KEY.into()),
         children: Vec::new(),
@@ -172,9 +172,9 @@ fn with_hide_lock_actions(item: semio_framework_ui_contract::TreeItemBuilder, hi
     item
 }
 
-fn object_row(object: &Puzzle3dObject, labels: &Puzzle3dLabels, budget: &mut RowBudget) -> UiAssemblyResult<BuiltNode> {
+fn object_row(object: &Puzzle3dObject, fixture: &Puzzle3dFixture, labels: &Puzzle3dLabels, budget: &mut RowBudget) -> UiAssemblyResult<BuiltNode> {
     let vortices = paged_section(&format!("{ROOT}.object.{}", object.id), &object.vortices, budget, |vortex, _| vortex_row(&object.id, vortex))?;
-    let item = selectable_item(&object.id, object.object_kind.clone().unwrap_or_else(|| object.id.clone()), "box", select_action(PUZZLE3D_GRANULARITY_OBJECT, &object.id))?
+    let item = selectable_item(&object.id, puzzle3d_object_display_label(object, fixture), "box", select_action(PUZZLE3D_GRANULARITY_OBJECT, &object.id))?
         .default_open(false)
         .dimmed(object.hidden)
         .try_children(vortices)
@@ -336,7 +336,7 @@ pub fn render(fixture: &Puzzle3dFixture, labels: &Puzzle3dLabels) -> UiAssemblyR
 /// 📄 Same tree as [`render`], starting each section at its `setPanelPage` cursor.
 pub fn render_from(fixture: &Puzzle3dFixture, labels: &Puzzle3dLabels, pages: &BTreeMap<String, u32>) -> UiAssemblyResult<BuiltNode> {
     let budget = &mut RowBudget::new(page_rows_for(fixture));
-    let objects = budget.nested(SECTIONS - 1, |share| paged_section_from(&format!("{ROOT}.objects"), &fixture.objects, pages, share, |object, share| object_row(object, labels, share)))?;
+    let objects = budget.nested(SECTIONS - 1, |share| paged_section_from(&format!("{ROOT}.objects"), &fixture.objects, pages, share, |object, share| object_row(object, fixture, labels, share)))?;
     let references = budget.nested(SECTIONS - 2, |share| paged_section_from(&format!("{ROOT}.references"), &fixture.references, pages, share, |reference, _| reference_row(reference, labels)))?;
     let target_volumes = budget.nested(SECTIONS - 3, |share| paged_section_from(&format!("{ROOT}.target-volumes"), &fixture.target_volumes, pages, share, |volume, _| target_volume_row(volume, labels)))?;
     let attractions = budget.nested(SECTIONS - 4, |share| paged_section_from(&format!("{ROOT}.attractions"), &fixture.attractions, pages, share, |attraction, _| attraction_row(attraction)))?;

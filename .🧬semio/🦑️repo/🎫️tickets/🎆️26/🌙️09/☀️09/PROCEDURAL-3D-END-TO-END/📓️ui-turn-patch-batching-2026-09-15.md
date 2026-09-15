@@ -165,7 +165,8 @@ component may not both import and return patches — so that invariant is now st
 | `🧰️framework/…/🧑‍🎨engine/🧪️tests/🧺️turn-patch-batch/🟦️.ts` + `🎯️targets/⚛️react/🧪️tests/🎚️config/🟦️.ts` | **new TS twin** (4) and its registration |
 | `🧰️framework/🔨️modules/🎠️kernel/🧪️tests/🔬️ui-turn-patch/🦀️.rs` | capacity/derivation/order laws for the page |
 | `⚛️reactor/🧪️tests/🔬️reconcile-spin/🦀️.rs`, `📨️pending/🧪️tests/{🩹️receipt,🔬️instance-lifetime-patch-close}`, `🩹️patches/🧪️tests/🔬️unit` | adapted to the batched `stage_emission`/page shape |
-| `📜️script.ts` | the interactivity gate's turn-patch strings follow the new shape (three of them were already stale against the pre-change tree) |
+| `📜️script.ts` | the interactivity gate's turn-patch strings follow the new shape, and the audit's `reactor` corpus gains `⚛️reactor/🔄️turn/🦀️.rs` — the turn patch page is assembled THERE, so two clauses that named it were reading a file it does not live in and measured nothing |
+| `<ticket>/🐍️turn-patch-gate-check.mjs` | **new** — evaluates that gate block's clauses against the working tree and prints every miss, so §4.3's claim is a reading rather than an eyeball |
 
 ---
 
@@ -219,6 +220,8 @@ nothing; and the empty-batch / foreign-token refusals.
 | `cargo check -p semio-framework-os-renderer-wgpu --lib` | green (warnings only) |
 | `@semio-tech/framework-renderer-wgpu:generate-frame-worker` | green (27.5 s, 4 tasks); the regenerated worker carries `submitUiAcknowledgements` and the new pairing rule |
 | `@semio-tech/framework-renderer-wgpu:wasm` | green (2 m 28 s, 8 tasks) |
+| `cargo test -p semio-framework-os-renderer-wgpu --lib retained -- --test-threads=1` | 13 passed, 1 failed — `command_batch_ninth_document_is_retained_…` pops `UI_DOCUMENT_LEASE_SLOTS` (now 64) owners from a 9-element fixture list. Pre-existing and peer-owned: `UI_RESIDENT_SLOTS` moved 8 → 64 in the `react-example-switch-regression` lane, and this fixture still assumes the old number. |
+| `bun 🐍️turn-patch-gate-check.mjs` | the interactivity audit's turn-patch block: **0 of this lane's clauses miss**. Three clauses still miss, all pre-existing peer drift this lane did not touch — `close_ui_turn_patch_transport_one() -> bool` (the function now returns `Result<UiTurnPatchTransportProgress, &'static str>`), `close_ui_turn_patch_owner_one()` (no longer in any audited file), and a `take_ready()` line-break the formatter moved. The same block had **seven** misses against the pre-change tree. |
 
 ---
 
@@ -298,22 +301,70 @@ fixtures (`eval-extrude@solid#0`, `eval-brep_bool_cut_5@solid#0`, `eval-fillet@s
 `eval-fuse@solid#0`, `eval-shell@solid#0`, `eval-rect@wire#0`); `meshOk=false` count: 0. The previous
 lane's run on the same probe had six `converged=false` rows; this one has none.
 
-### 5.5 One incident, named
+### 5.5 The operational consequence: a serve older than this change refuses a batched turn
 
 The FIRST probe run after the restage measured 0/10 converged, 0 meshes and a storm of
-`actor-ui-patch.pairing` — and the served module was already the new one. The next three runs against
-the same untouched build (`console-dump`, `page-error-stack`, `console2`) show zero pairing errors, a
-booted shell, and `window:procedural-preview` holding 3 meshes at `phase:"idle"`, `ratio:1`. The first
-page load after a restage raced the bridge write; it is the `feedback-vite-stale-transform` failure
-mode one level up (the file on disk was fresh, the page's module graph was not). **Every number in
-§5.1/§5.4 is from a run on a page that booted clean**, and the first run's numbers are published in
-`🗑️generated/patch-batch/after/` as the artefact of that race, not as a measurement.
+`actor-ui-patch.pairing` — while `curl` showed the served module already carrying the new rule. Three
+runs later against the same untouched build (`console-dump`, `page-error-stack`, `console2`) the
+shell boots, `window:procedural-preview` holds 3 meshes at `phase:"idle"`, `ratio:1`, and the pairing
+error does not occur at all.
+
+The mechanism is not a race but a **version skew across the boundary**, and the coordinator observed
+it independently at 10:10 on the other React serves: **a host serve started BEFORE this change still
+runs the old `validateActorUiPatchPairing`, which refuses any turn carrying more than one patch.** The
+guest is staged once and shared; the host half is served by whichever long-lived vite server a lane is
+pointed at, and with `SEMIO_VITE_HMR=0` a server that has already transformed
+`🎭️actor/🚪️lifetime/🩹️patch/🟦️.ts` keeps serving what it transformed. So:
+
+> After this change lands, **every React serve must be recycled**; a serve older than it will fail
+> every batched turn with `actor-ui-patch.pairing`, which looks exactly like a broken guest.
+
+6021 recovered on its own once its server re-transformed the module; the idle serves (6018, 6022–6025,
+6027, 6028) were recycled by the coordinator. **Every number in §5.1 and §5.4 is from a run on a page
+that booted clean**; the first run's numbers are published in `🗑️generated/patch-batch/after/` as the
+artefact of that skew, not as a measurement.
 
 ---
 
 ## 6. The wgpu twin
 
-<!--WGPU-RESULT-->
+The wgpu shell's frame Worker runs the SAME reactor and the same generated shard worker, so the guest
+half of this change reaches it unmodified. Its host half does not: the frame worker carries its own
+bundled copy of the shard client and its own `WgpuOwnedUi.accept`, and both were reshaped exactly like
+the React ones (§2.5) — drive every patch's intake to its token, submit ONE `issued-ui-acks` crossing,
+finish every intake against its own receipt.
+
+| gate | result |
+|---|---|
+| `cargo check -p semio-framework-os-renderer-wgpu --lib` | green (warnings only). The wgpu renderer's own patch admission (`🧊️renderer/🦀️.rs`) already drained the turn owner with `try_transfer_one` until `Empty`, so it needed no change to carry a batch — only the count cap above it had to move. |
+| `@semio-tech/framework-renderer-wgpu:generate-frame-worker` | green (27.5 s, 4 tasks). The regenerated `🎞️frame-worker/🤖️generated/🟨️.js` carries `submitUiAcknowledgements` (2 sites) and the new pairing rule — verified by reading the emitted file, not assumed. |
+| `@semio-tech/framework-renderer-wgpu:wasm` | green (2 m 28 s, 8 tasks) |
+| `…:activate-generation3d-wgpu-dev` (foreground, `NX_SKIP_NX_CACHE=true`) | **exit 0**, 1 m 20 s, 39 tasks, "11 completed components (changed)" → `🗑️generated/patch-batch/restage-wgpu.txt` |
+| `bun 🐍️wgpu-battery.mjs --only=frame-loop,examples` on 6118 | **not run as its own invocation** — 6118's standing gate (`until [ -z "$(pgrep -f 'wgpu-batter[y]\|wgpu-.*-pro[b]e')" ]`) was held continuously from 09:21 to past 11:00 by another lane's broader battery. Both of those two steps were read instead out of THAT battery's own scoreboard, on this lane's build — §6.1. |
+
+### 6.1 What the standing battery already read on this build
+
+A broader battery was already running against 6118 when this lane's wgpu restage landed (09:25) and
+kept going until 10:28, so its later steps are evidence on exactly this build
+(`🗑️generated/wgpu-verify/scoreboard.json`, `pageerrors: 0` over the whole run):
+
+| step | ran | verdict |
+|---|---|---|
+| **`frame-loop`** | ~10:26 (post-restage) | **green** — 20 gestures, **0 quarantines**, 6 954 batches / 6 953 frames, **0 faults**, 16 actions over 368 admits and 25 sweeps. The frame loop does not regress. |
+| **`examples`** | 09:22–09:45 (straddles) | **green** — all sixteen editor and viewer rows publish exactly their committed meshes with the right ids and boxes (`eval-extrude@solid#0`, `eval-fillet@solid#0`, `eval-fuse@solid#0`, `eval-shell@solid#0`, `eval-rect@wire#0`, `eval-brep_bool_cut_5@solid#0`) |
+| `generate-add`, `generation-roster` | post-restage | green |
+| `spawn-job` | post-restage | red on `s1_hover` only (`pumps: 0`), with `no dropped spawn-job effect` and `no panic, no dispatch failure` both green |
+| `world3d-editor` / `world3d-viewer` | post-restage | red on the selection round-trip (`h1`/`h3`/`h4`/`h6`) and on two boot-camera framing rows — **both are other lanes' open items**, named in `📓️status.md` as `wgpu-selection-roundtrip` and `boot-camera-framing`'s `reportCamera` origin fallback. Every `no authority fault, no panic, no dropped effect` row is green, and every example still publishes exactly its committed meshes. |
+| `boot`, `no-example`, `deferred-commit` | 09:21–09:24 (pre/straddling) | red; not read here — `no-example` is green in that battery's own `battery-2.txt` and red in `battery-1.txt`, on builds that predate this lane entirely |
+
+**No red on this build is a patch-delivery red**: every one of them is a hover/selection/camera or
+pixel-diff verdict, and the two rows that would catch a broken patch batch — "publishes exactly its
+committed meshes" and "no authority fault, no panic, no dropped effect" — are green on every example
+in both roles.
+
+Also restaged and re-verified after the wgpu wave: the React door on 6021 still boots clean, with
+`window:procedural-preview` holding 3 meshes at `phase:"idle"` and zero console errors
+(`🗑️generated/patch-batch/postwgpu/`), so §5's numbers are not left behind by the wgpu build.
 
 ---
 
@@ -360,3 +411,10 @@ mode one level up (the file on disk was fresh, the page's module graph was not).
   neither introduced nor fixed it.
 - **Nothing about the reconcile drive's readiness budget was changed** (§7.1). Widening the batch is
   now a matter of widening readiness, and that is the next lane's, not this one's.
+- **The wgpu `--only=frame-loop,examples` battery was not run as its own invocation** (§6). 6118's
+  standing gate was held by another lane's battery for the entire window; both steps were read from
+  that battery's scoreboard on this build instead, and `examples` there STRADDLES the restage by
+  ~3 minutes (§6.1) while `frame-loop` does not. A dedicated run is the one number this lane owes.
+- **This change is not backward compatible with a running host serve, by design.** §5.5 states the
+  skew and the recycle it requires; it is a wire cardinality change in a greenfield repo, so no
+  compatibility path was built and none should be.

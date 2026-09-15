@@ -1,5 +1,5 @@
 use semio_framework_3d::mesh::{FaceId, HalfedgeMesh, Vec3 as MeshVec3, VertexId};
-use semio_s_artifact_cad_cad::io::geometry_import::{objects_from_fixture_model, parse_geometry};
+use semio_s_artifact_cad_cad::io::geometry_import::{objects_from_host_document_model, parse_geometry};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::engine::{Brep, GeometryHandle};
 use std::collections::HashMap;
 
@@ -63,7 +63,7 @@ async fn export_concrete_forest_left_lowpoly_mesh_json() {
     let geometry = parse_geometry(root.pointer("/models/0/model/geometry"));
     let objects = root.pointer("/models/0/model/objects").and_then(|value| value.as_array()).cloned().unwrap_or_default();
     let mut kernel = Brep::new();
-    let imported = objects_from_fixture_model(&mut kernel, &objects, &geometry);
+    let imported = objects_from_host_document_model(&mut kernel, &objects, &geometry);
     let handle = GeometryHandle(imported[0].solid_handle.clone().expect("handle"));
     let (positions, face_loops) = kernel.solid_face_loops_sync(&handle).expect("CAD face loops");
     let holed = face_loops.iter().filter(|(_, holes)| !holes.is_empty()).count();

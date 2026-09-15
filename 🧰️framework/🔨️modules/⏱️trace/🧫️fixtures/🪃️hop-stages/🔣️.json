@@ -68,6 +68,21 @@
       "covers": "building the three.js buffers of the meshes a scene changed"
     },
     {
+      "id": "surface.paint",
+      "owner": "FlowGraphCanvasHost.renderFlow",
+      "covers": "one wasm board present: from issuing the render to the frame landing on the canvas"
+    },
+    {
+      "id": "patch.install",
+      "owner": "PluginRuntime.acceptUiPatches",
+      "covers": "admitting ONE published ui patch into its retained surface, from the first intake step to the surface being installed"
+    },
+    {
+      "id": "patch.paint",
+      "owner": "ShellHost.runUiRefreshPass",
+      "covers": "one retained surface reaching the DOM: from the patch that made it current being installed to the shell dispatching its projection"
+    },
+    {
       "id": "turn.accept",
       "owner": "PluginRuntime.settlePluginTurn",
       "covers": "admitting one continuation's published ui patches, including the ack turns that admission itself submits"

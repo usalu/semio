@@ -2,7 +2,7 @@
 
 use crate::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
 use crate::standards::v1::subsets::any::schema::mutations::text::Generation3dMutation;
-use crate::standards::v1::subsets::any::schema::{commit_fixture, with_host};
+use crate::standards::v1::subsets::any::schema::{commit_host_document, with_host};
 use crate::Generation3dSnapshot;
 use semio_framework_os_flow::FlowEvalSession;
 use semio_framework_plugin::{app::InteractionView, ArtifactView, ConfigView, Emit, Fault};
@@ -12,12 +12,12 @@ use semio_framework_value_derive::{FromValue, ToValue};
 #[dsl(keyword = "delete-selection")]
 pub struct DeleteSelection {}
 
-fn delete_selected(fixture: &semio_framework_artifact_flow_flow::FlowFixture, selected: &[String]) -> Emit<Generation3dMutation, Generation3dConfigMutation> {
+fn delete_selected(fixture: &semio_framework_artifact_flow_flow::FlowHostDocument, selected: &[String]) -> Emit<Generation3dMutation, Generation3dConfigMutation> {
     let operations = with_host(fixture, |host| {
         for id in selected {
             let _ = host.remove_widget(id);
         }
-        commit_fixture(fixture, &host.fixture)
+        commit_host_document(fixture, &host.host_document)
     });
     Emit { artifact_mutations: operations, ..Default::default() }
 }
@@ -27,7 +27,7 @@ fn delete_selected(fixture: &semio_framework_artifact_flow_flow::FlowFixture, se
 /// reachable only through that macro-generated path (`Generation3dPlayApp::handle` always routes this
 /// command through `apply` below instead), so it degrades to treating the selection as empty.
 pub fn handle(_payload: &DeleteSelection, doc: &ArtifactView<'_, Generation3dSnapshot>, _cfg: &ConfigView<'_, Generation3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation>, Fault> {
-    Ok(delete_selected(&doc.snapshot.fixture, &[]))
+    Ok(delete_selected(&doc.snapshot.host_document, &[]))
 }
 
 /// 🕹️ Reads the `graph` domain's current selection instead of a deleted config field — no config
@@ -40,7 +40,7 @@ pub fn apply(
     interaction: &InteractionView<'_>,
     _session: &mut FlowEvalSession,
 ) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation>, Fault> {
-    Ok(delete_selected(&doc.snapshot.fixture, &interaction.selection("graph").ids))
+    Ok(delete_selected(&doc.snapshot.host_document, &interaction.selection("graph").ids))
 }
 
 /// 🕹️ Retained-command-job entry point (`generation3d_retained_reduce`, editor `🦀️.rs`) — same real-selection
@@ -48,7 +48,7 @@ pub fn apply(
 /// construct; its fields are `pub(crate)` to the framework crate). `selected` is read straight off
 /// `protocol::InteractionState` by the caller.
 pub(crate) fn apply_selected(doc: &ArtifactView<'_, Generation3dSnapshot>, selected: &[String]) -> Emit<Generation3dMutation, Generation3dConfigMutation> {
-    delete_selected(&doc.snapshot.fixture, selected)
+    delete_selected(&doc.snapshot.host_document, selected)
 }
 
 //#region 🧪️Tests

@@ -40,8 +40,8 @@ pub const GIS3D_PLAY_APP_ID: &str = "gis3d-play";
 /// record, not itself mesh geometry — `scene:out` is the actual renderable mesh/terrain surface).
 pub fn gis3d_io() -> AppIo {
     AppIo {
-        document_schema: GIS_3D_TERRAIN_SCHEMA.into(),
-        document_media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
+        artifact_schema: GIS_3D_TERRAIN_SCHEMA.into(),
+        artifact_media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
         ports: vec![gis3d_map_in_port(), gis3d_scene_out_port()],
         export_formats: Vec::new(),
         import_formats: Vec::new(),
@@ -479,7 +479,7 @@ impl ArtifactEditor for Gis3dPlayApp {
         owner: EditorApp<Gis3dPlayApp>,
         owner_file: "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.gis.gisterrain@1/*#editor",
-        document_schema: "gis.terrain",
+        artifact_schema: "gis.terrain",
         factory: "Gis3dCommandJobFactory",
         factory_type: Gis3dCommandJobFactory,
         tools: {
@@ -548,8 +548,8 @@ impl ArtifactEditor for Gis3dPlayApp {
     fn export_media(port: &str, doc: &ArtifactView<'_, GisTerrainSnapshot>) -> Result<Media, MediaError> {
         match port {
             "scene:out" => Ok(gis3d_scene_media(doc.snapshot)),
-            "document:out" => {
-                let media_type = Self::io().map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.document_media_type);
+            "artifact:out" => {
+                let media_type = Self::io().map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.artifact_media_type);
                 let bytes = doc.snapshot.encode_pack();
                 Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
             }

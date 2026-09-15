@@ -242,7 +242,7 @@ pub mod standards {
                             pub mod inverse;
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✒️change-schema/🧪️tests/📅️retags-the-playground-document-schema/🦀️.rs"]
-                            mod tests_retags_the_playground_document_schema;
+                            mod tests_retags_the_playground_artifact_schema;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✒️change-schema/📝️text/🦀️.rs"]
                             pub mod text;
                         }

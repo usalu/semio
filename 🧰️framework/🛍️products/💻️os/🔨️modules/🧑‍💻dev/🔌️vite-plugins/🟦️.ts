@@ -682,8 +682,21 @@ export function reportActivationFreshness(receipt: ActivationReceipt, options: {
 /** 📡️ Announces explicit Nx activation completion and releases every server-owned subscription. */
 export function semioActivationVitePlugin(options: { readonly receiptDirectory: string; readonly moduleRoot: string; readonly installRoot: string; readonly components: readonly ActivationComponentSpec[] }) {
   let dispose = (): void => {};
+  let staleness: readonly string[] = [];
   return {
     name: "semio-activation",
+    /** @emoji 📣️ The staged-module verdict belongs in the DEVELOPER's console, not only in the server log
+     * they are not reading: a guest module staged behind its own source serves a wire contract the host
+     * TypeScript in the same page no longer speaks, and the symptom (`actor-ui-patch.pairing`, a window
+     * booting a fallback graph) never names its cause. */
+    transformIndexHtml: {
+      order: "post" as const,
+      handler() {
+        if (staleness.length === 0) return [];
+        const message = `semio dev · ${staleness.length} staged plugin module(s) are behind their source — the host in this page may speak a newer wire contract than the guest it is talking to:\n${staleness.join("\n")}`;
+        return [{ tag: "script", attrs: { type: "module" }, children: `console.warn(${JSON.stringify(message)});` }];
+      },
+    },
     configureServer(server: {
       middlewares: { use: (handler: (req: BackboneServerRequest, res: BackboneServerResponse, next: () => void) => void) => void };
       httpServer?: { once: (event: "close", listener: () => void) => unknown } | null;
@@ -699,7 +712,8 @@ export function semioActivationVitePlugin(options: { readonly receiptDirectory: 
         }
       };
       const observer = observeActivationReceipts(options.receiptDirectory, (receipt) => {
-        for (const line of reportActivationFreshness(receipt, options)) console.warn(line);
+        staleness = reportActivationFreshness(receipt, options);
+        for (const line of staleness) console.warn(line);
         if (previous) {
           if (previous.plugins.map((row) => row.pluginId).join() !== receipt.plugins.map((row) => row.pluginId).join()) server.ws?.send({ type: "full-reload" });
           const prior = new Map(previous.plugins.map((row) => [row.pluginId, row.artifactSha256]));
@@ -818,7 +832,7 @@ export function semioBlobVitePlugin() {
 }
 //#endregion BlobVitePlugin
 
-//#region 🔖️SourceWatchVitePlugin
+//#region 🔖️SourceFreshnessVitePlugins
 /** @emoji 🚫️ Repository directory names no dev server may ever watch: version control metadata, the Nx
  * workspace store, the package store, the shared build/cache root, compiled output and generated
  * sources. Tools rewrite millions of files inside them while a dev session is open, and every such write
@@ -914,29 +928,104 @@ export function semioPlaygroundReactRefreshCoherenceVitePlugin() {
   };
 }
 
-export function semioSourceWatchVitePlugin(options: { readonly repoRoot: string }) {
+/** @emoji 🧾️ The `{mtimeMs, size}` pair a transformed module's file carried when the dev server last read
+ * it. Two facts rather than one: a same-second rewrite of a different length moves `size` while `mtimeMs`
+ * can still round to the same millisecond on some filesystems. */
+export type SourceStamp = { readonly mtimeMs: number; readonly size: number };
+
+/** @emoji 🔍️ Remembers what every transformed module's file looked like on disk when its transform was
+ * produced, and answers which of them have moved since.
+ *
+ * ONLY files the dev server has actually transformed are tracked, so "moved" is exactly "the cached
+ * transform is out of date": a file the server never read has no cached transform to be stale. The
+ * per-directory index makes the answer to "did anything in THIS directory change" cost one stat per
+ * tracked sibling, which is what turns a filesystem event naming an editor's temporary file into the
+ * invalidation of the module that temporary file was renamed onto. */
+export function createSourceFreshnessRegistry() {
+  const stamps = new Map<string, SourceStamp>();
+  const siblings = new Map<string, Set<string>>();
+  const readStamp = (file: string): SourceStamp | null => {
+    try {
+      const status = statSync(file);
+      return { mtimeMs: status.mtimeMs, size: status.size };
+    } catch {
+      return null;
+    }
+  };
+  const moved = (file: string): boolean => {
+    const previous = stamps.get(file);
+    if (previous === undefined) return false;
+    const current = readStamp(file);
+    if (current === null) return false;
+    if (current.mtimeMs === previous.mtimeMs && current.size === previous.size) return false;
+    stamps.set(file, current);
+    return true;
+  };
+  return {
+    record(file: string): void {
+      const stamp = readStamp(file);
+      if (stamp === null) return;
+      const directory = dirname(file);
+      const tracked = siblings.get(directory) ?? new Set<string>();
+      tracked.add(file);
+      siblings.set(directory, tracked);
+      stamps.set(file, stamp);
+    },
+    trackedCount: (): number => stamps.size,
+    movedFile: (file: string): boolean => moved(file),
+    movedInDirectory: (directory: string): readonly string[] => [...(siblings.get(directory) ?? [])].filter(moved),
+    movedEverywhere: (): readonly string[] => [...stamps.keys()].filter(moved),
+  };
+}
+
+export type SourceFreshnessRegistry = ReturnType<typeof createSourceFreshnessRegistry>;
+
+type FreshnessServer = {
+  readonly watcher: { emit(event: string, path: string): boolean };
+  readonly httpServer: { once(event: "close", listener: () => void): void } | null;
+  readonly environments?: Record<string, { readonly moduleGraph: { onFileChange(file: string): void } }>;
+  readonly middlewares?: { use(handler: (request: { url?: string; headers: Record<string, string | string[] | undefined> }, response: unknown, next: () => void) => void): void };
+  readonly config?: { readonly root: string; readonly server: { readonly hmr: unknown } };
+};
+
+/** @emoji ♻️ Retires every cached transform of one file, synchronously for the request in flight and then
+ * through Vite's own file-change pipeline for everything downstream of it (plugin `watchChange`, HMR
+ * boundaries, config-dependency restarts). `onFileChange` walks importers, so an importer that inlined
+ * the edited module's output is retired with it. */
+function retireStaleModule(server: FreshnessServer, file: string): void {
+  for (const environment of Object.values(server.environments ?? {})) environment.moduleGraph.onFileChange(file);
+  server.watcher.emit("change", file);
+}
+
+export function semioSourceWatchVitePlugin(options: { readonly repoRoot: string; readonly freshness?: SourceFreshnessRegistry }) {
   return {
     name: "semio-source-watch",
     apply: "serve" as const,
-    configureServer(server: { watcher: { emit(event: string, path: string): boolean }; httpServer: { once(event: "close", listener: () => void): void } | null }) {
+    configureServer(server: FreshnessServer) {
       const unwatched = unwatchedRepositoryPathMatcher();
+      const freshness = options.freshness;
       const handles = repositorySourceWatchRoots(options.repoRoot).map((root) => watch(root, { recursive: true, persistent: false }, (eventType, name) => {
         if (name === null || unwatched.test(name)) return;
         const path = join(root, name);
+        const directory = dirname(path);
         if (eventType !== "rename") {
           server.watcher.emit("change", path);
+          for (const moved of freshness?.movedInDirectory(directory) ?? []) if (moved !== path) server.watcher.emit("change", moved);
           return;
         }
         if (!existsSync(path)) {
           server.watcher.emit("unlink", path);
+          for (const moved of freshness?.movedInDirectory(directory) ?? []) server.watcher.emit("change", moved);
           return;
         }
         if (statSync(path).isDirectory()) {
           server.watcher.emit("addDir", path);
+          for (const moved of freshness?.movedInDirectory(path) ?? []) server.watcher.emit("change", moved);
           return;
         }
         server.watcher.emit("add", path);
         server.watcher.emit("change", path);
+        for (const moved of freshness?.movedInDirectory(directory) ?? []) if (moved !== path) server.watcher.emit("change", moved);
       }));
       server.httpServer?.once("close", () => {
         for (const handle of handles) handle.close();
@@ -944,4 +1033,87 @@ export function semioSourceWatchVitePlugin(options: { readonly repoRoot: string 
     },
   };
 }
-//#endregion SourceWatchVitePlugin
+
+/** @emoji 🗺️ The absolute file a dev-server request would be transformed from, or `null` for a request no
+ * module graph entry can back (virtual ids, client runtime, the index document). `/@fs/` carries the
+ * absolute path the module graph is keyed by; everything else is relative to Vite's `root`. */
+export function requestedTransformFile(url: string, root: string): string | null {
+  const [pathname] = url.split("?");
+  if (pathname === "" || pathname === "/" || pathname.endsWith("/")) return null;
+  let decoded: string;
+  try {
+    decoded = decodeURIComponent(pathname);
+  } catch {
+    return null;
+  }
+  if (decoded.startsWith("/@fs/")) return decoded.slice("/@fs".length);
+  if (decoded.startsWith("/@") || decoded.startsWith("/\0") || decoded.includes("\0")) return null;
+  return join(root, decoded);
+}
+
+/** @emoji 🛡️ Proves, at request time, that every transform this dev server is about to serve was produced
+ * from the bytes currently on disk — the guarantee the filesystem watcher alone cannot give.
+ *
+ * macOS reports a recursive `fs.watch` event by the path whose directory entry changed, and an atomic
+ * save (write a temporary file, `rename` it onto the target) changes the entry of the TEMPORARY file. The
+ * edited module's own path is then never named by any event — measured 0 times in 5 at every module depth,
+ * for `sed -i ''`, for a rename-into-place and for every editor that saves atomically, which is all of
+ * them. `SEMIO_VITE_HMR=0` removes the HMR pass that would otherwise have papered over it, so the dev
+ * server keeps serving the pre-edit transform until the process is recycled: a developer moves a slider
+ * and the preview runs yesterday's module.
+ *
+ * {@link semioSourceWatchVitePlugin} now answers such an event by re-stating its whole directory, which
+ * repairs the common case at edit time. This plugin is the guarantee underneath it, and it does not
+ * depend on any event arriving at all: every module request re-stats the one file behind it, and every
+ * document request re-stats the whole transformed set, so the very next request after any edit — by any
+ * tool, through any write style, with the watcher armed or not — serves the current file.
+ *
+ * @see 🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧹️config/🟦️.ts */
+export function semioTransformFreshnessVitePlugin(options: { readonly freshness: SourceFreshnessRegistry }) {
+  let documentSweep = { verified: 0, retired: 0 };
+  return {
+    name: "semio-transform-freshness",
+    apply: "serve" as const,
+    enforce: "pre" as const,
+    transform(_code: string, id: string) {
+      const [file] = id.split("?");
+      if (isAbsolute(file)) options.freshness.record(file);
+      return null;
+    },
+    configureServer(server: FreshnessServer) {
+      const root = server.config?.root ?? "";
+      server.middlewares?.use((request, _response, next) => {
+        const url = request.url ?? "";
+        const accept = request.headers.accept;
+        if (typeof accept === "string" && accept.includes("text/html")) {
+          const stale = options.freshness.movedEverywhere();
+          for (const file of stale) retireStaleModule(server, file);
+          documentSweep = { verified: options.freshness.trackedCount(), retired: stale.length };
+          next();
+          return;
+        }
+        const file = requestedTransformFile(url, root);
+        if (file !== null && options.freshness.movedFile(file)) retireStaleModule(server, file);
+        next();
+      });
+    },
+    transformIndexHtml: {
+      order: "post" as const,
+      handler(_html: string, context: { server?: { config: { server: { hmr: unknown } } } }) {
+        const hmr = context.server?.config.server.hmr === false ? "off" : "on";
+        const banner = `semio dev · transform freshness: stat-guard (every module request + whole graph per document) · hmr ${hmr} · ${documentSweep.verified} modules verified, ${documentSweep.retired} stale transforms retired · serve pid ${process.pid} · document ${new Date().toISOString()}`;
+        return [{ tag: "script", attrs: { type: "module" }, children: `console.info(${JSON.stringify(banner)});` }];
+      },
+    },
+  };
+}
+
+/** @emoji 🛰️ The dev server's complete "never serve a stale module" contract: the source watcher that
+ * pushes edits into Vite's module graph, and the request-time stat guard that verifies what the watcher
+ * delivered. They share one {@link createSourceFreshnessRegistry}, so the watcher can resolve a
+ * temporary-file event into the module it was renamed onto. Mount both or neither. */
+export function semioSourceFreshnessVitePlugins(options: { readonly repoRoot: string }) {
+  const freshness = createSourceFreshnessRegistry();
+  return [semioTransformFreshnessVitePlugin({ freshness }), semioSourceWatchVitePlugin({ repoRoot: options.repoRoot, freshness })];
+}
+//#endregion SourceFreshnessVitePlugins

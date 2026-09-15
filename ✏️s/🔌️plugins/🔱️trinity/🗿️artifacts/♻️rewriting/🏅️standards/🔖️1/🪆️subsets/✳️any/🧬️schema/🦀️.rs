@@ -281,8 +281,8 @@ pub fn apply_rule(graph: &mut Graph, rule: &Rule, bindings: &BTreeMap<String, Pr
     let parsed = parse(&query).map_err(TrinityRewritingError::Jack)?;
     let (result, operations) = execute(graph, &parsed).map_err(TrinityRewritingError::Jack)?;
     if !operations.is_empty() {
-        let fixture = semio_s_artifact_trinity_jack::apply_trinity_graph_mutations(graph.to_fixture(), &operations)?;
-        *graph = Graph::from_fixture(fixture)?;
+        let fixture = semio_s_artifact_trinity_jack::apply_trinity_graph_mutations(graph.to_snapshot(), &operations)?;
+        *graph = Graph::from_snapshot(fixture)?;
     }
     Ok(result)
 }
@@ -292,7 +292,7 @@ pub fn apply_rule_json(graph: &mut Graph, rule_json: &str, bindings_json: &str) 
     let rule: Rule = pack::from_json_str(rule_json)?;
     let bindings = parse_bindings_json(bindings_json)?;
     let result = apply_rule(graph, &rule, &bindings)?;
-    Ok(pack::to_json_string(&ApplyRuleResult { fixture: graph.fixture_json()?, query: result }))
+    Ok(pack::to_json_string(&ApplyRuleResult { fixture: graph.host_document_json()?, query: result }))
 }
 
 /// 🧵️ Build a rewrite rule Jack query from JSON without a graph.

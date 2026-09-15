@@ -50,7 +50,7 @@ pub fn plugin() -> Result<Plugin<FemApps>, PluginAssemblyError> {
         .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_fem_2d::computation_artifact_kind().id })
         .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_fem_3d::computation_artifact_kind().id })
         .execution(ExecutionMode::Isolated)
-        .requests(CapabilityRequest { id: CapabilityId("documents.write".into()), scope: "plugin".into(), reason: "persist fem2d/fem3d edits to the open document".into(), optional: false })
+        .requests(CapabilityRequest { id: CapabilityId("artifacts.write".into()), scope: "plugin".into(), reason: "persist fem2d/fem3d edits to the open document".into(), optional: false })
         .try_build()
 }
 

@@ -159,7 +159,7 @@ async fn app_definition_declares_reorganize_and_history_actions() {
 #[semio_framework_async_macros::async_test]
 async fn trinity_rewriting_labels_resolve_native_by_default() {
     let mut app = new_app().await;
-    let json = serde_json::to_string(&app.render(TRINITY_REWRITING_PLAY_BODY_DOCUMENT, None, &ViewModel::default()).await.expect("render").root).expect("serialize semantic UI test tree");
+    let json = serde_json::to_string(&app.render(TRINITY_REWRITING_PLAY_BODY_ARTIFACT, None, &ViewModel::default()).await.expect("render").root).expect("serialize semantic UI test tree");
     assert!(json.contains("\"Pieces\""));
     assert!(!json.contains("Stücke"));
 }
@@ -168,7 +168,7 @@ async fn trinity_rewriting_labels_resolve_native_by_default() {
 async fn trinity_rewriting_labels_translate_panels_in_german() {
     let mut app = new_app().await;
     let view = ViewModel { locale: Locale::De, terminology: Terminology::Native, ..ViewModel::default() };
-    let document_json = serde_json::to_string(&app.render(TRINITY_REWRITING_PLAY_BODY_DOCUMENT, None, &view).await.expect("render").root).expect("serialize semantic UI test tree");
+    let document_json = serde_json::to_string(&app.render(TRINITY_REWRITING_PLAY_BODY_ARTIFACT, None, &view).await.expect("render").root).expect("serialize semantic UI test tree");
     assert!(document_json.contains("Stücke"));
     assert!(!document_json.contains("\"Pieces\""));
     let catalogue_json = serde_json::to_string(&app.render(TRINITY_REWRITING_PLAY_BODY_CATALOGUE, None, &view).await.expect("render").root).expect("serialize semantic UI test tree");
@@ -209,7 +209,7 @@ async fn export_media_graph_out_reflects_rule_applied_fixture() {
 #[semio_framework_async_macros::async_test]
 async fn rewriting_io_declares_graph_in_and_graph_out_ports() {
     let io = rewriting_io();
-    assert_eq!(io.document_schema, REWRITE_RULE_SCHEMA);
+    assert_eq!(io.artifact_schema, REWRITE_RULE_SCHEMA);
     let graph_in = io.ports.iter().find(|port| port.id == "graph:in").expect("graph:in declared");
     assert_eq!(graph_in.kind_id.as_deref(), Some("graph.trinity"));
     assert_eq!(graph_in.multiplicity, semio_framework_plugin::PortMultiplicity::One);

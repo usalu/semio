@@ -6,7 +6,7 @@
 semio_framework_plugin::app_labels! {
     /// 🗣️ Complete UI label set for the writer app; one field per label makes every locale combination compile-checked.
     pub struct WriterPlayLabels {
-        document: native_en "Document", native_de "Dokument", reuse_en "Document", reuse_de "Dokument";
+        artifact: native_en "Artifact", native_de "Artefakt", reuse_en "Artifact", reuse_de "Artefakt";
         empty_query: native_en "(empty query)", native_de "(leere Abfrage)", reuse_en "(empty query)", reuse_de "(leere Abfrage)";
         language: native_en "Language", native_de "Sprache", reuse_en "Language", reuse_de "Sprache";
         jack_description: native_en "jack — Cypher-inspired trinity query language", native_de "jack — von Cypher inspirierte Trinity-Abfragesprache", reuse_en "jack — Cypher-inspired trinity query language", reuse_de "jack — von Cypher inspirierte Trinity-Abfragesprache";

@@ -35,7 +35,7 @@ pub struct ExportDocument {
 /// guest because the operators are host-contributed and reached only through the asynchronous
 /// extension chain (measured live on 6018, ticket 26/09/09/PROCEDURAL-3D-END-TO-END io-surface lane).
 pub fn retained_preview(doc: &ArtifactView<'_, Generation3dSnapshot>, cfg: &ConfigView<'_, Generation3dViewConfig>, session: &semio_framework_os_flow::FlowEvalSession) -> Option<SemioMeshSnapshot> {
-    let payload = crate::viewer::generation3d::modes::view::windows::preview::preview_payload(session.eval_json(), &doc.snapshot.fixture, cfg.snapshot, Some(session), &Default::default());
+    let payload = crate::viewer::generation3d::modes::view::windows::preview::preview_payload(session.eval_json(), &doc.snapshot.host_document, cfg.snapshot, Some(session), &Default::default());
     let meshes: Vec<semio_framework_plugin::MeshData> = dsl::json::parse(&payload.meshes_json)
         .ok()
         .and_then(|value| value.as_array().cloned())

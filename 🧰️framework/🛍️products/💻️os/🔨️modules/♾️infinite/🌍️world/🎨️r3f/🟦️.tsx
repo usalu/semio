@@ -259,7 +259,7 @@ export function cadVec3ToThree(v: Vec3): Vec3 {
 }
 
 /** @emoji 🧭️ Maps a Three.js point back to CAD fixture coordinates (identity in z-up scenes). */
-export function threeVec3ToCad(v: Vector3): Vec3 {
+export function threeVec3ToCad(v: { readonly x: number; readonly y: number; readonly z: number }): Vec3 {
   return [v.x, v.y, v.z];
 }
 
@@ -3260,6 +3260,24 @@ export type WorldOrbitControlsBinding = {
   readonly update?: () => void;
 };
 
+/**
+ * @emoji 🎯️ The target a camera report is allowed to use — the orbit controls' OWN, or nothing.
+ *
+ * A camera report says where the USER left the camera, so it may only ever carry a target some
+ * controls object actually holds. `WorldOrbitGated.reportCamera` used to answer
+ * `controls?.target ?? new Vector3().set(0, 0, 0)`: with `useThree().controls` momentarily null —
+ * between a rig remount and r3f re-registering the controls — it published the world origin as the
+ * user's target and overwrote the pose the boot framing had just computed
+ * (`📓️boot-camera-framing-2026-09-15.md` §6). A non-finite component is refused for the same reason:
+ * an invented number is not a reading.
+ **/
+export function worldCameraReportTargetV1(controls: WorldOrbitControlsBinding | null | undefined): { readonly x: number; readonly y: number; readonly z: number } | null {
+  const target = controls?.target;
+  if (!target) return null;
+  if (!Number.isFinite(target.x) || !Number.isFinite(target.y) || !Number.isFinite(target.z)) return null;
+  return { x: target.x, y: target.y, z: target.z };
+}
+
 /** @emoji 🖱️ Default orbit mouse map: middle always pans; Alt+right orbits when rotation is enabled. */
 export function resolveWorldOrbitMouseButtonsIdle(_projection: OrbitCameraProjection = "perspective", _rotateEnabled = true): {
   readonly LEFT: number | null;
@@ -3469,8 +3487,8 @@ function WorldOrbitControlsBridge({
   readonly constraints?: { readonly rotate: boolean; readonly minPolar?: number; readonly maxPolar?: number };
   readonly controlsKey?: string | number;
   readonly onChange: () => void;
-  readonly onStart: () => void;
-  readonly onEnd: () => void;
+  readonly onStart: (controls: ThreeOrbitControls) => void;
+  readonly onEnd: (controls: ThreeOrbitControls) => void;
 }): null {
   const pointerTarget = useWorldPointerTarget();
   const set = useThree((state) => state.set);
@@ -3487,8 +3505,8 @@ function WorldOrbitControlsBridge({
     controls.enabled = enabled;
     controls.mouseButtons = { ...mouseButtons };
     const change = () => callbacksRef.current.onChange();
-    const start = () => callbacksRef.current.onStart();
-    const end = () => callbacksRef.current.onEnd();
+    const start = () => callbacksRef.current.onStart(controls);
+    const end = () => callbacksRef.current.onEnd(controls);
     controls.addEventListener("change", change);
     controls.addEventListener("start", start);
     controls.addEventListener("end", end);
@@ -3523,7 +3541,6 @@ export function WorldOrbitGated(props: WorldOrbitGatedProps): ReactElement | nul
   const pointerTarget = useWorldPointerTarget();
   const camera = props.camera === undefined ? sceneCamera : props.camera;
   const controls = useThree((s) => s.controls as OrbitControlsBinding | null);
-  const targetScratch = reactHostPort.useMemo(() => new Vector3(), []);
   const gate = props.controlsGate ?? false;
   const { snapGate } = useWorldOrbitViewSnapGate();
   const invalidate = useThree((s) => s.invalidate);
@@ -3536,9 +3553,17 @@ export function WorldOrbitGated(props: WorldOrbitGatedProps): ReactElement | nul
     invalidate();
   }, [gate, invalidate]);
   if (!camera || props.camera === null) return null;
-  const reportCamera = () => {
+  /** 🎯️ The gesture's OWN controls are the authority, never `useThree().controls`.
+   *
+   * `reportCamera` used to read the r3f store and fall back to `targetScratch.set(0, 0, 0)` — so a
+   * report taken while the store's `controls` slot was momentarily null published the WORLD ORIGIN as
+   * the user's camera target and overwrote a framed pose with it. A camera report must never invent a
+   * target: the `start`/`end` events are fired BY the controls object, so that object is handed in and
+   * a report with no target is not made at all (`📓️boot-camera-framing-2026-09-15.md` §6). */
+  const reportCamera = (source: OrbitControlsBinding | null) => {
     if (!props.onCamera || !camera) return;
-    const tgt = controls?.target ?? targetScratch.set(0, 0, 0);
+    const tgt = worldCameraReportTargetV1(source ?? controls);
+    if (!tgt) return;
     props.onCamera({
       position: threeVec3ToCad(camera.position),
       target: threeVec3ToCad(tgt),
@@ -3549,9 +3574,10 @@ export function WorldOrbitGated(props: WorldOrbitGatedProps): ReactElement | nul
   };
   // 🧭️ Live zoom (not `props.zoom`, stale mid-gesture — see `reportCamera` above) so an orthographic
   // scroll-zoom classifies correctly even before the shell's own camera-state prop round-trips.
-  const captureNavigationSnapshot = (): WorldNavigationSnapshot | null => {
+  const captureNavigationSnapshot = (source: OrbitControlsBinding | null): WorldNavigationSnapshot | null => {
     if (!camera) return null;
-    const tgt = controls?.target ?? targetScratch.set(0, 0, 0);
+    const tgt = worldCameraReportTargetV1(source ?? controls);
+    if (!tgt) return null;
     return {
       position: threeVec3ToCad(camera.position),
       target: threeVec3ToCad(tgt),
@@ -3567,18 +3593,18 @@ export function WorldOrbitGated(props: WorldOrbitGatedProps): ReactElement | nul
       constraints={props.constraints}
       controlsKey={props.controlsKey}
       onChange={() => invalidate()}
-      onStart={() => {
+      onStart={(source) => {
         invalidate();
-        navigationSnapshotRef.current = captureNavigationSnapshot();
+        navigationSnapshotRef.current = captureNavigationSnapshot(source);
         props.onCameraNavigate?.(true);
       }}
-      onEnd={() => {
+      onEnd={(source) => {
         invalidate();
         props.onCameraNavigate?.(false);
-        reportCamera();
+        reportCamera(source);
         const before = navigationSnapshotRef.current;
         navigationSnapshotRef.current = null;
-        const after = captureNavigationSnapshot();
+        const after = captureNavigationSnapshot(source);
         if (before && after && props.onNavigationGestures) {
           const gestures = classifyWorldNavigationGestures(before, after);
           if (gestures.length > 0) props.onNavigationGestures(gestures);

@@ -321,7 +321,7 @@ async fn the_manifest_stitches_every_taxonomy_node() {
     for id in [edit::LOWPOLY_PLAY_MODE_EDIT, paint_mode::LOWPOLY_PLAY_MODE_PAINT, paint_mode::LOWPOLY_PLAY_LAYOUT_PAINT] {
         assert!(json.contains(id), "mode/layout {id} missing from the manifest");
     }
-    for body in [LOWPOLY_PLAY_BODY_DOCUMENT, LOWPOLY_PLAY_BODY_CATALOGUE, LOWPOLY_PLAY_BODY_INSPECTION, LOWPOLY_PLAY_BODY_LAYERS] {
+    for body in [LOWPOLY_PLAY_BODY_ARTIFACT, LOWPOLY_PLAY_BODY_CATALOGUE, LOWPOLY_PLAY_BODY_INSPECTION, LOWPOLY_PLAY_BODY_LAYERS] {
         assert!(json.contains(body), "panel body {body} missing from the manifest");
     }
     assert!(json.contains("3d.lowpoly"), "artifact kind missing from the manifest");

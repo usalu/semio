@@ -1,0 +1,25 @@
+{
+  "turnsPerPage": 2,
+  "continuationBatchSize": 8,
+  "ceilings": [
+    { "id": "one-page", "pages": 1, "ceiling": 16 },
+    { "id": "no-pages-still-buys-one", "pages": 0, "ceiling": 16 },
+    { "id": "two-pages", "pages": 2, "ceiling": 32 },
+    { "id": "contributions-sixty-seven-pages", "pages": 67, "ceiling": 1072 },
+    { "id": "maximum-pages", "pages": 64, "ceiling": 1024 }
+  ],
+  "unowned": [
+    { "id": "idle-ingress-idle-actor-is-unowned", "ingress": "idle", "actor": "idle", "unowned": true },
+    { "id": "idle-ingress-missing-actor-is-unowned", "ingress": "idle", "actor": null, "unowned": true },
+    { "id": "missing-ingress-idle-actor-is-unowned", "ingress": null, "actor": "idle", "unowned": true },
+    { "id": "idle-ingress-working-actor-is-not-unowned", "ingress": "idle", "actor": "more-work", "unowned": false },
+    { "id": "pending-ingress-is-owned", "ingress": "command-pending", "actor": "idle", "unowned": false },
+    { "id": "page-accepted-is-owned", "ingress": "page-accepted", "actor": "idle", "unowned": false },
+    { "id": "complete-is-owned", "ingress": "command-complete", "actor": "idle", "unowned": false },
+    { "id": "fault-is-owned", "ingress": "fault", "actor": "idle", "unowned": false }
+  ],
+  "reactorStatuses": {
+    "unownedPageFault": "plugin.command-page-unowned",
+    "ownedTurnNeverIdle": true
+  }
+}

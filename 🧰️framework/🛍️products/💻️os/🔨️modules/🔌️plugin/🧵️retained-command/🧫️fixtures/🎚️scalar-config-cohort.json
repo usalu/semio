@@ -179,7 +179,7 @@
           "id": "addWidget",
           "disposition": "BatchOnlyPendingRewrite",
           "lanes": [],
-          "blocker": "Whole FlowFixture/graph clone and host operation diff remain monolithic; needs granular graph root and Artifact Store preparation."
+          "blocker": "Whole FlowHostDocument/graph clone and host operation diff remain monolithic; needs granular graph root and Artifact Store preparation."
         },
         {
           "id": "canvasPointerDown",
@@ -217,7 +217,7 @@
           "id": "connectMediaPorts",
           "disposition": "BatchOnlyPendingRewrite",
           "lanes": [],
-          "blocker": "Whole FlowFixture/graph clone and host operation diff remain monolithic; needs granular graph root and Artifact Store preparation."
+          "blocker": "Whole FlowHostDocument/graph clone and host operation diff remain monolithic; needs granular graph root and Artifact Store preparation."
         },
         {
           "id": "flowEvalTick",
@@ -237,13 +237,13 @@
           "id": "moveMediaNode",
           "disposition": "BatchOnlyPendingRewrite",
           "lanes": [],
-          "blocker": "Whole FlowFixture/graph clone and host operation diff remain monolithic; needs granular graph root and Artifact Store preparation."
+          "blocker": "Whole FlowHostDocument/graph clone and host operation diff remain monolithic; needs granular graph root and Artifact Store preparation."
         },
         {
           "id": "nodeGraphEdit",
           "disposition": "BatchOnlyPendingRewrite",
           "lanes": [],
-          "blocker": "Whole FlowFixture/graph clone and host operation diff remain monolithic; needs granular graph root and Artifact Store preparation."
+          "blocker": "Whole FlowHostDocument/graph clone and host operation diff remain monolithic; needs granular graph root and Artifact Store preparation."
         },
         {
           "id": "nodeGraphViewport",
@@ -263,7 +263,7 @@
           "id": "removeWidget",
           "disposition": "BatchOnlyPendingRewrite",
           "lanes": [],
-          "blocker": "Whole FlowFixture/graph clone and host operation diff remain monolithic; needs granular graph root and Artifact Store preparation."
+          "blocker": "Whole FlowHostDocument/graph clone and host operation diff remain monolithic; needs granular graph root and Artifact Store preparation."
         },
         {
           "id": "renameGeneration",
@@ -275,7 +275,7 @@
           "id": "reorganize",
           "disposition": "BatchOnlyPendingRewrite",
           "lanes": [],
-          "blocker": "Whole FlowFixture/graph clone and host operation diff remain monolithic; needs granular graph root and Artifact Store preparation."
+          "blocker": "Whole FlowHostDocument/graph clone and host operation diff remain monolithic; needs granular graph root and Artifact Store preparation."
         },
         {
           "id": "selectGeneration",

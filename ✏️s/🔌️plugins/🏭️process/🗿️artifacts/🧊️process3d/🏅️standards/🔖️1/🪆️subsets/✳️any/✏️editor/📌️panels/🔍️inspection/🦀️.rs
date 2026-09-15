@@ -4,7 +4,7 @@
 //! 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): `Process3dPlayApp::render_with_request_context`
 //! resolves the live `"geometry"` domain selection (`PROCESS3D_INTERACTION_DOMAIN`) once per render and
 //! threads the selected ids here — the SAME canonical targets `🗿️artifact`/`🛠️workshop` bind their trees
-//! to (`fixture.stock_id`, a `step_payloads` entry's own `id`, or a workshop machine's `"machine:{id}"`).
+//! to (`snapshot.stock_id`, a `step_payloads` entry's own `id`, or a workshop machine's `"machine:{id}"`).
 //! This panel resolves that id against the document and renders its real fields; an empty selection (or
 //! one that resolves to nothing, e.g. a just-deleted step) still falls back to the empty state.
 
@@ -142,22 +142,22 @@ fn capability_parameter_fields(capability: &Capability) -> UiAssemblyResult<semi
 //#endregion 🔖️Sections
 
 //#region 🔖️Render
-/// 🔍️ Resolves `selected_ids.first()` against `fixture` (stock, then a workshop machine's
+/// 🔍️ Resolves `selected_ids.first()` against `snapshot` (stock, then a workshop machine's
 /// `"machine:{id}"`, then a step) and renders that selection's real fields; an empty or
 /// unresolvable selection renders the empty state.
-pub fn render(fixture: &Process3dSnapshot, selected_ids: &[String], labels: &Process3dLabels) -> UiAssemblyResult<BuiltNode> {
+pub fn render(snapshot: &Process3dSnapshot, selected_ids: &[String], labels: &Process3dLabels) -> UiAssemblyResult<BuiltNode> {
     let Some(selected_id) = selected_ids.first() else {
         return empty_state(labels);
     };
-    if selected_id == &fixture.stock_id {
-        return render_stock(&fixture.stock_payload, labels);
+    if selected_id == &snapshot.stock_id {
+        return render_stock(&snapshot.stock_payload, labels);
     }
     if let Some(machine_id) = selected_id.strip_prefix("machine:") {
-        if let Some(machine) = fixture.workshop.machines.iter().find(|machine| machine.id == machine_id) {
+        if let Some(machine) = snapshot.workshop.machines.iter().find(|machine| machine.id == machine_id) {
             return render_machine(machine, labels);
         }
     }
-    if let Some(step) = fixture.step_payloads.iter().find(|step| &step.id == selected_id) {
+    if let Some(step) = snapshot.step_payloads.iter().find(|step| &step.id == selected_id) {
         return render_step(step, labels);
     }
     empty_state(labels)

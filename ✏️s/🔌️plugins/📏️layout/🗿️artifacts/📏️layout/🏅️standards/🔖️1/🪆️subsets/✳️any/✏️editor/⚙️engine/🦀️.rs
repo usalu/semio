@@ -13,8 +13,8 @@
 /// (the current layout re-exported as `2d.layout` vector/SVG for a downstream consumer).
 pub fn layout_io() -> semio_framework_plugin::AppIo {
     semio_framework_plugin::AppIo {
-        document_schema: "layout.layout".into(),
-        document_media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::TwoD, form: semio_framework_plugin::MediaForm::Vector },
+        artifact_schema: "layout.layout".into(),
+        artifact_media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::TwoD, form: semio_framework_plugin::MediaForm::Vector },
         ports: vec![
             semio_framework_plugin::MediaPortSpec {
                 id: "fields:in".into(),

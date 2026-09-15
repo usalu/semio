@@ -8,7 +8,7 @@
   ],
   "capabilityRequests": [
     {
-      "id": "documents.write",
+      "id": "artifacts.write",
       "optional": false,
       "reason": "persist flow graph edits to the open document",
       "scope": "plugin"
@@ -102,7 +102,7 @@
     ],
     "panels": [
       {
-        "bodyKey": "flow.play.document",
+        "bodyKey": "flow.play.artifact",
         "children": [],
         "group": "workbench",
         "kind": {
@@ -111,12 +111,12 @@
         },
         "label": {
           "native": {
-            "de": "Dokument",
-            "en": "Document"
+            "de": "Artefakt",
+            "en": "Artifact"
           },
           "reuse": {
-            "de": "Dokument",
-            "en": "Document"
+            "de": "Artefakt",
+            "en": "Artifact"
           }
         }
       },
@@ -279,7 +279,7 @@
               "policy": {
                 "approval": "never",
                 "scopes": [
-                  "documents.read",
+                  "artifacts.read",
                   "shell.observe"
                 ]
               }
@@ -326,7 +326,7 @@
               "policy": {
                 "approval": "never",
                 "scopes": [
-                  "documents.read",
+                  "artifacts.read",
                   "shell.observe"
                 ]
               }
@@ -475,7 +475,7 @@
             "class": "data",
             "form": "value"
           },
-          "documentSchema": "flow.fixture",
+          "documentSchema": "flow.hostDocument",
           "exportFormats": [],
           "importFormats": [],
           "ports": []
@@ -610,7 +610,7 @@
                   "policy": {
                     "approval": "whenDestructive",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -656,7 +656,7 @@
                   "policy": {
                     "approval": "whenDestructive",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -702,7 +702,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -749,7 +749,7 @@
                   "policy": {
                     "approval": "whenDestructive",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -795,7 +795,7 @@
                   "policy": {
                     "approval": "whenDestructive",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -866,7 +866,7 @@
         ],
         "panelTabs": [
           {
-            "bodyKey": "flow.play.document",
+            "bodyKey": "flow.play.artifact",
             "children": [],
             "group": "workbench",
             "kind": {
@@ -875,12 +875,12 @@
             },
             "label": {
               "native": {
-                "de": "Dokument",
-                "en": "Document"
+                "de": "Artefakt",
+                "en": "Artifact"
               },
               "reuse": {
-                "de": "Dokument",
-                "en": "Document"
+                "de": "Artefakt",
+                "en": "Artifact"
               }
             }
           },
@@ -1037,7 +1037,7 @@
                   "policy": {
                     "approval": "whenDestructive",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -1081,7 +1081,7 @@
                   "policy": {
                     "approval": "whenDestructive",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -1125,7 +1125,7 @@
                   "policy": {
                     "approval": "whenDestructive",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -1170,7 +1170,7 @@
                   "policy": {
                     "approval": "whenDestructive",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -1214,7 +1214,7 @@
                   "policy": {
                     "approval": "whenDestructive",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -1258,7 +1258,7 @@
                   "policy": {
                     "approval": "whenDestructive",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -1302,7 +1302,7 @@
                   "policy": {
                     "approval": "whenDestructive",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -1347,7 +1347,7 @@
                   "policy": {
                     "approval": "whenDestructive",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -1391,7 +1391,7 @@
                   "policy": {
                     "approval": "whenDestructive",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -1435,7 +1435,7 @@
                   "policy": {
                     "approval": "whenDestructive",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -1479,7 +1479,7 @@
                   "policy": {
                     "approval": "whenDestructive",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -1523,7 +1523,7 @@
                   "policy": {
                     "approval": "whenDestructive",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -1567,7 +1567,7 @@
                   "policy": {
                     "approval": "whenDestructive",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -1611,7 +1611,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -1657,7 +1657,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -1702,7 +1702,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -1747,7 +1747,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -1792,7 +1792,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -1837,7 +1837,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -1882,7 +1882,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -1927,7 +1927,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -1972,7 +1972,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -2018,7 +2018,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -2064,7 +2064,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -2110,7 +2110,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -2155,7 +2155,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -2200,7 +2200,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -2243,7 +2243,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -2285,7 +2285,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -2326,7 +2326,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -2367,7 +2367,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -2408,7 +2408,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -2449,7 +2449,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -2509,7 +2509,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -2808,7 +2808,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -2913,7 +2913,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -3228,7 +3228,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -3325,7 +3325,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -3371,7 +3371,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -3417,7 +3417,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -3525,7 +3525,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -3605,7 +3605,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -3725,7 +3725,7 @@
                   "policy": {
                     "approval": "whenDestructive",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -3769,7 +3769,7 @@
                   "policy": {
                     "approval": "whenDestructive",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -3813,7 +3813,7 @@
                   "policy": {
                     "approval": "whenDestructive",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -3858,7 +3858,7 @@
                   "policy": {
                     "approval": "whenDestructive",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -3902,7 +3902,7 @@
                   "policy": {
                     "approval": "whenDestructive",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -3946,7 +3946,7 @@
                   "policy": {
                     "approval": "whenDestructive",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -3990,7 +3990,7 @@
                   "policy": {
                     "approval": "whenDestructive",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -4035,7 +4035,7 @@
                   "policy": {
                     "approval": "whenDestructive",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -4079,7 +4079,7 @@
                   "policy": {
                     "approval": "whenDestructive",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -4123,7 +4123,7 @@
                   "policy": {
                     "approval": "whenDestructive",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -4167,7 +4167,7 @@
                   "policy": {
                     "approval": "whenDestructive",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -4211,7 +4211,7 @@
                   "policy": {
                     "approval": "whenDestructive",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -4255,7 +4255,7 @@
                   "policy": {
                     "approval": "whenDestructive",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -4299,7 +4299,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -4345,7 +4345,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -4390,7 +4390,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -4435,7 +4435,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -4480,7 +4480,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -4525,7 +4525,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -4570,7 +4570,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -4615,7 +4615,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -4660,7 +4660,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -4706,7 +4706,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -4752,7 +4752,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -4798,7 +4798,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -4843,7 +4843,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -4888,7 +4888,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -4931,7 +4931,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -4973,7 +4973,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -5014,7 +5014,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -5055,7 +5055,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -5096,7 +5096,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -5137,7 +5137,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -5197,7 +5197,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -5496,7 +5496,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -5601,7 +5601,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -5916,7 +5916,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -6013,7 +6013,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -6059,7 +6059,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -6105,7 +6105,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -6213,7 +6213,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -6293,7 +6293,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -6411,7 +6411,7 @@
                   "policy": {
                     "approval": "whenDestructive",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -6455,7 +6455,7 @@
                   "policy": {
                     "approval": "whenDestructive",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -6499,7 +6499,7 @@
                   "policy": {
                     "approval": "whenDestructive",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -6544,7 +6544,7 @@
                   "policy": {
                     "approval": "whenDestructive",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -6588,7 +6588,7 @@
                   "policy": {
                     "approval": "whenDestructive",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -6632,7 +6632,7 @@
                   "policy": {
                     "approval": "whenDestructive",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -6676,7 +6676,7 @@
                   "policy": {
                     "approval": "whenDestructive",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -6721,7 +6721,7 @@
                   "policy": {
                     "approval": "whenDestructive",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -6765,7 +6765,7 @@
                   "policy": {
                     "approval": "whenDestructive",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -6809,7 +6809,7 @@
                   "policy": {
                     "approval": "whenDestructive",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -6853,7 +6853,7 @@
                   "policy": {
                     "approval": "whenDestructive",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -6897,7 +6897,7 @@
                   "policy": {
                     "approval": "whenDestructive",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -6941,7 +6941,7 @@
                   "policy": {
                     "approval": "whenDestructive",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -6985,7 +6985,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -7031,7 +7031,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -7076,7 +7076,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -7121,7 +7121,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -7166,7 +7166,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -7211,7 +7211,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -7256,7 +7256,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -7301,7 +7301,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -7346,7 +7346,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -7392,7 +7392,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -7438,7 +7438,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -7484,7 +7484,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -7529,7 +7529,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -7574,7 +7574,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -7617,7 +7617,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -7659,7 +7659,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -7700,7 +7700,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -7741,7 +7741,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -7782,7 +7782,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -7823,7 +7823,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -7883,7 +7883,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -8182,7 +8182,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -8287,7 +8287,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -8602,7 +8602,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -8699,7 +8699,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -8745,7 +8745,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -8791,7 +8791,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -8899,7 +8899,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -8979,7 +8979,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -9097,7 +9097,7 @@
                   "policy": {
                     "approval": "whenDestructive",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -9141,7 +9141,7 @@
                   "policy": {
                     "approval": "whenDestructive",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -9185,7 +9185,7 @@
                   "policy": {
                     "approval": "whenDestructive",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -9230,7 +9230,7 @@
                   "policy": {
                     "approval": "whenDestructive",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -9274,7 +9274,7 @@
                   "policy": {
                     "approval": "whenDestructive",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -9318,7 +9318,7 @@
                   "policy": {
                     "approval": "whenDestructive",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -9362,7 +9362,7 @@
                   "policy": {
                     "approval": "whenDestructive",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -9407,7 +9407,7 @@
                   "policy": {
                     "approval": "whenDestructive",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -9451,7 +9451,7 @@
                   "policy": {
                     "approval": "whenDestructive",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -9495,7 +9495,7 @@
                   "policy": {
                     "approval": "whenDestructive",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -9539,7 +9539,7 @@
                   "policy": {
                     "approval": "whenDestructive",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -9583,7 +9583,7 @@
                   "policy": {
                     "approval": "whenDestructive",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -9627,7 +9627,7 @@
                   "policy": {
                     "approval": "whenDestructive",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -9671,7 +9671,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -9717,7 +9717,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -9762,7 +9762,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -9807,7 +9807,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -9852,7 +9852,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -9897,7 +9897,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -9942,7 +9942,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -9987,7 +9987,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -10032,7 +10032,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -10078,7 +10078,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -10124,7 +10124,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -10170,7 +10170,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -10215,7 +10215,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -10260,7 +10260,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -10303,7 +10303,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -10345,7 +10345,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -10386,7 +10386,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -10427,7 +10427,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -10468,7 +10468,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -10509,7 +10509,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -10569,7 +10569,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -10868,7 +10868,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -10973,7 +10973,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -11288,7 +11288,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -11385,7 +11385,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -11431,7 +11431,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -11477,7 +11477,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -11585,7 +11585,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -11665,7 +11665,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -11783,7 +11783,7 @@
                   "policy": {
                     "approval": "whenDestructive",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -11827,7 +11827,7 @@
                   "policy": {
                     "approval": "whenDestructive",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -11871,7 +11871,7 @@
                   "policy": {
                     "approval": "whenDestructive",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -11916,7 +11916,7 @@
                   "policy": {
                     "approval": "whenDestructive",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -11960,7 +11960,7 @@
                   "policy": {
                     "approval": "whenDestructive",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -12004,7 +12004,7 @@
                   "policy": {
                     "approval": "whenDestructive",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -12048,7 +12048,7 @@
                   "policy": {
                     "approval": "whenDestructive",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -12093,7 +12093,7 @@
                   "policy": {
                     "approval": "whenDestructive",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -12137,7 +12137,7 @@
                   "policy": {
                     "approval": "whenDestructive",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -12181,7 +12181,7 @@
                   "policy": {
                     "approval": "whenDestructive",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -12225,7 +12225,7 @@
                   "policy": {
                     "approval": "whenDestructive",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -12269,7 +12269,7 @@
                   "policy": {
                     "approval": "whenDestructive",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -12313,7 +12313,7 @@
                   "policy": {
                     "approval": "whenDestructive",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -12357,7 +12357,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -12403,7 +12403,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -12448,7 +12448,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -12493,7 +12493,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -12538,7 +12538,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -12583,7 +12583,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -12628,7 +12628,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -12673,7 +12673,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -12718,7 +12718,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -12764,7 +12764,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -12810,7 +12810,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -12856,7 +12856,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -12901,7 +12901,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -12946,7 +12946,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -12989,7 +12989,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -13031,7 +13031,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -13072,7 +13072,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -13113,7 +13113,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -13154,7 +13154,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -13195,7 +13195,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -13255,7 +13255,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -13554,7 +13554,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -13659,7 +13659,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -13974,7 +13974,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -14071,7 +14071,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -14117,7 +14117,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -14163,7 +14163,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -14271,7 +14271,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -14351,7 +14351,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -14430,7 +14430,7 @@
             "class": "data",
             "form": "value"
           },
-          "documentSchema": "flow.fixture",
+          "documentSchema": "flow.hostDocument",
           "exportFormats": [],
           "importFormats": [],
           "ports": []
@@ -14570,7 +14570,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -14612,7 +14612,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -14653,7 +14653,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -14694,7 +14694,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -14735,7 +14735,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -14776,7 +14776,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -14836,7 +14836,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.write"
+                      "artifacts.write"
                     ]
                   }
                 }
@@ -15135,7 +15135,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }
@@ -15240,7 +15240,7 @@
                   "policy": {
                     "approval": "never",
                     "scopes": [
-                      "documents.read",
+                      "artifacts.read",
                       "shell.observe"
                     ]
                   }

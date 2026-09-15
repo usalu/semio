@@ -1,6 +1,6 @@
 //! 🚪️ sequence <- json. The exact fixture rebuilds the composed content child and local owner.
 
-use crate::{SequenceFixture, SequenceSnapshot};
+use crate::{SequenceHostDocument, SequenceSnapshot};
 use semio_framework::io::io_mechanism::Deserializer;
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};
@@ -19,7 +19,7 @@ impl Deserializer<SequenceSnapshot> for JsonIntoSequence {
         };
         let _ = STDIO_JSON_DOCUMENT_SCHEMA;
         let text = std::str::from_utf8(bytes).map_err(|error| IoError { message: format!("JsonIntoSequence: {error}"), diagnostics: Vec::new() })?;
-        let fixture: SequenceFixture = dsl::os_pack::json::from_json_str(text).map_err(|error| IoError { message: format!("JsonIntoSequence: {error}"), diagnostics: Vec::new() })?;
-        Ok(IoOutcome::clean(SequenceSnapshot::from_fixture(fixture)))
+        let fixture: SequenceHostDocument = dsl::os_pack::json::from_json_str(text).map_err(|error| IoError { message: format!("JsonIntoSequence: {error}"), diagnostics: Vec::new() })?;
+        Ok(IoOutcome::clean(SequenceSnapshot::from_host_document(fixture)))
     }
 }

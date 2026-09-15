@@ -1,5 +1,5 @@
 //! 🔗️ Add Synapse direct payload and owned behavior.
-use super::super::{FlowFixture, FlowDiff, FlowDelta, FlowCollectionDelta, FlowMutation, SynapseSpec};
+use super::super::{FlowHostDocument, FlowDiff, FlowDelta, FlowCollectionDelta, FlowMutation, SynapseSpec};
 use crate::os_spr::{MutationKind, MutationOutcome, SemanticDescriptor, Identified};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -13,12 +13,12 @@ pub struct AddSynapse { pub index: u32, #[dsl(block)] pub synapse: SynapseSpec }
 //#endregion 🧬️Payload
 
 //#region 🎮️Behavior
-impl MutationKind<FlowFixture, FlowMutation> for AddSynapse {
+impl MutationKind<FlowHostDocument, FlowMutation> for AddSynapse {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "add", entity: "synapse", kind: "add-synapse", record: "AddedSynapse" };
-    fn diff(&self, _base: &FlowFixture) -> MutationOutcome<FlowDiff> {
+    fn diff(&self, _base: &FlowHostDocument) -> MutationOutcome<FlowDiff> {
         MutationOutcome::new(FlowDiff::from(FlowDelta::Synapses(FlowCollectionDelta { removed: vec![], inserted: vec![(self.index, self.synapse.clone())], replaced: vec![] })))
     }
-    fn inverse(&self, _base: &FlowFixture) -> Vec<FlowMutation> {
+    fn inverse(&self, _base: &FlowHostDocument) -> Vec<FlowMutation> {
         vec![FlowMutation::RemoveSynapse(super::RemoveSynapse { id: self.synapse.id().clone() })]
     }
     fn label(&self) -> String { format!("Add synapse {}", self.synapse.id()) }

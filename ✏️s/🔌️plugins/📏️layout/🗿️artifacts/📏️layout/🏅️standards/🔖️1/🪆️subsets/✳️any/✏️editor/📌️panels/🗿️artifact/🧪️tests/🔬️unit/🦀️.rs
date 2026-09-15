@@ -4,7 +4,7 @@ use crate::editor::layout::unit_tests::context::{layout_app, render as render_bo
 #[semio_framework_async_macros::async_test]
 async fn document_lists_sample_pages() {
     let mut app = layout_app().await;
-    let json = render_body(&mut app, LAYOUT_PLAY_BODY_DOCUMENT).await;
+    let json = render_body(&mut app, LAYOUT_PLAY_BODY_ARTIFACT).await;
     assert!(json.contains("layout-document.page.page-1"));
     assert!(json.contains("Page 1"));
 }
@@ -12,7 +12,7 @@ async fn document_lists_sample_pages() {
 #[semio_framework_async_macros::async_test]
 async fn document_tree_has_nine_sections() {
     let mut app = layout_app().await;
-    let json = render_body(&mut app, LAYOUT_PLAY_BODY_DOCUMENT).await;
+    let json = render_body(&mut app, LAYOUT_PLAY_BODY_ARTIFACT).await;
     for section_id in
         ["layout-document.document", "layout-document.spreads", "layout-document.pages", "layout-document.frames", "layout-document.parentPages", "layout-document.layers", "layout-document.stories", "layout-document.links", "layout-document.styles"]
     {
@@ -23,7 +23,7 @@ async fn document_tree_has_nine_sections() {
 #[semio_framework_async_macros::async_test]
 async fn layout_labels_resolve_native_english_by_default() {
     let mut app = layout_app().await;
-    let json = render_body(&mut app, LAYOUT_PLAY_BODY_DOCUMENT).await;
+    let json = render_body(&mut app, LAYOUT_PLAY_BODY_ARTIFACT).await;
     assert!(json.contains("\"Frames\""));
     assert!(json.contains("\"Layers\""));
     assert!(!json.contains("Rahmen"));
@@ -32,7 +32,7 @@ async fn layout_labels_resolve_native_english_by_default() {
 #[semio_framework_async_macros::async_test]
 async fn layout_labels_translate_document_tree_in_german() {
     let mut app = layout_app().await;
-    let json = render_body(&mut app, LAYOUT_PLAY_BODY_DOCUMENT).await;
+    let json = render_body(&mut app, LAYOUT_PLAY_BODY_ARTIFACT).await;
     assert!(json.contains("\"Rahmen\""));
     assert!(json.contains("\"Ebenen\""));
     assert!(!json.contains("\"Frames\""));
@@ -42,5 +42,5 @@ async fn layout_labels_translate_document_tree_in_german() {
 async fn definition_binds_the_framework_document_tab_to_this_body_key() {
     let definition = definition();
     assert_eq!(definition.id(), FRAMEWORK_PANEL_TAB_ARTIFACT_ID);
-    assert_eq!(definition.body_key.as_deref(), Some(LAYOUT_PLAY_BODY_DOCUMENT));
+    assert_eq!(definition.body_key.as_deref(), Some(LAYOUT_PLAY_BODY_ARTIFACT));
 }

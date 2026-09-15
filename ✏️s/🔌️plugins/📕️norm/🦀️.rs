@@ -55,7 +55,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME M6-remaining, `📓️design-abi.md` §3/§6) are this
 /// crate's migration proof: one `OnArtifactKind` event per owned norm family, read live from each
 /// family's own `artifact_kind().id` (never hardcoded, same standard `🗄️stdio`'s 36-kind migration
-/// set), `Isolated` execution, one `documents.write` ask covering all fifteen editors.
+/// set), `Isolated` execution, one `artifacts.write` ask covering all fifteen editors.
 pub fn plugin() -> Result<Plugin<NormApps>, PluginAssemblyError> {
     let din4108 = semio_s_artifact_norm_din4108::declaration(semio_s_artifact_norm_din4108::definition().map_err(PluginAssemblyError::definition)?).map_err(PluginAssemblyError::definition)?;
     let din16798 = semio_s_artifact_norm_din16798::declaration(semio_s_artifact_norm_din16798::definition().map_err(PluginAssemblyError::definition)?).map_err(PluginAssemblyError::definition)?;
@@ -167,7 +167,7 @@ pub fn plugin() -> Result<Plugin<NormApps>, PluginAssemblyError> {
         .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_norm_iso16757::artifact_kind().id })
         .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_norm_vdi3805::artifact_kind().id })
         .execution(ExecutionMode::Isolated)
-        .requests(CapabilityRequest { id: CapabilityId("documents.write".into()), scope: "plugin".into(), reason: "persist norm family edits to the open document".into(), optional: false })
+        .requests(CapabilityRequest { id: CapabilityId("artifacts.write".into()), scope: "plugin".into(), reason: "persist norm family edits to the open document".into(), optional: false })
         .try_build()
 }
 

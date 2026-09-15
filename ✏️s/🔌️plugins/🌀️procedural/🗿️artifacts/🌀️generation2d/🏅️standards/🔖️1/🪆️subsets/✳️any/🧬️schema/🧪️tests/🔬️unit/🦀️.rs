@@ -4,5 +4,5 @@ use crate::standards::v1::subsets::any::schema::snapshot::Generation2dSnapshotRe
 #[test]
 fn default_snapshot_parses_the_bundled_example() {
     let snapshot = Generation2dSnapshotRead::new(default_snapshot());
-    assert!(!snapshot.fixture.widgets.is_empty());
+    assert!(!snapshot.host_document.widgets.is_empty());
 }

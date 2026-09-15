@@ -32,6 +32,31 @@ function packedCarrierRoot(bodyKey: string, children: readonly number[]): UiNode
 export async function registerTests1(vitest: Pick<typeof import("vitest"), "describe" | "expect" | "it" | "vi">, dependencies: PluginRuntimeTestDependenciesV1, source: { url: string }): Promise<void> {
   const { testState, leftoverShellInvocationFrames, ActivationRegistry, ActorDocumentBindingV1, adaptPluginHandle, assertAddressedInvocation, AppChannelClient, AppChannelRequestSequence, applyRetainedWindowPatches, applyUiPatch, applyUiPatchToRetained, ArtifactMutationRouter, assertShardJspiAvailable, BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES, buildShardClientOptions, coerceTurnResult, coerceWireBytes, commandIngressFaultDisplay, computeDependencyLevels, consumeTypedOperationEffects, createShardCommandIngressPages, createTurnOutcomeBroadcast, currentPluginRuntimeActor, decodeActorUiPatchReceipt, decodeAppFrame, decodeBackboneMessage, decodeConflictsFromWire, decodeFaultFromWire, decodeForeignStep, decodeInvocationResultPacks, decodeLocalInteractionCaptureJson, decodeMergeReportFromWire, decodeMutationEnvelopesPack, decodePackValue, decodePackWire, decodeWirePack, decodeWirePatchOps, DEFAULT_SHARD_BUDGET, drainTypedOperationTurns, DIRECTORY_PROJECTION_RECEIPT_SCHEMA, emptyUiDocumentState, encodeActorUiPatchReceipt, encodeDocumentBackboneControlV1, encodeMutationOrigin, encodePackValue, enqueuePluginTurn, faultDisplayMessage, fetchDescriptorManifest, fnv1aHex, getActivationRegistry, getPluginTurnScheduler, getShardClient, getThunkScheduler, handlePluginShardLost, forgetInstanceForRecovery, onPluginInstancesLost, PLUGIN_ACTOR_INSTANCE_LOST_FAULT, rememberInstanceForRecovery, hasRequiredUiPatches, InstanceDirectory, invocationFromFrames, isPluginInstanceRetiredV1, isShardLostError, loadPluginModule, loadPluginModulesInDependencyOrder, LOCAL_INTERACTION_CAPTURE_MAX_BYTES, localInteractionIdentityEquals, MAX_TRANSACTION_DEPTH, nextGlobalInstanceId, normalizeWireUiNodeRecord, notePluginLoadProgress, orderPluginRegistryEntries, OwnedResidentLedger, packWireNatural, patchAckEvents, pendingCoalescedTurns, pendingCompletionEffects, pendingLifecycleTurns, pendingTurnEffects, performContextMenu, performInvocation, PLUGIN_BOOT_SHARD_LOST_FAULT, PLUGIN_OPERATION_DRAIN_BUDGET, PLUGIN_TURN_MAILBOX_CAPACITY, PLUGIN_UI_CONTINUATION_BATCH_SIZE, PLUGIN_UI_CONTINUATION_LIMIT, PLUGIN_UI_QUIESCENT_CONTINUATIONS, PLUGIN_UI_ZERO_PROGRESS_CONTINUATION_LIMIT, PluginBootShardLostError, pluginLoadProgress, pluginLoadProgressAt, pluginSurfaceRef, poolConcurrency, rejectionCodeFromBytes, releasePendingLifecycleTurn, rendererResidentLedger, resolveDescriptorBeforeRuntime, retainedSurfaceHash, retainedSurfaceId, retainedSurfacesForActor, retainedSurfaceToBuiltNode, retainedSurfaceToSnapshot, retainedUiRefreshResponse, uiRefreshSectionUnchanged, retainedWindowByActor, retainTurnUiPatches, runBounded, sectionValueFromBuiltNode, runPluginLifecycleTurn, SEGMENTED_DOWNLOAD_MARKER_PREFIX, SemioFaultError, SURFACE_RENDER_FAULT, SERIALIZE_PER_ACTOR_MAILBOX_CAPACITY, serializeCommandIngressForActor, serializePerActor, setPluginRuntimeActor, settleAcknowledgedPluginTurns, settlePluginTurn, SHARD_LIVENESS_POLICY, SHARD_WORKER_URL, ShardClient, sharedPluginTurnScheduler, sharedThunkScheduler, shellFrameBytes, submitPluginLifecycleTurn, submitPluginTurn, teardownPluginActor, tearingDownPluginActors, TransactionCoordinator, TurnScheduler, TYPED_OPERATION_ACK_MAGIC, TYPED_OPERATION_PAGE_MAGIC, TYPED_OPERATION_PARK_CAPACITY, TYPED_OPERATION_PARK_EVICTION_FAULT, TYPED_OPERATION_PENDING_OUTPUT, TYPED_OPERATION_TERMINAL_OUTPUT, TYPED_OPERATION_TERMINAL_SEEN, TYPED_OPERATION_UNATTRIBUTED_FAULT, typedOperationAcknowledgements, TypedOperationCall, TypedOperationRouter, typedOperationResult, uiRefreshBodyKeys, uiRefreshSectionTargets, uiRefreshSurfaceEvents, wireEffectToFriendly, wireExtensionInvocation, wireNatural, wirePatchSurfaceId, wireTurnStatusTag, withTypedOperationCall, yieldPluginUiContinuation } = dependencies;
   const { describe, expect, it, vi } = vitest;
+  /** 🚪️ The whole-instance UI close ladder's own budget, priced off what a close RETIRES.
+   *
+   * 🐛️ It used to spend `PLUGIN_UI_CONTINUATION_LIMIT` — a SETTLE bound, host round trips for ONE
+   * turn — and threw `plugin-ui.owner-close-budget-exhausted` with no phase and no count on a
+   * converged generation3d editor instance (`📓️role-switch-regression-2026-09-14.md` §6). The ceiling
+   * is a backstop; the progress GUARANTEE is byte-aware, the same rule `OwnedUiPatchIntake` applies to
+   * a mint. */
+  describe("plugin ui close ladder budget", () => {
+    it("prices a close by the surfaces it has to retire, never by a settle's round trips", () => {
+      const { retainedUiCloseStepCeilingV1, PLUGIN_UI_CLOSE_STEPS_PER_NODE, PLUGIN_UI_CONTINUATION_LIMIT } = dependencies;
+      const one = retainedUiCloseStepCeilingV1(1);
+      expect(retainedUiCloseStepCeilingV1(0)).toBe(one);
+      expect(retainedUiCloseStepCeilingV1(11)).toBe(one * 11);
+      expect(one % PLUGIN_UI_CLOSE_STEPS_PER_NODE).toBe(0);
+      expect(one).toBeGreaterThan(PLUGIN_UI_CONTINUATION_LIMIT);
+    });
+
+    it("keeps the stall rule far tighter than the backstop, so a stuck ladder is NAMED rather than ground through", () => {
+      const { retainedUiCloseStepCeilingV1, PLUGIN_UI_CLOSE_ZERO_PROGRESS_STEPS, PLUGIN_UI_CONTINUATION_LIMIT } = dependencies;
+      expect(PLUGIN_UI_CLOSE_ZERO_PROGRESS_STEPS).toBeGreaterThan(0);
+      expect(PLUGIN_UI_CLOSE_ZERO_PROGRESS_STEPS).toBeLessThan(PLUGIN_UI_CONTINUATION_LIMIT);
+      expect(PLUGIN_UI_CLOSE_ZERO_PROGRESS_STEPS).toBeLessThan(retainedUiCloseStepCeilingV1(1));
+    });
+  });
+
   describe("isolated job admission batch", () => {
     it("fails-before one slice per admission; passes-after a yield-sized batch", () => {
       const { isolatedJobStepsPerSerializedAdmission } = dependencies;
@@ -1023,6 +1048,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
         readHistory: async () => ({ cursor: 0 }) as unknown as HistoryPatch,
         readLocalInteraction: async (instanceId) => fakeLocalInteraction(instanceId),
         subscribeOperationCompletions: () => () => {},
+        subscribeOperationProgress: () => () => {},
         readWindowConfigPacks: async () => [],
         loadWindowConfigPack: async () => {},
         documentPack: (instanceId) => (options.pack !== undefined ? options.pack : { pack: new Uint8Array([1]), spr: new Uint8Array([instanceId]) }),
@@ -1326,6 +1352,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
           readHistory: async () => ({ cursor: 0 }) as unknown as HistoryPatch,
           readLocalInteraction: async (instanceId) => fakeLocalInteraction(instanceId),
           subscribeOperationCompletions: () => () => {},
+        subscribeOperationProgress: () => () => {},
           readWindowConfigPacks: async () => [],
           loadWindowConfigPack: async () => {},
           documentPack: () => ({ pack: new Uint8Array([1]), spr: new Uint8Array([2]) }),
@@ -3034,6 +3061,75 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
       pendingTurnEffects.delete(instanceId);
       console.info("[DEBUG] one typed-operation completion reached its subscriber once with its own effects");
     });
+  });
+
+  it("bounds one command's drain by a ceiling derived from its own page count, never by a chosen number", async () => {
+    const { commandIngressContinuationCeilingV1 } = dependencies;
+    const { default: fixture } = await import("../../🧱️elements/🔌️PluginRuntime/🧫️fixtures/command-ingress-drain.json");
+    for (const row of fixture.ceilings) {
+      expect(commandIngressContinuationCeilingV1(row.pages), row.id).toBe(row.ceiling);
+      expect(commandIngressContinuationCeilingV1(row.pages), `${row.id} is the derivation, not a literal`).toBe(Math.max(1, row.pages) * fixture.turnsPerPage * fixture.continuationBatchSize);
+    }
+    expect(commandIngressContinuationCeilingV1(2), "a two-page command may never buy less than a one-page command").toBeGreaterThan(commandIngressContinuationCeilingV1(1));
+    console.info(`[DEBUG] command ingress ceiling: 1 page=${commandIngressContinuationCeilingV1(1)} 67 pages=${commandIngressContinuationCeilingV1(67)} (was a flat 1024 for both)`);
+  });
+
+  it("calls a command unowned on the FIRST idle turn instead of spending a whole ceiling on it", async () => {
+    const { commandIngressUnownedV1, commandIngressContinuationCeilingV1 } = dependencies;
+    const { default: fixture } = await import("../../🧱️elements/🔌️PluginRuntime/🧫️fixtures/command-ingress-drain.json");
+    for (const row of fixture.unowned) {
+      expect(commandIngressUnownedV1(row.ingress ?? undefined, row.actor ?? undefined), row.id).toBe(row.unowned);
+    }
+    // 🧾️ The drain's own loop, replayed: a reactor that owns nothing answers `idle` forever, and the
+    // shape this law pins is that the host asks exactly ONCE more, not `ceiling` times.
+    const ceiling = commandIngressContinuationCeilingV1(1);
+    let asked = 0;
+    let terminal: string | undefined = "idle";
+    let actor: string | undefined = "idle";
+    for (let continuation = 0; terminal !== "command-complete" && continuation < ceiling; continuation += 1) {
+      if (commandIngressUnownedV1(terminal, actor)) break;
+      asked += 1;
+      terminal = "idle";
+      actor = "idle";
+    }
+    expect(asked, "an unowned command costs no further crossing at all").toBe(0);
+    console.info(`[DEBUG] unowned command ingress: 0 further crossings, ceiling ${ceiling} (was 1024 crossings then an unnamed timeout)`);
+  });
+
+  it("remembers a destroyed instance across a hot swap that replaces the handle", async () => {
+    const { adaptPluginHandle, encodePackValue, isPluginInstanceRetiredV1, pluginInstanceWasRetiredV1 } = dependencies;
+    const makeLease = (nextInstance: number) => ({
+      handle: {
+        manifest: async () => encodePackValue({ pluginId: "swap-fixture", apps: [] }),
+        createApp: async () => nextInstance,
+        destroyApp: async () => {},
+        enqueue: () => {},
+        takeSegmentedDownloadChunk: async () => undefined,
+        outcomes: { [Symbol.asyncIterator](): AsyncIterator<TurnOutcome> { return { next: () => new Promise(() => {}), return: async () => ({ done: true, value: undefined }) }; } },
+        dispose: async () => {},
+      },
+      release: async () => {},
+    });
+    const before = await adaptPluginHandle("swap-fixture", makeLease(41));
+    const instance = await before.createApp("fixture");
+    await before.destroyApp(instance);
+    expect(pluginInstanceWasRetiredV1("swap-fixture", instance), "the handle that destroyed it says so").toBe(true);
+
+    const after = await adaptPluginHandle("swap-fixture", makeLease(42));
+    let raised: unknown = null;
+    try { await after.readHistory(instance); } catch (error) { raised = error; }
+    expect(String(raised)).toContain(`no channel for instance ${instance}`);
+    expect(isPluginInstanceRetiredV1(raised), "the REPLACEMENT handle still knows the instance was retired, so a late lane drops instead of throwing").toBe(true);
+
+    let foreign: unknown = null;
+    try { await after.readHistory(9_001); } catch (error) { foreign = error; }
+    expect(isPluginInstanceRetiredV1(foreign), "and an id nothing ever created stays a loud failure").toBe(false);
+
+    const reviving = await adaptPluginHandle("swap-fixture", makeLease(instance));
+    const revived = await reviving.createApp("fixture");
+    expect(revived, "the fixture mints the same id again").toBe(instance);
+    expect(pluginInstanceWasRetiredV1("swap-fixture", revived), "a live instance under that id unsays the retirement").toBe(false);
+    console.info("[DEBUG] hot-swap retirement: the replacement handle answers retired for the destroyed instance and loud for a never-created one");
   });
 
   it("keeps reserved command ingress Interactive ahead of catalog Background and stamps a reply when none arrives", async () => {

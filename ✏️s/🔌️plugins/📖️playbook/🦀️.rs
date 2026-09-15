@@ -37,7 +37,7 @@ pub fn plugin() -> Result<Plugin<PlaybookApps>, PluginAssemblyError> {
         .viewer_mutation_roster::<crate::viewer::playbook::PlaybookViewer>()
         .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::playbook::artifact_kind().id })
         .execution(ExecutionMode::Isolated)
-        .requests(CapabilityRequest { id: CapabilityId("documents.write".into()), scope: "plugin".into(), reason: "persist playbook step-list edits to the open document".into(), optional: false })
+        .requests(CapabilityRequest { id: CapabilityId("artifacts.write".into()), scope: "plugin".into(), reason: "persist playbook step-list edits to the open document".into(), optional: false })
         .try_build()
 }
 

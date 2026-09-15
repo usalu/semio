@@ -50,7 +50,7 @@ semio_framework_plugin::app_labels! {
         fill_reason_no_open_grip: native_en "Stopped after {0}: no open grip", native_de "Nach {0} angehalten: kein offener Griff", reuse_en "Stopped after {0}: no open connection point", reuse_de "Nach {0} angehalten: kein offener Verbindungspunkt";
         fill_reason_no_compatible_kind: native_en "Stopped after {0}: no compatible kind", native_de "Nach {0} angehalten: keine passende Art", reuse_en "Stopped after {0}: no compatible building component", reuse_de "Nach {0} angehalten: keine passende Baukomponente";
         fill_reason_no_free_placement: native_en "Stopped after {0}: no free placement", native_de "Nach {0} angehalten: kein freier Platz", reuse_en "Stopped after {0}: no free placement", reuse_de "Nach {0} angehalten: kein freier Platz";
-        fill_reason_document_capacity: native_en "Document capacity reached at {0}", native_de "Dokumentkapazität bei {0} erreicht", reuse_en "Document capacity reached at {0}", reuse_de "Dokumentkapazität bei {0} erreicht";
+        fill_reason_artifact_capacity: native_en "Artifact capacity reached at {0}", native_de "Artefaktkapazität bei {0} erreicht", reuse_en "Artifact capacity reached at {0}", reuse_de "Artefaktkapazität bei {0} erreicht";
         fill_reason_requested_reached: native_en "Placed all {0} requested parts", native_de "Alle {0} angeforderten Teile platziert", reuse_en "Placed all {0} requested building components", reuse_de "Alle {0} angeforderten Baukomponenten platziert";
         fill_reason_retracted: native_en "Retracted placements above the new count", native_de "Platzierungen über der neuen Anzahl zurückgenommen", reuse_en "Retracted placements above the new count", reuse_de "Platzierungen über der neuen Anzahl zurückgenommen";
         fill_reason_vortex_exhausted: native_en "No collision-free candidate at this grip", native_de "Kein kollisionsfreier Kandidat an diesem Griff", reuse_en "No collision-free candidate at this connection point", reuse_de "Kein kollisionsfreier Kandidat an diesem Verbindungspunkt";
@@ -194,7 +194,7 @@ pub fn puzzle5d_fill_run_reasons() -> Vec<ToolRunReasonDefinition> {
         |labels| labels.fill_reason_no_open_grip,
         |labels| labels.fill_reason_no_compatible_kind,
         |labels| labels.fill_reason_no_free_placement,
-        |labels| labels.fill_reason_document_capacity,
+        |labels| labels.fill_reason_artifact_capacity,
         |labels| labels.fill_reason_requested_reached,
         |labels| labels.fill_reason_retracted,
         |labels| labels.fill_reason_vortex_exhausted,

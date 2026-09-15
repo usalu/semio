@@ -6,6 +6,9 @@ use ui_wgpu::wgpu::Mesh3dItem;
 #[cfg(test)]
 include!("../../../🧪️tests/🧊️wgpu-renderer-standalone/🦀️.rs");
 
+#[cfg(test)]
+include!("../../../🧪️tests/🐕️wgpu-present-stall-watch/🦀️.rs");
+
 // 🧊️ Raw wgpu WASM renderer for declarative framework UiNode trees.
 //
 // 🧭️ Rough correspondence with the React shell (`framework/renderer/react/os-shell.tsx`), as a
@@ -117,6 +120,8 @@ use infinite_world::world::{
 };
 #[cfg(not(target_arch = "wasm32"))]
 use infinite_world::world::{world3d_asset_cancellation_requested, WORLD_ASSET_RESPONSE_BYTE_CAPACITY};
+#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+use infinite_world::world::{apply_reference_image_bytes, collect_world3d_asset_bytes};
 use program_bridge::filter_plugins;
 #[cfg(not(target_arch = "wasm32"))]
 use program_bridge::load_wasm_plugins;
@@ -5797,7 +5802,7 @@ pub(crate) mod kernel_runtime {
         plugin: [u8; 32],
         package: [u8; 32],
         window: u64,
-        document: [u8; 32],
+        artifact: [u8; 32],
     }
 
     impl MountedReplayRouteSeed {
@@ -10279,6 +10284,25 @@ impl RuntimeMailbox {
                 RendererAssetFetchOwner::World { surface, .. } => *surface,
                 RendererAssetFetchOwner::Shared(_) => return false,
             };
+            #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+            if matches!(probe.owner().kind(), WorldAssetRequestKind::ReferenceImage) {
+                let url = probe.owner().url().to_string();
+                let bytes = match collect_world3d_asset_bytes(match probe.owner_mut() {
+                    RendererAssetFetchOwner::World { owner, .. } | RendererAssetFetchOwner::Shared(owner) => owner,
+                }) {
+                    Ok(bytes) => bytes,
+                    Err(_) => {
+                        probe.begin_close();
+                        return true;
+                    }
+                };
+                let Ok(mut runtime) = self.try_lock() else { return false };
+                let Some(interaction) = runtime.interaction.as_mut() else { return false };
+                let Some(state) = interaction.shell.world3d_states.get_mut(surface.as_str()) else { return false };
+                apply_reference_image_bytes(state, &url, &bytes);
+                probe.begin_close();
+                return true;
+            }
             let Some(lease) = probe.take_ready_mesh_lease() else { return false };
             let Ok(mut runtime) = self.try_lock() else {
                 probe.restore_ready_mesh_lease(lease);
@@ -11837,10 +11861,12 @@ impl FrameTransaction {
                     // showing "Surface: quarantined · input accepted: no"
                     // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
                     WorldDrawRebuildStep::Stale => {
+                        log_debug(&format!("[DEBUG] world3d draw rebuild surface={surface_id} step=Stale {}", state.ingest_census()));
                         close_world3d_draw_rebuild_step(state, context);
                         return AppFrameTransactionStep::Pending;
                     }
                     WorldDrawRebuildStep::Fault => {
+                        log_debug(&format!("[DEBUG] world3d draw rebuild surface={surface_id} step=Fault {}", state.ingest_census()));
                         runtime.record_frame_fault("world3d retained draw rebuild faulted");
                         self.phase = AppFrameTransactionPhase::Terminal;
                         return AppFrameTransactionStep::Fault;
@@ -11848,6 +11874,9 @@ impl FrameTransaction {
                 }
                 let snapshot_step = step_world3d_snapshot(state, context);
                 world3d_ingest_trace(&surface_id, state, &format!("snapshot-{snapshot_step:?}"));
+                if matches!(snapshot_step, World3dSnapshotApplyStep::Complete) {
+                    log_debug(&format!("[DEBUG] world3d delivery applied surface={surface_id} {}", state.ingest_census()));
+                }
                 match snapshot_step {
                     World3dSnapshotApplyStep::Idle | World3dSnapshotApplyStep::Complete => {
                         self.world3d_authority_cursor += 1;
@@ -12489,6 +12518,59 @@ pub(crate) struct AppPresenter {
     retirement: Option<AppPresentedRetirement>,
     retained_fault: Option<String>,
     surface_resize: Option<AppSurfaceResizeCursor>,
+    stall: AppPresentStallWatch,
+}
+
+/// 🐕️ The presentation ladder's own watchdog: the last progress signature [`AppPresenter::present_step`]
+/// answered `Pending` on, and how many consecutive steps have answered it unchanged.
+///
+/// ⚖️ `admit_next_frame` refuses to build a frame while `has_pending_presentation()`, so a cursor that
+/// stops advancing stops the whole host — no frame transaction, no runtime mailbox pump, no world
+/// snapshot apply, no retained document ingress, no accessibility projection. Measured on 6118 as
+/// `os_host frame gate blocked=true pending=true phase=Some(Engine)` held from t≈85 s to t≈200 s, and
+/// as `phase=Some(Aborted) retained-fault=true` (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
+/// `📓️wgpu-wheel-zoom-a11y-live-2026-09-14.md` §3.4, `📓️wgpu-host-settle-pump-2026-09-14.md` §7).
+///
+/// The signature is every index a HEALTHY step moves — the phase, the engine packet, the upload page,
+/// and whether a GPU cursor is held — so a legitimately long presentation (many upload pages, many
+/// engine packets) resets the count on every one of them and only a genuinely frozen cursor
+/// accumulates.
+#[derive(Default)]
+struct AppPresentStallWatch {
+    signature: Option<AppPresentProgress>,
+    steps: u32,
+}
+
+/// 🐕️ Every index a healthy presentation step moves: the ladder phase, the engine packet, the upload
+/// page, and — because `AppPresentPhase::Render` holds ONE `gpu_cursor` for a whole composite pass —
+/// that cursor's own `(phase, command, glass command, blur mip)`. Without the inner four the outer
+/// shape is frozen for as many steps as the scene has commands, and a watchdog reading the outer
+/// shape alone aborts a healthy present: measured on 6118 as
+/// `os_host present stalled phase=Render engine=1 upload=1 gpu-cursor=true` at t≈4.4 s on EVERY
+/// example boot (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+type AppPresentProgress = (AppPresentPhase, usize, usize, Option<(u8, usize, usize, u32)>);
+
+/// 🐕️ Consecutive non-advancing `Pending` answers after which a pending presentation is aborted
+/// rather than waited on. `present_step` is driven several times per frame transaction turn, so this
+/// is well under a second of wall clock and three orders of magnitude above the longest healthy
+/// non-advancing run this ladder has (`Uploads`/`Render` answering `Ok(false)` while the GPU queue
+/// drains).
+const APP_PRESENT_STALL_STEPS: u32 = 4_096;
+
+/// 🐕️ The watchdog's whole arithmetic, over the progress signature alone: `Some(shape)` on exactly the
+/// step a signature has repeated [`APP_PRESENT_STALL_STEPS`] times, `None` on every other step, and a
+/// reset the moment any term of the signature moves.
+fn note_present_stall_signature(watch: &mut AppPresentStallWatch, signature: AppPresentProgress) -> Option<String> {
+    if watch.signature != Some(signature) {
+        watch.signature = Some(signature);
+        watch.steps = 0;
+        return None;
+    }
+    watch.steps = watch.steps.saturating_add(1);
+    if watch.steps != APP_PRESENT_STALL_STEPS {
+        return None;
+    }
+    Some(format!("phase={:?} engine={} upload={} gpu-cursor={:?}", signature.0, signature.1, signature.2, signature.3))
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -12777,13 +12859,21 @@ impl AppPresenter {
     /// is pumped this tick.
     pub(crate) fn presentation_gate_shape(&self) -> String {
         format!(
-            "pending={} phase={:?} retirement={} retained-fault={} gate-ack={}",
+            "pending={} phase={:?} retirement={} retained-fault={:?} gate-ack={} stall-steps={}",
             self.pending.is_some(),
             self.pending.as_ref().map(|cursor| cursor.phase),
             self.retirement.is_some(),
-            self.retained_fault.is_some(),
-            self.gate.has_pending_acknowledgement()
+            self.retained_fault.as_deref(),
+            self.gate.has_pending_acknowledgement(),
+            self.stall.steps
         )
+    }
+
+    /// 🐕️ One watchdog tick over the pending presentation: `Some(shape)` exactly once, on the step the
+    /// cursor has answered [`APP_PRESENT_STALL_STEPS`] consecutive non-advancing `Pending`s. See
+    /// [`AppPresentStallWatch`].
+    fn note_present_stall(watch: &mut AppPresentStallWatch, cursor: &AppPresentCursor) -> Option<String> {
+        note_present_stall_signature(watch, (cursor.phase, cursor.engine, cursor.upload, cursor.gpu_cursor.as_ref().map(ui_wgpu::wgpu::PreparedGpuPresentCursor::progress)))
     }
 
     pub(crate) fn close_cursor_wake_step(&mut self) -> bool {
@@ -12935,7 +13025,20 @@ impl AppPresenter {
             }
             return Ok(AppPresentStep::Idle);
         }
-        let Some(cursor) = self.pending.as_mut() else { return Ok(AppPresentStep::Idle) };
+        let Some(cursor) = self.pending.as_mut() else {
+            self.stall = AppPresentStallWatch::default();
+            return Ok(AppPresentStep::Idle);
+        };
+        if let Some(shape) = Self::note_present_stall(&mut self.stall, cursor) {
+            log_debug(&format!("[DEBUG] os_host present stalled {shape} retained-fault={:?}", self.retained_fault));
+            if !matches!(cursor.phase, AppPresentPhase::Aborted) {
+                if self.retained_fault.is_none() {
+                    self.retained_fault = Some(format!("presentation stalled: {shape}"));
+                }
+                cursor.phase = AppPresentPhase::Aborted;
+                return Ok(AppPresentStep::Pending);
+            }
+        }
         match cursor.phase {
             AppPresentPhase::Aborted => {
                 if !self.engine.close_active_candidate_step(&mut self.gpu)? {
@@ -14323,6 +14426,7 @@ async fn boot_runtime(
         retirement: None,
         retained_fault: None,
         surface_resize: None,
+        stall: AppPresentStallWatch::default(),
     };
 
     // 🧹️ P3c: this used to build a `PointerCallbacks` here (5 `Rc<RefCell<AppRuntime>>` clones, one

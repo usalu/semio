@@ -5,9 +5,9 @@
 //! already derives `ToValue`/`FromValue`, so it round-trips through a quoted JSON atom uniformly
 //! (same rationale `din4108`'s sibling facet documents, applied here given this facet's field-count).
 
-pub use crate::document_schema::mutations::En1990Mutation;
+pub use crate::artifact_schema::mutations::En1990Mutation;
 
-use crate::document_schema::mutations::{
+use crate::artifact_schema::mutations::{
     change_annex, change_consequence_class::ChangeConsequenceClass, change_permanent_action::ChangePermanentAction, change_resistance::ChangeResistance, change_seismic_action::ChangeSeismicAction,
     change_variable_action_category::ChangeVariableActionCategory, change_variable_action_value::ChangeVariableActionValue, insert_variable_action::InsertVariableAction, remove_variable_action::RemoveVariableAction,
     reorder_variable_actions::ReorderVariableActions,

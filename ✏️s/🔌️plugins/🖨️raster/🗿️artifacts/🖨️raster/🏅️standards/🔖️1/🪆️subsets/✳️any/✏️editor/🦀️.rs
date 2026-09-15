@@ -666,7 +666,7 @@ impl ArtifactEditor for RasterPlayApp {
         owner: EditorApp<RasterPlayApp>,
         owner_file: "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.raster.raster@1/*#editor",
-        document_schema: "raster.document",
+        artifact_schema: "raster.document",
         factory: "RasterRetainedCommandJobFactory",
         factory_type: RasterRetainedCommandJobFactory,
         contract: ToolExecutionContract::bounded_first_step(65_536, 4_096, 1, 262_144, 7_500),
@@ -760,8 +760,8 @@ impl ArtifactEditor for RasterPlayApp {
     fn export_media(port: &str, doc: &ArtifactView<'_, RasterSnapshot>) -> Result<Media, MediaError> {
         match port {
             "image:out" => raster_composite_media(doc.snapshot),
-            "document:out" => {
-                let media_type = Self::io().map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.document_media_type);
+            "artifact:out" => {
+                let media_type = Self::io().map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.artifact_media_type);
                 let bytes = doc.snapshot.encode_pack();
                 Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
             }
@@ -835,8 +835,8 @@ impl ArtifactEditor for RasterPlayApp {
 /// `image:out` ports (see below).
 pub fn raster_io() -> semio_framework::AppIo {
     semio_framework::AppIo {
-        document_schema: RASTER_DOCUMENT_SCHEMA.into(),
-        document_media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Raster },
+        artifact_schema: RASTER_DOCUMENT_SCHEMA.into(),
+        artifact_media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Raster },
         ports: vec![raster_image_in_port(), raster_image_out_port()],
         export_formats: Vec::new(),
         import_formats: Vec::new(),

@@ -33,7 +33,7 @@ pub fn plugin() -> Result<Plugin<FlowApps>, PluginAssemblyError> {
         .viewer_mutation_roster::<crate::viewer::flow::FlowViewer>()
         .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::flow::artifact_kind().id })
         .execution(ExecutionMode::Isolated)
-        .requests(CapabilityRequest { id: CapabilityId("documents.write".into()), scope: "plugin".into(), reason: "persist flow graph edits to the open document".into(), optional: false })
+        .requests(CapabilityRequest { id: CapabilityId("artifacts.write".into()), scope: "plugin".into(), reason: "persist flow graph edits to the open document".into(), optional: false })
         .try_build()
 }
 

@@ -462,8 +462,8 @@ fn fem3d_results_map_json(results: &HashMap<String, crate::model::StaticResult>)
 /// (now deleted) artifact `⚙️engine`: it returns `AppIo`, an app type, so it belongs here.
 pub fn fem3d_io() -> AppIo {
     AppIo {
-        document_schema: crate::FEM_3D_SCHEMA.into(),
-        document_media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Any },
+        artifact_schema: crate::FEM_3D_SCHEMA.into(),
+        artifact_media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Any },
         ports: vec![fem3d_geometry_in_port(), fem3d_results_out_port()],
         export_formats: vec![],
         import_formats: vec![],
@@ -796,7 +796,7 @@ impl ArtifactEditor for Fem3dPlayApp {
         owner: EditorApp<Fem3dPlayApp>,
         owner_file: "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🦀️.rs",
         controller: "s.fem.fem3d@1/*#editor",
-        document_schema: "fem.3d",
+        artifact_schema: "fem.3d",
         factory: "Fem3dRetainedCommandJobFactory",
         factory_type: Fem3dRetainedCommandJobFactory,
         contract: fem3d_retained_contract(),
@@ -897,15 +897,15 @@ impl ArtifactEditor for Fem3dPlayApp {
         crate::live_visual::prepare_snapshot_read(operation, snapshot)
     }
 
-    /// 🎞️ `"document:out"` reproduces the trait's default whole-document pack (overriding
+    /// 🎞️ `"artifact:out"` reproduces the trait's default whole-document pack (overriding
     /// `export_media` shadows the trait's provided body for every port on this app, not just the new
     /// one). `"results:out"` runs every load case/combination's analysis fresh and returns them as plain
     /// JSON text in a `Structured` payload. A document with no load cases, or a solve failure, is
     /// reported as `MediaError::Payload` rather than an empty/panicking export.
     fn export_media(port: &str, doc: &ArtifactView<'_, Fem3dSnapshot>) -> Result<Media, MediaError> {
         match port {
-            "document:out" => {
-                let media_type = fem3d_io().document_media_type;
+            "artifact:out" => {
+                let media_type = fem3d_io().artifact_media_type;
                 let bytes = <Fem3dSnapshot as store::ArtifactPack>::encode_pack(doc.snapshot);
                 Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
             }
@@ -925,7 +925,7 @@ impl ArtifactEditor for Fem3dPlayApp {
     /// replace (`SetSnapshot`) is banned outright with NO replacement mutation, so this falls back to
     /// the trait's own default (`None`).
     ///
-    /// 🎞️ `"document:in"` swaps the whole live document via `reset_document_effect` (a
+    /// 🎞️ `"artifact:in"` swaps the whole live document via `reset_document_effect` (a
     /// `Effect::LoadDocument`, the sanctioned non-history whole-doc-replace path — see
     /// `reset_document_effect`'s own doc comment) instead of routing through `whole_document_operation`.
     /// `"geometry:in"` decodes a minimal, app-owned `{"outline": [[f64;2]...], "holes": [[[f64;2]...]...],
@@ -934,7 +934,7 @@ impl ArtifactEditor for Fem3dPlayApp {
     /// placeholder id — the solid simply won't solve until a real material is assigned.
     fn import_media(port: &str, media: &Media, doc: &ArtifactView<'_, Fem3dSnapshot>) -> Result<Emit<Fem3dMutation, NoConfigMutation, Self::DraftMutation>, MediaError> {
         match port {
-            "document:in" => {
+            "artifact:in" => {
                 let MediaPayload::Structured { json, .. } = &media.payload else {
                     return Err(MediaError::Payload(port.to_string(), "default document:in importer only accepts a Structured (base64 pack) payload".into()));
                 };
@@ -1017,7 +1017,7 @@ impl ArtifactEditor for Fem3dPlayApp {
 /// history — the sanctioned non-mutation path for a whole-document replace (file import,
 /// load-example). Per `📓️taxonomy.md`, `SetSnapshot` is banned outright with NO replacement
 /// mutation: whole-document replace is not expressible as an in-history `Mutation` at all. Every
-/// former "replace the whole document" gesture in this package (`import_media`'s `"document:in"`,
+/// former "replace the whole document" gesture in this package (`import_media`'s `"artifact:in"`,
 /// `commands::set_active_example`) builds this effect instead of an `Emit::mutations([...])`.
 /// The spr is a fresh, edit-free op-log for `scene` — a genesis envelope with no history to encode.
 pub fn reset_document_effect(scene: &Fem3dSnapshot) -> semio_framework::kernel::Effect {

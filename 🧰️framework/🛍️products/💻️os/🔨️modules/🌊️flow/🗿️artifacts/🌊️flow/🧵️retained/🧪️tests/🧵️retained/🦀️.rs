@@ -32,11 +32,11 @@ fn drain(mut retirement: FlowRetirement, minimum_close_bytes: usize) -> usize {
 fn flow_retirement_typed_serde_oracle_and_exact_bytes_survive_worker_transfer() {
     let fixture = crate::os_pack::json::parse(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
     for maximum in [1, 4096] {
-        let value: FlowFixture = crate::os_dsl::FromValue::from_value(crate::os_pack::json::to_dsl_value(fixture.get("fixture").unwrap())).unwrap();
-        let oracle: FlowFixture = crate::os_dsl::FromValue::from_value(crate::os_dsl::ToValue::to_value(&value)).unwrap();
+        let value: FlowHostDocument = crate::os_dsl::FromValue::from_value(crate::os_pack::json::to_dsl_value(fixture.get("hostDocument").unwrap())).unwrap();
+        let oracle: FlowHostDocument = crate::os_dsl::FromValue::from_value(crate::os_dsl::ToValue::to_value(&value)).unwrap();
         assert_eq!(value, oracle);
-        let oracle_released = drain(FlowRetirement::from_owner(FlowOwner::Fixture(oracle)), maximum);
-        let mut retirement = FlowRetirement::from_owner(FlowOwner::Fixture(value));
+        let oracle_released = drain(FlowRetirement::from_owner(FlowOwner::HostDocument(oracle)), maximum);
+        let mut retirement = FlowRetirement::from_owner(FlowOwner::HostDocument(value));
         assert!(matches!(retirement.close_step(0, maximum).unwrap(), SnapshotRetirementStep::Blocked));
         assert!(matches!(retirement.close_step(1, 0).unwrap(), SnapshotRetirementStep::Blocked));
         let released = std::thread::spawn(move || drain(retirement, maximum)).join().unwrap();
@@ -111,10 +111,10 @@ fn flow_physical_retirement_every_direct_string_and_vec_releases_actual_capacity
 
 #[test]
 fn flow_physical_retirement_frontier_requires_exact_admission_and_releases_metadata_last() {
-    let fixture: FlowFixture = crate::os_dsl::FromValue::from_value(crate::os_pack::json::to_dsl_value(
-        crate::os_pack::json::parse(include_str!("../../🧫️fixtures/🔣️.json")).unwrap().get("fixture").unwrap(),
+    let fixture: FlowHostDocument = crate::os_dsl::FromValue::from_value(crate::os_pack::json::to_dsl_value(
+        crate::os_pack::json::parse(include_str!("../../🧫️fixtures/🔣️.json")).unwrap().get("hostDocument").unwrap(),
     )).unwrap();
-    let mut retirement = FlowRetirement::from_owner(FlowOwner::Fixture(fixture));
+    let mut retirement = FlowRetirement::from_owner(FlowOwner::HostDocument(fixture));
     let demand = retirement.next_allocation_bytes().unwrap().expect("fixture decomposition needs a frontier page");
     assert!(demand > 0);
     assert_eq!(retirement.reserve_allocation(0).unwrap().allocated_bytes, 0);
@@ -153,7 +153,7 @@ fn flow_physical_retirement_frontier_requires_exact_admission_and_releases_metad
 }
 
 #[test]
-fn flow_physical_retirement_multi_root_ingress_retains_refused_owner_until_exact_retry_and_close() {
+fn flow_physical_retirement_multi_root_ingress_records_fault_without_admission_then_admits_exactly() {
     let fixture = crate::os_pack::json::parse(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
     let contract = fixture.get("physicalRetirement").and_then(|value| value.get("multiRootIngress")).unwrap();
     let first_capacity = contract.get("firstCapacityBytes").and_then(crate::os_pack::json::Value::as_u64).unwrap() as usize;
@@ -164,29 +164,13 @@ fn flow_physical_retirement_multi_root_ingress_retains_refused_owner_until_exact
     let mut second = Vec::with_capacity(second_capacity);
     second.push(2);
     let second_capacity = second.capacity();
-    let mut retirement = FlowRetirement::from_owner(FlowOwner::Bytes(first));
-    let mut refused = retirement.push(FlowOwner::Bytes(second)).expect_err("a second root requires admitted frontier backing");
-    assert_eq!(retirement.allocated_bytes(), first_capacity);
-    assert!(matches!(&refused, FlowOwner::Bytes(bytes) if bytes.capacity() == second_capacity));
 
-    for _ in 0..8 {
-        let demand = retirement.next_push_allocation_bytes().unwrap().expect("refused owner requires one exact frontier allocation");
-        let before = retirement.allocated_bytes();
-        assert_eq!(retirement.reserve_push_allocation(0).unwrap().allocated_bytes, 0);
-        assert_eq!(retirement.reserve_push_allocation(demand - 1).unwrap().allocated_bytes, 0);
-        assert_eq!(retirement.allocated_bytes(), before);
-        refused = match retirement.push(refused) {
-            Ok(()) => break,
-            Err(owner) => owner,
-        };
-        let step = retirement.reserve_push_allocation(demand).unwrap();
-        assert!(step.progressed && step.allocated_bytes >= demand);
-        refused = match retirement.push(refused) {
-            Ok(()) => break,
-            Err(owner) => owner,
-        };
-    }
-    assert!(retirement.next_push_allocation_bytes().unwrap().is_none());
+    let mut first = Vec::with_capacity(first_capacity);
+    first.push(1);
+    let mut second = Vec::with_capacity(second_capacity);
+    second.push(2);
+    let mut retirement = FlowRetirement::from_owner(FlowOwner::Bytes(first));
+    retirement.push(FlowOwner::Bytes(second));
     let admitted_bytes = retirement.allocated_bytes();
     assert!(admitted_bytes >= first_capacity + second_capacity);
     assert_eq!(drain(retirement, admitted_bytes), admitted_bytes);

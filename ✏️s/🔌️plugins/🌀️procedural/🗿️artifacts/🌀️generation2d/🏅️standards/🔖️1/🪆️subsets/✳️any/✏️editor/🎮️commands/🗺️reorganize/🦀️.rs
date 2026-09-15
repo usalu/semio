@@ -13,7 +13,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 pub struct Reorganize {}
 
 pub fn handle(_payload: &Reorganize, doc: &ArtifactView<'_, Generation2dSnapshot>, _cfg: &ConfigView<'_, Generation2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Generation2dMutation, Generation2dConfigMutation>, Fault> {
-    let fixture = &doc.snapshot.fixture;
+    let fixture = &doc.snapshot.host_document;
     Ok(Emit::mutations(host_operations(fixture, |host| {
         let _ = host.reorganize(r#"{"orientation":"leftRight"}"#);
     })))

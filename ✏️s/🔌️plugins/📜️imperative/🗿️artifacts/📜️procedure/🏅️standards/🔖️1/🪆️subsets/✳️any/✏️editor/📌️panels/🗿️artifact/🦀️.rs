@@ -6,7 +6,7 @@ use crate::ProcedureSnapshot;
 use semio_framework_plugin::{tree_item_desc, BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
 
 //#region 🔖️Constants
-pub const IMPERATIVE_PLAY_BODY_DOCUMENT: &str = "imperative.play.document";
+pub const IMPERATIVE_PLAY_BODY_ARTIFACT: &str = "imperative.play.artifact";
 const IMPERATIVE_PLAY_DOCUMENT_NAMESPACE: &str = "imperative-play-document";
 //#endregion 🔖️Constants
 
@@ -25,9 +25,9 @@ pub fn step_row_id(id: &str) -> String {
 pub fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_ARTIFACT_ID.into()),
-        label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Dokument"),
+        label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Artefakt"),
         group: PanelGroup::Workbench,
-        body_key: Some(IMPERATIVE_PLAY_BODY_DOCUMENT.into()),
+        body_key: Some(IMPERATIVE_PLAY_BODY_ARTIFACT.into()),
         children: Vec::new(),
     }
 }

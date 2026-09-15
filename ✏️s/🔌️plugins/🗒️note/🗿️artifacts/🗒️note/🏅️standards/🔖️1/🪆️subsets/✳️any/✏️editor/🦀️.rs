@@ -40,7 +40,7 @@ use store::EngineHandles;
 pub const NOTE_PLAY_CONTROLLER_ID: &str = "s.note.note@1/*#editor";
 pub use catalogue_panel::NOTE_PLAY_BODY_CATALOGUE;
 pub use composite::{NOTE_PLAY_BODY_COMPOSITE, NOTE_PLAY_WINDOW_COMPOSITE};
-pub use document_panel::NOTE_PLAY_BODY_DOCUMENT;
+pub use document_panel::NOTE_PLAY_BODY_ARTIFACT;
 pub use inspection_panel::NOTE_PLAY_BODY_PROPERTIES;
 pub use navigator::{NOTE_PLAY_BODY_NAVIGATOR, NOTE_PLAY_WINDOW_NAVIGATOR};
 //#endregion 🔖️Constants
@@ -211,7 +211,7 @@ impl ArtifactEditor for NotePlayApp {
         owner: semio_framework_plugin::EditorApp<NotePlayApp>,
         owner_file: "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.note.note@1/*#editor",
-        document_schema: "note.document",
+        artifact_schema: "note.document",
         factory: "NoteCommandJobFactory",
         factory_type: crate::editor::note::retained::NoteCommandJobFactory,
         tools: {
@@ -341,7 +341,7 @@ impl ArtifactEditor for NotePlayApp {
         match body_key {
             NOTE_PLAY_BODY_COMPOSITE => composite::render(document, &window.camera, active_utility),
             NOTE_PLAY_BODY_NAVIGATOR => navigator::render(document, &crate::NoteCamera::default(), active_utility),
-            NOTE_PLAY_BODY_DOCUMENT => document_panel::render(document, labels),
+            NOTE_PLAY_BODY_ARTIFACT => document_panel::render(document, labels),
             NOTE_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels),
             NOTE_PLAY_BODY_PROPERTIES => inspection_panel::render(document, active_utility, labels),
             _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "note diagnostic text admission failed")),

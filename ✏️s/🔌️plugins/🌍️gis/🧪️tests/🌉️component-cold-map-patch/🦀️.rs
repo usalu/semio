@@ -1,7 +1,7 @@
 //! 🌉️ Genuine GIS component cold-pair, render-patch, and addressed mutation acceptance.
 
 use semio_framework::kernel::{
-    ActorInstanceLifecycleAck, ActorInstanceLifecycleReceipt, ActorInstanceLifetime, ActorInstanceOpenRequest, ActorUiPatchReceipt, Budget, ColdDocumentPairApplied, ColdDocumentPairFrontier, ColdDocumentPairHeader, ColdDocumentPairPage,
+    ActorInstanceLifecycleAck, ActorInstanceLifecycleReceipt, ActorInstanceLifetime, ActorInstanceOpenRequest, ActorUiPatchReceipt, Budget, ColdArtifactPairApplied, ColdArtifactPairFrontier, ColdArtifactPairHeader, ColdArtifactPairPage,
     ColdPairIngressStatus, CommandBatch, CommandBatchDriver, CommandBatchProgress, CommandEnvelope, CommandEnvelopeSet, Event, QuotaSchema, TurnResult, UiTurnPatchTransportLease, COLD_PAIR_PAGE_MAXIMUM_BYTES, COMMAND_PAGE_MAXIMUM_BYTES,
 };
 use semio_framework::manifest::{ActionAddress, ActionInvocation, ViewModel, ViewWindowInstance};
@@ -101,15 +101,15 @@ async fn canonical_pair(value: &serde_json::Value) -> (Vec<u8>, Vec<u8>) {
     (files.pack, files.spr)
 }
 
-fn cold_header(pack: &[u8], spr: &[u8], lifetime: ActorInstanceLifetime) -> ColdDocumentPairHeader {
+fn cold_header(pack: &[u8], spr: &[u8], lifetime: ActorInstanceLifetime) -> ColdArtifactPairHeader {
     let mut aggregate = semio_framework_hash::Sha256::new();
     aggregate.update(pack);
     aggregate.update(spr);
-    ColdDocumentPairHeader {
+    ColdArtifactPairHeader {
         lifetime,
         transfer_generation: TRANSFER_GENERATION,
         descriptor_sha256: hex32(std::env::var("SEMIO_GIS_DESCRIPTOR_SHA256").expect("receipt-bound descriptor hash")),
-        baseline_frontier: ColdDocumentPairFrontier { document_id: "shared-map".into(), head_edit_ordinal: 7, head_edit_id: "edit-7".into(), last_commit_seq: 5, chain_sha256: [0x22; 32] },
+        baseline_frontier: ColdArtifactPairFrontier { artifact_id: "shared-map".into(), head_edit_ordinal: 7, head_edit_id: "edit-7".into(), last_commit_seq: 5, chain_sha256: [0x22; 32] },
         pack_sha256: semio_framework_hash::Sha256::digest(pack),
         spr_sha256: semio_framework_hash::Sha256::digest(spr),
         aggregate_sha256: aggregate.finalize(),
@@ -119,7 +119,7 @@ fn cold_header(pack: &[u8], spr: &[u8], lifetime: ActorInstanceLifetime) -> Cold
     }
 }
 
-fn cold_page(header: &ColdDocumentPairHeader, pack: &[u8], spr: &[u8], page_index: u32) -> ColdDocumentPairPage {
+fn cold_page(header: &ColdArtifactPairHeader, pack: &[u8], spr: &[u8], page_index: u32) -> ColdArtifactPairPage {
     let offset = page_index as usize * COLD_PAIR_PAGE_MAXIMUM_BYTES;
     let length = header.page_length(page_index).expect("admitted page");
     let mut bytes = Vec::with_capacity(length);
@@ -131,14 +131,14 @@ fn cold_page(header: &ColdDocumentPairHeader, pack: &[u8], spr: &[u8], page_inde
         let spr_offset = offset + bytes.len() - pack.len();
         bytes.extend_from_slice(&spr[spr_offset..spr_offset + length - bytes.len()]);
     }
-    ColdDocumentPairPage { header: header.clone(), page_index, bytes }
+    ColdArtifactPairPage { header: header.clone(), page_index, bytes }
 }
 
-async fn load_pair(runtime: &WasmtimeRuntime, instance: &mut GuestInstance, lifetime: ActorInstanceLifetime, pack: &[u8], spr: &[u8]) -> ColdDocumentPairApplied {
+async fn load_pair(runtime: &WasmtimeRuntime, instance: &mut GuestInstance, lifetime: ActorInstanceLifetime, pack: &[u8], spr: &[u8]) -> ColdArtifactPairApplied {
     let header = cold_header(pack, spr, lifetime);
     let mut applied = None;
     for page_index in 0..header.page_count {
-        let result = runtime.execute_turn(instance, &[Event::ColdDocumentPairPage(cold_page(&header, pack, spr, page_index))], budget()).await.expect("genuine guest accepts cold page");
+        let result = runtime.execute_turn(instance, &[Event::ColdArtifactPairPage(cold_page(&header, pack, spr, page_index))], budget()).await.expect("genuine guest accepts cold page");
         match result.cold_pair_ingress {
             ColdPairIngressStatus::PageAccepted(cursor) => assert_eq!(cursor, header.cursor(page_index)),
             ColdPairIngressStatus::Applied(receipt) => {
@@ -277,7 +277,7 @@ async fn genuine_gis_component_rejects_stale_cold_authority_before_loading() {
     let (pack, spr) = canonical_pair(&fixture["document"]["before"]).await;
     let mut header = cold_header(&pack, &spr, lifetime);
     header.lifetime.guest_lifetime += 1;
-    let result = runtime.execute_turn(&mut instance, &[Event::ColdDocumentPairPage(cold_page(&header, &pack, &spr, 0))], budget()).await.expect("stale cold page is a typed result");
+    let result = runtime.execute_turn(&mut instance, &[Event::ColdArtifactPairPage(cold_page(&header, &pack, &spr, 0))], budget()).await.expect("stale cold page is a typed result");
     assert!(matches!(result.cold_pair_ingress, ColdPairIngressStatus::Fault { ref fault, .. } if fault == b"cold-pair.not-live"));
     assert!(result.ui_patches.is_empty());
 }

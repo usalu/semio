@@ -2509,7 +2509,7 @@ pub mod workflow {
         }
     }
 
-    pub fn os_workflow_to_flow_fixture(graph: &Workflow, camera: &OsWorkflowCamera) -> Value {
+    pub fn os_workflow_to_flow_host_document_json(graph: &Workflow, camera: &OsWorkflowCamera) -> Value {
         let widgets: Vec<_> = graph
             .nodes
             .iter()
@@ -2544,7 +2544,7 @@ pub mod workflow {
             })
             .collect();
         json!({
-            "schema": "flow.fixture",
+            "schema": "flow.host_document",
             "camera": { "x": camera.x, "y": camera.y, "zoom": camera.zoom },
             "widgets": widgets,
             "synapses": synapses,
@@ -2552,8 +2552,8 @@ pub mod workflow {
         })
     }
 
-    /** @emoji 🔁️ Diffs a flow fixture back into workflow operations — inverse of [`os_workflow_to_flow_fixture`]. */
-    pub fn apply_flow_fixture_to_os_workflow(graph: &Workflow, fixture_json: &str) -> Vec<WorkflowMutation> {
+    /** @emoji 🔁️ Diffs a flow fixture back into workflow operations — inverse of [`os_workflow_to_flow_host_document_json`]. */
+    pub fn apply_flow_host_document_to_os_workflow(graph: &Workflow, fixture_json: &str) -> Vec<WorkflowMutation> {
         let Ok(fixture) = serde_json::from_str::<Value>(fixture_json) else {
             return Vec::new();
         };
@@ -4710,7 +4710,7 @@ pub mod registry {
             controller_id: app.controller_id.clone(),
             inputs,
             outputs,
-            source_format: app.io.document_schema.clone(),
+            source_format: app.io.artifact_schema.clone(),
             component_kind: app.io.artifact.component_kind.clone(),
             default_mode_id: Some(app.default_mode_id.clone()),
             parameter_fields: Vec::new(),
@@ -4729,16 +4729,16 @@ pub mod registry {
     /// `AppIo::all_ports()` re-derives byte-for-byte the same document ports `register_app_io` stored),
     /// every other port becomes a declared `AppIo.ports` entry.
     fn app_io_for_registration(registration: &OsAppRegistration) -> semio_framework::AppIo {
-        let document_media_type = registration
+        let artifact_media_type = registration
             .inputs
             .iter()
-            .find(|port| port.id == "document:in")
-            .or_else(|| registration.outputs.iter().find(|port| port.id == "document:out"))
+            .find(|port| port.id == "artifact:in")
+            .or_else(|| registration.outputs.iter().find(|port| port.id == "artifact:out"))
             .map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |port| port.media_type);
-        let declared_ports: Vec<_> = registration.inputs.iter().chain(registration.outputs.iter()).filter(|port| port.id != "document:in" && port.id != "document:out").cloned().collect();
-        let io = crate::host::resolve_kernel_future(semio_framework::AppIo::from_document(
+        let declared_ports: Vec<_> = registration.inputs.iter().chain(registration.outputs.iter()).filter(|port| port.id != "artifact:in" && port.id != "artifact:out").cloned().collect();
+        let io = crate::host::resolve_kernel_future(semio_framework::AppIo::from_artifact(
             registration.source_format.clone(),
-            document_media_type,
+            artifact_media_type,
             semio_framework::ArtifactPresentation {
                 id: registration.id.clone(),
                 // 🚧️ No locale context reaches this reconstruction path — resolves native/English
@@ -4894,8 +4894,8 @@ pub mod registry {
 pub use crate::space::*;
 #[cfg(any(feature = "os-host-full", feature = "space-guest"))]
 pub use crate::workflow::{
-    apply_flow_fixture_to_os_workflow, apply_workflow_operation, build_os_workflow_operator_infos, create_default_workflow_parameter, empty_workflow, empty_workflow_snapshot, export_os_app_instance_media_kind, import_os_app_instance_media_kind,
-    negotiate_media_contract, os_media_export_extension_for_format_kind, os_media_neuron_kind_for_node, os_resource_media_capability, os_workflow_to_flow_fixture, os_workflow_to_node_graph_payload, patch_workflow_parameter,
+    apply_flow_host_document_to_os_workflow, apply_workflow_operation, build_os_workflow_operator_infos, create_default_workflow_parameter, empty_workflow, empty_workflow_snapshot, export_os_app_instance_media_kind, import_os_app_instance_media_kind,
+    negotiate_media_contract, os_media_export_extension_for_format_kind, os_media_neuron_kind_for_node, os_resource_media_capability, os_workflow_to_flow_host_document_json, os_workflow_to_node_graph_payload, patch_workflow_parameter,
     placeholder_media_contract, plan_workflow, sync_workflow_parameter_ports, validate_workflow, validate_workflow_parameter_config_binding, validate_workflow_snapshot, workflow_node_for_app, workflow_parameter_id,
     workflow_parameter_id_from_port_id, workflow_parameter_name, workflow_parameter_types_compatible, workflow_parameter_value, MediaContract, OsMediaCapability, OsWorkflowCamera, OsWorkflowNodeGraphPayload, OsWorkflowOperatorInfo, Workflow,
     WorkflowDelivery, WorkflowEdge, WorkflowFixture, WorkflowInput, WorkflowInputBinding, WorkflowMediaPort, WorkflowMutation, WorkflowNode, WorkflowOutputBinding, WorkflowParameter, WorkflowParameterBinding, WorkflowParameterPatch,

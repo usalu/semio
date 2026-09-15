@@ -2,11 +2,11 @@
 
 use crate::engine::space::config::{SpaceConfig, SpaceConfigMutation, SpaceWindowCamera};
 use semio_framework_os::workflow::{MoveNode, RemoveNode};
-use semio_framework_os::{apply_flow_fixture_to_os_workflow, WorkflowMutation, WorkflowSnapshot};
+use semio_framework_os::{apply_flow_host_document_to_os_workflow, WorkflowMutation, WorkflowSnapshot};
 use semio_framework_plugin::{app::InteractionView, ArtifactView, ConfigView, Emit, Fault};
 
 /// 🚧️ TEMP(Wave 3): `operations_json` stays an opaque JSON-array string, mirroring
-/// `apply_flow_fixture_to_os_workflow`'s still-JSON `fixture_json` bridge — typed once the flow
+/// `apply_flow_host_document_to_os_workflow`'s still-JSON `fixture_json` bridge — typed once the flow
 /// bridge itself is typed.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[dsl(keyword = "node-graph-edit")]
@@ -21,12 +21,12 @@ async fn edit_with_selection(payload: &NodeGraphEdit, projection: &WorkflowSnaps
     let mut effects = Vec::new();
     for edit in &edit_operations {
         match edit.get("operation").and_then(pack::JsonValue::as_str).unwrap_or("") {
-            "setFixture" => {
-                if let Some(fixture_json) = edit.get("fixtureJson").and_then(pack::JsonValue::as_str) {
-                    if let Some(camera) = pack::parse_json(fixture_json).ok().and_then(|fixture| fixture.get("camera").cloned()).and_then(|camera| dsl::from_dsl_value::<SpaceWindowCamera>(pack::json_to_dsl_value(&camera)).ok()) {
+            "setHostDocument" => {
+                if let Some(host_document_json) = edit.get("hostDocumentJson").and_then(pack::JsonValue::as_str) {
+                    if let Some(camera) = pack::parse_json(host_document_json).ok().and_then(|fixture| fixture.get("camera").cloned()).and_then(|camera| dsl::from_dsl_value::<SpaceWindowCamera>(pack::json_to_dsl_value(&camera)).ok()) {
                         config_mutations.push(SpaceConfigMutation::SetCamera { window_id: crate::engine::space::modes::main::windows::workflow::S_PLAY_WINDOW_WORKFLOW.into(), camera });
                     }
-                    artifact_mutations.extend(apply_flow_fixture_to_os_workflow(&projection.graph, fixture_json));
+                    artifact_mutations.extend(apply_flow_host_document_to_os_workflow(&projection.graph, host_document_json));
                 }
             }
             "move" => {
@@ -62,7 +62,7 @@ async fn edit_with_selection(payload: &NodeGraphEdit, projection: &WorkflowSnaps
 /// (no `interaction` slot — ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) — reachable
 /// only through that macro-generated path (`SpaceApp::handle` always routes this command through
 /// `apply` below instead), so its `"deleteSelection"` sub-operation degrades to treating the selection
-/// as empty; every other sub-operation (`setFixture`/`move`/`connect`) is unaffected.
+/// as empty; every other sub-operation (`setHostDocument`/`move`/`connect`) is unaffected.
 pub fn handle(payload: &NodeGraphEdit, doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
     Ok(crate::engine::space::engine::resolve_future(edit_with_selection(payload, doc.snapshot, &[])))
 }

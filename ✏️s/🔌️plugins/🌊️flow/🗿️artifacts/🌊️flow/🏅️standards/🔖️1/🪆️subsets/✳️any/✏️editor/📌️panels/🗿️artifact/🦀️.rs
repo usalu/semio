@@ -1,4 +1,4 @@
-//! 📄️ Flow play app panel — the document tree: widgets and synapses of the current fixture.
+//! 📄️ Flow play app panel — the document tree: widgets and synapses of the current snapshot.
 
 use crate::editor::flow::terminology::FlowPlayLabels;
 use crate::editor::flow::{flow_graph_edge_target_id, flow_graph_node_target_id, FLOW_INTERACTION_GRAPH};
@@ -13,16 +13,16 @@ fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<
 }
 
 //#region 🔖️Constants
-pub const FLOW_PLAY_BODY_DOCUMENT: &str = "flow.play.document";
+pub const FLOW_PLAY_BODY_ARTIFACT: &str = "flow.play.artifact";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
 pub fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_ARTIFACT_ID.into()),
-        label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Dokument"),
+        label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Artefakt"),
         group: PanelGroup::Workbench,
-        body_key: Some(FLOW_PLAY_BODY_DOCUMENT.into()),
+        body_key: Some(FLOW_PLAY_BODY_ARTIFACT.into()),
         children: Vec::new(),
     }
 }
@@ -34,8 +34,8 @@ pub fn definition() -> PanelTabDefinition {
 /// declares for the "graph" domain — the framework stamps this tree's selection/hover presence from
 /// that domain (`.interaction_domain`) and prunes stale ids through that same topology, so no per-item
 /// click action is declared here anymore (clicks are translated into `interactionSelect` generically)?.
-pub fn render(fixture: &FlowSnapshot, labels: &FlowPlayLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    let live = fixture.to_fixture();
+pub fn render(snapshot: &FlowSnapshot, labels: &FlowPlayLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    let live = snapshot.to_host_document();
     let widget_items = crate::editor::flow::ui_node_list(live.widgets.iter().map(|widget| tree_item_desc(flow_graph_node_target_id(widget_id(widget)), widget_tree_label(widget), Some(widget_kind_label(widget).into()))))?;
     let synapse_items =
         crate::editor::flow::ui_node_list(live.synapses.iter().map(|synapse| tree_item_desc(flow_graph_edge_target_id(&synapse.id), format!("{} → {}", synapse.from, synapse.to), Some(format!("{} → {}", synapse.from_port, synapse.to_port)))))?;

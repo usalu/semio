@@ -25,7 +25,7 @@ pub mod language_service;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔤️lexer/🦀️.rs"]
 pub mod lexer;
 #[cfg(feature = "component-app-assembly")]
-pub use crate::editor::jack::fixture_to_workflow;
+pub use crate::editor::jack::snapshot_to_workflow;
 pub use crate::standards::v1::subsets::any::schema::inferences::flat_position::compute_flat_position;
 pub use language_service as core;
 
@@ -38,7 +38,7 @@ pub use semio_framework_graph::manifest::{ManifestValidator, PortDirection, Prop
 pub type Manifest = TrinityManifest;
 
 //#region ⚠️ Errors
-/// ⚠️ Trinity graph fixture, manifest-validation, and mutation errors.
+/// ⚠️ Trinity graph snapshot, manifest-validation, and mutation errors.
 #[derive(Debug)]
 pub enum TrinityRamError {
     /// 🧬️ JSON (de)serialization failure.
@@ -110,7 +110,7 @@ impl std::fmt::Display for TrinityRamError {
             Self::Manifest(error) => write!(formatter, "{}: {}", error.path, error.message),
             Self::SchemaMismatch { expected, actual } => write!(formatter, "expected schema {expected}, got {actual}"),
             Self::UnknownManifestId(id) => write!(formatter, "unknown manifest id {id}"),
-            Self::ManifestMissing => formatter.write_str("fixture missing manifest or manifestId"),
+            Self::ManifestMissing => formatter.write_str("snapshot missing manifest or manifestId"),
             Self::NodeNotFound(id) => write!(formatter, "node {id} not found"),
             Self::EdgeNotFound(id) => write!(formatter, "edge {id} not found"),
             Self::NodeAlreadyExists(id) => write!(formatter, "node {id} already exists"),
@@ -373,7 +373,7 @@ pub struct Edge {
     pub properties: PropertyBag,
 }
 
-/// 📷️ Camera for fixture documents.
+/// 📷️ Camera for snapshot documents.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct Camera {
@@ -398,9 +398,9 @@ impl JackSnapshot {
         Ok(())
     }
 
-    /// 📤️ JSON fixture text — unlike `Serialize`'s derive (which would emit the opaque `content`
+    /// 📤️ JSON snapshot text — unlike `Serialize`'s derive (which would emit the opaque `content`
     /// handle only, unrecoverable once the working-scene cache that minted it is gone, e.g. across a
-    /// process boundary or a persisted embedded fixture string), this hand-rolled JSON shape embeds
+    /// process boundary or a persisted embedded snapshot string), this hand-rolled JSON shape embeds
     /// the REAL `nodes`/`edges` at the top level, mirroring the old pre-migration wire shape and
     /// matching the same "wire format carries real content, not just the handle" fix the hand-rolled
     /// `ArtifactDsl`/`ArtifactPack` codecs use (see `📸️snapshot/📝️text/🦀️.rs`'s own doc
@@ -444,10 +444,10 @@ impl JackSnapshot {
         let nodes: Vec<Node> = value.get("nodes").map(|v| dsl::FromValue::from_value(pack::json_to_dsl_value(v))).transpose()?.unwrap_or_default();
         let edges: Vec<Edge> = value.get("edges").map(|v| dsl::FromValue::from_value(pack::json_to_dsl_value(v))).transpose()?.unwrap_or_default();
         let root_node_id: Option<String> = value.get("rootNodeId").and_then(|v| v.as_str()).map(str::to_string);
-        let mut fixture = Self::with_content(schema, name, manifest_id, manifest, camera, JackWorkingScene { nodes: nodes, edges: edges }, root_node_id);
-        fixture.validate_schema()?;
-        fixture.resolve_manifest()?;
-        Ok(fixture)
+        let mut snapshot = Self::with_content(schema, name, manifest_id, manifest, camera, JackWorkingScene { nodes: nodes, edges: edges }, root_node_id);
+        snapshot.validate_schema()?;
+        snapshot.resolve_manifest()?;
+        Ok(snapshot)
     }
 
     /// 🏗️ Transfers one working scene into the snapshot's exact composed content owner.
@@ -480,15 +480,15 @@ pub struct Graph {
 }
 
 impl Graph {
-    pub fn from_fixture(mut fixture: JackSnapshot) -> Result<Self, TrinityRamError> {
-        fixture.validate_schema()?;
-        fixture.resolve_manifest()?;
-        if let Some(id) = fixture.manifest_id.as_deref() {
+    pub fn from_snapshot(mut snapshot: JackSnapshot) -> Result<Self, TrinityRamError> {
+        snapshot.validate_schema()?;
+        snapshot.resolve_manifest()?;
+        if let Some(id) = snapshot.manifest_id.as_deref() {
             if let Some(gm) = manifest_by_id(id) {
-                validate_trinity_fixture(&gm, &fixture)?;
+                validate_trinity_snapshot(&gm, &snapshot)?;
             }
         }
-        let scene = jack_working_scene(&fixture);
+        let scene = jack_working_scene(&snapshot);
         let mut nodes = BTreeMap::new();
         for node in scene.nodes {
             nodes.insert(node.id.clone(), node);
@@ -497,22 +497,22 @@ impl Graph {
         for edge in scene.edges {
             edges.insert(edge.id.clone(), edge);
         }
-        Ok(Self { name: fixture.name, manifest_id: fixture.manifest_id, manifest: fixture.manifest, camera: fixture.camera, nodes, edges, root_node_id: fixture.root_node_id })
+        Ok(Self { name: snapshot.name, manifest_id: snapshot.manifest_id, manifest: snapshot.manifest, camera: snapshot.camera, nodes, edges, root_node_id: snapshot.root_node_id })
     }
 
-    pub fn to_fixture(&self) -> JackSnapshot {
+    pub fn to_snapshot(&self) -> JackSnapshot {
         JackSnapshot::with_content(JackSnapshot::SCHEMA.to_string(), self.name.clone(), self.manifest_id.clone(), self.manifest.clone(), self.camera.clone(), JackWorkingScene { nodes: self.nodes.values().cloned().collect(), edges: self.edges.values().cloned().collect() }, self.root_node_id.clone())
     }
 
     pub fn load_json(json: &str) -> Result<Self, TrinityRamError> {
-        Self::from_fixture(JackSnapshot::from_json(json)?)
+        Self::from_snapshot(JackSnapshot::from_json(json)?)
     }
 
     pub fn fixture_json(&self) -> Result<String, TrinityRamError> {
-        self.to_fixture().to_json()
+        self.to_snapshot().to_json()
     }
 
-    /// 🧩️ Build a `trinity.graph` fixture containing only the given node and edge ids.
+    /// 🧩️ Build a `trinity.graph` snapshot containing only the given node and edge ids.
     pub fn subgraph_fixture(&self, node_ids: &BTreeSet<String>, edge_ids: &BTreeSet<String>) -> JackSnapshot {
         let nodes: Vec<Node> = node_ids.iter().filter_map(|id| self.nodes.get(id).cloned()).collect();
         let edges: Vec<Edge> = edge_ids.iter().filter_map(|id| self.edges.get(id).cloned()).collect();
@@ -573,10 +573,10 @@ impl Graph {
     }
 }
 
-/// 🛡️ Validates trinity fixture instances against a compile-time graph manifest.
-fn validate_trinity_fixture(gm: &GraphManifest, fixture: &JackSnapshot) -> Result<(), TrinityRamError> {
+/// 🛡️ Validates trinity snapshot instances against a compile-time graph manifest.
+fn validate_trinity_snapshot(gm: &GraphManifest, snapshot: &JackSnapshot) -> Result<(), TrinityRamError> {
     let validator = ManifestValidator::new(gm);
-    let scene = jack_working_scene(fixture);
+    let scene = jack_working_scene(snapshot);
     for node in &scene.nodes {
         validator.validate_node_kind(&node.kind)?;
         validator.validate_node_properties(&node.kind, &node.properties)?;
@@ -1287,7 +1287,7 @@ pub mod editor {
 
             #[path = "."]
             mod set_fixture_json_leaf {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧫️set-fixture-json/🦀️.rs"]
+                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧫️set-snapshot-json/🦀️.rs"]
                 mod component;
                 pub(crate) use component::*;
             }

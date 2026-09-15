@@ -285,7 +285,7 @@ mod semantic_document_tests {
     #[test]
     fn rejected_production_replay_submit_retries_exact_restore_start_identity_before_job_step() {
         let recovery = mounted_replay_recovery_registry().lock().expect("replay recovery lock").reserve().expect("pre-reserved submit recovery");
-        let route = JobReplayRoute { plugin: [1; 32], package: [2; 32], controller: [3; 32], tool: [4; 32], window: 5, document: [6; 32], request_schema: [7; 32], request_version: 1, request_digest: [8; 32] };
+        let route = JobReplayRoute { plugin: [1; 32], package: [2; 32], controller: [3; 32], tool: [4; 32], window: 5, artifact: [6; 32], request_schema: [7; 32], request_version: 1, request_digest: [8; 32] };
         let authority = JobTurn { job: 19, operation: JobOperation { operation: 23, base_revision: 29, generation: 31, preview_sequence: 0, seed: 37 }, step_sequence: 0 };
         let request = JobReplayRequest::from_spawn("fixture.production-retry", b"retained-input");
         let mut mounted = MountedJobReplay {
@@ -347,7 +347,7 @@ mod semantic_document_tests {
         let mut request_owner = admitted_product_request(59, 7, kind, b"fixed-input", JobPlacement::Isolated);
         let request = request_owner.request;
         let route =
-            JobReplayRoute { plugin: [1; 32], package: [2; 32], controller: request.controller, tool: request.tool, window: 5, document: [6; 32], request_schema: request.schema, request_version: request.version, request_digest: request.digest };
+            JobReplayRoute { plugin: [1; 32], package: [2; 32], controller: request.controller, tool: request.tool, window: 5, artifact: [6; 32], request_schema: request.schema, request_version: request.version, request_digest: request.digest };
         let operation = JobOperation { operation: 11, base_revision: 13, generation: 17, preview_sequence: 0, seed: 19 };
         let turn = JobTurn { job: 7, operation, step_sequence: 23 };
         let terminal = JobReplayRecordHeader {
@@ -813,7 +813,7 @@ mod semantic_document_tests {
     #[test]
     fn populated_mounted_replay_drop_publishes_exact_generation_and_drains_incrementally() {
         let recovery = mounted_replay_recovery_registry().lock().expect("replay recovery lock").reserve().expect("pre-reserved recovery");
-        let route = JobReplayRoute { plugin: [1; 32], package: [2; 32], controller: [3; 32], tool: [4; 32], window: 5, document: [6; 32], request_schema: [7; 32], request_version: 1, request_digest: [8; 32] };
+        let route = JobReplayRoute { plugin: [1; 32], package: [2; 32], controller: [3; 32], tool: [4; 32], window: 5, artifact: [6; 32], request_schema: [7; 32], request_version: 1, request_digest: [8; 32] };
         let authority = JobTurn { job: 19, operation: JobOperation { operation: 23, base_revision: 29, generation: 31, preview_sequence: 0, seed: 37 }, step_sequence: 0 };
         drop(MountedJobReplay {
             actor: ActorId(41),
@@ -849,7 +849,7 @@ mod semantic_document_tests {
     #[test]
     fn panic_after_mounted_capture_transfers_the_exact_generation_to_incremental_recovery() {
         let recovery = mounted_replay_recovery_registry().lock().expect("replay recovery lock").reserve().expect("pre-reserved panic recovery");
-        let route = JobReplayRoute { plugin: [9; 32], package: [8; 32], controller: [7; 32], tool: [6; 32], window: 5, document: [4; 32], request_schema: [3; 32], request_version: 1, request_digest: [2; 32] };
+        let route = JobReplayRoute { plugin: [9; 32], package: [8; 32], controller: [7; 32], tool: [6; 32], window: 5, artifact: [4; 32], request_schema: [3; 32], request_version: 1, request_digest: [2; 32] };
         let authority = JobTurn { job: 43, operation: JobOperation { operation: 47, base_revision: 53, generation: 59, preview_sequence: 0, seed: 61 }, step_sequence: 0 };
         let caught = std::panic::catch_unwind(|| {
             let _mounted = MountedJobReplay {

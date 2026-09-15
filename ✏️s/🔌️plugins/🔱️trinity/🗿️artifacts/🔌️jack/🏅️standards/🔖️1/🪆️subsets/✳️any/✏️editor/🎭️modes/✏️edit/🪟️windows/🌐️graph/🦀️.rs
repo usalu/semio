@@ -37,9 +37,9 @@ pub(crate) fn trinity_lod_json_for_window(config: Option<&JackGraphWindowConfig>
 /// `stamp_and_cache_interaction_ui` post-pass would stamp either. The live node-graph host reads
 /// domain "ast"'s `DomainSelection`/`DomainHover` directly (`GraphHost::sync_interaction`), so the
 /// interactive surface stays correct even though this snapshot doesn't carry it.
-pub(crate) fn render(surface_id: &str, _controller_id: &str, fixture: &JackSnapshot, config: Option<&JackGraphWindowConfig>) -> UiAssemblyResult<BuiltNode> {
-    let (nodes, edges, _) = crate::editor::jack::fixture_to_workflow(fixture);
-    let camera = config.and_then(|config| config.camera.as_ref()).unwrap_or(&fixture.camera);
+pub(crate) fn render(surface_id: &str, _controller_id: &str, snapshot: &JackSnapshot, config: Option<&JackGraphWindowConfig>) -> UiAssemblyResult<BuiltNode> {
+    let (nodes, edges, _) = crate::editor::jack::snapshot_to_workflow(snapshot);
+    let camera = config.and_then(|config| config.camera.as_ref()).unwrap_or(&snapshot.camera);
     let viewport = Viewport2d { x: camera.x, y: camera.y, zoom: camera.zoom };
     scene_surface(surface_id, SurfaceKind::NodeGraph, &NodeGraphScene { lod_json: Some(trinity_lod_json_for_window(config)), ..NodeGraphScene::base(nodes, edges, viewport) })
 }

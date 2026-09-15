@@ -49,7 +49,7 @@
     }
   ],
   "codecs": [
-    { "id": "s.stdio.gltf.standard.2-0.codec.native-document.v1", "status": "implemented", "from": "s.stdio.gltf.standard.2-0.dialect.source", "to": "s.stdio.gltf.standard.2-0.dialect.source", "executable_registration": true, "native_factory": { "factory_id": "stdio.native.gltf.v1", "artifact_kind": "s.stdio.gltf", "document_schema": "stdio.gltf", "extension": "gltf", "pack_schema_hash": "b10e15cf930fe4e7e99655f70bd3087d1ba2bb6fbb53345fe0a9924bdcd202d8", "runtime_capability_id": "s.stdio.gltf.standard.2-0.codec.codec-stdio-gltf-extension-gltf.v1" } },
+    { "id": "s.stdio.gltf.standard.2-0.codec.native-document.v1", "status": "implemented", "from": "s.stdio.gltf.standard.2-0.dialect.source", "to": "s.stdio.gltf.standard.2-0.dialect.source", "executable_registration": true, "native_factory": { "factory_id": "stdio.native.gltf.v1", "artifact_kind": "s.stdio.gltf", "artifact_schema": "stdio.gltf", "extension": "gltf", "pack_schema_hash": "b10e15cf930fe4e7e99655f70bd3087d1ba2bb6fbb53345fe0a9924bdcd202d8", "runtime_capability_id": "s.stdio.gltf.standard.2-0.codec.codec-stdio-gltf-extension-gltf.v1" } },
     {
       "id": "s.stdio.gltf.standard.2-0.codec.inference-binary.v1",
       "status": "unimplemented",

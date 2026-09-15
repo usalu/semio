@@ -13,7 +13,7 @@ async fn set_active_example_via_string_action_loads_fixture() {
     app.handle_action("setActiveExample", Some(&serde_json::json!({ "exampleId": PROCEDURAL_EXAMPLE_BOX_FILLET }).into()), &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("set example");
     context::settle(&mut app).await;
     let projection = context::snapshot(&app);
-    assert!(projection.fixture.widgets.iter().any(|widget| crate::widget_id(widget).contains("fillet") || matches!(widget, Widget::Neuron { neuron_kind, .. } if neuron_kind.contains("fillet") || neuron_kind.contains("box"))));
+    assert!(projection.host_document.widgets.iter().any(|widget| crate::widget_id(widget).contains("fillet") || matches!(widget, Widget::Neuron { neuron_kind, .. } if neuron_kind.contains("fillet") || neuron_kind.contains("box"))));
 }
 
 #[semio_framework_async_macros::async_test]

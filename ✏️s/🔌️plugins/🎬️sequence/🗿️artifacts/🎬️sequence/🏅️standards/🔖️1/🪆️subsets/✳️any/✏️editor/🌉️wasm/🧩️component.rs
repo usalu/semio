@@ -4,7 +4,7 @@
 pub mod protocol;
 
 use crate::editor::sequence::SequenceHost;
-use crate::{SequenceFixture, SlotRef};
+use crate::{SequenceHostDocument, SlotRef};
 use infinite_board_port_directed_dag::DagLayoutOptions;
 use protocol::{SequenceBridge, SequenceDomain, SequenceFailure, SequencePayloadReader};
 use semio_framework::abi::{decode_abi_message, encode_abi_message, AbiErrorCode, AbiMessage, AbiPort, AbiPortPoll, AbiWorkBudget};
@@ -25,7 +25,7 @@ impl SequenceDomain for SequenceDomainAdapter {
         use protocol::*;
         match operation {
             SEQUENCE_OPERATION_LOAD_FIXTURE => {
-                let fixture: SequenceFixture = dsl::os_pack::from_json_str(std::str::from_utf8(payload).map_err(domain_error)?).map_err(domain_error)?;
+                let fixture: SequenceHostDocument = dsl::os_pack::from_json_str(std::str::from_utf8(payload).map_err(domain_error)?).map_err(domain_error)?;
                 self.host.replace_snapshot(fixture).map(|_| Vec::new()).map_err(domain_error)
             }
             SEQUENCE_OPERATION_FIXTURE => {
@@ -187,7 +187,7 @@ impl SequenceDomainAdapter {
         use infinite_canvas::Point;
         let (sx, sy) = point(payload)?;
         let viewport = Viewport { width: self.width.max(1), height: self.height.max(1), dpr: self.dpr.max(1.0) };
-        let camera = Camera { x: self.host.dag.fixture.camera.x, y: self.host.dag.fixture.camera.y, zoom: self.host.dag.fixture.camera.zoom };
+        let camera = Camera { x: self.host.dag.host_document.camera.x, y: self.host.dag.host_document.camera.y, zoom: self.host.dag.host_document.camera.zoom };
         let world = screen_to_world(&camera, &viewport, Point::new(sx, sy));
         Ok(format!("{{\"x\":{},\"y\":{}}}", world.x, world.y).into_bytes())
     }
@@ -240,7 +240,7 @@ impl SequenceDomainAdapter {
         reader.finish().map_err(abi_failure)?;
         self.host.dag.set_wheel_zoom_active(true);
         let viewport = Viewport { width: self.width.max(1), height: self.height.max(1), dpr: self.dpr.max(1.0) };
-        let mut camera = Camera { x: self.host.dag.fixture.camera.x, y: self.host.dag.fixture.camera.y, zoom: self.host.dag.fixture.camera.zoom };
+        let mut camera = Camera { x: self.host.dag.host_document.camera.x, y: self.host.dag.host_document.camera.y, zoom: self.host.dag.host_document.camera.zoom };
         wheel_screen(&mut camera, &viewport, sx, sy, delta_y);
         self.host.dag.set_camera(camera.x, camera.y, camera.zoom);
         self.host.dag.set_wheel_zoom_active(false);

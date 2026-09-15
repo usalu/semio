@@ -234,7 +234,7 @@ struct Codec {
 struct NativeCodecBinding {
     factory_id: String,
     artifact_kind: String,
-    document_schema: String,
+    artifact_schema: String,
     extension: String,
     pack_schema_hash: String,
     runtime_capability_id: String,
@@ -483,7 +483,7 @@ fn validate(source: &Source) -> Result<(), PluginAssemblyError> {
             (None, false) => {}
             (Some(binding), true) if matches!(item.status.as_str(), "implemented" | "verified") => {
                 native_codec_hash(&binding.pack_schema_hash)?;
-                if binding.factory_id.is_empty() || binding.artifact_kind.is_empty() || binding.document_schema.is_empty() || binding.extension.is_empty() || binding.runtime_capability_id.is_empty() {
+                if binding.factory_id.is_empty() || binding.artifact_kind.is_empty() || binding.artifact_schema.is_empty() || binding.extension.is_empty() || binding.runtime_capability_id.is_empty() {
                     return Err(failure(format!("codec {} has an incomplete native factory binding", item.id)));
                 }
             }
@@ -774,13 +774,13 @@ fn native_codec_binding<'a>(source: &'a Source, factory: &NativeCodecFactory) ->
     let codec = (factory.codec)();
     let hash = native_codec_hash(&binding.pack_schema_hash)?;
     let runtime = source.runtime_capabilities.iter().find(|capability| capability.id == binding.runtime_capability_id).ok_or_else(|| failure(format!("codec {} names missing runtime capability {}", item.id, binding.runtime_capability_id)))?;
-    let extension_claim = ArtifactIdentityClaim::codec_extension(&binding.document_schema, &binding.extension).map_err(PluginAssemblyError::definition)?;
-    let expected_claims = BTreeSet::from([("codec".to_owned(), binding.document_schema.clone()), (extension_claim.namespace().as_str().to_owned(), extension_claim.value().to_owned())]);
+    let extension_claim = ArtifactIdentityClaim::codec_extension(&binding.artifact_schema, &binding.extension).map_err(PluginAssemblyError::definition)?;
+    let expected_claims = BTreeSet::from([("codec".to_owned(), binding.artifact_schema.clone()), (extension_claim.namespace().as_str().to_owned(), extension_claim.value().to_owned())]);
     if factory.artifact != source.artifact
         || kind.id != binding.artifact_kind
         || runtime.category != "codec"
         || runtime_claims(runtime) != expected_claims
-        || codec.schema != binding.document_schema
+        || codec.schema != binding.artifact_schema
         || codec.extension != binding.extension
         || codec.pack_schema_hash != hash
     {
@@ -825,7 +825,7 @@ pub fn native_codec_factory_receipts(contribution: &ArtifactContribution, plugin
     let mut receipts = Vec::with_capacity(factories.len());
     for factory in factories {
         let (item, binding) = native_codec_binding(&source, &factory)?;
-        if !ids.insert(factory.id) || !descriptor_ids.insert(item.id.clone()) || !receipt_keys.insert((binding.artifact_kind.clone(), binding.document_schema.clone())) {
+        if !ids.insert(factory.id) || !descriptor_ids.insert(item.id.clone()) || !receipt_keys.insert((binding.artifact_kind.clone(), binding.artifact_schema.clone())) {
             return Err(failure(format!("{} native codec factories are not bijective", source.id)));
         }
         let receipt = NativeCodecFactoryReceipt {
@@ -836,7 +836,7 @@ pub fn native_codec_factory_receipts(contribution: &ArtifactContribution, plugin
             descriptor_codec_id: item.id.clone(),
             runtime_capability_id: binding.runtime_capability_id.clone(),
             artifact_kind: binding.artifact_kind.clone(),
-            schema: binding.document_schema.clone(),
+            schema: binding.artifact_schema.clone(),
             pack_schema_hash: native_codec_hash(&binding.pack_schema_hash)?,
             extension: binding.extension.clone(),
             factory: factory.codec,

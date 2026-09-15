@@ -40,7 +40,7 @@ pub fn plugin() -> Result<Plugin<RemodelApps>, PluginAssemblyError> {
         .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::remodeling::artifact_kind().id })
         .execution(ExecutionMode::Isolated)
         .requests(CapabilityRequest {
-            id: CapabilityId("documents.write".into()),
+            id: CapabilityId("artifacts.write".into()),
             scope: "plugin".into(),
             reason: "persist reconstruction results (job status, sparse cloud, camera trajectory, mesh, qc, geo products) to the open document".into(),
             optional: false,

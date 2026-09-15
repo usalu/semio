@@ -22,13 +22,13 @@ pub struct FlowInference {
 
 impl protocol::Inference<FlowSnapshot> for FlowInference {
     fn infer(snapshot: &FlowSnapshot) -> Self {
-        let fixture = snapshot.to_fixture();
+        let fixture = snapshot.to_host_document();
         Self { topology: compute_flow_topology(&fixture.widgets, &fixture.synapses) }
     }
 }
 
 /// 🌱 Hand-fixed to agree with `infer(&FlowSnapshot::default())` rather than a naive
-/// `#[derive(Default)]` — `FlowSnapshot`'s own `Default` bridges `semio_framework_artifact_flow_flow::FlowFixture::default()`,
+/// `#[derive(Default)]` — `FlowSnapshot`'s own `Default` bridges `semio_framework_artifact_flow_flow::FlowHostDocument::default()`,
 /// which ships a non-empty three-widget starter graph, the same "match `infer` of the real
 /// default, don't derive structurally" trick as `AddInference`'s hand-written `Default` in
 /// `📡️spr/🎮️command/🦀️.rs`.

@@ -15,7 +15,7 @@ pub use crate::preview_eval::FlowEvalTick;
 /// 🚧️ Whether the `previewEval` run may start or continue on this graph at all — see
 /// [`preview_eval::may_rearm`]. The editor's `pending_effects` asks the SAME question the hop asks
 /// before it gives an uncontributed window up.
-pub fn may_rearm(fixture: &semio_framework_artifact_flow_flow::FlowFixture) -> bool {
+pub fn may_rearm(fixture: &semio_framework_artifact_flow_flow::FlowHostDocument) -> bool {
     preview_eval::may_rearm(fixture)
 }
 
@@ -27,7 +27,7 @@ pub fn window_args(window_id: &str, window_kind_id: &str) -> dsl::DslValue {
 /// 🧮️ One evaluation tick, plus what the calling surface owes its retained preview publication.
 ///
 /// 🧬️ The editor-only half: a tick addressed at the GENERATE preview evaluates the patched
-/// generation fixture (`generation_fixture_for`) rather than the document's own, and evaluates
+/// generation fixture (`generation_host_document_for`) rather than the document's own, and evaluates
 /// nothing at all until a generation is selected.
 pub fn evaluate(
     window_id: &str,
@@ -52,9 +52,9 @@ pub fn evaluate(
             session.note_window_tick_outcome(window_id, false);
             return Ok((Emit::default(), session.eval_publication_for(retained_eval)));
         }
-        patched = Some(crate::standards::v1::subsets::any::schema::generation_fixture_for(&doc.snapshot.fixture, &state, state.selected_generation_id.as_deref()));
+        patched = Some(crate::standards::v1::subsets::any::schema::generation_host_document_for(&doc.snapshot.host_document, &state, state.selected_generation_id.as_deref()));
     }
-    let fixture = patched.as_ref().unwrap_or(&doc.snapshot.fixture);
+    let fixture = patched.as_ref().unwrap_or(&doc.snapshot.host_document);
     let outcome = preview_eval::evaluate_tick(window_id, window_kind_id, fixture, preview_eval::preview_tolerance(&cfg.snapshot.lod_mode), session, retained_eval, turn_started_us);
     if let Some(fixture) = patched {
         fixture.retire_cold();

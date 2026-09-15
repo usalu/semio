@@ -526,7 +526,7 @@ pub fn example_graph_fixture() -> JackSnapshot {
 
 /// 🧩️ [`example_graph_fixture`] as a resolved in-memory [`Graph`].
 pub fn example_graph() -> Graph {
-    Graph::from_fixture(example_graph_fixture()).expect("jack example fixture")
+    Graph::from_snapshot(example_graph_fixture()).expect("jack example fixture")
 }
 
 /// 🧩️ [`example_graph_fixture`] serialized as fixture JSON.

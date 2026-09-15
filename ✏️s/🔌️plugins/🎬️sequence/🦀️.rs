@@ -36,7 +36,7 @@ pub fn plugin() -> Result<Plugin<SequenceApps>, PluginAssemblyError> {
         .viewer_mutation_roster::<crate::viewer::sequence::SequenceViewer>()
         .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::sequence::artifact_kind().id })
         .execution(ExecutionMode::Isolated)
-        .requests(CapabilityRequest { id: CapabilityId("documents.write".into()), scope: "plugin".into(), reason: "persist sequence edits to the open document".into(), optional: false })
+        .requests(CapabilityRequest { id: CapabilityId("artifacts.write".into()), scope: "plugin".into(), reason: "persist sequence edits to the open document".into(), optional: false })
         .try_build()
 }
 

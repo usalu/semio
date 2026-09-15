@@ -25,9 +25,9 @@ fn base() -> DagSnapshot {
         schema: DAG_DOCUMENT_SCHEMA.into(),
         nodes: vec![node("a"), node("b"), node("c")],
         edges: vec![
-            DagFixtureEdge { id: "e".into(), source: "a@out".into(), target: "b@in".into(), ..Default::default() },
-            DagFixtureEdge { id: "keep".into(), source: "b@out".into(), target: "c@in".into(), ..Default::default() },
-            DagFixtureEdge { id: "last".into(), source: "c@out".into(), target: "a@in".into(), route_style: EdgeRouteStyle::SharpSz, properties: PropertyBag::from([("weight".into(), PropertyValue::Number(2.0))]) },
+            DagHostDocumentEdge { id: "e".into(), source: "a@out".into(), target: "b@in".into(), ..Default::default() },
+            DagHostDocumentEdge { id: "keep".into(), source: "b@out".into(), target: "c@in".into(), ..Default::default() },
+            DagHostDocumentEdge { id: "last".into(), source: "c@out".into(), target: "a@in".into(), route_style: EdgeRouteStyle::SharpSz, properties: PropertyBag::from([("weight".into(), PropertyValue::Number(2.0))]) },
         ],
     }
 }
@@ -126,7 +126,7 @@ fn direct_leaf_roster_and_codec_contracts() {
 #[test]
 fn direct_delete_inverse_declares_descending_edges_before_node() {
     let mut before = base();
-    before.edges.push(DagFixtureEdge { id: "loop".into(), source: "a@out".into(), target: "a@in".into(), ..Default::default() });
+    before.edges.push(DagHostDocumentEdge { id: "loop".into(), source: "a@out".into(), target: "a@in".into(), ..Default::default() });
     let mutation = DagMutation::DeleteNode(DeleteNode { id: "a".into() });
     let inverse = mutation.inverse(&before);
     assert_eq!(inverse.len(), 4);
@@ -170,7 +170,7 @@ fn direct_rename_preserves_exact_endpoint_suffix() {
         let new_id = row["newId"].as_str().expect("new ID");
         let source = row["source"].as_str().expect("source");
         let expected = row["expected"].as_str().expect("expected endpoint");
-        let before = DagSnapshot { schema: DAG_DOCUMENT_SCHEMA.into(), nodes: vec![node(id), node("b")], edges: vec![DagFixtureEdge { id: "edge".into(), source: source.into(), target: "b@in".into(), ..Default::default() }] };
+        let before = DagSnapshot { schema: DAG_DOCUMENT_SCHEMA.into(), nodes: vec![node(id), node("b")], edges: vec![DagHostDocumentEdge { id: "edge".into(), source: source.into(), target: "b@in".into(), ..Default::default() }] };
         let mutation = DagMutation::RenameNode(RenameNode { id: id.into(), new_id: new_id.into() });
         let after = apply(&before, &mutation);
         assert_eq!(after.edges[0].source, expected);

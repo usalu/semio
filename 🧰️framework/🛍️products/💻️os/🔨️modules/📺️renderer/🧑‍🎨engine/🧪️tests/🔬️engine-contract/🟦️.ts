@@ -4,7 +4,7 @@ import { flushSync } from "react-dom";
 import type { BackboneWorkerResponse } from "@semio-tech/framework-os";
 import { applyPatch } from "fast-json-patch";
 import { Layout, UIDialog, chromePanelSafeArea, childElementId, createTutorialClock, isElementId, singleTreeLeaf, uiI18n, type Anchor, type SafeAreaYield } from "@semio-tech/ui-react";
-import { createWorldProjectionTemplates, worldProjectionSwitchTreeItems } from "@semio-tech/infinite-world-r3f";
+import { createWorldProjectionTemplates, worldCameraReportTargetV1, worldProjectionSwitchTreeItems } from "@semio-tech/infinite-world-r3f";
 import { resolvePluginCanvasStatus, type PluginSupervisorState } from "../../🧱️elements/🐚️Shell/🟦️.tsx";
 import bootCanvasFixture from "../../🧱️elements/🐚️Shell/🧫️fixtures/🔣️.json";
 import {
@@ -76,7 +76,7 @@ import interactionSchema from "../../../../../../../🔨️modules/🕹️intera
 import manifestFixtureSchema from "../../../../../../../🔨️modules/🛂️manifest/🧬️schema/🔣️.json";
 import actionSemanticsFixture from "../../../../../../../🔨️modules/🛂️manifest/🧫️fixtures/⚖️action-semantics.json";
 import examplePickerFixture from "../../../../../../../🔨️modules/🛂️manifest/🧫️fixtures/📚️example-picker.json";
-import tutorialDocumentFixture from "../../../../../../../🔨️modules/🛂️manifest/🧫️fixtures/🎞️tutorial-document-track.json";
+import tutorialDocumentFixture from "../../../../../../../🔨️modules/🛂️manifest/🧫️fixtures/🎞️tutorial-artifact-track.json";
 import boardSessionFixture from "../../../../../../../../✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🧫️fixtures/🔣️session-factory.json";
 import boardSessionSchema from "../../../../../../../../✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json";
 import { tutorialSlice, validateTutorial } from "@semio-tech/ui-react";
@@ -748,7 +748,7 @@ describe("Space artifact creation host owner", () => {
         spaceId: owner.spaceId,
         ...(row.generation === "missing" ? {} : { catalogGenerationId: row.generation === "current" ? catalogAuthority.catalogGenerationId : "4".repeat(64) }),
         phase: "ready" as const,
-        ready: { documentId: `artifact-${"2".repeat(32)}`, kindId: owner.kindId, artifactSchema: "s.gis.gismap", parentDialect: { artifactKind: owner.kindId, standard: "1", subset: "*" } },
+        ready: { artifactId: `artifact-${"2".repeat(32)}`, kindId: owner.kindId, artifactSchema: "s.gis.gismap", parentDialect: { artifactKind: owner.kindId, standard: "1", subset: "*" } },
       };
       return spaceArtifactCreationOwnerAcceptsStatus(captured, message as Extract<BackboneWorkerResponse, { kind: "space-artifact-creation-status" }>);
     });
@@ -765,7 +765,7 @@ describe("Space artifact creation host owner", () => {
       spaceId: owner.spaceId,
       catalogGenerationId: owner.expectedCatalogGenerationId,
       phase: "ready" as const,
-      ready: { documentId: `artifact-${"2".repeat(32)}`, kindId: owner.kindId, artifactSchema: "s.gis.gismap", parentDialect: { artifactKind: owner.kindId, standard: "1", subset: "*" } },
+      ready: { artifactId: `artifact-${"2".repeat(32)}`, kindId: owner.kindId, artifactSchema: "s.gis.gismap", parentDialect: { artifactKind: owner.kindId, standard: "1", subset: "*" } },
     };
     const owners: Readonly<Record<string, SpaceArtifactCreationOwnerV1 | null>> = { current: owner, absent: null, ready: { ...owner, ready }, opening: { ...owner, opening: true } };
     const authorities: Readonly<Record<string, SpaceArtifactCreationCatalogAuthorityV1 | null>> = {
@@ -807,7 +807,7 @@ describe("Space artifact creation host owner", () => {
       catalogGenerationId: owner.expectedCatalogGenerationId,
       phase: "ready" as const,
       ready: {
-        documentId: `artifact-${"2".repeat(32)}`,
+        artifactId: `artifact-${"2".repeat(32)}`,
         kindId: "s.gis.gismap",
         artifactSchema: "s.gis.gismap",
         parentDialect: { artifactKind: "s.gis.gismap", standard: "1", subset: "*" },
@@ -817,10 +817,10 @@ describe("Space artifact creation host owner", () => {
     expect(spaceArtifactCreationOwnerAcceptsStatus(owner, { ...ready, requestId: "3".repeat(32) })).toBe(false);
     expect(spaceArtifactCreationOwnerAcceptsStatus(owner, { ...ready, ready: { ...ready.ready, kindId: "s.draw.draw" } })).toBe(false);
     expect(spaceArtifactCreationOwnerAcceptsStatus({ ...owner, ready }, ready)).toBe(true);
-    expect(spaceArtifactCreationOwnerAcceptsStatus({ ...owner, ready }, { ...ready, ready: { ...ready.ready, documentId: `artifact-${"5".repeat(32)}` } })).toBe(false);
+    expect(spaceArtifactCreationOwnerAcceptsStatus({ ...owner, ready }, { ...ready, ready: { ...ready.ready, artifactId: `artifact-${"5".repeat(32)}` } })).toBe(false);
     expect(spaceArtifactCreationReadyOpening(ready)).toEqual({
       artifactRef: "s.gis.gismap@1/*",
-      documentId: `artifact-${"2".repeat(32)}`,
+      artifactId: `artifact-${"2".repeat(32)}`,
       spaceId: "space-a",
       schema: "s.gis.gismap",
     });
@@ -939,7 +939,7 @@ describe("Space artifact creation host owner", () => {
       spaceId: "space-a",
       catalogGenerationId: owner.expectedCatalogGenerationId,
       phase: "ready" as const,
-      ready: { documentId: `artifact-${"4".repeat(32)}`, kindId: "s.draw.draw", artifactSchema: "s.draw.draw", parentDialect: { artifactKind: "s.draw.draw", standard: "1", subset: "*" } },
+      ready: { artifactId: `artifact-${"4".repeat(32)}`, kindId: "s.draw.draw", artifactSchema: "s.draw.draw", parentDialect: { artifactKind: "s.draw.draw", standard: "1", subset: "*" } },
     };
     expect(reduceArtifactCreationProgressUiV1(state, { kind: "status", message: wrongKind })).toBe(state);
     const ready = { ...wrongKind, ready: { ...wrongKind.ready, kindId: owner.kindId, artifactSchema: owner.kindId, parentDialect: { artifactKind: owner.kindId, standard: "1", subset: "*" } } };
@@ -4486,7 +4486,7 @@ describe("framework renderer hosts", () => {
     const validate = peerExport(flowParameterSchema, "GraphParameterV1");
     const command = peerExport(flowParameterSchema, "GraphParameterCommand");
     expect(validate(graphParameterFixture), JSON.stringify(validate.errors)).toBe(true);
-    for (const extra of ["documentJson", "fixtureJson", "operations"]) {
+    for (const extra of ["documentJson", "hostDocumentJson", "operations"]) {
       const malformed = structuredClone(graphParameterFixture);
       (malformed.cases[0] as Record<string, unknown>)[extra] = "{}";
       expect(validate(malformed)).toBe(false);
@@ -4530,7 +4530,7 @@ describe("framework renderer hosts", () => {
         createSpy.mockResolvedValueOnce(session);
         const onAction = vi.fn();
         const view = render(createElement(FlowGraphCanvasHost, {
-          scene: { nodes: [], edges: [], viewport: { x: 0, y: 0, zoom: 1 }, fixtureJson: '{"schema":"flow.fixture","widgets":[]}' },
+          scene: { nodes: [], edges: [], viewport: { x: 0, y: 0, zoom: 1 }, hostDocumentJson: '{"schema":"flow.host_document","widgets":[]}' },
           controllerId: item.controllerId, surfaceId: item.surfaceId, editable: true, onAction,
         }));
         await waitFor(() => expect(view.getByRole("slider", { name: item.label })).toBeTruthy());
@@ -4586,7 +4586,7 @@ describe("framework renderer hosts", () => {
       nodes: [],
       edges: [],
       viewport: { x: 0, y: 0, zoom: 1 },
-      fixtureJson: JSON.stringify({ schema: "flow.fixture", revision, widgets: [] }),
+      hostDocumentJson: JSON.stringify({ schema: "flow.host_document", revision, widgets: [] }),
     });
     const host = (id: "A" | "B", revision: number) => createElement(FlowGraphCanvasHost, {
       key: id,
@@ -4634,7 +4634,7 @@ describe("framework renderer hosts", () => {
       nodes: [],
       edges: [],
       viewport: { x: 0, y: 0, zoom: 1 },
-      fixtureJson: JSON.stringify({ schema: "flow.fixture", revision, widgets: [] }),
+      hostDocumentJson: JSON.stringify({ schema: "flow.host_document", revision, widgets: [] }),
     });
     const host = (id: "A" | "B", revision: number) => createElement(FlowGraphCanvasHost, {
       scene: scene(revision),
@@ -5620,8 +5620,17 @@ describe("framework renderer hosts", () => {
     expect(world3dProjectionContentFrameMounted(false, true, false)).toBe(true);
   });
 
-  it("world3dFrameVisibleOverlayOffered survives an enabled fit lane, because boot framing is not a reframe affordance", () => {
-    expect(world3dFrameVisibleOverlayOffered()).toBe(true);
+  it("world3dFrameVisibleOverlayOffered keeps the manual reframe when the fit lane carries published bounds, and hides it for scene-graph-only fit lanes", () => {
+    expect(world3dFrameVisibleOverlayOffered(null)).toBe(true);
+    expect(world3dFrameVisibleOverlayOffered({ enabled: false })).toBe(true);
+    expect(world3dFrameVisibleOverlayOffered({ enabled: true })).toBe(false);
+    expect(
+      world3dFrameVisibleOverlayOffered({
+        enabled: true,
+        boundsMin: [0, 0, 0],
+        boundsMax: [1, 1, 1],
+      }),
+    ).toBe(true);
   });
 
   it("world3dFrameDistanceForRadius stands the eye off far enough that the whole bounding sphere projects inside the frustum", () => {
@@ -5644,6 +5653,16 @@ describe("framework renderer hosts", () => {
   it("world3dBoundsRadius is the bounding-sphere radius, never half the longest edge", () => {
     expect(world3dBoundsRadius([0, 0, 0], [2, 2, 2])).toBeCloseTo(Math.sqrt(3), 6);
     expect(world3dBoundsRadius([-1.2, -1.2, -1.2], [1.5, 1.5, 1.5])).toBeCloseTo((Math.sqrt(3) * 2.7) / 2, 6);
+  });
+
+  it("a camera report never invents a target", () => {
+    expect(worldCameraReportTargetV1({ mouseButtons: {}, target: { x: 1.5, y: -2, z: 3 } as never })).toEqual({ x: 1.5, y: -2, z: 3 });
+    expect(worldCameraReportTargetV1(null)).toBeNull();
+    expect(worldCameraReportTargetV1(undefined)).toBeNull();
+    expect(worldCameraReportTargetV1({ mouseButtons: {} })).toBeNull();
+    expect(worldCameraReportTargetV1({ mouseButtons: {}, target: { x: Number.NaN, y: 0, z: 0 } as never })).toBeNull();
+    expect(worldCameraReportTargetV1({ mouseButtons: {}, target: { x: 0, y: Number.POSITIVE_INFINITY, z: 0 } as never })).toBeNull();
+    expect(worldCameraReportTargetV1({ mouseButtons: {}, target: { x: 0, y: 0, z: 0 } as never })).toEqual({ x: 0, y: 0, z: 0 });
   });
 
   it("world3dAutoFitOwed frames the first delivery of a document and never yanks a camera the user moved on it", () => {
@@ -7219,12 +7238,12 @@ describe("s workflow flow routing", () => {
   // — leaves the inspector out of the request entirely, so it keeps whatever it last rendered.
   it("a partial scope naming a panel body requests that panel, and one that omits it does not", () => {
     const leaves = [
-      { kind: { kind: "app" as const, id: "framework.panel.artifact" }, bodyKey: "puzzle.3d.play.document" },
+      { kind: { kind: "app" as const, id: "framework.panel.artifact" }, bodyKey: "puzzle.3d.play.artifact" },
       { kind: { kind: "app" as const, id: "framework.panel.inspection" }, bodyKey: "puzzle.3d.play.inspector" },
     ];
     const windows = [{ id: "puzzle3d-main", bodyKey: "puzzle3d.play.composite" }];
     const named = buildUiRefreshRequest(
-      { kind: "partial", windowBodies: ["puzzle3d.play.composite"], panelBodies: ["puzzle.3d.play.inspector", "puzzle.3d.play.document"], measures: true },
+      { kind: "partial", windowBodies: ["puzzle3d.play.composite"], panelBodies: ["puzzle.3d.play.inspector", "puzzle.3d.play.artifact"], measures: true },
       windows,
       leaves,
       {},
@@ -8931,7 +8950,7 @@ describe("shell option locks (SEMIO_LOCKED_*)", () => {
     // owes the reserved history body its row (wave B21 put the patch on the terminal completion).
     const admission = browserActorDispatchUiScopeV1({ outcome: "guest-applied", mutationCount: 0 });
     expect(admission).toEqual({ kind: "none" });
-    const documentScope = { kind: "partial", panelBodies: ["puzzle.3d.play.document", "puzzle.3d.play.inspector"], measures: true } as const;
+    const documentScope = { kind: "partial", panelBodies: ["puzzle.3d.play.artifact", "puzzle.3d.play.inspector"], measures: true } as const;
     expect(typedOperationCompletionRefreshV1({ uiScope: documentScope, historyPatch: { cursor: 3, upserts: [{ seq: 3 }] }, requestedEffects: [] })).toEqual(documentScope);
     expect(typedOperationCompletionRefreshV1({ uiScope: undefined, historyPatch: undefined, requestedEffects: [] })).toEqual({ kind: "full" });
     expect(typedOperationCompletionRefreshV1({ uiScope: { kind: "none" }, historyPatch: { cursor: 4, upserts: [{ seq: 4 }] }, requestedEffects: [] })).toEqual({
@@ -8979,12 +8998,12 @@ describe("shell option locks (SEMIO_LOCKED_*)", () => {
     // 10 s, wave B27).
     expect(hostEffectRefreshScopeV1([{ notify: { message: "refused" } }], { kind: "none" }, bodyKeys)).toEqual({ kind: "none" });
     expect(hostEffectRefreshScopeV1([{ clipboardWrite: { text: "x" } }, { dispatchAction: { actionId: "x" } }, "requestSync"], { kind: "none" }, bodyKeys)).toEqual({ kind: "none" });
-    const documentScope = { kind: "partial", panelBodies: ["puzzle.3d.play.document"], measures: true } as const;
+    const documentScope = { kind: "partial", panelBodies: ["puzzle.3d.play.artifact"], measures: true } as const;
     expect(hostEffectRefreshScopeV1([{ notify: { message: "done" } }], documentScope, bodyKeys), "an effect that earns nothing must leave a declared scope exactly as it is").toBe(documentScope);
     expect(hostEffectRefreshScopeV1([{ setActiveUtility: { windowId: "w", utilityId: "brush" } }], documentScope, bodyKeys), "the earned scope is UNIONED with the declared one, never substituted for it").toEqual({
       kind: "partial",
       windowBodies: ["puzzle.3d.play.viewport"],
-      panelBodies: ["puzzle.3d.play.document"],
+      panelBodies: ["puzzle.3d.play.artifact"],
       utilities: true,
       tools: true,
       engagements: false,
@@ -8992,6 +9011,35 @@ describe("shell option locks (SEMIO_LOCKED_*)", () => {
       labels: false,
     });
     console.warn("[DEBUG] b37 effect scope", JSON.stringify({ declared, earned }));
+  });
+
+  /** 🔁️ A pass's OWED effects are applied under the scope that pass declared — never a wider one.
+   *
+   * 🐛️ `ShellHost`'s ui-refresh lane handed `{ kind: "full" }` to `applyHostEffects` for every owed
+   * application, so each React pick paid a whole extra full guest re-render on top of the narrowed
+   * scope the interaction had just derived: `[DEBUG] refreshUi lane {"decision":"owed","scope":{"kind":"full"}}`,
+   * four of them per pick, which is why narrowing the pick's own scope moved its wall not at all
+   * (`📓️interaction-scope-narrowing-2026-09-15.md` §5.3, whose owner this law names). The effects a
+   * pass owes are `pending_effects` — `dispatchAction` shapes — and this proves they earn NOTHING of
+   * their own, so `full` was the hardcode and not a derivation.
+   */
+  it("applies a pass's owed effects under that pass's own scope, never a hardcoded full one", () => {
+    const bodyKeys = ["procedural.play.main", "procedural.play.preview", "procedural.play.generate-preview"] as const;
+    const passScope = { kind: "partial", windowBodies: ["procedural.play.main", "procedural.play.preview"], panelBodies: [], utilities: false, tools: false, engagements: false, measures: false, labels: false } as const;
+    const owedEffects = [{ dispatchAction: { req: 103, action: "flowEvalTick", args: {}, delayMs: 0 } }, { dispatchAction: { req: 104, action: "toolRunStart", args: { toolId: "previewEval" }, delayMs: 0 } }];
+    expect(hostEffectRefreshScopeV1(owedEffects, passScope, bodyKeys), "a pass's owed pending_effects earn no scope of their own").toBe(passScope);
+    expect(hostEffectRefreshScopeV1(owedEffects, { kind: "full" }, bodyKeys), "so the only thing that ever made the owed pass full was the caller").toEqual({ kind: "full" });
+
+    const shellHostRelative = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx";
+    let shellHostRoot = process.cwd();
+    for (let hop = 0; hop < 12 && !existsSync(`${shellHostRoot}/${shellHostRelative}`); hop += 1) shellHostRoot = `${shellHostRoot}/..`;
+    expect(existsSync(`${shellHostRoot}/${shellHostRelative}`)).toBe(true);
+    const shellHost = readFileSync(`${shellHostRoot}/${shellHostRelative}`, "utf8");
+    const lane = shellHost.slice(shellHost.indexOf("uiRefreshLaneRef.current = createUiRefreshCoalescerV1"), shellHost.indexOf("const refreshUi = useCallback"));
+    expect(lane, "the lane applies the scope the pass recorded").toContain("applyHostEffectsRef.current(owedEffects.effects, owedEffects.session, owedEffects.scope, owedEffects.owner)");
+    expect(lane.includes('{ kind: "full" }'), "and names no scope of its own").toBe(false);
+    expect(shellHost, "the owed slot records the pass's scope when it records the effects").toContain("owedPassEffectsRef.current = { effects: pendingRefreshEffects, session: nextSession, owner: refreshOwner, scope: scopeArg }");
+    console.warn("[DEBUG] owed-pass scope: pending effects earn nothing, the lane carries the pass's own scope");
   });
 
   // 📚️ The language-agnostic half of the picker: which examples a surface may offer at all. Rust
@@ -10535,7 +10583,7 @@ describe("node-graph surface sizing", () => {
     const session = vi.spyOn(flowSessionLoader, "createFlowSession").mockReturnValue(new Promise(() => {}));
     vi.stubGlobal("devicePixelRatio", 2);
     const view = render(createElement(FlowGraphCanvasHost, {
-      scene: { nodes: [], edges: [], viewport: { x: 0, y: 0, zoom: 1 }, fixtureJson: '{"schema":"flow.fixture","widgets":[]}' },
+      scene: { nodes: [], edges: [], viewport: { x: 0, y: 0, zoom: 1 }, hostDocumentJson: '{"schema":"flow.host_document","widgets":[]}' },
       controllerId: "procedural", surfaceId: "procedural.main", editable: true, onAction: noopAction,
     }));
     try {
@@ -10579,7 +10627,7 @@ function hexagonalMushroomColumnScene(): NodeGraphScene {
     .map(([source, target]) => ({ id: `${source}->${target}`, sourceNodeId: source!, sourcePortId: "out", targetNodeId: target!, targetPortId: "in" }));
   return {
     nodes, edges, viewport: { x: 0, y: 0, zoom: 1.78 }, editable: true,
-    fixtureJson: JSON.stringify({ schema: "flow.fixture", widgets: nodes.map((node) => ({ id: node.id, x: node.x, y: node.y })) }),
+    hostDocumentJson: JSON.stringify({ schema: "flow.host_document", widgets: nodes.map((node) => ({ id: node.id, x: node.x, y: node.y })) }),
   };
 }
 
@@ -11528,7 +11576,6 @@ describe("🛑️ world3d cancel contract", () => {
       const { controlHeightPx, surfaceControlMinimum } = surfaceControlsFixture;
       const fits = (bounds: readonly number[]) => bounds[2] >= surfaceControlMinimum.widthControlHeights * controlHeightPx && bounds[3] >= surfaceControlMinimum.heightControlHeights * controlHeightPx;
       const ids = [
-        ...row.graphs.filter((graph: { bounds: number[] }) => fits(graph.bounds)).map((graph: { surfaceId: string }) => `shell.nodeGraph.fit::${graph.surfaceId}`),
         ...row.worlds
           .filter((world: { bounds: number[]; statusJson: string | null }) => fits(world.bounds) && world3dComputeStatusV1(world.statusJson).cancellable)
           .map((world: { surfaceId: string }) => `shell.world3d.cancel::${world.surfaceId}`),
@@ -11653,6 +11700,23 @@ describe("⏳️ world3d compute status pane", () => {
       expect(status.ratio, row.id).toBeCloseTo(row.expected.ratio, 9);
     }
     console.log("[DEBUG] world3d status pane reproduced all %s shared fixture rows", rows.length);
+  });
+
+  it("carries the producer's own empty-surface hint, and an idle surface that HAS one is not silent", () => {
+    // 🕳️ `preview_hint` reached `data-status-json` and stopped there: this reader dropped the field
+    // and nothing painted it, so a user looking at an empty generate preview was told nothing
+    // (`panel-i18n · de:preview_hint`). The pane's own gate is `computing || cancellable ||
+    // phase === "cancelled"`; the hint branch is what an IDLE surface with something to say uses.
+    const german = "(Generation auswerten, um die Ausgabe in der Vorschau zu sehen)";
+    const withHint = world3dComputeStatusV1(JSON.stringify({ computing: false, phase: "idle", hint: german }));
+    expect(withHint.hint).toBe(german);
+    expect(isVisible(withHint)).toBe(false);
+    expect(withHint.hint.length > 0).toBe(true);
+    const withoutHint = world3dComputeStatusV1(JSON.stringify({ computing: false, phase: "idle" }));
+    expect(withoutHint.hint).toBe("");
+    expect(world3dComputeStatusV1(JSON.stringify({ hint: 42 })).hint).toBe("");
+    expect(world3dComputeStatusV1(JSON.stringify({ hint: "x".repeat(400) })).hint.length).toBe(200);
+    for (const row of rows) expect(typeof world3dComputeStatusV1(row.statusJson).hint, row.id).toBe("string");
   });
 
   it("shows the pane for exactly the unsettled rows, with exactly the declared progress text", () => {

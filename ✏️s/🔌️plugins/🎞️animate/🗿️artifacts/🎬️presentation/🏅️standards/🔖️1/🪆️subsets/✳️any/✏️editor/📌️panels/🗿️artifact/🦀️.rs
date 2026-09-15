@@ -8,16 +8,16 @@ use semio_framework_plugin::{tree_item_desc, LocalizedLabel, PanelGroup, PanelTa
 use semio_framework_ui_contract::BuiltNode;
 
 //#region 🔖️Constants
-pub const PRESENTATION_PLAY_BODY_DOCUMENT: &str = "animate.presentation.play.document";
+pub const PRESENTATION_PLAY_BODY_ARTIFACT: &str = "animate.presentation.play.artifact";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
 pub fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_ARTIFACT_ID.into()),
-        label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Dokument"),
+        label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Artefakt"),
         group: PanelGroup::Workbench,
-        body_key: Some(PRESENTATION_PLAY_BODY_DOCUMENT.into()),
+        body_key: Some(PRESENTATION_PLAY_BODY_ARTIFACT.into()),
         children: Vec::new(),
     }
 }

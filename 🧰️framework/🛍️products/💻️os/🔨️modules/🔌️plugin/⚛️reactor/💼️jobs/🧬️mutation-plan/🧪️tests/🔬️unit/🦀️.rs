@@ -6,8 +6,8 @@ use store::{ArtifactPack, OpBinary};
 /// `job_mutation_plan`'s `execute` phase reads from, mirroring `🔌️plugin/🦀️.rs`'s own
 /// `contributed_mutation_wire_tests::commit_test_contribution` fixture recipe (that helper is
 /// private to its own test module, so this is a from-scratch copy, not a shared import).
-async fn commit_job_test_contribution(artifact_kind: &str, target_document_schema: &str, contributor: &str) -> String {
-    let contribution = crate::app::ArtifactContribution::builder(artifact_kind).await.mutation::<JobTestSnapshot, JobTestOp, AddValue>(target_document_schema, 1, 1).await.build();
+async fn commit_job_test_contribution(artifact_kind: &str, target_artifact_schema: &str, contributor: &str) -> String {
+    let contribution = crate::app::ArtifactContribution::builder(artifact_kind).await.mutation::<JobTestSnapshot, JobTestOp, AddValue>(target_artifact_schema, 1, 1).await.build();
     let (descriptor, _inferences, mutation_runtime) = contribution.resolve(contributor);
     let mutation_id = descriptor.mutations[0].mutation_id.clone();
     crate::app::commit_contributed_mutation_services(mutation_runtime).await.expect("commit contributed mutation services");

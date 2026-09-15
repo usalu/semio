@@ -4,7 +4,7 @@ use crate::{empty_plugin, sample_plugin};
 #[semio_framework_async_macros::async_test]
 async fn the_tab_is_the_framework_document_tab_bound_to_this_apps_body_key() {
     let definition = definition();
-    assert_eq!(definition.body_key.as_deref(), Some(ARCHITECT_BODY_DOCUMENT));
+    assert_eq!(definition.body_key.as_deref(), Some(ARCHITECT_BODY_ARTIFACT));
     assert!(matches!(definition.group, PanelGroup::Workbench));
 }
 

@@ -33,10 +33,10 @@ pub fn definition() -> PanelTabDefinition {
 /// `"machine:{id}"` — the SAME canonical `"geometry"` domain target the old `selected_id` used for a
 /// machine pick — so `.interaction_domain` binding stamps/prunes this section correctly; the catalog
 /// sections stay un-bound (their items are install actions, not domain targets)?.
-pub fn render(fixture: &Process3dSnapshot, contributions_json: &str, labels: &Process3dLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(snapshot: &Process3dSnapshot, contributions_json: &str, labels: &Process3dLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let mut builder = PanelTreeBuilder::new("process3d-play-workshop")?;
     let mut machine_items = semio_framework_plugin::UiFixedList::default();
-    for machine in &fixture.workshop.machines {
+    for machine in &snapshot.workshop.machines {
         let args = crate::editor::process3d::ui_value_map([("id", crate::editor::process3d::ui_value_text(&machine.id)?)])?;
         let (action, args) = process3d_action("removeWorkshopMachine", Some(args))?;
         let mut row_actions = semio_framework_plugin::UiFixedList::default();
@@ -56,7 +56,7 @@ pub fn render(fixture: &Process3dSnapshot, contributions_json: &str, labels: &Pr
         machine_items.try_push(item).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.workshop.machines", "fixed workshop machine admission failed"))?;
     }
     builder = builder.section("process3d-play-workshop.machines", Some(crate::editor::process3d::ui_label(labels.machines.as_str())?), true, machine_items)?.interaction_domain(PROCESS3D_INTERACTION_DOMAIN)?;
-    let installed_ids: std::collections::BTreeSet<&str> = fixture.workshop.machines.iter().map(|machine| machine.id.as_str()).collect();
+    let installed_ids: std::collections::BTreeSet<&str> = snapshot.workshop.machines.iter().map(|machine| machine.id.as_str()).collect();
     for catalog in installed_catalogs(contributions_json) {
         let catalog_id = catalog.catalog_id();
         let installable: Vec<_> = catalog.machines().into_iter().filter(|machine| !installed_ids.contains(machine.id.as_str())).collect();

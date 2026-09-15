@@ -8,8 +8,8 @@ use store::{create_document_envelope, ArtifactCommand};
 async fn leaf_detection_preserves_language_neutral_plan_vectors() {
     let suite: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).expect("detection fixture JSON");
     for case in suite["cases"].as_array().expect("detection cases") {
-        let before: SequenceFixture = dsl::os_pack::from_json_str(&case["before"].to_string()).expect("before fixture");
-        let after: SequenceFixture = dsl::os_pack::from_json_str(&case["after"].to_string()).expect("after fixture");
+        let before: SequenceHostDocument = dsl::os_pack::from_json_str(&case["before"].to_string()).expect("before fixture");
+        let after: SequenceHostDocument = dsl::os_pack::from_json_str(&case["after"].to_string()).expect("after fixture");
         let expected: Vec<SequenceMutation> = dsl::os_pack::from_json_str(&case["expected"].to_string()).expect("expected mutations");
         assert_eq!(sequence_snapshot_mutations(&before, &after), expected, "{}", case["id"]);
     }
@@ -33,17 +33,17 @@ async fn create_edit_delete_step_round_trip() {
     let snapshot = default_snapshot();
     let step = SequenceStep { id: "step-99".into(), kind: "log.print".into(), params: StepParams::new(), x: 5.0, y: 6.0, slot: None, collapsed: false };
     let added = round_trip(&snapshot, &create_step(step));
-    assert_eq!(added.to_fixture().steps.len(), 3);
+    assert_eq!(added.to_host_document().steps.len(), 3);
     let moved = round_trip(&added, &move_step("step-99".into(), 120.0, 6.0));
-    assert_eq!(moved.to_fixture().steps.iter().find(|step| step.id == "step-99").unwrap().x, 120.0);
+    assert_eq!(moved.to_host_document().steps.iter().find(|step| step.id == "step-99").unwrap().x, 120.0);
     let removed = round_trip(&moved, &delete_step("step-99".into()));
-    assert!(!removed.to_fixture().steps.iter().any(|step| step.id == "step-99"));
+    assert!(!removed.to_host_document().steps.iter().any(|step| step.id == "step-99"));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn delete_step_severs_and_reconnects_edges() {
     let snapshot = default_snapshot();
-    assert!(snapshot.to_fixture().edges.iter().any(|edge| edge.from == "step-1" && edge.to == "step-2"));
+    assert!(snapshot.to_host_document().edges.iter().any(|edge| edge.from == "step-1" && edge.to == "step-2"));
     round_trip(&snapshot, &delete_step("step-1".into()));
 }
 
@@ -52,7 +52,7 @@ async fn snapshot_mutations_capture_move_and_connect() {
     // 🧭️ Built by hand rather than via `SequenceHost` (that editing host now lives in
     // `the sibling editor module` — an artifact must never depend on an app): a step add is enough
     // to exercise `sequence_snapshot_mutations`'s before/after diff directly.
-    let before = default_snapshot().to_fixture();
+    let before = default_snapshot().to_host_document();
     let id = "step-99".to_string();
     let mut after = before.clone();
     after.steps.push(SequenceStep { id: id.clone(), kind: "math.add".into(), params: StepParams::new(), x: 40.0, y: 40.0, slot: None, collapsed: false });
@@ -67,7 +67,7 @@ async fn store_applies_and_undoes_step_create() {
         .dispatch(ArtifactCommand::Apply { mutations: vec![create_step(SequenceStep { id: "step-7".into(), kind: "log.print".into(), params: StepParams::new(), x: 0.0, y: 0.0, slot: None, collapsed: false })], description: None })
         .await
         .expect("apply");
-    assert_eq!(store.snapshot().expect("snapshot").to_fixture().steps.len(), 3);
+    assert_eq!(store.snapshot().expect("snapshot").to_host_document().steps.len(), 3);
 }
 
 //#region 🔖️MutationLaws

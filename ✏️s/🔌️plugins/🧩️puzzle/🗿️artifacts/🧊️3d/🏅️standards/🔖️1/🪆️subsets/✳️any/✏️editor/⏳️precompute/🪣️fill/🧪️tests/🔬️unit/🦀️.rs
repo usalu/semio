@@ -886,7 +886,8 @@ fn fill_run_job_matches_the_language_neutral_fill_run_fixture() {
         let count = |wanted: ToolRunVerdict| mirror.verdicts.iter().filter(|(_, verdict, _)| *verdict == wanted).count() as u64;
         assert_eq!((count(ToolRunVerdict::Success), count(ToolRunVerdict::Danger), count(ToolRunVerdict::Warning)), (locked, collisions + marked, rejected));
         assert_eq!(mirror.verdicts.len() as u64, tested + marked, "every constructed candidate reached exactly one verdict and every marked vortex one danger record");
-        assert_eq!(mirror.trace.len() as u64, tested + marked, "every tested candidate and every marked vortex stays resident");
+        let candidates = mirror.trace.len() as u64 - marked;
+        assert!(mirror.trace.len() as u64 >= marked && candidates <= 1, "only the last tested candidate stays resident next to every marked vortex: {candidates} candidates, {marked} marked");
         for (index, pair) in mirror.ops.chunks(2).enumerate() {
             let Ok(Puzzle3dMutation::CreateObject(create)) = crate::standards::v1::subsets::any::schema::mutations::binary::decode_op(&pair[0]) else { panic!("op {} is create_object", 2 * index) };
             let Ok(Puzzle3dMutation::ConnectVortices(connect)) = crate::standards::v1::subsets::any::schema::mutations::binary::decode_op(&pair[1]) else { panic!("op {} is connect_vortices", 2 * index + 1) };
@@ -1065,7 +1066,8 @@ fn fill_run_job_collision_verdicts_agree_with_the_parry3d_oracle() {
 
 /// ⚖️ LAW: a long run (at least the fixture's `candidates` tested) delivers every trace record — the ledger's resident
 /// store and a renderer that only ever reads byte-budgeted deltas through its echoed cursor hold exactly the key set the
-/// job reported (one per tested candidate and one per marked vortex), with the verdict the job reported last.
+/// job reported (every marked vortex and the ONE candidate still on screen — each newly tested candidate retires the
+/// previous one), with the verdict the job reported last.
 #[test]
 fn fill_run_job_delivers_every_trace_record_of_a_long_run() {
     let fixture: serde_json::Value = serde_json::from_str(FILL_RUN_FIXTURE).expect("fill run fixture");
@@ -1127,7 +1129,7 @@ fn fill_run_job_delivers_every_trace_record_of_a_long_run() {
     }
     assert!(job.counters()[0] >= minimum, "the delivery law needs at least {minimum} tested candidates, the run reached {:?}", job.counters());
     let keys = |store: &ToolRunTraceStore| store.records().map(|(key, record)| (key, record.verdict)).collect::<HashMap<_, _>>();
-    assert_eq!(expected.len() as u64, job.counters()[0] + job.counters()[4]);
+    assert!(expected.len() as u64 >= job.counters()[4] && expected.len() as u64 <= job.counters()[4] + 1, "marked vortices plus at most the current candidate stay resident: {} records, counters {:?}", expected.len(), job.counters());
     assert_eq!(keys(&ledger.trace), expected, "the ledger holds every reported record");
     assert_eq!(keys(&renderer), expected, "a cursor-driven renderer holds every reported record");
 }
@@ -1295,6 +1297,51 @@ fn fill_run_job_step_with_one_unit_of_fuel_shows_each_candidate_before_its_verdi
     assert_eq!(job.counters()[1], 24);
 }
 
+/// ⚖️ LAW: the run shows ONE candidate at a time. After every tick the resident trace holds the marked vortices and at
+/// most one candidate record — the newest tested one, `testing` while under test, then its collision (`danger`) or fit
+/// (`success`) — because each newly constructed candidate retires the previous one. A placement stays visible as its
+/// provisional document instance, never as a pile of past collision records.
+#[test]
+fn fill_run_job_keeps_only_the_current_candidate_on_screen() {
+    // 🧫️ The fixture's concrete-forest seed 3 run: 40 placements, collisions and marked vortices all occur.
+    let (roots, lane, _) = example_fill_roots("concrete-forest", 3);
+    let mut job = fill_run_job(roots, lane, 3, 40);
+    let mut mirror = FillRunMirror::new();
+    let mut sequence = 0;
+    let mut newest: Option<u64> = None;
+    let (mut ticks, mut danger_shown) = (0usize, false);
+    for _ in 0..1_000_000 {
+        match fill_run_turn(&mut job, 8, &mut sequence) {
+            FillRunTurn::Tick(tick) => {
+                for op in tick.trace.iter().flat_map(|page| &page.ops) {
+                    if let ToolRunTraceOp::Upsert { key, reason, .. } = op {
+                        if *reason != FillRunReason::VortexExhausted.code() {
+                            newest = Some(newest.map_or(*key, |current| current.max(*key)));
+                        }
+                    }
+                }
+                mirror.apply(tick);
+                ticks += 1;
+                let candidates: Vec<(u64, ToolRunVerdict)> = mirror.trace.records().filter(|(_, record)| record.reason != FillRunReason::VortexExhausted.code()).map(|(key, record)| (key, record.verdict)).collect();
+                assert!(candidates.len() <= 1, "tick {ticks}: only the current candidate may be on screen, resident {candidates:?}");
+                if let Some((key, verdict)) = candidates.first() {
+                    assert_eq!(Some(*key), newest, "tick {ticks}: the resident candidate is the newest tested one");
+                    danger_shown |= *verdict == ToolRunVerdict::Danger;
+                }
+            }
+            FillRunTurn::Checkpoint(bytes) => mirror.checkpoints.push(bytes),
+            FillRunTurn::Yield => {}
+            FillRunTurn::Complete => break,
+        }
+    }
+    let [tested, locked, collisions, _, marked] = job.counters();
+    assert_eq!(locked, 40);
+    assert!(marked > 0, "the law needs a marked vortex next to the current candidate");
+    assert!(collisions > 0 && danger_shown, "the law needs a colliding candidate on screen ({collisions} collisions)");
+    assert!(tested > locked + 1, "the law needs more tested candidates than the one on screen ({tested} tested)");
+    assert_eq!(mirror.trace.records().filter(|(_, record)| record.reason == FillRunReason::VortexExhausted.code()).count() as u64, marked, "every marked vortex stays marked");
+}
+
 fn nakagin_scale_run(requested: usize) -> (FillRunJob, FillRunMirror) {
     let mut job = FillRunJob::new(FillBuilder::begin_preparation(nakagin_scale_roots(), Operation::new(OperationId(79), RevisionId(1), Generation(1), 43), requested), fill_run_identity(), vec![NAKAGIN_MESH_URL.to_string()], [0; 32]);
     let mut mirror = FillRunMirror::new();
@@ -1333,8 +1380,10 @@ fn fill_run_job_resume_raise_continues_the_sequence_and_lower_retracts_the_tail(
     assert_eq!(lowered_mirror.retractions.iter().min().copied(), Some(LOWERED as u32 * FILL_RUN_OPS_PER_PLACEMENT), "the lowered run retracts to exactly the lowered count");
     assert_eq!(lowered_mirror.ops.as_slice(), &before[..LOWERED * 2]);
     assert_eq!((lowered_mirror.entities.len(), lowered.counters()[1], lowered.builder().sequence.len()), (LOWERED, LOWERED as u64, LOWERED));
-    let success = lowered_mirror.trace.records().filter(|(_, record)| record.verdict == ToolRunVerdict::Success).count();
-    assert_eq!(success, LOWERED, "every retracted placement's success record was retired");
+    assert!(
+        lowered_mirror.trace.records().filter(|(_, record)| record.verdict == ToolRunVerdict::Success).all(|(key, _)| lowered.placement_keys.iter().any(|(kept, _)| *kept == key)),
+        "no retracted placement's success record stays resident"
+    );
 
     let mut foreign = FillRunCheckpoint::decode(&checkpoint).expect("checkpoint");
     foreign.next_key += 1_000;
@@ -1378,7 +1427,10 @@ fn fill_run_job_rebuilt_from_a_checkpoint_replays_silently_and_continues_like_th
     lowered.drive(&mut rebuilt, u64::MAX, 1_000_000);
     assert_eq!(lowered.retractions.iter().min().copied(), Some(LOWERED as u32 * FILL_RUN_OPS_PER_PLACEMENT), "the rebuilt lower retracts to exactly the lowered count");
     assert_eq!(lowered.ops.as_slice(), &before[..LOWERED * FILL_RUN_OPS_PER_PLACEMENT as usize]);
-    assert_eq!(lowered.trace.records().filter(|(_, record)| record.verdict == ToolRunVerdict::Success).count(), LOWERED, "every retracted placement's success record was retired");
+    assert!(
+        lowered.trace.records().filter(|(_, record)| record.verdict == ToolRunVerdict::Success).all(|(key, _)| rebuilt.placement_keys.iter().any(|(kept, _)| *kept == key)),
+        "no retracted placement's success record stays resident"
+    );
 
     let (_, mut restarted) = nakagin_scale_run(SHORT);
     let mut foreign = checkpoint;
@@ -1403,7 +1455,7 @@ fn fill_run_job_capacity_refusal_publishes_a_danger_step_before_faulting() {
     let mut sequence = 0;
     let FillRunTurn::Tick(tick) = fill_run_turn(&mut job, u64::MAX, &mut sequence) else { panic!("the refusal is published as a tick first") };
     assert!(tick.append_ops.is_empty(), "nothing is placed");
-    assert_eq!(tick.steps.iter().map(|step| (step.kind, step.reason, step.args.clone())).collect::<Vec<_>>(), vec![(ToolRunStepKind::Danger, FillRunReason::DocumentCapacity.code(), vec![ToolRunStepArg::Unsigned(DOCUMENT_OBJECT_SLOTS as u64)])]);
+    assert_eq!(tick.steps.iter().map(|step| (step.kind, step.reason, step.args.clone())).collect::<Vec<_>>(), vec![(ToolRunStepKind::Danger, FillRunReason::ArtifactCapacity.code(), vec![ToolRunStepArg::Unsigned(DOCUMENT_OBJECT_SLOTS as u64)])]);
     let operation = job.operation();
     let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(u64::MAX, u64::MAX), root_cancel_token(), never, &mut sequence);
     let StepOutcome::Fault(fault) = job.step(&mut context) else { panic!("the step after the danger step faults the run") };
@@ -1658,7 +1710,7 @@ fn fill_run_ends_visibly_with_a_declared_reason_for_every_case_and_own_mesh_vari
     assert!(disagreements.is_empty(), "the visible-end law disagrees:\n{}", disagreements.join("\n"));
 }
 
-/// 🚧️ LAW (ticket lane W1-H): a document page that fills mid-plan ends the run with the `document-capacity` warning step over
+/// 🚧️ LAW (ticket lane W1-H): an artifact page that fills mid-plan ends the run with the `artifact-capacity` warning step over
 /// what was already placed, the candidate under test reaching its verdict first — never a bare `Complete` the ledger cannot
 /// explain.
 #[test]
@@ -1680,7 +1732,7 @@ fn fill_run_job_mid_plan_capacity_stall_ends_with_a_visible_warning_step() {
     }
     job.builder.collection_over_capacity = true;
     mirror.drive(&mut job, u64::MAX, 1_000);
-    assert_eq!(fill_run_visible_end("mid-plan capacity", &job, &mirror, 8), Some(FillRunReason::DocumentCapacity.id()));
+    assert_eq!(fill_run_visible_end("mid-plan capacity", &job, &mirror, 8), Some(FillRunReason::ArtifactCapacity.id()));
     let [tested, locked, _, _, _] = job.counters();
     assert_eq!((locked, mirror.verdicts.len() as u64), (1, tested), "one placement, and every tested candidate reached its verdict");
 }

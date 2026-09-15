@@ -42,7 +42,7 @@ pub fn plugin() -> Result<Plugin<BlockApps>, PluginAssemblyError> {
         .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_block_3d::artifact_kind().id })
         .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_block_5d::artifact_kind().id })
         .execution(ExecutionMode::Isolated)
-        .requests(CapabilityRequest { id: CapabilityId("documents.write".into()), scope: "plugin".into(), reason: "persist block2d/block3d/block5d edits to the open document".into(), optional: false })
+        .requests(CapabilityRequest { id: CapabilityId("artifacts.write".into()), scope: "plugin".into(), reason: "persist block2d/block3d/block5d edits to the open document".into(), optional: false })
         .try_build()
 }
 //#endregion 🔌️Registration

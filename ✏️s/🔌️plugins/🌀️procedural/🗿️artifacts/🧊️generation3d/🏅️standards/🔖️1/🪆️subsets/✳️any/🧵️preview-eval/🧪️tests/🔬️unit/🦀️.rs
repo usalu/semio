@@ -229,7 +229,7 @@ fn every_run_effects_row_starts_finalizes_or_leaves_the_run() {
             link.settled = Some((run.identity.id.run, settled as u32));
         }
         link.restart_owed = row["restartOwed"].as_bool().unwrap_or(false);
-        let effects = preview_eval_run_effects(&mut session, &mut link, &windows, run.as_ref(), row["servable"].as_bool().unwrap_or(true));
+        let effects = preview_eval_run_effects(&mut session, &mut link, &windows, run.as_ref(), row["servable"].as_bool().unwrap_or(true), 0);
         let actions: Vec<&str> = effects.iter().map(|effect| match effect {
             Effect::DispatchAction { action, .. } => action.as_str(),
             other => panic!("{id}: the run owes only dispatches, found {other:?}"),
@@ -255,7 +255,7 @@ fn replay_pending_effects(session: &mut FlowEvalSession, link: &mut PreviewEvalR
     let mut starts = 0_usize;
     let mut landing: Option<(usize, ToolRunState)> = None;
     for _ in 0..polls {
-        for effect in preview_eval_run_effects(session, link, windows, view.as_ref(), servable) {
+        for effect in preview_eval_run_effects(session, link, windows, view.as_ref(), servable, 0) {
             let Effect::DispatchAction { action, .. } = effect else { panic!("the run owes only dispatches") };
             let state = match action.as_str() {
                 TOOL_RUN_START_ACTION_ID => {
@@ -334,7 +334,7 @@ fn every_gesture_rearm_row_owes_one_tick_per_preview_and_at_most_one_start() {
             let complete = run_view(&serde_json::json!({ "run": 1, "generation": 0, "state": "complete" }));
             let mut asked: Vec<&str> = Vec::new();
             for _ in 0..polls {
-                for effect in preview_eval_run_effects(&mut session, &mut link, &windows, complete.as_ref(), true) {
+                for effect in preview_eval_run_effects(&mut session, &mut link, &windows, complete.as_ref(), true, 0) {
                     let Effect::DispatchAction { action, .. } = effect else { panic!("{id}: the run owes only dispatches") };
                     asked.push(if action == TOOL_RUN_FINALIZE_ACTION_ID { "toolRunFinalize" } else { "toolRunStart" });
                 }
@@ -383,6 +383,75 @@ fn every_gesture_rearm_row_owes_one_tick_per_preview_and_at_most_one_start() {
         crate::flow_operators::retire_flow_eval_session(session);
         crate::flow_operators::retire_flow_eval_session(spinning);
     }
+}
+
+/// ⚖️ LAW: an UNDO owes the previews an evaluation, exactly as an edit does.
+///
+/// 🐛️ `undo`/`redo` are framework-reserved and never reach `dispatch_action`, so the emit-driven route
+/// (`owe_attached_previews_for_mutations`) cannot see them: measured on :6023, `mod+z` after a slider
+/// edit rewound `height` 8 → 6 in the published document while the preview kept delivering the 8-unit
+/// extrusion, with neither a `toolRunStart` nor a `flowEvalTick` after the chord. The rule is the
+/// APPLIED document-edit stack, which every route moves.
+#[test]
+fn a_history_verb_owes_the_previews_the_evaluation_a_gesture_would_have() {
+    use semio_framework_plugin::plugin_app_close_prelude::{ActionKind, CommandView, HistoryView};
+    let command = |seq: u64, applied: bool, edit: Option<&str>| CommandView {
+        seq,
+        action_id: "apply".into(),
+        label: "update-widget".into(),
+        kind: ActionKind::Mutation,
+        timestamp: String::new(),
+        edit_id: edit.map(str::to_string),
+        config_edit_id: None,
+        child_edit_ids: Vec::new(),
+        op_lines: Vec::new(),
+        applied,
+        revertible: true,
+        count: 1,
+        inverse: None,
+    };
+    let view = |commands: Vec<CommandView>| HistoryView { commands, ..HistoryView::empty() };
+
+    let edited = applied_document_edits_digest(&view(vec![command(2, true, Some("e2")), command(1, true, Some("e1"))]));
+    let undone = applied_document_edits_digest(&view(vec![command(2, false, Some("e2")), command(1, true, Some("e1"))]));
+    let redone = applied_document_edits_digest(&view(vec![command(2, true, Some("e2")), command(1, true, Some("e1"))]));
+    assert_ne!(edited, undone, "an undo unapplies an edit, so the stack moves");
+    assert_eq!(edited, redone, "a redo puts the same edit back, so the stack is the one it was");
+    assert_ne!(undone, applied_document_edits_digest(&view(vec![command(1, true, Some("e1"))])), "a stack with an unapplied entry is not the stack without it");
+    assert_eq!(
+        applied_document_edits_digest(&view(vec![command(9, true, None), command(8, false, None)])),
+        applied_document_edits_digest(&HistoryView::empty()),
+        "cursor-motion and config rows carry no document edit and the evaluation does not read them",
+    );
+
+    let windows = [("procedural-preview", "procedural-preview")];
+    let mut session = FlowEvalSession::new();
+    let mut link = PreviewEvalRunLink::default();
+    // 🚦️ First poll: the link learns the stack, the boot's own debt is paid and the run it asked for is
+    // answered — which is the state a user is in when they press undo on a settled preview.
+    preview_eval_run_effects(&mut session, &mut link, &windows, None, true, edited);
+    session.note_window_tick_outcome("procedural-preview", false);
+    link.requested = None;
+    assert!(!session.window_tick_owed("procedural-preview"), "a paid window owes nothing while the document stands still");
+    // ⏪️ The undo: no gesture, no emit, no app command — only the stack moving.
+    let effects = preview_eval_run_effects(&mut session, &mut link, &windows, None, true, undone);
+    assert!(session.window_tick_owed("procedural-preview"), "an undo owes the attached preview a fresh evaluation");
+    assert_eq!(effects.len(), 1, "and asks for the run that pays it: {effects:?}");
+    // 🔒️ …and it never asks for a SECOND run behind a gesture that already asked for one: the debt is
+    // recorded, the request latch is not released, and the poll returns nothing.
+    let mut gesturing = FlowEvalSession::new();
+    let mut gesture_link = PreviewEvalRunLink::default();
+    preview_eval_run_effects(&mut gesturing, &mut gesture_link, &windows, None, true, edited);
+    let mut emit = semio_framework_plugin::Emit::<u8>::default();
+    emit.artifact_mutations = vec![0_u8];
+    owe_attached_previews_for_mutations(&mut gesturing, &mut gesture_link, &windows, true, &mut emit);
+    assert_eq!(emit.effects.len(), 1, "the gesture carries its own run start");
+    let second = preview_eval_run_effects(&mut gesturing, &mut gesture_link, &windows, None, true, undone);
+    assert!(second.is_empty(), "the poll that sees the same move must ask for no second run, got {second:?}");
+    assert!(gesturing.window_tick_owed("procedural-preview"), "the debt is still recorded");
+    println!("[STATS] historyRearm edited={edited} undone={undone} effects={} second={}", effects.len(), second.len());
+    crate::flow_operators::retire_flow_eval_session(gesturing);
+    crate::flow_operators::retire_flow_eval_session(session);
 }
 
 /// ⚖️ LAW: the deflection ladder is ONE table — an editor mesh and a viewer mesh of the same handle

@@ -15,6 +15,9 @@ impl protocol::MutationKind<Generation3dConfig, Generation3dConfigMutation> for 
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "preview-camera", kind: "set-preview-camera", record: "SetPreviewCamera" };
 
     fn diff(&self, base: &Generation3dConfig) -> protocol::MutationOutcome<Generation3dConfig> {
+        if base.preview_camera == self.camera {
+            return protocol::MutationOutcome::new(base.clone()).warn("mutation.no-op", "Preview camera is already in the requested state.");
+        }
         let mut next = base.clone();
         next.preview_camera = self.camera.clone();
         protocol::MutationOutcome::new(next)

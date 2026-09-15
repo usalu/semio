@@ -15,28 +15,28 @@ use store::{create_document_envelope, ArtifactCommand, ArtifactEnvelope, Artifac
 pub type TrinityGraphEnvelope = ArtifactEnvelope<JackSnapshot, TrinityGraphMutation>;
 pub type TrinityGraphStore = ArtifactStore<JackSnapshot, TrinityGraphMutation>;
 
-pub fn create_trinity_graph_envelope(id: &str, fixture: JackSnapshot) -> TrinityGraphEnvelope {
-    create_document_envelope(TRINITY_GRAPH_SCHEMA, id, fixture, None)
+pub fn create_trinity_graph_envelope(id: &str, snapshot: JackSnapshot) -> TrinityGraphEnvelope {
+    create_document_envelope(TRINITY_GRAPH_SCHEMA, id, snapshot, None)
 }
 //#endregion 🔖️Store
 
 //#region 🔖️Validation
-/// 🛡️ Pre-flight manifest/reference validation for one operation against `fixture` — distinct from
+/// 🛡️ Pre-flight manifest/reference validation for one operation against `snapshot` — distinct from
 /// `diff`/`inverse` (which assume a validated operation); kept centralized because it cross-checks
 /// against the compile-time `Manifest`, not a single sparse-diff concern.
-pub fn validate_trinity_graph_operation(operation: &TrinityGraphMutation, fixture: &JackSnapshot) -> Result<(), crate::TrinityRamError> {
+pub fn validate_trinity_graph_operation(operation: &TrinityGraphMutation, snapshot: &JackSnapshot) -> Result<(), crate::TrinityRamError> {
     use crate::TrinityRamError;
-    let scene = crate::jack_working_scene(fixture);
+    let scene = crate::jack_working_scene(snapshot);
     match operation {
         TrinityGraphMutation::CreateNode(payload) => {
             let node = &payload.node;
             if scene.nodes.iter().any(|existing| existing.id == node.id) {
                 return Err(TrinityRamError::NodeAlreadyExists(node.id.clone()));
             }
-            validate_node_kind_trinity(&fixture.manifest, &node.kind)?;
-            if let Some(node_def) = fixture.manifest.node_kind(&node.kind) {
+            validate_node_kind_trinity(&snapshot.manifest, &node.kind)?;
+            if let Some(node_def) = snapshot.manifest.node_kind(&node.kind) {
                 for port in &node.ports {
-                    validate_port_kind_trinity(&fixture.manifest, &port.kind)?;
+                    validate_port_kind_trinity(&snapshot.manifest, &port.kind)?;
                     if !node_def.port_kinds.is_empty() && !node_def.port_kinds.iter().any(|p| p == &port.kind) {
                         return Err(TrinityRamError::PortKindNotDeclaredOnMutation { node_id: node.id.clone(), port_id: port.id.clone(), port_kind: port.kind.clone(), node_kind: node.kind.clone() });
                     }
@@ -53,8 +53,8 @@ pub fn validate_trinity_graph_operation(operation: &TrinityGraphMutation, fixtur
             if scene.edges.iter().any(|existing| existing.id == edge.id) {
                 return Err(TrinityRamError::EdgeAlreadyExists(edge.id.clone()));
             }
-            validate_edge_kind_trinity(&fixture.manifest, &edge.kind)?;
-            validate_edge_properties_trinity(&fixture.manifest, &edge.kind, &edge.properties)?;
+            validate_edge_kind_trinity(&snapshot.manifest, &edge.kind)?;
+            validate_edge_properties_trinity(&snapshot.manifest, &edge.kind, &edge.properties)?;
             let source_node = crate::port_node_id(&edge.source).ok_or_else(|| TrinityRamError::InvalidSourcePortKey(edge.source.clone()))?;
             let target_node = crate::port_node_id(&edge.target).ok_or_else(|| TrinityRamError::InvalidTargetPortKey(edge.target.clone()))?;
             if !scene.nodes.iter().any(|node| node.id == source_node) {
@@ -80,18 +80,18 @@ pub fn validate_trinity_graph_operation(operation: &TrinityGraphMutation, fixtur
             }
         }
         TrinityGraphMutation::ChangeDataProperty(payload) => {
-            validate_set_data_property(fixture, &payload.entity, &payload.key, &payload.new_value)?;
+            validate_set_data_property(snapshot, &payload.entity, &payload.key, &payload.new_value)?;
         }
         TrinityGraphMutation::RemoveDataProperty(payload) => {
-            validate_clear_data_property(fixture, &payload.entity, &payload.key)?;
+            validate_clear_data_property(snapshot, &payload.entity, &payload.key)?;
         }
     }
     Ok(())
 }
 
-fn validate_clear_data_property(fixture: &JackSnapshot, entity: &EntityRef, key: &str) -> Result<(), crate::TrinityRamError> {
+fn validate_clear_data_property(snapshot: &JackSnapshot, entity: &EntityRef, key: &str) -> Result<(), crate::TrinityRamError> {
     use crate::TrinityRamError;
-    let scene = crate::jack_working_scene(fixture);
+    let scene = crate::jack_working_scene(snapshot);
     match entity {
         EntityRef::Node(id) => {
             scene.nodes.iter().find(|node| node.id == *id).ok_or_else(|| TrinityRamError::NodeNotFound(id.clone()))?;
@@ -104,17 +104,17 @@ fn validate_clear_data_property(fixture: &JackSnapshot, entity: &EntityRef, key:
     Ok(())
 }
 
-fn validate_set_data_property(fixture: &JackSnapshot, entity: &EntityRef, key: &str, value: &PropertyValue) -> Result<(), crate::TrinityRamError> {
+fn validate_set_data_property(snapshot: &JackSnapshot, entity: &EntityRef, key: &str, value: &PropertyValue) -> Result<(), crate::TrinityRamError> {
     use crate::TrinityRamError;
-    let scene = crate::jack_working_scene(fixture);
+    let scene = crate::jack_working_scene(snapshot);
     let (defs, path_prefix) = match entity {
         EntityRef::Node(id) => {
             let node = scene.nodes.iter().find(|node| node.id == *id).ok_or_else(|| TrinityRamError::NodeNotFound(id.clone()))?;
-            (fixture.manifest.node_kind(&node.kind).map(|def| &def.properties[..]), format!("nodes/{id}/properties/{key}"))
+            (snapshot.manifest.node_kind(&node.kind).map(|def| &def.properties[..]), format!("nodes/{id}/properties/{key}"))
         }
         EntityRef::Edge(id) => {
             let edge = scene.edges.iter().find(|edge| edge.id == *id).ok_or_else(|| TrinityRamError::EdgeNotFound(id.clone()))?;
-            (fixture.manifest.edge_kind(&edge.kind).map(|def| &def.properties[..]), format!("edges/{id}/properties/{key}"))
+            (snapshot.manifest.edge_kind(&edge.kind).map(|def| &def.properties[..]), format!("edges/{id}/properties/{key}"))
         }
     };
     let Some(defs) = defs else {
@@ -216,8 +216,8 @@ pub fn inverse_trinity_graph_mutation(projection: &JackSnapshot, mutation: &Trin
 }
 
 /// ▶️ Validates then applies a batch of operations, failing atomically on the first invalid one.
-pub fn apply_trinity_graph_mutations(fixture: JackSnapshot, operations: &[TrinityGraphMutation]) -> Result<JackSnapshot, crate::TrinityRamError> {
-    let mut snapshot = fixture;
+pub fn apply_trinity_graph_mutations(snapshot: JackSnapshot, operations: &[TrinityGraphMutation]) -> Result<JackSnapshot, crate::TrinityRamError> {
+    let mut snapshot = snapshot;
     for operation in operations {
         validate_trinity_graph_operation(operation, &snapshot)?;
         apply_trinity_graph_mutation(&mut snapshot, operation)?;

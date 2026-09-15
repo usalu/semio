@@ -90,7 +90,7 @@ fn process3d_interaction_definition() -> InteractionDefinition {
 pub const PROCESS3D_EXAMPLE_TIMBER: &str = "timber-beam-joinery";
 pub const PROCESS3D_EXAMPLE_PLATE: &str = "drilled-plate";
 pub use catalogue::PROCESS_3D_PLAY_BODY_CATALOGUE;
-pub use document_panel::PROCESS_3D_PLAY_BODY_DOCUMENT;
+pub use document_panel::PROCESS_3D_PLAY_BODY_ARTIFACT;
 pub use inspection::PROCESS_3D_PLAY_BODY_INSPECTION;
 pub use workpiece::PROCESS_3D_PLAY_BODY_MAIN;
 pub use workshop_panel::PROCESS_3D_PLAY_BODY_WORKSHOP;
@@ -1223,7 +1223,7 @@ impl Process3dBoundedProofs {
         owner: EditorApp<Process3dPlayApp>,
         owner_file: "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.process.process3d@1/*#editor",
-        document_schema: "process.3d",
+        artifact_schema: "process.3d",
         factory: "Process3dBoundedCommandJobFactory",
         factory_type: Process3dBoundedCommandJobFactory,
         tools: {
@@ -1262,7 +1262,7 @@ impl Process3dResumableProofs {
         owner: EditorApp<Process3dPlayApp>,
         owner_file: "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.process.process3d@1/*#editor",
-        document_schema: "process.3d",
+        artifact_schema: "process.3d",
         factory: "Process3dResumableCommandJobFactory",
         factory_type: Process3dResumableCommandJobFactory,
         tools: {
@@ -1286,7 +1286,7 @@ fn process3d_render_body(body_key: &str, doc: &Process3dSnapshot, config: &Proce
     let base_body_key = body_key.split_once(':').map_or(body_key, |(base, _)| base);
     match base_body_key {
         PROCESS_3D_PLAY_BODY_MAIN => workpiece::render(doc, config, active_utility).map(semio_framework_plugin::built_to_component_tree),
-        PROCESS_3D_PLAY_BODY_DOCUMENT => document_panel::render(doc, labels).map(semio_framework_plugin::built_to_component_tree),
+        PROCESS_3D_PLAY_BODY_ARTIFACT => document_panel::render(doc, labels).map(semio_framework_plugin::built_to_component_tree),
         PROCESS_3D_PLAY_BODY_CATALOGUE => catalogue::render(doc, &config.contributions_json, labels).map(semio_framework_plugin::built_to_component_tree),
         PROCESS_3D_PLAY_BODY_WORKSHOP => workshop_panel::render(doc, &config.contributions_json, labels).map(semio_framework_plugin::built_to_component_tree),
         PROCESS_3D_PLAY_BODY_INSPECTION => inspection::render(doc, selected_ids, labels).map(semio_framework_plugin::built_to_component_tree),
@@ -1433,8 +1433,8 @@ impl ArtifactEditor for Process3dPlayApp {
                 }
                 None => Err(MediaError::Payload("brep:out".into(), "kernel replay failed".into())),
             },
-            "document:out" => {
-                let media_type = Self::io().map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.document_media_type);
+            "artifact:out" => {
+                let media_type = Self::io().map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.artifact_media_type);
                 let bytes = doc.snapshot.encode_pack();
                 Ok(semio_framework_plugin::Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
             }
@@ -1790,8 +1790,8 @@ pub fn create_process3d_app() -> AppDefinition {
 /// "3d.process"` — reusing the artifact kind already declared, never a second `.artifact_kind(...)` call).
 pub fn process3d_io() -> semio_framework_plugin::AppIo {
     semio_framework_plugin::AppIo {
-        document_schema: crate::PROCESS_3D_SCHEMA.into(),
-        document_media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Brep },
+        artifact_schema: crate::PROCESS_3D_SCHEMA.into(),
+        artifact_media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Brep },
         ports: vec![
             semio_framework_plugin::MediaPortSpec {
                 id: "geometry:in".into(),

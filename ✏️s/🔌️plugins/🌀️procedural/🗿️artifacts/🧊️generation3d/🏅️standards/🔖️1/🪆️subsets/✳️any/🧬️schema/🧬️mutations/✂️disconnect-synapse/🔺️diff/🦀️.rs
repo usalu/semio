@@ -8,7 +8,7 @@ use crate::Generation3dSnapshot;
 
 /// 🏗️ Builds the sparse fixture delta severing one synapse edge by id.
 pub fn diff(payload: &DisconnectSynapse, base: &Generation3dSnapshot) -> protocol::MutationOutcome<Generation3dDiff> {
-    if synapse_index(&base.fixture, &payload.id).is_none() {
+    if synapse_index(&base.host_document, &payload.id).is_none() {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Synapse \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     }
     protocol::MutationOutcome::new(diff_fixture_from_helpers(base, &WidgetsDiff::default(), &SynapsesDiff { removed: vec![payload.id.clone()], set: vec![] }, &LayoutDiff::default(), None, None))

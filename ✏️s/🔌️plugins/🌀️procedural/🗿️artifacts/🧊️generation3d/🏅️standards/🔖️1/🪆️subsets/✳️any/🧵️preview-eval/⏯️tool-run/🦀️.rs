@@ -284,6 +284,10 @@ pub struct PreviewEvalRunLink {
     /// closing job compares its own run id against this before touching anything
     /// (`📓️preview-rearm-after-inspector-edit-2026-09-14.md`).
     pub(crate) job_run: Option<u64>,
+    /// 🧾️ The applied document-edit stack this link last owed the previews for
+    /// ([`super::applied_document_edits_digest`]). `None` until the first poll, so a boot owes nothing
+    /// extra; a move owes every attached window exactly one fresh evaluation, whichever route moved it.
+    pub(crate) applied_edits: Option<u64>,
 }
 
 /// ⏯️ A run action a surface has asked the host for, and the reading of the document's `ToolRunView`
@@ -343,13 +347,31 @@ pub(crate) fn run_action_effect(action: &str, args: dsl::DslValue) -> Effect {
 /// window owes an evaluation, finalize a complete run whose document, settings or contributions moved
 /// on (the next poll then starts the fresh one), and wake a live run so it sees a changed roster. An
 /// aborted run stays down until a gesture owes its windows again.
-pub fn preview_eval_run_effects(session: &mut FlowEvalSession, link: &mut PreviewEvalRunLink, windows: &[(&str, &'static str)], run: Option<&ToolRunView>, servable: bool) -> Vec<Effect> {
+pub fn preview_eval_run_effects(session: &mut FlowEvalSession, link: &mut PreviewEvalRunLink, windows: &[(&str, &'static str)], run: Option<&ToolRunView>, servable: bool, applied_edits: u64) -> Vec<Effect> {
     session.retain_window_tick_latches(&windows.iter().map(|(window_id, _)| *window_id).collect::<Vec<_>>());
     link.attach_windows(windows);
     link.wake();
     if windows.is_empty() || !servable {
+        link.applied_edits = Some(applied_edits);
         return Vec::new();
     }
+    // 🧾️ The document moved by a route this app does not handle — an undo, a redo, a revert, a
+    // checkpoint checkout (`super::applied_document_edits_digest`).
+    //
+    // 🔒️ The DEBT is recorded and a live run woken; the request latch is deliberately NOT released,
+    // which is what `owe_attached_previews` does and why this does not call it. A gesture that moved
+    // the stack has already asked for its run on its own emit, and releasing the latch here made the
+    // very next poll ask for a second one — `a_shell_dispatched_example_switch_republishes_both_windows_and_rearms_the_eval_chain`
+    // caught exactly that ("the refresh poll must ask for no second run"). With the latch held, a
+    // gesture's own ask stands and a history verb — which asked for nothing — is served by the ladder
+    // below on this same poll.
+    if link.applied_edits.is_some_and(|held| held != applied_edits) {
+        for (window_id, _) in windows {
+            session.note_window_tick_outcome(window_id, true);
+        }
+        link.wake();
+    }
+    link.applied_edits = Some(applied_edits);
     let owed = windows.iter().any(|(window_id, _)| session.window_tick_owed(window_id));
     let run = run.filter(|run| run.tool_id == PREVIEW_EVAL_TOOL_ID);
     // ⏯️ A start and a finalize are REQUESTS, not state changes: the document's run view keeps

@@ -125,7 +125,7 @@ crate::component_persistent_local! {
     /// again on `Event::InstanceClose`. `spawn_task`'s quota gate is the first real reader.
     static REACTOR_CLOSES: RefCell<ReactorCloseRegistry> = RefCell::new(ReactorCloseRegistry::new());
     static REACTOR_CLOSE_CURSOR: Cell<usize> = Cell::new(0);
-    static COLD_PAIR_INGRESS: RefCell<cold_pair::ColdDocumentPairIngressRegistry<PLUGIN_REACTOR_INSTANCE_SLOTS>> = RefCell::new(cold_pair::ColdDocumentPairIngressRegistry::new());
+    static COLD_PAIR_INGRESS: RefCell<cold_pair::ColdArtifactPairIngressRegistry<PLUGIN_REACTOR_INSTANCE_SLOTS>> = RefCell::new(cold_pair::ColdArtifactPairIngressRegistry::new());
 }
 
 /// 🧵️ A task retains its instance and optional checkpoint restart command.
@@ -1206,7 +1206,7 @@ mod wit_bridge {
     #[derive(Default)]
     struct StagedTurnPages {
         command: Option<(semio_framework::kernel::CommandPageCursor, Box<semio_framework::kernel::FixedCommandPage>)>,
-        cold_pair: Option<Box<semio_framework::kernel::ColdDocumentPairPage>>,
+        cold_pair: Option<Box<semio_framework::kernel::ColdArtifactPairPage>>,
     }
 
     fn staging_fault(reason: &'static str) -> semio_framework::Fault {
@@ -1232,7 +1232,7 @@ mod wit_bridge {
     }
 
     /// 🧊️ `reactor::stage-cold-pair-page` body — the cold-pair twin of [`stage_command_page`].
-    pub async fn stage_cold_pair_page(page: crate::component::wasip2::exports::semio::framework::reactor::ColdDocumentPairPage) -> Result<(), semio_framework::Fault> {
+    pub async fn stage_cold_pair_page(page: crate::component::wasip2::exports::semio::framework::reactor::ColdArtifactPairPage) -> Result<(), semio_framework::Fault> {
         let staged = Box::new(wit_cold_pair_page_to_kernel(page)?);
         STAGED_PAGES.with(|pages| {
             let mut pages = pages.try_borrow_mut().map_err(|_| staging_fault("turn page staging authority busy"))?;
@@ -1364,16 +1364,16 @@ mod wit_bridge {
         bytes.try_into().map_err(|_| semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.cold-pair-hash-width"), field))
     }
 
-    fn wit_cold_pair_page_to_kernel(page: crate::component::wasip2::exports::semio::framework::reactor::ColdDocumentPairPage) -> Result<semio_framework::kernel::ColdDocumentPairPage, semio_framework::Fault> {
+    fn wit_cold_pair_page_to_kernel(page: crate::component::wasip2::exports::semio::framework::reactor::ColdArtifactPairPage) -> Result<semio_framework::kernel::ColdArtifactPairPage, semio_framework::Fault> {
         let header = page.header;
         let frontier = header.baseline_frontier;
-        Ok(semio_framework::kernel::ColdDocumentPairPage {
-            header: semio_framework::kernel::ColdDocumentPairHeader {
+        Ok(semio_framework::kernel::ColdArtifactPairPage {
+            header: semio_framework::kernel::ColdArtifactPairHeader {
                 lifetime: wit_lifetime_to_kernel(header.lifetime),
                 transfer_generation: header.transfer_generation,
                 descriptor_sha256: wit_cold_sha256(header.descriptor_sha256, "cold pair descriptor hash must be 32 bytes")?,
-                baseline_frontier: semio_framework::kernel::ColdDocumentPairFrontier {
-                    document_id: frontier.document_id,
+                baseline_frontier: semio_framework::kernel::ColdArtifactPairFrontier {
+                    artifact_id: frontier.artifact_id,
                     head_edit_ordinal: frontier.head_edit_ordinal,
                     head_edit_id: frontier.head_edit_id,
                     last_commit_seq: frontier.last_commit_seq,
@@ -1391,14 +1391,14 @@ mod wit_bridge {
         })
     }
 
-    fn kernel_cold_frontier_to_wit(frontier: semio_framework::kernel::ColdDocumentPairFrontier) -> crate::component::wasip2::exports::semio::framework::reactor::ColdDocumentPairFrontier {
+    fn kernel_cold_frontier_to_wit(frontier: semio_framework::kernel::ColdArtifactPairFrontier) -> crate::component::wasip2::exports::semio::framework::reactor::ColdArtifactPairFrontier {
         use crate::component::wasip2::exports::semio::framework::reactor as wit;
-        wit::ColdDocumentPairFrontier { document_id: frontier.document_id, head_edit_ordinal: frontier.head_edit_ordinal, head_edit_id: frontier.head_edit_id, last_commit_seq: frontier.last_commit_seq, chain_sha256: frontier.chain_sha256.to_vec() }
+        wit::ColdArtifactPairFrontier { artifact_id: frontier.artifact_id, head_edit_ordinal: frontier.head_edit_ordinal, head_edit_id: frontier.head_edit_id, last_commit_seq: frontier.last_commit_seq, chain_sha256: frontier.chain_sha256.to_vec() }
     }
 
-    fn kernel_cold_cursor_to_wit(cursor: semio_framework::kernel::ColdDocumentPairCursor) -> crate::component::wasip2::exports::semio::framework::reactor::ColdDocumentPairCursor {
+    fn kernel_cold_cursor_to_wit(cursor: semio_framework::kernel::ColdArtifactPairCursor) -> crate::component::wasip2::exports::semio::framework::reactor::ColdArtifactPairCursor {
         use crate::component::wasip2::exports::semio::framework::reactor as wit;
-        wit::ColdDocumentPairCursor { lifetime: kernel_lifetime_to_wit(cursor.lifetime), transfer_generation: cursor.transfer_generation, page_index: cursor.page_index, page_count: cursor.page_count }
+        wit::ColdArtifactPairCursor { lifetime: kernel_lifetime_to_wit(cursor.lifetime), transfer_generation: cursor.transfer_generation, page_index: cursor.page_index, page_count: cursor.page_count }
     }
 
     fn kernel_cold_pair_ingress_to_wit(status: semio_framework::kernel::ColdPairIngressStatus) -> crate::component::wasip2::exports::semio::framework::reactor::ColdPairIngressStatus {
@@ -1408,13 +1408,13 @@ mod wit_bridge {
             semio_framework::kernel::ColdPairIngressStatus::PageAccepted(cursor) => wit::ColdPairIngressStatus::PageAccepted(kernel_cold_cursor_to_wit(cursor)),
             semio_framework::kernel::ColdPairIngressStatus::Backpressure(cursor) => wit::ColdPairIngressStatus::Backpressure(kernel_cold_cursor_to_wit(cursor)),
             semio_framework::kernel::ColdPairIngressStatus::Loading(cursor) => wit::ColdPairIngressStatus::Loading(kernel_cold_cursor_to_wit(cursor)),
-            semio_framework::kernel::ColdPairIngressStatus::Applied(receipt) => wit::ColdPairIngressStatus::Applied(wit::ColdDocumentPairApplied {
+            semio_framework::kernel::ColdPairIngressStatus::Applied(receipt) => wit::ColdPairIngressStatus::Applied(wit::ColdArtifactPairApplied {
                 lifetime: kernel_lifetime_to_wit(receipt.lifetime),
                 transfer_generation: receipt.transfer_generation,
                 baseline_frontier: kernel_cold_frontier_to_wit(receipt.baseline_frontier),
                 aggregate_sha256: receipt.aggregate_sha256.to_vec(),
             }),
-            semio_framework::kernel::ColdPairIngressStatus::Fault { cursor, fault } => wit::ColdPairIngressStatus::Fault(wit::ColdDocumentPairFault { cursor: kernel_cold_cursor_to_wit(cursor), fault }),
+            semio_framework::kernel::ColdPairIngressStatus::Fault { cursor, fault } => wit::ColdPairIngressStatus::Fault(wit::ColdArtifactPairFault { cursor: kernel_cold_cursor_to_wit(cursor), fault }),
         }
     }
 
@@ -1663,7 +1663,7 @@ mod wit_bridge {
                 params: wit_effects::RequestMediaFramesParams { accept, frame_action, done_action, fallback_action, sample_stride, max_frames, max_long_edge_px, fps_hint, payload, args: args.map(|value| pack(&value)) },
             }),
             Effect::SpawnPluginInstance { req, plugin_id, app_id, os_instance_id, label, document_json } => {
-                wit::Effect::SpawnPluginInstance(wit_effects::SpawnPluginInstanceEffect { req: req.0, params: wit_effects::SpawnPluginInstanceParams { plugin_id, app_id, os_instance_id, label, document_json } })
+                wit::Effect::SpawnPluginInstance(wit_effects::SpawnPluginInstanceEffect { req: req.0, params: wit_effects::SpawnPluginInstanceParams { plugin_id, app_id, os_instance_id, label, artifact_json: document_json } })
             }
             Effect::OpenPluginInstance { plugin_id, app_id, os_instance_id } => wit::Effect::OpenPluginInstance(wit_effects::OpenPluginInstanceEffect { plugin_id, app_id, os_instance_id }),
             Effect::SetActiveUtility { window_id, utility_id } => wit::Effect::SetActiveUtility(wit_effects::SetActiveUtilityEffect { window_id, utility_id }),
@@ -1679,8 +1679,8 @@ mod wit_bridge {
             Effect::BlobWrite { req, media_type, bytes } => wit::Effect::BlobWrite(wit_effects::BlobWriteEffect { req: req.0, params: wit_effects::BlobWriteParams { media_type: pack(&media_type), bytes } }),
             Effect::BlobLoad { req, hash } => wit::Effect::BlobLoad(wit_effects::BlobLoadEffect { req: req.0, params: wit_effects::BlobLoadParams { hash } }),
             Effect::HttpRequest { req, method, url, headers, body, stream } => wit::Effect::HttpRequest(wit_effects::HttpRequestEffect { req: req.0, params: wit_effects::HttpParams { method, url, headers, body, streaming: stream } }),
-            Effect::DocumentRead { req, doc, lane } => wit::Effect::DocumentRead(wit_effects::DocumentReadEffect { req: req.0, params: wit_effects::DocumentReadParams { doc: doc.0 as u64, lane } }),
-            Effect::DocumentWrite { req, doc, lane, ops } => wit::Effect::DocumentWrite(wit_effects::DocumentWriteEffect { req: req.0, params: wit_effects::DocumentWriteParams { doc: doc.0 as u64, lane, ops } }),
+            Effect::DocumentRead { req, doc, lane } => wit::Effect::ArtifactRead(wit_effects::ArtifactReadEffect { req: req.0, params: wit_effects::ArtifactReadParams { doc: doc.0 as u64, lane } }),
+            Effect::DocumentWrite { req, doc, lane, ops } => wit::Effect::ArtifactWrite(wit_effects::ArtifactWriteEffect { req: req.0, params: wit_effects::ArtifactWriteParams { doc: doc.0 as u64, lane, ops } }),
             Effect::LinkResolve { req, link } => wit::Effect::LinkResolve(wit_effects::LinkResolveEffect { req: req.0, link: link.into_bytes() }),
             Effect::RegistryQuery { req, kind, filter } => wit::Effect::RegistryQuery(wit_effects::RegistryQueryEffect { req: req.0, params: wit_effects::RegistryQueryParams { kind, filter: filter.map(|value| pack(&value)).unwrap_or_default() } }),
             Effect::IoCompose { req, key, sources } => wit::Effect::IoCompose(wit_effects::IoComposeEffect { req: req.0, params: wit_effects::IoComposeParams { key: key.into_bytes(), sources: pack(&sources) } }),
@@ -1790,6 +1790,17 @@ mod reconcile_spin_tests;
 #[path = "🧪️tests/🧺️turn-patch-batch/🦀️.rs"]
 mod turn_patch_batch_tests;
 //#endregion 🧪️TurnPatchBatchTests
+
+//#region 🧪️MoreWorkDriveTests
+/// 🚚️ The laws of the WORKER-owned `MoreWork` drive: k silent turns cost one host crossing, a pending
+/// host input interrupts the drive within one turn, a cancellation ends it on the turn it lands, the
+/// drive's budget is derived from the MEASURED turn cost rather than from the reactor's own executor
+/// slice, and readiness is per allocation rather than global. See
+/// `📓️worker-more-work-drive-2026-09-15.md`.
+#[cfg(test)]
+#[path = "🧪️tests/🚚️more-work-drive/🦀️.rs"]
+mod more_work_drive_tests;
+//#endregion 🧪️MoreWorkDriveTests
 
 //#region 🧪️ExtensionContinuationTests
 #[cfg(test)]

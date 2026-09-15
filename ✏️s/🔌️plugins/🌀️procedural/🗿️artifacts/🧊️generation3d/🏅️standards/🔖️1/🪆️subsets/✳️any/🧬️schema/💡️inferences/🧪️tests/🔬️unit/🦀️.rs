@@ -1,12 +1,12 @@
 use super::*;
 use protocol::Inference;
-use semio_framework_artifact_flow_flow::{FlowFixture, SynapseSpec, Widget};
+use semio_framework_artifact_flow_flow::{FlowHostDocument, SynapseSpec, Widget};
 
 //#region 🧸️Fixtures
 fn sample_snapshot() -> Generation3dSnapshot {
     let mut snapshot = Generation3dSnapshot::default();
-    snapshot.fixture = FlowFixture {
-        schema: "flow.fixture".into(),
+    snapshot.host_document = FlowHostDocument {
+        schema: "flow.host_document".into(),
         camera: semio_framework_artifact_flow_flow::CameraJson { x: 0.0, y: 0.0, zoom: 1.0 },
         widgets: vec![
             Widget::InputSlider { id: "a".into(), label: "A".into(), value: 1.0, min: 0.0, max: 10.0, step: 1.0 },

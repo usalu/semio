@@ -13,7 +13,7 @@ use std::collections::BTreeMap;
 #[artifact_schema(id = "s.norm.iso16757")]
 pub struct Iso16757Diff {
     #[state(artifact)]
-    pub artifact: Option<Box<crate::document_schema::Iso16757Artifact>>,
+    pub artifact: Option<Box<crate::artifact_schema::Iso16757Artifact>>,
     #[state(artifact)]
     pub catalogue: Option<crate::part_1::Catalogue>,
     #[state(artifact)]

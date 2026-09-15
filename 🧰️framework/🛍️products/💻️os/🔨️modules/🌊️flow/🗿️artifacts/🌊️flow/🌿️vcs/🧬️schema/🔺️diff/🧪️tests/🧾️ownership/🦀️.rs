@@ -14,24 +14,24 @@ fn retire_diff(diff: FlowDiff) { MutationDiff::retire_cold(diff); }
 #[test]
 fn every_delta_variant_retires_cold_without_a_bare_drop() {
     let vectors = crate::os_pack::json::parse(include_str!("../../🧫️fixtures/🧾️ownership/🔣️.json")).unwrap();
-    let base: FlowFixture = crate::os_dsl::FromValue::from_value(crate::os_pack::json::to_dsl_value(vectors.get("base").unwrap())).unwrap();
+    let base: FlowHostDocument = crate::os_dsl::FromValue::from_value(crate::os_pack::json::to_dsl_value(vectors.get("base").unwrap())).unwrap();
     let widget = base.widgets.first().cloned().unwrap();
     let synapse = base.synapses.first().cloned().unwrap();
     let deltas = vec![
         FlowDelta::Widgets(FlowCollectionDelta { removed: vec!["gone".into()], inserted: vec![(0, widget.clone())], replaced: vec![(widget.id().clone(), widget)] }),
         FlowDelta::Synapses(FlowCollectionDelta { removed: vec!["gone".into()], inserted: vec![(0, synapse.clone())], replaced: vec![(synapse.id.clone(), synapse)] }),
         FlowDelta::Layout(base.layout.iter().map(|(id, layout)| FlowLayoutEntry { id: id.clone(), layout: Some(layout.clone()) }).collect()),
-        FlowDelta::Fixture(base.clone()),
+        FlowDelta::HostDocument(base.clone()),
     ];
     assert_eq!(deltas.len(), 4);
     MutationDiff::retire_cold(FlowDiff { deltas });
-    <FlowDiff as MutationDiff<FlowFixture>>::retire_projection(base);
+    <FlowDiff as MutationDiff<FlowHostDocument>>::retire_projection(base);
 }
 
 #[test]
 fn retained_payload_projection_matches_neutral_vectors() {
     let vectors = crate::os_pack::json::parse(include_str!("../../🧫️fixtures/🧾️ownership/🔣️.json")).unwrap();
-    let base: FlowFixture = crate::os_dsl::FromValue::from_value(crate::os_pack::json::to_dsl_value(vectors.get("base").unwrap())).unwrap();
+    let base: FlowHostDocument = crate::os_dsl::FromValue::from_value(crate::os_pack::json::to_dsl_value(vectors.get("base").unwrap())).unwrap();
     let base_json = crate::os_pack::json::from_dsl_value(&crate::os_dsl::ToValue::to_value(&base));
     for row in vectors.get("cases").and_then(crate::os_pack::json::Value::as_array).unwrap() {
         let diff: FlowDiff = crate::os_dsl::FromValue::from_value(crate::os_pack::json::to_dsl_value(row.get("diff").unwrap())).unwrap();

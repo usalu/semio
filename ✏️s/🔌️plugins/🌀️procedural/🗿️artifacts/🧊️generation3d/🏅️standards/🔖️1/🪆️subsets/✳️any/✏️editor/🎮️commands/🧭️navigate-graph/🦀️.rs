@@ -18,7 +18,7 @@
 use crate::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
 use crate::standards::v1::subsets::any::schema::mutations::text::Generation3dMutation;
 use crate::Generation3dSnapshot;
-use semio_framework_artifact_flow_flow::{FlowFixture, FlowGraphStep};
+use semio_framework_artifact_flow_flow::{FlowHostDocument, FlowGraphStep};
 use semio_framework_plugin::{ArtifactView, Emit, InteractionWrite};
 use std::collections::BTreeMap;
 
@@ -37,7 +37,7 @@ pub const HANDLE_GRANULARITY: &str = "handle";
 /// with its first member in READING order rather than whichever id the set happened to hold first;
 /// and an id the document no longer carries is no anchor at all, so the step re-enters the graph
 /// instead of refusing.
-pub(crate) fn anchor_node<'a>(fixture: &'a FlowFixture, selected: &[String]) -> Option<&'a str> {
+pub(crate) fn anchor_node<'a>(fixture: &'a FlowHostDocument, selected: &[String]) -> Option<&'a str> {
     let order = fixture.keyboard_order();
     selected
         .iter()
@@ -53,13 +53,13 @@ pub(crate) fn anchor_node<'a>(fixture: &'a FlowFixture, selected: &[String]) -> 
 /// when the step has nowhere to go (a source node asked for its upstream). An empty emit is the
 /// honest answer — a `Replace` naming the node already selected would cost a publication to change
 /// nothing.
-pub(crate) fn step_target<'a>(fixture: &'a FlowFixture, selected: &[String], step: FlowGraphStep) -> Option<&'a str> {
+pub(crate) fn step_target<'a>(fixture: &'a FlowHostDocument, selected: &[String], step: FlowGraphStep) -> Option<&'a str> {
     let anchor = anchor_node(fixture, selected);
     fixture.keyboard_step(anchor, step).filter(|target| Some(*target) != anchor)
 }
 
 pub(crate) fn step_emit(doc: &ArtifactView<'_, Generation3dSnapshot>, selected: &[String], step: FlowGraphStep) -> Emit<Generation3dMutation, Generation3dConfigMutation> {
-    let Some(target) = step_target(&doc.snapshot.fixture, selected, step) else { return Emit::default() };
+    let Some(target) = step_target(&doc.snapshot.host_document, selected, step) else { return Emit::default() };
     Emit { interaction_writes: vec![InteractionWrite::replace(GRAPH_DOMAIN, NODE_GRANULARITY, [target.to_string()])], ..Default::default() }
 }
 
@@ -73,14 +73,14 @@ pub(crate) fn step_emit(doc: &ArtifactView<'_, Generation3dSnapshot>, selected: 
 /// ([`anchor_node`]), so the node closes itself and traversal continues, and `escape` →
 /// `clearSelection` (framework-minted) backs all the way out. A node with no visible port, and a node
 /// already open, both emit nothing.
-pub(crate) fn activate_ports<'a>(fixture: &FlowFixture, ports_by_node: &'a BTreeMap<String, Vec<String>>, selected: &[String]) -> Option<&'a Vec<String>> {
+pub(crate) fn activate_ports<'a>(fixture: &FlowHostDocument, ports_by_node: &'a BTreeMap<String, Vec<String>>, selected: &[String]) -> Option<&'a Vec<String>> {
     let anchor = anchor_node(fixture, selected)?;
     let ports = ports_by_node.get(anchor).filter(|ports| !ports.is_empty())?;
     (selected.len() != ports.len() || !selected.iter().all(|id| ports.contains(id))).then_some(ports)
 }
 
 pub(crate) fn activate_emit(doc: &ArtifactView<'_, Generation3dSnapshot>, ports_by_node: &BTreeMap<String, Vec<String>>, selected: &[String]) -> Emit<Generation3dMutation, Generation3dConfigMutation> {
-    let Some(ports) = activate_ports(&doc.snapshot.fixture, ports_by_node, selected) else { return Emit::default() };
+    let Some(ports) = activate_ports(&doc.snapshot.host_document, ports_by_node, selected) else { return Emit::default() };
     Emit { interaction_writes: vec![InteractionWrite::replace(GRAPH_DOMAIN, HANDLE_GRANULARITY, ports.iter().cloned())], ..Default::default() }
 }
 

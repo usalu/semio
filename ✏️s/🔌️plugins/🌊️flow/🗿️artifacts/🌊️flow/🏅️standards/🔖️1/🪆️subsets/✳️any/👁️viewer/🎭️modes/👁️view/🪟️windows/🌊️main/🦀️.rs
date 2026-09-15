@@ -8,7 +8,7 @@
 use crate::schema::{FLOW_DEFAULT_GRID_FACTOR, FLOW_DEFAULT_PROXIMITY_DISTANCE};
 use crate::FlowSnapshot;
 use flow::{flow_backed_node_graph_extras, flow_host_with_session, FlowEvalSession, FLOW_LOD_MODE_AUTOMATIC};
-use semio_framework_artifact_infinite_dag::DagFixture;
+use semio_framework_artifact_infinite_dag::DagHostDocument;
 use semio_framework_plugin::{scene_surface, BuiltNode, LocalizedLabel, NodeGraphScene, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions};
 use semio_framework_os_kernel::Viewport2d;
 use semio_framework_ui_contract::SurfaceKind as ContractSurfaceKind;
@@ -49,7 +49,7 @@ fn split_endpoint(endpoint: &str) -> (String, String) {
     endpoint.split_once('@').map_or_else(|| (endpoint.to_string(), "out".into()), |(node, port)| (node.to_string(), port.to_string()))
 }
 
-fn fixture_to_workflow(fixture: &DagFixture) -> (Vec<NodeGraphNodeRecord>, Vec<NodeGraphEdgeRecord>) {
+fn dag_host_document_to_workflow(host_document: &DagHostDocument) -> (Vec<NodeGraphNodeRecord>, Vec<NodeGraphEdgeRecord>) {
     let nodes: Vec<NodeGraphNodeRecord> = fixture
         .nodes
         .iter()
@@ -82,10 +82,10 @@ fn fixture_to_workflow(fixture: &DagFixture) -> (Vec<NodeGraphNodeRecord>, Vec<N
 /// LOD/grid/proximity defaults (`Config = NoConfig` means there is no persisted per-session camera or
 /// canvas state to read), no selection, no preview-off overlay.
 pub fn render(document: &FlowSnapshot) -> UiAssemblyResult<BuiltNode> {
-    let live = document.to_fixture();
+    let live = document.to_host_document();
     let session = FlowEvalSession::new();
     let host = flow_host_with_session(&live, &session);
-    let (nodes, edges) = fixture_to_workflow(&host.dag.fixture);
+    let (nodes, edges) = dag_host_document_to_workflow(&host.dag.host_document);
     let viewport = Viewport2d { x: 0.0, y: 0.0, zoom: 1.0 };
     let fixture_json = Some(dsl::os_pack::json::to_json_string(document));
     let flow_extras = flow_backed_node_graph_extras(&live, FLOW_LOD_MODE_AUTOMATIC, FLOW_DEFAULT_PROXIMITY_DISTANCE, true, false, FLOW_DEFAULT_GRID_FACTOR, Some(&session));
@@ -93,7 +93,7 @@ pub fn render(document: &FlowSnapshot) -> UiAssemblyResult<BuiltNode> {
         editable: Some(false),
         capabilities_json: flow_extras.capabilities_json,
         lod_json: flow_extras.lod_json,
-        fixture_json: flow_extras.fixture_json.or(fixture_json),
+        host_document_json: flow_extras.host_document_json.or(fixture_json),
         eval_json: flow_extras.eval_json,
         status_json: flow_extras.status_json,
         selection: Vec::new(),

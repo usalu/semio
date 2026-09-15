@@ -4,7 +4,7 @@
 use crate::demo_space_projection;
 use crate::engine::space::config::SpaceConfig;
 use crate::engine::space::terminology::SStudioLabels;
-use semio_framework_os::{build_os_workflow_operator_infos, os_workflow_to_flow_fixture, os_workflow_to_node_graph_payload, OsWorkflowCamera, Viewport2d, WorkflowSnapshot};
+use semio_framework_os::{build_os_workflow_operator_infos, os_workflow_to_flow_host_document_json, os_workflow_to_node_graph_payload, OsWorkflowCamera, Viewport2d, WorkflowSnapshot};
 use semio_framework_plugin::{resolve_labels, ActionDescriptor, InteractionRef, LocalizedLabel, SurfaceKind, ViewModel, WindowEngagement, WindowEngagementInput, WindowEngagementSlot, WindowEngagementStatus, WindowKindDefinition, WindowOptions};
 use semio_framework_ui_scene::{NodeGraphEdgeRecord, NodeGraphFindItem, NodeGraphNodeRecord, NodeGraphOperatorRecord, NodeGraphScene};
 
@@ -105,7 +105,7 @@ async fn workflow_camera(config: &SpaceConfig) -> OsWorkflowCamera {
 pub async fn render(app: &crate::engine::space::SpaceApp, projection: &WorkflowSnapshot, config: &SpaceConfig) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let graph_payload = os_workflow_to_node_graph_payload(&projection.graph);
     let camera = workflow_camera(config).await;
-    let fixture = os_workflow_to_flow_fixture(&projection.graph, &camera);
+    let fixture = os_workflow_to_flow_host_document_json(&projection.graph, &camera);
     let operators = build_os_workflow_operator_infos(&projection.graph, &projection.parameters);
     // 🕹️ `render` carries no `InteractionView` (ArtifactApp's breaking pass only added it to
     // `handle`/`copy_fragment`/`cut_operations` — see ticket 26/08/14's w3b-summary.md) and
@@ -119,7 +119,7 @@ pub async fn render(app: &crate::engine::space::SpaceApp, projection: &WorkflowS
         operators: json_array_to_node_graph_operators(&operators).await,
         find_items: json_array_to_node_graph_find_items(&graph_payload.find_items_json).await,
         capabilities_json: Some(r#"{"engine":"flow","spotlight":false,"noteEdit":false,"clusters":false}"#.into()),
-        fixture_json: Some(fixture.to_string()),
+        host_document_json: Some(fixture.to_string()),
         presence_peers_json: Some(crate::engine::space::presence_peers_json(app, config).await),
         ..NodeGraphScene::base(json_array_to_node_graph_nodes(&graph_payload.nodes_json).await, json_array_to_node_graph_edges(&graph_payload.edges_json).await, Viewport2d { x: camera.x, y: camera.y, zoom: camera.zoom })
     };

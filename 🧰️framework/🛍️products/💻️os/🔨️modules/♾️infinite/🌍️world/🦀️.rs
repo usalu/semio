@@ -1408,6 +1408,7 @@ pub struct World3dState {
     /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️boot-camera-framing-2026-09-15.md`).
     camera_user_moved: bool,
     scene_selection_digest: Option<u64>,
+    scene_document_lanes_digest: Option<u64>,
     scene_mesh_digests: HashMap<String, u64>,
     prepared_status: [Option<World3dPreparedStatus>; 2],
     dynamic_blocked_owner: Option<WorldOpaqueOwner>,
@@ -1650,6 +1651,7 @@ impl World3dState {
             fit_seen_revision: None,
             camera_user_moved: false,
             scene_selection_digest: None,
+            scene_document_lanes_digest: None,
             scene_mesh_digests: HashMap::new(),
             snapshot_apply: None,
             snapshot_fault: None,
@@ -10186,6 +10188,43 @@ fn sync_world3d_scene_selection(state: &mut World3dState, selection_json: &str) 
         state.show_edges = show_edges;
     }
 }
+
+/// 🖼️ Applies the scene's vortex/attraction/target-volume/reference JSON lanes — the same payloads
+/// React's `World3dHost` parses every frame, but which the wgpu host had never copied into
+/// `World3dState` (so document-tree references never reached `render_world_3d`'s textured planes).
+fn sync_world3d_scene_document_lanes(state: &mut World3dState, world: &ui_wgpu::wgpu::World3dScene) {
+    let digest = world3d_scene_digest(&[
+        world.vortices_json.as_deref().unwrap_or(""),
+        world.attractions_json.as_deref().unwrap_or(""),
+        world.target_volumes_json.as_deref().unwrap_or(""),
+        world.references_json.as_deref().unwrap_or(""),
+    ]);
+    if state.scene_document_lanes_digest == Some(digest) {
+        return;
+    }
+    state.scene_document_lanes_digest = Some(digest);
+    state.vortices = world
+        .vortices_json
+        .as_deref()
+        .map(|json| serde_json::from_str(json).unwrap_or_default())
+        .unwrap_or_default();
+    state.attractions = world
+        .attractions_json
+        .as_deref()
+        .map(|json| serde_json::from_str(json).unwrap_or_default())
+        .unwrap_or_default();
+    state.target_volumes = world
+        .target_volumes_json
+        .as_deref()
+        .map(|json| serde_json::from_str(json).unwrap_or_default())
+        .unwrap_or_default();
+    state.references = world
+        .references_json
+        .as_deref()
+        .map(|json| serde_json::from_str(json).unwrap_or_default())
+        .unwrap_or_default();
+    state.interaction_revision = state.interaction_revision.wrapping_add(1);
+}
 //#endregion 🌉️World3dSceneBridge
 
 pub fn sync_world3d_state(state: &mut World3dState, scene: &UiComponentSceneNode, bounds: Rect) {
@@ -10200,6 +10239,7 @@ pub fn sync_world3d_state(state: &mut World3dState, scene: &UiComponentSceneNode
     sync_world3d_tool_run_trace(state, world);
     sync_world3d_scene_fit(state, world.fit_json.as_deref());
     sync_world3d_scene_selection(state, &world.selection_json);
+    sync_world3d_scene_document_lanes(state, world);
     let lease = match world.snapshot {
         Some(lease) => lease,
         None => {
@@ -10483,6 +10523,16 @@ pub fn render_world_3d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut ui_
         begin_world_placeholder_mesh(state, "reference-plane", WorldPlaceholderKind::Plane);
     }
     let mut textured_instances = Vec::new();
+    let reference_image_urls: Vec<String> = state
+        .references
+        .iter()
+        .filter(|reference| !reference.hidden.unwrap_or(false))
+        .filter_map(|reference| reference.url.clone())
+        .filter(|url| !state.reference_pixels.contains_key(url))
+        .collect();
+    for url in reference_image_urls {
+        let _ = reserve_world3d_asset_request(state, WorldAssetRequestKind::ReferenceImage, &url);
+    }
     for reference in &state.references {
         if reference.hidden.unwrap_or(false) {
             continue;
@@ -10520,9 +10570,10 @@ pub fn render_world_3d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut ui_
         textured_draws,
         ..Default::default()
     });
-    if state.marquee_active && state.marquee_points.len() >= 2 {
-        let crossing = marquee_is_crossing_from_path(&state.marquee_points, state.selection_method == "lasso");
-        paint_selection_marquee(ctx.draw, theme, crossing, state.selection_method == "lasso", &state.marquee_points, false);
+    if let Some(points) = world_marquee_overlay_points(state) {
+        let lasso = state.selection_method == "lasso";
+        let crossing = marquee_is_crossing_from_path(&points, lasso);
+        paint_selection_marquee(ctx.draw, theme, crossing, lasso, &points, true);
     }
     gpu_gizmo::paint_orbit_view_gizmo(ctx, &camera, inner, state.gizmo_hovered_tip);
     for (index, status) in state.prepared_status.iter().flatten().enumerate() {
@@ -11586,6 +11637,25 @@ fn pick_paint_hit(state: &World3dState, x: f32, y: f32, _inner: Rect) -> Option<
     best.map(|(_, object_id, u, v)| (object_id, u, v))
 }
 
+/// 🖱️ Screen-space marquee path for the selection rectangle overlay. Production pointer routing
+/// retains the gesture on `WorldInteractionAuthority::marquee`; the legacy `marquee_points` /
+/// `marquee_active` fields remain for the oracle tests only.
+fn world_marquee_overlay_points(state: &World3dState) -> Option<Vec<[f32; 2]>> {
+    if let Some(marquee) = state.interaction_authority.as_ref()?.marquee.as_ref() {
+        if !marquee.retiring && marquee.len >= 2 {
+            let mut points = Vec::with_capacity(usize::from(marquee.len));
+            for index in 0..usize::from(marquee.len) {
+                points.push(marquee.points[index].expect("marquee gesture point"));
+            }
+            return Some(points);
+        }
+    }
+    if state.marquee_active && state.marquee_points.len() >= 2 {
+        return Some(state.marquee_points.clone());
+    }
+    None
+}
+
 #[cfg(test)]
 fn marquee_local_polygon(state: &World3dState, rect: Rect) -> (Vec<[f32; 2]>, bool, bool) {
     let rectangle = state.selection_method != "lasso";
@@ -12442,6 +12512,18 @@ pub fn take_next_completed_world3d_asset_step(state: &mut World3dState) -> Optio
 #[expect(clippy::result_large_err, reason = "Rejected transfer returns the exact admitted owner for bounded retirement without allocating on the failure path.")]
 pub fn finish_world3d_asset(state: &mut World3dState, owner: WorldAssetFetchOwner) -> Result<(), WorldAssetFetchOwner> {
     state.asset_io.finish(owner)
+}
+
+/// 📦️ Concatenates every page of a sealed world-asset response — used when a retained decode
+/// finishes without materializing a typed mesh lease (reference images).
+pub fn collect_world3d_asset_bytes(owner: &mut WorldAssetFetchOwner) -> Result<Vec<u8>, WorldAssetFault> {
+    owner.rewind_decode_pages()?;
+    let mut bytes = Vec::with_capacity(owner.received_bytes());
+    while let Some(page) = owner.decode_page()? {
+        bytes.extend_from_slice(page.bytes());
+    }
+    owner.rewind_decode_pages()?;
+    Ok(bytes)
 }
 
 pub fn retire_cancelled_world3d_asset_step(state: &mut World3dState) -> bool {

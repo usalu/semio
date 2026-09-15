@@ -4,7 +4,7 @@
 //!
 //! The scene is generation3d's own Flow window payload for the bundled `hexagonal-mushroom-column`
 //! example (7 widgets, 6 synapses) — committed as data in `🔣️.json` rather than reached through the
-//! plugin crate, and re-validated field by field by `FlowHost::parse_fixture_json` in every lane
+//! plugin crate, and re-validated field by field by `FlowHost::parse_host_document_json` in every lane
 //! below. The action payloads are pinned against React's `NodeGraphHost`, the other implementation of
 //! this same host (`🧱️elements/🕸️NodeGraph/🟦️.tsx` — `nodeGraphSelectionActionArgs`,
 //! `nodeGraphHoverActionArgs`, `nodeGraphViewportActionArgs`).
@@ -17,7 +17,7 @@ const NODE_GRAPH_SCENE_FIXTURE: &str = include_str!("../../🧫️fixtures/🕸�
 
 pub(super) fn hexagonal_mushroom_column_fixture_json() -> String {
     let value: Value = serde_json::from_str(NODE_GRAPH_SCENE_FIXTURE).expect("committed generation3d flow fixture parses");
-    serde_json::to_string(value.get("fixture").expect("fixture payload")).expect("fixture re-encodes")
+    serde_json::to_string(value.get("hostDocument").expect("host document payload")).expect("host document re-encodes")
 }
 
 pub(super) fn flow_window_scene(surface_id: &str) -> UiComponentSceneNode {
@@ -33,7 +33,7 @@ pub(super) fn flow_window_scene(surface_id: &str) -> UiComponentSceneNode {
         world_3d: None,
         node_graph: Some(NodeGraphScene {
             editable: Some(true),
-            fixture_json: Some(hexagonal_mushroom_column_fixture_json()),
+            host_document_json: Some(hexagonal_mushroom_column_fixture_json()),
             capabilities_json: Some(json!({ "engine": "flow", "spotlight": true }).to_string()),
             lod_json: Some(json!({ "automatic": true }).to_string()),
             ..NodeGraphScene::base(Vec::new(), Vec::new(), Viewport2d { x: 94.755_815_717_374_45, y: -97.508_331_346_796_68, zoom: 1.784_432_561_601_109_9 })
@@ -53,7 +53,7 @@ pub(super) fn flow_window_scene(surface_id: &str) -> UiComponentSceneNode {
     }
 }
 
-/// 🧹️ Drains one attached surface through the registry's OWN retirement ladder. `FlowFixture`'s
+/// 🧹️ Drains one attached surface through the registry's OWN retirement ladder. `FlowHostDocument`'s
 /// ordered maps refuse to drop unretired, so a plain `remove` panics inside the registry mutex and
 /// poisons it for every later lane — the ladder is the only correct teardown.
 pub(super) fn drop_engine_surface(surface_id: &str) {
@@ -152,11 +152,11 @@ fn node_graph_window_attaches_the_flow_engine_and_paints_a_non_empty_draw_list()
         let map = cell.borrow();
         let entry = map.get(surface_id).expect("attach published the engine surface");
         match entry.node_graph.as_ref().expect("attach constructed the node-graph engine") {
-            NodeGraphEngine::Flow(host) => (host.dag.fixture.nodes.len(), host.dag.fixture.edges.len(), true),
-            NodeGraphEngine::Dag(host) => (host.dag.fixture.nodes.len(), host.dag.fixture.edges.len(), false),
+            NodeGraphEngine::Flow(host) => (host.dag.host_document.nodes.len(), host.dag.host_document.edges.len(), true),
+            NodeGraphEngine::Dag(host) => (host.dag.host_document.nodes.len(), host.dag.host_document.edges.len(), false),
         }
     });
-    assert!(engine_is_flow, "a scene carrying fixtureJson selects the flow engine, exactly as React's NodeGraphHost does");
+    assert!(engine_is_flow, "a scene carrying hostDocumentJson selects the flow engine, exactly as React's NodeGraphHost does");
     assert_eq!((nodes, edges), (7, 6), "the hexagonal-mushroom-column fixture reaches the engine whole");
 
     let key = engine_raster_key(surface_id).expect("bounded engine raster key");
@@ -249,7 +249,7 @@ fn wheel_zoom_emits_the_node_graph_viewport_action_with_the_moved_camera() {
     let committed = ENGINE_SURFACES.with(|cell| {
         let map = cell.borrow();
         let Some(NodeGraphEngine::Flow(host)) = map.get(surface_id)?.node_graph.as_ref() else { return None };
-        Some([host.fixture.camera.x, host.fixture.camera.y, host.fixture.camera.zoom])
+        Some([host.host_document.camera.x, host.host_document.camera.y, host.host_document.camera.zoom])
     })
     .expect("live flow host");
     assert!(committed[2] > 1.784_432_561_601_109_9, "a wheel-up zooms in from the fixture camera, got {}", committed[2]);
@@ -289,7 +289,7 @@ fn fit_graph_answers_the_fitted_camera_not_the_scene_camera() {
         .with(|cell| {
             let map = cell.borrow();
             let Some(NodeGraphEngine::Flow(host)) = map.get(surface_id)?.node_graph.as_ref() else { return None };
-            Some((host.camera(), [host.dag.fixture.camera.x, host.dag.fixture.camera.y, host.dag.fixture.camera.zoom], host.dag.camera_content_coverage()))
+            Some((host.camera(), [host.dag.host_document.camera.x, host.dag.host_document.camera.y, host.dag.host_document.camera.zoom], host.dag.camera_content_coverage()))
         })
         .expect("live flow host");
     assert_eq!(fitted, published, "the answer the control persists is the surface's own published camera");

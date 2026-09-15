@@ -17,7 +17,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 use crate::standards::v1::subsets::any::schema::diff::Generation2dDiff;
 use crate::{widget_id, Generation2dSnapshot};
 use protocol::Mutation;
-use semio_framework_artifact_flow_flow::FlowFixture;
+use semio_framework_artifact_flow_flow::FlowHostDocument;
 #[cfg(test)]
 use semio_framework_artifact_playbook_playbook::FormGeneration;
 use semio_framework_artifact_playbook_playbook::GenerationMutation;
@@ -25,12 +25,12 @@ use semio_framework_value_derive::{FromValue, ToValue};
 use store::{ArtifactEnvelope, ArtifactStore};
 //#region 🔖️Addressing
 /// 🌡️ Resolves a widget's stable id to its BASE-state index in the fixture's widget list.
-pub fn widget_index(fixture: &FlowFixture, id: &str) -> Option<usize> {
+pub fn widget_index(fixture: &FlowHostDocument, id: &str) -> Option<usize> {
     fixture.widgets.iter().position(|widget| widget_id(widget) == id)
 }
 
 /// 🌡️ Resolves a synapse's stable id to its BASE-state index in the fixture's synapse list.
-pub fn synapse_index(fixture: &FlowFixture, id: &str) -> Option<usize> {
+pub fn synapse_index(fixture: &FlowHostDocument, id: &str) -> Option<usize> {
     fixture.synapses.iter().position(|synapse| synapse.id == id)
 }
 //#endregion 🔖️Addressing
@@ -114,12 +114,12 @@ pub use super::replace_widget::replace_widget;
 pub use super::set_camera::update_camera;
 //#endregion 🔖️Builders
 
-//#region 🔖️FixtureOperations
+//#region 🔖️HostDocumentOperations
 /// 🔀️ Diffs two fixtures into a minimal, invertible, mergeable semantic operation set:
 /// created/replaced/deleted widgets and synapses (keyed by id), moved/cleared layout entries, and
 /// a changed fixture schema. The canvas camera is ephemeral view state (app config), never a
 /// document operation.
-pub fn generation2d_fixture_operations(before: &FlowFixture, after: &FlowFixture) -> Vec<Generation2dMutation> {
+pub fn generation2d_host_document_operations(before: &FlowHostDocument, after: &FlowHostDocument) -> Vec<Generation2dMutation> {
     let mut operations = Vec::new();
     for widget in &before.widgets {
         if !after.widgets.iter().any(|entry| widget_id(entry) == widget_id(widget)) {

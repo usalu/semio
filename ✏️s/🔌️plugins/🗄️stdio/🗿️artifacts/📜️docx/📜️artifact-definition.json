@@ -63,7 +63,7 @@
       "native_factory": {
         "factory_id": "stdio.native.docx.v1",
         "artifact_kind": "stdio.docx",
-        "document_schema": "stdio.docx",
+        "artifact_schema": "stdio.docx",
         "extension": "docx",
         "pack_schema_hash": "bc026d9b89ea95dc2ecf4570b51ddcb8b183caf0d84eaf397570f2926a13bbba",
         "runtime_capability_id": "s.stdio.docx.standard.ecma-376.codec.codec-stdio-docx-extension-docx.v1"

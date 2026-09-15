@@ -228,14 +228,75 @@ fn every_schema_feature_has_a_distinct_action_binding() {
 #[test]
 fn synchronized_document_json_is_the_exact_retained_document() {
     let mut domain = FlowDomainAdapter::default();
-    let mut expected = crate::artifact::FlowFixture::default();
-    expected.schema = "flow.fixture.synchronized".into();
+    let mut expected = crate::artifact::FlowHostDocument::default();
+    expected.schema = "flow.host_document.synchronized".into();
     let json = crate::os_pack::json::to_json_string(&expected);
     run(&mut domain, 2_610, text_payload(&json)).unwrap();
     let bytes = run(&mut domain, 2_609, Vec::new()).unwrap();
     let value = crate::os_pack::json::parse(std::str::from_utf8(&bytes).unwrap()).unwrap();
-    let actual = <crate::artifact::FlowFixture as crate::os_dsl::FromValue>::from_value(crate::os_pack::json::to_dsl_value(&value)).unwrap();
+    let actual = <crate::artifact::FlowHostDocument as crate::os_dsl::FromValue>::from_value(crate::os_pack::json::to_dsl_value(&value)).unwrap();
     assert_eq!(actual, expected);
+}
+
+/// ⚡️ How many `Progress` steps one flow operation costs at a given byte credit — the count that
+/// becomes ABI round trips, because the bridge turns every `Progress` into its own event the host has
+/// to poll, decode and reply to.
+fn progress_steps_for(operation: u16, byte_credit: usize) -> usize {
+    let domain = Rc::new(RefCell::new(FlowDomainAdapter::default()));
+    let session = semio_framework::abi::AbiHandle::try_new(1, 1).unwrap();
+    domain.borrow_mut().bind_session(session);
+    let admission = FlowFeatureAdmission { session, request_generation: 1 };
+    let mut feature = FlowDomainAdapter::start_feature(domain, admission, operation, Vec::new()).unwrap();
+    let budget = AbiWorkBudget { byte_credit, now_ms: 0, deadline_ms: None, cancelled: false, interrupted: false };
+    let mut steps = 0usize;
+    while let FlowFeatureStep::Progress { .. } = feature.step(budget) {
+        steps += 1;
+        assert!(steps < 2_000_000, "flow operation {operation} never left Progress at credit {byte_credit}");
+    }
+    steps
+}
+
+/// ⚡️ One poll spends the byte credit it was GRANTED, not one byte.
+///
+/// Every incremental phase of a flow operation — argument decode, the retained-DAG cursors, output
+/// encode — advances by a single byte and answers `Progress`, and the bridge makes each `Progress`
+/// its own ABI message. A poll granted 4 096 bytes therefore moved one byte, so an operation's
+/// payload crossed at roughly 68 KB/s: the node-graph board's own draw list cost ~20 000 round trips
+/// per frame, one present took 200–450 ms idle and over 2.5 s under a scroll gesture, and the Flow
+/// window painted ONCE for a thirty-tick scroll (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
+/// `📓️flow-scroll-render-perf-2026-09-15.md` §3).
+///
+/// The law is the ratio, not an absolute: at N times the credit an operation must cost at most about
+/// 1/N of the steps, so a future phase that forgets to honour its budget fails here.
+#[test]
+fn one_poll_spends_its_whole_byte_credit_instead_of_one_byte() {
+    let single = progress_steps_for(2_609, 1);
+    let granted = progress_steps_for(2_609, 4_096);
+    assert!(single > 1_000, "the document payload must be large enough to measure: {single} steps at credit 1");
+    assert!(granted * 100 < single, "credit 4096 cost {granted} steps against {single} at credit 1 — the budget is not being spent");
+    assert!(granted >= 1, "an operation still answers Progress at least once before it completes");
+}
+
+/// ⚡️ Spending the credit may not change WHAT an operation answers, only how many polls it took.
+#[test]
+fn spending_the_credit_does_not_change_the_operation_result() {
+    let read = |byte_credit: usize| {
+        let domain = Rc::new(RefCell::new(FlowDomainAdapter::default()));
+        let session = semio_framework::abi::AbiHandle::try_new(1, 1).unwrap();
+        domain.borrow_mut().bind_session(session);
+        let admission = FlowFeatureAdmission { session, request_generation: 1 };
+        let mut feature = FlowDomainAdapter::start_feature(domain, admission, 2_609, Vec::new()).unwrap();
+        let budget = AbiWorkBudget { byte_credit, now_ms: 0, deadline_ms: None, cancelled: false, interrupted: false };
+        loop {
+            match feature.step(budget) {
+                FlowFeatureStep::Progress { .. } => {}
+                FlowFeatureStep::Complete(output) => return output,
+                FlowFeatureStep::RetainedPage(output) => return output,
+                other => panic!("unexpected flow step {other:?}"),
+            }
+        }
+    };
+    assert_eq!(read(1), read(4_096));
 }
 
 #[test]

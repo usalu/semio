@@ -39,7 +39,7 @@ const SHOOTING_PLAY_CONTROLLER_ID: &str = SHOOTING_PLAY_APP_ID;
 pub const SHOOTING_INTERACTION_DOMAIN: &str = "assets";
 pub use crate::editor::shooting::commands::document::set_active_example::SHOOTING_EXAMPLE_DEFAULT_ID;
 pub use catalogue_panel::SHOOTING_PLAY_BODY_CATALOGUE;
-pub use document_panel::SHOOTING_PLAY_BODY_DOCUMENT;
+pub use document_panel::SHOOTING_PLAY_BODY_ARTIFACT;
 pub use icon_window::SHOOTING_PLAY_BODY_ICON;
 pub use icon_window::SHOOTING_PLAY_WINDOW_ICON;
 pub use inspection_panel::SHOOTING_PLAY_BODY_INSPECTION;
@@ -162,8 +162,8 @@ pub fn tree_item_with_icon(
 /// `import_stdio_kinds` remain the live source of truth for this artifact's real format list.
 pub fn shooting_io() -> AppIo {
     AppIo {
-        document_schema: "shooting.scene".into(),
-        document_media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Raster },
+        artifact_schema: "shooting.scene".into(),
+        artifact_media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Raster },
         ports: vec![shooting_photos_out_port()],
         export_formats: vec![],
         import_formats: vec![],
@@ -401,7 +401,7 @@ impl ArtifactEditor for ShootingPlayApp {
         owner: EditorApp<ShootingPlayApp>,
         owner_file: "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.shooting.shooting@1/*#editor",
-        document_schema: "shooting.shooting",
+        artifact_schema: "shooting.shooting",
         factory: "ShootingCommandJobFactory",
         factory_type: ShootingCommandJobFactory,
         tools: {
@@ -473,8 +473,8 @@ impl ArtifactEditor for ShootingPlayApp {
     fn export_media(port: &str, doc: &ArtifactView<'_, ShootingSnapshot>) -> Result<Media, MediaError> {
         match port {
             "photos:out" => shooting_photo_media(doc.snapshot),
-            "document:out" => {
-                let media_type = Self::io().map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.document_media_type);
+            "artifact:out" => {
+                let media_type = Self::io().map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.artifact_media_type);
                 let bytes = store::ArtifactPack::encode_pack(doc.snapshot);
                 Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
             }
@@ -484,10 +484,10 @@ impl ArtifactEditor for ShootingPlayApp {
 
     /// 🧬️ No `whole_document_operation` override — per `📓️taxonomy.md`, whole-document replace
     /// (the retired whole-document-replace variant) is banned outright with NO replacement mutation, so this falls back to the
-    /// trait's own default (`None`); `import_media`'s `"document:in"` override below handles the
+    /// trait's own default (`None`); `import_media`'s `"artifact:in"` override below handles the
     /// real gesture via `reset_document_effect` instead.
     fn import_media(port: &str, media: &Media, _doc: &ArtifactView<'_, ShootingSnapshot>) -> Result<Emit<ShootingMutation, ShootingConfigMutation, NoDraftMutation>, MediaError> {
-        if port != "document:in" {
+        if port != "artifact:in" {
             return Err(MediaError::NotImplemented);
         }
         let MediaPayload::Structured { json, .. } = &media.payload else {
@@ -555,7 +555,7 @@ impl ArtifactEditor for ShootingPlayApp {
         match body_key {
             SHOOTING_PLAY_BODY_SCENE => scene_window::render(snapshot, cfg.snapshot, view_state.active_utility_id.as_deref().unwrap_or("move")),
             SHOOTING_PLAY_BODY_ICON => icon_window::render(snapshot, cfg.snapshot),
-            SHOOTING_PLAY_BODY_DOCUMENT => document_panel::render(snapshot, labels),
+            SHOOTING_PLAY_BODY_ARTIFACT => document_panel::render(snapshot, labels),
             SHOOTING_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels),
             SHOOTING_PLAY_BODY_INSPECTION => inspection_panel::render(snapshot, cfg.snapshot, labels),
             _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| ui_capacity_error()),
@@ -581,7 +581,7 @@ impl ArtifactEditor for ShootingPlayApp {
 /// load-example, dev document load). Per `📓️taxonomy.md`, whole-document replace is banned outright with NO
 /// replacement mutation: whole-document replace is not expressible as an in-history `Mutation` at
 /// all. Every former "replace the whole document" gesture in this package (`import_media`'s
-/// `"document:in"` above, `commands::document::{import_snapshot_json,set_active_example,reset_snapshot}`)
+/// `"artifact:in"` above, `commands::document::{import_snapshot_json,set_active_example,reset_snapshot}`)
 /// builds this effect instead of an `Emit::mutations([...])`. The spr is a fresh, edit-free op-log
 /// for `scene` — a genesis envelope with no history to encode.
 pub fn reset_document_effect(scene: &ShootingSnapshot) -> semio_framework_plugin::Effect {

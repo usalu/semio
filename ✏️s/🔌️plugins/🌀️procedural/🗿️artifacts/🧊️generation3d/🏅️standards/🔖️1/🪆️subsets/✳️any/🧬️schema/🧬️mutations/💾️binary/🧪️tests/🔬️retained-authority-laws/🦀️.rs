@@ -58,12 +58,12 @@ impl Generation3dSemanticOracle for SerdeJsonMoveOracle {
 }
 
 fn semantic_result(snapshot: &Generation3dSnapshot, moved_id: &str) -> Generation3dSemanticResult {
-    let position = snapshot.fixture.layout.get(moved_id).expect("P3 small-feature moved layout");
-    let synapse = snapshot.fixture.synapses.first().expect("P3 small-feature synapse");
+    let position = snapshot.host_document.layout.get(moved_id).expect("P3 small-feature moved layout");
+    let synapse = snapshot.host_document.synapses.first().expect("P3 small-feature synapse");
     Generation3dSemanticResult {
-        widget_count: snapshot.fixture.widgets.len(),
-        synapse_count: snapshot.fixture.synapses.len(),
-        layout_count: snapshot.fixture.layout.len(),
+        widget_count: snapshot.host_document.widgets.len(),
+        synapse_count: snapshot.host_document.synapses.len(),
+        layout_count: snapshot.host_document.layout.len(),
         moved_id: moved_id.into(),
         x_bits: position.x.to_bits(),
         y_bits: position.y.to_bits(),
@@ -101,12 +101,12 @@ fn small_move_widget_feature_matches_the_test_only_third_party_oracle() {
     let source = include_bytes!("../../../../../🧫️fixtures/🔬️p8yz-b-third-party-oracle-laws.json");
     let oracle = SerdeJsonMoveOracle.evaluate(source).expect("third-party P3 semantic oracle");
     let mut snapshot = Generation3dSnapshot::default();
-    snapshot.fixture.widgets = vec![
+    snapshot.host_document.widgets = vec![
         semio_framework_artifact_flow_flow::Widget::Neuron { id: "source".into(), neuron_kind: "law".into(), params: Default::default(), input_ports: vec!["in".into()], output_ports: vec!["solid".into()], preview: true },
         semio_framework_artifact_flow_flow::Widget::OutputPreview { id: "preview".into(), preview: Default::default(), expanded: Default::default() },
     ];
-    snapshot.fixture.synapses = vec![semio_framework_artifact_flow_flow::SynapseSpec { id: "source-preview".into(), from: "source".into(), from_port: "solid".into(), to: "preview".into(), to_port: String::new() }];
-    snapshot.fixture.layout = [("source".into(), semio_framework_artifact_flow_flow::WidgetLayout { x: 1.0, y: 2.0 }), ("preview".into(), semio_framework_artifact_flow_flow::WidgetLayout { x: 8.0, y: 3.0 })].into_iter().collect();
+    snapshot.host_document.synapses = vec![semio_framework_artifact_flow_flow::SynapseSpec { id: "source-preview".into(), from: "source".into(), from_port: "solid".into(), to: "preview".into(), to_port: String::new() }];
+    snapshot.host_document.layout = [("source".into(), semio_framework_artifact_flow_flow::WidgetLayout { x: 1.0, y: 2.0 }), ("preview".into(), semio_framework_artifact_flow_flow::WidgetLayout { x: 8.0, y: 3.0 })].into_iter().collect();
     generation3d_apply_retained_mutations_for_test(&mut snapshot, &[Generation3dMutation::MoveWidget(MoveWidget { id: "source".into(), layout: semio_framework_artifact_flow_flow::WidgetLayout { x: 12.5, y: -8.25 } })]);
     let owned = semantic_result(&snapshot, "source");
     assert_eq!(owned, oracle, "owned P3 move result must equal the independent serde_json projection");

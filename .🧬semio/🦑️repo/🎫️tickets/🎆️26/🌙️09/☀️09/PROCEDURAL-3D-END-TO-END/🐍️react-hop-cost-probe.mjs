@@ -151,6 +151,12 @@ const breakdown = (spans) => {
     const clone = Number(span.detail?.replyCloneMs ?? -1);
     if (clone >= 0) { replyCloneMs += clone; replyCloneSamples += 1; }
   }
+  /** 🚚️ How many guest turns the WORKER ran inside one crossing, and why it stopped — the reading
+   * that makes "the worker owns the MoreWork drive" a measurement rather than an inference from
+   * `worker.guest`'s mean (📓️worker-more-work-drive-2026-09-15.md). */
+  const driveStops = {};
+  let drivePolls = 0;
+  let driveSamples = 0;
   for (const span of crossingSpans) {
     const key = String(span.detail?.eventKinds ?? "").length ? String(span.detail.eventKinds) : "(none)";
     const entry = (crossingKinds[key] ??= { count: 0, totalMs: 0, patches: 0 });
@@ -158,6 +164,10 @@ const breakdown = (spans) => {
     entry.totalMs += span.durationMs;
     entry.patches += Number(span.detail?.patches ?? 0);
     crossingPatches += Number(span.detail?.patches ?? 0);
+    const polls = Number(span.detail?.drivePolls ?? -1);
+    if (polls >= 0) { drivePolls += polls; driveSamples += 1; }
+    const stopped = String(span.detail?.driveStopped ?? "");
+    if (stopped.length) driveStops[stopped] = (driveStops[stopped] ?? 0) + 1;
   }
   /** 🔎️ What each refresh ASKED for — a hop that pays two full guest re-renders is a different
    * defect from a hop that pays one full and one narrow, and only the scope says which. */
@@ -171,6 +181,9 @@ const breakdown = (spans) => {
     crossings,
     crossingKinds,
     crossingPatches,
+    driveStops,
+    drivePolls,
+    driveSamples,
     replyCloneMs,
     replyCloneSamples,
     refreshScopes,
@@ -345,6 +358,11 @@ table.push("", "| worker crossing (posted event kinds) | count | per hop | total
 for (const [kind, entry] of Object.entries(kindTotals).sort((left, right) => right[1].totalMs - left[1].totalMs)) {
   table.push(`| ${kind} | ${entry.count} | ${totalHops ? (entry.count / totalHops).toFixed(1) : "-"} | ${entry.totalMs.toFixed(0)} | ${(entry.totalMs / entry.count).toFixed(1)} | ${entry.patches} |`);
 }
+const driveStopTotals = {};
+for (const row of results) for (const [stop, count] of Object.entries(row.driveStops ?? {})) driveStopTotals[stop] = (driveStopTotals[stop] ?? 0) + count;
+const totalDrivePolls = results.reduce((sum, row) => sum + (row.drivePolls ?? 0), 0);
+const totalDriveSamples = results.reduce((sum, row) => sum + (row.driveSamples ?? 0), 0);
+if (totalDriveSamples) table.push("", `worker MoreWork drive: ${totalDrivePolls} guest turns absorbed over ${totalDriveSamples} crossings (${(totalDrivePolls / totalDriveSamples).toFixed(2)} per crossing, ${totalHops ? (totalDrivePolls / totalHops).toFixed(1) : "-"} per hop); stops ${Object.entries(driveStopTotals).sort((left, right) => right[1] - left[1]).map(([stop, count]) => `${stop}=${count}`).join(" ") || "-"}`);
 const totalClone = results.reduce((sum, row) => sum + row.replyCloneMs, 0);
 const totalCloneSamples = results.reduce((sum, row) => sum + row.replyCloneSamples, 0);
 const totalReply = results.reduce((sum, row) => sum + (row.totals["worker.reply"]?.totalMs ?? 0), 0);

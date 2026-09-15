@@ -39,7 +39,7 @@ pub fn plugin() -> Result<Plugin<VcsApps>, PluginAssemblyError> {
         .viewer_mutation_roster::<crate::viewer::vcs::VcsViewer>()
         .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::vcs::artifact_kind().id })
         .execution(ExecutionMode::Isolated)
-        .requests(CapabilityRequest { id: CapabilityId("documents.write".into()), scope: "plugin".into(), reason: "persist vcs edits to the open document".into(), optional: false })
+        .requests(CapabilityRequest { id: CapabilityId("artifacts.write".into()), scope: "plugin".into(), reason: "persist vcs edits to the open document".into(), optional: false })
         .try_build()
 }
 

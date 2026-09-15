@@ -134,7 +134,7 @@ fn node_record_to_spec_falls_back_to_id_when_label_missing() {
 #[test]
 fn fixture_from_node_graph_records_uses_shared_default_viewport() {
     let fixture = fixture_from_node_graph_records(&[], &[], None);
-    assert_eq!(fixture.schema, "dag.fixture");
+    assert_eq!(fixture.schema, "dag.host_document");
     assert!(fixture.nodes.is_empty());
     assert!(fixture.edges.is_empty());
     assert_eq!(fixture.camera.zoom, 1.0);
@@ -306,7 +306,7 @@ fn graph_host_sync_from_scene_json_parses_raw_json() {
     let mut host = GraphHost::default();
     let scene = r#"{"nodes":[{"id":"a","x":0.0,"y":0.0,"width":1.0,"height":1.0,"outputs":[{"id":"out"}]}],"edges":[],"viewport":{"x":0,"y":0,"zoom":1}}"#;
     host.sync_from_scene_json(scene).expect("sync");
-    assert_eq!(host.dag.fixture.nodes.iter().map(|node| node.id.as_str()).collect::<Vec<_>>(), vec!["a"]);
+    assert_eq!(host.dag.host_document.nodes.iter().map(|node| node.id.as_str()).collect::<Vec<_>>(), vec!["a"]);
 }
 
 #[test]
@@ -320,7 +320,7 @@ fn graph_host_sync_from_scene_pack_decodes_pack_shell() {
     let dsl = dsl::DslValue::from(&scene);
     let bytes = store::pack_rt::encode_pack_value(&dsl);
     host.sync_from_scene_pack(&bytes).expect("sync");
-    assert_eq!(host.dag.fixture.nodes.iter().map(|node| node.id.as_str()).collect::<Vec<_>>(), vec!["a"]);
+    assert_eq!(host.dag.host_document.nodes.iter().map(|node| node.id.as_str()).collect::<Vec<_>>(), vec!["a"]);
 }
 
 #[test]
@@ -371,10 +371,10 @@ fn graph_host_selected_node_ids_json_matches_selection() {
 fn graph_host_wheel_screen_pan_without_zoom_gesture() {
     let mut host = GraphHost::default();
     host.set_viewport(400, 400, 1.0);
-    let before = host.dag.fixture.camera.y;
+    let before = host.dag.host_document.camera.y;
     host.wheel_screen(200.0, 200.0, 10.0, false);
-    assert!(host.dag.fixture.camera.y < before);
-    assert_eq!(host.dag.fixture.camera.zoom, 1.0);
+    assert!(host.dag.host_document.camera.y < before);
+    assert_eq!(host.dag.host_document.camera.zoom, 1.0);
 }
 
 #[test]
@@ -382,7 +382,49 @@ fn graph_host_wheel_screen_zoom_gesture_changes_zoom() {
     let mut host = GraphHost::default();
     host.set_viewport(400, 400, 1.0);
     host.wheel_screen(200.0, 200.0, -10.0, true);
-    assert!(host.dag.fixture.camera.zoom > 1.0);
+    assert!(host.dag.host_document.camera.zoom > 1.0);
+}
+
+/// 🖱️ A whole scroll gesture is board work: every tick moves the camera here, and nothing needs to
+/// leave this host until the ticks stop.
+///
+/// The renderer used to read `viewport()` and publish `nodeGraphViewport` to the plugin on EVERY
+/// notch, which cost a guest invocation, a ui refresh and a React commit per tick and left the board
+/// painting once for a whole scroll (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
+/// `📓️flow-scroll-render-perf-2026-09-15.md`). This pins the half that makes the host-side rule sound:
+/// the camera after N ticks is a pure function of the N ticks, so a reader that asks once at the end
+/// sees exactly what a reader that asked after every tick would have seen last.
+#[test]
+fn graph_host_wheel_ticks_accumulate_on_the_board_without_a_publication() {
+    let mut host = GraphHost::default();
+    host.set_viewport(400, 400, 1.0);
+    let mut zooms = Vec::new();
+    for _ in 0..30 {
+        host.wheel_screen(200.0, 200.0, -10.0, true);
+        zooms.push(host.viewport().zoom);
+    }
+    assert!(zooms.windows(2).all(|pair| pair[1] >= pair[0]), "a zoom-in scroll never zooms out");
+    assert!(zooms.last().copied().unwrap() > 1.0);
+
+    let mut settled = GraphHost::default();
+    settled.set_viewport(400, 400, 1.0);
+    for _ in 0..30 {
+        settled.wheel_screen(200.0, 200.0, -10.0, true);
+    }
+    assert_eq!(settled.viewport(), host.viewport(), "one read at settle equals the last of thirty reads");
+}
+
+/// 🖱️ A drag-pan is board work too: the camera the release publishes is the one the moves built.
+#[test]
+fn graph_host_pan_ticks_accumulate_on_the_board_without_a_publication() {
+    let mut host = GraphHost::default();
+    host.set_viewport(400, 400, 1.0);
+    let before = host.viewport().y;
+    for _ in 0..60 {
+        host.wheel_screen(200.0, 200.0, 10.0, false);
+    }
+    assert!(host.viewport().y < before);
+    assert_eq!(host.viewport().zoom, 1.0, "a pan never changes zoom");
 }
 
 #[test]
@@ -492,7 +534,7 @@ fn graph_host_fixture_json_round_trips_nodes() {
     let mut host = GraphHost::default();
     let payload = payload_with_node("a");
     host.sync_from_payload(&payload).expect("sync");
-    let json = host.fixture_json().expect("fixture json");
+    let json = host.host_document_json().expect("fixture json");
     assert!(json.contains("\"a\""));
 }
 

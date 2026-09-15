@@ -11,14 +11,14 @@ async fn renders_node_graph_scene() {
 /// 🛍️ The scene names its operators by KIND ID (inside `fixtureJson`) and carries only the document's
 /// own neuron kinds as operator records — never the registered catalogue (~100 KB, three times the
 /// fixed 32 KiB per-surface admission; ticket 26/09/09/PROCEDURAL-3D-END-TO-END §3.1). Those records
-/// are how the canvas instantiates the graph instead of `FlowFixture::default()`'s placeholder slider.
+/// are how the canvas instantiates the graph instead of `FlowHostDocument::default()`'s placeholder slider.
 #[semio_framework_async_macros::async_test]
 async fn main_graph_scene_exports_flow_backed_node_graph_fields() {
     let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
     let mut app = app_with_registry().await;
     let json = render_body(&mut app, GENERATION_3D_PLAY_BODY_MAIN).await;
     let scene = semio_framework_plugin::artifact_app_laws::decode_fixture_scene::<NodeGraphScene>(&json).expect("node-graph scene decodes off the rendered surface");
-    assert!(scene.fixture_json.as_deref().is_some_and(|fixture| fixture.contains("flow.fixture")));
+    assert!(scene.fixture_json.as_deref().is_some_and(|fixture| fixture.contains("flow.host_document")));
     let capabilities = scene.capabilities_json.clone().unwrap_or_default();
     assert!(capabilities.contains("flow"), "missing flow engine capability: {capabilities}");
     assert!(!scene.nodes.is_empty(), "the open document's nodes must reach the scene");
@@ -54,8 +54,8 @@ const GRAPH_OUTLINE_LAW: &str = include_str!("../../🧫️fixtures/🔬️unit/
 
 fn law_outline_projection() -> serde_json::Value {
     let law: serde_json::Value = serde_json::from_str(GRAPH_OUTLINE_LAW).expect("graph outline law json");
-    let fixture = semio_framework_os_flow::FlowHost::parse_fixture_json(&law["fixture"].to_string()).expect("law fixture parses");
-    let (nodes, edges) = with_host(&fixture, |host| fixture_to_workflow(&host.dag.fixture));
+    let fixture = semio_framework_os_flow::FlowHost::parse_host_document_json(&law["fixture"].to_string()).expect("law fixture parses");
+    let (nodes, edges) = with_host(&snapshot, |host| dag_host_document_to_workflow(&host.dag.host_document));
     let labels = crate::editor::generation3d::terminology::generation3d_labels(&semio_framework_plugin::ViewModel::default());
     let outline = graph_outline(&nodes, &edges, None, labels).expect("outline builds");
     fixture.retire_cold();
@@ -127,14 +127,22 @@ fn flow_graph_node_rows_bind_both_framework_interaction_verbs() {
 
 /// 🚦 A node row's description is the localized `NodeEvalStatus` the flow session reported for that
 /// widget — English and German, no default language.
+///
+/// 🗑️ `stale` is deliberately absent: `build_flow_status_json` stopped emitting it when the census
+/// became monotone, so the word had no producer and the vocabulary dropped it rather than keep a
+/// status a user could never be shown (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
 #[test]
 fn flow_graph_node_status_is_localized() {
-    let status = r#"{"height":{"status":"stale"}}"#.to_string();
     let english = crate::editor::generation3d::terminology::generation3d_labels(&semio_framework_plugin::ViewModel::default());
     let german = crate::editor::generation3d::terminology::generation3d_labels(&semio_framework_plugin::ViewModel { locale: semio_framework_plugin::Locale::De, ..Default::default() });
-    assert_eq!(node_status_label(Some(&status), "height", english), Some("Stale"));
-    assert_eq!(node_status_label(Some(&status), "height", german), Some("Veraltet"));
-    assert_eq!(node_status_label(Some(&status), "missing", english), None);
+    for (tag, en, de) in [("queued", "Queued", "In Warteschlange"), ("computing", "Computing", "Berechnen"), ("error", "Error", "Fehler"), ("blocked", "Blocked", "Blockiert"), ("ok", "Evaluated", "Ausgewertet")] {
+        let status = format!(r#"{{"height":{{"status":"{tag}"}}}}"#);
+        assert_eq!(node_status_label(Some(&status), "height", english), Some(en), "{tag}");
+        assert_eq!(node_status_label(Some(&status), "height", german), Some(de), "{tag}");
+    }
+    let unknown = r#"{"height":{"status":"stale"}}"#.to_string();
+    assert_eq!(node_status_label(Some(&unknown), "height", english), Some("Evaluated"), "a word the census cannot emit is not a status word");
+    assert_eq!(node_status_label(Some(&unknown), "missing", english), None);
     assert_eq!(node_status_label(None, "height", english), None);
 }
 

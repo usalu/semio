@@ -405,6 +405,13 @@ type ShardWorkerTurnTimings = Readonly<{
   readonly patches: number;
   readonly status?: string;
   readonly commandPageBytes: number;
+  /** 🚚️ How many guest turns the WORKER ran inside this one crossing, out of the ceiling it derived
+   * from the granted wall, and why it stopped (`carried`/`idle`/`input`/`steps`/`budget`/`closed`).
+   * Diagnostic: it is what makes "the worker owns the MoreWork drive" a reading rather than an
+   * inference from `worker.guest`'s mean. */
+  readonly drivePolls?: number;
+  readonly driveSteps?: number;
+  readonly driveStopped?: string;
 }>;
 
 /** 📮️ Places the worker's four stages on the PAGE's own hop timeline, where `channel`, `refresh.turn`
@@ -419,7 +426,7 @@ type ShardWorkerTurnTimings = Readonly<{
 function publishShardWorkerTurnSpans(timings: ShardWorkerTurnTimings, answeredAtEpochMs: number, actorId: string): void {
   const finite = (value: unknown): value is number => typeof value === "number" && Number.isFinite(value);
   if (!finite(timings.receivedAtEpochMs)) return;
-  const detail = { actorId, events: finite(timings.events) ? timings.events : 0, eventKinds: typeof timings.eventKinds === "string" ? timings.eventKinds : "", replyCloneMs: finite(timings.previousReplyCloneMs) ? Math.round(timings.previousReplyCloneMs * 100) / 100 : -1, patches: finite(timings.patches) ? timings.patches : 0, status: typeof timings.status === "string" ? timings.status : "", commandPageBytes: finite(timings.commandPageBytes) ? timings.commandPageBytes : 0 };
+  const detail = { actorId, events: finite(timings.events) ? timings.events : 0, eventKinds: typeof timings.eventKinds === "string" ? timings.eventKinds : "", replyCloneMs: finite(timings.previousReplyCloneMs) ? Math.round(timings.previousReplyCloneMs * 100) / 100 : -1, patches: finite(timings.patches) ? timings.patches : 0, status: typeof timings.status === "string" ? timings.status : "", commandPageBytes: finite(timings.commandPageBytes) ? timings.commandPageBytes : 0, drivePolls: finite(timings.drivePolls) ? timings.drivePolls : -1, driveSteps: finite(timings.driveSteps) ? timings.driveSteps : -1, driveStopped: typeof timings.driveStopped === "string" ? timings.driveStopped : "" };
   const span = (stage: "worker.turn" | "worker.receive" | "worker.decode" | "worker.guest" | "worker.reply", fromEpochMs: unknown, toEpochMs: unknown): void => {
     if (!finite(fromEpochMs) || !finite(toEpochMs) || toEpochMs < fromEpochMs) return;
     hopTrace.record(stage, hopTraceEpochToTimeline(fromEpochMs), toEpochMs - fromEpochMs, detail);
@@ -431,14 +438,30 @@ function publishShardWorkerTurnSpans(timings: ShardWorkerTurnTimings, answeredAt
   span("worker.turn", timings.receivedAtEpochMs, timings.repliedAtEpochMs);
 }
 
+/** 🫀️ A liveness beat CARRIED by a message that was crossing anyway, instead of costing a
+ * `postMessage` of its own.
+ *
+ * 🐛️ Every turn crossing used to cost three main-thread messages: a start-of-request `heartbeat`, a
+ * `turn-step` `heartbeat`, and the `result` itself — on a main thread the hop measurement shows is the
+ * binding constraint (`📓️reactor-reconcile-spin-2026-09-14.md` §7 item 3). Neither posted beat told
+ * this class anything the reply does not: {@link ShardClient.noteLiveness} treats EVERY inbound
+ * message as proof of life, and {@link evaluateShardLiveness} already counts the request's own start
+ * instant as proven-alive. So the beat rides, and {@link ShardClient.handleMessage} folds it into the
+ * same `recordHeartbeat` a dedicated `heartbeat` message reaches — the turn sequence stays monotone
+ * and the phase still names the boundary. */
+export type ShardCarriedBeat = { readonly turnSeq: number; readonly phase: string | null };
+
 type InboundMessage =
-  | { readonly kind: "result"; readonly requestId: string; readonly ok: true; readonly value: unknown; readonly timings?: ShardWorkerTurnTimings }
-  | { readonly kind: "result"; readonly requestId: string; readonly ok: false; readonly error: string; readonly stack?: string; readonly type?: string; readonly framesBytes?: number; readonly retryableLifecycle?: boolean }
+  | { readonly kind: "result"; readonly requestId: string; readonly ok: true; readonly value: unknown; readonly timings?: ShardWorkerTurnTimings; readonly beat?: ShardCarriedBeat }
+  | { readonly kind: "result"; readonly requestId: string; readonly ok: false; readonly error: string; readonly stack?: string; readonly type?: string; readonly framesBytes?: number; readonly retryableLifecycle?: boolean; readonly beat?: ShardCarriedBeat }
   /** 🫀️ `phase` names the generated worker's await boundary this beat was emitted at
    * (`module-fetch`/`module-ready`/`actor-ready`, or `progress` from its while-busy ticker); absent on
    * the unconditional start-of-request beat. Diagnostic only — {@link evaluateShardLiveness} treats
-   * every beat identically, so a future phase needs no host change to keep a shard alive. */
-  | { readonly kind: "heartbeat"; readonly turnSeq: number; readonly phase?: string }
+   * every beat identically, so a future phase needs no host change to keep a shard alive.
+   *
+   * A dedicated `heartbeat` message is now only for a beat with NO crossing to ride; the two beats a
+   * turn crossing used to cost ride the reply instead, as {@link ShardCarriedBeat}. */
+  | { readonly kind: "heartbeat"; readonly turnSeq: number; readonly phase?: string | null }
   | { readonly kind: "trap"; readonly actorId: string; readonly activationGeneration: bigint | null; readonly message: string }
   /** 🩺️ The worker's own account of a fault the host would otherwise see as an anonymous `ErrorEvent`
    * (or not at all): an exception escaping a message handler, an unhandled rejection, or a caught
@@ -1440,6 +1463,9 @@ export class ShardClient {
       this.recordHeartbeat(slot, message.turnSeq, this.now(), message.phase ?? null);
       return;
     }
+    // 🫀️ A beat that rode this crossing instead of costing its own message — folded into exactly the
+    // state a dedicated `heartbeat` would have reached, before anything else this message means.
+    if (message.kind === "result" && message.beat && typeof message.beat.turnSeq === "number") this.recordHeartbeat(slot, message.beat.turnSeq, this.now(), message.beat.phase ?? null);
     if (message.kind === "worker-fault") {
       const detail = formatShardWorkerFault(slot.index, message);
       console.error(`[DEBUG] ${detail}`, message.stack ?? "");

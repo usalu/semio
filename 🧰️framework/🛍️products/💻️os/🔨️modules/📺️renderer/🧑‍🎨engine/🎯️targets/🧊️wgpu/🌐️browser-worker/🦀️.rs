@@ -650,6 +650,7 @@ impl BrowserRendererBootstrap {
             retirement: None,
             retained_fault: None,
             surface_resize: None,
+            stall: Default::default(),
         };
         let mut host = crate::os_host::OsHost::new(runtime, presenter);
         let runtime_wake = self.wake.clone();

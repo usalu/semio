@@ -122,8 +122,8 @@ fn writer_hidden_view(id: &str, label: LocalizedLabel, icon_id: &str) -> ActionD
 /// writer's text out to several consumers, e.g. `playbook`'s `chapters:in`).
 pub fn writer_io() -> AppIo {
     AppIo {
-        document_schema: WRITER_DOCUMENT_SCHEMA.into(),
-        document_media_type: MediaType { class: MediaClass::Text, form: MediaForm::Document },
+        artifact_schema: WRITER_DOCUMENT_SCHEMA.into(),
+        artifact_media_type: MediaType { class: MediaClass::Text, form: MediaForm::Document },
         ports: vec![semio_framework_plugin::MediaPortSpec {
             id: "text:out".into(),
             label: "Text".into(),
@@ -1088,7 +1088,7 @@ impl ArtifactEditor for WriterPlayApp {
         owner: EditorApp<WriterPlayApp>,
         owner_file: "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.writer.writer@1/*#editor",
-        document_schema: "writer.document",
+        artifact_schema: "writer.document",
         factory: "WriterCommandJobFactory",
         factory_type: WriterCommandJobFactory,
         contract: ToolExecutionContract::resumable(4_096, 4_096, 1, 64, 2_000, 1, 1),
@@ -1196,7 +1196,7 @@ impl ArtifactEditor for WriterPlayApp {
 
     /// 🎞️ `"text:out"` exports the writer document's current text as one "chapter" payload (see
     /// `writer_chapter_payload`) — `playbook`'s `"chapters:in"` is the intended consumer. Falls through
-    /// to the default whole-document-pack export for `"document:out"` (duplicated inline, not delegated
+    /// to the default whole-document-pack export for `"artifact:out"` (duplicated inline, not delegated
     /// — Rust traits have no `super` call for an overridden default).
     fn export_media(port: &str, doc: &ArtifactView<'_, WriterSnapshot>) -> Result<Media, MediaError> {
         if port == "text:out" {
@@ -1204,7 +1204,7 @@ impl ArtifactEditor for WriterPlayApp {
             let json = serde_json::to_string(&payload).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
             return Ok(Media { media_type: MediaType { class: MediaClass::Text, form: MediaForm::Document }, payload: MediaPayload::Structured { schema: "text.document".into(), json } });
         }
-        if port != "document:out" {
+        if port != "artifact:out" {
             return Err(MediaError::NotImplemented);
         }
         let bytes = doc.snapshot.encode_pack();

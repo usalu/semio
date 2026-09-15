@@ -10,7 +10,7 @@ use framework_schema::ArtifactSchema;
 #[artifact_schema(id = "s.norm.en1997")]
 pub struct En1997Diff {
     #[state(artifact)]
-    pub artifact: Option<Box<crate::document_schema::En1997Artifact>>,
+    pub artifact: Option<Box<crate::artifact_schema::En1997Artifact>>,
     #[state(artifact)]
     pub v_ed_kn: Option<f64>,
     #[state(artifact)]

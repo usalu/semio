@@ -227,7 +227,7 @@ async fn config_spec_declares_no_fields() {
 async fn manifest_declares_config_io_and_computation_artifact_kind() {
     let definition = create_fem2d_app();
     assert!(definition.config.fields.is_empty());
-    assert_eq!(definition.io.document_schema, crate::FEM_2D_SCHEMA);
+    assert_eq!(definition.io.artifact_schema, crate::FEM_2D_SCHEMA);
     let computation_kind = definition.artifact_kinds.iter().find(|kind| kind.id == "computation.fem2d").expect("computation.fem2d artifact kind declared");
     assert_eq!(computation_kind.media_type.class, MediaClass::Computation);
     assert_eq!(computation_kind.media_type.form, MediaForm::Value);
@@ -246,9 +246,9 @@ async fn app_io_forwards_the_engine_declared_ports() {
 #[semio_framework_async_macros::async_test]
 async fn fem2d_io_declares_geometry_in_and_results_out_ports() {
     let io = fem2d_io();
-    assert_eq!(io.document_schema, crate::FEM_2D_SCHEMA);
-    assert_eq!(io.document_media_type.class, MediaClass::TwoD);
-    assert_eq!(io.document_media_type.form, MediaForm::Vector);
+    assert_eq!(io.artifact_schema, crate::FEM_2D_SCHEMA);
+    assert_eq!(io.artifact_media_type.class, MediaClass::TwoD);
+    assert_eq!(io.artifact_media_type.form, MediaForm::Vector);
     assert_eq!(io.artifact.id, "2d.fem");
     assert_eq!(io.artifact.component_kind, "fem2d");
 
@@ -321,7 +321,7 @@ async fn two_instances_converge_on_disjoint_edits() {
 
 //#region 🔖️ExportImportMedia
 /// 🧬️ Whole-document replace is not an in-history mutation (`SetSnapshot` is banned outright —
-/// see `📓️taxonomy.md`'s forbidden vocabulary), so `import_media("document:in")` now surfaces as a
+/// see `📓️taxonomy.md`'s forbidden vocabulary), so `import_media("artifact:in")` now surfaces as a
 /// `Effect::LoadDocument` carrying the replacement document's pack bytes, not an
 /// `artifact_mutations` entry — asserted directly on `Emit` rather than through `app.snapshot()`.
 #[semio_framework_async_macros::async_test]
@@ -330,13 +330,13 @@ async fn export_media_document_out_round_trips_via_import_media_document_in() {
     let snapshot: Fem2dSnapshot = Fem2dSnapshot::parse_dsl(FEM2D_EXAMPLE_DSL).unwrap();
     let history = semio_framework_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&snapshot, &history);
-    let media = Fem2dPlayApp::export_media("document:out", &doc).expect("document:out exports");
+    let media = Fem2dPlayApp::export_media("artifact:out", &doc).expect("document:out exports");
     assert_eq!(media.media_type.class, MediaClass::TwoD);
     assert_eq!(media.media_type.form, MediaForm::Vector);
     let empty_projection = crate::standards::v1::subsets::any::schema::empty_fem2d_snapshot();
     let empty_history = semio_framework_plugin::HistoryView::empty();
     let empty_doc = ArtifactView::new(&empty_projection, &empty_history);
-    let emit = Fem2dPlayApp::import_media("document:in", &media, &empty_doc).expect("document:in imports");
+    let emit = Fem2dPlayApp::import_media("artifact:in", &media, &empty_doc).expect("document:in imports");
     assert!(emit.artifact_mutations.is_empty(), "whole-document replace must not be an artifact_mutations entry");
     let semio_framework::kernel::Effect::LoadDocument { pack, .. } = emit.effects.first().expect("document:in must emit a LoadDocument effect") else {
         panic!("expected a LoadDocument effect");

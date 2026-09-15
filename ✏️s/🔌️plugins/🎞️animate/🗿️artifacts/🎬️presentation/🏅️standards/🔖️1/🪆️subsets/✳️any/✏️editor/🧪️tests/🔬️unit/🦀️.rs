@@ -149,7 +149,7 @@ async fn the_manifest_stitches_every_taxonomy_node() {
     let json = format!("{:?}", create_animate_presentation_app());
     assert!(json.contains(tile_editor::PRESENTATION_PLAY_WINDOW_MAIN), "window kind missing from the manifest: {json}");
     assert!(json.contains(main::PRESENTATION_PLAY_MODE_MAIN), "mode missing from the manifest");
-    for body in [PRESENTATION_PLAY_BODY_DOCUMENT, PRESENTATION_PLAY_BODY_CATALOGUE, PRESENTATION_PLAY_BODY_DETAILS] {
+    for body in [PRESENTATION_PLAY_BODY_ARTIFACT, PRESENTATION_PLAY_BODY_CATALOGUE, PRESENTATION_PLAY_BODY_DETAILS] {
         assert!(json.contains(body), "panel body {body} missing from the manifest");
     }
     assert!(json.contains(PRESENTATION_DOCUMENT_SCHEMA), "artifact kind missing from the manifest");
@@ -201,8 +201,8 @@ async fn two_instances_converge_disjoint_edits_via_backbone() {
 #[semio_framework_async_macros::async_test]
 async fn presentation_io_declares_frames_in_and_document_ports() {
     let ports = AnimatePresentationPlayApp::io().expect("io").all_ports().await;
-    assert!(ports.iter().any(|port| port.id == "document:in"));
-    assert!(ports.iter().any(|port| port.id == "document:out"));
+    assert!(ports.iter().any(|port| port.id == "artifact:in"));
+    assert!(ports.iter().any(|port| port.id == "artifact:out"));
     assert!(ports.iter().any(|port| port.id == "frames:in"));
 }
 
@@ -253,7 +253,7 @@ async fn empty_presentation_snapshot_has_no_tiles() {
 #[semio_framework_async_macros::async_test]
 async fn presentation_io_declares_the_frames_in_port() {
     let io = presentation_io();
-    assert_eq!(io.document_schema, PRESENTATION_DOCUMENT_SCHEMA);
+    assert_eq!(io.artifact_schema, PRESENTATION_DOCUMENT_SCHEMA);
     assert_eq!(io.ports.len(), 1);
     let port = &io.ports[0];
     assert_eq!(port.id, "frames:in");

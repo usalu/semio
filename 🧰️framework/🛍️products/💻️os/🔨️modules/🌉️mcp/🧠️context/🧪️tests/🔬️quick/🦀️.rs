@@ -45,7 +45,7 @@ fn mint_session_id_is_unique_per_counter() {
 #[test]
 fn resolve_context_carries_the_catalog_hash() {
     let catalog = test_catalog();
-    let summary = resolve_context(&catalog, "sess_1".to_string(), "agent:local", vec!["documents.read".to_string()], None, "en");
+    let summary = resolve_context(&catalog, "sess_1".to_string(), "agent:local", vec!["artifacts.read".to_string()], None, "en");
     assert_eq!(summary.catalog_hash, catalog.hash);
     assert_eq!(summary.session_id, "sess_1");
 }

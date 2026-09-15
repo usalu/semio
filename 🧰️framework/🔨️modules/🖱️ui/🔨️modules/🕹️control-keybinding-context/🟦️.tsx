@@ -7,7 +7,7 @@
 // #region 🔌️Adapters
 import * as React from "react";
 import { ephemeralMap } from "@semio-tech/framework";
-import { formatKeybindingShortcut } from "../🔤️keybinding-text-interpretation/🟦️.ts";
+import { formatKeybindingShortcut, keybindingPlatformUsesMetaV1 } from "../🔤️keybinding-text-interpretation/🟦️.ts";
 import { reactHostPort } from "../../🧱️elements/🔌️Ports/🟦️.tsx";
 import { resolveControlLabelId } from "../../🧱️elements/🚗️UiDriver/🟦️.tsx";
 // #endregion 🔌️Adapters
@@ -54,9 +54,9 @@ interface OwnedHotkeyChord {
   readonly shift: boolean;
 }
 
-/** @emoji 🍎 Whether the browser platform uses Command as its primary modifier. */
+/** @emoji 🍎 Whether the browser platform uses Command as its primary modifier — {@link keybindingPlatformUsesMetaV1}, so the dispatcher, the badge and `aria-keyshortcuts` resolve `mod` from ONE rule. */
 export function isAppleHotkeyPlatform(platform: string): boolean {
-  return /mac|iphone|ipad|ipod/i.test(platform);
+  return keybindingPlatformUsesMetaV1(platform);
 }
 
 /** @emoji 🧹 Normalizes browser key names and keybinding aliases to one comparison token. */

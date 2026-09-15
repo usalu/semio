@@ -253,7 +253,7 @@ impl ArtifactEditor for SpaceIndexEditor {
         owner: semio_framework_plugin::EditorApp<SpaceIndexEditor>,
         owner_file: "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.space.space@1/*#editor",
-        document_schema: "s.space",
+        artifact_schema: "s.space",
         factory: "SpaceIndexRetainedCommandJobFactory",
         factory_type: SpaceIndexRetainedCommandJobFactory,
         contract: space_index_retained_contract(),

@@ -1,7 +1,7 @@
 //! ⚙️ Sequence generic detection assembly, store bridges, and cross-kind laws.
 
 use crate::schema::mutations::*;
-use crate::{SequenceEdge, SequenceFixture, SequenceSnapshot, SequenceStep};
+use crate::{SequenceEdge, SequenceHostDocument, SequenceSnapshot, SequenceStep};
 use protocol::Mutation;
 use std::collections::BTreeMap;
 
@@ -13,8 +13,8 @@ pub type SequenceStore = store::ArtifactStore<SequenceSnapshot, SequenceMutation
 //#region 🔎️DetectionAssembly
 /// 🗂️ Indexed before/after scenes shared by independent leaf detection contributions.
 pub struct SequenceDetectionContext<'a> {
-    pub before: &'a SequenceFixture,
-    pub after: &'a SequenceFixture,
+    pub before: &'a SequenceHostDocument,
+    pub after: &'a SequenceHostDocument,
     pub before_steps: BTreeMap<&'a str, &'a SequenceStep>,
     pub after_steps: BTreeMap<&'a str, &'a SequenceStep>,
     pub before_edges: BTreeMap<&'a str, &'a SequenceEdge>,
@@ -30,7 +30,7 @@ pub struct SequenceDetectedMutation {
 pub type SequenceMutationDetector = for<'a> fn(&SequenceDetectionContext<'a>) -> Vec<SequenceDetectedMutation>;
 
 /// 🔀️ Assembles ordered leaf-owned detection contributions without concrete mutation branches.
-pub fn sequence_snapshot_mutations(before: &SequenceFixture, after: &SequenceFixture) -> Vec<SequenceMutation> {
+pub fn sequence_snapshot_mutations(before: &SequenceHostDocument, after: &SequenceHostDocument) -> Vec<SequenceMutation> {
     let context = SequenceDetectionContext {
         before,
         after,
@@ -101,7 +101,7 @@ pub fn decode_sequence_scene_json(text: &str) -> Result<(Vec<SequenceStep>, Vec<
 /// promise.
 pub fn encode_sequence_projection_json(snapshot: &SequenceSnapshot) -> String {
     let scene = crate::sequence_working_scene(snapshot);
-    dsl::os_pack::to_json_string(&SequenceFixture { schema: snapshot.schema.clone(), steps: scene.steps, edges: scene.edges })
+    dsl::os_pack::to_json_string(&SequenceHostDocument { schema: snapshot.schema.clone(), steps: scene.steps, edges: scene.edges })
 }
 //#endregion 🔖️CaseBridges
 

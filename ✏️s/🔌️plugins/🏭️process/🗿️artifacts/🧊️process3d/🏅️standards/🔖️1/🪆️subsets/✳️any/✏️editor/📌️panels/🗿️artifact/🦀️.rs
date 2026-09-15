@@ -7,42 +7,42 @@ use crate::Process3dSnapshot;
 use semio_framework_plugin::{tree_item, ActionBinding, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, RowAction, RowActionPlacement, Trigger, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
 
 //#region 🔖️Constants
-pub const PROCESS_3D_PLAY_BODY_DOCUMENT: &str = "process.play.document";
+pub const PROCESS_3D_PLAY_BODY_ARTIFACT: &str = "process.play.artifact";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
 pub fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_ARTIFACT_ID.into()),
-        label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Dokument"),
+        label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Artefakt"),
         group: PanelGroup::Workbench,
-        body_key: Some(PROCESS_3D_PLAY_BODY_DOCUMENT.into()),
+        body_key: Some(PROCESS_3D_PLAY_BODY_ARTIFACT.into()),
         children: Vec::new(),
     }
 }
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-/// 📄️ Renders the document tree: `fixture.stock_id`/`stock_label` (composition identity, always
-/// authoritative) plus the ordered step timeline read straight off `fixture.step_payloads` — the
+/// 📄️ Renders the document tree: `snapshot.stock_id`/`stock_label` (composition identity, always
+/// authoritative) plus the ordered step timeline read straight off `snapshot.step_payloads` — the
 /// snapshot's own inline, authoritative record of the process steps since ticket
 /// `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 4 (`stock_solid`/`steps` stay composed-child
 /// HANDLES with no resolvable content; the payloads are what's real, see `Process3dSnapshot`'s doc
 /// comment).
 ///
-/// 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): item ids (`fixture.stock_id`, each
+/// 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): item ids (`snapshot.stock_id`, each
 /// step id) are the SAME canonical targets the framework-owned `"geometry"` interaction domain
 /// selects — the tree binds `.interaction_domain` and stamps no `.selected()?`/`.highlighted()?`
 /// itself; the framework's post-render pass overwrites item presence from live selection/hover, and
 /// clicks translate into `interactionSelect` generically (mirrors `🧱️block`'s `📌️panels/🗿️artifact`).
-pub fn render(fixture: &Process3dSnapshot, labels: &Process3dLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    let mut stock_item = tree_item(&fixture.stock_id, crate::editor::process3d::ui_label(&fixture.stock_label)?)?;
+pub fn render(snapshot: &Process3dSnapshot, labels: &Process3dLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    let mut stock_item = tree_item(&snapshot.stock_id, crate::editor::process3d::ui_label(&snapshot.stock_label)?)?;
     if let semio_framework_plugin::Component::TreeItem(props) = &mut stock_item.component {
         props.icon = Some(semio_framework_plugin::UiText::try_from_str("box").ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.document.icon", "fixed document icon admission failed"))?);
     }
-    let cursor = fixture.resolved_up_to.unwrap_or(fixture.step_payloads.len());
+    let cursor = snapshot.resolved_up_to.unwrap_or(snapshot.step_payloads.len());
     let mut step_items = semio_framework_plugin::UiFixedList::default();
-    for (index, step) in fixture.step_payloads.iter().enumerate() {
+    for (index, step) in snapshot.step_payloads.iter().enumerate() {
         let mut item = tree_item(&step.id, crate::editor::process3d::ui_label(&step.label)?)?;
         let icon = semio_framework_plugin::UiText::try_from_str(process3d_measure_icon(&step.measure)).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.document.icon", "fixed document icon admission failed"))?;
         let enabled_args = crate::editor::process3d::ui_value_map([("enabled", crate::editor::process3d::ui_value_bool(!step.enabled)), ("id", crate::editor::process3d::ui_value_text(&step.id)?)])?;

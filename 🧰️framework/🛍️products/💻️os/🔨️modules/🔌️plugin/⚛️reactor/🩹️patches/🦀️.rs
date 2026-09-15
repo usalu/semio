@@ -760,6 +760,16 @@ impl PatchTracker {
         }))
     }
 
+    /// 🎚️ The generations of every slot still holding a producer or a job — what [`next_ready_index`]
+    /// used to compare a ready output against GLOBALLY. A law reads it to prove the widened gate
+    /// admits an output while a DIFFERENT allocation's lower-generation job is still running, which is
+    /// exactly the state the global gate refused.
+    #[cfg(test)]
+    pub(crate) fn in_flight_generations(&self) -> Vec<(NativeCloseKey, u64)> {
+        let state = self.state.borrow();
+        state.slots.iter().flatten().filter(|slot| slot.producer.is_some() || slot.job.is_some()).map(|slot| (slot.key, slot.generation)).collect()
+    }
+
     pub(crate) fn take_ready_patch_into(&self, key: NativeCloseKey, generation: u64, target: &mut Option<SurfaceReconcileReadyPatch>, admitted_bytes: usize) -> Result<bool, &'static str> {
         if target.is_some() {
             return Ok(false);
@@ -1125,18 +1135,47 @@ impl PatchTracker {
     }
 }
 
+/// 🎚️ The oldest ready output that may leave the guest NOW — the whole of what "readiness" means to
+/// [`super::turn::drive_reconcile_within`].
+///
+/// 🐛️ The refusal used to be GLOBAL: the minimum generation over EVERY slot still holding a producer
+/// or a job was compared against the chosen output, so one surface's running reconcile job blocked
+/// every other surface's finished one. That is the term
+/// `📓️ui-turn-patch-batching-2026-09-15.md` §7.1 names — "widening the batch means widening
+/// READINESS" — and it is why 18 of 25 measured boot turns had exactly ONE surface ready while the
+/// wire could already carry sixteen.
+///
+/// Ordering is a per-ALLOCATION contract, never a global one. A retained patch is addressed by its own
+/// `(surface, revision)` and applied into that surface's own retained document; two surfaces share no
+/// revision line, no document and no reader, so nothing about surface B's in-flight job constrains
+/// when surface A's finished output may be published. What DOES constrain it is the same allocation's
+/// own earlier work, so the gate asks exactly that question and nothing wider.
 fn next_ready_index(state: &PatchTrackerState) -> Option<usize> {
-    let (index, ready) = state
+    state
         .ready
         .iter()
         .enumerate()
         .filter_map(|(index, ready)| ready.as_ref().filter(|ready| ready.published && !ready.closing && !state.closing_instances.iter().flatten().any(|closing| closing.key == ready.key)).map(|ready| (index, ready)))
-        .min_by_key(|(_, ready)| ready.generation)?;
-    let pending = state.slots.iter().flatten().filter(|slot| slot.producer.is_some() || slot.job.is_some()).map(|slot| slot.generation).min();
-    if pending.is_some_and(|generation| generation < ready.generation) {
-        return None;
-    }
-    Some(index)
+        .filter(|(_, ready)| ready_output_is_admissible(ready.key, ready.generation, state.slots.iter().flatten().filter(|slot| slot.producer.is_some() || slot.job.is_some()).map(|slot| (slot.key, slot.generation))))
+        .min_by_key(|(_, ready)| ready.generation)
+        .map(|(index, _)| index)
+}
+
+/// 🎚️ Whether one finished reconcile output may leave the guest while `in_flight` allocations are
+/// still producing — the whole ordering contract of [`next_ready_index`], as a function so it can be
+/// stated as a law instead of inferred from a ladder.
+///
+/// An output waits only for ITS OWN allocation's earlier work. A retained patch is addressed by its
+/// own `(surface, revision)` and applied into that surface's own retained document; two allocations
+/// share no revision line, no document and no reader, so surface B's in-flight job says nothing about
+/// when surface A's finished output may be published.
+///
+/// 🐛️ The refusal used to be GLOBAL — the minimum generation over EVERY producing slot, compared
+/// against the chosen output — so one slow surface serialized every other surface's publication. That
+/// is the term `📓️ui-turn-patch-batching-2026-09-15.md` §7.1 names: 18 of 25 measured boot turns had
+/// exactly ONE surface ready while the wire could already carry sixteen.
+pub(crate) fn ready_output_is_admissible(ready_key: NativeCloseKey, ready_generation: u64, in_flight: impl Iterator<Item = (NativeCloseKey, u64)>) -> bool {
+    !in_flight.into_iter().any(|(key, generation)| key == ready_key && generation < ready_generation)
 }
 
 /// 🧹️ An unpublished, not-yet-closing output whose surface slot holds no producer or job any more can

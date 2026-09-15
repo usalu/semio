@@ -13,14 +13,14 @@ use semio_framework_plugin::{ActionFactory, InteractionTarget, LocalizedLabel, P
 use semio_framework_ui_contract as ui;
 
 //#region 🔖️Constants
-pub const BODY_KEY: &str = "puzzle.5d.play.document";
+pub const BODY_KEY: &str = "puzzle.5d.play.artifact";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
 pub fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_ARTIFACT_ID.into()),
-        label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Dokument"),
+        label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Artefakt"),
         group: PanelGroup::Workbench,
         body_key: Some(BODY_KEY.into()),
         children: Vec::new(),

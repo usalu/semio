@@ -15,8 +15,6 @@ mod artifact_inference_service_tests {
             artifact_kind,
             artifact_schema: artifact_kind,
             artifact_schema_version: 1,
-            document_schema: "test.document",
-            document_schema_version: 1,
             inference_schema,
             inference_schema_version: 1,
             algorithm_version: 1,

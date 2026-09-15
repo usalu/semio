@@ -1,6 +1,6 @@
 //! 🚪️ equation <- json. The exact carrier reconstructs composed children with a local owner.
 
-use crate::{equation_snapshot_from_fixture, EquationFixture, EquationSnapshot};
+use crate::{equation_snapshot_from_host_document, EquationFixture, EquationSnapshot};
 use semio_framework::io::io_mechanism::Deserializer;
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};
@@ -20,6 +20,6 @@ impl Deserializer<EquationSnapshot> for JsonIntoEquation {
         let _ = STDIO_JSON_DOCUMENT_SCHEMA;
         let text = std::str::from_utf8(bytes).map_err(|error| IoError { message: format!("JsonIntoEquation: not valid utf-8: {error}"), diagnostics: Vec::new() })?;
         let fixture: EquationFixture = pack::json::from_json_str(text).map_err(|error| IoError { message: format!("JsonIntoEquation: {error}"), diagnostics: Vec::new() })?;
-        Ok(IoOutcome::clean(equation_snapshot_from_fixture(fixture)))
+        Ok(IoOutcome::clean(equation_snapshot_from_host_document(fixture)))
     }
 }

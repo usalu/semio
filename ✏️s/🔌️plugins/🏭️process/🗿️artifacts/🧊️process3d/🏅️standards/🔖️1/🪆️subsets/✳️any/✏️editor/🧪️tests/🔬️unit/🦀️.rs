@@ -781,7 +781,7 @@ async fn the_manifest_stitches_every_taxonomy_node() {
     let json = serde_json::to_string(&create_process3d_app()).expect("app definition json");
     assert!(json.contains(workpiece::PROCESS_3D_PLAY_WINDOW_MAIN), "window kind missing from the manifest");
     assert!(json.contains(edit::PROCESS3D_MODE_EDIT), "mode missing from the manifest");
-    for body in [PROCESS_3D_PLAY_BODY_DOCUMENT, PROCESS_3D_PLAY_BODY_CATALOGUE, PROCESS_3D_PLAY_BODY_WORKSHOP, PROCESS_3D_PLAY_BODY_INSPECTION] {
+    for body in [PROCESS_3D_PLAY_BODY_ARTIFACT, PROCESS_3D_PLAY_BODY_CATALOGUE, PROCESS_3D_PLAY_BODY_WORKSHOP, PROCESS_3D_PLAY_BODY_INSPECTION] {
         assert!(json.contains(body), "panel body {body} missing from the manifest");
     }
     assert!(json.contains("3d.process"), "artifact kind missing from the manifest");
@@ -806,7 +806,7 @@ async fn utility_registry_declares_four_flat_utilities_scoped_to_workpiece_windo
 #[semio_framework_async_macros::async_test]
 async fn process3d_io_mirrors_the_declared_artifact_kind() {
     let io = process3d_io();
-    assert_eq!(io.document_schema, crate::PROCESS_3D_SCHEMA);
+    assert_eq!(io.artifact_schema, crate::PROCESS_3D_SCHEMA);
     assert_eq!(io.artifact.id, "3d.process");
     assert!(io.export_formats.is_empty());
     assert!(io.import_formats.is_empty());

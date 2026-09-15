@@ -6,5 +6,5 @@ use crate::standards::v1::subsets::any::schema::mutations::Generation3dMutation;
 use crate::Generation3dSnapshot;
 
 pub fn inverse(_payload: &UpdateCamera, base: &Generation3dSnapshot) -> Vec<Generation3dMutation> {
-    vec![Generation3dMutation::UpdateCamera(UpdateCamera { camera: base.fixture.camera.clone() })]
+    vec![Generation3dMutation::UpdateCamera(UpdateCamera { camera: base.host_document.camera.clone() })]
 }

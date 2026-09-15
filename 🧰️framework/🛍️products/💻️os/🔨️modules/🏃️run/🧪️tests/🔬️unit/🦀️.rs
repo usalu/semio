@@ -71,7 +71,7 @@ impl AppChannelHost for FakeHost {
                     self.documents.insert(node, (pack, spr));
                     frames.push(AppFrame::Done { in_reply_to: seq });
                 }
-                AppCommand::MediaIn { seq, port, descriptor, data } => match media_from_artifact(&descriptor, data, &self.blob_store).await {
+                AppCommand::MediaIn { seq, port, descriptor, data } => match media_from_document(&descriptor, data, &self.blob_store).await {
                     Ok(media) => {
                         self.imported.push((node, port, media));
                         frames.push(AppFrame::Done { in_reply_to: seq });

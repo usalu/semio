@@ -1167,7 +1167,7 @@ impl DrawingGestureProofs {
         owner: semio_framework_plugin::EditorApp<DrawingPlayApp>,
         owner_file: "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.draw.drawing@1/*#editor",
-        document_schema: "drawing.document",
+        artifact_schema: "drawing.document",
         factory: "DrawingGestureOperationJobFactory",
         factory_type: DrawingGestureOperationJobFactory,
         contract: semio_framework::ToolExecutionContract::resumable(8_192, 32, 1, 16_384, 7_500, 1, 1),
@@ -1181,7 +1181,7 @@ impl DrawingBoundedProofs {
         owner: semio_framework_plugin::EditorApp<DrawingPlayApp>,
         owner_file: "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.draw.drawing@1/*#editor",
-        document_schema: "drawing.document",
+        artifact_schema: "drawing.document",
         factory: "DrawingBoundedCommandJobFactory",
         factory_type: DrawingBoundedCommandJobFactory,
         contract: semio_framework::ToolExecutionContract::bounded_first_step(65_536, 4_096, 1, 262_144, 7_500),
@@ -1392,8 +1392,8 @@ impl ArtifactEditor for DrawingPlayApp {
     fn export_media(port: &str, doc: &ArtifactView<'_, DrawingSnapshot>) -> Result<Media, MediaError> {
         match port {
             "vector:out" => drawing_vector_media(doc.snapshot),
-            "document:out" => {
-                let media_type = Self::io().map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.document_media_type);
+            "artifact:out" => {
+                let media_type = Self::io().map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.artifact_media_type);
                 let bytes = doc.snapshot.encode_pack();
                 Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
             }
@@ -1403,7 +1403,7 @@ impl ArtifactEditor for DrawingPlayApp {
 
     // 🖼️ No override: whole-document replacement has no `Mutation` vehicle any more (banned
     // vocabulary — see `🧬️mutations/🦀️.rs`'s module doc). The default `None` disables the
-    // generic `import_media("document:in")` port for drawing; explicit whole-document load/replace
+    // generic `import_media("artifact:in")` port for drawing; explicit whole-document load/replace
     // stays reachable through the `set_snapshot`/`commit_document`/`set_fixture_json`/
     // `set_active_example` commands, which now emit `Effect::LoadDocument` (the sanctioned
     // non-history reset path) instead.
@@ -1509,8 +1509,8 @@ pub(crate) fn drawing_reset_document_effect(scene: &DrawingSnapshot) -> semio_fr
 /// verbatim), plus the app-specific `vector:out` port (see `drawing_vector_out_port` below).
 pub fn drawing_io() -> semio_framework::AppIo {
     semio_framework::AppIo {
-        document_schema: DRAWING_DOCUMENT_SCHEMA.into(),
-        document_media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector },
+        artifact_schema: DRAWING_DOCUMENT_SCHEMA.into(),
+        artifact_media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector },
         ports: vec![drawing_vector_out_port()],
         export_formats: Vec::new(),
         import_formats: Vec::new(),

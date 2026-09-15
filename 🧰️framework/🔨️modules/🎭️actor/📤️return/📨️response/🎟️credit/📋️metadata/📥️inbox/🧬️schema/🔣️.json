@@ -203,9 +203,7 @@
         },
         "mixedTrace": {
           "const": [
-            "heartbeat:1",
             "frame:effect-request",
-            "heartbeat:2",
             "result:r2:success",
             "frame:effect-emit",
             "frame:ui-patch-emit",
@@ -215,13 +213,11 @@
         "currentFaultTraces": {
           "const": {
             "postThenThrow": [
-              "heartbeat",
               "result-success",
               "worker-fault",
               "result-fault"
             ],
             "errorNormalizationThrows": [
-              "heartbeat",
               "worker-fault"
             ],
             "semanticallyAccepted": false

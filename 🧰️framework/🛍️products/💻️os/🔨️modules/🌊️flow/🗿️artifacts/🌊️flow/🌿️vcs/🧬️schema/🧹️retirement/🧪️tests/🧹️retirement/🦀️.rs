@@ -3,10 +3,10 @@
 use super::*;
 use crate::os_spr::Identified;
 use crate::os_store::SnapshotRetirementStep;
-use super::super::{AddSynapse, AddWidget, ChangeLayout, ChangeSynapse, ChangeWidget, FlowFixture, FlowLayoutEntry, FlowMutation, MoveSynapse, MoveWidget, RemoveSynapse, RemoveWidget, ReplaceFlowFixture};
+use super::super::{AddSynapse, AddWidget, ChangeLayout, ChangeSynapse, ChangeWidget, FlowHostDocument, FlowLayoutEntry, FlowMutation, MoveSynapse, MoveWidget, RemoveSynapse, RemoveWidget, ReplaceFlowHostDocument};
 
 //#region 🧭️Fixtures
-fn fixture() -> FlowFixture {
+fn fixture() -> FlowHostDocument {
     let vectors = crate::os_pack::json::parse(include_str!("../../../🔺️diff/🧫️fixtures/🧾️ownership/🔣️.json")).expect("actual retained ownership vectors");
     crate::os_dsl::FromValue::from_value(crate::os_pack::json::to_dsl_value(vectors.get("base").expect("base fixture"))).expect("actual retained Flow fixture")
 }
@@ -28,7 +28,7 @@ fn mutations() -> Vec<FlowMutation> {
         FlowMutation::MoveSynapse(MoveSynapse { id: synapse_id.clone(), to_index: 0 }),
         FlowMutation::ChangeSynapse(ChangeSynapse { id: synapse_id, synapse }),
         FlowMutation::ChangeLayout(ChangeLayout { entries: vec![entry] }),
-        FlowMutation::ReplaceFlowFixture(ReplaceFlowFixture { fixture }),
+        FlowMutation::ReplaceFlowHostDocument(ReplaceFlowHostDocument { host_document: fixture }),
     ]
 }
 //#endregion 🧭️Fixtures

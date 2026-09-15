@@ -324,52 +324,71 @@ naming the missing surface, and that guard is worth keeping.
 
 ## 7. Battery
 
-`SEMIO_BATTERY_URL=http://127.0.0.1:6023/?plugin=generation3d SEMIO_BATTERY_ROOT=react-gaps2`
+One consolidated run on the **01:26 guest**, :6023, `SEMIO_BATTERY_ROOT=react-gaps2`
+(`🗑️generated/react-gaps2/battery-clean.txt`, `scoreboard.json`). **0 page errors across all eight rows.**
 
-| Row | Before (handover §6) | After | Guest | Notes |
-|---|---|---|---|---|
-| `preview-chrome` | 16/16 | **18/18** | 00:40 | 0 page errors; unaffected by G5 |
-| `graph-keyboard` | 12/12 (pre-hardening) | **13/13 decided** | 23:08 / 00:16 | every decided step green (the row's other 4 steps — `baseline`, `escape-clear`, `delete-selection`, `undo` — are undecided by design, so the battery prints 13/17 and `ok=true`). The hardened verdict the handover never ran is now green: the Inspection Id field walks `sides → radius → profile → sides → height → extrusion-axis`. 0/17 on the 00:40 guest (G5) |
-| `outline-selection` (new) | — | **8/9** | 23:08 | F1's own row; the one red is G1 |
-| `status-states` | 13/13 (pre-outline-move) | **11/15** | 00:40 | 3/15 → 11/15 after the repoint; reds are `*:stale` (G4) and `*:error` (§8) |
-| `menus` | 4/6 | **5/6** | 00:16 | `context-menu-selected` green (F3); `export-formats` red. 0/6 on the 00:40 guest (G5) |
-| `viewer-actions` | 12/13 | **12/15** | 00:16 | row count grew: `viewer-export-row` green, `viewer-export-lists-every-format` + `viewer-export` red (F2c's fix is one stage newer than the last healthy measurement). 2/15 on the 00:40 guest (G5) |
-| `panel-i18n` | 26/33 | **not re-measured** | — | the 00:16 run CRASHED before writing `result.json` (guarded now); the 00:40 guest never got there |
-| `inspection-i18n` | 2/8 | **not re-measured** | — | roster corrected (three deleted dead fields dropped); not run on a healthy guest since |
+| Row | Before (handover §6) | After | Verdict |
+|---|---|---|---|
+| `preview-chrome` | 16/16 | **18/18** | green |
+| `graph-keyboard` | 12/12 (pre-hardening) | **13/13** | green — every decided step; `baseline`/`escape-clear`/`delete-selection`/`undo` are undecided by design, so the raw step count reads 13/17 with `ok=true` |
+| `outline-selection` (new, now a registered row) | — | **11/11** | green — F1's own row |
+| `viewer-actions` | 12/13 | **15/15** | green — F2, including 7/7 real downloads |
+| `inspection-i18n` | 2/8 | **5/5** | green |
+| `panel-i18n` | 26/33 | **25/29** | red ×4 — `graph_empty`, `graph_unwired`, `no_selection`, `preview_hint` |
+| `menus` | 4/6 | **4/6** (5/6 run in isolation) | red — `export-formats`, plus a flaky `interactionSelect` fault line |
+| `status-states` | 13/13 (pre-outline-move) | **11/15** | red ×4 — `*:stale` (§6 G3) and `*:error` |
+
+Row counts moved because steps were added, not because steps were dropped: `viewer-actions` gained
+`viewer-export-row` and `viewer-export-lists-every-format`; `inspection-i18n`'s roster lost the three
+deleted dead labels; `panel-i18n`'s lost four.
+
+### What each remaining red is
+
+- **`panel-i18n` · `graph_empty` / `graph_unwired`** — the outline's two placeholder rows, which paint only
+  for a document with no nodes / no wires. The probe drives a "No example" pass; the placeholders did not
+  appear in it. Not established whether the state is unreachable or the pass is.
+- **`panel-i18n` · `no_selection`** — `inspection-i18n` now reaches this label (§4) by deleting a selected
+  node; `panel-i18n` does not drive a delete, so its own step stays red. The LABEL is proven live; this
+  probe's route to it is not.
+- **`panel-i18n` · `preview_hint`** — needs a generate mode with no generation; the probe's generate pass
+  did not produce that state.
+- **`menus` · `export-formats`** — see below.
+- **`status-states` · `*:stale`** — §6 G3.
+- **`status-states` · `*:error`** — the degenerate-value drive records `attempts: 0`: after the outline
+  moved to the Artifact panel, `driveError`'s widget-row lookup finds nothing to type into. A probe
+  reachability question introduced by the move, not a product finding.
 
 ---
 
 ## 8. Not claimed
 
-- **`panel-i18n` and `inspection-i18n` have no post-fix number.** Both probes were corrected — the four
-  dead catalogue labels dropped from their rosters, `panel-i18n`'s outline click repointed at the Artifact
-  panel, and its crash guarded so a late failure can no longer erase every earlier verdict — but neither
-  has been re-run on a healthy guest. Their handover numbers (26/33, 2/8) stand until it is.
-- **F2's downloads were never observed.** The route, the seven-format list and the FAULT are all measured;
-  the fix for the fault (F2c) is proven by Rust law only, because the guest carrying it is the one G5
-  broke. Nobody should read "viewer export works" out of this document — read "viewer export was broken,
-  the cause is named and fixed in the source, and the bytes have not been seen".
-- **`viewer-export-lists-every-format` was red for a PROBE reason on the 00:16 run** (`missingFromMenu:
-  ["txt"]`): the picker did list `Semio Text (whole document)`, and an id regex missed it. The matcher now
-  keys on each row's declared label. The corrected matcher has not itself been run green.
-- **G1 stands.** `Escape` leaves a stale mark for one keystroke. Measured, narrowed, not fixed.
-- **G5 is not diagnosed, only attributed.** This lane did not read the peer's patch-lifetime change.
-- **`status-states` · `*:error` regressed within this lane's own probe edit.** Before the repoint the guest
-  status map carried `error` (with no row to read it off); after it, `driveError` records
-  `attempts: 0`, meaning its widget-row lookup found nothing to type into. That is a probe-reachability
-  question introduced by moving the read to the Artifact panel, not a product finding, and it is **not**
-  resolved here.
+- **`menus` · `export-formats` is red for a reason worth naming, not a flake.** The row IS in the menu
+  (`{"action": "exportDocument", "label": "2 Export Document⌘️⇧️E"}`) and Playwright resolves the real
+  element (`<button role="menuitem" id="exportDocument" data-menu-action="exportDocument">`), but it can
+  be reached by neither pointer nor keyboard from this probe: `hover` and `click` both time out — a
+  submenu stays open only while the pointer is inside the group→child chain, and moving the pointer to
+  the child closes it — and an `ArrowRight`/`ArrowDown` walk never gives the row focus
+  (`export row never took focus inside menu.group.transfer`). Whether that is a probe limit or a real
+  submenu-reachability defect is **undetermined**. What is NOT in doubt is the format list itself:
+  `viewer-actions` proves all seven through the Actions rail with real bytes.
+- **`menus` oscillates between 4/6 and 5/6.** `context-menu-selected` is green in both; the consolidated
+  run additionally tripped the `no shell faults` gate on a transient
+  `action failed interactionSelect {domainId: graph, …}`. Not investigated.
+- **G1 (the `Collapse` fold over the Inspection tab) is not fixed here** — lane `react-remaining-reds`
+  owns the product fix. This lane only made its probes click tabs at the left edge.
 - **wgpu is untouched.** The guest half of F1 (`retire_dropped_presence`) is renderer-neutral and its law
   covers both, and `ui_tree_stamp_presence` exists in the wgpu target — but it has no production caller
   there either, so the wgpu renderer still paints no selection on a panel tree. That is the same F1a gap
   on the other renderer, and this lane did not close it or measure it.
-- **The four reducer-adjacent test failures in `semio-framework-plugin` are pre-existing.**
+- **The reducer-adjacent test failures in `semio-framework-plugin` are pre-existing.**
   `full_operation_source_rejects_generic_reducers_and_old_monolithic_shells`,
   `registry_less_construction_rejects_before_the_reducer` (expects `interactive-job.unknown-key`, gets
   `interactive-job.missing-factory`), `unproved_command_fails_before_an_overrun_reducer_can_start` and the
-  generation3d VCS/envelope/preview trio fail on assertions this lane never touched. They were not
-  repaired and they are not this lane's.
+  generation3d VCS/envelope/preview trio fail on assertions this lane never touched. Not repaired, not
+  this lane's.
 - **`graph_canvas_hint`'s fixture repair is a forward fix of a peer's half-landed change**, not a finding
   of this lane's own; it is named because it was blocking the terminology law.
+- **`outline-selection` was registered in the battery by a peer** while this lane was running, citing this
+  report. This lane's own duplicate registration was removed rather than kept.
 - No claim is made about the **wgpu** battery, about `role-switch`, `gaps`/`actions-pane-de`, or about any
-  row outside the seven this lane owns.
+  row outside the eight above.

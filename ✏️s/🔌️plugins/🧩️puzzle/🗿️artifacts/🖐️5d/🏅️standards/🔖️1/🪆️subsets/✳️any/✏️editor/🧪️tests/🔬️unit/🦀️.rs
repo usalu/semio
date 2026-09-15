@@ -476,7 +476,7 @@ async fn initial_snapshot_is_the_concrete_forest_document() {
 #[semio_framework_async_macros::async_test]
 async fn document_panel_renders() {
     let mut app = app();
-    assert!(!render_body(&mut app, document_panel::BODY_KEY).is_empty());
+    assert!(!render_body(&mut app, artifact_panel::BODY_KEY).is_empty());
 }
 //#endregion 🔖️Rendering
 
@@ -685,7 +685,7 @@ async fn window_kind_actions_scope_transform_to_3d_only() {
 async fn app_definition_declares_its_three_panel_tabs() {
     let definition = create_puzzle5d_app();
     let body_keys: Vec<&str> = definition.panel_tabs.iter().filter_map(|tab| tab.body_key.as_deref()).collect();
-    for body_key in [document_panel::BODY_KEY, catalogue::BODY_KEY, inspection::BODY_KEY] {
+    for body_key in [artifact_panel::BODY_KEY, catalogue::BODY_KEY, inspection::BODY_KEY] {
         assert!(body_keys.contains(&body_key), "panel tab {body_key} must be declared, got {body_keys:?}");
     }
 }

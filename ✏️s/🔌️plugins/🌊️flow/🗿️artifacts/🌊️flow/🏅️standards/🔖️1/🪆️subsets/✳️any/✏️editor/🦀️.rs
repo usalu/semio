@@ -40,7 +40,7 @@ use crate::schema::mutations::replace_widget::ReplaceWidget;
 use crate::schema::mutations::update_synapse_endpoints::UpdateSynapseEndpoints;
 use crate::{FlowSnapshot, FlowWorkingScene, FLOW_DOCUMENT_SCHEMA};
 use flow::{flow_host_with_session, FlowEvalSession, FlowHost, FLOW_LOD_MODE_AUTOMATIC};
-use semio_framework_artifact_flow_flow::{flow_fixture_operations, CameraJson, Widget};
+use semio_framework_artifact_flow_flow::{flow_host_document_operations, CameraJson, Widget};
 use semio_framework_artifact_infinite_dag::DagDrawLod;
 use semio_framework_plugin::app::{ChildEmit, InteractionView};
 use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
@@ -71,7 +71,7 @@ mod transient_retirement_tests;
 pub const FLOW_PLAY_APP_ID: &str = "flow-play";
 pub use catalogue_panel::FLOW_PLAY_BODY_CATALOGUE;
 pub use compiled::FLOW_PLAY_BODY_COMPILED;
-pub use document_panel::FLOW_PLAY_BODY_DOCUMENT;
+pub use document_panel::FLOW_PLAY_BODY_ARTIFACT;
 pub use form::FLOW_PLAY_BODY_GENERATE_FORM;
 pub use generations::FLOW_PLAY_BODY_GENERATIONS;
 pub use inspection_panel::FLOW_PLAY_BODY_INSPECTOR;
@@ -225,7 +225,7 @@ semio_framework_plugin::app_commands! {
 
 //#region 🔖️ContextMenu
 /// 🖱️ On-demand flow node-graph context menu from surface hit-test and selection snapshot.
-fn flow_context_menu_items(registry: &AppActionRegistry, fixture: &FlowSnapshot, config: &FlowMainWindowConfig, labels: &FlowPlayLabels, is_de: bool, surface: Option<&semio_framework_plugin::ContextMenuSurfaceTarget>) -> Vec<ContextMenuItemSpec> {
+fn flow_context_menu_items(registry: &AppActionRegistry, snapshot: &FlowSnapshot, config: &FlowMainWindowConfig, labels: &FlowPlayLabels, is_de: bool, surface: Option<&semio_framework_plugin::ContextMenuSurfaceTarget>) -> Vec<ContextMenuItemSpec> {
     use semio_framework_plugin::{selection_count_phrase, Menu};
 
     let hits = surface.map_or(&[][..], |target| target.hits.as_slice());
@@ -239,7 +239,7 @@ fn flow_context_menu_items(registry: &AppActionRegistry, fixture: &FlowSnapshot,
     let edges: Vec<String> = groups.iter().filter(|group| group.domain == "edge").flat_map(|group| group.ids.iter().cloned()).collect();
     let has_selection = !nodes.is_empty() || !edges.is_empty();
     let all_preview_off = !nodes.is_empty() && nodes.iter().all(|id| config.preview_off_node_ids.contains(id));
-    let live = fixture.to_fixture();
+    let live = snapshot.to_host_document();
     let is_image = nodes.len() == 1
         && live.widgets.iter().any(|widget| match widget {
             Widget::InputImage { id, .. } => id == &nodes[0],
@@ -750,26 +750,26 @@ fn duplicate_edge_id(source: &str, target: &str) -> String {
     format!("{source}-to-{target}")
 }
 
-fn evaluate_generation_preview(fixture: &FlowSnapshot, config: &FlowMainWindowConfig, values: &crate::playbook::PlaybookValues) -> String {
-    let live = fixture.to_fixture();
+fn evaluate_generation_preview(snapshot: &FlowSnapshot, config: &FlowMainWindowConfig, values: &crate::playbook::PlaybookValues) -> String {
+    let live = snapshot.to_host_document();
     let fixture_json = dsl::json::to_json_string(&live);
     let values: dsl::json::Object = values.iter().map(|(key, value)| (key.clone(), dsl::json::from_dsl_value(value))).collect();
-    let patched = flow::forms_bridge::apply_generation_values_to_fixture(&fixture_json, &values);
-    let patched_fixture = match FlowHost::parse_fixture_json(&patched) {
+    let patched = flow::forms_bridge::apply_generation_values_to_host_document(&fixture_json, &values);
+    let patched_fixture = match FlowHost::parse_host_document_json(&patched) {
         Ok(parsed) => {
             live.retire_cold();
             parsed
         }
         Err(_) => live,
     };
-    let mut host = FlowHost::from_fixture(patched_fixture);
+    let mut host = FlowHost::from_host_document(patched_fixture);
     seed_host_catalogue(&mut host, &config.catalogue_sections_json);
     host.evaluate().unwrap_or_default()
 }
 
 fn generation_window_transient(
     command: &FlowCommand,
-    fixture: &FlowSnapshot,
+    snapshot: &FlowSnapshot,
     config: &FlowMainWindowConfig,
     current: &main::transient::FlowWindowTransient,
     view: &semio_framework_plugin::ViewModel,
@@ -792,8 +792,8 @@ fn generation_window_transient(
         ),
         _ => return Ok(None),
     };
-    let live = fixture.to_fixture();
-    let spec = flow::forms_bridge::flow_fixture_to_form_spec(&live);
+    let live = snapshot.to_host_document();
+    let spec = flow::forms_bridge::flow_host_document_to_form_spec(&live);
     live.retire_cold();
     let mut generation = current.generation();
     if !crate::playbook::handle_generation_action(action, args.as_ref(), &mut generation, &spec, FLOW_PLAY_APP_ID) {
@@ -801,7 +801,7 @@ fn generation_window_transient(
     }
     if matches!(command, FlowCommand::AddGeneration(_) | FlowCommand::SelectGeneration(_) | FlowCommand::UpdateGenerationValues(_)) {
         match crate::playbook::selected_generation(&generation) {
-            Some(active) => generation.preview_text = Some(evaluate_generation_preview(fixture, config, &active.values)),
+            Some(active) => generation.preview_text = Some(evaluate_generation_preview(snapshot, config, &active.values)),
             None => generation.preview_text = None,
         }
     }
@@ -1777,7 +1777,7 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for FlowHostEffectJobFa
 //#endregion 🧵️HostOnlyRetainedRoutes
 
 //#region 🧵️GraphOperationRetainedRoute
-/// 🕸️ The whole-graph routes: each runs one `FlowHost` operation (or the rename's pure fixture
+/// 🕸️ The whole-graph routes: each runs one `FlowHost` operation (or the rename's pure snapshot
 /// rewrite) against the live scene and publishes ONE batched artifact-lane edit. Retained rather
 /// than batch-dispatched, because a `BatchOnlyPendingRewrite` classification on these six is what
 /// faulted the entire app at construction with `interactive-job.catalog-authority` on every host
@@ -2025,7 +2025,7 @@ impl FlowGraphOperationJobFactoryProofs {
         owner: semio_framework_plugin::EditorApp<FlowPlayApp>,
         owner_file: "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.flow.flow@1/*#editor",
-        document_schema: "flow.fixture",
+        artifact_schema: "flow.snapshot",
         factory: "FlowGraphOperationJobFactory",
         factory_type: FlowGraphOperationJobFactory,
         contract: flow_graph_operation_contract(),
@@ -2041,7 +2041,7 @@ impl FlowDirectStoreJobFactoryProofs {
         owner: semio_framework_plugin::EditorApp<FlowPlayApp>,
         owner_file: "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.flow.flow@1/*#editor",
-        document_schema: "flow.fixture",
+        artifact_schema: "flow.snapshot",
         factory: "FlowDirectStoreJobFactory",
         factory_type: FlowDirectStoreJobFactory,
         contract: flow_direct_store_contract(),
@@ -2078,7 +2078,7 @@ impl FlowHostEffectJobFactoryProofs {
         owner: semio_framework_plugin::EditorApp<FlowPlayApp>,
         owner_file: "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.flow.flow@1/*#editor",
-        document_schema: "flow.fixture",
+        artifact_schema: "flow.snapshot",
         factory: "FlowHostEffectJobFactory",
         factory_type: FlowHostEffectJobFactory,
         tools: {
@@ -2099,7 +2099,7 @@ impl FlowChildGroupJobFactoryProofs {
         owner: semio_framework_plugin::EditorApp<FlowPlayApp>,
         owner_file: "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.flow.flow@1/*#editor",
-        document_schema: "flow.fixture",
+        artifact_schema: "flow.snapshot",
         factory: "FlowChildGroupJobFactory",
         factory_type: FlowChildGroupJobFactory,
         tools: {
@@ -2383,7 +2383,7 @@ impl ArtifactEditor for FlowPlayApp {
     /// skipped entirely (see the design doc's `HierarchyProvider::Flat` note). "handle" targets have no
     /// persisted document data to register — see `flow_graph_selection_domains`'s doc comment.
     fn interaction_topology(doc: &ArtifactView<'_, FlowSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> InteractionTopology {
-        let live = doc.snapshot.to_fixture();
+        let live = doc.snapshot.to_host_document();
         let mut ordered: Vec<TopologyNode> = live.widgets.iter().map(|widget| TopologyNode { id: flow_graph_node_target_id(crate::schema::widget_id(widget)), granularity: "node".into(), parent: None }).collect();
         ordered.extend(live.synapses.iter().map(|synapse| TopologyNode { id: flow_graph_edge_target_id(&synapse.id), granularity: "edge".into(), parent: None }));
         live.retire_cold();
@@ -2392,27 +2392,27 @@ impl ArtifactEditor for FlowPlayApp {
         InteractionTopology { domains }
     }
 
-    /// 🧵️ Arms a `flowEvalTick` chain whenever the main fixture has pending (uncomputed) nodes — covers
+    /// 🧵️ Arms a `flowEvalTick` chain whenever the main snapshot has pending (uncomputed) nodes — covers
     /// every mutation path (edits, undo/redo, example load, remote operations) in one place. Pure:
-    /// recomputes the probe fresh from the fixture and the driver's persisted baseline each call.
+    /// recomputes the probe fresh from the snapshot and the driver's persisted baseline each call.
     fn pending_effects(_owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, NoConfig>, _view: Option<&semio_framework_plugin::ViewModel>) -> Vec<Effect> {
         evaluate::evaluate_result(doc.snapshot, &main::config::current(cfg), &mut FlowEvalSession::new()).effects
     }
 
     fn render(body_key: &str, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
-        let fixture = doc.snapshot;
+        let snapshot = doc.snapshot;
         let config = main::config::current(cfg);
         let transient = main::transient::FlowWindowTransient::default();
         let labels = flow_play_labels(view_state);
         let mut session = FlowEvalSession::new();
         match body_key {
-            FLOW_PLAY_BODY_MAIN => main::render(fixture, &config, &mut session).map(semio_framework_plugin::built_to_component_tree),
-            FLOW_PLAY_BODY_COMPILED => compiled::render(fixture, &config, &mut session).map(semio_framework_plugin::built_to_component_tree),
+            FLOW_PLAY_BODY_MAIN => main::render(snapshot, &config, &mut session).map(semio_framework_plugin::built_to_component_tree),
+            FLOW_PLAY_BODY_COMPILED => compiled::render(snapshot, &config, &mut session).map(semio_framework_plugin::built_to_component_tree),
             FLOW_PLAY_BODY_GENERATIONS => generations::render(&transient, view_state.locale, view_state.terminology).map(semio_framework_plugin::built_to_component_tree),
-            FLOW_PLAY_BODY_GENERATE_FORM => form::render(fixture, &config, &transient, labels).map(semio_framework_plugin::built_to_component_tree),
+            FLOW_PLAY_BODY_GENERATE_FORM => form::render(snapshot, &config, &transient, labels).map(semio_framework_plugin::built_to_component_tree),
             FLOW_PLAY_BODY_GENERATE_PREVIEW => preview::render(&transient).map(semio_framework_plugin::built_to_component_tree),
-            FLOW_PLAY_BODY_DOCUMENT => document_panel::render(fixture, labels).map(semio_framework_plugin::built_to_component_tree),
-            FLOW_PLAY_BODY_CATALOGUE => catalogue_panel::render(fixture, &config, &mut session, labels).map(semio_framework_plugin::built_to_component_tree),
+            FLOW_PLAY_BODY_ARTIFACT => document_panel::render(snapshot, labels).map(semio_framework_plugin::built_to_component_tree),
+            FLOW_PLAY_BODY_CATALOGUE => catalogue_panel::render(snapshot, &config, &mut session, labels).map(semio_framework_plugin::built_to_component_tree),
             FLOW_PLAY_BODY_INSPECTOR => inspection_panel::render(labels).map(semio_framework_plugin::built_to_component_tree),
             _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
@@ -2437,7 +2437,7 @@ impl ArtifactEditor for FlowPlayApp {
                     FLOW_PLAY_BODY_GENERATIONS => generations::render(&transient, view_state.locale, view_state.terminology).map(semio_framework_plugin::built_to_component_tree),
                     FLOW_PLAY_BODY_GENERATE_FORM => form::render(doc.snapshot, &config, &transient, flow_play_labels(view_state)).map(semio_framework_plugin::built_to_component_tree),
                     FLOW_PLAY_BODY_GENERATE_PREVIEW => preview::render(&transient).map(semio_framework_plugin::built_to_component_tree),
-                    FLOW_PLAY_BODY_DOCUMENT => document_panel::render(doc.snapshot, flow_play_labels(view_state)).map(semio_framework_plugin::built_to_component_tree),
+                    FLOW_PLAY_BODY_ARTIFACT => document_panel::render(doc.snapshot, flow_play_labels(view_state)).map(semio_framework_plugin::built_to_component_tree),
                     FLOW_PLAY_BODY_CATALOGUE => catalogue_panel::render(doc.snapshot, &config, session, flow_play_labels(view_state)).map(semio_framework_plugin::built_to_component_tree),
                     FLOW_PLAY_BODY_INSPECTOR => inspection_panel::render(flow_play_labels(view_state)).map(semio_framework_plugin::built_to_component_tree),
                     _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
@@ -2489,8 +2489,8 @@ pub fn apply_canvas_options(host: &mut FlowHost, config: &FlowMainWindowConfig) 
 
 /// 🏗️ Rebuilds the stateful `FlowHost` from the document projection + view config + eval session — the
 /// single entry point every command handler and every window renderer goes through.
-pub fn host_from_snapshot(fixture: &FlowSnapshot, config: &FlowMainWindowConfig, session: &FlowEvalSession) -> FlowHost {
-    let live = fixture.to_fixture();
+pub fn host_from_snapshot(snapshot: &FlowSnapshot, config: &FlowMainWindowConfig, session: &FlowEvalSession) -> FlowHost {
+    let live = snapshot.to_host_document();
     let mut host = flow_host_with_session(&live, session);
     live.retire_cold();
     seed_host_catalogue(&mut host, &config.catalogue_sections_json);
@@ -2506,8 +2506,8 @@ pub fn host_operations(snapshot: &FlowSnapshot, config: &FlowMainWindowConfig, s
         host.retire_cold();
         return Vec::new();
     }
-    let live = snapshot.to_fixture();
-    let operations = flow_fixture_operations(&live, &host.fixture).unwrap_or_default();
+    let live = snapshot.to_host_document();
+    let operations = flow_host_document_operations(&live, &host.host_document).unwrap_or_default();
     live.retire_cold();
     host.retire_cold();
     operations.into_iter().filter_map(crate::schema::mutations::from_framework_mutation).collect()
@@ -2531,11 +2531,11 @@ pub fn sync_host_selection_domains(host: &mut FlowHost, nodes: &[String], edges:
 /// 🔍️ The camera that frames the given node selection (the "graph" domain's live selection, read by
 /// the caller via `InteractionView` — ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM), or
 /// `None` when nothing is selected.
-pub fn focus_selection_camera(fixture: &FlowSnapshot, config: &FlowMainWindowConfig, session: &FlowEvalSession, selected_node_ids: &[String]) -> Option<CameraJson> {
+pub fn focus_selection_camera(snapshot: &FlowSnapshot, config: &FlowMainWindowConfig, session: &FlowEvalSession, selected_node_ids: &[String]) -> Option<CameraJson> {
     if selected_node_ids.is_empty() {
         return None;
     }
-    let mut host = host_from_snapshot(fixture, config, session);
+    let mut host = host_from_snapshot(snapshot, config, session);
     host.dag.set_viewport(1280, 800, 1.0);
     host.dag.set_selection(selected_node_ids);
     host.focus_selection_camera(1.2)
@@ -2654,7 +2654,7 @@ pub fn create_flow_app() -> AppDefinition {
         // parent/child membership to walk (a `Widget::Cluster`'s own nested `tree` is a private,
         // self-contained sub-graph, never exposed as top-level "graph" members), so — DIVERGING from
         // this ticket's headline "flow" example, which describes transitive hover from group-node
-        // membership that the real fixture model does not have — both hover and selection stay
+        // membership that the real snapshot model does not have — both hover and selection stay
         // non-transitive here; a future wave adding real group-node containment to the top-level
         // widget list should flip both flags. Multi-select via Pick (document tree rows; the node-
         // graph canvas's own marquee/click wiring is a separate, framework-layer, unmigrated-this-wave

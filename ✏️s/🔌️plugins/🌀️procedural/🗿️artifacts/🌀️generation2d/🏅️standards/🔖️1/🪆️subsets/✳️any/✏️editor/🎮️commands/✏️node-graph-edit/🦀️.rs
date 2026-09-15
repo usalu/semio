@@ -4,7 +4,7 @@ use crate::editor::generation2d::config::{Generation2dConfig, Generation2dConfig
 use crate::standards::v1::subsets::any::schema::host_operations;
 use crate::standards::v1::subsets::any::schema::mutations::text::Generation2dMutation;
 use crate::Generation2dSnapshot;
-use semio_framework_artifact_flow_flow::FlowFixture;
+use semio_framework_artifact_flow_flow::FlowHostDocument;
 use semio_framework_os_flow::FlowEvalSession;
 use semio_framework_plugin::{app::InteractionView, ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -15,13 +15,13 @@ pub struct NodeGraphEdit {
     pub operations_json: String,
 }
 
-fn apply_operations(fixture: &FlowFixture, sub_operations: &[dsl::json::Value], selected: &[String]) -> Emit<Generation2dMutation, Generation2dConfigMutation> {
+fn apply_operations(fixture: &FlowHostDocument, sub_operations: &[dsl::json::Value], selected: &[String]) -> Emit<Generation2dMutation, Generation2dConfigMutation> {
     let operations = host_operations(fixture, |host| {
         for operation in sub_operations {
             match operation.get("operation").and_then(|value| value.as_str()).unwrap_or("") {
-                "setFixture" => {
-                    if let Some(fixture) = operation.get("fixtureJson").and_then(|value| value.as_str()).and_then(|json| semio_framework_os_flow::os_pack::json::from_json_str::<FlowFixture>(json).ok()) {
-                        host.replace_fixture(fixture);
+                "setHostDocument" => {
+                    if let Some(fixture) = operation.get("hostDocumentJson").and_then(|value| value.as_str()).and_then(|json| semio_framework_os_flow::os_pack::json::from_json_str::<FlowHostDocument>(json).ok()) {
+                        host.replace_host_document(fixture);
                     }
                 }
                 "deleteSelection" => {
@@ -56,7 +56,7 @@ pub fn handle(payload: &NodeGraphEdit, doc: &ArtifactView<'_, Generation2dSnapsh
 
 pub fn apply_selected(payload: &NodeGraphEdit, doc: &ArtifactView<'_, Generation2dSnapshot>, selected: &[String]) -> Result<Emit<Generation2dMutation, Generation2dConfigMutation>, Fault> {
     let sub_operations: Vec<dsl::json::Value> = dsl::json::parse(&payload.operations_json).ok().and_then(|value| value.as_array().cloned()).unwrap_or_default();
-    Ok(apply_operations(&doc.snapshot.fixture, &sub_operations, selected))
+    Ok(apply_operations(&doc.snapshot.host_document, &sub_operations, selected))
 }
 
 /// 🕹️ `"deleteSelection"` reads the `graph` domain's current selection instead of a deleted config

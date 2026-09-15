@@ -364,8 +364,6 @@ fn encode_result(request: crate::app::WireArtifactInferenceRequest, canonical_pa
         artifact_kind: request.artifact_kind,
         artifact_schema: request.artifact_schema,
         artifact_schema_version: request.artifact_schema_version,
-        document_schema: request.document_schema,
-        document_schema_version: request.document_schema_version,
         inference_schema: request.inference_schema,
         inference_schema_version: request.inference_schema_version,
         algorithm_version: request.algorithm_version,

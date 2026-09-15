@@ -334,7 +334,7 @@ fn retained_factories_declare_every_publication_lane() {
 #[semio_framework_async_macros::async_test]
 async fn sourcing_curation_io_declares_the_catalog_out_port_alongside_the_implicit_document_ports() {
     let io = sourcing_curation_io();
-    assert_eq!(io.document_schema, SOURCING_CURATION_SCHEMA);
+    assert_eq!(io.artifact_schema, SOURCING_CURATION_SCHEMA);
     let ports = io.all_ports().await;
     assert_eq!(ports.len(), 3, "document:in, document:out, catalog:out");
     let catalog_out = ports.iter().find(|port| port.id == "catalog:out").expect("catalog:out port declared");

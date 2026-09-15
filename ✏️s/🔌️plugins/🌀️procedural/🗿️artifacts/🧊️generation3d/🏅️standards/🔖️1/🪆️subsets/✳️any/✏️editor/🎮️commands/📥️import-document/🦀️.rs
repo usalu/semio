@@ -6,13 +6,13 @@
 //! (`📓️audit-user-journey-gaps-2026-09-13.md` §6, P0 #1).
 //!
 //! 🧬️ Importing REPLACES the whole document, and it does so the way `🎨️set-active-example` does: as
-//! an ordered batch of real `Generation3dMutation`s built by `generation3d_fixture_operations`, never
+//! an ordered batch of real `Generation3dMutation`s built by `generation3d_host_document_operations`, never
 //! an `Effect::LoadDocument`. That keeps the import event-sourced and point-invertible — one `mod+z`
 //! puts the previous graph back — where a whole-document replace effect would be a CRUD write with
 //! no inverse.
 //!
 //! 📷️ The camera rides the CONFIG lane (`config_after_document_load`), exactly as an example switch
-//! does, because `generation3d_fixture_operations` deliberately ignores it
+//! does, because `generation3d_host_document_operations` deliberately ignores it
 //! (`mutations::tests::fixture_ops_ignore_camera`).
 //!
 //! ⏳️ Progress and cancellation: `dispatchOpenedFiles` (`🛠️ShellHelpers/🟦️.tsx`) sends one
@@ -30,7 +30,7 @@
 use crate::editor::generation3d::commands::set_active_example::config_after_document_load;
 use crate::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
 use crate::standards::v1::subsets::any::io::document_io;
-use crate::standards::v1::subsets::any::schema::mutations::text::{generation3d_fixture_operations, generation_mutation_to_generation3d, Generation3dMutation};
+use crate::standards::v1::subsets::any::schema::mutations::text::{generation3d_host_document_operations, generation_mutation_to_generation3d, Generation3dMutation};
 use crate::Generation3dSnapshot;
 use semio_framework_artifact_playbook_playbook::GenerationMutation;
 use semio_framework_os_flow::FlowEvalSession;
@@ -277,8 +277,8 @@ pub fn apply_complete_payload(
 ) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation>, Fault> {
     let imported = document_io::import_document(name, payload).map_err(|error| import_fault("generation3d.io.import", error.to_string()))?;
     let mut operations: Vec<Generation3dMutation> = doc.snapshot.generation.generations.iter().map(|generation| generation_mutation_to_generation3d(GenerationMutation::Remove { id: generation.id.clone() })).collect();
-    operations.extend(generation3d_fixture_operations(&doc.snapshot.fixture, &imported.fixture));
-    let config = config_after_document_load(cfg.snapshot, &imported.fixture.camera);
+    operations.extend(generation3d_host_document_operations(&doc.snapshot.host_document, &imported.host_document));
+    let config = config_after_document_load(cfg.snapshot, &imported.host_document.camera);
     imported.retire_cold();
     Ok(Emit { artifact_mutations: operations, config_mutations: vec![Generation3dConfigMutation::SetSnapshot(crate::editor::generation3d::config::SetSnapshot { config })], ..Default::default() })
 }

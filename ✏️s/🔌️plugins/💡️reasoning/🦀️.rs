@@ -30,7 +30,7 @@ pub fn plugin() -> Result<Plugin<ReasoningApps>, PluginAssemblyError> {
         .viewer_mutation_roster::<crate::viewer::wires::WiresViewer>()
         .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::wires::artifact_kind().id })
         .execution(ExecutionMode::Isolated)
-        .requests(CapabilityRequest { id: CapabilityId("documents.write".into()), scope: "plugin".into(), reason: "persist reasoning wires edits to the open document".into(), optional: false })
+        .requests(CapabilityRequest { id: CapabilityId("artifacts.write".into()), scope: "plugin".into(), reason: "persist reasoning wires edits to the open document".into(), optional: false })
         .try_build()
 }
 

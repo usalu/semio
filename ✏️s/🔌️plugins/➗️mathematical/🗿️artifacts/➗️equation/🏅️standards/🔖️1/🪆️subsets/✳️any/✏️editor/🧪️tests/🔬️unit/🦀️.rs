@@ -345,7 +345,7 @@ async fn command_surface_is_registry_clean() {
 #[semio_framework_async_macros::async_test]
 async fn equation_io_declares_result_out_with_the_computation_equation_kind() {
     let io = equation_io();
-    assert_eq!(io.document_schema, "semio.equation/v1");
+    assert_eq!(io.artifact_schema, "semio.equation/v1");
     assert_eq!(io.artifact.id, "computation.equation");
     assert_eq!(io.ports.len(), 1);
     let port = &io.ports[0];

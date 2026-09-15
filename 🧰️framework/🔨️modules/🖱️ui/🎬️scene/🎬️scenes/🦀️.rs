@@ -1286,7 +1286,7 @@ pub struct NodeGraphScene {
     /// `brep`/`math` sets installed against a 32 KiB fixed per-surface admission, and rides the reserved
     /// `framework.section.catalogue` surface once per app instance instead
     /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END §3.1). A flow-backed scene leaves this empty and names
-    /// its operators by kind id through `fixture_json`.
+    /// its operators by kind id through `host_document_json`.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub operators: Vec<NodeGraphOperatorRecord>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -1314,7 +1314,7 @@ pub struct NodeGraphScene {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub capabilities_json: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub fixture_json: Option<String>,
+    pub host_document_json: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub presence_peers_json: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -1345,7 +1345,7 @@ impl NodeGraphScene {
             computing_json: None,
             status_json: None,
             capabilities_json: None,
-            fixture_json: None,
+            host_document_json: None,
             presence_peers_json: None,
             eval_json: None,
         }
@@ -1371,7 +1371,7 @@ impl ToValue for NodeGraphScene {
         value_push_option(&mut entries, "computingJson", &self.computing_json);
         value_push_option(&mut entries, "statusJson", &self.status_json);
         value_push_option(&mut entries, "capabilitiesJson", &self.capabilities_json);
-        value_push_option(&mut entries, "fixtureJson", &self.fixture_json);
+        value_push_option(&mut entries, "hostDocumentJson", &self.host_document_json);
         value_push_option(&mut entries, "presencePeersJson", &self.presence_peers_json);
         value_push_option(&mut entries, "evalJson", &self.eval_json);
         DslValue::Object(entries)
@@ -1398,7 +1398,7 @@ impl FromValue for NodeGraphScene {
             computing_json: value_decode_option(&entries, "computingJson")?,
             status_json: value_decode_option(&entries, "statusJson")?,
             capabilities_json: value_decode_option(&entries, "capabilitiesJson")?,
-            fixture_json: value_decode_option(&entries, "fixtureJson")?,
+            host_document_json: value_decode_option(&entries, "hostDocumentJson")?,
             presence_peers_json: value_decode_option(&entries, "presencePeersJson")?,
             eval_json: value_decode_option(&entries, "evalJson")?,
         })

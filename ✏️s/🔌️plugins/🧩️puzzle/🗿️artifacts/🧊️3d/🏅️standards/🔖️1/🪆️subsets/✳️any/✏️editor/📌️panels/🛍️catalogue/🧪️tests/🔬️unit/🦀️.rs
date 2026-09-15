@@ -5,7 +5,7 @@ use crate::editor::puzzle3d::{nakagin_fixture, Puzzle3dScene, PUZZLE3D_DEFAULT_U
 
 #[test]
 fn kinds_tree_object_drag_data_carries_object_kind_and_mesh_url() {
-    let _page = super::super::document::PANEL_PAGE_GUARD.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+    let _page = super::super::artifact::PANEL_PAGE_GUARD.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
     let envelope = Puzzle3dScene { fixture: nakagin_fixture(), runtime: Puzzle3dRuntime::default(), active_utility: PUZZLE3D_DEFAULT_UTILITY.into() };
     let labels = puzzle3d_labels(&semio_framework_plugin::ViewModel::default()).expect("admitted host axis");
     let node = render(&envelope, labels).expect("catalogue tree");
@@ -31,7 +31,7 @@ fn kinds_tree_object_drag_data_carries_object_kind_and_mesh_url() {
 /// the nested vortex templates of an over-wide object kind page the same way.
 #[test]
 fn the_catalogue_pages_an_over_wide_kind_catalog_without_exceeding_the_fixed_page() {
-    let _page = super::super::document::PANEL_PAGE_GUARD.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+    let _page = super::super::artifact::PANEL_PAGE_GUARD.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
     let kinds: Vec<Value> = (0..200)
         .map(|index| {
             let vortices: Vec<Value> = (0..40).map(|slot| json!({ "vortexKind": format!("edge-{slot}") })).collect();
@@ -61,7 +61,7 @@ fn the_catalogue_pages_an_over_wide_kind_catalog_without_exceeding_the_fixed_pag
 /// the row itself rather than on a leaf underneath it.
 #[test]
 fn every_object_kind_row_binds_activate_to_add_object_kind_with_its_own_kind_id() {
-    let _page = super::super::document::PANEL_PAGE_GUARD.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+    let _page = super::super::artifact::PANEL_PAGE_GUARD.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
     let envelope = Puzzle3dScene { fixture: nakagin_fixture(), runtime: Puzzle3dRuntime::default(), active_utility: PUZZLE3D_DEFAULT_UTILITY.into() };
     let labels = puzzle3d_labels(&semio_framework_plugin::ViewModel::default()).expect("admitted host axis");
     let node = render(&envelope, labels).expect("catalogue tree");
@@ -99,7 +99,7 @@ fn every_object_kind_row_binds_activate_to_add_object_kind_with_its_own_kind_id(
 /// under the panel is an object kind rather than a vortex template.
 #[test]
 fn the_catalogue_opens_its_object_kinds_and_folds_the_template_catalogs() {
-    let _page = super::super::document::PANEL_PAGE_GUARD.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+    let _page = super::super::artifact::PANEL_PAGE_GUARD.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
     let envelope = Puzzle3dScene { fixture: nakagin_fixture(), runtime: Puzzle3dRuntime::default(), active_utility: PUZZLE3D_DEFAULT_UTILITY.into() };
     let labels = puzzle3d_labels(&semio_framework_plugin::ViewModel::default()).expect("admitted host axis");
     let node = render(&envelope, labels).expect("catalogue tree");

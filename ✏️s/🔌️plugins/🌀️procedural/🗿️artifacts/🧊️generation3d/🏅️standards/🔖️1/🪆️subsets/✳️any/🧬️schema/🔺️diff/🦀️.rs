@@ -1,7 +1,7 @@
 //! 🧬️ Generation3d diff schema — sparse field delta over the artifact.
 
 use ::semio_framework_schema::ArtifactSchema;
-use semio_framework_artifact_flow_flow::FlowFixture;
+use semio_framework_artifact_flow_flow::FlowHostDocument;
 use semio_framework_artifact_playbook_playbook::GenerationPlayRoot;
 use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️Generation3dDiff
@@ -13,7 +13,7 @@ pub struct Generation3dDiff {
     #[state(artifact)]
     pub artifact: Option<Box<Generation3dArtifact>>,
     #[state(artifact)]
-    pub fixture: Option<FlowFixture>,
+    pub host_document: Option<FlowHostDocument>,
     #[state(artifact)]
     pub generation: Option<GenerationPlayRoot>,
 }
@@ -25,14 +25,14 @@ impl Generation3dDiff {
     /// whose root must be retired (`🧰️framework/🔨️modules/🌱️value/🗂️ordered/🦀️.rs:81`) and
     /// `generation` owns its own ladder — so an owned diff is CLOSED, never dropped.
     pub fn retire_cold(self) {
-        let Self { artifact, fixture, generation } = self;
+        let Self { artifact, host_document, generation } = self;
         if let Some(artifact) = artifact {
-            let Generation3dArtifact { fixture, generation } = *artifact;
-            fixture.retire_cold();
+            let Generation3dArtifact { host_document, generation } = *artifact;
+            host_document.retire_cold();
             generation.retire_cold();
         }
-        if let Some(fixture) = fixture {
-            fixture.retire_cold();
+        if let Some(host_document) = host_document {
+            host_document.retire_cold();
         }
         if let Some(generation) = generation {
             generation.retire_cold();

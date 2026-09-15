@@ -2,7 +2,7 @@
 
 use crate::editor::sequence::terminology::SequenceLabels;
 use crate::editor::sequence::ui_label;
-use crate::{SequenceFixture, SequenceStep};
+use crate::{SequenceHostDocument, SequenceStep};
 use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase};
 use semio_framework_plugin::{BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiAssemblyResult, UiFixedList, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
 use semio_framework_ui_contract as ui;
@@ -24,8 +24,8 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(fixture: &SequenceFixture, selected: &[String], labels: &SequenceLabels) -> UiAssemblyResult<BuiltNode> {
-    let steps: Vec<&SequenceStep> = selected.iter().filter_map(|id| fixture.steps.iter().find(|step| &step.id == id)).collect();
+pub fn render(host_document: &SequenceHostDocument, selected: &[String], labels: &SequenceLabels) -> UiAssemblyResult<BuiltNode> {
+    let steps: Vec<&SequenceStep> = selected.iter().filter_map(|id| host_document.steps.iter().find(|step| &step.id == id)).collect();
     let mut children = UiFixedList::default();
     let (section_id, heading) = if let Some(step) = steps.first() {
         let mut fields = UiFixedList::<(&str, String)>::default();

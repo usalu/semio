@@ -58,7 +58,7 @@ pub fn plugin() -> Result<Plugin<RasterApps>, PluginAssemblyError> {
         .viewer_mutation_roster::<crate::viewer::raster::RasterViewer>()
         .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::raster::artifact_kind().id })
         .execution(ExecutionMode::Isolated)
-        .requests(CapabilityRequest { id: CapabilityId("documents.write".into()), scope: "plugin".into(), reason: "persist raster edits to the open document".into(), optional: false })
+        .requests(CapabilityRequest { id: CapabilityId("artifacts.write".into()), scope: "plugin".into(), reason: "persist raster edits to the open document".into(), optional: false })
         .try_build()
 }
 

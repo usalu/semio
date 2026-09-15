@@ -93,9 +93,9 @@
         "ready": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["documentId", "kindId", "artifactSchema", "parentDialect"],
+          "required": ["artifactId", "kindId", "artifactSchema", "parentDialect"],
           "properties": {
-            "documentId": { "type": "string", "pattern": "^artifact-(?!0{32}$)[0-9a-f]{32}$" },
+            "artifactId": { "type": "string", "pattern": "^artifact-(?!0{32}$)[0-9a-f]{32}$" },
             "kindId": { "$ref": "#/$defs/Identity" },
             "artifactSchema": { "$ref": "#/$defs/Identity" },
             "parentDialect": {

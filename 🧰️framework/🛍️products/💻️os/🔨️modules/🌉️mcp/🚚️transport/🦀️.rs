@@ -141,7 +141,7 @@ impl HttpAdmission {
         match self {
             Self::Credential(credential) => credential.authorizes_capability(candidate),
             #[cfg(test)]
-            Self::Fixture(expected) => constant_time_eq(candidate.as_bytes(), expected),
+            Self::HostDocument(expected) => constant_time_eq(candidate.as_bytes(), expected),
         }
     }
 

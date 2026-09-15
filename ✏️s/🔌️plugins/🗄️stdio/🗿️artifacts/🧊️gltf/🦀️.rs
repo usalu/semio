@@ -182,8 +182,6 @@ fn gltf_inference_leaf_service(inference_schema: &'static str, infer: ArtifactIn
             artifact_kind: GLTF_ARTIFACT_KIND_ID,
             artifact_schema: GLTF_ARTIFACT_SCHEMA_ID,
             artifact_schema_version: GLTF_ARTIFACT_SCHEMA_VERSION,
-            document_schema: STDIO_GLTF_DOCUMENT_SCHEMA,
-            document_schema_version: GLTF_DOCUMENT_SCHEMA_VERSION,
             inference_schema,
             inference_schema_version: 1,
             algorithm_version: GLTF_INFERENCE_ALGORITHM_VERSION,

@@ -1,4 +1,5 @@
 use super::*;
+use semio_framework_plugin::{FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
 
 #[semio_framework_async_macros::async_test]
 async fn the_edit_mode_is_the_same_for_every_app() {
@@ -20,9 +21,9 @@ async fn a_window_definition_is_a_plain_canvas2d_surface() {
 /// after the panel declarations moved into `📌️panels/*` nodes.
 #[semio_framework_async_macros::async_test]
 async fn a_panel_definition_is_an_app_kind_leaf_carrying_its_body_key() {
-    let panel = panel_definition("document", LocalizedLabel::native("Document", "Dokument"), PanelGroup::Workbench, "norm.x.play.document");
-    assert!(matches!(&panel.kind, PanelTabKind::App(id) if id == "document"));
-    assert_eq!(panel.body_key.as_deref(), Some("norm.x.play.document"));
+    let panel = panel_definition(FRAMEWORK_PANEL_TAB_ARTIFACT_ID, LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Artefakt"), PanelGroup::Workbench, "norm.x.play.artifact");
+    assert!(matches!(&panel.kind, PanelTabKind::App(id) if id == FRAMEWORK_PANEL_TAB_ARTIFACT_ID));
+    assert_eq!(panel.body_key.as_deref(), Some("norm.x.play.artifact"));
     assert!(panel.children.is_empty());
 }
 

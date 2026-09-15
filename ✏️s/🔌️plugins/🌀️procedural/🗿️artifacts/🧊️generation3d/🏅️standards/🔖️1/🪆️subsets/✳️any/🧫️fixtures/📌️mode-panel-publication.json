@@ -5,7 +5,7 @@
   "panels": [
     {
       "tab": "framework.panel.artifact",
-      "bodyKey": "procedural.play.document",
+      "bodyKey": "procedural.play.artifact",
       "root": "procedural-play-document",
       "contains": ["procedural-play-document.widgets"]
     },

@@ -2,7 +2,7 @@
 
 use crate::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
 use crate::standards::v1::subsets::any::schema::with_host;
-use crate::standards::v1::subsets::any::schema::mutations::text::{generation3d_fixture_operations, Generation3dMutation};
+use crate::standards::v1::subsets::any::schema::mutations::text::{generation3d_host_document_operations, Generation3dMutation};
 use crate::Generation3dSnapshot;
 use semio_framework_artifact_flow_flow::Widget;
 use semio_framework_os_flow::FlowEvalSession;
@@ -18,10 +18,10 @@ pub struct PatchFlowWidgets {
 }
 
 pub fn handle(payload: &PatchFlowWidgets, doc: &ArtifactView<'_, Generation3dSnapshot>, _cfg: &ConfigView<'_, Generation3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation>, Fault> {
-    let fixture = &doc.snapshot.fixture;
+    let fixture = &doc.snapshot.host_document;
     Ok(Emit::mutations(with_host(fixture, |host| {
-        let baseline = host.fixture.clone();
-        for widget in host.fixture.widgets.iter_mut() {
+        let baseline = host.host_document.clone();
+        for widget in host.host_document.widgets.iter_mut() {
             if !payload.widget_ids.contains(&crate::widget_id(widget).to_string()) {
                 continue;
             }
@@ -31,7 +31,7 @@ pub fn handle(payload: &PatchFlowWidgets, doc: &ArtifactView<'_, Generation3dSna
                 }
             }
         }
-        let operations = generation3d_fixture_operations(&baseline, &host.fixture);
+        let operations = generation3d_host_document_operations(&baseline, &host.host_document);
         baseline.retire_cold();
         operations
     })))

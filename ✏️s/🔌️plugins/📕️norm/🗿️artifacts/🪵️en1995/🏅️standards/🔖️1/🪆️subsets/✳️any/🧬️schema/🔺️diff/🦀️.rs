@@ -10,7 +10,7 @@ use framework_schema::ArtifactSchema;
 #[artifact_schema(id = "s.norm.en1995")]
 pub struct En1995Diff {
     #[state(artifact)]
-    pub artifact: Option<Box<crate::document_schema::En1995Artifact>>,
+    pub artifact: Option<Box<crate::artifact_schema::En1995Artifact>>,
     #[state(artifact)]
     pub annex: Option<crate::document::AnnexChoice>,
     #[state(artifact)]

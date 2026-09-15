@@ -11,9 +11,9 @@ use framework_schema::ArtifactSchema;
 /// content model, it composes stdio's `flow` subset instead. Viewport state belongs to each
 /// concrete Flow main window and never enters this document snapshot.
 ///
-/// Distinct from `semio_framework_artifact_flow_flow::FlowFixture` in `semio-framework-os-flow`, which remains the framework
+/// Distinct from `semio_framework_artifact_flow_flow::FlowHostDocument` in `semio-framework-os-flow`, which remains the framework
 /// host/kernel document type. This plugin snapshot converts at the host boundary via
-/// `to_fixture`/`from_fixture`, now bridging through the composed child + working-scene cache.
+/// `to_host_document`/`from_host_document`, now bridging through the composed child + working-scene cache.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.flow.flow")]
@@ -29,23 +29,23 @@ pub struct FlowSnapshot {
 //#region 🔹DefaultsAndBridge
 impl Default for FlowSnapshot {
     fn default() -> Self {
-        Self::from_fixture(semio_framework_artifact_flow_flow::FlowFixture::default())
+        Self::from_host_document(semio_framework_artifact_flow_flow::FlowHostDocument::default())
     }
 }
 
 impl FlowSnapshot {
-    /// 🌊️ Builds a plugin snapshot from the framework `semio_framework_artifact_flow_flow::FlowFixture` document type — mints and
+    /// 🌊️ Builds a plugin snapshot from the framework `semio_framework_artifact_flow_flow::FlowHostDocument` document type — mints and
     /// caches a fresh content-addressed handle for the fixture's widgets/synapses/layout.
-    pub fn from_fixture(fixture: semio_framework_artifact_flow_flow::FlowFixture) -> Self {
+    pub fn from_host_document(fixture: semio_framework_artifact_flow_flow::FlowHostDocument) -> Self {
         Self { schema: fixture.schema, content: flow_content_child_handle_and_cache(fixture.widgets, fixture.synapses, fixture.layout) }
     }
 
-    /// 🌊️ Converts this snapshot into the framework `semio_framework_artifact_flow_flow::FlowFixture` for `FlowHost` / kernel
+    /// 🌊️ Converts this snapshot into the framework `semio_framework_artifact_flow_flow::FlowHostDocument` for `FlowHost` / kernel
     /// codecs — reads the live widgets/synapses/layout off the working-scene cache (see
     /// `flow_working_scene`'s doc comment for the staleness gap this bridges).
-    pub fn to_fixture(&self) -> semio_framework_artifact_flow_flow::FlowFixture {
+    pub fn to_host_document(&self) -> semio_framework_artifact_flow_flow::FlowHostDocument {
         let scene = flow_working_scene(self);
-        semio_framework_artifact_flow_flow::FlowFixture { schema: self.schema.clone(), camera: default_window_camera(), widgets: scene.widgets, synapses: scene.synapses, layout: scene.layout }
+        semio_framework_artifact_flow_flow::FlowHostDocument { schema: self.schema.clone(), camera: default_window_camera(), widgets: scene.widgets, synapses: scene.synapses, layout: scene.layout }
     }
 }
 
@@ -54,15 +54,15 @@ pub fn default_window_camera() -> semio_framework_artifact_flow_flow::CameraJson
     semio_framework_artifact_flow_flow::CameraJson { x: 0.0, y: 0.0, zoom: 1.0 }
 }
 
-impl From<semio_framework_artifact_flow_flow::FlowFixture> for FlowSnapshot {
-    fn from(fixture: semio_framework_artifact_flow_flow::FlowFixture) -> Self {
-        Self::from_fixture(fixture)
+impl From<semio_framework_artifact_flow_flow::FlowHostDocument> for FlowSnapshot {
+    fn from(fixture: semio_framework_artifact_flow_flow::FlowHostDocument) -> Self {
+        Self::from_host_document(fixture)
     }
 }
 
-impl From<FlowSnapshot> for semio_framework_artifact_flow_flow::FlowFixture {
+impl From<FlowSnapshot> for semio_framework_artifact_flow_flow::FlowHostDocument {
     fn from(snapshot: FlowSnapshot) -> Self {
-        snapshot.to_fixture()
+        snapshot.to_host_document()
     }
 }
 //#endregion 🔹DefaultsAndBridge
@@ -70,7 +70,7 @@ impl From<FlowSnapshot> for semio_framework_artifact_flow_flow::FlowFixture {
 //#region 🔹HandcraftedArtifactCodecs
 /// ✉️ ArtifactDsl — JSON body under envelope id `flow.flow`.
 ///
-/// Does not call `semio_framework_artifact_flow_flow::FlowFixture`'s codecs: that framework type still emits envelope id `flow`,
+/// Does not call `semio_framework_artifact_flow_flow::FlowHostDocument`'s codecs: that framework type still emits envelope id `flow`,
 /// which `SemioEnvelope::from_envelope_id` rejects (`plugin.artifact` required). Fixup belongs in
 /// `semio-framework-os-flow`; this plugin snapshot owns a valid envelope of its own.
 impl store::ArtifactDsl for FlowSnapshot {
@@ -89,7 +89,7 @@ impl store::ArtifactDsl for FlowSnapshot {
             let value: dsl::DslValue = json.into();
             return dsl::FromValue::from_value(value).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)));
         }
-        <semio_framework_artifact_flow_flow::FlowFixture as store::ArtifactDsl>::parse_dsl(text).map(Self::from_fixture)
+        <semio_framework_artifact_flow_flow::FlowHostDocument as store::ArtifactDsl>::parse_dsl(text).map(Self::from_host_document)
     }
     fn print_dsl(&self) -> String {
         let value = dsl::ToValue::to_value(self);

@@ -127,7 +127,7 @@ mod tests {
     // (`✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs`),
     // which this test's own STEP path always deferred to in production anyway.
 
-    /// 🧷️ Hand-built node for tests that don't need a real app registration — `os_workflow_to_flow_fixture`/
+    /// 🧷️ Hand-built node for tests that don't need a real app registration — `os_workflow_to_flow_host_document_json`/
     /// `build_os_workflow_operator_infos`/VFS listing all read straight off the node now (no more
     /// separate `OsAppInstance` join), so a plain struct literal is enough.
     fn media_node(id: &str, x: f64, y: f64) -> WorkflowNode {
@@ -164,8 +164,8 @@ mod tests {
     fn flow_fixture_projects_neuron_preview() {
         let mut graph = crate::host::resolve_kernel_future(empty_workflow());
         graph.nodes.push(media_node("node-1", 0.0, 0.0));
-        let fixture = os_workflow_to_flow_fixture(&graph, &OsWorkflowCamera::default());
-        assert_eq!(fixture["schema"], "flow.fixture");
+        let fixture = os_workflow_to_flow_host_document_json(&graph, &OsWorkflowCamera::default());
+        assert_eq!(fixture["schema"], "flow.host_document");
         assert_eq!(fixture["widgets"][0]["preview"], true);
         assert_eq!(fixture["widgets"][0]["params"]["nodeId"], "node-1");
         assert_eq!(fixture["widgets"][0]["params"]["pluginId"], "draw");
@@ -195,14 +195,14 @@ mod tests {
             contract: crate::host::resolve_kernel_future(placeholder_media_contract("2d.drawing")),
         });
         let camera = OsWorkflowCamera { x: 12.0, y: -8.0, zoom: 1.5 };
-        let fixture = os_workflow_to_flow_fixture(&graph, &camera);
+        let fixture = os_workflow_to_flow_host_document_json(&graph, &camera);
         assert_eq!(fixture["camera"]["x"], 12.0);
         assert_eq!(fixture["camera"]["zoom"], 1.5);
-        let unchanged = apply_flow_fixture_to_os_workflow(&graph, &fixture.to_string());
+        let unchanged = apply_flow_host_document_to_os_workflow(&graph, &fixture.to_string());
         assert!(unchanged.is_empty());
         let mut moved = fixture.clone();
         moved["layout"]["node-1"] = json!({ "x": 220.0, "y": 156.0 });
-        let operations = apply_flow_fixture_to_os_workflow(&graph, &moved.to_string());
+        let operations = apply_flow_host_document_to_os_workflow(&graph, &moved.to_string());
         assert_eq!(operations, vec![WorkflowMutation::MoveNode(MoveNode { node_id: "node-1".into(), x: 140.0, y: 120.0 })]);
     }
 
@@ -219,20 +219,20 @@ mod tests {
             target_port_id: "node-2:in".into(),
             contract: crate::host::resolve_kernel_future(placeholder_media_contract("2d.drawing")),
         });
-        let mut fixture = os_workflow_to_flow_fixture(&graph, &OsWorkflowCamera::default());
+        let mut fixture = os_workflow_to_flow_host_document_json(&graph, &OsWorkflowCamera::default());
         fixture["synapses"] = json!([
             { "id": "", "from": "node-2", "fromPort": "node-2:out", "to": "node-1", "toPort": "node-1:in" }
         ]);
-        let operations = apply_flow_fixture_to_os_workflow(&graph, &fixture.to_string());
+        let operations = apply_flow_host_document_to_os_workflow(&graph, &fixture.to_string());
         assert!(matches!(
             &operations[0],
             WorkflowMutation::ConnectPorts(ConnectPorts { edge }) if edge.source_node_id == "node-2" && edge.target_port_id == "node-1:in" && !edge.id.is_empty()
         ));
         assert!(operations.contains(&WorkflowMutation::DisconnectEdge(DisconnectEdge { edge_id: "edge-1".into() })));
-        let mut removal = os_workflow_to_flow_fixture(&graph, &OsWorkflowCamera::default());
+        let mut removal = os_workflow_to_flow_host_document_json(&graph, &OsWorkflowCamera::default());
         removal["widgets"] = json!([{ "id": "node-1" }]);
         removal["synapses"] = json!([]);
-        let removal_operations = apply_flow_fixture_to_os_workflow(&graph, &removal.to_string());
+        let removal_operations = apply_flow_host_document_to_os_workflow(&graph, &removal.to_string());
         assert!(removal_operations.contains(&WorkflowMutation::RemoveNode(RemoveNode { node_id: "node-2".into() })));
         assert!(!removal_operations.iter().any(|operation| matches!(operation, WorkflowMutation::DisconnectEdge(DisconnectEdge { .. }))));
     }

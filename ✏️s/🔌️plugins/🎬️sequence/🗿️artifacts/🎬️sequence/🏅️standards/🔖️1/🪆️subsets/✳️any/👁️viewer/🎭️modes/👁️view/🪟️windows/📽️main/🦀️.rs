@@ -1,5 +1,5 @@
 //! 📽️ Sequence viewer — the Main window: a read-only node-graph render of the live steps/edges, built
-//! directly from the artifact-level `SequenceSnapshot::to_fixture()`/`SequenceStep`/`SequenceEdge`
+//! directly from the artifact-level `SequenceSnapshot::to_host_document()`/`SequenceStep`/`SequenceEdge`
 //! pure types — this file itself imports nothing from the sibling editor module
 //! (`policyViewerPurityBreaches` forbids it outright). No selection, no engagement, no drag/connect
 //! utilities: a viewer has no utilities that edit and emits no mutations by construction (`ViewEmit`).

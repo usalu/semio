@@ -11,7 +11,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 
 use crate::Generation3dSnapshot;
 use semio_framework_artifact_flow_flow::neural::{Atom, Dictionary, Value as NeuralValue};
-use semio_framework_artifact_flow_flow::{CameraJson, FlowFixture, SynapseSpec, Widget, WidgetLayout};
+use semio_framework_artifact_flow_flow::{CameraJson, FlowHostDocument, SynapseSpec, Widget, WidgetLayout};
 use semio_framework_artifact_playbook_playbook::{FormGeneration, GenerationPlayState};
 use std::collections::BTreeMap;
 
@@ -307,7 +307,7 @@ impl store::ArtifactPack for Generation3dSnapshotDsl {
 //#endregion 🔖️HandcraftedArtifactCodecs
 
 fn generation3d_document_to_dsl(document: &Generation3dSnapshot) -> Generation3dSnapshotDsl {
-    let fixture = &document.fixture;
+    let fixture = &document.host_document;
     let generation = &document.generation;
     Generation3dSnapshotDsl {
         schema: fixture.schema.clone(),
@@ -326,7 +326,7 @@ fn generation3d_document_from_dsl(parsed: Generation3dSnapshotDsl) -> Result<Gen
     let synapses = parsed.synapses.into_iter().map(synapse_from_dsl).collect();
     let layout = parsed.layout.into_iter().map(|(id, entry)| (id, layout_from_dsl(&entry))).collect();
     Ok(Generation3dSnapshot {
-        fixture: FlowFixture { schema: parsed.schema, camera: camera_from_dsl(&parsed.camera), widgets, synapses, layout },
+        fixture: FlowHostDocument { schema: parsed.schema, camera: camera_from_dsl(&parsed.camera), widgets, synapses, layout },
         generation: GenerationPlayState { generations: parsed.generations.into_iter().map(form_generation_from_dsl).collect(), selected_generation_id: parsed.selected_generation_id, preview_text: parsed.preview_text }.into(),
     })
 }

@@ -36,7 +36,7 @@ pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyRes
 //#region 🔖️Constants
 pub const IMPERATIVE_PLAY_APP_ID: &str = "s.imperative.procedure@1/*#editor";
 pub use catalogue_panel::IMPERATIVE_PLAY_BODY_CATALOGUE;
-pub use document_panel::IMPERATIVE_PLAY_BODY_DOCUMENT;
+pub use document_panel::IMPERATIVE_PLAY_BODY_ARTIFACT;
 pub use inspection_panel::IMPERATIVE_PLAY_BODY_INSPECTOR;
 pub use main::{IMPERATIVE_PLAY_BODY_MAIN, IMPERATIVE_PLAY_WINDOW_MAIN};
 pub use script::IMPERATIVE_PLAY_BODY_SCRIPT;
@@ -161,7 +161,7 @@ impl ArtifactEditor for ImperativePlayApp {
     }
 
     /// 🎞️ `"result:out"` exports the last `run` scope (a generic data value, the port recipe's
-    /// `computation.procedure`-kinded output); `"document:out"` replicates `ArtifactEditor::export_media`'s
+    /// `computation.procedure`-kinded output); `"artifact:out"` replicates `ArtifactEditor::export_media`'s
     /// default whole-document-pack behavior (unreachable once this override exists).
     fn export_media(port: &str, doc: &ArtifactView<'_, ProcedureSnapshot>) -> Result<Media, MediaError> {
         match port {
@@ -171,8 +171,8 @@ impl ArtifactEditor for ImperativePlayApp {
                 let json = dsl::os_pack::json::to_json_string(&result.scope);
                 Ok(Media { media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value }, payload: MediaPayload::Structured { schema: "computation.procedure".into(), json } })
             }
-            "document:out" => {
-                let media_type = imperative_io().document_media_type;
+            "artifact:out" => {
+                let media_type = imperative_io().artifact_media_type;
                 let bytes = doc.snapshot.encode_pack();
                 Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
             }
@@ -188,7 +188,7 @@ impl ArtifactEditor for ImperativePlayApp {
         (match body_key {
             IMPERATIVE_PLAY_BODY_MAIN => main::render(document, &config.run_output_json, labels),
             IMPERATIVE_PLAY_BODY_SCRIPT => script::render(document),
-            IMPERATIVE_PLAY_BODY_DOCUMENT => document_panel::render(document, labels),
+            IMPERATIVE_PLAY_BODY_ARTIFACT => document_panel::render(document, labels),
             IMPERATIVE_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels),
             IMPERATIVE_PLAY_BODY_INSPECTOR => inspection_panel::render(document, labels),
             _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("imperative.ui.capacity", "diagnostic admission failed")),

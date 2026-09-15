@@ -12,10 +12,10 @@ export function flowTypedRetirementSelfTests(): number {
   const Ajv = createRequire(import.meta.url)("ajv");
   const validate = new Ajv({ strict: true, allErrors: true }).compile({ ...schema, $ref: "#/$defs/FlowRetirementV1" });
   if (!validate(fixture)) throw new Error("Flow retirement strict fixture schema failed");
-  const malformed = structuredClone(fixture); malformed.fixture.widgets[0].extra = true;
+  const malformed = structuredClone(fixture); malformed.hostDocument.widgets[0].extra = true;
   const hostiles = [{ ...fixture, extra: true }, malformed, { ...fixture, expected: { ...fixture.expected, terminalEmpty: false } }];
   for (const value of hostiles) if (validate(value)) throw new Error("Flow retirement schema accepted hostile payload");
-  const document = JSON.parse(JSON.stringify(fixture.fixture));
+  const document = JSON.parse(JSON.stringify(fixture.hostDocument));
   const physical = fixture.physicalRetirement;
   const direct = ["bytes", "strings", "widgets", "specs", "neurons", "synapses", "previews", "layout"];
   const nested = ["orderedSet", "orderedLayoutMap", "orderedNodeMap", "dynamicDictionary", "dynamicValue", "frontierMetadata", "frontierPayload"];
@@ -43,7 +43,7 @@ export function flowTypedRetirementSelfTests(): number {
     && value.includes("pub fn next_push_allocation_bytes") && value.includes("pub fn reserve_push_allocation")
     && value.includes("pub fn push(&mut self, owner: FlowOwner) -> Result<(), FlowOwner>") && value.includes("return Err(owner)")
     && value.includes("pub fn next_close_byte_demand") && value.includes("release_backing")
-    && value.includes("!std::thread::panicking()") && value.includes("FlowOwner::Fixture(value)")
+    && value.includes("!std::thread::panicking()") && value.includes("FlowOwner::HostDocument(value)")
     && !value.includes("maximum_bytes.min(bytes.len())") && !value.includes("close_step(1, 4096)")
     && !value.includes("std::mem::forget(owner)") && !/\.clone\(|serde_json::to_/.test(value);
   if (!exact(source)) throw new Error("Flow retirement exact source ownership linkage failed");
@@ -53,7 +53,7 @@ export function flowTypedRetirementSelfTests(): number {
     source.replace("pub fn next_push_allocation_bytes", "fn next_push_allocation_bytes"),
     source.replace("return Err(owner)", "drop(owner); return Ok(())"),
     source.replace("!std::thread::panicking()", "true"),
-    source.replace("FlowOwner::Fixture(value)", "FlowOwner::Fixture(_value)"),
+    source.replace("FlowOwner::HostDocument(value)", "FlowOwner::HostDocument(_value)"),
   ];
   for (const value of mutants) if (exact(value)) throw new Error("Flow retirement accepted hostile source");
   return 2 + hostiles.length + mutants.length;

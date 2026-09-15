@@ -14,6 +14,36 @@ struct RetainedCommandIngress {
     state: CommandIngressOwner,
 }
 
+/// 📥️ The cursor the retained owner is holding, whatever shape it holds it in — the one answer
+/// [`command_ingress_never_idle_while_owned`](crate::plugin::reactor::turn) needs to turn "this turn
+/// advanced nothing" into "this command is still mine", which is the difference between a host that
+/// keeps driving and a host that spins on `Idle` for a thousand crossings.
+/// 📥️ The law a turn that still OWNS a command ingress answers by: `Idle` means "no owner", and
+/// nothing else, so an owner that advanced nothing this turn says `CommandPending` rather than going
+/// silent. Without it the host's drain cannot tell "still mine, working" from "gone", and the only
+/// bound left is a crossing count — which is how `command ingress did not complete within 1024
+/// continuations (observed statuses: idle)` came to be the whole diagnosis.
+pub(super) fn command_ingress_while_owned(
+    status: semio_framework::kernel::CommandIngressStatus,
+    owner: Option<semio_framework::kernel::CommandPageCursor>,
+) -> semio_framework::kernel::CommandIngressStatus {
+    match (status, owner) {
+        (semio_framework::kernel::CommandIngressStatus::Idle, Some(cursor)) => semio_framework::kernel::CommandIngressStatus::CommandPending(cursor),
+        (status, _) => status,
+    }
+}
+
+fn command_ingress_owner_cursor(owner: &CommandIngressOwner) -> semio_framework::kernel::CommandPageCursor {
+    match owner {
+        CommandIngressOwner::ReservedPresence { cursor, .. }
+        | CommandIngressOwner::Presence { cursor, .. }
+        | CommandIngressOwner::PendingPresencePage { cursor, .. }
+        | CommandIngressOwner::GenericAssembly { cursor, .. }
+        | CommandIngressOwner::ClosingAssembly { cursor, .. }
+        | CommandIngressOwner::Generic { cursor, .. } => cursor.clone(),
+    }
+}
+
 fn retire_command_ingress(state: CommandIngressOwner) -> Option<CommandIngressOwner> {
     match state {
         CommandIngressOwner::ReservedPresence { admission, .. } => {
@@ -391,7 +421,7 @@ pub async fn poll_kernel<PA: crate::app::PluginApp + 'static>(
     runtime: &crate::plugin_runtime::PluginRuntime<PA>,
     events: Vec<Event>,
     command_page: Option<(semio_framework::kernel::CommandPageCursor, semio_framework::kernel::FixedCommandPage)>,
-    cold_pair_page: Option<semio_framework::kernel::ColdDocumentPairPage>,
+    cold_pair_page: Option<semio_framework::kernel::ColdArtifactPairPage>,
     budget: semio_framework::kernel::Budget,
 ) -> Result<semio_framework::kernel::TurnResult, semio_framework::Fault> {
     poll_kernel_output(runtime, events, command_page, cold_pair_page, budget, |_| Ok(()), |result, ()| result).await
@@ -403,7 +433,7 @@ pub(super) async fn poll_kernel_output<PA: crate::app::PluginApp, T, Prepared>(
     runtime: &crate::plugin_runtime::PluginRuntime<PA>,
     events: Vec<Event>,
     command_page: Option<(semio_framework::kernel::CommandPageCursor, semio_framework::kernel::FixedCommandPage)>,
-    cold_pair_page: Option<semio_framework::kernel::ColdDocumentPairPage>,
+    cold_pair_page: Option<semio_framework::kernel::ColdArtifactPairPage>,
     budget: semio_framework::kernel::Budget,
     prepare: impl FnOnce(&semio_framework::kernel::TurnResult) -> Result<Prepared, semio_framework::Fault>,
     publish: impl FnOnce(semio_framework::kernel::TurnResult, Prepared) -> T,
@@ -429,7 +459,7 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
     runtime: &crate::plugin_runtime::PluginRuntime<PA>,
     events: Vec<Event>,
     command_page: Option<(semio_framework::kernel::CommandPageCursor, semio_framework::kernel::FixedCommandPage)>,
-    cold_pair_page: Option<semio_framework::kernel::ColdDocumentPairPage>,
+    cold_pair_page: Option<semio_framework::kernel::ColdArtifactPairPage>,
     budget: semio_framework::kernel::Budget,
     prepare: impl FnOnce(&semio_framework::kernel::TurnResult) -> Result<Prepared, semio_framework::Fault>,
     publish: impl FnOnce(semio_framework::kernel::TurnResult, Prepared) -> T,
@@ -552,7 +582,7 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
             Event::CommandIngressPage { .. } => {
                 return Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.command-page-event-bypass"), "command page must use poll_kernel's dedicated owner argument"));
             }
-            Event::ColdDocumentPairPage(_) => {
+            Event::ColdArtifactPairPage(_) => {
                 return Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.cold-pair-page-event-bypass"), "cold document pair page must use poll_kernel's dedicated owner argument"));
             }
             // 🎯️ M1 (ticket 26/08/17 `design-unified.md`): decodes the pack-encoded
@@ -1019,7 +1049,16 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
                 },
                 Err(fault) => command_ingress = semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault: dsl::encode_fault_bytes(&fault) },
             }
-        } else if let Some(CommandIngressOwner::GenericAssembly { cursor: active, mut pages }) = retained.take() {
+        } else if let Some(CommandIngressOwner::GenericAssembly { cursor: active, mut pages }) = ({
+            // 📥️ Taken only when it IS the assembly this page belongs to. An `if let` on a bare
+            // `retained.take()` dropped every other owner shape on the floor — the page went with it,
+            // the turn still answered `Idle`, and the host's drain then spun its whole continuation
+            // ceiling asking a reactor that no longer owned anything.
+            match retained {
+                Some(CommandIngressOwner::GenericAssembly { .. }) => retained.take(),
+                _ => None,
+            }
+        }) {
             if cursor.page_index as usize != pages.len() {
                 command_ingress = semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault: b"plugin.command-page-order".to_vec() };
             } else {
@@ -1052,8 +1091,14 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
                     }
                 }
             }
+        } else {
+            // 📥️ The terminal arm this chain never had: a page that matches no admission shape is a
+            // page nobody owns, and it says so by name instead of leaving the turn `Idle` with the
+            // page silently gone.
+            command_ingress = semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault: b"plugin.command-page-unowned".to_vec() };
         }
     }
+    command_ingress = command_ingress_while_owned(command_ingress, retained.as_ref().map(command_ingress_owner_cursor));
     if let Some(retained) = retained {
         COMMAND_INGRESS.with(|ingress| {
             ingress.borrow_mut()[retained_slot] = Some(RetainedCommandIngress { key: retained_key.expect("admitted command retains its exact lifetime"), state: retained });
@@ -1233,7 +1278,7 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
     // 🚫️async: E5 executor bridge (× 2) — `LocalExecutor::{run_until_idle,has_ready}` stay
     // genuinely `async fn` (its own doc: "run_until_idle handles Pending without ever yielding
     // its own future" — matches `⚛️reactor/💼️jobs`'s identical use of this exact bridge).
-    let executor_deadline_work = REACTOR_EXECUTOR.with(|executor| executor.run_until_deadline(64, 256 * 1_024, std::time::Instant::now() + std::time::Duration::from_millis(8)));
+    let executor_deadline_work = REACTOR_EXECUTOR.with(|executor| executor.run_until_deadline(64, 256 * 1_024, std::time::Instant::now() + std::time::Duration::from_millis(REACTOR_TURN_EXECUTOR_HOLD_MS)));
     let process_pool_work = !executor_deadline_work && pump_process_worker_pool();
     let more_work = executor_deadline_work || process_pool_work;
     for effect in REGISTRY.with(|registry| registry.drain()) {
@@ -1552,6 +1597,64 @@ const PATCH_CLOSE_DEADLINE_STRIDE: usize = 8;
 pub(crate) const PATCH_RETIREMENT_ITEMS_PER_UNIT: usize = 1_024;
 /// 🧹️ Bytes one retirement unit may retire — the publication's own page budget.
 pub(crate) const PATCH_RETIREMENT_BYTES_PER_UNIT: usize = semio_framework_ui_runtime::SURFACE_RECONCILE_PAGE_BYTES;
+/// ⏱️ The reactor's OWN slice of one turn: the wall the executor may spend running ready tasks before
+/// it hands control back to whoever polled it. It is the reactor's slice, not the turn's — the turn's
+/// own wall is [`semio_framework::kernel::Budget::deadline_ms`], which the reconcile drive and the
+/// retirement passes read.
+///
+/// 🐛️ It was a literal `8` at its only call site, and the browser worker's silent-turn hold copied
+/// that literal as its OWN wall budget (`📓️reactor-reconcile-spin-2026-09-14.md` §3.5). That was the
+/// incoherence: one whole guest turn measures [`MEASURED_GUEST_TURN_COST_MS`] on the procedural 3d
+/// React door — the executor slice plus everything else a turn does — so a drive bounded by this
+/// number as a WALL admits `floor(hold / cost) = 0` further turns and degenerates into "one extra
+/// poll". A drive is therefore bounded by a STEP CEILING derived from the measured cost
+/// ([`more_work_drive_steps`]), and this constant stays what it always was: the reactor's slice.
+pub const REACTOR_TURN_EXECUTOR_HOLD_MS: u64 = 8;
+/// ⏱️ What one whole reactor turn costs on the renderer this budget was measured against — the
+/// `worker.guest` mean of `🐍️react-hop-cost-probe.mjs` over a 10-step run of the procedural 3d React
+/// door (12.9 ms over 1 154 crossings, 2026-09-15; 12.8 ms over 1 165 the day before). It is a
+/// MEASUREMENT carried as a declaration, so the derivation below is a law rather than a guess, and it
+/// is the number to re-measure when the guest's own turn cost moves.
+pub const MEASURED_GUEST_TURN_COST_MS: u64 = 13;
+/// 🚚️ How many consecutive guest turns ONE worker-owned `MoreWork` drive may run before it crosses
+/// back anyway — the host's own granted wall for this crossing, divided by what a turn measures.
+///
+/// The grant is the authority: `Budget::deadline_ms` is the wall the host declared when it posted
+/// this turn, so a drive that spends it is spending what it was given, and the host's watchdog ladder
+/// (`SHARD_LIVENESS_POLICY`) is already written against it. At least one step is always admitted —
+/// a grant smaller than one turn still has to make progress, exactly as the turn-patch page always
+/// admits its first patch.
+pub const fn more_work_drive_steps(grant_wall_ms: u64, guest_turn_cost_ms: u64) -> usize {
+    if guest_turn_cost_ms == 0 {
+        return 1;
+    }
+    let steps = grant_wall_ms / guest_turn_cost_ms;
+    if steps < 1 {
+        1
+    } else {
+        steps as usize
+    }
+}
+/// 🚚️ The WALL one worker-owned drive may spend — the whole grant, never the grant rounded down to
+/// whole measured turns.
+///
+/// [`more_work_drive_steps`] is the grant's derived EXPECTATION and its job is the coherence law; it is
+/// not the runtime cap, because rounding the wall down to `steps × cost` makes the drive cross back
+/// EMPTY with part of its own grant unspent whenever turns come in cheaper than they measured — the
+/// exact cost this whole lane exists to remove.
+///
+/// 🐛️ What that rounding cost, measured: a live tool run on the puzzle 3d shell requests window
+/// refreshes every 100–400 ms, its world-window patches cost ~30 ms of host intake each, and they
+/// arrived **250–800 ms** after the request rather than once per request (ticket
+/// `26/09/13/INTERACTIVE-TOOLS-VISIBLE-PROCESS` `📓️status.md` phase 8). A reconcile needing more turns
+/// than the rounded wall admits is one the drive hands back unfinished.
+pub const fn more_work_drive_budget_ms(grant_wall_ms: u64, guest_turn_cost_ms: u64) -> u64 {
+    if grant_wall_ms < guest_turn_cost_ms {
+        guest_turn_cost_ms
+    } else {
+        grant_wall_ms
+    }
+}
 #[cfg(target_arch = "wasm32")]
 const PROCESS_POOL_PUMPS_PER_TURN: usize = 64;
 /// ⏱️ Wall-clock bound on process-pool pumping per reactor turn on wasm.

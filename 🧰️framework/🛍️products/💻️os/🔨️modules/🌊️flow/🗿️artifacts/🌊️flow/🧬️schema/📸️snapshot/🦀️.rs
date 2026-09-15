@@ -257,7 +257,7 @@ pub enum Widget {
 /// 🧩️ Flow-host retained fixture encoded through the first-party value contract.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
 #[value(rename_all = "camelCase")]
-pub struct FlowFixture {
+pub struct FlowHostDocument {
     pub schema: String,
     pub camera: CameraJson,
     pub widgets: Vec<Widget>,
@@ -266,10 +266,10 @@ pub struct FlowFixture {
     pub layout: OrderedMap<WidgetLayout>,
 }
 
-impl Default for FlowFixture {
+impl Default for FlowHostDocument {
     fn default() -> Self {
         Self {
-            schema: "flow.fixture".into(),
+            schema: "flow.host_document".into(),
             camera: CameraJson { x: 0.0, y: 0.0, zoom: 1.0 },
             widgets: vec![
                 Widget::InputSlider { id: "slider".into(), label: "Number".into(), value: 3.0, min: FLOW_SLIDER_MIN, max: FLOW_SLIDER_MAX, step: FLOW_SLIDER_STEP },
@@ -285,7 +285,7 @@ impl Default for FlowFixture {
     }
 }
 
-impl FlowFixture {
+impl FlowHostDocument {
     pub fn to_artifact(&self) -> FlowArtifact {
         let mut nodes = OrderedMap::new();
         let mut previews = Vec::new();
@@ -297,7 +297,7 @@ impl FlowFixture {
                 previews.push(FlowPreviewGui { id: id.clone(), source, mode: "text".into(), preview: preview.clone(), expanded: expanded.clone(), layout: self.layout.get(id).cloned() });
             }
         }
-        FlowArtifact { schema: "flow.artifact".into(), tree: tree_from_fixture(self, &HashMap::new()), ui: FlowUi { camera: self.camera.clone(), nodes, previews } }
+        FlowArtifact { schema: "flow.artifact".into(), tree: tree_from_host_document(self, &HashMap::new()), ui: FlowUi { camera: self.camera.clone(), nodes, previews } }
     }
 }
 
@@ -313,7 +313,7 @@ fn widget_chrome(widget: &Widget) -> NodeChrome {
     }
 }
 
-pub fn tree_from_fixture(fixture: &FlowFixture, kind_infos: &HashMap<String, OperatorInfo>) -> Tree {
+pub fn tree_from_host_document(fixture: &FlowHostDocument, kind_infos: &HashMap<String, OperatorInfo>) -> Tree {
     let neurons = fixture
         .widgets
         .iter()
@@ -1129,7 +1129,7 @@ pub fn widget_from_descriptor(descriptor: &WidgetDescriptor, id: String, kind_in
 //#region 🔖️KeyboardTraversal
 /// ⌨️ One keyboard step across a flow graph — the whole vocabulary of node-by-node traversal.
 ///
-/// `Next`/`Previous` walk the READING order [`FlowFixture::keyboard_order`] defines and wrap, so a
+/// `Next`/`Previous` walk the READING order [`FlowHostDocument::keyboard_order`] defines and wrap, so a
 /// user can reach every node of a disconnected graph with one key. `Upstream`/`Downstream` follow a
 /// WIRE and deliberately do not wrap: a source node has nothing upstream of it, and pretending
 /// otherwise would teleport the selection across the canvas.
@@ -1144,10 +1144,10 @@ pub enum FlowGraphStep {
 /// ⌨️ The reading order keyboard traversal walks: ascending `layout.x`, then ascending `layout.y`,
 /// then the document's own widget order for the pairs neither coordinate separates.
 ///
-/// A node the layout map never names sits at the origin, exactly as [`FlowFixture::to_artifact`]
+/// A node the layout map never names sits at the origin, exactly as [`FlowHostDocument::to_artifact`]
 /// places it — the two must agree or the keyboard would visit a node where the canvas does not paint
 /// it. Left-to-right first because a flow graph reads left to right: inputs, operators, outputs.
-pub fn keyboard_order(fixture: &FlowFixture) -> Vec<&str> {
+pub fn keyboard_order(fixture: &FlowHostDocument) -> Vec<&str> {
     let mut rows: Vec<(usize, f64, f64, &str)> = fixture
         .widgets
         .iter()
@@ -1171,7 +1171,7 @@ pub fn keyboard_order(fixture: &FlowFixture) -> Vec<&str> {
 ///
 /// A wire step whose candidate set holds more than one node takes the first in [`keyboard_order`],
 /// never the document's synapse order: the user sees a canvas, and the canvas is laid out.
-pub fn keyboard_step<'a>(fixture: &'a FlowFixture, anchor: Option<&str>, step: FlowGraphStep) -> Option<&'a str> {
+pub fn keyboard_step<'a>(fixture: &'a FlowHostDocument, anchor: Option<&str>, step: FlowGraphStep) -> Option<&'a str> {
     let order = keyboard_order(fixture);
     if order.is_empty() {
         return None;
@@ -1195,7 +1195,7 @@ fn first_in_order<'a>(order: &[&'a str], candidates: impl Iterator<Item = &'a st
     candidates.filter_map(|id| order.iter().position(|known| *known == id).map(|at| (at, id))).min_by_key(|(at, _)| *at).map(|(_, id)| id)
 }
 
-impl FlowFixture {
+impl FlowHostDocument {
     /// ⌨️ See [`keyboard_order`].
     pub fn keyboard_order(&self) -> Vec<&str> {
         keyboard_order(self)

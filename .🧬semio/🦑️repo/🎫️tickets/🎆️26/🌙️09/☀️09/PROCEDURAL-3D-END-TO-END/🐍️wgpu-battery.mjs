@@ -115,20 +115,29 @@ const PROBES = [
   },
   {
     name: "no-example", script: "🐍️wgpu-example-matrix-probe.mjs", dir: "no-example", minutes: 10,
-    /** 🕳️ React's own `No example` row: the plugin booted with no `?example=` at all must paint a
-     * preview that carries NOTHING. The matrix probe's `converged` predicate demands a drawable, so
-     * here the PASS is its refusal — inverted below, never read as a failure. */
+    /** 🌱️ A boot with no `?example=` at all opens the app's OWN starter document and paints it.
+     *
+     * ⚖️ This row used to demand an EMPTY preview, and that expectation is stale by the app's own
+     * declaration: `ArtifactApp::initial_snapshot` answers `default_snapshot()`, which parses
+     * `GENERATION3D_EXAMPLE_HEX_COLUMN_TEXT` — the hexagonal profile → extrude starter graph. The
+     * schema module says so in as many words beside `default_generation3d_snapshot`: *"NOT empty …
+     * this is the DEFAULT document, not the empty one — the name it carried until ticket
+     * 26/09/09/PROCEDURAL-3D-END-TO-END said otherwise and made every 'empty document' law read
+     * against a populated graph."* The genuinely empty projection is `empty_generation3d_snapshot`,
+     * which no boot path opens. The measured boot dispatches no `setActiveExample` at all and paints
+     * that starter's `profile@wire` / `extrusion-axis@vectorOut` / `extrude@solid` — which is the
+     * product working, not failing (`📓️wgpu-regressions-sweep-2026-09-15.md`). */
     env: { SEMIO_PROBE_OUT: `${ROOT_NAME}/no-example`, SEMIO_PROBE_ORIGIN: ORIGIN, SEMIO_PROBE_LANES: "edit,viewer", SEMIO_PROBE_EXAMPLES: "(none)", SEMIO_PROBE_BUDGET: "60" },
     verdict: (dir) => {
       const rows = (readJson(join(dir, "results.json")) ?? {}).results ?? [];
       return {
-        /** 📐️ "Nothing" is `geometry === null` — no published mesh whose `positions`/`edgePositions`
-         * actually start with a number — and no instance. The preview still CARRIES two entries with
-         * empty arrays (generation3d always ships its `@wire#0` companions), so counting entries would
-         * score an empty preview as a painted one. */
+        /** 📐️ The starter is a SOLID: `geometry.body` names a published mesh whose `positions`
+         * actually start with a number, and no `?example=` trace may appear — a boot that reached the
+         * starter by dispatching `setActiveExample` would be testing the example lane instead. */
         steps: rows.map((row) => ({
-          step: `${row.lane}: No example paints no body`, ok: row.verdict === "fail" && row.geometry === null && (row.meshSurfaces ?? []).every((s) => (s.instances ?? 0) === 0) && !row.alert && !row.bootExampleTrace,
-          detail: { geometry: row.geometry, meshSurfaces: row.meshSurfaces, bootExample: row.bootExampleTrace, alert: row.alert },
+          step: `${row.lane}: no example opens the app's own starter document`,
+          ok: row.verdict === "pass" && row.geometry?.body === "solid" && !row.alert && !row.bootExampleTrace,
+          detail: { verdict: row.verdict, geometry: row.geometry?.body ?? null, meshSurfaces: row.meshSurfaces, bootExample: row.bootExampleTrace, alert: row.alert },
         })),
         key: { rows: rows.length }, pageerrors: 0, faults: [],
       };

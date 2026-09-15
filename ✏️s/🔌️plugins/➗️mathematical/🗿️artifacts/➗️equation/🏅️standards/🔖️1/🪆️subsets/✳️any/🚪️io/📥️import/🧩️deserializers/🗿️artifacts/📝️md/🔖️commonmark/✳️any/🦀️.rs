@@ -1,6 +1,6 @@
 //! 🚪️ equation <- md. Reads the canonical JSON carrier fixture from its code block.
 
-use crate::{equation_snapshot_from_fixture, EquationFixture, EquationSnapshot};
+use crate::{equation_snapshot_from_host_document, EquationFixture, EquationSnapshot};
 use semio_framework::io::io_mechanism::Deserializer;
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};
@@ -25,6 +25,6 @@ impl Deserializer<EquationSnapshot> for MdIntoEquation {
             _ => return Err(IoError { message: "MdIntoEquation: expected one json code block".into(), diagnostics: Vec::new() }),
         };
         let fixture: EquationFixture = pack::json::from_json_str(literal).map_err(|error| IoError { message: format!("MdIntoEquation: {error}"), diagnostics: Vec::new() })?;
-        Ok(IoOutcome::clean(equation_snapshot_from_fixture(fixture)))
+        Ok(IoOutcome::clean(equation_snapshot_from_host_document(fixture)))
     }
 }

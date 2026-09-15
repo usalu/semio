@@ -74,7 +74,7 @@ fn trinity_rewriting_rejected_page_close_retires_one_owner_per_grant() {
 
 fn nakagin_graph() -> Graph {
     let dsl = include_str!("../../../../../../../../../🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🖼️assets/🎬️demo/🗣️.dsl.semio");
-    Graph::from_fixture(JackSnapshot::parse_dsl(dsl).unwrap()).unwrap()
+    Graph::from_snapshot(JackSnapshot::parse_dsl(dsl).unwrap()).unwrap()
 }
 
 #[semio_framework_async_macros::async_test]
@@ -87,7 +87,7 @@ async fn nakagin_fixture_loads() {
 #[semio_framework_async_macros::async_test]
 async fn nakagin_flat_position_derived() {
     let g = nakagin_graph();
-    let flat = semio_s_artifact_trinity_jack::compute_flat_position(&g.to_fixture());
+    let flat = semio_s_artifact_trinity_jack::compute_flat_position(&g.to_snapshot());
     let root_uv = flat.positions.get("7dc5b737-3b6b-4068-b315-b7bacc91c2e1").unwrap();
     assert_eq!(root_uv.u, 0.0);
     let capsule_uv = flat.positions.get("6947a41b-8c6d-4291-bdd8-96cd535c78fc").unwrap();
@@ -228,7 +228,7 @@ async fn trinity_host_run_jack_json_and_with_fixture() {
     let before = host.graph.nodes.len();
     let out = host.run_jack_with_fixture_json("CREATE (n:Piece)").await.unwrap();
     let value: pack::JsonValue = pack::parse_json(&out).unwrap();
-    assert!(value.get("fixtureJson").is_some());
+    assert!(value.get("hostDocumentJson").is_some());
     assert_eq!(host.graph.nodes.len(), before + 1);
 }
 

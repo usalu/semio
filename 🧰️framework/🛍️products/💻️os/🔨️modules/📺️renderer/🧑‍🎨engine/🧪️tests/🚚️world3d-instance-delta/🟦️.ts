@@ -36,7 +36,11 @@ describe("🚚️ world-3d instance delta lane", () => {
       // be the SAME object the consumer already held, and a fallback must have re-parsed everything.
       const reused = advanced.records.filter((record) => previous?.records.includes(record)).map((record) => record.id);
       expect(reused).toEqual(scenario.expect.reusedIds);
-      expect(reused.length > 0).toBe(scenario.expect.applied);
+      // 🪪️ Identity is only ever kept for a record whose value did not change: on the in-place path the delta did not
+      // name it, on a fallback its re-parsed authoritative record serializes identically.
+      const authoritative = new Map((JSON.parse(scenario.instancesJson) as WorldInstanceRecord[]).map((record) => [record.id, record]));
+      for (const record of advanced.records.filter((candidate) => previous?.records.includes(candidate))) expect(record).toEqual(authoritative.get(record.id));
+      if (scenario.expect.applied) expect(reused.length).toBeGreaterThan(0);
     });
   }
 
@@ -54,10 +58,11 @@ describe("🚚️ world-3d instance delta lane", () => {
     expect(parseWorldInstanceDelta('{"revision":2}')).toBeNull();
   });
 
-  it("never applies a delta in place when the retained count disagrees with the producer's", () => {
-    const previous: WorldInstanceResidencyV1 = { revision: 1, records: [{ id: "a" }, { id: "b" }] };
-    const advanced = advanceWorldInstanceResidency(previous, '[{"id":"a"},{"id":"b"},{"id":"c"}]', '{"base":1,"revision":2,"count":3,"changed":[{"id":"a"}],"removed":[]}');
+  it("never applies a delta in place when the retained count disagrees with the producer's, keeping only value-equal records", () => {
+    const previous: WorldInstanceResidencyV1 = { revision: 1, records: [{ id: "a", position: [0, 0, 0] }, { id: "b" }] };
+    const advanced = advanceWorldInstanceResidency(previous, '[{"id":"a","position":[1,0,0]},{"id":"b"},{"id":"c"}]', '{"base":1,"revision":2,"count":3,"changed":[{"id":"a","position":[1,0,0]}],"removed":[]}');
     expect(advanced.records.map((record) => record.id)).toEqual(["a", "b", "c"]);
-    expect(advanced.records.some((record) => previous.records.includes(record))).toBe(false);
+    expect(advanced.records.map((record) => previous.records.includes(record))).toEqual([false, true, false]);
+    expect(advanced.records[0]?.position).toEqual([1, 0, 0]);
   });
 });

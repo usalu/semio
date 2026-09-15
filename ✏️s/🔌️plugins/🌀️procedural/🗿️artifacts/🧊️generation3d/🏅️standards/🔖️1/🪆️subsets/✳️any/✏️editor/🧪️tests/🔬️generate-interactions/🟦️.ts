@@ -90,7 +90,7 @@ export function testGeneration3dGenerateModeInteractionContract(): void {
 
   // 🕸️ Wire editing: connect and disconnect are both present, and each operation names its arguments.
   const operations = new Map(fixture.nodeGraphEditOperations.map((row) => [row.operation, row]));
-  for (const required of ["connect", "disconnect", "move", "deleteSelection", "setFixture"]) {
+  for (const required of ["connect", "disconnect", "move", "deleteSelection", "setHostDocument"]) {
     assert.ok(operations.has(required), `nodeGraphEdit must handle ${required}`);
   }
   assert.deepEqual([...operations.get("connect")!.required].sort(), ["sourceNodeId", "sourcePortId", "targetNodeId", "targetPortId"], "a connect names both endpoints by node AND port");

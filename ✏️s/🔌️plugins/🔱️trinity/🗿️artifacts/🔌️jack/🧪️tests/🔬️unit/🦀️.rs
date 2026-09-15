@@ -110,7 +110,7 @@ async fn fixture_round_trip() {
 
 #[semio_framework_async_macros::async_test]
 async fn remove_node_cascades_edges() {
-    let mut g = Graph::from_fixture(mini_fixture()).unwrap();
+    let mut g = Graph::from_snapshot(mini_fixture()).unwrap();
     assert!(g.remove_node("root"));
     assert!(g.edges.is_empty());
     assert!(g.nodes.contains_key("child"));
@@ -202,19 +202,19 @@ async fn resolve_manifest_errors_on_unknown_id() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn graph_from_fixture_rejects_port_kind_not_declared_on_node_kind() {
+async fn graph_from_host_document_rejects_port_kind_not_declared_on_node_kind() {
     let fixture = mini_fixture();
     let mut nodes = fixture.nodes();
     nodes[0].ports.push(Port { id: "bad".into(), kind: "core circular bottom".into(), direction: PortDirection::Out, properties: PropertyBag::new() });
     let fixture = JackSnapshot::with_content(fixture.schema.clone(), fixture.name.clone(), fixture.manifest_id.clone(), fixture.manifest.clone(), fixture.camera.clone(), JackWorkingScene { nodes: nodes, edges: fixture.edges() }, fixture.root_node_id.clone());
-    let err = Graph::from_fixture(fixture).expect_err("undeclared port kind");
+    let err = Graph::from_snapshot(fixture).expect_err("undeclared port kind");
     assert!(matches!(err, TrinityRamError::PortKindNotDeclaredOnFixture { .. }));
     assert!(err.to_string().contains("root"));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn graph_accessors_and_mutators() {
-    let mut g = Graph::from_fixture(mini_fixture()).unwrap();
+    let mut g = Graph::from_snapshot(mini_fixture()).unwrap();
     assert!(g.node("root").is_some());
     assert!(g.node("ghost").is_none());
     assert!(g.edge("e1").is_some());
@@ -232,7 +232,7 @@ async fn graph_accessors_and_mutators() {
 
 #[semio_framework_async_macros::async_test]
 async fn graph_remove_node_clears_root_node_id() {
-    let mut g = Graph::from_fixture(mini_fixture()).unwrap();
+    let mut g = Graph::from_snapshot(mini_fixture()).unwrap();
     assert!(g.remove_node("root"));
     assert!(g.edges.is_empty());
     assert!(g.nodes.contains_key("child"));
@@ -242,7 +242,7 @@ async fn graph_remove_node_clears_root_node_id() {
 
 #[semio_framework_async_macros::async_test]
 async fn graph_set_property_success_and_errors() {
-    let mut g = Graph::from_fixture(mini_fixture()).unwrap();
+    let mut g = Graph::from_snapshot(mini_fixture()).unwrap();
     g.set_property(EntityRef::Node("root".into()), "label", PropertyValue::String("hi".into())).expect("set node prop");
     assert_eq!(g.node("root").unwrap().properties.get("label"), Some(&PropertyValue::String("hi".into())));
     let err = g.set_property(EntityRef::Node("ghost".into()), "label", PropertyValue::Null).expect_err("missing node");
@@ -255,9 +255,9 @@ async fn graph_set_property_success_and_errors() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn graph_to_fixture_and_fixture_json() {
-    let g = Graph::from_fixture(mini_fixture()).unwrap();
-    let fixture = g.to_fixture();
+async fn graph_to_host_document_and_fixture_json() {
+    let g = Graph::from_snapshot(mini_fixture()).unwrap();
+    let fixture = g.to_snapshot();
     assert_eq!(fixture.nodes().len(), 2);
     assert_eq!(fixture.manifest_id.as_deref(), Some("nakagin"));
     let json = g.fixture_json().expect("fixture json");
@@ -266,7 +266,7 @@ async fn graph_to_fixture_and_fixture_json() {
 
 #[semio_framework_async_macros::async_test]
 async fn subgraph_fixture_filters_entities_and_keeps_root_when_included() {
-    let g = Graph::from_fixture(mini_fixture()).unwrap();
+    let g = Graph::from_snapshot(mini_fixture()).unwrap();
     let node_ids: BTreeSet<String> = ["root".to_string()].into_iter().collect();
     let sub = g.subgraph_fixture(&node_ids, &BTreeSet::new());
     assert_eq!(sub.nodes().len(), 1);
@@ -277,7 +277,7 @@ async fn subgraph_fixture_filters_entities_and_keeps_root_when_included() {
 
 #[semio_framework_async_macros::async_test]
 async fn subgraph_fixture_drops_root_when_not_included() {
-    let g = Graph::from_fixture(mini_fixture()).unwrap();
+    let g = Graph::from_snapshot(mini_fixture()).unwrap();
     let node_ids: BTreeSet<String> = ["child".to_string()].into_iter().collect();
     let sub = g.subgraph_fixture(&node_ids, &BTreeSet::new());
     assert!(sub.root_node_id.is_none());

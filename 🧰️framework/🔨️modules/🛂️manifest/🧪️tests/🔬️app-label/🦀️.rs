@@ -194,14 +194,14 @@ async fn action_semantics_for_kind_matches_the_defaults_table() {
     assert_eq!(mutation.execution.undo, UndoMode::Inverse);
     assert!(mutation.execution.expected_revision);
     assert_eq!(mutation.policy.approval, ApprovalMode::WhenDestructive);
-    assert_eq!(mutation.policy.scopes, vec![kernel::CapabilityId("documents.write".into())]);
+    assert_eq!(mutation.policy.scopes, vec![kernel::CapabilityId("artifacts.write".into())]);
 
     let view = ActionSemantics::for_kind(ActionKind::View);
     let interaction = ActionSemantics::for_kind(ActionKind::Interaction);
     assert_eq!(view, interaction, "View and Interaction share the config-lane defaults");
-    assert_eq!(view.policy.scopes, vec![kernel::CapabilityId("documents.read".into()), kernel::CapabilityId("shell.observe".into())]);
+    assert_eq!(view.policy.scopes, vec![kernel::CapabilityId("artifacts.read".into()), kernel::CapabilityId("shell.observe".into())]);
 
-    assert_eq!(ActionSemantics::for_kind(ActionKind::History).policy.scopes, vec![kernel::CapabilityId("documents.write".into())]);
+    assert_eq!(ActionSemantics::for_kind(ActionKind::History).policy.scopes, vec![kernel::CapabilityId("artifacts.write".into())]);
     assert_eq!(ActionSemantics::for_kind(ActionKind::Clipboard).policy.scopes, vec![kernel::CapabilityId("shell.clipboard".into())]);
 
     let shell = ActionSemantics::for_kind(ActionKind::Shell);
@@ -937,7 +937,7 @@ async fn tutorial_definition_serde_defaults() {
     assert!(def.description.is_none());
     assert!(def.chapters.is_empty());
     assert!(def.tracks.narration.is_empty());
-    assert!(def.tracks.document.is_empty());
+    assert!(def.tracks.artifact.is_empty());
     assert!(def.base.cameras.is_empty());
     let round = serde_json::to_string(&def).unwrap();
     let round: TutorialDefinition = serde_json::from_str(&round).unwrap();
@@ -1134,25 +1134,25 @@ async fn compose_tutorial_ui_applies_snapshot_then_deltas() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn tutorial_document_track_language_neutral_serde_parity() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎞️tutorial-document-track.json")).unwrap();
+async fn tutorial_artifact_track_language_neutral_serde_parity() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎞️tutorial-artifact-track.json")).unwrap();
     let mut def = minimal_tutorial().await;
-    def.tracks.document = serde_json::from_value(fixture["document"].clone()).unwrap();
-    assert_eq!(serde_json::to_value(&def.tracks.document).unwrap(), fixture["document"]);
+    def.tracks.artifact = serde_json::from_value(fixture["artifact"].clone()).unwrap();
+    assert_eq!(serde_json::to_value(&def.tracks.artifact).unwrap(), fixture["artifact"]);
     let tracks = serde_json::to_value(&def.tracks).unwrap();
-    assert_eq!(tracks.get("document"), Some(&fixture["document"]));
-    assert!(tracks.get("artifact").is_none());
+    assert_eq!(tracks.get("artifact"), Some(&fixture["artifact"]));
+    assert!(tracks.get("document").is_none());
     for vector in fixture["cases"].as_array().unwrap() {
         let slice = tutorial_slice(&def, vector["from"].as_f64().unwrap(), vector["to"].as_f64().unwrap());
         assert_eq!(slice.forward, vector["forward"].as_bool().unwrap());
-        assert_eq!(serde_json::to_value(slice.document.iter().map(|event| event.at).collect::<Vec<_>>()).unwrap(), vector["expectedAt"]);
+        assert_eq!(serde_json::to_value(slice.artifact.iter().map(|event| event.at).collect::<Vec<_>>()).unwrap(), vector["expectedAt"]);
     }
 }
 
 #[semio_framework_async_macros::async_test]
 async fn tutorial_slice_forward_and_reverse_cross_artifact_events() {
     let mut def = minimal_tutorial().await;
-    def.tracks.document = vec![
+    def.tracks.artifact = vec![
         TutorialArtifactEvent {
             at: 100,
             kind: TutorialArtifactEventKind::Edit {
@@ -1174,18 +1174,18 @@ async fn tutorial_slice_forward_and_reverse_cross_artifact_events() {
     ];
     let forward = tutorial_slice(&def, 0.0, 250.0);
     assert!(forward.forward);
-    assert_eq!(forward.document.len(), 2);
-    let TutorialArtifactEventKind::Edit { forwards, .. } = &forward.document[0].kind else { panic!("expected Edit") };
+    assert_eq!(forward.artifact.len(), 2);
+    let TutorialArtifactEventKind::Edit { forwards, .. } = &forward.artifact[0].kind else { panic!("expected Edit") };
     assert_eq!(forwards[0].get("id").and_then(DslValue::as_str), Some("a"), "forward order applies oldest-first");
 
     let backward = tutorial_slice(&def, 250.0, 0.0);
     assert!(!backward.forward);
-    assert_eq!(backward.document.len(), 2);
-    let TutorialArtifactEventKind::Edit { backwards, .. } = &backward.document[0].kind else { panic!("expected Edit") };
+    assert_eq!(backward.artifact.len(), 2);
+    let TutorialArtifactEventKind::Edit { backwards, .. } = &backward.artifact[0].kind else { panic!("expected Edit") };
     assert_eq!(backwards[0].get("id").and_then(DslValue::as_str), Some("b"), "backward order unwinds newest-first");
 
     let empty = tutorial_slice(&def, 250.0, 250.0);
-    assert!(empty.document.is_empty());
+    assert!(empty.artifact.is_empty());
 }
 
 #[semio_framework_async_macros::async_test]
@@ -1196,7 +1196,7 @@ async fn tutorial_slice_partitions_events_artifact_and_ui_by_track() {
     let slice = tutorial_slice(&def, 0.0, 100.0);
     assert_eq!(slice.events.len(), 1);
     assert_eq!(slice.ui_changes.len(), 1);
-    assert!(slice.document.is_empty());
+    assert!(slice.artifact.is_empty());
 }
 
 #[semio_framework_async_macros::async_test]

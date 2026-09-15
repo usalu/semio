@@ -228,10 +228,10 @@ fn the_viewer_offers_export_in_both_languages_and_never_offers_import() {
     assert_eq!(action.kind, ActionKind::View, "ShellHost's read-only gate swallows a Mutation-kind action on a viewer session");
     // 🪪️ NO trailing ellipsis in the declared label: the shell appends one itself for every action
     // that carries staged args (`🛠️ShellHelpers/🟦️.tsx`, `label: `${action.label}…``), so a declared
-    // one painted "Export Document……" / "Dokument exportieren……" in the Actions pane (ticket
+    // one painted "Export Artifact……" / "Artefakt exportieren……" in the Actions pane (ticket
     // 26/09/09/PROCEDURAL-3D-END-TO-END, `🐍️react-gap-probe.mjs` step `actions-pane-de`).
-    assert_eq!(action.label.resolve(Terminology::Native, Locale::En), "Export Document");
-    assert_eq!(action.label.resolve(Terminology::Native, Locale::De), "Dokument exportieren");
+    assert_eq!(action.label.resolve(Terminology::Native, Locale::En), "Export Artifact");
+    assert_eq!(action.label.resolve(Terminology::Native, Locale::De), "Artefakt exportieren");
     let arg = action.args.iter().find(|arg| arg.id == "format").expect("exportDocument carries a format arg");
     let ArgSchema::String { options, .. } = &arg.schema else { panic!("the format arg is a string select") };
     assert_eq!(options.iter().map(|option| option.value.as_str()).collect::<Vec<_>>(), document_io::EXPORT_FORMATS.iter().map(|row| row.id).collect::<Vec<_>>(), "the viewer's picker and the io roster are one list");
@@ -398,14 +398,14 @@ fn the_viewer_exports_the_example_it_is_showing_not_the_opened_document() {
     for example_id in ["hexagonal-mushroom-column", "rectangle-extrude-volume"] {
         let config = Generation3dViewConfig { active_example_id: Some(example_id.to_string()), ..Default::default() };
         let viewed = super::Generation3dViewedDocument::resolve(&opened, &config);
-        let widgets = viewed.snapshot().fixture.widgets.len();
+        let widgets = viewed.snapshot().host_document.widgets.len();
         println!("[DEBUG] viewer export document for {example_id}: widgets={widgets}");
         assert!(widgets > 0, "{example_id}: the viewed document must carry the example's widgets, not the opened document's none");
         viewed.retire();
     }
     let none = Generation3dViewConfig { active_example_id: None, ..Default::default() };
     let viewed = super::Generation3dViewedDocument::resolve(&opened, &none);
-    assert_eq!(viewed.snapshot().fixture.widgets.len(), opened.fixture.widgets.len(), "with no example picked the viewer exports the opened document itself");
+    assert_eq!(viewed.snapshot().host_document.widgets.len(), opened.host_document.widgets.len(), "with no example picked the viewer exports the opened document itself");
     viewed.retire();
     opened.retire_cold();
 }

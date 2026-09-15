@@ -271,11 +271,11 @@ pub fn artifact_kind_id(variant: &str) -> String {
 /// pinned to this family's own already-declared `computation.norm.{variant}` artifact kind via
 /// `kind_id`). One function serves both the builder's `.io(...)` declaration and each app's
 /// `ArtifactApp::io` override, so the two never drift apart.
-pub fn norm_io(variant: &str, document_schema: &str) -> AppIo {
+pub fn norm_io(variant: &str, artifact_schema: &str) -> AppIo {
     let artifact_kind_id = artifact_kind_id(variant);
     AppIo {
-        document_schema: document_schema.into(),
-        document_media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
+        artifact_schema: artifact_schema.into(),
+        artifact_media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
         ports: vec![
             MediaPortSpec {
                 id: "model:in".into(),
@@ -305,23 +305,23 @@ pub fn norm_io(variant: &str, document_schema: &str) -> AppIo {
 
 //#region 🔖️MediaPorts
 /// 🎞️ `"report:out"` dumps the currently computed `CheckReport`, pinned to this family's declared
-/// artifact kind; `"document:out"` replicates the SDK default (whole-document pack) since overriding
+/// artifact kind; `"artifact:out"` replicates the SDK default (whole-document pack) since overriding
 /// `export_media` shadows it entirely. Any other port is `NotImplemented`.
-pub fn export_media<F>(port: &str, variant: &str, document_schema: &str, document: &F::Document) -> Result<Media, MediaError>
+pub fn export_media<F>(port: &str, variant: &str, artifact_schema: &str, document: &F::Document) -> Result<Media, MediaError>
 where
     F: NormFamily,
     F::Document: store::ArtifactPack,
 {
     if port == "report:out" {
-        let host = NormHost::<F>::from_document(document.clone());
+        let host = NormHost::<F>::from_artifact(document.clone());
         let json = pack::json::to_json_string(host.report());
         return Ok(Media { media_type: MediaType { class: MediaClass::Computation, form: MediaForm::Value }, payload: MediaPayload::Structured { schema: artifact_kind_id(variant), json } });
     }
-    if port != "document:out" {
+    if port != "artifact:out" {
         return Err(MediaError::NotImplemented);
     }
     let bytes = store::ArtifactPack::encode_pack(document);
-    Ok(Media { media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value }, payload: MediaPayload::Structured { schema: document_schema.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
+    Ok(Media { media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value }, payload: MediaPayload::Structured { schema: artifact_schema.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
 }
 
 /// 🎞️ `"model:in"` is an honest generic pass-through: a payload that happens to decode as this family's
@@ -331,7 +331,7 @@ where
 /// decomposes the imported document into the closed semantic vocabulary instead. Bundling them into one
 /// `Emit::mutations` call keeps the import atomic (one edit, one undo entry), matching the old
 /// single-mutation commit's history shape. Anything that doesn't decode is accepted but inert (no norm
-/// family document has a generic "raw model" field to stash a foreign shape into yet). `"document:in"`
+/// family document has a generic "raw model" field to stash a foreign shape into yet). `"artifact:in"`
 /// replicates the SDK default (decodes the base64 pack).
 pub fn import_media<D, M, F>(port: &str, media: &Media, wrap: F) -> Result<Emit<M, NoConfigMutation>, MediaError>
 where
@@ -346,7 +346,7 @@ where
         }
         return Ok(Emit::default());
     }
-    if port != "document:in" {
+    if port != "artifact:in" {
         return Err(MediaError::NotImplemented);
     }
     let MediaPayload::Structured { json, .. } = &media.payload else {

@@ -112,17 +112,17 @@ pub fn encode_flow_projection_json(snapshot: &FlowSnapshot) -> String {
 
 //#region 🌉️FrameworkBridge
 /// 🌎️ Converts a framework kernel mutation into this plugin's semantic mutation vocabulary.
-/// `ReplaceFlowFixture` (whole-fixture replace) has no semantic-mutation representation — banned
+/// `ReplaceFlowHostDocument` (whole-fixture replace) has no semantic-mutation representation — banned
 /// per the taxonomy's `set-snapshot` ruling, "it has NO replacement mutation" — so it returns
 /// `None`; callers route that case through `store::ArtifactStore::reset` instead of the `Mutation`
-/// enum. The framework's own diffing helper (`semio_framework_artifact_flow_flow::flow_fixture_operations`) never emits
-/// `ReplaceFlowFixture` (only the add/remove/move/change leaves), so this arm is unreachable on the
+/// enum. The framework's own diffing helper (`semio_framework_artifact_flow_flow::flow_host_document_operations`) never emits
+/// `ReplaceFlowHostDocument` (only the add/remove/move/change leaves), so this arm is unreachable on the
 /// live host-bridge path and only matters for a hand-authored/decoded `flow.op` line.
 /// ✏️ Runs a stateful host mutation and diffs the result back into granular `FlowMutation`s — pure
 /// over two snapshots, so it lives here beside [`from_framework_mutation`] rather than under an app.
 /// Returns an empty vec when the two fixtures are identical, or when the framework diff itself fails.
 pub fn snapshot_operations(before: &FlowSnapshot, after: &FlowSnapshot) -> Vec<FlowMutation> {
-    semio_framework_artifact_flow_flow::flow_fixture_operations(&before.to_fixture(), &after.to_fixture()).unwrap_or_default().into_iter().filter_map(from_framework_mutation).collect()
+    semio_framework_artifact_flow_flow::flow_host_document_operations(&before.to_host_document(), &after.to_host_document()).unwrap_or_default().into_iter().filter_map(from_framework_mutation).collect()
 }
 
 pub fn from_framework_mutation(mutation: semio_framework_artifact_flow_flow::FlowMutation) -> Option<FlowMutation> {
@@ -145,7 +145,7 @@ pub fn from_framework_mutation(mutation: semio_framework_artifact_flow_flow::Flo
             FlowMutation::UpdateSynapseEndpoints(super::update_synapse_endpoints::UpdateSynapseEndpoints { id: payload.id, from: payload.synapse.from, from_port: payload.synapse.from_port, to: payload.synapse.to, to_port: payload.synapse.to_port })
         }
         semio_framework_artifact_flow_flow::FlowMutation::ChangeLayout(payload) => FlowMutation::MoveWidgets(super::move_widgets::MoveWidgets { entries: payload.entries }),
-        semio_framework_artifact_flow_flow::FlowMutation::ReplaceFlowFixture(_) => return None,
+        semio_framework_artifact_flow_flow::FlowMutation::ReplaceFlowHostDocument(_) => return None,
     })
 }
 
@@ -153,7 +153,7 @@ pub fn from_framework_mutation(mutation: semio_framework_artifact_flow_flow::Flo
 /// `DuplicateWidget`: a composite folds to a SINGLE `FlowDiff`, but it is not itself a single
 /// framework-generic op (it plans two: an `AddWidget` then an `AddSynapse`), so there is no
 /// framework-generic counterpart to bridge to — mirrors [`from_framework_mutation`]'s
-/// `ReplaceFlowFixture` case, one direction over.
+/// `ReplaceFlowHostDocument` case, one direction over.
 pub fn to_framework_mutation(mutation: &FlowMutation) -> Option<semio_framework_artifact_flow_flow::FlowMutation> {
     Some(match mutation {
         FlowMutation::CreateWidget(payload) => semio_framework_artifact_flow_flow::FlowMutation::AddWidget(semio_framework_artifact_flow_flow::AddWidget { index: payload.index as u32, widget: payload.widget.clone() }),
@@ -207,7 +207,7 @@ impl protocol::OpBinary for FlowMutation {
         from_framework_mutation(framework_mutation).ok_or_else(|| protocol::ProtocolError::Malformed {
             what: "flow.op",
             offset: 0,
-            detail: "replace-flow-fixture has no semantic mutation representation (whole-document replace is banned; route through ArtifactStore::reset)".into(),
+            detail: "replace-flow-host-document has no semantic mutation representation (whole-document replace is banned; route through ArtifactStore::reset)".into(),
         })
     }
 }
@@ -220,7 +220,7 @@ impl protocol::OpText for FlowMutation {
             return Ok(FlowMutation::DuplicateWidget(payload));
         }
         let framework_mutation = <semio_framework_artifact_flow_flow::FlowMutation as protocol::OpText>::parse_op(line)?;
-        from_framework_mutation(framework_mutation).ok_or_else(|| store::TextError::new("replace-flow-fixture has no semantic mutation representation (whole-document replace is banned; route through ArtifactStore::reset)", store::TextSpan::at(1, 1)))
+        from_framework_mutation(framework_mutation).ok_or_else(|| store::TextError::new("replace-flow-host-document has no semantic mutation representation (whole-document replace is banned; route through ArtifactStore::reset)", store::TextSpan::at(1, 1)))
     }
     fn print_op(&self) -> String {
         let FlowMutation::DuplicateWidget(payload) = self else {

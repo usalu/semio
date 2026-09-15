@@ -1263,6 +1263,10 @@ pub(crate) struct RetainedInteractiveSyncCursor {
     tree_record_len: usize,
     tree_item_count: usize,
     tree_apply: usize,
+    /// 🩺️ The source line of the `let … else` arm that last answered
+    /// [`RetainedInteractiveSyncStep::Fault`], `0` while the walk is healthy. See
+    /// [`retained_sync_fault`].
+    pub(crate) fault_line: u32,
 }
 
 impl Default for RetainedInteractiveSyncCursor {
@@ -1282,6 +1286,7 @@ impl Default for RetainedInteractiveSyncCursor {
             tree_record_len: 0,
             tree_item_count: 0,
             tree_apply: 0,
+            fault_line: 0,
         }
     }
 }
@@ -1336,8 +1341,22 @@ impl RetainedInteractiveSyncCursor {
     }
 }
 
+/// 🩺️ The ONE fault exit of the retained interactive synchronize walk, stamping the source line that
+/// took it onto the cursor.
+///
+/// ⚖️ Thirty-four `let … else` arms answer `RetainedInteractiveSyncStep::Fault`, the paint frame turns
+/// every one of them into the single phase name `synchronize-node`, and the shell turns THAT into
+/// `retained document ingress reached its terminal fault` on a body that then paints nothing. Three
+/// names for one event, none of which says which arm fired — measured on 6118 as a permanently
+/// faulted `framework.panel.toolRun` with no further detail available at all
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-regressions-sweep-2026-09-15.md`).
+fn retained_sync_fault(cursor: &mut RetainedInteractiveSyncCursor, line: u32) -> RetainedInteractiveSyncStep {
+    cursor.fault_line = line;
+    RetainedInteractiveSyncStep::Fault
+}
+
 fn retained_sync_tree_item_step(cursor: &mut RetainedInteractiveSyncCursor) -> RetainedInteractiveSyncStep {
-    let Some(frame) = cursor.tree_frames[cursor.tree_depth] else { return RetainedInteractiveSyncStep::Fault };
+    let Some(frame) = cursor.tree_frames[cursor.tree_depth] else { return retained_sync_fault(cursor, line!()) };
     if frame.next_item >= frame.items_len {
         cursor.tree_frames[cursor.tree_depth] = None;
         if cursor.tree_depth == 0 {
@@ -1349,22 +1368,22 @@ fn retained_sync_tree_item_step(cursor: &mut RetainedInteractiveSyncCursor) -> R
         return RetainedInteractiveSyncStep::Pending;
     }
     let item_index = frame.next_item;
-    let Some(next_item) = item_index.checked_add(1) else { return RetainedInteractiveSyncStep::Fault };
-    let Some(active) = cursor.tree_frames[cursor.tree_depth].as_mut() else { return RetainedInteractiveSyncStep::Fault };
+    let Some(next_item) = item_index.checked_add(1) else { return retained_sync_fault(cursor, line!()) };
+    let Some(active) = cursor.tree_frames[cursor.tree_depth].as_mut() else { return retained_sync_fault(cursor, line!()) };
     active.next_item = next_item;
-    let Some(item) = (unsafe { (frame.items_pointer as *const UiTreeItemNode).add(item_index).as_ref() }) else { return RetainedInteractiveSyncStep::Fault };
+    let Some(item) = (unsafe { (frame.items_pointer as *const UiTreeItemNode).add(item_index).as_ref() }) else { return retained_sync_fault(cursor, line!()) };
     if !item.presence.visible() {
         return RetainedInteractiveSyncStep::Pending;
     }
-    let Some(item_count) = cursor.tree_item_count.checked_add(1).filter(|count| *count <= RETAINED_SYNC_COLLECTION_ITEMS) else { return RetainedInteractiveSyncStep::Fault };
-    let Some(record_index) = cursor.tree_record_len.checked_add(1).filter(|count| *count <= RETAINED_SYNC_OUTPUTS).map(|_| cursor.tree_record_len) else { return RetainedInteractiveSyncStep::Fault };
-    let Some(key) = RetainedSyncKey::try_from_str(&item.id) else { return RetainedInteractiveSyncStep::Fault };
+    let Some(item_count) = cursor.tree_item_count.checked_add(1).filter(|count| *count <= RETAINED_SYNC_COLLECTION_ITEMS) else { return retained_sync_fault(cursor, line!()) };
+    let Some(record_index) = cursor.tree_record_len.checked_add(1).filter(|count| *count <= RETAINED_SYNC_OUTPUTS).map(|_| cursor.tree_record_len) else { return retained_sync_fault(cursor, line!()) };
+    let Some(key) = RetainedSyncKey::try_from_str(&item.id) else { return retained_sync_fault(cursor, line!()) };
     cursor.tree_records[record_index] = Some(RetainedSyncTreeRecord { key, parent: Some(frame.record), retained: None, draggable: item.draggable.unwrap_or(false), section: false });
     cursor.tree_record_len += 1;
     cursor.tree_item_count = item_count;
     let children = item.items.as_deref().filter(|items| item.default_open.unwrap_or(false) && !items.is_empty());
     if let Some(children) = children {
-        let Some(depth) = cursor.tree_depth.checked_add(1).filter(|depth| *depth < RETAINED_SYNC_DEPTH) else { return RetainedInteractiveSyncStep::Fault };
+        let Some(depth) = cursor.tree_depth.checked_add(1).filter(|depth| *depth < RETAINED_SYNC_DEPTH) else { return retained_sync_fault(cursor, line!()) };
         cursor.tree_depth = depth;
         cursor.tree_frames[depth] = Some(RetainedSyncTreeFrame { record: record_index, next_item: 0, items_pointer: children.as_ptr() as usize, items_len: children.len() });
     }
@@ -1379,17 +1398,17 @@ pub(crate) fn sync_interactive_state_node_step(tree: &mut UiTree, id: NodeId, th
         return RetainedInteractiveSyncStep::Pending;
     }
     if cursor.node != Some(id) {
-        return RetainedInteractiveSyncStep::Fault;
+        return retained_sync_fault(cursor, line!());
     }
     match cursor.phase {
         RetainedInteractiveSyncPhase::Bind => {
-            let Some(node) = tree.node(id) else { return RetainedInteractiveSyncStep::Fault };
+            let Some(node) = tree.node(id) else { return retained_sync_fault(cursor, line!()) };
             match &node.spec.0 {
                 UiNode::Select(select) if node.state.open => {
                     if select.items.len() > RETAINED_SYNC_COLLECTION_ITEMS {
-                        return RetainedInteractiveSyncStep::Fault;
+                        return retained_sync_fault(cursor, line!());
                     }
-                    let Some(layout) = tree.accepted_layout(id) else { return RetainedInteractiveSyncStep::Fault };
+                    let Some(layout) = tree.accepted_layout(id) else { return retained_sync_fault(cursor, line!()) };
                     cursor.select_width = layout.width;
                     cursor.select_height = layout.height;
                     cursor.phase = RetainedInteractiveSyncPhase::SelectItem;
@@ -1401,7 +1420,7 @@ pub(crate) fn sync_interactive_state_node_step(tree: &mut UiTree, id: NodeId, th
                 }
                 UiNode::Tree(tree_node) => {
                     if tree_node.sections.len() > RETAINED_SYNC_COLLECTION_ITEMS || tree.accepted_layout(id).is_none() {
-                        return RetainedInteractiveSyncStep::Fault;
+                        return retained_sync_fault(cursor, line!());
                     }
                     cursor.phase = RetainedInteractiveSyncPhase::TreeSection;
                     RetainedInteractiveSyncStep::Pending
@@ -1414,7 +1433,7 @@ pub(crate) fn sync_interactive_state_node_step(tree: &mut UiTree, id: NodeId, th
                 UiNode::Select(select) => Some(select),
                 _ => None,
             }) else {
-                return RetainedInteractiveSyncStep::Fault;
+                return retained_sync_fault(cursor, line!());
             };
             if cursor.item >= select.items.len() {
                 return cursor.finish();
@@ -1425,7 +1444,7 @@ pub(crate) fn sync_interactive_state_node_step(tree: &mut UiTree, id: NodeId, th
             RetainedInteractiveSyncStep::Pending
         }
         RetainedInteractiveSyncPhase::SelectScan => {
-            let Some(child) = cursor.child_scan else { return RetainedInteractiveSyncStep::Fault };
+            let Some(child) = cursor.child_scan else { return retained_sync_fault(cursor, line!()) };
             let matches = tree
                 .node(id)
                 .and_then(|node| match &node.spec.0 {
@@ -1442,14 +1461,14 @@ pub(crate) fn sync_interactive_state_node_step(tree: &mut UiTree, id: NodeId, th
             RetainedInteractiveSyncStep::Pending
         }
         RetainedInteractiveSyncPhase::SelectWrite => {
-            let Some(child) = cursor.matched.take() else { return RetainedInteractiveSyncStep::Fault };
+            let Some(child) = cursor.matched.take() else { return retained_sync_fault(cursor, line!()) };
             let rect = select_popup_row_rect(cursor.select_width, cursor.select_height, cursor.item, theme);
-            let Some(node) = tree.node_mut(child) else { return RetainedInteractiveSyncStep::Fault };
+            let Some(node) = tree.node_mut(child) else { return retained_sync_fault(cursor, line!()) };
             node.layout.x = rect.x;
             node.layout.y = rect.y;
             node.layout.width = rect.w;
             node.layout.height = rect.h;
-            let Some(item) = cursor.item.checked_add(1) else { return RetainedInteractiveSyncStep::Fault };
+            let Some(item) = cursor.item.checked_add(1) else { return retained_sync_fault(cursor, line!()) };
             cursor.item = item;
             cursor.phase = RetainedInteractiveSyncPhase::SelectItem;
             RetainedInteractiveSyncStep::Pending
@@ -1459,8 +1478,8 @@ pub(crate) fn sync_interactive_state_node_step(tree: &mut UiTree, id: NodeId, th
                 UiNode::Stack(stack) => Some(stack.drop_action.is_some()),
                 _ => None,
             });
-            let Some(accepts_drop) = accepts_drop else { return RetainedInteractiveSyncStep::Fault };
-            let Some(node) = tree.node_mut(id) else { return RetainedInteractiveSyncStep::Fault };
+            let Some(accepts_drop) = accepts_drop else { return retained_sync_fault(cursor, line!()) };
+            let Some(node) = tree.node_mut(id) else { return retained_sync_fault(cursor, line!()) };
             node.flags.set(NodeFlags::DROP_TARGET, accepts_drop);
             cursor.finish()
         }
@@ -1469,7 +1488,7 @@ pub(crate) fn sync_interactive_state_node_step(tree: &mut UiTree, id: NodeId, th
                 UiNode::Tree(tree_node) => tree.accepted_layout(id).map(|_| tree_node.sections.len()),
                 _ => None,
             }) else {
-                return RetainedInteractiveSyncStep::Fault;
+                return retained_sync_fault(cursor, line!());
             };
             if cursor.tree_section >= sections_len {
                 cursor.tree_apply = 0;
@@ -1480,10 +1499,10 @@ pub(crate) fn sync_interactive_state_node_step(tree: &mut UiTree, id: NodeId, th
                 UiNode::Tree(tree_node) => tree_node.sections.get(cursor.tree_section),
                 _ => None,
             }) else {
-                return RetainedInteractiveSyncStep::Fault;
+                return retained_sync_fault(cursor, line!());
             };
-            let Some(record_index) = cursor.tree_record_len.checked_add(1).filter(|count| *count <= RETAINED_SYNC_OUTPUTS).map(|_| cursor.tree_record_len) else { return RetainedInteractiveSyncStep::Fault };
-            let Some(key) = RetainedSyncKey::try_from_str(&section.id) else { return RetainedInteractiveSyncStep::Fault };
+            let Some(record_index) = cursor.tree_record_len.checked_add(1).filter(|count| *count <= RETAINED_SYNC_OUTPUTS).map(|_| cursor.tree_record_len) else { return retained_sync_fault(cursor, line!()) };
+            let Some(key) = RetainedSyncKey::try_from_str(&section.id) else { return retained_sync_fault(cursor, line!()) };
             cursor.tree_records[record_index] = Some(RetainedSyncTreeRecord { key, parent: None, retained: None, draggable: false, section: true });
             cursor.tree_record_len += 1;
             cursor.tree_depth = 0;
@@ -1497,21 +1516,21 @@ pub(crate) fn sync_interactive_state_node_step(tree: &mut UiTree, id: NodeId, th
                 cursor.phase = RetainedInteractiveSyncPhase::TreeClose;
                 return RetainedInteractiveSyncStep::Pending;
             }
-            let Some(record) = cursor.tree_records[cursor.tree_apply] else { return RetainedInteractiveSyncStep::Fault };
+            let Some(record) = cursor.tree_records[cursor.tree_apply] else { return retained_sync_fault(cursor, line!()) };
             let parent = match record.parent {
                 Some(parent) => cursor.tree_records.get(parent).and_then(|record| record.as_ref()).and_then(|record| record.retained),
                 None => Some(id),
             };
-            let Some(parent) = parent else { return RetainedInteractiveSyncStep::Fault };
+            let Some(parent) = parent else { return retained_sync_fault(cursor, line!()) };
             cursor.child_scan = tree.node(parent).and_then(|node| node.first_child);
             cursor.matched = None;
             cursor.phase = RetainedInteractiveSyncPhase::TreeApplyScan;
             RetainedInteractiveSyncStep::Pending
         }
         RetainedInteractiveSyncPhase::TreeApplyScan => {
-            let Some(child) = cursor.child_scan else { return RetainedInteractiveSyncStep::Fault };
-            let Some(record) = cursor.tree_records[cursor.tree_apply] else { return RetainedInteractiveSyncStep::Fault };
-            let Some(target) = record.key.as_str() else { return RetainedInteractiveSyncStep::Fault };
+            let Some(child) = cursor.child_scan else { return retained_sync_fault(cursor, line!()) };
+            let Some(record) = cursor.tree_records[cursor.tree_apply] else { return retained_sync_fault(cursor, line!()) };
+            let Some(target) = record.key.as_str() else { return retained_sync_fault(cursor, line!()) };
             if matches!(tree.node(child).map(|node| &node.key), Some(NodeKey::Explicit(key)) if key == target) {
                 cursor.matched = Some(child);
                 cursor.phase = RetainedInteractiveSyncPhase::TreeApplyWrite;
@@ -1521,15 +1540,15 @@ pub(crate) fn sync_interactive_state_node_step(tree: &mut UiTree, id: NodeId, th
             RetainedInteractiveSyncStep::Pending
         }
         RetainedInteractiveSyncPhase::TreeApplyWrite => {
-            let Some(child) = cursor.matched.take() else { return RetainedInteractiveSyncStep::Fault };
-            let Some(record) = cursor.tree_records[cursor.tree_apply] else { return RetainedInteractiveSyncStep::Fault };
-            let Some(node) = tree.node_mut(child) else { return RetainedInteractiveSyncStep::Fault };
+            let Some(child) = cursor.matched.take() else { return retained_sync_fault(cursor, line!()) };
+            let Some(record) = cursor.tree_records[cursor.tree_apply] else { return retained_sync_fault(cursor, line!()) };
+            let Some(node) = tree.node_mut(child) else { return retained_sync_fault(cursor, line!()) };
             if !record.section {
                 node.flags.set(NodeFlags::DRAG_SOURCE, record.draggable);
             }
-            let Some(output) = cursor.tree_records[cursor.tree_apply].as_mut() else { return RetainedInteractiveSyncStep::Fault };
+            let Some(output) = cursor.tree_records[cursor.tree_apply].as_mut() else { return retained_sync_fault(cursor, line!()) };
             output.retained = Some(child);
-            let Some(next) = cursor.tree_apply.checked_add(1) else { return RetainedInteractiveSyncStep::Fault };
+            let Some(next) = cursor.tree_apply.checked_add(1) else { return retained_sync_fault(cursor, line!()) };
             cursor.tree_apply = next;
             cursor.phase = RetainedInteractiveSyncPhase::TreeApplyPrepare;
             RetainedInteractiveSyncStep::Pending

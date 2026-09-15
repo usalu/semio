@@ -46,7 +46,7 @@ const TRINITY_REWRITING_PLAY_BODY_LHS: &str = "trinity.rewriting.play.lhs";
 const TRINITY_REWRITING_PLAY_BODY_RHS: &str = "trinity.rewriting.play.rhs";
 const TRINITY_REWRITING_PLAY_BODY_JACK: &str = "trinity.rewriting.play.jack";
 const TRINITY_REWRITING_PLAY_BODY_PARAMETERS: &str = "trinity.rewriting.play.parameters";
-const TRINITY_REWRITING_PLAY_BODY_DOCUMENT: &str = "trinity.rewriting.play.document";
+const TRINITY_REWRITING_PLAY_BODY_ARTIFACT: &str = "trinity.rewriting.play.artifact";
 const TRINITY_REWRITING_PLAY_BODY_CATALOGUE: &str = "trinity.rewriting.play.catalogue";
 const TRINITY_REWRITING_PLAY_BODY_INSPECTION: &str = "trinity.rewriting.play.inspection";
 pub(crate) const TRINITY_REWRITING_PLAY_WINDOW_BEFORE: &str = "trinity-rewriting-before";
@@ -199,7 +199,7 @@ fn apply_rewriting_to_fixture(before_json: &str, state: &RewritingSnapshot) -> S
         return before_json.into();
     };
     if schema::apply_rule(&mut graph, &rule, &state.parameter_bindings).is_ok() {
-        graph.fixture_json().unwrap_or_else(|_| before_json.into())
+        graph.host_document_json().unwrap_or_else(|_| before_json.into())
     } else {
         before_json.into()
     }
@@ -269,14 +269,14 @@ pub(crate) fn lhs_graph_fixture_json(lhs_json: &str, rule_layout: &BTreeMap<Stri
     let Ok(lhs) = pack::from_json_str::<schema::Lhs>(lhs_json) else {
         return nakagin_fixture_json();
     };
-    semio_s_artifact_trinity_jack::Graph::from_fixture(lhs_semantic_graph_fixture(&lhs, rule_layout)).ok().and_then(|graph| graph.fixture_json().ok()).unwrap_or_else(nakagin_fixture_json)
+    semio_s_artifact_trinity_jack::Graph::from_snapshot(lhs_semantic_graph_fixture(&lhs, rule_layout)).ok().and_then(|graph| graph.host_document_json().ok()).unwrap_or_else(nakagin_fixture_json)
 }
 
 pub(crate) fn rhs_graph_fixture_json(rhs_json: &str, rule_layout: &BTreeMap<String, LayoutPoint>) -> String {
     let Ok(rhs) = pack::from_json_str::<Rhs>(rhs_json) else {
         return nakagin_fixture_json();
     };
-    semio_s_artifact_trinity_jack::Graph::from_fixture(rhs_semantic_graph_fixture(&rhs, rule_layout)).ok().and_then(|graph| graph.fixture_json().ok()).unwrap_or_else(nakagin_fixture_json)
+    semio_s_artifact_trinity_jack::Graph::from_snapshot(rhs_semantic_graph_fixture(&rhs, rule_layout)).ok().and_then(|graph| graph.host_document_json().ok()).unwrap_or_else(nakagin_fixture_json)
 }
 
 /// 🕹️ Used by `interaction_topology` to hang a var-reference `TopologyNode` off its graph node
@@ -300,8 +300,8 @@ fn var_from_node_name(name: &str) -> Option<String> {
 /// rule-applied result graph.
 pub(crate) fn rewriting_io() -> semio_framework_plugin::AppIo {
     semio_framework_plugin::AppIo {
-        document_schema: REWRITE_RULE_SCHEMA.into(),
-        document_media_type: MediaType { class: MediaClass::Computation, form: MediaForm::Value },
+        artifact_schema: REWRITE_RULE_SCHEMA.into(),
+        artifact_media_type: MediaType { class: MediaClass::Computation, form: MediaForm::Value },
         ports: vec![
             semio_framework_plugin::MediaPortSpec {
                 id: "graph:in".into(),
@@ -358,7 +358,7 @@ fn trinity_rewriting_lod_measure(window_id: &str, current_mode: &str) -> WindowM
 /// correct even though this snapshot doesn't carry it.
 pub(crate) fn render_fixture_graph(surface_id: &str, fixture_json: &str, cfg: &window_config::RewritingWindowConfig, editable: bool) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let fixture = parse_fixture_json(fixture_json).unwrap_or_else(|| JackSnapshot::parse_dsl(NAKAGIN_FIXTURE_DSL).unwrap());
-    let (nodes, edges, fixture_viewport) = semio_s_artifact_trinity_jack::fixture_to_workflow(&fixture);
+    let (nodes, edges, fixture_viewport) = semio_s_artifact_trinity_jack::snapshot_to_workflow(&fixture);
     let viewport = cfg.camera.as_ref().map_or(fixture_viewport, |camera| Viewport2d { x: camera.x, y: camera.y, zoom: camera.zoom });
     semio_framework_plugin::scene_surface(
         surface_id,
@@ -372,7 +372,7 @@ pub(crate) fn render_fixture_graph(surface_id: &str, fixture_json: &str, cfg: &w
 /// 🎯️ `TrinityRewritingPlayApp::Command` — the SOLE dispatch surface for rewriting's own behavior. Kept
 /// hand-rolled (see `jack::TrinityJackCommand`'s doc comment for the rationale). `NodeGraphEdit` keeps
 /// its JSON-array `operations` shape (rather than a typed sub-enum) — the same
-/// `{"operation":"setFixture"|"deleteSelection", ...}` payload `apply_rewriting_node_graph_edit_operations`
+/// `{"operation":"setHostDocument"|"deleteSelection", ...}` payload `apply_rewriting_node_graph_edit_operations`
 /// already parses, carried as an opaque string field.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslOps)]
 pub enum TrinityRewritingCommand {
@@ -562,7 +562,7 @@ impl ArtifactEditor for TrinityRewritingPlayApp {
     // 🧬️ Whole-document replace is banned from the `Mutation` enum outright (`SetState` — a
     // whole-snapshot LWW register wearing a mutation costume, see `📓️taxonomy.md`'s forbidden
     // vocabulary), so this intentionally falls back to the trait default (`None`) rather than
-    // overriding — the `"document:in"` media port therefore reports `MediaError::NotImplemented`;
+    // overriding — the `"artifact:in"` media port therefore reports `MediaError::NotImplemented`;
     // there is no import mutation (locked decision).
 
     /// 🔌️ `"graph:in"` loads an incoming `trinity.graph` pack as this rule's `before_fixture_json`
@@ -583,7 +583,7 @@ impl ArtifactEditor for TrinityRewritingPlayApp {
         }
     }
 
-    /// 🔌️ `"graph:out"` re-emits the rule-applied result graph, alongside the implicit `"document:out"`.
+    /// 🔌️ `"graph:out"` re-emits the rule-applied result graph, alongside the implicit `"artifact:out"`.
     fn export_media(port: &str, doc: &ArtifactView<'_, RewritingSnapshot>) -> Result<Media, MediaError> {
         match port {
             "graph:out" => {
@@ -595,8 +595,8 @@ impl ArtifactEditor for TrinityRewritingPlayApp {
                     payload: MediaPayload::Structured { schema: semio_s_artifact_trinity_jack::TRINITY_GRAPH_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) },
                 })
             }
-            "document:out" => {
-                let media_type = Self::io().map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.document_media_type);
+            "artifact:out" => {
+                let media_type = Self::io().map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.artifact_media_type);
                 let bytes = doc.snapshot.encode_pack();
                 Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
             }
@@ -657,7 +657,7 @@ impl ArtifactEditor for TrinityRewritingPlayApp {
             TRINITY_REWRITING_PLAY_BODY_RHS => edit::windows::rhs::render(state, &window_config),
             TRINITY_REWRITING_PLAY_BODY_JACK => edit::windows::jack::render(state, config),
             TRINITY_REWRITING_PLAY_BODY_PARAMETERS => edit::windows::parameters::render(state, labels),
-            TRINITY_REWRITING_PLAY_BODY_DOCUMENT => crate::editor::rewriting::panels::document::render(state, config, labels),
+            TRINITY_REWRITING_PLAY_BODY_ARTIFACT => crate::editor::rewriting::panels::document::render(state, config, labels),
             TRINITY_REWRITING_PLAY_BODY_CATALOGUE => crate::editor::rewriting::panels::catalogue::render(labels),
             TRINITY_REWRITING_PLAY_BODY_INSPECTION => crate::editor::rewriting::panels::inspection::render(),
             _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("trinity.body.label", "the fixed Trinity body label exceeds its UI bound")),
@@ -724,7 +724,7 @@ impl ArtifactEditor for TrinityRewritingPlayApp {
         }
         // 🩹️ Reads the semantic rule graphs directly (`lhs_semantic_graph_fixture`/
         // `rhs_semantic_graph_fixture`), NOT via `lhs_graph_fixture_json`/`rhs_graph_fixture_json`:
-        // those round-trip through `Graph::from_fixture`, which validates node kinds against the
+        // those round-trip through `Graph::from_snapshot`, which validates node kinds against the
         // "nakagin" manifest — the synthetic `rewriting.*` clause kinds fail that validation and the
         // wrapper silently falls back to the nakagin fixture, which would leave the "graph" domain's
         // topology missing every `lhs-*`/`rhs-*` id entirely.
@@ -779,9 +779,9 @@ pub fn create_rewriting_app() -> semio_framework_plugin::AppDefinition {
             .default_layout(edit::layout())
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_ARTIFACT_ID,
-                LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Dokument"),
+                LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Artefakt"),
                 PanelGroup::Workbench,
-                TRINITY_REWRITING_PLAY_BODY_DOCUMENT,
+                TRINITY_REWRITING_PLAY_BODY_ARTIFACT,
             )
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_CATALOGUE_ID,

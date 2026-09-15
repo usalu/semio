@@ -106,7 +106,7 @@ async fn one_pick_builds_the_interaction_topology_once_whatever_the_document_siz
 
 /// 🌳️ Wave B46 LAW: the outliner PANEL BODY of the flagship document carries selectable rows, paged.
 ///
-/// 🧾️ The panel module's own law measures `document::render` directly; this one measures the route the
+/// 🧾️ The panel module's own law measures `artifact::render` directly; this one measures the route the
 /// host actually asks for (`render_panel_body`, no `window_id`, over the live session), because wave
 /// B44 §6.2 read zero entity rows in the browser while the builder was green in isolation.
 #[semio_framework_async_macros::async_test]
@@ -116,7 +116,7 @@ async fn the_flagship_outliner_panel_body_carries_paged_object_rows() {
     let objects = object_count(&app);
     assert!(objects >= 100, "the law needs the large document; got {objects} objects");
     let first = first_object_id(&app);
-    let body = render_panel_body(&mut app, document::BODY_KEY, Some(main::WINDOW_KIND_ID)).await;
+    let body = render_panel_body(&mut app, artifact::BODY_KEY, Some(main::WINDOW_KIND_ID)).await;
     let rows = mentions(&body, &first);
     let paged = mentions(&body, ".objects.more");
     eprintln!("[DEBUG] b46.panelBody objects={objects} firstRowPresent={rows} continuation={paged} bytes={}", to_json_string(&body).len());

@@ -511,7 +511,7 @@ fn every_inference_job_tool_is_denied_without_its_scope_and_admitted_by_inferenc
         engine.authorize_scopes(&granted, &capability).unwrap_or_else(|error| panic!("{} was refused for a granted principal: {error:?}", capability.id));
     }
     let read_only = principal(&["artifact.read"]);
-    engine.authorize_scopes(&read_only, &inference_events_capability()).expect("documents.read alone reads the owner-private page");
+    engine.authorize_scopes(&read_only, &inference_events_capability()).expect("artifacts.read alone reads the owner-private page");
     assert_eq!(engine.authorize_scopes(&read_only, &inference_submit_capability()).expect_err("a reader cannot submit").code, GatewayErrorCode::PermissionDenied);
     assert_eq!(engine.authorize_scopes(&read_only, &inference_approve_capability()).expect_err("a reader cannot approve").code, GatewayErrorCode::PermissionDenied);
     assert_eq!(engine.authorize_scopes(&read_only, &inference_cancel_capability()).expect_err("a reader cannot cancel").code, GatewayErrorCode::PermissionDenied);

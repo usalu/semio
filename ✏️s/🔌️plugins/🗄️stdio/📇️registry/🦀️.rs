@@ -66,7 +66,7 @@ struct NativeOpenableReceiptSourceV1 {
     descriptor_codec_id: String,
     runtime_capability_id: String,
     artifact_kind: String,
-    document_schema: String,
+    artifact_schema: String,
     extension: String,
     pack_schema_sha256: String,
     protocol_path: String,
@@ -277,7 +277,7 @@ fn validate_native_openable_projection(receipts: &[NativeCodecFactoryReceipt]) -
             || projected.descriptor_codec_id != receipt.descriptor_codec_id
             || projected.runtime_capability_id != receipt.runtime_capability_id
             || projected.artifact_kind != receipt.artifact_kind
-            || projected.document_schema != receipt.schema
+            || projected.artifact_schema != receipt.schema
             || projected.extension != receipt.extension
             || native_codec_hash(&projected.pack_schema_sha256)? != receipt.pack_schema_hash
             || !projected.protocol_path.starts_with("🗿️artifacts/")

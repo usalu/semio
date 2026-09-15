@@ -15,7 +15,7 @@ impl Serializer<SequenceSnapshot> for SequenceIntoMd {
     const INTO: Dialect = MD_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Canonical;
     async fn serialize(from: &SequenceSnapshot) -> IoResult<IoPayload> {
-        let fixture = from.try_to_fixture().map_err(|error| IoError { message: format!("SequenceIntoMd: {error}"), diagnostics: Vec::new() })?;
+        let fixture = from.try_to_host_document().map_err(|error| IoError { message: format!("SequenceIntoMd: {error}"), diagnostics: Vec::new() })?;
         let literal = dsl::os_pack::to_json_string(&fixture);
         let md = MdSnapshot { schema: STDIO_MD_DOCUMENT_SCHEMA.into(), blocks: vec![MdBlock::CodeBlock { info: Some("json".into()), literal }] };
         Ok(IoOutcome::clean(IoPayload::Binary(<MdSnapshot as store::ArtifactPack>::encode_pack(&md))))

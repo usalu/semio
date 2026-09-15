@@ -6,7 +6,7 @@ async fn primary_asset_is_nonempty() {
 
 #[semio_framework_async_macros::async_test]
 async fn inference_determinism_law() {
-    use crate::document_schema::inferences::Din16798Inference;
+    use crate::artifact_schema::inferences::Din16798Inference;
     use crate::Din16798Snapshot;
     use protocol::Inference;
     let snapshot = Din16798Snapshot::default();
@@ -15,7 +15,7 @@ async fn inference_determinism_law() {
 
 #[semio_framework_async_macros::async_test]
 async fn inference_default_law() {
-    use crate::document_schema::inferences::Din16798Inference;
+    use crate::artifact_schema::inferences::Din16798Inference;
     use crate::Din16798Snapshot;
     use protocol::Inference;
     assert_eq!(Din16798Inference::infer(&Din16798Snapshot::default()), Din16798Inference::default());

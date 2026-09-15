@@ -107,7 +107,7 @@ async fn the_manifest_stitches_every_taxonomy_node() {
     let definition = create_din4108_app();
     assert_eq!(definition.modes.len(), 1);
     assert_eq!(definition.window_kinds.len(), 2);
-    for body_key in [document_panel::BODY_DOCUMENT, catalogue_panel::BODY_CATALOGUE, inspection_panel::BODY_INSPECTION] {
+    for body_key in [document_panel::BODY_ARTIFACT, catalogue_panel::BODY_CATALOGUE, inspection_panel::BODY_INSPECTION] {
         assert!(definition.panel_tabs.iter().any(|tab| tab.body_key.as_deref() == Some(body_key)), "panel tab {body_key} is stitched into the manifest");
     }
     assert!(definition.artifact_kinds.iter().any(|kind| kind.id == crate::app_surface::artifact_kind_id(VARIANT)));
@@ -132,7 +132,7 @@ async fn an_unknown_body_key_falls_back_to_a_text_node() {
 #[semio_framework_async_macros::async_test]
 async fn every_declared_body_key_renders() {
     let mut app = context::app_with_registry().await;
-    for body_key in [inputs::BODY_INPUTS, results::BODY_RESULTS, document_panel::BODY_DOCUMENT, catalogue_panel::BODY_CATALOGUE, inspection_panel::BODY_INSPECTION] {
+    for body_key in [inputs::BODY_INPUTS, results::BODY_RESULTS, document_panel::BODY_ARTIFACT, catalogue_panel::BODY_CATALOGUE, inspection_panel::BODY_INSPECTION] {
         assert!(!context::render(&mut app, body_key).await.contains("Unknown body"), "{body_key} must render its own node");
     }
 }
@@ -143,7 +143,7 @@ async fn every_declared_body_key_renders() {
 async fn set_snapshot_commits_a_host_backed_report() {
     let mut app = context::app_with_registry().await;
     context::dispatch(&mut app, Din4108Command::ReplaceSnapshot(set_snapshot::ReplaceSnapshot { snapshot: Din4108Snapshot::default() })).await;
-    let host = NormHost::<Din4108Family>::from_document(app.snapshot().expect("projection"));
+    let host = NormHost::<Din4108Family>::from_artifact(app.snapshot().expect("projection"));
     assert!(!host.report().checks.is_empty());
 }
 

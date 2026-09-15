@@ -20,7 +20,7 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, it } from "vitest";
 import Ajv from "ajv";
-import { SHELL_KEYBINDINGS, ariaKeyshortcutsText, composeControlKeybindings } from "@semio-tech/ui-react";
+import { SHELL_KEYBINDINGS, ariaKeyshortcutsText, composeControlKeybindings, formatKeybindingShortcut } from "@semio-tech/ui-react";
 import { keyboardEventMatchesOwnedHotkey, parseOwnedHotkeyChords } from "../../../../../../../🔨️modules/🖱️ui/🔨️modules/🕹️control-keybinding-context/🟦️.tsx";
 import type { AppRole, ArtifactDialect } from "@semio-tech/framework";
 import { resolveBootQueryAppRole } from "../../../../🧑‍💻dev/🔗️boot-query/🟦️.ts";
@@ -114,10 +114,13 @@ type SurfaceSwitchFixture = {
     readonly controlId: string;
     readonly chord: string;
     readonly aria: string;
+    readonly ariaApple: string;
+    readonly badge: string;
+    readonly badgeApple: string;
     readonly event: { readonly key: string; readonly ctrlKey: boolean; readonly altKey: boolean; readonly metaKey: boolean; readonly shiftKey: boolean };
     readonly dispatches: { readonly requested: AppRole; readonly currentRole: AppRole; readonly expectedAppId: string } | null;
   }[];
-  readonly keybindingOverride: { readonly controlId: string; readonly keys: string; readonly aria: string };
+  readonly keybindingOverride: { readonly controlId: string; readonly keys: string; readonly aria: string; readonly ariaApple: string; readonly badge: string; readonly badgeApple: string };
 };
 
 const fixture = fixtureJson as unknown as SurfaceSwitchFixture;
@@ -258,9 +261,9 @@ const FIXTURE_SCHEMA: Record<string, unknown> = {
     keybindings: {
       type: "array",
       minItems: 1,
-      items: { type: "object", additionalProperties: false, required: ["controlId", "chord", "aria", "event", "dispatches"], properties: { controlId: { type: "string" }, chord: { type: "string" }, aria: { type: "string" }, event: { type: "object" }, dispatches: { type: ["object", "null"] } } },
+      items: { type: "object", additionalProperties: false, required: ["controlId", "chord", "aria", "ariaApple", "badge", "badgeApple", "event", "dispatches"], properties: { controlId: { type: "string" }, chord: { type: "string" }, aria: { type: "string" }, ariaApple: { type: "string" }, badge: { type: "string" }, badgeApple: { type: "string" }, event: { type: "object" }, dispatches: { type: ["object", "null"] } } },
     },
-    keybindingOverride: { type: "object", additionalProperties: false, required: ["controlId", "keys", "aria"], properties: { controlId: { type: "string" }, keys: { type: "string" }, aria: { type: "string" } } },
+    keybindingOverride: { type: "object", additionalProperties: false, required: ["controlId", "keys", "aria", "ariaApple", "badge", "badgeApple"], properties: { controlId: { type: "string" }, keys: { type: "string" }, aria: { type: "string" }, ariaApple: { type: "string" }, badge: { type: "string" }, badgeApple: { type: "string" } } },
   },
 };
 
@@ -638,7 +641,16 @@ export async function testSurfaceSwitch(): Promise<void> {
   for (const row of fixture.keybindings) {
     assert.equal(SHELL_KEYBINDINGS[row.controlId], row.chord, `${row.controlId}: declared chord`);
     assert.equal(composed.get(row.controlId), row.chord, `${row.controlId}: reaches the settings registry`);
-    assert.equal(ariaKeyshortcutsText(row.chord), row.aria, `${row.controlId}: aria-keyshortcuts`);
+    assert.equal(ariaKeyshortcutsText(row.chord, "Win32"), row.aria, `${row.controlId}: aria-keyshortcuts`);
+    // 🍎 The chord a screen reader is told must be the chord that FIRES: `mod` is Command on Apple, so
+    // `aria-keyshortcuts` and the visual badge resolve it through one predicate
+    // (`keybindingPlatformUsesMetaV1`). Publishing `Control+Alt+V` beside a rendered `⌘️⌥️V` told a
+    // macOS screen-reader user a chord that does nothing.
+    assert.equal(ariaKeyshortcutsText(row.chord, "MacIntel"), row.ariaApple, `${row.controlId}: aria-keyshortcuts on Apple`);
+    assert.equal(formatKeybindingShortcut(row.chord, "MacIntel"), row.badgeApple, `${row.controlId}: badge on Apple`);
+    assert.equal(formatKeybindingShortcut(row.chord, "Win32"), row.badge, `${row.controlId}: badge off Apple`);
+    assert.ok(row.ariaApple.startsWith("Meta+") && row.badgeApple.startsWith("⌘️"), `${row.controlId}: badge and aria name the same physical key on Apple`);
+    assert.ok(row.aria.startsWith("Control+") && row.badge.startsWith("Ctrl+"), `${row.controlId}: badge and aria name the same physical key off Apple`);
     const chords = parseOwnedHotkeyChords(row.chord, false);
     assert.equal(chords.length, 1, `${row.controlId}: one chord`);
     assert.equal(keyboardEventMatchesOwnedHotkey(new KeyboardEvent("keydown", row.event), chords[0]!), true, `${row.controlId}: matches its own event`);
@@ -660,7 +672,9 @@ export async function testSurfaceSwitch(): Promise<void> {
   const override = fixture.keybindingOverride;
   const overridden = composeControlKeybindings(new Map(), { [override.controlId]: override.keys });
   assert.equal(overridden.get(override.controlId), override.keys, "a user override replaces the framework chord");
-  assert.equal(ariaKeyshortcutsText(overridden.get(override.controlId)), override.aria, "the overridden chord is what aria-keyshortcuts republishes");
+  assert.equal(ariaKeyshortcutsText(overridden.get(override.controlId), "Win32"), override.aria, "the overridden chord is what aria-keyshortcuts republishes");
+  assert.equal(ariaKeyshortcutsText(overridden.get(override.controlId), "MacIntel"), override.ariaApple, "a user override is resolved by the same platform rule");
+  assert.equal(formatKeybindingShortcut(overridden.get(override.controlId)!, "MacIntel"), override.badgeApple, "a user override's badge is resolved by the same platform rule");
   for (const role of SURFACE_ROLE_ORDER) assert.equal(SURFACE_ROLE_CONTROL_IDS[role], `playground.navbar.roles.${role}`, "role button ids double as keybinding control ids");
   for (const controlId of Object.values(MODE_STEP_CONTROL_IDS)) assert.ok(SHELL_KEYBINDINGS[controlId], `${controlId} must be a declared framework verb`);
 

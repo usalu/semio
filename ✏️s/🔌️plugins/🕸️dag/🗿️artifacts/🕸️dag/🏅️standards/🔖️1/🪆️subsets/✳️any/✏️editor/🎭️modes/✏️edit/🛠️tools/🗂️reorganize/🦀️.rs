@@ -8,7 +8,7 @@ use crate::editor::dag::config::{dag_config_camera, DagConfig};
 use crate::op::DagMutation;
 use crate::DagSnapshot;
 use infinite_board_port_directed_dag::{DagHost, DagLayoutOptions};
-use semio_framework_artifact_infinite_dag::{dag_fixture_from_document, DagFixture, DAG_DOCUMENT_SCHEMA};
+use semio_framework_artifact_infinite_dag::{dag_fixture_from_document, DagHostDocument, DAG_DOCUMENT_SCHEMA};
 use semio_framework_graph_layout_run::{layout_run_definition, layout_run_entity, layout_run_job, layout_run_overlay_positions, LayoutRunConfig, LayoutRunEdge, LayoutRunEncodeError, LayoutRunGraph, LayoutRunNode, LayoutRunOpEncoder, LayoutRunPoint, LayoutRunResume, LayoutRunSpringLaw};
 use semio_framework_plugin::{Fault, LocalizedLabel, ToolDefinition, ToolRunJob};
 use semio_framework_tool_run::{JobKindId, ToolRunIdentity};
@@ -44,10 +44,10 @@ pub struct DagLayoutGraph {
 
 /// 🌳️ Every node's layered target: the document's layered layout (`DagHost::reorganize`), computed once, O(V + E).
 pub fn layered_targets(snapshot: &DagSnapshot, config: &DagConfig) -> Result<HashMap<String, LayoutRunPoint>, Fault> {
-    let fixture = DagFixture { schema: DAG_DOCUMENT_SCHEMA.into(), ..dag_fixture_from_document(&semio_framework_artifact_infinite_dag::DagSnapshot::from(snapshot), dag_config_camera(config)) };
+    let fixture = DagHostDocument { schema: DAG_DOCUMENT_SCHEMA.into(), ..dag_fixture_from_document(&semio_framework_artifact_infinite_dag::DagSnapshot::from(snapshot), dag_config_camera(config)) };
     let mut host = DagHost::load_fixture_json(&dsl::json::to_json_string(&fixture)).map_err(|error| Fault::from(format!("dag.layout-run.layered-load: {error}")))?;
     host.reorganize(&DagLayoutOptions::default()).map_err(|error| Fault::from(format!("dag.layout-run.layered-layout: {error}")))?;
-    let layered: DagFixture = host.fixture_json().ok().and_then(|json| dsl::json::from_json_str(&json).ok()).ok_or_else(|| Fault::from("dag.layout-run.layered-fixture"))?;
+    let layered: DagHostDocument = host.host_document_json().ok().and_then(|json| dsl::json::from_json_str(&json).ok()).ok_or_else(|| Fault::from("dag.layout-run.layered-fixture"))?;
     Ok(layered.nodes.into_iter().map(|node| (node.id, LayoutRunPoint::new(node.x, node.y))).collect())
 }
 

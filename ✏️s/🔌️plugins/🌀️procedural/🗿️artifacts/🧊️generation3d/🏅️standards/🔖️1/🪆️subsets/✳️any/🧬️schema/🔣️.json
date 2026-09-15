@@ -10,7 +10,7 @@
   ],
   "properties": {
     "fixture": {
-      "$ref": "#/$defs/FlowFixture",
+      "$ref": "#/$defs/FlowHostDocument",
       "x-semio-state": "artifact"
     },
     "generation": {
@@ -96,8 +96,8 @@
       "type": "string",
       "contentMediaType": "application/json"
     },
-    "FlowFixture": {
-      "title": "FlowFixture",
+    "FlowHostDocument": {
+      "title": "FlowHostDocument",
       "type": "object",
       "additionalProperties": false,
       "required": [

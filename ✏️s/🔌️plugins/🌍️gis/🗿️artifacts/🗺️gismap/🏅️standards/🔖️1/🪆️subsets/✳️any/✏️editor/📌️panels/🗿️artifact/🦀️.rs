@@ -6,16 +6,16 @@ use crate::editor::gis2d::{gis2d_layer_tree_item, ui_label, ui_node_list, GIS_MA
 use semio_framework_plugin::{LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
 
 //#region 🔖️Constants
-pub const GIS2D_PLAY_BODY_DOCUMENT: &str = "gis2d.play.document";
+pub const GIS2D_PLAY_BODY_ARTIFACT: &str = "gis2d.play.artifact";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
 pub fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_ARTIFACT_ID.into()),
-        label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Dokument"),
+        label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Artefakt"),
         group: PanelGroup::Workbench,
-        body_key: Some(GIS2D_PLAY_BODY_DOCUMENT.into()),
+        body_key: Some(GIS2D_PLAY_BODY_ARTIFACT.into()),
         children: Vec::new(),
     }
 }

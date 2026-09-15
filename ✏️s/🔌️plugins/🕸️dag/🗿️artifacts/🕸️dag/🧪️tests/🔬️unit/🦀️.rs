@@ -19,7 +19,7 @@ async fn artifact_kind_declares_the_graph_dag_component_kind() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn default_snapshot_matches_document_schema() {
+async fn default_snapshot_matches_artifact_schema() {
     assert_eq!(default_snapshot().schema, DAG_DOCUMENT_SCHEMA);
 }
 

@@ -315,7 +315,7 @@
     "semio dag.dag.dsl v2"
   ],
   "invalidTextMarkers": [
-    "dag.fixture",
+    "dag.hostDocument",
     "foreign.dag"
   ],
   "invalidPackEnvelopes": [

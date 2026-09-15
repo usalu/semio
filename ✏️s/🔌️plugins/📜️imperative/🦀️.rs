@@ -40,7 +40,7 @@ pub fn plugin() -> Result<Plugin<ImperativeApps>, PluginAssemblyError> {
         .viewer_mutation_roster::<crate::viewer::procedure::ImperativeViewer>()
         .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::procedure::artifact_kind().id })
         .execution(ExecutionMode::Isolated)
-        .requests(CapabilityRequest { id: CapabilityId("documents.write".into()), scope: "plugin".into(), reason: "persist imperative graph edits to the open document".into(), optional: false })
+        .requests(CapabilityRequest { id: CapabilityId("artifacts.write".into()), scope: "plugin".into(), reason: "persist imperative graph edits to the open document".into(), optional: false })
         .try_build()
 }
 

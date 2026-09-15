@@ -1697,6 +1697,12 @@ impl Ui {
         )
     }
 
+    /// 🩺️ The source line of the synchronize arm that faulted this window's paint frame, `0` when the
+    /// walk never took one. See `🖌️paint`'s `retained_sync_fault`.
+    pub fn paint_frame_sync_fault_line(&self, window_id: &str) -> u32 {
+        self.windows.get(window_id).and_then(|window| window.paint_frame.as_ref()).map_or(0, |frame| frame.node_sync.fault_line)
+    }
+
     pub fn paint_frame_phase(&self, window_id: &str) -> Option<&'static str> {
         self.windows.get(window_id).and_then(|window| window.paint_frame.as_ref()).map(|frame| match (frame.fault_site, frame.phase) {
             (Some(site), _) => site,

@@ -5,7 +5,7 @@ use crate::editor::generation2d::Generation2dCommand;
 use crate::standards::v1::subsets::any::schema::mutations::text::{generation_mutation_to_generation2d, Generation2dMutation};
 use crate::Generation2dSnapshot;
 use semio_framework_artifact_playbook_playbook::{apply_generation_mutation, generation_operations, select_generation, selected_generation, PlaybookValues};
-use semio_framework_os_flow::forms_bridge::flow_fixture_to_form_spec;
+use semio_framework_os_flow::forms_bridge::flow_host_document_to_form_spec;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit};
 
 pub struct Generation2dGenerationCommandResult {
@@ -16,7 +16,7 @@ pub struct Generation2dGenerationCommandResult {
 
 pub fn handle_generation(action: &str, args: Option<&dsl::DslValue>, doc: &ArtifactView<'_, Generation2dSnapshot>, cfg: &ConfigView<'_, Generation2dConfig>) -> Generation2dGenerationCommandResult {
     let projection = doc.snapshot;
-    let spec = flow_fixture_to_form_spec(&projection.fixture);
+    let spec = flow_host_document_to_form_spec(&projection.host_document);
     let mut state = projection.generation.as_state().clone();
     state.selected_generation_id = cfg.snapshot.selected_generation_id.clone();
     if action == "selectGeneration" {

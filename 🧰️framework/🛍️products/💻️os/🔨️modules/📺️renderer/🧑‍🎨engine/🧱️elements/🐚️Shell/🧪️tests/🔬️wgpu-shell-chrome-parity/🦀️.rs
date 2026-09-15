@@ -1,6 +1,6 @@
 //! 🔀️ Laws for the wgpu shell's chrome parity with the React shell: the example picker, the mode and
 //! surface-role navbar groups and their chords, and the two per-surface overlay controls (the World3d
-//! compute cancel and the node-graph `Fit graph`).
+//! compute cancel). Framing the flow graph is an app-declared action, not shell overlay chrome.
 //!
 //! Every law is answered from a SHARED, language-neutral fixture — `📚️example-picker.json` (the
 //! dialect-keyed picker, also answered by `manifest::examples_for_app`'s own Rust law and by the
@@ -358,7 +358,7 @@ fn the_alt_axis_never_swallows_a_neighbouring_chord() {
     assert_eq!(shell_mode_step_chord(&ui_wgpu::wgpu::KeyAction::ArrowRight, &accelerator), None);
     assert!(is_reserved_shell_chord(&ui_wgpu::wgpu::KeyAction::Char("f".into()), &accelerator), "mod+f stays the find chord");
     assert!(!is_reserved_shell_chord(&ui_wgpu::wgpu::KeyAction::Char("f".into()), &with_alt), "mod+alt+f belongs to whoever declares it, not to find");
-    assert!(!is_reserved_shell_chord(&ui_wgpu::wgpu::KeyAction::Char("f".into()), &bare), "a bare `f` is the `Fit graph` shortcut, never a reserved accelerator");
+    assert!(!is_reserved_shell_chord(&ui_wgpu::wgpu::KeyAction::Char("f".into()), &bare), "a bare `f` is never a reserved shell accelerator — app actions such as zoomToFlow own it");
     eprintln!("[DEBUG] wgpu shell chords: the alt axis is disjoint from the palette/find/panel accelerators");
 }
 
@@ -406,13 +406,15 @@ fn a_live_surface_offers_exactly_the_overlay_controls_the_shared_fixture_declare
         let controls = surface_overlay_controls_for(&graphs, &worlds, &[], &theme, false);
         let expected: Vec<&str> = case["expected"].as_array().expect("fixture expectation").iter().map(|id| id.as_str().expect("control id")).collect();
         assert_eq!(controls.iter().map(|(control, _)| control.control_id.as_str()).collect::<Vec<_>>(), expected, "{}", case["id"]);
-        for ((control, anchor), source) in controls.iter().zip(graphs.iter().map(|(_, bounds)| *bounds).chain(worlds.iter().map(|(_, bounds, _)| *bounds))) {
+        for (control, anchor) in &controls {
+            let surface_id = control.control_id.rsplit("::").next().expect("surface suffix");
+            let source = worlds.iter().find(|(id, _, _)| *id == surface_id).map(|(_, bounds, _)| *bounds).expect("control names a live surface");
             assert!(anchor[0] >= source.x && anchor[1] >= source.y, "{}: {} is anchored inside the surface it annotates", case["id"], control.control_id);
         }
         rows += 1;
     }
     assert_eq!(rows, 5, "the fixture's five surface-control rows");
-    eprintln!("[DEBUG] wgpu surface controls: {rows} fixture rows offer the Fit graph and cancel hit targets exactly when the surface declares them");
+    eprintln!("[DEBUG] wgpu surface controls: {rows} fixture rows offer the cancel hit target exactly when the surface declares it");
 }
 
 #[test]
@@ -916,8 +918,7 @@ fn the_shells_own_accelerator_chords_are_reserved_from_the_app_keybinding_loop()
 //#endregion ⌨️WindowScope
 
 /// 🛟️ The chrome-panel SAFE AREA, from the shared `chromePanelSafeArea` rows — the rule that keeps a
-/// live surface's overlay row (the World3d compute pill and its `Cancel`, the node-graph `Fit graph`)
-/// reachable while an anchored chrome panel paints over the same corner. React's `chromePanelSafeArea`
+/// live surface's overlay row (the World3d compute pill and its `Cancel`) reachable while an anchored chrome panel paints over the same corner. React's `chromePanelSafeArea`
 /// answers the identical rows; the defect it exists for is `📓️react-oracle-hardening-2026-09-14.md` §4.3,
 /// where the `top-right` Tool runs panel at (1137, 3) 300×120 swallowed every press meant for
 /// `Frame visible` and the preview `Cancel`.
@@ -956,7 +957,7 @@ fn a_chrome_panel_reserves_a_safe_area_for_the_surface_overlay_row() {
 
 /// 🛟️ The same rule where the shell actually places chrome: an open LEFT floating panel covers a dock
 /// window's top-left corner, which is exactly where `surface_overlay_controls_for` anchors the World3d
-/// `Cancel` and the node-graph `Fit graph` — so the whole overlay row moves right past the panel instead
+/// `Cancel` — so the whole overlay row moves right past the panel instead
 /// of painting under it, and moves back the moment the panel closes.
 #[test]
 fn the_overlay_row_steps_clear_of_an_open_floating_panel() {
@@ -970,7 +971,7 @@ fn the_overlay_row_steps_clear_of_an_open_floating_panel() {
     let flush_pills = surface_status_pills_for(&worlds, &[], &theme, false);
     let flush_controls = surface_overlay_controls_for(&graphs, &worlds, &[], &theme, false);
     assert_eq!(flush_pills[0].1.x, bounds.x + theme.gap_standard, "🛟️ with no panel open the row stays flush in its own corner");
-    assert_eq!(flush_controls[0].1[0], bounds.x + theme.gap_standard, "🛟️ the node-graph fit control stays flush too");
+    assert_eq!(flush_controls[0].1[0], bounds.x + theme.gap_standard, "🛟️ the cancel control stays flush too");
 
     let reserved_pills = surface_status_pills_for(&worlds, &[panel], &theme, false);
     let reserved_controls = surface_overlay_controls_for(&graphs, &worlds, &[panel], &theme, false);

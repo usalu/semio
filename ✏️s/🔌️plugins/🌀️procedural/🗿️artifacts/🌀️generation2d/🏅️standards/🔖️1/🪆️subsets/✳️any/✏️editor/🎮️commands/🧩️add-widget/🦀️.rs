@@ -2,7 +2,7 @@
 
 use crate::editor::generation2d::config::{Generation2dConfig, Generation2dConfigMutation};
 use crate::standards::v1::subsets::any::schema::with_host;
-use crate::standards::v1::subsets::any::schema::mutations::text::{generation2d_fixture_operations, Generation2dMutation};
+use crate::standards::v1::subsets::any::schema::mutations::text::{generation2d_host_document_operations, Generation2dMutation};
 use crate::Generation2dSnapshot;
 use semio_framework_os_flow::FlowEvalSession;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
@@ -20,7 +20,7 @@ pub struct AddWidget {
 /// 🕹️ No longer auto-selects the newly-added widget — no `Emit` channel writes `graph`'s selection
 /// directly anymore (the framework owns it exclusively; ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
 pub fn handle(payload: &AddWidget, doc: &ArtifactView<'_, Generation2dSnapshot>, _cfg: &ConfigView<'_, Generation2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Generation2dMutation, Generation2dConfigMutation>, Fault> {
-    let fixture = &doc.snapshot.fixture;
+    let fixture = &doc.snapshot.host_document;
     let descriptor = match payload.kind.as_str() {
         "neuron" => {
             dsl::json::to_json_string(&dsl::DslValue::object([("kind".to_string(), dsl::DslValue::String("neuron".to_string())), ("neuronKind".to_string(), dsl::DslValue::String(payload.neuron_kind.clone().unwrap_or_else(|| "math.add".into())))]))
@@ -29,9 +29,9 @@ pub fn handle(payload: &AddWidget, doc: &ArtifactView<'_, Generation2dSnapshot>,
         other => dsl::json::to_json_string(&dsl::DslValue::object([("kind".to_string(), dsl::DslValue::String(other.to_string()))])),
     };
     with_host(fixture, |host| {
-        let baseline = host.fixture.clone();
+        let baseline = host.host_document.clone();
         let added = host.add_widget(&descriptor, payload.x.unwrap_or(120.0), payload.y.unwrap_or(120.0)).is_ok();
-        let emit = if added { Emit { artifact_mutations: generation2d_fixture_operations(&baseline, &host.fixture), ..Default::default() } } else { Emit::default() };
+        let emit = if added { Emit { artifact_mutations: generation2d_host_document_operations(&baseline, &host.host_document), ..Default::default() } } else { Emit::default() };
         baseline.retire_cold();
         Ok(emit)
     })

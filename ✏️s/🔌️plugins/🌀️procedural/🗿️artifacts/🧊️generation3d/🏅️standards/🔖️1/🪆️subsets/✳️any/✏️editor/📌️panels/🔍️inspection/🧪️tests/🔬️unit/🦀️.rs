@@ -21,8 +21,8 @@ async fn inspector_shows_no_selection_by_default() {
 #[test]
 fn inspector_slider_control_rides_on_a_tree_row() {
     let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
-    let fixture = semio_framework_os_flow::FlowHost::parse_fixture_json(
-        r#"{"schema":"flow.fixture","camera":{"x":0.0,"y":0.0,"zoom":1.0},"widgets":[{"kind":"inputSlider","id":"height","label":"Height","value":3.0,"min":0.0,"max":10.0,"step":0.5}],"synapses":[],"layout":{"height":{"x":0.0,"y":0.0}}}"#,
+    let fixture = semio_framework_os_flow::FlowHost::parse_host_document_json(
+        r#"{"schema":"flow.host_document","camera":{"x":0.0,"y":0.0,"zoom":1.0},"widgets":[{"kind":"inputSlider","id":"height","label":"Height","value":3.0,"min":0.0,"max":10.0,"step":0.5}],"synapses":[],"layout":{"height":{"x":0.0,"y":0.0}}}"#,
     )
     .expect("law fixture parses");
     let labels = crate::editor::generation3d::terminology::generation3d_labels(&semio_framework_plugin::ViewModel::default());

@@ -49,7 +49,7 @@
     }
   ],
   "codecs": [
-    { "id": "s.stdio.mp4.standard.isobmff.codec.native-document.v1", "status": "implemented", "from": "s.stdio.mp4.standard.isobmff.dialect.source", "to": "s.stdio.mp4.standard.isobmff.dialect.source", "executable_registration": true, "native_factory": { "factory_id": "stdio.native.mp4.v1", "artifact_kind": "stdio.mp4", "document_schema": "stdio.mp4", "extension": "semio", "pack_schema_hash": "3dd6f57488121f469eaa871386c4842c322c25dbfa417b79342d2e547c57a915", "runtime_capability_id": "s.stdio.mp4.standard.isobmff.codec.codec-stdio-mp4-extension-semio.v1" } }
+    { "id": "s.stdio.mp4.standard.isobmff.codec.native-document.v1", "status": "implemented", "from": "s.stdio.mp4.standard.isobmff.dialect.source", "to": "s.stdio.mp4.standard.isobmff.dialect.source", "executable_registration": true, "native_factory": { "factory_id": "stdio.native.mp4.v1", "artifact_kind": "stdio.mp4", "artifact_schema": "stdio.mp4", "extension": "semio", "pack_schema_hash": "3dd6f57488121f469eaa871386c4842c322c25dbfa417b79342d2e547c57a915", "runtime_capability_id": "s.stdio.mp4.standard.isobmff.codec.codec-stdio-mp4-extension-semio.v1" } }
   ],
   "mutations": [],
   "inferences": [],

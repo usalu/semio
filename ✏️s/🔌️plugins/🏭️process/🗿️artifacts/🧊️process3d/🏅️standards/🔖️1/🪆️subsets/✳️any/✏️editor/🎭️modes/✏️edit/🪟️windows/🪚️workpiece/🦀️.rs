@@ -87,8 +87,8 @@ fn process3d_window_action(action: &str, args: Option<semio_framework::DslValue>
 /// `step_payloads` (`process_working_scene_from_snapshot`) — so a real stock and a real timeline
 /// tessellate into a real mesh; only a document that carries neither falls back to
 /// `PROCESS3D_FALLBACK_MESH_KIND`.
-fn evaluated_preview_payload(fixture: &Process3dSnapshot, scene: &ProcessWorkingScene) -> (String, String) {
-    let mesh = processed_mesh(scene, fixture.resolved_up_to).unwrap_or_else(|| mesh_from_kind(PROCESS3D_FALLBACK_MESH_KIND));
+fn evaluated_preview_payload(snapshot: &Process3dSnapshot, scene: &ProcessWorkingScene) -> (String, String) {
+    let mesh = processed_mesh(scene, snapshot.resolved_up_to).unwrap_or_else(|| mesh_from_kind(PROCESS3D_FALLBACK_MESH_KIND));
     let meshes = json::Value::Array(vec![json::object([("id".to_string(), json::Value::String("processed".to_string())), ("data".to_string(), json::Value::from(mesh))])]);
     let floats = |values: [f64; 3]| json::Value::Array(values.into_iter().map(json::Value::from).collect());
     let instances = json::Value::Array(vec![json::object([
@@ -97,7 +97,7 @@ fn evaluated_preview_payload(fixture: &Process3dSnapshot, scene: &ProcessWorking
         ("position".to_string(), floats([0.0, 0.0, 0.0])),
         ("rotation".to_string(), json::Value::Array(vec![json::Value::from(0.0), json::Value::from(0.0), json::Value::from(0.0), json::Value::from(1.0)])),
         ("scale".to_string(), floats([1.0, 1.0, 1.0])),
-        ("label".to_string(), json::Value::String(fixture.stock_label.clone())),
+        ("label".to_string(), json::Value::String(snapshot.stock_label.clone())),
         ("selected".to_string(), json::Value::Bool(false)),
         ("hovered".to_string(), json::Value::Bool(false)),
     ])]);
@@ -119,49 +119,49 @@ struct Process3dPreviewCache {
     volume: f64,
 }
 
-fn with_preview_cache<T>(fixture: &Process3dSnapshot, read: impl Fn(&Process3dPreviewCache) -> T) -> T {
+fn with_preview_cache<T>(snapshot: &Process3dSnapshot, read: impl Fn(&Process3dPreviewCache) -> T) -> T {
     static CACHE: std::sync::OnceLock<std::sync::Mutex<Option<Process3dPreviewCache>>> = std::sync::OnceLock::new();
-    let scene = crate::process_working_scene_from_snapshot(fixture);
+    let scene = crate::process_working_scene_from_snapshot(snapshot);
     let cell = CACHE.get_or_init(|| std::sync::Mutex::new(None));
     let Ok(mut slot) = cell.lock() else {
-        let entry = build_preview_cache(fixture, scene);
+        let entry = build_preview_cache(snapshot, scene);
         return read(&entry);
     };
-    let fresh = slot.as_ref().is_some_and(|entry| entry.scene == scene && entry.resolved_up_to == fixture.resolved_up_to && entry.label == fixture.stock_label);
+    let fresh = slot.as_ref().is_some_and(|entry| entry.scene == scene && entry.resolved_up_to == snapshot.resolved_up_to && entry.label == snapshot.stock_label);
     if !fresh {
-        *slot = Some(build_preview_cache(fixture, scene));
+        *slot = Some(build_preview_cache(snapshot, scene));
     }
     read(slot.as_ref().expect("preview cache populated"))
 }
 
-fn build_preview_cache(fixture: &Process3dSnapshot, scene: ProcessWorkingScene) -> Process3dPreviewCache {
-    let payload = evaluated_preview_payload(fixture, &scene);
-    let volume = crate::schema::inferences::processed_volume(&scene, fixture.resolved_up_to).unwrap_or(0.0);
-    Process3dPreviewCache { scene, resolved_up_to: fixture.resolved_up_to, label: fixture.stock_label.clone(), payload, volume }
+fn build_preview_cache(snapshot: &Process3dSnapshot, scene: ProcessWorkingScene) -> Process3dPreviewCache {
+    let payload = evaluated_preview_payload(snapshot, &scene);
+    let volume = crate::schema::inferences::processed_volume(&scene, snapshot.resolved_up_to).unwrap_or(0.0);
+    Process3dPreviewCache { scene, resolved_up_to: snapshot.resolved_up_to, label: snapshot.stock_label.clone(), payload, volume }
 }
 
-fn preview_payload_cached(fixture: &Process3dSnapshot) -> (String, String) {
-    with_preview_cache(fixture, |entry| entry.payload.clone())
+fn preview_payload_cached(snapshot: &Process3dSnapshot) -> (String, String) {
+    with_preview_cache(snapshot, |entry| entry.payload.clone())
 }
 
 /// 📐️ The replayed solid's volume, served from the same memo as the mesh.
-fn processed_volume_cached(fixture: &Process3dSnapshot) -> f64 {
-    with_preview_cache(fixture, |entry| entry.volume)
+fn processed_volume_cached(snapshot: &Process3dSnapshot) -> f64 {
+    with_preview_cache(snapshot, |entry| entry.volume)
 }
 //#endregion 🔖️PreviewCache
 
 //#region 🔖️Render
-pub fn render(fixture: &Process3dSnapshot, config: &Process3dConfig, active_utility: &str) -> UiAssemblyResult<BuiltNode> {
-    let (meshes_json, instances_json) = preview_payload_cached(fixture);
+pub fn render(snapshot: &Process3dSnapshot, config: &Process3dConfig, active_utility: &str) -> UiAssemblyResult<BuiltNode> {
+    let (meshes_json, instances_json) = preview_payload_cached(snapshot);
     MeshWindowKit::render(&MeshView { camera_json: world3d_camera_json(config.camera_position, config.camera_target, config.camera_fov), meshes_json, instances_json, selection_json: process3d_selection_json(active_utility) })
 }
 //#endregion 🔖️Render
 
 //#region 🔖️Engagement
-pub fn engagement(fixture: &Process3dSnapshot, config: &Process3dConfig, active_utility: &str, labels: &crate::editor::process3d::terminology::Process3dLabels) -> WindowEngagement {
-    let len = fixture.step_payloads.len();
-    let cursor = fixture.resolved_up_to.unwrap_or(len);
-    let volume = processed_volume_cached(fixture);
+pub fn engagement(snapshot: &Process3dSnapshot, config: &Process3dConfig, active_utility: &str, labels: &crate::editor::process3d::terminology::Process3dLabels) -> WindowEngagement {
+    let len = snapshot.step_payloads.len();
+    let cursor = snapshot.resolved_up_to.unwrap_or(len);
+    let volume = processed_volume_cached(snapshot);
     WindowEngagement {
         session_active: Some(active_utility != "select"),
         // 🧰️ The select/cut/drill/attach switcher lives in the framework utility bar (declared via

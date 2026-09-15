@@ -24,7 +24,7 @@
         "descriptor_codec_id",
         "runtime_capability_id",
         "artifact_kind",
-        "document_schema",
+        "artifact_schema",
         "extension",
         "pack_schema_sha256",
         "protocol_path"
@@ -45,7 +45,7 @@
         "artifact_kind": {
           "$ref": "#/$defs/NativeCodecFactoriesIdentity"
         },
-        "document_schema": {
+        "artifact_schema": {
           "$ref": "#/$defs/NativeCodecFactoriesIdentity"
         },
         "extension": {

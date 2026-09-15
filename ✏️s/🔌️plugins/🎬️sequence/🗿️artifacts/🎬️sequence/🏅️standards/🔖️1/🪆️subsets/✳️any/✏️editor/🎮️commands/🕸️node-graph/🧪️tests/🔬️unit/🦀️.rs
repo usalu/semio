@@ -28,5 +28,5 @@ async fn node_graph_edit_delete_selection_clears_selection() {
     let mut app = new_app_with_registry_wired().await;
     select_steps(&mut app, &["step-1"]).await;
     dispatch(&mut app, SequenceCommand::NodeGraphEdit(super::node_graph_edit::NodeGraphEdit { operations_json: "[{\"operation\":\"deleteSelection\"}]".into() })).await;
-    assert!(!app.snapshot().expect("projection").to_fixture().steps.iter().any(|step| step.id == "step-1"));
+    assert!(!app.snapshot().expect("projection").to_host_document().steps.iter().any(|step| step.id == "step-1"));
 }

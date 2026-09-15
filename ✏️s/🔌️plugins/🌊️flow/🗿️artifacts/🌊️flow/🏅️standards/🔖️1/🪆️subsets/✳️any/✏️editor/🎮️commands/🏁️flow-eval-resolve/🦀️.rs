@@ -23,8 +23,8 @@ pub fn eval_tick_effect() -> Effect {
 //#region 🔖️Arm
 /// 🧵️ Probes/arms the `flowEvalTick` chain via `FlowEvalSession::sync` — shared by `FlowCommand::Evaluate`,
 /// the `auto-evaluate` extension effect, and `FlowPlayApp::pending_effects`.
-pub fn evaluate_result(fixture: &FlowSnapshot, config: &FlowMainWindowConfig, session: &mut FlowEvalSession) -> Emit<FlowMutation, NoConfigMutation> {
-    let host = host_from_snapshot(fixture, config, session);
+pub fn evaluate_result(snapshot: &FlowSnapshot, config: &FlowMainWindowConfig, session: &mut FlowEvalSession) -> Emit<FlowMutation, NoConfigMutation> {
+    let host = host_from_snapshot(snapshot, config, session);
     if session.sync(&host) {
         Emit { effects: vec![eval_tick_effect()], ..Default::default() }
     } else {

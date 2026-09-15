@@ -4,6 +4,7 @@ import { createWgpuBrowserConfig } from "../🟦️.ts";
 import { ACTIVATION_RECEIPT_FILE, developmentRuntimeRoot, pluginModulesRoot } from "../../../../../../🧑‍💻dev/♻️activation/🟦️.ts";
 import { PLAYGROUND_BUILD_TARGETS } from "../../../../../../🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds/🟦️.ts";
 import { semioAssetsVitePlugin } from "../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts";
+import { semioSourceFreshnessVitePlugins } from "../../../../../../🧑‍💻dev/🔌️vite-plugins/🟦️.ts";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const workspace = resolve(root, "../../../../../../../../..");
@@ -25,5 +26,5 @@ export default () => {
     reloadFile: join(runtime, "activation", ACTIVATION_RECEIPT_FILE),
     assets: playground.assets,
   });
-  return { ...config, plugins: [...config.plugins!, ...semioAssetsVitePlugin(workspace)], server: { ...config.server, ...(process.env.S_LOCAL_RELAY_URL ? { proxy: { "/_semio": { target: process.env.S_LOCAL_RELAY_URL, changeOrigin: false, headers: process.env.S_LOCAL_RELAY_SECRET ? { "x-semio-local-relay": process.env.S_LOCAL_RELAY_SECRET } : undefined } } } : {}) } };
+  return { ...config, plugins: [...config.plugins!, ...semioAssetsVitePlugin(workspace), ...semioSourceFreshnessVitePlugins({ repoRoot: workspace })], server: { ...config.server, ...(process.env.S_LOCAL_RELAY_URL ? { proxy: { "/_semio": { target: process.env.S_LOCAL_RELAY_URL, changeOrigin: false, headers: process.env.S_LOCAL_RELAY_SECRET ? { "x-semio-local-relay": process.env.S_LOCAL_RELAY_SECRET } : undefined } } } : {}) } };
 };

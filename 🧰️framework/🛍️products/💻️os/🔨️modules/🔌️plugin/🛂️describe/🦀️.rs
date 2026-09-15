@@ -37,7 +37,7 @@ async fn plugin_file_types(apps: &[AppDefinition]) -> Vec<FileTypeContribution> 
         kinds.extend(app.io.export_formats.iter());
         kinds.extend(app.io.import_formats.iter());
         for kind in kinds {
-            let row = FileTypeContribution { format_kind: kind.clone(), media_type: app.io.document_media_type, imports: app.io.import_formats.contains(kind), exports: app.io.export_formats.contains(kind) };
+            let row = FileTypeContribution { format_kind: kind.clone(), media_type: app.io.artifact_media_type, imports: app.io.import_formats.contains(kind), exports: app.io.export_formats.contains(kind) };
             if !rows.contains(&row) {
                 rows.push(row);
             }
@@ -66,8 +66,6 @@ async fn plugin_inference_services<PA: crate::app::PluginApp>(runtime: &crate::p
             artifact_kind: metadata.artifact_kind,
             artifact_schema: metadata.artifact_schema,
             artifact_schema_version: metadata.artifact_schema_version,
-            document_schema: metadata.document_schema,
-            document_schema_version: metadata.document_schema_version,
             inference_schema: metadata.inference_schema,
             inference_schema_version: metadata.inference_schema_version,
             algorithm_version: metadata.algorithm_version,

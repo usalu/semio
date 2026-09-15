@@ -17,7 +17,7 @@ async fn animate_presentation_labels_resolve_native_by_default() {
 #[semio_framework_async_macros::async_test]
 async fn animate_presentation_labels_translate_panels_in_german() {
     use crate::editor::animate::unit_tests::context::{presentation_app, render};
-    use crate::editor::animate::{PRESENTATION_PLAY_BODY_CATALOGUE, PRESENTATION_PLAY_BODY_DOCUMENT};
+    use crate::editor::animate::{PRESENTATION_PLAY_BODY_CATALOGUE, PRESENTATION_PLAY_BODY_ARTIFACT};
     let mut app = presentation_app().await;
     let catalogue_json = render(&mut app, PRESENTATION_PLAY_BODY_CATALOGUE).await;
     assert!(catalogue_json.contains("Kachelvorlagen"));
@@ -25,6 +25,6 @@ async fn animate_presentation_labels_translate_panels_in_german() {
     assert!(catalogue_json.contains("Aktive Quelle"));
     assert!(!catalogue_json.contains("Tile templates"));
 
-    let document_json = render(&mut app, PRESENTATION_PLAY_BODY_DOCUMENT).await;
+    let document_json = render(&mut app, PRESENTATION_PLAY_BODY_ARTIFACT).await;
     assert!(document_json.contains("Kacheln"));
 }

@@ -64,7 +64,7 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 
 pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
     semio_framework_plugin::ArtifactDeclaration::builder(definition)
-        .schema(document_schema::en1999_artifact_schema_descriptor())
+        .schema(artifact_schema::en1999_artifact_schema_descriptor())
         .inferences([standards::v1::subsets::any::schema::inferences::en1999_artifact_inference_descriptor()])
         .composers(standards::v1::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
@@ -469,7 +469,7 @@ pub mod standards {
 }
 
 // ---- Shims: keep pre-migration module paths resolving for external callers ----
-pub mod document_schema {
+pub mod artifact_schema {
     pub use super::standards::v1::subsets::any::schema::*;
 }
 pub mod io {

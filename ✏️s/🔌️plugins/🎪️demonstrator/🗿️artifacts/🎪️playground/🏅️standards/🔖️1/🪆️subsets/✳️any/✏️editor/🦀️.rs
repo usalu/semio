@@ -315,7 +315,7 @@ impl ArtifactEditor for PlaygroundEditor {
         owner: EditorApp<PlaygroundEditor>,
         owner_file: "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.demonstrator.playground@1/*#editor",
-        document_schema: "playground.playground",
+        artifact_schema: "playground.playground",
         factory: "PlaygroundCommandJobFactory",
         factory_type: PlaygroundCommandJobFactory,
         tools: {

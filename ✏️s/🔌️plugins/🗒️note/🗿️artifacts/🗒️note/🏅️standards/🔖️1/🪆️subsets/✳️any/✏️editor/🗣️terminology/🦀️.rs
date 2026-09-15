@@ -14,7 +14,7 @@ semio_framework_plugin::app_labels! {
         summary_utility: native_en "Utility", native_de "Werkzeug", reuse_en "Utility", reuse_de "Werkzeug";
         summary_snap: native_en "Snap", native_de "Fangen", reuse_en "Snap", reuse_de "Fangen";
         summary_off: native_en "off", native_de "aus", reuse_en "off", reuse_de "aus";
-        document: native_en "Document", native_de "Dokument", reuse_en "Document", reuse_de "Dokument";
+        artifact: native_en "Artifact", native_de "Artefakt", reuse_en "Artifact", reuse_de "Artefakt";
         catalogue_title: native_en "Block kinds", native_de "Blockarten", reuse_en "Block kinds", reuse_de "Blockarten";
         catalogue_text: native_en "text — rich text block", native_de "Text — reicher Textblock", reuse_en "text — rich text block", reuse_de "Text — reicher Textblock";
         catalogue_image: native_en "image — embedded image", native_de "Bild — eingebettetes Bild", reuse_en "image — embedded image", reuse_de "Bild — eingebettetes Bild";

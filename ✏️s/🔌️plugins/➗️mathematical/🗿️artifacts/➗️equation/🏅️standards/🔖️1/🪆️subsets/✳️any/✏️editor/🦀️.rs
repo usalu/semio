@@ -54,8 +54,8 @@ pub use graph_window::MATH_PLAY_BODY_GRAPH;
 /// (WORKFLOWS-END-TO-END-TYPED-PORTS port recipe).
 pub fn equation_io() -> semio_framework_plugin::AppIo {
     semio_framework_plugin::AppIo {
-        document_schema: MATH_DOCUMENT_SCHEMA.into(),
-        document_media_type: MediaType { class: MediaClass::Computation, form: MediaForm::Value },
+        artifact_schema: MATH_DOCUMENT_SCHEMA.into(),
+        artifact_media_type: MediaType { class: MediaClass::Computation, form: MediaForm::Value },
         ports: vec![semio_framework_plugin::MediaPortSpec {
             id: "result:out".into(),
             label: "Result".into(),
@@ -1233,7 +1233,7 @@ impl ArtifactEditor for EquationPlayApp {
         owner: EditorApp<EquationPlayApp>,
         owner_file: "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.mathematical.equation@1/*#editor",
-        document_schema: "semio.equation/v1",
+        artifact_schema: "semio.equation/v1",
         factory: "EquationCommandJobFactory",
         factory_type: EquationCommandJobFactory,
         tools: {
@@ -1324,7 +1324,7 @@ impl ArtifactEditor for EquationPlayApp {
 
     /// 🎞️ `"result:out"` exports the active algorithm's per-node overlay (topo order/connected
     /// components/SCC group/BFS distance — the port recipe's `computation.equation`-kinded output);
-    /// `"document:out"` replicates `ArtifactApp::export_media`'s default whole-document-pack behavior
+    /// `"artifact:out"` replicates `ArtifactApp::export_media`'s default whole-document-pack behavior
     /// (unreachable once this override exists).
     fn export_media(port: &str, doc: &ArtifactView<'_, EquationSnapshot>) -> Result<Media, MediaError> {
         match port {
@@ -1335,8 +1335,8 @@ impl ArtifactEditor for EquationPlayApp {
                 let json = json::to_string(&json::object([("algorithm".to_string(), Value::from(graph.algorithm.as_str())), ("overlay".to_string(), overlay_json)]));
                 Ok(Media { media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value }, payload: MediaPayload::Structured { schema: "computation.equation".into(), json } })
             }
-            "document:out" => {
-                let media_type = Self::io().map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.document_media_type);
+            "artifact:out" => {
+                let media_type = Self::io().map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.artifact_media_type);
                 let bytes = doc.snapshot.encode_pack();
                 Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
             }

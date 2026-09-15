@@ -101,6 +101,19 @@ impl PreparedGpuPresentCursor {
         self.phase = PreparedGpuPresentPhase::Closing;
     }
 
+    /// 🐕️ Every index a healthy [`GpuContext::prepared_present_step`] moves — the ladder phase, the
+    /// draw command, the glass command and the blur mip.
+    ///
+    /// ⚖️ A host watchdog over the OUTER presentation cursor cannot see any of them: from outside,
+    /// `AppPresentPhase::Render` holds one `gpu_cursor` for the whole submit and looks frozen for as
+    /// many steps as the scene has commands. A ceiling read against the outer shape alone therefore
+    /// aborts a perfectly healthy present — measured on 6118, where a boot's own composite pass held
+    /// `phase=Render engine=1 upload=1 gpu-cursor=true` past 4 096 outer steps on every example
+    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-regressions-sweep-2026-09-15.md`). */
+    pub fn progress(&self) -> (u8, usize, usize, u32) {
+        (self.phase as u8, self.command, self.glass_command, self.blur_mip)
+    }
+
     pub fn close_step(&mut self) -> bool {
         if self.view.take().is_some() {
             return false;

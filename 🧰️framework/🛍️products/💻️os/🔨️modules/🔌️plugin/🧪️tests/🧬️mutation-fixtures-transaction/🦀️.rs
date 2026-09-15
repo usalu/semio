@@ -259,7 +259,7 @@ impl ArtifactApp for TxnApp {
     type Command = TxnCommand;
 
     crate::bounded_first_step_tool_proofs! {
-        owner: TxnApp, owner_file: "plugin/🧪️tests/🧬️mutation-fixtures-transaction/🦀️.rs", controller: "testkit-txn", document_schema: "semio.testkit-txn/v1",
+        owner: TxnApp, owner_file: "plugin/🧪️tests/🧬️mutation-fixtures-transaction/🦀️.rs", controller: "testkit-txn", artifact_schema: "semio.testkit-txn/v1",
         factory: "TxnFixtureFactory", factory_type: TxnFixtureFactory,
         contract: ToolExecutionContract::resumable(4_096, 1, 1, 4_096, 500, 1, 1), tools: ["increment", "coalesced-increment", "increment-and-notify"]
     }

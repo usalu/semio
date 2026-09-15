@@ -69,7 +69,7 @@
         "schema",
         "grants",
         "physicalRetirement",
-        "fixture",
+        "hostDocument",
         "expected"
       ],
       "properties": {
@@ -195,7 +195,7 @@
             }
           }
         },
-        "fixture": {
+        "hostDocument": {
           "type": "object",
           "additionalProperties": false,
           "required": [
@@ -207,7 +207,7 @@
           ],
           "properties": {
             "schema": {
-              "const": "flow.fixture"
+              "const": "flow.hostDocument"
             },
             "camera": {
               "$ref": "#/$defs/FlowCamera"

@@ -4,9 +4,9 @@
 //! here, one keyword per semantic verb, grammar `keyword key=value`. Every variant carries exactly
 //! one scalar/enum field, so each arm is a single key.
 
-pub use crate::document_schema::mutations::En1991Mutation;
+pub use crate::artifact_schema::mutations::En1991Mutation;
 
-use crate::document_schema::mutations::{
+use crate::artifact_schema::mutations::{
     change_accidental_mass_t::ChangeAccidentalMassT, change_accidental_speed_km_h::ChangeAccidentalSpeedKmH, change_annex::ChangeAnnex, change_area_m2::ChangeAreaM2, change_assumed_gk_kn_m2::ChangeAssumedGKKnM2, change_bridge_lane::ChangeBridgeLane,
     change_bridge_lane_width_m::ChangeBridgeLaneWidthM, change_bridge_moment_resistance_knm::ChangeBridgeMomentResistanceKnm, change_bridge_span_m::ChangeBridgeSpanM, change_category::ChangeCategory, change_cd::ChangeCD,
     change_construction_activity::ChangeConstructionActivity, change_crane_class::ChangeCraneClass, change_cs::ChangeCS, change_delta_tk::ChangeDeltaTK, change_en_sk_kn_m2::ChangeEnSKKnM2, change_en_vbms::ChangeEnVBMS,

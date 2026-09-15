@@ -102,7 +102,7 @@ fn every_puzzle_factory_validates_and_adopts_the_exact_checkpoint_owner() {
 #[derive(Debug, PartialEq, Eq)]
 struct PuzzleRetainedOracleOutput {
     owner: String,
-    document_schema: String,
+    artifact_schema: String,
     payload_schema: String,
     tool_ids: Vec<String>,
     evidence_tool_ids: Vec<String>,
@@ -133,7 +133,7 @@ impl PuzzleRetainedFixtureOracle for SerdeJsonFixtureOracle {
         let locales = root.get("locales").and_then(Value::as_object).ok_or_else(|| "fixture lacks locales".to_string())?.keys().cloned().collect();
         Ok(PuzzleRetainedOracleOutput {
             owner: text("owner")?,
-            document_schema: text("documentSchema")?,
+            artifact_schema: text("documentSchema")?,
             payload_schema: text("payloadSchema")?,
             tool_ids: strings("toolIds")?,
             evidence_tool_ids: strings("evidenceToolIds")?,
@@ -145,11 +145,11 @@ impl PuzzleRetainedFixtureOracle for SerdeJsonFixtureOracle {
     }
 }
 
-fn expected(owner: &str, document_schema: &str, tools: &[&str]) -> PuzzleRetainedOracleOutput {
+fn expected(owner: &str, artifact_schema: &str, tools: &[&str]) -> PuzzleRetainedOracleOutput {
     PuzzleRetainedOracleOutput {
         owner: owner.into(),
-        document_schema: document_schema.into(),
-        payload_schema: format!("{document_schema}.tool-command.v1"),
+        artifact_schema: artifact_schema.into(),
+        payload_schema: format!("{artifact_schema}.tool-command.v1"),
         tool_ids: tools.iter().map(|tool| (*tool).to_string()).collect(),
         evidence_tool_ids: Vec::new(),
         capacities: [PUZZLE_COMMAND_RAW_BYTES as u64, PUZZLE_COMMAND_DECODED_ITEMS as u64, PUZZLE_COMMAND_WORK_ITEMS as u64, PUZZLE_COMMAND_OUTPUT_BYTES as u64, PUZZLE_COMMAND_STEP_MICROS as u64, 1],
@@ -177,7 +177,7 @@ fn assert_fixture(fixture: &str, expected: PuzzleRetainedOracleOutput) {
     let oracle = SerdeJsonFixtureOracle;
     let actual = oracle.evaluate(fixture).expect("third-party fixture oracle parses");
     assert_eq!(actual.owner, expected.owner);
-    assert_eq!(actual.document_schema, expected.document_schema);
+    assert_eq!(actual.artifact_schema, expected.artifact_schema);
     assert_eq!(actual.payload_schema, expected.payload_schema);
     assert_eq!(actual.tool_ids, expected.tool_ids);
     assert_eq!(actual.capacities, expected.capacities);

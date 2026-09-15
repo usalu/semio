@@ -9,7 +9,7 @@
  *    (`b46.pick.empty`). The first point that reaches an instance is then waited out to a settled
  *    `data-selection-json`, with the guest's own `interaction selection lost reason=…` verdict quoted.
  * 2. **outliner** — opens `framework.panel.artifact` and reports the published node census for
- *    `puzzle.3d.play.document` (`b46.panel`) beside the tree rows the DOM actually carries, so
+ *    `puzzle.3d.play.artifact` (`b46.panel`) beside the tree rows the DOM actually carries, so
  *    "the guest published nothing" and "the host rendered nothing" are distinguishable.
  *
  * Run: `bun 🔍️b46-selection-nakagin.ts [--port=6013] [--label=before] [--grid=5x4] [--example=nakagin|forest]`.

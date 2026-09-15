@@ -11,7 +11,7 @@ fn mini_graph() -> Graph {
     let nodes = dsl::FromValue::from_value(dsl::DslValue::from(graph["nodes"].clone())).unwrap();
     let edges = dsl::FromValue::from_value(dsl::DslValue::from(graph["edges"].clone())).unwrap();
     let fixture = JackSnapshot::with_content(JackSnapshot::SCHEMA.into(), graph["name"].as_str().unwrap().into(), Some(graph["manifestId"].as_str().unwrap().into()), Manifest::nakagin_default(), Camera::default(), JackWorkingScene { nodes: nodes, edges: edges }, Some(graph["rootNodeId"].as_str().unwrap().into()));
-    Graph::from_fixture(fixture).unwrap()
+    Graph::from_snapshot(fixture).unwrap()
 }
 
 #[semio_framework_async_macros::async_test]
@@ -180,15 +180,15 @@ async fn query_ownership_resumable_matches_neutral_results_and_single_mutation_p
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪜️resumable-query/🔣️.json")).unwrap();
     for case in fixture["cases"].as_array().unwrap() {
         let graph = if case["inlineManifest"] == true {
-            let mut snapshot = mini_graph().to_fixture();
+            let mut snapshot = mini_graph().to_snapshot();
             snapshot.manifest_id = None;
-            Graph::from_fixture(snapshot).unwrap()
+            Graph::from_snapshot(snapshot).unwrap()
         } else {
             mini_graph()
         };
         let query = parse(case["query"].as_str().unwrap()).unwrap();
         let expected = execute(&graph, &query).unwrap();
-        let snapshot = graph.to_fixture();
+        let snapshot = graph.to_snapshot();
         let mut preparation = QueryExecutionPreparation::new(query);
         let mut preparation_turns = 0;
         let mut execution = loop {
@@ -260,7 +260,7 @@ fn query_ownership_cancelled_preparation_closes_while_source_scene_remains_live(
     let policy = &fixture["retainedExecution"];
     let cancel_after = policy["cancelAfterWorkUnits"].as_u64().expect("cancel units") as usize;
     let maximum_bytes = policy["retirementBytesPerStep"].as_u64().expect("retirement bytes") as usize;
-    let source = mini_graph().to_fixture();
+    let source = mini_graph().to_snapshot();
     let source_owner = source.content.local_owner::<crate::JackWorkingScene>().expect("source scene owner");
     let query = parse("MATCH (a:Apartment) RETURN a.name").expect("query");
     let mut preparation = QueryExecutionPreparation::new(query);
@@ -318,12 +318,12 @@ fn query_ownership_preparation_rejects_oversized_node_and_edge_before_clone() {
     let property_bytes = fixture["retainedExecution"]["entityAdmission"]["oversizedPropertyBytes"].as_u64().expect("oversized property bytes") as usize;
     let mut node_graph = mini_graph();
     node_graph.nodes.get_mut("root").expect("root node").properties.insert("payload".into(), PropertyValue::String("n".repeat(property_bytes)));
-    let node_source = node_graph.to_fixture();
+    let node_source = node_graph.to_snapshot();
     assert_eq!(query_ownership_preparation_rejection(&node_source), "query entity exceeds its byte grant");
     assert_eq!(node_source.nodes().iter().find(|node| node.id == "root").expect("oversized source node remains live").properties["payload"].as_str().map(str::len), Some(property_bytes));
     let mut edge_graph = mini_graph();
     edge_graph.edges.get_mut("e1").expect("fixture edge").properties.insert("payload".into(), PropertyValue::String("e".repeat(property_bytes)));
-    let edge_source = edge_graph.to_fixture();
+    let edge_source = edge_graph.to_snapshot();
     assert_eq!(query_ownership_preparation_rejection(&edge_source), "query entity exceeds its byte grant");
     assert_eq!(edge_source.edges().iter().find(|edge| edge.id == "e1").expect("oversized source edge remains live").properties["payload"].as_str().map(str::len), Some(property_bytes));
     eprintln!("[DEBUG] query preparation rejected oversized node and edge payloads before cloning them");

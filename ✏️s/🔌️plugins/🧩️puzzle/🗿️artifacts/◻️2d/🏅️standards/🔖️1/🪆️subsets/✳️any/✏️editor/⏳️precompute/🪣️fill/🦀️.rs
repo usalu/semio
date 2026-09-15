@@ -138,7 +138,7 @@ pub enum FillRunReason {
     NoOpenHandle,
     NoCompatibleKind,
     NoFreePlacement,
-    DocumentCapacity,
+    ArtifactCapacity,
     RequestedReached,
     Retracted,
 }
@@ -153,7 +153,7 @@ impl FillRunReason {
         Self::NoOpenHandle,
         Self::NoCompatibleKind,
         Self::NoFreePlacement,
-        Self::DocumentCapacity,
+        Self::ArtifactCapacity,
         Self::RequestedReached,
         Self::Retracted,
     ];
@@ -176,7 +176,7 @@ impl FillRunReason {
             Self::NoOpenHandle => "no-open-handle",
             Self::NoCompatibleKind => "no-compatible-kind",
             Self::NoFreePlacement => "no-free-placement",
-            Self::DocumentCapacity => "document-capacity",
+            Self::ArtifactCapacity => "artifact-capacity",
             Self::RequestedReached => "requested-reached",
             Self::Retracted => "retracted",
         }
@@ -202,7 +202,7 @@ impl FillRunReason {
             Self::NoOpenHandle => |labels| labels.fill_reason_no_open_handle,
             Self::NoCompatibleKind => |labels| labels.fill_reason_no_compatible_kind,
             Self::NoFreePlacement => |labels| labels.fill_reason_no_free_placement,
-            Self::DocumentCapacity => |labels| labels.fill_reason_document_capacity,
+            Self::ArtifactCapacity => |labels| labels.fill_reason_artifact_capacity,
             Self::RequestedReached => |labels| labels.fill_reason_requested_reached,
             Self::Retracted => |labels| labels.fill_reason_retracted,
         }
@@ -1226,7 +1226,7 @@ impl Puzzle2dFillRunJob {
     fn stall(&mut self, context: &mut StepContext<'_>, reason: FillRunReason) {
         if let Some(live) = self.live.take() {
             self.rejected += 1;
-            self.decide(context, live, FillRunReason::DocumentCapacity);
+            self.decide(context, live, FillRunReason::ArtifactCapacity);
         }
         self.end_replay();
         self.stall = Some(reason);
@@ -1391,7 +1391,7 @@ impl InteractiveJob for Puzzle2dFillRunJob {
                             Ok(false) => {}
                             Err(code) => return fill_run_fault(context, code),
                         },
-                        (false, Some("placement-capacity")) => self.stall(context, FillRunReason::DocumentCapacity),
+                        (false, Some("placement-capacity")) => self.stall(context, FillRunReason::ArtifactCapacity),
                         (false, Some(code)) => return fill_run_fault(context, code),
                         (false, None) => return fill_run_fault(context, "puzzle2d-fill-run-search-outcome"),
                     }

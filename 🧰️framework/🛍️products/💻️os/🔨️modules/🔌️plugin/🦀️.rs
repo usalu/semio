@@ -143,7 +143,7 @@ pub mod owned_abi {
     pub struct PollInput {
         pub events: Vec<semio_framework::kernel::Event>,
         pub command_page: Option<(semio_framework::kernel::CommandPageCursor, semio_framework::kernel::FixedCommandPage)>,
-        pub cold_pair_page: Option<semio_framework::kernel::ColdDocumentPairPage>,
+        pub cold_pair_page: Option<semio_framework::kernel::ColdArtifactPairPage>,
         pub budget: semio_framework::kernel::Budget,
     }
 
@@ -1424,8 +1424,6 @@ pub mod app {
         pub artifact_kind: &'static str,
         pub artifact_schema: &'static str,
         pub artifact_schema_version: u32,
-        pub document_schema: &'static str,
-        pub document_schema_version: u32,
         pub inference_schema: &'static str,
         pub inference_schema_version: u32,
         pub algorithm_version: u32,
@@ -1659,8 +1657,6 @@ pub mod app {
         pub artifact_kind: String,
         pub artifact_schema: String,
         pub artifact_schema_version: u32,
-        pub document_schema: String,
-        pub document_schema_version: u32,
         pub inference_schema: String,
         pub inference_schema_version: u32,
         pub algorithm_version: u32,
@@ -1674,8 +1670,6 @@ pub mod app {
                 artifact_kind: metadata.artifact_kind.into(),
                 artifact_schema: metadata.artifact_schema.into(),
                 artifact_schema_version: metadata.artifact_schema_version,
-                document_schema: metadata.document_schema.into(),
-                document_schema_version: metadata.document_schema_version,
                 inference_schema: metadata.inference_schema.into(),
                 inference_schema_version: metadata.inference_schema_version,
                 algorithm_version: metadata.algorithm_version,
@@ -1692,8 +1686,6 @@ pub mod app {
         pub artifact_kind: String,
         pub artifact_schema: String,
         pub artifact_schema_version: u32,
-        pub document_schema: String,
-        pub document_schema_version: u32,
         pub inference_schema: String,
         pub inference_schema_version: u32,
         pub algorithm_version: u32,
@@ -1756,8 +1748,6 @@ pub mod app {
         pub artifact_kind: String,
         pub artifact_schema: String,
         pub artifact_schema_version: u32,
-        pub document_schema: String,
-        pub document_schema_version: u32,
         pub inference_schema: String,
         pub inference_schema_version: u32,
         pub algorithm_version: u32,
@@ -1966,8 +1956,6 @@ pub mod app {
             artifact_kind: request.artifact_kind,
             artifact_schema: request.artifact_schema,
             artifact_schema_version: request.artifact_schema_version,
-            document_schema: request.document_schema,
-            document_schema_version: request.document_schema_version,
             inference_schema: request.inference_schema.clone(),
             inference_schema_version: request.inference_schema_version,
             algorithm_version: request.algorithm_version,
@@ -1998,8 +1986,6 @@ pub mod app {
             artifact_kind: request.artifact_kind.clone(),
             artifact_schema: request.artifact_schema.clone(),
             artifact_schema_version: request.artifact_schema_version,
-            document_schema: request.document_schema.clone(),
-            document_schema_version: request.document_schema_version,
             inference_schema: request.inference_schema.clone(),
             inference_schema_version: request.inference_schema_version,
             algorithm_version: request.algorithm_version,
@@ -3608,7 +3594,7 @@ pub mod app {
         pub owner: String,
         pub kind: HostMediaHandlerKind,
         pub artifact_kind: ArtifactKindSpec,
-        pub document_schema: String,
+        pub artifact_schema: String,
         pub file_stem: Option<String>,
         pub executable_identity: HostMediaExecutableIdentity,
     }
@@ -3619,7 +3605,7 @@ pub mod app {
         id: ArtifactIdentity,
         kind: HostMediaHandlerKind,
         artifact_kind: ArtifactKindSpec,
-        document_schema: String,
+        artifact_schema: String,
         file_stem: Option<String>,
         executable: HostMediaExecutable,
     }
@@ -3632,12 +3618,12 @@ pub mod app {
 
     impl HostMediaHandlerDeclaration {
         /// 🏗️ Describes one mesh bridge without invoking its converter during assembly.
-        pub fn mesh_import(id: impl Into<String>, artifact_kind: ArtifactKindSpec, document_schema: impl Into<String>, importer: MeshDocumentImporter) -> Result<Self, PluginAssemblyError> {
+        pub fn mesh_import(id: impl Into<String>, artifact_kind: ArtifactKindSpec, artifact_schema: impl Into<String>, importer: MeshDocumentImporter) -> Result<Self, PluginAssemblyError> {
             let declaration = Self {
                 id: ArtifactIdentity::parse(id).map_err(PluginAssemblyError::definition)?,
                 kind: HostMediaHandlerKind::MeshImport,
                 artifact_kind,
-                document_schema: document_schema.into(),
+                artifact_schema: artifact_schema.into(),
                 file_stem: None,
                 executable: HostMediaExecutable::MeshImport(importer),
             };
@@ -3646,12 +3632,12 @@ pub mod app {
         }
 
         /// 🏗️ Describes one 2D SVG renderer without invoking it during assembly.
-        pub fn two_d_svg_export(id: impl Into<String>, artifact_kind: ArtifactKindSpec, document_schema: impl Into<String>, file_stem: impl Into<String>, renderer: TwoDSvgDocumentRenderer) -> Result<Self, PluginAssemblyError> {
+        pub fn two_d_svg_export(id: impl Into<String>, artifact_kind: ArtifactKindSpec, artifact_schema: impl Into<String>, file_stem: impl Into<String>, renderer: TwoDSvgDocumentRenderer) -> Result<Self, PluginAssemblyError> {
             let declaration = Self {
                 id: ArtifactIdentity::parse(id).map_err(PluginAssemblyError::definition)?,
                 kind: HostMediaHandlerKind::TwoDSvgExport,
                 artifact_kind,
-                document_schema: document_schema.into(),
+                artifact_schema: artifact_schema.into(),
                 file_stem: Some(file_stem.into()),
                 executable: HostMediaExecutable::TwoDSvgExport(renderer),
             };
@@ -3673,13 +3659,13 @@ pub mod app {
         }
 
         fn validate_shape(&self) -> Result<(), PluginAssemblyError> {
-            if self.artifact_kind.id.trim().is_empty() || self.artifact_kind.schema.trim().is_empty() || self.document_schema.trim().is_empty() {
+            if self.artifact_kind.id.trim().is_empty() || self.artifact_kind.schema.trim().is_empty() || self.artifact_schema.trim().is_empty() {
                 return Err(PluginAssemblyError::new("plugin-assembly.host-media-shape", "host-media contributions require non-empty artifact kind and document schema"));
             }
-            if self.artifact_kind.schema != self.document_schema {
+            if self.artifact_kind.schema != self.artifact_schema {
                 return Err(PluginAssemblyError::new(
                     "plugin-assembly.host-media-schema",
-                    format!("host-media contribution {:?} schema {:?} does not equal artifact-kind schema {:?}", self.id.as_str(), self.document_schema, self.artifact_kind.schema),
+                    format!("host-media contribution {:?} schema {:?} does not equal artifact-kind schema {:?}", self.id.as_str(), self.artifact_schema, self.artifact_kind.schema),
                 ));
             }
             if matches!(self.kind, HostMediaHandlerKind::TwoDSvgExport) && self.file_stem.as_deref().is_none_or(|file_stem| file_stem.trim().is_empty()) {
@@ -3707,7 +3693,7 @@ pub mod app {
                 owner: owner.to_string(),
                 kind: self.kind,
                 artifact_kind: self.artifact_kind.clone(),
-                document_schema: self.document_schema.clone(),
+                artifact_schema: self.artifact_schema.clone(),
                 file_stem: self.file_stem.clone(),
                 executable_identity: self.executable_identity(),
             }
@@ -3718,7 +3704,7 @@ pub mod app {
     #[derive(Clone, Debug, PartialEq)]
     pub struct MeshImportRequest {
         pub artifact_kind: String,
-        pub document_schema: String,
+        pub artifact_schema: String,
         pub mesh: semio_framework::MeshData,
     }
 
@@ -3732,7 +3718,7 @@ pub mod app {
     #[derive(Clone, Debug, PartialEq)]
     pub struct TwoDSvgExportRequest {
         pub artifact_kind: String,
-        pub document_schema: String,
+        pub artifact_schema: String,
         pub document: Value,
     }
 
@@ -3962,7 +3948,7 @@ pub mod app {
         }
 
         fn mesh_import(&self, request: &MeshImportRequest) -> Result<MeshImportResult, HostMediaRuntimeError> {
-            let entry = self.lookup(HostMediaHandlerKind::MeshImport, &request.artifact_kind, &request.document_schema)?;
+            let entry = self.lookup(HostMediaHandlerKind::MeshImport, &request.artifact_kind, &request.artifact_schema)?;
             let HostMediaExecutable::MeshImport(importer) = entry.executable else {
                 return Err(HostMediaRuntimeError { code: "host-media.executable-kind".into(), message: format!("host-media target {:?} has no mesh executable", request.artifact_kind) });
             };
@@ -3970,7 +3956,7 @@ pub mod app {
         }
 
         fn two_d_svg_export(&self, request: &TwoDSvgExportRequest) -> Result<TwoDSvgExportResult, HostMediaRuntimeError> {
-            let entry = self.lookup(HostMediaHandlerKind::TwoDSvgExport, &request.artifact_kind, &request.document_schema)?;
+            let entry = self.lookup(HostMediaHandlerKind::TwoDSvgExport, &request.artifact_kind, &request.artifact_schema)?;
             let HostMediaExecutable::TwoDSvgExport(renderer) = entry.executable else {
                 return Err(HostMediaRuntimeError { code: "host-media.executable-kind".into(), message: format!("host-media target {:?} has no 2D SVG executable", request.artifact_kind) });
             };
@@ -3978,14 +3964,14 @@ pub mod app {
             Ok(TwoDSvgExportResult { file_stem: entry.descriptor.file_stem.clone().expect("2D SVG declaration requires a file stem"), svg, width, height })
         }
 
-        fn lookup(&self, kind: HostMediaHandlerKind, artifact_kind: &str, document_schema: &str) -> Result<&RegisteredHostMediaHandler, HostMediaRuntimeError> {
+        fn lookup(&self, kind: HostMediaHandlerKind, artifact_kind: &str, artifact_schema: &str) -> Result<&RegisteredHostMediaHandler, HostMediaRuntimeError> {
             let kind_str = kind.as_str();
             let id = self.by_target.get(&(kind, artifact_kind.to_string())).ok_or_else(|| HostMediaRuntimeError { code: "host-media.not-declared".into(), message: format!("no {} declaration for artifact kind {:?}", kind_str, artifact_kind) })?;
             let entry = self.by_id.get(id).expect("host-media target index always points to an entry");
-            if entry.descriptor.document_schema != document_schema {
+            if entry.descriptor.artifact_schema != artifact_schema {
                 return Err(HostMediaRuntimeError {
                     code: "host-media.schema-mismatch".into(),
-                    message: format!("host-media declaration {:?} expects schema {:?}, request supplied {:?}", entry.descriptor.id, entry.descriptor.document_schema, document_schema),
+                    message: format!("host-media declaration {:?} expects schema {:?}, request supplied {:?}", entry.descriptor.id, entry.descriptor.artifact_schema, artifact_schema),
                 });
             }
             Ok(entry)
@@ -4105,7 +4091,7 @@ pub mod app {
             }
             let mut inference_catalog: BTreeMap<ArtifactInferenceServiceKey, ArtifactInferenceServiceMetadata> = inference_services.metadata().into_iter().map(|metadata| (metadata.into(), metadata)).collect();
             for metadata in &routed_inferences {
-                if metadata.owner != owner || metadata.artifact_kind.trim().is_empty() || metadata.artifact_schema.trim().is_empty() || metadata.document_schema.trim().is_empty() || metadata.inference_schema.trim().is_empty() {
+                if metadata.owner != owner || metadata.artifact_kind.trim().is_empty() || metadata.artifact_schema.trim().is_empty() || metadata.artifact_schema.trim().is_empty() || metadata.inference_schema.trim().is_empty() {
                     return Err(PluginAssemblyError::new("plugin-assembly.routed-inference", format!("invalid routed inference metadata for {}/{}", metadata.artifact_kind, metadata.inference_schema)));
                 }
                 let key = (*metadata).into();
@@ -4200,9 +4186,9 @@ pub mod app {
                 self.inference_services.register(service).map_err(|error| PluginAssemblyError::new("plugin-assembly.contribution-inference", error.to_string()))?;
             }
             for provider in owner_rosters {
-                let (document_schema, kinds) = provider();
+                let (artifact_schema, kinds) = provider();
                 for descriptor in kinds {
-                    let entry = WireMutationRosterEntry::owner(document_schema, descriptor);
+                    let entry = WireMutationRosterEntry::owner(artifact_schema, descriptor);
                     if let Some(existing) = self.owner_mutations.get(&entry.mutation_id) {
                         if existing != &entry {
                             return Err(PluginAssemblyError::new("plugin-assembly.owner-mutation-roster", format!("conflicting owner mutation roster entry for {:?}", entry.mutation_id)));
@@ -4265,7 +4251,7 @@ pub mod app {
     /// (only known once a builder that already carries it calls `.contributes()`) — see
     /// `ArtifactContribution::resolve`.
     struct ContributedMutationSpec {
-        target_document_schema: String,
+        target_artifact_schema: String,
         semantics: semio_framework::ContributedMutationSemantics,
         schema_version: u32,
         algorithm_version: u32,
@@ -4283,12 +4269,12 @@ pub mod app {
         /// dependency crate) — the bound `K: protocol::CompositeMutationKind<Snapshot, Op>` makes a
         /// contribution that does not typecheck against the target artifact's own mutation vocabulary
         /// impossible to express: a `K` whose `plan` cannot drive a `Planner<Snapshot, Op>` simply does
-        /// not satisfy it. `target_document_schema` is `Snapshot`'s owning `ArtifactApp::DOCUMENT_SCHEMA`
+        /// not satisfy it. `target_artifact_schema` is `Snapshot`'s owning `ArtifactApp::DOCUMENT_SCHEMA`
         /// (mirrors `.document_codec_bare`'s own `impl Into<String>` — a bare `Snapshot` type carries no
         /// compile-time document-schema constant of its own). The frozen id
         /// `"<target-document-schema>#<contributor-plugin-id>:<kebab-kind>"` is only fully assembled at
         /// `.resolve()`, once the contributor's own plugin id is known.
-        pub async fn mutation<Snapshot, Op, K>(mut self, target_document_schema: impl Into<String>, schema_version: u32, algorithm_version: u32) -> Self
+        pub async fn mutation<Snapshot, Op, K>(mut self, target_artifact_schema: impl Into<String>, schema_version: u32, algorithm_version: u32) -> Self
         where
             Snapshot: Clone + ArtifactPack + 'static,
             Op: ::protocol::Mutation<Snapshot> + ::protocol::OpBinary + 'static,
@@ -4321,7 +4307,7 @@ pub mod app {
                 })
             }
             self.mutations.push(ContributedMutationSpec {
-                target_document_schema: target_document_schema.into(),
+                target_artifact_schema: target_artifact_schema.into(),
                 semantics: semio_framework::ContributedMutationSemantics { verb: K::SEMANTICS.verb.to_string(), entity: K::SEMANTICS.entity.to_string(), kind: K::SEMANTICS.kind.to_string(), record: K::SEMANTICS.record.to_string() },
                 schema_version,
                 algorithm_version,
@@ -4361,7 +4347,7 @@ pub mod app {
             let mut mutation_metadata = Vec::with_capacity(self.mutations.len());
             let mut mutation_runtime = Vec::with_capacity(self.mutations.len());
             for spec in self.mutations {
-                let mutation_id = format!("{}#{}:{}", spec.target_document_schema, plugin_id, spec.semantics.kind);
+                let mutation_id = format!("{}#{}:{}", spec.target_artifact_schema, plugin_id, spec.semantics.kind);
                 let roster = WireMutationRosterEntry::contributed(plugin_id, &self.artifact_kind, mutation_id.clone(), &spec.semantics);
                 mutation_metadata.push(semio_framework::ContributedMutationMetadata { mutation_id: mutation_id.clone(), semantics: spec.semantics, schema_version: spec.schema_version, algorithm_version: spec.algorithm_version });
                 mutation_runtime.push((mutation_id, ContributedMutationRuntimeEntry { roster, plan_cold: spec.plan_cold }));
@@ -4376,8 +4362,6 @@ pub mod app {
                         artifact_kind: metadata.artifact_kind.to_string(),
                         artifact_schema: metadata.artifact_schema.to_string(),
                         artifact_schema_version: metadata.artifact_schema_version,
-                        document_schema: metadata.document_schema.to_string(),
-                        document_schema_version: metadata.document_schema_version,
                         inference_schema: metadata.inference_schema.to_string(),
                         inference_schema_version: metadata.inference_schema_version,
                         algorithm_version: metadata.algorithm_version,
@@ -4515,9 +4499,9 @@ pub mod app {
     }
 
     impl WireMutationRosterEntry {
-        fn owner(document_schema: &str, descriptor: &::protocol::SemanticDescriptor) -> Self {
+        fn owner(artifact_schema: &str, descriptor: &::protocol::SemanticDescriptor) -> Self {
             Self {
-                mutation_id: format!("{document_schema}#{}", descriptor.kind),
+                mutation_id: format!("{artifact_schema}#{}", descriptor.kind),
                 verb: descriptor.verb.to_string(),
                 entity: descriptor.entity.to_string(),
                 kind: descriptor.kind.to_string(),
@@ -4632,15 +4616,15 @@ pub mod app {
     }
 
     /// 📌️ Commits every document app's owner mutation roster (`PluginBuilder::document_app`'s
-    /// captured `(document_schema, kinds)` providers) — idempotent for byte-identical re-registration
+    /// captured `(artifact_schema, kinds)` providers) — idempotent for byte-identical re-registration
     /// (mirrors `ArtifactInferenceServiceRegistry::register`), a typed conflict otherwise.
     #[cfg(test)]
     pub(crate) async fn commit_owner_mutation_roster(providers: &[OwnerMutationRoster]) -> Result<(), PluginAssemblyError> {
         let mut registry = owner_mutation_roster_registry().await.write().map_err(|_| PluginAssemblyError::new("plugin-assembly.owner-mutation-roster", "owner mutation roster registry is poisoned"))?;
         for provider in providers {
-            let (document_schema, kinds) = provider();
+            let (artifact_schema, kinds) = provider();
             for descriptor in kinds {
-                let entry = WireMutationRosterEntry::owner(document_schema, descriptor);
+                let entry = WireMutationRosterEntry::owner(artifact_schema, descriptor);
                 if let Some(existing) = registry.get(&entry.mutation_id) {
                     if *existing != entry {
                         return Err(PluginAssemblyError::new("plugin-assembly.owner-mutation-roster", format!("conflicting owner mutation roster entry for {:?}", entry.mutation_id)));
@@ -10754,7 +10738,7 @@ pub mod app {
     /// app's concrete `Snapshot`/`Mutation`/`Config`/`ConfigMutation` (the same way
     /// `flow_protocol`/`dag_protocol`/... payload handlers are today), never generically; a generic
     /// `dispatch<P,O,C,CO>` body calling a concrete-typed `$module::handle` fails to unify (`P` is not
-    /// literally `FlowFixture`, even though there is only ever one real instantiation). Naming the four
+    /// literally `FlowHostDocument`, even though there is only ever one real instantiation). Naming the four
     /// types once, at the `app_commands!` invocation, costs one extra clause per app but produces a
     /// `dispatch` whose signature matches `ArtifactApp::handle` exactly — so an app's whole `handle` impl
     /// collapses to one line, `command.dispatch(doc, cfg)`. A per-command closure/trait-object API (the
@@ -11203,8 +11187,11 @@ pub mod app {
         }
         /// @emoji 🐢️ What one framework-owned interaction verb (`InteractionVerb`) dirties in THIS app,
         /// for the domains it actually touched — the app half of `dispatch_interaction_action`'s
-        /// refresh scope. `None` means "not declared", and the framework then keeps the widest,
-        /// always-correct answer ([`UiDirtyScope::Full`]).
+        /// refresh scope. `None` means "not declared", and the framework then DERIVES the scope from the
+        /// app's own surface declarations (`semio_framework::interaction_declared_refresh_scope`: the
+        /// bodies of the window kinds that declare a touched domain, plus every panel body for the three
+        /// verbs that move a selection), keeping the widest, always-correct answer
+        /// ([`UiDirtyScope::Full`]) only when not even that is declared.
         ///
         /// 🌪️ Why this is a hook and not a constant: `interactionHover` fires on pointer motion, so a
         /// blanket `Full` makes every mouse move repaint every window body, every panel body, the
@@ -11343,7 +11330,7 @@ pub mod app {
         fn build_transient_store_disposer() -> ArtifactDisposal<store::TransientStore<Self::Transient, Self::TransientMutation>> {
             None
         }
-        /// @emoji 📜️ Stable document schema id — prefer this over `document_schema(&self)`.
+        /// @emoji 📜️ Stable document schema id — prefer this over `artifact_schema(&self)`.
         const DOCUMENT_SCHEMA: &'static str;
         /// @emoji 👁️✏️ Contract §2.3: `VcsArtifactApp` reads this to decide whether to reject the
         /// eight mutating verbs (see `VIEWER_REJECTED_ACTION_IDS`) with `viewer.read-only`. Defaults
@@ -11658,17 +11645,17 @@ pub mod app {
         }
         /// 🎞️ Pure export of the current document onto one declared output port — must not mutate
         /// anything. Called by both the UI (preview/export) and a headless runner (moving media along a
-        /// workflow edge). Default: the whole document pack, base64-wrapped, for `"document:out"`;
+        /// workflow edge). Default: the whole document pack, base64-wrapped, for `"artifact:out"`;
         /// `MediaError::NotImplemented` for any other port (apps declaring extra output ports override
         /// this to handle them, falling through to `ArtifactApp::export_media`'s default via `_ =>` for
-        /// `"document:out"` if desired).
+        /// `"artifact:out"` if desired).
         /// 🌀️ `io-async-signatures`: async signature, behaviourally unchanged body — see
         /// `ArtifactSerializer::serialize`'s doc comment for the ready-future guarantee.
         async fn export_media(port: &str, doc: &ArtifactView<'_, Self::Snapshot>) -> Result<Media, MediaError> {
-            if port != "document:out" {
+            if port != "artifact:out" {
                 return Err(MediaError::NotImplemented);
             }
-            let media_type = Self::io().await.map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.document_media_type);
+            let media_type = Self::io().await.map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.artifact_media_type);
             let bytes = doc.snapshot.encode_pack();
             Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
         }
@@ -11678,7 +11665,7 @@ pub mod app {
             Self::export_media(port, doc).await
         }
         /// 🎞️ Builds the operation that replaces the whole document with `snapshot` — the seam the
-        /// default `import_media("document:in")` below needs to turn a decoded document pack into a real,
+        /// default `import_media("artifact:in")` below needs to turn a decoded document pack into a real,
         /// undoable operation. `None` (the default) means "not implemented" (there is no generic "replace
         /// whole snapshot" operation); an app whose `Mutation` enum has such a variant (e.g.
         /// `SetFixture`/`SetArtifact`) overrides this one-liner to unlock the default `import_media`.
@@ -11687,10 +11674,10 @@ pub mod app {
         }
         /// 🎞️ Translates an incoming media value on one declared input port into operations — never mutates
         /// state directly, so a headless import is exactly as undoable/syncable as a UI edit. Default:
-        /// decodes a `"document:in"` structured (base64 pack) payload via `whole_document_operation`;
+        /// decodes a `"artifact:in"` structured (base64 pack) payload via `whole_document_operation`;
         /// `MediaError::NotImplemented` for any other port or when `whole_document_operation` is `None`.
         async fn import_media(port: &str, media: &Media, _doc: &ArtifactView<'_, Self::Snapshot>) -> ArtifactMutationOutcome<Self::Mutation, Self::ConfigMutation, Self::DraftMutation, MediaError> {
-            if port != "document:in" {
+            if port != "artifact:in" {
                 return Err(MediaError::NotImplemented);
             }
             let MediaPayload::Structured { json, .. } = &media.payload else {
@@ -11864,7 +11851,7 @@ pub mod app {
         /// scheduled on the shared maintenance worker and must never perform application-visible work.
         fn maintenance_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault>;
         async fn app_id(&self) -> &str;
-        async fn document_schema(&self) -> &str;
+        async fn artifact_schema(&self) -> &str;
         /// 🧬️ Compiler-derived concrete `ArtifactApp` identity used by fail-closed tool proof admission.
         async fn tool_owner_witness(&self) -> ToolOwnerWitness;
         async fn tool_public_contracts(&self) -> Vec<ArtifactToolPublicContract>;
@@ -12176,7 +12163,7 @@ pub mod app {
             Err(MediaError::NotImplemented)
         }
         /// 🎞️ ABI-level media artifact request for one port (`framework/wit/📜️world.wit`'s `produce-media`).
-        /// Default: a whole-document passthrough (`wire: Document{schema: document_schema()}` wrapping
+        /// Default: a whole-document passthrough (`wire: Document{schema: artifact_schema()}` wrapping
         /// `document_pack()`'s pack+spr bytes via `store::encode_document_pack_bytes`) — the fallback every
         /// `PluginApp` gets for free without declaring any `media_ports()`. Apps whose media output isn't
         /// simply their raw document (computed/derived outputs) override this directly; `port` is accepted
@@ -12185,20 +12172,20 @@ pub mod app {
         async fn produce_media(&mut self, port: &str) -> Result<MediaArtifact, MediaArtifactError> {
             let files = self.document_pack().await.map_err(|fault| MediaArtifactError::Payload(fault.message))?;
             Ok(MediaArtifact {
-                descriptor: MediaArtifactDescriptor { edge_id: None, port_id: Some(port.to_string()), kind_id: None, media_type: None, wire: MediaWireFormat::Document { schema: self.document_schema().await.to_string() }, blob_hash: None },
+                descriptor: MediaArtifactDescriptor { edge_id: None, port_id: Some(port.to_string()), kind_id: None, media_type: None, wire: MediaWireFormat::Document { schema: self.artifact_schema().await.to_string() }, blob_hash: None },
                 data: store::encode_document_pack_bytes(&files.pack, &files.spr).await,
             })
         }
         /// 🎞️ ABI-level media artifact delivery for one port (`framework/wit/📜️world.wit`'s `consume-media`).
-        /// Default: a `Document{schema}` wire matching this app's own `document_schema()` loads straight
+        /// Default: a `Document{schema}` wire matching this app's own `artifact_schema()` loads straight
         /// through `load_document_pack` — the same pack+spr bytes `read-app-document-pack`/
         /// `load-app-document-pack` already round-trip. Anything else (a foreign document schema, or a
         /// `Binary{format}` wire) has no SDK-level importer registry yet, so the default rejects it; apps
         /// that need one override this method directly.
-        /// 🌀️ `document_schema()` is now `async`, and a match GUARD cannot `.await` — resolved once
+        /// 🌀️ `artifact_schema()` is now `async`, and a match GUARD cannot `.await` — resolved once
         /// into `schema_now` before the match instead of calling it inline in the guard.
         async fn consume_media(&mut self, _port: &str, artifact: MediaArtifact) -> Result<(), MediaArtifactError> {
-            let schema_now = self.document_schema().await.to_string();
+            let schema_now = self.artifact_schema().await.to_string();
             match artifact.descriptor.wire {
                 MediaWireFormat::Document { schema } if schema == schema_now => {
                     let (pack, spr) = store::decode_document_pack_bytes(&artifact.data).await.map_err(|error| MediaArtifactError::Payload(error.to_string()))?;
@@ -12243,6 +12230,12 @@ pub mod app {
         tool_runs: HashMap<String, (LocalizedLabel, semio_framework::ToolRunDefinition)>,
         /// 🪟️ Every declared window kind's body key — how a run's declared `windows` resolve to the bodies a tick dirties.
         window_body_keys: HashMap<String, String>,
+        /// 🕹️ Every declared window body key indexed by the interaction domain that window kind
+        /// declares (`semio_framework::interaction_window_bodies_by_domain`) — the schema-first input
+        /// of `interaction_declared_refresh_scope`, read once here instead of per dispatched hover.
+        interaction_window_bodies: BTreeMap<String, Vec<String>>,
+        /// 🌳️ Every declared panel leaf body key, the panel half of the same derivation.
+        panel_body_keys: Vec<String>,
     }
 
     fn validate_ui_dispatch_classification(owner: &str, id: &str, classification: semio_framework::InteractiveJobClassification) -> Result<(), Fault> {
@@ -12290,7 +12283,20 @@ pub mod app {
                 .chain(definition.utilities.iter().filter_map(|utility| utility.run.clone().map(|run| (utility.id.clone(), (utility.label.clone(), run)))))
                 .collect();
             let window_body_keys = definition.window_kinds.iter().map(|window| (window.id.clone(), window.body_key.clone())).collect();
-            Self { actions, window_actions, app_commands, mode_commands, controller_id: definition.controller_id.clone(), interactions: definition.interactions.iter().map(|interaction| (interaction.id.clone(), interaction.clone())).collect(), tool_runs, window_body_keys }
+            let interaction_window_bodies = semio_framework::interaction_window_bodies_by_domain(definition);
+            let panel_body_keys = semio_framework::panel_leaf_body_keys(definition);
+            Self {
+                actions,
+                window_actions,
+                app_commands,
+                mode_commands,
+                controller_id: definition.controller_id.clone(),
+                interactions: definition.interactions.iter().map(|interaction| (interaction.id.clone(), interaction.clone())).collect(),
+                tool_runs,
+                window_body_keys,
+                interaction_window_bodies,
+                panel_body_keys,
+            }
         }
 
         /// 🧹 Releases one catalog row or one empty nested catalog owner.
@@ -12381,6 +12387,20 @@ pub mod app {
                 drop(self.window_body_keys.remove(&key));
                 return PluginCloseStep::Pending { released_items: 1, released_bytes: bytes };
             }
+            if let Some(key) = self.interaction_window_bodies.keys().next() {
+                let bytes = key.len();
+                if bytes > maximum_bytes {
+                    return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                }
+                let key = key.clone();
+                drop(self.interaction_window_bodies.remove(&key));
+                return PluginCloseStep::Pending { released_items: 1, released_bytes: bytes };
+            }
+            if let Some(body) = self.panel_body_keys.pop() {
+                let bytes = body.len();
+                drop(body);
+                return PluginCloseStep::Pending { released_items: 1, released_bytes: bytes };
+            }
             if !self.controller_id.is_empty() {
                 let bytes = self.controller_id.len();
                 if bytes > maximum_bytes {
@@ -12394,12 +12414,28 @@ pub mod app {
 
         /// 🧺 Proves that every catalog row and nested catalog owner was retired.
         pub(crate) fn terminal_is_empty(&self) -> bool {
-            self.actions.is_empty() && self.window_actions.is_empty() && self.app_commands.is_empty() && self.mode_commands.is_empty() && self.controller_id.is_empty() && self.interactions.is_empty() && self.tool_runs.is_empty() && self.window_body_keys.is_empty()
+            self.actions.is_empty()
+                && self.window_actions.is_empty()
+                && self.app_commands.is_empty()
+                && self.mode_commands.is_empty()
+                && self.controller_id.is_empty()
+                && self.interactions.is_empty()
+                && self.tool_runs.is_empty()
+                && self.window_body_keys.is_empty()
+                && self.interaction_window_bodies.is_empty()
+                && self.panel_body_keys.is_empty()
         }
 
         /// 🪟️ The body key of a declared window kind.
         pub(crate) fn window_body_key(&self, window_kind_id: &str) -> Option<&str> {
             self.window_body_keys.get(window_kind_id).map(String::as_str)
+        }
+
+        /// 🐢️ The refresh scope the app's OWN surface declarations owe one reserved interaction verb —
+        /// `None` when no declared window paints a touched domain, which is the framework's signal to
+        /// keep its widest `UiDirtyScope::Full`.
+        pub(crate) fn interaction_declared_refresh_scope(&self, verb: InteractionVerb, domains: &[&str]) -> Option<UiDirtyScope> {
+            semio_framework::interaction_declared_refresh_scope(verb, domains, &self.interaction_window_bodies, &self.panel_body_keys)
         }
 
         /// ⏯️ The declared label and `ToolRunDefinition` of one tool or utility.
@@ -12444,18 +12480,18 @@ pub mod app {
         fn tool_job_registration<A: ArtifactApp>(
             &self,
             runtime_controller_id: &str,
-            document_schema: &str,
+            artifact_schema: &str,
             generated_ids: &[&str],
             bus: &semio_framework::ActionBus,
             registrations: &BTreeMap<String, ArtifactToolRegistration>,
         ) -> Result<(String, Vec<QualifiedBoundedFirstStepProof>), Fault> {
-            self.validate_tool_job_rows::<A>(runtime_controller_id, document_schema, generated_ids, bus, registrations, A::bounded_first_step_tool_proofs())
+            self.validate_tool_job_rows::<A>(runtime_controller_id, artifact_schema, generated_ids, bus, registrations, A::bounded_first_step_tool_proofs())
         }
 
         fn validate_tool_job_rows<A: ArtifactApp>(
             &self,
             runtime_controller_id: &str,
-            document_schema: &str,
+            artifact_schema: &str,
             generated_ids: &[&str],
             bus: &semio_framework::ActionBus,
             registrations: &BTreeMap<String, ArtifactToolRegistration>,
@@ -12484,7 +12520,7 @@ pub mod app {
                         && registration.contract == row.contract
                         && bus.admit_exact_wire(runtime_controller_id, row.tool_id, &registration.schema_id, &[]).is_ok_and(|admission| QualifiedToolProof::AppOwned(registration.clone()).admits::<A>(&admission))
                 });
-                let authoritative = row.owner == owner && row.controller_id == runtime_controller_id && row.document_schema == document_schema && (generic || exact_registered) && !row.owner_file.is_empty() && expected.contains(row.tool_id) && unique;
+                let authoritative = row.owner == owner && row.controller_id == runtime_controller_id && row.artifact_schema == artifact_schema && (generic || exact_registered) && !row.owner_file.is_empty() && expected.contains(row.tool_id) && unique;
                 if !authoritative {
                     return Err(Fault::new(
                         FaultOrigin::Framework,
@@ -12496,8 +12532,8 @@ pub mod app {
                             owner.owner_type_name,
                             row.controller_id,
                             runtime_controller_id,
-                            row.document_schema,
-                            document_schema,
+                            row.artifact_schema,
+                            artifact_schema,
                             row.factory,
                             registered.map_or(BOUNDED_FIRST_STEP_FACTORY, |registration| registration.factory_type_name),
                             !row.owner_file.is_empty(),
@@ -12506,7 +12542,7 @@ pub mod app {
                             owner,
                             row.owner == owner,
                             row.controller_id == runtime_controller_id,
-                            row.document_schema == document_schema,
+                            row.artifact_schema == artifact_schema,
                         ),
                     ));
                 }
@@ -12833,7 +12869,7 @@ pub mod app {
         factory_type_id: Option<std::any::TypeId>,
         factory_type_name: Option<&'static str>,
         tool_id: &'static str,
-        document_schema: &'static str,
+        artifact_schema: &'static str,
         contract: semio_framework::ToolExecutionContract,
     }
 
@@ -12843,8 +12879,8 @@ pub mod app {
             self.tool_id
         }
 
-        pub fn new<A: ArtifactApp>(owner_file: &'static str, controller_id: &'static str, factory: &'static str, tool_id: &'static str, document_schema: &'static str, contract: semio_framework::ToolExecutionContract) -> Self {
-            Self { owner_file, owner: ToolOwnerWitness::of::<A>(), controller_id, factory, factory_type_id: None, factory_type_name: None, tool_id, document_schema, contract }
+        pub fn new<A: ArtifactApp>(owner_file: &'static str, controller_id: &'static str, factory: &'static str, tool_id: &'static str, artifact_schema: &'static str, contract: semio_framework::ToolExecutionContract) -> Self {
+            Self { owner_file, owner: ToolOwnerWitness::of::<A>(), controller_id, factory, factory_type_id: None, factory_type_name: None, tool_id, artifact_schema, contract }
         }
 
         pub fn with_factory_type<A: ArtifactApp, F: ArtifactOwnedToolJobFactory<Owner = A>>(mut self) -> Self {
@@ -12894,7 +12930,7 @@ pub mod app {
                 "wrongFactory" => row.factory = "NotTheRegisteredFactory",
                 "wrongOwner" => row.owner = ToolOwnerWitness::of::<W>(),
                 "wrongController" => row.controller_id = "s.test.other@1/*#editor",
-                "wrongDocumentSchema" => row.document_schema = "semio.test.other.v1",
+                "wrongDocumentSchema" => row.artifact_schema = "semio.test.other.v1",
                 "wrongTool" => row.tool_id = "otherTool",
                 "wrongContract" => row.contract = semio_framework::ToolExecutionContract::resumable(4_096, 5, 1, 4_096, 7_500, 1, 1),
                 "wrongPayloadSchema" => registered.get_mut(tool).expect("registered tool").schema_id = "wrong.payload.schema".into(),
@@ -12929,7 +12965,7 @@ pub mod app {
             owner: $owner:ty,
             owner_file: $owner_file:literal,
             controller: $controller:literal,
-            document_schema: $document_schema:literal,
+            artifact_schema: $artifact_schema:literal,
             factory: $factory:literal,
             $(factory_type: $factory_type:ty,)?
             contract: $contract:expr,
@@ -12946,7 +12982,7 @@ pub mod app {
                         $controller,
                         $factory,
                         $tool,
-                        $document_schema,
+                        $artifact_schema,
                         $contract,
                     ))
                 ),+]
@@ -12956,7 +12992,7 @@ pub mod app {
             owner: $owner:ty,
             owner_file: $owner_file:literal,
             controller: $controller:literal,
-            document_schema: $document_schema:literal,
+            artifact_schema: $artifact_schema:literal,
             factory: $factory:literal,
             $(factory_type: $factory_type:ty,)?
             tools: { $($tool:literal => $contract:expr),+ $(,)? }
@@ -12972,7 +13008,7 @@ pub mod app {
                         $controller,
                         $factory,
                         $tool,
-                        $document_schema,
+                        $artifact_schema,
                         $contract,
                     ))
                 ),+]
@@ -15330,7 +15366,7 @@ pub mod app {
         }
 
         fn schema_id(&self) -> String {
-            format!("{}.tool-command.v1", self.row.document_schema)
+            format!("{}.tool-command.v1", self.row.artifact_schema)
         }
 
         fn contract(&self) -> semio_framework::ToolExecutionContract {
@@ -23789,8 +23825,10 @@ pub mod app {
         /// `revalidate_and_persist_interaction_state`, records the command-log row under `ActionKind::Interaction`
         /// (kept out of the history panel — `finish_recorded`'s `skip_history_panel` check), and closes
         /// on the APP-DECLARED refresh scope for the dispatched verb and the domains it actually
-        /// touched (`A::interaction_scope`, one entry per `InteractionVerb`), falling back to
-        /// `UiDirtyScope::Full` for every app that declares none. `touched` is the single domain the
+        /// touched (`A::interaction_scope`, one entry per `InteractionVerb`), falling back to the scope
+        /// DERIVED from the app's own surface declarations
+        /// (`semio_framework::interaction_declared_refresh_scope` over `WindowKindDefinition.interactions`)
+        /// and only then to `UiDirtyScope::Full`, for an app that declares neither. `touched` is the single domain the
         /// verb names, or every declared domain for the two whole-app verbs
         /// (`clearSelection`/`selectAll`) — the exact set the arms above wrote.
         async fn dispatch_interaction_action(&mut self, action: &str, args: Option<&DslValue>, meta: &ActionMeta, permit: &FrameworkReservedCommitPermit) -> Result<InvocationResult, Fault> {
@@ -23938,7 +23976,7 @@ pub mod app {
             }
             self.record_command(action, ActionKind::Interaction, None, None, None, None).await;
             let declared: Vec<&str> = touched.iter().map(String::as_str).collect();
-            let scope = A::interaction_scope(verb, &declared).unwrap_or(UiDirtyScope::Full);
+            let scope = A::interaction_scope(verb, &declared).or_else(|| self.registry.interaction_declared_refresh_scope(verb, &declared)).unwrap_or(UiDirtyScope::Full);
             let mut result = Self::empty_result(action, meta, Vec::new(), Vec::new(), scope).await;
             result.output = leftover;
             Ok(result)
@@ -27652,7 +27690,7 @@ pub mod app {
             self.app.instance_id().await
         }
 
-        async fn document_schema(&self) -> &str {
+        async fn artifact_schema(&self) -> &str {
             A::DOCUMENT_SCHEMA
         }
 
@@ -29559,11 +29597,11 @@ pub mod app {
         const KIND_ID: &'static str = "framework.window.document";
 
         fn window_kind() -> WindowKindDefinition {
-            window_kind_definition(Self::KIND_ID, "Document", "Dokument", SurfaceKind::TextEditor, "file-text", Vec::new())
+            window_kind_definition(Self::KIND_ID, "Artifact", "Artefakt", SurfaceKind::TextEditor, "file-text", Vec::new())
         }
 
         fn editable_window_kind() -> WindowKindDefinition {
-            window_kind_definition(Self::KIND_ID, "Document", "Dokument", SurfaceKind::TextEditor, "file-text", vec![ActionDefinition::bounded_catalog("set-page", LocalizedLabel::native("Set Page", "Seite setzen"), ActionKind::Mutation)])
+            window_kind_definition(Self::KIND_ID, "Artifact", "Artefakt", SurfaceKind::TextEditor, "file-text", vec![ActionDefinition::bounded_catalog("set-page", LocalizedLabel::native("Set Page", "Seite setzen"), ActionKind::Mutation)])
         }
 
         fn render(view: &DocumentView) -> UiAssemblyResult<BuiltNode> {
@@ -29655,7 +29693,7 @@ pub mod app {
             Err(plugin_sdk_fault("editor did not declare a loaded-parent child projection"))
         }
         const REQUIRES_DOCUMENT_STORE_PUBLICATION_AUTHORITY: bool = false;
-        /// @emoji 📜️ Stable document schema id — prefer this over `document_schema(&self)`.
+        /// @emoji 📜️ Stable document schema id — prefer this over `artifact_schema(&self)`.
         const DOCUMENT_SCHEMA: &'static str;
         type Snapshot: Clone + PartialEq + protocol::ToValue + protocol::FromValue + Send + Sync + store::ArtifactDsl + ArtifactPack + semio_framework_schema::ArtifactCompositionFields + 'static;
         type Mutation: ::protocol::Mutation<Self::Snapshot> + PartialEq + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;
@@ -30005,10 +30043,10 @@ pub mod app {
         }
         /// 🌀️ `io-async-signatures`: async signature, behaviourally unchanged body.
         fn export_media(port: &str, doc: &ArtifactView<'_, Self::Snapshot>) -> Result<Media, MediaError> {
-            if port != "document:out" {
+            if port != "artifact:out" {
                 return Err(MediaError::NotImplemented);
             }
-            let media_type = Self::io().map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.document_media_type);
+            let media_type = Self::io().map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.artifact_media_type);
             let bytes = doc.snapshot.encode_pack();
             Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
         }
@@ -30020,7 +30058,7 @@ pub mod app {
             None
         }
         fn import_media(port: &str, media: &Media, _doc: &ArtifactView<'_, Self::Snapshot>) -> ArtifactMutationOutcome<Self::Mutation, Self::ConfigMutation, Self::DraftMutation, MediaError> {
-            if port != "document:in" {
+            if port != "artifact:in" {
                 return Err(MediaError::NotImplemented);
             }
             let MediaPayload::Structured { json, .. } = &media.payload else {
@@ -30348,10 +30386,10 @@ pub mod app {
         }
         /// 🌀️ `io-async-signatures`: async signature, behaviourally unchanged body.
         fn export_media(port: &str, doc: &ArtifactView<'_, Self::Snapshot>) -> Result<Media, MediaError> {
-            if port != "document:out" {
+            if port != "artifact:out" {
                 return Err(MediaError::NotImplemented);
             }
-            let media_type = Self::io().map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.document_media_type);
+            let media_type = Self::io().map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.artifact_media_type);
             let bytes = doc.snapshot.encode_pack();
             Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
         }
@@ -36159,7 +36197,7 @@ pub mod plugin_runtime {
                 }
 
                 async fn stage_cold_pair_page(
-                    page: $crate::component::wasip2::exports::semio::framework::reactor::ColdDocumentPairPage,
+                    page: $crate::component::wasip2::exports::semio::framework::reactor::ColdArtifactPairPage,
                 ) -> Result<(), $crate::component::wasip2::semio::framework::types::PluginError> {
                     $ensure();
                     $crate::app::resolve_ready($crate::reactor::stage_cold_pair_page(page)).map_err(|fault| $crate::component::wasip2::plugin_error(&fault))

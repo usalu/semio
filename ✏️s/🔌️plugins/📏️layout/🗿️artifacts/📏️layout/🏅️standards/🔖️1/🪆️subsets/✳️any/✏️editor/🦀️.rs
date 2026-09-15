@@ -40,7 +40,7 @@ use crate::editor::layout::engine::scene::LayoutEngine;
 pub const LAYOUT_PLAY_APP_ID: &str = "s.layout.layout@1/*#editor";
 pub use blueprint::{LAYOUT_PLAY_BODY_BLUEPRINT, LAYOUT_PLAY_SURFACE_BLUEPRINT, LAYOUT_PLAY_WINDOW_BLUEPRINT};
 pub(crate) use catalogue_panel::LAYOUT_PLAY_BODY_CATALOGUE;
-pub use document_panel::LAYOUT_PLAY_BODY_DOCUMENT;
+pub use document_panel::LAYOUT_PLAY_BODY_ARTIFACT;
 pub use inspection_panel::LAYOUT_PLAY_BODY_INSPECTION;
 pub use preflight_panel::{LAYOUT_PLAY_BODY_PREFLIGHT, LAYOUT_PLAY_PREFLIGHT_TAB_ID};
 pub use preview::{LAYOUT_PLAY_BODY_PREVIEW, LAYOUT_PLAY_SURFACE_PREVIEW, LAYOUT_PLAY_WINDOW_PREVIEW};
@@ -362,7 +362,7 @@ impl LayoutRetainedProofs {
         owner: EditorApp<LayoutPlayApp>,
         owner_file: "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.layout.layout@1/*#editor",
-        document_schema: "layout.layout",
+        artifact_schema: "layout.layout",
         factory: "LayoutRetainedCommandJobFactory",
         factory_type: LayoutRetainedCommandJobFactory,
         contract: ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
@@ -376,7 +376,7 @@ impl LayoutExportProofs {
         owner: EditorApp<LayoutPlayApp>,
         owner_file: "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.layout.layout@1/*#editor",
-        document_schema: "layout.layout",
+        artifact_schema: "layout.layout",
         factory: "LayoutExportJobFactory",
         factory_type: LayoutExportJobFactory,
         tools: {
@@ -608,7 +608,7 @@ impl ArtifactEditor for LayoutPlayApp {
     /// direct reducer reachability therefore fails closed instead of completing an export inline.
     fn export_media(port: &str, doc: &ArtifactView<'_, LayoutSnapshot>) -> Result<Media, MediaError> {
         match port {
-            "document:out" => {
+            "artifact:out" => {
                 let bytes = store::ArtifactPack::encode_pack(doc.snapshot);
                 Ok(Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, payload: MediaPayload::Structured { schema: crate::LAYOUT_DOCUMENT_SCHEMA.into(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
             }
@@ -644,7 +644,7 @@ impl ArtifactEditor for LayoutPlayApp {
         match body_key {
             LAYOUT_PLAY_BODY_BLUEPRINT => blueprint::render(&mut engine, document, &config, &transient),
             LAYOUT_PLAY_BODY_PREVIEW => preview::render(&mut engine, document, &config, &transient),
-            LAYOUT_PLAY_BODY_DOCUMENT => document_panel::render(document, &config, labels),
+            LAYOUT_PLAY_BODY_ARTIFACT => document_panel::render(document, &config, labels),
             LAYOUT_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels),
             LAYOUT_PLAY_BODY_INSPECTION => inspection_panel::render(document, &config, labels),
             LAYOUT_PLAY_BODY_PREFLIGHT => preflight_panel::render(document, labels),
@@ -677,7 +677,7 @@ impl ArtifactEditor for LayoutPlayApp {
         match body_key {
             LAYOUT_PLAY_BODY_BLUEPRINT => blueprint::render(&mut engine, document, &config, &transient),
             LAYOUT_PLAY_BODY_PREVIEW => preview::render(&mut engine, document, &config, &transient),
-            LAYOUT_PLAY_BODY_DOCUMENT => document_panel::render(document, &config, labels),
+            LAYOUT_PLAY_BODY_ARTIFACT => document_panel::render(document, &config, labels),
             LAYOUT_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels),
             LAYOUT_PLAY_BODY_INSPECTION => inspection_panel::render(document, &config, labels),
             LAYOUT_PLAY_BODY_PREFLIGHT => preflight_panel::render(document, labels),

@@ -16,7 +16,7 @@ async fn document_lists_nodes() {
     // `object_tree_item_includes_primitive_children` below cover the real (still-working)?
     // tree-item builder directly instead.
     let mut app = new_app().await;
-    let node = app.render(CAD_PLAY_BODY_DOCUMENT, None, &ViewModel::default()).await.expect("render").root;
+    let node = app.render(CAD_PLAY_BODY_ARTIFACT, None, &ViewModel::default()).await.expect("render").root;
     let json = serde_json::to_string(&node).unwrap();
     assert!(json.contains("cad-node:"));
 }
@@ -79,7 +79,7 @@ async fn cad_labels_translate_document_tree_panes_in_german() {
     let doc = ArtifactView::new(&scene, &history);
     let config = CadConfig::default();
     let view_state = ViewModel { locale: Locale::De, ..ViewModel::default() };
-    let node = render_direct(&app, CAD_PLAY_BODY_DOCUMENT, &doc, &config, &view_state).expect("CAD UI assembly");
+    let node = render_direct(&app, CAD_PLAY_BODY_ARTIFACT, &doc, &config, &view_state).expect("CAD UI assembly");
     let json = serde_json::to_string(&node).unwrap();
     assert!(json.contains("\"Form\""));
     assert!(json.contains("Gebäude"));

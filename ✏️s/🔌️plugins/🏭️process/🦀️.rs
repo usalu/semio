@@ -34,6 +34,6 @@ pub fn plugin() -> Result<Plugin<ProcessApps>, PluginAssemblyError> {
         .viewer_mutation_roster::<crate::viewer::process3d::Process3dViewer>()
         .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::process3d::artifact_kind().id })
         .execution(ExecutionMode::Isolated)
-        .requests(CapabilityRequest { id: CapabilityId("documents.write".into()), scope: "plugin".into(), reason: "persist process3d machine-assignment edits to the open document".into(), optional: false })
+        .requests(CapabilityRequest { id: CapabilityId("artifacts.write".into()), scope: "plugin".into(), reason: "persist process3d machine-assignment edits to the open document".into(), optional: false })
         .try_build()
 }

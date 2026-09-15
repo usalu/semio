@@ -1107,7 +1107,7 @@
           },
           {
             "code": 8,
-            "id": "document-capacity",
+            "id": "artifact-capacity",
             "verdict": "warning",
             "en": "Fill capacity reached, {0} placed",
             "de": "Füllkapazität erreicht, {0} platziert"

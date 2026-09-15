@@ -30,38 +30,38 @@ fn round_trip(projection: &Generation2dSnapshot, mutation: &Generation2dMutation
 
 #[test]
 fn fixture_ops_ignore_camera() {
-    let before = FlowFixture::default();
+    let before = FlowHostDocument::default();
     let mut after = before.clone();
     after.camera = CameraJson { x: 7.0, y: 8.0, zoom: 2.0 };
-    let operations = generation2d_fixture_operations(&before, &after);
+    let operations = generation2d_host_document_operations(&before, &after);
     assert!(operations.iter().all(|operation| !matches!(operation, Generation2dMutation::UpdateCamera(_))));
 }
 
 #[test]
 fn delete_and_recreate_widget_round_trips() {
     let base = empty_generation2d_snapshot();
-    let removed_id = widget_id(&base.fixture.widgets[0]).to_string();
+    let removed_id = widget_id(&base.host_document.widgets[0]).to_string();
     let after = round_trip(&base, &delete_widget(removed_id.clone()));
-    assert!(!after.fixture.widgets.iter().any(|w| widget_id(w) == removed_id));
+    assert!(!after.host_document.widgets.iter().any(|w| widget_id(w) == removed_id));
 }
 
 #[test]
 fn fixture_ops_capture_widget_creation() {
-    let before = FlowFixture::default();
+    let before = FlowHostDocument::default();
     let mut after = before.clone();
     after.widgets.push(Widget::InputNote { id: "note-1".into(), text: String::new() });
-    let operations = generation2d_fixture_operations(&before, &after);
+    let operations = generation2d_host_document_operations(&before, &after);
     assert!(operations.iter().any(|operation| matches!(operation, Generation2dMutation::CreateWidget(payload) if widget_id(&payload.widget) == "note-1")));
 }
 
 #[test]
 fn fixture_ops_capture_widget_replacement() {
-    let mut before = FlowFixture::default();
+    let mut before = FlowHostDocument::default();
     before.widgets.clear();
     before.widgets.push(Widget::InputNote { id: "note-1".into(), text: "old".into() });
     let mut after = before.clone();
     after.widgets[0] = Widget::InputNote { id: "note-1".into(), text: "new".into() };
-    let operations = generation2d_fixture_operations(&before, &after);
+    let operations = generation2d_host_document_operations(&before, &after);
     assert!(operations.iter().any(|operation| matches!(operation, Generation2dMutation::ReplaceWidget(payload) if widget_id(&payload.widget) == "note-1")));
 }
 
@@ -84,7 +84,7 @@ async fn create_widget_inverse_law() {
 #[semio_framework_async_macros::async_test]
 async fn replace_widget_inverse_law() {
     let base = empty_generation2d_snapshot();
-    let id = widget_id(&base.fixture.widgets[1]).to_string();
+    let id = widget_id(&base.host_document.widgets[1]).to_string();
     let mutation = replace_widget(Widget::InputNote { id, text: "replaced".into() });
     assert_mutation_inverse_law(&base, &mutation).await;
 }
@@ -99,7 +99,7 @@ fn replace_widget_on_unknown_id_is_a_noop_with_no_inverse() {
 #[semio_framework_async_macros::async_test]
 async fn delete_widget_inverse_law() {
     let base = empty_generation2d_snapshot();
-    let id = widget_id(&base.fixture.widgets[1]).to_string();
+    let id = widget_id(&base.host_document.widgets[1]).to_string();
     let mutation = delete_widget(id);
     assert_mutation_inverse_law(&base, &mutation).await;
 }
@@ -124,7 +124,7 @@ async fn connect_synapse_inverse_law() {
 #[semio_framework_async_macros::async_test]
 async fn replace_synapse_inverse_law() {
     let base = empty_generation2d_snapshot();
-    let id = base.fixture.synapses[0].id.clone();
+    let id = base.host_document.synapses[0].id.clone();
     let mutation = replace_synapse(SynapseSpec { id, from: "add".into(), to: "preview".into(), from_port: "sum".into(), to_port: "changed".into() });
     assert_mutation_inverse_law(&base, &mutation).await;
 }
@@ -132,7 +132,7 @@ async fn replace_synapse_inverse_law() {
 #[semio_framework_async_macros::async_test]
 async fn disconnect_synapse_inverse_law() {
     let base = empty_generation2d_snapshot();
-    let id = base.fixture.synapses[0].id.clone();
+    let id = base.host_document.synapses[0].id.clone();
     let mutation = disconnect_synapse(id);
     assert_mutation_inverse_law(&base, &mutation).await;
 }
@@ -147,8 +147,8 @@ fn disconnect_synapse_on_unknown_id_is_a_noop_with_no_inverse() {
 #[semio_framework_async_macros::async_test]
 async fn move_widget_inverse_law_over_prior_layout() {
     let mut base = Generation2dSnapshotRead::new(empty_generation2d_snapshot());
-    let id = widget_id(&base.fixture.widgets[0]).to_string();
-    base.fixture.layout.insert(id.clone(), WidgetLayout { x: 1.0, y: 1.0 });
+    let id = widget_id(&base.host_document.widgets[0]).to_string();
+    base.host_document.layout.insert(id.clone(), WidgetLayout { x: 1.0, y: 1.0 });
     let mutation = move_widget(id, WidgetLayout { x: 9.0, y: 9.0 });
     assert_mutation_inverse_law_cold(&*base, &mutation, retire_snapshot, retire_diff).await;
 }
@@ -156,16 +156,16 @@ async fn move_widget_inverse_law_over_prior_layout() {
 #[test]
 fn move_widget_creating_a_layout_entry_clears_on_undo() {
     let base = Generation2dSnapshotRead::new(empty_generation2d_snapshot());
-    assert!(base.fixture.layout.is_empty());
+    assert!(base.host_document.layout.is_empty());
     let mutation = move_widget("slider".into(), WidgetLayout { x: 2.0, y: 2.0 });
     let after = round_trip(&base, &mutation);
-    assert!(after.fixture.layout.contains_key("slider"));
+    assert!(after.host_document.layout.contains_key("slider"));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn clear_widget_layout_inverse_law() {
     let mut base = Generation2dSnapshotRead::new(empty_generation2d_snapshot());
-    base.fixture.layout.insert("slider".into(), WidgetLayout { x: 4.0, y: 5.0 });
+    base.host_document.layout.insert("slider".into(), WidgetLayout { x: 4.0, y: 5.0 });
     let mutation = clear_widget_layout("slider".into());
     assert_mutation_inverse_law_cold(&*base, &mutation, retire_snapshot, retire_diff).await;
 }
@@ -239,11 +239,11 @@ fn fixture_ops_widget_id_matches_every_widget_kind() {
         Widget::OutputExport { id: "w-export".into(), format: "svg".into() },
         Widget::Cluster { id: "w-cluster".into(), name: String::new(), tree: Default::default(), flow: Default::default() },
     ];
-    let mut before = FlowFixture::default();
+    let mut before = FlowHostDocument::default();
     before.widgets.clear();
     let mut after = before.clone();
     after.widgets = widgets.clone();
-    let operations = generation2d_fixture_operations(&before, &after);
+    let operations = generation2d_host_document_operations(&before, &after);
     for widget in &widgets {
         let id = widget_id(widget);
         assert!(operations.iter().any(|op| matches!(op, Generation2dMutation::CreateWidget(payload) if widget_id(&payload.widget) == id)));

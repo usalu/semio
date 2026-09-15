@@ -159,7 +159,7 @@ pub struct SpaceArtifactCreationDialectV1 {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct SpaceArtifactCreationReadyV1 {
-    pub document_id: String,
+    pub artifact_id: String,
     pub kind_id: String,
     pub artifact_schema: String,
     pub parent_dialect: SpaceArtifactCreationDialectV1,
@@ -168,7 +168,7 @@ pub struct SpaceArtifactCreationReadyV1 {
 impl SpaceArtifactCreationReadyV1 {
     /// 🧷️ Checks the minted coordinate and exact kind/dialect relationship.
     pub fn validate(&self) -> bool {
-        self.document_id.strip_prefix("artifact-").is_some_and(request_id)
+        self.artifact_id.strip_prefix("artifact-").is_some_and(request_id)
             && identity(&self.kind_id)
             && identity(&self.artifact_schema)
             && self.parent_dialect.artifact_kind == self.kind_id

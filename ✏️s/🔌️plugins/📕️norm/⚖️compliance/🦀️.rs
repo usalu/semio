@@ -550,12 +550,12 @@ pub struct NormHost<F: NormFamily> {
 
 impl<F: NormFamily> Default for NormHost<F> {
     fn default() -> Self {
-        Self::from_document(F::Document::default())
+        Self::from_artifact(F::Document::default())
     }
 }
 
 impl<F: NormFamily> NormHost<F> {
-    pub fn from_document(document: F::Document) -> Self {
+    pub fn from_artifact(document: F::Document) -> Self {
         let report = F::evaluate(&document);
         Self { document, report }
     }

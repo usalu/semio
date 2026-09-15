@@ -669,13 +669,27 @@ pub fn world_vortices_json(fixture: &Puzzle3dFixture, runtime: &Puzzle3dRuntime,
     serde_json::to_string(&records).unwrap_or_else(|_| "[]".into())
 }
 
+/// 🧲️ Attraction segments, resolving both ends through ONE vortex index built per call.
+///
+/// ⏱️ Resolving each end with `resolve_vortex_world_position` walked every vortex of every object and allocated
+/// its full id per comparison — attractions × vortices, and a fill run adds both with every placement: 8 ms of a
+/// 9 ms world render at 96 placements (unoptimized native), re-paid by every refresh of the live run. The index
+/// keeps the resolver's first-match order (`or_insert`), so a full id two vortices spell alike still names the
+/// first one.
 pub fn world_attractions_json(fixture: &Puzzle3dFixture) -> String {
+    let mut vortices = std::collections::HashMap::with_capacity(fixture.objects.iter().map(|object| object.vortices.len()).sum());
+    for object in &fixture.objects {
+        for vortex in &object.vortices {
+            vortices.entry(crate::editor::puzzle3d::puzzle3d_vortex_full_id(&object.id, &vortex.id)).or_insert((object, vortex));
+        }
+    }
+    let position = |full_id: &str| vortices.get(full_id).map(|(object, vortex)| crate::editor::puzzle3d::world_vortex_position(object, vortex));
     let records: Vec<Value> = fixture
         .attractions
         .iter()
         .filter_map(|attraction| {
-            let from = crate::editor::puzzle3d::resolve_vortex_world_position(fixture, &attraction.attracting)?;
-            let to = crate::editor::puzzle3d::resolve_vortex_world_position(fixture, &attraction.attracted)?;
+            let from = position(&attraction.attracting)?;
+            let to = position(&attraction.attracted)?;
             Some(json!({
                 "id": attraction.id,
                 "from": from,

@@ -29,9 +29,23 @@ fn capability(id: &str, scopes: &[&str], approval: ApprovalMode, destructive: bo
 #[test]
 fn artifact_write_expands_to_documents_write_and_jobs_spawn() {
     let principal = AgentPrincipal::from_scope_names("agent:local", "local", &["artifact.write".to_string()], None);
-    assert!(principal.grants(&kernel::CapabilityId("documents.write".into())));
+    assert!(principal.grants(&kernel::CapabilityId("artifacts.write".into())));
     assert!(principal.grants(&kernel::CapabilityId("jobs.spawn".into())));
     assert!(!principal.grants(&kernel::CapabilityId("shell.raw".into())));
+}
+
+#[test]
+fn legacy_documents_read_aliases_expand_to_artifacts_read() {
+    let principal = AgentPrincipal::from_scope_names("agent:local", "local", &["documents.read".to_string()], None);
+    assert!(principal.grants(&kernel::CapabilityId("artifacts.read".into())));
+    assert!(!principal.grants(&kernel::CapabilityId("artifacts.write".into())));
+}
+
+#[test]
+fn legacy_documents_write_aliases_expand_like_artifact_write() {
+    let principal = AgentPrincipal::from_scope_names("agent:local", "local", &["documents.write".to_string()], None);
+    assert!(principal.grants(&kernel::CapabilityId("artifacts.write".into())));
+    assert!(principal.grants(&kernel::CapabilityId("jobs.spawn".into())));
 }
 
 #[test]
@@ -42,8 +56,8 @@ fn ui_raw_control_expands_to_shell_raw() {
 
 #[test]
 fn an_unknown_alias_passes_through_as_a_literal_capability_id() {
-    let principal = AgentPrincipal::from_scope_names("agent:local", "local", &["documents.write".to_string()], None);
-    assert!(principal.grants(&kernel::CapabilityId("documents.write".into())));
+    let principal = AgentPrincipal::from_scope_names("agent:local", "local", &["artifacts.write".to_string()], None);
+    assert!(principal.grants(&kernel::CapabilityId("artifacts.write".into())));
 }
 
 #[test]
@@ -59,7 +73,7 @@ fn wildcard_family_grant_covers_any_concrete_member() {
 fn authorize_scopes_denies_when_a_required_scope_is_missing() {
     let engine = PolicyEngine::new(Arc::new(HandleTable::new()), AutoApprovePolicy::Never);
     let principal = AgentPrincipal::from_scope_names("agent:local", "local", &[], None);
-    let capability = capability("cad.editor.translateSelection", &["documents.write"], ApprovalMode::Never, false);
+    let capability = capability("cad.editor.translateSelection", &["artifacts.write"], ApprovalMode::Never, false);
     let error = engine.authorize_scopes(&principal, &capability).unwrap_err();
     assert_eq!(error.code, GatewayErrorCode::PermissionDenied);
 }
@@ -68,7 +82,7 @@ fn authorize_scopes_denies_when_a_required_scope_is_missing() {
 fn authorize_scopes_allows_when_every_scope_is_granted() {
     let engine = PolicyEngine::new(Arc::new(HandleTable::new()), AutoApprovePolicy::Never);
     let principal = AgentPrincipal::from_scope_names("agent:local", "local", &["artifact.write".to_string()], None);
-    let capability = capability("cad.editor.translateSelection", &["documents.write"], ApprovalMode::Never, false);
+    let capability = capability("cad.editor.translateSelection", &["artifacts.write"], ApprovalMode::Never, false);
     assert!(engine.authorize_scopes(&principal, &capability).is_ok());
 }
 //#endregion 🔖️ScopeEnforcement

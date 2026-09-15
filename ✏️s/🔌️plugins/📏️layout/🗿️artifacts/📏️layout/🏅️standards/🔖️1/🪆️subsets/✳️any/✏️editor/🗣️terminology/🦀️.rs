@@ -8,7 +8,7 @@ use semio_framework_plugin::{Label, LabelText};
 semio_framework_plugin::app_labels! {
     /// 🗣️ Complete UI label set for the layout app; one field per label makes every locale combination compile-checked.
     pub struct LayoutLabels {
-        document: native_en "Document", native_de "Dokument", reuse_en "Document", reuse_de "Dokument";
+        artifact: native_en "Artifact", native_de "Artefakt", reuse_en "Artifact", reuse_de "Artefakt";
         spreads: native_en "Spreads", native_de "Doppelseiten", reuse_en "Spreads", reuse_de "Doppelseiten";
         frames: native_en "Frames", native_de "Rahmen", reuse_en "Frames", reuse_de "Rahmen";
         parent_pages: native_en "Parent Pages", native_de "Übergeordnete Seiten", reuse_en "Parent Pages", reuse_de "Übergeordnete Seiten";

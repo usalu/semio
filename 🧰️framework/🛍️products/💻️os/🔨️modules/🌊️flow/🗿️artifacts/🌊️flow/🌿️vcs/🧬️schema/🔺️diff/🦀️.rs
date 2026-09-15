@@ -1,5 +1,5 @@
 //! 🧵️ Ordered Flow structural changes corresponding to the adjacent JSON schema.
-use super::{FlowCollectionDelta, FlowFixture, FlowLayoutEntry, FlowOwner, FlowRetirement, MutationApplyResult, MutationDiff, SynapseSpec, Widget};
+use super::{FlowCollectionDelta, FlowHostDocument, FlowLayoutEntry, FlowOwner, FlowRetirement, MutationApplyResult, MutationDiff, SynapseSpec, Widget};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🧬️Schema
@@ -10,7 +10,7 @@ pub enum FlowDelta {
     Widgets(FlowCollectionDelta<Widget>),
     Synapses(FlowCollectionDelta<SynapseSpec>),
     Layout(Vec<FlowLayoutEntry>),
-    Fixture(FlowFixture),
+    HostDocument(FlowHostDocument),
 }
 
 /// 🧶️ Sequential structural changes compose by concatenation, never by semantic replay.
@@ -45,7 +45,7 @@ impl FlowDelta {
                 frontier.push(FlowOwner::Specs(specs));
             }
             Self::Layout(entries) => frontier.push(FlowOwner::Layout(entries)),
-            Self::Fixture(fixture) => frontier.push(FlowOwner::Fixture(fixture)),
+            Self::HostDocument(fixture) => frontier.push(FlowOwner::HostDocument(fixture)),
         }
     }
 }
@@ -56,8 +56,8 @@ impl FlowDelta {
 mod projection;
 use projection::FlowProjection;
 
-impl MutationDiff<FlowFixture> for FlowDiff {
-    fn apply(&self, snapshot: &FlowFixture) -> MutationApplyResult<FlowFixture> {
+impl MutationDiff<FlowHostDocument> for FlowDiff {
+    fn apply(&self, snapshot: &FlowHostDocument) -> MutationApplyResult<FlowHostDocument> {
         let mut projection = FlowProjection::new(snapshot);
         for delta in &self.deltas {
             projection.apply(delta)?;
@@ -75,7 +75,7 @@ impl MutationDiff<FlowFixture> for FlowDiff {
         frontier.retire_cold();
     }
 
-    fn retire_projection(projection: FlowFixture) { projection.retire_cold(); }
+    fn retire_projection(projection: FlowHostDocument) { projection.retire_cold(); }
 }
 //#endregion ▶️Application
 

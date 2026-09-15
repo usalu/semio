@@ -7,8 +7,6 @@ async fn package_descriptor_advertises_metadata_only_cold_inference_routes() {
         artifact_kind: "s.describe.route",
         artifact_schema: "s.describe.route",
         artifact_schema_version: 1,
-        document_schema: "s.describe.route",
-        document_schema_version: 1,
         inference_schema: "s.describe.route.solve",
         inference_schema_version: 1,
         algorithm_version: 1,

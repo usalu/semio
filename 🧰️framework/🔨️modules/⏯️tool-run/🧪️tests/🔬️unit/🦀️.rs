@@ -420,18 +420,18 @@ fn definition_round_trips_through_serde_and_value_and_validates() {
     assert_eq!(invalid.validate(), Err(ToolRunDefinitionError::NoStages));
 }
 
-/// ⚖️ LAW: every `settingsPointers` row resolves to its fixture value over the fixture document, exactly as the
+/// ⚖️ LAW: every `settingsPointers` row resolves to its fixture value over the fixture artifact, exactly as the
 /// `serde_json` RFC 6901 implementation (`Value::pointer`, the oracle) resolves it; malformed pointers name nothing.
 #[test]
 fn settings_pointers_resolve_like_the_rfc_6901_oracle() {
     let law = fixture(LIFECYCLE);
     let cases = &law["settingsPointers"];
-    let document = dsl::DslValue::from(cases["document"].clone());
+    let document = dsl::DslValue::from(cases["artifact"].clone());
     for row in cases["rows"].as_array().expect("rows") {
         let pointer = text(&row["pointer"]);
         let expected = (!row["resolves"].is_null()).then(|| dsl::DslValue::from(row["resolves"].clone()));
         assert_eq!(tool_run_pointer_value(&document, pointer).cloned(), expected, "{pointer}");
-        assert_eq!(cases["document"].pointer(pointer).cloned().map(dsl::DslValue::from), expected, "{pointer}: the oracle agrees");
+        assert_eq!(cases["artifact"].pointer(pointer).cloned().map(dsl::DslValue::from), expected, "{pointer}: the oracle agrees");
     }
     for pointer in cases["malformed"].as_array().expect("malformed").iter().map(text) {
         assert_eq!(tool_run_pointer_tokens(pointer), None, "{pointer}");

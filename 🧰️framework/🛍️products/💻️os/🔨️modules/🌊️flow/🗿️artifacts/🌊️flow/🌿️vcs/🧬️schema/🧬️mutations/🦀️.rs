@@ -1,5 +1,5 @@
 //! 🧬️ Transparent Flow direct-leaf dispatch and generic codec surfaces.
-use super::{FlowFixture, FlowDiff};
+use super::{FlowHostDocument, FlowDiff};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🧩️Leaves
@@ -21,15 +21,15 @@ pub use move_synapse::MoveSynapse;
 pub use change_synapse::ChangeSynapse;
 #[path = "📐️change-layout/🦀️.rs"] mod change_layout;
 pub use change_layout::ChangeLayout;
-#[path = "♻️replace-flow-fixture/🦀️.rs"] mod replace_flow_fixture;
-pub use replace_flow_fixture::ReplaceFlowFixture;
+#[path = "♻️replace-flow-host-document/🦀️.rs"] mod replace_flow_host_document;
+pub use replace_flow_host_document::ReplaceFlowHostDocument;
 //#endregion 🧩️Leaves
 
 //#region 🧬️Aggregate
 /// 🔮️ First-party Flow mutation wire aggregate.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::Mutations, crate::os_dsl::DslOps)]
 #[value(tag = "operation", rename_all = "camelCase", deny_unknown_fields)]
-#[mutations(snapshot = FlowFixture, diff = FlowDiff, schema = "flow.fixture")]
+#[mutations(snapshot = FlowHostDocument, diff = FlowDiff, schema = "flow.host_document")]
 pub enum FlowMutation {
     AddWidget(AddWidget),
     RemoveWidget(RemoveWidget),
@@ -40,7 +40,7 @@ pub enum FlowMutation {
     MoveSynapse(MoveSynapse),
     ChangeSynapse(ChangeSynapse),
     ChangeLayout(ChangeLayout),
-    ReplaceFlowFixture(ReplaceFlowFixture),
+    ReplaceFlowHostDocument(ReplaceFlowHostDocument),
 }
 //#endregion 🧬️Aggregate
 

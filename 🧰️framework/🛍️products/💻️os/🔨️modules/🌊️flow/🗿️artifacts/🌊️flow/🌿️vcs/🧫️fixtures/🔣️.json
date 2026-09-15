@@ -124,66 +124,19 @@
       "operation": "changeLayout"
     },
     {
-      "folder": "♻️replace-flow-fixture",
-      "name": "ReplaceFlowFixture",
+      "folder": "♻️replace-flow-host-document",
+      "name": "ReplaceFlowHostDocument",
       "verb": "replace",
-      "entity": "flow-fixture",
-      "record": "ReplacedFlowFixture",
+      "entity": "flow-host-document",
+      "record": "ReplacedFlowHostDocument",
       "required": [
-        "fixture"
+        "hostDocument"
       ],
       "tag": 9,
-      "kind": "replace-flow-fixture",
-      "operation": "replaceFlowFixture"
+      "kind": "replace-flow-host-document",
+      "operation": "replaceFlowHostDocument"
     }
   ],
-  "fixture": {
-    "schema": "flow.fixture",
-    "camera": {
-      "x": 0,
-      "y": 0,
-      "zoom": 1
-    },
-    "widgets": [
-      {
-        "kind": "inputNote",
-        "id": "a",
-        "text": "A"
-      },
-      {
-        "kind": "inputNote",
-        "id": "b",
-        "text": "B"
-      },
-      {
-        "kind": "inputNote",
-        "id": "c",
-        "text": "C"
-      }
-    ],
-    "synapses": [
-      {
-        "id": "s1",
-        "from": "a",
-        "to": "b",
-        "fromPort": "out",
-        "toPort": "in"
-      },
-      {
-        "id": "s2",
-        "from": "b",
-        "to": "c",
-        "fromPort": "out",
-        "toPort": "in"
-      }
-    ],
-    "layout": {
-      "a": {
-        "x": 1,
-        "y": 2
-      }
-    }
-  },
   "widgets": [
     {
       "kind": "neuron",
@@ -199,10 +152,10 @@
           "answer": 42
         }
       },
-      "input_ports": [
+      "inputPorts": [
         "a"
       ],
-      "output_ports": [
+      "outputPorts": [
         "sum"
       ],
       "preview": true
@@ -383,7 +336,7 @@
       ]
     },
     {
-      "fixture": {
+      "hostDocument": {
         "schema": "flow.import",
         "camera": {
           "x": 12,
@@ -621,5 +574,52 @@
       },
       "error": true
     }
-  ]
+  ],
+  "hostDocument": {
+    "schema": "flow.hostDocument",
+    "camera": {
+      "x": 0,
+      "y": 0,
+      "zoom": 1
+    },
+    "widgets": [
+      {
+        "kind": "inputNote",
+        "id": "a",
+        "text": "A"
+      },
+      {
+        "kind": "inputNote",
+        "id": "b",
+        "text": "B"
+      },
+      {
+        "kind": "inputNote",
+        "id": "c",
+        "text": "C"
+      }
+    ],
+    "synapses": [
+      {
+        "id": "s1",
+        "from": "a",
+        "to": "b",
+        "fromPort": "out",
+        "toPort": "in"
+      },
+      {
+        "id": "s2",
+        "from": "b",
+        "to": "c",
+        "fromPort": "out",
+        "toPort": "in"
+      }
+    ],
+    "layout": {
+      "a": {
+        "x": 1,
+        "y": 2
+      }
+    }
+  }
 }

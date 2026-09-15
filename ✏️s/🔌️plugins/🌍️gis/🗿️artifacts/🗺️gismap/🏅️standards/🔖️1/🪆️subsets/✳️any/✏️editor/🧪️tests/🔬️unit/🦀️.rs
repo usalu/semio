@@ -352,7 +352,7 @@ async fn the_manifest_stitches_every_taxonomy_node() {
     assert_eq!(definition.window_kinds.len(), 1);
     // 🧷️ The framework injects its own panel tabs on top of the app's three, so assert the app's
     // own tabs are stitched in rather than pinning a total.
-    for body_key in [document_panel::GIS2D_PLAY_BODY_DOCUMENT, catalogue_panel::GIS2D_PLAY_BODY_CATALOGUE, inspection_panel::GIS2D_PLAY_BODY_INSPECTION] {
+    for body_key in [document_panel::GIS2D_PLAY_BODY_ARTIFACT, catalogue_panel::GIS2D_PLAY_BODY_CATALOGUE, inspection_panel::GIS2D_PLAY_BODY_INSPECTION] {
         assert!(definition.panel_tabs.iter().any(|tab| tab.body_key.as_deref() == Some(body_key)), "panel tab {body_key} is stitched into the manifest");
     }
     assert!(definition.artifact_kinds.iter().any(|kind| kind.id == crate::GISMAP_DIALECT.artifact_kind));
@@ -411,7 +411,7 @@ async fn media_ports_declare_features_in_and_map_out() {
 #[semio_framework_async_macros::async_test]
 async fn gis2d_io_declares_the_features_in_and_map_out_ports() {
     let io = gis2d_io();
-    assert_eq!(io.document_schema, GIS_MAP_SCHEMA);
+    assert_eq!(io.artifact_schema, GIS_MAP_SCHEMA);
     assert_eq!(io.artifact.id, crate::GISMAP_DIALECT.artifact_kind);
     let ports = io.all_ports().await;
     assert!(ports.iter().any(|port| port.id == "features:in" && port.direction == semio_framework_plugin::MediaPortDirection::In));

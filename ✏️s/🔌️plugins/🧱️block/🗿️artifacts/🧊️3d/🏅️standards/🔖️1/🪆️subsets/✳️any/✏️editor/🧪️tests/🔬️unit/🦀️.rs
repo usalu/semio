@@ -331,7 +331,7 @@ async fn the_manifest_stitches_every_taxonomy_node() {
     let definition = create_block3d_app();
     assert_eq!(definition.modes.len(), 1);
     assert_eq!(definition.window_kinds.len(), 1);
-    for body_key in [document_panel::BLOCK3D_BODY_DOCUMENT, inspection_panel::BLOCK3D_BODY_INSPECTOR] {
+    for body_key in [document_panel::BLOCK3D_BODY_ARTIFACT, inspection_panel::BLOCK3D_BODY_INSPECTOR] {
         assert!(definition.panel_tabs.iter().any(|tab| tab.body_key.as_deref() == Some(body_key)), "panel tab {body_key} is stitched into the manifest");
     }
     assert!(definition.artifact_kinds.iter().any(|kind| kind.id == "kit.catalog"));
@@ -376,10 +376,10 @@ async fn interaction_topology_covers_every_representation_and_vortex() {
 #[semio_framework_async_macros::async_test]
 async fn block3d_io_declares_the_catalog_out_port() {
     let io = block3d_io();
-    assert_eq!(io.document_schema, BLOCK_3D_SCHEMA);
+    assert_eq!(io.artifact_schema, BLOCK_3D_SCHEMA);
     let ports = io.all_ports().await;
-    assert!(ports.iter().any(|port| port.id == "document:in"));
-    assert!(ports.iter().any(|port| port.id == "document:out"));
+    assert!(ports.iter().any(|port| port.id == "artifact:in"));
+    assert!(ports.iter().any(|port| port.id == "artifact:out"));
     let catalog = ports.iter().find(|port| port.id == "catalog:out").expect("catalog:out port declared");
     assert_eq!(catalog.kind_id.as_deref(), Some("kit.catalog"));
     assert_eq!(catalog.direction, semio_framework_plugin::MediaPortDirection::Out);
@@ -389,7 +389,7 @@ async fn block3d_io_declares_the_catalog_out_port() {
 #[semio_framework_async_macros::async_test]
 async fn renders_document_tree_and_inspector() {
     let mut app: Block3dApp = new_app().await;
-    let json = context::render(&mut app, document_panel::BLOCK3D_BODY_DOCUMENT).await;
+    let json = context::render(&mut app, document_panel::BLOCK3D_BODY_ARTIFACT).await;
     assert!(json.contains("Representations"));
     let inspector = context::render(&mut app, inspection_panel::BLOCK3D_BODY_INSPECTOR).await;
     assert!(inspector.contains("\"type\":\"tree\""));

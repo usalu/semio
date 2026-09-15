@@ -1,4 +1,4 @@
-use super::super::{DagDelta, DagDiff, DagFixtureEdge, DagMutation, DagSnapshot, DisconnectNodes, EdgeRouteStyle, PropertyBag};
+use super::super::{DagDelta, DagDiff, DagHostDocumentEdge, DagMutation, DagSnapshot, DisconnectNodes, EdgeRouteStyle, PropertyBag};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord, dsl::MutationLeaf)]
@@ -18,7 +18,7 @@ impl protocol::MutationKind<DagSnapshot, DagMutation> for ConnectNodes {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "connect", entity: "nodes", kind: "connect-nodes", record: "ConnectedNodes" };
     fn diff(&self, _base: &DagSnapshot) -> protocol::MutationOutcome<DagDiff> {
         protocol::MutationOutcome::new(DagDiff::from(DagDelta {
-            connected_edge: Some(DagFixtureEdge { id: self.id.clone(), source: self.source.clone(), target: self.target.clone(), route_style: self.route_style, properties: self.properties.clone() }),
+            connected_edge: Some(DagHostDocumentEdge { id: self.id.clone(), source: self.source.clone(), target: self.target.clone(), route_style: self.route_style, properties: self.properties.clone() }),
             connected_edge_at: Some(self.index),
             ..Default::default()
         }))

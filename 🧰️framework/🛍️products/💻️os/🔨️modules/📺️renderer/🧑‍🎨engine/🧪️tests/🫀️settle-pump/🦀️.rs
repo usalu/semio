@@ -193,10 +193,38 @@ fn an_input_gesture_declares_the_chain_and_never_converges_it_inside_its_own_dis
 }
 
 #[test]
+fn a_gesture_runs_its_user_activation_bound_work_before_it_returns() {
+    let fixture = fixture();
+    let rows = fixture["gestureBoundRows"].as_array().expect("the fixture declares its gesture-bound rows");
+    assert!(rows.len() >= 3, "every door a user-activation-bound request can arrive through is covered");
+    for row in rows {
+        let id = row["id"].as_str().expect("every row is named");
+        let source = match row["source"].as_str().expect("source") {
+            "shell" => SHELL_SOURCE,
+            "renderer" => RENDERER_SOURCE,
+            other => panic!("{id}: the fixture names source {other}, which this suite does not read"),
+        };
+        let signature = row["owns"].as_str().expect("owns");
+        let after = source.split(signature).nth(1).unwrap_or_else(|| panic!("{id}: {signature} is declared"));
+        let body = after.split("\n    }\n").next().unwrap_or_else(|| panic!("{id}: {signature} has a body"));
+        let runs = row["runs"].as_str().expect("runs");
+        assert!(body.contains(runs), "{id}: {signature} must run {runs} — a picker handed to the settle pump has lost the gesture that was allowed to open it");
+    }
+    assert!(
+        SHELL_SOURCE.contains("async fn drain_gesture_bound_work(&mut self) {"),
+        "the shell owns one narrow drain for user-activation-bound work"
+    );
+    let drain = SHELL_SOURCE.split("async fn drain_gesture_bound_work(&mut self) {").nth(1).expect("the drain has a body");
+    let drain = drain.split("\n    }\n").next().expect("the drain has a body");
+    assert!(drain.contains("pending_file_opens"), "the drain takes the parked file opens");
+    assert!(!drain.contains("deferred_actions"), "and NOTHING else — every other kind of armed work belongs to the pump");
+}
+
+#[test]
 fn every_declared_law_is_answered_here() {
     let fixture = fixture();
     let laws = fixture["laws"].as_array().expect("the fixture declares its laws");
-    assert!(laws.len() >= 10, "the oracle declares every law this suite answers");
+    assert!(laws.len() >= 12, "the oracle declares every law this suite answers");
     for consumer in fixture["consumers"].as_array().expect("the fixture names its consumers") {
         let path = consumer.as_str().expect("every consumer is a path");
         assert!(path.ends_with("🦀️.rs") || path.ends_with("🟦️.ts"), "the oracle is answered by one implementation per language");

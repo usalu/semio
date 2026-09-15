@@ -11,7 +11,7 @@ use framework_schema::ArtifactSchema;
 #[artifact_schema(id = "s.norm.en1993")]
 pub struct En1993Diff {
     #[state(artifact)]
-    pub artifact: Option<Box<crate::document_schema::En1993Artifact>>,
+    pub artifact: Option<Box<crate::artifact_schema::En1993Artifact>>,
     #[state(artifact)]
     pub annex: Option<crate::document::AnnexChoice>,
     #[state(artifact)]

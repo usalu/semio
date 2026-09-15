@@ -1,6 +1,7 @@
 //! 🧊️ `duplicate-selection` command.
 
 use crate::editor::puzzle3d::next_object_id;
+use crate::editor::puzzle3d::puzzle3d_next_object_label;
 use crate::editor::puzzle3d::resolve_puzzle3d_attractions;
 use crate::editor::puzzle3d::Puzzle3dActionCtx;
 use crate::editor::puzzle3d::Puzzle3dObject;
@@ -26,6 +27,9 @@ pub fn duplicate_selection(ctx: &mut Puzzle3dActionCtx<'_>) {
             clone.id = next_object_id();
             clone.origin[0] += 0.5;
             clone.origin[1] += 0.5;
+            if let Some(kind) = clone.object_kind.as_deref() {
+                clone.label = Some(puzzle3d_next_object_label(&ctx.scene.fixture.objects, &ctx.scene.fixture, kind));
+            }
             clone
         })
         .collect();

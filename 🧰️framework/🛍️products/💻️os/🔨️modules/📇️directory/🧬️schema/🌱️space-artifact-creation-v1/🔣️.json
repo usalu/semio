@@ -108,7 +108,7 @@
         "expectedCatalogGenerationId": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
         "kindId": "s.gis.map",
         "name": "Collaborative Map",
-        "documentId": "chosen"
+        "artifactId": "chosen"
       },
       "accepted": false
     },
@@ -237,7 +237,7 @@
         "catalogGenerationId": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
         "phase": "ready",
         "ready": {
-          "documentId": "artifact-11223344556677889900aabbccddeeff",
+          "artifactId": "artifact-11223344556677889900aabbccddeeff",
           "kindId": "s.gis.map",
           "artifactSchema": "gis.map",
           "parentDialect": {
@@ -269,7 +269,7 @@
         "catalogGenerationId": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
         "phase": "accepted",
         "ready": {
-          "documentId": "artifact-11223344556677889900aabbccddeeff",
+          "artifactId": "artifact-11223344556677889900aabbccddeeff",
           "kindId": "s.gis.map",
           "artifactSchema": "gis.map",
           "parentDialect": {
@@ -301,7 +301,7 @@
         "catalogGenerationId": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
         "phase": "preparing",
         "ready": {
-          "documentId": "artifact-11223344556677889900aabbccddeeff",
+          "artifactId": "artifact-11223344556677889900aabbccddeeff",
           "kindId": "s.gis.map",
           "artifactSchema": "gis.map",
           "parentDialect": {
@@ -333,7 +333,7 @@
         "catalogGenerationId": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
         "phase": "indeterminate",
         "ready": {
-          "documentId": "artifact-11223344556677889900aabbccddeeff",
+          "artifactId": "artifact-11223344556677889900aabbccddeeff",
           "kindId": "s.gis.map",
           "artifactSchema": "gis.map",
           "parentDialect": {
@@ -365,7 +365,7 @@
         "catalogGenerationId": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
         "phase": "failed",
         "ready": {
-          "documentId": "artifact-11223344556677889900aabbccddeeff",
+          "artifactId": "artifact-11223344556677889900aabbccddeeff",
           "kindId": "s.gis.map",
           "artifactSchema": "gis.map",
           "parentDialect": {
@@ -397,7 +397,7 @@
         "catalogGenerationId": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
         "phase": "cancelled",
         "ready": {
-          "documentId": "artifact-11223344556677889900aabbccddeeff",
+          "artifactId": "artifact-11223344556677889900aabbccddeeff",
           "kindId": "s.gis.map",
           "artifactSchema": "gis.map",
           "parentDialect": {
@@ -429,7 +429,7 @@
         "catalogGenerationId": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
         "phase": "ready",
         "ready": {
-          "documentId": "artifact-11223344556677889900aabbccddeeff",
+          "artifactId": "artifact-11223344556677889900aabbccddeeff",
           "kindId": "s.gis.map",
           "artifactSchema": "gis.map",
           "parentDialect": {
@@ -449,7 +449,7 @@
         "spaceId": "space-fixture",
         "phase": "ready",
         "ready": {
-          "documentId": "artifact-11223344556677889900aabbccddeeff",
+          "artifactId": "artifact-11223344556677889900aabbccddeeff",
           "kindId": "s.gis.map",
           "artifactSchema": "gis.map",
           "parentDialect": {
@@ -470,7 +470,7 @@
         "catalogGenerationId": "0000000000000000000000000000000000000000000000000000000000000000",
         "phase": "ready",
         "ready": {
-          "documentId": "artifact-11223344556677889900aabbccddeeff",
+          "artifactId": "artifact-11223344556677889900aabbccddeeff",
           "kindId": "s.gis.map",
           "artifactSchema": "gis.map",
           "parentDialect": {
@@ -491,7 +491,7 @@
         "catalogGenerationId": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
         "phase": "ready",
         "ready": {
-          "documentId": "artifact-11223344556677889900aabbccddeeff",
+          "artifactId": "artifact-11223344556677889900aabbccddeeff",
           "kindId": "s.gis.map",
           "artifactSchema": "gis.map",
           "parentDialect": {
@@ -512,7 +512,7 @@
         "catalogGenerationId": 123,
         "phase": "ready",
         "ready": {
-          "documentId": "artifact-11223344556677889900aabbccddeeff",
+          "artifactId": "artifact-11223344556677889900aabbccddeeff",
           "kindId": "s.gis.map",
           "artifactSchema": "gis.map",
           "parentDialect": {
@@ -533,7 +533,7 @@
         "catalogGenerationId": null,
         "phase": "ready",
         "ready": {
-          "documentId": "artifact-11223344556677889900aabbccddeeff",
+          "artifactId": "artifact-11223344556677889900aabbccddeeff",
           "kindId": "s.gis.map",
           "artifactSchema": "gis.map",
           "parentDialect": {
@@ -556,7 +556,7 @@
         ],
         "phase": "ready",
         "ready": {
-          "documentId": "artifact-11223344556677889900aabbccddeeff",
+          "artifactId": "artifact-11223344556677889900aabbccddeeff",
           "kindId": "s.gis.map",
           "artifactSchema": "gis.map",
           "parentDialect": {
@@ -754,25 +754,25 @@
     {
       "id": "exact-status",
       "type": "status",
-      "source": "{\"schema\":\"semio.hub.space-artifact-creation-status/v1\",\"requestId\":\"1234567890abcdef1234567890abcdef\",\"spaceId\":\"space-fixture\",\"catalogGenerationId\":\"1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef\",\"phase\":\"ready\",\"ready\":{\"documentId\":\"artifact-11223344556677889900aabbccddeeff\",\"kindId\":\"s.gis.map\",\"artifactSchema\":\"gis.map\",\"parentDialect\":{\"artifactKind\":\"s.gis.map\",\"standard\":\"1\",\"subset\":\"any\"}}}",
+      "source": "{\"schema\":\"semio.hub.space-artifact-creation-status/v1\",\"requestId\":\"1234567890abcdef1234567890abcdef\",\"spaceId\":\"space-fixture\",\"catalogGenerationId\":\"1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef\",\"phase\":\"ready\",\"ready\":{\"artifactId\":\"artifact-11223344556677889900aabbccddeeff\",\"kindId\":\"s.gis.map\",\"artifactSchema\":\"gis.map\",\"parentDialect\":{\"artifactKind\":\"s.gis.map\",\"standard\":\"1\",\"subset\":\"any\"}}}",
       "accepted": true
     },
     {
       "id": "reordered-status",
       "type": "status",
-      "source": "{\"requestId\":\"1234567890abcdef1234567890abcdef\",\"schema\":\"semio.hub.space-artifact-creation-status/v1\",\"spaceId\":\"space-fixture\",\"catalogGenerationId\":\"1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef\",\"phase\":\"ready\",\"ready\":{\"documentId\":\"artifact-11223344556677889900aabbccddeeff\",\"kindId\":\"s.gis.map\",\"artifactSchema\":\"gis.map\",\"parentDialect\":{\"artifactKind\":\"s.gis.map\",\"standard\":\"1\",\"subset\":\"any\"}}}",
+      "source": "{\"requestId\":\"1234567890abcdef1234567890abcdef\",\"schema\":\"semio.hub.space-artifact-creation-status/v1\",\"spaceId\":\"space-fixture\",\"catalogGenerationId\":\"1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef\",\"phase\":\"ready\",\"ready\":{\"artifactId\":\"artifact-11223344556677889900aabbccddeeff\",\"kindId\":\"s.gis.map\",\"artifactSchema\":\"gis.map\",\"parentDialect\":{\"artifactKind\":\"s.gis.map\",\"standard\":\"1\",\"subset\":\"any\"}}}",
       "accepted": false
     },
     {
       "id": "duplicate-status",
       "type": "status",
-      "source": "{\"phase\":\"ready\",\"schema\":\"semio.hub.space-artifact-creation-status/v1\",\"requestId\":\"1234567890abcdef1234567890abcdef\",\"spaceId\":\"space-fixture\",\"catalogGenerationId\":\"1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef\",\"phase\":\"ready\",\"ready\":{\"documentId\":\"artifact-11223344556677889900aabbccddeeff\",\"kindId\":\"s.gis.map\",\"artifactSchema\":\"gis.map\",\"parentDialect\":{\"artifactKind\":\"s.gis.map\",\"standard\":\"1\",\"subset\":\"any\"}}}",
+      "source": "{\"phase\":\"ready\",\"schema\":\"semio.hub.space-artifact-creation-status/v1\",\"requestId\":\"1234567890abcdef1234567890abcdef\",\"spaceId\":\"space-fixture\",\"catalogGenerationId\":\"1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef\",\"phase\":\"ready\",\"ready\":{\"artifactId\":\"artifact-11223344556677889900aabbccddeeff\",\"kindId\":\"s.gis.map\",\"artifactSchema\":\"gis.map\",\"parentDialect\":{\"artifactKind\":\"s.gis.map\",\"standard\":\"1\",\"subset\":\"any\"}}}",
       "accepted": false
     },
     {
       "id": "padded-status",
       "type": "status",
-      "source": "{\"schema\":\"semio.hub.space-artifact-creation-status/v1\",\"requestId\":\"1234567890abcdef1234567890abcdef\",\"spaceId\":\"space-fixture\",\"catalogGenerationId\":\"1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef\",\"phase\":\"ready\",\"ready\":{\"documentId\":\"artifact-11223344556677889900aabbccddeeff\",\"kindId\":\"s.gis.map\",\"artifactSchema\":\"gis.map\",\"parentDialect\":{\"artifactKind\":\"s.gis.map\",\"standard\":\"1\",\"subset\":\"any\"}}} ",
+      "source": "{\"schema\":\"semio.hub.space-artifact-creation-status/v1\",\"requestId\":\"1234567890abcdef1234567890abcdef\",\"spaceId\":\"space-fixture\",\"catalogGenerationId\":\"1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef\",\"phase\":\"ready\",\"ready\":{\"artifactId\":\"artifact-11223344556677889900aabbccddeeff\",\"kindId\":\"s.gis.map\",\"artifactSchema\":\"gis.map\",\"parentDialect\":{\"artifactKind\":\"s.gis.map\",\"standard\":\"1\",\"subset\":\"any\"}}} ",
       "accepted": false
     },
     {

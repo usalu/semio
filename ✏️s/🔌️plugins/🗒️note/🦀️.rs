@@ -43,7 +43,7 @@ pub fn plugin() -> Result<Plugin<NoteApps>, PluginAssemblyError> {
         .viewer_mutation_roster::<crate::viewer::note::NoteViewer>()
         .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::note::artifact_kind().id })
         .execution(ExecutionMode::Isolated)
-        .requests(CapabilityRequest { id: CapabilityId("documents.write".into()), scope: "plugin".into(), reason: "persist note edits to the open document".into(), optional: false })
+        .requests(CapabilityRequest { id: CapabilityId("artifacts.write".into()), scope: "plugin".into(), reason: "persist note edits to the open document".into(), optional: false })
         .try_build()
 }
 

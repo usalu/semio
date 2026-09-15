@@ -18,7 +18,7 @@ fn sequence_retained_json_measure_matches_the_json_oracle() {
     }
     let carrier: Value = serde_json::from_str(include_str!("../../../🚪️io/🧫️fixtures/🔁️carrier-contracts.json")).expect("neutral carrier vectors");
     for row in carrier["cases"].as_array().expect("carrier cases") {
-        let fixture: SequenceFixture = dsl::os_pack::from_json_str(&row["fixture"].to_string()).expect("owned fixture decoder");
+        let fixture: SequenceHostDocument = dsl::os_pack::from_json_str(&row["fixture"].to_string()).expect("owned fixture decoder");
         let scene = (fixture.steps, fixture.edges);
         assert_measure(&scene);
         neural_engine::ColdRetire::retire_cold(scene.0);

@@ -340,6 +340,18 @@ export type World3dComputeStatusV1 = {
   readonly phase: string;
   /** 🌍️ The phase's own English/German label, when the producer supplies one. */
   readonly phaseLabel: World3dComputeLabelV1 | null;
+  /**
+   * 🕳️ Why this surface has nothing to show, in the producer's own words — already localized by the
+   * producer, exactly as `phaseLabel` is.
+   *
+   * The generation3d generate preview publishes `labels.preview_hint` here whenever it delivered no
+   * meshes and no instances ("(evaluate a generation to preview output)" /
+   * "(Generation auswerten, um die Ausgabe in der Vorschau zu sehen)"), and until now this reader
+   * dropped the field: the string was on the wire and on `data-status-json`, and NOTHING painted it,
+   * so a user looking at an empty 3D pane was told nothing at all
+   * (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `panel-i18n · de:preview_hint`).
+   */
+  readonly hint: string;
   readonly unitsDone: number;
   readonly unitsTotal: number;
   readonly facesDone: number;
@@ -356,10 +368,14 @@ export type World3dComputeStatusV1 = {
   readonly cancelArgs: Readonly<Record<string, string | number>>;
 };
 
+/** 🕳️ Longest empty-surface hint this reader admits — chrome text, never a document. */
+const WORLD3D_COMPUTE_HINT_MAXIMUM_CHARACTERS = 200;
+
 const WORLD3D_EMPTY_COMPUTE_STATUS: World3dComputeStatusV1 = Object.freeze({
   computing: false,
   phase: "idle",
   phaseLabel: null,
+  hint: "",
   unitsDone: 0,
   unitsTotal: 0,
   facesDone: 0,
@@ -413,6 +429,7 @@ export function world3dComputeStatusV1(statusJson: string | undefined | null): W
     computing: row.computing === true,
     phase: typeof row.phase === "string" && row.phase.length > 0 ? row.phase : "idle",
     phaseLabel: world3dComputeLabel(row.phaseLabel),
+    hint: typeof row.hint === "string" ? row.hint.slice(0, WORLD3D_COMPUTE_HINT_MAXIMUM_CHARACTERS) : "",
     unitsDone,
     unitsTotal,
     facesDone: world3dComputeNumber(progress.facesDone),
@@ -712,7 +729,7 @@ export type NodeGraphScene = {
   readonly computingJson?: string;
   readonly statusJson?: string;
   readonly capabilitiesJson?: string;
-  readonly fixtureJson?: string;
+  readonly hostDocumentJson?: string;
   readonly presencePeersJson?: string;
   /** 🧵️ Channel-structured eval outputs from an off-main-thread `flowEvalTick` chain, applied via
    * `FlowWasmSession.applyEvalOutputsJson` — lets the canvas session pick up results without ever
@@ -752,10 +769,96 @@ export const nodeGraphActions = {
   hover: "interactionHover",
   clearSelection: "clearSelection",
   edit: "nodeGraphEdit",
-  parameter: "setGraphParameter",
   viewport: "nodeGraphViewport",
   spotlightCommit: "spotlightCommit",
 } as const;
+
+//#region 🎚️ContinuousGestureLane
+/** 🎚️ What a continuous gesture (a dragged slider, a held spinner) needs from its host: ONE way to
+ * send a value, whose promise settles when the receiver has finished with it. A sink that answers
+ * `void` makes the lane degenerate into "send everything", which is the shape this type exists to
+ * forbid. */
+export type ContinuousGestureLanePorts<Value> = Readonly<{
+  readonly send: (value: Value, phase: ContinuousGesturePhase) => void | Promise<void>;
+  readonly onFault?: (error: unknown) => void;
+}>;
+
+/** 🏁️ `live` is a value the user is still moving through; `commit` is the value they released on.
+ * The distinction is the receiver's, not the lane's: the lane guarantees only that the LAST value of
+ * a gesture is always sent as `commit`, whatever the traffic before it. */
+export type ContinuousGesturePhase = "live" | "commit";
+
+export type ContinuousGestureLane<Value> = {
+  readonly offer: (value: Value) => void;
+  readonly commit: (value?: Value) => void;
+  readonly inFlight: () => boolean;
+  readonly owed: () => Value | null;
+  readonly sent: () => number;
+};
+
+/** 🎚️ At most ONE send in flight and at most ONE owed value — always the latest.
+ *
+ * A 60 Hz drag over a round trip that costs more than 16 ms has exactly two honest answers: queue
+ * every value (the user then watches a backlog of stale geometry drain after they let go) or keep
+ * only the newest one and send it when the receiver is free. This is the second answer, and it is the
+ * same rule the ui-refresh coalescer runs on: the intermediate values a user swept THROUGH were never
+ * asked for, only the one they are on now.
+ *
+ * The release is never dropped. `commit` marks the gesture's last value, and a `commit` is sent even
+ * when it equals the value already sent — the receiver needs the release to close its coalesced edit,
+ * and a gesture whose last live value happened to win the race would otherwise never be committed.
+ *
+ * A send that rejects frees the lane; the fault reaches `onFault` and the owed value is still sent,
+ * because a gesture must not be wedged by one refused round trip.
+ */
+export function createContinuousGestureLane<Value>(ports: ContinuousGestureLanePorts<Value>): ContinuousGestureLane<Value> {
+  let inFlight = false;
+  let owed: { readonly value: Value; readonly phase: ContinuousGesturePhase } | null = null;
+  let sent = 0;
+  const pump = (): void => {
+    if (inFlight || owed === null) return;
+    const next = owed;
+    owed = null;
+    inFlight = true;
+    sent += 1;
+    let settled: void | Promise<void>;
+    try {
+      settled = ports.send(next.value, next.phase);
+    } catch (error) {
+      inFlight = false;
+      ports.onFault?.(error);
+      pump();
+      return;
+    }
+    if (settled === undefined) {
+      inFlight = false;
+      pump();
+      return;
+    }
+    void settled
+      .catch((error: unknown) => ports.onFault?.(error))
+      .finally(() => {
+        inFlight = false;
+        pump();
+      });
+  };
+  return {
+    offer(value) {
+      owed = { value, phase: "live" };
+      pump();
+    },
+    commit(value) {
+      const last = value ?? owed?.value;
+      if (last === undefined) return;
+      owed = { value: last as Value, phase: "commit" };
+      pump();
+    },
+    inFlight: () => inFlight,
+    owed: () => owed?.value ?? null,
+    sent: () => sent,
+  };
+}
+//#endregion 🎚️ContinuousGestureLane
 
 export const textEditorActions = {
   edit: "textEdit",

@@ -143,12 +143,6 @@
       "reuseEn": "Evaluated",
       "reuseDe": "Ausgewertet"
     },
-    "status_stale": {
-      "nativeEn": "Stale",
-      "nativeDe": "Veraltet",
-      "reuseEn": "Stale",
-      "reuseDe": "Veraltet"
-    },
     "status_queued": {
       "nativeEn": "Queued",
       "nativeDe": "In Warteschlange",

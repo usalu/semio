@@ -1,7 +1,7 @@
 {
   "schema": "semio.s.flow.flow.editor.interactive-job/v1",
   "controller": "s.flow.flow@1/*#editor",
-  "documentSchema": "flow.fixture",
+  "documentSchema": "flow.hostDocument",
   "note": "Every declared flow editor action, the exact app-owned factory that owns its retained route, and the publication lanes that route may write. The catalog-authority join (interactive-job.catalog-authority) requires this set to equal the manifest's Migrated declarations AND the aggregated bounded-first-step proof rows, exactly.",
   "factories": [
     {

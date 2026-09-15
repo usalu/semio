@@ -57,8 +57,8 @@ impl From<dsl::ValueError> for ImperativeCoreError {
 /// last `run` scope as a generic data value (WORKFLOWS-END-TO-END-TYPED-PORTS port recipe).
 pub fn imperative_io() -> semio_framework_plugin::AppIo {
     semio_framework_plugin::AppIo {
-        document_schema: crate::PROCEDURE_DOCUMENT_SCHEMA.into(),
-        document_media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::Computation, form: semio_framework_plugin::MediaForm::Procedure },
+        artifact_schema: crate::PROCEDURE_DOCUMENT_SCHEMA.into(),
+        artifact_media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::Computation, form: semio_framework_plugin::MediaForm::Procedure },
         ports: vec![semio_framework_plugin::MediaPortSpec {
             id: "result:out".into(),
             label: "Result".into(),

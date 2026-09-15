@@ -24,7 +24,7 @@ export const HOP_TRACE_MEASURE_PREFIX = "semio.hop.";
 /** 🧱️ The declared stages of ONE hop, in the order a hop passes through them. The language-agnostic
  * twin is `🧫️fixtures/🪃️hop-stages/🔣️.json`; a probe that renders a breakdown table and a law that
  * checks ordering both read the same list rather than two hand-kept copies. */
-export const HOP_TRACE_STAGES = ["encode", "channel", "decode", "invoke", "refresh.guest", "refresh.turn", "refresh.project", "refresh.slots", "refresh.apply", "refresh", "commit", "arm", "mesh.decode", "turn.accept", "turn.decide", "turn.yield", "worker.turn", "worker.receive", "worker.decode", "worker.guest", "worker.reply"] as const;
+export const HOP_TRACE_STAGES = ["encode", "channel", "decode", "invoke", "refresh.guest", "refresh.turn", "refresh.project", "refresh.slots", "refresh.apply", "refresh", "commit", "arm", "mesh.decode", "surface.paint", "patch.install", "patch.paint", "turn.accept", "turn.decide", "turn.yield", "worker.turn", "worker.receive", "worker.decode", "worker.guest", "worker.reply"] as const;
 
 export type HopTraceStage = (typeof HOP_TRACE_STAGES)[number];
 

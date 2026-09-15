@@ -197,7 +197,7 @@ pub struct InferenceBindingIdentityV1 {
     pub component_sha256: String,
     pub component_blake3: String,
     pub artifact_kind: String,
-    pub document_schema: String,
+    pub artifact_schema: String,
     pub parent_dialect: InferenceParentDialectV1,
     pub surface_id: String,
     pub granted_mode: String,
@@ -212,7 +212,7 @@ impl InferenceBindingIdentityV1 {
             || self.package_id != GIS_PACKAGE_ID
             || !server_id(&self.package_version)
             || self.artifact_kind != GIS_ARTIFACT_KIND
-            || self.document_schema != GIS_DOCUMENT_SCHEMA
+            || self.artifact_schema != GIS_DOCUMENT_SCHEMA
             || self.parent_dialect.artifact_kind != GIS_ARTIFACT_KIND
             || self.parent_dialect.standard != "1"
             || self.parent_dialect.subset != "*"
@@ -347,8 +347,6 @@ pub struct InferenceCatalogServiceV1 {
     pub artifact_kind: String,
     pub artifact_schema: String,
     pub artifact_schema_version: u32,
-    pub document_schema: String,
-    pub document_schema_version: u32,
     pub inference_schema: String,
     pub inference_schema_version: u32,
     pub algorithm_version: u32,

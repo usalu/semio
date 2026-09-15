@@ -1,17 +1,17 @@
 use super::*;
-use semio_framework::kernel::{ActorInstanceLifetime, ColdDocumentPairHeader};
+use semio_framework::kernel::{ActorInstanceLifetime, ColdArtifactPairHeader};
 
-fn wit_cursor(value: ColdDocumentPairCursor) -> wit_reactor::ColdDocumentPairCursor {
-    wit_reactor::ColdDocumentPairCursor { lifetime: kernel_lifetime_to_wit(value.lifetime), transfer_generation: value.transfer_generation, page_index: value.page_index, page_count: value.page_count }
+fn wit_cursor(value: ColdArtifactPairCursor) -> wit_reactor::ColdArtifactPairCursor {
+    wit_reactor::ColdArtifactPairCursor { lifetime: kernel_lifetime_to_wit(value.lifetime), transfer_generation: value.transfer_generation, page_index: value.page_index, page_count: value.page_count }
 }
-fn wit_frontier(value: ColdDocumentPairFrontier) -> wit_reactor::ColdDocumentPairFrontier {
-    wit_reactor::ColdDocumentPairFrontier { document_id: value.document_id, head_edit_ordinal: value.head_edit_ordinal, head_edit_id: value.head_edit_id, last_commit_seq: value.last_commit_seq, chain_sha256: value.chain_sha256.to_vec() }
+fn wit_frontier(value: ColdArtifactPairFrontier) -> wit_reactor::ColdArtifactPairFrontier {
+    wit_reactor::ColdArtifactPairFrontier { artifact_id: value.artifact_id, head_edit_ordinal: value.head_edit_ordinal, head_edit_id: value.head_edit_id, last_commit_seq: value.last_commit_seq, chain_sha256: value.chain_sha256.to_vec() }
 }
 fn fixture_lifetime(value: &serde_json::Value) -> ActorInstanceLifetime {
     ActorInstanceLifetime { activation_generation: value["activationGeneration"].as_u64().unwrap(), instance_id: value["instanceId"].as_u64().unwrap().try_into().unwrap(), guest_lifetime: value["guestLifetime"].as_u64().unwrap() }
 }
-fn fixture_cursor(value: &serde_json::Value) -> ColdDocumentPairCursor {
-    ColdDocumentPairCursor {
+fn fixture_cursor(value: &serde_json::Value) -> ColdArtifactPairCursor {
+    ColdArtifactPairCursor {
         lifetime: fixture_lifetime(&value["lifetime"]),
         transfer_generation: value["transferGeneration"].as_u64().unwrap(),
         page_index: value["pageIndex"].as_u64().unwrap().try_into().unwrap(),
@@ -27,7 +27,7 @@ fn fixture_status(row: &serde_json::Value) -> ColdPairIngressStatus {
         "fault" => ColdPairIngressStatus::Fault { cursor: fixture_cursor(&row["cursor"]), fault: serde_json::from_value(row["fault"].clone()).unwrap() },
         "applied" => {
             let value = &row["receipt"];
-            ColdPairIngressStatus::Applied(ColdDocumentPairApplied {
+            ColdPairIngressStatus::Applied(ColdArtifactPairApplied {
                 lifetime: fixture_lifetime(&value["lifetime"]),
                 transfer_generation: value["transferGeneration"].as_u64().unwrap(),
                 baseline_frontier: serde_json::from_value(value["baselineFrontier"].clone()).unwrap(),
@@ -44,8 +44,8 @@ fn wit_status(value: ColdPairIngressStatus) -> wit_reactor::ColdPairIngressStatu
         ColdPairIngressStatus::PageAccepted(value) => W::PageAccepted(wit_cursor(value)),
         ColdPairIngressStatus::Backpressure(value) => W::Backpressure(wit_cursor(value)),
         ColdPairIngressStatus::Loading(value) => W::Loading(wit_cursor(value)),
-        ColdPairIngressStatus::Fault { cursor, fault } => W::Fault(wit_reactor::ColdDocumentPairFault { cursor: wit_cursor(cursor), fault }),
-        ColdPairIngressStatus::Applied(value) => W::Applied(wit_reactor::ColdDocumentPairApplied {
+        ColdPairIngressStatus::Fault { cursor, fault } => W::Fault(wit_reactor::ColdArtifactPairFault { cursor: wit_cursor(cursor), fault }),
+        ColdPairIngressStatus::Applied(value) => W::Applied(wit_reactor::ColdArtifactPairApplied {
             lifetime: kernel_lifetime_to_wit(value.lifetime),
             transfer_generation: value.transfer_generation,
             baseline_frontier: wit_frontier(value.baseline_frontier),
@@ -76,12 +76,12 @@ fn neutral_cold_ingress_variants_preserve_authority_and_refuse_hostile_wit() {
 
 #[semio_framework_async_macros::async_test]
 async fn native_cold_pages_use_dedicated_bounded_input() {
-    let page = ColdDocumentPairPage {
-        header: ColdDocumentPairHeader {
+    let page = ColdArtifactPairPage {
+        header: ColdArtifactPairHeader {
             lifetime: ActorInstanceLifetime { activation_generation: 1, instance_id: 7, guest_lifetime: 3 },
             transfer_generation: 4,
             descriptor_sha256: [1; 32],
-            baseline_frontier: ColdDocumentPairFrontier { document_id: "map".into(), head_edit_ordinal: 8, head_edit_id: "edit-8".into(), last_commit_seq: 6, chain_sha256: [2; 32] },
+            baseline_frontier: ColdArtifactPairFrontier { artifact_id: "map".into(), head_edit_ordinal: 8, head_edit_id: "edit-8".into(), last_commit_seq: 6, chain_sha256: [2; 32] },
             pack_sha256: [3; 32],
             spr_sha256: [4; 32],
             aggregate_sha256: [5; 32],
@@ -92,7 +92,7 @@ async fn native_cold_pages_use_dedicated_bounded_input() {
         page_index: 0,
         bytes: vec![1, 2, 3, 4, 5],
     };
-    let event = Event::ColdDocumentPairPage(page.clone());
+    let event = Event::ColdArtifactPairPage(page.clone());
     let (ordinary, command, cold) = kernel_turn_inputs_to_wit(&[event.clone()], 7).await.unwrap();
     assert!(ordinary.is_empty() && command.is_none());
     let lifted = cold.unwrap();

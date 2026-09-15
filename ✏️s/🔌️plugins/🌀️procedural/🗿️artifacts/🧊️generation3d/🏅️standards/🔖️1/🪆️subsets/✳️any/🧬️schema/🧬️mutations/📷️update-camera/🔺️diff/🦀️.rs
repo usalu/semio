@@ -11,7 +11,7 @@ pub fn diff(payload: &UpdateCamera, base: &Generation3dSnapshot) -> protocol::Mu
     if !payload.camera.x.is_finite() || !payload.camera.y.is_finite() || !payload.camera.zoom.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", "Camera position or zoom is not finite.", Vec::<String>::new());
     }
-    if base.fixture.camera == payload.camera {
+    if base.host_document.camera == payload.camera {
         return protocol::MutationOutcome::new(Generation3dDiff::default()).warn("mutation.no-op", "Camera is already in the requested state.");
     }
     protocol::MutationOutcome::new(diff_fixture_from_helpers(base, &WidgetsDiff::default(), &SynapsesDiff::default(), &LayoutDiff::default(), Some(&payload.camera), None))

@@ -46,7 +46,7 @@ pub fn plugin() -> Result<Plugin<MathematicalApps>, PluginAssemblyError> {
         .viewer_mutation_roster::<crate::viewer::equation::EquationViewer>()
         .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::equation::artifact_kind().id })
         .execution(ExecutionMode::Isolated)
-        .requests(CapabilityRequest { id: CapabilityId("documents.write".into()), scope: "plugin".into(), reason: "persist mathematical graph edits to the open document".into(), optional: false })
+        .requests(CapabilityRequest { id: CapabilityId("artifacts.write".into()), scope: "plugin".into(), reason: "persist mathematical graph edits to the open document".into(), optional: false })
         .try_build()
 }
 

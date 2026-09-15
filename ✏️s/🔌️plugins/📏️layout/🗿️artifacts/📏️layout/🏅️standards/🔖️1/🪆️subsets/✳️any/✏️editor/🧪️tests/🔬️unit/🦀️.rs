@@ -161,7 +161,7 @@ async fn the_manifest_stitches_every_taxonomy_node() {
         assert!(json.contains(id), "window kind {id} missing from the manifest: {json}");
     }
     assert!(json.contains(edit::LAYOUT_PLAY_MODE_EDIT), "mode missing from the manifest");
-    for body in [LAYOUT_PLAY_BODY_DOCUMENT, LAYOUT_PLAY_BODY_CATALOGUE, LAYOUT_PLAY_BODY_INSPECTION, LAYOUT_PLAY_BODY_PREFLIGHT] {
+    for body in [LAYOUT_PLAY_BODY_ARTIFACT, LAYOUT_PLAY_BODY_CATALOGUE, LAYOUT_PLAY_BODY_INSPECTION, LAYOUT_PLAY_BODY_PREFLIGHT] {
         assert!(json.contains(body), "panel body {body} missing from the manifest");
     }
     assert!(json.contains("2d.layout"), "artifact kind missing from the manifest");
@@ -253,7 +253,7 @@ async fn export_media_document_out_round_trips_through_pack() {
     let document = app.snapshot().expect("projection");
     let history = semio_framework_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&document, &history);
-    let media = LayoutPlayApp::export_media("document:out", &doc).expect("export document:out");
+    let media = LayoutPlayApp::export_media("artifact:out", &doc).expect("export document:out");
     let MediaPayload::Structured { schema, json } = media.payload else { panic!("expected structured payload") };
     assert_eq!(schema, crate::LAYOUT_DOCUMENT_SCHEMA);
     let bytes = store::pack_rt::pack_value_from_base64(&json).expect("decode base64 pack");
@@ -280,7 +280,7 @@ async fn layout_io_exposes_declared_ports() {
 #[semio_framework_async_macros::async_test]
 async fn layout_io_declares_fields_in_and_layout_out_ports() {
     let io = crate::editor::layout::engine::layout_io();
-    assert_eq!(io.document_schema, "layout.layout");
+    assert_eq!(io.artifact_schema, "layout.layout");
     assert_eq!(io.artifact.id, "2d.layout");
     let fields_in = io.ports.iter().find(|port| port.id == "fields:in").expect("fields:in declared");
     assert_eq!(fields_in.direction, semio_framework_plugin::MediaPortDirection::In);
@@ -291,7 +291,7 @@ async fn layout_io_declares_fields_in_and_layout_out_ports() {
     assert_eq!(layout_out.kind_id.as_deref(), Some("2d.layout"));
     assert_eq!(layout_out.multiplicity, semio_framework::PortMultiplicity::Many);
     let all_ports = io.all_ports().await;
-    assert!(all_ports.iter().any(|port| port.id == "document:in"));
-    assert!(all_ports.iter().any(|port| port.id == "document:out"));
+    assert!(all_ports.iter().any(|port| port.id == "artifact:in"));
+    assert!(all_ports.iter().any(|port| port.id == "artifact:out"));
 }
 //#endregion 🔖️MediaPorts

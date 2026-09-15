@@ -69,7 +69,7 @@ fn run_main() -> Result<(), TrinityJackShellError> {
     let fixture_path = args.get(1).map_or("trinity/example/🔱️nakagin-capsule-tower.trinity", String::as_str);
     let text = fs::read_to_string(fixture_path).map_err(|source| TrinityJackShellError::ReadFixture { path: fixture_path.to_string(), source })?;
     let fixture = JackSnapshot::parse_dsl(&text).map_err(|source| TrinityJackShellError::Dsl { path: fixture_path.to_string(), source })?;
-    let mut graph = Graph::from_fixture(fixture)?;
+    let mut graph = Graph::from_snapshot(fixture)?;
     println!("[DEBUG] trinity jack shell loaded {} nodes, {} edges from {fixture_path}", graph.nodes.len(), graph.edges.len());
     if args.len() > 2 {
         let query = args[2..].join(" ");

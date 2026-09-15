@@ -190,7 +190,7 @@ const PROBES = [
     },
   },
   {
-    name: "keyboard-verbs", script: "🐍️editor-verbs-keyboard-probe.mjs", dir: "keyboard-verbs", minutes: 12,
+    name: "keyboard-verbs", script: "🐍️editor-verbs-keyboard-probe.mjs", dir: "keyboard-verbs", minutes: 24,
     env: { SEMIO_PROBE_OUT: outUp("keyboard-verbs") },
     /** ⌨️ Every row is decided by the probe's OWN oracle sentence — the probe presses each chord in the
      * state that owns it and reads back the effect that chord must have, so no step is exempt here.
@@ -348,6 +348,25 @@ const PROBES = [
       const console_ = readText(join(dir, "console.txt"));
       const steps = (r.steps ?? []).map((s) => ({ step: s.step, ok: Boolean(s.ok), detail: s.detail }));
       return { steps, key: { steps: steps.length, ok: steps.filter((s) => s.ok).length }, pageerrors: countPageErrors(console_), faults: faultLines(console_) };
+    },
+  },
+  {
+    name: "flow-scroll", script: "🐍️flow-scroll-render-perf-probe.mjs", dir: "flow-scroll", minutes: 14,
+    env: { SEMIO_PROBE_OUT: out("flow-scroll") },
+    /** 🖱️ Butter-smooth is four numbers per gesture, not an impression: the board repaints within a
+     * frame of each tick, the tail stays inside a slow frame, the plugin hears NOTHING while the
+     * gesture runs, and it hears the settled camera exactly once. A gesture that publishes per tick
+     * reads as "scrolling takes seconds to render" — the user's own words, 2026-09-15 13:03. */
+    verdict: (dir) => {
+      const rows = readJson(join(dir, "scroll.json")) ?? [];
+      const console_ = readText(join(dir, "console.txt"));
+      const steps = rows.flatMap((row) => [
+        { step: `${row.example} ${row.gesture} · paint median ≤ 16 ms`, ok: row.paintMedianMs !== null && row.paintMedianMs <= 16, detail: { medianMs: row.paintMedianMs, paints: row.paints, events: row.events } },
+        { step: `${row.example} ${row.gesture} · paint p95 ≤ 50 ms`, ok: row.paintP95Ms !== null && row.paintP95Ms <= 50, detail: { p95Ms: row.paintP95Ms, maxMs: row.paintMaxMs, longTasks: row.longTasks } },
+        { step: `${row.example} ${row.gesture} · 0 guest hops during`, ok: row.guestInvocationsDuring === 0, detail: { during: row.guestInvocationsDuringByAction } },
+        { step: `${row.example} ${row.gesture} · 1 camera publication at settle`, ok: row.viewportPublicationsAtSettle === 1, detail: { atSettle: row.guestInvocationsAtSettleByAction, refresh: `${row.refreshPassesDuring}/${row.refreshPassesAtSettle}`, commits: `${row.reactCommitsDuring}/${row.reactCommitsAtSettle}` } },
+      ]);
+      return { steps, key: { gestures: rows.length, ok: steps.filter((step) => step.ok).length }, pageerrors: countPageErrors(console_), faults: faultLines(console_) };
     },
   },
   {

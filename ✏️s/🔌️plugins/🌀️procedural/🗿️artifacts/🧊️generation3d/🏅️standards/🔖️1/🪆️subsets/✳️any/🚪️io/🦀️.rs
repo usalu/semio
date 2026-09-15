@@ -27,7 +27,7 @@ pub fn export_stdio_kinds() -> &'static [&'static str] {
 pub mod mesh_bridge {
     use crate::Generation3dSnapshot;
     use semio_framework_artifact_flow_flow::neural::Dictionary;
-    use semio_framework_artifact_flow_flow::{CameraJson, FlowFixture, OrderedMap, OrderedSet, SynapseSpec, Widget, WidgetLayout};
+    use semio_framework_artifact_flow_flow::{CameraJson, FlowHostDocument, OrderedMap, OrderedSet, SynapseSpec, Widget, WidgetLayout};
     use semio_framework_plugin::MeshData;
     use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::SemioPoint3;
     use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMesh, SemioMeshSnapshot, SemioPrimitive, SemioTopology, STDIO_SEMIOMESH_DOCUMENT_SCHEMA};
@@ -114,8 +114,8 @@ pub mod mesh_bridge {
         layout.insert(IMPORT_SOURCE_WIDGET.to_string(), WidgetLayout { x: 0.0, y: 0.0 });
         layout.insert(IMPORT_GEOMETRY_WIDGET.to_string(), WidgetLayout { x: 260.0, y: 0.0 });
         layout.insert(IMPORT_PREVIEW_WIDGET.to_string(), WidgetLayout { x: 520.0, y: 0.0 });
-        let fixture = FlowFixture {
-            schema: "flow.fixture".into(),
+        let fixture = FlowHostDocument {
+            schema: "flow.host_document".into(),
             camera: CameraJson { x: 0.0, y: 0.0, zoom: 1.0 },
             widgets: vec![
                 Widget::InputNote { id: IMPORT_SOURCE_WIDGET.into(), text: data_text },
@@ -133,11 +133,11 @@ pub mod mesh_bridge {
 
     /// 🔎️ The payload an import fixture planted, and the neuron kind that consumes it.
     pub fn imported_source(snapshot: &Generation3dSnapshot) -> Option<(&str, &str)> {
-        let text = snapshot.fixture.widgets.iter().find_map(|widget| match widget {
+        let text = snapshot.host_document.widgets.iter().find_map(|widget| match widget {
             Widget::InputNote { id, text } if id == IMPORT_SOURCE_WIDGET => Some(text.as_str()),
             _ => None,
         })?;
-        let kind = snapshot.fixture.widgets.iter().find_map(|widget| match widget {
+        let kind = snapshot.host_document.widgets.iter().find_map(|widget| match widget {
             Widget::Neuron { id, neuron_kind, .. } if id == IMPORT_GEOMETRY_WIDGET => Some(neuron_kind.as_str()),
             _ => None,
         })?;
@@ -197,7 +197,7 @@ pub mod document_io {
         Generation3dFormatRow { id: "gltf", label_en: "glTF Mesh", label_de: "glTF-Netz", kind_id: "s.stdio.gltf.standard.2-0.representation.document", descriptors: semio_s_artifact_stdio_gltf::formats },
         Generation3dFormatRow { id: "las", label_en: "LAS Point Cloud", label_de: "LAS-Punktwolke", kind_id: "s.stdio.las.standard.1-0.representation.document", descriptors: semio_s_artifact_stdio_las::formats },
         Generation3dFormatRow { id: "dwg", label_en: "DWG Drawing", label_de: "DWG-Zeichnung", kind_id: "s.stdio.dwg.standard.ac1018.representation.document", descriptors: semio_s_artifact_stdio_dwg::formats },
-        Generation3dFormatRow { id: "txt", label_en: "Semio Text (whole document)", label_de: "Semio-Text (ganzes Dokument)", kind_id: "s.stdio.txt.standard.utf-8.representation.document", descriptors: semio_s_artifact_stdio_txt::formats },
+        Generation3dFormatRow { id: "txt", label_en: "Semio Text (whole artifact)", label_de: "Semio-Text (ganzes Artefakt)", kind_id: "s.stdio.txt.standard.utf-8.representation.document", descriptors: semio_s_artifact_stdio_txt::formats },
     ];
 
     /// 📥️ Every format `importDocument` accepts, in picker order — the SEVEN of
@@ -213,7 +213,7 @@ pub mod document_io {
         Generation3dFormatRow { id: "gltf", label_en: "glTF Mesh", label_de: "glTF-Netz", kind_id: "s.stdio.gltf.standard.2-0.representation.document", descriptors: semio_s_artifact_stdio_gltf::formats },
         Generation3dFormatRow { id: "dwg", label_en: "DWG Drawing", label_de: "DWG-Zeichnung", kind_id: "s.stdio.dwg.standard.ac1018.representation.document", descriptors: semio_s_artifact_stdio_dwg::formats },
         Generation3dFormatRow { id: "json", label_en: "Generation JSON", label_de: "Generation-JSON", kind_id: "s.stdio.json.standard.rfc8259.representation.document", descriptors: semio_s_artifact_stdio_json::formats },
-        Generation3dFormatRow { id: "txt", label_en: "Semio Text (whole document)", label_de: "Semio-Text (ganzes Dokument)", kind_id: "s.stdio.txt.standard.utf-8.representation.document", descriptors: semio_s_artifact_stdio_txt::formats },
+        Generation3dFormatRow { id: "txt", label_en: "Semio Text (whole artifact)", label_de: "Semio-Text (ganzes Artefakt)", kind_id: "s.stdio.txt.standard.utf-8.representation.document", descriptors: semio_s_artifact_stdio_txt::formats },
     ];
 
     /// 🚫️ The two [`super::import_stdio_kinds`] rows [`IMPORT_FORMATS`] withholds, with the reason

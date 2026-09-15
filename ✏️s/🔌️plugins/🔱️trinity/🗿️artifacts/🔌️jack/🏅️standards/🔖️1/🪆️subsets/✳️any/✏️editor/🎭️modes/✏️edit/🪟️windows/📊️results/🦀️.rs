@@ -42,7 +42,7 @@ pub(crate) fn render(surface_id: &str, _controller_id: &str, result: Option<&Que
     let result = result.unwrap_or(&empty);
     if result.kind == QueryResultKind::Graph {
         if let Some(fixture) = &result.graph_fixture {
-            let (nodes, edges, viewport) = crate::editor::jack::fixture_to_workflow(fixture);
+            let (nodes, edges, viewport) = crate::editor::jack::snapshot_to_workflow(snapshot);
             return scene_surface(surface_id, SurfaceKind::NodeGraph, &NodeGraphScene::base(nodes, edges, viewport));
         }
     }

@@ -612,7 +612,7 @@ async fn drawing_io_declares_vector_out_and_export_media_covers_both_ports() {
     let MediaPayload::Structured { schema, json } = vector.payload else { panic!("expected structured svg payload") };
     assert_eq!(schema, "2d.drawing");
     assert!(json.starts_with("<svg"));
-    assert!(DrawingPlayApp::export_media("document:out", &doc).is_ok());
+    assert!(DrawingPlayApp::export_media("artifact:out", &doc).is_ok());
     assert!(matches!(DrawingPlayApp::export_media("unknown:out", &doc), Err(MediaError::NotImplemented)));
 }
 

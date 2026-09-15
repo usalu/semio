@@ -1,5 +1,5 @@
 use super::*;
-use crate::document_schema::mutations::change_airtightness_n50::ChangeAirtightnessN50;
+use crate::artifact_schema::mutations::change_airtightness_n50::ChangeAirtightnessN50;
 use crate::Din4108Snapshot;
 
 #[semio_framework_async_macros::async_test]

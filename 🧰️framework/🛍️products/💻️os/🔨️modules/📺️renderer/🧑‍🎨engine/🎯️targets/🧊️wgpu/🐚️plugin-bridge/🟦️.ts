@@ -57,6 +57,9 @@
 import {
   ActivationRegistry,
   type ActivationReason,
+  appCommandIdsV1,
+  hostEffectInvocationV1,
+  type HostEffectDispatchScope,
   createTurnOutcomeBroadcast,
   fetchDescriptorManifest,
   reachableKindsFromUnknown,
@@ -674,6 +677,21 @@ export function wgpuSetContributionsCommand(pluginId: string, appId: string, jso
   return { address: { owner: { app: { pluginId, appId } }, commandId: "setContributions" }, arguments: { json, page: 0, pageCount: 1 } };
 }
 
+/** 🔁️ This target's half of {@link hostEffectInvocationV1}: the `(plugin, app, mode, window kind,
+ * window instance)` a re-armed host effect is addressed in, read off the slim view state the
+ * contributions crossing already carries. */
+export function wgpuEffectDispatchScope(pluginId: string, appId: string, viewState: Record<string, unknown>): HostEffectDispatchScope {
+  const text = (key: string, fallback: string): string => (typeof viewState[key] === "string" && (viewState[key] as string).length > 0 ? (viewState[key] as string) : fallback);
+  const windowKindId = text("activeWindowKindId", text("active_window_kind_id", ""));
+  return {
+    pluginId,
+    appId,
+    modeId: text("activeModeId", text("active_mode_id", "")),
+    windowKindId,
+    windowInstanceId: text("windowId", text("window_id", text("focusedWindowId", text("focused_window_id", windowKindId)))),
+  };
+}
+
 
 
 /** @emoji 📄️ JSON-safe leftover effects — `req` is a bigint on the wire and JSON.stringify refuses it. */
@@ -712,11 +730,39 @@ function stashLeftoverHostEffects(instanceId: number, effects: readonly WireVari
   const before = leftover.length;
   for (const effect of effects) {
     if (admitSpawnedJob(instanceId, effect)) continue;
-    if (!shellFrameBytes(effect, instanceId)) leftover.push(effect);
+    const frame = shellFrameBytes(effect, instanceId);
+    if (!frame || !shellFrameAnswersACaller(frame)) leftover.push(effect);
   }
   if (leftover.length === 0) return 0;
   pendingTurnEffects.set(instanceId, leftover);
   return leftover.length - before;
+}
+
+/** 🕹️ Whether one `Shell{instance}` `AppFrame` can still reach the caller waiting for it.
+ *
+ * ⚖️ `AppChannelClient` correlates every reply by `AppFrame::*.in_reply_to`, and sequences start at
+ * 1 — so `in_reply_to: 0` names NO caller. A framework-reserved tool job's settled
+ * `InvocationResult` is published exactly that way (`plugin_complete_reserved_spawned_job`,
+ * `💻️os/🔨️modules/🔌️plugin/🦀️.rs`), because it answers a JOB rather than a command sequence, and
+ * that result IS the whole answer of `interactionSelect`/`interactionHover`/`clearSelection`:
+ * `output.interactionView` plus the app-declared refresh scope. Put on the frame lane it matched no
+ * waiter, fell into the channel's `onOperationProgress` lane — which this target subscribes to
+ * nowhere — and was dropped, so every pick answered `uiScope: undefined` (`UiDirtyScope::None` at
+ * the shell), refreshed nothing, and left the guest's `World3dScene.selectionJson` empty however the
+ * pick went (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
+ * `📓️wgpu-selection-roundtrip-2026-09-15.md`).
+ *
+ * An uncorrelated frame therefore belongs in the LEFTOVER lane, which `wgpuInvocationFromFrames`
+ * folds through `leftoverShellInvocationFrames` — the same law `PluginRuntime` reads for its own
+ * job-completion leftovers. Undecodable bytes answer `true`: only a frame this host can positively
+ * read as uncorrelated is rerouted. */
+export function shellFrameAnswersACaller(payload: Uint8Array): boolean {
+  try {
+    const carrier = Object.values(decodeAppFrame(payload))[0] as { readonly in_reply_to?: unknown } | undefined;
+    return carrier?.in_reply_to !== 0;
+  } catch {
+    return true;
+  }
 }
 
 //#region 🧵️SpawnedJobs
@@ -894,8 +940,24 @@ export function decodeInvocationPayloads(frame: AppFrameInvocationPayload): Pick
   };
 }
 
-async function performInvocation(client: AppChannelClient, instanceId: number, invocation: unknown, viewState: unknown): Promise<InvocationResponse> {
-  const frames = await client.command(encodePackValue(invocation), viewState);
+/** 📬️ Folds ONE call's answer out of the frames it resolved with AND the leftover effects the same
+ * outcome carried — the wgpu twin of `PluginRuntime`'s `invocationFromFrames`, and the only place
+ * this target decides what a dispatch answered.
+ *
+ * 🕹️ The leftover half is not an extra: a framework-reserved tool verb (`interactionSelect`,
+ * `interactionHover`, `clearSelection`, `selectAll`, `setSelectionMode`, `setGranularity`) is
+ * ADMITTED by the dispatch turn with an empty `InvocationResult` and a `SpawnJob`, and its real
+ * answer — `output.interactionView` plus the app-declared refresh scope — is published by the job's
+ * completion turn, which lands in the leftover lane. Reading the frames alone therefore answers
+ * `uiScope: undefined` (the shell reads `UiDirtyScope::None`), so `refresh` renders NOTHING, the
+ * guest is never asked to re-render, and its `World3dScene.selectionJson` stays `[]` however the
+ * pick went — the wgpu selection round trip's own defect, measured on 6118 across 7 of 8
+ * generation3d examples in both roles (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
+ * `📓️wgpu-selection-roundtrip-2026-09-15.md`).
+ *
+ * Per-field, never wholesale: an admission that already carried mutations or a history patch must
+ * not be blanked by a completion frame that carries neither. */
+export function wgpuInvocationFromFrames(frames: readonly AppFrameValue[], leftover: readonly WireVariant[]): InvocationResponse {
   let output: unknown = null;
   let diagnostics: InvocationResponse["diagnostics"] = [];
   let uiScope: InvocationResponse["uiScope"];
@@ -903,13 +965,17 @@ async function performInvocation(client: AppChannelClient, instanceId: number, i
   let mutations: InvocationResponse["mutations"] = [];
   let inverseGroup: InvocationResponse["inverseGroup"] = { invocationId: "", mutations: [], inverseMutations: [] };
   const applyInvocationFrame = (frame: AppFrameInvocationPayload): void => {
-    const payloads = decodeInvocationPayloads(frame);
-    if (frame.output.length) output = payloads.output;
-    if (frame.diagnostics.length) diagnostics = payloads.diagnostics;
-    if (frame.ui_scope.length) uiScope = payloads.uiScope;
-    if (frame.history_patch.length) historyPatch = payloads.historyPatch;
-    mutations = payloads.mutations;
-    inverseGroup = payloads.inverseGroup;
+    if (frame.output.length) output = decodePackWire(new Uint8Array(frame.output), "invocation.output");
+    if (frame.diagnostics.length) {
+      const decoded = decodePackWire(new Uint8Array(frame.diagnostics), "invocation.diagnostics");
+      diagnostics = Array.isArray(decoded) ? (decoded as InvocationResponse["diagnostics"]) : [];
+    }
+    if (frame.ui_scope.length) uiScope = decodePackWire(new Uint8Array(frame.ui_scope), "invocation.uiScope") as InvocationResponse["uiScope"];
+    if (frame.history_patch.length) {
+      const decoded = decodePackWire(new Uint8Array(frame.history_patch), "invocation.historyPatch");
+      historyPatch = decoded && typeof decoded === "object" ? (decoded as InvocationResponse["historyPatch"]) : undefined;
+    }
+    if (frame.mutations.length || frame.inverse_group.length) ({ mutations, inverseGroup } = decodeInvocationResultPacks(frame));
   };
   for (const frame of frames) {
     if ("Invocation" in frame) {
@@ -920,18 +986,18 @@ async function performInvocation(client: AppChannelClient, instanceId: number, i
       throw new Error(`invocation failed: ${faultDisplayMessage(frame.Error.fault, decodePackValue)}`);
     }
   }
-  const leftover = pendingTurnEffects.get(instanceId) ?? [];
-  pendingTurnEffects.delete(instanceId);
-  // 🕹️ The reserved tool verbs answer on a LATER turn than the one that admitted them, so their whole
-  // `InvocationResult` — `output.interactionView` and the app-declared refresh scope — rides the
-  // leftover lane. Folding it here is the same law `PluginRuntime`'s `invocationFromFrames` applies;
-  // without it this target read the admission's empty answer, refreshed nothing, and the guest never
-  // republished its `selectionJson` after a pick (`leftoverShellInvocationFrames`, `🖼️wire-turn.ts`).
   for (const frame of leftoverShellInvocationFrames<AppFrameValue>(leftover, decodeAppFrame)) {
     if ("Invocation" in frame) applyInvocationFrame(frame.Invocation);
   }
   const requestedEffects = leftover.map((effect) => wireEffectToFriendly(effect, decodePackWire)).filter((effect): effect is Effect => effect !== null);
   return { output, mutations, inverseGroup, diagnostics, requestedEffects, events: [], uiScope, historyPatch };
+}
+
+async function performInvocation(client: AppChannelClient, instanceId: number, invocation: unknown, viewState: unknown): Promise<InvocationResponse> {
+  const frames = await client.command(encodePackValue(invocation), viewState);
+  const leftover = pendingTurnEffects.get(instanceId) ?? [];
+  pendingTurnEffects.delete(instanceId);
+  return wgpuInvocationFromFrames(frames, leftover);
 }
 //#endregion 🔖️Invocation
 
@@ -1128,7 +1194,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
         const hostEffects = drive.hostEffects(settled);
         for (const effect of hostEffects) {
           const frame = shellFrameBytes(effect, instanceId);
-          if (frame) frames.push(frame);
+          if (frame && shellFrameAnswersACaller(frame)) frames.push(frame);
         }
         stashLeftoverHostEffects(instanceId, hostEffects);
         drive.report(`job=${job.job}`);
@@ -1193,7 +1259,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
       const outFrames: Uint8Array[] = [];
       for (const effect of drive.hostEffects(results)) {
         const frame = shellFrameBytes(effect, instanceId);
-        if (frame) outFrames.push(frame);
+        if (frame && shellFrameAnswersACaller(frame)) outFrames.push(frame);
       }
       stashLeftoverHostEffects(instanceId, drive.hostEffects(results));
       // 🧵️ Before the command's own reply is published: a reserved tool job's completion IS the rest
@@ -1244,7 +1310,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
           for (const effect of drive.hostEffects(accepted)) {
             if (admitSpawnedJob(instanceId, effect)) continue;
             const frame = shellFrameBytes(effect, instanceId);
-            if (frame) frames.push(frame);
+            if (frame && shellFrameAnswersACaller(frame)) frames.push(frame);
             else leftover.push(effect);
           }
           if (leftover.length > WGPU_TYPED_OPERATION_EFFECT_CAPACITY) throw new Error(`[DEBUG] wgpu-bridge typed-operation host effects for instance ${instanceId} exceeded their ${WGPU_TYPED_OPERATION_EFFECT_CAPACITY}-entry authority`);
@@ -1334,7 +1400,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
         for (const effect of drive.hostEffects(accepted)) {
           if (admitSpawnedJob(instanceId, effect)) continue;
           const frame = shellFrameBytes(effect, instanceId);
-          if (frame) frames.push(frame);
+          if (frame && shellFrameAnswersACaller(frame)) frames.push(frame);
           else leftoverWire.push(effect);
         }
         // 🧵️ An extension answer resumes a guest operation that may itself admit a reserved tool job;
@@ -1469,8 +1535,9 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
       if (!effect || typeof effect !== "object" || !("dispatchAction" in effect)) continue;
       const dispatch = effect.dispatchAction as { readonly action: string; readonly args?: unknown };
       try {
-        const tick = await performInvocation(requireChannel(instanceId), instanceId, { address: { owner: { app: { pluginId, appId } }, commandId: dispatch.action }, arguments: dispatch.args ?? {} }, slimView);
-        console.log("[DEBUG] contributions rearm", { plugin: pluginId, action: dispatch.action, effects: tick.requestedEffects.length, tags: effectTags(tick.requestedEffects).join(",") || "-" });
+        const addressed = hostEffectInvocationV1(wgpuEffectDispatchScope(pluginId, appId, slimView), appCommandIdsV1(manifest, appId), dispatch.action, (dispatch.args ?? {}) as Record<string, unknown>);
+        const tick = await performInvocation(requireChannel(instanceId), instanceId, addressed.invocation, slimView);
+        console.log("[DEBUG] contributions rearm", { plugin: pluginId, action: dispatch.action, channel: addressed.kind, effects: tick.requestedEffects.length, tags: effectTags(tick.requestedEffects).join(",") || "-" });
         ticks.push(tick);
       } catch (error) {
         console.warn("[DEBUG] contributions rearm failed", dispatch.action, error instanceof Error ? error.message : String(error));

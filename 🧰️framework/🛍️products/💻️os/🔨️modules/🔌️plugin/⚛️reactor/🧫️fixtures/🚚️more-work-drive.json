@@ -1,0 +1,13 @@
+{
+  "$comment": "🚚️ Language-agnostic contract of the WORKER-owned MoreWork drive. In the browser the host round trip IS the guest's pump, so a reactor that answers `more-work` while carrying nothing costs a POST, a poll, a structured clone and a main-thread pickup just to be asked again. The drive moves that pump inside the worker: k consecutive silent turns cost ONE host crossing. Owner: 📓️worker-more-work-drive-2026-09-15.md.",
+  "reactorExecutorHoldMs": 8,
+  "measuredGuestTurnCostMs": 13,
+  "hostGrantWallMs": 100,
+  "driveStepCeiling": 7,
+  "driveBudgetMs": 100,
+  "silentTurnRuns": [1, 4, 6],
+  "crossingsPerSilentRun": 1,
+  "hostContinuationCeiling": 1024,
+  "ingressInterruptTurns": 1,
+  "cancellationQuiesceTurns": 1
+}

@@ -106,12 +106,12 @@ export function loadFirstPartyStdioNativeCodecReceipts(repoRoot = getWorkspaceRo
   if (!Array.isArray(document.receipts)) throw new Error("empty native codec catalog");
   const receipts: TrustedStdioNativeCodecReceiptV1[] = [];
   for (const row of document.receipts) {
-    if (typeof row.artifact_kind !== "string" || typeof row.document_schema !== "string" || typeof row.pack_schema_sha256 !== "string" || typeof row.factory_id !== "string" || typeof row.extension !== "string" || typeof row.protocol_path !== "string") {
+    if (typeof row.artifact_kind !== "string" || typeof row.artifact_schema !== "string" || typeof row.pack_schema_sha256 !== "string" || typeof row.factory_id !== "string" || typeof row.extension !== "string" || typeof row.protocol_path !== "string") {
       throw new Error("stdio native codec receipt is incomplete");
     }
     receipts.push({
       artifactKind: row.artifact_kind,
-      artifactSchema: row.document_schema,
+      artifactSchema: row.artifact_schema,
       packSchemaHash: row.pack_schema_sha256,
       factoryId: row.factory_id,
       extension: row.extension,

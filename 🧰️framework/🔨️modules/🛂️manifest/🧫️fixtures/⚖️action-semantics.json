@@ -13,7 +13,7 @@
       },
       "policy": {
         "scopes": [
-          "documents.write"
+          "artifacts.write"
         ],
         "approval": "whenDestructive"
       },
@@ -46,7 +46,7 @@
       },
       "policy": {
         "scopes": [
-          "documents.read",
+          "artifacts.read",
           "shell.observe"
         ],
         "approval": "never"
@@ -80,7 +80,7 @@
       },
       "policy": {
         "scopes": [
-          "documents.read",
+          "artifacts.read",
           "shell.observe"
         ],
         "approval": "never"
@@ -112,7 +112,7 @@
       },
       "policy": {
         "scopes": [
-          "documents.write"
+          "artifacts.write"
         ],
         "approval": "never"
       },

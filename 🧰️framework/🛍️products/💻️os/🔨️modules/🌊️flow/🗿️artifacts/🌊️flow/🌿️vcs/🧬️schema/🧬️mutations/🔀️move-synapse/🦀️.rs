@@ -1,5 +1,5 @@
 //! 🔀️ Move Synapse direct payload and owned behavior.
-use super::super::{FlowFixture, FlowDiff, FlowDelta, FlowCollectionDelta, FlowMutation, flow_wire_index};
+use super::super::{FlowHostDocument, FlowDiff, FlowDelta, FlowCollectionDelta, FlowMutation, flow_wire_index};
 use crate::os_spr::{MutationKind, MutationOutcome, SemanticDescriptor, Identified};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -13,12 +13,12 @@ pub struct MoveSynapse { pub id: String, pub to_index: u32 }
 //#endregion 🧬️Payload
 
 //#region 🎮️Behavior
-impl MutationKind<FlowFixture, FlowMutation> for MoveSynapse {
+impl MutationKind<FlowHostDocument, FlowMutation> for MoveSynapse {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "move", entity: "synapse", kind: "move-synapse", record: "MovedSynapse" };
-    fn diff(&self, base: &FlowFixture) -> MutationOutcome<FlowDiff> {
+    fn diff(&self, base: &FlowHostDocument) -> MutationOutcome<FlowDiff> {
         MutationOutcome::new(FlowDiff::from(FlowDelta::Synapses(FlowCollectionDelta { removed: vec![self.id.clone()], inserted: base.synapses.iter().find(|item| item.id() == &self.id).map(|item| (self.to_index, item.clone())).into_iter().collect(), replaced: vec![] })))
     }
-    fn inverse(&self, base: &FlowFixture) -> Vec<FlowMutation> {
+    fn inverse(&self, base: &FlowHostDocument) -> Vec<FlowMutation> {
         base.synapses.iter().position(|item| item.id() == &self.id).and_then(|index| flow_wire_index(index).ok().map(|to_index| FlowMutation::MoveSynapse(Self { id: self.id.clone(), to_index }))).into_iter().collect()
     }
     fn label(&self) -> String { format!("Move synapse {}", self.id) }

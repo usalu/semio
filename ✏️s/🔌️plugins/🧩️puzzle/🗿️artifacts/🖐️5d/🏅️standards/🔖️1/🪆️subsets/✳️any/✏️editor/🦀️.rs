@@ -22,7 +22,7 @@ use crate::editor::puzzle5d::commands::{
 use crate::editor::puzzle5d::config::{Puzzle5dCamera2d, Puzzle5dConfig, Puzzle5dConfigMutation, Puzzle5dRuntime};
 use crate::editor::puzzle5d::modes::edit;
 use crate::editor::puzzle5d::modes::edit::windows::{board2d, world3d};
-use crate::editor::puzzle5d::panels::{catalogue, document as document_panel, inspection};
+use crate::editor::puzzle5d::panels::{catalogue, artifact as artifact_panel, inspection};
 use semio_s_artifact_puzzle_3d::editor::puzzle3d::Puzzle3dInstanceOperationOwner;
 use crate::editor::puzzle5d::presence::{Puzzle5dPresence, Puzzle5dPresenceMutation};
 use crate::editor::puzzle5d::terminology::{puzzle5d_is_de_locale, puzzle5d_labels, puzzle5d_localized, Puzzle5dLabels};
@@ -7636,7 +7636,7 @@ impl ArtifactEditor for Puzzle5dPlayApp {
         owner: EditorApp<Puzzle5dPlayApp>,
         owner_file: "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.puzzle.puzzle5d@1/*#editor",
-        document_schema: "puzzle.5d",
+        artifact_schema: "puzzle.5d",
         factory: "Puzzle5dRetainedCommandJobFactory",
         factory_type: Puzzle5dRetainedCommandJobFactory,
         contract: ToolExecutionContract::resumable(8_192, 512, 1, 262_144, 7_500, 1, 1),
@@ -7869,7 +7869,7 @@ impl ArtifactEditor for Puzzle5dPlayApp {
     /// potentially many producers) and `design:out` (this app's own `5d.puzzle` design artifact, fanning
     /// OUT to potentially many consumers).
     fn io() -> Option<AppIo> {
-        let io = semio_framework::io::resolve_ready(AppIo::from_document(
+        let io = semio_framework::io::resolve_ready(AppIo::from_artifact(
             "puzzle.5d",
             MediaType { class: MediaClass::Kit, form: MediaForm::Design },
             ArtifactPresentation { id: "5d.puzzle".into(), name: "5D Puzzle".into(), dimension: "5d".into(), component_kind: "puzzle5d".into() },
@@ -7916,7 +7916,7 @@ impl ArtifactEditor for Puzzle5dPlayApp {
         let node = match body_key {
             board2d::BODY_KEY => board2d::render(&envelope),
             world3d::BODY_KEY => world3d::render(&envelope, doc.tool_run(), &crate::editor::puzzle5d::precompute::puzzle5d_mesh_lane(doc.snapshot, &envelope.document)),
-            document_panel::BODY_KEY => document_panel::render(&envelope, labels),
+            artifact_panel::BODY_KEY => artifact_panel::render(&envelope, labels),
             catalogue::BODY_KEY => catalogue::render(&envelope, labels),
             inspection::BODY_KEY => inspection::render(&envelope, labels),
             _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "puzzle5d unknown-body label admission failed")),
@@ -7943,7 +7943,7 @@ impl ArtifactEditor for Puzzle5dPlayApp {
         let node = match body_key {
             board2d::BODY_KEY => board2d::render(&envelope),
             world3d::BODY_KEY => world3d::render(&envelope, doc.tool_run(), &crate::editor::puzzle5d::precompute::puzzle5d_mesh_lane(doc.snapshot, &envelope.document)),
-            document_panel::BODY_KEY => document_panel::render(&envelope, labels),
+            artifact_panel::BODY_KEY => artifact_panel::render(&envelope, labels),
             catalogue::BODY_KEY => catalogue::render(&envelope, labels),
             inspection::BODY_KEY => inspection::render(&envelope, labels),
             _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "puzzle5d unknown-body label admission failed")),
@@ -8074,7 +8074,7 @@ pub fn create_puzzle5d_app() -> semio_framework_plugin::AppDefinition {
             // `semio_compose_rs/client/lib/sketchpad/js/index.ts:15367-15378`), the assembly-editing use case
             // this app replaces.
             .default_layout(edit::layout())
-            .panel_tab_def(document_panel::definition())
+            .panel_tab_def(artifact_panel::definition())
             .panel_tab_def(catalogue::definition())
             .panel_tab_def(inspection::definition())
             // 🔧️ Document-mutating operations (emit VCS operations through the before/after document delta).

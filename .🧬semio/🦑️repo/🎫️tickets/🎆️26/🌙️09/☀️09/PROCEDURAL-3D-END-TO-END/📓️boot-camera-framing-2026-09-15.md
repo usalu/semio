@@ -222,10 +222,13 @@ The wgpu column is the **native** law of §3.2 rather than a browser reading; se
 - **The wgpu battery did not run.** `bun 🐍️wgpu-battery.mjs --only=world3d-editor,world3d-viewer,examples`
   on :6118 is gated behind `until [ -z "$(pgrep -f 'wgpu-batter[y]|wgpu-.*-pro[b]e')" ]`, and lane
   `reconcile-spin` held :6118 with a live `wgpu-battery.mjs` + `wgpu-example-matrix-probe.mjs` for the
-  whole window; three other lanes were queued on the same gate. The `activate-generation3d-wgpu-dev`
-  restage is queued behind that gate (`🗑️generated/boot-frame/restage-wgpu.txt`). What IS proven on the
-  wgpu side is §3.2 (native, 2/2) plus `cargo check -p semio-framework-os-infinite` clean; what is **not**
-  proven is a wgpu browser reading of a framed camera.
+  whole window (still running at 09:57); three other lanes were queued on the same gate. The
+  `activate-generation3d-wgpu-dev` restage therefore never started either — it must be run before the
+  wgpu battery, and both are the first thing to pick up here. What IS proven on the wgpu side is §3.2
+  (native, 2/2) plus `cargo check -p semio-framework-os-infinite` clean **for the renderer's own target**
+  (`--target wasm32-unknown-unknown`, 22 warnings = the expansion really ran;
+  `🗑️generated/boot-frame/check-infinite-wasm.txt`) — a native-only check would not have compiled the
+  wgpu-gated code at all. What is **not** proven is a wgpu browser reading of a framed camera.
 - **`WorldOrbitGated.reportCamera`'s origin fallback is still there.** `controls?.target ?? targetScratch.set(0,0,0)`
   (`♾️infinite/🌍️world/🎨️r3f/🟦️.tsx`) invents the world origin when `useThree().controls` is momentarily null.
   §1.3 was proven to be the rig remount, not this, so it was left alone rather than changed on a

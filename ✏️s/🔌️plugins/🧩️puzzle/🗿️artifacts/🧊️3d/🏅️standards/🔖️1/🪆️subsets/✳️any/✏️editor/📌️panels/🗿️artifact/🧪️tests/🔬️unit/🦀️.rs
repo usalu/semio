@@ -1,11 +1,11 @@
 use std::collections::BTreeMap;
 use crate::editor::puzzle3d::terminology::{puzzle3d_labels, Puzzle3dLabels};
-use crate::editor::puzzle3d::{default_fixture, empty_fixture, with_puzzle3d_app, PUZZLE3D_DOCUMENT_TREE_BUILDS};
+use crate::editor::puzzle3d::{default_fixture, empty_fixture, with_puzzle3d_app, PUZZLE3D_ARTIFACT_TREE_BUILDS};
 
 const RETIREMENT_DRAIN_STEPS: usize = 4096;
 
 fn builds() -> u32 {
-    PUZZLE3D_DOCUMENT_TREE_BUILDS.with(std::cell::Cell::get)
+    PUZZLE3D_ARTIFACT_TREE_BUILDS.with(std::cell::Cell::get)
 }
 
 fn labels_for(terminology: semio_framework_plugin::Terminology) -> &'static Puzzle3dLabels {
@@ -46,10 +46,10 @@ fn the_outliner_memo_serves_one_key_and_rebuilds_on_a_fixture_or_label_switch() 
     let empty = empty_fixture();
     with_puzzle3d_app(|app| {
         drain_retired_ui_owners();
-        PUZZLE3D_DOCUMENT_TREE_BUILDS.with(|counter| counter.set(0));
-        let cold = app.document_tree_cached(&empty, native).expect("cold outliner build");
+        PUZZLE3D_ARTIFACT_TREE_BUILDS.with(|counter| counter.set(0));
+        let cold = app.artifact_tree_cached(&empty, native).expect("cold outliner build");
         assert_eq!(builds(), 1, "the cold read must build exactly once");
-        let warm = app.document_tree_cached(&empty, native).expect("memoized outliner read");
+        let warm = app.artifact_tree_cached(&empty, native).expect("memoized outliner read");
         assert_eq!(builds(), 1, "the warm read must not rebuild");
         assert_eq!(cold.key.as_str(), warm.key.as_str());
         assert_eq!(cold.children.len(), warm.children.len());
@@ -59,13 +59,13 @@ fn the_outliner_memo_serves_one_key_and_rebuilds_on_a_fixture_or_label_switch() 
         }
         drop((cold, warm));
         drain_retired_ui_owners();
-        app.document_tree_cached(&empty, reuse).expect("terminology switch rebuild");
+        app.artifact_tree_cached(&empty, reuse).expect("terminology switch rebuild");
         assert_eq!(builds(), 2, "a different label set must rebuild");
         drain_retired_ui_owners();
         let populated = default_fixture();
-        app.document_tree_cached(&populated, reuse).expect("fixture switch rebuild");
+        app.artifact_tree_cached(&populated, reuse).expect("fixture switch rebuild");
         assert_eq!(builds(), 3, "a different fixture must rebuild");
-        app.document_tree_cached(&populated, reuse).expect("memoized outliner read");
+        app.artifact_tree_cached(&populated, reuse).expect("memoized outliner read");
         assert_eq!(builds(), 3, "the newest key stays memoized");
     });
     drain_retired_ui_owners();
@@ -160,7 +160,7 @@ fn a_document_that_fits_the_page_keeps_every_nested_vortex_row() {
     drain_retired_ui_owners();
 }
 
-/// 🗼️ The flagship example itself: `nakagin_fixture()` used to fail `document::render` cold with
+/// 🗼️ The flagship example itself: `nakagin_fixture()` used to fail `artifact::render` cold with
 /// `ui.fixed-capacity` (`📓️2026-09-09-wave-G2-locale-and-tree-memo.md` §5.1). It must render.
 #[test]
 fn the_outliner_renders_the_nakagin_example() {

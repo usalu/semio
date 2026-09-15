@@ -24,7 +24,7 @@ fn surface_id(text: &str) -> ui_contract::SurfaceId {
 #[test]
 fn one_turn_redirties_every_acknowledged_deferred_surface() {
     let patches = patches::PatchTracker::new();
-    let deferred = ["7:puzzle3d.play.composite", "7:puzzle3d-main-top", "7:puzzle3d-main-perspective", "7:window", "7:framework.panel.inspection", "7:puzzle.3d.play.document"];
+    let deferred = ["7:puzzle3d.play.composite", "7:puzzle3d-main-top", "7:puzzle3d-main-perspective", "7:window", "7:framework.panel.inspection", "7:puzzle.3d.play.artifact"];
     for surface in deferred {
         patches.defer(surface_id(surface)).expect("a fresh tracker's deferred ring admits every surface of one instance");
     }

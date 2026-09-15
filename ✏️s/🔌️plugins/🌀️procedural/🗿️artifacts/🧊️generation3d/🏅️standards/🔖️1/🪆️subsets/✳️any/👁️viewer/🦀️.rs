@@ -394,7 +394,7 @@ impl ArtifactCommandWork<ViewerApp<Generation3dViewer>> for Generation3dViewComm
         if next.active_example_id != input.config.active_example_id || next.tolerance().to_bits() != input.config.tolerance().to_bits() {
             let windows = generation3d_view_preview_windows(input.context.and_then(|context| context.view_state.as_ref()));
             let viewed = Generation3dViewedDocument::resolve(input.snapshot, &next);
-            let servable = preview_eval::may_rearm(&viewed.snapshot().fixture);
+            let servable = preview_eval::may_rearm(&viewed.snapshot().host_document);
             viewed.retire();
             self.instance_owner.with_mut::<Generation3dViewInstanceOperationOwner, _>(|owner| owner.owe_attached_previews_carrying(&windows, servable, &mut emit))?;
         }
@@ -457,7 +457,7 @@ impl Generation3dViewFlowEvalWindowWork {
 fn generation3d_view_continue_inline(
     window_id: &str,
     window_kind_id: &str,
-    fixture: &semio_framework_artifact_flow_flow::FlowFixture,
+    fixture: &semio_framework_artifact_flow_flow::FlowHostDocument,
     tolerance: f64,
     session: &mut FlowEvalSession,
     retained_eval: Option<&str>,
@@ -521,7 +521,7 @@ impl ArtifactCommandWork<ViewerApp<Generation3dViewer>> for Generation3dViewFlow
         let viewed = Generation3dViewedDocument::resolve(input.snapshot, input.config);
         let outcome = self.instance_owner.with_mut::<Generation3dViewInstanceOperationOwner, _>(|owner| {
             owner.with_session_waking(|session| {
-                let fixture = &viewed.snapshot().fixture;
+                let fixture = &viewed.snapshot().host_document;
                 match input.command {
                     Generation3dViewCommand::FlowEvalTick(_) => Ok(preview_eval::evaluate_tick(window.window_id(), window.window_kind_id(), fixture, tolerance, session, retained_eval, None)),
                     Generation3dViewCommand::FlowEvalResolve(payload) => {
@@ -738,7 +738,7 @@ impl ArtifactCommandWork<ViewerApp<Generation3dViewer>> for Generation3dViewCont
         self.instance_owner.with_mut::<Generation3dViewInstanceOperationOwner, _>(|owner| {
             if owner.with_session(|session| set_contributions::install(payload, session))?? {
                 let viewed = Generation3dViewedDocument::resolve(input.snapshot, input.config);
-                let servable = preview_eval::may_rearm(&viewed.snapshot().fixture);
+                let servable = preview_eval::may_rearm(&viewed.snapshot().host_document);
                 viewed.retire();
                 owner.owe_attached_previews_carrying(&windows, servable, &mut emit)?;
             }
@@ -810,7 +810,7 @@ impl Generation3dViewBoundedCommandJobFactoryProofs {
         owner: ViewerApp<Generation3dViewer>,
         owner_file: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
         controller: "s.procedural.generation3d@1/*#viewer",
-        document_schema: "generation.3d",
+        artifact_schema: "generation.3d",
         factory: "Generation3dViewBoundedCommandJobFactory",
         factory_type: Generation3dViewBoundedCommandJobFactory,
         contract: generation3d_view_bounded_contract(),
@@ -825,7 +825,7 @@ impl Generation3dViewContributionsJobFactoryProofs {
         owner: ViewerApp<Generation3dViewer>,
         owner_file: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
         controller: "s.procedural.generation3d@1/*#viewer",
-        document_schema: "generation.3d",
+        artifact_schema: "generation.3d",
         factory: "Generation3dViewContributionsJobFactory",
         factory_type: Generation3dViewContributionsJobFactory,
         contract: generation3d_view_contributions_contract(),
@@ -910,7 +910,7 @@ impl Generation3dViewExampleJobFactoryProofs {
         owner: ViewerApp<Generation3dViewer>,
         owner_file: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
         controller: "s.procedural.generation3d@1/*#viewer",
-        document_schema: "generation.3d",
+        artifact_schema: "generation.3d",
         factory: "Generation3dViewExampleJobFactory",
         factory_type: Generation3dViewExampleJobFactory,
         contract: generation3d_view_example_contract(),
@@ -1001,7 +1001,7 @@ impl Generation3dViewFlowEvalJobFactoryProofs {
         owner: ViewerApp<Generation3dViewer>,
         owner_file: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
         controller: "s.procedural.generation3d@1/*#viewer",
-        document_schema: "generation.3d",
+        artifact_schema: "generation.3d",
         factory: "Generation3dViewFlowEvalJobFactory",
         factory_type: Generation3dViewFlowEvalJobFactory,
         contract: generation3d_view_flow_eval_contract(),
@@ -1130,7 +1130,7 @@ impl Generation3dViewDocumentIoJobFactoryProofs {
         owner: ViewerApp<Generation3dViewer>,
         owner_file: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
         controller: "s.procedural.generation3d@1/*#viewer",
-        document_schema: "generation.3d",
+        artifact_schema: "generation.3d",
         factory: "Generation3dViewDocumentIoJobFactory",
         factory_type: Generation3dViewDocumentIoJobFactory,
         contract: generation3d_view_document_io_contract(),
@@ -1143,8 +1143,8 @@ impl Generation3dViewDocumentIoJobFactoryProofs {
 //#region 🔖️InteractionTopology
 /// 🕸️ Every node's visible port ids (`{nodeId}@{portId}`) — read-only twin of the sibling surface's
 /// own projection, so a world pick in this viewer names the exact same declared target ids.
-fn generation3d_view_port_ids_by_node(fixture: &semio_framework_artifact_flow_flow::FlowFixture) -> std::collections::BTreeMap<String, Vec<String>> {
-    let (graph_nodes, _) = crate::standards::v1::subsets::any::schema::with_host(fixture, |host| crate::standards::v1::subsets::any::schema::fixture_to_workflow(&host.dag.fixture));
+fn generation3d_view_port_ids_by_node(fixture: &semio_framework_artifact_flow_flow::FlowHostDocument) -> std::collections::BTreeMap<String, Vec<String>> {
+    let (graph_nodes, _) = crate::standards::v1::subsets::any::schema::with_host(snapshot, |host| crate::standards::v1::subsets::any::schema::dag_host_document_to_workflow(&host.dag.host_document));
     graph_nodes.into_iter().map(|node| (node.id, node.inputs.into_iter().chain(node.outputs).map(|port| port.id).collect())).collect()
 }
 //#endregion 🔖️InteractionTopology
@@ -1271,13 +1271,14 @@ impl semio_framework_plugin::ArtifactViewer for Generation3dViewer {
     fn pending_effects(owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view: Option<&semio_framework_plugin::ViewModel>) -> Vec<semio_framework_plugin::Effect> {
         let windows = generation3d_view_preview_windows(view);
         let viewed = Generation3dViewedDocument::resolve(doc.snapshot, cfg.snapshot);
-        let servable = preview_eval::may_rearm(&viewed.snapshot().fixture);
+        let servable = preview_eval::may_rearm(&viewed.snapshot().host_document);
         viewed.retire();
+        let applied_edits = preview_eval::applied_document_edits_digest(doc.history);
         owner
             .with_mut::<Generation3dViewInstanceOperationOwner, _>(|owner| {
                 use preview_eval::PreviewEvalRunOwner as _;
                 let (session, link) = owner.preview_eval_parts().ok_or_else(|| Fault::from("generation3d-view-eval-session-closing"))?;
-                Ok(preview_eval::preview_eval_run_effects(session, link, &windows, doc.tool_run(), servable))
+                Ok(preview_eval::preview_eval_run_effects(session, link, &windows, doc.tool_run(), servable, applied_edits))
             })
             .unwrap_or_default()
     }
@@ -1288,7 +1289,7 @@ impl semio_framework_plugin::ArtifactViewer for Generation3dViewer {
             return Ok(None);
         }
         let viewed = Generation3dViewedDocument::resolve(&request.snapshot, &request.config);
-        let preview_widget_ids = preview_eval::preview_widget_ids(&viewed.snapshot().fixture);
+        let preview_widget_ids = preview_eval::preview_widget_ids(&viewed.snapshot().host_document);
         viewed.retire();
         Ok(Some(Box::new(preview_eval::PreviewEvalRunJob::<Generation3dViewInstanceOperationOwner>::new(request.instance_owner, request.port, request.identity, preview_widget_ids)?)))
     }
@@ -1477,7 +1478,7 @@ impl semio_framework_plugin::ArtifactViewer for Generation3dViewer {
             }
         }
         let viewed = Generation3dViewedDocument::resolve(doc.snapshot, cfg.snapshot);
-        let fixture = &viewed.snapshot().fixture;
+        let fixture = &viewed.snapshot().host_document;
         let mut ordered = Vec::new();
         let ports_by_node = generation3d_view_port_ids_by_node(fixture);
         for widget in &fixture.widgets {
@@ -1633,7 +1634,7 @@ pub fn create_generation3d_viewer() -> semio_framework_plugin::AppDefinition {
         // 📤️ The reader's own io verb. `ActionKind::View` for the same reason `setActiveExample` is:
         // `ShellHost` refuses a `Mutation`-kind action on a viewer session outright, and an export
         // really does mutate nothing — it hands the shell a `DownloadMediaExport` and returns.
-        .action_with(ActionDefinition::new("exportDocument", LocalizedLabel::native("Export Document", "Dokument exportieren"), ActionKind::View, "download"))
+        .action_with(ActionDefinition::new("exportDocument", LocalizedLabel::native("Export Artifact", "Artefakt exportieren"), ActionKind::View, "download"))
         .action_interactive_job("exportDocument", InteractiveJobClassification::Migrated)
         .action_args("exportDocument", vec![semio_framework_plugin::ActionArgDef::select("format", LocalizedLabel::native("Format", "Format"), crate::standards::v1::subsets::any::io::document_io::export_format_options()).required().default_value(&"stl")])
         .keybinding("mod+shift+e", "exportDocument")

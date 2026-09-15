@@ -15,7 +15,7 @@ async fn first_slider_question(app: &mut Generation3dApp) -> (String, String, f6
     dispatch(app, Generation3dCommand::AddGeneration(add_generation::AddGeneration {})).await;
     let read = snapshot(app);
     let generation_id = read.generation.generations.first().expect("addGeneration seeds one generation").id.clone();
-    let spec = flow_fixture_to_form_spec(&read.fixture);
+    let spec = flow_host_document_to_form_spec(&read.host_document);
     let question = spec
         .steps
         .iter()
@@ -44,7 +44,7 @@ async fn a_selected_generation_turns_the_form_into_bound_controls() {
 }
 
 /// ⚖️ LAW: editing a form value round-trips into the PATCHED fixture the generate preview evaluates.
-/// `updateGenerationValues` writes the roster entry, and `generation_fixture_for` — the one input the
+/// `updateGenerationValues` writes the roster entry, and `generation_host_document_for` — the one input the
 /// generate preview's mesh is computed from (`flow_eval_tick::evaluate`) — carries the new number onto
 /// the matching widget. That is the whole mechanism by which typing into the Form window changes the
 /// preview mesh; the browser step in `🐍️generate-mode-probe.mjs` proves the mesh itself.
@@ -66,7 +66,7 @@ async fn editing_a_form_value_repatches_the_generate_preview_fixture() {
     let read = snapshot(&app);
     let stored = read.generation.generations[0].values.get(&question_id).and_then(dsl::DslValue::as_f64);
     assert_eq!(stored, Some(next), "updateGenerationValues must persist the typed number on the generation");
-    let patched = crate::standards::v1::subsets::any::schema::generation_fixture_for(&read.fixture, &read.generation, Some(generation_id.as_str()));
+    let patched = crate::standards::v1::subsets::any::schema::generation_host_document_for(&read.host_document, &read.generation, Some(generation_id.as_str()));
     let patched_value = patched
         .widgets
         .iter()

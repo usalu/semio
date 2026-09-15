@@ -11,7 +11,7 @@
       "x-semio-state": "artifact"
     },
     "fixture": {
-      "$ref": "https://semio.tech/schema/s/procedural/generation2d/artifact.json#/$defs/FlowFixture",
+      "$ref": "https://semio.tech/schema/s/procedural/generation2d/artifact.json#/$defs/FlowHostDocument",
       "x-semio-state": "artifact"
     },
     "generation": {
@@ -30,7 +30,7 @@
       ],
       "properties": {
         "fixture": {
-          "$ref": "https://semio.tech/schema/s/procedural/generation2d/artifact.json#/$defs/FlowFixture"
+          "$ref": "https://semio.tech/schema/s/procedural/generation2d/artifact.json#/$defs/FlowHostDocument"
         },
         "generation": {
           "$ref": "https://semio.tech/schema/s/procedural/generation2d/artifact.json#/$defs/GenerationPlayState"

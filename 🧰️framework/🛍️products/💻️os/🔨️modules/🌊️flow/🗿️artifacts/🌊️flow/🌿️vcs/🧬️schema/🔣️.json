@@ -1,9 +1,9 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/schema/os/flow/artifacts/flow/vcs/snapshot.json",
-  "title": "FlowFixture Intrinsic Wire Schema",
+  "title": "FlowHostDocument Intrinsic Wire Schema",
   "description": "Source-owned serde domain shapes. Intrinsic unknown fields and default omission follow current artifact/neural serde; direct operation wrappers are strict. No runtime detector coverage is asserted.",
-  "$ref": "#/$defs/Fixture",
+  "$ref": "#/$defs/HostDocument",
   "$defs": {
     "Index": {
       "type": "integer",
@@ -271,7 +271,7 @@
         }
       ]
     },
-    "Fixture": {
+    "HostDocument": {
       "type": "object",
       "properties": {
         "schema": {

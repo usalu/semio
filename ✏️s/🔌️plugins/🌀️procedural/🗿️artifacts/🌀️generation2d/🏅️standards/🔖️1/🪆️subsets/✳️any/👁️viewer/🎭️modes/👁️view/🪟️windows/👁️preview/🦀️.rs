@@ -46,7 +46,7 @@ pub fn definition() -> WindowKindDefinition {
 /// position — no evaluated drawing-handle overlay (that needs a live `semio_framework_os_flow::FlowEvalSession`, an
 /// editor-dispatch-time concept a stateless viewer render never has access to).
 pub fn render(document: &Generation2dSnapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    let fixture = &document.fixture;
+    let fixture = &document.host_document;
     let layers: Vec<dsl::DslValue> = fixture
         .widgets
         .iter()

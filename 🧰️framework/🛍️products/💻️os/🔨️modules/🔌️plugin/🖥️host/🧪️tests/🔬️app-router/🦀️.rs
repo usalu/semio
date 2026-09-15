@@ -62,7 +62,7 @@ pub(super) async fn fixture_app(id: &str, dialect: semio_framework::ArtifactDial
         artifact_kinds: Vec::new(),
         config: semio_framework::ConfigSpec::empty().await,
         command_grammar: semio_framework::CommandGrammar::empty().await,
-        io: semio_framework::AppIo::from_document(
+        io: semio_framework::AppIo::from_artifact(
             id,
             semio_framework::MediaType { class: semio_framework::MediaClass::Data, form: semio_framework::MediaForm::Value },
             semio_framework::ArtifactPresentation { id: id.into(), name: id.into(), dimension: String::new(), component_kind: id.into() },

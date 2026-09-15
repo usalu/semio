@@ -1,7 +1,7 @@
 //! 🏃️ Sequence play app commands — run the compiled path and clear the last run result.
 
 use semio_framework_plugin::{NoConfig, NoConfigMutation};
-use crate::editor::sequence::{host_from_fixture, retire_run_result_cold, sequence_fixture_from_children};
+use crate::editor::sequence::{host_from_document, retire_run_result_cold, sequence_host_document_from_children};
 use crate::mutations::SequenceMutation;
 use crate::SequenceSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
@@ -20,8 +20,8 @@ pub mod run_command {
     pub struct Run {}
 
     pub fn handle(_payload: &Run, doc: &ArtifactView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<SequenceMutation, NoConfigMutation>, Fault> {
-        let fixture = sequence_fixture_from_children(doc.snapshot, &doc.children)?;
-        let host = neural_engine::ColdOwner::new(host_from_fixture(&fixture));
+        let fixture = sequence_host_document_from_children(doc.snapshot, &doc.children)?;
+        let host = neural_engine::ColdOwner::new(host_from_document(&fixture));
         retire_run_result_cold(host.run());
         Ok(Emit::default())
     }

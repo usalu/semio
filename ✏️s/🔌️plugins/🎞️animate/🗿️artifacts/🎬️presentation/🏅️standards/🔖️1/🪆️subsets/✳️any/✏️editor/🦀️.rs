@@ -44,7 +44,7 @@ use store::EngineHandles;
 
 //#region 🔖️Constants
 pub const PRESENTATION_PLAY_APP_ID: &str = "s.animate.presentation@1/*#editor";
-pub use artifact::PRESENTATION_PLAY_BODY_DOCUMENT;
+pub use artifact::PRESENTATION_PLAY_BODY_ARTIFACT;
 pub use catalogue::PRESENTATION_PLAY_BODY_CATALOGUE;
 pub use inspection::PRESENTATION_PLAY_BODY_DETAILS;
 pub use tile_editor::PRESENTATION_PLAY_BODY_MAIN;
@@ -135,8 +135,8 @@ pub(crate) fn interaction_select_effect(ids: &[String], merge: &str) -> Effect {
 /// media type copied verbatim) plus the extra `frames:in` input port (Wave-2 port recipe).
 pub fn presentation_io() -> AppIo {
     AppIo {
-        document_schema: PRESENTATION_DOCUMENT_SCHEMA.into(),
-        document_media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::Presentation, form: semio_framework_plugin::MediaForm::Deck },
+        artifact_schema: PRESENTATION_DOCUMENT_SCHEMA.into(),
+        artifact_media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::Presentation, form: semio_framework_plugin::MediaForm::Deck },
         ports: vec![semio_framework_plugin::MediaPortSpec {
             id: "frames:in".into(),
             label: "Frames".into(),
@@ -601,7 +601,7 @@ impl ArtifactEditor for AnimatePresentationPlayApp {
         owner: EditorApp<AnimatePresentationPlayApp>,
         owner_file: "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.animate.presentation@1/*#editor",
-        document_schema: "animate.presentation",
+        artifact_schema: "animate.presentation",
         factory: "AnimatePresentationRetainedCommandJobFactory",
         factory_type: AnimatePresentationRetainedCommandJobFactory,
         contract: ToolExecutionContract::bounded_first_step(8_192, 64, 1, 65_536, 7_500),
@@ -719,7 +719,7 @@ impl ArtifactEditor for AnimatePresentationPlayApp {
         let labels = animate_presentation_labels(view_state);
         (match body_key {
             PRESENTATION_PLAY_BODY_MAIN => tile_editor::render(deck),
-            PRESENTATION_PLAY_BODY_DOCUMENT => artifact::render(deck, labels),
+            PRESENTATION_PLAY_BODY_ARTIFACT => artifact::render(deck, labels),
             PRESENTATION_PLAY_BODY_CATALOGUE => catalogue::render(deck, labels),
             PRESENTATION_PLAY_BODY_DETAILS => inspection::render(deck, labels),
             _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| ui_capacity_error()),

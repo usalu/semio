@@ -6,16 +6,16 @@ use crate::{widget_id, Generation2dSnapshot};
 use semio_framework_plugin::{tree_item, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
 
 //#region 🔖️Constants
-pub const GENERATION2D_PLAY_BODY_DOCUMENT: &str = "generation2d.play.document";
+pub const GENERATION2D_PLAY_BODY_ARTIFACT: &str = "generation2d.play.artifact";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
 pub fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_ARTIFACT_ID.into()),
-        label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Dokument"),
+        label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Artefakt"),
         group: PanelGroup::Workbench,
-        body_key: Some(GENERATION2D_PLAY_BODY_DOCUMENT.into()),
+        body_key: Some(GENERATION2D_PLAY_BODY_ARTIFACT.into()),
         children: Vec::new(),
     }
 }
@@ -28,7 +28,7 @@ pub fn definition() -> PanelTabDefinition {
 /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM). Clicks/selection are the framework's now — no
 /// per-item action needed, and `_config` is unused (kept for call-site symmetry with `inspection`).
 pub fn render(document: &Generation2dSnapshot, _config: &Generation2dConfig, labels: &Generation2dLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    let widget_items = crate::ui_node_list(document.fixture.widgets.iter().map(|widget| tree_item(widget_id(widget), widget_id(widget).to_string())))?;
+    let widget_items = crate::ui_node_list(document.host_document.widgets.iter().map(|widget| tree_item(widget_id(widget), widget_id(widget).to_string())))?;
     PanelTreeBuilder::new("procedural2d-play-document")?
         .section_or_placeholder("procedural2d-play-document.widgets", Some(crate::ui_label(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL)?), true, widget_items, labels.none.as_str())?
         .interaction_domain("graph")?

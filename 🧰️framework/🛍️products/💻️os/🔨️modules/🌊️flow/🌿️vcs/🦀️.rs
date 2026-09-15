@@ -192,7 +192,7 @@ pub struct FlowSurfaceOwner {
 }
 
 impl FlowSurfaceOwner {
-    fn from_fixture(surface: u64, host: u64, generation: u64, fixture: &FlowFixture) -> Self {
+    fn from_host_document(surface: u64, host: u64, generation: u64, fixture: &FlowHostDocument) -> Self {
         let widget_slots = fixture.widgets.len();
         Self { surface, host, generation, document: 1, widgets: widget_slots, synapses: fixture.synapses.len(), previews: widget_slots, expanded: widget_slots, layout: fixture.layout.len(), history: 1, edit: 1, conflict: 1, control: 1, output: 1 }
     }
@@ -254,7 +254,7 @@ enum FlowVcsAction {
     PatchSynapse { id: String, item: SynapseSpec },
     SetLayout(FlowLayoutEntry),
     LayoutRoot(OrderedMap<WidgetLayout>),
-    ReplaceDocument(FlowFixture),
+    ReplaceDocument(FlowHostDocument),
     ActivateDocument { index: usize },
     Undo,
     Redo,
@@ -450,7 +450,7 @@ impl<T, const N: usize> FlowFixedOwners<T, N> {
 }
 
 struct FlowVcsDocument {
-    versions: FlowFixedOwners<FlowFixture, FLOW_VCS_MAX_HISTORY>,
+    versions: FlowFixedOwners<FlowHostDocument, FLOW_VCS_MAX_HISTORY>,
     active: usize,
     revision: u64,
     parent_revision: u64,
@@ -461,18 +461,18 @@ struct FlowVcsDocument {
 }
 
 impl FlowVcsDocument {
-    fn new(fixture: FlowFixture, revision: u64, parent_revision: u64) -> Self {
-        let committed_digest = flow_vcs_fixture_scalar_digest(&fixture);
+    fn new(fixture: FlowHostDocument, revision: u64, parent_revision: u64) -> Self {
+        let committed_digest = flow_vcs_host_document_scalar_digest(&fixture);
         let mut versions = FlowFixedOwners::new();
         let _ = versions.push(fixture);
         Self { versions, active: 0, revision, parent_revision, generation: 1, committed_digest, edit_owner: None, surface: None }
     }
 
-    fn fixture(&self) -> &FlowFixture {
+    fn host_document(&self) -> &FlowHostDocument {
         self.versions.get(self.active).expect("active Flow VCS document version")
     }
 
-    fn fixture_mut(&mut self) -> &mut FlowFixture {
+    fn fixture_mut(&mut self) -> &mut FlowHostDocument {
         self.versions.get_mut(self.active).expect("active Flow VCS document version")
     }
 }
@@ -494,7 +494,7 @@ pub struct FlowRetainedVcs {
 }
 
 impl FlowRetainedVcs {
-    pub fn new(document: FlowFixture, session_generation: u32, revision: u64, parent_revision: u64) -> Self {
+    pub fn new(document: FlowHostDocument, session_generation: u32, revision: u64, parent_revision: u64) -> Self {
         Self {
             session_generation,
             document: Some(FlowVcsDocument::new(document, revision, parent_revision)),
@@ -559,7 +559,7 @@ impl FlowRetainedVcs {
         if document.surface.is_some() || self.retired_surfaces.len() == FLOW_VCS_MAX_HISTORY {
             return Err(FlowVcsFault::Full);
         }
-        document.surface = Some(FlowSurfaceOwner::from_fixture(surface, host, generation, document.fixture()));
+        document.surface = Some(FlowSurfaceOwner::from_host_document(surface, host, generation, document.host_document()));
         Ok(())
     }
 
@@ -625,7 +625,7 @@ impl FlowRetainedVcs {
         self.admit(authority, census, FlowVcsAction::SetLayout(source.take()))
     }
 
-    pub fn begin_replace_document(&mut self, authority: FlowVcsAuthority, source: &mut FlowVcsSource<FlowFixture>) -> Result<FlowVcsHandle, FlowVcsFault> {
+    pub fn begin_replace_document(&mut self, authority: FlowVcsAuthority, source: &mut FlowVcsSource<FlowHostDocument>) -> Result<FlowVcsHandle, FlowVcsFault> {
         let census = flow_vcs_fixture_census(source.get()?);
         self.preflight(census)?;
         self.admit(authority, census, FlowVcsAction::ReplaceDocument(source.take()))
@@ -951,7 +951,7 @@ impl FlowRetainedVcs {
                 return Ok(false);
             }
             if let Some(fixture) = document.versions.pop() {
-                self.retirement.push(FlowOwner::Fixture(fixture));
+                self.retirement.push(FlowOwner::HostDocument(fixture));
                 return Ok(false);
             }
             self.document = None;
@@ -1186,9 +1186,9 @@ impl FlowRetainedVcs {
         let document = self.document.as_mut().expect("open Flow VCS document");
         let revision = document.revision.checked_add(1).ok_or(FlowVcsFault::Limit)?;
         let generation = document.generation.checked_add(1).ok_or(FlowVcsFault::Limit)?;
-        let widget_count = u32::try_from(document.fixture().widgets.len()).unwrap_or(u32::MAX);
-        let synapse_count = u32::try_from(document.fixture().synapses.len()).unwrap_or(u32::MAX);
-        let layout_count = u32::try_from(document.fixture().layout.len()).unwrap_or(u32::MAX);
+        let widget_count = u32::try_from(document.host_document().widgets.len()).unwrap_or(u32::MAX);
+        let synapse_count = u32::try_from(document.host_document().synapses.len()).unwrap_or(u32::MAX);
+        let layout_count = u32::try_from(document.host_document().layout.len()).unwrap_or(u32::MAX);
         let operation = self.operations[slot].as_mut().expect("validated Flow VCS operation");
         operation.cursor.prior_generation = document.generation;
         operation.cursor.prior_digest = document.committed_digest;
@@ -1207,9 +1207,9 @@ impl FlowRetainedVcs {
             return Err(FlowVcsFault::InsufficientGrant);
         }
         let document = self.document.as_ref().ok_or(FlowVcsFault::Closed)?;
-        let widget_count = u32::try_from(document.fixture().widgets.len()).unwrap_or(u32::MAX);
-        let synapse_count = u32::try_from(document.fixture().synapses.len()).unwrap_or(u32::MAX);
-        let layout_count = u32::try_from(document.fixture().layout.len()).unwrap_or(u32::MAX);
+        let widget_count = u32::try_from(document.host_document().widgets.len()).unwrap_or(u32::MAX);
+        let synapse_count = u32::try_from(document.host_document().synapses.len()).unwrap_or(u32::MAX);
+        let layout_count = u32::try_from(document.host_document().layout.len()).unwrap_or(u32::MAX);
         let page = FlowVcsPage {
             sequence: self.next_page,
             operation: self.operations[slot].as_ref().expect("validated Flow VCS operation").handle.operation,
@@ -1263,7 +1263,7 @@ fn flow_vcs_cursor_requires_edit(phase: FlowVcsCursorPhase) -> bool {
 
 fn flow_vcs_step_cursor(document: &mut FlowVcsDocument, operation: &mut FlowVcsOperation, grant: FlowVcsGrant) -> Result<(), FlowVcsFault> {
     match operation.cursor.phase {
-        FlowVcsCursorPhase::Scan => flow_vcs_step_scan(document.fixture(), operation),
+        FlowVcsCursorPhase::Scan => flow_vcs_step_scan(document.host_document(), operation),
         FlowVcsCursorPhase::Mutate => flow_vcs_step_mutation(document, operation, grant),
         FlowVcsCursorPhase::Shift => flow_vcs_step_shift(document.fixture_mut(), operation),
         FlowVcsCursorPhase::ReserveReplacement
@@ -1280,7 +1280,7 @@ fn flow_vcs_step_cursor(document: &mut FlowVcsDocument, operation: &mut FlowVcsO
     }
 }
 
-fn flow_vcs_step_scan(fixture: &FlowFixture, operation: &mut FlowVcsOperation) -> Result<(), FlowVcsFault> {
+fn flow_vcs_step_scan(fixture: &FlowHostDocument, operation: &mut FlowVcsOperation) -> Result<(), FlowVcsFault> {
     let index = operation.cursor.scan;
     let action = operation.action.as_ref().ok_or(FlowVcsFault::InvalidMutation)?;
     match action {
@@ -1364,7 +1364,7 @@ fn flow_vcs_step_scan(fixture: &FlowFixture, operation: &mut FlowVcsOperation) -
     Ok(())
 }
 
-fn flow_vcs_step_shift(fixture: &mut FlowFixture, operation: &mut FlowVcsOperation) -> Result<(), FlowVcsFault> {
+fn flow_vcs_step_shift(fixture: &mut FlowHostDocument, operation: &mut FlowVcsOperation) -> Result<(), FlowVcsFault> {
     let cursor = &mut operation.cursor;
     match cursor.kind {
         FlowVcsCursorKind::InsertWidget | FlowVcsCursorKind::InsertSynapse => {
@@ -1516,7 +1516,7 @@ fn flow_vcs_step_document_replacement(document: &mut FlowVcsDocument, operation:
             if document.versions.is_full() {
                 return Err(FlowVcsFault::Full);
             }
-            let empty = FlowFixture { schema: String::new(), camera: CameraJson { x: 0.0, y: 0.0, zoom: 0.0 }, widgets: Vec::new(), synapses: Vec::new(), layout: OrderedMap::new() };
+            let empty = FlowHostDocument { schema: String::new(), camera: CameraJson { x: 0.0, y: 0.0, zoom: 0.0 }, widgets: Vec::new(), synapses: Vec::new(), layout: OrderedMap::new() };
             document.versions.push(empty).map_err(|_| FlowVcsFault::Full)?;
             operation.cursor.target = document.versions.len() - 1;
             operation.cursor.mutated = true;
@@ -1724,7 +1724,7 @@ fn flow_vcs_step_rollback(document: &mut FlowVcsDocument, operation: &mut FlowVc
                 return Err(FlowVcsFault::ClosePending);
             }
             let candidate = document.versions.pop().ok_or(FlowVcsFault::InvalidMutation)?;
-            operation.retirement.push(FlowOwner::Fixture(candidate));
+            operation.retirement.push(FlowOwner::HostDocument(candidate));
         }
         FlowVcsCursorKind::None => {}
     }
@@ -1738,7 +1738,7 @@ fn flow_vcs_step_rollback(document: &mut FlowVcsDocument, operation: &mut FlowVc
 
 fn flow_vcs_retire_action(action: FlowVcsAction, retirement: &mut FlowRetirement) {
     match action {
-        FlowVcsAction::ReplaceDocument(fixture) => retirement.push(FlowOwner::Fixture(fixture)),
+        FlowVcsAction::ReplaceDocument(fixture) => retirement.push(FlowOwner::HostDocument(fixture)),
         FlowVcsAction::LayoutRoot(layout) => retirement.push(FlowOwner::Layouts(layout)),
         FlowVcsAction::SetLayout(entry) => retirement.text(entry.id),
         FlowVcsAction::InsertWidget { item, .. } => retirement.push(FlowOwner::Widget(item)),
@@ -1757,9 +1757,9 @@ fn flow_vcs_retire_action(action: FlowVcsAction, retirement: &mut FlowRetirement
     }
 }
 
-fn flow_vcs_fixture_census(fixture: &FlowFixture) -> FlowVcsCensus {
+fn flow_vcs_fixture_census(fixture: &FlowHostDocument) -> FlowVcsCensus {
     let items = 1usize.saturating_add(fixture.widgets.len()).saturating_add(fixture.synapses.len()).saturating_add(fixture.layout.len());
-    let bytes = size_of::<FlowFixture>()
+    let bytes = size_of::<FlowHostDocument>()
         .saturating_add(fixture.schema.len())
         .saturating_add(fixture.widgets.len().saturating_mul(size_of::<Widget>()))
         .saturating_add(fixture.synapses.len().saturating_mul(size_of::<SynapseSpec>()))
@@ -1794,7 +1794,7 @@ fn flow_vcs_synapse_census(synapse: &SynapseSpec) -> FlowVcsCensus {
     FlowVcsCensus::leaf(synapse.id.len() + synapse.from.len() + synapse.to.len() + synapse.from_port.len() + synapse.to_port.len())
 }
 
-fn flow_vcs_fixture_scalar_digest(fixture: &FlowFixture) -> u64 {
+fn flow_vcs_host_document_scalar_digest(fixture: &FlowHostDocument) -> u64 {
     14_695_981_039_346_656_037
         ^ u64::try_from(fixture.schema.len()).unwrap_or(u64::MAX).rotate_left(3)
         ^ u64::try_from(fixture.widgets.len()).unwrap_or(u64::MAX).rotate_left(11)
@@ -1809,7 +1809,7 @@ fn flow_vcs_fixture_scalar_digest(fixture: &FlowFixture) -> u64 {
 
 // #region 🔖️FormsBridge
 pub mod forms_bridge {
-    use super::{FlowFixture, Widget};
+    use super::{FlowHostDocument, Widget};
     use crate::playbook::{PlaybookBlock, PlaybookBlockOption, PlaybookSpec, PlaybookStep, PLAYBOOK_DOCUMENT_SCHEMA};
 
     fn humanize_widget_label(id: &str) -> String {
@@ -1957,7 +1957,7 @@ pub mod forms_bridge {
         }
     }
 
-    pub fn flow_fixture_to_form_spec(fixture: &FlowFixture) -> PlaybookSpec {
+    pub fn flow_host_document_to_form_spec(fixture: &FlowHostDocument) -> PlaybookSpec {
         let blocks: Vec<PlaybookBlock> = fixture.widgets.iter().filter_map(widget_to_playbook_block).collect();
         PlaybookSpec { schema: PLAYBOOK_DOCUMENT_SCHEMA.into(), id: "flow-generate".into(), version: "1".into(), title: Some("Generate".into()), steps: vec![PlaybookStep { id: "inputs".into(), title: "Inputs".into(), description: None, blocks }] }
     }
@@ -1982,7 +1982,7 @@ pub mod forms_bridge {
         }
     }
 
-    pub fn apply_generation_values_to_fixture(fixture_json: &str, values: &crate::os_pack::json::Object) -> String {
+    pub fn apply_generation_values_to_host_document(fixture_json: &str, values: &crate::os_pack::json::Object) -> String {
         let Ok(mut root) = crate::os_pack::json::parse(fixture_json) else {
             return fixture_json.to_string();
         };

@@ -8,8 +8,8 @@ use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::sync::{Arc, LazyLock, Mutex};
 
 use dag::{fit_node_size, would_create_cycle, DagHost, DagLayoutOptions};
-use semio_framework_artifact_infinite_dag::{dag_fixture_execution_rows, dag_fixture_to_wire_literal, DagFixture, DagFixtureEdge, DagNodeKind, DagNodeSpec, EdgeRouteStyle, IoPortSpec};
-use semio_framework_artifact_flow_flow::{widget_id_for, FlowMutation, FlowStore, ReplaceFlowFixture, FLOW_DOCUMENT_SCHEMA};
+use semio_framework_artifact_infinite_dag::{dag_fixture_execution_rows, dag_fixture_to_wire_literal, DagHostDocument, DagHostDocumentEdge, DagNodeKind, DagNodeSpec, EdgeRouteStyle, IoPortSpec};
+use semio_framework_artifact_flow_flow::{widget_id_for, FlowMutation, FlowStore, ReplaceFlowHostDocument, FLOW_DOCUMENT_SCHEMA};
 use graph::dsl::{WireEdge, WireNode};
 use graph::manifest::{PropertyBag, PropertyValue};
 use neural::{
@@ -161,7 +161,7 @@ impl FlowWheelPlan {
 
 /// 🏠️ Retained flow host: fixture, dag scene, evaluation cache.
 pub struct FlowHost {
-    pub fixture: FlowFixture,
+    pub host_document: FlowHostDocument,
     pub dag: DagHost,
     pub outputs: BTreeMap<String, Dictionary>,
     export_payloads: BTreeMap<String, Dictionary>,
@@ -192,10 +192,10 @@ pub struct FlowHost {
     viewport_dpr: f64,
     pan_anchor: Option<(f64, f64, f64, f64)>,
     ghost_node: Option<DagNodeSpec>,
-    /// ↩️ Undo/redo, backed by the standard `crate::os_store::ArtifactStore<FlowFixture, FlowMutation>`
+    /// ↩️ Undo/redo, backed by the standard `crate::os_store::ArtifactStore<FlowHostDocument, FlowMutation>`
     /// mechanism (see the `impl FlowHost`'s `🔖️History` region) instead of a hand-rolled snapshot stack.
     history_store: Option<FlowStore>,
-    pending_history_baseline: Option<FlowFixture>,
+    pending_history_baseline: Option<FlowHostDocument>,
     /// 🚩️ Armed by `begin_change`/`begin_gesture` for a discrete mutation not yet flushed into
     /// `history_store` — lets `can_undo` reflect it immediately, mirroring how the old snapshot stack's
     /// `begin_change` pushed synchronously instead of lazily.
@@ -229,31 +229,31 @@ pub struct FlowHost {
 
 impl Default for FlowHost {
     fn default() -> Self {
-        Self::from_fixture(FlowFixture::default())
+        Self::from_host_document(FlowHostDocument::default())
     }
 }
 
 impl FlowHost {
-    pub fn from_fixture(fixture: FlowFixture) -> Self {
-        Self::from_fixture_with_cache(fixture, Arc::new(NeuralCache::new()))
+    pub fn from_host_document(fixture: FlowHostDocument) -> Self {
+        Self::from_host_document_with_cache(fixture, Arc::new(NeuralCache::new()))
     }
 
     /// 🧠️ Builds a host sharing an existing [`NeuralCache`] — lets a long-lived caller (e.g. a
     /// stateless request/response program boundary that reconstructs `FlowHost` on every call)
     /// keep per-node memoization alive across those reconstructions instead of discarding it.
-    pub fn from_fixture_with_cache(fixture: FlowFixture, neural_cache: Arc<NeuralCache>) -> Self {
-        Self::from_fixture_with_cache_and_infos(fixture, neural_cache, Arc::default())
+    pub fn from_host_document_with_cache(fixture: FlowHostDocument, neural_cache: Arc<NeuralCache>) -> Self {
+        Self::from_host_document_with_cache_and_infos(fixture, neural_cache, Arc::default())
     }
 
     /// 🏠️ Builds a host that ALREADY indexes `kind_infos`. The ONE construction path for a caller
     /// that would set the operator catalogue immediately afterwards: the bare constructor builds its
     /// dag against an empty catalogue, and the setter's own `rebuild_dag` then throws that work away
     /// — twice per evaluation tick (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-    pub fn from_fixture_with_cache_and_infos(mut fixture: FlowFixture, neural_cache: Arc<NeuralCache>, kind_infos: Arc<HashMap<String, OperatorInfo>>) -> Self {
-        dedupe_fixture_widgets(&mut fixture);
+    pub fn from_host_document_with_cache_and_infos(mut fixture: FlowHostDocument, neural_cache: Arc<NeuralCache>, kind_infos: Arc<HashMap<String, OperatorInfo>>) -> Self {
+        dedupe_host_document_widgets(&mut fixture);
         let mut host = Self {
-            fixture,
-            dag: DagHost::from_fixture(DagFixture { schema: "dag.fixture".into(), camera: semio_framework_artifact_infinite_dag::DagCamera { x: 0.0, y: 0.0, zoom: 1.0 }, nodes: vec![], edges: vec![] }),
+            host_document: fixture,
+            dag: DagHost::from_host_document(DagHostDocument { schema: "dag.host_document".into(), camera: semio_framework_artifact_infinite_dag::DagCamera { x: 0.0, y: 0.0, zoom: 1.0 }, nodes: vec![], edges: vec![] }),
             outputs: BTreeMap::new(),
             export_payloads: BTreeMap::new(),
             last_eval_json: String::new(),
@@ -287,28 +287,28 @@ impl FlowHost {
     }
 
     /// 📥️ Replaces fixture content while keeping catalogue, operator metadata, eval bridge, and the live camera.
-    pub fn replace_fixture(&mut self, fixture: FlowFixture) {
-        self.apply_fixture(fixture, true, false);
+    pub fn replace_host_document(&mut self, fixture: FlowHostDocument) {
+        self.apply_host_document(fixture, true, false);
     }
 
     /// 📥️ Scene resync: reloads fixture layout/content without discarding eval baseline or cached outputs.
-    pub fn resync_fixture_from_scene(&mut self, fixture: FlowFixture) {
-        self.apply_fixture(fixture, false, true);
+    pub fn resync_host_document_from_scene(&mut self, fixture: FlowHostDocument) {
+        self.apply_host_document(fixture, false, true);
     }
 
     /// 📥️ Replaces fixture content without clearing undo/redo history.
-    pub fn set_fixture_preserving_history(&mut self, fixture: FlowFixture) {
-        self.apply_fixture(fixture, false, false);
+    pub fn set_host_document_preserving_history(&mut self, fixture: FlowHostDocument) {
+        self.apply_host_document(fixture, false, false);
     }
 
-    fn apply_fixture(&mut self, mut fixture: FlowFixture, reset_history: bool, preserve_eval: bool) {
+    fn apply_host_document(&mut self, mut fixture: FlowHostDocument, reset_history: bool, preserve_eval: bool) {
         self.interaction_revision = self.interaction_revision.wrapping_add(1);
-        dedupe_fixture_widgets(&mut fixture);
+        dedupe_host_document_widgets(&mut fixture);
         // 🎥️ Camera is ephemeral view state (same as undo/redo) — never snap the live pan/zoom when a
         // scene resync reloads fixture content (hover, eval tick, remote operations, …).
-        let camera = self.fixture.camera.clone();
+        let camera = self.host_document.camera.clone();
         fixture.camera = camera;
-        std::mem::replace(&mut self.fixture, fixture).retire_cold();
+        std::mem::replace(&mut self.host_document, fixture).retire_cold();
         if !preserve_eval {
             self.displace_eval_state();
             self.last_eval_json.clear();
@@ -319,9 +319,9 @@ impl FlowHost {
         self.refresh_interaction_projection();
         if reset_history {
             if let Some(store) = self.history_store.as_mut() {
-                let envelope = create_document_envelope(FLOW_DOCUMENT_SCHEMA, "flow-host", self.fixture.clone(), None);
+                let envelope = create_document_envelope(FLOW_DOCUMENT_SCHEMA, "flow-host", self.host_document.clone(), None);
                 resolve_ready(store.reset(envelope, Vec::new(), Vec::new())).expect("failed to reset flow history store");
-                store.install_document_store_owners_exact(FlowFixture::member_store_owners());
+                store.install_document_store_owners_exact(FlowHostDocument::member_store_owners());
             }
             if let Some(stale) = self.pending_history_baseline.take() {
                 stale.retire_cold();
@@ -331,16 +331,16 @@ impl FlowHost {
         }
     }
 
-    pub fn parse_fixture_json(json: &str) -> Result<FlowFixture, FlowCoreError> {
+    pub fn parse_host_document_json(json: &str) -> Result<FlowHostDocument, FlowCoreError> {
         Ok(crate::os_pack::json::from_json_str(json)?)
     }
 
-    pub fn fixture_json(&self) -> Result<String, FlowCoreError> {
-        Ok(crate::os_pack::json::to_json_string(&self.fixture))
+    pub fn host_document_json(&self) -> Result<String, FlowCoreError> {
+        Ok(crate::os_pack::json::to_json_string(&self.host_document))
     }
 
     pub fn document(&self) -> FlowArtifact {
-        self.fixture.to_artifact()
+        self.host_document.to_artifact()
     }
 
     pub fn catalogue_json(&self) -> Result<String, FlowCoreError> {
@@ -567,24 +567,24 @@ impl FlowHost {
     }
 
     pub fn set_camera(&mut self, x: f64, y: f64, zoom: f64) {
-        self.fixture.camera = CameraJson { x, y, zoom: zoom.clamp(ui_styling::metrics::camera::ZOOM_MIN, ui_styling::metrics::camera::FLOW_ZOOM_MAX) };
-        self.dag.set_camera(x, y, self.fixture.camera.zoom);
+        self.host_document.camera = CameraJson { x, y, zoom: zoom.clamp(ui_styling::metrics::camera::ZOOM_MIN, ui_styling::metrics::camera::FLOW_ZOOM_MAX) };
+        self.dag.set_camera(x, y, self.host_document.camera.zoom);
         self.interaction_revision = self.interaction_revision.wrapping_add(1);
         self.refresh_interaction_projection();
     }
 
-    /// 📷️ The ONE camera of a flow surface. `self.fixture.camera` is the authority — it is what
-    /// `screen_to_world_point` projects with, what `build_dag_fixture_v1` re-seeds the dag copy from
+    /// 📷️ The ONE camera of a flow surface. `self.host_document.camera` is the authority — it is what
+    /// `screen_to_world_point` projects with, what `build_dag_host_document_v1` re-seeds the dag copy from
     /// on every rebuild, and what the renderer publishes as `nodeGraphViewport`. The dag's own
     /// `fixture.camera` is a derived paint copy; reading it instead is how a fit got published stale.
     pub fn camera(&self) -> [f64; 3] {
-        [self.fixture.camera.x, self.fixture.camera.y, self.fixture.camera.zoom]
+        [self.host_document.camera.x, self.host_document.camera.y, self.host_document.camera.zoom]
     }
 
     /// 📷️ Adopts a camera the DAG computed for itself (a fit, a refit, an opening decision) into the
     /// authority, so the published, projected and painted cameras cannot drift apart.
     fn adopt_dag_camera(&mut self) {
-        self.fixture.camera = CameraJson { x: self.dag.fixture.camera.x, y: self.dag.fixture.camera.y, zoom: self.dag.fixture.camera.zoom };
+        self.host_document.camera = CameraJson { x: self.dag.host_document.camera.x, y: self.dag.host_document.camera.y, zoom: self.dag.host_document.camera.zoom };
         self.interaction_revision = self.interaction_revision.wrapping_add(1);
         self.refresh_interaction_projection();
     }
@@ -634,7 +634,7 @@ impl FlowHost {
     }
 
     pub fn plan_wheel(&self, sx: f64, sy: f64, delta_x: f64, delta_y: f64, zoom_gesture: bool) -> FlowWheelPlan {
-        let camera = &self.fixture.camera;
+        let camera = &self.host_document.camera;
         let expected = [camera.x, camera.y, camera.zoom];
         let next = if zoom_gesture {
             use canvas::camera::{screen_to_world, Camera, Viewport};
@@ -653,11 +653,11 @@ impl FlowHost {
     }
 
     pub fn commit_wheel(&mut self, plan: FlowWheelPlan) -> bool {
-        let camera = &self.fixture.camera;
+        let camera = &self.host_document.camera;
         if self.interaction_revision != plan.revision || [camera.x.to_bits(), camera.y.to_bits(), camera.zoom.to_bits()] != [plan.expected[0].to_bits(), plan.expected[1].to_bits(), plan.expected[2].to_bits()] {
             return false;
         }
-        self.fixture.camera = CameraJson { x: plan.next[0], y: plan.next[1], zoom: plan.next[2] };
+        self.host_document.camera = CameraJson { x: plan.next[0], y: plan.next[1], zoom: plan.next[2] };
         self.dag.set_camera(plan.next[0], plan.next[1], plan.next[2]);
         self.interaction_revision = self.interaction_revision.wrapping_add(1);
         self.refresh_interaction_projection();
@@ -689,8 +689,8 @@ impl FlowHost {
             let Some((id, x, y)) = self.dag.pointer_plan_move(&plan, index) else {
                 continue;
             };
-            if self.fixture.layout.contains_key(id) {
-                self.fixture.layout.insert(id.to_owned(), WidgetLayout { x, y });
+            if self.host_document.layout.contains_key(id) {
+                self.host_document.layout.insert(id.to_owned(), WidgetLayout { x, y });
             }
         }
         self.dag.apply_pointer_plan(&plan);
@@ -717,20 +717,20 @@ impl FlowHost {
     pub fn wheel_zoom_screen(&mut self, sx: f64, sy: f64, delta_y: f64) {
         let before = self.screen_to_world_point(sx, sy);
         let factor = if delta_y < 0.0 { ui_styling::metrics::camera::WHEEL_ZOOM_IN_FACTOR } else { ui_styling::metrics::camera::WHEEL_ZOOM_OUT_FACTOR };
-        let zoom = (self.fixture.camera.zoom * factor).clamp(ui_styling::metrics::camera::ZOOM_MIN, ui_styling::metrics::camera::FLOW_ZOOM_MAX);
-        self.fixture.camera.zoom = zoom;
-        self.dag.set_camera(self.fixture.camera.x, self.fixture.camera.y, zoom);
+        let zoom = (self.host_document.camera.zoom * factor).clamp(ui_styling::metrics::camera::ZOOM_MIN, ui_styling::metrics::camera::FLOW_ZOOM_MAX);
+        self.host_document.camera.zoom = zoom;
+        self.dag.set_camera(self.host_document.camera.x, self.host_document.camera.y, zoom);
         self.interaction_revision = self.interaction_revision.wrapping_add(1);
         let after = self.screen_to_world_point(sx, sy);
-        self.fixture.camera.x += before.x - after.x;
-        self.fixture.camera.y += before.y - after.y;
-        self.dag.set_camera(self.fixture.camera.x, self.fixture.camera.y, zoom);
+        self.host_document.camera.x += before.x - after.x;
+        self.host_document.camera.y += before.y - after.y;
+        self.dag.set_camera(self.host_document.camera.x, self.host_document.camera.y, zoom);
     }
 
     pub fn wheel_pan_screen(&mut self, delta_x: f64, delta_y: f64) {
-        let zoom = self.fixture.camera.zoom;
-        let x = self.fixture.camera.x - delta_x / zoom;
-        let y = self.fixture.camera.y - delta_y / zoom;
+        let zoom = self.host_document.camera.zoom;
+        let x = self.host_document.camera.x - delta_x / zoom;
+        let y = self.host_document.camera.y - delta_y / zoom;
         self.set_camera(x, y, zoom);
     }
 
@@ -769,41 +769,41 @@ impl FlowHost {
         self.clear_ghost_widget();
         let descriptor: WidgetDescriptor = crate::os_pack::json::from_json_str(descriptor_json)?;
         let id = descriptor_explicit_id(&descriptor).unwrap_or_else(|| self.next_widget_id(&descriptor));
-        if self.fixture.widgets.iter().any(|widget| widget_id_for(widget) == id) {
+        if self.host_document.widgets.iter().any(|widget| widget_id_for(widget) == id) {
             return Err(FlowCoreError::WidgetIdExists(id));
         }
         let widget = widget_from_descriptor(&descriptor, id.clone(), &self.kind_infos);
-        self.fixture.widgets.push(widget);
-        self.fixture.layout.insert(id.clone(), WidgetLayout { x: world_x, y: world_y });
+        self.host_document.widgets.push(widget);
+        self.host_document.layout.insert(id.clone(), WidgetLayout { x: world_x, y: world_y });
         self.rebuild_dag();
         Ok(id)
     }
 
     pub fn remove_widget(&mut self, widget_id: &str) -> Result<(), FlowCoreError> {
         self.begin_change();
-        let before = self.fixture.widgets.len();
-        self.fixture.widgets.retain(|w| widget_id_for(w) != widget_id);
-        if self.fixture.widgets.len() == before {
+        let before = self.host_document.widgets.len();
+        self.host_document.widgets.retain(|w| widget_id_for(w) != widget_id);
+        if self.host_document.widgets.len() == before {
             return Err(FlowCoreError::UnknownWidget(widget_id.to_string()));
         }
-        self.fixture.layout.remove(widget_id);
-        self.fixture.synapses.retain(|s| s.from != widget_id && s.to != widget_id);
+        self.host_document.layout.remove(widget_id);
+        self.host_document.synapses.retain(|s| s.from != widget_id && s.to != widget_id);
         self.rebuild_dag();
         Ok(())
     }
 
     pub fn move_widget(&mut self, widget_id: &str, x: f64, y: f64) -> Result<(), FlowCoreError> {
-        if !self.fixture.widgets.iter().any(|w| widget_id_for(w) == widget_id) {
+        if !self.host_document.widgets.iter().any(|w| widget_id_for(w) == widget_id) {
             return Err(FlowCoreError::UnknownWidget(widget_id.to_string()));
         }
-        self.fixture.layout.insert(widget_id.to_string(), WidgetLayout { x, y });
+        self.host_document.layout.insert(widget_id.to_string(), WidgetLayout { x, y });
         self.dag.set_widget_position(widget_id, x, y)?;
         Ok(())
     }
 
     pub fn connect(&mut self, from_id: &str, to_id: &str) -> Result<String, FlowCoreError> {
-        let from_port = first_output_port(from_id, &self.fixture.widgets, &self.fixture.synapses, &self.kind_infos);
-        let to_port = first_input_port(to_id, &self.fixture.widgets, &self.fixture.synapses, &self.kind_infos);
+        let from_port = first_output_port(from_id, &self.host_document.widgets, &self.host_document.synapses, &self.kind_infos);
+        let to_port = first_input_port(to_id, &self.host_document.widgets, &self.host_document.synapses, &self.kind_infos);
         self.connect_ports(from_id, &from_port, to_id, &to_port)
     }
 
@@ -812,21 +812,21 @@ impl FlowHost {
         if from_id == to_id {
             return Err(FlowCoreError::SelfConnection);
         }
-        if !widget_has_output(from_id, &self.fixture.widgets, &self.fixture.synapses, &self.kind_infos) {
+        if !widget_has_output(from_id, &self.host_document.widgets, &self.host_document.synapses, &self.kind_infos) {
             return Err(FlowCoreError::NoOutputPort(from_id.to_string()));
         }
-        if !widget_has_input(to_id, &self.fixture.widgets, &self.fixture.synapses, &self.kind_infos) {
+        if !widget_has_input(to_id, &self.host_document.widgets, &self.host_document.synapses, &self.kind_infos) {
             return Err(FlowCoreError::NoInputPort(to_id.to_string()));
         }
-        let existing: Vec<(String, String)> = self.fixture.synapses.iter().map(|s| (s.from.clone(), s.to.clone())).collect();
+        let existing: Vec<(String, String)> = self.host_document.synapses.iter().map(|s| (s.from.clone(), s.to.clone())).collect();
         if would_create_cycle(&existing, from_id, to_id) {
             return Err(FlowCoreError::CycleWouldBeCreated);
         }
-        if self.fixture.synapses.iter().any(|s| s.from == from_id && s.from_port == from_port && s.to == to_id && s.to_port == to_port) {
+        if self.host_document.synapses.iter().any(|s| s.from == from_id && s.from_port == from_port && s.to == to_id && s.to_port == to_port) {
             return Err(FlowCoreError::ConnectionAlreadyExists);
         }
-        let source_types = widget_port_value_types(from_id, from_port, PortSide::Output, &self.fixture.widgets, &self.fixture.synapses, &self.kind_infos);
-        let target_types = widget_port_value_types(to_id, to_port, PortSide::Input, &self.fixture.widgets, &self.fixture.synapses, &self.kind_infos);
+        let source_types = widget_port_value_types(from_id, from_port, PortSide::Output, &self.host_document.widgets, &self.host_document.synapses, &self.kind_infos);
+        let target_types = widget_port_value_types(to_id, to_port, PortSide::Input, &self.host_document.widgets, &self.host_document.synapses, &self.kind_infos);
         if !port_value_types_compatible(&source_types, &target_types) {
             return Err(FlowCoreError::IncompatiblePortTypes {
                 source: format!("{from_id}@{from_port}"),
@@ -835,10 +835,10 @@ impl FlowHost {
                 target_type: target_types.join(","),
             });
         }
-        self.fixture.synapses.retain(|s| !(s.to == to_id && s.to_port == to_port));
+        self.host_document.synapses.retain(|s| !(s.to == to_id && s.to_port == to_port));
         self.next_synapse_serial += 1;
         let synapse_id = format!("s{}", self.next_synapse_serial);
-        self.fixture.synapses.push(SynapseSpec { id: synapse_id.clone(), from: from_id.to_string(), to: to_id.to_string(), from_port: from_port.to_string(), to_port: to_port.to_string() });
+        self.host_document.synapses.push(SynapseSpec { id: synapse_id.clone(), from: from_id.to_string(), to: to_id.to_string(), from_port: from_port.to_string(), to_port: to_port.to_string() });
         self.rebuild_dag();
         Ok(synapse_id)
     }
@@ -855,7 +855,7 @@ impl FlowHost {
             })
             .ok_or_else(|| FlowCoreError::UnknownNeuronWidget(widget_id.to_string()))?;
         let spec = self.kind_infos.get(&neuron_kind).and_then(|info| info.variadic_input.clone()).ok_or_else(|| FlowCoreError::NotVariadicInput(widget_id.to_string()))?;
-        let widget = self.fixture.widgets.iter_mut().find(|widget| widget_id_for(widget) == widget_id).ok_or_else(|| FlowCoreError::UnknownWidget(widget_id.to_string()))?;
+        let widget = self.host_document.widgets.iter_mut().find(|widget| widget_id_for(widget) == widget_id).ok_or_else(|| FlowCoreError::UnknownWidget(widget_id.to_string()))?;
         let Widget::Neuron { input_ports, .. } = widget else {
             return Err(FlowCoreError::NotNeuron(widget_id.to_string()));
         };
@@ -867,7 +867,7 @@ impl FlowHost {
         }
         let insert_at = index.min(ports.len());
         ports.insert(insert_at, insert_at.to_string());
-        for synapse in &mut self.fixture.synapses {
+        for synapse in &mut self.host_document.synapses {
             if synapse.to != widget_id {
                 continue;
             }
@@ -894,7 +894,7 @@ impl FlowHost {
             })
             .ok_or_else(|| FlowCoreError::UnknownNeuronWidget(widget_id.to_string()))?;
         let spec = self.kind_infos.get(&neuron_kind).and_then(|info| info.variadic_input.clone()).ok_or_else(|| FlowCoreError::NotVariadicInput(widget_id.to_string()))?;
-        let widget = self.fixture.widgets.iter_mut().find(|widget| widget_id_for(widget) == widget_id).ok_or_else(|| FlowCoreError::UnknownWidget(widget_id.to_string()))?;
+        let widget = self.host_document.widgets.iter_mut().find(|widget| widget_id_for(widget) == widget_id).ok_or_else(|| FlowCoreError::UnknownWidget(widget_id.to_string()))?;
         let Widget::Neuron { input_ports, .. } = widget else {
             return Err(FlowCoreError::NotNeuron(widget_id.to_string()));
         };
@@ -905,8 +905,8 @@ impl FlowHost {
         let Some(remove_index) = ports.iter().position(|port| port == port_id) else {
             return Err(FlowCoreError::UnknownInputPort(port_id.to_string()));
         };
-        self.fixture.synapses.retain(|synapse| !(synapse.to == widget_id && synapse.to_port == port_id));
-        for synapse in &mut self.fixture.synapses {
+        self.host_document.synapses.retain(|synapse| !(synapse.to == widget_id && synapse.to_port == port_id));
+        for synapse in &mut self.host_document.synapses {
             if synapse.to != widget_id {
                 continue;
             }
@@ -935,7 +935,7 @@ impl FlowHost {
             })
             .ok_or_else(|| FlowCoreError::UnknownNeuronWidget(widget_id.to_string()))?;
         let spec = self.kind_infos.get(&neuron_kind).and_then(|info| info.variadic_output.clone()).ok_or_else(|| FlowCoreError::NotVariadicOutput(widget_id.to_string()))?;
-        let widget = self.fixture.widgets.iter_mut().find(|widget| widget_id_for(widget) == widget_id).ok_or_else(|| FlowCoreError::UnknownWidget(widget_id.to_string()))?;
+        let widget = self.host_document.widgets.iter_mut().find(|widget| widget_id_for(widget) == widget_id).ok_or_else(|| FlowCoreError::UnknownWidget(widget_id.to_string()))?;
         let Widget::Neuron { output_ports, .. } = widget else {
             return Err(FlowCoreError::NotNeuron(widget_id.to_string()));
         };
@@ -947,7 +947,7 @@ impl FlowHost {
         }
         let insert_at = index.min(ports.len());
         ports.insert(insert_at, insert_at.to_string());
-        for synapse in &mut self.fixture.synapses {
+        for synapse in &mut self.host_document.synapses {
             if synapse.from != widget_id {
                 continue;
             }
@@ -974,7 +974,7 @@ impl FlowHost {
             })
             .ok_or_else(|| FlowCoreError::UnknownNeuronWidget(widget_id.to_string()))?;
         let spec = self.kind_infos.get(&neuron_kind).and_then(|info| info.variadic_output.clone()).ok_or_else(|| FlowCoreError::NotVariadicOutput(widget_id.to_string()))?;
-        let widget = self.fixture.widgets.iter_mut().find(|widget| widget_id_for(widget) == widget_id).ok_or_else(|| FlowCoreError::UnknownWidget(widget_id.to_string()))?;
+        let widget = self.host_document.widgets.iter_mut().find(|widget| widget_id_for(widget) == widget_id).ok_or_else(|| FlowCoreError::UnknownWidget(widget_id.to_string()))?;
         let Widget::Neuron { output_ports, .. } = widget else {
             return Err(FlowCoreError::NotNeuron(widget_id.to_string()));
         };
@@ -985,8 +985,8 @@ impl FlowHost {
         let Some(remove_index) = ports.iter().position(|port| port == port_id) else {
             return Err(FlowCoreError::UnknownOutputPort(port_id.to_string()));
         };
-        self.fixture.synapses.retain(|synapse| !(synapse.from == widget_id && synapse.from_port == port_id));
-        for synapse in &mut self.fixture.synapses {
+        self.host_document.synapses.retain(|synapse| !(synapse.from == widget_id && synapse.from_port == port_id));
+        for synapse in &mut self.host_document.synapses {
             if synapse.from != widget_id {
                 continue;
             }
@@ -1005,9 +1005,9 @@ impl FlowHost {
 
     pub fn disconnect(&mut self, synapse_id: &str) -> Result<(), FlowCoreError> {
         self.begin_change();
-        let before = self.fixture.synapses.len();
-        self.fixture.synapses.retain(|s| s.id != synapse_id);
-        if self.fixture.synapses.len() == before {
+        let before = self.host_document.synapses.len();
+        self.host_document.synapses.retain(|s| s.id != synapse_id);
+        if self.host_document.synapses.len() == before {
             return Err(FlowCoreError::UnknownSynapse(synapse_id.to_string()));
         }
         self.rebuild_dag();
@@ -1018,44 +1018,44 @@ impl FlowHost {
     /// 🔀️ Splices `mid_id` between `anchor_id` and its downstream consumers on `anchor_out_port`.
     pub fn insert_between(&mut self, anchor_id: &str, anchor_out_port: &str, mid_id: &str, mid_in_port: &str, mid_out_port: &str) -> Result<(), FlowCoreError> {
         self.begin_change();
-        if !self.fixture.widgets.iter().any(|widget| widget_id_for(widget) == anchor_id) {
+        if !self.host_document.widgets.iter().any(|widget| widget_id_for(widget) == anchor_id) {
             return Err(FlowCoreError::UnknownWidget(anchor_id.to_string()));
         }
-        if !self.fixture.widgets.iter().any(|widget| widget_id_for(widget) == mid_id) {
+        if !self.host_document.widgets.iter().any(|widget| widget_id_for(widget) == mid_id) {
             return Err(FlowCoreError::UnknownWidget(mid_id.to_string()));
         }
         if anchor_id == mid_id {
             return Err(FlowCoreError::SelfInsertion);
         }
-        if !widget_has_output(anchor_id, &self.fixture.widgets, &self.fixture.synapses, &self.kind_infos) {
+        if !widget_has_output(anchor_id, &self.host_document.widgets, &self.host_document.synapses, &self.kind_infos) {
             return Err(FlowCoreError::NoOutputPort(anchor_id.to_string()));
         }
-        if !widget_has_input(mid_id, &self.fixture.widgets, &self.fixture.synapses, &self.kind_infos) {
+        if !widget_has_input(mid_id, &self.host_document.widgets, &self.host_document.synapses, &self.kind_infos) {
             return Err(FlowCoreError::NoInputPort(mid_id.to_string()));
         }
-        if !widget_has_output(mid_id, &self.fixture.widgets, &self.fixture.synapses, &self.kind_infos) {
+        if !widget_has_output(mid_id, &self.host_document.widgets, &self.host_document.synapses, &self.kind_infos) {
             return Err(FlowCoreError::NoOutputPort(mid_id.to_string()));
         }
-        let existing: Vec<(String, String)> = self.fixture.synapses.iter().map(|synapse| (synapse.from.clone(), synapse.to.clone())).collect();
+        let existing: Vec<(String, String)> = self.host_document.synapses.iter().map(|synapse| (synapse.from.clone(), synapse.to.clone())).collect();
         if would_create_cycle(&existing, anchor_id, mid_id) {
             return Err(FlowCoreError::CycleWouldBeCreated);
         }
-        let mid_has_input = self.fixture.synapses.iter().any(|synapse| synapse.to == mid_id);
+        let mid_has_input = self.host_document.synapses.iter().any(|synapse| synapse.to == mid_id);
         if !mid_has_input {
-            for synapse in &mut self.fixture.synapses {
+            for synapse in &mut self.host_document.synapses {
                 if synapse.from == anchor_id && synapse.from_port == anchor_out_port {
                     synapse.from = mid_id.to_string();
                     synapse.from_port = mid_out_port.to_string();
                 }
             }
         }
-        if self.fixture.synapses.iter().any(|synapse| synapse.from == anchor_id && synapse.from_port == anchor_out_port && synapse.to == mid_id && synapse.to_port == mid_in_port) {
+        if self.host_document.synapses.iter().any(|synapse| synapse.from == anchor_id && synapse.from_port == anchor_out_port && synapse.to == mid_id && synapse.to_port == mid_in_port) {
             self.rebuild_dag();
             return Ok(());
         }
         self.next_synapse_serial += 1;
         let synapse_id = format!("s{}", self.next_synapse_serial);
-        self.fixture.synapses.push(SynapseSpec { id: synapse_id, from: anchor_id.to_string(), to: mid_id.to_string(), from_port: anchor_out_port.to_string(), to_port: mid_in_port.to_string() });
+        self.host_document.synapses.push(SynapseSpec { id: synapse_id, from: anchor_id.to_string(), to: mid_id.to_string(), from_port: anchor_out_port.to_string(), to_port: mid_in_port.to_string() });
         self.rebuild_dag();
         Ok(())
     }
@@ -1063,8 +1063,8 @@ impl FlowHost {
     /// ↔ Shifts widgets to the right of `anchor_id` to open layout space for inserted nodes.
     pub fn make_space(&mut self, anchor_id: &str, dx: f64, dy: f64) -> Result<(), FlowCoreError> {
         self.begin_change();
-        let anchor_x = self.fixture.layout.get(anchor_id).map(|layout| layout.x).ok_or_else(|| FlowCoreError::UnknownWidgetLayout(anchor_id.to_string()))?;
-        let previous = std::mem::take(&mut self.fixture.layout);
+        let anchor_x = self.host_document.layout.get(anchor_id).map(|layout| layout.x).ok_or_else(|| FlowCoreError::UnknownWidgetLayout(anchor_id.to_string()))?;
+        let previous = std::mem::take(&mut self.host_document.layout);
         for (widget_id, layout) in &previous {
             let mut layout = layout.clone();
             if layout.x > anchor_x {
@@ -1072,7 +1072,7 @@ impl FlowHost {
                 layout.y += dy;
             }
             let _ = self.dag.set_widget_position(widget_id, layout.x, layout.y);
-            self.fixture.layout.insert(widget_id.clone(), layout);
+            self.host_document.layout.insert(widget_id.clone(), layout);
         }
         let mut retirement = crate::retained::FlowRetirement::default();
         retirement.push(crate::retained::FlowOwner::Layouts(previous));
@@ -1084,7 +1084,7 @@ impl FlowHost {
     pub fn set_neuron_params(&mut self, widget_id: &str, params_json: &str) -> Result<(), FlowCoreError> {
         self.begin_change();
         let patch: Dictionary = crate::os_pack::json::from_json_str(params_json)?;
-        let merged = match self.fixture.widgets.iter_mut().find(|widget| widget_id_for(widget) == widget_id) {
+        let merged = match self.host_document.widgets.iter_mut().find(|widget| widget_id_for(widget) == widget_id) {
             Some(Widget::Neuron { params, .. }) => Ok(std::mem::replace(params, params.merge(&patch))),
             Some(_) => Err(FlowCoreError::NotNeuron(widget_id.to_string())),
             None => Err(FlowCoreError::UnknownWidget(widget_id.to_string())),
@@ -1101,7 +1101,7 @@ impl FlowHost {
         self.begin_change();
         let opts: DagLayoutOptions = if opts_json.trim().is_empty() { DagLayoutOptions::default() } else { crate::os_pack::json::from_json_str(opts_json)? };
         let theme = self.dag.canvas_theme;
-        self.dag = DagHost::from_fixture_without_layout(self.build_dag_fixture_v1());
+        self.dag = DagHost::from_host_document_without_layout(self.build_dag_host_document_v1());
         self.dag.canvas_theme = theme;
         self.dag.reorganize(&opts)?;
         self.sync_from_dag();
@@ -1115,7 +1115,7 @@ impl FlowHost {
     pub fn pointer_down_screen(&mut self, sx: f64, sy: f64, button: u8, shift: bool, ctrl_or_meta: bool, alt: bool, pan: bool) {
         self.interaction_revision = self.interaction_revision.wrapping_add(1);
         if pan {
-            self.pan_anchor = Some((sx, sy, self.fixture.camera.x, self.fixture.camera.y));
+            self.pan_anchor = Some((sx, sy, self.host_document.camera.x, self.host_document.camera.y));
             return;
         }
         self.clear_ghost_widget();
@@ -1139,7 +1139,7 @@ impl FlowHost {
     pub fn pointer_move_screen(&mut self, sx: f64, sy: f64, shift: bool, ctrl_or_meta: bool, alt: bool) {
         self.interaction_revision = self.interaction_revision.wrapping_add(1);
         if let Some((start_sx, start_sy, cam_x, cam_y)) = self.pan_anchor {
-            let zoom = self.fixture.camera.zoom;
+            let zoom = self.host_document.camera.zoom;
             let dx = (sx - start_sx) / zoom;
             let dy = (sy - start_sy) / zoom;
             self.set_camera(cam_x - dx, cam_y - dy, zoom);
@@ -1164,11 +1164,11 @@ impl FlowHost {
     }
 
     /// 🔗️ Drains the wire edits the last gesture performed, in the GUEST's own sub-operation
-    /// vocabulary: `{"operations":[{"operation":"connect",…}|{"operation":"disconnect","synapseId":…}],"fixtureChanged":bool}`.
+    /// vocabulary: `{"operations":[{"operation":"connect",…}|{"operation":"disconnect","synapseId":…}],"hostDocumentChanged":bool}`.
     /// The renderer dispatches exactly those operations as a `nodeGraphEdit`, instead of re-publishing
     /// the whole fixture — a narrow intent the guest replays, not a state blob it adopts.
     ///
-    /// 🪶 `fixtureChanged` is the answer to the OTHER half of the question, and the renderer has no
+    /// 🪶 `hostDocumentChanged` is the answer to the OTHER half of the question, and the renderer has no
     /// way to derive it: a gesture that moved a node or dragged an inline slider changed content the
     /// narrow vocabulary does not carry, so the fixture commit is still owed — while a plain click, a
     /// marquee, a pan and a press that grabbed nothing changed nothing and are owed NOTHING. Reading an
@@ -1202,7 +1202,7 @@ impl FlowHost {
             .collect();
         crate::os_pack::json::to_string(&crate::os_pack::json::object([
             ("operations".to_string(), crate::os_pack::json::array(operations)),
-            ("fixtureChanged".to_string(), crate::os_pack::json::Value::Bool(self.gesture_changed_content)),
+            ("hostDocumentChanged".to_string(), crate::os_pack::json::Value::Bool(self.gesture_changed_content)),
         ]))
     }
 
@@ -1321,7 +1321,7 @@ impl FlowHost {
                 self.displaced.push_dictionaries(displaced_outputs);
                 self.apply_preview_outputs(&channels.outputs);
                 self.apply_export_outputs(&channels.outputs);
-                self.last_eval_json = build_channel_eval_json(&self.fixture, &channels, &self.kind_infos);
+                self.last_eval_json = build_channel_eval_json(&self.host_document, &channels, &self.kind_infos);
                 if !remaining.is_empty() {
                     channels.retire_cold();
                     return remaining;
@@ -1364,7 +1364,7 @@ impl FlowHost {
     }
 
     pub fn widget_blocked_ports(&self, widget_id: &str) -> Vec<String> {
-        let Some(operator_info) = self.fixture.widgets.iter().find(|widget| widget_id_for(widget) == widget_id).and_then(|widget| widget_operator_info(widget, &self.kind_infos)) else {
+        let Some(operator_info) = self.host_document.widgets.iter().find(|widget| widget_id_for(widget) == widget_id).and_then(|widget| widget_operator_info(widget, &self.kind_infos)) else {
             return Vec::new();
         };
         if operator_info.variadic_input.is_some() {
@@ -1443,7 +1443,7 @@ impl FlowHost {
 
     // #region 🌳️TreeBuilding
     fn build_tree(&self) -> Tree {
-        let fixture = self.build_dag_fixture_v1();
+        let fixture = self.build_dag_host_document_v1();
         let (nodes, edges) = dag_fixture_execution_rows(&fixture);
         Self::tree_from_dag(&nodes, &edges)
     }
@@ -1509,12 +1509,12 @@ impl FlowHost {
 
     /// 📝️ Renders the compiled DAG fixture as wire-literal text.
     pub fn compiled_wire_literal(&self) -> String {
-        dag_fixture_to_wire_literal(&self.build_dag_fixture_v1())
+        dag_fixture_to_wire_literal(&self.build_dag_host_document_v1())
     }
 
     fn build_seeds(&self) -> HashMap<String, Dictionary> {
         let mut seeds = HashMap::new();
-        for widget in &self.fixture.widgets {
+        for widget in &self.host_document.widgets {
             match widget {
                 Widget::InputSlider { id, value, .. } => {
                     seeds.insert(id.clone(), channel_output("number", Dictionary::with_schema("number").insert("value", NeuralValue::Atom(Atom::Decimal(*value)))));
@@ -1532,11 +1532,11 @@ impl FlowHost {
     }
 
     fn apply_preview_outputs(&mut self, outputs: &BTreeMap<String, Dictionary>) {
-        for widget in &mut self.fixture.widgets {
+        for widget in &mut self.host_document.widgets {
             if let Widget::OutputPreview { id, preview, .. } = widget {
                 if let Some(out) = outputs.get(id) {
                     std::mem::replace(preview, out.clone()).retire_cold();
-                } else if let Some(syn) = self.fixture.synapses.iter().find(|s| s.to == *id) {
+                } else if let Some(syn) = self.host_document.synapses.iter().find(|s| s.to == *id) {
                     if let Some(src) = outputs.get(&syn.from) {
                         std::mem::replace(preview, preview_dict_from_connection(src, &syn.from_port, &syn.to_port)).retire_cold();
                     }
@@ -1548,11 +1548,11 @@ impl FlowHost {
     }
 
     fn apply_export_outputs(&mut self, outputs: &BTreeMap<String, Dictionary>) {
-        for widget in &self.fixture.widgets {
+        for widget in &self.host_document.widgets {
             if let Widget::OutputExport { id, .. } = widget {
                 if let Some(out) = outputs.get(id) {
                     self.export_payloads.insert(id.clone(), out.clone());
-                } else if let Some(syn) = self.fixture.synapses.iter().find(|s| s.to == *id) {
+                } else if let Some(syn) = self.host_document.synapses.iter().find(|s| s.to == *id) {
                     if let Some(src) = outputs.get(&syn.from) {
                         let payload = preview_dict_from_connection(src, &syn.from_port, &syn.to_port);
                         self.export_payloads.insert(id.clone(), payload);
@@ -1573,9 +1573,9 @@ impl FlowHost {
     }
 
     fn sync_dag_display_from_widgets(&mut self) {
-        for widget in &self.fixture.widgets {
+        for widget in &self.host_document.widgets {
             let id = widget_id_for(widget);
-            let Some(node) = self.dag.fixture.nodes.iter_mut().find(|n| n.id == *id) else {
+            let Some(node) = self.dag.host_document.nodes.iter_mut().find(|n| n.id == *id) else {
                 continue;
             };
             match (widget, &mut node.kind) {
@@ -1610,12 +1610,12 @@ impl FlowHost {
     }
 
     fn rebuild_dag(&mut self) {
-        let fixture = self.build_dag_fixture_v1();
+        let fixture = self.build_dag_host_document_v1();
         let theme = self.dag.canvas_theme;
         let automatic_lod = self.dag.automatic_lod();
         let forced_draw_lod = self.dag.forced_draw_lod_label().map(str::to_string);
         let ghost = self.ghost_node.clone();
-        self.dag.replace_fixture_without_layout(fixture);
+        self.dag.replace_host_document_without_layout(fixture);
         self.dag.canvas_theme = theme;
         self.dag.set_viewport(self.viewport_w, self.viewport_h, self.viewport_dpr);
         self.dag.set_automatic_lod(automatic_lod);
@@ -1714,7 +1714,7 @@ impl FlowHost {
 
     /// 🌫️ Widget ids with preview disabled.
     pub fn preview_off_widget_ids(&self) -> Vec<String> {
-        self.fixture
+        self.host_document
             .widgets
             .iter()
             .filter_map(|widget| match widget {
@@ -1727,7 +1727,7 @@ impl FlowHost {
     /// 🌫️ Sets preview-off neurons from a JSON array of widget ids.
     pub fn set_preview_off_json(&mut self, json: &str) {
         let ids: Vec<String> = crate::os_pack::json::from_json_str(json).unwrap_or_default();
-        for widget in &mut self.fixture.widgets {
+        for widget in &mut self.host_document.widgets {
             if let Widget::Neuron { id, preview, .. } = widget {
                 *preview = !ids.contains(id);
             }
@@ -1737,7 +1737,7 @@ impl FlowHost {
 
     /// 👁️ Toggles preview on a neuron widget.
     pub fn toggle_preview(&mut self, widget_id: &str) -> Result<(), FlowCoreError> {
-        let Some(widget) = self.fixture.widgets.iter_mut().find(|w| widget_id_for(w) == widget_id) else {
+        let Some(widget) = self.host_document.widgets.iter_mut().find(|w| widget_id_for(w) == widget_id) else {
             return Err(FlowCoreError::UnknownWidget(widget_id.to_string()));
         };
         let Widget::Neuron { preview, .. } = widget else {
@@ -1749,14 +1749,14 @@ impl FlowHost {
     }
 
     fn sync_from_dag(&mut self) {
-        let dag_ids: BTreeSet<String> = self.dag.fixture.nodes.iter().map(|node| node.id.clone()).collect();
-        self.fixture.widgets.retain(|widget| dag_ids.contains(widget_id_for(widget)));
-        for node in &self.dag.fixture.nodes {
-            self.fixture.layout.insert(node.id.clone(), WidgetLayout { x: node.x, y: node.y });
+        let dag_ids: BTreeSet<String> = self.dag.host_document.nodes.iter().map(|node| node.id.clone()).collect();
+        self.host_document.widgets.retain(|widget| dag_ids.contains(widget_id_for(widget)));
+        for node in &self.dag.host_document.nodes {
+            self.host_document.layout.insert(node.id.clone(), WidgetLayout { x: node.x, y: node.y });
         }
-        for widget in &mut self.fixture.widgets {
+        for widget in &mut self.host_document.widgets {
             let id = widget_id_for(widget);
-            let Some(node) = self.dag.fixture.nodes.iter().find(|n| n.id == *id) else {
+            let Some(node) = self.dag.host_document.nodes.iter().find(|n| n.id == *id) else {
                 continue;
             };
             match (widget, &node.kind) {
@@ -1781,7 +1781,7 @@ impl FlowHost {
                 _ => {}
             }
         }
-        self.fixture.synapses = self
+        self.host_document.synapses = self
             .dag
             .fixture
             .edges
@@ -1792,41 +1792,41 @@ impl FlowHost {
                 SynapseSpec { id: edge.id.clone(), from, to, from_port, to_port }
             })
             .collect();
-        self.fixture.camera = CameraJson { x: self.dag.fixture.camera.x, y: self.dag.fixture.camera.y, zoom: self.dag.fixture.camera.zoom };
+        self.host_document.camera = CameraJson { x: self.dag.host_document.camera.x, y: self.dag.host_document.camera.y, zoom: self.dag.host_document.camera.zoom };
     }
 
-    fn build_dag_fixture_v1(&self) -> DagFixture {
+    fn build_dag_host_document_v1(&self) -> DagHostDocument {
         let mut seen = BTreeSet::new();
         let nodes: Vec<DagNodeSpec> =
-            self.fixture.widgets.iter().enumerate().filter(|(_, widget)| seen.insert(widget_id_for(widget).to_string())).map(|(i, w)| widget_to_dag_node(w, i, &self.fixture.layout, &self.fixture.synapses, &self.kind_infos, widget_node_size(w, &self.fixture.synapses, &self.kind_infos))).collect();
-        let existing: Vec<(String, String)> = self.fixture.synapses.iter().map(|s| (s.from.clone(), s.to.clone())).collect();
-        let edges: Vec<DagFixtureEdge> = self
+            self.host_document.widgets.iter().enumerate().filter(|(_, widget)| seen.insert(widget_id_for(widget).to_string())).map(|(i, w)| widget_to_dag_node(w, i, &self.host_document.layout, &self.host_document.synapses, &self.kind_infos, widget_node_size(w, &self.host_document.synapses, &self.kind_infos))).collect();
+        let existing: Vec<(String, String)> = self.host_document.synapses.iter().map(|s| (s.from.clone(), s.to.clone())).collect();
+        let edges: Vec<DagHostDocumentEdge> = self
             .fixture
             .synapses
             .iter()
             .filter(|syn| !would_create_cycle(&existing.iter().filter(|(a, b)| !(a == &syn.from && b == &syn.to)).cloned().collect::<Vec<_>>(), &syn.from, &syn.to))
-            .map(|syn| DagFixtureEdge { id: syn.id.clone(), source: format!("{}@{}", syn.from, syn.from_port), target: format!("{}@{}", syn.to, syn.to_port), route_style: EdgeRouteStyle::default(), properties: PropertyBag::new() })
+            .map(|syn| DagHostDocumentEdge { id: syn.id.clone(), source: format!("{}@{}", syn.from, syn.from_port), target: format!("{}@{}", syn.to, syn.to_port), route_style: EdgeRouteStyle::default(), properties: PropertyBag::new() })
             .collect();
-        DagFixture { schema: "dag.fixture".into(), camera: semio_framework_artifact_infinite_dag::DagCamera { x: self.fixture.camera.x, y: self.fixture.camera.y, zoom: self.fixture.camera.zoom }, nodes, edges }
+        DagHostDocument { schema: "dag.host_document".into(), camera: semio_framework_artifact_infinite_dag::DagCamera { x: self.host_document.camera.x, y: self.host_document.camera.y, zoom: self.host_document.camera.zoom }, nodes, edges }
     }
 
     fn screen_to_world_point(&self, sx: f64, sy: f64) -> canvas::Point {
         use canvas::camera::{screen_to_world, Camera, Viewport};
         use canvas::Point;
-        let cam = Camera { x: self.fixture.camera.x, y: self.fixture.camera.y, zoom: self.fixture.camera.zoom };
+        let cam = Camera { x: self.host_document.camera.x, y: self.host_document.camera.y, zoom: self.host_document.camera.zoom };
         let viewport = Viewport { width: self.viewport_w, height: self.viewport_h, dpr: self.viewport_dpr };
         screen_to_world(&cam, &viewport, Point::new(sx, sy))
     }
 
     fn next_widget_id(&mut self, descriptor: &WidgetDescriptor) -> String {
-        let (id, serial) = generated_widget_id(descriptor, self.fixture.widgets.iter().map(widget_id_for));
+        let (id, serial) = generated_widget_id(descriptor, self.host_document.widgets.iter().map(widget_id_for));
         self.next_widget_serial = serial;
         id
     }
 
     pub fn set_slider_value(&mut self, widget_id: &str, value: f64) {
         self.begin_change();
-        for widget in &mut self.fixture.widgets {
+        for widget in &mut self.host_document.widgets {
             if let Widget::InputSlider { id, .. } = widget {
                 if id == widget_id {
                     set_widget_slider_value(widget, value);
@@ -1843,7 +1843,7 @@ impl FlowHost {
 
     pub fn set_note_text(&mut self, widget_id: &str, text: &str) {
         self.begin_change();
-        for widget in &mut self.fixture.widgets {
+        for widget in &mut self.host_document.widgets {
             if let Widget::InputNote { id, text: note } = widget {
                 if id == widget_id {
                     *note = text.to_string();
@@ -1916,7 +1916,7 @@ impl FlowHost {
             return;
         }
         self.begin_change();
-        for widget in &mut self.fixture.widgets {
+        for widget in &mut self.host_document.widgets {
             if let Widget::Variable { id, name: variable_name, .. } = widget {
                 if id == widget_id {
                     *variable_name = trimmed.to_string();
@@ -1932,7 +1932,7 @@ impl FlowHost {
             return;
         }
         self.begin_change();
-        for widget in &mut self.fixture.widgets {
+        for widget in &mut self.host_document.widgets {
             if let Widget::Variable { id, schema: variable_schema, .. } = widget {
                 if id == widget_id {
                     *variable_schema = trimmed.to_string();
@@ -1944,7 +1944,7 @@ impl FlowHost {
 
     pub fn set_image_src(&mut self, widget_id: &str, src: &str) {
         self.begin_change();
-        for widget in &mut self.fixture.widgets {
+        for widget in &mut self.host_document.widgets {
             if let Widget::InputImage { id, src: image } = widget {
                 if id == widget_id {
                     *image = src.to_string();
@@ -1957,7 +1957,7 @@ impl FlowHost {
     }
 
     pub fn preview_text(&self) -> String {
-        self.fixture
+        self.host_document
             .widgets
             .iter()
             .find_map(|w| match w {
@@ -2027,25 +2027,25 @@ impl FlowHost {
             return Err(FlowCoreError::CollapseNeedsTwoWidgets);
         }
         let selected: BTreeSet<String> = selected_ids.iter().cloned().collect();
-        if !selected.iter().all(|id| self.fixture.widgets.iter().any(|widget| widget_id_for(widget) == id)) {
+        if !selected.iter().all(|id| self.host_document.widgets.iter().any(|widget| widget_id_for(widget) == id)) {
             return Err(FlowCoreError::CollapseUnknownWidgets);
         }
-        if selected.iter().any(|id| self.fixture.widgets.iter().any(|widget| widget_id_for(widget) == id && matches!(widget, Widget::Cluster { .. }))) {
+        if selected.iter().any(|id| self.host_document.widgets.iter().any(|widget| widget_id_for(widget) == id && matches!(widget, Widget::Cluster { .. }))) {
             return Err(FlowCoreError::CollapseContainsClusters);
         }
         self.begin_change();
         let mut crossing_external = Vec::new();
-        for synapse in &self.fixture.synapses {
+        for synapse in &self.host_document.synapses {
             let from_selected = selected.contains(&synapse.from);
             let to_selected = selected.contains(&synapse.to);
             if (from_selected || to_selected) && !(from_selected && to_selected) {
                 crossing_external.push(synapse.clone());
             }
         }
-        let boundary_variables = boundary_variable_widget_ids(&selected, &crossing_external, &self.fixture.widgets);
+        let boundary_variables = boundary_variable_widget_ids(&selected, &crossing_external, &self.host_document.widgets);
         let mut inner_neurons = Vec::new();
         let mut inner_layout = BTreeMap::new();
-        for widget in &self.fixture.widgets {
+        for widget in &self.host_document.widgets {
             let id = widget_id_for(widget).to_string();
             if !selected.contains(&id) {
                 continue;
@@ -2056,13 +2056,13 @@ impl FlowHost {
             if let Some(neuron) = widget_to_inner_neuron(widget) {
                 inner_neurons.push(neuron);
             }
-            if let Some(layout) = self.fixture.layout.get(&id) {
+            if let Some(layout) = self.host_document.layout.get(&id) {
                 inner_layout.insert(id, layout.clone());
             }
         }
         let mut inner_synapses = Vec::new();
         let mut retained_external = Vec::new();
-        for synapse in &self.fixture.synapses {
+        for synapse in &self.host_document.synapses {
             let from_selected = selected.contains(&synapse.from);
             let to_selected = selected.contains(&synapse.to);
             if from_selected && to_selected {
@@ -2082,14 +2082,14 @@ impl FlowHost {
         let mut cluster_external = Vec::new();
         let outputs = self.outputs.clone();
         let kind_infos = self.kind_infos.clone();
-        let widgets = self.fixture.widgets.clone();
-        let synapses_snapshot = self.fixture.synapses.clone();
+        let widgets = self.host_document.widgets.clone();
+        let synapses_snapshot = self.host_document.synapses.clone();
         for synapse in crossing_external {
             let from_selected = selected.contains(&synapse.from);
             let to_selected = selected.contains(&synapse.to);
             if to_selected && !from_selected {
                 let inner_target = if boundary_variables.contains(&synapse.to) {
-                    self.fixture.synapses.iter().find(|entry| entry.from == synapse.to && selected.contains(&entry.to)).map_or_else(|| (synapse.to.clone(), synapse.to_port.clone()), |entry| (entry.to.clone(), entry.to_port.clone()))
+                    self.host_document.synapses.iter().find(|entry| entry.from == synapse.to && selected.contains(&entry.to)).map_or_else(|| (synapse.to.clone(), synapse.to_port.clone()), |entry| (entry.to.clone(), entry.to_port.clone()))
                 } else {
                     (synapse.to.clone(), synapse.to_port.clone())
                 };
@@ -2109,7 +2109,7 @@ impl FlowHost {
                 cluster_external.push(SynapseSpec { id: synapse.id.clone(), from: synapse.from.clone(), to: String::new(), from_port: synapse.from_port.clone(), to_port: channel });
             } else if from_selected && !to_selected {
                 let inner_source = if boundary_variables.contains(&synapse.from) {
-                    self.fixture.synapses.iter().find(|entry| entry.to == synapse.from && selected.contains(&entry.from)).map_or_else(|| (synapse.from.clone(), synapse.from_port.clone()), |entry| (entry.from.clone(), entry.from_port.clone()))
+                    self.host_document.synapses.iter().find(|entry| entry.to == synapse.from && selected.contains(&entry.from)).map_or_else(|| (synapse.from.clone(), synapse.from_port.clone()), |entry| (entry.from.clone(), entry.from_port.clone()))
                 } else {
                     (synapse.from.clone(), synapse.from_port.clone())
                 };
@@ -2129,7 +2129,7 @@ impl FlowHost {
                 cluster_external.push(SynapseSpec { id: synapse.id.clone(), from: String::new(), to: synapse.to.clone(), from_port: channel, to_port: synapse.to_port.clone() });
             }
         }
-        let (sum_x, sum_y, layout_count) = selected.iter().filter_map(|id| self.fixture.layout.get(id)).fold((0.0, 0.0, 0usize), |(sx, sy, count), layout| (sx + layout.x, sy + layout.y, count + 1));
+        let (sum_x, sum_y, layout_count) = selected.iter().filter_map(|id| self.host_document.layout.get(id)).fold((0.0, 0.0, 0usize), |(sx, sy, count), layout| (sx + layout.x, sy + layout.y, count + 1));
         let count = layout_count.max(1) as f64;
         let cluster_x = sum_x / count;
         let cluster_y = sum_y / count;
@@ -2142,18 +2142,18 @@ impl FlowHost {
             tree: inner_tree,
             flow: FlowGui { camera: CameraJson { x: 0.0, y: 0.0, zoom: 1.0 }, nodes: inner_layout.into_iter().map(|(id, layout)| (id, FlowNodeGui { layout, chrome: NodeChrome::Plain { preview: true } })).collect(), previews: vec![] },
         };
-        self.fixture.widgets.retain(|widget| !selected.contains(widget_id_for(widget)));
-        self.fixture.widgets.push(cluster);
+        self.host_document.widgets.retain(|widget| !selected.contains(widget_id_for(widget)));
+        self.host_document.widgets.push(cluster);
         for id in &selected {
-            self.fixture.layout.remove(id);
+            self.host_document.layout.remove(id);
         }
-        self.fixture.layout.insert(cluster_id.clone(), WidgetLayout { x: cluster_x, y: cluster_y });
-        self.fixture.synapses = retained_external;
+        self.host_document.layout.insert(cluster_id.clone(), WidgetLayout { x: cluster_x, y: cluster_y });
+        self.host_document.synapses = retained_external;
         for synapse in cluster_external {
             if synapse.to.is_empty() {
-                self.fixture.synapses.push(SynapseSpec { id: synapse.id, from: synapse.from, to: cluster_id.clone(), from_port: synapse.from_port, to_port: synapse.to_port });
+                self.host_document.synapses.push(SynapseSpec { id: synapse.id, from: synapse.from, to: cluster_id.clone(), from_port: synapse.from_port, to_port: synapse.to_port });
             } else {
-                self.fixture.synapses.push(SynapseSpec { id: synapse.id, from: cluster_id.clone(), to: synapse.to, from_port: synapse.from_port, to_port: synapse.to_port });
+                self.host_document.synapses.push(SynapseSpec { id: synapse.id, from: cluster_id.clone(), to: synapse.to, from_port: synapse.from_port, to_port: synapse.to_port });
             }
         }
         self.rebuild_dag();
@@ -2162,17 +2162,17 @@ impl FlowHost {
 
     /// 💥️ Explodes a cluster back into its inner widgets.
     pub fn explode_cluster(&mut self, cluster_id: &str) -> Result<(), FlowCoreError> {
-        let cluster_index = self.fixture.widgets.iter().position(|widget| matches!(widget, Widget::Cluster { id, .. } if id == cluster_id)).ok_or_else(|| FlowCoreError::UnknownCluster(cluster_id.to_string()))?;
+        let cluster_index = self.host_document.widgets.iter().position(|widget| matches!(widget, Widget::Cluster { id, .. } if id == cluster_id)).ok_or_else(|| FlowCoreError::UnknownCluster(cluster_id.to_string()))?;
         // 🧹️ The working copy is BORROWED from one retired clone, not destructured out of it: a
         // cluster's `Tree` params and its `FlowUi` node map both fail closed on a bare drop, so
         // owning `tree`/`flow` as loose locals aborted the process at the end of this function
         // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-        let exploded = self.fixture.widgets[cluster_index].clone();
+        let exploded = self.host_document.widgets[cluster_index].clone();
         let Widget::Cluster { tree, flow, .. } = &exploded else {
             exploded.retire_cold();
             return Err(FlowCoreError::WidgetNotCluster(cluster_id.to_string()));
         };
-        let cluster_layout = self.fixture.layout.get(cluster_id).cloned().unwrap_or(WidgetLayout { x: 0.0, y: 0.0 });
+        let cluster_layout = self.host_document.layout.get(cluster_id).cloned().unwrap_or(WidgetLayout { x: 0.0, y: 0.0 });
         self.begin_change();
         let mut boundary_channels: HashMap<String, (String, String)> = HashMap::new();
         for neuron in &tree.neurons {
@@ -2194,7 +2194,7 @@ impl FlowHost {
                     other => other,
                 };
                 let layout = flow.nodes.get(&neuron.id).map_or(WidgetLayout { x: 0.0, y: 0.0 }, |node| node.layout.clone());
-                self.fixture.layout.insert(namespaced_id.clone(), WidgetLayout { x: cluster_layout.x + layout.x, y: cluster_layout.y + layout.y });
+                self.host_document.layout.insert(namespaced_id.clone(), WidgetLayout { x: cluster_layout.x + layout.x, y: cluster_layout.y + layout.y });
                 restored_widgets.push((namespaced_id, neuron.id.clone(), widget));
                 continue;
             }
@@ -2204,20 +2204,20 @@ impl FlowHost {
                 _ => {}
             }
             let layout = flow.nodes.get(&neuron.id).map_or(WidgetLayout { x: 0.0, y: 0.0 }, |node| node.layout.clone());
-            self.fixture.layout.insert(namespaced_id.clone(), WidgetLayout { x: cluster_layout.x + layout.x, y: cluster_layout.y + layout.y });
+            self.host_document.layout.insert(namespaced_id.clone(), WidgetLayout { x: cluster_layout.x + layout.x, y: cluster_layout.y + layout.y });
             restored_widgets.push((namespaced_id, neuron.id.clone(), widget));
         }
         let id_map: HashMap<String, String> = restored_widgets.iter().map(|(namespaced, original, _)| (original.clone(), namespaced.clone())).collect();
         // 🧹️ The cluster widget carries a `FlowUi` whose `OrderedMap<FlowNodeGui>` and a `Tree`
         // whose `Dictionary` params both fail closed on a bare drop, so the exploded shell is
         // RETIRED rather than dropped (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-        self.fixture.widgets.remove(cluster_index).retire_cold();
-        self.fixture.layout.remove(cluster_id);
+        self.host_document.widgets.remove(cluster_index).retire_cold();
+        self.host_document.layout.remove(cluster_id);
         for (_, _, widget) in restored_widgets {
-            self.fixture.widgets.push(widget);
+            self.host_document.widgets.push(widget);
         }
         let mut next_synapses = Vec::new();
-        for synapse in &self.fixture.synapses {
+        for synapse in &self.host_document.synapses {
             if synapse.to == cluster_id {
                 if let Some((variable_id, variable_port)) = boundary_channels.get(&synapse.to_port) {
                     next_synapses.push(SynapseSpec { id: synapse.id.clone(), from: synapse.from.clone(), to: variable_id.clone(), from_port: synapse.from_port.clone(), to_port: variable_port.clone() });
@@ -2248,51 +2248,51 @@ impl FlowHost {
             self.next_synapse_serial += 1;
             next_synapses.push(SynapseSpec { id: format!("s{}", self.next_synapse_serial), from: from.clone(), to: to.clone(), from_port, to_port });
         }
-        self.fixture.synapses = next_synapses;
+        self.host_document.synapses = next_synapses;
         exploded.retire_cold();
         self.rebuild_dag();
         Ok(())
     }
 
     // #region History
-    fn content_changed(a: &FlowFixture, b: &FlowFixture) -> bool {
+    fn content_changed(a: &FlowHostDocument, b: &FlowHostDocument) -> bool {
         a.widgets != b.widgets || a.synapses != b.synapses || a.layout != b.layout
     }
 
     /// 🧾️ Lazily seeds the undo/redo store from `baseline`.
     ///
     /// ⚠️ `baseline` is CONSUMED only on the first call — the store is seeded once, and every later
-    /// `flush_pending_change` hands in a fresh `FlowFixture` clone this function does not need. A
-    /// `FlowFixture` owns the fail-closed `OrderedMap<WidgetLayout>` root, so that surplus clone is
+    /// `flush_pending_change` hands in a fresh `FlowHostDocument` clone this function does not need. A
+    /// `FlowHostDocument` owns the fail-closed `OrderedMap<WidgetLayout>` root, so that surplus clone is
     /// RETIRED through the artifact's own bounded frontier instead of dropped; the bare drop aborted
     /// the pool worker on the second discrete edit of any session
     /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️unit-suite-3d-2026-09-09.md` §5).
-    fn history_store_from_baseline(&mut self, baseline: FlowFixture) -> Option<&mut FlowStore> {
+    fn history_store_from_baseline(&mut self, baseline: FlowHostDocument) -> Option<&mut FlowStore> {
         if self.history_store.is_some() {
             let mut retirement = crate::retained::FlowRetirement::default();
-            retirement.push(crate::retained::FlowOwner::Fixture(baseline));
+            retirement.push(crate::retained::FlowOwner::HostDocument(baseline));
             retirement.retire_cold();
             return self.history_store.as_mut();
         }
         let mut store = resolve_ready(FlowStore::new(create_document_envelope(FLOW_DOCUMENT_SCHEMA, "flow-host", baseline, None))).ok()?;
-        store.install_document_store_owners_exact(FlowFixture::member_store_owners());
+        store.install_document_store_owners_exact(FlowHostDocument::member_store_owners());
         self.history_store = Some(store);
         self.history_store.as_mut()
     }
 
     /// 🧾️ Flushes an armed-but-not-yet-recorded discrete mutation into `history_store` as one
-    /// invertible `FlowMutation::ReplaceFlowFixture` edit — the standard `crate::os_store::ArtifactStore`/`Mutation`/
+    /// invertible `FlowMutation::ReplaceFlowHostDocument` edit — the standard `crate::os_store::ArtifactStore`/`Mutation`/
     /// `MutationDiff` mechanism (see `🔖️Mutations`) driving undo/redo here instead of the old
-    /// hand-rolled `Vec<FlowFixture>` snapshot stack. Unconditional once armed (no `content_changed`
+    /// hand-rolled `Vec<FlowHostDocument>` snapshot stack. Unconditional once armed (no `content_changed`
     /// gate), mirroring the old stack's unconditional `past.push` on a discrete `begin_change` — only
     /// the gesture-coalescing path (`commit_gesture_history`) skips a no-op edit.
     fn flush_pending_change(&mut self) {
         if self.pending_change {
             self.pending_change = false;
-            let baseline = self.pending_history_baseline.take().unwrap_or_else(|| self.fixture.clone());
-            let fixture = self.fixture.clone();
+            let baseline = self.pending_history_baseline.take().unwrap_or_else(|| self.host_document.clone());
+            let fixture = self.host_document.clone();
             if let Some(store) = self.history_store_from_baseline(baseline) {
-                let _ = resolve_ready(store.dispatch(ArtifactCommand::Apply { mutations: vec![FlowMutation::ReplaceFlowFixture(ReplaceFlowFixture { fixture })], description: None }));
+                let _ = resolve_ready(store.dispatch(ArtifactCommand::Apply { mutations: vec![FlowMutation::ReplaceFlowHostDocument(ReplaceFlowHostDocument { host_document: fixture })], description: None }));
             }
         }
     }
@@ -2309,7 +2309,7 @@ impl FlowHost {
 
     /// 🧾️ Arms a fresh undo baseline, RETIRING the one it replaces.
     ///
-    /// 🩸️ A baseline is a `FlowFixture`, which owns the fail-closed `OrderedMap<WidgetLayout>` root,
+    /// 🩸️ A baseline is a `FlowHostDocument`, which owns the fail-closed `OrderedMap<WidgetLayout>` root,
     /// and overwriting the field simply DROPPED the old one: `panicked at 🗂️ordered/🦀️.rs:81:
     /// ordered-map root must be explicitly retired before drop`, aborting the whole pool worker.
     /// Reached on 6118 by the FOURTH middle-button pan of one session — a gesture whose release never
@@ -2320,7 +2320,7 @@ impl FlowHost {
         if let Some(stale) = self.pending_history_baseline.take() {
             stale.retire_cold();
         }
-        self.pending_history_baseline = Some(self.fixture.clone());
+        self.pending_history_baseline = Some(self.host_document.clone());
     }
 
     /// 🖐️ Starts a coalescing gesture (drag, inline note edit): flushes anything already armed first,
@@ -2335,7 +2335,7 @@ impl FlowHost {
     /// changed content.
     ///
     /// 🩸️ A gesture that changed nothing — every plain CLICK on the graph — still holds a
-    /// `FlowFixture` baseline, and a `FlowFixture` owns the fail-closed `OrderedMap<WidgetLayout>`
+    /// `FlowHostDocument` baseline, and a `FlowHostDocument` owns the fail-closed `OrderedMap<WidgetLayout>`
     /// root: letting it fall out of scope aborted the whole pool worker with `ordered-map root must
     /// be explicitly retired before drop` on the FIRST click. It was unreachable from wgpu only
     /// because no pointer ever reached the graph; the retention fix reaches it on press one (ticket
@@ -2346,15 +2346,15 @@ impl FlowHost {
         self.gesture_changed_content = false;
         if self.gesture_active {
             self.gesture_active = false;
-            let baseline = self.pending_history_baseline.take().unwrap_or_else(|| self.fixture.clone());
-            if !Self::content_changed(&baseline, &self.fixture) {
+            let baseline = self.pending_history_baseline.take().unwrap_or_else(|| self.host_document.clone());
+            if !Self::content_changed(&baseline, &self.host_document) {
                 baseline.retire_cold();
                 return;
             }
             self.gesture_changed_content = true;
-            let fixture = self.fixture.clone();
+            let fixture = self.host_document.clone();
             if let Some(store) = self.history_store_from_baseline(baseline) {
-                let _ = resolve_ready(store.dispatch(ArtifactCommand::Apply { mutations: vec![FlowMutation::ReplaceFlowFixture(ReplaceFlowFixture { fixture })], description: None }));
+                let _ = resolve_ready(store.dispatch(ArtifactCommand::Apply { mutations: vec![FlowMutation::ReplaceFlowHostDocument(ReplaceFlowHostDocument { host_document: fixture })], description: None }));
             }
         }
     }
@@ -2362,7 +2362,7 @@ impl FlowHost {
     /// ↩️ Restores the previous fixture content snapshot, keeping the current camera.
     pub fn undo(&mut self) -> bool {
         self.flush_pending_change();
-        let camera = self.fixture.camera.clone();
+        let camera = self.host_document.camera.clone();
         let Some(store) = self.history_store.as_mut() else {
             return false;
         };
@@ -2373,14 +2373,14 @@ impl FlowHost {
             return false;
         };
         restored.camera = camera;
-        std::mem::replace(&mut self.fixture, restored).retire_cold();
+        std::mem::replace(&mut self.host_document, restored).retire_cold();
         self.rebuild_dag();
         true
     }
 
     /// ↪️ Re-applies a fixture content snapshot undone earlier, keeping the current camera.
     pub fn redo(&mut self) -> bool {
-        let camera = self.fixture.camera.clone();
+        let camera = self.host_document.camera.clone();
         let Some(store) = self.history_store.as_mut() else {
             return false;
         };
@@ -2391,7 +2391,7 @@ impl FlowHost {
             return false;
         };
         restored.camera = camera;
-        std::mem::replace(&mut self.fixture, restored).retire_cold();
+        std::mem::replace(&mut self.host_document, restored).retire_cold();
         self.rebuild_dag();
         true
     }
@@ -2411,7 +2411,7 @@ impl FlowHost {
 /// 🧹 Incremental exact-owner retirement for one retained flow host.
 #[doc(hidden)]
 pub struct FlowHostRetirementState {
-    fixture: FlowFixture,
+    fixture: FlowHostDocument,
     dag: Option<dag::DagHostRetirement>,
     outputs: BTreeMap<String, Dictionary>,
     export_payloads: BTreeMap<String, Dictionary>,
@@ -2423,7 +2423,7 @@ pub struct FlowHostRetirementState {
     previous_snapshot: Option<TreeSnapshot>,
     previous_channels: Option<EvalChannels>,
     history_store: Option<FlowStore>,
-    pending_history_baseline: Option<FlowFixture>,
+    pending_history_baseline: Option<FlowHostDocument>,
     pending_extension_evals: Vec<neural::PendingExtensionEval>,
     interaction_projection: Option<dag::DagInteractionProjection>,
     domain: crate::retained::FlowRetirement,
@@ -2457,7 +2457,7 @@ impl std::ops::DerefMut for FlowHostRetirement {
 impl FlowHostRetirement {
     pub fn new(host: FlowHost) -> Self {
         let FlowHost {
-            fixture,
+            host_document: fixture,
             dag,
             outputs,
             export_payloads,
@@ -2492,7 +2492,7 @@ impl FlowHostRetirement {
         }
         Self {
             state: std::mem::ManuallyDrop::new(FlowHostRetirementState {
-                fixture,
+                host_document: fixture,
                 dag: Some(dag),
                 outputs,
                 export_payloads,
@@ -2590,7 +2590,7 @@ impl FlowHostRetirement {
         } else if let Some(channels) = state.previous_channels.take() {
             state.neural.push_channels(channels);
         } else if let Some(fixture) = state.pending_history_baseline.take() {
-            state.domain.push(FlowOwner::Fixture(fixture));
+            state.domain.push(FlowOwner::HostDocument(fixture));
         } else if let Some(pending) = state.pending_extension_evals.pop() {
             state.neural.text(pending.neuron_id);
             state.neural.text(pending.extension_id);
@@ -2626,10 +2626,10 @@ impl FlowHostRetirement {
         self.terminal
             && !self.faulted
             && self.dag.is_none()
-            && self.fixture.widgets.is_empty()
-            && self.fixture.synapses.is_empty()
-            && self.fixture.layout.is_empty()
-            && self.fixture.schema.is_empty()
+            && self.host_document.widgets.is_empty()
+            && self.host_document.synapses.is_empty()
+            && self.host_document.layout.is_empty()
+            && self.host_document.schema.is_empty()
             && self.outputs.is_empty()
             && self.export_payloads.is_empty()
             && self.last_eval_json.is_empty()
@@ -2661,8 +2661,8 @@ impl Drop for FlowHostRetirement {
 }
 
 impl FlowHost {
-    /// 🧊️ Explicit cold-only disposal of a detached host — the twin of [`FlowFixture::retire_cold`].
-    /// A `FlowHost` owns a `FlowFixture`, whose `layout: OrderedMap<WidgetLayout>` panics on a bare
+    /// 🧊️ Explicit cold-only disposal of a detached host — the twin of [`FlowHostDocument::retire_cold`].
+    /// A `FlowHost` owns a `FlowHostDocument`, whose `layout: OrderedMap<WidgetLayout>` panics on a bare
     /// drop (`ordered-map root must be explicitly retired before drop`), so a host is CLOSED, never
     /// dropped. Retained callers drive [`FlowHostRetirement::close_step`] under their own grant
     /// instead; this drains the same ladder in one uninterrupted cold pass.
@@ -2673,8 +2673,8 @@ impl FlowHost {
 
     /// 🏠️ Runs `body` against a host built from `fixture`, then retires that host — the ONE shape a
     /// caller that only needs a host for the length of an expression should use.
-    pub fn with_fixture<R>(fixture: &FlowFixture, body: impl FnOnce(&mut FlowHost) -> R) -> R {
-        let mut host = Self::from_fixture(fixture.clone());
+    pub fn with_host_document<R>(fixture: &FlowHostDocument, body: impl FnOnce(&mut FlowHost) -> R) -> R {
+        let mut host = Self::from_host_document(fixture.clone());
         let result = body(&mut host);
         host.retire_cold();
         result
@@ -2765,7 +2765,6 @@ fn sync_flow_geometry_retention() {
 #[value(tag = "status", rename_all = "camelCase")]
 pub enum NodeEvalStatus {
     Ok,
-    Stale,
     Queued,
     Computing,
     Error { message: String },
@@ -3602,7 +3601,7 @@ impl FlowEvalSession {
     /// `in_flight` (an extension answer is owed), `owed` (an answer asked for a continuation) and
     /// `unfinished` (the window's own last tick said there is more) — plus `tick_scheduled`. The
     /// monotone denominator is the session's own published per-node census: a node leaves
-    /// `queued`/`computing`/`stale` exactly once per chain and never returns to it, so
+    /// `queued`/`computing` exactly once per chain and never returns to it, so
     /// `nodes_done / nodes_total` only ever grows while one evaluation runs.
     pub fn preview_chain_status(&self) -> PreviewChainStatus {
         let in_flight: u32 = self.window_tick_latches.values().map(|latch| latch.in_flight).sum();
@@ -3611,7 +3610,7 @@ impl FlowEvalSession {
         if let Some(widgets) = crate::os_pack::json::parse(&self.status_json).ok().and_then(|value| value.as_object().cloned()) {
             for (_, entry) in widgets.iter() {
                 status.nodes_total = status.nodes_total.saturating_add(1);
-                if !matches!(entry.get("status").and_then(crate::os_pack::json::Value::as_str), Some("queued" | "computing" | "stale")) {
+                if !matches!(entry.get("status").and_then(crate::os_pack::json::Value::as_str), Some("queued" | "computing")) {
                     status.nodes_done = status.nodes_done.saturating_add(1);
                 }
             }
@@ -4247,8 +4246,8 @@ pub fn preview_tessellate_node_hash(handle: &str, tolerance_bits: u64) -> u64 {
 }
 
 /// 🏠 Builds a host wired to `session`'s shared cache and converged baseline.
-pub fn flow_host_with_session(fixture: &FlowFixture, session: &FlowEvalSession) -> FlowHost {
-    let mut host = FlowHost::from_fixture_with_cache_and_infos(fixture.clone(), session.neural_cache(), flow_neuron_kind_info_map());
+pub fn flow_host_with_session(fixture: &FlowHostDocument, session: &FlowEvalSession) -> FlowHost {
+    let mut host = FlowHost::from_host_document_with_cache_and_infos(fixture.clone(), session.neural_cache(), flow_neuron_kind_info_map());
     session.install_baseline_into(&mut host);
     if !session.eval_json().is_empty() {
         host.last_eval_json = session.eval_json().to_string();
@@ -4273,7 +4272,7 @@ pub fn flow_host_with_session(fixture: &FlowFixture, session: &FlowEvalSession) 
 /// extension pack registers and the ones a host push makes resolvable. A cluster's inner tree is not
 /// walked — its boundary kinds are structural (`core.input`/`core.output`), never contributed — so
 /// this answer never invents a block that a contribution could not lift.
-pub fn unserved_flow_operator_kinds(fixture: &FlowFixture) -> Vec<String> {
+pub fn unserved_flow_operator_kinds(fixture: &FlowHostDocument) -> Vec<String> {
     let registry = flow_registry();
     let mut unserved = BTreeSet::new();
     for widget in &fixture.widgets {
@@ -4312,7 +4311,7 @@ fn build_flow_status_json(host: &FlowHost, remaining: &[String]) -> String {
     let wave: BTreeSet<&str> = host.pending_extension_evals.iter().map(|pending| pending.neuron_id.as_str()).collect();
     let active = remaining.first().map(String::as_str);
     let mut widgets = crate::os_pack::json::Object::new();
-    for widget in &host.fixture.widgets {
+    for widget in &host.host_document.widgets {
         let id = widget_id_for(widget);
         if matches!(widget, Widget::InputSlider { .. } | Widget::InputNote { .. } | Widget::InputImage { .. } | Widget::OutputPreview { .. } | Widget::OutputAction { .. } | Widget::OutputExport { .. } | Widget::Cluster { .. }) {
             widgets.insert(id.to_string(), node_eval_status_json(&NodeEvalStatus::Ok));
@@ -4345,7 +4344,7 @@ fn build_flow_status_json(host: &FlowHost, remaining: &[String]) -> String {
 }
 // #endregion 🔖️EvalSession
 
-fn dedupe_fixture_widgets(fixture: &mut FlowFixture) {
+fn dedupe_host_document_widgets(fixture: &mut FlowHostDocument) {
     let mut seen = BTreeSet::new();
     fixture.widgets.retain(|widget| seen.insert(widget_id_for(widget).to_string()));
 }

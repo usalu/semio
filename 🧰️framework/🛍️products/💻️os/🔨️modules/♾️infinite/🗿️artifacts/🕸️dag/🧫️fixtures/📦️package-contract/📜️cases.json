@@ -3,7 +3,7 @@
     {
       "id": "empty-dag",
       "snapshot": {
-        "schema": "dag.fixture",
+        "schema": "dag.hostDocument",
         "nodes": [],
         "edges": []
       }

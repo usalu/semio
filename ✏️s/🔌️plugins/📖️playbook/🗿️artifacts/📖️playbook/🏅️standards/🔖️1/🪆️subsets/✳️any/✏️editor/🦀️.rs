@@ -387,7 +387,7 @@ impl ArtifactEditor for PlaybookPlayApp {
         owner: EditorApp<PlaybookPlayApp>,
         owner_file: "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.playbook.playbook@1/*#editor",
-        document_schema: "playbook.program",
+        artifact_schema: "playbook.program",
         factory: "PlaybookRetainedCommandJobFactory",
         factory_type: PlaybookRetainedCommandJobFactory,
         contract: ToolExecutionContract::bounded_first_step(8_192, 64, 64, 16_384, 7_500),

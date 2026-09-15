@@ -6,7 +6,7 @@
     "records": {
       "dispatch-action": ["action", "args", "delay-ms"],
       "open-window": ["kind", "params"],
-      "spawn-plugin-instance": ["plugin-id", "app-id", "os-instance-id", "label", "document-json"]
+      "spawn-plugin-instance": ["plugin-id", "app-id", "os-instance-id", "label", "artifact-json"]
     }
   },
   "flat": ["notify", "navigate", "open-external-url", "set-panel", "set-active-utility", "close-window", "open-plugin-instance"],
@@ -29,7 +29,7 @@
     },
     {
       "id": "spawn-plugin-instance-reads-its-params-record",
-      "effect": { "tag": "spawn-plugin-instance", "val": { "req": 4, "params": { "pluginId": "procedural", "appId": "editor", "osInstanceId": { "tag": "some", "val": "os-1" }, "label": { "tag": "none" }, "documentJson": { "tag": "none" } } } },
+      "effect": { "tag": "spawn-plugin-instance", "val": { "req": 4, "params": { "pluginId": "procedural", "appId": "editor", "osInstanceId": { "tag": "some", "val": "os-1" }, "label": { "tag": "none" }, "artifactJson": { "tag": "none" } } } },
       "friendly": { "spawnPluginInstance": { "req": 4, "pluginId": "procedural", "appId": "editor", "osInstanceId": "os-1" } }
     },
     {

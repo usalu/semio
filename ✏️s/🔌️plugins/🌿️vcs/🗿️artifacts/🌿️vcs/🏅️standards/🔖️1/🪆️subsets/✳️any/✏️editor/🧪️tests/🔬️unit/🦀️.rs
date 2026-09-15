@@ -453,7 +453,7 @@ async fn the_manifest_stitches_every_taxonomy_node() {
         assert!(json.contains(id), "window kind {id} missing from the manifest: {json}");
     }
     assert!(json.contains(edit::VCS_PLAY_MODE_EDIT), "mode missing from the manifest");
-    for body in [VCS_PLAY_BODY_DOCUMENT, VCS_PLAY_BODY_INSPECTION] {
+    for body in [VCS_PLAY_BODY_ARTIFACT, VCS_PLAY_BODY_INSPECTION] {
         assert!(json.contains(body), "panel body {body} missing from the manifest");
     }
     assert!(json.contains("vcs.vcs"), "artifact kind missing from the manifest");

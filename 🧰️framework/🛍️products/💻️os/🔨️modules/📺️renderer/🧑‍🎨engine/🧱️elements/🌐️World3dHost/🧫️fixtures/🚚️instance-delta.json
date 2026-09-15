@@ -8,6 +8,7 @@
     "$comment": "`instancesJson` stays AUTHORITATIVE on every publication: a consumer may ignore the delta entirely and still render the right scene. In-place application is admissible ONLY for pure updates of ids the consumer already retains, because `instancesJson` is index-addressed (a world pick resolves a hit by array position), so anything that can reorder — an addition or a removal — must fall back to the full set.",
     "authoritativeField": "instancesJson",
     "appliesInPlaceWhen": ["base matches the retained revision", "no removed ids", "count equals the retained length", "every changed id is already retained"],
+    "fallbackKeepsIdentityOf": "every retained record whose re-parsed authoritative record is value-equal (same serialized JSON), so a fill that APPENDS placements re-renders only the new records",
     "fallbackIsAlwaysCorrect": true
   },
   "cases": [
@@ -40,18 +41,18 @@
       "expect": { "applied": false, "revision": 8, "ids": ["a"], "positions": [[5, 5, 5]], "reusedIds": [] }
     },
     {
-      "name": "a removal falls back, because the full set is index-addressed",
+      "name": "a removal falls back, because the full set is index-addressed, and keeps the identity of every value-equal survivor",
       "retained": { "revision": 3, "instancesJson": "[{\"id\":\"a\",\"meshId\":\"box\",\"position\":[0,0,0]},{\"id\":\"b\",\"meshId\":\"box\",\"position\":[1,0,0]}]" },
       "instancesJson": "[{\"id\":\"b\",\"meshId\":\"box\",\"position\":[1,0,0]}]",
       "instancesDeltaJson": "{\"base\":3,\"revision\":4,\"count\":1,\"changed\":[],\"removed\":[\"a\"]}",
-      "expect": { "applied": false, "revision": 4, "ids": ["b"], "positions": [[1, 0, 0]], "reusedIds": [] }
+      "expect": { "applied": false, "revision": 4, "ids": ["b"], "positions": [[1, 0, 0]], "reusedIds": ["b"] }
     },
     {
-      "name": "an addition falls back, because appending cannot be proven to match the producer's order",
+      "name": "an addition falls back, because appending cannot be proven to match the producer's order, and keeps the identity of every value-equal record",
       "retained": { "revision": 4, "instancesJson": "[{\"id\":\"b\",\"meshId\":\"box\",\"position\":[1,0,0]}]" },
       "instancesJson": "[{\"id\":\"b\",\"meshId\":\"box\",\"position\":[1,0,0]},{\"id\":\"d\",\"meshId\":\"box\",\"position\":[3,0,0]}]",
       "instancesDeltaJson": "{\"base\":4,\"revision\":5,\"count\":2,\"changed\":[{\"id\":\"d\",\"meshId\":\"box\",\"position\":[3,0,0]}],\"removed\":[]}",
-      "expect": { "applied": false, "revision": 5, "ids": ["b", "d"], "positions": [[1, 0, 0], [3, 0, 0]], "reusedIds": [] }
+      "expect": { "applied": false, "revision": 5, "ids": ["b", "d"], "positions": [[1, 0, 0], [3, 0, 0]], "reusedIds": ["b"] }
     },
     {
       "name": "no delta at all falls back, so a producer without an incremental residency stays correct",

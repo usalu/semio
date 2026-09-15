@@ -8,16 +8,16 @@ async fn delete_selection_deletes_the_widgets_picked_via_interaction_select() {
     select_graph(&mut app, &["slider"], &[]).await;
     let result = dispatch(&mut app, FlowCommand::DeleteSelection(DeleteSelection {})).await;
     assert!(!result.mutations.is_empty(), "deleteSelection must emit operations for a picked widget");
-    assert!(!app.snapshot().expect("snapshot").to_fixture().widgets.iter().any(|widget| crate::schema::widget_id(widget) == "slider"), "slider must be deleted");
+    assert!(!app.snapshot().expect("snapshot").to_host_document().widgets.iter().any(|widget| crate::schema::widget_id(widget) == "slider"), "slider must be deleted");
 }
 
 #[semio_framework_async_macros::async_test]
 async fn delete_selection_action_removes_selected_synapses() {
     let mut app = flow_app_with_registry().await;
-    let before = app.snapshot().expect("snapshot").to_fixture().synapses.len();
+    let before = app.snapshot().expect("snapshot").to_host_document().synapses.len();
     select_graph(&mut app, &[], &["s1"]).await;
     let result = dispatch_with_registry(&mut app, FlowCommand::DeleteSelection(DeleteSelection {})).await;
-    let after = app.snapshot().expect("snapshot").to_fixture();
+    let after = app.snapshot().expect("snapshot").to_host_document();
     assert!(!result.mutations.is_empty(), "deleteSelection must emit operations for an edge");
     assert!(!after.synapses.iter().any(|synapse| synapse.id == "s1"), "synapse s1 must be removed");
     assert_eq!(after.synapses.len(), before - 1);

@@ -215,7 +215,7 @@ pub trait MediaCache {
 //#region 🔖️BlobStore
 /// 💾️ Disk-backed `store::BlobStore` under `<studio>/blobs/<hash>` — backs both a `WasmPluginRuntime`'s
 /// guest-side `write-blob`/`read-blob` host calls (via `WasmtimeNodeHost` registering it on every
-/// runtime it loads) and `media_to_artifact`/`media_from_artifact`'s own resolution of a
+/// runtime it loads) and `media_to_artifact`/`media_from_document`'s own resolution of a
 /// `MediaPayload::Binary` value's bytes on the way on/off the wire.
 pub struct FileBlobStore {
     root: PathBuf,
@@ -319,7 +319,7 @@ pub async fn media_to_artifact<B: BlobStore>(media: &Media, blob_store: &B) -> R
 /// `blob_store` (content-addressed, idempotent) rather than kept inline, mirroring `Media`'s own
 /// "binary payloads never carry bytes directly" invariant — the freshly computed hash supersedes
 /// whatever `blob_hash` the artifact's own descriptor claimed.
-pub async fn media_from_artifact<B: BlobStore>(descriptor: &[u8], data: Vec<u8>, blob_store: &B) -> Result<Media, RunError> {
+pub async fn media_from_document<B: BlobStore>(descriptor: &[u8], data: Vec<u8>, blob_store: &B) -> Result<Media, RunError> {
     let value = store::pack_rt::decode_wire_value(descriptor).map_err(|error| RunError::Host(error.to_string()))?;
     let descriptor: semio_framework_plugin::app::MediaArtifactDescriptor = from_dsl_value(value).map_err(|error| RunError::Host(error))?;
     let media_type = descriptor.media_type.ok_or_else(|| RunError::Host("media artifact descriptor is missing media_type".to_string()))?;
@@ -1181,7 +1181,7 @@ impl<H: AppChannelHost, B: BlobStore + 'static> SpaceRunner<H, B> {
         let mut outputs = BTreeMap::new();
         for (port_id, media_out_seq, fingerprint_seq) in &output_seqs {
             let media = match reply_to(*media_out_seq)? {
-                AppFrame::Media { descriptor, data, .. } => media_from_artifact(descriptor, data.clone(), self.blob_store.as_ref()).await?,
+                AppFrame::Media { descriptor, data, .. } => media_from_document(descriptor, data.clone(), self.blob_store.as_ref()).await?,
                 AppFrame::Error { fault, report, .. } => return Err(RunError::Host(dispatch_error_message(&node.app_id, &format!("failed to produce media on `{port_id}`"), fault, report))),
                 other => return Err(RunError::Host(format!("`{}` sent an unexpected frame for media-out `{port_id}`: {other:?}", node.app_id))),
             };
@@ -1992,7 +1992,7 @@ impl<B: BlobStore + 'static> AppChannelHost for WasmtimeNodeHost<B> {
     /// like a real per-node turn — this is the SAME `run_turn` `exchange` uses below, not a separate
     /// path. `artifact_ref` binding into `instance_directory` (this struct's own field doc) is a
     /// SEPARATE, still-unwired concern this packet does not touch (out of scope: it needs the
-    /// manifest's own app entry's `io.document_schema`, not anything kernel-shaped).
+    /// manifest's own app entry's `io.artifact_schema`, not anything kernel-shaped).
     async fn open(&mut self, plugin_id: &str, app_id: &str, _artifact_ref: &str) -> Result<u32, RunError> {
         self.manifest_for(plugin_id).await?;
         let compiled = self.compiled_for_plugin.get(plugin_id).cloned().expect("manifest_for just compiled or already present");

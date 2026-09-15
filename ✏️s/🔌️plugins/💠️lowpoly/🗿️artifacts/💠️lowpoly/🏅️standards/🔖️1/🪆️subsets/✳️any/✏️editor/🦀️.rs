@@ -40,7 +40,7 @@ const LOWPOLY_PLAY_CONTROLLER_ID: &str = "lowpoly-play";
 pub use crate::editor::lowpoly::modes::edit::windows::model::LOWPOLY_PLAY_BODY_MAIN;
 pub use crate::editor::lowpoly::modes::paint::windows::uv::LOWPOLY_PLAY_BODY_UV;
 pub use crate::editor::lowpoly::panels::catalogue::LOWPOLY_PLAY_BODY_CATALOGUE;
-pub use crate::editor::lowpoly::panels::document::LOWPOLY_PLAY_BODY_DOCUMENT;
+pub use crate::editor::lowpoly::panels::document::LOWPOLY_PLAY_BODY_ARTIFACT;
 pub use crate::editor::lowpoly::panels::inspection::LOWPOLY_PLAY_BODY_INSPECTION;
 pub use crate::editor::lowpoly::panels::layers::LOWPOLY_PLAY_BODY_LAYERS;
 
@@ -123,8 +123,8 @@ pub fn ui_node_list(values: impl IntoIterator<Item = semio_framework_plugin::UiA
 /// migration's boundary — flagged under `sharedFileRequests` in this wave's report.
 pub fn lowpoly_io() -> semio_framework_plugin::AppIo {
     semio_framework_plugin::AppIo {
-        document_schema: LOWPOLY_DOCUMENT_SCHEMA.into(),
-        document_media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh },
+        artifact_schema: LOWPOLY_DOCUMENT_SCHEMA.into(),
+        artifact_media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh },
         ports: vec![
             semio_framework_plugin::MediaPortSpec {
                 id: "mesh:in".into(),
@@ -1454,8 +1454,8 @@ fn lowpoly_export_media(port: &str, doc: &ArtifactView<'_, LowpolySnapshot>, scr
             let json = dsl::json::to_json_string(&dsl::DslValue::from(&mesh_document));
             Ok(Media { media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh }, payload: MediaPayload::Structured { schema: "mesh.document".into(), json } })
         }
-        "document:out" => {
-            let media_type = LowpolyPlayApp::io().map_or(MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh }, |io| io.document_media_type);
+        "artifact:out" => {
+            let media_type = LowpolyPlayApp::io().map_or(MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh }, |io| io.artifact_media_type);
             let bytes = doc.snapshot.encode_pack();
             Ok(Media { media_type, payload: MediaPayload::Structured { schema: LOWPOLY_DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
         }
@@ -1481,11 +1481,11 @@ fn lowpoly_render(
     let texture_cache = scratch.textures().clone();
     let render_projection = scratch_projection.as_ref().unwrap_or(projection);
     let view = LowpolyView { snapshot: render_projection, config };
-    let loaded = matches!(body_key, LOWPOLY_PLAY_BODY_MAIN | LOWPOLY_PLAY_BODY_UV | LOWPOLY_PLAY_BODY_DOCUMENT).then(|| crate::editor::lowpoly::view::build_doc(projection, config, scratch)).flatten();
+    let loaded = matches!(body_key, LOWPOLY_PLAY_BODY_MAIN | LOWPOLY_PLAY_BODY_UV | LOWPOLY_PLAY_BODY_ARTIFACT).then(|| crate::editor::lowpoly::view::build_doc(projection, config, scratch)).flatten();
     let node = match body_key {
         LOWPOLY_PLAY_BODY_MAIN => edit::windows::model::render(view, loaded.as_ref(), active_utility, &texture_cache),
         LOWPOLY_PLAY_BODY_UV => paint_mode::windows::uv::render(view, loaded.as_ref(), &texture_cache),
-        LOWPOLY_PLAY_BODY_DOCUMENT => match &loaded {
+        LOWPOLY_PLAY_BODY_ARTIFACT => match &loaded {
             Some(loaded) => document_panel::render(view, loaded, labels),
             None => semio_framework_plugin::built_text_node(semio_framework_plugin::Label::data("Failed to load lowpoly document"))
                 .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "lowpoly document failed-load text admission failed")),
@@ -1536,7 +1536,7 @@ impl ArtifactEditor for LowpolyPlayApp {
         owner: EditorApp<LowpolyPlayApp>,
         owner_file: "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.lowpoly.lowpoly@1/*#editor",
-        document_schema: "lowpoly.document",
+        artifact_schema: "lowpoly.document",
         factory: "LowpolyCommandJobFactory",
         factory_type: LowpolyCommandJobFactory,
         tools: {
@@ -1648,7 +1648,7 @@ impl ArtifactEditor for LowpolyPlayApp {
 
     /// 🧬️ No `whole_document_operation` override — per `📓️taxonomy.md`, whole-document replace
     /// (the retired whole-document-replace variant) is banned outright with NO replacement mutation, so this falls back to the
-    /// trait's own default (`None`); `import_media`'s `"mesh:in"`/`"document:in"` arms below build
+    /// trait's own default (`None`); `import_media`'s `"mesh:in"`/`"artifact:in"` arms below build
     /// `reset_document_effect` (a `Effect::LoadDocument`, outside undo history) instead.
     ///
     /// 🎞️ `mesh:out` plus the inherited `document:out` default (the pack of `doc.snapshot`, replicated
@@ -1678,7 +1678,7 @@ impl ArtifactEditor for LowpolyPlayApp {
                 let snapshot: LowpolySnapshot = dsl::json::from_json_str(&projection_json.to_string()).map_err(|error| MediaError::Payload(port.into(), error.to_string()))?;
                 Ok(Emit { effects: vec![reset_document_effect(&snapshot)], ..Default::default() })
             }
-            "document:in" => {
+            "artifact:in" => {
                 let MediaPayload::Structured { json, .. } = &media.payload else {
                     return Err(MediaError::Payload(port.into(), "default document:in importer only accepts a Structured (base64 pack) payload".into()));
                 };
@@ -1755,7 +1755,7 @@ impl ArtifactEditor for LowpolyPlayApp {
 /// open, dev fixture load). Per `📓️taxonomy.md`, whole-document replace is banned outright with NO
 /// replacement mutation: whole-document replace is not expressible as an in-history `Mutation` at
 /// all. Every former "replace the whole document" gesture in this package (`import_media`'s
-/// `"mesh:in"`/`"document:in"` above, `commands::document::{set_snapshot_json,replace_snapshot_json}`)
+/// `"mesh:in"`/`"artifact:in"` above, `commands::document::{set_snapshot_json,replace_snapshot_json}`)
 /// builds this effect instead of an `Emit::mutations([...])`. The spr is a fresh, edit-free op-log
 /// for `scene` — a genesis envelope with no history to encode.
 // 🚫️async: E5 executor bridge — `store::print_document_spr` is `async fn` per R2, but every caller of

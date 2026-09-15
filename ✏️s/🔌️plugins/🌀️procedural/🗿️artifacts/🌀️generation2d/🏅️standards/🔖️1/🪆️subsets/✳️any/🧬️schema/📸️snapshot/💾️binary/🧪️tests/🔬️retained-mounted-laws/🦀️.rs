@@ -51,13 +51,13 @@ fn non_empty_canonical_snapshot_round_trips_one_grant_at_a_time() {
     let params = semio_framework_artifact_flow_flow::neural::Dictionary::new()
         .insert("gain", semio_framework_artifact_flow_flow::neural::Value::Atom(semio_framework_artifact_flow_flow::neural::Atom::Decimal(2.5)))
         .insert("nested", semio_framework_artifact_flow_flow::neural::Value::Dictionary(nested));
-    expected.fixture.widgets.push(semio_framework_artifact_flow_flow::Widget::Neuron { id: "retained-neuron".into(), neuron_kind: "law".into(), params, input_ports: vec!["in".into()], output_ports: vec!["out".into()], preview: true });
+    expected.host_document.widgets.push(semio_framework_artifact_flow_flow::Widget::Neuron { id: "retained-neuron".into(), neuron_kind: "law".into(), params, input_ports: vec!["in".into()], output_ports: vec!["out".into()], preview: true });
     let mut expanded = semio_framework_artifact_flow_flow::OrderedSet::new();
     expanded.insert("answer".into());
     let preview = semio_framework_artifact_flow_flow::neural::Dictionary::new().insert("answer", semio_framework_artifact_flow_flow::neural::Value::Atom(semio_framework_artifact_flow_flow::neural::Atom::String("visible".into())));
-    expected.fixture.widgets.push(semio_framework_artifact_flow_flow::Widget::OutputPreview { id: "retained-preview".into(), preview, expanded });
-    expected.fixture.widgets.push(semio_framework_artifact_flow_flow::Widget::Cluster { id: "retained-cluster".into(), name: "Cluster".into(), tree: Default::default(), flow: Default::default() });
-    expected.fixture.synapses.push(semio_framework_artifact_flow_flow::SynapseSpec { id: "retained-synapse".into(), from: "retained-neuron".into(), to: "retained-preview".into(), from_port: "out".into(), to_port: String::new() });
+    expected.host_document.widgets.push(semio_framework_artifact_flow_flow::Widget::OutputPreview { id: "retained-preview".into(), preview, expanded });
+    expected.host_document.widgets.push(semio_framework_artifact_flow_flow::Widget::Cluster { id: "retained-cluster".into(), name: "Cluster".into(), tree: Default::default(), flow: Default::default() });
+    expected.host_document.synapses.push(semio_framework_artifact_flow_flow::SynapseSpec { id: "retained-synapse".into(), from: "retained-neuron".into(), to: "retained-preview".into(), from_port: "out".into(), to_port: String::new() });
     let mut values: semio_framework_artifact_playbook_playbook::PlaybookValues = std::collections::HashMap::new();
     values.insert(
         "nested".into(),
@@ -66,8 +66,8 @@ fn non_empty_canonical_snapshot_round_trips_one_grant_at_a_time() {
     expected.generation.cold_builder_mut().expect("unique cold generation owner").generations.push(semio_framework_artifact_playbook_playbook::FormGeneration { id: "retained-generation".into(), name: "Generation".into(), values });
     expected.generation.cold_builder_mut().expect("unique cold generation owner").selected_generation_id = Some("retained-generation".into());
     expected.generation.cold_builder_mut().expect("unique cold generation owner").preview_text = Some("preview".into());
-    assert!(!expected.fixture.widgets.is_empty());
-    assert!(!expected.fixture.synapses.is_empty());
+    assert!(!expected.host_document.widgets.is_empty());
+    assert!(!expected.host_document.synapses.is_empty());
     let bytes = encode(&expected);
     assert_eq!(&bytes[..4], &GENERATION2D_MOUNTED_PREFIX);
     let expected_ledger = bytes[4..].iter().fold(0xcbf2_9ce4_8422_2325u64, |ledger, byte| (ledger ^ u64::from(*byte)).wrapping_mul(0x0000_0100_0000_01b3));
@@ -95,9 +95,9 @@ fn non_empty_canonical_snapshot_round_trips_one_grant_at_a_time() {
     }
     assert!(ready, "P2 retained canonical route must converge");
     let actual = session.take().expect("typed snapshot handoff");
-    assert_eq!(actual.fixture.synapses.len(), expected.fixture.synapses.len(), "typed synapse owner must retain the exact row census");
-    assert_eq!(actual.fixture.synapses.last(), expected.fixture.synapses.last(), "typed synapse owner must retain the exact non-empty appended row");
-    assert_eq!(synapse_digest(actual.fixture.synapses.last().expect("typed retained synapse")), synapse_digest(expected.fixture.synapses.last().expect("expected retained synapse")));
+    assert_eq!(actual.host_document.synapses.len(), expected.host_document.synapses.len(), "typed synapse owner must retain the exact row census");
+    assert_eq!(actual.host_document.synapses.last(), expected.host_document.synapses.last(), "typed synapse owner must retain the exact non-empty appended row");
+    assert_eq!(synapse_digest(actual.host_document.synapses.last().expect("typed retained synapse")), synapse_digest(expected.host_document.synapses.last().expect("expected retained synapse")));
     assert_eq!(actual, expected, "all typed snapshot owners must round-trip exactly");
     actual.retire_cold();
     expected.retire_cold();

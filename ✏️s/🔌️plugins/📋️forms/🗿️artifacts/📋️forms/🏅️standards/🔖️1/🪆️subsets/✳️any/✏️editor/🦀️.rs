@@ -39,7 +39,7 @@ use store::EngineHandles;
 pub const FORMS_PLAY_APP_ID: &str = "forms-play";
 pub use builder::FORMS_PLAY_BODY_BLUEPRINT;
 pub use catalogue_panel::FORMS_PLAY_BODY_CATALOGUE;
-pub use document_panel::FORMS_PLAY_BODY_DOCUMENT;
+pub use document_panel::FORMS_PLAY_BODY_ARTIFACT;
 pub use inspection_panel::FORMS_PLAY_BODY_INSPECTION;
 pub use try_window::FORMS_PLAY_BODY_TRY;
 
@@ -346,8 +346,8 @@ semio_framework_plugin::app_commands! {
 /// own IO surface, not artifact behaviour.
 pub fn forms_io() -> semio_framework_plugin::AppIo {
     semio_framework_plugin::AppIo {
-        document_schema: FORMS_DOCUMENT_SCHEMA.into(),
-        document_media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
+        artifact_schema: FORMS_DOCUMENT_SCHEMA.into(),
+        artifact_media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
         ports: vec![semio_framework_plugin::MediaPortSpec {
             id: "dictionary:out".into(),
             label: "Dictionary".into(),
@@ -934,7 +934,7 @@ impl ArtifactEditor for FormsPlayApp {
         owner: EditorApp<FormsPlayApp>,
         owner_file: "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.forms.forms@1/*#editor",
-        document_schema: "forms.form",
+        artifact_schema: "forms.form",
         factory: "FormsBoundedCommandJobFactory",
         factory_type: FormsBoundedCommandJobFactory,
         tools: {
@@ -1028,7 +1028,7 @@ impl ArtifactEditor for FormsPlayApp {
     /// in the exact Try window config and transient owners).
     fn export_media(port: &str, doc: &ArtifactView<'_, FormsSnapshot>) -> Result<semio_framework_plugin::Media, MediaError> {
         match port {
-            "document:out" => {
+            "artifact:out" => {
                 let bytes = store::ArtifactPack::encode_pack(doc.snapshot);
                 Ok(semio_framework_plugin::Media {
                     media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
@@ -1052,7 +1052,7 @@ impl ArtifactEditor for FormsPlayApp {
         let node = match body_key {
             FORMS_PLAY_BODY_BLUEPRINT => builder::render(spec, config, labels),
             FORMS_PLAY_BODY_TRY => try_window::render(spec, config, &try_window::config::current(cfg), &try_window::transient::FormsTryWindowTransient::default(), labels, view_state),
-            FORMS_PLAY_BODY_DOCUMENT => document_panel::render(spec, labels),
+            FORMS_PLAY_BODY_ARTIFACT => document_panel::render(spec, labels),
             FORMS_PLAY_BODY_CATALOGUE => catalogue_panel::render(config, labels),
             FORMS_PLAY_BODY_INSPECTION => inspection_panel::render(spec),
             _ => return semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
@@ -1075,7 +1075,7 @@ impl ArtifactEditor for FormsPlayApp {
         let node = match body_key {
             FORMS_PLAY_BODY_BLUEPRINT => builder::render(spec, config, labels),
             FORMS_PLAY_BODY_TRY => try_window::render(spec, config, &try_window::config::current(cfg), &try_window::transient::current(transient), labels, view_state),
-            FORMS_PLAY_BODY_DOCUMENT => document_panel::render(spec, labels),
+            FORMS_PLAY_BODY_ARTIFACT => document_panel::render(spec, labels),
             FORMS_PLAY_BODY_CATALOGUE => catalogue_panel::render(config, labels),
             FORMS_PLAY_BODY_INSPECTION => inspection_panel::render(spec),
             _ => return semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),

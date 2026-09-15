@@ -7,7 +7,7 @@ use crate::{widget_id, Generation2dDiff, Generation2dSnapshot};
 //#region 🔖️Diff
 pub fn diff(payload: &ReplaceWidget, base: &Generation2dSnapshot) -> protocol::MutationOutcome<Generation2dDiff> {
     let id = widget_id(&payload.widget);
-    let Some(index) = widget_index(&base.fixture, id) else {
+    let Some(index) = widget_index(&base.host_document, id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Widget \"{id}\" does not exist."), [id.to_string()]);
     };
     protocol::MutationOutcome::new(diff_fixture_from_helpers(base, &WidgetsDiff { removed: vec![], set: vec![(index, payload.widget.clone())] }, &SynapsesDiff::default(), &LayoutDiff::default(), None, None))

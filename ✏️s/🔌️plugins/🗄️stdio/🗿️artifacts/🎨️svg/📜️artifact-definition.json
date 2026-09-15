@@ -62,7 +62,7 @@
       "native_factory": {
         "factory_id": "stdio.native.svg.v1",
         "artifact_kind": "stdio.svg",
-        "document_schema": "stdio.svg",
+        "artifact_schema": "stdio.svg",
         "extension": "svg",
         "pack_schema_hash": "d206ade8f78d5daab8fe14d51941521cb092c5b87002bd9c9a9089d2fb477b98",
         "runtime_capability_id": "s.stdio.svg.standard.1-1.codec.codec-stdio-svg-extension-svg.v1"

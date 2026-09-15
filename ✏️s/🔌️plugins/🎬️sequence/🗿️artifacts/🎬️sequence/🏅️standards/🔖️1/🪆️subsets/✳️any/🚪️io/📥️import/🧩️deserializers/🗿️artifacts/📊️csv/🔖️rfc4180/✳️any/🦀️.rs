@@ -8,7 +8,7 @@
 //! `SequenceSnapshot` pack directly instead of as a `CsvSnapshot` pack — this impl's `deserialize`
 //! decodes the foreign `CsvSnapshot` first, as the coordinate (`CSV_DIALECT`) requires.
 
-use crate::{SequenceFixture, SequenceSnapshot, SequenceStep, StepParams, SEQUENCE_DOCUMENT_SCHEMA};
+use crate::{SequenceHostDocument, SequenceSnapshot, SequenceStep, StepParams, SEQUENCE_DOCUMENT_SCHEMA};
 use semio_framework::io::io_mechanism::Deserializer;
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};
@@ -45,6 +45,6 @@ impl Deserializer<SequenceSnapshot> for CsvIntoSequence {
                 }
             })
             .collect();
-        Ok(IoOutcome::clean(SequenceSnapshot::from_fixture(SequenceFixture { schema: SEQUENCE_DOCUMENT_SCHEMA.into(), steps, edges: Vec::new() })))
+        Ok(IoOutcome::clean(SequenceSnapshot::from_host_document(SequenceHostDocument { schema: SEQUENCE_DOCUMENT_SCHEMA.into(), steps, edges: Vec::new() })))
     }
 }

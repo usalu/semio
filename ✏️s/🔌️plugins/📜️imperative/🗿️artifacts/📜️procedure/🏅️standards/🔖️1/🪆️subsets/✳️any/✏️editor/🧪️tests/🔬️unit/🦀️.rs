@@ -155,7 +155,7 @@ async fn the_manifest_stitches_every_taxonomy_node() {
         assert!(json.contains(id), "window kind {id} missing from the manifest: {json}");
     }
     assert!(json.contains(edit::IMPERATIVE_PLAY_MODE_EDIT), "mode missing from the manifest");
-    for body in [IMPERATIVE_PLAY_BODY_DOCUMENT, IMPERATIVE_PLAY_BODY_CATALOGUE, IMPERATIVE_PLAY_BODY_INSPECTOR] {
+    for body in [IMPERATIVE_PLAY_BODY_ARTIFACT, IMPERATIVE_PLAY_BODY_CATALOGUE, IMPERATIVE_PLAY_BODY_INSPECTOR] {
         assert!(json.contains(body), "panel body {body} missing from the manifest");
     }
     assert!(json.contains("computation.procedure"), "artifact kind missing from the manifest");

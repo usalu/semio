@@ -466,7 +466,7 @@ const PanelTabButton: React.FC<{
       >
         {windowTabChrome ? (
           <div className={modeDockTabLabelClassName}>
-            <span className="shrink-0"><Icon size={12} /></span>
+            <span className={panelTabIconSlotClass}><Icon size={12} /></span>
             {inlineText !== undefined ? (
               <span data-slot="inline-label" className="truncate">
                 {inlineText}
@@ -516,13 +516,16 @@ const PanelTabRow: React.FC<PanelTabRowProps> = ({ variant, anchor, parentPath =
   const sortedTabs = reactHostPort.useMemo(() => [...tabs].sort((a, b) => (a.order ?? 0) - (b.order ?? 0)), [tabs]);
   const resolvedActiveId = activeId;
 
+  // 📜️ Keyed on the tab IDS, not the array: a shell refresh hands a fresh `tabs` array with the same tabs, and resetting
+  // `scrollLeft` forces a synchronous layout (121 ms of a 3.6 s tool run in the React shell, one per refresh per row).
+  const tabIdsKey = sortedTabs.map((tab) => tab.id).join("\u0000");
   reactHostPort.useLayoutEffect(() => {
     const bar = barRef.current;
     if (!bar) return;
     bar.scrollLeft = 0;
     const activeButton = bar.querySelector<HTMLElement>(`[data-slot="${tabSlot}-tab-button"][data-active="true"]`);
     activeButton?.scrollIntoView({ block: "nearest", inline: "nearest" });
-  }, [resolvedActiveId, sortedTabs, tabSlot]);
+  }, [resolvedActiveId, tabIdsKey, tabSlot]);
 
   const parentPathKey = parentPath.join("/");
   const setRowRef = reactHostPort.useCallback(

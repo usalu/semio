@@ -15,11 +15,11 @@ import { glassClass } from "../🌈️surface-presentation/🟦️.ts";
 // #region 🎛️ChromeControlPresentation
 /** @emoji 🎛️ Shared transparent control-cell base. */
 export const chromeControlItemBaseClass = cn(
-  "text-element inline-flex items-center justify-center gap-single text-xs font-medium bg-transparent",
+  "text-element box-border inline-flex items-center justify-center gap-single text-xs font-medium bg-transparent overflow-visible",
   "cursor-selectable disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed",
-  "[&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-small [&_svg]:shrink-0",
+  "[&_[data-icon]]:overflow-visible [&_svg]:pointer-events-none [&_svg]:block [&_svg:not([class*='size-'])]:size-small [&_svg]:shrink-0",
   formControlFocusBorderClass,
-  "whitespace-nowrap min-h-medium h-full p-single leading-none",
+  "whitespace-nowrap min-h-medium h-full max-h-full p-single leading-none",
 );
 
 /** @emoji 🎛️ Interactive chrome control cell. */
@@ -40,7 +40,7 @@ export const windowPaneChromeToggleClass = cn(
 );
 
 /** @emoji 🎛️ Shared outer chrome control shell. */
-export const chromeControlGroupShellClass = cn("flex items-stretch border divide-x overflow-hidden w-fit shrink-0", borderNormalClass, "divide-normal", glassClass);
+export const chromeControlGroupShellClass = cn("box-border flex items-stretch overflow-visible border w-fit shrink-0", borderNormalClass, glassClass);
 
 /** @emoji 🎛️ Standard chrome control group height. */
 export const chromeControlGroupClass = cn(chromeControlGroupShellClass, "h-medium");

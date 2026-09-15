@@ -100,9 +100,11 @@ test-results
 **/📺️renderer-modules/
 **/*.wasm
 **/*.cwasm
+**/*_bg.wasm.d.ts
 **/*_component.js
 **/*_component.d.ts
 **/*_component.core.wasm
+**/🕸️bindings/**
 **/*.map
 **/pkg/
 **/🟨️boot.js
@@ -627,6 +629,8 @@ nul
 # fixtures tree explicitly, the same way the taxonomy dirs above are rescued.
 !**/🧫️fixtures/
 !**/🧫️fixtures/**
+**/🧫️fixtures/**/🌐️browser-bundles/**
+**/🧫️fixtures/**/🤖️generated/**
 
 # Nx-staged package deliverables remain generated inside fixture packages.
 **/📦️packages/*/dist/

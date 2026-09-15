@@ -277,7 +277,7 @@
           "const": "fixture.document"
         },
         "componentKind": {
-          "const": "fixture"
+          "const": "hostDocument"
         },
         "dimension": {
           "const": "2d"
@@ -314,15 +314,15 @@
         }
       }
     },
-    "TutorialDocumentTrackFixture": {
+    "TutorialArtifactTrackFixture": {
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "document",
+        "artifact",
         "cases"
       ],
       "properties": {
-        "document": {
+        "artifact": {
           "type": "array",
           "items": {
             "type": "object",

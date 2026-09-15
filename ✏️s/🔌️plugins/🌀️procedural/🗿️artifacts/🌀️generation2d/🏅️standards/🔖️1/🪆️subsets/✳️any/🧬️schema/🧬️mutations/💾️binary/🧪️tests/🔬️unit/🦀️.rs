@@ -24,7 +24,7 @@ fn op_text_round_trip_connect_synapse() {
 
 #[test]
 fn op_text_round_trip_change_schema() {
-    test_support::assert_op_line_round_trip(&change_schema("flow.fixture".into()));
+    test_support::assert_op_line_round_trip(&change_schema("flow.host_document".into()));
 }
 
 #[test]
@@ -50,7 +50,7 @@ fn op_text_parse_rejects_non_integer_index() {
 
 #[test]
 fn op_binary_round_trips_via_wrapper_fns() {
-    let operation = change_schema("flow.fixture".into());
+    let operation = change_schema("flow.host_document".into());
     let bytes = encode_op(&operation).expect("encode");
     assert_eq!(decode_op(&bytes).expect("decode"), operation);
 }

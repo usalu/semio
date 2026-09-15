@@ -7,16 +7,16 @@ use semio_framework_plugin::{
 };
 
 //#region 🔖️Constants
-pub const VCS_PLAY_BODY_DOCUMENT: &str = "vcs.play.document";
+pub const VCS_PLAY_BODY_ARTIFACT: &str = "vcs.play.artifact";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
 pub fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_ARTIFACT_ID.into()),
-        label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Dokument"),
+        label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Artefakt"),
         group: PanelGroup::Workbench,
-        body_key: Some(VCS_PLAY_BODY_DOCUMENT.into()),
+        body_key: Some(VCS_PLAY_BODY_ARTIFACT.into()),
         children: Vec::new(),
     }
 }
@@ -67,7 +67,7 @@ pub fn render(history: &HistoryView, labels: &VcsPlayLabels) -> semio_framework_
         Ok(node)
     }))?;
     builder
-        .section_or_placeholder("vcs-play-document.checkpoints", Some(ui_fixed_label(labels.document)?), true, checkpoint_items, labels.no_checkpoints.as_str())?
+        .section_or_placeholder("vcs-play-document.checkpoints", Some(ui_fixed_label(labels.artifact)?), true, checkpoint_items, labels.no_checkpoints.as_str())?
         .section("vcs-play-document.alternatives", Some(ui_fixed_label(labels.alternatives)?), true, alternative_items)?
         .interaction_domain(VCS_INTERACTION_HISTORY)?
         .build()

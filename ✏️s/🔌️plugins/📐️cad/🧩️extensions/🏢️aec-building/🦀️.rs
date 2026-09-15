@@ -141,8 +141,6 @@ fn building_structure_summary_service() -> ArtifactInferenceService {
             artifact_kind: CAD_ARTIFACT_KIND,
             artifact_schema: CAD_ARTIFACT_KIND,
             artifact_schema_version: 1,
-            document_schema: CAD_DOCUMENT_SCHEMA,
-            document_schema_version: 1,
             inference_schema: AEC_BUILDING_INFERENCE_SCHEMA,
             inference_schema_version: 1,
             algorithm_version: 1,

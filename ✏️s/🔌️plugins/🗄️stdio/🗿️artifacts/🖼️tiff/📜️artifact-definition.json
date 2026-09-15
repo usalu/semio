@@ -62,7 +62,7 @@
       "native_factory": {
         "factory_id": "stdio.native.tiff.v1",
         "artifact_kind": "stdio.tiff",
-        "document_schema": "stdio.tiff",
+        "artifact_schema": "stdio.tiff",
         "extension": "tiff",
         "pack_schema_hash": "498e64a94f0652c53ffc1839376721e66ba387d38681cc179d7b0bf844bc9b4a",
         "runtime_capability_id": "s.stdio.tiff.standard.6-0.codec.codec-stdio-tiff-extension-tiff.v1"

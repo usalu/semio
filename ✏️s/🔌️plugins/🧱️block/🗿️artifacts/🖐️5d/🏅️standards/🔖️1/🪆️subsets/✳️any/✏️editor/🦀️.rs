@@ -115,7 +115,7 @@ pub fn ui_node_list(values: impl IntoIterator<Item = semio_framework_plugin::UiA
 /// (`Kit×Type`, matching the `"5d.block"` artifact kind) plus a `"catalog:out"` port giving
 /// `puzzle5d_catalog_fragment` a real caller (see `export_media` below).
 pub fn block5d_io() -> semio_framework_plugin::AppIo {
-    let io = semio_framework_plugin::resolve_ready(semio_framework_plugin::AppIo::from_document(
+    let io = semio_framework_plugin::resolve_ready(semio_framework_plugin::AppIo::from_artifact(
         BLOCK_5D_SCHEMA,
         MediaType { class: MediaClass::Kit, form: MediaForm::Type },
         semio_framework_plugin::ArtifactPresentation { id: "5d.block".into(), name: "Part Kind".into(), dimension: "5d".into(), component_kind: "block5d".into() },
@@ -395,7 +395,7 @@ impl ArtifactEditor for Block5dPlayApp {
         owner: EditorApp<Block5dPlayApp>,
         owner_file: "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.block.block5d@1/*#editor",
-        document_schema: "block.5d",
+        artifact_schema: "block.5d",
         factory: "Block5dRetainedCommandJobFactory",
         factory_type: Block5dRetainedCommandJobFactory,
         contract: ToolExecutionContract::bounded_first_step(65_536, 4_096, 1, 262_144, 7_500),
@@ -508,7 +508,7 @@ impl ArtifactEditor for Block5dPlayApp {
         let node = match body_key {
             board::BLOCK5D_BODY_BOARD => board::render(doc.snapshot, labels)?,
             world::BLOCK5D_BODY_WORLD => world::render(doc.snapshot, labels)?,
-            document_panel::BLOCK5D_BODY_DOCUMENT => document_panel::render(doc.snapshot, labels)?,
+            document_panel::BLOCK5D_BODY_ARTIFACT => document_panel::render(doc.snapshot, labels)?,
             inspection_panel::BLOCK5D_BODY_INSPECTOR => inspection_panel::render(doc.snapshot, labels)?,
             _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}")))
                 .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "block5d unknown-body label admission failed"))?,
@@ -520,17 +520,17 @@ impl ArtifactEditor for Block5dPlayApp {
     /// puzzle5d-shaped catalog fragment (`parts`/`grips`/`fasteners`/`ropes`/`kindCompatibility`) as
     /// a `kit.catalog`-schema `Media` value for the `"catalog:out"` port declared in `block5d_io`.
     /// Falls through to the default whole-document pack export for every other port
-    /// (`"document:out"`).
+    /// (`"artifact:out"`).
     fn export_media(port: &str, doc: &ArtifactView<'_, Block5dSnapshot>) -> Result<Media, MediaError> {
         if port != "catalog:out" {
-            // 🌉️ Reimplements `ArtifactEditor::export_media`'s default `"document:out"` behavior
+            // 🌉️ Reimplements `ArtifactEditor::export_media`'s default `"artifact:out"` behavior
             // verbatim — overriding the trait method forfeits the ability to delegate back to its
             // own default body, so the whole-document pack export is duplicated here rather than
             // left unreachable for this app.
-            if port != "document:out" {
+            if port != "artifact:out" {
                 return Err(MediaError::NotImplemented);
             }
-            let media_type = Self::io().map_or(MediaType { class: MediaClass::Kit, form: MediaForm::Type }, |io| io.document_media_type);
+            let media_type = Self::io().map_or(MediaType { class: MediaClass::Kit, form: MediaForm::Type }, |io| io.artifact_media_type);
             let bytes = store::ArtifactPack::encode_pack(doc.snapshot);
             return Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } });
         }

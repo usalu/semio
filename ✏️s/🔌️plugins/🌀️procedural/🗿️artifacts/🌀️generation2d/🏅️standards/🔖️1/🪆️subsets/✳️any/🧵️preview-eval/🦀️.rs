@@ -83,7 +83,7 @@ pub fn tick_effect(window_id: &str, window_kind_id: &str) -> Effect {
 
 /// 🚧️ Whether an evaluation of `fixture` may start or continue at all: an operator kind no contributed
 /// extension serves faults identically on every hop, and only `setContributions` can change that.
-pub fn may_rearm(fixture: &semio_framework_artifact_flow_flow::FlowFixture) -> bool {
+pub fn may_rearm(fixture: &semio_framework_artifact_flow_flow::FlowHostDocument) -> bool {
     semio_framework_os_flow::unserved_flow_operator_kinds(fixture).is_empty()
 }
 
@@ -155,7 +155,7 @@ pub fn tick_is_unfinished(more: bool, parked_extension_invocations: usize) -> bo
 
 /// 🧮️ ONE evaluation hop over `fixture` into `session`, for the window it names. `retained_eval` is
 /// the evaluation text the caller already published, so an unmoved evaluation republishes nothing.
-pub fn evaluate_tick(window_id: &str, window_kind_id: &str, fixture: &semio_framework_artifact_flow_flow::FlowFixture, session: &mut FlowEvalSession, retained_eval: Option<&str>) -> FlowEvalTickOutcome {
+pub fn evaluate_tick(window_id: &str, window_kind_id: &str, fixture: &semio_framework_artifact_flow_flow::FlowHostDocument, session: &mut FlowEvalSession, retained_eval: Option<&str>) -> FlowEvalTickOutcome {
     session.begin_window_tick(window_id);
     let mut host = flow_host_with_session(fixture, session);
     let more = session.tick(&mut host, None);

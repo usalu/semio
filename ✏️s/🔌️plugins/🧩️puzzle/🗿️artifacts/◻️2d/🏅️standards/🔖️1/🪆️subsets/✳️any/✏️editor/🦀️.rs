@@ -23,7 +23,7 @@ use crate::editor::puzzle2d::modes::edit::tools::fill;
 use crate::editor::puzzle2d::precompute::fill as fill_run;
 use crate::editor::puzzle2d::modes::edit::windows::overview::utilities::{brush as brush_utility, select as select_utility};
 use crate::editor::puzzle2d::modes::edit::windows::{detail, overview, selection};
-use crate::editor::puzzle2d::panels::{catalogue, document, inspection};
+use crate::editor::puzzle2d::panels::{catalogue, artifact, inspection};
 use crate::editor::puzzle2d::presence::{Puzzle2dPresence, Puzzle2dPresenceMutation};
 use crate::editor::puzzle2d::terminology::puzzle2d_labels;
 pub use crate::editor::puzzle2d::terminology::{puzzle2d_localized, puzzle2d_localized_phrase};
@@ -323,7 +323,7 @@ pub fn puzzle_extension_id() -> &'static str {
 //#endregion 🔖️Scene
 
 //#region 🔖️FixtureEdits
-pub fn add_node_to_fixture(fixture: &mut Value, kind: Option<&str>, args: Option<&Value>) {
+pub fn add_node_to_host_document(fixture: &mut Value, kind: Option<&str>, args: Option<&Value>) {
     let Some(obj) = fixture.as_object_mut() else {
         return;
     };
@@ -358,7 +358,7 @@ pub fn add_node_to_fixture(fixture: &mut Value, kind: Option<&str>, args: Option
     nodes.push(node);
 }
 
-pub fn delete_selection_from_fixture(fixture: &mut Value, selected: &[String]) {
+pub fn delete_selection_from_host_document(fixture: &mut Value, selected: &[String]) {
     if selected.is_empty() {
         return;
     }
@@ -765,7 +765,7 @@ pub fn puzzle2d_window_and_measures_scope() -> UiDirtyScope {
 pub fn puzzle2d_select_scope() -> UiDirtyScope {
     UiDirtyScope::Partial {
         window_bodies: apply_board_events::PUZZLE2D_WINDOW_BODY_KEYS.iter().map(|body_key| body_key.to_string()).collect(),
-        panel_bodies: vec![document::PUZZLE2D_PLAY_BODY_LAYERS.to_string(), inspection::PUZZLE2D_PLAY_BODY_PROPERTIES.to_string()],
+        panel_bodies: vec![artifact::PUZZLE2D_PLAY_BODY_LAYERS.to_string(), inspection::PUZZLE2D_PLAY_BODY_PROPERTIES.to_string()],
         utilities: false,
         tools: false,
         engagements: true,
@@ -1756,7 +1756,7 @@ fn puzzle2d_retained_reduce(
         return Err(Fault::from("puzzle2d-retained-command-mismatch"));
     }
     let mut fixture = json!({ "nodes": [] });
-    add_node_to_fixture(&mut fixture, command.args().and_then(|args| args.get("kind")).and_then(Value::as_str), command.args());
+    add_node_to_host_document(&mut fixture, command.args().and_then(|args| args.get("kind")).and_then(Value::as_str), command.args());
     let node = fixture.get_mut("nodes").and_then(Value::as_array_mut).and_then(Vec::pop).ok_or_else(|| Fault::from("puzzle2d-add-node-owner-lost"))?;
     let node = <crate::Puzzle2dNode as dsl::FromValue>::from_value(dsl::DslValue::from(&node)).map_err(|_| Fault::from("puzzle2d-add-node-malformed"))?;
     Ok(Emit { artifact_mutations: vec![crate::standards::v1::subsets::any::schema::mutations::create_node(node, None)], ui_scope: UiDirtyScope::Full, ..Default::default() })
@@ -2532,7 +2532,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle2dPlayApp>> for 
 }
 
 /// 🕸️ Admission ceilings and chunk size for one `redrawHandles` run. The legacy handler serialized
-/// the entire fixture and called `apply_edge_handle_snap_to_fixture_v1_json` once, with no size
+/// the entire fixture and called `apply_edge_handle_snap_to_host_document_v1_json` once, with no size
 /// guard and no yield point; these bound the same three passes so a large board is refused at
 /// preflight rather than blocking a step.
 const PUZZLE2D_REDRAW_MAX_NODES: usize = 4_096;
@@ -2553,7 +2553,7 @@ enum Puzzle2dRedrawStage {
 
 /// 🔵️ The snap geometry of one node, mirroring the engine's own `NodeShapeSnap`: a node without a
 /// finite centre — or a circle without a radius, or a rectangle without extents — has no rim to
-/// snap onto and is skipped, exactly as `apply_edge_handle_snap_to_fixture_v1_value` skips it.
+/// snap onto and is skipped, exactly as `apply_edge_handle_snap_to_host_document_v1_value` skips it.
 #[derive(Clone, Copy)]
 struct Puzzle2dRedrawShape {
     center: [f64; 2],
@@ -3553,7 +3553,7 @@ impl ArtifactEditor for Puzzle2dPlayApp {
         owner: EditorApp<Puzzle2dPlayApp>,
         owner_file: "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.puzzle.puzzle2d@1/*#editor",
-        document_schema: "puzzle.2d.fixture",
+        artifact_schema: "puzzle.2d.fixture",
         factory: "Puzzle2dRetainedCommandJobFactory",
         factory_type: Puzzle2dRetainedCommandJobFactory,
         contract: semio_framework::ToolExecutionContract::resumable(8_192, 512, 1, 262_144, 7_500, 1, 1),
@@ -3653,7 +3653,7 @@ impl ArtifactEditor for Puzzle2dPlayApp {
     /// so this is a 2d↔2d vocabulary, not block3d's object/vortex-kind one; `Puzzle2dImportJob` does the
     /// normalization one bounded row per step.
     fn io() -> Option<AppIo> {
-        let io = semio_framework::io::resolve_ready(AppIo::from_document(
+        let io = semio_framework::io::resolve_ready(AppIo::from_artifact(
             "puzzle.2d",
             MediaType { class: MediaClass::TwoD, form: MediaForm::Design },
             ArtifactPresentation { id: "2d.puzzle".into(), name: "2D Puzzle".into(), dimension: "2d".into(), component_kind: "puzzle2d".into() },
@@ -3711,7 +3711,7 @@ impl ArtifactEditor for Puzzle2dPlayApp {
             overview::BODY_KEY => overview::render(&document_json, &envelope)?,
             detail::BODY_KEY => detail::render(&document_json, &envelope)?,
             selection::BODY_KEY => selection::render(&document_json, &envelope)?,
-            document::PUZZLE2D_PLAY_BODY_LAYERS => document::render(&envelope, labels)?,
+            artifact::PUZZLE2D_PLAY_BODY_LAYERS => artifact::render(&envelope, labels)?,
             catalogue::PUZZLE2D_PLAY_BODY_CATALOGUE => catalogue::render(&envelope.fixture, labels)?,
             inspection::PUZZLE2D_PLAY_BODY_PROPERTIES => inspection::render(&envelope, labels)?,
             _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "puzzle2d unknown-body label admission failed"))?,
@@ -3738,7 +3738,7 @@ impl ArtifactEditor for Puzzle2dPlayApp {
             overview::BODY_KEY => overview::render(&document_json, &envelope)?,
             detail::BODY_KEY => detail::render(&document_json, &envelope)?,
             selection::BODY_KEY => selection::render(&document_json, &envelope)?,
-            document::PUZZLE2D_PLAY_BODY_LAYERS => document::render(&envelope, labels)?,
+            artifact::PUZZLE2D_PLAY_BODY_LAYERS => artifact::render(&envelope, labels)?,
             catalogue::PUZZLE2D_PLAY_BODY_CATALOGUE => catalogue::render(&envelope.fixture, labels)?,
             inspection::PUZZLE2D_PLAY_BODY_PROPERTIES => inspection::render(&envelope, labels)?,
             _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "puzzle2d unknown-body label admission failed"))?,
@@ -3837,7 +3837,7 @@ pub fn create_puzzle2d_app() -> semio_framework_plugin::AppDefinition {
             .window_kind_interactions(overview::WINDOW_KIND_ID, vec![InteractionRef::new(PUZZLE2D_INTERACTION_DOMAIN)])
             .window_kind_interactions(detail::WINDOW_KIND_ID, vec![InteractionRef::new(PUZZLE2D_INTERACTION_DOMAIN)])
             .window_kind_interactions(selection::WINDOW_KIND_ID, vec![InteractionRef::new(PUZZLE2D_INTERACTION_DOMAIN)])
-            .panel_tab_def(document::definition())
+            .panel_tab_def(artifact::definition())
             .panel_tab_def(catalogue::definition())
             .panel_tab_def(inspection::definition())
             // ✏️ Palette-visible content operations.

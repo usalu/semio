@@ -43,7 +43,7 @@ pub fn plugin() -> Result<Plugin<LayoutApps>, PluginAssemblyError> {
         .viewer_mutation_roster::<crate::viewer::layout::LayoutViewer>()
         .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::layout::artifact_kind().id })
         .execution(ExecutionMode::Isolated)
-        .requests(CapabilityRequest { id: CapabilityId("documents.write".into()), scope: "plugin".into(), reason: "persist layout edits to the open document".into(), optional: false })
+        .requests(CapabilityRequest { id: CapabilityId("artifacts.write".into()), scope: "plugin".into(), reason: "persist layout edits to the open document".into(), optional: false })
         .try_build()
 }
 

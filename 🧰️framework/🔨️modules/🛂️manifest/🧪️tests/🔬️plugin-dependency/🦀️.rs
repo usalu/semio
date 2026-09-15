@@ -220,8 +220,6 @@ async fn artifact_contribution_descriptor_round_trips() {
             artifact_kind: "s.cad.building".into(),
             artifact_schema: "s.cad.building".into(),
             artifact_schema_version: 1,
-            document_schema: "s.cad.document".into(),
-            document_schema_version: 1,
             inference_schema: "s.aec-building.load-path".into(),
             inference_schema_version: 1,
             algorithm_version: 1,

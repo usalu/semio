@@ -197,8 +197,8 @@ mod png;
 // 📄️ The user-facing surface those nine leaves reach the user THROUGH — the roster, the download
 // envelope, the accept filter and the picked-file path. It shares this lane's fixture, projection
 // and third-party oracle rather than standing up a second copy of them.
-#[path = "../📄️document-surface/🦀️.rs"]
-mod document_surface;
+#[path = "../🗿️artifact-surface/🦀️.rs"]
+mod artifact_surface;
 //#endregion 🔖️Cases
 
 //#region 🧪️FixtureLaws

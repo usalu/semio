@@ -76,7 +76,7 @@ async fn set_active_example_passes_the_retained_preflight() {
 async fn interaction_select_passes_the_reserved_preflight() {
     let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
     let mut app = app_with_registry().await;
-    let node_id = context::snapshot(&app).fixture.widgets.first().map(crate::widget_id).expect("default fixture node").to_string();
+    let node_id = context::snapshot(&app).host_document.widgets.first().map(crate::widget_id).expect("default fixture node").to_string();
     // 🧯️ The reserved spawn-job the admission requests has to be DRIVEN before the selection exists —
     // see `context::select_graph`. Settling a typed operation instead left this law reading a `None`
     // selection and asserting nothing (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).

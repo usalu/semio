@@ -38,7 +38,7 @@ pub const TOOL_RUN_STATUS_ANNOUNCE_INTERVAL_MS: u64 = 2_000;
 pub const TOOL_RUN_RESERVED_REASON_FLOOR: u16 = 0xFF00;
 /// 🔁️ Framework step: the document changed and the provisional result is being re-applied.
 pub const TOOL_RUN_REASON_REBASING: u16 = 0xFF00;
-/// ⚔️ Framework step: `{0}` provisional changes conflict with the current document.
+/// ⚔️ Framework step: `{0}` provisional changes conflict with the current artifact.
 pub const TOOL_RUN_REASON_CONFLICT: u16 = 0xFF01;
 /// ✂️ Framework step: the oldest `{0}` rejected attempts were evicted from the trace.
 pub const TOOL_RUN_REASON_TRACE_TRUNCATED: u16 = 0xFF02;
@@ -2202,8 +2202,8 @@ impl ToolRunLabel {
             Self::ActionDismiss => ("actionDismiss", "Dismiss", "Schließen"),
             Self::FinalizeDisabled => ("finalizeDisabled", "Available once the run is complete", "Verfügbar, sobald der Lauf fertig ist"),
             Self::ReadyToStart => ("readyToStart", "Ready to start", "Bereit zum Starten"),
-            Self::RebasingStep => ("rebasingStep", "Document changed, re-applying provisional result", "Dokument geändert, vorläufiges Ergebnis wird neu angewendet"),
-            Self::ConflictStep => ("conflictStep", "{0} provisional changes conflict with the current document", "{0} vorläufige Änderungen stehen im Konflikt mit dem aktuellen Dokument"),
+            Self::RebasingStep => ("rebasingStep", "Artifact changed, re-applying provisional result", "Artefakt geändert, vorläufiges Ergebnis wird neu angewendet"),
+            Self::ConflictStep => ("conflictStep", "{0} provisional changes conflict with the current artifact", "{0} vorläufige Änderungen stehen im Konflikt mit dem aktuellen Artefakt"),
             Self::TraceTruncatedStep => ("traceTruncatedStep", "Oldest {0} rejected attempts are no longer shown", "Die ältesten {0} verworfenen Versuche werden nicht mehr angezeigt"),
             Self::ProvisionalCapStep => ("provisionalCapStep", "Provisional change limit of {0} reached, run completed", "Grenze von {0} vorläufigen Änderungen erreicht, Lauf abgeschlossen"),
             Self::ProgressValueText => ("progressValueText", "{stage} ({i}/{n}): {completed} of {total} {unit} ({pct} %)", "{stage} ({i}/{n}): {completed} von {total} {unit} ({pct} %)"),

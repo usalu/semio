@@ -136,7 +136,7 @@ pub mod guest {
         async fn poll(
             events: Vec<WitEvent>,
             command_page: Option<exports::semio::framework::reactor::CommandIngressPage>,
-            _cold_pair_page: Option<exports::semio::framework::reactor::ColdDocumentPairPage>,
+            _cold_pair_page: Option<exports::semio::framework::reactor::ColdArtifactPairPage>,
             budget: WitBudget,
         ) -> Result<WitTurnResult, PluginError> {
             let mut lifecycle_receipt = None;

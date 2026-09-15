@@ -9,12 +9,12 @@ use crate::editor::generation3d::unit_tests::context;
 const OVERLAPPED: (f64, f64) = (-900.0, -900.0);
 
 async fn overlap_every_widget(app: &mut crate::editor::generation3d::unit_tests::context::Generation3dApp) -> Vec<String> {
-    let widget_ids: Vec<String> = context::snapshot(&app).fixture.widgets.iter().map(|widget| crate::widget_id(widget).to_string()).collect();
+    let widget_ids: Vec<String> = context::snapshot(&app).host_document.widgets.iter().map(|widget| crate::widget_id(widget).to_string()).collect();
     assert!(widget_ids.len() >= 2, "the reorganize fixture needs at least two widgets to be meaningfully overlapped");
     for id in &widget_ids {
         dispatch(app, Generation3dCommand::NodeGraphEdit(NodeGraphEdit { operations_json: crate::editor::generation3d::unit_tests::node_move_operations_json(id, OVERLAPPED.0, OVERLAPPED.1) })).await;
     }
-    let layout = &context::snapshot(&app).fixture.layout;
+    let layout = &context::snapshot(&app).host_document.layout;
     for id in &widget_ids {
         let position = layout.get(id).unwrap_or_else(|| panic!("widget {id} must have a pinned layout after a nodeGraphEdit move"));
         assert_eq!((position.x, position.y), OVERLAPPED, "widget {id} must start out overlapped");
@@ -34,8 +34,8 @@ async fn reorganize_moves_at_least_one_widget_off_a_deliberately_overlapped_layo
     dispatch(&mut app, Generation3dCommand::Reorganize(Reorganize {})).await;
 
     let after = context::snapshot(&app);
-    assert_eq!(after.fixture.widgets.len(), widget_ids.len(), "reorganize is a layout operation and must not add or remove widgets");
-    let moved: Vec<&String> = widget_ids.iter().filter(|id| after.fixture.layout.get(id.as_str()).is_some_and(|position| (position.x, position.y) != OVERLAPPED)).collect();
+    assert_eq!(after.host_document.widgets.len(), widget_ids.len(), "reorganize is a layout operation and must not add or remove widgets");
+    let moved: Vec<&String> = widget_ids.iter().filter(|id| after.host_document.layout.get(id.as_str()).is_some_and(|position| (position.x, position.y) != OVERLAPPED)).collect();
     assert!(!moved.is_empty(), "reorganize must move at least one widget off the overlapped position, but every widget stayed at {OVERLAPPED:?}");
 }
 
@@ -52,7 +52,7 @@ async fn reorganize_leaves_no_two_widgets_sharing_one_position() {
     let after = context::snapshot(&app);
     let mut seen: std::collections::BTreeSet<(u64, u64)> = std::collections::BTreeSet::new();
     for id in &widget_ids {
-        let Some(position) = after.fixture.layout.get(id.as_str()) else { continue };
+        let Some(position) = after.host_document.layout.get(id.as_str()) else { continue };
         let key = (position.x.to_bits(), position.y.to_bits());
         assert!(seen.insert(key), "reorganize left widget {id} sharing a position with another widget");
     }

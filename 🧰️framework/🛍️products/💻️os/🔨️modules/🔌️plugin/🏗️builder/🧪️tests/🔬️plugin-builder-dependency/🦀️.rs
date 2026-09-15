@@ -87,7 +87,7 @@ async fn host_media_contributions_are_idempotent_and_execute_only_at_runtime() {
         .expect("identical frozen host-media declarations are idempotent");
     assert_eq!(MESH_IMPORT_EXECUTIONS.load(Ordering::SeqCst), 0, "assembly must never execute a media converter");
     assert_eq!(plugin.host_media_handlers().len(), 1);
-    let result = plugin.import_mesh(&crate::MeshImportRequest { artifact_kind: kind.id.clone(), document_schema: kind.schema.clone(), mesh: semio_framework::MeshData::default() }).expect("runtime bridge execution");
+    let result = plugin.import_mesh(&crate::MeshImportRequest { artifact_kind: kind.id.clone(), artifact_schema: kind.schema.clone(), mesh: semio_framework::MeshData::default() }).expect("runtime bridge execution");
     assert_eq!(result.document, dsl::json!({ "bridge": "counting" }));
     assert_eq!(MESH_IMPORT_EXECUTIONS.load(Ordering::SeqCst), 1);
 }

@@ -646,7 +646,7 @@ async fn export_media_mesh_out_exports_a_structured_3d_mesh() {
 #[semio_framework_async_macros::async_test]
 async fn remodeling_io_declares_photos_in_and_mesh_out() {
     let io = remodeling_io();
-    assert_eq!(io.document_schema, "remodeling.scene");
+    assert_eq!(io.artifact_schema, "remodeling.scene");
     assert_eq!(io.artifact.id, "3d.remodeling");
     let photos_in = io.ports.iter().find(|port| port.id == "photos:in").expect("photos:in declared");
     assert_eq!(photos_in.direction, MediaPortDirection::In);

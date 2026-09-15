@@ -4,7 +4,7 @@
 //! `nodes`/`edges` fields are replaced by a composed `s.stdio.semio.graph` CHILD slot
 //! (`🔖️ContentBridge` below) — this plugin no longer defines its own persisted node/edge model, it
 //! composes stdio's neutral `graph` subset instead. The rich live editing types
-//! (`semio_framework_artifact_infinite_dag::DagNodeSpec`/`DagNodeKind`/`DagFixtureEdge`) still flow
+//! (`semio_framework_artifact_infinite_dag::DagNodeSpec`/`DagNodeKind`/`DagHostDocumentEdge`) still flow
 //! through the app exactly as before; only the PERSISTED shape changed. They now bridge through the
 //! composed child's exact local owner rather than plain struct fields.
 
@@ -33,7 +33,7 @@ pub const DAG_DOCUMENT_SCHEMA: &str = "dag.dag";
 pub const DAG_DIALECT: semio_framework_plugin::app::Dialect = semio_framework_plugin::app::Dialect { artifact_kind: "s.dag.dag", standard: semio_framework_plugin::app::StandardId("1"), subset: semio_framework_plugin::app::SubsetId::ANY };
 
 pub use crate::snapshot::schema::default_snapshot;
-pub use semio_framework_artifact_infinite_dag::{DagEdgePatch, DagFixtureEdge, DagNodeKind, DagNodePatch, DagNodeSpec, DagPreviewContent, IoPortSpec};
+pub use semio_framework_artifact_infinite_dag::{DagEdgePatch, DagHostDocumentEdge, DagNodeKind, DagNodePatch, DagNodeSpec, DagPreviewContent, IoPortSpec};
 
 //#region 🔖️ContentBridge
 /// 🕸️ Owned CHILD handle type for the composed `s.stdio.semio.graph` document — the dag plugin's
@@ -86,45 +86,45 @@ fn dag_node_from_semio_node(node: &SemioGraphNode) -> DagNodeSpec {
 }
 
 /// 🏷️ `SemioGraphEdge` has no `properties` slot (unlike `SemioGraphNode`) — its `label` field (which
-/// this plugin's own `DagFixtureEdge` never populates on its own behalf) is repurposed to carry the
-/// FULL `DagFixtureEdge` (port-qualified `source`/`target` endpoint strings, `route_style`,
+/// this plugin's own `DagHostDocumentEdge` never populates on its own behalf) is repurposed to carry the
+/// FULL `DagHostDocumentEdge` (port-qualified `source`/`target` endpoint strings, `route_style`,
 /// `properties`) as JSON, the round-trip source of truth on decode. `source`/`target`/`kind` are also
 /// projected onto their native fields (node-id-only, port suffix stripped) for genuine graph-shape
 /// tooling.
-fn semio_edge_from_dag_edge(edge: &DagFixtureEdge) -> SemioGraphEdge {
+fn semio_edge_from_dag_edge(edge: &DagHostDocumentEdge) -> SemioGraphEdge {
     let (source_node, _) = split_endpoint(&edge.source);
     let (target_node, _) = split_endpoint(&edge.target);
     SemioGraphEdge { id: SemioGraphEdgeId::new(edge.id.clone()), source: SemioGraphNodeId::new(source_node), target: SemioGraphNodeId::new(target_node), kind: "dag-edge".into(), label: dsl::json::to_json_string(edge) }
 }
 
 /// 🌉 Inverse of [`semio_edge_from_dag_edge`] — falls back to a bare node-id edge (no route
-/// style/properties) if `label` isn't valid `DagFixtureEdge` JSON (content authored outside this
+/// style/properties) if `label` isn't valid `DagHostDocumentEdge` JSON (content authored outside this
 /// plugin) — never panics.
-fn dag_edge_from_semio_edge(edge: &SemioGraphEdge) -> DagFixtureEdge {
-    dsl::json::from_json_str::<DagFixtureEdge>(&edge.label).unwrap_or_else(|_| DagFixtureEdge { id: edge.id.value.clone(), source: edge.source.value.clone(), target: edge.target.value.clone(), ..Default::default() })
+fn dag_edge_from_semio_edge(edge: &SemioGraphEdge) -> DagHostDocumentEdge {
+    dsl::json::from_json_str::<DagHostDocumentEdge>(&edge.label).unwrap_or_else(|_| DagHostDocumentEdge { id: edge.id.value.clone(), source: edge.source.value.clone(), target: edge.target.value.clone(), ..Default::default() })
 }
 
 fn split_endpoint(endpoint: &str) -> (String, String) {
     schema::split_endpoint(endpoint)
 }
 
-/// 🌉 REAL bidirectional converter between the app's live `DagNodeSpec`/`DagFixtureEdge` editing
+/// 🌉 REAL bidirectional converter between the app's live `DagNodeSpec`/`DagHostDocumentEdge` editing
 /// state and the composed child's own `SemioGraphSnapshot` node/edge graph (the
 /// "ModelBridge"/"DocumentBridge" pattern from `📓️wave3-reports/cad-report.md` and
 /// `📓️wave4-reports/flow-report.md`).
-pub fn dag_content_snapshot_from_working(nodes: &[DagNodeSpec], edges: &[DagFixtureEdge]) -> SemioGraphSnapshot {
+pub fn dag_content_snapshot_from_working(nodes: &[DagNodeSpec], edges: &[DagHostDocumentEdge]) -> SemioGraphSnapshot {
     SemioGraphSnapshot { schema: STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA.into(), nodes: nodes.iter().map(semio_node_from_dag_node).collect(), edges: edges.iter().map(semio_edge_from_dag_edge).collect() }
 }
 
 /// 🌉 Inverse of [`dag_content_snapshot_from_working`].
-pub fn working_from_dag_content_snapshot(content: &SemioGraphSnapshot) -> (Vec<DagNodeSpec>, Vec<DagFixtureEdge>) {
+pub fn working_from_dag_content_snapshot(content: &SemioGraphSnapshot) -> (Vec<DagNodeSpec>, Vec<DagHostDocumentEdge>) {
     (content.nodes.iter().map(dag_node_from_semio_node).collect(), content.edges.iter().map(dag_edge_from_semio_edge).collect())
 }
 
 /// 🕸️ Deterministic content-addressed CHILD handle for the dag content — same `(child_id, target)`
 /// for identical `(nodes, edges)`, a different pair once the content actually changes; mirrors
 /// flow's `flow_content_child_handle`/writer's `document_child_handle`.
-pub fn dag_content_child_handle(nodes: &[DagNodeSpec], edges: &[DagFixtureEdge]) -> DagContentChild {
+pub fn dag_content_child_handle(nodes: &[DagNodeSpec], edges: &[DagHostDocumentEdge]) -> DagContentChild {
     use std::hash::{Hash, Hasher};
     let snapshot = dag_content_snapshot_from_working(nodes, edges);
     let content_json = dsl::json::to_json_string(&snapshot);
@@ -144,7 +144,7 @@ pub fn dag_content_child_handle(nodes: &[DagNodeSpec], edges: &[DagFixtureEdge])
 #[derive(Clone, Debug, Default)]
 pub struct DagWorkingScene {
     pub nodes: Vec<DagNodeSpec>,
-    pub edges: Vec<DagFixtureEdge>,
+    pub edges: Vec<DagHostDocumentEdge>,
 }
 
 /// 🔎 Retains this exact child's typed working owner. A wire-only handle fails soft until the host
@@ -162,7 +162,7 @@ pub fn dag_working_scene(snapshot: &DagSnapshot) -> DagWorkingScene {
 
 /// 🏗️ Mints one content-addressed child and transfers its immutable working scene into that exact
 /// local owner. No matching identity in another snapshot can observe the payload.
-pub fn dag_content_child_with_owner(nodes: Vec<DagNodeSpec>, edges: Vec<DagFixtureEdge>) -> DagContentChild {
+pub fn dag_content_child_with_owner(nodes: Vec<DagNodeSpec>, edges: Vec<DagHostDocumentEdge>) -> DagContentChild {
     let handle = dag_content_child_handle(&nodes, &edges);
     handle.with_local_owner(std::sync::Arc::new(DagWorkingScene { nodes, edges }))
 }

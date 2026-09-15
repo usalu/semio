@@ -1,0 +1,45 @@
+{
+  "why": "How a framework-reserved interaction verb ANSWERS, and which lane its answer travels on. `interactionSelect`/`interactionHover`/`clearSelection`/`selectAll`/`setSelectionMode`/`setGranularity` are ADMITTED by the dispatch turn with an empty `InvocationResult` plus an `Effect::SpawnJob`; the real result — `output.interactionView` and the app-declared refresh scope from `dispatch_interaction_action` — is published by the job's completion turn as `AppFrame::Invocation { in_reply_to: 0, .. }` (`plugin_complete_reserved_spawned_job`, `💻️os/🔨️modules/🔌️plugin/🦀️.rs`). Sequences start at 1, so `in_reply_to: 0` names NO caller: `AppChannelClient` cannot correlate that frame to any waiter and routes it to its `onOperationProgress` lane. A host that leaves it on the frame lane therefore never sees it — the wgpu browser target subscribes to that lane nowhere, so every pick answered the ADMISSION's empty scope, refreshed nothing, and the guest never republished `World3dScene.selectionJson`: a click selected on 7 of 8 generation3d examples in neither role (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-selection-roundtrip-2026-09-15.md`). React never saw it because its `deliverJobCompletionTurn` parks the same effects in the LEFTOVER lane, where `leftoverShellInvocationFrames` folds them. One lane rule, both hosts.",
+  "instanceId": 7,
+  "commandSequence": 4,
+  "uncorrelatedReplySequence": 0,
+  "admission": {
+    "why": "What the dispatch turn resolves with: a reserved verb answers nothing itself, so its scope is the one that refreshes nothing.",
+    "replySequence": 4,
+    "output": null,
+    "uiScope": { "kind": "none" }
+  },
+  "settled": {
+    "why": "What the reserved job's completion turn publishes — the whole answer of the verb, on a frame that answers no command sequence.",
+    "replySequence": 0,
+    "output": {
+      "interactionView": {
+        "selectedIds": ["shell@solid"],
+        "hoverTarget": null,
+        "locked": { "shell@solid": false },
+        "gumball": { "active": false, "anchorId": "shell@solid" },
+        "windowId": "procedural-preview",
+        "selectionCleared": false
+      }
+    },
+    "uiScope": {
+      "kind": "partial",
+      "windowBodies": ["procedural.play.preview"],
+      "panelBodies": ["framework.panel.inspection"],
+      "utilities": false,
+      "tools": false,
+      "engagements": false,
+      "measures": false,
+      "labels": false
+    }
+  },
+  "expect": {
+    "admissionAnswersACaller": true,
+    "settledAnswersACaller": false,
+    "foldedSelectedIds": ["shell@solid"],
+    "foldedUiScopeKind": "partial",
+    "foldedWindowBodies": ["procedural.play.preview"],
+    "frameLaneOnlyUiScopeKind": "none",
+    "frameLaneOnlySelectedIds": []
+  }
+}

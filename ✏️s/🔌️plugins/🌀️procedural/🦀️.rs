@@ -113,7 +113,7 @@ pub fn plugin() -> Result<Plugin<ProceduralApps>, PluginAssemblyError> {
         .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_procedural_generation3d::artifact_kind().id })
         .execution(ExecutionMode::Isolated)
         .requests(CapabilityRequest {
-            id: CapabilityId("documents.write".into()),
+            id: CapabilityId("artifacts.write".into()),
             scope: "plugin".into(),
             reason: "persist generation2d/generation3d/assembly editor edits to the open document".into(),
             optional: false,

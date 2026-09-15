@@ -34,8 +34,8 @@ use store::EngineHandles;
 /// one it came from (see `crate::schema::inferences::sourcing_catalog_fragment`).
 pub fn sourcing_curation_io() -> semio_framework_plugin::AppIo {
     semio_framework_plugin::AppIo {
-        document_schema: SOURCING_CURATION_SCHEMA.into(),
-        document_media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Kit },
+        artifact_schema: SOURCING_CURATION_SCHEMA.into(),
+        artifact_media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Kit },
         ports: vec![semio_framework_plugin::MediaPortSpec {
             id: "catalog:out".into(),
             label: "Catalog".into(),
@@ -843,7 +843,7 @@ impl ArtifactEditor for SourcingCurationApp {
         owner: EditorApp<SourcingCurationApp>,
         owner_file: "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.sourcing.curation@1/*#editor",
-        document_schema: "sourcing.curation/v1",
+        artifact_schema: "sourcing.curation/v1",
         factory: "SourcingCurationBoundedCommandJobFactory",
         factory_type: SourcingCurationBoundedCommandJobFactory,
         tools: {
@@ -918,8 +918,8 @@ impl ArtifactEditor for SourcingCurationApp {
                 media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type },
                 payload: MediaPayload::Structured { schema: "kit.catalog".into(), json: dsl::json::to_json_string(&crate::schema::inferences::sourcing_catalog_fragment(doc.snapshot)) },
             }),
-            "document:out" => {
-                let media_type = Self::io().map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.document_media_type);
+            "artifact:out" => {
+                let media_type = Self::io().map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.artifact_media_type);
                 let bytes = doc.snapshot.encode_pack();
                 Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
             }
@@ -933,7 +933,7 @@ impl ArtifactEditor for SourcingCurationApp {
     /// (stays at the trait's own `None` default) and instead overrides `import_media` below to build a
     /// `Effect::LoadDocument` via `reset_document_effect`, outside undo history.
     fn import_media(port: &str, media: &Media, _doc: &ArtifactView<'_, CurationSnapshot>) -> Result<Emit<SourcingMutation, SourcingCurationConfigMutation, Self::DraftMutation>, MediaError> {
-        if port != "document:in" {
+        if port != "artifact:in" {
             return Err(MediaError::NotImplemented);
         }
         let MediaPayload::Structured { json, .. } = &media.payload else {
@@ -999,7 +999,7 @@ impl ArtifactEditor for SourcingCurationApp {
 /// example, bulk catalogue restock). Per `📓️taxonomy.md`, the former whole-snapshot-replace variant
 /// is banned outright with NO replacement mutation: whole-document replace is not expressible as an in-history `Mutation` at
 /// all. Every former "replace the whole document" gesture in this app (`import_media`'s
-/// `"document:in"` above, `commands::document::{set_active_example, set_artifact_json,
+/// `"artifact:in"` above, `commands::document::{set_active_example, set_artifact_json,
 /// stock_from_catalogue}`) builds this effect instead of an `Emit::mutations([...])`. The spr is a
 /// fresh, edit-free op-log for `document` — a genesis envelope with no history to encode.
 pub fn reset_document_effect(document: &CurationSnapshot) -> semio_framework::kernel::Effect {

@@ -63,7 +63,7 @@
       "native_factory": {
         "factory_id": "stdio.native.zip.v1",
         "artifact_kind": "stdio.zip",
-        "document_schema": "stdio.zip",
+        "artifact_schema": "stdio.zip",
         "extension": "zip",
         "pack_schema_hash": "dd8e607c9ce0dc46608d4fe57c72166e47013684ff0cd86407414332fc2391d2",
         "runtime_capability_id": "s.stdio.zip.standard.2-0.codec.codec-stdio-zip-extension-zip.v1"

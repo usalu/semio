@@ -117,7 +117,7 @@ export function resolveArtifactOpeningRelay(
     app = resolveOpeningApp(router, dialect, role, preferences);
   }
 
-  const documentId = openingRelayString(record, "documentId");
+  const documentId = openingRelayString(record, "artifactId") ?? openingRelayString(record, "documentId");
   const schema = openingRelayString(record, "schema");
   if (Boolean(documentId) !== Boolean(schema)) return openingRelayError("opening.partial-document-ref");
   const spaceId = openingRelayString(record, "spaceId");
@@ -1012,18 +1012,18 @@ export function parseSpaceArtifactCreationStatusV1(value: unknown): SpaceArtifac
   if (phase !== "ready") return { kind: "space-artifact-creation-status", requestId, spaceId, catalogGenerationId, phase };
   if (typeof row.ready !== "object" || row.ready === null || Array.isArray(row.ready)) throw new Error("space artifact creation status: invalid ready record");
   const ready = row.ready as Readonly<Record<string, unknown>>;
-  if (Object.keys(ready).sort().join(",") !== "artifactSchema,documentId,kindId,parentDialect") throw new Error("space artifact creation status: invalid ready fields");
+  if (Object.keys(ready).sort().join(",") !== "artifactId,artifactSchema,kindId,parentDialect") throw new Error("space artifact creation status: invalid ready fields");
   if (typeof ready.parentDialect !== "object" || ready.parentDialect === null || Array.isArray(ready.parentDialect)) throw new Error("space artifact creation status: invalid parent dialect");
   const parentDialect = ready.parentDialect as Readonly<Record<string, unknown>>;
   if (Object.keys(parentDialect).sort().join(",") !== "artifactKind,standard,subset") throw new Error("space artifact creation status: invalid parent dialect fields");
-  const documentId = typeof ready.documentId === "string" && /^artifact-(?!0{32}$)[0-9a-f]{32}$/u.test(ready.documentId) ? ready.documentId : null,
+  const artifactId = typeof ready.artifactId === "string" && /^artifact-(?!0{32}$)[0-9a-f]{32}$/u.test(ready.artifactId) ? ready.artifactId : null,
     kindId = workerWireCreationIdentityV1(ready.kindId),
     artifactSchema = workerWireCreationIdentityV1(ready.artifactSchema),
     artifactKind = workerWireCreationIdentityV1(parentDialect.artifactKind),
     standard = workerWireCreationIdentityV1(parentDialect.standard),
     subset = workerWireCreationIdentityV1(parentDialect.subset);
-  if (documentId === null || kindId === null || artifactSchema === null || artifactKind === null || standard === null || subset === null || artifactKind !== kindId) throw new Error("space artifact creation status: invalid ready identity");
-  return { kind: "space-artifact-creation-status", requestId, spaceId, catalogGenerationId, phase, ready: { documentId, kindId, artifactSchema, parentDialect: { artifactKind, standard, subset } } };
+  if (artifactId === null || kindId === null || artifactSchema === null || artifactKind === null || standard === null || subset === null || artifactKind !== kindId) throw new Error("space artifact creation status: invalid ready identity");
+  return { kind: "space-artifact-creation-status", requestId, spaceId, catalogGenerationId, phase, ready: { artifactId, kindId, artifactSchema, parentDialect: { artifactKind, standard, subset } } };
 }
 
 /** 🗂️ Validates the presentation-only selected-current creation catalog from the worker. */
@@ -1127,7 +1127,7 @@ export type SpaceArtifactCreationPhaseV1 = "accepted" | "preparing" | "ready" | 
 /** 🔐️ The exact public artifact identity produced by a ready creation saga. Catalog authority,
  * descriptors, grants and filesystem details remain server-private and are re-resolved by open-plan. */
 export type SpaceArtifactCreationReadyV1 = Readonly<{
-  documentId: string;
+  artifactId: string;
   kindId: string;
   artifactSchema: string;
   parentDialect: ArtifactDialect;
@@ -3560,6 +3560,7 @@ export class AppChannelRequestSequence {
 export class AppChannelClient {
   private localQuery: LocalInteractionClientQuery | null = null;
   private readonly completionListeners = new Set<(completion: OperationCompletionV1) => void>();
+  private readonly progressListeners = new Set<(uiScope: unknown) => void>();
   private disposed = false;
   private retired = false;
   private readonly handle: AppChannelHandle;
@@ -3624,6 +3625,7 @@ export class AppChannelClient {
       for (const frame of frames) {
         if ("LocalInteractionQuery" in frame) this.receiveLocalInteractionQuery(frame.LocalInteractionQuery.reply);
         else if ("OperationCompleted" in frame) this.publishOperationCompletion(frame.OperationCompleted);
+        else if ("Invocation" in frame && frame.Invocation.in_reply_to === 0 && frame.Invocation.ui_scope.length > 0) this.publishOperationProgress(frame.Invocation.ui_scope);
         else ordinary.push(frame);
       }
       const correlated = new Set(ordinary.flatMap((frame) => { const sequence = appChannelReplySequence(frame); return sequence === null ? [] : [sequence]; }));
@@ -3646,6 +3648,24 @@ export class AppChannelClient {
   onOperationCompleted(listener: (completion: OperationCompletionV1) => void): () => void {
     this.completionListeners.add(listener);
     return () => this.completionListeners.delete(listener);
+  }
+
+  /** 🎞️ Subscribes to this instance's unsolicited progress refreshes: the `UiDirtyScope` a running operation (a tool run's
+   * trace, provisional pieces and progress) hands the shell mid-operation as an `Invocation` frame answering no command.
+   * It is best effort — the shell refreshes as often as it keeps up with — and the ONLY delivery path for that scope once
+   * the operation runs on the background drain. Returns the unsubscribe. */
+  onOperationProgress(listener: (uiScope: unknown) => void): () => void {
+    this.progressListeners.add(listener);
+    return () => this.progressListeners.delete(listener);
+  }
+
+  private publishOperationProgress(uiScope: readonly number[]): void {
+    if (this.disposed || this.progressListeners.size === 0) return;
+    const scope = decodePackWire(new Uint8Array(uiScope), "$.uiScope");
+    for (const listener of [...this.progressListeners]) {
+      try { listener(scope); }
+      catch (error) { console.error("[DEBUG] operation progress subscriber failed", error); }
+    }
   }
 
   /** 🏁️ Decodes one completion frame's pack-encoded carriers and fans it out to every subscriber.

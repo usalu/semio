@@ -474,7 +474,7 @@ impl ContributionRow for manifest::ContributedInferenceMetadata {
     }
 
     fn row_description(&self) -> String {
-        format!("Infers {} on {} artifacts (schema {} v{}).", self.inference_schema, self.artifact_kind, self.document_schema, self.inference_schema_version)
+        format!("Infers {} on {} artifacts (schema {} v{}).", self.inference_schema, self.artifact_kind, self.artifact_schema, self.inference_schema_version)
     }
 
     fn row_artifact_kind(&self) -> Option<String> {
@@ -647,7 +647,7 @@ fn artifact_create_capability(template_ids: &[String]) -> CapabilityDefinition {
         input_schema,
         output_schema: capability_generic_output_schema("artifact.create"),
         effects: manifest::CapabilityEffects { writes: vec![manifest::ResourceSelector::new("artifact:{self}")], reversible: false, ..Default::default() },
-        policy: manifest::CapabilityPolicy { scopes: vec![kernel::CapabilityId("documents.write".into())], ..Default::default() },
+        policy: manifest::CapabilityPolicy { scopes: vec![kernel::CapabilityId("artifacts.write".into())], ..Default::default() },
         execution: manifest::CapabilityExecution { class: manifest::ExecutionClass::Job, interactive_job: manifest::InteractiveJobClassification::Migrated, ..Default::default() },
         exposure: ToolExposure::CatalogOnly,
         presentation: CapabilityPresentation { icon_id: None, category: Some("artifact".into()), keys: None, in_palette: false, args: Vec::new() },

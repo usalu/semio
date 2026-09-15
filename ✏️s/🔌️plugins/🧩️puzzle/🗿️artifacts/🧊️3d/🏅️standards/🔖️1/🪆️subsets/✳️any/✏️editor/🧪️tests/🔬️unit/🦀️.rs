@@ -2321,7 +2321,7 @@ async fn a_mutating_verb_lands_its_object_and_its_history_row_inside_its_own_set
 #[semio_framework_async_macros::async_test]
 async fn document_and_inspector_panels_render() {
     let mut app = app().await;
-    for body in [document::BODY_KEY, catalogue::BODY_KEY, inspection::BODY_KEY, settings_panel::BODY_KEY] {
+    for body in [artifact::BODY_KEY, catalogue::BODY_KEY, inspection::BODY_KEY, settings_panel::BODY_KEY] {
         assert!(!render_body(&mut app, body).await.to_string().is_empty());
     }
 }
@@ -2580,7 +2580,7 @@ async fn app_definition_declares_the_add_object_dialog() {
 async fn app_definition_declares_its_four_panel_tabs() {
     let definition = create_puzzle3d_app();
     let body_keys: Vec<&str> = definition.panel_tabs.iter().filter_map(|tab| tab.body_key.as_deref()).collect();
-    for expected in [document::BODY_KEY, catalogue::BODY_KEY, inspection::BODY_KEY, settings_panel::BODY_KEY] {
+    for expected in [artifact::BODY_KEY, catalogue::BODY_KEY, inspection::BODY_KEY, settings_panel::BODY_KEY] {
         assert!(body_keys.contains(&expected), "panel tab body {expected} must be declared, got {body_keys:?}");
     }
 }
@@ -2682,7 +2682,7 @@ async fn document_and_kinds_trees_use_german_reuse_section_labels() {
     // 🗣️ Panels resolve their label set from the host's own axes and fail closed on an unauthored one
     // (`puzzle3d_labels`), so the German reuse text this law is about only exists once the axes name it.
     app.set_label_axes(semio_framework_plugin::Locale::De, semio_framework_plugin::Terminology::Reuse);
-    let document_json = render_body(&mut app, document::BODY_KEY).await.to_string();
+    let document_json = render_body(&mut app, artifact::BODY_KEY).await.to_string();
     let kinds = render_body(&mut app, catalogue::BODY_KEY).await.to_string();
     let view = app.window_view(main::WINDOW_KIND_ID);
     let measures_json = to_json_string(&app.window_measures(&view).await);
@@ -3522,7 +3522,7 @@ async fn window_option_verbs_paint_only_their_window_their_rail_and_the_settings
     assert_eq!(panel_bodies, vec![settings_panel::BODY_KEY.to_string()], "the Settings panel mirrors four window options and must never disagree with the rail");
     assert!(measures, "the rail's own controls are bound to the value this publishes");
     assert!(!utilities && !tools && !engagements && !labels, "a window option moves no other chrome");
-    for body in [inspection::BODY_KEY, document::BODY_KEY, catalogue::BODY_KEY, FRAMEWORK_HISTORY_BODY_KEY] {
+    for body in [inspection::BODY_KEY, artifact::BODY_KEY, catalogue::BODY_KEY, FRAMEWORK_HISTORY_BODY_KEY] {
         assert!(!panel_bodies.iter().any(|named| named == body), "a window option cannot move the {body} panel");
     }
 }
@@ -4250,7 +4250,7 @@ async fn command_scope_classes_name_the_panels_they_change() {
             UiDirtyScope::Partial { ref panel_bodies, ref window_bodies, .. } => {
                 narrowed += 1;
                 assert_eq!(window_bodies, &vec![main::BODY_KEY.to_string()], "{} edits the document, so the world body is dirty", action.id);
-                for body in [inspection::BODY_KEY, document::BODY_KEY, FRAMEWORK_HISTORY_BODY_KEY] {
+                for body in [inspection::BODY_KEY, artifact::BODY_KEY, FRAMEWORK_HISTORY_BODY_KEY] {
                     assert!(panel_bodies.iter().any(|named| named == body), "{} is a declared Mutation with a narrowed scope, so it must name the {body} panel body: {panel_bodies:?}", action.id);
                 }
             }
@@ -4270,7 +4270,7 @@ async fn selection_scope_names_the_inspector_and_not_the_catalogue() {
         panic!("the selection class is a narrowed scope");
     };
     assert!(panel_bodies.iter().any(|body| body == inspection::BODY_KEY), "{panel_bodies:?}");
-    assert!(panel_bodies.iter().any(|body| body == document::BODY_KEY), "{panel_bodies:?}");
+    assert!(panel_bodies.iter().any(|body| body == artifact::BODY_KEY), "{panel_bodies:?}");
     assert!(panel_bodies.iter().any(|body| body == FRAMEWORK_HISTORY_BODY_KEY), "{panel_bodies:?}");
     assert!(!panel_bodies.iter().any(|body| body == catalogue::BODY_KEY), "a selection cannot change the kind roster: {panel_bodies:?}");
     assert!(measures, "selection-dependent window measures are re-read");
@@ -4322,7 +4322,7 @@ async fn a_hover_paints_only_the_world_body_and_a_pick_adds_exactly_the_selectio
         panic!("the selection scope is a narrowed scope");
     };
     assert_eq!(panel_bodies.len(), 3, "a pick moves exactly the inspector, the outliner and the history: {panel_bodies:?}");
-    for body in [inspection::BODY_KEY, document::BODY_KEY, FRAMEWORK_HISTORY_BODY_KEY] {
+    for body in [inspection::BODY_KEY, artifact::BODY_KEY, FRAMEWORK_HISTORY_BODY_KEY] {
         assert!(panel_bodies.iter().any(|named| named == body), "a pick moves {body}: {panel_bodies:?}");
     }
     let UiDirtyScope::Partial { panel_bodies, measures, .. } = puzzle3d_interaction_chrome_scope() else {
@@ -5516,7 +5516,28 @@ fn set_active_example_every_step_stays_below_the_interactive_ceiling_for_nakagin
 /// different content — `empty_fixture()`'s `meta` serializes both members as `Null`, which the typed
 /// decode refuses, and `new()` silently falls back to `Puzzle3dSnapshot::default()`; see this wave's
 /// report §6.
-///
+#[test]
+fn puzzle3d_next_object_label_increments_from_the_authored_seed_name() {
+    let fixture = CONCRETE_FOREST_EXAMPLE_FIXTURE.clone();
+    let kind = "Hexagonal Cut Concrete Forest Left";
+    let next = puzzle3d_next_object_label(&fixture.objects, &fixture, kind);
+    assert_eq!(next, "Hexagonal Cut Concrete Forest Left 2");
+    let mut peers = fixture.objects.clone();
+    peers.push(Puzzle3dObject {
+        id: "fill-1".into(),
+        label: Some("Hexagonal Cut Concrete Forest Left 2".into()),
+        object_kind: Some(kind.into()),
+        origin: [0.0; 3],
+        orientation: None,
+        scale: None,
+        mesh_url: None,
+        vortices: Vec::new(),
+        hidden: false,
+        locked: false,
+    });
+    assert_eq!(puzzle3d_next_object_label(&peers, &fixture, kind), "Hexagonal Cut Concrete Forest Left 3");
+}
+
 /// 🗝️ The two untyped `meta` members are compared as the TYPED catalogs they stand for
 /// (`Puzzle3dKindCatalogs` / `Vec<Puzzle3dKindCompatibility>` — lossless, and what every reader of
 /// those members ultimately decodes them into), because raw `DslValue` equality would compare key
@@ -5541,6 +5562,38 @@ fn puzzle3d_typed_fixture_matches_the_projection_bridge_for_every_example() {
         assert_eq!(catalogs(&typed.fixture.meta), catalogs(&bridged.fixture.meta), "{label}: kind catalogs disagree");
         assert_eq!(compatibility(&typed.fixture.meta), compatibility(&bridged.fixture.meta), "{label}: kind compatibility disagrees");
         assert_eq!(typed.active_utility, bridged.active_utility, "{label}: active utility disagrees");
+    }
+}
+
+/// 🧲️ Differential law for the world attraction segments: resolving both ends through the one per-call vortex
+/// index lands every segment exactly where `resolve_vortex_world_position` (the scan it replaced) puts it, and
+/// drops exactly the attractions that scan cannot resolve — for every example, and for a fill-run-sized
+/// document whose attractions multiply with its placements.
+#[test]
+fn world_attraction_segments_match_the_vortex_position_resolver_for_every_example() {
+    let mut grown = NAKAGIN_EXAMPLE_FIXTURE.clone();
+    let ends: Vec<String> = grown.objects.iter().flat_map(|object| object.vortices.iter().map(|vortex| crate::editor::puzzle3d::puzzle3d_vortex_full_id(&object.id, &vortex.id))).collect();
+    assert!(ends.len() > 2, "nakagin declares vortices to attract");
+    grown.attractions = ends.windows(2).enumerate().map(|(index, pair)| Puzzle3dAttraction { id: format!("a{index}"), attracting: pair[0].clone(), attracted: pair[1].clone(), ..Default::default() }).collect();
+    grown.attractions.push(Puzzle3dAttraction { id: "dangling".into(), attracting: ends[0].clone(), attracted: "no-such-object:no-such-vortex".into(), ..Default::default() });
+    for (label, fixture) in [("empty", empty_fixture()), ("concrete-forest", CONCRETE_FOREST_EXAMPLE_FIXTURE.clone()), ("nakagin", NAKAGIN_EXAMPLE_FIXTURE.clone()), ("nakagin-dangling", grown)] {
+        let expected: Vec<Value> = fixture
+            .attractions
+            .iter()
+            .filter_map(|attraction| {
+                let from = crate::editor::puzzle3d::resolve_vortex_world_position(&fixture, &attraction.attracting)?;
+                let to = crate::editor::puzzle3d::resolve_vortex_world_position(&fixture, &attraction.attracted)?;
+                Some(json!({ "id": attraction.id, "from": from, "to": to, "color": "#60a5fa" }))
+            })
+            .collect();
+        let rendered = parse(&main::world_attractions_json(&fixture)).expect("attractions json");
+        let rendered = rendered.as_array().cloned().unwrap_or_default();
+        assert_eq!(rendered.len(), expected.len(), "{label}: exactly the resolvable attractions render");
+        for (segment, resolved) in rendered.iter().zip(&expected) {
+            for field in ["id", "from", "to", "color"] {
+                assert_eq!(segment[field], resolved[field], "{label}: indexed attraction segment {} diverges from the resolver at {field}", resolved["id"]);
+            }
+        }
     }
 }
 
@@ -5983,7 +6036,7 @@ async fn outliner_row_hide_and_show_round_trip_through_their_own_declared_args()
     };
     assert!(!hidden_of(&app, &object_id), "a freshly added object starts visible");
     for expected in [true, false] {
-        let panel: Value = from_json_str(&to_json_string(&render_body(&mut app, document::BODY_KEY).await)).expect("the outliner renders parseable ui json");
+        let panel: Value = from_json_str(&to_json_string(&render_body(&mut app, artifact::BODY_KEY).await)).expect("the outliner renders parseable ui json");
         let args = hidden_flag_args(&panel, &object_id).unwrap_or_else(|| panic!("the outliner row must declare a hidden-flag action for {object_id}: {panel}"));
         assert_eq!(args.get("value").and_then(Value::as_bool), Some(expected), "the row's own action must ask for the INVERSE of the state it renders: {args}");
         dispatch(&mut app, "setSelectionFlag", Some(&args), None).await.expect("setSelectionFlag from the outliner row's own args");
@@ -6043,14 +6096,14 @@ async fn outliner_hide_reaches_the_world_instance_lane_and_flips_the_row_control
     let object_id = first_object_id(&app);
     let visible = render_body(&mut app, main::BODY_KEY).await;
     assert_eq!(instance_scale(&visible, &object_id), vec![1.0, 1.0, 1.0], "a visible object publishes its real scale");
-    let before_icon = visibility_control_icon(&render_body(&mut app, document::BODY_KEY).await, &object_id);
+    let before_icon = visibility_control_icon(&render_body(&mut app, artifact::BODY_KEY).await, &object_id);
     assert_eq!(before_icon.as_deref(), Some("eye"), "a visible object's row renders the Hide control");
 
     dispatch(&mut app, "setSelectionFlag", Some(&json!({ "entity": "object", "flag": "hidden", "ids": [object_id.clone()], "value": true })), None).await.expect("setSelectionFlag hidden");
 
     let hidden = render_body(&mut app, main::BODY_KEY).await;
     assert_eq!(instance_scale(&hidden, &object_id), vec![0.0, 0.0, 0.0], "a hidden object must publish a zero scale into the world instance lane");
-    let after_icon = visibility_control_icon(&render_body(&mut app, document::BODY_KEY).await, &object_id);
+    let after_icon = visibility_control_icon(&render_body(&mut app, artifact::BODY_KEY).await, &object_id);
     assert_eq!(after_icon.as_deref(), Some("eye-off"), "a hidden object's row must re-render as the Show control");
     eprintln!("[DEBUG] outliner hide world lane scale={:?} rowIcon={after_icon:?}", instance_scale(&hidden, &object_id));
 }
@@ -7252,7 +7305,7 @@ async fn the_settings_panel_renders_the_focused_panes_own_value_not_a_default() 
 /// (`inspection-object-fields id=null`, `locked-flag-row lockChrome=false`,
 /// `gumball-scene-delta sceneDelta=false`, `relocate-pose-delta`), and the law is GREEN — the guest
 /// keeps the pick across both routes and both mutating dispatches, including the
-/// `revalidate_interaction_state_after_document_change` pass every document-intent dispatch runs.
+/// `revalidate_interaction_state_after_document_change` pass every artifact-intent dispatch runs.
 /// What the browser has and this law cannot reach is the surface-context route
 /// (`plugin_mount_surface` → `SurfaceContexts` → `plugin_render_surface`): every test context render
 /// helper calls `PluginApp::render` directly with a hand-built `ViewModel`, so a body that is never
@@ -7280,7 +7333,7 @@ async fn a_browser_shaped_pick_survives_every_render_route_and_both_mutating_dis
     assert_ne!(before, after, "a translate taken on the SECOND mutating dispatch after the pick must still change the world lane the pane renders");
     assert!(
         !render_panel_body(&mut app, inspection::BODY_KEY, Some(main::WINDOW_INSTANCE_PERSPECTIVE)).await.to_string().contains("puzzle3d-play-inspector.empty"),
-        "two document-intent dispatches run two `revalidate_interaction_state_after_document_change` passes; neither may eat the pick"
+        "two artifact-intent dispatches run two `revalidate_interaction_state_after_document_change` passes; neither may eat the pick"
     );
 }
 

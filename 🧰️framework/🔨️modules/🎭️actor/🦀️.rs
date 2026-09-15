@@ -123,7 +123,7 @@ pub mod schema_metadata {
         SchemaMetadata {
             name: "JobReplayRoute",
             version: 1,
-            typescript: "export type JobReplayRoute = { plugin: number[], package: number[], controller: number[], tool: number[], window: bigint, document: number[], requestSchema: number[], requestVersion: number, requestDigest: number[], };",
+            typescript: "export type JobReplayRoute = { plugin: number[], package: number[], controller: number[], tool: number[], window: bigint, artifact: number[], requestSchema: number[], requestVersion: number, requestDigest: number[], };",
         },
         SchemaMetadata {
             name: "JobStepOutcome",
@@ -158,22 +158,22 @@ pub mod schema_metadata {
         SchemaMetadata {
             name: "ColdPairIngressStatus",
             version: 1,
-            typescript: r#"export type ColdPairIngressStatus = { "kind": "idle" } | { "kind": "pageAccepted", cursor: ColdDocumentPairCursor, } | { "kind": "backpressure", cursor: ColdDocumentPairCursor, } | { "kind": "loading", cursor: ColdDocumentPairCursor, } | { "kind": "applied", receipt: ColdDocumentPairApplied, } | { "kind": "fault", cursor: ColdDocumentPairCursor, fault: Array<number>, };"#,
+            typescript: r#"export type ColdPairIngressStatus = { "kind": "idle" } | { "kind": "pageAccepted", cursor: ColdArtifactPairCursor, } | { "kind": "backpressure", cursor: ColdArtifactPairCursor, } | { "kind": "loading", cursor: ColdArtifactPairCursor, } | { "kind": "applied", receipt: ColdArtifactPairApplied, } | { "kind": "fault", cursor: ColdArtifactPairCursor, fault: Array<number>, };"#,
         },
         SchemaMetadata {
-            name: "ColdDocumentPairCursor",
+            name: "ColdArtifactPairCursor",
             version: 1,
-            typescript: "export type ColdDocumentPairCursor = { lifetime: import(\"../🚪️lifetime/🟦️component.js\").ActorInstanceLifetime, transfer_generation: bigint, page_index: number, page_count: number, };",
+            typescript: "export type ColdArtifactPairCursor = { lifetime: import(\"../🚪️lifetime/🟦️component.js\").ActorInstanceLifetime, transfer_generation: bigint, page_index: number, page_count: number, };",
         },
         SchemaMetadata {
-            name: "ColdDocumentPairFrontier",
+            name: "ColdArtifactPairFrontier",
             version: 1,
-            typescript: "export type ColdDocumentPairFrontier = { document_id: string, head_edit_ordinal: bigint, head_edit_id: string, last_commit_seq: bigint, chain_sha256: Array<number>, };",
+            typescript: "export type ColdArtifactPairFrontier = { artifact_id: string, head_edit_ordinal: bigint, head_edit_id: string, last_commit_seq: bigint, chain_sha256: Array<number>, };",
         },
         SchemaMetadata {
-            name: "ColdDocumentPairApplied",
+            name: "ColdArtifactPairApplied",
             version: 1,
-            typescript: "export type ColdDocumentPairApplied = { lifetime: import(\"../🚪️lifetime/🟦️component.js\").ActorInstanceLifetime, transfer_generation: bigint, baseline_frontier: ColdDocumentPairFrontier, aggregate_sha256: Array<number>, };",
+            typescript: "export type ColdArtifactPairApplied = { lifetime: import(\"../🚪️lifetime/🟦️component.js\").ActorInstanceLifetime, transfer_generation: bigint, baseline_frontier: ColdArtifactPairFrontier, aggregate_sha256: Array<number>, };",
         },
         SchemaMetadata {
             name: "TurnStatus",
@@ -240,7 +240,7 @@ pub mod pack {
                 Self::OverlongVarint(offset) => write!(formatter, "pack: overlong varint at offset {offset}"),
                 Self::InvalidLifecycle(reason) => write!(formatter, "pack: invalid instance lifecycle: {reason}"),
                 Self::InvalidUiPatchReceipt(reason) => write!(formatter, "pack: invalid issued UI patch receipt: {reason}"),
-                Self::InvalidColdPair(reason) => write!(formatter, "pack: invalid cold document pair status: {reason}"),
+                Self::InvalidColdPair(reason) => write!(formatter, "pack: invalid cold artifact pair status: {reason}"),
             }
         }
     }
@@ -902,7 +902,7 @@ pub struct JobReplayRoute {
     pub controller: [u8; 32],
     pub tool: [u8; 32],
     pub window: u64,
-    pub document: [u8; 32],
+    pub artifact: [u8; 32],
     pub request_schema: [u8; 32],
     pub request_version: u16,
     pub request_digest: [u8; 32],
@@ -946,7 +946,7 @@ impl JobReplayRequest {
 
 impl JobReplayRoute {
     pub const fn zeroed() -> Self {
-        Self { plugin: [0; 32], package: [0; 32], controller: [0; 32], tool: [0; 32], window: 0, document: [0; 32], request_schema: [0; 32], request_version: 0, request_digest: [0; 32] }
+        Self { plugin: [0; 32], package: [0; 32], controller: [0; 32], tool: [0; 32], window: 0, artifact: [0; 32], request_schema: [0; 32], request_version: 0, request_digest: [0; 32] }
     }
 }
 
@@ -1640,7 +1640,7 @@ fn replay_digest32_parts(left: &[u8], right: &[u8]) -> [u8; 32] {
 }
 
 fn replay_header_digest(mut digest: u64, route: &JobReplayRoute, header: &JobReplayRecordHeader) -> u64 {
-    for byte in route.plugin.iter().chain(route.package.iter()).chain(route.controller.iter()).chain(route.tool.iter()).chain(route.document.iter()).chain(route.request_schema.iter()).chain(route.request_digest.iter()) {
+    for byte in route.plugin.iter().chain(route.package.iter()).chain(route.controller.iter()).chain(route.tool.iter()).chain(route.artifact.iter()).chain(route.request_schema.iter()).chain(route.request_digest.iter()) {
         digest = replay_mix(digest, u64::from(*byte));
     }
     for value in [

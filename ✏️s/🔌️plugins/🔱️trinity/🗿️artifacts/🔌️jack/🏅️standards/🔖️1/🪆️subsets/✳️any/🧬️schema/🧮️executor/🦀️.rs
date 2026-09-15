@@ -23,7 +23,7 @@ pub(crate) use execution::QUERY_OUTPUT_MAXIMUM_BYTES;
 
 /// ▶️ Execute a jack query against a graph and emit CQRS operations for mutations.
 pub fn execute(graph: &Graph, query: &Query) -> Result<(QueryResult, Vec<TrinityGraphMutation>), String> {
-    let mut fixture = graph.to_fixture();
+    let mut fixture = graph.to_snapshot();
     let mut view = graph.clone();
     let mut bindings: Vec<Binding> = vec![Binding::default()];
     let mut return_items: Option<Vec<ReturnItem>> = None;
@@ -40,18 +40,18 @@ pub fn execute(graph: &Graph, query: &Query) -> Result<(QueryResult, Vec<Trinity
                 return_items = Some(items.clone());
             }
             Clause::Create(pattern) => {
-                let batch = emit_create_operations(&fixture, pattern)?;
+                let batch = emit_create_operations(&snapshot, pattern)?;
                 operations.extend(batch.iter().cloned());
-                fixture = apply_trinity_graph_mutations(fixture, &batch).map_err(|e| e.to_string())?;
-                view = Graph::from_fixture(fixture.clone()).map_err(|e| e.to_string())?;
+                snapshot = apply_trinity_graph_mutations(snapshot, &batch).map_err(|e| e.to_string())?;
+                view = Graph::from_snapshot(fixture.clone()).map_err(|e| e.to_string())?;
             }
             Clause::Delete(vars) => {
                 for var in vars {
                     if let Some(id) = bindings.first().and_then(|b| b.nodes.get(var).cloned()) {
                         let operation = delete_node(id);
                         operations.push(operation.clone());
-                        fixture = apply_trinity_graph_mutations(fixture, std::slice::from_ref(&operation)).map_err(|e| e.to_string())?;
-                        view = Graph::from_fixture(fixture.clone()).map_err(|e| e.to_string())?;
+                        snapshot = apply_trinity_graph_mutations(snapshot, std::slice::from_ref(&operation)).map_err(|e| e.to_string())?;
+                        view = Graph::from_snapshot(fixture.clone()).map_err(|e| e.to_string())?;
                     }
                 }
             }
@@ -59,20 +59,20 @@ pub fn execute(graph: &Graph, query: &Query) -> Result<(QueryResult, Vec<Trinity
                 let b = bindings.first().cloned().unwrap_or_default();
                 for item in items {
                     if let Some(node_id) = b.nodes.get(&item.var) {
-                        let operation = emit_set_operation(&fixture, node_id, &item.prop, item.value.clone())?;
+                        let operation = emit_set_operation(&snapshot, node_id, &item.prop, item.value.clone())?;
                         operations.push(operation.clone());
-                        fixture = apply_trinity_graph_mutations(fixture, std::slice::from_ref(&operation)).map_err(|e| e.to_string())?;
-                        view = Graph::from_fixture(fixture.clone()).map_err(|e| e.to_string())?;
+                        snapshot = apply_trinity_graph_mutations(snapshot, std::slice::from_ref(&operation)).map_err(|e| e.to_string())?;
+                        view = Graph::from_snapshot(fixture.clone()).map_err(|e| e.to_string())?;
                     }
                 }
             }
             Clause::Merge(pattern) => {
                 let existing = match_patterns(&view, std::slice::from_ref(pattern))?;
                 if existing.is_empty() {
-                    let batch = emit_create_operations(&fixture, pattern)?;
+                    let batch = emit_create_operations(&snapshot, pattern)?;
                     operations.extend(batch.iter().cloned());
-                    fixture = apply_trinity_graph_mutations(fixture, &batch).map_err(|e| e.to_string())?;
-                    view = Graph::from_fixture(fixture.clone()).map_err(|e| e.to_string())?;
+                    snapshot = apply_trinity_graph_mutations(snapshot, &batch).map_err(|e| e.to_string())?;
+                    view = Graph::from_snapshot(fixture.clone()).map_err(|e| e.to_string())?;
                 }
             }
         }
@@ -88,8 +88,8 @@ pub fn run(graph: &mut Graph, source: &str) -> Result<QueryResult, String> {
     let query = parse(source)?;
     let (result, operations) = execute(graph, &query)?;
     if !operations.is_empty() {
-        let fixture = apply_trinity_graph_mutations(graph.to_fixture(), &operations).map_err(|e| e.to_string())?;
-        *graph = Graph::from_fixture(fixture).map_err(|e| e.to_string())?;
+        let fixture = apply_trinity_graph_mutations(graph.to_snapshot(), &operations).map_err(|e| e.to_string())?;
+        *graph = Graph::from_snapshot(fixture).map_err(|e| e.to_string())?;
     }
     Ok(result)
 }
@@ -247,8 +247,8 @@ fn build_return(graph: &Graph, bindings: &[Binding], items: &[ReturnItem]) -> Qu
     QueryResult::table(columns, rows)
 }
 
-fn emit_set_operation(fixture: &JackSnapshot, node_id: &str, prop: &str, value: PropertyValue) -> Result<TrinityGraphMutation, String> {
-    let scene = crate::jack_working_scene(fixture);
+fn emit_set_operation(snapshot: &JackSnapshot, node_id: &str, prop: &str, value: PropertyValue) -> Result<TrinityGraphMutation, String> {
+    let scene = crate::jack_working_scene(snapshot);
     let node = scene.nodes.iter().find(|node| node.id == node_id).ok_or_else(|| format!("node {node_id} not found"))?;
     match prop {
         "name" => {
@@ -269,8 +269,8 @@ fn emit_set_operation(fixture: &JackSnapshot, node_id: &str, prop: &str, value: 
     }
 }
 
-fn emit_create_operations(fixture: &JackSnapshot, pattern: &Pattern) -> Result<Vec<TrinityGraphMutation>, String> {
-    let scene = crate::jack_working_scene(fixture);
+fn emit_create_operations(snapshot: &JackSnapshot, pattern: &Pattern) -> Result<Vec<TrinityGraphMutation>, String> {
+    let scene = crate::jack_working_scene(snapshot);
     let left = pattern.nodes.first().ok_or_else(|| "empty create pattern".to_string())?;
     let left_id = format!("{}-{}", left.var, scene.nodes.len());
     let mut operations = Vec::new();

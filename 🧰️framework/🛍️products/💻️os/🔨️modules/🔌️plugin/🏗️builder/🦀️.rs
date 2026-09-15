@@ -79,7 +79,7 @@ pub struct PluginBuilder<State, PA: PluginApp = crate::app::NoPluginApp> {
     /// `try_build`, once it is known to be final.
     contributions: Vec<ArtifactContribution>,
     topic_contributions: Vec<semio_framework::TopicContribution>,
-    /// 📖️ One non-capturing `(document_schema, kinds)` provider per `.document_app_mutation_roster::
+    /// 📖️ One non-capturing `(artifact_schema, kinds)` provider per `.document_app_mutation_roster::
     /// <A>()`/`.viewer_mutation_roster::<V>()`/`.editor_mutation_roster::<E>()` call — committed into
     /// the process-wide owner mutation roster by `try_build`.
     owner_mutation_rosters: Vec<crate::app::OwnerMutationRoster>,
@@ -425,11 +425,11 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
         {
             PA::from(resolve_ready(crate::app::VcsArtifactApp::<crate::app::ViewerApp<V>, M>::with_registry(crate::app::ViewerApp::<V>::default(), crate::app::AppActionRegistry::from_definition(def))))
         }
-        // 🎯️ C8.2 — schema-first: `io.document_schema` names the schema this surface opens without
+        // 🎯️ C8.2 — schema-first: `io.artifact_schema` names the schema this surface opens without
         // relying on the `artifact_kinds[0].schema` convention. Stamped only when the app left it
-        // empty, so an app that already set a different `io.document_schema` keeps its own choice.
-        if def.io.document_schema.is_empty() {
-            def.io.document_schema = V::DOCUMENT_SCHEMA.to_string();
+        // empty, so an app that already set a different `io.artifact_schema` keeps its own choice.
+        if def.io.artifact_schema.is_empty() {
+            def.io.artifact_schema = V::DOCUMENT_SCHEMA.to_string();
         }
         let app = App { definition: def.clone(), examples: Vec::new() };
         self.app_defs.push((app, (def, factory::<V, M, PA>)));
@@ -500,11 +500,11 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
         fn factory<E: crate::app::ArtifactEditor, PA: PluginApp + From<crate::app::VcsArtifactApp<crate::app::EditorApp<E>>>>(def: &crate::app::AppDefinition) -> PA {
             PA::from(resolve_ready(crate::app::VcsArtifactApp::with_registry(crate::app::EditorApp::<E>::default(), crate::app::AppActionRegistry::from_definition(def))))
         }
-        // 🎯️ C8.2 — schema-first: `io.document_schema` names the schema this surface opens without
+        // 🎯️ C8.2 — schema-first: `io.artifact_schema` names the schema this surface opens without
         // relying on the `artifact_kinds[0].schema` convention. Stamped only when the app left it
-        // empty, so an app that already set a different `io.document_schema` keeps its own choice.
-        if def.io.document_schema.is_empty() {
-            def.io.document_schema = E::DOCUMENT_SCHEMA.to_string();
+        // empty, so an app that already set a different `io.artifact_schema` keeps its own choice.
+        if def.io.artifact_schema.is_empty() {
+            def.io.artifact_schema = E::DOCUMENT_SCHEMA.to_string();
         }
         let app = App { definition: def.clone(), examples };
         self.app_defs.push((app, (def, factory::<E, PA>)));
@@ -534,8 +534,8 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
         {
             PA::from(resolve_ready(crate::app::VcsArtifactApp::<crate::app::EditorApp<E>, M>::with_registry(crate::app::EditorApp::<E>::default(), crate::app::AppActionRegistry::from_definition(def))))
         }
-        if def.io.document_schema.is_empty() {
-            def.io.document_schema = E::DOCUMENT_SCHEMA.to_string();
+        if def.io.artifact_schema.is_empty() {
+            def.io.artifact_schema = E::DOCUMENT_SCHEMA.to_string();
         }
         let app = App { definition: def.clone(), examples: Vec::new() };
         self.app_defs.push((app, (def, factory::<E, M, PA>)));
@@ -784,7 +784,7 @@ mod dependency_fixture;
 mod plugin_builder_dependency_tests;
 
 /// 🧪️ Ticket 26/08/17/SHARED-PRESENCE-SESSION-COLORS-AND-UNIVERSAL-ARTIFACT-CREATION contract §C8.2 —
-/// `PluginBuilder::editor::<E>`/`viewer::<V>` stamp `def.io.document_schema` from `E::DOCUMENT_SCHEMA`/
+/// `PluginBuilder::editor::<E>`/`viewer::<V>` stamp `def.io.artifact_schema` from `E::DOCUMENT_SCHEMA`/
 /// `V::DOCUMENT_SCHEMA` when the app left it empty, so "which document schema does this surface open"
 /// is schema-first instead of the `artifact_kinds[0].schema` convention.
 #[cfg(test)]

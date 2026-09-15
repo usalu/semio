@@ -666,11 +666,36 @@ impl FlowProgramFeature {
 }
 
 impl FlowFeature for FlowProgramFeature {
+    /// ⚡️ Spends the whole granted byte credit on ONE poll instead of one byte.
+    ///
+    /// Every incremental phase — argument decode, the retained-DAG cursors, output encode — advances
+    /// by a single byte and answers `Progress`, and the bridge turns each `Progress` into its own ABI
+    /// event the host must poll, decode and reply to. A poll granted 4 096 bytes of credit therefore
+    /// moved one byte, so a flow operation's payload crossed at roughly 68 KB/s: a 20 KB node-graph
+    /// draw list cost ~20 000 round trips and a board frame took 200–450 ms to present while idle,
+    /// and over 2.5 s under a scroll gesture sharing the pipe with the overlay reads
+    /// (`📓️flow-scroll-render-perf-2026-09-15.md` §3).
+    ///
+    /// The budget already says how much one poll may do. Looping until the credit is spent honours it
+    /// and publishes the LAST progress of the run, so `completed`/`total` still advance monotonically
+    /// and a watcher sees the same ladder at coarser granularity. Every other step — `Yield`,
+    /// `Complete`, `Failed`, a page, a checkpoint, a preview — returns immediately, so nothing that
+    /// carries a payload or ends the operation is ever coalesced away, and the loop is bounded by the
+    /// credit whatever the action does.
     fn step(&mut self, budget: AbiWorkBudget) -> FlowFeatureStep {
         if let Err(failure) = self.guard(budget) {
             return FlowFeatureStep::Failed(failure);
         }
-        self.action.advance(&mut self.domain.borrow_mut(), &self.arguments, budget)
+        let mut domain = self.domain.borrow_mut();
+        let mut spent = 0usize;
+        loop {
+            let step = self.action.advance(&mut domain, &self.arguments, budget);
+            let FlowFeatureStep::Progress { completed, total } = step else { return step };
+            spent += 1;
+            if spent >= budget.byte_credit {
+                return FlowFeatureStep::Progress { completed, total };
+            }
+        }
     }
 
     fn cancel(&mut self, _: AbiWorkBudget) -> Result<(), FlowFailure> {
@@ -681,7 +706,7 @@ impl FlowFeature for FlowProgramFeature {
 
 impl FlowDomain for FlowDomainAdapter {
     fn bind_session(&mut self, session: semio_framework::abi::AbiHandle) {
-        self.vcs = Some(FlowRetainedVcs::new(crate::artifact::FlowFixture::default(), session.generation(), 0, 0));
+        self.vcs = Some(FlowRetainedVcs::new(crate::artifact::FlowHostDocument::default(), session.generation(), 0, 0));
     }
 
     fn start_feature(domain: Rc<RefCell<Self>>, admission: FlowFeatureAdmission, operation: u16, payload: Vec<u8>) -> Result<Box<dyn FlowFeature>, FlowFailure> {
@@ -3663,7 +3688,7 @@ impl FlowActionState for FlowAction2566 {
             FlowProgramPhase::Checkpoint => self.program.checkpoint_step(2_566),
             FlowProgramPhase::Domain if self.program.domain_cursor == 0 => self.program.domain_ready_step(),
             FlowProgramPhase::Domain => {
-                let camera = &domain.host.fixture.camera;
+                let camera = &domain.host.host_document.camera;
                 let result: Result<Vec<u8>, FlowFailure> = Ok(format!("{{\"x\":{},\"y\":{},\"zoom\":{}}}", camera.x, camera.y, camera.zoom).into_bytes());
                 self.program.finish_domain(result)
             }
@@ -5306,7 +5331,7 @@ impl FlowActionState for FlowAction2609 {
             FlowProgramPhase::Checkpoint => self.program.checkpoint_step(2_609),
             FlowProgramPhase::Domain if self.program.domain_cursor == 0 => self.program.domain_ready_step(),
             FlowProgramPhase::Domain => {
-                let result: Result<Vec<u8>, FlowFailure> = flow_result! { domain.host.fixture_json().map(String::into_bytes).map_err(domain_error) };
+                let result: Result<Vec<u8>, FlowFailure> = flow_result! { domain.host.host_document_json().map(String::into_bytes).map_err(domain_error) };
                 self.program.finish_domain(result)
             }
             FlowProgramPhase::Encode => self.program.encode_step(),
@@ -5347,8 +5372,8 @@ impl FlowActionState for FlowAction2610 {
             FlowProgramPhase::Domain => {
                 let result: Result<Vec<u8>, FlowFailure> = flow_result! {
                     {
-                        let fixture = FlowHost::parse_fixture_json(text(args, "json")?).map_err(domain_error)?;
-                        domain.host.resync_fixture_from_scene(fixture);
+                        let fixture = FlowHost::parse_host_document_json(text(args, "json")?).map_err(domain_error)?;
+                        domain.host.resync_host_document_from_scene(fixture);
                         ok()
                     }
                 };
@@ -5549,7 +5574,7 @@ impl FlowDomainAdapter {
         self.host.paint_scene(&mut scene, self.width, self.height, self.dpr);
         let clear = self.host.dag.canvas_theme.raster_clear;
         let presented = surface_canvas::present_surface_scene(surface.id.get(), &scene, clear, self.dpr);
-        let fixture = self.host.fixture_json().map_err(domain_error)?;
+        let fixture = self.host.host_document_json().map_err(domain_error)?;
         let labels = self.host.label_overlay_paint_state_json().map_err(domain_error)?;
         let rgba = clear.to_rgba8();
         // 🧱️ One retained buffer, cleared and refilled — a guest that allocates a fresh multi-kilobyte
@@ -5576,7 +5601,7 @@ impl FlowDomainAdapter {
         } else {
             canvas::draw_list::write_scene_draw_list(payload, &scene, canvas::draw_list::DrawListOptions::default());
         }
-        payload.push_str(",\"fixture\":");
+        payload.push_str(",\"hostDocument\":");
         payload.push_str(&fixture);
         payload.push_str(",\"labels\":");
         payload.push_str(&labels);

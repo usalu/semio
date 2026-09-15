@@ -311,11 +311,13 @@ export const TOOL_RUN_TRACE_VERDICT_PAINT: Readonly<Record<ToolRunVerdict, { rea
 /** 🔦️ The newest `testing` record's outline — the same `highlighted` token the World3d mesh styles use. */
 export const TOOL_RUN_TRACE_HIGHLIGHT_PAINT = tokenVar("secondary");
 
-/** 🟩️ The `provisional` style token: success hue at `toolRun.provisionalOpacity`, with a dashed outline
- * that breathes over `toolRun.provisionalDashPeriodMs` unless `prefers-reduced-motion` asks for a static one. */
+/** 🟩️ The `provisional` style token: the highlighted mesh hue (`secondary`, as `MESH_STYLE_PAINT.highlighted`) at
+ * `toolRun.provisionalOpacity`, with a dashed outline that breathes over `toolRun.provisionalDashPeriodMs` unless
+ * `prefers-reduced-motion` asks for a static one. Placements a run has made read as highlighted objects; the verdict
+ * colours belong to the one candidate under test. */
 export const TOOL_RUN_PROVISIONAL_PAINT = {
-  fill: tokenVar("success"),
-  line: tokenVar("success"),
+  fill: tokenVar("secondary"),
+  line: tokenVar("secondary"),
   opacity: TOOL_RUN_TRACE_METRICS.provisionalOpacity,
   dash: TOOL_RUN_TRACE_METRICS.provisionalDash,
   dashPeriodMs: TOOL_RUN_TRACE_METRICS.provisionalDashPeriodMs,

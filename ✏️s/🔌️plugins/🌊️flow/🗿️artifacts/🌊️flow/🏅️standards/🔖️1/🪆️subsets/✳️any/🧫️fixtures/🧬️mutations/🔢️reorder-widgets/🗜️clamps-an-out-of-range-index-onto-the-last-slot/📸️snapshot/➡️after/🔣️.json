@@ -1,5 +1,5 @@
 {
-  "schema": "flow.fixture",
+  "schema": "flow.hostDocument",
   "camera": {
     "x": 0,
     "y": 0,

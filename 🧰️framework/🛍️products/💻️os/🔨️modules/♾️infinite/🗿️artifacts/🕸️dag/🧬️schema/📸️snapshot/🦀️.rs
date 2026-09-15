@@ -591,14 +591,14 @@ impl IoPortSpec {
     }
 }
 
-/// 📦️ `dag.fixture` document.
+/// 📦️ `dag.host_document` document.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
 #[value(rename_all = "camelCase")]
-pub struct DagFixture {
+pub struct DagHostDocument {
     pub schema: String,
     pub camera: DagCamera,
     pub nodes: Vec<DagNodeSpec>,
-    pub edges: Vec<DagFixtureEdge>,
+    pub edges: Vec<DagHostDocumentEdge>,
 }
 
 /// 📷️ Fixture camera snapshot.
@@ -613,7 +613,7 @@ pub struct DagCamera {
 /// 🔗️ Edge between port handles.
 #[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 #[value(rename_all = "camelCase")]
-pub struct DagFixtureEdge {
+pub struct DagHostDocumentEdge {
     pub id: String,
     pub source: String,
     pub target: String,
@@ -623,7 +623,7 @@ pub struct DagFixtureEdge {
     pub properties: PropertyBag,
 }
 
-impl Default for DagFixture {
+impl Default for DagHostDocument {
     fn default() -> Self {
         let document = <DagSnapshot as crate::os_store::ArtifactDsl>::parse_dsl(crate::DAG_DEMO_TEXT)
             .expect("bundled DAG demo DSL is valid DagSnapshot text");
@@ -643,7 +643,7 @@ fn dag_visual_kind(node: &DagNodeSpec) -> String {
 }
 
 /// 📝️ Render a DAG fixture as wire-literal compiled text.
-pub fn dag_fixture_to_wire_literal(fixture: &DagFixture) -> String {
+pub fn dag_fixture_to_wire_literal(fixture: &DagHostDocument) -> String {
     use ::graph::dsl::{wire_literal_from_dag, WireEdge, WireNode};
     let nodes = fixture.nodes.iter().map(|node| WireNode { id: node.id.clone(), kind: dag_visual_kind(node), port: None, properties: node.properties.clone() }).collect::<Vec<_>>();
     let edges = fixture
@@ -659,7 +659,7 @@ pub fn dag_fixture_to_wire_literal(fixture: &DagFixture) -> String {
 }
 
 /// 🧵️ Build execution wire rows from an enriched DAG fixture.
-pub fn dag_fixture_execution_rows(fixture: &DagFixture) -> (Vec<::graph::dsl::WireNode>, Vec<::graph::dsl::WireEdge>) {
+pub fn dag_fixture_execution_rows(fixture: &DagHostDocument) -> (Vec<::graph::dsl::WireNode>, Vec<::graph::dsl::WireEdge>) {
     use ::graph::dsl::{WireEdge, WireNode};
     use std::collections::HashSet;
     let executable: HashSet<String> = fixture.nodes.iter().filter_map(|node| node.operator_kind.as_ref().map(|_| node.id.clone())).collect();

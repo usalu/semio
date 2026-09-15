@@ -78,11 +78,11 @@ pub fn preview_window_measures(config: &Generation3dConfig, is_de: bool, procedu
 //#region 🔖️Render
 pub fn render(document: &Generation3dSnapshot, config: &Generation3dConfig, preview_eval_text: Option<&str>, session: &FlowEvalSession, run: Option<&semio_framework_plugin::ToolRunView>, active_utility: &str, marks: &PreviewInteractionMarks, labels: &Generation3dLabels) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let eval_json = preview_eval_text.unwrap_or_default().to_string();
-    let payload = preview_payload(&eval_json, &document.fixture, config, Some(session), marks);
+    let payload = preview_payload(&eval_json, &document.host_document, config, Some(session), marks);
     let selection_json = preview_selection_json(config, active_utility, &payload);
     let (meshes_json, instances_json) = (payload.meshes_json, payload.instances_json);
-    let preview_status = preview_status_json(&eval_json, &document.fixture);
-    let fit_json = crate::preview_eval::preview_fit_json(&document.fixture, &meshes_json);
+    let preview_status = preview_status_json(&eval_json, &document.host_document);
+    let fit_json = crate::preview_eval::preview_fit_json(&document.host_document, &meshes_json);
     let sun = config.sun();
     let status_json = preview_window_status_json(Some(session), run, preview_status, &PreviewStatusDebug { meshes_json: &meshes_json, instances_json: &instances_json }, None);
     let _ = GENERATION_3D_PLAY_APP_ID;

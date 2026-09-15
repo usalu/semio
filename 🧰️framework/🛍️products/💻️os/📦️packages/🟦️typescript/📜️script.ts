@@ -670,7 +670,7 @@ async function proveMountedGisMapProbe(repoRoot: string): Promise<number> {
 }
 
 /** 🧵️ Executes the authenticated Session lifecycle and exact 64 KiB page-transfer browser laws. */
-class ColdDocumentPairBrowserCheckScript extends BundleScript {
+class ColdArtifactPairBrowserCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
     const checks = (await proveGisMapPeerRebootstrap(this.repoRoot)) + (await proveMountedGisMapProbe(this.repoRoot));
@@ -690,6 +690,6 @@ const router = new ScriptRouter(import.meta.dir)
   .register("preview-generated", PreviewGeneratedScript)
   .register("gis-map-inference-port-check", GisMapInferencePortCheckScript)
   .register("document-opening-attempt-check", DocumentOpeningAttemptCheckScript)
-  .register("cold-document-pair-browser-check", ColdDocumentPairBrowserCheckScript);
+  .register("cold-document-pair-browser-check", ColdArtifactPairBrowserCheckScript);
 
 await runBundleScriptMain(router, import.meta.url, { defaultCommand: "test" });

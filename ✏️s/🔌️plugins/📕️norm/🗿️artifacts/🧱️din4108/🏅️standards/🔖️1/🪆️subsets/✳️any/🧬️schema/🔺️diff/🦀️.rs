@@ -11,7 +11,7 @@ use framework_schema::ArtifactSchema;
 #[artifact_schema(id = "s.norm.din4108")]
 pub struct Din4108Diff {
     #[state(artifact)]
-    pub artifact: Option<Box<crate::document_schema::Din4108Artifact>>,
+    pub artifact: Option<Box<crate::artifact_schema::Din4108Artifact>>,
     #[state(artifact)]
     pub category: Option<String>,
     #[state(artifact)]

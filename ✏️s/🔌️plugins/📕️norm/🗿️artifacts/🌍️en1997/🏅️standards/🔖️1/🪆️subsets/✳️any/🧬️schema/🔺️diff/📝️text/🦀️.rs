@@ -1,13 +1,13 @@
 //! 🔺️ En1997 artifact — sparse field diff runtime.
 
-use crate::document_schema::diff::*;
+use crate::artifact_schema::diff::*;
 
 //#region 📖️SemioGrammar
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-use crate::document_schema::En1997Artifact;
+use crate::artifact_schema::En1997Artifact;
 use crate::En1997Snapshot;
 use protocol::MutationDiff;
 

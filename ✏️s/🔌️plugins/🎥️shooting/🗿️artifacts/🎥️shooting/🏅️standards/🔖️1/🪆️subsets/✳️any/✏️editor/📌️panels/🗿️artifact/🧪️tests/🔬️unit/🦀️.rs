@@ -4,7 +4,7 @@ use crate::editor::shooting::unit_tests::context::{render as render_body, shooti
 #[semio_framework_async_macros::async_test]
 async fn document_lists_shots_and_assets() {
     let mut app = shooting_app().await;
-    let json = render_body(&mut app, SHOOTING_PLAY_BODY_DOCUMENT).await;
+    let json = render_body(&mut app, SHOOTING_PLAY_BODY_ARTIFACT).await;
     assert!(json.contains("Overview Svg"));
     assert!(json.contains("Base"));
 }

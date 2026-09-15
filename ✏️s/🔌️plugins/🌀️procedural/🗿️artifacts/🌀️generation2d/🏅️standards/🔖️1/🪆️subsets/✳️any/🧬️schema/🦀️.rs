@@ -1,10 +1,10 @@
 //! 🧬️ Generation2d artifact schema — every field of the artifact with its state class.
 
 use crate::standards::v1::subsets::any::schema::snapshot::Generation2dSnapshot;
-use semio_framework_artifact_infinite_dag::DagFixture;
+use semio_framework_artifact_infinite_dag::DagHostDocument;
 use semio_framework_artifact_playbook_playbook::GenerationPlayRoot;
 #[cfg(feature = "component-app-assembly")]
-use semio_framework_os_flow::forms_bridge::apply_generation_values_to_fixture;
+use semio_framework_os_flow::forms_bridge::apply_generation_values_to_host_document;
 #[cfg(feature = "component-app-assembly")]
 use semio_framework_os_flow::render_scene_json;
 
@@ -22,7 +22,7 @@ use store::ArtifactDsl;
 #[artifact_schema(id = "s.procedural.generation2d")]
 pub struct Generation2dArtifact {
     #[state(artifact)]
-    pub fixture: FlowFixture,
+    pub host_document: FlowHostDocument,
     #[state(artifact)]
     pub generation: GenerationPlayRoot,
 }
@@ -32,17 +32,17 @@ pub struct Generation2dArtifact {
 impl Generation2dArtifact {
     /// 📸️ Persisted subset.
     pub fn to_snapshot(&self) -> Generation2dSnapshot {
-        Generation2dSnapshot { fixture: self.fixture.clone(), generation: self.generation.clone() }
+        Generation2dSnapshot { host_document: self.host_document.clone(), generation: self.generation.clone() }
     }
 
     /// 🧬️ Builds the document artifact from its snapshot.
     pub fn from_snapshot(snapshot: Generation2dSnapshot) -> Self {
-        Self { fixture: snapshot.fixture, generation: snapshot.generation }
+        Self { host_document: snapshot.host_document, generation: snapshot.generation }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
     pub fn set_snapshot(&mut self, snapshot: Generation2dSnapshot) {
-        self.fixture = snapshot.fixture;
+        self.host_document = snapshot.host_document;
         std::mem::replace(&mut self.generation, snapshot.generation).retire_cold();
     }
 }
@@ -195,16 +195,16 @@ semio_framework_plugin::derive_artifact_facets!(
 
 //#region 🔖️DocumentHelpers
 /// 🧬️ Rehomed from the deleted `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) —
-/// pure helpers over document types (`FlowFixture`/`DagFixture`/eval `Value`), not app-referencing.
+/// pure helpers over document types (`FlowHostDocument`/`DagHostDocument`/eval `Value`), not app-referencing.
 /// 🏠️ Runs `body` against a catalogue-seeded host built from `fixture`, then retires that host.
 ///
-/// A `FlowHost` owns a cloned `FlowFixture`, whose `layout: OrderedMap<WidgetLayout>` rejects a bare
+/// A `FlowHost` owns a cloned `FlowHostDocument`, whose `layout: OrderedMap<WidgetLayout>` rejects a bare
 /// drop (`ordered-map root must be explicitly retired before drop`,
 /// `🧰️framework/🔨️modules/🌱️value/🗂️ordered/🦀️.rs:81`), so a host is CLOSED through
 /// [`FlowHost::retire_cold`], never dropped.
 #[cfg(feature = "component-app-assembly")]
-pub fn with_host<R>(fixture: &FlowFixture, body: impl FnOnce(&mut FlowHost) -> R) -> R {
-    FlowHost::with_fixture(fixture, |host| {
+pub fn with_host<R>(fixture: &FlowHostDocument, body: impl FnOnce(&mut FlowHost) -> R) -> R {
+    FlowHost::with_host_document(fixture, |host| {
         host.set_neuron_kind_info_map(flow_neuron_kind_info_map());
         body(host)
     })
@@ -214,7 +214,7 @@ pub fn with_host<R>(fixture: &FlowFixture, body: impl FnOnce(&mut FlowHost) -> R
 /// evaluation baseline, and is retired the same way. `body` receives the session back alongside the
 /// host because every real caller needs it mutably (`sync`/`tick`).
 #[cfg(feature = "component-app-assembly")]
-pub fn with_host_session<R>(fixture: &FlowFixture, session: &mut FlowEvalSession, body: impl FnOnce(&mut FlowHost, &mut FlowEvalSession) -> R) -> R {
+pub fn with_host_session<R>(fixture: &FlowHostDocument, session: &mut FlowEvalSession, body: impl FnOnce(&mut FlowHost, &mut FlowEvalSession) -> R) -> R {
     let mut host = flow_host_with_session(fixture, session);
     let result = body(&mut host, session);
     host.retire_cold();
@@ -226,11 +226,11 @@ pub fn with_host_session<R>(fixture: &FlowFixture, session: &mut FlowEvalSession
 /// dedupe/dag-rebuild normalization does not leak spurious collection operations — only the actual
 /// mutation becomes an operation, which keeps concurrent disjoint edits mergeable on the backbone.
 #[cfg(feature = "component-app-assembly")]
-pub fn host_operations(fixture: &FlowFixture, mutate: impl FnOnce(&mut FlowHost)) -> Vec<crate::standards::v1::subsets::any::schema::mutations::text::Generation2dMutation> {
-    with_host(fixture, |host| {
-        let baseline = host.fixture.clone();
+pub fn host_operations(fixture: &FlowHostDocument, mutate: impl FnOnce(&mut FlowHost)) -> Vec<crate::standards::v1::subsets::any::schema::mutations::text::Generation2dMutation> {
+    with_host(snapshot, |host| {
+        let baseline = host.host_document.clone();
         mutate(host);
-        let operations = crate::standards::v1::subsets::any::schema::mutations::text::generation2d_fixture_operations(&baseline, &host.fixture);
+        let operations = crate::standards::v1::subsets::any::schema::mutations::text::generation2d_host_document_operations(&baseline, &host.host_document);
         baseline.retire_cold();
         operations
     })
@@ -241,7 +241,7 @@ pub fn split_endpoint(endpoint: &str) -> (String, String) {
 }
 
 #[cfg(feature = "component-app-assembly")]
-pub fn fixture_to_workflow(fixture: &DagFixture) -> (Vec<NodeGraphNodeRecord>, Vec<NodeGraphEdgeRecord>) {
+pub fn dag_host_document_to_workflow(host_document: &DagHostDocument) -> (Vec<NodeGraphNodeRecord>, Vec<NodeGraphEdgeRecord>) {
     let nodes: Vec<NodeGraphNodeRecord> = fixture
         .nodes
         .iter()
@@ -356,16 +356,16 @@ pub fn scene_layers_from_drawing_handle(handle: &str, prefix: &str) -> Vec<dsl::
 }
 
 #[cfg(feature = "component-app-assembly")]
-pub fn generation_preview_host(fixture: &FlowFixture, values: &semio_framework_artifact_playbook_playbook::PlaybookValues) -> FlowHost {
+pub fn generation_preview_host(fixture: &FlowHostDocument, values: &semio_framework_artifact_playbook_playbook::PlaybookValues) -> FlowHost {
     let fixture_json = dsl::json::to_json_string(fixture);
     let object: dsl::json::Object = values.iter().map(|(key, value)| (key.clone(), dsl::json::from_dsl_value(value))).collect();
-    let patched = apply_generation_values_to_fixture(&fixture_json, &object);
-    let patched_fixture = FlowHost::parse_fixture_json(&patched).unwrap_or_else(|_| fixture.clone());
-    FlowHost::from_fixture(patched_fixture)
+    let patched = apply_generation_values_to_host_document(&fixture_json, &object);
+    let patched_fixture = FlowHost::parse_host_document_json(&patched).unwrap_or_else(|_| fixture.clone());
+    FlowHost::from_host_document(patched_fixture)
 }
 
 #[cfg(feature = "component-app-assembly")]
-pub fn evaluate_generation_preview(fixture: &FlowFixture, values: &semio_framework_artifact_playbook_playbook::PlaybookValues) -> String {
+pub fn evaluate_generation_preview(fixture: &FlowHostDocument, values: &semio_framework_artifact_playbook_playbook::PlaybookValues) -> String {
     let mut host = generation_preview_host(fixture, values);
     let evaluated = host.evaluate().unwrap_or_default();
     host.retire_cold();
@@ -408,5 +408,5 @@ mod tests;
 //#region 🔁️Re-exports
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
 pub use semio_framework_artifact_flow_flow::CameraJson;
-pub use semio_framework_artifact_flow_flow::FlowFixture;
+pub use semio_framework_artifact_flow_flow::FlowHostDocument;
 //#endregion 🔁️Re-exports

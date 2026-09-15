@@ -247,15 +247,15 @@ io: AppIo, };"####,
             name: "AppIo",
             version: 1,
             typescript: r####"/**
- * 🔌️ An app's full media I/O surface — the document schema/type every app carries implicitly (see
- * `document_in_port`/`document_out_port`) plus whatever additional workflow ports, catalog
+ * 🔌️ An app's full media I/O surface — the artifact schema/type every app carries implicitly (see
+ * `artifact_in_port`/`artifact_out_port`) plus whatever additional workflow ports, catalog
  * export/import formats, and OS presentation it declares itself. Scaffolding for the typed manifest
  * surface (`AppDefinition.io`); apps don't populate this yet — later waves migrate `media_inputs`/
  * `media_outputs`/`artifact_kinds` onto it.
  */
-export type AppIo = { documentSchema: string, documentMediaType: MediaType,
+export type AppIo = { artifactSchema: string, artifactMediaType: MediaType,
 /**
- * 🔌️ App-specific ports only — the implicit document ports are auto-injected by `all_ports`.
+ * 🔌️ App-specific ports only — the implicit artifact ports are auto-injected by `all_ports`.
  */
 ports: Array<MediaPortSpec>, exportFormats: Array<string>, importFormats: Array<string>, artifact: ArtifactPresentation, };"####,
         },
@@ -1496,9 +1496,9 @@ export type TutorialTracks = { narration: Array<TutorialNarrationCue>, video: Ar
  */
 events: Array<TutorialEvent>, ui: Array<TutorialUiKeyframe>,
 /**
- * 🖋️ The sole source of document mutation during playback — see `TutorialArtifactEventKind`.
+ * 🖋️ The sole source of artifact mutation during playback — see `TutorialArtifactEventKind`.
  */
-document: Array<TutorialArtifactEvent>, camera: Array<TutorialCameraKeyframe>, gestures: Array<TutorialGestureCue>, };"####,
+artifact: Array<TutorialArtifactEvent>, camera: Array<TutorialCameraKeyframe>, gestures: Array<TutorialGestureCue>, };"####,
         },
         SchemaMetadata {
             name: "TutorialUiChange",

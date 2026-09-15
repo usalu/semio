@@ -15,6 +15,9 @@ impl protocol::MutationKind<Generation3dConfig, Generation3dConfigMutation> for 
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "camera", kind: "set-camera", record: "SetCamera" };
 
     fn diff(&self, base: &Generation3dConfig) -> protocol::MutationOutcome<Generation3dConfig> {
+        if base.camera == self.camera {
+            return protocol::MutationOutcome::new(base.clone()).warn("mutation.no-op", "Flow graph camera is already in the requested state.");
+        }
         let mut next = base.clone();
         next.camera = self.camera.clone();
         protocol::MutationOutcome::new(next)

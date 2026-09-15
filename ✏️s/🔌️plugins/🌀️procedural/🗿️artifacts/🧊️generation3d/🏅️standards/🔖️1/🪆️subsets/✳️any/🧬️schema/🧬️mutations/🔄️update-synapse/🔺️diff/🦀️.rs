@@ -10,10 +10,10 @@ use crate::Generation3dSnapshot;
 /// irrelevant here — `apply_synapses_diff` resolves an existing entry by id first.
 pub fn diff(payload: &UpdateSynapse, base: &Generation3dSnapshot) -> protocol::MutationOutcome<Generation3dDiff> {
     let id = &payload.synapse.id;
-    let Some(index) = synapse_index(&base.fixture, id) else {
+    let Some(index) = synapse_index(&base.host_document, id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Synapse \"{id}\" does not exist."), [id.clone()]);
     };
-    if base.fixture.synapses[index] == payload.synapse {
+    if base.host_document.synapses[index] == payload.synapse {
         return protocol::MutationOutcome::new(Generation3dDiff::default()).warn("mutation.no-op", format!("Synapse \"{id}\" is already in the requested state."));
     }
     protocol::MutationOutcome::new(diff_fixture_from_helpers(base, &WidgetsDiff::default(), &SynapsesDiff { removed: vec![], set: vec![(0, payload.synapse.clone())] }, &LayoutDiff::default(), None, None))

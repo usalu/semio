@@ -90,6 +90,32 @@ async fn every_run_hop_names_a_viewer_preview_window_that_is_actually_attached()
     }
 }
 
+/// ⚖️ LAW: destroying a CONVERGED instance retires every ordered root it holds.
+///
+/// 🐛️ Regression guard for the teardown panic `ordered-map root must be explicitly retired before
+/// drop` (`📡️replication/🌱️value/🗂️ordered/🦀️.rs:81`) seen once inside `flow-extension-brep` at the
+/// end of a browser run, followed by `shard 0 worker fault [handler/turn] … unreachable`
+/// (`📓️react-remaining-reds-2026-09-15.md` §11.1). Every `OrderedMap` in this process panics on a
+/// bare drop, so this law needs no assertion of its own: it converges a real preview chain with the
+/// geometry kernel served, performs the teardown a role switch performs — the whole-registry cancel
+/// the shell sends, then the instance close — and a single unretired root anywhere in that path
+/// aborts the test.
+#[semio_framework_async_macros::async_test]
+async fn destroying_a_converged_instance_retires_every_ordered_root() {
+    let _serial = context::lock();
+    let mut app = app().await;
+    let view = context::view_shell_view("view-preview");
+    let settled = context::drive_preview_run(&mut app, &view, &[]).await;
+    assert!(settled.hops > 0, "the chain must actually run, or the teardown proves nothing: {settled:?}");
+    let body = context::render_with_view(&mut app, preview::BODY_KEY, &view).await;
+    let meshes = context::preview_mesh_count(&body);
+    assert!(meshes >= 1, "the chain must actually converge onto painted geometry, got {meshes}");
+    let retired = semio_framework_os_flow::cancel_all_evaluations();
+    eprintln!("[DEBUG] teardown after convergence: hops={} meshes={meshes} parked evaluations retired={retired}", settled.hops);
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
+    drop(app);
+}
+
 /// ⚖️ LAW: which of those addresses the REAL retained route admits, driven through
 /// `PluginApp::handle_command` → wire decode → `ArtifactRetainedCommandPhase::Preflight` → work.
 #[semio_framework_async_macros::async_test]

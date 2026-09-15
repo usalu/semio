@@ -99,7 +99,7 @@ fn dag_retirement_fixture() -> (DagHostRetirement, usize) {
         kind: DagNodeKind::Note { text, output: IoPortSpec::simple("out", "note") },
     };
     let host =
-        DagHost::from_fixture_without_layout(DagFixture { schema: dag_fixture.get("schemaText").and_then(crate::os_pack::json::Value::as_str).unwrap().into(), camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 }, nodes: vec![node], edges: Vec::new() });
+        DagHost::from_host_document_without_layout(DagHostDocument { schema: dag_fixture.get("schemaText").and_then(crate::os_pack::json::Value::as_str).unwrap().into(), camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 }, nodes: vec![node], edges: Vec::new() });
     (DagHostRetirement::new(host), minimum_bytes)
 }
 
@@ -230,7 +230,7 @@ fn session_close_vector_scene_retirement_retains_and_reuses_exact_slot() {
 /// 🖐️ LAW: a gesture that changed NOTHING — every plain click on the graph — must retire its history
 /// baseline instead of dropping it.
 ///
-/// `begin_gesture` clones the whole `FlowFixture` as the undo baseline, and a `FlowFixture` owns the
+/// `begin_gesture` clones the whole `FlowHostDocument` as the undo baseline, and a `FlowHostDocument` owns the
 /// fail-closed `OrderedMap<WidgetLayout>` root. `commit_gesture_history` only consumed that clone on
 /// the `content_changed` branch, so a no-op gesture let it fall out of scope and the process aborted
 /// with `ordered-map root must be explicitly retired before drop`. A bare drop aborts rather than
@@ -240,15 +240,15 @@ fn session_close_vector_scene_retirement_retains_and_reuses_exact_slot() {
 #[test]
 fn a_gesture_that_changed_nothing_retires_its_history_baseline() {
     let json = r#"{
-  "schema": "flow.fixture",
+  "schema": "flow.host_document",
   "camera": { "x": 0, "y": 0, "zoom": 1 },
   "widgets": [{ "id": "rect", "kind": "neuron", "neuronKind": "rectangle" }],
   "synapses": [],
   "layout": { "rect": { "x": 40, "y": 40 } }
 }
 "#;
-    let fixture = FlowHost::parse_fixture_json(json).expect("fixture json");
-    let mut host = FlowHost::from_fixture(fixture);
+    let fixture = FlowHost::parse_host_document_json(json).expect("fixture json");
+    let mut host = FlowHost::from_host_document(fixture);
     host.set_viewport(1280, 800, 1.0);
     host.rebuild_dag();
     for _ in 0..3 {
@@ -267,7 +267,7 @@ fn a_gesture_that_changed_nothing_retires_its_history_baseline() {
 /// every screen-path gesture triggers through `resync_interaction_projection`. So a bounded gesture
 /// interleaved with a screen-path one is seen as never having started: its release closes nothing,
 /// its baseline stays armed, and the NEXT press's `begin_gesture` simply assigned over it — dropping a
-/// `FlowFixture`, and with it an unretired `OrderedMap<WidgetLayout>` root. The pool worker aborted
+/// `FlowHostDocument`, and with it an unretired `OrderedMap<WidgetLayout>` root. The pool worker aborted
 /// with `ordered-map root must be explicitly retired before drop`, measured on 6118 as the FOURTH
 /// middle-button pan of one session (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
 /// `📓️wgpu-node-graph-gestures-2026-09-13.md` §4). A bare drop aborts rather than unwinds, so — like
@@ -275,15 +275,15 @@ fn a_gesture_that_changed_nothing_retires_its_history_baseline() {
 #[test]
 fn arming_a_second_history_baseline_retires_the_first() {
     let json = r#"{
-  "schema": "flow.fixture",
+  "schema": "flow.host_document",
   "camera": { "x": 0, "y": 0, "zoom": 1 },
   "widgets": [{ "id": "rect", "kind": "neuron", "neuronKind": "rectangle" }],
   "synapses": [],
   "layout": { "rect": { "x": 40, "y": 40 } }
 }
 "#;
-    let fixture = FlowHost::parse_fixture_json(json).expect("fixture json");
-    let mut host = FlowHost::from_fixture(fixture);
+    let fixture = FlowHost::parse_host_document_json(json).expect("fixture json");
+    let mut host = FlowHost::from_host_document(fixture);
     host.set_viewport(1280, 800, 1.0);
     host.rebuild_dag();
     let pan = |x: f64, y: f64| dag::DagPointerIntent { phase: dag::DagPointerPhase::Down, x, y, button: 1, shift: false, ctrl_or_meta: false, alt: false, pan: true };

@@ -156,7 +156,7 @@ async fn raster_live_envelope_cancel_closes_retained_pages_without_publication()
 #[semio_framework_async_macros::async_test]
 async fn raster_io_declares_image_in_and_image_out() {
     let io = raster_io();
-    assert_eq!(io.document_schema, RASTER_DOCUMENT_SCHEMA);
+    assert_eq!(io.artifact_schema, RASTER_DOCUMENT_SCHEMA);
     assert_eq!(io.artifact.id, "2d.raster");
     assert!(io.ports.iter().any(|p| p.id == "image:in"));
     let out_port = raster_image_out_port();
@@ -441,7 +441,7 @@ async fn raster_io_declares_image_in_out_and_export_media_covers_all_ports() {
     let MediaPayload::Structured { schema, json } = image_out.payload else { panic!("expected structured payload") };
     assert_eq!(schema, "2d.image");
     assert!(!json.is_empty());
-    assert!(RasterPlayApp::export_media("document:out", &doc).is_ok());
+    assert!(RasterPlayApp::export_media("artifact:out", &doc).is_ok());
     assert!(matches!(RasterPlayApp::export_media("unknown:out", &doc), Err(MediaError::NotImplemented)));
 }
 

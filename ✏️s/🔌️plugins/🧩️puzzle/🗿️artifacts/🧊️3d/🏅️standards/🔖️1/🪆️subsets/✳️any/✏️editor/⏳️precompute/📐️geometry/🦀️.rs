@@ -35,7 +35,7 @@ pub(crate) const DOCUMENT_OWNER_PAGE_BYTES: usize = 64 * FIXED_OWNER_PAGE_BYTES;
 pub(crate) const NAKAGIN_DOCUMENT_OBJECTS: usize = 180;
 /// 🧊️ Fill placements a document page keeps free above the flagship fixture. It is a DOCUMENT
 /// capacity, not a request ceiling — the count the user asks for is unbounded, and a plan that
-/// exhausts these slots reports `stall_reason = "document-capacity"` and stops, visibly, instead of
+/// exhausts these slots reports `stall_reason = "artifact-capacity"` and stops, visibly, instead of
 /// being clamped or faulting.
 pub(crate) const DOCUMENT_FILL_HEADROOM_SLOTS: usize = 1024;
 /// 🧊️ Objects one fill session owns: the flagship fixture plus its fill headroom — 1204 — rounded up

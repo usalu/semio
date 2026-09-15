@@ -704,7 +704,10 @@
         "requested": "editor",
         "currentRole": "viewer",
         "expectedAppId": "s.procedural.generation3d@1/*#editor"
-      }
+      },
+      "ariaApple": "Meta+Alt+E",
+      "badgeApple": "⌘️⌥️E",
+      "badge": "Ctrl+Alt+E"
     },
     {
       "controlId": "playground.navbar.roles.viewer",
@@ -721,7 +724,10 @@
         "requested": "viewer",
         "currentRole": "editor",
         "expectedAppId": "s.procedural.generation3d@1/*#viewer"
-      }
+      },
+      "ariaApple": "Meta+Alt+V",
+      "badgeApple": "⌘️⌥️V",
+      "badge": "Ctrl+Alt+V"
     },
     {
       "controlId": "ui.shell.mode.next",
@@ -734,7 +740,10 @@
         "metaKey": false,
         "shiftKey": false
       },
-      "dispatches": null
+      "dispatches": null,
+      "ariaApple": "Meta+Alt+ArrowRight",
+      "badgeApple": "⌘️⌥️→",
+      "badge": "Ctrl+Alt+→"
     },
     {
       "controlId": "ui.shell.mode.previous",
@@ -747,13 +756,19 @@
         "metaKey": false,
         "shiftKey": false
       },
-      "dispatches": null
+      "dispatches": null,
+      "ariaApple": "Meta+Alt+ArrowLeft",
+      "badgeApple": "⌘️⌥️←",
+      "badge": "Ctrl+Alt+←"
     }
   ],
   "keybindingOverride": {
     "controlId": "playground.navbar.roles.viewer",
     "keys": "mod+shift+8",
-    "aria": "Control+Shift+8"
+    "aria": "Control+Shift+8",
+    "ariaApple": "Meta+Shift+8",
+    "badgeApple": "⌘️⇧️8",
+    "badge": "Ctrl+Shift+8"
   },
   "gate": {
     "note": "🚦️ Two switches that overlap: the gate REFUSES the second rather than queueing it, so one tear-down can never interleave with another.",

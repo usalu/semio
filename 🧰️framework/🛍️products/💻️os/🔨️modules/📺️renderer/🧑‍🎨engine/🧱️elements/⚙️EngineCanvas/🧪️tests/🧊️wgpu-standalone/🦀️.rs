@@ -312,7 +312,7 @@ fn saturated_graph_and_board_wheel_queues_preserve_cameras() {
     let graph_before = ENGINE_SURFACES.with(|cell| {
         let map = cell.borrow();
         let Some(NodeGraphEngine::Dag(host)) = map.get(graph_id).unwrap().node_graph.as_ref() else { unreachable!() };
-        [host.dag.fixture.camera.x, host.dag.fixture.camera.y, host.dag.fixture.camera.zoom]
+        [host.dag.host_document.camera.x, host.dag.host_document.camera.y, host.dag.host_document.camera.zoom]
     });
     let mut graph_input = ui_wgpu::wgpu::InputState::default();
     saturate(&mut graph_input);
@@ -320,7 +320,7 @@ fn saturated_graph_and_board_wheel_queues_preserve_cameras() {
     let graph_after = ENGINE_SURFACES.with(|cell| {
         let map = cell.borrow();
         let Some(NodeGraphEngine::Dag(host)) = map.get(graph_id).unwrap().node_graph.as_ref() else { unreachable!() };
-        [host.dag.fixture.camera.x, host.dag.fixture.camera.y, host.dag.fixture.camera.zoom]
+        [host.dag.host_document.camera.x, host.dag.host_document.camera.y, host.dag.host_document.camera.zoom]
     });
     assert_eq!(graph_after, graph_before);
     let graph_selection_before = ENGINE_SURFACES.with(|cell| {

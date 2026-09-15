@@ -1134,7 +1134,7 @@ struct OwnedInstanceState {
 struct OwnedPollInput<'a> {
     events: &'a [Event],
     command_page: Option<(semio_framework::kernel::CommandPageCursor, semio_framework::kernel::FixedCommandPage)>,
-    cold_pair_page: Option<&'a semio_framework::kernel::ColdDocumentPairPage>,
+    cold_pair_page: Option<&'a semio_framework::kernel::ColdArtifactPairPage>,
     budget: Budget,
 }
 
@@ -1207,7 +1207,7 @@ impl OwnedRuntime {
                     command_page = Some((cursor.clone(), bytes.clone()));
                 }
                 Event::CommandIngressPage { .. } => return Err(TurnFault::Trapped("turn carries more than one command page or an invalid page size".to_string())),
-                Event::ColdDocumentPairPage(page) => {
+                Event::ColdArtifactPairPage(page) => {
                     if cold_pair_page.is_some() {
                         return Err(TurnFault::Trapped("turn carries duplicate cold-pair page".into()));
                     }
@@ -1820,12 +1820,12 @@ impl wit_host_async::HostWithStore<ActorHostState> for wasmtime::component::HasS
         Err(poll_backed_direct_await_fault("http-fetch").await)
     }
 
-    async fn document_read(_accessor: &Accessor<ActorHostState, Self>, _params: wit_effects::DocumentReadParams) -> Result<Vec<u8>, Vec<u8>> {
-        Err(poll_backed_direct_await_fault("document-read").await)
+    async fn artifact_read(_accessor: &Accessor<ActorHostState, Self>, _params: wit_effects::ArtifactReadParams) -> Result<Vec<u8>, Vec<u8>> {
+        Err(poll_backed_direct_await_fault("artifact-read").await)
     }
 
-    async fn document_write(_accessor: &Accessor<ActorHostState, Self>, _params: wit_effects::DocumentWriteParams) -> Result<Vec<u8>, Vec<u8>> {
-        Err(poll_backed_direct_await_fault("document-write").await)
+    async fn artifact_write(_accessor: &Accessor<ActorHostState, Self>, _params: wit_effects::ArtifactWriteParams) -> Result<Vec<u8>, Vec<u8>> {
+        Err(poll_backed_direct_await_fault("artifact-write").await)
     }
 
     async fn link_resolve(_accessor: &Accessor<ActorHostState, Self>, _link: Vec<u8>) -> Result<Vec<u8>, Vec<u8>> {
@@ -2450,8 +2450,8 @@ async fn wit_effect_to_kernel(effect: wit_effects::Effect) -> Result<Effect, Plu
             bytes: inner.params.bytes,
         },
         E::HttpRequest(inner) => Effect::HttpRequest { req: RequestId(inner.req), method: inner.params.method, url: inner.params.url, headers: inner.params.headers, body: inner.params.body, stream: inner.params.streaming },
-        E::DocumentRead(inner) => Effect::DocumentRead { req: RequestId(inner.req), doc: ArtifactHandle(inner.params.doc as u128), lane: inner.params.lane },
-        E::DocumentWrite(inner) => Effect::DocumentWrite { req: RequestId(inner.req), doc: ArtifactHandle(inner.params.doc as u128), lane: inner.params.lane, ops: inner.params.ops },
+        E::ArtifactRead(inner) => Effect::DocumentRead { req: RequestId(inner.req), doc: ArtifactHandle(inner.params.doc as u128), lane: inner.params.lane },
+        E::ArtifactWrite(inner) => Effect::DocumentWrite { req: RequestId(inner.req), doc: ArtifactHandle(inner.params.doc as u128), lane: inner.params.lane, ops: inner.params.ops },
         E::LinkResolve(inner) => Effect::LinkResolve { req: RequestId(inner.req), link: String::from_utf8_lossy(&inner.link).into_owned() },
         E::RegistryQuery(inner) => Effect::RegistryQuery { req: RequestId(inner.req), kind: inner.params.kind, filter: decode_dsl(&inner.params.filter).await },
         E::IoCompose(inner) => Effect::IoCompose { req: RequestId(inner.req), key: String::from_utf8_lossy(&inner.params.key).into_owned(), sources: decode_json(&inner.params.sources).await.unwrap_or_default() },
@@ -2487,7 +2487,7 @@ async fn wit_effect_to_kernel(effect: wit_effects::Effect) -> Result<Effect, Plu
             Effect::ReplayShellCommand { action_id: inner.action_id, args }
         }
         E::SpawnPluginInstance(inner) => {
-            Effect::SpawnPluginInstance { req: RequestId(inner.req), plugin_id: inner.params.plugin_id, app_id: inner.params.app_id, os_instance_id: inner.params.os_instance_id, label: inner.params.label, document_json: inner.params.document_json }
+            Effect::SpawnPluginInstance { req: RequestId(inner.req), plugin_id: inner.params.plugin_id, app_id: inner.params.app_id, os_instance_id: inner.params.os_instance_id, label: inner.params.label, document_json: inner.params.artifact_json }
         }
         E::OpenPluginInstance(inner) => Effect::OpenPluginInstance { plugin_id: inner.plugin_id, app_id: inner.app_id, os_instance_id: inner.os_instance_id },
         E::OpenDialog(inner) => {
@@ -2610,7 +2610,7 @@ fn wit_lifecycle_receipt_to_kernel(value: wit_lifetime::Receipt) -> semio_framew
     }
 }
 
-async fn kernel_turn_inputs_to_wit(events: &[Event], instance_id: u32) -> Result<(Vec<wit_events::Event>, Option<(wit_reactor::CommandPageCursor, Vec<u8>)>, Option<wit_reactor::ColdDocumentPairPage>), TurnFault> {
+async fn kernel_turn_inputs_to_wit(events: &[Event], instance_id: u32) -> Result<(Vec<wit_events::Event>, Option<(wit_reactor::CommandPageCursor, Vec<u8>)>, Option<wit_reactor::ColdArtifactPairPage>), TurnFault> {
     let mut ordinary = Vec::with_capacity(events.len());
     let mut command = None;
     let mut cold = None;
@@ -2622,7 +2622,7 @@ async fn kernel_turn_inputs_to_wit(events: &[Event], instance_id: u32) -> Result
                 }
                 command = Some(kernel_command_page_to_wit(cursor, bytes));
             }
-            Event::ColdDocumentPairPage(page) => {
+            Event::ColdArtifactPairPage(page) => {
                 if cold.is_some() {
                     return Err(TurnFault::Trapped("turn carries duplicate cold-pair page".into()));
                 }
@@ -2661,7 +2661,7 @@ async fn kernel_event_to_wit(event: &Event, instance_id: u32) -> wit_events::Eve
         Event::SuspendRequest => wit_events::Event::SuspendRequest(wit_events::SuspendRequestEvent { instance: instance_id }),
         Event::CapabilityChanged { change } => wit_events::Event::CapabilityChanged(wit_events::CapabilityChangedEvent { instance: instance_id, change: kernel_capability_change_to_wit(change).await }),
         Event::QuotaChanged { quotas } => wit_events::Event::QuotaChanged(wit_events::QuotaChangedEvent { instance: instance_id, quotas: encode_json(quotas).await }),
-        Event::ColdDocumentPairPage(_) => unreachable!("cold pages use the dedicated poll input"),
+        Event::ColdArtifactPairPage(_) => unreachable!("cold pages use the dedicated poll input"),
         Event::CommandIngressPage { .. } => unreachable!("command pages are lifted through reactor.poll's dedicated page argument"),
         Event::UiIntent { instance, intent } => wit_events::Event::UiIntent(wit_events::UiIntentEvent { instance: instance.0.parse().unwrap_or(instance_id), intent: intent.clone() }),
         Event::SurfaceVisible { surface, body_key, view_state } => {
@@ -4917,7 +4917,7 @@ impl SessionLanePack {
 pub struct ArtifactSession {
     pub generation: u64,
     pub command_log_len: u64,
-    pub document_schema: Option<String>,
+    pub artifact_schema: Option<String>,
     pub config_schema: Option<String>,
     pub draft_schema: Option<String>,
     pub document: SessionLanePack,
@@ -5421,8 +5421,6 @@ pub struct GuestArtifactInferenceMetadata {
     pub artifact_kind: String,
     pub artifact_schema: String,
     pub artifact_schema_version: u32,
-    pub document_schema: String,
-    pub document_schema_version: u32,
     pub inference_schema: String,
     pub inference_schema_version: u32,
     pub algorithm_version: u32,
@@ -5451,8 +5449,6 @@ struct InferenceRouteRequest {
     artifact_kind: String,
     artifact_schema: String,
     artifact_schema_version: u32,
-    document_schema: String,
-    document_schema_version: u32,
     inference_schema: String,
     inference_schema_version: u32,
     algorithm_version: u32,
@@ -5496,8 +5492,6 @@ struct InferenceRouteResult {
     artifact_kind: String,
     artifact_schema: String,
     artifact_schema_version: u32,
-    document_schema: String,
-    document_schema_version: u32,
     inference_schema: String,
     inference_schema_version: u32,
     algorithm_version: u32,
@@ -5724,7 +5718,7 @@ fn validate_inference_dependency_graph(routes: &BTreeMap<(String, String), (Stri
 }
 
 /// 🎞️ Builds the outgoing request for one `depends_on` entry: identity fields (`owner`/`artifact_schema*`/
-/// `document_schema*`/`inference_schema*`/`algorithm_version`/`policy_version`) come from the
+/// `artifact_schema*`/`inference_schema*`/`algorithm_version`/`policy_version`) come from the
 /// DEPENDENCY's own registered metadata; caller-context fields (`revision`/`generation`/
 /// `source_dialect`/`policy`/`budgets`/`cancellation_id`/`requested_cache_mode`/`canonical_payload`)
 /// are inherited from the parent request — the same underlying artifact source, viewed through a
@@ -5737,8 +5731,6 @@ async fn build_dependency_inference_request(base: &InferenceRouteRequest, depend
         artifact_kind: base.artifact_kind.clone(),
         artifact_schema: dependency.artifact_schema.clone(),
         artifact_schema_version: dependency.artifact_schema_version,
-        document_schema: dependency.document_schema.clone(),
-        document_schema_version: dependency.document_schema_version,
         inference_schema: dependency.inference_schema.clone(),
         inference_schema_version: dependency.inference_schema_version,
         algorithm_version: dependency.algorithm_version,
@@ -5762,8 +5754,8 @@ async fn validate_inference_echo(request: &InferenceRouteRequest, result: &Infer
         || result.artifact_kind != request.artifact_kind
         || result.artifact_schema != request.artifact_schema
         || result.artifact_schema_version != request.artifact_schema_version
-        || result.document_schema != request.document_schema
-        || result.document_schema_version != request.document_schema_version
+        || result.artifact_schema != request.artifact_schema
+        || result.artifact_schema_version != request.artifact_schema_version
         || result.inference_schema != request.inference_schema
         || result.inference_schema_version != request.inference_schema_version
         || result.algorithm_version != request.algorithm_version

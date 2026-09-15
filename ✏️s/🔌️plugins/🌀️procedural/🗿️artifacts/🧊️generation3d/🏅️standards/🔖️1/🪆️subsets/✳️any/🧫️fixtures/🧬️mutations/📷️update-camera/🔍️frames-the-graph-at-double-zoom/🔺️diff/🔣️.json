@@ -1,7 +1,7 @@
 {
   "artifact": null,
   "fixture": {
-    "schema": "flow.fixture",
+    "schema": "flow.hostDocument",
     "camera": {
       "x": -4.0,
       "y": 6.0,

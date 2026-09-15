@@ -196,9 +196,9 @@ pub struct TrinityBridge {
 
 impl TrinityBridge {
     pub async fn from_graph(graph: &Graph) -> Self {
-        let fixture = graph.to_fixture();
+        let fixture = graph.to_snapshot();
         let store = semio_s_artifact_trinity_jack::TrinityGraphStore::new(semio_s_artifact_trinity_jack::create_trinity_graph_envelope("trinity-host", fixture)).await.expect("failed to create trinity graph store");
-        let graph = Graph::from_fixture(store.snapshot().expect("projection")).expect("graph");
+        let graph = Graph::from_snapshot(store.snapshot().expect("projection")).expect("graph");
         let mut host = Self {
             graph,
             store,
@@ -225,7 +225,7 @@ impl TrinityBridge {
     }
 
     fn refresh_graph_from_store(&mut self) -> Result<(), TrinityRewritingError> {
-        self.graph = Graph::from_fixture(self.store.snapshot()?)?;
+        self.graph = Graph::from_snapshot(self.store.snapshot()?)?;
         Ok(())
     }
 
@@ -260,7 +260,7 @@ impl TrinityBridge {
     }
 
     pub fn fixture_json(&self) -> Result<String, TrinityRewritingError> {
-        Ok(self.graph.fixture_json()?)
+        Ok(self.graph.host_document_json()?)
     }
 
     pub fn set_viewport(&mut self, width: u32, height: u32, dpr: f64) {
@@ -563,7 +563,7 @@ struct JackRunWithFixture {
 impl dsl::ToValue for JackRunWithFixture {
     fn to_value(&self) -> dsl::DslValue {
         let dsl::DslValue::Object(mut entries) = dsl::ToValue::to_value(&self.result) else { unreachable!("QueryResult::to_value always produces an object") };
-        entries.push(("fixtureJson".to_string(), dsl::ToValue::to_value(&self.fixture_json)));
+        entries.push(("hostDocumentJson".to_string(), dsl::ToValue::to_value(&self.fixture_json)));
         dsl::DslValue::Object(entries)
     }
 }

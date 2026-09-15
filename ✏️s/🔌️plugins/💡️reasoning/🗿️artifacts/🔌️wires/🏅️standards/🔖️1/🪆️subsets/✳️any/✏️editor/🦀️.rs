@@ -31,7 +31,7 @@ use store::EngineHandles;
 //#region 🔖️Constants
 pub const WIRES_PLAY_APP_ID: &str = "reasoning-wires-play";
 pub use catalogue_panel::WIRES_PLAY_BODY_CATALOGUE;
-pub use document_panel::WIRES_PLAY_BODY_DOCUMENT;
+pub use document_panel::WIRES_PLAY_BODY_ARTIFACT;
 pub use edit::windows::canvas::{WIRES_PLAY_BODY_COMPOSITE, WIRES_PLAY_WINDOW_CANVAS};
 pub use inspection_panel::WIRES_PLAY_BODY_PROPERTIES;
 
@@ -475,7 +475,7 @@ impl ArtifactEditor for ReasoningWiresPlayApp {
         owner: EditorApp<ReasoningWiresPlayApp>,
         owner_file: "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.reasoning.wires@1/*#editor",
-        document_schema: "reasoning.wires.fixture",
+        artifact_schema: "reasoning.wires.fixture",
         factory: "WiresRetainedCommandJobFactory",
         factory_type: WiresRetainedCommandJobFactory,
         contract: ToolExecutionContract::bounded_first_step(8_192, 16, 1_048_576, 16_384, 7_500),
@@ -579,7 +579,7 @@ impl ArtifactEditor for ReasoningWiresPlayApp {
                 let window = edit::windows::canvas::config::current(cfg).cloned().unwrap_or_default();
                 edit::windows::canvas::render(&crate::wires_working_board(document), &document.wires_fixture, &window)
             }
-            WIRES_PLAY_BODY_DOCUMENT => document_panel::render(document, labels),
+            WIRES_PLAY_BODY_ARTIFACT => document_panel::render(document, labels),
             WIRES_PLAY_BODY_CATALOGUE => catalogue_panel::render(&document.wires_fixture, labels),
             WIRES_PLAY_BODY_PROPERTIES => inspection_panel::render(document, labels),
             _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "wires diagnostic admission failed")),

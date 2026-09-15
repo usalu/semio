@@ -62,7 +62,7 @@
       "native_factory": {
         "factory_id": "stdio.native.step.v1",
         "artifact_kind": "stdio.step",
-        "document_schema": "stdio.step",
+        "artifact_schema": "stdio.step",
         "extension": "step",
         "pack_schema_hash": "7955ba193d890463155c4da998bfcaa1a126c9b7d53fef90998843a85d1d1ad5",
         "runtime_capability_id": "s.stdio.step.standard.ap214.codec.codec-stdio-step-extension-step.v1"

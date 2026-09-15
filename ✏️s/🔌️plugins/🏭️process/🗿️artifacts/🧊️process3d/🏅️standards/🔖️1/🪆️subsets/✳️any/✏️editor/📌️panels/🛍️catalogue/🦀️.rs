@@ -56,7 +56,7 @@ fn capability_items<'a>(machines: impl IntoIterator<Item = &'a WorkshopMachine>,
 }
 
 /// 📐️ Real per-variant stock dimensions for capability-rule validation, derived from
-/// `fixture.stock_payload.solid` — the snapshot's own inline, authoritative record since ticket
+/// `snapshot.stock_payload.solid` — the snapshot's own inline, authoritative record since ticket
 /// `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 4 (`stock_solid` stays a composed-child HANDLE
 /// with no resolvable content). `Box`/`Cylinder`/`Sphere` are analytic: a cylinder's/sphere's
 /// width/depth are their diameter. `ImportedMesh`/`ImportedSolid` carry no persisted analytic
@@ -75,12 +75,12 @@ fn stock_validation_context(solid: &WorkingSolid) -> ValidationContext {
 /// catalog (uncataloged/generic machines first, open by default), disabling (non-clickable, with a
 /// reason) any capability the current stock doesn't satisfy — real dimensions via
 /// `stock_validation_context`.
-pub fn render(fixture: &Process3dSnapshot, contributions_json: &str, labels: &Process3dLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    let ctx = stock_validation_context(&fixture.stock_payload.solid);
+pub fn render(snapshot: &Process3dSnapshot, contributions_json: &str, labels: &Process3dLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    let ctx = stock_validation_context(&snapshot.stock_payload.solid);
     let mut builder = PanelTreeBuilder::new("process3d-play-catalogue")?;
     let mut workshop_machines: semio_framework_plugin::UiFixedList<&WorkshopMachine> = semio_framework_plugin::UiFixedList::default();
     let mut catalog_sections: Vec<(semio_framework_plugin::UiText, Vec<&WorkshopMachine>)> = Vec::new();
-    for machine in &fixture.workshop.machines {
+    for machine in &snapshot.workshop.machines {
         let Some(catalog_id) = machine.catalog_id.as_deref() else {
             workshop_machines.try_push(machine).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.catalogue.workshop", "fixed workshop catalogue admission failed"))?;
             continue;

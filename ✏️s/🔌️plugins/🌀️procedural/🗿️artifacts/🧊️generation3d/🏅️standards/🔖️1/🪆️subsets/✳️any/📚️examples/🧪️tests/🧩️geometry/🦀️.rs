@@ -1,5 +1,5 @@
 //! 🔬️ Headless example-geometry lane — every bundled generation3d example's real
-//! `🖼️assets/<name>/🗣️.dsl.semio` is parsed into its `FlowFixture`, evaluated through the same
+//! `🖼️assets/<name>/🗣️.dsl.semio` is parsed into its `FlowHostDocument`, evaluated through the same
 //! `FlowHost` the editor's `flow-eval-tick` drives with the packaged `brep`/`math` operator sets
 //! installed, and the resulting preview handle is tessellated through the same
 //! `tessellate_geometry` bridge the preview path calls. Every number the run produces is held to
@@ -496,9 +496,9 @@ fn parry_oracle(positions: &[f32], indices: &[u32]) -> (f64, [f64; 3], [f64; 3])
 /// 🚀️ Parses, evaluates and tessellates one example exactly as the editor's preview path does.
 fn run_example(dsl: &str, fixture: &ExampleGeometryFixture) -> ExampleRun {
     operators_installed();
-    let Generation3dSnapshot { fixture: graph, generation } = parse_dsl(dsl).expect("example dsl parses");
+    let Generation3dSnapshot { host_document: graph, generation } = parse_dsl(dsl).expect("example dsl parses");
     generation.retire_cold();
-    let mut host = FlowHost::from_fixture(graph);
+    let mut host = FlowHost::from_host_document(graph);
     host.set_neuron_kind_info_map(flow_neuron_kind_info_map());
     let started = std::time::Instant::now();
     let eval_json = host.evaluate().expect("example evaluates");
@@ -541,7 +541,7 @@ fn frozen_now() -> Option<u64> {
     Some(0)
 }
 
-/// 🧹️ Drains a `FlowHost` through its explicit retirement ladder. `FlowFixture`'s ordered maps
+/// 🧹️ Drains a `FlowHost` through its explicit retirement ladder. `FlowHostDocument`'s ordered maps
 /// panic on a bare drop ("ordered-map root must be explicitly retired before drop"), so a host is
 /// closed, never dropped.
 fn retire_host(host: FlowHost) {
@@ -716,13 +716,13 @@ fn hexagonal_mushroom_column_preview_payload_matches_the_scene_bridge_fixture() 
     operators_installed();
     let expected: SceneBridgeFixture = serde_json::from_str(SCENE_BRIDGE_FIXTURE).expect("scene bridge fixture parses");
     let dsl = include_str!("../../🍄️hexagonal-mushroom-column/🖼️assets/🍄️hexagonal-mushroom-column/🗣️.dsl.semio");
-    let Generation3dSnapshot { fixture: graph, generation } = parse_dsl(dsl).expect("example dsl parses");
+    let Generation3dSnapshot { host_document: graph, generation } = parse_dsl(dsl).expect("example dsl parses");
     generation.retire_cold();
     let cfg = semio_s_artifact_procedural_generation3d::editor::generation3d::config::Generation3dConfig::default();
-    let mut host = FlowHost::from_fixture(graph);
+    let mut host = FlowHost::from_host_document(graph);
     host.set_neuron_kind_info_map(flow_neuron_kind_info_map());
     let eval_json = host.evaluate().expect("example evaluates");
-    let (meshes_json, instances_json) = semio_s_artifact_procedural_generation3d::editor::generation3d::preview_payload_from_eval(&eval_json, &host.fixture, &cfg);
+    let (meshes_json, instances_json) = semio_s_artifact_procedural_generation3d::editor::generation3d::preview_payload_from_eval(&eval_json, &host.host_document, &cfg);
     let camera_json = semio_s_artifact_procedural_generation3d::editor::generation3d::preview_camera_json(&cfg);
     retire_host(host);
     let meshes: Vec<SceneBridgeMesh> = serde_json::from_str(&meshes_json).expect("live meshes json");
@@ -775,6 +775,57 @@ struct DeliveryRun {
     payload_bounds: Option<([f64; 3], [f64; 3])>,
     view_payload_bounds: Option<([f64; 3], [f64; 3])>,
     step_micros: Vec<u64>,
+    /// 🕹️ Every `interactionId` this example's published instances declare — the exact target id
+    /// shape a renderer's pick dispatches (`{node}@{channel}`), read off the publication rather than
+    /// guessed.
+    topology_ids: Vec<String>,
+    /// 🕹️ `World3dScene.selection_json`'s `ids` for four framework `graph` selections applied to the
+    /// SAME delivered session: the fixture's own preview target picked, every published target
+    /// picked (a shift-click that adds), nothing picked (Escape / an empty-space click), and the
+    /// viewer window's own projection of the first.
+    ///
+    /// ⚖️ This is the lane the wgpu renderer reported EMPTY on 7 of 8 examples in both roles while
+    /// the guest's own interaction store held the pick: the host dropped the reserved verb's settled
+    /// answer, so no refresh ever asked the app to republish it and these ids were never rebuilt
+    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-selection-roundtrip-2026-09-15.md`).
+    selection_picked_ids: Vec<String>,
+    selection_added_ids: Vec<String>,
+    selection_cleared_ids: Vec<String>,
+    view_selection_picked_ids: Vec<String>,
+}
+
+/// 🕹️ The `ids` one `World3dScene.selection_json` publishes for a given framework `graph` selection,
+/// built through the EDITOR preview window's own projection (`preview_payload` →
+/// `preview_selection_json`) on an already-delivered session.
+fn editor_selection_ids(
+    eval_json: &str,
+    fixture: &semio_framework_artifact_flow_flow::FlowHostDocument,
+    config: &semio_s_artifact_procedural_generation3d::editor::generation3d::config::Generation3dConfig,
+    session: &semio_framework_os_flow::FlowEvalSession,
+    selected: &[String],
+) -> Vec<String> {
+    let marks = semio_s_artifact_procedural_generation3d::editor::generation3d::PreviewInteractionMarks { hovered: Default::default(), selected: selected.iter().cloned().collect() };
+    let payload = semio_s_artifact_procedural_generation3d::editor::generation3d::preview_payload(eval_json, fixture, config, Some(session), &marks);
+    selection_json_ids(&semio_s_artifact_procedural_generation3d::editor::generation3d::preview_selection_json(config, "", &payload))
+}
+
+/// 🕹️ The VIEWER window's twin of [`editor_selection_ids`] — a read-only role paints the same pick.
+fn viewer_selection_ids(
+    eval_json: &str,
+    fixture: &semio_framework_artifact_flow_flow::FlowHostDocument,
+    config: &semio_s_artifact_procedural_generation3d::viewer::generation3d::config::Generation3dViewConfig,
+    session: &semio_framework_os_flow::FlowEvalSession,
+    selected: &[String],
+) -> Vec<String> {
+    let marks = semio_s_artifact_procedural_generation3d::viewer::generation3d::modes::view::windows::preview::Generation3dViewMarks { hovered: Default::default(), selected: selected.iter().cloned().collect() };
+    let payload = semio_s_artifact_procedural_generation3d::viewer::generation3d::modes::view::windows::preview::preview_payload(eval_json, fixture, config, Some(session), &marks);
+    selection_json_ids(&semio_s_artifact_procedural_generation3d::viewer::generation3d::modes::view::windows::preview::preview_selection_json(config, &payload))
+}
+
+/// 🕹️ The `ids` array of one published `selection_json`.
+fn selection_json_ids(selection_json: &str) -> Vec<String> {
+    let parsed: serde_json::Value = serde_json::from_str(selection_json).expect("selection json parses");
+    parsed.get("ids").and_then(serde_json::Value::as_array).cloned().unwrap_or_default().iter().filter_map(|id| id.as_str().map(str::to_string)).collect()
 }
 
 /// 🧹️ Retires a `FlowEvalSession`, which rejects a live drop — the same `begin_close` + granted
@@ -796,9 +847,9 @@ fn retire_eval_session(mut session: semio_framework_os_flow::FlowEvalSession) {
 fn run_delivery(dsl: &str, fixture: &ExampleGeometryFixture, lod_mode: &str) -> DeliveryRun {
     use semio_s_artifact_procedural_generation3d::preview_eval::{preview_tolerance, PREVIEW_TESSELLATE_STEP_BUDGET, PREVIEW_TESSELLATE_STEP_WALL_MICROS};
     operators_installed();
-    let Generation3dSnapshot { fixture: graph, generation } = parse_dsl(dsl).expect("example dsl parses");
+    let Generation3dSnapshot { host_document: graph, generation } = parse_dsl(dsl).expect("example dsl parses");
     generation.retire_cold();
-    let mut host = FlowHost::from_fixture(graph);
+    let mut host = FlowHost::from_host_document(graph);
     host.set_neuron_kind_info_map(flow_neuron_kind_info_map());
     let eval_json = host.evaluate().expect("example evaluates");
     let eval: serde_json::Value = serde_json::from_str(&eval_json).expect("evaluation json");
@@ -839,7 +890,7 @@ fn run_delivery(dsl: &str, fixture: &ExampleGeometryFixture, lod_mode: &str) -> 
     // 👁️ The publication the preview window actually paints, built from the SAME delivered session
     // — transfer and publication are two different failures and this row separates them.
     let config = semio_s_artifact_procedural_generation3d::editor::generation3d::config::Generation3dConfig { lod_mode: lod_mode.to_string(), ..Default::default() };
-    let payload = semio_s_artifact_procedural_generation3d::editor::generation3d::preview_payload(&eval_json, &host.fixture, &config, Some(&session), &semio_s_artifact_procedural_generation3d::editor::generation3d::PreviewInteractionMarks::default());
+    let payload = semio_s_artifact_procedural_generation3d::editor::generation3d::preview_payload(&eval_json, &host.host_document, &config, Some(&session), &semio_s_artifact_procedural_generation3d::editor::generation3d::PreviewInteractionMarks::default());
     let payload_meshes: serde_json::Value = serde_json::from_str(&payload.meshes_json).expect("payload meshes json");
     let payload_instances: serde_json::Value = serde_json::from_str(&payload.instances_json).expect("payload instances json");
     let published = payload_meshes.as_array().cloned().unwrap_or_default();
@@ -850,7 +901,13 @@ fn run_delivery(dsl: &str, fixture: &ExampleGeometryFixture, lod_mode: &str) -> 
         *payload_mesh_roles.entry(entry.get("role").and_then(serde_json::Value::as_str).unwrap_or("(unstamped)").to_string()).or_default() += 1;
     }
     let view_config = semio_s_artifact_procedural_generation3d::viewer::generation3d::config::Generation3dViewConfig { lod_mode: lod_mode.to_string(), ..Default::default() };
-    let view_payload = semio_s_artifact_procedural_generation3d::viewer::generation3d::modes::view::windows::preview::preview_payload(&eval_json, &host.fixture, &view_config, Some(&session), &Default::default());
+    let view_payload = semio_s_artifact_procedural_generation3d::viewer::generation3d::modes::view::windows::preview::preview_payload(&eval_json, &host.host_document, &view_config, Some(&session), &Default::default());
+    let topology_ids: Vec<String> = payload_instances.as_array().cloned().unwrap_or_default().iter().filter_map(|entry| entry.get("interactionId").and_then(serde_json::Value::as_str).map(str::to_string)).collect();
+    let picked_id = format!("{}@{}", fixture.preview.node, fixture.preview.channel);
+    let selection_picked_ids = editor_selection_ids(&eval_json, &host.host_document, &config, &session, std::slice::from_ref(&picked_id));
+    let selection_added_ids = editor_selection_ids(&eval_json, &host.host_document, &config, &session, &topology_ids);
+    let selection_cleared_ids = editor_selection_ids(&eval_json, &host.host_document, &config, &session, &[]);
+    let view_selection_picked_ids = viewer_selection_ids(&eval_json, &host.host_document, &view_config, &session, std::slice::from_ref(&picked_id));
     let run = DeliveryRun {
         payload_bounds: semio_s_artifact_procedural_generation3d::preview_eval::preview_payload_bounds(&payload.meshes_json),
         view_payload_bounds: semio_s_artifact_procedural_generation3d::preview_eval::preview_payload_bounds(&view_payload.meshes_json),
@@ -867,10 +924,47 @@ fn run_delivery(dsl: &str, fixture: &ExampleGeometryFixture, lod_mode: &str) -> 
         edge_segments: mesh.as_ref().map(|m| m.edge_positions.len() / 6).unwrap_or_default(),
         phase,
         diagnostics,
+        topology_ids,
+        selection_picked_ids,
+        selection_added_ids,
+        selection_cleared_ids,
+        view_selection_picked_ids,
     };
     retire_eval_session(session);
     retire_host(host);
     run
+}
+
+/// ✅️ The SELECTION round trip's app half, one example at a time, driven by the fixture's own
+/// `preview.node`/`preview.channel` — the very target id a renderer's pick dispatches.
+///
+/// 🕹️ Four laws, all against the same delivered session: a click on the example's own preview target
+/// publishes that target in `World3dScene.selection_json` (and its viewer twin publishes the same),
+/// a shift-click that names every published target publishes every published instance and never
+/// fewer than the single pick did, and an empty selection publishes none — the Escape / empty-space
+/// answer. The complementary framework laws live in
+/// `💻️os/🔨️modules/🔌️plugin/🧪️tests/🕹️interaction-selection-laws/🦀️.rs` (an example switch prunes the
+/// pick, its mirror and its leftover cover) and in
+/// `🧑‍🎨engine/🧪️tests/🕹️wgpu-selection-roundtrip/🟦️.ts` (the wgpu host folds the reserved verb's
+/// settled answer at all) — together they are the whole round trip
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-selection-roundtrip-2026-09-15.md`).
+fn assert_selection_round_trip(fixture: &ExampleGeometryFixture, run: &DeliveryRun) {
+    let picked_id = format!("{}@{}", fixture.preview.node, fixture.preview.channel);
+    assert!(run.topology_ids.contains(&picked_id), "{}: the publication declares {:?}, none of which is the fixture's own preview target {picked_id}", fixture.example, run.topology_ids);
+    for id in &run.topology_ids {
+        assert!(id.split_once('@').is_some_and(|(node, channel)| !node.is_empty() && !channel.is_empty()), "{}: {id:?} is not a {{node}}@{{channel}} interaction id", fixture.example);
+    }
+    assert!(!run.selection_picked_ids.is_empty(), "{}: clicking {picked_id} published no selection id at all — the pick never reaches the scene", fixture.example);
+    for id in &run.selection_picked_ids {
+        assert!(id.starts_with(&picked_id), "{}: clicking {picked_id} published {id:?}, which belongs to another target", fixture.example);
+    }
+    assert_eq!(run.selection_added_ids.len(), run.payload_instances, "{}: selecting every published target ({:?}) painted {} of {} instances", fixture.example, run.topology_ids, run.selection_added_ids.len(), run.payload_instances);
+    for id in &run.selection_picked_ids {
+        assert!(run.selection_added_ids.contains(id), "{}: shift-clicking must ADD to the pick, but {id:?} is missing from {:?}", fixture.example, run.selection_added_ids);
+    }
+    assert!(run.selection_added_ids.len() >= run.selection_picked_ids.len(), "{}: the added selection {:?} is smaller than the single pick {:?}", fixture.example, run.selection_added_ids, run.selection_picked_ids);
+    assert!(run.selection_cleared_ids.is_empty(), "{}: an empty selection still published {:?}", fixture.example, run.selection_cleared_ids);
+    assert_eq!(run.view_selection_picked_ids, run.selection_picked_ids, "{}: the viewer window paints {:?} for the same pick the editor paints {:?} for", fixture.example, run.view_selection_picked_ids, run.selection_picked_ids);
 }
 
 /// ✅️ Holds one example's delivery to its committed `delivery` row.
@@ -881,6 +975,17 @@ fn assert_delivery(dsl: &str, fixture_json: &str) {
     let run = run_delivery(dsl, &fixture, &fixture.delivery.lod_mode.clone());
     println!("[DELIVERY-BOUNDS] {} editPayload={:?} viewPayload={:?}", fixture.example, run.payload_bounds, run.view_payload_bounds);
     println!("[DELIVERY] {} roundTrips={} chunks={} packBase64Bytes={} triangles={} edgeSegments={} phase={} diagnostics={:?} payloadMeshes={} payloadInstances={} payloadTriangles={} payloadEdgeSegments={} payloadMeshRoles={:?} stepMicros={:?} totalMicros={}", fixture.example, run.round_trips, run.chunks, run.pack_base64_bytes, run.triangles, run.edge_segments, run.phase, run.diagnostics, run.payload_meshes, run.payload_instances, run.payload_triangles, run.payload_edge_segments, run.payload_mesh_roles, run.step_micros, run.step_micros.iter().sum::<u64>());
+    println!(
+        "[SELECTION] {} picked={:?} topology={:?} pickedIds={:?} addedIds={:?} clearedIds={:?} viewerPickedIds={:?}",
+        fixture.example,
+        format!("{}@{}", fixture.preview.node, fixture.preview.channel),
+        run.topology_ids,
+        run.selection_picked_ids,
+        run.selection_added_ids,
+        run.selection_cleared_ids,
+        run.view_selection_picked_ids
+    );
+    assert_selection_round_trip(&fixture, &run);
     let delivery = &fixture.delivery;
     assert_eq!(run.diagnostics, None, "{}: the validate gate rejected the preview solid", fixture.example);
     assert_eq!(run.phase, "complete", "{}: the delivery ended in phase {:?}", fixture.example, run.phase);

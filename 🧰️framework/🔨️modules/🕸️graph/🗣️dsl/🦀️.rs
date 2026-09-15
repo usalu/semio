@@ -228,7 +228,7 @@ pub mod queryable {
     }
 
     impl BoardQueryableGraph {
-        pub fn from_fixture_json(json: &str, manifest_id: Option<&str>) -> Result<Self, GraphDslError> {
+        pub fn from_host_document_json(json: &str, manifest_id: Option<&str>) -> Result<Self, GraphDslError> {
             let raw: Value = dsl_core::json::parse(json)?;
             let manifest = manifest_id.and_then(manifest_by_id).or_else(|| raw.get("manifestId").and_then(|v| v.as_str()).and_then(manifest_by_id)).or_else(|| raw.get("manifest_id").and_then(|v| v.as_str()).and_then(manifest_by_id));
             let mut nodes = BTreeMap::new();
@@ -282,11 +282,11 @@ pub mod queryable {
         }
 
         pub fn from_dag_fixture_json(json: &str) -> Result<Self, GraphDslError> {
-            Self::from_fixture_json(json, Some("flow-dag"))
+            Self::from_host_document_json(json, Some("flow-dag"))
         }
 
         pub fn from_puzzle2d_fixture_json(json: &str) -> Result<Self, GraphDslError> {
-            Self::from_fixture_json(json, Some("puzzle2d-default"))
+            Self::from_host_document_json(json, Some("puzzle2d-default"))
         }
 
         pub fn from_puzzle3d_fixture_json(json: &str) -> Result<Self, GraphDslError> {
@@ -309,11 +309,11 @@ pub mod queryable {
                     }
                 }
             }
-            Self::from_fixture_json(&dsl_core::json::to_string(&fixture), Some("puzzle3d-default"))
+            Self::from_host_document_json(&dsl_core::json::to_string(&fixture), Some("puzzle3d-default"))
         }
 
         pub fn from_puzzle5d_fixture_json(json: &str) -> Result<Self, GraphDslError> {
-            Self::from_fixture_json(json, Some("puzzle5d-default"))
+            Self::from_host_document_json(json, Some("puzzle5d-default"))
         }
     }
 

@@ -1,0 +1,152 @@
+{
+  "why": "When the wgpu host's presentation ladder is declared STALLED, and what it does about it. `AppPresenter::admit_next_frame` refuses to build a frame while `has_pending_presentation()`, so a presentation cursor that stops advancing stops the whole host: no frame transaction, no runtime mailbox pump, no world snapshot apply, no retained document ingress, no accessibility projection. Measured on 6118 as `os_host frame gate blocked=true pending=true phase=Some(Engine)` held from t≈85 s to t≈200 s and as `phase=Some(Aborted) retained-fault=true` (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-wheel-zoom-a11y-live-2026-09-14.md` §3.4, `📓️wgpu-host-settle-pump-2026-09-14.md` §7). The watchdog counts CONSECUTIVE non-advancing `Pending` answers over the cursor's own progress signature — phase, engine packet index, upload page index, and whether a GPU cursor is held — so a legitimately long presentation resets on every index it moves and only a frozen cursor accumulates. On the ceiling step it names the holder once and aborts the presentation, which is the one action that reopens the gate without touching a GPU owner. The signature also carries the GPU present cursor's OWN (phase, command, glass command, blur mip): `AppPresentPhase::Render` holds one `gpu_cursor` for a whole composite pass, so without the inner four the outer shape is frozen for as many steps as the scene has commands and the watchdog aborts a healthy present — measured on 6118 as `os_host present stalled phase=Render engine=1 upload=1 gpu-cursor=true` at t≈4.4 s on EVERY example boot.",
+  "ceilingSteps": 4096,
+  "cases": [
+    {
+      "why": "A healthy ladder moves an index on every step and is never reported, however long it runs.",
+      "signatures": [
+        [
+          "Engine",
+          0,
+          0,
+          null
+        ],
+        [
+          "Engine",
+          1,
+          0,
+          null
+        ],
+        [
+          "Engine",
+          2,
+          0,
+          null
+        ],
+        [
+          "Uploads",
+          0,
+          0,
+          null
+        ],
+        [
+          "Uploads",
+          0,
+          1,
+          null
+        ],
+        [
+          "Uploads",
+          0,
+          2,
+          null
+        ]
+      ],
+      "repeatEachFor": 4095,
+      "expectReports": 0
+    },
+    {
+      "why": "A composite pass whose OUTER shape never moves while its GPU cursor encodes command after command is healthy and must never be reported — the false positive a signature without the inner four produces on every boot.",
+      "signatures": [
+        [
+          "Render",
+          1,
+          1,
+          [
+            2,
+            0,
+            0,
+            1
+          ]
+        ],
+        [
+          "Render",
+          1,
+          1,
+          [
+            2,
+            1,
+            0,
+            1
+          ]
+        ],
+        [
+          "Render",
+          1,
+          1,
+          [
+            2,
+            2,
+            0,
+            1
+          ]
+        ],
+        [
+          "Render",
+          1,
+          1,
+          [
+            2,
+            3,
+            0,
+            1
+          ]
+        ]
+      ],
+      "repeatEachFor": 4095,
+      "expectReports": 0
+    },
+    {
+      "why": "The measured wedge: `realize_step` answering `Ok(false)` forever with the engine packet index frozen. Reported once, on the ceiling step, and never again.",
+      "signatures": [
+        [
+          "Engine",
+          0,
+          0,
+          null
+        ]
+      ],
+      "repeatEachFor": 12288,
+      "expectReports": 1,
+      "expectShape": "phase=Engine engine=0 upload=0 gpu-cursor=None"
+    },
+    {
+      "why": "The second measured variant: an `Aborted` cursor whose close never completes.",
+      "signatures": [
+        [
+          "Aborted",
+          3,
+          0,
+          [
+            10,
+            7,
+            2,
+            1
+          ]
+        ]
+      ],
+      "repeatEachFor": 4097,
+      "expectReports": 1,
+      "expectShape": "phase=Aborted engine=3 upload=0 gpu-cursor=Some((10, 7, 2, 1))"
+    },
+    {
+      "why": "A GPU cursor that itself freezes mid-composite IS a stall, and the inner four are what name it.",
+      "signatures": [
+        [
+          "Render",
+          1,
+          1,
+          [
+            2,
+            9,
+            0,
+            1
+          ]
+        ]
+      ],
+      "repeatEachFor": 4097,
+      "expectReports": 1,
+      "expectShape": "phase=Render engine=1 upload=1 gpu-cursor=Some((2, 9, 0, 1))"
+    }
+  ]
+}

@@ -68,7 +68,7 @@ fn replace_node_kind_and_properties_round_trip() {
 fn rename_node_cascades_edge_endpoints() {
     let mut document = empty_dag_document();
     document.nodes = vec![sample_node("a"), sample_node("b")];
-    document.edges = vec![DagFixtureEdge { id: "e1".into(), source: "a@out".into(), target: "b@in".into(), ..Default::default() }];
+    document.edges = vec![DagHostDocumentEdge { id: "e1".into(), source: "a@out".into(), target: "b@in".into(), ..Default::default() }];
     let renamed = round_trip(&document, &DagMutation::RenameNode(RenameNode { id: "a".into(), new_id: "aa".into() }));
     assert!(renamed.nodes.iter().any(|node| node.id == "aa"));
     assert_eq!(renamed.edges[0].source, "aa@out");
@@ -79,7 +79,7 @@ fn rename_node_cascades_edge_endpoints() {
 fn delete_node_severs_and_reconnects_edges() {
     let mut document = empty_dag_document();
     document.nodes = vec![sample_node("a"), sample_node("b")];
-    document.edges = vec![DagFixtureEdge { id: "e1".into(), source: "a@out".into(), target: "b@in".into(), route_style: EdgeRouteStyle::SharpSz, properties: PropertyBag::from([("weight".to_string(), PropertyValue::Number(2.0))]) }];
+    document.edges = vec![DagHostDocumentEdge { id: "e1".into(), source: "a@out".into(), target: "b@in".into(), route_style: EdgeRouteStyle::SharpSz, properties: PropertyBag::from([("weight".to_string(), PropertyValue::Number(2.0))]) }];
     let deleted = round_trip(&document, &DagMutation::DeleteNode(DeleteNode { id: "a".into() }));
     assert!(deleted.nodes.iter().all(|node| node.id != "a"));
     assert!(deleted.edges.is_empty(), "the severed edge must be removed by the same delete-node diff, not left dangling");
@@ -210,8 +210,8 @@ fn kitchen_sink_snapshot() -> DagSnapshot {
         },
     ];
     let edges = vec![
-        DagFixtureEdge { id: "e1".into(), source: "slider@out".into(), target: "comp@in".into(), ..Default::default() },
-        DagFixtureEdge { id: "e2".into(), source: "comp@out".into(), target: "screen@in".into(), route_style: EdgeRouteStyle::SharpSz, properties: PropertyBag::from([("weight".to_string(), PropertyValue::Number(2.0))]) },
+        DagHostDocumentEdge { id: "e1".into(), source: "slider@out".into(), target: "comp@in".into(), ..Default::default() },
+        DagHostDocumentEdge { id: "e2".into(), source: "comp@out".into(), target: "screen@in".into(), route_style: EdgeRouteStyle::SharpSz, properties: PropertyBag::from([("weight".to_string(), PropertyValue::Number(2.0))]) },
     ];
     DagSnapshot { schema: DAG_DOCUMENT_SCHEMA.into(), nodes, edges }
 }

@@ -10,7 +10,7 @@ use framework_schema::ArtifactSchema;
 #[artifact_schema(id = "s.norm.en1998")]
 pub struct En1998Diff {
     #[state(artifact)]
-    pub artifact: Option<Box<crate::document_schema::En1998Artifact>>,
+    pub artifact: Option<Box<crate::artifact_schema::En1998Artifact>>,
     #[state(artifact)]
     pub seismic_zone: Option<u8>,
     #[state(artifact)]

@@ -36,6 +36,13 @@ class ToolRunActionsTestScript extends BundleScript {
   }
 }
 
+/** 🔁️ Runs the shared host-effect invocation fixture: which channel a guest's `dispatchAction` re-enters, the ONE rule both renderer targets read. */
+class HostEffectInvocationTestScript extends BundleScript {
+  async run(): Promise<void> {
+    await runTestBudgeted(process.execPath, ["test", join(this.root, "../../🔨️modules/🛂️manifest/🧪️tests/🔁️host-effect-invocation/🟦️.ts")], { cwd: this.repoRoot });
+  }
+}
+
 /** 🔽️ Runs the shared neutral closed-choice fixture through the native implementation. */
 class ActionChoicesTestScript extends BundleScript {
   async run(): Promise<void> {
@@ -125,6 +132,6 @@ class CheckScript extends BundleScript {
 }
 //#endregion 🔖️Typegen
 
-const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("test-action-choices", ActionChoicesTestScript).register("test-tool-run-actions", ToolRunActionsTestScript).register("test-core-modules", CoreModulesTestScript).register("test-package-descriptor-value-codec", PackageDescriptorValueCodecTestScript).register("test-wire-retirement-source", WireRetirementSourceScript).register("test-wire-retirement-native", WireRetirementNativeScript).register("generate", GenerateScript).register("preview-generated", PreviewGeneratedScript).register("check", CheckScript).register("lint", LintScript);
+const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("test-action-choices", ActionChoicesTestScript).register("test-tool-run-actions", ToolRunActionsTestScript).register("test-host-effect-invocation", HostEffectInvocationTestScript).register("test-core-modules", CoreModulesTestScript).register("test-package-descriptor-value-codec", PackageDescriptorValueCodecTestScript).register("test-wire-retirement-source", WireRetirementSourceScript).register("test-wire-retirement-native", WireRetirementNativeScript).register("generate", GenerateScript).register("preview-generated", PreviewGeneratedScript).register("check", CheckScript).register("lint", LintScript);
 
 await runBundleScriptMain(router, import.meta.url, { defaultCommand: "test" });

@@ -42,10 +42,12 @@ import {
   type NodeTypes,
 } from "@semio-tech/ui-react";
 import {
+  createContinuousGestureLane,
   nodeGraphActions,
   parseViewport2d,
   windowElementId,
   type ActionDescriptor,
+  type ContinuousGestureLane,
   type ComponentSceneHostProps,
   type ContextMenuItemSpec,
   type NodeGraphEdgeRecord,
@@ -67,6 +69,7 @@ import { mapContextMenuSpecs, parseJsonArray, parseSelectionDomainsFromSession, 
 import { createDemandFrameScheduler, createFlowSession, createGraphSession, isFlowGraphScene, type FlowTask, type FlowWasmSession } from "../🪪️WasmSessionLoader/🟦️.tsx";
 import { useAppKeybindingsByActionId, useMapContextMenuSpecs } from "../🏛️ShellHost/🟦️.tsx";
 import { useUIFindSafe } from "../🔎️ShellSearch/🟦️.tsx";
+import { hopTrace } from "../../../../../../../🔨️modules/⏱️trace/🟦️.ts";
 // #endregion 🔌️Adapters
 
 //#region 🔖️NodeGraphHost
@@ -690,12 +693,10 @@ function WasmGraphSurface({
   const sceneRef = useRef(scene);
   sceneRef.current = scene;
 
-  const dispatch = useCallback(
-    (action: string, args?: Record<string, unknown>) => {
-      onAction({ controllerId, action, args: { surfaceId, ...args } });
-    },
-    [controllerId, onAction, surfaceId],
-  );
+  const dispatch = useCallback((action: string, args?: Record<string, unknown>) => onAction({ controllerId, action, args: { surfaceId, ...args } }), [controllerId, onAction, surfaceId]);
+  const dispatchRef = useRef(dispatch);
+  dispatchRef.current = dispatch;
+  const { sliderLane, beginSliderGesture } = useGraphSliderLanes(surfaceId, dispatchRef);
 
   const mapContextMenu = useMapContextMenuSpecs(dispatch);
   const shellContextMenuFallback = useShellContextMenuFallback();
@@ -824,7 +825,6 @@ function WasmGraphSurface({
       dispatch(nodeGraphActions.select, nodeGraphSelectionActionArgs({ nodeIds }));
       const hovered = session.hoveredNodeId();
       dispatch(nodeGraphActions.hover, nodeGraphHoverActionArgs(hovered));
-      dispatch(nodeGraphActions.viewport, nodeGraphViewportActionArgs(parseNodeGraphSessionViewport(session.viewport())));
       const openId = session.takePendingOpenInstanceId?.();
       if (openId) dispatch("openInstance", { instanceId: openId });
     } catch {
@@ -837,8 +837,8 @@ function WasmGraphSurface({
     const session = sessionRef.current;
     if (!session?.fixtureJson) return;
     try {
-      const fixtureJson = session.fixtureJson();
-      dispatch(nodeGraphActions.edit, { operations: [{ operation: "setFixture", fixtureJson }] });
+      const hostDocumentJson = session.fixtureJson();
+      dispatch(nodeGraphActions.edit, { operations: [{ operation: "setHostDocument", hostDocumentJson }] });
     } catch {
       /* session not ready */
     }
@@ -999,7 +999,16 @@ function WasmGraphSurface({
           }}
         />
       ) : null}
-      <GraphSliderOverlays scopeId={JSON.stringify([windowInstanceId, controllerId, surfaceId])} stateJson={sliderStateJson} logicalW={overlaySize.w} logicalH={overlaySize.h} editable={editable} onSliderChange={(widgetId, value) => dispatch(nodeGraphActions.edit, { operator: "setSlider", widgetId, value })} />
+      <GraphSliderOverlays
+        scopeId={JSON.stringify([windowInstanceId, controllerId, surfaceId])}
+        stateJson={sliderStateJson}
+        logicalW={overlaySize.w}
+        logicalH={overlaySize.h}
+        editable={editable}
+        onSliderChange={(widgetId, value) => sliderLane(widgetId).offer(value)}
+        onSliderCommit={(widgetId, value) => sliderLane(widgetId).commit(value)}
+        onSliderPointerDown={beginSliderGesture}
+      />
       <CanvasPickMenu request={pickInteraction.pickMenu} hoveredKey={pickInteraction.menuHoveredKey} onHoverKey={pickInteraction.onMenuHoverKey} onPick={pickInteraction.onMenuPick} onDismiss={pickInteraction.dismissPickMenu} />
       <ContextMenuController
         title={contextMenuTitleLabel}
@@ -1282,14 +1291,14 @@ export function NodeGraphHost({ node, onAction, requestContextMenu }: ComponentS
 
   if (!scene) return <div className="semio-node-graph-empty">{emptySceneLabel}</div>;
 
-  const useFlowEngine = isFlowGraphScene(scene.capabilitiesJson) || Boolean(scene.fixtureJson);
+  const useFlowEngine = isFlowGraphScene(scene.capabilitiesJson) || Boolean(scene.hostDocumentJson);
 
   return (
     <div
       className={NODE_GRAPH_HOST_CLASS}
       data-surface-id={node.surfaceId}
       data-status-json={scene.statusJson ?? undefined}
-      data-fixture-json={scene.fixtureJson ?? undefined}
+      data-host-document-json={scene.hostDocumentJson ?? undefined}
       data-selection-json={JSON.stringify(nodeGraphSurfaceSelectionDomV1(scene))}
       tabIndex={editable ? 0 : undefined}
       onKeyDown={(event) => handleGraphKeyboard(event, editable, parsedNodes, dispatch)}
@@ -1937,6 +1946,50 @@ export function sceneToSyncJson(scene: NodeGraphScene): string {
   return JSON.stringify(scene);
 }
 
+//#region 🎚️SliderGestureLanes
+/** 🎚️ One coalescing lane per slider widget of a graph surface, plus the gesture identity its edits
+ * fold under.
+ *
+ * A dragged inline slider produces ~60 values a second. Sending one `nodeGraphEdit` per value costs
+ * one retained command, one document edit, one history entry and one preview re-evaluation EACH —
+ * measured on 6018 as 24 `toolRunStart`s and 29 history entries for ONE one-second drag, with the
+ * mesh arriving three seconds behind the thumb. The lane keeps only the value the user is on now and
+ * sends it when the previous round trip has landed (`📓️slider-preview-update-2026-09-15.md`).
+ *
+ * The gesture id is minted on press and travels with every edit of that press, so the guest folds a
+ * whole drag into ONE undoable edit and the next drag starts a new one.
+ *
+ * 🩸️ Before this, the overlay dispatched `setGraphParameter` — an action NO app declares. The shell
+ * dropped every tick (`dropped action "setGraphParameter" … no window kind declares it`), so the knob
+ * moved, the local flow session moved, and the document and the preview never did: the user's
+ * "moving a slider doesn't update the preview" in one line.
+ */
+function useGraphSliderLanes(surfaceId: string, dispatchRef: React.RefObject<(action: string, args?: Record<string, unknown>) => void | Promise<void>>) {
+  const gestureIdsRef = useRef(new Map<string, string>());
+  const lanesRef = useRef(new Map<string, ContinuousGestureLane<number>>());
+  const beginSliderGesture = useCallback((widgetId: string) => {
+    gestureIdsRef.current.set(widgetId, `${surfaceId}:${widgetId}:${Date.now()}`);
+  }, [surfaceId]);
+  const sliderLane = useCallback(
+    (widgetId: string) => {
+      const existing = lanesRef.current.get(widgetId);
+      if (existing) return existing;
+      const lane = createContinuousGestureLane<number>({
+        send: (value, phase) =>
+          dispatchRef.current?.(nodeGraphActions.edit, {
+            operations: [{ operation: "setSlider", widgetId, value, gesture: gestureIdsRef.current.get(widgetId) ?? `${surfaceId}:${widgetId}`, commit: phase === "commit" }],
+          }),
+        onFault: (error) => console.error("[DEBUG] graph slider dispatch failed", error),
+      });
+      lanesRef.current.set(widgetId, lane);
+      return lane;
+    },
+    [dispatchRef, surfaceId],
+  );
+  return { sliderLane, beginSliderGesture };
+}
+//#endregion 🎚️SliderGestureLanes
+
 //#region DagDomOverlays
 export function GraphSliderOverlays({
   scopeId,
@@ -1945,6 +1998,7 @@ export function GraphSliderOverlays({
   logicalH,
   editable,
   onSliderChange,
+  onSliderCommit,
   onSliderPointerDown,
   onSliderPointerUp,
   occluderRect = null,
@@ -1955,8 +2009,9 @@ export function GraphSliderOverlays({
   readonly logicalH: number;
   readonly editable: boolean;
   readonly onSliderChange: (widgetId: string, value: number) => void;
-  readonly onSliderPointerDown?: () => void;
-  readonly onSliderPointerUp?: () => void;
+  readonly onSliderCommit?: (widgetId: string, value: number) => void;
+  readonly onSliderPointerDown?: (widgetId: string) => void;
+  readonly onSliderPointerUp?: (widgetId: string) => void;
   readonly occluderRect?: { readonly x: number; readonly y: number; readonly width: number; readonly height: number } | null;
 }) {
   const camera = parseDagOverlayCamera(stateJson);
@@ -1993,9 +2048,10 @@ export function GraphSliderOverlays({
               disabled={!editable}
               showValue={false}
               onValueChange={(values) => onSliderChange(slider.widgetId, values[0] ?? slider.value)}
-              onPointerDown={onSliderPointerDown}
-              onPointerUp={onSliderPointerUp}
-              onPointerCancel={onSliderPointerUp}
+              onPointerDown={() => onSliderPointerDown?.(slider.widgetId)}
+              onPointerUp={() => onSliderPointerUp?.(slider.widgetId)}
+              onPointerCancel={() => onSliderPointerUp?.(slider.widgetId)}
+              onValueCommit={(values) => onSliderCommit?.(slider.widgetId, values[0] ?? slider.value)}
             />
           </div>
         );
@@ -2077,6 +2133,32 @@ function observeFlowTask<T>(session: FlowWasmSession, feature: string, task: Flo
     task.cancel();
     if (features?.get(feature) === task) features.delete(feature);
   };
+}
+
+/** 🧊️ Whether an overlay read produced the same picture as the last pass. Every pass re-parses its
+ * JSON into fresh objects, so a plain `setState` would change the reference 60 times a second during
+ * a gesture and commit the surface's whole React subtree for a picture that did not move. */
+function sameOverlayValue(left: unknown, right: unknown): boolean {
+  return left === right || JSON.stringify(left ?? null) === JSON.stringify(right ?? null);
+}
+
+/** 🖱️ Issues one gesture STEP — a wheel tick, a pointer down/move/up, a slider write — and never
+ * pre-empts the previous one.
+ *
+ * `observeFlowTask` keeps one task per feature key and cancels the previous, which is right for a
+ * query whose answer is superseded and wrong for an input event: a cancelled `wheelScreen` that had
+ * not reached the session yet is a zoom tick the board NEVER applies, so a fast scroll silently
+ * loses travel, and a cancelled `pointerMoveScreen` is a drag step the gesture never sees. A step is
+ * an increment on board state; it has no successor that could carry its delta.
+ *
+ * The session's own operation order is the serialization, so steps stay in the order the user made
+ * them; a closed session rejects them all and the whole surface is going away anyway. */
+function issueFlowGestureStep<T>(task: FlowTask<T>, consume?: (value: T) => void): void {
+  const unsubscribe = task.subscribe(() => {});
+  void task.result
+    .then((value) => consume?.(value))
+    .catch(() => {})
+    .finally(unsubscribe);
 }
 
 async function readFlowTask<T>(task: FlowTask<T>): Promise<T> {
@@ -2183,7 +2265,7 @@ function syncFlowSessionAppCatalogue(session: FlowWasmSession, catalogue: AppCat
 
 function syncFlowSessionStructureFromScene(session: FlowWasmSession, scene: NodeGraphScene, catalogue: AppCatalogue, skipFixture = false): void {
   if (scene.operators?.length) syncFlowOperatorInfos(session, catalogue, scene);
-  if (!skipFixture && scene.fixtureJson) sendFlowPayloadOnce(session, "synchronizeDocumentJson", scene.fixtureJson, (json) => session.synchronizeDocumentJson(json));
+  if (!skipFixture && scene.hostDocumentJson) sendFlowPayloadOnce(session, "synchronizeDocumentJson", scene.hostDocumentJson, (json) => session.synchronizeDocumentJson(json));
   if (scene.selection) observeFlowTask(session, "setSelection", session.setSelection(JSON.stringify(scene.selection)));
   applyNodeGraphHoverFromScene(session, scene.hover);
   if (scene.previewOffJson) observeFlowTask(session, "setPreviewOff", session.setPreviewOff(scene.previewOffJson));
@@ -2233,6 +2315,58 @@ function syncFlowSessionFromScene(session: FlowWasmSession, scene: NodeGraphScen
 //#region FlowGraphCanvasHost
 export function flowSurfaceRenderAllowed(surfaceReady: boolean): boolean {
   return surfaceReady;
+}
+
+/** ⏲️ How long after the last wheel tick a zoom gesture counts as settled. Long enough that one
+ * continuous scroll is ONE gesture on a trackpad's own inter-tick spacing, short enough that the
+ * camera the next open honours is published while the user still thinks of it as this gesture. */
+export const FLOW_CAMERA_GESTURE_SETTLE_MS = 140;
+
+/** 🔌️ What a camera gesture needs from its host, injected so a law drives the real rule over a
+ * virtual clock instead of a browser. */
+export type FlowCameraGesturePorts = Readonly<{
+  readonly begin: (reason: string) => void;
+  readonly end: (reason: string) => void;
+  readonly invalidate: () => void;
+  readonly publish: () => void;
+  readonly schedule: (run: () => void, delayMs: number) => unknown;
+  readonly cancel: (handle: unknown) => void;
+}>;
+
+/** 🎥️ The camera-gesture rule, as one unit: N ticks open ONE gesture and repaint through the
+ * scheduler, and the plugin hears about the camera exactly once, when the ticks stop.
+ *
+ * A wheel gesture has no release event, so its end is the absence of the next tick — every tick
+ * restarts the settle. Publishing per tick instead cost a `performInvocation` → `refreshUi` → React
+ * commit for every notch of the wheel; publishing never would lose the camera the next open honours. */
+export function createFlowCameraGesture(ports: FlowCameraGesturePorts, settleMs: number = FLOW_CAMERA_GESTURE_SETTLE_MS) {
+  let settle: unknown = null;
+  return {
+    tick(): void {
+      if (settle === null) ports.begin("wheel");
+      else ports.cancel(settle);
+      settle = ports.schedule(() => {
+        settle = null;
+        ports.end("wheel");
+        ports.publish();
+      }, settleMs);
+      ports.invalidate();
+    },
+    active(): boolean {
+      return settle !== null;
+    },
+    dispose(): void {
+      if (settle !== null) ports.cancel(settle);
+      settle = null;
+    },
+  };
+}
+
+/** 🎥️ Whether a press starts a camera PAN rather than a content gesture — the middle button, or a
+ * pointer already held on it. A pan moves the board's own camera and changes neither selection nor
+ * fixture, so its release owes the plugin one viewport publication and nothing else. */
+export function flowGestureIsCameraPan(button: number, buttons: number): boolean {
+  return button === 1 || buttons === 4;
 }
 
 /** 🪧️ The one frame verdict this host has to act on — `FlowPresentation.unpresentable` in
@@ -2288,7 +2422,6 @@ export function FlowGraphCanvasHost({
     readonly widgetId?: string;
   } | null>(null);
   const contextMenuTitleLabel = useLabel(contextMenu?.titleKey ?? "ui.surfaceContextMenu.flow");
-  const fitGraphLabel = useLabel("ui.nodeGraph.fitGraph");
   const [wireRefusal, setWireRefusal] = useState<DagWireTypeRefusal | null>(null);
   const portTypeLabels = usePortTypeLabels();
   const wireRefusalText = useLabel("ui.nodeGraph.incompatiblePorts", wireRefusalLabelOptions(wireRefusal, portTypeLabels));
@@ -2332,7 +2465,7 @@ export function FlowGraphCanvasHost({
     const registry = (host.__semioFlowGraphProbe ??= {});
     registry[surfaceId] = {
       entity: (domain, id) => resolver.entity?.(domain, id) ?? null,
-      fixtureJson: () => sceneRef.current.fixtureJson ?? null,
+      fixtureJson: () => sceneRef.current.hostDocumentJson ?? null,
       rect: () => {
         const measured = containerRef.current?.getBoundingClientRect();
         return measured ? { x: measured.x, y: measured.y, width: measured.width, height: measured.height } : null;
@@ -2343,10 +2476,12 @@ export function FlowGraphCanvasHost({
     };
   }, [surfaceId]);
 
+  // 🔁️ Returns what `onAction` returns. `ComponentSceneHostProps.onAction` is declared
+  // `void | Promise<void>` — a settling shell answers with the promise, and dropping it here is what
+  // left every continuous gesture (a dragged slider) with no way to know when its last value had
+  // landed, so it could only queue one round trip per tick.
   const dispatch = useCallback(
-    (action: string, args?: Record<string, unknown>) => {
-      onAction({ controllerId, action, args: { surfaceId, ...args } });
-    },
+    (action: string, args?: Record<string, unknown>) => onAction({ controllerId, action, args: { surfaceId, ...args } }),
     [controllerId, onAction, surfaceId],
   );
 
@@ -2368,9 +2503,9 @@ export function FlowGraphCanvasHost({
         if (host) openSpotlightAtClient(x, y, host);
         return;
       }
-      dispatch(action, action === "openInstance" ? { ...args, instanceId: resolveFixtureWidgetInstanceId(scene.fixtureJson, widgetId) } : args);
+      dispatch(action, action === "openInstance" ? { ...args, instanceId: resolveFixtureWidgetInstanceId(scene.hostDocumentJson, widgetId) } : args);
     },
-    [dispatch, scene.fixtureJson],
+    [dispatch, scene.hostDocumentJson],
   );
 
   // 🧵️ Dispatches the mutated fixture to the plugin and returns immediately — evaluation happens
@@ -2380,39 +2515,94 @@ export function FlowGraphCanvasHost({
     const session = sessionRef.current;
     if (!session) return;
     observeFlowTask(session, "documentJson:commit", session.documentJson(), (value) => {
-      dispatch(nodeGraphActions.edit, { operations: [{ operation: "setFixture", fixtureJson: flowJsonText(value) }] });
+      dispatch(nodeGraphActions.edit, { operations: [{ operation: "setHostDocument", hostDocumentJson: flowJsonText(value) }] });
     });
   }, [dispatch]);
 
   /** 🔗️ What a released gesture did, read out of `pointerUpScreen`'s own result — the gesture answers
    * for itself, so there is no second round trip and no window in which a later read could drain the
-   * journal first. Shape: `{operations:[…],fixtureChanged:boolean}` — `operations` in the guest's own
+   * journal first. Shape: `{operations:[…],hostDocumentChanged:boolean}` — `operations` in the guest's own
    * `nodeGraphEdit` sub-operation vocabulary (`connect` with four ids, `disconnect` with a synapse
    * id), the identical payload the wgpu renderer writes (`⚙️EngineCanvas/🎯️targets/🧊️wgpu`'s
-   * `write_graph_edit_action`); `fixtureChanged` the host's own content predicate
+   * `write_graph_edit_action`); `hostDocumentChanged` the host's own content predicate
    * (`🌊️flow/🖥️host/🦀️.rs`'s `commit_gesture_history`), which is the ONLY thing that may authorise the
    * whole-fixture commit. A gesture with neither changed nothing and is owed no dispatch at all. */
-  const graphGestureAnswer = useCallback((value: unknown): { readonly operations: readonly Record<string, unknown>[]; readonly fixtureChanged: boolean } => {
+  const graphGestureAnswer = useCallback((value: unknown): { readonly operations: readonly Record<string, unknown>[]; readonly hostDocumentChanged: boolean } => {
     try {
-      const parsed = JSON.parse(flowJsonText(value)) as { readonly operations?: unknown; readonly fixtureChanged?: unknown } | null;
+      const parsed = JSON.parse(flowJsonText(value)) as { readonly operations?: unknown; readonly hostDocumentChanged?: unknown } | null;
       const operations = parsed?.operations;
-      return { operations: Array.isArray(operations) ? (operations as readonly Record<string, unknown>[]) : [], fixtureChanged: parsed?.fixtureChanged === true };
+      return { operations: Array.isArray(operations) ? (operations as readonly Record<string, unknown>[]) : [], hostDocumentChanged: parsed?.hostDocumentChanged === true };
     } catch {
-      return { operations: [], fixtureChanged: false };
+      return { operations: [], hostDocumentChanged: false };
     }
   }, []);
 
-  const isGestureActiveRef = useRef(false);
+  /** 🤹 The gesture reasons holding this surface open right now. A surface can be under two at once
+   * (a wheel gesture arriving mid-drag), so "is a gesture active" is a set membership rather than a
+   * boolean that the second `end` would clear while the first still runs. */
+  const gestureReasonsRef = useRef<Set<string>>(new Set());
+  const cameraPanRef = useRef(false);
+  const isGestureActive = useCallback(() => gestureReasonsRef.current.size > 0, []);
+
+  /** 🎬️ Opens a gesture: the demand scheduler goes continuous for its duration, so every repaint the
+   * gesture asks for is coalesced onto a rAF instead of issued per input event. */
+  const beginGesture = useCallback((reason: string) => {
+    gestureReasonsRef.current.add(reason);
+    schedulerRef.current?.beginContinuous(reason);
+    schedulerRef.current?.invalidate();
+  }, []);
+
+  const endGesture = useCallback((reason: string) => {
+    if (!gestureReasonsRef.current.delete(reason)) return;
+    schedulerRef.current?.endContinuous(reason);
+    schedulerRef.current?.invalidate();
+  }, []);
+
+  /** 🎥️ Publishes the live board camera to the plugin — ONCE, when a camera gesture has settled.
+   *
+   * The camera is board state, not plugin state: `wheelScreen`/`pointerMoveScreen` move it and the
+   * board repaints from it with no guest involved. `nodeGraphViewport` exists so the NEXT open of
+   * this graph honours where the user left the view, which is a per-gesture fact, not a per-tick one.
+   * Dispatching it per wheel tick cost a `performInvocation` → `refreshUi` → React commit for every
+   * notch of the wheel: measured at 30 ticks → 5–9 guest hops, 1 board paint, and a median
+   * tick-to-paint of 653–1110 ms (`📓️flow-scroll-render-perf-2026-09-15.md` §2). */
+  const publishCameraRef = useRef<() => void>(() => {});
+  const publishCamera = useCallback(() => {
+    const session = sessionRef.current;
+    if (!session) return;
+    observeFlowTask(session, "viewport:settle", session.viewport(), (value) => {
+      dispatch(nodeGraphActions.viewport, nodeGraphViewportActionArgs(parseNodeGraphSessionViewport(value)));
+    });
+  }, [dispatch]);
+  publishCameraRef.current = publishCamera;
+
+  /** 🖱️ A wheel gesture has no release event, so its end is the absence of the next tick: every tick
+   * restarts {@link FLOW_CAMERA_GESTURE_SETTLE_MS}, and the gesture settles once when they stop. */
+  const wheelGesture = useMemo(
+    () =>
+      createFlowCameraGesture({
+        begin: beginGesture,
+        end: endGesture,
+        invalidate: () => schedulerRef.current?.invalidate(),
+        publish: () => publishCameraRef.current(),
+        schedule: (run, delayMs) => setTimeout(run, delayMs),
+        cancel: (handle) => clearTimeout(handle as ReturnType<typeof setTimeout>),
+      }),
+    [beginGesture, endGesture],
+  );
+
+  useEffect(() => () => wheelGesture.dispose(), [wheelGesture]);
 
   const handleGesturePointerDown = useCallback(() => {
-    isGestureActiveRef.current = true;
-    schedulerRef.current?.beginContinuous("gesture");
-  }, []);
+    beginGesture("gesture");
+  }, [beginGesture]);
+
+  const { sliderLane, beginSliderGesture } = useGraphSliderLanes(surfaceId, dispatchRef);
 
   /** 🏷️ Paints the label/slider/selection overlay, and COALESCES instead of pre-empting — the same
    * law `renderFlow` below carries, on the other canvas of this surface.
    *
-   * Each pass reads ten session queries through `observeFlowTask`, which keeps one task per feature
+   * Each pass reads eleven session queries through `observeFlowTask`, which keeps one task per feature
    * key and cancels the previous. A second pass starting while the first is in flight therefore
    * cancelled the first pass's own reads, its `Promise.all` rejected, and the overlay was NOT
    * painted. Since every invalidation calls this, the overlay painted exactly ONCE per session:
@@ -2449,7 +2639,8 @@ export function FlowGraphCanvasHost({
       readObservedFlowTask(session, "selectionPreviewPointsJson", session.selectionPreviewPointsJson()),
       readObservedFlowTask(session, "selectionPreviewCrossing", session.selectionPreviewCrossing()),
       readObservedFlowTask(session, "selectionPreviewMethod", session.selectionPreviewMethod()),
-    ]).then(([labelValue, selectedValue, preselectValue, dimmedValue, hoveredValue, sliderValue, boundsValue, pointsValue, crossingValue, methodValue]) => {
+      readObservedFlowTask(session, "hoveredChannelJson:overlay", session.hoveredChannelJson()),
+    ]).then(([labelValue, selectedValue, preselectValue, dimmedValue, hoveredValue, sliderValue, boundsValue, pointsValue, crossingValue, methodValue, channelValue]) => {
       if (request !== overlayRequestRef.current || sessionRef.current !== session || labelCanvasRef.current !== labelCanvas) return;
       const labelJson = flowJsonText(labelValue);
       setLabelStateJson((prev) => (prev === labelJson ? prev : labelJson));
@@ -2469,8 +2660,12 @@ export function FlowGraphCanvasHost({
       });
       const nextSliderJson = flowJsonText(sliderValue);
       setSliderStateJson((prev) => (prev === nextSliderJson ? prev : nextSliderJson));
-      setSelectionBounds(parseDagSelectionUnionBoundsScreen(flowJsonText(boundsValue)));
-      setMarquee(computeDagMarqueeOverlay(flowJsonText(pointsValue), flowBoolean(crossingValue), typeof methodValue === "string" ? methodValue : undefined));
+      const nextBounds = parseDagSelectionUnionBoundsScreen(flowJsonText(boundsValue));
+      setSelectionBounds((prev) => (sameOverlayValue(prev, nextBounds) ? prev : nextBounds));
+      const nextMarquee = computeDagMarqueeOverlay(flowJsonText(pointsValue), flowBoolean(crossingValue), typeof methodValue === "string" ? methodValue : undefined);
+      setMarquee((prev) => (sameOverlayValue(prev, nextMarquee) ? prev : nextMarquee));
+      const nextRefusal = parseDagWireTypeRefusalJson(flowJsonText(channelValue));
+      setWireRefusal((prev) => (sameOverlayValue(prev, nextRefusal) ? prev : nextRefusal));
     })
       .catch(() => {})
       .finally(() => {
@@ -2506,6 +2701,7 @@ export function FlowGraphCanvasHost({
       return;
     }
     renderInFlightRef.current = true;
+    const closePaint = hopTrace.open("surface.paint", { surfaceId });
     const task = session.renderCanvas(canvas);
     observeFlowTask(session, "renderCanvas", task, () => {
       if (drewOnceRef.current) return;
@@ -2518,6 +2714,7 @@ export function FlowGraphCanvasHost({
       })
       .catch(() => {})
       .finally(() => {
+        closePaint();
         renderInFlightRef.current = false;
         if (!renderDirtyRef.current) return;
         renderDirtyRef.current = false;
@@ -2586,16 +2783,14 @@ export function FlowGraphCanvasHost({
   }, [paintOverlays, renderFlow, syncSurfaceSize]);
 
   const handleGesturePointerUp = useCallback(() => {
-    isGestureActiveRef.current = false;
-    schedulerRef.current?.endContinuous("gesture");
-    schedulerRef.current?.invalidate();
+    endGesture("gesture");
     const session = sessionRef.current;
     if (session) {
       syncFlowSessionStructureFromScene(session, sceneRef.current, appCatalogueRef.current, true);
       renderFlow();
       paintOverlays();
     }
-  }, [paintOverlays, renderFlow]);
+  }, [endGesture, paintOverlays, renderFlow]);
 
   const emitInteractionState = useCallback(() => {
     const session = sessionRef.current;
@@ -2604,14 +2799,12 @@ export function FlowGraphCanvasHost({
       readObservedFlowTask(session, "selectionDomainsJson:interaction", session.selectionDomainsJson()),
       readObservedFlowTask(session, "hoveredWidgetId:interaction", session.hoveredWidgetId()),
       readObservedFlowTask(session, "hoveredChannelJson:interaction", session.hoveredChannelJson()),
-      readObservedFlowTask(session, "viewport:interaction", session.viewport()),
-    ]).then(([domainsValue, hoveredValue, channelValue, cameraValue]) => {
+    ]).then(([domainsValue, hoveredValue, channelValue]) => {
       const domains = parseSelectionDomainsFromSession(flowJsonText(domainsValue));
       dispatch(nodeGraphActions.select, nodeGraphSelectionActionArgs({ nodeIds: domains.nodes, edgeIds: domains.edges, handleIds: domains.handles }));
       const hovered = typeof hoveredValue === "string" ? hoveredValue : undefined;
       void channelValue;
       dispatch(nodeGraphActions.hover, nodeGraphHoverActionArgs(hovered));
-      dispatch(nodeGraphActions.viewport, nodeGraphViewportActionArgs(parseNodeGraphSessionViewport(cameraValue)));
     }).catch(() => {});
     paintOverlays();
   }, [dispatch, paintOverlays]);
@@ -2675,7 +2868,11 @@ export function FlowGraphCanvasHost({
         // 🖼️ The opening camera is decided HERE, once per surface, against the pane it actually got:
         // a stored camera that does not frame this graph loses to the fit, and the fit is persisted
         // as a viewport gesture so the next open honours it.
-        const opening = applyFlowStartupCamera(session, sceneRef.current, Math.round(rect.width), Math.round(rect.height));
+        // 🎥️ An attach that completes while the user is already driving the camera leaves the live
+        // camera alone: a surface can re-attach long after boot (a re-keyed subtree, a canvas that
+        // lost its device), and a framing decision landing mid-scroll both snaps the view away and
+        // publishes a viewport inside a gesture that owes the plugin exactly one, at its settle.
+        const opening = isGestureActive() ? { camera: { x: 0, y: 0, zoom: 1 }, fitted: false } : applyFlowStartupCamera(session, sceneRef.current, Math.round(rect.width), Math.round(rect.height));
         framedGraphSignatureRef.current = nodeGraphContentSignature(sceneRef.current.nodes);
         if (opening.fitted) {
           console.log("[DEBUG] node-graph fit on open surface=%s %s", surfaceId, JSON.stringify(opening.camera));
@@ -2714,7 +2911,7 @@ export function FlowGraphCanvasHost({
       attachment.cancel();
       cleanupAttached?.();
     };
-  }, [sessionReady, paintOverlays, renderFlow, surfaceId, syncSurfaceSize, canvasGeneration]);
+  }, [sessionReady, isGestureActive, paintOverlays, renderFlow, surfaceId, syncSurfaceSize, canvasGeneration]);
 
   useEffect(() => {
     const session = sessionRef.current;
@@ -2723,7 +2920,7 @@ export function FlowGraphCanvasHost({
     // fixture edits via `setSliderValue`; applying `scene.evalJson` here would install a stale baseline
     // (new slider seeds + old channel outputs) and wipe computing chrome mid-drag. Full resync waits for
     // `handleGesturePointerUp`.
-    if (!isGestureActiveRef.current) {
+    if (!isGestureActive()) {
       syncFlowSessionFromScene(session, scene, appCatalogueRef.current);
       // 🔀️ An example switch replaces the whole graph under a live camera. Only when the new graph
       // left the view entirely is the camera re-framed — an ordinary edit never moves it.
@@ -2736,7 +2933,11 @@ export function FlowGraphCanvasHost({
           readObservedFlowTask(session, "viewport:refit", session.viewport())
             .then((value) => {
               const live = sessionRef.current;
-              if (!live) return;
+              // 🎥️ A framing decision taken before the user grabbed the camera loses to the gesture:
+              // the read is asynchronous, so a refit armed by a graph change can land mid-scroll and
+              // both snap the view away under the user's hand and publish a viewport during a gesture
+              // that owes the plugin exactly one, at its settle.
+              if (!live || isGestureActive()) return;
               const fitted = refitFlowCameraIfContentLeftView(live, sceneRef.current, parseNodeGraphSessionViewport(value), Math.round(rect.width), Math.round(rect.height));
               if (!fitted) return;
               console.log("[DEBUG] node-graph refit after graph change surface=%s %s", surfaceId, JSON.stringify(fitted));
@@ -2753,7 +2954,7 @@ export function FlowGraphCanvasHost({
     renderFlow();
     paintOverlays();
     schedulerRef.current?.invalidate();
-  }, [sceneSignature, paintOverlays, renderFlow, scene, sessionReady, surfaceId]);
+  }, [sceneSignature, isGestureActive, paintOverlays, renderFlow, scene, sessionReady, surfaceId]);
 
   const flowGraphCanvasHostShellScope = useShellScopeOptional();
   useCanvasAppearanceSync(
@@ -2806,8 +3007,7 @@ export function FlowGraphCanvasHost({
           nodeGraphHoverActionArgs(typeof hoveredValue === "string" ? hoveredValue : undefined, hoveredChannel?.portId),
         );
       }).catch(() => {});
-      renderFlow();
-      paintOverlays();
+      schedulerRef.current?.invalidate();
     },
     onSelectTarget: () => {
       emitInteractionState();
@@ -2965,13 +3165,13 @@ export function FlowGraphCanvasHost({
           openSpotlightAtClient(event.clientX, event.clientY, event.currentTarget);
           return;
         }
-        const instanceId = resolveFixtureWidgetInstanceId(scene.fixtureJson, hovered);
+        const instanceId = resolveFixtureWidgetInstanceId(scene.hostDocumentJson, hovered);
         if (instanceId) {
           dispatch("openInstance", { instanceId });
         }
       });
     },
-    [dispatch, editable, openSpotlightAtClient, scene.fixtureJson],
+    [dispatch, editable, openSpotlightAtClient, scene.hostDocumentJson],
   );
 
   useEffect(() => clearGhostPreview, [clearGhostPreview]);
@@ -3001,35 +3201,13 @@ export function FlowGraphCanvasHost({
     });
   }, [appCatalogue, sessionReady, spotlight]);
 
-  /** 🖼️ `Fit graph`: frames the whole graph in the pane and persists the result exactly the way a pan
-   * or a zoom gesture is persisted (`nodeGraphViewport`), so the next open honours it. */
-  const fitGraphToView = useCallback(() => {
-    const session = sessionRef.current;
-    const container = containerRef.current;
-    if (!session || !container) return;
-    const content = dagContentBounds(sceneRef.current.nodes);
-    if (!content) return;
-    const rect = container.getBoundingClientRect();
-    const camera = dagFitCamera(content, Math.round(rect.width), Math.round(rect.height));
-    observeFlowTask(session, "setCamera", session.setCamera(camera.x, camera.y, camera.zoom));
-    framedGraphSignatureRef.current = nodeGraphContentSignature(sceneRef.current.nodes);
-    dispatch(nodeGraphActions.viewport, nodeGraphViewportActionArgs(camera));
-    renderFlow();
-    paintOverlays();
-    schedulerRef.current?.invalidate();
-  }, [dispatch, paintOverlays, renderFlow]);
-
   return (
     <div
       ref={containerRef}
       className="relative h-full w-full"
-      onKeyDown={(event) => {
-        if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.altKey) return;
-        if (isEditableGraphKeyTarget(event.target)) return;
-        if (event.key !== "f" && event.key !== "F") return;
-        event.preventDefault();
-        fitGraphToView();
-      }}
+      // 🧱️ The board paints itself; nothing inside this box may make the document relayout or
+      // restyle, so a gesture's 60 repaints never reach the shell's own style/layout work.
+      style={{ contain: "layout paint" }}
       onDragOver={onDragOverCanvas}
       onDragLeave={() => {
         if (!editable) return;
@@ -3102,17 +3280,6 @@ export function FlowGraphCanvasHost({
     >
       <canvas key={flowSurfaceCanvasKey(surfaceId, canvasGeneration)} ref={gpuCanvasRef} className="absolute inset-0 block h-full w-full" />
       <canvas ref={labelCanvasRef} className="pointer-events-none absolute inset-0 z-40" />
-      <button
-        type="button"
-        className="absolute left-2 top-2 z-50 rounded border border-border bg-panel/90 px-2 py-1 text-xs text-foreground hover:bg-active-base focus-visible:outline focus-visible:outline-2"
-        aria-keyshortcuts="F"
-        aria-label={fitGraphLabel}
-        title={fitGraphLabel}
-        onPointerDown={(event) => event.stopPropagation()}
-        onClick={fitGraphToView}
-      >
-        {fitGraphLabel}
-      </button>
       <GraphSliderOverlays
         scopeId={JSON.stringify([windowInstanceId, controllerId, surfaceId])}
         stateJson={sliderStateJson}
@@ -3124,12 +3291,16 @@ export function FlowGraphCanvasHost({
           const session = sessionRef.current;
           if (!session) return;
           observeFlowTask(session, "setSliderValue", session.setSliderValue(widgetId, value));
-          dispatch(nodeGraphActions.parameter, { widgetId, value });
+          sliderLane(widgetId).offer(value);
           renderFlow();
           paintOverlays();
         }}
-        onSliderPointerDown={handleGesturePointerDown}
-        onSliderPointerUp={handleGesturePointerUp}
+        onSliderCommit={(widgetId, value) => sliderLane(widgetId).commit(value)}
+        onSliderPointerDown={(widgetId) => {
+          beginSliderGesture(widgetId);
+          handleGesturePointerDown();
+        }}
+        onSliderPointerUp={() => handleGesturePointerUp()}
       />
       {selectionBounds ? (
         <>
@@ -3176,22 +3347,17 @@ export function FlowGraphCanvasHost({
             /* capture is unavailable for this pointer — the gesture still works inside the canvas */
           }
           pickInteraction.onCanvasPointerDown(client);
-          observeFlowTask(session, "pointerDownScreen", session.pointerDownScreen(event.clientX - rect.left, event.clientY - rect.top, event.button, event.shiftKey, event.metaKey || event.ctrlKey, event.altKey, event.button === 1 || event.buttons === 4));
-          renderFlow();
-          paintOverlays();
+          cameraPanRef.current = flowGestureIsCameraPan(event.button, event.buttons);
+          issueFlowGestureStep(session.pointerDownScreen(event.clientX - rect.left, event.clientY - rect.top, event.button, event.shiftKey, event.metaKey || event.ctrlKey, event.altKey, cameraPanRef.current));
+          handleGesturePointerDown();
         }}
         onPointerMove={(event) => {
           const session = sessionRef.current;
           if (!session) return;
           const rect = event.currentTarget.getBoundingClientRect();
-          const client = { x: event.clientX, y: event.clientY };
-          pickInteraction.onCanvasPointerMove(client);
-          observeFlowTask(session, "pointerMoveScreen", session.pointerMoveScreen(event.clientX - rect.left, event.clientY - rect.top, event.shiftKey, event.metaKey || event.ctrlKey, event.altKey));
-          readObservedFlowTask(session, "hoveredChannelJson:drag", session.hoveredChannelJson())
-            .then((value) => setWireRefusal(parseDagWireTypeRefusalJson(flowJsonText(value))))
-            .catch(() => {});
-          renderFlow();
-          paintOverlays();
+          pickInteraction.onCanvasPointerMove({ x: event.clientX, y: event.clientY });
+          issueFlowGestureStep(session.pointerMoveScreen(event.clientX - rect.left, event.clientY - rect.top, event.shiftKey, event.metaKey || event.ctrlKey, event.altKey));
+          schedulerRef.current?.invalidate();
         }}
         onPointerUp={(event) => {
           if (event.button === 2) return;
@@ -3206,7 +3372,9 @@ export function FlowGraphCanvasHost({
           }
           pickInteraction.onCanvasPointerUp(client, { shift: event.shiftKey, ctrlOrMeta: event.metaKey || event.ctrlKey, alt: event.altKey });
           setWireRefusal(null);
-          observeFlowTask(session, "pointerUpScreen", session.pointerUpScreen(event.clientX - rect.left, event.clientY - rect.top, event.shiftKey, event.metaKey || event.ctrlKey, event.altKey), (value) => {
+          const wasCameraPan = cameraPanRef.current;
+          cameraPanRef.current = false;
+          issueFlowGestureStep(session.pointerUpScreen(event.clientX - rect.left, event.clientY - rect.top, event.shiftKey, event.metaKey || event.ctrlKey, event.altKey), (value) => {
             // 🔗️ A gesture that wired or cut dispatches THAT — four ids, or one synapse id — and never
             // the whole fixture on top of it: the guest replays the narrow intent and re-publishes the
             // graph itself, so a second `setFixture` would only race its own result.
@@ -3216,13 +3384,16 @@ export function FlowGraphCanvasHost({
             // pan and a press that grabbed nothing change nothing, and used to dispatch a whole-fixture
             // `nodeGraphEdit` all the same — a retained command per click, and a re-armed preview
             // evaluation on a shell nobody touched.
-            const { operations, fixtureChanged } = graphGestureAnswer(value);
+            const { operations, hostDocumentChanged } = graphGestureAnswer(value);
             if (operations.length > 0) console.log("[DEBUG] node graph wire edit dispatch", JSON.stringify(operations));
             if (operations.length > 0) dispatch(nodeGraphActions.edit, { operations });
-            else if (fixtureChanged) commitFixture();
+            else if (hostDocumentChanged) commitFixture();
           });
-          renderFlow();
-          emitInteractionState();
+          handleGesturePointerUp();
+          // 🎥️ A pan moved the camera and nothing else, so its settle owes the plugin the viewport and
+          // never a selection/hover round trip the board's own state did not change.
+          if (wasCameraPan) publishCameraRef.current();
+          else emitInteractionState();
         }}
         onPointerLeave={() => {
           setWireRefusal(null);
@@ -3235,12 +3406,8 @@ export function FlowGraphCanvasHost({
           if (!session) return;
           const rect = event.currentTarget.getBoundingClientRect();
           const delta = event.deltaMode === 1 ? event.deltaY * 16 : event.deltaMode === 2 ? event.deltaY * 400 : event.deltaY;
-          observeFlowTask(session, "wheelScreen", session.wheelScreen(event.clientX - rect.left, event.clientY - rect.top, 0, delta, true));
-          renderFlow();
-          observeFlowTask(session, "viewport:wheel", session.viewport(), (value) => {
-            dispatch(nodeGraphActions.viewport, nodeGraphViewportActionArgs(parseNodeGraphSessionViewport(value)));
-          });
-          paintOverlays();
+          issueFlowGestureStep(session.wheelScreen(event.clientX - rect.left, event.clientY - rect.top, 0, delta, true));
+          wheelGesture.tick();
         }}
       />
       {wireRefusal ? (

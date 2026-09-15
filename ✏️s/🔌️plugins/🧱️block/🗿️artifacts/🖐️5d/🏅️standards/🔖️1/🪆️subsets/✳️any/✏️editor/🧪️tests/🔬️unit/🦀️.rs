@@ -98,7 +98,7 @@ async fn the_manifest_stitches_every_taxonomy_node() {
     let definition = create_block5d_app();
     assert_eq!(definition.modes.len(), 1);
     assert_eq!(definition.window_kinds.len(), 2);
-    for body_key in [document_panel::BLOCK5D_BODY_DOCUMENT, inspection_panel::BLOCK5D_BODY_INSPECTOR] {
+    for body_key in [document_panel::BLOCK5D_BODY_ARTIFACT, inspection_panel::BLOCK5D_BODY_INSPECTOR] {
         assert!(definition.panel_tabs.iter().any(|tab| tab.body_key.as_deref() == Some(body_key)), "panel tab {body_key} is stitched into the manifest");
     }
     assert!(definition.artifact_kinds.iter().any(|kind| kind.id == "kit.catalog"));
@@ -141,7 +141,7 @@ async fn interaction_topology_nests_grips_under_their_grip_kind() {
 #[semio_framework_async_macros::async_test]
 async fn block5d_io_declares_the_catalog_out_port() {
     let io = block5d_io();
-    assert_eq!(io.document_schema, BLOCK_5D_SCHEMA);
+    assert_eq!(io.artifact_schema, BLOCK_5D_SCHEMA);
     let ports = io.all_ports().await;
     let catalog = ports.iter().find(|port| port.id == "catalog:out").expect("catalog:out port declared");
     assert_eq!(catalog.kind_id.as_deref(), Some("kit.catalog"));
@@ -159,7 +159,7 @@ async fn an_unknown_body_key_falls_back_to_a_text_node() {
 #[semio_framework_async_macros::async_test]
 async fn renders_document_tree_board_and_world() {
     let mut app: Block5dApp = new_app().await;
-    assert!(context::render(&mut app, document_panel::BLOCK5D_BODY_DOCUMENT).await.contains("Grip Kinds"));
+    assert!(context::render(&mut app, document_panel::BLOCK5D_BODY_ARTIFACT).await.contains("Grip Kinds"));
     assert!(context::render(&mut app, board::BLOCK5D_BODY_BOARD).await.contains("2d grips"));
     assert!(context::render(&mut app, world::BLOCK5D_BODY_WORLD).await.contains("mesh:"));
 }

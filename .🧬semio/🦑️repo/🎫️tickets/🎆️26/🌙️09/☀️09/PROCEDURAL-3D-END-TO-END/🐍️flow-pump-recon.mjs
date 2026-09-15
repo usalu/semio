@@ -1,0 +1,31 @@
+import { chromium } from "playwright";
+const url = "http://127.0.0.1:6022/?plugin=generation3d&example=hexagonal-mushroom-column";
+const browser = await chromium.launch({ headless: true, args: ["--enable-unsafe-webgpu", "--ignore-gpu-blocklist", "--use-angle=metal"] });
+const page = await browser.newPage({ viewport: { width: 1600, height: 1000 } });
+const logs = [];
+page.on("console", (m) => { const t = m.text(); if (t.includes("flow surface created") || t.includes("node-graph")) logs.push(t.slice(0, 200)); });
+await page.goto(url, { waitUntil: "domcontentloaded" });
+const ready = async () => page.evaluate(() => { const r = window.__semioFlowGraphProbe ?? {}; const e = Object.values(r)[0]; const rect = e?.rect?.(); let w=0; try { w = (JSON.parse(e?.fixtureJson?.() ?? "{}").widgets ?? []).length; } catch {} return rect && w >= 3 ? { ...rect, widgets: w } : null; });
+let rect = null;
+for (let i = 0; i < 90; i += 1) { await page.waitForTimeout(1000); rect = await ready(); if (rect) break; }
+console.log("[DEBUG] rect", JSON.stringify(rect));
+console.log(logs.join("\n"));
+const snap = () => page.evaluate(() => ({ ...(globalThis.__flowPumpStats ?? {}) }));
+await page.waitForTimeout(2000);
+const idle0 = await snap();
+await page.waitForTimeout(2000);
+const idle1 = await snap();
+console.log("[DEBUG] idle 2s delta", JSON.stringify(Object.fromEntries(Object.keys(idle1).filter((k)=>typeof idle1[k]==="number").map((k) => [k, Math.round((idle1[k] - idle0[k])*10)/10]))));
+console.log("[DEBUG] idle kinds", JSON.stringify(idle1.kinds), "ops", JSON.stringify(idle1.ops), "progressOps", JSON.stringify(idle1.progressOps));
+const cx = Math.round(rect.x + rect.width / 2), cy = Math.round(rect.y + rect.height / 2);
+await page.mouse.move(cx, cy);
+const a = await snap();
+const t0 = Date.now();
+for (let i = 0; i < 30; i += 1) { await page.mouse.wheel(0, -120); await page.waitForTimeout(16); }
+await page.waitForTimeout(1500);
+const b = await snap();
+console.log("[DEBUG] wheel window wall", Date.now() - t0, "delta", JSON.stringify(Object.fromEntries(Object.keys(b).filter((k)=>typeof b[k]==="number").map((k) => [k, Math.round((b[k] - a[k]) * 10) / 10]))));
+console.log("[DEBUG] wheel kinds", JSON.stringify(b.kinds), "ops", JSON.stringify(b.ops));
+const paints = await page.evaluate(() => performance.getEntriesByType("measure").filter((e) => e.name === "semio.hop.surface.paint").map((e) => ({ s: Math.round(e.startTime), d: Math.round(e.duration) })));
+console.log("[DEBUG] paint spans", JSON.stringify(paints.slice(-8)));
+await browser.close();

@@ -61,8 +61,8 @@ mod window_kits_tests {
         assert_ne!(mesh_en, mesh_de);
 
         let (document_en, document_de) = label_en_de(&DocumentWindowKit::window_kind().label).await;
-        assert_eq!(document_en, "Document");
-        assert_eq!(document_de, "Dokument");
+        assert_eq!(document_en, "Artifact");
+        assert_eq!(document_de, "Artefakt");
         assert_ne!(document_en, document_de);
 
         let (media_en, media_de) = label_en_de(&MediaWindowKit::window_kind().label).await;

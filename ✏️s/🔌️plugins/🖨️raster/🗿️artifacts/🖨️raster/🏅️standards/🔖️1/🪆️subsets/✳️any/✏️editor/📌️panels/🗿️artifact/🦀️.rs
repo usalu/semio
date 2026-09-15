@@ -18,7 +18,7 @@ pub const RASTER_PLAY_BODY_LAYERS: &str = "raster.play.layers";
 pub fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_ARTIFACT_ID.into()),
-        label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Dokument"),
+        label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Artefakt"),
         group: PanelGroup::Workbench,
         body_key: Some(RASTER_PLAY_BODY_LAYERS.into()),
         children: Vec::new(),

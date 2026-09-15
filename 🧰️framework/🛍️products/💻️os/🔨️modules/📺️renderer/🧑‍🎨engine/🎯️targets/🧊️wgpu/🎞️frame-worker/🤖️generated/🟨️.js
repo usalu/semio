@@ -269,6 +269,20 @@ function viewContextWithIntegerCarriers(view, mint) {
   }
   return { ...view, toolRunTraceCursorByWindowId: carried };
 }
+function hostEffectInvocationV1(scope, appCommandIds, action, args) {
+  if (appCommandIds.includes(action)) {
+    return { kind: "command", invocation: { address: { owner: { app: { pluginId: scope.pluginId, appId: scope.appId } }, commandId: action }, arguments: { ...args } } };
+  }
+  const invocation = {
+    address: { pluginId: scope.pluginId, appId: scope.appId, modeId: scope.modeId, windowKindId: scope.windowKindId, windowInstanceId: scope.windowInstanceId, actionId: action },
+    arguments: { ...args, windowId: scope.windowInstanceId }
+  };
+  return { kind: "action", invocation };
+}
+function appCommandIdsV1(manifest, appId) {
+  const app = manifest.apps.find((entry) => entry.id === appId);
+  return (app?.commands ?? []).map((command) => String(command.id ?? "")).filter((id) => id.length > 0);
+}
 if (undefined) {}
 /* owned-wgpu:🧰️framework/🔨️modules/🔏️hash/🟦️.ts */
 var BLAKE3_IV = new Uint32Array([1779033703, 3144134277, 1013904242, 2773480762, 1359893119, 2600822924, 528734635, 1541459225]);
@@ -528,6 +542,7 @@ var WORLD3D_EMPTY_COMPUTE_STATUS = Object.freeze({
   computing: false,
   phase: "idle",
   phaseLabel: null,
+  hint: "",
   unitsDone: 0,
   unitsTotal: 0,
   facesDone: 0,
@@ -7503,7 +7518,7 @@ var _catalog_default = {
     TiledMapScene: { fields: [["mapFixtureJson", "text"], ["cameraJson", "text"], ["renderMode", "text"], ["vectorStyle", "text"], ["lodMode", "text"], ["tileUrlTemplate", "text"], ["vectorTileUrlTemplate", "text"], ["layerVisibilityJson", "text"], ["layerStrokeScaleJson", "text"], ["selectionJson", "text"], ["hoverJson", "text"], ["selectionMethod", "text"], ["selectionMode", "text"]], defaults: { renderMode: "combined", vectorStyle: "colored", lodMode: "automatic", tileUrlTemplate: "/osm/{z}/{x}/{y}.png", vectorTileUrlTemplate: "/vt/{z}/{x}/{y}.pbf", layerVisibilityJson: "{}", layerStrokeScaleJson: "{}", selectionJson: "{}", hoverJson: "null", selectionMethod: "rectangle", selectionMode: "default" } },
     Board2dScene: { fields: [["fixtureJson", "text"], ["cameraJson", "text"], ["glyphCatalogsJson", "text"], ["selectionJson", "text"], ["interactive", "bool"], ["hoveredId", "?text"], ["activeUtility", "?text"], ["selectionMethod", "text"], ["gridSnapEnabled", "bool"], ["gridFactor", "f64"], ["suggestionOffset", "f64"], ["brushWeightsJson", "text"], ["placementCompatibilityJson", "text"], ["lodMode", "text"]] },
     IconRenderScene: { fields: [["requestJson", "text"], ["footer", "?text"], ["frameJson", "?text"]] },
-    InkCanvasScene: { fields: [["documentJson", "text"], ["selectionJson", "text"], ["hoveredId", "?text"], ["activeUtility", "text"], ["viewMode", "text"], ["interactive", "bool"]], defaults: { selectionJson: "[]", interactive: false } },
+    InkCanvasScene: { fields: [["artifactJson", "text"], ["selectionJson", "text"], ["hoveredId", "?text"], ["activeUtility", "text"], ["viewMode", "text"], ["interactive", "bool"]], defaults: { selectionJson: "[]", interactive: false } },
     GraphTimelineScene: { fields: [["columnsJson", "text"]] },
     BlockListScene: { fields: [["stepsJson", "text"], ["paletteJson", "text"], ["selectedId", "?text"], ["draggingId", "?text"], ["domainId", "?text"]] },
     DiffViewScene: { fields: [["before", "text"], ["after", "text"], ["language", "?text"], ["mode", "?text"], ["domainId", "?text"]] },
@@ -15824,7 +15839,7 @@ function publishShardWorkerTurnSpans(timings, answeredAtEpochMs, actorId) {
   const finite2 = (value) => typeof value === "number" && Number.isFinite(value);
   if (!finite2(timings.receivedAtEpochMs))
     return;
-  const detail = { actorId, events: finite2(timings.events) ? timings.events : 0, eventKinds: typeof timings.eventKinds === "string" ? timings.eventKinds : "", replyCloneMs: finite2(timings.previousReplyCloneMs) ? Math.round(timings.previousReplyCloneMs * 100) / 100 : -1, patches: finite2(timings.patches) ? timings.patches : 0, status: typeof timings.status === "string" ? timings.status : "", commandPageBytes: finite2(timings.commandPageBytes) ? timings.commandPageBytes : 0 };
+  const detail = { actorId, events: finite2(timings.events) ? timings.events : 0, eventKinds: typeof timings.eventKinds === "string" ? timings.eventKinds : "", replyCloneMs: finite2(timings.previousReplyCloneMs) ? Math.round(timings.previousReplyCloneMs * 100) / 100 : -1, patches: finite2(timings.patches) ? timings.patches : 0, status: typeof timings.status === "string" ? timings.status : "", commandPageBytes: finite2(timings.commandPageBytes) ? timings.commandPageBytes : 0, drivePolls: finite2(timings.drivePolls) ? timings.drivePolls : -1, driveSteps: finite2(timings.driveSteps) ? timings.driveSteps : -1, driveStopped: typeof timings.driveStopped === "string" ? timings.driveStopped : "" };
   const span = (stage, fromEpochMs, toEpochMs) => {
     if (!finite2(fromEpochMs) || !finite2(toEpochMs) || toEpochMs < fromEpochMs)
       return;
@@ -16840,6 +16855,8 @@ class ShardClient {
       this.recordHeartbeat(slot, message.turnSeq, this.now(), message.phase ?? null);
       return;
     }
+    if (message.kind === "result" && message.beat && typeof message.beat.turnSeq === "number")
+      this.recordHeartbeat(slot, message.beat.turnSeq, this.now(), message.beat.phase ?? null);
     if (message.kind === "worker-fault") {
       const detail = formatShardWorkerFault(slot.index, message);
       console.error(`[DEBUG] ${detail}`, message.stack ?? "");
@@ -22827,7 +22844,7 @@ function validateArtifactBootstrapHeader(bootstrap, inline, limits) {
     throw artifactBootstrapError("artifact schema length is invalid");
   if (kindBytes === 0 || kindBytes > 256)
     throw artifactBootstrapError("artifact kind length is invalid");
-  if (bootstrap.baseline_frontier.document_id.length === 0 || bootstrap.baseline_frontier.document_id !== bootstrap.required_tail_frontier.document_id)
+  if (bootstrap.baseline_frontier.artifact_id.length === 0 || bootstrap.baseline_frontier.artifact_id !== bootstrap.required_tail_frontier.artifact_id)
     throw artifactBootstrapError("frontier document mismatch");
   validateNatural("baseline head", bootstrap.baseline_frontier.head_edit_ordinal, 0);
   validateNatural("baseline commit", bootstrap.baseline_frontier.last_commit_seq, 0);
@@ -23955,6 +23972,7 @@ class AppChannelClient {
   sequenceOwner;
   localQuery = null;
   completionListeners = new Set;
+  progressListeners = new Set;
   disposed = false;
   retired = false;
   handle;
@@ -24011,6 +24029,8 @@ class AppChannelClient {
           this.receiveLocalInteractionQuery(frame.LocalInteractionQuery.reply);
         else if ("OperationCompleted" in frame)
           this.publishOperationCompletion(frame.OperationCompleted);
+        else if ("Invocation" in frame && frame.Invocation.in_reply_to === 0 && frame.Invocation.ui_scope.length > 0)
+          this.publishOperationProgress(frame.Invocation.ui_scope);
         else
           ordinary.push(frame);
       }
@@ -24035,6 +24055,22 @@ class AppChannelClient {
   onOperationCompleted(listener) {
     this.completionListeners.add(listener);
     return () => this.completionListeners.delete(listener);
+  }
+  onOperationProgress(listener) {
+    this.progressListeners.add(listener);
+    return () => this.progressListeners.delete(listener);
+  }
+  publishOperationProgress(uiScope) {
+    if (this.disposed || this.progressListeners.size === 0)
+      return;
+    const scope = decodePackWire(new Uint8Array(uiScope), "$.uiScope");
+    for (const listener of [...this.progressListeners]) {
+      try {
+        listener(scope);
+      } catch (error) {
+        console.error("[DEBUG] operation progress subscriber failed", error);
+      }
+    }
   }
   publishOperationCompletion(frame) {
     if (this.disposed || this.completionListeners.size === 0)
@@ -24746,7 +24782,7 @@ function text2(value, code) {
     throw new Error(code);
   return value;
 }
-function parseColdDocumentPairLifetime(value) {
+function parseColdArtifactPairLifetime(value) {
   const record = exactRecord2(value, ["activationGeneration", "instanceId", "guestLifetime"], "cold-pair.lifetime");
   return Object.freeze({
     activationGeneration: unsigned64(record.activationGeneration, true, "cold-pair.lifetime"),
@@ -24754,8 +24790,8 @@ function parseColdDocumentPairLifetime(value) {
     guestLifetime: unsigned64(record.guestLifetime, true, "cold-pair.lifetime")
   });
 }
-function parseColdDocumentPairFrontier(value) {
-  const record = exactRecord2(value, ["documentId", "headEditOrdinal", "headEditId", "lastCommitSeq", "chainSha256"], "cold-pair.frontier");
+function parseColdArtifactPairFrontier(value) {
+  const record = exactRecord2(value, ["artifactId", "headEditOrdinal", "headEditId", "lastCommitSeq", "chainSha256"], "cold-pair.frontier");
   const frontier = Object.freeze({
     documentId: text2(record.documentId, "cold-pair.frontier"),
     headEditOrdinal: unsigned64(record.headEditOrdinal, false, "cold-pair.frontier"),
@@ -24767,10 +24803,10 @@ function parseColdDocumentPairFrontier(value) {
     throw new Error("cold-pair.frontier");
   return frontier;
 }
-function parseColdDocumentPairCursor(value) {
+function parseColdArtifactPairCursor(value) {
   const record = exactRecord2(value, ["lifetime", "transferGeneration", "pageIndex", "pageCount"], "cold-pair.cursor");
   const cursor = Object.freeze({
-    lifetime: parseColdDocumentPairLifetime(record.lifetime),
+    lifetime: parseColdArtifactPairLifetime(record.lifetime),
     transferGeneration: unsigned64(record.transferGeneration, true, "cold-pair.cursor"),
     pageIndex: unsigned32(record.pageIndex, "cold-pair.cursor"),
     pageCount: unsigned32(record.pageCount, "cold-pair.cursor")
@@ -24779,12 +24815,12 @@ function parseColdDocumentPairCursor(value) {
     throw new Error("cold-pair.cursor");
   return cursor;
 }
-function parseColdDocumentPairApplied(value) {
+function parseColdArtifactPairApplied(value) {
   const record = exactRecord2(value, ["lifetime", "transferGeneration", "baselineFrontier", "aggregateSha256"], "cold-pair.applied");
   return Object.freeze({
-    lifetime: parseColdDocumentPairLifetime(record.lifetime),
+    lifetime: parseColdArtifactPairLifetime(record.lifetime),
     transferGeneration: unsigned64(record.transferGeneration, true, "cold-pair.applied"),
-    baselineFrontier: parseColdDocumentPairFrontier(record.baselineFrontier),
+    baselineFrontier: parseColdArtifactPairFrontier(record.baselineFrontier),
     aggregateSha256: exactHash(record.aggregateSha256, "cold-pair.applied")
   });
 }
@@ -24795,13 +24831,13 @@ function parseWitColdPairIngressStatus(value) {
     return Object.freeze({ kind: "idle" });
   if (tagged.tag === "page-accepted" || tagged.tag === "backpressure" || tagged.tag === "loading") {
     const kind = tagged.tag === "page-accepted" ? "pageAccepted" : tagged.tag;
-    return Object.freeze({ kind, cursor: parseColdDocumentPairCursor(tagged.val) });
+    return Object.freeze({ kind, cursor: parseColdArtifactPairCursor(tagged.val) });
   }
   if (tagged.tag === "applied")
-    return Object.freeze({ kind: "applied", receipt: parseColdDocumentPairApplied(tagged.val) });
+    return Object.freeze({ kind: "applied", receipt: parseColdArtifactPairApplied(tagged.val) });
   if (tagged.tag === "fault") {
     const fault = exactRecord2(tagged.val, ["cursor", "fault"], "cold-pair.fault");
-    return Object.freeze({ kind: "fault", cursor: parseColdDocumentPairCursor(fault.cursor), fault: exactBytes(fault.fault, null, COLD_PAIR_FAULT_MAXIMUM_BYTES, "cold-pair.fault") });
+    return Object.freeze({ kind: "fault", cursor: parseColdArtifactPairCursor(fault.cursor), fault: exactBytes(fault.fault, null, COLD_PAIR_FAULT_MAXIMUM_BYTES, "cold-pair.fault") });
   }
   throw new Error("cold-pair.status");
 }
@@ -24875,6 +24911,25 @@ function shellFrameBytes(effect, instanceId) {
   if (payload === null || bytesStartWith(payload, TYPED_OPERATION_PAGE_MAGIC) || bytesStartWith(payload, TYPED_OPERATION_ACK_MAGIC))
     return null;
   return payload;
+}
+function leftoverShellInvocationFrames(leftover, decodeAppFrame2) {
+  const frames = [];
+  for (const effect of leftover) {
+    const value = effect.val;
+    if (effect.tag !== "send-message" || value?.target?.tag !== "shell" || value.payload === undefined)
+      continue;
+    const payload = coerceWireBytes(value.payload);
+    if (bytesStartWith(payload, TYPED_OPERATION_PAGE_MAGIC) || bytesStartWith(payload, TYPED_OPERATION_ACK_MAGIC))
+      continue;
+    try {
+      const frame = decodeAppFrame2(payload);
+      if (frame !== null && typeof frame === "object" && "Invocation" in frame)
+        frames.push(frame);
+    } catch {
+      continue;
+    }
+  }
+  return frames;
 }
 function wireSendMessageTargetTag(effect) {
   if (effect.tag !== "send-message")
@@ -25141,7 +25196,7 @@ function wireEffectToFriendly(effect, decodePackValue2) {
       return { closeWindow: { window: num("window") } };
     case "spawn-plugin-instance":
       return {
-        spawnPluginInstance: { req: num("req"), pluginId: pstr("pluginId"), appId: pstr("appId"), osInstanceId: poptstr("osInstanceId"), label: poptstr("label"), documentJson: poptstr("documentJson") }
+        spawnPluginInstance: { req: num("req"), pluginId: pstr("pluginId"), appId: pstr("appId"), osInstanceId: poptstr("osInstanceId"), label: poptstr("label"), artifactJson: poptstr("artifactJson") }
       };
     case "open-plugin-instance":
       return { openPluginInstance: { pluginId: str("pluginId"), appId: str("appId"), osInstanceId: val.osInstanceId } };
@@ -25653,6 +25708,17 @@ function wgpuContributionsIngressSize(command, viewState) {
 function wgpuSetContributionsCommand(pluginId, appId, json) {
   return { address: { owner: { app: { pluginId, appId } }, commandId: "setContributions" }, arguments: { json, page: 0, pageCount: 1 } };
 }
+function wgpuEffectDispatchScope(pluginId, appId, viewState) {
+  const text3 = (key, fallback) => typeof viewState[key] === "string" && viewState[key].length > 0 ? viewState[key] : fallback;
+  const windowKindId = text3("activeWindowKindId", text3("active_window_kind_id", ""));
+  return {
+    pluginId,
+    appId,
+    modeId: text3("activeModeId", text3("active_mode_id", "")),
+    windowKindId,
+    windowInstanceId: text3("windowId", text3("window_id", text3("focusedWindowId", text3("focused_window_id", windowKindId))))
+  };
+}
 function jsonEffects(effects) {
   return JSON.parse(JSON.stringify(effects, (_key, value) => typeof value === "bigint" ? Number(value) : value));
 }
@@ -25677,13 +25743,22 @@ function stashLeftoverHostEffects(instanceId, effects) {
   for (const effect of effects) {
     if (admitSpawnedJob(instanceId, effect))
       continue;
-    if (!shellFrameBytes(effect, instanceId))
+    const frame = shellFrameBytes(effect, instanceId);
+    if (!frame || !shellFrameAnswersACaller(frame))
       leftover.push(effect);
   }
   if (leftover.length === 0)
     return 0;
   pendingTurnEffects.set(instanceId, leftover);
   return leftover.length - before;
+}
+function shellFrameAnswersACaller(payload) {
+  try {
+    const carrier = Object.values(decodeAppFrame(payload))[0];
+    return carrier?.in_reply_to !== 0;
+  } catch {
+    return true;
+  }
 }
 var pendingSpawnedJobs = new Map;
 var WGPU_SPAWNED_JOB_ROUNDS = 16;
@@ -25760,28 +25835,32 @@ class WgpuTypedOperationDrive {
 }
 var pendingTurnEffects = new Map;
 var nextGlobalInstanceId = 1;
-function decodeInvocationPayloads(frame) {
-  const diagnostics = decodePackWire(new Uint8Array(frame.diagnostics), "invocation.diagnostics");
-  const historyPatch = decodePackWire(new Uint8Array(frame.history_patch), "invocation.historyPatch");
-  return {
-    ...decodeInvocationResultPacks(frame),
-    output: decodePackWire(new Uint8Array(frame.output), "invocation.output"),
-    diagnostics: Array.isArray(diagnostics) ? diagnostics : [],
-    uiScope: decodePackWire(new Uint8Array(frame.ui_scope), "invocation.uiScope"),
-    historyPatch: historyPatch && typeof historyPatch === "object" ? historyPatch : undefined
-  };
-}
-async function performInvocation(client, instanceId, invocation, viewState) {
-  const frames = await client.command(encodePackValue(invocation), viewState);
+function wgpuInvocationFromFrames(frames, leftover) {
   let output = null;
   let diagnostics = [];
   let uiScope;
   let historyPatch;
   let mutations = [];
   let inverseGroup = { invocationId: "", mutations: [], inverseMutations: [] };
+  const applyInvocationFrame = (frame) => {
+    if (frame.output.length)
+      output = decodePackWire(new Uint8Array(frame.output), "invocation.output");
+    if (frame.diagnostics.length) {
+      const decoded = decodePackWire(new Uint8Array(frame.diagnostics), "invocation.diagnostics");
+      diagnostics = Array.isArray(decoded) ? decoded : [];
+    }
+    if (frame.ui_scope.length)
+      uiScope = decodePackWire(new Uint8Array(frame.ui_scope), "invocation.uiScope");
+    if (frame.history_patch.length) {
+      const decoded = decodePackWire(new Uint8Array(frame.history_patch), "invocation.historyPatch");
+      historyPatch = decoded && typeof decoded === "object" ? decoded : undefined;
+    }
+    if (frame.mutations.length || frame.inverse_group.length)
+      ({ mutations, inverseGroup } = decodeInvocationResultPacks(frame));
+  };
   for (const frame of frames) {
     if ("Invocation" in frame) {
-      ({ output, diagnostics, uiScope, historyPatch, mutations, inverseGroup } = decodeInvocationPayloads(frame.Invocation));
+      applyInvocationFrame(frame.Invocation);
     } else if ("Error" in frame) {
       const fault = decodeFaultFromWire(frame.Error.fault, decodePackValue);
       if (fault)
@@ -25789,10 +25868,18 @@ async function performInvocation(client, instanceId, invocation, viewState) {
       throw new Error(`invocation failed: ${faultDisplayMessage(frame.Error.fault, decodePackValue)}`);
     }
   }
-  const leftover = pendingTurnEffects.get(instanceId) ?? [];
-  pendingTurnEffects.delete(instanceId);
+  for (const frame of leftoverShellInvocationFrames(leftover, decodeAppFrame)) {
+    if ("Invocation" in frame)
+      applyInvocationFrame(frame.Invocation);
+  }
   const requestedEffects = leftover.map((effect) => wireEffectToFriendly(effect, decodePackWire)).filter((effect) => effect !== null);
   return { output, mutations, inverseGroup, diagnostics, requestedEffects, events: [], uiScope, historyPatch };
+}
+async function performInvocation(client, instanceId, invocation, viewState) {
+  const frames = await client.command(encodePackValue(invocation), viewState);
+  const leftover = pendingTurnEffects.get(instanceId) ?? [];
+  pendingTurnEffects.delete(instanceId);
+  return wgpuInvocationFromFrames(frames, leftover);
 }
 async function loadPluginModule(pluginId, moduleUrl, signal) {
   const manifest = await fetchDescriptorManifest(pluginId, moduleUrl, signal);
@@ -25925,7 +26012,7 @@ async function loadPluginModule(pluginId, moduleUrl, signal) {
         const hostEffects = drive.hostEffects(settled);
         for (const effect of hostEffects) {
           const frame = shellFrameBytes(effect, instanceId);
-          if (frame)
+          if (frame && shellFrameAnswersACaller(frame))
             frames.push(frame);
         }
         stashLeftoverHostEffects(instanceId, hostEffects);
@@ -25989,7 +26076,7 @@ async function loadPluginModule(pluginId, moduleUrl, signal) {
       const outFrames = [];
       for (const effect of drive.hostEffects(results)) {
         const frame = shellFrameBytes(effect, instanceId);
-        if (frame)
+        if (frame && shellFrameAnswersACaller(frame))
           outFrames.push(frame);
       }
       stashLeftoverHostEffects(instanceId, drive.hostEffects(results));
@@ -26028,7 +26115,7 @@ async function loadPluginModule(pluginId, moduleUrl, signal) {
           if (admitSpawnedJob(instanceId, effect))
             continue;
           const frame = shellFrameBytes(effect, instanceId);
-          if (frame)
+          if (frame && shellFrameAnswersACaller(frame))
             frames.push(frame);
           else
             leftover.push(effect);
@@ -26120,7 +26207,7 @@ async function loadPluginModule(pluginId, moduleUrl, signal) {
           if (admitSpawnedJob(instanceId, effect))
             continue;
           const frame = shellFrameBytes(effect, instanceId);
-          if (frame)
+          if (frame && shellFrameAnswersACaller(frame))
             frames.push(frame);
           else
             leftoverWire.push(effect);
@@ -26266,8 +26353,9 @@ async function loadPluginModule(pluginId, moduleUrl, signal) {
         continue;
       const dispatch = effect.dispatchAction;
       try {
-        const tick = await performInvocation(requireChannel(instanceId), instanceId, { address: { owner: { app: { pluginId, appId } }, commandId: dispatch.action }, arguments: dispatch.args ?? {} }, slimView);
-        console.log("[DEBUG] contributions rearm", { plugin: pluginId, action: dispatch.action, effects: tick.requestedEffects.length, tags: effectTags(tick.requestedEffects).join(",") || "-" });
+        const addressed = hostEffectInvocationV1(wgpuEffectDispatchScope(pluginId, appId, slimView), appCommandIdsV1(manifest, appId), dispatch.action, dispatch.args ?? {});
+        const tick = await performInvocation(requireChannel(instanceId), instanceId, addressed.invocation, slimView);
+        console.log("[DEBUG] contributions rearm", { plugin: pluginId, action: dispatch.action, channel: addressed.kind, effects: tick.requestedEffects.length, tags: effectTags(tick.requestedEffects).join(",") || "-" });
         ticks.push(tick);
       } catch (error) {
         console.warn("[DEBUG] contributions rearm failed", dispatch.action, error instanceof Error ? error.message : String(error));

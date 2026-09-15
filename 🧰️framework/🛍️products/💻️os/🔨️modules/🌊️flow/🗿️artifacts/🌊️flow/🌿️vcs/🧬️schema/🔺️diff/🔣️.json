@@ -185,7 +185,7 @@
           ],
           "properties": {
             "delta": {
-              "const": "fixture"
+              "const": "hostDocument"
             },
             "value": {
               "$ref": "https://semio.tech/schema/os/flow/artifacts/flow/vcs/snapshot.json"

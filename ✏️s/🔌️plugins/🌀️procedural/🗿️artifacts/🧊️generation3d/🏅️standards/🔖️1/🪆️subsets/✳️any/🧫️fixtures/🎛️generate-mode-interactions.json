@@ -52,7 +52,7 @@
   "previewParity": ["procedural-preview", "generation3d-generate-preview"],
   "gumballVerbs": ["translateSelection", "rotateSelection", "scaleSelection"],
   "nodeGraphEditOperations": [
-    { "operation": "setFixture", "dispatchedBy": "flowCanvasCommit", "required": ["fixtureJson"] },
+    { "operation": "setHostDocument", "dispatchedBy": "flowCanvasCommit", "required": ["hostDocumentJson"] },
     { "operation": "deleteSelection", "dispatchedBy": "deleteKey", "required": [] },
     { "operation": "connect", "dispatchedBy": "portDrag", "required": ["sourceNodeId", "sourcePortId", "targetNodeId", "targetPortId"] },
     { "operation": "disconnect", "dispatchedBy": "wireCut", "required": ["synapseId"] },

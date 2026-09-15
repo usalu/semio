@@ -28,6 +28,28 @@ function flowExport(name: string) {
 }
 //#endregion 🧬️OwnedSchemaExports
 
+//#region 🗣️Terminology
+const flowEditorSources = [
+  await Bun.file(new URL("../../🦀️.rs", import.meta.url)).text(),
+  await Bun.file(new URL("../../🎭️modes/✏️edit/🪟️windows/🌊️main/🦀️.rs", import.meta.url)).text(),
+  await Bun.file(new URL("../../../🧬️schema/📸️snapshot/🦀️.rs", import.meta.url)).text(),
+];
+for (const source of flowEditorSources) {
+  assert(!/\bfixture:\s*&\w+Snapshot\b/.test(source), "persisted snapshots must use the snapshot parameter name, not fixture");
+  assert(!/\bFlowFixture\b/.test(source), "framework host documents must be FlowHostDocument, not FlowFixture");
+  assert(!/\.to_fixture\s*\(/.test(source), "FlowSnapshot bridges must call to_host_document, not to_fixture");
+  assert(!/\bFlowOwner::Fixture\b/.test(source), "flow retirement owners must use FlowOwner::HostDocument");
+  assert(!/\bFlowHost::with_fixture\b/.test(source), "scoped flow hosts must use FlowHost::with_host_document");
+  assert(!/\bgeneration3d_fixture_operations\b/.test(source), "procedural helpers must use generation3d_host_document_operations");
+  assert(!/\bflow_fixture_to_form_spec\b/.test(source), "forms bridge must use flow_host_document_to_form_spec");
+  assert(!/\bflow_fixture_operations\b/.test(source), "flow diff helpers must use flow_host_document_operations");
+  assert(!/pub fixture_json:\s*Option<String>/.test(source), "NodeGraphScene must use host_document_json, not fixture_json");
+  assert(!/\.replace_fixture\s*\(/.test(source), "FlowHost must use replace_host_document");
+  assert(!/\breplace_fixture_without_layout\b/.test(source), "DagHost must use replace_host_document_without_layout");
+}
+console.log("[DEBUG] Flow snapshot/fixture terminology lint: 3 sources, 0 forbidden patterns");
+//#endregion 🗣️Terminology
+
 //#region 🧒️ChildAddWidget
 const childAddWidget = await Bun.file(new URL("../../🧫️fixtures/🧒️child-add-widget/🔣️.json", import.meta.url)).json();
 const validateChildAddWidget = flowExport("FlowChildAddWidget");

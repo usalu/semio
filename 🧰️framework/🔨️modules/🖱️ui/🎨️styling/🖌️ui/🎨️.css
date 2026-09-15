@@ -681,8 +681,14 @@
   min-height: var(--layout-touch-min);
 }
 
+.touch :is([data-slot="button-group"], [data-slot="toggle-group"], [data-slot="action-group"]) {
+  height: auto;
+  min-height: var(--layout-touch-min);
+}
+
 .touch :is([data-slot="button-group-item"], [data-slot="toggle-group-item"], [data-slot="action-group-item"], [data-slot="select-trigger"], [data-slot="mode-dock-tab"], [data-slot="mode-dock-maximize"], [data-slot="mode-dock-close"]) {
   min-height: var(--layout-touch-min);
+  max-height: none;
 }
 
 @layer base {
@@ -6535,9 +6541,7 @@
 [data-slot="button-group"] > [data-slot="button-group-item"]:not(:last-child),
 [data-slot="toggle-group"] > :is([data-slot="toggle-group-item"], [data-slot="toggle-group-item-shell"]):not(:last-child),
 [data-slot="action-group"] > [data-slot="action-group-item"]:not(:last-child) {
-  border-inline-end-width: var(--stroke-hairline);
-  border-inline-end-style: solid;
-  border-inline-end-color: var(--border-normal-color);
+  box-shadow: inset calc(-1 * var(--stroke-hairline)) 0 0 0 var(--border-normal-color);
 }
 
 @utility gap-single {
@@ -7144,9 +7148,7 @@
 }
 
 [data-slot="panel-tabs"] > [data-slot="panel-tab-button"]:not(:last-child) {
-  border-inline-end-width: var(--stroke-hairline);
-  border-inline-end-style: solid;
-  border-inline-end-color: var(--border-normal-color) !important;
+  box-shadow: inset calc(-1 * var(--stroke-hairline)) 0 0 0 var(--border-normal-color);
 }
 
 [data-slot="window-chrome-stack"],

@@ -75,14 +75,14 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "documentId",
+        "artifactId",
         "headEditOrdinal",
         "headEditId",
         "lastCommitSeq",
         "chainSha256"
       ],
       "properties": {
-        "documentId": {
+        "artifactId": {
           "type": "string",
           "minLength": 1,
           "maxLength": 512
@@ -133,7 +133,7 @@
   },
   "$defs": {
     "ColdPair": {
-      "title": "Actor Cold Document Pair Ingress Status",
+      "title": "Actor Cold Artifact Pair Ingress Status",
       "oneOf": [
         {
           "type": "object",

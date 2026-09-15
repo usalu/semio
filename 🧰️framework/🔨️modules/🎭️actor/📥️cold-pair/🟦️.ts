@@ -3,33 +3,33 @@ import { actorInstanceLifetimeEquals, type ActorInstanceLifetime } from "../🚪
 export const COLD_PAIR_MAXIMUM_PAGES = 64;
 export const COLD_PAIR_FAULT_MAXIMUM_BYTES = 4 * 1024;
 
-export type ColdDocumentPairFrontier = Readonly<{
-  documentId: string;
+export type ColdArtifactPairFrontier = Readonly<{
+  artifactId: string;
   headEditOrdinal: bigint;
   headEditId: string;
   lastCommitSeq: bigint;
   chainSha256: Uint8Array;
 }>;
 
-export type ColdDocumentPairCursor = Readonly<{
+export type ColdArtifactPairCursor = Readonly<{
   lifetime: ActorInstanceLifetime;
   transferGeneration: bigint;
   pageIndex: number;
   pageCount: number;
 }>;
 
-export type ColdDocumentPairApplied = Readonly<{
+export type ColdArtifactPairApplied = Readonly<{
   lifetime: ActorInstanceLifetime;
   transferGeneration: bigint;
-  baselineFrontier: ColdDocumentPairFrontier;
+  baselineFrontier: ColdArtifactPairFrontier;
   aggregateSha256: Uint8Array;
 }>;
 
 export type ColdPairIngressStatus =
   | Readonly<{ kind: "idle" }>
-  | Readonly<{ kind: "pageAccepted" | "backpressure" | "loading"; cursor: ColdDocumentPairCursor }>
-  | Readonly<{ kind: "applied"; receipt: ColdDocumentPairApplied }>
-  | Readonly<{ kind: "fault"; cursor: ColdDocumentPairCursor; fault: Uint8Array }>;
+  | Readonly<{ kind: "pageAccepted" | "backpressure" | "loading"; cursor: ColdArtifactPairCursor }>
+  | Readonly<{ kind: "applied"; receipt: ColdArtifactPairApplied }>
+  | Readonly<{ kind: "fault"; cursor: ColdArtifactPairCursor; fault: Uint8Array }>;
 
 function exactRecord(value: unknown, keys: readonly string[], code: string): Record<string, unknown> {
   if (value === null || typeof value !== "object" || Array.isArray(value)) throw new Error(code);
@@ -67,7 +67,7 @@ function text(value: unknown, code: string): string {
   return value;
 }
 
-export function parseColdDocumentPairLifetime(value: unknown): ActorInstanceLifetime {
+export function parseColdArtifactPairLifetime(value: unknown): ActorInstanceLifetime {
   const record = exactRecord(value, ["activationGeneration", "instanceId", "guestLifetime"], "cold-pair.lifetime");
   return Object.freeze({
     activationGeneration: unsigned64(record.activationGeneration, true, "cold-pair.lifetime"),
@@ -76,10 +76,10 @@ export function parseColdDocumentPairLifetime(value: unknown): ActorInstanceLife
   });
 }
 
-export function parseColdDocumentPairFrontier(value: unknown): ColdDocumentPairFrontier {
-  const record = exactRecord(value, ["documentId", "headEditOrdinal", "headEditId", "lastCommitSeq", "chainSha256"], "cold-pair.frontier");
+export function parseColdArtifactPairFrontier(value: unknown): ColdArtifactPairFrontier {
+  const record = exactRecord(value, ["artifactId", "headEditOrdinal", "headEditId", "lastCommitSeq", "chainSha256"], "cold-pair.frontier");
   const frontier = Object.freeze({
-    documentId: text(record.documentId, "cold-pair.frontier"),
+    artifactId: text(record.artifactId, "cold-pair.frontier"),
     headEditOrdinal: unsigned64(record.headEditOrdinal, false, "cold-pair.frontier"),
     headEditId: text(record.headEditId, "cold-pair.frontier"),
     lastCommitSeq: unsigned64(record.lastCommitSeq, false, "cold-pair.frontier"),
@@ -89,10 +89,10 @@ export function parseColdDocumentPairFrontier(value: unknown): ColdDocumentPairF
   return frontier;
 }
 
-export function parseColdDocumentPairCursor(value: unknown): ColdDocumentPairCursor {
+export function parseColdArtifactPairCursor(value: unknown): ColdArtifactPairCursor {
   const record = exactRecord(value, ["lifetime", "transferGeneration", "pageIndex", "pageCount"], "cold-pair.cursor");
   const cursor = Object.freeze({
-    lifetime: parseColdDocumentPairLifetime(record.lifetime),
+    lifetime: parseColdArtifactPairLifetime(record.lifetime),
     transferGeneration: unsigned64(record.transferGeneration, true, "cold-pair.cursor"),
     pageIndex: unsigned32(record.pageIndex, "cold-pair.cursor"),
     pageCount: unsigned32(record.pageCount, "cold-pair.cursor"),
@@ -101,12 +101,12 @@ export function parseColdDocumentPairCursor(value: unknown): ColdDocumentPairCur
   return cursor;
 }
 
-export function parseColdDocumentPairApplied(value: unknown): ColdDocumentPairApplied {
+export function parseColdArtifactPairApplied(value: unknown): ColdArtifactPairApplied {
   const record = exactRecord(value, ["lifetime", "transferGeneration", "baselineFrontier", "aggregateSha256"], "cold-pair.applied");
   return Object.freeze({
-    lifetime: parseColdDocumentPairLifetime(record.lifetime),
+    lifetime: parseColdArtifactPairLifetime(record.lifetime),
     transferGeneration: unsigned64(record.transferGeneration, true, "cold-pair.applied"),
-    baselineFrontier: parseColdDocumentPairFrontier(record.baselineFrontier),
+    baselineFrontier: parseColdArtifactPairFrontier(record.baselineFrontier),
     aggregateSha256: exactHash(record.aggregateSha256, "cold-pair.applied"),
   });
 }
@@ -117,23 +117,23 @@ export function parseWitColdPairIngressStatus(value: unknown): ColdPairIngressSt
   if (tagged.tag === "idle") return Object.freeze({ kind: "idle" });
   if (tagged.tag === "page-accepted" || tagged.tag === "backpressure" || tagged.tag === "loading") {
     const kind = tagged.tag === "page-accepted" ? "pageAccepted" : tagged.tag;
-    return Object.freeze({ kind, cursor: parseColdDocumentPairCursor(tagged.val) });
+    return Object.freeze({ kind, cursor: parseColdArtifactPairCursor(tagged.val) });
   }
-  if (tagged.tag === "applied") return Object.freeze({ kind: "applied", receipt: parseColdDocumentPairApplied(tagged.val) });
+  if (tagged.tag === "applied") return Object.freeze({ kind: "applied", receipt: parseColdArtifactPairApplied(tagged.val) });
   if (tagged.tag === "fault") {
     const fault = exactRecord(tagged.val, ["cursor", "fault"], "cold-pair.fault");
-    return Object.freeze({ kind: "fault", cursor: parseColdDocumentPairCursor(fault.cursor), fault: exactBytes(fault.fault, null, COLD_PAIR_FAULT_MAXIMUM_BYTES, "cold-pair.fault") });
+    return Object.freeze({ kind: "fault", cursor: parseColdArtifactPairCursor(fault.cursor), fault: exactBytes(fault.fault, null, COLD_PAIR_FAULT_MAXIMUM_BYTES, "cold-pair.fault") });
   }
   throw new Error("cold-pair.status");
 }
 
-export function coldDocumentPairCursorEquals(left: ColdDocumentPairCursor, right: ColdDocumentPairCursor): boolean {
+export function coldArtifactPairCursorEquals(left: ColdArtifactPairCursor, right: ColdArtifactPairCursor): boolean {
   return actorInstanceLifetimeEquals(left.lifetime, right.lifetime) && left.transferGeneration === right.transferGeneration && left.pageIndex === right.pageIndex && left.pageCount === right.pageCount;
 }
 
-export function coldDocumentPairFrontierEquals(left: ColdDocumentPairFrontier, right: ColdDocumentPairFrontier): boolean {
+export function coldArtifactPairFrontierEquals(left: ColdArtifactPairFrontier, right: ColdArtifactPairFrontier): boolean {
   return (
-    left.documentId === right.documentId &&
+    left.artifactId === right.artifactId &&
     left.headEditOrdinal === right.headEditOrdinal &&
     left.headEditId === right.headEditId &&
     left.lastCommitSeq === right.lastCommitSeq &&

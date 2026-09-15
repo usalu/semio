@@ -37,7 +37,7 @@ impl<D, C> LocalInteractionInputReads<D, C> {
         }
         if let Some(read) = self.owned.document.take() {
             if !read.return_to_registry() {
-                return Err("local-interaction.document-read-return".into());
+                return Err("local-interaction.artifact-read-return".into());
             }
             return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }

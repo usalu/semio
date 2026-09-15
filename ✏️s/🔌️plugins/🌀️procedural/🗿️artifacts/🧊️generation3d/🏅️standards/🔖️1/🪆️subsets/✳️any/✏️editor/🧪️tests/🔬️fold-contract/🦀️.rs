@@ -1,6 +1,6 @@
 use super::*;
 use crate::editor::generation3d::config::SetSnapshot;
-use crate::standards::v1::subsets::any::schema::mutations::generation3d_fixture_operations;
+use crate::standards::v1::subsets::any::schema::mutations::generation3d_host_document_operations;
 use crate::standards::v1::subsets::any::schema::snapshot::Generation3dSnapshotRead;
 use crate::standards::v1::subsets::any::schema::{
     default_snapshot, example_snapshot, PROCEDURAL_EXAMPLE_BOX_FILLET, PROCEDURAL_EXAMPLE_BOX_SHELL, PROCEDURAL_EXAMPLE_FACE_SWEEP_EXTRUDE, PROCEDURAL_EXAMPLE_HEX_COLUMN, PROCEDURAL_EXAMPLE_RECTANGLE_WIRE, PROCEDURAL_EXAMPLE_RECT_EXTRUDE,
@@ -23,17 +23,17 @@ const BUNDLED_EXAMPLES: [&str; 8] = [
 ];
 
 /// 🪪️ The widget-id signature of a bundled example's authored fixture. A synchronous frame on
-/// purpose: a `Generation3dSnapshotRead` carries the whole `FlowFixture`, and parking one in an
+/// purpose: a `Generation3dSnapshotRead` carries the whole `FlowHostDocument`, and parking one in an
 /// `async fn` that also holds a live app makes the test future large enough to overflow the test
 /// thread's stack the moment the eight-example walk awaits inside it.
 fn bundled_widget_ids(example_id: &str) -> std::collections::BTreeSet<String> {
     let read = Generation3dSnapshotRead::new(example_snapshot(example_id).expect("bundled example snapshot"));
-    read.fixture.widgets.iter().map(crate::widget_id).map(str::to_string).collect()
+    read.host_document.widgets.iter().map(crate::widget_id).map(str::to_string).collect()
 }
 
 /// 🪪️ The same signature for the app's LIVE document — synchronous for the same reason.
 fn live_widget_ids(app: &context::Generation3dApp) -> std::collections::BTreeSet<String> {
-    context::snapshot(app).fixture.widgets.iter().map(crate::widget_id).map(str::to_string).collect()
+    context::snapshot(app).host_document.widgets.iter().map(crate::widget_id).map(str::to_string).collect()
 }
 
 /// 🧺️ Replays the store's OWN fold arithmetic over one lane's authored gesture: every item costs its
@@ -59,14 +59,14 @@ fn set_active_example_artifact_gesture_fits_its_declared_fold_envelope_for_every
     let boot = Generation3dSnapshotRead::new(default_snapshot());
     let hex = Generation3dSnapshotRead::new(example_snapshot(PROCEDURAL_EXAMPLE_HEX_COLUMN).expect("bundled example snapshot"));
     assert!(
-        generation3d_fixture_operations(&boot.fixture, &hex.fixture).is_empty(),
+        generation3d_host_document_operations(&boot.host_document, &hex.host_document).is_empty(),
         "the boot document IS the hex-column fixture, so re-picking it authors no gesture — every OTHER pick in the cycle below is the one that publishes"
     );
     for (index, example_id) in BUNDLED_EXAMPLES.into_iter().enumerate() {
         let previous = BUNDLED_EXAMPLES[(index + BUNDLED_EXAMPLES.len() - 1) % BUNDLED_EXAMPLES.len()];
         let target = Generation3dSnapshotRead::new(example_snapshot(example_id).expect("bundled example snapshot"));
         let mut base = Generation3dSnapshotRead::new(example_snapshot(previous).expect("bundled example snapshot"));
-        let operations = generation3d_fixture_operations(&base.fixture, &target.fixture);
+        let operations = generation3d_host_document_operations(&base.host_document, &target.host_document);
         assert!(!operations.is_empty(), "example {example_id} authored an empty artifact gesture");
         let mut items = Vec::with_capacity(operations.len());
         for mutation in operations {
@@ -89,11 +89,11 @@ fn set_active_example_artifact_gesture_fits_its_declared_fold_envelope_for_every
             items.push((inverse_rows, footprint.work_items));
             base = Generation3dSnapshotRead::new(post);
         }
-        assert_eq!(base.fixture.widgets, target.fixture.widgets, "example {example_id}: replaying the authored gesture against the running post root does not reach the example's own widgets — in THIS order");
-        assert_eq!(base.fixture.synapses, target.fixture.synapses, "example {example_id}: the replayed gesture does not reach the example's own synapses");
-        assert_eq!(base.fixture.layout, target.fixture.layout, "example {example_id}: the replayed gesture leaves the PREVIOUS example's orphaned layout overrides behind");
-        assert_eq!(base.fixture.camera, Generation3dSnapshotRead::new(example_snapshot(previous).expect("bundled example snapshot")).fixture.camera, "example {example_id}: the artifact lane must NOT author the camera (`mutations::tests::fixture_ops_ignore_camera`) — `config_after_document_load` carries it on the Config lane");
-        assert_eq!(base.fixture.schema, target.fixture.schema, "example {example_id}: the replayed gesture does not reach the example's own schema");
+        assert_eq!(base.host_document.widgets, target.host_document.widgets, "example {example_id}: replaying the authored gesture against the running post root does not reach the example's own widgets — in THIS order");
+        assert_eq!(base.host_document.synapses, target.host_document.synapses, "example {example_id}: the replayed gesture does not reach the example's own synapses");
+        assert_eq!(base.host_document.layout, target.host_document.layout, "example {example_id}: the replayed gesture leaves the PREVIOUS example's orphaned layout overrides behind");
+        assert_eq!(base.host_document.camera, Generation3dSnapshotRead::new(example_snapshot(previous).expect("bundled example snapshot")).host_document.camera, "example {example_id}: the artifact lane must NOT author the camera (`mutations::tests::fixture_ops_ignore_camera`) — `config_after_document_load` carries it on the Config lane");
+        assert_eq!(base.host_document.schema, target.host_document.schema, "example {example_id}: the replayed gesture does not reach the example's own schema");
         let (rows, declared) = folded_rows_against_declaration(&items);
         assert!(rows <= declared, "example {example_id}: the staged gesture folds {rows} rows against a declared envelope of {declared}");
         eprintln!("[DEBUG] fold envelope {previous} -> {example_id}: {} items, {rows} rows, {declared} declared", items.len());
@@ -184,7 +184,7 @@ set_active_example_publishes! {
 async fn interaction_select_publishes_through_the_retained_typed_path() {
     let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
     let mut app = app_with_registry().await;
-    let node_id = context::snapshot(&app).fixture.widgets.first().map(crate::widget_id).expect("default fixture node").to_string();
+    let node_id = context::snapshot(&app).host_document.widgets.first().map(crate::widget_id).expect("default fixture node").to_string();
     // 🧯️ `interactionSelect` is a framework-reserved TOOL JOB (`FrameworkInteractionSelectJob`), so
     // `handle_action` alone only admits its `Effect::SpawnJob` — the selection lands when the host
     // drives that job, which is what `select_graph` does. A `settle_registered_typed_operation`

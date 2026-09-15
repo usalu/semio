@@ -121,7 +121,7 @@ pub fn ui_node_list(values: impl IntoIterator<Item = semio_framework_plugin::UiA
 /// (`Kit×Type`, matching the `"2d.block"` artifact kind) plus a `"catalog:out"` port giving
 /// `puzzle2d_manifest_fragment` a real caller (see `export_media` above).
 pub fn block2d_io() -> AppIo {
-    let io = semio_framework::io::resolve_ready(AppIo::from_document(BLOCK_2D_SCHEMA, MediaType { class: MediaClass::Kit, form: MediaForm::Type }, ArtifactPresentation { id: "2d.block".into(), name: "Node Kind".into(), dimension: "2d".into(), component_kind: "block2d".into() }));
+    let io = semio_framework::io::resolve_ready(AppIo::from_artifact(BLOCK_2D_SCHEMA, MediaType { class: MediaClass::Kit, form: MediaForm::Type }, ArtifactPresentation { id: "2d.block".into(), name: "Node Kind".into(), dimension: "2d".into(), component_kind: "block2d".into() }));
     semio_framework::io::resolve_ready(io.with_ports(vec![MediaPortSpec {
         id: "catalog:out".into(),
         label: "Kit Catalog".into(),
@@ -423,7 +423,7 @@ impl ArtifactEditor for Block2dPlayApp {
         owner: EditorApp<Block2dPlayApp>,
         owner_file: "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.block.block2d@1/*#editor",
-        document_schema: "block.2d",
+        artifact_schema: "block.2d",
         factory: "Block2dRetainedCommandJobFactory",
         factory_type: Block2dRetainedCommandJobFactory,
         contract: ToolExecutionContract::bounded_first_step(65_536, 4_096, 1, 262_144, 7_500),
@@ -535,7 +535,7 @@ impl ArtifactEditor for Block2dPlayApp {
         let labels = block2d_labels(view_state);
         let node = match body_key {
             board::BLOCK2D_BODY_BOARD => board::render(doc.snapshot, labels)?,
-            document_panel::BLOCK2D_BODY_DOCUMENT => document_panel::render(doc.snapshot, labels)?,
+            document_panel::BLOCK2D_BODY_ARTIFACT => document_panel::render(doc.snapshot, labels)?,
             inspection_panel::BLOCK2D_BODY_INSPECTOR => inspection_panel::render(doc.snapshot, labels)?,
             _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "block2d unknown-body label admission failed"))?,
         };
@@ -546,17 +546,17 @@ impl ArtifactEditor for Block2dPlayApp {
     /// puzzle2d-shaped catalog fragment (`portKinds`/`wireKinds`/`edgeKinds`/`nodeKinds`/
     /// `kindCompatibility`) as a `kit.catalog`-schema `Media` value for the `"catalog:out"` port
     /// declared in `block2d_io`. Falls through to the default whole-document pack export for every
-    /// other port (`"document:out"`).
+    /// other port (`"artifact:out"`).
     fn export_media(port: &str, doc: &ArtifactView<'_, Block2dSnapshot>) -> Result<Media, MediaError> {
         if port != "catalog:out" {
-            // 🌉️ Reimplements `ArtifactEditor::export_media`'s default `"document:out"` behavior
+            // 🌉️ Reimplements `ArtifactEditor::export_media`'s default `"artifact:out"` behavior
             // verbatim — overriding the trait method forfeits the ability to delegate back to its
             // own default body, so the whole-document pack export is duplicated here rather than
             // left unreachable for this app.
-            if port != "document:out" {
+            if port != "artifact:out" {
                 return Err(MediaError::NotImplemented);
             }
-            let media_type = Self::io().map_or(MediaType { class: MediaClass::Kit, form: MediaForm::Type }, |io| io.document_media_type);
+            let media_type = Self::io().map_or(MediaType { class: MediaClass::Kit, form: MediaForm::Type }, |io| io.artifact_media_type);
             let bytes = store::ArtifactPack::encode_pack(doc.snapshot);
             return Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } });
         }

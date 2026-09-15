@@ -56,7 +56,7 @@ pub(super) fn every_command() -> Vec<DagCommand> {
         DagCommand::DeleteSelection(delete_selection::DeleteSelection {}),
         DagCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit {
             operations: vec![
-                node_graph_edit::DagNodeGraphEditOp::SetFixture { fixture_json: "{}".into() },
+                node_graph_edit::DagNodeGraphEditOp::SetHostDocument { host_document_json: "{}".into() },
                 node_graph_edit::DagNodeGraphEditOp::DeleteSelection,
                 node_graph_edit::DagNodeGraphEditOp::Connect { source_node_id: "n1".into(), source_port_id: "out".into(), target_node_id: "n2".into(), target_port_id: "in".into() },
             ],
@@ -137,7 +137,7 @@ async fn the_manifest_stitches_every_taxonomy_node() {
     assert!(json.contains(DAG_PLAY_WINDOW_MAIN), "main window kind missing from the manifest: {json}");
     assert!(json.contains(DAG_PLAY_WINDOW_COMPILED), "compiled window kind missing from the manifest: {json}");
     assert!(json.contains(edit::DAG_PLAY_MODE_EDIT), "mode missing from the manifest");
-    for body in [DAG_PLAY_BODY_DOCUMENT, DAG_PLAY_BODY_CATALOGUE, DAG_PLAY_BODY_INSPECTOR] {
+    for body in [DAG_PLAY_BODY_ARTIFACT, DAG_PLAY_BODY_CATALOGUE, DAG_PLAY_BODY_INSPECTOR] {
         assert!(json.contains(body), "panel body {body} missing from the manifest");
     }
     assert!(json.contains("graph.dag"), "artifact kind missing from the manifest");

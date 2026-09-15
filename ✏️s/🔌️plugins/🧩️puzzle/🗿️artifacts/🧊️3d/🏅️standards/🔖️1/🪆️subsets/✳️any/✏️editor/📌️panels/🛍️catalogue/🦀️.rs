@@ -8,7 +8,7 @@
 //! instead of failing admission. The paging primitives live with the outliner
 //! (`📌️panels/🗿️artifact/🦀️.rs`), the panel that derives them, rather than being restated here.
 
-use crate::editor::puzzle3d::panels::document::{page_rows, paged_section, RowBudget, SECTIONS};
+use crate::editor::puzzle3d::panels::artifact::{page_rows, paged_section, RowBudget, SECTIONS};
 use crate::editor::puzzle3d::terminology::Puzzle3dLabels;
 use crate::editor::puzzle3d::{ui_label, Puzzle3dScene, PUZZLE3D_PLAY_CONTROLLER_ID};
 use dsl::json;

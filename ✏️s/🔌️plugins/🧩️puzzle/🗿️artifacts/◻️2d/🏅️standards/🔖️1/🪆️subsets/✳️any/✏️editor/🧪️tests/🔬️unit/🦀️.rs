@@ -518,7 +518,7 @@ async fn select_action_declares_partial_ui_scope() {
             // `AppDefinition.windowKinds[].bodyKey` by the shell's `buildUiRefreshRequest`), not
             // the pane/kind-id constants (`PUZZLE2D_PANES`) — those are a different id space.
             assert_eq!(window_bodies, vec![overview::BODY_KEY, detail::BODY_KEY, selection::BODY_KEY], "window_bodies must be body keys, not pane ids");
-            assert!(panel_bodies.contains(&document::PUZZLE2D_PLAY_BODY_LAYERS.to_string()));
+            assert!(panel_bodies.contains(&artifact::PUZZLE2D_PLAY_BODY_LAYERS.to_string()));
             assert!(panel_bodies.contains(&inspection::PUZZLE2D_PLAY_BODY_PROPERTIES.to_string()));
             assert!(engagements, "select must refresh the engagement bar");
             assert!(!measures, "select must not force a measures refresh");

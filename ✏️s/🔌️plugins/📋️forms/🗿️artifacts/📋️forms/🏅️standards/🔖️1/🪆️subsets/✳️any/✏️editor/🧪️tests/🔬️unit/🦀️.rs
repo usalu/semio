@@ -193,7 +193,7 @@ async fn the_manifest_stitches_every_taxonomy_node() {
         assert!(json.contains(id), "window kind {id} missing from the manifest: {json}");
     }
     assert!(json.contains(blueprint::FORMS_PLAY_MODE_BLUEPRINT), "mode missing from the manifest");
-    for body in [FORMS_PLAY_BODY_DOCUMENT, FORMS_PLAY_BODY_CATALOGUE, FORMS_PLAY_BODY_INSPECTION] {
+    for body in [FORMS_PLAY_BODY_ARTIFACT, FORMS_PLAY_BODY_CATALOGUE, FORMS_PLAY_BODY_INSPECTION] {
         assert!(json.contains(body), "panel body {body} missing from the manifest");
     }
     assert!(json.contains("form.dictionary"), "artifact kind missing from the manifest");
@@ -379,7 +379,7 @@ async fn export_media_document_out_round_trips_through_pack() {
     let document = app.snapshot().expect("projection");
     let history = semio_framework_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&document, &history);
-    let media = <FormsPlayApp as ArtifactEditor>::export_media("document:out", &doc).expect("export document:out");
+    let media = <FormsPlayApp as ArtifactEditor>::export_media("artifact:out", &doc).expect("export document:out");
     let MediaPayload::Structured { schema, json } = media.payload else { panic!("expected structured payload") };
     assert_eq!(schema, FORMS_DOCUMENT_SCHEMA);
     let bytes = store::pack_rt::pack_value_from_base64(&json).expect("decode base64 pack");
@@ -399,13 +399,13 @@ async fn forms_io_exposes_dictionary_out_port() {
 #[semio_framework_async_macros::async_test]
 async fn forms_io_declares_dictionary_out_port() {
     let io = forms_io();
-    assert_eq!(io.document_schema, FORMS_DOCUMENT_SCHEMA);
+    assert_eq!(io.artifact_schema, FORMS_DOCUMENT_SCHEMA);
     let dictionary_out = io.ports.iter().find(|port| port.id == "dictionary:out").expect("dictionary:out declared");
     assert_eq!(dictionary_out.direction, semio_framework_plugin::MediaPortDirection::Out);
     assert_eq!(dictionary_out.kind_id.as_deref(), Some("form.dictionary"));
     assert_eq!(dictionary_out.multiplicity, semio_framework::PortMultiplicity::Many);
     let all_ports = io.all_ports().await;
-    assert!(all_ports.iter().any(|port| port.id == "document:in"));
-    assert!(all_ports.iter().any(|port| port.id == "document:out"));
+    assert!(all_ports.iter().any(|port| port.id == "artifact:in"));
+    assert!(all_ports.iter().any(|port| port.id == "artifact:out"));
 }
 //#endregion 🔖️MediaPorts

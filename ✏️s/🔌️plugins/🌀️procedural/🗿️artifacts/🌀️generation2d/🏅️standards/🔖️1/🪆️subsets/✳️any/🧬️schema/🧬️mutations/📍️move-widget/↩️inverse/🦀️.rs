@@ -6,7 +6,7 @@ use crate::standards::v1::subsets::any::schema::mutations::{clear_widget_layout,
 use crate::Generation2dSnapshot;
 
 pub fn inverse(payload: &super::MoveWidget, base: &Generation2dSnapshot) -> Vec<Generation2dMutation> {
-    match base.fixture.layout.get(&payload.id) {
+    match base.host_document.layout.get(&payload.id) {
         Some(previous) => vec![move_widget(payload.id.clone(), previous.clone())],
         None => vec![clear_widget_layout(payload.id.clone())],
     }

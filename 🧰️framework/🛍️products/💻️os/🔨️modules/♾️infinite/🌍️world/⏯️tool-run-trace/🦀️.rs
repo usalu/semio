@@ -373,11 +373,13 @@ pub struct ToolRunTraceDraw {
     pub instances: Vec<Instance3d>,
 }
 
-/// 🟩️ The `provisional` style token for a document instance a running tool placed: the theme success
-/// tone at the `toolRun.provisionalOpacity` token. wgpu paints it static (no dash animation), which is
+/// 🟩️ The `provisional` style token for a document instance a running tool placed: the highlighted mesh tone at the
+/// `toolRun.provisionalOpacity` token, so the placements a run has made read as highlighted objects while the success,
+/// danger and testing verdict colours stay reserved for the ONE candidate under test. The wgpu theme has no `secondary`
+/// tone (React's highlighted mesh paint), so its accent stands in. wgpu paints it static (no dash animation), which is
 /// also what `prefers-reduced-motion` asks of the React target.
 pub fn tool_run_provisional_color(theme: &Theme) -> [f32; 4] {
-    [theme.success.r, theme.success.g, theme.success.b, tool_run::PROVISIONAL_OPACITY as f32]
+    [theme.accent.r, theme.accent.g, theme.accent.b, tool_run::PROVISIONAL_OPACITY as f32]
 }
 //#endregion 🔖️Paint
 

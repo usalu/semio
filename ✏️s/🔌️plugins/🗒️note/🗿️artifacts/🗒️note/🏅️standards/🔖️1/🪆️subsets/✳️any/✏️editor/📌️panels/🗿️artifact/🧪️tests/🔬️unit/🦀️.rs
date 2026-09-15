@@ -1,5 +1,5 @@
 use crate::editor::note::unit_tests::context::{note_app, render as render_body};
-use crate::editor::note::NOTE_PLAY_BODY_DOCUMENT as BODY_DOCUMENT;
+use crate::editor::note::NOTE_PLAY_BODY_ARTIFACT as BODY_ARTIFACT;
 use semio_framework_plugin::PluginApp;
 
 /// 🩹️ Pre-existing bug fixed here (confirmed via `git log --date=iso`: `SetActiveExample`'s
@@ -18,7 +18,7 @@ async fn renders_document_tree() {
     let envelope = store::create_document_envelope::<crate::NoteSnapshot, crate::NoteMutation>(&document.schema.clone(), &document.id.clone(), document, None);
     let files = store::print_document_pack(&envelope).await.expect("print semio example document pack");
     app.load_document_pack(&files).await.expect("load semio example");
-    let json = render_body(&mut app, BODY_DOCUMENT).await;
+    let json = render_body(&mut app, BODY_ARTIFACT).await;
     assert!(json.contains("\"type\":\"tree\""));
     assert!(json.contains("Welcome"));
 }
@@ -26,7 +26,7 @@ async fn renders_document_tree() {
 #[semio_framework_async_macros::async_test]
 async fn note_labels_resolve_native_by_default() {
     let mut app = note_app().await;
-    let document_json = render_body(&mut app, BODY_DOCUMENT).await;
+    let document_json = render_body(&mut app, BODY_ARTIFACT).await;
     assert!(document_json.contains("Add Text"));
     assert!(document_json.contains("Add Table"));
     assert!(document_json.contains("Add Math"));

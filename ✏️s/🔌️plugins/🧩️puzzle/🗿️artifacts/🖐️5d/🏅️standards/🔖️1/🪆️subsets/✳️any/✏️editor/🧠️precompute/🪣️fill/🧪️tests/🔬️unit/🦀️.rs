@@ -376,7 +376,7 @@ fn fill_run_job_step_stays_below_the_interactive_ceiling_on_the_largest_examples
             match law["capacityRefusals"][name].as_str() {
                 Some(refusal) => {
                     assert_eq!(mirror.fault.as_deref(), Some(refusal), "{name}: cold run {run} refuses the document past the planner's fixed capacity");
-                    assert!(mirror.steps.iter().any(|step| step.kind == semio_framework_tool_run::ToolRunStepKind::Danger && step.reason == FillRunReason::DocumentCapacity.code()), "{name}: the refusal is a visible danger step before the fault");
+                    assert!(mirror.steps.iter().any(|step| step.kind == semio_framework_tool_run::ToolRunStepKind::Danger && step.reason == FillRunReason::ArtifactCapacity.code()), "{name}: the refusal is a visible danger step before the fault");
                 }
                 None => assert!(mirror.complete && mirror.fault.is_none(), "{name}: cold run {run} completes: {:?}", mirror.fault),
             }

@@ -18,7 +18,7 @@ async fn op_binary_round_trips_and_agrees_with_text() {
 
 #[semio_framework_async_macros::async_test]
 async fn flow_document_text_round_trips_store_with_applied_operation() {
-    let envelope = store::create_document_envelope::<FlowSnapshot, FlowMutation>("flow.fixture", "doc-text-test", FlowSnapshot::default(), None);
+    let envelope = store::create_document_envelope::<FlowSnapshot, FlowMutation>("flow.host_document", "doc-text-test", FlowSnapshot::default(), None);
     let mut doc_store = store::ArtifactStore::new(envelope).await.expect("valid artifact store fixture");
     doc_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![sample_move_widgets_operation()], description: None }).await.expect("apply");
     store::os_store::test_support::assert_document_text_round_trip(&doc_store).await;
@@ -44,10 +44,10 @@ async fn duplicate_widget_composite_round_trips_through_op_codecs_and_a_real_sto
     let bytes = encode_op(&duplicate).expect("encode");
     assert_eq!(decode_op(&bytes).expect("decode"), duplicate);
 
-    let envelope = store::create_document_envelope::<FlowSnapshot, FlowMutation>("flow.fixture", "doc-composite-test", FlowSnapshot::default(), None);
+    let envelope = store::create_document_envelope::<FlowSnapshot, FlowMutation>("flow.host_document", "doc-composite-test", FlowSnapshot::default(), None);
     let mut doc_store = store::ArtifactStore::new(envelope).await.expect("valid artifact store fixture");
     doc_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![create, duplicate], description: None }).await.expect("apply composite through the real store");
-    let live = doc_store.snapshot().expect("snapshot").to_fixture();
+    let live = doc_store.snapshot().expect("snapshot").to_host_document();
     assert!(live.widgets.iter().any(|widget| widget.id() == "note-2"));
     assert!(live.synapses.iter().any(|synapse| synapse.id == "note-1-to-note-2"));
     store::os_store::test_support::assert_document_text_round_trip(&doc_store).await;

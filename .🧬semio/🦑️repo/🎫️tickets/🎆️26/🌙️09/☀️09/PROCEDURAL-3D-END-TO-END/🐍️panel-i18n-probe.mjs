@@ -61,7 +61,7 @@ const GERMAN = {
 /** 🟰️ German that is the same word as the English by design — present on screen proves nothing. */
 const IDENTICAL_BY_DESIGN = ["schema_prefix"];
 /** 🚦 Driven and read by `🐍️status-states-probe.mjs`, which is the only probe that reaches all six. */
-const OWNED_ELSEWHERE = ["status_ok", "status_stale", "status_queued", "status_computing", "status_error", "status_blocked"];
+const OWNED_ELSEWHERE = ["status_ok", "status_queued", "status_computing", "status_error", "status_blocked"];
 
 const lines = [];
 const t0 = Date.now();
@@ -248,11 +248,48 @@ for (const [tag, id, marker] of [
 }
 //#endregion
 
+//#region 🕳️ `Keine Auswahl` — a selection whose id names no widget any more
+/** 🗑️ DELETING the selected node is the reach, and the only one.
+ *
+ * `inspection::render` paints the schema + widget count when NOTHING is selected and reaches
+ * `labels.no_selection` only on its second branch: a node IS selected and no fixture widget carries
+ * that id. Every graph node here is a fixture widget and port rows carry no activate binding, so no
+ * ordinary click can leave such a selection — a delete can, because the selection id outlives the
+ * widget it named for the render that follows. Proven by `🐍️inspection-i18n-probe.mjs`; this probe
+ * simply never drove it, which is why `no_selection` read as untranslated
+ * (`📓️window-gaps-followup-2026-09-14.md` §7).
+ */
+{
+  await openPanel("framework.panel.artifact", "procedural-play-graph");
+  const victim = page.locator('[data-slot="panel"] [role="treeitem"]').filter({ hasText: /Seitenanzahl|Radius|Side Count|Höhe/u }).first();
+  const found = (await victim.count()) > 0;
+  if (found) {
+    await victim.click({ timeout: 8000 }).catch((e) => lines.push(`victim row ${String(e).replace(/\s+/gu, " ").slice(0, 140)}`));
+    await page.waitForTimeout(3000);
+    await page.keyboard.press("Delete");
+    await page.waitForTimeout(5000);
+    await openPanel("framework.panel.inspection", "procedural-play-inspector");
+    await page.waitForTimeout(1500);
+  }
+  await harvest("6b-inspection-no-selection");
+  console.log(`[DEBUG] no-selection drive victimFound=${found}`);
+}
+//#endregion
+
 //#region 🧬️ Generate mode — the two empty-state hints and the three generate windows
 {
   await page.keyboard.press("Meta+Alt+ArrowRight");
   await page.waitForTimeout(8000);
   await harvest("7-generate-de");
+  /** 👁️ `preview_hint` is the GENERATE PREVIEW window's empty state — it paints only while that window
+   * is mounted with no generation evaluated, and the window mounts a beat after the mode does. Waited
+   * for by its own surface id rather than by a fixed sleep, then harvested again. */
+  for (let i = 0; i < 40; i += 1) {
+    if ((await page.locator('[data-surface-id="window:generation3d-generate-preview"]').count()) > 0) break;
+    await page.waitForTimeout(1000);
+  }
+  await page.waitForTimeout(4000);
+  await harvest("7b-generate-preview-de");
   await page.keyboard.press("Meta+Alt+ArrowLeft");
   await page.waitForTimeout(5000);
 }
@@ -262,8 +299,13 @@ for (const [tag, id, marker] of [
 {
   const picked = await pickExample(/Kein Beispiel|No example/u);
   await page.waitForTimeout(6000);
+  /** 🌳️ `graph_empty`/`graph_unwired` are the OUTLINE's two placeholder rows, and the outline lives in
+   * the Artifact panel — harvesting an empty document with another panel open reads a screen those two
+   * strings were never on and calls them untranslated. */
+  const outline = await openPanel("framework.panel.artifact", "procedural-play-graph");
+  await page.waitForTimeout(2500);
   await harvest("8-no-example");
-  console.log(`[DEBUG] no-example picked=${picked}`);
+  console.log(`[DEBUG] no-example picked=${picked} outline=${JSON.stringify(outline)}`);
 }
 //#endregion
 

@@ -29,7 +29,7 @@ use store::EngineHandles;
 
 //#region 🔖️Constants
 pub const VCS_PLAY_APP_ID: &str = "vcs-play";
-pub use document_panel::VCS_PLAY_BODY_DOCUMENT;
+pub use document_panel::VCS_PLAY_BODY_ARTIFACT;
 pub use editor::VCS_PLAY_BODY_EDITOR;
 pub use history::VCS_PLAY_BODY_HISTORY;
 pub use inspection_panel::VCS_PLAY_BODY_INSPECTION;
@@ -768,7 +768,7 @@ impl VcsBoundedProofs {
         owner: EditorApp<VcsPlayApp>,
         owner_file: "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.vcs.vcs@1/*#editor",
-        document_schema: "vcs.vcs",
+        artifact_schema: "vcs.vcs",
         factory: "VcsBoundedCommandJobFactory",
         factory_type: VcsBoundedCommandJobFactory,
         tools: {
@@ -789,7 +789,7 @@ impl VcsResumableProofs {
         owner: EditorApp<VcsPlayApp>,
         owner_file: "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.vcs.vcs@1/*#editor",
-        document_schema: "vcs.vcs",
+        artifact_schema: "vcs.vcs",
         factory: "VcsResumableCommandJobFactory",
         factory_type: VcsResumableCommandJobFactory,
         tools: {
@@ -943,7 +943,7 @@ impl ArtifactEditor for VcsPlayApp {
         match body_key {
             VCS_PLAY_BODY_EDITOR => editor::render(doc.snapshot, labels).map(semio_framework_plugin::built_to_component_tree),
             VCS_PLAY_BODY_HISTORY => history::render(doc.history).map(semio_framework_plugin::built_to_component_tree),
-            VCS_PLAY_BODY_DOCUMENT => document_panel::render(doc.history, labels).map(semio_framework_plugin::built_to_component_tree),
+            VCS_PLAY_BODY_ARTIFACT => document_panel::render(doc.history, labels).map(semio_framework_plugin::built_to_component_tree),
             VCS_PLAY_BODY_INSPECTION => inspection_panel::render(doc.snapshot, labels).map(semio_framework_plugin::built_to_component_tree),
             _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }

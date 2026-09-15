@@ -758,7 +758,7 @@ impl ArtifactApp for SpaceApp {
         owner: SpaceApp,
         owner_file: "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/🦀️.rs",
         controller: "s.space.studio@1/*#editor",
-        document_schema: "os.workflow",
+        artifact_schema: "os.workflow",
         factory: "SpaceCommandJobFactory",
         factory_type: SpaceCommandJobFactory,
         contract: space_bounded_contract(),

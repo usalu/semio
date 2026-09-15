@@ -4,9 +4,9 @@ use semio_framework_plugin::UiAssemblyResult;
 use semio_framework_ui_contract::{ActionId as UiActionId, Buildable, HasBase, HasChildren};
 
 use flow::{export_solid_json, import_solid_json, tessellate_geometry};
-use flow::{flow_neuron_kind_info_map, forms_bridge::flow_fixture_to_form_spec, FlowHost};
+use flow::{flow_neuron_kind_info_map, forms_bridge::flow_host_document_to_form_spec, FlowHost};
 use protocol::MutationDiff;
-use semio_framework_artifact_flow_flow::{FlowFixture, Widget};
+use semio_framework_artifact_flow_flow::{FlowHostDocument, Widget};
 use semio_framework_artifact_playbook_playbook::{visible_blocks, PlaybookBlock};
 use semio_framework_plugin::__semio_dispatch_PluginApp;
 use semio_framework_plugin::app::InteractionView;
@@ -19,7 +19,7 @@ use semio_framework_plugin::{
 // replacement, `🧰️framework/🔨️modules/🎒️pack/🔤️json/🦀️.rs`), keeping this file's shape
 // unchanged everywhere else. `playbook::visible_blocks` (`🧰️framework/🛍️products/💻️os/🔨️modules/📖️playbook/🦀️.rs`)
 // takes `&PlaybookValues` (`HashMap<String, DslValue>`) — already first-party, converted through
-// `json_to_dsl_value` at its one call site below, no `serde_json` crossing left. `FlowFixture`
+// `json_to_dsl_value` at its one call site below, no `serde_json` crossing left. `FlowHostDocument`
 // itself now derives `ToValue`/`FromValue` alongside `Serialize`/`Deserialize`, so its own parse
 // goes through `pack::json::from_json_str` below instead. Every other JSON value in this file is
 // arbitrary-shaped and goes through `pack::json` instead.
@@ -57,10 +57,10 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 //#endregion 🗃️Apps
 // 🩹️ Was `include_str!` of procedural's example fixture; procedural migrated that fixture to a
 // handcrafted DSL (`store::ArtifactDsl`) that this module (which parses the content as a raw
-// `FlowFixture`, not a `Generation3dDocument`) doesn't read — inlined the same flow-fixture JSON
+// `FlowHostDocument`, not a `Generation3dDocument`) doesn't read — inlined the same flow-fixture JSON
 // this module actually needs, decoupled from procedural's document format.
 const HEX_COLUMN_FIXTURE_JSON: &str = r#"{
-  "schema": "flow.fixture",
+  "schema": "flow.host_document",
   "camera": { "x": 94.75581571737445, "y": -97.50833134679668, "zoom": 1.7844325616011099 },
   "widgets": [
     { "kind": "inputSlider", "id": "height", "label": "Column Height", "value": 6.0, "min": 0.0, "max": 10.0, "step": 0.5, "unit": "m" },
@@ -333,7 +333,7 @@ fn geometry_handle_for_widget(eval: &Value, widget_id: &str) -> Option<String> {
     handles.into_iter().next()
 }
 
-fn apply_flow_params(host: &mut FlowHost, fixture: &FlowFixture, params: &Value) {
+fn apply_flow_params(host: &mut FlowHost, fixture: &FlowHostDocument, params: &Value) {
     let Some(object) = params.as_object() else {
         return;
     };
@@ -350,8 +350,8 @@ fn apply_flow_params(host: &mut FlowHost, fixture: &FlowFixture, params: &Value)
     }
 }
 
-fn evaluated_preview_payload(fixture: &FlowFixture, params: &Value) -> (String, String) {
-    let mut host = FlowHost::from_fixture(fixture.clone());
+fn evaluated_preview_payload(fixture: &FlowHostDocument, params: &Value) -> (String, String) {
+    let mut host = FlowHost::from_host_document(fixture.clone());
     host.set_neuron_kind_info_map(flow_neuron_kind_info_map());
     apply_flow_params(&mut host, fixture, params);
     let eval_json = host.evaluate().unwrap_or_default();
@@ -408,7 +408,7 @@ fn render_preview_body(payload: &ModuleRenderPayload) -> UiAssemblyResult<BuiltN
     let Some(fixture_json) = fixture_json_for_slug(slug) else {
         return text_node(format!("Unknown fixture slug: {slug}"));
     };
-    let fixture: FlowFixture = pack::json::from_json_str(fixture_json).unwrap_or_else(|_| FlowFixture::default());
+    let fixture: FlowHostDocument = pack::json::from_json_str(fixture_json).unwrap_or_else(|_| FlowHostDocument::default());
     let params = params_as_json(&payload.params);
     let (meshes_json, instances_json) = evaluated_preview_payload(&fixture, &params);
     scene_surface(PREVIEW_SURFACE, SurfaceKind::World3d, &world3d_scene(world3d_default_camera(), meshes_json, instances_json, world3d_selection_json("single", &[], None), &WorldSunConfig::default()))
@@ -417,8 +417,8 @@ fn render_preview_body(payload: &ModuleRenderPayload) -> UiAssemblyResult<BuiltN
 
 //#region 🔖️MediaExport
 /// 🧵️ Collects every distinct brep geometry handle exposed by the fixture's preview-flagged widgets, evaluated against the current param overrides — same eval pass as `evaluated_preview_payload`, minus the tessellation step.
-fn evaluated_preview_geometry_handles(fixture: &FlowFixture, params: &Value) -> Vec<String> {
-    let mut host = FlowHost::from_fixture(fixture.clone());
+fn evaluated_preview_geometry_handles(fixture: &FlowHostDocument, params: &Value) -> Vec<String> {
+    let mut host = FlowHost::from_host_document(fixture.clone());
     host.set_neuron_kind_info_map(flow_neuron_kind_info_map());
     apply_flow_params(&mut host, fixture, params);
     let eval_json = host.evaluate().unwrap_or_default();
@@ -445,7 +445,7 @@ fn handle_export_solid(payload: &mut ModuleRenderPayload, format: &str) {
     let Some(fixture_json) = fixture_json_for_slug(slug) else {
         return;
     };
-    let fixture: FlowFixture = pack::json::from_json_str(fixture_json).unwrap_or_else(|_| FlowFixture::default());
+    let fixture: FlowHostDocument = pack::json::from_json_str(fixture_json).unwrap_or_else(|_| FlowHostDocument::default());
     let handles = evaluated_preview_geometry_handles(&fixture, &params_as_json(&payload.params));
     let result_json =
         if handles.is_empty() { pack::json!({ "error": "no procedural solid geometry to export" }) } else { parse_json(&export_solid_json(&handles, format, SOLID_EXPORT_DEFLECTION)).unwrap_or(pack::json!({ "error": "export failed" })) };
@@ -516,8 +516,8 @@ fn render_params_body(payload: &ModuleRenderPayload, labels: &ModuleLabels) -> U
     let Some(fixture_json) = fixture_json_for_slug(slug) else {
         return text_node(format!("Unknown fixture slug: {slug}"));
     };
-    let fixture: FlowFixture = pack::json::from_json_str(fixture_json).map_err(|error| PluginAssemblyError::new("procedural.fixture", error.to_string()))?;
-    let spec = flow_fixture_to_form_spec(&fixture);
+    let fixture: FlowHostDocument = pack::json::from_json_str(fixture_json).map_err(|error| PluginAssemblyError::new("procedural.fixture", error.to_string()))?;
+    let spec = flow_host_document_to_form_spec(&fixture);
     let values: Map = params_as_json(&payload.params).as_object().cloned().unwrap_or_default();
     let Some(step) = spec.steps.first() else {
         return text_node(labels.no_flow_inputs.as_str());

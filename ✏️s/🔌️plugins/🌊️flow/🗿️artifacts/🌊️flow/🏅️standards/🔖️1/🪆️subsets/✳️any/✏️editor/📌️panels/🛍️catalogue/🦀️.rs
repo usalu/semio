@@ -54,8 +54,8 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(fixture: &FlowSnapshot, config: &FlowMainWindowConfig, session: &FlowEvalSession, labels: &FlowPlayLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    let host = host_from_snapshot(fixture, config, session);
+pub fn render(snapshot: &FlowSnapshot, config: &FlowMainWindowConfig, session: &FlowEvalSession, labels: &FlowPlayLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    let host = host_from_snapshot(snapshot, config, session);
     let raw = host.catalogue_json().map_err(|error| PluginAssemblyError::new("ui.catalogue", error.to_string()))?;
     let catalogue: Value = serde_json::from_str(&raw).map_err(|error| PluginAssemblyError::new("ui.catalogue", error.to_string()))?;
     let sections = catalogue.as_array().ok_or_else(|| PluginAssemblyError::new("ui.catalogue", "flow catalogue root must be an array"))?;

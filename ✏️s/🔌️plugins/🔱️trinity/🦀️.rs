@@ -31,7 +31,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// the artifact/schema/io itself. `.activation(…)`/`.execution(…)`/`.requests(…)` (ticket
 /// 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME M6-remaining, `📓️design-abi.md` §3/§6) are this
 /// crate's migration proof: one `OnArtifactKind` event per owned kind, read live from each artifact's
-/// own `artifact_kind().id`, `Isolated` execution, one `documents.write` ask covering both editors.
+/// own `artifact_kind().id`, `Isolated` execution, one `artifacts.write` ask covering both editors.
 pub fn plugin() -> Result<Plugin<TrinityApps>, PluginAssemblyError> {
     Plugin::<TrinityApps>::builder("trinity")
         .label("Trinity")
@@ -46,7 +46,7 @@ pub fn plugin() -> Result<Plugin<TrinityApps>, PluginAssemblyError> {
         .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_trinity_jack::artifact_kind().id })
         .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_trinity_rewriting::artifact_kind().id })
         .execution(ExecutionMode::Isolated)
-        .requests(CapabilityRequest { id: CapabilityId("documents.write".into()), scope: "plugin".into(), reason: "persist trinity jack/rewriting edits to the open document".into(), optional: false })
+        .requests(CapabilityRequest { id: CapabilityId("artifacts.write".into()), scope: "plugin".into(), reason: "persist trinity jack/rewriting edits to the open document".into(), optional: false })
         .try_build()
 }
 

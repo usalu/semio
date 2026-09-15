@@ -229,12 +229,12 @@
       "type": "object",
       "allOf": [
         {
-          "$ref": "https://semio.tech/schema/os/flow/artifacts/flow/vcs/mutation/replace-flow-fixture/schema.json#/$defs/Payload"
+          "$ref": "https://semio.tech/schema/os/flow/artifacts/flow/vcs/mutation/replace-flow-host-document/schema.json#/$defs/Payload"
         },
         {
           "properties": {
             "operation": {
-              "const": "replaceFlowFixture"
+              "const": "replaceFlowHostDocument"
             }
           },
           "required": [

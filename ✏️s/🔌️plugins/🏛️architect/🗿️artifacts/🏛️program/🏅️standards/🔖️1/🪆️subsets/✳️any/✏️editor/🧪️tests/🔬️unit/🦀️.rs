@@ -180,7 +180,7 @@ async fn the_manifest_stitches_every_taxonomy_node() {
     let definition = create_architect_app();
     assert_eq!(definition.modes.len(), 3);
     assert_eq!(definition.window_kinds.len(), 5);
-    for body_key in [document_panel::ARCHITECT_BODY_DOCUMENT, catalogue_panel::ARCHITECT_BODY_CATALOGUE, inspection_panel::ARCHITECT_BODY_INSPECTION] {
+    for body_key in [document_panel::ARCHITECT_BODY_ARTIFACT, catalogue_panel::ARCHITECT_BODY_CATALOGUE, inspection_panel::ARCHITECT_BODY_INSPECTION] {
         assert!(definition.panel_tabs.iter().any(|tab| tab.body_key.as_deref() == Some(body_key)), "panel tab {body_key} is stitched into the manifest");
     }
     for window in [adjacency_window::ARCHITECT_WINDOW_ADJACENCY, graph_window::ARCHITECT_WINDOW_GRAPH, register_window::ARCHITECT_WINDOW_REGISTER, report_window::ARCHITECT_WINDOW_REPORT, trace_window::ARCHITECT_WINDOW_TRACE] {
@@ -350,7 +350,7 @@ async fn interaction_select_stamps_the_picked_element_as_selected_in_the_documen
     app.handle_action("interactionSelect", Some(&dsl::json::to_dsl_value(&dsl::json!({ "domainId": ARCHITECT_INTERACTION_PROGRAM, "targets": targets, "merge": "replace" }))), &semio_framework_plugin::artifact_app_laws::meta("test"))
         .await
         .expect("interactionSelect");
-    let rendered = context::render(&mut app, document_panel::ARCHITECT_BODY_DOCUMENT).await;
+    let rendered = context::render(&mut app, document_panel::ARCHITECT_BODY_ARTIFACT).await;
     assert!(rendered.contains(&element_id), "the rendered tree must still list the picked element");
     assert!(rendered.contains("\"selected\":true"), "the picked element must be stamped selected by the framework wrapper");
 }

@@ -28,7 +28,6 @@ semio_framework_plugin::app_labels! {
         graph_empty: native_en "(no nodes)", native_de "(keine Knoten)", reuse_en "(no nodes)", reuse_de "(keine Knoten)";
         graph_unwired: native_en "(no wires)", native_de "(keine Leitungen)", reuse_en "(no wires)", reuse_de "(keine Leitungen)";
         status_ok: native_en "Evaluated", native_de "Ausgewertet", reuse_en "Evaluated", reuse_de "Ausgewertet";
-        status_stale: native_en "Stale", native_de "Veraltet", reuse_en "Stale", reuse_de "Veraltet";
         status_queued: native_en "Queued", native_de "In Warteschlange", reuse_en "Queued", reuse_de "In Warteschlange";
         status_computing: native_en "Computing", native_de "Berechnen", reuse_en "Computing", reuse_de "Berechnen";
         status_error: native_en "Error", native_de "Fehler", reuse_en "Error", reuse_de "Fehler";

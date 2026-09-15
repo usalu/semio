@@ -85,7 +85,7 @@ impl ArtifactEditor for En1990PlayApp {
         owner: semio_framework_plugin::EditorApp<En1990PlayApp>,
         owner_file: "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.norm.en1990@1/*#editor",
-        document_schema: "semio.norm.en1990/v1",
+        artifact_schema: "semio.norm.en1990/v1",
         factory: "En1990BoundedCommandJobFactory",
         factory_type: En1990BoundedCommandJobFactory,
         contract: semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
@@ -127,11 +127,11 @@ impl ArtifactEditor for En1990PlayApp {
     }
 
     fn render(body_key: &str, doc: &ArtifactView<'_, En1990Snapshot>, cfg: &ConfigView<'_, NoConfig>, _view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
-        let host = NormHost::<En1990Family>::from_document(doc.snapshot.clone());
+        let host = NormHost::<En1990Family>::from_artifact(doc.snapshot.clone());
         match body_key {
             inputs::BODY_INPUTS => inputs::render(doc.snapshot),
             results::BODY_RESULTS => results::render(&host),
-            document_panel::BODY_DOCUMENT => document_panel::render(&host),
+            document_panel::BODY_ARTIFACT => document_panel::render(&host),
             catalogue_panel::BODY_CATALOGUE => catalogue_panel::render(),
             inspection_panel::BODY_INSPECTION => inspection_panel::render(&host, crate::results_window_config::current::<results::ResultsWindowConfigOwner>(cfg).selected_check_index),
             _ => crate::app_surface::render_unknown_body(body_key),
@@ -140,14 +140,14 @@ impl ArtifactEditor for En1990PlayApp {
     }
 
     //#region ðï¸MediaPorts
-    /// ðï¸ `"report:out"`/`"document:out"` â see `crate::app_surface::export_media`, which all fifteen apps
-    /// share (overriding this method shadows the SDK default entirely, so `"document:out"` is
+    /// ðï¸ `"report:out"`/`"artifact:out"` â see `crate::app_surface::export_media`, which all fifteen apps
+    /// share (overriding this method shadows the SDK default entirely, so `"artifact:out"` is
     /// re-implemented there rather than left unreachable).
     fn export_media(port: &str, doc: &ArtifactView<'_, En1990Snapshot>) -> Result<Media, MediaError> {
         crate::app_surface::export_media::<En1990Family>(port, VARIANT, DOCUMENT_SCHEMA, doc.snapshot)
     }
 
-    /// ðï¸ `"model:in"`/`"document:in"` â see `crate::app_surface::import_media`.
+    /// ðï¸ `"model:in"`/`"artifact:in"` â see `crate::app_surface::import_media`.
     fn import_media(port: &str, media: &Media, doc: &ArtifactView<'_, En1990Snapshot>) -> Result<Emit<En1990Mutation, NoConfigMutation, Self::DraftMutation>, MediaError> {
         let base = doc.snapshot.clone();
         crate::app_surface::import_media(port, media, move |snapshot: En1990Snapshot| En1990Mutation::from_snapshot(&base, &snapshot))

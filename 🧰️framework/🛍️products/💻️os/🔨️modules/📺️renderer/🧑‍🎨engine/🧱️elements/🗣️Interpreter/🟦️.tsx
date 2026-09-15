@@ -63,6 +63,7 @@ import {
   type ComponentKind,
   type ComponentSceneHostProps,
   type ContextMenuItemSpec,
+  type ContinuousGestureLane,
   type PluginContextMenuRequest,
   type UiComponentSceneNode,
   type UiMenuRef,
@@ -74,6 +75,7 @@ import {
   WORLD3D_SCENE_LANE_KEY_PREFIX,
   board2dSceneFromLanes,
   canvas2dSceneFromLanes,
+  createContinuousGestureLane,
   sceneFromLanes,
   world3dSceneFromLanes,
   world3dSceneLaneForBodyKey,
@@ -632,7 +634,10 @@ export type UiInterpreterContext = {
    * never use this; they go through `emitIntent`/`UiIntent` instead. */
   readonly onAction: (action: ActionDescriptor) => void;
   /** 🎬️ Semantic dispatch — fires a `UiIntent` built from the node's own `ActionBinding`s. */
-  readonly onIntent: (intent: UiIntent) => void;
+  /** 🔁️ Answers with the promise the shell's own dispatch settles on, so a CONTINUOUS control (a
+   * dragged slider, a held spinner) can tell whether its last value has landed. `void` is still
+   * accepted for a sink that has nothing to settle. */
+  readonly onIntent: (intent: UiIntent) => void | Promise<void>;
   readonly requestContextMenu?: (request: PluginContextMenuRequest) => Promise<readonly ContextMenuItemSpec[]>;
 };
 //#endregion UiInterpreterContext
@@ -937,10 +942,36 @@ function resolveControlIconNode(iconId: string, size: number | "tiny" | "small" 
   return <Icon icon={iconId as IconName} size={size} />;
 }
 
-function dispatchTrigger(context: UiInterpreterContext, record: UiNodeRecord, trigger: UiTrigger, input?: UiValue): void {
+function dispatchTrigger(context: UiInterpreterContext, record: UiNodeRecord, trigger: UiTrigger, input?: UiValue): void | Promise<void> {
   const intent = emitIntent(context.store, record, trigger, input);
-  if (intent) context.onIntent(intent);
+  return intent ? context.onIntent(intent) : undefined;
 }
+
+//#region 🎚️ContinuousControlLane
+/** 🎚️ The coalescing lane a CONTINUOUS control's `change` trigger rides, one per mounted control.
+ *
+ * A slider dragged at 60 Hz, or a spinner held down, emits a value every frame. Dispatching each one
+ * is one retained command, one document edit, one history entry and one preview re-evaluation EACH:
+ * measured on 6018, a one-second drag of the Inspection panel's number field cost 29
+ * `patchFlowWidgets`, 24 `toolRunStart`s and 29 history entries, and the mesh arrived 3.0 s behind the
+ * value (`📓️slider-preview-update-2026-09-15.md`). The lane keeps ONE value in flight and ONE owed —
+ * always the newest — and always sends the release.
+ *
+ * `context` and `record` are read through a ref because both identities change on every render while
+ * the lane must outlive them: a lane recreated per render is not a lane. */
+function useContinuousTriggerLane(context: UiInterpreterContext, record: UiNodeRecord): ContinuousGestureLane<UiValue> {
+  const bindingRef = useRef({ context, record });
+  bindingRef.current = { context, record };
+  const laneRef = useRef<ContinuousGestureLane<UiValue> | null>(null);
+  if (laneRef.current === null) {
+    laneRef.current = createContinuousGestureLane<UiValue>({
+      send: (value) => dispatchTrigger(bindingRef.current.context, bindingRef.current.record, "change", value),
+      onFault: (error) => console.error("[DEBUG] continuous control dispatch failed", error),
+    });
+  }
+  return laneRef.current;
+}
+//#endregion 🎚️ContinuousControlLane
 
 /** 🧬️ Widens a primitive into the untagged `UiValue` union — every `Change`/`Delta` trigger's own
  * payload is always one of these three JS-native shapes, never a nested list/map, at this call site. */
@@ -1139,8 +1170,17 @@ function InputView({ record, context }: { readonly record: UiNodeRecord; readonl
   const component = record.component as Extract<Component, { type: "input" }>;
   const commitOnBlur = component.commit === "blur";
   const [draft, setDraft] = useCommitDraft(component.value);
+  const lane = useContinuousTriggerLane(context, record);
+  // 🎚️ A number field with no `commit` mode IS a continuous control: a held spinner, an arrow key on
+  // repeat and a scripted value stream all emit a value per frame, and each one costs a whole
+  // document round trip. It rides the same coalescing lane as a slider, and its blur is the release.
+  const continuous = component.kind === "number" && !commitOnBlur;
   const commitValue = (raw: string) => {
     const value: UiValue = component.kind === "number" ? toUiValue(Number(raw)) : toUiValue(raw);
+    if (continuous) {
+      lane.offer(value);
+      return;
+    }
     dispatchTrigger(context, record, commitOnBlur ? "commit" : "change", value);
   };
   /** ⌨️ Enter commits without waiting for focus to leave — the gesture a user expects from an inline
@@ -1180,7 +1220,7 @@ function InputView({ record, context }: { readonly record: UiNodeRecord; readonl
       accept={component.kind === "file" ? (component.accept ?? undefined) : undefined}
       onChange={commitOnBlur && component.kind !== "file" ? (event) => setDraft(event.target.value) : (event) => commitValue(component.kind === "file" ? (event.target.files?.[0]?.name ?? "") : event.target.value)}
       onKeyDown={commitOnBlur ? commitOnEnter : undefined}
-      onBlur={commitOnBlur ? (event) => commitValue(component.kind === "file" ? (event.target.files?.[0]?.name ?? "") : event.target.value) : undefined}
+      onBlur={commitOnBlur ? (event) => commitValue(component.kind === "file" ? (event.target.files?.[0]?.name ?? "") : event.target.value) : continuous ? (event) => lane.commit(toUiValue(Number(event.target.value))) : undefined}
     />
   );
 }
@@ -1224,6 +1264,7 @@ function KeyValueListView({ record }: { readonly record: UiNodeRecord }) {
 
 function SliderView({ record, context }: { readonly record: UiNodeRecord; readonly context: UiInterpreterContext }) {
   const component = record.component as Extract<Component, { type: "slider" }>;
+  const lane = useContinuousTriggerLane(context, record);
   const slider = (
     <Slider
       id={nodeDomId(context.store, record)}
@@ -1233,7 +1274,8 @@ function SliderView({ record, context }: { readonly record: UiNodeRecord; readon
       min={component.min}
       step={component.step}
       value={[component.value]}
-      onValueChange={(values) => dispatchTrigger(context, record, "change", toUiValue(values[0] ?? component.value))}
+      onValueChange={(values) => lane.offer(toUiValue(values[0] ?? component.value))}
+      onValueCommit={(values) => lane.commit(toUiValue(values[0] ?? component.value))}
     />
   );
   if (!component.unit) return slider;

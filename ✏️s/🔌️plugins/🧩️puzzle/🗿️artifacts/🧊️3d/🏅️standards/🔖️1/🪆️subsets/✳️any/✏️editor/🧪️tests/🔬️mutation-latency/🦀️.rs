@@ -105,24 +105,24 @@ fn the_incremental_residency_assembles_byte_identically_to_the_whole_set_encode(
 fn a_mutation_emits_o_changed_operations_whatever_the_document_size() {
     let large = &*NAKAGIN_EXAMPLE_FIXTURE;
     assert!(large.objects.len() >= 100, "the law needs a document large enough for O(n) and O(changed) to differ; got {}", large.objects.len());
-    let before = crate::editor::puzzle3d::puzzle3d_snapshot_from_fixture(large);
+    let before = crate::editor::puzzle3d::puzzle3d_snapshot_from_host_document(large);
 
     let mut deleted = large.clone();
     let removed = deleted.objects.remove(0).id;
-    let delete_operations = puzzle3d_snapshot_mutations(&before, &crate::editor::puzzle3d::puzzle3d_snapshot_from_fixture(&deleted));
+    let delete_operations = puzzle3d_snapshot_mutations(&before, &crate::editor::puzzle3d::puzzle3d_snapshot_from_host_document(&deleted));
     eprintln!("[DEBUG] b44.emit objects={} deleteOperations={} removed={removed}", large.objects.len(), delete_operations.len());
     assert_eq!(delete_operations.len(), 1, "deleting the FIRST of {} objects must emit one operation, not rewrite the tail", large.objects.len());
 
     let mut moved = large.clone();
     moved.objects[0].origin[1] += 2.75;
-    let move_operations = puzzle3d_snapshot_mutations(&before, &crate::editor::puzzle3d::puzzle3d_snapshot_from_fixture(&moved));
+    let move_operations = puzzle3d_snapshot_mutations(&before, &crate::editor::puzzle3d::puzzle3d_snapshot_from_host_document(&moved));
     eprintln!("[DEBUG] b44.emit objects={} moveOperations={}", large.objects.len(), move_operations.len());
     assert_eq!(move_operations.len(), 1, "moving one of {} objects must emit one operation", large.objects.len());
 
     let mut both = large.clone();
     both.objects[0].origin[1] += 2.75;
     both.objects[1].origin[2] -= 1.25;
-    let both_operations = puzzle3d_snapshot_mutations(&before, &crate::editor::puzzle3d::puzzle3d_snapshot_from_fixture(&both));
+    let both_operations = puzzle3d_snapshot_mutations(&before, &crate::editor::puzzle3d::puzzle3d_snapshot_from_host_document(&both));
     assert_eq!(both_operations.len(), 2, "two moved objects emit two operations — the emit is priced by the delta, not by the document");
 }
 

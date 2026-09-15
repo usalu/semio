@@ -54,7 +54,7 @@ export async function registerCancelJobReplyTests(
       expect(seen).toEqual([5n]);
       expect(result, "a cancelJob request the worker never answers is the outstanding request the watchdog kills the shard over").toBeTruthy();
       expect(result?.ok).toBe(true);
-      expect(posted.some((message) => message.kind === "heartbeat"), "an unanswered request is also an unbeaten one — the worker looks dead rather than busy").toBe(true);
+      expect(typeof (result as { beat?: { turnSeq?: number } })?.beat?.turnSeq, "an unanswered request is also an unbeaten one — the worker looks dead rather than busy, and since 2026-09-15 the beat RIDES the reply instead of costing its own message").toBe("number");
       expect(SHARD_LIVENESS_POLICY.missedLimit).toBeGreaterThan(0);
       console.log(`shard-worker.cancel-job-reply posts=${posted.map((message) => message.kind).join(",")}`);
     });

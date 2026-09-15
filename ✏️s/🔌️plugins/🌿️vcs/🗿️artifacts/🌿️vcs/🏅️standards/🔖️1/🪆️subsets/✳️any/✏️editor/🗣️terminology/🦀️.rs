@@ -6,7 +6,7 @@
 semio_framework_plugin::app_labels! {
     /// 🗣️ Complete UI label set for the VCS app; one field per label makes every locale combination compile-checked.
     pub struct VcsPlayLabels {
-        document: native_en "Document", native_de "Dokument", reuse_en "Document", reuse_de "Dokument";
+        artifact: native_en "Artifact", native_de "Artefakt", reuse_en "Artifact", reuse_de "Artefakt";
         actions: native_en "Actions", native_de "Aktionen", reuse_en "Actions", reuse_de "Aktionen";
         counter: native_en "Counter", native_de "Zähler", reuse_en "Counter", reuse_de "Zähler";
         commit: native_en "Commit", native_de "Commit", reuse_en "Commit", reuse_de "Commit";

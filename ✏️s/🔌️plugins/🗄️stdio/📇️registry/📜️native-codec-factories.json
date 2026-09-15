@@ -11,7 +11,7 @@
     "descriptor_codec_id": "s.stdio.avi.standard.1-0.codec.native-document.v1",
     "runtime_capability_id": "s.stdio.avi.standard.1-0.codec.codec-stdio-avi-extension-semio.v1",
     "artifact_kind": "stdio.avi",
-    "document_schema": "stdio.avi",
+    "artifact_schema": "stdio.avi",
     "extension": "semio",
     "pack_schema_sha256": "de0d04905741068debee64bacacaf53197ac57741bd12991074e49f34ab9c690",
     "protocol_path": "🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio"
@@ -22,7 +22,7 @@
     "descriptor_codec_id": "s.stdio.bcf.standard.2-1.codec.native-document.v1",
     "runtime_capability_id": "s.stdio.bcf.standard.2-1.codec.codec-stdio-bcf-extension-bcf.v1",
     "artifact_kind": "stdio.bcf",
-    "document_schema": "stdio.bcf",
+    "artifact_schema": "stdio.bcf",
     "extension": "bcf",
     "pack_schema_sha256": "a0a9aeb921b5347337f68c7544dc73b566d953851634683ca3102bd555664abc",
     "protocol_path": "🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio"
@@ -33,7 +33,7 @@
     "descriptor_codec_id": "s.stdio.csv.standard.rfc4180.codec.native-document.v1",
     "runtime_capability_id": "s.stdio.csv.standard.rfc4180.codec.codec-stdio-csv-extension-csv.v1",
     "artifact_kind": "stdio.csv",
-    "document_schema": "stdio.csv",
+    "artifact_schema": "stdio.csv",
     "extension": "csv",
     "pack_schema_sha256": "a4810543b9f45e25228b492f1f2e188db09d9331c1ef5fd14cced527a2878a17",
     "protocol_path": "🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio"
@@ -44,7 +44,7 @@
     "descriptor_codec_id": "s.stdio.deflate.standard.rfc1950.codec.native-document.v1",
     "runtime_capability_id": "s.stdio.deflate.standard.rfc1950.codec.codec-stdio-deflate-extension-zz.v1",
     "artifact_kind": "stdio.deflate",
-    "document_schema": "stdio.deflate",
+    "artifact_schema": "stdio.deflate",
     "extension": "zz",
     "pack_schema_sha256": "09606efdb4dcf74613fd853e260c354fd04eddabb956079c6aabecc3c01559ea",
     "protocol_path": "🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio"
@@ -55,7 +55,7 @@
     "descriptor_codec_id": "s.stdio.docx.standard.ecma-376.codec.native-document.v1",
     "runtime_capability_id": "s.stdio.docx.standard.ecma-376.codec.codec-stdio-docx-extension-docx.v1",
     "artifact_kind": "stdio.docx",
-    "document_schema": "stdio.docx",
+    "artifact_schema": "stdio.docx",
     "extension": "docx",
     "pack_schema_sha256": "bc026d9b89ea95dc2ecf4570b51ddcb8b183caf0d84eaf397570f2926a13bbba",
     "protocol_path": "🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio"
@@ -66,7 +66,7 @@
     "descriptor_codec_id": "s.stdio.dwg.standard.ac1024.codec.native-document.v1",
     "runtime_capability_id": "s.stdio.dwg.standard.ac1018.codec.codec-stdio-dwg-extension-dwg.v1",
     "artifact_kind": "stdio.dwg",
-    "document_schema": "stdio.dwg",
+    "artifact_schema": "stdio.dwg",
     "extension": "dwg",
     "pack_schema_sha256": "29035528709921a6dadecf2968004525baa90f33690d5dc5e09ee4fe49852bb5",
     "protocol_path": "🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio"
@@ -77,7 +77,7 @@
     "descriptor_codec_id": "s.stdio.dxf.standard.r12.codec.native-document.v1",
     "runtime_capability_id": "s.stdio.dxf.standard.r12.codec.codec-stdio-dxf-extension-dxf.v1",
     "artifact_kind": "stdio.dxf",
-    "document_schema": "stdio.dxf",
+    "artifact_schema": "stdio.dxf",
     "extension": "dxf",
     "pack_schema_sha256": "b0d5eb41ea2a3e261d99cb7387688720c225d74dad1b4d260b35e8ca28b9fd99",
     "protocol_path": "🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio"
@@ -88,7 +88,7 @@
     "descriptor_codec_id": "s.stdio.gltf.standard.2-0.codec.native-document.v1",
     "runtime_capability_id": "s.stdio.gltf.standard.2-0.codec.codec-stdio-gltf-extension-gltf.v1",
       "artifact_kind": "s.stdio.gltf",
-    "document_schema": "stdio.gltf",
+    "artifact_schema": "stdio.gltf",
     "extension": "gltf",
     "pack_schema_sha256": "b10e15cf930fe4e7e99655f70bd3087d1ba2bb6fbb53345fe0a9924bdcd202d8",
     "protocol_path": "🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio"
@@ -99,7 +99,7 @@
     "descriptor_codec_id": "s.stdio.jpg.standard.jfif-1-01.codec.native-document.v1",
     "runtime_capability_id": "s.stdio.jpg.standard.jfif-1-01.codec.codec-stdio-jpg-extension-jpg.v1",
     "artifact_kind": "stdio.jpg",
-    "document_schema": "stdio.jpg",
+    "artifact_schema": "stdio.jpg",
     "extension": "jpg",
     "pack_schema_sha256": "f219d5263766b5f60120ccd63da80058f6a6082b8347e1e220181a686f7c60ad",
     "protocol_path": "🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio"
@@ -110,7 +110,7 @@
     "descriptor_codec_id": "s.stdio.json.standard.rfc8259.codec.native-document.v1",
     "runtime_capability_id": "s.stdio.json.standard.rfc8259.codec.codec-stdio-json-extension-json.v1",
     "artifact_kind": "stdio.json",
-    "document_schema": "stdio.json",
+    "artifact_schema": "stdio.json",
     "extension": "json",
     "pack_schema_sha256": "5cea30cf9b0956e112863b9183e9bde32087a14faffc34cf2e017f8d2b86c71a",
     "protocol_path": "🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio"
@@ -121,7 +121,7 @@
     "descriptor_codec_id": "s.stdio.las.standard.1-0.codec.native-document.v1",
     "runtime_capability_id": "s.stdio.las.standard.1-0.codec.codec-stdio-las-extension-las.v1",
     "artifact_kind": "stdio.las",
-    "document_schema": "stdio.las",
+    "artifact_schema": "stdio.las",
     "extension": "las",
     "pack_schema_sha256": "1017f34238855d14c9d3a101bc57759bf369905c897d91db23e44bb1cc7ef199",
     "protocol_path": "🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/🎩️header/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio"
@@ -132,7 +132,7 @@
     "descriptor_codec_id": "s.stdio.md.standard.commonmark.codec.native-document.v1",
     "runtime_capability_id": "s.stdio.md.standard.commonmark.codec.codec-stdio-md-extension-md.v1",
     "artifact_kind": "stdio.md",
-    "document_schema": "stdio.md",
+    "artifact_schema": "stdio.md",
     "extension": "md",
     "pack_schema_sha256": "c6a6e37e788b111c9ac17746093db293d9d9d5372a628a17821bc698ae8afbfa",
     "protocol_path": "🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio"
@@ -143,7 +143,7 @@
     "descriptor_codec_id": "s.stdio.mp3.standard.mpeg1-layer3.codec.native-document.v1",
     "runtime_capability_id": "s.stdio.mp3.standard.mpeg1-layer3.codec.codec-stdio-mp3-extension-mp3.v1",
     "artifact_kind": "stdio.mp3",
-    "document_schema": "stdio.mp3",
+    "artifact_schema": "stdio.mp3",
     "extension": "mp3",
     "pack_schema_sha256": "3dc49d96a507fc2454bbb70e1d9958f08009bc3eb7db12da33c405ba148e7d6e",
     "protocol_path": "🗿️artifacts/🎵️mp3/🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio"
@@ -154,7 +154,7 @@
     "descriptor_codec_id": "s.stdio.mp4.standard.isobmff.codec.native-document.v1",
     "runtime_capability_id": "s.stdio.mp4.standard.isobmff.codec.codec-stdio-mp4-extension-semio.v1",
     "artifact_kind": "stdio.mp4",
-    "document_schema": "stdio.mp4",
+    "artifact_schema": "stdio.mp4",
     "extension": "semio",
     "pack_schema_sha256": "3dd6f57488121f469eaa871386c4842c322c25dbfa417b79342d2e547c57a915",
     "protocol_path": "🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio"
@@ -165,7 +165,7 @@
     "descriptor_codec_id": "s.stdio.obj.standard.3-0.codec.native-document.v1",
     "runtime_capability_id": "s.stdio.obj.standard.3-0.codec.codec-stdio-obj-extension-obj.v1",
     "artifact_kind": "stdio.obj",
-    "document_schema": "stdio.obj",
+    "artifact_schema": "stdio.obj",
     "extension": "obj",
     "pack_schema_sha256": "c66960b9a3ae9b20cd6acc31c344d39b0f217b8d2423bb39082baa8c8bfba787",
     "protocol_path": "🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio"
@@ -176,7 +176,7 @@
     "descriptor_codec_id": "s.stdio.pdf.standard.1-4.codec.native-document.v1",
     "runtime_capability_id": "s.stdio.pdf.standard.1-4.codec.codec-stdio-pdf-extension-pdf.v1",
     "artifact_kind": "stdio.pdf",
-    "document_schema": "stdio.pdf",
+    "artifact_schema": "stdio.pdf",
     "extension": "pdf",
     "pack_schema_sha256": "9f6de52d8be98fb427b4e2328b827b98a223494714c61b0bb5d44c2fa41fa7ce",
     "protocol_path": "🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio"
@@ -187,7 +187,7 @@
     "descriptor_codec_id": "s.stdio.ply.standard.1-0.codec.native-document.v1",
     "runtime_capability_id": "s.stdio.ply.standard.1-0.codec.codec-stdio-ply-extension-ply.v1",
     "artifact_kind": "stdio.ply",
-    "document_schema": "stdio.ply",
+    "artifact_schema": "stdio.ply",
     "extension": "ply",
     "pack_schema_sha256": "42ed85cd84beceab5a85f3d9784d66af517c0e85c843058411b52cb0b03cb40a",
     "protocol_path": "🗿️artifacts/🧱️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio"
@@ -198,7 +198,7 @@
     "descriptor_codec_id": "s.stdio.png.standard.1-2.codec.native-document.v1",
     "runtime_capability_id": "s.stdio.png.standard.1-2.codec.codec-stdio-png-extension-png.v1",
     "artifact_kind": "stdio.png",
-    "document_schema": "stdio.png",
+    "artifact_schema": "stdio.png",
     "extension": "png",
     "pack_schema_sha256": "fae0c8a340fe7d7486768794f7f3cad326ec9cd055fe271985154c383c48f9d0",
     "protocol_path": "🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio"
@@ -209,7 +209,7 @@
     "descriptor_codec_id": "s.stdio.pptx.standard.ecma-376.codec.native-document.v1",
     "runtime_capability_id": "s.stdio.pptx.standard.ecma-376.codec.codec-stdio-pptx-extension-pptx.v1",
     "artifact_kind": "stdio.pptx",
-    "document_schema": "stdio.pptx",
+    "artifact_schema": "stdio.pptx",
     "extension": "pptx",
     "pack_schema_sha256": "83c2f6a9860ca932773a56bd3af8d558ebee223162e7b6bcecfff263988ea705",
     "protocol_path": "🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio"
@@ -220,7 +220,7 @@
     "descriptor_codec_id": "s.stdio.step.standard.ap214.codec.native-document.v1",
     "runtime_capability_id": "s.stdio.step.standard.ap214.codec.codec-stdio-step-extension-step.v1",
     "artifact_kind": "stdio.step",
-    "document_schema": "stdio.step",
+    "artifact_schema": "stdio.step",
     "extension": "step",
     "pack_schema_sha256": "7955ba193d890463155c4da998bfcaa1a126c9b7d53fef90998843a85d1d1ad5",
     "protocol_path": "🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio"
@@ -231,7 +231,7 @@
     "descriptor_codec_id": "s.stdio.stl.standard.ascii.codec.native-document.v1",
     "runtime_capability_id": "s.stdio.stl.standard.ascii.codec.codec-stdio-stl-extension-stl.v1",
     "artifact_kind": "stdio.stl",
-    "document_schema": "stdio.stl",
+    "artifact_schema": "stdio.stl",
     "extension": "stl",
     "pack_schema_sha256": "9c38a62ba3264c36c89a1e9aef6c3d993ce4419a13bbbdd15583d3e78e395440",
     "protocol_path": "🗿️artifacts/🔺️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio"
@@ -242,7 +242,7 @@
     "descriptor_codec_id": "s.stdio.svg.standard.1-1.codec.native-document.v1",
     "runtime_capability_id": "s.stdio.svg.standard.1-1.codec.codec-stdio-svg-extension-svg.v1",
     "artifact_kind": "stdio.svg",
-    "document_schema": "stdio.svg",
+    "artifact_schema": "stdio.svg",
     "extension": "svg",
     "pack_schema_sha256": "d206ade8f78d5daab8fe14d51941521cb092c5b87002bd9c9a9089d2fb477b98",
     "protocol_path": "🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio"
@@ -253,7 +253,7 @@
     "descriptor_codec_id": "s.stdio.tiff.standard.6-0.codec.native-document.v1",
     "runtime_capability_id": "s.stdio.tiff.standard.6-0.codec.codec-stdio-tiff-extension-tiff.v1",
     "artifact_kind": "stdio.tiff",
-    "document_schema": "stdio.tiff",
+    "artifact_schema": "stdio.tiff",
     "extension": "tiff",
     "pack_schema_sha256": "498e64a94f0652c53ffc1839376721e66ba387d38681cc179d7b0bf844bc9b4a",
     "protocol_path": "🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio"
@@ -264,7 +264,7 @@
     "descriptor_codec_id": "s.stdio.xlsx.standard.ecma-376.codec.native-document.v1",
     "runtime_capability_id": "s.stdio.xlsx.standard.ecma-376.codec.codec-stdio-xlsx-extension-xlsx.v1",
     "artifact_kind": "stdio.xlsx",
-    "document_schema": "stdio.xlsx",
+    "artifact_schema": "stdio.xlsx",
     "extension": "xlsx",
     "pack_schema_sha256": "52a9d42eed1d22504d190a8b6f9ab83a84b161dbf6a82d333d31c213ddff9cea",
     "protocol_path": "🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio"
@@ -275,7 +275,7 @@
     "descriptor_codec_id": "s.stdio.xml.standard.1-0.codec.native-document.v1",
     "runtime_capability_id": "s.stdio.xml.standard.1-0.codec.codec-stdio-xml-extension-xml.v1",
     "artifact_kind": "stdio.xml",
-    "document_schema": "stdio.xml",
+    "artifact_schema": "stdio.xml",
     "extension": "xml",
     "pack_schema_sha256": "874b28c8d55ae58982a4556ae5e01cfb3c70b69648b094b2920b34b742d06e08",
     "protocol_path": "🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio"
@@ -286,7 +286,7 @@
     "descriptor_codec_id": "s.stdio.zip.standard.2-0.codec.native-document.v1",
     "runtime_capability_id": "s.stdio.zip.standard.2-0.codec.codec-stdio-zip-extension-zip.v1",
     "artifact_kind": "stdio.zip",
-    "document_schema": "stdio.zip",
+    "artifact_schema": "stdio.zip",
     "extension": "zip",
     "pack_schema_sha256": "dd8e607c9ce0dc46608d4fe57c72166e47013684ff0cd86407414332fc2391d2",
     "protocol_path": "🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio"

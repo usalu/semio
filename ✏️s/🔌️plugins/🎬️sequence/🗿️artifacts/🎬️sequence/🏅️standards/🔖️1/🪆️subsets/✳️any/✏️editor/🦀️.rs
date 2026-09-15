@@ -23,13 +23,13 @@ use crate::editor::sequence::panels::{catalogue as catalogue_panel, document as 
 use crate::editor::sequence::terminology::sequence_play_labels;
 use crate::mutations::SequenceMutation;
 use crate::op::sequence_snapshot_mutations;
-use crate::{default_snapshot, SequenceCamera, SequenceEdge, SequenceFixture, SequenceSnapshot, SequenceStep, SequenceWorkingScene, SlotRef, StepParams, SEQUENCE_DOCUMENT_SCHEMA};
+use crate::{default_snapshot, SequenceCamera, SequenceEdge, SequenceHostDocument, SequenceSnapshot, SequenceStep, SequenceWorkingScene, SlotRef, StepParams, SEQUENCE_DOCUMENT_SCHEMA};
 use dag::{would_create_cycle, DagHost, DagLayoutOptions};
 use graph::manifest::PropertyBag;
 use imperative_engine::{compile_to_text as imperative_compile_to_text, imperative_catalogue_json, imperative_module_registry, Executor, Path, RunResult, Step};
 use infinite_board_port_directed_dag as dag;
 use neural_engine::{ChannelSpec, ColdOwner, Dictionary, Registry, RegistryRetirement, SharedRegistry, Value as NeuralValue, ValueRetirement, ValueRetirementStep};
-use semio_framework_artifact_infinite_dag::{dag_fixture_to_wire_literal, DagCamera, DagFixture, DagFixtureEdge, DagNodeSpec, EdgeRouteStyle, IoPortSpec, PortShape};
+use semio_framework_artifact_infinite_dag::{dag_fixture_to_wire_literal, DagCamera, DagHostDocument, DagHostDocumentEdge, DagNodeSpec, EdgeRouteStyle, IoPortSpec, PortShape};
 use semio_framework_plugin::{
     app::{ChildEmit, InteractionView}, ActionArgDef, ActionArgOption, ActionDefinition, ActionKind, AppActionRegistry, AppDefinition, AppIo, ArtifactEditor, ArtifactView, ConfigView, ContextMenuItemSpec,
     ContextMenuRequest, Dialect, DomainTopology, DraftView, DslValue, Editor, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractionTopology, Label, LocalizedLabel, Media, MediaError,
@@ -45,7 +45,7 @@ use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot
 pub const SEQUENCE_PLAY_APP_ID: &str = "s.sequence.sequence@1/*#editor";
 pub use catalogue_panel::SEQUENCE_PLAY_BODY_CATALOGUE;
 pub use compiled::SEQUENCE_PLAY_BODY_COMPILED;
-pub use document_panel::SEQUENCE_PLAY_BODY_DOCUMENT;
+pub use document_panel::SEQUENCE_PLAY_BODY_ARTIFACT;
 pub use inspection_panel::SEQUENCE_PLAY_BODY_INSPECTOR;
 pub use main::SEQUENCE_PLAY_BODY_MAIN;
 pub use script::SEQUENCE_PLAY_BODY_SCRIPT;
@@ -119,8 +119,8 @@ pub fn ui_node_list(values: impl IntoIterator<Item = semio_framework_plugin::UiA
 /// new steps in the sequence document (see `SequencePlayApp::import_media` below).
 pub fn sequence_io() -> AppIo {
     AppIo {
-        document_schema: SEQUENCE_DOCUMENT_SCHEMA.into(),
-        document_media_type: semio_framework::MediaType { class: semio_framework::MediaClass::Computation, form: semio_framework::MediaForm::Sequence },
+        artifact_schema: SEQUENCE_DOCUMENT_SCHEMA.into(),
+        artifact_media_type: semio_framework::MediaType { class: semio_framework::MediaClass::Computation, form: semio_framework::MediaForm::Sequence },
         ports: vec![semio_framework::MediaPortSpec {
             id: "steps:in".into(),
             label: "Steps".into(),
@@ -138,10 +138,10 @@ pub fn sequence_io() -> AppIo {
 
 /// 🎯️ Pure next-available step id for `import_media("steps:in", ...)` — mirrors `SequenceHost::next_step_id`
 /// but never mutates a host's serial counter (there is no live `SequenceHost` in a pure
-/// `ArtifactApp::import_media` call): derives the next id purely from the fixture's own existing
+/// `ArtifactApp::import_media` call): derives the next id purely from the snapshot's own existing
 /// `step-N`/`edge-N` ids, exactly like `SequenceHost::from_snapshot`'s own initial-serial derivation.
-pub fn next_available_step_id(fixture: &SequenceSnapshot) -> String {
-    format!("step-{}", max_serial_in_snapshot(&fixture.to_fixture()).max(100) + 1)
+pub fn next_available_step_id(snapshot: &SequenceSnapshot) -> String {
+    format!("step-{}", max_serial_in_snapshot(&snapshot.to_host_document()).max(100) + 1)
 }
 
 /// 🧸️ Resolves the document's exact published content child through its captured member-store view.
@@ -156,10 +156,10 @@ pub fn sequence_working_scene_from_children(snapshot: &SequenceSnapshot, childre
     Ok(ColdOwner::new(SequenceWorkingScene { steps, edges }))
 }
 
-/// 🎬️ Projects the published content child into the editor's plain execution fixture.
-pub fn sequence_fixture_from_children(snapshot: &SequenceSnapshot, children: &semio_framework_plugin::app::ChildContentView) -> Result<ColdOwner<SequenceFixture>, Fault> {
+/// 🎬️ Projects the published content child into the editor's plain execution snapshot.
+pub fn sequence_host_document_from_children(snapshot: &SequenceSnapshot, children: &semio_framework_plugin::app::ChildContentView) -> Result<ColdOwner<SequenceHostDocument>, Fault> {
     let SequenceWorkingScene { steps, edges } = sequence_working_scene_from_children(snapshot, children)?.into_inner();
-    Ok(ColdOwner::new(SequenceFixture { schema: snapshot.schema.clone(), steps, edges }))
+    Ok(ColdOwner::new(SequenceHostDocument { schema: snapshot.schema.clone(), steps, edges }))
 }
 
 /// 🌊️ Publishes an edited Sequence working scene on its exact composed Flow child lane.
@@ -179,8 +179,8 @@ fn sequence_child_replace_emit_from_parts(snapshot: &SequenceSnapshot, steps: &[
 
 /// 🧰️ Applies one editor host mutation to the captured typed child and emits its exact replacement.
 pub fn sequence_child_emit_from_host_mutation(doc: &ArtifactView<'_, SequenceSnapshot>, mutate: impl FnOnce(&mut SequenceHost)) -> Result<Emit<SequenceMutation, NoConfigMutation>, Fault> {
-    let live = sequence_fixture_from_children(doc.snapshot, &doc.children)?;
-    let mut host = ColdOwner::new(host_from_fixture(&live));
+    let live = sequence_host_document_from_children(doc.snapshot, &doc.children)?;
+    let mut host = ColdOwner::new(host_from_document(&live));
     mutate(&mut host);
     if host.snapshot == *live {
         return Ok(Emit::default());
@@ -345,14 +345,14 @@ fn parse_serial_suffix(prefix: &str, id: &str) -> Option<u64> {
     id.strip_prefix(prefix)?.parse().ok()
 }
 
-fn max_serial_in_snapshot(fixture: &SequenceFixture) -> u64 {
+fn max_serial_in_snapshot(snapshot: &SequenceHostDocument) -> u64 {
     let mut max = 0u64;
-    for step in &fixture.steps {
+    for step in &snapshot.steps {
         if let Some(serial) = parse_serial_suffix("step-", &step.id) {
             max = max.max(serial);
         }
     }
-    for edge in &fixture.edges {
+    for edge in &snapshot.edges {
         if let Some(serial) = parse_serial_suffix("edge-", &edge.id) {
             max = max.max(serial);
         }
@@ -466,11 +466,11 @@ fn ensure_imperative_modules_for_tests() {
 
 pub struct SequenceHost {
     /// 🌊️ The plain pre-migration document shape (`{schema, steps, edges}`) — this plugin's own
-    /// working representation, matching `SequenceFixture`'s doc comment. `SequenceHost` edits this
+    /// working representation, matching `SequenceHostDocument`'s doc comment. `SequenceHost` edits this
     /// in place exactly as it edited `SequenceSnapshot.steps`/`.edges` directly before the
     /// `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` migration (`sequence→C:flow`) — only the
     /// boundary conversions (`from_snapshot`/`replace_snapshot`/`to_json`/`load_json`) changed.
-    pub snapshot: SequenceFixture,
+    pub snapshot: SequenceHostDocument,
     /// 🎥️ The canvas camera — session-only host state (never a `SequenceSnapshot` document field; see
     /// the exact main-window camera). Persists across `rebuild_dag()` calls
     /// within this `SequenceHost` instance (each document mutation rebuilds `dag` from scratch, so
@@ -497,21 +497,21 @@ impl Default for SequenceHost {
 
 impl SequenceHost {
     /// 🌊️ Builds a live host from a persisted composed-child snapshot — reads the real steps/edges
-    /// off the working-scene cache via `to_fixture()` (see `SequenceFixture`'s doc comment).
+    /// off the working-scene cache via `to_host_document()` (see `SequenceHostDocument`'s doc comment).
     pub fn from_snapshot(snapshot: &SequenceSnapshot) -> Self {
-        Self::from_fixture(snapshot.to_fixture())
+        Self::from_host_document(snapshot.to_host_document())
     }
 
-    /// 🌊️ Builds a live host directly from a plain fixture (the WASM bridge's `loadFixtureJson`/
+    /// 🌊️ Builds a live host directly from a plain snapshot (the WASM bridge's `loadFixtureJson`/
     /// `SequenceHost::load_json` entry point).
-    pub fn from_fixture(fixture: SequenceFixture) -> Self {
+    pub fn from_host_document(host_document: SequenceHostDocument) -> Self {
         #[cfg(test)]
         ensure_imperative_modules_for_tests();
-        let next_serial = max_serial_in_snapshot(&fixture).max(100);
+        let next_serial = max_serial_in_snapshot(&host_document).max(100);
         let mut host = Self {
-            snapshot: fixture,
+            snapshot: host_document,
             camera: SequenceCamera::default(),
-            dag: DagHost::from_fixture_without_layout(DagFixture { schema: "dag.fixture".into(), camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 }, nodes: vec![], edges: vec![] }),
+            dag: DagHost::from_host_document_without_layout(DagHostDocument { schema: "dag.host_document".into(), camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 }, nodes: vec![], edges: vec![] }),
             registry: imperative_module_registry(),
             next_serial,
         };
@@ -519,22 +519,22 @@ impl SequenceHost {
         host
     }
 
-    pub fn replace_snapshot(&mut self, fixture: SequenceFixture) -> Result<(), SequenceCoreError> {
-        if fixture.schema != "sequence.sequence" {
-            return Err(SequenceCoreError::UnsupportedSchema(fixture.schema));
+    pub fn replace_snapshot(&mut self, snapshot: SequenceHostDocument) -> Result<(), SequenceCoreError> {
+        if snapshot.schema != "sequence.sequence" {
+            return Err(SequenceCoreError::UnsupportedSchema(snapshot.schema));
         }
-        self.next_serial = self.next_serial.max(max_serial_in_snapshot(&fixture));
-        self.snapshot = fixture;
+        self.next_serial = self.next_serial.max(max_serial_in_snapshot(&snapshot));
+        self.snapshot = snapshot;
         self.rebuild_dag();
         Ok(())
     }
 
     pub fn load_json(json: &str) -> Result<Self, SequenceCoreError> {
-        let fixture: SequenceFixture = dsl::os_pack::from_json_str(json).map_err(|error| SequenceCoreError::Json(error.to_string()))?;
-        if fixture.schema != "sequence.sequence" {
-            return Err(SequenceCoreError::UnsupportedSchema(fixture.schema));
+        let snapshot: SequenceHostDocument = dsl::os_pack::from_json_str(json).map_err(|error| SequenceCoreError::Json(error.to_string()))?;
+        if snapshot.schema != "sequence.sequence" {
+            return Err(SequenceCoreError::UnsupportedSchema(snapshot.schema));
         }
-        Ok(Self::from_fixture(fixture))
+        Ok(Self::from_host_document(snapshot))
     }
 
     pub fn to_json(&self) -> Result<String, SequenceCoreError> {
@@ -549,9 +549,9 @@ impl SequenceHost {
         use infinite_canvas::camera::{screen_to_world, Camera as CanvasCamera, Viewport};
         use infinite_canvas::Point;
         let viewport = Viewport { width: width.max(1), height: height.max(1), dpr: dpr.max(1.0) };
-        let camera = CanvasCamera { x: self.dag.fixture.camera.x, y: self.dag.fixture.camera.y, zoom: self.dag.fixture.camera.zoom };
+        let camera = CanvasCamera { x: self.dag.host_document.camera.x, y: self.dag.host_document.camera.y, zoom: self.dag.host_document.camera.zoom };
         let world = screen_to_world(&camera, &viewport, Point::new(sx, sy));
-        for node in self.dag.fixture.nodes.iter().rev() {
+        for node in self.dag.host_document.nodes.iter().rev() {
             let hw = node.width * 0.5;
             let hh = node.height * 0.5;
             if world.x >= node.x - hw && world.x <= node.x + hw && world.y >= node.y - hh && world.y <= node.y + hh {
@@ -683,7 +683,7 @@ impl SequenceHost {
     pub fn sync_edges_from_dag(&mut self) {
         let dag_pairs: Vec<(String, String)> = self
             .dag
-            .fixture
+            .host_document
             .edges
             .iter()
             .filter_map(|dag_edge| {
@@ -708,10 +708,10 @@ impl SequenceHost {
     }
 
     pub fn sync_from_dag(&mut self) {
-        self.camera = sequence_camera_from_dag(&self.dag.fixture.camera);
+        self.camera = sequence_camera_from_dag(&self.dag.host_document.camera);
         self.sync_edges_from_dag();
         for step in &mut self.snapshot.steps {
-            let Some(node) = self.dag.fixture.nodes.iter().find(|node| node.id == step.id) else {
+            let Some(node) = self.dag.host_document.nodes.iter().find(|node| node.id == step.id) else {
                 continue;
             };
             step.x = node.x;
@@ -812,7 +812,7 @@ impl SequenceHost {
     /// 🌳️ Recomputes visible step positions using the shared layered DAG tree layout, then rebuilds the DAG view.
     pub fn reorganize(&mut self, opts: &DagLayoutOptions) -> Result<(), SequenceCoreError> {
         self.dag.reorganize(opts).map_err(|e| SequenceCoreError::Dag(e.to_string()))?;
-        let positions: HashMap<String, (f64, f64)> = self.dag.fixture.nodes.iter().map(|node| (node.id.clone(), (node.x, node.y))).collect();
+        let positions: HashMap<String, (f64, f64)> = self.dag.host_document.nodes.iter().map(|node| (node.id.clone(), (node.x, node.y))).collect();
         for step in self.snapshot.steps.iter_mut() {
             if let Some(&(x, y)) = positions.get(&step.id) {
                 step.x = x;
@@ -831,7 +831,7 @@ impl SequenceHost {
         imperative_compile_to_text(&self.build_path())
     }
 
-    /// 📝️ Renders the compiled DAG fixture as wire-literal text.
+    /// 📝️ Renders the compiled DAG snapshot as wire-literal text.
     pub fn compiled_wire_literal(&self) -> String {
         dag_fixture_to_wire_literal(&self.build_dag_fixture())
     }
@@ -839,26 +839,26 @@ impl SequenceHost {
     fn rebuild_dag(&mut self) {
         let selected = self.dag.selected_node_ids();
         let dag_fixture = self.build_dag_fixture();
-        self.dag = DagHost::from_fixture_without_layout(dag_fixture);
+        self.dag = DagHost::from_host_document_without_layout(dag_fixture);
         self.dag.set_camera(self.camera.x, self.camera.y, self.camera.zoom);
         if !selected.is_empty() {
             self.dag.set_selection(&selected);
         }
     }
 
-    fn build_dag_fixture(&self) -> DagFixture {
+    fn build_dag_fixture(&self) -> DagHostDocument {
         let nodes: Vec<DagNodeSpec> = self.snapshot.steps.iter().filter(|step| self.is_step_visible(step)).map(|step| self.step_to_dag_node(step)).collect();
         let visible_ids: std::collections::HashSet<String> = nodes.iter().map(|node| node.id.clone()).collect();
         let existing: Vec<(String, String)> = self.snapshot.edges.iter().map(|edge| (edge.from.clone(), edge.to.clone())).collect();
-        let edges: Vec<DagFixtureEdge> = self
+        let edges: Vec<DagHostDocumentEdge> = self
             .snapshot
             .edges
             .iter()
             .filter(|edge| visible_ids.contains(&edge.from) && visible_ids.contains(&edge.to))
             .filter(|edge| !would_create_cycle(&existing, &edge.from, &edge.to))
-            .map(|edge| DagFixtureEdge { id: edge.id.clone(), source: format!("{}@{}", edge.from, FLOW_OUTPUT_PORT), target: format!("{}@{}", edge.to, FLOW_INPUT_PORT), route_style: EdgeRouteStyle::SharpSz, properties: PropertyBag::new() })
+            .map(|edge| DagHostDocumentEdge { id: edge.id.clone(), source: format!("{}@{}", edge.from, FLOW_OUTPUT_PORT), target: format!("{}@{}", edge.to, FLOW_INPUT_PORT), route_style: EdgeRouteStyle::SharpSz, properties: PropertyBag::new() })
             .collect();
-        DagFixture { schema: "dag.fixture".into(), camera: dag_camera_from_sequence(&self.camera), nodes, edges }
+        DagHostDocument { schema: "dag.host_document".into(), camera: dag_camera_from_sequence(&self.camera), nodes, edges }
     }
 
     fn step_to_dag_node(&self, step: &SequenceStep) -> DagNodeSpec {
@@ -908,13 +908,13 @@ impl SequenceHost {
 /// host's cycle/slot/layout logic) and then diff the result into typed operations. More than one
 /// consumer across the taxonomy tree (commands, windows), so it lives here rather than in a single
 /// caller's file.
-pub fn host_from_snapshot(fixture: &SequenceSnapshot) -> SequenceHost {
-    SequenceHost::from_snapshot(fixture)
+pub fn host_from_snapshot(snapshot: &SequenceSnapshot) -> SequenceHost {
+    SequenceHost::from_snapshot(snapshot)
 }
 
 /// 🧸️ Builds a host from an already resolved typed child projection.
-pub fn host_from_fixture(fixture: &SequenceFixture) -> SequenceHost {
-    SequenceHost::from_fixture(fixture.clone())
+pub fn host_from_document(host_document: &SequenceHostDocument) -> SequenceHost {
+    SequenceHost::from_host_document(host_document.clone())
 }
 
 /// 🧊️ Retires one synchronous execution result through its domain-owned dictionaries.
@@ -929,12 +929,12 @@ pub fn retire_run_result_cold(result: RunResult) {
     }
 }
 
-/// 🔀️ Runs a host mutation seeded from `fixture` and diffs the result into typed operations — a free
+/// 🔀️ Runs a host mutation seeded from `snapshot` and diffs the result into typed operations — a free
 /// function (not a method) since `SequencePlayApp` is a unit struct with nothing to borrow.
-pub fn ops_from_host_mutation(fixture: &SequenceSnapshot, mutate: impl FnOnce(&mut SequenceHost)) -> Vec<SequenceMutation> {
-    let mut host = host_from_snapshot(fixture);
+pub fn ops_from_host_mutation(snapshot: &SequenceSnapshot, mutate: impl FnOnce(&mut SequenceHost)) -> Vec<SequenceMutation> {
+    let mut host = host_from_snapshot(snapshot);
     mutate(&mut host);
-    sequence_snapshot_mutations(&fixture.to_fixture(), &host.snapshot)
+    sequence_snapshot_mutations(&snapshot.to_host_document(), &host.snapshot)
 }
 //#endregion 🔖️HostHelpers
 
@@ -1904,17 +1904,17 @@ impl SequenceNodeGraphState {
                 let operation = &self.operations[self.operation];
                 let target = self.target.as_mut().ok_or_else(|| Fault::from("sequence-node-graph-target"))?;
                 match operation.get("operation").and_then(Value::as_str).unwrap_or("") {
-                    "setFixture" => {
-                        if let Some(mut fixture) = operation.get("fixtureJson").and_then(Value::as_str).and_then(|json| dsl::os_pack::from_json_str::<SequenceFixture>(json).ok()) {
-                            if fixture.schema == SEQUENCE_DOCUMENT_SCHEMA && fixture.steps.len() <= SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS && fixture.edges.len() <= SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS {
+                    "setHostDocument" => {
+                        if let Some(mut snapshot) = operation.get("hostDocumentJson").and_then(Value::as_str).and_then(|json| dsl::os_pack::from_json_str::<SequenceHostDocument>(json).ok()) {
+                            if snapshot.schema == SEQUENCE_DOCUMENT_SCHEMA && snapshot.steps.len() <= SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS && snapshot.edges.len() <= SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS {
                                 self.discarded_steps.extend(target.steps.drain(..));
                                 target.edges.clear();
-                                self.fixture_steps = fixture.steps.drain(..).collect();
-                                self.fixture_edges = std::mem::take(&mut fixture.edges).into();
+                                self.fixture_steps = snapshot.steps.drain(..).collect();
+                                self.fixture_edges = std::mem::take(&mut snapshot.edges).into();
                                 self.stage = SequenceNodeGraphStage::FixtureSteps;
-                                return Ok(SequencePersistentAdvance::Progress("sequence-node-graph-fixture", b"{\"en\":\"Preparing bounded fixture replacement\",\"de\":\"Begrenzter Dokumentersatz wird vorbereitet\"}"));
+                                return Ok(SequencePersistentAdvance::Progress("sequence-node-graph-snapshot", b"{\"en\":\"Preparing bounded snapshot replacement\",\"de\":\"Begrenzter Dokumentersatz wird vorbereitet\"}"));
                             }
-                            self.discarded_steps.extend(fixture.steps.drain(..));
+                            self.discarded_steps.extend(snapshot.steps.drain(..));
                         }
                     }
                     "deleteSelection" => {
@@ -1943,19 +1943,19 @@ impl SequenceNodeGraphState {
             SequenceNodeGraphStage::FixtureSteps => {
                 if let Some(step) = self.fixture_steps.pop_front() {
                     self.target.as_mut().ok_or_else(|| Fault::from("sequence-node-graph-target"))?.steps.push(step);
-                    return Ok(SequencePersistentAdvance::Progress("sequence-node-graph-fixture-step", b"{\"en\":\"Replacing one graph step\",\"de\":\"Ein Graphschritt wird ersetzt\"}"));
+                    return Ok(SequencePersistentAdvance::Progress("sequence-node-graph-snapshot-step", b"{\"en\":\"Replacing one graph step\",\"de\":\"Ein Graphschritt wird ersetzt\"}"));
                 }
                 self.stage = SequenceNodeGraphStage::FixtureEdges;
-                Ok(SequencePersistentAdvance::Progress("sequence-node-graph-fixture-edges", b"{\"en\":\"Preparing fixture edges\",\"de\":\"Dokumentkanten werden vorbereitet\"}"))
+                Ok(SequencePersistentAdvance::Progress("sequence-node-graph-snapshot-edges", b"{\"en\":\"Preparing snapshot edges\",\"de\":\"Dokumentkanten werden vorbereitet\"}"))
             }
             SequenceNodeGraphStage::FixtureEdges => {
                 if let Some(edge) = self.fixture_edges.pop_front() {
                     self.target.as_mut().ok_or_else(|| Fault::from("sequence-node-graph-target"))?.edges.push(edge);
-                    return Ok(SequencePersistentAdvance::Progress("sequence-node-graph-fixture-edge", b"{\"en\":\"Replacing one graph edge\",\"de\":\"Eine Graphkante wird ersetzt\"}"));
+                    return Ok(SequencePersistentAdvance::Progress("sequence-node-graph-snapshot-edge", b"{\"en\":\"Replacing one graph edge\",\"de\":\"Eine Graphkante wird ersetzt\"}"));
                 }
                 self.operation += 1;
                 self.stage = SequenceNodeGraphStage::Apply;
-                Ok(SequencePersistentAdvance::Progress("sequence-node-graph-fixture-complete", b"{\"en\":\"Completed bounded fixture replacement\",\"de\":\"Begrenzter Dokumentersatz wurde abgeschlossen\"}"))
+                Ok(SequencePersistentAdvance::Progress("sequence-node-graph-snapshot-complete", b"{\"en\":\"Completed bounded snapshot replacement\",\"de\":\"Begrenzter Dokumentersatz wurde abgeschlossen\"}"))
             }
             SequenceNodeGraphStage::DeleteSelectionDiscover => {
                 if self.delete_current.is_none() {
@@ -2956,7 +2956,7 @@ impl SequenceArtifactProofs {
         owner: semio_framework_plugin::EditorApp<SequencePlayApp>,
         owner_file: "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.sequence.sequence@1/*#editor",
-        document_schema: "sequence.sequence",
+        artifact_schema: "sequence.sequence",
         factory: "SequenceRetainedArtifactJobFactory",
         factory_type: SequenceRetainedArtifactJobFactory,
         tools: {
@@ -2980,7 +2980,7 @@ impl SequencePersistentProofs {
         owner: semio_framework_plugin::EditorApp<SequencePlayApp>,
         owner_file: "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.sequence.sequence@1/*#editor",
-        document_schema: "sequence.sequence",
+        artifact_schema: "sequence.sequence",
         factory: "SequencePersistentJobFactory",
         factory_type: SequencePersistentJobFactory,
         tools: {
@@ -2997,7 +2997,7 @@ impl SequenceConfigProofs {
         owner: semio_framework_plugin::EditorApp<SequencePlayApp>,
         owner_file: "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.sequence.sequence@1/*#editor",
-        document_schema: "sequence.sequence",
+        artifact_schema: "sequence.sequence",
         factory: "SequenceRetainedConfigJobFactory",
         factory_type: SequenceRetainedConfigJobFactory,
         tools: {
@@ -3180,7 +3180,7 @@ impl ArtifactEditor for SequencePlayApp {
         let value: Value = serde_json::from_str(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
         let params_value = if value.is_object() { value } else { json!({ "value": value }) };
         let params: StepParams = dsl::os_pack::from_json_str(&params_value.to_string()).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
-        let mut live = sequence_fixture_from_children(doc.snapshot, &doc.children).map_err(|error| MediaError::Payload(port.to_string(), format!("{error:?}")))?;
+        let mut live = sequence_host_document_from_children(doc.snapshot, &doc.children).map_err(|error| MediaError::Payload(port.to_string(), format!("{error:?}")))?;
         let id = format!("step-{}", max_serial_in_snapshot(&live).max(100) + 1);
         let x = live.steps.iter().map(|step| step.x).fold(0.0_f64, f64::max) + if live.steps.is_empty() { 0.0 } else { 280.0 };
         let step = SequenceStep { id, kind: "computation.import".into(), params, x, y: 0.0, slot: None, collapsed: false };
@@ -3228,7 +3228,7 @@ impl ArtifactEditor for SequencePlayApp {
     }
 
     fn render(body_key: &str, doc: &ArtifactView<'_, SequenceSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
-        let live = sequence_fixture_from_children(doc.snapshot, &doc.children)
+        let live = sequence_host_document_from_children(doc.snapshot, &doc.children)
             .map_err(|error| semio_framework_plugin::PluginAssemblyError::new("sequence.child-content", format!("{error:?}")))?;
         let config = main::config::current(cfg);
         let transient = SequenceScriptWindowTransient::default();
@@ -3237,7 +3237,7 @@ impl ArtifactEditor for SequencePlayApp {
             SEQUENCE_PLAY_BODY_MAIN => main::render(&live, &config),
             SEQUENCE_PLAY_BODY_SCRIPT => script::render(&live, &transient),
             SEQUENCE_PLAY_BODY_COMPILED => compiled::render(&live),
-            SEQUENCE_PLAY_BODY_DOCUMENT => document_panel::render(&live, labels),
+            SEQUENCE_PLAY_BODY_ARTIFACT => document_panel::render(&live, labels),
             SEQUENCE_PLAY_BODY_CATALOGUE => catalogue_panel::render(&live, labels),
             // 🕹️ `render` carries no `InteractionView` (same gap as `context_menu` below — see ticket
             // 26/08/14's w3b-summary.md), so this always takes the "nothing selected" branch rather
@@ -3261,7 +3261,7 @@ impl ArtifactEditor for SequencePlayApp {
         transient: &semio_framework_plugin::TransientView<'_, semio_framework_plugin::NoTransient>,
         _interaction: &InteractionView<'_>,
     ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
-        let live = sequence_fixture_from_children(doc.snapshot, &doc.children)
+        let live = sequence_host_document_from_children(doc.snapshot, &doc.children)
             .map_err(|error| semio_framework_plugin::PluginAssemblyError::new("sequence.child-content", format!("{error:?}")))?;
         let config = main::config::current(cfg);
         let transient = script::transient::current(transient);
@@ -3270,7 +3270,7 @@ impl ArtifactEditor for SequencePlayApp {
             SEQUENCE_PLAY_BODY_MAIN => main::render(&live, &config),
             SEQUENCE_PLAY_BODY_SCRIPT => script::render(&live, &transient),
             SEQUENCE_PLAY_BODY_COMPILED => compiled::render(&live),
-            SEQUENCE_PLAY_BODY_DOCUMENT => document_panel::render(&live, labels),
+            SEQUENCE_PLAY_BODY_ARTIFACT => document_panel::render(&live, labels),
             SEQUENCE_PLAY_BODY_CATALOGUE => catalogue_panel::render(&live, labels),
             SEQUENCE_PLAY_BODY_INSPECTOR => inspection_panel::render(&live, &[], labels),
             _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "sequence diagnostic admission failed")),

@@ -3,7 +3,7 @@
 use crate::editor::generation3d::terminology::Generation3dLabels;
 use crate::editor::generation3d::GENERATION_3D_PLAY_APP_ID;
 use crate::widget_id;
-use semio_framework_artifact_flow_flow::{FlowFixture, Widget};
+use semio_framework_artifact_flow_flow::{FlowHostDocument, Widget};
 use semio_framework_plugin::plugin_app_close_prelude::{input, Buildable, HasBase, HasChildren, InputKind, Trigger, UiAssemblyResult, UiListBuilder, UiValue};
 use semio_framework_plugin::{tree_item, ActionFactory, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
 
@@ -24,7 +24,7 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(fixture: &FlowFixture, selected_node_ids: &[String], labels: &Generation3dLabels) -> UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(fixture: &FlowHostDocument, selected_node_ids: &[String], labels: &Generation3dLabels) -> UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let Some(selected_id) = selected_node_ids.first() else {
         return PanelTreeBuilder::new("procedural-play-inspector")?
             .section(

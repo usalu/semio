@@ -2,7 +2,7 @@ use super::*;
 use crate::editor::generation3d::modes::edit::windows::flow::graph_outline;
 use crate::editor::generation3d::unit_tests::context;
 use crate::editor::generation3d::unit_tests::context::{app_with_registry, render as render_body};
-use crate::standards::v1::subsets::any::schema::{fixture_to_workflow, with_host};
+use crate::standards::v1::subsets::any::schema::{dag_host_document_to_workflow, with_host};
 
 const DOCUMENT_ROWS_LAW: &str = include_str!("../../🧫️fixtures/🔬️unit/🔣️.json");
 
@@ -10,8 +10,8 @@ const DOCUMENT_ROWS_LAW: &str = include_str!("../../🧫️fixtures/🔬️unit/
 async fn document_lists_widgets() {
     let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
     let mut app = app_with_registry().await;
-    let rendered = render_body(&mut app, GENERATION_3D_PLAY_BODY_DOCUMENT).await;
-    let fixture_widgets: Vec<String> = context::snapshot(&app).fixture.widgets.iter().map(|widget| crate::widget_id(widget).to_string()).collect();
+    let rendered = render_body(&mut app, GENERATION_3D_PLAY_BODY_ARTIFACT).await;
+    let fixture_widgets: Vec<String> = context::snapshot(&app).host_document.widgets.iter().map(|widget| crate::widget_id(widget).to_string()).collect();
     let first = fixture_widgets.first().expect("default fixture has at least one widget");
     assert!(rendered.contains(first), "document tree missing widget id {first}: {rendered}");
 }
@@ -20,8 +20,8 @@ async fn document_lists_widgets() {
 /// window's outline law uses, so both trees are read as one renderer-neutral shape.
 fn law_document_projection() -> serde_json::Value {
     let law: serde_json::Value = serde_json::from_str(DOCUMENT_ROWS_LAW).expect("document rows law json");
-    let fixture = semio_framework_os_flow::FlowHost::parse_fixture_json(&law["fixture"].to_string()).expect("law fixture parses");
-    let (nodes, edges) = with_host(&fixture, |host| fixture_to_workflow(&host.dag.fixture));
+    let fixture = semio_framework_os_flow::FlowHost::parse_host_document_json(&law["fixture"].to_string()).expect("law fixture parses");
+    let (nodes, edges) = with_host(&snapshot, |host| dag_host_document_to_workflow(&host.dag.host_document));
     let labels = crate::editor::generation3d::terminology::generation3d_labels(&semio_framework_plugin::ViewModel::default());
     let outline = graph_outline(&nodes, &edges, None, labels).expect("document tree builds");
     fixture.retire_cold();

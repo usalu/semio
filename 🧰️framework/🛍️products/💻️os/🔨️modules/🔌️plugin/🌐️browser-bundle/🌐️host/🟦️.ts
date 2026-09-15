@@ -160,7 +160,7 @@ export function createBrowserHostActivation(identity: BrowserHostIdentity, port:
       if (!value || typeof value !== "object" || !("body" in value)) throw new Error("browser host: invalid HTTP response");
       return { ...value, body: stream(value.body) };
     }, true),
-    documentRead: call("document-read"), documentWrite: call("document-write"), linkResolve: (link: unknown) => request("link-resolve", { link }),
+    artifactRead: call("artifact-read"), artifactWrite: call("artifact-write"), linkResolve: (link: unknown) => request("link-resolve", { link }),
     registryQuery: call("registry-query"), ioCompose: call("io-compose"), ioRun: call("io-run"), cacheDerive: call("cache-derive"), cacheRead: call("cache-read"),
     invokeExtension: call("invoke-extension"), openWindow: call("open-window"), openDialog: call("open-dialog"), dispatchAction: call("dispatch-action"),
     spawnPluginInstance: call("spawn-plugin-instance"), requestFileOpen: call("request-file-open"), requestMediaFrames: call("request-media-frames"), requestCapability: call("request-capability"),

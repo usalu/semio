@@ -123,6 +123,33 @@ mod wasm_program_exchange {
     /// also emit — no `kernel::Event` variant carries it back to this exchange today, so
     /// `invocation_from_frames` reports an empty list, a real but honestly-flagged gap rather than a
     /// silent guess).
+    ///
+    /// 🕹️ The `in_reply_to` a frame carries when it answers NO command sequence. `AppChannelClient`
+    /// mints sequences from 1, so a guest that publishes `0` is naming a JOB rather than a caller —
+    /// which is exactly how a framework-reserved interaction verb's real answer travels
+    /// (`plugin_complete_reserved_spawned_job`, `💻️os/🔨️modules/🔌️plugin/🦀️.rs`). See
+    /// `🧫️fixtures/🕹️reserved-verb-answer/🔣️.json`.
+    const UNCORRELATED_REPLY_SEQUENCE: u64 = 0;
+
+    /// 🕹️ The ONE fold this target's dispatch answers with — the correlated admission AND every
+    /// settled answer that names no caller, per field, in frame order.
+    ///
+    /// ⚖️ `interactionSelect`/`interactionHover`/`clearSelection`/`selectAll`/`setSelectionMode`/
+    /// `setGranularity` are ADMITTED with an empty `InvocationResult` plus an `Effect::SpawnJob`; the
+    /// real answer — `output.interactionView` plus the app-declared refresh scope — is published by
+    /// the job's completion turn as `AppFrame::Invocation { in_reply_to: 0, .. }`. Matching
+    /// `in_reply_to == seq` alone therefore reads the ADMISSION's empty scope and refreshes nothing.
+    /// The browser target's twin (`🎯️targets/🧊️wgpu/🐚️plugin-bridge/🟦️.ts`'s
+    /// `wgpuInvocationFromFrames`) reroutes such a frame to its leftover lane and folds it there; this
+    /// target has no leftover lane — `KernelClient::exchange_commands` already unpacks every
+    /// `Effect::SendMessage{target: Shell{..}}` onto `ExchangeOutcome::frames` — so the SAME rule is
+    /// spelt here as one guard. It was masked natively because the hardcoded `UiDirtyScope::default()`
+    /// is `Full`; the scope decode that landed with this ticket removed the mask
+    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-selection-roundtrip-2026-09-15.md` §7).
+    ///
+    /// Per field, never wholesale: an admission that carried mutations or a history patch must not be
+    /// blanked by a completion frame that carries neither, and only the CORRELATED frame satisfies
+    /// "the plugin answered this sequence".
     fn invocation_from_frames(outcome: &mut crate::kernel_runtime::ExchangeOutcome, seq: u64) -> Result<InvocationResult, String> {
         let mut output = DslValue::Null;
         let mut diagnostics = Vec::new();
@@ -145,12 +172,18 @@ mod wasm_program_exchange {
         let mut ui_scope = semio_framework::kernel::UiDirtyScope::default();
         for frame in &outcome.frames {
             match frame {
-                AppFrame::Invocation { in_reply_to, output: out_bytes, diagnostics: diag_bytes, ui_scope: ui_scope_bytes, history_patch: history_patch_bytes, mutations: mutation_bytes, inverse_group: inverse_group_bytes, .. } if *in_reply_to == seq => {
-                    output = decode_wire::<DslValue>(out_bytes)?;
+                AppFrame::Invocation { in_reply_to, output: out_bytes, diagnostics: diag_bytes, ui_scope: ui_scope_bytes, history_patch: history_patch_bytes, mutations: mutation_bytes, inverse_group: inverse_group_bytes, .. }
+                    if *in_reply_to == seq || *in_reply_to == UNCORRELATED_REPLY_SEQUENCE =>
+                {
+                    if !out_bytes.is_empty() {
+                        output = decode_wire::<DslValue>(out_bytes)?;
+                    }
                     if !ui_scope_bytes.is_empty() {
                         ui_scope = decode_wire::<semio_framework::kernel::UiDirtyScope>(ui_scope_bytes).unwrap_or_default();
                     }
-                    diagnostics = decode_wire(diag_bytes).unwrap_or_default();
+                    if !diag_bytes.is_empty() {
+                        diagnostics = decode_wire(diag_bytes).unwrap_or_default();
+                    }
                     if !history_patch_bytes.is_empty() {
                         history_patch = decode_wire::<semio_framework::kernel::HistoryPatch>(history_patch_bytes).ok();
                     }
@@ -162,7 +195,7 @@ mod wasm_program_exchange {
                         }
                         _ => return Err("plugin invocation published mutations and inverse group asymmetrically".to_string()),
                     }
-                    saw_invocation = true;
+                    saw_invocation = saw_invocation || *in_reply_to == seq;
                 }
                 AppFrame::Error { in_reply_to, fault, report } if in_reply_to == &Some(seq) => {
                     return Err(app_frame_error_message(fault, report));
@@ -399,6 +432,9 @@ mod wasm_program_exchange {
     pub async fn window_engagements(_client: &KernelClient, _instance_id: u32, _view_state: &ViewModel) -> Result<HashMap<String, WindowEngagement>, String> {
         Ok(HashMap::new())
     }
+
+    #[cfg(test)]
+    include!("../../🧪️tests/🕹️wgpu-reserved-verb-answer/🦀️.rs");
 }
 
 enum ProgramBridgeBackend {

@@ -109,22 +109,22 @@ fn apply_rewriting_node_graph_edit_operations(state: &mut RewritingSnapshot, sel
     let mut changed = false;
     for operation in operations {
         match operation.get("operation").and_then(|value| value.as_str()).unwrap_or("") {
-            "setFixture" => {
-                let Some(fixture_json) = operation.get("fixtureJson").and_then(|value| value.as_str()) else {
+            "setHostDocument" => {
+                let Some(host_document_json) = operation.get("hostDocumentJson").and_then(|value| value.as_str()) else {
                     continue;
                 };
-                if parse_fixture_json(fixture_json).is_none() {
+                if parse_fixture_json(host_document_json).is_none() {
                     continue;
                 }
                 if surface_id == crate::editor::rewriting::TRINITY_REWRITING_PLAY_SURFACE_BEFORE {
-                    state.before_fixture_json = fixture_json.into();
+                    state.before_fixture_json = host_document_json.into();
                     changed = true;
                 } else if surface_id == crate::editor::rewriting::TRINITY_REWRITING_PLAY_SURFACE_LHS {
                     let current = crate::editor::rewriting::lhs_graph_fixture_json(&state.lhs_json, &state.rule_layout);
-                    changed |= apply_semantic_layout_edit(&mut state.rule_layout, &current, fixture_json);
+                    changed |= apply_semantic_layout_edit(&mut state.rule_layout, &current, host_document_json);
                 } else if surface_id == crate::editor::rewriting::TRINITY_REWRITING_PLAY_SURFACE_RHS {
                     let current = crate::editor::rewriting::rhs_graph_fixture_json(&state.rhs_json, &state.rule_layout);
-                    changed |= apply_semantic_layout_edit(&mut state.rule_layout, &current, fixture_json);
+                    changed |= apply_semantic_layout_edit(&mut state.rule_layout, &current, host_document_json);
                 }
             }
             "deleteSelection" => {
@@ -142,7 +142,7 @@ fn apply_rewriting_node_graph_edit_operations(state: &mut RewritingSnapshot, sel
                             !selected_node_ids.iter().any(|id| id == from || id == to)
                         });
                         let fixture = JackSnapshot::with_content(fixture.schema.clone(), fixture.name.clone(), fixture.manifest_id.clone(), fixture.manifest.clone(), fixture.camera.clone(), JackWorkingScene { nodes: nodes, edges: edges }, fixture.root_node_id.clone());
-                        if let Ok(json) = Graph::from_fixture(fixture).and_then(|graph| graph.fixture_json()) {
+                        if let Ok(json) = Graph::from_snapshot(fixture).and_then(|graph| graph.host_document_json()) {
                             state.before_fixture_json = json;
                             changed = true;
                         }

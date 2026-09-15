@@ -10,7 +10,7 @@ pub(crate) mod context {
     pub async fn register_content_child(app: &mut SequenceApp) {
         let snapshot = app.snapshot().expect("Sequence parent snapshot");
         let materialized = neural_engine::ColdOwner::new(default_snapshot());
-        let fixture = materialized.to_fixture();
+        let fixture = materialized.to_host_document();
         let content = crate::sequence_content_snapshot_from_working(&fixture.steps, &fixture.edges);
         neural_engine::ColdRetire::retire_cold(fixture);
         let child_id = snapshot.content.child_id.clone();
@@ -72,13 +72,13 @@ use semio_framework_plugin::{artifact_app_laws::assert_undo_redo_round_trip, Loc
 
 #[semio_framework_async_macros::async_test]
 async fn default_snapshot_has_steps() {
-    assert_eq!(default_snapshot().to_fixture().steps.len(), 2);
+    assert_eq!(default_snapshot().to_host_document().steps.len(), 2);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn undo_redo_round_trip_through_the_wrapper() {
     let mut app = new_app().await;
-    assert_undo_redo_round_trip(&mut app, SequenceCommand::AddStep(add_step::AddStep { kind: "log.print".into(), x: 0.0, y: 0.0 }), |app| app.snapshot().expect("projection").to_fixture().steps.len(), 2, 3).await;
+    assert_undo_redo_round_trip(&mut app, SequenceCommand::AddStep(add_step::AddStep { kind: "log.print".into(), x: 0.0, y: 0.0 }), |app| app.snapshot().expect("projection").to_host_document().steps.len(), 2, 3).await;
 }
 
 /// 🧪️ The definitional regression proof: two independent instances start from the same fixture,
@@ -122,7 +122,7 @@ async fn the_manifest_stitches_every_taxonomy_node() {
         assert!(json.contains(id), "window kind {id} missing from the manifest: {json}");
     }
     assert!(json.contains(edit::SEQUENCE_PLAY_MODE_EDIT), "edit mode missing from the manifest");
-    for body in [SEQUENCE_PLAY_BODY_DOCUMENT, SEQUENCE_PLAY_BODY_CATALOGUE, SEQUENCE_PLAY_BODY_INSPECTOR] {
+    for body in [SEQUENCE_PLAY_BODY_ARTIFACT, SEQUENCE_PLAY_BODY_CATALOGUE, SEQUENCE_PLAY_BODY_INSPECTOR] {
         assert!(json.contains(body), "panel body {body} missing from the manifest");
     }
     assert!(json.contains("computation.sequence"), "artifact kind missing from the manifest");
@@ -149,21 +149,21 @@ async fn context_menu_stays_within_nine_rows_and_ends_with_destructive_delete() 
 #[semio_framework_async_macros::async_test]
 async fn sequence_io_declares_steps_in_and_document_ports() {
     let ports = SequencePlayApp::io().expect("io").all_ports().await;
-    assert!(ports.iter().any(|port| port.id == "document:in"));
-    assert!(ports.iter().any(|port| port.id == "document:out"));
+    assert!(ports.iter().any(|port| port.id == "artifact:in"));
+    assert!(ports.iter().any(|port| port.id == "artifact:out"));
     assert!(ports.iter().any(|port| port.id == "steps:in"));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn import_media_steps_in_inserts_a_new_step_from_an_object_payload() {
     let mut app = new_app_with_registry_wired().await;
-    let before = app.snapshot().expect("projection").to_fixture().steps.len();
+    let before = app.snapshot().expect("projection").to_host_document().steps.len();
     let media = Media {
         media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::Computation, form: semio_framework_plugin::MediaForm::Any },
         payload: MediaPayload::Structured { schema: "computation.value".into(), json: json!({ "message": "from upstream" }).to_string() },
     };
     app.import_media("steps:in", media, &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("import steps:in");
-    let after = app.snapshot().expect("projection").to_fixture();
+    let after = app.snapshot().expect("projection").to_host_document();
     assert_eq!(after.steps.len(), before + 1);
     let imported = after.steps.last().expect("imported step");
     assert_eq!(imported.kind, "computation.import");
@@ -178,7 +178,7 @@ async fn import_media_steps_in_wraps_a_bare_scalar_payload() {
         payload: MediaPayload::Structured { schema: "computation.value".into(), json: "42".into() },
     };
     app.import_media("steps:in", media, &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("import steps:in");
-    let after = app.snapshot().expect("projection").to_fixture();
+    let after = app.snapshot().expect("projection").to_host_document();
     let imported = after.steps.last().expect("imported step");
     assert_eq!(imported.params.get("value").and_then(|value| value.as_atom()).and_then(|atom| atom.as_f64()), Some(42.0));
 }
@@ -277,7 +277,7 @@ async fn disconnect_steps_removes_edge() {
 #[semio_framework_async_macros::async_test]
 async fn sync_from_dag_copies_node_positions() {
     let mut host = SequenceHost::default();
-    if let Some(node) = host.dag.fixture.nodes.iter_mut().find(|node| node.id == "step-1") {
+    if let Some(node) = host.dag.host_document.nodes.iter_mut().find(|node| node.id == "step-1") {
         node.x = 120.0;
         node.y = 80.0;
     }
@@ -373,7 +373,7 @@ async fn replace_snapshot_preserves_next_serial_and_selection() {
     let first = host.add_step("math.add", 40.0, 40.0);
     host.dag.set_selection(std::slice::from_ref(&first));
     let json = host.to_json().expect("fixture json");
-    let round_trip: SequenceFixture = dsl::os_pack::from_json_str(&json).expect("parse");
+    let round_trip: SequenceHostDocument = dsl::os_pack::from_json_str(&json).expect("parse");
     host.replace_snapshot(round_trip).expect("replace");
     let second = host.add_step("math.add", 80.0, 80.0);
     assert_ne!(first, second);
@@ -387,7 +387,7 @@ async fn repeated_drops_after_replace_snapshot_use_distinct_ids() {
     let mut host = SequenceHost::default();
     let first = host.add_step_dropped("math.add", 10.0, 10.0, None);
     let json = host.to_json().expect("fixture json");
-    let round_trip: SequenceFixture = dsl::os_pack::from_json_str(&json).expect("parse");
+    let round_trip: SequenceHostDocument = dsl::os_pack::from_json_str(&json).expect("parse");
     host.replace_snapshot(round_trip).expect("replace");
     let second = host.add_step_dropped("math.add", 20.0, 20.0, None);
     assert_ne!(first, second);
@@ -553,7 +553,7 @@ async fn reorganize_syncs_step_positions_from_dag_layout() {
     let mut host = SequenceHost::default();
     host.reorganize(&DagLayoutOptions::default()).expect("reorganize");
     for step in &host.snapshot.steps {
-        let node = host.dag.fixture.nodes.iter().find(|node| node.id == step.id).expect("node for step");
+        let node = host.dag.host_document.nodes.iter().find(|node| node.id == step.id).expect("node for step");
         assert_eq!(step.x, node.x);
         assert_eq!(step.y, node.y);
     }
@@ -660,7 +660,7 @@ async fn compiled_wire_literal_includes_step_ids() {
 #[semio_framework_async_macros::async_test]
 async fn sequence_io_declares_the_steps_in_port() {
     let io = sequence_io();
-    assert_eq!(io.document_schema, SEQUENCE_DOCUMENT_SCHEMA);
+    assert_eq!(io.artifact_schema, SEQUENCE_DOCUMENT_SCHEMA);
     assert_eq!(io.ports.len(), 1);
     let port = &io.ports[0];
     assert_eq!(port.id, "steps:in");
@@ -673,7 +673,7 @@ async fn sequence_io_declares_the_steps_in_port() {
 async fn next_available_step_id_is_free_and_deterministic() {
     let fixture = default_snapshot();
     let id = next_available_step_id(&fixture);
-    assert!(!fixture.to_fixture().steps.iter().any(|step| step.id == id));
+    assert!(!snapshot.to_host_document().steps.iter().any(|step| step.id == id));
     assert_eq!(id, next_available_step_id(&fixture), "pure function of the fixture, not a mutating counter");
 }
 //#endregion 🔖️HostTests

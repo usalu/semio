@@ -28,7 +28,7 @@ pub fn plugin() -> Result<Plugin<AnimateApps>, PluginAssemblyError> {
         .viewer_mutation_roster::<crate::viewer::animate::AnimatePresentationViewer>()
         .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::presentation::artifact_kind().id })
         .execution(ExecutionMode::Isolated)
-        .requests(CapabilityRequest { id: CapabilityId("documents.write".into()), scope: "plugin".into(), reason: "persist animate presentation edits to the open document".into(), optional: false })
+        .requests(CapabilityRequest { id: CapabilityId("artifacts.write".into()), scope: "plugin".into(), reason: "persist animate presentation edits to the open document".into(), optional: false })
         .try_build()
 }
 

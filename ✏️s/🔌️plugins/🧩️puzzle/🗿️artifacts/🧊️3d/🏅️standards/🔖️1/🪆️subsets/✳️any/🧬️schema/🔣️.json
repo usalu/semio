@@ -634,7 +634,7 @@
           },
           {
             "code": 20,
-            "id": "document-capacity",
+            "id": "artifact-capacity",
             "verdict": "warning"
           },
           {

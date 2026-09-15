@@ -621,7 +621,7 @@ export const windowMeasureTreeGroupLabelClass = "text-tiny font-semibold upperca
 export const panelTabLabelClass = "min-w-0 truncate text-xs leading-none";
 
 /** @emoji 📑️ Panel tab icon slot — defers dimensions to the tab icon (12px). */
-export const panelTabIconSlotClass = "inline-flex shrink-0 items-center justify-center leading-none";
+export const panelTabIconSlotClass = "inline-flex shrink-0 items-center justify-center overflow-visible leading-none [&_svg]:block";
 
 /** @emoji 🎯️ Label/icon emphasis paired with {@link dropZoneReadyFillClass} so text stays legible on the fill. */
 export const dropZoneReadyTextClass = "text-emphasized";
@@ -987,9 +987,15 @@ export function useCanvasPickInteraction({ resolveTargetsAtClient, onHoverFocus,
     onHoverFocus(canvasHoverFocusFromTarget(CANVAS_HOVER_SOURCE_CANVAS, null));
   }, [onHoverFocus]);
 
+  /** 🖱️ A move with a button held is a DRAG, not a hover: the surface under the pointer is being
+   * orbited, panned, marquee'd or wired, and the board that owns the gesture already tracks whatever
+   * chrome the drag needs. Resolving hover here instead published a hover target per pointer move —
+   * on the flow node-graph one guest `interactionHover` round trip per move, 16–18 of them in a 1 s
+   * drag-pan (`📓️flow-scroll-render-perf-2026-09-15.md` §2). */
   const onCanvasPointerMove = React.useCallback(
     (client: { readonly x: number; readonly y: number }) => {
       if (pickMenu) return;
+      if (pointerDownRef.current) return;
       const targets = resolveTargetsAtClient(client);
       const specific = pickMostSpecificCanvasTarget(targets);
       onHoverFocus(canvasHoverFocusFromTarget(CANVAS_HOVER_SOURCE_CANVAS, specific));
@@ -7548,7 +7554,7 @@ export const modeDockInactiveTabBeforeGapClass = cn(`relative z-30 box-border mi
 export const panelWindowInactiveTabClass = "relative z-30 box-border min-h-medium h-full shrink-0 bg-transparent";
 
 /** @emoji 🪟️ Icon + title cluster inside a mode-dock tab — standard gap between glyph and label. */
-export const modeDockTabLabelClassName = "flex min-w-0 flex-1 items-center gap-single overflow-hidden";
+export const modeDockTabLabelClassName = "flex min-w-0 flex-1 items-center gap-single overflow-visible";
 
 /** @emoji 🪟️ Default mode-dock tab label — element gray; emphasize on hover/active only. */
 

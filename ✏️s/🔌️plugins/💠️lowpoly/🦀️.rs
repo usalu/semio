@@ -39,7 +39,7 @@ pub fn plugin() -> Result<Plugin<LowpolyApps>, PluginAssemblyError> {
         .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::lowpoly::artifact_kind().id })
         .execution(ExecutionMode::Isolated)
         .requests(CapabilityRequest {
-            id: CapabilityId("documents.write".into()),
+            id: CapabilityId("artifacts.write".into()),
             scope: "plugin".into(),
             reason: "persist lowpoly mesh-edit/paint/UV editor edits to the open document".into(),
             optional: false,

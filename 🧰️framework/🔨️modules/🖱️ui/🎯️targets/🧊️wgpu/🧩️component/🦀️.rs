@@ -704,7 +704,7 @@ pub mod layout {
     pub const FRAMEWORK_PANEL_TAB_ARTIFACT_ID: &str = "framework.panel.artifact";
     pub const FRAMEWORK_PANEL_TAB_CATALOGUE_ID: &str = "framework.panel.catalogue";
     pub const FRAMEWORK_PANEL_TAB_INSPECTION_ID: &str = "framework.panel.inspection";
-    pub const FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL: &str = "Document";
+    pub const FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL: &str = "Artifact";
     pub const FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL: &str = "Catalogue";
     pub const FRAMEWORK_PANEL_TAB_INSPECTION_LABEL: &str = "Inspection";
     pub const FRAMEWORK_PANEL_TAB_ARTIFACT_ICON_ID: &str = "framework.panel.artifact";

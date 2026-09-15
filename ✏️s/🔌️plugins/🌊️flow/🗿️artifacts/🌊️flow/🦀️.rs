@@ -1,7 +1,7 @@
 //! 🌊️ Flow artifact — the document entity this plugin's apps edit.
 //!
 //! The persisted snapshot type is [`FlowSnapshot`] (this plugin). The framework crate
-//! `semio-framework-os-flow` still owns a separate `semio_framework_artifact_flow_flow::FlowFixture` used by `FlowHost` and by
+//! `semio-framework-os-flow` still owns a separate `semio_framework_artifact_flow_flow::FlowHostDocument` used by `FlowHost` and by
 //! other plugins (e.g. procedural) that embed a flow graph; conversions live on `FlowSnapshot`.
 //!
 //! Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` (`flow→C:flow`, the canonical editor for
@@ -9,8 +9,8 @@
 //! composed `s.stdio.semio@v1/flow` CHILD slot (`🔖️ContentBridge` below) — this plugin no longer
 //! defines its own node-graph content model, it composes stdio's `flow` subset instead. The rich
 //! live editing types (`semio_framework_artifact_flow_flow::Widget`/`semio_framework_artifact_flow_flow::SynapseSpec`/`semio_framework_artifact_flow_flow::WidgetLayout`, the framework
-//! kernel's own vocabulary `FlowHost` edits) still flow entirely through `FlowSnapshot::to_fixture`/
-//! `from_fixture`, which now bridge through the composed child + `🔖️WorkingScene` cache rather than
+//! kernel's own vocabulary `FlowHost` edits) still flow entirely through `FlowSnapshot::to_host_document`/
+//! `from_host_document`, which now bridge through the composed child + `🔖️WorkingScene` cache rather than
 //! plain struct fields.
 
 extern crate semio_framework_schema as framework_schema;
@@ -302,9 +302,9 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
         )?
         .capability(
             ArtifactCapability::new(ArtifactIdentity::parse("s.flow.flow.codec.document")?, ArtifactCapabilityKind::codec())
-                .descriptor(b"flow.fixture:flow")?
-                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::codec(), "flow.fixture")?)?
-                .claim(ArtifactIdentityClaim::codec_extension("flow.fixture", "flow")?)?,
+                .descriptor(b"flow.host_document:flow")?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::codec(), "flow.host_document")?)?
+                .claim(ArtifactIdentityClaim::codec_extension("flow.host_document", "flow")?)?,
         )?
         .capability(ArtifactCapability::new(ArtifactIdentity::parse("s.flow.flow.localization.en")?, ArtifactCapabilityKind::localization()).descriptor(b"Flow")?.localization(ArtifactLocalization::new(ArtifactLocale::parse("en")?, "Flow")?)?)?
         .capability(ArtifactCapability::new(ArtifactIdentity::parse("s.flow.flow.localization.de")?, ArtifactCapabilityKind::localization()).descriptor(b"Flow")?.localization(ArtifactLocalization::new(ArtifactLocale::parse("de")?, "Flow")?)?)

@@ -162,7 +162,7 @@ fn hop_effect(action: &str, window_id: &str, window_kind_id: &str) -> Effect {
 /// not JSON) and says nothing about who owes the next tick. Symmetry of encoding is not symmetry of
 /// continuation — a fault nothing in this process can clear owes no continuation at all. The run
 /// therefore neither starts on such a graph nor continues it.
-pub fn may_rearm(fixture: &semio_framework_artifact_flow_flow::FlowFixture) -> bool {
+pub fn may_rearm(fixture: &semio_framework_artifact_flow_flow::FlowHostDocument) -> bool {
     semio_framework_os_flow::unserved_flow_operator_kinds(fixture).is_empty()
 }
 
@@ -175,6 +175,33 @@ pub fn window_args(window_id: &str, window_kind_id: &str) -> dsl::DslValue {
         ("windowId".to_string(), dsl::DslValue::String(window_id.to_string())),
         ("windowKindId".to_string(), dsl::DslValue::String(window_kind_id.to_string())),
     ])
+}
+
+/// 🧾️ The APPLIED document-edit stack, folded into one number — what an evaluation is actually
+/// computed from, independent of the route that changed it.
+///
+/// 🐛️ [`owe_attached_previews_for_mutations`] reads a gesture's OWN emit, so it can only ever see a
+/// route the app itself handles. `undo` and `redo` are FRAMEWORK-RESERVED (`HISTORY_ACTION_IDS`,
+/// intercepted before `dispatch_action` reaches the app), so an undo rewound the document and the app
+/// never learned: measured on :6023, `mod+z` after a slider edit moved `height` 8 → 6 in the graph's
+/// own published fixture and armed `canRedo`, while the preview kept delivering the 8-unit extrusion
+/// and the console carried neither a `toolRunStart` nor a `flowEvalTick` after the chord
+/// (`📓️react-final-sweep-2026-09-15.md` §7). The user pressed undo and the 3d view did not move.
+///
+/// Every route that changes the document moves this stack — a gesture's edit appends an applied entry,
+/// an undo flips one to unapplied, a redo flips it back, `revertToCommand` and a checkpoint checkout
+/// move several — so THIS is the rule, and the emit route stays the fast path a gesture takes without
+/// waiting for a poll. Rows with no `edit_id` are cursor-motion and config entries, which the
+/// evaluation does not read (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+pub fn applied_document_edits_digest(history: &semio_framework_plugin::HistoryView) -> u64 {
+    const OFFSET: u64 = 0xcbf2_9ce4_8422_2325;
+    const PRIME: u64 = 0x0000_0100_0000_01b3;
+    let mut digest = OFFSET;
+    for command in history.commands.iter().filter(|command| command.edit_id.is_some()) {
+        digest = (digest ^ command.seq).wrapping_mul(PRIME);
+        digest = (digest ^ u64::from(command.applied)).wrapping_mul(PRIME);
+    }
+    digest
 }
 
 /// 🧵️ Marks every attached preview window as owing an evaluation — what a gesture owes after it
@@ -420,7 +447,7 @@ pub fn widget_previews(widget: &semio_framework_artifact_flow_flow::Widget) -> b
 }
 
 /// 🪪️ Every preview-bearing widget id of a fixture, in declaration order.
-pub fn preview_widget_ids(fixture: &semio_framework_artifact_flow_flow::FlowFixture) -> Vec<String> {
+pub fn preview_widget_ids(fixture: &semio_framework_artifact_flow_flow::FlowHostDocument) -> Vec<String> {
     fixture.widgets.iter().filter(|widget| widget_previews(widget)).map(|widget| crate::widget_id(widget).to_string()).collect()
 }
 
@@ -499,7 +526,7 @@ pub const PREVIEW_FIT_PADDING: f64 = 1.12;
 /// out from under an edit". Every re-evaluation of one example answers the same revision, which is
 /// what makes the hosts' framing one-shot at all
 /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️boot-camera-framing-2026-09-15.md`).
-pub fn preview_fit_revision(fixture: &semio_framework_artifact_flow_flow::FlowFixture) -> u32 {
+pub fn preview_fit_revision(fixture: &semio_framework_artifact_flow_flow::FlowHostDocument) -> u32 {
     let mut hash = 0xcbf2_9ce4_8422_2325u64;
     let mut eat = |text: &str| {
         for byte in text.as_bytes() {
@@ -537,7 +564,7 @@ fn widget_kind_tag(widget: &semio_framework_artifact_flow_flow::Widget) -> &str 
 
 /// 🎯️ The `World3dScene.fit_json` every generation3d preview window publishes: frame the delivered
 /// bounds once per document, never again while that document is on screen.
-pub fn preview_fit_json(fixture: &semio_framework_artifact_flow_flow::FlowFixture, meshes_json: &str) -> String {
+pub fn preview_fit_json(fixture: &semio_framework_artifact_flow_flow::FlowHostDocument, meshes_json: &str) -> String {
     semio_framework_ui::wgpu::world3d_fit_json(preview_fit_revision(fixture), PREVIEW_FIT_PADDING, preview_payload_bounds(meshes_json))
 }
 
@@ -619,7 +646,7 @@ pub fn mesh_data_for_preview_handle(handle: &str, tolerance: f64, session: Optio
 /// 🧊 Geometry handles on preview widgets that still need an extension tessellate. Takes the ALREADY
 /// PARSED evaluation: its caller parses the same document one line earlier to collect the live
 /// handle set, and re-parsing a whole eval session per tick is the cost this path exists to avoid.
-pub fn pending_preview_tessellate_handles(eval: &dsl::json::Value, fixture: &semio_framework_artifact_flow_flow::FlowFixture, session: &FlowEvalSession) -> Vec<String> {
+pub fn pending_preview_tessellate_handles(eval: &dsl::json::Value, fixture: &semio_framework_artifact_flow_flow::FlowHostDocument, session: &FlowEvalSession) -> Vec<String> {
     let mut handles = Vec::new();
     for id in preview_widget_ids(fixture) {
         for handle in preview_channel_items_for_widget(eval, &id).into_iter().filter_map(|item| (!item.handle.is_empty()).then_some(item.handle)) {
@@ -639,7 +666,7 @@ pub fn pending_preview_tessellate_handles(eval: &dsl::json::Value, fixture: &sem
 /// mints the `req`, parks the continuation and dispatches the mesh JSON straight back into the
 /// addressed surface — a hand-minted `RequestId` owns no registry slot, so every tessellation result
 /// would be discarded and the 3d preview could never paint.
-pub fn preview_tessellate_invocations(window_id: &str, window_kind_id: &str, session: &mut FlowEvalSession, fixture: &semio_framework_artifact_flow_flow::FlowFixture, tolerance: f64) -> Vec<ExtensionInvocation> {
+pub fn preview_tessellate_invocations(window_id: &str, window_kind_id: &str, session: &mut FlowEvalSession, fixture: &semio_framework_artifact_flow_flow::FlowHostDocument, tolerance: f64) -> Vec<ExtensionInvocation> {
     let Ok(geometry_extension_address) = geometry_extension_address() else {
         return Vec::new();
     };
@@ -722,7 +749,7 @@ pub fn tick_is_unfinished(more: bool, parked_extension_invocations: usize) -> bo
 pub fn evaluate_tick(
     window_id: &str,
     window_kind_id: &str,
-    fixture: &semio_framework_artifact_flow_flow::FlowFixture,
+    fixture: &semio_framework_artifact_flow_flow::FlowHostDocument,
     tolerance: f64,
     session: &mut FlowEvalSession,
     retained_eval: Option<&str>,
@@ -899,7 +926,7 @@ pub fn resolve_tessellate(payload: &FlowTessellateResolve, session: &mut FlowEva
 /// 📈️ The per-widget half: the evaluation's own `error`, or the `widgetErrors` map of every widget
 /// whose evaluation carries one. Surface-neutral — it reads the evaluation text and the fixture the
 /// surface is looking at, nothing else.
-pub fn preview_status_json(eval_json: &str, fixture: &semio_framework_artifact_flow_flow::FlowFixture) -> Option<String> {
+pub fn preview_status_json(eval_json: &str, fixture: &semio_framework_artifact_flow_flow::FlowHostDocument) -> Option<String> {
     let eval = dsl::json::parse(eval_json).ok()?;
     if eval.get("error").and_then(dsl::json::Value::as_str).is_some() {
         let mut error_object = dsl::json::Object::new();

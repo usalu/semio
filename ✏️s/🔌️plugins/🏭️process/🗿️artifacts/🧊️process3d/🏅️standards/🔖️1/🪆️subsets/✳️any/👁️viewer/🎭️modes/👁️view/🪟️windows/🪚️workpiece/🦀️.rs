@@ -55,9 +55,9 @@ fn default_camera_json() -> String {
 /// to while composed-child object resolution is unimplemented (pre-existing
 /// `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave-4 gap, not introduced here) — real parity
 /// with the editor's *current* behavior, not a regression.
-fn view_preview_payload(fixture: &Process3dSnapshot) -> (String, String) {
-    let scene = crate::process_working_scene_from_snapshot(fixture);
-    let mesh = processed_mesh(&scene, fixture.resolved_up_to).unwrap_or_else(|| mesh_from_kind(PROCESS3D_VIEW_FALLBACK_MESH_KIND));
+fn view_preview_payload(snapshot: &Process3dSnapshot) -> (String, String) {
+    let scene = crate::process_working_scene_from_snapshot(snapshot);
+    let mesh = processed_mesh(&scene, snapshot.resolved_up_to).unwrap_or_else(|| mesh_from_kind(PROCESS3D_VIEW_FALLBACK_MESH_KIND));
     let meshes = json::Value::Array(vec![json::object([("id".to_string(), json::Value::String("processed".to_string())), ("data".to_string(), json::Value::from(mesh))])]);
     let floats = |values: [f64; 3]| json::Value::Array(values.into_iter().map(json::Value::from).collect());
     let instances = json::Value::Array(vec![json::object([
@@ -66,7 +66,7 @@ fn view_preview_payload(fixture: &Process3dSnapshot) -> (String, String) {
         ("position".to_string(), floats([0.0, 0.0, 0.0])),
         ("rotation".to_string(), json::Value::Array(vec![json::Value::from(0.0), json::Value::from(0.0), json::Value::from(0.0), json::Value::from(1.0)])),
         ("scale".to_string(), floats([1.0, 1.0, 1.0])),
-        ("label".to_string(), json::Value::String(fixture.stock_label.clone())),
+        ("label".to_string(), json::Value::String(snapshot.stock_label.clone())),
         ("selected".to_string(), json::Value::Bool(false)),
         ("hovered".to_string(), json::Value::Bool(false)),
     ])]);
@@ -74,8 +74,8 @@ fn view_preview_payload(fixture: &Process3dSnapshot) -> (String, String) {
 }
 
 /// 👁️ The viewer's own pure render function — never calls into the sibling `editor` module.
-pub fn render(fixture: &Process3dSnapshot) -> UiAssemblyResult<BuiltNode> {
-    let (meshes_json, instances_json) = view_preview_payload(fixture);
+pub fn render(snapshot: &Process3dSnapshot) -> UiAssemblyResult<BuiltNode> {
+    let (meshes_json, instances_json) = view_preview_payload(snapshot);
     MeshWindowKit::render(&MeshView { camera_json: default_camera_json(), meshes_json, instances_json, selection_json: world3d_selection_json("rectangle", &[], None) })
 }
 //#endregion 🔖️Render

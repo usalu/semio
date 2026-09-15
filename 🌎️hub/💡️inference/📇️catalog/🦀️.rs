@@ -61,7 +61,7 @@ impl VerifiedGisMapArtifactBindingV1 {
             component_sha256: self.projection.package.component_sha256.clone(),
             component_blake3: self.projection.package.component_blake3.clone(),
             artifact_kind: self.projection.artifact.kind.clone(),
-            document_schema: self.projection.artifact.schema.clone(),
+            artifact_schema: self.projection.artifact.schema.clone(),
             parent_dialect: self.projection.parent_dialect.clone(),
             surface_id: self.projection.surface.surface_id.clone(),
             granted_mode: GIS_GRANTED_MODE.to_owned(),
@@ -101,17 +101,14 @@ fn validate_gis_map_binding_projection(projection: &GisMapFrozenBindingV1, nativ
         || projection.service.owner != "gis"
         || projection.service.contributor != "gis"
         || projection.service.artifact_kind != projection.artifact.kind
-        || projection.service.artifact_schema != "s.gis.gismap"
-        || projection.service.document_schema != projection.artifact.schema
+        || projection.service.artifact_schema != projection.artifact.schema
         || projection.service.inference_schema != GIS_SERVICE_ID
         || !projection.service.depends_on.is_empty()
-        || [projection.service.artifact_schema_version, projection.service.document_schema_version, projection.service.inference_schema_version, projection.service.algorithm_version, projection.service.policy_version] != [1; 5]
+        || [projection.service.artifact_schema_version, projection.service.inference_schema_version, projection.service.algorithm_version, projection.service.policy_version] != [1; 4]
         || metadata.owner != projection.service.owner
         || metadata.artifact_kind != projection.service.artifact_kind
         || metadata.artifact_schema != projection.service.artifact_schema
         || metadata.artifact_schema_version != projection.service.artifact_schema_version
-        || metadata.document_schema != projection.service.document_schema
-        || metadata.document_schema_version != projection.service.document_schema_version
         || metadata.inference_schema != projection.service.inference_schema
         || metadata.inference_schema_version != projection.service.inference_schema_version
         || metadata.algorithm_version != projection.service.algorithm_version
@@ -188,8 +185,6 @@ fn verified_gis_map_binding_with_service(catalog: Arc<VerifiedTrustedCatalog>, n
             artifact_kind: declared.artifact_kind.clone(),
             artifact_schema: declared.artifact_schema.clone(),
             artifact_schema_version: declared.artifact_schema_version,
-            document_schema: declared.document_schema.clone(),
-            document_schema_version: declared.document_schema_version,
             inference_schema: declared.inference_schema.clone(),
             inference_schema_version: declared.inference_schema_version,
             algorithm_version: declared.algorithm_version,
@@ -240,10 +235,9 @@ fn exact_projection<'a>(scope: &DocumentScope, descriptor: &DocumentDescriptor, 
         || service.owner != "gis"
         || service.contributor != "gis"
         || service.artifact_kind != descriptor.artifact_kind
-        || service.artifact_schema != "s.gis.gismap"
-        || service.document_schema != descriptor.artifact_schema
+        || service.artifact_schema != descriptor.artifact_schema
         || !service.depends_on.is_empty()
-        || [service.artifact_schema_version, service.document_schema_version, service.inference_schema_version, service.algorithm_version, service.policy_version] != [1; 5]
+        || [service.artifact_schema_version, service.inference_schema_version, service.algorithm_version, service.policy_version] != [1; 4]
     {
         return Err(InferenceErrorV1::Denied);
     }
@@ -288,7 +282,7 @@ pub(crate) async fn identity_from_frozen_binding(binding: &VerifiedGisMapArtifac
         || frozen.package_version != source.descriptor.owner.version
         || frozen.component_sha256 != package_hash
         || frozen.artifact_kind != source.descriptor.artifact_kind
-        || frozen.document_schema != source.descriptor.artifact_schema
+        || frozen.artifact_schema != source.descriptor.artifact_schema
     {
         return Err(InferenceErrorV1::Denied);
     }

@@ -62,7 +62,7 @@
       "native_factory": {
         "factory_id": "stdio.native.json.v1",
         "artifact_kind": "stdio.json",
-        "document_schema": "stdio.json",
+        "artifact_schema": "stdio.json",
         "extension": "json",
         "pack_schema_hash": "5cea30cf9b0956e112863b9183e9bde32087a14faffc34cf2e017f8d2b86c71a",
         "runtime_capability_id": "s.stdio.json.standard.rfc8259.codec.codec-stdio-json-extension-json.v1"

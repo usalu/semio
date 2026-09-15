@@ -18,7 +18,7 @@ pub struct ConnectMediaPorts {
 }
 
 pub fn handle(payload: &ConnectMediaPorts, doc: &ArtifactView<'_, Generation2dSnapshot>, _cfg: &ConfigView<'_, Generation2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Generation2dMutation, Generation2dConfigMutation>, Fault> {
-    let fixture = &doc.snapshot.fixture;
+    let fixture = &doc.snapshot.host_document;
     Ok(Emit::mutations(host_operations(fixture, |host| {
         let _ = host.connect_ports(&payload.source_node_id, &payload.source_port_id, &payload.target_node_id, &payload.target_port_id);
     })))

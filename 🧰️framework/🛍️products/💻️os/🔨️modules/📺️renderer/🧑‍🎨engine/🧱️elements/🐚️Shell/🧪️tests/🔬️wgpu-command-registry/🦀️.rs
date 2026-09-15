@@ -737,7 +737,7 @@ fn directory_home_terminal_receipt_rejects_unknown_fields_and_nonreceipt_effects
 #[test]
 fn native_document_admission_is_bound_to_verified_package_app_window_and_renderer() {
     let mut app = test_app(Vec::new(), Vec::new());
-    app.io.document_schema = "s.test.document".into();
+    app.io.artifact_schema = "s.test.document".into();
     let manifest = PluginManifest {
         plugin_id: "s.test".into(),
         label: "Test".into(),

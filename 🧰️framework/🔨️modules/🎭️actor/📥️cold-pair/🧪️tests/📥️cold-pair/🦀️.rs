@@ -1,16 +1,16 @@
-use crate::cold_pair::{ColdDocumentPairApplied, ColdDocumentPairCursor, ColdDocumentPairFrontier, ColdPairIngressStatus};
+use crate::cold_pair::{ColdArtifactPairApplied, ColdArtifactPairCursor, ColdArtifactPairFrontier, ColdPairIngressStatus};
 use crate::instance_lifetime::ActorInstanceLifetime;
 
 fn lifetime() -> ActorInstanceLifetime {
     ActorInstanceLifetime { activation_generation: 7, instance_id: 3, guest_lifetime: 11 }
 }
 
-fn cursor() -> ColdDocumentPairCursor {
-    ColdDocumentPairCursor { lifetime: lifetime(), transfer_generation: 13, page_index: 1, page_count: 2 }
+fn cursor() -> ColdArtifactPairCursor {
+    ColdArtifactPairCursor { lifetime: lifetime(), transfer_generation: 13, page_index: 1, page_count: 2 }
 }
 
-fn frontier() -> ColdDocumentPairFrontier {
-    ColdDocumentPairFrontier { document_id: "shared-map".into(), head_edit_ordinal: 17, head_edit_id: "edit-17".into(), last_commit_seq: 15, chain_sha256: [34; 32] }
+fn frontier() -> ColdArtifactPairFrontier {
+    ColdArtifactPairFrontier { artifact_id: "shared-map".into(), head_edit_ordinal: 17, head_edit_id: "edit-17".into(), last_commit_seq: 15, chain_sha256: [34; 32] }
 }
 
 #[semio_framework_async_macros::async_test]
@@ -20,7 +20,7 @@ async fn cold_pair_ingress_status_pack_round_trips_every_exact_variant() {
         ColdPairIngressStatus::PageAccepted(cursor()),
         ColdPairIngressStatus::Backpressure(cursor()),
         ColdPairIngressStatus::Loading(cursor()),
-        ColdPairIngressStatus::Applied(ColdDocumentPairApplied { lifetime: lifetime(), transfer_generation: 13, baseline_frontier: frontier(), aggregate_sha256: [51; 32] }),
+        ColdPairIngressStatus::Applied(ColdArtifactPairApplied { lifetime: lifetime(), transfer_generation: 13, baseline_frontier: frontier(), aggregate_sha256: [51; 32] }),
         ColdPairIngressStatus::Fault { cursor: cursor(), fault: b"cold-pair.hash".to_vec() },
     ];
     for (tag, row) in rows.into_iter().enumerate() {
@@ -43,13 +43,13 @@ fn cold_pair_ingress_neutral_fixture_has_exact_semantic_receipts_and_hostiles() 
     let hostile = fixture["hostileRows"].as_array().expect("hostile rows");
     assert_eq!(hostile.len(), 5);
     assert!(hostile.iter().all(|row| row["kind"].as_str().is_some()));
-    assert!(ColdPairIngressStatus::PageAccepted(ColdDocumentPairCursor { lifetime: ActorInstanceLifetime { activation_generation: 0, ..lifetime() }, ..cursor() }).validate().is_err());
-    assert!(ColdPairIngressStatus::Loading(ColdDocumentPairCursor { transfer_generation: 0, ..cursor() }).validate().is_err());
-    assert!(ColdPairIngressStatus::Backpressure(ColdDocumentPairCursor { page_index: 2, ..cursor() }).validate().is_err());
-    assert!(ColdPairIngressStatus::Applied(ColdDocumentPairApplied {
+    assert!(ColdPairIngressStatus::PageAccepted(ColdArtifactPairCursor { lifetime: ActorInstanceLifetime { activation_generation: 0, ..lifetime() }, ..cursor() }).validate().is_err());
+    assert!(ColdPairIngressStatus::Loading(ColdArtifactPairCursor { transfer_generation: 0, ..cursor() }).validate().is_err());
+    assert!(ColdPairIngressStatus::Backpressure(ColdArtifactPairCursor { page_index: 2, ..cursor() }).validate().is_err());
+    assert!(ColdPairIngressStatus::Applied(ColdArtifactPairApplied {
         lifetime: lifetime(),
         transfer_generation: 13,
-        baseline_frontier: ColdDocumentPairFrontier { head_edit_ordinal: 14, last_commit_seq: 15, ..frontier() },
+        baseline_frontier: ColdArtifactPairFrontier { head_edit_ordinal: 14, last_commit_seq: 15, ..frontier() },
         aggregate_sha256: [51; 32]
     })
     .validate()
@@ -59,7 +59,7 @@ fn cold_pair_ingress_neutral_fixture_has_exact_semantic_receipts_and_hostiles() 
 
 #[semio_framework_async_macros::async_test]
 async fn cold_pair_ingress_decode_refuses_noncanonical_authority_before_publication() {
-    let mut invalid = ColdPairIngressStatus::PageAccepted(ColdDocumentPairCursor { page_index: 2, ..cursor() });
+    let mut invalid = ColdPairIngressStatus::PageAccepted(ColdArtifactPairCursor { page_index: 2, ..cursor() });
     let mut bytes = Vec::new();
     assert!(invalid.pack_encode(&mut bytes).await.is_err());
     assert!(bytes.is_empty());

@@ -35,7 +35,7 @@ async fn set_app_registrations_command_registers_app_and_surfaces_empty_document
         .await
         .window_kind("main", LocalizedLabel::native("Main", "Hauptansicht"), "root-tool.main", semio_framework_ui_contract::SurfaceKind::Canvas2d, "square-pen")
         .await
-        .io(AppIo::from_document(
+        .io(AppIo::from_artifact(
             "root-tool.document",
             MediaType { class: MediaClass::Data, form: MediaForm::Value },
             ArtifactPresentation { id: "root-tool".into(), name: "Root Tool".into(), dimension: String::new(), component_kind: "root-tool".into() },

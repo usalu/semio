@@ -173,6 +173,23 @@ describe("node graph gestures", () => {
     expect(law.rules.aContentlessGestureDispatchesNothing).toContain("dispatches NOTHING");
   });
 
+  it("publishes the flow-graph viewport only after a camera gesture settles, not on every selection sync", () => {
+    const reactGraph = readFileSync(resolve(engineRoot, "🧱️elements/🕸️NodeGraph/🟦️.tsx"), "utf8");
+    let searchFrom = 0;
+    let emitCount = 0;
+    while (searchFrom < reactGraph.length) {
+      const at = reactGraph.indexOf("const emitInteractionState = useCallback", searchFrom);
+      if (at < 0) break;
+      emitCount += 1;
+      const bodyEnd = reactGraph.indexOf("}, [", at);
+      const body = reactGraph.slice(at, bodyEnd);
+      expect(body, `emitInteractionState #${emitCount} must not replay nodeGraphViewport`).not.toContain("nodeGraphActions.viewport");
+      searchFrom = at + 1;
+    }
+    expect(emitCount).toBeGreaterThanOrEqual(2);
+    expect(reactGraph).toContain("publishCameraRef.current()");
+  });
+
   it("classifies a surface point exactly once, and routes the gesture by that same answer", () => {
     // 🩺️ Which part of a node is draggable body and which is inline widget used to be knowable only by
     // pressing and seeing what happened. `DagScreenHit` is the one classification, `is_screen_path`

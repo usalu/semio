@@ -365,7 +365,7 @@ impl Host {
     //#endregion 🔖️Http
 
     //#region 🔖️Documents
-    pub async fn document_read(&self, doc: semio_framework::kernel::ArtifactHandle, lane: impl Into<String>) -> Result<Vec<u8>, Fault> {
+    pub async fn artifact_read(&self, doc: semio_framework::kernel::ArtifactHandle, lane: impl Into<String>) -> Result<Vec<u8>, Fault> {
         let lane = lane.into();
         match &self.backend {
             HostBackend::Poll(registry) => registry.request(move |req| Effect::DocumentRead { req, doc, lane }).await,
@@ -373,18 +373,18 @@ impl Host {
             HostBackend::Direct => {
                 #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
                 {
-                    direct::host_async::document_read(direct::effects::DocumentReadParams { doc: doc.0 as u64, lane }).await.map_err(|bytes| decode_fault_pack(&bytes))
+                    direct::host_async::artifact_read(direct::effects::ArtifactReadParams { doc: doc.0 as u64, lane }).await.map_err(|bytes| decode_fault_pack(&bytes))
                 }
                 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
                 {
                     let _ = (doc, lane);
-                    Err(direct_unavailable_fault("document-read").await)
+                    Err(direct_unavailable_fault("artifact-read").await)
                 }
             }
         }
     }
 
-    pub async fn document_write(&self, doc: semio_framework::kernel::ArtifactHandle, lane: impl Into<String>, ops: Vec<u8>) -> Result<Vec<u8>, Fault> {
+    pub async fn artifact_write(&self, doc: semio_framework::kernel::ArtifactHandle, lane: impl Into<String>, ops: Vec<u8>) -> Result<Vec<u8>, Fault> {
         let lane = lane.into();
         match &self.backend {
             HostBackend::Poll(registry) => registry.request(move |req| Effect::DocumentWrite { req, doc, lane, ops }).await,
@@ -397,7 +397,7 @@ impl Host {
                 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
                 {
                     let _ = (doc, lane, ops);
-                    Err(direct_unavailable_fault("document-write").await)
+                    Err(direct_unavailable_fault("artifact-write").await)
                 }
             }
         }

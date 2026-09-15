@@ -294,7 +294,7 @@ mod quick {
                 calls: 0,
                 ..Default::default()
             };
-            let route = JobReplayRoute { plugin: [1; 32], package: [2; 32], controller: [3; 32], tool: [4; 32], window: 5, document: [6; 32], request_schema: [7; 32], request_version: 1, request_digest: [8; 32] };
+            let route = JobReplayRoute { plugin: [1; 32], package: [2; 32], controller: [3; 32], tool: [4; 32], window: 5, artifact: [6; 32], request_schema: [7; 32], request_version: 1, request_digest: [8; 32] };
             let mut log = JobReplayLog::new(route, operation.generation.0).expect("fixed replay authority");
             let mut turn = bridge_turn(0, 0);
             loop {
@@ -417,7 +417,7 @@ mod quick {
     #[test]
     fn mounted_replay_records_and_replays_the_exact_cancelled_terminal_classification() {
         let operation = bridge_operation();
-        let route = JobReplayRoute { plugin: [11; 32], package: [13; 32], controller: [17; 32], tool: [19; 32], window: 23, document: [29; 32], request_schema: [31; 32], request_version: 1, request_digest: [37; 32] };
+        let route = JobReplayRoute { plugin: [11; 32], package: [13; 32], controller: [17; 32], tool: [19; 32], window: 23, artifact: [29; 32], request_schema: [31; 32], request_version: 1, request_digest: [37; 32] };
         let mut log = JobReplayLog::new(route, operation.generation.0).expect("fixed replay authority");
         let turn = bridge_turn(0, 0);
         for replaying in [false, true] {
@@ -453,7 +453,7 @@ mod quick {
     #[test]
     fn mounted_replay_cancel_deadline_and_stale_refuse_the_exact_publication_owner_unchanged() {
         let operation = bridge_operation();
-        let route = JobReplayRoute { plugin: [41; 32], package: [43; 32], controller: [47; 32], tool: [53; 32], window: 59, document: [61; 32], request_schema: [67; 32], request_version: 1, request_digest: [71; 32] };
+        let route = JobReplayRoute { plugin: [41; 32], package: [43; 32], controller: [47; 32], tool: [53; 32], window: 59, artifact: [61; 32], request_schema: [67; 32], request_version: 1, request_digest: [71; 32] };
         let mut log = JobReplayLog::new(route, operation.generation.0).expect("fixed replay authority");
         let publication = |generation: u64| JobPublication { turn: JobTurn { operation: JobOperation { generation, ..bridge_turn(0, 0).operation }, ..bridge_turn(0, 0) }, outcome: JobStepOutcome::PreviewReady { preview: vec![73, 79] } };
 
@@ -497,7 +497,7 @@ mod quick {
     #[test]
     fn mounted_replay_preserves_the_exact_fault_payload_and_prefix_across_replay() {
         let operation = bridge_operation();
-        let route = JobReplayRoute { plugin: [73; 32], package: [79; 32], controller: [83; 32], tool: [89; 32], window: 97, document: [101; 32], request_schema: [103; 32], request_version: 1, request_digest: [107; 32] };
+        let route = JobReplayRoute { plugin: [73; 32], package: [79; 32], controller: [83; 32], tool: [89; 32], window: 97, artifact: [101; 32], request_schema: [103; 32], request_version: 1, request_digest: [107; 32] };
         let mut log = JobReplayLog::new(route, operation.generation.0).expect("fixed replay authority");
         let turn = bridge_turn(0, 0);
         for replaying in [false, true] {

@@ -1,5 +1,5 @@
 //! 📐️ Change Layout direct payload and owned behavior.
-use super::super::{FlowFixture, FlowDiff, FlowDelta, FlowLayoutEntry, FlowMutation, WidgetLayout};
+use super::super::{FlowHostDocument, FlowDiff, FlowDelta, FlowLayoutEntry, FlowMutation, WidgetLayout};
 use crate::os_spr::{MutationKind, MutationOutcome, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -13,12 +13,12 @@ pub struct ChangeLayout { pub entries: Vec<FlowLayoutEntry> }
 //#endregion 🧬️Payload
 
 //#region 🎮️Behavior
-impl MutationKind<FlowFixture, FlowMutation> for ChangeLayout {
+impl MutationKind<FlowHostDocument, FlowMutation> for ChangeLayout {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "layout", kind: "change-layout", record: "ChangedLayout" };
-    fn diff(&self, _base: &FlowFixture) -> MutationOutcome<FlowDiff> {
+    fn diff(&self, _base: &FlowHostDocument) -> MutationOutcome<FlowDiff> {
         MutationOutcome::new(FlowDiff::from(FlowDelta::Layout(self.entries.clone())))
     }
-    fn inverse(&self, base: &FlowFixture) -> Vec<FlowMutation> {
+    fn inverse(&self, base: &FlowHostDocument) -> Vec<FlowMutation> {
         let mut layout: std::collections::BTreeMap<String, WidgetLayout> = base.layout.iter().map(|(id, layout)| (id.clone(), layout.clone())).collect();
         let mut inverse = Vec::with_capacity(self.entries.len());
         for entry in &self.entries {

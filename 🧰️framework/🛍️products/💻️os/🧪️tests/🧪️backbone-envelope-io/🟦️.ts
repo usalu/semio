@@ -1149,6 +1149,28 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(completions).toHaveLength(1);
     });
 
+    /**
+     * 🎞️ A running operation (a tool run) hands the shell its dirty scope mid-operation as an `Invocation` answering no
+     * command. Once the operation runs on the background drain that frame correlates with no waiter, so without this
+     * subscription the renderer saw nothing until the run ended and then everything at once.
+     */
+    it("delivers an unsolicited operation progress scope to its subscriber, never to a pending command waiter", async () => {
+      const progress: unknown[] = [];
+      const handle = fakeHandle((_instanceId, commands) => [
+        { Invocation: { in_reply_to: 0, output: [], diagnostics: [], ui_scope: Array.from(encodePackValue({ kind: "partial", panelBodies: ["framework.body.toolRun"] })), history_patch: [], messages: [], mutations: [], inverse_group: [] } },
+        { Invocation: { in_reply_to: 0, output: [], diagnostics: [], ui_scope: [], history_patch: [], messages: [], mutations: [], inverse_group: [] } },
+        { Invocation: { in_reply_to: Object.values(commands[0]!)[0]!.seq, output: [], diagnostics: [], ui_scope: Array.from(encodePackValue("full")), history_patch: [], messages: [], mutations: [], inverse_group: [] } },
+      ]);
+      const client = new AppChannelClient(handle, new AppChannelRequestSequence(), 1, "app.demo");
+      const unsubscribe = client.onOperationProgress((uiScope) => progress.push(uiScope));
+      const frames = await client.command(new Uint8Array([1]), {});
+      expect(frames).toHaveLength(1);
+      expect(progress).toEqual([{ kind: "partial", panelBodies: ["framework.body.toolRun"] }]);
+      unsubscribe();
+      await client.command(new Uint8Array([2]), {});
+      expect(progress).toHaveLength(1);
+    });
+
     it("matches the shared cross-language typed-operation completion fixture vector, byte-for-byte", async () => {
       const { readFileSync } = await import("node:fs");
       const { fileURLToPath } = await import("node:url");
@@ -2313,7 +2335,7 @@ export async function registerTests4(vitest: NonNullable<ImportMeta["vitest"]>, 
         spaceId: "space-a",
         catalogGenerationId,
         phase: "ready",
-        ready: { documentId: `artifact-${"2".repeat(32)}`, kindId: "s.gis.gismap", artifactSchema: "s.gis.gismap", parentDialect: { artifactKind: "s.gis.gismap", standard: "1", subset: "any" } },
+        ready: { artifactId: `artifact-${"2".repeat(32)}`, kindId: "s.gis.gismap", artifactSchema: "s.gis.gismap", parentDialect: { artifactKind: "s.gis.gismap", standard: "1", subset: "any" } },
       };
       expect(equal(fixture.request, request)).toBe(true);
       expect(equal(fixture.ready, ready)).toBe(true);

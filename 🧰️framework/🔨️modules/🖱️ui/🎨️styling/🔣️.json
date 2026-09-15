@@ -329,7 +329,7 @@
       "fadeRecords": 256.0,
       "testingOutlineWidth": 2.0,
       "testingPulseMs": 900.0,
-      "provisionalOpacity": 0.5,
+      "provisionalOpacity": 1.0,
       "provisionalOutlineWidth": 2.0,
       "provisionalDash": [6.0, 4.0],
       "provisionalDashPeriodMs": 1200.0

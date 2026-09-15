@@ -1248,7 +1248,7 @@ mod plugin_builder_contract_tests {
         type TransientMutation = NoTransientMutation;
         type Command = TestCommand;
         crate::bounded_first_step_tool_proofs! {
-            owner: KeyedTestApp, owner_file: "plugin/🦀️.rs", controller: "s.test.keyed@1/*#editor", document_schema: "semio.test/v1",
+            owner: KeyedTestApp, owner_file: "plugin/🦀️.rs", controller: "s.test.keyed@1/*#editor", artifact_schema: "semio.test/v1",
             factory: "KeyedTestFactory", factory_type: KeyedTestFactory,
             contract: ToolExecutionContract::resumable(32_768, 4, 1, 4_096, 500, 1, 1), tools: ["compositeEdit"]
         }
@@ -2523,6 +2523,13 @@ mod plugin_builder_contract_tests {
     /// framework interaction actions via `interaction_action_definitions` (verified by
     /// `build_definition_carries_window_interactions_and_injects_framework_actions` above).
     async fn interaction_registry() -> AppActionRegistry {
+        AppActionRegistry::from_definition(&interaction_app_definition().await)
+    }
+
+    /// 🕹️ The synthetic app the interaction laws dispatch against: ONE window kind, ONE declared
+    /// domain, and the `window_kind_interactions` ref that binds them — the whole input the framework's
+    /// `interaction_declared_refresh_scope` derives a verb's refresh scope from.
+    async fn interaction_app_definition() -> AppDefinition {
         let app = App::from_builder(
             App::builder(test_app_surface_id().await, LocalizedLabel::data("Synthetic"))
                 .await
@@ -2550,7 +2557,7 @@ mod plugin_builder_contract_tests {
                 .await,
         )
         .await;
-        AppActionRegistry::from_definition(&app.definition)
+        app.definition
     }
 
     async fn interaction_app_under_test() -> VcsArtifactApp<TestApp> {
@@ -5928,16 +5935,36 @@ mod plugin_builder_contract_tests {
         close_reserved_app(&mut app);
     }
 
-    /// 🈳️ Wave B34 — the framework DEFAULT, unchanged: a verb the app declares no scope for still
-    /// answers `UiDirtyScope::Full`, which is what every app that implements no `interaction_scope` hook
-    /// keeps getting. `TestApp` declares nothing for `setInteractionGranularity` precisely so this arm
-    /// has a fixture.
+    /// 🈳️ The framework DEFAULT: a verb the app declares no scope for falls through to the scope
+    /// DERIVED from the app's own surface declarations (`interaction_declared_refresh_scope` over
+    /// `WindowKindDefinition.interactions`) — the window that accepts the domain, the Select chrome,
+    /// and no panel, because `setInteractionGranularity` moves no selection. `TestApp` declares
+    /// nothing for this verb precisely so this arm has a fixture, and `UiDirtyScope::Full` is now
+    /// reached only when not even a window declares the touched domain (the sibling law below).
     #[semio_framework_async_macros::async_test]
-    async fn an_undeclared_interaction_verb_keeps_the_framework_full_scope() {
+    async fn an_undeclared_interaction_verb_falls_through_to_the_declared_surface_scope() {
         let mut app = interaction_app_under_test().await;
         let settled = reserved_action(&mut app, SET_INTERACTION_GRANULARITY_ACTION_ID, Some(&dv(json!({ "domainId": "items", "granularityId": "item" })))).await;
-        assert_eq!(settled.ui_scope, UiDirtyScope::Full, "an undeclared interaction verb keeps the widest, always-correct scope");
+        assert_eq!(
+            settled.ui_scope,
+            UiDirtyScope::Partial { window_bodies: vec![TEST_APP_WINDOW_BODY_KEY.to_string()], panel_bodies: Vec::new(), utilities: false, tools: false, engagements: false, measures: true, labels: false },
+            "an app that declares the domain on a window narrows to that window without declaring a scope hook"
+        );
         close_reserved_app(&mut app);
+    }
+
+    /// 🌀️ The widest, always-correct answer is what is left when there is nothing to derive from: no
+    /// window kind declares the touched domain, so the framework may not guess which body paints it.
+    #[semio_framework_async_macros::async_test]
+    async fn a_domain_no_window_declares_keeps_the_framework_full_scope() {
+        let definition = interaction_app_definition().await;
+        let windows = semio_framework::interaction_window_bodies_by_domain(&definition);
+        let panels = semio_framework::panel_leaf_body_keys(&definition);
+        for verb in InteractionVerb::ALL {
+            assert!(semio_framework::interaction_declared_refresh_scope(verb, &["nowhere"], &windows, &panels).is_none(), "{verb:?} narrowed a domain no window declares");
+            assert!(semio_framework::interaction_declared_refresh_scope(verb, &[], &windows, &panels).is_none(), "{verb:?} narrowed a verb that touched no domain");
+        }
+        assert_eq!(windows.get("items").map(Vec::as_slice), Some([TEST_APP_WINDOW_BODY_KEY.to_string()].as_slice()), "the derivation reads the window kind's own interaction refs");
     }
 
     /// 🎮️ Wave B34 — the verb type the declaration is keyed by is exactly the six ids

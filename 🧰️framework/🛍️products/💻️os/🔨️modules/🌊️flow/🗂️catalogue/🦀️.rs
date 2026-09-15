@@ -261,7 +261,7 @@ pub const FLOW_LOD_MODE_AUTOMATIC: &str = "automatic";
 /// instance. See that type for the byte measurement that forced the split.
 #[derive(Clone, Debug)]
 pub struct FlowBackedNodeGraphExtras {
-    pub fixture_json: Option<String>,
+    pub host_document_json: Option<String>,
     pub capabilities_json: Option<String>,
     pub lod_json: Option<String>,
     pub eval_json: Option<String>,
@@ -352,10 +352,10 @@ pub(crate) fn node_graph_operator_record_to_operator_info(record: &ui_wgpu::wgpu
 /// 🌊️ Builds shared NodeGraphScene fields for flow-backed plugins. `session`, when set, contributes
 /// `eval_json`/`status_json` from the in-process [`FlowEvalSession`] (never persisted in config).
 ///
-/// 🧹️ [`flow_host_with_session`] CLONES `fixture` into the host, and `FlowFixture::layout` is an
+/// 🧹️ [`flow_host_with_session`] CLONES `fixture` into the host, and `FlowHostDocument::layout` is an
 /// `OrderedMap` root that rejects a bare drop, so the status host is retired here rather than left to
 /// drop glue (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-pub fn flow_backed_node_graph_extras(fixture: &FlowFixture, lod_mode: &str, proximity_distance: f64, grid_visible: bool, grid_snap_enabled: bool, grid_factor: f64, session: Option<&FlowEvalSession>) -> FlowBackedNodeGraphExtras {
+pub fn flow_backed_node_graph_extras(fixture: &FlowHostDocument, lod_mode: &str, proximity_distance: f64, grid_visible: bool, grid_snap_enabled: bool, grid_factor: f64, session: Option<&FlowEvalSession>) -> FlowBackedNodeGraphExtras {
     let automatic = lod_mode.is_empty() || lod_mode == FLOW_LOD_MODE_AUTOMATIC;
     let status_json = session.map(|session| {
         let host = flow_host_with_session(fixture, session);
@@ -364,7 +364,7 @@ pub fn flow_backed_node_graph_extras(fixture: &FlowFixture, lod_mode: &str, prox
         status
     });
     FlowBackedNodeGraphExtras {
-        fixture_json: Some(crate::os_pack::json::to_json_string(fixture)),
+        host_document_json: Some(crate::os_pack::json::to_json_string(fixture)),
         capabilities_json: Some(r#"{"engine":"flow","spotlight":true,"noteEdit":true,"clusters":true,"previewToggle":true}"#.into()),
         lod_json: Some(crate::os_pack::json::to_string(&crate::os_pack::json::object([
             ("automatic".to_string(), crate::os_pack::json::Value::Bool(automatic)),

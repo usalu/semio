@@ -6,7 +6,7 @@ use crate::editor::generation2d::Generation2dCommand;
 async fn reorganize_emits_operations() {
     let mut app = app().await;
     let placements = |app: &crate::editor::generation2d::unit_tests::context::Generation2dApp| -> Vec<(String, u64, u64)> {
-        snapshot_read(app).fixture.layout.iter().map(|(id, layout)| (id.clone(), layout.x.to_bits(), layout.y.to_bits())).collect()
+        snapshot_read(app).host_document.layout.iter().map(|(id, layout)| (id.clone(), layout.x.to_bits(), layout.y.to_bits())).collect()
     };
     let before = placements(&app);
     dispatch(&mut app, Generation2dCommand::Reorganize(Reorganize {})).await;

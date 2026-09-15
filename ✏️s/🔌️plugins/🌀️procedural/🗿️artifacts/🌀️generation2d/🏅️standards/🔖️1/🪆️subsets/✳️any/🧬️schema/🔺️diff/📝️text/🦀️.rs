@@ -4,7 +4,7 @@ use crate::standards::v1::subsets::any::schema::diff::*;
 use crate::standards::v1::subsets::any::schema::Generation2dArtifact;
 use crate::{widget_id, Generation2dSnapshot};
 use protocol::MutationDiff;
-use semio_framework_artifact_flow_flow::{CameraJson, FlowFixture, SynapseSpec, Widget, WidgetLayout};
+use semio_framework_artifact_flow_flow::{CameraJson, FlowHostDocument, SynapseSpec, Widget, WidgetLayout};
 use semio_framework_artifact_playbook_playbook::{apply_generation_mutation, GenerationMutation, GenerationPlayState};
 use semio_framework_value_derive::{FromValue, ToValue};
 //#region 📖️SemioGrammar
@@ -72,7 +72,7 @@ fn apply_layout_diff(layout: &mut semio_framework_artifact_flow_flow::OrderedMap
 }
 
 /// 🧩 Applies sparse fixture-collection helpers onto a cloned fixture.
-pub fn apply_fixture_helpers(fixture: &FlowFixture, widgets: &WidgetsDiff, synapses: &SynapsesDiff, layout: &LayoutDiff, camera: Option<&CameraJson>, schema: Option<&str>) -> FlowFixture {
+pub fn apply_host_document_helpers(fixture: &FlowHostDocument, widgets: &WidgetsDiff, synapses: &SynapsesDiff, layout: &LayoutDiff, camera: Option<&CameraJson>, schema: Option<&str>) -> FlowHostDocument {
     let mut next = fixture.clone();
     apply_widgets_diff(&mut next.widgets, widgets);
     apply_synapses_diff(&mut next.synapses, synapses);
@@ -105,8 +105,8 @@ impl Generation2dDiff {
                 return Ok((**replacement).clone());
             }
             let mut next = artifact.clone();
-            if let Some(fixture) = &self.fixture {
-                std::mem::replace(&mut next.fixture, fixture.clone()).retire_cold();
+            if let Some(fixture) = &self.host_document {
+                std::mem::replace(&mut next.host_document, fixture.clone()).retire_cold();
             }
             if let Some(generation) = &self.generation {
                 std::mem::replace(&mut next.generation, generation.clone()).retire_cold();
@@ -123,8 +123,8 @@ impl MutationDiff<Generation2dSnapshot> for Generation2dDiff {
                 return Ok(replacement.to_snapshot());
             }
             let mut next = snapshot.clone();
-            if let Some(fixture) = &self.fixture {
-                std::mem::replace(&mut next.fixture, fixture.clone()).retire_cold();
+            if let Some(fixture) = &self.host_document {
+                std::mem::replace(&mut next.host_document, fixture.clone()).retire_cold();
             }
             if let Some(generation) = &self.generation {
                 std::mem::replace(&mut next.generation, generation.clone()).retire_cold();
@@ -142,7 +142,7 @@ impl MutationDiff<Generation2dSnapshot> for Generation2dDiff {
         }
         let Self { artifact: _, fixture, generation } = other;
         if let Some(fixture) = fixture {
-            if let Some(displaced) = self.fixture.replace(fixture) {
+            if let Some(displaced) = self.host_document.replace(fixture) {
                 displaced.retire_cold();
             }
         }
@@ -170,7 +170,7 @@ impl MutationDiff<Generation2dSnapshot> for Generation2dDiff {
 //#region 🔖️Constructors
 /// 🏗️ Whole-fixture field delta after applying sparse collection helpers.
 pub fn diff_fixture_from_helpers(base: &Generation2dSnapshot, widgets: &WidgetsDiff, synapses: &SynapsesDiff, layout: &LayoutDiff, camera: Option<&CameraJson>, schema: Option<&str>) -> Generation2dDiff {
-    let fixture = apply_fixture_helpers(&base.fixture, widgets, synapses, layout, camera, schema);
+    let fixture = apply_host_document_helpers(&base.host_document, widgets, synapses, layout, camera, schema);
     Generation2dDiff { fixture: Some(fixture), ..Generation2dDiff::default() }
 }
 

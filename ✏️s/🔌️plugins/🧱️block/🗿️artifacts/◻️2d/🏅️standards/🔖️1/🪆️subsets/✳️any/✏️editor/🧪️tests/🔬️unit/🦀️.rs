@@ -122,7 +122,7 @@ async fn the_manifest_stitches_every_taxonomy_node() {
     let definition = create_block2d_app();
     assert_eq!(definition.modes.len(), 1);
     assert_eq!(definition.window_kinds.len(), 1);
-    for body_key in [document_panel::BLOCK2D_BODY_DOCUMENT, inspection_panel::BLOCK2D_BODY_INSPECTOR] {
+    for body_key in [document_panel::BLOCK2D_BODY_ARTIFACT, inspection_panel::BLOCK2D_BODY_INSPECTOR] {
         assert!(definition.panel_tabs.iter().any(|tab| tab.body_key.as_deref() == Some(body_key)), "panel tab {body_key} is stitched into the manifest");
     }
     assert!(definition.artifact_kinds.iter().any(|kind| kind.id == "kit.catalog"));
@@ -169,7 +169,7 @@ async fn block2d_io_is_wired_into_the_manifest() {
 #[semio_framework_async_macros::async_test]
 async fn block2d_io_declares_the_catalog_out_port() {
     let io = block2d_io();
-    assert_eq!(io.document_schema, BLOCK_2D_SCHEMA);
+    assert_eq!(io.artifact_schema, BLOCK_2D_SCHEMA);
     let ports = io.all_ports().await;
     let catalog = ports.iter().find(|port| port.id == "catalog:out").expect("catalog:out port declared");
     assert_eq!(catalog.kind_id.as_deref(), Some("kit.catalog"));

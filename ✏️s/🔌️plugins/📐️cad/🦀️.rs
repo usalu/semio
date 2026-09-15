@@ -35,7 +35,7 @@ pub fn plugin() -> Result<Plugin<CadApps>, PluginAssemblyError> {
         .viewer_mutation_roster::<crate::viewer::cad::CadViewer>()
         .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::cad::artifact_kind().id })
         .execution(ExecutionMode::Isolated)
-        .requests(CapabilityRequest { id: CapabilityId("documents.write".into()), scope: "plugin".into(), reason: "persist cad edits to the open document".into(), optional: false })
+        .requests(CapabilityRequest { id: CapabilityId("artifacts.write".into()), scope: "plugin".into(), reason: "persist cad edits to the open document".into(), optional: false })
         .try_build()
 }
 

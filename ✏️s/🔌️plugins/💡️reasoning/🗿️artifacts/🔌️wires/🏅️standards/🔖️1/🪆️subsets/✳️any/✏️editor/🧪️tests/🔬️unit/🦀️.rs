@@ -201,7 +201,7 @@ async fn the_manifest_stitches_every_taxonomy_node() {
     let json = serde_json::to_string(&create_wires_app()).expect("app definition json");
     assert!(json.contains(WIRES_PLAY_WINDOW_CANVAS), "window kind missing from the manifest: {json}");
     assert!(json.contains(edit::WIRES_PLAY_MODE_EDIT), "mode missing from the manifest");
-    for body in [WIRES_PLAY_BODY_DOCUMENT, WIRES_PLAY_BODY_CATALOGUE, WIRES_PLAY_BODY_PROPERTIES] {
+    for body in [WIRES_PLAY_BODY_ARTIFACT, WIRES_PLAY_BODY_CATALOGUE, WIRES_PLAY_BODY_PROPERTIES] {
         assert!(json.contains(body), "panel body {body} missing from the manifest");
     }
     assert!(json.contains("graph.wires"), "artifact kind missing from the manifest");
@@ -212,7 +212,7 @@ async fn the_manifest_stitches_every_taxonomy_node() {
 #[semio_framework_async_macros::async_test]
 async fn wires_labels_resolve_native_by_default() {
     let mut app = metabolism_app().await;
-    let json = render(&mut app, WIRES_PLAY_BODY_DOCUMENT).await;
+    let json = render(&mut app, WIRES_PLAY_BODY_ARTIFACT).await;
     assert!(json.contains("Identities") && json.contains("Relationships"));
     let catalogue_json = render(&mut app, WIRES_PLAY_BODY_CATALOGUE).await;
     assert!(catalogue_json.contains("Identity kinds"));

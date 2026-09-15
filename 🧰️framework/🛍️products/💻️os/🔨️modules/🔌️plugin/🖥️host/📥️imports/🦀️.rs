@@ -433,8 +433,8 @@ async fn wit_effect_to_kernel(effect: wit_effects::Effect) -> Result<semio_frame
             K::BlobWrite { req: semio_framework::kernel::RequestId(inner.req), media_type: decode_json(&inner.params.media_type).await.unwrap_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }), bytes: inner.params.bytes }
         }
         E::HttpRequest(inner) => K::HttpRequest { req: semio_framework::kernel::RequestId(inner.req), method: inner.params.method, url: inner.params.url, headers: inner.params.headers, body: inner.params.body, stream: inner.params.streaming },
-        E::DocumentRead(inner) => K::DocumentRead { req: semio_framework::kernel::RequestId(inner.req), doc: semio_framework::kernel::ArtifactHandle(inner.params.doc as u128), lane: inner.params.lane },
-        E::DocumentWrite(inner) => K::DocumentWrite { req: semio_framework::kernel::RequestId(inner.req), doc: semio_framework::kernel::ArtifactHandle(inner.params.doc as u128), lane: inner.params.lane, ops: inner.params.ops },
+        E::ArtifactRead(inner) => K::DocumentRead { req: semio_framework::kernel::RequestId(inner.req), doc: semio_framework::kernel::ArtifactHandle(inner.params.doc as u128), lane: inner.params.lane },
+        E::ArtifactWrite(inner) => K::DocumentWrite { req: semio_framework::kernel::RequestId(inner.req), doc: semio_framework::kernel::ArtifactHandle(inner.params.doc as u128), lane: inner.params.lane, ops: inner.params.ops },
         E::LinkResolve(inner) => K::LinkResolve { req: semio_framework::kernel::RequestId(inner.req), link: String::from_utf8_lossy(&inner.link).into_owned() },
         E::RegistryQuery(inner) => K::RegistryQuery { req: semio_framework::kernel::RequestId(inner.req), kind: inner.params.kind, filter: decode_dsl(&inner.params.filter).await },
         E::IoCompose(inner) => K::IoCompose { req: semio_framework::kernel::RequestId(inner.req), key: String::from_utf8_lossy(&inner.params.key).into_owned(), sources: decode_json(&inner.params.sources).await.unwrap_or_default() },
@@ -478,7 +478,7 @@ async fn wit_effect_to_kernel(effect: wit_effects::Effect) -> Result<semio_frame
             app_id: inner.params.app_id,
             os_instance_id: inner.params.os_instance_id,
             label: inner.params.label,
-            document_json: inner.params.document_json,
+            document_json: inner.params.artifact_json,
         },
         E::OpenPluginInstance(inner) => K::OpenPluginInstance { plugin_id: inner.plugin_id, app_id: inner.app_id, os_instance_id: inner.os_instance_id },
         E::OpenDialog(inner) => {
@@ -596,7 +596,7 @@ impl wit_host_async::Host for AsyncActorHostState {
 
 //#region ⏳️host_async::HostWithStore (the 24 async imports)
 /// ⏳️ Shared tail for the 9 imports `⚡️effects/🦀️.rs`'s `RouterEffectHandler` already
-/// answers (`blob-load`/`blob-write`/`document-read`/`document-write`/`io-compose`/`cache-derive`/
+/// answers (`blob-load`/`blob-write`/`artifact-read`/`artifact-write`/`io-compose`/`cache-derive`/
 /// `cache-read`/`invoke-extension`/`dispatch-action`) — one explicit resumable router job, driven
 /// one bounded step per worker closure and awaited inline to resolve the guest's future.
 async fn run_router_effect(call: &CallContext, effect: crate::effects::RouterEffect, name: &str) -> Result<Vec<u8>, Vec<u8>> {
@@ -795,24 +795,24 @@ impl wit_host_async::HostWithStore<AsyncActorHostState> for HasSelf<AsyncActorHo
     //#endregion 🌐️http
 
     //#region 📄️document
-    async fn document_read(accessor: &Accessor<AsyncActorHostState, Self>, params: wit_effects::DocumentReadParams) -> Result<Vec<u8>, Vec<u8>> {
+    async fn artifact_read(accessor: &Accessor<AsyncActorHostState, Self>, params: wit_effects::ArtifactReadParams) -> Result<Vec<u8>, Vec<u8>> {
         let call = begin_call(accessor.with(|mut access| snapshot_call(access.get()))).await;
         if call.ctx.cancel.is_cancelled().await {
             call.guard.disarm();
-            return Err(fault_bytes("capability-revoked", "document-read cancelled before dispatch").await);
+            return Err(fault_bytes("capability-revoked", "artifact-read cancelled before dispatch").await);
         }
-        let result = run_router_effect(&call, crate::effects::RouterEffect::DocumentRead { doc: params.doc as u128, lane: params.lane }, "document-read").await;
+        let result = run_router_effect(&call, crate::effects::RouterEffect::DocumentRead { doc: params.doc as u128, lane: params.lane }, "artifact-read").await;
         call.guard.disarm();
         result
     }
 
-    async fn document_write(accessor: &Accessor<AsyncActorHostState, Self>, params: wit_effects::DocumentWriteParams) -> Result<Vec<u8>, Vec<u8>> {
+    async fn artifact_write(accessor: &Accessor<AsyncActorHostState, Self>, params: wit_effects::ArtifactWriteParams) -> Result<Vec<u8>, Vec<u8>> {
         let call = begin_call(accessor.with(|mut access| snapshot_call(access.get()))).await;
         if call.ctx.cancel.is_cancelled().await {
             call.guard.disarm();
             return Err(fault_bytes("capability-revoked", "document-write cancelled before dispatch").await);
         }
-        let result = run_router_effect(&call, crate::effects::RouterEffect::DocumentWrite { doc: params.doc as u128, lane: params.lane, ops: params.ops }, "document-write").await;
+        let result = run_router_effect(&call, crate::effects::RouterEffect::DocumentWrite { doc: params.doc as u128, lane: params.lane, ops: params.ops }, "artifact-write").await;
         call.guard.disarm();
         result
     }

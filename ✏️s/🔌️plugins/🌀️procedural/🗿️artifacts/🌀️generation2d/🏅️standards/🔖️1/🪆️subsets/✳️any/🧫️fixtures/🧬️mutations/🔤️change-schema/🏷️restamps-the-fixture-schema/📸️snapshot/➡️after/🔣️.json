@@ -1,6 +1,6 @@
 {
   "fixture": {
-    "schema": "flow.fixture.revised",
+    "schema": "flow.hostDocument.revised",
     "camera": {
       "x": 0.0,
       "y": 0.0,

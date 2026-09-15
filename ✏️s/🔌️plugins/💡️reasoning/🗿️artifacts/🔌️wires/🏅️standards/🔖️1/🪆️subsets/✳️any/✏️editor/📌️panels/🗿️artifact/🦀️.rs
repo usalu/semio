@@ -10,7 +10,7 @@ use semio_framework_plugin::{
 };
 
 //#region 🔖️Constants
-pub const WIRES_PLAY_BODY_DOCUMENT: &str = "reasoning.wires.document";
+pub const WIRES_PLAY_BODY_ARTIFACT: &str = "reasoning.wires.document";
 const WIRES_PLAY_DOCUMENT_NAMESPACE: &str = "wires-play-document";
 //#endregion 🔖️Constants
 
@@ -18,9 +18,9 @@ const WIRES_PLAY_DOCUMENT_NAMESPACE: &str = "wires-play-document";
 pub fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_ARTIFACT_ID.into()),
-        label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Dokument"),
+        label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Artefakt"),
         group: PanelGroup::Workbench,
-        body_key: Some(WIRES_PLAY_BODY_DOCUMENT.into()),
+        body_key: Some(WIRES_PLAY_BODY_ARTIFACT.into()),
         children: Vec::new(),
     }
 }

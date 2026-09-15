@@ -191,7 +191,7 @@ impl Generation3dMountedTypedSnapshotOwner {
         let mut dsl_stack = Vec::new();
         dsl_stack.try_reserve_exact(GENERATION3D_MOUNTED_TYPED_DEPTH).map_err(|_| "generation3d-mounted.dsl-stack-preflight")?;
         let candidate = Generation3dSnapshot {
-            fixture: semio_framework_artifact_flow_flow::FlowFixture {
+            fixture: semio_framework_artifact_flow_flow::FlowHostDocument {
                 schema: String::new(),
                 camera: semio_framework_artifact_flow_flow::CameraJson::default(),
                 widgets: Vec::new(),
@@ -323,7 +323,7 @@ impl Generation3dMountedTypedSnapshotOwner {
         let owner = self.string.take().ok_or("generation3d-mounted.string-handoff")?;
         match owner.target {
             Generation3dMountedStringTarget::Root(0) => {
-                self.candidate.as_mut().ok_or("generation3d-mounted.snapshot-owner")?.fixture.schema = owner.value;
+                self.candidate.as_mut().ok_or("generation3d-mounted.snapshot-owner")?.host_document.schema = owner.value;
                 if let Some(Generation3dMountedContainerOwner::Record { field, .. }) = self.stack.last_mut() {
                     *field = None;
                 }
@@ -752,16 +752,16 @@ impl Generation3dMountedTypedSnapshotOwner {
                 }
             }
             Generation3dMountedContainerOwner::Record { root_field: Some(1), owner: Generation3dMountedRecordOwner::Camera(camera), field: None, .. } => {
-                self.candidate.as_mut().ok_or("generation3d-mounted.snapshot-owner")?.fixture.camera = camera;
+                self.candidate.as_mut().ok_or("generation3d-mounted.snapshot-owner")?.host_document.camera = camera;
                 if let Some(Generation3dMountedContainerOwner::Record { field, .. }) = self.stack.last_mut() {
                     *field = None;
                 }
             }
             Generation3dMountedContainerOwner::Record { root_field: Some(2), owner: Generation3dMountedRecordOwner::Widget(widget), field: None, .. } => {
-                self.candidate.as_mut().ok_or("generation3d-mounted.snapshot-owner")?.fixture.widgets.push(Self::finish_widget(widget)?);
+                self.candidate.as_mut().ok_or("generation3d-mounted.snapshot-owner")?.host_document.widgets.push(Self::finish_widget(widget)?);
             }
             Generation3dMountedContainerOwner::Record { root_field: Some(4), owner: Generation3dMountedRecordOwner::Layout { key, value }, field: None, .. } => {
-                self.candidate.as_mut().ok_or("generation3d-mounted.snapshot-owner")?.fixture.layout.insert(key, value);
+                self.candidate.as_mut().ok_or("generation3d-mounted.snapshot-owner")?.host_document.layout.insert(key, value);
             }
             Generation3dMountedContainerOwner::Strings { parent, field, values } => match self.stack.get_mut(parent) {
                 Some(Generation3dMountedContainerOwner::Record { owner: Generation3dMountedRecordOwner::Widget(widget), field: active, .. }) => {
@@ -771,7 +771,7 @@ impl Generation3dMountedTypedSnapshotOwner {
                 _ => return Err("generation3d-mounted.widget-list-owner"),
             },
             Generation3dMountedContainerOwner::Synapses { rows, .. } if kind == mounted::RetainedValueContainer::Table => {
-                let target = &mut self.candidate.as_mut().ok_or("generation3d-mounted.snapshot-owner")?.fixture.synapses;
+                let target = &mut self.candidate.as_mut().ok_or("generation3d-mounted.snapshot-owner")?.host_document.synapses;
                 for row in rows {
                     target.push(semio_framework_artifact_flow_flow::SynapseSpec { id: row.id, from: row.from, to: row.to, from_port: row.from_port, to_port: row.to_port });
                 }

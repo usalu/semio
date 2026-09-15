@@ -1404,16 +1404,16 @@
           "$ref": "#/$defs/ToolRunDefinition"
         },
         "settingsPointers": {
-          "description": "Settings pointer resolution (RFC 6901) over one document: every row names the value the pointer resolves to, or null when it names nothing; malformed pointers are refused by `ToolRunDefinition.validate`.",
+          "description": "Settings pointer resolution (RFC 6901) over one artifact: every row names the value the pointer resolves to, or null when it names nothing; malformed pointers are refused by `ToolRunDefinition.validate`.",
           "type": "object",
           "additionalProperties": false,
           "required": [
-            "document",
+            "artifact",
             "rows",
             "malformed"
           ],
           "properties": {
-            "document": {
+            "artifact": {
               "type": "object"
             },
             "rows": {

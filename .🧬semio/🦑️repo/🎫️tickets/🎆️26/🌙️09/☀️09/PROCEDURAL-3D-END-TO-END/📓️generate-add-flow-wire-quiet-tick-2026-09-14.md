@@ -6,7 +6,9 @@ Owns the three reds `📓️react-oracle-hardening-2026-09-14.md` §6 handed on:
 `SEMIO_VITE_HMR=0`, `screen -S g3dreact6026`). Evidence under `🗑️generated/react-gen-wire/` and
 `🗑️generated/react-gen-wire-confirm/`.
 
-**Final: `green=3/3 red=[] pageerrors=0`, twice consecutively.**
+**Final: `green=3/3 red=[] pageerrors=0`, twice consecutively** (09-15 09:26 and 09:31, guest staged
+01:26, serve recycled 09:23, both changed modules verified through `/@fs/` before the verdict). §5.3
+records what a peer's reactor change did to the tree an hour later, and what it did NOT touch.
 
 ---
 
@@ -337,7 +339,66 @@ The numbers the rows now carry:
 
 ### 5.2 wgpu twin
 
-<!--WGPU-->
+**Not run — the shared 6118 gate never cleared.** `bun 🐍️wgpu-battery.mjs --only=generate-add,node-gestures`
+needs up to 45 minutes of exclusive time on 6118, behind
+`until [ -z "$(pgrep -f 'wgpu-batter[y]|wgpu-.*-pro[b]e')" ]`. That predicate was polled continuously
+across this lane's whole window — 01:18 → 02:00 and again 09:35 → 10:50 — and never went empty for a
+single sample: pids 58234/58270/58397 (48 minutes elapsed at 01:56), then 4986/5023/6564 (38 minutes at
+09:57), then 9403 and a fresh 28627 at 10:50. Peers relaunch into the gate faster than it drains, and
+this lane did not run alongside them.
+
+What IS established about the wgpu side, and what is not:
+
+- The **wgpu guest was restaged** for this lane's changes (`🗑️generated/react-gen-wire/restage-wgpu.txt`,
+  `activate-generation3d-wgpu-dev`, 20 m 0 s, exit 0), so the renderer 6118 serves carries the
+  `entity_screen_json` visibility rule and the `FlowHost` answer. The build is done; only the browser
+  measurement is missing.
+- The **`visible` fix is renderer-neutral by construction**: it is inside `DagHost::entity_screen_json`,
+  which both shells read through the same `entity_screen_json`/`entity_census_json` pair, and it is
+  carried by a Rust law over the real `DagHost`
+  (`a_port_the_camera_has_scrolled_past_publishes_no_geometry_to_aim_at`) rather than by either shell.
+- The **quiet-tick fix cannot regress wgpu**, because wgpu never had the defect: the whole-fixture
+  `commitFixture` fallback is React-only — `🕸️dag/🦀️.rs:2040` says so outright ("React reaches the same
+  end by re-publishing the WHOLE fixture … a payload no bounded-action budget on the wgpu target can
+  carry") — and wgpu's bounded path already speaks the narrow `move`/`connect`/`disconnect` vocabulary,
+  with `aClickIsNotAMove` in the shared gesture fixture already pinning the zero-delta case. The TS twin
+  this lane added reads both renderers' sources, so a drift on either side fails it.
+- The **`cancel` backpressure fix is shell-neutral**: it is in the flow browser runtime
+  (`🕸️wasm/🖥️host/🏃️runtime/🟨️.js`) and is carried by `semio-framework-os-flow-core:test-browser`.
+
+All four are arguments, not measurements. `--only=generate-add,node-gestures` on 6118 is the one thing
+this lane owes and could not take; it is the first thing to run when the gate next drains.
+
+### 5.3 The tree an hour later — a peer reactor regression, and what it leaves standing
+
+Between 09:31 and 10:08 peers landed `🔌️plugin/⚛️reactor/🦀️.rs`, `⚛️reactor/🔄️turn/🦀️.rs`,
+`⚛️reactor/🩹️patches/🦀️.rs` and host-side `🏛️ShellHost/🟦️.tsx`, `🔌️PluginRuntime/🟦️.tsx`,
+`🎭️actor/🖼️wire-turn/🟦️.ts`. From 10:08 on, every run carries a new framework fault:
+
+```
+action failed noteShellCommand {commandId: shell.windowActivate, …}
+  Error: plugin procedural: command ingress did not complete within 1024 continuations
+action failed interactionHover {surfaceId: window:procedural-main, domainId: graph, channel: pointer, targets: []}
+  Error: plugin procedural: command ingress did not complete within 1024 continuations
+```
+
+It is not a host/guest pairing artefact: it appeared with the 01:26 guest against the new host, and got
+WORSE (from "did not complete" to "…within 1024 continuations") after a clean
+`NX_SKIP_NX_CACHE=true activate-generation3d-react-dev` at 10:24 paired the two
+(`🗑️generated/react-gen-wire/restage-morning.txt`). Nothing this lane changed is in the command-ingress
+or continuation path. **Not this lane's; handed on with the signature above.**
+
+What it leaves standing, from the same runs' scoreboard
+(`🗑️generated/react-gen-wire/paired-run-2.txt`, 10:31):
+
+| probe | steps the row OWNS | the central gate |
+|---|---|---|
+| generate-mode | **11/11 green** | ✗ `no shell faults` — the `noteShellCommand` ingress |
+| flow-wire | **3/3 green** (`graph publishes wires`, `cut removes the wire`, `redraw restores the wire`) | ✗ `no shell faults` — the `interactionHover` ingress |
+| keyboard-verbs | **12/12 green**, `baseline` included | ✓ |
+
+Every assertion this lane owns is green on the current tree; the two reds are the battery's central
+clean-page gate correctly catching somebody else's regression. `pageerrors` is **0** in all three.
 
 ---
 
@@ -411,6 +472,13 @@ Probes and battery (ticket folder):
 - **That the React `typecheck` is clean.** It reports 801 pre-existing errors tree-wide; this lane only
   claims that none of them is at a line it changed, and that the two in `🕸️NodeGraph/🟦️.tsx` are the
   peer-owned `Viewport2d` rename at line 1111.
+- **That the wgpu twin passes.** `bun 🐍️wgpu-battery.mjs --only=generate-add,node-gestures` on 6118 was
+  NOT run: the shared gate was held by peer wgpu probes at every sample across 01:18–02:00 and
+  09:35–10:50 (§5.2). The wgpu guest is restaged for these changes and every argument for renderer
+  neutrality is written down there, but no wgpu browser measurement was taken by this lane.
+- **That the peer reactor regression of §5.3 is understood or bounded.** It is shown to be absent before
+  09:31, present after, unaffected by pairing host and guest, and outside every path this lane touched.
+  Nothing more.
 - **That the 20:14-era tree was measurable at all.** Every extension evaluation on it failed
   `invokeExtension dispatch failed … SemioFaultError: targeted window transient capture requires an exact
   ViewModel roster`, so the graph never converged (`profile: queued`, `extrusion-axis: computing`,

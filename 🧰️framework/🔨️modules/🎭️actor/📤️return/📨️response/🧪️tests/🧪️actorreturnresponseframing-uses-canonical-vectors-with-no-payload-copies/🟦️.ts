@@ -163,8 +163,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     if (!dispatch) throw new Error("Missing generated worker dispatcher");
     const send = dispatch as (event: { data: Record<string, unknown> }) => Promise<void>;
     const pending = send({ data: { kind: "turn", requestId: "r1", actorId: "a", activationGeneration: 1n, events: [], budget: {} } });
-    expect(messages.map(message => message.kind)).toEqual(["heartbeat", "frame"]);
-    const effectRequest = messages[1].frame.envelope.payload.payload; expect(effectRequest.effect).toBe("storage-read");
+    expect(messages.map(message => message.kind)).toEqual(["frame"]);
+    const effectRequest = messages[0].frame.envelope.payload.payload; expect(effectRequest.effect).toBe("storage-read");
     await send({ data: { kind: "checkpoint", requestId: "r2", actorId: "b" } });
     expect(messages.find(message => message.requestId === "r2")?.value).toBe(checkpoint); expect(messages.some(message => message.requestId === "r1")).toBe(false);
     shim.exports.emit({ notification: true }); shim.exports.emitPatch({ patch: true });
@@ -174,7 +174,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     expect(trace).toEqual(fixture.mixedTrace); expect(messages.at(-1).value).toBe(effectResult);
     expect(messages.filter(message => message.kind === "frame").map(message => message.frame.envelope.payload.kind)).toEqual(fixture.hostFramePayloadKinds);
     await send({ data: { kind: "unrecognized", requestId: "r3", actorId: "b" } });
-    expect(messages.at(-3)).toMatchObject({ kind: "heartbeat", turnSeq: 3 }); expect(messages.at(-2)).toMatchObject({ kind: "worker-fault", source: "handler", phase: "unrecognized", actorId: "b" }); expect(messages.at(-1)).toMatchObject({ kind: "result", requestId: "r3", ok: false });
+    expect(messages.at(-2)).toMatchObject({ kind: "worker-fault", source: "handler", phase: "unrecognized", actorId: "b" }); expect(messages.at(-1)).toMatchObject({ kind: "result", requestId: "r3", ok: false, beat: { phase: "fault" } });
     const traps: unknown[] = []; const failed = vm.createContext({ WebAssembly: {}, self: { postMessage: (message: unknown) => traps.push(message) } });
     expect(() => new vm.Script(generated("shardWorkerSource")).runInContext(failed)).toThrow(/JSPI/); expect(traps).toHaveLength(1); expect(traps[0]).toMatchObject({ kind: "trap", actorId: "*", activationGeneration: null });
     const postFault = new Error("post-after-observation"); const normalizationFault = Object.freeze({ normalization: "failed" });

@@ -46,7 +46,7 @@ mod app_builder_tests {
             .await
             .window_kind("main", LocalizedLabel::data("Main"), "good.main", SurfaceKind::Canvas2d, IconName::AppWindow)
             .await
-            .panel_tab("framework.panel.artifact", LocalizedLabel::data("Document"), PanelGroup::Workbench, "good.document")
+            .panel_tab("framework.panel.artifact", LocalizedLabel::data("Artifact"), PanelGroup::Workbench, "good.document")
             .await
             .default_layout(create_default_layout(&["main".into()], "row", None, None))
             .await

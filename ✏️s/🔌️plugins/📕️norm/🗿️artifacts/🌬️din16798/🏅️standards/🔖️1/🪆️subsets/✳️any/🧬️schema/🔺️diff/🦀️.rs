@@ -11,7 +11,7 @@ use framework_schema::ArtifactSchema;
 #[artifact_schema(id = "s.norm.din16798")]
 pub struct Din16798Diff {
     #[state(artifact)]
-    pub artifact: Option<Box<crate::document_schema::Din16798Artifact>>,
+    pub artifact: Option<Box<crate::artifact_schema::Din16798Artifact>>,
     #[state(artifact)]
     pub annex: Option<crate::document::AnnexChoice>,
     #[state(artifact)]

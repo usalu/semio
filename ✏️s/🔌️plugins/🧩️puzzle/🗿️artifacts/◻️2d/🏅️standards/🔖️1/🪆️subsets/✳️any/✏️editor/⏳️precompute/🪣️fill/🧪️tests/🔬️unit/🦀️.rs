@@ -229,7 +229,7 @@ fn fill_run_job_matches_the_language_neutral_fill_run_fixture() {
         assert!(log.complete);
         let closing = log.steps.last().expect("a closing step");
         assert_eq!(closing.args, vec![ToolRunStepArg::Unsigned(counters[1])]);
-        assert!(matches!((closing.kind, FillRunReason::from_code(closing.reason)), (ToolRunStepKind::Success, Some(FillRunReason::RequestedReached)) | (ToolRunStepKind::Warning, Some(FillRunReason::NoOpenHandle | FillRunReason::NoCompatibleKind | FillRunReason::NoFreePlacement | FillRunReason::DocumentCapacity))));
+        assert!(matches!((closing.kind, FillRunReason::from_code(closing.reason)), (ToolRunStepKind::Success, Some(FillRunReason::RequestedReached)) | (ToolRunStepKind::Warning, Some(FillRunReason::NoOpenHandle | FillRunReason::NoCompatibleKind | FillRunReason::NoFreePlacement | FillRunReason::ArtifactCapacity))));
         let checkpoint = FillRunCheckpoint::decode(log.checkpoints.last().expect("final checkpoint")).expect("checkpoint decodes");
         assert_eq!((checkpoint.tested, checkpoint.placements.len() as u64, checkpoint.collisions, checkpoint.rejected), (counters[0], counters[1], counters[2], counters[3]));
     }

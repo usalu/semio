@@ -241,7 +241,7 @@ fn hostile_owner() -> &'static Mutex<[Option<Vec<u8>>; 4]> {
     throw new Error("[verify interactivity tool-jobs] self-test mounted-fem2d-full-visual-slot-lost-exact-handback-was falsely accepted.");
   const exactProof = (owner: string, controller: string, id: string, raw = 64) => {
     const ownerType = `Owner${owner.replaceAll(/[^A-Za-z0-9]/g, "")}`;
-    return `impl ArtifactEditor for ${ownerType} { const DOCUMENT_SCHEMA: &'static str = "fixture.document"; }\nbounded_first_step_tool_proofs! { owner: semio_framework_plugin::EditorApp<${ownerType}>, owner_file: "${owner}", controller: "${controller}", document_schema: "fixture.document", factory: "BoundedFirstStepCommandJobFactory", tools: { "${id}" => semio_framework::ToolExecutionContract::bounded_first_step(${raw}, 1, 1, 64, 100), } }`;
+    return `impl ArtifactEditor for ${ownerType} { const DOCUMENT_SCHEMA: &'static str = "fixture.document"; }\nbounded_first_step_tool_proofs! { owner: semio_framework_plugin::EditorApp<${ownerType}>, owner_file: "${owner}", controller: "${controller}", artifact_schema: "fixture.document", factory: "BoundedFirstStepCommandJobFactory", tools: { "${id}" => semio_framework::ToolExecutionContract::bounded_first_step(${raw}, 1, 1, 64, 100), } }`;
   };
   const scanThenMonolithSource = `${exactProof("owner.rs", "owner@1/*#editor", "scan").replace("bounded_first_step(64, 1, 1, 64, 100)", "resumable(64, 1, 1, 64, 100, 1, 1)")}
 fn scan_retained_reduce(command: &Command) { command.dispatch(); }
@@ -324,7 +324,7 @@ impl ArtifactEditor for Ownerownerrs {
   if (evaluate(duplicateCatalog).length === 0) throw new Error("[verify interactivity tool-jobs] self-test duplicate-proof was falsely accepted.");
   const forgedOwner = { "owner.rs": validCatalog["owner.rs"]!.replace("EditorApp<Ownerownerrs>", "EditorApp<ForgedOwner>") };
   if (evaluate(forgedOwner).length === 0) throw new Error("[verify interactivity tool-jobs] self-test forged-owner was falsely accepted.");
-  const forgedSchema = { "owner.rs": validCatalog["owner.rs"]!.replace('document_schema: "fixture.document"', 'document_schema: "forged.document"') };
+  const forgedSchema = { "owner.rs": validCatalog["owner.rs"]!.replace('artifact_schema: "fixture.document"', 'artifact_schema: "forged.document"') };
   if (evaluate(forgedSchema).length === 0) throw new Error("[verify interactivity tool-jobs] self-test forged-schema was falsely accepted.");
   const forgedFactory = { "owner.rs": validCatalog["owner.rs"]!.replace('factory: "BoundedFirstStepCommandJobFactory"', 'factory: "ForgedFactory"') };
   if (evaluate(forgedFactory).length === 0) throw new Error("[verify interactivity tool-jobs] self-test forged-factory was falsely accepted.");
@@ -338,7 +338,7 @@ impl ArtifactEditor for Ownerownerrs {
   if (toolJobLimitsMatch(mismatchProofs, new Map([["owner@1/*#editor\0bounded", 128]]))) throw new Error("[verify interactivity tool-jobs] self-test contract-mismatch was falsely accepted.");
   const externalCancellation = "let cancellation = JobScope::root(); session.step(cancel.cancel_token());";
   if (toolJobExternalCancellationOwned(externalCancellation)) throw new Error("[verify interactivity tool-jobs] self-test external-cancellation was falsely accepted.");
-  const unqualifiedRuntime = "fn bounded_first_step_contract(document_schema, id) {} fn bounded_first_step_public_wire_limit(command_id) {}";
+  const unqualifiedRuntime = "fn bounded_first_step_contract(artifact_schema, id) {} fn bounded_first_step_public_wire_limit(command_id) {}";
   if (toolJobRuntimeProofQualified(unqualifiedRuntime)) throw new Error("[verify interactivity tool-jobs] self-test runtime-owner-proof-drop was falsely accepted.");
   const proofAfterDecode = "async fn admit_command_json() { bounded_json_items(); qualified_tool_proof(); } async fn handle_intent_frame() { serde_json::to_value(); qualified_tool_proof(); }";
   if (toolJobQualifiedProofBeforeDecode(proofAfterDecode)) throw new Error("[verify interactivity tool-jobs] self-test qualified-proof-after-decode was falsely accepted.");
@@ -351,7 +351,7 @@ impl ArtifactEditor for Ownerownerrs {
     throw new Error("[verify interactivity tool-jobs] self-test delegated host proof after helper was falsely accepted.");
   if (toolJobQualifiedProofBeforeDecode(delegatedQualifiedProof.replace("begin_exact_wire(); serde_json::to_writer();", "serde_json::to_writer(); begin_exact_wire();")))
     throw new Error("[verify interactivity tool-jobs] self-test delegated helper decode before wire admission was falsely accepted.");
-  const copiedOwnerStrings = 'struct QualifiedBoundedFirstStepProof; fn bounded_first_step_proof(controller_id: &str, factory: &str, tool_id: &str, document_schema: &str) { proof.owner_file != ""; } tool_job_registration(A::APP_ID, A::DOCUMENT_SCHEMA);';
+  const copiedOwnerStrings = 'struct QualifiedBoundedFirstStepProof; fn bounded_first_step_proof(controller_id: &str, factory: &str, tool_id: &str, artifact_schema: &str) { proof.owner_file != ""; } tool_job_registration(A::APP_ID, A::DOCUMENT_SCHEMA);';
   if (toolJobRuntimeProofQualified(copiedOwnerStrings)) throw new Error("[verify interactivity tool-jobs] self-test copied-owner-without-compiler-witness was falsely accepted.");
   const controllerScopedOperation = 'let app_id = app.instance_id().await.to_string(); format!("{}/{verb}/{}", self.tool_job_controller_id, base_revision.0); app_instance_id: meta.instance_id;';
   if (toolJobLiveInstanceIsolated(controllerScopedOperation)) throw new Error("[verify interactivity tool-jobs] self-test controller-scoped-runtime-instance was falsely accepted.");

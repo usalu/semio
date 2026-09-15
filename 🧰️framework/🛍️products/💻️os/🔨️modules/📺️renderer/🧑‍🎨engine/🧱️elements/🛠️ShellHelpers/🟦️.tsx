@@ -35,7 +35,8 @@ import {
   actionSemanticsForKind,
   type ActionDefinition,
   type ActionDescriptor,
-  type ActionInvocation,
+  hostEffectInvocationV1,
+  type HostEffectDispatchScope,
   type AppDefinition,
   type AppModeDefinition,
   type AppPanelTabDefinition,
@@ -51,7 +52,6 @@ import {
   type CommandDefinition,
   CONTEXT_MENU_GROUP_ID_PREFIX,
   CONTEXT_MENU_OVERFLOW_CATEGORY,
-  type CommandInvocation,
   type DerivedUtilitySpec,
   deriveUtilityNodes,
   type DialogDefinition,
@@ -741,29 +741,25 @@ type EffectDispatchOne = (action: string, args?: Record<string, unknown>) => Pro
 /** 🎯️ Encodes a host-effect callback as the same fully scoped JSON `ActionInvocation` every other
  * renderer action uses; pack-base64 belongs inside the worker channel, never at `handleAction`'s edge. */
 export function encodeEffectActionInvocation(baseSession: ActiveSession, action: string, args?: Record<string, unknown>): string {
-  const windowKindId = baseSession.viewState.activeWindowKindId ?? baseSession.app.windowKinds[0]?.id ?? "";
-  const windowInstanceId = baseSession.viewState.windowId ?? windowKindId;
-  const invocation: ActionInvocation = {
-    address: {
-      pluginId: baseSession.pluginId,
-      appId: baseSession.app.id,
-      modeId: baseSession.viewState.activeModeId ?? baseSession.app.defaultModeId ?? baseSession.app.modes[0]?.id ?? baseSession.app.id,
-      windowKindId,
-      windowInstanceId,
-      actionId: action,
-    },
-    arguments: { ...args, windowId: windowInstanceId },
-  };
-  return JSON.stringify(invocation);
+  return JSON.stringify(hostEffectInvocationV1(effectDispatchScope(baseSession), [], action, args).invocation);
 }
 
 /** 🎯️ Encodes a recursively requested app command with its manifest owner. */
 export function encodeEffectCommandInvocation(baseSession: ActiveSession, commandId: string, args?: Record<string, unknown>): string {
-  const invocation: CommandInvocation = {
-    address: { owner: { app: { pluginId: baseSession.pluginId, appId: baseSession.app.id } }, commandId },
-    arguments: { ...args },
+  return JSON.stringify(hostEffectInvocationV1(effectDispatchScope(baseSession), [commandId], commandId, args).invocation);
+}
+
+/** 🎯️ The `(plugin, app, mode, window kind, window instance)` a host effect re-dispatches in, read off
+ * one live session — the shell's half of {@link hostEffectInvocationV1}. */
+function effectDispatchScope(baseSession: ActiveSession): HostEffectDispatchScope {
+  const windowKindId = baseSession.viewState.activeWindowKindId ?? baseSession.app.windowKinds[0]?.id ?? "";
+  return {
+    pluginId: baseSession.pluginId,
+    appId: baseSession.app.id,
+    modeId: baseSession.viewState.activeModeId ?? baseSession.app.defaultModeId ?? baseSession.app.modes[0]?.id ?? baseSession.app.id,
+    windowKindId,
+    windowInstanceId: baseSession.viewState.windowId ?? windowKindId,
   };
-  return JSON.stringify(invocation);
 }
 
 /** 🔁️ Builds an {@link EffectDispatchOne} bound to one plugin instance + `applyHostEffects` closure;

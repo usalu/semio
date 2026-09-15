@@ -1342,7 +1342,7 @@ fn an_alias_window_surface_the_host_never_acknowledges_does_not_block_the_retire
 /// surface (`UI_RESIDENT_AGGREGATE_BYTES` / `UI_RESIDENT_SURFACE_BYTES` = a handful, against a session that
 /// mounts thirteen) now holds only for bodies that genuinely fill the per-surface maximum. This law holds
 /// that many ceiling-sized reservations OUTRIGHT and then requires the refusal to name the ledger it came
-/// from; `thirteen_mounted_surfaces_at_their_real_sizes_all_hold_a_reconcile_reservation_at_once` pins the
+/// from; `twelve_mounted_surfaces_at_their_real_sizes_all_hold_a_reconcile_reservation_at_once` pins the
 /// other half — that ordinary bodies are never refused at all.
 #[test]
 fn the_refused_reconcile_reservation_names_the_resident_credit_ledger_not_the_handback_registry() {
@@ -1457,18 +1457,18 @@ fn sized_body(key: &str, bytes: usize) -> TreeNode {
 /// 26/09/02/PUZZLE-3D-END-TO-END wave B54 §8.2, wave B56 §1.1 and §6). The ceiling is a per-surface
 /// MAXIMUM, never a price, and this law fixes the aggregate to the session's real occupancy.
 #[test]
-fn thirteen_mounted_surfaces_at_their_real_sizes_all_hold_a_reconcile_reservation_at_once() {
+fn twelve_mounted_surfaces_at_their_real_sizes_all_hold_a_reconcile_reservation_at_once() {
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
     let baseline = semio_framework_ui_runtime::surface_reconcile_registry_census();
     let tracker = PatchTracker::new();
     let panes = ["puzzle3d-main", "puzzle3d-main-top", "puzzle3d-main-perspective"];
-    let panels = ["framework.panel.artifact", "framework.panel.catalogue", "framework.panel.inspection", "puzzle3d.panel.settings", "framework.panel.history", "framework.section.engagements", "framework.section.measures", "framework.section.tools", "framework.section.catalogue", "framework.panel.document"];
+    let panels = ["framework.panel.artifact", "framework.panel.catalogue", "framework.panel.inspection", "puzzle3d.panel.settings", "framework.panel.history", "framework.section.engagements", "framework.section.measures", "framework.section.tools", "framework.section.catalogue"];
     let mut mounted = Vec::new();
     for (index, body) in panes.iter().map(|name| (*name, 54 * 1024)).chain(panels.iter().enumerate().map(|(index, name)| (*name, 1024 + index * 768))).enumerate() {
         let (name, bytes) = body;
         let surface = format!("58:{name}");
         reserve(&tracker, ui_contract::SurfaceId::try_from(surface.clone()).expect("bounded surface"))
-            .unwrap_or_else(|_| panic!("surface {index} of a thirteen-surface session must hold a reservation priced by its own {bytes}-byte body: {}", tracker.debug_state()))
+            .unwrap_or_else(|_| panic!("surface {index} of a twelve-surface session must hold a reservation priced by its own {bytes}-byte body: {}", tracker.debug_state()))
             .commit_source(sized_body(name, bytes))
             .unwrap_or_else(|_| panic!("surface {surface} commits its rendered body: {}", tracker.debug_state()));
         mounted.push(surface);
@@ -1479,7 +1479,7 @@ fn thirteen_mounted_surfaces_at_their_real_sizes_all_hold_a_reconcile_reservatio
     assert_eq!(census.resident_slots, baseline.resident_slots + mounted.len(), "every mounted surface must hold its own reservation at once: {census:?} against {baseline:?} — {state}");
     assert!(
         census.resident_bytes - baseline.resident_bytes < mounted.len() * ui_contract::UI_RESIDENT_SURFACE_BYTES,
-        "thirteen reservations priced at the per-surface ceiling cannot fit the aggregate, so they must be priced by their bodies: {census:?} against {baseline:?}"
+        "twelve reservations priced at the per-surface ceiling cannot fit the aggregate, so they must be priced by their bodies: {census:?} against {baseline:?}"
     );
     let mut peak = census.resident_bytes;
     let mut published = 0usize;
@@ -1499,7 +1499,7 @@ fn thirteen_mounted_surfaces_at_their_real_sizes_all_hold_a_reconcile_reservatio
     assert_eq!(published, mounted.len(), "every mounted surface must publish its body within one turn set: {}", tracker.debug_state());
     assert!(
         peak - baseline.resident_bytes < mounted.len() * ui_contract::UI_RESIDENT_SURFACE_BYTES,
-        "thirteen concurrent reconciles must never hold thirteen per-surface ceilings: peak {peak} against baseline {} — {}",
+        "twelve concurrent reconciles must never hold twelve per-surface ceilings: peak {peak} against baseline {} — {}",
         baseline.resident_bytes,
         tracker.debug_state()
     );

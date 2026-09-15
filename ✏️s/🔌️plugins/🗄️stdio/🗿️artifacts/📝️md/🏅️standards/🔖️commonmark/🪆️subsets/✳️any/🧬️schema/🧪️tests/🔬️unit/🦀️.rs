@@ -66,7 +66,7 @@ mod conformance_laws {
 
     /// ✅️ `grammar_conformance_law`: the snapshot grammar recognizes real `print_dsl` output
     /// for the demo (genuinely block-quote-recursive) snapshot — same preamble-stripped body
-    /// reconstruction `m5_handcrafted_grammar_conformance`'s own `dsl_body_from_fixture` uses,
+    /// reconstruction `m5_handcrafted_grammar_conformance`'s own `dsl_body_from_host_document` uses,
     /// so this is a direct proof this artifact will pass that harness once graduated.
     #[semio_framework_async_macros::async_test]
     async fn grammar_conformance_law() {

@@ -40,7 +40,7 @@ semio_framework_plugin::app_labels! {
         nothing_selected: native_en "Nothing is selected", native_de "Es ist nichts ausgewählt", reuse_en "Nothing is selected", reuse_de "Es ist nichts ausgewählt";
         selection_locked: native_en "Selection is locked", native_de "Die Auswahl ist gesperrt", reuse_en "Selection is locked", reuse_de "Die Auswahl ist gesperrt";
         target_volume_origin_required: native_en "Point at the ground plane to place a target volume", native_de "Zeigen Sie auf die Bodenebene, um ein Zielvolumen zu platzieren", reuse_en "Point at the ground plane to place a target volume", reuse_de "Zeigen Sie auf die Bodenebene, um ein Zielvolumen zu platzieren";
-        import_invalid: native_en "That file is not a puzzle 3D document", native_de "Diese Datei ist kein Puzzle-3D-Dokument", reuse_en "That file is not a puzzle 3D document", reuse_de "Diese Datei ist kein Puzzle-3D-Dokument";
+        import_invalid: native_en "That file is not a puzzle 3D artifact", native_de "Diese Datei ist kein Puzzle-3D-Artefakt", reuse_en "That file is not a puzzle 3D artifact", reuse_de "Diese Datei ist kein Puzzle-3D-Artefakt";
         import_too_large: native_en "That file is larger than one import may carry", native_de "Diese Datei ist größer als ein Import tragen kann", reuse_en "That file is larger than one import may carry", reuse_de "Diese Datei ist größer als ein Import tragen kann";
         import_incomplete: native_en "That import arrived incomplete", native_de "Dieser Import ist unvollständig angekommen", reuse_en "That import arrived incomplete", reuse_de "Dieser Import ist unvollständig angekommen";
         export_fixture: native_en "Export", native_de "Exportieren", reuse_en "Export", reuse_de "Exportieren";
@@ -207,7 +207,7 @@ pub fn puzzle3d_fill_run_reasons() -> Vec<ToolRunReasonDefinition> {
         reason(FillRunReason::NoOpenVortex, ToolRunVerdict::Warning, "Stopped after {0}: no open vortex", "Nach {0} angehalten: kein offener Vortex"),
         reason(FillRunReason::NoCompatibleKind, ToolRunVerdict::Warning, "Stopped after {0}: no compatible kind", "Nach {0} angehalten: keine passende Art"),
         reason(FillRunReason::NoFreePlacement, ToolRunVerdict::Warning, "Stopped after {0}: no free placement", "Nach {0} angehalten: kein freier Platz"),
-        reason(FillRunReason::DocumentCapacity, ToolRunVerdict::Warning, "Document capacity reached at {0}", "Dokumentkapazität bei {0} erreicht"),
+        reason(FillRunReason::ArtifactCapacity, ToolRunVerdict::Warning, "Artifact capacity reached at {0}", "Artefaktkapazität bei {0} erreicht"),
         reason(FillRunReason::RequestedReached, ToolRunVerdict::Success, "Placed all {0} requested objects", "Alle {0} angeforderten Objekte platziert"),
         reason(FillRunReason::Retracted, ToolRunVerdict::Testing, "Retracted placements above the new count", "Platzierungen über der neuen Anzahl zurückgenommen"),
         reason(FillRunReason::VortexExhausted, ToolRunVerdict::Danger, "No collision-free candidate at this vortex", "Kein kollisionsfreier Kandidat an diesem Vortex"),

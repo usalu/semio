@@ -10,7 +10,7 @@ use semio_framework_plugin::{
 };
 
 //#region 🔖️Constants
-pub const ARCHITECT_BODY_DOCUMENT: &str = "architect.document";
+pub const ARCHITECT_BODY_ARTIFACT: &str = "architect.document";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
@@ -18,9 +18,9 @@ pub const ARCHITECT_BODY_DOCUMENT: &str = "architect.document";
 pub fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_ARTIFACT_ID.into()),
-        label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Dokument"),
+        label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Artefakt"),
         group: PanelGroup::Workbench,
-        body_key: Some(ARCHITECT_BODY_DOCUMENT.into()),
+        body_key: Some(ARCHITECT_BODY_ARTIFACT.into()),
         children: Vec::new(),
     }
 }

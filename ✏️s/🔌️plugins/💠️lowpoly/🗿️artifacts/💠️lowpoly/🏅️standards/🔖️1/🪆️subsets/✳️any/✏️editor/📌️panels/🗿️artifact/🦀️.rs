@@ -10,16 +10,16 @@ use semio_framework_plugin::{LocalizedLabel, PanelGroup, PanelTabDefinition, Pan
 use semio_framework_ui_contract as ui;
 
 //#region 🔖️Constants
-pub const LOWPOLY_PLAY_BODY_DOCUMENT: &str = "lowpoly.play.document";
+pub const LOWPOLY_PLAY_BODY_ARTIFACT: &str = "lowpoly.play.artifact";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
 pub fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_ARTIFACT_ID.into()),
-        label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Dokument"),
+        label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Artefakt"),
         group: PanelGroup::Workbench,
-        body_key: Some(LOWPOLY_PLAY_BODY_DOCUMENT.into()),
+        body_key: Some(LOWPOLY_PLAY_BODY_ARTIFACT.into()),
         children: Vec::new(),
     }
 }

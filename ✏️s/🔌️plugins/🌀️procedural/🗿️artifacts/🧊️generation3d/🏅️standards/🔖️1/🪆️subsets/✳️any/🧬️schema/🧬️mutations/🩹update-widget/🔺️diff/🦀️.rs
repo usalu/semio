@@ -12,7 +12,7 @@ use semio_framework_artifact_flow_flow::Widget;
 /// the index, which only matters for a genuinely new (`create-widget`) insertion.
 pub fn diff(payload: &UpdateWidget, base: &Generation3dSnapshot) -> protocol::MutationOutcome<Generation3dDiff> {
     let id = widget_id(&payload.widget);
-    let Some(index) = widget_index(&base.fixture, id) else {
+    let Some(index) = widget_index(&base.host_document, id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Widget \"{id}\" does not exist."), [id.to_string()]);
     };
     if let Widget::InputSlider { value, min, max, step, .. } = &payload.widget {
@@ -20,7 +20,7 @@ pub fn diff(payload: &UpdateWidget, base: &Generation3dSnapshot) -> protocol::Mu
             return protocol::MutationOutcome::fatal("mutation.invariant", format!("Slider \"{id}\" has a non-finite or inverted value/min/max/step."), [id.to_string()]);
         }
     }
-    if base.fixture.widgets[index] == payload.widget {
+    if base.host_document.widgets[index] == payload.widget {
         return protocol::MutationOutcome::new(Generation3dDiff::default()).warn("mutation.no-op", format!("Widget \"{id}\" is already in the requested state."));
     }
     protocol::MutationOutcome::new(diff_fixture_from_helpers(base, &WidgetsDiff { removed: vec![], set: vec![(0, payload.widget.clone())] }, &SynapsesDiff::default(), &LayoutDiff::default(), None, None))

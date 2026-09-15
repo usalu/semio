@@ -6,7 +6,7 @@ use crate::editor::flow::modes::edit::windows::main::options;
 use crate::editor::flow::terminology::FlowPlayLabels;
 use crate::FlowSnapshot;
 use flow::{flow_backed_node_graph_extras, FlowEvalSession};
-use semio_framework_artifact_infinite_dag::DagFixture;
+use semio_framework_artifact_infinite_dag::DagHostDocument;
 use semio_framework_plugin::{scene_surface, BuiltNode, LocalizedLabel, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowMeasure, WindowOptions};
 use semio_framework_ui_contract::SurfaceKind as ContractSurfaceKind;
 use semio_framework_os_kernel::Viewport2d;
@@ -52,8 +52,8 @@ pub fn split_endpoint(endpoint: &str) -> (String, String) {
     endpoint.split_once('@').map_or_else(|| (endpoint.to_string(), "out".into()), |(node, port)| (node.to_string(), port.to_string()))
 }
 
-pub fn fixture_to_workflow(fixture: &DagFixture) -> (Vec<NodeGraphNodeRecord>, Vec<NodeGraphEdgeRecord>) {
-    let nodes: Vec<NodeGraphNodeRecord> = fixture
+pub fn dag_host_document_to_workflow(host_document: &DagHostDocument) -> (Vec<NodeGraphNodeRecord>, Vec<NodeGraphEdgeRecord>) {
+    let nodes: Vec<NodeGraphNodeRecord> = snapshot
         .nodes
         .iter()
         .map(|node| NodeGraphNodeRecord {
@@ -68,7 +68,7 @@ pub fn fixture_to_workflow(fixture: &DagFixture) -> (Vec<NodeGraphNodeRecord>, V
             ..Default::default()
         })
         .collect();
-    let edges: Vec<NodeGraphEdgeRecord> = fixture
+    let edges: Vec<NodeGraphEdgeRecord> = snapshot
         .edges
         .iter()
         .map(|edge| {
@@ -82,23 +82,23 @@ pub fn fixture_to_workflow(fixture: &DagFixture) -> (Vec<NodeGraphNodeRecord>, V
 //#endregion 🔖️Workflow
 
 //#region 🔖️Render
-pub fn render(fixture: &FlowSnapshot, config: &FlowMainWindowConfig, session: &FlowEvalSession) -> UiAssemblyResult<BuiltNode> {
-    let host = host_from_snapshot(fixture, config, session);
-    let (nodes, edges) = fixture_to_workflow(&host.dag.fixture);
+pub fn render(snapshot: &FlowSnapshot, config: &FlowMainWindowConfig, session: &FlowEvalSession) -> UiAssemblyResult<BuiltNode> {
+    let host = host_from_snapshot(snapshot, config, session);
+    let (nodes, edges) = dag_host_document_to_workflow(&host.dag.host_document);
     let viewport = Viewport2d { x: config.camera.x, y: config.camera.y, zoom: config.camera.zoom };
-    let fixture_json = Some(dsl::json::to_json_string(&fixture.to_fixture()));
+    let fixture_json = Some(dsl::json::to_json_string(&snapshot.to_host_document()));
     // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the "graph" domain's live selection
     // is framework-owned `InteractionState` now, and `ArtifactApp::render` is not threaded an
     // `InteractionView` this wave — the scene's selection payload drops to empty rather than showing
     // stale app-local state (a real known gap, mirrors lowpoly's identical `render`/status-line note).
     let selection: Vec<String> = Vec::new();
-    let flow_extras = flow_backed_node_graph_extras(&fixture.to_fixture(), &config.lod_mode, config.proximity_distance, config.grid_visible, config.grid_snap_enabled, config.grid_factor, Some(session));
+    let flow_extras = flow_backed_node_graph_extras(&snapshot.to_host_document(), &config.lod_mode, config.proximity_distance, config.grid_visible, config.grid_snap_enabled, config.grid_factor, Some(session));
     let preview_off_json = if config.preview_off_node_ids.is_empty() { None } else { serde_json::to_string(&config.preview_off_node_ids).ok() };
     let scene = NodeGraphScene {
         editable: Some(true),
         capabilities_json: flow_extras.capabilities_json,
         lod_json: flow_extras.lod_json,
-        fixture_json: flow_extras.fixture_json.or(fixture_json),
+        host_document_json: flow_extras.host_document_json.or(fixture_json),
         eval_json: flow_extras.eval_json,
         status_json: flow_extras.status_json,
         selection,

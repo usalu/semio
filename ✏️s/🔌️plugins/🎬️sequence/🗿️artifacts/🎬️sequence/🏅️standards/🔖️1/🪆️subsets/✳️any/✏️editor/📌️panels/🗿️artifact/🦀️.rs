@@ -3,22 +3,22 @@
 use crate::editor::sequence::terminology::SequenceLabels;
 use crate::editor::sequence::{control_slots, is_control_kind, SEQUENCE_INTERACTION_STEPS};
 use crate::editor::sequence::{sequence_action, ui_label, ui_node_list, ui_value_map, ui_value_text};
-use crate::{SequenceFixture, SequenceStep};
+use crate::{SequenceHostDocument, SequenceStep};
 use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase, HasChildren, Trigger};
 use semio_framework_plugin::{tree_item_desc, BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiFixedList, UiText, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
 use semio_framework_ui_contract as ui;
 
 //#region 🔖️Constants
-pub const SEQUENCE_PLAY_BODY_DOCUMENT: &str = "sequence.play.document";
+pub const SEQUENCE_PLAY_BODY_ARTIFACT: &str = "sequence.play.artifact";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
 pub fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_ARTIFACT_ID.into()),
-        label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Dokument"),
+        label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Artefakt"),
         group: PanelGroup::Workbench,
-        body_key: Some(SEQUENCE_PLAY_BODY_DOCUMENT.into()),
+        body_key: Some(SEQUENCE_PLAY_BODY_ARTIFACT.into()),
         children: Vec::new(),
     }
 }
@@ -42,7 +42,7 @@ fn slot_label<'a>(slot_name: &'a str, labels: &SequenceLabels) -> &'a str {
 /// selection/hover presence from that domain (`.interaction_domain`) and prunes stale ids through
 /// that same topology, so no per-item click action is declared here anymore (clicks are translated
 /// into `interactionSelect` generically)?.
-fn build_step_tree_item(step: &SequenceStep, fixture: &SequenceFixture, labels: &SequenceLabels) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+fn build_step_tree_item(step: &SequenceStep, host_document: &SequenceHostDocument, labels: &SequenceLabels) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let mut builder = ui::tree_item(ui_label(format!("{} ({})", step.id, step.kind))?)
         .try_id(&step.id)
         .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "sequence step id admission failed"))?
@@ -64,7 +64,7 @@ fn build_step_tree_item(step: &SequenceStep, fixture: &SequenceFixture, labels: 
         .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "sequence collapse control admission failed"))?;
         children.try_push(toggle).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "sequence collapse child admission failed"))?;
         for slot_name in control_slots(&step.kind) {
-            let nested = ui_node_list(fixture.steps.iter().filter(|entry| entry.slot.as_ref().is_some_and(|slot| slot.owner == step.id && slot.name == *slot_name)).map(|entry| build_step_tree_item(entry, fixture, labels)))?;
+            let nested = ui_node_list(host_document.steps.iter().filter(|entry| entry.slot.as_ref().is_some_and(|slot| slot.owner == step.id && slot.name == *slot_name)).map(|entry| build_step_tree_item(entry, host_document, labels)))?;
             let slot = ui::tree_item(ui_label(slot_label(slot_name, labels))?)
                 .try_id(format!("sequence-play-document.slot.{}.{}", step.id, slot_name))
                 .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "sequence slot id admission failed"))?
@@ -85,9 +85,9 @@ fn build_step_tree_item(step: &SequenceStep, fixture: &SequenceFixture, labels: 
 //#endregion 🔖️Helpers
 
 //#region 🔖️Render
-pub fn render(fixture: &SequenceFixture, labels: &SequenceLabels) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    let step_items = ui_node_list(fixture.steps.iter().filter(|step| step.slot.is_none()).map(|step| build_step_tree_item(step, fixture, labels)))?;
-    let edge_items = ui_node_list(fixture.edges.iter().map(|edge| tree_item_desc(format!("sequence-play-document.edge.{}", edge.id), format!("{} → {}", edge.from, edge.to), Some(edge.id.clone()))))?;
+pub fn render(host_document: &SequenceHostDocument, labels: &SequenceLabels) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+    let step_items = ui_node_list(host_document.steps.iter().filter(|step| step.slot.is_none()).map(|step| build_step_tree_item(step, host_document, labels)))?;
+    let edge_items = ui_node_list(host_document.edges.iter().map(|edge| tree_item_desc(format!("sequence-play-document.edge.{}", edge.id), format!("{} → {}", edge.from, edge.to), Some(edge.id.clone()))))?;
     PanelTreeBuilder::new("sequence-play-document")?
         .section_or_placeholder("sequence-play-document.steps", Some(ui_label(labels.steps.as_str())?), true, step_items, labels.none.as_str())?
         .section_or_placeholder("sequence-play-document.edges", Some(ui_label(labels.flow_edges.as_str())?), false, edge_items, labels.none.as_str())?

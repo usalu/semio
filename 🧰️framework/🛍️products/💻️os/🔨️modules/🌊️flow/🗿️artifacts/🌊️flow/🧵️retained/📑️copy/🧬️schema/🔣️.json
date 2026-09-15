@@ -76,7 +76,7 @@
                 "enum": [
                   "widget",
                   "synapse",
-                  "fixture"
+                  "hostDocument"
                 ]
               },
               "index": {

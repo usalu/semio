@@ -775,8 +775,8 @@ pub fn command_value_json(field: &str, value: &str) -> protocol::DslValue {
 /// each pull an independent export).
 pub fn cad_io() -> semio_framework_plugin::AppIo {
     semio_framework_plugin::AppIo {
-        document_schema: "cad.scene".into(),
-        document_media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Brep },
+        artifact_schema: "cad.scene".into(),
+        artifact_media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Brep },
         ports: vec![
             semio_framework_plugin::MediaPortSpec {
                 id: "geometry:in".into(),
@@ -1710,7 +1710,7 @@ impl ArtifactEditor for CadPlayApp {
         owner: EditorApp<CadPlayApp>,
         owner_file: "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.cad.cad@1/*#editor",
-        document_schema: "cad.scene",
+        artifact_schema: "cad.scene",
         factory: "CadRetainedCommandJobFactory",
         factory_type: CadRetainedCommandJobFactory,
         contract: ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
@@ -1803,7 +1803,7 @@ impl ArtifactEditor for CadPlayApp {
     /// `document:in` importer for any other port.
     fn import_media(port: &str, media: &Media, _doc: &ArtifactView<'_, CadSnapshot>) -> Result<Emit<CadMutation, CadConfigMutation, Self::DraftMutation>, MediaError> {
         if port != "geometry:in" {
-            if port != "document:in" {
+            if port != "artifact:in" {
                 return Err(MediaError::NotImplemented);
             }
             let MediaPayload::Structured { json, .. } = &media.payload else {
@@ -1837,10 +1837,10 @@ impl ArtifactEditor for CadPlayApp {
     /// wrapped as `Media`. Falls through to the default whole-document `document:out` for any other port.
     fn export_media(port: &str, doc: &ArtifactView<'_, CadSnapshot>) -> Result<Media, MediaError> {
         if port != "brep:out" {
-            if port != "document:out" {
+            if port != "artifact:out" {
                 return Err(MediaError::NotImplemented);
             }
-            let media_type = Self::io().map_or(MediaType { class: MediaClass::ThreeD, form: MediaForm::Brep }, |io| io.document_media_type);
+            let media_type = Self::io().map_or(MediaType { class: MediaClass::ThreeD, form: MediaForm::Brep }, |io| io.artifact_media_type);
             let bytes = <CadSnapshot as store::ArtifactPack>::encode_pack(doc.snapshot);
             return Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } });
         }
@@ -1905,7 +1905,7 @@ impl ArtifactEditor for CadPlayApp {
             building::BODY_KEY => building::render(&view, active_utility, options).map(semio_framework_plugin::built_to_component_tree),
             energy::BODY_KEY => energy::render(&view, active_utility, options).map(semio_framework_plugin::built_to_component_tree),
             structure_classic::BODY_KEY => structure_classic::render(&view, active_utility, options).map(semio_framework_plugin::built_to_component_tree),
-            document::CAD_PLAY_BODY_DOCUMENT => document::build_document_tree(&view, labels).map(semio_framework_plugin::built_to_component_tree),
+            document::CAD_PLAY_BODY_ARTIFACT => document::build_document_tree(&view, labels).map(semio_framework_plugin::built_to_component_tree),
             catalogue::CAD_PLAY_BODY_CATALOGUE => catalogue::build_catalogue_tree(labels).map(semio_framework_plugin::built_to_component_tree),
             inspection::CAD_PLAY_BODY_PROPERTIES => inspection::build_properties_panel(&view, labels, active_utility).map(semio_framework_plugin::built_to_component_tree),
             _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),

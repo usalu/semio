@@ -202,7 +202,7 @@ async fn node_graph_select_updates_selection_and_document_tree() {
     let mut app = new_app().await;
     let node_id = node_id_at(&app, 0);
     select_ast(&mut app, &[&node_id]).await;
-    let tree = app.render(TRINITY_JACK_PLAY_BODY_DOCUMENT, None, &ViewModel::default()).await.expect("render");
+    let tree = app.render(TRINITY_JACK_PLAY_BODY_ARTIFACT, None, &ViewModel::default()).await.expect("render");
     let json = serde_json::to_string(&tree.root).expect("serialize semantic UI test tree");
     assert!(json.contains(&node_id));
     assert!(json.contains("\"selected\":true"));
@@ -287,7 +287,7 @@ async fn inspection_panel_renders_the_selection_prompt() {
 async fn document_tree_de_locale_translates_labels() {
     let mut app = new_app().await;
     let view = ViewModel { locale: semio_framework_plugin::Locale::De, ..ViewModel::default() };
-    let node = app.render(TRINITY_JACK_PLAY_BODY_DOCUMENT, None, &view).await.expect("render");
+    let node = app.render(TRINITY_JACK_PLAY_BODY_ARTIFACT, None, &view).await.expect("render");
     assert!(serde_json::to_string(&node.root).expect("serialize semantic UI test tree").contains("Stücke"));
 }
 
@@ -345,7 +345,7 @@ async fn context_menu_stays_within_row_budget_and_ends_with_delete_selection() {
 async fn export_media_graph_out_matches_document_pack() {
     use semio_framework_plugin::PluginApp as _;
     let mut app = new_app().await;
-    let document_out = app.export_media("document:out").await.expect("document:out export");
+    let document_out = app.export_media("artifact:out").await.expect("document:out export");
     let graph_out = app.export_media("graph:out").await.expect("graph:out export");
     assert_eq!(document_out.payload, graph_out.payload);
 }
@@ -353,7 +353,7 @@ async fn export_media_graph_out_matches_document_pack() {
 #[semio_framework_async_macros::async_test]
 async fn jack_io_declares_graph_out_fan_out_port() {
     let io = jack_io();
-    assert_eq!(io.document_schema, TRINITY_GRAPH_SCHEMA);
+    assert_eq!(io.artifact_schema, TRINITY_GRAPH_SCHEMA);
     assert_eq!(io.artifact.id, "graph.trinity");
     let graph_out = io.ports.iter().find(|port| port.id == "graph:out").expect("graph:out declared");
     assert_eq!(graph_out.kind_id.as_deref(), Some("graph.trinity"));

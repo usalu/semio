@@ -1,0 +1,48 @@
+{
+  "why": "Which channel a guest's `dispatchAction` host effect re-enters, and with which invocation. An id the app DECLARES as a command re-enters the typed command channel addressed `{owner:{app:{pluginId,appId}},commandId}`; everything else — every framework-reserved verb (`toolRunStart`, `toolRunAbort`, `flowEvalTick`), every window action — re-enters the scoped ACTION channel addressed `{pluginId,appId,modeId,windowKindId,windowInstanceId,actionId}` with `windowId` folded into the arguments. Addressing a reserved verb as an app-owned command is REFUSED by the guest's own ownership gate (`dispatch_command`, `💻️os/🔨️modules/🔌️plugin/🦀️.rs` → `command '<id>' is not owned by app <app>`), and a refused re-arm is a dropped continuation. The wgpu bridge addressed every re-arm as an app command, so `toolRunStart` was refused at boot on 6118 (`[DEBUG] contributions rearm failed toolRunStart command 'toolRunStart' is not owned by app s.procedural.generation3d@1/*#editor`) and the preview evaluation's `ToolRunView` never reached the guest's surface: `cancellable:false` in all 206 status samples of a run where React — same guest, same instant — publishes `cancellable:true` with `cancelArgs:{runId:\"1\",generation:0}` (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-regressions-sweep-2026-09-15.md`).",
+  "scope": {
+    "pluginId": "s.procedural",
+    "appId": "s.procedural.generation3d@1/*#editor",
+    "modeId": "edit",
+    "windowKindId": "procedural-preview",
+    "windowInstanceId": "procedural-preview"
+  },
+  "appCommandIds": ["setActiveExample", "setContributions", "nodeGraphEdit"],
+  "cases": [
+    {
+      "why": "A declared app command keeps the typed command channel it was declared on.",
+      "action": "setActiveExample",
+      "args": { "exampleId": "box-fillet-preview" },
+      "expect": {
+        "kind": "command",
+        "invocation": {
+          "address": { "owner": { "app": { "pluginId": "s.procedural", "appId": "s.procedural.generation3d@1/*#editor" } } , "commandId": "setActiveExample" },
+          "arguments": { "exampleId": "box-fillet-preview" }
+        }
+      }
+    },
+    {
+      "why": "The framework-reserved tool-run verb the wgpu bridge was refusing: it belongs to the action channel, fully scoped, with `windowId` folded in.",
+      "action": "toolRunStart",
+      "args": { "toolId": "generation3d.previewEval" },
+      "expect": {
+        "kind": "action",
+        "invocation": {
+          "address": { "pluginId": "s.procedural", "appId": "s.procedural.generation3d@1/*#editor", "modeId": "edit", "windowKindId": "procedural-preview", "windowInstanceId": "procedural-preview", "actionId": "toolRunStart" },
+          "arguments": { "toolId": "generation3d.previewEval", "windowId": "procedural-preview" }
+        }
+      }
+    },
+    {
+      "why": "An effect with no arguments still carries its own window id.",
+      "action": "flowEvalTick",
+      "expect": {
+        "kind": "action",
+        "invocation": {
+          "address": { "pluginId": "s.procedural", "appId": "s.procedural.generation3d@1/*#editor", "modeId": "edit", "windowKindId": "procedural-preview", "windowInstanceId": "procedural-preview", "actionId": "flowEvalTick" },
+          "arguments": { "windowId": "procedural-preview" }
+        }
+      }
+    }
+  ]
+}

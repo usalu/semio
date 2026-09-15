@@ -149,8 +149,8 @@ pub fn gis2d_layer_tree_item(
 /// interchange kind gis3d's `map:in` consumes).
 pub fn gis2d_io() -> AppIo {
     AppIo {
-        document_schema: GIS_MAP_SCHEMA.into(),
-        document_media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector },
+        artifact_schema: GIS_MAP_SCHEMA.into(),
+        artifact_media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector },
         ports: vec![gis2d_features_in_port(), gis2d_map_out_port()],
         // 🚮️ V7 deprecated-codec-enum retirement (SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-RETIREMENT):
         // `AppIo.{export,import}_formats` stays framework-owned and carries no `&'static str`
@@ -714,7 +714,7 @@ impl ArtifactEditor for Gis2dPlayApp {
         owner: EditorApp<Gis2dPlayApp>,
         owner_file: "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.gis.gismap@1/*#editor",
-        document_schema: "gis.map",
+        artifact_schema: "gis.map",
         factory: "Gis2dRetainedCommandJobFactory",
         factory_type: Gis2dRetainedCommandJobFactory,
         contract: ToolExecutionContract::bounded_first_step(8_192, 64, 64, 16_384, 7_500),
@@ -846,8 +846,8 @@ impl ArtifactEditor for Gis2dPlayApp {
     fn export_media(port: &str, doc: &ArtifactView<'_, GisMapSnapshot>) -> Result<Media, MediaError> {
         match port {
             "map:out" => Ok(gis2d_map_media(doc.snapshot)),
-            "document:out" => {
-                let media_type = Self::io().map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.document_media_type);
+            "artifact:out" => {
+                let media_type = Self::io().map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.artifact_media_type);
                 let bytes = doc.snapshot.encode_pack();
                 Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
             }
@@ -872,7 +872,7 @@ impl ArtifactEditor for Gis2dPlayApp {
                 operations.extend(regions_operations(&document.regions, &incoming.regions));
                 Ok(Emit::mutations(operations))
             }
-            "document:in" => {
+            "artifact:in" => {
                 let MediaPayload::Structured { json, .. } = &media.payload else {
                     return Err(MediaError::Payload(port.to_string(), "default document:in importer only accepts a Structured (base64 pack) payload".into()));
                 };
@@ -962,7 +962,7 @@ impl ArtifactEditor for Gis2dPlayApp {
         let labels = gis2d_labels(view_state);
         match body_key {
             map::GIS2D_PLAY_BODY_COMPOSITE => map::render(doc.snapshot, config).map(semio_framework_plugin::built_to_component_tree),
-            document_panel::GIS2D_PLAY_BODY_DOCUMENT => document_panel::render(config, labels).map(semio_framework_plugin::built_to_component_tree),
+            document_panel::GIS2D_PLAY_BODY_ARTIFACT => document_panel::render(config, labels).map(semio_framework_plugin::built_to_component_tree),
             catalogue_panel::GIS2D_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels).map(semio_framework_plugin::built_to_component_tree),
             inspection_panel::GIS2D_PLAY_BODY_INSPECTION => inspection_panel::render(config, labels).map(semio_framework_plugin::built_to_component_tree),
             _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),

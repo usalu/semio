@@ -49,7 +49,7 @@
     }
   ],
   "codecs": [
-    { "id": "s.stdio.dxf.standard.r12.codec.native-document.v1", "status": "implemented", "from": "s.stdio.dxf.standard.r12.dialect.source", "to": "s.stdio.dxf.standard.r12.dialect.source", "executable_registration": true, "native_factory": { "factory_id": "stdio.native.dxf.v1", "artifact_kind": "stdio.dxf", "document_schema": "stdio.dxf", "extension": "dxf", "pack_schema_hash": "b0d5eb41ea2a3e261d99cb7387688720c225d74dad1b4d260b35e8ca28b9fd99", "runtime_capability_id": "s.stdio.dxf.standard.r12.codec.codec-stdio-dxf-extension-dxf.v1" } }
+    { "id": "s.stdio.dxf.standard.r12.codec.native-document.v1", "status": "implemented", "from": "s.stdio.dxf.standard.r12.dialect.source", "to": "s.stdio.dxf.standard.r12.dialect.source", "executable_registration": true, "native_factory": { "factory_id": "stdio.native.dxf.v1", "artifact_kind": "stdio.dxf", "artifact_schema": "stdio.dxf", "extension": "dxf", "pack_schema_hash": "b0d5eb41ea2a3e261d99cb7387688720c225d74dad1b4d260b35e8ca28b9fd99", "runtime_capability_id": "s.stdio.dxf.standard.r12.codec.codec-stdio-dxf-extension-dxf.v1" } }
   ],
   "mutations": [],
   "inferences": [],

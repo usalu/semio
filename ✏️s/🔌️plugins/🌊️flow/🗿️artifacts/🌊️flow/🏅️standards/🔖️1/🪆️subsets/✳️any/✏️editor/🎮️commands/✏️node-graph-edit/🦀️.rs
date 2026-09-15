@@ -14,7 +14,7 @@ use semio_framework_plugin::{app::InteractionView, ArtifactView, ConfigView, Emi
 /// `dag_protocol::DagNodeGraphEditOp` exactly.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslEnum)]
 pub enum FlowNodeGraphEditOp {
-    #[dsl(key = "set-fixture")]
+    #[dsl(key = "set-snapshot")]
     SetSnapshot { snapshot_json: String },
     #[dsl(key = "delete-selection")]
     DeleteSelection,
@@ -28,8 +28,8 @@ pub enum FlowNodeGraphEditOp {
 /// domain's live node selection (read by the caller via `InteractionView`) — no `SetSelection` config
 /// mutation afterwards, the framework auto-prunes deleted ids out of `graph`'s selection via
 /// `interaction_topology`.
-pub fn node_graph_edit_result(fixture: &FlowSnapshot, config: &FlowMainWindowConfig, session: &FlowEvalSession, operations: &[FlowNodeGraphEditOp], selected_nodes: &[String]) -> Emit<FlowMutation, NoConfigMutation> {
-    let artifact_mutations = host_operations(fixture, config, session, |host| {
+pub fn node_graph_edit_result(snapshot: &FlowSnapshot, config: &FlowMainWindowConfig, session: &FlowEvalSession, operations: &[FlowNodeGraphEditOp], selected_nodes: &[String]) -> Emit<FlowMutation, NoConfigMutation> {
+    let artifact_mutations = host_operations(snapshot, config, session, |host| {
         let mut changed = false;
         for sub_operation in operations {
             match sub_operation {
@@ -37,7 +37,7 @@ pub fn node_graph_edit_result(fixture: &FlowSnapshot, config: &FlowMainWindowCon
                     let parsed: Option<FlowSnapshot> = serde_json::from_str::<serde_json::Value>(snapshot_json).ok().and_then(|json| dsl::FromValue::from_value(dsl::DslValue::from(json)).ok());
                     if let Some(parsed) = parsed {
                         host.begin_change();
-                        host.set_fixture_preserving_history(parsed.to_fixture());
+                        host.set_host_document_preserving_history(parsed.to_host_document());
                         changed = true;
                     }
                 }

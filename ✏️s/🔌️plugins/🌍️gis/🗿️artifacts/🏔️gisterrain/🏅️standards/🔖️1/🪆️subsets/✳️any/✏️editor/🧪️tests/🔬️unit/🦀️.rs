@@ -231,7 +231,7 @@ async fn media_ports_declare_map_in_and_scene_out() {
 #[semio_framework_async_macros::async_test]
 async fn gis3d_io_declares_the_map_in_and_scene_out_ports() {
     let io = gis3d_io();
-    assert_eq!(io.document_schema, GIS_3D_TERRAIN_SCHEMA);
+    assert_eq!(io.artifact_schema, GIS_3D_TERRAIN_SCHEMA);
     let ports = io.all_ports().await;
     let map_in = ports.iter().find(|port| port.id == "map:in").expect("map:in declared");
     assert_eq!(map_in.direction, semio_framework_plugin::MediaPortDirection::In);

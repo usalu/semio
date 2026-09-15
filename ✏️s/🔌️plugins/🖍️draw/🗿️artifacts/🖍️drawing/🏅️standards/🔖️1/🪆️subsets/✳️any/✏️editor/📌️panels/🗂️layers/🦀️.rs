@@ -13,7 +13,7 @@ pub const DRAWING_LAYER_KIND_DRAG_MIME: &str = "application/x-semio-drawing-laye
 pub fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_ARTIFACT_ID.into()),
-        label: semio_framework_plugin::LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Dokument"),
+        label: semio_framework_plugin::LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Artefakt"),
         group: PanelGroup::Workbench,
         body_key: Some(DRAWING_PLAY_BODY_LAYERS.into()),
         children: Vec::new(),

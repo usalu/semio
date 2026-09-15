@@ -158,7 +158,7 @@ fn window_id_from_args(args: Option<&Value>) -> String {
 /// seam that gives `puzzle3d_catalog_fragment` a real caller (see `export_media` below).
 pub fn block3d_io() -> semio_framework_plugin::AppIo {
     semio_framework::io::resolve_ready(
-        semio_framework::io::resolve_ready(semio_framework_plugin::AppIo::from_document(
+        semio_framework::io::resolve_ready(semio_framework_plugin::AppIo::from_artifact(
             BLOCK_3D_SCHEMA,
             MediaType { class: MediaClass::Kit, form: MediaForm::Type },
             semio_framework_plugin::ArtifactPresentation { id: "3d.block".into(), name: "Object Kind".into(), dimension: "3d".into(), component_kind: "block3d".into() },
@@ -791,7 +791,7 @@ impl ArtifactEditor for Block3dPlayApp {
         owner: EditorApp<Block3dPlayApp>,
         owner_file: "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.block.block3d@1/*#editor",
-        document_schema: "block.3d",
+        artifact_schema: "block.3d",
         factory: "Block3dRetainedCommandJobFactory",
         factory_type: Block3dRetainedCommandJobFactory,
         contract: ToolExecutionContract::bounded_first_step(65_536, 4_096, 1, 262_144, 7_500),
@@ -988,7 +988,7 @@ impl ArtifactEditor for Block3dPlayApp {
                 view_state.active_utility_id.as_deref().unwrap_or(BLOCK3D_UTILITY_SELECT),
                 None,
             )?,
-            document_panel::BLOCK3D_BODY_DOCUMENT => document_panel::render(doc.snapshot, labels)?,
+            document_panel::BLOCK3D_BODY_ARTIFACT => document_panel::render(doc.snapshot, labels)?,
             inspection_panel::BLOCK3D_BODY_INSPECTOR => inspection_panel::render(doc.snapshot, active_representation_id, labels)?,
             _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "block3d unknown-body label admission failed"))?,
         };
@@ -1024,17 +1024,17 @@ impl ArtifactEditor for Block3dPlayApp {
     /// but `ArtifactEditor::export_media`'s landed signature doesn't thread `ConfigView` through yet —
     /// see `Block3dConfig::wanted_tags`'s doc — so this always resolves the active representation with
     /// an empty (all-tags) filter until that lands. Falls through to the default whole-document pack
-    /// export for every other port (`"document:out"`).
+    /// export for every other port (`"artifact:out"`).
     fn export_media(port: &str, doc: &ArtifactView<'_, Block3dSnapshot>) -> Result<Media, MediaError> {
         if port != "catalog:out" {
-            // 🌉️ Reimplements `ArtifactEditor::export_media`'s default `"document:out"` behavior
+            // 🌉️ Reimplements `ArtifactEditor::export_media`'s default `"artifact:out"` behavior
             // verbatim — overriding the trait method forfeits the ability to delegate back to its
             // own default body, so the whole-document pack export is duplicated here rather than
             // left unreachable for this surface.
-            if port != "document:out" {
+            if port != "artifact:out" {
                 return Err(MediaError::NotImplemented);
             }
-            let media_type = Self::io().map_or(MediaType { class: MediaClass::Kit, form: MediaForm::Type }, |io| io.document_media_type);
+            let media_type = Self::io().map_or(MediaType { class: MediaClass::Kit, form: MediaForm::Type }, |io| io.artifact_media_type);
             let bytes = store::ArtifactPack::encode_pack(doc.snapshot);
             return Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } });
         }

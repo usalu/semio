@@ -2632,7 +2632,7 @@
               "const": "addWidget"
             },
             "schema": {
-              "const": "flow.fixture"
+              "const": "flow.hostDocument"
             },
             "classification": {
               "const": "migrated"

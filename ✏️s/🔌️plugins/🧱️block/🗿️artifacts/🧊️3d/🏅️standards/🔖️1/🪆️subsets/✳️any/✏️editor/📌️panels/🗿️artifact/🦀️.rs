@@ -7,16 +7,16 @@ use crate::editor::block3d::{ui_label, ui_node_list, BLOCK3D_INTERACTION_VORTEX}
 use semio_framework_plugin::{tree_item_desc, BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiText, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
 
 //#region 🔖️Constants
-pub const BLOCK3D_BODY_DOCUMENT: &str = "block3d.play.document";
+pub const BLOCK3D_BODY_ARTIFACT: &str = "block3d.play.artifact";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
 pub fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_ARTIFACT_ID.into()),
-        label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Dokument"),
+        label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Artefakt"),
         group: PanelGroup::Workbench,
-        body_key: Some(BLOCK3D_BODY_DOCUMENT.into()),
+        body_key: Some(BLOCK3D_BODY_ARTIFACT.into()),
         children: Vec::new(),
     }
 }

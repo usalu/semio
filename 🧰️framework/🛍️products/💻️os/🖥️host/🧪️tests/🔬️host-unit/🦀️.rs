@@ -370,7 +370,7 @@ mod tests {
 
     /// 🧷️ Minimal `AppDefinition` for registry tests — every field but `io`/`document` is filler;
     /// `register_app_io` only reads `.id`/`.label`/`.io` (see `workflow::workflow_node_for_app`).
-    fn test_app_definition(id: &str, label: &str, document_schema: &str, ports: Vec<semio_framework::MediaPortSpec>) -> AppDefinition {
+    fn test_app_definition(id: &str, label: &str, artifact_schema: &str, ports: Vec<semio_framework::MediaPortSpec>) -> AppDefinition {
         AppDefinition {
             id: id.into(),
             role: AppRole::Editor,
@@ -415,8 +415,8 @@ mod tests {
             config: resolve_kernel_future(semio_framework::ConfigSpec::empty()),
             command_grammar: resolve_kernel_future(semio_framework::CommandGrammar::empty()),
             io: resolve_kernel_future(
-                resolve_kernel_future(semio_framework::AppIo::from_document(
-                    document_schema,
+                resolve_kernel_future(semio_framework::AppIo::from_artifact(
+                    artifact_schema,
                     MediaType { class: MediaClass::TwoD, form: MediaForm::Vector },
                     semio_framework::ArtifactPresentation { id: id.into(), name: label.into(), dimension: "2d".into(), component_kind: id.into() },
                 ))

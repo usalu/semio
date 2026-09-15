@@ -207,6 +207,7 @@ import { policyAppSchemaBreaches } from "./🧰️framework/🛍️products/🦑
 import { policyInferenceFamilyBreaches } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/💡️inference/⚖️laws/📋️aggregate/🟦️.ts";
 import { abstractionOwnershipChecks } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📏️ownership/🏛️abstraction/✅️verification/🟦️.ts";
 import { policyAbstractionOwnershipBreaches } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📏️ownership/🏛️abstraction/⚖️law/🟦️.ts";
+import { policyIndexedGeneratedOutputBreaches } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/indexed-generated-output/🟦️.ts";
 import { createHash, randomUUID } from "node:crypto";
 import { existsSync, linkSync, lstatSync, mkdirSync, chownSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, rmdirSync, statSync, symlinkSync, unlinkSync, writeFileSync } from "node:fs";
 import { homedir, tmpdir } from "node:os";
@@ -1271,7 +1272,7 @@ function toolJobProofs(files: ReadonlyMap<string, string>): ToolJobProof[] {
     while ((match = invocation.exec(source))) {
       const block = toolJobRustBlock(source, source.indexOf("{", match.index));
       if (!block) break;
-      const header = block.body.match(/owner:\s*([^,]+),\s*owner_file:\s*"([^"]+)",\s*controller:\s*"([^"]+)",\s*document_schema:\s*"([^"]+)",\s*factory:\s*"([^"]+)"/s);
+      const header = block.body.match(/owner:\s*([^,]+),\s*owner_file:\s*"([^"]+)",\s*controller:\s*"([^"]+)",\s*artifact_schema:\s*"([^"]+)",\s*factory:\s*"([^"]+)"/s);
       if (header) {
         const factoryType = block.body.match(/factory_type:\s*([^,]+),/)?.[1]?.replaceAll(/\s+/g, "");
         const common = { sourceFile, ownerFile: header[2]!, ownerTypeName: header[1]!.replaceAll(/\s+/g, ""), controllerId: header[3]!, documentSchema: header[4]!, factory: header[5]!, factoryType };
@@ -3969,7 +3970,7 @@ function toolJobRuntimeProofQualified(source: string): boolean {
     source.includes("std::any::type_name::<A>()") &&
     registered >= 0 && joined > registered &&
     source.includes("A::bounded_first_step_tool_proofs())") &&
-    source.includes("row.owner == owner && row.controller_id == runtime_controller_id && row.document_schema == document_schema && (generic || exact_registered)") &&
+    source.includes("row.owner == owner && row.controller_id == runtime_controller_id && row.artifact_schema == artifact_schema && (generic || exact_registered)") &&
     source.includes("row.factory == BOUNDED_FIRST_STEP_FACTORY && row.factory_type_id.is_none() && row.factory_type_name.is_none() && registered.is_none()") &&
     source.includes("row.factory_type_id == Some(registration.factory_type_id)") &&
     source.includes("row.factory_type_name == Some(registration.factory_type_name)") &&
@@ -3991,7 +3992,7 @@ function toolJobRuntimeProofQualified(source: string): boolean {
     source.includes("admission.factory_type_name == std::any::type_name::<TypedCommandFullOperationJobFactory<A>>()") &&
     source.includes("TypedCommandFullOperationJobFactory::<A>::from_proof(proof.clone())") &&
     source.includes("bounded_tool_contracts") &&
-    !source.includes("bounded_first_step_contract(document_schema, id)") &&
+    !source.includes("bounded_first_step_contract(artifact_schema, id)") &&
     !source.includes("const BOUNDED_FIRST_STEP_PROOFS")
   );
 }
@@ -7830,12 +7831,12 @@ export class VerifyScript extends Script {
     }
     if (segments[0] === "generation3d-document-io") {
       const testRoot = join(this.root, "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io");
-      const { testGeneration3dDocumentIoSurface } = await import(`${testRoot}/🧪️tests/📄️document-surface/🟦️.ts`);
+      const { testGeneration3dDocumentIoSurface } = await import(`${testRoot}/🧪️tests/🗿️artifact-surface/🟦️.ts`);
       testGeneration3dDocumentIoSurface();
-      runCmd("bun", [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--allowImportingTsExtensions", "--skipLibCheck", `${testRoot}/🧪️tests/📄️document-surface/🟦️.ts`], { cwd: this.root });
+      runCmd("bun", [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--allowImportingTsExtensions", "--skipLibCheck", `${testRoot}/🧪️tests/🗿️artifact-surface/🟦️.ts`], { cwd: this.root });
       if (segments[1] === "native") {
         const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
-        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-procedural-generation3d", "--test", "io-round-trip", "document_surface", "--", "--nocapture"], this.root);
+        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-procedural-generation3d", "--test", "io-round-trip", "artifact_surface", "--", "--nocapture"], this.root);
         await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-procedural-generation3d", "--features", "component-app-assembly", "--lib", "document_io", "--", "--nocapture"], this.root);
       }
       return;
@@ -8450,6 +8451,16 @@ export class VerifyScript extends Script {
     }
     console.log("[verify] storybook scope freshness…");
     await this.checkStorybookFreshness();
+    console.log("[verify] indexed generated output (wasm/jco/wasm-pack)…");
+    {
+      const generatedBreaches = policyIndexedGeneratedOutputBreaches(this.root);
+      if (generatedBreaches.length > 0) {
+        for (const b of generatedBreaches) {
+          console.error(`[verify] ${b.kind}: ${b.summary}`);
+        }
+        throw new Error(`[verify] ${generatedBreaches.length} indexed generated-output breach(es)`);
+      }
+    }
     console.log("[verify] OS exclusive state authority policies…");
     {
       const osBreaches = [
@@ -13868,7 +13879,7 @@ const STDIO_COMPONENT_RS = "🦀️.rs";
 const STDIO_PACKAGE_BUILD_OUTPUT_DIR = "dist";
 
 /** 🏭️ The optional native codec factory a codec registers with the plugin host; every field is a string id. */
-const STDIO_NATIVE_FACTORY_FIELDS = ["factory_id", "artifact_kind", "document_schema", "extension", "pack_schema_hash", "runtime_capability_id"] as const;
+const STDIO_NATIVE_FACTORY_FIELDS = ["factory_id", "artifact_kind", "artifact_schema", "extension", "pack_schema_hash", "runtime_capability_id"] as const;
 
 function stdioRel(workspaceRoot: string, path: string): string {
   return relative(workspaceRoot, path).split("\\").join("/");

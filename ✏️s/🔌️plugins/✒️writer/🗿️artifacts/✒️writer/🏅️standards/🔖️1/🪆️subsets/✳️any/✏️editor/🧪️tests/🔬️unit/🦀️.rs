@@ -570,8 +570,8 @@ async fn interaction_topology_is_empty_for_non_jack_documents() {
 async fn writer_io_declares_the_extra_text_out_port() {
     let io = writer_io();
     let ports = io.all_ports().await;
-    assert!(ports.iter().any(|port| port.id == "document:in"));
-    assert!(ports.iter().any(|port| port.id == "document:out"));
+    assert!(ports.iter().any(|port| port.id == "artifact:in"));
+    assert!(ports.iter().any(|port| port.id == "artifact:out"));
     let text_out = ports.iter().find(|port| port.id == "text:out").expect("text:out port declared");
     assert_eq!(text_out.kind_id.as_deref(), Some("text.document"));
     assert_eq!(text_out.multiplicity, semio_framework_plugin::PortMultiplicity::Many);

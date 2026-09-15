@@ -1,5 +1,5 @@
 {
-  "note": "🛑️🖼️ The two per-surface overlay controls the shell offers on top of a live engine surface: the World3d compute CANCEL, read out of the scene's own `statusJson` cancel contract (`cancellable` + `cancelAction` + the string/number `cancelArgs` the control dispatches the action with, e.g. a tool run's `{runId, generation}`), and the node-graph `Fit graph`. Language-neutral: the Rust law answers it through `world3d_cancel_affordance`/`surface_overlay_controls_for`, the TypeScript twin through `world3dComputeStatusV1` (`🔨️modules/🖱️ui/🎬️scene/🟦️.ts`). Ticket 26/09/09/PROCEDURAL-3D-END-TO-END.",
+  "note": "🛑️ The per-surface overlay control the shell offers on top of a live engine surface: the World3d compute CANCEL, read out of the scene's own `statusJson` cancel contract (`cancellable` + `cancelAction` + the string/number `cancelArgs` the control dispatches the action with, e.g. a tool run's `{runId, generation}`). Framing the flow graph is an app-declared action (`zoomToFlow`), not shell chrome. Language-neutral: the Rust law answers it through `world3d_cancel_affordance`/`surface_overlay_controls_for`, the TypeScript twin through `world3dComputeStatusV1` (`🔨️modules/🖱️ui/🎬️scene/🟦️.ts`). Ticket 26/09/09/PROCEDURAL-3D-END-TO-END.",
   "controlHeightPx": 22.4,
   "surfaceControlMinimum": {
     "widthControlHeights": 4,
@@ -114,7 +114,7 @@
   ],
   "surfaceControls": [
     {
-      "id": "a-live-graph-pane-offers-fit-graph",
+      "id": "a-live-graph-pane-offers-no-shell-overlay",
       "graphs": [
         {
           "surfaceId": "window:procedural-view-flow",
@@ -127,12 +127,10 @@
         }
       ],
       "worlds": [],
-      "expected": [
-        "shell.nodeGraph.fit::window:procedural-view-flow"
-      ]
+      "expected": []
     },
     {
-      "id": "a-computing-preview-offers-cancel-beside-the-graphs-fit",
+      "id": "a-computing-preview-offers-cancel",
       "graphs": [
         {
           "surfaceId": "window:procedural-view-flow",
@@ -157,7 +155,6 @@
         }
       ],
       "expected": [
-        "shell.nodeGraph.fit::window:procedural-view-flow",
         "shell.world3d.cancel::window:procedural-view-preview"
       ]
     },

@@ -359,7 +359,14 @@ type FixedContextMenuRenderOptions = {
   readonly submenuCollapsedAt: readonly number[] | null;
   readonly setActivePath: (path: number[], collapseSubmenuAt?: readonly number[] | null) => void;
   readonly onClose: () => void;
+  /** @emoji 🎯️ Every rendered row hands its element in under {@link contextMenuPathKey}, so the controller can move real DOM focus onto the active row wherever that row was portaled to. */
+  readonly registerRow: (pathKey: string, node: HTMLButtonElement | null) => void;
 };
+
+/** @emoji 🔑️ Stable key for a row path, used to address a rendered row across submenu portals. */
+export function contextMenuPathKey(path: readonly number[]): string {
+  return path.join(".");
+}
 
 function contextMenuPathsEqual(a: readonly number[], b: readonly number[]): boolean {
   return a.length === b.length && a.every((value, index) => value === b[index]);
@@ -375,6 +382,41 @@ function isContextMenuSubmenuOpen(activePath: readonly number[], parentPath: rea
 /** @emoji ⏱️ Delay before hovering a parent row opens its submenu, so a pointer merely passing over the row doesn't flash it open. */
 const CONTEXT_MENU_SUBMENU_HOVER_DELAY_MS = 150;
 
+/** @emoji ↔️ Gap between a parent row and its submenu panel, in px. */
+const CONTEXT_MENU_SUBMENU_GAP_PX = 4;
+
+/** @emoji 📐️ Viewport-fixed placement of a submenu panel beside its parent row. */
+export interface ContextMenuSubmenuPlacement {
+  readonly left: number;
+  readonly top: number;
+  readonly flipped: boolean;
+}
+
+/**
+ * @emoji 📐️ Places a submenu panel beside its anchor row in viewport coordinates, flipping to the
+ * anchor's start side when the end side would overflow and clamping the top edge into view.
+ *
+ * The panel is portaled to the shell's floating surface host rather than nested inside the parent
+ * menu, because {@link ContextMenuChrome} scrolls (`max-h-layout-command overflow-y-auto`) and a
+ * scrollport clips every side-anchored child away: measured on :6023 the export row reported a full
+ * `getBoundingClientRect` while `elementsFromPoint` at its own centre answered the node-graph canvas.
+ **/
+export function contextMenuSubmenuPlacement(input: {
+  readonly anchor: { readonly left: number; readonly right: number; readonly top: number };
+  readonly panel: { readonly width: number; readonly height: number };
+  readonly viewport: { readonly width: number; readonly height: number };
+  readonly gap?: number;
+}): ContextMenuSubmenuPlacement {
+  const gap = input.gap ?? CONTEXT_MENU_SUBMENU_GAP_PX;
+  const endLeft = input.anchor.right + gap;
+  const startLeft = input.anchor.left - input.panel.width - gap;
+  const overflowsEnd = endLeft + input.panel.width > input.viewport.width;
+  const flipped = overflowsEnd && startLeft >= 0;
+  const left = Math.max(0, Math.min(flipped ? startLeft : endLeft, Math.max(0, input.viewport.width - input.panel.width)));
+  const top = Math.max(0, Math.min(input.anchor.top, Math.max(0, input.viewport.height - input.panel.height)));
+  return { left, top, flipped };
+}
+
 type ContextMenuSubmenuRowProps = {
   readonly item: ContextMenuItem;
   readonly rowPath: readonly number[];
@@ -382,14 +424,19 @@ type ContextMenuSubmenuRowProps = {
   readonly isActive: boolean;
   readonly submenuOpen: boolean;
   readonly setActivePath: FixedContextMenuRenderOptions["setActivePath"];
+  readonly registerRow: FixedContextMenuRenderOptions["registerRow"];
   readonly children: React.ReactNode;
 };
 
-/** @emoji 📂️ Parent-row button for a submenu: click toggles it open/closed, hover opens it after a short delay, and the panel flips to the opposite side when it would overflow the viewport. */
-function ContextMenuSubmenuRow({ item, rowPath, ordinal, isActive, submenuOpen, setActivePath, children }: ContextMenuSubmenuRowProps): React.ReactElement {
+/** @emoji 📂️ Parent-row button for a submenu: click toggles it open/closed, hover opens it after a short delay, and the panel is portaled beside the row so the parent menu's own scrollport cannot clip it. */
+function ContextMenuSubmenuRow({ item, rowPath, ordinal, isActive, submenuOpen, setActivePath, registerRow, children }: ContextMenuSubmenuRowProps): React.ReactElement {
   const hoverTimerRef = reactHostPort.useRef<number | undefined>(undefined);
+  const buttonRef = reactHostPort.useRef<HTMLButtonElement | null>(null);
   const panelRef = reactHostPort.useRef<HTMLDivElement | null>(null);
-  const [flipToEnd, setFlipToEnd] = reactHostPort.useState(false);
+  const floatingHost = useShellFloatingSurfaceHost();
+  const pathKey = contextMenuPathKey(rowPath);
+  const [anchor, setAnchor] = reactHostPort.useState<{ left: number; right: number; top: number } | null>(null);
+  const [placement, setPlacement] = reactHostPort.useState<ContextMenuSubmenuPlacement | null>(null);
   const clearHoverTimer = reactHostPort.useCallback((): void => {
     if (hoverTimerRef.current !== undefined) {
       window.clearTimeout(hoverTimerRef.current);
@@ -399,13 +446,31 @@ function ContextMenuSubmenuRow({ item, rowPath, ordinal, isActive, submenuOpen, 
   reactHostPort.useEffect(() => clearHoverTimer, [clearHoverTimer]);
   reactHostPort.useLayoutEffect(() => {
     if (!submenuOpen) {
-      setFlipToEnd(false);
+      setAnchor(null);
+      setPlacement(null);
       return;
     }
-    const node = panelRef.current;
+    const node = buttonRef.current;
     if (!node) return;
-    setFlipToEnd(node.getBoundingClientRect().right > window.innerWidth);
+    const rect = node.getBoundingClientRect();
+    setAnchor({ left: rect.left, right: rect.right, top: rect.top });
   }, [submenuOpen]);
+  // 📐️ Two passes, and the second one lands in STATE rather than on `node.style`: the panel's own size
+  // is unknown until it has rendered, and an imperative style write would be overwritten by the very
+  // next render (activating a child row re-renders this row), snapping a flipped panel back under the
+  // viewport edge mid-walk.
+  reactHostPort.useLayoutEffect(() => {
+    const node = panelRef.current;
+    if (!node || !anchor) return;
+    const rect = node.getBoundingClientRect();
+    setPlacement(
+      contextMenuSubmenuPlacement({
+        anchor,
+        panel: { width: rect.width, height: rect.height },
+        viewport: { width: window.innerWidth, height: window.innerHeight },
+      }),
+    );
+  }, [anchor]);
   const toggleSubmenu = (): void => {
     if (item.disabled) return;
     setActivePath([...rowPath], submenuOpen ? [...rowPath] : null);
@@ -424,10 +489,16 @@ function ContextMenuSubmenuRow({ item, rowPath, ordinal, isActive, submenuOpen, 
     >
       <button
         id={item.id}
+        ref={(node) => {
+          buttonRef.current = node;
+          registerRow(pathKey, node);
+        }}
         aria-disabled={item.disabled}
         aria-expanded={submenuOpen}
+        aria-haspopup="menu"
         className={contextMenuItemClassName(item)}
         data-active={isActive ? "true" : undefined}
+        data-context-menu-path={pathKey}
         data-disabled={item.disabled ? "" : undefined}
         data-selected={item.checked ? "true" : undefined}
         data-menu-action={item.action}
@@ -436,6 +507,7 @@ function ContextMenuSubmenuRow({ item, rowPath, ordinal, isActive, submenuOpen, 
         onPointerEnter={() => item.onHover?.()}
         onPointerLeave={() => item.onHoverEnd?.()}
         role="menuitem"
+        tabIndex={-1}
         type="button"
       >
         {renderContextMenuOrdinalBadge(ordinal)}
@@ -450,18 +522,29 @@ function ContextMenuSubmenuRow({ item, rowPath, ordinal, isActive, submenuOpen, 
           ›
         </span>
       </button>
-      {submenuOpen ? (
-        <div ref={panelRef} className={cn("absolute top-0 ms-tiny", flipToEnd ? "end-full" : "start-full")}>
-          {children}
-        </div>
-      ) : null}
+      {submenuOpen && anchor
+        ? renderPortalInto(
+            <div
+              ref={panelRef}
+              className="fixed z-menu"
+              data-slot="context-menu-submenu"
+              data-context-menu-submenu-of={pathKey}
+              data-context-menu-submenu-flipped={placement?.flipped ? "true" : undefined}
+              onPointerEnter={clearHoverTimer}
+              style={{ left: placement?.left ?? anchor.right + CONTEXT_MENU_SUBMENU_GAP_PX, top: placement?.top ?? anchor.top }}
+            >
+              {children}
+            </div>,
+            floatingHost,
+          )
+        : null}
     </div>
   );
 }
 
 function renderFixedContextMenuItems(items: readonly ContextMenuItem[], pathPrefix: readonly number[], options: FixedContextMenuRenderOptions): React.ReactNode {
   const ordinals = contextMenuOrdinals(items);
-  const { activePath, submenuCollapsedAt, setActivePath, onClose } = options;
+  const { activePath, submenuCollapsedAt, setActivePath, onClose, registerRow } = options;
   return items.map((item, index) => {
     const rowPath = [...pathPrefix, index];
     if (item.separator) {
@@ -484,9 +567,11 @@ function renderFixedContextMenuItems(items: readonly ContextMenuItem[], pathPref
         isContextMenuSubmenuOpen(activePath, rowPath) ||
         (isActive && !(submenuCollapsedAt && contextMenuPathsEqual(submenuCollapsedAt, rowPath)));
       return (
-        <ContextMenuSubmenuRow key={item.id} item={item} rowPath={rowPath} ordinal={ordinal} isActive={isActive} submenuOpen={submenuOpen} setActivePath={setActivePath}>
+        <ContextMenuSubmenuRow key={item.id} item={item} rowPath={rowPath} ordinal={ordinal} isActive={isActive} submenuOpen={submenuOpen} setActivePath={setActivePath} registerRow={registerRow}>
           <ContextMenuChrome title={item.label ?? item.id} icon={(item.icon ?? "folder") as IconSource}>
-            {renderFixedContextMenuItems(item.children, rowPath, options)}
+            <div aria-label={item.label ?? item.id} role="menu">
+              {renderFixedContextMenuItems(item.children, rowPath, options)}
+            </div>
           </ContextMenuChrome>
         </ContextMenuSubmenuRow>
       );
@@ -496,10 +581,12 @@ function renderFixedContextMenuItems(items: readonly ContextMenuItem[], pathPref
       <button
         key={item.id}
         id={item.id}
+        ref={(node) => registerRow(contextMenuPathKey(rowPath), node)}
         aria-checked={item.checked}
         aria-disabled={item.disabled}
         className={contextMenuItemClassName(item)}
         data-active={isActive ? "true" : undefined}
+        data-context-menu-path={contextMenuPathKey(rowPath)}
         data-disabled={item.disabled ? "" : undefined}
         data-selected={item.checked ? "true" : undefined}
         data-menu-action={item.action}
@@ -514,6 +601,7 @@ function renderFixedContextMenuItems(items: readonly ContextMenuItem[], pathPref
         }}
         onPointerLeave={() => item.onHoverEnd?.()}
         role={role}
+        tabIndex={-1}
         type="button"
       >
         {renderContextMenuOrdinalBadge(ordinal)}
@@ -563,6 +651,36 @@ export const ContextMenuController: React.FC<ContextMenuControllerProps> = ({ op
   const activePathRef = reactHostPort.useRef(activePath);
   activePathRef.current = activePath;
   const previousHoverItemRef = reactHostPort.useRef<ContextMenuItem | undefined>(undefined);
+  // ⌨️ Rows hand their element in here so the active row can take REAL DOM focus wherever it was
+  // portaled to. Before this the active row lived in React state alone: `document.activeElement`
+  // stayed `<body>` through a whole arrow walk, so a screen reader was told nothing at all.
+  const rowNodesRef = reactHostPort.useRef<Map<string, HTMLButtonElement>>(new Map());
+  const registerRow = reactHostPort.useCallback((pathKey: string, node: HTMLButtonElement | null): void => {
+    if (node) {
+      rowNodesRef.current.set(pathKey, node);
+      return;
+    }
+    rowNodesRef.current.delete(pathKey);
+  }, []);
+  const focusReturnRef = reactHostPort.useRef<HTMLElement | null>(null);
+  reactHostPort.useEffect(() => {
+    if (!open) {
+      return undefined;
+    }
+    focusReturnRef.current = typeof document === "undefined" ? null : (document.activeElement as HTMLElement | null);
+    return () => {
+      const previous = focusReturnRef.current;
+      focusReturnRef.current = null;
+      if (previous?.isConnected) previous.focus({ preventScroll: true });
+    };
+  }, [open]);
+  reactHostPort.useLayoutEffect(() => {
+    if (!open) {
+      return;
+    }
+    const node = activePath.length ? rowNodesRef.current.get(contextMenuPathKey(activePath)) : undefined;
+    (node ?? menuRef.current)?.focus({ preventScroll: true });
+  }, [open, activePath]);
   reactHostPort.useEffect(() => {
     if (!open) {
       setActivePath([]);
@@ -711,10 +829,11 @@ export const ContextMenuController: React.FC<ContextMenuControllerProps> = ({ op
     submenuCollapsedAt,
     setActivePath: applyActivePath,
     onClose: closeOnSelect ? close : () => undefined,
+    registerRow,
   };
   return renderPortalInto(
     <ContextMenuChrome ref={chromeRef} style={{ left: position.x, position: "fixed", top: `calc(${position.y}px - var(--size-medium))` }} title={title} icon={titleIcon}>
-      <div dir={flow.inline === "rtl" ? "rtl" : undefined} onContextMenu={(event) => event.preventDefault()} ref={menuRef} role="menu">
+      <div aria-label={title} dir={flow.inline === "rtl" ? "rtl" : undefined} onContextMenu={(event) => event.preventDefault()} ref={menuRef} role="menu" tabIndex={-1}>
         {renderFixedContextMenuItems(items, [], renderOptions)}
       </div>
     </ContextMenuChrome>,
@@ -787,16 +906,25 @@ export function buildTextSelectionContextMenuItems(input: { readonly editable: b
   return items;
 }
 
-/** @emoji 📋️ Copies the current DOM text selection to the clipboard. */
-export async function copyDomTextSelection(): Promise<void> {
-  const text = readDomTextSelection();
+/**
+ * @emoji 📋️ Copies a DOM text selection to the clipboard — `captured` when the caller took a reading,
+ * otherwise whatever is selected right now.
+ *
+ * 🎯️ `captured` is not a convenience. An open menu HOLDS FOCUS (the active row is the focused
+ * element, which is what lets a screen reader follow an arrow walk), and taking focus collapses the
+ * document text selection the menu was opened on — so by the time `Copy` is activated,
+ * {@link readDomTextSelection} answers the empty string and nothing reaches the clipboard. The
+ * selection is therefore read when the menu OPENS and handed to the action.
+ **/
+export async function copyDomTextSelection(captured?: string): Promise<void> {
+  const text = captured ?? readDomTextSelection();
   if (!text || typeof navigator === "undefined" || !navigator.clipboard?.writeText) return;
   await navigator.clipboard.writeText(text);
 }
 
-/** @emoji ✂️ Cuts the current DOM text selection when the focus target is editable. */
-export async function cutDomTextSelection(target: EventTarget | null): Promise<void> {
-  await copyDomTextSelection();
+/** @emoji ✂️ Cuts a DOM text selection when the target is editable; `captured` is the reading taken when the menu opened (see {@link copyDomTextSelection}). */
+export async function cutDomTextSelection(target: EventTarget | null, captured?: string): Promise<void> {
+  await copyDomTextSelection(captured);
   if (!isDomTextEditableTarget(target)) return;
   if (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement) {
     const start = target.selectionStart ?? 0;
@@ -875,6 +1003,7 @@ export const TextSelectionContextMenuHost: React.FC = () => {
   const [position, setPosition] = reactHostPort.useState<{ x: number; y: number } | null>(null);
   const [items, setItems] = reactHostPort.useState<readonly ContextMenuItem[]>([]);
   const targetRef = reactHostPort.useRef<EventTarget | null>(null);
+  const selectionRef = reactHostPort.useRef<string>("");
   reactHostPort.useEffect(() => {
     if (typeof document === "undefined") return undefined;
     const onContextMenu = (event: MouseEvent): void => {
@@ -884,17 +1013,20 @@ export const TextSelectionContextMenuHost: React.FC = () => {
       event.stopPropagation();
       targetRef.current = event.target;
       const editable = isDomTextEditableTarget(event.target);
-      const hasSelection = Boolean(readDomTextSelection());
+      // 📋️ Read the selection HERE, while it still exists: opening the menu moves focus onto it.
+      const captured = readDomTextSelection();
+      selectionRef.current = captured;
+      const hasSelection = Boolean(captured);
       setItems(
         buildTextSelectionContextMenuItems(
           { editable, hasSelection },
           { cut: cutLabel, copy: copyLabel, paste: pasteLabel, selectAll: selectAllLabel },
           {
             cut: () => {
-              void cutDomTextSelection(targetRef.current);
+              void cutDomTextSelection(targetRef.current, selectionRef.current);
             },
             copy: () => {
-              void copyDomTextSelection();
+              void copyDomTextSelection(selectionRef.current);
             },
             paste: () => {
               void pasteDomTextSelection(targetRef.current);

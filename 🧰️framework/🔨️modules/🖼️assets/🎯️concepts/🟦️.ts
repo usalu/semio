@@ -9,7 +9,7 @@ export const ICON_CONCEPT_ASSIGNMENTS = {
   "chrome.display-windows": "display-windows",
   "chrome.hud": "hud-overlay",
   "chrome.panel.catalogue": "panel-catalogue",
-  "chrome.panel.document": "file-text",
+  "chrome.panel.artifact": "file-text",
   "chrome.panel.inspection": "panel-inspection",
   "chrome.panel.parameters": "panel-parameters",
   "chrome.scene": "scene-3d",

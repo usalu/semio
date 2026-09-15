@@ -10,16 +10,16 @@ use semio_framework_plugin::plugin_app_close_prelude::{ActionBinding, BuiltNode,
 use semio_framework_plugin::{LabelText, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiFixedList, UiText, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
 
 //#region 🔖️Constants
-pub const CAD_PLAY_BODY_DOCUMENT: &str = "cad.play.document";
+pub const CAD_PLAY_BODY_ARTIFACT: &str = "cad.play.artifact";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
 pub fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_ARTIFACT_ID.into()),
-        label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Dokument"),
+        label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Artefakt"),
         group: PanelGroup::Workbench,
-        body_key: Some(CAD_PLAY_BODY_DOCUMENT.into()),
+        body_key: Some(CAD_PLAY_BODY_ARTIFACT.into()),
         children: Vec::new(),
     }
 }

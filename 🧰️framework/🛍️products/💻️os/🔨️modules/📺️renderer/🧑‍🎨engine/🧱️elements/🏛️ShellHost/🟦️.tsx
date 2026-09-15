@@ -1422,7 +1422,7 @@ export function spaceArtifactCreationOwnerAcceptsStatus(
   if (owner.ready === null) return true;
   const retained = owner.ready.ready;
   return message.phase === "ready" && retained !== undefined && message.ready !== undefined
-    && message.ready.documentId === retained.documentId && message.ready.kindId === retained.kindId
+    && message.ready.artifactId === retained.artifactId && message.ready.kindId === retained.kindId
     && message.ready.artifactSchema === retained.artifactSchema
     && message.ready.parentDialect.artifactKind === retained.parentDialect.artifactKind
     && message.ready.parentDialect.standard === retained.parentDialect.standard
@@ -1452,7 +1452,7 @@ export function spaceArtifactCreationReadyOpening(
   if (message.phase !== "ready" || message.ready === undefined || message.ready.kindId !== message.ready.parentDialect.artifactKind) return null;
   return {
     artifactRef: `${message.ready.parentDialect.artifactKind}@${message.ready.parentDialect.standard}/${message.ready.parentDialect.subset}`,
-    documentId: message.ready.documentId,
+    artifactId: message.ready.artifactId,
     spaceId: message.spaceId,
     schema: message.ready.artifactSchema,
   };
@@ -4933,7 +4933,7 @@ function FrameworkOsShellInner({
       // 🤝️ Handed BACK to the lane, never awaited here: applying an effect re-enters `refreshUi`, and a
       // pass that awaits its own re-entrant request waits on itself (`createUiRefreshCoalescerV1`
       // property 3). The lane voids this application and the effect's refresh lands as the next pass.
-      if (pendingRefreshEffects.length) owedPassEffectsRef.current = { effects: pendingRefreshEffects, session: nextSession, owner: refreshOwner };
+      if (pendingRefreshEffects.length) owedPassEffectsRef.current = { effects: pendingRefreshEffects, session: nextSession, owner: refreshOwner, scope: scopeArg };
       if (appRegistrationsJson) {
         const appRegistrationsPushKey = `${nextSession.instanceId}::${appRegistrationsJson}`;
         if (appRegistrationsPushKey !== appRegistrationsJsonRef.current) {
@@ -4984,7 +4984,7 @@ function FrameworkOsShellInner({
    * 🔁️ A pass's own `requestedEffects` are applied OUTSIDE the pass (`owedPassEffectsRef`, voided
    * below): applying an effect re-enters `refreshUi`, and a pass that awaits its own re-entrant
    * request waits on itself. */
-  const owedPassEffectsRef = useRef<{ effects: readonly Effect[]; session: ActiveSession; owner: ReturnType<typeof captureEffectOwner> } | null>(null);
+  const owedPassEffectsRef = useRef<{ effects: readonly Effect[]; session: ActiveSession; owner: ReturnType<typeof captureEffectOwner>; scope: UiDirtyScope } | null>(null);
   const uiRefreshLaneRef = useRef<UiRefreshCoalescerV1<UiRefreshLaneRequest> | null>(null);
   /** 🚪️ The guest ingress generation the pass in flight submitted its own turn under, `null` while no
    * pass is running. It is captured INSIDE the pass, immediately before the guest crossing, because
@@ -5003,7 +5003,7 @@ function FrameworkOsShellInner({
         }
         const owedEffects = owedPassEffectsRef.current;
         owedPassEffectsRef.current = null;
-        if (owedEffects) void applyHostEffectsRef.current(owedEffects.effects, owedEffects.session, { kind: "full" }, owedEffects.owner).catch((error) => console.error("refresh-owed host effects failed", error));
+        if (owedEffects) void applyHostEffectsRef.current(owedEffects.effects, owedEffects.session, owedEffects.scope, owedEffects.owner).catch((error) => console.error("refresh-owed host effects failed", error));
       },
       (owed, next) => ({ session: next.session, scope: mergeUiDirtyScopeV1(owed.scope, next.scope), extraInstances: next.extraInstances ?? owed.extraInstances, replaceBodies: owed.replaceBodies || next.replaceBodies, hostInputs: owed.hostInputs || next.hostInputs }),
       (decision, scope, passes) => {
@@ -5271,9 +5271,9 @@ function FrameworkOsShellInner({
     [loadedPlugins, refreshUi, retireSessionInstance, session, appLabelsOverlay, hostMode, hostApp, landingAppId, uiTerminology, uiLocale],
   );
 
-  const syncSpawnedPluginDocument = useCallback(async (plugin: PluginWasmHandle, app: AppDefinition, pluginInstanceId: number, documentJson: string, viewState: ViewModel) => {
+  const syncSpawnedPluginDocument = useCallback(async (plugin: PluginWasmHandle, app: AppDefinition, pluginInstanceId: number, artifactJson: string, viewState: ViewModel) => {
     try {
-      const document = JSON.parse(documentJson) as Record<string, unknown>;
+      const document = JSON.parse(artifactJson) as Record<string, unknown>;
       const targetSession: ActiveSession = { pluginId: plugin.pluginId, instanceId: pluginInstanceId, app, viewState };
       await plugin.handleAction(pluginInstanceId, encodeWindowActionInvocation(targetSession, { controllerId: app.controllerId, action: "setDocument", args: { document } }), viewState);
     } catch (syncError) {
@@ -5282,7 +5282,7 @@ function FrameworkOsShellInner({
   }, []);
 
   const ensureSpawnedPlugin = useCallback(
-    async (program: SpaceProgramEntry, isCurrent: () => boolean, label?: string, osInstanceId?: string, documentJson?: string, sourceViewState?: ViewModel): Promise<SpacePanelState | null> => {
+    async (program: SpaceProgramEntry, isCurrent: () => boolean, label?: string, osInstanceId?: string, artifactJson?: string, sourceViewState?: ViewModel): Promise<SpacePanelState | null> => {
       if (!isCurrent()) return null;
       const pluginEntry = loadedPlugins.find((entry) => entry.handle.pluginId === program.pluginId);
       if (!pluginEntry || !session) return null;
@@ -5290,15 +5290,15 @@ function FrameworkOsShellInner({
       const currentPanel = parsePanelState(sourceViewState ?? session.viewState) ?? buildSpacePanelState([], requiredHostPanelLeafId(hostApp));
       const existing = osInstanceId ? currentPanel.spawnedApps.find((entry) => entry.id === osInstanceId) : currentPanel.spawnedApps.find((entry) => entry.appId === program.appId && entry.pluginId === program.pluginId);
       if (existing) {
-        if (documentJson && app) {
-          await syncSpawnedPluginDocument(pluginEntry.handle, app, existing.instanceId, documentJson, sourceViewState ?? session.viewState);
+        if (artifactJson && app) {
+          await syncSpawnedPluginDocument(pluginEntry.handle, app, existing.instanceId, artifactJson, sourceViewState ?? session.viewState);
         }
         return isCurrent() ? studioPanelFocusingSpawned(currentPanel, existing) : null;
       }
       const instanceId = await createAdmittedShellInstanceV1(isCurrent, () => pluginEntry.handle.createApp(program.appId), (id) => pluginEntry.handle.destroyApp(id));
       if (instanceId === null) return null;
-      if (documentJson && app) {
-        await syncSpawnedPluginDocument(pluginEntry.handle, app, instanceId, documentJson, sourceViewState ?? session.viewState);
+      if (artifactJson && app) {
+        await syncSpawnedPluginDocument(pluginEntry.handle, app, instanceId, artifactJson, sourceViewState ?? session.viewState);
       }
       if (!isCurrent()) {
         await pluginEntry.handle.destroyApp(instanceId);
@@ -5644,7 +5644,7 @@ function FrameworkOsShellInner({
               }
               const target = await openArtifactWithAppRefRef.current(opening.app, opening.dialect, opening.role, () => isCurrentEffectOwner(effectOwner));
               if (target && opening.documentId && opening.schema) {
-                await openDocumentRef.current({ documentId: opening.documentId, schema: opening.schema, ...(opening.spaceId ? { spaceId: opening.spaceId } : {}) }, undefined, target);
+                await openDocumentRef.current({ documentId: opening.artifactId, schema: opening.schema, ...(opening.spaceId ? { spaceId: opening.spaceId } : {}) }, undefined, target);
               }
             } catch (openingError) {
               console.warn("[os-shell] replayShellCommand: artifact opening rejected", openingError, args);
@@ -5716,12 +5716,12 @@ function FrameworkOsShellInner({
           continue;
         }
         if ("spawnPluginInstance" in effect) {
-          const { pluginId, appId, osInstanceId, label, documentJson } = effect.spawnPluginInstance;
+          const { pluginId, appId, osInstanceId, label, artifactJson } = effect.spawnPluginInstance;
           const program = spacePrograms.find((entry) => entry.pluginId === pluginId && entry.appId === appId) ?? spacePrograms.find((entry) => entry.pluginId === pluginId);
           if (program) {
             // 🪟️ Fold spawn into `nextViewState` — a separate SET_SESSION would be clobbered by the
             // final write below and leave the shell stuck on the studio surface.
-            const nextPanel = await ensureSpawnedPlugin(program, () => isCurrentEffectOwner(effectOwner), label, osInstanceId, documentJson, nextViewState);
+            const nextPanel = await ensureSpawnedPlugin(program, () => isCurrentEffectOwner(effectOwner), label, osInstanceId, artifactJson, nextViewState);
             if (!isCurrentEffectOwner(effectOwner)) return;
             if (nextPanel) nextViewState = viewStateWithSpacePanel(nextViewState, nextPanel);
           }
@@ -5842,6 +5842,26 @@ function FrameworkOsShellInner({
       return;
     }
   }, [applyHistoryPatch, applyLeftoverInteractionView, applyHostEffects, captureDialogOrigin, captureEffectOwner, dropForRetiredInstance, isCurrentEffectOwner, session, settleOperation]);
+
+  /** 🎞️ Renders a running operation's process while it runs: every mid-operation refresh a tool run asks for (its trace,
+   * provisional pieces, progress) goes through the ui-refresh lane, whose coalescer merges what arrives while a pass is in
+   * flight — the operation never waits on the renderer, and the renderer shows as much of the process as it keeps up with. */
+  useEffect(() => {
+    if (!session) return;
+    const plugin = loadedPluginsRef.current.find((entry) => entry.handle.pluginId === session.pluginId)?.handle;
+    if (!plugin) return;
+    const target = session;
+    try {
+      return plugin.subscribeOperationProgress(target.instanceId, (uiScope) => {
+        const scope = resolveUiDirtyScope(uiScope);
+        if (scope.kind === "none") return;
+        void applyHostEffects([], target, scope, captureEffectOwner(target, captureDialogOrigin(target))).catch((error) => console.error("typed-operation progress refresh failed", error));
+      });
+    } catch (error) {
+      if (!dropForRetiredInstance(target, "typed-operation progress subscription", error)) console.error("[DEBUG] typed-operation progress subscription failed", error);
+      return;
+    }
+  }, [applyHostEffects, captureDialogOrigin, captureEffectOwner, dropForRetiredInstance, session]);
 
   const applyShellUri = useCallback(
     async (uri: string, preservedViewState?: ViewModel) => {
@@ -7784,7 +7804,7 @@ function FrameworkOsShellInner({
         return target === null ? null : { ...target, expectedCatalogGenerationId: openingOwner.expectedCatalogGenerationId };
       },
       open: (target) => openDocument(
-        { documentId: openingArgs.documentId!, schema: openingArgs.schema!, spaceId: openingOwner.spaceId },
+        { documentId: openingArgs.artifactId!, schema: openingArgs.schema!, spaceId: openingOwner.spaceId },
         undefined,
         target,
       ),
@@ -10231,8 +10251,10 @@ function FrameworkOsShellInner({
     const windowBodies = [...skipped].filter(([windowId]) => mounted.has(windowId)).map(([, bodyKey]) => bodyKey);
     if (windowBodies.length === 0) return;
     unmountedSkippedWindowBodiesRef.current = new Map([...skipped].filter(([windowId]) => !mounted.has(windowId)));
-    void refreshUi(live, { kind: "partial", windowBodies }).catch((error) => console.error("[os-shell] remounted window refresh failed", error));
-  }, [effectiveModeLayout, refreshUi]);
+    void refreshUi(live, { kind: "partial", windowBodies }).catch((error) => {
+      if (!dropForRetiredInstance(live, "remounted window refresh", error)) console.error("[os-shell] remounted window refresh failed", error);
+    });
+  }, [dropForRetiredInstance, effectiveModeLayout, refreshUi]);
 
   const handleActiveWindowChange = useCallback(
     (value: string | null) => {

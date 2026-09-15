@@ -28,9 +28,9 @@ const WORKFLOW_SCENE: NodeGraphScene = {
   findItems: [{ id: "app-a", label: "Draw", category: "Workflow" }],
 };
 
-/** 🌊️ A `FlowFixture`-shaped `fixtureJson` (mirrors `FlowFixture::default()` in `flow/core/rs/lib.rs`) — its presence alone routes `NodeGraphHost` to `FlowGraphCanvasHost`/`createFlowSession` (see `isFlowGraphScene`). */
-const FLOW_FIXTURE_JSON = JSON.stringify({
-  schema: "flow.fixture",
+/** 🌊️ A `FlowHostDocument`-shaped `hostDocumentJson` — its presence alone routes `NodeGraphHost` to `FlowGraphCanvasHost`/`createFlowSession` (see `isFlowGraphScene`). */
+const FLOW_HOST_DOCUMENT_JSON = JSON.stringify({
+  schema: "flow.host_document",
   camera: { x: 0, y: 0, zoom: 1 },
   widgets: [
     { kind: "inputSlider", id: "slider", value: 3, min: 0, max: 10, step: 0.1 },
@@ -50,7 +50,7 @@ const FLOW_GRAPH_SCENE: NodeGraphScene = {
   viewport: { x: 0, y: 0, zoom: 1 },
   editable: true,
   capabilitiesJson: '{"engine":"flow"}',
-  fixtureJson: FLOW_FIXTURE_JSON,
+  hostDocumentJson: FLOW_HOST_DOCUMENT_JSON,
 };
 //#endregion SceneFixtures
 

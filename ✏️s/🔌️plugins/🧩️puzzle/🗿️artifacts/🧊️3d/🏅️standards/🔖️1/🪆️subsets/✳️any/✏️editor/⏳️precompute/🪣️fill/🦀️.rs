@@ -14,6 +14,7 @@ use crate::editor::puzzle3d::precompute::geometry::{
     CollisionIndexRemoval, CollisionMutationStep, CollisionOverlapState, CollisionQueryCursor, CollisionQueryStep, CollisionSpatialIndex, CollisionStepResult, FixedOwnerMap, FixedOwnerMapInsert, FixedOwnerSet, FixedOwnerSetInsert, FixedOwnerVec,
     Pose3d, DOCUMENT_ATTRACTION_SLOTS, DOCUMENT_CANDIDATE_SLOTS, DOCUMENT_KIND_SLOTS, DOCUMENT_OBJECT_SLOTS, DOCUMENT_VOLUME_SLOTS, DOCUMENT_VORTEX_SLOTS,
 };
+use crate::editor::puzzle3d::{empty_fixture, puzzle3d_next_object_label, Puzzle3dFixture, Puzzle3dObject};
 use crate::standards::v1::subsets::any::schema::{
     puzzle3d_vortex_full_id, AttractionProps, BrushCompatibleCandidate, BrushHostRules, BrushPlacePayload, BrushPreviewState, CableKindCatalog, FixtureObject, FillRunCheckpoint, FillRunCounter, FillRunReason, FillRunStage, KindCompatEntry,
     KindCatalogBundle, ObjectKind, SceneConfig, VortexKindCatalog, VortexProps, WorldVolumeProps,
@@ -33,14 +34,14 @@ pub(crate) enum FillStall {
     NoOpenVortex,
     /// 🧩️ Open vortices existed, but no catalog kind is compatible with any of them.
     NoCompatibleKind,
-    /// 🚧️ Candidates were built and every one of them was refused — the document has no room left.
+    /// 🚧️ Candidates were built and every one of them was refused — the artifact has no room left.
     NoFreePlacement,
-    /// 📄️ A fixed document page refused an owner: a visible stall, never a fault.
-    DocumentCapacity,
+    /// 📄️ A fixed artifact page refused an owner: a visible stall, never a fault.
+    ArtifactCapacity,
 }
 
 impl FillStall {
-    pub(crate) const ALL: [Self; 4] = [Self::NoOpenVortex, Self::NoCompatibleKind, Self::NoFreePlacement, Self::DocumentCapacity];
+    pub(crate) const ALL: [Self; 4] = [Self::NoOpenVortex, Self::NoCompatibleKind, Self::NoFreePlacement, Self::ArtifactCapacity];
 
     /// 🏷️ The run reason the stall's `warning` step names.
     pub(crate) const fn reason(self) -> FillRunReason {
@@ -48,7 +49,7 @@ impl FillStall {
             Self::NoOpenVortex => FillRunReason::NoOpenVortex,
             Self::NoCompatibleKind => FillRunReason::NoCompatibleKind,
             Self::NoFreePlacement => FillRunReason::NoFreePlacement,
-            Self::DocumentCapacity => FillRunReason::DocumentCapacity,
+            Self::ArtifactCapacity => FillRunReason::ArtifactCapacity,
         }
     }
 }
@@ -1248,6 +1249,31 @@ impl FillBuilder {
         FillFixtureView { base: &self.base, appended: &self.appended_objects }
     }
 
+    fn label_catalog_fixture(&self) -> Puzzle3dFixture {
+        let mut fixture = empty_fixture();
+        if let Some(roots) = self.preparation_roots.as_ref() {
+            if let Some(catalogs) = roots.scene.kind_catalogs.as_ref() {
+                fixture.meta.kind_catalogs = Some(dsl::ToValue::to_value(catalogs));
+            }
+        }
+        fixture
+    }
+
+    fn label_peers(&self) -> Vec<Puzzle3dObject> {
+        let mut peers = Vec::new();
+        for object in self.base.objects.iter() {
+            if let Ok(peer) = dsl::FromValue::from_value(dsl::ToValue::to_value(object)) {
+                peers.push(peer);
+            }
+        }
+        for object in self.appended_objects.iter().take(self.appended_objects.len().saturating_sub(1)) {
+            if let Ok(peer) = dsl::FromValue::from_value(dsl::ToValue::to_value(object)) {
+                peers.push(peer);
+            }
+        }
+        peers
+    }
+
     /// 🏁️ How the plan ended, `None` while it still runs.
     pub(crate) fn end(&self) -> Option<FillPlanEnd> {
         match self.stage {
@@ -1343,7 +1369,7 @@ impl FillBuilder {
     pub(crate) fn prepare_one(&mut self) -> Result<(), StaleSpatialIndex> {
         if self.collection_over_capacity {
             self.last_rejection = Some("preparation-capacity".into());
-            self.stall(FillStall::DocumentCapacity);
+            self.stall(FillStall::ArtifactCapacity);
             return Ok(());
         }
         match self.stage {
@@ -2166,7 +2192,7 @@ impl FillBuilder {
         if let Some(refusal) = self.preparation_capacity_refusal.as_mut() {
             if let Some(writer) = writer.filter(|_| !refusal.published) {
                 refusal.published = true;
-                let _ = writer.step(ToolRunStepKind::Danger, FillRunStage::Prepare.index(), FillRunReason::DocumentCapacity.code(), None, &[ToolRunStepArg::Unsigned(refusal.omitted_index as u64)]);
+                let _ = writer.step(ToolRunStepKind::Danger, FillRunStage::Prepare.index(), FillRunReason::ArtifactCapacity.code(), None, &[ToolRunStepArg::Unsigned(refusal.omitted_index as u64)]);
                 return Some(StepOutcome::Yield);
             }
             return Some(StepOutcome::Fault(JobFault { detail: context.fault_payload(refusal.diagnostic().as_bytes()) }));
@@ -2174,12 +2200,12 @@ impl FillBuilder {
         None
     }
 
-    /// 📄️ A fixed page that refused an owner mid-plan stalls the plan as `document-capacity` over what was already
+    /// 📄️ A fixed page that refused an owner mid-plan stalls the plan as `artifact-capacity` over what was already
     /// placed; answers whether the plan is over capacity.
     pub(crate) fn stall_on_capacity(&mut self) -> bool {
         if self.collection_over_capacity || self.fixed_rejection.is_some() {
             if !matches!(self.stage, FillJobStage::Complete(_)) {
-                self.stall(FillStall::DocumentCapacity);
+                self.stall(FillStall::ArtifactCapacity);
             }
             return true;
         }
@@ -2349,9 +2375,13 @@ pub(crate) fn fill_run_entity(object_id: &str) -> u64 {
 }
 
 /// 🧬️ The two `OpBinary` document ops one placement contributes, in append order.
-pub(crate) fn fill_run_ops(object: &FixtureObject, attraction: &AttractionProps) -> Option<[Vec<u8>; 2]> {
+pub(crate) fn fill_run_ops(object: &FixtureObject, attraction: &AttractionProps, peers: &[Puzzle3dObject], catalog_fixture: &Puzzle3dFixture) -> Option<[Vec<u8>; 2]> {
     use crate::standards::v1::subsets::any::schema::mutations::{binary::encode_op, connect_vortices, create_object};
-    let document = <crate::Puzzle3dObject as dsl::FromValue>::from_value(dsl::ToValue::to_value(object)).ok()?;
+    let mut document: crate::Puzzle3dObject = dsl::FromValue::from_value(dsl::ToValue::to_value(object)).ok()?;
+    let kind_id = object.object_kind.as_deref().unwrap_or("object");
+    if document.label.as_deref().map(str::is_empty).unwrap_or(true) {
+        document.label = Some(puzzle3d_next_object_label(peers, catalog_fixture, kind_id));
+    }
     let create = encode_op(&create_object(document, None)).ok()?;
     let connect = encode_op(&connect_vortices(attraction.id.clone(), attraction.attracting.clone(), attraction.attracted.clone(), attraction.gap, attraction.shift, attraction.rise, attraction.rotation, attraction.turn, attraction.tilt, attraction.x, attraction.y)).ok()?;
     Some([create, connect])
@@ -2477,6 +2507,10 @@ pub(crate) struct FillRunJob {
     events: Vec<FillRunEvent>,
     deferred: Vec<FillRunEvent>,
     live: Option<(u64, ToolRunTraceSubject)>,
+    /// 👁️ The one tested candidate whose verdict is still on screen. The run shows ONE candidate at a time: the next
+    /// constructed candidate retires it, so a collision is visible only while it is the current attempt and a placement
+    /// stays visible as its document instance (the `provisional` style), never as a pile of past trace records.
+    shown: Option<u64>,
     next_key: u64,
     placement_keys: Vec<(u64, ToolRunTraceSubject)>,
     tested: u64,
@@ -2560,6 +2594,7 @@ impl FillRunJob {
             events: Vec::with_capacity(4),
             deferred: Vec::new(),
             live: None,
+            shown: None,
             next_key: 0,
             placement_keys: Vec::new(),
             tested: 0,
@@ -2678,6 +2713,7 @@ impl FillRunJob {
     fn verdict(&mut self, context: &mut StepContext<'_>, reason: FillRunReason, verdict: ToolRunVerdict, code: u16) -> Option<(u64, ToolRunTraceSubject)> {
         let (key, subject) = self.live.take()?;
         self.writer.upsert(key, verdict, code, subject);
+        self.shown = Some(key);
         if self.replay.is_none() {
             context.consume_fuel(1);
         }
@@ -2707,6 +2743,9 @@ impl FillRunJob {
             cursor += 1;
             match event {
                 FillRunEvent::Constructed { mesh_url, origin, orientation, scale } => {
+                    if let Some(previous) = self.shown.take() {
+                        self.writer.retire(previous);
+                    }
                     let key = self.next_key;
                     self.next_key += 1;
                     self.tested += 1;
@@ -2738,7 +2777,9 @@ impl FillRunJob {
                     let (Some(object), Some(attraction)) = (self.builder.appended_objects.last(), self.builder.appended_attractions.last()) else {
                         return Err(b"fill-run-placement-missing");
                     };
-                    let Some(ops) = fill_run_ops(object, attraction) else {
+                    let peers = self.builder.label_peers();
+                    let catalog_fixture = self.builder.label_catalog_fixture();
+                    let Some(ops) = fill_run_ops(object, attraction, &peers, &catalog_fixture) else {
                         return Err(b"fill-run-op-encode");
                     };
                     let entity = fill_run_entity(&object.id);
@@ -2782,8 +2823,9 @@ impl FillRunJob {
                 }
                 FillRunEvent::Discarded => {
                     while self.placement_keys.len() > self.builder.sequence.len() {
-                        if let Some((key, _)) = self.placement_keys.pop() {
+                        if let Some((key, _)) = self.placement_keys.pop().filter(|(key, _)| self.shown == Some(*key)) {
                             self.writer.retire(key);
+                            self.shown = None;
                         }
                     }
                     self.writer.retract_to(self.placement_keys.len() as u32 * FILL_RUN_OPS_PER_PLACEMENT);
@@ -3139,12 +3181,28 @@ impl FillRevalidateJob {
         let Some(first) = self.conflicts.iter().position(|conflict| *conflict) else {
             return self.flush(context, None);
         };
+        let mut catalog_fixture = empty_fixture();
+        if let Some(catalogs) = self.scene.kind_catalogs.as_ref() {
+            catalog_fixture.meta.kind_catalogs = Some(dsl::ToValue::to_value(catalogs));
+        }
+        let mut peers: Vec<Puzzle3dObject> = self
+            .scene
+            .fixture
+            .objects
+            .iter()
+            .filter_map(|object| dsl::FromValue::from_value(dsl::ToValue::to_value(object)).ok())
+            .collect();
         let mut ops = Vec::new();
         let mut entities = Vec::new();
         for (placement, _) in self.placements.iter().zip(&self.conflicts).skip(first).filter(|(_, conflict)| !**conflict) {
-            let Some([create, connect]) = fill_run_ops(&placement.object, &placement.attraction) else {
+            let Some([create, connect]) = fill_run_ops(&placement.object, &placement.attraction, &peers, &catalog_fixture) else {
                 return StepOutcome::Fault(JobFault { detail: FillStepContext::fault_payload(context, b"fill-revalidate-op-encode") });
             };
+            if let Ok(mut peer) = <Puzzle3dObject as dsl::FromValue>::from_value(dsl::ToValue::to_value(&placement.object)) {
+                let kind_id = placement.object.object_kind.as_deref().unwrap_or("object");
+                peer.label = Some(puzzle3d_next_object_label(&peers, &catalog_fixture, kind_id));
+                peers.push(peer);
+            }
             ops.extend([create, connect]);
             entities.push(placement.entity);
         }

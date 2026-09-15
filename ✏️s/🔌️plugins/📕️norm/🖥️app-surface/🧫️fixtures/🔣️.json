@@ -8,7 +8,7 @@
       "bodyKeys": [
         "norm.din4108.play.inputs",
         "norm.din4108.play.results",
-        "norm.din4108.play.document",
+        "norm.din4108.play.artifact",
         "norm.din4108.play.catalogue",
         "norm.din4108.play.inspection",
         "framework.body.history"
@@ -30,7 +30,7 @@
       "bodyKeys": [
         "norm.din16798.play.inputs",
         "norm.din16798.play.results",
-        "norm.din16798.play.document",
+        "norm.din16798.play.artifact",
         "norm.din16798.play.catalogue",
         "norm.din16798.play.inspection",
         "framework.body.history"
@@ -52,7 +52,7 @@
       "bodyKeys": [
         "norm.din18599.play.inputs",
         "norm.din18599.play.results",
-        "norm.din18599.play.document",
+        "norm.din18599.play.artifact",
         "norm.din18599.play.catalogue",
         "norm.din18599.play.inspection",
         "framework.body.history"
@@ -74,7 +74,7 @@
       "bodyKeys": [
         "norm.en1990.play.inputs",
         "norm.en1990.play.results",
-        "norm.en1990.play.document",
+        "norm.en1990.play.artifact",
         "norm.en1990.play.catalogue",
         "norm.en1990.play.inspection",
         "framework.body.history"
@@ -96,7 +96,7 @@
       "bodyKeys": [
         "norm.en1991.play.inputs",
         "norm.en1991.play.results",
-        "norm.en1991.play.document",
+        "norm.en1991.play.artifact",
         "norm.en1991.play.catalogue",
         "norm.en1991.play.inspection",
         "framework.body.history"
@@ -118,7 +118,7 @@
       "bodyKeys": [
         "norm.en1992.play.inputs",
         "norm.en1992.play.results",
-        "norm.en1992.play.document",
+        "norm.en1992.play.artifact",
         "norm.en1992.play.catalogue",
         "norm.en1992.play.inspection",
         "framework.body.history"
@@ -140,7 +140,7 @@
       "bodyKeys": [
         "norm.en1993.play.inputs",
         "norm.en1993.play.results",
-        "norm.en1993.play.document",
+        "norm.en1993.play.artifact",
         "norm.en1993.play.catalogue",
         "norm.en1993.play.inspection",
         "framework.body.history"
@@ -162,7 +162,7 @@
       "bodyKeys": [
         "norm.en1994.play.inputs",
         "norm.en1994.play.results",
-        "norm.en1994.play.document",
+        "norm.en1994.play.artifact",
         "norm.en1994.play.catalogue",
         "norm.en1994.play.inspection",
         "framework.body.history"
@@ -184,7 +184,7 @@
       "bodyKeys": [
         "norm.en1995.play.inputs",
         "norm.en1995.play.results",
-        "norm.en1995.play.document",
+        "norm.en1995.play.artifact",
         "norm.en1995.play.catalogue",
         "norm.en1995.play.inspection",
         "framework.body.history"
@@ -206,7 +206,7 @@
       "bodyKeys": [
         "norm.en1996.play.inputs",
         "norm.en1996.play.results",
-        "norm.en1996.play.document",
+        "norm.en1996.play.artifact",
         "norm.en1996.play.catalogue",
         "norm.en1996.play.inspection",
         "framework.body.history"
@@ -228,7 +228,7 @@
       "bodyKeys": [
         "norm.en1997.play.inputs",
         "norm.en1997.play.results",
-        "norm.en1997.play.document",
+        "norm.en1997.play.artifact",
         "norm.en1997.play.catalogue",
         "norm.en1997.play.inspection",
         "framework.body.history"
@@ -250,7 +250,7 @@
       "bodyKeys": [
         "norm.en1998.play.inputs",
         "norm.en1998.play.results",
-        "norm.en1998.play.document",
+        "norm.en1998.play.artifact",
         "norm.en1998.play.catalogue",
         "norm.en1998.play.inspection",
         "framework.body.history"
@@ -272,7 +272,7 @@
       "bodyKeys": [
         "norm.en1999.play.inputs",
         "norm.en1999.play.results",
-        "norm.en1999.play.document",
+        "norm.en1999.play.artifact",
         "norm.en1999.play.catalogue",
         "norm.en1999.play.inspection",
         "framework.body.history"
@@ -294,7 +294,7 @@
       "bodyKeys": [
         "norm.iso16757.play.inputs",
         "norm.iso16757.play.results",
-        "norm.iso16757.play.document",
+        "norm.iso16757.play.artifact",
         "norm.iso16757.play.catalogue",
         "norm.iso16757.play.inspection",
         "framework.body.history"
@@ -316,7 +316,7 @@
       "bodyKeys": [
         "norm.vdi3805.play.inputs",
         "norm.vdi3805.play.results",
-        "norm.vdi3805.play.document",
+        "norm.vdi3805.play.artifact",
         "norm.vdi3805.play.catalogue",
         "norm.vdi3805.play.inspection",
         "framework.body.history"

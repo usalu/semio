@@ -7,16 +7,16 @@ use crate::{forms_steps, FormsSnapshot};
 use semio_framework_plugin::{tree_item_desc, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiText, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
 
 //#region 🔖️Constants
-pub const FORMS_PLAY_BODY_DOCUMENT: &str = "forms.play.document";
+pub const FORMS_PLAY_BODY_ARTIFACT: &str = "forms.play.artifact";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
 pub fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_ARTIFACT_ID.into()),
-        label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Dokument"),
+        label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Artefakt"),
         group: PanelGroup::Workbench,
-        body_key: Some(FORMS_PLAY_BODY_DOCUMENT.into()),
+        body_key: Some(FORMS_PLAY_BODY_ARTIFACT.into()),
         children: Vec::new(),
     }
 }

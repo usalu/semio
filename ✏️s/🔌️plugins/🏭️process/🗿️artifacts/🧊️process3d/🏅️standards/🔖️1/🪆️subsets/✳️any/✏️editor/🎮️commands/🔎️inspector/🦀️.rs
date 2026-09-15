@@ -25,7 +25,7 @@ fn apply_pose_patch(pose: &mut Pose, field: &str, value: f64) -> bool {
 
 /// 🌉️ Ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM wave 4: dimension edits (`width`/`depth`/
 /// `height`/`radius`) need to read the stock's CURRENT `WorkingSolid` shape to patch a single field
-/// — but `fixture.stock_solid` is a composed `s.stdio.semio.brep` CHILD HANDLE now, with no
+/// — but `snapshot.stock_solid` is a composed `s.stdio.semio.brep` CHILD HANDLE now, with no
 /// resolvable content (no `LinkResolver` — see `ProcessWorkingScene`'s doc comment). This is a
 /// documented gap: only `label`/pose fields (real, inline persisted fields) remain patchable; a
 /// dimension-only patch returns `None` (no mutation) rather than guessing at unknown geometry.
@@ -70,11 +70,11 @@ fn apply_workshop_machine_patch(machine: &mut WorkshopMachine, field: &str, valu
 /// `RenameMachine`/`ChangeStockLabel`, a spatial stock field → `MoveStock`, a capability parameter →
 /// `ReplaceMachineCapabilities`. A step-addressed target (`step:<id>`) and a stock dimension-only
 /// patch are both a DOCUMENTED NO-OP (see `apply_stock_patch`'s doc comment and
-/// `RenameStep`/`ReplaceStepMeasure`'s own triads) — `fixture.steps`/`fixture.stock_solid` carry no
+/// `RenameStep`/`ReplaceStepMeasure`'s own triads) — `snapshot.steps`/`snapshot.stock_solid` carry no
 /// resolvable content without a `LinkResolver` this ticket doesn't add.
-fn process3d_inspector_patch_operation(fixture: &Process3dSnapshot, target: &str, field: &str, value: Option<&DslValue>) -> Option<Process3dMutation> {
+fn process3d_inspector_patch_operation(snapshot: &Process3dSnapshot, target: &str, field: &str, value: Option<&DslValue>) -> Option<Process3dMutation> {
     if let Some(machine_id) = target.strip_prefix("machine:") {
-        let machine = fixture.workshop.machines.iter().find(|machine| machine.id == machine_id)?;
+        let machine = snapshot.workshop.machines.iter().find(|machine| machine.id == machine_id)?;
         let mut updated = machine.clone();
         if !apply_workshop_machine_patch(&mut updated, field, value) {
             return None;
@@ -85,9 +85,9 @@ fn process3d_inspector_patch_operation(fixture: &Process3dSnapshot, target: &str
             Process3dMutation::ReplaceMachineCapabilities(ReplaceMachineCapabilities { id: machine_id.to_string(), new_capabilities: updated.capabilities })
         });
     }
-    if target == fixture.stock_id {
-        let mut stock_pose = fixture.stock_pose.clone();
-        let mut stock_label = fixture.stock_label.clone();
+    if target == snapshot.stock_id {
+        let mut stock_pose = snapshot.stock_pose.clone();
+        let mut stock_label = snapshot.stock_label.clone();
         if !apply_stock_patch(&mut stock_pose, &mut stock_label, field, value) {
             return None;
         }

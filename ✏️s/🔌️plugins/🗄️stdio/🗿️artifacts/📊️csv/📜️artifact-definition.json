@@ -49,7 +49,7 @@
     }
   ],
   "codecs": [
-    { "id": "s.stdio.csv.standard.rfc4180.codec.native-document.v1", "status": "implemented", "from": "s.stdio.csv.standard.rfc4180.dialect.source", "to": "s.stdio.csv.standard.rfc4180.dialect.source", "executable_registration": true, "native_factory": { "factory_id": "stdio.native.csv.v1", "artifact_kind": "stdio.csv", "document_schema": "stdio.csv", "extension": "csv", "pack_schema_hash": "a4810543b9f45e25228b492f1f2e188db09d9331c1ef5fd14cced527a2878a17", "runtime_capability_id": "s.stdio.csv.standard.rfc4180.codec.codec-stdio-csv-extension-csv.v1" } }
+    { "id": "s.stdio.csv.standard.rfc4180.codec.native-document.v1", "status": "implemented", "from": "s.stdio.csv.standard.rfc4180.dialect.source", "to": "s.stdio.csv.standard.rfc4180.dialect.source", "executable_registration": true, "native_factory": { "factory_id": "stdio.native.csv.v1", "artifact_kind": "stdio.csv", "artifact_schema": "stdio.csv", "extension": "csv", "pack_schema_hash": "a4810543b9f45e25228b492f1f2e188db09d9331c1ef5fd14cced527a2878a17", "runtime_capability_id": "s.stdio.csv.standard.rfc4180.codec.codec-stdio-csv-extension-csv.v1" } }
   ],
   "mutations": [],
   "inferences": [],

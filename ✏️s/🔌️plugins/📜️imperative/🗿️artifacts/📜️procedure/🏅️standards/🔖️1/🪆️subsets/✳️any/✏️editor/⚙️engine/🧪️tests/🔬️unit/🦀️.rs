@@ -3,7 +3,7 @@ use super::*;
 #[semio_framework_async_macros::async_test]
 async fn imperative_io_declares_result_out_reusing_the_computation_procedure_kind() {
     let io = imperative_io();
-    assert_eq!(io.document_schema, "procedure.document/v1");
+    assert_eq!(io.artifact_schema, "procedure.document/v1");
     assert_eq!(io.artifact.id, "computation.procedure");
     assert_eq!(io.ports.len(), 1);
     let port = &io.ports[0];

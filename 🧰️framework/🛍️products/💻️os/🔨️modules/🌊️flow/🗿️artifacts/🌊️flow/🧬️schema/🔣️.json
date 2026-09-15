@@ -37,7 +37,7 @@
                 "additionalProperties": false,
                 "properties": {
                   "schema": {
-                    "const": "flow.fixture"
+                    "const": "flow.hostDocument"
                   },
                   "camera": {
                     "type": "object",

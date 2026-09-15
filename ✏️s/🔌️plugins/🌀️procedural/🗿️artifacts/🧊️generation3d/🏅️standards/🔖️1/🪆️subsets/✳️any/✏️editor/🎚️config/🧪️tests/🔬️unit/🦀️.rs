@@ -22,6 +22,24 @@ fn config_round_trip(base: &Generation3dConfig, operation: &Generation3dConfigMu
 }
 
 #[test]
+fn config_set_camera_no_ops_when_unchanged() {
+    let base = Generation3dConfig::default();
+    let same = Generation3dConfigMutation::SetCamera(SetCamera { camera: base.camera.clone() });
+    let outcome = same.diff(&base);
+    assert!(outcome.messages().iter().any(|message| message.code.0 == "mutation.no-op"));
+    assert_eq!(outcome.into_parts().0, base);
+}
+
+#[test]
+fn config_set_preview_camera_no_ops_when_unchanged() {
+    let base = Generation3dConfig::default();
+    let same = Generation3dConfigMutation::SetPreviewCamera(SetPreviewCamera { camera: base.preview_camera.clone() });
+    let outcome = same.diff(&base);
+    assert!(outcome.messages().iter().any(|message| message.code.0 == "mutation.no-op"));
+    assert_eq!(outcome.into_parts().0, base);
+}
+
+#[test]
 fn config_set_camera_and_preview_camera_round_trip() {
     let base = Generation3dConfig::default();
     let next = config_round_trip(&base, &Generation3dConfigMutation::SetCamera(SetCamera { camera: CameraJson { x: 1.0, y: 2.0, zoom: 3.0 } }));

@@ -33,7 +33,7 @@ impl FlowMutationRetirementFrontier {
                 self.frontier.push(FlowOwner::Specs(vec![value.synapse]));
             }
             FlowMutation::ChangeLayout(value) => self.frontier.push(FlowOwner::Layout(value.entries)),
-            FlowMutation::ReplaceFlowFixture(value) => self.frontier.push(FlowOwner::Fixture(value.fixture)),
+            FlowMutation::ReplaceFlowHostDocument(value) => self.frontier.push(FlowOwner::HostDocument(value.host_document)),
         }
     }
 

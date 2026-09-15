@@ -6,16 +6,16 @@ use crate::editor::block5d::{ui_label, ui_node_list, BLOCK5D_INTERACTION_GRIP};
 use semio_framework_plugin::{tree_item_desc, BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiText, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
 
 //#region 🔖️Constants
-pub const BLOCK5D_BODY_DOCUMENT: &str = "block5d.play.document";
+pub const BLOCK5D_BODY_ARTIFACT: &str = "block5d.play.artifact";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
 pub fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_ARTIFACT_ID.into()),
-        label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Dokument"),
+        label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Artefakt"),
         group: PanelGroup::Workbench,
-        body_key: Some(BLOCK5D_BODY_DOCUMENT.into()),
+        body_key: Some(BLOCK5D_BODY_ARTIFACT.into()),
         children: Vec::new(),
     }
 }

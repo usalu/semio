@@ -137,7 +137,7 @@ use context::*;
 use super::*;
 use crate::standards::v1::subsets::any::io::scene_from_spatial_payload;
 use crate::standards::v1::subsets::any::schema::inferences::{
-    align_mesh_to_fixture_centroid, default_document, object_mesh_data, run_derive_from_geometry, CAD_DEFAULT_TYPOLOGY_EXTENT, CAD_FOREST_REFERENCE_IMAGE_HEIGHT_PX, CAD_FOREST_REFERENCE_IMAGE_WIDTH_PX, CAD_FOREST_REFERENCE_PLANE_Z,
+    align_mesh_to_host_document_centroid, default_document, object_mesh_data, run_derive_from_geometry, CAD_DEFAULT_TYPOLOGY_EXTENT, CAD_FOREST_REFERENCE_IMAGE_HEIGHT_PX, CAD_FOREST_REFERENCE_IMAGE_WIDTH_PX, CAD_FOREST_REFERENCE_PLANE_Z,
     CAD_FOREST_REFERENCE_WIDTH_WORLD, CAD_FOREST_REFERENCE_Y_OFFSET_RATIO,
 };
 use crate::{empty_cad_snapshot, CadNode, CAD_PLAY_DOCUMENT_SCHEMA};
@@ -500,7 +500,7 @@ async fn forest_references_use_xy_ground_plane_and_z_up() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn align_mesh_to_fixture_centroid_corrects_drifted_surface() {
+async fn align_mesh_to_host_document_centroid_corrects_drifted_surface() {
     let scene = forest_working_scene();
     let geometry = scene.energy_geometry.as_ref().expect("energy geometry");
     let object = scene.energy_objects.first().expect("energy object");
@@ -508,7 +508,7 @@ async fn align_mesh_to_fixture_centroid_corrects_drifted_surface() {
     for vertex in mesh.positions.as_chunks_mut::<3>().0 {
         vertex[2] = 0.0;
     }
-    align_mesh_to_fixture_centroid(&mut mesh, geometry, &object.primitives);
+    align_mesh_to_host_document_centroid(&mut mesh, geometry, &object.primitives);
     let min_z = mesh.positions.as_chunks::<3>().0.iter().map(|vertex| vertex[2]).fold(f32::INFINITY, f32::min);
     assert!(min_z > 2.5, "aligned mesh min z {min_z}");
 }
@@ -521,7 +521,7 @@ async fn forest_surface_meshes_fall_back_to_typology_extent_without_pane_geometr
     // `BrepEngineHost` singleton, so `energy.solid_handle` (minted by an EARLIER, already-dropped
     // call to `forest_pane_bundle`) still resolved in whatever kernel `object_mesh_data` happened
     // to reach. `origin` on fixture-derived `CadObject`s is always `[0,0,0]`
-    // (`objects_from_fixture_model`) — the authored height lived ONLY in the solid's own vertex
+    // (`objects_from_host_document_model`) — the authored height lived ONLY in the solid's own vertex
     // data, addressed by that handle. A `cad_brep_kernel()` is now a fresh, local `Brep::new()`
     // per call (doctrine tier-(d): never outlives the call that built it), so a handle from a
     // different call is honestly unresolvable, and — exactly like `mesh_from_glb`'s documented
@@ -537,7 +537,7 @@ async fn forest_surface_meshes_fall_back_to_typology_extent_without_pane_geometr
 }
 
 #[semio_framework_async_macros::async_test]
-async fn cad_document_schema_matches_domain() {
+async fn cad_artifact_schema_matches_domain() {
     let scene = empty_cad_snapshot();
     assert_eq!(scene.schema, CAD_PLAY_DOCUMENT_SCHEMA);
 }
@@ -631,7 +631,7 @@ async fn manifest_stitches_every_taxonomy_node_with_its_pre_migration_shape() {
     assert_eq!(
         panels,
         vec![
-            (semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID, Some(document::CAD_PLAY_BODY_DOCUMENT)),
+            (semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID, Some(document::CAD_PLAY_BODY_ARTIFACT)),
             (semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID, Some(catalogue::CAD_PLAY_BODY_CATALOGUE)),
             (semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_ID, Some(inspection::CAD_PLAY_BODY_PROPERTIES)),
         ]
@@ -925,7 +925,7 @@ async fn forest_transformation_uses_live_shape_pane() {
     // whatever kernel `run_derive_from_geometry` reached — only true under the deleted
     // process-global `BrepEngineHost` singleton. `solid_for_object` (the derive's per-object
     // solid builder) has never applied `object.origin` — fixture objects carry `origin:
-    // [0,0,0]` regardless (`objects_from_fixture_model`) — so once a handle stops resolving it
+    // [0,0,0]` regardless (`objects_from_host_document_model`) — so once a handle stops resolving it
     // falls back to an extent+typology-only box built at the kernel's local origin, and two
     // fixture objects sharing that origin fuse into a materially different (and no longer
     // fixture-distinguishing) hull. The real, still-true property — output tracks LIVE INPUT,

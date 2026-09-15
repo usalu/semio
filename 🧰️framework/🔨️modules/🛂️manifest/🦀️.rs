@@ -806,23 +806,23 @@ pub struct ActionSemantics {
 impl ActionSemantics {
     /// @emoji 🏭️ The `📋️master.md` §3.1 defaults table, keyed by `ActionKind`: `Mutation` writes its
     /// own artifact, is reversible, previews a `Diff`, undoes via `Inverse`, expects a revision, and
-    /// needs `documents.write` gated `WhenDestructive`; `View`/`Interaction` read the config lane
-    /// (`documents.read` + `shell.observe`); `History` needs `documents.write`; `Clipboard` needs
+    /// needs `artifacts.write` gated `WhenDestructive`; `View`/`Interaction` read the config lane
+    /// (`artifacts.read` + `shell.observe`); `History` needs `artifacts.write`; `Clipboard` needs
     /// `shell.clipboard`; `🐚️Shell` is not reversible and needs `shell.navigate`.
     pub fn for_kind(kind: ActionKind) -> Self {
         match kind {
             ActionKind::Mutation => Self {
                 effects: CapabilityEffects { writes: vec![ResourceSelector::new("artifact:{self}")], reversible: true, ..Default::default() },
-                policy: CapabilityPolicy { scopes: vec![kernel::CapabilityId("documents.write".into())], approval: ApprovalMode::WhenDestructive },
+                policy: CapabilityPolicy { scopes: vec![kernel::CapabilityId("artifacts.write".into())], approval: ApprovalMode::WhenDestructive },
                 execution: CapabilityExecution { preview: PreviewMode::Diff, undo: UndoMode::Inverse, expected_revision: true, ..Default::default() },
                 ..Default::default()
             },
             ActionKind::View | ActionKind::Interaction => Self {
                 effects: CapabilityEffects { reads: vec![ResourceSelector::new("config:{self}")], ..Default::default() },
-                policy: CapabilityPolicy { scopes: vec![kernel::CapabilityId("documents.read".into()), kernel::CapabilityId("shell.observe".into())], ..Default::default() },
+                policy: CapabilityPolicy { scopes: vec![kernel::CapabilityId("artifacts.read".into()), kernel::CapabilityId("shell.observe".into())], ..Default::default() },
                 ..Default::default()
             },
-            ActionKind::History => Self { policy: CapabilityPolicy { scopes: vec![kernel::CapabilityId("documents.write".into())], ..Default::default() }, ..Default::default() },
+            ActionKind::History => Self { policy: CapabilityPolicy { scopes: vec![kernel::CapabilityId("artifacts.write".into())], ..Default::default() }, ..Default::default() },
             ActionKind::Clipboard => Self { policy: CapabilityPolicy { scopes: vec![kernel::CapabilityId("shell.clipboard".into())], ..Default::default() }, ..Default::default() },
             ActionKind::Shell => Self { effects: CapabilityEffects { reversible: false, ..Default::default() }, policy: CapabilityPolicy { scopes: vec![kernel::CapabilityId("shell.navigate".into())], ..Default::default() }, ..Default::default() },
         }
@@ -1144,6 +1144,92 @@ impl InteractionVerb {
     /// added without an author deciding what it dirties.
     pub const ALL: [Self; 6] = [Self::Select, Self::Hover, Self::ClearSelection, Self::SelectAll, Self::SetSelectionMode, Self::SetGranularity];
 }
+
+//#region 🔖️InteractionRefreshScope
+/// 🐢️ The refresh scope one reserved interaction verb owes, DERIVED from the app's own surface
+/// declarations instead of hand-written once per app.
+///
+/// 🪟️ `window_bodies` is the body of every window kind that declares one of the domains the verb
+/// touched ([`WindowKindDefinition::interactions`] — the same list that lets a renderer dispatch the
+/// verb from that pane at all), so a window that never paints the domain is never asked to re-render
+/// for it.
+///
+/// 🧯️ Why the panels are NOT narrowed the same way: a [`PanelTabDefinition`] declares no interaction
+/// refs, so nothing in the manifest says which panel paints a selection — every declared panel body
+/// therefore stays dirty for the three verbs that MOVE a selection, which is the widest honest
+/// answer and can never under-refresh an inspector. The one lane narrowed without a declaration is
+/// [`InteractionVerb::Hover`]: hover is the pointer-transient lane, owed to the surfaces the pointer
+/// is over, and a panel row that chased the pointer would flicker rather than inform.
+///
+/// 🎛️ `measures` is the window's own Select chrome (active mode / active granularity, bound by the
+/// measures rail): every verb but `Hover` can move persisted interaction state a rail control binds,
+/// and `Hover` can move none. Utilities, tools, engagements, labels and the app-static catalogue are
+/// moved by no interaction verb.
+pub fn interaction_verb_surface_scope(verb: InteractionVerb, window_bodies: &[String], panel_bodies: &[String]) -> kernel::UiDirtyScope {
+    let selection_moved = matches!(verb, InteractionVerb::Select | InteractionVerb::ClearSelection | InteractionVerb::SelectAll);
+    kernel::UiDirtyScope::Partial {
+        window_bodies: window_bodies.to_vec(),
+        panel_bodies: if selection_moved { panel_bodies.to_vec() } else { Vec::new() },
+        utilities: false,
+        tools: false,
+        engagements: false,
+        measures: verb != InteractionVerb::Hover,
+        labels: false,
+    }
+}
+
+/// 🕹️ Every declared window body key indexed by the interaction domain that window kind declares —
+/// the schema-first half of [`interaction_verb_surface_scope`], read once when an app's action
+/// registry is built rather than per dispatched hover.
+pub fn interaction_window_bodies_by_domain(app: &AppDefinition) -> BTreeMap<String, Vec<String>> {
+    let mut index: BTreeMap<String, Vec<String>> = BTreeMap::new();
+    for window in app.window_kinds.iter() {
+        for interaction in &window.interactions {
+            let bodies = index.entry(interaction.as_str().to_string()).or_default();
+            if !bodies.iter().any(|body| body == &window.body_key) {
+                bodies.push(window.body_key.clone());
+            }
+        }
+    }
+    index
+}
+
+/// 🌳️ Every declared panel LEAF body key, in declaration order, branches walked — the panel half of
+/// [`interaction_verb_surface_scope`].
+pub fn panel_leaf_body_keys(app: &AppDefinition) -> Vec<String> {
+    fn walk(tab: &PanelTabDefinition, out: &mut Vec<String>) {
+        if let Some(body_key) = &tab.body_key {
+            if !out.iter().any(|entry| entry == body_key) {
+                out.push(body_key.clone());
+            }
+        }
+        for child in &tab.children {
+            walk(child, out);
+        }
+    }
+    let mut out = Vec::new();
+    for tab in &app.panel_tabs {
+        walk(tab, &mut out);
+    }
+    out
+}
+
+/// 🐢️ The framework's own answer to "what does this verb repaint", for every app that implements no
+/// `ArtifactApp::interaction_scope` of its own. `None` — and with it the framework's widest
+/// [`kernel::UiDirtyScope::Full`] — is the answer whenever NO declared window paints a touched
+/// domain, because then there is no declaration to derive from and narrowing would be a guess.
+pub fn interaction_declared_refresh_scope(verb: InteractionVerb, domains: &[&str], windows_by_domain: &BTreeMap<String, Vec<String>>, panel_bodies: &[String]) -> Option<kernel::UiDirtyScope> {
+    let mut window_bodies: Vec<String> = Vec::new();
+    for domain in domains {
+        for body in windows_by_domain.get(*domain).into_iter().flatten() {
+            if !window_bodies.iter().any(|entry| entry == body) {
+                window_bodies.push(body.clone());
+            }
+        }
+    }
+    (!window_bodies.is_empty()).then(|| interaction_verb_surface_scope(verb, &window_bodies, panel_bodies))
+}
+//#endregion 🔖️InteractionRefreshScope
 
 /// 🕹️ The six framework-owned Interaction actions, auto-injected into any `AppDefinition` that
 /// declares at least one `InteractionDefinition` — mirrors `history_action_definitions`/
@@ -2269,7 +2355,7 @@ pub struct TutorialTracks {
     /// 🖋️ The sole source of document mutation during playback — see `TutorialArtifactEventKind`.
     #[serde(default)]
     #[value(default)]
-    pub document: Vec<TutorialArtifactEvent>,
+    pub artifact: Vec<TutorialArtifactEvent>,
     #[serde(default)]
     #[value(default)]
     pub camera: Vec<TutorialCameraKeyframe>,
@@ -2752,7 +2838,7 @@ pub fn validate_tutorial(def: &TutorialDefinition) -> Result<(), String> {
     sorted_by_at("video", &def.tracks.video, |c| c.at, def.duration_ms)?;
     sorted_by_at("events", &def.tracks.events, |e| e.at, def.duration_ms)?;
     sorted_by_at("ui", &def.tracks.ui, |k| k.at, def.duration_ms)?;
-    sorted_by_at("document", &def.tracks.document, |e| e.at, def.duration_ms)?;
+    sorted_by_at("artifact", &def.tracks.artifact, |e| e.at, def.duration_ms)?;
     sorted_by_at("camera", &def.tracks.camera, |k| k.at, def.duration_ms)?;
     sorted_by_at("gestures", &def.tracks.gestures, |c| c.at, def.duration_ms)?;
 
@@ -2927,7 +3013,7 @@ pub fn compose_tutorial_ui(def: &TutorialDefinition, at_ms: f64) -> TutorialUiSn
 pub struct TutorialSlice {
     pub forward: bool,
     pub events: Vec<TutorialEvent>,
-    pub document: Vec<TutorialArtifactEvent>,
+    pub artifact: Vec<TutorialArtifactEvent>,
     pub ui_changes: Vec<TutorialUiChange>,
 }
 
@@ -2946,7 +3032,7 @@ pub fn tutorial_slice(def: &TutorialDefinition, from_ms: f64, to_ms: f64) -> Tut
     let in_range = |at: u64| (at as f64) > lo && (at as f64) <= hi;
 
     let mut events: Vec<TutorialEvent> = def.tracks.events.iter().filter(|e| in_range(e.at)).cloned().collect();
-    let mut document: Vec<TutorialArtifactEvent> = def.tracks.document.iter().filter(|e| in_range(e.at)).cloned().collect();
+    let mut artifact: Vec<TutorialArtifactEvent> = def.tracks.artifact.iter().filter(|e| in_range(e.at)).cloned().collect();
     let mut ui_changes: Vec<TutorialUiChange> = Vec::new();
     for keyframe in def.tracks.ui.iter().filter(|k| in_range(k.at)) {
         if let TutorialUiSample::Delta { changes } = &keyframe.sample {
@@ -2955,10 +3041,10 @@ pub fn tutorial_slice(def: &TutorialDefinition, from_ms: f64, to_ms: f64) -> Tut
     }
     if !forward {
         events.reverse();
-        document.reverse();
+        artifact.reverse();
         ui_changes.reverse();
     }
-    TutorialSlice { forward, events, document, ui_changes }
+    TutorialSlice { forward, events, artifact, ui_changes }
 }
 //#endregion 🔖️TutorialEngine
 //#endregion 🔖️Tutorial
@@ -4102,8 +4188,6 @@ pub struct ContributedInferenceMetadata {
     pub artifact_kind: String,
     pub artifact_schema: String,
     pub artifact_schema_version: u32,
-    pub document_schema: String,
-    pub document_schema_version: u32,
     pub inference_schema: String,
     pub inference_schema_version: u32,
     pub algorithm_version: u32,
@@ -4251,7 +4335,7 @@ pub async fn decode_surface_app_choice(value: &str) -> Result<SurfaceAppChoice, 
 }
 
 /// 🗂️ Every artifact-kind choice for the given `roles`: every app across `manifests` whose `role` is
-/// in `roles` and whose `io.document_schema` is non-empty contributes one choice per dialect
+/// in `roles` and whose `io.artifact_schema` is non-empty contributes one choice per dialect
 /// coordinate. Deduped by dialect coordinate (first manifest/app wins — callers pass owner manifests
 /// first so the owner's label wins over a later contributor's), sorted by coordinate for determinism
 /// — the pure resolver behind `ActionArgControl::ArtifactKind`.
@@ -4259,10 +4343,10 @@ pub async fn artifact_kind_choices(manifests: &[PluginManifest], roles: &[AppRol
     let mut by_coordinate: BTreeMap<String, ArtifactKindChoice> = BTreeMap::new();
     for manifest in manifests {
         for app in &manifest.apps {
-            if !roles.contains(&app.role) || app.io.document_schema.is_empty() {
+            if !roles.contains(&app.role) || app.io.artifact_schema.is_empty() {
                 continue;
             }
-            by_coordinate.entry(app.dialect.to_coordinate()).or_insert_with(|| ArtifactKindChoice { kind_id: app.dialect.artifact_kind.clone(), schema: app.io.document_schema.clone(), dialect: app.dialect.clone(), label: app.label.clone() });
+            by_coordinate.entry(app.dialect.to_coordinate()).or_insert_with(|| ArtifactKindChoice { kind_id: app.dialect.artifact_kind.clone(), schema: app.io.artifact_schema.clone(), dialect: app.dialect.clone(), label: app.label.clone() });
         }
     }
     by_coordinate.into_values().collect()
@@ -4861,7 +4945,7 @@ pub struct DescriptorEntry {
 /// 🗂️ One file-format kind an app declares it can import and/or export — the typed shape for
 /// `ContributionSet.file_types` (`📓️design-abi.md` §3), grounded in `AppIo.export_formats`/
 /// `import_formats` (currently flat `Vec<String>` scaffolding on that type) paired with the app's
-/// own `document_media_type`, flattened to one row per format kind across every app the package
+/// own `artifact_media_type`, flattened to one row per format kind across every app the package
 /// declares.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
@@ -5031,7 +5115,7 @@ mod package_descriptor_value_codec_tests;
 // §3.1: what a package OFFERS to agents — distinct from `capability_requests` on
 // `PackageDescriptor` above (what a package NEEDS host permission for). Overloading one for the
 // other is exactly the mistake this design forbids: `capability_requests: Vec<kernel::
-// CapabilityRequest>` gates HOST PRIVILEGE (`documents.write`, `fs:*`, …) this package asks the
+// CapabilityRequest>` gates HOST PRIVILEGE (`artifacts.write`, `fs:*`, …) this package asks the
 // broker for; `AgentContributions` below is a curated ADVERTISEMENT of which of this package's own
 // already-declared capabilities (actions/commands, already fully described via `ActionSemantics`/
 // `CapabilityPolicy` — P3, `🔖️ActionSemantics` above) an agent may discover and invoke at all, and
@@ -5289,8 +5373,8 @@ pub struct ArtifactPresentation {
     pub component_kind: String,
 }
 
-/// 🔌️ An app's full media I/O surface — the document schema/type every app carries implicitly (see
-/// `document_in_port`/`document_out_port`) plus whatever additional workflow ports, catalog
+/// 🔌️ An app's full media I/O surface — the artifact schema/type every app carries implicitly (see
+/// `artifact_in_port`/`artifact_out_port`) plus whatever additional workflow ports, catalog
 /// export/import formats, and OS presentation it declares itself. Scaffolding for the typed manifest
 /// surface (`AppDefinition.io`); apps don't populate this yet — later waves migrate `media_inputs`/
 /// `media_outputs`/`artifact_kinds` onto it.
@@ -5299,9 +5383,9 @@ pub struct ArtifactPresentation {
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct AppIo {
-    pub document_schema: String,
-    pub document_media_type: MediaType,
-    /// 🔌️ App-specific ports only — the implicit document ports are auto-injected by `all_ports`.
+    pub artifact_schema: String,
+    pub artifact_media_type: MediaType,
+    /// 🔌️ App-specific ports only — the implicit artifact ports are auto-injected by `all_ports`.
     pub ports: Vec<MediaPortSpec>,
     pub export_formats: Vec<String>,
     pub import_formats: Vec<String>,
@@ -5309,29 +5393,29 @@ pub struct AppIo {
 }
 
 impl AppIo {
-    /// 🔌️ The implicit `"document:in"` port every app accepts, keyed by `self.document_media_type`.
-    pub async fn document_in_port(&self) -> MediaPortSpec {
-        MediaPortSpec { id: "document:in".into(), label: "Document".into(), direction: MediaPortDirection::In, media_type: self.document_media_type, kind_id: None, required: true, multiplicity: PortMultiplicity::One }
+    /// 🔌️ The implicit `"artifact:in"` port every app accepts, keyed by `self.artifact_media_type`.
+    pub async fn artifact_in_port(&self) -> MediaPortSpec {
+        MediaPortSpec { id: "artifact:in".into(), label: "Artifact".into(), direction: MediaPortDirection::In, media_type: self.artifact_media_type, kind_id: None, required: true, multiplicity: PortMultiplicity::One }
     }
 
-    /// 🔌️ The implicit `"document:out"` port every app produces — see `document_in_port`.
-    pub async fn document_out_port(&self) -> MediaPortSpec {
-        MediaPortSpec { id: "document:out".into(), label: "Document".into(), direction: MediaPortDirection::Out, media_type: self.document_media_type, kind_id: None, required: true, multiplicity: PortMultiplicity::One }
+    /// 🔌️ The implicit `"artifact:out"` port every app produces — see `artifact_in_port`.
+    pub async fn artifact_out_port(&self) -> MediaPortSpec {
+        MediaPortSpec { id: "artifact:out".into(), label: "Artifact".into(), direction: MediaPortDirection::Out, media_type: self.artifact_media_type, kind_id: None, required: true, multiplicity: PortMultiplicity::One }
     }
 
-    /// 🔌️ The full port list, in stable order: the implicit document ports first, followed by every app-specific port declared in `self.ports`.
+    /// 🔌️ The full port list, in stable order: the implicit artifact ports first, followed by every app-specific port declared in `self.ports`.
     pub async fn all_ports(&self) -> Vec<MediaPortSpec> {
-        let mut ports = vec![self.document_in_port().await, self.document_out_port().await];
+        let mut ports = vec![self.artifact_in_port().await, self.artifact_out_port().await];
         ports.extend(self.ports.clone());
         ports
     }
 
-    /// 🏗️ Builds an `AppIo` from just its implicit document surface, with no extra ports/formats declared yet — chain `.with_ports(...)` to add app-specific ports.
-    pub async fn from_document(schema: impl Into<String>, media_type: MediaType, artifact: ArtifactPresentation) -> Self {
-        Self { document_schema: schema.into(), document_media_type: media_type, ports: Vec::new(), export_formats: Vec::new(), import_formats: Vec::new(), artifact }
+    /// 🏗️ Builds an `AppIo` from just its implicit artifact surface, with no extra ports/formats declared yet — chain `.with_ports(...)` to add app-specific ports.
+    pub async fn from_artifact(schema: impl Into<String>, media_type: MediaType, artifact: ArtifactPresentation) -> Self {
+        Self { artifact_schema: schema.into(), artifact_media_type: media_type, ports: Vec::new(), export_formats: Vec::new(), import_formats: Vec::new(), artifact }
     }
 
-    /// 🔌️ Attaches app-specific ports (beyond the implicit document ports) to this `AppIo`.
+    /// 🔌️ Attaches app-specific ports (beyond the implicit artifact ports) to this `AppIo`.
     pub async fn with_ports(mut self, ports: Vec<MediaPortSpec>) -> Self {
         self.ports = ports;
         self
@@ -5341,8 +5425,8 @@ impl AppIo {
 impl Default for AppIo {
     fn default() -> Self {
         Self {
-            document_schema: String::new(),
-            document_media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
+            artifact_schema: String::new(),
+            artifact_media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
             ports: Vec::new(),
             export_formats: Vec::new(),
             import_formats: Vec::new(),

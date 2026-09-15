@@ -501,7 +501,7 @@ pub fn plugin() -> Result<Plugin<StdioApps>, PluginAssemblyError> {
     builder = builder.activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_stdio_html::artifact_kind().id });
     builder = builder.execution(ExecutionMode::Isolated);
     builder = builder.requests(CapabilityRequest {
-        id: CapabilityId("documents.write".into()),
+        id: CapabilityId("artifacts.write".into()),
         scope: "plugin".into(),
         reason: "persist editor mutations back to whichever of stdio's 36 owned file-format artifacts (image/audio/video/text/data/document/geometry) is currently open".into(),
         optional: false,

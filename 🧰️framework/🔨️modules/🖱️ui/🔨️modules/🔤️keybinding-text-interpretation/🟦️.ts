@@ -13,7 +13,22 @@ export function parseKeybindingChords(keys: string): string[] {
     .filter(Boolean);
 }
 
-function isAppleUiPlatform(): boolean {
+/**
+ * @emoji 🍎 The ONE rule deciding what `mod` means on this machine — Command on Apple, Control
+ * everywhere else.
+ *
+ * Every spelling of a chord has to agree with the chord that actually FIRES, and there are three:
+ * the dispatcher (`parseOwnedHotkeyChords`), the visual badge ({@link formatKeybindingShortcut}) and
+ * the assistive-technology text ({@link ariaKeyshortcutsText}). While `aria-keyshortcuts` resolved
+ * `mod` to `Control` on its own, the navbar role buttons rendered `⌘️⌥️V` and published
+ * `aria-keyshortcuts="Control+Alt+V"` on the same button — a screen-reader user on macOS was told a
+ * chord that does nothing (`📓️role-switch-regression-2026-09-14.md` §6).
+ *
+ * `platform` is the caller's own reading (`navigator.platform`) where one is already in hand; with no
+ * argument it reads the live navigator, preferring `userAgentData.platform`.
+ **/
+export function keybindingPlatformUsesMetaV1(platform?: string): boolean {
+  if (platform !== undefined) return /mac|iphone|ipad|ipod/i.test(platform);
   if (typeof navigator === "undefined") return false;
   if ("userAgentData" in navigator && navigator.userAgentData && typeof navigator.userAgentData === "object" && "platform" in navigator.userAgentData) {
     return (navigator.userAgentData as { readonly platform?: string }).platform === "macOS";
@@ -21,11 +36,11 @@ function isAppleUiPlatform(): boolean {
   return /Mac|iPhone|iPod|iPad/i.test(navigator.platform);
 }
 
-/** @emoji ⌨️ Formats the first chord of a keybinding for inline or menu shortcut labels. */
-export function formatKeybindingShortcut(keys: string): string {
+/** @emoji ⌨️ Formats the first chord of a keybinding for inline or menu shortcut labels. `platform` is the caller's own reading where one is in hand, so the badge and {@link ariaKeyshortcutsText} can be proved to name the same physical key off a real machine. */
+export function formatKeybindingShortcut(keys: string, platform?: string): string {
   const chord = parseKeybindingChords(keys)[0];
   if (!chord) return "";
-  const apple = isAppleUiPlatform();
+  const apple = keybindingPlatformUsesMetaV1(platform);
   const glyph = (part: string): string => {
     switch (part) {
       case "mod":
@@ -47,12 +62,16 @@ export function formatKeybindingShortcut(keys: string): string {
       case "escape":
         return apple ? "⎋️" : "Esc";
       case "up":
+      case "arrowup":
         return "↑";
       case "down":
+      case "arrowdown":
         return "↓";
       case "left":
+      case "arrowleft":
         return "←";
       case "right":
+      case "arrowright":
         return "→";
       default:
         if (part.length === 1) return part.toUpperCase();
@@ -65,7 +84,6 @@ export function formatKeybindingShortcut(keys: string): string {
 }
 
 const ARIA_MODIFIER_NAMES: Readonly<Record<string, string>> = {
-  mod: "Control",
   ctrl: "Control",
   control: "Control",
   meta: "Meta",
@@ -92,7 +110,8 @@ const ARIA_NAMED_KEYS: Readonly<Record<string, string>> = {
   tab: "Tab",
 };
 
-function ariaKeyToken(token: string): string {
+function ariaKeyToken(token: string, usesMeta: boolean): string {
+  if (token === "mod") return usesMeta ? "Meta" : "Control";
   const modifier = ARIA_MODIFIER_NAMES[token];
   if (modifier !== undefined) return modifier;
   if (token.length === 1) return token.toUpperCase();
@@ -101,18 +120,19 @@ function ariaKeyToken(token: string): string {
 
 /** @emoji ⌨️ Rewrites this codebase's chord grammar (`"mod+alt+arrowright,ctrl+k"` — comma-separated
  * alternatives, lowercase tokens) into the `aria-keyshortcuts` grammar: space-separated chords,
- * `+`-joined, DOM `KeyboardEvent.key` spelling with capitalized modifier names. `mod` resolves to
- * `Control` because `aria-keyshortcuts` names one concrete chord that assistive tech reads verbatim —
- * {@link formatKeybindingShortcut} stays the platform-aware VISUAL spelling. */
-export function ariaKeyshortcutsText(keys: string | undefined): string | undefined {
+ * `+`-joined, DOM `KeyboardEvent.key` spelling with capitalized modifier names. `mod` is resolved by
+ * {@link keybindingPlatformUsesMetaV1}, the same predicate the dispatcher and the visual badge use,
+ * so the chord a screen reader announces is the chord that fires. */
+export function ariaKeyshortcutsText(keys: string | undefined, platform?: string): string | undefined {
   if (!keys) return undefined;
+  const usesMeta = keybindingPlatformUsesMetaV1(platform);
   const chords = parseKeybindingChords(keys)
     .map((chord) =>
       chord
         .split("+")
         .map((token) => token.trim())
         .filter(Boolean)
-        .map(ariaKeyToken)
+        .map((token) => ariaKeyToken(token, usesMeta))
         .join("+"),
     )
     .filter(Boolean);

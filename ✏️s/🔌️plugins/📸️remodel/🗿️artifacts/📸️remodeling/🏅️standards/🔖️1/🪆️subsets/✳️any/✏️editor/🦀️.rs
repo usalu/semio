@@ -121,8 +121,8 @@ pub fn ui_node_list(values: impl IntoIterator<Item = semio_framework_plugin::UiA
 /// the artifact side.
 pub fn remodeling_io() -> AppIo {
     AppIo {
-        document_schema: "remodeling.scene".into(),
-        document_media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh },
+        artifact_schema: "remodeling.scene".into(),
+        artifact_media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh },
         ports: vec![remodeling_photos_in_port(), remodeling_mesh_out_port()],
         export_formats: vec![],
         import_formats: vec![],
@@ -931,7 +931,7 @@ impl ArtifactEditor for RemodelingPlayApp {
         owner: EditorApp<RemodelingPlayApp>,
         owner_file: "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.remodel.remodeling@1/*#editor",
-        document_schema: "remodeling.scene",
+        artifact_schema: "remodeling.scene",
         factory: "RemodelingRetainedCommandJobFactory",
         factory_type: RemodelingRetainedCommandJobFactory,
         contract: ToolExecutionContract::bounded_first_step(65_536, 4_096, 1, 262_144, 7_500),
@@ -1030,8 +1030,8 @@ impl ArtifactEditor for RemodelingPlayApp {
                 let bytes = MeshExporter::export(&GlbExporter, &mesh).map_err(|error| MediaError::Payload(port.to_string(), error))?;
                 Ok(Media { media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh }, payload: MediaPayload::Structured { schema: "3d.mesh".into(), json: base64_codec::base64_standard_encode(bytes) } })
             }
-            "document:out" => {
-                let media_type = Self::io().map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.document_media_type);
+            "artifact:out" => {
+                let media_type = Self::io().map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.artifact_media_type);
                 let bytes = doc.snapshot.encode_pack();
                 Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
             }

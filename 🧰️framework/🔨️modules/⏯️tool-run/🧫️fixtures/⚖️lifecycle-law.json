@@ -1959,13 +1959,13 @@
     },
     {
       "key": "rebasingStep",
-      "en": "Document changed, re-applying provisional result",
-      "de": "Dokument geändert, vorläufiges Ergebnis wird neu angewendet"
+      "en": "Artifact changed, re-applying provisional result",
+      "de": "Artefakt geändert, vorläufiges Ergebnis wird neu angewendet"
     },
     {
       "key": "conflictStep",
-      "en": "{0} provisional changes conflict with the current document",
-      "de": "{0} vorläufige Änderungen stehen im Konflikt mit dem aktuellen Dokument"
+      "en": "{0} provisional changes conflict with the current artifact",
+      "de": "{0} vorläufige Änderungen stehen im Konflikt mit dem aktuellen Artefakt"
     },
     {
       "key": "traceTruncatedStep",
@@ -2003,11 +2003,11 @@
   ],
   "templates": [
     {
-      "template": "{0} provisional changes conflict with the current document",
+      "template": "{0} provisional changes conflict with the current artifact",
       "values": {
         "0": "3"
       },
-      "expected": "3 provisional changes conflict with the current document"
+      "expected": "3 provisional changes conflict with the current artifact"
     },
     {
       "template": "{stage} ({i}/{n}): {completed} of {total} {unit} ({pct} %)",
@@ -2204,7 +2204,7 @@
     ]
   },
   "settingsPointers": {
-    "document": {
+    "artifact": {
       "fillCount": 12,
       "weights": {
         "crate": 0.5,

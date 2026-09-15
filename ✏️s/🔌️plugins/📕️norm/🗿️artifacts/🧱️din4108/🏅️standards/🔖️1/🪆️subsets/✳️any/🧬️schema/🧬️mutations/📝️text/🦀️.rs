@@ -7,9 +7,9 @@
 //! duplicate that losslessly (same rationale ISO 16757's sibling facet documents for its
 //! structured-only fields, applied uniformly here given this facet's field-count).
 
-pub use crate::document_schema::mutations::Din4108Mutation;
+pub use crate::artifact_schema::mutations::Din4108Mutation;
 
-use crate::document_schema::mutations::{
+use crate::artifact_schema::mutations::{
     change_airtightness_class::ChangeAirtightnessClass, change_airtightness_n50::ChangeAirtightnessN50, change_application_type::ChangeApplicationType, change_bb2_details_conform::ChangeBb2DetailsConform, change_catalog_id::ChangeCatalogId,
     change_category::ChangeCategory, change_climate::ChangeClimate, change_declared_application_class::ChangeDeclaredApplicationClass, change_envelope_area_m2::ChangeEnvelopeAreaM2, change_irradiance_w_m2::ChangeIrradianceWM2,
     change_layer_lambda::ChangeLayerLambda, change_layer_thickness::ChangeLayerThickness, change_material_id::ChangeMaterialId, change_moisture_mu_exterior::ChangeMoistureMuExterior, change_moisture_mu_interior::ChangeMoistureMuInterior,

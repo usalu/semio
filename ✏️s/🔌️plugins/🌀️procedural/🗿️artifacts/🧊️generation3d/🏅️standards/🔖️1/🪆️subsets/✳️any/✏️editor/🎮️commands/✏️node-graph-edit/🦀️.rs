@@ -2,9 +2,9 @@
 
 use crate::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
 use crate::standards::v1::subsets::any::schema::mutations::text::Generation3dMutation;
-use crate::standards::v1::subsets::any::schema::{commit_fixture, with_host};
+use crate::standards::v1::subsets::any::schema::{commit_host_document, with_host};
 use crate::Generation3dSnapshot;
-use semio_framework_artifact_flow_flow::FlowFixture;
+use semio_framework_artifact_flow_flow::FlowHostDocument;
 use semio_framework_os_flow::FlowEvalSession;
 use semio_framework_plugin::{app::InteractionView, ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -21,7 +21,7 @@ fn parse_sub_operations(text: &str) -> Vec<dsl::json::Value> {
     dsl::json::parse(text).ok().and_then(|value| value.as_array().cloned()).unwrap_or_default()
 }
 
-/// 🧾️ The five sub-operations the node-graph surfaces actually dispatch, and who dispatches each:
+/// 🧾️ The six sub-operations the node-graph surfaces actually dispatch, and who dispatches each:
 /// `setFixture` (the wasm flow canvas, after every committed gesture — `🕸️NodeGraph/🟦️.tsx`'s
 /// `onFixtureChanged`), `move` / `connect` (the SSR `Diagram` fallback's `onNodeDragStop` /
 /// `onConnect`), `disconnect` (a cut wire), and `deleteSelection` (the row/keyboard delete path).
@@ -29,13 +29,22 @@ fn parse_sub_operations(text: &str) -> Vec<dsl::json::Value> {
 /// wire cut were silent no-ops that still spent a whole retained command
 /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, gaps #3/#10). `move` is also the ONE home of the node
 /// move verb now — the redundant `moveMediaNode` command it duplicated is gone.
-fn apply_operations(fixture: &FlowFixture, sub_operations: &[dsl::json::Value], selected: &[String]) -> Emit<Generation3dMutation, Generation3dConfigMutation> {
+///
+/// `setSlider` is the inline slider overlay's value, LIVE while the user drags. It arrives once per
+/// coalesced round trip rather than once per pointer move (`🕸️NodeGraph/🟦️.tsx`'s
+/// `useGraphSliderLanes`), carries the `gesture` identity of the press it belongs to, and the last
+/// one of a press carries `commit`. Its whole press folds into ONE undoable edit: every tick emits
+/// under the gesture's coalesce key, so the history shows the drag, not its 60 samples
+/// (`📓️slider-preview-update-2026-09-15.md`). Before this, the overlay dispatched an undeclared
+/// `setGraphParameter` action that the shell dropped, so the document — and the preview — never moved
+/// at all.
+fn apply_operations(fixture: &FlowHostDocument, sub_operations: &[dsl::json::Value], selected: &[String]) -> Emit<Generation3dMutation, Generation3dConfigMutation> {
     let operations = with_host(fixture, |host| {
         for operation in sub_operations {
             match operation.get("operation").and_then(|value| value.as_str()).unwrap_or("") {
-                "setFixture" => {
-                    if let Some(new_fixture) = operation.get("fixtureJson").and_then(|value| value.as_str()).and_then(|json| semio_framework_os_flow::os_pack::json::from_json_str::<FlowFixture>(json).ok()) {
-                        host.replace_fixture(new_fixture);
+                "setHostDocument" => {
+                    if let Some(new_fixture) = operation.get("hostDocumentJson").and_then(|value| value.as_str()).and_then(|json| semio_framework_os_flow::os_pack::json::from_json_str::<FlowHostDocument>(json).ok()) {
+                        host.replace_host_document(new_fixture);
                     }
                 }
                 "deleteSelection" => {
@@ -65,12 +74,40 @@ fn apply_operations(fixture: &FlowFixture, sub_operations: &[dsl::json::Value], 
                         let _ = host.move_widget(node_id, x, y);
                     }
                 }
+                "setSlider" => {
+                    let widget_id = operation.get("widgetId").and_then(|value| value.as_str());
+                    let value = operation.get("value").and_then(dsl::json::Value::as_f64);
+                    if let (Some(widget_id), Some(value)) = (widget_id, value) {
+                        host.set_slider_value(widget_id, value);
+                    }
+                }
                 _ => {}
             }
         }
-        commit_fixture(fixture, &host.fixture)
+        commit_host_document(fixture, &host.host_document)
     });
-    Emit { artifact_mutations: operations, ..Default::default() }
+    Emit { artifact_mutations: operations, coalesce_key: gesture_coalesce_key(sub_operations), ..Default::default() }
+}
+
+/// 🎚️ The coalesce key one continuous gesture's edits fold under, or `None` for a discrete edit.
+///
+/// A key is minted only when EVERY sub-operation of this dispatch belongs to the SAME press — the
+/// releasing tick included, so a whole drag is one undo step. A mixed batch, or a `setSlider` with no
+/// press identity, is a described edit of its own. `AmendLast` keys on the string alone, so a press
+/// identified only by its widget would swallow every later press of that widget into one undo step.
+fn gesture_coalesce_key(sub_operations: &[dsl::json::Value]) -> Option<String> {
+    let mut gesture: Option<&str> = None;
+    for operation in sub_operations {
+        if operation.get("operation").and_then(|value| value.as_str()) != Some("setSlider") {
+            return None;
+        }
+        let key = operation.get("gesture").and_then(|value| value.as_str())?;
+        if gesture.is_some_and(|current| current != key) {
+            return None;
+        }
+        gesture = Some(key);
+    }
+    gesture.map(|key| format!("graph-slider:{key}"))
 }
 
 /// 🕹️ `app_commands!`'s generated `dispatch(doc, cfg, ctx)` is framework-fixed at this exact 4-arg
@@ -80,7 +117,7 @@ fn apply_operations(fixture: &FlowFixture, sub_operations: &[dsl::json::Value], 
 /// the selection as empty.
 pub fn handle(payload: &NodeGraphEdit, doc: &ArtifactView<'_, Generation3dSnapshot>, _cfg: &ConfigView<'_, Generation3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation>, Fault> {
     let sub_operations = parse_sub_operations(&payload.operations_json);
-    Ok(apply_operations(&doc.snapshot.fixture, &sub_operations, &[]))
+    Ok(apply_operations(&doc.snapshot.host_document, &sub_operations, &[]))
 }
 
 /// 🕹️ `"deleteSelection"` reads the `graph` domain's current selection instead of a deleted config
@@ -94,7 +131,7 @@ pub fn apply(
     _session: &mut FlowEvalSession,
 ) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation>, Fault> {
     let sub_operations = parse_sub_operations(&payload.operations_json);
-    Ok(apply_operations(&doc.snapshot.fixture, &sub_operations, &interaction.selection("graph").ids))
+    Ok(apply_operations(&doc.snapshot.host_document, &sub_operations, &interaction.selection("graph").ids))
 }
 
 /// 🕹️ Retained-command-job entry point (`generation3d_retained_reduce`, editor `🦀️.rs`) — same real-selection
@@ -103,7 +140,7 @@ pub fn apply(
 /// `protocol::InteractionState` by the caller.
 pub(crate) fn apply_selected(payload: &NodeGraphEdit, doc: &ArtifactView<'_, Generation3dSnapshot>, selected: &[String]) -> Emit<Generation3dMutation, Generation3dConfigMutation> {
     let sub_operations = parse_sub_operations(&payload.operations_json);
-    apply_operations(&doc.snapshot.fixture, &sub_operations, selected)
+    apply_operations(&doc.snapshot.host_document, &sub_operations, selected)
 }
 
 //#region 🧪️Tests

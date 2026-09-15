@@ -57,25 +57,28 @@ export const SEGMENTED_DOWNLOAD_CHUNK_BYTES = 4096;
 export const SHARD_RUNTIME_DIAGNOSTICS_KEY = "SEMIO_RUNTIME_DIAGNOSTICS";
 export const SHARD_WORKER_DIAGNOSTICS_PARAM = "diagnostics";
 
-/** 🤫️ Wall-clock budget the generated worker may spend re-polling a guest that answered `more-work`
- * while carrying NOTHING, before it crosses back anyway.
+/** 🚚️ What ONE whole reactor turn costs on the renderer this drive was measured against, in
+ * milliseconds — the `worker.guest` mean of `🐍️react-hop-cost-probe.mjs` over a 10-step run of the
+ * procedural 3d React door (12.9 ms over 1 154 crossings and 13.2 ms over 1 214, 2026-09-15). It is a
+ * MEASUREMENT carried as a declaration, because the drive's bounds are DERIVED from it rather than
+ * chosen: `SHARD_TURN_DRIVE_STEPS = floor(grant wall / this)`.
  *
- * Its owner is the reactor's own executor hold — `⚛️reactor/🔄️turn/🦀️.rs`'s
- * `run_until_deadline(64, 256 KiB, now + 8 ms)`: the guest already promises to hand control back
- * within that slice, so a worker that re-enters it for at most the same 8 ms adds no new latency
- * class, and one message can still be waiting behind it for at most one hold.
+ * 🐛️ It replaces a wall budget of `SHARD_TURN_SILENT_HOLD_MS = 8`, which was the reactor's own
+ * executor slice (`⚛️reactor/🔄️turn/🦀️.rs`'s `run_until_deadline(64, 256 KiB, now + 8 ms)`) borrowed
+ * as the worker's drive budget. A whole turn costs more than the reactor's slice of it, so an 8 ms
+ * wall admitted `floor(8 / 13) = 0` further turns and the hold degenerated into "one extra poll" —
+ * named but not taken by `📓️reactor-reconcile-spin-2026-09-14.md` §7 item 2. The reactor's slice is
+ * still the reactor's: `REACTOR_TURN_EXECUTOR_HOLD_MS` is unchanged and unrelated to this number.
  *
- * 🐛️ The reason it exists: in the browser the host round trip IS the guest's pump — there is no
- * self-driving loop on the far side of the worker boundary — so every `more-work` answer that
- * published nothing cost a full POST + poll + structured clone + main-thread pickup. Measured on the
- * procedural 3d React door, 2026-09-14: **89 of 111 crossings per `flowEvalTick` hop posted no events
- * and returned no patch**, carrying 80 % of the worker's busy time
- * (`📓️reactor-reconcile-spin-2026-09-14.md` §2). Held equal to {@link driveShardTurnSilentHoldV1}'s
- * default by the shard-worker suite, which reads this literal straight out of this file. */
-export const SHARD_TURN_SILENT_HOLD_MS = 8;
-/** 🤫️ Hard cap on re-polls inside one {@link SHARD_TURN_SILENT_HOLD_MS} hold, so a guest whose turn
- * costs microseconds cannot spin the worker's whole message queue behind an unbounded loop. */
-export const SHARD_TURN_SILENT_HOLD_POLLS = 512;
+ * Held equal to `⚛️reactor/🧫️fixtures/🚚️more-work-drive.json`'s `measuredGuestTurnCostMs` — and
+ * through it to the reactor's own `MEASURED_GUEST_TURN_COST_MS` — by the more-work-drive suite, which
+ * reads this literal straight out of this file. Declared rather than imported for the same reason
+ * {@link SHARD_PROGRESS_HEARTBEAT_INTERVAL_MS} is. */
+export const SHARD_TURN_GUEST_COST_MS = 13;
+/** 🚚️ Hard cap on the drive's step ceiling however large a lane's granted wall gets, so a guest whose
+ * turns cost microseconds cannot park the worker's whole message queue behind one drive. It bounds
+ * the DERIVATION, it is not the derivation. */
+export const SHARD_TURN_DRIVE_STEP_CEILING = 512;
 
 export type PluginWebMaterializeContext = {
   readonly repoRoot: string;
@@ -161,17 +164,21 @@ export const stdin = {`
  * another actor's message be picked up and start in the meantime; nothing here blocks the worker's
  * event loop across actors.
  *
- * Heartbeats: posts `{kind:"heartbeat", turnSeq}` at the START of every request (before running any
- * guest code) AND at every STEP BOUNDARY — the instant a `turn`/`stepJob` hands control back, before
- * the reply is posted (`phase: "turn-step"`). The start beat alone proves only that the request was
- * received; the step beat is what proves a guest running a BUDGETED job is alive, because such a
- * guest blocks the worker's event loop (and the while-busy ticker with it) for the whole of each
- * step and is otherwise indistinguishable from a dead worker
- * (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). See `ShardClient`'s watchdog, which times a turn out
- * at `2×wallMs` and, after three such windows, terminates and rebuilds this worker. Also mirrors the same `turnSeq` into the shared
- * `Atomics.store` heartbeat slot when `attachHeartbeatSab` provided one (COOP/COEP already served ⇒
- * `SharedArrayBuffer` available) — purely a faster read path for `ShardClient`; the `postMessage`
- * heartbeat above is unconditional, so correctness never depends on the SAB path being available.
+ * Heartbeats: a beat is taken at the START of every request (before running any guest code) and at
+ * every STEP BOUNDARY — the instant a `turn`/`stepJob` hands control back. The step beat is what
+ * proves a guest running a BUDGETED job is alive, because such a guest blocks the worker's event loop
+ * (and the while-busy ticker with it) for the whole of each step and is otherwise indistinguishable
+ * from a dead worker (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). See `ShardClient`'s watchdog, which
+ * times a turn out at `2×wallMs` and, after three such windows, terminates and rebuilds this worker.
+ *
+ * Neither of those two beats costs a `postMessage` of its own any more: they RIDE the crossing that is
+ * already happening, as the reply's `beat` field, and `ShardClient.handleMessage` folds them into the
+ * same `recordHeartbeat` a dedicated `{kind:"heartbeat"}` message reaches. One message carries
+ * liveness. A beat with NO crossing to ride still posts — `loadActor`'s three await boundaries and
+ * the while-busy `progress` ticker — because there is nothing else to carry it. Every beat also
+ * mirrors its `turnSeq` into the shared `Atomics.store` heartbeat slot when `attachHeartbeatSab`
+ * provided one (COOP/COEP already served ⇒ `SharedArrayBuffer` available) — purely a faster read path;
+ * the messages above are unconditional, so correctness never depends on the SAB path.
  *
  * 🚧 See `🧵️shard-client.ts`'s header doc for the one open gap this generated worker inherits: `turn`
  * events/results here are the interim JSON `ShardEventEnvelope[]`/plain-object shape, not the real
@@ -283,13 +290,19 @@ const SEGMENTED_DOWNLOAD_CHUNK_BYTES = ${SEGMENTED_DOWNLOAD_CHUNK_BYTES};
 // (\`🎭️actor/📮️shard-client/🧫️fixtures/🔣️.json\`'s \`policy\`, mirrored by \`SHARD_LIVENESS_POLICY\`) the
 // host watchdog reads — never a literal of this worker's own.
 const PROGRESS_HEARTBEAT_INTERVAL_MS = ${SHARD_PROGRESS_HEARTBEAT_INTERVAL_MS};
-// 🤫️ The silent-turn hold, interpolated from \`SHARD_TURN_SILENT_HOLD_MS\`/\`SHARD_TURN_SILENT_HOLD_POLLS\`
-// — the reactor's own 8 ms executor hold, re-entered here rather than paid for as a host round trip.
-// Twin of \`🎭️actor/🖼️wire-turn/🟦️.ts\`'s \`driveShardTurnSilentHoldV1\`, which owns the law.
-const SILENT_HOLD_MS = ${SHARD_TURN_SILENT_HOLD_MS};
-const SILENT_HOLD_POLLS = ${SHARD_TURN_SILENT_HOLD_POLLS};
+// 🚚️ The worker-owned MoreWork drive, interpolated from \`SHARD_TURN_GUEST_COST_MS\`/
+// \`SHARD_TURN_DRIVE_STEP_CEILING\` — the MEASURED cost of one whole guest turn, which is what the
+// drive's step ceiling is derived FROM. Twin of \`🎭️actor/🖼️wire-turn/🟦️.ts\`'s
+// \`driveShardTurnMoreWorkV1\`/\`shardTurnDriveStepsV1\`, which own the law.
+const GUEST_TURN_COST_MS = ${SHARD_TURN_GUEST_COST_MS};
+const DRIVE_STEP_CEILING = ${SHARD_TURN_DRIVE_STEP_CEILING};
 let progressHandle = null;
 let inFlightRequests = 0;
+// 📬️ Every message the host posts bumps this, and a drive that started at one value crosses back the
+// moment it sees another — that is the whole "a host-owned input interrupts the drive" contract. It
+// counts messages rather than naming kinds on purpose: a kind this worker has never heard of is still
+// the host speaking, and the drive must never be the reason it waits.
+let hostInputSeq = 0;
 
 // 📨️ terra-web-shardframe: ShardFrame::Grant/Envelope support — see this file's own header doc.
 const MAINTENANCE_LANE_DEFAULT_BUDGET = { fuel: 80000000, wallMs: 200, memoryBytes: 256 * 1024 * 1024, uiNodes: 4000, mailboxLen: 1024, maxEffects: 512, maxPatchBytes: 2097152 };
@@ -323,14 +336,27 @@ function interpretFrame(frame, actorId) {
   }
 }
 
-// 🫀️ ONE beat door for every liveness signal this worker emits — \`phase\` is \`undefined\` for the
-// unconditional start-of-request beat, an await-boundary name inside \`loadActor\`, or \`"progress"\`
-// from the while-busy ticker below. \`ShardClient\`'s watchdog treats them identically; the phase is
-// there so a boot stall can be read off the console at the exact boundary it happened on.
-function heartbeat(phase) {
+// 🫀️ ONE beat door for every liveness signal this worker emits. It advances the sequence and mirrors
+// it into the shared \`Atomics\` slot, and it RETURNS the beat instead of posting it — because a beat
+// taken at a boundary that is about to cross anyway rides the crossing (\`reply\`/\`replyError\` carry
+// \`beat\`), and a message that carries liveness is one message, not two.
+//
+// 🐛️ It used to post unconditionally, so every turn crossing cost THREE main-thread messages: a
+// start-of-request \`heartbeat\`, a \`turn-step\` \`heartbeat\`, and the \`result\` itself — on a main
+// thread the hop measurement shows is the binding constraint
+// (\`📓️reactor-reconcile-spin-2026-09-14.md\` §7 item 3, which named this and left it). Neither posted
+// beat told the host anything the reply does not: \`ShardClient.noteLiveness\` treats EVERY inbound
+// message as proof of life, and the request's own start instant already counts as proven-alive in
+// \`evaluateShardLiveness\`. What is NOT foldable is a beat with no crossing to ride — \`loadActor\`'s
+// await boundaries and the while-busy ticker — so those still call \`postBeat\`.
+function beat(phase) {
   turnSeq += 1;
-  self.postMessage({ kind: "heartbeat", turnSeq, phase });
   if (heartbeatSabView) Atomics.store(heartbeatSabView, heartbeatShardIndex, turnSeq);
+  return { turnSeq, phase: phase === undefined ? null : phase };
+}
+
+function postBeat(phase) {
+  self.postMessage({ kind: "heartbeat", ...beat(phase) });
 }
 
 // 🫀️ The whole busy-versus-dead discriminator: while ANY request is outstanding, an interval beats
@@ -342,7 +368,7 @@ function heartbeat(phase) {
 function beginRequest() {
   inFlightRequests += 1;
   if (progressHandle !== null || typeof setInterval !== "function") return;
-  progressHandle = setInterval(() => heartbeat("progress"), PROGRESS_HEARTBEAT_INTERVAL_MS);
+  progressHandle = setInterval(() => postBeat("progress"), PROGRESS_HEARTBEAT_INTERVAL_MS);
 }
 
 function endRequest() {
@@ -361,7 +387,7 @@ const hopEpochNow = () => (typeof performance === "object" && typeof performance
 
 // 🏷️ The ONE spelling of a turn status. jco lifts \`more-work\` kebab-cased, the host's own fixtures
 // spell it \`moreWork\`, and \`🖼️wire-turn/🟦️.ts\`'s \`wireTurnStatusTag\` reconciles both — this is its
-// verbatim twin, because a hold that misreads the status would hand back a turn nobody asked for.
+// verbatim twin, because a drive that misreads the status would hand back a turn nobody asked for.
 function shardTurnStatusTag(result) {
   const tag = result && typeof result === "object" && result.status && typeof result.status === "object" ? result.status.tag : undefined;
   return typeof tag === "string" ? tag.replace(/([a-z])([A-Z])/g, "$1-$2").toLowerCase() : "";
@@ -370,7 +396,7 @@ function shardTurnStatusTag(result) {
 // 🤫️ Whether ONE reactor turn result carried nothing the host could act on: no ui patch, no effect,
 // no presence, no wake, neither receipt, and both ingress lanes idle. Every field of \`turn-result\`
 // (\`🔌️plugin/🧬️schema/📜️.wit\`) is named here on purpose — a carrier this predicate forgot would be
-// DROPPED by the hold below, so the list is exhaustive by construction and asserted as such by
+// DROPPED by the drive below, so the list is exhaustive by construction and asserted as such by
 // \`🎭️actor/🖼️wire-turn/🟦️.ts\`'s law. \`fuelUsed\` is the one field with no host reader.
 function shardTurnCarriesNothing(result) {
   if (!result || typeof result !== "object") return false;
@@ -385,10 +411,43 @@ function shardTurnCarriesNothing(result) {
   return true;
 }
 
-function reply(requestId, value, timings) {
-  if (!timings) { self.postMessage({ kind: "result", requestId, ok: true, value }); return; }
+// 🚚️ The drive's two bounds, DERIVED from the wall the host granted for this crossing and what one
+// guest turn measures — never a constant of this worker's own. Verbatim twins of
+// \`🎭️actor/🖼️wire-turn/🟦️.ts\`'s \`shardTurnDriveStepsV1\`/\`shardTurnDriveBudgetMsV1\`.
+function shardTurnDriveSteps(grantWallMs, guestTurnCostMs) {
+  if (!Number.isFinite(grantWallMs) || !Number.isFinite(guestTurnCostMs) || guestTurnCostMs <= 0) return 1;
+  return Math.max(1, Math.min(DRIVE_STEP_CEILING, Math.floor(grantWallMs / guestTurnCostMs)));
+}
+
+function shardTurnDriveBudgetMs(grantWallMs, guestTurnCostMs) {
+  if (!Number.isFinite(grantWallMs) || grantWallMs <= 0) return Math.max(0, guestTurnCostMs);
+  return Math.max(grantWallMs, guestTurnCostMs);
+}
+
+// 📬️ ONE macrotask, so a message the host already posted is DELIVERED before the drive takes its next
+// step. Without it \`hostInputSeq\` could never move mid-drive: an \`await\` settles on the microtask
+// queue, which never drains the message queue, so the drive would be uninterruptible by construction.
+// A \`MessageChannel\` task and not \`setTimeout(0)\`, for the reason the host's own
+// \`hostContinuations\` gives: a timer chain is throttled to one tick per second in a hidden tab (once
+// per minute under intensive throttling) and a channel message is a macrotask visibility never
+// throttles. Waiters are a QUEUE because two actors may be driving this worker at the same time.
+const driveYieldChannel = typeof MessageChannel === "function" ? new MessageChannel() : null;
+const driveYieldWaiters = [];
+if (driveYieldChannel) driveYieldChannel.port1.onmessage = () => { const resolve = driveYieldWaiters.shift(); if (resolve) resolve(); };
+
+function driveYield() {
+  if (!driveYieldChannel) return Promise.resolve();
+  return new Promise((resolve) => { driveYieldWaiters.push(resolve); driveYieldChannel.port2.postMessage(0); });
+}
+
+// 🫀️ EVERY reply carries a beat — an answered request is a proven-alive worker, and the caller's own
+// \`ShardClient\` folds it into exactly the state a dedicated \`heartbeat\` message would have reached.
+// A boundary that has a name of its own (\`turn-step\`) passes it; everything else beats unphased.
+function reply(requestId, value, timings, carriedBeat) {
+  const carried = carriedBeat === undefined ? beat() : carriedBeat;
+  if (!timings) { self.postMessage({ kind: "result", requestId, ok: true, value, beat: carried }); return; }
   timings.repliedAtEpochMs = hopEpochNow();
-  self.postMessage({ kind: "result", requestId, ok: true, value, timings });
+  self.postMessage({ kind: "result", requestId, ok: true, value, timings, beat: carried });
   // ⏱️ Written AFTER the post so the host can separate the two halves of the reply: the structured
   // CLONE this call performs synchronously (\`clonedAtEpochMs\` − \`repliedAtEpochMs\`, mutated on the
   // object the clone already took a copy of, so the host reads it from the NEXT reply's carry) from
@@ -433,7 +492,7 @@ function replyError(requestId, error, frames, retryableLifecycle) {
   else if (error && typeof error === "object" && (typeof error.stack === "string" || typeof error.message === "string")) reason = String(error);
   else if (error && typeof error === "object") { try { reason = JSON.stringify(error); } catch { reason = String(error); } }
   else reason = String(error);
-  self.postMessage({ kind: "result", requestId, ok: false, error: reason + detail, stack, type, framesBytes, retryableLifecycle: retryableLifecycle === true });
+  self.postMessage({ kind: "result", requestId, ok: false, error: reason + detail, stack, type, framesBytes, retryableLifecycle: retryableLifecycle === true, beat: beat("fault") });
 }
 
 // 🩺️ Hands every component this worker hosts the guest-side diagnostics switch through
@@ -479,14 +538,14 @@ async function loadActor(actorId, activationGeneration, moduleUrl) {
     // actually sat; the ticker above is what carries liveness THROUGH each of them.
     faultModuleUrl = moduleUrl;
     faultPhase = "load-bridge";
-    heartbeat("module-fetch");
+    postBeat("module-fetch");
     await armGuestRuntimeDiagnostics();
     const bridge = await import(/* @vite-ignore */ moduleUrl);
     faultPhase = "instantiate";
-    heartbeat("module-ready");
+    postBeat("module-ready");
     const api = await bridge.createActorApi(actorId, activationGeneration);
     faultPhase = "actor-ready";
-    heartbeat("actor-ready");
+    postBeat("actor-ready");
     const entry = { api, moduleUrl, activationGeneration, pendingAssets: [] };
     actors.set(actorId, entry);
     return entry;
@@ -557,6 +616,10 @@ self.addEventListener("message", async (event) => {
   // \`Performance\` domain answers nothing on a worker target —
   // \`📓️react-hop-latency-2026-09-14.md\` §1). Twin vocabulary: \`semio.hop.worker.*\`.
   const receivedAtEpochMs = hopEpochNow();
+  // 📬️ The host said something. A drive in flight reads this counter every step and crosses back the
+  // moment it moves, so an ingress message, a cancel or a view-state change never waits behind a
+  // guest the worker is pumping. Bumped BEFORE any dispatch, for every kind without exception.
+  hostInputSeq += 1;
   const msg = event.data ?? {};
   const { kind } = msg;
   if (kind === "attachHeartbeatSab") {
@@ -583,7 +646,7 @@ self.addEventListener("message", async (event) => {
   const { requestId, actorId } = msg;
   if (!requestId || !actorId) return;
   const timings = { postedAtEpochMs: typeof msg.postedAtEpochMs === "number" ? msg.postedAtEpochMs : null, receivedAtEpochMs, guestEnteredAtEpochMs: null, guestLeftAtEpochMs: null, repliedAtEpochMs: null, previousReplyCloneMs: lastReplyCloneMs, events: Array.isArray(msg.events) ? msg.events.length : 0, eventKinds: Array.isArray(msg.events) ? [...new Set(msg.events.map((entry) => (entry && typeof entry.kind === "string" ? entry.kind : "?")))].slice(0, 4).join("+") : "", patches: 0, commandPageBytes: msg.commandPage && msg.commandPage.bytes ? msg.commandPage.bytes.byteLength ?? msg.commandPage.bytes.length ?? 0 : 0 };
-  heartbeat();
+  beat();
   beginRequest();
   faultPhase = kind;
   faultActorId = actorId;
@@ -615,39 +678,60 @@ self.addEventListener("message", async (event) => {
           const admitted = spliceInstanceOpenAssets(actor, msg.events);
           timings.guestEnteredAtEpochMs = hopEpochNow();
           let result = await actor.api.poll(admitted, msg.commandPage, undefined, msg.budget);
-          // 🤫️ THE silent-turn hold. A \`more-work\` answer that carried nothing is not a message for
-          // the host — it is the guest asking to be pumped, and in the browser the host round trip IS
-          // the pump. So pump it HERE, inside the reactor's own 8 ms hold, and cross only to deliver
-          // something or when the hold is spent. Every discarded result satisfied
-          // \`shardTurnCarriesNothing\`, so the hold is lossless by construction; the loop re-reads the
-          // actor registry and its activation generation on every lap so a dispose or a re-activation
-          // that landed before the hold began ends it at once.
-          const holdDeadline = hopEpochNow() + SILENT_HOLD_MS;
-          let holdPolls = 0;
-          while (
-            shardTurnStatusTag(result) === "more-work" &&
-            shardTurnCarriesNothing(result) &&
-            holdPolls < SILENT_HOLD_POLLS &&
-            hopEpochNow() < holdDeadline &&
-            actors.get(actorId) === actor &&
-            actor.activationGeneration === msg.activationGeneration
-          ) {
+          // 🚚️ THE worker-owned MoreWork drive. A \`more-work\` answer that carried nothing is not a
+          // message for the host — it is the guest asking to be pumped, and in the browser the host
+          // round trip IS the pump. So the WORKER owns that pump: it runs the next turn itself and
+          // crosses only to deliver something the host can act on. Every discarded result satisfied
+          // \`shardTurnCarriesNothing\`, so the drive is lossless by construction.
+          //
+          // Five other stops, and each one is a promise to somebody: the guest went \`idle\`;
+          // \`hostInputSeq\` moved, so a host-owned input is pending behind the drive and must not wait
+          // for it; the actor was disposed or re-activated; the derived step ceiling is spent; the
+          // derived wall budget is spent. The ceiling and the budget come from
+          // \`shardTurnDriveSteps\`/\`shardTurnDriveBudgetMs\` — the wall the host GRANTED for this
+          // crossing divided by what one turn MEASURES — never from the reactor's own 8 ms executor
+          // slice, which is smaller than one whole turn and therefore admitted no further turn at all.
+          const grantWallMs = msg.budget && typeof msg.budget.wallMs === "number" ? msg.budget.wallMs : MAINTENANCE_LANE_DEFAULT_BUDGET.wallMs;
+          // 🚚️ The WALL bounds this drive; \`DRIVE_STEP_CEILING\` is the hard backstop against an
+          // unbounded loop, and \`shardTurnDriveSteps\` is the grant's derived EXPECTATION, reported so
+          // the host can read what one crossing was meant to cover.
+          const driveSteps = DRIVE_STEP_CEILING;
+          const driveExpectedSteps = shardTurnDriveSteps(grantWallMs, GUEST_TURN_COST_MS);
+          const driveDeadline = hopEpochNow() + shardTurnDriveBudgetMs(grantWallMs, GUEST_TURN_COST_MS);
+          const inputMark = hostInputSeq;
+          let drivePolls = 0;
+          let driveStopped = shardTurnStatusTag(result) === "more-work" ? (shardTurnCarriesNothing(result) ? "" : "carried") : "idle";
+          while (driveStopped === "") {
+            if (hostInputSeq !== inputMark) { driveStopped = "input"; break; }
+            if (actors.get(actorId) !== actor || actor.activationGeneration !== msg.activationGeneration) { driveStopped = "closed"; break; }
+            if (hopEpochNow() >= driveDeadline) { driveStopped = "budget"; break; }
+            if (drivePolls + 1 >= driveSteps) { driveStopped = "steps"; break; }
+            // 📬️ One macrotask before the next turn, so a message the host already posted is
+            // DELIVERED and \`hostInputSeq\` can actually move. Without it the drive is
+            // uninterruptible: an \`await\` settles on the microtask queue, which never drains the
+            // message queue.
+            await driveYield();
+            if (hostInputSeq !== inputMark) { driveStopped = "input"; break; }
+            if (actors.get(actorId) !== actor || actor.activationGeneration !== msg.activationGeneration) { driveStopped = "closed"; break; }
             result = await actor.api.poll([], undefined, undefined, msg.budget);
-            holdPolls += 1;
+            drivePolls += 1;
+            driveStopped = shardTurnStatusTag(result) === "more-work" ? (shardTurnCarriesNothing(result) ? "" : "carried") : "idle";
           }
           timings.guestLeftAtEpochMs = hopEpochNow();
-          timings.holdPolls = holdPolls;
+          timings.drivePolls = drivePolls;
+          timings.driveSteps = driveExpectedSteps;
+          timings.driveStopped = driveStopped;
           timings.patches = result && Array.isArray(result.uiPatches) ? result.uiPatches.length : 0;
           timings.status = result && result.status && typeof result.status.tag === "string" ? result.status.tag : String(result && result.status);
           // 🫀️ THE step boundary. A guest running a BUDGETED job (a resumable tessellation, a
           // resumable boolean) crosses this point once per step and blocks the event loop in
           // between, so the while-busy ticker cannot fire and the only thing that distinguishes it
-          // from a dead worker is a beat emitted HERE, the moment the guest hands control back.
-          // Without it a worker doing exactly what it was asked to do reads as silence
+          // from a dead worker is a beat taken HERE, the moment the guest hands control back
           // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
-          // \`📓️extension-evaluate-budget-2026-09-12.md\`).
-          heartbeat("turn-step");
-          reply(requestId, result, timings);
+          // \`📓️extension-evaluate-budget-2026-09-12.md\`). It RIDES the reply rather than costing its
+          // own \`postMessage\`, because the reply is already crossing at this exact instant and
+          // \`ShardClient\` reads liveness off every inbound message it receives.
+          reply(requestId, result, timings, beat("turn-step"));
         } finally {
           inFlightTurnActors.delete(actorId);
         }
@@ -661,8 +745,7 @@ self.addEventListener("message", async (event) => {
         // 🫀️ Same step boundary as \`turn\` above: a job step is exactly the unit a budgeted guest
         // yields at, so it is exactly where liveness is provable.
         const step = await actor.api.stepJob(msg.job, msg.budget);
-        heartbeat("turn-step");
-        reply(requestId, step);
+        reply(requestId, step, undefined, beat("turn-step"));
         break;
       }
       case "cancelJob":
@@ -1326,8 +1409,8 @@ export const blobLoad = call("blob-load");
 export const blobWrite = call("blob-write");
 export const blobRead = (hash) => effectRequest("blob-read", { hash }).then(streamToByteGenerator);
 export const httpFetch = (params) => effectRequest("http-fetch", params).then((response) => ({ ...response, body: streamToByteGenerator(response.body) }));
-export const documentRead = call("document-read");
-export const documentWrite = call("document-write");
+export const artifactRead = call("artifact-read");
+export const documentWrite = call("artifact-write");
 export const linkResolve = (link) => effectRequest("link-resolve", { link });
 export const registryQuery = call("registry-query");
 export const ioCompose = call("io-compose");

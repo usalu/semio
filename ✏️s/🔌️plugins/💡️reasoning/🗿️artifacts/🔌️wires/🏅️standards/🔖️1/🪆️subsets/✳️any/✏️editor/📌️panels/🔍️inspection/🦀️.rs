@@ -33,7 +33,7 @@ pub fn definition() -> PanelTabDefinition {
 /// here (framework file, out of this crate's remit).
 pub fn render(document: &WiresSnapshot, labels: &crate::editor::wires::terminology::WiresLabels) -> UiAssemblyResult<BuiltNode> {
     let board = crate::wires_working_board(document);
-    let extension = DefaultWiresExtension::from_fixture_json(&fixture_json_string(&document.wires_fixture)).ok();
+    let extension = DefaultWiresExtension::from_host_document_json(&fixture_json_string(&document.wires_fixture)).ok();
     let namespace = PanelTreeBuilder::new("wires-inspection")?;
     let rows = [
         format!("{}: {MINDMAP_WIRES_SCHEMA}", labels.schema.as_str()),
@@ -56,7 +56,7 @@ pub fn render(document: &WiresSnapshot, labels: &crate::editor::wires::terminolo
 
 //#region 🔖️WiresExtension
 /// 🧠️ Dissolved from the former `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES)
-/// — `DefaultWiresExtension` has exactly one consumer, `render` above (via `from_fixture_json`), so it
+/// — `DefaultWiresExtension` has exactly one consumer, `render` above (via `from_host_document_json`), so it
 /// lives here rather than in the artifact's `🧬️schema` (the single- vs multi-consumer split the former
 /// engine file's own module doc already drew: a helper with more than one consumer lives in the
 /// artifact, one with exactly one consumer lives in that consumer's own file).
@@ -160,7 +160,7 @@ impl canvas::board::GraphExtension for DefaultWiresExtension {}
 
 impl DefaultWiresExtension {
     /// 🔗️ Hydrate extension state from `reasoning.wires.fixture` JSON.
-    pub fn from_fixture_json(json: &str) -> Result<Self, WiresError> {
+    pub fn from_host_document_json(json: &str) -> Result<Self, WiresError> {
         let root: Value = dsl::os_pack::json::parse(json)?;
         let Some(obj) = root.as_object() else {
             return Err(WiresError::FixtureRootNotObject);

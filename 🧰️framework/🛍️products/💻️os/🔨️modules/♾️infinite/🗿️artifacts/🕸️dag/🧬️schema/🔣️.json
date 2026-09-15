@@ -29,7 +29,7 @@
       "additionalProperties": false,
       "required": ["schema", "nodes", "edges"],
       "properties": {
-        "schema": { "const": "dag.fixture" },
+        "schema": { "const": "dag.hostDocument" },
         "nodes": { "type": "array" },
         "edges": { "type": "array" }
       }

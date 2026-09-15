@@ -26,7 +26,7 @@ export type SpaceArtifactCreationDialectV1 = Readonly<{
 }>;
 
 export type SpaceArtifactCreationReadyV1 = Readonly<{
-  documentId: string;
+  artifactId: string;
   kindId: string;
   artifactSchema: string;
   parentDialect: SpaceArtifactCreationDialectV1;
@@ -81,17 +81,17 @@ function name(value: unknown): string | null {
 
 function ready(value: unknown): SpaceArtifactCreationReadyV1 | null {
   const row = record(value);
-  if (row === null || !exactFields(row, ["documentId", "kindId", "artifactSchema", "parentDialect"])) return null;
+  if (row === null || !exactFields(row, ["artifactId", "kindId", "artifactSchema", "parentDialect"])) return null;
   const dialect = record(row.parentDialect);
   if (dialect === null || !exactFields(dialect, ["artifactKind", "standard", "subset"])) return null;
-  const documentId = typeof row.documentId === "string" && /^artifact-(?!0{32}$)[0-9a-f]{32}$/u.test(row.documentId) ? row.documentId : null,
+  const artifactId = typeof row.artifactId === "string" && /^artifact-(?!0{32}$)[0-9a-f]{32}$/u.test(row.artifactId) ? row.artifactId : null,
     kindId = identity(row.kindId),
     artifactSchema = identity(row.artifactSchema),
     artifactKind = identity(dialect.artifactKind),
     standard = identity(dialect.standard),
     subset = identity(dialect.subset);
-  return documentId !== null && kindId !== null && artifactSchema !== null && artifactKind === kindId && standard !== null && subset !== null
-    ? { documentId, kindId, artifactSchema, parentDialect: { artifactKind, standard, subset } }
+  return artifactId !== null && kindId !== null && artifactSchema !== null && artifactKind === kindId && standard !== null && subset !== null
+    ? { artifactId, kindId, artifactSchema, parentDialect: { artifactKind, standard, subset } }
     : null;
 }
 

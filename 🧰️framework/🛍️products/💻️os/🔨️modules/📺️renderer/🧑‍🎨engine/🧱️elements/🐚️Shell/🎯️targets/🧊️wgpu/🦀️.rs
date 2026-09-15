@@ -583,7 +583,7 @@ fn bind_wgpu_document_socket_surface(host: &ArtifactHost, document_id: &str, art
     if hub_spaces.any(|candidate| candidate != space_id) {
         return Err("document open cannot span hub spaces".into());
     }
-    if app.io.document_schema != artifact_schema {
+    if app.io.artifact_schema != artifact_schema {
         return Err("document open local artifact schema does not match the selected app".into());
     }
     let surface_id = wgpu_document_socket_surface(program, app, window_kind_id)?;
@@ -5711,7 +5711,7 @@ impl ShellState {
             // `detach_sync_backbone_internal`'s note; `attach_backbone` below now carries the honest
             // "not implemented yet" error for the whole mechanism.
             let document_id = self.sync_document_id().unwrap_or_else(|| "document".into());
-            let schema = session.app.io.document_schema.clone();
+            let schema = session.app.io.artifact_schema.clone();
             let bindings = Self::parse_persistence_binding(&uri)?;
             let window_id = self.active_window_id.as_deref().or(session.view_state.window_id.as_deref()).unwrap_or_else(|| session.app.window_kinds.first().id.as_str());
             let window_kind_id = self.live_window_kind_id(&session, window_id).unwrap_or_else(|| session.app.window_kinds.first().id.as_str()).to_string();
@@ -6926,37 +6926,6 @@ impl ShellState {
         Ok(())
     }
 
-    /// 🖼️ Frames one node-graph surface's whole graph and persists the camera through
-    /// `nodeGraphViewport` — the same two steps React's `fitGraphToView` performs (`setCamera` on the
-    /// live host, then the ordinary gesture-persistence dispatch), so the next open honours the fit.
-    pub(crate) async fn fit_node_graph_camera(&mut self, surface_id: &str) -> Result<(), String> {
-        let Some(controller_id) = self.node_graph_states.get(surface_id).map(|surface| surface.controller_id.clone()) else {
-            return Ok(());
-        };
-        let Some(camera) = crate::engine_canvas::node_graph_fit_camera(surface_id) else {
-            return Ok(());
-        };
-        Self::debug_log(&format!("[DEBUG] shell node-graph fit {}", serde_json::json!({ "surface": surface_id, "x": camera[0], "y": camera[1], "zoom": camera[2] })));
-        self.dispatch_action(ActionDescriptor {
-            controller_id,
-            action: "nodeGraphViewport".into(),
-            args: crate::action_args_json!({ "surfaceId": surface_id, "viewport": { "x": camera[0], "y": camera[1], "zoom": camera[2] } }),
-        })
-        .await
-    }
-
-    /// 🖼️ The node-graph surface an `F` press addresses: the one under the pointer, or — when the
-    /// pointer is elsewhere — the only live one. Ambiguity is answered with `None` rather than a
-    /// guess, so a multi-graph layout never re-frames a pane the user was not pointing at.
-    fn keyboard_fit_surface_id(&self, pointer_x: f32, pointer_y: f32) -> Option<String> {
-        if let Some((surface_id, _)) = self.node_graph_states.iter().find(|(_, surface)| surface.bounds.contains(pointer_x, pointer_y)) {
-            return Some(surface_id.clone());
-        }
-        let mut live = self.node_graph_states.iter();
-        let (only, _) = live.next()?;
-        live.next().is_none().then(|| only.clone())
-    }
-
     /// 🔁️ Steps the active mode one place along the app's declared order, wrapping — what the
     /// `mod+alt+→`/`mod+alt+←` chords fire. Reuses the very same body as clicking a
     /// `playground.navbar.modes.<id>` button, so keyboard and pointer cannot diverge.
@@ -7371,6 +7340,7 @@ impl ShellState {
                 }
             }
         }
+        self.drain_gesture_bound_work().await;
         self.owe_settle();
         Ok(())
     }
@@ -7641,6 +7611,7 @@ impl ShellState {
                 self.dispatch_action(action).await?;
             }
         }
+        self.drain_gesture_bound_work().await;
         self.owe_settle();
         Ok(())
     }
@@ -7784,14 +7755,6 @@ impl ShellState {
             id if id.starts_with("playground.navbar.modes.") => {
                 let mode_id = id.trim_start_matches("playground.navbar.modes.").to_string();
                 self.apply_navbar_mode(&mode_id).await?;
-                return Ok(true);
-            }
-            // 🖼️ `Fit graph` — frames the whole graph and persists the result through
-            // `nodeGraphViewport`, exactly the way a pan or a zoom gesture is persisted, so the next
-            // open honours it (React's `fitGraphToView` does the same two steps).
-            id if id.starts_with("shell.nodeGraph.fit::") => {
-                let surface_id = id.trim_start_matches("shell.nodeGraph.fit::").to_string();
-                self.fit_node_graph_camera(&surface_id).await?;
                 return Ok(true);
             }
             // 🛑️ The World3d compute cancel — dispatches whatever id the surface's own status
@@ -8262,6 +8225,30 @@ impl ShellState {
         }
         Ok(worked)
     }
+
+    /// 🖐️ Runs the work a browser only permits inside the gesture that asked for it — today exactly
+    /// the parked file-open pickers — and nothing else.
+    ///
+    /// ⚖️ Everything a gesture arms goes to the settle pump, which takes it on a LATER frame. A file
+    /// picker cannot wait for one: `input.click()` is gated on USER ACTIVATION, which the browser
+    /// grants to the task that handles the click and to no task after it. This is the one exception,
+    /// and it is deliberately the narrowest possible: only `pending_file_opens`, only from a pointer
+    /// gesture, and still bounded (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    #[cfg(target_arch = "wasm32")]
+    async fn drain_gesture_bound_work(&mut self) {
+        for _ in 0..SHELL_DEFERRED_CHAIN_ROUNDS {
+            let file_opens = std::mem::take(&mut self.pending_file_opens);
+            if file_opens.is_empty() {
+                break;
+            }
+            for request in file_opens {
+                self.run_file_open_request(request).await;
+            }
+        }
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    async fn drain_gesture_bound_work(&mut self) {}
 
     /// 🫀️ Arms the runtime-owned settle lane — the settle twin of [`Self::owe_refresh`], and the ONE
     /// way a producer says "there is a chain here to converge". Declaring is all a producer may do:
@@ -9369,16 +9356,6 @@ impl ShellState {
                 }
             }
         }
-        // 🖼️ `F` frames the graph under the pointer — React's own `Fit graph` shortcut
-        // (`🧱️elements/🕸️NodeGraph/🟦️.tsx`, `aria-keyshortcuts="F"`), placed AFTER the content-focus
-        // routing above so a plain `f` typed into a focused note or field is never hijacked, and
-        // consumed only when a node-graph surface actually resolves.
-        if idle && !modifiers.meta && !modifiers.ctrl && !modifiers.alt && matches!(&action, ui_wgpu::wgpu::KeyAction::Char(key) if key.eq_ignore_ascii_case("f")) {
-            if let Some(surface_id) = self.keyboard_fit_surface_id(input.pointer_x, input.pointer_y) {
-                self.fit_node_graph_camera(&surface_id).await?;
-                return Ok(());
-            }
-        }
         // 🧰️ Escape deactivates the active utility for the focused window (P5).
         if idle && action == ui_wgpu::wgpu::KeyAction::Escape {
             if let Some(window_id) = self.active_window_id.clone() {
@@ -9393,10 +9370,17 @@ impl ShellState {
         if idle && !is_reserved_shell_chord(&action, modifiers) {
             if let Some(descriptor) = self.match_app_keybinding(&action, modifiers) {
                 self.dispatch_app_keybinding(descriptor).await?;
+                // 🖐️ A chord is a user gesture exactly as a click is: `mod+o` is the ONLY door the
+                // import picker has, and a browser grants user activation to the task that handled the
+                // key and to nothing after it (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+                self.drain_gesture_bound_work().await;
+                self.owe_settle();
                 return Ok(());
             }
         }
         self.handle_keyboard(action, modifiers, input);
+        self.drain_gesture_bound_work().await;
+        self.owe_settle();
         Ok(())
     }
 
@@ -10654,12 +10638,8 @@ pub(crate) fn surface_status_pills_for(worlds: &[(&str, Rect, Option<&str>)], pa
 /// at — pure over the surfaces' own bounds and status, so the laws drive it without a `ShellState`.
 /// A surface too small to carry a control offers none, which is what keeps a collapsed dock pane from
 /// painting chrome over its whole body.
-pub(crate) fn surface_overlay_controls_for(graphs: &[(&str, Rect)], worlds: &[(&str, Rect, Option<&str>)], panels: &[Rect], theme: &Theme, is_de: bool) -> Vec<(ShellNavbarControl, [f32; 2])> {
+pub(crate) fn surface_overlay_controls_for(_graphs: &[(&str, Rect)], worlds: &[(&str, Rect, Option<&str>)], panels: &[Rect], theme: &Theme, is_de: bool) -> Vec<(ShellNavbarControl, [f32; 2])> {
     let mut controls = Vec::new();
-    for (surface_id, bounds) in graphs.iter().filter(|(_, bounds)| surface_fits_overlay(theme, *bounds)) {
-        let control = ShellNavbarControl { control_id: format!("shell.nodeGraph.fit::{surface_id}"), icon_id: Some("maximize-2"), label: shell_chrome_string("nodeGraph.fitGraph", is_de).to_string(), active: false };
-        controls.push((control, surface_overlay_row_origin(theme, *bounds, panels)));
-    }
     for (surface_id, bounds, status_json) in worlds.iter().filter(|(_, bounds, _)| surface_fits_overlay(theme, *bounds)) {
         let status = world3d_compute_status(*status_json);
         if !status.cancellable {
@@ -13750,15 +13730,12 @@ impl ShellState {
 
     /// 🛑️🖼️ The overlay controls each LIVE engine surface offers, with the anchor each is painted at.
     ///
-    /// - node-graph → `Fit graph` at the pane's top-left, React's own placement
-    ///   (`🧱️elements/🕸️NodeGraph/🟦️.tsx`, `absolute left-2 top-2`);
     /// - World3d → the compute CANCEL, offered exactly while the scene's own status document says
     ///   `cancellable` AND names a non-empty `cancelAction`. The shell never learns `cancelPreviewEval`
     ///   from code: it dispatches whatever id the surface's status contract published
     ///   (`🌐️World3dHost/🟦️.tsx`'s `WorldComputeStatusPane` does exactly the same in React).
     ///
-    /// Neither React twin carries a DOM id, so these follow this shell's own
-    /// `shell.<surface-kind>.<verb>::<surfaceId>` control-id grammar.
+    /// Framing the flow graph is an app-declared action (`zoomToFlow`), not shell overlay chrome.
     fn surface_overlay_controls(&self, theme: &Theme) -> Vec<(ShellNavbarControl, [f32; 2])> {
         let graphs: Vec<(&str, Rect)> = self.node_graph_states.iter().map(|(surface_id, surface)| (surface_id.as_str(), surface.bounds)).collect();
         let worlds = self.world3d_status_rows();
@@ -14258,9 +14235,9 @@ impl ShellState {
                 cursor.scalar = 0;
                 return false;
             }
-            // 🛑️🖼️ Per-surface overlay controls — the World3d compute cancel and the node-graph
-            // `Fit graph`. Painted last so they sit above the surface they annotate, and registered
-            // last so `InputState::hit_at` (reverse order) resolves them over the surface's own hit.
+            // 🛑️🖼️ Per-surface overlay controls — the World3d compute cancel. Painted last so they sit
+            // above the surface they annotate, and registered last so `InputState::hit_at` (reverse
+            // order) resolves them over the surface's own hit.
             // Each grant recomputes its own rect from the live surface bounds, so nothing survives
             // between grants and a surface that stopped painting stops offering its control.
             8 => {

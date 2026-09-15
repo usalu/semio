@@ -243,12 +243,12 @@ We are building a collaborative plugin-based virtual operating system with multi
 Every plugin has apps.
 Every app has modes.
 Every app works over CQRS instead of CRUD (materialization over initial pack + patch)
-Every app is defining a document.
+Every app is defining an artifact.
 Every app has a headless engine.
 Every app has a ui that uses the headless engine.
 Every ui uses exclusively commands to communicate with the headless engine.
-Every app is defining a custom binary representation for a document (pack).
-Every app is defining a custom text representation for a document (dsl).
+Every app is defining a custom binary representation for an artifact (pack).
+Every app is defining a custom text representation for an artifact (dsl).
 
 ---
 
@@ -581,6 +581,28 @@ TODO: Add roomie to discord for verification
 TODO: Start new project `elements` that offers domain-agnostic primitives (such as multi-lingual ui and cross-plattform desktop with App for multi-device, multi-window ui where sketchpad/coda can use all primitive functionality. Introduce sidebar (no need for mobile support) for system trays, companions and side panels e.g. rhino plugin)t
 
 ##
+
+---
+
+There is a confusion between snapshot and fixture in the code.
+Refactor everything to get it right.
+Examples are shown to the user to demonstrate the software.
+Fixtures are examples that are only used for testing. Fixtures should never appear in the final runtime.
+Assets are static content that is needed to run the app. Assets appear in the final runtime.
+Snapshots are persisted data. Snapshots dont include infered data that can be computed from persisted data.
+
+violations e.g.
+✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs
+`fn flow_context_menu_items(registry: &AppActionRegistry, fixture: &FlowSnapshot, config: &FlowMainWindowConfig, labels: &FlowPlayLabels, …`
+
+---
+
+Make sure that versioned code appears through folder taxonomy design. it must not appear in the naming of symbols.
+
+
+violations e.g.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🟦️.tsx
+SettleOutcomeV1
 
 ---
 
@@ -3085,10 +3107,12 @@ The tree of the fill tool is not correctly structured and rendered.
 The verbindungspunkte tree section has too large font and wrongly sits on the right.
 The following items should be clean:
 
+```
 - <Count Slider>
 - Distribution
   - <ObjectKind with Slider>
       - <VortexKind with Slider>
+```
 
 Make sure that the distributions are correct. The slider of the vortex kind is the probability of the object kind times the probability of the vortex kind.
 Make sure that all object kinds add to 1 and all vortex kind add to one.

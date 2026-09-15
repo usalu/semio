@@ -5,7 +5,7 @@
 //! decode primitives plus the thin artifact-facing `encode`/`decode` wrappers and the pack↔dsl
 //! equivalence law.
 
-use crate::{DagFixtureEdge, DagNodeSpec, DagSnapshot};
+use crate::{DagHostDocumentEdge, DagNodeSpec, DagSnapshot};
 use store::PackError;
 
 //#region 📡️SemioProtocol
@@ -59,7 +59,7 @@ fn decode_dag_snapshot_binary(bytes: &[u8]) -> Result<DagSnapshot, String> {
     }
     let schema = read_str_lp(&mut reader)?;
     let nodes: Vec<DagNodeSpec> = dsl::json::from_json_str(&read_str_lp(&mut reader)?).map_err(|e| e.to_string())?;
-    let edges: Vec<DagFixtureEdge> = dsl::json::from_json_str(&read_str_lp(&mut reader)?).map_err(|e| e.to_string())?;
+    let edges: Vec<DagHostDocumentEdge> = dsl::json::from_json_str(&read_str_lp(&mut reader)?).map_err(|e| e.to_string())?;
     let content = crate::dag_content_child_with_owner(nodes, edges);
     let snapshot = DagSnapshot { schema, content };
     if reader.read_u8().is_ok() { return Err("trailing DAG snapshot bytes".into()); }

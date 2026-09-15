@@ -4163,7 +4163,7 @@ type NativeOpenableProjectionReceipt = {
   descriptor_codec_id: string;
   runtime_capability_id: string;
   artifact_kind: string;
-  document_schema: string;
+  artifact_schema: string;
   extension: string;
   pack_schema_sha256: string;
   protocol_path: string;
@@ -4282,14 +4282,14 @@ async function proveNativeOpenableCatalogProviderFixture(repoRoot: string): Prom
         descriptor_codec_id: codec.id,
         runtime_capability_id: native?.runtime_capability_id,
         artifact_kind: native?.artifact_kind,
-        document_schema: native?.document_schema,
+        artifact_schema: native?.artifact_schema,
         extension: native?.extension,
         pack_schema_sha256: native?.pack_schema_hash,
         runtimeAuthorized:
           runtime?.category === "codec" &&
           claims.size === 2 &&
-          claims.get("codec") === native?.document_schema &&
-          claims.get("codec-extension") === `${Buffer.byteLength(native?.document_schema ?? "", "utf8")}:${native?.document_schema}:${native?.extension}`,
+          claims.get("codec") === native?.artifact_schema &&
+          claims.get("codec-extension") === `${Buffer.byteLength(native?.artifact_schema ?? "", "utf8")}:${native?.artifact_schema}:${native?.extension}`,
       });
     }
   }
@@ -4316,14 +4316,14 @@ async function proveNativeOpenableCatalogProviderFixture(repoRoot: string): Prom
     for (const row of candidate.projected) {
       const owner = ownerByFactory.get(row.factory_id);
       if (!owner?.runtimeAuthorized || protocolDigests.get(row.protocol_path) !== row.pack_schema_sha256) return false;
-      for (const key of ["artifact", "factory_id", "descriptor_codec_id", "runtime_capability_id", "artifact_kind", "document_schema", "extension", "pack_schema_sha256"] as const) if (owner[key] !== row[key]) return false;
+      for (const key of ["artifact", "factory_id", "descriptor_codec_id", "runtime_capability_id", "artifact_kind", "artifact_schema", "extension", "pack_schema_sha256"] as const) if (owner[key] !== row[key]) return false;
     }
     const target = candidate.targets[0];
     const json = candidate.projected.find((row) => row.factory_id === "stdio.native.json.v1");
     return Boolean(
       json &&
       target.artifactKind === json.artifact_kind &&
-      target.artifactSchema === json.document_schema &&
+      target.artifactSchema === json.artifact_schema &&
       target.packSchemaHash === json.pack_schema_sha256 &&
       target.surfaceId === "s.stdio.json@rfc8259/*#viewer" &&
       target.appId === target.surfaceId &&
@@ -8734,11 +8734,11 @@ function projectTrustedBootstrapCodecsV1(stdio: unknown, gis: unknown): Readonly
   )
     return fail();
   const stdioRows = s.receipts.map((value: unknown) => {
-    const fields = ["artifact", "factory_id", "descriptor_codec_id", "runtime_capability_id", "artifact_kind", "document_schema", "extension"];
+    const fields = ["artifact", "factory_id", "descriptor_codec_id", "runtime_capability_id", "artifact_kind", "artifact_schema", "extension"];
     const row = record(value, [...fields, "pack_schema_sha256", "protocol_path"]);
     if (!fields.every((field) => identity(row[field])) || !digest(row.pack_schema_sha256) || typeof row.protocol_path !== "string" || row.protocol_path.length > 1024 || !/^🗿️artifacts\/.+\/📡️\.protocol\.semio$/u.test(row.protocol_path))
       return fail();
-    return Object.freeze({ artifactKind: row.artifact_kind as string, artifactSchema: row.document_schema as string, packSchemaHash: row.pack_schema_sha256 });
+    return Object.freeze({ artifactKind: row.artifact_kind as string, artifactSchema: row.artifact_schema as string, packSchemaHash: row.pack_schema_sha256 });
   });
   const gisRows = g.receipts.map((value: unknown) => {
     const row = record(value, ["factoryId", "kind", "schema", "extension", "capability", "packRecord", "protocolPath", "protocolBytes", "protocolSha256"]);

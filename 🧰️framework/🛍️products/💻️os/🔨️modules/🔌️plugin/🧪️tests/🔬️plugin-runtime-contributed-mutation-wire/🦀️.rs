@@ -3,8 +3,8 @@ mod contributed_mutation_wire_tests {
     use crate::contributed_mutation_wire::{AddValue, WireTestMutation, WireTestSnapshot};
     use store::{ArtifactPack, OpBinary};
 
-    async fn commit_test_contribution(artifact_kind: &str, target_document_schema: &str, contributor: &str, delta: i32) -> String {
-        let contribution = crate::app::ArtifactContribution::builder(artifact_kind).await.mutation::<WireTestSnapshot, WireTestMutation, AddValue>(target_document_schema, 1, 1).await.build();
+    async fn commit_test_contribution(artifact_kind: &str, target_artifact_schema: &str, contributor: &str, delta: i32) -> String {
+        let contribution = crate::app::ArtifactContribution::builder(artifact_kind).await.mutation::<WireTestSnapshot, WireTestMutation, AddValue>(target_artifact_schema, 1, 1).await.build();
         let (descriptor, _inferences, mutation_runtime) = contribution.resolve(contributor);
         let mutation_id = descriptor.mutations[0].mutation_id.clone();
         crate::app::commit_contributed_mutation_services(mutation_runtime).await.expect("commit contributed mutation services");

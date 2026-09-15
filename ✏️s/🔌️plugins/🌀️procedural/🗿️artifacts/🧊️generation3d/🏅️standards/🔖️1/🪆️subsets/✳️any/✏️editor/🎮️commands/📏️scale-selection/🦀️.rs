@@ -3,11 +3,11 @@
 use crate::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
 use crate::standards::v1::subsets::any::schema::mutations::text::Generation3dMutation;
 use crate::Generation3dSnapshot;
-use semio_framework_artifact_flow_flow::FlowFixture;
+use semio_framework_artifact_flow_flow::FlowHostDocument;
 use semio_framework_os_flow::{FlowEvalSession, FlowHost};
 use semio_framework_plugin::{app::InteractionView, ArtifactView, ConfigView, Emit, Fault};
 
-use crate::standards::v1::subsets::any::schema::{commit_fixture, ensure_gumball_node, gumball_scale_params_json, gumball_widget_number_param, with_host};
+use crate::standards::v1::subsets::any::schema::{commit_host_document, ensure_gumball_node, gumball_scale_params_json, gumball_widget_number_param, with_host};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Shared
@@ -24,7 +24,7 @@ fn mesh_selection_ids_typed(ids: &[String], fallback: &[String]) -> Vec<String> 
 /// 🧭️ Runs a gumball transform (translate/rotate/scale) as a fixture operation, splicing transform
 /// neurons via `ensure_gumball_node` and re-selecting the resulting transform widgets. `None` when no
 /// transform actually changed anything (nothing to commit).
-fn gumball_transform(fixture: &FlowFixture, ids: &[String], operation: &str, apply: impl Fn(&mut FlowHost, &str) -> bool) -> Option<(Vec<Generation3dMutation>, Vec<String>)> {
+fn gumball_transform(fixture: &FlowHostDocument, ids: &[String], operation: &str, apply: impl Fn(&mut FlowHost, &str) -> bool) -> Option<(Vec<Generation3dMutation>, Vec<String>)> {
     with_host(fixture, |host| {
         let mut new_selection = Vec::new();
         let mut changed = false;
@@ -37,7 +37,7 @@ fn gumball_transform(fixture: &FlowFixture, ids: &[String], operation: &str, app
             }
         }
         if changed {
-            Some((commit_fixture(fixture, &host.fixture), new_selection))
+            Some((commit_host_document(fixture, &host.host_document), new_selection))
         } else {
             None
         }
@@ -63,7 +63,7 @@ pub struct ScaleSelection {
     pub sz: f64,
 }
 
-fn scale_ids(fixture: &FlowFixture, ids: &[String], uniform_factor: f64) -> Emit<Generation3dMutation, Generation3dConfigMutation> {
+fn scale_ids(fixture: &FlowHostDocument, ids: &[String], uniform_factor: f64) -> Emit<Generation3dMutation, Generation3dConfigMutation> {
     match gumball_transform(fixture, ids, "scale", move |host, transform_id| {
         let current_factor = gumball_widget_number_param(host, transform_id, "factor", 1.0);
         host.set_neuron_params(transform_id, &gumball_scale_params_json(current_factor * uniform_factor)).is_ok()
@@ -79,7 +79,7 @@ fn scale_ids(fixture: &FlowFixture, ids: &[String], uniform_factor: f64) -> Emit
 /// command through `apply` below instead), so an ids-less payload degrades to a no-op transform.
 pub fn handle(payload: &ScaleSelection, doc: &ArtifactView<'_, Generation3dSnapshot>, _cfg: &ConfigView<'_, Generation3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation>, Fault> {
     let ids = mesh_selection_ids_typed(&payload.node_ids, &[]);
-    Ok(scale_ids(&doc.snapshot.fixture, &ids, (payload.sx + payload.sy + payload.sz) / 3.0))
+    Ok(scale_ids(&doc.snapshot.host_document, &ids, (payload.sx + payload.sy + payload.sz) / 3.0))
 }
 
 /// 🕹️ Falls back to the `graph` domain's current selection instead of a deleted config field when the
@@ -92,7 +92,7 @@ pub fn apply(
     _session: &mut FlowEvalSession,
 ) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation>, Fault> {
     let ids = mesh_selection_ids_typed(&payload.node_ids, &interaction.selection("graph").ids);
-    Ok(scale_ids(&doc.snapshot.fixture, &ids, (payload.sx + payload.sy + payload.sz) / 3.0))
+    Ok(scale_ids(&doc.snapshot.host_document, &ids, (payload.sx + payload.sy + payload.sz) / 3.0))
 }
 
 /// 🕹️ Retained-command-job entry point (`generation3d_retained_reduce`, editor `🦀️.rs`) — same real-selection
@@ -101,7 +101,7 @@ pub fn apply(
 /// `protocol::InteractionState` by the caller.
 pub(crate) fn apply_selected(payload: &ScaleSelection, doc: &ArtifactView<'_, Generation3dSnapshot>, selected: &[String]) -> Emit<Generation3dMutation, Generation3dConfigMutation> {
     let ids = mesh_selection_ids_typed(&payload.node_ids, selected);
-    scale_ids(&doc.snapshot.fixture, &ids, (payload.sx + payload.sy + payload.sz) / 3.0)
+    scale_ids(&doc.snapshot.host_document, &ids, (payload.sx + payload.sy + payload.sz) / 3.0)
 }
 
 //#region 🧪️Tests

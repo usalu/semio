@@ -55,7 +55,7 @@ pub(crate) mod context {
         semio_framework::surface_app_id(&semio_framework::ArtifactDialect { artifact_kind: format!("s.{slug}"), standard: "1".into(), subset: "*".into() }, semio_framework::AppRole::Editor)
     }
     
-    async fn seed_app(plugin_id: &str, app_id: &str, label: &str, document: &[&str], document_schema: &str, ports: Vec<MediaPortSpec>) {
+    async fn seed_app(plugin_id: &str, app_id: &str, label: &str, document: &[&str], artifact_schema: &str, ports: Vec<MediaPortSpec>) {
         let surface_id = test_surface_id(app_id).await;
         let definition = App::builder(surface_id, LocalizedLabel::data(label))
             .await
@@ -64,7 +64,7 @@ pub(crate) mod context {
             .await
             .window_kind("main", LocalizedLabel::native("Main", "Hauptansicht"), format!("{app_id}.main"), semio_framework_ui_contract::SurfaceKind::Canvas2d, "square-pen")
             .await
-            .io(AppIo::from_document(document_schema, MediaType { class: MediaClass::Data, form: MediaForm::Value }, ArtifactPresentation { id: app_id.into(), name: label.into(), dimension: String::new(), component_kind: app_id.into() })
+            .io(AppIo::from_artifact(document_schema, MediaType { class: MediaClass::Data, form: MediaForm::Value }, ArtifactPresentation { id: app_id.into(), name: label.into(), dimension: String::new(), component_kind: app_id.into() })
                 .await
                 .with_ports(ports)
                 .await)

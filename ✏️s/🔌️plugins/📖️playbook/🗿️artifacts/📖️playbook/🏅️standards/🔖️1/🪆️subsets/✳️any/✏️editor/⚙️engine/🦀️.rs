@@ -15,8 +15,8 @@ use semio_framework_value_derive::{FromValue, ToValue};
 /// upstream `writer` nodes' `"text:out"`).
 pub fn playbook_io() -> semio_framework_plugin::AppIo {
     semio_framework_plugin::AppIo {
-        document_schema: PLAYBOOK_DOCUMENT_SCHEMA.into(),
-        document_media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::Text, form: semio_framework_plugin::MediaForm::Document },
+        artifact_schema: PLAYBOOK_DOCUMENT_SCHEMA.into(),
+        artifact_media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::Text, form: semio_framework_plugin::MediaForm::Document },
         ports: vec![semio_framework_plugin::MediaPortSpec {
             id: "chapters:in".into(),
             label: "Chapters".into(),

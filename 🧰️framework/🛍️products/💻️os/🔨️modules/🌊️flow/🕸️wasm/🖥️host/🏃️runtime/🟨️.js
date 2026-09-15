@@ -18,11 +18,37 @@ export const FlowOperationFields = Object.freeze({
 
 //#region 🌉️ReactiveHost
 
+/** ⏱️ The macrotask the pump re-schedules itself on.
+ *
+ * `setTimeout(step, 0)` is clamped to 4 ms once a callback chain nests past five levels, and a pump
+ * that re-schedules itself from inside its own timer reaches that depth on its first few rounds — so
+ * every poll round of a long operation paid a timer it did not need. Measured on the flow node-graph
+ * board: one `renderCanvas` present took a median 3 193 ms to settle while the page spent 439 ms of
+ * that on script, i.e. the thread was idle waiting for timers for most of a frame the user was
+ * scrolling through (`📓️flow-scroll-render-perf-2026-09-15.md` §3).
+ *
+ * A `MessageChannel` post is an unclamped macrotask: it still yields between rounds, so input,
+ * rendering and every other task keep their turn and the pump never starves the frame — it simply
+ * stops paying 4 ms for each of its own. `unref` exists only on Node's port and keeps a host that a
+ * test never closed from holding that process open. */
+export function createFlowPumpScheduler() {
+  if (typeof MessageChannel !== "function") return (step) => setTimeout(step, 0);
+  const channel = new MessageChannel();
+  const queue = [];
+  channel.port1.onmessage = () => queue.shift()?.();
+  channel.port1.unref?.();
+  channel.port2.unref?.();
+  return (step) => {
+    queue.push(step);
+    channel.port2.postMessage(0);
+  };
+}
+
 const ownedFlowExports = new WeakSet();
 class FlowMessageRejected extends Error {}
 class FlowSessionOpenRejected extends Error {}
 
-export function createFlowHost({ exports, memory, schedule = (step) => setTimeout(step, 0), now = Date.now, maximumInFlight = FLOW_MAX_IN_FLIGHT } = {}) {
+export function createFlowHost({ exports, memory, schedule = createFlowPumpScheduler(), now = Date.now, maximumInFlight = FLOW_MAX_IN_FLIGHT } = {}) {
   if (!exports || !(memory instanceof WebAssembly.Memory) || memory !== exports.memory || ["flow_bridge_allocate", "flow_bridge_release", "flow_bridge_send", "flow_bridge_poll", "flow_bridge_begin_close", "flow_bridge_terminal_is_empty"].some((name) => typeof exports[name] !== "function")) throw new Error("Flow Wasm exports and exact memory are required");
   if (ownedFlowExports.has(exports.flow_bridge_send)) throw new Error("Flow Wasm exports already have a runtime owner");
   ownedFlowExports.add(exports.flow_bridge_send);

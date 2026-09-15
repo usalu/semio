@@ -13,12 +13,12 @@ async fn node_graph_edit_set_fixture_moves_node_and_persists_camera() {
     use crate::engine::space::SpaceCommand;
     use crate::engine::space::unit_tests::context::{apply_mutations, studio_emit};
     use pack::json::Object;
-    use semio_framework_os::{OsWorkflowCamera, os_workflow_to_flow_fixture};
+    use semio_framework_os::{OsWorkflowCamera, os_workflow_to_flow_host_document_json};
     let projection = demo_space_projection().await;
     let config = SpaceConfig::default();
     let node = projection.graph.nodes.first().expect("node").clone();
     let camera = OsWorkflowCamera { x: 40.0, y: -20.0, zoom: 2.0 };
-    let mut fixture = os_workflow_to_flow_fixture(&projection.graph, &camera);
+    let mut fixture = os_workflow_to_flow_host_document_json(&projection.graph, &camera);
     if let Some(layout) = fixture.get_mut("layout").and_then(serde_json::Value::as_object_mut) {
         let mut position = serde_json::Map::new();
         position.insert("x".into(), serde_json::Value::from(500.0 + node.width / 2.0));
@@ -26,8 +26,8 @@ async fn node_graph_edit_set_fixture_moves_node_and_persists_camera() {
         layout.insert(node.id.clone(), serde_json::Value::Object(position));
     }
     let mut operations_entry = Object::new();
-    operations_entry.insert("operation", pack::JsonValue::from("setFixture"));
-    operations_entry.insert("fixtureJson", pack::JsonValue::from(fixture.to_string()));
+    operations_entry.insert("operation", pack::JsonValue::from("setHostDocument"));
+    operations_entry.insert("hostDocumentJson", pack::JsonValue::from(fixture.to_string()));
     let mut operations_root = Object::new();
     operations_root.insert("operations", pack::json_array([pack::JsonValue::Object(operations_entry)]));
     let operations_json = pack::JsonValue::Object(operations_root).to_string();

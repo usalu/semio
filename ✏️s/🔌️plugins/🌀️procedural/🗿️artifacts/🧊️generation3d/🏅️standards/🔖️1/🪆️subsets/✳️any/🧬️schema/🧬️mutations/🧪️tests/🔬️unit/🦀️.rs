@@ -43,7 +43,7 @@ fn every_mutation() -> Vec<Generation3dMutation> {
         Generation3dMutation::MoveWidget(MoveWidget { id: "extrude".into(), layout: WidgetLayout { x: 1.0, y: 2.0 } }),
         Generation3dMutation::DeleteWidgetPosition(DeleteWidgetPosition { id: "extrude".into() }),
         Generation3dMutation::UpdateCamera(UpdateCamera { camera: CameraJson { x: 1.0, y: 2.0, zoom: 3.0 } }),
-        Generation3dMutation::ChangeSchema(ChangeSchema { new_schema: "flow.fixture.v2".into() }),
+        Generation3dMutation::ChangeSchema(ChangeSchema { new_schema: "flow.host_document.v2".into() }),
         Generation3dMutation::CreateGeneration(CreateGeneration { generation: FormGeneration { id: "generation-fresh".into(), name: "Generation".into(), values: Default::default() } }),
         Generation3dMutation::DeleteGeneration(DeleteGeneration { id: "generation-1".into() }),
         Generation3dMutation::RenameGeneration(RenameGeneration { id: "generation-1".into(), new_name: "Renamed".into() }),
@@ -64,7 +64,7 @@ fn every_variant_registers_an_approved_semantic_descriptor() {
 async fn store_applies_widget_create() {
     let mut store = crate::store_fixture::document_store(default_generation3d_snapshot()).await;
     store.dispatch(store::ArtifactCommand::Apply { mutations: vec![Generation3dMutation::CreateWidget(CreateWidget { index: 3, widget: Widget::InputNote { id: "note-9".into(), text: String::new() } })], description: None }).await.expect("apply");
-    assert!(store.snapshot().expect("snapshot").fixture.widgets.iter().any(|w| widget_id(w) == "note-9"));
+    assert!(store.snapshot().expect("snapshot").host_document.widgets.iter().any(|w| widget_id(w) == "note-9"));
     crate::store_fixture::close(store);
 }
 
@@ -72,7 +72,7 @@ async fn store_applies_widget_create() {
 fn create_widget_round_trips() {
     let before = default_generation3d_snapshot();
     let after = round_trip(&before, &Generation3dMutation::CreateWidget(CreateWidget { index: 9, widget: Widget::InputNote { id: "note-9".into(), text: String::new() } }));
-    assert!(after.fixture.widgets.iter().any(|w| widget_id(w) == "note-9"));
+    assert!(after.host_document.widgets.iter().any(|w| widget_id(w) == "note-9"));
 }
 
 #[test]
@@ -97,30 +97,30 @@ fn generation_mutation_bridge_covers_every_variant() {
 
 #[test]
 fn fixture_ops_ignore_camera() {
-    let before = FlowFixture::default();
+    let before = FlowHostDocument::default();
     let mut after = before.clone();
     after.camera = CameraJson { x: 7.0, y: 8.0, zoom: 2.0 };
-    let operations = generation3d_fixture_operations(&before, &after);
+    let operations = generation3d_host_document_operations(&before, &after);
     assert!(operations.iter().all(|operation| !matches!(operation, Generation3dMutation::UpdateCamera { .. })));
 }
 
 #[test]
-fn generation3d_fixture_operations_detects_widget_synapse_layout_schema_changes() {
-    let mut before = FlowFixture { schema: "old-schema".into(), ..Default::default() };
+fn generation3d_host_document_operations_detects_widget_synapse_layout_schema_changes() {
+    let mut before = FlowHostDocument { schema: "old-schema".into(), ..Default::default() };
     before.widgets = vec![Widget::InputNote { id: "w-gone".into(), text: String::new() }, Widget::InputNote { id: "w-keep".into(), text: "old".into() }];
     before.synapses =
         vec![SynapseSpec { id: "s-gone".into(), from: "a".into(), to: "b".into(), from_port: "out".into(), to_port: "in".into() }, SynapseSpec { id: "s-keep".into(), from: "a".into(), to: "b".into(), from_port: "out".into(), to_port: "old".into() }];
     before.layout.insert("l-gone".into(), WidgetLayout { x: 0.0, y: 0.0 });
     before.layout.insert("l-keep".into(), WidgetLayout { x: 1.0, y: 1.0 });
 
-    let mut after = FlowFixture { schema: "new-schema".into(), ..Default::default() };
+    let mut after = FlowHostDocument { schema: "new-schema".into(), ..Default::default() };
     after.widgets = vec![Widget::InputNote { id: "w-keep".into(), text: "new".into() }, Widget::InputNote { id: "w-new".into(), text: String::new() }];
     after.synapses =
         vec![SynapseSpec { id: "s-keep".into(), from: "a".into(), to: "b".into(), from_port: "out".into(), to_port: "new".into() }, SynapseSpec { id: "s-new".into(), from: "a".into(), to: "b".into(), from_port: "out".into(), to_port: "in".into() }];
     after.layout.insert("l-keep".into(), WidgetLayout { x: 2.0, y: 2.0 });
     after.layout.insert("l-new".into(), WidgetLayout { x: 3.0, y: 3.0 });
 
-    let operations = generation3d_fixture_operations(&before, &after);
+    let operations = generation3d_host_document_operations(&before, &after);
     assert!(operations.contains(&Generation3dMutation::DeleteWidget(DeleteWidget { id: "w-gone".into() })));
     assert!(operations.contains(&Generation3dMutation::UpdateWidget(UpdateWidget { widget: Widget::InputNote { id: "w-keep".into(), text: "new".into() } })));
     assert!(operations.contains(&Generation3dMutation::CreateWidget(CreateWidget { index: 1, widget: Widget::InputNote { id: "w-new".into(), text: String::new() } })));
@@ -138,11 +138,11 @@ fn generation3d_fixture_operations_detects_widget_synapse_layout_schema_changes(
 #[test]
 fn update_widget_round_trip_replaces_existing_widget_by_id() {
     let mut before = default_generation3d_snapshot();
-    before.fixture.widgets.clear();
-    before.fixture.widgets.push(Widget::InputNote { id: "note-9".into(), text: "old".into() });
+    before.host_document.widgets.clear();
+    before.host_document.widgets.push(Widget::InputNote { id: "note-9".into(), text: "old".into() });
     let after = round_trip(&before, &Generation3dMutation::UpdateWidget(UpdateWidget { widget: Widget::InputNote { id: "note-9".into(), text: "new".into() } }));
-    assert_eq!(after.fixture.widgets.len(), 1);
-    assert_eq!(after.fixture.widgets[0], Widget::InputNote { id: "note-9".into(), text: "new".into() });
+    assert_eq!(after.host_document.widgets.len(), 1);
+    assert_eq!(after.host_document.widgets[0], Widget::InputNote { id: "note-9".into(), text: "new".into() });
 }
 
 #[test]
@@ -154,11 +154,11 @@ fn inverse_delete_widget_when_missing_returns_empty() {
 #[test]
 fn update_synapse_round_trip_replaces_existing_synapse_by_id() {
     let mut before = default_generation3d_snapshot();
-    before.fixture.synapses.clear();
-    before.fixture.synapses.push(SynapseSpec { id: "e1".into(), from: "a".into(), to: "b".into(), from_port: "out".into(), to_port: "in".into() });
+    before.host_document.synapses.clear();
+    before.host_document.synapses.push(SynapseSpec { id: "e1".into(), from: "a".into(), to: "b".into(), from_port: "out".into(), to_port: "in".into() });
     let after = round_trip(&before, &Generation3dMutation::UpdateSynapse(UpdateSynapse { synapse: SynapseSpec { id: "e1".into(), from: "a".into(), to: "c".into(), from_port: "out".into(), to_port: "in".into() } }));
-    assert_eq!(after.fixture.synapses.len(), 1);
-    assert_eq!(after.fixture.synapses[0].to, "c");
+    assert_eq!(after.host_document.synapses.len(), 1);
+    assert_eq!(after.host_document.synapses[0].to, "c");
 }
 
 #[test]
@@ -172,7 +172,7 @@ fn inverse_disconnect_synapse_when_missing_returns_empty() {
 /// (`📍️move-widget/🔺️diff/🦀️.rs`'s `mutation.target-missing` branch).
 fn snapshot_with_extrude_widget() -> Generation3dSnapshot {
     let mut base = default_generation3d_snapshot();
-    base.fixture.widgets.push(Widget::InputNote { id: "extrude".into(), text: String::new() });
+    base.host_document.widgets.push(Widget::InputNote { id: "extrude".into(), text: String::new() });
     base
 }
 
@@ -180,16 +180,16 @@ fn snapshot_with_extrude_widget() -> Generation3dSnapshot {
 fn move_widget_round_trip_inserts_when_absent() {
     let before = snapshot_with_extrude_widget();
     let after = round_trip(&before, &Generation3dMutation::MoveWidget(MoveWidget { id: "extrude".into(), layout: WidgetLayout { x: 1.0, y: 2.0 } }));
-    assert_eq!(after.fixture.layout.get("extrude"), Some(&WidgetLayout { x: 1.0, y: 2.0 }));
+    assert_eq!(after.host_document.layout.get("extrude"), Some(&WidgetLayout { x: 1.0, y: 2.0 }));
     before.retire_cold();
 }
 
 #[test]
 fn move_widget_round_trip_replaces_when_present() {
     let mut before = snapshot_with_extrude_widget();
-    before.fixture.layout.insert("extrude".into(), WidgetLayout { x: 1.0, y: 2.0 });
+    before.host_document.layout.insert("extrude".into(), WidgetLayout { x: 1.0, y: 2.0 });
     let after = round_trip(&before, &Generation3dMutation::MoveWidget(MoveWidget { id: "extrude".into(), layout: WidgetLayout { x: 5.0, y: 6.0 } }));
-    assert_eq!(after.fixture.layout.get("extrude"), Some(&WidgetLayout { x: 5.0, y: 6.0 }));
+    assert_eq!(after.host_document.layout.get("extrude"), Some(&WidgetLayout { x: 5.0, y: 6.0 }));
     before.retire_cold();
 }
 
@@ -207,7 +207,7 @@ fn move_widget_on_a_missing_widget_is_rejected_and_leaves_the_projection_untouch
 #[test]
 fn delete_widget_position_inverse_present_restores_move_widget_missing_returns_empty() {
     let mut projection = default_generation3d_snapshot();
-    projection.fixture.layout.insert("extrude".into(), WidgetLayout { x: 1.0, y: 2.0 });
+    projection.host_document.layout.insert("extrude".into(), WidgetLayout { x: 1.0, y: 2.0 });
     assert_eq!(Generation3dMutation::DeleteWidgetPosition(DeleteWidgetPosition { id: "extrude".into() }).inverse(&projection), vec![Generation3dMutation::MoveWidget(MoveWidget { id: "extrude".into(), layout: WidgetLayout { x: 1.0, y: 2.0 } })]);
     assert!(Generation3dMutation::DeleteWidgetPosition(DeleteWidgetPosition { id: "ghost".into() }).inverse(&projection).is_empty());
     projection.retire_cold();
@@ -217,14 +217,14 @@ fn delete_widget_position_inverse_present_restores_move_widget_missing_returns_e
 fn update_camera_round_trip_updates_camera() {
     let before = default_generation3d_snapshot();
     let after = round_trip(&before, &Generation3dMutation::UpdateCamera(UpdateCamera { camera: CameraJson { x: 1.0, y: 2.0, zoom: 3.0 } }));
-    assert_eq!(after.fixture.camera, CameraJson { x: 1.0, y: 2.0, zoom: 3.0 });
+    assert_eq!(after.host_document.camera, CameraJson { x: 1.0, y: 2.0, zoom: 3.0 });
 }
 
 #[test]
 fn change_schema_round_trip_updates_schema() {
     let before = default_generation3d_snapshot();
-    let after = round_trip(&before, &Generation3dMutation::ChangeSchema(ChangeSchema { new_schema: "flow.fixture.v2".into() }));
-    assert_eq!(after.fixture.schema, "flow.fixture.v2");
+    let after = round_trip(&before, &Generation3dMutation::ChangeSchema(ChangeSchema { new_schema: "flow.host_document.v2".into() }));
+    assert_eq!(after.host_document.schema, "flow.host_document.v2");
 }
 
 //#region 🧪️MutationLaws
@@ -239,15 +239,15 @@ async fn create_widget_satisfies_the_inverse_and_absorb_laws() {
     let mutation = Generation3dMutation::CreateWidget(CreateWidget { index: 0, widget: Widget::InputNote { id: "note-fresh".into(), text: String::new() } });
     semio_framework_os_kernel::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
     let d1 = mutation.diff(&base).into_parts().0;
-    let d2 = Generation3dMutation::ChangeSchema(ChangeSchema { new_schema: "flow.fixture.v2".into() }).diff(&base).into_parts().0;
+    let d2 = Generation3dMutation::ChangeSchema(ChangeSchema { new_schema: "flow.host_document.v2".into() }).diff(&base).into_parts().0;
     semio_framework_os_kernel::os_spr::protocol_laws::assert_mutation_diff_absorb_law(&base, d1, d2).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn connect_synapse_satisfies_the_inverse_and_absorb_laws() {
     let mut base = default_generation3d_snapshot();
-    base.fixture.widgets.push(Widget::InputNote { id: "a".into(), text: String::new() });
-    base.fixture.widgets.push(Widget::InputNote { id: "b".into(), text: String::new() });
+    base.host_document.widgets.push(Widget::InputNote { id: "a".into(), text: String::new() });
+    base.host_document.widgets.push(Widget::InputNote { id: "b".into(), text: String::new() });
     let base = base;
     let mutation = Generation3dMutation::ConnectSynapse(ConnectSynapse { index: 0, synapse: SynapseSpec { id: "e-fresh".into(), from: "a".into(), to: "b".into(), from_port: "out".into(), to_port: "in".into() } });
     semio_framework_os_kernel::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
@@ -262,7 +262,7 @@ async fn update_camera_satisfies_the_inverse_and_absorb_laws() {
     let mutation = Generation3dMutation::UpdateCamera(UpdateCamera { camera: CameraJson { x: 4.0, y: 5.0, zoom: 6.0 } });
     semio_framework_os_kernel::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
     let d1 = mutation.diff(&base).into_parts().0;
-    let d2 = Generation3dMutation::ChangeSchema(ChangeSchema { new_schema: "flow.fixture.v3".into() }).diff(&base).into_parts().0;
+    let d2 = Generation3dMutation::ChangeSchema(ChangeSchema { new_schema: "flow.host_document.v3".into() }).diff(&base).into_parts().0;
     semio_framework_os_kernel::os_spr::protocol_laws::assert_mutation_diff_absorb_law(&base, d1, d2).await;
 }
 //#endregion 🧪️MutationLaws

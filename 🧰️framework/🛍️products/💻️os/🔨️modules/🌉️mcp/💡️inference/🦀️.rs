@@ -50,8 +50,6 @@ pub struct DeclaredInference {
     pub artifact_kind: String,
     pub artifact_schema: String,
     pub artifact_schema_version: u32,
-    pub document_schema: String,
-    pub document_schema_version: u32,
     pub inference_schema: String,
     pub inference_schema_version: u32,
     pub algorithm_version: u32,
@@ -67,8 +65,6 @@ impl From<&semio_framework::ContributedInferenceMetadata> for DeclaredInference 
             artifact_kind: metadata.artifact_kind.clone(),
             artifact_schema: metadata.artifact_schema.clone(),
             artifact_schema_version: metadata.artifact_schema_version,
-            document_schema: metadata.document_schema.clone(),
-            document_schema_version: metadata.document_schema_version,
             inference_schema: metadata.inference_schema.clone(),
             inference_schema_version: metadata.inference_schema_version,
             algorithm_version: metadata.algorithm_version,
@@ -131,7 +127,7 @@ pub fn declared_inferences_for_artifact(workspace: &HeadlessWorkspace, artifact_
         return Ok((schema, Vec::new()));
     }
     let roster = declared_inferences_for_workspace(workspace)?;
-    let matches = roster.into_iter().filter(|item| item.document_schema == schema || item.artifact_schema == schema).collect();
+    let matches = roster.into_iter().filter(|item| item.artifact_schema == schema || item.artifact_schema == schema).collect();
     Ok((schema, matches))
 }
 //#endregion 🔖️DeclaredInference
@@ -1111,7 +1107,7 @@ pub fn mint_inference_request_id() -> String {
 }
 
 fn inference_scope_ids() -> Vec<semio_framework::manifest::kernel::CapabilityId> {
-    vec![semio_framework::manifest::kernel::CapabilityId("documents.read".to_string()), semio_framework::manifest::kernel::CapabilityId("documents.write".to_string()), semio_framework::manifest::kernel::CapabilityId("jobs.spawn".to_string())]
+    vec![semio_framework::manifest::kernel::CapabilityId("artifacts.read".to_string()), semio_framework::manifest::kernel::CapabilityId("artifacts.write".to_string()), semio_framework::manifest::kernel::CapabilityId("jobs.spawn".to_string())]
 }
 
 fn inference_job_capability(id: &str, tool_name: &str, title: &str, description: &str, kind: CapabilityKind, scopes: Vec<semio_framework::manifest::kernel::CapabilityId>, input_schema: serde_json::Value, output_schema: serde_json::Value) -> CapabilityDefinition {
@@ -1156,7 +1152,7 @@ pub fn inference_events_capability() -> CapabilityDefinition {
         "Poll GIS Map Inference Job Events",
         "Reads the next owner-private bounded page of lifecycle events and progress rows for one job handle. MCP has no progress push, so poll this cursor. — Liest die nächste, nur dem Eigentümer sichtbare begrenzte Seite mit Lebenszyklus-Ereignissen und Fortschrittszeilen zu einem Auftrags-Handle. MCP kennt keine Fortschrittsmeldung, frage diesen Cursor also ab.",
         CapabilityKind::Query,
-        vec![semio_framework::manifest::kernel::CapabilityId("documents.read".to_string())],
+        vec![semio_framework::manifest::kernel::CapabilityId("artifacts.read".to_string())],
         inference_job_handle_input_schema("inference.events"),
         inference_job_output_schema("inference.events"),
     )

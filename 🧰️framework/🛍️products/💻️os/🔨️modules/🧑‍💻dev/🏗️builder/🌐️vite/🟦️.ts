@@ -10,7 +10,7 @@ import { EXTENSION_TARGETS, PLUGIN_BUILD_TARGETS } from "../../../🔌️plugin/
 import { MODULE_PLUGIN_ROUTE, MODULE_EXTENSION_ROUTE, moduleDirectoryName, MODULE_VENDOR_DIRECTORY, MODULE_SHARD_DIRECTORY } from "../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
 import { isHostPlaygroundFilter } from "../../../🔌️plugin/📇️registry/🟦️.ts";
 import { resolveShellBrandById } from "../../🏷️brand/🟦️.ts";
-import { semioBackboneVitePlugin, semioBlobVitePlugin, semioDescriptorRouteGuardVitePlugin, semioActivationVitePlugin, semioPlaygroundReactRefreshCoherenceVitePlugin, semioProductionTestBoundaryVitePlugin, semioSourceWatchVitePlugin } from "../../🔌️vite-plugins/🟦️.ts";
+import { semioBackboneVitePlugin, semioBlobVitePlugin, semioDescriptorRouteGuardVitePlugin, semioActivationVitePlugin, semioPlaygroundReactRefreshCoherenceVitePlugin, semioProductionTestBoundaryVitePlugin, semioSourceFreshnessVitePlugins } from "../../🔌️vite-plugins/🟦️.ts";
 import { semioExtensionStoreVitePlugin } from "../../../🔌️plugin/🏪️store/📥️installation/🟦️.ts";
 import { developmentRuntimeRoot, playgroundSessionViteAlias, pluginModulesRoot, readActivationReceipt } from "../../♻️activation/🟦️.ts";
 import { resolveTestBrowserHostRootsV1 } from "../../♻️activation/🌐️browser-host/🟦️.ts";
@@ -158,7 +158,7 @@ return {
       },
     } : {}),
     fs: { allow: [repoRoot, pluginModulesDir, installedExtensionsDir, rendererModulesDir] },
-    // 👁️ `semioSourceWatchVitePlugin` owns file watching (see its docstring): Vite's own chokidar
+    // 👁️ `semioSourceFreshnessVitePlugins` owns file watching (see its docstring): Vite's own chokidar
     // watcher watches `root` plus every module-graph file outside it, which on macOS consolidates into
     // ONE FSEvents stream over the whole repository and then pays `events × watched paths` per event —
     // a concurrent cargo build in the shared cache wedges the server. `server.watch.ignored` cannot fix
@@ -185,7 +185,7 @@ return {
     ]),
     semioBackboneVitePlugin(),
     semioBlobVitePlugin(),
-    ...(command === "serve" ? [semioSourceWatchVitePlugin({ repoRoot }), semioActivationVitePlugin({ receiptDirectory, moduleRoot: pluginModulesDir, installRoot: installedExtensionsDir, components: activationComponents }), semioExtensionStoreVitePlugin({ installRoot: installedExtensionsDir, repoRoot })] : []),
+    ...(command === "serve" ? [...semioSourceFreshnessVitePlugins({ repoRoot }), semioActivationVitePlugin({ receiptDirectory, moduleRoot: pluginModulesDir, installRoot: installedExtensionsDir, components: activationComponents }), semioExtensionStoreVitePlugin({ installRoot: installedExtensionsDir, repoRoot })] : []),
     ...semioAssetsVitePlugin(repoRoot),
     ...(productionComponents ? [productionBrowserArtifactsVitePlugin(repoRoot, productionComponents)] : [
       ...pluginModuleDirNames.flatMap((name) => staticDirVitePlugin(repoRoot, { kind: "static-dir", route: `${MODULE_PLUGIN_ROUTE}/${name}`, root: path.relative(repoRoot, path.join(pluginModulesDir, name)) })),

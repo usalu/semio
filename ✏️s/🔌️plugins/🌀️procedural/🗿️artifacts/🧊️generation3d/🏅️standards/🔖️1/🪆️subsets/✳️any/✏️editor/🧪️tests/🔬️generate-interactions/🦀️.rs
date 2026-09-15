@@ -162,14 +162,14 @@ async fn every_node_graph_sub_operation_the_table_names_changes_the_fixture() {
     let _serial = serial_execution::lock();
     let fixture = generate_interactions_fixture();
     let named: std::collections::BTreeSet<&str> = fixture.node_graph_edit_operations.iter().map(|row| row.operation.as_str()).collect();
-    assert_eq!(named, ["connect", "deleteSelection", "disconnect", "move", "setFixture"].into_iter().collect::<std::collections::BTreeSet<_>>());
+    assert_eq!(named, ["connect", "deleteSelection", "disconnect", "move", "setHostDocument"].into_iter().collect::<std::collections::BTreeSet<_>>());
     for row in &fixture.node_graph_edit_operations {
         assert!(!row.required.is_empty() || row.operation == "deleteSelection", "{} must name the arguments it reads", row.operation);
     }
     let mut app = crate::editor::generation3d::unit_tests::context::app().await;
     let node_id = {
         let read = crate::editor::generation3d::unit_tests::context::snapshot(&app);
-        crate::widget_id(read.fixture.widgets.first().expect("a widget")).to_string()
+        crate::widget_id(read.host_document.widgets.first().expect("a widget")).to_string()
     };
     let operations = serde_json::json!([{ "operation": "move", "nodeId": node_id, "x": 12.5, "y": -7.5 }]).to_string();
     crate::editor::generation3d::unit_tests::context::dispatch(
@@ -179,7 +179,7 @@ async fn every_node_graph_sub_operation_the_table_names_changes_the_fixture() {
     .await;
     let landed = {
         let read = crate::editor::generation3d::unit_tests::context::snapshot(&app);
-        let position = read.fixture.layout.get(node_id.as_str()).expect("a moved widget keeps a pinned layout");
+        let position = read.host_document.layout.get(node_id.as_str()).expect("a moved widget keeps a pinned layout");
         (position.x, position.y)
     };
     assert_eq!(landed, (12.5, -7.5), "the `move` row of the table must name a HANDLED sub-operation");

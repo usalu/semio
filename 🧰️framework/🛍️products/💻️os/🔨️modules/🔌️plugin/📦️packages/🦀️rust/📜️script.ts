@@ -143,7 +143,7 @@ class GuestLifecycleCheckScript extends BundleScript {
 }
 
 
-class ColdDocumentPairIngressCheckScript extends BundleScript {
+class ColdArtifactPairIngressCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     assert(segments.every((segment) => segment === "--native"), "cold-document-pair-ingress-check accepts only --native");
     const hostile = await coldDocumentPairIngressOracle(this.repoRoot);
@@ -232,7 +232,7 @@ class DocumentBackboneBindingCheckScript extends BundleScript {
 
 const router = new ScriptRouter(import.meta.dir)
   .register("document-backbone-binding-check", DocumentBackboneBindingCheckScript)
-  .register("cold-document-pair-ingress-check", ColdDocumentPairIngressCheckScript)
+  .register("cold-document-pair-ingress-check", ColdArtifactPairIngressCheckScript)
   .register("guest-lifecycle-check", GuestLifecycleCheckScript)
   .register("check", CheckScript)
   .register("test", TestScript)

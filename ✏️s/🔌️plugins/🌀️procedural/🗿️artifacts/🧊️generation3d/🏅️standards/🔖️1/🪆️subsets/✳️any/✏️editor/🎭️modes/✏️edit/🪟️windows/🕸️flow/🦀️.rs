@@ -6,7 +6,7 @@ use crate::editor::generation3d::PreviewInteractionMarks;
 use crate::editor::generation3d::GENERATION_3D_INTERACTION_CHANNEL;
 use crate::editor::generation3d::GENERATION_3D_INTERACTION_DOMAIN;
 use crate::editor::generation3d::GENERATION_3D_PLAY_APP_ID;
-use crate::standards::v1::subsets::any::schema::{fixture_to_workflow, with_host};
+use crate::standards::v1::subsets::any::schema::{dag_host_document_to_workflow, with_host};
 use crate::Generation3dSnapshot;
 use semio_framework_os_flow::{flow_backed_node_graph_extras, FlowEvalSession};
 use semio_framework_os_kernel::Viewport2d;
@@ -84,12 +84,11 @@ pub(crate) fn graph_targets_json(granularity: &str, id: &str) -> String {
 }
 
 /// 🚦 The `NodeEvalStatus` tag `flow_backed_node_graph_extras` reported for one widget, localized —
-/// `build_flow_status_json` keys `{"<widgetId>": {"status": "ok" | "stale" | …}}`.
+/// `build_flow_status_json` keys `{"<widgetId>": {"status": "ok" | "queued" | …}}`.
 fn node_status_label(status_json: Option<&String>, node_id: &str, labels: &Generation3dLabels) -> Option<&'static str> {
     let parsed = dsl::json::parse(status_json?.as_str()).ok()?;
     let status = parsed.get(node_id)?.get("status")?.as_str()?;
     Some(match status {
-        "stale" => labels.status_stale.as_str(),
         "queued" => labels.status_queued.as_str(),
         "computing" => labels.status_computing.as_str(),
         "error" => labels.status_error.as_str(),
@@ -204,7 +203,7 @@ fn kind_extension_name(kind: &str) -> (String, String) {
 /// the OS workflow window seeds `NodeGraphScene.operators` so the canvas can lay ports out without
 /// waiting for the app-static catalogue (which may not have been contributed yet). Built-in `core.*`
 /// widgets are omitted: the engine already knows them. Never the registered catalogue.
-fn document_operator_records(dag: &semio_framework_artifact_infinite_dag::DagFixture, nodes: &[NodeGraphNodeRecord]) -> Vec<NodeGraphOperatorRecord> {
+fn document_operator_records(dag: &semio_framework_artifact_infinite_dag::DagHostDocument, nodes: &[NodeGraphNodeRecord]) -> Vec<NodeGraphOperatorRecord> {
     let catalogue = semio_framework_os_flow::flow_operator_catalogue_records();
     let node_by_id: std::collections::BTreeMap<&str, &NodeGraphNodeRecord> = nodes.iter().map(|node| (node.id.as_str(), node)).collect();
     let mut kinds: Vec<String> = Vec::new();
@@ -269,10 +268,10 @@ fn graph_find_items(nodes: &[NodeGraphNodeRecord], category: &str) -> Vec<NodeGr
 
 //#region 🔖️Render
 pub fn render(document: &Generation3dSnapshot, config: &Generation3dConfig, session: &FlowEvalSession, marks: &PreviewInteractionMarks, labels: &Generation3dLabels) -> UiAssemblyResult<BuiltNode> {
-    let fixture = &document.fixture;
-    let (nodes, edges, operators) = with_host(fixture, |host| {
-        let (nodes, edges) = fixture_to_workflow(&host.dag.fixture);
-        let operators = document_operator_records(&host.dag.fixture, &nodes);
+    let fixture = &document.host_document;
+    let (nodes, edges, operators) = with_host(snapshot, |host| {
+        let (nodes, edges) = dag_host_document_to_workflow(&host.dag.host_document);
+        let operators = document_operator_records(&host.dag.host_document, &nodes);
         (nodes, edges, operators)
     });
     let viewport = Viewport2d { x: fixture.camera.x, y: fixture.camera.y, zoom: fixture.camera.zoom };
@@ -285,7 +284,7 @@ pub fn render(document: &Generation3dSnapshot, config: &Generation3dConfig, sess
             editable: Some(true),
             capabilities_json: flow_extras.capabilities_json,
             lod_json: flow_extras.lod_json,
-            fixture_json: flow_extras.fixture_json,
+            host_document_json: flow_extras.host_document_json,
             eval_json: flow_extras.eval_json,
             status_json: flow_extras.status_json,
             operators,

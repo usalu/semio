@@ -4,7 +4,7 @@ use crate::editor::generation2d::terminology::Generation2dLabels;
 use crate::editor::generation2d::GENERATION2D_PLAY_APP_ID;
 use crate::Generation2dSnapshot;
 use semio_framework_artifact_playbook_playbook::{selected_generation, GenerationPlayState};
-use semio_framework_os_flow::forms_bridge::flow_fixture_to_form_spec;
+use semio_framework_os_flow::forms_bridge::flow_host_document_to_form_spec;
 use semio_framework_plugin::{built_text_node, BuiltNode, LocalizedLabel, SurfaceKind, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants
@@ -35,7 +35,7 @@ pub fn definition() -> WindowKindDefinition {
 
 //#region 🔖️Render
 pub fn render(document: &Generation2dSnapshot, generation: &GenerationPlayState, labels: &Generation2dLabels) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    let spec = flow_fixture_to_form_spec(&document.fixture);
+    let spec = flow_host_document_to_form_spec(&document.host_document);
     let Some(current) = selected_generation(generation) else {
         return built_text_node(semio_framework_plugin::Label::data(labels.generate_hint.as_str())).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.generate-form.hint", "fixed UI hint admission failed"));
     };

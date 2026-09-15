@@ -26,7 +26,7 @@ mod conformance_laws {
     /// 🧪️ P2-P1: `dsl::parse_grammar` + `dsl::Recognizer::compile` + `.recognize` against the
     /// REAL fixture body — the snapshot text facet's own real RFC 4180 grammar recognizes the
     /// genuine `print_dsl` output (envelope-id-normalized, matching how
-    /// `dsl::fixture_sweep::m5_handcrafted_grammar_conformance::dsl_body_from_fixture` feeds the
+    /// `dsl::fixture_sweep::m5_handcrafted_grammar_conformance::dsl_body_from_host_document` feeds the
     /// Recognizer, mirrored here so this law does not depend on the framework's own harness).
     #[semio_framework_async_macros::async_test]
     async fn grammar_conformance_law() {

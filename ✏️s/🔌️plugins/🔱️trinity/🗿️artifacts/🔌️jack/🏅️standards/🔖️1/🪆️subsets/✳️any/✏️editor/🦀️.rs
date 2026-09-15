@@ -38,7 +38,7 @@ const TRINITY_JACK_PLAY_SURFACE_RESULTS: &str = "trinity.jack.results";
 const TRINITY_JACK_PLAY_BODY_GRAPH: &str = "trinity.jack.play.main";
 const TRINITY_JACK_PLAY_BODY_EDITOR: &str = "trinity.jack.play.editor";
 const TRINITY_JACK_PLAY_BODY_RESULTS: &str = "trinity.jack.play.results";
-const TRINITY_JACK_PLAY_BODY_DOCUMENT: &str = "trinity.jack.play.document";
+const TRINITY_JACK_PLAY_BODY_ARTIFACT: &str = "trinity.jack.play.artifact";
 const TRINITY_JACK_PLAY_BODY_CATALOGUE: &str = "trinity.jack.play.catalogue";
 const TRINITY_JACK_PLAY_BODY_INSPECTION: &str = "trinity.jack.play.inspection";
 pub(crate) const TRINITY_JACK_PLAY_WINDOW_GRAPH: &str = "trinity-jack-graph";
@@ -52,7 +52,7 @@ pub(crate) const TRINITY_JACK_DEFAULT_QUERY: &str = "MATCH (a:Piece)-[r:Connecti
 //#endregion 🔖️Constants
 
 //#region 🔖️DocumentHelpers
-/// 📦️ The default trinity graph fixture (Nakagin capsule tower) — the initial document projection.
+/// 📦️ The default trinity graph snapshot (Nakagin capsule tower) — the initial document projection.
 /// 📬️ Admission envelope of one published document mutation: the reorganize run finalizes one `move-node` per moved
 /// node, each far below one page.
 const TRINITY_JACK_ARTIFACT_MUTATION_MAXIMUM_BYTES: usize = 4_096;
@@ -64,9 +64,9 @@ pub(crate) fn default_fixture() -> JackSnapshot {
 /// 🧬️ Whole-document replace is banned from the `Mutation` enum outright (`SetFixture` — see
 /// `📓️taxonomy.md`'s forbidden vocabulary), so `setActiveExample`/`setFixtureJson` build a
 /// `Effect::LoadDocument` (outside undo history) instead of an `artifact_mutations` entry.
-pub(crate) fn reset_document_effect(fixture: &JackSnapshot) -> Effect {
-    let pack = <JackSnapshot as ArtifactPack>::encode_pack(fixture);
-    let envelope = store::create_document_envelope::<JackSnapshot, TrinityGraphMutation>(TRINITY_GRAPH_SCHEMA, "jack", fixture.clone(), None);
+pub(crate) fn reset_document_effect(snapshot: &JackSnapshot) -> Effect {
+    let pack = <JackSnapshot as ArtifactPack>::encode_pack(snapshot);
+    let envelope = store::create_document_envelope::<JackSnapshot, TrinityGraphMutation>(TRINITY_GRAPH_SCHEMA, "jack", snapshot.clone(), None);
     let spr = semio_framework_plugin::resolve_ready(store::print_document_spr(&envelope)).expect("jack document spr encode is infallible for a fresh, edit-free envelope");
     Effect::LoadDocument { pack, spr }
 }
@@ -128,8 +128,8 @@ pub fn ui_node_list(values: impl IntoIterator<Item = semio_framework_plugin::UiA
     Ok(nodes)
 }
 
-pub(crate) fn graph_from_fixture_or_default(fixture: &JackSnapshot) -> crate::Graph {
-    crate::Graph::from_fixture(fixture.clone()).unwrap_or_else(|_| crate::Graph::from_fixture(default_fixture()).expect("nakagin graph"))
+pub(crate) fn graph_from_snapshot_or_default(snapshot: &JackSnapshot) -> crate::Graph {
+    crate::Graph::from_snapshot(snapshot.clone()).unwrap_or_else(|_| crate::Graph::from_snapshot(default_fixture()).expect("nakagin graph"))
 }
 
 /// 🩹️ Delegates to `crate::parse_port_key` (the one place the `nodeId@portId`
@@ -138,9 +138,9 @@ pub(crate) fn split_endpoint(endpoint: &str) -> (String, String) {
     crate::parse_port_key(endpoint).map_or_else(|| (endpoint.to_string(), "in".into()), |(n, p)| (n.to_string(), p.to_string()))
 }
 
-/// ♻️ Projects a Jack fixture into the shared node-graph view consumed by Rewriting.
-pub fn fixture_to_workflow(fixture: &JackSnapshot) -> (Vec<NodeGraphNodeRecord>, Vec<NodeGraphEdgeRecord>, Viewport2d) {
-    let scene = crate::jack_working_scene(fixture);
+/// ♻️ Projects a Jack snapshot into the shared node-graph view consumed by Rewriting.
+pub fn snapshot_to_workflow(snapshot: &JackSnapshot) -> (Vec<NodeGraphNodeRecord>, Vec<NodeGraphEdgeRecord>, Viewport2d) {
+    let scene = crate::jack_working_scene(snapshot);
     let nodes: Vec<NodeGraphNodeRecord> = scene.nodes.iter().map(node_to_workflow_record).collect();
     let edges: Vec<NodeGraphEdgeRecord> = scene
         .edges
@@ -151,7 +151,7 @@ pub fn fixture_to_workflow(fixture: &JackSnapshot) -> (Vec<NodeGraphNodeRecord>,
             NodeGraphEdgeRecord { id: edge.id.clone(), source_node_id, source_port_id, target_node_id, target_port_id, label: None }
         })
         .collect();
-    let viewport = Viewport2d { x: fixture.camera.x, y: fixture.camera.y, zoom: fixture.camera.zoom };
+    let viewport = Viewport2d { x: snapshot.camera.x, y: snapshot.camera.y, zoom: snapshot.camera.zoom };
     (nodes, edges, viewport)
 }
 
@@ -179,8 +179,8 @@ fn node_to_workflow_record(node: &Node) -> NodeGraphNodeRecord {
 /// `graph:in`).
 pub(crate) fn jack_io() -> semio_framework_plugin::AppIo {
     semio_framework_plugin::AppIo {
-        document_schema: TRINITY_GRAPH_SCHEMA.into(),
-        document_media_type: MediaType { class: MediaClass::Graph, form: MediaForm::Trinity },
+        artifact_schema: TRINITY_GRAPH_SCHEMA.into(),
+        artifact_media_type: MediaType { class: MediaClass::Graph, form: MediaForm::Trinity },
         ports: vec![semio_framework_plugin::MediaPortSpec {
             id: "graph:out".into(),
             label: "Graph".into(),
@@ -207,7 +207,7 @@ pub(crate) fn jack_io() -> semio_framework_plugin::AppIo {
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslOps)]
 pub enum TrinityJackCommand {
     // 🔧️ Document-mutating — dispatched as VCS operations with a true inverse.
-    #[dsl(key = "set-fixture-json")]
+    #[dsl(key = "set-snapshot-json")]
     SetFixtureJson { json: String },
     #[dsl(key = "delete-selection")]
     DeleteSelection,
@@ -696,16 +696,16 @@ impl ArtifactEditor for TrinityJackPlayApp {
 
     // 🧬️ Whole-document replace is banned from the `Mutation` enum outright (`SetFixture` — see
     // `📓️taxonomy.md`'s forbidden vocabulary), so this intentionally falls back to the trait
-    // default (`None`) rather than overriding — the `"document:in"` media port therefore reports
-    // `MediaError::NotImplemented`; a real whole-fixture load goes through `reset_document_effect`
+    // default (`None`) rather than overriding — the `"artifact:in"` media port therefore reports
+    // `MediaError::NotImplemented`; a real whole-snapshot load goes through `reset_document_effect`
     // (`Effect::LoadDocument`, outside undo history), see `editor::jack::commands::set_active_example`
     // and `editor::jack::commands::set_fixture_json`.
 
     /// 🔌️ `"graph:out"` fans the live query-graph projection out to other graph-consuming workflow
-    /// nodes, in addition to the implicit `"document:out"` — both encode the same `JackSnapshot` pack.
+    /// nodes, in addition to the implicit `"artifact:out"` — both encode the same `JackSnapshot` pack.
     fn export_media(port: &str, doc: &ArtifactView<'_, JackSnapshot>) -> Result<Media, MediaError> {
         match port {
-            "graph:out" | "document:out" => {
+            "graph:out" | "artifact:out" => {
                 let bytes = doc.snapshot.encode_pack();
                 Ok(Media { media_type: MediaType { class: MediaClass::Graph, form: MediaForm::Trinity }, payload: MediaPayload::Structured { schema: TRINITY_GRAPH_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
             }
@@ -740,11 +740,11 @@ impl ArtifactEditor for TrinityJackPlayApp {
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<TrinityGraphMutation, NoConfigMutation, Self::DraftMutation>, Fault> {
-        let fixture = doc.snapshot;
+        let snapshot = doc.snapshot;
         Ok(match command {
             TrinityJackCommand::SetFixtureJson { json } => commands::set_fixture_json(json),
-            TrinityJackCommand::DeleteSelection => commands::delete_selection(fixture, &interaction.selection("ast").ids),
-            TrinityJackCommand::PatchNodes { node_ids, field, value } => commands::patch_nodes(fixture, node_ids, field, value),
+            TrinityJackCommand::DeleteSelection => commands::delete_selection(snapshot, &interaction.selection("ast").ids),
+            TrinityJackCommand::PatchNodes { node_ids, field, value } => commands::patch_nodes(snapshot, node_ids, field, value),
             TrinityJackCommand::RunQuery { .. } | TrinityJackCommand::LoadExampleQuery { .. } => return Err(Fault::from("query execution requires its retained operation owner")),
             TrinityJackCommand::SetActiveExample { example_id } => commands::set_active_example(example_id),
             TrinityJackCommand::SetViewport { viewport, .. } => return commands::set_viewport(viewport, view_state),
@@ -759,16 +759,16 @@ impl ArtifactEditor for TrinityJackPlayApp {
     }
 
     fn render(body_key: &str, doc: &ArtifactView<'_, JackSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
-        let fixture = doc.snapshot;
+        let snapshot = doc.snapshot;
         let labels = semio_framework_plugin::resolve_labels::<crate::editor::jack::terminology::TrinityJackLabels>(view_state);
         let root = match body_key {
-            TRINITY_JACK_PLAY_BODY_GRAPH => edit::windows::graph::render(TRINITY_JACK_PLAY_SURFACE_GRAPH, TRINITY_JACK_PLAY_CONTROLLER_ID, fixture, crate::editor::jack::window_config::current(cfg)),
+            TRINITY_JACK_PLAY_BODY_GRAPH => edit::windows::graph::render(TRINITY_JACK_PLAY_SURFACE_GRAPH, TRINITY_JACK_PLAY_CONTROLLER_ID, snapshot, crate::editor::jack::window_config::current(cfg)),
             TRINITY_JACK_PLAY_BODY_EDITOR => {
                 let query = crate::editor::jack::query_window_config::current(cfg).cloned().unwrap_or_default();
-                edit::windows::editor::render(TRINITY_JACK_PLAY_SURFACE_EDITOR, TRINITY_JACK_PLAY_CONTROLLER_ID, fixture, &query, None)
+                edit::windows::editor::render(TRINITY_JACK_PLAY_SURFACE_EDITOR, TRINITY_JACK_PLAY_CONTROLLER_ID, snapshot, &query, None)
             }
             TRINITY_JACK_PLAY_BODY_RESULTS => edit::windows::results::render(TRINITY_JACK_PLAY_SURFACE_RESULTS, TRINITY_JACK_PLAY_CONTROLLER_ID, None, None),
-            TRINITY_JACK_PLAY_BODY_DOCUMENT => crate::editor::jack::panels::document::render(fixture, cfg.snapshot, labels),
+            TRINITY_JACK_PLAY_BODY_ARTIFACT => crate::editor::jack::panels::document::render(snapshot, cfg.snapshot, labels),
             TRINITY_JACK_PLAY_BODY_CATALOGUE => crate::editor::jack::panels::catalogue::render(labels),
             TRINITY_JACK_PLAY_BODY_INSPECTION => crate::editor::jack::panels::inspection::render(),
             _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("trinity.body.label", "the fixed Trinity body label exceeds its UI bound")),
@@ -822,19 +822,19 @@ impl ArtifactEditor for TrinityJackPlayApp {
         menu.build()
     }
 
-    /// 🕹️ Domain "ast" topology: every fixture node is a `TopologyNode`, parented by the source node
+    /// 🕹️ Domain "ast" topology: every snapshot node is a `TopologyNode`, parented by the source node
     /// of its first incoming connection (roots — nodes with no incoming edge — get `parent: None`).
     /// `MergeMode::Range` is not declared for this domain, so `ordered`'s sequence need not be a strict
     /// pre-order — `descendant_closure`/`ancestors` only need the (id, parent) pairs, not list order.
     fn interaction_topology(doc: &ArtifactView<'_, JackSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> InteractionTopology {
-        let fixture = doc.snapshot;
+        let snapshot = doc.snapshot;
         let mut parent_of: std::collections::BTreeMap<String, String> = std::collections::BTreeMap::new();
-        for edge in fixture.edges() {
+        for edge in snapshot.edges() {
             let source = crate::port_node_id(&edge.source).unwrap_or(&edge.source).to_string();
             let target = crate::port_node_id(&edge.target).unwrap_or(&edge.target).to_string();
             parent_of.entry(target).or_insert(source);
         }
-        let ordered = fixture.nodes().iter().map(|node| TopologyNode { id: node.id.clone(), granularity: "node".into(), parent: parent_of.get(&node.id).cloned() }).collect();
+        let ordered = snapshot.nodes().iter().map(|node| TopologyNode { id: node.id.clone(), granularity: "node".into(), parent: parent_of.get(&node.id).cloned() }).collect();
         let mut domains = std::collections::BTreeMap::new();
         domains.insert("ast".to_string(), DomainTopology { ordered });
         InteractionTopology { domains }
@@ -876,9 +876,9 @@ pub fn create_trinity_jack_app() -> semio_framework_plugin::AppDefinition {
             .default_layout(edit::layout())
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_ARTIFACT_ID,
-                LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Dokument"),
+                LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Artefakt"),
                 PanelGroup::Workbench,
-                TRINITY_JACK_PLAY_BODY_DOCUMENT,
+                TRINITY_JACK_PLAY_BODY_ARTIFACT,
             )
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
@@ -897,7 +897,7 @@ pub fn create_trinity_jack_app() -> semio_framework_plugin::AppDefinition {
             .action_with(semio_framework_plugin::ActionDefinition::bounded_catalog("runQuery", LocalizedLabel::native("Run Jack Query", "Jack-Abfrage ausführen"), ActionKind::Mutation).with_category("methods"))
             .action_with(semio_framework_plugin::ActionDefinition::bounded_catalog("loadExampleQuery", LocalizedLabel::native("Load Example Query", "Beispielabfrage laden"), ActionKind::Mutation).with_category("open"))
             .action_with(semio_framework_plugin::ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), ActionKind::Mutation, "panel-left").with_category("mode"))
-            // 🛠️ Dev-only whole-fixture import — kept out of the command palette.
+            // 🛠️ Dev-only whole-snapshot import — kept out of the command palette.
             .action_with(semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::bounded_catalog("setFixtureJson", LocalizedLabel::native("Set Fixture Json", "Fixture-JSON festlegen"), ActionKind::Mutation) })
             .view_action("nodeGraphViewport", LocalizedLabel::native("Set Graph Viewport", "Graph-Ansicht festlegen"))
             .action_with(semio_framework_plugin::ActionDefinition::new("textEdit", LocalizedLabel::native("Edit Jack Query", "Jack-Abfrage bearbeiten"), ActionKind::View, "typography"))

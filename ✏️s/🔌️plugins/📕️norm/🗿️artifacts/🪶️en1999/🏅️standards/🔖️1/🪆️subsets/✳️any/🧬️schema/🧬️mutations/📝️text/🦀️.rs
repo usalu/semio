@@ -10,8 +10,8 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 //#endregion 📖️SemioGrammar
 
 use crate::document::AnnexChoice;
-pub use crate::document_schema::mutations::En1999Mutation;
-use crate::document_schema::mutations::{
+pub use crate::artifact_schema::mutations::En1999Mutation;
+use crate::artifact_schema::mutations::{
     change_a_mm2, change_alloy, change_annex, change_beta_w, change_chi, change_delta_sigma_c, change_delta_sigma_ed, change_fatigue_m, change_i_t_mm4, change_l_cr_mm, change_m_ed_knm, change_n_cycles, change_n_ed_kn, change_sheet_b_mm,
     change_sheet_k_sigma, change_sheet_m_ed_knm, change_sheet_t_mm, change_sheet_w_el_mm3, change_shell_r_mm, change_shell_t_mm, change_sigma_ed_shell_mpa, change_theta_c, change_v_weld_ed_kn, change_w_el_mm3, change_weld_length_mm,
     change_weld_throat_mm,

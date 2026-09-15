@@ -27,19 +27,19 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 
 use crate::standards::v1::subsets::any::schema::diff::Generation3dDiff;
 use crate::{widget_id, Generation3dSnapshot};
-use semio_framework_artifact_flow_flow::FlowFixture;
+use semio_framework_artifact_flow_flow::FlowHostDocument;
 use semio_framework_artifact_playbook_playbook::GenerationMutation;
 use semio_framework_value_derive::{FromValue, ToValue};
 use store::{ArtifactEnvelope, ArtifactStore};
 
 //#region 🔖️AddressHelpers
 /// 🔎️ BASE-state widget index lookup by id — shared by every widget triad leaf's inverse.
-pub(crate) fn widget_index(fixture: &FlowFixture, id: &str) -> Option<usize> {
+pub(crate) fn widget_index(fixture: &FlowHostDocument, id: &str) -> Option<usize> {
     fixture.widgets.iter().position(|widget| widget_id(widget) == id)
 }
 
 /// 🔎️ BASE-state synapse index lookup by id — shared by every synapse triad leaf's inverse.
-pub(crate) fn synapse_index(fixture: &FlowFixture, id: &str) -> Option<usize> {
+pub(crate) fn synapse_index(fixture: &FlowHostDocument, id: &str) -> Option<usize> {
     fixture.synapses.iter().position(|synapse| synapse.id == id)
 }
 //#endregion 🔖️AddressHelpers
@@ -214,10 +214,10 @@ pub fn generation_mutation_to_generation3d(operation: GenerationMutation) -> Gen
 }
 //#endregion 🔖️GenerationBridge
 
-//#region 🔖️FixtureDiffing
+//#region 🔖️HostDocumentDiffing
 /// 🔀️ Diffs two fixtures into a minimal, invertible, mergeable semantic mutation set — signature
 /// preserved from the pre-migration generic-vocabulary version (`🏗️builder`/app callers reach this
-/// via `crate::standards::v1::subsets::any::schema::commit_fixture`, unchanged) but every pushed
+/// via `crate::standards::v1::subsets::any::schema::commit_host_document`, unchanged) but every pushed
 /// mutation is now a real semantic variant.
 ///
 /// ⚠️ Order is load-bearing: every orphaned layout override is retired FIRST, while its widget is
@@ -226,7 +226,7 @@ pub fn generation_mutation_to_generation3d(operation: GenerationMutation) -> Gen
 /// authoring the position removals after the widget removals silently kept every stale override, and
 /// an example swap accumulated the previous example's layout keys forever
 /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-pub fn generation3d_fixture_operations(before: &FlowFixture, after: &FlowFixture) -> Vec<Generation3dMutation> {
+pub fn generation3d_host_document_operations(before: &FlowHostDocument, after: &FlowHostDocument) -> Vec<Generation3dMutation> {
     let mut operations = Vec::new();
     for id in before.layout.keys() {
         if !after.layout.contains_key(id) {

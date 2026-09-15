@@ -60,7 +60,7 @@ mod tests {
             artifact_kinds: Vec::new(),
             config: crate::host::resolve_kernel_future(ConfigSpec::empty()),
             command_grammar: crate::host::resolve_kernel_future(semio_framework::CommandGrammar::empty()),
-            io: crate::host::resolve_kernel_future(semio_framework::AppIo::from_document(
+            io: crate::host::resolve_kernel_future(semio_framework::AppIo::from_artifact(
                 "draw.document",
                 MediaType { class: MediaClass::TwoD, form: MediaForm::Vector },
                 semio_framework::ArtifactPresentation { id: "draw".into(), name: "Draw".into(), dimension: "2d".into(), component_kind: "draw".into() },

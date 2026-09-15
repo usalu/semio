@@ -98,8 +98,11 @@ fn reactor_uncommitted_patch_handback_preserves_exact_slot_and_retry() {
     pending.stage_emission(old, std::iter::once(&patch)).unwrap();
     assert!(!pending.apply_issued_ack(old, "7:window", 2, 65536, |_| unreachable!()).unwrap());
     pending.hand_back_turn(patch).unwrap();
-    assert_eq!(pending.borrowed_sequences().collect::<Vec<_>>(), sequence);
+    // 🧾️ A handed-back patch is one the host was NEVER handed, so no receipt may be staged against it
+    // until a later turn takes it out again — and when that turn does, it re-borrows the SAME slot.
+    assert_eq!(pending.borrowed_sequences().count(), 0);
     let patch = pending.take_one(65536).unwrap().unwrap();
+    assert_eq!(pending.borrowed_sequences().collect::<Vec<_>>(), sequence);
     let current = ActorUiPatchReceipt { patch_sequence: old.patch_sequence + 1, ..old };
     pending.stage_emission(current, std::iter::once(&patch)).unwrap();
     pending.commit_emission();

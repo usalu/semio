@@ -42,7 +42,7 @@ fn wire_host(law: &Value) -> DagHost {
         })
         .collect();
     let viewport = &graph["viewport"];
-    let mut host = DagHost::from_fixture_without_layout(DagFixture { schema: "dag.fixture".into(), camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 }, nodes, edges: vec![] });
+    let mut host = DagHost::from_host_document_without_layout(DagHostDocument { schema: "dag.host_document".into(), camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 }, nodes, edges: vec![] });
     host.set_viewport(viewport["width"].as_u64().expect("viewport width") as u32, viewport["height"].as_u64().expect("viewport height") as u32, viewport["dpr"].as_f64().expect("viewport dpr"));
     host
 }
@@ -99,7 +99,7 @@ const EMPTY_CANVAS_SCREEN: (f64, f64) = (8.0, 8.0);
 /// rect is reported in.
 fn world_point_to_screen(host: &DagHost, point: canvas::Point) -> (f64, f64) {
     use canvas::camera::{world_to_screen, Camera, Viewport};
-    let camera = Camera { x: host.fixture.camera.x, y: host.fixture.camera.y, zoom: host.fixture.camera.zoom };
+    let camera = Camera { x: host.host_document.camera.x, y: host.host_document.camera.y, zoom: host.host_document.camera.zoom };
     let viewport = Viewport { width: host.width, height: host.height, dpr: host.dpr };
     let screen = world_to_screen(&camera, &viewport, point);
     (screen.x, screen.y)
@@ -130,9 +130,9 @@ fn a_port_to_port_drag_creates_a_wire_and_journals_it_for_the_guest() {
                     for edge in edges {
                         let source = edge["source"].as_str().expect("edge source");
                         let target = edge["target"].as_str().expect("edge target");
-                        assert!(host.fixture.edges.iter().any(|candidate| candidate.source == source && candidate.target == target), "{name}: {source} -> {target} must be a live wire, got {:?}", host.fixture.edges.iter().map(|edge| (edge.source.as_str(), edge.target.as_str())).collect::<Vec<_>>());
+                        assert!(host.host_document.edges.iter().any(|candidate| candidate.source == source && candidate.target == target), "{name}: {source} -> {target} must be a live wire, got {:?}", host.host_document.edges.iter().map(|edge| (edge.source.as_str(), edge.target.as_str())).collect::<Vec<_>>());
                     }
-                    assert_eq!(host.fixture.edges.len(), edges.len(), "{name}: an input port holds exactly one incoming wire");
+                    assert_eq!(host.host_document.edges.len(), edges.len(), "{name}: an input port holds exactly one incoming wire");
                 }
                 if case["expectedSecondDrain"].is_array() {
                     assert!(host.take_graph_edits().is_empty(), "{name}: a drained journal must not report the same wire twice");
@@ -225,9 +225,9 @@ fn a_minimap_click_moves_the_camera() {
             other => panic!("fixture minimap point {other}"),
         };
         assert!(host.screen_pointer_gesture_begins_at(x, y), "{name}: a minimap press belongs to the screen pointer path");
-        let before = (host.fixture.camera.x, host.fixture.camera.y);
+        let before = (host.host_document.camera.x, host.host_document.camera.y);
         host.pointer_down_screen(x, y, 0, false, false, false, false);
-        let after = (host.fixture.camera.x, host.fixture.camera.y);
+        let after = (host.host_document.camera.x, host.host_document.camera.y);
         let moved = (after.0 - before.0).abs() > f64::EPSILON || (after.1 - before.1).abs() > f64::EPSILON;
         assert_eq!(moved, case["expectedCameraMoves"].as_bool().expect("expected camera moves"), "{name}: camera {before:?} -> {after:?}");
         assert!(host.screen_pointer_gesture_active(), "{name}: the minimap drag holds the screen path until release");
@@ -256,7 +256,7 @@ fn case_endpoint_centre(host: &DagHost, case: &Value) -> (f64, f64) {
     let centres: Vec<(f64, f64)> = endpoints
         .iter()
         .filter_map(|endpoint| endpoint.split('@').next())
-        .filter_map(|node_id| host.fixture.nodes.iter().find(|node| node.id == node_id))
+        .filter_map(|node_id| host.host_document.nodes.iter().find(|node| node.id == node_id))
         .map(|node| (node.x, node.y))
         .collect();
     assert!(!centres.is_empty(), "a case must name at least one endpoint to frame");
@@ -285,7 +285,7 @@ fn the_port_geometry_the_host_publishes_is_the_geometry_that_grabs_a_wire() {
                 host.pointer_down_screen(from_x, from_y, 0, false, false, false, false);
                 host.pointer_move_screen(to_x, to_y, false, false, false);
                 host.pointer_up_screen(to_x, to_y, false, false, false);
-                assert!(!host.fixture.edges.is_empty(), "{name}: the setup wire must exist before the case runs");
+                assert!(!host.host_document.edges.is_empty(), "{name}: the setup wire must exist before the case runs");
                 let _ = host.take_graph_edits();
             }
             let gesture = &case["gesture"];
@@ -309,7 +309,7 @@ fn the_port_geometry_the_host_publishes_is_the_geometry_that_grabs_a_wire() {
                 "grabSides" => {
                     let endpoint = gesture["at"].as_str().expect("grab endpoint");
                     let (node_id, port_id) = endpoint.split_once('@').expect("endpoint grammar");
-                    let node = host.fixture.nodes.iter().find(|node| node.id == node_id).expect("fixture node").clone();
+                    let node = host.host_document.nodes.iter().find(|node| node.id == node_id).expect("fixture node").clone();
                     let input_index = node.inputs().iter().position(|port| port.id == port_id).expect("input port");
                     let output_index = node.outputs().iter().position(|port| port.id == port_id).expect("output port");
                     for (side, bounds) in [(true, input_port_connector_bounds(&node, input_index)), (false, output_port_connector_bounds(&node, output_index))] {
@@ -356,7 +356,7 @@ fn a_port_the_camera_has_scrolled_past_publishes_no_geometry_to_aim_at() {
     let (on_x, on_y) = published_port_centre(&host, &endpoint);
     assert!(on_x >= 0.0 && on_y >= 0.0 && on_x <= f64::from(host.width) && on_y <= f64::from(host.height), "{endpoint} must start on the surface: ({on_x}, {on_y}) in {}×{}", host.width, host.height);
 
-    let world = host.fixture.nodes.iter().find(|node| node.id == endpoint.split('@').next().expect("node id")).map(|node| (node.x, node.y)).expect("endpoint node");
+    let world = host.host_document.nodes.iter().find(|node| node.id == endpoint.split('@').next().expect("node id")).map(|node| (node.x, node.y)).expect("endpoint node");
     host.set_camera(world.0 + f64::from(host.width) * 2.0, world.1, 1.0);
     let geometry: Value = serde_json::from_str(&host.entity_screen_json("handle", &endpoint)).expect("entity screen json");
     println!("[DEBUG] scrolled-past port geometry {geometry}");
@@ -398,7 +398,7 @@ fn assert_case_edges(host: &DagHost, case: &Value, name: &str) {
     for edge in edges {
         let source = edge["source"].as_str().expect("edge source");
         let target = edge["target"].as_str().expect("edge target");
-        assert!(host.fixture.edges.iter().any(|candidate| candidate.source == source && candidate.target == target), "{name}: {source} -> {target} must be a live wire, got {:?}", host.fixture.edges.iter().map(|edge| (edge.source.as_str(), edge.target.as_str())).collect::<Vec<_>>());
+        assert!(host.host_document.edges.iter().any(|candidate| candidate.source == source && candidate.target == target), "{name}: {source} -> {target} must be a live wire, got {:?}", host.host_document.edges.iter().map(|edge| (edge.source.as_str(), edge.target.as_str())).collect::<Vec<_>>());
     }
-    assert_eq!(host.fixture.edges.len(), edges.len(), "{name}: the live wire count must be exactly what the case declares");
+    assert_eq!(host.host_document.edges.len(), edges.len(), "{name}: the live wire count must be exactly what the case declares");
 }

@@ -226,7 +226,7 @@ async fn the_manifest_stitches_every_taxonomy_node() {
     for id in [SHOOTING_PLAY_WINDOW_SCENE, SHOOTING_PLAY_WINDOW_ICON] {
         assert!(json.contains(id), "window kind {id} missing from the manifest: {json}");
     }
-    for body in [SHOOTING_PLAY_BODY_DOCUMENT, SHOOTING_PLAY_BODY_CATALOGUE, SHOOTING_PLAY_BODY_INSPECTION] {
+    for body in [SHOOTING_PLAY_BODY_ARTIFACT, SHOOTING_PLAY_BODY_CATALOGUE, SHOOTING_PLAY_BODY_INSPECTION] {
         assert!(json.contains(body), "panel body {body} missing from the manifest");
     }
     assert!(json.contains("2d.shooting"), "artifact kind missing from the manifest");
@@ -279,7 +279,7 @@ async fn assets_interaction_domain_is_declared_and_scoped_to_the_scene_window() 
 #[semio_framework_async_macros::async_test]
 async fn shooting_labels_resolve_native_english_by_default() {
     let mut app = shooting_app().await;
-    let document_json = crate::editor::shooting::unit_tests::context::render(&mut app, SHOOTING_PLAY_BODY_DOCUMENT).await;
+    let document_json = crate::editor::shooting::unit_tests::context::render(&mut app, SHOOTING_PLAY_BODY_ARTIFACT).await;
     assert!(document_json.contains("Shots"));
     assert!(document_json.contains("Assets"));
     let catalogue_json = crate::editor::shooting::unit_tests::context::render(&mut app, SHOOTING_PLAY_BODY_CATALOGUE).await;
@@ -294,7 +294,7 @@ async fn shooting_labels_resolve_native_english_by_default() {
 async fn shooting_labels_resolve_native_german() {
     let mut app = shooting_app().await;
     let view_state = semio_framework_plugin::ViewModel { locale: semio_framework_plugin::Locale::De, ..Default::default() };
-    let document_json = artifact_app_laws::project_and_retire_fixture_tree(app.render(SHOOTING_PLAY_BODY_DOCUMENT, None, &view_state).await.expect("render document")).expect("retire document tree");
+    let document_json = artifact_app_laws::project_and_retire_fixture_tree(app.render(SHOOTING_PLAY_BODY_ARTIFACT, None, &view_state).await.expect("render document")).expect("retire document tree");
     assert!(document_json.contains("Aufnahmen"));
     assert!(document_json.contains("Objekte"));
     let engagements = app.window_engagements(&view_state).await;
@@ -364,7 +364,7 @@ async fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
 #[semio_framework_async_macros::async_test]
 async fn shooting_io_mirrors_the_declared_artifact_kind() {
     let io = shooting_io();
-    assert_eq!(io.document_schema, "shooting.scene");
+    assert_eq!(io.artifact_schema, "shooting.scene");
     assert_eq!(io.artifact.id, "2d.shooting");
     // 🗂️ `AppIo` has no `export_stdio_kinds`/`import_stdio_kinds` string peer (see `shooting_io`'s
     // doc comment) — the real format list lives on `artifact_kind()` instead, asserted below.

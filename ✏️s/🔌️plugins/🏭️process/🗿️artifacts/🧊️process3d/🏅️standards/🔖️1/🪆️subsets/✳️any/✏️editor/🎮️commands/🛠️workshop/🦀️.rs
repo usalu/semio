@@ -12,16 +12,16 @@ use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Helpers
-fn add_workshop_machine_operation(fixture: &Process3dSnapshot, machine: WorkshopMachine) -> Option<Process3dMutation> {
-    if fixture.workshop.machines.iter().any(|existing| existing.id == machine.id) {
+fn add_workshop_machine_operation(snapshot: &Process3dSnapshot, machine: WorkshopMachine) -> Option<Process3dMutation> {
+    if snapshot.workshop.machines.iter().any(|existing| existing.id == machine.id) {
         return None;
     }
-    let at = fixture.workshop.machines.len();
+    let at = snapshot.workshop.machines.len();
     Some(Process3dMutation::CreateMachine(CreateMachine { index: at, machine }))
 }
 
-fn remove_workshop_machine_operation(fixture: &Process3dSnapshot, id: &str) -> Option<Process3dMutation> {
-    fixture.workshop.machines.iter().any(|machine| machine.id == id).then(|| Process3dMutation::DeleteMachine(DeleteMachine { id: id.to_string() }))
+fn remove_workshop_machine_operation(snapshot: &Process3dSnapshot, id: &str) -> Option<Process3dMutation> {
+    snapshot.workshop.machines.iter().any(|machine| machine.id == id).then(|| Process3dMutation::DeleteMachine(DeleteMachine { id: id.to_string() }))
 }
 //#endregion 🔖️Helpers
 
@@ -42,9 +42,9 @@ pub mod add_workshop_machine {
         cfg: &ConfigView<'_, Process3dConfig>,
         _ctx: &mut crate::editor::process3d::Process3dDispatchCtx,
     ) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
-        let fixture = doc.snapshot;
+        let snapshot = doc.snapshot;
         match catalog_machine(&cfg.snapshot.contributions_json, &payload.catalog_id, &payload.machine_id) {
-            Some(machine) => match add_workshop_machine_operation(fixture, machine) {
+            Some(machine) => match add_workshop_machine_operation(snapshot, machine) {
                 Some(operation) => Ok(Emit { artifact_mutations: vec![operation], ..Default::default() }),
                 None => Ok(Emit::default()),
             },
@@ -70,8 +70,8 @@ pub mod remove_workshop_machine {
         _cfg: &ConfigView<'_, Process3dConfig>,
         _ctx: &mut crate::editor::process3d::Process3dDispatchCtx,
     ) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
-        let fixture = doc.snapshot;
-        match remove_workshop_machine_operation(fixture, &payload.id) {
+        let snapshot = doc.snapshot;
+        match remove_workshop_machine_operation(snapshot, &payload.id) {
             Some(operation) => Ok(Emit { artifact_mutations: vec![operation], ..Default::default() }),
             None => Ok(Emit::default()),
         }

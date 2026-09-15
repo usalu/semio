@@ -12,7 +12,8 @@
     "owes": "One frame asking the shell whether it owes a settle step. `settling` is a synchronous flush holding the chain; `session` is an open app; `armedWork` is a deferred action, a parked extension invocation, a parked file-open or an owed shell URI; `scope` is the union owed to the next refresh pass; `armed` is the lane's own declaration (`owe_settle`); `computing` is any live producer whose published status says it is working.",
     "watch": "One live producer, step by step. Each entry is the `World3dScene.statusJson` that producer published on that step, read by the SAME parser the status pill reads. The verdict is `fund` (spend this step's crossing on that producer's window body), `terminal` (drive the run to a terminal state through the action the producer itself published) or `stand` (the witness is frozen and there is nothing left to try, so the pump stops paying for crossings until it moves again).",
     "frame": "One frame's deferred cursor, built from the flags the frame-finish boundary computed, drained one work item at a time exactly as the runtime drains it.",
-    "gesture": "One input entry point, read as source. `owns` is the function whose body the law reads; `forbids` is the symbol that body may not name, because naming it converges the chain inside the turn that holds the renderer's single interaction state; `declares` is the arming call the body must make instead. A gesture is measured on the SOURCE rather than on a live shell because the defect is structural: any body that can reach the synchronous door can starve every later input, whatever that particular gesture happened to arm."
+    "gesture": "One input entry point, read as source. `owns` is the function whose body the law reads; `forbids` is the symbol that body may not name, because naming it converges the chain inside the turn that holds the renderer's single interaction state; `declares` is the arming call the body must make instead. A gesture is measured on the SOURCE rather than on a live shell because the defect is structural: any body that can reach the synchronous door can starve every later input, whatever that particular gesture happened to arm.",
+    "gestureBound": "One entry point that must run USER-ACTIVATION-BOUND work before it returns. `owns` is the function whose body the law reads; `runs` is the call it must make. A file picker is the only such work today: `input.click()` is granted user activation by the task that handled the click or the key and by no task after it, so handing it to the settle pump loses the gesture and the browser opens nothing."
   },
   "owesRows": [
     {
@@ -269,7 +270,8 @@
     "a-producer-whose-witness-stays-frozen-after-its-terminal-drives-stops-costing-crossings",
     "a-frame-drains-its-input-actions-before-it-takes-a-settle-step",
     "an-input-gesture-declares-the-chain-and-never-converges-it-inside-its-own-dispatch",
-    "a-pointer-move-returns-the-interaction-state-within-its-own-dispatch"
+    "a-pointer-move-returns-the-interaction-state-within-its-own-dispatch",
+    "a-gesture-runs-its-user-activation-bound-work-before-it-returns"
   ],
   "gestureRows": [
     {
@@ -303,6 +305,29 @@
       "owns": "async fn handle_pointer_move",
       "forbids": "flush_deferred_actions",
       "declares": null
+    }
+  ],
+  "gestureBoundRows": [
+    {
+      "id": "a-pointer-gesture-runs-its-file-picker-before-it-returns",
+      "why": "Measured: with the picker handed to the pump, `io`'s \"the import opens a real file picker\" read `{\"inputs\":[],\"choosers\":0}` — no input element was ever created — and \"the picked file REPLACES the graph\" fell with it, 6/6 → 4/6.",
+      "source": "shell",
+      "owns": "pub async fn handle_pointer_button",
+      "runs": "self.drain_gesture_bound_work().await;"
+    },
+    {
+      "id": "a-retained-press-runs-its-file-picker-before-it-returns",
+      "why": "The retained half of the same gesture — a toolbar button, a tree row, a form control — reaches the same parked request.",
+      "source": "shell",
+      "owns": "async fn route_retained_pointer_press",
+      "runs": "self.drain_gesture_bound_work().await;"
+    },
+    {
+      "id": "a-chord-runs-its-file-picker-before-it-returns",
+      "why": "`mod+o` is the ONLY door the import has on this shell — the `io` probe reaches `importDocumentRequest` through the keybinding path, not through a click — so a fix that covered only the pointer paths left the row red.",
+      "source": "shell",
+      "owns": "pub async fn handle_keyboard_async",
+      "runs": "self.drain_gesture_bound_work().await;"
     }
   ]
 }

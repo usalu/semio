@@ -7,9 +7,9 @@
 //! `Serialize`/`Deserialize`, so a second handcrafted grammar per structured type would just
 //! duplicate that losslessly.
 
-pub use crate::document_schema::mutations::Iso16757Mutation;
+pub use crate::artifact_schema::mutations::Iso16757Mutation;
 
-use crate::document_schema::mutations::{
+use crate::artifact_schema::mutations::{
     add_selection_constraint::mutation::AddSelectionConstraint, change_exchange_process::mutation::ChangeExchangeProcess, change_part_number_input::mutation::ChangePartNumberInput, change_selection_class::mutation::ChangeSelectionClass,
     change_selection_series::mutation::ChangeSelectionSeries, create_product::mutation::CreateProduct, create_product_group::mutation::CreateProductGroup, create_property_definition::mutation::CreatePropertyDefinition,
     create_subject::mutation::CreateSubject, delete_product::mutation::DeleteProduct, delete_product_group::mutation::DeleteProductGroup, delete_property_definition::mutation::DeletePropertyDefinition, delete_subject::mutation::DeleteSubject,

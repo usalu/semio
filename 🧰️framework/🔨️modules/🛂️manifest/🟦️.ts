@@ -323,7 +323,7 @@ export type SurfaceProps = GeneratedSurfaceProps;
 export const CANVAS_HOVER_SOURCE_CANVAS = "canvas";
 export const CANVAS_HOVER_SOURCE_PICK_MENU = "pick-menu";
 export const CANVAS_HOVER_SOURCE_CATALOG = "catalog";
-export const CANVAS_HOVER_SOURCE_ARTIFACT = "document";
+export const CANVAS_HOVER_SOURCE_ARTIFACT = "artifact";
 
 export const FRAMEWORK_PANEL_TAB_ARTIFACT_ID = "framework.panel.artifact";
 export const FRAMEWORK_PANEL_TAB_CATALOGUE_ID = "framework.panel.catalogue";
@@ -530,7 +530,7 @@ export function actionSemanticsForKind(kind: ActionKind): ActionSemantics {
   const observes = kind === "view" || kind === "interaction";
   return {
     effects: { reads: observes ? ["config:{self}"] : [], writes: mutation ? ["artifact:{self}"] : [], external: false, destructive: false, reversible: mutation },
-    policy: { scopes: mutation || kind === "history" ? ["documents.write"] : observes ? ["documents.read", "shell.observe"] : kind === "clipboard" ? ["shell.clipboard"] : ["shell.navigate"], approval: mutation ? "whenDestructive" : "never" },
+    policy: { scopes: mutation || kind === "history" ? ["artifacts.write"] : observes ? ["artifacts.read", "shell.observe"] : kind === "clipboard" ? ["shell.clipboard"] : ["shell.navigate"], approval: mutation ? "whenDestructive" : "never" },
     execution: { preview: mutation ? "diff" : "none", undo: { kind: mutation ? "inverse" : "none" }, idempotency: "none", expectedRevision: mutation, cancellable: false, class: "interactive", interactiveJob: "unclassified" },
     useWhen: [], examples: [],
   };
@@ -774,7 +774,7 @@ export type TutorialTracks = {
   readonly video: readonly TutorialVideoCue[];
   readonly events: readonly TutorialEvent[];
   readonly ui: readonly TutorialUiKeyframe[];
-  readonly document: readonly TutorialArtifactEvent[];
+  readonly artifact: readonly TutorialArtifactEvent[];
   readonly camera: readonly TutorialCameraKeyframe[];
   readonly gestures: readonly TutorialGestureCue[];
 };
@@ -1177,6 +1177,55 @@ export type PluginManifest = {
   readonly commands?: readonly CommandDefinition[];
 };
 
+//#region 🔁️HostEffectInvocation
+/** 🔁️ The scope a host effect's re-dispatch is addressed in — the fields both invocation shapes need,
+ * read off whatever view state the host holds. */
+export type HostEffectDispatchScope = {
+  readonly pluginId: string;
+  readonly appId: string;
+  readonly modeId: string;
+  readonly windowKindId: string;
+  readonly windowInstanceId: string;
+};
+
+/** 🔁️ The ONE rule that decides which channel a guest's `dispatchAction` host effect re-enters, and
+ * the invocation it re-enters with.
+ *
+ * ⚖️ An id the app DECLARES as a command re-enters the typed command channel; everything else — every
+ * framework-reserved verb, every window action — re-enters the scoped ACTION channel. Addressing a
+ * reserved verb as an app-owned command is refused by the guest's own ownership gate
+ * (`dispatch_command`, `💻️os/🔨️modules/🔌️plugin/🦀️.rs`: `command '<id>' is not owned by app <app>`), and
+ * a refused re-arm is a dropped continuation: the wgpu bridge addressed EVERY re-arm as an app
+ * command, so `toolRunStart` was refused at boot and the preview evaluation's `ToolRunView` never
+ * reached the guest's own surface — leaving `cancellable: false` and no Cancel affordance for the
+ * whole of a computation React offers one for at t=5.3 s
+ * (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-regressions-sweep-2026-09-15.md`).
+ *
+ * Fixture: `🧰️framework/🔨️modules/🛂️manifest/🧫️fixtures/🔁️host-effect-invocation/🔣️.json`. */
+export function hostEffectInvocationV1(
+  scope: HostEffectDispatchScope,
+  appCommandIds: readonly string[],
+  action: string,
+  args?: Record<string, unknown>,
+): { readonly kind: "command"; readonly invocation: CommandInvocation } | { readonly kind: "action"; readonly invocation: ActionInvocation } {
+  if (appCommandIds.includes(action)) {
+    return { kind: "command", invocation: { address: { owner: { app: { pluginId: scope.pluginId, appId: scope.appId } }, commandId: action }, arguments: { ...args } } as CommandInvocation };
+  }
+  const invocation = {
+    address: { pluginId: scope.pluginId, appId: scope.appId, modeId: scope.modeId, windowKindId: scope.windowKindId, windowInstanceId: scope.windowInstanceId, actionId: action },
+    arguments: { ...args, windowId: scope.windowInstanceId },
+  } as ActionInvocation;
+  return { kind: "action", invocation };
+}
+
+/** 🔁️ Every command id one app of `manifest` declares — the left-hand side of
+ * {@link hostEffectInvocationV1}'s rule, read off the manifest a host already holds. */
+export function appCommandIdsV1(manifest: PluginManifest, appId: string): readonly string[] {
+  const app = manifest.apps.find((entry) => (entry as { readonly id?: unknown }).id === appId) as { readonly commands?: readonly { readonly id?: unknown }[] } | undefined;
+  return (app?.commands ?? []).map((command) => String(command.id ?? "")).filter((id) => id.length > 0);
+}
+//#endregion 🔁️HostEffectInvocation
+
 //#region 🔖️HostResolvedArgs
 
 
@@ -1260,7 +1309,7 @@ function resolveNativeLabel(label: unknown): { readonly en: string; readonly de:
 }
 
 /** 🗂️ Every artifact-kind choice for the given `roles` — TS twin of Rust `artifact_kind_choices`.
- * Every app across `manifests` whose `role` is in `roles` and whose `io.documentSchema` is non-empty
+ * Every app across `manifests` whose `role` is in `roles` and whose `io.artifactSchema` is non-empty
  * contributes one choice per dialect coordinate. Deduped by dialect coordinate (first manifest/app
  * wins — callers pass owner manifests first so the owner's label wins over a later contributor's),
  * sorted by coordinate for determinism — the pure resolver behind `ActionArgControl.artifactKind`. */
@@ -1268,11 +1317,11 @@ export function artifactKindChoices(manifests: readonly { readonly apps: readonl
   const byCoordinate = new Map<string, ArtifactKindChoice>();
   for (const manifest of manifests) {
     for (const raw of manifest.apps) {
-      const app = raw as unknown as { readonly role: AppRole; readonly dialect: ArtifactDialect; readonly label: unknown; readonly io: { readonly documentSchema: string } };
-      if (!roles.includes(app.role) || app.io.documentSchema === "") continue;
+      const app = raw as unknown as { readonly role: AppRole; readonly dialect: ArtifactDialect; readonly label: unknown; readonly io: { readonly artifactSchema: string } };
+      if (!roles.includes(app.role) || app.io.artifactSchema === "") continue;
       const coordinate = `${app.dialect.artifactKind}@${app.dialect.standard}/${app.dialect.subset}`;
       if (byCoordinate.has(coordinate)) continue;
-      byCoordinate.set(coordinate, { kindId: app.dialect.artifactKind, schema: app.io.documentSchema, dialect: app.dialect, label: resolveNativeLabel(app.label) });
+      byCoordinate.set(coordinate, { kindId: app.dialect.artifactKind, schema: app.io.artifactSchema, dialect: app.dialect, label: resolveNativeLabel(app.label) });
     }
   }
   return [...byCoordinate.keys()].sort().map((coordinate) => byCoordinate.get(coordinate)!);

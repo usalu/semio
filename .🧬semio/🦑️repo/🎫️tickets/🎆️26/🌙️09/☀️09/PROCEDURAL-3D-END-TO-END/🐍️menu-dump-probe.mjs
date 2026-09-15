@@ -16,14 +16,18 @@
  *   `context-menu-acts` — one row is CLICKED (`Reorganize`) and the document's own widget positions
  *                       are compared before and after: a menu that opens but dispatches nothing is
  *                       the defect this step exists for.
- *   `export-formats`  — the Export Document form's format select, whose rows must be exactly the
- *                       seven `EXPORT_FORMATS` ids in table order.
+ *   `export-formats`  — the Export Document row inside the `menu.group.transfer` submenu, REACHED
+ *                       by pointer (hover + click, owning its own centre pixel) and by keyboard (the
+ *                       arrow walk marks it AND `document.activeElement` becomes it), producing the
+ *                       default format as real bytes. The seven-row `EXPORT_FORMATS` roster is owned
+ *                       by `viewer-actions · viewer-export-lists-every-format`, which drives the
+ *                       picker itself — this row's subject is the MENU (see its own comment below).
  *
  * Usage: cd <ticket> && SEMIO_PROBE_OUT=react-gaps/menus bun 🐍️menu-dump-probe.mjs
  * @see 🐍️react-battery.mjs, ✏️editor/🦀️.rs `context_menu_with_request_context`, 🚪️io/🦀️.rs `EXPORT_FORMATS`
  */
 import { chromium } from "playwright";
-import { mkdirSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 const url = process.env.SEMIO_PROBE_URL ?? "http://127.0.0.1:6018/?plugin=generation3d";
@@ -45,7 +49,7 @@ const results = { url, steps: [] };
 let shot = 0;
 
 const browser = await chromium.launch({ headless: true, args: ["--enable-unsafe-webgpu", "--ignore-gpu-blocklist", "--use-angle=metal"] });
-const page = await browser.newPage({ viewport: { width: 1600, height: 1000 } });
+const page = await browser.newPage({ acceptDownloads: true, viewport: { width: 1600, height: 1000 } });
 page.on("console", (m) => lines.push(`${Date.now() - t0} ${m.type()} ${m.text().slice(0, 1000)}`));
 page.on("pageerror", (e) => lines.push(`${Date.now() - t0} pageerror ${String(e).slice(0, 1000)}`));
 
@@ -232,61 +236,99 @@ await page.waitForTimeout(8000);
 {
   // 🎬️ `exportDocument` is a STAGED action: dispatching it opens the arg form whose `format` select
   // carries the artifact's own table. The context menu is the shortest live path to it.
+  let keyboardReached = false;
+  /** ⌨️ The KEYBOARD route, asserted twice over: the arrow walk must land the active mark on the row
+   * AND `document.activeElement` must BE that row. The menu used to track its active row in React
+   * state alone — `data-active` moved, `document.activeElement` stayed `<body>` for the whole walk —
+   * so a screen-reader user was told nothing and this step could never be reached by focus. */
+  {
+    await openContextMenu();
+    let focusedRow = "";
+    let activeRow = null;
+    for (let hop = 0; hop < 24 && focusedRow !== "exportDocument"; hop += 1) {
+      await page.keyboard.press(hop === 0 ? "ArrowDown" : activeRow?.startsWith("menu.group.") ? "ArrowRight" : "ArrowDown");
+      await page.waitForTimeout(260);
+      activeRow = await page.evaluate(() => document.querySelector('[role="menuitem"][data-active="true"]')?.id ?? null);
+      focusedRow = await page.evaluate(() => document.activeElement?.id ?? "");
+    }
+    keyboardReached = focusedRow === "exportDocument" && activeRow === "exportDocument";
+    lines.push(`keyboard walk activeRow=${activeRow} focused=${focusedRow}`);
+    await page.keyboard.press("Escape");
+    await page.waitForTimeout(500);
+    await page.keyboard.press("Escape");
+    await page.waitForTimeout(800);
+  }
   await openContextMenu();
   const { groups, rows } = await expandGroups();
   const row = rows.find((r) => (r.action ?? "") === "exportDocument");
-  /** 🗂️ `exportDocument` lives INSIDE a `menu.group.*` submenu, and hovering the next group closes the
-   * previous one — so `expandGroups`'s accumulated roster names a row whose element is no longer in the
-   * document. The row has to be clicked while ITS OWN group is the hovered one, which is why this
-   * re-hovers each group and clicks inside that open submenu. */
+  /** 🖱️ The POINTER route: hover the group row, then hover and CLICK the child. A submenu whose panel
+   * is clipped away by the parent menu's own scrollport resolves as an element, reports a full
+   * `getBoundingClientRect`, and answers someone else at `elementFromPoint` — which is exactly how
+   * both gestures used to time out (`🐍️submenu-reach-recon.mjs`, :6023). `hitsOwnCentre` is that
+   * reading, recorded whether or not the click lands. */
   let reached = false;
+  let hitsOwnCentre = null;
+  let download = null;
   for (const group of groups) {
     await page.locator(`[id="${group.action}"]`).first().hover({ timeout: 4000 }).catch(() => {});
     await page.waitForTimeout(1100);
     const exportRow = page.locator('[id="exportDocument"], [data-action-id="exportDocument"]');
     if ((await exportRow.count()) === 0) continue;
-    /** 🖱️ HOVERED, then clicked. A submenu stays open only while the pointer is inside the group→child
-     * chain, and Playwright's `click` moves the pointer straight to the target — leaving the group, which
-     * closes the submenu out from under the very click being delivered (measured: the locator resolves,
-     * then the click times out at 8 s). Hovering first walks the pointer into the open submenu and keeps
-     * it there, which is also what a real pointer does. */
-    /** ⌨️ Reached by KEYBOARD, not by pointer. The row is a real `<button role="menuitem">` — Playwright
-     * resolves it — but both `hover` and `click` time out on it: a submenu stays open only while the
-     * pointer is inside the group→child chain, and moving the pointer to the child leaves the group,
-     * which closes the submenu out from under the gesture. Arrow keys walk the same menu without moving
-     * the pointer at all, and they are the route a keyboard user has anyway. */
-    await page.locator(`[id="${group.action}"]`).first().focus().catch(() => {});
-    await page.waitForTimeout(300);
-    await page.keyboard.press("ArrowRight");
-    await page.waitForTimeout(500);
-    if ((await page.evaluate(() => document.activeElement?.id ?? "")) === group.action) {
-      await page.keyboard.press("ArrowDown");
-      await page.waitForTimeout(400);
+    hitsOwnCentre = await page.evaluate(() => {
+      const el = document.getElementById("exportDocument");
+      if (!el) return null;
+      const r = el.getBoundingClientRect();
+      const hit = document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2);
+      return { own: Boolean(hit && el.contains(hit)), hit: hit ? `${hit.tagName}.${(hit.className ?? "").toString().slice(0, 40)}` : null };
+    });
+    await exportRow.first().hover({ timeout: 6000 }).catch((e) => lines.push(`export hover ${String(e).replace(/\s+/gu, " ").slice(0, 160)}`));
+    await page.waitForTimeout(400);
+    /** 📥️ The row is not a staged form — `Export Document` carries no ellipsis and `exportDocument`
+     * defaults its `format` arg to `stl`, so activating it must produce REAL BYTES. A menu row that
+     * opens, closes and downloads nothing is exactly the inert row this step exists to catch. */
+    const [file] = await Promise.all([
+      page.waitForEvent("download", { timeout: 120000 }).catch((e) => {
+        lines.push(`export download ${String(e).replace(/\s+/gu, " ").slice(0, 160)}`);
+        return null;
+      }),
+      exportRow
+        .first()
+        .click({ timeout: 6000 })
+        .then(() => {
+          reached = true;
+        })
+        .catch((e) => lines.push(`export click ${String(e).replace(/\s+/gu, " ").slice(0, 160)}`)),
+    ]);
+    if (file) {
+      const saved = join(outDir, file.suggestedFilename() || "menu-export.bin");
+      await file.saveAs(saved).catch((e) => lines.push(`export save ${String(e).slice(0, 120)}`));
+      const bytes = readFileSync(saved);
+      download = { filename: file.suggestedFilename(), bytes: bytes.length, head: bytes.subarray(0, 24).toString("latin1") };
     }
-    for (let hop = 0; hop < 12 && !reached; hop += 1) {
-      const focused = await page.evaluate(() => document.activeElement?.id ?? "");
-      if (focused === "exportDocument") {
-        await page.keyboard.press("Enter");
-        reached = true;
-        break;
-      }
-      await page.keyboard.press("ArrowDown");
-      await page.waitForTimeout(250);
-    }
-    if (!reached) lines.push(`export row never took focus inside ${group.action}`);
     if (reached) break;
   }
-  if (reached) await page.waitForTimeout(3000);
-  const select = page.locator('[role="combobox"]').filter({ hasText: /STL|OBJ|Netz|Mesh/u }).first();
-  let formats = [];
-  if ((await select.count()) > 0) {
-    await select.click({ timeout: 8000 }).catch(() => {});
-    await page.waitForTimeout(900);
-    formats = await page.evaluate(() => [...document.querySelectorAll('[role="option"]')].map((el) => ({ value: el.getAttribute("data-value"), label: (el.textContent ?? "").replace(/\s+/gu, " ").trim() })));
-    await page.keyboard.press("Escape");
-  }
-  const missing = EXPORT_FORMATS.filter((id) => !formats.some((f) => f.value === id || new RegExp(`\\b${id}\\b`, "iu").test(f.label)));
-  await note("export-formats", reached && formats.length > 0 && missing.length === 0, { menuRow: row ?? null, reached, count: formats.length, expected: EXPORT_FORMATS, missing, formats });
+  await page.keyboard.press("Escape");
+  await page.waitForTimeout(800);
+  /** 🧾 The seven-format ROSTER is not re-driven here, and that is deliberate.
+   *
+   * `Export Document` carries no ellipsis and `exportDocument` defaults its `format` arg to `stl`, so
+   * the menu row exports without a picker — the picker lives in a window's Actions pane, and
+   * `viewer-actions · viewer-export-lists-every-format` already holds all seven ids against
+   * `document_io::EXPORT_FORMATS` with a real download and a signature check for each. Re-driving that
+   * pane from inside this row added a second failure surface (the window engagement toggle, which is
+   * not on screen in the state a context-menu walk leaves the shell in) for a fact another registered
+   * row owns. This row asserts what the MENU owns: that the row is reachable by pointer, reachable by
+   * keyboard, the owner of its own centre pixel, and not inert. */
+  const rosterOwnedBy = "viewer-actions · viewer-export-lists-every-format";
+  await note("export-formats", reached && keyboardReached && Boolean(hitsOwnCentre?.own) && (download?.bytes ?? 0) > 0 && (download?.filename ?? "").endsWith(".stl"), {
+    menuRow: row ?? null,
+    reached,
+    keyboardReached,
+    hitsOwnCentre,
+    download,
+    defaultFormat: EXPORT_FORMATS[0],
+    rosterOwnedBy,
+  });
   await page.keyboard.press("Escape");
 }
 //#endregion

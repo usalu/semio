@@ -48,7 +48,7 @@ fn canonical_pair_fixture() -> VerifiedActiveCheckpointPair {
     }
 }
 
-fn frontier_from_fixture(value: &serde_json::Value) -> ArtifactFrontier {
+fn frontier_from_host_document(value: &serde_json::Value) -> ArtifactFrontier {
     let encoded = value["chainHash"].as_str().expect("chain hash").as_bytes();
     let mut chain_hash = [0u8; 32];
     for (index, slot) in chain_hash.iter_mut().enumerate() {
@@ -119,7 +119,7 @@ fn canonical_pair_baseline_admits_exact_genesis_or_edited_before_pair_allocation
     let context = RebootstrapContext::new(100, &control);
     for row in fixture["frontierCases"].as_array().expect("frontier cases") {
         let mut pair = canonical_pair_fixture();
-        pair.selection.baseline_frontier = frontier_from_fixture(row);
+        pair.selection.baseline_frontier = frontier_from_host_document(row);
         let accepted = row["accepted"].as_bool().expect("accepted");
         assert_eq!(canonical_pair_frontier_is_exact(&pair.selection.scope, &pair.selection.baseline_frontier), accepted, "{}", row["id"]);
         if accepted {

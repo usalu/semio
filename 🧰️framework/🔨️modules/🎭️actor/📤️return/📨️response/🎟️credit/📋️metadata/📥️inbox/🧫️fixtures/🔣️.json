@@ -392,8 +392,8 @@
     "blob-write",
     "blob-read",
     "http-fetch",
-    "document-read",
-    "document-write",
+    "artifact-read",
+    "artifact-write",
     "link-resolve",
     "registry-query",
     "io-compose",
@@ -411,9 +411,7 @@
     "spawn-job"
   ],
   "mixedTrace": [
-    "heartbeat:1",
     "frame:effect-request",
-    "heartbeat:2",
     "result:r2:success",
     "frame:effect-emit",
     "frame:ui-patch-emit",
@@ -421,13 +419,11 @@
   ],
   "currentFaultTraces": {
     "postThenThrow": [
-      "heartbeat",
       "result-success",
       "worker-fault",
       "result-fault"
     ],
     "errorNormalizationThrows": [
-      "heartbeat",
       "worker-fault"
     ],
     "semanticallyAccepted": false

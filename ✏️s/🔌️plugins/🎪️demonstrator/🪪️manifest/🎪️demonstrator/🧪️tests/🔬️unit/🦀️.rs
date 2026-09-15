@@ -52,9 +52,9 @@ fn bundle_registers_its_own_and_the_six_foreign_demonstrator_surfaces() {
 }
 
 #[test]
-fn every_surface_declares_a_document_schema() {
+fn every_surface_declares_a_artifact_schema() {
     for app in test_bundle().manifest.apps {
-        assert!(!app.io.document_schema.is_empty(), "app {} declares no document schema", app.id);
+        assert!(!app.io.artifact_schema.is_empty(), "app {} declares no document schema", app.id);
     }
 }
 

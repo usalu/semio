@@ -50,12 +50,73 @@ const snap = () => page.evaluate(() => {
     status: parse(el.getAttribute("data-status-json")),
   }));
   const history = document.querySelector("[data-history-json]");
+  const field = document.querySelector('[data-slot="panel"] input[type="number"]');
+  const previewHost = document.querySelector('[data-surface-id="window:procedural-preview"]');
   const cancel = document.querySelector('[data-slot="world-compute-cancel"]');
   const rows = [...document.querySelectorAll('[id*="procedural3d-play-generate.generation."]')].filter((el) => !el.id.endsWith(".rename")).map((el) => el.id);
   return {
     hosts,
     generationRows: rows,
     history: history ? parse(history.getAttribute("data-history-json")) : null,
+    inspectorValue: field instanceof HTMLInputElement ? field.value : null,
+    previewHostCarriesMeshes: previewHost?.hasAttribute("data-meshes-json") ?? false,
+    /** 📐️ The delivered geometry's own bounding box, rounded — the comparable the armed-history rows
+     * are stated in.
+     *
+     * NOT a count: raising `Column Height` from 6 to 8 re-extrudes the same topology, so the vertex and
+     * triangle totals are byte-identical before and after the edit and an edit that really reached the
+     * kernel would read as no change at all. The BOX moves, and it moves back on undo and forward again
+     * on redo, which is what makes these rows a product assertion. Read off EVERY element carrying
+     * `data-meshes-json` rather than off the preview surface's own node: the mesh payload and
+     * `data-status-json` are not always on the same element (measured — the surface node answered an
+     * empty payload while the meshes were delivered on a sibling). */
+    previewBox: (() => {
+      const min = [Infinity, Infinity, Infinity];
+      const max = [-Infinity, -Infinity, -Infinity];
+      for (const el of document.querySelectorAll("[data-meshes-json]")) {
+        let meshes = [];
+        try { const parsedMeshes = JSON.parse(el.getAttribute("data-meshes-json") ?? "[]"); meshes = Array.isArray(parsedMeshes) ? parsedMeshes : []; } catch { meshes = []; }
+        for (const mesh of meshes) {
+          // 📐️ `positions` FIRST, `edgePositions` only when it is EMPTY — a wire mesh publishes
+          // `positions: []` beside a full `edgePositions`, and `positions ?? edgePositions` keeps the
+          // empty array (it is not nullish), which is how the box read `null` on a painted preview.
+          const solid = mesh?.data?.positions ?? [];
+          const positions = solid.length > 0 ? solid : (mesh?.data?.edgePositions ?? []);
+          for (let i = 0; i + 2 < positions.length; i += 3) for (let axis = 0; axis < 3; axis += 1) {
+            const v = positions[i + axis];
+            if (v < min[axis]) min[axis] = v;
+            if (v > max[axis]) max[axis] = v;
+          }
+        }
+      }
+      return Number.isFinite(min[0]) ? [...min, ...max].map((v) => Math.round(v * 1000) / 1000).join(",") : null;
+    })(),
+    /** 🔢️ FNV-1a over every delivered mesh payload — the discriminator the armed-history rows assert.
+     * A slider edit re-extrudes the SAME topology, so counts do not move and even the bounding box can
+     * stay put for an edit that only changes interior coordinates; the payload itself always moves. */
+    previewDigest: (() => {
+      let hash = 0x811c9dc5;
+      let seen = 0;
+      for (const el of document.querySelectorAll("[data-meshes-json]")) {
+        const raw = el.getAttribute("data-meshes-json") ?? "";
+        if (raw.length === 0) continue;
+        seen += raw.length;
+        for (let i = 0; i < raw.length; i += 1) {
+          hash ^= raw.charCodeAt(i);
+          hash = Math.imul(hash, 0x01000193) >>> 0;
+        }
+      }
+      return seen === 0 ? null : `${hash.toString(16)}:${seen}`;
+    })(),
+    /** 🎚️ The edited widget's own value straight off the document the graph publishes — panel-independent,
+     * unlike `inspectorValue`, which is `null` whenever the Inspection panel is not the open one. */
+    fixtureValues: (() => {
+      try {
+        const host = document.querySelector('[data-surface-id="window:procedural-main"]');
+        const fixture = JSON.parse(host?.getAttribute("data-fixture-json") ?? "null");
+        return Object.fromEntries((fixture?.widgets ?? []).filter((w) => w && w.kind === "inputSlider").map((w) => [w.id, w.value]));
+      } catch { return null; }
+    })(),
     cancelButton: cancel ? { action: cancel.getAttribute("data-cancel-action") } : null,
     modes: [...document.querySelectorAll("[data-show-mode],[data-lod-mode]")].map((el) => ({
       slot: el.getAttribute("data-slot"), show: el.getAttribute("data-show-mode"), lod: el.getAttribute("data-lod-mode"),
@@ -116,6 +177,31 @@ const historyChordStep = async (label, chord, direction) => {
   return settled;
 };
 
+/** 🧘️ Polls until the edit preview is QUIET and its delivered box has stopped moving, then applies
+ * `accept`.
+ *
+ * 🐛️ A plain "the payload differs" wait returns the moment the FIRST partial delivery of a new
+ * evaluation lands: measured here as `box "-0.5,-0.433,0,0.5,0.433,0"` with a 442-char payload — the
+ * profile wire alone, the extruded solid still computing. The undo pressed on that reading then raced
+ * the edit's own convergence, and the height-8 geometry arrived AFTER the undo (`box …,0.433,8`), so
+ * both armed rows read the wrong document. Three consecutive identical boxes on a preview that is not
+ * cancellable is the settle this lane asserts against. */
+const settledBox = async (label, seconds, accept) => {
+  let last = null;
+  let stable = 0;
+  let snapshot = await snap();
+  for (let i = 0; i < seconds * 2; i += 1) {
+    snapshot = await snap();
+    const quiet = editPreview(snapshot)?.status?.cancellable !== true && snapshot.previewBox !== null;
+    stable = quiet && snapshot.previewBox === last ? stable + 1 : 0;
+    last = quiet ? snapshot.previewBox : null;
+    if (stable >= 3 && accept(snapshot)) break;
+    await page.waitForTimeout(500);
+  }
+  console.log(`[DEBUG] settledBox ${label} stable=${stable} box=${snapshot.previewBox} t=${Date.now() - t0}`);
+  return snapshot;
+};
+
 /** ⌨️ A mode-independent chord: pressed where it is already bound, decided by the invocation it mints. */
 const chordStep = async (label, chord) => {
   const mark = lines.length;
@@ -170,6 +256,80 @@ await record("baseline", null, baseline, editPreview(baseline)?.status != null &
 for (const [label, chord] of [["cycle-show-mode", "Control+Alt+d"], ["cycle-show-mode-again", "Control+Alt+d"], ["cycle-lod-mode", "Control+Alt+k"]]) await chordStep(label, chord);
 await historyChordStep("undo", "Control+z", "undo");
 await historyChordStep("redo", "Control+Shift+z", "redo");
+//#endregion
+
+//#region ⏪️ undo and redo against an ARMED history
+/** 🗂️ Opens a panel and confirms its own body is on screen. A tab TOGGLES, so one click can leave the
+ * panel shut; the body marker is what tells a shut panel from an empty one. */
+const openPanelTab = async (id, marker) => {
+  const tab = page.locator(`button#${id.replace(/\./gu, "\\.")}`);
+  if ((await tab.count()) === 0) return false;
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    const box = await tab.first().boundingBox().catch(() => null);
+    await tab.first().click({ position: { x: 8, y: Math.round((box?.height ?? 22) / 2) }, timeout: 8000 }).catch((e) => lines.push(`tab ${id} ${String(e).slice(0, 120)}`));
+    await page.waitForTimeout(2200);
+    if ((await page.evaluate((m) => document.querySelectorAll(`[id*="${m}"]`).length, marker)) > 0) return true;
+  }
+  return false;
+};
+
+/** ⏪️ The two chords, pressed on a history that HAS something to act on.
+ *
+ * The rows above press `mod+z`/`mod+shift+z` on this app's quiet boot, where the only entries are
+ * config snapshots and the cursor legitimately stays put — so the ARMED branch of those rows had never
+ * been exercised at all (`📓️react-remaining-reds-2026-09-15.md` §12). This drives a real document edit
+ * first (a value typed into the Inspection panel's own field, which is what a user does), then requires
+ * of undo and redo that BOTH the published cursor and the delivered geometry move the right way.
+ */
+{
+  const artifactOpen = await openPanelTab("framework.panel.artifact", "procedural-play-graph");
+  const row = page.locator('[data-slot="panel"] [role="treeitem"]').filter({ hasText: /Column Height|Profile Radius|Side Count/u }).first();
+  const rowFound = (await row.count()) > 0;
+  if (rowFound) await row.click({ timeout: 8000 }).catch((e) => lines.push(`armed row ${String(e).slice(0, 140)}`));
+  await page.waitForTimeout(2500);
+  const inspectionOpen = await openPanelTab("framework.panel.inspection", "procedural-play-inspector");
+  const settledBefore = await settledBox("before the edit", 90, (s) => s.previewBox !== null);
+  const originalValue = settledBefore.inspectorValue;
+  const originalBox = settledBefore.previewBox;
+  const originalDigest = settledBefore.previewDigest;
+  await record("edit-target", null, settledBefore, artifactOpen && rowFound && inspectionOpen && originalValue !== null && originalBox !== null, "a widget is selected and its own number field is on screen over a painted preview", { invoked: [], artifactOpen, rowFound, inspectionOpen, originalValue, originalBox, originalDigest, fixtureValues: settledBefore.fixtureValues, previewHostCarriesMeshes: settledBefore.previewHostCarriesMeshes });
+
+  const editMark = lines.length;
+  const field = page.locator('[data-slot="panel"] input[type="number"]').first();
+  const edited = originalValue === null ? null : String(Number(originalValue) + 2);
+  if (edited !== null) {
+    await field.fill(edited, { timeout: 8000 }).catch((e) => lines.push(`armed fill ${String(e).slice(0, 140)}`));
+    await page.keyboard.press("Enter");
+    await field.blur().catch(() => {});
+  }
+  const afterEdit = await settledBox("after the edit", 150, (s) => s.history?.canUndo === true && s.previewBox !== originalBox);
+  await record("edit-arms-history", null, afterEdit, afterEdit.history?.canUndo === true && afterEdit.previewBox !== null && afterEdit.previewBox !== originalBox, "a typed value is a user edit: the shell's history arms canUndo and the preview SETTLES on a different delivered extent", { invoked: invocationsSince(editMark), edited, originalDigest, digest: afterEdit.previewDigest, originalBox, box: afterEdit.previewBox, fixtureValues: afterEdit.fixtureValues, history: afterEdit.history });
+  const editedDigest = afterEdit.previewDigest;
+  const editedBox = afterEdit.previewBox;
+  const editedCursor = afterEdit.history?.cursor ?? null;
+
+  /** ⏪️ `canRedo` is the direction discriminator, NOT the cursor's sign.
+   *
+   * `shellHistoryCursorDomV1` projects an APPEND-ONLY reduction of every `HistoryPatch` the guest
+   * sent, so an undo APPENDS its own entry and the cursor goes UP — measured here 17 → 18 on a real
+   * undo, and it also climbs on its own while the probe hovers and selects. The cursor is therefore
+   * asserted as "it moved", and the direction is read where the shell actually states it: only an undo
+   * can leave something to redo. The geometry is the substantive half. */
+  const undoMark = lines.length;
+  await page.keyboard.press("Control+z");
+  const undone = await settledBox("after undo", 120, (s) => s.history?.canRedo === true && s.previewBox === originalBox);
+  await record("undo-armed-history", "Control+z", undone, invocationsSince(undoMark).includes("undo") && undone.history?.canRedo === true && (undone.history?.cursor ?? null) !== editedCursor && undone.previewBox === originalBox, "on an armed history the chord invokes undo, the shell's cursor moves, it leaves something to REDO and the preview settles back on the extent it delivered before the edit", { invoked: invocationsSince(undoMark), cursorBefore: editedCursor, cursorAfter: undone.history?.cursor ?? null, canRedo: undone.history?.canRedo ?? null, digestBefore: editedDigest, digest: undone.previewDigest, originalDigest, boxBefore: editedBox, box: undone.previewBox, originalBox, fixtureValues: undone.fixtureValues });
+  const undoneCursor = undone.history?.cursor ?? null;
+
+  const redoMark = lines.length;
+  await page.keyboard.press("Control+Shift+z");
+  const redone = await settledBox("after redo", 120, (s) => (s.history?.cursor ?? null) !== undoneCursor && s.previewBox === editedBox);
+  await record("redo-armed-history", "Control+Shift+z", redone, invocationsSince(redoMark).includes("redo") && (redone.history?.cursor ?? null) !== undoneCursor && redone.previewBox === editedBox, "on a history that has just been undone the chord invokes redo, the shell's cursor moves again and the preview settles back on the EDITED extent", { invoked: invocationsSince(redoMark), cursorBefore: undoneCursor, cursorAfter: redone.history?.cursor ?? null, digest: redone.previewDigest, editedDigest, originalDigest, box: redone.previewBox, editedBox, originalBox, fixtureValues: redone.fixtureValues });
+
+  // 🛟️ Leave the document as it was found, so the later rows drive the example they expect.
+  await page.keyboard.press("Control+z");
+  await page.waitForTimeout(3000);
+}
 //#endregion
 
 //#region ➕️add-generation, in the mode that owns the Generations window

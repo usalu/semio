@@ -734,13 +734,15 @@ export function world3dProjectionContentFrameMounted(fitProjectionContent: boole
 
 /** 🎯️ Whether the host may paint the manual frame-visible-instances overlay.
  *
- * ⚖️ An enabled fit lane no longer suppresses it, and that reversal is the point: {@link WorldAutoFit}
- * frames ONCE per document and then stands down for good the moment the user moves the camera, so
- * without this button a user who has orbited away has no way back to the geometry at all. Boot framing
- * and a user-invoked reframe are two different affordances, not two spellings of one
- * (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️boot-camera-framing-2026-09-15.md`). */
-export function world3dFrameVisibleOverlayOffered(): boolean {
-  return true;
+ * ⚖️ Producers that publish a fit lane **with** `boundsMin`/`boundsMax` still need the button after the
+ * user orbits away — {@link WorldAutoFit} stands down once the camera is user-owned
+ * (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️boot-camera-framing-2026-09-15.md`). Producers whose fit
+ * lane is revision-only and rely on the scene graph (puzzle 3d) already get continuous {@link WorldAutoFit}
+ * reframing without a host chrome duplicate (ticket 26/09/14/PUZZLE-3D-HIDE-FIT-LANE-FRAME-OVERLAY). */
+export function world3dFrameVisibleOverlayOffered(fit: Pick<WorldFitRecord, "enabled" | "boundsMin" | "boundsMax"> | null): boolean {
+  if (!fit?.enabled) return true;
+  const hasPublishedBounds = fit.boundsMin != null && fit.boundsMax != null;
+  return hasPublishedBounds;
 }
 
 /** 📷️ Builds the `setCamera` dispatch payload from a viewport camera pose — deliberately omits `projection`
@@ -1340,6 +1342,28 @@ function parseInstances(instancesJson: string): WorldInstanceRecord[] {
   }
 }
 
+const WORLD_INSTANCE_RECORD_TEXT = new WeakMap<WorldInstanceRecord, string>();
+
+/** 🧾️ A record's serialized JSON, memoized per record object so a retained record is serialized once. */
+function worldInstanceRecordText(record: WorldInstanceRecord): string {
+  let text = WORLD_INSTANCE_RECORD_TEXT.get(record);
+  if (text === undefined) {
+    text = JSON.stringify(record);
+    WORLD_INSTANCE_RECORD_TEXT.set(record, text);
+  }
+  return text;
+}
+
+/** 🪪️ `parsed`, with every record whose retained twin (same id) serializes identically replaced by that twin. */
+function internWorldInstanceRecords(retained: readonly WorldInstanceRecord[] | null, parsed: WorldInstanceRecord[]): WorldInstanceRecord[] {
+  if (!retained || retained.length === 0) return parsed;
+  const byId = new Map(retained.map((record) => [record.id, record]));
+  return parsed.map((record) => {
+    const twin = byId.get(record.id);
+    return twin !== undefined && worldInstanceRecordText(twin) === worldInstanceRecordText(record) ? twin : record;
+  });
+}
+
 /** 🚚️ The `instancesDeltaJson` lane's declared shape — see the Rust `World3dScene::instances_delta_json`. */
 export type WorldInstanceDeltaV1 = {
   readonly base: number;
@@ -1382,6 +1406,11 @@ export function parseWorldInstanceDelta(deltaJson: string | null | undefined): W
  * reorder — falls back to the authoritative full parse. Same for a delta whose `base` does not match,
  * a `count` that disagrees with the result, or a producer that publishes no delta at all: the full
  * lane is always correct, so ignoring the delta can only cost time, never correctness.
+ *
+ * 🪪️ A fallback still keeps the object identity of every retained record whose re-parsed record is
+ * value-equal (same serialized JSON). A running fill APPENDS placements, so every one of its refreshes
+ * falls back; re-issuing all records re-rendered every instance of the document per refresh, where only
+ * the appended ones changed.
  */
 export function advanceWorldInstanceResidency(previous: WorldInstanceResidencyV1 | null, instancesJson: string, deltaJson: string | null | undefined): WorldInstanceResidencyV1 {
   const delta = parseWorldInstanceDelta(deltaJson);
@@ -1393,7 +1422,7 @@ export function advanceWorldInstanceResidency(previous: WorldInstanceResidencyV1
     delta.removed.length === 0 &&
     delta.count === retained.length &&
     delta.changed.every((record) => retained.some((existing) => existing.id === record.id));
-  if (!applicable) return { revision: delta?.revision ?? -1, records: parseInstances(instancesJson) };
+  if (!applicable) return { revision: delta?.revision ?? -1, records: internWorldInstanceRecords(retained, parseInstances(instancesJson)) };
   if (delta.changed.length === 0) return { revision: delta.revision, records: retained };
   const replacements = new Map(delta.changed.map((record) => [record.id, record]));
   return { revision: delta.revision, records: retained.map((existing) => replacements.get(existing.id) ?? existing) };
@@ -3047,6 +3076,22 @@ const WorldInstanceNode = reactHostPort.memo(function WorldInstanceNode({
 //#endregion WorldSceneParsing
 
 //#region WorldInstancesLayer
+const WORLD_INSTANCE_UNIT_SCALE: readonly [number, number, number] = [1, 1, 1];
+const WORLD_INSTANCE_QUATERNION = new WeakMap<WorldInstanceRecord, Quaternion>();
+
+/** 🪪️ One `Quaternion` per instance record object, so an unchanged record (kept by `advanceWorldInstanceResidency`) hands its
+ * memoized `WorldInstanceNode` the same prop instead of a fresh object per render. */
+function worldInstanceQuaternion(instance: WorldInstanceRecord): Quaternion | undefined {
+  const rotation = instance.rotation;
+  if (!rotation) return undefined;
+  let quaternion = WORLD_INSTANCE_QUATERNION.get(instance);
+  if (!quaternion) {
+    quaternion = new Quaternion(rotation[0], rotation[1], rotation[2], rotation[3]);
+    WORLD_INSTANCE_QUATERNION.set(instance, quaternion);
+  }
+  return quaternion;
+}
+
 function WorldInstancesLayer({
   instances,
   meshes,
@@ -3408,9 +3453,14 @@ function WorldInstancesLayer({
     [applyGumballLivePreview, controllerId, gumballPreviewSourceId, onGumballDragEnd],
   );
 
-  const mergeMode = (event: { shiftKey?: boolean; ctrlKey?: boolean; metaKey?: boolean }) => componentPickMergeMode(resolveWorldMergeMode(selection.selectionMergeMode, event, persistentSelectionMode));
+  // 🪪️ Stable across renders, like every other `WorldInstanceNode` prop: an inline function here defeated the node's memo, so
+  // every refresh re-rendered every instance of the document even when one instance changed.
+  const mergeMode = useCallback(
+    (event: { shiftKey?: boolean; ctrlKey?: boolean; metaKey?: boolean }) => componentPickMergeMode(resolveWorldMergeMode(selection.selectionMergeMode, event, persistentSelectionMode)),
+    [selection.selectionMergeMode, persistentSelectionMode],
+  );
 
-  const paintFromHit = (objectId: string, mesh: WorldMeshData, event: { faceIndex?: number | null; uv?: { x: number; y: number } }) => {
+  const paintFromHit = useCallback((objectId: string, mesh: WorldMeshData, event: { faceIndex?: number | null; uv?: { x: number; y: number } }) => {
     if (!onPaintAt) return;
     let u = event.uv?.x;
     let v = event.uv?.y;
@@ -3424,7 +3474,7 @@ function WorldInstancesLayer({
       v = (mesh.uvs[i0 * 2 + 1]! + mesh.uvs[i1 * 2 + 1]! + mesh.uvs[i2 * 2 + 1]!) / 3;
     }
     onPaintAt(objectId, u, v);
-  };
+  }, [onPaintAt]);
 
   return (
     <WorldInstanceChromeContext.Provider value={instanceChromeStore}>
@@ -3436,9 +3486,8 @@ function WorldInstancesLayer({
           const meshData = meshRecord?.data;
           const geometry = geometries.get(meshId);
           const position = instance.position ?? [instance.x ?? index, instance.y ?? 0, instance.z ?? 0];
-          const scale = instance.scale ?? [1, 1, 1];
-          const rotation = instance.rotation;
-          const quaternion = rotation ? new Quaternion(rotation[0], rotation[1], rotation[2], rotation[3]) : undefined;
+          const scale = instance.scale ?? WORLD_INSTANCE_UNIT_SCALE;
+          const quaternion = worldInstanceQuaternion(instance);
           return (
             <WorldInstanceNode
               key={instance.id}
@@ -3824,7 +3873,18 @@ function WorldComputeStatusPane({
   // idle → "Sampling edges" → "Evaluated" was therefore completely silent, which is the whole point
   // of the region. Keeping an empty, zero-size region in the tree makes every later phase a
   // mutation of an observed subtree, which IS announced.
-  if (idle) return <div className="sr-only" data-slot="world-compute-status" data-compute-phase={status.phase} role="status" aria-busy={undefined} />;
+  // 🕳️ An idle surface with a HINT is not silent: the producer said why it is empty, in its own
+  // locale, and that sentence is painted. Without this the hint reached `data-status-json` and stopped
+  // there — a user looking at an empty generate preview was told nothing
+  // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `panel-i18n · de:preview_hint`).
+  if (idle) {
+    if (!status.hint) return <div className="sr-only" data-slot="world-compute-status" data-compute-phase={status.phase} role="status" aria-busy={undefined} />;
+    return (
+      <div className={cn("pointer-events-none flex items-center gap-single rounded px-single py-half text-xs text-muted-foreground shadow-sm", glassClass)} data-level="pane" data-slot="world-compute-status" data-compute-phase={status.phase} role="status" aria-busy={undefined}>
+        <span data-slot="world-compute-hint">{status.hint}</span>
+      </div>
+    );
+  }
   return (
     <div
       className={cn("pointer-events-auto flex items-center gap-single rounded px-single py-half text-xs shadow-sm", glassClass)}
@@ -6300,7 +6360,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
   const hasProjectionSeed = Boolean(pendingProjectionSpecRef.current ?? cameraState.projectionSpec);
   const fitProjectionContent = world3dFitProjectionContent(viewportOwned, cameraNavigating, hasProjectionSeed);
   const projectionContentFrameMounted = world3dProjectionContentFrameMounted(fitProjectionContent, projectionFramePending, cameraNavigating);
-  const frameVisibleOverlayOffered = world3dFrameVisibleOverlayOffered();
+  const frameVisibleOverlayOffered = world3dFrameVisibleOverlayOffered(fit);
   const autoFitUserMoved = userMovedFitRevision === (fit?.revision ?? 0);
   const worldOrbitConstraints = useMemo(() => worldProjectionOrbitConstraints(cameraState.projectionSpec), [cameraState.projectionSpec]);
 

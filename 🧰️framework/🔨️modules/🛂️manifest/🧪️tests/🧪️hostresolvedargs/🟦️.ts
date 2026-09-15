@@ -43,12 +43,12 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(() => decodeSurfaceAppChoice('{"pluginId":"draw","appId":"a","role":"bogus"}')).toThrow(/role/);
     });
 
-    function fakeManifest(pluginId: string, apps: readonly { role: AppRole; dialect: ArtifactDialect; documentSchema: string; label?: { en: string; de: string } }[]): PluginManifest {
+    function fakeManifest(pluginId: string, apps: readonly { role: AppRole; dialect: ArtifactDialect; artifactSchema: string; label?: { en: string; de: string } }[]): PluginManifest {
       return {
         pluginId,
         label: pluginId,
         version: "1.0.0",
-        apps: apps.map((app) => ({ role: app.role, dialect: app.dialect, label: { native: app.label ?? { en: app.dialect.artifactKind, de: app.dialect.artifactKind } }, io: { documentSchema: app.documentSchema } })),
+        apps: apps.map((app) => ({ role: app.role, dialect: app.dialect, label: { native: app.label ?? { en: app.dialect.artifactKind, de: app.dialect.artifactKind } }, io: { artifactSchema: app.artifactSchema } })),
         workflows: [],
         examples: [],
       };
@@ -58,17 +58,17 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const drawDialect: ArtifactDialect = { artifactKind: "s.draw.draw", standard: "1", subset: "*" };
       const dagDialect: ArtifactDialect = { artifactKind: "s.dag.dag", standard: "1", subset: "*" };
       // 🗂️ Two manifests: "draw" (the owner plugin, passed first) offers the editor for its own
-      // dialect plus an unrelated app with an empty `documentSchema` (must never surface — it hasn't
+      // dialect plus an unrelated app with an empty `artifactSchema` (must never surface — it hasn't
       // opted into `io` yet, mirroring apps that haven't populated `AppIo` in the Rust test's spirit);
       // "draw-contrib" is a later contributor offering only a viewer for the SAME dialect coordinate
       // under a different label, proving the owner's (first) label wins once both roles are in scope.
       const manifests = [
         fakeManifest("draw", [
-          { role: "editor", dialect: drawDialect, documentSchema: "draw.document", label: { en: "Draw", de: "Zeichnung" } },
-          { role: "editor", dialect: { artifactKind: "s.draw.empty", standard: "1", subset: "*" }, documentSchema: "" },
+          { role: "editor", dialect: drawDialect, artifactSchema: "draw.document", label: { en: "Draw", de: "Zeichnung" } },
+          { role: "editor", dialect: { artifactKind: "s.draw.empty", standard: "1", subset: "*" }, artifactSchema: "" },
         ]),
-        fakeManifest("draw-contrib", [{ role: "viewer", dialect: drawDialect, documentSchema: "draw.document", label: { en: "Draw (fallback)", de: "Zeichnung (fallback)" } }]),
-        fakeManifest("dag", [{ role: "editor", dialect: dagDialect, documentSchema: "dag.document", label: { en: "DAG", de: "DAG" } }]),
+        fakeManifest("draw-contrib", [{ role: "viewer", dialect: drawDialect, artifactSchema: "draw.document", label: { en: "Draw (fallback)", de: "Zeichnung (fallback)" } }]),
+        fakeManifest("dag", [{ role: "editor", dialect: dagDialect, artifactSchema: "dag.document", label: { en: "DAG", de: "DAG" } }]),
       ];
 
       const editorOnly = artifactKindChoices(manifests, ["editor"]);

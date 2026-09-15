@@ -14,7 +14,8 @@ import { build, type Plugin } from "esbuild";
 import picomatch from "picomatch";
 import { describe, expect, it } from "vitest";
 import { stripExecutableShebang } from "../../🧹️executable-source/🟦️.ts";
-import { UNWATCHED_REPOSITORY_SEGMENTS, repositorySourceWatchRoots, semioPlaygroundReactRefreshCoherenceVitePlugin, semioSourceWatchVitePlugin, unwatchedRepositoryPathMatcher } from "../../🔌️vite-plugins/🟦️.ts";
+import { createServer } from "vite";
+import { UNWATCHED_REPOSITORY_SEGMENTS, createSourceFreshnessRegistry, repositorySourceWatchRoots, requestedTransformFile, semioPlaygroundReactRefreshCoherenceVitePlugin, semioSourceFreshnessVitePlugins, semioSourceWatchVitePlugin, unwatchedRepositoryPathMatcher } from "../../🔌️vite-plugins/🟦️.ts";
 
 describe("semioPlaygroundReactRefreshCoherenceVitePlugin", () => {
   const plugin = semioPlaygroundReactRefreshCoherenceVitePlugin();
@@ -172,7 +173,7 @@ describe("dev server watch policy", () => {
   it("hands Vite no chokidar watcher of its own and mounts the replacement", () => {
     const source = readFileSync(join(repoRoot, contract.entry), "utf8");
     expect(source, "server.watch must stay null — a chokidar watcher here consolidates onto the whole repository").toMatch(/watch:\s*null/u);
-    expect(source).toContain("semioSourceWatchVitePlugin({ repoRoot })");
+    expect(source).toContain("semioSourceFreshnessVitePlugins({ repoRoot })");
   });
 
   it("reports source edits and stays silent for every unwatched store", async () => {
@@ -204,6 +205,13 @@ describe("dev server watch policy", () => {
   // `SEMIO_VITE_HMR=0` (`hmr: false`) no HMR pass invalidates either. A watcher that answers a modified
   // file with `add` therefore serves the pre-edit transform for the life of the server, which is how a
   // landed host fix measured as absent on `:6013` (`📓️2026-09-13-wave-B53-nakagin-export-full-run.md` §4.2).
+  //
+  // 26/09/09 PROCEDURAL-3D-END-TO-END: the PATH is not the contract either. macOS names a recursive
+  // `fs.watch` event after the directory entry that changed, and an atomic save changes the entry of the
+  // TEMPORARY file — the edited module's own path was named 0 times in 5 at every module depth
+  // (`📓️vite-stale-transform-guard-2026-09-15.md` §1). The watcher therefore carries the freshness
+  // registry and answers any event by re-stating the tracked modules of its directory, which is the only
+  // way a temporary-file event can invalidate the module it was renamed onto.
   it.each([
     ["an in-place write", (target: string) => writeFileSync(target, `export const value = ${Date.now()};\n`)],
     ["an atomic save", (target: string) => {
@@ -220,7 +228,9 @@ describe("dev server watch policy", () => {
       const target = join(sandbox, "🧰️framework/🟦️.ts");
       const arming = join(sandbox, "🧰️framework/🔎️arm.ts");
       writeFileSync(target, "export const value = 0;\n");
-      semioSourceWatchVitePlugin({ repoRoot: sandbox }).configureServer(server);
+      const freshness = createSourceFreshnessRegistry();
+      freshness.record(target);
+      semioSourceWatchVitePlugin({ repoRoot: sandbox, freshness }).configureServer(server);
       // ⏳️ `fs.watch` arms asynchronously, and macOS answers only the FIRST write to a path with `rename`
       // — every later write to the same path in the same session may report `change` on its own. A retry
       // loop over the target would therefore pass on its second write while a real editor's single save
@@ -239,6 +249,111 @@ describe("dev server watch policy", () => {
       rmSync(sandbox, { recursive: true, force: true });
     }
   }, 30_000);
+});
+
+/** @emoji ✍️ The write styles a dev server must survive. `sed -i ''` and a rename-into-place are the same
+ * shape — macOS editors, `sed`, and every agent file-writing tool save atomically — and that shape is
+ * exactly the one whose filesystem event never names the edited file. */
+const DEV_SERVER_WRITE_STYLES: readonly (readonly [string, (target: string, body: string) => void])[] = [
+  ["an in-place write", (target, body) => writeFileSync(target, body)],
+  ["an atomic save (rename into place)", (target, body) => {
+    const temporary = `${target}.tmp`;
+    writeFileSync(temporary, body);
+    renameSync(temporary, target);
+  }],
+  ["sed -i '' (macOS temporary + rename)", (target, body) => {
+    spawnSync("sed", ["-i", "", `1s|.*|${body.trim()}|`, target]);
+  }],
+];
+
+describe("dev server transform freshness", () => {
+  it.each(DEV_SERVER_WRITE_STYLES)("serves the current file on the FIRST request after %s", async (_label, write) => {
+    const sandbox = mkdtempSync(join(tmpdir(), "semio-transform-freshness-"));
+    mkdirSync(join(sandbox, "🧰️framework"), { recursive: true });
+    const target = join(sandbox, "🧰️framework/🟦️.ts");
+    writeFileSync(target, "export const value: number = 0;\n");
+    const server = await createServer({
+      configFile: false,
+      root: sandbox,
+      logLevel: "silent",
+      cacheDir: join(sandbox, ".vite"),
+      optimizeDeps: { noDiscovery: true, include: [] },
+      server: { host: "127.0.0.1", port: 0, hmr: false, watch: null },
+      plugins: semioSourceFreshnessVitePlugins({ repoRoot: sandbox }),
+    });
+    try {
+      await server.listen();
+      const port = (server.httpServer!.address() as { port: number }).port;
+      // 🧭️ `/@fs/` is the shape Vite transforms AND caches; a root-relative `.ts` URL is answered by the
+      // static middleware from disk, which is always fresh and would make this law vacuous. The type
+      // annotation proves the response really is a transform rather than the file's own bytes.
+      const request = async () => (await fetch(`http://127.0.0.1:${port}/@fs${target}`, { headers: { accept: "*/*" } })).text();
+      const cached = await request();
+      expect(cached, "the measured response must be a cached transform, not the raw file").not.toContain(": number");
+      expect(cached).toContain("export const value = 0");
+      const stamp = `export const value = ${Date.now()};`;
+      write(target, `${stamp}\n`);
+      // 🚫️ No settle window: the guarantee is "the NEXT request", not "a request after the watcher
+      // eventually catches up". Waiting here would let the filesystem watcher pass the test on the one
+      // write style it can see and hide the two it cannot.
+      expect(await request(), "the first request after an edit must carry the edited bytes").toContain(stamp);
+    } finally {
+      await server.close();
+      rmSync(sandbox, { recursive: true, force: true });
+    }
+  }, 60_000);
+
+  it("re-verifies the whole transformed set on a document request", async () => {
+    const sandbox = mkdtempSync(join(tmpdir(), "semio-transform-freshness-document-"));
+    mkdirSync(join(sandbox, "🧰️framework"), { recursive: true });
+    const leaf = join(sandbox, "🧰️framework/🍃️leaf.ts");
+    const target = join(sandbox, "🧰️framework/🟦️.ts");
+    writeFileSync(leaf, "export const leaf: number = 0;\n");
+    writeFileSync(target, "export { leaf } from \"./🍃️leaf.ts\";\n");
+    writeFileSync(join(sandbox, "index.html"), "<!doctype html><html><head></head><body><script type=\"module\" src=\"/🧰️framework/🟦️.ts\"></script></body></html>");
+    const server = await createServer({
+      configFile: false,
+      root: sandbox,
+      logLevel: "silent",
+      cacheDir: join(sandbox, ".vite"),
+      optimizeDeps: { noDiscovery: true, include: [] },
+      server: { host: "127.0.0.1", port: 0, hmr: false, watch: null },
+      plugins: semioSourceFreshnessVitePlugins({ repoRoot: sandbox }),
+    });
+    try {
+      await server.listen();
+      const port = (server.httpServer!.address() as { port: number }).port;
+      const leafRequest = async () => (await fetch(`http://127.0.0.1:${port}/@fs${leaf}`, { headers: { accept: "*/*" } })).text();
+      const cachedLeaf = await leafRequest();
+      expect(cachedLeaf, "the measured response must be a cached transform, not the raw file").not.toContain(": number");
+      expect(cachedLeaf).toContain("export const leaf = 0");
+      const stamp = `export const leaf = ${Date.now()};`;
+      const temporary = `${leaf}.tmp`;
+      writeFileSync(temporary, `${stamp}\n`);
+      renameSync(temporary, leaf);
+      const document$ = await fetch(`http://127.0.0.1:${port}/`, { headers: { accept: "text/html" } });
+      const html = await document$.text();
+      expect(html, "a served document must name its transform freshness mode in one console line").toContain("transform freshness: stat-guard");
+      expect(await leafRequest(), "a document request must have retired every stale transform behind it").toContain(stamp);
+    } finally {
+      await server.close();
+      rmSync(sandbox, { recursive: true, force: true });
+    }
+  }, 60_000);
+
+  it.each([
+    ["/@fs/Users/x/🧰️framework/🟦️.ts", "/Users/x/🧰️framework/🟦️.ts"],
+    ["/🧰️framework/🟦️.ts?import&t=1", "/root/🧰️framework/🟦️.ts"],
+    ["/@vite/client", null],
+    ["/", null],
+  ])("resolves the request %s to the file a transform would be read from", (url, expected) => {
+    expect(requestedTransformFile(url, "/root")).toBe(expected);
+  });
+
+  it("guards the wgpu browser serve with the same plugins", () => {
+    const source = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌐️server/🎚️config/🟦️.ts"), "utf8");
+    expect(source, "the wgpu serve declares server.watch: null too, so it needs the same watcher and stat guard").toContain("semioSourceFreshnessVitePlugins({ repoRoot: workspace })");
+  });
 });
 
 const browserContract = JSON.parse(readFileSync(join(packageDir, "../../🧫️fixtures/🌐️browser-graph.json"), "utf8")) as {

@@ -1,17 +1,17 @@
-//#region 🧊️ColdDocumentPairIngress
+//#region 🧊️ColdArtifactPairIngress
 pub const COLD_PAIR_PAGE_MAXIMUM_BYTES: usize = 64 * 1024;
 pub const COLD_PAIR_MAXIMUM_BYTES: usize = 4 * 1024 * 1024;
 const COLD_PAIR_ID_MAXIMUM_BYTES: usize = 512;
 
-pub use semio_framework_actor::cold_pair::{ColdDocumentPairApplied, ColdDocumentPairCursor, ColdDocumentPairFrontier, ColdPairIngressStatus, COLD_PAIR_MAXIMUM_PAGES};
+pub use semio_framework_actor::cold_pair::{ColdArtifactPairApplied, ColdArtifactPairCursor, ColdArtifactPairFrontier, ColdPairIngressStatus, COLD_PAIR_MAXIMUM_PAGES};
 
 #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub struct ColdDocumentPairHeader {
+pub struct ColdArtifactPairHeader {
     pub lifetime: super::ActorInstanceLifetime,
     pub transfer_generation: u64,
     pub descriptor_sha256: [u8; 32],
-    pub baseline_frontier: ColdDocumentPairFrontier,
+    pub baseline_frontier: ColdArtifactPairFrontier,
     pub pack_sha256: [u8; 32],
     pub spr_sha256: [u8; 32],
     pub aggregate_sha256: [u8; 32],
@@ -20,7 +20,7 @@ pub struct ColdDocumentPairHeader {
     pub page_count: u32,
 }
 
-impl ColdDocumentPairHeader {
+impl ColdArtifactPairHeader {
     pub fn validate(&self) -> Result<(), &'static str> {
         let total = self.pack_length.checked_add(self.spr_length).ok_or("cold-pair.length-overflow")?;
         let expected_pages = total.checked_add(COLD_PAIR_PAGE_MAXIMUM_BYTES as u64 - 1).ok_or("cold-pair.page-count-overflow")? / COLD_PAIR_PAGE_MAXIMUM_BYTES as u64;
@@ -30,8 +30,8 @@ impl ColdDocumentPairHeader {
         if self.descriptor_sha256 == [0; 32] || self.pack_sha256 == [0; 32] || self.spr_sha256 == [0; 32] || self.aggregate_sha256 == [0; 32] {
             return Err("cold-pair.hash");
         }
-        if self.baseline_frontier.document_id.is_empty()
-            || self.baseline_frontier.document_id.len() > COLD_PAIR_ID_MAXIMUM_BYTES
+        if self.baseline_frontier.artifact_id.is_empty()
+            || self.baseline_frontier.artifact_id.len() > COLD_PAIR_ID_MAXIMUM_BYTES
             || self.baseline_frontier.head_edit_id.is_empty()
             || self.baseline_frontier.head_edit_id.len() > COLD_PAIR_ID_MAXIMUM_BYTES
             || self.baseline_frontier.last_commit_seq > self.baseline_frontier.head_edit_ordinal
@@ -61,17 +61,17 @@ impl ColdDocumentPairHeader {
         Ok((total - offset).min(COLD_PAIR_PAGE_MAXIMUM_BYTES))
     }
 
-    pub fn cursor(&self, page_index: u32) -> ColdDocumentPairCursor {
-        ColdDocumentPairCursor { lifetime: self.lifetime, transfer_generation: self.transfer_generation, page_index, page_count: self.page_count }
+    pub fn cursor(&self, page_index: u32) -> ColdArtifactPairCursor {
+        ColdArtifactPairCursor { lifetime: self.lifetime, transfer_generation: self.transfer_generation, page_index, page_count: self.page_count }
     }
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub struct ColdDocumentPairPage {
-    pub header: ColdDocumentPairHeader,
+pub struct ColdArtifactPairPage {
+    pub header: ColdArtifactPairHeader,
     pub page_index: u32,
     pub bytes: Vec<u8>,
 }
 
-//#endregion 🧊️ColdDocumentPairIngress
+//#endregion 🧊️ColdArtifactPairIngress

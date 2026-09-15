@@ -16,6 +16,13 @@
         "command": "bun ./📜️script.ts test-tool-run-actions"
       }
     },
+    "test-host-effect-invocation": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-host-effect-invocation"
+      }
+    },
     "test-core-modules": {
       "executor": "nx:run-commands",
       "options": {

@@ -3,7 +3,7 @@ use semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::snapshot
 use store::ArtifactDsl;
 
 fn nakagin_graph() -> Graph {
-    Graph::from_fixture(semio_s_artifact_trinity_jack::JackSnapshot::parse_dsl(NAKAGIN_EXAMPLE_TEXT).unwrap()).unwrap()
+    Graph::from_snapshot(semio_s_artifact_trinity_jack::JackSnapshot::parse_dsl(NAKAGIN_EXAMPLE_TEXT).unwrap()).unwrap()
 }
 
 fn empty_rule() -> Rule {
@@ -65,7 +65,7 @@ async fn rewrite_rule_parameter_substitution() {
 
 #[semio_framework_async_macros::async_test]
 async fn rewriting_labeled_fixture_reloads() {
-    let mut g = Graph::from_fixture(semio_s_artifact_trinity_jack::JackSnapshot::parse_dsl(NAKAGIN_EXAMPLE_TEXT).unwrap()).unwrap();
+    let mut g = Graph::from_snapshot(semio_s_artifact_trinity_jack::JackSnapshot::parse_dsl(NAKAGIN_EXAMPLE_TEXT).unwrap()).unwrap();
     let rule = Rule {
         name: "label-core".into(),
         lhs: Lhs { pattern: PatternJson { left_var: "a".into(), left_kind: "Piece".into(), edge_var: None, edge_kind: None, right_var: None, right_kind: None }, where_clause: Some("a.name = 'b'".into()) },

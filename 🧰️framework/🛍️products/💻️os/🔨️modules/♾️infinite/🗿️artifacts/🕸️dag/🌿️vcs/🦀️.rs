@@ -22,9 +22,9 @@ use crate::os_store::create_document_envelope;
 use crate::os_store::ArtifactCommand;
 use crate::os_store::{ArtifactEnvelope, ArtifactStore};
 
-pub const DAG_DOCUMENT_SCHEMA: &str = "dag.fixture";
+pub const DAG_DOCUMENT_SCHEMA: &str = "dag.host_document";
 
-fn dag_document_schema() -> String {
+fn dag_artifact_schema() -> String {
     DAG_DOCUMENT_SCHEMA.into()
 }
 
@@ -33,12 +33,12 @@ fn dag_document_schema() -> String {
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct DagSnapshot {
-    #[value(default = "dag_document_schema")]
+    #[value(default = "dag_artifact_schema")]
     pub schema: String,
     #[value(default)]
     pub nodes: Vec<DagNodeSpec>,
     #[value(default)]
-    pub edges: Vec<DagFixtureEdge>,
+    pub edges: Vec<DagHostDocumentEdge>,
 }
 
 pub fn empty_dag_document() -> DagSnapshot {
@@ -47,18 +47,18 @@ pub fn empty_dag_document() -> DagSnapshot {
 
 /// 🌱️ The demo document seed (nodes/edges from `🕸️demo.dag`), sharing the fixture's example.
 pub fn default_dag_document() -> DagSnapshot {
-    dag_document_from_fixture(&DagFixture::default())
+    dag_document_from_host_document(&DagHostDocument::default())
 }
 
-/// 🔁️ Projects a {@link DagFixture} (which also carries a camera) down to the persistent {@link DagSnapshot}.
-pub fn dag_document_from_fixture(fixture: &DagFixture) -> DagSnapshot {
+/// 🔁️ Projects a {@link DagHostDocument} (which also carries a camera) down to the persistent {@link DagSnapshot}.
+pub fn dag_document_from_host_document(fixture: &DagHostDocument) -> DagSnapshot {
     DagSnapshot { schema: fixture.schema.clone(), nodes: fixture.nodes.clone(), edges: fixture.edges.clone() }
 }
 
-/// 🔁️ Rehydrates a full {@link DagFixture} from a {@link DagSnapshot} plus a runtime `camera`, so the
+/// 🔁️ Rehydrates a full {@link DagHostDocument} from a {@link DagSnapshot} plus a runtime `camera`, so the
 /// existing fixture-shaped helpers (`dag_fixture_to_wire_literal`, `DagHost`, …) can be reused.
-pub fn dag_fixture_from_document(document: &DagSnapshot, camera: DagCamera) -> DagFixture {
-    DagFixture { schema: document.schema.clone(), camera, nodes: document.nodes.clone(), edges: document.edges.clone() }
+pub fn dag_fixture_from_document(document: &DagSnapshot, camera: DagCamera) -> DagHostDocument {
+    DagHostDocument { schema: document.schema.clone(), camera, nodes: document.nodes.clone(), edges: document.edges.clone() }
 }
 
 //#region 🔖️ExternalPatchSupport
@@ -70,7 +70,7 @@ pub fn dag_fixture_from_document(document: &DagSnapshot, camera: DagCamera) -> D
 // load-bearing dependency by that plugin's own already-landed `🧬️mutations` facet: its
 // `apply_nodes_delta`/`apply_edges_delta`/`apply_identified_delta` helpers
 // (`…/🧬️schema/🔺️diff/📝️text/🦀️.rs`) are generic over `T: Identified<String> + Patchable<P>`
-// and call `.apply_patch(...)` on `DagNodeSpec`/`DagFixtureEdge` using exactly these impls. Deleting
+// and call `.apply_patch(...)` on `DagNodeSpec`/`DagHostDocumentEdge` using exactly these impls. Deleting
 // them would compile-break that plugin's facet, which is the same "boundary that separates a
 // definition from its registration is a race" failure this ticket's own doctrine warns against —
 // so this file keeps them, unrelated to and independent of the `CollectionMutation<TId,TItem,TPatch>`
@@ -81,7 +81,7 @@ impl Identified<String> for DagNodeSpec {
     }
 }
 
-impl Identified<String> for DagFixtureEdge {
+impl Identified<String> for DagHostDocumentEdge {
     fn id(&self) -> &String {
         &self.id
     }
@@ -143,14 +143,14 @@ impl Patchable<DagNodePatch> for DagNodeSpec {
     }
 }
 
-/// 🩹️ Sparse patch of a {@link DagFixtureEdge}'s endpoints.
+/// 🩹️ Sparse patch of a {@link DagHostDocumentEdge}'s endpoints.
 #[derive(Clone, Debug, Default, PartialEq, dsl::DslRecord)]
 pub struct DagEdgePatch {
     pub source: Option<String>,
     pub target: Option<String>,
 }
 
-impl Patchable<DagEdgePatch> for DagFixtureEdge {
+impl Patchable<DagEdgePatch> for DagHostDocumentEdge {
     fn apply_patch(&mut self, patch: &DagEdgePatch) {
         if let Some(source) = &patch.source {
             self.source = source.clone();
@@ -286,7 +286,7 @@ pub struct DagDelta {
     pub replaced_node_kind: Option<ReplacedNodeKind>,
     pub replaced_node_properties: Option<ReplacedNodeProperties>,
     pub reordered_nodes: Option<Vec<String>>,
-    pub connected_edge: Option<DagFixtureEdge>,
+    pub connected_edge: Option<DagHostDocumentEdge>,
     pub connected_edge_at: Option<u64>,
     pub disconnected_edge_ids: Option<Vec<String>>,
     /// 🩹️ `rename-node`'s edge cascade only — no direct edge field-change verb exists; any other
@@ -497,7 +497,7 @@ fn close_dag_test_store(mut store: DagStore) {
 
 //#region 🔖️Dsl
 // 🧬️ `.dag` document DSL via the `crate::os_dsl::` derive engine (see `🔖️DslMirror` below) — every persisted
-// type (`DagSnapshot`/`DagNodeSpec`/`DagNodeKind`/`DagFixtureEdge`/`IoPortSpec`/`DagMedia`/
+// type (`DagSnapshot`/`DagNodeSpec`/`DagNodeKind`/`DagHostDocumentEdge`/`IoPortSpec`/`DagMedia`/
 // `DagPreviewContent`/`PortShape`/`EdgeRouteStyle`/`DagMediaKind`/patches) either derives a
 // `dsl::Dsl*` macro directly or, where the real Rust field shape can't satisfy the derive engine
 // (a bare tagged-enum field where the engine requires `Box<T>`), converts through a small local
@@ -703,7 +703,7 @@ struct DagSnapshotDsl {
     schema: String,
     nodes: Vec<DagNodeSpecDsl>,
     #[dsl(table)]
-    edges: Vec<DagFixtureEdge>,
+    edges: Vec<DagHostDocumentEdge>,
 }
 
 fn dag_snapshot_to_dsl(document: &DagSnapshot) -> DagSnapshotDsl {

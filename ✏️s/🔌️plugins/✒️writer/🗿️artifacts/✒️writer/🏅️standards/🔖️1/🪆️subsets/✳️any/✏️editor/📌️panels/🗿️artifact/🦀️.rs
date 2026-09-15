@@ -9,7 +9,7 @@ use semio_framework_plugin::{tree_item, LocalizedLabel, PanelGroup, PanelTabDefi
 use semio_framework_ui_contract as ui;
 
 //#region 🔖️Constants
-pub const WRITER_PLAY_BODY_ARTIFACT: &str = "writer.play.document";
+pub const WRITER_PLAY_BODY_ARTIFACT: &str = "writer.play.artifact";
 const WRITER_PANEL_TAB_ARTIFACT_CONTENT_ID: &str = "framework.panel.document.content";
 const WRITER_PANEL_TAB_ARTIFACT_OUTLINE_ID: &str = "framework.panel.document.outline";
 //#endregion 🔖️Constants
@@ -19,7 +19,7 @@ const WRITER_PANEL_TAB_ARTIFACT_OUTLINE_ID: &str = "framework.panel.document.out
 pub fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_ARTIFACT_ID.into()),
-        label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Dokument"),
+        label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Artefakt"),
         group: PanelGroup::Workbench,
         body_key: None,
         children: vec![
@@ -66,12 +66,12 @@ fn jack_ast_to_tree_item(node: &JackAstNode) -> semio_framework_plugin::UiAssemb
 pub fn render(document: &WriterSnapshot, labels: &WriterPlayLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     if document.language_id != "jack" {
         let items = crate::editor::writer::ui_node_list([tree_item("writer-document.id", crate::editor::writer::ui_label(document.id.clone())?), tree_item("writer-document.language", crate::editor::writer::ui_label(document.language_id.clone())?)])?;
-        return PanelTreeBuilder::new("writer-document")?.section("writer-document.meta", Some(crate::editor::writer::ui_label(labels.document.as_str())?), true, items)?.build();
+        return PanelTreeBuilder::new("writer-document")?.section("writer-document.meta", Some(crate::editor::writer::ui_label(labels.artifact.as_str())?), true, items)?.build();
     }
     let root = parse_jack_ast(&writer_text(document));
     let items = crate::editor::writer::ui_node_list([jack_ast_to_tree_item(&root)])?;
     PanelTreeBuilder::new("writer-play-document")?
-        .section_or_placeholder("writer-play-document.ast", Some(crate::editor::writer::ui_label(labels.document.as_str())?), true, items, crate::editor::writer::ui_label(labels.empty_query.as_str())?)?
+        .section_or_placeholder("writer-play-document.ast", Some(crate::editor::writer::ui_label(labels.artifact.as_str())?), true, items, crate::editor::writer::ui_label(labels.empty_query.as_str())?)?
         .interaction_domain("ast")?
         .build()
 }
