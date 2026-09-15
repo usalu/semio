@@ -7124,7 +7124,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(safeAreaBoxFromRect({ left: 1136.6, top: 3.4, right: 1437.2, bottom: 122.8 } as DOMRect)).toEqual({ left: 1137, top: 3, right: 1437, bottom: 123 });
     });
 
-    it("yields a window's right-edge chrome to an open anchored chrome panel instead of sharing it", () => {
+    it("keeps window pane toggles flush when an anchored chrome panel opens over them", () => {
       const originalRect = Element.prototype.getBoundingClientRect;
       Element.prototype.getBoundingClientRect = function stubbedRect(this: Element): DOMRect {
         if (this.getAttribute("data-slot") !== "window-body") return originalRect.call(this);
@@ -7132,7 +7132,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       };
       try {
         const { container } = render(
-          <Window id="dock-reserve-window" measures={<div>LOD</div>}>
+          <Window id="behind-panel-window" measures={<div>LOD</div>}>
             <div>Body</div>
           </Window>,
         );
@@ -7141,12 +7141,11 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         act(() => {
           publishShellChromePanelBox(undefined, "panel:top-right", "top-right", { left: 1137, top: 26, right: 1437, bottom: 840 });
         });
-        expect(overlay.style.right).toBe(`calc(var(--spacing-single) + ${1440 - 1137}px)`);
+        expect(overlay.style.right).toBe("var(--spacing-single)");
         act(() => {
           publishShellChromePanelBox(undefined, "panel:top-right", "top-right", null);
         });
         expect(overlay.style.right).toBe("var(--spacing-single)");
-        expect(windowMeasuresMinWidthPx).toBeGreaterThan(0);
       } finally {
         Element.prototype.getBoundingClientRect = originalRect;
         publishShellChromePanelBox(undefined, "panel:top-right", "top-right", null);
@@ -7804,7 +7803,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 }
 
 export async function registerTests2(vitest: Pick<typeof import("vitest"), "describe" | "expect" | "it" | "vi">, dependencies: Record<string, any>, testSource: { directory: string; url: string }): Promise<void> {
-  const { applyChromeRevealAtPoint, applyDockSkeleton, applyElementsSurfaceChrome, bootstrapElementsSurfaceChromeDocument, borderNormalBottomClass, borderNormalClass, borderNormalTopClass, buildVirtualFileSystemDescriptorColumns, buildVirtualFileSystemVisibleRows, Button, ButtonGroup, ButtonGroupItem, catalogueTreeDragController, CheckIcon, ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, ChevronUpIcon, cn, COLLAPSED_FIELD_ELLIPSIS, Command, CommandItem, CommandList, COMPACT_UI_DRIVER, composeControlKeybindings, composeTutorialUi, computeTabDockDropZone, ControlTree, createBrowserStoragePort, createTreeHighlightStore, createTreeSelectionStore, createTutorialClock, DEFAULT_UI_DRIVER, defaultControlRenderer, deriveTreeDragRoles, treeRowDragPayloadAttributes, dockSkeletonOf, dockSkeletonsEqual, DragHandle, FindInViewIcon, fitCollapsedFieldText, flowChevronIconName, FlowProvider, Footer, formatControlTooltipText, formatKeybindingShortcut, formatTutorialTime, formatVirtualFileSystemTime, getElementById, getTreeItemOrderedIds, getTreeNextSelectionState, getTreeSiblingGapPx, getVirtualFileSystemNextSelectionState, GhostProvider, GhostRegionShell, HistoryTable, humanizeControlId, humanizeControlSegment, Icon, Input, interactionMergeFromModifiers, interpolateTutorialCamera, isInternalChromeControlId, isPanelTabInSubtree, isTreeReorderDragEvent, Label, LevelProvider, loadingBorderActiveClass, loadingBorderClass, loadingBorderStateClass, markGhostTreeInteraction, measureWindowSilhouetteMetrics, Mode, modeDockTabClassName, moveTabInDock, moveTreeUnitInDock, Navbar, NavbarExampleSelect, navbarFillItem, normalizeTreeSelectedIds, Pane, PaneHost, Panel, PanelChromeTabBar, PanelDockContext, panelKindFromPanelToggleControlId, PanelRightIcon, panelTabButtonDividerClass, parseUiDriver, PresenceBar, presenceColor, presenceCssVar, pruneEmptyPanelBranches, React, readStoredUiChromeLayout, reconcileActivePath, renderToStaticMarkup, resetElementsSurfaceChromeForTests, resolveCollapsedFieldDisplayState, resolveControlLabelId, resolveSceneGizmoSnapTarget, resolveSceneGizmoViewportPlacement, resolveTranslationLabel, resolveTreeDropPosition, resolveUiDriver, resolveVirtualFileSystemSchemaIcon, resolveWindowSilhouetteBorderKind, Ribbon, RibbonItem, RibbonZone, Ring, SCENE_GIZMO_LABELS, Search, SearchIcon, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, serializeUiDriver, shellChromeBorderClass, shellChromeFrameLayerClass, shouldBeginAutomaticGhostInteraction, shouldDispatchTreeRowPointerLeave, singleTreeLeaf, Slider, Stepper, syncTreeSelectionPath, Table, Textarea, THREE, Toggle, ToggleGroup, Tree, TreeAlignedRow, TreeCheckbox, treeCompactSiblingGapPx, TreeContent, TreeContext, treeFoldChevronIcon, TreeItem, treeItemSecondaryTextClassName, TreeRow, TreeRowAlignmentContext, treeRowChromeClasses, treeRowChromeContentFillClasses, treeRowChromeShellClasses, TreeSection, TreeStateProvider, TutorialBar, tutorialCameraAt, tutorialCuesBetween, tutorialSlice, UI_CHROME_LAYOUT_STORAGE_KEY, uiDataLabel, UiDriverProvider, uiI18n, UIIntroduction, UiKeybindingsProvider, useCanvasAppearanceSync, validateTutorial, VIRTUAL_FILE_SYSTEM_DEMO_FILE_NODE_KINDS, VIRTUAL_FILE_SYSTEM_DEMO_SCHEMA, VirtualFileSystem, waitingBorderActiveClass, waitingBorderClass, waitingBorderStateClass, Window, WINDOW_PANE_MEASURES_ICON, WindowMeasuresTree, windowMeasureToggleClass, windowMeasureToggleCompactClass, WindowMeasureTreeGroup, WindowMeasureTreeLeaf, WindowPaneChromeToggle, windowSilhouettePath, writeStoredUiChromeLayout } = dependencies;
+  const { applyChromeRevealAtPoint, applyDockSkeleton, applyElementsSurfaceChrome, bootstrapElementsSurfaceChromeDocument, borderNormalBottomClass, borderNormalClass, borderNormalTopClass, buildVirtualFileSystemDescriptorColumns, buildVirtualFileSystemVisibleRows, Button, ButtonGroup, ButtonGroupItem, catalogueTreeDragController, CheckIcon, ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, ChevronUpIcon, cn, COLLAPSED_FIELD_ELLIPSIS, Command, CommandItem, CommandList, COMPACT_UI_DRIVER, composeControlKeybindings, composeTutorialUi, computeTabDockDropZone, ControlTree, createBrowserStoragePort, createTreeHighlightStore, createTreeSelectionStore, createTutorialClock, DEFAULT_UI_DRIVER, defaultControlRenderer, deriveTreeDragRoles, treeRowDragPayloadAttributes, dockSkeletonOf, dockSkeletonsEqual, DragHandle, FindInViewIcon, fitCollapsedFieldText, flowChevronIconName, FlowProvider, Footer, formatControlTooltipText, formatKeybindingShortcut, formatTutorialTime, formatVirtualFileSystemTime, getElementById, getTreeItemOrderedIds, getTreeNextSelectionState, getTreeSiblingGapPx, getVirtualFileSystemNextSelectionState, GhostProvider, GhostRegionShell, HistoryTable, humanizeControlId, humanizeControlSegment, Icon, Input, interactionMergeFromModifiers, interpolateTutorialCamera, isInternalChromeControlId, isPanelTabInSubtree, isTreeReorderDragEvent, Label, LevelProvider, loadingBorderActiveClass, loadingBorderClass, loadingBorderStateClass, markGhostTreeInteraction, measureWindowSilhouetteMetrics, Mode, modeDockTabClassName, moveTabInDock, moveTreeUnitInDock, Navbar, NavbarExampleSelect, navbarFillItem, normalizeTreeSelectedIds, Pane, PaneHost, Panel, PanelChromeTabBar, PanelDockContext, panelKindFromPanelToggleControlId, PanelRightIcon, panelTabButtonDividerClass, parseUiDriver, PresenceBar, presenceColor, presenceCssVar, pruneEmptyPanelBranches, React, readStoredUiChromeLayout, reconcileActivePath, renderToStaticMarkup, resetElementsSurfaceChromeForTests, resolveCollapsedFieldDisplayState, resolveControlLabelId, resolveSceneGizmoSnapTarget, resolveSceneGizmoViewportPlacement, resolveTranslationLabel, resolveTreeDropPosition, resolveUiDriver, resolveVirtualFileSystemSchemaIcon, resolveWindowSilhouetteBorderKind, Ribbon, RibbonItem, RibbonZone, Ring, SCENE_GIZMO_LABELS, Search, SearchIcon, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, serializeUiDriver, shellChromeBorderClass, shellChromeFrameLayerClass, shouldBeginAutomaticGhostInteraction, shouldDispatchTreeRowPointerLeave, singleTreeLeaf, Slider, Stepper, syncTreeSelectionPath, Table, Textarea, THREE, Toggle, ToggleGroup, Tree, TreeAlignedRow, TreeCheckbox, treeCompactSiblingGapPx, TreeContent, TreeContext, treeFoldChevronIcon, TreeItem, treeItemSecondaryTextClassName, TreeRow, TreeRowAlignmentContext, treeRowChromeClasses, treeRowChromeContentFillClasses, treeRowChromeShellClasses, TreeSection, TreeStateProvider, TutorialBar, tutorialCameraAt, tutorialCuesBetween, tutorialSlice, UI_CHROME_LAYOUT_STORAGE_KEY, uiDataLabel, UiDriverProvider, uiI18n, UIIntroduction, UiKeybindingsProvider, useCanvasAppearanceSync, validateTutorial, VIRTUAL_FILE_SYSTEM_DEMO_FILE_NODE_KINDS, VIRTUAL_FILE_SYSTEM_DEMO_SCHEMA, VirtualFileSystem, waitingBorderActiveClass, waitingBorderClass, waitingBorderStateClass, Window, WindowChrome, WINDOW_PANE_MEASURES_ICON, WindowMeasuresTree, windowMeasureToggleClass, windowMeasureToggleCompactClass, WindowMeasureTreeGroup, WindowMeasureTreeLeaf, WindowPaneChromeToggle, windowSilhouettePath, writeStoredUiChromeLayout } = dependencies;
   const { describe, expect, it, vi } = vitest;
   
     describe("tree helpers", () => {
@@ -8158,6 +8157,37 @@ export async function registerTests2(vitest: Pick<typeof import("vitest"), "desc
         expect(foldedChromeBar.hasAttribute("data-ghost")).toBe(false);
         expect(foldedChromeBar.querySelector('[data-slot="panel-tabs"]')?.hasAttribute("data-dim")).toBe(true);
         fireEvent.pointerUp(document);
+      });
+
+      it("WindowChrome stamps data-dim on the body glass surface for ghost dimming", async () => {
+        const { render, waitFor } = await import("@testing-library/react");
+        const rectSpy = vi.spyOn(Element.prototype, "getBoundingClientRect").mockImplementation(function (this: Element) {
+          const stack = this.closest('[data-slot="ghost-body-surface-stack"]');
+          if (this.getAttribute("data-slot") === "ghost-body-surface-stack") {
+            return { width: 200, height: 100, top: 0, left: 0, right: 200, bottom: 100, x: 0, y: 0, toJSON: () => ({}) } as DOMRect;
+          }
+          if (stack && this.hasAttribute("data-window-silhouette-chip")) {
+            return { width: 60, height: 24, top: 0, left: 0, right: 60, bottom: 24, x: 0, y: 0, toJSON: () => ({}) } as DOMRect;
+          }
+          if (stack && (this.getAttribute("data-slot") === "window-chrome-cap" || this.getAttribute("data-slot") === "window-chrome-gap")) {
+            return { width: 140, height: 24, top: 0, left: 60, right: 200, bottom: 24, x: 60, y: 0, toJSON: () => ({}) } as DOMRect;
+          }
+          return { width: 0, height: 0, top: 0, left: 0, right: 0, bottom: 0, x: 0, y: 0, toJSON: () => ({}) } as DOMRect;
+        });
+        const { container } = render(
+          <GhostProvider>
+            <GhostRegionShell>
+              <div id="canvas" />
+              <WindowChrome level="panel" stackSlot="ghost-body-surface-stack" titleChips={<span>Tab</span>} body={<div>Body</div>} />
+            </GhostRegionShell>
+          </GhostProvider>,
+        );
+        await waitFor(() => {
+          const bodySurface = container.querySelector('[data-slot="window-chrome-body-surface"]');
+          expect(bodySurface).toBeTruthy();
+          expect(bodySurface?.hasAttribute("data-dim")).toBe(true);
+        });
+        rectSpy.mockRestore();
       });
   
       it("GhostProvider dims open and folded pane toggles, borders, chrome, and body on interaction", async () => {

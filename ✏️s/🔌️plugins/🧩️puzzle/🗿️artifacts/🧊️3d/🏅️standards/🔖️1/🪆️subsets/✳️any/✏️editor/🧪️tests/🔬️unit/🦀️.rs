@@ -1901,7 +1901,7 @@ fn set_active_example_work_advances_through_multiple_bounded_steps_for_nakagin()
     assert!(emit.artifact_mutations.len() > 1, "the completed emit must carry every incrementally-collected mutation, one per deleted/created item; observed {}", emit.artifact_mutations.len());
     // 🏷️ Example loading publishes exactly ONE config row, and it moves exactly ONE field: the id of
     // the example just loaded, which is what `export_fixture` names its download after. The user's own
-    // shared preferences (fill count, overlap budget, kind weights) ride through untouched.
+    // shared preferences (fill count, contact tolerance, kind weights) ride through untouched.
     let Some(Puzzle3dConfigMutation::Snapshot { config: published }) = emit.config_mutations.first().cloned() else {
         panic!("example loading must stamp the active example id on the shared config: {:?}", emit.config_mutations);
     };
@@ -3296,7 +3296,7 @@ fn the_brush_utility_declares_a_read_only_tool_run_through_the_manifest() {
     assert!(!run.mutating, "a candidate search never writes the document");
     assert_eq!((run.rebase, run.reconfigure, run.trace), (ToolRunRebasePolicy::Restart, ToolRunReconfigurePolicy::Restart, ToolRunTraceKind::Instance3d));
     assert_eq!((run.run_job.as_str(), run.revalidate_job.as_ref()), (utilities::brush::RUN_JOB_KIND, None));
-    assert_eq!(run.settings.config, vec!["/overlapBudget", "/objectKindWeights", "/vortexKindWeights"]);
+    assert_eq!(run.settings.config, vec!["/contactTolerance", "/objectKindWeights", "/vortexKindWeights"]);
     for (reason, declared) in BrushSuggestionsRunReason::ALL.iter().zip(&run.reasons) {
         assert_eq!((declared.code, declared.id.as_str(), declared.verdict), (reason.code(), reason.id(), reason.verdict()));
     }
@@ -3464,7 +3464,7 @@ async fn settings_panel_steppers_carry_their_value_and_the_trigger_they_dispatch
     let mut app = app().await;
     let panel: Value = from_json_str(&to_json_string(&render_body(&mut app, settings_panel::BODY_KEY).await)).expect("the settings panel renders parseable ui json");
     for (field, action) in [
-        ("overlap-budget", "setBrushPlacementOverlapBudget"),
+        ("contact-tolerance", "setBrushPlacementContactTolerance"),
         ("proximity-radius", "setProximityRadius"),
         ("chunk-size", "setChunkSize"),
         ("grid-spacing", "setGridSpacing"),
@@ -4035,27 +4035,29 @@ async fn puzzle3d_normalize_kind_weight_group_redistributes_siblings_proportiona
 async fn puzzle3d_vortex_measure_exposes_joint_weight_scaled_by_object() {
     let object_ids = vec!["Object".to_string(), "Placed".to_string()];
     let vortex_ids = vec!["c-b".to_string(), "b-s".to_string()];
-    let object_weights = puzzle3d_uniform_kind_weights(&object_ids);
-    let vortex_weights = HashMap::from([("c-b".to_string(), 0.75), ("b-s".to_string(), 0.25)]);
-    let object_weight = *object_weights.get("Object").unwrap();
-    let measures = puzzle3d_joint_vortex_measures("Object", object_weight, &vortex_ids, &vortex_weights);
+    let mut object_weights = puzzle3d_uniform_kind_weights(&object_ids);
+    let mut joint_weights = HashMap::new();
+    puzzle3d_ensure_joint_distribution(&mut object_weights, &mut joint_weights, &object_ids, &vortex_ids);
+    let object_weight = puzzle3d_object_joint_total(&joint_weights, &object_weights, "Object", &vortex_ids);
+    let measures = puzzle3d_joint_vortex_measures("Object", object_weight, &vortex_ids, &object_weights, &joint_weights);
+    let expected_joint = puzzle3d_read_joint_weight(&joint_weights, &object_weights, "Object", "c-b");
     match &measures[0] {
         WindowMeasure::Slider { value, max, step, disabled, .. } => {
-            let expected_joint = puzzle3d_joint_vortex_weight(object_weight, 0.75);
-            assert!((*value - expected_joint).abs() < 1e-9, "slider must show P(object)×P(vortex), got {value}");
-            assert!((*max - object_weight).abs() < 1e-9, "joint range max is P(object)");
-            assert_eq!(*step, Some(object_weight * 0.01), "step tracks 1% of P(object)");
+            assert!((*value - expected_joint).abs() < 1e-9, "slider must show the joint probability, got {value}");
+            assert!((*max - 1.0).abs() < 1e-9, "joint range spans the global simplex");
+            assert_eq!(*step, Some(0.01));
             assert_eq!(*disabled, None);
         }
         other => panic!("expected vortex slider, got {other:?}"),
     }
-    let raised = puzzle3d_normalize_kind_weight_group(&object_weights, &object_ids, "Object", 0.8);
-    let raised_weight = *raised.get("Object").unwrap();
-    let raised_measures = puzzle3d_joint_vortex_measures("Object", raised_weight, &vortex_ids, &vortex_weights);
+    puzzle3d_set_object_kind_distribution_weight(&mut object_weights, &mut joint_weights, &object_ids, &vortex_ids, "Object", 0.8);
+    let raised_weight = puzzle3d_object_joint_total(&joint_weights, &object_weights, "Object", &vortex_ids);
+    let raised_measures = puzzle3d_joint_vortex_measures("Object", raised_weight, &vortex_ids, &object_weights, &joint_weights);
     match (&measures[0], &raised_measures[0]) {
         (WindowMeasure::Slider { value: before, .. }, WindowMeasure::Slider { value: after, .. }) => {
             assert!(*after > *before, "raising P(object) must raise joint vortex percentages");
-            assert!((*after - raised_weight * 0.75).abs() < 1e-9);
+            let expected_after = puzzle3d_read_joint_weight(&joint_weights, &object_weights, "Object", "c-b");
+            assert!((*after - expected_after).abs() < 1e-9);
         }
         _ => panic!("expected vortex sliders"),
     }
@@ -4097,13 +4099,33 @@ async fn puzzle3d_object_weight_change_scales_joint_sampling_product() {
     let object_ids = vec!["Object".to_string(), "Placed".to_string()];
     let vortex_ids = vec!["c-b".to_string(), "b-s".to_string()];
     let mut object_weights = puzzle3d_uniform_kind_weights(&object_ids);
-    let vortex_weights = puzzle3d_uniform_kind_weights(&vortex_ids);
-    object_weights = puzzle3d_normalize_kind_weight_group(&object_weights, &object_ids, "Object", 0.6);
-    let object_weight = *object_weights.get("Object").unwrap();
-    let vortex_weight = *vortex_weights.get("c-b").unwrap();
-    let joint_before = puzzle3d_joint_vortex_weight(0.5, vortex_weight);
-    let joint_after = puzzle3d_joint_vortex_weight(object_weight, vortex_weight);
+    let mut joint_weights = HashMap::new();
+    puzzle3d_ensure_joint_distribution(&mut object_weights, &mut joint_weights, &object_ids, &vortex_ids);
+    let joint_before = puzzle3d_read_joint_weight(&joint_weights, &object_weights, "Object", "c-b");
+    puzzle3d_set_object_kind_distribution_weight(&mut object_weights, &mut joint_weights, &object_ids, &vortex_ids, "Object", 0.6);
+    let joint_after = puzzle3d_read_joint_weight(&joint_weights, &object_weights, "Object", "c-b");
     assert!(joint_after > joint_before);
+    let global = puzzle3d_global_joint_total(&joint_weights, &object_weights, &object_ids, &vortex_ids);
+    assert!((global - 1.0).abs() < 1e-6, "global joints must stay normalized, got {global}");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn puzzle3d_vortex_joint_edit_redistributes_siblings_and_preserves_object_total() {
+    let object_ids = vec!["Object".to_string(), "Placed".to_string()];
+    let vortex_ids = vec!["c-b".to_string(), "b-s".to_string()];
+    let mut object_weights = puzzle3d_uniform_kind_weights(&object_ids);
+    let mut joint_weights = HashMap::new();
+    puzzle3d_ensure_joint_distribution(&mut object_weights, &mut joint_weights, &object_ids, &vortex_ids);
+    let object_total_before = puzzle3d_object_joint_total(&joint_weights, &object_weights, "Object", &vortex_ids);
+    let sibling_before = puzzle3d_read_joint_weight(&joint_weights, &object_weights, "Object", "b-s");
+    let new_joint = object_total_before * 0.7;
+    puzzle3d_set_vortex_joint_weight(&mut object_weights, &mut joint_weights, &object_ids, &vortex_ids, "Object", "c-b", new_joint);
+    let object_total_after = puzzle3d_object_joint_total(&joint_weights, &object_weights, "Object", &vortex_ids);
+    assert!((object_total_after - object_total_before).abs() < 1e-6);
+    let sibling_after = puzzle3d_read_joint_weight(&joint_weights, &object_weights, "Object", "b-s");
+    assert!(sibling_after < sibling_before, "raising one vortex must lower its siblings");
+    let global = puzzle3d_global_joint_total(&joint_weights, &object_weights, &object_ids, &vortex_ids);
+    assert!((global - 1.0).abs() < 1e-6);
 }
 
 /// 🚫️ Zero object-kind weight disables every vortex slider under that kind — anything × 0 is 0.
@@ -5605,7 +5627,7 @@ fn world_attraction_segments_match_the_vortex_position_resolver_for_every_exampl
 fn puzzle3d_typed_scene_config_matches_the_value_bridge_for_every_example() {
     for (label, fixture) in [("empty", empty_fixture()), ("concrete-forest", CONCRETE_FOREST_EXAMPLE_FIXTURE.clone()), ("nakagin", NAKAGIN_EXAMPLE_FIXTURE.clone())] {
         let mut runtime = Puzzle3dRuntime::default();
-        runtime.overlap_budget = 0.375;
+        runtime.contact_tolerance = 0.375;
         runtime.object_kind_weights.insert("capsule".into(), 0.25);
         runtime.vortex_kind_weights.insert("rim".into(), 0.75);
         let envelope = Puzzle3dScene { fixture, runtime, active_utility: "utility".into() };
@@ -7223,7 +7245,7 @@ async fn the_settings_panel_is_addressed_at_the_focused_pane_not_the_base_window
         let panel = render_panel_body(&mut app, settings_panel::BODY_KEY, Some(focused)).await;
         let rendered = panel.to_string();
         assert!(rendered.contains(focused), "the Settings section names the pane it is addressed at, so the user can see which one a bump will retune: {rendered}");
-        for field in ["overlap-budget", "proximity-radius", "chunk-size", "grid-spacing"] {
+        for field in ["contact-tolerance", "proximity-radius", "chunk-size", "grid-spacing"] {
             let control = node_by_key(&panel, &format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-settings.{field}.control")).unwrap_or_else(|| panic!("the {field} stepper: {panel}"));
             let bindings = control.get("bindings").and_then(Value::as_array).cloned().unwrap_or_default();
             assert_eq!(bindings[0].pointer("/args/windowId").and_then(Value::as_str), Some(focused), "{field} tags the focused pane, never the base window kind: {bindings:?}");

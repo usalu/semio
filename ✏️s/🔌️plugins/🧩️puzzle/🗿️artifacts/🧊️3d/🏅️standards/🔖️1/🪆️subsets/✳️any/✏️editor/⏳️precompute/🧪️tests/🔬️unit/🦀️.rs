@@ -41,7 +41,7 @@ fn catalog_host_engine() -> Puzzle3dCollision {
             cables: vec![],
         }),
         kind_compatibility: vec![KindCompatEntry { source: "port-b".to_string(), target: "port-a".to_string(), bidirectional: true, important: false, specificity: Some("vortex".to_string()) }],
-        overlap_budget: DEFAULT_OVERLAP_BUDGET,
+        contact_tolerance: DEFAULT_OVERLAP_BUDGET,
         seed: 1,
         host_rules: BrushHostRules::default(),
         weights: BrushKindWeights::default(),
@@ -95,7 +95,7 @@ fn brush_candidates_allow_separated_boxes() {
             cables: vec![CableKindCatalog { id: "cable.link".to_string(), default_attraction_kind: None, ..Default::default() }],
         }),
         kind_compatibility: vec![KindCompatEntry { source: "port-b".to_string(), target: "port-a".to_string(), bidirectional: true, important: false, specificity: Some("vortex".to_string()) }],
-        overlap_budget: DEFAULT_OVERLAP_BUDGET,
+        contact_tolerance: DEFAULT_OVERLAP_BUDGET,
         seed: 1,
         host_rules: BrushHostRules::default(),
         weights: BrushKindWeights::default(),
@@ -108,7 +108,7 @@ fn brush_candidates_allow_separated_boxes() {
 
 /// 🗺️ A scene sync invalidates the brush derivation PER OBJECT: an identical scene invalidates nothing,
 /// a new object enqueues exactly its own targets and nothing else, and only a change to what every
-/// candidate is derived from (overlap budget, catalogs, weights) invalidates every candidate.
+/// candidate is derived from (contact tolerance, catalogs, weights) invalidates every candidate.
 ///
 /// 🧾️ This law used to read `assert_ne!(work_pending, before)` for "a changed scene must rebuild the
 /// queue" — it pinned the whole-document wipe itself, which is the defect: on the 340-object
@@ -137,8 +137,8 @@ fn a_scene_sync_invalidates_the_brush_derivation_per_object() {
     assert_eq!(engine.work_pending_for_test(), queue_len_after_step + 1, "one added object enqueues exactly its own one brush target, and no other object's");
 
     let mut replanned: serde_json::Value = serde_json::from_str(&grown_json).unwrap();
-    replanned["overlapBudget"] = serde_json::json!(0.5);
-    engine.set_scene(&serde_json::to_string(&replanned).unwrap()).expect("set_scene with a new overlap budget should succeed");
+    replanned["contactTolerance"] = serde_json::json!(0.5);
+    engine.set_scene(&serde_json::to_string(&replanned).unwrap()).expect("set_scene with a new contact tolerance should succeed");
     assert_eq!(engine.work_pending_for_test(), 0, "a candidate-derivation change invalidates every candidate and clears the queue for a whole-scene rebuild");
 }
 
@@ -311,7 +311,7 @@ fn nakagin_scale_brush_broad_phase_visits_only_the_queried_cells() {
             cables: vec![],
         }),
         kind_compatibility: vec![],
-        overlap_budget: DEFAULT_OVERLAP_BUDGET,
+        contact_tolerance: DEFAULT_OVERLAP_BUDGET,
         seed: 1,
         host_rules: BrushHostRules::default(),
         weights: BrushKindWeights::default(),
@@ -337,11 +337,10 @@ fn nakagin_scale_brush_broad_phase_visits_only_the_queried_cells() {
         scale: None,
     };
     let deadline = puzzle3d_deadline(PUZZLE3D_PRECOMPUTE_STEP_BUDGET_US * 64).expect("clock");
-    let (page, (cells, members)) = engine.brush_broad_phase_page(&preview, "object-0", deadline).expect("broad phase page");
+    let (page, (cells, members)) = engine.brush_broad_phase_page(&preview, deadline).expect("broad phase page");
     assert!(cells <= 32, "a one-cube query may only walk its own cell span, walked {cells}");
     assert!(members < OBJECTS, "the query examined {members} members of a {OBJECTS}-object scene — that is a linear scan");
-    assert!(page.iter().all(|entry| entry.object_id != "object-0"), "the queried host is never its own collision pair");
-    assert!(page.len() <= 2, "only the immediate spatial neighbours may reach the narrow phase, got {}", page.len());
+    assert!(page.len() <= 3, "only the immediate spatial neighbours — the docking host included, the depth measure keeps its flush contact at 0 — may reach the narrow phase, got {}", page.len());
 }
 
 /// 🔁️ Wave W-P: moving one object must reconcile the persistent index incrementally — the moved owner's

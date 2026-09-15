@@ -27,7 +27,7 @@ pub fn definition(label: LocalizedLabel) -> UtilityDefinition {
 }
 
 /// ⏯️ A read-only `instance3d` run. It authors no provisional edit, so a document change or a change of the
-/// settings its job reads (overlap budget and kind weights) simply restarts the search against what is now there
+/// settings its job reads (contact tolerance and kind weights) simply restarts the search against what is now there
 /// (`restart` for both); there is nothing to revalidate.
 pub fn run_definition() -> ToolRunDefinition {
     ToolRunDefinition {
@@ -41,12 +41,12 @@ pub fn run_definition() -> ToolRunDefinition {
         trace: ToolRunTraceKind::Instance3d,
         run_job: JobKindId::new(RUN_JOB_KIND),
         revalidate_job: None,
-        settings: ToolRunSettingsReads { config: vec!["/overlapBudget".into(), "/objectKindWeights".into(), "/vortexKindWeights".into()], window_config: Default::default() },
+        settings: ToolRunSettingsReads { config: vec!["/contactTolerance".into(), "/objectKindWeights".into(), "/vortexKindWeights".into()], window_config: Default::default() },
         windows: Vec::new(),
     }
 }
 
-/// 🖌️ Utility Options for the Brush utility: the overlap budget and the shared object/vortex distribution tree.
+/// 🖌️ Utility Options for the Brush utility: the contact tolerance and the shared object/vortex distribution tree.
 /// Tagged with this utility's id as a routing envelope only; `partition_window_measures` unwraps the children.
 /// The candidate search's progress, status and every candidate with its verdict are the framework ToolRun panel's.
 pub fn options(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels) -> WindowMeasure {
@@ -57,17 +57,17 @@ pub fn options(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels) -> WindowMeasu
         active_utility_id: Some(UTILITY_ID.into()),
         children: vec![
             WindowMeasure::Slider {
-                id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-brush-overlap-budget"),
-                label: Some(labels.overlap_budget.into()),
-                value: envelope.runtime.overlap_budget,
+                id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-brush-contact-tolerance"),
+                label: Some(labels.contact_tolerance.into()),
+                value: envelope.runtime.contact_tolerance,
                 min: 0.0,
-                max: 1.0,
-                step: Some(0.01),
+                max: 0.05,
+                step: Some(0.001),
                 ready: None,
                 loading: None,
                 waiting: None,
                 disabled: None,
-                on_change: puzzle3d_action("setBrushPlacementOverlapBudget", None),
+                on_change: puzzle3d_action("setBrushPlacementContactTolerance", None),
             },
             puzzle3d_distribution_group(envelope, labels, Some(false)),
         ],
@@ -90,7 +90,7 @@ pub fn build_run_job(request: ToolRunJobRequest<'_, EditorApp<Puzzle3dPlayApp>>)
         return Ok(None);
     }
     let config = request.config.as_ref();
-    let runtime = Puzzle3dRuntime { overlap_budget: config.overlap_budget, object_kind_weights: config.object_kind_weights.clone(), vortex_kind_weights: config.vortex_kind_weights.clone(), ..Puzzle3dRuntime::default() };
+    let runtime = Puzzle3dRuntime { contact_tolerance: config.contact_tolerance, object_kind_weights: config.object_kind_weights.clone(), vortex_kind_weights: config.vortex_kind_weights.clone(), ..Puzzle3dRuntime::default() };
     let envelope = Puzzle3dScene { fixture: puzzle3d_fixture_from_snapshot(request.snapshot.typed()), runtime, active_utility: UTILITY_ID.into() };
     let scene = scene_config(&envelope).ok_or_else(|| Fault::from("puzzle3d-brush-suggestions-scene"))?;
     let job = BrushSuggestionsRunJob::<Puzzle3dInstanceOperationOwner>::new(request.instance_owner, request.port, request.identity, Arc::new(scene), main::mesh_lane(&envelope.fixture), shared_brush_mesh, puzzle3d_fallback_mesh_buffers()).ok_or_else(|| Fault::from("puzzle3d-brush-suggestions-fallback-mesh"))?;

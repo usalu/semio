@@ -723,8 +723,18 @@ export function world3dViewportCameraSeedKey(sceneCameraJson: string, detachEpoc
 }
 
 /** 📷️ Whether a seeded projection pane may keep auto-fitting {@link worldSceneContentBounds} while a running tool grows the scene. */
-export function world3dFitProjectionContent(viewportOwned: boolean, cameraNavigating: boolean, hasProjectionSeed: boolean): boolean {
-  return !viewportOwned && !cameraNavigating && hasProjectionSeed;
+export function world3dFitProjectionContent(
+  viewportOwned: boolean,
+  cameraNavigating: boolean,
+  hasProjectionSeed: boolean,
+  lockContentFrame: boolean = false,
+): boolean {
+  return !viewportOwned && !cameraNavigating && !lockContentFrame && hasProjectionSeed;
+}
+
+/** 📷️ Scene instances that may move the projection framing bounds — excludes tool-run provisional placements so fill planning never yanks the camera. */
+export function world3dFramingInstances(instances: readonly WorldInstanceRecord[]): readonly WorldInstanceRecord[] {
+  return instances.filter((instance) => !instance.provisional);
 }
 
 /** 📷️ Whether {@link WorldProjectionContentFrame} should stay mounted — suppressed for the whole orbit/pan/zoom gesture, not only after `end`. */
@@ -954,6 +964,21 @@ export function world3dAutoFitOwed(appliedKey: string, fitKey: string, userMoved
   return !userMoved;
 }
 
+/** 📷️ Key for {@link WorldAutoFit} — document revision and external camera seed, plus producer-published
+ * bounds when present. Deliberately omits the scene mesh roster: puzzle 3d's fit revision already tracks
+ * document identity, and mesh-list churn (catalogue drop) must not re-arm auto-fit; producers that publish
+ * `boundsMin`/`boundsMax` still refit when that extent grows (generation3d preview). */
+export function world3dAutoFitKey(
+  revision: number,
+  sceneCameraAttachJson: string,
+  autoFitBounds: readonly [readonly number[], readonly number[]] | null,
+): string {
+  if (!autoFitBounds) return `${revision}:${sceneCameraAttachJson}`;
+  const [minimum, maximum] = autoFitBounds;
+  const round = (value: number) => Math.round(value * 1e3) / 1e3;
+  return `${revision}:${sceneCameraAttachJson}:${minimum.map(round).join(",")}:${maximum.map(round).join(",")}`;
+}
+
 /** @emoji 🎯️ Fits the orbit camera to the producer's published bounds (or, absent those, the scene
  * group's own AABB) once per fit key, preserving the view direction. */
 function WorldAutoFit({
@@ -1104,7 +1129,7 @@ function seedPendingWorldProjectionCamera(
   references: readonly WorldReferenceRecord[],
   viewport?: { readonly width: number; readonly height: number },
 ): WorldParsedCameraState {
-  const bounds = worldSceneContentBounds(instances, references);
+  const bounds = worldSceneContentBounds(world3dFramingInstances(instances), references);
   const pose = bounds
     ? frameWorldProjectionPose(pendingSpec, bounds, {
         viewportWidth: viewport?.width,
@@ -5307,7 +5332,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
     if (sceneCameraJson.includes('"position"')) return parsedCamera;
     return instances.length > 0 ? autofitCameraFromInstances(instances) : parsedCamera;
   }, [instances, parsedCamera, sceneCameraJson]);
-  const contentBounds = useMemo(() => worldSceneContentBounds(instances, references), [instances, references]);
+  const contentBounds = useMemo(() => worldSceneContentBounds(world3dFramingInstances(instances), references), [instances, references]);
   const pendingProjectionSpecRef = useRef<WorldProjectionSpec | null>(null);
   const [viewportCamera, setViewportCamera] = useState<WorldParsedCameraState | null>(() => {
     const pendingSpec = peekPendingWorldProjection(windowInstanceId);
@@ -5519,6 +5544,11 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
   );
   const gumballTransformPreviewSourceId = windowInstanceId ?? node.surfaceId;
   const [contextMenu, setContextMenu] = useState<(SurfaceContextMenuResult & { readonly x: number; readonly y: number }) | null>(null);
+  const contextMenuOpenEpochRef = useRef(0);
+  const dismissContextMenu = useCallback(() => {
+    contextMenuOpenEpochRef.current += 1;
+    setContextMenu(null);
+  }, []);
   const contextMenuTitleLabel = useLabel(contextMenu?.titleKey ?? "ui.surfaceContextMenu.scene");
   const cameraRef = useRef<import("three").Camera | null>(null);
   const catalogueDragDepthRef = useRef(0);
@@ -6368,6 +6398,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
       projectionContentFrameSeededRef.current = true;
       setDetachEpoch((epoch) => epoch + 1);
     }
+    setViewportOwned(true);
     setProjectionFramePending(false);
   }, []);
 
@@ -6376,7 +6407,10 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
    * user takes ownership — otherwise tool-placed objects that expand the scene fall outside the one-shot
    * initial frustum and only remain visible in the wider perspective pane. */
   const hasProjectionSeed = Boolean(pendingProjectionSpecRef.current ?? cameraState.projectionSpec);
-  const fitProjectionContent = world3dFitProjectionContent(viewportOwned, cameraNavigating, hasProjectionSeed);
+  const lockProjectionContentFrame =
+    activeUtility === "fill" || instances.some((instance) => instance.provisional) || projectionContentFrameSeededRef.current;
+  const fitProjectionContent = world3dFitProjectionContent(viewportOwned, cameraNavigating, hasProjectionSeed, lockProjectionContentFrame);
+  const autoFitKey = world3dAutoFitKey(fit?.revision ?? 0, sceneCameraAttachJson, autoFitBounds);
   const projectionContentFrameMounted = world3dProjectionContentFrameMounted(fitProjectionContent, projectionFramePending, cameraNavigating);
   const frameVisibleOverlayOffered = world3dFrameVisibleOverlayOffered(fit);
   const autoFitUserMoved = userMovedFitRevision === (fit?.revision ?? 0);
@@ -6765,6 +6799,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
         return;
       }
       if (selection.engagementSessionActive || paintMode) return;
+      if (contextMenu) dismissContextMenu();
       if (interaction.suggestionMenu?.open) {
         handleSuggestionClose();
       }
@@ -6794,7 +6829,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
       }
       dispatch("worldPick", { granularity: selectionMode, id: null, merge });
     },
-    [dispatch, handleSuggestionClose, interaction.suggestionMenu?.open, interactionDomainId, interactionGranularity, paintMode, persistentSelectionMode, selection.engagementSessionActive, selection.hoveredId, selection.selectionMergeMode, selectionMode],
+    [contextMenu, dismissContextMenu, dispatch, handleSuggestionClose, interaction.suggestionMenu?.open, interactionDomainId, interactionGranularity, paintMode, persistentSelectionMode, selection.engagementSessionActive, selection.hoveredId, selection.selectionMergeMode, selectionMode],
   );
 
   const clearCatalogueDrop = useCallback(() => {
@@ -6997,6 +7032,8 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
         const target = resolveWorldContextMenuTarget(interaction, selection);
         event.preventDefault();
         event.stopPropagation();
+        const epoch = contextMenuOpenEpochRef.current + 1;
+        contextMenuOpenEpochRef.current = epoch;
         void (async () => {
           const surface = world3dContextMenuSurfaceV1(target, selection);
           const menu = await openSurfaceContextMenu(
@@ -7010,6 +7047,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
             mapWorldContextMenuSpecs,
             shellContextMenuFallback,
           );
+          if (contextMenuOpenEpochRef.current !== epoch) return;
           setContextMenu({ x: event.clientX, y: event.clientY, ...menu });
         })();
       }}
@@ -7126,7 +7164,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
             {fit?.enabled ? (
               <WorldAutoFit
                 groupRef={instancesGroupRef}
-                fitKey={`${fit.revision ?? 0}:${sceneCameraAttachJson}:${meshes.map((mesh) => mesh.url ?? mesh.id).join(",")}`}
+                fitKey={autoFitKey}
                 padding={fit.padding ?? WORLD3D_FRAME_BOUNDS_MARGIN}
                 camera={cameraState}
                 bounds={autoFitBounds}
@@ -7238,9 +7276,10 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
         </WorldOrbitViewSnapGateProvider>
       </WorldCanvas>
       {marqueeDragActive && marqueeStart && marqueeEnd && world3dMarqueeOverlayShape(method) === "polygon" ? (
-        <SelectionMarquee coverage={marqueeCoverage} shape="polygon" points={marqueePath} />
+        <SelectionMarquee className="z-50" coverage={marqueeCoverage} shape="polygon" points={marqueePath} />
       ) : marqueeDragActive && marqueeStart && marqueeEnd && world3dMarqueeOverlayShape(method) === "rect" ? (
           <SelectionMarquee
+            className="z-50"
             coverage={marqueeCoverage}
             shape="rect"
             rect={{
@@ -7257,7 +7296,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
         position={contextMenu ?? { x: 0, y: 0 }}
         items={contextMenu?.items ?? []}
         onOpenChange={(open) => {
-          if (!open) setContextMenu(null);
+          if (!open) dismissContextMenu();
         }}
       />
       {suggestionMenuOwnsThisWindow ? (

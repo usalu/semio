@@ -817,8 +817,16 @@ fn shapes_intersect(pose_a: &Pose3d, a: &CollisionShape, pose_b: &Pose3d, b: &Co
 //#endregion 🔒️GeometryAdapter
 
 //#region 🔖️Constants
-const SURFACE_CONTACT_MAX_AABB_VOLUME: f64 = 1e-4;
 const BRUSH_COLLISION_MESH_MIN_EXTENT: f64 = 2.0;
+/// 🕳️ Distance (m) below which a probe is contact, not penetration, whatever the tolerance: single-precision noise of
+/// faces that meet exactly (1e-7 m measured on docked cubes) must never read as a collision.
+const COLLISION_CONTACT_NOISE_M: f64 = 1e-4;
+/// 🕳️ Probes per edge of a clipped face polygon (its first corner included), see `CollisionPenetrationState::step_face`.
+const COLLISION_EDGE_PROBES: usize = 8;
+/// 🕳️ Smallest and largest half inward offset of a coincident-surface probe (m): a zero tolerance still probes off the
+/// surface, and an unbounded measure (an infinite tolerance) still probes a real point instead of one at infinity.
+const COLLISION_INSET_MIN_M: f64 = 1e-4;
+const COLLISION_INSET_MAX_M: f64 = 0.05;
 pub(crate) const BRUSH_PLACEMENT_PARALLEL_TOLERANCE: f64 = 1e-6;
 //#endregion 🔖️Constants
 
@@ -1826,16 +1834,17 @@ impl CollisionStepContext for semio_framework_job::StepContext<'_> {
     }
 }
 
+/// 🕳️ Where a [`CollisionPenetrationState`] stands. `A`/`B` name the two bodies; `Vertices*` probe one body's vertices
+/// against the other solid, `Faces*` probe the parts of one body's triangles that pass behind the other body's faces.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
-pub(crate) enum CollisionOverlapStage {
-    BroadPhaseInit,
-    PartPairs,
-    ContainmentA,
-    ContainmentB,
-    SampleInit,
-    Sampling,
-    SamplingPointA,
-    SamplingPointB,
+pub(crate) enum CollisionPenetrationStage {
+    BroadPhase,
+    VerticesA,
+    VerticesB,
+    FacesA,
+    FacesB,
+    InsetA,
+    InsetB,
     Complete,
 }
 
@@ -1843,54 +1852,41 @@ pub(crate) enum CollisionOverlapStage {
 pub(crate) enum CollisionStepResult {
     Pending,
     Cancelled,
-    Complete { overlap: f64, rejected_early: bool },
+    /// `depth`: how far (m) one body's surface dives into the other solid, measured to that solid's nearest surface —
+    /// `0` for bodies that only touch. `rejected_early` when the measure stopped at the first probe past the tolerance.
+    Complete { depth: f64, rejected_early: bool },
 }
 
+/// 🕳️ Resumable PENETRATION-DEPTH test of one body pair: every step probes one vertex or one triangle, so a fill or brush
+/// search interleaves it with its own fuel and cancellation.
+///
+/// The measure is the deepest point of one body's SURFACE inside the other SOLID, as its distance to that solid's surface.
+/// Probes: the vertices of each body that lie inside the other, and the corners of every part of one body's triangle that
+/// passes behind a triangle of the other inside that triangle's prism ([`collision::clip_behind_triangle`]) — the exact
+/// extremes of a surface diving under a face. A probe only counts when it is farther than `tolerance` from the other
+/// surface AND inside the other solid, which also keeps flush contact (the docking of two faces) at depth `0`. Surfaces
+/// that COINCIDE (a duplicate at the same pose, a face lying inside another body's face) have no probe off the other
+/// surface, so each triangle also probes its centroid moved inward by twice the tolerance: inside its own body, and for a
+/// flush-docked neighbour outside the other one, but deep inside a coinciding solid.
+///
+/// 🐛️ It replaced a volume estimate (512 random points in the bounding-box intersection against an `m³` budget) that
+/// accepted a slab 5.5 cm deep inside its neighbour and, because the docking host was skipped, a placement 1 m deep inside
+/// its host (ticket 26/09/13/INTERACTIVE-TOOLS-VISIBLE-PROCESS, dev directive: only tiny collisions on the touching
+/// surfaces).
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-pub(crate) struct CollisionOverlapState {
-    pub(crate) stage: CollisionOverlapStage,
-    pub(crate) part_a_cursor: usize,
-    pub(crate) part_b_cursor: usize,
-    pub(crate) sample_cursor: usize,
-    pub(crate) inside_both: usize,
-    pub(crate) last_sample: Option<[f32; 3]>,
-    containment_hit: bool,
-    current_sample: Option<[f32; 3]>,
-    intersection_min: [f32; 3],
-    intersection_max: [f32; 3],
-    fallback_center: [f32; 3],
-    intersection_volume: f64,
-    sample_count: usize,
-    sample_batch_size: usize,
-    overlap_budget: f64,
-    rng_state: u32,
-    result: Option<f64>,
+pub(crate) struct CollisionPenetrationState {
+    pub(crate) stage: CollisionPenetrationStage,
+    part_a: usize,
+    part_b: usize,
+    cursor: usize,
+    tolerance: f64,
+    depth: f64,
     rejected_early: bool,
 }
 
-impl CollisionOverlapState {
-    pub(crate) fn new(sample_count: usize, sample_batch_size: usize, overlap_budget: f64) -> Self {
-        assert!(sample_batch_size > 0);
-        Self {
-            stage: CollisionOverlapStage::BroadPhaseInit,
-            part_a_cursor: 0,
-            part_b_cursor: 0,
-            sample_cursor: 0,
-            inside_both: 0,
-            last_sample: None,
-            containment_hit: false,
-            current_sample: None,
-            intersection_min: [0.0; 3],
-            intersection_max: [0.0; 3],
-            fallback_center: [0.0; 3],
-            intersection_volume: 0.0,
-            sample_count,
-            sample_batch_size,
-            overlap_budget,
-            rng_state: 0x9e3779b9,
-            result: None,
-            rejected_early: false,
-        }
+impl CollisionPenetrationState {
+    pub(crate) fn new(tolerance: f64) -> Self {
+        Self { stage: CollisionPenetrationStage::BroadPhase, part_a: 0, part_b: 0, cursor: 0, tolerance, depth: 0.0, rejected_early: false }
     }
 
     #[cfg(test)]
@@ -1910,172 +1906,143 @@ impl CollisionOverlapState {
         if context.should_yield() {
             return CollisionStepResult::Pending;
         }
-        let stage = self.stage;
-        let result = match stage {
-            CollisionOverlapStage::BroadPhaseInit => self.init_broad_phase(a, world_a, b, world_b),
-            CollisionOverlapStage::PartPairs => self.step_part_pair(a, world_a, b, world_b),
-            CollisionOverlapStage::ContainmentA => self.step_containment(a, world_a, true),
-            CollisionOverlapStage::ContainmentB => self.step_containment(b, world_b, false),
-            CollisionOverlapStage::SampleInit => self.init_samples(),
-            CollisionOverlapStage::Sampling => self.begin_sample(context),
-            CollisionOverlapStage::SamplingPointA => self.step_sample_part(a, world_a, true),
-            CollisionOverlapStage::SamplingPointB => self.step_sample_part(b, world_b, false),
-            CollisionOverlapStage::Complete => self.complete_result(),
+        let result = match self.stage {
+            CollisionPenetrationStage::BroadPhase => {
+                if CollisionAabb::from_body(a, world_a).intersects(&CollisionAabb::from_body(b, world_b)) {
+                    self.advance(CollisionPenetrationStage::VerticesA)
+                } else {
+                    self.finish()
+                }
+            }
+            CollisionPenetrationStage::VerticesA => self.step_vertex(a, world_a, b, world_b, CollisionPenetrationStage::VerticesB),
+            CollisionPenetrationStage::VerticesB => self.step_vertex(b, world_b, a, world_a, CollisionPenetrationStage::FacesA),
+            CollisionPenetrationStage::FacesA => self.step_face(a, world_a, b, world_b, CollisionPenetrationStage::FacesB),
+            CollisionPenetrationStage::FacesB => self.step_face(b, world_b, a, world_a, CollisionPenetrationStage::InsetA),
+            CollisionPenetrationStage::InsetA => self.step_inset(a, world_a, b, world_b, CollisionPenetrationStage::InsetB),
+            CollisionPenetrationStage::InsetB => self.step_inset(b, world_b, a, world_a, CollisionPenetrationStage::Complete),
+            CollisionPenetrationStage::Complete => CollisionStepResult::Complete { depth: self.depth, rejected_early: self.rejected_early },
         };
         context.consume_fuel(1);
-        if context.is_cancelled() {
-            CollisionStepResult::Cancelled
-        } else {
-            result
-        }
+        if context.is_cancelled() { CollisionStepResult::Cancelled } else { result }
     }
 
-    fn init_broad_phase(&mut self, a: &CollisionBody, world_a: &Pose3d, b: &CollisionBody, world_b: &Pose3d) -> CollisionStepResult {
-        let a = CollisionAabb::from_body(a, world_a);
-        let b = CollisionAabb::from_body(b, world_b);
-        self.intersection_min = [a.min[0].max(b.min[0]), a.min[1].max(b.min[1]), a.min[2].max(b.min[2])];
-        self.intersection_max = [a.max[0].min(b.max[0]), a.max[1].min(b.max[1]), a.max[2].min(b.max[2])];
-        self.fallback_center = [(a.min[0] + a.max[0] + b.min[0] + b.max[0]) * 0.25, (a.min[1] + a.max[1] + b.min[1] + b.max[1]) * 0.25, (a.min[2] + a.max[2] + b.min[2] + b.max[2]) * 0.25];
-        if !a.intersects(&b) {
-            return self.finish(0.0, false);
+    fn advance(&mut self, stage: CollisionPenetrationStage) -> CollisionStepResult {
+        self.stage = stage;
+        self.part_a = 0;
+        self.part_b = 0;
+        self.cursor = 0;
+        if stage == CollisionPenetrationStage::Complete {
+            return self.finish();
         }
-        self.stage = CollisionOverlapStage::PartPairs;
         CollisionStepResult::Pending
     }
 
-    fn step_part_pair(&mut self, a: &CollisionBody, world_a: &Pose3d, b: &CollisionBody, world_b: &Pose3d) -> CollisionStepResult {
-        if self.part_a_cursor < a.parts.len() && self.part_b_cursor < b.parts.len() {
-            let part_a = &a.parts[self.part_a_cursor];
-            let part_b = &b.parts[self.part_b_cursor];
-            let pose_a = world_a.semio_compose_rs(&part_a.local_pose);
-            let pose_b = world_b.semio_compose_rs(&part_b.local_pose);
-            self.advance_part_pair(b.parts.len());
-            if shapes_intersect(&pose_a, &part_a.shape, &pose_b, &part_b.shape) {
-                self.stage = CollisionOverlapStage::SampleInit;
+    fn finish(&mut self) -> CollisionStepResult {
+        self.stage = CollisionPenetrationStage::Complete;
+        CollisionStepResult::Complete { depth: self.depth, rejected_early: self.rejected_early }
+    }
+
+    /// 📍️ Records `point` as a depth probe into `solid`'s part, keeping the deepest one; answers `true` once the depth is past
+    /// the tolerance, which ends the measure (an infinite tolerance measures the full depth).
+    fn probe(&mut self, point: rigid::Point3, solid_bounds: &CollisionAabb, solid_pose: rigid::Isometry3, solid: &CollisionShape) -> bool {
+        // 📦️ A point outside the solid's world bounds cannot be inside it: the surface query and the containment test are only
+        // paid for probes where the two bodies' bounds meet, and containment (BVH ray parity) only for a probe whose surface
+        // distance would deepen the measure.
+        let outside = |axis: usize, value: f32| value < solid_bounds.min[axis] || value > solid_bounds.max[axis];
+        if outside(0, point.x) || outside(1, point.y) || outside(2, point.z) {
+            return false;
+        }
+        let distance = f64::from(collision::distance_to_surface(solid_pose, &solid.shape, point));
+        if distance <= COLLISION_CONTACT_NOISE_M || distance <= self.depth || !collision::contains_point_fast(solid_pose, &solid.shape, point) {
+            return false;
+        }
+        self.depth = distance;
+        self.rejected_early = self.depth > self.tolerance;
+        self.rejected_early
+    }
+
+    /// 🧭️ The current `(probe part, solid part)` pair, advancing the part cursors past exhausted `count`s; `None` once every
+    /// pair is done.
+    fn parts<'a>(&mut self, probe: &'a CollisionBody, solid: &'a CollisionBody, count: impl Fn(&CollisionShape) -> usize) -> Option<(&'a CollisionMeshPart, &'a CollisionMeshPart)> {
+        loop {
+            let probe_part = probe.parts.get(self.part_a)?;
+            let Some(solid_part) = solid.parts.get(self.part_b) else {
+                self.part_a += 1;
+                self.part_b = 0;
+                self.cursor = 0;
+                continue;
+            };
+            if self.cursor >= count(&probe_part.shape) {
+                self.part_b += 1;
+                self.cursor = 0;
+                continue;
             }
-            return CollisionStepResult::Pending;
-        }
-        self.current_sample = Some(self.fallback_center);
-        self.part_a_cursor = 0;
-        self.part_b_cursor = 0;
-        self.containment_hit = false;
-        self.stage = CollisionOverlapStage::ContainmentA;
-        CollisionStepResult::Pending
-    }
-
-    fn advance_part_pair(&mut self, b_part_count: usize) {
-        self.part_b_cursor += 1;
-        if self.part_b_cursor >= b_part_count {
-            self.part_b_cursor = 0;
-            self.part_a_cursor += 1;
+            return Some((probe_part, solid_part));
         }
     }
 
-    fn init_samples(&mut self) -> CollisionStepResult {
-        let size = [self.intersection_max[0] - self.intersection_min[0], self.intersection_max[1] - self.intersection_min[1], self.intersection_max[2] - self.intersection_min[2]];
-        self.intersection_volume = size[0] as f64 * size[1] as f64 * size[2] as f64;
-        if self.intersection_volume <= SURFACE_CONTACT_MAX_AABB_VOLUME {
-            return self.finish(0.0, false);
-        }
-        if self.sample_count == 0 {
-            return self.finish(f64::NAN, false);
-        }
-        self.stage = CollisionOverlapStage::Sampling;
-        CollisionStepResult::Pending
+    fn step_vertex(&mut self, probe: &CollisionBody, probe_world: &Pose3d, solid: &CollisionBody, solid_world: &Pose3d, next: CollisionPenetrationStage) -> CollisionStepResult {
+        let Some((probe_part, solid_part)) = self.parts(probe, solid, |shape| shape.shape.vertex_count()) else { return self.advance(next) };
+        let probe_pose = probe_world.semio_compose_rs(&probe_part.local_pose).0;
+        let solid_pose = solid_world.semio_compose_rs(&solid_part.local_pose).0;
+        let point = probe_part.shape.shape.world_vertex(probe_pose, self.cursor);
+        self.cursor += 1;
+        if self.probe(point, &CollisionAabb::from_body(solid, solid_world), solid_pose, &solid_part.shape) { self.finish() } else { CollisionStepResult::Pending }
     }
 
-    fn step_containment(&mut self, body: &CollisionBody, world: &Pose3d, first: bool) -> CollisionStepResult {
-        let cursor = if first { &mut self.part_a_cursor } else { &mut self.part_b_cursor };
-        let sample = self.current_sample.expect("containment point");
-        if let Some(part) = body.parts.get(*cursor) {
-            *cursor += 1;
-            let local = world.inverse().transform_point(&Point3d::new(sample[0], sample[1], sample[2]));
-            let part_local = part.local_pose.inverse().transform_point(&local);
-            self.containment_hit |= part.shape.contains_point(&part.local_pose, &part_local);
-            return CollisionStepResult::Pending;
-        }
-        if !self.containment_hit {
-            return self.finish(0.0, false);
-        }
-        self.containment_hit = false;
-        if first {
-            self.stage = CollisionOverlapStage::ContainmentB;
-        } else {
-            self.stage = CollisionOverlapStage::SampleInit;
-            self.current_sample = None;
-        }
-        CollisionStepResult::Pending
+    fn step_inset(&mut self, probe: &CollisionBody, probe_world: &Pose3d, solid: &CollisionBody, solid_world: &Pose3d, next: CollisionPenetrationStage) -> CollisionStepResult {
+        let Some((probe_part, solid_part)) = self.parts(probe, solid, |shape| shape.shape.triangle_count()) else { return self.advance(next) };
+        let probe_pose = probe_world.semio_compose_rs(&probe_part.local_pose).0;
+        let solid_pose = solid_world.semio_compose_rs(&solid_part.local_pose).0;
+        let [a, b, c] = probe_part.shape.shape.world_triangle_outward(probe_pose, self.cursor);
+        self.cursor += 1;
+        let Some(outward) = (b - a).cross(c - a).try_normalize(1e-12) else { return CollisionStepResult::Pending };
+        let centroid = rigid::Point3::new((a.x + b.x + c.x) / 3.0, (a.y + b.y + c.y) / 3.0, (a.z + b.z + c.z) / 3.0);
+        let inset = centroid + outward * -(2.0 * self.tolerance.clamp(COLLISION_INSET_MIN_M, COLLISION_INSET_MAX_M) as f32);
+        if self.probe(inset, &CollisionAabb::from_body(solid, solid_world), solid_pose, &solid_part.shape) { self.finish() } else { CollisionStepResult::Pending }
     }
 
-    fn begin_sample<C: CollisionStepContext>(&mut self, context: &mut C) -> CollisionStepResult {
-        if context.is_cancelled() {
-            return CollisionStepResult::Cancelled;
-        }
-        if self.sample_cursor == self.sample_count {
-            return self.finish(self.estimated_overlap(), false);
-        }
-        let sample = [self.next_sample_axis(0), self.next_sample_axis(1), self.next_sample_axis(2)];
-        self.last_sample = Some(sample);
-        self.current_sample = Some(sample);
-        self.sample_cursor += 1;
-        self.part_a_cursor = 0;
-        self.part_b_cursor = 0;
-        self.containment_hit = false;
-        self.stage = CollisionOverlapStage::SamplingPointA;
-        CollisionStepResult::Pending
-    }
-
-    fn step_sample_part(&mut self, body: &CollisionBody, world: &Pose3d, first: bool) -> CollisionStepResult {
-        let cursor = if first { &mut self.part_a_cursor } else { &mut self.part_b_cursor };
-        let sample = self.current_sample.expect("sampling point");
-        if let Some(part) = body.parts.get(*cursor) {
-            *cursor += 1;
-            let local = world.inverse().transform_point(&Point3d::new(sample[0], sample[1], sample[2]));
-            let part_local = part.local_pose.inverse().transform_point(&local);
-            self.containment_hit |= part.shape.contains_point(&part.local_pose, &part_local);
-            return CollisionStepResult::Pending;
-        }
-        if first {
-            if self.containment_hit {
-                self.containment_hit = false;
-                self.stage = CollisionOverlapStage::SamplingPointB;
-            } else {
-                self.stage = CollisionOverlapStage::Sampling;
-                self.current_sample = None;
+    fn step_face(&mut self, probe: &CollisionBody, probe_world: &Pose3d, solid: &CollisionBody, solid_world: &Pose3d, next: CollisionPenetrationStage) -> CollisionStepResult {
+        let Some((probe_part, solid_part)) = self.parts(probe, solid, |shape| shape.shape.triangle_count()) else { return self.advance(next) };
+        let probe_pose = probe_world.semio_compose_rs(&probe_part.local_pose).0;
+        let solid_pose = solid_world.semio_compose_rs(&solid_part.local_pose).0;
+        let triangle = probe_part.shape.shape.world_triangle(probe_pose, self.cursor);
+        self.cursor += 1;
+        let bounds = CollisionAabb::from_body(solid, solid_world);
+        let mut near = Vec::new();
+        solid_part.shape.shape.triangles_near(solid_pose, triangle, self.tolerance as f32, &mut near);
+        for index in near {
+            let face = solid_part.shape.shape.world_triangle_outward(solid_pose, index as usize);
+            let clipped = collision::clip_behind_triangle(triangle, face);
+            // 📏️ A clipped point sits behind `face` inside its prism, so its distance to the solid's surface is at most its
+            // distance to that face's plane: a polygon whose every corner is within the tolerance of the plane cannot probe
+            // deeper, and skips the surface queries.
+            let normal = (face[1] - face[0]).cross(face[2] - face[0]);
+            let Some(unit) = normal.try_normalize(1e-12) else { continue };
+            let deepest = clipped.points().iter().map(|point| f64::from(-unit.dot(*point - face[0]))).fold(0.0, f64::max);
+            if deepest <= COLLISION_CONTACT_NOISE_M || deepest <= self.depth {
+                continue;
             }
-            return CollisionStepResult::Pending;
-        }
-        if self.containment_hit {
-            self.inside_both += 1;
-            if self.estimated_overlap() > self.overlap_budget {
-                return self.finish(self.overlap_budget + 1.0, true);
+            // 📍️ Depth into a solid is the smallest distance over ALL its faces, which peaks inside the polygon (an edge cutting
+            // into a face between two other faces reads 0 at both ends and its full depth at the middle), so the polygon's
+            // edges and centroid are probed too.
+            let points = clipped.points();
+            let mut centroid = rigid::Vector3::new(0.0, 0.0, 0.0);
+            for (index, point) in points.iter().enumerate() {
+                centroid = centroid + point.coords();
+                let to = points[(index + 1) % points.len()];
+                for step in 0..COLLISION_EDGE_PROBES {
+                    let along = *point + (to - *point) * (step as f32 / COLLISION_EDGE_PROBES as f32);
+                    if self.probe(along, &bounds, solid_pose, &solid_part.shape) {
+                        return self.finish();
+                    }
+                }
+            }
+            if self.probe(rigid::Point3::from_coords(centroid * (1.0 / points.len() as f32)), &bounds, solid_pose, &solid_part.shape) {
+                return self.finish();
             }
         }
-        self.containment_hit = false;
-        self.current_sample = None;
-        self.stage = CollisionOverlapStage::Sampling;
         CollisionStepResult::Pending
-    }
-
-    fn next_sample_axis(&mut self, axis: usize) -> f32 {
-        self.rng_state = self.rng_state.wrapping_mul(1664525).wrapping_add(1013904223);
-        let ratio = self.rng_state as f64 / u32::MAX as f64;
-        self.intersection_min[axis] + (self.intersection_max[axis] - self.intersection_min[axis]) * ratio as f32
-    }
-
-    fn estimated_overlap(&self) -> f64 {
-        (self.inside_both as f64 / self.sample_count as f64) * self.intersection_volume
-    }
-
-    fn finish(&mut self, overlap: f64, rejected_early: bool) -> CollisionStepResult {
-        self.stage = CollisionOverlapStage::Complete;
-        self.result = Some(overlap);
-        self.rejected_early = rejected_early;
-        CollisionStepResult::Complete { overlap, rejected_early }
-    }
-
-    fn complete_result(&self) -> CollisionStepResult {
-        CollisionStepResult::Complete { overlap: self.result.unwrap_or(0.0), rejected_early: self.rejected_early }
     }
 }
 //#endregion ⏳️OverlapStateMachine

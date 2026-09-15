@@ -1,5 +1,8 @@
 # 📓️ Sourcing End to End — Status
 
+**2026-09-15:** boot, curation, drag, filters, sort, undo and the 3D grid and Preview selection verified live — see
+[📓️day4-run.md](📓️day4-run.md). Open: composed-document example switch/reload.
+
 - [🔍️diagnosis.md](🔍️diagnosis.md) — why `dev:sourcing` failed
 - [🧪️test-triage.md](🧪️test-triage.md) — the test suite, failure by failure
 - [📓️batch-only-migration.md](📓️batch-only-migration.md) — the eight unreachable commands

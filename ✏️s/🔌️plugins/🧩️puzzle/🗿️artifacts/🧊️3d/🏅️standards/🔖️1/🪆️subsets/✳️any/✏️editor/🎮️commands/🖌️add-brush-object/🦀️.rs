@@ -19,7 +19,7 @@ pub fn add_brush_object(ctx: &mut Puzzle3dActionCtx<'_>, args: Option<&Value>) {
     };
     let before: Vec<String> = ctx.scene.fixture.objects.iter().map(|object| object.id.clone()).collect();
     let outcome = ctx.app.precompute.borrow_mut().dispatch(Puzzle3dEngineCommand::ApplyBrushPlacement { payload });
-    // 🧯️ The engine refuses a placement that collides or exceeds the overlap budget
+    // 🧯️ The engine refuses a placement that collides or exceeds the contact tolerance
     // (`Puzzle3dError::BrushPlacementRejected`) and a fixture the app model cannot adopt is equally a
     // non-placement — both used to fall out of an `if let Ok(Fixture(_))` with nothing on screen at all.
     let placed_scene = match outcome {

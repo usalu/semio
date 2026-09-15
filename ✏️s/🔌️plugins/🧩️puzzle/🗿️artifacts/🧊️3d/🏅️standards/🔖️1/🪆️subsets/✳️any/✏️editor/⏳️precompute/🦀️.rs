@@ -26,7 +26,7 @@ use crate::editor::puzzle3d::precompute::brush::{
 };
 use crate::editor::puzzle3d::precompute::fill::PlacedCollisionEntry;
 use crate::editor::puzzle3d::precompute::geometry::{
-    pose_isometry, world_bounds, CollisionAabb, CollisionBody, CollisionIndexMutation, CollisionIndexOwner, CollisionIndexRemoval, CollisionMutationStep, CollisionOverlapState, CollisionQueryStep, CollisionSpatialIndex, CollisionStepContext,
+    pose_isometry, world_bounds, CollisionAabb, CollisionBody, CollisionIndexMutation, CollisionIndexOwner, CollisionIndexRemoval, CollisionMutationStep, CollisionPenetrationState, CollisionQueryStep, CollisionSpatialIndex, CollisionStepContext,
     CollisionStepResult,
 };
 use crate::standards::v1::subsets::any::schema::{
@@ -432,7 +432,7 @@ impl Puzzle3dSceneInvalidation {
     pub(crate) fn between(previous: &SceneConfig, next: &SceneConfig) -> Self {
         let plan = previous.kind_catalogs != next.kind_catalogs
             || previous.kind_compatibility != next.kind_compatibility
-            || previous.overlap_budget != next.overlap_budget
+            || previous.contact_tolerance != next.contact_tolerance
             || previous.seed != next.seed
             || previous.host_rules != next.host_rules
             || previous.weights != next.weights
@@ -895,7 +895,7 @@ impl Puzzle3dCollision {
         self.brush_cache.insert(vortex_full_id.to_string(), result);
     }
 
-    fn preview_collides(meshes: &HashMap<String, CollisionBody>, preview: &BrushPreviewState, placed: &[PlacedCollisionEntry], overlap_budget: f64, sample_count: usize, deadline_us: u64) -> Option<bool> {
+    fn preview_collides(meshes: &HashMap<String, CollisionBody>, preview: &BrushPreviewState, placed: &[PlacedCollisionEntry], contact_tolerance: f64, deadline_us: u64) -> Option<bool> {
         struct BrushCollisionContext {
             deadline_us: u64,
         }
@@ -918,13 +918,13 @@ impl Puzzle3dCollision {
             if pmax.x() < omin.x() || pmin.x() > omax.x() || pmax.y() < omin.y() || pmin.y() > omax.y() || pmax.z() < omin.z() || pmin.z() > omax.z() {
                 continue;
             }
-            let mut collision = CollisionOverlapState::new(sample_count, 8, overlap_budget);
+            let mut collision = CollisionPenetrationState::new(contact_tolerance);
             loop {
                 match collision.step(&mut context, preview_body, &preview_world, other, &entry.world) {
                     CollisionStepResult::Pending if context.should_yield() => return None,
                     CollisionStepResult::Pending => {}
                     CollisionStepResult::Cancelled => return None,
-                    CollisionStepResult::Complete { overlap, .. } if overlap > overlap_budget => return Some(true),
+                    CollisionStepResult::Complete { depth, .. } if depth > contact_tolerance => return Some(true),
                     CollisionStepResult::Complete { .. } => break,
                 }
             }
@@ -935,7 +935,7 @@ impl Puzzle3dCollision {
     /// 🔎️ One resumable slice of ONE vortex's collision-free search, the background lane puzzle 5d still
     /// reads. A candidate already held free is never pushed twice, so a pass that restarts at 0 (a mesh only
     /// arrived later) refines the same list instead of duplicating it.
-    fn brush_collision_free_until(&mut self, target_full_id: &str, candidates: &[BrushCompatibleCandidate], overlap_budget: f64, resume_from: usize, mut free: Vec<BrushCompatibleCandidate>, deadline_us: u64) -> BrushCollisionFreeResult {
+    fn brush_collision_free_until(&mut self, target_full_id: &str, candidates: &[BrushCompatibleCandidate], contact_tolerance: f64, resume_from: usize, mut free: Vec<BrushCompatibleCandidate>, deadline_us: u64) -> BrushCollisionFreeResult {
         self.reconcile_brush_index_until(deadline_us);
         let Some(scene) = self.scene.clone() else {
             return BrushCollisionFreeResult { free: vec![], unknown_pending: true, resume_candidate_index: resume_from };
@@ -966,7 +966,7 @@ impl Puzzle3dCollision {
                 unknown_pending = true;
                 continue;
             }
-            match self.preview_collides_indexed(&preview, &host.id, overlap_budget, 1024, deadline_us) {
+            match self.preview_collides_indexed(&preview, contact_tolerance, deadline_us) {
                 None => unknown_pending = true,
                 Some(true) => {}
                 Some(false) => {
@@ -982,14 +982,14 @@ impl Puzzle3dCollision {
     /// 🗺️ Broad phase for ONE brush preview: the persistent spatial index resolves the candidate page
     /// its own world bounds actually overlap, so the narrow phase never sees an object from a distant
     /// cell. Replaces the former full-fixture rebuild plus linear scan per candidate.
-    fn preview_collides_indexed(&self, preview: &BrushPreviewState, host_id: &str, overlap_budget: f64, sample_count: usize, deadline_us: u64) -> Option<bool> {
-        let (page, _) = self.brush_broad_phase_page(preview, host_id, deadline_us)?;
-        Self::preview_collides(&self.meshes, preview, &page, overlap_budget, sample_count, deadline_us)
+    fn preview_collides_indexed(&self, preview: &BrushPreviewState, contact_tolerance: f64, deadline_us: u64) -> Option<bool> {
+        let (page, _) = self.brush_broad_phase_page(preview, deadline_us)?;
+        Self::preview_collides(&self.meshes, preview, &page, contact_tolerance, deadline_us)
     }
 
     /// 📏️ The queried candidate page plus the `(cells, members)` the cursor actually examined — the
     /// witness a document-scale test reads to prove the query stayed inside its own cells.
-    fn brush_broad_phase_page(&self, preview: &BrushPreviewState, host_id: &str, deadline_us: u64) -> Option<(Vec<PlacedCollisionEntry>, (usize, usize))> {
+    fn brush_broad_phase_page(&self, preview: &BrushPreviewState, deadline_us: u64) -> Option<(Vec<PlacedCollisionEntry>, (usize, usize))> {
         let preview_body = self.meshes.get(&preview.mesh_url)?;
         let preview_world = pose_isometry(preview.origin, preview.orientation, &preview.scale);
         let owner = self.brush_index_owner;
@@ -1002,16 +1002,18 @@ impl Puzzle3dCollision {
                 CollisionQueryStep::Complete => break,
             }
         }
-        let page = (0..query.len()).filter_map(|index| query.candidate(index)).filter(|id| id.as_str() != host_id).filter_map(|id| self.brush_placed.get(id.as_str()).cloned()).collect();
+        // 🧲️ The docking host is a collision pair like any other: a candidate may only touch it where the two faces meet, and the
+        // depth measure keeps that flush contact at 0 (`CollisionPenetrationState`).
+        let page = (0..query.len()).filter_map(|index| query.candidate(index)).filter_map(|id| self.brush_placed.get(id.as_str()).cloned()).collect();
         Some((page, query.examined()))
     }
 
     #[cfg(test)]
-    fn brush_collision_free(&mut self, target_full_id: &str, candidates: &[BrushCompatibleCandidate], overlap_budget: f64) -> BrushCollisionFreeResult {
+    fn brush_collision_free(&mut self, target_full_id: &str, candidates: &[BrushCompatibleCandidate], contact_tolerance: f64) -> BrushCollisionFreeResult {
         let Some(deadline) = puzzle3d_deadline(PUZZLE3D_PRECOMPUTE_STEP_BUDGET_US * 8) else {
             return BrushCollisionFreeResult { free: Vec::new(), unknown_pending: true, resume_candidate_index: 0 };
         };
-        self.brush_collision_free_until(target_full_id, candidates, overlap_budget, 0, Vec::new(), deadline)
+        self.brush_collision_free_until(target_full_id, candidates, contact_tolerance, 0, Vec::new(), deadline)
     }
 
     #[cfg(test)]
@@ -1039,7 +1041,7 @@ impl Puzzle3dCollision {
         }
         let compatible = brush_compatible_candidates(&target_ctx, &catalogs, &scene.kind_compatibility, &scene.host_rules);
         let compatible: Vec<BrushCompatibleCandidate> = compatible.into_iter().filter(|candidate| brush_candidate_suggestion_weight(candidate, &scene.weights, &catalogs) > 0.0).collect();
-        self.brush_collision_free(target_full_id, &compatible, scene.overlap_budget)
+        self.brush_collision_free(target_full_id, &compatible, scene.contact_tolerance)
     }
 
     pub(crate) fn brush_preview(&self, target_full_id: &str, candidate_index: usize) -> Option<BrushPreviewState> {
@@ -1125,7 +1127,7 @@ impl Puzzle3dCollision {
         }
         let compatible = brush_compatible_candidates(&target_ctx, &catalogs, &scene.kind_compatibility, &scene.host_rules);
         let compatible: Vec<BrushCompatibleCandidate> = compatible.into_iter().filter(|candidate| brush_candidate_suggestion_weight(candidate, &scene.weights, &catalogs) > 0.0).collect();
-        self.brush_collision_free_until(target_full_id, &compatible, scene.overlap_budget, resume_from, prior_free, deadline_us)
+        self.brush_collision_free_until(target_full_id, &compatible, scene.contact_tolerance, resume_from, prior_free, deadline_us)
     }
 
     #[cfg(test)]

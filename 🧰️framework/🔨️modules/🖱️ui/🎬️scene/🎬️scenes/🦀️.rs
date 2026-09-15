@@ -1562,8 +1562,12 @@ pub struct TableScene {
     pub drop_action_json: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub sort_json: Option<String>,
+    /// 🪟️ The framework interaction domain a row pick selects in — `None` keeps row clicks plugin-private.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub domain_id: Option<String>,
+    /// 🎯️ `domain_id`'s granularity id a row is picked under.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub domain_granularity_id: Option<String>,
 }
 
 impl SceneDoc for TableScene {
@@ -1573,7 +1577,7 @@ impl SceneDoc for TableScene {
 impl TableScene {
     /** @emoji 📋️ Builds a table scene with optional extensions (selection/drag/sort/domain) unset. */
     pub fn base(columns_json: impl Into<String>, rows_json: impl Into<String>) -> Self {
-        Self { columns_json: columns_json.into(), rows_json: rows_json.into(), selection_json: None, row_drag_mime: None, drop_action_json: None, sort_json: None, domain_id: None }
+        Self { columns_json: columns_json.into(), rows_json: rows_json.into(), selection_json: None, row_drag_mime: None, drop_action_json: None, sort_json: None, domain_id: None, domain_granularity_id: None }
     }
 }
 
@@ -1587,6 +1591,7 @@ impl ToValue for TableScene {
         value_push_option(&mut entries, "dropActionJson", &self.drop_action_json);
         value_push_option(&mut entries, "sortJson", &self.sort_json);
         value_push_option(&mut entries, "domainId", &self.domain_id);
+        value_push_option(&mut entries, "domainGranularityId", &self.domain_granularity_id);
         DslValue::Object(entries)
     }
 }
@@ -1602,6 +1607,7 @@ impl FromValue for TableScene {
             drop_action_json: value_decode_option(&entries, "dropActionJson")?,
             sort_json: value_decode_option(&entries, "sortJson")?,
             domain_id: value_decode_option(&entries, "domainId")?,
+            domain_granularity_id: value_decode_option(&entries, "domainGranularityId")?,
         })
     }
 }

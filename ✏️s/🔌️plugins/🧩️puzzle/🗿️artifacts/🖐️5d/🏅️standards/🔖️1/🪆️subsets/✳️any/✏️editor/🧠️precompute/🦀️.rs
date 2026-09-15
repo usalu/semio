@@ -62,7 +62,7 @@ pub fn puzzle5d_mesh_lane(snapshot: &Puzzle5dPlaySnapshot, document: &Puzzle5dDo
 
 /// 🎚️ The planner configuration a 5d configuration asks for.
 pub(crate) fn puzzle3d_config(config: &Puzzle5dConfig) -> Puzzle3dConfig {
-    Puzzle3dConfig { fill_count: config.fill_count, overlap_budget: config.overlap_budget, object_kind_weights: config.object_kind_weights.clone(), vortex_kind_weights: config.vortex_kind_weights.clone(), ..Puzzle3dConfig::default() }
+    Puzzle3dConfig { fill_count: config.fill_count, contact_tolerance: config.contact_tolerance, object_kind_weights: config.object_kind_weights.clone(), vortex_kind_weights: config.vortex_kind_weights.clone(), ..Puzzle3dConfig::default() }
 }
 
 /// 🌉️ The puzzle 3d document the planner sees for a 5d document: parts as objects with their grips as vortices,

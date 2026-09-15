@@ -75,16 +75,20 @@ pub fn evaluate(
             // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
             session.begin_window_tick(window_id);
             session.note_window_tick_outcome(window_id, false);
-            return Ok((Emit { ui_scope: chain_ui_scope(window_kind_id, false), ..Default::default() }, session.eval_publication_for(retained_eval)));
+            return Ok((Emit { ui_scope: chain_ui_scope(window_kind_id, false), ..Default::default() }, preview_eval::preview_eval_publication_for(session, &doc.snapshot.host_snapshot, retained_eval)));
         }
         patched = Some(crate::standards::v1::subsets::any::schema::generation_host_snapshot_for(&doc.snapshot.host_snapshot, &state, state.selected_generation_id.as_deref()));
     }
     let host_snapshot = patched.as_ref().unwrap_or(&doc.snapshot.host_snapshot);
     let outcome = preview_eval::evaluate_tick(window_id, window_kind_id, host_snapshot, preview_eval::preview_tolerance(&cfg.snapshot.lod_mode), session, retained_eval, turn_started_us);
+    let publication = preview_eval::preview_eval_publication_for(session, host_snapshot, retained_eval);
     if let Some(displaced) = patched {
         displaced.retire_cold();
     }
-    Ok((Emit { extension_invocations: outcome.extension_invocations, ui_scope: chain_ui_scope(window_kind_id, outcome.census_moved), ..Default::default() }, outcome.publication))
+    Ok((
+        Emit { extension_invocations: outcome.extension_invocations, ui_scope: chain_ui_scope(window_kind_id, outcome.census_moved), ..Default::default() },
+        publication,
+    ))
 }
 
 /// 🔁️ The wave a just-folded extension answer unblocked, run INLINE inside that answer's own guest

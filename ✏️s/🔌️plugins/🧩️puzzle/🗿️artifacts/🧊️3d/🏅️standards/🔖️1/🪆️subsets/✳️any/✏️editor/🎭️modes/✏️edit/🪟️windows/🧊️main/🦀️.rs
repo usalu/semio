@@ -915,7 +915,7 @@ pub fn render(
 
 /// 🤝️ The engagement HUD for this window: the select/brush/fill switcher lives in the framework
 /// utility bar (declared via `.utility` + `.window_kind_utilities`); the fill-count slider, voxel
-/// steppers and brush overlap budget are tagged [`WindowMeasure::Group`]s surfaced in the dedicated
+/// steppers and brush contact tolerance are tagged [`WindowMeasure::Group`]s surfaced in the dedicated
 /// "Utility Options" rail. The remaining chrome is the command input and a status line — object
 /// placement lives on the catalogue panel (drag-and-drop) and the shell menu (`openAddObjectDialog`).
 /// While a fill run is non-terminal, Escape in the input aborts that run (`toolRunAbort` with its current

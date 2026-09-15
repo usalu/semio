@@ -1,6 +1,6 @@
 export interface Puzzle3dConfig {
   /** @state config */ fillCount: number;
-  /** @state config */ overlapBudget: number;
+  /** @state config */ contactTolerance: number;
   /** @state config */ objectKindWeights: Record<string, number>;
   /** @state config */ vortexKindWeights: Record<string, number>;
   /** @state config */ activeExampleId: string;
@@ -26,5 +26,5 @@ export function parsePuzzle3dConfig(value: unknown, at = "$"): Puzzle3dConfig {
   const row = record(value, at);
   const fillCount = number(row.fillCount, `${at}.fillCount`);
   if (!Number.isSafeInteger(fillCount) || fillCount < 0) throw new Puzzle3dConfigGuardRefusal(`${at}.fillCount`, "value is not an unsigned integer");
-  return { fillCount, overlapBudget: number(row.overlapBudget, `${at}.overlapBudget`), objectKindWeights: weights(row.objectKindWeights, `${at}.objectKindWeights`), vortexKindWeights: weights(row.vortexKindWeights, `${at}.vortexKindWeights`), activeExampleId: text(row.activeExampleId, `${at}.activeExampleId`) };
+  return { fillCount, contactTolerance: number(row.contactTolerance, `${at}.contactTolerance`), objectKindWeights: weights(row.objectKindWeights, `${at}.objectKindWeights`), vortexKindWeights: weights(row.vortexKindWeights, `${at}.vortexKindWeights`), activeExampleId: text(row.activeExampleId, `${at}.activeExampleId`) };
 }

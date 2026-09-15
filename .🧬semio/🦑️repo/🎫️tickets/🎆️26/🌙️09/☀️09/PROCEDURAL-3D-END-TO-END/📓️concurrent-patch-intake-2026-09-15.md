@@ -290,6 +290,75 @@ after Finalize  {"t":2191,"panel":"Finalized · Placing (4/5) | Start | Dismiss"
 Copy kept at `<ticket>/🗑️generated/intake-6013-after/abort-finalize-midrun-1789494511118.txt` (the probe also
 writes to its own ticket's `🗑️generated`, where it always writes; nothing there was edited).
 
+### 5.2 generation3d on :6024 — Start / mid-run action / Dismiss, twice
+
+`<ticket>/🐍️tool-run-intake-probe.mjs`, `SEMIO_PROBE_CYCLES=2`, the action pressed the instant the panel
+arms it (`previewEval` runs ~250–900 ms end to end on this door, so there is no 1.5 s window to wait for).
+Output at `<ticket>/🗑️generated/intake-6024-hostonly/`.
+
+| cycle | action | pressed at | panel when pressed | terminal shown | intake faults |
+|---|---|---|---|---|---|
+| 1 | Abort | mid-run | `Running · Tessellating meshes (2/2)` | `Finalized · Tessellating meshes (2/2)` at **+417 ms** | **0** |
+| 1 | Finalize | mid-run | `Running · Tessellating meshes (2/2)` | `Running · Evaluating nodes (1/2)` +538 ms → `Finalized` at **+969 ms** | **0** |
+| 2 | Abort | mid-run | `Running · Evaluating nodes (1/2)` (71 %) | **`Aborted, nothing was changed`** at **+877 ms** | **0** |
+| 2 | Finalize | — | the re-arm picked `No example`, so no run started (probe artefact) | — | **0** |
+
+`intakeRejected: 0`, `intakeBlocked: 0`, `pageerrors: 0` over the whole 69 s session, four `Dismiss` presses
+included. Cycle 1's Abort landing on `Finalized` rather than `Aborted` is the run finishing on its own inside
+the ~250 ms it takes — cycle 2 catches it at 71 % and gets the real `Aborted, nothing was changed`.
+
+**Observation for the ticket, not a defect this lane fixes:** after `Dismiss`, generation3d's Tool runs panel
+is completely empty — no run group and no *ready* group, so there is no Start to press. `previewEval` is
+dispatched by the document, not by an active tool, and `ToolRunLedger::panel` only draws the ready group for
+an active run-declaring tool (`ready_tool`). The probe therefore re-arms each later cycle by picking the next
+example, which re-dispatches `toolRunStart`. Worth its own lane.
+
+### 5.3 The battery on :6024 — 3/4 green, the red attributed
+
+```
+SEMIO_BATTERY_URL=http://127.0.0.1:6024/?plugin=generation3d SEMIO_BATTERY_ROOT=react-intake \
+  bun 🐍️react-battery.mjs --only=cancel-preview,status-parity,keyboard-verbs,journey
+
+[DEBUG] battery ■ journey        ok=true  exit=0 121s steps=14/14 pageerrors=0
+[DEBUG] battery ■ cancel-preview ok=true  exit=0  16s steps=4/4   pageerrors=0
+[DEBUG] battery ■ keyboard-verbs ok=false exit=0 200s steps=17/18 pageerrors=0
+[DEBUG] battery ■ status-parity  ok=true  exit=0 201s steps=12/12 pageerrors=0
+[DEBUG] BATTERY DONE green=3/4 red=["keyboard-verbs"] 538s pageerrors=0
+```
+
+`journey` all 8 examples + generate mode + viewer role, `status-parity` 12/12, `cancel-preview` 4/4 —
+including `cancel-preview-eval` inside `keyboard-verbs`, which presses `mod+.` on work genuinely in flight
+and gets `toolRunAbort` + `phase: cancelled`: the tool-run abort path this lane is about, green.
+
+The single red row is `keyboard-verbs > edit-arms-history`: typing `8` into the Column Height slider **does**
+arm the history (`canUndo: true`, `update-widget input-slider id=height … value=8` on the cursor), but the
+preview never settles on a different delivered extent — box and digest stay `…,6` / `365066bd:1681` for the
+whole ~154 s the step waits.
+
+**Attributed, not assumed.** The row is reproducible, and it is red with this lane's host change **fully
+bypassed** — the round split neutralized *and* `acceptUiPatches` calling `acceptOwnedUiPatches` directly
+instead of through the intake queue (both edits reverted immediately after):
+
+| run | round split | intake queue | `edit-arms-history` |
+|---|---|---|---|
+| `🗑️generated/react-intake/keyboard-verbs` | on | on | red, box `…,6` |
+| `🗑️generated/editor-verbs/keys-nosplit` | **off** | on | red, box `…,6` |
+| `🗑️generated/editor-verbs/keys-fullbypass` | **off** | **off** | red, box `…,6` |
+
+It was green at 12:37 today (`🗑️generated/react-sweep-closing/keyboard-verbs`, box `…,8`), so it regressed
+somewhere in the afternoon's fleet — in the widget-edit → `flowEvalTick` lane, not in patch intake. Handed
+back to the coordinator rather than claimed.
+
+### 5.4 The guest half is NOT yet in a browser
+
+`📜️restage-intake-lane.sh` (`NX_SKIP_NX_CACHE=true`) has been running since 19:14 and has not produced a new
+`🌀️procedural` module: the shared build dir is queueing 8 `wasm32-wasip2` cargo processes behind one live
+`rustc` while peers hold it, swap is at 30.1 GB of 30.7 GB, and the flow plugin's build exceeded its budget
+once (the script retries, up to 6 attempts). **Everything measured in §5.1–§5.3 is therefore the HOST half
+alone, against guests that still emit the duplicate-surface page** — which is the stronger reading for the
+defect, because the host is what had to stop wedging on it. The reactor half is proven by its Rust law
+(§3.1) and will reach the browser with the next successful activation.
+
 ---
 
 ## 6. Not claimed
@@ -306,5 +375,11 @@ writes to its own ticket's `🗑️generated`, where it always writes; nothing t
   terminal state. The visible-feedback claim is made on the long puzzle 3d run in §5.3, not on :6024.
 - **Not claimed: any wgpu reading.** wgpu is on hold for this lane; the reactor half protects that door by
   construction, and no wgpu probe was run.
-- **Not claimed: the two whole-suite reds in §3.2 and the two in §3.3 are fixed.** They are peer-owned, each
-  reproduced alone, and each attributed above.
+- **Not claimed: the two whole-suite reds in §3.2, the two in §3.3, or `keyboard-verbs > edit-arms-history`
+  in §5.3 are fixed.** They are peer-owned; each was reproduced alone, and `edit-arms-history` was
+  additionally re-run with this lane's whole host change bypassed and stayed red (§5.3).
+- **Not claimed: the reactor half has been seen in a browser.** The generation3d activation had not produced
+  a new guest module when this report was written (§5.4). Every browser reading here is the host half.
+- **Not claimed: the serve was recycled.** It was not needed: :6024's vite stat-guard had already re-served
+  the peer's `__semioTypedOpAckCensus` `defineProperty` fix and this lane's own edits (verified by curling
+  the `/@fs` module and grepping for both before every reading).

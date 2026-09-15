@@ -535,12 +535,19 @@ fn brush_search_kind(id: &str, url: &str) -> ObjectKind {
         id: id.to_string(),
         representations: vec![ObjectKindRepresentation { id: id.to_lowercase(), name: String::new(), url: url.to_string(), mime: String::new(), tags: vec![], lod: None, description: String::new() }],
         scale: None,
-        vortices: vec![ObjectKindVortexTemplate { vortex_kind: Some("port-b".to_string()), point: [0.0, 0.0, 0.0], direction: Some([0.0, 0.0, -1.0]), ..Default::default() }],
+        // 🧲️ On the cube's top face, pointing out, so a candidate docks flush under the host's bottom face.
+        vortices: vec![ObjectKindVortexTemplate { vortex_kind: Some("port-b".to_string()), point: [0.0, 0.0, 4.0], direction: Some([0.0, 0.0, 1.0]), ..Default::default() }],
     }
 }
 
-/// 🧪️ The fixture scene: one host vortex, two compatible kinds, and optionally a body of the host's own kind
-/// carrying its own mesh parked exactly where both candidates dock.
+/// 📦️ Half height of the app's fallback box, the host's collision body while its own mesh is unregistered.
+fn brush_search_host_half_height() -> f64 {
+    f64::from(crate::editor::puzzle3d::puzzle3d_fallback_mesh_buffers().0.chunks(3).map(|vertex| vertex[2]).fold(f32::MIN, f32::max))
+}
+
+/// 🧪️ The fixture scene: one host vortex on the bottom face of the host's (fallback box) body, two compatible kinds that
+/// dock flush under it, and optionally a body of the host's own kind carrying its own (larger) mesh parked at the host,
+/// whose volume reaches into where both candidates dock.
 fn brush_search_scene(blocker: bool) -> SceneConfig {
     let mut objects = vec![FixtureObject {
         id: "host".to_string(),
@@ -550,7 +557,7 @@ fn brush_search_scene(blocker: bool) -> SceneConfig {
         origin: [12.0, 0.0, 0.0],
         orientation: Some([0.0, 0.0, 0.0, 1.0]),
         scale: None,
-        vortices: vec![VortexProps { id: "v0".to_string(), vortex_kind: Some("port-a".to_string()), position: [0.0, 0.0, 0.0], direction: Some([0.0, 0.0, -1.0]) }],
+        vortices: vec![VortexProps { id: "v0".to_string(), vortex_kind: Some("port-a".to_string()), position: [0.0, 0.0, -brush_search_host_half_height()], direction: Some([0.0, 0.0, -1.0]) }],
     }];
     if blocker {
         objects.push(FixtureObject { id: "blocker".to_string(), mesh_url: Some("/test/blocker.glb".to_string()), vortices: vec![], ..objects[0].clone() });
@@ -563,7 +570,7 @@ fn brush_search_scene(blocker: bool) -> SceneConfig {
             cables: vec![CableKindCatalog { id: "cable.link".to_string(), default_attraction_kind: None, ..Default::default() }],
         }),
         kind_compatibility: vec![KindCompatEntry { source: "port-b".to_string(), target: "port-a".to_string(), bidirectional: true, important: false, specificity: Some("vortex".to_string()) }],
-        overlap_budget: 0.02,
+        contact_tolerance: 0.02,
         seed: 1,
         host_rules: BrushHostRules::default(),
         weights: BrushKindWeights::default(),
@@ -832,85 +839,67 @@ fn brush_run_no_meshes(_url: &str) -> Option<(Vec<f32>, Vec<u32>)> {
     None
 }
 
-/// ⚖️ ORACLE (`parry3d`): on Concrete Forest with the app's box fallback, every candidate the run decided for the
-/// fixture's targets is recomputed as an exact convex hull against every placed body except the docking host; the
-/// overlap volume comes from parry point containment. A decisive overlap (at least twice the budget, enough
-/// expected samples) must be a collision, a decisive clearance (at most half the budget, or separated hulls) must be
-/// free. Every decisive verdict must agree.
+/// ⚖️ ORACLE (`parry3d`): on Concrete Forest and Nakagin with the app's box fallback, every candidate the run decided for the
+/// fixture's targets is recomputed as an exact convex hull against EVERY placed body, the docking host included, and
+/// `parry3d::query::contact` measures how deep they penetrate. A penetration of at least twice the scene's contact
+/// tolerance must be a collision, one of at most half of it (or separated hulls) must be free; a candidate whose own center
+/// lies inside a body (coincident hulls, where `contact` reads 0) collides. Every decisive verdict must agree.
 #[test]
 fn brush_suggestions_run_collision_verdicts_agree_with_the_parry3d_oracle() {
     use parry3d::query::PointQuery;
     use parry3d::shape::Shape;
     let fixture: serde_json::Value = serde_json::from_str(BRUSH_SUGGESTIONS_RUN_FIXTURE).expect("brush suggestions run fixture");
     let law = &fixture["laws"]["parryOracle"];
-    let (samples, decisive_hits, cells) = (law["samples"].as_f64().expect("samples"), law["decisiveHits"].as_f64().expect("decisive hits"), law["gridCells"].as_u64().expect("grid cells") as usize);
     let identity = parry3d::math::Isometry::identity();
     let (mut decisive, mut ambiguous, mut collisions, mut frees) = (0usize, 0usize, 0usize, 0usize);
     let mut disagreements = Vec::new();
     for document in law["documents"].as_array().expect("documents") {
         let (scene, lane, targets) = brush_run_example_scene(document["document"].as_str().expect("document"));
-        let budget = scene.overlap_budget;
+        let tolerance = scene.contact_tolerance;
         let (positions, _) = crate::editor::puzzle3d::puzzle3d_fallback_mesh_buffers();
         let hull = |pose: &Pose3d| {
             let points: Vec<parry3d::math::Point<f32>> = positions.chunks(3).map(|vertex| pose.transform_point(&crate::editor::puzzle3d::precompute::geometry::Point3d::new(vertex[0], vertex[1], vertex[2]))).map(|world| parry3d::math::Point::new(world.x(), world.y(), world.z())).collect();
             parry3d::shape::ConvexPolyhedron::from_convex_hull(&points).expect("box hull")
         };
         let catalogs = scene.kind_catalogs.clone().unwrap_or_default();
-        let placed: Vec<(String, parry3d::shape::ConvexPolyhedron)> = scene.fixture.objects.iter().filter(|object| resolve_placed_object_mesh_url(object, &catalogs, &scene.fixture).is_some()).map(|object| (object.id.clone(), hull(&pose_isometry(object.origin, object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]), &object.scale)))).collect();
+        let placed: Vec<parry3d::shape::ConvexPolyhedron> = scene.fixture.objects.iter().filter(|object| resolve_placed_object_mesh_url(object, &catalogs, &scene.fixture).is_some()).map(|object| hull(&pose_isometry(object.origin, object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]), &object.scale))).collect();
         let (owner, port) = (brush_run_owner(None), ToolRunJobPort::default());
         let mut job = brush_run_job(&owner, &port, scene.clone(), lane, brush_run_no_meshes, 0);
         for target in targets.iter().take(document["targets"].as_u64().expect("targets") as usize) {
             brush_run_link(&owner, |link| link.hover(Some(target.clone())));
             BrushRunMirror::new(0).drive(&mut job, &port, u64::MAX);
             let Some(found) = brush_run_link(&owner, |link| link.found(target).cloned()) else { continue };
-            let host = target.split(':').next().expect("host id");
             for (key, (preview, verdict)) in found.previews.iter().zip(&found.verdicts).enumerate() {
                 let (Some(preview), BrushSuggestionVerdict::Free | BrushSuggestionVerdict::Collision) = (preview, verdict) else { continue };
                 let candidate = hull(&pose_isometry(preview.origin, preview.orientation, &preview.scale));
-                let (mut collides, mut uncertain) = (false, false);
-                for (_, other) in placed.iter().filter(|(id, _)| id != host) {
-                    let (left, right) = (candidate.compute_local_aabb(), other.compute_local_aabb());
-                    if !parry3d::bounding_volume::BoundingVolume::intersects(&left, &right) || parry3d::query::distance(&identity, &candidate, &identity, other).expect("convex distance") > 0.0 {
-                        continue;
-                    }
-                    let (min, max) = (left.mins.sup(&right.mins), left.maxs.inf(&right.maxs));
-                    let size = max - min;
-                    let box_volume = f64::from(size.x) * f64::from(size.y) * f64::from(size.z);
-                    let mut inside = 0usize;
-                    for x in 0..cells {
-                        for y in 0..cells {
-                            for z in 0..cells {
-                                let at = |index: usize, axis: usize| min[axis] + size[axis] * ((index as f32 + 0.5) / cells as f32);
-                                let point = parry3d::math::Point::new(at(x, 0), at(y, 1), at(z, 2));
-                                inside += usize::from(candidate.contains_local_point(&point) && other.contains_local_point(&point));
-                            }
+                let center = candidate.compute_local_aabb().center();
+                let deepest = placed
+                    .iter()
+                    .map(|other| {
+                        if other.contains_local_point(&center) {
+                            return f64::INFINITY;
                         }
-                    }
-                    let volume = box_volume * inside as f64 / (cells * cells * cells) as f64;
-                    let (expected_hits, threshold_hits) = (samples * volume / box_volume.max(f64::MIN_POSITIVE), samples * budget / box_volume.max(f64::MIN_POSITIVE));
-                    if volume >= 2.0 * budget && expected_hits >= decisive_hits {
-                        collides = true;
-                    } else if !(volume <= 0.5 * budget && threshold_hits >= decisive_hits) {
-                        uncertain = true;
-                    }
-                }
+                        parry3d::query::contact(&identity, &candidate, &identity, other, 0.0).ok().flatten().map_or(0.0, |contact| f64::from(-contact.dist))
+                    })
+                    .fold(0.0, f64::max);
+                let (collides, clear) = (deepest >= 2.0 * tolerance, deepest <= 0.5 * tolerance);
                 let ours = *verdict == BrushSuggestionVerdict::Collision;
                 collisions += usize::from(ours);
                 frees += usize::from(!ours);
-                if !collides && uncertain {
+                if !collides && !clear {
                     ambiguous += 1;
                     continue;
                 }
                 decisive += 1;
                 if ours != collides {
-                    disagreements.push(format!("{target} candidate {key} ({}) ours={verdict:?} parry collides={collides}", preview.object_kind_id));
+                    disagreements.push(format!("{target} candidate {key} ({}) ours={verdict:?} parry penetration {deepest:.4} m (tolerance {tolerance} m)", preview.object_kind_id));
                 }
             }
         }
     }
     assert!(disagreements.is_empty(), "{} of {decisive} decisive verdicts disagree with parry3d:\n{}", disagreements.len(), disagreements.join("\n"));
     assert!(collisions > 0 && frees > 0, "the oracle must decide both collisions ({collisions}) and free candidates ({frees})");
-    assert!(ambiguous * 10 <= decisive, "at most one in ten verdicts may fall inside the sampling band: {ambiguous} of {decisive}");
+    assert!(ambiguous * 10 <= decisive, "at most one in ten verdicts may fall inside the tolerance band: {ambiguous} of {decisive}");
 }
 
 /// ⏱️ LAW: hovering never blocks. On Nakagin, the largest example, every real-clock step of the run under the

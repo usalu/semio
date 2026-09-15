@@ -211,7 +211,15 @@ pub fn reset_preview_mesh_table() {
 /// arriving mesh would ever reach the screen. The pack BODIES are never hashed — only each
 /// handle's resolved length, which is O(handles) per render and changes exactly when a round trip
 /// lands (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-fn preview_mesh_signature(eval_json: &str, tolerance_bits: u64, show_mode: &str, preview_ids: &[String], eval: &Value, session: Option<&semio_framework_os_flow::FlowEvalSession>) -> u64 {
+fn preview_mesh_signature(
+    eval_json: &str,
+    tolerance_bits: u64,
+    show_mode: &str,
+    preview_ids: &[String],
+    eval: &Value,
+    host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot,
+    session: Option<&semio_framework_os_flow::FlowEvalSession>,
+) -> u64 {
     use std::hash::{Hash, Hasher};
     let mut hasher = std::collections::hash_map::DefaultHasher::new();
     eval_json.hash(&mut hasher);
@@ -224,7 +232,7 @@ fn preview_mesh_signature(eval_json: &str, tolerance_bits: u64, show_mode: &str,
                 if item.handle.is_empty() {
                     continue;
                 }
-                session.preview_mesh_pack(&item.handle).map_or(0usize, str::len).hash(&mut hasher);
+                preview_eval::preview_mesh_pack_fingerprint(session, host_snapshot, id, &item).hash(&mut hasher);
             }
         }
     }
@@ -233,7 +241,15 @@ fn preview_mesh_signature(eval_json: &str, tolerance_bits: u64, show_mode: &str,
 
 /// 🧊️ Tessellates every preview handle exactly once, in the declaration order the instance table
 /// replays. Only reached when [`preview_mesh_signature`] says the retained table is stale.
-fn build_preview_mesh_table(signature: u64, eval: &Value, preview_ids: &[String], tolerance: f64, show_mode: &str, session: Option<&semio_framework_os_flow::FlowEvalSession>) -> PreviewMeshTable {
+fn build_preview_mesh_table(
+    signature: u64,
+    eval: &Value,
+    preview_ids: &[String],
+    host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot,
+    tolerance: f64,
+    show_mode: &str,
+    session: Option<&semio_framework_os_flow::FlowEvalSession>,
+) -> PreviewMeshTable {
     let mut meshes: Vec<Value> = Vec::new();
     let mut mesh_ids = std::collections::BTreeSet::new();
     let mut mesh_id_by_handle = std::collections::BTreeMap::new();
@@ -252,11 +268,14 @@ fn build_preview_mesh_table(signature: u64, eval: &Value, preview_ids: &[String]
                 // `flowTessellateResolve`'s mesh pack is the only mesh a viewer can ever paint.
                 // Reaching the in-process kernel is counted, and only a session-free caller (a law
                 // measuring a cold render) ever gets there.
-                None => match session.and_then(|session| preview_eval::session_preview_mesh(&handle, session)) {
-                    Some(data) => Some(data),
+                None => match session {
+                    Some(session) => preview_eval::mesh_data_for_session_preview_channel(&handle, id, &channel, index, tolerance, session, host_snapshot).or_else(|| {
+                        PREVIEW_TESSELLATIONS.with(|count| count.set(count.get() + 1));
+                        preview_eval::mesh_data_for_preview_handle(&handle, tolerance, Some(session))
+                    }),
                     None => {
                         PREVIEW_TESSELLATIONS.with(|count| count.set(count.get() + 1));
-                        preview_eval::mesh_data_for_preview_handle(&handle, tolerance, session)
+                        preview_eval::mesh_data_for_preview_handle(&handle, tolerance, None)
                     }
                 },
             };
@@ -288,11 +307,11 @@ pub fn preview_payload(eval_json: &str, host_snapshot: &semio_framework_artifact
     let tolerance = config.tolerance();
     let show_mode = config.effective_show_mode();
     let preview_ids = preview_eval::preview_widget_ids(host_snapshot);
-    let signature = preview_mesh_signature(eval_json, tolerance.to_bits(), show_mode, &preview_ids, &eval, session);
+    let signature = preview_mesh_signature(eval_json, tolerance.to_bits(), show_mode, &preview_ids, &eval, host_snapshot, session);
     PREVIEW_MESH_TABLE.with(|retained| {
         let mut retained = retained.borrow_mut();
         if retained.as_ref().is_none_or(|table| table.signature != signature) {
-            *retained = Some(build_preview_mesh_table(signature, &eval, &preview_ids, tolerance, show_mode, session));
+            *retained = Some(build_preview_mesh_table(signature, &eval, &preview_ids, host_snapshot, tolerance, show_mode, session));
         }
         let table = retained.as_ref().expect("preview mesh table was just built");
         let mut instances: Vec<Value> = Vec::new();

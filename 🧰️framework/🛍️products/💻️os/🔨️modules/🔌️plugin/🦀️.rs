@@ -14358,6 +14358,482 @@ pub mod app {
     {
         Box::new(ArtifactDocumentStoreDisposer::<P, M>::new())
     }
+
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    enum BoundedStoreInitializationPhase {
+        ValidateEnvelope,
+        ValidateEditPair { left: usize, right: usize },
+        CloneInitial,
+        SeedHistory { edit: usize, lane: u8, index: usize },
+        FindApplied { position: usize, scan: usize },
+        ApplyForward { position: usize, edit: usize, mutation: usize },
+        HashInverse { position: usize, edit: usize, mutation: usize },
+        CommitApplied { position: usize, edit: usize },
+        FindRedo { position: usize, scan: usize },
+        HashRedo { position: usize, edit: usize, lane: u8, mutation: usize },
+        CommitRedo { position: usize, edit: usize },
+        BuildCandidate,
+        RetireCancelled,
+        RetireFault,
+        Complete,
+        Cancelled,
+        Fault,
+    }
+
+    /// 🌱️ Retained persisted-document initialization for an explicitly bounded app — the document
+    /// twin of [`bounded_document_store_owners`]: the envelope's initial snapshot is cloned in one
+    /// page, every applied edit replays one mutation per step, and every displaced owner retires
+    /// through the same bounded factories.
+    struct BoundedStoreInitializationAuthority<P, M>
+    where
+        P: Clone + protocol::ToValue + protocol::FromValue + ArtifactPack + Send + Sync + 'static,
+        M: Clone + protocol::ToValue + protocol::FromValue + Mutation<P> + OpBinary + OpText + Send + 'static,
+    {
+        operation: semio_framework_job::OperationId,
+        generation: semio_framework_job::Generation,
+        schema: &'static str,
+        envelope: std::mem::ManuallyDrop<Option<store::ArtifactEnvelope<P, M>>>,
+        runtime: std::mem::ManuallyDrop<Option<store::ArtifactStoreInitializationRuntime<P>>>,
+        candidate: std::mem::ManuallyDrop<Option<ArtifactStore<P, M>>>,
+        active: std::mem::ManuallyDrop<Option<Box<dyn store::ErasedSnapshotRetirement>>>,
+        envelope_retirement: std::mem::ManuallyDrop<Option<Box<dyn store::ErasedSnapshotRetirement>>>,
+        edit_digest: std::mem::ManuallyDrop<Option<store::ArtifactStoreInitializationDigest>>,
+        phase: BoundedStoreInitializationPhase,
+        cancel_requested: bool,
+        fault: Option<Vec<u8>>,
+        terminal_handoff: bool,
+    }
+
+    impl<P, M> BoundedStoreInitializationAuthority<P, M>
+    where
+        P: Clone + protocol::ToValue + protocol::FromValue + ArtifactPack + Send + Sync + 'static,
+        M: Clone + protocol::ToValue + protocol::FromValue + Mutation<P> + OpBinary + OpText + Send + 'static,
+    {
+        fn applied_id(&self, position: usize) -> Option<&str> {
+            let envelope = self.envelope.as_ref()?;
+            match &envelope.cursor {
+                Some(cursor) => cursor.applied_edit_ids.get(position).map(String::as_str),
+                None => envelope.vcs.edits.get(position).map(|edit| edit.id.as_str()),
+            }
+        }
+
+        fn redo_id(&self, position: usize) -> Option<&str> {
+            self.envelope.as_ref()?.cursor.as_ref()?.redo_edit_ids.get(position).map(String::as_str)
+        }
+
+        fn fail(&mut self, code: &'static [u8]) {
+            self.fault = Some(code.to_vec());
+            self.phase = BoundedStoreInitializationPhase::RetireFault;
+        }
+
+        fn begin_edit_digest(&mut self, edit: usize) {
+            let entry = self.envelope.as_ref().and_then(|envelope| envelope.vcs.edits.get(edit)).expect("bounded initializer edit remains retained");
+            let mut digest = store::ArtifactStoreInitializationDigest::new(b"bounded.edit");
+            digest.observe(entry.id.as_bytes());
+            digest.observe(&entry.sequence_number.to_be_bytes());
+            digest.observe(entry.started_at.as_bytes());
+            *self.edit_digest = Some(digest);
+        }
+
+        fn hash_operation(&mut self, operation: &M) -> Option<usize> {
+            match operation.encode_op() {
+                Ok(encoded) if encoded.len() <= store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES => {
+                    self.edit_digest.as_mut().expect("bounded initializer edit digest remains retained").observe(&encoded);
+                    Some(encoded.len())
+                }
+                _ => None,
+            }
+        }
+
+        fn pump_active(&mut self) -> Result<bool, String> {
+            let Some(active) = self.active.as_mut() else { return Ok(false) };
+            match active.close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)? {
+                store::SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items <= 1 && released_bytes <= store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES => Ok(true),
+                store::SnapshotRetirementStep::Pending { .. } => Err("bounded store initializer retirement exceeded its exact grant".into()),
+                store::SnapshotRetirementStep::Blocked => Ok(true),
+                store::SnapshotRetirementStep::Complete if active.terminal_is_empty() => {
+                    drop(self.active.take());
+                    Ok(true)
+                }
+                store::SnapshotRetirementStep::Complete => Err("bounded store initializer retirement reported a false terminal".into()),
+            }
+        }
+
+        fn pump_terminal_retirement(&mut self) -> Result<bool, String> {
+            if self.pump_active()? {
+                return Ok(false);
+            }
+            if let Some(runtime) = self.runtime.as_mut() {
+                match runtime.close_step(&BoundedConfigRetirementFactory::<P>::new(), 1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)? {
+                    store::SnapshotRetirementStep::Complete if runtime.terminal_is_empty() => {
+                        drop(self.runtime.take());
+                        return Ok(false);
+                    }
+                    store::SnapshotRetirementStep::Complete => return Err("bounded initialization runtime reported a false terminal".into()),
+                    _ => return Ok(false),
+                }
+            }
+            if self.envelope_retirement.is_none() {
+                if let Some(envelope) = self.envelope.take() {
+                    *self.envelope_retirement = Some(bounded_document_store_owners::<P, M>().retire_envelope(envelope));
+                    return Ok(false);
+                }
+            }
+            if let Some(retirement) = self.envelope_retirement.as_mut() {
+                return match retirement.close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)? {
+                    store::SnapshotRetirementStep::Complete if retirement.terminal_is_empty() => {
+                        drop(self.envelope_retirement.take());
+                        Ok(true)
+                    }
+                    store::SnapshotRetirementStep::Complete => Err("bounded initialization envelope retirement reported a false terminal".into()),
+                    _ => Ok(false),
+                };
+            }
+            Ok(true)
+        }
+
+        fn finish_terminal(&mut self) {
+            drop(self.edit_digest.take());
+            self.terminal_handoff = true;
+        }
+
+        fn terminal_is_empty_inner(&self) -> bool {
+            self.terminal_handoff && self.envelope.is_none() && self.runtime.is_none() && self.candidate.is_none() && self.active.is_none() && self.envelope_retirement.is_none() && self.edit_digest.is_none()
+        }
+
+        fn fault_outcome(&self, cx: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::StepOutcome {
+            let source = self.fault.as_deref().unwrap_or(b"bounded-store.initializer-fault");
+            let detail = cx.payload_from_bytes(semio_framework_job::JobPayloadStream::Fault, source).unwrap_or_else(|_| semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault));
+            semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail })
+        }
+    }
+
+    impl<P, M> ArtifactStoreInitializationAuthority<P, M> for BoundedStoreInitializationAuthority<P, M>
+    where
+        P: Clone + protocol::ToValue + protocol::FromValue + ArtifactPack + Send + Sync + 'static,
+        M: Clone + protocol::ToValue + protocol::FromValue + Mutation<P> + OpBinary + OpText + Send + 'static,
+    {
+        fn step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::StepOutcome {
+            if cx.operation() != self.operation || cx.generation() != self.generation {
+                self.fail(b"bounded-store.initializer-stale-authority");
+            }
+            if self.cancel_requested && !matches!(self.phase, BoundedStoreInitializationPhase::RetireCancelled | BoundedStoreInitializationPhase::Cancelled) {
+                self.phase = BoundedStoreInitializationPhase::RetireCancelled;
+            }
+            if let Err(error) = self.pump_active() {
+                self.fault = Some(error.into_bytes());
+                self.phase = BoundedStoreInitializationPhase::RetireFault;
+            } else if self.active.is_some() {
+                return semio_framework_job::StepOutcome::Yield;
+            }
+            let commit = || semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate {
+                state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState),
+                output: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput),
+            });
+            match self.phase {
+                BoundedStoreInitializationPhase::ValidateEnvelope => {
+                    match self.envelope.as_ref() {
+                        None => self.fail(b"bounded-store.initializer-envelope-missing"),
+                        Some(envelope) if envelope.schema != self.schema || envelope.id.is_empty() || envelope.id.len() > store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES => self.fail(b"bounded-store.initializer-envelope-invalid"),
+                        Some(_) => self.phase = BoundedStoreInitializationPhase::ValidateEditPair { left: 0, right: 1 },
+                    }
+                    cx.consume_fuel(1);
+                    semio_framework_job::StepOutcome::Yield
+                }
+                BoundedStoreInitializationPhase::ValidateEditPair { left, right } => {
+                    let edits = &self.envelope.as_ref().expect("validated bounded envelope remains retained").vcs.edits;
+                    if left >= edits.len() {
+                        self.phase = BoundedStoreInitializationPhase::CloneInitial;
+                    } else if right >= edits.len() {
+                        self.phase = BoundedStoreInitializationPhase::ValidateEditPair { left: left + 1, right: left + 2 };
+                    } else if edits[left].id == edits[right].id || edits[left].id.len() > store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES {
+                        self.fail(b"bounded-store.initializer-duplicate-or-hostile-edit");
+                    } else {
+                        self.phase = BoundedStoreInitializationPhase::ValidateEditPair { left, right: right + 1 };
+                    }
+                    cx.consume_fuel(1);
+                    semio_framework_job::StepOutcome::Yield
+                }
+                BoundedStoreInitializationPhase::CloneInitial => {
+                    let envelope = self.envelope.as_ref().expect("bounded envelope remains retained during initial clone");
+                    let pack = envelope.vcs.initial_snapshot.encode_pack();
+                    let mut digest = store::ArtifactStoreInitializationDigest::new(b"bounded.initial");
+                    digest.observe(&pack);
+                    *self.runtime = Some(store::ArtifactStoreInitializationRuntime::new(&envelope.id, &envelope.schema, envelope.vcs.initial_snapshot.clone(), digest.finish()));
+                    self.phase = BoundedStoreInitializationPhase::SeedHistory { edit: 0, lane: 0, index: 0 };
+                    cx.consume_fuel(pack.len().max(1) as u64);
+                    semio_framework_job::StepOutcome::Yield
+                }
+                BoundedStoreInitializationPhase::SeedHistory { edit, lane, index } => {
+                    let envelope = self.envelope.as_ref().expect("bounded envelope remains retained while causal history is seeded");
+                    let Some(entry) = envelope.vcs.edits.get(edit) else {
+                        self.phase = BoundedStoreInitializationPhase::FindApplied { position: 0, scan: 0 };
+                        return semio_framework_job::StepOutcome::Yield;
+                    };
+                    let runtime = self.runtime.as_mut().expect("bounded runtime remains retained while history is seeded");
+                    let seeded = match lane {
+                        0 => runtime.seed_mutation(protocol::MutationId(entry.id.clone())).map(|()| {
+                            runtime.observe_sequence(entry.sequence_number);
+                            BoundedStoreInitializationPhase::SeedHistory { edit, lane: 1, index: 0 }
+                        }),
+                        1 if index < entry.forwards.len() => {
+                            let id = entry.mutation_meta.get(index).and_then(|meta| meta.mutation_id.clone()).or_else(|| entry.forwards[index].mutation_id()).unwrap_or_else(|| protocol::MutationId(format!("{}#{index}", entry.id)));
+                            runtime.seed_mutation(id).map(|()| BoundedStoreInitializationPhase::SeedHistory { edit, lane, index: index + 1 })
+                        }
+                        1 => Ok(BoundedStoreInitializationPhase::SeedHistory { edit, lane: 2, index: 0 }),
+                        2 if index < entry.mutation_meta.len() => {
+                            runtime.observe_timestamp(entry.mutation_meta[index].timestamp.clone());
+                            Ok(BoundedStoreInitializationPhase::SeedHistory { edit, lane, index: index + 1 })
+                        }
+                        _ => Ok(BoundedStoreInitializationPhase::SeedHistory { edit: edit + 1, lane: 0, index: 0 }),
+                    };
+                    match seeded {
+                        Ok(next) => self.phase = next,
+                        Err(error) => {
+                            self.fault = Some(error.into_bytes());
+                            self.phase = BoundedStoreInitializationPhase::RetireFault;
+                        }
+                    }
+                    cx.consume_fuel(1);
+                    semio_framework_job::StepOutcome::Yield
+                }
+                BoundedStoreInitializationPhase::FindApplied { position, scan } => {
+                    let Some(id) = self.applied_id(position).map(str::to_owned) else {
+                        let checkpoint = self.envelope.as_ref().and_then(|envelope| envelope.cursor.as_ref().and_then(|cursor| cursor.checkpoint_id.clone()).or_else(|| envelope.vcs.checkpoints.last().map(|checkpoint| checkpoint.id.clone())));
+                        self.runtime.as_mut().expect("bounded runtime remains retained").set_current_checkpoint_id(checkpoint);
+                        self.phase = BoundedStoreInitializationPhase::FindRedo { position: 0, scan: 0 };
+                        return semio_framework_job::StepOutcome::Yield;
+                    };
+                    match self.envelope.as_ref().expect("bounded envelope remains retained").vcs.edits.get(scan).map(|edit| edit.id == id) {
+                        None => self.fail(b"bounded-store.initializer-applied-edit-missing"),
+                        Some(true) => {
+                            self.begin_edit_digest(scan);
+                            self.phase = BoundedStoreInitializationPhase::ApplyForward { position, edit: scan, mutation: 0 };
+                        }
+                        Some(false) => self.phase = BoundedStoreInitializationPhase::FindApplied { position, scan: scan + 1 },
+                    }
+                    cx.consume_fuel(1);
+                    semio_framework_job::StepOutcome::Yield
+                }
+                BoundedStoreInitializationPhase::ApplyForward { position, edit, mutation } => {
+                    let Some(operation) = self.envelope.as_ref().and_then(|envelope| envelope.vcs.edits.get(edit)).expect("bounded applied edit remains retained").forwards.get(mutation).cloned() else {
+                        self.phase = BoundedStoreInitializationPhase::HashInverse { position, edit, mutation: 0 };
+                        return semio_framework_job::StepOutcome::Yield;
+                    };
+                    let Some(bytes) = self.hash_operation(&operation) else {
+                        self.fail(b"bounded-store.initializer-forward-encoding");
+                        return semio_framework_job::StepOutcome::Yield;
+                    };
+                    let current = self.runtime.as_mut().and_then(store::ArtifactStoreInitializationRuntime::current_mut).expect("bounded runtime current snapshot remains retained");
+                    let (diff, messages) = operation.diff(current).into_parts();
+                    if messages.iter().any(|message| message.level == protocol::Severity::Fatal) {
+                        self.fail(b"bounded-store.initializer-fatal-mutation");
+                        return semio_framework_job::StepOutcome::Yield;
+                    }
+                    match diff.apply(current) {
+                        Ok(next) => {
+                            let previous = std::mem::replace(current, next);
+                            *self.active = Some(store::ArtifactOwnedValueRetirementFactory::retire_owned(&BoundedConfigRetirementFactory::<P>::new(), previous));
+                            self.phase = BoundedStoreInitializationPhase::ApplyForward { position, edit, mutation: mutation + 1 };
+                            cx.consume_fuel(bytes.max(1) as u64);
+                        }
+                        Err(error) => {
+                            self.fault = Some(error.to_string().into_bytes());
+                            self.phase = BoundedStoreInitializationPhase::RetireFault;
+                        }
+                    }
+                    semio_framework_job::StepOutcome::Yield
+                }
+                BoundedStoreInitializationPhase::HashInverse { position, edit, mutation } => {
+                    let Some(operation) = self.envelope.as_ref().and_then(|envelope| envelope.vcs.edits.get(edit)).expect("bounded applied edit remains retained").inverse.get(mutation).cloned() else {
+                        self.phase = BoundedStoreInitializationPhase::CommitApplied { position, edit };
+                        return semio_framework_job::StepOutcome::Yield;
+                    };
+                    match self.hash_operation(&operation) {
+                        Some(bytes) => {
+                            self.phase = BoundedStoreInitializationPhase::HashInverse { position, edit, mutation: mutation + 1 };
+                            cx.consume_fuel(bytes.max(1) as u64);
+                        }
+                        None => self.fail(b"bounded-store.initializer-inverse-encoding"),
+                    }
+                    semio_framework_job::StepOutcome::Yield
+                }
+                BoundedStoreInitializationPhase::CommitApplied { position, edit } => {
+                    let entry = self.envelope.as_ref().and_then(|envelope| envelope.vcs.edits.get(edit)).expect("bounded applied edit remains retained");
+                    let (id, actor) = (entry.id.clone(), entry.actor.clone());
+                    let digest = self.edit_digest.take().expect("bounded applied edit digest remains retained").finish();
+                    let runtime = self.runtime.as_mut().expect("bounded runtime remains retained");
+                    match runtime.push_applied(id, digest) {
+                        Ok(()) => {
+                            runtime.set_local_actor_id(actor);
+                            self.phase = BoundedStoreInitializationPhase::FindApplied { position: position + 1, scan: 0 };
+                        }
+                        Err(error) => {
+                            self.fault = Some(error.into_bytes());
+                            self.phase = BoundedStoreInitializationPhase::RetireFault;
+                        }
+                    }
+                    cx.consume_fuel(1);
+                    semio_framework_job::StepOutcome::Yield
+                }
+                BoundedStoreInitializationPhase::FindRedo { position, scan } => {
+                    let Some(id) = self.redo_id(position).map(str::to_owned) else {
+                        self.phase = BoundedStoreInitializationPhase::BuildCandidate;
+                        return semio_framework_job::StepOutcome::Yield;
+                    };
+                    match self.envelope.as_ref().expect("bounded envelope remains retained").vcs.edits.get(scan).map(|edit| edit.id == id) {
+                        None => self.fail(b"bounded-store.initializer-redo-edit-missing"),
+                        Some(true) => {
+                            self.begin_edit_digest(scan);
+                            self.phase = BoundedStoreInitializationPhase::HashRedo { position, edit: scan, lane: 0, mutation: 0 };
+                        }
+                        Some(false) => self.phase = BoundedStoreInitializationPhase::FindRedo { position, scan: scan + 1 },
+                    }
+                    cx.consume_fuel(1);
+                    semio_framework_job::StepOutcome::Yield
+                }
+                BoundedStoreInitializationPhase::HashRedo { position, edit, lane, mutation } => {
+                    let entry = self.envelope.as_ref().and_then(|envelope| envelope.vcs.edits.get(edit)).expect("bounded redo edit remains retained");
+                    let operation = if lane == 0 { entry.forwards.get(mutation) } else { entry.inverse.get(mutation) }.cloned();
+                    let Some(operation) = operation else {
+                        self.phase = if lane == 0 { BoundedStoreInitializationPhase::HashRedo { position, edit, lane: 1, mutation: 0 } } else { BoundedStoreInitializationPhase::CommitRedo { position, edit } };
+                        return semio_framework_job::StepOutcome::Yield;
+                    };
+                    match self.hash_operation(&operation) {
+                        Some(bytes) => {
+                            self.phase = BoundedStoreInitializationPhase::HashRedo { position, edit, lane, mutation: mutation + 1 };
+                            cx.consume_fuel(bytes.max(1) as u64);
+                        }
+                        None => self.fail(b"bounded-store.initializer-redo-encoding"),
+                    }
+                    semio_framework_job::StepOutcome::Yield
+                }
+                BoundedStoreInitializationPhase::CommitRedo { position, edit } => {
+                    let id = self.envelope.as_ref().and_then(|envelope| envelope.vcs.edits.get(edit)).expect("bounded redo edit remains retained").id.clone();
+                    let digest = self.edit_digest.take().expect("bounded redo digest remains retained").finish();
+                    match self.runtime.as_mut().expect("bounded runtime remains retained").push_redo(id, digest) {
+                        Ok(()) => self.phase = BoundedStoreInitializationPhase::FindRedo { position: position + 1, scan: 0 },
+                        Err(error) => {
+                            self.fault = Some(error.into_bytes());
+                            self.phase = BoundedStoreInitializationPhase::RetireFault;
+                        }
+                    }
+                    cx.consume_fuel(1);
+                    semio_framework_job::StepOutcome::Yield
+                }
+                BoundedStoreInitializationPhase::BuildCandidate => {
+                    let Some(candidate_generation) = self.generation.0.checked_add(1) else {
+                        self.fail(b"bounded-store.initializer-generation-exhausted");
+                        return semio_framework_job::StepOutcome::Yield;
+                    };
+                    let envelope = self.envelope.take().expect("bounded envelope remains retained until atomic store construction");
+                    let runtime = self.runtime.take().expect("bounded runtime remains retained until atomic store construction");
+                    *self.candidate = Some(ArtifactStore::from_initialized_runtime_with_owners(envelope, runtime, candidate_generation, bounded_document_store_owners::<P, M>()));
+                    self.phase = BoundedStoreInitializationPhase::Complete;
+                    commit()
+                }
+                BoundedStoreInitializationPhase::RetireCancelled | BoundedStoreInitializationPhase::RetireFault => match self.pump_terminal_retirement() {
+                    Ok(false) => semio_framework_job::StepOutcome::Yield,
+                    Ok(true) => {
+                        self.finish_terminal();
+                        if self.phase == BoundedStoreInitializationPhase::RetireCancelled {
+                            self.phase = BoundedStoreInitializationPhase::Cancelled;
+                            semio_framework_job::StepOutcome::Cancelled
+                        } else {
+                            self.phase = BoundedStoreInitializationPhase::Fault;
+                            self.fault_outcome(cx)
+                        }
+                    }
+                    Err(error) => {
+                        self.fault = Some(error.into_bytes());
+                        semio_framework_job::StepOutcome::Yield
+                    }
+                },
+                BoundedStoreInitializationPhase::Complete => commit(),
+                BoundedStoreInitializationPhase::Cancelled => semio_framework_job::StepOutcome::Cancelled,
+                BoundedStoreInitializationPhase::Fault => self.fault_outcome(cx),
+            }
+        }
+
+        fn request_cancel(&mut self) {
+            self.cancel_requested = true;
+        }
+
+        fn begin_close(&mut self) {
+            self.cancel_requested = true;
+            if !matches!(self.phase, BoundedStoreInitializationPhase::Cancelled | BoundedStoreInitializationPhase::Fault) {
+                self.phase = BoundedStoreInitializationPhase::RetireCancelled;
+            }
+        }
+
+        fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
+            self.begin_close();
+            if maximum_items == 0 || maximum_bytes < store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES {
+                return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+            }
+            match self.pump_terminal_retirement() {
+                Ok(false) => Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }),
+                Ok(true) => {
+                    self.finish_terminal();
+                    Ok(PluginCloseStep::Complete)
+                }
+                Err(error) => Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.initializer-close"), format!("bounded store initializer close failed: {error}"))),
+            }
+        }
+
+        fn take_candidate(&mut self) -> Option<ArtifactStore<P, M>> {
+            if self.phase != BoundedStoreInitializationPhase::Complete || self.terminal_handoff {
+                return None;
+            }
+            let candidate = self.candidate.take()?;
+            self.finish_terminal();
+            Some(candidate)
+        }
+
+        fn terminal_is_empty(&self) -> bool {
+            self.terminal_is_empty_inner()
+        }
+    }
+
+    impl<P, M> Drop for BoundedStoreInitializationAuthority<P, M>
+    where
+        P: Clone + protocol::ToValue + protocol::FromValue + ArtifactPack + Send + Sync + 'static,
+        M: Clone + protocol::ToValue + protocol::FromValue + Mutation<P> + OpBinary + OpText + Send + 'static,
+    {
+        fn drop(&mut self) {
+            assert!(std::thread::panicking() || self.terminal_is_empty_inner(), "bounded store initialization authority reached Drop before exact candidate handoff or retained rejection close");
+        }
+    }
+
+    /// 🌱️ Persisted-document initialization authority for an explicitly bounded document store —
+    /// what `ArtifactApp::build_document_store_initialization_job` returns for an app whose owners
+    /// come from [`bounded_document_store_owners`], so a whole-document load can replace its store.
+    pub fn bounded_document_store_initialization_job<P, M>(
+        envelope: store::ArtifactEnvelope<P, M>,
+        schema: &'static str,
+        operation: semio_framework_job::OperationId,
+        generation: semio_framework_job::Generation,
+    ) -> ArtifactStoreInitializationJob<P, M>
+    where
+        P: Clone + protocol::ToValue + protocol::FromValue + ArtifactPack + Send + Sync + 'static,
+        M: Clone + protocol::ToValue + protocol::FromValue + Mutation<P> + OpBinary + OpText + Send + 'static,
+    {
+        ArtifactStoreInitializationJob::new(Box::new(BoundedStoreInitializationAuthority {
+            operation,
+            generation,
+            schema,
+            envelope: std::mem::ManuallyDrop::new(Some(envelope)),
+            runtime: std::mem::ManuallyDrop::new(None),
+            candidate: std::mem::ManuallyDrop::new(None),
+            active: std::mem::ManuallyDrop::new(None),
+            envelope_retirement: std::mem::ManuallyDrop::new(None),
+            edit_digest: std::mem::ManuallyDrop::new(None),
+            phase: BoundedStoreInitializationPhase::ValidateEnvelope,
+            cancel_requested: false,
+            fault: None,
+            terminal_handoff: false,
+        }))
+    }
     //#endregion 🎛️BoundedConfigStoreOwners
 
     /// @emoji 🧹️ Explicit adapter from an app-owned document-store close catalog to the
@@ -21087,6 +21563,28 @@ pub mod app {
             }
         }
 
+        /// ♻️ Reclaims the document Store's returned snapshot reads before a batched publication folds its next item:
+        /// `true` once no returned root is left (or the one left is still shared elsewhere), `false` when `steps` ran
+        /// out first and the caller must yield instead of folding.
+        ///
+        /// 🐛️ Every batch item is prepared against a registry lease on the previous item's post root, and the registry
+        /// keeps that root alive after the lease returns until a pump takes it. The maintenance rotation reclaims one
+        /// returned read per rotation at one item per step, while a publication folds an item every turn — so a
+        /// 408-placement fill finalize (816 ops over a 409-object puzzle 3d document) retained one ~5 MB root per
+        /// folded op and trapped the guest at its 512 MiB ceiling (`memory allocation of 1232 bytes failed`, ticket
+        /// 26/09/13/INTERACTIVE-TOOLS-VISIBLE-PROCESS). Draining here bounds a publication to the staged root plus the
+        /// base its current item reads, whatever the batch size.
+        pub(crate) fn reclaim_document_snapshot_read_returns(&mut self, steps: usize) -> Result<bool, Fault> {
+            for _ in 0..steps {
+                match self.document_snapshot_read_returns.drive(|| self.store.take_returned_snapshot_read_retirement().map_err(|error| error.into_fault()), PUBLICATION_SNAPSHOT_READ_RECLAIM_ITEMS, PUBLICATION_SNAPSHOT_READ_RECLAIM_BYTES)? {
+                    PluginCloseStep::Pending { .. } => {}
+                    // A disposer that waits on outside ownership cannot be hurried here; the publication must not stall on it.
+                    _ => return Ok(true),
+                }
+            }
+            Ok(self.document_snapshot_read_returns.terminal_is_empty() && self.store.returned_snapshot_read_count() == 0)
+        }
+
         /// 🪹️ No returned-read disposer is held by any of the three fixed capture-store pumps.
         fn snapshot_read_returns_terminal_is_empty(&self) -> bool {
             self.document_snapshot_read_returns.terminal_is_empty() && self.config_snapshot_read_returns.terminal_is_empty() && self.interaction_snapshot_read_returns.terminal_is_empty()
@@ -21815,8 +22313,8 @@ pub mod app {
                     let hydration = active.hydration.take().ok_or_else(|| plugin_sdk_fault("ready recursive document parent hydration owner changed before handoff"))?;
                     if !store::ErasedSnapshotRetirement::terminal_is_empty(&hydration) {
                         active.hydration = Some(hydration);
-                        let parent_bundle = A::build_envelope_decode_owner_bundle().ok_or_else(|| plugin_sdk_fault("ready document archive envelope requires its exact retirement owner catalog"))?;
-                        active.retained = Some(parent_bundle.retire_envelope(envelope));
+                        let owners = A::build_document_store_owners().expect("document archive hydration admitted this app's document owner catalog");
+                        active.retained = Some(owners.retire_envelope(envelope));
                         return Err(plugin_sdk_fault("ready recursive document parent hydration retained nonterminal ownership"));
                     }
                     drop(hydration);
@@ -21827,8 +22325,8 @@ pub mod app {
                             active.phase = ActiveDocumentArchiveLoadPhase::AwaitingMembers;
                         }
                         Err((fault, envelope)) => {
-                            let parent_bundle = A::build_envelope_decode_owner_bundle().ok_or_else(|| plugin_sdk_fault("rejected document archive envelope requires its exact retirement owner catalog"))?;
-                            active.retained = Some(parent_bundle.retire_envelope(envelope));
+                            let owners = A::build_document_store_owners().expect("document archive hydration admitted this app's document owner catalog");
+                            active.retained = Some(owners.retire_envelope(envelope));
                             return Err(fault);
                         }
                     }
@@ -25529,6 +26027,10 @@ pub mod app {
                         }
                     };
                 }
+                if matches!(pending, PendingArtifactStorePublication::Artifact(_)) && !self.reclaim_document_snapshot_read_returns(PUBLICATION_SNAPSHOT_READ_RECLAIM_STEPS)? {
+                    return Ok(());
+                }
+                let pending = mounted.pending_artifact_publication.as_mut().expect("pending publication checked above");
                 let advance = match pending {
                     PendingArtifactStorePublication::Artifact(publication) => self.store.advance_apply_batch(publication, grant).map_err(|error| plugin_sdk_fault(error.to_string()))?,
                     PendingArtifactStorePublication::Config(publication) => self.config_store.advance_apply_batch(publication, grant).map_err(|error| plugin_sdk_fault(error.to_string()))?,
@@ -26655,6 +27157,14 @@ pub mod app {
     /// runs at most one bounded unit per call, so a step-budget law needs exactly this many calls
     /// to observe each stage once.
     pub const MAINTENANCE_STAGES: u8 = 25;
+
+    /// ♻️ Retirement grant of one [`VcsArtifactApp::reclaim_document_snapshot_read_returns`] pump step: a returned
+    /// document root is disposed this many items at a time instead of the maintenance rotation's one.
+    pub(crate) const PUBLICATION_SNAPSHOT_READ_RECLAIM_ITEMS: usize = 256;
+    /// ♻️ Byte grant of the same pump step.
+    pub(crate) const PUBLICATION_SNAPSHOT_READ_RECLAIM_BYTES: usize = 1 << 20;
+    /// ♻️ Pump steps a batched publication spends reclaiming returned roots before it folds its next item.
+    pub(crate) const PUBLICATION_SNAPSHOT_READ_RECLAIM_STEPS: usize = 4_096;
 
     /// 🐞️ `[DEBUG]` last maintenance stage entered — temporary, ticket 26/09/02/PUZZLE-3D-END-TO-END.
     pub(crate) static LAST_MAINTENANCE_STAGE: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
@@ -37682,6 +38192,7 @@ pub use app::{
     bounded_config_store_one_item_preparation_factory,
     bounded_config_store_owners,
     bounded_document_store_disposer,
+    bounded_document_store_initialization_job,
     bounded_document_store_owners,
     bounded_transient_preparation_factory,
     bounded_transient_root_retirement_factory,

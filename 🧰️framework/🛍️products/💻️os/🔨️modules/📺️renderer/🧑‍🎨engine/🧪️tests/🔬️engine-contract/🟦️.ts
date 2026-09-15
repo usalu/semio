@@ -1729,7 +1729,7 @@ import {
 import { ENTWERFEN_MIT_BESTAND_BRAND_IDS, ENTWERFEN_MIT_BESTAND_GENERAL_INTRODUCTION } from "../../../../../../../../♻️mit-bestand/🧺️demonstrator/🪧️brand.ts";
 import { Footer, navbarFillItem, progressPanelTabSelection, resolvePanelBranchBodyLeaf, resolveTranslationLabel, SelectionMarquee, uiDataLabel, formatKeybindingShortcut, buildKeysByActionId, type PanelTabNode, type TreeDataSection } from "@semio-tech/ui-react";
 import { renderUiControl } from "../../🧱️elements/🗣️Interpreter/🟦️.tsx";
-import { WorldOrbitProjectionSwitchPane, world3dProjectionPaneElementId, resolveClickInstanceIdFromProjected, world3dInstancePickUsesInteractionDomain, world3dMarqueePointerCaptureArmed, world3dProjectedAabbContainsClick, world3dFrameCameraFromBounds, world3dFrameDistanceForRadius, world3dBoundsRadius, world3dAutoFitOwed, world3dFrameCameraFromInstances, world3dSuggestionsGestureArmed, world3dRetainLocalVortexHover, leftoverHoveredVortexFullIdV1, leftoverOverlayCarryingSelectionV1, leftoverSelectIdsMustNameHoverPickV1, leftoverOverlayCarryingUtilityV1, leftoverOverlayArmedBrushUtilityV1, leftoverTreeItemSelectedV1, leftoverWorldOverlayAppliesV1, mergeWorldInteractionWithLeftoverV1, mergeWorldSelectionWithLeftoverV1, gumballPreviewWorldPoint, world3dSuggestionsGestureConsumesContextMenu, world3dSuggestionsRightDownRoutesOnWindowCapture, worldVortexHitProxy, worldInstanceMeshRaycast, applyWorldInstanceMeshRaycast } from "../../🧱️elements/🌐️World3dHost/🟦️.tsx";
+import { WorldOrbitProjectionSwitchPane, world3dProjectionPaneElementId, resolveClickInstanceIdFromProjected, world3dInstancePickUsesInteractionDomain, world3dMarqueePointerCaptureArmed, world3dProjectedAabbContainsClick, world3dFrameCameraFromBounds, world3dFrameDistanceForRadius, world3dBoundsRadius, world3dAutoFitOwed, world3dAutoFitKey, world3dFrameCameraFromInstances, world3dSuggestionsGestureArmed, world3dRetainLocalVortexHover, leftoverHoveredVortexFullIdV1, leftoverOverlayCarryingSelectionV1, leftoverSelectIdsMustNameHoverPickV1, leftoverOverlayCarryingUtilityV1, leftoverOverlayArmedBrushUtilityV1, leftoverTreeItemSelectedV1, leftoverWorldOverlayAppliesV1, mergeWorldInteractionWithLeftoverV1, mergeWorldSelectionWithLeftoverV1, gumballPreviewWorldPoint, world3dSuggestionsGestureConsumesContextMenu, world3dSuggestionsRightDownRoutesOnWindowCapture, worldVortexHitProxy, worldInstanceMeshRaycast, applyWorldInstanceMeshRaycast } from "../../🧱️elements/🌐️World3dHost/🟦️.tsx";
 import { leftoverInspectionPanelHash, leftoverInspectionRefreshScope, uiRefreshSectionUnchanged } from "../../🧱️elements/🔌️PluginRuntime/🟦️.tsx";
 
 import { aProjectOfLuhUdkFooterItem, fundedByZukunftBauFooterItem, LUH_LOGO_URL, LUH_URL, UDK_LOGO_URL, UDK_URL, ZUKUNFT_BAU_PROJECT_URL } from "../../../../../../../../♻️mit-bestand/🧺️demonstrator/⚛️footer.tsx";
@@ -1832,7 +1832,10 @@ import {
   snapWorldPointToGrid,
   world3dViewportCameraSeedKey,
   world3dFitProjectionContent,
+  world3dFramingInstances,
   world3dFrameVisibleOverlayOffered,
+  worldSceneContentBounds,
+  worldSceneContentBoundsKey,
   world3dProjectionContentFrameMounted,
   world3dCameraDomJson,
   worldInstancePickBlocked,
@@ -4795,6 +4798,8 @@ describe("framework renderer hosts", () => {
     expect(markup).toContain("translate(-50%, -50%) scale(2)");
     expect(markup).toContain("width:120px");
     expect(markup).toContain('data-slot="slider-thumb"');
+    expect(markup).toContain("size-tiny");
+    expect(markup).not.toMatch(/data-slot="slider-thumb"[^>]*size-small/);
   });
 
   it("renders canvas 2d host with infinite canvas session", () => {
@@ -5641,15 +5646,24 @@ describe("framework renderer hosts", () => {
     expect(merged.up).toEqual([0, 1, 0]);
   });
 
-  it("world3dFitProjectionContent pauses fill-driven projection reframes while the user is navigating", () => {
+  it("world3dFitProjectionContent pauses fill-driven projection reframes while the user is navigating or fill is armed", () => {
     expect(world3dFitProjectionContent(false, false, true)).toBe(true);
     expect(world3dFitProjectionContent(true, false, true)).toBe(false);
     expect(world3dFitProjectionContent(false, true, true)).toBe(false);
+    expect(world3dFitProjectionContent(false, false, true, true)).toBe(false);
     expect(world3dFitProjectionContent(false, false, false)).toBe(false);
     expect(world3dProjectionContentFrameMounted(true, false, false)).toBe(true);
     expect(world3dProjectionContentFrameMounted(true, false, true)).toBe(false);
     expect(world3dProjectionContentFrameMounted(false, true, true)).toBe(false);
     expect(world3dProjectionContentFrameMounted(false, true, false)).toBe(true);
+  });
+
+  it("world3dFramingInstances keeps fill provisional placements out of projection framing bounds", () => {
+    const committed = worldSceneContentBounds([{ position: [0, 0, 0] }]);
+    const withProvisional = worldSceneContentBounds(
+      world3dFramingInstances([{ id: "a", position: [0, 0, 0] }, { id: "b", position: [40, -12, 3], provisional: true }]),
+    );
+    expect(worldSceneContentBoundsKey(withProvisional)).toBe(worldSceneContentBoundsKey(committed));
   });
 
   it("world3dFrameVisibleOverlayOffered keeps the manual reframe when the fit lane carries published bounds, and hides it for scene-graph-only fit lanes", () => {
@@ -5698,11 +5712,19 @@ describe("framework renderer hosts", () => {
   });
 
   it("world3dAutoFitOwed frames the first delivery of a document and never yanks a camera the user moved on it", () => {
-    expect(world3dAutoFitOwed("", "7:a,b", false)).toBe(true);
-    expect(world3dAutoFitOwed("7:a,b", "7:a,b", false)).toBe(false);
-    expect(world3dAutoFitOwed("", "7:a,b", true)).toBe(false);
-    expect(world3dAutoFitOwed("7:a,b", "7:a,b,c", true)).toBe(false);
-    expect(world3dAutoFitOwed("7:a,b", "9:x", false)).toBe(true);
+    expect(world3dAutoFitOwed("", "7:a", false)).toBe(true);
+    expect(world3dAutoFitOwed("7:a", "7:a", false)).toBe(false);
+    expect(world3dAutoFitOwed("", "7:a", true)).toBe(false);
+    expect(world3dAutoFitOwed("7:a", "7:b", true)).toBe(false);
+    expect(world3dAutoFitOwed("7:a", "9:a", false)).toBe(true);
+  });
+
+  it("world3dAutoFitKey tracks document revision and published bounds, not scene mesh roster churn", () => {
+    expect(world3dAutoFitKey(7, "seed", null)).toBe("7:seed");
+    expect(world3dAutoFitKey(7, "seed", null)).toBe(world3dAutoFitKey(7, "seed", null));
+    const bounds: [readonly number[], readonly number[]] = [[0, 0, 0], [2, 2, 3]];
+    expect(world3dAutoFitKey(7, "seed", bounds)).toBe("7:seed:0,0,0:2,2,3");
+    expect(world3dAutoFitOwed(world3dAutoFitKey(7, "seed", null), world3dAutoFitKey(7, "seed", null), false)).toBe(false);
   });
 
   it("a framed camera puts every corner of the delivered box inside the viewport, for every bundled generation3d example", () => {
@@ -10931,7 +10953,7 @@ describe("built-node store reloads", () => {
 test("world3d rectangle marquee draws a rectangle and pick draws nothing", () => {
   expect(world3dMarqueeOverlayShape("rectangle")).toBe("rect");
   expect(world3dMarqueeOverlayShape("lasso")).toBe("polygon");
-  expect(world3dMarqueeOverlayShape("pick")).toBeNull();
+  expect(world3dMarqueeOverlayShape("pick")).toBe("rect");
 });
 
 test("InterpretedUiNode hands every surface host the shell's plugin context-menu resolver", () => {

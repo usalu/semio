@@ -34,7 +34,7 @@ semio_framework_plugin::app_labels! {
         depth: native_en "Depth", native_de "Tiefe", reuse_en "Depth", reuse_de "Tiefe";
         height: native_en "Height", native_de "Höhe", reuse_en "Height", reuse_de "Höhe";
         placement: native_en "Placement", native_de "Platzierung", reuse_en "Placement", reuse_de "Platzierung";
-        placement_rejected: native_en "Placement rejected — it collides or exceeds the overlap budget", native_de "Platzierung abgelehnt — sie kollidiert oder überschreitet das Überlappungsbudget", reuse_en "Placement rejected — it collides or exceeds the overlap budget", reuse_de "Platzierung abgelehnt — sie kollidiert oder überschreitet das Überlappungsbudget";
+        placement_rejected: native_en "Placement rejected — it cuts into another object deeper than the contact tolerance", native_de "Platzierung abgelehnt — sie dringt tiefer als die Kontakttoleranz in ein anderes Objekt ein", reuse_en "Placement rejected — it cuts into another object deeper than the contact tolerance", reuse_de "Platzierung abgelehnt — sie dringt tiefer als die Kontakttoleranz in ein anderes Objekt ein";
         placement_unavailable: native_en "No placement available here", native_de "Hier ist keine Platzierung möglich", reuse_en "No placement available here", reuse_de "Hier ist keine Platzierung möglich";
         placement_occupied: native_en "That connection point is already taken", native_de "Dieser Verbindungspunkt ist bereits belegt", reuse_en "That connection point is already taken", reuse_de "Dieser Verbindungspunkt ist bereits belegt";
         nothing_selected: native_en "Nothing is selected", native_de "Es ist nichts ausgewählt", reuse_en "Nothing is selected", reuse_de "Es ist nichts ausgewählt";
@@ -76,7 +76,7 @@ semio_framework_plugin::app_labels! {
         visible: native_en "Visible", native_de "Sichtbar", reuse_en "Visible", reuse_de "Sichtbar";
         snap: native_en "Snap", native_de "Fang", reuse_en "Snap", reuse_de "Fang";
         spacing: native_en "Spacing", native_de "Abstand", reuse_en "Spacing", reuse_de "Abstand";
-        overlap_budget: native_en "Overlap budget (m³)", native_de "Überlappungsbudget (m³)", reuse_en "Overlap budget (m³)", reuse_de "Überlappungsbudget (m³)";
+        contact_tolerance: native_en "Contact tolerance (m)", native_de "Kontakttoleranz (m)", reuse_en "Contact tolerance (m)", reuse_de "Kontakttoleranz (m)";
         id: native_en "Id", native_de "Id", reuse_en "Id", reuse_de "Id";
         label: native_en "Label", native_de "Bezeichnung", reuse_en "Label", reuse_de "Bezeichnung";
         kind: native_en "Kind", native_de "Art", reuse_en "Kind", reuse_de "Art";

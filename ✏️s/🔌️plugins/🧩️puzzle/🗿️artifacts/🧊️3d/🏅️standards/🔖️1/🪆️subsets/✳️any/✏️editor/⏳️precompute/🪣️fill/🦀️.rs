@@ -11,7 +11,7 @@ use crate::editor::puzzle3d::precompute::brush::{
 };
 use crate::editor::puzzle3d::precompute::geometry::{
     pose_isometry, world_bounds, world_volumes_contain_aabb, CollisionAabb, CollisionBody, CollisionIndexMutation, CollisionStepContext, CollisionIndexOwner, CollisionIndexRejectedOwner,
-    CollisionIndexRemoval, CollisionMutationStep, CollisionOverlapState, CollisionQueryCursor, CollisionQueryStep, CollisionSpatialIndex, CollisionStepResult, FixedOwnerMap, FixedOwnerMapInsert, FixedOwnerSet, FixedOwnerSetInsert, FixedOwnerVec,
+    CollisionIndexRemoval, CollisionMutationStep, CollisionPenetrationState, CollisionQueryCursor, CollisionQueryStep, CollisionSpatialIndex, CollisionStepResult, FixedOwnerMap, FixedOwnerMapInsert, FixedOwnerSet, FixedOwnerSetInsert, FixedOwnerVec,
     Pose3d, DOCUMENT_ATTRACTION_SLOTS, DOCUMENT_CANDIDATE_SLOTS, DOCUMENT_KIND_SLOTS, DOCUMENT_OBJECT_SLOTS, DOCUMENT_VOLUME_SLOTS, DOCUMENT_VORTEX_SLOTS,
 };
 use crate::editor::puzzle3d::{empty_fixture, puzzle3d_next_object_label, Puzzle3dFixture, Puzzle3dObject};
@@ -423,7 +423,7 @@ pub(crate) struct FillBuilder {
     weights: RetainedBrushKindWeights,
     kind_compatibility: FixedOwnerVec<KindCompatEntry, DOCUMENT_KIND_SLOTS>,
     host_rules: BrushHostRules,
-    overlap_budget: f64,
+    contact_tolerance: f64,
     meshes: FixedOwnerMap<String, CollisionBody, DOCUMENT_KIND_SLOTS>,
     spatial_index: CollisionSpatialIndex,
     /// 🌀️ The pool of free vortices, drawn from by `target_weights` (a vortex kind's distribution weight, zero once the
@@ -454,7 +454,7 @@ pub(crate) struct FillBuilder {
     broad_phase_query: Option<CollisionQueryCursor>,
     broad_phase_cursor: usize,
     broad_phase_bounds: Option<CollisionAabb>,
-    collision: Option<CollisionOverlapState>,
+    collision: Option<CollisionPenetrationState>,
     accept_phase: AcceptPhase,
     accept_attraction_cursor: usize,
     accept_vortex_cursor: usize,
@@ -498,12 +498,23 @@ impl RetainedBrushKindWeights {
 }
 
 fn retained_fill_vortex_target_weight(target: &BrushFillVortexTarget, weights: &RetainedBrushKindWeights) -> f64 {
-    weights.vortex_value(target.vortex_kind.as_deref().unwrap_or(""))
+    let object_kind = target.object_kind.as_deref().unwrap_or("");
+    let vortex_kind = target.vortex_kind.as_deref().unwrap_or("");
+    retained_joint_weight(weights, object_kind, vortex_kind)
 }
 
 fn retained_candidate_suggestion_weight(candidate: &BrushCompatibleCandidate, weights: &RetainedBrushKindWeights, catalogs: &impl BrushCatalogView) -> f64 {
     let vortex_kind = catalogs.objects().iter().find(|kind| kind.id == candidate.object_kind_id).and_then(|kind| kind.vortices.get(candidate.source_vortex_index)).and_then(|template| template.vortex_kind.as_deref()).unwrap_or("");
-    weights.object_value(&candidate.object_kind_id) * weights.vortex_value(vortex_kind)
+    retained_joint_weight(weights, &candidate.object_kind_id, vortex_kind)
+}
+
+fn retained_joint_weight(weights: &RetainedBrushKindWeights, object_kind_id: &str, vortex_kind_id: &str) -> f64 {
+    let sep = crate::editor::puzzle3d::PUZZLE3D_JOINT_WEIGHT_SEP;
+    let composite = format!("{object_kind_id}{sep}{vortex_kind_id}");
+    if let Some(weight) = weights.vortex_weights.get(&composite) {
+        return *weight;
+    }
+    weights.object_value(object_kind_id) * weights.vortex_value(vortex_kind_id)
 }
 
 enum FillRetiredOwner {
@@ -1072,7 +1083,7 @@ impl FillBuilder {
             weights: RetainedBrushKindWeights::new(),
             kind_compatibility: FixedOwnerVec::new(),
             host_rules: BrushHostRules::default(),
-            overlap_budget: 0.0,
+            contact_tolerance: 0.0,
             meshes: FixedOwnerMap::new(),
             spatial_index: CollisionSpatialIndex::new(8.0),
             targets: Vec::new(),
@@ -1553,7 +1564,7 @@ impl FillBuilder {
         self.preparation_inner_cursor += 1;
         if self.preparation_inner_cursor == 3 {
             self.host_rules = roots.scene.host_rules.clone();
-            self.overlap_budget = roots.scene.overlap_budget;
+            self.contact_tolerance = roots.scene.contact_tolerance;
             self.preparation_roots = None;
             self.preparation_inner_cursor = 0;
             self.stage = FillJobStage::PrepareTargets;
@@ -1819,10 +1830,6 @@ impl FillBuilder {
             self.stage = FillJobStage::AcceptCandidate;
             return None;
         };
-        if self.current_target.as_ref().is_some_and(|target| target.object_id == pair_id) {
-            self.broad_phase_cursor += 1;
-            return None;
-        }
         let Some(preview) = &self.current_preview else {
             self.reject_candidate("missing-preview");
             return None;
@@ -1840,12 +1847,12 @@ impl FillBuilder {
             return None;
         };
         let preview_world = pose_isometry(preview.origin, preview.orientation, &preview.scale);
-        let collision = self.collision.get_or_insert_with(|| CollisionOverlapState::new(512, 8, self.overlap_budget));
+        let collision = self.collision.get_or_insert_with(|| CollisionPenetrationState::new(self.contact_tolerance));
         let result = collision.step(context, preview_body, &preview_world, other, &entry.world);
         match result {
             CollisionStepResult::Pending => {}
             CollisionStepResult::Cancelled => return Some(StepOutcome::Cancelled),
-            CollisionStepResult::Complete { overlap, .. } if overlap > self.overlap_budget => {
+            CollisionStepResult::Complete { depth, .. } if depth > self.contact_tolerance => {
                 self.reject_candidate("solid-overlap");
             }
             CollisionStepResult::Complete { .. } => {
@@ -3011,7 +3018,7 @@ enum FillRevalidatePhase {
 
 /// 🔍️ The fill tool run revalidation job (`ToolRunDefinition.revalidateJob`): re-tests every provisional
 /// placement against the head document — its host vortex must still exist, its id must be free and its
-/// body must not overlap a head object beyond the head's overlap budget. Each placement is one unit of
+/// surface must not reach into any head object, its docking host included, deeper than the head's contact tolerance. Each placement is one unit of
 /// fuel and ends as a `success` (`fits`) or `danger` (`TOOL_RUN_REASON_CONFLICT`) trace record. The last
 /// tick retracts to the first conflict and re-appends every later survivor's ops and entity, with one
 /// `danger` conflict step carrying the conflict count; `Complete` follows on the next call.
@@ -3026,7 +3033,7 @@ pub(crate) struct FillRevalidateJob {
     vortex_owners: HashMap<String, String>,
     head_cursor: usize,
     pair_cursor: usize,
-    collision: Option<CollisionOverlapState>,
+    collision: Option<CollisionPenetrationState>,
     conflicts: Vec<bool>,
     cursor: usize,
     phase: FillRevalidatePhase,
@@ -3115,7 +3122,6 @@ impl FillRevalidateJob {
             }
         }
         let placement = &self.placements[index];
-        let host = self.vortex_owners.get(&placement.attraction.attracting);
         let Some(body) = placement.object.mesh_url.as_ref().and_then(|url| self.meshes.get(url)) else {
             return Some(false);
         };
@@ -3123,10 +3129,6 @@ impl FillRevalidateJob {
         let Some(entry) = self.head.get(self.pair_cursor) else {
             return Some(false);
         };
-        if host == Some(&entry.object_id) {
-            self.pair_cursor += 1;
-            return None;
-        }
         let Some(other) = self.meshes.get(&entry.mesh_url) else {
             self.pair_cursor += 1;
             return None;
@@ -3137,14 +3139,14 @@ impl FillRevalidateJob {
                 return None;
             }
         }
-        let budget = self.scene.overlap_budget;
-        let collision = self.collision.get_or_insert_with(|| CollisionOverlapState::new(512, 8, budget));
+        let budget = self.scene.contact_tolerance;
+        let collision = self.collision.get_or_insert_with(|| CollisionPenetrationState::new(budget));
         match collision.step(&mut FillRunTransitionContext { outer: context, operation: self.operation }, body, &world, other, &entry.world) {
             CollisionStepResult::Pending | CollisionStepResult::Cancelled => None,
-            CollisionStepResult::Complete { overlap, .. } => {
+            CollisionStepResult::Complete { depth, .. } => {
                 self.collision = None;
                 self.pair_cursor += 1;
-                (overlap > budget).then_some(true)
+                (depth > budget).then_some(true)
             }
         }
     }

@@ -7,7 +7,7 @@ use std::collections::HashMap;
 #[artifact_schema(id = "s.puzzle.puzzle3d.config")]
 pub struct Puzzle3dConfig {
     #[state(config)] pub fill_count: u32,
-    #[state(config)] pub overlap_budget: f64,
+    #[state(config)] pub contact_tolerance: f64,
     #[state(config)] pub object_kind_weights: HashMap<String, f64>,
     #[state(config)] pub vortex_kind_weights: HashMap<String, f64>,
     /// 🏷️ The example id the document was last loaded from (`concrete-forest`,

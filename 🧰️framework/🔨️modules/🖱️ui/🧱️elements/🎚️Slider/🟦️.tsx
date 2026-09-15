@@ -27,9 +27,9 @@ const sliderRangeClassName = cn("bg-element absolute transition-[background-colo
 /** @emoji 🎚️ Slider ready extent presentation. */
 const sliderReadyClassName = cn("bg-[var(--accent-secondary)] pointer-events-none absolute data-[orientation=horizontal]:h-full data-[orientation=vertical]:w-full");
 
-/** @emoji 🎚️ Slider thumb presentation. */
-const sliderThumbClassName = cn(
-  "block size-small shrink-0 rounded-[9999px] bg-element transition-[background-color] outline-hidden",
+/** @emoji 🎚️ Slider thumb presentation (extent token applied per instance). */
+const sliderThumbBaseClassName = cn(
+  "block shrink-0 rounded-[9999px] bg-element transition-[background-color] outline-hidden",
   "hover:bg-emphasized group-hover:bg-emphasized",
   "focus-visible:bg-active-base focus-visible:ring-0",
   "data-[dragging=true]:bg-active-base",
@@ -71,6 +71,7 @@ export interface SliderProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 
   onPointerCancel?: () => void;
   interactionId?: string;
   snapValues?: number[];
+  thumbClassName?: string;
 }
 
 export interface SliderRange {
@@ -162,10 +163,12 @@ const Slider = React.forwardRef<HTMLDivElement, SliderProps>(function Slider(
     disabled = false,
     readOnly = false,
     clampToReady = false,
+    thumbClassName,
     ...props
   },
   forwardedRef,
 ) {
+  const thumbPresentationClassName = cn(sliderThumbBaseClassName, thumbClassName ?? "size-small");
   const isInPropertyValueColumn = reactHostPort.useContext(PropertyValueColumnContext);
   const [isEditing, setIsEditing] = reactHostPort.useState(false);
   const [isDragging, setIsDragging] = reactHostPort.useState(false);
@@ -485,7 +488,7 @@ const Slider = React.forwardRef<HTMLDivElement, SliderProps>(function Slider(
             data-orientation={orientation}
             data-dragging={isDragging && activeThumbIdRef.current === thumbId ? "true" : undefined}
             key={thumbId}
-            className={sliderThumbClassName}
+            className={thumbPresentationClassName}
             style={orientation === "horizontal" ? { position: "absolute", left: `${physicalValues[index]}%`, transform: "translateX(-50%)" } : { position: "absolute", bottom: `${physicalValues[index]}%`, transform: "translateY(50%)" }}
             onFocus={() => {
               activeThumbIdRef.current = thumbId;

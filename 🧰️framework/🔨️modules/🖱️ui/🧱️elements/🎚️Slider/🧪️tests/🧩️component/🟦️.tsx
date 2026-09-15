@@ -191,6 +191,13 @@ describe("Slider", () => {
     expect(readOnlyChange).not.toHaveBeenCalled();
   });
 
+  it("applies thumbClassName instead of the default thumb extent token", () => {
+    const { container } = render(<Slider id="slider.compact-thumb" value={[4]} min={0} max={10} thumbClassName="size-tiny" />);
+    const thumb = container.querySelector('[data-slot="slider-thumb"]') as HTMLElement;
+    expect(thumb.className).toContain("size-tiny");
+    expect(thumb.className).not.toContain("size-small");
+  });
+
   it("keeps ready extent presentation and hard ready clamping distinct", () => {
     const change = vi.fn();
     const { container, getByRole } = render(<Slider id="slider.ready" value={[20]} min={0} max={100} ready={55} clampToReady onValueChange={change} />);

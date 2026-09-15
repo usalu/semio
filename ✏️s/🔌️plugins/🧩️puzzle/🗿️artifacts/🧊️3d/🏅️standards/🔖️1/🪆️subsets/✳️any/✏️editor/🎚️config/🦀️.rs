@@ -16,8 +16,10 @@ fn default_true() -> bool {
     true
 }
 
-fn default_overlap_budget() -> f64 {
-    0.02
+/// 🧲️ How deep (m) one object's surface may reach into another before a placement collides: 5 mm admits the numeric
+/// contact of two docked faces and nothing a viewer would see as objects cutting into each other.
+fn default_contact_tolerance() -> f64 {
+    0.005
 }
 
 /// 🪣️ The fill count a fresh document asks for. Unbounded above — the planner plans toward exactly
@@ -152,8 +154,8 @@ pub struct Puzzle3dSuggestionMenu {
 pub struct Puzzle3dRuntime {
     #[value(default)]
     pub suggestion_menu: Option<Puzzle3dSuggestionMenu>,
-    #[value(default = "default_overlap_budget")]
-    pub overlap_budget: f64,
+    #[value(default = "default_contact_tolerance")]
+    pub contact_tolerance: f64,
     #[value(default = "default_fill_count")]
     pub fill_count: u32,
     #[value(default)]
@@ -227,11 +229,11 @@ pub struct Puzzle3dRuntime {
 
 impl Default for Puzzle3dRuntime {
     /// 🎛️ Mirrors every `#[value(default = "...")]` above — `#[derive(Default)]` would silently ignore
-    /// them and zero out fields like `overlap_budget`/`selection_method`/`lod_automatic` in Rust-constructed runtimes.
+    /// them and zero out fields like `contact_tolerance`/`selection_method`/`lod_automatic` in Rust-constructed runtimes.
     fn default() -> Self {
         Self {
             suggestion_menu: None,
-            overlap_budget: default_overlap_budget(),
+            contact_tolerance: default_contact_tolerance(),
             fill_count: default_fill_count(),
             brush_candidate_index: 0,
             object_kind_weights: HashMap::new(),
@@ -267,8 +269,8 @@ impl Default for Puzzle3dRuntime {
 pub struct Puzzle3dConfig {
     #[value(default = "default_fill_count")]
     pub fill_count: u32,
-    #[value(default = "default_overlap_budget")]
-    pub overlap_budget: f64,
+    #[value(default = "default_contact_tolerance")]
+    pub contact_tolerance: f64,
     #[value(default)]
     pub object_kind_weights: HashMap<String, f64>,
     #[value(default)]
@@ -287,7 +289,7 @@ pub struct Puzzle3dConfig {
 
 impl Default for Puzzle3dConfig {
     fn default() -> Self {
-        Self { fill_count: default_fill_count(), overlap_budget: default_overlap_budget(), object_kind_weights: HashMap::new(), vortex_kind_weights: HashMap::new(), active_example_id: default_active_example_id() }
+        Self { fill_count: default_fill_count(), contact_tolerance: default_contact_tolerance(), object_kind_weights: HashMap::new(), vortex_kind_weights: HashMap::new(), active_example_id: default_active_example_id() }
     }
 }
 
@@ -322,7 +324,7 @@ store::impl_whole_record_config!(Puzzle3dConfig);
 pub enum Puzzle3dConfigMutation {
     Snapshot { config: Puzzle3dConfig },
     SetFillCount { count: u32 },
-    SetOverlapBudget { value: f64 },
+    SetContactTolerance { value: f64 },
     SetObjectKindWeights { value: HashMap<String, f64> },
     SetVortexKindWeights { value: HashMap<String, f64> },
 }
@@ -332,19 +334,19 @@ impl protocol::Mutation<Puzzle3dConfig> for Puzzle3dConfigMutation {
     const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[
         protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config", semantic_kind: "snapshot", display_name: "Set Puzzle 3D Shared Configuration", emoji: "🎚️", aggregate_variant: "Snapshot", payload_schema: "puzzle.3dconfig", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
         protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config", semantic_kind: "set-fill-count", display_name: "Set Puzzle 3D Fill Count", emoji: "🎚️", aggregate_variant: "SetFillCount", payload_schema: "puzzle.3dconfig", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
-        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config", semantic_kind: "set-overlap-budget", display_name: "Set Puzzle 3D Overlap Budget", emoji: "🎚️", aggregate_variant: "SetOverlapBudget", payload_schema: "puzzle.3dconfig", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
+        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config", semantic_kind: "set-contact-tolerance", display_name: "Set Puzzle 3D Overlap Budget", emoji: "🎚️", aggregate_variant: "SetContactTolerance", payload_schema: "puzzle.3dconfig", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
         protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config", semantic_kind: "set-object-kind-weights", display_name: "Set Puzzle 3D Object Kind Weights", emoji: "🎚️", aggregate_variant: "SetObjectKindWeights", payload_schema: "puzzle.3dconfig", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
         protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config", semantic_kind: "set-vortex-kind-weights", display_name: "Set Puzzle 3D Vortex Kind Weights", emoji: "🎚️", aggregate_variant: "SetVortexKindWeights", payload_schema: "puzzle.3dconfig", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
     ];
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
-        match self { Self::Snapshot { .. } => &Self::DESCRIPTORS[0], Self::SetFillCount { .. } => &Self::DESCRIPTORS[1], Self::SetOverlapBudget { .. } => &Self::DESCRIPTORS[2], Self::SetObjectKindWeights { .. } => &Self::DESCRIPTORS[3], Self::SetVortexKindWeights { .. } => &Self::DESCRIPTORS[4] }
+        match self { Self::Snapshot { .. } => &Self::DESCRIPTORS[0], Self::SetFillCount { .. } => &Self::DESCRIPTORS[1], Self::SetContactTolerance { .. } => &Self::DESCRIPTORS[2], Self::SetObjectKindWeights { .. } => &Self::DESCRIPTORS[3], Self::SetVortexKindWeights { .. } => &Self::DESCRIPTORS[4] }
     }
     fn diff(&self, base: &Puzzle3dConfig) -> protocol::MutationOutcome<Self::Diff> {
         let mut next = base.clone();
         match self {
             Self::Snapshot { config } => next = config.clone(),
             Self::SetFillCount { count } => next.fill_count = *count,
-            Self::SetOverlapBudget { value } => next.overlap_budget = *value,
+            Self::SetContactTolerance { value } => next.contact_tolerance = *value,
             Self::SetObjectKindWeights { value } => next.object_kind_weights = value.clone(),
             Self::SetVortexKindWeights { value } => next.vortex_kind_weights = value.clone(),
         }

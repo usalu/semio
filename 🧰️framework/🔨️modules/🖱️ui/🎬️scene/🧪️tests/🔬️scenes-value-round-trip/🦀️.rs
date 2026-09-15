@@ -96,7 +96,7 @@ fn node_graph_viewport_and_hover_round_trip_including_all_none() {
 
 #[test]
 fn table_scene_and_tiled_map_scene_round_trip() {
-    let table = TableScene { columns_json: "[]".into(), rows_json: "[]".into(), selection_json: Some("{}".into()), row_drag_mime: None, drop_action_json: None, sort_json: None, domain_id: Some("d".into()) };
+    let table = TableScene { columns_json: "[]".into(), rows_json: "[]".into(), selection_json: Some("{}".into()), row_drag_mime: None, drop_action_json: None, sort_json: None, domain_id: Some("d".into()), domain_granularity_id: Some("g".into()) };
     assert_eq!(TableScene::from_value(table.to_value()), Ok(table));
 
     let tiled = TiledMapScene::base("{}".into(), "{}".into());

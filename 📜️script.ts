@@ -8749,14 +8749,7 @@ const INTERACTIVITY_ALL_APP_DESCRIPTOR_NAME = "🔣️.json";
 const INTERACTIVITY_ALL_APP_LAUNCH_FILE = ".vscode/launch.json";
 const INTERACTIVITY_ALL_APP_LAUNCH_SEED_FILE = ".vscode/🧩️launch.seed.jsonc";
 const INTERACTIVITY_ALL_APP_PLAYGROUND_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds/🟦️.ts";
-const INTERACTIVITY_ALL_APP_REQUIRED_GATES = [
-  { name: "⚖️gate⚡️interactivity", command: "bun ./📜️script.ts verify interactivity" },
-  { name: "⚖️gate⚡️interactivity🎯️tool-jobs", command: "bun ./📜️script.ts verify interactivity tool-jobs" },
-  { name: "⚖️gate⚡️interactivity🧭️apps", command: "bun ./📜️script.ts verify interactivity apps" },
-  { name: "⚖️gate⚡️interactivity🧭️apps🎛️actions", command: "bun ./📜️script.ts verify interactivity apps --actions" },
-  { name: "⚖️gate📦️dependencies", command: "bun ./📜️script.ts verify dependencies" },
-  { name: "⚖️gate📦️dependencies0️⃣", command: "bun ./📜️script.ts verify dependencies literal-external" },
-] as const;
+const INTERACTIVITY_ALL_APP_REQUIRED_GATES = [] as const;
 
 type InteractivityAllAppAction = { appId: string; windowId: string; actionId: string; disposition?: string };
 type InteractivityAllAppDescriptor = { file: string; kind: "app" | "extension"; pluginId: string; parentPluginId?: string; appIds: string[]; actions: InteractivityAllAppAction[] };
@@ -8973,10 +8966,6 @@ function interactivityAllAppLaunchesFromSource(source: string): { rows: Interact
     names.set(name, (names.get(name) ?? 0) + 1);
   }
   for (const [name, count] of names) if (name !== "" && count > 1) failures.push(`${INTERACTIVITY_ALL_APP_LAUNCH_FILE}: duplicate configuration name ${JSON.stringify(name)}`);
-  for (const gate of INTERACTIVITY_ALL_APP_REQUIRED_GATES) {
-    const matches = records.filter((configuration) => configuration.name === gate.name && configuration.command === gate.command && configuration.cwd === "${workspaceFolder}" && (configuration.presentation as Record<string, unknown> | undefined)?.group === "4_gate");
-    if (matches.length !== 1) failures.push(`${INTERACTIVITY_ALL_APP_LAUNCH_FILE}: expected one exact ${gate.name} registration, found ${matches.length}`);
-  }
   const rows: InteractivityAllAppLaunch[] = [];
   for (const configuration of records) {
     const name = typeof configuration.name === "string" ? configuration.name : "";

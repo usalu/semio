@@ -43,7 +43,7 @@
     "registerBrushMesh",
     "relocateTargetVolume",
     "selectSameKindSelection",
-    "setBrushPlacementOverlapBudget",
+    "setBrushPlacementContactTolerance",
     "setCamera",
     "setChunkSize",
     "setGridSnapEnabled",
@@ -92,7 +92,7 @@
     "rotateSelection",
     "scaleSelection",
     "setActiveExample",
-    "setBrushPlacementOverlapBudget",
+    "setBrushPlacementContactTolerance",
     "setCamera",
     "setChunkSize",
     "setFillCount",
@@ -270,7 +270,7 @@
       "publish",
       "closeOwner"
     ],
-    "setBrushPlacementOverlapBudget": [
+    "setBrushPlacementContactTolerance": [
       "boundedFieldDecode",
       "exactTypedMutation",
       "publish",
@@ -740,7 +740,7 @@
     },
     {
       "id": "scalarConfigOverlapMutationRemoved",
-      "remove": "Puzzle3dConfigMutation::SetOverlapBudget",
+      "remove": "Puzzle3dConfigMutation::SetContactTolerance",
       "expected": "rejected"
     },
     {
@@ -1873,7 +1873,7 @@
         "setTransformGumballFlag",
         "setVortexShow",
         "setVortexDirection",
-        "setBrushPlacementOverlapBudget",
+        "setBrushPlacementContactTolerance",
         "closeVortexSuggestions",
         "targetBrushSuggestions",
         "hoverSuggestion",
@@ -2050,12 +2050,12 @@
       "fingerprint": "0:0:0:0:0:0"
     },
     {
-      "id": "overlapBudgetExact",
-      "toolId": "setBrushPlacementOverlapBudget",
+      "id": "contactToleranceExact",
+      "toolId": "setBrushPlacementContactTolerance",
       "input": {
         "value": 1.5
       },
-      "expectedMutation": "SetOverlapBudget:1",
+      "expectedMutation": "SetContactTolerance:1",
       "control": "pollProgressAckClose",
       "expected": "terminalEmpty",
       "fingerprint": "0:0:0:0:0:0"

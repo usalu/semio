@@ -1,7 +1,7 @@
 
 use super::*;
 use crate::Filters;
-use crate::editor::sourcing::unit_tests::context::{new_app, render as render_body};
+use crate::editor::sourcing::unit_tests::context::new_app;
 
 #[semio_framework_async_macros::async_test]
 async fn pool_render_respects_query_filter() {
@@ -29,8 +29,10 @@ async fn pool_row_carries_the_drag_payload_and_a_stepper_bounded_by_availability
 async fn pool_scene_names_columns_by_id_and_drops_onto_the_pool() {
     let document = crate::schema::default_document();
     let node = render(&document, &SourcingCurationConfig::default(), crate::editor::sourcing::terminology::sourcing_curation_labels(&semio_framework_plugin::ViewModel::default())).expect("bounded pool");
-    let semio_framework_plugin::Component::Surface(props) = node.component else { panic!("expected a table surface") };
-    let scene: semio_framework_plugin::TableScene = semio_framework_ui_scene::decode(&props).expect("table scene");
+    assert_eq!(node.children.len(), 2, "filter row above the table");
+    let semio_framework_plugin::Component::Surface(props) = &node.children.get(1).expect("table surface").component else { panic!("expected a table surface") };
+    let scene: semio_framework_plugin::TableScene = semio_framework_ui_scene::decode(props).expect("table scene");
+    assert!(node.children.get(0).expect("filter row").children.len() >= 5, "query, three modules, typology and availability controls");
     let columns: serde_json::Value = serde_json::from_str(&scene.columns_json).unwrap();
     assert_eq!(columns[0]["id"], "name");
     assert_eq!(scene.row_drag_mime.as_deref(), Some(crate::editor::sourcing::SOURCING_DRAG_MIME));
@@ -47,5 +49,6 @@ async fn definition_declares_the_table_surface_and_body_key() {
 #[semio_framework_async_macros::async_test]
 async fn renders_pool_table_scene() {
     let mut app = new_app().await;
-    assert!(render_body(&mut app, SOURCING_CURATION_BODY_POOL).await.contains("table"));
+    let rendered = semio_framework_plugin::PluginApp::render(&mut *app, SOURCING_CURATION_BODY_POOL, None, &semio_framework_plugin::ViewModel::default()).await.expect("render");
+    assert!(rendered.root.children.iter().any(|child| matches!(child.component, semio_framework_plugin::Component::Surface(_))));
 }

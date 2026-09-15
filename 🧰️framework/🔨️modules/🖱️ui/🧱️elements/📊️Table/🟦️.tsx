@@ -35,6 +35,17 @@ const tableRowSelectedClass = interactiveActiveFillClass;
  **/
 export type SortDirection = "asc" | "desc";
 
+/** @emoji 🔀️ The direction a header click requests: an unsorted or descending column sorts ascending, an ascending one flips to descending. */
+export function tableSortNextDirectionV1(columnId: string, sortColumn: string | undefined, sortDirection: SortDirection | undefined): SortDirection {
+  return sortColumn === columnId && sortDirection === "asc" ? "desc" : "asc";
+}
+
+/** @emoji ♿️ The `aria-sort` a header announces for the table's active sort. */
+export function tableSortAriaV1(columnId: string, sortColumn: string | undefined, sortDirection: SortDirection | undefined): "ascending" | "descending" | undefined {
+  if (sortColumn !== columnId) return undefined;
+  return sortDirection === "desc" ? "descending" : "ascending";
+}
+
 /**
  * Configuration interface for a table column definition.
  **/
@@ -412,8 +423,20 @@ const Table = <T,>({
           <thead className={cn(surfaceClass, borderNormalBottomClass, stickyHeader && "sticky top-0 z-panel", headerClassName)}>
             <tr className="h-large">
               {visibleColumns.map((column) => (
-                <th key={column.id} className={`text-start p-single font-medium h-large text-element ${column.headerClassName || column.className || ""}`} style={{ width: column.width }}>
-                  {column.header}
+                <th
+                  key={column.id}
+                  aria-sort={tableSortAriaV1(column.id, sortColumn, sortDirection)}
+                  className={`text-start p-single font-medium h-large text-element ${column.headerClassName || column.className || ""}`}
+                  style={{ width: column.width }}
+                >
+                  {column.sortable && onSort ? (
+                    <button type="button" className={cn("inline-flex items-center gap-1 font-medium", interactiveControlTransitionClass, interactiveHoverClass)} onClick={() => onSort(column.id, tableSortNextDirectionV1(column.id, sortColumn, sortDirection))}>
+                      {column.header}
+                      {sortColumn === column.id ? <span aria-hidden="true">{sortDirection === "desc" ? "↓" : "↑"}</span> : null}
+                    </button>
+                  ) : (
+                    column.header
+                  )}
                 </th>
               ))}
             </tr>

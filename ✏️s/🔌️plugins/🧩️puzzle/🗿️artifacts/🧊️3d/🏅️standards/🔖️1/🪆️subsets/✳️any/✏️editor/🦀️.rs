@@ -15,7 +15,7 @@
 use crate::editor::puzzle3d::commands::{
     accept_suggestion, add_brush_object, add_object_kind, add_target_volume, apply_sun, close_vortex_suggestions, create_attraction, cycle_candidate, delete_attraction, delete_selection, delete_target_volume, duplicate_selection, engagement_abort, export_fixture,
     engagement_control_select, engagement_input, engagement_repeat_last, engagement_submit, focus_selection, hover_suggestion, import_fixture, open_import_fixture, open_vortex_suggestions, patch_inspector, register_brush_mesh, relocate_target_volume, rotate_selection,
-    scale_selection, select_same_kind, set_active_example, set_automatic, set_brush_placement_overlap_budget, set_camera, set_chunk_size, set_depth_variable, set_fill_count, set_kind_weight, set_manual, set_projection,
+    scale_selection, select_same_kind, set_active_example, set_automatic, set_brush_placement_contact_tolerance, set_camera, set_chunk_size, set_depth_variable, set_fill_count, set_kind_weight, set_manual, set_projection,
     set_proximity_radius, set_selectable_kind, set_selection_flag, set_snap_enabled, set_spacing, set_target_volume_flag, set_transform_gumball_flag, set_panel_page, set_visible, set_vortex_direction, set_vortex_show, set_voxel_dims, target_brush_suggestions,
     translate_selection, world_relocate,
 };
@@ -1559,7 +1559,7 @@ pub(crate) fn scene_config(envelope: &Puzzle3dScene) -> Option<crate::standards:
         },
         kind_catalogs,
         kind_compatibility,
-        overlap_budget: envelope.runtime.overlap_budget,
+        contact_tolerance: envelope.runtime.contact_tolerance,
         seed: 1,
         host_rules: crate::standards::v1::subsets::any::schema::BrushHostRules::default(),
         weights: crate::standards::v1::subsets::any::schema::BrushKindWeights {
@@ -1627,7 +1627,7 @@ pub(crate) fn scene_config_value(envelope: &Puzzle3dScene) -> dsl::DslValue {
         ),
         ("kindCatalogs".to_string(), envelope.fixture.meta.kind_catalogs.clone().unwrap_or(dsl::DslValue::Null)),
         ("kindCompatibility".to_string(), envelope.fixture.meta.kind_compatibility.clone().unwrap_or_else(|| dsl::DslValue::Array(Vec::new()))),
-        ("overlapBudget".to_string(), dsl::DslValue::float(envelope.runtime.overlap_budget)),
+        ("contactTolerance".to_string(), dsl::DslValue::float(envelope.runtime.contact_tolerance)),
         ("seed".to_string(), dsl::DslValue::uint(1)),
         ("weights".to_string(), dsl::DslValue::object([("objectWeights".to_string(), dsl::ToValue::to_value(&envelope.runtime.object_kind_weights)), ("vortexWeights".to_string(), dsl::ToValue::to_value(&envelope.runtime.vortex_kind_weights))])),
     ])
@@ -2055,10 +2055,163 @@ pub fn puzzle3d_rederive_moved_attractions(fixture: &mut Puzzle3dFixture, moved_
 //#endregion 🔖️AttractionResolve
 
 //#region 🔖️Distribution
-/// 🎲️ Nested object/vortex distribution — one group per object kind (header slider = P(object)),
-/// vortex children are the **global** vortex catalog shown as joint P(object)×P(vortex). Moving an
-/// object header scales its children; the sum of every nested joint across all objects is 1. Shared by
-/// the Fill tool and the Brush utility options, so it lives here rather than in either of them.
+/// 🎲️ Nested object/vortex distribution — one group per object kind (header slider = the sum of its
+/// vortex joints), vortex children are absolute joint probabilities. The sum of every joint across all
+/// objects is 1; `object_kind_weights` mirrors each object's joint sum for persistence and precompute.
+pub const PUZZLE3D_JOINT_WEIGHT_SEP: &str = "::";
+
+pub fn puzzle3d_joint_weight_key(object_kind_id: &str, vortex_kind_id: &str) -> String {
+    format!("{object_kind_id}{PUZZLE3D_JOINT_WEIGHT_SEP}{vortex_kind_id}")
+}
+
+pub fn puzzle3d_joint_weights_use_composite_keys(joint_weights: &HashMap<String, f64>) -> bool {
+    joint_weights.keys().any(|key| key.contains(PUZZLE3D_JOINT_WEIGHT_SEP))
+}
+
+pub fn puzzle3d_read_joint_weight(joint_weights: &HashMap<String, f64>, object_weights: &HashMap<String, f64>, object_kind_id: &str, vortex_kind_id: &str) -> f64 {
+    let composite = puzzle3d_joint_weight_key(object_kind_id, vortex_kind_id);
+    if let Some(weight) = joint_weights.get(&composite) {
+        return *weight;
+    }
+    let object_weight = object_weights.get(object_kind_id).copied().unwrap_or(0.0);
+    let vortex_weight = joint_weights.get(vortex_kind_id).copied().unwrap_or(0.0);
+    object_weight * vortex_weight
+}
+
+pub fn puzzle3d_object_joint_total(joint_weights: &HashMap<String, f64>, object_weights: &HashMap<String, f64>, object_kind_id: &str, vortex_kind_ids: &[String]) -> f64 {
+    vortex_kind_ids.iter().map(|vortex_kind_id| puzzle3d_read_joint_weight(joint_weights, object_weights, object_kind_id, vortex_kind_id)).sum()
+}
+
+pub fn puzzle3d_global_joint_total(joint_weights: &HashMap<String, f64>, object_weights: &HashMap<String, f64>, object_kind_ids: &[String], vortex_kind_ids: &[String]) -> f64 {
+    object_kind_ids.iter().map(|object_kind_id| puzzle3d_object_joint_total(joint_weights, object_weights, object_kind_id, vortex_kind_ids)).sum()
+}
+
+pub fn puzzle3d_sync_object_kind_weights_from_joints(object_weights: &mut HashMap<String, f64>, joint_weights: &HashMap<String, f64>, object_kind_ids: &[String], vortex_kind_ids: &[String]) {
+    for object_kind_id in object_kind_ids {
+        let total = puzzle3d_object_joint_total(joint_weights, object_weights, object_kind_id, vortex_kind_ids);
+        object_weights.insert(object_kind_id.clone(), total);
+    }
+}
+
+pub fn puzzle3d_ensure_joint_distribution(object_weights: &mut HashMap<String, f64>, joint_weights: &mut HashMap<String, f64>, object_kind_ids: &[String], vortex_kind_ids: &[String]) {
+    if object_kind_ids.is_empty() || vortex_kind_ids.is_empty() {
+        object_weights.clear();
+        joint_weights.clear();
+        return;
+    }
+    if puzzle3d_joint_weights_use_composite_keys(joint_weights) {
+        puzzle3d_sync_object_kind_weights_from_joints(object_weights, joint_weights, object_kind_ids, vortex_kind_ids);
+        let total = puzzle3d_global_joint_total(joint_weights, object_weights, object_kind_ids, vortex_kind_ids);
+        if total > f64::EPSILON && (total - 1.0).abs() > 0.001 {
+            for object_kind_id in object_kind_ids {
+                for vortex_kind_id in vortex_kind_ids {
+                    let key = puzzle3d_joint_weight_key(object_kind_id, vortex_kind_id);
+                    if let Some(weight) = joint_weights.get_mut(&key) {
+                        *weight /= total;
+                    }
+                }
+            }
+            puzzle3d_sync_object_kind_weights_from_joints(object_weights, joint_weights, object_kind_ids, vortex_kind_ids);
+        }
+        return;
+    }
+    puzzle3d_ensure_catalog_kind_weights(object_weights, object_kind_ids);
+    puzzle3d_ensure_catalog_kind_weights(joint_weights, vortex_kind_ids);
+    let mut composite = HashMap::new();
+    for object_kind_id in object_kind_ids {
+        let object_weight = object_weights.get(object_kind_id).copied().unwrap_or(0.0);
+        for vortex_kind_id in vortex_kind_ids {
+            let vortex_weight = joint_weights.get(vortex_kind_id).copied().unwrap_or(0.0);
+            composite.insert(puzzle3d_joint_weight_key(object_kind_id, vortex_kind_id), object_weight * vortex_weight);
+        }
+    }
+    *joint_weights = composite;
+    puzzle3d_sync_object_kind_weights_from_joints(object_weights, joint_weights, object_kind_ids, vortex_kind_ids);
+}
+
+pub fn puzzle3d_set_object_kind_distribution_weight(object_weights: &mut HashMap<String, f64>, joint_weights: &mut HashMap<String, f64>, object_kind_ids: &[String], vortex_kind_ids: &[String], changed_object_kind_id: &str, new_object_total: f64) {
+    puzzle3d_ensure_joint_distribution(object_weights, joint_weights, object_kind_ids, vortex_kind_ids);
+    let new_object_total = new_object_total.clamp(0.0, 1.0);
+    let old_object_total = puzzle3d_object_joint_total(joint_weights, object_weights, changed_object_kind_id, vortex_kind_ids);
+    let old_global = puzzle3d_global_joint_total(joint_weights, object_weights, object_kind_ids, vortex_kind_ids).max(f64::EPSILON);
+    let old_other_total = (old_global - old_object_total).max(0.0);
+    let new_other_total = (1.0 - new_object_total).max(0.0);
+    if old_object_total > f64::EPSILON {
+        let scale = new_object_total / old_object_total;
+        for vortex_kind_id in vortex_kind_ids {
+            let key = puzzle3d_joint_weight_key(changed_object_kind_id, vortex_kind_id);
+            let joint = puzzle3d_read_joint_weight(joint_weights, object_weights, changed_object_kind_id, vortex_kind_id);
+            joint_weights.insert(key, joint * scale);
+        }
+    } else if !vortex_kind_ids.is_empty() {
+        let each = new_object_total / vortex_kind_ids.len() as f64;
+        for vortex_kind_id in vortex_kind_ids {
+            joint_weights.insert(puzzle3d_joint_weight_key(changed_object_kind_id, vortex_kind_id), each);
+        }
+    }
+    if old_other_total > f64::EPSILON && new_other_total > f64::EPSILON {
+        let scale = new_other_total / old_other_total;
+        for object_kind_id in object_kind_ids {
+            if object_kind_id == changed_object_kind_id {
+                continue;
+            }
+            for vortex_kind_id in vortex_kind_ids {
+                let key = puzzle3d_joint_weight_key(object_kind_id, vortex_kind_id);
+                let joint = puzzle3d_read_joint_weight(joint_weights, object_weights, object_kind_id, vortex_kind_id);
+                joint_weights.insert(key, joint * scale);
+            }
+        }
+    } else if new_other_total <= f64::EPSILON {
+        for object_kind_id in object_kind_ids {
+            if object_kind_id == changed_object_kind_id {
+                continue;
+            }
+            for vortex_kind_id in vortex_kind_ids {
+                joint_weights.insert(puzzle3d_joint_weight_key(object_kind_id, vortex_kind_id), 0.0);
+            }
+        }
+    }
+    puzzle3d_sync_object_kind_weights_from_joints(object_weights, joint_weights, object_kind_ids, vortex_kind_ids);
+}
+
+pub fn puzzle3d_set_vortex_joint_weight(object_weights: &mut HashMap<String, f64>, joint_weights: &mut HashMap<String, f64>, object_kind_ids: &[String], vortex_kind_ids: &[String], object_kind_id: &str, vortex_kind_id: &str, new_joint: f64) {
+    puzzle3d_ensure_joint_distribution(object_weights, joint_weights, object_kind_ids, vortex_kind_ids);
+    let object_total = puzzle3d_object_joint_total(joint_weights, object_weights, object_kind_id, vortex_kind_ids);
+    if object_total <= f64::EPSILON {
+        return;
+    }
+    let new_joint = new_joint.clamp(0.0, object_total);
+    let mut relative = HashMap::new();
+    for id in vortex_kind_ids {
+        relative.insert(id.clone(), puzzle3d_read_joint_weight(joint_weights, object_weights, object_kind_id, id) / object_total);
+    }
+    let share = (new_joint / object_total).clamp(0.0, 1.0);
+    let normalized = puzzle3d_normalize_kind_weight_group(&relative, vortex_kind_ids, vortex_kind_id, share);
+    for id in vortex_kind_ids {
+        joint_weights.insert(puzzle3d_joint_weight_key(object_kind_id, id), normalized.get(id).copied().unwrap_or(0.0) * object_total);
+    }
+    puzzle3d_sync_object_kind_weights_from_joints(object_weights, joint_weights, object_kind_ids, vortex_kind_ids);
+}
+
+pub fn puzzle3d_apply_distribution_weight(object_weights: &mut HashMap<String, f64>, joint_weights: &mut HashMap<String, f64>, object_kind_ids: &[String], vortex_kind_ids: &[String], action: &str, kind_id: &str, object_kind_id: Option<&str>, value: f64) {
+    if action == "setObjectKindWeight" {
+        puzzle3d_set_object_kind_distribution_weight(object_weights, joint_weights, object_kind_ids, vortex_kind_ids, kind_id, value);
+    } else if let Some(object_kind_id) = object_kind_id {
+        puzzle3d_set_vortex_joint_weight(object_weights, joint_weights, object_kind_ids, vortex_kind_ids, object_kind_id, kind_id, value);
+    } else {
+        puzzle3d_ensure_joint_distribution(object_weights, joint_weights, object_kind_ids, vortex_kind_ids);
+        let legacy = puzzle3d_normalize_kind_weight_group(joint_weights, vortex_kind_ids, kind_id, value);
+        for vortex_kind_id in vortex_kind_ids {
+            if let Some(weight) = legacy.get(vortex_kind_id) {
+                for object_kind_id in object_kind_ids {
+                    joint_weights.insert(puzzle3d_joint_weight_key(object_kind_id, vortex_kind_id), object_weights.get(object_kind_id).copied().unwrap_or(0.0) * *weight);
+                }
+            }
+        }
+        puzzle3d_sync_object_kind_weights_from_joints(object_weights, joint_weights, object_kind_ids, vortex_kind_ids);
+    }
+}
+
 pub fn puzzle3d_uniform_kind_weights(ids: &[String]) -> HashMap<String, f64> {
     if ids.is_empty() {
         return HashMap::new();
@@ -2131,28 +2284,22 @@ pub fn puzzle3d_joint_vortex_weight(object_weight: f64, vortex_weight: f64) -> f
     object_weight * vortex_weight
 }
 
-/// 🎲️ Vortex-kind sliders under an object row — displayed value is the **final** joint percentage
-/// `P(object) × P(vortex)`. Every **global** vortex kind is listed under each object so the sum of all
-/// nested joint percentages across the tree is 1 (not a local simplex per object). Editing converts
-/// back to relative `P(vortex)` on the shared vortex simplex. Disabled when the parent object weight
-/// is 0. Step tracks ~1% of the object weight for a smooth `[0, P(object)]` range.
-pub fn puzzle3d_joint_vortex_measures(object_kind_id: &str, object_weight: f64, vortex_kind_ids: &[String], vortex_weights: &HashMap<String, f64>) -> Vec<WindowMeasure> {
+/// 🎲️ Vortex-kind sliders under an object row — displayed value is the joint probability for that
+/// object/vortex pair. Siblings under the same object redistribute when one moves; the object header
+/// is the sum of its joints. Disabled when that sum is 0.
+pub fn puzzle3d_joint_vortex_measures(object_kind_id: &str, object_weight: f64, vortex_kind_ids: &[String], object_weights: &HashMap<String, f64>, joint_weights: &HashMap<String, f64>) -> Vec<WindowMeasure> {
     let object_kind_zero = object_weight <= f64::EPSILON;
-    let joint_max = if object_kind_zero { 1.0 } else { object_weight };
-    let joint_step = if object_kind_zero { 0.01 } else { (object_weight * 0.01).max(0.0001) };
-    let fallback = if vortex_kind_ids.is_empty() { 0.0 } else { 1.0 / vortex_kind_ids.len() as f64 };
     vortex_kind_ids
         .iter()
         .map(|vortex_kind_id| {
-            let vortex_weight = vortex_weights.get(vortex_kind_id).copied().unwrap_or(fallback);
-            let joint = puzzle3d_joint_vortex_weight(object_weight, vortex_weight);
+            let joint = puzzle3d_read_joint_weight(joint_weights, object_weights, object_kind_id, vortex_kind_id);
             WindowMeasure::Slider {
                 id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-joint-vortex-{object_kind_id}-{vortex_kind_id}"),
                 label: Some(vortex_kind_id.clone()),
                 value: joint,
                 min: 0.0,
-                max: joint_max,
-                step: Some(joint_step),
+                max: 1.0,
+                step: Some(0.01),
                 ready: None,
                 loading: None,
                 waiting: None,
@@ -2166,10 +2313,13 @@ pub fn puzzle3d_joint_vortex_measures(object_kind_id: &str, object_weight: f64, 
 pub fn puzzle3d_distribution_children(envelope: &Puzzle3dScene, default_open: Option<bool>) -> Vec<WindowMeasure> {
     let object_ids = puzzle3d_kind_ids(&envelope.fixture, "objects");
     let vortex_kind_ids = puzzle3d_kind_ids(&envelope.fixture, "vortices");
+    let mut object_weights = envelope.runtime.object_kind_weights.clone();
+    let mut joint_weights = envelope.runtime.vortex_kind_weights.clone();
+    puzzle3d_ensure_joint_distribution(&mut object_weights, &mut joint_weights, &object_ids, &vortex_kind_ids);
     object_ids
         .iter()
         .map(|object_kind_id| {
-            let object_weight = envelope.runtime.object_kind_weights.get(object_kind_id).copied().unwrap_or_else(|| if object_ids.is_empty() { 0.0 } else { 1.0 / object_ids.len() as f64 });
+            let object_weight = puzzle3d_object_joint_total(&joint_weights, &object_weights, object_kind_id, &vortex_kind_ids);
             let label = puzzle3d_object_kind_label(&envelope.fixture, object_kind_id);
             WindowMeasure::Group {
                 id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-distribution-object-{object_kind_id}"),
@@ -2184,7 +2334,7 @@ pub fn puzzle3d_distribution_children(envelope: &Puzzle3dScene, default_open: Op
                 loading: None,
                 waiting: None,
                 on_change: Some(puzzle3d_action("setObjectKindWeight", Some(json!({ "kindId": object_kind_id.as_str() })))),
-                children: puzzle3d_joint_vortex_measures(object_kind_id, object_weight, &vortex_kind_ids, &envelope.runtime.vortex_kind_weights),
+                children: puzzle3d_joint_vortex_measures(object_kind_id, object_weight, &vortex_kind_ids, &object_weights, &joint_weights),
             }
         })
         .collect()
@@ -2483,7 +2633,7 @@ puzzle3d_command_variants! {
     EngagementControlSelect = "engagementControlSelect",
     AddBrushObject = "addBrushObject",
     SetFillCount = "setFillCount",
-    SetBrushPlacementOverlapBudget = "setBrushPlacementOverlapBudget",
+    SetBrushPlacementContactTolerance = "setBrushPlacementContactTolerance",
     SetObjectKindWeight = "setObjectKindWeight",
     SetVortexKindWeight = "setVortexKindWeight",
     CycleBrushCandidate = "cycleBrushCandidate",
@@ -2553,7 +2703,7 @@ impl protocol::OpBinary for Puzzle3dCommand {
         "engagementControlSelect",
         "addBrushObject",
         "setFillCount",
-        "setBrushPlacementOverlapBudget",
+        "setBrushPlacementContactTolerance",
         "setObjectKindWeight",
         "setVortexKindWeight",
         "cycleBrushCandidate",
@@ -3590,7 +3740,7 @@ fn dispatch_puzzle3d_action(ctx: &mut Puzzle3dActionCtx<'_>, action: &str, args:
         "setGridSpacing" => set_spacing::set_spacing(ctx, args),
         "setProximityRadius" => set_proximity_radius::set_proximity_radius(ctx, args),
         "setChunkSize" => set_chunk_size::set_chunk_size(ctx, args),
-        "setBrushPlacementOverlapBudget" => set_brush_placement_overlap_budget::set_brush_placement_overlap_budget(ctx, args),
+        "setBrushPlacementContactTolerance" => set_brush_placement_contact_tolerance::set_brush_placement_contact_tolerance(ctx, args),
         "setVoxelDims" => set_voxel_dims::set_voxel_dims(ctx, args),
         "setTransformGumballFlag" => set_transform_gumball_flag::set_transform_gumball_flag(ctx, args),
         "setVortexShow" => set_vortex_show::set_vortex_show(ctx, args),
@@ -3633,7 +3783,7 @@ fn dispatch_puzzle3d_action(ctx: &mut Puzzle3dActionCtx<'_>, action: &str, args:
 fn puzzle3d_action_uses_precompute(action: &str) -> bool {
     matches!(
         action,
-        "setBrushPlacementOverlapBudget"
+        "setBrushPlacementContactTolerance"
             | "addBrushObject"
             | "acceptSuggestion"
             | "setObjectKindWeight"
@@ -3699,7 +3849,7 @@ pub(crate) const PUZZLE3D_RETAINED_TOOL_IDS: &[&str] = &[
     "registerBrushMesh",
     "relocateTargetVolume",
     "selectSameKindSelection",
-    "setBrushPlacementOverlapBudget",
+    "setBrushPlacementContactTolerance",
     "setCamera",
     "setChunkSize",
     "setGridSnapEnabled",
@@ -4056,13 +4206,14 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
                 let requested = command.args().and_then(|args| args.get("value")).and_then(Value::as_f64).unwrap_or(1.0).clamp(0.0, 1.0);
                 self.requested = if self.tool_id == "setVortexKindWeight" {
                     if let Some(object_kind_id) = command.args().and_then(|args| args.get("objectKindId")).and_then(Value::as_str) {
-                        let object_weight = config.object_kind_weights.get(object_kind_id).copied().unwrap_or(0.0);
+                        let vortex_ids = self.ids.clone();
+                        let object_weight = puzzle3d_object_joint_total(&config.vortex_kind_weights, &config.object_kind_weights, object_kind_id, &vortex_ids);
                         if object_weight <= f64::EPSILON {
                             self.ignored = true;
                             self.stage = Puzzle3dKindWeightStage::Publish;
                             return Ok(Self::progress("puzzle3d-kind-weight-publish", "Ignoring zero-weight child", "Kind mit Nullgewicht wird ignoriert"));
                         }
-                        (requested / object_weight).clamp(0.0, 1.0)
+                        requested
                     } else {
                         requested
                     }
@@ -4132,12 +4283,22 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
                 if self.ignored {
                     return Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit::default()));
                 }
-                let mutation = if self.tool_id == "setObjectKindWeight" {
-                    Puzzle3dConfigMutation::SetObjectKindWeights { value: std::mem::take(&mut self.result) }
-                } else {
-                    Puzzle3dConfigMutation::SetVortexKindWeights { value: std::mem::take(&mut self.result) }
-                };
-                Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit { config_mutations: vec![mutation], ui_scope: puzzle3d_scope(puzzle3d_command_scope_class(self.tool_id)), ..Default::default() }))
+                let catalogs = snapshot.typed().meta.kind_catalogs.as_ref().ok_or_else(|| Fault::from("puzzle3d-kind-weight-catalog-owner"))?;
+                let object_ids: Vec<String> = catalogs.objects.iter().map(|entry| entry.id.clone()).collect();
+                let vortex_ids: Vec<String> = catalogs.vortices.iter().map(|entry| entry.id.clone()).collect();
+                let kind_id = self.changed_id.as_deref().unwrap_or("");
+                let object_kind_id = command.args().and_then(|args| args.get("objectKindId")).and_then(Value::as_str);
+                let mut object_weights = config.object_kind_weights.clone();
+                let mut joint_weights = config.vortex_kind_weights.clone();
+                puzzle3d_apply_distribution_weight(&mut object_weights, &mut joint_weights, &object_ids, &vortex_ids, self.tool_id, kind_id, object_kind_id, self.requested);
+                Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit {
+                    config_mutations: vec![
+                        Puzzle3dConfigMutation::SetObjectKindWeights { value: object_weights },
+                        Puzzle3dConfigMutation::SetVortexKindWeights { value: joint_weights },
+                    ],
+                    ui_scope: puzzle3d_scope(puzzle3d_command_scope_class(self.tool_id)),
+                    ..Default::default()
+                }))
             }
             Puzzle3dKindWeightStage::Complete => Err(Fault::from("puzzle3d-kind-weight-complete-repolled")),
             Puzzle3dKindWeightStage::Closing => Err(Fault::from("puzzle3d-kind-weight-closing")),
@@ -7114,7 +7275,7 @@ impl ArtifactOwnedToolJobFactory for Puzzle3dRetainedCommandJobFactory {
         ArtifactToolPublicationContract { tool_id: "registerBrushMesh", lanes: &[ArtifactToolPublicationLane::HostOnly] },
         ArtifactToolPublicationContract { tool_id: "relocateTargetVolume", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "selectSameKindSelection", lanes: &[ArtifactToolPublicationLane::Interaction] },
-        ArtifactToolPublicationContract { tool_id: "setBrushPlacementOverlapBudget", lanes: &[ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "setBrushPlacementContactTolerance", lanes: &[ArtifactToolPublicationLane::Config] },
         ArtifactToolPublicationContract { tool_id: "setCamera", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
         ArtifactToolPublicationContract { tool_id: "setChunkSize", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
         ArtifactToolPublicationContract { tool_id: "setGridSnapEnabled", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
@@ -7178,7 +7339,7 @@ fn puzzle3d_config_store_bounded_bytes(value: &Puzzle3dConfig) -> Result<usize, 
 /// bounded by the single `PUZZLE3D_CONFIG_STORE_MAXIMUM_BYTES` envelope every Config lane publication
 /// obeys. Every `Puzzle3dConfigMutation` variant is admissible: an allowlist here silently killed the
 /// whole `Puzzle3dScalarConfigWork` family (camera, projection, sun, LOD, grid, selectable kinds,
-/// proximity radius, chunk size, voxel dims, gumball flags, vortex show/direction, overlap budget,
+/// proximity radius, chunk size, voxel dims, gumball flags, vortex show/direction, contact tolerance,
 /// suggestion menu, engagement input) plus both kind-weight routes, because
 /// `Puzzle3dConfigStorePreparation::advance` rejects whatever this returns `None` for and the
 /// operation's publication lease is cancelled behind it. Only an oversize payload is refused now, and
@@ -7526,7 +7687,7 @@ impl Puzzle3dRetainedCommandProofs {
             "openAddObjectDialog", "worldPointerDown", "transformBegin", "transformEnd", "setActiveExample", "setFillCount",
             "addTargetVolume",
             "acceptSuggestion", "addBrushObject", "addObjectKind", "createAttraction", "deleteAttraction", "deleteSelection", "deleteTargetVolume", "duplicateSelection", "exportFixture", "importFixture", "openImportFixture", "patchInspector", "rotateSelection", "scaleSelection", "setSelectionFlag", "setTargetVolumeFlag", "translateSelection", "worldRelocate", "relocateTargetVolume",
-            "closeVortexSuggestions", "cycleBrushCandidate", "cycleBrushCandidateBack", "engagementAbort", "engagementControlSelect", "engagementInput", "engagementRepeatLast", "engagementSubmit", "focusSelection", "hoverSuggestion", "openVortexSuggestions", "registerBrushMesh", "selectSameKindSelection", "setBrushPlacementOverlapBudget", "setCamera", "setChunkSize", "setGridSnapEnabled", "setGridSpacing", "setGridVisible", "setPanelPage", "setLodAutomatic", "setLodDepthVariable", "setLodManual", "setObjectKindWeight", "setProjection", "setProjectionParam", "setProximityRadius", "setSelectableKind", "setSunAzimuth", "setSunElevation", "setSunIntensity", "setTransformGumballFlag", "setVortexDirection", "setVortexKindWeight", "setVortexShow", "setVoxelDims", "targetBrushSuggestions", "toggleSun",
+            "closeVortexSuggestions", "cycleBrushCandidate", "cycleBrushCandidateBack", "engagementAbort", "engagementControlSelect", "engagementInput", "engagementRepeatLast", "engagementSubmit", "focusSelection", "hoverSuggestion", "openVortexSuggestions", "registerBrushMesh", "selectSameKindSelection", "setBrushPlacementContactTolerance", "setCamera", "setChunkSize", "setGridSnapEnabled", "setGridSpacing", "setGridVisible", "setPanelPage", "setLodAutomatic", "setLodDepthVariable", "setLodManual", "setObjectKindWeight", "setProjection", "setProjectionParam", "setProximityRadius", "setSelectableKind", "setSunAzimuth", "setSunElevation", "setSunIntensity", "setTransformGumballFlag", "setVortexDirection", "setVortexKindWeight", "setVortexShow", "setVoxelDims", "targetBrushSuggestions", "toggleSun",
         ]
     }
 }
@@ -7839,7 +8000,7 @@ impl ArtifactEditor for Puzzle3dPlayApp {
             | "setTransformGumballFlag"
             | "setVortexShow"
             | "setVortexDirection"
-            | "setBrushPlacementOverlapBudget"
+            | "setBrushPlacementContactTolerance"
             | "openVortexSuggestions"
             | "closeVortexSuggestions"
             | "targetBrushSuggestions"
@@ -8420,7 +8581,7 @@ pub fn create_puzzle3d_app() -> semio_framework_plugin::AppDefinition {
             .view_action("setVoxelDims", LocalizedLabel::native("Set Voxel Dims", "Voxel-Abmessungen festlegen"))
             .mutation("relocateTargetVolume", LocalizedLabel::native("Relocate Target Volume", "Zielvolumen verlagern"))
             .view_action("setFillCount", LocalizedLabel::native("Set Fill Count", "Füllanzahl festlegen"))
-            .view_action("setBrushPlacementOverlapBudget", LocalizedLabel::native("Set Brush Placement Overlap Budget", "Pinsel-Überlappungsbudget festlegen"))
+            .view_action("setBrushPlacementContactTolerance", LocalizedLabel::native("Set Brush Placement Contact Tolerance", "Pinsel-Kontakttoleranz festlegen"))
             .view_action("setObjectKindWeight", puzzle3d_localized_phrase(|l| l.object, |w| format!("Set {w} Kind Weight"), |w| format!("{w}-Art-Gewicht festlegen")))
             .view_action("setVortexKindWeight", puzzle3d_localized_phrase(|l| l.vortex, |w| format!("Set {w} Kind Weight"), |w| format!("{w}-Art-Gewicht festlegen")))
             .view_action("cycleBrushCandidate", LocalizedLabel::native("Cycle Brush Candidate", "Pinselkandidat wechseln"))
@@ -8557,7 +8718,7 @@ pub fn create_puzzle3d_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("scaleSelection", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("selectSameKindSelection", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("setActiveExample", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setBrushPlacementOverlapBudget", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setBrushPlacementContactTolerance", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("setCamera", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("setChunkSize", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("setFillCount", semio_framework_plugin::InteractiveJobClassification::Migrated)

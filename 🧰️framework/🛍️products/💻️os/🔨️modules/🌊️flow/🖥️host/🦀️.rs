@@ -3114,6 +3114,10 @@ pub struct FlowEvalSessionState {
     /// resumes its retained job by (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
     /// `📓️extension-evaluate-budget-2026-09-12.md`).
     eval_progress_by_hash: BTreeMap<u64, PreviewEvalProgress>,
+    /// 📏️ Fingerprint of the mesh packs the preview last published — lets tessellation land without
+    /// moving the evaluation text while still owing a republication
+    /// (`📓️slider-mesh-supersession-fallback-2026-09-15.md`).
+    published_preview_mesh_digest: u64,
     retiring_cache: Option<neural::NeuralCacheRetirement>,
     retirement: neural::ValueRetirement,
     retiring_collections: std::collections::LinkedList<SessionCollectionOwner>,
@@ -3297,6 +3301,7 @@ impl FlowEvalSession {
                 flow_extension_generation: flow_extension_registry_generation(),
                 extension_evaluate_fault: None,
                 preview_cancelled: false,
+                published_preview_mesh_digest: 0,
                 retiring_collections: std::collections::LinkedList::new(),
                 closing: false,
             }),
@@ -3404,6 +3409,12 @@ impl FlowEvalSession {
         &self.painted_eval_json
     }
 
+    /// 🏁️ The last evaluation that fully converged — what a preview may fall back to while a node's
+    /// new brep handle is still crossing and its tessellation has not landed yet.
+    pub fn converged_eval_json(&self) -> &str {
+        &self.converged_eval_json
+    }
+
     /// 📤️ What this session owes ONE surface whose retained preview publication currently holds
     /// `retained`. See [`flow_eval_publication_for`] — the decision is per PUBLICATION TARGET, never
     /// per session: two preview windows on one instance each own their own retained bytes.
@@ -3441,6 +3452,7 @@ impl FlowEvalSession {
         state.retiring_collections.push_back(SessionCollectionOwner::Pending(std::mem::take(&mut state.tessellate_chunks_by_hash)));
         state.tessellate_progress_by_hash.clear();
         state.eval_progress_by_hash.clear();
+        state.published_preview_mesh_digest = 0;
         if let Ok(mut map) = FLOW_SESSION_GEOMETRY.lock() {
             if let Some(previous) = map.remove(&state.session_id) {
                 state.retiring_collections.push_back(SessionCollectionOwner::Handles(previous));
@@ -3666,6 +3678,21 @@ impl FlowEvalSession {
     /// geometry extension.
     pub fn preview_mesh_pack(&self, handle: &str) -> Option<&str> {
         self.preview_mesh_pack_by_handle.get(handle).map(String::as_str)
+    }
+
+    /// 📏️ Mesh-residency fingerprint the preview last published — see [`FlowEvalSessionState::published_preview_mesh_digest`].
+    pub fn published_preview_mesh_digest(&self) -> u64 {
+        self.published_preview_mesh_digest
+    }
+
+    /// 📏️ Records the mesh-residency fingerprint a preview publication just carried.
+    pub fn note_published_preview_mesh_digest(&mut self, digest: u64) {
+        self.published_preview_mesh_digest = digest;
+    }
+
+    /// 🧊 Every brep handle that currently holds a resolved preview tessellation pack.
+    pub fn preview_packed_handles(&self) -> Vec<String> {
+        self.preview_mesh_pack_by_handle.keys().cloned().collect()
     }
 
     /// 🩺 Blocking validate-gate findings for `handle`, as a JSON array string.

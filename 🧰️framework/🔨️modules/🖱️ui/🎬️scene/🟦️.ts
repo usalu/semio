@@ -880,8 +880,10 @@ export type TableScene = {
   readonly rowsJson: string;
   readonly selectionJson?: string;
   readonly rowDragMime?: string;
-  readonly dropAction?: ActionDescriptor;
+  readonly dropActionJson?: string;
   readonly sortJson?: string;
+  readonly domainId?: string;
+  readonly domainGranularityId?: string;
 };
 
 /** 🖌️ A 2D paint surface scene payload — mirrors the wasm `componentScene` node's `paint2d` field. */

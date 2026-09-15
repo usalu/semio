@@ -73,6 +73,7 @@ const engineTestSuites = [
   elementSuite("🖥️Board2dHost/⏯️tool-run-trace", "🧩️component"),
   elementSuite("📃️UiDocumentStore/📥️intake", "📏️step-ceiling"),
   uiSuite("🔝️navbar-centered-band"),
+  uiSuite("📊️table-sort-header"),
 ] as const;
 const playwrightEngineTestSuites = [engineSuite("📚️storybook-hosts-no-wasm"), engineSuite("📚️storybook-hosts-wasm")] as const;
 const rootPolicySelfTestSuites = ["interactivity-live-reconcile", "interactivity-mounted-engine-surface-lifetime", "interactivity-mounted-frame-transaction"].map((id) => resolve(repoRoot, `./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️${id}/🟦️.ts`));

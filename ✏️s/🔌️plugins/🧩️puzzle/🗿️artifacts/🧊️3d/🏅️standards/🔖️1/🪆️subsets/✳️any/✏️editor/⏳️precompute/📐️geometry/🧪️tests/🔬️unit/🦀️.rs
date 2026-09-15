@@ -34,7 +34,7 @@ fn overlap_body() -> CollisionBody {
     collision_body_from_buffers(&positions, &indices).expect("body")
 }
 
-fn drive_overlap(mut state: CollisionOverlapState, a: &CollisionBody, world_a: &Pose3d, b: &CollisionBody, world_b: &Pose3d) -> (CollisionOverlapState, CollisionStepResult) {
+fn drive_depth(mut state: CollisionPenetrationState, a: &CollisionBody, world_a: &Pose3d, b: &CollisionBody, world_b: &Pose3d) -> (CollisionPenetrationState, CollisionStepResult) {
     let mut context = TestStepContext::unlimited();
     for _ in 0..100_000 {
         let result = state.step(&mut context, a, world_a, b, world_b);
@@ -42,7 +42,18 @@ fn drive_overlap(mut state: CollisionOverlapState, a: &CollisionBody, world_a: &
             return (state, result);
         }
     }
-    panic!("collision overlap state did not terminate");
+    panic!("collision penetration state did not terminate");
+}
+
+fn depth_of(result: CollisionStepResult) -> f64 {
+    match result {
+        CollisionStepResult::Complete { depth, .. } => depth,
+        other => panic!("the penetration state must complete: {other:?}"),
+    }
+}
+
+fn shifted(x: f32) -> Pose3d {
+    Pose3d::from_parts(Vec3d::new(x, 0.0, 0.0), Rotation3d::identity())
 }
 
 #[test]
@@ -211,81 +222,68 @@ fn world_volumes_contain_aabb_empty_and_multi_volume() {
     assert!(world_volumes_contain_aabb(&volumes, Point3d::new(-1.0, -1.0, -1.0), Point3d::new(1.0, 1.0, 1.0)), "any single containing volume is enough");
 }
 
+/// ⚖️ LAW (penetration depth, the fill's and brush's collision measure): two unit cubes (side 2) that do not meet, or only
+/// touch face to face, measure depth 0; a cube pushed `d` into another measures `d` (the face that dives in, to the other
+/// cube's nearest face); an identical cube at the same pose — surfaces that COINCIDE — is caught by the inset probes.
 #[test]
-fn overlap_state_rejects_disjoint_aabbs() {
-    let (positions, indices) = unit_cube_mesh_buffers();
-    let body = collision_body_from_buffers(&positions, &indices).expect("body");
-    let pose_a = Pose3d::identity();
-    let pose_b = Pose3d::from_parts(Vec3d::new(100.0, 0.0, 0.0), Rotation3d::identity());
-    assert!(!bodies_intersect(&body, &pose_a, &body, &pose_b));
-    let (_, result) = drive_overlap(CollisionOverlapState::new(64, 8, 0.02), &body, &pose_a, &body, &pose_b);
-    assert_eq!(result, CollisionStepResult::Complete { overlap: 0.0, rejected_early: false });
+fn penetration_depth_is_zero_apart_and_touching_and_the_overlap_distance_when_pushed_in() {
+    let body = overlap_body();
+    let (pose, apart) = (Pose3d::identity(), shifted(100.0));
+    assert!(!bodies_intersect(&body, &pose, &body, &apart));
+    assert_eq!(drive_depth(CollisionPenetrationState::new(0.005), &body, &pose, &body, &apart).1, CollisionStepResult::Complete { depth: 0.0, rejected_early: false });
+    assert_eq!(depth_of(drive_depth(CollisionPenetrationState::new(0.005), &body, &pose, &body, &shifted(2.0)).1), 0.0, "face-to-face contact is not a collision");
+    for pushed in [0.05_f32, 0.3, 1.0] {
+        let depth = depth_of(drive_depth(CollisionPenetrationState::new(f64::INFINITY), &body, &pose, &body, &shifted(2.0 - pushed)).1);
+        assert!((depth - f64::from(pushed)).abs() < 1e-3, "a cube pushed {pushed} m in measures {depth}");
+    }
+    let (_, duplicate) = drive_depth(CollisionPenetrationState::new(0.005), &body, &pose, &body, &pose);
+    assert!(matches!(duplicate, CollisionStepResult::Complete { rejected_early: true, .. }), "an identical body at the same pose collides: {duplicate:?}");
 }
 
+/// ⚖️ LAW: the measure stops at the first probe past the tolerance, and a tolerance at or above the true depth accepts.
 #[test]
-fn overlap_state_reports_positive_overlap_for_coincident_bodies() {
-    let (positions, indices) = outward_wound_unit_cube_mesh_buffers();
-    let scaled: Vec<f32> = positions.iter().map(|c| c * 4.0).collect();
-    let body = collision_body_from_buffers(&scaled, &indices).expect("body");
-    let pose = Pose3d::identity();
-    assert!(point_inside_body(&body, &pose, Point3d::new(0.0, 0.0, 0.0)), "the box's own center must be inside itself");
-    let (_, result) = drive_overlap(CollisionOverlapState::new(256, 16, f64::INFINITY), &body, &pose, &body, &pose);
-    let CollisionStepResult::Complete { overlap, .. } = result else { panic!("overlap state must complete") };
-    assert!(overlap > 0.0, "two fully coincident solid bodies must report a positive overlap: {overlap}");
-}
-
-#[test]
-fn overlap_is_deterministic_across_batch_sizes() {
+fn penetration_depth_rejects_early_past_the_tolerance_and_accepts_within_it() {
     let body = overlap_body();
     let pose = Pose3d::identity();
-    let runs = [1, 7, 64].map(|batch| drive_overlap(CollisionOverlapState::new(257, batch, f64::INFINITY), &body, &pose, &body, &pose));
-    let overlaps = runs.map(|(_, result)| match result {
-        CollisionStepResult::Complete { overlap, rejected_early: false } => overlap,
-        other => panic!("unexpected result: {other:?}"),
-    });
-    assert_eq!(overlaps[0], overlaps[1]);
-    assert_eq!(overlaps[1], overlaps[2]);
+    let (_, deep) = drive_depth(CollisionPenetrationState::new(0.1), &body, &pose, &body, &shifted(1.7));
+    assert!(matches!(deep, CollisionStepResult::Complete { rejected_early: true, depth } if depth > 0.1), "0.3 m in against a 0.1 m tolerance: {deep:?}");
+    let (_, shallow) = drive_depth(CollisionPenetrationState::new(0.1), &body, &pose, &body, &shifted(1.95));
+    assert!(matches!(shallow, CollisionStepResult::Complete { rejected_early: false, depth } if depth <= 0.1), "0.05 m in against a 0.1 m tolerance: {shallow:?}");
 }
 
+/// ⚖️ LAW: a rotated neighbour whose EDGE cuts into a face (no vertex inside the other solid) is measured through the clipped
+/// face probes — 45° about z, its edge pushed 0.2 m into the other cube's +x face.
 #[test]
-fn overlap_checkpoint_resumes_exact_rng_and_sample_cursor() {
+fn penetration_depth_catches_an_edge_cutting_into_a_face() {
     let body = overlap_body();
-    let pose = Pose3d::identity();
-    let mut state = CollisionOverlapState::new(257, 3, f64::INFINITY);
+    let half_diagonal = std::f32::consts::SQRT_2;
+    let rotated = Pose3d::from_parts(Vec3d::new(1.0 + half_diagonal - 0.2, 0.0, 0.0), Rotation3d::from_ijkw(0.0, 0.0, (std::f32::consts::FRAC_PI_8).sin(), (std::f32::consts::FRAC_PI_8).cos()));
+    let depth = depth_of(drive_depth(CollisionPenetrationState::new(f64::INFINITY), &body, &Pose3d::identity(), &body, &rotated).1);
+    assert!((depth - 0.2).abs() < 5e-3, "the edge dives 0.2 m under the face: {depth}");
+}
+
+/// ⚖️ LAW: a checkpoint taken mid-measure resumes to the identical state and verdict.
+#[test]
+fn penetration_checkpoint_resumes_exactly() {
+    let body = overlap_body();
+    let (pose, other) = (Pose3d::identity(), shifted(1.99));
+    let mut state = CollisionPenetrationState::new(0.0);
     let mut context = TestStepContext::unlimited();
-    while state.sample_cursor < 12 {
-        assert_eq!(state.step(&mut context, &body, &pose, &body, &pose), CollisionStepResult::Pending);
+    for _ in 0..20 {
+        assert_eq!(state.step(&mut context, &body, &pose, &body, &other), CollisionStepResult::Pending);
     }
     let checkpoint = state.checkpoint();
-    let (finished, result) = drive_overlap(state, &body, &pose, &body, &pose);
-    let (resumed, resumed_result) = drive_overlap(CollisionOverlapState::resume(checkpoint), &body, &pose, &body, &pose);
+    let (finished, result) = drive_depth(state, &body, &pose, &body, &other);
+    let (resumed, resumed_result) = drive_depth(CollisionPenetrationState::resume(checkpoint), &body, &pose, &body, &other);
     assert_eq!(result, resumed_result);
     assert_eq!(finished, resumed);
 }
 
 #[test]
-fn overlap_touching_surfaces_are_not_solid_overlap() {
-    let body = overlap_body();
-    let pose_a = Pose3d::identity();
-    let pose_b = Pose3d::from_parts(Vec3d::new(2.0, 0.0, 0.0), Rotation3d::identity());
-    let (_, result) = drive_overlap(CollisionOverlapState::new(257, 8, f64::INFINITY), &body, &pose_a, &body, &pose_b);
-    assert_eq!(result, CollisionStepResult::Complete { overlap: 0.0, rejected_early: false });
-}
-
-#[test]
-fn overlap_rejects_early_against_budget() {
+fn penetration_cancellation_and_yield_preserve_state() {
     let body = overlap_body();
     let pose = Pose3d::identity();
-    let (state, result) = drive_overlap(CollisionOverlapState::new(4096, 32, 0.0), &body, &pose, &body, &pose);
-    assert_eq!(result, CollisionStepResult::Complete { overlap: 1.0, rejected_early: true });
-    assert!(state.sample_cursor < 4096);
-}
-
-#[test]
-fn overlap_cancellation_and_yield_preserve_state() {
-    let body = overlap_body();
-    let pose = Pose3d::identity();
-    let mut state = CollisionOverlapState::new(64, 8, f64::INFINITY);
+    let mut state = CollisionPenetrationState::new(0.005);
     let before = state.checkpoint();
     let mut cancelled = TestStepContext { cancelled: true, yield_now: false, fuel: 100 };
     assert_eq!(state.step(&mut cancelled, &body, &pose, &body, &pose), CollisionStepResult::Cancelled);
@@ -486,20 +484,20 @@ fn spatial_fixed_collections_use_the_credited_pages_and_return_identical_plus_on
 }
 
 #[test]
-fn overlap_sample_steps_stay_within_interaction_watchdog() {
+fn penetration_steps_stay_within_interaction_watchdog() {
     let body = overlap_body();
-    let pose = Pose3d::identity();
-    let mut state = CollisionOverlapState::new(128, 1, f64::INFINITY);
+    let (pose, other) = (Pose3d::identity(), shifted(1.999));
+    let mut state = CollisionPenetrationState::new(0.0);
     let mut context = TestStepContext::unlimited();
-    while state.stage != CollisionOverlapStage::Sampling {
-        assert_eq!(state.step(&mut context, &body, &pose, &body, &pose), CollisionStepResult::Pending);
-    }
-    for _ in 0..32 {
+    for _ in 0..512 {
         let started = Instant::now();
-        let result = state.step(&mut context, &body, &pose, &body, &pose);
-        assert!(started.elapsed() < Duration::from_millis(8), "one-sample collision step exceeded the 8 ms interaction ceiling");
-        assert!(matches!(result, CollisionStepResult::Pending | CollisionStepResult::Complete { .. }));
+        let result = state.step(&mut context, &body, &pose, &body, &other);
+        assert!(started.elapsed() < Duration::from_millis(8), "one penetration probe step exceeded the 8 ms interaction ceiling");
+        if matches!(result, CollisionStepResult::Complete { .. }) {
+            return;
+        }
     }
+    panic!("the measure of two cubes completes within 512 steps");
 }
 
 #[test]
@@ -684,4 +682,89 @@ fn an_owner_whose_middle_sub_page_was_refused_keeps_the_earlier_ones_and_reports
     assert_eq!(map.get(&0), Some(&[0u64; 32]));
     assert_eq!(map.get(&(entries - 1)), Some(&[entries as u64 - 1; 32]));
     assert_eq!(map.iter().count(), entries);
+}
+
+/// 🧱️ A box of half extents `(hx, hy, hz)` whose every face is a `cells × cells` grid, outward wound — a stand-in for a
+/// real ~1000-triangle part mesh.
+fn gridded_box(hx: f32, hy: f32, hz: f32, cells: usize) -> CollisionBody {
+    let (mut positions, mut indices) = (Vec::<f32>::new(), Vec::<u32>::new());
+    // (origin, u, v) per face, u × v pointing outward.
+    let faces: [([f32; 3], [f32; 3], [f32; 3]); 6] = [
+        ([-hx, -hy, hz], [2.0 * hx, 0.0, 0.0], [0.0, 2.0 * hy, 0.0]),
+        ([-hx, hy, -hz], [2.0 * hx, 0.0, 0.0], [0.0, -2.0 * hy, 0.0]),
+        ([hx, -hy, -hz], [0.0, 2.0 * hy, 0.0], [0.0, 0.0, 2.0 * hz]),
+        ([-hx, -hy, hz], [0.0, 2.0 * hy, 0.0], [0.0, 0.0, -2.0 * hz]),
+        ([-hx, hy, -hz], [0.0, 0.0, 2.0 * hz], [2.0 * hx, 0.0, 0.0]),
+        ([-hx, -hy, hz], [0.0, 0.0, -2.0 * hz], [2.0 * hx, 0.0, 0.0]),
+    ];
+    for (origin, u, v) in faces {
+        let base = (positions.len() / 3) as u32;
+        for j in 0..=cells {
+            for i in 0..=cells {
+                let (a, b) = (i as f32 / cells as f32, j as f32 / cells as f32);
+                positions.extend([origin[0] + u[0] * a + v[0] * b, origin[1] + u[1] * a + v[1] * b, origin[2] + u[2] * a + v[2] * b]);
+            }
+        }
+        let row = (cells + 1) as u32;
+        for j in 0..cells as u32 {
+            for i in 0..cells as u32 {
+                let (p, q, r, t) = (base + j * row + i, base + j * row + i + 1, base + (j + 1) * row + i, base + (j + 1) * row + i + 1);
+                indices.extend([p, q, t, p, t, r]);
+            }
+        }
+    }
+    collision_body_from_buffers(&positions, &indices).expect("gridded box")
+}
+
+/// ⏱️ LAW: a fitting pair of ~1000-triangle parts docked face to face (the common fill case: every probe runs) is measured
+/// at depth 0 with every step under the 8 ms interaction ceiling and the whole measure within 250 ms unoptimized. The
+/// best of three cold runs is taken, so concurrent builds cannot fake a regression.
+#[test]
+fn penetration_of_flush_thousand_triangle_parts_stays_interactive() {
+    let body = gridded_box(5.4, 1.5, 0.225, 9);
+    let (pose, docked) = (Pose3d::identity(), Pose3d::from_parts(Vec3d::new(10.8, 0.0, 0.0), Rotation3d::identity()));
+    let runs: Vec<(Duration, Duration)> = (0..3)
+        .map(|_| {
+            let mut state = CollisionPenetrationState::new(0.005);
+            let mut context = TestStepContext::unlimited();
+            let (started, mut worst) = (Instant::now(), Duration::ZERO);
+            let depth = loop {
+                let step = Instant::now();
+                let result = state.step(&mut context, &body, &pose, &body, &docked);
+                worst = worst.max(step.elapsed());
+                if let CollisionStepResult::Complete { depth, .. } = result {
+                    break depth;
+                }
+            };
+            assert_eq!(depth, 0.0, "flush docking is contact, not penetration");
+            (worst, started.elapsed())
+        })
+        .collect();
+    let (worst, total) = runs.iter().copied().min_by_key(|(worst, _)| *worst).expect("three runs");
+    assert!(worst < Duration::from_millis(8), "one probe step exceeded the 8 ms interaction ceiling: {worst:?} (runs {runs:?})");
+    assert!(total < Duration::from_millis(250), "a fitting 1k-triangle pair must measure within 250 ms unoptimized: {total:?} (runs {runs:?})");
+}
+
+#[test]
+fn debug_w6_real_glb_pair_depth() {
+    // [DEBUG] temp: the 26 cm committed pair from the :6013 w6 probe on the real hexagonal GLB.
+    let path = "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️13/INTERACTIVE-TOOLS-VISIBLE-PROCESS/🗑️generated/W5-mac-react-e2e/debug-pair.json";
+    let value: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(path).expect("pair")).expect("json");
+    let positions: Vec<f32> = value["positions"].as_array().expect("positions").iter().map(|v| v.as_f64().expect("f") as f32).collect();
+    let indices: Vec<u32> = (0..(positions.len() / 3) as u32).collect();
+    let body = collision_body_from_buffers(&positions, &indices).expect("body");
+    let pose = |key: &str| {
+        let p: Vec<f32> = value[key]["position"].as_array().expect("p").iter().map(|v| v.as_f64().expect("f") as f32).collect();
+        let r: Vec<f32> = value[key]["rotation"].as_array().expect("r").iter().map(|v| v.as_f64().expect("f") as f32).collect();
+        Pose3d::from_parts(Vec3d::new(p[0], p[1], p[2]), Rotation3d::from_ijkw(r[0], r[1], r[2], r[3]))
+    };
+    let (a, b) = (pose("a"), pose("b"));
+    let started = Instant::now();
+    let depth = depth_of(drive_depth(CollisionPenetrationState::new(f64::INFINITY), &body, &a, &body, &b).1);
+    let full = started.elapsed();
+    let early = drive_depth(CollisionPenetrationState::new(0.005), &body, &a, &body, &b).1;
+    let flush = Pose3d::from_parts(Vec3d::new(10.8, 0.0, 0.0), Rotation3d::identity());
+    let started = Instant::now();
+    let flush_result = drive_depth(CollisionPenetrationState::new(0.005), &body, &Pose3d::identity(), &body, &flush).1;
+    eprintln!("[DEBUG] w6 pair depth={depth} in {full:?} tol0.005={early:?} flush={flush_result:?} in {:?}", started.elapsed());
 }

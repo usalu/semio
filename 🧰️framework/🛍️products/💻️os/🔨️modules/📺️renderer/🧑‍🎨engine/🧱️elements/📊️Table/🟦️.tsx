@@ -164,7 +164,7 @@ export function TableHost({ node, onAction, requestContextMenu }: ComponentScene
   if (!scene) return <div className="semio-table-empty">{emptySceneLabel}</div>;
 
   const rowDragMime = scene.rowDragMime;
-  const dropAction = scene.dropAction;
+  const dropAction = scene.dropActionJson ? parseSceneJsonField<ActionDescriptor>(scene.dropActionJson) : undefined;
 
   return (
     <div
@@ -223,11 +223,17 @@ export function TableHost({ node, onAction, requestContextMenu }: ComponentScene
             : undefined
         }
         onRowClick={(row) =>
-          onAction({
-            controllerId: node.controllerId,
-            action: "selectRow",
-            args: { surfaceId: node.surfaceId, row },
-          })
+          scene.domainId && scene.domainGranularityId
+            ? onAction({
+                controllerId: node.controllerId,
+                action: "interactionSelect",
+                args: { domainId: scene.domainId, targets: JSON.stringify([{ granularity: scene.domainGranularityId, id: getRowId(row) }]), merge: "replace", method: "pick" },
+              })
+            : onAction({
+                controllerId: node.controllerId,
+                action: "selectRow",
+                args: { surfaceId: node.surfaceId, row },
+              })
         }
         onRowContextMenu={(row, index, event) => {
           if (!requestContextMenu) return;

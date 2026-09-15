@@ -36,7 +36,7 @@ pub(crate) fn sample_scene_config() -> crate::standards::v1::subsets::any::schem
             },
             "kindCatalogs": {"objects": [{"id": "Host", "representations": [{"id": "r0", "name": "default", "url": "/test/host.glb"}], "vortices": []}], "vortices": [{"id": "port-a"}], "cables": []},
             "kindCompatibility": [],
-            "overlapBudget": 0.02,
+            "contactTolerance": 0.02,
             "seed": 1
         }"#;
     serde_json::from_str(json).expect("sample scene config parses")

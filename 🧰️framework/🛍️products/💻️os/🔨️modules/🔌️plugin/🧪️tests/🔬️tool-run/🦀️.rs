@@ -769,6 +769,36 @@ async fn tool_run_finalize_publishes_one_grouped_edit_one_mutations_batch_and_un
     close(&mut app);
 }
 
+/// ⚖️ LAW: a large finalize never piles up returned document roots — after every driver turn the document Store
+/// holds at most one returned-but-unreclaimed snapshot read, so the publication's memory is bounded by the staged
+/// root and the base its current op reads instead of one whole document per op.
+#[semio_framework_async_macros::async_test]
+async fn tool_run_large_finalize_reclaims_each_folded_root_before_the_next_op() {
+    let fixture = fixture();
+    let law = &fixture["largeFinalize"];
+    let units = number(&law["units"]);
+    let maximum = number(&law["maximumReturnedReads"]) as usize;
+    let mut app = toy_app(units).await;
+    start(&mut app, text(&fixture["toolId"])).await;
+    pump_until(&mut app, "run completes", |app| app.tool_runs.state() == Some(ToolRunState::Complete)).await;
+    let edits = app.store.envelope().vcs.edits.len();
+    let output = run_action(&mut app, "toolRunFinalize").await;
+    assert_eq!(output.get("toolRun").and_then(DslValue::as_str), Some("beginFinalize"));
+    let (mut turns, mut peak) = (0usize, 0usize);
+    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(120);
+    while !(app.tool_runs.state() == Some(ToolRunState::Finalized) && !app.tool_runs.has_pending_work()) {
+        assert!(std::time::Instant::now() < deadline, "the large finalize never settled; state {:?}", app.tool_runs.state());
+        app.advance_typed_operation_publication().await.unwrap_or_else(|fault| panic!("large finalize driver turn faulted: {fault:?}"));
+        turns += 1;
+        peak = peak.max(app.store.returned_snapshot_read_count());
+        assert!(peak <= maximum, "turn {turns}: {peak} returned document roots are still held (at most {maximum})");
+    }
+    assert_eq!(app.store.envelope().vcs.edits.len() - edits, 1, "still exactly one grouped edit");
+    assert_eq!(app.store.envelope().vcs.edits.last().expect("finalized edit").forwards.len() as u64, units * number(&fixture["opsPerUnit"]), "every provisional op landed");
+    eprintln!("[DEBUG] large finalize: {units} units in {turns} driver turns, peak {peak} returned document roots");
+    close(&mut app);
+}
+
 #[semio_framework_async_macros::async_test]
 async fn tool_run_remote_ingest_rebases_and_a_revalidation_conflict_returns_to_complete_with_the_next_generation() {
     let fixture = fixture();

@@ -11,7 +11,7 @@ use crate::standards::v1::subsets::any::schema::{
     ObjectKindVortexTemplate, Quat, Vec3, VortexKindCatalog, VortexProps,
 };
 use crate::editor::puzzle3d::precompute::geometry::{
-    collision_body_from_buffers, compute_brush_placement_pose, normalize_vec3, pose_isometry, quat_rotate_vec, vec3_add, CollisionAabb, CollisionBody, CollisionOverlapState, CollisionStepContext, CollisionStepResult, Pose3d,
+    collision_body_from_buffers, compute_brush_placement_pose, normalize_vec3, pose_isometry, quat_rotate_vec, vec3_add, CollisionAabb, CollisionBody, CollisionPenetrationState, CollisionStepContext, CollisionStepResult, Pose3d,
 };
 use crate::standards::v1::subsets::any::schema::{BrushSuggestionsRunCounter, BrushSuggestionsRunReason, BrushSuggestionsRunStage, SceneConfig};
 use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, JobFault, JobPayloadStream, RetainedJobPayload, StepContext, StepOutcome};
@@ -402,16 +402,27 @@ pub(crate) fn brush_kind_weight_value(weights: &std::collections::BTreeMap<Strin
 
 pub(crate) fn brush_candidate_suggestion_weight(candidate: &BrushCompatibleCandidate, weights: &BrushKindWeights, catalogs: &KindCatalogBundle) -> f64 {
     let vortex_kind = catalog_object_kind_by_id(catalogs, &candidate.object_kind_id).and_then(|kind| kind.vortices.get(candidate.source_vortex_index)).and_then(|template| template.vortex_kind.as_deref()).unwrap_or("");
-    brush_kind_weight_value(&weights.object_weights, &candidate.object_kind_id) * brush_kind_weight_value(&weights.vortex_weights, vortex_kind)
+    brush_joint_weight_value(&weights.object_weights, &weights.vortex_weights, &candidate.object_kind_id, vortex_kind)
 }
 
 pub(crate) fn brush_target_vortex_allows_suggestion(vortex_kind: Option<&str>, weights: &BrushKindWeights) -> bool {
     brush_kind_weight_value(&weights.vortex_weights, vortex_kind.unwrap_or("")) > 0.0
 }
 
+fn brush_joint_weight_value(object_weights: &std::collections::BTreeMap<String, f64>, joint_weights: &std::collections::BTreeMap<String, f64>, object_kind_id: &str, vortex_kind_id: &str) -> f64 {
+    let sep = crate::editor::puzzle3d::PUZZLE3D_JOINT_WEIGHT_SEP;
+    let composite = format!("{object_kind_id}{sep}{vortex_kind_id}");
+    if let Some(weight) = joint_weights.get(&composite) {
+        return *weight;
+    }
+    brush_kind_weight_value(object_weights, object_kind_id) * brush_kind_weight_value(joint_weights, vortex_kind_id)
+}
+
 #[cfg(test)]
 pub(crate) fn fill_vortex_target_weight(target: &BrushFillVortexTarget, weights: &BrushKindWeights) -> f64 {
-    brush_kind_weight_value(&weights.vortex_weights, target.vortex_kind.as_deref().unwrap_or(""))
+    let object_kind = target.object_kind.as_deref().unwrap_or("");
+    let vortex_kind = target.vortex_kind.as_deref().unwrap_or("");
+    brush_joint_weight_value(&weights.object_weights, &weights.vortex_weights, object_kind, vortex_kind)
 }
 
 #[cfg(test)]
@@ -593,10 +604,6 @@ pub(crate) fn brush_object_id(fixture: &impl BrushFixtureView, payload: &BrushPl
 //#endregion 🔖️Placement
 
 //#region ⏯️BrushSuggestionsRun
-/// 🎲️ Overlap samples one candidate × placed-body pair draws, the interactive brush's own resolution.
-const BRUSH_SUGGESTIONS_SAMPLES: usize = 1_024;
-/// 🎲️ Samples one collision unit tests before it may yield.
-const BRUSH_SUGGESTIONS_SAMPLE_BATCH: usize = 8;
 
 /// 🚥️ What the run decided about one compatible candidate of its target vortex.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -725,10 +732,9 @@ struct BrushSuggestionsPlaced {
 /// 🔎️ The search over one target vortex's compatible candidates, resumable between collision units.
 struct BrushSuggestionsSearch {
     found: BrushSuggestionsFound,
-    host: String,
     cursor: usize,
     pair: usize,
-    collision: Option<CollisionOverlapState>,
+    collision: Option<CollisionPenetrationState>,
     tested: u64,
     free: u64,
     collisions: u64,
@@ -883,7 +889,7 @@ impl<O: BrushSuggestionsOwner> BrushSuggestionsRunJob<O> {
             let _ = self.writer.step(ToolRunStepKind::Warning, BrushSuggestionsRunStage::Target.index(), reason.code(), None, &[]);
         }
         self.stage = if refusal.is_some() { BrushSuggestionsRunStage::Idle } else { BrushSuggestionsRunStage::Test };
-        self.search = Some(BrushSuggestionsSearch { found, host: host.map(|(host, _)| host.id.clone()).unwrap_or_default(), cursor: 0, pair: 0, collision: None, tested: 0, free: 0, collisions: 0, settled: refusal.is_some() });
+        self.search = Some(BrushSuggestionsSearch { found, cursor: 0, pair: 0, collision: None, tested: 0, free: 0, collisions: 0, settled: refusal.is_some() });
     }
 
     /// 🧪️ One collision unit of the current candidate, or its verdict, or the search's completion step.
@@ -921,20 +927,20 @@ impl<O: BrushSuggestionsOwner> BrushSuggestionsRunJob<O> {
         let body = meshes.get(&preview.mesh_url).unwrap_or(fallback);
         let world = pose_isometry(preview.origin, preview.orientation, &preview.scale);
         let bounds = CollisionAabb::from_body(body, &world);
-        let budget = scene.overlap_budget;
+        let budget = scene.contact_tolerance;
         let collides = loop {
             let Some(entry) = placed.get(search.pair) else { break Some(false) };
-            if search.collision.is_none() && (entry.object_id == search.host || !entry.bounds.intersects(&bounds)) {
+            if search.collision.is_none() && !entry.bounds.intersects(&bounds) {
                 search.pair += 1;
                 continue;
             }
-            let collision = search.collision.get_or_insert_with(|| CollisionOverlapState::new(BRUSH_SUGGESTIONS_SAMPLES, BRUSH_SUGGESTIONS_SAMPLE_BATCH, budget));
+            let collision = search.collision.get_or_insert_with(|| CollisionPenetrationState::new(budget));
             match collision.step(&mut BrushSuggestionsCollisionContext { outer: context }, body, &world, meshes.get(&entry.mesh_url).unwrap_or(fallback), &entry.world) {
                 CollisionStepResult::Pending | CollisionStepResult::Cancelled => break None,
-                CollisionStepResult::Complete { overlap, .. } => {
+                CollisionStepResult::Complete { depth, .. } => {
                     search.collision = None;
                     search.pair += 1;
-                    if overlap > budget {
+                    if depth > budget {
                         break Some(true);
                     }
                 }

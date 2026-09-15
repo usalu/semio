@@ -368,6 +368,18 @@ export function contextMenuPathKey(path: readonly number[]): string {
   return path.join(".");
 }
 
+function contextMenuFusionOffsetsEqual(a: ReadonlyMap<string, number>, b: ReadonlyMap<string, number>): boolean {
+  if (a.size !== b.size) {
+    return false;
+  }
+  for (const [key, value] of a) {
+    if (b.get(key) !== value) {
+      return false;
+    }
+  }
+  return true;
+}
+
 function contextMenuPathsEqual(a: readonly number[], b: readonly number[]): boolean {
   return a.length === b.length && a.every((value, index) => value === b[index]);
 }
@@ -383,7 +395,7 @@ function isContextMenuSubmenuOpen(activePath: readonly number[], parentPath: rea
 const CONTEXT_MENU_SUBMENU_HOVER_DELAY_MS = 150;
 
 /** @emoji ↔️ Gap between a parent row and its submenu panel, in px. */
-const CONTEXT_MENU_SUBMENU_GAP_PX = 4;
+const CONTEXT_MENU_SUBMENU_GAP_PX = 0;
 
 /** @emoji 📐️ Viewport-fixed placement of a submenu panel beside its parent row. */
 export interface ContextMenuSubmenuPlacement {
@@ -392,14 +404,39 @@ export interface ContextMenuSubmenuPlacement {
   readonly flipped: boolean;
 }
 
+/** @emoji 📂 One fused submenu column beside its parent row inside the shared {@link ContextMenuChrome}. */
+export interface ContextMenuFusionPanel {
+  readonly parentPath: readonly number[];
+  readonly items: readonly ContextMenuItem[];
+}
+
+/** @emoji 📂 Open submenu columns to render fused into the root menu chrome (one outline, no nested title chips). */
+export function contextMenuOpenFusionPanels(
+  root: readonly ContextMenuItem[],
+  activePath: readonly number[],
+  submenuCollapsedAt: readonly number[] | null,
+): readonly ContextMenuFusionPanel[] {
+  const panels: ContextMenuFusionPanel[] = [];
+  for (let depth = 0; depth < activePath.length; depth += 1) {
+    const parentPath = activePath.slice(0, depth + 1);
+    const item = contextMenuItemAtPath(root, parentPath);
+    if (!item?.children?.length) {
+      break;
+    }
+    const submenuOpen =
+      isContextMenuSubmenuOpen(activePath, parentPath) ||
+      (contextMenuPathsEqual(activePath, parentPath) && !(submenuCollapsedAt && contextMenuPathsEqual(submenuCollapsedAt, parentPath)));
+    if (!submenuOpen) {
+      break;
+    }
+    panels.push({ parentPath, items: item.children });
+  }
+  return panels;
+}
+
 /**
  * @emoji 📐️ Places a submenu panel beside its anchor row in viewport coordinates, flipping to the
  * anchor's start side when the end side would overflow and clamping the top edge into view.
- *
- * The panel is portaled to the shell's floating surface host rather than nested inside the parent
- * menu, because {@link ContextMenuChrome} scrolls (`max-h-layout-command overflow-y-auto`) and a
- * scrollport clips every side-anchored child away: measured on :6023 the export row reported a full
- * `getBoundingClientRect` while `elementsFromPoint` at its own centre answered the node-graph canvas.
  **/
 export function contextMenuSubmenuPlacement(input: {
   readonly anchor: { readonly left: number; readonly right: number; readonly top: number };
@@ -425,18 +462,12 @@ type ContextMenuSubmenuRowProps = {
   readonly submenuOpen: boolean;
   readonly setActivePath: FixedContextMenuRenderOptions["setActivePath"];
   readonly registerRow: FixedContextMenuRenderOptions["registerRow"];
-  readonly children: React.ReactNode;
 };
 
-/** @emoji 📂️ Parent-row button for a submenu: click toggles it open/closed, hover opens it after a short delay, and the panel is portaled beside the row so the parent menu's own scrollport cannot clip it. */
-function ContextMenuSubmenuRow({ item, rowPath, ordinal, isActive, submenuOpen, setActivePath, registerRow, children }: ContextMenuSubmenuRowProps): React.ReactElement {
+/** @emoji 📂️ Parent-row button for a submenu: click toggles it open/closed; hover opens it after a short delay. Child rows render in fused columns beside this row. */
+function ContextMenuSubmenuRow({ item, rowPath, ordinal, isActive, submenuOpen, setActivePath, registerRow }: ContextMenuSubmenuRowProps): React.ReactElement {
   const hoverTimerRef = reactHostPort.useRef<number | undefined>(undefined);
-  const buttonRef = reactHostPort.useRef<HTMLButtonElement | null>(null);
-  const panelRef = reactHostPort.useRef<HTMLDivElement | null>(null);
-  const floatingHost = useShellFloatingSurfaceHost();
   const pathKey = contextMenuPathKey(rowPath);
-  const [anchor, setAnchor] = reactHostPort.useState<{ left: number; right: number; top: number } | null>(null);
-  const [placement, setPlacement] = reactHostPort.useState<ContextMenuSubmenuPlacement | null>(null);
   const clearHoverTimer = reactHostPort.useCallback((): void => {
     if (hoverTimerRef.current !== undefined) {
       window.clearTimeout(hoverTimerRef.current);
@@ -444,33 +475,6 @@ function ContextMenuSubmenuRow({ item, rowPath, ordinal, isActive, submenuOpen, 
     }
   }, []);
   reactHostPort.useEffect(() => clearHoverTimer, [clearHoverTimer]);
-  reactHostPort.useLayoutEffect(() => {
-    if (!submenuOpen) {
-      setAnchor(null);
-      setPlacement(null);
-      return;
-    }
-    const node = buttonRef.current;
-    if (!node) return;
-    const rect = node.getBoundingClientRect();
-    setAnchor({ left: rect.left, right: rect.right, top: rect.top });
-  }, [submenuOpen]);
-  // 📐️ Two passes, and the second one lands in STATE rather than on `node.style`: the panel's own size
-  // is unknown until it has rendered, and an imperative style write would be overwritten by the very
-  // next render (activating a child row re-renders this row), snapping a flipped panel back under the
-  // viewport edge mid-walk.
-  reactHostPort.useLayoutEffect(() => {
-    const node = panelRef.current;
-    if (!node || !anchor) return;
-    const rect = node.getBoundingClientRect();
-    setPlacement(
-      contextMenuSubmenuPlacement({
-        anchor,
-        panel: { width: rect.width, height: rect.height },
-        viewport: { width: window.innerWidth, height: window.innerHeight },
-      }),
-    );
-  }, [anchor]);
   const toggleSubmenu = (): void => {
     if (item.disabled) return;
     setActivePath([...rowPath], submenuOpen ? [...rowPath] : null);
@@ -489,10 +493,7 @@ function ContextMenuSubmenuRow({ item, rowPath, ordinal, isActive, submenuOpen, 
     >
       <button
         id={item.id}
-        ref={(node) => {
-          buttonRef.current = node;
-          registerRow(pathKey, node);
-        }}
+        ref={(node) => registerRow(pathKey, node)}
         aria-disabled={item.disabled}
         aria-expanded={submenuOpen}
         aria-haspopup="menu"
@@ -522,22 +523,6 @@ function ContextMenuSubmenuRow({ item, rowPath, ordinal, isActive, submenuOpen, 
           ›
         </span>
       </button>
-      {submenuOpen && anchor
-        ? renderPortalInto(
-            <div
-              ref={panelRef}
-              className="fixed z-menu"
-              data-slot="context-menu-submenu"
-              data-context-menu-submenu-of={pathKey}
-              data-context-menu-submenu-flipped={placement?.flipped ? "true" : undefined}
-              onPointerEnter={clearHoverTimer}
-              style={{ left: placement?.left ?? anchor.right + CONTEXT_MENU_SUBMENU_GAP_PX, top: placement?.top ?? anchor.top }}
-            >
-              {children}
-            </div>,
-            floatingHost,
-          )
-        : null}
     </div>
   );
 }
@@ -567,13 +552,7 @@ function renderFixedContextMenuItems(items: readonly ContextMenuItem[], pathPref
         isContextMenuSubmenuOpen(activePath, rowPath) ||
         (isActive && !(submenuCollapsedAt && contextMenuPathsEqual(submenuCollapsedAt, rowPath)));
       return (
-        <ContextMenuSubmenuRow key={item.id} item={item} rowPath={rowPath} ordinal={ordinal} isActive={isActive} submenuOpen={submenuOpen} setActivePath={setActivePath} registerRow={registerRow}>
-          <ContextMenuChrome title={item.label ?? item.id} icon={(item.icon ?? "folder") as IconSource}>
-            <div aria-label={item.label ?? item.id} role="menu">
-              {renderFixedContextMenuItems(item.children, rowPath, options)}
-            </div>
-          </ContextMenuChrome>
-        </ContextMenuSubmenuRow>
+        <ContextMenuSubmenuRow key={item.id} item={item} rowPath={rowPath} ordinal={ordinal} isActive={isActive} submenuOpen={submenuOpen} setActivePath={setActivePath} registerRow={registerRow} />
       );
     }
     const role = item.checked === undefined ? "menuitem" : "menuitemcheckbox";
@@ -634,7 +613,7 @@ export function findCheckedContextMenuItem(items: readonly ContextMenuItem[]): C
 }
 
 /**
- * 🧩️ Controlled right-click menu whose title chip bottom-left anchors at viewport coordinates (puzzle 2d canvas bridge), keeping the first row beside the pointer. Portals to `document.body` for correct `fixed` placement under transformed UI; outside-dismiss uses `window` bubble listeners so they run after the puzzle 2d `eventSurface` bubble path and after `window` capture (441–442 used `document` capture and swallowed input).
+ * 🧩️ Controlled right-click menu whose title chip bottom-left anchors at viewport coordinates (puzzle 2d canvas bridge), keeping the first row beside the pointer. Portals to `document.body` for correct `fixed` placement under transformed UI; outside-dismiss uses a `window` capture listener (same as {@link CanvasPickMenu}) so a canvas `stopImmediatePropagation` on pointer-down cannot swallow the bubble phase and leave the menu stuck open.
  **/
 export const ContextMenuController: React.FC<ContextMenuControllerProps> = ({ open, position, items, onOpenChange, title, titleIcon = "list", closeOnSelect = true }) => {
   const close = reactHostPort.useCallback(() => onOpenChange(false), [onOpenChange]);
@@ -643,7 +622,9 @@ export const ContextMenuController: React.FC<ContextMenuControllerProps> = ({ op
   const floatingHost = useShellFloatingSurfaceHost();
   const flow = useFlow();
   const menuRef = reactHostPort.useRef<HTMLDivElement | null>(null);
+  const fusionBodyRef = reactHostPort.useRef<HTMLDivElement | null>(null);
   const chromeRef = reactHostPort.useRef<HTMLDivElement | null>(null);
+  const [fusionOffsets, setFusionOffsets] = reactHostPort.useState<ReadonlyMap<string, number>>(() => new Map());
   const itemsRef = reactHostPort.useRef(items);
   itemsRef.current = items;
   const [activePath, setActivePath] = reactHostPort.useState<number[]>([]);
@@ -788,7 +769,7 @@ export const ContextMenuController: React.FC<ContextMenuControllerProps> = ({ op
       }
     };
     const bindings = createDOMEventBinding();
-    bindings.listen(window, "pointerdown", handlePointerDown, false);
+    bindings.listen(window, "pointerdown", handlePointerDown, true);
     bindings.listen(window, "keydown", handleKeyDown, false);
     return () => {
       window.clearTimeout(armTimer);
@@ -817,6 +798,24 @@ export const ContextMenuController: React.FC<ContextMenuControllerProps> = ({ op
       node.style.top = `${clampedTop}px`;
     }
   }, [open, position?.x, position?.y, items]);
+  const fusionPanels = reactHostPort.useMemo(() => contextMenuOpenFusionPanels(items, activePath, submenuCollapsedAt), [activePath, items, submenuCollapsedAt]);
+  reactHostPort.useLayoutEffect(() => {
+    const body = fusionBodyRef.current;
+    if (!open || !body || fusionPanels.length === 0) {
+      setFusionOffsets((previous) => (previous.size === 0 ? previous : new Map()));
+      return;
+    }
+    const bodyTop = body.getBoundingClientRect().top;
+    const next = new Map<string, number>();
+    for (const panel of fusionPanels) {
+      const anchor = rowNodesRef.current.get(contextMenuPathKey(panel.parentPath));
+      if (!anchor) {
+        continue;
+      }
+      next.set(contextMenuPathKey(panel.parentPath), anchor.getBoundingClientRect().top - bodyTop);
+    }
+    setFusionOffsets((previous) => (contextMenuFusionOffsetsEqual(previous, next) ? previous : next));
+  }, [fusionPanels, open]);
   if (!items.length) {
     return null;
   }
@@ -833,8 +832,32 @@ export const ContextMenuController: React.FC<ContextMenuControllerProps> = ({ op
   };
   return renderPortalInto(
     <ContextMenuChrome ref={chromeRef} style={{ left: position.x, position: "fixed", top: `calc(${position.y}px - var(--size-medium))` }} title={title} icon={titleIcon}>
-      <div aria-label={title} dir={flow.inline === "rtl" ? "rtl" : undefined} onContextMenu={(event) => event.preventDefault()} ref={menuRef} role="menu" tabIndex={-1}>
-        {renderFixedContextMenuItems(items, [], renderOptions)}
+      <div
+        data-slot="context-menu-fusion-body"
+        dir={flow.inline === "rtl" ? "rtl" : undefined}
+        onContextMenu={(event) => event.preventDefault()}
+        ref={fusionBodyRef}
+        className="flex flex-row items-start gap-0"
+      >
+        <div aria-label={title} ref={menuRef} role="menu" tabIndex={-1}>
+          {renderFixedContextMenuItems(items, [], renderOptions)}
+        </div>
+        {fusionPanels.map((panel) => {
+          const panelKey = contextMenuPathKey(panel.parentPath);
+          return (
+            <div
+              key={panelKey}
+              aria-label={contextMenuItemAtPath(items, panel.parentPath)?.label ?? panelKey}
+              data-context-menu-submenu-of={panelKey}
+              data-slot="context-menu-submenu"
+              role="menu"
+              className="flex min-w-0 flex-col"
+              style={{ marginTop: fusionOffsets.get(panelKey) ?? 0 }}
+            >
+              {renderFixedContextMenuItems(panel.items, panel.parentPath, renderOptions)}
+            </div>
+          );
+        })}
       </div>
     </ContextMenuChrome>,
     floatingHost,

@@ -27,7 +27,7 @@ pub fn accept_suggestion(ctx: &mut Puzzle3dActionCtx<'_>, args: Option<&Value>) 
         .or_else(|| puzzle3d_brush_target_vortex(ctx.scene, ctx.interaction));
     ctx.scene.runtime.suggestion_menu = None;
     // 🧯️ Every dead end below is now spoken: no target vortex and no surviving candidate are both
-    // "there is nothing to place here", and the engine's own refusal (collision / overlap budget) is a
+    // "there is nothing to place here", and the engine's own refusal (collision / contact tolerance) is a
     // rejection. The popup still closes on all of them — `accept_suggestion_closes_menu_even_when_
     // placement_fails` — but the failure itself is no longer invisible.
     let Some(vortex_id) = vortex_id else {

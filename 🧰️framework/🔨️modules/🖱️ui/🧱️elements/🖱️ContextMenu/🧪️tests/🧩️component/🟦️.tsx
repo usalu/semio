@@ -27,24 +27,24 @@ describe("🖱️ context menu submenu reachability", () => {
   it("places a submenu beside its anchor row and flips only when the end side overflows", () => {
     const viewport = { width: 1000, height: 800 };
     const panel = { width: 180, height: 90 };
-    expect(contextMenuSubmenuPlacement({ anchor: { left: 100, right: 260, top: 200 }, panel, viewport })).toEqual({ left: 264, top: 200, flipped: false });
-    expect(contextMenuSubmenuPlacement({ anchor: { left: 700, right: 900, top: 200 }, panel, viewport })).toEqual({ left: 516, top: 200, flipped: true });
+    expect(contextMenuSubmenuPlacement({ anchor: { left: 100, right: 260, top: 200 }, panel, viewport })).toEqual({ left: 260, top: 200, flipped: false });
+    expect(contextMenuSubmenuPlacement({ anchor: { left: 700, right: 900, top: 200 }, panel, viewport })).toEqual({ left: 520, top: 200, flipped: true });
   });
 
   it("clamps a submenu whose anchor sits at the bottom edge back into the viewport", () => {
     const placement = contextMenuSubmenuPlacement({ anchor: { left: 10, right: 100, top: 760 }, panel: { width: 120, height: 200 }, viewport: { width: 1000, height: 800 } });
     expect(placement.top).toBe(600);
-    expect(placement.left).toBe(104);
+    expect(placement.left).toBe(100);
   });
 
-  it("keeps a submenu out of the scrolling menu chrome that would clip it away", () => {
-    const { container, getByRole } = renderMenu();
+  it("fuses an open submenu into the same context menu chrome without a nested title chip", () => {
+    const { getByRole } = renderMenu();
     fireEvent.click(getByRole("menuitem", { name: /Transfer/u }));
     const panel = document.querySelector('[data-slot="context-menu-submenu"]');
     expect(panel).not.toBeNull();
-    const scrollport = panel?.closest(".overflow-y-auto");
-    expect(scrollport).toBeNull();
-    expect(container.contains(panel as Node)).toBe(false);
+    const chrome = document.querySelector('[data-slot="context-menu-content"]');
+    expect(chrome?.contains(panel as Node)).toBe(true);
+    expect(document.querySelectorAll('[data-slot="context-menu-title-chip"]')).toHaveLength(1);
     expect(panel?.getAttribute("data-context-menu-submenu-of")).toBe(contextMenuPathKey([1]));
   });
 
@@ -52,8 +52,8 @@ describe("🖱️ context menu submenu reachability", () => {
     const { getByRole } = renderMenu();
     fireEvent.click(getByRole("menuitem", { name: /Transfer/u }));
     const panel = document.querySelector('[data-slot="context-menu-submenu"]');
-    expect(panel?.querySelector('[role="menu"]')).not.toBeNull();
-    expect(document.getElementById("exportDocument")?.closest('[role="menu"]')).not.toBeNull();
+    expect(panel?.getAttribute("role")).toBe("menu");
+    expect(document.getElementById("exportDocument")?.closest('[role="menu"]')).toBe(panel);
   });
 
   it("moves real DOM focus onto the active row, not only the painted mark", () => {
@@ -90,3 +90,25 @@ describe("🖱️ context menu submenu reachability", () => {
   });
 });
 // #endregion 🖱️SubmenuReachability
+
+// #region 🖱️OutsideDismiss
+describe("🖱️ context menu outside dismiss", () => {
+  it("still dismisses when canvas capture calls stopImmediatePropagation and bubble never reaches window", async () => {
+    const onOpenChange = vi.fn();
+    const canvas = document.createElement("canvas");
+    document.body.append(canvas);
+    canvas.addEventListener(
+      "pointerdown",
+      (event) => {
+        event.stopImmediatePropagation();
+      },
+      true,
+    );
+    render(<ContextMenuController open position={{ x: 8, y: 8 }} items={[{ id: "a", label: "Alpha" }]} onOpenChange={onOpenChange} title="Actions" />);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    canvas.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, cancelable: true, button: 0, clientX: 4, clientY: 4 }));
+    expect(onOpenChange).toHaveBeenCalledWith(false);
+    canvas.remove();
+  });
+});
+// #endregion 🖱️OutsideDismiss

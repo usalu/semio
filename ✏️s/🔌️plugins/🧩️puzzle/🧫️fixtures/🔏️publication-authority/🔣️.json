@@ -114,7 +114,7 @@
             "config"
           ],
           "routes": [
-            "setBrushPlacementOverlapBudget",
+            "setBrushPlacementContactTolerance",
             "setFillCount",
             "setObjectKindWeight",
             "setVortexKindWeight"
@@ -350,7 +350,7 @@
             "config"
           ],
           "routes": [
-            "setBrushPlacementOverlapBudget",
+            "setBrushPlacementContactTolerance",
             "setObjectKindWeight",
             "setVortexKindWeight"
           ],

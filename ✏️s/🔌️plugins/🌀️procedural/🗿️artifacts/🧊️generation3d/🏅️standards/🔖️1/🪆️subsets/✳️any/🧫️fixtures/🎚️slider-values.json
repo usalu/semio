@@ -3,9 +3,7 @@
   "schema": "s.procedural.generation3d.slider-values/v1",
   "lodMode": "",
   "boundsTolerance": 0.001,
-  "handedOn": {
-    "brep-input-handle-lifetime": "A boolean operator leaves its INPUT solid unusable: after one `brep.bool.fuse`/`cut`, the box handle its sibling node still names resolves to a freed arena slot, so the next evaluation of the same graph answers `missing handle: <digest>` for an input whose own node never changed. The oracle — a fresh host that rebuilds the input — succeeds at the same value. Witnessed as `retain left dangling live handles: [<handle>=ssolid-9-0]` inside the kernel's own compaction. Owner: the brep boolean's input lifetime (`🧊️brep/🧬️schema/🔺️diff/🔀️boolean`), not the gesture chain. A handed-on row must still FAIL, so a fix cannot rot unnoticed."
-  },
+  "handedOn": {},
   "rows": [
     {
       "example": "hexagonal-mushroom-column",
@@ -62,8 +60,8 @@
       "max": 3.0,
       "gestures": [
         { "row": "inside", "kind": "drag", "values": [1.4, 1.8, 2.2] },
-        { "row": "max-end", "kind": "drag", "values": [2.6, 3.0], "handedOn": "brep-input-handle-lifetime" },
-        { "row": "min-end", "kind": "drag", "values": [0.6, 0.2], "handedOn": "brep-input-handle-lifetime" },
+        { "row": "max-end", "kind": "drag", "values": [2.6, 3.0] },
+        { "row": "min-end", "kind": "drag", "values": [0.6, 0.2] },
         { "row": "burst", "kind": "burst", "values": [0.8, 2.7, 1.6] }
       ]
     },

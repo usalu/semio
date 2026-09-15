@@ -1,6 +1,6 @@
 type Puzzle3dConfig {
   fillCount: Int! @state(class: CONFIG)
-  overlapBudget: Float! @state(class: CONFIG)
+  contactTolerance: Float! @state(class: CONFIG)
   objectKindWeights: [Puzzle3dFloatEntry!]! @state(class: CONFIG)
   vortexKindWeights: [Puzzle3dFloatEntry!]! @state(class: CONFIG)
   activeExampleId: String! @state(class: CONFIG)

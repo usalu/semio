@@ -9,7 +9,7 @@ pub struct Puzzle5dConfig {
     #[state(config)]
     pub fill_count: u32,
     #[state(config)]
-    pub overlap_budget: f64,
+    pub contact_tolerance: f64,
     #[state(config)]
     pub object_kind_weights: HashMap<String, f64>,
     #[state(config)]

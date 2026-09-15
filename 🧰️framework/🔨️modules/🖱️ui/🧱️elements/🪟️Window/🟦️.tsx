@@ -17,7 +17,7 @@ import { useLabel } from "../🏷️Label/🟦️.tsx";
 import { useShellScopeOptional, NULL_SHELL_ROOT_REF, useShellKeydown } from "../🐚️ShellScope/🟦️.tsx";
 import { SurfaceScope, isSurfaceActiveBackgroundPointer, getLevelZClass } from "../🌈️Surface/🟦️.tsx";
 import { measureWindowChromeScrollClearancePx, windowChromeScrollClearanceVar, windowContentDeadLineVar } from "../🚧️WindowContentDeadLine/🟦️.tsx";
-import { type UiStatus, type EngagementSpec, type SearchSpec, UI_WINDOW_SEARCH, useUiMobile, routeWindowSearchEscape, shouldRouteKeysToWindowSearch, windowMeasuresDefaultWidthPx, windowMeasuresMinWidthPx, windowMeasuresMaxWidthPx, uiSpacingPx, type ChromePanelOccupancy, useShellChromePanelBoxes, useChromePanelSafeArea, chromePanelSafeArea, chromePanelSafeAreaStyle, safeAreaBoxFromRect, ExternalLinkIcon, GhostRegionShell, PaneHost, Pane, WINDOW_PANE_MEASURES_ICON, WINDOW_PANE_ACTIONS_ICON, WINDOW_PANE_SEARCH_ICON, WINDOW_PANE_UTILITIES_ICON, Engagement, Search, panelResizeEdgeAccentClass, windowMeasuresBodyClass, windowEngagementBodyClass, utilityBarBodyClass, focusActiveSearchInput, windowChromeClearedTopOffset } from "../../🎯️targets/⚛️react/🟦️";
+import { type UiStatus, type EngagementSpec, type SearchSpec, UI_WINDOW_SEARCH, useUiMobile, routeWindowSearchEscape, shouldRouteKeysToWindowSearch, windowMeasuresDefaultWidthPx, windowMeasuresMinWidthPx, windowMeasuresMaxWidthPx, uiSpacingPx, useChromePanelSafeArea, chromePanelSafeAreaStyle, ExternalLinkIcon, GhostRegionShell, PaneHost, Pane, WINDOW_PANE_MEASURES_ICON, WINDOW_PANE_ACTIONS_ICON, WINDOW_PANE_SEARCH_ICON, WINDOW_PANE_UTILITIES_ICON, Engagement, Search, panelResizeEdgeAccentClass, windowMeasuresBodyClass, windowEngagementBodyClass, utilityBarBodyClass, focusActiveSearchInput, windowChromeClearedTopOffset } from "../../🎯️targets/⚛️react/🟦️";
 import { Minimize2Icon, Maximize2Icon, CloseIcon } from "../🔣️Icons/🟦️.tsx";
 // #endregion 🔌️Adapters
 
@@ -74,10 +74,6 @@ interface WindowProps extends WindowConfig {
 /**
  * DefaultErrorDisplay holds the data fields for a DefaultErrorDisplay record.
  **/
-/** @emoji 📱️ The mobile chrome docks ONE full-width panel sheet instead of a side column, so a window's
- * right-edge chrome has nothing to reserve against there — see the safe-area read in {@link Window}. */
-const NO_WINDOW_CHROME_PANEL_BOXES: readonly ChromePanelOccupancy[] = Object.freeze([]);
-
 const DefaultErrorDisplay: React.FC<{ error: Error }> = ({ error }) => {
   // 🎨️ Transparent — rendered inside the Window body, which already paints the window-level surface.
   const bgClass = "bg-transparent";
@@ -204,35 +200,8 @@ const Window: React.FC<WindowProps> = ({
     return Math.max(windowMeasuresMinWidthPx, Math.min(windowMeasuresMaxWidthPx, Math.round(bodyWidth) - 8));
   }, []);
   const measuresMaxWidthPx = readMeasuresMaxWidthPx();
-  // 🛟️ A window reaching under an open anchored chrome panel shares that corner with the panel body,
-  // which paints at `z-panel` in the app root's stacking context and takes every press meant for this
-  // window's own right-edge chrome — the Projection group of wave B47 §1.3. The chrome column is pinned
-  // to the top of its window, so it declares `"inline"`: it yields exactly the overlap on its own edge,
-  // and a window that stops short of the panel keeps its rail flush.
-  // 📱️ Desktop only: the mobile chrome docks ONE full-width panel sheet instead of a side column, so
-  // there is no column for a window's right-edge chrome to yield to — and yielding to a full-width sheet
-  // would push the rail across its own window. The store is still subscribed unconditionally (hook order).
-  const publishedChromePanelBoxes = useShellChromePanelBoxes(shellScope?.rootRef.current ?? undefined);
-  const chromePanelBoxes = mobile ? NO_WINDOW_CHROME_PANEL_BOXES : publishedChromePanelBoxes;
-  const [rightChromeReservePx, setRightChromeReservePx] = reactHostPort.useState(0);
-  reactHostPort.useLayoutEffect(() => {
-    const body = windowBodyRef.current;
-    if (!body) return;
-    const boxes = chromePanelBoxes.map((panel) => panel.box);
-    const sync = () => {
-      const host = safeAreaBoxFromRect(body.getBoundingClientRect());
-      const column = { left: host.right - windowMeasuresMinWidthPx, top: host.top, right: host.right, bottom: host.bottom };
-      setRightChromeReservePx(chromePanelSafeArea(column, host, "top-right", boxes, "inline", 0).inlinePx);
-    };
-    sync();
-    const resizeObserver = typeof ResizeObserver !== "undefined" ? new ResizeObserver(sync) : null;
-    resizeObserver?.observe(body);
-    window.addEventListener("resize", sync);
-    return () => {
-      resizeObserver?.disconnect();
-      window.removeEventListener("resize", sync);
-    };
-  }, [chromePanelBoxes]);
+  // 🪟️ Window pane toggles (measures, engagement, search, utilities) stay on their authored anchors behind
+  // anchored chrome panels — panels paint above `z-window` and occlude overlap without shifting pane chrome.
   // 🛟️ The folded engagement's quick-action rail is window CONTENT anchored into the top-LEFT corner, the
   // same corner a `top-left` chrome panel occupies — so it reads its own safe area instead of painting
   // under one. It floats, so it yields on whichever axis costs less.
@@ -352,11 +321,7 @@ const Window: React.FC<WindowProps> = ({
           className,
         )}
       >
-        {hasControls ? (
-          <div className="absolute top-1 right-1 z-panel flex items-stretch gap-single" style={rightChromeReservePx > 0 ? { right: `calc(var(--spacing-quarter) + ${rightChromeReservePx}px)` } : undefined}>
-            {controlsContent}
-          </div>
-        ) : null}
+        {hasControls ? <div className="absolute top-1 right-1 z-panel flex items-stretch gap-single">{controlsContent}</div> : null}
         <div ref={windowBodyRef} data-slot="window-body" className={cn("relative flex min-w-0 flex-col overflow-hidden", fill ? "min-h-0 flex-1" : "h-auto shrink-0")}>
           {/* 🪟️ PaneHost wraps window body content so deep canvas hosts (e.g. projection switcher via usePaneSlot) receive PaneHostContext; the portal mount is a sibling overlay. */}
           <PaneHost className={cn("flex min-w-0 flex-col", fill ? "min-h-0 flex-1" : undefined)}>{error ? <DefaultErrorDisplay error={error} /> : loading && skeleton ? skeleton : children}</PaneHost>
@@ -388,7 +353,6 @@ const Window: React.FC<WindowProps> = ({
               }}
               size={measuresWidthPx}
               onSizeChange={setMeasuresWidthPx}
-              inlineEdgeReservePx={rightChromeReservePx}
               minSize={windowMeasuresMinWidthPx}
               maxSize={measuresMaxWidthPx}
               onResizeActiveChange={setMeasuresResizeLeftActive}

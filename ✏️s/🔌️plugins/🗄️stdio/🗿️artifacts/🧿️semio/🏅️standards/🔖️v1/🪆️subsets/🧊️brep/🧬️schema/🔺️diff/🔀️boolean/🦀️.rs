@@ -21,6 +21,15 @@
 //! duplicate. Coincident/adjacent duplicate faces on the same surface (e.g. two operands sharing a
 //! face exactly) are detected and merged into one rather than kept twice.
 //!
+//! ♻️ Input lifetime: a boolean OWNS everything it answers with and frees nothing it did not
+//! create. The general engine plans on deep copies of both operands ([`BooleanJob::new`]), every
+//! fast-path branch that "returns an operand" returns a [`copy_solid`] of it, and the post-stitch
+//! orphan sweep is scoped to the entities the job itself minted. The operands are read-only
+//! throughout, because the evaluator above this kernel serves an unchanged input node from cache
+//! and re-presents the SAME handle on the next evaluation — a boolean that consumed its inputs made
+//! `sphere-box-fuse`/`sphere-cut-with-torus` answer `missing handle: <digest>` from the second
+//! evaluation onwards (`📓️brep-boolean-input-lifetime-2026-09-15.md`).
+//!
 //! Still out of scope, surfacing as a `BooleanError` rather than a silently wrong result: a set of
 //! open segments that closes into a cycle with no free end, and a clip whose endpoints fall on a
 //! pole or exactly along a trim boundary — `refine_boundary` locates those only to within the
@@ -36,7 +45,7 @@ use std::collections::{HashMap, HashSet};
 use crate::standards::v1::subsets::brep::schema::diff::euler::{add_shell, add_solid, make_edge, make_vertex, splice_boundary_vertex, split_face_by_chain, split_face_by_interior_curve, split_face_by_seam_crossing, ParametricEdge};
 use crate::standards::v1::subsets::brep::schema::diff::intersect::{intersect_curve_surface, intersect_surface_surface, IntCurve};
 use crate::standards::v1::subsets::brep::schema::diff::primitives::{make_box, make_convex_hull, solid_from_triangle_soup};
-use crate::standards::v1::subsets::brep::schema::diff::transform::transform_solid;
+use crate::standards::v1::subsets::brep::schema::diff::transform::{copy_solid, transform_solid};
 use crate::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Affine3;
 use crate::standards::v1::subsets::brep::schema::engine::{MeshTransfer, PointClassification};
 use crate::standards::v1::subsets::brep::schema::inferences::bounding_volume::face_aabb;
@@ -80,7 +89,10 @@ pub fn boolean_solid(body: &mut Body, a: SolidId, b: SolidId, op: BooleanOp, tol
     }
 }
 
-/// 🔀 Successively cuts `tools` from `target` (folded [`BooleanOp::Cut`]).
+/// 🔀 Successively cuts `tools` from `target` (folded [`BooleanOp::Cut`]). Every intermediate is a
+/// solid this fold minted and nobody else can name, so it is dropped as soon as the next round
+/// supersedes it — `target` and the tools, which the caller DOES name, are never touched (see
+/// [`BooleanJob::new`]).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn compound_cut(body: &mut Body, target: SolidId, tools: &[SolidId], tol: f64, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
     require_tol(tol)?;
@@ -90,7 +102,11 @@ pub fn compound_cut(body: &mut Body, target: SolidId, tools: &[SolidId], tol: f6
     }
     let mut current = target;
     for &tool in tools {
-        current = boolean_solid(body, current, tool, BooleanOp::Cut, tol, rec)?;
+        let next = boolean_solid(body, current, tool, BooleanOp::Cut, tol, rec)?;
+        if current != target {
+            remove_solid_and_orphans(body, current, &HashSet::new(), rec);
+        }
+        current = next;
     }
     Ok(current)
 }
@@ -226,34 +242,38 @@ pub fn split_solid_by_plane(body: &mut Body, solid: SolidId, origin: Pnt3, norma
 /// real [`point_in_solid`] probe of several boundary points, not just AABB containment (AABB
 /// containment alone is necessary but not sufficient — used only to decide whether the probe is
 /// worth running).
+/// 🐛 Every branch that "returns an operand" returns a DEEP COPY of it ([`copy_solid`],
+/// [`detached_copy_of_outer_faces`]). The former `clone_solid_shells` minted a second solid/shell
+/// wrapper over the operand's OWN faces, so one face belonged to two shells at once and the
+/// operand's lifetime became the result's — see this module's header.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn trivial_topology_fast_path(body: &mut Body, a: SolidId, b: SolidId, (bb_a, bb_b): (&AxisAlignedBox, &AxisAlignedBox), op: BooleanOp, tol: f64, rec: &mut OpRecorder) -> Result<Option<SolidId>, KernelError> {
     let gap = aabb_gap(bb_a, bb_b);
     if gap >= tol {
         return match op {
             BooleanOp::Unite => {
-                let mut faces = outer_faces(body, a)?;
-                faces.extend(outer_faces(body, b)?);
+                let mut faces = detached_copy_of_outer_faces(body, a, rec)?;
+                faces.extend(detached_copy_of_outer_faces(body, b, rec)?);
                 Ok(Some(solid_from_outer_faces(body, faces, Vec::new(), rec)?))
             }
-            BooleanOp::Cut => Ok(Some(clone_solid_shells(body, a, rec)?)),
+            BooleanOp::Cut => Ok(Some(copy_solid(body, a, rec)?)),
             BooleanOp::Intersect => Err(KernelError::Boolean(BooleanError::InvalidResult("boolean intersect is empty (operands disjoint)".into()))),
         };
     }
     if aabb_contains(bb_b, bb_a, tol) && solid_wholly_inside(body, a, b, tol)? {
         return match op {
-            BooleanOp::Unite => Ok(Some(clone_solid_shells(body, b, rec)?)),
-            BooleanOp::Intersect => Ok(Some(clone_solid_shells(body, a, rec)?)),
+            BooleanOp::Unite => Ok(Some(copy_solid(body, b, rec)?)),
+            BooleanOp::Intersect => Ok(Some(copy_solid(body, a, rec)?)),
             BooleanOp::Cut => Err(KernelError::Boolean(BooleanError::InvalidResult("boolean cut is empty (tool contains target)".into()))),
         };
     }
     if aabb_contains(bb_a, bb_b, tol) && solid_wholly_inside(body, b, a, tol)? {
         return match op {
-            BooleanOp::Unite => Ok(Some(clone_solid_shells(body, a, rec)?)),
-            BooleanOp::Intersect => Ok(Some(clone_solid_shells(body, b, rec)?)),
+            BooleanOp::Unite => Ok(Some(copy_solid(body, a, rec)?)),
+            BooleanOp::Intersect => Ok(Some(copy_solid(body, b, rec)?)),
             BooleanOp::Cut => {
-                let outer = outer_faces(body, a)?;
-                let inner = outer_faces(body, b)?;
+                let outer = detached_copy_of_outer_faces(body, a, rec)?;
+                let inner = detached_copy_of_outer_faces(body, b, rec)?;
                 Ok(Some(solid_from_outer_faces(body, outer, vec![inner], rec)?))
             }
         };
@@ -575,16 +595,22 @@ pub enum BooleanAdmission {
 /// stitch (one unit, group + signed-volume probe + containment) is the coarsest step this design
 /// admits (ticket `26/09/09/PROCEDURAL-3D-END-TO-END`).
 ///
-/// 🚧️ A cancelled or failed job leaves the imprints it already applied in the body — exactly what
-/// a boolean that returns `Err` mid-pipeline has always left. The operand handles stay valid (a
-/// split face covers the same surface region); nothing is rolled back, because the kernel has no
-/// transaction.
+/// 🚧️ A cancelled or failed job leaves the imprints it already applied in the body. Those imprints
+/// live on the job's OWN working copies of the operands ([`BooleanJob::new`]), never on the
+/// operands themselves, so a cancelled boolean leaves its inputs byte-identical and leaves behind
+/// only unreachable garbage the next compaction reclaims; nothing is rolled back, because the
+/// kernel has no transaction.
 pub struct BooleanJob {
     a: SolidId,
     b: SolidId,
     op: BooleanOp,
     tol: f64,
     pre_existing_solids: HashSet<SolidId>,
+    /// ♻️ Every edge/vertex that already existed when this job was planned. [`gc_orphan_edges_and_vertices`]
+    /// may free only what the job itself minted: a bare wire's edges carry no coedge at all, so a
+    /// whole-arena orphan sweep would eat every live `Wire` handle's geometry as collateral.
+    protected_edges: HashSet<EdgeId>,
+    protected_vertices: HashSet<VertexId>,
     coincident_a: HashSet<FaceId>,
     faces_a: Vec<FaceId>,
     faces_b: Vec<FaceId>,
@@ -614,9 +640,21 @@ impl BooleanJob {
     /// 🔀 Plans the general exact boolean of `a` and `b`. Every plan input (which faces exist,
     /// which pairs are coincident, the weld table) is read ONCE here, so the walk below is a pure
     /// cursor advance.
+    ///
+    /// 🐛 The engine imprints DESTRUCTIVELY (it splits the faces it classifies) and the stitch then
+    /// drops whatever the selection did not keep, so the plan runs on deep copies of both operands
+    /// ([`copy_solid`]) and the operands themselves are never touched. Without that, one
+    /// `brep.bool.fuse`/`brep.bool.cut` freed the arena entities of BOTH its inputs, and since the
+    /// evaluator serves an unchanged input node from cache, the next evaluation of the same graph
+    /// answered `missing handle: <digest>` for a node whose own parameters never moved
+    /// (`📓️brep-boolean-input-lifetime-2026-09-15.md`).
     // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-    pub fn new(body: &Body, a: SolidId, b: SolidId, op: BooleanOp, tol: f64) -> Self {
+    pub fn new(body: &mut Body, a: SolidId, b: SolidId, op: BooleanOp, tol: f64, rec: &mut OpRecorder) -> Result<Self, KernelError> {
         let pre_existing_solids: HashSet<SolidId> = body.solids.iter().map(|(id, _)| id).collect();
+        let protected_edges: HashSet<EdgeId> = body.edges.iter().map(|(id, _)| id).collect();
+        let protected_vertices: HashSet<VertexId> = body.vertices.iter().map(|(id, _)| id).collect();
+        let a = copy_solid(body, a, rec)?;
+        let b = copy_solid(body, b, rec)?;
         let faces_a_all = body.solid_faces(a);
         let faces_b_all = body.solid_faces(b);
         let coincident = find_coincident_face_pairs(body, &faces_a_all, &faces_b_all, tol);
@@ -639,12 +677,14 @@ impl BooleanJob {
             }
         }
         let units_total = faces_a.len() * faces_b.len() + 2 * (faces_a.len() + faces_b.len()) + 1;
-        Self {
+        Ok(Self {
             a,
             b,
             op,
             tol,
             pre_existing_solids,
+            protected_edges,
+            protected_vertices,
             coincident_a,
             faces_a,
             faces_b,
@@ -666,7 +706,7 @@ impl BooleanJob {
             units_done: 0,
             units_total,
             phase: BooleanPhase::Imprint,
-        }
+        })
     }
 
     /// 📈 This job's progress right now — safe to read between steps and after termination.
@@ -844,7 +884,7 @@ impl BooleanJob {
                     let result = stitch_selected_faces(body, &self.selected, self.tol, rec)?;
                     remove_solid_and_orphans(body, self.a, &selected_set, rec);
                     remove_solid_and_orphans(body, self.b, &selected_set, rec);
-                    gc_orphan_edges_and_vertices(body, rec);
+                    gc_orphan_edges_and_vertices(body, (&self.protected_edges, &self.protected_vertices), rec);
                     self.result = Some(result);
                     let validation = BodyValidationJob::new(body);
                     self.units_total = self.units_done + 1 + validation.progress().units_total;
@@ -910,7 +950,7 @@ pub fn boolean_job(body: &mut Body, a: SolidId, b: SolidId, op: BooleanOp, tol: 
             return Ok(BooleanAdmission::Answered(id));
         }
     }
-    Ok(BooleanAdmission::Job(BooleanJob::new(body, a, b, op, tol)))
+    Ok(BooleanAdmission::Job(BooleanJob::new(body, a, b, op, tol, rec)?))
 }
 
 // #endregion ⏱️ResumableBoolean
@@ -2122,14 +2162,19 @@ fn remove_face(body: &mut Body, face: FaceId, rec: &mut OpRecorder) {
     body.faces.remove(face);
 }
 
-/// 🔀 Drops every edge/vertex no longer referenced by any live coedge/edge — the imprint pipeline
-/// creates edges/vertices speculatively (both faces of a pair queue the same shared edge even when
-/// only one side ends up selected) and `remove_face` only clears coedges, not the shared geometry
-/// underneath them.
+/// 🔀 Drops every edge/vertex THIS boolean minted that no live coedge/edge references any more —
+/// the imprint pipeline creates edges/vertices speculatively (both faces of a pair queue the same
+/// shared edge even when only one side ends up selected) and `remove_face` only clears coedges, not
+/// the shared geometry underneath them.
+/// 🐛 `protected` is every edge/vertex that predates the job, and the sweep may never cross it: a
+/// bare [`crate::standards::v1::subsets::brep::schema::snapshot::topology::Wire`]'s member edges
+/// carry no coedge at all, so an unscoped orphan sweep read every live wire handle's geometry as
+/// garbage and freed it — the same "a boolean frees what it did not create" law its operands are
+/// now protected by.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn gc_orphan_edges_and_vertices(body: &mut Body, rec: &mut OpRecorder) {
+fn gc_orphan_edges_and_vertices(body: &mut Body, (protected_edges, protected_vertices): (&HashSet<EdgeId>, &HashSet<VertexId>), rec: &mut OpRecorder) {
     let used_edges: HashSet<EdgeId> = body.coedges.iter().map(|(_, c)| c.edge).collect();
-    let dead_edges: Vec<EdgeId> = body.edges.iter().map(|(id, _)| id).filter(|id| !used_edges.contains(id)).collect();
+    let dead_edges: Vec<EdgeId> = body.edges.iter().map(|(id, _)| id).filter(|id| !used_edges.contains(id) && !protected_edges.contains(id)).collect();
     for e in dead_edges {
         if let Some(data) = body.edges.get(e) {
             rec.record_deleted(data.label);
@@ -2141,7 +2186,7 @@ fn gc_orphan_edges_and_vertices(body: &mut Body, rec: &mut OpRecorder) {
         used_verts.insert(e.v0);
         used_verts.insert(e.v1);
     }
-    let dead_verts: Vec<VertexId> = body.vertices.iter().map(|(id, _)| id).filter(|id| !used_verts.contains(id)).collect();
+    let dead_verts: Vec<VertexId> = body.vertices.iter().map(|(id, _)| id).filter(|id| !used_verts.contains(id) && !protected_vertices.contains(id)).collect();
     for v in dead_verts {
         if let Some(data) = body.vertices.get(v) {
             rec.record_deleted(data.label);
@@ -2237,16 +2282,16 @@ fn solid_from_outer_faces(body: &mut Body, outer_faces: Vec<FaceId>, inner_face_
     Ok(add_solid(body, outer, inners, rec))
 }
 
+/// 🔀 A deep copy of `solid`'s OUTER faces, detached from any shell/solid wrapper and ready to be
+/// re-assembled into somebody else's shell — the operand-owning counterpart of [`outer_faces`],
+/// which hands back the operand's own face ids and therefore may only ever be READ from.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn clone_solid_shells(body: &mut Body, solid: SolidId, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
-    let data = body.solids.get(solid).ok_or_else(|| KernelError::MissingEntity(format!("solid {solid}")))?.clone();
-    let outer = outer_faces(body, solid)?;
-    let mut inners = Vec::new();
-    for shell_id in data.inners {
-        let faces = body.shells.get(shell_id).ok_or_else(|| KernelError::MissingEntity(format!("shell {shell_id}")))?.faces.clone();
-        inners.push(faces);
-    }
-    solid_from_outer_faces(body, outer, inners, rec)
+fn detached_copy_of_outer_faces(body: &mut Body, solid: SolidId, rec: &mut OpRecorder) -> Result<Vec<FaceId>, KernelError> {
+    let copy = copy_solid(body, solid, rec)?;
+    let faces = outer_faces(body, copy)?;
+    let keep: HashSet<FaceId> = faces.iter().copied().collect();
+    remove_solid_and_orphans(body, copy, &keep, rec);
+    Ok(faces)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

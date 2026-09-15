@@ -58,6 +58,10 @@ pub fn sourcing_curation_io() -> semio_framework_plugin::AppIo {
 /// `SOURCING_DIALECT` + `AppRole` via `surface_app_id`, never hand-written).
 pub const SOURCING_CONTROLLER_ID: &str = "sourcing-curation";
 pub const SOURCING_DRAG_MIME: &str = "application/x-semio-sourcing-object";
+/// 🕹️ The framework interaction domain every sourcing table row and grid object is picked in.
+pub const SOURCING_ROWS_DOMAIN: &str = "rows";
+/// 🕹️ The granularity a stock kind is picked under in [`SOURCING_ROWS_DOMAIN`].
+pub const SOURCING_OBJECT_GRANULARITY: &str = "object";
 pub const DEMO_STOCK_EXAMPLE_ID: &str = crate::examples::demo::ID;
 /// 🫙️ The shell's "no example" selection.
 pub const EMPTY_EXAMPLE_ID: &str = "";
@@ -96,6 +100,8 @@ pub fn sourcing_table(surface_id: &str, columns: &[(&str, &str, bool)], rows: Ve
     scene.row_drag_mime = Some(SOURCING_DRAG_MIME.into());
     scene.drop_action_json = Some(protocol::json::to_json_string(&protocol::ToValue::to_value(&sourcing_table_action(drop_action, None))));
     scene.sort_json = sort.map(|sort| protocol::json::to_json_string(&protocol::ToValue::to_value(sort)));
+    scene.domain_id = Some(SOURCING_ROWS_DOMAIN.into());
+    scene.domain_granularity_id = Some(SOURCING_OBJECT_GRANULARITY.into());
     semio_framework_plugin::scene_surface(surface_id, semio_framework_plugin::plugin_app_close_prelude::SurfaceKind::Table, &scene)
 }
 
@@ -836,6 +842,14 @@ impl ArtifactEditor for SourcingCurationApp {
         Some(semio_framework_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
     }
 
+    fn build_document_store_initialization_job(
+        envelope: store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
+        operation: semio_framework_job::OperationId,
+        generation: semio_framework_job::Generation,
+    ) -> Result<semio_framework_plugin::ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
+        Ok(semio_framework_plugin::bounded_document_store_initialization_job(envelope, SOURCING_CURATION_SCHEMA, operation, generation))
+    }
+
     fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
         Some(semio_framework_plugin::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
     }
@@ -1013,14 +1027,28 @@ impl ArtifactEditor for SourcingCurationApp {
         match body_key {
             pool::SOURCING_CURATION_BODY_POOL => pool::render(snapshot, config, labels).map(semio_framework_plugin::built_to_component_tree),
             curated::SOURCING_CURATION_BODY_CURATED => curated::render(snapshot, labels).map(semio_framework_plugin::built_to_component_tree),
-            // 🕹️ `render` carries no `InteractionView` (ArtifactApp's breaking pass only added it to
-            // `handle`/`copy_fragment`/`cut_operations` — see ticket 26/08/14's w3b-summary.md) — the
-            // preview window degrades to its "no selection" default until a future wave threads
-            // interaction into render. Flagged as a discovered framework gap, not worked around here.
             preview::SOURCING_CURATION_BODY_PREVIEW => preview::render(snapshot, &[], labels).map(semio_framework_plugin::built_to_component_tree),
             grid::SOURCING_CURATION_BODY_GRID => grid::render(snapshot, config).map(semio_framework_plugin::built_to_component_tree),
             _ => semio_framework_plugin::built_text_to_component_tree(Label::data("")),
         }
+    }
+
+    /// 🕹️ The Preview window follows the framework-owned `rows` selection a table row or grid pick makes;
+    /// every other body renders exactly as [`Self::render`].
+    fn render_with_request_context(
+        _owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
+        body_key: &str,
+        doc: &ArtifactView<'_, CurationSnapshot>,
+        cfg: &ConfigView<'_, SourcingCurationConfig>,
+        view_state: &semio_framework_plugin::ViewModel,
+        _transient: &semio_framework_plugin::TransientView<'_, semio_framework_plugin::NoTransient>,
+        interaction: &InteractionView<'_>,
+    ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+        if body_key == preview::SOURCING_CURATION_BODY_PREVIEW {
+            let selected_ids = interaction.selection(SOURCING_ROWS_DOMAIN).ids.clone();
+            return preview::render(doc.snapshot, &selected_ids, sourcing_curation_labels(view_state)).map(semio_framework_plugin::built_to_component_tree);
+        }
+        Self::render(body_key, doc, cfg, view_state)
     }
 }
 //#endregion 🔖️SourcingCurationApp
@@ -1120,9 +1148,9 @@ pub fn create_sourcing_curation_app() -> AppDefinition {
             // `setInteractionGranularity`) auto-inject; the pool/curated tables and the grid's world3d
             // pick surface all carry it.
             .interaction(InteractionDefinition {
-                id: "rows".into(),
+                id: SOURCING_ROWS_DOMAIN.into(),
                 label: LocalizedLabel::native("Rows", "Zeilen"),
-                granularities: vec![GranularityDefinition { id: "object".into(), label: LocalizedLabel::native("Object", "Objekt"), icon_id: "box".into() }],
+                granularities: vec![GranularityDefinition { id: SOURCING_OBJECT_GRANULARITY.into(), label: LocalizedLabel::native("Object", "Objekt"), icon_id: "box".into() }],
                 hierarchy: HierarchyProvider::Flat,
                 hover: HoverSpec::default(),
                 selection: SelectionSpec {

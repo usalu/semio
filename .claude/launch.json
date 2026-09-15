@@ -238,6 +238,11 @@
       "port": 6013
     },
     {
+      "name": "puzzle3d-react-release-e2e-attach",
+      "url": "http://localhost:6014",
+      "port": 6014
+    },
+    {
       "name": "procedural3d-react-attach",
       "url": "http://localhost:6018",
       "port": 6018

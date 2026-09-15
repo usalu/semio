@@ -584,6 +584,12 @@ TODO: Start new project `elements` that offers domain-agnostic primitives (such 
 
 ---
 
+The repo must have a domain-driven folder taxonomy and files are just anonymous implementation leafes (e.g. `🦀️.rs`) or fixed names when needed (e.g. `Cargo.toml`, etc)
+violations e.g.
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧫️fixtures/⏯️tool-run/🪧️panel-running.json
+
+---
+
 There is a confusion between snapshot and fixture in the code.
 Refactor everything to get it right.
 Examples are shown to the user to demonstrate the software.
@@ -2847,6 +2853,11 @@ This MUST NOT happen.
 
 ---
 
+The nested context menus should fuse into a large shape. Dont repeat the name of the parent item as chip on the top left and directly show all the items.
+Fusing means that the shape shares one outline, no gap, etc
+
+---
+
 The ui system should change:
 Everything must have the same kind of silhouettes (rectangle with chips around it). The chips are glassy and the content of the element flows through the active chips.
 e.g.
@@ -3099,9 +3110,11 @@ Implement it general for infinite worlds so that puzzle 3d, cad, etc have it
 
 ---
 
-The repo must have a domain-driven folder taxonomy and files are just anonymous implementation leafes (e.g. `🦀️.rs`) or fixed names when needed (e.g. `Cargo.toml`, etc)
-violations e.g.
-🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧫️fixtures/⏯️tool-run/🪧️panel-running.json
+puzzle 3d: Moving the current distribution parameters for fill doesnt work correctly.
+The total probability of all vortices (of all objects) must sum up to 1. Not the sum of all vorticees within an object kind must sum to 1 but the total sum of all probabiliies across all object kinds. The probability for an object is never explicitly modeled but the result of the sum of all vortices for that object kind.
+The ui should work cleanly.
+e.g. when a vortex probability within an object is adjusted then the other vortices of the same object kind are proportionally adjusted so that the object probability stays invariant.
+e.g. when an object probability slider is moved then all vortices are proportionally increased and all other objects vortices are proportionally decreased.
 
 ---
 

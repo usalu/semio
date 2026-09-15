@@ -20,7 +20,9 @@ use std::sync::{Mutex, MutexGuard, OnceLock};
 
 use semio_framework_job::{allocate_operation_id, CancelToken, Generation, StepBudget, StepContext};
 use semio_framework_os_flow::neural::{ColdRetire as _, Registry};
-use semio_framework_os_flow::{flow_neuron_kind_info_map, install_flow_extension, merge_unanswered_eval_entries, tessellate_geometry, FlowExtensionSpec, FlowHost, FlowHostRetirement};
+use semio_framework_os_flow::{flow_neuron_kind_info_map, install_flow_extension, merge_unanswered_eval_entries, preview_tessellate_node_hash, tessellate_geometry, FlowEvalSession, FlowExtensionSpec, FlowHost, FlowHostRetirement, PreviewTessellateOutcome};
+use semio_s_artifact_procedural_generation3d::editor::generation3d::config::Generation3dConfig;
+use semio_s_artifact_procedural_generation3d::editor::generation3d::{preview_payload, PreviewInteractionMarks};
 use semio_s_artifact_procedural_generation3d::preview_eval;
 use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::snapshot::text::parse_dsl;
 use semio_s_artifact_procedural_generation3d::Generation3dSnapshot;
@@ -309,6 +311,57 @@ fn an_unanswered_node_keeps_its_converged_answer_and_an_answered_one_never_does(
     let foreign = serde_json::to_string(&serde_json::json!({ "some-other-document-node": { "out": { "solid": { "handle": "solid-1" } } } })).expect("foreign json");
     let unfilled = merge_unanswered_eval_entries(&live, &foreign, &host.host_snapshot);
     assert_eq!(unfilled, live, "a node this document does not declare is never filled in");
+    retire_host(host);
+}
+
+/// ⚖️ LAW: when a slider edit mints a new brep handle before tessellation lands, the preview keeps
+/// painting the last converged solid for that channel — the defect users saw as "only vector/wire left".
+#[test]
+fn a_superseded_solid_handle_keeps_the_converged_mesh_until_the_new_pack_lands() {
+    let _guard = exclusive();
+    let mut host = hex_column_host();
+    let mut session = FlowEvalSession::new();
+    while session.tick(&mut host, None) {}
+    let converged = session.eval_json().to_string();
+    let old_handle = handle_of(&converged, "extrude", "solid").expect("baseline solid handle");
+    let tolerance = preview_eval::preview_tolerance("coarse");
+    let mesh = tessellate_geometry(&old_handle, tolerance).expect("baseline tessellates");
+    let pack = semio_framework_os_flow::brep_geometry::encode_base64(&semio_framework_os_flow::brep_geometry::encode_mesh_pack(&mesh).expect("pack"));
+    let node_hash = preview_tessellate_node_hash(&old_handle, tolerance.to_bits());
+    assert!(session.note_pending_tessellate(node_hash, old_handle.clone()));
+    let envelope = format!(r#"{{"done":true,"phase":"complete","unitsDone":3,"unitsTotal":3,"facesDone":1,"facesTotal":1,"chunk":0,"chunks":1,"meshPack":"{pack}"}}"#);
+    assert_eq!(session.resolve_preview_tessellate(node_hash, &envelope), PreviewTessellateOutcome::Ready);
+
+    host.set_slider_value("height", 4.0);
+    while session.tick(&mut host, None) {}
+    let painted = session.painted_eval_json().to_string();
+    let new_handle = handle_of(&painted, "extrude", "solid").expect("edited solid handle");
+    assert_ne!(old_handle, new_handle, "a height edit mints a new solid handle");
+
+    let painted_eval = semio_framework_os_flow::os_pack::json::parse(&painted).expect("painted eval json");
+    let live = preview_eval::preview_mesh_retention_handles(&painted_eval, &host.host_snapshot, &session);
+    assert!(live.contains(&old_handle), "the converged pack must stay retained across handle supersession");
+    assert!(live.contains(&new_handle));
+
+    let config = Generation3dConfig::default();
+    let payload = preview_payload(&painted, &host.host_snapshot, &config, Some(&session), &PreviewInteractionMarks::default());
+    let mesh_ids = payload
+        .meshes_json
+        .matches(r#""role":"solid""#)
+        .count();
+    assert!(mesh_ids >= 1, "the payload must still carry a solid mesh while the new handle tessellates");
+    let new_pack = tessellate_geometry(&new_handle, tolerance).expect("edited solid tessellates");
+    let pack = semio_framework_os_flow::brep_geometry::encode_base64(&semio_framework_os_flow::brep_geometry::encode_mesh_pack(&new_pack).expect("pack"));
+    let node_hash = preview_tessellate_node_hash(&new_handle, tolerance.to_bits());
+    assert!(session.note_pending_tessellate(node_hash, new_handle.clone()));
+    let envelope = format!(r#"{{"done":true,"phase":"complete","unitsDone":3,"unitsTotal":3,"facesDone":1,"facesTotal":1,"chunk":0,"chunks":1,"meshPack":"{pack}"}}"#);
+    assert_eq!(session.resolve_preview_tessellate(node_hash, &envelope), PreviewTessellateOutcome::Ready);
+    assert!(preview_eval::session_preview_mesh(&new_handle, &session).is_some(), "the new handle's pack must be on the session");
+    assert!(matches!(
+        preview_eval::preview_eval_publication_for(&mut session, &host.host_snapshot, Some(&painted)),
+        semio_framework_os_flow::FlowEvalPublication::Changed(_)
+    ), "a landed pack must republish even when the evaluation text is unchanged");
+    session.retire_cold();
     retire_host(host);
 }
 //#endregion ⚖️PaintedEvaluation

@@ -2775,11 +2775,11 @@ export function createDirectionalAsyncDispatcher(dispatchValue: (value: number) 
   };
 }
 
-/** @emoji 🖱️ Overlay chrome for a world-3d marquee method. `rectangle` draws a box; `lasso` draws a
- * polygon; `pick` has no drag chrome. */
+/** @emoji 🖱️ Overlay chrome for a world-3d marquee method. `lasso` draws a polygon; `rectangle` and
+ * `pick` (click picks, drag sweeps a box — puzzle3d's default) both draw the axis-aligned rectangle. */
 export function world3dMarqueeOverlayShape(method: string): "rect" | "polygon" | null {
   if (method === "lasso") return "polygon";
-  if (method === "rectangle") return "rect";
+  if (method === "rectangle" || method === "pick") return "rect";
   return null;
 }
 

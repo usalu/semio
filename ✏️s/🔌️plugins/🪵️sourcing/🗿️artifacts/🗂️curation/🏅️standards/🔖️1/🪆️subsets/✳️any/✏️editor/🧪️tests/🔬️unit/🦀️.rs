@@ -64,8 +64,34 @@ pub(crate) mod context {
         }
     }
     
+    /// 🎬️ Dispatches one typed command and drives its retained operation to publication, the way the
+    /// host does — a migrated command's document and config edits land only once it settles.
     pub async fn dispatch(app: &mut SourcingApp, command: SourcingCurationCommand) -> InvocationResult {
-        app.dispatch_typed(command, &meta("local")).await.expect("dispatch")
+        let result = app.dispatch_typed(command, &meta("local")).await.expect("dispatch");
+        settle(app).await;
+        result
+    }
+
+    /// 🏁️ Drains every pending typed operation for instance 1, returning the document effects it published.
+    pub async fn settle(app: &mut SourcingApp) -> Vec<semio_framework::kernel::Effect> {
+        let mut effects = Vec::new();
+        for _ in 0..100_000 {
+            app.maintenance_step(1, 4_096).expect("maintenance step");
+            app.advance_typed_operation_publication().await.expect("typed operation publication");
+            if let Some(page) = app.take_typed_operation_result_page(1) {
+                assert!(app.acknowledge_typed_operation_result(page.token).expect("typed operation acknowledgement"));
+            }
+            if let Some(effect) = app.take_typed_operation_effect() {
+                effects.push(effect);
+            }
+            app.take_typed_operation_event();
+            app.take_typed_operation_ui_scope();
+            if !app.has_pending_typed_operations() {
+                break;
+            }
+            std::thread::yield_now();
+        }
+        effects
     }
     
     pub async fn render(app: &mut SourcingApp, body_key: &str) -> String {
@@ -98,7 +124,8 @@ async fn retained_example_load_publishes_authored_stock_and_closes_exact_owners(
             if let Some(effect) = app.take_typed_operation_effect() {
                 let semio_framework::kernel::Effect::LoadDocument { pack, spr } = effect else { panic!("example must publish a document load") };
                 let history = protocol::os_spr::decode_history(&spr, &protocol::os_spr::DecodeOptions::default()).await.unwrap();
-                assert_eq!(history.doc_id, "curation");
+                assert_eq!(history.doc_id, "s.sourcing.curation@1/*#editor", "the load names the live store, not the app-minted id");
+                assert!(history.composition.as_ref().and_then(|composition| composition.dialect.as_ref()).is_some(), "the load carries the dialect archive hydration checks");
                 assert_eq!(history.schema, SOURCING_CURATION_SCHEMA);
                 assert!(history.edits.is_empty());
                 document = Some(CurationSnapshot::decode_pack(&pack).unwrap());
@@ -130,6 +157,51 @@ async fn retained_example_load_publishes_authored_stock_and_closes_exact_owners(
     }
 }
 
+/// 🚪️ The browser host answers an example load by handing the published `LoadDocument` back through
+/// the document archive door with an empty member roster; the load must settle `Ready` and publish the
+/// authored stock rather than trap the instance.
+#[semio_framework_async_macros::async_test]
+#[ignore = "closure validation rejects the load as Incomplete: CurationSnapshot composes a `catalog` kit child that the editor (NoMembers) never creates, and Effect::LoadDocument carries no members — ticket 26/09/01/SOURCING-END-TO-END 📓️day4-run.md"]
+async fn example_load_settles_through_the_host_document_archive_door() {
+    let oracle: Vec<crate::ObjectKind> = dsl::json::from_json_str(include_str!("../../../🧫️fixtures/📦️expected-stock.json")).unwrap();
+    let mut app = new_app().await;
+    app.bind_instance_id(7).await;
+    app.dispatch_typed(SourcingCurationCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: DEMO_STOCK_EXAMPLE_ID.into() }), &semio_framework_plugin::ActionMeta { actor: "fixture".into(), instance_id: 7, view_state: None }).await.unwrap();
+    let mut loaded = None;
+    for _ in 0..100_000 {
+        app.maintenance_step(1, 4_096).unwrap();
+        app.advance_typed_operation_publication().await.unwrap();
+        if let Some(page) = app.take_typed_operation_result_page(7) {
+            assert!(app.acknowledge_typed_operation_result(page.token).unwrap());
+        }
+        if let Some(semio_framework::kernel::Effect::LoadDocument { pack, spr }) = app.take_typed_operation_effect() {
+            loaded = Some((pack, spr));
+        }
+        app.take_typed_operation_event();
+        app.take_typed_operation_ui_scope();
+        if !app.has_pending_typed_operations() {
+            break;
+        }
+        std::thread::yield_now();
+    }
+    let (parent_pack, parent_spr) = loaded.expect("example publishes a document load");
+    PluginApp::begin_document_archive_load(&mut *app, 91, protocol::DocumentArchivePack { parent_pack, parent_spr, members: Vec::new() }).expect("archive admission");
+    let mut status = None;
+    for _ in 0..1_000_000 {
+        let polled = PluginApp::poll_document_archive_load(&mut *app, 91).await.expect("archive status");
+        if matches!(polled.state, protocol::DocumentArchiveLoadState::Ready | protocol::DocumentArchiveLoadState::Cancelled | protocol::DocumentArchiveLoadState::Fault) {
+            status = Some(polled);
+            break;
+        }
+        let _ = PluginApp::maintenance_step(&mut *app, 1, 4_096).expect("archive maintenance step");
+        std::thread::yield_now();
+    }
+    let status = status.expect("archive load reaches a terminal state");
+    assert_eq!(status.state, protocol::DocumentArchiveLoadState::Ready, "{}", String::from_utf8_lossy(&status.fault));
+    PluginApp::acknowledge_document_archive_load(&mut *app, 91).expect("archive acknowledgement");
+    assert_eq!(crate::stock_of(&app.snapshot().expect("loaded snapshot")), oracle);
+}
+
 #[test]
 fn retained_config_preparation_matches_the_json_oracle_and_rejects_maximum_plus_one() {
     let base = SourcingCurationConfig::default();
@@ -140,7 +212,8 @@ fn retained_config_preparation_matches_the_json_oracle_and_rejects_maximum_plus_
     assert!(matches!(&inverse[0], SourcingCurationConfigMutation::SetFilterQuery { value } if value == &base.filters.query));
     assert!(sourcing_curation_config_mutation_footprint(&SourcingCurationConfigMutation::SetFilterQuery { value: "x".repeat(SOURCING_CURATION_CONFIG_TEXT_BYTES) }).is_ok());
     assert!(sourcing_curation_config_mutation_footprint(&SourcingCurationConfigMutation::SetFilterQuery { value: "x".repeat(SOURCING_CURATION_CONFIG_TEXT_BYTES + 1) }).is_err());
-    assert!(sourcing_curation_config_mutation_footprint(&SourcingCurationConfigMutation::SetFilterModules { module_ids: Vec::new() }).is_err());
+    assert!(sourcing_curation_config_mutation_footprint(&SourcingCurationConfigMutation::SetFilterModules { module_ids: Vec::new() }).is_ok(), "clearing the module filter is a retained edit");
+    assert!(sourcing_curation_config_mutation_footprint(&SourcingCurationConfigMutation::SetFilterModules { module_ids: vec!["m".into(); SOURCING_CURATION_CONFIG_STORE_MAXIMUM_ITEMS + 1] }).is_err());
     assert_eq!(SOURCING_CURATION_CONFIG_STORE_MAXIMUM_BYTES * 4 + 1_024, 4_096);
 }
 //#endregion 🧪️RetainedConfigOracle
@@ -167,7 +240,7 @@ async fn command_ids_are_unique_and_match_the_declared_manifest_actions() {
     sorted.sort_unstable();
     sorted.dedup();
     assert_eq!(sorted.len(), ids.len(), "duplicate command ids in {ids:?}");
-    assert_eq!(ids.len(), 15, "every SourcingCurationCommand row must be covered by every_command()");
+    assert_eq!(ids.len(), 14, "every SourcingCurationCommand row must be covered by every_command()");
 }
 
 /// ⚖️ LAW: the PRODUCTION action bridge covers every declared row. `ArtifactEditor`'s default

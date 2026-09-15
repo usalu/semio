@@ -2196,6 +2196,16 @@ where
         self
     }
 
+    /// 🧹️ Bounded retirement for a whole envelope this store's owners could not adopt — the same
+    /// initial-snapshot and mutation factories a live store retires its history with.
+    pub fn retire_envelope(&self, envelope: ArtifactEnvelope<P, Mutation>) -> Box<dyn ErasedSnapshotRetirement>
+    where
+        P: Send + 'static,
+        Mutation: Send + 'static,
+    {
+        Box::new(ArtifactStoreEnvelopeRetirement::new(envelope, Arc::clone(&self.initial_snapshot_retirement), Arc::clone(&self.mutation_retirement)))
+    }
+
     pub(crate) fn retire_decoded_edit(&self, edit: Edit<Mutation>) -> Box<dyn ErasedSnapshotRetirement>
     where
         Mutation: Send + 'static,
@@ -16196,6 +16206,12 @@ where
 
     pub fn snapshot_read_leases_terminal_is_empty(&self) -> bool {
         self.snapshot_read_leases.terminal_is_empty()
+    }
+
+    /// 🧾️ Leases returned to the registry whose roots it still holds until a returned-read pump reclaims them —
+    /// every one of them keeps a whole document root alive.
+    pub fn returned_snapshot_read_count(&self) -> usize {
+        self.snapshot_read_leases.returned.load(std::sync::atomic::Ordering::Acquire)
     }
 
     pub fn owned_roots_terminal_is_empty(&self) -> bool {

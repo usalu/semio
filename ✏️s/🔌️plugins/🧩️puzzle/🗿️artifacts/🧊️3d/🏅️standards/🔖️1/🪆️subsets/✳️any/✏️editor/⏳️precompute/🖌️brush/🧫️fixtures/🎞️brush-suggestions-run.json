@@ -43,7 +43,7 @@
     }
   ],
   "laws": {
-    "parryOracle": { "documents": [{ "document": "concrete-forest", "targets": 4096 }, { "document": "nakagin", "targets": 3 }], "samples": 1024, "decisiveHits": 16, "gridCells": 16 },
+    "parryOracle": { "documents": [{ "document": "concrete-forest", "targets": 4096 }, { "document": "nakagin", "targets": 3 }] },
     "interactive": { "document": "nakagin", "targets": 12, "runs": 5, "budgetUs": 2000 }
   }
 }

@@ -15420,17 +15420,17 @@
               {
                 "args": [],
                 "iconId": "eye",
-                "id": "setBrushPlacementOverlapBudget",
+                "id": "setBrushPlacementContactTolerance",
                 "inPalette": true,
                 "kind": "view",
                 "label": {
                   "native": {
-                    "de": "Pinsel-Überlappungsbudget festlegen",
-                    "en": "Set Brush Placement Overlap Budget"
+                    "de": "Pinsel-Kontakttoleranz festlegen",
+                    "en": "Set Brush Placement Contact Tolerance"
                   },
                   "reuse": {
-                    "de": "Pinsel-Überlappungsbudget festlegen",
-                    "en": "Set Brush Placement Overlap Budget"
+                    "de": "Pinsel-Kontakttoleranz festlegen",
+                    "en": "Set Brush Placement Contact Tolerance"
                   }
                 },
                 "semantics": {
@@ -20878,17 +20878,17 @@
               {
                 "args": [],
                 "iconId": "eye",
-                "id": "setBrushPlacementOverlapBudget",
+                "id": "setBrushPlacementContactTolerance",
                 "inPalette": true,
                 "kind": "view",
                 "label": {
                   "native": {
-                    "de": "Pinsel-Überlappungsbudget festlegen",
-                    "en": "Set Brush Placement Overlap Budget"
+                    "de": "Pinsel-Kontakttoleranz festlegen",
+                    "en": "Set Brush Placement Contact Tolerance"
                   },
                   "reuse": {
-                    "de": "Pinsel-Überlappungsbudget festlegen",
-                    "en": "Set Brush Placement Overlap Budget"
+                    "de": "Pinsel-Kontakttoleranz festlegen",
+                    "en": "Set Brush Placement Contact Tolerance"
                   }
                 },
                 "semantics": {
@@ -22909,13 +22909,13 @@
                       "value": 80
                     },
                     {
-                      "id": "puzzle5d-play-brush-overlap",
+                      "id": "puzzle5d-play-brush-contact-tolerance",
                       "kind": "slider",
                       "label": "Overlap",
                       "max": 0.2,
                       "min": 0,
                       "onChange": {
-                        "action": "setBrushPlacementOverlapBudget",
+                        "action": "setBrushPlacementContactTolerance",
                         "controllerId": "puzzle5d-play"
                       },
                       "step": 0.005,
@@ -24913,17 +24913,17 @@
               {
                 "args": [],
                 "iconId": "eye",
-                "id": "setBrushPlacementOverlapBudget",
+                "id": "setBrushPlacementContactTolerance",
                 "inPalette": true,
                 "kind": "view",
                 "label": {
                   "native": {
-                    "de": "Pinsel-Überlappungsbudget festlegen",
-                    "en": "Set Brush Placement Overlap Budget"
+                    "de": "Pinsel-Kontakttoleranz festlegen",
+                    "en": "Set Brush Placement Contact Tolerance"
                   },
                   "reuse": {
-                    "de": "Pinsel-Überlappungsbudget festlegen",
-                    "en": "Set Brush Placement Overlap Budget"
+                    "de": "Pinsel-Kontakttoleranz festlegen",
+                    "en": "Set Brush Placement Contact Tolerance"
                   }
                 },
                 "semantics": {
@@ -26956,13 +26956,13 @@
                       "value": 80
                     },
                     {
-                      "id": "puzzle5d-play-brush-overlap",
+                      "id": "puzzle5d-play-brush-contact-tolerance",
                       "kind": "slider",
                       "label": "Overlap",
                       "max": 0.2,
                       "min": 0,
                       "onChange": {
-                        "action": "setBrushPlacementOverlapBudget",
+                        "action": "setBrushPlacementContactTolerance",
                         "controllerId": "puzzle5d-play"
                       },
                       "step": 0.005,

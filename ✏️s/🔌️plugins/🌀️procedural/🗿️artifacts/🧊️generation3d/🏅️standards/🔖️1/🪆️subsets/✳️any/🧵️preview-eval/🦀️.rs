@@ -32,7 +32,7 @@ use semio_framework_tool_run::{
     TOOL_RUN_ARG_TOOL_ID, TOOL_RUN_FINALIZE_ACTION_ID, TOOL_RUN_START_ACTION_ID,
 };
 use semio_framework_value_derive::{FromValue, ToValue};
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashSet};
 
 //#region 🪟️Addressing
 /// 🪟️ The evaluation tick names the preview window that OWNS the evaluation it advances.
@@ -643,6 +643,164 @@ pub fn mesh_data_for_preview_handle(handle: &str, tolerance: f64, session: Optio
     mesh_has_preview_geometry(&data).then_some(data)
 }
 
+/// 🔁️ The converged walk's brep handle for the same preview channel leaf — used while a slider edit
+/// has already minted a new handle but its tessellation has not landed.
+/// 🔁 When the painted handle has no pack yet, the one OTHER packed handle this session still
+/// holds — true after convergence superseded the handle and retired the old one from every eval text.
+fn superseded_preview_mesh_handle(session: &FlowEvalSession, painted_handle: &str) -> Option<String> {
+    let mut candidates = session
+        .preview_packed_handles()
+        .into_iter()
+        .filter(|handle| handle != painted_handle && session_preview_mesh(handle, session).is_some())
+        .collect::<Vec<_>>();
+    match candidates.len() {
+        0 => None,
+        1 => Some(candidates.remove(0)),
+        _ => None,
+    }
+}
+
+fn converged_preview_handle(session: &FlowEvalSession, host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot, widget_id: &str, channel: &str, index: usize) -> Option<String> {
+    let converged = session.converged_eval_json();
+    if converged.is_empty() {
+        return None;
+    }
+    let eval = dsl::json::parse(converged).unwrap_or_else(|_| dsl::json::Value::Object(dsl::json::Object::new()));
+    preview_channel_items_for_widget(&eval, widget_id)
+        .into_iter()
+        .find(|item| item.channel == channel && item.index == index)
+        .map(|item| item.handle)
+        .filter(|handle| !handle.is_empty())
+}
+
+/// 🧵️ Mesh lookup for one preview channel while a live evaluation is in flight: the new handle's
+/// pack when it exists, otherwise the last converged handle's retained pack — never a second kernel
+/// round trip on geometry the session already tessellated.
+pub fn mesh_data_for_session_preview_channel(
+    handle: &str,
+    widget_id: &str,
+    channel: &str,
+    index: usize,
+    tolerance: f64,
+    session: &FlowEvalSession,
+    host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot,
+) -> Option<MeshData> {
+    if let Some(data) = mesh_data_for_preview_handle(handle, tolerance, Some(session)) {
+        return Some(data);
+    }
+    // 🚦️ A refused handle must not keep painting the last converged solid on top of the fault the
+    // status pill already names — the supersession fallback is only for "new pack still crossing".
+    if session.preview_diagnostics(handle).is_some() {
+        return None;
+    }
+    if let Some(fallback) = converged_preview_handle(session, host_snapshot, widget_id, channel, index).filter(|fallback| fallback != handle) {
+        if let Some(data) = session_preview_mesh(&fallback, session) {
+            return Some(data);
+        }
+    }
+    superseded_preview_mesh_handle(session, handle).and_then(|fallback| session_preview_mesh(&fallback, session))
+}
+
+/// 📏️ Fingerprint of whichever mesh pack a preview channel would paint — the live handle's or the
+/// converged fallback's while tessellation is outstanding.
+pub fn preview_mesh_pack_fingerprint(
+    session: &FlowEvalSession,
+    host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot,
+    widget_id: &str,
+    item: &PreviewChannelItem,
+) -> usize {
+    if item.handle.is_empty() {
+        return 0;
+    }
+    if let Some(pack) = session.preview_mesh_pack(&item.handle) {
+        return pack.len();
+    }
+    if session.preview_diagnostics(&item.handle).is_some() {
+        return 0;
+    }
+    if let Some(fallback) = converged_preview_handle(session, host_snapshot, widget_id, &item.channel, item.index).filter(|fallback| *fallback != item.handle) {
+        if let Some(pack) = session.preview_mesh_pack(&fallback) {
+            return pack.len();
+        }
+    }
+    superseded_preview_mesh_handle(session, &item.handle)
+        .and_then(|fallback| session.preview_mesh_pack(&fallback))
+        .map_or(0, |pack| pack.len())
+}
+
+/// 📏️ What the preview would paint from `eval` given the session's current mesh packs — changes when
+/// `flowTessellateResolve` lands even though the evaluation text did not move one byte.
+fn preview_mesh_residency_digest(session: &FlowEvalSession, host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot, eval: &dsl::json::Value) -> u64 {
+    use std::hash::{Hash, Hasher};
+    let mut hasher = std::collections::hash_map::DefaultHasher::new();
+    for id in preview_widget_ids(host_snapshot) {
+        for item in preview_channel_items_for_widget(eval, &id) {
+            if item.handle.is_empty() {
+                continue;
+            }
+            preview_mesh_pack_fingerprint(session, host_snapshot, &id, &item).hash(&mut hasher);
+        }
+    }
+    hasher.finish()
+}
+
+/// 📤️ Whether the addressed preview window owes a fresh publication. The painted evaluation text is
+/// the primary signal; mesh residency is the second — tessellation can finish without moving eval
+/// json, and a signature that looked only at bytes pinned the first (empty or stale) table forever
+/// (`📓️slider-mesh-supersession-fallback-2026-09-15.md`, viewer `preview_mesh_signature`).
+pub fn preview_eval_publication_for(session: &mut FlowEvalSession, host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot, retained_eval: Option<&str>) -> FlowEvalPublication {
+    let painted = session.painted_eval_json().to_string();
+    let digest = if painted.is_empty() {
+        0
+    } else {
+        dsl::json::parse(&painted).map(|eval| preview_mesh_residency_digest(session, host_snapshot, &eval)).unwrap_or(0)
+    };
+    let publication = session.eval_publication_for(retained_eval);
+    match publication {
+        FlowEvalPublication::Changed(eval) => {
+            session.note_published_preview_mesh_digest(digest);
+            FlowEvalPublication::Changed(eval)
+        }
+        FlowEvalPublication::Retained if session.published_preview_mesh_digest() == digest => FlowEvalPublication::Retained,
+        FlowEvalPublication::Retained => {
+            session.note_published_preview_mesh_digest(digest);
+            FlowEvalPublication::Changed((!painted.is_empty()).then_some(painted))
+        }
+    }
+}
+
+/// 🧹 Every brep handle whose tessellation pack must stay live across a handle supersession.
+pub fn preview_mesh_retention_handles(eval: &dsl::json::Value, host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot, session: &FlowEvalSession) -> HashSet<String> {
+    let mut live = HashSet::new();
+    let mut channel_missing_pack = false;
+    for widget in &host_snapshot.widgets {
+        let id = crate::widget_id(widget).to_string();
+        for item in preview_channel_items_for_widget(eval, &id) {
+            if item.handle.is_empty() {
+                continue;
+            }
+            live.insert(item.handle.clone());
+            if session_preview_mesh(&item.handle, session).is_none() && session.preview_diagnostics(&item.handle).is_none() {
+                channel_missing_pack = true;
+                if let Some(fallback) = converged_preview_handle(session, host_snapshot, &id, &item.channel, item.index) {
+                    if fallback != item.handle {
+                        live.insert(fallback);
+                    }
+                }
+                if let Some(fallback) = superseded_preview_mesh_handle(session, &item.handle) {
+                    live.insert(fallback);
+                }
+            }
+        }
+    }
+    if channel_missing_pack {
+        for handle in session.preview_packed_handles() {
+            live.insert(handle);
+        }
+    }
+    live
+}
+
 /// 🧊 Geometry handles on preview widgets that still need an extension tessellate. Takes the ALREADY
 /// PARSED evaluation: its caller parses the same document one line earlier to collect the live
 /// handle set, and re-parsing a whole eval session per tick is the cost this path exists to avoid.
@@ -683,15 +841,7 @@ pub fn preview_tessellate_invocations(window_id: &str, window_kind_id: &str, ses
             return Vec::new();
         }
         let eval = dsl::json::parse(eval_json).unwrap_or_else(|_| dsl::json::Value::Object(dsl::json::Object::new()));
-        let mut live = std::collections::HashSet::new();
-        for widget in &host_snapshot.widgets {
-            let id = crate::widget_id(widget).to_string();
-            for item in preview_channel_items_for_widget(&eval, &id) {
-                if !item.handle.is_empty() {
-                    live.insert(item.handle);
-                }
-            }
-        }
+        let live = preview_mesh_retention_handles(&eval, host_snapshot, session);
         (live, pending_preview_tessellate_handles(&eval, host_snapshot, session))
     };
     session.retain_preview_meshes(&live);
@@ -838,7 +988,7 @@ pub fn evaluate_tick(
     } else if more && !may_rearm(host_snapshot) {
         session.abandon_window_tick(window_id);
     }
-    let publication = session.eval_publication_for(retained_eval);
+    let publication = preview_eval_publication_for(session, host_snapshot, retained_eval);
     if let (Some(started_us), Some(finished_us)) = (started_us, started_us.and_then(|_| semio_framework_job::default_now_us())) {
         semio_framework_os_flow::record_flow_eval_step(finished_us.saturating_sub(started_us));
     }

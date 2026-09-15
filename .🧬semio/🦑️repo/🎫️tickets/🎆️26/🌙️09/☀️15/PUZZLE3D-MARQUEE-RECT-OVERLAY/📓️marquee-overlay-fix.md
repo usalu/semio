@@ -4,14 +4,16 @@
 
 Rectangle/lasso marquee selection in puzzle 3d updates selection in the 3d viewport (objects highlight / `interactionSelect` commits) but the drag rubber-band rectangle is not painted.
 
-## Root cause
+## Root causes
 
-Pointer routing was migrated to `WorldInteractionAuthority::marquee` (`WorldMarqueeGesture`), while `render_world_3d` still gated `paint_selection_marquee` on legacy `World3dState::marquee_active` / `marquee_points`. Those fields are only updated by `#[cfg(test)]` pointer handlers, so production wgpu (and any host using the authority) never had overlay points at paint time.
+1. **wgpu:** Pointer routing lives on `WorldInteractionAuthority::marquee`, but paint still read legacy `marquee_active` / `marquee_points` (test-only). Fixed via `world_marquee_overlay_points` + overlay lane paint.
+2. **React (puzzle3d default):** `selection.method` is `pick` (click picks, drag marquees). Marquee hit-testing already treats `pick` like a rectangle, but `world3dMarqueeOverlayShape("pick")` returned `null`, so `SelectionMarquee` never mounted while drag preview highlighting still ran.
 
 ## Fix
 
 - `world_marquee_overlay_points` reads the live authority gesture (falls back to legacy fields for oracle tests).
 - Marquee paint uses the overlay draw lane (`overlay: true`), matching node-graph marquee parity.
+- `world3dMarqueeOverlayShape` maps `pick` → `rect`; `World3dHost` paints marquee at `z-50`.
 
 ## Files
 

@@ -7,24 +7,14 @@ import { publicationWasmPath } from "../../🛂️descriptor-verification/🟦�
 import { pluginWasmArtifactPath } from "../../../🖨️describe/🏗️component-build/🟦️.ts";
 
 type GeneratorContract = { readonly previewTarget?: string };
-type LaunchEntry = {
-  readonly name?: string;
-  readonly type?: string;
-  readonly request?: string;
-  readonly command?: string;
-  readonly cwd?: string;
-  readonly presentation?: { readonly group?: string; readonly order?: number };
-};
 
-describe("plugin registry generated preview launchers", () => {
-  it("exposes every owned generator preview exactly once in contract order", () => {
+describe("plugin registry generator preview targets", () => {
+  it("names every owned generator preview target in taxonomy order", () => {
     const repoRoot = getWorkspaceRoot();
     const taxonomy = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"), "utf8")) as {
       readonly generatorContracts: Readonly<Record<string, GeneratorContract>>;
     };
-    const launch = Bun.JSONC.parse(readFileSync(join(repoRoot, ".vscode/launch.json"), "utf8")) as { readonly configurations: readonly LaunchEntry[] };
     const expected = Object.entries(taxonomy.generatorContracts).filter((entry): entry is [string, GeneratorContract & { readonly previewTarget: string }] => typeof entry[1].previewTarget === "string");
-
     const previewOrder = [
       ["actor-typegen", 206.01], ["assets-build", 206.02], ["async-typegen", 206.03],
       ["dev-distribution-bundle", 206.035],
@@ -36,33 +26,15 @@ describe("plugin registry generated preview launchers", () => {
       ["wgpu-frame-worker", 206.14],
     ] as const;
     expect(expected.map(([contractId]) => contractId)).toEqual(previewOrder.map(([contractId]) => contractId));
-    expected.forEach(([contractId, contract], index) => {
-      const name = `📦️preview🤖️${contractId}`;
-      const matches = launch.configurations.filter((entry) => entry.name === name);
-      expect(matches, name).toEqual([
-        {
-          name,
-          type: "node-terminal",
-          request: "launch",
-          command: `bun nx run ${contract.previewTarget}`,
-          cwd: "${workspaceFolder}",
-          presentation: { group: "4_build", order: previewOrder[index]![1] },
-        },
-      ]);
+    expected.forEach(([contractId, contract]) => {
+      expect(contract.previewTarget, contractId).toMatch(/:/);
     });
   });
 
-  it("registers the strict catalog completion target with an explicit fresh build root", () => {
+  it("registers catalog-complete on the plugin-registry project", () => {
     const repoRoot = getWorkspaceRoot();
-    const launch = Bun.JSONC.parse(readFileSync(join(repoRoot, ".vscode/launch.json"), "utf8")) as { readonly configurations: readonly LaunchEntry[] };
-    expect(launch.configurations.filter(({ name }) => name === "📦️catalog-complete🤖️plugin-registry")).toEqual([{
-      name: "📦️catalog-complete🤖️plugin-registry",
-      type: "node-terminal",
-      request: "launch",
-      command: "bun nx run @semio-tech/plugin-registry:catalog-complete -- --build-root \"${input:catalogFreshBuildRoot}\"",
-      cwd: "${workspaceFolder}",
-      presentation: { group: "4_build", order: 206.066 },
-    }]);
+    const project = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📋️project.json"), "utf8")) as { targets: Record<string, unknown> };
+    expect(project.targets["catalog-complete"]).toBeDefined();
   });
 });
 

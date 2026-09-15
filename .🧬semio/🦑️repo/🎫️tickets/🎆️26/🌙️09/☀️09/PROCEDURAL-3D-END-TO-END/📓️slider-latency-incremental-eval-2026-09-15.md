@@ -52,6 +52,13 @@ What was ALREADY right, and is now stated as a law rather than assumed: the dirt
 `profile` free-ride on the converged baseline, `profile@wire` keeps its content address, and exactly
 one mesh is owed a `tessellate` round trip.
 
+Served on the 21:11 guest: the chain's own whole-shell refreshes are **gone** (5 → 0; the two full refreshes
+that remain bracket the tool RUN — its start's settle and its own settle — and neither is a chain hop), and the geometry is off screen for
+**0 ms** of a re-evaluation that used to blank it for 1 373 ms. **The ≤ 150 ms budget is not met and
+is not claimed** — §5.4 has all eight examples, the load they were taken under, and the three reasons
+the numbers are not a like-for-like of the 17:25 readings. `bun 🐍️journey-probe.mjs` is 23/23 with
+16/16 mesh oracles green, so full evaluation is not regressed.
+
 ---
 
 ## 2. The chain, stage by stage
@@ -216,7 +223,108 @@ That lane answered **0 tests** before §3.5: it could not import at all.
 
 ## 5. Measured, after
 
-_TO BE FILLED_
+### 5.1 The narrow chain scope, served (guest 18:36, serve recycled 18:38, :6025)
+
+Same gesture, same probe, `🗑️generated/slider-latency/recon-after2` against `recon-before`. Load was
+3.96 for the before run and 59.8 for the after run, so the WALL numbers are not comparable; the
+COUNTS and the scope tags are.
+
+| reading | before (17:10 guest) | after (18:36 guest) |
+|---|---|---|
+| `refresh` **full** in the gesture window | **5**, 2 063 ms | **2**, 675 ms |
+| `refresh` **partial** | 2, 590 ms | 5, 1 790 ms |
+| chain hops declaring `Full` | every one | **none** |
+| the two remaining `Full` refreshes | — | one on the `toolRunStart` settle, one on the run's own settle — neither is a chain hop |
+| `patch.install 1:procedural-preview` | 7, 658 ms | 7, 551 ms |
+| `patch.install 1:procedural-main` | 4, 1 043 ms | 4, **974 ms** |
+
+The scope rule is visibly live in the spans: hops that moved the census read
+`refresh partial → patch.install procedural-main + procedural-preview + framework.panel.artifact +
+framework.panel.toolRun`, and the settling hop at +2 241 ms reads `refresh partial →
+procedural-preview + framework.panel.toolRun` alone — `censusMoved=false`, graph body not named.
+
+**The honest reading of this half:** the whole-shell refreshes are gone, but the graph body is still
+republished four times. §3.1's `census_chrome_marks` reduction removes the re-render for a pure
+`computing`/`queued` RESHUFFLE among the same busy nodes (pinned by
+`the_chrome_digest_moves_on_a_fault_or_a_chrome_edge_and_never_on_a_reshuffle`), and on the hex column
+each of those four hops genuinely CLEARS one node's chrome — four different chrome states, four
+legitimate re-renders. Served with the reduction (21:11) the count is still 4, at 935 ms. Making that
+body cheap to re-render is `flow-surface-followup`'s (§7 item 1).
+
+### 5.2 The mid-gesture blanking, still there at 5.1 — and why
+
+`recon-after2` still shows the payload going 3 meshes → **1** (+1 374 ms) → 2 (+1 839 ms) → settled
+2. The first cut of the painted evaluation keyed on a MISSING row, and
+`build_channel_eval_json` writes a row for every widget of the document whether the walk reached it
+or not — an empty `out`, never an absent key — so the merge never fired. The rule is now "an EMPTY
+`out` with no `error` beside it, against a converged row that has one", which is what
+`an_unanswered_node_keeps_its_converged_answer_and_an_answered_one_never_does` pins.
+
+### 5.3 The painted evaluation, served (guest 21:11, serve recycled 21:19, :6025)
+
+`🗑️generated/slider-latency/recon-after3`, same single step, load 22.
+
+| t | before (17:10) | after (21:11) |
+|---|---|---|
+| press | 3 meshes: wire + axis + **solid** | 3 meshes: wire + axis + **solid** |
+| chain starts | 3 meshes | 3 meshes |
+| first published change | **1 mesh** — the axis AND the solid gone (+1 312 ms) | **3 meshes** — the solid held at its last converged geometry (+1 280 ms, nodes 5/7, `inFlight 1`) |
+| next | 2 meshes, still no solid (+1 834 ms) | **3 meshes**, the axis updated to its new value, the solid still held (+1 712 ms) |
+| settled | 2 meshes, `idle` | 2 meshes, `idle` |
+| geometry off screen during the re-evaluation | **1 373 ms** | **0 ms** |
+
+**The knob moves and the model stays on screen.** The settled state is unchanged — at convergence the
+painted evaluation IS the live evaluation, so the solid the chain failed to rebuild is still dropped
+and still visible as a defect. This lane holds the last good geometry while the answer is crossing;
+it does not invent one for an answer that never came (§7 item 2).
+
+Chain-hop refreshes across the three guests (same window, same gesture):
+
+| | 17:10 (before) | 18:36 (scope) | 21:11 (scope + painted) |
+|---|---|---|---|
+| `refresh` full | 5 / 2 063 ms | 2 / 675 ms | 2 / 692 ms |
+| `refresh` partial | 2 / 590 ms | 5 / 1 790 ms | 5 / 1 689 ms |
+| `patch.install procedural-main` | 4 / 1 043 ms | 4 / 974 ms | 4 / 935 ms |
+| settle (load) | 2 685 ms (3.96) | 2 529 ms (59.8) | **2 391 ms (22.1)** |
+
+### 5.4 The gate — all eight examples, guest 21:11, :6025, load 20–41
+
+`SEMIO_PROBE_URL=… bun 🐍️slider-live-preview-probe.mjs`, `graph` kind, 1 s 60 Hz drag
+(`🗑️generated/slider-latency/after-examples`, `after-examples-b`).
+
+| example | value changes | edits / starts / ticks | value → mesh median / p95 | dropped | settled meshes | settled phase | fault |
+|---|---|---|---|---|---|---|---|
+| hexagonal-mushroom-column | 8 | 5 / 3 / 5 | 4 019 / 4 992 ms | 0 | 2 | invalid | **named** |
+| rectangle-wire-preview | 38 | 6 / 4 / 6 | 3 009 / 3 779 ms | 0 | 1 | idle | none |
+| sphere-cut-with-torus | 63 | 3 / 2 / 4 | 3 467 / 3 949 ms | 0 | 0 | idle | **named** |
+| box-shell-preview | 29 | 5 / 3 / 6 | 3 847 / 4 465 ms | 0 | 0 | samplingEdges | none |
+| box-fillet-preview | 29 | 5 / 3 / 5 | 4 010 / 4 728 ms | 0 | 0 | samplingEdges | none |
+| rectangle-extrude-volume | 62 | 6 / 3 / 6 | 6 027 / 6 883 ms | 0 | 0 | invalid | **named** |
+| sphere-box-fuse | 19 | 8 / 5 / 7 | 5 187 / 7 284 ms | 0 | 0 | idle | **named** |
+| face-sweep-extrude | 39 | 7 / 4 / 7 | 6 883 / 8 121 ms | 0 | 0 | invalid | **named** |
+
+**8/8 reachable, 8/8 zero dropped actions, 8/8 coalesced (3–8 edits for 8–63 value changes).
+0/8 under the 150 ms budget.** The gate is NOT met, and the medians are worse than the 17:25
+readings, not better. Three things are true at once and the report will not collapse them:
+
+1. **The metric changed under this lane's own fix.** Before, the first payload change of a drag was
+   the geometry LEAVING (§5.3), and the probe timed that. Now the payload holds until real geometry
+   arrives, so the same number measures the real thing for the first time. A like-for-like comparison
+   on the controlled single step is §5.3's table.
+2. **The load is not the 17:25 load.** The fleet held 20–41 through this run and 112 an hour earlier
+   (`uptime` beside every reading); the gate asks for < 20 and no window under 20 existed tonight.
+3. **The guest is not the 17:25 guest in the evaluation either.** Six of the eight now settle on a
+   NAMED kernel fault (`edge-0: edge is used by 6 coedges …`, `fuse: … missing entity: solid-0-0`) —
+   lane `slider-reevaluation-correctness`'s work landing in the same tree and the same probe. Those
+   are evaluations that RUN THE KERNEL TO A FAULT before settling, which is strictly more work than
+   the silent empty payload they replaced.
+
+### 5.5 No regression of full evaluation
+
+`bun 🐍️journey-probe.mjs` on the same guest: **23 steps, 23 converged, 16/16 mesh oracles green, 0
+red, 0 page errors** (`🗑️generated/slider-latency/journey/results.json`). Boot, all eight examples in
+edit mode, generate mode with `Add Generation`, the viewer role and all eight examples in view mode
+deliver the geometry their committed fixtures declare.
 
 ---
 
@@ -277,8 +385,25 @@ Updated:
 
 - **Nothing about the wgpu surface.** wgpu is ON HOLD; the guest halves (`chain_ui_scope`, the painted
   evaluation) are surface-neutral and serve it by construction, but nothing here was measured on it.
-- **No claim that the ≤ 150 ms budget is met.** See §5 for the measured after-numbers and exactly
-  which terms remain.
+- **The ≤ 150 ms budget is NOT met, on any example.** §5.4 carries the eight readings and the three
+  reasons the numbers are not comparable to the 17:25 ones. The largest remaining single term this
+  lane can name is §7 item 1's 451 ms, which is not this lane's; the next is the four 230 ms
+  `procedural.play.main` patch installs, which are also not this lane's. Nothing here claims a path
+  from 2 391 ms to 150 ms.
+- **No gate reading at load < 20 exists.** The fleet held 20–112 for the whole window; every reading
+  in this report carries the `uptime` it was taken under.
+- **The eight-example gate is not a before/after of this lane alone.** The 21:11 guest also carries
+  lane `slider-reevaluation-correctness`'s named-fault work and whatever else landed in the tree
+  between 17:10 and 21:11. The controlled comparison this lane owns is the single step of §5.3.
+- **The renderer's `typecheck` is red on this tree (831 errors) and was before this lane.** None
+  names a symbol this lane added or renamed (`chain_ui_scope`, `painted_eval_json`,
+  `merge_unanswered_eval_entries`, `dirty_widget_ids_since`, `uiInspectorMixedPlaceholder`); the full
+  react vitest suite reads 1 292 passed / 19 failed across 5 suites, none of them the residency lane
+  and several of them naming a peer's in-flight `documentJson` → `artifactJson` rename.
+- **`cargo test -p semio-framework-os-flow --lib` could not build**, on a peer's in-flight
+  `SolidId cannot be dereferenced` in `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/…/⚙️engine/🦀️.rs`
+  — a dev-dependency of that test binary, untouched here. The flow-host changes are exercised through
+  the generation3d lanes instead (51 + 6 green).
 - **`deliver only changed meshes` is a CONTENT-HASH property here, not a delta protocol.** The guest
   still serializes the whole `meshesJson` array per publication; what §3.2/§3.3 buy is that an
   unchanged mesh's element text is byte-identical, which is the key the host's residency

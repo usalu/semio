@@ -59,7 +59,7 @@ pub(crate) mod context {
                 cables: vec![],
             }),
             kind_compatibility: vec![],
-            overlap_budget: DEFAULT_OVERLAP_BUDGET,
+            contact_tolerance: DEFAULT_OVERLAP_BUDGET,
             seed: 1,
             host_rules: BrushHostRules::default(),
             weights: BrushKindWeights::default(),

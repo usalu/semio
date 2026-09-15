@@ -2,7 +2,7 @@ syntax = "proto3";
 package semio.app.puzzle.puzzle5d;
 message Puzzle5dConfig {
   uint32 fill_count = 1;
-  double overlap_budget = 2;
+  double contact_tolerance = 2;
   map<string, double> object_kind_weights = 3;
   map<string, double> vortex_kind_weights = 4;
 }

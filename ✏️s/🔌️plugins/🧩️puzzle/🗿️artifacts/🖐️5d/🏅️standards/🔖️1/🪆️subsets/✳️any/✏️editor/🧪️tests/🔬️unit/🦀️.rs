@@ -736,7 +736,7 @@ async fn every_dispatched_action_bridges_to_a_command() {
         "addBrushObject",
         "cycleBrushCandidate",
         "registerBrushMesh",
-        "setBrushPlacementOverlapBudget",
+        "setBrushPlacementContactTolerance",
         "setObjectKindWeight",
         "setVortexKindWeight",
         "engagementControlSelect",

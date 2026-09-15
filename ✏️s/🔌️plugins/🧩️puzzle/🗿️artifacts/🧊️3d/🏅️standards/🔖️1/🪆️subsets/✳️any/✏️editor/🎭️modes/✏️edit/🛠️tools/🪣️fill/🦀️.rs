@@ -25,9 +25,9 @@ pub const RUN_JOB_KIND: &str = "s.puzzle.puzzle3d.fill.run";
 /// 🔍️ `ToolRunDefinition.revalidateJob` of the fill tool.
 pub const REVALIDATE_JOB_KIND: &str = "s.puzzle.puzzle3d.fill.revalidate";
 /// 🎚️ `ToolRunDefinition.settings.config`: the `Puzzle3dConfig` fields a fill job reads — the count it plans
-/// toward and the overlap budget and kind weights its inputs digest. A camera move or any other publication
+/// toward and the contact tolerance and kind weights its inputs digest. A camera move or any other publication
 /// leaves them unchanged and never reconfigures a run.
-pub const RUN_SETTINGS_CONFIG: [&str; 4] = ["/fillCount", "/overlapBudget", "/objectKindWeights", "/vortexKindWeights"];
+pub const RUN_SETTINGS_CONFIG: [&str; 4] = ["/fillCount", "/contactTolerance", "/objectKindWeights", "/vortexKindWeights"];
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
@@ -102,7 +102,7 @@ pub fn build_run_job(request: ToolRunJobRequest<'_, EditorApp<Puzzle3dPlayApp>>)
         return Ok(None);
     }
     let config = request.config.as_ref();
-    let runtime = Puzzle3dRuntime { fill_count: config.fill_count, overlap_budget: config.overlap_budget, object_kind_weights: config.object_kind_weights.clone(), vortex_kind_weights: config.vortex_kind_weights.clone(), ..Puzzle3dRuntime::default() };
+    let runtime = Puzzle3dRuntime { fill_count: config.fill_count, contact_tolerance: config.contact_tolerance, object_kind_weights: config.object_kind_weights.clone(), vortex_kind_weights: config.vortex_kind_weights.clone(), ..Puzzle3dRuntime::default() };
     let envelope = Puzzle3dScene { fixture: puzzle3d_fixture_from_snapshot(request.snapshot.typed()), runtime, active_utility: TOOL_ID.into() };
     let scene = scene_config(&envelope).ok_or_else(|| Fault::from("puzzle3d-fill-run-scene"))?;
     let lane = main::mesh_lane(&envelope.fixture);
@@ -120,7 +120,7 @@ pub fn build_run_job(request: ToolRunJobRequest<'_, EditorApp<Puzzle3dPlayApp>>)
 /// cannot continue the same sequence.
 #[derive(Clone, Debug, PartialEq)]
 struct FillRunInputs {
-    overlap_budget: u64,
+    contact_tolerance: u64,
     object_kind_weights: Vec<(String, u64)>,
     vortex_kind_weights: Vec<(String, u64)>,
 }
@@ -132,7 +132,7 @@ impl FillRunInputs {
             sorted.sort_unstable();
             sorted
         };
-        Self { overlap_budget: config.overlap_budget.to_bits(), object_kind_weights: weights(&config.object_kind_weights), vortex_kind_weights: weights(&config.vortex_kind_weights) }
+        Self { contact_tolerance: config.contact_tolerance.to_bits(), object_kind_weights: weights(&config.object_kind_weights), vortex_kind_weights: weights(&config.vortex_kind_weights) }
     }
 }
 
@@ -144,7 +144,7 @@ enum FillToolRunTarget {
 
 /// 🥽️ The bounded collision mesh preparation of a fill tool run job: one mesh identity per unit, real
 /// geometry from the process-wide derived mesh store or the scaled box fallback, digested together with the
-/// base revision, overlap budget, seed and weights into the run's `inputs`.
+/// base revision, contact tolerance, seed and weights into the run's `inputs`.
 struct FillToolRunPreparation {
     identity: ToolRunIdentity,
     scene: SceneConfig,
@@ -175,7 +175,7 @@ impl Puzzle3dFillToolRunJob {
     fn new(identity: ToolRunIdentity, scene: SceneConfig, lane: Vec<String>, target: FillToolRunTarget, inputs: FillRunInputs) -> Self {
         let mut digest = Vec::with_capacity(128);
         digest.extend_from_slice(&identity.base_revision);
-        digest.extend_from_slice(&scene.overlap_budget.to_bits().to_le_bytes());
+        digest.extend_from_slice(&scene.contact_tolerance.to_bits().to_le_bytes());
         digest.extend_from_slice(&scene.seed.to_le_bytes());
         for (kind, weight) in scene.weights.object_weights.iter().chain(&scene.weights.vortex_weights) {
             digest.extend_from_slice(kind.as_bytes());

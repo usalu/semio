@@ -26,7 +26,7 @@ fn empty_builder() -> FillBuilder {
         fixture: Fixture::default(),
         kind_catalogs: Some(KindCatalogBundle::default()),
         kind_compatibility: Vec::new(),
-        overlap_budget: 0.0,
+        contact_tolerance: 0.0,
         seed: 17,
         host_rules: BrushHostRules::default(),
         weights: BrushKindWeights::default(),
@@ -60,7 +60,7 @@ fn constructor_cap_and_plus_one_take_bounded_turns_and_refuse_permanently() {
     let body = collision_body_from_buffers(&[0.0, 0.0, 0.0, 4.0, 0.0, 0.0, 0.0, 4.0, 0.0], &[0, 1, 2]).expect("body");
     let roots = |branch: HostileRoot, count| {
         let mut scene =
-            SceneConfig { fixture: Fixture::default(), kind_catalogs: Some(KindCatalogBundle::default()), kind_compatibility: Vec::new(), overlap_budget: 0.0, seed: 31, host_rules: BrushHostRules::default(), weights: BrushKindWeights::default() };
+            SceneConfig { fixture: Fixture::default(), kind_catalogs: Some(KindCatalogBundle::default()), kind_compatibility: Vec::new(), contact_tolerance: 0.0, seed: 31, host_rules: BrushHostRules::default(), weights: BrushKindWeights::default() };
         let mut meshes = HashMap::new();
         match branch {
             HostileRoot::FixtureObjects => scene.fixture.objects.extend((0..count).map(object)),
@@ -385,7 +385,7 @@ fn adversarial_broad_phase_fill_is_end_to_end_resumable_below_eight_ms() {
         fixture: Fixture { objects, attractions: Vec::new(), target_volumes: Vec::new() },
         kind_catalogs: Some(catalogs),
         kind_compatibility: Vec::new(),
-        overlap_budget: 0.0,
+        contact_tolerance: 0.0,
         seed: 29,
         host_rules: BrushHostRules::default(),
         weights: BrushKindWeights::default(),
@@ -466,7 +466,9 @@ fn nakagin_scale_roots() -> FillPreparationRoots {
             scale: None,
             vortices: vec![
                 VortexProps { id: "v0".into(), vortex_kind: Some("port-00".into()), position: [0.0, 0.0, 0.0], direction: Some([0.0, 0.0, -1.0]) },
-                VortexProps { id: "v1".into(), vortex_kind: Some("port-00".into()), position: [0.0, 0.0, 0.0], direction: Some([0.0, 0.0, 1.0]) },
+                // 🧲️ On the capsule's apex, pointing out: a placement docks there flush. At the base center pointing INTO the
+                // body it made every placement a duplicate of its host, which only passed while the host was never tested.
+                VortexProps { id: "v1".into(), vortex_kind: Some("port-00".into()), position: [0.0, 0.0, 8.0], direction: Some([0.0, 0.0, 1.0]) },
             ],
         })
         .collect();
@@ -492,7 +494,7 @@ fn nakagin_scale_roots() -> FillPreparationRoots {
         fixture: Fixture { objects, attractions, target_volumes: Vec::new() },
         kind_catalogs: Some(catalogs),
         kind_compatibility,
-        overlap_budget: 0.0,
+        contact_tolerance: 0.0,
         seed: 43,
         host_rules: BrushHostRules::default(),
         weights: BrushKindWeights::default(),
@@ -913,31 +915,6 @@ fn parry_hull(pose: &Pose3d, positions: &[f32]) -> parry3d::shape::ConvexPolyhed
     parry3d::shape::ConvexPolyhedron::from_convex_hull(&points).expect("box hull")
 }
 
-/// 📦️ Overlap volume of two world-space hulls by `parry3d` point containment on a regular grid over
-/// their bounding-box intersection, plus that intersection's volume.
-fn parry_overlap(a: &parry3d::shape::ConvexPolyhedron, b: &parry3d::shape::ConvexPolyhedron, cells: usize) -> (f64, f64) {
-    use parry3d::query::PointQuery;
-    use parry3d::shape::Shape;
-    let (left, right) = (a.compute_local_aabb(), b.compute_local_aabb());
-    let min = left.mins.sup(&right.mins);
-    let max = left.maxs.inf(&right.maxs);
-    let size = max - min;
-    if size.iter().any(|extent| *extent <= 0.0) {
-        return (0.0, 0.0);
-    }
-    let box_volume = f64::from(size.x) * f64::from(size.y) * f64::from(size.z);
-    let mut inside = 0usize;
-    for x in 0..cells {
-        for y in 0..cells {
-            for z in 0..cells {
-                let at = |index: usize, axis: usize| min[axis] + size[axis] * ((index as f32 + 0.5) / cells as f32);
-                let point = parry3d::math::Point::new(at(x, 0), at(y, 1), at(z, 2));
-                inside += usize::from(a.contains_local_point(&point) && b.contains_local_point(&point));
-            }
-        }
-    }
-    (box_volume * inside as f64 / (cells * cells * cells) as f64, box_volume)
-}
 
 /// 🧥️ The mesh identity every second body of an own-mesh document variant carries instead of its kind's.
 const FILL_RUN_OWN_MESH_URL: &str = "/own-mesh/body.glb";
@@ -972,20 +949,15 @@ struct FillRunOracleTally {
     disagreements: Vec<String>,
 }
 
-/// ⚖️ ORACLE (`parry3d`): every candidate the run marked `danger` (solid overlap) or `success` (fits) — the first
-/// `records` of them — is recomputed against every body placed before it — the document's own bodies plus the run's
-/// earlier placements, the docking host excluded — as exact convex hulls whose pairwise overlap volume `parry3d`
-/// measures by point containment. A document body's hull is built from the mesh it renders, its own `meshUrl` first,
-/// independently of the planner's resolution. The planner collides when one pair overlaps beyond the scene's overlap
-/// budget, estimated from `COLLISION_SAMPLES` samples of the pair's bounding-box intersection; a verdict is decisive
-/// when the true overlap is at least twice (collision) or at most half (fit) the budget and the sample estimate cannot
-/// plausibly land across it, or when parry separates the hulls outright.
+/// ⚖️ ORACLE (`parry3d`): every candidate the run marked `danger` (solid overlap) or `success` (fits) — the first `records` of
+/// them — is recomputed against EVERY body placed before it, the docking host included: the document's own bodies plus the
+/// run's earlier placements, as exact convex hulls whose penetration depth `parry3d::query::contact` measures. A document
+/// body's hull is built from the mesh it renders, its own `meshUrl` first, independently of the planner's resolution. The
+/// planner collides when one pair's surface dives deeper than the scene's contact tolerance; a verdict is decisive when some
+/// pair penetrates at least twice the tolerance (collision) or every pair stays within half of it (fit).
 fn fill_run_parry3d_tally(roots: FillPreparationRoots, lane: Vec<String>, positions: &HashMap<String, Vec<f32>>, seed: u64, requested: usize, records: usize) -> FillRunOracleTally {
-    const COLLISION_SAMPLES: f64 = 512.0;
-    const DECISIVE_HITS: f64 = 16.0;
-    const GRID_CELLS: usize = 16;
     let scene = roots.scene.clone();
-    let budget = scene.overlap_budget;
+    let tolerance = scene.contact_tolerance;
     let mut job = fill_run_job(roots, lane, seed, requested);
     let mut mirror = FillRunMirror::new();
     mirror.drive(&mut job, u64::MAX, 1_000_000);
@@ -1005,30 +977,29 @@ fn fill_run_parry3d_tally(roots: FillPreparationRoots, lane: Vec<String>, positi
     let mut tally = FillRunOracleTally::default();
     for record in job.verdicts.iter().filter(|record| matches!(record.reason, FillRunReason::SolidOverlap | FillRunReason::Fits)).take(records) {
         let candidate = parry_hull(&pose_isometry(record.origin, record.orientation, &None), rendered(Some(&record.mesh_url)));
-        let (mut collides, mut uncertain) = (false, false);
-        for (_, other) in bodies[..base + record.placements_before].iter().filter(|(id, _)| Some(id) != record.host.as_ref()) {
-            if !parry3d::bounding_volume::BoundingVolume::intersects(&parry3d::shape::Shape::compute_local_aabb(&candidate), &parry3d::shape::Shape::compute_local_aabb(other)) || parry3d::query::distance(&identity, &candidate, &identity, other).expect("convex distance") > 0.0 {
-                continue;
-            }
-            let (volume, box_volume) = parry_overlap(&candidate, other, GRID_CELLS);
-            let expected_hits = COLLISION_SAMPLES * volume / box_volume.max(f64::MIN_POSITIVE);
-            let threshold_hits = COLLISION_SAMPLES * budget / box_volume.max(f64::MIN_POSITIVE);
-            if volume >= 2.0 * budget && expected_hits >= DECISIVE_HITS {
-                collides = true;
-            } else if !(volume <= 0.5 * budget && threshold_hits >= DECISIVE_HITS) {
-                uncertain = true;
-            }
-        }
+        // 🪞️ `contact` reads 0 for hulls that coincide exactly (a duplicate at an occupied pose), so a candidate whose own center
+        // lies inside another body counts as a collision all the way through.
+        let center = parry3d::shape::Shape::compute_local_aabb(&candidate).center();
+        let deepest = bodies[..base + record.placements_before]
+            .iter()
+            .map(|(_, other)| {
+                if parry3d::query::PointQuery::contains_point(other, &identity, &center) {
+                    return f64::INFINITY;
+                }
+                parry3d::query::contact(&identity, &candidate, &identity, other, 0.0).ok().flatten().map_or(0.0, |contact| f64::from(-contact.dist))
+            })
+            .fold(0.0, f64::max);
+        let (collides, fits) = (deepest >= 2.0 * tolerance, deepest <= 0.5 * tolerance);
         let ours = record.reason == FillRunReason::SolidOverlap;
         tally.collisions += usize::from(ours);
         tally.fits += usize::from(!ours);
-        if !collides && uncertain {
+        if !collides && !fits {
             tally.ambiguous += 1;
             continue;
         }
         tally.decisive += 1;
         if ours != collides {
-            tally.disagreements.push(format!("candidate {} ours={:?} parry collides={collides}", record.key, record.reason));
+            tally.disagreements.push(format!("candidate {} ours={:?} parry penetration {deepest:.4} m (tolerance {tolerance} m)", record.key, record.reason));
         }
     }
     tally
@@ -1036,7 +1007,7 @@ fn fill_run_parry3d_tally(roots: FillPreparationRoots, lane: Vec<String>, positi
 
 /// ⚖️ ORACLE (`parry3d`, see [`fill_run_parry3d_tally`]): the shipped Concrete Forest law and the own-mesh variants
 /// of Concrete Forest and Nakagin, whose bodies render meshes that differ from their kinds'. Every decisive verdict
-/// of every document agrees, each document keeps at most one in ten verdicts inside the sampling band, and the
+/// of every document agrees, each document keeps at most one in ten verdicts inside the tolerance band, and the
 /// documents together decide both collisions and fits.
 #[test]
 fn fill_run_job_collision_verdicts_agree_with_the_parry3d_oracle() {
@@ -1057,7 +1028,7 @@ fn fill_run_job_collision_verdicts_agree_with_the_parry3d_oracle() {
         let tally = fill_run_parry3d_tally(roots, lane, &positions, seed, requested, law["records"].as_u64().map_or(usize::MAX, |records| records as usize));
         let name = format!("{document} seed {seed}{}", if own_mesh { " own-mesh" } else { "" });
         assert!(tally.disagreements.is_empty(), "{name}: {} of {} decisive verdicts disagree with parry3d:\n{}", tally.disagreements.len(), tally.decisive, tally.disagreements.join("\n"));
-        assert!(tally.decisive > 0 && tally.ambiguous * 10 <= tally.decisive, "{name}: at most one in ten verdicts may fall inside the sampling band: {} of {}", tally.ambiguous, tally.decisive);
+        assert!(tally.decisive > 0 && tally.ambiguous * 10 <= tally.decisive, "{name}: at most one in ten verdicts may fall inside the tolerance band: {} of {}", tally.ambiguous, tally.decisive);
         collisions += tally.collisions;
         fits += tally.fits;
     }
@@ -1449,7 +1420,7 @@ fn fill_run_job_rebuilt_from_a_checkpoint_replays_silently_and_continues_like_th
 #[test]
 fn fill_run_job_capacity_refusal_publishes_a_danger_step_before_faulting() {
     let objects = (0..=DOCUMENT_OBJECT_SLOTS).map(|index| FixtureObject { id: format!("rejected-{index:04}"), object_kind: None, anchor: Default::default(), mesh_url: None, origin: [0.0; 3], orientation: None, scale: None, vortices: Vec::new() }).collect();
-    let scene = Arc::new(SceneConfig { fixture: Fixture { objects, attractions: Vec::new(), target_volumes: Vec::new() }, kind_catalogs: Some(KindCatalogBundle::default()), kind_compatibility: Vec::new(), overlap_budget: 0.0, seed: 37, host_rules: BrushHostRules::default(), weights: BrushKindWeights::default() });
+    let scene = Arc::new(SceneConfig { fixture: Fixture { objects, attractions: Vec::new(), target_volumes: Vec::new() }, kind_catalogs: Some(KindCatalogBundle::default()), kind_compatibility: Vec::new(), contact_tolerance: 0.0, seed: 37, host_rules: BrushHostRules::default(), weights: BrushKindWeights::default() });
     let builder = FillBuilder::begin_preparation(FillPreparationRoots::new(scene, Arc::new(HashMap::new())), Operation::new(OperationId(37), RevisionId(9), Generation(11), 37), TEST_REQUESTED_COUNT);
     let mut job = FillRunJob::new(builder, fill_run_identity(), Vec::new(), [0; 32]);
     let mut sequence = 0;
@@ -1593,7 +1564,7 @@ fn own_mesh_roots(blocker: bool, kind_offset: f32) -> FillPreparationRoots {
             cables: vec![CableKindCatalog { id: "cable.link".into(), default_attraction_kind: None, ..Default::default() }],
         }),
         kind_compatibility: vec![KindCompatEntry { source: "port-b".into(), target: "port-a".into(), bidirectional: true, important: false, specificity: Some("vortex".into()) }],
-        overlap_budget: 0.02,
+        contact_tolerance: 0.02,
         seed: 1,
         host_rules: BrushHostRules::default(),
         weights: BrushKindWeights::default(),
@@ -1745,4 +1716,61 @@ fn fill_run_job_mid_plan_capacity_stall_ends_with_a_visible_warning_step() {
     assert_eq!(fill_run_visible_end("mid-plan capacity", &job, &mirror, 8), Some(FillRunReason::ArtifactCapacity.id()));
     let [tested, locked, _, _, _] = job.counters();
     assert_eq!((locked, mirror.verdicts.len() as u64), (1, tested), "one placement, and every tested candidate reached its verdict");
+}
+
+struct DebugUnlimited;
+impl crate::editor::puzzle3d::precompute::geometry::CollisionStepContext for DebugUnlimited {
+    fn is_cancelled(&self) -> bool {
+        false
+    }
+    fn should_yield(&self) -> bool {
+        false
+    }
+    fn consume_fuel(&mut self, _units: u64) {}
+}
+
+#[test]
+fn debug_w6_real_glb_fill_has_no_deep_pairs() {
+    // [DEBUG] temp: concrete-forest fill on the real hexagonal GLB bodies; every committed pair (host included) measured.
+    use crate::editor::puzzle3d::precompute::geometry::{CollisionPenetrationState, CollisionStepResult};
+    let path = "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️13/INTERACTIVE-TOOLS-VISIBLE-PROCESS/🗑️generated/W5-mac-react-e2e/debug-meshes.json";
+    let meshes: HashMap<String, Vec<f32>> = serde_json::from_str::<HashMap<String, Vec<f64>>>(&std::fs::read_to_string(path).expect("meshes")).expect("json").into_iter().map(|(k, v)| (k, v.into_iter().map(|x| x as f32).collect())).collect();
+    for seed in [7u32] {
+        let (roots, lane, _) = example_fill_roots("concrete-forest", seed);
+        let mut bodies: HashMap<String, CollisionBody> = roots.meshes.iter().map(|(k, v)| (k.clone(), v.clone())).collect();
+        for (url, positions) in &meshes {
+            let indices: Vec<u32> = (0..(positions.len() / 3) as u32).collect();
+            bodies.insert(url.clone(), collision_body_from_buffers(positions, &indices).expect("glb body"));
+        }
+        let roots = FillPreparationRoots::new(roots.scene.clone(), Arc::new(bodies.clone()));
+        let tolerance = roots.scene.contact_tolerance;
+        let started = Instant::now();
+        let mut job = fill_run_job(roots, lane, u64::from(seed), 30);
+        let mut mirror = FillRunMirror::new();
+        mirror.drive(&mut job, u64::MAX, 1_000_000);
+        let placed = &job.builder().placed;
+        let base = placed.len() - job.builder().sequence.len();
+        let mut deep = Vec::new();
+        for j in base..placed.len() {
+            for i in 0..j {
+                let (a, b) = (&placed[i], &placed[j]);
+                let (ba, bb) = (crate::editor::puzzle3d::precompute::geometry::CollisionAabb::from_body(&bodies[&a.mesh_url], &a.world), crate::editor::puzzle3d::precompute::geometry::CollisionAabb::from_body(&bodies[&b.mesh_url], &b.world));
+                if !ba.intersects(&bb) {
+                    continue;
+                }
+                let mut state = CollisionPenetrationState::new(tolerance);
+                let depth = loop {
+                    match state.step(&mut DebugUnlimited, &bodies[&b.mesh_url], &b.world, &bodies[&a.mesh_url], &a.world) {
+                        CollisionStepResult::Complete { depth, .. } => break depth,
+                        CollisionStepResult::Pending => {}
+                        other => panic!("{other:?}"),
+                    }
+                };
+                if depth > tolerance {
+                    deep.push(format!("{}#{i} <- {}#{j} {depth:.3}", a.object_id, b.object_id));
+                }
+            }
+        }
+        eprintln!("[DEBUG] seed {seed} fill {:?}: placed {} counters {:?} deep pairs {}: {:?}", started.elapsed(), placed.len() - base, job.counters(), deep.len(), &deep[..deep.len().min(6)]);
+    }
 }

@@ -150,7 +150,22 @@ const SAMPLER = () => {
       fault: status?.fault?.code ?? null,
       // 🚦️ What the surface NAMES when it delivers nothing: a per-node evaluation error, or a typed
       // kernel diagnostic. An empty payload with neither is the silent vanish this probe grades.
-      named: [...Object.entries(status?.widgetErrors ?? {}).map(([widget, message]) => `${widget}: ${message}`), ...(Array.isArray(status?.diagnostics) ? status.diagnostics.map((issue) => `${issue?.entity}: ${issue?.message}`) : [])].filter((entry) => entry && entry.trim().length > 0),
+      named: (() => {
+        const said = [];
+        for (const [widget, message] of Object.entries(status?.widgetErrors ?? {})) {
+          if (typeof message === "string" && message.trim()) said.push(`${widget}: ${message}`);
+        }
+        if (typeof status?.error === "string" && status.error.trim()) said.push(`graph: ${status.error}`);
+        if (typeof status?.fault?.faultMessage === "string" && status.fault.faultMessage.trim()) said.push(`${status.fault.extensionId ?? "extension"}: ${status.fault.faultMessage}`);
+        // 🩺️ A typed validate-gate diagnostic is published as `{ handle, issues: [{ entity, code, message }] }`.
+        for (const entry of Array.isArray(status?.diagnostics) ? status.diagnostics : []) {
+          for (const issue of Array.isArray(entry?.issues) ? entry.issues : []) {
+            const text = typeof issue?.message === "string" && issue.message.trim() ? issue.message : typeof issue?.code === "string" ? issue.code : "";
+            if (text.trim()) said.push(`${issue?.entity ?? entry?.handle ?? "kernel"}: ${text}`);
+          }
+        }
+        return said;
+      })(),
       history: history ? { entries: history.entries ?? history.length ?? null, index: history.index ?? history.cursor ?? null, canUndo: history.canUndo ?? null } : null,
     };
   };

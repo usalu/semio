@@ -2072,7 +2072,7 @@ export function GraphSliderOverlays({
         // 🎚️ Lay out in world units and scale the whole control (track + knob tokens) with zoom —
         // multiplying only the box left the CSS thumb (`size-small`) and track (`h-single`) fixed.
         const w = slider.w;
-        const h = Math.max(slider.h, 16 / zoom);
+        const h = Math.max(slider.h, 8 / zoom);
         return (
           <div
             key={slider.widgetId}
@@ -2093,6 +2093,7 @@ export function GraphSliderOverlays({
               id={`graph-slider-${encodeURIComponent(JSON.stringify([scopeId, slider.widgetId]))}`}
               aria-label={slider.label}
               className="h-full w-full min-w-0"
+              thumbClassName="size-tiny"
               max={slider.max}
               min={slider.min}
               step={slider.step}

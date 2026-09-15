@@ -45,24 +45,24 @@ fn load_document_pack(emit: &Emit<SourcingMutation, SourcingCurationConfigMutati
     <CurationSnapshot as store::ArtifactPack>::decode_pack(pack).expect("decode loaded document pack")
 }
 
-/// 🧬️ Whole-document replace is not an in-history mutation (the former whole-snapshot-replace
-/// variant is banned outright — see `📓️taxonomy.md`'s forbidden vocabulary), so this now surfaces as a `Effect::LoadDocument`
-/// carrying the replacement document's pack bytes, not an `artifact_mutations` entry — `dispatch`'s
-/// in-process `VcsArtifactApp` never applies `effects` to its own store (that's the real host's
-/// job), so this asserts on `requested_effects` rather than through `app.snapshot()`.
+/// 🧬️ Whole-document replace is not an in-history mutation, so `setActiveExample` publishes an
+/// `Effect::LoadDocument` carrying the replacement pack once its retained operation settles, while
+/// `curationAdd` stays an ordinary undoable document edit on the live store.
 #[semio_framework_async_macros::async_test]
 async fn curation_and_example_actions_survive_registry_enforcement() {
     let mut app = new_app().await;
-    let result = app.dispatch_typed(SourcingCurationCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: DEMO_STOCK_EXAMPLE_ID.into() }), &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("set example");
-    let Effect::LoadDocument { pack, .. } = result.requested_effects.first().expect("setActiveExample must emit a LoadDocument effect") else {
-        panic!("expected a LoadDocument effect");
-    };
+    app.dispatch_typed(SourcingCurationCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: DEMO_STOCK_EXAMPLE_ID.into() }), &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("set example");
+    let effects = crate::editor::sourcing::unit_tests::context::settle(&mut app).await;
+    let Some(Effect::LoadDocument { pack, .. }) = effects.first() else { panic!("setActiveExample must publish a LoadDocument effect") };
     let loaded = <CurationSnapshot as store::ArtifactPack>::decode_pack(pack).expect("decode loaded document pack");
     assert!(!loaded.stock_extra.is_empty(), "demo-stock default materialized from the registry");
-    let object_id = loaded.stock_extra[0].id.clone();
-    let result = app.dispatch_typed(SourcingCurationCommand::CurationAdd(crate::editor::sourcing::commands::curation_add::CurationAdd { object_id }), &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("curation");
-    assert_eq!(result.mutations.len(), 1, "curationAdd is a document operation");
-    app.handle_action("undo", None, &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("undo");
+    let object_id = app.snapshot().expect("snapshot").stock_extra[2].id.clone();
+    crate::editor::sourcing::unit_tests::context::dispatch(&mut app, SourcingCurationCommand::CurationAdd(crate::editor::sourcing::commands::curation_add::CurationAdd { object_id: object_id.clone() })).await;
+    assert_eq!(crate::schema::curated_count(&app.snapshot().expect("snapshot"), &object_id), 1, "curationAdd is a document operation");
+    let admitted = app.handle_action("undo", None, &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("undo");
+    semio_framework_plugin::app::settle_framework_reserved_admission(&mut app, admitted).await.expect("undo settles its reserved job");
+    crate::editor::sourcing::unit_tests::context::settle(&mut app).await;
+    assert_eq!(crate::schema::curated_count(&app.snapshot().expect("snapshot"), &object_id), 0, "undo reverts the curation edit");
 }
 
 #[semio_framework_async_macros::async_test]

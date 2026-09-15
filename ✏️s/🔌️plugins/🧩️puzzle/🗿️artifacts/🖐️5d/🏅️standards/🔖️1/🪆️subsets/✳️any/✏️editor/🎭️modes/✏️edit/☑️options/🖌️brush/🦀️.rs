@@ -1,5 +1,5 @@
-//! 🖌️ Edit-mode window option — the Brush utility's Utility Options group: suggestion offset, overlap
-//! budget and the part/grip distribution trees; the brush suggestions run's candidates show as its trace in the
+//! 🖌️ Edit-mode window option — the Brush utility's Utility Options group: suggestion offset, contact
+//! tolerance and the part/grip distribution trees; the brush suggestions run's candidates show as its trace in the
 //! windows. Tagged `Some("brush")`.
 //!
 //! 🎚️ SHARED at MODE level, not per window (TEMPLATE.md §12.2): BOTH the 2D board window and the 3D
@@ -93,17 +93,17 @@ pub fn measure(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels) -> WindowMeasu
             on_change: puzzle5d_action("setSuggestionOffset", None),
         },
         WindowMeasure::Slider {
-            id: format!("{PUZZLE5D_PLAY_CONTROLLER_ID}-brush-overlap"),
-            label: Some(labels.overlap.into()),
-            value: envelope.runtime.overlap_budget,
+            id: format!("{PUZZLE5D_PLAY_CONTROLLER_ID}-brush-contact-tolerance"),
+            label: Some(labels.contact_tolerance.into()),
+            value: envelope.runtime.contact_tolerance,
             min: 0.0,
-            max: 0.2,
-            step: Some(0.005),
+            max: 0.05,
+            step: Some(0.001),
             ready: None,
             loading: None,
             waiting: None,
             disabled: None,
-            on_change: puzzle5d_action("setBrushPlacementOverlapBudget", None),
+            on_change: puzzle5d_action("setBrushPlacementContactTolerance", None),
         },
         WindowMeasure::Group {
             id: format!("{PUZZLE5D_PLAY_CONTROLLER_ID}-brush-distribution"),

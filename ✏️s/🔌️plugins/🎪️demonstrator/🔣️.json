@@ -34561,17 +34561,17 @@
               {
                 "args": [],
                 "iconId": "eye",
-                "id": "setBrushPlacementOverlapBudget",
+                "id": "setBrushPlacementContactTolerance",
                 "inPalette": true,
                 "kind": "view",
                 "label": {
                   "native": {
-                    "de": "Pinsel-Überlappungsbudget festlegen",
-                    "en": "Set Brush Placement Overlap Budget"
+                    "de": "Pinsel-Kontakttoleranz festlegen",
+                    "en": "Set Brush Placement Contact Tolerance"
                   },
                   "reuse": {
-                    "de": "Pinsel-Überlappungsbudget festlegen",
-                    "en": "Set Brush Placement Overlap Budget"
+                    "de": "Pinsel-Kontakttoleranz festlegen",
+                    "en": "Set Brush Placement Contact Tolerance"
                   }
                 },
                 "semantics": {

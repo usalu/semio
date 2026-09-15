@@ -59,6 +59,11 @@
     "editsAdded": 1,
     "groupId": "toolRun:1"
   },
+  "largeFinalize": {
+    "note": "A finalize folds one op per publication step, each prepared against the root the previous step produced. Those roots return to the document Store's read registry and must be reclaimed as the publication goes, never piled up for maintenance: a 408-placement puzzle 3d finalize kept one whole document per op and trapped the guest at its memory ceiling.",
+    "units": 400,
+    "maximumReturnedReads": 1
+  },
   "abort": {
     "target": 1000,
     "unitsBeforeAbort": 1,

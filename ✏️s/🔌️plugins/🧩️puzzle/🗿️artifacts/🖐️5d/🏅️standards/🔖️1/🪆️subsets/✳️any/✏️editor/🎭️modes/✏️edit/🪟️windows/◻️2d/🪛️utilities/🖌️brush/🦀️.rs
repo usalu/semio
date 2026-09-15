@@ -36,7 +36,7 @@ pub fn run_definition() -> ToolRunDefinition {
         trace: ToolRunTraceKind::Instance3d,
         run_job: JobKindId::new(RUN_JOB_KIND),
         revalidate_job: None,
-        settings: ToolRunSettingsReads { config: ["/overlapBudget", "/objectKindWeights", "/vortexKindWeights"].map(String::from).to_vec(), ..ToolRunSettingsReads::default() },
+        settings: ToolRunSettingsReads { config: ["/contactTolerance", "/objectKindWeights", "/vortexKindWeights"].map(String::from).to_vec(), ..ToolRunSettingsReads::default() },
         windows: Vec::new(),
     }
 }

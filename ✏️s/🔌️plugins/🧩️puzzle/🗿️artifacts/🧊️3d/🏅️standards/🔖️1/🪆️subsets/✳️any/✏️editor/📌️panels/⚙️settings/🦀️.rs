@@ -1,4 +1,4 @@
-//! ⚙️ Puzzle 3d play app panel — the app-wide settings: the brush placement overlap budget, the
+//! ⚙️ Puzzle 3d play app panel — the app-wide settings: the brush placement contact tolerance, the
 //! relocate proximity radius, the viewport chunk size and the grid spacing. Unlike the
 //! window-instance chrome in `🎭️modes/✏️edit/☑️options/*`, these are settings a user tunes once for
 //! the whole session rather than per pane. 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM:
@@ -57,7 +57,7 @@ pub fn render(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels, window_id: &str
         .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.section", "settings section id admission failed"))?
         .default_open(true)
         .try_children(crate::editor::puzzle3d::ui_node_list([
-            stepper_field("puzzle3d-play-settings.overlap-budget", labels.overlap_budget.as_str(), runtime.overlap_budget, 0.05, "setBrushPlacementOverlapBudget", window_id),
+            stepper_field("puzzle3d-play-settings.contact-tolerance", labels.contact_tolerance.as_str(), runtime.contact_tolerance, 0.001, "setBrushPlacementContactTolerance", window_id),
             stepper_field("puzzle3d-play-settings.proximity-radius", labels.proximity_radius.as_str(), runtime.proximity_radius, 0.1, "setProximityRadius", window_id),
             stepper_field("puzzle3d-play-settings.chunk-size", labels.chunk_size.as_str(), runtime.chunk_size, 1.0, "setChunkSize", window_id),
             stepper_field("puzzle3d-play-settings.grid-spacing", labels.spacing.as_str(), runtime.grid_spacing, 0.5, "setGridSpacing", window_id),

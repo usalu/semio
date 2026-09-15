@@ -265,3 +265,40 @@ async fn the_validate_gate_judges_the_shape_it_was_asked_about_and_not_the_arena
     assert!(kernel.validate_gate_sync(&healthy).is_ok(), "the healthy box must still pass while a STRANGER is broken: {stranger_issues:?}");
     eprintln!("[DEBUG] scoped gate: healthy=ok stranger={:?}", stranger_issues.iter().map(|issue| format!("{}:{}", issue.entity, issue.code)).collect::<Vec<_>>());
 }
+
+/// ⚖️ LAW: a boolean leaves BOTH its inputs usable — it owns copies of everything it consumes.
+///
+/// 🐛️ The exact imprint engine used to imprint ON the operands' own faces and then
+/// `remove_solid_and_orphans` both of them, and the trivial fast paths used to alias the operands'
+/// faces into a second shell. Either way the sibling input's handle named a freed arena slot the
+/// moment the boolean answered, so the next evaluation of the same graph — where the unchanged
+/// input node is served from the evaluator's cache — failed with `missing handle: <digest>` on a
+/// node whose own parameters never moved. Witnessed as `sphere-box-fuse` and `sphere-cut-with-torus`
+/// refusing to follow their slider after the first edit
+/// (`📓️brep-boolean-input-lifetime-2026-09-15.md`).
+#[semio_framework_async_macros::async_test]
+async fn a_boolean_leaves_both_of_its_input_solids_alive_for_the_next_evaluation() {
+    for op in [BooleanOp::Unite, BooleanOp::Cut, BooleanOp::Intersect] {
+        let mut kernel = Brep::new();
+        let sphere = kernel.sphere_prim_sync(1.2).expect("sphere");
+        let cube = kernel.box_prim_sync(1.5, 1.5, 1.5).expect("box");
+        let sphere_volume = kernel.volume_sync(&sphere).expect("sphere volume");
+        let cube_volume = kernel.volume_sync(&cube).expect("box volume");
+        let result = kernel.boolean_sync(&sphere, &cube, op).expect("the boolean itself must answer");
+        let after_sphere = kernel.volume_sync(&sphere).unwrap_or_else(|error| panic!("{op:?} freed its first input: {error}"));
+        let after_cube = kernel.volume_sync(&cube).unwrap_or_else(|error| panic!("{op:?} freed its second input: {error}"));
+        assert!((after_sphere - sphere_volume).abs() < 1e-9, "{op:?} changed its first input: {sphere_volume} → {after_sphere}");
+        assert!((after_cube - cube_volume).abs() < 1e-9, "{op:?} changed its second input: {cube_volume} → {after_cube}");
+        let live: std::collections::HashSet<String> = [&sphere, &cube, &result].iter().map(|handle| handle.as_str().to_string()).collect();
+        kernel.retain(&live);
+        assert_eq!(kernel.registry_len(), 3, "{op:?}: the claim named three live handles and the compaction must keep all three");
+        kernel.tessellate_sync(&sphere, 0.5).unwrap_or_else(|error| panic!("{op:?}: the first input must still tessellate after a compaction: {error}"));
+        kernel.tessellate_sync(&cube, 0.5).unwrap_or_else(|error| panic!("{op:?}: the second input must still tessellate after a compaction: {error}"));
+        kernel.tessellate_sync(&result, 0.5).unwrap_or_else(|error| panic!("{op:?}: the result must still tessellate after a compaction: {error}"));
+        let again = kernel.boolean_sync(&sphere, &cube, op).unwrap_or_else(|error| panic!("{op:?}: the same graph must evaluate a second time from the same cached inputs: {error}"));
+        let first = kernel.volume_sync(&result).expect("first result volume");
+        let second = kernel.volume_sync(&again).expect("second result volume");
+        assert!((first - second).abs() < 1e-6, "{op:?}: re-evaluating the same inputs must answer the same solid: {first} vs {second}");
+        eprintln!("[DEBUG] boolean input lifetime {op:?}: inputs {after_sphere:.6}/{after_cube:.6} survive, result {first:.6} reproduces as {second:.6}");
+    }
+}

@@ -1726,6 +1726,14 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
             }
         }
         loop {
+            // ♻️ Each folded op leaves the root it was prepared against returned to the Store; reclaim it before the
+            // next fold, or a large finalize keeps one whole document per op (see `reclaim_document_snapshot_read_returns`).
+            if !self.reclaim_document_snapshot_read_returns(PUBLICATION_SNAPSHOT_READ_RECLAIM_STEPS)? {
+                if semio_framework_job::default_now_us().is_none_or(|now| now >= deadline) {
+                    return Ok(());
+                }
+                continue;
+            }
             let entry = selected_entry_mut!(self.tool_runs).expect("finalizing slot");
             let publication = entry.finalize.as_mut().and_then(|finalize| finalize.publication.as_mut()).expect("admitted publication");
             match self.store.advance_apply_batch(publication, TOOL_RUN_PUBLICATION_GRANT) {

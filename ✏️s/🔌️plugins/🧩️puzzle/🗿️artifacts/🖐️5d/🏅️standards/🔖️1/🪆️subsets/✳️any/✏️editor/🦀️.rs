@@ -16,7 +16,7 @@ use crate::standards::v1::subsets::any::schema::mutations::text::{puzzle5d_docum
 use crate::Puzzle5dSnapshot;
 use crate::editor::puzzle5d::commands::{
     add_brush_part, add_node, add_part_kind, apply_board_events, apply_sun, create_fastener, cycle_brush_candidate, delete_fastener, delete_selection, duplicate_selection, edit_fastener, engagement_abort, engagement_control_select, engagement_input,
-    engagement_submit, patch_fastener, patch_grip, patch_part, proximity_connect, register_brush_mesh, retarget_fastener, rotate_selection, scale_selection, select_same_kind, set_active_example, set_brush_placement_overlap_budget,
+    engagement_submit, patch_fastener, patch_grip, patch_part, proximity_connect, register_brush_mesh, retarget_fastener, rotate_selection, scale_selection, select_same_kind, set_active_example, set_brush_placement_contact_tolerance,
     set_camera, set_camera_2d, set_camera_3d, set_fill_count, set_fixture_json, set_grid_factor, set_grid_snap_enabled, set_kind_weight, set_lod_mode, set_selection_flag, set_suggestion_offset, target_brush_suggestions, translate_selection, world_relocate, zoom_to_selection,
 };
 use crate::editor::puzzle5d::config::{Puzzle5dCamera2d, Puzzle5dConfig, Puzzle5dConfigMutation, Puzzle5dRuntime};
@@ -3603,7 +3603,7 @@ puzzle5d_command_variants! {
     CycleBrushCandidate = "cycleBrushCandidate",
     TargetBrushSuggestions = "targetBrushSuggestions",
     RegisterBrushMesh = "registerBrushMesh",
-    SetBrushPlacementOverlapBudget = "setBrushPlacementOverlapBudget",
+    SetBrushPlacementContactTolerance = "setBrushPlacementContactTolerance",
     SetObjectKindWeight = "setObjectKindWeight",
     SetVortexKindWeight = "setVortexKindWeight",
     SetLodMode = "setLodMode",
@@ -3848,7 +3848,7 @@ fn dispatch_puzzle5d_action(ctx: &mut Puzzle5dActionCtx<'_>, action: &str, args:
         "cycleBrushCandidate" => cycle_brush_candidate::cycle_brush_candidate(ctx),
         "targetBrushSuggestions" => target_brush_suggestions::target_brush_suggestions(ctx, args),
         "registerBrushMesh" => register_brush_mesh::register_brush_mesh(ctx, args),
-        "setBrushPlacementOverlapBudget" => set_brush_placement_overlap_budget::set_brush_placement_overlap_budget(ctx, args),
+        "setBrushPlacementContactTolerance" => set_brush_placement_contact_tolerance::set_brush_placement_contact_tolerance(ctx, args),
         "setObjectKindWeight" | "setVortexKindWeight" => set_kind_weight::set_kind_weight(ctx, action, args),
         "engagementControlSelect" => engagement_control_select::engagement_control_select(ctx, args),
         "setSuggestionOffset" => set_suggestion_offset::set_suggestion_offset(ctx, args),
@@ -8120,7 +8120,7 @@ pub fn create_puzzle5d_app() -> semio_framework_plugin::AppDefinition {
             .view_action("cycleBrushCandidate", LocalizedLabel::native("Cycle Brush Candidate", "Pinselkandidat wechseln"))
             .view_action("targetBrushSuggestions", LocalizedLabel::native("Target Brush Suggestions", "Pinselvorschläge ausrichten"))
             .view_action("registerBrushMesh", LocalizedLabel::native("Register Brush Mesh", "Pinsel-Mesh registrieren"))
-            .view_action("setBrushPlacementOverlapBudget", LocalizedLabel::native("Set Brush Placement Overlap Budget", "Pinsel-Überlappungsbudget festlegen"))
+            .view_action("setBrushPlacementContactTolerance", LocalizedLabel::native("Set Brush Placement Contact Tolerance", "Pinsel-Kontakttoleranz festlegen"))
             .view_action("setObjectKindWeight", LocalizedLabel::native("Set Object Kind Weight", "Objektart-Gewicht festlegen"))
             .view_action("setVortexKindWeight", LocalizedLabel::native("Set Vortex Kind Weight", "Vortexart-Gewicht festlegen"))
             .action_with(ActionDefinition::new("setLodMode", LocalizedLabel::native("Set Lod Mode", "LOD-Modus festlegen"), ActionKind::View, "layers"))
@@ -8159,7 +8159,7 @@ pub fn create_puzzle5d_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("selectSameKind", InteractiveJobClassification::BatchOnlyPendingRewrite)
             .action_interactive_job("selectSameKindSelection", InteractiveJobClassification::Migrated)
             .action_interactive_job("setActiveExample", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("setBrushPlacementOverlapBudget", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("setBrushPlacementContactTolerance", InteractiveJobClassification::BatchOnlyPendingRewrite)
             .action_interactive_job("setCamera", InteractiveJobClassification::BatchOnlyPendingRewrite)
             .action_interactive_job("setCamera2d", InteractiveJobClassification::BatchOnlyPendingRewrite)
             .action_interactive_job("setCamera3d", InteractiveJobClassification::BatchOnlyPendingRewrite)

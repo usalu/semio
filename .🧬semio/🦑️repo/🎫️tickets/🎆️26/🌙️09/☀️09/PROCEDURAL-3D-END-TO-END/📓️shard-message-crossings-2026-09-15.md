@@ -26,11 +26,14 @@ neither:
 > lane). It is the workload: 10.2 patch-PUBLISHING turns per hop publishing 13.5 patches between
 > them. Named with its owner, not claimed.**
 
-| | before (`🗑️generated/shard-msg/before2`) | after |
+| | before — three runs, `🗑️generated/shard-msg/{before,before2,probe-1836}` | after |
 |---|---:|---:|
-| worker crossings per `flowEvalTick` hop | **36.30** | see §5 |
-| `message` (= typed-operation page acks) per hop | **10.0**, width **1×200** | see §5 |
-| `patch-ack` per hop | 10.2, width 1×160 2×31 3×10 4×2 9×1 | see §5 |
+| worker crossings per `flowEvalTick` hop | **36.15 / 36.30 / 34.80** | **owed — §5** |
+| `message` (= typed-operation page acks) per hop | **10.0 / 10.0 / 10.0**, width **1×200 in all three** | owed |
+| `patch-ack` per hop | 10.2 / 10.2 / 9.2, width `1×160 2×31 3×10 4×2 9×1` | measured, not changed — §2.3 |
+
+**The fix is landed on both layers and proven by three law suites (§4); the SERVED reading is owed to
+a restage that the machine's deadlocked wasm build fleet has not let through (§5).**
 
 ---
 
@@ -253,9 +256,61 @@ multi-page turn — proven, not assumed.
 
 ---
 
-## 5. The served reading
+## 5. The served reading — OWED, and why
 
-*(filled below after the restage)*
+**Not taken.** The guest half needs a restage, and from 18:05 to 20:45 the machine's entire
+`wasm32-wasip2` build fleet was deadlocked. The evidence, so the condition is actionable rather than
+merely asserted:
+
+* Three attempts of `📜️restage-shard-msg.sh`
+  (`CARGO_PROFILE_WASM_DEV_DEBUG=false NX_DAEMON=false NX_SKIP_NX_CACHE=true bun nx run
+  @semio-tech/framework-os-dev:activate-generation3d-react-dev`, under `screen -S restageshardmsg`).
+  Attempts 1 and 2 died on a **peer-owned** compile error in a crate this lane never opened —
+  `error[E0614]: type SolidId cannot be dereferenced` at
+  `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/⚙️engine/🦀️.rs:2139`.
+  Polled rather than fixed forward (the file was 7 minutes old); **the peer fixed it themself at
+  18:38** (`**id` → `*id`), which is why attempt 3 got past it.
+* Attempt 3 has produced no output since **19:09**. At 20:44: **0 running `rustc`**, and **12 `cargo`
+  processes in `Ss`/`SNs` at 0.0 % CPU, aged 15 s to 95 min, every one of them holding
+  `/Users/ueli/.cargo/.package-cache-mutate` open**. Three separate
+  `activate-generation3d-react-dev` runs are live on this machine (this lane's plus two peers'), each
+  fanning out to its own private `dist/cargo-artifacts-*/target`, so the contention is not a target
+  lease — it is the ONE global package-cache lock.
+* And nothing is making progress behind it: `~/.cargo/registry/{src,cache}` has no write **since
+  Sep 14**. So no download or extraction is in flight; the convoy is waiting on a lock whose holder
+  is doing nothing with it. Breaking it means killing one of the two peers' `cargo` processes, which
+  this lane is not permitted to do — **named for the coordinator, not acted on.**
+
+What IS pinned about the served path, without the restage:
+
+* **The guest change is not on the served bytes, and that was verified rather than assumed.** The
+  staged `…/dist/dev/🔌️plugin-modules/🌀️procedural/semio_s_plugin_procedural_component.core.wasm`
+  did change at 18:36 (74 485 425 → 74 560 538 B) while attempt 1 was running, so a third full probe
+  was taken against it at 19:50 to find out whether it carried this lane's change:
+
+  ```
+  worker crossings per hop: 34.80; hop wall: 2363 ms; 10/10 converged
+  | message.typed-op-ack | 200 | 10.0 | 200 | … | 1×200 |
+  typed-operation ack ladder: 200 acks over 69 operations (2.9 pages per operation)
+  ```
+
+  **Still `1×200`** — that wasm is a peer's, not this lane's, and the lane's own `before` reading is
+  now three independent runs (36.15 / 36.30 / 34.80 crossings per hop) agreeing on the same shape.
+* **The wire cardinality itself is proven on both sides of the boundary** by §4.1 (10 pages, 4
+  crossings, widest batch 4, through the production `plugin_continue_typed_operations` with the
+  production browser budget), §4.2 (4 pages, exactly 1 crossing, through the production
+  `settlePluginTurn`) and §4.3 (3 pages + an app frame, 3 acks in one handover, wgpu).
+* **The arithmetic the served run would be checked against**, stated in advance so it can be
+  falsified: 200 acks over 69 operations, 2.9 pages per operation, sequences `0..4`. One operation's
+  own sequence stays strictly serial (`queue_page` — one unacknowledged page per operation), so the
+  floor this change can reach is the per-operation DEPTH, ~2.9 crossings per operation-chain, not 10
+  per hop. With the 3.45 operations a hop starts, `message` should land between **3 and 5 per hop**,
+  against 10.0 today — and `patch-ack` (10.2) and `command-page` (6.4), neither of them this lane's,
+  should not move at all.
+
+**The ≤ 15 crossings-per-hop gate is therefore NOT met and not claimed**, and `🐍️journey-probe.mjs`
+was not run against a guest that has nothing new in it. Both are owed to the restage, and the restage
+is owed to the fleet.
 
 ---
 
@@ -289,8 +344,10 @@ rather than quietly repaired.
 - **`command-page` (6.4/hop) is re-attributed, not claimed.** It is a boot term (the 67-page
   `setContributions`) and belongs to the command-ingress paging owner.
 - **`surface-visible` (4.0/hop) needed nothing**: 792 events over 81 crossings, already 11 wide.
-- **The ≤ 15 crossings-per-hop target** — see §5 for whether it was met; the two terms this lane did
-  not own (`patch-ack` 10.2 and `command-page` 6.4) together exceed it on their own.
+- **The ≤ 15 crossings-per-hop gate is NOT met and not claimed**, and `🐍️journey-probe.mjs` was not
+  run: both need the served guest, and §5 says why there is none. Even with `message` at its floor the
+  two terms this lane does not own — `patch-ack` 10.2 and `command-page` 6.4 — come to 16.6 on their
+  own, so ≤ 15 is unreachable from this lane alone whatever the restage shows.
 - **No millisecond is attributed to this change.** The before and after runs straddle a load swing
   from 15.8 to well past 70 (peers rebuilding wasm throughout). Only the crossing counts are
   load-independent and only they are claimed.
@@ -301,3 +358,19 @@ rather than quietly repaired.
   operation still retains exactly ONE unacknowledged page (`queue_page`), so the bound is over
   DISTINCT live operations; one operation's own 0..4 sequence stays strictly serial and no change here
   touches that.
+
+---
+
+## 8. Files
+
+| file | change |
+|---|---|
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs` | `PluginExchangeOutput.typed_operation_result: Option<Page>` → `typed_operation_results: Vec<Page>`; new `TYPED_OPERATION_PAGES_PER_TURN_MAXIMUM = 8`; `advance_typed_operation_output` drains every presentable page; `TypedOperationGrant::spent` ends at the bound, not the first page; `plugin_continue_typed_operations` extends instead of overwriting; the intent-frame exit carries its pages instead of dropping them; the two `#[cfg(test)]` host-continuation helpers drain like production |
+| `🧰️framework/…/🔌️plugin/⚛️reactor/🔄️turn/🦀️.rs` | `route_exchange_output` pushes one `Effect::SendMessage{Shell}` per page |
+| `🧰️framework/…/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs` | **new law** `concurrent_typed_operations_hand_every_presentable_page_to_one_turn`; two call sites adapted to the `Vec` |
+| `🧰️framework/…/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs` | the two reactor source-text assertions follow the new shape |
+| `🧰️framework/…/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🟦️.tsx` | the crossing census (§1): `crossingCensusV1`, `messageCrossingClassV1`, `crossingCensusClassV1`, `noteCrossingCensusV1`, hooked into the turn scheduler's `runTurn`, published through a `get`/`set` accessor pair (§6) |
+| `🧰️framework/…/📺️renderer/🧑‍🎨engine/🧪️tests/🔌️plugin-runtime/🟦️.tsx` | **new TS twin law** `retires every result page one turn carried in a single acknowledgement crossing` |
+| `<ticket>/🐍️react-hop-cost-probe.mjs` | reads the census off the page and prints the two extra tables (additive; the existing gate output is untouched) |
+| `<ticket>/📜️restage-shard-msg.sh` | this lane's restage retry |
+| `<ticket>/📓️shard-message-crossings-2026-09-15.md` | this report |

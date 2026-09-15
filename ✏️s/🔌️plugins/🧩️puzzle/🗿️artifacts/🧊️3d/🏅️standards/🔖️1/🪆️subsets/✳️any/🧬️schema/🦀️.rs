@@ -552,9 +552,9 @@ pub struct SceneConfig {
     #[cfg_attr(test, serde(rename = "kindCompatibility", default))]
     #[value(rename = "kindCompatibility", default)]
     pub(crate) kind_compatibility: Vec<KindCompatEntry>,
-    #[cfg_attr(test, serde(rename = "overlapBudget", default))]
-    #[value(rename = "overlapBudget", default)]
-    pub(crate) overlap_budget: f64,
+    #[cfg_attr(test, serde(rename = "contactTolerance", default))]
+    #[value(rename = "contactTolerance", default)]
+    pub(crate) contact_tolerance: f64,
     #[cfg_attr(test, serde(default))]
     #[value(default)]
     pub(crate) seed: u32,
@@ -890,7 +890,7 @@ impl FillRunReason {
 /// 📸️ Resume point a fill run job reports through `StepOutcome::CheckpointReady`: fixed 68-byte
 /// little-endian layout `requested u64 | placements u64 | provisionalOps u32 | tested u64 | nextKey u64 |
 /// inputs [u8; 32]`. `inputs` digests everything the planner's deterministic sequence depends on except
-/// the requested count (base revision, overlap budget, weights, collision meshes), so a rebuilt run job
+/// the requested count (base revision, contact tolerance, weights, collision meshes), so a rebuilt run job
 /// replays to the checkpoint only when its prefix is provably the same sequence.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub struct FillRunCheckpoint {

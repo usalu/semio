@@ -2679,7 +2679,7 @@ pub async fn generation3d_io() -> semio_framework_plugin::AppIo {
 /// surface's own call sites (and `📌️panels`, `🎭️modes`, the io bridge) keep naming them unqualified
 /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
 pub use crate::preview_eval::{
-    apply_show_mode_mesh, decode_preview_mesh_pack, geometry_extension_address, is_brep_geometry_handle, mesh_data_for_preview_handle, mesh_has_preview_geometry, pending_preview_tessellate_handles, point_marker_mesh, preview_channel_items_for_widget,
+    apply_show_mode_mesh, decode_preview_mesh_pack, geometry_extension_address, is_brep_geometry_handle, mesh_data_for_preview_handle, mesh_data_for_session_preview_channel, mesh_has_preview_geometry, pending_preview_tessellate_handles, point_marker_mesh, preview_channel_items_for_widget,
     preview_mesh_role, preview_tolerance, vector_marker_mesh, widget_previews, PreviewChannelItem, PreviewInlineGeometry, GENERATION_3D_GEOMETRY_EXTENSION_ID, PREVIEW_MESH_ROLES, PREVIEW_TESSELLATE_STEP_BUDGET,
 };
 
@@ -2918,7 +2918,9 @@ pub fn preview_payload(eval_json: &str, host_snapshot: &semio_framework_artifact
                 let data = match inline {
                     Some(PreviewInlineGeometry::Point { x, y, z }) => Some(point_marker_mesh(*x, *y, *z)),
                     Some(PreviewInlineGeometry::Vector { x, y, z }) => Some(vector_marker_mesh(*x, *y, *z)),
-                    None => mesh_data_for_preview_handle(handle, tolerance, session),
+                    None => session
+                        .map(|session| mesh_data_for_session_preview_channel(handle, &id, channel, *index, tolerance, session, host_snapshot))
+                        .unwrap_or_else(|| mesh_data_for_preview_handle(handle, tolerance, session)),
                 };
                 if let Some(data) = data {
                     let data = apply_show_mode_mesh(data, show_mode);

@@ -1,0 +1,14 @@
+{
+  "contract": {
+    "unsortedColumnRequestsAscending": true,
+    "ascendingColumnFlipsToDescending": true,
+    "descendingColumnReturnsToAscending": true,
+    "onlyTheActiveColumnAnnouncesSort": true
+  },
+  "transitions": [
+    { "name": "an unsorted table sorts the clicked column ascending", "columnId": "availability", "sortColumn": null, "sortDirection": null, "next": "asc", "aria": null },
+    { "name": "another column's sort leaves the clicked column ascending", "columnId": "availability", "sortColumn": "name", "sortDirection": "asc", "next": "asc", "aria": null },
+    { "name": "an ascending column flips to descending", "columnId": "availability", "sortColumn": "availability", "sortDirection": "asc", "next": "desc", "aria": "ascending" },
+    { "name": "a descending column returns to ascending", "columnId": "availability", "sortColumn": "availability", "sortDirection": "desc", "next": "asc", "aria": "descending" }
+  ]
+}

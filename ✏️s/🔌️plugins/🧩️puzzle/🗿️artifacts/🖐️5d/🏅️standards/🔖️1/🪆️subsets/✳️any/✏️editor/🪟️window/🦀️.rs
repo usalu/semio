@@ -304,7 +304,7 @@ pub fn runtime(
     window_id: &str,
 ) -> crate::editor::puzzle5d::config::Puzzle5dRuntime {
     let mut runtime = crate::editor::puzzle5d::config::Puzzle5dRuntime::default();
-    runtime.overlap_budget = shared.overlap_budget;
+    runtime.contact_tolerance = shared.contact_tolerance;
     runtime.object_kind_weights = shared.object_kind_weights.clone();
     runtime.vortex_kind_weights = shared.vortex_kind_weights.clone();
     runtime.camera2d = window.camera2d.clone();
@@ -324,7 +324,7 @@ pub fn runtime(
 pub fn shared(runtime: &crate::editor::puzzle5d::config::Puzzle5dRuntime) -> crate::editor::puzzle5d::config::Puzzle5dConfig {
     let mut config = crate::editor::puzzle5d::config::Puzzle5dConfig::default();
     config.fill_count = runtime.fill_count;
-    config.overlap_budget = runtime.overlap_budget;
+    config.contact_tolerance = runtime.contact_tolerance;
     config.object_kind_weights = runtime.object_kind_weights.clone();
     config.vortex_kind_weights = runtime.vortex_kind_weights.clone();
     config

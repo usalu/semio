@@ -286,6 +286,13 @@ test result: ok. 2 passed; 0 failed
 Both drive `close_bridge`, which is bounded by the fixture's own `close.maximumTurns`.
 
 ```
+cargo test -p semio-framework-os-flow --lib protocol -- --test-threads=1
+test result: ok. 10 passed; 0 failed; 236 filtered out
+```
+
+The protocol unit suite reads the same `🧹️session-close` fixture and drives `advance_session_close`.
+
+```
 cargo check -p semio-framework-os-flow --all-targets --keep-going  → exit 0, no errors
 ```
 
@@ -293,9 +300,12 @@ cargo check -p semio-framework-os-flow --all-targets --keep-going  → exit 0, n
 
 ### 6.1 `🐍️retirement-ladder-probe.mjs` — 8 role switches on the converged hex column
 
+Run on a RECYCLED serve (killed by pid, `📜️serve-generation3d-react-6022.sh` restarted, the served
+`🔌️PluginRuntime` module re-fetched through `/@fs` and grepped for this lane's own symbols first).
+
 ```
 cd <ticket> && SEMIO_PROBE_URL=http://127.0.0.1:6022/?plugin=generation3d&example=hexagonal-mushroom-column \
-  SEMIO_PROBE_OUT=react-retire/ladder SEMIO_PROBE_GATE=1 bun 🐍️retirement-ladder-probe.mjs   → exit 0
+  SEMIO_PROBE_OUT=react-retire/ladder-final SEMIO_PROBE_GATE=1 bun 🐍️retirement-ladder-probe.mjs  → exit 0
 
 1-boot            ok=true  windows=["procedural-preview"]       meshes=3
 2..9 switch × 8   ok=true  viewer/editor alternating            meshes=3 every step
@@ -303,21 +313,38 @@ verdict red=0 unconverged=[] closes=8 maxTurns=29
 
 {instance:1, surfaces:14, turns:29, steps:11207, ceiling:4480000}
 {instance:2, surfaces: 7, turns:15, steps: 2828, ceiling:2240000}
-… the remaining six closes repeat those two shapes exactly
+{instance:3, surfaces:14, turns:29, steps:11207}   {instance:4, surfaces: 7, turns:15, steps:2828}
+{instance:5, surfaces:14, turns:29, steps:11207}   {instance:6, surfaces: 7, turns:15, steps:2828}
+{instance:7, surfaces:14, turns:29, steps:11160}   {instance:8, surfaces: 7, turns:15, steps:2828}
 
 budgetExhausted 0  stalled 0  blocked 0  pageErrors 0  roleSwitchFailed 0
 ```
 
 Eight real retirements of a converged instance. Turns are exactly `2 × surfaces + 1` in every one of
-them, `owner-close-budget-exhausted` is **0**, and so are the stall, blocked, page-error and
+them — **29 for 14 surfaces whether the ladder took 11 207 steps or 11 160**, which is the property
+under test — and `owner-close-budget-exhausted` is **0**, as are the stall, blocked, page-error and
 role-switch-failure counts. The same probe on the run-length rule read `maxTurns 5861`.
 
-### 6.2 Battery
+### 6.2 Restage
+
+`nx run semio-framework-os-flow-core:wasm` (`NX_SKIP_NX_CACHE=true`, 4 m 8 s, exit 0) is the build that
+matters for this lane's Rust change — it is what produces the `flow_core_bg.wasm` the page loads, and
+both binding copies are stamped with it. The React half needs no build: the served
+`🔌️PluginRuntime/🟦️.tsx` module was fetched back through `/@fs` and greps for this lane's own seam
+before any verdict was taken.
+
+`nx run @semio-tech/framework-os-dev:activate-generation3d-react-dev` (`NX_SKIP_NX_CACHE=true`) restages
+the PROCEDURAL PLUGIN modules, which this lane does not touch. **It did not complete** — see §7 — and
+the gate above was therefore taken on the tree as staged, with the serve recycled first.
+
+### 6.3 Battery
 
 ```
 cd <ticket> && SEMIO_BATTERY_URL=http://127.0.0.1:6022/?plugin=generation3d \
   SEMIO_BATTERY_ROOT=react-retire bun 🐍️react-battery.mjs --only=role-switch,journey
-[DEBUG] BATTERY DONE green=2/2 red=[] 154s pageerrors=0
+[DEBUG] battery ■ journey     ok=true exit=0 168s steps=25/25 pageerrors=0
+[DEBUG] battery ■ role-switch ok=true exit=0  75s steps=9/9   pageerrors=0
+[DEBUG] BATTERY DONE green=2/2 red=[] 243s pageerrors=0
 ```
 
 - `journey` — all eight examples load with live preview meshes in the editor and the viewer, generate
@@ -327,6 +354,19 @@ cd <ticket> && SEMIO_BATTERY_URL=http://127.0.0.1:6022/?plugin=generation3d \
 
 ## 7. Not claimed
 
+- **The restage never completed, and this lane stopped retrying it.** Four runs of
+  `activate-generation3d-react-dev`: one killed by a peer's in-flight `SolidId` deref error in
+  `✏️s/🔌️plugins/🗄️stdio/…/🧊️brep/🧬️schema/⚙️engine/🦀️.rs` (the peer fixed it within six minutes),
+  one by a transient `error writing dependencies to …/wasm-dev/build/anyhow/…` right after a peer
+  pruned the shared cargo build cache, and two by `Cargo artifact build failed` on
+  `🧩️extensions/🔤️primitive` (after 4 501 s of build) and on `✏️s/🔌️plugins/🌊️flow` — **with no
+  compiler error anywhere in either log**, and `cargo check -p semio-s-plugin-flow --target
+  wasm32-unknown-unknown` is clean (exit 0). That is the build-harness-under-fleet-load family, not a
+  source error. It is also not a precondition for this lane: the Rust change ships through
+  `semio-framework-os-flow-core:wasm` (built, exit 0, both binding copies stamped) and the React change
+  is served from source, both verified before the gate. The procedural plugin modules are unchanged by
+  this lane. **A peer picking up a full restage should expect ~75 min per plugin artifact until the
+  pruned cache is warm again.**
 - **The Rust close is proven natively, not in the browser.** Both laws and the census drive the real
   `FlowBridge`/`FlowDomainAdapter` in-process. `flow_core_bg.wasm` was rebuilt so the guest the page
   loads carries the fix, but no browser reading of a FLOW SESSION close turn count was taken — the
@@ -372,6 +412,20 @@ cd <ticket> && SEMIO_BATTERY_URL=http://127.0.0.1:6022/?plugin=generation3d \
   window` (a 5 s timeout). This lane's diff to `🔌️PluginRuntime/🟦️.tsx` touches only `closeUiOwner`,
   the new ladder accountant and two docstrings — neither the effect decoder nor the brush hover path —
   and all six `plugin ui close ladder budget` rows are green.
+- **Four `host::tests` rows are red and none is this lane's.** `--lib host::tests` is
+  `110 passed | 4 failed`: `connect_ports_replaces_existing_incoming_on_same_input`,
+  `delete_selection_removes_edge_selected_by_synapse_id_domain`,
+  `hexagonal_mushroom_fixture_reports_extruded_solid_output` and
+  `rectangle_extrude_fixture_evaluates_solid_output` — graph-edit and geometry-evaluation rows, with a
+  brep extension rebuild in flight from a peer at the time. This lane's only change to
+  `🖥️host/🦀️.rs` is a new enum and a pure-read `close_phase()`; `--lib session_retirement` is 9/9 and
+  `--lib retirement` 11/11.
+- **Two `draw_list_laws` rows are red on a peer's in-flight fixture.**
+  `render_frame_carries_the_draw_list_the_host_must_paint` and
+  `without_a_gpu_adapter_the_frame_replays_a_list_that_covers_the_node_layout` both fail on
+  `frame["hostSnapshot"]["widgets"]`; `🧪️tests/🎬️draw-list/🦀️.rs` and its
+  `🧫️fixtures/🎬️draw-list/🔣️.json` are both modified in the working tree by a peer. Nothing in this
+  lane touches the draw list.
 - **`FlowVcsFeature::close_cursor_step` still spends one rung per turn.** That is the OPERATION-cancel
   ladder, not the session close; it retires one operation's cursor and page, a quantity that does not
   scale with the document. It was read and deliberately left alone.

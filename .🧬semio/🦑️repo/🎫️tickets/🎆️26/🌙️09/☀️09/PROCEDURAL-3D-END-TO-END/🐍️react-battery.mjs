@@ -128,9 +128,15 @@ const PROBES = [
         medianMs: row.drag?.latencyMedianMs ?? null,
         settledPhase: row.drag?.settledPhase ?? null,
         settledMeshes: row.drag?.settledMeshes ?? null,
+        released: row.releasedDelivery?.why ?? null,
+        returned: row.returnedDelivery?.why ?? null,
       }));
       return {
         rows,
+        /** 🩺 One step per graded example — this verdict used to return `rows` alone, and the central
+         * page-error gate then threw `undefined is not an object (evaluating 'v.steps.filter')` before
+         * any row could be scored, so the whole probe reported nothing at all. */
+        steps: rows.map((row) => ({ step: `${row.example}/${row.kind}`, ok: row.ok, detail: row })),
         key: {
           rows: rows.length,
           reached: rows.filter((row) => row.changes != null).length,

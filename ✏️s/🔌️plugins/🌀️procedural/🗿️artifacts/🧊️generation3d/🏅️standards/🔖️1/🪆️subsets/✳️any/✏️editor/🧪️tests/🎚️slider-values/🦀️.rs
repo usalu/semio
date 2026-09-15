@@ -186,13 +186,23 @@ struct DeliveredPreview {
     computing: bool,
 }
 
+/// 🚚️ 🐛 The status's `diagnostics` row is `[{handle, issues:[{entity, code, message}]}]`
+/// (`🧵️preview-eval/🦀️.rs`), one NESTING deeper than this reader used to walk — it read `entity` and
+/// `message` off the outer entry, found neither, and recorded every validate-gate refusal as the
+/// contentless `$kernel: ""`. A refusal read that way names nothing, so a row whose kernel genuinely
+/// refuses the value looked like a silent empty payload.
 fn delivered_preview(preview_body_json: &str) -> DeliveredPreview {
     let world: semio_framework_ui::wgpu::World3dScene = semio_framework_plugin::artifact_app_laws::decode_fixture_scene_with_lanes(preview_body_json).expect("projected preview body must decode as an assembled world-3d scene");
     let status: serde_json::Value = serde_json::from_str(world.status_json.as_deref().unwrap_or("{}")).expect("preview status json");
     let mut widget_errors = widget_errors_of(world.status_json.as_deref());
-    for issue in status.get("diagnostics").and_then(serde_json::Value::as_array).cloned().unwrap_or_default() {
-        let entity = issue.get("entity").and_then(serde_json::Value::as_str).unwrap_or("$kernel").to_string();
-        widget_errors.insert(entity, issue.get("message").and_then(serde_json::Value::as_str).unwrap_or_default().to_string());
+    for entry in status.get("diagnostics").and_then(serde_json::Value::as_array).cloned().unwrap_or_default() {
+        let handle = entry.get("handle").and_then(serde_json::Value::as_str).unwrap_or("$kernel");
+        for issue in entry.get("issues").and_then(serde_json::Value::as_array).cloned().unwrap_or_default() {
+            let entity = issue.get("entity").and_then(serde_json::Value::as_str).unwrap_or(handle).to_string();
+            let code = issue.get("code").and_then(serde_json::Value::as_str).unwrap_or_default();
+            let message = issue.get("message").and_then(serde_json::Value::as_str).unwrap_or_default();
+            widget_errors.insert(entity, format!("[{code}] {message}").trim().to_string());
+        }
     }
     DeliveredPreview {
         reading: PreviewReading { mesh_ids: payload_mesh_ids(&world.meshes_json), bounds: crate::preview_eval::preview_payload_bounds(&world.meshes_json), widget_errors },
@@ -303,6 +313,12 @@ fn press_faults(label: &str, oracle: &PreviewReading, delivered: &DeliveredPrevi
                 delivered.reading.mesh_ids.len(),
                 delivered.phase,
                 delivered.reading.widget_errors
+            ));
+        } else if oracle.mesh_ids.is_empty() && !delivered.reading.mesh_ids.is_empty() {
+            faults.push(format!(
+                "{label}: the kernel refuses this value ({:?}) but the preview still paints stale meshes {:?}",
+                oracle.widget_errors,
+                delivered.reading.mesh_ids
             ));
         }
         return faults;

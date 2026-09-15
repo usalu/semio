@@ -415,7 +415,7 @@ fn a_pose_edit_invalidates_the_precompute_derivation_of_o_changed_objects() {
     assert_eq!(invalidation.stale.len(), removed.vortices.len(), "deleting the FIRST of {} objects invalidates only its own targets — an index-addressed diff would invalidate the whole tail", large.fixture.objects.len());
 
     let mut replanned_fixture = large.clone();
-    replanned_fixture.runtime.overlap_budget += 0.25;
+    replanned_fixture.runtime.contact_tolerance += 0.25;
     let replanned = scene_config(&replanned_fixture).expect("the replanned document builds an engine scene");
     assert!(crate::editor::puzzle3d::precompute::Puzzle3dSceneInvalidation::between(&base, &replanned).plan, "a fill-plan member change invalidates every candidate and must take the whole-scene rebuild");
 }

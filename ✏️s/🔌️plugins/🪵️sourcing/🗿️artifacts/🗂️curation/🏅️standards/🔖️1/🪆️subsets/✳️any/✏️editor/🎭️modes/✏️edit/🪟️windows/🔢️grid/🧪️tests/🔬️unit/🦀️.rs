@@ -44,7 +44,7 @@ async fn definition_declares_the_world3d_surface_and_body_key() {
 #[semio_framework_async_macros::async_test]
 async fn renders_via_the_app() {
     let mut app = new_app().await;
-    let rendered = app.render(SOURCING_CURATION_BODY_GRID, None, &semio_framework_plugin::ViewModel::default()).await.expect("render");
+    let rendered = semio_framework_plugin::PluginApp::render(&mut *app, SOURCING_CURATION_BODY_GRID, None, &semio_framework_plugin::ViewModel::default()).await.expect("render");
     let scene: semio_framework_ui_scene::World3dScene = semio_framework_plugin::artifact_app_laws::built_surface_scene(&rendered.root).expect("assemble world3d scene");
     assert!(scene.meshes_json.contains(crate::schema::SOURCING_UNIT_BOX_MESH_ID));
 }

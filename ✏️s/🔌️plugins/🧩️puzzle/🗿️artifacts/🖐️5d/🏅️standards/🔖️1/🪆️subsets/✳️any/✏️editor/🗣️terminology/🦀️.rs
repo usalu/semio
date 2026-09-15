@@ -84,7 +84,7 @@ semio_framework_plugin::app_labels! {
         offset: native_en "Offset", native_de "Versatz", reuse_en "Offset", reuse_de "Versatz";
         part_weights: native_en "Part Weights", native_de "Teilgewichte", reuse_en "Part Weights", reuse_de "Teilgewichte";
         grip_weights: native_en "Grip Weights", native_de "Griffgewichte", reuse_en "Grip Weights", reuse_de "Griffgewichte";
-        overlap: native_en "Overlap", native_de "Überlappung", reuse_en "Overlap", reuse_de "Überlappung";
+        contact_tolerance: native_en "Contact tolerance (m)", native_de "Kontakttoleranz (m)", reuse_en "Contact tolerance (m)", reuse_de "Kontakttoleranz (m)";
         window_2d: native_en "Puzzle 2D", native_de "Puzzle 2D", reuse_en "Puzzle 2D", reuse_de "Puzzle 2D";
         window_3d: native_en "Puzzle 3D", native_de "Puzzle 3D", reuse_en "Puzzle 3D", reuse_de "Puzzle 3D";
         // inspector field labels

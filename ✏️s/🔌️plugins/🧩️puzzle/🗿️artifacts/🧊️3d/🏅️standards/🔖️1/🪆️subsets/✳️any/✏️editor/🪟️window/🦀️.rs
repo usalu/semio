@@ -284,7 +284,7 @@ pub fn runtime(shared: &Puzzle3dConfig, window: &Puzzle3dWindowConfig, transient
     let transient = &live_transient(transient, &host_activation(view));
     Puzzle3dRuntime {
         fill_count: shared.fill_count,
-        overlap_budget: shared.overlap_budget,
+        contact_tolerance: shared.contact_tolerance,
         object_kind_weights: shared.object_kind_weights.clone(),
         vortex_kind_weights: shared.vortex_kind_weights.clone(),
         lod_automatic: window.lod_automatic,
@@ -315,7 +315,7 @@ pub fn runtime(shared: &Puzzle3dConfig, window: &Puzzle3dWindowConfig, transient
 }
 
 pub fn shared(runtime: &Puzzle3dRuntime) -> Puzzle3dConfig {
-    Puzzle3dConfig { fill_count: runtime.fill_count, overlap_budget: runtime.overlap_budget, object_kind_weights: runtime.object_kind_weights.clone(), vortex_kind_weights: runtime.vortex_kind_weights.clone(), active_example_id: runtime.active_example_id.clone() }
+    Puzzle3dConfig { fill_count: runtime.fill_count, contact_tolerance: runtime.contact_tolerance, object_kind_weights: runtime.object_kind_weights.clone(), vortex_kind_weights: runtime.vortex_kind_weights.clone(), active_example_id: runtime.active_example_id.clone() }
 }
 
 /// 🫧️ The scratch this turn wants to retain, stamped with the activation it belongs to — read back by

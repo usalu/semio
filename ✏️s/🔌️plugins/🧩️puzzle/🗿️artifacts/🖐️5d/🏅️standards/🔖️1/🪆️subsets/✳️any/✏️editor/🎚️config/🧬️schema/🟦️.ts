@@ -3,7 +3,7 @@ export interface Puzzle5dConfig {
   /** @state config */
   fillCount: number;
   /** @state config */
-  overlapBudget: number;
+  contactTolerance: number;
   /** @state config */
   objectKindWeights: Record<string, number>;
   /** @state config */
@@ -33,5 +33,5 @@ const weights = (value: unknown, at: string): Record<string, number> => Object.f
 
 export function parsePuzzle5dConfig(value: unknown, at = "$"): Puzzle5dConfig {
   const row = record(value, at);
-  return { fillCount: count(row.fillCount, `${at}.fillCount`), overlapBudget: finite(row.overlapBudget, `${at}.overlapBudget`), objectKindWeights: weights(row.objectKindWeights, `${at}.objectKindWeights`), vortexKindWeights: weights(row.vortexKindWeights, `${at}.vortexKindWeights`) };
+  return { fillCount: count(row.fillCount, `${at}.fillCount`), contactTolerance: finite(row.contactTolerance, `${at}.contactTolerance`), objectKindWeights: weights(row.objectKindWeights, `${at}.objectKindWeights`), vortexKindWeights: weights(row.vortexKindWeights, `${at}.vortexKindWeights`) };
 }
