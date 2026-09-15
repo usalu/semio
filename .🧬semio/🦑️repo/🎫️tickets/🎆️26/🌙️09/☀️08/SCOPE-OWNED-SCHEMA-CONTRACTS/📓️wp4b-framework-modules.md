@@ -23,7 +23,7 @@ root `📜️script.ts` was touched — those edits are listed under §7.
 `🧰️framework/🔨️modules/🎭️actor/🎠️activation` → `🧰️framework/🔨️modules/🎭️actor/🎠️activation-reservation/`
 (4 files moved: `🦀️.rs`, `🧬️schema/🔣️.json`,
 `🧫️fixture/🔣️.json`, `🧪️tests/🦀️.rs`). The module `$id` was already
-`https://semio.tech/schema/framework/actor/activation-reservation/schema.json`; it is now derivable from
+`https://json.schemas.assets.semio-tech.com/framework/actor/activation-reservation/schema.json`; it is now derivable from
 the path, so the transformer's `SCOPE_OVERRIDE` table is gone (`wp4-framework-modules.py`: the dict and
 the `scope_path()` branch that read it were deleted — the function is now purely path-derived).
 
@@ -44,7 +44,7 @@ must **not** be renamed. Exact request in §7.1.
 ## 3. Row 37 — `framework.ui.render` owns both target contracts
 
 New module `🧰️framework/🔨️modules/🖱️ui/🖌️render/🧬️schema/🔣️.json`,
-`$id https://semio.tech/schema/framework/ui/render/schema.json`, scope `framework.ui.render`.
+`$id https://json.schemas.assets.semio-tech.com/framework/ui/render/schema.json`, scope `framework.ui.render`.
 
 | export | was | named from |
 |---|---|---|
@@ -62,7 +62,7 @@ Readers rewired (both inside the partition):
   operation names in the hoisted document.
 - `🎯️targets/🍎️metal/📦️packages/🦀️rust/🧫️fixtures/🔣️.json:2` and the byte-identical generated literal in
   `🧭️objective_c.rs:606`: `"$schema": "../🧬️schema/🔣️.json"` →
-  `"$schema": "https://semio.tech/schema/framework/ui/render/schema.json#/$defs/MetalObjectiveCAbiFixture"`.
+  `"$schema": "https://json.schemas.assets.semio-tech.com/framework/ui/render/schema.json#/$defs/MetalObjectiveCAbiFixture"`.
   Both sides changed together, so `🧭️objective_c.rs:611`'s `assert_eq!(fixture, include_str!(…))` still holds
   (proven by a real test run, §8).
 
@@ -312,7 +312,7 @@ path-derivable module $ids: 116 ok, 0 not derivable
 ```
 
 The last line is the row-36/37 acceptance test: every module `$id` in the partition equals
-`https://semio.tech/schema/framework/<ascii tail of each directory>/schema.json`, so no override table is
+`https://json.schemas.assets.semio-tech.com/framework/<ascii tail of each directory>/schema.json`, so no override table is
 needed anywhere.
 
 ```

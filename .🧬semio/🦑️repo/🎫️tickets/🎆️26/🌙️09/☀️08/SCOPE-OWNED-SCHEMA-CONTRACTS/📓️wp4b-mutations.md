@@ -42,7 +42,7 @@ rule out: `<root module $id scope path>/mutation/<semanticKind>/schema.json`, re
 | `🌍️gis/…/✏️editor/🎚️config/…` | `app/gis/gis2d` | `s/gis/gismap/1/any/editor/config` |
 
 `module_scope_path()` (new) reads the one declaration; `reidentify()` now keys on it. The live checker agrees:
-`mutation-leaf-id-grammar` prints `must be https://semio.tech/schema/app/writer/writer/mutation/…`.
+`mutation-leaf-id-grammar` prints `must be https://json.schemas.assets.semio-tech.com/app/writer/writer/mutation/…`.
 
 ### 1.1 Injectivity proof — established before any write
 
@@ -54,10 +54,10 @@ then stamps. A collision therefore cannot be written and discovered afterwards.
 $ python3 <ticket>/wp4-mutation-aggregates.py --ids                      # first dry run
 leaves=1766 leavesChanged=1590 aggregates=79 aggregatesChanged=60 facets=43 facetsChanged=43
 collisions=2 unowned=191 duplicateTargets=0
-  https://semio.tech/schema/app/gis/gis2d/mutation/set-camera/schema.json is claimed by 2 documents:
+  https://json.schemas.assets.semio-tech.com/app/gis/gis2d/mutation/set-camera/schema.json is claimed by 2 documents:
     …/🗺️gismap/…/✏️editor/🎚️config/🧬️schema/🧬️mutations/🎥️set-camera/🧬️schema/🔣️.json,
     …/🗺️gismap/…/✏️editor/👥️presence/🧬️schema/🧬️mutations/🎥️set-camera/🧬️schema/🔣️.json
-  https://semio.tech/schema/app/gis/gis2d/mutations.json is claimed by 2 documents: (the same two roots)
+  https://json.schemas.assets.semio-tech.com/app/gis/gis2d/mutations.json is claimed by 2 documents: (the same two roots)
 ```
 
 Both collisions had one cause: `✏️editor/🎚️config` and `✏️editor/👥️presence` declared the **same** module `$id`,
@@ -110,7 +110,7 @@ documents=1900 refs=1645 rewritten=1644 aggregates=78 leaves=21 refused=1
 ```
 
 The single refusal was resolved by W5b during the session (they deleted that helper module and pointed the
-ref at `https://semio.tech/schema/os/store/presence/component.json#/$defs/I32`), so the partition now holds
+ref at `https://json.schemas.assets.semio-tech.com/os/store/presence/component.json#/$defs/I32`), so the partition now holds
 **0 relative `$ref`s**:
 
 ```
@@ -126,7 +126,7 @@ They were part of the same sweep, no special case: `../../../🔣️.json` → t
 
 ```
 📸️remodel/…/✏️editor/🎚️config/…/🎥️set-camera   ../../../🔣️.json#/properties/camera
-  → https://semio.tech/schema/app/remodel/remodeling/config/schema.json#/properties/camera
+  → https://json.schemas.assets.semio-tech.com/app/remodel/remodeling/config/schema.json#/properties/camera
 📸️remodel/…/✏️editor/🎚️config/…/📸️replace-config → …/config/schema.json
 📸️remodel/…/✏️editor/👥️presence/…/👥️replace-presence → …/presence/schema.json
 ```

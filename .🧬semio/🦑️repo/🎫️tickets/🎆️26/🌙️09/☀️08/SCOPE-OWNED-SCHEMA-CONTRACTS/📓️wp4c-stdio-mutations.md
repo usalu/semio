@@ -64,7 +64,7 @@ Before → after, one branch of `las 1.0 header`:
 
 ```
 -  {"$ref": "./➕insert-point/🧬️schema/🔣️.json"}
-+  {"$ref": "https://semio.tech/schema/s/stdio/las/1.0/header/mutation/insert-point/schema.json"}
++  {"$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/las/1.0/header/mutation/insert-point/schema.json"}
 ```
 
 ### 1.2 Proof that every aggregate `$ref` equals an existing leaf `$id`
@@ -334,16 +334,16 @@ mutation-leaf-id-grammar
   $id "…/s/stdio/las/1.0/header/mutation/set-point/schema.json"
   must be "…/s.stdio.las/mutation/set-point/schema.json": a mutation leaf is its own scope…
 module-scope-id-inconsistent
-  must keep this module's scope path https://semio.tech/schema/s.stdio.html/ and vary only the facet filename
+  must keep this module's scope path https://json.schemas.assets.semio-tech.com/s.stdio.html/ and vary only the facet filename
 ```
 
 and the module `$id`s it reads are still the pre-migration artifact-level ones:
 
 ```
-🌐️html 5 any        → https://semio.tech/schema/s.stdio.html/artifact.json
-☁️las 1.0 header    → https://semio.tech/schema/s.stdio.las/artifact.json
-📖️pdf 1.4 base      → https://semio.tech/schema/s.stdio.pdf/artifact.json
-📖️pdf 1.7 base      → https://semio.tech/schema/s.stdio.pdf.1.7/artifact.json     ← not even self-consistent
+🌐️html 5 any        → https://json.schemas.assets.semio-tech.com/s.stdio.html/artifact.json
+☁️las 1.0 header    → https://json.schemas.assets.semio-tech.com/s.stdio.las/artifact.json
+📖️pdf 1.4 base      → https://json.schemas.assets.semio-tech.com/s.stdio.pdf/artifact.json
+📖️pdf 1.7 base      → https://json.schemas.assets.semio-tech.com/s.stdio.pdf.1.7/artifact.json     ← not even self-consistent
 ```
 
 **That is row 83's open item (W6c: stdio outside `🧬️mutations`), not a defect here.** The moment those
@@ -358,9 +358,9 @@ hard constraint the coordinator needs:
 PROOF-2 the checker's expected id is not injective over this partition
   915 leaves -> 766 distinct ids under the artifact-level dotted root;
   229 leaves share 80 ids
-    11 x https://semio.tech/schema/s.stdio.semio/mutation/set-snapshot/schema.json
-     7 x https://semio.tech/schema/s.stdio.step/mutation/set-file-schema/schema.json
-     7 x https://semio.tech/schema/s.stdio.step/mutation/set-snapshot/schema.json
+    11 x https://json.schemas.assets.semio-tech.com/s.stdio.semio/mutation/set-snapshot/schema.json
+     7 x https://json.schemas.assets.semio-tech.com/s.stdio.step/mutation/set-file-schema/schema.json
+     7 x https://json.schemas.assets.semio-tech.com/s.stdio.step/mutation/set-snapshot/schema.json
 ```
 
 Dropping `<standard>/<subset>` merges `semio`'s eleven subsets, `step`'s seven, `ifc` 2x3 with 4,
@@ -396,11 +396,11 @@ specific to gif 89a. `catalog-stale=1` in the same run makes the second more lik
 reaches it, so it is now unowned. It carries
 
 ```json
-"value":     {"$ref": "https://semio.tech/schema/s.stdio.gltf/mutation.json"},
-"rejection": {"$ref": "https://semio.tech/schema/s.stdio.gltf/mutation.json#/$defs/rejection"}
+"value":     {"$ref": "https://json.schemas.assets.semio-tech.com/s.stdio.gltf/mutation.json"},
+"rejection": {"$ref": "https://json.schemas.assets.semio-tech.com/s.stdio.gltf/mutation.json#/$defs/rejection"}
 ```
 
-and **no document in the repo declares `https://semio.tech/schema/s.stdio.gltf/mutation.json`** — two
+and **no document in the repo declares `https://json.schemas.assets.semio-tech.com/s.stdio.gltf/mutation.json`** — two
 dangling cross-document references. It also holds the `$id`
 `…/s/stdio/gltf/2.0/any/mutations/text.json`, which W8b gave it and which now belongs to no schema
 module. Decide whether the `🚪️io` mutation tree is a scope at all; if it is not, delete the document
@@ -434,7 +434,7 @@ this is derived from the file contents, which are quoted above and reproducible 
 
 Row 83, restated with the number it now costs: until
 `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/*/🏅️standards/*/🪆️subsets/*/🧬️schema/🔣️.json` declares
-`https://semio.tech/schema/s/stdio/<artifact>/<standard>/<subset>/artifact.json`, this partition reads
+`https://json.schemas.assets.semio-tech.com/s/stdio/<artifact>/<standard>/<subset>/artifact.json`, this partition reads
 989 findings that are not its own (§5.2). The artifact-level form cannot be adopted here — it collides
 229 of 915 leaves onto 80 ids. Note `pdf` 1.7 already deviates from its own siblings
 (`s.stdio.pdf.1.7` vs `s.stdio.pdf`), so the current root ids are not a consistent scheme either.

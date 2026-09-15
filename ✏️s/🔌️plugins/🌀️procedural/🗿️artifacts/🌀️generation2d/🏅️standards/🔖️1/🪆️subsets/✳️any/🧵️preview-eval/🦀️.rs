@@ -81,10 +81,10 @@ pub fn tick_effect(window_id: &str, window_kind_id: &str) -> Effect {
     Effect::DispatchAction { req: semio_framework_plugin::RequestId(PREVIEW_EVAL_HOP_REQUEST), action: "flowEvalTick".into(), args: Some(window_args(window_id, window_kind_id)), delay_ms: 0 }
 }
 
-/// 🚧️ Whether an evaluation of `fixture` may start or continue at all: an operator kind no contributed
+/// 🚧️ Whether an evaluation of `host_snapshot` may start or continue at all: an operator kind no contributed
 /// extension serves faults identically on every hop, and only `setContributions` can change that.
-pub fn may_rearm(fixture: &semio_framework_artifact_flow_flow::FlowHostDocument) -> bool {
-    semio_framework_os_flow::unserved_flow_operator_kinds(fixture).is_empty()
+pub fn may_rearm(host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot) -> bool {
+    semio_framework_os_flow::unserved_flow_operator_kinds(host_snapshot).is_empty()
 }
 
 /// 🪟️ The one argument object every hop carries, on the redispatch and on the extension request alike.
@@ -153,11 +153,11 @@ pub fn tick_is_unfinished(more: bool, parked_extension_invocations: usize) -> bo
     more || parked_extension_invocations > 0
 }
 
-/// 🧮️ ONE evaluation hop over `fixture` into `session`, for the window it names. `retained_eval` is
+/// 🧮️ ONE evaluation hop over `host_snapshot` into `session`, for the window it names. `retained_eval` is
 /// the evaluation text the caller already published, so an unmoved evaluation republishes nothing.
-pub fn evaluate_tick(window_id: &str, window_kind_id: &str, fixture: &semio_framework_artifact_flow_flow::FlowHostDocument, session: &mut FlowEvalSession, retained_eval: Option<&str>) -> FlowEvalTickOutcome {
+pub fn evaluate_tick(window_id: &str, window_kind_id: &str, host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot, session: &mut FlowEvalSession, retained_eval: Option<&str>) -> FlowEvalTickOutcome {
     session.begin_window_tick(window_id);
-    let mut host = flow_host_with_session(fixture, session);
+    let mut host = flow_host_with_session(host_snapshot, session);
     let more = session.tick(&mut host, None);
     let pending_extension_evals = host.take_pending_extension_evals();
     host.retire_cold();
@@ -180,7 +180,7 @@ pub fn evaluate_tick(window_id: &str, window_kind_id: &str, fixture: &semio_fram
     session.note_window_tick_outcome(window_id, tick_is_unfinished(more, extension_invocations.len()));
     if !extension_invocations.is_empty() {
         session.note_window_extensions_in_flight(window_id, extension_invocations.len());
-    } else if more && !may_rearm(fixture) {
+    } else if more && !may_rearm(host_snapshot) {
         session.abandon_window_tick(window_id);
     }
     FlowEvalTickOutcome { extension_invocations, publication: session.eval_publication_for(retained_eval) }

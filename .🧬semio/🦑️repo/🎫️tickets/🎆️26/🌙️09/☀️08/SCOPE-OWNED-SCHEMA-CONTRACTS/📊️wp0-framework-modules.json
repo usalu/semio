@@ -2719,7 +2719,7 @@
   {
     "path": "🧰️framework/🔨️modules/🌱️value/🔁️codec/🧪️fixtures/🧬️.schema.json",
     "blob": "ab7b118c57e0f172f061194982880f874e8c984d",
-    "role": "fixture-owned schema validating the exact-integer codec corpus ($id https://semio.tech/schemas/value/exact-integer-codec-v1.json, title \"Exact Integer Value Codec Corpus\")",
+    "role": "fixture-owned schema validating the exact-integer codec corpus ($id https://json.schemas.assets.semio-tech.coms/value/exact-integer-codec-v1.json, title \"Exact Integer Value Codec Corpus\")",
     "classification": "b",
     "owner": "value/🔁️codec (no independent Cargo crate; 🔁️codec/🦀️.rs is a mod compiled into the semio-framework-replication crate, id=replication)",
     "intendedOwner": "value/🔁️codec (should still get its own 🧬️schema/ module even though the owning crate is 'replication')",
@@ -2738,7 +2738,7 @@
     ],
     "decision": "move-to 🧰️framework/🔨️modules/🌱️value/🔁️codec/🧬️schema/🔣️.json (there is no 🧬️schema/ anywhere under 🔁️codec; this anonymous .schema.json sitting directly inside 🧪️fixtures/ is the ONLY schema defining this contract, so it must be promoted out of the fixtures directory into a proper canonical module rather than merely renamed in place)",
     "evidence": [
-      "🧰️framework/🔨️modules/🌱️value/🔁️codec/🧪️fixtures/🧬️.schema.json:3 — $id https://semio.tech/schemas/value/exact-integer-codec-v1.json, title \"Exact Integer Value Codec Corpus\"",
+      "🧰️framework/🔨️modules/🌱️value/🔁️codec/🧪️fixtures/🧬️.schema.json:3 — $id https://json.schemas.assets.semio-tech.coms/value/exact-integer-codec-v1.json, title \"Exact Integer Value Codec Corpus\"",
       "directory listing of 🧰️framework/🔨️modules/🌱️value/🔁️codec/ shows only 🦀️.rs and 🧪️fixtures/ — no 🧬️schema/ directory exists anywhere in this leaf",
       "🧰️framework/🔨️modules/🌱️value/🔁️codec/🦀️.rs:456 and 🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🦀️.rs:2981 both include_str! the sibling fixture DATA file (🔣️.json), not this schema file directly — the schema is consumed by a TS-side Ajv oracle (not directly grepped by id since it uses a URL $id, not a bare semio.* token)"
     ],
@@ -4077,7 +4077,7 @@
   {
     "path": "🧰️framework/🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🏘️admission/📐️schema/🔣️.json",
     "blob": "f53c6dcb9b8619f0718355c0a1fe72f6d1f53134",
-    "role": "fixture-shape schema validating this leaf's own admission fixture ($id https://semio.tech/schema/actor/output/admission-fixture.v1); mirrors sibling 🤝️contract.json",
+    "role": "fixture-shape schema validating this leaf's own admission fixture ($id https://json.schemas.assets.semio-tech.com/actor/output/admission-fixture.v1); mirrors sibling 🤝️contract.json",
     "classification": "c",
     "owner": "actor/🪪️activation/🚪️instance/📥️output/🏘️admission",
     "intendedOwner": "actor/🪪️activation/🚪️instance/📥️output/🏘️admission",
@@ -4092,7 +4092,7 @@
     ],
     "decision": "move-to 🧰️framework/🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🏘️admission/🧫️fixture/🧬️schema/🔣️.json (competing name: sibling flat 🧬️schema.json already claims 🧬️schema for the real domain admission contract)",
     "evidence": [
-      "🧰️framework/🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🏘️admission/📐️schema/🔣️.json:3 — \"$id\": \"https://semio.tech/schema/actor/output/admission-fixture.v1\"",
+      "🧰️framework/🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🏘️admission/📐️schema/🔣️.json:3 — \"$id\": \"https://json.schemas.assets.semio-tech.com/actor/output/admission-fixture.v1\"",
       "🧰️framework/🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🟦️.ts:171 — imports 🤝️contract.json + 🧬️schema.json + 🧪️fixture/🔣️.json + 📐️schema/🔣️.json (fixtureSchema) together, validated with Ajv + immer produce()"
     ],
     "open": [],
@@ -4101,7 +4101,7 @@
   {
     "path": "🧰️framework/🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🏘️admission/🧬️schema.json",
     "blob": "4d6a3b4dce792ed979a8371f06103315869d312a",
-    "role": "canonical domain contract schema ($id https://semio.tech/schema/actor/output/admission.v1)",
+    "role": "canonical domain contract schema ($id https://json.schemas.assets.semio-tech.com/actor/output/admission.v1)",
     "classification": "d",
     "owner": "actor",
     "intendedOwner": "actor/🪪️activation/🚪️instance/📥️output/🏘️admission",
@@ -4116,7 +4116,7 @@
     ],
     "decision": "move-to 🧰️framework/🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🏘️admission/🧬️schema/🔣️.json (flat file -> directory module)",
     "evidence": [
-      "🧰️framework/🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🏘️admission/🧬️schema.json:3 — \"$id\": \"https://semio.tech/schema/actor/output/admission.v1\""
+      "🧰️framework/🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🏘️admission/🧬️schema.json:3 — \"$id\": \"https://json.schemas.assets.semio-tech.com/actor/output/admission.v1\""
     ],
     "open": [],
     "slice": "B"
@@ -4774,7 +4774,7 @@
     "owner": "📡️replication",
     "intendedOwner": "📡️replication/🧫️fixtures/🚀️artifact-bootstrap/🧬️schema/🔣️.json (needs its own wrapping 🧬️schema/ directory; currently a fully flat file with no wrapping schema-dir AND sitting directly inside a 🧫️fixtures/ subtree — combines patterns (b) and (d))",
     "exports": [
-      "artifact-bootstrap fixture schema: https://semio.tech/schema/replication/artifact-bootstrap-fixture-v1.json"
+      "artifact-bootstrap fixture schema: https://json.schemas.assets.semio-tech.com/replication/artifact-bootstrap-fixture-v1.json"
     ],
     "consumers": [],
     "decision": "move-to 🧰️framework/🔨️modules/📡️replication/🧫️fixtures/🚀️artifact-bootstrap/🧬️schema/🔣️.json",
@@ -4881,7 +4881,7 @@
     "owner": "framework (top-level framework crate; 🕹️interaction has no own Cargo.toml)",
     "intendedOwner": "🕹️interaction (InteractionDefinition/InteractionState/PresenceInteraction canonical multi-language schema facet set)",
     "exports": [
-      "InteractionSchema ($id https://semio.tech/schema/framework/interaction/component.json)"
+      "InteractionSchema ($id https://json.schemas.assets.semio-tech.com/framework/interaction/component.json)"
     ],
     "consumers": [],
     "decision": "keep",
@@ -7657,7 +7657,7 @@
     "owner": "repo/library module (repo-wide mutation-descriptor authority)",
     "intendedOwner": "repo/library module — 🧬️schema/ directory at the library module root",
     "exports": [
-      "JSON Schema draft-07 \"Direct Mutation Descriptor\" ($id https://semio.tech/schema/mutation-descriptor/1) — the canonical, repo-wide contract every mutation owner's own 🧬️.schema.json companion file must satisfy (schemaVersion/owner/semanticKind/displayName/emoji/aggregateVariant/payloadSchema/textOpcode/binaryTag/invertibility/diffParticipation/outcomeClasses/composition/requiredLanguageSurfaces)"
+      "JSON Schema draft-07 \"Direct Mutation Descriptor\" ($id https://json.schemas.assets.semio-tech.com/mutation-descriptor/1) — the canonical, repo-wide contract every mutation owner's own 🧬️.schema.json companion file must satisfy (schemaVersion/owner/semanticKind/displayName/emoji/aggregateVariant/payloadSchema/textOpcode/binaryTag/invertibility/diffParticipation/outcomeClasses/composition/requiredLanguageSurfaces)"
     ],
     "consumers": [
       {

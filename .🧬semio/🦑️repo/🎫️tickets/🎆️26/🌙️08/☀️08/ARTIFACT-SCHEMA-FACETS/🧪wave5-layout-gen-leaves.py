@@ -105,7 +105,7 @@ def json_leaf(title: str, facet: str, fields):
         if req:
             required.append(name)
     doc = {
-        "$id": f"https://semio.tech/schema/s/layout/layout/{facet}.json",
+        "$id": f"https://json.schemas.assets.semio-tech.com/s/layout/layout/{facet}.json",
         "title": title,
         "type": "object",
         "additionalProperties": False,

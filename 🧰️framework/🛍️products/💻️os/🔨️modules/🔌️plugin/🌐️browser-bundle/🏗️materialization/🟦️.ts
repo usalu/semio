@@ -12,12 +12,12 @@ import { spawn } from "node:child_process";
 import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, renameSync, writeFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import ts from "typescript";
-import { PREVIEW2_VENDOR_RELATIVE, rewritePreview2ShimImportSource } from "../🕸️imports/🟦️.ts";
-export { PREVIEW2_VENDOR_RELATIVE, rewritePreview2ShimImportSource } from "../🕸️imports/🟦️.ts";
 import { ACTOR_INSTANCE_LIFECYCLE_MAXIMUM_BYTES, encodeActorInstanceLifecycle } from "../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🟦️.ts";
 import { ACTOR_UI_PATCH_RECEIPT_MAXIMUM_BYTES, encodeActorUiPatchReceipt, validateActorUiPatchPairing } from "../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🩹️patch/🟦️.ts";
-import { buildBudgetMs, resolveWorkspaceBin, runCmdStatus, runNodeBinStatus, semioBuildMode } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts";
 import { preparedBinaryen } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🕸️wasm/📜️script.ts";
+import { buildBudgetMs, resolveWorkspaceBin, runCmdStatus, runNodeBinStatus, semioBuildMode } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts";
+import { rewritePreview2ShimImportSource } from "../🕸️imports/🟦️.ts";
+export { PREVIEW2_VENDOR_RELATIVE, rewritePreview2ShimImportSource } from "../🕸️imports/🟦️.ts";
 
 export const PLUGIN_HOST_SHIM_FILE = "🟨️.js";
 export const SHARD_WORKER_FILE = "🟨️shard-worker.js";
@@ -25,7 +25,7 @@ export const GUESTSLIM_FONT_RELATIVE = "🪞️vendor/🔤️guestslim-typst-fon
 
 /** 🫀️ The generated worker's progress-heartbeat cadence, interpolated into
  * {@link shardWorkerSource}. Its OWNER is the schema-owned liveness policy
- * (`https://semio.tech/schema/framework/actor/shard-client/schema.json#/$defs/ShardClient` —
+ * (`https://json.schemas.assets.semio-tech.com/framework/actor/shard-client/schema.json#/$defs/ShardClient` —
  * `🎭️actor/📮️shard-client/🧬️schema/🔣️.json` +
  * `🧫️fixtures/🔣️.json`, mirrored on the host side by `SHARD_LIVENESS_POLICY`); this declaration is
  * held equal to `policy.progressIntervalMs` by that module's own in-source suite, which reads this
@@ -39,7 +39,7 @@ export const SHARD_PROGRESS_HEARTBEAT_INTERVAL_MS = 1000;
 
 /** 📤️ The generated worker's per-chunk byte cap for the segmented-download lane, interpolated into
  * {@link shardWorkerSource}. Its OWNER is the schema-owned chunk contract
- * (`https://semio.tech/schema/framework/actor/shard-client/segmented-download/schema.json` —
+ * (`https://json.schemas.assets.semio-tech.com/framework/actor/shard-client/segmented-download/schema.json` —
  * `🎭️actor/📮️shard-client/📤️segmented-download/🧬️schema/🔣️.json` + `🧫️fixtures/🔣️.json`, mirrored on the
  * host side by `SEGMENTED_DOWNLOAD_CONTRACT` and on the guest side by `🔌️plugin/🦀️.rs`'s
  * `ARTIFACT_OUTPUT_CHUNK_BYTES`); this declaration is held equal to `contract.chunkBytes` by the

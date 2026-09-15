@@ -14,14 +14,14 @@ async fn scale_selection_multiplies_one_uniform_transform_neuron_in_the_flow_gra
     let mut app = app().await;
     dispatch(&mut app, Generation3dCommand::ScaleSelection(ScaleSelection { node_ids: vec!["extrude".into()], sx: 1.0, sy: 2.0, sz: 3.0 })).await;
     let once = context::snapshot(&app);
-    let neuron = once.host_document.widgets.iter().find(|widget| widget_id(widget) == SCALE_ID).expect("scale neuron spliced");
+    let neuron = once.host_snapshot.widgets.iter().find(|widget| widget_id(widget) == SCALE_ID).expect("scale neuron spliced");
     assert!(matches!(neuron, Widget::Neuron { neuron_kind, .. } if neuron_kind == "brep.xform.scale"));
-    assert_eq!(with_host(&once.host_document, |host| gumball_widget_number_param(host, SCALE_ID, "factor", 1.0)), 2.0);
+    assert_eq!(with_host(&once.host_snapshot, |host| gumball_widget_number_param(host, SCALE_ID, "factor", 1.0)), 2.0);
 
     dispatch(&mut app, Generation3dCommand::ScaleSelection(ScaleSelection { node_ids: vec![SCALE_ID.into()], sx: 3.0, sy: 3.0, sz: 3.0 })).await;
     let twice = context::snapshot(&app);
-    assert_eq!(twice.host_document.widgets.iter().filter(|widget| widget_id(widget) == SCALE_ID).count(), 1);
-    assert_eq!(with_host(&twice.host_document, |host| gumball_widget_number_param(host, SCALE_ID, "factor", 1.0)), 6.0);
+    assert_eq!(twice.host_snapshot.widgets.iter().filter(|widget| widget_id(widget) == SCALE_ID).count(), 1);
+    assert_eq!(with_host(&twice.host_snapshot, |host| gumball_widget_number_param(host, SCALE_ID, "factor", 1.0)), 6.0);
 }
 
 /// 🎯️ The context-menu shape: no ids in the payload, the FRAMEWORK-owned `graph` selection decides.
@@ -32,8 +32,8 @@ async fn an_ids_less_scale_transforms_the_framework_owned_graph_selection() {
     context::select_graph(&mut app, "node", &["extrude"]).await;
     dispatch(&mut app, Generation3dCommand::ScaleSelection(ScaleSelection { node_ids: Vec::new(), sx: 4.0, sy: 4.0, sz: 4.0 })).await;
     let projection = context::snapshot(&app);
-    assert!(projection.host_document.widgets.iter().any(|widget| matches!(widget, Widget::Neuron { id, neuron_kind, .. } if id == SCALE_ID && neuron_kind == "brep.xform.scale")));
-    assert_eq!(with_host(&projection.host_document, |host| gumball_widget_number_param(host, SCALE_ID, "factor", 1.0)), 4.0);
+    assert!(projection.host_snapshot.widgets.iter().any(|widget| matches!(widget, Widget::Neuron { id, neuron_kind, .. } if id == SCALE_ID && neuron_kind == "brep.xform.scale")));
+    assert_eq!(with_host(&projection.host_snapshot, |host| gumball_widget_number_param(host, SCALE_ID, "factor", 1.0)), 4.0);
     drop(projection);
     semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
 }
@@ -43,9 +43,9 @@ async fn an_ids_less_scale_transforms_the_framework_owned_graph_selection() {
 async fn a_scale_with_no_target_leaves_the_graph_untouched() {
     let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
     let mut app = app().await;
-    let before = context::snapshot(&app).host_document.widgets.len();
+    let before = context::snapshot(&app).host_snapshot.widgets.len();
     dispatch(&mut app, Generation3dCommand::ScaleSelection(ScaleSelection { node_ids: Vec::new(), sx: 2.0, sy: 2.0, sz: 2.0 })).await;
     let after = context::snapshot(&app);
-    assert_eq!(after.host_document.widgets.len(), before);
-    assert!(!after.host_document.widgets.iter().any(|widget| widget_id(widget) == SCALE_ID));
+    assert_eq!(after.host_snapshot.widgets.len(), before);
+    assert!(!after.host_snapshot.widgets.iter().any(|widget| widget_id(widget) == SCALE_ID));
 }

@@ -8,12 +8,13 @@ use crate::editor::cad::modes::edit::windows::{building, energy, shape, structur
 use crate::editor::cad::terminology::CadLabels;
 use crate::editor::cad::{cad_pane_camera_runtime, cad_pane_suffix, camera_json, CadPlayRuntime, CadPlayView, CAD_DISLOCATE_UTILITY_ID, CAD_FALLBACK_MESH_KIND, CAD_PLAY_APP_ID};
 use crate::standards::v1::subsets::any::io::geometry_import::{CadGeometry, CadObject};
-use crate::standards::v1::subsets::any::schema::inferences::{collect_mesh_urls, object_mesh_data, object_scale_json, resolve_object_mesh_url};
+use crate::standards::v1::subsets::any::schema::inferences::{collect_mesh_urls, object_scale_json, resolve_object_mesh_url, typology_mesh_kind};
+use std::collections::HashSet;
 use crate::{CadPaneId, CadSnapshot, CadWorkingScene};
 use protocol::DslValue;
 use semio_framework_plugin::app::WindowKit;
 use semio_framework_plugin::{
-    mesh_from_kind, world3d_mesh_id_from_url, world3d_selection_json, ActionDescriptor, BuiltNode, LocalizedLabel, MeshView, MeshWindowKit, ModeDefinition, UiAssemblyResult, WindowEngagement, WindowEngagementInput, WindowEngagementPossible,
+    world3d_mesh_id_from_url, world3d_selection_json, ActionDescriptor, BuiltNode, LocalizedLabel, MeshView, MeshWindowKit, ModeDefinition, UiAssemblyResult, WindowEngagement, WindowEngagementInput, WindowEngagementPossible,
     WindowEngagementStatus, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode,
 };
 
@@ -81,11 +82,23 @@ fn f64_array_value(values: &[f64]) -> DslValue {
     DslValue::Array(values.iter().map(|v| DslValue::float(*v)).collect())
 }
 
-/// 🌉️ `MeshData` (`semio_framework_plugin`) carries its own first-party `From<MeshData> for
-/// pack::json::Value` — reached here through `protocol`'s `os_pack` re-export of the same `pack`
-/// crate, never `serde_json`. Bridged once, here, at the point each mesh payload is assembled.
-fn mesh_data_to_dsl(data: &semio_framework_plugin::MeshData) -> DslValue {
-    protocol::os_pack::json::to_dsl_value(&protocol::os_pack::json::Value::from(data.clone()))
+/// 🥽️ Mesh id an instance references — URL-backed assets keep their stable `mesh:{slug}` id; every
+/// other object shares a built-in procedural kind the renderer already owns (`world3d_mesh_kind_entry`).
+fn instance_mesh_id(object: &CadObject) -> String {
+    resolve_object_mesh_url(object).map_or_else(|| typology_mesh_kind(&object.typology).to_string(), |url| world3d_mesh_id_from_url(&url))
+}
+
+/// 🥽️ Distinct built-in mesh kinds referenced by `objects`, in first-seen order.
+fn world_mesh_kinds(objects: &[CadObject]) -> Vec<String> {
+    let mut kinds = Vec::new();
+    let mut seen = HashSet::new();
+    for object in objects.iter().filter(|object| object.visible) {
+        let kind = typology_mesh_kind(&object.typology).to_string();
+        if seen.insert(kind.clone()) {
+            kinds.push(kind);
+        }
+    }
+    kinds
 }
 
 pub(crate) fn world_instances_json(objects: &[CadObject], runtime: &CadPlayRuntime) -> String {
@@ -93,7 +106,7 @@ pub(crate) fn world_instances_json(objects: &[CadObject], runtime: &CadPlayRunti
         .iter()
         .filter(|object| object.visible)
         .map(|object| {
-            let mesh_id = resolve_object_mesh_url(object).map_or_else(|| object.id.clone(), |url| world3d_mesh_id_from_url(&url));
+            let mesh_id = instance_mesh_id(object);
             let selected = false;
             let hovered = instance_is_component_hovered(runtime, &object.id);
             DslValue::object([
@@ -112,25 +125,16 @@ pub(crate) fn world_instances_json(objects: &[CadObject], runtime: &CadPlayRunti
     protocol::json::to_json_string(&instances)
 }
 
-pub(crate) fn world_meshes_json(objects: &[CadObject], geometry: Option<&CadGeometry>) -> String {
+pub(crate) fn world_meshes_json(objects: &[CadObject], _geometry: Option<&CadGeometry>) -> String {
     let urls = collect_mesh_urls(objects);
     if !urls.is_empty() {
         return semio_framework_plugin::world3d_meshes_json_from_urls(&urls);
     }
-    let meshes: Vec<DslValue> = objects
-        .iter()
-        .filter(|object| object.visible)
-        .map(|object| {
-            let data = object_mesh_data(object, geometry);
-            DslValue::object([("id".to_string(), DslValue::String(object.id.clone())), ("data".to_string(), mesh_data_to_dsl(&data))])
-        })
-        .collect();
-    if meshes.is_empty() {
-        let data = mesh_from_kind(CAD_FALLBACK_MESH_KIND);
-        let fallback = vec![DslValue::object([("id".to_string(), DslValue::String(CAD_FALLBACK_MESH_KIND.to_string())), ("data".to_string(), mesh_data_to_dsl(&data))])];
-        return protocol::json::to_json_string(&fallback);
+    let kinds = world_mesh_kinds(objects);
+    if kinds.is_empty() {
+        return semio_framework_plugin::world3d_meshes_json_from_kinds(&[CAD_FALLBACK_MESH_KIND.to_string()]);
     }
-    protocol::json::to_json_string(&meshes)
+    semio_framework_plugin::world3d_meshes_json_from_kinds_and_urls(&kinds, &[])
 }
 
 /// ⚠️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): mesh object/vertex/edge/face

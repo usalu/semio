@@ -1,5 +1,5 @@
 //! ♻️ Replace Flow Fixture direct payload and owned behavior.
-use super::super::{FlowHostDocument, FlowDiff, FlowDelta, FlowMutation};
+use super::super::{FlowHostSnapshot, FlowDiff, FlowDelta, FlowMutation};
 use crate::os_spr::{MutationKind, MutationOutcome, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -8,19 +8,19 @@ use semio_framework_value_derive::{FromValue, ToValue};
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord, crate::os_dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
-#[dsl(keyword = "replace-flow-host-document")]
-pub struct ReplaceFlowHostDocument { #[dsl(block)] pub host_document: FlowHostDocument }
+#[dsl(keyword = "replace-flow-host-snapshot")]
+pub struct ReplaceFlowHostSnapshot { #[dsl(block)] pub host_snapshot: FlowHostSnapshot }
 
 //#endregion 🧬️Payload
 
 //#region 🎮️Behavior
-impl MutationKind<FlowHostDocument, FlowMutation> for ReplaceFlowHostDocument {
-    const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "replace", entity: "flow-fixture", kind: "replace-flow-host-document", record: "ReplacedFlowHostDocument" };
-    fn diff(&self, _base: &FlowHostDocument) -> MutationOutcome<FlowDiff> {
-        MutationOutcome::new(FlowDiff::from(FlowDelta::HostDocument(self.host_document.clone())))
+impl MutationKind<FlowHostSnapshot, FlowMutation> for ReplaceFlowHostSnapshot {
+    const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "replace", entity: "flow-fixture", kind: "replace-flow-host-snapshot", record: "ReplacedFlowHostSnapshot" };
+    fn diff(&self, _base: &FlowHostSnapshot) -> MutationOutcome<FlowDiff> {
+        MutationOutcome::new(FlowDiff::from(FlowDelta::HostSnapshot(self.host_snapshot.clone())))
     }
-    fn inverse(&self, base: &FlowHostDocument) -> Vec<FlowMutation> {
-        vec![FlowMutation::ReplaceFlowHostDocument(Self { host_document: base.clone() })]
+    fn inverse(&self, base: &FlowHostSnapshot) -> Vec<FlowMutation> {
+        vec![FlowMutation::ReplaceFlowHostSnapshot(Self { host_snapshot: base.clone() })]
     }
     fn label(&self) -> String { "Replace flow fixture".into() }
     fn target(&self) -> Vec<String> { vec![] }

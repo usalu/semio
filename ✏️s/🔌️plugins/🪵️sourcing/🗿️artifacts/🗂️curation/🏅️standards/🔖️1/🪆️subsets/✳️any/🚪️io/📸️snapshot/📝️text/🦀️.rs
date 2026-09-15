@@ -8,12 +8,12 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 
 use crate::CurationSnapshot;
 
-/// 📄️ The demo-stock example, handcrafted in the `.curation` DSL.
-pub const DEMO_STOCK_TEXT: &str = include_str!("../../../🖼️assets/🎬️demo/🗣️.dsl.semio");
+/// 📄️ The `demo` example, handcrafted in the `.curation` DSL.
+pub const DEMO_STOCK_TEXT: &str = crate::examples::demo::PRIMARY_TEXT;
 
-/// 📄️ The empty-curation example — empty stock and curated table. `catalog`'s handle is
-/// content-addressed from an empty stock (`catalog_child_handle(&[])`, same value
-/// `CurationSnapshot::default()` mints), regenerated via the hand-rolled codec, not hand-transcribed.
+/// 📄️ The empty curation the shell's "no example" loads — empty stock and curated table. `catalog`'s
+/// handle is content-addressed from an empty stock (`catalog_child_handle(&[])`, same value
+/// `CurationSnapshot::default()` mints).
 pub const EMPTY_CURATION_TEXT: &str = r#"semio curation.curation.dsl v1
 catalog=child_id=catalog-7904dd65836c8ff4 target="catalog-7904dd65836c8ff4!s.stdio.semio@v1/kit" stock-extra=[ ]
 curated [object-id:REF count:UINT] {

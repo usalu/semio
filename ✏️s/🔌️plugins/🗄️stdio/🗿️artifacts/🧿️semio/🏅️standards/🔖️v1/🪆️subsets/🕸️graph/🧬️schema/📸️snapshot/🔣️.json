@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/semio/v1/graph/snapshot.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/graph/snapshot.json",
   "title": "SemioGraphSnapshot",
   "description": "The neutral typed property graph: id-keyed nodes and edges with ports and properties.",
   "type": "object",

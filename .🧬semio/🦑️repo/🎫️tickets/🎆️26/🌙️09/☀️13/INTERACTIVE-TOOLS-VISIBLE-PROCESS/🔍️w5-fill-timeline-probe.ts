@@ -53,8 +53,14 @@ if (cdp) {
 const start = Date.now();
 const mark = consoleLines.length;
 await page.getByRole("button", { name: "Start", exact: true }).first().click({ timeout: 60000 });
+const shots = process.argv.includes("--shots");
+if (shots) {
+  await page.waitForTimeout(1600);
+  await page.screenshot({ path: `${import.meta.dir}/🗑️generated/W5-mac-react-e2e/fill-mid-run.png` });
+}
 const ended = await page.waitForFunction(() => /Complete, ready to finalize|Failed|Faulted/.test([...document.querySelectorAll('[id^="panel:framework.toolRun"]')].map((node) => (node as HTMLElement).innerText ?? "").join(" ")), undefined, { timeout: 120000, polling: 50 }).then(() => true).catch(() => false);
 const endedAt = Date.now();
+if (shots) await page.screenshot({ path: `${import.meta.dir}/🗑️generated/W5-mac-react-e2e/fill-complete.png` });
 console.log(`ended=${ended} runMs=${endedAt - start}`);
 if (cdp) {
   const { profile } = (await cdp.send("Profiler.stop")) as { profile: { nodes: { id: number; callFrame: { functionName: string; url: string; lineNumber: number }; children?: number[] }[]; samples: number[]; timeDeltas: number[] } };
@@ -85,8 +91,20 @@ if (cdp) {
   writeFileSync(`${import.meta.dir}/🗑️generated/W5-mac-react-e2e/profile-${Date.now()}.txt`, `SELF\n${top(self)}\n\nTOTAL\n${top(total)}\n\nCALLERS\n${top(callers)}\n`);
 }
 console.log(`panel=${JSON.stringify((await page.locator('[id^="panel:framework.toolRun"]').first().innerText().catch(() => "")).slice(0, 200))} live=${JSON.stringify(await page.evaluate(() => [...document.querySelectorAll('[aria-live="polite"],[aria-live="assertive"]')].map((node) => node.textContent ?? "").filter(Boolean).slice(0, 6)))}`);
-await page.waitForTimeout(3000);
+await page.waitForTimeout(Number(process.argv.find((arg) => arg.startsWith("--settle="))?.slice(9) ?? "3000"));
 const timeline = (await page.evaluate(() => (window as unknown as { __tl: number[][] }).__tl)).filter((row) => row[0]! >= start);
+if (process.argv.includes("--finalize")) {
+  const finalizeClicked = Date.now();
+  await page.locator('[id^="panel:framework.toolRun"] button', { hasText: "Finalize" }).first().click({ timeout: 5000 });
+  const finalized = await page.waitForFunction(() => /Finalized/.test((document.querySelector('[id^="panel:framework.toolRun"]') as HTMLElement | null)?.innerText ?? ""), undefined, { timeout: 60000, polling: 50 }).then(() => true, () => false);
+  await page.waitForTimeout(2000);
+  const counts = await page.evaluate(() => {
+    const instances = JSON.parse(document.querySelector('[data-surface-id="window:puzzle3d-main-perspective"]')?.getAttribute("data-instances-json") ?? "[]") as { provisional?: boolean }[];
+    return { committed: instances.filter((instance) => !instance.provisional).length, provisional: instances.filter((instance) => instance.provisional).length, records: document.querySelector('[data-surface-id="window:puzzle3d-main-perspective"]')?.getAttribute("data-tool-run-records") };
+  });
+  console.log(`finalize-after-complete finalized=${finalized} ms=${Date.now() - finalizeClicked} ${JSON.stringify(counts)}`);
+  if (process.argv.includes("--shots")) await page.screenshot({ path: `${import.meta.dir}/🗑️generated/W5-mac-react-e2e/fill-finalized.png` });
+}
 const changes: string[] = [];
 let previous = "";
 for (const [t, records, danger, success, provisional, topRecords, windows] of timeline) {
@@ -94,7 +112,7 @@ for (const [t, records, danger, success, provisional, topRecords, windows] of ti
   if (key !== previous) changes.push(`+${t! - start}ms records=${records} danger=${danger} success=${success} provisional=${provisional} top=${topRecords} traceWindows=${windows}`);
   previous = key;
 }
-const relevant = consoleLines.slice(mark).filter((line) => /slice|refresh|drain|toolRun|typed-operation|Invocation|ui scope|uiScope|error|fault|stall/i.test(line.text)).map((line) => `+${line.t - start}ms ${line.text}`);
+const relevant = consoleLines.slice(mark).filter((line) => /tool progress|slice|refresh|drain|toolRun|typed-operation|Invocation|ui scope|uiScope|error|fault|stall/i.test(line.text)).map((line) => `+${line.t - start}ms ${line.text}`);
 const stages = await page.evaluate(() => {
   const totals: Record<string, { count: number; totalMs: number; maxMs: number }> = {};
   for (const entry of performance.getEntriesByType("measure")) {

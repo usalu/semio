@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/hub/artifact-authority/trusted-catalog/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/hub/artifact-authority/trusted-catalog/schema.json",
   "$ref": "#/$defs/TrustedBundleV1",
   "$defs": {
     "identity": { "type": "string", "minLength": 1, "maxLength": 256, "pattern": "^\\S(?:.*\\S)?$" },
@@ -113,7 +113,7 @@
         { "type": "object", "additionalProperties": false, "required": ["kind"], "properties": { "kind": { "const": "none" } } },
         {
           "allOf": [
-            { "$ref": "https://semio.tech/schema/os/directory/component.json#/$defs/DocumentBrowserActorIdentity" },
+            { "$ref": "https://json.schemas.assets.semio-tech.com/os/directory/component.json#/$defs/DocumentBrowserActorIdentity" },
             {
               "type": "object",
               "additionalProperties": false,

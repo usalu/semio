@@ -1,10 +1,10 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/framework/kernel/return/content/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/kernel/return/content/schema.json",
   "title": "Kernel Return Content Schema Module",
   "definitions": {
     "u64": {
-      "$ref": "https://semio.tech/schema/framework/actor/page/schema.json#/$defs/Word"
+      "$ref": "https://json.schemas.assets.semio-tech.com/framework/actor/page/schema.json#/$defs/Word"
     },
     "hex": {
       "type": "string",
@@ -339,7 +339,7 @@
           ],
           "properties": {
             "receipt": {
-              "$ref": "https://semio.tech/schema/framework/actor/lifetime/patch/schema.json#/$defs/Patch"
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/actor/lifetime/patch/schema.json#/$defs/Patch"
             },
             "surface": {
               "type": "string",

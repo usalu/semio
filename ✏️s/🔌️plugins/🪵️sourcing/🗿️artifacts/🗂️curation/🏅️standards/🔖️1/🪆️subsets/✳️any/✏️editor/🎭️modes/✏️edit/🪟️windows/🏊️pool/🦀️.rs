@@ -1,11 +1,11 @@
 //! 🏊️ Sourcing curation app — the pool window: the full stock catalogue with filter chrome + drag source.
 
 use crate::schema::{curated_count, filtered_stock};
-use crate::{CurationSnapshot, SortDirection};
+use crate::{CurationSnapshot, ObjectKind, SortDirection};
 use crate::editor::sourcing::config::SourcingCurationConfig;
 use crate::editor::sourcing::terminology::SourcingLabels;
-use semio_framework_plugin::app::{TableView, TableWindowKit, WindowKit};
-use semio_framework_plugin::{BuiltNode, LocalizedLabel, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions};
+use crate::editor::sourcing::{sourcing_table, sourcing_table_action, sourcing_table_row};
+use semio_framework_plugin::{BuiltNode, LocalizedLabel, SurfaceKind, TableCell, UiAssemblyResult, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants
 pub const SOURCING_CURATION_WINDOW_POOL: &str = "sourcing-pool";
@@ -34,12 +34,15 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-fn pool_view(document: &CurationSnapshot, cfg: &SourcingCurationConfig, labels: &SourcingLabels) -> TableView {
+const SOURCING_CURATION_SURFACE_POOL: &str = "sourcing.pool.table";
+
+fn pool_kinds(document: &CurationSnapshot, cfg: &SourcingCurationConfig) -> Vec<ObjectKind> {
     let mut filtered = filtered_stock(document, &cfg.filters);
     if let Some(sort) = &cfg.filters.sort {
         filtered.sort_by(|a, b| {
             let ordering = match sort.column_id.as_str() {
                 "availability" => a.availability.cmp(&b.availability),
+                "module" => a.module_id.cmp(&b.module_id),
                 _ => a.name.cmp(&b.name),
             };
             if sort.direction == SortDirection::Desc {
@@ -49,24 +52,32 @@ fn pool_view(document: &CurationSnapshot, cfg: &SourcingCurationConfig, labels: 
             }
         });
     }
-    let rows = filtered
-        .iter()
-        .map(|kind| vec![kind.name.clone(), kind.module_id.clone(), kind.typology_path.join(" / "), kind.availability.to_string(), curated_count(document, &kind.id).to_string()])
-        .collect();
-    TableView {
-        columns: vec![
-            labels.col_name.as_str().to_owned(),
-            labels.col_module.as_str().to_owned(),
-            labels.col_typology.as_str().to_owned(),
-            labels.col_availability.as_str().to_owned(),
-            labels.col_curated.as_str().to_owned(),
+    filtered
+}
+
+fn pool_row(document: &CurationSnapshot, kind: &ObjectKind) -> protocol::DslValue {
+    sourcing_table_row(
+        &kind.id,
+        vec![
+            ("name", TableCell::Text { value: kind.name.clone() }),
+            ("module", TableCell::Text { value: kind.module_id.clone() }),
+            ("typology", TableCell::Text { value: kind.typology_path.join(" / ") }),
+            ("availability", TableCell::Number { value: kind.availability as f64 }),
+            ("curated", TableCell::Stepper { value: curated_count(document, &kind.id) as f64, min: 0.0, max: kind.availability as f64, step: 1.0, action: sourcing_table_action("curationSetCount", Some(&kind.id)) }),
         ],
-        rows,
-    }
+    )
 }
 
 pub fn render(document: &CurationSnapshot, cfg: &SourcingCurationConfig, labels: &SourcingLabels) -> UiAssemblyResult<BuiltNode> {
-    TableWindowKit::render(&pool_view(document, cfg, labels))
+    let columns = [
+        ("name", labels.col_name.as_str(), true),
+        ("module", labels.col_module.as_str(), true),
+        ("typology", labels.col_typology.as_str(), false),
+        ("availability", labels.col_availability.as_str(), true),
+        ("curated", labels.col_curated.as_str(), false),
+    ];
+    let rows = pool_kinds(document, cfg).iter().map(|kind| pool_row(document, kind)).collect();
+    sourcing_table(SOURCING_CURATION_SURFACE_POOL, &columns, rows, "dropOnPool", cfg.filters.sort.as_ref())
 }
 //#endregion 🔖️Render
 

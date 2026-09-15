@@ -661,7 +661,7 @@ def gen_json(facet: str, type_name: str, fields) -> str:
     }
 
     doc = {
-        "$id": f"https://semio.tech/schema/s/{PLUGIN_KEY}/{ARTIFACT_KEY}/{facet}.json",
+        "$id": f"https://json.schemas.assets.semio-tech.com/s/{PLUGIN_KEY}/{ARTIFACT_KEY}/{facet}.json",
         "title": type_name,
         "type": "object",
         "additionalProperties": False,
@@ -850,7 +850,7 @@ def gen_diff_json() -> str:
             prop = {"$ref": f"#/$defs/{scalar}", "x-semio-state": state}
         props[camel] = prop
     doc = {
-        "$id": f"https://semio.tech/schema/s/{PLUGIN_KEY}/{ARTIFACT_KEY}/diff.json",
+        "$id": f"https://json.schemas.assets.semio-tech.com/s/{PLUGIN_KEY}/{ARTIFACT_KEY}/diff.json",
         "title": "RemodelDiff",
         "type": "object",
         "additionalProperties": False,

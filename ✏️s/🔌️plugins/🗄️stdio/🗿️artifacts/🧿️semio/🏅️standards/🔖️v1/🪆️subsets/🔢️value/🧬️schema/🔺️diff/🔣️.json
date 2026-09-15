@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/semio/v1/value/diff.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/value/diff.json",
   "title": "SemioValueTreeDiff",
   "description": "Sparse, handcrafted diff over SemioValueSnapshot — mirrors the 🦀️.rs sibling's real fields.",
   "$defs": {
@@ -99,7 +99,7 @@
           "$ref": "#/$defs/IndexedTripleDiff"
         },
         "id": {
-          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/value/snapshot.json#/$defs/valueId"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/value/snapshot.json#/$defs/valueId"
         }
       },
       "required": [
@@ -137,7 +137,7 @@
       "type": "value",
       "properties": {
         "id": {
-          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/value/snapshot.json#/$defs/valueId"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/value/snapshot.json#/$defs/valueId"
         },
         "value": {
           "$ref": "#/definitions/semioValue"

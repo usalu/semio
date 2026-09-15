@@ -13,7 +13,7 @@
     "(\"equation\", <EquationSnapshot as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<EquationSnapshot>),",
     "(\"generation_2d\", <Generation2dDocument as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<Generation2dDocument>),",
     "(\"generation_3d\", <Generation3dDocument as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<Generation3dDocument>),",
-    "(\"flow_app\", <FlowHostDocument as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<FlowHostDocument>),",
+    "(\"flow_app\", <FlowHostSnapshot as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<FlowHostSnapshot>),",
     "(\"gis2d\", \"gis.gismap\", crate::os_store::test_support::check_dsl_fixture_text_laws::<GisMapDocument>),",
     "(\"gis3d\", \"gis.gisterrain\", crate::os_store::test_support::check_dsl_fixture_text_laws::<Gis3dTerrainDocument>),",
     "(\"vcs_app\", <VcsSnapshot as crate::os_store::ArtifactDsl>::envelope_id(), crate::os_store::test_support::check_dsl_fixture_text_laws::<VcsSnapshot>),",

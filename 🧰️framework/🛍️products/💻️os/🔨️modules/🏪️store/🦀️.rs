@@ -11689,6 +11689,25 @@ pub async fn empty_document_spr(doc_id: &str, schema: &str) -> Vec<u8> {
     crate::os_spr::encode_history(&log, &crate::os_spr::EncodeOptions::default()).await.expect("encoding an edit-free HistoryLog is infallible")
 }
 
+/// @emoji 🪪️ Re-stamps an app-built document `.spr` with the identity of the live document it is
+/// loaded into — id, schema, dialect, owner, and a cursor when absent — keeping every history record.
+/// A command replacing its whole document (`Effect::LoadDocument`) builds that log without knowing
+/// where its store is mounted, and archive hydration rejects any log whose identity differs.
+pub async fn stamp_document_spr_identity(spr: &[u8], doc_id: &str, schema: &str, dialect: &crate::os_io::ArtifactDialect, owner: Option<&OwnerRef>) -> Result<Vec<u8>, VcsError> {
+    let mut log = crate::os_spr::decode_history(spr, &crate::os_spr::DecodeOptions::default()).await.map_err(|error| VcsError::Deserialize(error.to_string()))?;
+    log.doc_id = doc_id.to_string();
+    log.schema = schema.to_string();
+    log.cursor.get_or_insert_with(|| crate::os_spr::HistoryCursor { applied_edit_ids: Vec::new(), redo_edit_ids: Vec::new(), checkpoint_id: None });
+    let checkpoint_pins = log.composition.take().map(|composition| composition.checkpoint_pins).unwrap_or_default();
+    log.composition = Some(crate::os_spr::HistoryComposition {
+        owner: owner.map(|owner| (owner.parent.to_uri(), owner.slot.clone(), owner.child_id.clone())),
+        dialect: Some((dialect.artifact_kind.clone(), dialect.standard.clone(), dialect.subset.clone())),
+        checkpoint_pins,
+    });
+    let options = crate::os_spr::EncodeOptions { write_backwards_section: true, ..crate::os_spr::EncodeOptions::default() };
+    crate::os_spr::encode_history(&log, &options).await.map_err(|error| VcsError::Serialize(error.to_string()))
+}
+
 /// @emoji ➕️ Appends `edits` to an already-encoded `.spr` byte log — decode, extend, re-encode.
 /// **Also refreshes `log.cursor.applied_edit_ids`** with the newly-appended edits' own ids: the
 /// live snapshot a later `parse_document_spr` call folds is exactly `cursor.applied_edit_ids`

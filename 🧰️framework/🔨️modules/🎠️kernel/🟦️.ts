@@ -275,7 +275,7 @@ function collectOperatorKinds(value: unknown, into: Set<string>, keyed = false):
   }
   if (typeof value === "object") {
     for (const [key, item] of Object.entries(value as Record<string, unknown>)) {
-      collectOperatorKinds(item, into, keyed || CONTRIBUTION_KIND_KEYS.has(key) || key === "fixtureJson" || key === "fixture");
+      collectOperatorKinds(item, into, keyed || CONTRIBUTION_KIND_KEYS.has(key) || key === "hostSnapshotJson" || key === "fixtureJson" || key === "fixture");
     }
   }
 }

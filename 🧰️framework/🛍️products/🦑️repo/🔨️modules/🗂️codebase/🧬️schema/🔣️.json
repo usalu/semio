@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://semio.tech/schema/repo/codebase/1",
+  "$id": "https://json.schemas.assets.semio-tech.com/repo/codebase/1",
   "title": "🗂️ Repo codebase fixtures and wire shapes",
   "description": "🗂️ The three vector files the codebase cases read, and the projections every implementation of the repository walk, the technology and bundle detection, the artifact id builders and the ignore integration must produce.",
   "$defs": {

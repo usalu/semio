@@ -5,7 +5,7 @@ use crate::editor::flow::modes::edit::windows::main::transient::FlowWindowTransi
 use crate::editor::flow::{flow_action, ui_value_map, ui_value_text};
 use crate::playbook::{default_value_for_block, is_block_visible, selected_generation, PlaybookBlock, PlaybookValues};
 use crate::FlowSnapshot;
-use flow::forms_bridge::flow_host_document_to_form_spec;
+use flow::forms_bridge::flow_host_snapshot_to_form_spec;
 use semio_framework_plugin::plugin_app_close_prelude::Label;
 use semio_framework_plugin::{ActionId, Buildable, BuiltNode, HasBase, HasChildren, LocalizedLabel, PluginAssemblyError, SurfaceKind, Trigger, UiAssemblyResult, UiFixedList, UiText, WindowKindDefinition, WindowOptions};
 use semio_framework_ui_contract::{self as ui, InputKind};
@@ -50,7 +50,7 @@ fn ui_text(value: impl AsRef<str>) -> UiAssemblyResult<UiText> {
 }
 
 /// 🧩️ Builds the one interactive control a question's kind maps to (`📓️recipe-plugin.md` §2's
-/// `Input`/`Select`/`Slider` rows). `flow_host_document_to_form_spec` only ever emits `"slider"`/`"note"`/
+/// `Input`/`Select`/`Slider` rows). `flow_host_snapshot_to_form_spec` only ever emits `"slider"`/`"note"`/
 /// `"image"`/`"text"`/`"single"` (see `forms_bridge::widget_to_playbook_block`'s exhaustive match) — the
 /// `_` arm below covers `"text"` and any future addition defensively as a plain text input, and `"note"`/
 /// `"image"` never reach this function (handled directly in [`question_field`], unwrapped, no control).
@@ -120,7 +120,7 @@ fn question_field(question: &PlaybookBlock, values: &PlaybookValues, patch_actio
 }
 
 pub fn render(snapshot: &FlowSnapshot, _config: &FlowMainWindowConfig, transient: &FlowWindowTransient, labels: &crate::editor::flow::terminology::FlowPlayLabels) -> UiAssemblyResult<BuiltNode> {
-    let spec = flow_host_document_to_form_spec(&snapshot.to_host_document());
+    let spec = flow_host_snapshot_to_form_spec(&snapshot.to_host_snapshot());
     let generation = transient.generation();
     let Some(active) = selected_generation(&generation) else {
         return ui::text(ui_label(labels.generation_needed.as_str())?).try_build().map_err(|_| form_error("placeholder-build"));

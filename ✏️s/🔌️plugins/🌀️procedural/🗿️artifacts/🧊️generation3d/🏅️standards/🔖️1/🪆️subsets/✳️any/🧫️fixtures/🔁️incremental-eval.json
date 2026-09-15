@@ -1,0 +1,197 @@
+{
+  "format": "semio.generation3d.incremental-eval",
+  "version": 1,
+  "example": "hexagonal-mushroom-column",
+  "note": "What ONE slider edit may cost the evaluation chain. The graph is height/radius/sides -> extrusion-axis/profile -> extrude -> column-preview, so an edit of `height` and an edit of `radius` dirty disjoint halves of it and neither dirties the whole. Read by the Rust lane `incremental-eval` and its TypeScript twin.",
+  "edits": [
+    {
+      "widget": "height",
+      "from": 6.0,
+      "to": 7.0,
+      "dirty": [
+        "height",
+        "extrusion-axis",
+        "extrude"
+      ],
+      "clean": [
+        "radius",
+        "sides",
+        "profile",
+        "column-preview"
+      ],
+      "handlesUnchanged": [
+        "profile@wire"
+      ],
+      "handlesChanged": [
+        "extrude@solid"
+      ],
+      "maxRetessellations": 1
+    },
+    {
+      "widget": "radius",
+      "from": 0.5,
+      "to": 0.7,
+      "dirty": [
+        "radius",
+        "profile",
+        "extrude"
+      ],
+      "clean": [
+        "height",
+        "extrusion-axis",
+        "sides",
+        "column-preview"
+      ],
+      "handlesUnchanged": [],
+      "handlesChanged": [
+        "profile@wire",
+        "extrude@solid"
+      ],
+      "maxRetessellations": 2
+    }
+  ],
+  "burst": {
+    "widget": "height",
+    "values": [
+      6.5,
+      7.0,
+      7.5,
+      8.0,
+      8.5
+    ],
+    "dirtyPerValue": [
+      "height",
+      "extrusion-axis",
+      "extrude"
+    ],
+    "note": "A burst of N values costs N dirty branches, never a growing one: the baseline advances with every converged walk, so value k+1 is diffed against value k and not against the document the gesture started on."
+  },
+  "paintedEval": {
+    "outstandingNode": "extrude",
+    "note": "A node whose extension request is parked emits no entry at all, so the preview it feeds vanishes unless the last CONVERGED answer fills the hole. A node the walk DID answer keeps its live answer even when that answer is an error, and a node the document no longer declares is never filled in at all."
+  },
+  "chainScope": {
+    "always": [
+      "procedural.play.preview"
+    ],
+    "onlyWhenCensusMoved": [
+      "procedural.play.main"
+    ],
+    "panels": [
+      "procedural.play.artifact",
+      "framework.panel.toolRun"
+    ],
+    "neverFull": true,
+    "neverNone": true,
+    "note": "One evaluation hop changes the addressed preview's geometry, the artifact panel's evaluation status and the tool-run pill. It changes the graph body only when the per-node computing chrome moved, and it changes nothing else in the shell.",
+    "chrome": {
+      "note": "The graph body is re-rendered for the census only where the census CHANGES WHAT IT PAINTS: the chrome turning on, the chrome clearing, and a fault landing. Reshuffling which busy node is the active one leaves the marks identical, because paying a 188-265 ms patch install of the biggest body in the app for that reshuffle put four of them in front of the geometry whose progress they report.",
+      "sameMarks": [
+        {
+          "left": {
+            "a": {
+              "status": "computing"
+            },
+            "b": {
+              "status": "queued"
+            }
+          },
+          "right": {
+            "a": {
+              "status": "queued"
+            },
+            "b": {
+              "status": "computing"
+            }
+          }
+        },
+        {
+          "left": {
+            "a": {
+              "status": "ok"
+            },
+            "b": {
+              "status": "ok"
+            }
+          },
+          "right": {
+            "a": {
+              "status": "ok"
+            },
+            "b": {
+              "status": "ok"
+            }
+          }
+        }
+      ],
+      "differentMarks": [
+        {
+          "left": {
+            "a": {
+              "status": "ok"
+            }
+          },
+          "right": {
+            "a": {
+              "status": "computing"
+            }
+          }
+        },
+        {
+          "left": {
+            "a": {
+              "status": "computing"
+            }
+          },
+          "right": {
+            "a": {
+              "status": "ok"
+            }
+          }
+        },
+        {
+          "left": {
+            "a": {
+              "status": "computing"
+            }
+          },
+          "right": {
+            "a": {
+              "status": "error",
+              "message": "kernel refused"
+            }
+          }
+        },
+        {
+          "left": {
+            "a": {
+              "status": "error",
+              "message": "one"
+            }
+          },
+          "right": {
+            "a": {
+              "status": "error",
+              "message": "two"
+            }
+          }
+        },
+        {
+          "left": {
+            "a": {
+              "status": "computing"
+            }
+          },
+          "right": {
+            "a": {
+              "status": "blocked",
+              "ports": [
+                "wire"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  }
+}

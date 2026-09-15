@@ -143,7 +143,7 @@ to define.
 
 ## 4. Rows 51 + 39 — `🧰️framework/🔨️modules/🖱️ui/🧬️schema/🔣️.json`
 
-`$id https://semio.tech/schema/framework/ui/schema.json`. Exports went 5 → 7, `definitions` 13 → 19.
+`$id https://json.schemas.assets.semio-tech.com/framework/ui/schema.json`. Exports went 5 → 7, `definitions` 13 → 19.
 
 ### 4.1 §6B items
 
@@ -237,7 +237,7 @@ per-file, per-pair counts; reproduced in §6). Three further edit sets travel wi
 ### 5.2 W6b plugins — let norm adopt `RetainedCommandCohort`
 
 `✏️s/🔌️plugins/📕️norm/🧬️schema/🔣️.json`'s `NormRetainedCommandDispositions` becomes an `allOf` of
-`https://semio.tech/schema/framework/ui/schema.json#/$defs/RetainedCommandCohort` and its existing
+`https://json.schemas.assets.semio-tech.com/framework/ui/schema.json#/$defs/RetainedCommandCohort` and its existing
 `const` narrowings (`schemaVersion: 2`, the three tool ids, the fifteen variants, the census). Its
 `NormRetainedPublicationContract`/`NormRetainedRoute`/`NormRetainedApp` definitions then reduce to those
 narrowings. Two content changes go with it: the lane arrays re-case per §5.1 (including `host` →
@@ -341,7 +341,7 @@ modules=116 exports=217 badDialect=0 badId=0 noExports=0 problems=0
 
 ```
 $ bun <scratchpad>/w10c-ui-ajv.mjs           # focused ajv compile + behaviour probes of the ui module
-ajv=8.20.0 dialect=http://json-schema.org/draft-07/schema# id=https://semio.tech/schema/framework/ui/schema.json
+ajv=8.20.0 dialect=http://json-schema.org/draft-07/schema# id=https://json.schemas.assets.semio-tech.com/framework/ui/schema.json
   compiled PresenceOverlayFixture: ok
   compiled UIDialogModalFixture: ok
   compiled RetainedCommandLimits: ok

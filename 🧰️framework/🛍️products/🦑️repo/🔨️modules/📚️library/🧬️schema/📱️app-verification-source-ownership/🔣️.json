@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/repo/app-verification-source-ownership.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/repo/app-verification-source-ownership.json",
   "type": "object",
   "additionalProperties": false,
   "required": ["owners", "routers", "directoryContexts", "consumers", "sourceDataConsumers", "registration"],

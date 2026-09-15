@@ -91,7 +91,7 @@ for table, cols in tables.items():
 
 document = {
     "$schema": "http://json-schema.org/draft-07/schema#",
-    "$id": "https://semio.tech/schema/repo/server/schema.json",
+    "$id": "https://json.schemas.assets.semio-tech.com/repo/server/schema.json",
     "title": "RepoServerPersistence",
     "description": "Documents persisted by the repo server. The native implementation of this contract is the sibling 🐘️postgres/🗄️.sql; every table there has exactly one <Table>Row export here.",
     "$defs": collections.OrderedDict([

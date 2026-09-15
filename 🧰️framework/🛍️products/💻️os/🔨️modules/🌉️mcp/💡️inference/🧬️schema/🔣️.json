@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/os/mcp/inference/component.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/os/mcp/inference/component.json",
   "title": "Semio OS MCP Inference Discovery",
   "$defs": {
     "InferenceIdV1": { "type": "string", "minLength": 1, "maxLength": 256, "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$" },

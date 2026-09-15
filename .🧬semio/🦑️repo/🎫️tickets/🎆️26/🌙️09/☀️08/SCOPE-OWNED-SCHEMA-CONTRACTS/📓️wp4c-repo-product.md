@@ -18,11 +18,11 @@ start showed one file (`🪶️sqlite/📦️packages/🟦️typescript/🧪️t
 
 | Scope id | Module path | `$id` | Formats |
 |---|---|---|---|
-| `repo.client.vscode` | `🦑️repo/🔨️modules/💻️client/🧩️vscode/🧬️schema/` | `https://semio.tech/schema/repo/client/vscode/schema.json` | `🔣️.json` (draft-07), `🟦️.ts` |
-| `repo.client.mcp` | `🦑️repo/🔨️modules/💻️client/🔌️mcp/🧬️schema/` | `https://semio.tech/schema/repo/client/mcp/schema.json` | `🔗️.graphql` (normative SDL), `🔣️.json` (draft-07) |
+| `repo.client.vscode` | `🦑️repo/🔨️modules/💻️client/🧩️vscode/🧬️schema/` | `https://json.schemas.assets.semio-tech.com/repo/client/vscode/schema.json` | `🔣️.json` (draft-07), `🟦️.ts` |
+| `repo.client.mcp` | `🦑️repo/🔨️modules/💻️client/🔌️mcp/🧬️schema/` | `https://json.schemas.assets.semio-tech.com/repo/client/mcp/schema.json` | `🔗️.graphql` (normative SDL), `🔣️.json` (draft-07) |
 
 **Deviation from the brief, deliberate.** The brief named
-`$id https://semio.tech/schema/repo/mcp/schema.json` for the MCP scope. Contract §A requires the scope id
+`$id https://json.schemas.assets.semio-tech.com/repo/mcp/schema.json` for the MCP scope. Contract §A requires the scope id
 to be derivable from the path, and the module owner is `🔨️modules/💻️client/🔌️mcp`, so the derived id is
 `repo.client.mcp` — which is what `bun ./📜️script.ts schema audit` independently reports (§6.2), and what
 the two sibling client scopes already use (`repo.client.sqlite`, and now `repo.client.vscode`). Using
@@ -380,7 +380,7 @@ source. Replace with
 `entity_kind_by_emoji` resolves a shared emoji with `.rev()` (last-wins) and its docstring claims to
 mirror `ENTITY_KIND_BY_EMOJI`'s "`Map` insertion-order semantics". Neither claim holds: the vscode
 consumer is **first**-wins (`🌱️` → `technology-mono`, `📝️` → `draft`), which is now the documented rule
-of `https://semio.tech/schema/repo/client/vscode/schema.json#/$defs/TechnologyCatalog`. Make the Rust and
+of `https://json.schemas.assets.semio-tech.com/repo/client/vscode/schema.json#/$defs/TechnologyCatalog`. Make the Rust and
 generated-TS indexes first-wins, or state the divergence in the schema.
 
 **D — `📚️library/🔣️taxonomy.json:8560` → W2c tooling.** `🔗️graphql` in

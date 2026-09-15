@@ -107,7 +107,7 @@ NODES_DELTA = """    "DagNodesDelta": {
     }"""
 
 ARTIFACT_JSON = f"""{{
-  "$id": "https://semio.tech/schema/s/dag/dag/artifact.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/dag/dag/artifact.json",
   "title": "DagArtifact",
   "type": "object",
   "additionalProperties": false,
@@ -127,7 +127,7 @@ ARTIFACT_JSON = f"""{{
 }}"""
 
 SNAPSHOT_JSON = f"""{{
-  "$id": "https://semio.tech/schema/s/dag/dag/snapshot.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/dag/dag/snapshot.json",
   "title": "DagSnapshot",
   "type": "object",
   "additionalProperties": false,
@@ -143,7 +143,7 @@ SNAPSHOT_JSON = f"""{{
 }}"""
 
 DIFF_JSON = f"""{{
-  "$id": "https://semio.tech/schema/s/dag/dag/diff.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/dag/dag/diff.json",
   "title": "DagDiff",
   "type": "object",
   "additionalProperties": false,

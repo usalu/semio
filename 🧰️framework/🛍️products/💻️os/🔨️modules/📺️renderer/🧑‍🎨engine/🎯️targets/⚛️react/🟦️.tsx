@@ -616,7 +616,7 @@ export { nodeGraphActions, textEditorActions };
 
 //#region 🔖️types
 import {
-  UI_INSPECTOR_MIXED_PLACEHOLDER,
+  uiInspectorMixedPlaceholder,
   type ViewModel,
   type PluginManifest,
   type PluginPanelStatus,
@@ -651,7 +651,7 @@ import {
   peerIdsHovering,
 } from "../../🧱️elements/🐚️Shell/🟦️.tsx";
 export {
-  UI_INSPECTOR_MIXED_PLACEHOLDER,
+  uiInspectorMixedPlaceholder,
   type ViewModel,
   type PluginManifest,
   type PluginPanelStatus,
@@ -1100,7 +1100,8 @@ import {
   parseDagPreselectJson,
   parseDagSelectionUnionBoundsScreen,
   parseDagSliderOverlays,
-  resolveFixtureWidgetInstanceId,
+  dagSliderValueText,
+  resolveHostSnapshotWidgetInstanceId,
   sceneToSyncJson,
   sceneToSyncPack,
   SelectionAlignChrome,
@@ -1166,7 +1167,8 @@ export {
   parseDagPreselectJson,
   parseDagSelectionUnionBoundsScreen,
   parseDagSliderOverlays,
-  resolveFixtureWidgetInstanceId,
+  dagSliderValueText,
+  resolveHostSnapshotWidgetInstanceId,
   sceneToSyncJson,
   sceneToSyncPack,
   SelectionAlignChrome,

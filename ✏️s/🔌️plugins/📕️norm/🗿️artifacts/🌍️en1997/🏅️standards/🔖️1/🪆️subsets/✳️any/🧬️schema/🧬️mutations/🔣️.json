@@ -1,73 +1,73 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/norm/en1997/mutations.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/mutations.json",
   "title": "En1997Mutation",
   "oneOf": [
     {
-      "$ref": "https://semio.tech/schema/s/norm/en1997/mutation/change-alpha-s/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/mutation/change-alpha-s/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/norm/en1997/mutation/change-annex/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/mutation/change-annex/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/norm/en1997/mutation/change-bm/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/mutation/change-bm/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/norm/en1997/mutation/change-c-kpa/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/mutation/change-c-kpa/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/norm/en1997/mutation/change-design-approach/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/mutation/change-design-approach/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/norm/en1997/mutation/change-dfm/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/mutation/change-dfm/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/norm/en1997/mutation/change-es-mpa/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/mutation/change-es-mpa/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/norm/en1997/mutation/change-footing-area-m2/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/mutation/change-footing-area-m2/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/norm/en1997/mutation/change-gamma-kn-m3/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/mutation/change-gamma-kn-m3/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/norm/en1997/mutation/change-h-ed-kn/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/mutation/change-h-ed-kn/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/norm/en1997/mutation/change-n-pile-ed-kn/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/mutation/change-n-pile-ed-kn/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/norm/en1997/mutation/change-nu/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/mutation/change-nu/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/norm/en1997/mutation/change-phi-deg/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/mutation/change-phi-deg/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/norm/en1997/mutation/change-pile-base-area-m2/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/mutation/change-pile-base-area-m2/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/norm/en1997/mutation/change-pile-dm/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/mutation/change-pile-dm/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/norm/en1997/mutation/change-pile-lm/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/mutation/change-pile-lm/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/norm/en1997/mutation/change-pile-n-profiles/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/mutation/change-pile-n-profiles/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/norm/en1997/mutation/change-qb-kpa/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/mutation/change-qb-kpa/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/norm/en1997/mutation/change-qs-kpa/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/mutation/change-qs-kpa/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/norm/en1997/mutation/change-settlement-limit-mm/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/mutation/change-settlement-limit-mm/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/norm/en1997/mutation/change-v-ed-kn/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/mutation/change-v-ed-kn/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/norm/en1997/mutation/change-z-investigated-m/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/mutation/change-z-investigated-m/schema.json"
     }
   ]
 }

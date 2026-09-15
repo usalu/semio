@@ -56,7 +56,7 @@ impl DagArtifact {
     pub fn nodes(&self) -> Vec<DagNodeSpec> {
         self.to_snapshot().nodes()
     }
-    pub fn edges(&self) -> Vec<DagHostDocumentEdge> {
+    pub fn edges(&self) -> Vec<DagHostSnapshotEdge> {
         self.to_snapshot().edges()
     }
 }
@@ -232,8 +232,8 @@ pub fn default_node_for_kind(kind: &str, id: &str, x: f64, y: f64) -> DagNodeSpe
     node
 }
 
-/// 🔗️ Builds the `DagHostDocumentEdge` connecting two ports, or `Err` if it would introduce a cycle.
-pub fn connect_edge(document: &DagSnapshot, source_node_id: &str, source_port_id: &str, target_node_id: &str, target_port_id: &str) -> Result<DagHostDocumentEdge, DagPlayError> {
+/// 🔗️ Builds the `DagHostSnapshotEdge` connecting two ports, or `Err` if it would introduce a cycle.
+pub fn connect_edge(document: &DagSnapshot, source_node_id: &str, source_port_id: &str, target_node_id: &str, target_port_id: &str) -> Result<DagHostSnapshotEdge, DagPlayError> {
     let edges = document.edges();
     let existing: Vec<(String, String)> = edges
         .iter()
@@ -247,7 +247,7 @@ pub fn connect_edge(document: &DagSnapshot, source_node_id: &str, source_port_id
         return Err(DagPlayError::CycleDetected);
     }
     let edge_id = format!("e{}", edges.iter().filter_map(|edge| edge.id.strip_prefix('e').and_then(|suffix| suffix.parse::<u64>().ok())).max().unwrap_or(0) + 1);
-    Ok(DagHostDocumentEdge { id: edge_id, source: format!("{source_node_id}@{source_port_id}"), target: format!("{target_node_id}@{target_port_id}"), ..Default::default() })
+    Ok(DagHostSnapshotEdge { id: edge_id, source: format!("{source_node_id}@{source_port_id}"), target: format!("{target_node_id}@{target_port_id}"), ..Default::default() })
 }
 
 /// 🩹️ Builds the `DagNodePatch` for a `patchDagNodes` field write (name, or a slider param that also
@@ -294,7 +294,7 @@ mod document_behavior_tests;
 
 //#region 🔁️Re-exports
 pub use crate::DagCamera;
-pub use crate::DagHostDocumentEdge;
+pub use crate::DagHostSnapshotEdge;
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
 pub use crate::DagNodeSpec;
 //#endregion 🔁️Re-exports

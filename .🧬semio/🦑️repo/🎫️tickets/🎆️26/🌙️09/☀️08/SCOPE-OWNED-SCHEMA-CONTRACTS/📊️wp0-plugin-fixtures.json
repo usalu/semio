@@ -17,7 +17,7 @@
    }
   ],
   "decision": "move schema to writer's owned 🧬️schema (or editor-law) module; keep only example instances under fixtures",
-  "evidence": "$id=https://semio.tech/schema/writer-child-local-text-law.json; writer artifact already has 🧬️schema, ✏️editor/🎚️config/🧬️schema, ✏️editor/👥️presence/🧬️schema but no editor-law home",
+  "evidence": "$id=https://json.schemas.assets.semio-tech.com/writer-child-local-text-law.json; writer artifact already has 🧬️schema, ✏️editor/🎚️config/🧬️schema, ✏️editor/👥️presence/🧬️schema but no editor-law home",
   "open": "confirm exact consumer call site and whether an Ajv-style oracle validates this fixture the way flow's script.ts does"
  },
  {
@@ -42,7 +42,7 @@
    }
   ],
   "decision": "move to equation's owned schema/editor-law module",
-  "evidence": "$id=https://semio.tech/schema/equation-scene-owner-law.json; sibling of equation-retained-command.schema.json in same 🧪️fixtures dir",
+  "evidence": "$id=https://json.schemas.assets.semio-tech.com/equation-scene-owner-law.json; sibling of equation-retained-command.schema.json in same 🧪️fixtures dir",
   "open": "verify exact loader (include_str! vs Ajv) and whether scene-owner is a cross-plugin shared shape"
  },
  {
@@ -63,7 +63,7 @@
    }
   ],
   "decision": "move to flow's owned schema/editor-law module; note flow already owns a full multi-format 🧬️schema (json/rs/ts/graphql/proto) one level down at the subset — this plugin-root fixture is a SEPARATE, still-unowned contract",
-  "evidence": "$id=https://semio.tech/schema/flow-scene-owner-law.json; sibling data file ⚖️flow-scene-owner-law.json in same ✏️s/🔌️plugins/🌊️flow/🧪️fixtures dir",
+  "evidence": "$id=https://json.schemas.assets.semio-tech.com/flow-scene-owner-law.json; sibling data file ⚖️flow-scene-owner-law.json in same ✏️s/🔌️plugins/🌊️flow/🧪️fixtures dir",
   "open": "confirm whether flow-scene-owner and the artifact's real 🧬️schema/🔣️.json overlap or are disjoint concerns"
  },
  {
@@ -84,7 +84,7 @@
    }
   ],
   "decision": "move to playbook's owned schema/editor-law module",
-  "evidence": "$id=https://semio.tech/schema/playbook-view-command-limits.json",
+  "evidence": "$id=https://json.schemas.assets.semio-tech.com/playbook-view-command-limits.json",
   "open": "verify loader"
  },
  {
@@ -105,7 +105,7 @@
    }
   ],
   "decision": "move to playbook's owned schema/editor-law module",
-  "evidence": "$id=https://semio.tech/schema/playbook-scene-owner-law.json; sibling of playbook-view-command-limits.schema.json",
+  "evidence": "$id=https://json.schemas.assets.semio-tech.com/playbook-scene-owner-law.json; sibling of playbook-view-command-limits.schema.json",
   "open": "verify loader"
  },
  {
@@ -126,7 +126,7 @@
    }
   ],
   "decision": "fold into the retained-command family destination for equation's editor",
-  "evidence": "$id=https://semio.tech/schema/equation-retained-command-law.json; belongs to the repo-wide retained-command-* family (limits/routes) even though filename differs",
+  "evidence": "$id=https://json.schemas.assets.semio-tech.com/equation-retained-command-law.json; belongs to the repo-wide retained-command-* family (limits/routes) even though filename differs",
   "open": "none"
  },
  {
@@ -781,7 +781,7 @@
    }
   ],
   "decision": "relocate both the schema and the co-located 🦀️.rs logic out of 🧪️fixtures into an owned module — this is the most structurally confused case in the gis family since production-shaped code, not just data, sits under fixtures",
-  "evidence": "$id=https://semio.tech/schemas/gis/component-cold-map-patch-v1.json; is the only fixture directory in the entire audited partition with its own 🦀️.rs file inside it",
+  "evidence": "$id=https://json.schemas.assets.semio-tech.coms/gis/component-cold-map-patch-v1.json; is the only fixture directory in the entire audited partition with its own 🦀️.rs file inside it",
   "open": "read ✏️s/🔌️plugins/🌍️gis/🧪️fixtures/🌉️component-cold-map-patch/🦀️.rs in full to determine if it is test-only or actually wired into the gis plugin's dispatch — highest-priority follow-up in this ticket"
  },
  {
@@ -1036,7 +1036,7 @@
    }
   ],
   "decision": "fold into the same new package-level schema module as catalog-root/dwg-artifact-ownership",
-  "evidence": "$id=https://semio.tech/schemas/stdio-home-io-surface-v1.json",
+  "evidence": "$id=https://json.schemas.assets.semio-tech.coms/stdio-home-io-surface-v1.json",
   "open": "isolate exact consumer"
  },
  {
@@ -1057,7 +1057,7 @@
    }
   ],
   "decision": "classify separately from the 'application contract in a fixture dir' violation pattern — likely fine to leave as test-harness schema PROVIDED it moves to a test-schema location rather than sitting as a bare *.schema.json; flag to ticket owner for a ruling",
-  "evidence": "norm's real config schema (✏️s/🔌️plugins/📕️norm/🎚️config/🧬️schema/🔣️.json) has $id=https://semio.tech/schema/app/norm/norm/config.json, title=NormConfig, props=['selectedCheckIndex'] — completely different shape from this test schema's props=['contractId','cases','invalid','text','binary'], so this is NOT duplicate/drifted config authority, it is a distinct test-case-shape schema",
+  "evidence": "norm's real config schema (✏️s/🔌️plugins/📕️norm/🎚️config/🧬️schema/🔣️.json) has $id=https://json.schemas.assets.semio-tech.com/app/norm/norm/config.json, title=NormConfig, props=['selectedCheckIndex'] — completely different shape from this test schema's props=['contractId','cases','invalid','text','binary'], so this is NOT duplicate/drifted config authority, it is a distinct test-case-shape schema",
   "open": "get a ruling on whether test-case-shape schemas (as opposed to application-data schemas) fall inside this ticket's violation pattern at all"
  },
  {
@@ -1363,7 +1363,7 @@
    }
   ],
   "decision": "no action needed; at most a naming cleanup (redundant nested 🧬️schema/🧬️schema path segment)",
-  "evidence": "$id=https://semio.tech/schema/gis/gis2d-presence/tests",
+  "evidence": "$id=https://json.schemas.assets.semio-tech.com/gis/gis2d-presence/tests",
   "open": "none"
  },
  {

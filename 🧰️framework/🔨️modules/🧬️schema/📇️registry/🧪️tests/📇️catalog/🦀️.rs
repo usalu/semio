@@ -13,7 +13,7 @@ const LEAVES: FacetLeaves = FacetLeaves {
     rust: "pub struct UiSnapshot;",
     typescript: "export type UiSnapshot = {};",
     graphql: "",
-    json_schema: r#"{"$id":"https://semio.tech/schema/framework/ui/contract/schema.json","type":"object"}"#,
+    json_schema: r#"{"$id":"https://json.schemas.assets.semio-tech.com/framework/ui/contract/schema.json","type":"object"}"#,
     proto: "",
 };
 const EMPTY: FacetLeaves = FacetLeaves { rust: "", typescript: "", graphql: "", json_schema: "", proto: "" };

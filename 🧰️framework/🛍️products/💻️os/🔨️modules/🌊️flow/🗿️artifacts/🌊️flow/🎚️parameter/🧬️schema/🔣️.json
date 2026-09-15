@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/os/flow/artifacts/flow/parameter/component.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/os/flow/artifacts/flow/parameter/component.json",
   "title": "Flow Graph Parameter Contracts",
   "$defs": {
     "GraphParameterBound": {

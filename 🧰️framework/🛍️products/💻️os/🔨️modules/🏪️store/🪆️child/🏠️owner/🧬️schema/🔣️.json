@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/os/store/child/owner.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/os/store/child/owner.json",
   "title": "OwnerRef",
   "type": "object",
   "additionalProperties": false,
@@ -11,7 +11,7 @@
   ],
   "properties": {
     "parent": {
-      "$ref": "https://semio.tech/schema/framework/io/schema.json#/$defs/ArtifactRef"
+      "$ref": "https://json.schemas.assets.semio-tech.com/framework/io/schema.json#/$defs/ArtifactRef"
     },
     "slot": {
       "type": "string"

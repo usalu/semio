@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/fem/fem3d/diff.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/fem/fem3d/diff.json",
   "title": "Fem3dDiff",
   "type": "object",
   "additionalProperties": false,
@@ -44,7 +44,7 @@
       "x-semio-state": "artifact"
     },
     "analysis": {
-      "$ref": "https://semio.tech/schema/s/fem/fem3d/artifact.json#/$defs/FemAnalysisSettings",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/fem/fem3d/artifact.json#/$defs/FemAnalysisSettings",
       "x-semio-state": "artifact"
     }
   },

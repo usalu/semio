@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/app/reasoning/wires/canvas-window-transient/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/app/reasoning/wires/canvas-window-transient/schema.json",
   "title": "WiresCanvasTransient",
   "type": "object",
   "additionalProperties": false,

@@ -5,19 +5,19 @@ use crate::editor::dag::config::{DagConfig, DagConfigMutation};
 use crate::mutations::{connect_nodes, dag_snapshot_mutations};
 use crate::op::DagMutation;
 use crate::DagSnapshot;
-use semio_framework_artifact_infinite_dag::{dag_document_from_host_document, DagHostDocument};
+use semio_framework_artifact_infinite_dag::{dag_document_from_host_snapshot, DagHostSnapshot};
 use semio_framework_plugin::{app::InteractionView, ArtifactView, ConfigView, Emit, Fault};
 #[cfg(test)]
 use serde::{Deserialize, Serialize};
 
 /// 🎯️ One batched edit inside a `NodeGraphEdit` — mirrors the pre-migration `nodeGraphEdit` action's
-/// `operations` JSON array (`"setHostDocument"`/`"deleteSelection"`/`"connect"` sub-kinds), now closed and
+/// `operations` JSON array (`"setHostSnapshot"`/`"deleteSelection"`/`"connect"` sub-kinds), now closed and
 /// typed instead of stringly-tagged JSON.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslEnum)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 pub enum DagNodeGraphEditOp {
-    #[dsl(key = "set-host-document")]
-    SetHostDocument { host_document_json: String },
+    #[dsl(key = "set-host-snapshot")]
+    SetHostSnapshot { host_snapshot_json: String },
     #[dsl(key = "delete-selection")]
     DeleteSelection,
     #[dsl(key = "connect")]
@@ -50,10 +50,10 @@ fn apply_to(payload: &NodeGraphEdit, doc: &ArtifactView<'_, DagSnapshot>, _cfg: 
     let mut config_mutations: Vec<DagConfigMutation> = Vec::new();
     for sub_operation in &payload.operations {
         match sub_operation {
-            DagNodeGraphEditOp::SetHostDocument { host_document_json } => {
-                if let Ok(fixture) = dsl::json::from_json_str::<DagHostDocument>(host_document_json) {
+            DagNodeGraphEditOp::SetHostSnapshot { host_snapshot_json } => {
+                if let Ok(fixture) = dsl::json::from_json_str::<DagHostSnapshot>(host_snapshot_json) {
                     config_mutations.push(DagConfigMutation::ChangeCamera(crate::editor::dag::config::ChangeCamera { x: fixture.camera.x, y: fixture.camera.y, zoom: fixture.camera.zoom }));
-                    artifact_mutations.extend(dag_snapshot_mutations(document, &dag_document_from_host_document(&fixture).into()));
+                    artifact_mutations.extend(dag_snapshot_mutations(document, &dag_document_from_host_snapshot(&fixture).into()));
                 }
             }
             DagNodeGraphEditOp::DeleteSelection => {

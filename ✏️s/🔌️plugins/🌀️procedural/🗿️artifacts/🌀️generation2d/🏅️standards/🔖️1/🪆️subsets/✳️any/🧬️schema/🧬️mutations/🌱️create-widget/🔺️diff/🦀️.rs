@@ -6,7 +6,7 @@ use crate::{widget_id, Generation2dSnapshot};
 
 pub fn diff(payload: &super::CreateWidget, base: &Generation2dSnapshot) -> protocol::MutationOutcome<Generation2dDiff> {
     let id = widget_id(&payload.widget);
-    if base.host_document.widgets.iter().any(|widget| widget_id(widget) == id) {
+    if base.host_snapshot.widgets.iter().any(|widget| widget_id(widget) == id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A widget with id \"{id}\" already exists."), [id.to_string()]);
     }
     protocol::MutationOutcome::new(diff_fixture_from_helpers(base, &WidgetsDiff { removed: vec![], set: vec![(payload.index, payload.widget.clone())] }, &SynapsesDiff::default(), &LayoutDiff::default(), None, None))

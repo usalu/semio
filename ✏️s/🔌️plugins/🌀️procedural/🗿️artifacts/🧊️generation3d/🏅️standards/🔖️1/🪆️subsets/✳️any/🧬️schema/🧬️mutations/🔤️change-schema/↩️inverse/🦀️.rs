@@ -5,5 +5,5 @@ use crate::standards::v1::subsets::any::schema::mutations::Generation3dMutation;
 use crate::Generation3dSnapshot;
 
 pub fn inverse(_payload: &ChangeSchema, base: &Generation3dSnapshot) -> Vec<Generation3dMutation> {
-    vec![Generation3dMutation::ChangeSchema(ChangeSchema { new_schema: base.host_document.schema.clone() })]
+    vec![Generation3dMutation::ChangeSchema(ChangeSchema { new_schema: base.host_snapshot.schema.clone() })]
 }

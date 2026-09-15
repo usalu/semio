@@ -48,11 +48,16 @@
       "id": "framework.toolRun.{run}.toolRunAbort",
       "shortcut": "mod+."
     },
-    "runningFinalizeDescription": "Available once the run is complete",
     "groupId": "framework.toolRun.{run}",
     "step": {
       "id": "framework.toolRun.{run}.toolRunStep"
     }
+  },
+  "partialFinalize": {
+    "target": 1000,
+    "unitsBeforeFinalize": 3,
+    "editsAdded": 1,
+    "groupId": "toolRun:1"
   },
   "abort": {
     "target": 1000,

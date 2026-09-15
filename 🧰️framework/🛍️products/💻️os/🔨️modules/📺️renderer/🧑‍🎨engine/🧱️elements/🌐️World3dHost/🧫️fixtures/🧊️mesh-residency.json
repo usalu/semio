@@ -32,6 +32,20 @@
       "expect": { "ids": ["a"], "reusedIds": ["a"], "built": 0 }
     },
     {
+      "name": "one slider edit rebuilds only the branch downstream of the knob",
+      "note": "The generation3d hex column publishes one mesh per previewing output channel. Moving `Column Height` changes the extrusion axis and the extruded solid and leaves the profile wire's content address alone, so the host must rebuild two buffers and keep the third — the delivery half of the guest's own tessellation cache.",
+      "previousMeshesJson": "[{\"id\":\"eval-profile@wire#0\",\"data\":{\"positions\":[0,0,0],\"normals\":[0,1,0],\"indices\":[0]}},{\"id\":\"eval-extrusion-axis@vectorOut#0\",\"data\":{\"positions\":[0,0,6],\"normals\":[0,1,0],\"indices\":[0]}},{\"id\":\"eval-extrude@solid#0\",\"data\":{\"positions\":[0,0,6],\"normals\":[0,1,0],\"indices\":[0]}}]",
+      "meshesJson": "[{\"id\":\"eval-profile@wire#0\",\"data\":{\"positions\":[0,0,0],\"normals\":[0,1,0],\"indices\":[0]}},{\"id\":\"eval-extrusion-axis@vectorOut#0\",\"data\":{\"positions\":[0,0,7],\"normals\":[0,1,0],\"indices\":[0]}},{\"id\":\"eval-extrude@solid#0\",\"data\":{\"positions\":[0,0,7],\"normals\":[0,1,0],\"indices\":[0]}}]",
+      "expect": { "ids": ["eval-profile@wire#0", "eval-extrusion-axis@vectorOut#0", "eval-extrude@solid#0"], "reusedIds": ["eval-profile@wire#0"], "built": 2 }
+    },
+    {
+      "name": "a mid-gesture payload that omits a still-computing branch takes it off screen",
+      "note": "The host can only deliver what the payload carries: a guest that publishes nothing for a node whose extension request is still crossing retires that mesh and the geometry disappears until the answer lands. Measured on :6025 as three meshes falling to one for 1.4 s of a 2.7 s re-evaluation. The fix is the guest's painted evaluation, not a host rule — this case is the statement of what the host does with such a payload, so the guest half can never be reintroduced unnoticed.",
+      "previousMeshesJson": "[{\"id\":\"eval-profile@wire#0\",\"data\":{\"positions\":[0,0,0],\"normals\":[0,1,0],\"indices\":[0]}},{\"id\":\"eval-extrusion-axis@vectorOut#0\",\"data\":{\"positions\":[0,0,6],\"normals\":[0,1,0],\"indices\":[0]}},{\"id\":\"eval-extrude@solid#0\",\"data\":{\"positions\":[0,0,6],\"normals\":[0,1,0],\"indices\":[0]}}]",
+      "meshesJson": "[{\"id\":\"eval-profile@wire#0\",\"data\":{\"positions\":[0,0,0],\"normals\":[0,1,0],\"indices\":[0]}}]",
+      "expect": { "ids": ["eval-profile@wire#0"], "reusedIds": ["eval-profile@wire#0"], "built": 0 }
+    },
+    {
       "name": "an empty payload retains nothing",
       "previousMeshesJson": "[{\"id\":\"a\",\"data\":{\"positions\":[0,0,0],\"normals\":[0,1,0],\"indices\":[0]}}]",
       "meshesJson": "[]",

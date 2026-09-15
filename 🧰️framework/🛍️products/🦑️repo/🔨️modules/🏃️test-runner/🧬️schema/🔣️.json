@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://semio.tech/schema/repo/test-runner.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/repo/test-runner.json",
   "title": "🏃️ Repo test runner",
   "description": "🏃️ The wire shapes of the repo test-runner domain: the filesystem snapshot planning is a pure function of, the invocation plan it produces, the recorded runner transcripts execution replays, and the one outcome model every runner dialect folds into. Every implementation (🦀️rust, 🐹️go) and every 🧪️tests fixture of this module is described here.",
   "type": "object",

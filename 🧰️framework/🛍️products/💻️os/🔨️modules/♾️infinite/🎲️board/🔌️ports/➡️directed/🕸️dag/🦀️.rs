@@ -41,7 +41,7 @@ impl std::fmt::Display for DagError {
     fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::FixtureRootNotObject => formatter.write_str("fixture root must be object"),
-            Self::SchemaMismatch => formatter.write_str("schema must be dag.host_document"),
+            Self::SchemaMismatch => formatter.write_str("schema must be dag.host_snapshot"),
             Self::NodesMissing => formatter.write_str("nodes array missing"),
             Self::InvalidNodeKind(message) | Self::CanvasTheme(message) => formatter.write_str(message),
             Self::UnknownAlignMode(mode) => write!(formatter, "unknown align mode: {mode}"),
@@ -92,6 +92,9 @@ const DAG_DISTRIBUTE_MIN_GAP: f64 = ui_styling::metrics::board::LAYOUT_SIBLING_G
 const DAG_IO_WIDGET_HEIGHT: f64 = ui_styling::metrics::dag::IO_WIDGET_HEIGHT;
 const DAG_LABEL_SCREEN_PX: f64 = ui_styling::metrics::label::DAG_DEFAULT_PX;
 const DAG_LABEL_COMPACT_SCREEN_PX: f64 = ui_styling::metrics::label::DAG_COMPACT_PX;
+/// 🔢 How large a slider's value readout is against the board's own label size — the ratio the GPU
+/// readout carried before it moved onto the HTML overlay beside the knob it belongs to.
+const DAG_SLIDER_VALUE_LABEL_RATIO: f64 = 0.9;
 
 enum ComputationChannelRowSide {
     Input,
@@ -485,7 +488,7 @@ fn preview_tree_row_layouts(node: &DagNodeSpec, json: &DslValue, expanded: &BTre
 }
 // #endregion 🔖️PreviewContent
 
-fn validate_dag_fixture_node_kinds(nodes: &[DagNodeSpec]) -> Result<(), DagError> {
+fn validate_dag_host_snapshot_node_kinds(nodes: &[DagNodeSpec]) -> Result<(), DagError> {
     let manifest = flow_dag_manifest();
     let validator = ManifestValidator::new(&manifest);
     for node in nodes {
@@ -539,16 +542,6 @@ fn slider_track_bounds(node: &DagNodeSpec) -> (f64, f64, f64, f64) {
     let track_y = node.y;
     let hit_h = 8.0;
     (node.x - hw + pad, track_y - hit_h * 0.5, node.x + hw - pad, track_y + hit_h * 0.5)
-}
-
-fn slider_value_world_center(node: &DagNodeSpec, value_text: &str, paint_px: f64, zoom: f64) -> (f64, f64) {
-    use canvas::text::label_extent;
-    let hw = node.width * 0.5;
-    let (value_w, _) = label_extent(value_text, paint_px);
-    let z = zoom.max(0.05);
-    let screen_gap = DAG_LABEL_SCREEN_PX * ui_styling::metrics::label::DAG_LABEL_GAP_RATIO;
-    let world_offset = (screen_gap + value_w * 0.5) / z;
-    (node.x - hw - world_offset, node.y)
 }
 
 fn select_control_bounds(node: &DagNodeSpec) -> (f64, f64, f64, f64) {
@@ -1144,12 +1137,12 @@ impl Default for DagLayoutOptions {
     }
 }
 
-/// 🌳️ Writes node centers from a layered DAG layout into `dag.host_document`.
-pub fn apply_dag_layout_to_host_document_v1_value(fixture: &mut Value, opts: &DagLayoutOptions) -> Result<(), DagError> {
+/// 🌳️ Writes node centers from a layered DAG layout into `dag.host_snapshot`.
+pub fn apply_dag_layout_to_host_snapshot_v1_value(fixture: &mut Value, opts: &DagLayoutOptions) -> Result<(), DagError> {
     let Some(root) = fixture.as_object_mut() else {
         return Err(DagError::FixtureRootNotObject);
     };
-    if root.get("schema").and_then(|v| v.as_str()) != Some("dag.host_document") {
+    if root.get("schema").and_then(|v| v.as_str()) != Some("dag.host_snapshot") {
         return Err(DagError::SchemaMismatch);
     }
     let edges_json = root.get("edges").and_then(|v| v.as_array()).cloned().unwrap_or_default();
@@ -1787,15 +1780,15 @@ impl DagSelectedNodesJsonCursor {
 
     fn count(&self, host: &DagHost) -> usize {
         match self.kind {
-            DagSelectedJsonKind::Nodes => host.host_document.nodes.len(),
-            DagSelectedJsonKind::Edges => host.host_document.edges.len(),
+            DagSelectedJsonKind::Nodes => host.host_snapshot.nodes.len(),
+            DagSelectedJsonKind::Edges => host.host_snapshot.edges.len(),
         }
     }
 
     fn item<'a>(&self, host: &'a DagHost, index: usize) -> Option<&'a str> {
         match self.kind {
-            DagSelectedJsonKind::Nodes => Self::selected(host, index).then(|| host.host_document.nodes.get(index).map(|node| node.id.as_str())).flatten(),
-            DagSelectedJsonKind::Edges => host.edge_engine_ids.get(index).and_then(|id| *id).filter(|id| host.engine.selection.edge_ids.contains(id)).and_then(|_| host.host_document.edges.get(index).map(|edge| edge.id.as_str())),
+            DagSelectedJsonKind::Nodes => Self::selected(host, index).then(|| host.host_snapshot.nodes.get(index).map(|node| node.id.as_str())).flatten(),
+            DagSelectedJsonKind::Edges => host.edge_engine_ids.get(index).and_then(|id| *id).filter(|id| host.engine.selection.edge_ids.contains(id)).and_then(|_| host.host_snapshot.edges.get(index).map(|edge| edge.id.as_str())),
         }
     }
 
@@ -1982,7 +1975,7 @@ impl DagPointerPlan {
 
 /// 🌳️ Retained DAG host: typed nodes, edges, engine, camera.
 pub struct DagHost {
-    pub host_document: DagHostDocument,
+    pub host_snapshot: DagHostSnapshot,
     pub engine: DagBoardEngine,
     pub canvas_theme: CanvasPalette,
     width: u32,
@@ -2078,8 +2071,8 @@ enum DagRetirementOwner {
     NodeKind(DagNodeKind),
     FixtureNode(DagNodeSpec),
     FixtureNodes { values: Vec<DagNodeSpec>, remaining_backing_bytes: usize },
-    FixtureEdge(DagHostDocumentEdge),
-    FixtureEdges { values: Vec<DagHostDocumentEdge>, remaining_backing_bytes: usize },
+    FixtureEdge(DagHostSnapshotEdge),
+    FixtureEdges { values: Vec<DagHostSnapshotEdge>, remaining_backing_bytes: usize },
     EngineNode(Node),
     EngineHandle(Handle),
     EngineSemantics(::graph::ElementSemantics),
@@ -2147,7 +2140,7 @@ impl DagPayloadRetirement {
         self.push(DagRetirementOwner::FixtureNodes { values, remaining_backing_bytes });
     }
 
-    fn fixture_edges(&mut self, values: Vec<DagHostDocumentEdge>) {
+    fn fixture_edges(&mut self, values: Vec<DagHostSnapshotEdge>) {
         let remaining_backing_bytes = dag_vec_backing_bytes(&values);
         self.push(DagRetirementOwner::FixtureEdges { values, remaining_backing_bytes });
     }
@@ -2430,7 +2423,7 @@ impl DagPayloadRetirement {
                 DagRetirementStep::Pending { released_items: 1, credited_bytes, released_bytes: if released_backing { released_backing_bytes } else { 0 } }
             }
             DagRetirementOwner::FixtureEdge(value) => {
-                let DagHostDocumentEdge { id, source, target, route_style: _, properties } = value;
+                let DagHostSnapshotEdge { id, source, target, route_style: _, properties } = value;
                 self.text(id);
                 self.text(source);
                 self.text(target);
@@ -2598,7 +2591,7 @@ fn retire_empty_hash_set_backing<T>(values: &mut HashSet<T>, credited: &mut usiz
 
 #[doc(hidden)]
 pub struct DagHostRetirementState {
-    host_document: DagHostDocument,
+    host_snapshot: DagHostSnapshot,
     engine: DagBoardEngine,
     node_id_map: HashMap<NodeId, usize>,
     handle_key_map: HashMap<HandleId, String>,
@@ -2648,7 +2641,7 @@ impl std::ops::DerefMut for DagHostRetirement {
 impl DagHostRetirement {
     pub fn new(host: DagHost) -> Self {
         let DagHost {
-            host_document: fixture,
+            host_snapshot: fixture,
             engine,
             canvas_theme: _,
             width: _,
@@ -2698,7 +2691,7 @@ impl DagHostRetirement {
         } = host;
         Self {
             state: std::mem::ManuallyDrop::new(DagHostRetirementState {
-                host_document: fixture,
+                host_snapshot: fixture,
                 engine,
                 node_id_map,
                 handle_key_map,
@@ -2789,17 +2782,17 @@ impl DagHostRetirement {
             }
             graph::IconPaintRetirementStep::Complete => {}
         }
-        if !self.host_document.schema.is_empty() {
-            let value = std::mem::take(&mut self.host_document.schema);
+        if !self.host_snapshot.schema.is_empty() {
+            let value = std::mem::take(&mut self.host_snapshot.schema);
             return self.credit_owner(DagRetirementOwner::Text(value), maximum_items, maximum_bytes);
         }
-        if self.host_document.nodes.capacity() != 0 {
-            let values = std::mem::take(&mut self.host_document.nodes);
+        if self.host_snapshot.nodes.capacity() != 0 {
+            let values = std::mem::take(&mut self.host_snapshot.nodes);
             self.payload_retirement.fixture_nodes(values);
             return self.payload_retirement.close_step(maximum_items, maximum_bytes);
         }
-        if self.host_document.edges.capacity() != 0 {
-            let values = std::mem::take(&mut self.host_document.edges);
+        if self.host_snapshot.edges.capacity() != 0 {
+            let values = std::mem::take(&mut self.host_snapshot.edges);
             self.payload_retirement.fixture_edges(values);
             return self.payload_retirement.close_step(maximum_items, maximum_bytes);
         }
@@ -2923,9 +2916,9 @@ impl DagHostRetirement {
     pub fn terminal_is_empty(&self) -> bool {
         self.released
             && self.engine.terminal_is_empty()
-            && self.host_document.schema.is_empty()
-            && self.host_document.nodes.is_empty()
-            && self.host_document.edges.is_empty()
+            && self.host_snapshot.schema.is_empty()
+            && self.host_snapshot.nodes.is_empty()
+            && self.host_snapshot.edges.is_empty()
             && self.node_id_map.is_empty()
             && self.handle_key_map.is_empty()
             && self.handle_port_shape.is_empty()
@@ -3041,28 +3034,28 @@ impl DagNodePaintChrome {
 
 impl DagHost {
     pub fn default_demo() -> Self {
-        Self::from_host_document(DagHostDocument::default())
+        Self::from_host_snapshot(DagHostSnapshot::default())
     }
 
-    pub fn from_host_document(fixture: DagHostDocument) -> Self {
-        Self::from_host_document_with_layout(fixture, false)
+    pub fn from_host_snapshot(fixture: DagHostSnapshot) -> Self {
+        Self::from_host_snapshot_with_layout(fixture, false)
     }
 
     /// 🌳️ Builds a host without running auto-layout (preserves node positions).
-    pub fn from_host_document_without_layout(fixture: DagHostDocument) -> Self {
-        Self::from_host_document(fixture)
+    pub fn from_host_snapshot_without_layout(fixture: DagHostSnapshot) -> Self {
+        Self::from_host_snapshot(fixture)
     }
 
     /// ♻️ Rebuilds transient DAG state while retaining the exact owner of admitted icon paints.
-    pub fn replace_host_document_without_layout(&mut self, fixture: DagHostDocument) {
-        let mut next = Self::from_host_document_without_layout(fixture);
+    pub fn replace_host_snapshot_without_layout(&mut self, fixture: DagHostSnapshot) {
+        let mut next = Self::from_host_snapshot_without_layout(fixture);
         std::mem::swap(&mut self.icon_paint_cache, &mut next.icon_paint_cache);
         *self = next;
     }
 
-    fn from_host_document_with_layout(fixture: DagHostDocument, apply_layout: bool) -> Self {
+    fn from_host_snapshot_with_layout(fixture: DagHostSnapshot, apply_layout: bool) -> Self {
         let mut host = Self {
-            host_document: fixture,
+            host_snapshot: fixture,
             engine: DagBoardEngine::new(),
             canvas_theme: CanvasPalette::default(),
             width: 1,
@@ -3119,7 +3112,7 @@ impl DagHost {
     }
 
     fn node_id_for_widget_id(&self, widget_id: &str) -> Option<NodeId> {
-        let idx = self.host_document.nodes.iter().position(|n| n.id == widget_id)?;
+        let idx = self.host_snapshot.nodes.iter().position(|n| n.id == widget_id)?;
         self.engine_node_id_for_index(idx)
     }
 
@@ -3129,7 +3122,7 @@ impl DagHost {
 
     fn widget_id_for_node_id_ref(&self, node_id: NodeId) -> Option<&str> {
         let idx = *self.node_id_map.get(&node_id)?;
-        self.host_document.nodes.get(idx).map(|node| node.id.as_str())
+        self.host_snapshot.nodes.get(idx).map(|node| node.id.as_str())
     }
 
     fn is_node_hovered(&self, node_id: NodeId) -> bool {
@@ -3137,8 +3130,8 @@ impl DagHost {
     }
 
     fn resolve_minimap_hover_node_id(&self, world_x: f64, world_y: f64) -> Option<NodeId> {
-        for idx in (0..self.host_document.nodes.len()).rev() {
-            let node = &self.host_document.nodes[idx];
+        for idx in (0..self.host_snapshot.nodes.len()).rev() {
+            let node = &self.host_snapshot.nodes[idx];
             let hw = node.width * 0.5;
             let hh = node.height * 0.5;
             if world_x >= node.x - hw && world_x <= node.x + hw && world_y >= node.y - hh && world_y <= node.y + hh {
@@ -3200,7 +3193,7 @@ impl DagHost {
 
     fn sync_camera_from_engine(&mut self) {
         let cam = self.engine.camera;
-        self.host_document.camera = DagCamera { x: cam.x, y: cam.y, zoom: cam.zoom };
+        self.host_snapshot.camera = DagCamera { x: cam.x, y: cam.y, zoom: cam.zoom };
     }
 
     /// 🎯️ Selected fixture node ids from the engine selection snapshot.
@@ -3217,11 +3210,11 @@ impl DagHost {
     }
 
     pub fn bounded_interaction_projection(&self, revision: u64) -> Result<DagInteractionProjection, DagInteractionPlanFault> {
-        if self.host_document.nodes.len() > DAG_INTERACTION_NODE_CAPACITY {
+        if self.host_snapshot.nodes.len() > DAG_INTERACTION_NODE_CAPACITY {
             return Err(DagInteractionPlanFault::NodeCredits);
         }
         let mut bytes = 0usize;
-        for node in &self.host_document.nodes {
+        for node in &self.host_snapshot.nodes {
             if node.id.len() > 256 {
                 return Err(DagInteractionPlanFault::StringCredits);
             }
@@ -3237,12 +3230,12 @@ impl DagHost {
             }
         }
         let hover = self.engine.hover.and_then(|node_id| self.node_id_map.get(&node_id).copied()).and_then(|index| u16::try_from(index).ok());
-        let camera = &self.host_document.camera;
+        let camera = &self.host_snapshot.camera;
         Ok(DagInteractionProjection { revision, camera: [camera.x, camera.y, camera.zoom], selected, hover, gesture: DagProjectionGesture::Idle })
     }
 
     pub fn derive_pointer_plan(&self, projection: DagInteractionProjection, intent: DagPointerIntent) -> Result<DagPointerPlan, DagInteractionPlanFault> {
-        if projection.revision == u64::MAX || self.host_document.nodes.len() > DAG_INTERACTION_NODE_CAPACITY {
+        if projection.revision == u64::MAX || self.host_snapshot.nodes.len() > DAG_INTERACTION_NODE_CAPACITY {
             return Err(DagInteractionPlanFault::NodeCredits);
         }
         let mut next = projection;
@@ -3270,7 +3263,7 @@ impl DagHost {
             return Err(DagInteractionPlanFault::Unsupported);
         }
         let world = self.screen_to_world_point(sx, sy);
-        if self.port_insert_hit(world.x, world.y, self.host_document.camera.zoom).is_some() || self.world_hits_handle(world.x, world.y) || self.widget_hit_at(world.x, world.y).is_some() {
+        if self.port_insert_hit(world.x, world.y, self.host_snapshot.camera.zoom).is_some() || self.world_hits_handle(world.x, world.y) || self.widget_hit_at(world.x, world.y).is_some() {
             return Err(DagInteractionPlanFault::Unsupported);
         }
         Ok(self.fixture_draggable_node_hit(world.x, world.y).and_then(|node_id| self.node_id_map.get(&node_id).copied()))
@@ -3304,11 +3297,11 @@ impl DagHost {
         next.hover = u16::try_from(index).ok();
         let mut starts = [None; DAG_INTERACTION_NODE_CAPACITY];
         let mut len = 0usize;
-        for node_index in 0..self.host_document.nodes.len() {
+        for node_index in 0..self.host_snapshot.nodes.len() {
             if !dag_bit_contains(&next.selected, node_index) {
                 continue;
             }
-            let node = &self.host_document.nodes[node_index];
+            let node = &self.host_snapshot.nodes[node_index];
             starts[len] = Some(DagNodeMove { index: node_index as u16, x: node.x, y: node.y });
             len += 1;
         }
@@ -3341,8 +3334,8 @@ impl DagHost {
                 let min_y = start_y.min(intent.y);
                 let max_y = start_y.max(intent.y);
                 let mut selected = if intent.shift || intent.ctrl_or_meta { initial } else { [0; DAG_INTERACTION_WORD_CAPACITY] };
-                for index in 0..self.host_document.nodes.len() {
-                    let node = &self.host_document.nodes[index];
+                for index in 0..self.host_snapshot.nodes.len() {
+                    let node = &self.host_snapshot.nodes[index];
                     let screen = self.world_to_screen_point(node.x, node.y);
                     if screen.0 >= min_x && screen.0 <= max_x && screen.1 >= min_y && screen.1 <= max_y {
                         dag_bit_set(&mut selected, index, true);
@@ -3359,7 +3352,7 @@ impl DagHost {
 
     fn world_to_screen_point(&self, x: f64, y: f64) -> (f64, f64) {
         use canvas::camera::{world_to_screen, Camera, Viewport};
-        let camera = Camera { x: self.host_document.camera.x, y: self.host_document.camera.y, zoom: self.host_document.camera.zoom };
+        let camera = Camera { x: self.host_snapshot.camera.x, y: self.host_snapshot.camera.y, zoom: self.host_snapshot.camera.zoom };
         let viewport = Viewport { width: self.width, height: self.height, dpr: self.dpr };
         let point = world_to_screen(&camera, &viewport, canvas::Point::new(x, y));
         (point.x, point.y)
@@ -3372,14 +3365,14 @@ impl DagHost {
                 continue;
             };
             let index = usize::from(delta.index);
-            if let Some(node) = self.host_document.nodes.get_mut(index) {
+            if let Some(node) = self.host_snapshot.nodes.get_mut(index) {
                 node.x = delta.x;
                 node.y = delta.y;
             }
             self.sync_fixture_node_center_to_engine(index);
         }
         self.engine.selection = Selection::default();
-        for index in 0..self.host_document.nodes.len() {
+        for index in 0..self.host_snapshot.nodes.len() {
             if dag_bit_contains(&plan.next.selected, index) {
                 if let Some(node_id) = self.engine_node_id_for_index(index) {
                     self.engine.selection.node_ids.insert(node_id);
@@ -3392,16 +3385,16 @@ impl DagHost {
     }
 
     pub fn projection_selected_id_refs<'a>(&'a self, projection: &'a DagInteractionProjection) -> impl Iterator<Item = &'a str> + 'a {
-        self.host_document.nodes.iter().enumerate().filter(move |(index, _)| dag_bit_contains(&projection.selected, *index)).map(|(_, node)| node.id.as_str())
+        self.host_snapshot.nodes.iter().enumerate().filter(move |(index, _)| dag_bit_contains(&projection.selected, *index)).map(|(_, node)| node.id.as_str())
     }
 
     pub fn projection_hovered_id_ref<'a>(&'a self, projection: &DagInteractionProjection) -> Option<&'a str> {
-        projection.hover.and_then(|index| self.host_document.nodes.get(usize::from(index))).map(|node| node.id.as_str())
+        projection.hover.and_then(|index| self.host_snapshot.nodes.get(usize::from(index))).map(|node| node.id.as_str())
     }
 
     pub fn pointer_plan_move(&self, plan: &DagPointerPlan, index: usize) -> Option<(&str, f64, f64)> {
         let delta = plan.moves.get(index).and_then(|delta| *delta)?;
-        self.host_document.nodes.get(usize::from(delta.index)).map(|node| (node.id.as_str(), delta.x, delta.y))
+        self.host_snapshot.nodes.get(usize::from(delta.index)).map(|node| (node.id.as_str(), delta.x, delta.y))
     }
 
     /// 🫳️ The node moves a plan COMMITS when it ends a drag, in the guest's own edit vocabulary.
@@ -3422,7 +3415,7 @@ impl DagHost {
             let Some(delta) = plan.moves[index] else {
                 continue;
             };
-            let Some(node) = self.host_document.nodes.get(usize::from(delta.index)) else {
+            let Some(node) = self.host_snapshot.nodes.get(usize::from(delta.index)) else {
                 continue;
             };
             edits.push(DagGraphEdit::Move { node_id: node.id.clone(), x: delta.x, y: delta.y });
@@ -3521,7 +3514,7 @@ impl DagHost {
         }
         let key = self.handle_key_map.get(&target)?;
         let (node_id, port_id) = key.split_once('@')?;
-        let node = self.host_document.nodes.iter().find(|entry| entry.id == node_id)?;
+        let node = self.host_snapshot.nodes.iter().find(|entry| entry.id == node_id)?;
         let direction = if node.inputs().iter().any(|port| port.id == port_id) {
             "in"
         } else if node.outputs().iter().any(|port| port.id == port_id) {
@@ -3597,7 +3590,7 @@ impl DagHost {
     /// Rects are SURFACE-local, in the same coordinates `pointer_*_screen` takes.
     pub fn screen_geometry_census_json(&self) -> String {
         let mut rows: Vec<String> = Vec::new();
-        for node in &self.host_document.nodes {
+        for node in &self.host_snapshot.nodes {
             let body = match self.entity_screen_rect("node", &node.id) {
                 Some(rect) => self.first_screen_point_in(rect, |hit| hit.is_draggable_body() && hit.node_id.as_deref() == Some(node.id.as_str())),
                 None => None,
@@ -3732,9 +3725,9 @@ impl DagHost {
     /// 🖼️ World bounds of every node this board holds — what a fit frames and what the minimap maps.
     /// `None` for an empty graph, which has nothing to frame.
     pub fn content_world_bounds(&self) -> Option<canvas::camera::ContentBounds> {
-        let first = self.host_document.nodes.first()?;
+        let first = self.host_snapshot.nodes.first()?;
         let mut union = Self::dag_node_world_bounds(first);
-        for node in self.host_document.nodes.iter().skip(1) {
+        for node in self.host_snapshot.nodes.iter().skip(1) {
             let b = Self::dag_node_world_bounds(node);
             union.min_x = union.min_x.min(b.min_x);
             union.min_y = union.min_y.min(b.min_y);
@@ -3749,7 +3742,7 @@ impl DagHost {
     }
 
     fn camera_state(&self) -> canvas::camera::Camera {
-        canvas::camera::Camera { x: self.host_document.camera.x, y: self.host_document.camera.y, zoom: self.host_document.camera.zoom }
+        canvas::camera::Camera { x: self.host_snapshot.camera.x, y: self.host_snapshot.camera.y, zoom: self.host_snapshot.camera.zoom }
     }
 
     /// 🖼️ Fraction of the graph's own area the live camera currently shows — `1.0` when the whole
@@ -3805,7 +3798,7 @@ impl DagHost {
     /// 🗺️ Thin wrapper over `ui_wgpu::wgpu::minimap::content_fully_visible` — pure layout math relocated there
     /// (see `.🧬semio/🦑️repo/🎫️tickets/26/08/05/FRAMEWORK-BUILDER-PASSTHROUGHS-APP-COMMANDS-MACRO-WIDGET-EXTRACTION`).
     fn minimap_camera_fully_shows_content(&self, content: &WorldBox, viewport_w: u32, viewport_h: u32) -> bool {
-        let cam = &self.host_document.camera;
+        let cam = &self.host_snapshot.camera;
         ui_wgpu::wgpu::minimap::content_fully_visible(&ui_wgpu::wgpu::minimap::MinimapContentBounds { min_x: content.min_x, min_y: content.min_y, max_x: content.max_x, max_y: content.max_y }, viewport_w, viewport_h, cam.x, cam.y, cam.zoom, 12.0)
     }
 
@@ -3822,7 +3815,7 @@ impl DagHost {
         let h = ui_styling::metrics::dag::MINIMAP_WIDGET_HEIGHT;
         let margin = ui_styling::metrics::dag::MINIMAP_WIDGET_MARGIN;
         let ratio = ui_styling::metrics::dag::MINIMAP_WIDGET_MAX_CONTENT_RATIO;
-        let cam = &self.host_document.camera;
+        let cam = &self.host_snapshot.camera;
         let layout =
             ui_wgpu::wgpu::minimap::layout(&ui_wgpu::wgpu::minimap::MinimapContentBounds { min_x: content.min_x, min_y: content.min_y, max_x: content.max_x, max_y: content.max_y }, viewport_w, viewport_h, cam.x, cam.y, cam.zoom, w, h, margin, ratio);
         Some(MinimapWidgetLayout { panel: layout.panel, world_min_x: layout.world_min_x, world_min_y: layout.world_min_y, scale: layout.scale, map_origin_x: layout.map_origin_x, map_origin_y: layout.map_origin_y, viewport: layout.viewport })
@@ -3884,7 +3877,7 @@ impl DagHost {
         scene.stroke(&Stroke::new(strokes::DAG_MINIMAP_WIDGET_PANEL), aff, theme.minimap_widget_panel_stroke, None, &panel);
         let node_min = ui_styling::metrics::dag::MINIMAP_WIDGET_NODE_MIN_SIZE;
         let lod = DagDrawLod::Minimap;
-        for (idx, fixture_node) in self.host_document.nodes.iter().enumerate() {
+        for (idx, fixture_node) in self.host_snapshot.nodes.iter().enumerate() {
             let node = self.node_spec_for_paint(idx, fixture_node);
             let node = node.as_ref();
             let engine_nid = self.engine_node_id_for_index(idx);
@@ -3918,11 +3911,11 @@ impl DagHost {
 
     fn selected_fixture_nodes(&self) -> Vec<(usize, DagNodeSpec)> {
         let ids = self.selected_node_ids();
-        ids.into_iter().filter_map(|id| self.host_document.nodes.iter().enumerate().find(|(_, node)| node.id == id).map(|(idx, node)| (idx, node.clone()))).collect()
+        ids.into_iter().filter_map(|id| self.host_snapshot.nodes.iter().enumerate().find(|(_, node)| node.id == id).map(|(idx, node)| (idx, node.clone()))).collect()
     }
 
     fn sync_fixture_node_center_to_engine(&mut self, idx: usize) {
-        let node = &self.host_document.nodes[idx];
+        let node = &self.host_snapshot.nodes[idx];
         let Some(nid) = self.node_id_for_widget_id(&node.id) else {
             return;
         };
@@ -3939,7 +3932,7 @@ impl DagHost {
         }
         use canvas::camera::{world_to_screen, Camera as CanvasCamera, Viewport};
         use canvas::Point;
-        let pad_world = 4.0 / self.host_document.camera.zoom.max(0.05);
+        let pad_world = 4.0 / self.host_snapshot.camera.zoom.max(0.05);
         let mut corners = Vec::new();
         for (_, node) in &selected {
             let hw = node.width * 0.5 + pad_world;
@@ -3950,7 +3943,7 @@ impl DagHost {
         let Some(bounds) = world_box_from_points(&corners) else {
             return "null".into();
         };
-        let cam = CanvasCamera { x: self.host_document.camera.x, y: self.host_document.camera.y, zoom: self.host_document.camera.zoom };
+        let cam = CanvasCamera { x: self.host_snapshot.camera.x, y: self.host_snapshot.camera.y, zoom: self.host_snapshot.camera.zoom };
         let viewport = Viewport { width: self.width.max(1), height: self.height.max(1), dpr: self.dpr.max(1.0) };
         let tl = world_to_screen(&cam, &viewport, Point::new(bounds.min_x, bounds.min_y));
         let br = world_to_screen(&cam, &viewport, Point::new(bounds.max_x, bounds.max_y));
@@ -3984,7 +3977,7 @@ impl DagHost {
         use canvas::camera::{world_to_screen, Camera as CanvasCamera, Viewport};
         use canvas::Point;
         let unresolved = EntityGeometry { visible: false, x: None, y: None, rect: None, polyline: None };
-        let cam = CanvasCamera { x: self.host_document.camera.x, y: self.host_document.camera.y, zoom: self.host_document.camera.zoom };
+        let cam = CanvasCamera { x: self.host_snapshot.camera.x, y: self.host_snapshot.camera.y, zoom: self.host_snapshot.camera.zoom };
         let viewport = Viewport { width: self.width.max(1), height: self.height.max(1), dpr: self.dpr.max(1.0) };
         let viewport_center = (self.width as f64 * 0.5, self.height as f64 * 0.5);
 
@@ -3997,7 +3990,7 @@ impl DagHost {
         // grabs a wire in, so anything that aims at what the host reports (a demonstration, an
         // assistive caller, a scripted drag) presses a point that wires.
         let handle_world_bounds = |widget_id: &str, port: &str| -> Option<(f64, f64, f64, f64)> {
-            let node = self.host_document.nodes.iter().find(|node| node.id == widget_id)?;
+            let node = self.host_snapshot.nodes.iter().find(|node| node.id == widget_id)?;
             if let Some(index) = node.inputs().iter().position(|candidate| candidate.id == port) {
                 return input_port_connector_bounds(node, index);
             }
@@ -4020,7 +4013,7 @@ impl DagHost {
             "node" => {
                 if id == "*" {
                     let all: Vec<(f64, f64, f64, f64)> = self
-                        .host_document
+                        .host_snapshot
                         .nodes
                         .iter()
                         .map(|node| {
@@ -4030,7 +4023,7 @@ impl DagHost {
                         .collect();
                     nearest_center_screen(&all)
                 } else {
-                    self.host_document.nodes.iter().find(|node| node.id == id).map(|node| {
+                    self.host_snapshot.nodes.iter().find(|node| node.id == id).map(|node| {
                         let b = Self::dag_node_world_bounds(node);
                         (b.min_x, b.min_y, b.max_x, b.max_y)
                     })
@@ -4039,7 +4032,7 @@ impl DagHost {
             "handle" => {
                 if id == "*" {
                     let mut all: Vec<(f64, f64, f64, f64)> = Vec::new();
-                    for node in &self.host_document.nodes {
+                    for node in &self.host_snapshot.nodes {
                         for port in node.inputs().iter().chain(node.outputs().iter()) {
                             if let Some(bounds) = handle_world_bounds(&node.id, &port.id) {
                                 all.push(bounds);
@@ -4052,7 +4045,7 @@ impl DagHost {
                 }
             }
             "edge" => {
-                let edge = if id == "*" { self.host_document.edges.first() } else { self.host_document.edges.iter().find(|edge| edge.id == id) };
+                let edge = if id == "*" { self.host_snapshot.edges.first() } else { self.host_snapshot.edges.iter().find(|edge| edge.id == id) };
                 let Some(edge) = edge else { return os_pack::json::to_json_string(&unresolved) };
                 let Some((source_widget, source_port)) = edge.source.split_once('@') else { return os_pack::json::to_json_string(&unresolved) };
                 let Some((target_widget, target_port)) = edge.target.split_once('@') else { return os_pack::json::to_json_string(&unresolved) };
@@ -4206,8 +4199,8 @@ impl DagHost {
             other => return Err(DagError::UnknownAlignMode(other.to_string())),
         }
         for (idx, node) in selected {
-            self.host_document.nodes[idx].x = node.x;
-            self.host_document.nodes[idx].y = node.y;
+            self.host_snapshot.nodes[idx].x = node.x;
+            self.host_snapshot.nodes[idx].y = node.y;
             self.sync_fixture_node_center_to_engine(idx);
         }
         Ok(())
@@ -4216,9 +4209,9 @@ impl DagHost {
 
     /// 📍️ Sets a fixture widget position in both the fixture and engine snapshots.
     pub fn set_widget_position(&mut self, widget_id: &str, x: f64, y: f64) -> Result<(), DagError> {
-        let idx = self.host_document.nodes.iter().position(|node| node.id == widget_id).ok_or_else(|| DagError::UnknownWidget(widget_id.to_string()))?;
-        self.host_document.nodes[idx].x = x;
-        self.host_document.nodes[idx].y = y;
+        let idx = self.host_snapshot.nodes.iter().position(|node| node.id == widget_id).ok_or_else(|| DagError::UnknownWidget(widget_id.to_string()))?;
+        self.host_snapshot.nodes[idx].x = x;
+        self.host_snapshot.nodes[idx].y = y;
         let Some(nid) = self.engine_node_id_for_index(idx) else {
             return Ok(());
         };
@@ -4232,14 +4225,14 @@ impl DagHost {
     pub fn delete_selected(&mut self) {
         let widget_ids = self.selected_node_ids();
         self.engine.delete_selection();
-        self.host_document.nodes.retain(|node| !widget_ids.contains(&node.id));
+        self.host_snapshot.nodes.retain(|node| !widget_ids.contains(&node.id));
         self.sync_edges_from_engine();
         self.rebuild_engine_with_layout(false);
     }
 
     /// ⌨️ Selects every fixture node id.
     pub fn select_all_node_ids(&self) -> Vec<String> {
-        self.host_document.nodes.iter().map(|node| node.id.clone()).collect()
+        self.host_snapshot.nodes.iter().map(|node| node.id.clone()).collect()
     }
 
     pub fn select_all(&mut self) {
@@ -4393,7 +4386,7 @@ impl DagHost {
         if zoom < DAG_VARIADIC_PLUS_ZOOM_THRESHOLD {
             return None;
         }
-        for node in self.host_document.nodes.iter().rev() {
+        for node in self.host_snapshot.nodes.iter().rev() {
             if node.variadic_inputs() {
                 let inputs = node.inputs();
                 let hw = node.width * 0.5;
@@ -4458,7 +4451,7 @@ impl DagHost {
                 return lod;
             }
         }
-        dag_draw_lod(self.host_document.camera.zoom)
+        dag_draw_lod(self.host_snapshot.camera.zoom)
     }
 
     fn draw_lod_for_frame(&self) -> DagDrawLod {
@@ -4472,7 +4465,7 @@ impl DagHost {
                 return pinned;
             }
         }
-        dag_draw_lod(self.host_document.camera.zoom)
+        dag_draw_lod(self.host_snapshot.camera.zoom)
     }
 
     /// 📶️ Active draw LOD tier label (`minimap`, `overview`, …).
@@ -4643,28 +4636,24 @@ impl DagHost {
         self.forced_draw_lod = DagDrawLod::from_id(trimmed);
     }
 
-    pub fn load_fixture_json(json: &str) -> Result<Self, DagError> {
-        let fixture: DagHostDocument = os_pack::json::from_json_str(json)?;
-        if fixture.schema != "dag.host_document" {
+    pub fn load_host_snapshot_json(json: &str) -> Result<Self, DagError> {
+        let host_snapshot: DagHostSnapshot = os_pack::json::from_json_str(json)?;
+        if host_snapshot.schema != "dag.host_snapshot" {
             return Err(DagError::SchemaMismatch);
         }
-        validate_dag_fixture_node_kinds(&fixture.nodes)?;
-        Ok(Self::from_host_document(fixture))
+        validate_dag_host_snapshot_node_kinds(&host_snapshot.nodes)?;
+        Ok(Self::from_host_snapshot(host_snapshot))
     }
 
-    pub fn host_document_json(&self) -> Result<String, DagError> {
-        Ok(os_pack::json::to_json_string(&self.host_document))
-    }
-
-    pub fn fixture_json(&self) -> Result<String, DagError> {
-        self.host_document_json()
+    pub fn host_snapshot_json(&self) -> Result<String, DagError> {
+        Ok(os_pack::json::to_json_string(&self.host_snapshot))
     }
 
     /// 🌳️ Recomputes node positions from the current graph using layered tree layout.
     pub fn reorganize(&mut self, opts: &DagLayoutOptions) -> Result<(), DagError> {
-        let mut fixture_value = os_pack::json::from_dsl_value(&<DagHostDocument as dsl::ToValue>::to_value(&self.host_document));
-        apply_dag_layout_to_host_document_v1_value(&mut fixture_value, opts)?;
-        self.host_document = <DagHostDocument as dsl::FromValue>::from_value(os_pack::json::to_dsl_value(&fixture_value))?;
+        let mut fixture_value = os_pack::json::from_dsl_value(&<DagHostSnapshot as dsl::ToValue>::to_value(&self.host_snapshot));
+        apply_dag_layout_to_host_snapshot_v1_value(&mut fixture_value, opts)?;
+        self.host_snapshot = <DagHostSnapshot as dsl::FromValue>::from_value(os_pack::json::to_dsl_value(&fixture_value))?;
         self.rebuild_engine_with_layout(false);
         Ok(())
     }
@@ -4678,23 +4667,23 @@ impl DagHost {
         self.handle_port_visible.clear();
         self.edge_id_map.clear();
         self.edge_engine_ids.clear();
-        self.edge_engine_ids.resize(self.host_document.edges.len(), None);
+        self.edge_engine_ids.resize(self.host_snapshot.edges.len(), None);
         self.edge_route_style.clear();
-        for node in &mut self.host_document.nodes {
+        for node in &mut self.host_snapshot.nodes {
             fit_node_size(node);
         }
-        let (cx, cy, zoom) = (self.host_document.camera.x, self.host_document.camera.y, self.host_document.camera.zoom);
+        let (cx, cy, zoom) = (self.host_snapshot.camera.x, self.host_snapshot.camera.y, self.host_snapshot.camera.zoom);
         self.engine.set_camera(cx, cy, zoom);
         if apply_layout {
-            let mut fixture_value = os_pack::json::from_dsl_value(&<DagHostDocument as dsl::ToValue>::to_value(&self.host_document));
-            let _ = apply_dag_layout_to_host_document_v1_value(&mut fixture_value, &DagLayoutOptions::default());
-            if let Ok(updated) = <DagHostDocument as dsl::FromValue>::from_value(os_pack::json::to_dsl_value(&fixture_value)) {
-                self.host_document = updated;
+            let mut fixture_value = os_pack::json::from_dsl_value(&<DagHostSnapshot as dsl::ToValue>::to_value(&self.host_snapshot));
+            let _ = apply_dag_layout_to_host_snapshot_v1_value(&mut fixture_value, &DagLayoutOptions::default());
+            if let Ok(updated) = <DagHostSnapshot as dsl::FromValue>::from_value(os_pack::json::to_dsl_value(&fixture_value)) {
+                self.host_snapshot = updated;
             }
         }
         let mut next_handle: u64 = 10;
         let mut handle_map: HashMap<String, u64> = HashMap::new();
-        for (idx, node) in self.host_document.nodes.iter().enumerate() {
+        for (idx, node) in self.host_snapshot.nodes.iter().enumerate() {
             let nid = idx as u64 + 1;
             self.node_id_map.insert(nid, idx);
             self.engine.create_rect_node(nid, node.x, node.y, node.width, node.height, true);
@@ -4734,7 +4723,7 @@ impl DagHost {
             }
         }
         let existing: Vec<(String, String)> = self
-            .host_document
+            .host_snapshot
             .edges
             .iter()
             .filter_map(|e| {
@@ -4744,7 +4733,7 @@ impl DagHost {
             })
             .collect();
         let mut eid: u64 = 100;
-        for (edge_index, edge) in self.host_document.edges.iter().enumerate() {
+        for (edge_index, edge) in self.host_snapshot.edges.iter().enumerate() {
             if would_create_cycle(&existing, edge.source.split('@').next().unwrap_or(""), edge.target.split('@').next().unwrap_or("")) {
                 continue;
             }
@@ -4779,7 +4768,7 @@ impl DagHost {
     fn screen_to_world_point(&self, sx: f64, sy: f64) -> canvas::Point {
         use canvas::camera::{screen_to_world, Camera as CanvasCamera, Viewport};
         use canvas::Point;
-        let cam = CanvasCamera { x: self.host_document.camera.x, y: self.host_document.camera.y, zoom: self.host_document.camera.zoom };
+        let cam = CanvasCamera { x: self.host_snapshot.camera.x, y: self.host_snapshot.camera.y, zoom: self.host_snapshot.camera.zoom };
         let viewport = Viewport { width: self.width, height: self.height, dpr: self.dpr };
         screen_to_world(&cam, &viewport, Point::new(sx, sy))
     }
@@ -4793,8 +4782,8 @@ impl DagHost {
             if self.grid_snap_enabled {
                 (x, y) = self.snap_world_pair(x, y);
             }
-            self.host_document.nodes[idx].x = x;
-            self.host_document.nodes[idx].y = y;
+            self.host_snapshot.nodes[idx].x = x;
+            self.host_snapshot.nodes[idx].y = y;
             if self.grid_snap_enabled {
                 if let Some(engine_node) = self.engine.nodes.get_mut(&nid) {
                     engine_node.center = canvas::Point::new(x, y);
@@ -4831,10 +4820,10 @@ impl DagHost {
             };
             let id = self.edge_id_map.get(eid).cloned().unwrap_or_else(|| format!("e{eid}"));
             self.edge_id_map.insert(*eid, id.clone());
-            edges.push(DagHostDocumentEdge { id, source, target, ..Default::default() });
+            edges.push(DagHostSnapshotEdge { id, source, target, ..Default::default() });
             edge_engine_ids.push(Some(*eid));
         }
-        self.host_document.edges = edges;
+        self.host_snapshot.edges = edges;
         self.edge_engine_ids = edge_engine_ids;
     }
 
@@ -4882,7 +4871,7 @@ impl DagHost {
     }
 
     pub fn set_camera(&mut self, x: f64, y: f64, zoom: f64) {
-        self.host_document.camera = DagCamera { x, y, zoom };
+        self.host_snapshot.camera = DagCamera { x, y, zoom };
         self.engine.set_camera(x, y, zoom);
     }
 
@@ -4951,7 +4940,7 @@ impl DagHost {
             channel: handle.and_then(|hid| self.decode_channel_ref(hid)),
             minimap: minimap.is_some(),
             minimap_viewport: minimap.is_some_and(|(_, on_viewport)| on_viewport),
-            port_insert: self.port_insert_hit(world.x, world.y, self.host_document.camera.zoom).is_some(),
+            port_insert: self.port_insert_hit(world.x, world.y, self.host_snapshot.camera.zoom).is_some(),
             handle: handle.is_some(),
             widget: self.widget_hit_at(world.x, world.y).is_some(),
         }
@@ -4996,7 +4985,7 @@ impl DagHost {
     }
 
     fn port_row_handle_hit(&self, world_x: f64, world_y: f64, inputs: bool, outputs: bool) -> Option<HandleId> {
-        for node in self.host_document.nodes.iter().rev() {
+        for node in self.host_snapshot.nodes.iter().rev() {
             if inputs {
                 for (port_idx, port) in node.inputs().iter().enumerate() {
                     let Some((x0, y0, x1, y1)) = input_port_row_hit_bounds(node, port_idx) else {
@@ -5029,7 +5018,7 @@ impl DagHost {
 
     /// 🔌️ The port whose CONNECTOR rect — the published one — contains this world point.
     fn port_connector_handle_hit(&self, world_x: f64, world_y: f64) -> Option<HandleId> {
-        for node in self.host_document.nodes.iter().rev() {
+        for node in self.host_snapshot.nodes.iter().rev() {
             for (port_idx, port) in node.inputs().iter().enumerate() {
                 let Some((x0, y0, x1, y1)) = input_port_connector_bounds(node, port_idx) else { continue };
                 if point_in_rect(world_x, world_y, x0, y0, x1, y1) {
@@ -5092,8 +5081,8 @@ impl DagHost {
     }
 
     fn fixture_draggable_node_hit(&self, world_x: f64, world_y: f64) -> Option<NodeId> {
-        for idx in (0..self.host_document.nodes.len()).rev() {
-            let node = &self.host_document.nodes[idx];
+        for idx in (0..self.host_snapshot.nodes.len()).rev() {
+            let node = &self.host_snapshot.nodes[idx];
             let hw = node.width * 0.5;
             let hh = node.height * 0.5;
             if world_x < node.x - hw || world_x > node.x + hw || world_y < node.y - hh || world_y > node.y + hh {
@@ -5170,8 +5159,8 @@ impl DagHost {
     }
 
     fn widget_hit_at(&self, world_x: f64, world_y: f64) -> Option<(usize, WidgetPointerKind)> {
-        for idx in (0..self.host_document.nodes.len()).rev() {
-            let node = &self.host_document.nodes[idx];
+        for idx in (0..self.host_snapshot.nodes.len()).rev() {
+            let node = &self.host_snapshot.nodes[idx];
             match &node.kind {
                 DagNodeKind::Slider { .. } => {
                     let (x0, y0, x1, y1) = slider_track_bounds(node);
@@ -5211,7 +5200,7 @@ impl DagHost {
     }
 
     fn sync_fixture_node_size_to_engine(&mut self, idx: usize) {
-        let node = &self.host_document.nodes[idx];
+        let node = &self.host_snapshot.nodes[idx];
         let Some(nid) = self.engine_node_id_for_index(idx) else {
             return;
         };
@@ -5239,14 +5228,14 @@ impl DagHost {
 
     /// ✏️ Begins inline note text editing at a world-space click position.
     pub fn begin_note_edit(&mut self, node_id: &str, world_x: f64, _world_y: f64) -> bool {
-        let Some(node) = self.host_document.nodes.iter().find(|n| n.id == node_id) else {
+        let Some(node) = self.host_snapshot.nodes.iter().find(|n| n.id == node_id) else {
             return false;
         };
         let DagNodeKind::Note { text, .. } = &node.kind else {
             return false;
         };
-        let lod_index = dag_lod_index(self.host_document.camera.zoom);
-        let font_px = dag_label_paint_px(self.host_document.camera.zoom, lod_index) * 1.05;
+        let lod_index = dag_lod_index(self.host_snapshot.camera.zoom);
+        let font_px = dag_label_paint_px(self.host_snapshot.camera.zoom, lod_index) * 1.05;
         let origin_x = note_text_origin_x(node);
         let offset = hit_byte_in_note_line(text, world_x, origin_x, font_px);
         self.editing_note = Some(NoteEditState { node_id: node_id.to_string(), caret: offset, anchor: offset });
@@ -5259,10 +5248,10 @@ impl DagHost {
         let Some(node_id) = self.editing_note.as_ref().map(|edit| edit.node_id.clone()) else {
             return false;
         };
-        let Some(idx) = self.host_document.nodes.iter().position(|n| n.id == node_id) else {
+        let Some(idx) = self.host_snapshot.nodes.iter().position(|n| n.id == node_id) else {
             return false;
         };
-        let DagNodeKind::Note { text, .. } = &mut self.host_document.nodes[idx].kind else {
+        let DagNodeKind::Note { text, .. } = &mut self.host_snapshot.nodes[idx].kind else {
             return false;
         };
         let Some(edit) = self.editing_note.as_mut() else {
@@ -5282,10 +5271,10 @@ impl DagHost {
         let Some(node_id) = self.editing_note.as_ref().map(|edit| edit.node_id.clone()) else {
             return false;
         };
-        let Some(idx) = self.host_document.nodes.iter().position(|n| n.id == node_id) else {
+        let Some(idx) = self.host_snapshot.nodes.iter().position(|n| n.id == node_id) else {
             return false;
         };
-        let DagNodeKind::Note { text, .. } = &mut self.host_document.nodes[idx].kind else {
+        let DagNodeKind::Note { text, .. } = &mut self.host_snapshot.nodes[idx].kind else {
             return false;
         };
         let Some(edit) = self.editing_note.as_mut() else {
@@ -5314,10 +5303,10 @@ impl DagHost {
         let Some(node_id) = self.editing_note.as_ref().map(|edit| edit.node_id.clone()) else {
             return false;
         };
-        let Some(idx) = self.host_document.nodes.iter().position(|n| n.id == node_id) else {
+        let Some(idx) = self.host_snapshot.nodes.iter().position(|n| n.id == node_id) else {
             return false;
         };
-        let DagNodeKind::Note { text, .. } = &mut self.host_document.nodes[idx].kind else {
+        let DagNodeKind::Note { text, .. } = &mut self.host_snapshot.nodes[idx].kind else {
             return false;
         };
         let Some(edit) = self.editing_note.as_mut() else {
@@ -5346,10 +5335,10 @@ impl DagHost {
         let Some(node_id) = self.editing_note.as_ref().map(|edit| edit.node_id.clone()) else {
             return false;
         };
-        let Some(idx) = self.host_document.nodes.iter().position(|n| n.id == node_id) else {
+        let Some(idx) = self.host_snapshot.nodes.iter().position(|n| n.id == node_id) else {
             return false;
         };
-        let DagNodeKind::Note { text, .. } = &self.host_document.nodes[idx].kind else {
+        let DagNodeKind::Note { text, .. } = &self.host_snapshot.nodes[idx].kind else {
             return false;
         };
         let Some(edit) = self.editing_note.as_mut() else {
@@ -5394,10 +5383,10 @@ impl DagHost {
 
     /// 📐️ Recomputes preview and image node sizes after content changes.
     pub fn fit_preview_sizes(&mut self) {
-        for idx in 0..self.host_document.nodes.len() {
-            let kind = &self.host_document.nodes[idx].kind;
+        for idx in 0..self.host_snapshot.nodes.len() {
+            let kind = &self.host_snapshot.nodes[idx].kind;
             if matches!(kind, DagNodeKind::Preview { .. } | DagNodeKind::Image { .. }) {
-                fit_node_size(&mut self.host_document.nodes[idx]);
+                fit_node_size(&mut self.host_snapshot.nodes[idx]);
                 self.sync_fixture_node_size_to_engine(idx);
             }
         }
@@ -5405,9 +5394,9 @@ impl DagHost {
 
     /// 📐️ Recomputes note node sizes after text changes.
     pub fn fit_note_sizes(&mut self) {
-        for idx in 0..self.host_document.nodes.len() {
-            if matches!(self.host_document.nodes[idx].kind, DagNodeKind::Note { .. }) {
-                fit_node_size(&mut self.host_document.nodes[idx]);
+        for idx in 0..self.host_snapshot.nodes.len() {
+            if matches!(self.host_snapshot.nodes[idx].kind, DagNodeKind::Note { .. }) {
+                fit_node_size(&mut self.host_snapshot.nodes[idx]);
                 self.sync_fixture_node_size_to_engine(idx);
             }
         }
@@ -5422,27 +5411,27 @@ impl DagHost {
         };
         match kind {
             WidgetPointerKind::SliderDrag => {
-                let node_id = self.host_document.nodes[idx].id.clone();
+                let node_id = self.host_snapshot.nodes[idx].id.clone();
                 self.widget_drag = Some(idx);
-                if let Some(value) = set_slider_value_from_x(&mut self.host_document.nodes[idx], world_x) {
+                if let Some(value) = set_slider_value_from_x(&mut self.host_snapshot.nodes[idx], world_x) {
                     dag_debug_log(&format!("[DEBUG] dag slider value id={node_id} value={value:.3}"));
                 }
             }
             WidgetPointerKind::SelectClick => {
-                let node_id = self.host_document.nodes[idx].id.clone();
-                if let Some(label) = advance_select_option(&mut self.host_document.nodes[idx]) {
+                let node_id = self.host_snapshot.nodes[idx].id.clone();
+                if let Some(label) = advance_select_option(&mut self.host_snapshot.nodes[idx]) {
                     dag_debug_log(&format!("[DEBUG] dag select option id={node_id} label={label}"));
                 }
             }
             WidgetPointerKind::PreviewToggle(path) => {
-                Self::toggle_preview_tree_path(&mut self.host_document.nodes[idx], &path);
+                Self::toggle_preview_tree_path(&mut self.host_snapshot.nodes[idx], &path);
                 self.sync_fixture_node_size_to_engine(idx);
             }
             WidgetPointerKind::ClusterExplode => {
-                self.pending_cluster_explode = Some(self.host_document.nodes[idx].id.clone());
+                self.pending_cluster_explode = Some(self.host_snapshot.nodes[idx].id.clone());
             }
             WidgetPointerKind::ExportClick => {
-                self.pending_export_click = Some(self.host_document.nodes[idx].id.clone());
+                self.pending_export_click = Some(self.host_snapshot.nodes[idx].id.clone());
             }
         }
         true
@@ -5480,9 +5469,9 @@ impl DagHost {
         if button == 0 && !shift && !ctrl_or_meta && !alt && !pan {
             if let Some((layout, on_viewport)) = self.minimap_widget_pointer_hit(sx, sy) {
                 let (wx, wy) = self.minimap_widget_screen_to_world(&layout, sx, sy);
-                let zoom = self.host_document.camera.zoom;
+                let zoom = self.host_snapshot.camera.zoom;
                 if on_viewport {
-                    let cam = &self.host_document.camera;
+                    let cam = &self.host_snapshot.camera;
                     self.minimap_widget_drag = Some((cam.x - wx, cam.y - wy));
                 } else {
                     self.set_camera(wx, wy, zoom);
@@ -5493,7 +5482,7 @@ impl DagHost {
             }
         }
         if pan {
-            self.pan_anchor = Some((sx, sy, self.host_document.camera.x, self.host_document.camera.y));
+            self.pan_anchor = Some((sx, sy, self.host_snapshot.camera.x, self.host_snapshot.camera.y));
             return;
         }
         self.sync_connection_hit_picking_for_lod();
@@ -5504,11 +5493,11 @@ impl DagHost {
             if let Some(node_id) = self.fixture_draggable_node_hit(world.x, world.y) {
                 if !self.world_hits_handle(world.x, world.y) {
                     if let Some(widget_id) = self.widget_id_for_node_id(node_id) {
-                        if let Some(node) = self.host_document.nodes.iter().find(|entry| entry.id == widget_id) {
+                        if let Some(node) = self.host_snapshot.nodes.iter().find(|entry| entry.id == widget_id) {
                             if let DagNodeKind::AppInstance { instance_id, .. } = &node.kind {
                                 let now = pointer_event_now_ms();
                                 let dist = ((world.x - self.last_pointer_down_world.0).powi(2) + (world.y - self.last_pointer_down_world.1).powi(2)).sqrt();
-                                let zoom = self.host_document.camera.zoom.max(1e-9);
+                                let zoom = self.host_snapshot.camera.zoom.max(1e-9);
                                 if self.last_pointer_down_node_id.as_deref() == Some(widget_id.as_str()) && now - self.last_pointer_down_at_ms < 350.0 && dist < 8.0 / zoom {
                                     self.pending_open_instance_id = Some(instance_id.clone());
                                     return;
@@ -5522,7 +5511,7 @@ impl DagHost {
                 }
             }
         }
-        if let Some(hit) = self.port_insert_hit(world.x, world.y, self.host_document.camera.zoom) {
+        if let Some(hit) = self.port_insert_hit(world.x, world.y, self.host_snapshot.camera.zoom) {
             self.pending_port_insert = Some(hit);
             return;
         }
@@ -5544,7 +5533,7 @@ impl DagHost {
         }
         let merge_from_modifiers = ctrl_or_meta || shift;
         if button == 0 && !merge_from_modifiers && self.lod_uses_bounded_drag() {
-            let pad = DAG_BOUNDED_DRAG_HIT_PAD_PX / self.host_document.camera.zoom.max(1e-9);
+            let pad = DAG_BOUNDED_DRAG_HIT_PAD_PX / self.host_snapshot.camera.zoom.max(1e-9);
             if self.engine.try_begin_selection_union_drag_at(world, pad) {
                 self.process_engine_events();
                 self.sync_camera_from_engine();
@@ -5568,7 +5557,7 @@ impl DagHost {
         if let Some((ox, oy)) = self.minimap_widget_drag {
             if let Some(layout) = self.minimap_widget_layout(self.width, self.height) {
                 let (wx, wy) = self.minimap_widget_screen_to_world(&layout, sx, sy);
-                let zoom = self.host_document.camera.zoom;
+                let zoom = self.host_snapshot.camera.zoom;
                 self.set_camera(wx + ox, wy + oy, zoom);
                 self.last_screen_x = sx;
                 self.last_screen_y = sy;
@@ -5576,7 +5565,7 @@ impl DagHost {
             }
         }
         if let Some((start_sx, start_sy, cam_x, cam_y)) = self.pan_anchor {
-            let zoom = self.host_document.camera.zoom.max(1e-9);
+            let zoom = self.host_snapshot.camera.zoom.max(1e-9);
             let dx = (sx - start_sx) / zoom;
             let dy = (sy - start_sy) / zoom;
             self.set_camera(cam_x - dx, cam_y - dy, zoom);
@@ -5596,8 +5585,8 @@ impl DagHost {
         self.last_screen_y = sy;
         let world = self.screen_to_world_point(sx, sy);
         if let Some(idx) = self.widget_drag {
-            if let Some(value) = set_slider_value_from_x(&mut self.host_document.nodes[idx], world.x) {
-                dag_debug_log(&format!("[DEBUG] dag slider value id={} value={value:.3}", self.host_document.nodes[idx].id));
+            if let Some(value) = set_slider_value_from_x(&mut self.host_snapshot.nodes[idx], world.x) {
+                dag_debug_log(&format!("[DEBUG] dag slider value id={} value={value:.3}", self.host_snapshot.nodes[idx].id));
             }
             return;
         }
@@ -5643,10 +5632,10 @@ impl DagHost {
     pub fn node_overlays_json(&self) -> Result<String, DagError> {
         use canvas::camera::{world_to_screen, Camera as CanvasCamera, Viewport};
         use canvas::Point;
-        let cam = CanvasCamera { x: self.host_document.camera.x, y: self.host_document.camera.y, zoom: self.host_document.camera.zoom };
+        let cam = CanvasCamera { x: self.host_snapshot.camera.x, y: self.host_snapshot.camera.y, zoom: self.host_snapshot.camera.zoom };
         let viewport = Viewport { width: self.width.max(1), height: self.height.max(1), dpr: self.dpr.max(1.0) };
         let mut overlays = Vec::new();
-        for node in &self.host_document.nodes {
+        for node in &self.host_snapshot.nodes {
             let DagNodeKind::Screen { media: Some(media), .. } = &node.kind else {
                 continue;
             };
@@ -5759,7 +5748,7 @@ impl DagHost {
 
     pub fn label_overlay_rows_for_node_spec(&self, node: &DagNodeSpec, ghost: bool) -> Vec<Value> {
         let lod = self.draw_lod_for_frame();
-        let zoom = self.host_document.camera.zoom;
+        let zoom = self.host_snapshot.camera.zoom;
         let lod_index = dag_lod_index(zoom);
         let engine_nid = self.node_id_for_widget_id(&node.id);
         Self::label_overlay_rows_for_node(node, lod, zoom, lod_index, ghost, engine_nid, &self.unresolved_input_ports)
@@ -5895,11 +5884,19 @@ impl DagHost {
         rows
     }
 
-    /// 🎚️ Slider track anchors for the HTML slider overlay.
+    /// 🎚️ Slider track anchors for the HTML slider overlay — the ONE row that carries a knob's value.
+    ///
+    /// 🔢 `value` is published exactly once and the overlay renders it twice: as the control's own
+    /// value (hence `aria-valuenow`) and as the readout beside the track. The readout used to be
+    /// painted on the GPU instead, which made it a second producer that could only move when a frame
+    /// was drawn — a released knob then read `10` to a screen reader and `0.0` on the canvas. The
+    /// readout's typography rides along as `fontScreenPx`/`gapScreenPx` so the DOM lands where the
+    /// paint did without re-deriving the board's own metrics
+    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️slider-reevaluation-correctness-2026-09-15.md`).
     pub fn slider_overlay_state_json(&self) -> Result<String, DagError> {
-        let cam = &self.host_document.camera;
+        let cam = &self.host_snapshot.camera;
         let mut sliders: Vec<Value> = Vec::new();
-        for (idx, fixture_node) in self.host_document.nodes.iter().enumerate() {
+        for (idx, fixture_node) in self.host_snapshot.nodes.iter().enumerate() {
             let node = self.node_spec_for_paint(idx, fixture_node);
             let DagNodeKind::Slider { min, max, step, value, .. } = &node.kind else {
                 continue;
@@ -5916,6 +5913,8 @@ impl DagHost {
                 ("y".to_string(), Value::from((y0 + y1) * 0.5)),
                 ("w".to_string(), Value::from((x1 - x0).max(1.0))),
                 ("h".to_string(), Value::from((y1 - y0).max(1.0))),
+                ("fontScreenPx".to_string(), Value::from(DAG_LABEL_SCREEN_PX * DAG_SLIDER_VALUE_LABEL_RATIO)),
+                ("gapScreenPx".to_string(), Value::from(DAG_LABEL_SCREEN_PX * ui_styling::metrics::label::DAG_LABEL_GAP_RATIO)),
             ]));
         }
         Ok(os_pack::json::to_string(&os_pack::json::object([
@@ -5929,10 +5928,10 @@ impl DagHost {
     /// 🏷️ Camera, draw LOD, and node label anchors for the JS canvas text overlay (must match the last GPU frame).
     pub fn label_overlay_paint_state_json(&self) -> Result<String, DagError> {
         let lod = self.draw_lod_for_frame();
-        let cam = &self.host_document.camera;
+        let cam = &self.host_snapshot.camera;
         let lod_index = dag_lod_index(cam.zoom);
         let mut labels = Vec::new();
-        for (idx, fixture_node) in self.host_document.nodes.iter().enumerate() {
+        for (idx, fixture_node) in self.host_snapshot.nodes.iter().enumerate() {
             let node = self.node_spec_for_paint(idx, fixture_node);
             let engine_nid = self.engine_node_id_for_index(idx);
             labels.extend(Self::label_overlay_rows_for_node(node.as_ref(), lod, cam.zoom, lod_index, false, engine_nid, &self.unresolved_input_ports));
@@ -6384,20 +6383,17 @@ impl DagHost {
                         }
                     }
                 }
-                DagNodeKind::Slider { value, .. } => {
+                DagNodeKind::Slider { .. } => {
                     if let Some(label) = label_text.filter(|_| lod.shows_controls() && !caption_on_overlay) {
                         Self::paint_slider_name(scene, cam, viewport, node, label, paint_px, label_fill, label_halo);
                     }
-                    // 🎚️ Track + knob live on the HTML `GraphSliderOverlays` control — painting them here
-                    // doubles a pixelated GPU ghost above the crisp DOM slider. Only the left value readout
-                    // stays on the GPU so the overlay can stay track-bounds-aligned (`showValue={false}`).
-                    if lod.shows_controls() {
-                        let value_text = format!("{value:.1}");
-                        let value_px = paint_px * 0.9;
-                        let (vx, vy) = slider_value_world_center(node, &value_text, value_px, cam.zoom);
-                        let value_pos = world_to_screen(cam, viewport, Point::new(vx, vy));
-                        append_label(scene, &value_text, value_pos, value_px, label_fill, label_halo);
-                    }
+                    // 🎚️ Track, knob AND value readout live on the HTML `GraphSliderOverlays` control,
+                    // which renders all three off ONE published row (`slider_overlay_state_json`). A
+                    // readout painted here was a SECOND producer of the same number: it could only
+                    // change when a GPU frame was drawn, while `aria-valuenow` moved with the DOM
+                    // control, so a released knob read `10` to a screen reader and `0.0` on the canvas
+                    // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
+                    // `📓️slider-reevaluation-correctness-2026-09-15.md`).
                 }
                 DagNodeKind::Select { options, selected, .. } => {
                     if lod.shows_controls() {
@@ -6538,7 +6534,7 @@ impl DagHost {
 
         let theme = &self.canvas_theme;
         self.tick_computing_animation();
-        let cam = CanvasCamera { x: self.host_document.camera.x, y: self.host_document.camera.y, zoom: self.host_document.camera.zoom };
+        let cam = CanvasCamera { x: self.host_snapshot.camera.x, y: self.host_snapshot.camera.y, zoom: self.host_snapshot.camera.zoom };
         let viewport = Viewport { width: viewport_w.max(1), height: viewport_h.max(1), dpr: dpr.max(1.0) };
         let aff = camera_content_affine(&cam, &viewport);
         let lod = self.draw_lod_for_frame();
@@ -6623,7 +6619,7 @@ impl DagHost {
             }
         };
         if lod == DagDrawLod::Minimap {
-            for (idx, fixture_node) in self.host_document.nodes.iter().enumerate() {
+            for (idx, fixture_node) in self.host_snapshot.nodes.iter().enumerate() {
                 let engine_nid = self.engine_node_id_for_index(idx);
                 let chrome = engine_nid.is_some_and(|nid| {
                     let (selected, highlighted, hovered) = self.node_interaction_chrome(nid);
@@ -6633,7 +6629,7 @@ impl DagHost {
                     paint_minimap_node(scene, idx, fixture_node);
                 }
             }
-            for (idx, fixture_node) in self.host_document.nodes.iter().enumerate() {
+            for (idx, fixture_node) in self.host_snapshot.nodes.iter().enumerate() {
                 let engine_nid = self.engine_node_id_for_index(idx);
                 let chrome = engine_nid.is_some_and(|nid| {
                     let (selected, highlighted, hovered) = self.node_interaction_chrome(nid);
@@ -6644,7 +6640,7 @@ impl DagHost {
                 }
             }
         } else {
-            for (idx, fixture_node) in self.host_document.nodes.iter().enumerate() {
+            for (idx, fixture_node) in self.host_snapshot.nodes.iter().enumerate() {
                 let node = self.node_spec_for_paint(idx, fixture_node);
                 let node = node.as_ref();
                 let engine_nid = self.engine_node_id_for_index(idx);
@@ -6703,16 +6699,16 @@ mod wasm_session {
             Self { state: Rc::new(RefCell::new(DagSessionInner { host: DagHost::default_demo(), gpu: canvas::gpu_session::CanvasGpuSession::default(), width: 1, height: 1, dpr: 1.0 })) }
         }
 
-        #[wasm_bindgen(js_name = loadFixtureJson)]
-        pub fn load_fixture_json(&self, json: &str) -> Result<(), JsValue> {
-            let host = DagHost::load_fixture_json(json).map_err(|e| JsValue::from_str(&e.to_string()))?;
+        #[wasm_bindgen(js_name = loadHostSnapshotJson)]
+        pub fn load_host_snapshot_json(&self, json: &str) -> Result<(), JsValue> {
+            let host = DagHost::load_host_snapshot_json(json).map_err(|e| JsValue::from_str(&e.to_string()))?;
             self.state.borrow_mut().host = host;
             Ok(())
         }
 
-        #[wasm_bindgen(js_name = fixtureJson)]
-        pub fn fixture_json(&self) -> Result<String, JsValue> {
-            self.state.borrow().host.host_document_json().map_err(|e| JsValue::from_str(&e.to_string()))
+        #[wasm_bindgen(js_name = hostSnapshotJson)]
+        pub fn host_snapshot_json(&self) -> Result<String, JsValue> {
+            self.state.borrow().host.host_snapshot_json().map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = nodeOverlaysJson)]

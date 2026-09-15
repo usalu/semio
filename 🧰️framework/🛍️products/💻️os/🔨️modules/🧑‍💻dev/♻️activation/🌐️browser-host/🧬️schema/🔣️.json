@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/os/dev/activation/browser-host/component.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/os/dev/activation/browser-host/component.json",
   "title": "Test Browser Host Staging Contracts",
   "$defs": {
     "Sha256Digest": {

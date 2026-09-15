@@ -1,5 +1,5 @@
 {
-  "document": { "fixture": { "nodes": [], "connections": [] }, "generations": [] },
+  "document": { "hostSnapshot": { "nodes": [], "connections": [] }, "generations": [] },
   "appConfig": { "showMode": "geometry", "selectedGenerationId": null },
   "windowInstances": [
     { "id": "main-left", "windowKindId": "generation2d-main" },

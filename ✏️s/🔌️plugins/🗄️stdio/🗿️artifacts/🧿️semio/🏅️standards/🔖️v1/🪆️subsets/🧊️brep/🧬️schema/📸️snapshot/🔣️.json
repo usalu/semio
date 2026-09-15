@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/semio/v1/brep/snapshot.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/brep/snapshot.json",
   "title": "SemioBrepSnapshot",
   "description": "id-keyed b-rep topology graph — see the sibling 🦀️.rs for the real source of truth.",
   "type": "object",
@@ -66,10 +66,10 @@
               "const": "line"
             },
             "origin": {
-              "$ref": "https://semio.tech/schema/s/stdio/semio/v1/brep/inference.json#/$defs/semioPoint3"
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/brep/inference.json#/$defs/semioPoint3"
             },
             "direction": {
-              "$ref": "https://semio.tech/schema/s/stdio/semio/v1/brep/inference.json#/$defs/semioPoint3"
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/brep/inference.json#/$defs/semioPoint3"
             }
           },
           "required": [
@@ -85,10 +85,10 @@
               "const": "circle"
             },
             "center": {
-              "$ref": "https://semio.tech/schema/s/stdio/semio/v1/brep/inference.json#/$defs/semioPoint3"
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/brep/inference.json#/$defs/semioPoint3"
             },
             "axis": {
-              "$ref": "https://semio.tech/schema/s/stdio/semio/v1/brep/inference.json#/$defs/semioPoint3"
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/brep/inference.json#/$defs/semioPoint3"
             },
             "radius": {
               "type": "number"
@@ -108,10 +108,10 @@
               "const": "ellipse"
             },
             "center": {
-              "$ref": "https://semio.tech/schema/s/stdio/semio/v1/brep/inference.json#/$defs/semioPoint3"
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/brep/inference.json#/$defs/semioPoint3"
             },
             "axis": {
-              "$ref": "https://semio.tech/schema/s/stdio/semio/v1/brep/inference.json#/$defs/semioPoint3"
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/brep/inference.json#/$defs/semioPoint3"
             },
             "radiusMajor": {
               "type": "number"
@@ -137,7 +137,7 @@
             "controlPoints": {
               "type": "array",
               "items": {
-                "$ref": "https://semio.tech/schema/s/stdio/semio/v1/brep/inference.json#/$defs/semioPoint3"
+                "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/brep/inference.json#/$defs/semioPoint3"
               }
             },
             "weights": {
@@ -440,10 +440,10 @@
               "const": "plane"
             },
             "origin": {
-              "$ref": "https://semio.tech/schema/s/stdio/semio/v1/brep/inference.json#/$defs/semioPoint3"
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/brep/inference.json#/$defs/semioPoint3"
             },
             "normal": {
-              "$ref": "https://semio.tech/schema/s/stdio/semio/v1/brep/inference.json#/$defs/semioPoint3"
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/brep/inference.json#/$defs/semioPoint3"
             }
           },
           "required": [
@@ -459,10 +459,10 @@
               "const": "cylinder"
             },
             "origin": {
-              "$ref": "https://semio.tech/schema/s/stdio/semio/v1/brep/inference.json#/$defs/semioPoint3"
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/brep/inference.json#/$defs/semioPoint3"
             },
             "axis": {
-              "$ref": "https://semio.tech/schema/s/stdio/semio/v1/brep/inference.json#/$defs/semioPoint3"
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/brep/inference.json#/$defs/semioPoint3"
             },
             "radius": {
               "type": "number"
@@ -482,10 +482,10 @@
               "const": "cone"
             },
             "origin": {
-              "$ref": "https://semio.tech/schema/s/stdio/semio/v1/brep/inference.json#/$defs/semioPoint3"
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/brep/inference.json#/$defs/semioPoint3"
             },
             "axis": {
-              "$ref": "https://semio.tech/schema/s/stdio/semio/v1/brep/inference.json#/$defs/semioPoint3"
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/brep/inference.json#/$defs/semioPoint3"
             },
             "radius": {
               "type": "number"
@@ -509,7 +509,7 @@
               "const": "sphere"
             },
             "center": {
-              "$ref": "https://semio.tech/schema/s/stdio/semio/v1/brep/inference.json#/$defs/semioPoint3"
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/brep/inference.json#/$defs/semioPoint3"
             },
             "radius": {
               "type": "number"
@@ -528,10 +528,10 @@
               "const": "torus"
             },
             "center": {
-              "$ref": "https://semio.tech/schema/s/stdio/semio/v1/brep/inference.json#/$defs/semioPoint3"
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/brep/inference.json#/$defs/semioPoint3"
             },
             "axis": {
-              "$ref": "https://semio.tech/schema/s/stdio/semio/v1/brep/inference.json#/$defs/semioPoint3"
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/brep/inference.json#/$defs/semioPoint3"
             },
             "majorRadius": {
               "type": "number"
@@ -557,7 +557,7 @@
             "controlPoints": {
               "type": "array",
               "items": {
-                "$ref": "https://semio.tech/schema/s/stdio/semio/v1/brep/inference.json#/$defs/semioPoint3"
+                "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/brep/inference.json#/$defs/semioPoint3"
               }
             },
             "weights": {
@@ -612,7 +612,7 @@
           "type": "string"
         },
         "point": {
-          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/brep/inference.json#/$defs/semioPoint3"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/brep/inference.json#/$defs/semioPoint3"
         },
         "tol": {
           "type": "number",

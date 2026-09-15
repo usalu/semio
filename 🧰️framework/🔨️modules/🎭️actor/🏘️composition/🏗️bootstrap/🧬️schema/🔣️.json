@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/framework/actor/composition/bootstrap/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/actor/composition/bootstrap/schema.json",
   "title": "Actor Composition Bootstrap Schema Module",
   "$defs": {
     "Bootstrap": {
@@ -38,7 +38,7 @@
           }
         },
         "capacity": {
-          "$ref": "https://semio.tech/schema/framework/value/resident/schema.json#/$defs/Resident"
+          "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/resident/schema.json#/$defs/Resident"
         },
         "shared": {
           "const": {

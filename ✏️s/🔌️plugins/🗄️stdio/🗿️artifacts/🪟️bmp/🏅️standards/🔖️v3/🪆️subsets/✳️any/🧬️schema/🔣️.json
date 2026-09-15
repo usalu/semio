@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/bmp/v3/any/artifact.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/bmp/v3/any/artifact.json",
   "title": "BmpArtifact",
   "type": "object",
   "additionalProperties": false,
@@ -42,7 +42,7 @@
       "x-semio-state": "artifact"
     },
     "rowOrder": {
-      "$ref": "https://semio.tech/schema/s/stdio/bmp/v3/any/snapshot.json#/$defs/BmpRowOrder",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/bmp/v3/any/snapshot.json#/$defs/BmpRowOrder",
       "x-semio-state": "artifact"
     },
     "planes": {
@@ -87,7 +87,7 @@
       "type": "array",
       "x-semio-state": "artifact",
       "items": {
-        "$ref": "https://semio.tech/schema/s/stdio/bmp/v3/any/snapshot.json#/$defs/BmpPaletteEntry"
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/bmp/v3/any/snapshot.json#/$defs/BmpPaletteEntry"
       }
     },
     "pixels": {

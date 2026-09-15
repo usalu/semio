@@ -1,5 +1,5 @@
 {
-  "$id": "https://semio.tech/schema/s/dag/dag/snapshot/text.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/dag/dag/snapshot/text.json",
   "title": "DagSnapshotText",
   "type": "object"
 }

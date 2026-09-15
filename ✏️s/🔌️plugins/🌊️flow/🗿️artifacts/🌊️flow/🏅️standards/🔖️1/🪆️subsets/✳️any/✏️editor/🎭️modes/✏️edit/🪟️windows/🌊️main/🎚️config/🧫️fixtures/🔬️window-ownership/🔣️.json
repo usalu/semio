@@ -1,7 +1,7 @@
 {
   "schema": "semio.flow.window-ownership/v1",
   "document": {
-    "schema": "flow.hostDocument",
+    "schema": "flow.hostSnapshot",
     "content": {
       "childId": "flow-content-sha256-fixture",
       "target": {

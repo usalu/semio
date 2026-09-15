@@ -1,6 +1,6 @@
 {
-  "fixture": {
-    "schema": "flow.hostDocument.solid",
+  "hostSnapshot": {
+    "schema": "flow.hostSnapshot.solid",
     "camera": {
       "x": 0.0,
       "y": 0.0,

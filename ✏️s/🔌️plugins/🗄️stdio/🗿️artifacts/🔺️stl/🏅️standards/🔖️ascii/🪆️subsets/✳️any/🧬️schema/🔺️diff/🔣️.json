@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/stl/ascii/any/diff.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/stl/ascii/any/diff.json",
   "title": "StlDiff",
   "$defs": {
     "StlTriangleDiff": {
@@ -55,7 +55,7 @@
           "type": "integer"
         },
         "triangle": {
-          "$ref": "https://semio.tech/schema/s/stdio/stl/ascii/any/artifact.json#/$defs/StlTriangle"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/stl/ascii/any/artifact.json#/$defs/StlTriangle"
         }
       }
     },

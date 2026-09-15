@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/repo/test/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/repo/test/schema.json",
   "title": "Semio Repository Test Protocol v2",
   "description": "🧬️ Schema-first contract shared by the test coordinator, every native host and every external probe. v2 makes the unit of coverage `artifact × standard × smallest owning subset × runtime mutation × expected outcome class × fixture × subject implementation × platform`, replaces the single-projection result with a multi-artifact bundle, and requires a QUALIFYING third-party oracle for every mutation. Ticket 26/08/27/SUBSET-SCOPED-EXTERNAL-ORACLE-MUTATION-TESTING, baseline a8d1caf41f68204e73ff5e47ce40c5f543ed442d.",
   "x-semio": {
@@ -2379,7 +2379,7 @@
     "SchemaScopeId": {
       "type": "string",
       "pattern": "^[a-z0-9]+(?:[.-][a-z0-9]+)*$",
-      "description": "🏛️ The dotted id of an eligible scope owner, derived from its module `$id` path after `https://semio.tech/schema/`. Never derived by stripping emoji from a directory path."
+      "description": "🏛️ The dotted id of an eligible scope owner, derived from its module `$id` path after `https://json.schemas.assets.semio-tech.com/`. Never derived by stripping emoji from a directory path."
     },
     "SchemaExportId": {
       "type": "string",

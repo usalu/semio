@@ -4,7 +4,7 @@ use super::pilot_resolve;
 use crate::os_dsl::{parse_grammar, Recognizer, SemioDialect};
 use crate::os_store::semio_format::split_text_preamble;
 
-pub(super) async fn dsl_body_from_host_document(text: &str) -> String {
+pub(super) async fn dsl_body_from_host_snapshot(text: &str) -> String {
     if text.trim_start().starts_with("semio ") {
         split_text_preamble(text).map_or_else(|_| text.to_string(), |(env, body)| format!("{}\n{body}", env.envelope_id()))
     } else {
@@ -19,7 +19,7 @@ async fn check_grammar_recognizes(grammar_semio: &str, fixture_semio: &str) -> R
         return Err("expected grammar dialect".to_string());
     }
     let recognizer = Recognizer::compile(&grammar);
-    let body = dsl_body_from_host_document(fixture_semio);
+    let body = dsl_body_from_host_snapshot(fixture_semio);
     let ok = recognizer.recognize(&body.await).map_err(|error| format!("recognize failed: {error:?}"))?;
     if !ok {
         return Err("grammar did not recognize shipped fixture DSL body".to_string());

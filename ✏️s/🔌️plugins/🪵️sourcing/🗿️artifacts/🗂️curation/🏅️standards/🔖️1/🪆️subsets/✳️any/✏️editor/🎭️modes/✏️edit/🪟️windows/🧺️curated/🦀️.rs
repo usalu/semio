@@ -2,8 +2,8 @@
 
 use crate::CurationSnapshot;
 use crate::editor::sourcing::terminology::SourcingLabels;
-use semio_framework_plugin::app::{TableView, TableWindowKit, WindowKit};
-use semio_framework_plugin::{BuiltNode, LocalizedLabel, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions};
+use crate::editor::sourcing::{sourcing_table, sourcing_table_action, sourcing_table_row};
+use semio_framework_plugin::{BuiltNode, LocalizedLabel, SurfaceKind, TableCell, UiAssemblyResult, UiTreeActionPlacement, UiTreeItemAction, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants
 pub const SOURCING_CURATION_WINDOW_CURATED: &str = "sourcing-curated";
@@ -32,24 +32,29 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-fn view_model(document: &CurationSnapshot, labels: &SourcingLabels) -> TableView {
+const SOURCING_CURATION_SURFACE_CURATED: &str = "sourcing.curated.table";
+
+pub fn render(document: &CurationSnapshot, labels: &SourcingLabels) -> UiAssemblyResult<BuiltNode> {
     let stock = crate::stock_of(document);
+    let columns = [("name", labels.col_name.as_str(), false), ("availability", labels.col_availability.as_str(), false), ("count", labels.col_count.as_str(), false), ("actions", "", false)];
     let rows = document
         .curated
         .iter()
         .filter_map(|item| {
             let kind = stock.iter().find(|kind| kind.id == item.object_id)?;
-            Some(vec![kind.name.clone(), kind.availability.to_string(), item.count.to_string()])
+            let remove = UiTreeItemAction { icon_id: "trash-2".into(), label: Some(labels.remove.into()), action: sourcing_table_action("curationRemove", Some(&kind.id)), placement: Some(UiTreeActionPlacement::Row) };
+            Some(sourcing_table_row(
+                &kind.id,
+                vec![
+                    ("name", TableCell::Text { value: kind.name.clone() }),
+                    ("availability", TableCell::Number { value: kind.availability as f64 }),
+                    ("count", TableCell::Stepper { value: item.count as f64, min: 0.0, max: kind.availability as f64, step: 1.0, action: sourcing_table_action("curationSetCount", Some(&kind.id)) }),
+                    ("actions", TableCell::Buttons { buttons: vec![remove] }),
+                ],
+            ))
         })
         .collect();
-    TableView {
-        columns: vec![labels.col_name.as_str().to_owned(), labels.col_availability.as_str().to_owned(), labels.col_count.as_str().to_owned()],
-        rows,
-    }
-}
-
-pub fn render(document: &CurationSnapshot, labels: &SourcingLabels) -> UiAssemblyResult<BuiltNode> {
-    TableWindowKit::render(&view_model(document, labels))
+    sourcing_table(SOURCING_CURATION_SURFACE_CURATED, &columns, rows, "dropOnCurated", None)
 }
 //#endregion 🔖️Render
 

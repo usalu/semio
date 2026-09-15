@@ -157,7 +157,7 @@ bun x tsc --noEmit -p …/🎯️targets/⚛️react/tsconfig.json
 **Pre-existing failures NOT from this lane** — the full actor-package run reports 12 failures in
 `🚪️lifetime/🟦️.ts`, `🚪️lifetime/🩹️patch/🟦️.ts`, `📤️return/🟦️.ts`, `📤️return/📨️response/🟦️.ts` and
 `🪪️activation/🚪️instance/📥️output/🟦️.ts`, all of the form
-`can't resolve reference https://semio.tech/schema/framework/value/schema.json#/$defs/NonZeroU64` — a peer
+`can't resolve reference https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/NonZeroU64` — a peer
 lane's schema `$ref` churn. None of those files is touched here and the shard-client file passes clean.
 
 ## 5 Reproduction harness

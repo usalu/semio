@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/obj/3.0/geometry/diff.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/obj/3.0/geometry/diff.json",
   "title": "ObjDiff",
   "type": "object",
   "additionalProperties": false,
@@ -33,19 +33,19 @@
     "usemtl": {
       "type": "array",
       "items": {
-        "$ref": "https://semio.tech/schema/s/stdio/obj/3.0/geometry/artifact.json#/$defs/ObjUsemtlRange"
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/obj/3.0/geometry/artifact.json#/$defs/ObjUsemtlRange"
       }
     },
     "smoothingGroups": {
       "type": "array",
       "items": {
-        "$ref": "https://semio.tech/schema/s/stdio/obj/3.0/geometry/artifact.json#/$defs/ObjSmoothingRange"
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/obj/3.0/geometry/artifact.json#/$defs/ObjSmoothingRange"
       }
     },
     "unknownStatements": {
       "type": "array",
       "items": {
-        "$ref": "https://semio.tech/schema/s/stdio/obj/3.0/geometry/artifact.json#/$defs/ObjUnknownStatement"
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/obj/3.0/geometry/artifact.json#/$defs/ObjUnknownStatement"
       }
     }
   },
@@ -279,7 +279,7 @@
         "vertices": {
           "type": "array",
           "items": {
-            "$ref": "https://semio.tech/schema/s/stdio/obj/3.0/geometry/artifact.json#/$defs/ObjFaceVertex"
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/obj/3.0/geometry/artifact.json#/$defs/ObjFaceVertex"
           }
         }
       }

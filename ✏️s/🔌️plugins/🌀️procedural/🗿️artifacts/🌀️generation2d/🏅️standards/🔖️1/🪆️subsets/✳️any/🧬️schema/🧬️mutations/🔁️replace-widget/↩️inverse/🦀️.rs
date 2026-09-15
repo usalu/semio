@@ -6,8 +6,8 @@ use crate::{widget_id, Generation2dSnapshot};
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &ReplaceWidget, base: &Generation2dSnapshot) -> Vec<Generation2dMutation> {
-    match widget_index(&base.host_document, widget_id(&payload.widget)) {
-        Some(index) => vec![replace_widget(base.host_document.widgets[index].clone())],
+    match widget_index(&base.host_snapshot, widget_id(&payload.widget)) {
+        Some(index) => vec![replace_widget(base.host_snapshot.widgets[index].clone())],
         None => Vec::new(),
     }
 }

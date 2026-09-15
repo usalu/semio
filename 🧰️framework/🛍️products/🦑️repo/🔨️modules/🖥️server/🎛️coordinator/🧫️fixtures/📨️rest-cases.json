@@ -1,5 +1,5 @@
 {
-  "schema": "https://semio.tech/schema/repo/server/coordinator/schema.json",
+  "schema": "https://json.schemas.assets.semio-tech.com/repo/server/coordinator/schema.json",
   "accepted": [
     {
       "export": "TicketOpenRequest",

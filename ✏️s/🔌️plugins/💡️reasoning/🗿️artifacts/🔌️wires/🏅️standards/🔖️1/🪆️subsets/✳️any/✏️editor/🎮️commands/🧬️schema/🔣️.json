@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/reasoning/wires/editor/commands/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/reasoning/wires/editor/commands/schema.json",
   "title": "Wires Editor Commands",
   "$defs": {
     "WiresRetainedCommandRoutes": {
@@ -27,7 +27,7 @@
         "routes": {
           "allOf": [
             {
-              "$ref": "https://semio.tech/schema/os/plugin/retained-command/component.json#/$defs/RetainedCommandRoutes"
+              "$ref": "https://json.schemas.assets.semio-tech.com/os/plugin/retained-command/component.json#/$defs/RetainedCommandRoutes"
             },
             {
               "type": "array",

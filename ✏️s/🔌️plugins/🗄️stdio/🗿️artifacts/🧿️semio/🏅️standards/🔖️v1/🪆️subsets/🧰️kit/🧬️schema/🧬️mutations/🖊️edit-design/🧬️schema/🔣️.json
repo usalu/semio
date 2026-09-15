@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/semio/v1/kit/mutation/edit-design/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/kit/mutation/edit-design/schema.json",
   "title": "EditDesign",
   "type": "object",
   "additionalProperties": false,
@@ -9,11 +9,11 @@
     "id": { "type": "string" },
     "pieces": {
       "type": "array",
-      "items": { "$ref": "https://semio.tech/schema/s/stdio/semio/v1/kit/snapshot.json#/$defs/SemioKitPiece" }
+      "items": { "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/kit/snapshot.json#/$defs/SemioKitPiece" }
     },
     "connections": {
       "type": "array",
-      "items": { "$ref": "https://semio.tech/schema/s/stdio/semio/v1/kit/snapshot.json#/$defs/SemioKitConnection" }
+      "items": { "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/kit/snapshot.json#/$defs/SemioKitConnection" }
     }
   }
 }

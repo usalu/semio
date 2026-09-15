@@ -2,7 +2,7 @@
 
 Owner module: `🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧬️schema/`
 Scope id: `hub.artifact-authority.trusted-catalog`
-Module `$id`: `https://semio.tech/schema/hub/artifact-authority/trusted-catalog/schema.json`
+Module `$id`: `https://json.schemas.assets.semio-tech.com/hub/artifact-authority/trusted-catalog/schema.json`
 Dialect: `http://json-schema.org/draft-07/schema#` (no `prefixItems`, no `unevaluated*`, no 2020-12 `$schema`)
 Root: `$ref: #/$defs/TrustedBundleV1`
 
@@ -171,7 +171,7 @@ bundle schema + the os.directory `addSchema`.
 
 ```
 $ cd /Users/ueli/Documents/semio && bun <scratchpad>/verify.mjs
-module https://semio.tech/schema/hub/artifact-authority/trusted-catalog/schema.json
+module https://json.schemas.assets.semio-tech.com/hub/artifact-authority/trusted-catalog/schema.json
 dialect http://json-schema.org/draft-07/schema#
 exports(17) TrustedCatalogRelativePathV1 TrustedBundleIdentityV1 TrustedBundleCodecV1 TrustedBundleParentDialectV1 TrustedBundleGrantV1 TrustedBundleOpenTargetV1 TrustedBundleFileV1 TrustedBundleComponentV1 TrustedBundleExecutionProtocolV1 TrustedBundleBrowserActorV1 TrustedBundlePackageV1 TrustedBundleProfileOpenTargetV1 TrustedBundleProfileV1 TrustedBundleV1 TrustedCatalogCurrentPointerV1 TrustedCatalogPublicationCommandV1 TrustedCatalogPublicationReceiptV1
 private-helpers(6) identity digest nonzeroDigest requestId relativePath publicationRevision

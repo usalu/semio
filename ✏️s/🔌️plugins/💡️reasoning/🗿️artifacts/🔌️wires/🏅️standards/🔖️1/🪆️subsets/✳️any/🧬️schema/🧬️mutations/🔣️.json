@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/reasoning/wires/mutations.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/reasoning/wires/mutations.json",
   "title": "WiresMutation",
   "oneOf": [
     {
@@ -15,7 +15,7 @@
           "const": "disconnectNodes"
         },
         "edgeId": {
-          "$ref": "https://semio.tech/schema/s/reasoning/wires/mutation/disconnect-nodes/schema.json#/properties/edgeId"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/reasoning/wires/mutation/disconnect-nodes/schema.json#/properties/edgeId"
         }
       }
     },
@@ -32,10 +32,10 @@
           "const": "editNodeText"
         },
         "nodeId": {
-          "$ref": "https://semio.tech/schema/s/reasoning/wires/mutation/edit-node-text/schema.json#/properties/nodeId"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/reasoning/wires/mutation/edit-node-text/schema.json#/properties/nodeId"
         },
         "newText": {
-          "$ref": "https://semio.tech/schema/s/reasoning/wires/mutation/edit-node-text/schema.json#/properties/newText"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/reasoning/wires/mutation/edit-node-text/schema.json#/properties/newText"
         }
       }
     },
@@ -51,7 +51,7 @@
           "const": "createNode"
         },
         "node": {
-          "$ref": "https://semio.tech/schema/s/reasoning/wires/mutation/create-node/schema.json#/properties/node"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/reasoning/wires/mutation/create-node/schema.json#/properties/node"
         }
       }
     },
@@ -68,10 +68,10 @@
           "const": "changeNodeKind"
         },
         "nodeId": {
-          "$ref": "https://semio.tech/schema/s/reasoning/wires/mutation/change-node-kind/schema.json#/properties/nodeId"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/reasoning/wires/mutation/change-node-kind/schema.json#/properties/nodeId"
         },
         "newNodeKind": {
-          "$ref": "https://semio.tech/schema/s/reasoning/wires/mutation/change-node-kind/schema.json#/properties/newNodeKind"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/reasoning/wires/mutation/change-node-kind/schema.json#/properties/newNodeKind"
         }
       }
     },
@@ -87,16 +87,16 @@
           "const": "resizeNode"
         },
         "nodeId": {
-          "$ref": "https://semio.tech/schema/s/reasoning/wires/mutation/resize-node/schema.json#/properties/nodeId"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/reasoning/wires/mutation/resize-node/schema.json#/properties/nodeId"
         },
         "newRadius": {
-          "$ref": "https://semio.tech/schema/s/reasoning/wires/mutation/resize-node/schema.json#/properties/newRadius"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/reasoning/wires/mutation/resize-node/schema.json#/properties/newRadius"
         },
         "newWidth": {
-          "$ref": "https://semio.tech/schema/s/reasoning/wires/mutation/resize-node/schema.json#/properties/newWidth"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/reasoning/wires/mutation/resize-node/schema.json#/properties/newWidth"
         },
         "newHeight": {
-          "$ref": "https://semio.tech/schema/s/reasoning/wires/mutation/resize-node/schema.json#/properties/newHeight"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/reasoning/wires/mutation/resize-node/schema.json#/properties/newHeight"
         }
       }
     },
@@ -113,10 +113,10 @@
           "const": "changeNodeShape"
         },
         "nodeId": {
-          "$ref": "https://semio.tech/schema/s/reasoning/wires/mutation/change-node-shape/schema.json#/properties/nodeId"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/reasoning/wires/mutation/change-node-shape/schema.json#/properties/nodeId"
         },
         "newShape": {
-          "$ref": "https://semio.tech/schema/s/reasoning/wires/mutation/change-node-shape/schema.json#/properties/newShape"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/reasoning/wires/mutation/change-node-shape/schema.json#/properties/newShape"
         }
       }
     },
@@ -132,7 +132,7 @@
           "const": "deleteNode"
         },
         "nodeId": {
-          "$ref": "https://semio.tech/schema/s/reasoning/wires/mutation/delete-node/schema.json#/properties/nodeId"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/reasoning/wires/mutation/delete-node/schema.json#/properties/nodeId"
         }
       }
     },
@@ -149,10 +149,10 @@
           "const": "setNodeRoot"
         },
         "nodeId": {
-          "$ref": "https://semio.tech/schema/s/reasoning/wires/mutation/set-node-root/schema.json#/properties/nodeId"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/reasoning/wires/mutation/set-node-root/schema.json#/properties/nodeId"
         },
         "newRoot": {
-          "$ref": "https://semio.tech/schema/s/reasoning/wires/mutation/set-node-root/schema.json#/properties/newRoot"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/reasoning/wires/mutation/set-node-root/schema.json#/properties/newRoot"
         }
       }
     },
@@ -169,10 +169,10 @@
           "const": "connectNodes"
         },
         "edge": {
-          "$ref": "https://semio.tech/schema/s/reasoning/wires/mutation/connect-nodes/schema.json#/properties/edge"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/reasoning/wires/mutation/connect-nodes/schema.json#/properties/edge"
         },
         "relationship": {
-          "$ref": "https://semio.tech/schema/s/reasoning/wires/mutation/connect-nodes/schema.json#/properties/relationship"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/reasoning/wires/mutation/connect-nodes/schema.json#/properties/relationship"
         }
       }
     },
@@ -190,13 +190,13 @@
           "const": "moveNode"
         },
         "nodeId": {
-          "$ref": "https://semio.tech/schema/s/reasoning/wires/mutation/move-node/schema.json#/properties/nodeId"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/reasoning/wires/mutation/move-node/schema.json#/properties/nodeId"
         },
         "newX": {
-          "$ref": "https://semio.tech/schema/s/reasoning/wires/mutation/move-node/schema.json#/properties/newX"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/reasoning/wires/mutation/move-node/schema.json#/properties/newX"
         },
         "newY": {
-          "$ref": "https://semio.tech/schema/s/reasoning/wires/mutation/move-node/schema.json#/properties/newY"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/reasoning/wires/mutation/move-node/schema.json#/properties/newY"
         }
       }
     }

@@ -10738,7 +10738,7 @@ pub mod app {
     /// app's concrete `Snapshot`/`Mutation`/`Config`/`ConfigMutation` (the same way
     /// `flow_protocol`/`dag_protocol`/... payload handlers are today), never generically; a generic
     /// `dispatch<P,O,C,CO>` body calling a concrete-typed `$module::handle` fails to unify (`P` is not
-    /// literally `FlowHostDocument`, even though there is only ever one real instantiation). Naming the four
+    /// literally `FlowHostSnapshot`, even though there is only ever one real instantiation). Naming the four
     /// types once, at the `app_commands!` invocation, costs one extra clause per app but produces a
     /// `dispatch` whose signature matches `ArtifactApp::handle` exactly — so an app's whole `handle` impl
     /// collapses to one line, `command.dispatch(doc, cfg)`. A per-command closure/trait-object API (the
@@ -18042,7 +18042,7 @@ pub mod app {
                 return;
             }
             app.advance_typed_operation_publication().await.expect("one host continuation unit");
-            if let Some(page) = app.take_typed_operation_result_page(receiver) {
+            while let Some(page) = app.take_typed_operation_result_page(receiver) {
                 assert!(app.acknowledge_typed_operation_result(page.token).expect("presented result page accepts its exact token"));
             }
             while app.take_typed_operation_effect().is_some() {}
@@ -18073,7 +18073,7 @@ pub mod app {
                 app.acknowledge_typed_operation_result(token).expect("a presented result page accepts its exact token");
             }
             app.advance_typed_operation_publication().await.expect("one host continuation unit");
-            if let Some(page) = app.take_typed_operation_result_page(receiver) {
+            while let Some(page) = app.take_typed_operation_result_page(receiver) {
                 if matches!(page.lane, TypedOperationResultLane::Terminal | TypedOperationResultLane::Fault) {
                     terminal = Some((page.lane, String::from_utf8_lossy(page.bytes()).into_owned()));
                 }
@@ -20182,6 +20182,16 @@ pub mod app {
         #[cfg(feature = "artifact-app-testing")]
         pub fn tool_run_ledger(&self) -> &ToolRunLedger<A> {
             &self.tool_runs
+        }
+
+        /// 🪪️ A command's whole-document replacement names this store's identity, not whatever the app
+        /// minted: see [`store::stamp_document_spr_identity`].
+        fn stamp_load_document_identity(&self, effect: Effect) -> Result<Effect, Fault> {
+            let Effect::LoadDocument { pack, spr } = effect else { return Ok(effect) };
+            let envelope = self.store.envelope();
+            let identity = ArtifactRef { artifact_id: envelope.id.clone(), dialect: A::DIALECT.into() };
+            let spr = resolve_ready(store::stamp_document_spr_identity(&spr, &identity.artifact_id, A::DOCUMENT_SCHEMA, &identity.dialect, envelope.owner.as_ref())).map_err(|error| plugin_sdk_fault(format!("load-document identity stamp failed: {error}")))?;
+            Ok(Effect::LoadDocument { pack, spr })
         }
     }
 
@@ -25739,6 +25749,7 @@ pub mod app {
                     } else {
                         Self::mint_extension_invocations(mounted.meta.instance_id, emit)?;
                         if let Some(effect) = emit.effects.pop() {
+                        let effect = self.stamp_load_document_identity(effect)?;
                         if let Err(effect) = self.typed_effect_outbox.push(effect) {
                             emit.effects.push(effect);
                             return Err(plugin_sdk_fault("typed-operation effect receiver is saturated"));
@@ -29121,9 +29132,25 @@ pub mod app {
             window_kind_definition(Self::KIND_ID, "Table", "Tabelle", SurfaceKind::Table, "table-2", vec![ActionDefinition::bounded_catalog("set-cell", LocalizedLabel::native("Set Cell", "Zelle setzen"), ActionKind::Mutation)])
         }
 
+        /// 📊️ Emits the renderer table contract both hosts read: `columnsJson` as `{id, label}` records
+        /// and `rowsJson` as `{id, <column id>: cell}` records, keyed by column and row position.
         fn render(view: &TableView) -> UiAssemblyResult<BuiltNode> {
-            let columns_json = serde_json::to_string(&view.columns).unwrap_or_else(|_| "[]".into());
-            let rows_json = serde_json::to_string(&view.rows).unwrap_or_else(|_| "[]".into());
+            let columns: Vec<serde_json::Value> = view.columns.iter().enumerate().map(|(index, label)| serde_json::json!({ "id": index.to_string(), "label": label })).collect();
+            let rows: Vec<serde_json::Value> = view
+                .rows
+                .iter()
+                .enumerate()
+                .map(|(index, cells)| {
+                    let mut record = serde_json::Map::new();
+                    record.insert("id".into(), serde_json::Value::String(index.to_string()));
+                    for (column, cell) in cells.iter().enumerate() {
+                        record.insert(column.to_string(), serde_json::Value::String(cell.clone()));
+                    }
+                    serde_json::Value::Object(record)
+                })
+                .collect();
+            let columns_json = serde_json::to_string(&columns).unwrap_or_else(|_| "[]".into());
+            let rows_json = serde_json::to_string(&rows).unwrap_or_else(|_| "[]".into());
             // 🧬️ M2 fallout (terra-sdk-wire): `TableScene` moved to `semio-framework-ui-scene` and its
             // `base` constructor is now the E6 sync-by-decree shape (no suspension point) — the
             // OUTER `build_table_scene` (unmoved, `ui_wgpu::wgpu`) stays a real `async fn`.
@@ -29571,9 +29598,7 @@ pub mod app {
         fn render(view: &MeshView) -> UiAssemblyResult<BuiltNode> {
             let sun_config = crate::world3d_host::WorldSunConfig::default();
             let scene = crate::world3d_host::world3d_scene(view.camera_json.clone(), view.meshes_json.clone(), view.instances_json.clone(), view.selection_json.clone(), &sun_config);
-            let props = semio_framework_ui_scene::encode(SurfaceKind::World3d, &scene).map_err(|error| ui_assembly_error_because("mesh-window.scene", error))?;
-            let builder = surface(props);
-            builder.try_id(Self::KIND_ID).map_err(|_| ui_assembly_error("mesh-window.id"))?.try_build().map_err(|_| ui_assembly_error("mesh-window.build"))
+            scene_surface(Self::KIND_ID, SurfaceKind::World3d, &scene)
         }
     }
     //#endregion 🔖️MeshWindowKit
@@ -34828,7 +34853,7 @@ pub mod plugin_runtime {
         pub presence_pending: Option<u64>,
         pub presence_terminal: Option<u64>,
         pub presence_terminal_fault: Option<Vec<u8>>,
-        pub typed_operation_result: Option<TypedOperationResultPage>,
+        pub typed_operation_results: Vec<TypedOperationResultPage>,
     }
 
     //#region 🔁️TypedOperationContinuation
@@ -34864,7 +34889,11 @@ pub mod plugin_runtime {
     fn advance_typed_operation_output<PA: PluginApp>(app: &mut PA, instance: u32) -> Result<PluginExchangeOutput, Fault> {
         resolve_ready(app.advance_typed_operation_publication())?;
         trace_typed_operation_slot_occupancy(app, instance);
-        let mut output = PluginExchangeOutput { typed_operation_result: app.take_typed_operation_result_page(instance), ..PluginExchangeOutput::default() };
+        let mut output = PluginExchangeOutput::default();
+        while output.typed_operation_results.len() < TYPED_OPERATION_PAGES_PER_TURN_MAXIMUM {
+            let Some(page) = app.take_typed_operation_result_page(instance) else { break };
+            output.typed_operation_results.push(page);
+        }
         if let Some(effect) = app.take_typed_operation_effect() {
             output.effects.push(encode_wire_serialized(&effect));
         }
@@ -34917,6 +34946,24 @@ pub mod plugin_runtime {
     /// runtime admits (the heaviest measured is a 5.7 KB `registerBrushMesh` at ~84).
     pub const TYPED_OPERATION_UNITS_PER_TURN: u32 = 256;
 
+    /// 📄️ Result pages ONE turn may hand the host, and therefore the widest acknowledgement batch the
+    /// shell posts back in one crossing.
+    ///
+    /// 🐛️ A turn used to carry EXACTLY ONE page: [`advance_typed_operation_output`] took a single page
+    /// and [`TypedOperationGrant::spent`] ended the drive the instant it existed, so every
+    /// acknowledgeable publication unit of every live operation cost its own host round trip. Measured
+    /// on the React door of 🧊️generation3d (`📓️shard-message-crossings-2026-09-15.md` §2): **200 ack
+    /// crossings over 69 operations, every single one carrying exactly ONE ack** — 10.0 of a
+    /// `flowEvalTick` hop's 36.2 worker crossings, each a full structured-clone round trip to retire 53
+    /// bytes. A page's ACK is per-page by protocol; the CROSSING that carries it never had to be.
+    /// `Event::Message` is a list on the wire and the reactor's poll already acknowledges every entry of
+    /// it, so N presentable pages retire in ONE crossing — the same cardinality change
+    /// `📓️ui-turn-patch-batching-2026-09-15.md` made for `patch-ack`.
+    ///
+    /// Each operation still retains exactly one unacknowledged page (`queue_page`), so this bound is
+    /// over DISTINCT live operations, never over one operation's own sequence.
+    pub const TYPED_OPERATION_PAGES_PER_TURN_MAXIMUM: usize = 8;
+
     /// 🔁️ What one turn may spend continuing typed operations, and what stops it early.
     ///
     /// [`plugin_continue_typed_operations`] advanced EXACTLY ONE publication unit per call and the
@@ -34954,7 +35001,7 @@ pub mod plugin_runtime {
         /// never counts as reached, so a budget declaring zero frames still drives units rather than
         /// silently restoring the one-unit-per-turn pacing this grant exists to remove.
         fn spent(&self, output: &PluginExchangeOutput) -> bool {
-            output.typed_operation_result.is_some()
+            output.typed_operation_results.len() >= TYPED_OPERATION_PAGES_PER_TURN_MAXIMUM
                 || (!output.frames.is_empty() && output.frames.len() >= self.max_frames)
                 || (!output.effects.is_empty() && output.effects.len() >= self.max_effects)
         }
@@ -35015,7 +35062,7 @@ pub mod plugin_runtime {
             collected.1.frames.extend(output.frames);
             collected.1.effects.extend(output.effects);
             collected.1.events.extend(output.events);
-            collected.1.typed_operation_result = output.typed_operation_result;
+            collected.1.typed_operation_results.extend(output.typed_operation_results);
             if grant.spent(&collected.1) {
                 let (_, scan) = pending_typed_operation_instance(runtime, runtime.typed_continuation_cursor.get())?;
                 return Ok((driven, scan));
@@ -35100,7 +35147,7 @@ pub mod plugin_runtime {
             presence_pending: None,
             presence_terminal: None,
             presence_terminal_fault: None,
-            typed_operation_result: None,
+            typed_operation_results: Vec::new(),
         }
     }
 
@@ -35176,7 +35223,7 @@ pub mod plugin_runtime {
             presence_pending: None,
             presence_terminal: None,
             presence_terminal_fault: None,
-            typed_operation_result: None,
+            typed_operation_results: Vec::new(),
         }
     }
 
@@ -35213,12 +35260,14 @@ pub mod plugin_runtime {
                 for frame in frames.iter() {
                     frame_bytes.push(protocol::encode_app_frame(frame).await);
                 }
+                let mut typed_operation_results = Vec::new();
                 if let Ok(typed) = typed {
                     frame_bytes.extend(typed.frames);
                     effect_bytes.extend(typed.effects);
                     event_bytes.extend(typed.events);
+                    typed_operation_results = typed.typed_operation_results;
                 }
-                return PluginExchangeOutput { frames: frame_bytes, effects: effect_bytes, events: event_bytes, retry_command: None, command_terminal_fault: None, presence_pending: None, presence_terminal: None, presence_terminal_fault: None, typed_operation_result: None };
+                return PluginExchangeOutput { frames: frame_bytes, effects: effect_bytes, events: event_bytes, retry_command: None, command_terminal_fault: None, presence_pending: None, presence_terminal: None, presence_terminal_fault: None, typed_operation_results };
             }
             Ok(None) => {}
             Err(fault) => push_app_fault(&mut frames, None, fault).await,
@@ -35227,7 +35276,7 @@ pub mod plugin_runtime {
         for frame in frames.iter() {
             frame_bytes.push(protocol::encode_app_frame(frame).await);
         }
-        PluginExchangeOutput { frames: frame_bytes, effects: effect_bytes, events: event_bytes, retry_command: None, command_terminal_fault: None, presence_pending: None, presence_terminal: None, presence_terminal_fault: None, typed_operation_result: None }
+        PluginExchangeOutput { frames: frame_bytes, effects: effect_bytes, events: event_bytes, retry_command: None, command_terminal_fault: None, presence_pending: None, presence_terminal: None, presence_terminal_fault: None, typed_operation_results: Vec::new() }
     }
 
     /// 🎯️ M1 (ticket 26/08/17 `design-unified.md`): dispatches every `intents` entry for
@@ -35293,7 +35342,7 @@ pub mod plugin_runtime {
             presence_pending: None,
             presence_terminal: None,
             presence_terminal_fault: None,
-            typed_operation_result: None,
+            typed_operation_results: Vec::new(),
         })
     }
 
@@ -35445,7 +35494,7 @@ pub mod plugin_runtime {
                         presence_pending,
                         presence_terminal,
                         presence_terminal_fault,
-                        typed_operation_result: None,
+                        typed_operation_results: Vec::new(),
                     });
                 }
                 PluginCommandIngressStep::Ready(owner) => Some((envelope_seq, owner)),
@@ -35461,7 +35510,7 @@ pub mod plugin_runtime {
                         presence_pending,
                         presence_terminal,
                         presence_terminal_fault,
-                        typed_operation_result: None,
+                        typed_operation_results: Vec::new(),
                     });
                 }
             },
@@ -35488,7 +35537,7 @@ pub mod plugin_runtime {
                         presence_pending,
                         presence_terminal,
                         presence_terminal_fault,
-                        typed_operation_result: None,
+                        typed_operation_results: Vec::new(),
                     });
                 }
                 return Err(fault);
@@ -36173,7 +36222,7 @@ pub mod plugin_runtime {
             presence_pending,
             presence_terminal,
             presence_terminal_fault,
-            typed_operation_result: typed_output.typed_operation_result,
+            typed_operation_results: typed_output.typed_operation_results,
         })
     }
     //#endregion 🔖️Exchange

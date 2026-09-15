@@ -1,6 +1,6 @@
 //! 👁️ Sourcing curation app — the preview window: a 3D preview of the currently-selected object.
 
-use crate::schema::{instance_json, kind_mesh_json};
+use crate::schema::{box_parts, kind_instances_json, kind_mesh_json, unit_box_mesh_json};
 use crate::CurationSnapshot;
 use crate::editor::sourcing::terminology::SourcingLabels;
 use semio_framework_plugin::app::WindowKit;
@@ -47,8 +47,8 @@ pub fn render(document: &CurationSnapshot, selected_ids: &[String], labels: &Sou
     };
     MeshWindowKit::render(&MeshView {
         camera_json: world3d_default_camera(),
-        meshes_json: dsl::json::to_json_string(&dsl::DslValue::Array(vec![kind_mesh_json(kind)])),
-        instances_json: dsl::json::to_json_string(&dsl::DslValue::Array(vec![instance_json(kind, [0.0, 0.0, 0.0], 1.0, false)])),
+        meshes_json: dsl::json::to_json_string(&dsl::DslValue::Array(vec![if box_parts(&kind.geometry).is_some() { unit_box_mesh_json() } else { kind_mesh_json(kind) }])),
+        instances_json: dsl::json::to_json_string(&dsl::DslValue::Array(kind_instances_json(kind, [0.0, 0.0, 0.0], 1.0, false))),
         selection_json: world3d_selection_json("rectangle", &[], None),
     })
 }

@@ -77,7 +77,7 @@ const invoked = (mark) => [...new Set(lines.slice(mark).flatMap((l) => [...l.mat
 const snap = () => page.evaluate(([surface]) => {
   const parse = (s) => { try { return JSON.parse(s ?? ""); } catch { return null; } };
   const main = document.querySelector(`[data-surface-id="${surface}"]`);
-  const raw = main?.getAttribute("data-fixture-json") ?? window.__semioFlowGraphProbe?.[surface]?.fixtureJson?.() ?? null;
+  const raw = main?.getAttribute("data-fixture-json") ?? window.__semioFlowGraphProbe?.[surface]?.hostSnapshotJson?.() ?? null;
   const fx = parse(raw);
   const widgets = Array.isArray(fx?.widgets) ? fx.widgets.map((w) => { const key = w && typeof w === "object" ? Object.keys(w)[0] : null; const inner = key && typeof w[key] === "object" ? w[key] : null; return { kind: w?.kind ?? key ?? null, id: w?.id ?? inner?.id ?? null, value: w?.value ?? inner?.value ?? null }; }) : [];
   /** 🔢️ A payload's own CONTENT, not merely its length: two different meshes of the same topology

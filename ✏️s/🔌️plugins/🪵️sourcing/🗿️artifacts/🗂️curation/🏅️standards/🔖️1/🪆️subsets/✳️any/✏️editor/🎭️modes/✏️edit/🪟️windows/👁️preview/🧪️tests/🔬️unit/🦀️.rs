@@ -15,8 +15,8 @@ async fn preview_renders_selected_mesh_id() {
     let object_id = crate::stock_of(&document)[0].id.clone();
     let node = render(&document, &[object_id.clone()], crate::editor::sourcing::terminology::sourcing_curation_labels(&semio_framework_plugin::ViewModel::default())).expect("bounded preview");
     let scene: semio_framework_ui_scene::World3dScene = semio_framework_plugin::artifact_app_laws::built_surface_scene(&node).expect("assemble world3d scene");
-    assert!(scene.meshes_json.contains(&object_id), "the selected kind's mesh must be in the scene");
-    assert!(scene.instances_json.contains(&object_id), "the selected kind must be instanced once");
+    assert!(scene.meshes_json.contains(crate::schema::SOURCING_UNIT_BOX_MESH_ID), "the selected box-built kind draws from the unit box mesh");
+    assert!(scene.instances_json.contains(&object_id), "the selected kind must be instanced");
 }
 
 #[semio_framework_async_macros::async_test]

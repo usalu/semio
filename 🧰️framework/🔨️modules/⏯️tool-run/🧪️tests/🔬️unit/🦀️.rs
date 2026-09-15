@@ -263,13 +263,13 @@ fn reducer_replays_every_lifecycle_scenario_with_its_commit_count() {
 fn lifecycle_invariants_hold_over_the_matrix_and_scenarios() {
     let law = fixture(LIFECYCLE);
     let ids: Vec<&str> = law["invariants"].as_array().expect("invariants").iter().map(|invariant| text(&invariant["id"])).collect();
-    assert_eq!(ids, ["finalizeOnlyInComplete", "storeGenerationOnlyOnFinalized", "abortAndFaultLeaveZeroTrace", "pauseAndStepNeverCommit", "singleNonTerminalRun"]);
+    assert_eq!(ids, ["finalizeOnlyWithAResult", "storeGenerationOnlyOnFinalized", "abortAndFaultLeaveZeroTrace", "pauseAndStepNeverCommit", "singleNonTerminalRun"]);
     for state in ToolRunState::ALL.map(Some).into_iter().chain([None]) {
         let current = state.map(|state| ToolRunSlot { run: 1, generation: 0, state });
         for key in ToolRunEventKey::ALL {
             let outcome = ToolRunMachine::apply(current, matrix_event(key, 1, 0));
             if key == ToolRunEventKey::Finalize {
-                assert_eq!(outcome.is_ok(), state == Some(ToolRunState::Complete));
+                assert_eq!(outcome.is_ok(), matches!(state, Some(ToolRunState::Running | ToolRunState::Paused | ToolRunState::Complete)));
             }
             if let Ok(transition) = outcome {
                 assert_eq!(transition.effect.commits(), state == Some(ToolRunState::Finalizing) && key == ToolRunEventKey::PublicationComplete);

@@ -27,8 +27,8 @@ pub fn definition() -> PanelTabDefinition {
 /// interaction into render. Flagged as a discovered framework gap, not worked around here.
 pub fn render(document: &Generation2dSnapshot, config: &Generation2dConfig, labels: &Generation2dLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let items = crate::ui_node_list([
-        tree_item("procedural2d-play-inspector.schema", format!("{} flow.host_document", labels.schema_prefix.as_str())),
-        tree_item("procedural2d-play-inspector.widgets", format!("{} {}", labels.widgets_prefix.as_str(), document.host_document.widgets.len())),
+        tree_item("procedural2d-play-inspector.schema", format!("{} flow.host_snapshot", labels.schema_prefix.as_str())),
+        tree_item("procedural2d-play-inspector.widgets", format!("{} {}", labels.widgets_prefix.as_str(), document.host_snapshot.widgets.len())),
         tree_item("procedural2d-play-inspector.show-mode", format!("{} {}", labels.show_mode_prefix.as_str(), config.show_mode)),
     ])?;
     PanelTreeBuilder::new("procedural2d-play-inspector")?.section("procedural2d-play-inspector.empty", Some(crate::ui_label(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL)?), true, items)?.build()

@@ -1,18 +1,18 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/semio/v1/object/diff.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/object/diff.json",
   "title": "SemioObjectDiff",
   "type": "object",
   "additionalProperties": false,
   "properties": {
     "transform": {
-      "$ref": "https://semio.tech/schema/s/stdio/semio/v1/base/geometry.json",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/base/geometry.json",
       "x-semio-state": "artifact"
     },
     "brep": {
       "anyOf": [
         {
-          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/base/child.json#/$defs/brep"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/base/child.json#/$defs/brep"
         },
         {
           "type": "null"
@@ -23,7 +23,7 @@
     "mesh": {
       "anyOf": [
         {
-          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/base/child.json#/$defs/mesh"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/base/child.json#/$defs/mesh"
         },
         {
           "type": "null"
@@ -34,7 +34,7 @@
     "properties": {
       "anyOf": [
         {
-          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/base/child.json#/$defs/value"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/base/child.json#/$defs/value"
         },
         {
           "type": "null"

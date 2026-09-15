@@ -317,7 +317,7 @@ def exports_of(document: dict) -> dict[str, dict]:
 
 
 def helper_prefix(document_id: str | None) -> str:
-    """`https://semio.tech/schema/s/writer/writer/diff.json` → `sWriterWriterDiffGuard`.
+    """`https://json.schemas.assets.semio-tech.com/s/writer/writer/diff.json` → `sWriterWriterDiffGuard`.
 
     The scope's own `$id` names the helpers, so two schema modules compiled into one TypeScript program
     never collide and the name says which contract the guard belongs to.

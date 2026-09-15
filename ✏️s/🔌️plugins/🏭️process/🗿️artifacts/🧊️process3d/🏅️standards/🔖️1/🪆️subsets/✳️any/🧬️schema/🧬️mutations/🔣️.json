@@ -1,55 +1,55 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/process/process3d/mutations.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/process/process3d/mutations.json",
   "title": "Process3dMutation",
   "oneOf": [
     {
-      "$ref": "https://semio.tech/schema/s/process/process3d/mutation/change-cursor/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/process/process3d/mutation/change-cursor/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/process/process3d/mutation/change-machine-icon/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/process/process3d/mutation/change-machine-icon/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/process/process3d/mutation/change-step-enabled/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/process/process3d/mutation/change-step-enabled/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/process/process3d/mutation/change-step-origin/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/process/process3d/mutation/change-step-origin/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/process/process3d/mutation/change-stock-label/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/process/process3d/mutation/change-stock-label/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/process/process3d/mutation/create-machine/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/process/process3d/mutation/create-machine/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/process/process3d/mutation/create-step/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/process/process3d/mutation/create-step/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/process/process3d/mutation/delete-machine/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/process/process3d/mutation/delete-machine/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/process/process3d/mutation/delete-step/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/process/process3d/mutation/delete-step/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/process/process3d/mutation/move-stock/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/process/process3d/mutation/move-stock/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/process/process3d/mutation/rename-machine/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/process/process3d/mutation/rename-machine/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/process/process3d/mutation/rename-step/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/process/process3d/mutation/rename-step/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/process/process3d/mutation/reorder-steps/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/process/process3d/mutation/reorder-steps/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/process/process3d/mutation/replace-machine-capabilities/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/process/process3d/mutation/replace-machine-capabilities/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/process/process3d/mutation/replace-step-measure/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/process/process3d/mutation/replace-step-measure/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/process/process3d/mutation/replace-stock-solid/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/process/process3d/mutation/replace-stock-solid/schema.json"
     }
   ]
 }

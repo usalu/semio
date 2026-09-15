@@ -130,9 +130,9 @@ pub fn assert_is_unit_cube(format: &str, projection: &MeshProjection) {
 /// it by moving the fixture into a `FlowHost` and retiring the generation half. A test that only
 /// looks at a document has to do it by hand.
 pub fn retire_document(document: semio_s_artifact_procedural_generation3d::Generation3dSnapshot) {
-    let semio_s_artifact_procedural_generation3d::Generation3dSnapshot { fixture, generation } = document;
+    let semio_s_artifact_procedural_generation3d::Generation3dSnapshot { host_snapshot, generation } = document;
     generation.retire_cold();
-    fixture.retire_cold();
+    host_snapshot.retire_cold();
 }
 //#endregion ⚖️Assertions
 
@@ -210,8 +210,8 @@ fn committed_unit_cube_fixture_is_a_closed_unit_cube() {
     let mesh = unit_cube_semio_mesh();
     let projection = project(&mesh);
     assert_eq!(projection.vertex_count, 8, "the fixture keeps a shared 8-vertex pool");
-    assert_is_unit_cube("fixture", &projection);
-    assert_oracle_agrees_on_unit_cube("fixture", &mesh);
+    assert_is_unit_cube("hostSnapshot", &projection);
+    assert_oracle_agrees_on_unit_cube("hostSnapshot", &mesh);
 }
 
 /// 🚫️ A mesh with no positions is a typed error, never an empty file that looks like a successful

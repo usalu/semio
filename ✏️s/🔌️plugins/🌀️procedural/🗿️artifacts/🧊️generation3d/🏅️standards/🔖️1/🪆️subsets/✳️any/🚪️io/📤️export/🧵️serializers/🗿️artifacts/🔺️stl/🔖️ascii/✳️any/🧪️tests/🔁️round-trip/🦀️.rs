@@ -41,9 +41,9 @@ fn stl_import_plants_a_previewable_import_neuron_carrying_the_source_bytes() {
     let (kind, payload) = mesh_bridge::imported_source(&document).expect("the import fixture plants a source note and an import neuron");
     assert_eq!(kind, import::IMPORT_NEURON_KIND, "stl re-enters the graph through its own brep operator");
     assert_eq!(mesh_bridge::base64_decode(payload).expect("the note holds base64"), bytes, "the note carries the source bytes verbatim");
-    let previews = document.host_document.widgets.iter().any(|widget| matches!(widget, semio_framework_artifact_flow_flow::Widget::Neuron { preview: true, .. }));
+    let previews = document.host_snapshot.widgets.iter().any(|widget| matches!(widget, semio_framework_artifact_flow_flow::Widget::Neuron { preview: true, .. }));
     assert!(previews, "the import neuron previews, so the imported mesh reaches the 3d window");
-    assert_eq!(document.host_document.synapses.len(), 2, "note -> import -> preview");
+    assert_eq!(document.host_snapshot.synapses.len(), 2, "note -> import -> preview");
     retire_document(document);
 }
 

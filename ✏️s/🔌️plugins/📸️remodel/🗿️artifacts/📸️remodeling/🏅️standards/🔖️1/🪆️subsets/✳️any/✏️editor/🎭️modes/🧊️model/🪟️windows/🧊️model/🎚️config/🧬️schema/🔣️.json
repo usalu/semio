@@ -1,12 +1,12 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://semio.tech/schema/window/remodel/remodeling/model/config/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/window/remodel/remodeling/model/config/schema.json",
   "title": "RemodelingModelWindowConfig",
   "type": "object",
   "additionalProperties": false,
   "required": ["camera", "layers"],
   "properties": {
-    "camera": { "$ref": "https://semio.tech/schema/framework/ui/viewport/3d", "x-semio-state": "config" },
+    "camera": { "$ref": "https://json.schemas.assets.semio-tech.com/framework/ui/viewport/3d", "x-semio-state": "config" },
     "layers": { "$ref": "#/$defs/RemodelingLayerVisibility", "x-semio-state": "config" }
   },
   "$defs": {

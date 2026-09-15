@@ -18,21 +18,21 @@
 //#region 🔌️WireTypes
 /** ⚖️ `Lane`/`CoalesceKey` taken from the owned-schema mirror — real wire types, same reasoning
  * `📬️mailbox.ts`'s own header doc already gives for importing rather than redeclaring them. */
-import type { Lane, CoalesceKey } from "../🤖️generated/🎭️actor/🟦️.ts";
-import { actorInstanceCapturedReceiptMatches, actorInstanceCloseReceiptMatches, actorInstanceLifecycleReceiptEquals, actorInstanceLifetimeEquals, decodeActorInstanceLifecycle, encodeActorInstanceLifecycle, type ActorInstanceLifecycleReceipt, type ActorInstanceCloseRequest, type ActorInstanceOpenRequest, type ActorInstanceLifetime } from "../🚪️lifetime/🟦️.ts";
-import { actorUiPatchReceiptEquals, decodeActorUiPatchReceipt, encodeActorUiPatchReceipt, validateActorUiPatchPairing, type ActorUiPatchReceipt } from "../🚪️lifetime/🩹️patch/🟦️.ts";
-import { OwnedActorTurnOutputs, OwnedActorTurnOutput } from "../🪪️activation/🚪️instance/📥️output/🟦️.ts";
-import { ACTOR_BYTE_PAGE_BYTES, createActorBytePage, type ActorBytePage } from "../📃️page/🟦️.ts";
-import { GUEST_HOST_ANSWER_CEILING_BYTES } from "../../⏱️trace/🧮️memory/🟦️.ts";
-import { encodeActorReturnDrive, decodeActorReturnResult, type ActorReturnOrigin, type ActorReturnIdentity, type ActorReturnPageReceipt, type ActorReturnDrive, type ActorReturnResult } from "../📤️return/🟦️.ts";
-export { encodeActorReturnDrive, decodeActorReturnDrive, encodeActorReturnResult, decodeActorReturnResult, ACTOR_RETURN_RESULT_MAXIMUM_BYTES, type ActorReturnOrigin, type ActorReturnIdentity, type ActorReturnPageReceipt, type ActorReturnControl, type ActorReturnDrive, type ActorReturnResult, type ActorReturnFault } from "../📤️return/🟦️.ts";
-import { OwnedUiInstance, OwnedUiInstanceRetirement, OwnedUiPatchAcknowledgement, OwnedUiPatchInputAcceptance, OwnedUiPatchInputRetirement } from "../../🖱️ui/🧬️contract/🧵️retained/🏘️instance/🟦️.ts";
-import { OwnedKernelReturnContent } from "../../🎠️kernel/📤️return/📦️content/📥️input/🟦️.ts";
-import { OwnedResidentLedger, OwnedResidentRecordDetachment, OwnedResidentRetirement, type OwnedResidentAdmission, type OwnedResidentRecord, type ResidentGrant, type ResidentStep } from "../../🌱️value/💾️resident/🟦️.ts";
-import { OwnedUiResidentPool, OwnedUiResidentPoolRetirement, type OwnedUiResidentInstance, type OwnedUiResidentPayload, type OwnedUiResidentPayloadSourceRelease as UiResidentSourceProof } from "../../🖱️ui/🧬️contract/🧵️retained/💾️resident/🟦️.ts";
-import { uiResidentMetadataEnvelope } from "../../🖱️ui/🧬️contract/🧵️retained/💾️resident/🪪️metadata/🟦️.ts";
 import { hopTrace, hopTraceEpochNowMs, hopTraceEpochToTimeline } from "../../⏱️trace/🟦️.ts";
+import { GUEST_HOST_ANSWER_CEILING_BYTES } from "../../⏱️trace/🧮️memory/🟦️.ts";
+import { OwnedResidentLedger, OwnedResidentRecordDetachment, OwnedResidentRetirement, type OwnedResidentAdmission, type OwnedResidentRecord, type ResidentGrant, type ResidentStep } from "../../🌱️value/💾️resident/🟦️.ts";
+import { OwnedKernelReturnContent } from "../../🎠️kernel/📤️return/📦️content/📥️input/🟦️.ts";
+import { OwnedUiInstance, OwnedUiInstanceRetirement, OwnedUiPatchAcknowledgement, OwnedUiPatchInputAcceptance, OwnedUiPatchInputRetirement } from "../../🖱️ui/🧬️contract/🧵️retained/🏘️instance/🟦️.ts";
+import { OwnedUiResidentPool, OwnedUiResidentPoolRetirement } from "../../🖱️ui/🧬️contract/🧵️retained/💾️resident/🟦️.ts";
+import { uiResidentMetadataEnvelope } from "../../🖱️ui/🧬️contract/🧵️retained/💾️resident/🪪️metadata/🟦️.ts";
+import { ACTOR_BYTE_PAGE_BYTES, createActorBytePage, type ActorBytePage } from "../📃️page/🟦️.ts";
+import { decodeActorReturnResult, encodeActorReturnDrive, type ActorReturnDrive, type ActorReturnIdentity, type ActorReturnOrigin, type ActorReturnPageReceipt, type ActorReturnResult } from "../📤️return/🟦️.ts";
+import { actorInstanceCapturedReceiptMatches, actorInstanceCloseReceiptMatches, actorInstanceLifecycleReceiptEquals, actorInstanceLifetimeEquals, decodeActorInstanceLifecycle, encodeActorInstanceLifecycle, type ActorInstanceCloseRequest, type ActorInstanceLifecycleReceipt, type ActorInstanceLifetime, type ActorInstanceOpenRequest } from "../🚪️lifetime/🟦️.ts";
+import { actorUiPatchReceiptEquals, decodeActorUiPatchReceipt, encodeActorUiPatchReceipt, validateActorUiPatchPairing, type ActorUiPatchReceipt } from "../🚪️lifetime/🩹️patch/🟦️.ts";
+import type { CoalesceKey, Lane } from "../🤖️generated/🎭️actor/🟦️.ts";
+import { OwnedActorTurnOutput, OwnedActorTurnOutputs } from "../🪪️activation/🚪️instance/📥️output/🟦️.ts";
 import { admitSegmentedDownloadChunk, admitSegmentedDownloadOperationId, SEGMENTED_DOWNLOAD_CONTRACT, SEGMENTED_DOWNLOAD_REFUSAL } from "./📤️segmented-download/🟦️.ts";
+export { ACTOR_RETURN_RESULT_MAXIMUM_BYTES, decodeActorReturnDrive, decodeActorReturnResult, encodeActorReturnDrive, encodeActorReturnResult, type ActorReturnControl, type ActorReturnDrive, type ActorReturnFault, type ActorReturnIdentity, type ActorReturnOrigin, type ActorReturnPageReceipt, type ActorReturnResult } from "../📤️return/🟦️.ts";
 export { admitSegmentedDownloadChunk, admitSegmentedDownloadOperationId, SEGMENTED_DOWNLOAD_CONTRACT, SEGMENTED_DOWNLOAD_REFUSAL } from "./📤️segmented-download/🟦️.ts";
 /** 🧬️ Brand-check accessor for {@link OwnedResidentLedger}, resolved LAZILY on first use.
  * `OwnedResidentLedger` arrives over an import cycle (`📮️shard-client` → `🎠️kernel/📥️input` →
@@ -483,7 +483,7 @@ type InboundMessage =
  * (`🔌️plugin/🌐️browser-bundle/🏗️materialization/🟦️.ts`'s `shardWorkerSource`, which interpolates
  * `progressIntervalMs` straight out of the fixture below) and the shell's per-plugin load deadline
  * (`🛠️ShellHelpers/🟦️.tsx`'s `loadPluginModuleResilient`). Language-agnostic owner:
- * `🧬️schema/🔣️.json` (`https://semio.tech/schema/framework/actor/shard-client/schema.json#/$defs/ShardClient`) + `🧫️fixtures/🔣️.json`'s `policy` block; this
+ * `🧬️schema/🔣️.json` (`https://json.schemas.assets.semio-tech.com/framework/actor/shard-client/schema.json#/$defs/ShardClient`) + `🧫️fixtures/🔣️.json`'s `policy` block; this
  * mirror is asserted field-for-field equal to that fixture by this file's own in-source suite, so a
  * literal edited here alone fails closed rather than silently diverging. */
 export const SHARD_LIVENESS_POLICY = Object.freeze({

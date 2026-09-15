@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/app/reasoning/wires/canvas-window/config/mutations.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/app/reasoning/wires/canvas-window/config/mutations.json",
   "title": "WiresCanvasWindowConfigMutation",
   "oneOf": [
     {

@@ -1,5 +1,5 @@
 {
-  "$id": "https://semio.tech/schema/s/forms/forms/inference/text.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/forms/forms/inference/text.json",
   "title": "FormsInferenceText",
   "type": "object"
 }

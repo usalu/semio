@@ -12,6 +12,7 @@ import { chromium } from "playwright";
 import { writeFileSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { gradeMeshes, meshStatsScript, oracleForLabel } from "./🐍️example-oracle.mjs";
+import { CONVERGENCE_BUDGET_V1, convergenceVerdictV1 } from "./🐍️convergence-budget.mjs";
 
 const url = process.env.SEMIO_PROBE_URL ?? "http://127.0.0.1:6018/?plugin=generation3d";
 const outDir = join(import.meta.dir, "🗑️generated", process.env.SEMIO_PROBE_OUT ?? "journey");
@@ -33,8 +34,23 @@ const domSnap = () => page.evaluate(() => {
     // 🪪️ `data-status-json` is the EVALUATION's per-node status map, which lags the document; the
     // published GRAPH is `data-fixture-json`. Reading the status map as "the graph" is what made this
     // probe call a stale flow window converged (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-    const fx = parse(el.getAttribute("data-fixture-json"));
-    const widgetIds = fx && Array.isArray(fx.widgets) ? fx.widgets.map((w) => { const inner = w && typeof w === "object" ? Object.values(w)[0] : null; return (w && w.id) ?? (inner && inner.id) ?? null; }).filter(Boolean) : undefined;
+    // 🪪️ The graph a surface is PAINTING, read from the surface's own probe registry
+    // (`window.__semioFlowGraphProbe[surfaceId].nodeIds()`) first. `data-fixture-json` was renamed to
+    // `data-host-snapshot-json` by a peers' sweep, and `scene.hostSnapshotJson` is absent on this stage
+    // anyway — so BOTH attribute lanes answer `null` here, and this row's graph oracle was failing on a
+    // reading that no longer exists rather than on the product
+    // (`📓️hot-swap-board-remount-2026-09-15.md` §4; the same renamed lane took `flow-reorganize` down in
+    // `📓️flow-surface-followup-2026-09-15.md` §6.3).
+    const surfaceIdAttribute = el.getAttribute("data-surface-id");
+    let painted;
+    try {
+      const probe = surfaceIdAttribute ? window.__semioFlowGraphProbe?.[surfaceIdAttribute] : undefined;
+      const ids = probe?.nodeIds?.();
+      if (Array.isArray(ids) && ids.length > 0) painted = ids;
+    } catch { painted = undefined; }
+    const fx = parse(el.getAttribute("data-host-snapshot-json") ?? el.getAttribute("data-fixture-json"));
+    const authored = fx && Array.isArray(fx.widgets) ? fx.widgets.map((w) => { const inner = w && typeof w === "object" ? Object.values(w)[0] : null; return (w && w.id) ?? (inner && inner.id) ?? null; }).filter(Boolean) : undefined;
+    const widgetIds = painted ?? authored;
     return { surfaceId: el.getAttribute("data-surface-id"), meshes, instances, phase: st?.phase, ratio: st?.progress?.ratio, computing: st?.computing ?? null, cancellable: st?.cancellable ?? null, cancelAction: st?.cancelAction ?? null, statusKeys: st && typeof st === "object" && st.phase ? Object.keys(st) : undefined, meshesLen: st?.debug?.meshesLen, fault: st?.fault?.code ?? null, nodeStatuses, widgetIds, w: el.offsetWidth, h: el.offsetHeight };
   });
   const sel = document.querySelector("select");
@@ -118,18 +134,36 @@ const converged = (s, expectWidgets, expectLabel, oracle, expectSurface) => {
  * before a generation is evaluated). */
 const waitMeshes = async (label, seconds, expectWidgets, expectLabel, expectMeshes, expectSurface) => {
   const oracle = expectMeshes === null ? null : (oracleForLabel(expectMeshes ?? expectLabel) ?? null);
-  let last = null; let stable = 0; const start = Date.now();
-  for (let i = 0; i < seconds; i++) {
+  let last = null; const start = Date.now();
+  /** ⏱️ The budget is counted in POLLS and only spent once the preview stops moving — see
+   * `🐍️convergence-budget.mjs`. The caller's `seconds` survives as the poll CEILING, so a row that
+   * keeps twitching forever still terminates, but a green product on a busy box is no longer called red
+   * because the machine was slow. */
+  const budget = { ...CONVERGENCE_BUDGET_V1, ceilingPolls: Math.max(seconds, CONVERGENCE_BUDGET_V1.stallPolls * 2) };
+  const samples = [];
+  let verdict = { verdict: "running", polls: 0, seconds: 0, stalledForPolls: 0, loadFactor: 1, reason: "not polled" };
+  for (let i = 0; i < budget.ceilingPolls; i++) {
     await page.waitForTimeout(1000); last = await snap(oracle?.previewMeshId ?? null);
-    if (converged(last, expectWidgets, expectLabel, oracle, expectSurface)) { stable += 1; if (stable >= 3) break; } else stable = 0;
+    const previews = last.hosts.filter((h) => h.surfaceId && h.surfaceId.endsWith("-preview"));
+    samples.push({
+      t: Date.now() - t0,
+      converged: converged(last, expectWidgets, expectLabel, oracle, expectSurface),
+      oracleOk: oracle ? previews.every((h) => gradeMeshes(oracle, h.stats).ok) : null,
+      example: last.example,
+      widgetIds: last.hosts.find((h) => h.surfaceId === "window:procedural-main")?.widgetIds ?? null,
+      nodeStatuses: last.hosts.find((h) => h.surfaceId === "window:procedural-main")?.nodeStatuses ?? null,
+      previews: previews.map((h) => ({ surfaceId: h.surfaceId, phase: h.phase, ratio: h.ratio, computing: h.computing, fault: h.fault, meshes: h.meshes, triangles: h.stats?.preview?.triangles ?? null })),
+    });
+    verdict = convergenceVerdictV1(samples, budget);
+    if (verdict.verdict !== "running") break;
   }
   const previews = last.hosts.filter((h) => h.surfaceId && h.surfaceId.endsWith("-preview"));
   const meshGrades = oracle ? previews.map((h) => ({ surfaceId: h.surfaceId, ...gradeMeshes(oracle, h.stats) })) : [];
-  const row = { label, t: Date.now() - t0, seconds: (Date.now() - start) / 1000, converged: converged(last, expectWidgets, expectLabel, oracle, expectSurface), expectSurface: expectSurface ?? null, expectWidgets: expectWidgets ?? null, expectLabel: expectLabel ?? null, meshes: last.meshes, example: last.example, hosts: last.hosts, windows: last.windows, modes: last.modes, roles: last.roles, faults: last.faults,
+  const row = { label, t: Date.now() - t0, seconds: (Date.now() - start) / 1000, converged: verdict.verdict === "converged", verdict, samples, expectSurface: expectSurface ?? null, expectWidgets: expectWidgets ?? null, expectLabel: expectLabel ?? null, meshes: last.meshes, example: last.example, hosts: last.hosts, windows: last.windows, modes: last.modes, roles: last.roles, faults: last.faults,
     oracle: oracle ? { slug: oracle.slug, previewMeshId: oracle.previewMeshId, meshes: oracle.meshes, minTriangles: oracle.minTriangles, minEdgeSegments: oracle.minEdgeSegments, boundingBoxMin: oracle.boundingBoxMin, boundingBoxMax: oracle.boundingBoxMax, boundingBoxTolerance: oracle.boundingBoxTolerance } : null,
     measured: previews.map((h) => ({ surfaceId: h.surfaceId, meshCount: h.stats?.meshCount ?? 0, instanceCount: h.stats?.instanceCount ?? 0, meshIds: h.stats?.meshIds ?? [], preview: h.stats?.preview ?? null })),
     meshOk: oracle ? meshGrades.every((g) => g.ok) : null, meshReasons: meshGrades.flatMap((g) => g.reasons.map((r) => `${g.surfaceId}: ${r}`)) };
-  results.push(row); console.log(`[DEBUG] ${label}: converged=${row.converged} in ${row.seconds.toFixed(0)}s meshes=${row.meshes} meshOk=${row.meshOk} example=${JSON.stringify(row.example)} oracle=${JSON.stringify(row.oracle && [row.oracle.meshes, row.oracle.previewMeshId])} measured=${JSON.stringify(row.measured.map((m) => [m.surfaceId, m.meshCount, m.preview?.triangles ?? null, m.preview?.bounds ?? null]))} reasons=${JSON.stringify(row.meshReasons)}`);
+  results.push(row); console.log(`[DEBUG] ${label}: converged=${row.converged} verdict=${verdict.verdict} polls=${verdict.polls} stalledFor=${verdict.stalledForPolls} load=${verdict.loadFactor.toFixed(2)} reason=${JSON.stringify(verdict.reason)} in ${row.seconds.toFixed(0)}s meshes=${row.meshes} meshOk=${row.meshOk} example=${JSON.stringify(row.example)} oracle=${JSON.stringify(row.oracle && [row.oracle.meshes, row.oracle.previewMeshId])} measured=${JSON.stringify(row.measured.map((m) => [m.surfaceId, m.meshCount, m.preview?.triangles ?? null, m.preview?.bounds ?? null]))} reasons=${JSON.stringify(row.meshReasons)}`);
   await page.screenshot({ path: join(outDir, `${results.length}-${label.replace(/[^a-z0-9]+/gi, "-")}.png`) });
   return last;
 };

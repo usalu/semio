@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/raster/raster/snapshot.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/raster/raster/snapshot.json",
   "title": "RasterSnapshot",
   "type": "object",
   "additionalProperties": false,
@@ -11,12 +11,12 @@
     "title": { "type": "string", "x-semio-state": "artifact" },
     "layers": {
       "type": "array",
-      "items": { "$ref": "https://semio.tech/schema/s/raster/raster/artifact.json#/$defs/RasterLayerNode" },
+      "items": { "$ref": "https://json.schemas.assets.semio-tech.com/s/raster/raster/artifact.json#/$defs/RasterLayerNode" },
       "x-semio-state": "artifact"
     },
     "assets": {
       "type": "object",
-      "additionalProperties": { "$ref": "https://semio.tech/schema/os/store/child.json" },
+      "additionalProperties": { "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child.json" },
       "x-semio-state": "artifact",
       "x-semio-child-kind": "s.stdio.semio.image"
     }

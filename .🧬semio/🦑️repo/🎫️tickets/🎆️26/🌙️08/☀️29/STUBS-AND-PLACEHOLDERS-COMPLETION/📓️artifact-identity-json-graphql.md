@@ -55,7 +55,7 @@ deriving them mechanically from directory names would have been wrong:
   → JSON `"title": "Din18599SnapshotText"`.
 - GraphQL header = `# <dotted-slug> text grammar schema`, where `<dotted-slug>` is copied from the
   `.ts` docstring `/** 📝️ Text representation for \`norm.din18599.snapshot\`. */` verbatim.
-- `$id` = `https://semio.tech/schema/s/<plugin>/<artifact>/<facet-singular>/text.json`, where
+- `$id` = `https://json.schemas.assets.semio-tech.com/s/<plugin>/<artifact>/<facet-singular>/text.json`, where
   `<plugin>`/`<artifact>` are read from the artifact's own top-level `🦀️component.rs`
   `pub const …_DIALECT: Dialect { artifact_kind: "s.<plugin>.<artifact>", …, subset: SubsetId::ANY }`
   (e.g. `✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599/🦀️component.rs:162`), and `<facet-singular>` is
@@ -77,7 +77,7 @@ ticket's own discovery method.
 
 - `title` = `<Base><Facet>`, `Base` read from the subset's own `🧬️schema/🟦️component.ts`
   `export interface <Base>Artifact`, `<Facet>` = `Diff`/`Mutation`(singular)/`Snapshot`.
-- `$id` = `https://semio.tech/schema/s/<plugin>/<artifact>/<facet-singular>.json`.
+- `$id` = `https://json.schemas.assets.semio-tech.com/s/<plugin>/<artifact>/<facet-singular>.json`.
 - Cross-validated against `🧱️block/◻2d`'s own **already-correct, non-stub** aggregate files
   (`🧬️schema/🔺️diff/🔣️component.json` → `$id: s/block/block2d/diff.json`, `title: Block2dDiff`;
   `🧬️mutations/🔣️component.json` → `$id: s/block/block2d/mutation.json`, `title: Block2dMutation`

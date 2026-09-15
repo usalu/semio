@@ -2,21 +2,21 @@
 
 use crate::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
 use crate::editor::generation3d::Generation3dCommand;
-use crate::standards::v1::subsets::any::schema::generation_host_document_for;
+use crate::standards::v1::subsets::any::schema::generation_host_snapshot_for;
 use crate::standards::v1::subsets::any::schema::mutations::text::{generation_mutation_to_generation3d, Generation3dMutation};
 use crate::Generation3dSnapshot;
-use semio_framework_artifact_flow_flow::FlowHostDocument;
+use semio_framework_artifact_flow_flow::FlowHostSnapshot;
 use semio_framework_artifact_playbook_playbook::{apply_generation_mutation, generation_operations, select_generation, selected_generation};
-use semio_framework_os_flow::forms_bridge::flow_host_document_to_form_spec;
+use semio_framework_os_flow::forms_bridge::flow_host_snapshot_to_form_spec;
 use semio_framework_plugin::Emit;
 
 pub struct Generation3dGenerationCommandResult {
     pub emit: Emit<Generation3dMutation, Generation3dConfigMutation>,
-    pub preview_fixture: Option<FlowHostDocument>,
+    pub preview_fixture: Option<FlowHostSnapshot>,
 }
 
 pub fn generation_command_result(action: &str, args: Option<&dsl::DslValue>, projection: &Generation3dSnapshot, config: &Generation3dConfig) -> Option<Generation3dGenerationCommandResult> {
-    let spec = flow_host_document_to_form_spec(&projection.host_document);
+    let spec = flow_host_snapshot_to_form_spec(&projection.host_snapshot);
     let mut state = projection.generation.as_state().clone();
     state.selected_generation_id.clone_from(&config.selected_generation_id);
     let operations = if action == "selectGeneration" {
@@ -30,7 +30,7 @@ pub fn generation_command_result(action: &str, args: Option<&dsl::DslValue>, pro
         }
         operations
     };
-    let preview_fixture = selected_generation(&state).map(|_| generation_host_document_for(&projection.host_document, &state, state.selected_generation_id.as_deref()));
+    let preview_fixture = selected_generation(&state).map(|_| generation_host_snapshot_for(&projection.host_snapshot, &state, state.selected_generation_id.as_deref()));
     if semio_framework_job::runtime_diagnostics_enabled() {
         eprintln!("[DEBUG] gen3d command action={action} before={} after={} ops={} selected={:?}", projection.generation.as_state().generations.len(), state.generations.len(), operations.len(), state.selected_generation_id);
     }

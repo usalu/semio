@@ -228,75 +228,244 @@ fn every_schema_feature_has_a_distinct_action_binding() {
 #[test]
 fn synchronized_document_json_is_the_exact_retained_document() {
     let mut domain = FlowDomainAdapter::default();
-    let mut expected = crate::artifact::FlowHostDocument::default();
-    expected.schema = "flow.host_document.synchronized".into();
+    let mut expected = crate::artifact::FlowHostSnapshot::default();
+    expected.schema = "flow.host_snapshot.synchronized".into();
     let json = crate::os_pack::json::to_json_string(&expected);
     run(&mut domain, 2_610, text_payload(&json)).unwrap();
     let bytes = run(&mut domain, 2_609, Vec::new()).unwrap();
     let value = crate::os_pack::json::parse(std::str::from_utf8(&bytes).unwrap()).unwrap();
-    let actual = <crate::artifact::FlowHostDocument as crate::os_dsl::FromValue>::from_value(crate::os_pack::json::to_dsl_value(&value)).unwrap();
+    let actual = <crate::artifact::FlowHostSnapshot as crate::os_dsl::FromValue>::from_value(crate::os_pack::json::to_dsl_value(&value)).unwrap();
     assert_eq!(actual, expected);
 }
 
-/// ⚡️ How many `Progress` steps one flow operation costs at a given byte credit — the count that
-/// becomes ABI round trips, because the bridge turns every `Progress` into its own event the host has
-/// to poll, decode and reply to.
-fn progress_steps_for(operation: u16, byte_credit: usize) -> usize {
-    let domain = Rc::new(RefCell::new(FlowDomainAdapter::default()));
-    let session = semio_framework::abi::AbiHandle::try_new(1, 1).unwrap();
-    domain.borrow_mut().bind_session(session);
-    let admission = FlowFeatureAdmission { session, request_generation: 1 };
-    let mut feature = FlowDomainAdapter::start_feature(domain, admission, operation, Vec::new()).unwrap();
-    let budget = AbiWorkBudget { byte_credit, now_ms: 0, deadline_ms: None, cancelled: false, interrupted: false };
-    let mut steps = 0usize;
-    while let FlowFeatureStep::Progress { .. } = feature.step(budget) {
-        steps += 1;
-        assert!(steps < 2_000_000, "flow operation {operation} never left Progress at credit {byte_credit}");
+/// 🧾️ Retained rows the measured document carries. Sized so the JSON is worth measuring
+/// (5 140 crossings at credit 1 against 612 for the app's own starter document) while the session's
+/// retirement still fits the declared close bound (`🧫️fixtures/🧹️session-close/🔣️.json`,
+/// `maximumTurns` 4 096 — this document cost 2 627 turns to close before the ladder was anchored on
+/// its retained items, and costs 11 now, at any row count).
+const MEASURED_ROWS: u32 = 24;
+
+fn row_document_json(rows: u32) -> String {
+    let mut document = crate::artifact::FlowHostSnapshot::default();
+    for index in 0..rows {
+        document.widgets.push(Widget::InputNote { id: format!("measured-{index}"), text: format!("measured payload row {index}: a retained node-graph draw list carries thousands of bytes of exactly this shape") });
     }
-    steps
+    let json = crate::os_pack::json::to_json_string(&document);
+    document.retire_cold();
+    json
+}
+
+fn measured_document_json() -> String {
+    row_document_json(MEASURED_ROWS)
+}
+
+/// 🔁️ Polls the bridge until it hands out one message.
+fn flow_poll_one(bridge: &mut FlowBridge<FlowDomainAdapter>, budget: AbiWorkBudget) -> AbiMessage {
+    for _ in 0..8_000_000 {
+        if let AbiPortPoll::Message(message) = bridge.poll(budget).unwrap() {
+            return message;
+        }
+    }
+    panic!("Flow bridge did not progress")
+}
+
+/// 🧵️ Drives ONE request to its reply, acknowledging every event and page the bridge raises, and
+/// answers how many `Progress` events crossed, the reply's status, and the bytes it answered.
+fn flow_drain_request(bridge: &mut FlowBridge<FlowDomainAdapter>, budget: AbiWorkBudget, request_id: u64) -> (usize, semio_framework::abi::AbiStatus, Vec<u8>) {
+    let mut progress = 0usize;
+    let mut operation = None;
+    let mut answered = Vec::new();
+    loop {
+        match flow_poll_one(bridge, budget) {
+            AbiMessage::Event(event) => {
+                if event.event.get() == protocol::FLOW_EVENT_ADMITTED {
+                    operation = Some(FlowPayloadReader::new(event.bytes.as_slice()).handle().unwrap());
+                }
+                if event.event.get() == protocol::FLOW_EVENT_PROGRESS {
+                    progress += 1;
+                }
+                acknowledge_bridge_event(bridge, &event);
+            }
+            AbiMessage::Page(page) => {
+                let operation = operation.expect("admitted Flow operation");
+                answered.extend_from_slice(page.bytes.as_slice());
+                bridge.try_send(AbiMessage::Control(semio_framework::abi::AbiControl::Acknowledge { handle: operation, index: page.index }), budget).unwrap();
+            }
+            AbiMessage::Reply(reply) if reply.request_id.0 == request_id => {
+                answered.extend_from_slice(reply.bytes.as_slice());
+                return (progress, reply.status, answered);
+            }
+            _ => {}
+        }
+    }
+}
+
+/// 🚪️ Opens one real session on a fresh bridge.
+fn flow_open_session(bridge: &mut FlowBridge<FlowDomainAdapter>, budget: AbiWorkBudget) -> semio_framework::abi::AbiHandle {
+    bridge.try_send(bridge_request(protocol::FLOW_OPERATION_OPEN, 1, 1, Vec::new()), budget).unwrap();
+    let AbiMessage::Reply(opened) = flow_poll_one(bridge, budget) else { panic!("Flow session reply") };
+    let mut reader = FlowPayloadReader::new(opened.bytes.as_slice());
+    let session = reader.handle().unwrap();
+    reader.finish().unwrap();
+    session
+}
+
+/// ✍️ A request payload: the session handle the bridge routes by, then the operation's own text.
+fn flow_session_text(session: semio_framework::abi::AbiHandle, text: &str) -> Vec<u8> {
+    let mut writer = FlowPayloadWriter::default();
+    writer.handle(session);
+    writer.bytes(text.as_bytes()).unwrap();
+    writer.finish()
+}
+
+/// ⚡️ Drives one whole `documentJson` through the REAL bridge at a given poll credit and reports
+/// what it cost: how many `FLOW_EVENT_PROGRESS` events crossed, and the bytes the operation answered.
+///
+/// The document is seeded through the bridge's own `synchronizeDocument` first, so the measured
+/// crossing carries a real payload rather than an empty default.
+///
+/// Counted at the bridge rather than at the feature because the event is the unit that matters: every
+/// `Progress` is its own ABI message the host has to poll, decode and reply to.
+fn document_json_transfer(byte_credit: usize) -> (usize, Vec<u8>) {
+    let budget = AbiWorkBudget { byte_credit, now_ms: 0, deadline_ms: None, cancelled: false, interrupted: false };
+    let mut bridge = FlowBridge::new(FlowDomainAdapter::default);
+    let session = flow_open_session(&mut bridge, budget);
+
+    bridge.try_send(bridge_request(2_610, 2, 1, flow_session_text(session, &measured_document_json())), budget).unwrap();
+    flow_drain_request(&mut bridge, budget, 2);
+
+    let mut payload = FlowPayloadWriter::default();
+    payload.handle(session);
+    bridge.try_send(bridge_request(2_609, 3, 1, payload.finish()), budget).unwrap();
+    let (progress, _, answered) = flow_drain_request(&mut bridge, budget, 3);
+    close_bridge(&mut bridge);
+    (progress, answered)
 }
 
 /// ⚡️ One poll spends the byte credit it was GRANTED, not one byte.
 ///
 /// Every incremental phase of a flow operation — argument decode, the retained-DAG cursors, output
 /// encode — advances by a single byte and answers `Progress`, and the bridge makes each `Progress`
-/// its own ABI message. A poll granted 4 096 bytes therefore moved one byte, so an operation's
-/// payload crossed at roughly 68 KB/s: the node-graph board's own draw list cost ~20 000 round trips
-/// per frame, one present took 200–450 ms idle and over 2.5 s under a scroll gesture, and the Flow
+/// its own ABI message. A poll granted 4 096 bytes therefore moved one byte, so an operation's
+/// payload crossed at roughly 68 KB/s: the node-graph board's own draw list cost ~20 000 round trips
+/// per frame, one present took 200–450 ms idle and over 2.5 s under a scroll gesture, and the Flow
 /// window painted ONCE for a thirty-tick scroll (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
 /// `📓️flow-scroll-render-perf-2026-09-15.md` §3).
 ///
 /// The law is the ratio, not an absolute: at N times the credit an operation must cost at most about
-/// 1/N of the steps, so a future phase that forgets to honour its budget fails here.
+/// 1/N of the crossings, so a future phase that forgets to honour its budget fails here.
 #[test]
 fn one_poll_spends_its_whole_byte_credit_instead_of_one_byte() {
-    let single = progress_steps_for(2_609, 1);
-    let granted = progress_steps_for(2_609, 4_096);
-    assert!(single > 1_000, "the document payload must be large enough to measure: {single} steps at credit 1");
-    assert!(granted * 100 < single, "credit 4096 cost {granted} steps against {single} at credit 1 — the budget is not being spent");
-    assert!(granted >= 1, "an operation still answers Progress at least once before it completes");
+    let (single, _) = document_json_transfer(1);
+    let (granted, _) = document_json_transfer(4_096);
+    println!("flow poll credit: {MEASURED_ROWS} retained rows crossed in {single} progress events at credit 1 and {granted} at credit 4096");
+    assert!(single > 1_000, "the document payload must be large enough to measure: {single} crossings at credit 1");
+    assert!(granted * 100 < single, "credit 4096 cost {granted} crossings against {single} at credit 1 — the budget is not being spent");
+    assert!(granted >= 1, "an operation still reports progress at least once before it completes");
 }
 
-/// ⚡️ Spending the credit may not change WHAT an operation answers, only how many polls it took.
+/// 🛍️ Drives one `setCatalogueJson` payload through a fresh session and answers what the guest then
+/// holds, read back through its own `catalogueJson`. Fresh bridge per call, because the point of the
+/// law is what a SECOND session inherits from the process the first one registered into.
+fn catalogue_round_trip(payload: &str) -> (semio_framework::abi::AbiStatus, String) {
+    let budget = bridge_budget();
+    let mut bridge = FlowBridge::new(FlowDomainAdapter::default);
+    let session = flow_open_session(&mut bridge, budget);
+    bridge.try_send(bridge_request(2_505, 2, 1, flow_session_text(session, payload)), budget).unwrap();
+    let (_, status, _) = flow_drain_request(&mut bridge, budget, 2);
+    let mut read = FlowPayloadWriter::default();
+    read.handle(session);
+    bridge.try_send(bridge_request(2_504, 3, 1, read.finish()), budget).unwrap();
+    let (_, _, answered) = flow_drain_request(&mut bridge, budget, 3);
+    close_bridge(&mut bridge);
+    (status, String::from_utf8(answered).expect("catalogue json is utf-8"))
+}
+
+/// 📦️ An app-static payload crosses the ABI once per CONTENT GENERATION, not once per surface attach.
+///
+/// Every flow session in a page lives in one wasm module, and the operator catalogue is the same
+/// bytes for all of them — 88 438 B of `setNeuronKindInfosJson` plus 22 849 B of `setCatalogueJson`,
+/// re-crossed by every board that attached (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
+/// `📓️flow-scroll-render-perf-2026-09-15.md` §9). A second session names what the first delivered.
+#[test]
+fn a_shared_payload_crosses_once_and_a_second_session_names_it() {
+    retire_flow_shared_payloads();
+    let sections = r#"[{"id":"shared-payload-law","title":"Shared Payload Law","items":[{"kind":"neuron","neuronKind":"brep.box","name":"Box","abbreviation":"Box","icon":"cube","summary":"a measured catalogue entry"}]}]"#;
+    let digest = "24.abc.def";
+    let (carried_status, carried) = catalogue_round_trip(&format!("@{digest}\n{sections}"));
+    assert_eq!(carried_status, semio_framework::abi::AbiStatus::OK);
+    let (named_status, named) = catalogue_round_trip(&format!("@{digest}"));
+    assert_eq!(named_status, semio_framework::abi::AbiStatus::OK);
+    assert!(carried.contains("Shared Payload Law"), "the carried body must reach the guest catalogue: {carried}");
+    assert_eq!(named, carried, "a named payload must install exactly what the carried one did");
+    println!("shared flow payload: carried {} B, named {} B for the same catalogue", sections.len() + digest.len() + 2, digest.len() + 1);
+}
+
+/// 📦️ A reference this guest process does not hold FAILS, so the sender carries the body again
+/// instead of installing an empty catalogue behind a stale note of what the guest holds.
+#[test]
+fn a_shared_payload_reference_the_guest_lost_fails_closed() {
+    retire_flow_shared_payloads();
+    let (status, answered) = catalogue_round_trip("@a-digest-this-process-never-registered");
+    assert_ne!(status, semio_framework::abi::AbiStatus::OK, "an unheld shared payload reference must not answer OK");
+    assert!(!answered.contains("Shared Payload Law"), "a failed reference must install nothing: {answered}");
+}
+
+/// 📦️ The envelope itself: a carried body registers and answers itself, a reference answers the
+/// registered body, an unheld reference is an error, and a bare body is its own payload.
+#[test]
+fn shared_payload_envelope_carries_names_and_fails_closed() {
+    retire_flow_shared_payloads();
+    assert!(resolve_flow_shared_payload("@missing").is_err());
+    assert_eq!(resolve_flow_shared_payload("[]").expect("a bare body is its own payload"), "[]");
+    assert_eq!(resolve_flow_shared_payload("@k1\n[1,2,3]").expect("a carried body answers itself"), "[1,2,3]");
+    assert_eq!(resolve_flow_shared_payload("@k1").expect("a registered digest answers its body"), "[1,2,3]");
+    retire_flow_shared_payloads();
+    assert!(resolve_flow_shared_payload("@k1").is_err(), "a retired registry holds nothing");
+}
+
+/// 🧩️ A payload composed of parts names the parts the guest holds and carries only the new one — the
+/// app-static operator table must not re-cross to append the scene's own records.
+#[test]
+fn a_composed_payload_carries_only_the_part_the_guest_has_never_seen() {
+    retire_flow_shared_payloads();
+    let separator = FLOW_SHARED_PAYLOAD_PART_SEPARATOR;
+    let app = "[\"app-operator\"]";
+    let scene = "[\"scene-operator\"]";
+    let carried = format!("@app\n{app}");
+    assert_eq!(resolve_flow_shared_payload_parts(&carried).unwrap(), vec![app.to_string()]);
+    let appended = format!("@app{separator}@scene\n{scene}");
+    assert_eq!(resolve_flow_shared_payload_parts(&appended).unwrap(), vec![app.to_string(), scene.to_string()]);
+    assert!(appended.len() * 4 < carried.len() + scene.len() + 32 || appended.len() < carried.len() + scene.len(), "appending must not re-carry the first part");
+    let both_named = format!("@app{separator}@scene");
+    assert_eq!(resolve_flow_shared_payload_parts(&both_named).unwrap(), vec![app.to_string(), scene.to_string()]);
+    retire_flow_shared_payloads();
+    assert!(resolve_flow_shared_payload_parts(&both_named).is_err(), "a retired registry holds no part");
+}
+
+/// 🧩️ A two-part operator table installs exactly the ids of both parts, in the order the host wrote
+/// them — the composition must mean what one concatenated body meant.
+#[test]
+fn a_composed_operator_table_installs_every_part() {
+    retire_flow_shared_payloads();
+    let app = r#"[{"id":"app.only","extension":"app","name":"App Only","abbreviation":"AO","icon":"box","summary":"","inputs":[],"outputs":[]}]"#;
+    let scene = r#"[{"id":"scene.only","extension":"scene","name":"Scene Only","abbreviation":"SO","icon":"box","summary":"","inputs":[],"outputs":[]}]"#;
+    let separator = FLOW_SHARED_PAYLOAD_PART_SEPARATOR;
+    let mut host = FlowHost::default();
+    host.set_neuron_kind_infos_payload(&format!("@app\n{app}{separator}@scene\n{scene}")).expect("a carried composition installs");
+    assert_eq!(host.neuron_kind_ids(), vec!["app.only".to_string(), "scene.only".to_string()], "both parts must install");
+    host.set_neuron_kind_infos_payload(&format!("@app{separator}@scene")).expect("a fully named composition installs");
+    assert_eq!(host.neuron_kind_ids(), vec!["app.only".to_string(), "scene.only".to_string()], "naming both parts must install the same table");
+    host.retire_cold();
+}
+
+/// ⚡️ Spending the credit may only change how many polls an operation took, never what it answered.
 #[test]
 fn spending_the_credit_does_not_change_the_operation_result() {
-    let read = |byte_credit: usize| {
-        let domain = Rc::new(RefCell::new(FlowDomainAdapter::default()));
-        let session = semio_framework::abi::AbiHandle::try_new(1, 1).unwrap();
-        domain.borrow_mut().bind_session(session);
-        let admission = FlowFeatureAdmission { session, request_generation: 1 };
-        let mut feature = FlowDomainAdapter::start_feature(domain, admission, 2_609, Vec::new()).unwrap();
-        let budget = AbiWorkBudget { byte_credit, now_ms: 0, deadline_ms: None, cancelled: false, interrupted: false };
-        loop {
-            match feature.step(budget) {
-                FlowFeatureStep::Progress { .. } => {}
-                FlowFeatureStep::Complete(output) => return output,
-                FlowFeatureStep::RetainedPage(output) => return output,
-                other => panic!("unexpected flow step {other:?}"),
-            }
-        }
-    };
-    assert_eq!(read(1), read(4_096));
+    let (_, single) = document_json_transfer(1);
+    let (_, granted) = document_json_transfer(4_096);
+    assert!(!single.is_empty(), "documentJson answered nothing");
+    assert_eq!(single, granted);
 }
 
 #[test]
@@ -501,3 +670,121 @@ fn selected_widget_query_uses_census_and_multiple_cancellable_grants() {
     cancelled.cancelled = true;
     assert!(matches!(action.advance(&mut domain, &arguments, cancelled), FlowFeatureStep::Failed(FlowFailure { code: AbiErrorCode::Cancelled, .. })));
 }
+
+//#region 🪜️RetirementLadder
+
+/// 📏️ A retained document whose STRUCTURE is fixed (eight note rows) and whose PAYLOAD is scaled to
+/// `target_bytes`, so a close-turn census that changes with the size is reading bytes and one that
+/// does not is reading surfaces (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+fn scaled_document_json(target_bytes: usize) -> String {
+    const ROWS: usize = 8;
+    let text = "measured retained payload ".repeat(1 + target_bytes / (ROWS * 26));
+    let mut document = crate::artifact::FlowHostSnapshot::default();
+    for index in 0..ROWS {
+        document.widgets.push(Widget::InputNote { id: format!("scaled-{index}"), text: text.clone() });
+    }
+    let json = crate::os_pack::json::to_json_string(&document);
+    document.retire_cold();
+    json
+}
+
+/// 🧮️ Seeds one real session with `document_json` through the real bridge, closes it, and answers
+/// how many close TURNS the retirement ladder needed — one turn is one `poll`, which is one ABI
+/// round trip the host has to make.
+fn close_ladder_turns(document_json: &str) -> usize {
+    let budget = bridge_budget();
+    let mut bridge = FlowBridge::new(FlowDomainAdapter::default);
+    let session = flow_open_session(&mut bridge, budget);
+    bridge.try_send(bridge_request(2_610, 2, 1, flow_session_text(session, document_json)), budget).unwrap();
+    flow_drain_request(&mut bridge, budget, 2);
+    let mut read = FlowPayloadWriter::default();
+    read.handle(session);
+    bridge.try_send(bridge_request(2_609, 3, 1, read.finish()), budget).unwrap();
+    flow_drain_request(&mut bridge, budget, 3);
+    bridge.begin_close();
+    let mut turns = 0usize;
+    loop {
+        turns += 1;
+        assert!(turns < 8_000_000, "retained Flow domain never closed");
+        match bridge.poll(budget).unwrap() {
+            AbiPortPoll::Message(AbiMessage::Event(event)) => acknowledge_bridge_event(&mut bridge, &event),
+            AbiPortPoll::Closed => {
+                assert!(bridge.terminal_is_empty());
+                return turns;
+            }
+            _ => {}
+        }
+    }
+}
+
+/// 🪜️ A retained document retires in turns proportional to the SURFACES it holds, never to the bytes
+/// under them.
+///
+/// The close ladder had the same defect `FlowProgramFeature::step` had one layer down: a turn granted
+/// 4 096 bytes of credit advanced the retirement by one rung, so the turn count was linear in the
+/// payload — a 24-row document cost 2 626 turns and a 64-row one 5 718, against a declared bound of
+/// 4 096 (`🧫️fixtures/🧹️session-close/🔣️.json` `close.maximumTurns`). Any document over ~20 KB could
+/// not be closed inside its own contract (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
+/// `📓️flow-surface-followup-2026-09-15.md` §2.4).
+///
+/// Nothing crosses the ABI while a session retires, so the bytes under a retained item are not a
+/// turn's currency: its structure is. The three documents here carry the SAME eight rows at 1 KB,
+/// 32 KB and 256 KB, so a ladder that moves per surface answers the same count for all three.
+#[test]
+fn a_retained_document_retires_in_turns_that_do_not_count_its_bytes() {
+    let sizes = [1_024usize, 32_768, 262_144];
+    let mut census = Vec::new();
+    for size in sizes {
+        let json = scaled_document_json(size);
+        let turns = close_ladder_turns(&json);
+        println!("[DEBUG] flow close ladder: document {} B ({} B of json) retired in {turns} turns", size, json.len());
+        census.push((json.len(), turns));
+    }
+    let bound = serde_json::from_str::<Value>(include_str!("../../🧫️fixtures/🧹️session-close/🔣️.json")).unwrap()["close"]["maximumTurns"].as_u64().unwrap() as usize;
+    let smallest = census.first().expect("a measured document").1;
+    let largest = census.last().expect("a measured document").1;
+    assert!(census.last().unwrap().0 > census.first().unwrap().0 * 64, "the payloads must differ by two orders of magnitude to measure a per-byte ladder: {census:?}");
+    assert_eq!(smallest, largest, "the close turn count must not read the payload: {census:?}");
+    assert!(largest * 32 < bound, "a retained document must retire with margin inside its declared bound of {bound}: {census:?}");
+}
+
+
+/// 🧾️ Drives ONE retained domain's close ladder to terminal and answers, per close turn, the phase
+/// the turn anchored on — the ladder printed rung by rung.
+fn close_ladder_census(document_json: &str) -> Vec<(String, usize)> {
+    let mut domain = FlowDomainAdapter::default();
+    domain.bind_session(semio_framework::abi::AbiHandle::try_new(1, 1).unwrap());
+    run(&mut domain, 2_610, text_payload(document_json)).unwrap();
+    domain.begin_close();
+    let mut census: Vec<(String, usize)> = Vec::new();
+    for turn in 0..8_000_000usize {
+        let phase = format!("{:?}", domain.close_phase());
+        match census.last_mut() {
+            Some((held, count)) if *held == phase => *count += 1,
+            _ => census.push((phase, 1)),
+        }
+        if domain.close_step(bridge_budget()).unwrap() {
+            assert!(domain.terminal_is_empty(), "a complete close must be terminal at turn {turn}");
+            return census;
+        }
+    }
+    panic!("retained Flow domain never closed")
+}
+
+/// 🪜️ Prints the retirement ladder of a 32 KB retained document, turn by turn.
+#[test]
+fn the_retirement_ladder_names_every_turn_it_spends() {
+    let census = close_ladder_census(&scaled_document_json(32_768));
+    let turns: usize = census.iter().map(|(_, count)| count).sum();
+    println!("[DEBUG] flow close ladder census (32 KB document): {turns} turns");
+    for (phase, count) in &census {
+        println!("[DEBUG]   {phase} x{count}");
+    }
+    for rows in [24u32, 64] {
+        println!("[DEBUG] flow close ladder: the {rows}-row measured document retired in {} turns", close_ladder_turns(&row_document_json(rows)));
+    }
+    assert!(turns < 64, "a 32 KB document must retire in turns worth naming, not thousands: {census:?}");
+    assert!(!census.iter().any(|(phase, _)| phase.contains("Backing") || phase.contains("Domain") || phase.contains("Neural")), "a payload frontier must never anchor a close turn: {census:?}");
+}
+
+//#endregion 🪜️RetirementLadder

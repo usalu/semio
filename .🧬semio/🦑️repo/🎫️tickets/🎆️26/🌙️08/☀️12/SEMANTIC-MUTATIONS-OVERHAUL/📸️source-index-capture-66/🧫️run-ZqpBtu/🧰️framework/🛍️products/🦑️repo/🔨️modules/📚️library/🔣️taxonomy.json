@@ -25508,7 +25508,7 @@
       "🛰️protobuf": "protobuf"
     },
     "generator": "bun ./📜️script.ts schema generate",
-    "idBase": "https://semio.tech/schema/",
+    "idBase": "https://json.schemas.assets.semio-tech.com/",
     "idFacetFilenamePattern": "^[a-z0-9]+(?:-[a-z0-9]+)*\\.json$",
     "mutationAggregateFacetFilename": "mutations.json",
     "mutationLeafFacetFilename": "schema.json",

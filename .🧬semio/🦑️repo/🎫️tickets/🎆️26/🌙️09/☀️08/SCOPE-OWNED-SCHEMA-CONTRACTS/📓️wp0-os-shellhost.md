@@ -114,7 +114,7 @@ Full evidence for every file below (with source line numbers, consumer lists, an
 
 ### 4.1 🎟️invite-capability — full trace
 
-- Schema: `$id: https://semio.tech/schema/directory/invite-capability-transfer.v1.json`, dialect
+- Schema: `$id: https://json.schemas.assets.semio-tech.com/directory/invite-capability-transfer.v1.json`, dialect
   2020-12 (not draft-07). Fixture `🔣️.json` mirrors the schema 1:1 (a "schema of one example" document,
   per the coordinator's seed note).
 - **Issuer/verifier of the real token**: `🌎️hub/📇️directory/🦀️.rs:805` (`capability_type!(InviteCapability,
@@ -169,7 +169,7 @@ excluded from the enumeration and record count for that reason (see §9). `🧵�
 
 ### 4.6 🪪️host-bootstrap — the other unresolved case
 
-`$id: https://semio.tech/schema/react/host-identity-bootstrap-v1.json` namespaces itself under a
+`$id: https://json.schemas.assets.semio-tech.com/react/host-identity-bootstrap-v1.json` namespaces itself under a
 *rendering target* ("react"), not a domain. Content (`resolveRequiredHostApps`, `landingAppId`/
 `hostAppId` resolution) is intrinsic to how the React target boots ShellHost's own chrome; no consumer
 outside `⚛️react`'s test suite and ShellHost itself was found. `semanticAllowedOwnerLevels` has no

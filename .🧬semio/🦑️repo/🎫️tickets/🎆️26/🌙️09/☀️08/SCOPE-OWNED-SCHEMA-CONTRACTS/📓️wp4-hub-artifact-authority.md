@@ -7,7 +7,7 @@ contains data only.
 ## 1. Scope → export table
 
 ### `hub.artifact-authority`
-`🌎️hub/🗿️artifact-authority/🧬️schema/🔣️.json` — `$id` `https://semio.tech/schema/hub/artifact-authority/schema.json`
+`🌎️hub/🗿️artifact-authority/🧬️schema/🔣️.json` — `$id` `https://json.schemas.assets.semio-tech.com/hub/artifact-authority/schema.json`
 
 | Export id | Source fixture (wrapper it was extracted from) | Implementation it mirrors |
 |---|---|---|
@@ -19,7 +19,7 @@ contains data only.
 Private helpers (lower-camel, not exports): `hash`, `safeInteger`, `chunkOrdinal`.
 
 ### `hub.artifact-authority.creation`
-`🌎️hub/🗿️artifact-authority/🌱️creation/🧬️schema/🔣️.json` — `$id` `https://semio.tech/schema/hub/artifact-authority/creation/schema.json`
+`🌎️hub/🗿️artifact-authority/🌱️creation/🧬️schema/🔣️.json` — `$id` `https://json.schemas.assets.semio-tech.com/hub/artifact-authority/creation/schema.json`
 
 | Export id | Source fixture | Implementation it mirrors |
 |---|---|---|
@@ -39,7 +39,7 @@ Private helpers (lower-camel, not exports): `hash`, `safeInteger`, `chunkOrdinal
 Private helpers: `safeInteger`, `identity`, `openTransitions`.
 
 ### `hub.artifact-authority.native-openable-provider`
-`🌎️hub/🗿️artifact-authority/📇️native-openable-provider/🧬️schema/🔣️.json` — `$id` `https://semio.tech/schema/hub/artifact-authority/native-openable-provider/schema.json`
+`🌎️hub/🗿️artifact-authority/📇️native-openable-provider/🧬️schema/🔣️.json` — `$id` `https://json.schemas.assets.semio-tech.com/hub/artifact-authority/native-openable-provider/schema.json`
 
 | Export id | Source fixture | Implementation it mirrors |
 |---|---|---|
@@ -126,11 +126,11 @@ Fixture-count guards added where the deleted wrappers' `minItems`/`maxItems` use
 validates every rewired fixture member plus the mutation ratchets:
 
 ```
-hub.artifact-authority => https://semio.tech/schema/hub/artifact-authority/schema.json
+hub.artifact-authority => https://json.schemas.assets.semio-tech.com/hub/artifact-authority/schema.json
   exports: ArtifactCasObjectKeyV1, ArtifactCasManifestPlanV1, ArtifactCasRetentionLedgerEventV1, ArtifactCasSweepCursorV1
-hub.artifact-authority.creation => https://semio.tech/schema/hub/artifact-authority/creation/schema.json
+hub.artifact-authority.creation => https://json.schemas.assets.semio-tech.com/hub/artifact-authority/creation/schema.json
   exports: ArtifactCreationPhaseV1, ArtifactCreationFactKindV1, ArtifactCreationOperationStateV1, ArtifactCreationTransitionV1, ArtifactCreationCancellationDecisionV1, ArtifactCreationTransactionKindV1, ArtifactCreationTransactionOutcomeV1, ArtifactCreationAcceptedRecoveryV1, ArtifactCreationHttpLimitsV1, ArtifactCreationHttpRouteV1, ArtifactCreationHttpAuthorityV1, ArtifactCreationHttpResponseV1
-hub.artifact-authority.native-openable-provider => https://semio.tech/schema/hub/artifact-authority/native-openable-provider/schema.json
+hub.artifact-authority.native-openable-provider => https://json.schemas.assets.semio-tech.com/hub/artifact-authority/native-openable-provider/schema.json
   exports: NativeArtifactProviderHeadlessProfileV1, NativeCodecProviderSetIdentityV1, NativeCodecProviderSelectionCaseV1, NativeCodecUnconsumedProfileV1, NativeOpenableAttestationV1, NativeOpenableOpenTargetV1, NativeOpenableHostileExpectationV1
 contract rejects wrong-surface: true
 contract rejects cancelled-before-preview: true

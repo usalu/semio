@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/framework/tool-run/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/tool-run/schema.json",
   "title": "ToolRunSchema",
   "description": "Source of record for the ⏯️tool-run framework module: run identity, lifecycle states, events and the pure reducer transition, progress and step ring, trace pages, trace delta, ticks, the static ToolRunDefinition and the lifecycle, trace page and tick fixtures. Wire names are camelCase; u64 values are JSON integers; byte strings are lowercase hex.",
   "$defs": {

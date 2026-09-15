@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/framework/graph/manifest/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/graph/manifest/schema.json",
   "title": "Graph Manifest Schema Module",
   "definitions": {
     "graphManifestPropertyDef": {

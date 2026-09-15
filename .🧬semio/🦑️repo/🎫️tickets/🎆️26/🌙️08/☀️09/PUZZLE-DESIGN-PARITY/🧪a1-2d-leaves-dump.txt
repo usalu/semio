@@ -237,7 +237,7 @@ type Puzzle2dArtifact {
 
 ===== 🧬️schema/🔣️component.json (4373 bytes) =====
 {
-  "$id": "https://semio.tech/schema/s/puzzle/puzzle2d/artifact.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle2d/artifact.json",
   "title": "Puzzle2dArtifact",
   "type": "object",
   "additionalProperties": false,
@@ -631,7 +631,7 @@ type Puzzle2dSnapshot {
 
 ===== 📸️snapshot/🧬️schema/🔣️component.json (1331 bytes) =====
 {
-  "$id": "https://semio.tech/schema/s/puzzle/puzzle2d/snapshot.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle2d/snapshot.json",
   "title": "Puzzle2dSnapshot",
   "type": "object",
   "additionalProperties": false,
@@ -951,7 +951,7 @@ type Puzzle2dMeta { _placeholder: Boolean }
 
 ===== 🔺️diff/🧬️schema/🔣️component.json (7175 bytes) =====
 {
-  "$id": "https://semio.tech/schema/s/puzzle/puzzle2d/diff.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle2d/diff.json",
   "title": "Puzzle2dDiff",
   "type": "object",
   "additionalProperties": false,

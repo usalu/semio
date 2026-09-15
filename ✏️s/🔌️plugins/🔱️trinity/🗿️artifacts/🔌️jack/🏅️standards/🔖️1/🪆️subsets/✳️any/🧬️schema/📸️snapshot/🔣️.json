@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/trinity/jack/snapshot.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/trinity/jack/snapshot.json",
   "title": "JackSnapshot",
   "type": "object",
   "additionalProperties": false,
@@ -9,10 +9,10 @@
     "schema": { "type": "string", "x-semio-state": "artifact" },
     "name": { "type": "string", "x-semio-state": "artifact" },
     "manifestId": { "type": "string", "x-semio-state": "artifact" },
-    "manifest": { "$ref": "https://semio.tech/schema/s/trinity/jack/artifact.json#/$defs/Manifest", "x-semio-state": "artifact" },
-    "camera": { "$ref": "https://semio.tech/schema/s/trinity/jack/artifact.json#/$defs/Camera", "x-semio-state": "artifact" },
+    "manifest": { "$ref": "https://json.schemas.assets.semio-tech.com/s/trinity/jack/artifact.json#/$defs/Manifest", "x-semio-state": "artifact" },
+    "camera": { "$ref": "https://json.schemas.assets.semio-tech.com/s/trinity/jack/artifact.json#/$defs/Camera", "x-semio-state": "artifact" },
     "content": {
-      "$ref": "https://semio.tech/schema/os/store/child.json",
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child.json",
       "x-semio-state": "artifact",
       "x-semio-child-kind": "s.stdio.semio"
     },

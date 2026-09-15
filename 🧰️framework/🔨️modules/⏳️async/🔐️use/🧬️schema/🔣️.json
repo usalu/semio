@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/framework/async/use/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/async/use/schema.json",
   "title": "Async Use Schema Module",
   "$defs": {
     "UseFixture": {

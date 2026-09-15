@@ -218,7 +218,7 @@
     "revocation-with-live-reader"
   ],
   "capacity": {
-    "schema": "https://semio.tech/schema/framework/value/resident/schema.json#/$defs/Resident",
+    "schema": "https://json.schemas.assets.semio-tech.com/framework/value/resident/schema.json#/$defs/Resident",
     "compositionFixture": "../../../💾️resident/🪪️metadata/🧫️fixtures/🔣️.json#/compositionCapacity",
     "maxDestinationPages": 1,
     "blockedReservationChangesUsage": false,

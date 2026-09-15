@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://semio.tech/schema/playground-session-output-ownership-v1.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/playground-session-output-ownership-v1.json",
   "title": "Playground Session Output Ownership",
   "type": "object",
   "additionalProperties": false,

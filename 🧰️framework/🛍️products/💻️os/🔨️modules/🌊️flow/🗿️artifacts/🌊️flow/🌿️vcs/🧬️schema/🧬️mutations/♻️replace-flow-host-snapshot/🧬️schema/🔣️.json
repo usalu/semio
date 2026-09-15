@@ -1,0 +1,28 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/os/flow/artifacts/flow/vcs/mutation/replace-flow-host-snapshot/schema.json",
+  "title": "ReplaceFlowHostSnapshot",
+  "$defs": {
+    "Payload": {
+      "type": "object",
+      "properties": {
+        "hostSnapshot": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/os/flow/artifacts/flow/vcs/snapshot.json#/$defs/HostDocument"
+        }
+      },
+      "required": [
+        "hostSnapshot"
+      ]
+    }
+  },
+  "allOf": [
+    {
+      "$ref": "#/$defs/Payload"
+    }
+  ],
+  "propertyNames": {
+    "enum": [
+      "hostSnapshot"
+    ]
+  }
+}

@@ -179,7 +179,7 @@ From slice C: the entire `🖼️assets` module (`🌱️metabolism/🎨️repre
 
 ## `📚️library/🧬️.schema.json` mutation-descriptor meta-schema finding
 
-From slice D — the single most consequential flat-file finding across the whole framework-modules partition: the repo-wide **mutation-descriptor meta-schema** (`🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️.schema.json`) lives as a hidden, anonymous dot-file directly in the `📚️library` module root, rather than in a `🧬️schema/` directory — even though it is the schema that literally standardizes the naming convention it itself violates. It defines the canonical, repo-wide "Direct Mutation Descriptor" contract (`$id https://semio.tech/schema/mutation-descriptor/1`) that every mutation owner's own companion `🧬️.schema.json` descriptor file must satisfy. Consumers: `📚️library/📦️packages/🟦️typescript/🔬️index.test.ts:7394` (hard-coded absolute repo-relative path) and `:52` (generic loop over every owner directory's own descriptor); `🔣️taxonomy.json:3358,3382` (`mutation-descriptor-specimen`/`mutation-descriptor-agreement` entries). The file has already moved once before without ever landing in the canonical `🧬️schema/` shape (earlier location per historical ticket notes: `🦑️repo/📚️library/🔣️mutation-descriptor.schema.json`). A move is repo-wide, high-blast-radius, and should be coordinated with whoever owns the mutation/DSL derive machinery, not executed unilaterally from within this partition alone.
+From slice D — the single most consequential flat-file finding across the whole framework-modules partition: the repo-wide **mutation-descriptor meta-schema** (`🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️.schema.json`) lives as a hidden, anonymous dot-file directly in the `📚️library` module root, rather than in a `🧬️schema/` directory — even though it is the schema that literally standardizes the naming convention it itself violates. It defines the canonical, repo-wide "Direct Mutation Descriptor" contract (`$id https://json.schemas.assets.semio-tech.com/mutation-descriptor/1`) that every mutation owner's own companion `🧬️.schema.json` descriptor file must satisfy. Consumers: `📚️library/📦️packages/🟦️typescript/🔬️index.test.ts:7394` (hard-coded absolute repo-relative path) and `:52` (generic loop over every owner directory's own descriptor); `🔣️taxonomy.json:3358,3382` (`mutation-descriptor-specimen`/`mutation-descriptor-agreement` entries). The file has already moved once before without ever landing in the canonical `🧬️schema/` shape (earlier location per historical ticket notes: `🦑️repo/📚️library/🔣️mutation-descriptor.schema.json`). A move is repo-wide, high-blast-radius, and should be coordinated with whoever owns the mutation/DSL derive machinery, not executed unilaterally from within this partition alone.
 
 ## Full findings table (319 files, all four slices)
 
@@ -2055,7 +2055,7 @@ Every classification-`b`, `c`, and `d` finding, in candidate-list order grouped 
 ### `🧰️framework/🔨️modules/🌱️value/🔁️codec/🧪️fixtures/🧬️.schema.json`
 
 - **Classification:** b — fixture-owned contract (violation)
-- **Role:** fixture-owned schema validating the exact-integer codec corpus ($id https://semio.tech/schemas/value/exact-integer-codec-v1.json, title "Exact Integer Value Codec Corpus")
+- **Role:** fixture-owned schema validating the exact-integer codec corpus ($id https://json.schemas.assets.semio-tech.coms/value/exact-integer-codec-v1.json, title "Exact Integer Value Codec Corpus")
 - **Current owner:** value/🔁️codec (no independent Cargo crate; 🔁️codec/🦀️.rs is a mod compiled into the semio-framework-replication crate, id=replication)
 - **Intended owner:** value/🔁️codec (should still get its own 🧬️schema/ module even though the owning crate is 'replication')
 - **Proposed named export(s):** `exactIntegerCodecCorpusSchema`
@@ -2064,7 +2064,7 @@ Every classification-`b`, `c`, and `d` finding, in candidate-list order grouped 
   - `🧰️framework/🔨️modules/🌱️value/🔁️codec/🦀️.rs:456` — rust include_str! of sibling fixture data 🧪️fixtures/🔣️.json validated against this schema at test time (schema itself not include_str!'d — validated only via the TS oracle below)
   - `🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🦀️.rs:2981` — rust include_str! of the SAME fixture data via a relative path reach-through from an unrelated product module (os/directory), confirming this corpus is treated as a shared oracle beyond value/🔁️codec itself
 - **Evidence:**
-  - 🧰️framework/🔨️modules/🌱️value/🔁️codec/🧪️fixtures/🧬️.schema.json:3 — $id https://semio.tech/schemas/value/exact-integer-codec-v1.json, title "Exact Integer Value Codec Corpus"
+  - 🧰️framework/🔨️modules/🌱️value/🔁️codec/🧪️fixtures/🧬️.schema.json:3 — $id https://json.schemas.assets.semio-tech.coms/value/exact-integer-codec-v1.json, title "Exact Integer Value Codec Corpus"
   - directory listing of 🧰️framework/🔨️modules/🌱️value/🔁️codec/ shows only 🦀️.rs and 🧪️fixtures/ — no 🧬️schema/ directory exists anywhere in this leaf
   - 🧰️framework/🔨️modules/🌱️value/🔁️codec/🦀️.rs:456 and 🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🦀️.rs:2981 both include_str! the sibling fixture DATA file (🔣️.json), not this schema file directly — the schema is consumed by a TS-side Ajv oracle (not directly grepped by id since it uses a URL $id, not a bare semio.* token)
 - **Open questions:**
@@ -2682,7 +2682,7 @@ Every classification-`b`, `c`, and `d` finding, in candidate-list order grouped 
 ### `🧰️framework/🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🏘️admission/📐️schema/🔣️.json`
 
 - **Classification:** c — non-canonical schema directory name (violation)
-- **Role:** fixture-shape schema validating this leaf's own admission fixture ($id https://semio.tech/schema/actor/output/admission-fixture.v1); mirrors sibling 🤝️contract.json
+- **Role:** fixture-shape schema validating this leaf's own admission fixture ($id https://json.schemas.assets.semio-tech.com/actor/output/admission-fixture.v1); mirrors sibling 🤝️contract.json
 - **Current owner:** actor/🪪️activation/🚪️instance/📥️output/🏘️admission
 - **Intended owner:** actor/🪪️activation/🚪️instance/📥️output/🏘️admission
 - **Proposed named export(s):** `outputAdmissionFixtureSchema`
@@ -2690,13 +2690,13 @@ Every classification-`b`, `c`, and `d` finding, in candidate-list order grouped 
 - **Consumers:**
   - `🧰️framework/🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🟦️.ts:171` — typescript dynamic import (fixtureSchema), paired with 🤝️contract.json, 🧬️schema.json, and 🧪️fixture/🔣️.json
 - **Evidence:**
-  - 🧰️framework/🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🏘️admission/📐️schema/🔣️.json:3 — "$id": "https://semio.tech/schema/actor/output/admission-fixture.v1"
+  - 🧰️framework/🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🏘️admission/📐️schema/🔣️.json:3 — "$id": "https://json.schemas.assets.semio-tech.com/actor/output/admission-fixture.v1"
   - 🧰️framework/🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🟦️.ts:171 — imports 🤝️contract.json + 🧬️schema.json + 🧪️fixture/🔣️.json + 📐️schema/🔣️.json (fixtureSchema) together, validated with Ajv + immer produce()
 
 ### `🧰️framework/🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🏘️admission/🧬️schema.json`
 
 - **Classification:** d — flat-file schema outside a module (violation)
-- **Role:** canonical domain contract schema ($id https://semio.tech/schema/actor/output/admission.v1)
+- **Role:** canonical domain contract schema ($id https://json.schemas.assets.semio-tech.com/actor/output/admission.v1)
 - **Current owner:** actor
 - **Intended owner:** actor/🪪️activation/🚪️instance/📥️output/🏘️admission
 - **Proposed named export(s):** `outputAdmissionSchema`
@@ -2704,7 +2704,7 @@ Every classification-`b`, `c`, and `d` finding, in candidate-list order grouped 
 - **Consumers:**
   - `🧰️framework/🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🟦️.ts:171` — typescript dynamic import, same call site as its fixture-schema sibling
 - **Evidence:**
-  - 🧰️framework/🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🏘️admission/🧬️schema.json:3 — "$id": "https://semio.tech/schema/actor/output/admission.v1"
+  - 🧰️framework/🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🏘️admission/🧬️schema.json:3 — "$id": "https://json.schemas.assets.semio-tech.com/actor/output/admission.v1"
 
 ### `🧰️framework/🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🧬️schema.json`
 
@@ -3271,7 +3271,7 @@ A schema-shaped `🧬️schema.json` / `🛂️schema.json` / `🧬️.schema.js
 - **Classification:** (d) flat-file schema outside a module (violation)
 - **Owner (current):** repo/library module (repo-wide mutation-descriptor authority)
 - **Intended owner:** repo/library module — 🧬️schema/ directory at the library module root
-- **Should export:** JSON Schema draft-07 "Direct Mutation Descriptor" ($id https://semio.tech/schema/mutation-descriptor/1) — the canonical, repo-wide contract every mutation owner's own 🧬️.schema.json companion file must satisfy (schemaVersion/owner/semanticKind/displayName/emoji/aggregateVariant/payloadSchema/textOpcode/binaryTag/invertibility/diffParticipation/outcomeClasses/composition/requiredLanguageSurfaces)
+- **Should export:** JSON Schema draft-07 "Direct Mutation Descriptor" ($id https://json.schemas.assets.semio-tech.com/mutation-descriptor/1) — the canonical, repo-wide contract every mutation owner's own 🧬️.schema.json companion file must satisfy (schemaVersion/owner/semanticKind/displayName/emoji/aggregateVariant/payloadSchema/textOpcode/binaryTag/invertibility/diffParticipation/outcomeClasses/composition/requiredLanguageSurfaces)
 - **Consumers:** 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🔬️index.test.ts:7394 (typescript-test (hard-coded absolute path to this exact file)); 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🔬️index.test.ts:52 (typescript-test (generic loop reading every owner directory's own 🧬️.schema.json descriptor and presumably cross-checking against this meta-schema)); 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json:3358,3382 (taxonomy (mutation-descriptor-specimen / mutation-descriptor-agreement entries reference this contract))
 - **Decision:** move-to 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🔣️.json
 - **Evidence:**

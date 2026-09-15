@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/framework/schema/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/schema/schema.json",
   "title": "FrameworkSchema",
   "description": "🧬️ The `framework.schema` scope: the `(scope id, export id, format id)` resolution contract every scope and every catalog tool speaks, plus the entity-kind catalog the `schema-entity-catalog` generator projects into TypeScript, Rust and Go. The root is a `oneOf` of the two instance documents this scope serializes to disk — the `schema-export-registry-entries-v1` dump (an object) and `🏷️entity-kinds/🔣️.json` (an array) — which are disjoint by JSON type, so exactly one branch can ever match.",
   "oneOf": [
@@ -85,7 +85,7 @@
       ],
       "properties": {
         "scope": {
-          "description": "Dotted scope id derived from the module `$id` path after `https://semio.tech/schema/`, e.g. `framework.schema`, `hub.inference`, `s.writer.writer`.",
+          "description": "Dotted scope id derived from the module `$id` path after `https://json.schemas.assets.semio-tech.com/`, e.g. `framework.schema`, `hub.inference`, `s.writer.writer`.",
           "type": "string",
           "pattern": "^[a-z0-9][a-z0-9.-]*$"
         },
@@ -109,7 +109,7 @@
       ],
       "properties": {
         "scope": {
-          "description": "Dotted scope id derived from the module `$id` path after `https://semio.tech/schema/`, e.g. `framework.schema`, `hub.inference`, `s.writer.writer`.",
+          "description": "Dotted scope id derived from the module `$id` path after `https://json.schemas.assets.semio-tech.com/`, e.g. `framework.schema`, `hub.inference`, `s.writer.writer`.",
           "type": "string",
           "pattern": "^[a-z0-9][a-z0-9.-]*$"
         },
@@ -167,7 +167,7 @@
               "const": "unknown-scope"
             },
             "scope": {
-              "description": "Dotted scope id derived from the module `$id` path after `https://semio.tech/schema/`, e.g. `framework.schema`, `hub.inference`, `s.writer.writer`.",
+              "description": "Dotted scope id derived from the module `$id` path after `https://json.schemas.assets.semio-tech.com/`, e.g. `framework.schema`, `hub.inference`, `s.writer.writer`.",
               "type": "string",
               "pattern": "^[a-z0-9][a-z0-9.-]*$"
             }
@@ -185,7 +185,7 @@
               "const": "unknown-export"
             },
             "scope": {
-              "description": "Dotted scope id derived from the module `$id` path after `https://semio.tech/schema/`, e.g. `framework.schema`, `hub.inference`, `s.writer.writer`.",
+              "description": "Dotted scope id derived from the module `$id` path after `https://json.schemas.assets.semio-tech.com/`, e.g. `framework.schema`, `hub.inference`, `s.writer.writer`.",
               "type": "string",
               "pattern": "^[a-z0-9][a-z0-9.-]*$"
             },
@@ -209,7 +209,7 @@
               "const": "format-absent"
             },
             "scope": {
-              "description": "Dotted scope id derived from the module `$id` path after `https://semio.tech/schema/`, e.g. `framework.schema`, `hub.inference`, `s.writer.writer`.",
+              "description": "Dotted scope id derived from the module `$id` path after `https://json.schemas.assets.semio-tech.com/`, e.g. `framework.schema`, `hub.inference`, `s.writer.writer`.",
               "type": "string",
               "pattern": "^[a-z0-9][a-z0-9.-]*$"
             },
@@ -235,7 +235,7 @@
               "const": "ambiguous-scope"
             },
             "scope": {
-              "description": "Dotted scope id derived from the module `$id` path after `https://semio.tech/schema/`, e.g. `framework.schema`, `hub.inference`, `s.writer.writer`.",
+              "description": "Dotted scope id derived from the module `$id` path after `https://json.schemas.assets.semio-tech.com/`, e.g. `framework.schema`, `hub.inference`, `s.writer.writer`.",
               "type": "string",
               "pattern": "^[a-z0-9][a-z0-9.-]*$"
             },

@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/gis/gismap/artifact.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/gis/gismap/artifact.json",
   "title": "GisMapArtifact",
   "type": "object",
   "additionalProperties": false,
@@ -8,33 +8,33 @@
     "positions": {
       "type": "array",
       "items": {
-        "$ref": "https://semio.tech/schema/s/gis/gismap/feature.json"
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/gis/gismap/feature.json"
       },
       "x-semio-state": "artifact"
     },
     "routes": {
       "type": "array",
       "items": {
-        "$ref": "https://semio.tech/schema/s/gis/gismap/feature.json"
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/gis/gismap/feature.json"
       },
       "x-semio-state": "artifact"
     },
     "regions": {
       "type": "array",
       "items": {
-        "$ref": "https://semio.tech/schema/s/gis/gismap/feature.json"
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/gis/gismap/feature.json"
       },
       "x-semio-state": "artifact"
     },
     "drawing": {
-      "$ref": "https://semio.tech/schema/os/store/child.json",
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child.json",
       "x-semio-state": "artifact",
       "x-semio-child-kind": "s.stdio.semio"
     },
     "image": {
       "anyOf": [
         {
-          "$ref": "https://semio.tech/schema/os/store/child.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child.json"
         },
         {
           "type": "null"
@@ -44,7 +44,7 @@
       "x-semio-child-kind": "s.stdio.semio"
     },
     "value": {
-      "$ref": "https://semio.tech/schema/os/store/child.json",
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child.json",
       "x-semio-state": "artifact",
       "x-semio-child-kind": "s.stdio.semio"
     }

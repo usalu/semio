@@ -2,7 +2,7 @@
 use super::*;
 
 const EXPORT_LEAVES: FacetLeaves =
-    FacetLeaves { rust: "pub struct Thing;", typescript: "export type Thing = {};", graphql: "type Thing { id: String! }", json_schema: r#"{"$id":"https://semio.tech/schema/test/thing.json","type":"object"}"#, proto: "" };
+    FacetLeaves { rust: "pub struct Thing;", typescript: "export type Thing = {};", graphql: "type Thing { id: String! }", json_schema: r#"{"$id":"https://json.schemas.assets.semio-tech.com/test/thing.json","type":"object"}"#, proto: "" };
 const EMPTY_LEAVES: FacetLeaves = FacetLeaves { rust: "", typescript: "", graphql: "", json_schema: "", proto: "" };
 const NAMED_EXPORTS: [SchemaExport; 2] = [SchemaExport { id: "Thing", leaves: EXPORT_LEAVES }, SchemaExport { id: "Other", leaves: EXPORT_LEAVES }];
 

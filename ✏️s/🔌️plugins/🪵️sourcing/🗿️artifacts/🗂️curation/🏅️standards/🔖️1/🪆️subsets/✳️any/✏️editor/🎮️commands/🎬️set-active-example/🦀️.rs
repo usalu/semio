@@ -3,7 +3,7 @@
 use crate::op::SourcingMutation;
 use crate::CurationSnapshot;
 use crate::editor::sourcing::config::{SourcingCurationConfig, SourcingCurationConfigMutation};
-use crate::editor::sourcing::{reset_document_effect, DEMO_STOCK_EXAMPLE_ID, EMPTY_EXAMPLE_ID};
+use crate::editor::sourcing::{reset_document_effect, EMPTY_EXAMPLE_ID};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -20,9 +20,8 @@ const _: () = assert!(crate::document_dsl::EMPTY_CURATION_TEXT.len() <= MAXIMUM_
 
 pub fn handle(payload: &SetActiveExample, _doc: &ArtifactView<'_, CurationSnapshot>, _cfg: &ConfigView<'_, SourcingCurationConfig>) -> Result<Emit<SourcingMutation, SourcingCurationConfigMutation>, Fault> {
     let text = match payload.example_id.as_str() {
-        "" | EMPTY_EXAMPLE_ID => crate::document_dsl::EMPTY_CURATION_TEXT,
-        DEMO_STOCK_EXAMPLE_ID => crate::document_dsl::DEMO_STOCK_TEXT,
-        _ => return Err(Fault::from("sourcing.example.unknown")),
+        EMPTY_EXAMPLE_ID => crate::document_dsl::EMPTY_CURATION_TEXT,
+        id => crate::standards::v1::subsets::any::examples().iter().find(|example| example.id() == id).map(|example| example.document()).ok_or_else(|| Fault::from("sourcing.example.unknown"))?,
     };
     let next = <CurationSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|error| Fault::from(error.to_string()))?;
     Ok(Emit { effects: vec![reset_document_effect(&next)], ..Default::default() })

@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/cad/cad/diff.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/cad/cad/diff.json",
   "title": "CadDiff",
   "type": "object",
   "additionalProperties": false,
@@ -11,7 +11,7 @@
           "type": "null"
         },
         {
-          "$ref": "https://semio.tech/schema/s/cad/cad/artifact.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/cad/cad/artifact.json"
         }
       ],
       "x-semio-state": "artifact"
@@ -84,7 +84,7 @@
           "type": "null"
         },
         {
-          "$ref": "https://semio.tech/schema/s/cad/cad/artifact.json#/$defs/CadDrawingChildList"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/cad/cad/artifact.json#/$defs/CadDrawingChildList"
         }
       ],
       "x-semio-state": "artifact",
@@ -98,7 +98,7 @@
         {
           "type": "object",
           "additionalProperties": {
-            "$ref": "https://semio.tech/schema/s/cad/cad/artifact.json#/$defs/CadReferenceList"
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/cad/cad/artifact.json#/$defs/CadReferenceList"
           }
         }
       ],
@@ -110,7 +110,7 @@
           "type": "null"
         },
         {
-          "$ref": "https://semio.tech/schema/s/cad/cad/artifact.json#/$defs/CadNodesDelta"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/cad/cad/artifact.json#/$defs/CadNodesDelta"
         }
       ],
       "x-semio-state": "artifact"
@@ -120,7 +120,7 @@
     "CadModelChild": {
       "allOf": [
         {
-          "$ref": "https://semio.tech/schema/os/store/child.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child.json"
         },
         {
           "type": "object",
@@ -151,7 +151,7 @@
     "CadDrawingChild": {
       "allOf": [
         {
-          "$ref": "https://semio.tech/schema/os/store/child.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child.json"
         },
         {
           "type": "object",

@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/puzzle/puzzle2d/artifact.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle2d/artifact.json",
   "title": "Puzzle2dArtifact",
   "type": "object",
   "additionalProperties": false,

@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/framework/value/resident/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/value/resident/schema.json",
   "title": "Value Resident Schema Module",
   "definitions": {
     "count": {
@@ -90,10 +90,10 @@
           ],
           "properties": {
             "envelope": {
-              "$ref": "https://semio.tech/schema/framework/value/resident/schema.json#/$defs/Resources"
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/resident/schema.json#/$defs/Resources"
             },
             "intrinsic": {
-              "$ref": "https://semio.tech/schema/framework/value/resident/schema.json#/$defs/Resources"
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/resident/schema.json#/$defs/Resources"
             },
             "cases": {
               "type": "array",
@@ -124,7 +124,7 @@
                 ]
               },
               "control": {
-                "$ref": "https://semio.tech/schema/framework/value/resident/schema.json#/$defs/Resources"
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/resident/schema.json#/$defs/Resources"
               }
             }
           }
@@ -180,7 +180,7 @@
           "const": 1
         },
         "capacity": {
-          "$ref": "https://semio.tech/schema/framework/value/resident/schema.json#/$defs/Resident"
+          "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/resident/schema.json#/$defs/Resident"
         },
         "invalidCapacities": {
           "type": "array",
@@ -238,19 +238,19 @@
           ],
           "properties": {
             "owner": {
-              "$ref": "https://semio.tech/schema/framework/value/resident/schema.json#/$defs/Resources"
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/resident/schema.json#/$defs/Resources"
             },
             "storage": {
-              "$ref": "https://semio.tech/schema/framework/value/resident/schema.json#/$defs/Resources"
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/resident/schema.json#/$defs/Resources"
             },
             "reader": {
-              "$ref": "https://semio.tech/schema/framework/value/resident/schema.json#/$defs/Resources"
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/resident/schema.json#/$defs/Resources"
             },
             "witness": {
-              "$ref": "https://semio.tech/schema/framework/value/resident/schema.json#/$defs/Resources"
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/resident/schema.json#/$defs/Resources"
             },
             "pageBacking": {
-              "$ref": "https://semio.tech/schema/framework/value/resident/schema.json#/$defs/Resources"
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/resident/schema.json#/$defs/Resources"
             }
           }
         },

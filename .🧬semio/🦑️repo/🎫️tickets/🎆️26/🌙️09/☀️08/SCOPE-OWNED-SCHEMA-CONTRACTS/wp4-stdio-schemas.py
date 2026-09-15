@@ -35,7 +35,7 @@ MUTATIONS_DIR = "🧬️mutations"
 SCHEMA_DIR = "🧬️schema"
 CANONICAL_SCHEMA_REL = "🧬️schema/🔣️.json"
 DIALECT = "http://json-schema.org/draft-07/schema#"
-ID_ROOT = "https://semio.tech/schema/s/stdio"
+ID_ROOT = "https://json.schemas.assets.semio-tech.com/s/stdio"
 
 # 🔢 `value_derive`'s scalar codecs (`🌱️value/🔁️codec/🦀️.rs` §Scalars) plus the width bound the
 # repository's own hand-authored stdio schemas already carry (`maximum: 255 | 65535 | 4294967295`).

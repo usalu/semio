@@ -2717,7 +2717,7 @@
   {
    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/💡️inferences/📝️text/🔣️.json",
    "classification": "definition",
-   "id": "https://semio.tech/schema/s/stdio/gltf/inference/text.json",
+   "id": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/inference/text.json",
    "schemaKeywordValue": "https://json-schema.org/draft/2020-12/schema",
    "hasDefs": false,
    "generatedMarker": null
@@ -2725,7 +2725,7 @@
   {
    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🧬️mutations/📝️text/🔣️.json",
    "classification": "definition",
-   "id": "https://semio.tech/schema/stdio.gltf/mutations/text.json",
+   "id": "https://json.schemas.assets.semio-tech.com/stdio.gltf/mutations/text.json",
    "schemaKeywordValue": "https://json-schema.org/draft/2020-12/schema",
    "hasDefs": false,
    "generatedMarker": null
@@ -3861,7 +3861,7 @@
   {
    "path": "🧰️framework/🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🏘️admission/📐️schema/🔣️.json",
    "classification": "definition",
-   "id": "https://semio.tech/schema/actor/output/admission-fixture.v1",
+   "id": "https://json.schemas.assets.semio-tech.com/actor/output/admission-fixture.v1",
    "schemaKeywordValue": "http://json-schema.org/draft-07/schema#",
    "hasDefs": false,
    "generatedMarker": null
@@ -3869,7 +3869,7 @@
   {
    "path": "🧰️framework/🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🏘️admission/🧬️schema.json",
    "classification": "definition",
-   "id": "https://semio.tech/schema/actor/output/admission.v1",
+   "id": "https://json.schemas.assets.semio-tech.com/actor/output/admission.v1",
    "schemaKeywordValue": "http://json-schema.org/draft-07/schema#",
    "hasDefs": false,
    "generatedMarker": null
@@ -5149,7 +5149,7 @@
   {
    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📥️ui-patch/🧬️schema.json",
    "classification": "definition",
-   "id": "https://semio.tech/schemas/os/native-ui-patch-marshalling-v1.json",
+   "id": "https://json.schemas.assets.semio-tech.coms/os/native-ui-patch-marshalling-v1.json",
    "schemaKeywordValue": "https://json-schema.org/draft/2020-12/schema",
    "hasDefs": false,
    "generatedMarker": null
@@ -7196,83 +7196,83 @@
   "unresolvedAmbiguousIdStyleCount": 126,
   "crossScope": [],
   "duplicateIds": {
-   "https://semio.tech/schema/stdio.gif/snapshot/text.json": [
+   "https://json.schemas.assets.semio-tech.com/stdio.gif/snapshot/text.json": [
     "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/7️⃣87a/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🔣️.json",
     "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/📝️text/🔣️.json"
    ],
-   "https://semio.tech/schema/s.stdio.gif/snapshot.json": [
+   "https://json.schemas.assets.semio-tech.com/s.stdio.gif/snapshot.json": [
     "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/7️⃣87a/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json",
     "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🔣️.json"
    ],
-   "https://semio.tech/schema/s.stdio.gif/artifact.json": [
+   "https://json.schemas.assets.semio-tech.com/s.stdio.gif/artifact.json": [
     "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/7️⃣87a/🪆️subsets/✳️any/🧬️schema/🔣️.json",
     "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🧬️schema/🔣️.json"
    ],
-   "https://semio.tech/schema/stdio.gif/diff/text.json": [
+   "https://json.schemas.assets.semio-tech.com/stdio.gif/diff/text.json": [
     "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/7️⃣87a/🪆️subsets/✳️any/🧬️schema/🔺️diff/📝️text/🔣️.json",
     "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🧬️schema/🔺️diff/📝️text/🔣️.json"
    ],
-   "https://semio.tech/schema/s.stdio.gif/diff.json": [
+   "https://json.schemas.assets.semio-tech.com/s.stdio.gif/diff.json": [
     "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/7️⃣87a/🪆️subsets/✳️any/🧬️schema/🔺️diff/🔣️.json",
     "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🔣️.json"
    ],
-   "https://semio.tech/schema/stdio.gif/mutations/text.json": [
+   "https://json.schemas.assets.semio-tech.com/stdio.gif/mutations/text.json": [
     "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/7️⃣87a/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🔣️.json",
     "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/📝️text/🔣️.json"
    ],
-   "https://semio.tech/schema/s.stdio.gif/mutation.json": [
+   "https://json.schemas.assets.semio-tech.com/s.stdio.gif/mutation.json": [
     "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/7️⃣87a/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔣️.json",
     "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🔣️.json"
    ],
-   "https://semio.tech/schema/stdio.mp4.snapshot.json": [
+   "https://json.schemas.assets.semio-tech.com/stdio.mp4.snapshot.json": [
     "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🔣️.json",
     "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json"
    ],
-   "https://semio.tech/schema/stdio.mp4.diff.json": [
+   "https://json.schemas.assets.semio-tech.com/stdio.mp4.diff.json": [
     "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧬️schema/🔺️diff/💾️binary/🔣️.json",
     "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧬️schema/🔺️diff/📝️text/🔣️.json",
     "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧬️schema/🔺️diff/🔣️.json"
    ],
-   "https://semio.tech/schema/stdio.mp4.mutations.json": [
+   "https://json.schemas.assets.semio-tech.com/stdio.mp4.mutations.json": [
     "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🔣️.json",
     "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🔣️.json",
     "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔣️.json"
    ],
-   "https://semio.tech/schema/stdio.pdf/snapshot/text.json": [
+   "https://json.schemas.assets.semio-tech.com/stdio.pdf/snapshot/text.json": [
     "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/📝️text/🔣️.json",
     "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/📝️text/🔣️.json"
    ],
-   "https://semio.tech/schema/stdio.pdf/diff/text.json": [
+   "https://json.schemas.assets.semio-tech.com/stdio.pdf/diff/text.json": [
     "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🧬️schema/🔺️diff/📝️text/🔣️.json",
     "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🔺️diff/📝️text/🔣️.json"
    ],
-   "https://semio.tech/schema/stdio.avi.snapshot.json": [
+   "https://json.schemas.assets.semio-tech.com/stdio.avi.snapshot.json": [
     "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🧬️schema/📸️snapshot/📝️text/🔣️.json",
     "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🧬️schema/📸️snapshot/🔣️.json"
    ],
-   "https://semio.tech/schema/stdio.avi.diff.json": [
+   "https://json.schemas.assets.semio-tech.com/stdio.avi.diff.json": [
     "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🧬️schema/🔺️diff/💾️binary/🔣️.json",
     "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🧬️schema/🔺️diff/📝️text/🔣️.json",
     "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🧬️schema/🔺️diff/🔣️.json"
    ],
-   "https://semio.tech/schema/stdio.avi.mutations.json": [
+   "https://json.schemas.assets.semio-tech.com/stdio.avi.mutations.json": [
     "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🧬️schema/🧬️mutations/💾️binary/🔣️.json",
     "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🧬️schema/🧬️mutations/📝️text/🔣️.json",
     "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🧬️schema/🧬️mutations/🔣️.json"
    ],
-   "https://semio.tech/schema/stdio.dwg/snapshot/text.json": [
+   "https://json.schemas.assets.semio-tech.com/stdio.dwg/snapshot/text.json": [
     "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/4️⃣ac1018/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🔣️.json",
     "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🔣️.json"
    ],
-   "https://semio.tech/schema/stdio.dwg/diff/text.json": [
+   "https://json.schemas.assets.semio-tech.com/stdio.dwg/diff/text.json": [
     "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/4️⃣ac1018/🪆️subsets/✳️any/🧬️schema/🔺️diff/📝️text/🔣️.json",
     "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/🔺️diff/📝️text/🔣️.json"
    ],
-   "https://semio.tech/schema/stdio.dwg/mutations/text.json": [
+   "https://json.schemas.assets.semio-tech.com/stdio.dwg/mutations/text.json": [
     "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/4️⃣ac1018/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🔣️.json",
     "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🔣️.json"
    ],
-   "https://semio.tech/schemas/os/gis-map-approval-history-fixture-v1.json": [
+   "https://json.schemas.assets.semio-tech.coms/os/gis-map-approval-history-fixture-v1.json": [
     "🧰️framework/🛍️products/💻️os/🧪️fixtures/↩️gis-map-approval-history-v1/🧬️.schema.json",
     "🧰️framework/🛍️products/💻️os/🧫️fixtures/↩️gis-map-approval-history-v1/🧬️.schema.json"
    ]
@@ -7438,7 +7438,7 @@
    ]
   },
   "fixtureDirectoryNamingDrift": {
-   "description": "🧪️fixtures (536 tracked-path occurrences) and 🧫️fixtures (4200 occurrences) are both live, widely-used conventions for the same semantic role across the same products (including sibling instances inside 💻️os), not a rare typo. This directly caused a real duplicate-$id/content-drift bug (see refGraph.duplicateIds: 'https://semio.tech/schemas/os/gis-map-approval-history-fixture-v1.json'): 🧰️framework/🛍️products/💻️os/🧪️fixtures/↩️gis-map-approval-history-v1/🧬️.schema.json and 🧰️framework/🛍️products/💻️os/🧫️fixtures/↩️gis-map-approval-history-v1/🧬️.schema.json share the identical $id but have DIFFERENT content — one requires 'oldOwnerRetired' with minItems 8/8, the other omits it from 'required' with minItems 9/9.",
+   "description": "🧪️fixtures (536 tracked-path occurrences) and 🧫️fixtures (4200 occurrences) are both live, widely-used conventions for the same semantic role across the same products (including sibling instances inside 💻️os), not a rare typo. This directly caused a real duplicate-$id/content-drift bug (see refGraph.duplicateIds: 'https://json.schemas.assets.semio-tech.coms/os/gis-map-approval-history-fixture-v1.json'): 🧰️framework/🛍️products/💻️os/🧪️fixtures/↩️gis-map-approval-history-v1/🧬️.schema.json and 🧰️framework/🛍️products/💻️os/🧫️fixtures/↩️gis-map-approval-history-v1/🧬️.schema.json share the identical $id but have DIFFERENT content — one requires 'oldOwnerRetired' with minItems 8/8, the other omits it from 'required' with minItems 9/9.",
    "action": "Needs owner decision: which of 🧪️fixtures/🧫️fixtures is canonical repo-wide, and the stale duplicate under 💻️os needs reconciling (not deleting per this audit's read-only mandate — flagged for the ticket owner)"
   }
  },

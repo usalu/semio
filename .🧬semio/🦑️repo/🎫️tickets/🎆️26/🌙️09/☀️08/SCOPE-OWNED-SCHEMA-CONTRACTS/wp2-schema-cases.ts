@@ -41,10 +41,10 @@ for (const row of cases.cases) {
   }
 }
 
-check("scope id from artifact $id", schemaScopeIdFromDocumentId("https://semio.tech/schema/s/trinity/jack/artifact.json", taxonomy), "s.trinity.jack");
-check("scope id from hub $id", schemaScopeIdFromDocumentId("https://semio.tech/schema/hub/inference/contract.json", taxonomy), "hub.inference");
+check("scope id from artifact $id", schemaScopeIdFromDocumentId("https://json.schemas.assets.semio-tech.com/s/trinity/jack/artifact.json", taxonomy), "s.trinity.jack");
+check("scope id from hub $id", schemaScopeIdFromDocumentId("https://json.schemas.assets.semio-tech.com/hub/inference/contract.json", taxonomy), "hub.inference");
 check("urn $id is unaddressable", schemaScopeIdFromDocumentId("urn:semio:hub:inference", taxonomy), null);
-check("facet-only $id is unaddressable", schemaScopeIdFromDocumentId("https://semio.tech/schema/contract.json", taxonomy), null);
+check("facet-only $id is unaddressable", schemaScopeIdFromDocumentId("https://json.schemas.assets.semio-tech.com/contract.json", taxonomy), null);
 check("export uri", parseSchemaExportUri("schema://hub.inference/InferenceApproval", taxonomy), { scopeId: "hub.inference", exportId: "InferenceApproval" });
 check("camelCase export uri is rejected", parseSchemaExportUri("schema://hub.inference/inferenceApproval", taxonomy), null);
 check("foreign scheme is rejected", parseSchemaExportUri("local://hub.inference/InferenceApproval", taxonomy), null);
@@ -54,7 +54,7 @@ check("declared interface facet kind", resolveSchemaFacetKind("🧰️framework/
 check("default facet kind", resolveSchemaFacetKind("🌎️hub/💡️inference/🧬️schema", taxonomy), taxonomy.schemaDefaultFacetKind);
 check("single dialect", taxonomy.schemaJsonDialect, taxonomy.mutationPayloadSchemaAuthority.jsonSchemaDialect);
 
-const probe = { $schema: taxonomy.schemaJsonDialect, $id: "https://semio.tech/schema/repo/library/probe.json", title: "Probe", type: "object", additionalProperties: false, properties: { id: { type: "string" } }, required: ["id"] };
+const probe = { $schema: taxonomy.schemaJsonDialect, $id: "https://json.schemas.assets.semio-tech.com/repo/library/probe.json", title: "Probe", type: "object", additionalProperties: false, properties: { id: { type: "string" } }, required: ["id"] };
 const validate = new Ajv({ strict: true }).compile(probe);
 check("ajv accepts the declared dialect (valid)", validate({ id: "a" }), true);
 check("ajv accepts the declared dialect (invalid)", validate({ id: 1 }), false);

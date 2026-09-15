@@ -1,11 +1,11 @@
+import Ajv from "ajv";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import Ajv from "ajv";
 import { describe, expect, it } from "vitest";
-import { ENTITY_KINDS, ENTITY_KIND_BY_EMOJI, entityKindByEmoji } from "../../🤖️generated/🏷️entity-kinds/🟦️";
 import { entityKindIndexByEmoji, parseEntityKind, parseEntityKindCatalog } from "../../🟦️";
+import { ENTITY_KINDS, ENTITY_KIND_BY_EMOJI, entityKindByEmoji } from "../../🤖️generated/🏷️entity-kinds/🟦️";
 
 /** 🏷️ Third-party oracle for the `framework.schema` entity-kind catalog: the single source
  * `🏷️entity-kinds/🔣️.json` must satisfy `🔣️.json#/$defs/EntityKindCatalog` in `ajv` exactly as it does in
@@ -16,7 +16,7 @@ import { entityKindIndexByEmoji, parseEntityKind, parseEntityKindCatalog } from 
  * @see https://ajv.js.org/json-schema.html */
 const moduleRoot = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const repoRoot = join(moduleRoot, "..", "..", "..");
-const SCHEMA_ID = "https://semio.tech/schema/framework/schema/schema.json";
+const SCHEMA_ID = "https://json.schemas.assets.semio-tech.com/framework/schema/schema.json";
 const facet = JSON.parse(readFileSync(join(moduleRoot, "🔣️.json"), "utf8")) as Record<string, unknown>;
 const sourceBytes = readFileSync(join(moduleRoot, "🏷️entity-kinds", "🔣️.json"));
 const sourceSha256 = createHash("sha256").update(sourceBytes).digest("hex");

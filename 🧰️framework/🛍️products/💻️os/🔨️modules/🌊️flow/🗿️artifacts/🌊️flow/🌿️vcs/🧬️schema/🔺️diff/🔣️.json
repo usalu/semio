@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/os/flow/artifacts/flow/vcs/diff.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/os/flow/artifacts/flow/vcs/diff.json",
   "title": "Ordered Flow Structural Diff",
   "$ref": "#/$defs/Diff",
   "$defs": {
@@ -47,10 +47,10 @@
             "maxItems": 2,
             "items": [
               {
-                "$ref": "https://semio.tech/schema/os/flow/artifacts/flow/vcs/snapshot.json#/$defs/Index"
+                "$ref": "https://json.schemas.assets.semio-tech.com/os/flow/artifacts/flow/vcs/snapshot.json#/$defs/Index"
               },
               {
-                "$ref": "https://semio.tech/schema/os/flow/artifacts/flow/vcs/snapshot.json#/$defs/Widget"
+                "$ref": "https://json.schemas.assets.semio-tech.com/os/flow/artifacts/flow/vcs/snapshot.json#/$defs/Widget"
               }
             ],
             "additionalItems": false
@@ -67,7 +67,7 @@
                 "type": "string"
               },
               {
-                "$ref": "https://semio.tech/schema/os/flow/artifacts/flow/vcs/snapshot.json#/$defs/Widget"
+                "$ref": "https://json.schemas.assets.semio-tech.com/os/flow/artifacts/flow/vcs/snapshot.json#/$defs/Widget"
               }
             ],
             "additionalItems": false
@@ -95,10 +95,10 @@
             "maxItems": 2,
             "items": [
               {
-                "$ref": "https://semio.tech/schema/os/flow/artifacts/flow/vcs/snapshot.json#/$defs/Index"
+                "$ref": "https://json.schemas.assets.semio-tech.com/os/flow/artifacts/flow/vcs/snapshot.json#/$defs/Index"
               },
               {
-                "$ref": "https://semio.tech/schema/os/flow/artifacts/flow/vcs/snapshot.json#/$defs/Synapse"
+                "$ref": "https://json.schemas.assets.semio-tech.com/os/flow/artifacts/flow/vcs/snapshot.json#/$defs/Synapse"
               }
             ],
             "additionalItems": false
@@ -115,7 +115,7 @@
                 "type": "string"
               },
               {
-                "$ref": "https://semio.tech/schema/os/flow/artifacts/flow/vcs/snapshot.json#/$defs/Synapse"
+                "$ref": "https://json.schemas.assets.semio-tech.com/os/flow/artifacts/flow/vcs/snapshot.json#/$defs/Synapse"
               }
             ],
             "additionalItems": false
@@ -171,7 +171,7 @@
             "value": {
               "type": "array",
               "items": {
-                "$ref": "https://semio.tech/schema/os/flow/artifacts/flow/vcs/snapshot.json#/$defs/LayoutEntry"
+                "$ref": "https://json.schemas.assets.semio-tech.com/os/flow/artifacts/flow/vcs/snapshot.json#/$defs/LayoutEntry"
               }
             }
           }
@@ -185,10 +185,10 @@
           ],
           "properties": {
             "delta": {
-              "const": "hostDocument"
+              "const": "hostSnapshot"
             },
             "value": {
-              "$ref": "https://semio.tech/schema/os/flow/artifacts/flow/vcs/snapshot.json"
+              "$ref": "https://json.schemas.assets.semio-tech.com/os/flow/artifacts/flow/vcs/snapshot.json"
             }
           }
         }

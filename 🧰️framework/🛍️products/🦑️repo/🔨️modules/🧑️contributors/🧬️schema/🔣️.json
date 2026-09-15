@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://semio.tech/schema/repo/contributors/🔣️.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/repo/contributors/🔣️.json",
   "title": "🧑️ semio repo contributors",
   "$comment": "🧬️ The wire contract of the 🧑️contributors module: the stored `🧑️‍💻️contributor.json` document, the session record derived from a session's own event files, the checkpoint parsed out of the git log, and the fixture files under 🧫️fixtures. ContributorDocument states the member names and the `omitempty` rule exactly as the Go struct tags declare them, so a real document taken out of `.🧬semio/🦑️repo/🧑️‍💻️devs` validates against it unchanged.",
   "type": "object",

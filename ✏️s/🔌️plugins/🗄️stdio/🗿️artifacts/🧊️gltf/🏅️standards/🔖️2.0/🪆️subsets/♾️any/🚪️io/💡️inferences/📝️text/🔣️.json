@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://semio.tech/schema/s/stdio/gltf/inference/text.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/inference/text.json",
   "title": "GltfInferenceTextIoDocument",
   "type": "object",
   "additionalProperties": false,
@@ -10,6 +10,6 @@
     "version": { "const": 2 },
     "payloadLength": { "type": "integer", "minimum": 0 },
     "checksum": { "type": "string", "pattern": "^[0-9a-f]{8}$" },
-    "value": { "$ref": "https://semio.tech/schema/s/stdio/gltf/inference.json" }
+    "value": { "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/inference.json" }
   }
 }

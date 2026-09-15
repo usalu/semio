@@ -5,12 +5,12 @@ use crate::editor::flow::FlowCommand;
 #[semio_framework_async_macros::async_test]
 async fn toggle_extension_and_run_action_reorganizes_fixture() {
     let mut app = flow_app().await;
-    let before = app.snapshot().expect("snapshot").to_host_document().widgets.len();
+    let before = app.snapshot().expect("snapshot").to_host_snapshot().widgets.len();
     let ignored = dispatch(&mut app, FlowCommand::RunExtensionAction(crate::editor::flow::commands::run_extension_action::RunExtensionAction { action_id: "flow.extension.reorganize".into() })).await;
     assert!(ignored.mutations.is_empty(), "disabled automation action must be a no-operation");
     dispatch(&mut app, FlowCommand::ToggleExtension(ToggleExtension { id: "auto-layout".into(), enabled: true })).await;
     dispatch(&mut app, FlowCommand::RunExtensionAction(crate::editor::flow::commands::run_extension_action::RunExtensionAction { action_id: "flow.extension.reorganize".into() })).await;
-    assert_eq!(app.snapshot().expect("snapshot").to_host_document().widgets.len(), before, "reorganize keeps every widget");
+    assert_eq!(app.snapshot().expect("snapshot").to_host_snapshot().widgets.len(), before, "reorganize keeps every widget");
 }
 
 #[semio_framework_async_macros::async_test]

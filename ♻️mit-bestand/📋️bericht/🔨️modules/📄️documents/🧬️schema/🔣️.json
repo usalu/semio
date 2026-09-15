@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/mit-bestand/bericht/documents/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/mit-bestand/bericht/documents/schema.json",
   "title": "ReportDocumentCatalog",
   "description": "Every report document owned by the mit-bestand report product.",
   "$ref": "#/$defs/ReportDocumentCatalog",

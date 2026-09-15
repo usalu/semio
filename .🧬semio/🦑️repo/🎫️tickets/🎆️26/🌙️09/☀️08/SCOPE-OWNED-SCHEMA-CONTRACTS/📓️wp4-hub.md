@@ -9,7 +9,7 @@ disk, no ticket tool was called, `🗑️generated/` was never deleted.
 ## 1. Result
 
 `🌎️hub` now has **ten** scope-owned schema modules carrying **143** `$defs` exports, all draft-07, all under
-`https://semio.tech/schema/hub/…`. **Zero** fixture-owned schemas remain anywhere in the partition, and the
+`https://json.schemas.assets.semio-tech.com/hub/…`. **Zero** fixture-owned schemas remain anywhere in the partition, and the
 three `🧬️schema/` directories that were illegally nested inside `🧪️fixtures` leaves are gone.
 
 ```
@@ -46,7 +46,7 @@ would create formats nothing reads.
 ## 3. `hub.inference` — the complete module (task 1)
 
 `🌎️hub/💡️inference/🧬️schema/` is now `{🔣️.json, 🟦️.ts, 🦀️.rs, ✅️approval/🦀️.rs}`.
-`🔣️.json` is draft-07 with `$id https://semio.tech/schema/hub/inference/schema.json` and 45 PascalCase
+`🔣️.json` is draft-07 with `$id https://json.schemas.assets.semio-tech.com/hub/inference/schema.json` and 45 PascalCase
 exports (plus six lower-camel private helpers `id`, `hash`, `serverId`, `safeInteger`, `generation`,
 `hexBytes`, which are not exports):
 
@@ -121,7 +121,7 @@ A new region `//#region 🧬️Scope-owned schema resolution` at the top of
 
 - `HUB_SCHEMA_SCOPES` — the ten scope ids → module paths.
 - `hubSchemaModule(repoRoot, scope)` — loads a module once, **asserts** it declares the draft-07 dialect and
-  a `https://semio.tech/schema/hub/…` `$id`, and keeps its compiled `Ajv` (draft-07 `ajv`, not
+  a `https://json.schemas.assets.semio-tech.com/hub/…` `$id`, and keeps its compiled `Ajv` (draft-07 `ajv`, not
   `ajv/dist/2020`).
 - `hubSchemaExport(repoRoot, "schema://<scope id>/<ExportId>")` → a validator. The URI form of §A of the
   contract is used **now**; when the harness worker lands `schema://` in `resolveFixtures`, fixture
@@ -215,7 +215,7 @@ hub.lag-rebootstrap | draft-07 | ok | 7 | 🔣️.json
 hub.local-bootstrap | draft-07 | ok | 12 | 🔣️.json
 TOTAL EXPORTS 143
 ```
-(`$id` column `ok` means the `$id` is exactly `https://semio.tech/schema/<scope path>/schema.json`.)
+(`$id` column `ok` means the `$id` is exactly `https://json.schemas.assets.semio-tech.com/<scope path>/schema.json`.)
 
 ### 6.2 `hub.inference` — AJV ⟷ TypeScript ⟷ fixture agreement
 ```
@@ -354,7 +354,7 @@ CARGO_TARGET_DIR=<private> RUSTC_WRAPPER="" cargo test -p semio-hub --lib hub_in
    - `🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript/💡️inference-bridge.ts:61,259`
      — an inline AJV-shaped object literal.
    Requested change: each becomes a conformance-checked mirror that `$ref`s
-   `https://semio.tech/schema/hub/inference/schema.json#/$defs/InferenceApprovalRequestV1` (and
+   `https://json.schemas.assets.semio-tech.com/hub/inference/schema.json#/$defs/InferenceApprovalRequestV1` (and
    `…/InferenceApprovalReceiptV1`), or re-exports the hub type. The same applies to
    `GisMapInferenceApprovalReceiptV1` (`…/📇️directory/🧬️schema/🦀️.rs:2091`) versus
    `hub.inference/InferenceApprovalReceiptV1`.

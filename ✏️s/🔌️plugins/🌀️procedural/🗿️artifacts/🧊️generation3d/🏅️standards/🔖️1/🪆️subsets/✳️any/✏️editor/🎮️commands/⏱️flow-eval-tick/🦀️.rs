@@ -7,16 +7,41 @@ use crate::editor::generation3d::config::{Generation3dConfig, Generation3dConfig
 use crate::preview_eval;
 use crate::standards::v1::subsets::any::schema::mutations::text::Generation3dMutation;
 use crate::Generation3dSnapshot;
+use semio_framework::kernel::UiDirtyScope;
 use semio_framework_os_flow::{FlowEvalPublication, FlowEvalSession};
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FRAMEWORK_TOOL_RUN_BODY_KEY};
 
 pub use crate::preview_eval::FlowEvalTick;
+
+/// 🪟️ The BODY one preview window kind renders — the thing a chain hop's refresh has to name, as
+/// opposed to the window kind its payload is addressed by.
+fn preview_body_key(window_kind_id: &str) -> &'static str {
+    if window_kind_id == crate::editor::generation3d::modes::generate::windows::preview::GENERATION_3D_PLAY_WINDOW_GENERATE_PREVIEW {
+        crate::editor::generation3d::modes::generate::windows::preview::GENERATION_3D_PLAY_BODY_GENERATE_PREVIEW
+    } else {
+        crate::editor::generation3d::modes::edit::windows::preview::GENERATION_3D_PLAY_BODY_PREVIEW
+    }
+}
+
+/// 🐢️ The editor's binding of [`preview_eval::chain_ui_scope`]: the addressed preview body, the
+/// graph body only while this hop moved the computing chrome, and the two panels that read the
+/// chain's own progress back (the artifact panel's evaluation status and the framework tool-run
+/// panel's pill). The catalogue, the inspection panel, the utilities, tools, engagements, measures
+/// and labels are identical before and after every hop of an evaluation.
+pub(crate) fn chain_ui_scope(window_kind_id: &str, census_moved: bool) -> UiDirtyScope {
+    preview_eval::chain_ui_scope(
+        preview_body_key(window_kind_id),
+        Some(crate::editor::generation3d::modes::edit::windows::flow::GENERATION_3D_PLAY_BODY_MAIN),
+        &[crate::editor::generation3d::panels::artifact::GENERATION_3D_PLAY_BODY_ARTIFACT, FRAMEWORK_TOOL_RUN_BODY_KEY],
+        census_moved,
+    )
+}
 
 /// 🚧️ Whether the `previewEval` run may start or continue on this graph at all — see
 /// [`preview_eval::may_rearm`]. The editor's `pending_effects` asks the SAME question the hop asks
 /// before it gives an uncontributed window up.
-pub fn may_rearm(fixture: &semio_framework_artifact_flow_flow::FlowHostDocument) -> bool {
-    preview_eval::may_rearm(fixture)
+pub fn may_rearm(host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot) -> bool {
+    preview_eval::may_rearm(host_snapshot)
 }
 
 /// 🪟️ The one `windowId`/`windowKindId` argument object every hop of the chain carries.
@@ -27,7 +52,7 @@ pub fn window_args(window_id: &str, window_kind_id: &str) -> dsl::DslValue {
 /// 🧮️ One evaluation tick, plus what the calling surface owes its retained preview publication.
 ///
 /// 🧬️ The editor-only half: a tick addressed at the GENERATE preview evaluates the patched
-/// generation fixture (`generation_host_document_for`) rather than the document's own, and evaluates
+/// generation fixture (`generation_host_snapshot_for`) rather than the document's own, and evaluates
 /// nothing at all until a generation is selected.
 pub fn evaluate(
     window_id: &str,
@@ -50,16 +75,16 @@ pub fn evaluate(
             // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
             session.begin_window_tick(window_id);
             session.note_window_tick_outcome(window_id, false);
-            return Ok((Emit::default(), session.eval_publication_for(retained_eval)));
+            return Ok((Emit { ui_scope: chain_ui_scope(window_kind_id, false), ..Default::default() }, session.eval_publication_for(retained_eval)));
         }
-        patched = Some(crate::standards::v1::subsets::any::schema::generation_host_document_for(&doc.snapshot.host_document, &state, state.selected_generation_id.as_deref()));
+        patched = Some(crate::standards::v1::subsets::any::schema::generation_host_snapshot_for(&doc.snapshot.host_snapshot, &state, state.selected_generation_id.as_deref()));
     }
-    let fixture = patched.as_ref().unwrap_or(&doc.snapshot.host_document);
-    let outcome = preview_eval::evaluate_tick(window_id, window_kind_id, fixture, preview_eval::preview_tolerance(&cfg.snapshot.lod_mode), session, retained_eval, turn_started_us);
-    if let Some(fixture) = patched {
-        fixture.retire_cold();
+    let host_snapshot = patched.as_ref().unwrap_or(&doc.snapshot.host_snapshot);
+    let outcome = preview_eval::evaluate_tick(window_id, window_kind_id, host_snapshot, preview_eval::preview_tolerance(&cfg.snapshot.lod_mode), session, retained_eval, turn_started_us);
+    if let Some(displaced) = patched {
+        displaced.retire_cold();
     }
-    Ok((Emit { extension_invocations: outcome.extension_invocations, ..Default::default() }, outcome.publication))
+    Ok((Emit { extension_invocations: outcome.extension_invocations, ui_scope: chain_ui_scope(window_kind_id, outcome.census_moved), ..Default::default() }, outcome.publication))
 }
 
 /// 🔁️ The wave a just-folded extension answer unblocked, run INLINE inside that answer's own guest
@@ -84,7 +109,7 @@ pub fn continue_inline(
     turn_started_us: Option<u64>,
 ) -> Result<(Emit<Generation3dMutation, Generation3dConfigMutation>, FlowEvalPublication), Fault> {
     if !session.inline_continuation_admitted(window_id, turn_started_us, semio_framework_job::default_now_us()) {
-        return Ok((Emit::default(), FlowEvalPublication::Retained));
+        return Ok((Emit { ui_scope: chain_ui_scope(window_kind_id, false), ..Default::default() }, FlowEvalPublication::Retained));
     }
     session.arm_window_tick(window_id);
     evaluate(window_id, window_kind_id, doc, cfg, session, retained_eval, turn_started_us)

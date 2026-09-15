@@ -3,7 +3,7 @@
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { basename, dirname, join, relative } from "node:path";
-import { BundleScript, ScriptRouter, buildBudgetMs, runBundleScriptMain, runCargo, runCargoTestBudgeted, runCmdStatus, resolveTestLevel } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter, buildBudgetMs, resolveTestLevel, runBundleScriptMain, runCargo, runCargoTestBudgeted, runCmdStatus } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
 class CheckScript extends BundleScript {
   run(): void {
@@ -43,7 +43,7 @@ function generatedBindingsPath(root: string): string {
 }
 
 /** 🪪️ The `$id` `🧬️schema/🔣️.json` must declare, mirrored from `schema_registry::OWNED_JSON_SCHEMA_ID`. */
-const OWNED_JSON_SCHEMA_ID = "https://semio.tech/schema/os/shell/component.json";
+const OWNED_JSON_SCHEMA_ID = "https://json.schemas.assets.semio-tech.com/os/shell/component.json";
 const OWNED_JSON_SCHEMA_DIALECT = "http://json-schema.org/draft-07/schema#";
 
 function runTypegenExportTest(root: string, outPath: string): void {

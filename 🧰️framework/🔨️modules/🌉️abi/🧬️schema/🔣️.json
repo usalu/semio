@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/framework/abi/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/abi/schema.json",
   "title": "Abi Schema Module",
   "definitions": {
     "Operation": {

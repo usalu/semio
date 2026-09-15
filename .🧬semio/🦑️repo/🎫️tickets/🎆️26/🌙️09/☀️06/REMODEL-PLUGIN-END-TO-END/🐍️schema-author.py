@@ -270,7 +270,7 @@ def record_schema(id_: str, title: str, fields: list[tuple[str, str, str]], extr
     }
 
 
-BASE = "https://semio.tech/schema/s/remodeling/remodeling"
+BASE = "https://json.schemas.assets.semio-tech.com/s/remodeling/remodeling"
 
 artifact_fields = state_fields(SCHEMA / "🦀️.rs", "RemodelingArtifact")
 snapshot_fields = state_fields(SCHEMA / "📸️snapshot/🦀️.rs", "RemodelingSnapshot")

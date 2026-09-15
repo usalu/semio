@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/png/1.2/any/artifact.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/png/1.2/any/artifact.json",
   "title": "PngArtifact",
   "type": "object",
   "additionalProperties": false,
@@ -38,7 +38,7 @@
       "x-semio-state": "artifact"
     },
     "colorType": {
-      "$ref": "https://semio.tech/schema/s/stdio/png/1.2/any/snapshot.json#/$defs/PngColorType",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/png/1.2/any/snapshot.json#/$defs/PngColorType",
       "x-semio-state": "artifact"
     },
     "interlace": {
@@ -48,12 +48,12 @@
     "plte": {
       "type": "array",
       "items": {
-        "$ref": "https://semio.tech/schema/s/stdio/png/1.2/any/snapshot.json#/$defs/PngRgb"
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/png/1.2/any/snapshot.json#/$defs/PngRgb"
       },
       "x-semio-state": "artifact"
     },
     "trns": {
-      "$ref": "https://semio.tech/schema/s/stdio/png/1.2/any/snapshot.json#/$defs/PngTransparency",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/png/1.2/any/snapshot.json#/$defs/PngTransparency",
       "x-semio-state": "artifact"
     },
     "gama": {
@@ -61,29 +61,29 @@
       "x-semio-state": "artifact"
     },
     "chrm": {
-      "$ref": "https://semio.tech/schema/s/stdio/png/1.2/any/snapshot.json#/$defs/PngChromaticities",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/png/1.2/any/snapshot.json#/$defs/PngChromaticities",
       "x-semio-state": "artifact"
     },
     "srgb": {
-      "$ref": "https://semio.tech/schema/s/stdio/png/1.2/any/snapshot.json#/$defs/PngSrgbIntent",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/png/1.2/any/snapshot.json#/$defs/PngSrgbIntent",
       "x-semio-state": "artifact"
     },
     "phys": {
-      "$ref": "https://semio.tech/schema/s/stdio/png/1.2/any/snapshot.json#/$defs/PngPhysicalDims",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/png/1.2/any/snapshot.json#/$defs/PngPhysicalDims",
       "x-semio-state": "artifact"
     },
     "time": {
-      "$ref": "https://semio.tech/schema/s/stdio/png/1.2/any/snapshot.json#/$defs/PngTimestamp",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/png/1.2/any/snapshot.json#/$defs/PngTimestamp",
       "x-semio-state": "artifact"
     },
     "bkgd": {
-      "$ref": "https://semio.tech/schema/s/stdio/png/1.2/any/snapshot.json#/$defs/PngBackground",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/png/1.2/any/snapshot.json#/$defs/PngBackground",
       "x-semio-state": "artifact"
     },
     "textChunks": {
       "type": "array",
       "items": {
-        "$ref": "https://semio.tech/schema/s/stdio/png/1.2/any/snapshot.json#/$defs/PngTextChunk"
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/png/1.2/any/snapshot.json#/$defs/PngTextChunk"
       },
       "x-semio-state": "artifact"
     },
@@ -99,14 +99,14 @@
     "chunkOrder": {
       "type": "array",
       "items": {
-        "$ref": "https://semio.tech/schema/s/stdio/png/1.2/any/snapshot.json#/$defs/PngChunkMarker"
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/png/1.2/any/snapshot.json#/$defs/PngChunkMarker"
       },
       "x-semio-state": "artifact"
     },
     "unknownChunks": {
       "type": "array",
       "items": {
-        "$ref": "https://semio.tech/schema/s/stdio/png/1.2/any/snapshot.json#/$defs/PngChunk"
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/png/1.2/any/snapshot.json#/$defs/PngChunk"
       },
       "x-semio-state": "artifact"
     }

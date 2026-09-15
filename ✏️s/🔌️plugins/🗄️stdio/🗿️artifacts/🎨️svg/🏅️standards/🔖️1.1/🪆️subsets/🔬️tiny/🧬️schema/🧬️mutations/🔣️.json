@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/svg/1.1/tiny/mutations.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/svg/1.1/tiny/mutations.json",
   "title": "SvgTinyMutation",
   "description": "Discriminated union over this module's mutation leaves (externally tagged); every payload is the leaf's own schema, referenced, never restated.",
   "oneOf": [
@@ -12,7 +12,7 @@
       ],
       "properties": {
         "InsertTinyElement": {
-          "$ref": "https://semio.tech/schema/s/stdio/svg/1.1/tiny/mutation/insert-tiny-element/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/svg/1.1/tiny/mutation/insert-tiny-element/schema.json"
         }
       }
     },
@@ -24,7 +24,7 @@
       ],
       "properties": {
         "RemoveElement": {
-          "$ref": "https://semio.tech/schema/s/stdio/svg/1.1/tiny/mutation/remove-element/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/svg/1.1/tiny/mutation/remove-element/schema.json"
         }
       }
     },
@@ -36,7 +36,7 @@
       ],
       "properties": {
         "SetSnapshot": {
-          "$ref": "https://semio.tech/schema/s/stdio/svg/1.1/tiny/mutation/set-snapshot/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/svg/1.1/tiny/mutation/set-snapshot/schema.json"
         }
       }
     },
@@ -48,7 +48,7 @@
       ],
       "properties": {
         "SetText": {
-          "$ref": "https://semio.tech/schema/s/stdio/svg/1.1/tiny/mutation/set-text/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/svg/1.1/tiny/mutation/set-text/schema.json"
         }
       }
     },
@@ -60,7 +60,7 @@
       ],
       "properties": {
         "SetTinyAttribute": {
-          "$ref": "https://semio.tech/schema/s/stdio/svg/1.1/tiny/mutation/set-tiny-attribute/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/svg/1.1/tiny/mutation/set-tiny-attribute/schema.json"
         }
       }
     },
@@ -72,7 +72,7 @@
       ],
       "properties": {
         "SetTransform": {
-          "$ref": "https://semio.tech/schema/s/stdio/svg/1.1/tiny/mutation/set-transform/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/svg/1.1/tiny/mutation/set-transform/schema.json"
         }
       }
     },
@@ -84,7 +84,7 @@
       ],
       "properties": {
         "SetViewBox": {
-          "$ref": "https://semio.tech/schema/s/stdio/svg/1.1/tiny/mutation/set-view-box/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/svg/1.1/tiny/mutation/set-view-box/schema.json"
         }
       }
     },
@@ -96,7 +96,7 @@
       ],
       "properties": {
         "StampBaseProfile": {
-          "$ref": "https://semio.tech/schema/s/stdio/svg/1.1/tiny/mutation/stamp-base-profile/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/svg/1.1/tiny/mutation/stamp-base-profile/schema.json"
         }
       }
     },
@@ -108,7 +108,7 @@
       ],
       "properties": {
         "StripNonTiny": {
-          "$ref": "https://semio.tech/schema/s/stdio/svg/1.1/tiny/mutation/strip-non-tiny/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/svg/1.1/tiny/mutation/strip-non-tiny/schema.json"
         }
       }
     }

@@ -135,7 +135,7 @@ is outside this partition and outside this packet's cargo scope, so it was **not
 ## 3. Row 68 — the `framework.schema` facet
 
 `🧬️schema/🔣️.json` is now the module's real draft-07 facet
-(`$id https://semio.tech/schema/framework/schema/schema.json`, root `$ref: #/$defs/SchemaExportEntries`).
+(`$id https://json.schemas.assets.semio-tech.com/framework/schema/schema.json`, root `$ref: #/$defs/SchemaExportEntries`).
 
 ### Export table — `framework.schema`
 

@@ -59,7 +59,7 @@ the scope on its own:
 
 ### 2.2 `repo.native.observe` exports
 
-`$id https://semio.tech/schema/repo/native/observe/schema.json`, draft-07, root `$ref` →
+`$id https://json.schemas.assets.semio-tech.com/repo/native/observe/schema.json`, draft-07, root `$ref` →
 `#/$defs/TransactionProcessOwnershipVector`. Formats provided: `🔣️jsonschema` only, so no
 `x-semio-formats` annotation is required and none was invented.
 

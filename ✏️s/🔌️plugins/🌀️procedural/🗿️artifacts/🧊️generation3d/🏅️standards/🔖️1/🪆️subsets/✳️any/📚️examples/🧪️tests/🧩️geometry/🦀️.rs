@@ -1,5 +1,5 @@
 //! 🔬️ Headless example-geometry lane — every bundled generation3d example's real
-//! `🖼️assets/<name>/🗣️.dsl.semio` is parsed into its `FlowHostDocument`, evaluated through the same
+//! `🖼️assets/<name>/🗣️.dsl.semio` is parsed into its `FlowHostSnapshot`, evaluated through the same
 //! `FlowHost` the editor's `flow-eval-tick` drives with the packaged `brep`/`math` operator sets
 //! installed, and the resulting preview handle is tessellated through the same
 //! `tessellate_geometry` bridge the preview path calls. Every number the run produces is held to
@@ -496,9 +496,9 @@ fn parry_oracle(positions: &[f32], indices: &[u32]) -> (f64, [f64; 3], [f64; 3])
 /// 🚀️ Parses, evaluates and tessellates one example exactly as the editor's preview path does.
 fn run_example(dsl: &str, fixture: &ExampleGeometryFixture) -> ExampleRun {
     operators_installed();
-    let Generation3dSnapshot { host_document: graph, generation } = parse_dsl(dsl).expect("example dsl parses");
+    let Generation3dSnapshot { host_snapshot: graph, generation } = parse_dsl(dsl).expect("example dsl parses");
     generation.retire_cold();
-    let mut host = FlowHost::from_host_document(graph);
+    let mut host = FlowHost::from_host_snapshot(graph);
     host.set_neuron_kind_info_map(flow_neuron_kind_info_map());
     let started = std::time::Instant::now();
     let eval_json = host.evaluate().expect("example evaluates");
@@ -541,7 +541,7 @@ fn frozen_now() -> Option<u64> {
     Some(0)
 }
 
-/// 🧹️ Drains a `FlowHost` through its explicit retirement ladder. `FlowHostDocument`'s ordered maps
+/// 🧹️ Drains a `FlowHost` through its explicit retirement ladder. `FlowHostSnapshot`'s ordered maps
 /// panic on a bare drop ("ordered-map root must be explicitly retired before drop"), so a host is
 /// closed, never dropped.
 fn retire_host(host: FlowHost) {
@@ -716,13 +716,13 @@ fn hexagonal_mushroom_column_preview_payload_matches_the_scene_bridge_fixture() 
     operators_installed();
     let expected: SceneBridgeFixture = serde_json::from_str(SCENE_BRIDGE_FIXTURE).expect("scene bridge fixture parses");
     let dsl = include_str!("../../🍄️hexagonal-mushroom-column/🖼️assets/🍄️hexagonal-mushroom-column/🗣️.dsl.semio");
-    let Generation3dSnapshot { host_document: graph, generation } = parse_dsl(dsl).expect("example dsl parses");
+    let Generation3dSnapshot { host_snapshot: graph, generation } = parse_dsl(dsl).expect("example dsl parses");
     generation.retire_cold();
     let cfg = semio_s_artifact_procedural_generation3d::editor::generation3d::config::Generation3dConfig::default();
-    let mut host = FlowHost::from_host_document(graph);
+    let mut host = FlowHost::from_host_snapshot(graph);
     host.set_neuron_kind_info_map(flow_neuron_kind_info_map());
     let eval_json = host.evaluate().expect("example evaluates");
-    let (meshes_json, instances_json) = semio_s_artifact_procedural_generation3d::editor::generation3d::preview_payload_from_eval(&eval_json, &host.host_document, &cfg);
+    let (meshes_json, instances_json) = semio_s_artifact_procedural_generation3d::editor::generation3d::preview_payload_from_eval(&eval_json, &host.host_snapshot, &cfg);
     let camera_json = semio_s_artifact_procedural_generation3d::editor::generation3d::preview_camera_json(&cfg);
     retire_host(host);
     let meshes: Vec<SceneBridgeMesh> = serde_json::from_str(&meshes_json).expect("live meshes json");
@@ -799,26 +799,26 @@ struct DeliveryRun {
 /// `preview_selection_json`) on an already-delivered session.
 fn editor_selection_ids(
     eval_json: &str,
-    fixture: &semio_framework_artifact_flow_flow::FlowHostDocument,
+    host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot,
     config: &semio_s_artifact_procedural_generation3d::editor::generation3d::config::Generation3dConfig,
     session: &semio_framework_os_flow::FlowEvalSession,
     selected: &[String],
 ) -> Vec<String> {
     let marks = semio_s_artifact_procedural_generation3d::editor::generation3d::PreviewInteractionMarks { hovered: Default::default(), selected: selected.iter().cloned().collect() };
-    let payload = semio_s_artifact_procedural_generation3d::editor::generation3d::preview_payload(eval_json, fixture, config, Some(session), &marks);
+    let payload = semio_s_artifact_procedural_generation3d::editor::generation3d::preview_payload(eval_json, host_snapshot, config, Some(session), &marks);
     selection_json_ids(&semio_s_artifact_procedural_generation3d::editor::generation3d::preview_selection_json(config, "", &payload))
 }
 
 /// 🕹️ The VIEWER window's twin of [`editor_selection_ids`] — a read-only role paints the same pick.
 fn viewer_selection_ids(
     eval_json: &str,
-    fixture: &semio_framework_artifact_flow_flow::FlowHostDocument,
+    host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot,
     config: &semio_s_artifact_procedural_generation3d::viewer::generation3d::config::Generation3dViewConfig,
     session: &semio_framework_os_flow::FlowEvalSession,
     selected: &[String],
 ) -> Vec<String> {
     let marks = semio_s_artifact_procedural_generation3d::viewer::generation3d::modes::view::windows::preview::Generation3dViewMarks { hovered: Default::default(), selected: selected.iter().cloned().collect() };
-    let payload = semio_s_artifact_procedural_generation3d::viewer::generation3d::modes::view::windows::preview::preview_payload(eval_json, fixture, config, Some(session), &marks);
+    let payload = semio_s_artifact_procedural_generation3d::viewer::generation3d::modes::view::windows::preview::preview_payload(eval_json, host_snapshot, config, Some(session), &marks);
     selection_json_ids(&semio_s_artifact_procedural_generation3d::viewer::generation3d::modes::view::windows::preview::preview_selection_json(config, &payload))
 }
 
@@ -847,9 +847,9 @@ fn retire_eval_session(mut session: semio_framework_os_flow::FlowEvalSession) {
 fn run_delivery(dsl: &str, fixture: &ExampleGeometryFixture, lod_mode: &str) -> DeliveryRun {
     use semio_s_artifact_procedural_generation3d::preview_eval::{preview_tolerance, PREVIEW_TESSELLATE_STEP_BUDGET, PREVIEW_TESSELLATE_STEP_WALL_MICROS};
     operators_installed();
-    let Generation3dSnapshot { host_document: graph, generation } = parse_dsl(dsl).expect("example dsl parses");
+    let Generation3dSnapshot { host_snapshot: graph, generation } = parse_dsl(dsl).expect("example dsl parses");
     generation.retire_cold();
-    let mut host = FlowHost::from_host_document(graph);
+    let mut host = FlowHost::from_host_snapshot(graph);
     host.set_neuron_kind_info_map(flow_neuron_kind_info_map());
     let eval_json = host.evaluate().expect("example evaluates");
     let eval: serde_json::Value = serde_json::from_str(&eval_json).expect("evaluation json");
@@ -890,7 +890,7 @@ fn run_delivery(dsl: &str, fixture: &ExampleGeometryFixture, lod_mode: &str) -> 
     // 👁️ The publication the preview window actually paints, built from the SAME delivered session
     // — transfer and publication are two different failures and this row separates them.
     let config = semio_s_artifact_procedural_generation3d::editor::generation3d::config::Generation3dConfig { lod_mode: lod_mode.to_string(), ..Default::default() };
-    let payload = semio_s_artifact_procedural_generation3d::editor::generation3d::preview_payload(&eval_json, &host.host_document, &config, Some(&session), &semio_s_artifact_procedural_generation3d::editor::generation3d::PreviewInteractionMarks::default());
+    let payload = semio_s_artifact_procedural_generation3d::editor::generation3d::preview_payload(&eval_json, &host.host_snapshot, &config, Some(&session), &semio_s_artifact_procedural_generation3d::editor::generation3d::PreviewInteractionMarks::default());
     let payload_meshes: serde_json::Value = serde_json::from_str(&payload.meshes_json).expect("payload meshes json");
     let payload_instances: serde_json::Value = serde_json::from_str(&payload.instances_json).expect("payload instances json");
     let published = payload_meshes.as_array().cloned().unwrap_or_default();
@@ -901,13 +901,13 @@ fn run_delivery(dsl: &str, fixture: &ExampleGeometryFixture, lod_mode: &str) -> 
         *payload_mesh_roles.entry(entry.get("role").and_then(serde_json::Value::as_str).unwrap_or("(unstamped)").to_string()).or_default() += 1;
     }
     let view_config = semio_s_artifact_procedural_generation3d::viewer::generation3d::config::Generation3dViewConfig { lod_mode: lod_mode.to_string(), ..Default::default() };
-    let view_payload = semio_s_artifact_procedural_generation3d::viewer::generation3d::modes::view::windows::preview::preview_payload(&eval_json, &host.host_document, &view_config, Some(&session), &Default::default());
+    let view_payload = semio_s_artifact_procedural_generation3d::viewer::generation3d::modes::view::windows::preview::preview_payload(&eval_json, &host.host_snapshot, &view_config, Some(&session), &Default::default());
     let topology_ids: Vec<String> = payload_instances.as_array().cloned().unwrap_or_default().iter().filter_map(|entry| entry.get("interactionId").and_then(serde_json::Value::as_str).map(str::to_string)).collect();
     let picked_id = format!("{}@{}", fixture.preview.node, fixture.preview.channel);
-    let selection_picked_ids = editor_selection_ids(&eval_json, &host.host_document, &config, &session, std::slice::from_ref(&picked_id));
-    let selection_added_ids = editor_selection_ids(&eval_json, &host.host_document, &config, &session, &topology_ids);
-    let selection_cleared_ids = editor_selection_ids(&eval_json, &host.host_document, &config, &session, &[]);
-    let view_selection_picked_ids = viewer_selection_ids(&eval_json, &host.host_document, &view_config, &session, std::slice::from_ref(&picked_id));
+    let selection_picked_ids = editor_selection_ids(&eval_json, &host.host_snapshot, &config, &session, std::slice::from_ref(&picked_id));
+    let selection_added_ids = editor_selection_ids(&eval_json, &host.host_snapshot, &config, &session, &topology_ids);
+    let selection_cleared_ids = editor_selection_ids(&eval_json, &host.host_snapshot, &config, &session, &[]);
+    let view_selection_picked_ids = viewer_selection_ids(&eval_json, &host.host_snapshot, &view_config, &session, std::slice::from_ref(&picked_id));
     let run = DeliveryRun {
         payload_bounds: semio_s_artifact_procedural_generation3d::preview_eval::preview_payload_bounds(&payload.meshes_json),
         view_payload_bounds: semio_s_artifact_procedural_generation3d::preview_eval::preview_payload_bounds(&view_payload.meshes_json),

@@ -7,8 +7,8 @@ Every line: replace the first string with the second in the named file. `$id` fr
 
 - path  "🧰️framework/🔨️modules/🧵️job/🧪️fixtures/📡️shared-framework-action-routes.schema.json"  →  "🧰️framework/🔨️modules/🧵️job/🧬️schema/🔣️.json"
 - path  "🧰️framework/🔨️modules/🧵️job/🧪️fixtures/🧬️fixed-operation-registry.schema.json"  →  "🧰️framework/🔨️modules/🧵️job/🧬️schema/🔣️.json"
-- id    "semio://framework/plugin/shared-framework-action-routes/v1"  ->  "https://semio.tech/schema/framework/job/schema.json#/$defs/SharedFrameworkActionRoutesFixture"
-- id    "semio://framework/job/fixed-operation-registry-law/v1"  ->  "https://semio.tech/schema/framework/job/schema.json#/$defs/FixedOperationRegistryFixture"
+- id    "semio://framework/plugin/shared-framework-action-routes/v1"  ->  "https://json.schemas.assets.semio-tech.com/framework/job/schema.json#/$defs/SharedFrameworkActionRoutesFixture"
+- id    "semio://framework/job/fixed-operation-registry-law/v1"  ->  "https://json.schemas.assets.semio-tech.com/framework/job/schema.json#/$defs/FixedOperationRegistryFixture"
 
 #### `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🔬️index.test.ts`
 
@@ -102,27 +102,27 @@ Every line: replace the first string with the second in the named file. `$id` fr
 
 #### `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📤️return/🟦️.ts`
 
-- id    "semio.actor.retained-return.v1"  ->  "https://semio.tech/schema/framework/actor/return/schema.json#/$defs/Return"
+- id    "semio.actor.retained-return.v1"  ->  "https://json.schemas.assets.semio-tech.com/framework/actor/return/schema.json#/$defs/Return"
 
 #### `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📥️poll/🏘️composition/🟦️.ts`
 
-- id    "semio.kernel.poll.composition.v1"  ->  "https://semio.tech/schema/framework/kernel/poll/composition/schema.json#/$defs/Composition"
+- id    "semio.kernel.poll.composition.v1"  ->  "https://json.schemas.assets.semio-tech.com/framework/kernel/poll/composition/schema.json#/$defs/Composition"
 
 #### `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🟦️.ts`
 
-- id    "semio.actor.shard-liveness.v1"  ->  "https://semio.tech/schema/framework/actor/shard-client/schema.json#/$defs/ShardClient"
+- id    "semio.actor.shard-liveness.v1"  ->  "https://json.schemas.assets.semio-tech.com/framework/actor/shard-client/schema.json#/$defs/ShardClient"
 
 #### `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛠️ShellHelpers/🟦️.tsx`
 
-- id    "semio.actor.shard-liveness.v1"  ->  "https://semio.tech/schema/framework/actor/shard-client/schema.json#/$defs/ShardClient"
+- id    "semio.actor.shard-liveness.v1"  ->  "https://json.schemas.assets.semio-tech.com/framework/actor/shard-client/schema.json#/$defs/ShardClient"
 
 #### `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛠️ShellHelpers/🧫️fixtures/🎥️tutorial-interaction/🧬️schema.json`
 
-- id    "https://semio.tech/schema/framework/interaction/component.json"  ->  "https://semio.tech/schema/framework/interaction/schema.json#/$defs/Interaction"
+- id    "https://json.schemas.assets.semio-tech.com/framework/interaction/component.json"  ->  "https://json.schemas.assets.semio-tech.com/framework/interaction/schema.json#/$defs/Interaction"
 
 #### `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/💾️resident/🧬️schema.json`
 
-- id    "semio.value.resident.capacity.v1"  ->  "https://semio.tech/schema/framework/value/resident/schema.json#/$defs/Resident"
+- id    "semio.value.resident.capacity.v1"  ->  "https://json.schemas.assets.semio-tech.com/framework/value/resident/schema.json#/$defs/Resident"
 
 #### `🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📤️distribution/🧾️manifest.json`
 
@@ -233,11 +233,11 @@ requires these root-`📜️script.ts` edits at the same time (line numbers as o
 and these data-file `$schema` pointers (inside the partition, will be updated by whoever applies it):
 `⏱️budget/🕰️clock.json:2`, `⏱️budget/🪢️binding.json:2`, `⏱️budget/🧫️fixture/🔣️.json:2`, plus the
 matching `"$schema": {"const": …}` in each of the three schema files. `$id` would become
-`https://semio.tech/schema/framework/job/budget/schema.json`.
+`https://json.schemas.assets.semio-tech.com/framework/job/budget/schema.json`.
 
 **Applied by W10b (`📓️wp4b-framework-modules.md` row 35).** The three schema files are gone; the module is
-`🧵️job/⏱️budget/🧬️schema/🔣️.json`, `$id https://semio.tech/schema/framework/job/budget/schema.json`,
+`🧵️job/⏱️budget/🧬️schema/🔣️.json`, `$id https://json.schemas.assets.semio-tech.com/framework/job/budget/schema.json`,
 exports `Budget` / `Clock` / `Binding`. The three data files now carry
-`"$schema": "https://semio.tech/schema/framework/job/budget/schema.json#/$defs/<Export>"`. The root
+`"$schema": "https://json.schemas.assets.semio-tech.com/framework/job/budget/schema.json#/$defs/<Export>"`. The root
 `📜️script.ts` edits above are still **open** for W2c — `toolJobMicrosecondBudgetSelfTests()` is broken
 until they land (accepted transient break, coordinator decision on ledger row 35).

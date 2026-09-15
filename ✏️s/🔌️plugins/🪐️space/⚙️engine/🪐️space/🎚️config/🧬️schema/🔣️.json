@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/app/space/space/config/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/app/space/space/config/schema.json",
   "title": "SpaceConfig",
   "type": "object",
   "additionalProperties": false,

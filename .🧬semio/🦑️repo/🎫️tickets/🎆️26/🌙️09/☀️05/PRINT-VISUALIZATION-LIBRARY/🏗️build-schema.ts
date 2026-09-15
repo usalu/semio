@@ -61,7 +61,7 @@ const groups = [...new Set(readFileSync(join(PRODUCT, "🖼️assets/📊️viz-
 
 const schema = {
   $schema: "https://json-schema.org/draft/2020-12/schema",
-  $id: "https://semio.tech/schema/print/viz/catalog.json",
+  $id: "https://json.schemas.assets.semio-tech.com/print/viz/catalog.json",
   $comment:
     "📊️ Schema-first contract of the print visualization library: the chart-kind catalogue (🖼️assets/🔣️viz-catalog.json), the family option vocabularies, the demo data tables and the numeric probe protocol. Owned by the CATALOG agent; every family owner extends `x-semio-family-options` for its own families only. The `x-` annotations carry the vocabulary that pure JSON Schema cannot express per family; `🔨️modules/📊️visualization-gallery/🟦️.ts` enforces them.",
   type: "object",

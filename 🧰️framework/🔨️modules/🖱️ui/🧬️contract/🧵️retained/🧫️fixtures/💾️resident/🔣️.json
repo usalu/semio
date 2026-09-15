@@ -1,6 +1,6 @@
 {
   "capacitySource": "../../💾️resident/🪪️metadata/🧫️fixtures/🔣️.json#/compositionCapacity",
-  "capacitySchema": "https://semio.tech/schema/framework/value/resident/schema.json#/$defs/Resident",
+  "capacitySchema": "https://json.schemas.assets.semio-tech.com/framework/value/resident/schema.json#/$defs/Resident",
   "pageBytes": 256,
   "grant": {
     "maxItems": 1,

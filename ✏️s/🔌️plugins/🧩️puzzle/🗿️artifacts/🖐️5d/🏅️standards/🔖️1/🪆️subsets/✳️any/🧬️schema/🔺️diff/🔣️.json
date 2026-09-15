@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/puzzle/puzzle5d/diff.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/diff.json",
   "title": "Puzzle5dDiff",
   "type": "object",
   "additionalProperties": false,
@@ -31,7 +31,7 @@
       "x-semio-state": "artifact"
     },
     "meta": {
-      "$ref": "https://semio.tech/schema/s/puzzle/puzzle5d/artifact.json#/$defs/Puzzle5dMeta",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json#/$defs/Puzzle5dMeta",
       "x-semio-state": "artifact"
     },
     "kindCatalogs": {
@@ -40,7 +40,7 @@
           "type": "null"
         },
         {
-          "$ref": "https://semio.tech/schema/s/puzzle/puzzle5d/artifact.json#/$defs/Puzzle5dKindCatalogs"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json#/$defs/Puzzle5dKindCatalogs"
         }
       ],
       "x-semio-state": "artifact"
@@ -51,7 +51,7 @@
           "type": "null"
         },
         {
-          "$ref": "https://semio.tech/schema/s/puzzle/puzzle5d/snapshot.json#/$defs/Puzzle5dKindCatalogsExtra"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/snapshot.json#/$defs/Puzzle5dKindCatalogsExtra"
         }
       ],
       "x-semio-state": "artifact"
@@ -99,7 +99,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "https://semio.tech/schema/s/puzzle/puzzle5d/artifact.json#/$defs/Puzzle5dPart"
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json#/$defs/Puzzle5dPart"
           }
         },
         "removed": {
@@ -146,7 +146,7 @@
       "required": [],
       "properties": {
         "replacement": {
-          "$ref": "https://semio.tech/schema/s/puzzle/puzzle5d/artifact.json#/$defs/Puzzle5dPart"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json#/$defs/Puzzle5dPart"
         }
       }
     },
@@ -163,7 +163,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "https://semio.tech/schema/s/puzzle/puzzle5d/artifact.json#/$defs/Puzzle5dFastener"
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json#/$defs/Puzzle5dFastener"
           }
         },
         "removed": {
@@ -210,7 +210,7 @@
       "required": [],
       "properties": {
         "replacement": {
-          "$ref": "https://semio.tech/schema/s/puzzle/puzzle5d/artifact.json#/$defs/Puzzle5dFastener"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json#/$defs/Puzzle5dFastener"
         }
       }
     },
@@ -225,7 +225,7 @@
         "values": {
           "type": "array",
           "items": {
-            "$ref": "https://semio.tech/schema/s/puzzle/puzzle5d/artifact.json#/$defs/Puzzle5dKindCompatibility"
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json#/$defs/Puzzle5dKindCompatibility"
           }
         }
       }

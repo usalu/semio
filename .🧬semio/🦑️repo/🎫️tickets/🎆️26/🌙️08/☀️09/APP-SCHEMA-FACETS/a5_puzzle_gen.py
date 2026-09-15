@@ -1247,8 +1247,8 @@ def write_facet(owner_app: Path, slug: str, config_type: str, presence_type: str
     presence_dir = owner_app / "👥️presence"
     presence_schema = presence_dir / "🧬️schema"
     pkg = f"semio.app.puzzle.{slug}"
-    cfg_id = f"https://semio.tech/schema/app/puzzle/{slug}/config.json"
-    pres_id = f"https://semio.tech/schema/app/puzzle/{slug}/presence.json"
+    cfg_id = f"https://json.schemas.assets.semio-tech.com/app/puzzle/{slug}/config.json"
+    pres_id = f"https://json.schemas.assets.semio-tech.com/app/puzzle/{slug}/presence.json"
     rust_cfg_id = f"s.puzzle.{slug}.config"
     rust_pres_id = f"s.puzzle.{slug}.presence"
 

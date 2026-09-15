@@ -84,7 +84,7 @@ STEPS_DELTA = """    "FormsStepsDelta": {
 
 def artifact_json():
     return f"""{{
-  "$id": "https://semio.tech/schema/s/forms/forms/artifact.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/forms/forms/artifact.json",
   "title": "FormsArtifact",
   "type": "object",
   "additionalProperties": false,
@@ -137,7 +137,7 @@ def artifact_json():
 
 def snapshot_json():
     return f"""{{
-  "$id": "https://semio.tech/schema/s/forms/forms/snapshot.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/forms/forms/snapshot.json",
   "title": "FormsSnapshot",
   "type": "object",
   "additionalProperties": false,
@@ -165,7 +165,7 @@ def snapshot_json():
 
 def diff_json():
     return f"""{{
-  "$id": "https://semio.tech/schema/s/forms/forms/diff.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/forms/forms/diff.json",
   "title": "FormsDiff",
   "type": "object",
   "additionalProperties": false,

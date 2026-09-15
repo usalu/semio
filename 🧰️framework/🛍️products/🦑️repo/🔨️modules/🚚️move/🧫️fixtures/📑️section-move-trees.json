@@ -1,5 +1,5 @@
 {
-  "schema": "https://semio.tech/schema/repo/move/1#/$defs/SectionMoveFile",
+  "schema": "https://json.schemas.assets.semio-tech.com/repo/move/1#/$defs/SectionMoveFile",
   "cases": [
     {
       "name": "typescript-markers",

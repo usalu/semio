@@ -185,7 +185,7 @@ def write_json_artifact(key: str, prefix: str, fields: list[Field], path: Path) 
         "x-semio-state": "shared-ui",
     }
     doc = {
-        "$id": f"https://semio.tech/schema/s/norm/{key}/artifact.json",
+        "$id": f"https://json.schemas.assets.semio-tech.com/s/norm/{key}/artifact.json",
         "title": f"{prefix}Artifact",
         "type": "object",
         "additionalProperties": False,
@@ -216,7 +216,7 @@ def write_json_snapshot(key: str, prefix: str, fields: list[Field], path: Path) 
         props[f.camel] = {**json_type(f, prefix), "x-semio-state": "persistent"}
         required.append(f.camel)
     doc = {
-        "$id": f"https://semio.tech/schema/s/norm/{key}/snapshot.json",
+        "$id": f"https://json.schemas.assets.semio-tech.com/s/norm/{key}/snapshot.json",
         "title": f"{prefix}Snapshot",
         "type": "object",
         "additionalProperties": False,
@@ -280,7 +280,7 @@ def write_json_diff(key: str, prefix: str, fields: list[Field], path: Path) -> N
         "x-semio-state": "shared-ui",
     }
     doc = {
-        "$id": f"https://semio.tech/schema/s/norm/{key}/diff.json",
+        "$id": f"https://json.schemas.assets.semio-tech.com/s/norm/{key}/diff.json",
         "title": f"{prefix}Diff",
         "type": "object",
         "additionalProperties": False,

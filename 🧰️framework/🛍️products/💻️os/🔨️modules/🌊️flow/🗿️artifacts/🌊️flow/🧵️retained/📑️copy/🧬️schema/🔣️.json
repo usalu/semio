@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/os/flow/artifacts/flow/retained/copy/component.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/os/flow/artifacts/flow/retained/copy/component.json",
   "title": "Flow Typed Copy Contracts",
   "$defs": {
     "FlowTypedCopyV1": {
@@ -76,7 +76,7 @@
                 "enum": [
                   "widget",
                   "synapse",
-                  "hostDocument"
+                  "hostSnapshot"
                 ]
               },
               "index": {

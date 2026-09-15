@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/drawing/drawing/diff.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/drawing/drawing/diff.json",
   "title": "DrawingDiff",
   "type": "object",
   "additionalProperties": false,
@@ -11,7 +11,7 @@
     },
     "artifact": {
       "anyOf": [
-        { "$ref": "https://semio.tech/schema/s/drawing/drawing/artifact.json" },
+        { "$ref": "https://json.schemas.assets.semio-tech.com/s/drawing/drawing/artifact.json" },
         { "type": "null" }
       ],
       "x-semio-state": "artifact"
@@ -40,7 +40,7 @@
     },
     "artboard": {
       "anyOf": [
-        { "$ref": "https://semio.tech/schema/s/drawing/drawing/artifact.json#/$defs/DrawingArtboard" },
+        { "$ref": "https://json.schemas.assets.semio-tech.com/s/drawing/drawing/artifact.json#/$defs/DrawingArtboard" },
         { "type": "null" }
       ],
       "x-semio-state": "artifact"
@@ -56,7 +56,7 @@
           "type": "object",
           "additionalProperties": {
             "anyOf": [
-              { "$ref": "https://semio.tech/schema/s/drawing/drawing/artifact.json#/$defs/DrawingImageAsset" },
+              { "$ref": "https://json.schemas.assets.semio-tech.com/s/drawing/drawing/artifact.json#/$defs/DrawingImageAsset" },
               { "type": "null" }
             ]
           }
@@ -81,7 +81,7 @@
       "properties": {
         "parentId": { "type": "string" },
         "index": { "type": "integer", "minimum": 0 },
-        "layer": { "$ref": "https://semio.tech/schema/s/drawing/drawing/artifact.json#/$defs/DrawingLayerNode" }
+        "layer": { "$ref": "https://json.schemas.assets.semio-tech.com/s/drawing/drawing/artifact.json#/$defs/DrawingLayerNode" }
       }
     },
     "DrawingLayerPatchEntry": {

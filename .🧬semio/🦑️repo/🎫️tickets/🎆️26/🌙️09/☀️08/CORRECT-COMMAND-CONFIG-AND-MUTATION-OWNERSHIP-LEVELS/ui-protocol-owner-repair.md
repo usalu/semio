@@ -18,7 +18,7 @@ The scene move preserved the public `@semio-tech/framework` API while correcting
 
 The owner schema consolidates the relocated grammar with its existing scalar-config retained-command grammar. `ScalarConfigRoute` uses the shared lane and classification definitions, with its local classification restriction retained. The owner exports the 24 relocated identities plus `RetainedCommandAdmissionOutcome` and `RetainedCommandAdmission`.
 
-The seven direct consumer schemas are VCS, Wires, Shooting, Remodel, Space Home, Space Index, and Space root. Every relevant duplicate `$ref` in those files now targets `https://semio.tech/schema/os/plugin/retained-command/component.json#/$defs/...`. VCS and Wires fixtures and Rust expectation maps were canonicalized with their schemas. The Imperative route fixture and its Rust oracle were canonicalized as a direct owner-schema consumer even though it has no document-schema `$ref`. Shooting, Remodel, and the three Space proof surfaces received the same fixture/schema/native expectation update.
+The seven direct consumer schemas are VCS, Wires, Shooting, Remodel, Space Home, Space Index, and Space root. Every relevant duplicate `$ref` in those files now targets `https://json.schemas.assets.semio-tech.com/os/plugin/retained-command/component.json#/$defs/...`. VCS and Wires fixtures and Rust expectation maps were canonicalized with their schemas. The Imperative route fixture and its Rust oracle were canonicalized as a direct owner-schema consumer even though it has no document-schema `$ref`. Shooting, Remodel, and the three Space proof surfaces received the same fixture/schema/native expectation update.
 
 Strict validation found three stale cardinality assumptions and they were reconciled against concrete owners:
 

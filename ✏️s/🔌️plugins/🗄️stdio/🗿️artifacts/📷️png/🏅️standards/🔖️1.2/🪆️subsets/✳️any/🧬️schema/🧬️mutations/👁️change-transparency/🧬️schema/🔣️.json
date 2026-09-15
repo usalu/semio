@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/png/1.2/any/mutation/change-transparency/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/png/1.2/any/mutation/change-transparency/schema.json",
   "title": "ChangeTransparencyMutation",
   "type": "object",
   "additionalProperties": false,

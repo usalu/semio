@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/repo/library/caching/vite/session/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/repo/library/caching/vite/session/schema.json",
   "$ref": "#/$defs/Session",
   "$defs": {
     "MutationLease": { "const": { "directory": ".leases", "resource": "sessions" } },

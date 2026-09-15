@@ -11,14 +11,14 @@ async fn renders_node_graph_scene() {
 /// 🛍️ The scene names its operators by KIND ID (inside `fixtureJson`) and carries only the document's
 /// own neuron kinds as operator records — never the registered catalogue (~100 KB, three times the
 /// fixed 32 KiB per-surface admission; ticket 26/09/09/PROCEDURAL-3D-END-TO-END §3.1). Those records
-/// are how the canvas instantiates the graph instead of `FlowHostDocument::default()`'s placeholder slider.
+/// are how the canvas instantiates the graph instead of `FlowHostSnapshot::default()`'s placeholder slider.
 #[semio_framework_async_macros::async_test]
 async fn main_graph_scene_exports_flow_backed_node_graph_fields() {
     let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
     let mut app = app_with_registry().await;
     let json = render_body(&mut app, GENERATION_3D_PLAY_BODY_MAIN).await;
     let scene = semio_framework_plugin::artifact_app_laws::decode_fixture_scene::<NodeGraphScene>(&json).expect("node-graph scene decodes off the rendered surface");
-    assert!(scene.fixture_json.as_deref().is_some_and(|fixture| fixture.contains("flow.host_document")));
+    assert!(scene.host_snapshot_json.as_deref().is_some_and(|host_snapshot| host_snapshot.contains("flow.host_snapshot")));
     let capabilities = scene.capabilities_json.clone().unwrap_or_default();
     assert!(capabilities.contains("flow"), "missing flow engine capability: {capabilities}");
     assert!(!scene.nodes.is_empty(), "the open document's nodes must reach the scene");
@@ -54,8 +54,8 @@ const GRAPH_OUTLINE_LAW: &str = include_str!("../../🧫️fixtures/🔬️unit/
 
 fn law_outline_projection() -> serde_json::Value {
     let law: serde_json::Value = serde_json::from_str(GRAPH_OUTLINE_LAW).expect("graph outline law json");
-    let fixture = semio_framework_os_flow::FlowHost::parse_host_document_json(&law["fixture"].to_string()).expect("law fixture parses");
-    let (nodes, edges) = with_host(&snapshot, |host| dag_host_document_to_workflow(&host.dag.host_document));
+    let fixture = semio_framework_os_flow::FlowHost::parse_host_snapshot_json(&law["fixture"].to_string()).expect("law fixture parses");
+    let (nodes, edges) = with_host(&fixture, |host| dag_host_snapshot_to_workflow(&host.dag.host_snapshot));
     let labels = crate::editor::generation3d::terminology::generation3d_labels(&semio_framework_plugin::ViewModel::default());
     let outline = graph_outline(&nodes, &edges, None, labels).expect("outline builds");
     fixture.retire_cold();

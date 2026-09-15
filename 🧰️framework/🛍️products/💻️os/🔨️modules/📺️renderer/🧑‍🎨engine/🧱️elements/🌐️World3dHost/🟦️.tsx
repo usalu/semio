@@ -1872,6 +1872,16 @@ export function worldInstancePickBlocked(activeUtility: string | undefined): boo
   return activeUtility === "brush" || activeUtility === "volumeBrush" || activeUtility === "surfaceBrush";
 }
 
+/** @emoji 🎯️ The hover this pane is publishing, as an interaction target the background-click path may
+ * pick instead of clearing. `null` for empty canvas and for every MARKER layer — a vortex
+ * (`kind:fullId`) and a reference (`reference:id`) carry a `:` and own dedicated pick handlers, so the
+ * background path must never select them. Pure and exported for
+ * `🧪️tests/🎯️world3d-pick-bounds`. */
+export function hoveredInteractionTargetV1(hoveredId: string | null | undefined): { readonly granularity: string; readonly id: string } | null {
+  if (typeof hoveredId !== "string" || hoveredId.length === 0 || hoveredId.includes(":")) return null;
+  return { granularity: "object", id: hoveredId };
+}
+
 /** @emoji 🚫️ `undefined` keeps the default mesh raycast; a no-op replaces it so a blocked instance cannot steal sibling vortex hits. */
 export function worldInstanceMeshRaycast(pickEnabled: boolean): (() => null) | undefined {
   return pickEnabled ? undefined : () => null;
@@ -5946,6 +5956,9 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
   });
 
   const hoveredVortexFullIdRef = useRef<string | null>(null);
+  /** 🎯️ The interaction id this pane's OWN raycast last resolved under the pointer — see
+   * {@link hoveredInteractionTargetV1}. Null whenever the pointer left every instance. */
+  const hoveredInstanceInteractionIdRef = useRef<string | null>(null);
   const altHeldRef = useRef(false);
   useEffect(() => {
     hoveredVortexFullIdRef.current = world3dRetainLocalVortexHover(hoveredVortexFullIdRef.current, interaction.hoveredVortexFullId);
@@ -6097,6 +6110,11 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
 
   const handleInstancePointerMove = useCallback(
     (id: string | null) => {
+      // 🎯️ What THIS pane's own raycast last resolved, kept locally. `selection.hoveredId` is the
+      // guest's echo of it: it lags a round trip and any unrelated refresh can clear it, so a
+      // background click that consulted it raced the refresh and cleared a live selection instead of
+      // re-picking the object under the pointer (`📓️hot-swap-board-remount-2026-09-15.md` §3).
+      hoveredInstanceInteractionIdRef.current = id == null ? null : (instancesRef.current.find((entry) => entry.id === id)?.interactionId ?? id);
       dispatchInstanceHover(id);
     },
     [dispatchInstanceHover],
@@ -6751,13 +6769,32 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
         handleSuggestionClose();
       }
       const merge = resolveWorldMergeMode(selection.selectionMergeMode, event, persistentSelectionMode);
+      // 🎯️ A pane must not CLEAR its selection at a point where it is publishing a hover target. The
+      // two hit tests are not the same code — hover rides R3F's raycast against the real geometry, the
+      // click's "did I hit anything" is R3F's own `onPointerMissed` bookkeeping — and on the
+      // generation3d preview they disagree: sweeping the pointer resolves `extrude@solid` and clicking
+      // that same point ten milliseconds later arrives here, so the pick dispatched
+      // `interactionSelect targets:[]` and the object was never selectable at all
+      // (measured 26/09/15 on :6023, `📓️hot-swap-board-remount-2026-09-15.md` §3;
+      // `🐍️world-pick-recon.mjs` records both halves). The hover this pane published IS the target under
+      // the pointer, so a click there is a pick of it; a click on genuinely empty canvas has no hover
+      // and still clears.
+      const hovered = hoveredInteractionTargetV1(hoveredInstanceInteractionIdRef.current ?? selection.hoveredId);
+      if (interactionDomainId && hovered) {
+        dispatch("interactionSelect", world3dSelectionActionArgs(interactionDomainId, hovered.granularity, [hovered.id], merge));
+        return;
+      }
       if (interactionDomainId) {
         dispatch("interactionSelect", world3dSelectionActionArgs(interactionDomainId, interactionGranularity, [], merge));
         return;
       }
+      if (hovered) {
+        dispatch("worldPick", { granularity: selectionMode, id: hovered.id, merge });
+        return;
+      }
       dispatch("worldPick", { granularity: selectionMode, id: null, merge });
     },
-    [dispatch, handleSuggestionClose, interaction.suggestionMenu?.open, interactionDomainId, interactionGranularity, paintMode, persistentSelectionMode, selection.engagementSessionActive, selection.selectionMergeMode, selectionMode],
+    [dispatch, handleSuggestionClose, interaction.suggestionMenu?.open, interactionDomainId, interactionGranularity, paintMode, persistentSelectionMode, selection.engagementSessionActive, selection.hoveredId, selection.selectionMergeMode, selectionMode],
   );
 
   const clearCatalogueDrop = useCallback(() => {

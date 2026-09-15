@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/framework/os/plugin/tests/children-fixture/mutations.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/os/plugin/tests/children-fixture/mutations.json",
   "title": "Uninhabited Children Fixture Mutation Roster",
   "$comment": "No mutation values or direct leaves exist. The Rust descriptor roster is empty; every operation payload is rejected.",
   "not": {}

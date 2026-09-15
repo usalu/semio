@@ -46,7 +46,7 @@ Re-run standalone against the committed fixture (§4.5): the positive and all th
 `🧰️framework/🔨️modules/🌱️value/🧬️schema/` did not exist (`🌱️value` had `💾️resident`, `🔁️codec`,
 `🗂️ordered`, `✨️derive` sub-scopes but no module scope of its own). Created:
 
-* `🔣️.json` — `$id https://semio.tech/schema/framework/value/schema.json`, draft-07, two `$defs`.
+* `🔣️.json` — `$id https://json.schemas.assets.semio-tech.com/framework/value/schema.json`, draft-07, two `$defs`.
 * `🟦️.ts` — `export type U64` / `NonZeroU64` plus `parseU64()` / `parseNonZeroU64()` and a
   `ValueSchemaError`, the runtime entry point execution contract §A requires beside an erased type.
 

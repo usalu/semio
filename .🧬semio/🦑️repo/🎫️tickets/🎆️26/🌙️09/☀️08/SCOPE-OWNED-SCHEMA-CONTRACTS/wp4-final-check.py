@@ -41,7 +41,7 @@ for scope in touched:
     label = scope.replace("✏️s/🔌️plugins/", "")
     if d.get("$schema") != DRAFT07:
         print("DIALECT", label, d.get("$schema")); problems += 1
-    if not str(d.get("$id", "")).startswith("https://semio.tech/schema/"):
+    if not str(d.get("$id", "")).startswith("https://json.schemas.assets.semio-tech.com/"):
         print("ID", label, d.get("$id")); problems += 1
     defs = d.get("$defs", {})
     for ref in set(re.findall(r'"\$ref":\s*"([^"]+)"', json.dumps(d))):

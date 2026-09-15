@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/txt/utf-8/any/mutation/set-line-ending/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/txt/utf-8/any/mutation/set-line-ending/schema.json",
   "title": "SetLineEndingMutation",
   "description": "Canonical payload schema for set-line-ending.",
   "type": "object",

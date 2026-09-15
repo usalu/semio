@@ -5,8 +5,8 @@ use crate::standards::v1::subsets::any::schema::mutations::{create_widget, Gener
 use crate::{widget_id, Generation2dSnapshot};
 
 pub fn inverse(payload: &super::DeleteWidget, base: &Generation2dSnapshot) -> Vec<Generation2dMutation> {
-    match base.host_document.widgets.iter().position(|widget| widget_id(widget) == payload.id) {
-        Some(index) => vec![create_widget(index, base.host_document.widgets[index].clone())],
+    match base.host_snapshot.widgets.iter().position(|widget| widget_id(widget) == payload.id) {
+        Some(index) => vec![create_widget(index, base.host_snapshot.widgets[index].clone())],
         None => Vec::new(),
     }
 }

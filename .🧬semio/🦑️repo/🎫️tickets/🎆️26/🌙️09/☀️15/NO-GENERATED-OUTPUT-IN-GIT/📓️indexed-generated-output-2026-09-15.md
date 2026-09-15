@@ -8,7 +8,7 @@ Ensure Git never indexes wasm binaries, wasm-bindgen/jco JS glue, wasm-pack `�
 
 - `.gitignore`: `**/*_bg.wasm.d.ts`, `**/🕸️bindings/**`, and fixture-scoped re-ignore for `🌐️browser-bundles/` and `🤖️generated/` after the fixtures rescue block.
 - Policy: `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/indexed-generated-output/🟦️.ts` plus gate hook in root `📜️script.ts` `runGate`.
-- Index cleanup: `git rm --cached` on all paths matching the policy outside ticket evidence and the frame-worker `🤖️generated/🟨️.js` allowlist.
+- Index cleanup: `git rm --cached` on all paths matching the policy outside ticket evidence (including wgpu frame-worker `🤖️generated/🟨️.js`; removed legacy `.gitignore` negation rules).
 
 ## Verification
 

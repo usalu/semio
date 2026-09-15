@@ -1313,7 +1313,7 @@
       "type": "object"
     }
   },
-  "$id": "https://semio.tech/schema/os/mcp/component.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/os/mcp/component.json",
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Semio OS MCP Gateway"
 }

@@ -76,7 +76,7 @@ resolution`) and is imported by `📜️script.ts` and by `🧪️tests/🤝️i
   partition; no allowlist, no fallback to a hand-written table).
 - `schemaModulePath` takes `scopes[<id>].path` + `formats["🔣️jsonschema"]`. No nearest-parent search, no
   glob, no fixture-local fallback.
-- `schemaModuleId` asserts the draft-07 dialect and a `https://semio.tech/schema/` `$id` (and a
+- `schemaModuleId` asserts the draft-07 dialect and a `https://json.schemas.assets.semio-tech.com/` `$id` (and a
   `…/hub/` `$id` for `hub.*`), then recursively loads every dependency **before** `addSchema`, so a
   cross-scope `$ref` resolves at compile time instead of being restated.
 - `hubSchemaExport` returns a plain `(value: unknown) => boolean`. It deliberately does **not** return
@@ -88,7 +88,7 @@ resolution`) and is imported by `📜️script.ts` and by `🧪️tests/🤝️i
 Row 26 asks for catalog `dependsOn` to feed the shared Ajv. It does — but `dependsOn` alone is not
 sufficient today, so `schemaModuleId` loads the **union** of `dependsOn` and the foreign scopes the
 document actually `$ref`s (`schemaReferencedScopes`, which walks the document and maps each
-`https://semio.tech/schema/<scope path>/<facet>.json` back to its scope id per the §A grammar):
+`https://json.schemas.assets.semio-tech.com/<scope path>/<facet>.json` back to its scope id per the §A grammar):
 
 ```
 $ node -e '…' 🔣️schema-catalog.json
@@ -106,13 +106,13 @@ would rather the catalog be the sole authority, `schemaReferencedScopes` can be 
 
 ### 3c. `TrustedBundleBrowserActorV1` restatement → `$ref`
 
-`os.directory` is now draft-07 with `$id https://semio.tech/schema/os/directory/component.json`, so the
+`os.directory` is now draft-07 with `$id https://json.schemas.assets.semio-tech.com/os/directory/component.json`, so the
 restated browser-actor identity fields in
 `🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧬️schema/🔣️.json` were replaced by
 
 ```json
 "allOf": [
-  { "$ref": "https://semio.tech/schema/os/directory/component.json#/$defs/DocumentBrowserActorIdentity" },
+  { "$ref": "https://json.schemas.assets.semio-tech.com/os/directory/component.json#/$defs/DocumentBrowserActorIdentity" },
   { "type": "object", "additionalProperties": false, "required": ["path", "byteLength"], "properties": { … } }
 ]
 ```
@@ -123,7 +123,7 @@ closes the object, and adds the two bundle-only fields). This closes `📓️wp4
 ### 3d. `UNCATALOGUED_SCHEMA_MODULES`
 
 One entry: `s.stdio.registry` → `✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️schema/🔣️.json`. The module exists
-and is correct (draft-07, `$id https://semio.tech/schema/s/stdio/registry/schema.json`, 14 `$defs`), but
+and is correct (draft-07, `$id https://json.schemas.assets.semio-tech.com/s/stdio/registry/schema.json`, 14 `$defs`), but
 the catalog does not emit it — `✏️s/🔌️plugins/<p>/📇️registry` is not an eligible owner level in the
 execution contract §A / `🔣️taxonomy.json`, so the generator emits `s.stdio` (plugin root) and 844
 artifact/mutation scopes under it but not `s.stdio.registry`. The entry self-retires: declaring a scope
@@ -133,9 +133,9 @@ the catalog already carries is a hard error, never an override. See request §6.
 
 | `📜️script.ts` / test site | Reads | Blocker | Exact expected target |
 |---|---|---|---|
-| `proveTrustedBootstrapCodecCaptureFixture` (`:9170`) | `✏️s/🔌️plugins/🌍️gis/📇️native-codecs/🧬️.schema.json` | no `🧬️schema/` module; the file is still 2020-12 with `$id semio.gis.native-codec-receipts/v1` | `✏️s/🔌️plugins/🌍️gis/📇️native-codecs/🧬️schema/🔣️.json`, draft-07, `$id https://semio.tech/schema/s/gis/native-codecs/schema.json`, receipt corpus as a named `$defs` export → hub binds `schema://s.gis.native-codecs/<ExportId>` |
-| `BrowserActorChildWorkerContainmentCheckScript.run` (`:5867`+) | `…/🔌️plugin/🌐️browser-bundle/🧵️child/🧬️schema/🔣️.json` | module exists but `$id` is `https://semio.tech/schemas/os/browser-actor-child-v1.json` (`schemas` plural, no scope path, no facet) and it is **not** in the catalog; the contract lives at the document root, not in `$defs` | `$id https://semio.tech/schema/os/plugin/browser-bundle/child/schema.json`, scope `os.plugin.browser-bundle.child`, root contract moved to a PascalCase `$defs` export → `schema://os.plugin.browser-bundle.child/<ExportId>` |
-| `proveGisChildBrowserActor` (`:6286`), `BrowserActorGisDescribeCheckScript.run` (`:6436`) | `…/🌐️browser-bundle/🧾️describe/🧬️schema/🔣️.json` | same defect; `$id https://semio.tech/schemas/os/browser-actor-describe-v1.json`, no `$defs` at all | `$id https://semio.tech/schema/os/plugin/browser-bundle/describe/schema.json`, scope `os.plugin.browser-bundle.describe`, root contract moved to a `$defs` export → `schema://os.plugin.browser-bundle.describe/<ExportId>` |
+| `proveTrustedBootstrapCodecCaptureFixture` (`:9170`) | `✏️s/🔌️plugins/🌍️gis/📇️native-codecs/🧬️.schema.json` | no `🧬️schema/` module; the file is still 2020-12 with `$id semio.gis.native-codec-receipts/v1` | `✏️s/🔌️plugins/🌍️gis/📇️native-codecs/🧬️schema/🔣️.json`, draft-07, `$id https://json.schemas.assets.semio-tech.com/s/gis/native-codecs/schema.json`, receipt corpus as a named `$defs` export → hub binds `schema://s.gis.native-codecs/<ExportId>` |
+| `BrowserActorChildWorkerContainmentCheckScript.run` (`:5867`+) | `…/🔌️plugin/🌐️browser-bundle/🧵️child/🧬️schema/🔣️.json` | module exists but `$id` is `https://json.schemas.assets.semio-tech.coms/os/browser-actor-child-v1.json` (`schemas` plural, no scope path, no facet) and it is **not** in the catalog; the contract lives at the document root, not in `$defs` | `$id https://json.schemas.assets.semio-tech.com/os/plugin/browser-bundle/child/schema.json`, scope `os.plugin.browser-bundle.child`, root contract moved to a PascalCase `$defs` export → `schema://os.plugin.browser-bundle.child/<ExportId>` |
+| `proveGisChildBrowserActor` (`:6286`), `BrowserActorGisDescribeCheckScript.run` (`:6436`) | `…/🌐️browser-bundle/🧾️describe/🧬️schema/🔣️.json` | same defect; `$id https://json.schemas.assets.semio-tech.coms/os/browser-actor-describe-v1.json`, no `$defs` at all | `$id https://json.schemas.assets.semio-tech.com/os/plugin/browser-bundle/describe/schema.json`, scope `os.plugin.browser-bundle.describe`, root contract moved to a `$defs` export → `schema://os.plugin.browser-bundle.describe/<ExportId>` |
 | `proveSpaceArtifactCreationContractV1` (`:14637`), test `:377` and `:724` | `os.directory` `DirectoryEventBody` / `DirectoryStreamMessage` | see §5.2 — the OpenAPI `discriminator` keyword | delete the five `discriminator` annotations from `📇️directory/🧬️schema/🔣️.json`; then `schema://os.directory/DirectoryEventBody` etc. bind directly and the branch splice and both `strict:false, discriminator:true` Ajv instances in the test go away |
 
 `📜️script.ts:3585` and the three other reads of `📇️directory/🧬️schema/🔣️.json` are **source-text**
@@ -148,8 +148,8 @@ are deliberately untouched.
 
 ```
 FAIL |os-hub-ts| ../../🧪️tests/🤝️integration/🟦️.ts > validates the neutral immutable trusted-catalog bundle with AJV and Node crypto
-Error: can't resolve reference https://semio.tech/schema/os/directory/component.json#/$defs/DocumentBrowserActorIdentity
-       from id https://semio.tech/schema/hub/artifact-authority/trusted-catalog/schema.json
+Error: can't resolve reference https://json.schemas.assets.semio-tech.com/os/directory/component.json#/$defs/DocumentBrowserActorIdentity
+       from id https://json.schemas.assets.semio-tech.com/hub/artifact-authority/trusted-catalog/schema.json
 ```
 
 Cause: the test's own duplicate resolver loaded one module per `Ajv`. Fixed by §3a (the test now imports
@@ -230,8 +230,8 @@ in any partition is a landmine while the test-layout refactor is in flight.
 2. **W5 os (`os.directory`) — delete the five `discriminator` annotations** listed in §5.2. They make
    five exports uncompilable by the shared strict draft-07 validator and are semantically redundant.
 3. **W5 os (`os.plugin.browser-bundle`) — two modules with non-conforming `$id`s**, see the §4 table
-   rows 2 and 3: `https://semio.tech/schemas/os/browser-actor-{child,describe}-v1.json` does not match
-   the §A grammar `https://semio.tech/schema/<scope path>/<facet>.json`, and neither module names its
+   rows 2 and 3: `https://json.schemas.assets.semio-tech.coms/os/browser-actor-{child,describe}-v1.json` does not match
+   the §A grammar `https://json.schemas.assets.semio-tech.com/<scope path>/<facet>.json`, and neither module names its
    contract as a `$defs` export, so neither is catalogued and the hub cannot bind them.
 4. **W6 plugins (gis) — `📇️native-codecs` has no scope module**, see §4 row 1. This is the last
    surviving `*.schema.json` read in the hub script.
@@ -267,7 +267,7 @@ inference-wal-chain-oracle: exact=14 hashing-ownership=3 retained-boundaries=2 a
 inference-catalog-projection-oracle: exact=12; no native provider or route authority
 trusted-catalog-identity-oracle: exact=6 canonical-kind=1 descriptor-sha256=1 package-ref-blake3=distinct; no GIS provider activation
 
-error: can't resolve reference #/$defs/field from id https://semio.tech/schema/s/gis/schema.json
+error: can't resolve reference #/$defs/field from id https://json.schemas.assets.semio-tech.com/s/gis/schema.json
       at async proveGisNativeCodecReceipts (…/✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust/📜️script.ts:49:26)
       at async run (…/🌎️hub/📦️packages/🦀️rust/📜️script.ts:7827:92)
 exit=1

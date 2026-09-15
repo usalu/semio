@@ -8,7 +8,7 @@
 //! per-field table in `📓️wave3b-reports/surface-report.md`). Node positions/connections — genuine
 //! document content per the ticket's own framing — are NOT owned here: `self.dag` is rebuilt
 //! wholesale from `NodeGraphScenePayload` every time [`GraphHost::sync_from_payload`]'s content-hash
-//! signature changes, and the payload itself is produced from `💻️os/🔨️modules/🌊️flow`'s `FlowHostDocument`
+//! signature changes, and the payload itself is produced from `💻️os/🔨️modules/🌊️flow`'s `FlowHostSnapshot`
 //! (`Widget`/`SynapseSpec` graph, consumed via `⚙️EngineCanvas` — see
 //! `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/⚙️EngineCanvas/🎯️targets/🧊️wgpu/🦀️.rs`).
 //! That owner is real but **not yet properly event-sourced itself** — `🌊️flow/🌿️vcs/🦀️.rs`
@@ -22,7 +22,7 @@ pub use infinite_canvas as canvas;
 pub use infinite_canvas::board::ports::directed_dag as dag;
 
 use dag::{dag_screen_to_world, fit_node_size, DagHost};
-use semio_framework_artifact_infinite_dag::{DagCamera, DagHostDocument, DagHostDocumentEdge, DagNodeKind, DagNodeSpec, IoPortSpec};
+use semio_framework_artifact_infinite_dag::{DagCamera, DagHostSnapshot, DagHostSnapshotEdge, DagNodeKind, DagNodeSpec, IoPortSpec};
 use semio_framework_os_kernel::{DomainHover, DomainSelection, SelectionMethod, Viewport2d};
 // 🌱️ `ToValue`/`FromValue` here is the first-party analog of `Serialize`/`Deserialize` below, for
 // ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
@@ -215,13 +215,13 @@ fn node_record_to_spec(record: &GraphNodeRecord) -> DagNodeSpec {
 }
 
 /// 🕸️ Projects the typed `NodeGraphScene` records into the retained DAG host.
-pub fn fixture_from_node_graph_records(nodes: &[GraphNodeRecord], edges: &[GraphEdgeRecord], viewport: Option<&Viewport2d>) -> DagHostDocument {
+pub fn fixture_from_node_graph_records(nodes: &[GraphNodeRecord], edges: &[GraphEdgeRecord], viewport: Option<&Viewport2d>) -> DagHostSnapshot {
     let viewport = viewport.cloned().unwrap_or_default();
-    DagHostDocument {
-        schema: "dag.host_document".into(),
+    DagHostSnapshot {
+        schema: "dag.host_snapshot".into(),
         camera: DagCamera { x: viewport.x, y: viewport.y, zoom: viewport.zoom },
         nodes: nodes.iter().map(node_record_to_spec).collect(),
-        edges: edges.iter().map(|edge| DagHostDocumentEdge { id: edge.id.clone(), source: format!("{}@{}", edge.source_node_id, edge.source_port_id), target: format!("{}@{}", edge.target_node_id, edge.target_port_id), ..Default::default() }).collect(),
+        edges: edges.iter().map(|edge| DagHostSnapshotEdge { id: edge.id.clone(), source: format!("{}@{}", edge.source_node_id, edge.source_port_id), target: format!("{}@{}", edge.target_node_id, edge.target_port_id), ..Default::default() }).collect(),
     }
 }
 
@@ -242,7 +242,7 @@ pub struct NodeGraphScenePayload {
     pub computing_json: Option<String>,
     pub status_json: Option<String>,
     pub capabilities_json: Option<String>,
-    pub fixture_json: Option<String>,
+    pub host_snapshot_json: Option<String>,
 }
 
 fn expand_payload_pack_fields(payload: &mut NodeGraphScenePayload) -> Result<(), NodeGraphError> {
@@ -267,7 +267,7 @@ fn expand_payload_pack_fields(payload: &mut NodeGraphScenePayload) -> Result<(),
     if let Some(json) = payload.capabilities_json.as_mut() {
         *json = store::pack_rt::scene_field_json_text(json)?;
     }
-    if let Some(json) = payload.fixture_json.as_mut() {
+    if let Some(json) = payload.host_snapshot_json.as_mut() {
         *json = store::pack_rt::scene_field_json_text(json)?;
     }
     Ok(())
@@ -286,7 +286,7 @@ impl NodeGraphScenePayload {
             computing_json: value.get("computingJson").and_then(|v| v.as_str()).map(str::to_string),
             status_json: value.get("statusJson").and_then(|v| v.as_str()).map(str::to_string),
             capabilities_json: value.get("capabilitiesJson").and_then(|v| v.as_str()).map(str::to_string),
-            fixture_json: value.get("fixtureJson").and_then(|v| v.as_str()).map(str::to_string),
+            host_snapshot_json: value.get("hostSnapshotJson").and_then(|v| v.as_str()).map(str::to_string),
         })
     }
 }
@@ -331,7 +331,7 @@ pub struct GraphHost {
     /// 🧱️ (d) ephemeral working representation — hit-testing/layout structure rebuilt wholesale from
     /// `NodeGraphScenePayload` on every content-hash change (see [`GraphHost::sync_from_payload`]).
     /// Node positions/connections are real document content whose authoritative owner is OS `flow`'s
-    /// `FlowHostDocument` (see module docstring); this field is a render-session mirror of it, not a second
+    /// `FlowHostSnapshot` (see module docstring); this field is a render-session mirror of it, not a second
     /// authoritative copy.
     pub dag: DagHost,
     /// 📇 (c) Preview/Effect — the app-static palette catalogue, pushed once per app instance through
@@ -357,13 +357,13 @@ pub struct GraphHost {
 
 impl Default for GraphHost {
     fn default() -> Self {
-        Self::from_host_document(DagHostDocument::default())
+        Self::from_host_snapshot(DagHostSnapshot::default())
     }
 }
 
 impl GraphHost {
-    pub fn from_host_document(fixture: DagHostDocument) -> Self {
-        let dag = DagHost::from_host_document_without_layout(fixture);
+    pub fn from_host_snapshot(fixture: DagHostSnapshot) -> Self {
+        let dag = DagHost::from_host_snapshot_without_layout(fixture);
         let interaction_projection = dag.bounded_interaction_projection(0).ok();
         Self { dag, catalogue_json: String::new(), controls_json: String::new(), capabilities_json: String::new(), last_payload_signature: None, pending_gather: None, interaction_revision: 0, interaction_projection }
     }
@@ -398,7 +398,7 @@ impl GraphHost {
         if self.last_payload_signature != Some(signature) {
             let viewport = self.last_payload_signature.map(|_| self.viewport()).or(payload.viewport);
             let fixture = fixture_from_node_graph_records(&payload.nodes, &payload.edges, viewport.as_ref());
-            self.dag = DagHost::from_host_document_without_layout(fixture);
+            self.dag = DagHost::from_host_snapshot_without_layout(fixture);
             self.last_payload_signature = Some(signature);
         }
         if let Some(preview_off_json) = &payload.preview_off_json {
@@ -477,7 +477,7 @@ impl GraphHost {
     }
 
     pub fn viewport(&self) -> Viewport2d {
-        let camera = &self.dag.host_document.camera;
+        let camera = &self.dag.host_snapshot.camera;
         Viewport2d { x: camera.x, y: camera.y, zoom: camera.zoom }
     }
 
@@ -503,7 +503,7 @@ impl GraphHost {
     }
 
     pub fn plan_wheel(&self, sx: f64, sy: f64, delta_y: f64, zoom_gesture: bool) -> GraphWheelPlan {
-        let cam = &self.dag.host_document.camera;
+        let cam = &self.dag.host_snapshot.camera;
         let expected = [cam.x, cam.y, cam.zoom];
         let next = if !zoom_gesture {
             [cam.x, cam.y - delta_y / cam.zoom.max(1e-9), cam.zoom.max(1e-9)]
@@ -516,7 +516,7 @@ impl GraphHost {
     }
 
     pub fn commit_wheel(&mut self, plan: GraphWheelPlan) -> bool {
-        let cam = &self.dag.host_document.camera;
+        let cam = &self.dag.host_snapshot.camera;
         if self.interaction_revision != plan.revision || [cam.x.to_bits(), cam.y.to_bits(), cam.zoom.to_bits()] != [plan.expected[0].to_bits(), plan.expected[1].to_bits(), plan.expected[2].to_bits()] {
             return false;
         }
@@ -631,8 +631,8 @@ impl GraphHost {
         Ok(self.dag.align_selection(mode)?)
     }
 
-    pub fn fixture_json(&self) -> Result<String, NodeGraphError> {
-        Ok(self.dag.host_document_json()?)
+    pub fn host_snapshot_json(&self) -> Result<String, NodeGraphError> {
+        Ok(self.dag.host_snapshot_json()?)
     }
 
     pub fn set_canvas_theme_dark(&mut self, dark: bool) {
@@ -953,9 +953,9 @@ mod wasm_session {
             self.state.borrow_mut().host.align_selection(mode).map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
-        #[wasm_bindgen(js_name = fixtureJson)]
-        pub fn fixture_json(&self) -> Result<String, JsValue> {
-            self.state.borrow().host.host_document_json().map_err(|e| JsValue::from_str(&e.to_string()))
+        #[wasm_bindgen(js_name = hostSnapshotJson)]
+        pub fn host_snapshot_json(&self) -> Result<String, JsValue> {
+            self.state.borrow().host.host_snapshot_json().map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = takePendingOpenInstanceId)]

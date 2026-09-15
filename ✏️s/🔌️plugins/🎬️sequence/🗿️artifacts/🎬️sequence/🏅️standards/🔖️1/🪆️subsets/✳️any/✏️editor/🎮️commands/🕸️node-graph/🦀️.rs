@@ -23,8 +23,8 @@ pub mod node_graph_edit {
         sequence_child_emit_from_host_mutation(doc, |host| {
             for operation in &sub_operations {
                 match operation.get("operation").and_then(|value| value.as_str()).unwrap_or("") {
-                    "setHostDocument" => {
-                        if let Some(fixture) = operation.get("hostDocumentJson").and_then(|value| value.as_str()).and_then(|json| dsl::os_pack::from_json_str::<crate::SequenceHostDocument>(json).ok()) {
+                    "setHostSnapshot" => {
+                        if let Some(fixture) = operation.get("hostSnapshotJson").and_then(|value| value.as_str()).and_then(|json| dsl::os_pack::from_json_str::<crate::SequenceHostSnapshot>(json).ok()) {
                             let _ = host.replace_snapshot(fixture);
                         }
                     }
@@ -50,7 +50,7 @@ pub mod node_graph_edit {
     /// shape (no `interaction` slot — ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) —
     /// reachable only through that macro-generated path (`SequencePlayApp::handle` always routes this
     /// command through `apply` below instead), so its `"deleteSelection"` sub-operation degrades to
-    /// treating the selection as empty; every other sub-operation (`setHostDocument`/`connect`) is unaffected.
+    /// treating the selection as empty; every other sub-operation (`setHostSnapshot`/`connect`) is unaffected.
     pub fn handle(payload: &NodeGraphEdit, doc: &ArtifactView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<SequenceMutation, NoConfigMutation>, Fault> {
         edit_with_selection(payload, doc, &[])
     }

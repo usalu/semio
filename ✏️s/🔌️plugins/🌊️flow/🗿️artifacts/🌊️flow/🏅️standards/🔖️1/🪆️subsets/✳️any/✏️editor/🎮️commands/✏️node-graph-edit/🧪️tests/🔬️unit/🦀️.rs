@@ -10,7 +10,7 @@ async fn batched_delete_selection_clears_the_node_selection_on_the_scene() {
     let mut app = flow_app_with_registry().await;
     select_graph(&mut app, &["slider"], &[]).await;
     dispatch(&mut app, FlowCommand::NodeGraphEdit(NodeGraphEdit { operations: vec![FlowNodeGraphEditOp::DeleteSelection] })).await;
-    assert!(!app.snapshot().expect("snapshot").to_host_document().widgets.iter().any(|widget| crate::schema::widget_id(widget) == "slider"), "batched delete removes the picked widget");
+    assert!(!app.snapshot().expect("snapshot").to_host_snapshot().widgets.iter().any(|widget| crate::schema::widget_id(widget) == "slider"), "batched delete removes the picked widget");
     let _ = render(&mut app, crate::editor::flow::FLOW_PLAY_BODY_MAIN).await;
 }
 

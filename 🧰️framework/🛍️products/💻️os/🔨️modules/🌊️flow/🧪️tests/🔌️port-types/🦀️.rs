@@ -12,7 +12,7 @@
 use semio_framework_os_flow::{port_value_types_compatible, widget_port_value_types, PortSide};
 use semio_framework_artifact_flow_flow::{SynapseSpec, Widget};
 use semio_framework_os_flow::{FlowHost, FlowHostRetirement};
-use semio_framework_artifact_flow_flow::FlowHostDocument;
+use semio_framework_artifact_flow_flow::FlowHostSnapshot;
 use std::collections::HashMap;
 use std::sync::OnceLock;
 // #endregion 🔖️Imports
@@ -31,7 +31,7 @@ fn fixture() -> serde_json::Value {
 }
 
 /// 🍄️ The defect's own graph, exactly as the example ships it.
-fn hexagonal_mushroom_column() -> FlowHostDocument {
+fn hexagonal_mushroom_column() -> FlowHostSnapshot {
     let widgets = vec![
         Widget::Neuron { id: "profile".into(), neuron_kind: "brep.curve.polygon".into(), params: Default::default(), input_ports: vec!["radius".into(), "sides".into()], output_ports: vec![], preview: true },
         Widget::Neuron { id: "extrusion-axis".into(), neuron_kind: "math.vector".into(), params: Default::default(), input_ports: vec!["x".into(), "y".into(), "z".into()], output_ports: vec![], preview: true },
@@ -41,10 +41,10 @@ fn hexagonal_mushroom_column() -> FlowHostDocument {
         SynapseSpec { id: "e4".into(), from: "profile".into(), from_port: "wire".into(), to: "extrude".into(), to_port: "wire".into() },
         SynapseSpec { id: "e5".into(), from: "extrusion-axis".into(), from_port: "vectorOut".into(), to: "extrude".into(), to_port: "vector".into() },
     ];
-    FlowHostDocument { widgets, synapses, ..Default::default() }
+    FlowHostSnapshot { widgets, synapses, ..Default::default() }
 }
 
-/// 🧹️ `FlowHostDocument`'s ordered maps refuse to drop unretired, so a law that builds a real host walks
+/// 🧹️ `FlowHostSnapshot`'s ordered maps refuse to drop unretired, so a law that builds a real host walks
 /// it through the same retirement ladder the session close walks.
 fn retire(host: FlowHost) {
     let mut retirement = FlowHostRetirement::new(host);
@@ -159,16 +159,16 @@ fn a_vector_output_is_refused_by_the_wire_input_that_accepts_the_profile() {
 /// displaced, and adds no synapse — so nothing re-solves.
 #[test]
 fn the_flow_host_refuses_the_drop_and_keeps_the_displaced_wire() {
-    let mut host = FlowHost::from_host_document_with_cache_and_infos(hexagonal_mushroom_column(), std::sync::Arc::new(neural_engine::NeuralCache::new()), std::sync::Arc::new(kind_infos().clone()));
-    let before: Vec<(String, String, String, String)> = host.host_document.synapses.iter().map(|synapse| (synapse.from.clone(), synapse.from_port.clone(), synapse.to.clone(), synapse.to_port.clone())).collect();
+    let mut host = FlowHost::from_host_snapshot_with_cache_and_infos(hexagonal_mushroom_column(), std::sync::Arc::new(neural_engine::NeuralCache::new()), std::sync::Arc::new(kind_infos().clone()));
+    let before: Vec<(String, String, String, String)> = host.host_snapshot.synapses.iter().map(|synapse| (synapse.from.clone(), synapse.from_port.clone(), synapse.to.clone(), synapse.to_port.clone())).collect();
     let refusal = host.connect_ports("extrusion-axis", "vectorOut", "extrude", "wire");
     assert!(matches!(refusal, Err(semio_framework_os_flow::FlowCoreError::IncompatiblePortTypes { .. })), "the drop must be refused, got {refusal:?}");
-    let after: Vec<(String, String, String, String)> = host.host_document.synapses.iter().map(|synapse| (synapse.from.clone(), synapse.from_port.clone(), synapse.to.clone(), synapse.to_port.clone())).collect();
+    let after: Vec<(String, String, String, String)> = host.host_snapshot.synapses.iter().map(|synapse| (synapse.from.clone(), synapse.from_port.clone(), synapse.to.clone(), synapse.to_port.clone())).collect();
     assert_eq!(after, before, "a refused drop must leave the graph byte-identical");
     assert!(after.contains(&("profile".into(), "wire".into(), "extrude".into(), "wire".into())), "the profile wire the drop would have displaced must survive");
     assert!(host.connect_ports("extrusion-axis", "vectorOut", "extrude", "vector").is_err(), "that wire already exists");
     retire(host);
-    let mut host = FlowHost::from_host_document_with_cache_and_infos(hexagonal_mushroom_column(), std::sync::Arc::new(neural_engine::NeuralCache::new()), std::sync::Arc::new(kind_infos().clone()));
+    let mut host = FlowHost::from_host_snapshot_with_cache_and_infos(hexagonal_mushroom_column(), std::sync::Arc::new(neural_engine::NeuralCache::new()), std::sync::Arc::new(kind_infos().clone()));
     host.disconnect("e5").expect("the shipped vector wire is there to cut");
     host.connect_ports("extrusion-axis", "vectorOut", "extrude", "vector").expect("and the compatible pair reconnects");
     retire(host);

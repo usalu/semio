@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/os/infinite/artifacts/dag/vcs/mutation/create-node/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/os/infinite/artifacts/dag/vcs/mutation/create-node/schema.json",
   "title": "CreateNode",
   "type": "object",
   "$defs": {
@@ -12,10 +12,10 @@
       ],
       "properties": {
         "node": {
-          "$ref": "https://semio.tech/schema/os/infinite/artifacts/dag/vcs/schema.json#/$defs/DagNodeSpec"
+          "$ref": "https://json.schemas.assets.semio-tech.com/os/infinite/artifacts/dag/vcs/schema.json#/$defs/DagNodeSpec"
         },
         "index": {
-          "$ref": "https://semio.tech/schema/os/infinite/artifacts/dag/vcs/schema.json#/$defs/U64"
+          "$ref": "https://json.schemas.assets.semio-tech.com/os/infinite/artifacts/dag/vcs/schema.json#/$defs/U64"
         }
       }
     }

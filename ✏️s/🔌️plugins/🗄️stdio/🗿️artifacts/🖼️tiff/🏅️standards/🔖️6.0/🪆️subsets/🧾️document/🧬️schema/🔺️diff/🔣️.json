@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/tiff/6.0/document/diff.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/tiff/6.0/document/diff.json",
   "title": "TiffDiff",
   "type": "object",
   "$defs": {
@@ -18,10 +18,10 @@
           "maximum": 65535
         },
         "kind": {
-          "$ref": "https://semio.tech/schema/s/stdio/tiff/6.0/document/snapshot.json#/$defs/TiffFieldType"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/tiff/6.0/document/snapshot.json#/$defs/TiffFieldType"
         },
         "values": {
-          "$ref": "https://semio.tech/schema/s/stdio/tiff/6.0/document/snapshot.json#/$defs/TiffValues"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/tiff/6.0/document/snapshot.json#/$defs/TiffValues"
         }
       }
     },
@@ -39,10 +39,10 @@
           "maximum": 65535
         },
         "kind": {
-          "$ref": "https://semio.tech/schema/s/stdio/tiff/6.0/document/snapshot.json#/$defs/TiffFieldType"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/tiff/6.0/document/snapshot.json#/$defs/TiffFieldType"
         },
         "values": {
-          "$ref": "https://semio.tech/schema/s/stdio/tiff/6.0/document/snapshot.json#/$defs/TiffValues"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/tiff/6.0/document/snapshot.json#/$defs/TiffValues"
         }
       }
     },
@@ -117,7 +117,7 @@
           "minimum": 0
         },
         "ifd": {
-          "$ref": "https://semio.tech/schema/s/stdio/tiff/6.0/document/snapshot.json#/$defs/TiffIfd"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/tiff/6.0/document/snapshot.json#/$defs/TiffIfd"
         }
       }
     },
@@ -150,7 +150,7 @@
   "description": "Sparse diff for stdio.tiff. Every field present = changed to a value. No tri-state fields at this level.",
   "properties": {
     "byteOrder": {
-      "$ref": "https://semio.tech/schema/s/stdio/tiff/6.0/document/snapshot.json#/$defs/TiffByteOrder",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/tiff/6.0/document/snapshot.json#/$defs/TiffByteOrder",
       "x-semio-state": "artifact"
     },
     "ifds": {

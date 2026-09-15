@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/repo/client/sqlite/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/repo/client/sqlite/schema.json",
   "title": "RepoClientSqlitePersistence",
   "description": "Documents persisted by the repo client's SQLite checkpoint export. The native implementation of this contract is the sibling 🗄️.sql; every table there has exactly one <Table>Row export here. The exported entity set is the one the client materializes in ExportResult (technologies, bundles, folders, files, sections, definitions) rooted in one repo checkpoint.",
   "$defs": {

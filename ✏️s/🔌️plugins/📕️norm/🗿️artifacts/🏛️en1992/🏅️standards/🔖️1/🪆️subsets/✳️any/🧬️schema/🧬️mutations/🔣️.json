@@ -1,112 +1,112 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/norm/en1992/mutations.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutations.json",
   "title": "En1992Mutation",
   "oneOf": [
     {
-      "$ref": "https://semio.tech/schema/s/norm/en1992/mutation/change-ac-mm2/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-ac-mm2/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/norm/en1992/mutation/change-anchor-as-mm2/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-anchor-as-mm2/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/norm/en1992/mutation/change-anchor-c1-mm/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-anchor-c1-mm/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/norm/en1992/mutation/change-anchor-cracked/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-anchor-cracked/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/norm/en1992/mutation/change-anchor-d-mm/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-anchor-d-mm/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/norm/en1992/mutation/change-anchor-f-uk-mpa/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-anchor-f-uk-mpa/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/norm/en1992/mutation/change-anchor-f-yk-mpa/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-anchor-f-yk-mpa/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/norm/en1992/mutation/change-anchor-h-ef-mm/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-anchor-h-ef-mm/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/norm/en1992/mutation/change-anchor-n-ed-kn/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-anchor-n-ed-kn/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/norm/en1992/mutation/change-anchor-v-ed-kn/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-anchor-v-ed-kn/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/norm/en1992/mutation/change-annex/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-annex/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/norm/en1992/mutation/change-as-mm2/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-as-mm2/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/norm/en1992/mutation/change-b-mm/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-b-mm/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/norm/en1992/mutation/change-bridge-delta-sigma-s-mpa/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-bridge-delta-sigma-s-mpa/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/norm/en1992/mutation/change-bridge-sigma-c-mpa/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-bridge-sigma-c-mpa/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/norm/en1992/mutation/change-d-mm/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-d-mm/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/norm/en1992/mutation/change-f-ck/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-f-ck/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/norm/en1992/mutation/change-f-yk/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-f-yk/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/norm/en1992/mutation/change-fire-rating/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-fire-rating/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/norm/en1992/mutation/change-hd-over-h/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-hd-over-h/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/norm/en1992/mutation/change-liquid-es-mpa/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-liquid-es-mpa/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/norm/en1992/mutation/change-liquid-f-ct-eff-mpa/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-liquid-f-ct-eff-mpa/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/norm/en1992/mutation/change-liquid-rho-p-eff/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-liquid-rho-p-eff/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/norm/en1992/mutation/change-liquid-sigma-s-mpa/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-liquid-sigma-s-mpa/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/norm/en1992/mutation/change-liquid-sr-max-mm/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-liquid-sr-max-mm/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/norm/en1992/mutation/change-m-ed-knm/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-m-ed-knm/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/norm/en1992/mutation/change-n-ed-kn/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-n-ed-kn/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/norm/en1992/mutation/change-p-kn/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-p-kn/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/norm/en1992/mutation/change-provided-axis-distance-mm/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-provided-axis-distance-mm/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/norm/en1992/mutation/change-rho-l/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-rho-l/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/norm/en1992/mutation/change-span-m/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-span-m/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/norm/en1992/mutation/change-tightness-class/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-tightness-class/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/norm/en1992/mutation/change-udl-kn-m/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-udl-kn-m/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/norm/en1992/mutation/change-use-fem/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-use-fem/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/norm/en1992/mutation/change-v-ed-kn/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-v-ed-kn/schema.json"
     }
   ]
 }

@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/framework/graph/layout-run/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/graph/layout-run/schema.json",
   "title": "LayoutRunSchema",
   "description": "Source of record for the ⏯️layout-run graph module: the domain-neutral, stepped, cancellable force-directed layout run a ToolRun `runJob` drives. One iteration per fuel unit; per-node trace records (entity subjects) with displacement verdicts; counters iterations/energy/max displacement/settled; stages initialize/iterate/settle; provisional move ops through a caller encoder; a 44-byte checkpoint. Wire names are camelCase; u64 values are JSON integers.",
   "x-semio-toolRun": {

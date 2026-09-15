@@ -27,7 +27,7 @@ import sys
 ROOT = pathlib.Path(__file__).resolve().parents[7]
 SUBSET = ROOT / "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any"
 SCHEMA = SUBSET / "🧬️schema"
-ARTIFACT_ID = "https://semio.tech/schema/s/puzzle/puzzle3d/artifact.json"
+ARTIFACT_ID = "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle3d/artifact.json"
 
 
 def load(path):

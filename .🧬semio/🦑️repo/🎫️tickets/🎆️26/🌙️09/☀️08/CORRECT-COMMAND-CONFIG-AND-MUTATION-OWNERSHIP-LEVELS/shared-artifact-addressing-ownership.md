@@ -1,10 +1,10 @@
 # Shared Artifact Addressing Ownership
 
-Artifact coordinates and references now have one authored TypeScript, JSON Schema, GraphQL, and Protobuf owner beside their native IO schema: `🧰️framework/🔨️modules/🚪️io/🧬️schema/`. JSON definitions use `https://semio.tech/schema/framework/io/schema.json#/$defs/ArtifactDialect` and `#/$defs/ArtifactRef`. The TypeScript module owns `ArtifactDialect`, `ArtifactRef`, their exact record parsers, dialect coordinate codecs, and artifact URI codecs.
+Artifact coordinates and references now have one authored TypeScript, JSON Schema, GraphQL, and Protobuf owner beside their native IO schema: `🧰️framework/🔨️modules/🚪️io/🧬️schema/`. JSON definitions use `https://json.schemas.assets.semio-tech.com/framework/io/schema.json#/$defs/ArtifactDialect` and `#/$defs/ArtifactRef`. The TypeScript module owns `ArtifactDialect`, `ArtifactRef`, their exact record parsers, dialect coordinate codecs, and artifact URI codecs.
 
 Cross-plugin app roles and app references belong to Manifest: `🧰️framework/🔨️modules/🛂️manifest/🧬️schema/`. Its existing JSON module now owns `AppRole` and `AppRef`; corresponding TypeScript, GraphQL, and Protobuf definitions and surface-ID codecs live beside it. Kernel consumes these owners instead of declaring duplicate types or codecs. The framework package barrel exposes IO directly and Manifest exposes its own app-addressing contract.
 
-Persisted child handles belong to OS Store: `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/`. The JSON ID is `https://semio.tech/schema/os/store/child.json`; the shape is exactly `childId` plus `target`, referencing IO's `ArtifactRef`. No local materialization or native phantom type appears on the wire. Native child/address decoding now rejects unknown fields rather than silently accepting hidden state.
+Persisted child handles belong to OS Store: `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/`. The JSON ID is `https://json.schemas.assets.semio-tech.com/os/store/child.json`; the shape is exactly `childId` plus `target`, referencing IO's `ArtifactRef`. No local materialization or native phantom type appears on the wire. Native child/address decoding now rejects unknown fields rather than silently accepting hidden state.
 
 OS opening preferences and their set/clear mutations reference the shared IO and Manifest definitions. Their TypeScript imports and GraphQL/Protobuf dependencies point at those owners; OS config no longer declares generic addressing types.
 

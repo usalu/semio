@@ -9,7 +9,7 @@
     { "leaf": "MoveSynapse", "owners": ["Bytes"], "grants": [{ "items": 0, "bytes": 64, "result": "blocked" }, { "items": 1, "bytes": 0, "result": "blocked" }, { "items": 1, "bytes": 64, "result": "handoff" }, { "items": 1, "bytes": 64, "result": "nested" }] },
     { "leaf": "ChangeSynapse", "owners": ["Bytes", "Specs"], "grants": [{ "items": 0, "bytes": 64, "result": "blocked" }, { "items": 1, "bytes": 0, "result": "blocked" }, { "items": 1, "bytes": 64, "result": "handoff" }, { "items": 1, "bytes": 64, "result": "nested" }] },
     { "leaf": "ChangeLayout", "owners": ["Layout"], "grants": [{ "items": 0, "bytes": 64, "result": "blocked" }, { "items": 1, "bytes": 0, "result": "blocked" }, { "items": 1, "bytes": 64, "result": "handoff" }, { "items": 1, "bytes": 64, "result": "nested" }] },
-    { "leaf": "ReplaceFlowHostDocument", "owners": ["HostDocument"], "grants": [{ "items": 0, "bytes": 64, "result": "blocked" }, { "items": 1, "bytes": 0, "result": "blocked" }, { "items": 1, "bytes": 64, "result": "handoff" }, { "items": 1, "bytes": 64, "result": "nested" }] }
+    { "leaf": "ReplaceFlowHostSnapshot", "owners": ["HostDocument"], "grants": [{ "items": 0, "bytes": 64, "result": "blocked" }, { "items": 1, "bytes": 0, "result": "blocked" }, { "items": 1, "bytes": 64, "result": "handoff" }, { "items": 1, "bytes": 64, "result": "nested" }] }
   ],
   "fault": { "injected": true, "productionObserved": false, "ownershipRetained": true }
 }

@@ -54,7 +54,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     const { default: pageSchema } = await import("../../../../../../../🔨️modules/🎭️actor/📃️page/🧬️schema/🔣️.json");
     const { default: valueSchema } = await import("../../../../../../../🔨️modules/🌱️value/🧬️schema/🔣️.json");
     const { default: Ajv } = await import("ajv");
-    const validate = new Ajv({ strict: true }).addSchema(valueSchema).addSchema(lifetimeSchema).addSchema(pageSchema).addSchema(schema).getSchema("https://semio.tech/schema/framework/actor/return/schema.json#/$defs/Return")!;
+    const validate = new Ajv({ strict: true }).addSchema(valueSchema).addSchema(lifetimeSchema).addSchema(pageSchema).addSchema(schema).getSchema("https://json.schemas.assets.semio-tech.com/framework/actor/return/schema.json#/$defs/Return")!;
     const { decodeActorReturnResult } = await import("../../../../../../../🔨️modules/🎭️actor/📤️return/🟦️.ts");
     for (const row of fixture.resultVectors) {
       expect(validate(row.value)).toBe(true);

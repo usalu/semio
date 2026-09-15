@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/framework/ui/host/input/admission/root/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/ui/host/input/admission/root/schema.json",
   "title": "Ui Host Input Admission Root Schema Module",
   "$defs": {
     "RootFixture": {
@@ -54,10 +54,10 @@
                 "minLength": 1
               },
               "before": {
-                "$ref": "https://semio.tech/schema/framework/value/schema.json#/$defs/U64"
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/U64"
               },
               "atCas": {
-                "$ref": "https://semio.tech/schema/framework/value/schema.json#/$defs/U64"
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/U64"
               },
               "grant": {
                 "enum": [
@@ -75,12 +75,12 @@
                 ]
               },
               "after": {
-                "$ref": "https://semio.tech/schema/framework/value/schema.json#/$defs/U64"
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/U64"
               },
               "root": {
                 "anyOf": [
                   {
-                    "$ref": "https://semio.tech/schema/framework/value/schema.json#/$defs/U64"
+                    "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/U64"
                   },
                   {
                     "type": "null"
@@ -114,19 +114,19 @@
           ],
           "properties": {
             "initial": {
-              "$ref": "https://semio.tech/schema/framework/value/schema.json#/$defs/U64"
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/U64"
             },
             "firstRoot": {
-              "$ref": "https://semio.tech/schema/framework/value/schema.json#/$defs/U64"
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/U64"
             },
             "secondRoot": {
-              "$ref": "https://semio.tech/schema/framework/value/schema.json#/$defs/U64"
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/U64"
             },
             "firstEpoch": {
-              "$ref": "https://semio.tech/schema/framework/value/schema.json#/$defs/U64"
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/U64"
             },
             "secondEpoch": {
-              "$ref": "https://semio.tech/schema/framework/value/schema.json#/$defs/U64"
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/U64"
             },
             "oldKeyAccepted": {
               "const": false
@@ -143,10 +143,10 @@
           ],
           "properties": {
             "retainedRoot": {
-              "$ref": "https://semio.tech/schema/framework/value/schema.json#/$defs/U64"
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/U64"
             },
             "nextRoot": {
-              "$ref": "https://semio.tech/schema/framework/value/schema.json#/$defs/U64"
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/U64"
             },
             "returnedToSequence": {
               "const": false

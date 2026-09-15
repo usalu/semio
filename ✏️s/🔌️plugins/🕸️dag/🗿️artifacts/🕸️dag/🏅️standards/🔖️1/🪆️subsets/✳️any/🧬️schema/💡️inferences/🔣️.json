@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/dag/dag/inference.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/dag/dag/inference.json",
   "title": "DagInference",
   "type": "object",
   "additionalProperties": false,

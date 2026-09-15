@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/framework/ui/host/input/admission/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/ui/host/input/admission/schema.json",
   "title": "Ui Host Input Admission Schema Module",
   "$defs": {
     "AdmissionFixture": {
@@ -171,10 +171,10 @@
                 ]
               },
               "frameGeneration": {
-                "$ref": "https://semio.tech/schema/framework/value/schema.json#/$defs/U64"
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/U64"
               },
               "inputGeneration": {
-                "$ref": "https://semio.tech/schema/framework/value/schema.json#/$defs/U64"
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/U64"
               },
               "expected": {
                 "type": "object",

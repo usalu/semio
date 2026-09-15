@@ -74,8 +74,18 @@ import { readUiPreferences, resolveUiPreferences } from "../../🎚️UiPreferen
 // #endregion 🔌️Adapters
 
 //#region 🔖️types
-/** 🌐️ Locale-resolved mixed-value placeholder for this renderer layer; framework/core/js/index.ts keeps its own non-reactive low-level default. */
-export const UI_INSPECTOR_MIXED_PLACEHOLDER = shellLabel("ui.common.mixedValues");
+/** 🌐️ Locale-resolved mixed-value placeholder for this renderer layer; framework/core/js/index.ts keeps its own non-reactive low-level default.
+ *
+ * 🔁️ Resolved on CALL, never at module load. `shellLabel` lives in `🛠️ShellHelpers`, which imports this
+ * module, so a module-top-level call ran Shell's body from inside ShellHelpers' own initialization and
+ * read a binding ShellHelpers had not reached yet — `Cannot access '__vite_ssr_import_18__' before
+ * initialization`, thrown for every entry point that reaches ShellHelpers before Shell (importing
+ * `🌐️World3dHost` first, which is what the mesh-residency lane does). A function has no load-time
+ * order to get wrong, and the label is locale-resolved when it is read, which is what a relabelled
+ * shell needs anyway (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). */
+export function uiInspectorMixedPlaceholder(): ReturnType<typeof shellLabel> {
+  return shellLabel("ui.common.mixedValues");
+}
 
 /** 🎭️ Renderer-side view state passed to program wasm calls — structurally mirrors `@semio-tech/framework`'s {@link PluginViewState}, kept as a distinct local alias since `ViewModel` is the established name used throughout this file. */
 export type ViewModel = PluginViewState;

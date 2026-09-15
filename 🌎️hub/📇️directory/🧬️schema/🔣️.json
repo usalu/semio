@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/hub/directory/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/hub/directory/schema.json",
   "$defs": {
     "id": { "type": "string", "minLength": 1, "maxLength": 256 },
     "identifier": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[A-Za-z0-9._:-]+$" },

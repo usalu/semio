@@ -111,6 +111,38 @@ const PROBES = [
     },
   },
   {
+    // 🎚️ Does the preview FOLLOW a dragged slider? One row per slider kind per example: the gate is
+    // zero dropped actions, ONE history entry per press, a coalesced dispatch count, and geometry that
+    // ends on the released value (`📓️slider-preview-update-2026-09-15.md`).
+    name: "slider-live-preview", script: "🐍️slider-live-preview-probe.mjs", dir: "slider-live-preview", minutes: 30,
+    env: { SEMIO_PROBE_OUT: out("slider-live-preview"), SEMIO_PROBE_KINDS: "graph", SEMIO_PROBE_SETTLE: "25", SEMIO_PROBE_EXAMPLES: "hexagonal-mushroom-column,sphere-cut-with-torus,box-shell-preview,box-fillet-preview,rectangle-extrude-volume,sphere-box-fuse,face-sweep-extrude,rectangle-wire-preview" },
+    verdict: (dir) => {
+      const r = readJson(join(dir, "results.json"));
+      const console_ = readText(join(dir, "console.txt"));
+      const rows = (r?.rows ?? []).map((row) => ({
+        example: row.example, kind: row.kind, ok: Boolean(row.ok),
+        dropped: (row.droppedActions ?? []).length,
+        history: row.history?.delta ?? null,
+        starts: row.drag?.starts ?? null,
+        changes: row.drag?.valueChanges ?? null,
+        medianMs: row.drag?.latencyMedianMs ?? null,
+        settledPhase: row.drag?.settledPhase ?? null,
+        settledMeshes: row.drag?.settledMeshes ?? null,
+      }));
+      return {
+        rows,
+        key: {
+          rows: rows.length,
+          reached: rows.filter((row) => row.changes != null).length,
+          noDroppedActions: rows.filter((row) => row.dropped === 0).length,
+          oneHistoryEntryPerPress: rows.filter((row) => row.history === 1).length,
+          coalesced: rows.filter((row) => row.starts != null && row.changes != null && row.starts <= row.changes).length,
+        },
+        pageerrors: countPageErrors(console_), faults: faultLines(console_),
+      };
+    },
+  },
+  {
     name: "generate-mode", script: "🐍️generate-mode-probe.mjs", dir: "generate-mode", minutes: 18,
     env: { SEMIO_PROBE_OUT: out("generate-mode") },
     verdict: (dir) => {
@@ -161,7 +193,10 @@ const PROBES = [
   },
   {
     name: "flow-reorganize", script: "🐍️flow-window-probe.mjs", dir: "flow-reorganize", minutes: 8,
-    env: { SEMIO_PROBE_MODE: "reorganize", SEMIO_PROBE_OUT: outUp("flow-reorganize"), SEMIO_PROBE_SECONDS: "120" },
+    // ⏱️ 45 s, not 120: this mode only needs the boot and one keypress, and the extra idle minute was
+    // long enough for a dev hot-swap to retire the app instance under the probe — after which the Flow
+    // window has no node-graph host at all and the reorganize lands on nothing.
+    env: { SEMIO_PROBE_MODE: "reorganize", SEMIO_PROBE_OUT: outUp("flow-reorganize"), SEMIO_PROBE_SECONDS: "45" },
     verdict: (dir) => {
       const r = readJson(join(dir, "reorganize-result.json"));
       const console_ = readText(join(dir, "console.txt"));

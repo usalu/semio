@@ -90,7 +90,7 @@ reads `🧬️schema/🔣️.json`.
 Every relocated schema is stamped:
 - `"$schema": "http://json-schema.org/draft-07/schema#"` (2020-12 migrated: `unevaluatedProperties`/
   `unevaluatedItems` dropped, `prefixItems` → `items` array + `additionalItems: false`),
-- `"$id": "https://semio.tech/schema/<scope>/mutation/<semanticKind>.json"` where `<scope>` is the mutations
+- `"$id": "https://json.schemas.assets.semio-tech.com/<scope>/mutation/<semanticKind>.json"` where `<scope>` is the mutations
   root path with the structural segments (`🗿️artifacts`, `🏅️standards`, `🪆️subsets`, `🧬️schema`, `🧬️mutations`,
   `🔌️plugins`, `🔨️modules`, `🛍️products`, `🧩️extensions`) removed and each remaining segment reduced to its
   ASCII tail — e.g. `s/space/home/1/any`, `s/norm/en1990/1/any`, `framework/os/config`. All 1766 `$id`s are unique.
@@ -149,7 +149,7 @@ the stricter scan found 3 more in `🖍️draw` whose descriptor pointed at a Ru
 | `🧩️puzzle/🖐️5d/…/📏scale-part3d` | `ScalePart3d { id, new_scale: Option<Puzzle5dScale> }` | same shape |
 | `🖍️draw/…/🎨️style/🎨️replace-layer-fill` | the leaf's own orphaned `🔣️.schema.json` (complete, `title: ReplaceLayerFill`) | relocated; descriptor now points at it and declares `json-schema` |
 | `🖍️draw/…/🎨️style/🖊️replace-layer-stroke` | same | same |
-| `🖍️draw/…/🧱️structure/➕️create-layer` | `CreateLayer { parent_id: Option<String>, index: Option<usize>, layer: Box<DrawingLayerNode> }` | `{parentId?, index?, layer}` with `layer` a cross-scope `$ref` to `https://semio.tech/schema/s/drawing/drawing/artifact.json#/$defs/DrawingLayerNode` (contract §B cross-scope form; the module already owns that export, so it is referenced rather than duplicated) |
+| `🖍️draw/…/🧱️structure/➕️create-layer` | `CreateLayer { parent_id: Option<String>, index: Option<usize>, layer: Box<DrawingLayerNode> }` | `{parentId?, index?, layer}` with `layer` a cross-scope `$ref` to `https://json.schemas.assets.semio-tech.com/s/drawing/drawing/artifact.json#/$defs/DrawingLayerNode` (contract §B cross-scope form; the module already owns that export, so it is referenced rather than duplicated) |
 
 The puzzle/procedural leaves have no `🧪️tests` example payloads to validate against (their fixtures are
 Rust-value-driven, WP0 §4); the shapes follow the neighbouring leaves' committed convention exactly

@@ -1,10 +1,10 @@
+import Ajv from "ajv";
 import { expect, test } from "bun:test";
+import { parse as parseJson, type ParseError } from "jsonc-parser";
+import { fromMarkdown } from "mdast-util-from-markdown";
 import { createHash } from "node:crypto";
 import { closeSync, constants, fstatSync, lstatSync, openSync, readFileSync } from "node:fs";
 import { join, posix, relative, resolve } from "node:path";
-import Ajv from "ajv";
-import { parse as parseJson, type ParseError } from "jsonc-parser";
-import { fromMarkdown } from "mdast-util-from-markdown";
 import ts from "typescript";
 
 const libraryRoot = resolve(import.meta.dir, "../.."), root = resolve(libraryRoot, "../../../../..");
@@ -124,7 +124,7 @@ test("registry JSON parsers agree and its schema link names the current regular 
   const schemaBytes = readOwned(target), schemaErrors: ParseError[] = [];
   expect(parseJson(schemaBytes.toString("utf8"), schemaErrors, { disallowComments: true, allowTrailingComma: false })).toEqual(JSON.parse(schemaBytes.toString("utf8")));
   expect(schemaErrors).toEqual([]);
-  expect(JSON.parse(schemaBytes.toString("utf8")).$id).toBe("https://semio.tech/schema/repo/test/schema.json");
+  expect(JSON.parse(schemaBytes.toString("utf8")).$id).toBe("https://json.schemas.assets.semio-tech.com/repo/test/schema.json");
 });
 
 test("documentation correction leaves the original forty-row authority and baseline preimage immutable", () => {

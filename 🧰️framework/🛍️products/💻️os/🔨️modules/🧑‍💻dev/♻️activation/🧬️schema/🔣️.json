@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/os/dev/activation/component.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/os/dev/activation/component.json",
   "title": "Development Activation Contracts",
   "$defs": {
     "DevActivationV1": {

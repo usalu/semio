@@ -18,7 +18,7 @@ export function flowSelectedCopySelfTests(): number {
   const hostiles = [{ ...fixture, extra: true }, malformed, { ...fixture, expected: { ...fixture.expected, framesBeforeRoot: false } }];
   for (const value of hostiles) if (validate(value)) throw new Error("Flow selected copy accepted hostile schema");
   for (const test of fixture.cases) {
-    const selected = test.kind === "hostDocument" ? document : document[test.kind === "widget" ? "widgets" : "synapses"][test.index];
+    const selected = test.kind === "hostSnapshot" ? document : document[test.kind === "widget" ? "widgets" : "synapses"][test.index];
     const copied = structuredClone(selected);
     if (stable(copied) !== stable(JSON.parse(JSON.stringify(selected)))) throw new Error("Flow selected copy third-party canonical oracle disagrees");
     const pointer = test.pointer === "" ? document : test.pointer.slice(1).split("/").reduce((value: any, key: string) => value[key], document);

@@ -1,13 +1,13 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/xml/1.0/valid/mutations.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/xml/1.0/valid/mutations.json",
   "title": "XmlValidMutation",
   "description": "Discriminated union over this module's mutation leaves (internally tagged); every payload is the leaf's own schema, referenced, never restated.",
   "oneOf": [
     {
       "allOf": [
         {
-          "$ref": "https://semio.tech/schema/s/stdio/xml/1.0/valid/mutation/declare-doctype/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/xml/1.0/valid/mutation/declare-doctype/schema.json"
         },
         {
           "type": "object",
@@ -25,7 +25,7 @@
     {
       "allOf": [
         {
-          "$ref": "https://semio.tech/schema/s/stdio/xml/1.0/valid/mutation/declare-entity/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/xml/1.0/valid/mutation/declare-entity/schema.json"
         },
         {
           "type": "object",
@@ -43,7 +43,7 @@
     {
       "allOf": [
         {
-          "$ref": "https://semio.tech/schema/s/stdio/xml/1.0/valid/mutation/rename-document-element/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/xml/1.0/valid/mutation/rename-document-element/schema.json"
         },
         {
           "type": "object",
@@ -61,7 +61,7 @@
     {
       "allOf": [
         {
-          "$ref": "https://semio.tech/schema/s/stdio/xml/1.0/valid/mutation/set-external-subset/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/xml/1.0/valid/mutation/set-external-subset/schema.json"
         },
         {
           "type": "object",
@@ -79,7 +79,7 @@
     {
       "allOf": [
         {
-          "$ref": "https://semio.tech/schema/s/stdio/xml/1.0/valid/mutation/set-internal-subset/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/xml/1.0/valid/mutation/set-internal-subset/schema.json"
         },
         {
           "type": "object",
@@ -97,7 +97,7 @@
     {
       "allOf": [
         {
-          "$ref": "https://semio.tech/schema/s/stdio/xml/1.0/valid/mutation/set-snapshot/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/xml/1.0/valid/mutation/set-snapshot/schema.json"
         },
         {
           "type": "object",
@@ -115,7 +115,7 @@
     {
       "allOf": [
         {
-          "$ref": "https://semio.tech/schema/s/stdio/xml/1.0/valid/mutation/set-standalone/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/xml/1.0/valid/mutation/set-standalone/schema.json"
         },
         {
           "type": "object",
@@ -133,7 +133,7 @@
     {
       "allOf": [
         {
-          "$ref": "https://semio.tech/schema/s/stdio/xml/1.0/valid/mutation/set-text/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/xml/1.0/valid/mutation/set-text/schema.json"
         },
         {
           "type": "object",

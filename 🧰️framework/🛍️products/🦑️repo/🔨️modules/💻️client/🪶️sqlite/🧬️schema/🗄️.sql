@@ -1,6 +1,6 @@
 -- #region 🧲️Header
 
--- 🪶️Native SQLite implementation of https://semio.tech/schema/repo/client/sqlite/schema.json
+-- 🪶️Native SQLite implementation of https://json.schemas.assets.semio-tech.com/repo/client/sqlite/schema.json
 
 -- 2025 Ueli Saluz <ueli@semio-tech.com>
 

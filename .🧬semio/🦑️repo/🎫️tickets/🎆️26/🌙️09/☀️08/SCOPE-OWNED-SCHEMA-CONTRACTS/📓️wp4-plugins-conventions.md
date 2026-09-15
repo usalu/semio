@@ -9,7 +9,7 @@ Derived from `📋️execution-contract.md` §A/§B/§D. Every file this work pa
 ```json
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/<scope path>/<facet>.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/<scope path>/<facet>.json",
   "title": "<RootExport>",
   ...root schema...,
   "$defs": { "<ExportId>": { ... } }
@@ -21,8 +21,8 @@ Derived from `📋️execution-contract.md` §A/§B/§D. Every file this work pa
   → `additionalItems: false`; `$defs` stays (draft-07 tolerates it and Ajv resolves `#/$defs/...`).
 - A module that already exists keeps its `$id`; new exports are added as `$defs` keys only.
 - A **new** module gets `$id`:
-  - plugin root: `https://semio.tech/schema/s/<plugin>/schema.json` (scope id `s.<plugin>`)
-  - other new scope: `https://semio.tech/schema/s/<plugin>/<segment>/schema.json`
+  - plugin root: `https://json.schemas.assets.semio-tech.com/s/<plugin>/schema.json` (scope id `s.<plugin>`)
+  - other new scope: `https://json.schemas.assets.semio-tech.com/s/<plugin>/<segment>/schema.json`
 - Export ids are PascalCase `$defs` keys. Fixture data binds `schema://<scope id>/<ExportId>`.
 
 ## 2. What moves and what stays
@@ -44,7 +44,7 @@ Derived from `📋️execution-contract.md` §A/§B/§D. Every file this work pa
 ## 3. Shared retained-command shape (cross-partition)
 
 The retained-command family shares a *shape*, not content. The shape is already published by
-`🧰️framework/🔨️modules/🖱️ui/🧬️schema/🔣️.json`, `$id https://semio.tech/schema/framework/ui/schema.json`
+`🧰️framework/🔨️modules/🖱️ui/🧬️schema/🔣️.json`, `$id https://json.schemas.assets.semio-tech.com/framework/ui/schema.json`
 (another worker's partition — do not edit it). **Read that file before writing any `$ref`.** As of
 this writing its `$defs` are exactly:
 
@@ -60,7 +60,7 @@ Per-artifact exports reference the document-level export and narrow it:
 
 ```json
 "<Artifact>RetainedCommandLimits": { "allOf": [
-  { "$ref": "https://semio.tech/schema/framework/ui/schema.json#/$defs/RetainedCommandLimits" },
+  { "$ref": "https://json.schemas.assets.semio-tech.com/framework/ui/schema.json#/$defs/RetainedCommandLimits" },
   { "type": "object", "additionalProperties": false, "required": [...],
     "properties": { ...the per-artifact const law verbatim... } } ] }
 ```
@@ -69,7 +69,7 @@ and narrow the route table at the array level:
 
 ```json
 "routes": { "allOf": [
-  { "$ref": "https://semio.tech/schema/framework/ui/schema.json#/$defs/RetainedCommandRoutes" },
+  { "$ref": "https://json.schemas.assets.semio-tech.com/framework/ui/schema.json#/$defs/RetainedCommandRoutes" },
   { "type": "array", "minItems": 18, "maxItems": 18, "items": [ ... ], "additionalItems": false } ] }
 ```
 

@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/mp4/isobmff/any/artifact.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/mp4/isobmff/any/artifact.json",
   "title": "Mp4Artifact",
   "description": "Full artifact state, mirrors Mp4Snapshot field for field.",
   "type": "object",

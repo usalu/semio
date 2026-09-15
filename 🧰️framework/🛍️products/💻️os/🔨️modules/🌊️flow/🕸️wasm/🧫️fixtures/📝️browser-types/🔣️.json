@@ -30,7 +30,7 @@
       ]
     },
     {
-      "name": "documentJson",
+      "name": "snapshotJson",
       "parameters": []
     }
   ],

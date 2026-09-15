@@ -1,8 +1,8 @@
 //! 📜️ Sequence play app — the script window: the compiled imperative path plus the last `run` result.
 
 use super::transient::SequenceScriptWindowTransient;
-use crate::editor::sequence::host_from_document;
-use crate::SequenceHostDocument;
+use crate::editor::sequence::host_from_host_snapshot;
+use crate::SequenceHostSnapshot;
 use semio_framework_plugin::{BuiltNode, LocalizedLabel, SurfaceKind, TextEditorScene, UiAssemblyResult, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants
@@ -33,8 +33,8 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(host_document: &SequenceHostDocument, transient: &SequenceScriptWindowTransient) -> UiAssemblyResult<BuiltNode> {
-    let host = neural_engine::ColdOwner::new(host_from_document(host_document));
+pub fn render(host_snapshot: &SequenceHostSnapshot, transient: &SequenceScriptWindowTransient) -> UiAssemblyResult<BuiltNode> {
+    let host = neural_engine::ColdOwner::new(host_from_host_snapshot(host_snapshot));
     let mut text = host.compile_text();
     if !transient.last_run_json.is_empty() {
         text.push_str("\n\n# run result\n");

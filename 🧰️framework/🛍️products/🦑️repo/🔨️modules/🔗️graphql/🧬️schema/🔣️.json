@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://semio.tech/schemas/repo/graphql/ast-projection.json",
+  "$id": "https://json.schemas.assets.semio-tech.coms/repo/graphql/ast-projection.json",
   "title": "🔗️ Repo GraphQL AST projection",
   "description": "The canonical, language-neutral projection of one parsed document. Every implementation of 🔗️graphql (Go, Rust) and the third-party oracle emit exactly this shape, so the harness compares ASTs rather than internal representations. The projection is deliberately LOSSY in the same places the grammar is: variable definitions, directives and directive arguments are parsed and dropped, an alias-free field projects a null alias, and the `null` literal and the empty list are indistinguishable because the reference implementation represents both as its zero value.",
   "$defs": {

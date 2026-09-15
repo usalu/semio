@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/os/shell/component.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/os/shell/component.json",
   "title": "OS Shell",
   "description": "🧬️ `os.shell` — every shell wire type the pure reduce() transition consumes and produces. This document is the authority: the Rust registry in `🦀️.rs` carries exactly one row per `$defs` export and renders `../🤖️generated/🟦️.ts` from it, and `🟦️.ts` parses against this document. Every field is required and nullability is spelled out, exactly as the TypeScript mirror declares it.",
   "$defs": {

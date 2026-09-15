@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/os/store/link.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/os/store/link.json",
   "title": "ArtifactLink",
   "type": "object",
   "additionalProperties": false,
@@ -11,7 +11,7 @@
   ],
   "properties": {
     "target": {
-      "$ref": "https://semio.tech/schema/framework/io/schema.json#/$defs/ArtifactRef"
+      "$ref": "https://json.schemas.assets.semio-tech.com/framework/io/schema.json#/$defs/ArtifactRef"
     },
     "pin": {
       "$ref": "#/$defs/LinkPin"
@@ -63,7 +63,7 @@
               "const": "snapshot"
             },
             "blob": {
-              "$ref": "https://semio.tech/schema/os/store/blob.json"
+              "$ref": "https://json.schemas.assets.semio-tech.com/os/store/blob.json"
             }
           }
         }

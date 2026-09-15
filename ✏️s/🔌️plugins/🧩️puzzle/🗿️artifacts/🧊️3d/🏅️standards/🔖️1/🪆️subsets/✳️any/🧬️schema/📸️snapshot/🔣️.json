@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/puzzle/puzzle3d/snapshot.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle3d/snapshot.json",
   "title": "Puzzle3dSnapshot",
   "type": "object",
   "additionalProperties": false,
@@ -23,34 +23,34 @@
       "x-semio-state": "artifact"
     },
     "meta": {
-      "$ref": "https://semio.tech/schema/s/puzzle/puzzle3d/artifact.json#/$defs/Puzzle3dMeta",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle3d/artifact.json#/$defs/Puzzle3dMeta",
       "x-semio-state": "artifact"
     },
     "objects": {
       "type": "array",
       "items": {
-        "$ref": "https://semio.tech/schema/s/puzzle/puzzle3d/artifact.json#/$defs/Puzzle3dObject"
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle3d/artifact.json#/$defs/Puzzle3dObject"
       },
       "x-semio-state": "artifact"
     },
     "attractions": {
       "type": "array",
       "items": {
-        "$ref": "https://semio.tech/schema/s/puzzle/puzzle3d/artifact.json#/$defs/Puzzle3dAttraction"
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle3d/artifact.json#/$defs/Puzzle3dAttraction"
       },
       "x-semio-state": "artifact"
     },
     "targetVolumes": {
       "type": "array",
       "items": {
-        "$ref": "https://semio.tech/schema/s/puzzle/puzzle3d/artifact.json#/$defs/Puzzle3dTargetVolume"
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle3d/artifact.json#/$defs/Puzzle3dTargetVolume"
       },
       "x-semio-state": "artifact"
     },
     "references": {
       "type": "array",
       "items": {
-        "$ref": "https://semio.tech/schema/s/puzzle/puzzle3d/artifact.json#/$defs/Puzzle3dReference"
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle3d/artifact.json#/$defs/Puzzle3dReference"
       },
       "x-semio-state": "artifact"
     }

@@ -1,5 +1,5 @@
 {
-  "$id": "https://semio.tech/schema/s/sourcing/curation/snapshot/text.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/sourcing/curation/snapshot/text.json",
   "title": "CurationSnapshotText",
   "type": "object"
 }

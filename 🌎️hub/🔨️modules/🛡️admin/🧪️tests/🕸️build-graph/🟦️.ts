@@ -1,11 +1,11 @@
+import Ajv from "ajv";
 import { strict as assert } from "node:assert";
 import { existsSync, readFileSync, realpathSync } from "node:fs";
 import { dirname, isAbsolute, relative, resolve, sep } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import Ajv from "ajv";
 
 const ADMIN_SCHEMA_MODULE = "../../🧬️schema/🔣️.json";
-const ADMIN_SCHEMA_ID = "https://semio.tech/schema/hub/admin/schema.json";
+const ADMIN_SCHEMA_ID = "https://json.schemas.assets.semio-tech.com/hub/admin/schema.json";
 const ADMIN_ENTRY_GRAPH_LAWS = ["html-module-entry-exists", "package-export-matches-html", "entry-contained-by-package", "single-canonical-entry"] as const;
 const ADMIN_STYLESHEET_GRAPH_LAWS = ["imports-before-tailwind-sources", "repository-imports-resolve", "repository-imports-contained", "shared-export-is-canonical", "no-compatibility-duplicate"] as const;
 

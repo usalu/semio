@@ -1,58 +1,58 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/norm/en1993/mutations.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutations.json",
   "title": "En1993Mutation",
   "oneOf": [
     {
-      "$ref": "https://semio.tech/schema/s/norm/en1993/mutation/change-annex/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/change-annex/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/norm/en1993/mutation/update-bolt-inputs/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/update-bolt-inputs/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/norm/en1993/mutation/update-bridge-inputs/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/update-bridge-inputs/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/norm/en1993/mutation/update-cold-formed-inputs/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/update-cold-formed-inputs/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/norm/en1993/mutation/update-crane-inputs/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/update-crane-inputs/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/norm/en1993/mutation/update-fatigue-inputs/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/update-fatigue-inputs/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/norm/en1993/mutation/update-fire-inputs/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/update-fire-inputs/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/norm/en1993/mutation/update-hss-inputs/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/update-hss-inputs/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/norm/en1993/mutation/update-member-properties/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/update-member-properties/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/norm/en1993/mutation/update-pile-inputs/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/update-pile-inputs/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/norm/en1993/mutation/update-plated-inputs/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/update-plated-inputs/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/norm/en1993/mutation/update-silo-shell-inputs/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/update-silo-shell-inputs/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/norm/en1993/mutation/update-stainless-inputs/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/update-stainless-inputs/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/norm/en1993/mutation/update-tension-component-inputs/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/update-tension-component-inputs/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/norm/en1993/mutation/update-through-thickness-inputs/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/update-through-thickness-inputs/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/norm/en1993/mutation/update-tower-inputs/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/update-tower-inputs/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/norm/en1993/mutation/update-weld-inputs/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/update-weld-inputs/schema.json"
     }
   ]
 }

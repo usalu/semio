@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/semio/v1/table/mutations.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/table/mutations.json",
   "title": "SemioTableMutation",
   "description": "Discriminated union over this module's mutation leaves (externally tagged); every payload is the leaf's own schema, referenced, never restated.",
   "oneOf": [
@@ -12,7 +12,7 @@
       ],
       "properties": {
         "CreateColumn": {
-          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/table/mutation/create-column/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/table/mutation/create-column/schema.json"
         }
       }
     },
@@ -24,7 +24,7 @@
       ],
       "properties": {
         "DeleteColumn": {
-          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/table/mutation/delete-column/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/table/mutation/delete-column/schema.json"
         }
       }
     },
@@ -36,7 +36,7 @@
       ],
       "properties": {
         "EditCell": {
-          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/table/mutation/edit-cell/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/table/mutation/edit-cell/schema.json"
         }
       }
     },
@@ -48,7 +48,7 @@
       ],
       "properties": {
         "InsertRow": {
-          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/table/mutation/insert-row/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/table/mutation/insert-row/schema.json"
         }
       }
     },
@@ -60,7 +60,7 @@
       ],
       "properties": {
         "RemoveRow": {
-          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/table/mutation/remove-row/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/table/mutation/remove-row/schema.json"
         }
       }
     },
@@ -72,7 +72,7 @@
       ],
       "properties": {
         "RenameColumn": {
-          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/table/mutation/rename-column/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/table/mutation/rename-column/schema.json"
         }
       }
     },
@@ -84,7 +84,7 @@
       ],
       "properties": {
         "ReorderColumns": {
-          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/table/mutation/reorder-columns/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/table/mutation/reorder-columns/schema.json"
         }
       }
     },
@@ -96,7 +96,7 @@
       ],
       "properties": {
         "ReorderRows": {
-          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/table/mutation/reorder-rows/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/table/mutation/reorder-rows/schema.json"
         }
       }
     }

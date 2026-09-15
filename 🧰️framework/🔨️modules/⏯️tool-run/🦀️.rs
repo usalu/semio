@@ -498,7 +498,9 @@ impl ToolRunMachine {
             (S::Running | S::Paused, K::SettingsChanged) => (Some(current.state), F::Reconfigure, true),
             (S::Complete, K::SettingsChanged) => (Some(S::Running), F::Reconfigure, true),
             (S::Running | S::Paused | S::Complete, K::BaseChanged) => (Some(current.state), F::Refold, true),
-            (S::Complete, K::Finalize) => (Some(S::Finalizing), F::BeginFinalize, false),
+            // 🏁️ A running or paused run finalizes the partial result it holds: the driver closes the run job at its tick
+            // boundary (placements are applied whole per tick) and publishes exactly the provisional edits computed so far.
+            (S::Running | S::Paused | S::Complete, K::Finalize) => (Some(S::Finalizing), F::BeginFinalize, false),
             (S::Finalizing, K::PublicationComplete) => (Some(S::Finalized), F::ReleaseProvisional, false),
             (S::Finalizing, K::RevalidationConflicts) => (Some(S::Complete), F::RetractConflicts, true),
             (S::Finalizing, K::StoreRejected) => (Some(S::Complete), F::KeepProvisional, true),
@@ -2117,7 +2119,7 @@ impl ToolRunAction {
         match (self, state) {
             (Self::Start, None) => true,
             (Self::Start | Self::Dismiss, Some(state)) => state.is_terminal(),
-            (Self::Pause, Some(S::Running)) | (Self::Resume | Self::Step, Some(S::Paused)) | (Self::Finalize, Some(S::Complete)) => true,
+            (Self::Pause, Some(S::Running)) | (Self::Resume | Self::Step, Some(S::Paused)) | (Self::Finalize, Some(S::Running | S::Paused | S::Complete)) => true,
             (Self::Abort, Some(S::Starting | S::Running | S::Paused | S::Complete | S::Finalizing)) => true,
             _ => false,
         }
@@ -2200,7 +2202,7 @@ impl ToolRunLabel {
             Self::ActionAbort => ("actionAbort", "Abort", "Abbrechen"),
             Self::ActionFinalize => ("actionFinalize", "Finalize", "Abschließen"),
             Self::ActionDismiss => ("actionDismiss", "Dismiss", "Schließen"),
-            Self::FinalizeDisabled => ("finalizeDisabled", "Available once the run is complete", "Verfügbar, sobald der Lauf fertig ist"),
+            Self::FinalizeDisabled => ("finalizeDisabled", "Available once the run has started", "Verfügbar, sobald der Lauf gestartet ist"),
             Self::ReadyToStart => ("readyToStart", "Ready to start", "Bereit zum Starten"),
             Self::RebasingStep => ("rebasingStep", "Artifact changed, re-applying provisional result", "Artefakt geändert, vorläufiges Ergebnis wird neu angewendet"),
             Self::ConflictStep => ("conflictStep", "{0} provisional changes conflict with the current artifact", "{0} vorläufige Änderungen stehen im Konflikt mit dem aktuellen Artefakt"),

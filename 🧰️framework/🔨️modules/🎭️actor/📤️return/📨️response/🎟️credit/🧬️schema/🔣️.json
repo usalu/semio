@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/framework/actor/return/response/credit/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/actor/return/response/credit/schema.json",
   "title": "Actor Return Response Credit Schema Module",
   "definitions": {
     "authority": {
@@ -12,10 +12,10 @@
       ],
       "properties": {
         "activationGeneration": {
-          "$ref": "https://semio.tech/schema/framework/value/schema.json#/$defs/NonZeroU64"
+          "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/NonZeroU64"
         },
         "transportRequestSequence": {
-          "$ref": "https://semio.tech/schema/framework/actor/return/response/schema.json#/$defs/TransportRequestSequence"
+          "$ref": "https://json.schemas.assets.semio-tech.com/framework/actor/return/response/schema.json#/$defs/TransportRequestSequence"
         }
       }
     },
@@ -509,7 +509,7 @@
             "fixedFaultReleasesOriginalError": false,
             "emergencyMayOverwrite": false,
             "rogueFloodIsBounded": false,
-            "wireLayout": "https://semio.tech/schema/framework/actor/return/response/schema.json#/$defs/Response"
+            "wireLayout": "https://json.schemas.assets.semio-tech.com/framework/actor/return/response/schema.json#/$defs/Response"
           }
         }
       }

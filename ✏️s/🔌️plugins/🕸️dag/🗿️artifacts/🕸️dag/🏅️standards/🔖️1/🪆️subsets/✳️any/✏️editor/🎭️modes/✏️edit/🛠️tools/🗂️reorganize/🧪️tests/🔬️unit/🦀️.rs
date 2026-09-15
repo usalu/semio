@@ -2,7 +2,7 @@ use super::*;
 use crate::editor::dag::config::DagConfig;
 use crate::editor::dag::unit_tests::context::{new_app_with_registry, DagApp};
 use crate::editor::dag::DagPlayApp;
-use crate::{DagHostDocumentEdge, DagNodeSpec};
+use crate::{DagHostSnapshotEdge, DagNodeSpec};
 use semio_framework_graph_layout_run::testing::{layout_run_close, layout_run_drive, layout_run_longest_path_layers};
 use semio_framework_graph_layout_run::{LayoutRunJob, LayoutRunReason};
 use semio_framework_job::INTERACTIVE_LANE_FUEL;
@@ -81,7 +81,7 @@ fn dag_document_maps_to_the_language_neutral_layout_graph() {
     let fixture = fixture();
     let mapping = &fixture["mapping"];
     let nodes = mapping["nodes"].as_array().expect("nodes").iter().map(|node| DagNodeSpec { id: node["id"].as_str().expect("id").into(), x: number(&node["x"]), y: number(&node["y"]), width: number(&node["width"]), height: number(&node["height"]), ..DagNodeSpec::default() }).collect();
-    let edges = mapping["edges"].as_array().expect("edges").iter().map(|edge| DagHostDocumentEdge { id: edge["id"].as_str().expect("id").into(), source: edge["source"].as_str().expect("source").into(), target: edge["target"].as_str().expect("target").into(), ..DagHostDocumentEdge::default() }).collect();
+    let edges = mapping["edges"].as_array().expect("edges").iter().map(|edge| DagHostSnapshotEdge { id: edge["id"].as_str().expect("id").into(), source: edge["source"].as_str().expect("source").into(), target: edge["target"].as_str().expect("target").into(), ..DagHostSnapshotEdge::default() }).collect();
     let document = DagSnapshot { schema: crate::default_snapshot().schema, content: crate::dag_content_child_with_owner(nodes, edges) };
     let targets = mapping["targets"].as_object().expect("targets").iter().map(|(id, point)| (id.clone(), LayoutRunPoint::new(number(&point["x"]), number(&point["y"])))).collect();
     let layout = layout_graph(&document, &targets);

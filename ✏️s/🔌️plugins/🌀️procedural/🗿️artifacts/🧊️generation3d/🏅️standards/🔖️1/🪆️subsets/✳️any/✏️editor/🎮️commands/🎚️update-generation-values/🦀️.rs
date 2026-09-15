@@ -29,10 +29,19 @@ pub struct UpdateGenerationValues {
     pub generation_id: Option<String>,
     pub question_id: String,
     pub value: dsl::DslValue,
+    /// 🎚️ The press this value belongs to, when the Form control it came from is CONTINUOUS (a
+    /// dragged slider, a held spinner). Every value of one press folds into ONE undoable edit under
+    /// this identity; absent means a discrete edit of its own
+    /// (`📓️slider-preview-update-2026-09-15.md`).
+    pub gesture: Option<String>,
 }
 
 pub fn handle(payload: &UpdateGenerationValues, doc: &ArtifactView<'_, Generation3dSnapshot>, cfg: &ConfigView<'_, Generation3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation>, Fault> {
     let generation_id = payload.generation_id.clone().map_or(dsl::DslValue::Null, dsl::DslValue::String);
     let args = dsl::DslValue::object([("generationId".to_string(), generation_id), ("questionId".to_string(), dsl::DslValue::String(payload.question_id.clone())), ("value".to_string(), payload.value.clone())]);
-    Ok(generation_command_result("updateGenerationValues", Some(&args), doc.snapshot, cfg.snapshot).map(|result| result.emit).unwrap_or_default())
+    let mut emit = generation_command_result("updateGenerationValues", Some(&args), doc.snapshot, cfg.snapshot).map(|result| result.emit).unwrap_or_default();
+    if let Some(key) = crate::editor::generation3d::commands::patch_flow_widgets::patch_coalesce_key(payload.gesture.as_deref()) {
+        emit.coalesce_key = Some(key);
+    }
+    Ok(emit)
 }

@@ -81,7 +81,7 @@ transport that owns the wire:
 
 | file | what |
 |---|---|
-| `🧬️schema/🔣️.json` | `https://semio.tech/schema/framework/actor/shard-client/segmented-download/schema.json#/$defs/SegmentedDownloadContract` |
+| `🧬️schema/🔣️.json` | `https://json.schemas.assets.semio-tech.com/framework/actor/shard-client/segmented-download/schema.json#/$defs/SegmentedDownloadContract` |
 | `🧫️fixtures/🔣️.json` | `contract`: `chunkBytes 4096`, `maximumOutstandingChunks 8192`, `maximumTotalBytes 33554432`, `maximumOperationId "18446744073709551615"`; plus the six `refusals` codes |
 | `🟦️.ts` | `SEGMENTED_DOWNLOAD_CONTRACT`, `SEGMENTED_DOWNLOAD_REFUSAL`, `admitSegmentedDownloadChunk`, `admitSegmentedDownloadOperationId` |
 

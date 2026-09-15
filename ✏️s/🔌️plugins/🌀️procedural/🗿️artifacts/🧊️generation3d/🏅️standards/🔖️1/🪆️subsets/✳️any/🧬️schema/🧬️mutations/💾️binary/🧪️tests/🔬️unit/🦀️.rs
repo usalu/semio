@@ -44,7 +44,7 @@ fn op_text_round_trip_update_camera() {
 
 #[test]
 fn op_text_round_trip_change_schema() {
-    test_support::assert_op_line_round_trip(&Generation3dMutation::ChangeSchema(ChangeSchema { new_schema: "flow.host_document".into() }));
+    test_support::assert_op_line_round_trip(&Generation3dMutation::ChangeSchema(ChangeSchema { new_schema: "flow.host_snapshot".into() }));
 }
 
 #[test]

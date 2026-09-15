@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://semio.tech/schema/app/fem/2d/results-window-config/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/app/fem/2d/results-window-config/schema.json",
   "$ref": "#/$defs/Fem2dResultsWindowConfig",
   "$defs": {
     "Fem2dResultsWindowConfig": {
@@ -13,7 +13,7 @@
       ],
       "properties": {
         "camera": {
-          "$ref": "https://semio.tech/schema/framework/ui/viewport/2d"
+          "$ref": "https://json.schemas.assets.semio-tech.com/framework/ui/viewport/2d"
         },
         "resultSourceId": {
           "type": [
@@ -22,7 +22,7 @@
           ]
         },
         "resultMode": {
-          "$ref": "https://semio.tech/schema/fem/result-mode/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/fem/result-mode/schema.json"
         },
         "resultModeIndex": {
           "type": "integer",

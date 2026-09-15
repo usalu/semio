@@ -86,3 +86,11 @@ path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples
 [[test]]
 name = "io-round-trip"
 path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🔁️round-trip/🦀️.rs"
+
+# 🔁️ The incremental re-evaluation lane: what ONE slider edit costs the chain, on the real hex
+# column with the packaged operators installed — dirty-set precision, the tessellation cache, the
+# painted evaluation and the hop's own UI scope.
+[[test]]
+name = "incremental-eval"
+path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧵️preview-eval/🧪️tests/🔁️incremental/🦀️.rs"
+required-features = ["component-app-assembly"]

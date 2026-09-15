@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/framework/actor/lifetime/patch/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/actor/lifetime/patch/schema.json",
   "title": "Actor Lifetime Patch Schema Module",
   "$defs": {
     "PatchFixture": {
@@ -36,7 +36,7 @@
             ],
             "properties": {
               "value": {
-                "$ref": "https://semio.tech/schema/framework/actor/lifetime/patch/schema.json#/$defs/Patch"
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/actor/lifetime/patch/schema.json#/$defs/Patch"
               },
               "hex": {
                 "type": "string",
@@ -119,10 +119,10 @@
       ],
       "properties": {
         "lifetime": {
-          "$ref": "https://semio.tech/schema/framework/actor/lifetime/schema.json#/$defs/InstanceLifetime"
+          "$ref": "https://json.schemas.assets.semio-tech.com/framework/actor/lifetime/schema.json#/$defs/InstanceLifetime"
         },
         "patchSequence": {
-          "$ref": "https://semio.tech/schema/framework/value/schema.json#/$defs/NonZeroU64"
+          "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/NonZeroU64"
         }
       }
     }

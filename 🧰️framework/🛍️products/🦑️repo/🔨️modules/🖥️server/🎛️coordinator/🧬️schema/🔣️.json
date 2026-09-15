@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/repo/server/coordinator/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/repo/server/coordinator/schema.json",
   "title": "RepoServerCoordinator",
   "description": "Wire contracts of the repo coordinator REST API (auth, diff, event, repo, ticket) and of the language-neutral G3 event log.",
   "$defs": {

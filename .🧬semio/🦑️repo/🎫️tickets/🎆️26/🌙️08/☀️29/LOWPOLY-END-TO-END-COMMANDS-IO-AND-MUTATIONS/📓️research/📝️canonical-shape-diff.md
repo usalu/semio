@@ -96,7 +96,7 @@ Every plugin follows:
 **Example File:** `/Users/ueli/Documents/semio/✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema/🔣️component.json` (lines 1-40)
 ```json
 {
-  "$id": "https://semio.tech/schema/app/cad/cad/presence.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/app/cad/cad/presence.json",
   "title": "CadPresence",
   "type": "object",
   "required": ["selectedObjectIds", "selectedNodeIds", "cameraPosition", "cameraTarget"],

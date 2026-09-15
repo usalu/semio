@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/vcs/vcs/artifact.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/vcs/vcs/artifact.json",
   "title": "VcsArtifact",
   "type": "object",
   "additionalProperties": false,
@@ -46,7 +46,7 @@
     "VcsRetainedCommandRoutes": {
       "allOf": [
         {
-          "$ref": "https://semio.tech/schema/os/plugin/retained-command/component.json#/$defs/RetainedCommandRoutesDocument"
+          "$ref": "https://json.schemas.assets.semio-tech.com/os/plugin/retained-command/component.json#/$defs/RetainedCommandRoutesDocument"
         },
         {
           "type": "object",

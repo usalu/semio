@@ -12,8 +12,8 @@ PRS_COMPONENT = ROOT / "👥️presence/🦀️component.rs"
 
 PLUGIN = "remodel"
 OWNER = "remodel"
-CONFIG_ID = f"https://semio.tech/schema/app/{PLUGIN}/{OWNER}/config.json"
-PRESENCE_ID = f"https://semio.tech/schema/app/{PLUGIN}/{OWNER}/presence.json"
+CONFIG_ID = f"https://json.schemas.assets.semio-tech.com/app/{PLUGIN}/{OWNER}/config.json"
+PRESENCE_ID = f"https://json.schemas.assets.semio-tech.com/app/{PLUGIN}/{OWNER}/presence.json"
 PROTO_PKG = f"semio.app.{PLUGIN}.{OWNER}"
 
 

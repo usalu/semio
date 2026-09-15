@@ -6,7 +6,7 @@ type RecordCopyTaskFactory<T> = fn(&Rooted<T>, usize) -> Option<Box<dyn Task>>;
 use super::{FlowOwner as Owner, FlowRetirement as Retirement};
 use crate::os_store::{ErasedSnapshotRetirement, SnapshotRetirementFactory, SnapshotRetirementStep};
 use std::mem::ManuallyDrop;
-use crate::{FlowHostDocument, neural, FlowChannelRef, FlowGui, FlowNodeGui, FlowPreviewGui, NodeChrome, SynapseSpec, Widget, WidgetLayout};
+use crate::{FlowHostSnapshot, neural, FlowChannelRef, FlowGui, FlowNodeGui, FlowPreviewGui, NodeChrome, SynapseSpec, Widget, WidgetLayout};
 use std::any::Any;
 use std::collections::LinkedList;
 use std::sync::Arc;
@@ -188,7 +188,7 @@ impl<T: Copy> Task for BoxTask<T> {
 macro_rules! retire_owner {
     ($type:ty, $variant:ident) => { impl Retire for $type { fn retire(self, retirement: &mut Retirement) { retirement.push(Owner::$variant(self)); } } };
 }
-retire_owner!(FlowHostDocument, HostDocument);
+retire_owner!(FlowHostSnapshot, HostSnapshot);
 retire_owner!(Widget, Widget);
 retire_owner!(Vec<Widget>, Widgets);
 retire_owner!(Vec<String>, Strings);
@@ -216,7 +216,7 @@ impl Copy for WidgetLayout {
     fn task(source: Rooted<Self>) -> Box<dyn Task> { Box::new(RecordTask { target: Some(source.get().clone()), source, index: 0, next: |_, _| None, set: |_, _, _| unreachable!() }) }
 }
 
-record!(FlowHostDocument, |source: &FlowHostDocument| FlowHostDocument { schema: String::new(), camera: source.camera.clone(), widgets: Vec::new(), synapses: Vec::new(), layout: crate::OrderedMap::new() }, { 0 => schema: String, 1 => widgets: Vec<Widget>, 2 => synapses: Vec<SynapseSpec>, 3 => layout: crate::OrderedMap<WidgetLayout> });
+record!(FlowHostSnapshot, |source: &FlowHostSnapshot| FlowHostSnapshot { schema: String::new(), camera: source.camera.clone(), widgets: Vec::new(), synapses: Vec::new(), layout: crate::OrderedMap::new() }, { 0 => schema: String, 1 => widgets: Vec<Widget>, 2 => synapses: Vec<SynapseSpec>, 3 => layout: crate::OrderedMap<WidgetLayout> });
 record!(SynapseSpec, |_: &SynapseSpec| SynapseSpec { id: String::new(), from: String::new(), to: String::new(), from_port: String::new(), to_port: String::new() }, { 0 => id: String, 1 => from: String, 2 => to: String, 3 => from_port: String, 4 => to_port: String });
 record!(neural::Tree, |_: &neural::Tree| neural::Tree::default(), { 0 => neurons: Vec<neural::Neuron>, 1 => synapses: Vec<neural::Synapse> });
 record!(neural::Neuron, |_: &neural::Neuron| neural::Neuron { id: String::new(), kind: String::new(), params: neural::Dictionary::new(), tree: None }, { 0 => id: String, 1 => kind: String, 2 => params: neural::Dictionary, 3 => tree: Option<Box<neural::Tree>> });
@@ -452,7 +452,7 @@ macro_rules! selected_cursor {
 }
 selected_cursor!(FlowWidgetCopy, Widget);
 selected_cursor!(FlowSynapseCopy, SynapseSpec);
-selected_cursor!(FlowHostDocumentCopy, FlowHostDocument);
+selected_cursor!(FlowHostSnapshotCopy, FlowHostSnapshot);
 //#endregion 🗿️SelectedCopyCursor
 
 //#region 🧪️CopyLaws

@@ -17,7 +17,7 @@ silently applied.
   (e.g. `🖱️ui/🧬️contract/`, the `ui-contract` crate) is an eligible nested module scope; only the plural
   per-contract `🧬️contracts/<x>` shape is forbidden. Scope ids must be derivable from the path: sibling
   directories whose ASCII tails collide are renamed, never mapped through an override table.
-- **Scope id** = dotted id derived from the module `$id` path after `https://semio.tech/schema/`, e.g.
+- **Scope id** = dotted id derived from the module `$id` path after `https://json.schemas.assets.semio-tech.com/`, e.g.
   `s.writer.writer`, `hub.inference`, `os.directory`, `framework.actor.return`. It is declared in the
   module's `🔣️.json` as `$id` and must equal the id the Rust `ArtifactSchemaDescriptor` registers where
   one exists. Never derive ids by stripping emoji from paths.
@@ -30,7 +30,7 @@ silently applied.
   `<target $id>#/$defs/<ExportId>`.
 - **Export id** = a PascalCase key of the module's `$defs` (JSON Schema), the same-named `message`
   (proto), `type` (GraphQL), `struct/enum` (Rust), exported `interface/type` + `parse<Export>` function (TS).
-- **`$id` grammar (settled after WP2)**: `https://semio.tech/schema/<scope path>/<facet>.json`. The scope
+- **`$id` grammar (settled after WP2)**: `https://json.schemas.assets.semio-tech.com/<scope path>/<facet>.json`. The scope
   path is every segment before the filename; the filename is the facet (`schema`, `artifact`, `snapshot`,
   `diff`, `mutations`, `inferences`, `text`, `binary`, …). Scope id = scope path with `/` → `.`. Facet
   documents of one module (e.g. `📸️snapshot/📝️text/🔣️.json` → `…/<scope path>/snapshot/text.json`) keep the
@@ -63,7 +63,7 @@ silently applied.
 
 - JSON Schema dialect everywhere: `http://json-schema.org/draft-07/schema#`. Migrate 2020-12 documents
   (`prefixItems` → `items` array + `additionalItems:false`, `$defs` stays, `unevaluated*` removed).
-- `$id` everywhere: `https://semio.tech/schema/<scope path>/<facet>.json` (replace `urn:` and
+- `$id` everywhere: `https://json.schemas.assets.semio-tech.com/<scope path>/<facet>.json` (replace `urn:` and
   `semio.hub.*-fixture` ids). Cross-scope `$ref` uses the target `$id` + `#/$defs/<ExportId>`.
 - Filenames: inside a `🧬️schema/` module only the canonical five (+ facet dirs). `*.schema.json`,
   `🧬️schema.json`, `📋️.schema.json`, `🧬️contracts/` cease to exist after WP7.

@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/framework/replication/wire/local-interaction/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/replication/wire/local-interaction/schema.json",
   "title": "Replication Wire Local-interaction Schema Module",
   "definitions": {
     "id": {
@@ -245,16 +245,16 @@
                 "minLength": 1
               },
               "before": {
-                "$ref": "https://semio.tech/schema/framework/replication/wire/local-interaction/schema.json#/$defs/State"
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/replication/wire/local-interaction/schema.json#/$defs/State"
               },
               "current": {
-                "$ref": "https://semio.tech/schema/framework/replication/wire/local-interaction/schema.json#/$defs/Identity"
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/replication/wire/local-interaction/schema.json#/$defs/Identity"
               },
               "restore": {
                 "$ref": "#/definitions/restore"
               },
               "expected": {
-                "$ref": "https://semio.tech/schema/framework/replication/wire/local-interaction/schema.json#/$defs/State"
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/replication/wire/local-interaction/schema.json#/$defs/State"
               },
               "error": {
                 "const": "stale-authority"
@@ -264,7 +264,7 @@
               {
                 "properties": {
                   "expected": {
-                    "$ref": "https://semio.tech/schema/framework/replication/wire/local-interaction/schema.json#/$defs/State"
+                    "$ref": "https://json.schemas.assets.semio-tech.com/framework/replication/wire/local-interaction/schema.json#/$defs/State"
                   }
                 },
                 "required": [
@@ -433,7 +433,7 @@
                 "maximum": 255
               },
               "uiGeneration": {
-                "$ref": "https://semio.tech/schema/framework/replication/wire/local-interaction/schema.json#/$defs/Generation"
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/replication/wire/local-interaction/schema.json#/$defs/Generation"
               },
               "expected": {
                 "$ref": "#/definitions/revision"

@@ -49,16 +49,16 @@ const key = (rel) => `file:///${encodeURI(rel)}`;
 const REPAIRED_REFS = {
   "../../../🧬️schema/🔣️.json#/$defs/I32": "../../../📐️schema/🔣️.json#/$defs/I32",
   "https://semio.dev/schema/plugin/reactor/job-test-mutations/snapshot#/$defs/i32": "../../../📐️schema/🔣️.json#/$defs/i32",
-  "../../../📐️schema/🔣️.json#/$defs/I64": "https://semio.tech/schema/os/spr/command/component.json#/$defs/MutationLawsI64",
-  "../../../📐️schema/🔣️.json#/$defs/U8": "https://semio.tech/schema/os/spr/command/component.json#/$defs/MutationLawsU8",
-  "https://semio.dev/schema/os/flow-vcs/snapshot#/$defs/index": "https://semio.tech/schema/os/flow/artifacts/flow/vcs/snapshot.json#/$defs/index",
-  "https://semio.dev/schema/os/flow-vcs/snapshot#/$defs/neuron": "https://semio.tech/schema/os/flow/artifacts/flow/vcs/snapshot.json#/$defs/neuron",
-  "https://semio.dev/schema/os/flow-vcs/snapshot#/$defs/synapse": "https://semio.tech/schema/os/flow/artifacts/flow/vcs/snapshot.json#/$defs/synapse",
-  "https://semio.dev/schema/os/flow-vcs/snapshot#/$defs/layout": "https://semio.tech/schema/os/flow/artifacts/flow/vcs/snapshot.json#/$defs/layout",
-  "https://semio.dev/schema/os/flow-vcs/snapshot#/$defs/tree": "https://semio.tech/schema/os/flow/artifacts/flow/vcs/snapshot.json#/$defs/tree",
-  "https://semio.dev/schema/os/flow-vcs/snapshot#/$defs/neuralValue": "https://semio.tech/schema/os/flow/artifacts/flow/vcs/snapshot.json#/$defs/neuralValue",
-  "https://semio.dev/schema/os/flow-vcs/snapshot#/$defs/dictionary": "https://semio.tech/schema/os/flow/artifacts/flow/vcs/snapshot.json#/$defs/dictionary",
-  "https://semio.dev/schema/os/flow-vcs/snapshot#/$defs/camera": "https://semio.tech/schema/os/flow/artifacts/flow/vcs/snapshot.json#/$defs/camera",
+  "../../../📐️schema/🔣️.json#/$defs/I64": "https://json.schemas.assets.semio-tech.com/os/spr/command/component.json#/$defs/MutationLawsI64",
+  "../../../📐️schema/🔣️.json#/$defs/U8": "https://json.schemas.assets.semio-tech.com/os/spr/command/component.json#/$defs/MutationLawsU8",
+  "https://semio.dev/schema/os/flow-vcs/snapshot#/$defs/index": "https://json.schemas.assets.semio-tech.com/os/flow/artifacts/flow/vcs/snapshot.json#/$defs/index",
+  "https://semio.dev/schema/os/flow-vcs/snapshot#/$defs/neuron": "https://json.schemas.assets.semio-tech.com/os/flow/artifacts/flow/vcs/snapshot.json#/$defs/neuron",
+  "https://semio.dev/schema/os/flow-vcs/snapshot#/$defs/synapse": "https://json.schemas.assets.semio-tech.com/os/flow/artifacts/flow/vcs/snapshot.json#/$defs/synapse",
+  "https://semio.dev/schema/os/flow-vcs/snapshot#/$defs/layout": "https://json.schemas.assets.semio-tech.com/os/flow/artifacts/flow/vcs/snapshot.json#/$defs/layout",
+  "https://semio.dev/schema/os/flow-vcs/snapshot#/$defs/tree": "https://json.schemas.assets.semio-tech.com/os/flow/artifacts/flow/vcs/snapshot.json#/$defs/tree",
+  "https://semio.dev/schema/os/flow-vcs/snapshot#/$defs/neuralValue": "https://json.schemas.assets.semio-tech.com/os/flow/artifacts/flow/vcs/snapshot.json#/$defs/neuralValue",
+  "https://semio.dev/schema/os/flow-vcs/snapshot#/$defs/dictionary": "https://json.schemas.assets.semio-tech.com/os/flow/artifacts/flow/vcs/snapshot.json#/$defs/dictionary",
+  "https://semio.dev/schema/os/flow-vcs/snapshot#/$defs/camera": "https://json.schemas.assets.semio-tech.com/os/flow/artifacts/flow/vcs/snapshot.json#/$defs/camera",
 };
 const repair = (node) => {
   if (Array.isArray(node)) return node.map(repair);

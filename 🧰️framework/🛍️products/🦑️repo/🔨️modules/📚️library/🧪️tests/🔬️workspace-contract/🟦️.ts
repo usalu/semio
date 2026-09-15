@@ -1,54 +1,35 @@
+import toml from "@iarna/toml";
+import Ajv from "ajv";
 import { describe, expect, test } from "bun:test";
-import "../../🧹️normalization/🧪️tests/🚪️source-admission/🟦️";
-import "../../🧹️normalization/🧪️tests/📦️package-boundary-classification/🟦️";
-import "../🔏️path-emoji-statutes/🟦️.ts";
-import "../📣️typescript-declaration-facts/🟦️.ts";
-import "../🧾️source-file-facts/🟦️.ts";
-import "../🎭️source-roster-roles/🟦️.ts";
-import "../📸️source-index-capture/🟦️.ts";
-import "../🎫️ticket-role-routing/🟦️.ts";
+import fastGlob from "fast-glob";
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { existsSync, readFileSync } from "node:fs";
+import { chmodSync, closeSync, constants, copyFileSync, existsSync, fstatSync, fsyncSync, lstatSync, mkdirSync, mkdtempSync, openSync, readFileSync, readdirSync, readlinkSync, realpathSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { basename, dirname, join, posix, relative, resolve, sep, win32 } from "node:path";
 import { parseArgs } from "node:util";
-import { nextestArtifactLocation, partitionNextestExecutionFilters } from "../../📦️packages/🟦️typescript/🟦️.ts";
 import { NEO4J_GRAPH_DATABASE_NAMES, getAllNeo4jGraphExportSpecs, joinNeo4jGraphDatabaseName, parseExtraNeo4jGraphDatabaseNamesFromEnv, partitionNeo4jGraphCliArgv, policyCanonicalArtifactKindBreaches, policyCanonicalChildKindBreaches, policyDissolvedKindRedefinitionBreaches, policyEmojiPrefixBreaches, policyModeCompletenessBreaches, policyPluginDependencyParityBreaches, policyWindowCompletenessBreaches } from "../../../../../../../📜️script.ts";
-import { BundleScript, ScriptRouter, DAEMON_BUDGET_MS, ORCHESTRATOR_BUDGET_MS, budgetTimeoutHint, canReuseDevPort, capturedTestFailureDiagnostics, daemonBudgetMs, daemonBudgetOpts, describeDevPortOccupant, devServerUrl, devToolingEnv, dispatchSubcommand, findRepoRoot, gitSpawnEnv, goLevelTestArgs, isDevPortInUse, orchestratorBudgetMs, orchestratorBudgetOpts, resolveCargoPackageName, resolveCargoPackageNames, resolveDevPort, runCmd, runCmdStatus, runProbe, testLevelBudgetMs, vitestLevelArgs, wgpuDevPlayUrl } from "../../📦️packages/🟦️typescript/🟦️.ts";
-import { defineLint, type FileLinter } from "../../📦️packages/🟦️typescript/🟦️.ts";
-import { layeringBreaches, layeringCounts, layeringReferences, loadLayeringBaseline, policyDiscoveredAllowlist } from "../../📦️packages/🟦️typescript/🟦️.ts";
-import { dependencyBoundaryBreachesForBundleDir, dependencyBoundaryBreachesForFile, isAdapterBoundaryFile, parseTsImportSpecs } from "../../📦️packages/🟦️typescript/🟦️.ts";
-import {
-  PLAYGROUND_PORTS,
-  PLAYGROUND_LOCKED_EXAMPLE_ENV,
-  allPlaygroundReservedPorts,
-  playgroundDevPort,
-  frameworkOsPlaygroundDevEnv,
-  resolveFrameworkOsPlaygroundPlugin,
-  loadFrameworkOsPlaygroundCatalog,
-  playgroundPlayViteDefine,
-} from "../../📦️packages/🟦️typescript/🟦️.ts";
 import { playgroundStaticSiteBuildOptions } from "../../../../../../🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts";
-import { areaOf, clearDiscoveryCache, discoverBurndown, discoverOwners, discoverPackageProblems, discoverPackages, getWorkspaceRoot, loadTaxonomy, readSemioMarker, resolveWorkspaceTaxonomyAuthority, resolveWorkspaceTaxonomyAuthorityFromDirectory, validateTaxonomy } from "../../📦️packages/🟦️typescript/🟦️.ts";
-import { artifactFacetPathIsDeclared, buildSemanticCensus, canonicalPrimaryFilenameForKind, createRustMutationCodecOwnershipInspector, fixedDirectoryContractIdsForPath, fixedFilenameContractIdsForPath, generatorNxPreviewCommand, inspectMutationMetadataSource, inspectRustModuleGraph, inspectRustModuleGraphFacts, inspectRustMutationAggregateSpan, inspectRustMutationMetadataFacts, inspectRustStructure, inspectRustVirtualSources, mutationDirectLeafInlinedBehaviorFacets, projectCargoProviderManifest, renderRustStructuralFactsJson, renderSemanticCensusJson, resolveCargoProviderBinding, resolveRustPathAttributes, scopedFileKindIdForSourcePath, semanticPathProjectionAuthority, semanticProjectionCatalogProblems, taxonomyCliAttemptPreparationsProblems, taxonomyCliBackupPreparationProblems, taxonomyCliBackupWritePreparationProblems, taxonomyCliEditPreparationProblems, taxonomyCliEditWritePreparationProblems, taxonomyCliJsonWritePreparationProblems, taxonomyCliLeaseDirectoryProblems, taxonomyCliRestorePreparationProblems, validateGeneratorContractsAgainstWorkspace, type SemanticProjectionAuthorityNode, type SemanticProjectionCatalogRegistration, type Taxonomy } from "../../🔍️discovery/🟦️.ts";
-import { computeWorkspaces, diffWorkspaces } from "../../📦️packages/🟦️typescript/🟦️.ts";
-import { chmodSync, closeSync, constants, copyFileSync, fstatSync, fsyncSync, lstatSync, mkdirSync, mkdtempSync, openSync, readdirSync, readlinkSync, realpathSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { applyTaxonomyPlan, artifactProjectionTail, canonicalJson, generatorInputPaths, inventoryTaxonomy, noFollowTreeDigest, opaqueTreeDigest, parseGeneratorPreviewManifest, parseTaxonomyPlan, planTaxonomy, repositoryLocalSymlinkTargetPath, taxonomyPlanDigest, taxonomyPlatformPathViolationCodes, taxonomyScopedGitPathspec, verifyTaxonomy, type OpaqueTreeDigest, type TaxonomyApplyOptions, type TaxonomyApplyResult, type TaxonomyInventory, type TaxonomyInventoryOptions, type TaxonomyPlan, type TaxonomyProgress } from "../../🧹️normalization/🟦️.ts";
-import { ownedFilePaths, ownedFilesystemEntries, ownedPathByteSort, type OwnedFilesystemEntry } from "../🔍️filesystem/🟦️.ts";
-import Ajv from "ajv";
-import toml from "@iarna/toml";
-import fastGlob from "fast-glob";
-import { loadCatalogTaxonomy, registryCompilerInputDependencies, registryStaticImports, type RegistryCompilerInputRole } from "../../🔍️discovery/🟦️.ts";
-import { leadingEmojiIdentity, pathEmojiStatuteFindings, semanticDirectoryKindId, semanticOwnedInputFileSnapshot } from "../../🔍️discovery/🟦️.ts";
 import { newScaffoldMutationTree } from "../../🏗️authoring/🧬️mutation-tree/🟦️.ts";
-import { taxonomyCliArtifactPath } from "../../🧹️normalization/🎮️command-contract/🟦️.ts";
-import { inventoryMutationTaxonomy } from "../../🧹️normalization/🧬️mutation/🧾️evidence/🟦️.ts";
-import { mutationTaxonomySourceIndex } from "../../🧹️normalization/🧬️mutation/📇️index/🟦️.ts";
-import { mutationTaxonomyStructuralView } from "../../🧹️normalization/🧬️mutation/📸️captured-source/🟦️.ts";
-import { MUTATION_STRUCTURAL_POLICY_KINDS, inspectMutationRootReachability, policyMutationStructuralBreaches, policyMutationStructuralBreachesView } from "../../🧹️normalization/🧬️mutation/📐️structural-reachability/🟦️.ts";
-import { planMutationTaxonomy, runMutationTaxonomyCli } from "../../🧹️normalization/🧬️mutation/🔁️workflow/🟦️.ts";
+import { BundleScript, DAEMON_BUDGET_MS, ORCHESTRATOR_BUDGET_MS, PLAYGROUND_LOCKED_EXAMPLE_ENV, PLAYGROUND_PORTS, ScriptRouter, allPlaygroundReservedPorts, areaOf, budgetTimeoutHint, canReuseDevPort, capturedTestFailureDiagnostics, clearDiscoveryCache, computeWorkspaces, daemonBudgetMs, daemonBudgetOpts, defineLint, dependencyBoundaryBreachesForBundleDir, dependencyBoundaryBreachesForFile, describeDevPortOccupant, devServerUrl, devToolingEnv, diffWorkspaces, discoverBurndown, discoverOwners, discoverPackageProblems, discoverPackages, dispatchSubcommand, findRepoRoot, frameworkOsPlaygroundDevEnv, getWorkspaceRoot, gitSpawnEnv, goLevelTestArgs, isAdapterBoundaryFile, isDevPortInUse, layeringBreaches, layeringCounts, layeringReferences, loadFrameworkOsPlaygroundCatalog, loadLayeringBaseline, loadTaxonomy, nextestArtifactLocation, orchestratorBudgetMs, orchestratorBudgetOpts, parseTsImportSpecs, partitionNextestExecutionFilters, playgroundDevPort, playgroundPlayViteDefine, policyDiscoveredAllowlist, readSemioMarker, resolveCargoPackageName, resolveCargoPackageNames, resolveDevPort, resolveFrameworkOsPlaygroundPlugin, resolveWorkspaceTaxonomyAuthority, resolveWorkspaceTaxonomyAuthorityFromDirectory, runCmd, runCmdStatus, runProbe, testLevelBudgetMs, validateTaxonomy, vitestLevelArgs, wgpuDevPlayUrl, type FileLinter } from "../../📦️packages/🟦️typescript/🟦️.ts";
+import { artifactFacetPathIsDeclared, buildSemanticCensus, canonicalPrimaryFilenameForKind, createRustMutationCodecOwnershipInspector, fixedDirectoryContractIdsForPath, fixedFilenameContractIdsForPath, generatorNxPreviewCommand, inspectMutationMetadataSource, inspectRustModuleGraph, inspectRustModuleGraphFacts, inspectRustMutationAggregateSpan, inspectRustMutationMetadataFacts, inspectRustStructure, inspectRustVirtualSources, leadingEmojiIdentity, loadCatalogTaxonomy, mutationDirectLeafInlinedBehaviorFacets, pathEmojiStatuteFindings, projectCargoProviderManifest, registryCompilerInputDependencies, renderRustStructuralFactsJson, renderSemanticCensusJson, resolveCargoProviderBinding, resolveRustPathAttributes, scopedFileKindIdForSourcePath, semanticPathProjectionAuthority, taxonomyCliAttemptPreparationsProblems, taxonomyCliBackupPreparationProblems, taxonomyCliBackupWritePreparationProblems, taxonomyCliEditPreparationProblems, taxonomyCliEditWritePreparationProblems, taxonomyCliJsonWritePreparationProblems, taxonomyCliLeaseDirectoryProblems, taxonomyCliRestorePreparationProblems, validateGeneratorContractsAgainstWorkspace, type RegistryCompilerInputRole, type SemanticProjectionAuthorityNode, type Taxonomy } from "../../🔍️discovery/🟦️.ts";
 import { validateJsonSchemaSubset } from "../../🧬️schema/✅️validation/🟦️.ts";
+import { taxonomyCliArtifactPath } from "../../🧹️normalization/🎮️command-contract/🟦️.ts";
+import { applyTaxonomyPlan, artifactProjectionTail, canonicalJson, generatorInputPaths, inventoryTaxonomy, noFollowTreeDigest, opaqueTreeDigest, parseGeneratorPreviewManifest, parseTaxonomyPlan, planTaxonomy, repositoryLocalSymlinkTargetPath, taxonomyPlanDigest, taxonomyPlatformPathViolationCodes, taxonomyScopedGitPathspec, verifyTaxonomy, type OpaqueTreeDigest, type TaxonomyApplyOptions, type TaxonomyApplyResult, type TaxonomyInventory, type TaxonomyInventoryOptions, type TaxonomyPlan, type TaxonomyProgress } from "../../🧹️normalization/🟦️.ts";
+import "../../🧹️normalization/🧪️tests/📦️package-boundary-classification/🟦️";
+import "../../🧹️normalization/🧪️tests/🚪️source-admission/🟦️";
+import { mutationTaxonomySourceIndex } from "../../🧹️normalization/🧬️mutation/📇️index/🟦️.ts";
+import { MUTATION_STRUCTURAL_POLICY_KINDS, inspectMutationRootReachability, policyMutationStructuralBreaches, policyMutationStructuralBreachesView } from "../../🧹️normalization/🧬️mutation/📐️structural-reachability/🟦️.ts";
+import { mutationTaxonomyStructuralView } from "../../🧹️normalization/🧬️mutation/📸️captured-source/🟦️.ts";
+import { planMutationTaxonomy, runMutationTaxonomyCli } from "../../🧹️normalization/🧬️mutation/🔁️workflow/🟦️.ts";
+import { inventoryMutationTaxonomy } from "../../🧹️normalization/🧬️mutation/🧾️evidence/🟦️.ts";
+import "../🎫️ticket-role-routing/🟦️.ts";
+import "../🎭️source-roster-roles/🟦️.ts";
+import "../📣️typescript-declaration-facts/🟦️.ts";
+import "../📸️source-index-capture/🟦️.ts";
+import { ownedFilePaths, ownedFilesystemEntries, ownedPathByteSort, type OwnedFilesystemEntry } from "../🔍️filesystem/🟦️.ts";
+import "../🔏️path-emoji-statutes/🟦️.ts";
+import "../🧾️source-file-facts/🟦️.ts";
 
 describe("extension Cargo installation owner", () => {
   test("preserves the authored extension directory alongside the independent TOML identity", async () => {
@@ -7704,10 +7685,10 @@ describe("schema scope catalog", () => {
   test("resolves scope ids and export bindings only from declared identity", async () => {
     const library = await import("../../🔍️discovery/🟦️.ts");
     const taxonomy = library.loadCatalogTaxonomy();
-    expect(library.schemaScopeIdFromDocumentId("https://semio.tech/schema/s/trinity/jack/artifact.json", taxonomy)).toBe("s.trinity.jack");
-    expect(library.schemaScopeIdFromDocumentId("https://semio.tech/schema/hub/inference/contract.json", taxonomy)).toBe("hub.inference");
+    expect(library.schemaScopeIdFromDocumentId("https://json.schemas.assets.semio-tech.com/s/trinity/jack/artifact.json", taxonomy)).toBe("s.trinity.jack");
+    expect(library.schemaScopeIdFromDocumentId("https://json.schemas.assets.semio-tech.com/hub/inference/contract.json", taxonomy)).toBe("hub.inference");
     expect(library.schemaScopeIdFromDocumentId("urn:semio:hub:inference", taxonomy)).toBe(null);
-    expect(library.schemaScopeIdFromDocumentId("https://semio.tech/schema/contract.json", taxonomy)).toBe(null);
+    expect(library.schemaScopeIdFromDocumentId("https://json.schemas.assets.semio-tech.com/contract.json", taxonomy)).toBe(null);
     expect(library.parseSchemaExportUri("schema://hub.inference/InferenceApproval", taxonomy)).toEqual({ scopeId: "hub.inference", exportId: "InferenceApproval" });
     expect(library.parseSchemaExportUri("schema://hub.inference/inferenceApproval", taxonomy)).toBe(null);
     expect(library.parseSchemaExportUri("local://hub.inference/InferenceApproval", taxonomy)).toBe(null);
@@ -7736,7 +7717,7 @@ describe("schema scope catalog", () => {
     const library = await import("../../🔍️discovery/🟦️.ts");
     const taxonomy = library.loadCatalogTaxonomy();
     expect(taxonomy.schemaJsonDialect).toBe(taxonomy.mutationPayloadSchemaAuthority.jsonSchemaDialect);
-    const document = { $schema: taxonomy.schemaJsonDialect, $id: "https://semio.tech/schema/repo/library/probe.json", title: "Probe", type: "object", additionalProperties: false, properties: { id: { type: "string" } }, required: ["id"] };
+    const document = { $schema: taxonomy.schemaJsonDialect, $id: "https://json.schemas.assets.semio-tech.com/repo/library/probe.json", title: "Probe", type: "object", additionalProperties: false, properties: { id: { type: "string" } }, required: ["id"] };
     const validate = new Ajv({ strict: true }).compile(document);
     expect(validate({ id: "a" })).toBe(true);
     expect(validate({ id: 1 })).toBe(false);

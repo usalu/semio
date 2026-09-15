@@ -280,7 +280,7 @@ async fn optional_field_rows_keep_their_pre_migration_bytes() {
 fn every_command() -> Vec<SourcingCurationCommand> {
     vec![
         SourcingCurationCommand::SetArtifactJson(set_artifact_json::SetArtifactJson { json: "{}".into() }),
-        SourcingCurationCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "demo-stock".into() }),
+        SourcingCurationCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: DEMO_STOCK_EXAMPLE_ID.into() }),
         SourcingCurationCommand::StockFromCatalogue(stock_from_catalogue::StockFromCatalogue {}),
         SourcingCurationCommand::CurationAdd(curation_add::CurationAdd { object_id: "beam-glulam-gl24h".into() }),
         SourcingCurationCommand::CurationSetCount(curation_set_count::CurationSetCount { object_id: "beam-glulam-gl24h".into(), delta: Some(1.0), value: None }),

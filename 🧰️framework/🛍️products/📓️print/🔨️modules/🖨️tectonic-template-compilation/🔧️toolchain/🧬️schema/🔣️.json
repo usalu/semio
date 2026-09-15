@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/print/tectonic-template-compilation/toolchain/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/print/tectonic-template-compilation/toolchain/schema.json",
   "title": "PrintToolchainManifest",
   "description": "Pinned tectonic release downloaded per platform.",
   "$ref": "#/$defs/PrintToolchainManifest",

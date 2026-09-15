@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/os/space/artifacts/space/component.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/os/space/artifacts/space/component.json",
   "title": "Space",
   "$defs": {
     "SpaceArtifactDefinitionV1": {

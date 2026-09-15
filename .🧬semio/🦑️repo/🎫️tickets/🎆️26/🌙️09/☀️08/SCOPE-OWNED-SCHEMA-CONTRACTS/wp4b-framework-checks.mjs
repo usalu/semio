@@ -73,7 +73,7 @@ for (const path of walk(MODULES)) {
   if (path.includes("🧬️mutations") || path.startsWith(`${MODULES}/🧬️schema/`)) continue;
   const document = JSON.parse(readFileSync(path, "utf8"));
   const segments = path.split("/").slice(2, -2).map(ascii);
-  const expected = `https://semio.tech/schema/framework/${segments.join("/")}/schema.json`;
+  const expected = `https://json.schemas.assets.semio-tech.com/framework/${segments.join("/")}/schema.json`;
   if (document.$id === expected) derivable++;
   else undeliverable.push([path, document.$id, expected]);
 }

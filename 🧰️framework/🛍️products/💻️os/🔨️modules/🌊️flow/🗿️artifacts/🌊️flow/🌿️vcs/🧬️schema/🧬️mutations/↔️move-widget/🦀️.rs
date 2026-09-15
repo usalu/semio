@@ -1,5 +1,5 @@
 //! ↔️ Move Widget direct payload and owned behavior.
-use super::super::{FlowHostDocument, FlowDiff, FlowDelta, FlowCollectionDelta, FlowMutation, flow_wire_index};
+use super::super::{FlowHostSnapshot, FlowDiff, FlowDelta, FlowCollectionDelta, FlowMutation, flow_wire_index};
 use crate::os_spr::{MutationKind, MutationOutcome, SemanticDescriptor, Identified};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -13,12 +13,12 @@ pub struct MoveWidget { pub id: String, pub to_index: u32 }
 //#endregion 🧬️Payload
 
 //#region 🎮️Behavior
-impl MutationKind<FlowHostDocument, FlowMutation> for MoveWidget {
+impl MutationKind<FlowHostSnapshot, FlowMutation> for MoveWidget {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "move", entity: "widget", kind: "move-widget", record: "MovedWidget" };
-    fn diff(&self, base: &FlowHostDocument) -> MutationOutcome<FlowDiff> {
+    fn diff(&self, base: &FlowHostSnapshot) -> MutationOutcome<FlowDiff> {
         MutationOutcome::new(FlowDiff::from(FlowDelta::Widgets(FlowCollectionDelta { removed: vec![self.id.clone()], inserted: base.widgets.iter().find(|item| item.id() == &self.id).map(|item| (self.to_index, item.clone())).into_iter().collect(), replaced: vec![] })))
     }
-    fn inverse(&self, base: &FlowHostDocument) -> Vec<FlowMutation> {
+    fn inverse(&self, base: &FlowHostSnapshot) -> Vec<FlowMutation> {
         base.widgets.iter().position(|item| item.id() == &self.id).and_then(|index| flow_wire_index(index).ok().map(|to_index| FlowMutation::MoveWidget(Self { id: self.id.clone(), to_index }))).into_iter().collect()
     }
     fn label(&self) -> String { format!("Move widget {}", self.id) }

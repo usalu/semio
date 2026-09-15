@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/avi/1.0/hdrl/artifact.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/avi/1.0/hdrl/artifact.json",
   "title": "AviArtifact",
   "description": "Full artifact state, mirrors AviSnapshot field for field.",
   "type": "object",

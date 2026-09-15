@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://semio.tech/schema/app/fem/3d/model-window-config/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/app/fem/3d/model-window-config/schema.json",
   "$ref": "#/$defs/Fem3dModelWindowConfig",
   "$defs": {
     "Fem3dModelWindowConfig": {
@@ -11,7 +11,7 @@
       ],
       "properties": {
         "camera": {
-          "$ref": "https://semio.tech/schema/framework/ui/viewport/3d"
+          "$ref": "https://json.schemas.assets.semio-tech.com/framework/ui/viewport/3d"
         }
       }
     }

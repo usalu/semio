@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/framework/ui/host/input/admission/commit/enqueue/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/ui/host/input/admission/commit/enqueue/schema.json",
   "title": "Ui Host Input Admission Commit Enqueue Schema Module",
   "definitions": {
     "state": {

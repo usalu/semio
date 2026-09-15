@@ -315,7 +315,7 @@ one carrying its expected error path.
    `🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/🟦️.ts`. It is
    in my partition, but deciding whether that data is deleted (as a duplicate) or relocated into the
    vscode client scope touches a partition I do not own, and the `framework.schema` module's real
-   JSON Schema facet (`$id https://semio.tech/schema/framework/schema/schema.json`, `$defs` for
+   JSON Schema facet (`$id https://json.schemas.assets.semio-tech.com/framework/schema/schema.json`, `$defs` for
    `SchemaExport`, `ScopeSchemaExports`, `SchemaExportEntry`, `SchemaResolveError` — the TS twins
    already exist in `🟦️.ts`) is a catalog-shaped decision for the WP2/WP7 owner. I left the file
    untouched and report it rather than guessing. It shows in the compile report as

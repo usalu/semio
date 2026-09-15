@@ -5,8 +5,8 @@ use crate::standards::v1::subsets::any::schema::mutations::{connect_synapse, Gen
 use crate::Generation2dSnapshot;
 
 pub fn inverse(payload: &super::DisconnectSynapse, base: &Generation2dSnapshot) -> Vec<Generation2dMutation> {
-    match base.host_document.synapses.iter().position(|synapse| synapse.id == payload.id) {
-        Some(index) => vec![connect_synapse(index, base.host_document.synapses[index].clone())],
+    match base.host_snapshot.synapses.iter().position(|synapse| synapse.id == payload.id) {
+        Some(index) => vec![connect_synapse(index, base.host_snapshot.synapses[index].clone())],
         None => Vec::new(),
     }
 }

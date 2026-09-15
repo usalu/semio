@@ -17,7 +17,7 @@ use crate::retained::{FlowOwner, FlowRetirement};
 use crate::os_spr::{Identified, MutationApplyError, MutationApplyResult, MutationDiff, Patchable};
 use crate::os_store::{ArtifactEnvelope, ArtifactOwnedValueRetirementFactory, ArtifactStore, ArtifactStoreCursorDisposer, ErasedSnapshotRetirement, MemberStoreOwner, DocumentStoreOwners, SnapshotRetirementFactory, SnapshotRetirementStep};
 
-pub const FLOW_DOCUMENT_SCHEMA: &str = "flow.host_document";
+pub const FLOW_DOCUMENT_SCHEMA: &str = "flow.host_snapshot";
 
 //#region 🔖️CollectionSupport
 impl Identified<String> for Widget {
@@ -145,11 +145,11 @@ mod flow_direct_tests;
 mod diff;
 pub use diff::{FlowDelta, FlowDiff};
 
-/// 🌉️ Host-mutation → granular-operations bridge: diffs a `FlowHostDocument` before/after a `FlowHost` mutation into
+/// 🌉️ Host-mutation → granular-operations bridge: diffs a `FlowHostSnapshot` before/after a `FlowHost` mutation into
 /// the minimal set of `FlowMutation`s, so the rich stateful engine keeps owning mutation logic (port wiring,
 /// cycle checks, cluster collapse) while the document store still records convergent, invertible operations.
 /// The camera is intentionally excluded (it is plugin runtime state).
-pub fn flow_host_document_operations(before: &FlowHostDocument, after: &FlowHostDocument) -> MutationApplyResult<Vec<FlowMutation>> {
+pub fn flow_host_snapshot_operations(before: &FlowHostSnapshot, after: &FlowHostSnapshot) -> MutationApplyResult<Vec<FlowMutation>> {
     let mut operations = Vec::new();
     let after_widget_ids: BTreeSet<&str> = after.widgets.iter().map(widget_id_for).collect();
     for widget in &before.widgets {
@@ -315,7 +315,7 @@ enum NeuronNodeDsl {
 /// the unified syntax law for graph edges/connections. Converts at the `crate::os_store::ArtifactDsl`/
 /// `crate::os_store::OpText` boundary through the shared intrinsic field lowering and artifact conversion,
 /// plus `tree_to_tree_dsl`/`tree_dsl_to_tree` for the nested neural-tree case); `SynapseSpec`
-/// itself (JSON shape, `tree_from_host_document`, `flow_host_document_operations`, every other consumer
+/// itself (JSON shape, `tree_from_host_snapshot`, `flow_host_snapshot_operations`, every other consumer
 /// matching on its `from`/`to`/`from_port`/`to_port` fields) is completely untouched.
 #[derive(Clone, Debug, PartialEq, crate::os_dsl::DslRecord)]
 struct SynapseDsl {
@@ -369,9 +369,9 @@ fn neuron_node_dsl_to_neuron(node: NeuronNodeDsl) -> Result<Neuron, String> {
 /// `Cluster`'s `flow: FlowGui` is deliberately printed via the engine's `serde_json::Value` escape
 /// hatch (untyped but byte-for-byte round-tripping JSON), not its own nested DSL grammar: `FlowGui`/
 /// `FlowNodeGui`/`NodeChrome`/`FlowPreviewGui` are GUI-only view state (see each type's own doc
-/// comment) that never feeds neural evaluation — `tree_from_host_document`'s `Cluster` handling reads only
+/// comment) that never feeds neural evaluation — `tree_from_host_snapshot`'s `Cluster` handling reads only
 /// `tree`, never `flow` — the same "derived read-view, not a DSL-typed field" reasoning `FlowArtifact`
-/// itself gets relative to `FlowHostDocument`, just one level further in.
+/// itself gets relative to `FlowHostSnapshot`, just one level further in.
 #[derive(Clone, Debug, PartialEq, crate::os_dsl::DslEnum)]
 enum WidgetDsl {
     Neuron {
@@ -476,15 +476,15 @@ fn widget_dsl_to_widget(widget: WidgetDsl) -> Result<Widget, String> {
     })
 }
 
-/// 📄️ Local mirror of `FlowHostDocument` — see this region's opening doc comment for why `widgets:
+/// 📄️ Local mirror of `FlowHostSnapshot` — see this region's opening doc comment for why `widgets:
 /// Vec<Widget>` (which embeds foreign `Dictionary`/`Tree` types) can't stay as-is under a direct
 /// `#[derive(crate::os_dsl::DslArtifact)]`. `FlowArtifact` (the derived read-view built by
-/// `FlowHostDocument::to_artifact()`) deliberately does NOT get this treatment — it's a computed
+/// `FlowHostSnapshot::to_artifact()`) deliberately does NOT get this treatment — it's a computed
 /// snapshot for rendering, never itself round-tripped through DSL text.
 #[derive(Clone, Debug, PartialEq, crate::os_dsl::DslArtifact)]
 #[dsl(id = "flow.flow")]
 #[dsl(layout = "lines")]
-struct FlowHostDocumentDsl {
+struct FlowHostSnapshotDsl {
     schema: String,
     #[dsl(block)]
     camera: CameraJson,
@@ -495,27 +495,27 @@ struct FlowHostDocumentDsl {
     layout: BTreeMap<String, WidgetLayout>,
 }
 
-fn flow_host_document_to_dsl(fixture: &FlowHostDocument) -> FlowHostDocumentDsl {
-    FlowHostDocumentDsl {
-        schema: fixture.schema.clone(),
-        camera: fixture.camera.clone(),
-        widgets: fixture.widgets.iter().map(widget_to_widget_dsl).collect(),
-        synapses: fixture.synapses.iter().map(synapse_to_dsl).collect(),
-        layout: fixture.layout.iter().map(|(key, value)| (key.clone(), value.clone())).collect(),
+fn flow_host_snapshot_to_dsl(host_snapshot: &FlowHostSnapshot) -> FlowHostSnapshotDsl {
+    FlowHostSnapshotDsl {
+        schema: host_snapshot.schema.clone(),
+        camera: host_snapshot.camera.clone(),
+        widgets: host_snapshot.widgets.iter().map(widget_to_widget_dsl).collect(),
+        synapses: host_snapshot.synapses.iter().map(synapse_to_dsl).collect(),
+        layout: host_snapshot.layout.iter().map(|(key, value)| (key.clone(), value.clone())).collect(),
     }
 }
 
-fn flow_host_document_dsl_to_host_document(fixture: FlowHostDocumentDsl) -> Result<FlowHostDocument, String> {
-    Ok(FlowHostDocument {
-        schema: fixture.schema,
-        camera: fixture.camera,
-        widgets: fixture.widgets.into_iter().map(widget_dsl_to_widget).collect::<Result<Vec<_>, _>>()?,
-        synapses: fixture.synapses.into_iter().map(synapse_from_dsl).collect::<Result<Vec<_>, _>>()?,
-        layout: fixture.layout.into_iter().collect(),
+fn flow_host_snapshot_dsl_to_host_snapshot(dsl: FlowHostSnapshotDsl) -> Result<FlowHostSnapshot, String> {
+    Ok(FlowHostSnapshot {
+        schema: dsl.schema,
+        camera: dsl.camera,
+        widgets: dsl.widgets.into_iter().map(widget_dsl_to_widget).collect::<Result<Vec<_>, _>>()?,
+        synapses: dsl.synapses.into_iter().map(synapse_from_dsl).collect::<Result<Vec<_>, _>>()?,
+        layout: dsl.layout.into_iter().collect(),
     })
 }
 /// 📜️ Handcrafted ArtifactDsl (P6): derive no longer emits ArtifactDsl/ArtifactPack.
-impl crate::os_store::ArtifactDsl for FlowHostDocumentDsl {
+impl crate::os_store::ArtifactDsl for FlowHostSnapshotDsl {
     const EXTENSION: &'static str = Self::__DSL_EXTENSION;
     fn envelope_id() -> &'static str {
         Self::__DSL_ENVELOPE_ID
@@ -536,7 +536,7 @@ impl crate::os_store::ArtifactDsl for FlowHostDocumentDsl {
 }
 
 /// 📦️ Handcrafted ArtifactPack (P6).
-impl crate::os_store::ArtifactPack for FlowHostDocumentDsl {
+impl crate::os_store::ArtifactPack for FlowHostSnapshotDsl {
     fn encode_pack_with(&self, options: &crate::os_store::PackEncodeOptions) -> Result<Vec<u8>, crate::os_store::PackError> {
         let inner = crate::os_store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope =
@@ -556,32 +556,32 @@ impl crate::os_store::ArtifactPack for FlowHostDocumentDsl {
     }
 }
 
-impl crate::os_store::ArtifactDsl for FlowHostDocument {
+impl crate::os_store::ArtifactDsl for FlowHostSnapshot {
     const EXTENSION: &'static str = "flow";
 
     fn parse_dsl(text: &str) -> Result<Self, crate::os_store::TextError> {
-        let dsl_fixture = <FlowHostDocumentDsl as crate::os_store::ArtifactDsl>::parse_dsl(text)?;
-        flow_host_document_dsl_to_host_document(dsl_fixture).map_err(|message| crate::os_store::TextError::new(message, crate::os_store::TextSpan::at(1, 1)))
+        let dsl_fixture = <FlowHostSnapshotDsl as crate::os_store::ArtifactDsl>::parse_dsl(text)?;
+        flow_host_snapshot_dsl_to_host_snapshot(dsl_fixture).map_err(|message| crate::os_store::TextError::new(message, crate::os_store::TextSpan::at(1, 1)))
     }
 
     fn print_dsl(&self) -> String {
-        <FlowHostDocumentDsl as crate::os_store::ArtifactDsl>::print_dsl(&flow_host_document_to_dsl(self))
+        <FlowHostSnapshotDsl as crate::os_store::ArtifactDsl>::print_dsl(&flow_host_snapshot_to_dsl(self))
     }
 }
 
-/// 🗜️ `FlowHostDocument` has no `#[derive(crate::os_dsl::DslArtifact)]` of its own (see `FlowHostDocumentDsl`'s doc
+/// 🗜️ `FlowHostSnapshot` has no `#[derive(crate::os_dsl::DslArtifact)]` of its own (see `FlowHostSnapshotDsl`'s doc
 /// comment above), so it doesn't automatically gain `crate::os_store::ArtifactPack` the way every derived type
 /// does — this hand-written twin of the `crate::os_store::ArtifactDsl` impl just above delegates through the
-/// same `flow_host_document_to_dsl`/`flow_host_document_dsl_to_host_document` mirror instead of `__dsl_to_record`/
+/// same `flow_host_snapshot_to_dsl`/`flow_host_snapshot_dsl_to_host_snapshot` mirror instead of `__dsl_to_record`/
 /// `__dsl_from_record`.
-impl crate::os_store::ArtifactPack for FlowHostDocument {
+impl crate::os_store::ArtifactPack for FlowHostSnapshot {
     fn encode_pack_with(&self, options: &crate::os_store::PackEncodeOptions) -> Result<Vec<u8>, crate::os_store::PackError> {
-        <FlowHostDocumentDsl as crate::os_store::ArtifactPack>::encode_pack_with(&flow_host_document_to_dsl(self), options)
+        <FlowHostSnapshotDsl as crate::os_store::ArtifactPack>::encode_pack_with(&flow_host_snapshot_to_dsl(self), options)
     }
 
     fn decode_pack_with(bytes: &[u8], options: &crate::os_store::PackDecodeOptions) -> Result<Self, crate::os_store::PackError> {
-        let dsl_fixture = <FlowHostDocumentDsl as crate::os_store::ArtifactPack>::decode_pack_with(bytes, options)?;
-        flow_host_document_dsl_to_host_document(dsl_fixture).map_err(|message| crate::os_store::text_error_to_pack_error(crate::os_store::TextError::new(message, crate::os_store::TextSpan::at(1, 1))))
+        let dsl_fixture = <FlowHostSnapshotDsl as crate::os_store::ArtifactPack>::decode_pack_with(bytes, options)?;
+        flow_host_snapshot_dsl_to_host_snapshot(dsl_fixture).map_err(|message| crate::os_store::text_error_to_pack_error(crate::os_store::TextError::new(message, crate::os_store::TextSpan::at(1, 1))))
     }
 }
 //#endregion 🔖️Dsl
@@ -605,33 +605,33 @@ impl crate::os_dsl::DslField for SynapseSpec {
 }
 
 /// 📄️ Explicit import payloads share the artifact's intrinsic DSL schema.
-impl crate::os_dsl::DslField for FlowHostDocument {
-    fn shape() -> crate::os_dsl::Shape { crate::os_dsl::Shape::Record(FlowHostDocumentDsl::__dsl_spec) }
-    fn to_value(&self) -> crate::os_dsl::FieldValue { crate::os_dsl::FieldValue::Record(flow_host_document_to_dsl(self).__dsl_to_record()) }
+impl crate::os_dsl::DslField for FlowHostSnapshot {
+    fn shape() -> crate::os_dsl::Shape { crate::os_dsl::Shape::Record(FlowHostSnapshotDsl::__dsl_spec) }
+    fn to_value(&self) -> crate::os_dsl::FieldValue { crate::os_dsl::FieldValue::Record(flow_host_snapshot_to_dsl(self).__dsl_to_record()) }
     fn from_value(value: &crate::os_dsl::FieldValue) -> Result<Self, String> {
         match value {
-            crate::os_dsl::FieldValue::Record(record) => flow_host_document_dsl_to_host_document(FlowHostDocumentDsl::__dsl_from_record(record).map_err(|error| error.message)?),
+            crate::os_dsl::FieldValue::Record(record) => flow_host_snapshot_dsl_to_host_snapshot(FlowHostSnapshotDsl::__dsl_from_record(record).map_err(|error| error.message)?),
             other => Err(format!("expected Flow fixture record, found {other:?}")),
         }
     }
 }
 
-pub type FlowEnvelope = ArtifactEnvelope<FlowHostDocument, FlowMutation>;
-pub type FlowStore = ArtifactStore<FlowHostDocument, FlowMutation>;
+pub type FlowEnvelope = ArtifactEnvelope<FlowHostSnapshot, FlowMutation>;
+pub type FlowStore = ArtifactStore<FlowHostSnapshot, FlowMutation>;
 
-struct FlowHostDocumentRetirement {
+struct FlowHostSnapshotRetirement {
     retirement: FlowRetirement,
 }
 
-impl FlowHostDocumentRetirement {
-    fn new(fixture: FlowHostDocument) -> Self {
+impl FlowHostSnapshotRetirement {
+    fn new(host_snapshot: FlowHostSnapshot) -> Self {
         let mut retirement = FlowRetirement::default();
-        retirement.push(FlowOwner::HostDocument(fixture));
+        retirement.push(FlowOwner::HostSnapshot(host_snapshot));
         Self { retirement }
     }
 }
 
-impl ErasedSnapshotRetirement for FlowHostDocumentRetirement {
+impl ErasedSnapshotRetirement for FlowHostSnapshotRetirement {
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
         self.retirement.close_page(maximum_items, maximum_bytes)
     }
@@ -641,20 +641,20 @@ impl ErasedSnapshotRetirement for FlowHostDocumentRetirement {
     }
 }
 
-impl Drop for FlowHostDocumentRetirement {
+impl Drop for FlowHostSnapshotRetirement {
     fn drop(&mut self) {
-        assert!(self.terminal_is_empty(), "FlowHostDocumentRetirement must reach terminal-empty before release");
+        assert!(self.terminal_is_empty(), "FlowHostSnapshotRetirement must reach terminal-empty before release");
     }
 }
 
 struct FlowSnapshotRetirement {
-    snapshot: Option<Arc<FlowHostDocument>>,
-    host_document: Option<FlowHostDocumentRetirement>,
+    snapshot: Option<Arc<FlowHostSnapshot>>,
+    host_snapshot: Option<FlowHostSnapshotRetirement>,
 }
 
-impl SnapshotRetirementFactory<FlowHostDocument> for FlowSnapshotRetirementFactory {
-    fn retire(&self, snapshot: Arc<FlowHostDocument>) -> Box<dyn ErasedSnapshotRetirement> {
-        Box::new(FlowSnapshotRetirement { snapshot: Some(snapshot), host_document: None })
+impl SnapshotRetirementFactory<FlowHostSnapshot> for FlowSnapshotRetirementFactory {
+    fn retire(&self, snapshot: Arc<FlowHostSnapshot>) -> Box<dyn ErasedSnapshotRetirement> {
+        Box::new(FlowSnapshotRetirement { snapshot: Some(snapshot), host_snapshot: None })
     }
 }
 
@@ -666,12 +666,12 @@ impl ErasedSnapshotRetirement for FlowSnapshotRetirement {
             return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
         if let Some(snapshot) = self.snapshot.take() {
-            if let Some(fixture) = Arc::into_inner(snapshot) {
-                self.host_document = Some(FlowHostDocumentRetirement::new(fixture));
+            if let Some(host_snapshot) = Arc::into_inner(snapshot) {
+                self.host_snapshot = Some(FlowHostSnapshotRetirement::new(host_snapshot));
             }
             return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
-        let Some(retirement) = self.host_document.as_mut() else {
+        let Some(retirement) = self.host_snapshot.as_mut() else {
             return Ok(SnapshotRetirementStep::Complete);
         };
         let step = retirement.close_step(maximum_items, maximum_bytes)?;
@@ -679,13 +679,13 @@ impl ErasedSnapshotRetirement for FlowSnapshotRetirement {
             if !retirement.terminal_is_empty() {
                 return Err("flow snapshot host document reported Complete before terminal-empty".into());
             }
-            self.host_document = None;
+            self.host_snapshot = None;
         }
         Ok(step)
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.snapshot.is_none() && self.host_document.is_none()
+        self.snapshot.is_none() && self.host_snapshot.is_none()
     }
 }
 
@@ -695,11 +695,11 @@ impl Drop for FlowSnapshotRetirement {
     }
 }
 
-struct FlowOwnedHostDocumentRetirementFactory;
+struct FlowOwnedHostSnapshotRetirementFactory;
 
-impl ArtifactOwnedValueRetirementFactory<FlowHostDocument> for FlowOwnedHostDocumentRetirementFactory {
-    fn retire_owned(&self, fixture: FlowHostDocument) -> Box<dyn ErasedSnapshotRetirement> {
-        Box::new(FlowHostDocumentRetirement::new(fixture))
+impl ArtifactOwnedValueRetirementFactory<FlowHostSnapshot> for FlowOwnedHostSnapshotRetirementFactory {
+    fn retire_owned(&self, host_snapshot: FlowHostSnapshot) -> Box<dyn ErasedSnapshotRetirement> {
+        Box::new(FlowHostSnapshotRetirement::new(host_snapshot))
     }
 }
 
@@ -734,16 +734,16 @@ impl ArtifactOwnedValueRetirementFactory<FlowMutation> for FlowMutationRetiremen
     }
 }
 
-impl MemberStoreOwner<FlowMutation> for FlowHostDocument {
+impl MemberStoreOwner<FlowMutation> for FlowHostSnapshot {
     type SnapshotOpen = crate::os_store::UnsupportedMemberSnapshotOpen<Self>;
 
     fn member_store_owners() -> DocumentStoreOwners<Self, FlowMutation> {
-        DocumentStoreOwners::new(Arc::new(FlowSnapshotRetirementFactory), Arc::new(FlowOwnedHostDocumentRetirementFactory), Arc::new(FlowMutationRetirementFactory), Box::new(ArtifactStoreCursorDisposer::<FlowHostDocument, FlowMutation>::new()))
+        DocumentStoreOwners::new(Arc::new(FlowSnapshotRetirementFactory), Arc::new(FlowOwnedHostSnapshotRetirementFactory), Arc::new(FlowMutationRetirementFactory), Box::new(ArtifactStoreCursorDisposer::<FlowHostSnapshot, FlowMutation>::new()))
     }
 }
 
-pub fn empty_flow_snapshot() -> FlowHostDocument {
-    FlowHostDocument::default()
+pub fn empty_flow_snapshot() -> FlowHostSnapshot {
+    FlowHostSnapshot::default()
 }
 
 /// 🧹️ How many disposer turns one cold flow-store teardown pays before it declares the ladder stuck.
@@ -753,10 +753,10 @@ const FLOW_STORE_COLD_CLOSE_STEPS: usize = 1_000_000;
 const FLOW_STORE_COLD_CLOSE_PAGE_BYTES: usize = 4_096;
 
 /// 🧊️ Explicit cold-only disposal of a detached flow store — the store-level twin of
-/// [`FlowHostDocument::retire_cold`].
+/// [`FlowHostSnapshot::retire_cold`].
 ///
 /// 🐛️ `ArtifactStore`'s `Drop` asserts a terminal-empty shallow shell, and only the owner-supplied
-/// disposer installed by [`FlowHostDocument::member_store_owners`] empties it, so a store built for the
+/// disposer installed by [`FlowHostSnapshot::member_store_owners`] empties it, so a store built for the
 /// length of an expression and then dropped aborts with
 /// `artifact store reached Drop without its exact terminal-empty shallow-shell witness`. Retained
 /// callers drive `close_owned_store_step` under their own grant; this drains the same ladder in one

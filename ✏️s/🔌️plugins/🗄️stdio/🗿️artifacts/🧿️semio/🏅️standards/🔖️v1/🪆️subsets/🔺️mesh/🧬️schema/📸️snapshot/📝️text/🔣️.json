@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/semio/v1/mesh/snapshot/text.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/mesh/snapshot/text.json",
   "title": "SemioMeshSnapshotText",
   "description": "s.stdio.semio.mesh DSL text representation: preamble line + whitespace-tolerant ASCII hex dump of SemioMeshSnapshot's own JSON bytes.",
   "type": "string",

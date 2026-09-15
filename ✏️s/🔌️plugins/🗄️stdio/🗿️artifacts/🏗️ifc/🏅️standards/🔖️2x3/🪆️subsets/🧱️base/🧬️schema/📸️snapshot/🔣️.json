@@ -1,11 +1,11 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/ifc/2x3/base/snapshot.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/ifc/2x3/base/snapshot.json",
   "title": "Ifc2x3Snapshot",
   "type": "object",
   "properties": {
     "schema": {
-      "$ref": "https://semio.tech/schema/s/stdio/ifc/2x3/base/artifact.json#/$defs/Part21Document",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/ifc/2x3/base/artifact.json#/$defs/Part21Document",
       "x-semio-state": "artifact"
     },
     "document": {
@@ -13,7 +13,7 @@
       "x-semio-state": "artifact"
     },
     "edmPreamble": {
-      "$ref": "https://semio.tech/schema/s/stdio/ifc/2x3/base/artifact.json#/$defs/Ifc2x3EdmPreamble",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/ifc/2x3/base/artifact.json#/$defs/Ifc2x3EdmPreamble",
       "x-semio-state": "artifact"
     }
   }

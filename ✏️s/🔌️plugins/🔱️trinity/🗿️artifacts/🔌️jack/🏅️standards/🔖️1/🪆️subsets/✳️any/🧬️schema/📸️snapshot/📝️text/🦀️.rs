@@ -14,7 +14,7 @@
 //! snapshot's own persisted shape.
 //!
 //! ⚠️ **The WIRE FORMAT still carries the real `nodes`/`edges` data** (JSON-blob-encoded), not just
-//! the opaque handle — matching `dag`'s `<semio_framework_artifact_flow_flow::FlowHostDocument as ArtifactDsl>::parse_dsl` precedent.
+//! the opaque handle — matching `dag`'s `<semio_framework_artifact_flow_flow::FlowHostSnapshot as ArtifactDsl>::parse_dsl` precedent.
 //! No `LinkResolver`/child-dispatch seam exists yet (see the artifact root's `🔖️WorkingScene`), so
 //! the working-scene cache is only populated in-process, by whatever call SET the `content` field. A
 //! codec that persisted only the bare handle would produce an UNRECOVERABLE snapshot the instant a

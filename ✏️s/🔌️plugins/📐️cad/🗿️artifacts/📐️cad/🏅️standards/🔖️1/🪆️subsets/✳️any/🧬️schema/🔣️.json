@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/cad/cad/artifact.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/cad/cad/artifact.json",
   "title": "CadArtifact",
   "type": "object",
   "additionalProperties": false,
@@ -250,7 +250,7 @@
     "CadModelChild": {
       "allOf": [
         {
-          "$ref": "https://semio.tech/schema/os/store/child.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child.json"
         },
         {
           "type": "object",
@@ -281,7 +281,7 @@
     "CadDrawingChild": {
       "allOf": [
         {
-          "$ref": "https://semio.tech/schema/os/store/child.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child.json"
         },
         {
           "type": "object",

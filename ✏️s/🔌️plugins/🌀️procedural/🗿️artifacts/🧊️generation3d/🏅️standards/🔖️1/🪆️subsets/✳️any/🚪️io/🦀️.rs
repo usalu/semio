@@ -27,7 +27,7 @@ pub fn export_stdio_kinds() -> &'static [&'static str] {
 pub mod mesh_bridge {
     use crate::Generation3dSnapshot;
     use semio_framework_artifact_flow_flow::neural::Dictionary;
-    use semio_framework_artifact_flow_flow::{CameraJson, FlowHostDocument, OrderedMap, OrderedSet, SynapseSpec, Widget, WidgetLayout};
+    use semio_framework_artifact_flow_flow::{CameraJson, FlowHostSnapshot, OrderedMap, OrderedSet, SynapseSpec, Widget, WidgetLayout};
     use semio_framework_plugin::MeshData;
     use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::SemioPoint3;
     use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMesh, SemioMeshSnapshot, SemioPrimitive, SemioTopology, STDIO_SEMIOMESH_DOCUMENT_SCHEMA};
@@ -114,8 +114,8 @@ pub mod mesh_bridge {
         layout.insert(IMPORT_SOURCE_WIDGET.to_string(), WidgetLayout { x: 0.0, y: 0.0 });
         layout.insert(IMPORT_GEOMETRY_WIDGET.to_string(), WidgetLayout { x: 260.0, y: 0.0 });
         layout.insert(IMPORT_PREVIEW_WIDGET.to_string(), WidgetLayout { x: 520.0, y: 0.0 });
-        let fixture = FlowHostDocument {
-            schema: "flow.host_document".into(),
+        let fixture = FlowHostSnapshot {
+            schema: "flow.host_snapshot".into(),
             camera: CameraJson { x: 0.0, y: 0.0, zoom: 1.0 },
             widgets: vec![
                 Widget::InputNote { id: IMPORT_SOURCE_WIDGET.into(), text: data_text },
@@ -128,16 +128,16 @@ pub mod mesh_bridge {
             ],
             layout,
         };
-        Generation3dSnapshot { fixture, ..Generation3dSnapshot::default() }
+        Generation3dSnapshot { host_snapshot: fixture, ..Generation3dSnapshot::default() }
     }
 
     /// 🔎️ The payload an import fixture planted, and the neuron kind that consumes it.
     pub fn imported_source(snapshot: &Generation3dSnapshot) -> Option<(&str, &str)> {
-        let text = snapshot.host_document.widgets.iter().find_map(|widget| match widget {
+        let text = snapshot.host_snapshot.widgets.iter().find_map(|widget| match widget {
             Widget::InputNote { id, text } if id == IMPORT_SOURCE_WIDGET => Some(text.as_str()),
             _ => None,
         })?;
-        let kind = snapshot.host_document.widgets.iter().find_map(|widget| match widget {
+        let kind = snapshot.host_snapshot.widgets.iter().find_map(|widget| match widget {
             Widget::Neuron { id, neuron_kind, .. } if id == IMPORT_GEOMETRY_WIDGET => Some(neuron_kind.as_str()),
             _ => None,
         })?;
@@ -264,7 +264,7 @@ pub mod document_io {
 
     /// 📤️ The MESH half of every geometry export, isolated exactly as each leaf's own
     /// `serialize_mesh_bytes` is: it needs no flow evaluator, so the format table, the filename and
-    /// the wire envelope are all provable natively against the committed unit-cube fixture.
+    /// the wire envelope are all provable natively against the committed unit-cube host_snapshot.
     pub fn export_mesh_bytes(mesh: &SemioMeshSnapshot, format: &str) -> Result<Vec<u8>, store::TextError> {
         match format {
             "stl" => export_leaves::stl::v_ascii::any::serialize_mesh_bytes(mesh),

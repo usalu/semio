@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/framework/ui/contract/bindings/copy/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/ui/contract/bindings/copy/schema.json",
   "title": "Ui Contract Bindings Copy Schema Module",
   "$defs": {
     "Copy": {
@@ -37,7 +37,7 @@
           "const": 2072
         },
         "scope": {
-          "const": "hostDocument"
+          "const": "hostSnapshot"
         },
         "names": {
           "const": [

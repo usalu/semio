@@ -37,7 +37,7 @@ pub fn node_graph_edit_result(snapshot: &FlowSnapshot, config: &FlowMainWindowCo
                     let parsed: Option<FlowSnapshot> = serde_json::from_str::<serde_json::Value>(snapshot_json).ok().and_then(|json| dsl::FromValue::from_value(dsl::DslValue::from(json)).ok());
                     if let Some(parsed) = parsed {
                         host.begin_change();
-                        host.set_host_document_preserving_history(parsed.to_host_document());
+                        host.set_host_snapshot_preserving_history(parsed.to_host_snapshot());
                         changed = true;
                     }
                 }

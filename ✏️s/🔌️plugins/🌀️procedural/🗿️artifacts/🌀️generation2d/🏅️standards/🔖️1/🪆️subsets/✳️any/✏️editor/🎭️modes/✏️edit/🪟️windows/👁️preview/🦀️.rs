@@ -41,7 +41,7 @@ pub fn definition() -> WindowKindDefinition {
 /// 👁️ Overlays evaluated draw-handle layers, plus (in `"wire"` show mode) a schematic node box per
 /// visible widget.
 pub fn render(document: &Generation2dSnapshot, app_config: &Generation2dConfig, window_config: &config::Generation2dEditPreviewWindowConfig, session: &FlowEvalSession) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    let fixture = &document.host_document;
+    let fixture = &document.host_snapshot;
     let eval_json = session.eval_json();
     let prefix = "generation2d-preview";
     let mut layers = Vec::new();

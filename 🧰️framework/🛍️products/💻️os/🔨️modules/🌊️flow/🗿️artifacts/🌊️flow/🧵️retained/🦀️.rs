@@ -1,7 +1,7 @@
 //! 🧵️ Shared typed Flow ownership frontiers for resumable copying and retirement.
 
 use crate::os_store::{ErasedSnapshotRetirement, SnapshotRetirementStep};
-use crate::{neural, FlowArtifact, FlowHostDocument, FlowGui, FlowLayoutEntry, FlowNodeGui, FlowPreviewGui, NodeChrome, OrderedMap, OrderedSet, SynapseSpec, Widget, WidgetLayout};
+use crate::{neural, FlowArtifact, FlowHostSnapshot, FlowGui, FlowLayoutEntry, FlowNodeGui, FlowPreviewGui, NodeChrome, OrderedMap, OrderedSet, SynapseSpec, Widget, WidgetLayout};
 use protocol::value::list::{PagedList, PagedListAllocationError, PagedListProgress};
 use protocol::value::ordered::{Grant, Retirement, RetirementStep};
 use std::mem::{size_of, ManuallyDrop};
@@ -9,7 +9,7 @@ use std::mem::{size_of, ManuallyDrop};
 //#region 📑️SelectedCopy
 #[path = "📑️copy/🦀️.rs"]
 pub mod copy;
-pub use copy::{FlowCopyAllocationBudget, FlowHostDocumentCopy, FlowSynapseCopy, FlowWidgetCopy};
+pub use copy::{FlowCopyAllocationBudget, FlowHostSnapshotCopy, FlowSynapseCopy, FlowWidgetCopy};
 //#endregion 📑️SelectedCopy
 
 //#region 🧹️TypedRetirement
@@ -23,7 +23,7 @@ pub enum FlowOwner {
     Dictionary(neural::Dictionary),
     Value(neural::Value),
     Neural(neural::ValueRetirement),
-    HostDocument(FlowHostDocument),
+    HostSnapshot(FlowHostSnapshot),
     Widget(Widget),
     Widgets(Vec<Widget>),
     Specs(Vec<SynapseSpec>),
@@ -107,7 +107,7 @@ fn owner_continuation_slots(owner: &FlowOwner) -> usize {
         FlowOwner::Neurons(values) if !values.is_empty() => 4,
         FlowOwner::Previews(values) if !values.is_empty() => 7,
         FlowOwner::Layout(values) if !values.is_empty() => 1,
-        FlowOwner::HostDocument(_) => 3,
+        FlowOwner::HostSnapshot(_) => 3,
         FlowOwner::Widget(Widget::Neuron { .. }) => 4,
         FlowOwner::Widget(Widget::InputSlider { .. })
         | FlowOwner::Widget(Widget::InputNote { .. })
@@ -321,7 +321,7 @@ impl FlowRetirement {
             FlowOwner::Dictionary(value) => self.dictionary(value),
             FlowOwner::Value(value) => self.value(value),
             FlowOwner::Neural(value) => self.neural(value, maximum_bytes),
-            FlowOwner::HostDocument(value) => self.host_document(value),
+            FlowOwner::HostSnapshot(value) => self.host_snapshot(value),
             FlowOwner::Widget(value) => {
                 self.widget(value);
                 Some(0)
@@ -395,7 +395,7 @@ impl FlowRetirement {
         (!blocked).then_some(released_bytes)
     }
 
-    fn host_document(&mut self, value: FlowHostDocument) -> Option<usize> {
+    fn host_snapshot(&mut self, value: FlowHostSnapshot) -> Option<usize> {
         self.install([
             Some(FlowOwner::Bytes(value.schema.into_bytes())),
             Some(FlowOwner::Widgets(value.widgets)),
@@ -544,10 +544,10 @@ impl FlowRetirement {
     }
 }
 
-impl FlowHostDocument {
+impl FlowHostSnapshot {
     /// 🧊️ Explicit cold-only disposal of a detached fixture.
     pub fn retire_cold(self) {
-        FlowRetirement::from_owner(FlowOwner::HostDocument(self)).retire_cold();
+        FlowRetirement::from_owner(FlowOwner::HostSnapshot(self)).retire_cold();
     }
 
     /// 🧊️ Installs a whole widget roster AND retires the one it displaces. A bare
@@ -579,7 +579,7 @@ impl FlowGui {
 
 impl FlowArtifact {
     /// 🧊️ Explicit cold-only disposal of a detached artifact projection. `FlowHost::document()`
-    /// hands back an OWNED projection built by `FlowHostDocument::to_artifact`, and both of its halves
+    /// hands back an OWNED projection built by `FlowHostSnapshot::to_artifact`, and both of its halves
     /// refuse a bare drop — the `Tree`'s neurons own `Dictionary` params, the `FlowUi`'s `nodes` are
     /// an `OrderedMap` — so a caller that only reads it still has to close it
     /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).

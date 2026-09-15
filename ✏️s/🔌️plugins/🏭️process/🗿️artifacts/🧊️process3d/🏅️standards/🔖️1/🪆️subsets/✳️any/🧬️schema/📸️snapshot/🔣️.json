@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/process/process3d/snapshot.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/process/process3d/snapshot.json",
   "title": "Process3dSnapshot",
   "type": "object",
   "additionalProperties": false,
@@ -17,7 +17,7 @@
   ],
   "properties": {
     "workshop": {
-      "$ref": "https://semio.tech/schema/s/process/process3d/artifact.json#/$defs/Process3dWorkshop",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/process/process3d/artifact.json#/$defs/Process3dWorkshop",
       "x-semio-state": "artifact"
     },
     "stockId": {
@@ -29,32 +29,32 @@
       "x-semio-state": "artifact"
     },
     "stockPose": {
-      "$ref": "https://semio.tech/schema/s/process/process3d/artifact.json#/$defs/Process3dPose",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/process/process3d/artifact.json#/$defs/Process3dPose",
       "x-semio-state": "artifact"
     },
     "stockPayload": {
-      "$ref": "https://semio.tech/schema/s/process/process3d/artifact.json#/$defs/Process3dStock",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/process/process3d/artifact.json#/$defs/Process3dStock",
       "x-semio-state": "artifact"
     },
     "stockSolid": {
-      "$ref": "https://semio.tech/schema/s/process/process3d/artifact.json#/$defs/ArtifactChildHandle",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/process/process3d/artifact.json#/$defs/ArtifactChildHandle",
       "x-semio-state": "artifact"
     },
     "steps": {
-      "$ref": "https://semio.tech/schema/s/process/process3d/artifact.json#/$defs/ArtifactChildHandle",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/process/process3d/artifact.json#/$defs/ArtifactChildHandle",
       "x-semio-state": "artifact"
     },
     "stepPayloads": {
       "type": "array",
       "items": {
-        "$ref": "https://semio.tech/schema/s/process/process3d/artifact.json#/$defs/Process3dStep"
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/process/process3d/artifact.json#/$defs/Process3dStep"
       },
       "x-semio-state": "artifact"
     },
     "toolSolids": {
       "type": "array",
       "items": {
-        "$ref": "https://semio.tech/schema/s/process/process3d/artifact.json#/$defs/ArtifactChildHandle"
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/process/process3d/artifact.json#/$defs/ArtifactChildHandle"
       },
       "x-semio-state": "artifact"
     },

@@ -509,7 +509,7 @@ def write_facet(
 ) -> None:
     schema = base / "🧬️schema"
     package = f"semio.app.procedural.{slug}"
-    id_ = f"https://semio.tech/schema/app/procedural/{slug}/{facet}.json"
+    id_ = f"https://json.schemas.assets.semio-tech.com/app/procedural/{slug}/{facet}.json"
     write(schema / "🔣️component.json", emit_json(title, fields, state, id_, defs))
     write(schema / "🟦️component.ts", emit_ts(title, fields, state, extras_ts))
     write(schema / "🔗️component.graphql", emit_gql(title, fields, state_enum, extras_gql))

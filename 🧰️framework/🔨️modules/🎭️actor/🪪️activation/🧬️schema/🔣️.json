@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/framework/actor/activation/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/actor/activation/schema.json",
   "title": "Actor Activation Schema Module",
   "$defs": {
     "ActivationFixture": {

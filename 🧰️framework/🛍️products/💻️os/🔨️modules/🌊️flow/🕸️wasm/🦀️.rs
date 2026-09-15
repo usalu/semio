@@ -8,7 +8,7 @@ use crate::drawing::*;
 use crate::host::*;
 use crate::infinite::board::ports::directed_dag as dag;
 use crate::infinite::canvas;
-use crate::vcs::{FlowRetainedVcs, FlowVcsAuthority, FlowVcsFault, FlowVcsGrant, FlowVcsHandle, FlowVcsPage, FlowVcsPoll};
+use crate::vcs::{FlowRetainedVcs, FlowVcsAuthority, FlowVcsClosePhase, FlowVcsFault, FlowVcsGrant, FlowVcsHandle, FlowVcsPage, FlowVcsPoll};
 use protocol::{FlowBridge, FlowDomain, FlowFailure, FlowFeature, FlowFeatureAdmission, FlowFeatureStep, FlowPayloadReader, FlowPayloadWriter};
 use semio_framework::abi::{decode_abi_message, encode_abi_message, AbiErrorCode, AbiMessage, AbiPort, AbiPortPoll, AbiWorkBudget};
 use serde_json::{json, Value};
@@ -276,11 +276,11 @@ struct FlowPreviewOffSource<'a>(&'a FlowHost);
 
 impl FlowStringArraySource for FlowPreviewOffSource<'_> {
     fn len(&self) -> usize {
-        self.0.fixture.widgets.len()
+        self.0.host_snapshot.widgets.len()
     }
 
     fn item(&self, index: usize) -> Option<&str> {
-        match self.0.fixture.widgets.get(index) {
+        match self.0.host_snapshot.widgets.get(index) {
             Some(Widget::Neuron { id, preview: false, .. }) => Some(id),
             _ => None,
         }
@@ -706,7 +706,7 @@ impl FlowFeature for FlowProgramFeature {
 
 impl FlowDomain for FlowDomainAdapter {
     fn bind_session(&mut self, session: semio_framework::abi::AbiHandle) {
-        self.vcs = Some(FlowRetainedVcs::new(crate::artifact::FlowHostDocument::default(), session.generation(), 0, 0));
+        self.vcs = Some(FlowRetainedVcs::new(crate::artifact::FlowHostSnapshot::default(), session.generation(), 0, 0));
     }
 
     fn start_feature(domain: Rc<RefCell<Self>>, admission: FlowFeatureAdmission, operation: u16, payload: Vec<u8>) -> Result<Box<dyn FlowFeature>, FlowFailure> {
@@ -728,31 +728,119 @@ impl FlowDomain for FlowDomainAdapter {
         self.surface = None;
     }
 
+    /// 🪜️ Retires one retained ITEM per close turn, whatever that item weighs.
+    ///
+    /// The retirement ladder had the defect `FlowProgramFeature::step` had one layer down: a turn
+    /// granted 4 096 bytes of credit advanced the ladder by a single rung, so the turn count was
+    /// linear in the retained payload — a 24-row document cost 2 626 turns and a 64-row (~32 KB) one
+    /// 5 718, against the 4 096 its own contract declares
+    /// (`🧫️fixtures/🧹️session-close/🔣️.json` `close.maximumTurns`). Every document over ~20 KB was a
+    /// live contract violation, and the React host's owner ladder answered
+    /// `plugin-ui.owner-close-budget-exhausted` on a converged instance for the same reason
+    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️flow-surface-followup-2026-09-15.md` §2.4).
+    ///
+    /// A byte credit is the wrong currency for a close: NOTHING crosses the ABI while a session
+    /// retires, so a turn's cost is the round trip the host pays to ask for it, and the quantity
+    /// worth spending a round trip on is a retained ITEM. The turn anchors on the first non-payload
+    /// phase its ladder reports ([`FlowVcsClosePhase`], [`FlowHostClosePhase`]) and runs until the
+    /// ladder reaches a DIFFERENT one, so the frontier drains those rungs feed are spent inside the
+    /// turn that created them. The turn count is then the number of retained items — surfaces,
+    /// history entries, document versions, host owners — and reads the payload nowhere.
     fn close_step(&mut self, budget: AbiWorkBudget) -> Result<bool, FlowFailure> {
         protocol::validate_budget(budget).map_err(abi_code_failure)?;
-        if let Some(vcs) = self.vcs.as_mut() {
-            match vcs.close_retired_step(flow_vcs_grant(budget)) {
-                Ok(true) if vcs.terminal_is_empty() => self.vcs = None,
-                Ok(_) | Err(FlowVcsFault::ClosePending) => {},
-                Err(fault) => return Err(flow_vcs_failure(fault)),
+        let mut anchor: Option<FlowCloseLadderPhase> = None;
+        let mut rungs = 0usize;
+        loop {
+            let phase = self.close_phase();
+            if !phase.is_backing() {
+                match anchor {
+                    None => anchor = Some(phase),
+                    Some(held) if held == phase => {}
+                    Some(_) => return Ok(false),
+                }
             }
-            return Ok(false);
-        }
-        match &mut self.host {
-            FlowDomainHost::Open(_) => return Err(abi_failure(AbiErrorCode::Busy)),
-            FlowDomainHost::Closing(host) => {
-                let complete = host.close_page(1, budget.byte_credit).map_err(|fault| FlowFailure::new(match fault { FlowHostRetirementFault::NoCredit => AbiErrorCode::NoCredit, FlowHostRetirementFault::Failed => AbiErrorCode::Busy }, format!("Flow host retirement: {fault:?}")))?;
-                if !complete { return Ok(false); }
-                if !host.terminal_nonopaque_is_empty() { return Err(abi_failure(AbiErrorCode::Busy)); }
-                self.host = FlowDomainHost::Closed;
+            rungs += 1;
+            if rungs > FLOW_CLOSE_RUNGS_PER_TURN {
+                return Ok(false);
             }
-            FlowDomainHost::Closed => {},
+            match self.close_rung(budget)? {
+                FlowCloseRung::Advanced => {}
+                FlowCloseRung::Yielded => return Ok(false),
+                FlowCloseRung::Complete => return Ok(self.terminal_is_empty()),
+            }
         }
-        Ok(self.terminal_is_empty())
     }
 
     fn terminal_is_empty(&self) -> bool {
         self.vcs.is_none() && self.surface.is_none() && matches!(self.host, FlowDomainHost::Closed)
+    }
+}
+
+/// 🪜️ The retained close ladder's current rung, across both stages of a Flow domain.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum FlowCloseLadderPhase {
+    Vcs(FlowVcsClosePhase),
+    Host(FlowHostClosePhase),
+    Terminal,
+}
+
+impl FlowCloseLadderPhase {
+    fn is_backing(self) -> bool {
+        match self {
+            Self::Vcs(phase) => phase.is_backing(),
+            Self::Host(phase) => phase.is_backing(),
+            Self::Terminal => false,
+        }
+    }
+}
+
+/// 🪜️ What one rung of the retained close ladder did.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum FlowCloseRung {
+    Advanced,
+    Yielded,
+    Complete,
+}
+
+/// 🛡️ A per-turn rung ceiling that exists ONLY so a ladder that stops progressing yields the event
+/// loop instead of hanging the worker. It is not the close's bound — the phase count is — and a
+/// turn that hits it is re-entered by the driver with a fresh anchor, never failed
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+const FLOW_CLOSE_RUNGS_PER_TURN: usize = 1 << 20;
+
+impl FlowDomainAdapter {
+    fn close_phase(&self) -> FlowCloseLadderPhase {
+        if let Some(vcs) = self.vcs.as_ref() {
+            return FlowCloseLadderPhase::Vcs(vcs.close_phase());
+        }
+        match &self.host {
+            FlowDomainHost::Closing(host) => FlowCloseLadderPhase::Host(host.close_phase()),
+            _ => FlowCloseLadderPhase::Terminal,
+        }
+    }
+
+    fn close_rung(&mut self, budget: AbiWorkBudget) -> Result<FlowCloseRung, FlowFailure> {
+        if let Some(vcs) = self.vcs.as_mut() {
+            match vcs.close_retired_step(flow_vcs_grant(budget)) {
+                Ok(true) if vcs.terminal_is_empty() => self.vcs = None,
+                Ok(true) => return Ok(FlowCloseRung::Yielded),
+                Ok(false) => {}
+                Err(FlowVcsFault::ClosePending) => return Ok(FlowCloseRung::Yielded),
+                Err(fault) => return Err(flow_vcs_failure(fault)),
+            }
+            return Ok(FlowCloseRung::Advanced);
+        }
+        match &mut self.host {
+            FlowDomainHost::Open(_) => Err(abi_failure(AbiErrorCode::Busy)),
+            FlowDomainHost::Closing(host) => {
+                let complete = host.close_page(1, budget.byte_credit).map_err(|fault| FlowFailure::new(match fault { FlowHostRetirementFault::NoCredit => AbiErrorCode::NoCredit, FlowHostRetirementFault::Failed => AbiErrorCode::Busy }, format!("Flow host retirement: {fault:?}")))?;
+                if !complete { return Ok(FlowCloseRung::Advanced); }
+                if !host.terminal_nonopaque_is_empty() { return Err(abi_failure(AbiErrorCode::Busy)); }
+                self.host = FlowDomainHost::Closed;
+                Ok(FlowCloseRung::Complete)
+            }
+            FlowDomainHost::Closed => Ok(FlowCloseRung::Complete),
+        }
     }
 }
 
@@ -1109,7 +1197,7 @@ impl FlowActionState for FlowAction2505 {
             FlowProgramPhase::Domain => {
                 let result: Result<Vec<u8>, FlowFailure> = flow_result! {
                     {
-                        domain.host.set_host_catalogue_json(text(args, "json")?);
+                        domain.host.set_host_catalogue_payload(text(args, "json")?).map_err(domain_error)?;
                         ok()
                     }
                 };
@@ -1153,7 +1241,7 @@ impl FlowActionState for FlowAction2506 {
             FlowProgramPhase::Domain => {
                 let result: Result<Vec<u8>, FlowFailure> = flow_result! {
                     {
-                        domain.host.set_neuron_kind_infos_json(text(args, "json")?);
+                        domain.host.set_neuron_kind_infos_payload(text(args, "json")?).map_err(domain_error)?;
                         ok()
                     }
                 };
@@ -3688,7 +3776,7 @@ impl FlowActionState for FlowAction2566 {
             FlowProgramPhase::Checkpoint => self.program.checkpoint_step(2_566),
             FlowProgramPhase::Domain if self.program.domain_cursor == 0 => self.program.domain_ready_step(),
             FlowProgramPhase::Domain => {
-                let camera = &domain.host.host_document.camera;
+                let camera = &domain.host.host_snapshot.camera;
                 let result: Result<Vec<u8>, FlowFailure> = Ok(format!("{{\"x\":{},\"y\":{},\"zoom\":{}}}", camera.x, camera.y, camera.zoom).into_bytes());
                 self.program.finish_domain(result)
             }
@@ -5331,7 +5419,7 @@ impl FlowActionState for FlowAction2609 {
             FlowProgramPhase::Checkpoint => self.program.checkpoint_step(2_609),
             FlowProgramPhase::Domain if self.program.domain_cursor == 0 => self.program.domain_ready_step(),
             FlowProgramPhase::Domain => {
-                let result: Result<Vec<u8>, FlowFailure> = flow_result! { domain.host.host_document_json().map(String::into_bytes).map_err(domain_error) };
+                let result: Result<Vec<u8>, FlowFailure> = flow_result! { domain.host.host_snapshot_json().map(String::into_bytes).map_err(domain_error) };
                 self.program.finish_domain(result)
             }
             FlowProgramPhase::Encode => self.program.encode_step(),
@@ -5372,8 +5460,8 @@ impl FlowActionState for FlowAction2610 {
             FlowProgramPhase::Domain => {
                 let result: Result<Vec<u8>, FlowFailure> = flow_result! {
                     {
-                        let fixture = FlowHost::parse_host_document_json(text(args, "json")?).map_err(domain_error)?;
-                        domain.host.resync_host_document_from_scene(fixture);
+                        let fixture = FlowHost::parse_host_snapshot_json(text(args, "json")?).map_err(domain_error)?;
+                        domain.host.resync_host_snapshot_from_scene(fixture);
                         ok()
                     }
                 };
@@ -5574,7 +5662,7 @@ impl FlowDomainAdapter {
         self.host.paint_scene(&mut scene, self.width, self.height, self.dpr);
         let clear = self.host.dag.canvas_theme.raster_clear;
         let presented = surface_canvas::present_surface_scene(surface.id.get(), &scene, clear, self.dpr);
-        let fixture = self.host.host_document_json().map_err(domain_error)?;
+        let fixture = self.host.host_snapshot_json().map_err(domain_error)?;
         let labels = self.host.label_overlay_paint_state_json().map_err(domain_error)?;
         let rgba = clear.to_rgba8();
         // 🧱️ One retained buffer, cleared and refilled — a guest that allocates a fresh multi-kilobyte

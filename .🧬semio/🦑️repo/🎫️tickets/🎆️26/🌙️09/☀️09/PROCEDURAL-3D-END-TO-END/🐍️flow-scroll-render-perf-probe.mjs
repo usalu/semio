@@ -128,11 +128,12 @@ const graphState = () =>
       return { surfaceId: element.getAttribute("data-surface-id"), phase: status?.phase ?? null, ratio: status?.progress?.ratio ?? null, fault: status?.fault?.code ?? null };
     });
     const registry = window.__semioFlowGraphProbe ?? {};
-    const fixture = Object.values(registry)[0]?.fixtureJson?.() ?? null;
+    const fixture = Object.values(registry)[0]?.hostSnapshotJson?.() ?? null;
     let widgets = 0;
     try { widgets = (JSON.parse(fixture ?? "{}").widgets ?? []).length; } catch { widgets = 0; }
     const combo = document.querySelector('[role="combobox"]');
-    return { hosts, widgets, example: combo?.innerText?.replace(/\s+/g, " ").trim() ?? null };
+    const painted = performance.getEntriesByType("measure").some((entry) => entry.name === "semio.hop.surface.paint");
+    return { hosts, widgets, painted, example: combo?.innerText?.replace(/\s+/g, " ").trim() ?? null };
   });
 //#endregion 📏️Reads
 
@@ -294,6 +295,11 @@ const rows = [];
 const settledHost = (host) => host.phase === "idle" && host.ratio === 1 && !host.fault;
 
 for (const example of examples) {
+  // 🪞 One console file per DOCUMENT. Accumulating across the examples made one page look like two
+  // attaches of the same surface — `node-graph surface ready` twice for `window:procedural-main` —
+  // which was read as a re-attach defect and handed on as one
+  // (`📓️flow-scroll-render-perf-2026-09-15.md` §9). Two navigations are two documents.
+  lines.length = 0;
   await page.goto(`${url}&example=${example}`, { waitUntil: "domcontentloaded" });
   let state = null;
   let rect = null;
@@ -302,7 +308,11 @@ for (const example of examples) {
     state = await graphState();
     rect = await flowRect();
     const previews = state.hosts.filter((host) => host.surfaceId && host.surfaceId.endsWith("-preview"));
-    if (rect && state.widgets >= 3 && previews.length > 0 && previews.every(settledHost)) break;
+    // 🖼️ Readiness is the board having PAINTED and the previews having settled. Widget count is a
+    // diagnostic, not a gate: it is read out of the surface's published host snapshot, which a peer's
+    // rename can move out from under this probe — and a boot gate that waits on a field nobody
+    // publishes any more burns its whole budget before measuring anything.
+    if (rect && state.painted && previews.length > 0 && previews.every(settledHost)) break;
   }
   if (!rect) {
     lines.push(`${Date.now() - t0} probe found no flow canvas for ${example}`);
@@ -351,7 +361,7 @@ const green = verdicts.every((verdict) => verdict.medianOk && verdict.p95Ok && v
 
 writeFileSync(join(outDir, "scroll.json"), JSON.stringify(rows, null, 2));
 writeFileSync(join(outDir, "scroll.md"), `${table}\n\n${JSON.stringify(verdicts, null, 2)}\n`);
-writeFileSync(join(outDir, "console.txt"), lines.join("\n"));
+writeFileSync(join(outDir, `console-${examples.at(-1)}.txt`), lines.join("\n"));
 console.log(`\n${table}\n`);
 console.log(`[DEBUG] flow-scroll gate ${green ? "GREEN" : "RED"} (median ≤ ${PAINT_BUDGET_MEDIAN_MS} ms, p95 ≤ ${PAINT_BUDGET_P95_MS} ms, 0 guest hops during, 1 viewport publication at settle)`);
 console.log(`[DEBUG] flow-scroll wrote ${join(outDir, "scroll.json")}`);

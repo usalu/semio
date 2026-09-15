@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/png/1.2/any/diff.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/png/1.2/any/diff.json",
   "title": "PngDiff",
   "type": "object",
   "additionalProperties": false,
@@ -15,7 +15,7 @@
       "type": "integer"
     },
     "colorType": {
-      "$ref": "https://semio.tech/schema/s/stdio/png/1.2/any/snapshot.json#/$defs/PngColorType"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/png/1.2/any/snapshot.json#/$defs/PngColorType"
     },
     "interlace": {
       "type": "boolean"
@@ -33,7 +33,7 @@
     "trns": {
       "anyOf": [
         {
-          "$ref": "https://semio.tech/schema/s/stdio/png/1.2/any/snapshot.json#/$defs/PngTransparency"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/png/1.2/any/snapshot.json#/$defs/PngTransparency"
         },
         {
           "type": "null"
@@ -53,7 +53,7 @@
     "chrm": {
       "anyOf": [
         {
-          "$ref": "https://semio.tech/schema/s/stdio/png/1.2/any/snapshot.json#/$defs/PngChromaticities"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/png/1.2/any/snapshot.json#/$defs/PngChromaticities"
         },
         {
           "type": "null"
@@ -63,7 +63,7 @@
     "srgb": {
       "anyOf": [
         {
-          "$ref": "https://semio.tech/schema/s/stdio/png/1.2/any/snapshot.json#/$defs/PngSrgbIntent"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/png/1.2/any/snapshot.json#/$defs/PngSrgbIntent"
         },
         {
           "type": "null"
@@ -73,7 +73,7 @@
     "phys": {
       "anyOf": [
         {
-          "$ref": "https://semio.tech/schema/s/stdio/png/1.2/any/snapshot.json#/$defs/PngPhysicalDims"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/png/1.2/any/snapshot.json#/$defs/PngPhysicalDims"
         },
         {
           "type": "null"
@@ -83,7 +83,7 @@
     "time": {
       "anyOf": [
         {
-          "$ref": "https://semio.tech/schema/s/stdio/png/1.2/any/snapshot.json#/$defs/PngTimestamp"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/png/1.2/any/snapshot.json#/$defs/PngTimestamp"
         },
         {
           "type": "null"
@@ -93,7 +93,7 @@
     "bkgd": {
       "anyOf": [
         {
-          "$ref": "https://semio.tech/schema/s/stdio/png/1.2/any/snapshot.json#/$defs/PngBackground"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/png/1.2/any/snapshot.json#/$defs/PngBackground"
         },
         {
           "type": "null"
@@ -132,7 +132,7 @@
           "minimum": 0
         },
         "rgb": {
-          "$ref": "https://semio.tech/schema/s/stdio/png/1.2/any/snapshot.json#/$defs/PngRgb"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/png/1.2/any/snapshot.json#/$defs/PngRgb"
         }
       }
     },
@@ -149,7 +149,7 @@
           "minimum": 0
         },
         "rgb": {
-          "$ref": "https://semio.tech/schema/s/stdio/png/1.2/any/snapshot.json#/$defs/PngRgb"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/png/1.2/any/snapshot.json#/$defs/PngRgb"
         }
       }
     },
@@ -192,7 +192,7 @@
           "type": "boolean"
         },
         "kind": {
-          "$ref": "https://semio.tech/schema/s/stdio/png/1.2/any/snapshot.json#/$defs/PngTextKind"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/png/1.2/any/snapshot.json#/$defs/PngTextKind"
         },
         "languageTag": {
           "type": "string"
@@ -232,7 +232,7 @@
           "minimum": 0
         },
         "chunk": {
-          "$ref": "https://semio.tech/schema/s/stdio/png/1.2/any/snapshot.json#/$defs/PngTextChunk"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/png/1.2/any/snapshot.json#/$defs/PngTextChunk"
         }
       }
     },
@@ -274,7 +274,7 @@
           "minimum": 0
         },
         "chunk": {
-          "$ref": "https://semio.tech/schema/s/stdio/png/1.2/any/snapshot.json#/$defs/PngChunk"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/png/1.2/any/snapshot.json#/$defs/PngChunk"
         }
       }
     },
@@ -291,7 +291,7 @@
           "minimum": 0
         },
         "chunk": {
-          "$ref": "https://semio.tech/schema/s/stdio/png/1.2/any/snapshot.json#/$defs/PngChunk"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/png/1.2/any/snapshot.json#/$defs/PngChunk"
         }
       }
     },
@@ -333,7 +333,7 @@
           "minimum": 0
         },
         "marker": {
-          "$ref": "https://semio.tech/schema/s/stdio/png/1.2/any/snapshot.json#/$defs/PngChunkMarker"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/png/1.2/any/snapshot.json#/$defs/PngChunkMarker"
         }
       }
     },
@@ -350,7 +350,7 @@
           "minimum": 0
         },
         "marker": {
-          "$ref": "https://semio.tech/schema/s/stdio/png/1.2/any/snapshot.json#/$defs/PngChunkMarker"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/png/1.2/any/snapshot.json#/$defs/PngChunkMarker"
         }
       }
     },

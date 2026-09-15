@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/gltf/2.0/mesh/mutations.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/mesh/mutations.json",
   "title": "glTF Mesh Mutation",
   "description": "View over the any subset's mutation leaves (adjacently tagged); every payload is the owning leaf's own schema, referenced, never restated.",
   "oneOf": [
@@ -16,7 +16,7 @@
           "const": "bindMorphTargetAttribute"
         },
         "payload": {
-          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/bind-morph-target-attribute/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/bind-morph-target-attribute/schema.json"
         }
       }
     },
@@ -32,7 +32,7 @@
           "const": "bindPrimitiveAttribute"
         },
         "payload": {
-          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/bind-primitive-attribute/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/bind-primitive-attribute/schema.json"
         }
       }
     },
@@ -48,7 +48,7 @@
           "const": "bindPrimitiveIndices"
         },
         "payload": {
-          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/bind-primitive-indices/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/bind-primitive-indices/schema.json"
         }
       }
     },
@@ -64,7 +64,7 @@
           "const": "bindPrimitiveMaterial"
         },
         "payload": {
-          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/bind-primitive-material/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/bind-primitive-material/schema.json"
         }
       }
     },
@@ -80,7 +80,7 @@
           "const": "changeMeshExtensionData"
         },
         "payload": {
-          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/change-mesh-extension-data/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/change-mesh-extension-data/schema.json"
         }
       }
     },
@@ -96,7 +96,7 @@
           "const": "changeMeshExtraData"
         },
         "payload": {
-          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/change-mesh-extra-data/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/change-mesh-extra-data/schema.json"
         }
       }
     },
@@ -112,7 +112,7 @@
           "const": "changeMeshMorphWeights"
         },
         "payload": {
-          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/change-mesh-morph-weights/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/change-mesh-morph-weights/schema.json"
         }
       }
     },
@@ -128,7 +128,7 @@
           "const": "changeMeshName"
         },
         "payload": {
-          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/change-mesh-name/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/change-mesh-name/schema.json"
         }
       }
     },
@@ -144,7 +144,7 @@
           "const": "changePrimitiveExtensionData"
         },
         "payload": {
-          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/change-primitive-extension-data/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/change-primitive-extension-data/schema.json"
         }
       }
     },
@@ -160,7 +160,7 @@
           "const": "changePrimitiveExtraData"
         },
         "payload": {
-          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/change-primitive-extra-data/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/change-primitive-extra-data/schema.json"
         }
       }
     },
@@ -176,7 +176,7 @@
           "const": "changePrimitiveTopologyMode"
         },
         "payload": {
-          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/change-primitive-topology-mode/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/change-primitive-topology-mode/schema.json"
         }
       }
     },
@@ -192,7 +192,7 @@
           "const": "createAccessor"
         },
         "payload": {
-          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/create-accessor/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/create-accessor/schema.json"
         }
       }
     },
@@ -208,7 +208,7 @@
           "const": "createMesh"
         },
         "payload": {
-          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/create-mesh/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/create-mesh/schema.json"
         }
       }
     },
@@ -224,7 +224,7 @@
           "const": "createMorphTarget"
         },
         "payload": {
-          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/create-morph-target/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/create-morph-target/schema.json"
         }
       }
     },
@@ -240,7 +240,7 @@
           "const": "createPrimitive"
         },
         "payload": {
-          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/create-primitive/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/create-primitive/schema.json"
         }
       }
     },
@@ -256,7 +256,7 @@
           "const": "deleteAccessor"
         },
         "payload": {
-          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/delete-accessor/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/delete-accessor/schema.json"
         }
       }
     },
@@ -272,7 +272,7 @@
           "const": "deleteMesh"
         },
         "payload": {
-          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/delete-mesh/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/delete-mesh/schema.json"
         }
       }
     },
@@ -288,7 +288,7 @@
           "const": "deleteMorphTarget"
         },
         "payload": {
-          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/delete-morph-target/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/delete-morph-target/schema.json"
         }
       }
     },
@@ -304,7 +304,7 @@
           "const": "deletePrimitive"
         },
         "payload": {
-          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/delete-primitive/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/delete-primitive/schema.json"
         }
       }
     },
@@ -320,7 +320,7 @@
           "const": "moveAccessor"
         },
         "payload": {
-          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/move-accessor/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/move-accessor/schema.json"
         }
       }
     },
@@ -336,7 +336,7 @@
           "const": "moveMesh"
         },
         "payload": {
-          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/move-mesh/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/move-mesh/schema.json"
         }
       }
     },
@@ -352,7 +352,7 @@
           "const": "moveMorphTarget"
         },
         "payload": {
-          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/move-morph-target/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/move-morph-target/schema.json"
         }
       }
     },
@@ -368,7 +368,7 @@
           "const": "moveMorphTargetAttribute"
         },
         "payload": {
-          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/move-morph-target-attribute/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/move-morph-target-attribute/schema.json"
         }
       }
     },
@@ -384,7 +384,7 @@
           "const": "movePrimitive"
         },
         "payload": {
-          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/move-primitive/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/move-primitive/schema.json"
         }
       }
     },
@@ -400,7 +400,7 @@
           "const": "movePrimitiveAttribute"
         },
         "payload": {
-          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/move-primitive-attribute/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/move-primitive-attribute/schema.json"
         }
       }
     },
@@ -416,7 +416,7 @@
           "const": "reorderAccessors"
         },
         "payload": {
-          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/reorder-accessors/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/reorder-accessors/schema.json"
         }
       }
     },
@@ -432,7 +432,7 @@
           "const": "reorderMeshs"
         },
         "payload": {
-          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/reorder-meshs/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/reorder-meshs/schema.json"
         }
       }
     },
@@ -448,7 +448,7 @@
           "const": "reorderMorphTargetAttributes"
         },
         "payload": {
-          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/reorder-morph-target-attributes/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/reorder-morph-target-attributes/schema.json"
         }
       }
     },
@@ -464,7 +464,7 @@
           "const": "reorderMorphTargets"
         },
         "payload": {
-          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/reorder-morph-targets/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/reorder-morph-targets/schema.json"
         }
       }
     },
@@ -480,7 +480,7 @@
           "const": "reorderPrimitiveAttributes"
         },
         "payload": {
-          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/reorder-primitive-attributes/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/reorder-primitive-attributes/schema.json"
         }
       }
     },
@@ -496,7 +496,7 @@
           "const": "reorderPrimitives"
         },
         "payload": {
-          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/reorder-primitives/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/reorder-primitives/schema.json"
         }
       }
     },
@@ -512,7 +512,7 @@
           "const": "unbindMorphTargetAttribute"
         },
         "payload": {
-          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/unbind-morph-target-attribute/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/unbind-morph-target-attribute/schema.json"
         }
       }
     },
@@ -528,7 +528,7 @@
           "const": "unbindPrimitiveAttribute"
         },
         "payload": {
-          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/unbind-primitive-attribute/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/unbind-primitive-attribute/schema.json"
         }
       }
     },
@@ -544,7 +544,7 @@
           "const": "unbindPrimitiveIndices"
         },
         "payload": {
-          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/unbind-primitive-indices/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/unbind-primitive-indices/schema.json"
         }
       }
     },
@@ -560,7 +560,7 @@
           "const": "unbindPrimitiveMaterial"
         },
         "payload": {
-          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/unbind-primitive-material/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/unbind-primitive-material/schema.json"
         }
       }
     }

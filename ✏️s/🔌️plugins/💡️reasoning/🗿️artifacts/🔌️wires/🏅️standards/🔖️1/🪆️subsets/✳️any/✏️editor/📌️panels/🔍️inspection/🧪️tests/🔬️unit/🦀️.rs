@@ -48,10 +48,10 @@ async fn topic_lookup_stays_local_to_the_wires_extension() {
 async fn metabolism_fixture_hydrates_extension() {
     // 📜️ The `.wires` fixture is handcrafted in `crate::dsl`'s DSL — parse it,
     // then hydrate this crate's JSON-facing extension from its `wires_fixture` value, the same
-    // shape `from_host_document_json` has always expected.
+    // shape `from_host_snapshot_json` has always expected.
     let document = crate::schema::metabolism_wires_example_snapshot().expect("valid metabolism fixture mutations");
     let json = dsl::os_pack::json::to_string(&crate::schema::dsl_to_json(&document.wires_fixture));
-    let ext = DefaultWiresExtension::from_host_document_json(&json).expect("metabolism fixture");
+    let ext = DefaultWiresExtension::from_host_snapshot_json(&json).expect("metabolism fixture");
     assert_eq!(ext.topics.len(), 7);
     assert_eq!(ext.relationships.len(), 9);
     assert_eq!(ext.relationship_kind_label(8), Some("is"));

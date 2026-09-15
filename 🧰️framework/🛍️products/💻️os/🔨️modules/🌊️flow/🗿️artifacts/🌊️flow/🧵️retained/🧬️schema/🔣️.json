@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/os/flow/artifacts/flow/retained/component.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/os/flow/artifacts/flow/retained/component.json",
   "title": "Flow Retained Contracts",
   "$defs": {
     "FlowCamera": {
@@ -69,7 +69,7 @@
         "schema",
         "grants",
         "physicalRetirement",
-        "hostDocument",
+        "hostSnapshot",
         "expected"
       ],
       "properties": {
@@ -195,7 +195,7 @@
             }
           }
         },
-        "hostDocument": {
+        "hostSnapshot": {
           "type": "object",
           "additionalProperties": false,
           "required": [
@@ -207,7 +207,7 @@
           ],
           "properties": {
             "schema": {
-              "const": "flow.hostDocument"
+              "const": "flow.hostSnapshot"
             },
             "camera": {
               "$ref": "#/$defs/FlowCamera"

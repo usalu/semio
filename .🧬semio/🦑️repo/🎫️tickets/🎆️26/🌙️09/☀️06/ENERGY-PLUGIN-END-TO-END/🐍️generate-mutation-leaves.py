@@ -8893,7 +8893,7 @@ def aggregate_schema_json() -> str:
             "properties": props,
         }
     doc = {
-        "$id": "https://semio.tech/schema/s/energy/model/mutation.json",
+        "$id": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation.json",
         "title": "EnergyModelMutation",
         "description": "One handcrafted semantic mutation kind per $defs entry - the tagged union EnergyModelMutation dispatches on.",
         "oneOf": [{"$ref": f"#/$defs/{k.variant}"} for k in KINDS],

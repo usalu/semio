@@ -1,5 +1,5 @@
 /** 👁️ Generation3d editor — Preview window (generate mode): typed twin of `🦀️.rs`'s
- * view-model. Mirrors the pane's `render(fixture: &FlowFixture, generation: &GenerationPlayState,
+ * view-model. Mirrors the pane's `render(host_snapshot: &FlowHostSnapshot, generation: &GenerationPlayState,
  * cfg: &Generation3dConfig, labels: &Generation3dLabels, activeUtility: &str)` boundary — the
  * tessellated preview of the selected generation's evaluated fixture, or a hint string when nothing
  * is selected/evaluated yet. */

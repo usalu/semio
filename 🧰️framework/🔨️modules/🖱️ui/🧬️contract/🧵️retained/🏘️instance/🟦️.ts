@@ -34,6 +34,8 @@ let createRetirement: (owner: OwnedUiInstance, activation: ShardActorActivationL
 let createInputRetirement: (source: OwnedNativeUiPatchAuthority, ordinal: number, original: unknown) => OwnedUiPatchInputRetirement;
 let createInputAcceptance: (source: OwnedNativeUiPatchAuthority, ordinal: number, original: unknown) => OwnedUiPatchInputAcceptance;
 function live(cell: Cell, operation = false): OwnedUiSurface { if (!cell.owner || !cell.surface) throw new Error("Owned UI instance surface is retired"); if (operation) operationAuthority(cell.owner); return cell.surface; }
+/** 🔒️ Whether this surface's previous patch still holds its wire cursor, input page or receipt outbox. */
+function patchIsOpen(cell: Cell): boolean { return Boolean((cell.wire && !cell.wire.terminalIsEmpty()) || cell.page || cell.ack); }
 function prepareInputRetirement(cell: Cell, wire: OwnedUiWirePatchCursor): OwnedUiPatchInputRetirement | null {
   if (cell.page || !cell.inputActive || !cell.source) return cell.page; const receipt = wire.takePageReceipt(); if (!receipt && !wire.terminalIsEmpty()) return null;
   if (receipt && receipt.ordinal !== cell.ordinal) throw new Error("Native input retirement ordinal mismatch"); cell.page = createInputRetirement(cell.source, cell.ordinal, cell.original); return cell.page;
@@ -246,9 +248,19 @@ export class OwnedUiInstance {
     if (!this.#matches(activation, lifetime)) return null; operationAuthority(this); if (this.#lookup) return null;
     const lookup = createLookup(this, surfaceName(name), this.#head); this.#lookup = lookup; return lookup;
   }
+  /** 🔎️ Whether this surface's previous patch is still open. A host that admits patches through ONE
+   * serialized intake per instance keeps this `false` at every {@link beginPatch}; it is the query that
+   * lets such a host assert that instead of discovering it as a fault. */
+  surfacePatchIsOpen(facade: OwnedUiInstanceSurface): boolean { const cell = cellOf(facade); return cell.owner === this && patchIsOpen(cell); }
+  /** 📥️ Opens the surface's next patch. The two refusals are DIFFERENT faults and are named apart:
+   * `Foreign instance surface owner` is an identity error (another instance's cell, another surface's
+   * name, a retired cell) and stays a fault forever; `Busy instance surface owner` means this surface's
+   * previous patch has not closed, which is unreachable from a host whose intake is serialized per
+   * instance — see {@link surfacePatchIsOpen}. */
   beginPatch(source: OwnedNativeUiPatchAuthority, facade: OwnedUiInstanceSurface): OwnedUiInstancePatch {
     operationAuthority(this); if (!OwnedNativeUiPatchAuthority.matches(source, this.#activation!, this.#lifetime) || !OwnedNativeUiPatchAuthority.matchesOwner(source, this)) throw new Error("Foreign native instance patch owner"); const cell = cellOf(facade); const value = source.value;
-    if (cell.owner !== this || cell.name !== value.surface || !cell.surface || (cell.wire && !cell.wire.terminalIsEmpty()) || cell.page || cell.ack) throw new Error("Foreign or busy instance surface owner");
+    if (cell.owner !== this || cell.name !== value.surface || !cell.surface) throw new Error("Foreign instance surface owner");
+    if (patchIsOpen(cell)) throw new Error("Busy instance surface owner");
     const wire = new OwnedUiWirePatchCursor(cell.surface, value.baseRevision, value.revision, value.operationCount); cell.wire = wire; cell.source = source; cell.ordinal = 0; cell.inputActive = false; cell.patch = createPatch(cell); return cell.patch;
   }
   get maintenancePending(): boolean { return this.#work !== null; }

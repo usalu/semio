@@ -34,7 +34,7 @@ impl protocol::InferenceSpec<Generation3dSnapshot> for Generation3dInference {
         1
     }
     fn fields() -> &'static [protocol::InferenceFieldSpec] {
-        &[protocol::InferenceFieldSpec { id: "s.procedural.generation3d.inference.topology", reads: &["fixture"] }]
+        &[protocol::InferenceFieldSpec { id: "s.procedural.generation3d.inference.topology", reads: &["hostSnapshot"] }]
     }
 }
 //#endregion 🔖️Inference

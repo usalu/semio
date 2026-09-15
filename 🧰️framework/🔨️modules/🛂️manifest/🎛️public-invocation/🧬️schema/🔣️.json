@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/framework/public-invocation/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/public-invocation/schema.json",
   "title": "PublicInvocationEnvelope",
   "description": "Language-neutral admission bounds every structurally addressed action/command JSON body crosses a plugin process boundary under. Rust enforces them in `validate_public_json_envelope`; the shell must page any payload larger than `maxStringBytes` before it dispatches.",
   "type": "object",

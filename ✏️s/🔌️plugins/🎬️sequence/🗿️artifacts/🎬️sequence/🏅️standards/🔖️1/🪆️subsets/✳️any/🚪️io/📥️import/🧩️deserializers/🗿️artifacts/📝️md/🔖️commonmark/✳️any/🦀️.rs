@@ -1,6 +1,6 @@
 //! 🚪️ sequence <- md. Reads the canonical JSON carrier fixture from its code block.
 
-use crate::{SequenceHostDocument, SequenceSnapshot};
+use crate::{SequenceHostSnapshot, SequenceSnapshot};
 use semio_framework::io::io_mechanism::Deserializer;
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};
@@ -23,7 +23,7 @@ impl Deserializer<SequenceSnapshot> for MdIntoSequence {
             [MdBlock::CodeBlock { info: Some(info), literal }] if info == "json" => literal,
             _ => return Err(IoError { message: "MdIntoSequence: expected one json code block".into(), diagnostics: Vec::new() }),
         };
-        let fixture: SequenceHostDocument = dsl::os_pack::json::from_json_str(literal).map_err(|error| IoError { message: format!("MdIntoSequence: {error}"), diagnostics: Vec::new() })?;
-        Ok(IoOutcome::clean(SequenceSnapshot::from_host_document(fixture)))
+        let fixture: SequenceHostSnapshot = dsl::os_pack::json::from_json_str(literal).map_err(|error| IoError { message: format!("MdIntoSequence: {error}"), diagnostics: Vec::new() })?;
+        Ok(IoOutcome::clean(SequenceSnapshot::from_host_snapshot(fixture)))
     }
 }

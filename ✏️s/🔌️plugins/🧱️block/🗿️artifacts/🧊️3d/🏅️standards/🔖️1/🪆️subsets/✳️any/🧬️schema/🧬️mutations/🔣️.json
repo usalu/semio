@@ -1,119 +1,119 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/block/block3d/mutations.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/block/block3d/mutations.json",
   "title": "Block3dMutation",
   "description": "One of 37 semantic mutation kinds — see x-mutation-kind on each $def.",
   "oneOf": [
     {
-      "$ref": "https://semio.tech/schema/s/block/block3d/mutation/add-attribute/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block3d/mutation/add-attribute/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/block/block3d/mutation/add-author/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block3d/mutation/add-author/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/block/block3d/mutation/add-compatibility-rule/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block3d/mutation/add-compatibility-rule/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/block/block3d/mutation/add-representation-attribute/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block3d/mutation/add-representation-attribute/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/block/block3d/mutation/add-representation-tag/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block3d/mutation/add-representation-tag/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/block/block3d/mutation/change-meta-description/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block3d/mutation/change-meta-description/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/block/block3d/mutation/change-object-kind-description/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block3d/mutation/change-object-kind-description/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/block/block3d/mutation/change-object-kind-icon/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block3d/mutation/change-object-kind-icon/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/block/block3d/mutation/change-object-kind-label/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block3d/mutation/change-object-kind-label/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/block/block3d/mutation/change-object-kind-unit/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block3d/mutation/change-object-kind-unit/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/block/block3d/mutation/change-object-kind-variant/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block3d/mutation/change-object-kind-variant/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/block/block3d/mutation/change-representation-description/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block3d/mutation/change-representation-description/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/block/block3d/mutation/change-representation-lod/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block3d/mutation/change-representation-lod/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/block/block3d/mutation/change-representation-mesh-url/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block3d/mutation/change-representation-mesh-url/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/block/block3d/mutation/change-vortex-kind-color/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block3d/mutation/change-vortex-kind-color/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/block/block3d/mutation/change-vortex-kind-default-cable-kind/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block3d/mutation/change-vortex-kind-default-cable-kind/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/block/block3d/mutation/change-vortex-kind-label/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block3d/mutation/change-vortex-kind-label/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/block/block3d/mutation/change-vortex-label/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block3d/mutation/change-vortex-label/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/block/block3d/mutation/change-vortex-vortex-kind/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block3d/mutation/change-vortex-vortex-kind/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/block/block3d/mutation/create-representation/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block3d/mutation/create-representation/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/block/block3d/mutation/create-vortex/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block3d/mutation/create-vortex/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/block/block3d/mutation/create-vortex-kind/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block3d/mutation/create-vortex-kind/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/block/block3d/mutation/delete-representation/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block3d/mutation/delete-representation/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/block/block3d/mutation/delete-vortex/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block3d/mutation/delete-vortex/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/block/block3d/mutation/delete-vortex-kind/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block3d/mutation/delete-vortex-kind/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/block/block3d/mutation/move-camera3d/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block3d/mutation/move-camera3d/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/block/block3d/mutation/move-vortex/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block3d/mutation/move-vortex/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/block/block3d/mutation/remove-attribute/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block3d/mutation/remove-attribute/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/block/block3d/mutation/remove-author/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block3d/mutation/remove-author/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/block/block3d/mutation/remove-compatibility-rule/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block3d/mutation/remove-compatibility-rule/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/block/block3d/mutation/remove-representation-attribute/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block3d/mutation/remove-representation-attribute/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/block/block3d/mutation/remove-representation-tag/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block3d/mutation/remove-representation-tag/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/block/block3d/mutation/rename-object-kind/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block3d/mutation/rename-object-kind/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/block/block3d/mutation/rename-representation/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block3d/mutation/rename-representation/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/block/block3d/mutation/rename-vortex-kind/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block3d/mutation/rename-vortex-kind/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/block/block3d/mutation/resize-vortex/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block3d/mutation/resize-vortex/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/block/block3d/mutation/scale-camera3d/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block3d/mutation/scale-camera3d/schema.json"
     }
   ]
 }

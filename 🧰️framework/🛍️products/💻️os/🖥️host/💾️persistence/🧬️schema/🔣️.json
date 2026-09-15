@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/os/host/persistence/component.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/os/host/persistence/component.json",
   "oneOf": [
     {
       "$ref": "#/$defs/Request"

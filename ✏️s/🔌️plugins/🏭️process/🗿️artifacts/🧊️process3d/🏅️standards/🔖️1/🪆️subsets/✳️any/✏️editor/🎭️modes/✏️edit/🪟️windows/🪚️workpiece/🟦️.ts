@@ -1,5 +1,5 @@
 /** 🪚️ Process 3D editor — Workpiece window: typed twin of `🦀️.rs`'s view-model. Mirrors
- * the window's `render(fixture: &Process3dSnapshot, config: &Process3dConfig)` boundary — the
+ * the window's `render(snapshot: &Process3dSnapshot, config: &Process3dConfig)` boundary — the
  * world-3d scene payload (camera + sun) plus the mutation-capable active-utility state a
  * mutation-capable surface carries (absent from the viewer's read-only twin, see
  * `👁️viewer/…/🟦️.ts`). */

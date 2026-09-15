@@ -1,12 +1,12 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/semio/v1/base/child.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/base/child.json",
   "title": "SemioChild",
   "$defs": {
     "brep": {
       "allOf": [
         {
-          "$ref": "https://semio.tech/schema/os/store/child.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child.json"
         },
         {
           "type": "object",
@@ -37,7 +37,7 @@
     "mesh": {
       "allOf": [
         {
-          "$ref": "https://semio.tech/schema/os/store/child.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child.json"
         },
         {
           "type": "object",
@@ -68,7 +68,7 @@
     "value": {
       "allOf": [
         {
-          "$ref": "https://semio.tech/schema/os/store/child.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child.json"
         },
         {
           "type": "object",
@@ -99,7 +99,7 @@
     "object": {
       "allOf": [
         {
-          "$ref": "https://semio.tech/schema/os/store/child.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child.json"
         },
         {
           "type": "object",
@@ -130,7 +130,7 @@
     "model": {
       "allOf": [
         {
-          "$ref": "https://semio.tech/schema/os/store/child.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child.json"
         },
         {
           "type": "object",
@@ -161,7 +161,7 @@
     "graph": {
       "allOf": [
         {
-          "$ref": "https://semio.tech/schema/os/store/child.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child.json"
         },
         {
           "type": "object",
@@ -192,7 +192,7 @@
     "table": {
       "allOf": [
         {
-          "$ref": "https://semio.tech/schema/os/store/child.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child.json"
         },
         {
           "type": "object",
@@ -223,7 +223,7 @@
     "kit": {
       "allOf": [
         {
-          "$ref": "https://semio.tech/schema/os/store/child.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child.json"
         },
         {
           "type": "object",

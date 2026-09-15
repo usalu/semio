@@ -6,7 +6,7 @@
       "id": "object-required-and-additional-properties",
       "schema": {
         "$schema": "http://json-schema.org/draft-07/schema#",
-        "$id": "https://semio.tech/schema/framework/schema/vectors/object.json",
+        "$id": "https://json.schemas.assets.semio-tech.com/framework/schema/vectors/object.json",
         "type": "object",
         "additionalProperties": false,
         "required": [
@@ -103,7 +103,7 @@
       "id": "string-pattern-and-enum-and-const",
       "schema": {
         "$schema": "http://json-schema.org/draft-07/schema#",
-        "$id": "https://semio.tech/schema/framework/schema/vectors/string.json",
+        "$id": "https://json.schemas.assets.semio-tech.com/framework/schema/vectors/string.json",
         "type": "object",
         "required": [
           "scope",
@@ -202,7 +202,7 @@
       "id": "array-list-items-and-bounds",
       "schema": {
         "$schema": "http://json-schema.org/draft-07/schema#",
-        "$id": "https://semio.tech/schema/framework/schema/vectors/array.json",
+        "$id": "https://json.schemas.assets.semio-tech.com/framework/schema/vectors/array.json",
         "type": "array",
         "minItems": 1,
         "maxItems": 3,
@@ -262,7 +262,7 @@
       "id": "array-tuple-items-and-additional-items",
       "schema": {
         "$schema": "http://json-schema.org/draft-07/schema#",
-        "$id": "https://semio.tech/schema/framework/schema/vectors/tuple.json",
+        "$id": "https://json.schemas.assets.semio-tech.com/framework/schema/vectors/tuple.json",
         "type": "array",
         "items": [
           {
@@ -321,7 +321,7 @@
       "id": "combinators-one-of-any-of-all-of",
       "schema": {
         "$schema": "http://json-schema.org/draft-07/schema#",
-        "$id": "https://semio.tech/schema/framework/schema/vectors/combinators.json",
+        "$id": "https://json.schemas.assets.semio-tech.com/framework/schema/vectors/combinators.json",
         "allOf": [
           {
             "type": [
@@ -378,7 +378,7 @@
       "id": "local-ref-into-definitions",
       "schema": {
         "$schema": "http://json-schema.org/draft-07/schema#",
-        "$id": "https://semio.tech/schema/framework/schema/vectors/local-ref.json",
+        "$id": "https://json.schemas.assets.semio-tech.com/framework/schema/vectors/local-ref.json",
         "definitions": {
           "ExportId": {
             "type": "string",
@@ -442,7 +442,7 @@
       "documents": [
         {
           "$schema": "http://json-schema.org/draft-07/schema#",
-          "$id": "https://semio.tech/schema/framework/schema/vectors/shared.json",
+          "$id": "https://json.schemas.assets.semio-tech.com/framework/schema/vectors/shared.json",
           "definitions": {
             "ScopeId": {
               "type": "string",
@@ -462,7 +462,7 @@
       ],
       "schema": {
         "$schema": "http://json-schema.org/draft-07/schema#",
-        "$id": "https://semio.tech/schema/framework/schema/vectors/cross-ref.json",
+        "$id": "https://json.schemas.assets.semio-tech.com/framework/schema/vectors/cross-ref.json",
         "type": "object",
         "additionalProperties": false,
         "required": [
@@ -471,10 +471,10 @@
         ],
         "properties": {
           "scope": {
-            "$ref": "https://semio.tech/schema/framework/schema/vectors/shared.json#/definitions/ScopeId"
+            "$ref": "https://json.schemas.assets.semio-tech.com/framework/schema/vectors/shared.json#/definitions/ScopeId"
           },
           "format": {
-            "$ref": "https://semio.tech/schema/framework/schema/vectors/shared.json#/definitions/FormatId"
+            "$ref": "https://json.schemas.assets.semio-tech.com/framework/schema/vectors/shared.json#/definitions/FormatId"
           }
         }
       },
@@ -515,7 +515,7 @@
       "id": "conditional-if-then-else",
       "schema": {
         "$schema": "http://json-schema.org/draft-07/schema#",
-        "$id": "https://semio.tech/schema/framework/schema/vectors/conditional.json",
+        "$id": "https://json.schemas.assets.semio-tech.com/framework/schema/vectors/conditional.json",
         "type": "object",
         "required": [
           "status"
@@ -605,7 +605,7 @@
       "id": "object-dependencies-property-and-schema-forms",
       "schema": {
         "$schema": "http://json-schema.org/draft-07/schema#",
-        "$id": "https://semio.tech/schema/framework/schema/vectors/dependencies.json",
+        "$id": "https://json.schemas.assets.semio-tech.com/framework/schema/vectors/dependencies.json",
         "type": "object",
         "properties": {
           "scope": {
@@ -678,7 +678,7 @@
       "id": "object-property-names-and-counts",
       "schema": {
         "$schema": "http://json-schema.org/draft-07/schema#",
-        "$id": "https://semio.tech/schema/framework/schema/vectors/property-names.json",
+        "$id": "https://json.schemas.assets.semio-tech.com/framework/schema/vectors/property-names.json",
         "type": "object",
         "minProperties": 1,
         "maxProperties": 3,
@@ -733,7 +733,7 @@
       "id": "object-pattern-properties-and-additional",
       "schema": {
         "$schema": "http://json-schema.org/draft-07/schema#",
-        "$id": "https://semio.tech/schema/framework/schema/vectors/pattern-properties.json",
+        "$id": "https://json.schemas.assets.semio-tech.com/framework/schema/vectors/pattern-properties.json",
         "type": "object",
         "properties": {
           "id": {
@@ -786,7 +786,7 @@
       "id": "array-contains-and-unique-items",
       "schema": {
         "$schema": "http://json-schema.org/draft-07/schema#",
-        "$id": "https://semio.tech/schema/framework/schema/vectors/contains.json",
+        "$id": "https://json.schemas.assets.semio-tech.com/framework/schema/vectors/contains.json",
         "type": "array",
         "minItems": 1,
         "uniqueItems": true,
@@ -869,7 +869,7 @@
       "id": "numeric-exclusive-bounds-and-multiple-of",
       "schema": {
         "$schema": "http://json-schema.org/draft-07/schema#",
-        "$id": "https://semio.tech/schema/framework/schema/vectors/numeric.json",
+        "$id": "https://json.schemas.assets.semio-tech.com/framework/schema/vectors/numeric.json",
         "type": "object",
         "properties": {
           "ratio": {
@@ -935,7 +935,7 @@
       "id": "annotations-and-negation",
       "schema": {
         "$schema": "http://json-schema.org/draft-07/schema#",
-        "$id": "https://semio.tech/schema/framework/schema/vectors/annotations.json",
+        "$id": "https://json.schemas.assets.semio-tech.com/framework/schema/vectors/annotations.json",
         "title": "Annotated Export",
         "description": "Annotation keywords never reject an instance.",
         "$comment": "title, description, default, examples and every x-semio-* extension are annotations",
@@ -1002,7 +1002,7 @@
       "id": "string-formats-pinned-assertions",
       "schema": {
         "$schema": "http://json-schema.org/draft-07/schema#",
-        "$id": "https://semio.tech/schema/framework/schema/vectors/formats.json",
+        "$id": "https://json.schemas.assets.semio-tech.com/framework/schema/vectors/formats.json",
         "type": "object",
         "properties": {
           "createdAt": {
@@ -1044,7 +1044,7 @@
           "day": "2024-02-29",
           "at": "23:59:60Z",
           "contact": "ueli.saluz@posteo.de",
-          "id": "https://semio.tech/schema/framework/schema/schema.json",
+          "id": "https://json.schemas.assets.semio-tech.com/framework/schema/schema.json",
           "trace": "urn:uuid:5f6d7c8b-1234-4abc-89de-0123456789ab",
           "pattern": "^[a-z][a-z0-9]*$"
         }
@@ -1134,7 +1134,7 @@
       "id": "annotation-only-formats-never-reject",
       "schema": {
         "$schema": "http://json-schema.org/draft-07/schema#",
-        "$id": "https://semio.tech/schema/framework/schema/vectors/annotation-formats.json",
+        "$id": "https://json.schemas.assets.semio-tech.com/framework/schema/vectors/annotation-formats.json",
         "type": "object",
         "properties": {
           "ratio": {

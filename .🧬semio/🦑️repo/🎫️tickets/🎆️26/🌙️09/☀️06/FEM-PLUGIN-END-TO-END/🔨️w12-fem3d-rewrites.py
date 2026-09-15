@@ -753,7 +753,7 @@ def region_4():
 
     schema = collections.OrderedDict([
         ("$schema", "https://json-schema.org/draft/2020-12/schema"),
-        ("$id", "https://semio.tech/schema/s/fem/fem3d/mutation.json"),
+        ("$id", "https://json.schemas.assets.semio-tech.com/s/fem/fem3d/mutation.json"),
         ("title", "Fem3dMutation"),
         ("description", "🧬️ The closed fem3d mutation vocabulary as it travels the wire: an internally tagged union discriminated by `mutation`, one variant per `🧬️mutations/<kind>/🧬️.schema.json` payload. Kept in the declaration order of the `Fem3dMutation` enum."),
         ("oneOf", variants),

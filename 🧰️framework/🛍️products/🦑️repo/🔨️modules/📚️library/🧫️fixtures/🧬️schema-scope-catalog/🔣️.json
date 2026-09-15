@@ -7,7 +7,7 @@
       "files": {
         "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": {
           "$schema": "http://json-schema.org/draft-07/schema#",
-          "$id": "https://semio.tech/schema/s/probe/thing/artifact.json",
+          "$id": "https://json.schemas.assets.semio-tech.com/s/probe/thing/artifact.json",
           "title": "ThingArtifact",
           "type": "object",
           "additionalProperties": false,
@@ -58,7 +58,7 @@
       "files": {
         "🌎️hub/💡️inference/🧬️schema/🔣️.json": {
           "$schema": "http://json-schema.org/draft-07/schema#",
-          "$id": "https://semio.tech/schema/hub/inference/contract.json",
+          "$id": "https://json.schemas.assets.semio-tech.com/hub/inference/contract.json",
           "title": "InferenceApproval",
           "type": "object",
           "additionalProperties": false,
@@ -81,13 +81,13 @@
         },
         "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": {
           "$schema": "http://json-schema.org/draft-07/schema#",
-          "$id": "https://semio.tech/schema/s/probe/thing/artifact.json",
+          "$id": "https://json.schemas.assets.semio-tech.com/s/probe/thing/artifact.json",
           "title": "ThingArtifact",
           "type": "object",
           "additionalProperties": false,
           "properties": {
             "receipt": {
-              "$ref": "https://semio.tech/schema/hub/inference/contract.json#/$defs/Receipt"
+              "$ref": "https://json.schemas.assets.semio-tech.com/hub/inference/contract.json#/$defs/Receipt"
             }
           }
         }
@@ -133,7 +133,7 @@
       "files": {
         "🌎️hub/💡️inference/🧬️schema/🔣️.json": {
           "$schema": "http://json-schema.org/draft-07/schema#",
-          "$id": "https://semio.tech/schema/hub/inference/contract.json",
+          "$id": "https://json.schemas.assets.semio-tech.com/hub/inference/contract.json",
           "title": "InferenceApproval",
           "type": "object",
           "additionalProperties": false,
@@ -145,7 +145,7 @@
         },
         "🌎️hub/🔐️auth/🧬️schema/🔣️.json": {
           "$schema": "http://json-schema.org/draft-07/schema#",
-          "$id": "https://semio.tech/schema/hub/inference/mirror.json",
+          "$id": "https://json.schemas.assets.semio-tech.com/hub/inference/mirror.json",
           "title": "InferenceApprovalMirror",
           "type": "object",
           "additionalProperties": false,
@@ -183,13 +183,13 @@
       "files": {
         "🌎️hub/💡️inference/🧬️schema/🔣️.json": {
           "$schema": "http://json-schema.org/draft-07/schema#",
-          "$id": "https://semio.tech/schema/hub/inference/contract.json",
+          "$id": "https://json.schemas.assets.semio-tech.com/hub/inference/contract.json",
           "title": "InferenceApproval",
           "type": "object",
           "additionalProperties": false,
           "properties": {
             "missing": {
-              "$ref": "https://semio.tech/schema/hub/absent/contract.json#/$defs/Nope"
+              "$ref": "https://json.schemas.assets.semio-tech.com/hub/absent/contract.json#/$defs/Nope"
             }
           }
         }
@@ -220,7 +220,7 @@
       "files": {
         "🌎️hub/💡️inference/🧬️schema/🔣️.json": {
           "$schema": "https://json-schema.org/draft/2020-12/schema",
-          "$id": "https://semio.tech/schema/hub/inference/contract.json",
+          "$id": "https://json.schemas.assets.semio-tech.com/hub/inference/contract.json",
           "title": "InferenceApproval",
           "type": "object",
           "additionalProperties": false,
@@ -305,7 +305,7 @@
       "files": {
         "🌎️hub/💡️inference/🧬️contracts/📝️approval/🔣️.json": {
           "$schema": "http://json-schema.org/draft-07/schema#",
-          "$id": "https://semio.tech/schema/hub/inference/approval.json",
+          "$id": "https://json.schemas.assets.semio-tech.com/hub/inference/approval.json",
           "title": "Approval",
           "type": "object"
         }
@@ -324,7 +324,7 @@
       "files": {
         "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🧬️schema/🔣️.json": {
           "$schema": "http://json-schema.org/draft-07/schema#",
-          "$id": "https://semio.tech/schema/framework/ui/contract.json",
+          "$id": "https://json.schemas.assets.semio-tech.com/framework/ui/contract.json",
           "title": "UiContract",
           "type": "object"
         }
@@ -343,7 +343,7 @@
       "files": {
         "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": {
           "$schema": "http://json-schema.org/draft-07/schema#",
-          "$id": "https://semio.tech/schema/s/probe/thing/artifact.json",
+          "$id": "https://json.schemas.assets.semio-tech.com/s/probe/thing/artifact.json",
           "title": "ThingArtifact",
           "type": "object",
           "additionalProperties": false,
@@ -355,10 +355,10 @@
         },
         "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔣️.json": {
           "$schema": "http://json-schema.org/draft-07/schema#",
-          "$id": "https://semio.tech/schema/s/probe/thing/mutations.json",
+          "$id": "https://json.schemas.assets.semio-tech.com/s/probe/thing/mutations.json",
           "oneOf": [
             {
-              "$ref": "https://semio.tech/schema/s/probe/thing/mutation/edit-text/schema.json"
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/probe/thing/mutation/edit-text/schema.json"
             }
           ]
         },
@@ -376,7 +376,7 @@
         },
         "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️edit-text/🧬️schema/🔣️.json": {
           "$schema": "http://json-schema.org/draft-07/schema#",
-          "$id": "https://semio.tech/schema/s/probe/thing/mutation/edit-text/schema.json",
+          "$id": "https://json.schemas.assets.semio-tech.com/s/probe/thing/mutation/edit-text/schema.json",
           "title": "EditText",
           "type": "object",
           "additionalProperties": false,
@@ -424,7 +424,7 @@
       "files": {
         "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": {
           "$schema": "http://json-schema.org/draft-07/schema#",
-          "$id": "https://semio.tech/schema/s/probe/thing/artifact.json",
+          "$id": "https://json.schemas.assets.semio-tech.com/s/probe/thing/artifact.json",
           "title": "ThingArtifact",
           "type": "object",
           "additionalProperties": false,
@@ -436,10 +436,10 @@
         },
         "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔣️.json": {
           "$schema": "http://json-schema.org/draft-07/schema#",
-          "$id": "https://semio.tech/schema/s/probe/thing/mutations.json",
+          "$id": "https://json.schemas.assets.semio-tech.com/s/probe/thing/mutations.json",
           "oneOf": [
             {
-              "$ref": "https://semio.tech/schema/s/probe/thing/mutation/edit-text/schema.json"
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/probe/thing/mutation/edit-text/schema.json"
             }
           ],
           "x-semio-mutationKinds": [
@@ -460,7 +460,7 @@
         },
         "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️edit-text/🧬️schema/🔣️.json": {
           "$schema": "http://json-schema.org/draft-07/schema#",
-          "$id": "https://semio.tech/schema/s/probe/thing/1/any/mutation/edit-text.json",
+          "$id": "https://json.schemas.assets.semio-tech.com/s/probe/thing/1/any/mutation/edit-text.json",
           "title": "EditText",
           "type": "object",
           "additionalProperties": false,
@@ -510,7 +510,7 @@
       "files": {
         "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": {
           "$schema": "http://json-schema.org/draft-07/schema#",
-          "$id": "https://semio.tech/schema/s/probe/thing/artifact.json",
+          "$id": "https://json.schemas.assets.semio-tech.com/s/probe/thing/artifact.json",
           "title": "ThingArtifact",
           "type": "object",
           "additionalProperties": false,
@@ -522,7 +522,7 @@
         },
         "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json": {
           "$schema": "http://json-schema.org/draft-07/schema#",
-          "$id": "https://semio.tech/schema/s/probe/thing/snapshot.json",
+          "$id": "https://json.schemas.assets.semio-tech.com/s/probe/thing/snapshot.json",
           "title": "ThingSnapshot",
           "type": "object",
           "additionalProperties": false,
@@ -534,7 +534,7 @@
         },
         "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🔣️.json": {
           "$schema": "http://json-schema.org/draft-07/schema#",
-          "$id": "https://semio.tech/schema/s/probe/thing/snapshot/text.json",
+          "$id": "https://json.schemas.assets.semio-tech.com/s/probe/thing/snapshot/text.json",
           "title": "ThingSnapshotText",
           "type": "object",
           "additionalProperties": false,
@@ -546,7 +546,7 @@
         },
         "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🔣️.json": {
           "$schema": "http://json-schema.org/draft-07/schema#",
-          "$id": "https://semio.tech/schema/s/other/thing/diff.json",
+          "$id": "https://json.schemas.assets.semio-tech.com/s/other/thing/diff.json",
           "title": "ThingDiff",
           "type": "object",
           "additionalProperties": false,
@@ -595,7 +595,7 @@
       "files": {
         "🧰️framework/🔨️modules/🖱️ui/🧬️schema/🔣️.json": {
           "$schema": "http://json-schema.org/draft-07/schema#",
-          "$id": "https://semio.tech/schema/framework/ui/schema.json",
+          "$id": "https://json.schemas.assets.semio-tech.com/framework/ui/schema.json",
           "$defs": {
             "RetainedCommandLaw": {
               "x-semio-formats": [
@@ -640,7 +640,7 @@
       "files": {
         "🌎️hub/💡️inference/🧬️schema/🔣️.json": {
           "$schema": "http://json-schema.org/draft-07/schema#",
-          "$id": "https://semio.tech/schema/hub/inference/contract.json",
+          "$id": "https://json.schemas.assets.semio-tech.com/hub/inference/contract.json",
           "title": "InferenceApproval",
           "type": "object",
           "additionalProperties": false,
@@ -683,7 +683,7 @@
       "files": {
         "🧰️framework/🔨️modules/🧬️schema/🔣️.json": {
           "$schema": "http://json-schema.org/draft-07/schema#",
-          "$id": "https://semio.tech/schema/framework/schema/schema.json",
+          "$id": "https://json.schemas.assets.semio-tech.com/framework/schema/schema.json",
           "title": "SchemaModule",
           "type": "object",
           "additionalProperties": false,
@@ -740,7 +740,7 @@
         },
         "🌎️hub/💡️inference/🧬️schema/🔣️.json": {
           "$schema": "http://json-schema.org/draft-07/schema#",
-          "$id": "https://semio.tech/schema/hub/inference/contract.json",
+          "$id": "https://json.schemas.assets.semio-tech.com/hub/inference/contract.json",
           "title": "InferenceApproval",
           "type": "object",
           "additionalProperties": false,

@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://semio.tech/schema/print/viz/catalog.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/print/viz/catalog.json",
   "$comment": "📊️ Schema-first contract of the print visualization library: the chart-kind catalogue (🖼️assets/🔣️viz-catalog.json), the family option vocabularies, the demo data tables and the numeric probe protocol. Owned by the CATALOG agent; every family owner extends `x-semio-family-options` for its own families only. The `x-` annotations carry the vocabulary that pure JSON Schema cannot express per family; `🔨️modules/📊️visualization-gallery/🟦️.ts` enforces them. A catalogue entry must set an option exactly when its family declares the key here, and this is the authority for `variant` in particular: a family that declares `variant` renders a different geometry per variant, so every one of its kinds names one; a family that does not declare it takes none.",
   "type": "object",
   "required": [

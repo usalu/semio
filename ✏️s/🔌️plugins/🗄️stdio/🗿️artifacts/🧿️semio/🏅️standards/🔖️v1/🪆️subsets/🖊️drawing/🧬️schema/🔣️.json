@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/semio/v1/drawing/artifact.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/drawing/artifact.json",
   "title": "SemioDrawingArtifact",
   "description": "Mirrors the real Rust SemioDrawingArtifact. See snapshot/component.json for DrawCanvas/DrawStyle/DrawLayer/DrawNode.",
   "type": "object",
@@ -16,21 +16,21 @@
       "x-semio-state": "artifact"
     },
     "canvas": {
-      "$ref": "https://semio.tech/schema/s/stdio/semio/v1/drawing/snapshot.json#/$defs/DrawCanvas",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/drawing/snapshot.json#/$defs/DrawCanvas",
       "x-semio-state": "artifact"
     },
     "styles": {
       "type": "array",
       "x-semio-state": "artifact",
       "items": {
-        "$ref": "https://semio.tech/schema/s/stdio/semio/v1/drawing/snapshot.json#/$defs/DrawStyle"
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/drawing/snapshot.json#/$defs/DrawStyle"
       }
     },
     "layers": {
       "type": "array",
       "x-semio-state": "artifact",
       "items": {
-        "$ref": "https://semio.tech/schema/s/stdio/semio/v1/drawing/snapshot.json#/$defs/DrawLayer"
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/drawing/snapshot.json#/$defs/DrawLayer"
       }
     }
   }

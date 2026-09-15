@@ -19,7 +19,7 @@ pub use crate::schema::mutations::SequenceMutation;
 pub use crate::schema::diff::SequenceDiff;
 
 pub const SEQUENCE_DOCUMENT_SCHEMA: &str = "sequence.sequence";
-pub use crate::snapshot::schema::{default_snapshot, SequenceHostDocument, SequenceSnapshot};
+pub use crate::snapshot::schema::{default_snapshot, SequenceHostSnapshot, SequenceSnapshot};
 
 //#region 🔖️Constants
 /// 🪪️ The canonical dialect for this artifact's one subset (`✳️any`) — lives at the ARTIFACT level

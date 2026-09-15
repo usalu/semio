@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/puzzle/puzzle3d/diff.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle3d/diff.json",
   "title": "Puzzle3dDiff",
   "type": "object",
   "additionalProperties": false,
@@ -20,7 +20,7 @@
       "x-semio-state": "artifact"
     },
     "meta": {
-      "$ref": "https://semio.tech/schema/s/puzzle/puzzle3d/artifact.json#/$defs/Puzzle3dMeta",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle3d/artifact.json#/$defs/Puzzle3dMeta",
       "x-semio-state": "artifact"
     },
     "objects": {
@@ -70,7 +70,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "https://semio.tech/schema/s/puzzle/puzzle3d/artifact.json#/$defs/Puzzle3dObject"
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle3d/artifact.json#/$defs/Puzzle3dObject"
           }
         },
         "removed": {
@@ -117,7 +117,7 @@
       "required": [],
       "properties": {
         "replacement": {
-          "$ref": "https://semio.tech/schema/s/puzzle/puzzle3d/artifact.json#/$defs/Puzzle3dObject"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle3d/artifact.json#/$defs/Puzzle3dObject"
         }
       }
     },
@@ -134,7 +134,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "https://semio.tech/schema/s/puzzle/puzzle3d/artifact.json#/$defs/Puzzle3dAttraction"
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle3d/artifact.json#/$defs/Puzzle3dAttraction"
           }
         },
         "removed": {
@@ -181,7 +181,7 @@
       "required": [],
       "properties": {
         "replacement": {
-          "$ref": "https://semio.tech/schema/s/puzzle/puzzle3d/artifact.json#/$defs/Puzzle3dAttraction"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle3d/artifact.json#/$defs/Puzzle3dAttraction"
         }
       }
     },
@@ -198,7 +198,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "https://semio.tech/schema/s/puzzle/puzzle3d/artifact.json#/$defs/Puzzle3dTargetVolume"
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle3d/artifact.json#/$defs/Puzzle3dTargetVolume"
           }
         },
         "removed": {
@@ -245,7 +245,7 @@
       "required": [],
       "properties": {
         "replacement": {
-          "$ref": "https://semio.tech/schema/s/puzzle/puzzle3d/artifact.json#/$defs/Puzzle3dTargetVolume"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle3d/artifact.json#/$defs/Puzzle3dTargetVolume"
         }
       }
     },
@@ -262,7 +262,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "https://semio.tech/schema/s/puzzle/puzzle3d/artifact.json#/$defs/Puzzle3dReference"
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle3d/artifact.json#/$defs/Puzzle3dReference"
           }
         },
         "removed": {
@@ -309,7 +309,7 @@
       "required": [],
       "properties": {
         "replacement": {
-          "$ref": "https://semio.tech/schema/s/puzzle/puzzle3d/artifact.json#/$defs/Puzzle3dReference"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle3d/artifact.json#/$defs/Puzzle3dReference"
         }
       }
     }

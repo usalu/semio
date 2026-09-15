@@ -862,7 +862,7 @@ def gen_artifact(
     snap_fields = persist
     snap_json = emit_json_schema(
         snapshot_type,
-        f"https://semio.tech/schema/s/{plugin_key}/{key}/snapshot.json",
+        f"https://json.schemas.assets.semio-tech.com/s/{plugin_key}/{key}/snapshot.json",
         snap_fields,
         {k: defs[k] for k in COMMON_DEFS} | ({k: extra_defs[k] for k in (extra_defs or {})}),
     )
@@ -962,7 +962,7 @@ impl Default for {snapshot_type} {{
     art_json_defs.pop(artifact_type, None)
     art_json = emit_json_schema(
         artifact_type,
-        f"https://semio.tech/schema/s/{plugin_key}/{key}/artifact.json",
+        f"https://json.schemas.assets.semio-tech.com/s/{plugin_key}/{key}/artifact.json",
         artifact_fields,
         art_json_defs,
     )
@@ -1190,7 +1190,7 @@ pub fn {key}_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {{
 
     diff_json = emit_json_schema(
         diff_type,
-        f"https://semio.tech/schema/s/{plugin_key}/{key}/diff.json",
+        f"https://json.schemas.assets.semio-tech.com/s/{plugin_key}/{key}/diff.json",
         dfields,
         diff_defs,
     )

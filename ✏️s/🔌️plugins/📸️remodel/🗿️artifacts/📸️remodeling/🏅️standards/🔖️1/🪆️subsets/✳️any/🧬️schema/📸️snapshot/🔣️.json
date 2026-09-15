@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/remodel/remodeling/snapshot.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/remodel/remodeling/snapshot.json",
   "title": "RemodelingSnapshot",
   "type": "object",
   "additionalProperties": false,
@@ -27,41 +27,41 @@
     "streams": {
       "type": "array",
       "items": {
-        "$ref": "https://semio.tech/schema/s/remodel/remodeling/artifact.json#/$defs/MediaStream"
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/remodel/remodeling/artifact.json#/$defs/MediaStream"
       },
       "x-semio-state": "artifact"
     },
     "assets": {
       "type": "object",
       "additionalProperties": {
-        "$ref": "https://semio.tech/schema/s/remodel/remodeling/artifact.json#/$defs/RemodelingAssetChild"
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/remodel/remodeling/artifact.json#/$defs/RemodelingAssetChild"
       },
       "x-semio-state": "artifact"
     },
     "durableArtifacts": {
       "type": "object",
       "additionalProperties": {
-        "$ref": "https://semio.tech/schema/s/remodel/remodeling/artifact.json#/$defs/RemodelingDurableArtifact"
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/remodel/remodeling/artifact.json#/$defs/RemodelingDurableArtifact"
       },
       "x-semio-state": "artifact"
     },
     "calibration": {
-      "$ref": "https://semio.tech/schema/s/remodel/remodeling/artifact.json#/$defs/CalibrationState",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/remodel/remodeling/artifact.json#/$defs/CalibrationState",
       "x-semio-state": "artifact"
     },
     "params": {
-      "$ref": "https://semio.tech/schema/s/remodel/remodeling/artifact.json#/$defs/ReconstructionParams",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/remodel/remodeling/artifact.json#/$defs/ReconstructionParams",
       "x-semio-state": "artifact"
     },
     "gcps": {
       "type": "array",
       "items": {
-        "$ref": "https://semio.tech/schema/s/remodel/remodeling/artifact.json#/$defs/GroundControlPoint"
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/remodel/remodeling/artifact.json#/$defs/GroundControlPoint"
       },
       "x-semio-state": "artifact"
     },
     "results": {
-      "$ref": "https://semio.tech/schema/s/remodel/remodeling/artifact.json#/$defs/ReconstructionResults",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/remodel/remodeling/artifact.json#/$defs/ReconstructionResults",
       "x-semio-state": "artifact"
     }
   }

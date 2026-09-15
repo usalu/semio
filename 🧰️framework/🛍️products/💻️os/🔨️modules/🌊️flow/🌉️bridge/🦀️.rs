@@ -298,9 +298,9 @@ pub(crate) fn neuron_to_exploded_widget(neuron: &Neuron) -> Widget {
     }
 }
 
-pub(crate) fn build_channel_eval_json(fixture: &FlowHostDocument, channels: &EvalChannels, kind_infos: &HashMap<String, OperatorInfo>) -> String {
+pub(crate) fn build_channel_eval_json(host_snapshot: &FlowHostSnapshot, channels: &EvalChannels, kind_infos: &HashMap<String, OperatorInfo>) -> String {
     let mut widgets = crate::os_pack::json::Object::new();
-    for widget in &fixture.widgets {
+    for widget in &host_snapshot.widgets {
         let id = widget_id_for(widget);
         let operator_info = widget_operator_info(widget, kind_infos);
         let kind_info = operator_info.as_ref();

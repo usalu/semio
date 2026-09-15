@@ -108,8 +108,8 @@
     "traceDrawingBitmap": 2605,
     "booleanDrawingSegments": 2606,
     "dispose": 2607,
-    "documentJson": 2609,
-    "synchronizeDocumentJson": 2610
+    "snapshotJson": 2609,
+    "synchronizeSnapshotJson": 2610
   },
   "events": {
     "admitted": 2650,
@@ -912,8 +912,8 @@
         "type": "utf8"
       }
     ],
-    "documentJson": [],
-    "synchronizeDocumentJson": [
+    "snapshotJson": [],
+    "synchronizeSnapshotJson": [
       {
         "name": "json",
         "type": "utf8"

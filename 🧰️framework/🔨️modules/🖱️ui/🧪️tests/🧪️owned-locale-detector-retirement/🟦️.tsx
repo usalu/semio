@@ -10504,9 +10504,9 @@ export async function registerTests2(vitest: Pick<typeof import("vitest"), "desc
         expect(css).not.toMatch(/\[data-slot="navbar"\]:focus-within::after/);
         expect(css).not.toMatch(/\[data-slot="footer"\]:focus-within::before/);
         expect(css).toContain("background-color: var(--border-emphasized-color)");
-        expect(css).not.toMatch(/\[data-window-silhouette\]:not\(\[data-active="true"\]\):hover \[data-window-silhouette-border\]\[data-kind="normal"\] path/);
-        expect(css).toMatch(/:is\(\[data-slot="panel"\]\[data-panel="mobilePanel"\]\):hover\s*\[data-slot="chrome-frame"\]/);
-        expect(css).not.toMatch(/:is\(\[data-slot="panel"\],\s*\[data-slot="pane"\]\):hover\s*\[data-slot="chrome-frame"\]/);
+        expect(css).toMatch(/\[data-window-silhouette\]:hover > \[data-window-silhouette-border\]\[data-kind="normal"\]:not\(\[data-pending\]\) path/);
+        expect(css).not.toMatch(/\[data-window-silhouette\]:hover \[data-window-silhouette-border\]\[data-kind="normal"\]:not\(\[data-pending\]\) path/);
+        expect(css).toMatch(/:is\(\[data-slot="panel"\],\s*\[data-slot="pane"\]\):hover\s*\[data-slot="chrome-frame"\]/);
         expect(css).not.toMatch(/:is\(\[data-slot="panel"\],\s*\[data-slot="pane"\]\):focus-within\s*\[data-slot="chrome-frame"\]/);
         expect(css).toContain('[data-hover-scope]:hover [data-slot="drag-handle"]');
         expect(css).toContain('[data-hover-scope]:hover :is([data-slot="mode-dock-tab-focus"], [data-slot="mode-dock-tab-new-window"], [data-slot="mode-dock-tab-close"])');

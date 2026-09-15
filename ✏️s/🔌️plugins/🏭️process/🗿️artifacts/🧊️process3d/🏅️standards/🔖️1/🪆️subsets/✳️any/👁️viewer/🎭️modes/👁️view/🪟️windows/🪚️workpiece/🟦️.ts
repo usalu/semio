@@ -1,5 +1,5 @@
 /** 🪚️ Process 3D viewer — Workpiece window: typed twin of `🦀️.rs`'s view-model. Mirrors
- * the window's read-only `render(fixture: &Process3dSnapshot)` boundary — no camera/sun/active-
+ * the window's read-only `render(snapshot: &Process3dSnapshot)` boundary — no camera/sun/active-
  * utility fields here, unlike the editor's twin: the viewer has no config lane to read them from
  * and uses hardcoded defaults (see `🦀️.rs`'s own doc comment). */
 

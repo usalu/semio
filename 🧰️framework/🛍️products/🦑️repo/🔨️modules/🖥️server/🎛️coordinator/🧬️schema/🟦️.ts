@@ -5,7 +5,7 @@
  * 🧬️ TypeScript projection of the coordinator wire contracts.
  *
  * Every exported type and `parse<Export>` function implements one `$defs` entry of the sibling
- * {@link https://semio.tech/schema/repo/server/coordinator/schema.json 🔣️.json} draft-07 document.
+ * {@link https://json.schemas.assets.semio-tech.com/repo/server/coordinator/schema.json 🔣️.json} draft-07 document.
  * Parsers are hand-written (no code generation, no external validator) and are the single
  * request-validation authority of the coordinator's HTTP surface.
  */
@@ -13,7 +13,7 @@
 
 //#region 🔖️Contracts
 /** 🪪️ Canonical `$id` of the schema these parsers implement. */
-export const COORDINATOR_SCHEMA_ID = "https://semio.tech/schema/repo/server/coordinator/schema.json";
+export const COORDINATOR_SCHEMA_ID = "https://json.schemas.assets.semio-tech.com/repo/server/coordinator/schema.json";
 
 /** 🎁️ Outcome of one parse, free of any implementation-specific error type. */
 export type ParseResult<T> = { readonly success: true; readonly data: T } | { readonly success: false; readonly error: { readonly message: string } };

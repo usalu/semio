@@ -21,7 +21,7 @@ without fixture directories. No duplicate authority, no fixture-local fallback, 
   `mutationPayloadSchemaAuthority` (descriptor-linked, draft-07), `schemaChildDirs`
   (`📸️snapshot`, `🔺️diff`, `🧬️mutations`, `💡️inferences`), `testSchemaLocation`.
 - Canonical module example: `✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/`
-  with all five formats and `$id: https://semio.tech/schema/s/writer/writer/artifact.json`.
+  with all five formats and `$id: https://json.schemas.assets.semio-tech.com/s/writer/writer/artifact.json`.
 - ~495 `🧬️schema/` modules, ~2,272 `🧬️.schema.json` leaf files (≈2,100 mutation leaves, 164 under 🧪️/🧫️ trees),
   ~70 flat `🧬️schema.json` files in framework modules, 43 `🔣️.schema.json`, six `🧬️contracts/*` per-contract dirs.
 - Test module: `🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/🟦️.ts` treats

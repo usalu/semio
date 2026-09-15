@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://semio.tech/schema/stdio-command-ownership.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/stdio-command-ownership.json",
   "type": "object",
   "additionalProperties": false,
   "required": ["schemaVersion", "owners", "routers", "artifactDefinitions", "inputs", "registration"],

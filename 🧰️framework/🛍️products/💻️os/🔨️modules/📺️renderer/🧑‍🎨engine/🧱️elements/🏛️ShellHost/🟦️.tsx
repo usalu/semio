@@ -3693,6 +3693,16 @@ function FrameworkOsShellInner({
         // instance. Mirrors the shell-unmount teardown effect, scoped to one pluginId instead of every
         // loaded plugin.
         if (ownsSession && activeSession) {
+          // 🪦️ The session is retired BEFORE its instance is destroyed, and the plugin stays
+          // `reloading` until the successor session exists (below). Between those two points the shell
+          // used to keep rendering the windows of a session whose instance was already gone: the
+          // node-graph host remounted against the RETIRED instance, its boot `interactionSelect`,
+          // `readLocalInteraction` and opening-camera dispatch all answered
+          // `no channel for instance N`, `attachSurface` rejected, and the Flow window stayed blank for
+          // the rest of the page because nothing re-attaches a surface whose effect is keyed on a
+          // `surfaceId` that did not change (measured on :6023,
+          // `📓️hot-swap-board-remount-2026-09-15.md` §1).
+          dispatch({ type: "SET_SESSION", value: null });
           await current.handle.destroyApp(activeSession.instanceId).catch(() => {});
         }
         for (const spawned of spawnedAppsRef.current.filter((entry) => entry.pluginId === pluginId)) {
@@ -3724,11 +3734,15 @@ function FrameworkOsShellInner({
         pluginModuleUrlByIdRef.current.set(pluginId, moduleUrl);
         recordPluginArtifactRebuiltAt(pluginId, rebuiltAt);
         dispatch({ type: "UPSERT_LOADED_PLUGIN", value: { handle: newHandle, manifest: newHandle.manifest } });
-        dispatch({ type: "SET_PLUGIN_STATUS", pluginId, value: "loaded" });
-        dispatch({ type: "SET_PLUGIN_SUPERVISOR", pluginId, value: ownsSession ? "running" : "loaded" });
         committed = true;
 
+        // 🪟️ The successor session FIRST, the live canvas after it. `SET_PLUGIN_STATUS "loaded"` is what
+        // `resolvePluginCanvasStatus` reads to stop showing the reload state, so announcing it before
+        // `establishPrimarySession` re-opened the whole window layout on the predecessor's retired
+        // instance — one wasted mount per hot swap, every dispatch it makes refused.
         if (ownsSession) await establishPrimarySession(newHandle);
+        dispatch({ type: "SET_PLUGIN_STATUS", pluginId, value: "loaded" });
+        dispatch({ type: "SET_PLUGIN_SUPERVISOR", pluginId, value: ownsSession ? "running" : "loaded" });
 
         // 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (H1-react) — `evictPluginModule`'s refcounted
         // module-URL lease pool is gone (packet H2's "must not exist" list); disposing the OLD handle
@@ -3744,6 +3758,9 @@ function FrameworkOsShellInner({
         // (ticket 26/09/02 wave B17).
         if (committed) {
           console.warn(`hot-swap ${pluginId} retained its committed handle; predecessor retirement failed`, error);
+          // 🚦️ The status announcement moved AFTER `establishPrimarySession`, so a failure between the
+          // two would otherwise leave the plugin reading `reloading` for the rest of the page.
+          dispatch({ type: "SET_PLUGIN_STATUS", pluginId, value: "loaded" });
           dispatch({ type: "SET_PLUGIN_SUPERVISOR", pluginId, value: ownsSession ? "running" : "loaded" });
         } else {
           console.warn(`[DEBUG] hot-swap rolled back for ${pluginId}`, error);
@@ -5711,6 +5728,16 @@ function FrameworkOsShellInner({
           }).catch((error) => {
             const { extensionId, capability, req } = effect.invokeExtension;
             if (sealedInstancesRef.current.sealed(requester.pluginId, requester.instanceId)) return;
+            // 🪦️ A hot swap RETIRES the requester rather than sealing it, and an extension round trip
+            // outlives the swap by construction — the `evaluate` calls the guest had in flight land
+            // after their instance is gone. The typed retirement is the drop, exactly as it is for the
+            // typed-operation subscriptions and the local-interaction read above; the two
+            // `no actor for instance 1` errors every measured hot swap left in the console were this
+            // one path missing it (`📓️hot-swap-board-remount-2026-09-15.md` §1.4).
+            if (isPluginInstanceRetiredV1(error)) {
+              console.warn(`[DEBUG] dropped extension answer ${extensionId}/${capability} for retired instance ${requester.pluginId}#${requester.instanceId}`);
+              return;
+            }
             console.error("[DEBUG] invokeExtension dispatch failed", { extensionId, capability, req, error });
           }).finally(releaseExtensionWork);
           continue;

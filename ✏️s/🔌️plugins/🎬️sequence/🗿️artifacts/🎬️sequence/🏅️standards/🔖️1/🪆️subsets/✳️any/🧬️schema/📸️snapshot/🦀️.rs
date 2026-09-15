@@ -28,7 +28,7 @@ impl Default for SequenceSnapshot {
 
 /// 🌱 Canonical default document used by the play app and examples.
 pub fn default_snapshot() -> SequenceSnapshot {
-    SequenceSnapshot::from_host_document(SequenceHostDocument {
+    SequenceSnapshot::from_host_snapshot(SequenceHostSnapshot {
         schema: SEQUENCE_DOCUMENT_SCHEMA.into(),
         steps: vec![
             SequenceStep {
@@ -66,18 +66,18 @@ pub fn default_persisted_snapshot() -> SequenceSnapshot {
 
 //#region 🔖️HostDocument
 /// 🌊️ The plain pre-migration document shape (`{schema, steps, edges}`) — this plugin's own
-/// analog of `semio_framework_artifact_flow_flow::FlowHostDocument`: the live editing representation `SequenceHost` and the WASM
+/// analog of `semio_framework_artifact_flow_flow::FlowHostSnapshot`: the live editing representation `SequenceHost` and the WASM
 /// bridge operate on, and the JSON wire contract `SequenceHost::to_json`/`load_json` still speak.
-/// Bridges to/from the composed-child `SequenceSnapshot` via `to_host_document`/`from_host_document` below.
+/// Bridges to/from the composed-child `SequenceSnapshot` via `to_host_snapshot`/`from_host_snapshot` below.
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
 #[value(rename_all = "camelCase")]
-pub struct SequenceHostDocument {
+pub struct SequenceHostSnapshot {
     pub schema: String,
     pub steps: Vec<SequenceStep>,
     pub edges: Vec<SequenceEdge>,
 }
 
-impl neural_engine::ColdRetire for SequenceHostDocument {
+impl neural_engine::ColdRetire for SequenceHostSnapshot {
     fn retire_cold(self) {
         self.steps.retire_cold();
     }
@@ -96,19 +96,19 @@ impl neural_engine::ColdRetire for SequenceSnapshot {
 impl SequenceSnapshot {
     /// 🌱 Builds a persisted snapshot from a plain fixture and transfers its scene to the exact
     /// composed child owner.
-    pub fn from_host_document(fixture: SequenceHostDocument) -> Self {
+    pub fn from_host_snapshot(fixture: SequenceHostSnapshot) -> Self {
         Self { schema: fixture.schema, content: sequence_content_child_with_owner(fixture.steps, fixture.edges) }
     }
 
     /// 🌱 Converts this snapshot into the plain fixture shape from its exact child-owned scene.
-    pub fn try_to_host_document(&self) -> Result<SequenceHostDocument, store::ArtifactChildMaterializationError> {
+    pub fn try_to_host_snapshot(&self) -> Result<SequenceHostSnapshot, store::ArtifactChildMaterializationError> {
         let scene = require_sequence_working_scene(&self.content)?;
-        Ok(SequenceHostDocument { schema: self.schema.clone(), steps: scene.steps, edges: scene.edges })
+        Ok(SequenceHostSnapshot { schema: self.schema.clone(), steps: scene.steps, edges: scene.edges })
     }
 
     /// 🌱 Converts a snapshot known to be materialized into its fixture shape.
-    pub fn to_host_document(&self) -> SequenceHostDocument {
-        self.try_to_host_document().expect("sequence child scene must be materialized before fixture projection")
+    pub fn to_host_snapshot(&self) -> SequenceHostSnapshot {
+        self.try_to_host_snapshot().expect("sequence child scene must be materialized before fixture projection")
     }
 }
 //#endregion 🔖️HostDocument

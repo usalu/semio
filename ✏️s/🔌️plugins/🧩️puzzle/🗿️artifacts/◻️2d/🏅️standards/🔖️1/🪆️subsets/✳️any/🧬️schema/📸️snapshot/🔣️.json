@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/puzzle/puzzle2d/snapshot.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle2d/snapshot.json",
   "title": "Puzzle2dSnapshot",
   "type": "object",
   "additionalProperties": false,
@@ -17,25 +17,25 @@
       "x-semio-state": "artifact"
     },
     "camera": {
-      "$ref": "https://semio.tech/schema/s/puzzle/puzzle2d/artifact.json#/$defs/Puzzle2dCamera",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle2d/artifact.json#/$defs/Puzzle2dCamera",
       "x-semio-state": "artifact"
     },
     "nodes": {
       "type": "array",
       "items": {
-        "$ref": "https://semio.tech/schema/s/puzzle/puzzle2d/artifact.json#/$defs/Puzzle2dNode"
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle2d/artifact.json#/$defs/Puzzle2dNode"
       },
       "x-semio-state": "artifact"
     },
     "edges": {
       "type": "array",
       "items": {
-        "$ref": "https://semio.tech/schema/s/puzzle/puzzle2d/artifact.json#/$defs/Puzzle2dEdge"
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle2d/artifact.json#/$defs/Puzzle2dEdge"
       },
       "x-semio-state": "artifact"
     },
     "meta": {
-      "$ref": "https://semio.tech/schema/s/puzzle/puzzle2d/artifact.json#/$defs/Puzzle2dMeta",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle2d/artifact.json#/$defs/Puzzle2dMeta",
       "x-semio-state": "artifact"
     }
   }

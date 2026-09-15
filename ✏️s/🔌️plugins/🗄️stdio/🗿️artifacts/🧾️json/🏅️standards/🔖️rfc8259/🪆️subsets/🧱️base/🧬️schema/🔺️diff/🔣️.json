@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/json/rfc8259/base/diff.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/json/rfc8259/base/diff.json",
   "title": "JsonDiff",
   "type": "object",
   "properties": {
@@ -23,7 +23,7 @@
               "const": "replace"
             },
             "value": {
-              "$ref": "https://semio.tech/schema/s/stdio/json/rfc8259/base/snapshot.json#/$defs/JsonValue"
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/json/rfc8259/base/snapshot.json#/$defs/JsonValue"
             }
           }
         },
@@ -146,7 +146,7 @@
                 "type": "integer"
               },
               "item": {
-                "$ref": "https://semio.tech/schema/s/stdio/json/rfc8259/base/snapshot.json#/$defs/JsonValue"
+                "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/json/rfc8259/base/snapshot.json#/$defs/JsonValue"
               }
             }
           },
@@ -198,7 +198,7 @@
                 "type": "string"
               },
               "item": {
-                "$ref": "https://semio.tech/schema/s/stdio/json/rfc8259/base/snapshot.json#/$defs/JsonValue"
+                "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/json/rfc8259/base/snapshot.json#/$defs/JsonValue"
               }
             }
           }

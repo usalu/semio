@@ -3,7 +3,7 @@
   "registration": {
     "controller": "s.flow.flow@1/*#editor",
     "tool": "addWidget",
-    "schema": "flow.hostDocument",
+    "schema": "flow.hostSnapshot",
     "classification": "migrated",
     "publication": ["child"],
     "execution": [16384, 256, 1, 16384, 7500, 1, 1]
@@ -13,7 +13,7 @@
   "canonical": {
     "controller": "s.flow.flow@1/*#editor",
     "tool": "addWidget",
-    "schema": "flow.hostDocument",
+    "schema": "flow.hostSnapshot",
     "rawBytes": 96,
     "checkpointBytes": 0,
     "wire": "canonical",

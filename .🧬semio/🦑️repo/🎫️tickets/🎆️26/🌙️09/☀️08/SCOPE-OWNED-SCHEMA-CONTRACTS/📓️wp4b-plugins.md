@@ -259,7 +259,7 @@ PASS WiresRetainedCommandRoutes          PASS ProcedureRetainedCommandRoutes
 ## 5. Row 83 + contract §A/§B — `$id` grammar and draft-07
 
 `wp4b-plugin-schema-ids.py` derives every module's scope path from its own directory and writes
-`$id = https://semio.tech/schema/<scope path>/<facet>.json` plus the draft-07 dialect on every facet
+`$id = https://json.schemas.assets.semio-tech.com/<scope path>/<facet>.json` plus the draft-07 dialect on every facet
 document, migrating 2020-12 keywords (`prefixItems` → `items` + `additionalItems`, `unevaluated*`
 dropped).
 
@@ -272,7 +272,7 @@ Three shapes changed:
 
 1. **stdio (row 83).** `s.stdio.<artifact>` (a *dotted* segment, standard and subset dropped) →
    `s/stdio/<artifact>/<standard>/<subset>`, the same slash scope path row 45/78 settled for the
-   mutation leaves. `https://semio.tech/schema/s.stdio.las/artifact.json` →
+   mutation leaves. `https://json.schemas.assets.semio-tech.com/s.stdio.las/artifact.json` →
    `…/s/stdio/las/1.0/header/artifact.json`; `…/stdio.epw/snapshot.epw` (not even a `.json` facet) →
    `…/s/stdio/epw/energyplus/any/snapshot.json`. This is what makes the 491 stdio
    `mutation-leaf-id-grammar` findings resolvable: the leaves already write

@@ -1,5 +1,5 @@
 {
-  "$id": "https://semio.tech/schema/s/writer/writer/inference/text.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/writer/writer/inference/text.json",
   "title": "WriterInferenceText",
   "type": "object"
 }

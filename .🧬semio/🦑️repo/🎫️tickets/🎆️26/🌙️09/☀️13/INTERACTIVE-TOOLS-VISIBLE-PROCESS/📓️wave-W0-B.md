@@ -31,7 +31,7 @@ Paths are relative to the repo root. `M` = `🧰️framework/🔨️modules/🛂
 ### Schema (`M/🧬️schema/🔣️.json`, insertions only)
 
 New `$defs`:
-- `ToolRunDefinition`: a `$ref` to `https://semio.tech/schema/framework/tool-run/schema.json#/$defs/ToolRunDefinition`.
+- `ToolRunDefinition`: a `$ref` to `https://json.schemas.assets.semio-tech.com/framework/tool-run/schema.json#/$defs/ToolRunDefinition`.
 - `ToolDefinition` and `UtilityDefinition`: their wire shape, with `label` as a `$ref` to tool-run `LocalizedLabel` and `run` as a `$ref` to `ToolRunDefinition`.
 - `ToolRunActionsFixture`.
 

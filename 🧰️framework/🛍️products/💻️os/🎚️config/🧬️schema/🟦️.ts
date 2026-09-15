@@ -1,5 +1,5 @@
 import type { ArtifactDialect } from "../../../../🔨️modules/🚪️io/🧬️schema/🟦️.ts";
-import type { AppRole, AppRef } from "../../../../🔨️modules/🛂️manifest/🧬️schema/🟦️.ts";
+import type { AppRef, AppRole } from "../../../../🔨️modules/🛂️manifest/🧬️schema/🟦️.ts";
 /** 🧬️ Canonical OS configuration schemas. */
 
 import uiPreferencesSchema from "./🎨️ui-preferences/🔣️.json" with { type: "json" };
@@ -32,7 +32,7 @@ export interface UiPreferences {
   keybindingOverrides: Record<string, string>;
 }
 
-export const OS_UI_PREFERENCES_SCHEMA_ID = "https://semio.tech/schema/os/config/ui-preferences.json";
+export const OS_UI_PREFERENCES_SCHEMA_ID = "https://json.schemas.assets.semio-tech.com/os/config/ui-preferences.json";
 export const osUiPreferencesSchemaDocument = uiPreferencesSchema;
 
 export class OsConfigSchemaError extends Error {

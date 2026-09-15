@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/tiff/6.0/document/artifact.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/tiff/6.0/document/artifact.json",
   "title": "TiffArtifact",
   "type": "object",
   "required": [
@@ -15,13 +15,13 @@
       "x-semio-state": "artifact"
     },
     "byteOrder": {
-      "$ref": "https://semio.tech/schema/s/stdio/tiff/6.0/document/snapshot.json#/$defs/TiffByteOrder",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/tiff/6.0/document/snapshot.json#/$defs/TiffByteOrder",
       "x-semio-state": "artifact"
     },
     "ifds": {
       "type": "array",
       "items": {
-        "$ref": "https://semio.tech/schema/s/stdio/tiff/6.0/document/snapshot.json#/$defs/TiffIfd"
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/tiff/6.0/document/snapshot.json#/$defs/TiffIfd"
       },
       "x-semio-state": "artifact"
     },

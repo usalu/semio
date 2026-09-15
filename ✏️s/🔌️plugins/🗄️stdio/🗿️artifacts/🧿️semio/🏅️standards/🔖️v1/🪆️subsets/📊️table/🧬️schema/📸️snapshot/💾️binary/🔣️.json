@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/semio/v1/table/snapshot/binary.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/table/snapshot/binary.json",
   "title": "SemioTableSnapshotBinaryFrame",
   "description": "Descriptive twin of 📡️.protocol.semio — format u8, schema_len/schema_bytes varint-length-prefixed UTF-8, then an opaque columns+rows payload tail.",
   "type": "object",

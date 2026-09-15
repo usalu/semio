@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/pdf/1.7/base/diff.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/diff.json",
   "title": "PdfDiff",
   "$defs": {
     "PdfPageDiff": {
@@ -55,7 +55,7 @@
           "type": "integer"
         },
         "page": {
-          "$ref": "https://semio.tech/schema/s/stdio/pdf/1.7/base/snapshot.json#/$defs/PdfPage"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/PdfPage"
         }
       }
     },
@@ -112,7 +112,7 @@
           "type": "string"
         },
         "item": {
-          "$ref": "https://semio.tech/schema/s/stdio/pdf/1.7/base/snapshot.json#/$defs/PdfObject"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/PdfObject"
         }
       }
     },
@@ -165,7 +165,7 @@
           "type": "integer"
         },
         "item": {
-          "$ref": "https://semio.tech/schema/s/stdio/pdf/1.7/base/snapshot.json#/$defs/PdfObject"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/PdfObject"
         }
       }
     },
@@ -227,7 +227,7 @@
         "filters": {
           "type": "array",
           "items": {
-            "$ref": "https://semio.tech/schema/s/stdio/pdf/1.7/base/snapshot.json#/$defs/PdfStreamFilter"
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/PdfStreamFilter"
           }
         }
       }
@@ -240,7 +240,7 @@
       ],
       "properties": {
         "id": {
-          "$ref": "https://semio.tech/schema/s/stdio/pdf/1.7/base/snapshot.json#/$defs/ObjRef"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/ObjRef"
         },
         "diff": {
           "$ref": "#/$defs/PdfValueDiff"
@@ -259,10 +259,10 @@
           "type": "integer"
         },
         "id": {
-          "$ref": "https://semio.tech/schema/s/stdio/pdf/1.7/base/snapshot.json#/$defs/ObjRef"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/ObjRef"
         },
         "value": {
-          "$ref": "https://semio.tech/schema/s/stdio/pdf/1.7/base/snapshot.json#/$defs/PdfObject"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/PdfObject"
         }
       }
     },
@@ -272,7 +272,7 @@
         "removed": {
           "type": "array",
           "items": {
-            "$ref": "https://semio.tech/schema/s/stdio/pdf/1.7/base/snapshot.json#/$defs/ObjRef"
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/ObjRef"
           }
         },
         "modified": {
@@ -318,7 +318,7 @@
       "x-semio-state": "artifact"
     },
     "info": {
-      "$ref": "https://semio.tech/schema/s/stdio/pdf/1.7/base/snapshot.json#/$defs/PdfInfo",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/PdfInfo",
       "x-semio-state": "artifact"
     },
     "pages": {

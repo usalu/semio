@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/framework/ui/contract/retained/resident/payload/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/ui/contract/retained/resident/payload/schema.json",
   "title": "Ui Contract Retained Resident Payload Schema Module",
   "definitions": {
     "slot": {

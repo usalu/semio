@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/drawing/drawing/artifact.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/drawing/drawing/artifact.json",
   "title": "DrawingArtifact",
   "type": "object",
   "additionalProperties": false,

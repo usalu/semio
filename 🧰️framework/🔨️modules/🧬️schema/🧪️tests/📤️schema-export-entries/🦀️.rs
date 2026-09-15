@@ -27,7 +27,7 @@ fn schema_export_catalog_entries_dump_is_sorted_and_matches_the_declared_contrac
         rust: "pub struct SchemaExportEntry;",
         typescript: "export type SchemaExportEntry = {};",
         graphql: "",
-        json_schema: "{\"$schema\":\"http://json-schema.org/draft-07/schema#\",\"$id\":\"https://semio.tech/schema/framework/schema/entries/schema.json\",\"type\":\"object\"}",
+        json_schema: "{\"$schema\":\"http://json-schema.org/draft-07/schema#\",\"$id\":\"https://json.schemas.assets.semio-tech.com/framework/schema/entries/schema.json\",\"type\":\"object\"}",
         proto: "",
     };
     const EXPORTS: [SchemaExport; 1] = [SchemaExport { id: "SchemaExportEntry", leaves: LEAVES }];

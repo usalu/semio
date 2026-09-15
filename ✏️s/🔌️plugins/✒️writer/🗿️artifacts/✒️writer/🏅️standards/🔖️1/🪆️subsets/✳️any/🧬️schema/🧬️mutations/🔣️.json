@@ -1,19 +1,19 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/writer/writer/mutations.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/writer/writer/mutations.json",
   "title": "WriterMutation",
   "oneOf": [
     {
-      "$ref": "https://semio.tech/schema/s/writer/writer/mutation/change-language/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/writer/writer/mutation/change-language/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/writer/writer/mutation/change-uri/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/writer/writer/mutation/change-uri/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/writer/writer/mutation/edit-text/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/writer/writer/mutation/edit-text/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/writer/writer/mutation/rename-writer/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/writer/writer/mutation/rename-writer/schema.json"
     }
   ]
 }

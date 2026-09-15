@@ -33,7 +33,7 @@
       "pointer": "/synapses/0"
     },
     {
-      "kind": "hostDocument",
+      "kind": "hostSnapshot",
       "index": 0,
       "pointer": ""
     }

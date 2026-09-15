@@ -14,9 +14,9 @@ rewrites descriptors, and turns every plugin aggregate into a pure relative-`$re
 `--ids` is the idempotent contract §A `$id`-grammar pass, run on its own (`--ids` reports, `--ids --apply`
 writes). It touches nothing but `$id`/`title` and rewrites, for every document of a `🧬️mutations` tree:
 
-    leaf   <leaf>/🧬️schema/🔣️.json   → https://semio.tech/schema/<root scope>/mutation/<semanticKind>/schema.json
-    root   <root>/🔣️.json            → https://semio.tech/schema/<root scope>/mutations.json
-    facet  <root>/<facet>/🔣️.json    → https://semio.tech/schema/<root scope>/mutations/<facet>.json
+    leaf   <leaf>/🧬️schema/🔣️.json   → https://json.schemas.assets.semio-tech.com/<root scope>/mutation/<semanticKind>/schema.json
+    root   <root>/🔣️.json            → https://json.schemas.assets.semio-tech.com/<root scope>/mutations.json
+    facet  <root>/<facet>/🔣️.json    → https://json.schemas.assets.semio-tech.com/<root scope>/mutations/<facet>.json
 
 A mutation leaf is a scope of its own, so its facet filename is `schema`; the aggregate and its text/binary
 facet documents keep the root scope path and vary only the facet filename.
@@ -153,7 +153,7 @@ def apply_leaf(leaf: str, info: dict, family: str, present: set[str], report: di
     descriptor = info["descriptor"]
     declared = descriptor["payloadSchema"]
     scope = scope_id(info["root"])
-    schema_id = f"https://semio.tech/schema/{scope}/mutation/{descriptor['semanticKind']}.json"
+    schema_id = f"https://json.schemas.assets.semio-tech.com/{scope}/mutation/{descriptor['semanticKind']}.json"
     title = descriptor["aggregateVariant"]
     target = f"{leaf}/{TARGET_REL}"
     old_paths = []
@@ -201,7 +201,7 @@ def apply_aggregate(root: str, leaves: dict[str, dict], report: dict, aggregate_
         return
     previous = load(aggregate_rel) if os.path.exists(os.path.join(REPO, aggregate_rel)) else {}
     scope = scope_id(root)
-    doc = {"$schema": DRAFT7, "$id": previous.get("$id") or f"https://semio.tech/schema/{scope}/mutation.json", "title": previous.get("title") or "".join(part.capitalize() for part in re.split(r"[/\-]", scope)) + "Mutation"}
+    doc = {"$schema": DRAFT7, "$id": previous.get("$id") or f"https://json.schemas.assets.semio-tech.com/{scope}/mutation.json", "title": previous.get("title") or "".join(part.capitalize() for part in re.split(r"[/\-]", scope)) + "Mutation"}
     if previous.get("description"):
         doc["description"] = previous["description"]
     doc["oneOf"] = [{"$ref": leaf_schema_id(scope, info["descriptor"]["semanticKind"])} for _, info in members]
@@ -214,17 +214,17 @@ FACET_DOC_DIRS = ("📝️text", "💾️binary")
 
 def leaf_schema_id(scope: str, semantic_kind: str) -> str:
     """🆔️ Contract §A: a mutation leaf is its own scope, facet `schema`."""
-    return f"https://semio.tech/schema/{scope}/mutation/{semantic_kind}/schema.json"
+    return f"https://json.schemas.assets.semio-tech.com/{scope}/mutation/{semantic_kind}/schema.json"
 
 
 def aggregate_schema_id(scope: str) -> str:
     """🆔️ Contract §A: the union document is the root scope's `mutations` facet."""
-    return f"https://semio.tech/schema/{scope}/mutations.json"
+    return f"https://json.schemas.assets.semio-tech.com/{scope}/mutations.json"
 
 
 def facet_schema_id(scope: str, facet_dir: str) -> str:
     """🆔️ Contract §A: a facet document never deepens the scope, it only varies the filename."""
-    return f"https://semio.tech/schema/{scope}/mutations/{ascii_tail(facet_dir)}.json"
+    return f"https://json.schemas.assets.semio-tech.com/{scope}/mutations/{ascii_tail(facet_dir)}.json"
 
 
 def relref(files: list[str], grouped: dict[str, list[str]], leaves: dict[str, dict], present: set[str], apply: bool) -> dict:
@@ -654,7 +654,7 @@ def draft07(files: list[str], grouped: dict[str, list[str]], present: set[str], 
     return report
 
 
-ID_BASE = "https://semio.tech/schema/"
+ID_BASE = "https://json.schemas.assets.semio-tech.com/"
 
 
 def module_scope_path(root: str, present: set[str]) -> str | None:

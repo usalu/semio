@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/move-camera/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/move-camera/schema.json",
   "title": "MoveCameraMutation",
   "oneOf": [
     {

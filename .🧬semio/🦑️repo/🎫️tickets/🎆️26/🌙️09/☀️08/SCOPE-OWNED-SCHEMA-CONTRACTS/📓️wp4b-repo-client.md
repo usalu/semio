@@ -87,7 +87,7 @@ carries them — the only client traffic is `syncTicketToServer` (`/api/v1/ticke
 
 | Scope id | Module path | `$id` | Formats |
 |---|---|---|---|
-| `repo.client.sqlite` | `🦑️repo/🔨️modules/💻️client/🪶️sqlite/🧬️schema/` | `https://semio.tech/schema/repo/client/sqlite/schema.json` | `🔣️.json` (draft-07), native `🗄️.sql` |
+| `repo.client.sqlite` | `🦑️repo/🔨️modules/💻️client/🪶️sqlite/🧬️schema/` | `https://json.schemas.assets.semio-tech.com/repo/client/sqlite/schema.json` | `🔣️.json` (draft-07), native `🗄️.sql` |
 
 Exports (7), one `<Table>Row` per native table, each `x-semio-persistence: "local-only"`:
 `RepoRow`, `FolderRow`, `TechnologyRow`, `BundleRow`, `FileRow`, `SectionRow`, `DefinitionRow`.

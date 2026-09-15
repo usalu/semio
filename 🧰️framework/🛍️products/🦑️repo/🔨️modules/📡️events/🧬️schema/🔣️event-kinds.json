@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://semio.tech/schema/repo/events/event-kinds.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/repo/events/event-kinds.json",
   "title": "Repo event kinds",
   "description": "📋️ Single source of truth for every repo event kind string. Go and Rust both load this file.",
   "schemaVersion": 1,

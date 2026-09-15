@@ -4,7 +4,7 @@ export interface Generation2dDiff {
   /** @state artifact */
   artifact?: Generation2dArtifact;
   /** @state artifact */
-  fixture?: FlowFixture;
+  hostSnapshot?: FlowHostSnapshot;
   /** @state artifact */
   generation?: GenerationPlayState;
 }
@@ -17,7 +17,7 @@ export type WidgetLayout = { x: number; y: number };
 export type SynapseSpec = { id: string; from: string; to: string; fromPort: string; toPort: string };
 /** @description Polymorphic flow widget — JSON blob. */
 export type Widget = string;
-export type FlowFixture = {
+export type FlowHostSnapshot = {
   schema: string;
   camera: CameraJson;
   widgets: Widget[];

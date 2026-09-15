@@ -1023,7 +1023,7 @@ pub fn tool_output_schema(export_id: &str) -> serde_json::Value {
 pub const SCHEMA_MIRROR_JSON: &str = include_str!("🔣️.json");
 
 /// 🆔️ The `$id` of [`SCHEMA_MIRROR_JSON`] — the `os.mcp` scope's one component document.
-pub const SCHEMA_MIRROR_ID: &str = "https://semio.tech/schema/os/mcp/component.json";
+pub const SCHEMA_MIRROR_ID: &str = "https://json.schemas.assets.semio-tech.com/os/mcp/component.json";
 //#endregion 🔖️SchemaCatalog
 
 //#region 🔖️ScopeSchemaExports

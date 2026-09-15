@@ -1,5 +1,5 @@
 {
-  "$id": "https://semio.tech/schema/s/vcs/vcs/diff/text.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/vcs/vcs/diff/text.json",
   "title": "VcsDiffText",
   "type": "object"
 }

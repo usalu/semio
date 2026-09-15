@@ -18,15 +18,6 @@ import { join } from "node:path";
 import type { PlaygroundEntry } from "../🎮️playground/🔎️discovery/🟦️.ts";
 
 const SEED_REL_PATH = ".vscode/🧩️launch.seed.jsonc";
-/** @emoji 🖼️ The renderers whose `serve`/`dev` browser listeners every playground variant owns a
- * `0_dev` launcher for. `⚛️react` serves `🎯️targets/⚛️react`'s Vite host; `🧊️wgpu` serves
- * `🎯️targets/🧊️wgpu/🌐️server`'s, the one browser listener that consumes Nx-completed WGPU artifacts
- * (`@semio-tech/framework-os-dev:serve-<variant>-wgpu-<profile>`). Both target families are inferred
- * per variant from the playground registry, so a new plugin gets both rows with no seed edit. */
-const RENDERER_ROWS = [
-  { id: "react", badge: "⚛️react" },
-  { id: "wgpu", badge: "🧊️wgpu" },
-] as const;
 /** @emoji 📄️ Repo-relative path of the generated output, shared with `📜️script.ts`'s freshness gate. */
 export const LAUNCH_OUTPUT_REL_PATH = ".vscode/launch.json";
 const DEV_LAUNCHERS_MARKER =
@@ -114,32 +105,6 @@ function renderEntry(name: string, launcher: DevLauncherEntry, renderer: "react"
   };
 }
 
-/** @emoji 🧽️ Supplies one zero-touch renderer entry when a discovered variant has no curated launcher surface. */
-function renderDiscoveredEntry(playground: PlaygroundEntry, namePrefix: string, renderer: "react" | "wgpu" | "native", order: number, command?: string): object {
-  const port = renderer === "react" ? playground.ports.react : playground.ports.wgpu;
-  if (renderer === "native") {
-    return {
-      name: `🛠️dev${namePrefix}🧊️wgpu🖥️native`,
-      type: "node-terminal",
-      request: "launch",
-      command: `bun nx run @semio-tech/framework-os-dev:run-${playground.variant}-native-dev`,
-      cwd: "${workspaceFolder}",
-      env: { SEMIO_PLUGIN: playground.pluginId, ...(playground.app ? { SEMIO_APP: playground.app } : {}) },
-      presentation: { group: "3_dev", order },
-    };
-  }
-  return {
-    name: `🛠️dev${namePrefix}${renderer === "react" ? "⚛️react" : "🧊️wgpu🌐️wasm"}`,
-    type: "node-terminal",
-    request: "launch",
-    command: command ?? `bun nx run workspace:dev -- ${playground.variant}`,
-    cwd: "${workspaceFolder}",
-    env: { S_OS_PORT: String(port), SEMIO_PLUGIN: playground.pluginId, SEMIO_RENDERER: renderer, ...(playground.app ? { SEMIO_APP: playground.app } : {}) },
-    presentation: { group: "3_dev", order },
-    serverReadyAction: { action: "openExternally", pattern: `(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):${port})`, uriFormat: "%s" },
-  };
-}
-
 /** @emoji ↔️ Re-indents a `JSON.stringify(obj, null, 2)` block (0-based) to sit at the seed's 4-space
  * `configurations` array-item depth; only line 1 needs no shift since it replaces an inline placeholder. */
 function reindent(jsonText: string, extraSpaces: number): string {
@@ -197,7 +162,7 @@ function renderUserEntries(launcher: DevLauncherEntry, playground: PlaygroundEnt
 //#region 🔖️Generate
 /** @emoji 🏗️ Renders the full `.vscode/launch.json` text: seed skeleton with every
  * `@generated:<variant>:<renderer>` placeholder substituted by a fresh, registry-ported entry. */
-export function generateLaunchJson(repoRoot: string, playgrounds: readonly PlaygroundEntry[], components: readonly { project: string; pluginId: string }[], readText?: (path: string) => string): string {
+export function generateLaunchJson(repoRoot: string, playgrounds: readonly PlaygroundEntry[], _components: readonly { project: string; pluginId: string }[], readText?: (path: string) => string): string {
   const { skeleton, devLaunchers } = readSeed(repoRoot, readText);
   const byVariant = new Map(playgrounds.map((entry) => [entry.variant, entry]));
   let out = skeleton;
@@ -224,51 +189,6 @@ export function generateLaunchJson(repoRoot: string, playgrounds: readonly Playg
     }
   }
   if (out.includes("@generated:")) throw new Error("🚀️launch/🟦️.ts: an @generated placeholder was not resolved (devLaunchers table is missing an entry)");
-  const synthesized: object[] = [];
-  const printCatalogPath = "🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/📇️catalog/🔣️.json";
-  const printCatalog = JSON.parse(readText ? readText(printCatalogPath) : readFileSync(join(repoRoot, printCatalogPath), "utf8")) as { documents: { id: string }[] };
-  printCatalog.documents.forEach((document, index) => {
-    synthesized.push({ name: `📦️build🖨️print ${document.id}`, type: "node-terminal", request: "launch", command: `bun nx run @semio-tech/print:build-${document.id}`, cwd: "${workspaceFolder}", presentation: { group: "4_build", order: Math.round((231 + index * 0.001) * 1000) / 1000 } });
-    synthesized.push({ name: `🛠️dev🖨️print ${document.id}`, type: "node-terminal", request: "launch", command: `bun nx run @semio-tech/print:watch-${document.id}`, cwd: "${workspaceFolder}", presentation: { group: "0_dev", order: Math.round((391 + index * 0.001) * 1000) / 1000 } });
-  });
-  [...components].sort((a, b) => a.pluginId.localeCompare(b.pluginId)).forEach((component, index) => {
-    for (const [offset, target] of ["component-dev", "component-release", "materialize-dev", "materialize-release"].entries()) synthesized.push({
-      name: `📦️build🧩️${component.pluginId}⚙️${target}`,
-      type: "node-terminal",
-      request: "launch",
-      command: `bun nx run ${component.project}:${target}`,
-      cwd: "${workspaceFolder}",
-      presentation: { group: "4_build", order: Math.round((230 + index * 0.01 + offset * 0.001) * 1000) / 1000 },
-    });
-  });
-  synthesized.push({ name: "🎮️build inputs", type: "node-terminal", request: "launch", command: "bun nx run @semio-tech/framework-os-dev:build-inputs", cwd: "${workspaceFolder}", presentation: { group: "4_build", order: 349 } });
-  const ordered = [...playgrounds].sort((left, right) => left.variant.localeCompare(right.variant));
-  ordered.forEach((playground, index) => {
-    synthesized.push({ name: `🎮️generate🧩️${playground.variant} session`, type: "node-terminal", request: "launch", command: `bun nx run @semio-tech/plugin-registry:session-${playground.variant}`, cwd: "${workspaceFolder}", presentation: { group: "4_build", order: Math.round((350 + index * 0.001) * 1000) / 1000 } });
-    for (const [offset, profile] of ["dev", "release"].entries()) synthesized.push({ name: `🎮️prepare🧩️${playground.variant}⚛️react ${profile}`, type: "node-terminal", request: "launch", command: `bun nx run @semio-tech/framework-os-dev:prepare-${playground.variant}-react-${profile}`, cwd: "${workspaceFolder}", presentation: { group: "4_build", order: Math.round((360 + index * 0.01 + offset * 0.001) * 1000) / 1000 } });
-    for (const [offset, profile] of ["dev", "release"].entries()) for (const [commandIndex, command] of ["prepare", "run", "smoke"].entries()) synthesized.push({
-      name: `🎮️${command}🧩️${playground.variant}🖥️native ${profile}`, type: "node-terminal", request: "launch",
-      command: `bun nx run @semio-tech/framework-os-dev:${command}-${playground.variant}-native-${profile}`, cwd: "${workspaceFolder}",
-      presentation: { group: command === "prepare" ? "4_build" : command === "smoke" ? "3_test" : "0_dev", order: Math.round((365 + index * 0.01 + offset * 0.003 + commandIndex * 0.001) * 1000) / 1000 },
-    });
-    synthesized.push({ name: `🎮️build🧩️${playground.variant}⚛️react release`, type: "node-terminal", request: "launch", command: `bun nx run @semio-tech/framework-os-dev:build-${playground.variant}-react-release`, cwd: "${workspaceFolder}", presentation: { group: "4_build", order: Math.round((362 + index * 0.001) * 1000) / 1000 } });
-    for (const [offset, profile] of ["dev", "release"].entries()) synthesized.push({ name: `🎮️activate🧩️${playground.variant}⚛️react ${profile}`, type: "node-terminal", request: "launch", command: `bun nx run @semio-tech/framework-os-dev:activate-${playground.variant}-react-${profile}`, cwd: "${workspaceFolder}", presentation: { group: "4_build", order: Math.round((361 + index * 0.01 + offset * 0.001) * 1000) / 1000 } });
-    for (const [rendererIndex, renderer] of RENDERER_ROWS.entries()) for (const [offset, profile] of ["dev", "release"].entries()) for (const [commandIndex, command] of ["serve", "dev"].entries()) synthesized.push({ name: `🎮️${command}🧩️${playground.variant}${renderer.badge} ${profile}`, type: "node-terminal", request: "launch", command: `bun nx run @semio-tech/framework-os-dev:${command}-${playground.variant}-${renderer.id}-${profile}`, cwd: "${workspaceFolder}", presentation: { group: "0_dev", order: Math.round((380 + index * 0.1 + rendererIndex * 0.05 + offset * 0.01 + commandIndex * 0.001) * 1000) / 1000 } });
-    const launcher = devLaunchers[playground.variant];
-    const prefix = launcher?.namePrefix ?? `🧩️${playground.variant}`;
-    const order = Math.round((390 + index * 0.01) * 1_000) / 1_000;
-    const reactName = `🛠️dev${prefix}⚛️react`;
-    const wgpuName = `🛠️dev${prefix}🧊️wgpu🌐️wasm`;
-    const nativeName = `🛠️dev${prefix}🧊️wgpu🖥️native`;
-    if (!out.includes(JSON.stringify(reactName))) synthesized.push(renderDiscoveredEntry(playground, prefix, "react", order, launcher?.command));
-    if (!out.includes(JSON.stringify(wgpuName))) synthesized.push(renderDiscoveredEntry(playground, prefix, "wgpu", order + 0.001, launcher?.command));
-    if (!out.includes(JSON.stringify(nativeName))) synthesized.push(renderDiscoveredEntry(playground, prefix, "native", order + 0.002));
-  });
-  if (synthesized.length > 0) {
-    const marker = '\n  ],\n  "compounds":';
-    if (!out.includes(marker)) throw new Error("🚀️launch/🟦️.ts: generated skeleton lacks the configurations/compounds boundary");
-    out = out.replace(marker, `\n    ,\n${synthesized.map((entry) => reindent(JSON.stringify(entry, null, 2), 4)).join(",\n")}\n  ],\n  "compounds":`);
-  }
   try {
     Bun.JSONC.parse(out);
   } catch {

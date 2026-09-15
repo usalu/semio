@@ -591,7 +591,7 @@ pub fn unwrap_spatial_load_payload(raw: &DslValue) -> Option<DslValue> {
 }
 
 /// 🌉 Real per-pane object extraction from a `spatial.modelspace`/`spatial.model` payload — the
-/// SAME fixture-import machinery (`geometry_import::parse_geometry` + `objects_from_host_document_model`)
+/// SAME fixture-import machinery (`geometry_import::parse_geometry` + `objects_from_host_snapshot_model`)
 /// the Concrete Forest Left quad fixture is built from (`crate::editor::cad::forest_working_scene`),
 /// since both are the identical `spatial.model`-shaped wire form. A `spatial.modelspace` payload
 /// wraps zero or more `{id|modelDefinitionId, model}` entries in `models[]`; a bare `spatial.model`
@@ -601,7 +601,7 @@ pub fn unwrap_spatial_load_payload(raw: &DslValue) -> Option<DslValue> {
 /// panes with no objects, or an id this document doesn't recognize, are left `None` rather than
 /// fabricating an empty child. Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 3.
 pub fn scene_from_spatial_payload(payload: &DslValue) -> Option<crate::CadSnapshot> {
-    use crate::standards::v1::subsets::any::io::geometry_import::{objects_from_host_document_model, parse_geometry, semio_model_snapshot_from_objects};
+    use crate::standards::v1::subsets::any::io::geometry_import::{objects_from_host_snapshot_model, parse_geometry, semio_model_snapshot_from_objects};
     use crate::standards::v1::subsets::any::schema::inferences::{cad_brep_kernel, default_document, CAD_MODEL_DEFINITION_SHAPE};
     use crate::{cad_model_child_handle, cad_pane_from_model_definition_id, CadPaneId};
     let schema = payload.get("schema").and_then(|value| value.as_str());
@@ -630,7 +630,7 @@ pub fn scene_from_spatial_payload(payload: &DslValue) -> Option<crate::CadSnapsh
         }
         let geometry = parse_geometry(model_value.get("geometry"));
         let mut kernel = cad_brep_kernel();
-        let objects = objects_from_host_document_model(&mut kernel, objects_value, &geometry);
+        let objects = objects_from_host_snapshot_model(&mut kernel, objects_value, &geometry);
         if objects.is_empty() {
             continue;
         }

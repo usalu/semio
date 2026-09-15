@@ -58,13 +58,45 @@ pub fn sourcing_curation_io() -> semio_framework_plugin::AppIo {
 /// `SOURCING_DIALECT` + `AppRole` via `surface_app_id`, never hand-written).
 pub const SOURCING_CONTROLLER_ID: &str = "sourcing-curation";
 pub const SOURCING_DRAG_MIME: &str = "application/x-semio-sourcing-object";
-pub const DEMO_STOCK_EXAMPLE_ID: &str = "demo-stock";
-pub const EMPTY_EXAMPLE_ID: &str = "empty-curation";
+pub const DEMO_STOCK_EXAMPLE_ID: &str = crate::examples::demo::ID;
+/// 🫙️ The shell's "no example" selection.
+pub const EMPTY_EXAMPLE_ID: &str = "";
 
 /// 🎯️ An `ActionDescriptor` addressed at this app — the single factory every taxonomy node's chrome
 /// builds its `on_change`/drop actions with.
 pub fn sourcing_action(action: &str, args: Option<semio_framework_plugin::UiValue>) -> semio_framework_plugin::UiAssemblyResult<(semio_framework_plugin::ActionId, Option<semio_framework_plugin::UiValue>)> {
     semio_framework_plugin::ActionFactory::new(SOURCING_CONTROLLER_ID).action(action, args)
+}
+
+/// 🎯️ The table-scene action descriptor a stepper, row button or drop target dispatches to this app.
+pub fn sourcing_table_action(action: &str, object_id: Option<&str>) -> semio_framework_plugin::ActionDescriptor {
+    let args = object_id.map(|id| protocol::DslValue::object([("objectId".to_string(), protocol::DslValue::String(id.to_string()))]));
+    semio_framework_plugin::ActionDescriptor { controller_id: SOURCING_CONTROLLER_ID.into(), action: action.into(), args }
+}
+
+/// 🧾️ One table row record for a stock kind: its id, the `{objectId}` payload a drag carries under
+/// [`SOURCING_DRAG_MIME`], and `cells` keyed by column id.
+pub fn sourcing_table_row(object_id: &str, cells: Vec<(&str, semio_framework_plugin::TableCell)>) -> protocol::DslValue {
+    let mut entries = vec![
+        ("id".to_string(), protocol::DslValue::String(object_id.to_string())),
+        ("_drag".to_string(), protocol::DslValue::object([("objectId".to_string(), protocol::DslValue::String(object_id.to_string()))])),
+    ];
+    entries.extend(cells.into_iter().map(|(column, cell)| (column.to_string(), protocol::ToValue::to_value(&cell))));
+    protocol::DslValue::object(entries)
+}
+
+/// 📊️ One sourcing table surface: `(id, label, sortable)` columns, [`sourcing_table_row`] records
+/// draggable under [`SOURCING_DRAG_MIME`], and `drop_action` answering a row dropped onto it.
+pub fn sourcing_table(surface_id: &str, columns: &[(&str, &str, bool)], rows: Vec<protocol::DslValue>, drop_action: &str, sort: Option<&crate::TableSort>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    let columns = columns
+        .iter()
+        .map(|(id, label, sortable)| protocol::DslValue::object([("id".to_string(), protocol::DslValue::String(id.to_string())), ("label".to_string(), protocol::DslValue::String(label.to_string())), ("sortable".to_string(), protocol::DslValue::Bool(*sortable))]))
+        .collect();
+    let mut scene = semio_framework_plugin::TableScene::base(protocol::json::to_json_string(&protocol::DslValue::Array(columns)), protocol::json::to_json_string(&protocol::DslValue::Array(rows)));
+    scene.row_drag_mime = Some(SOURCING_DRAG_MIME.into());
+    scene.drop_action_json = Some(protocol::json::to_json_string(&protocol::ToValue::to_value(&sourcing_table_action(drop_action, None))));
+    scene.sort_json = sort.map(|sort| protocol::json::to_json_string(&protocol::ToValue::to_value(sort)));
+    semio_framework_plugin::scene_surface(surface_id, semio_framework_plugin::plugin_app_close_prelude::SurfaceKind::Table, &scene)
 }
 
 
@@ -1126,7 +1158,7 @@ pub fn create_sourcing_curation_app() -> AppDefinition {
                 vec![ActionArgDef::select(
                     "exampleId",
                     LocalizedLabel::native("Example", "Beispiel"),
-                    vec![ActionArgOption::new(DEMO_STOCK_EXAMPLE_ID, LocalizedLabel::native("Demo Stock", "Beispielbestand")), ActionArgOption::new(EMPTY_EXAMPLE_ID, LocalizedLabel::native("Empty Curation", "Leere Kuratierung"))],
+                    crate::standards::v1::subsets::any::examples().iter().map(|example| ActionArgOption::new(example.id(), example.label().clone())).collect(),
                 )
                 .default_value(&DEMO_STOCK_EXAMPLE_ID)],
             )

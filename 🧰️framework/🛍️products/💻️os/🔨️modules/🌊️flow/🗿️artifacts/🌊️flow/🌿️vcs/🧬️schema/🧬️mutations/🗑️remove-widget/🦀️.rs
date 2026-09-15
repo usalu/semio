@@ -1,5 +1,5 @@
 //! 🗑️ Remove Widget direct payload and owned behavior.
-use super::super::{FlowHostDocument, FlowDiff, FlowDelta, FlowCollectionDelta, FlowMutation, flow_wire_index};
+use super::super::{FlowHostSnapshot, FlowDiff, FlowDelta, FlowCollectionDelta, FlowMutation, flow_wire_index};
 use crate::os_spr::{MutationKind, MutationOutcome, SemanticDescriptor, Identified};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -13,12 +13,12 @@ pub struct RemoveWidget { pub id: String }
 //#endregion 🧬️Payload
 
 //#region 🎮️Behavior
-impl MutationKind<FlowHostDocument, FlowMutation> for RemoveWidget {
+impl MutationKind<FlowHostSnapshot, FlowMutation> for RemoveWidget {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "remove", entity: "widget", kind: "remove-widget", record: "RemovedWidget" };
-    fn diff(&self, _base: &FlowHostDocument) -> MutationOutcome<FlowDiff> {
+    fn diff(&self, _base: &FlowHostSnapshot) -> MutationOutcome<FlowDiff> {
         MutationOutcome::new(FlowDiff::from(FlowDelta::Widgets(FlowCollectionDelta { removed: vec![self.id.clone()], inserted: vec![], replaced: vec![] })))
     }
-    fn inverse(&self, base: &FlowHostDocument) -> Vec<FlowMutation> {
+    fn inverse(&self, base: &FlowHostSnapshot) -> Vec<FlowMutation> {
         base.widgets.iter().position(|item| item.id() == &self.id).and_then(|index| flow_wire_index(index).ok().map(|wire| FlowMutation::AddWidget(super::AddWidget { index: wire, widget: base.widgets[index].clone() }))).into_iter().collect()
     }
     fn label(&self) -> String { format!("Remove widget {}", self.id) }

@@ -88,8 +88,8 @@ type ToolRunRow = readonly [ToolRunState | null, ToolRunEffect, boolean];
 
 const TOOL_RUN_TABLE: Readonly<Partial<Record<ToolRunState, Partial<Record<ToolRunEventKey, ToolRunRow | ToolRunRejection>>>>> = {
   starting: { jobAdmitted: ["running", "schedule", false], abort: ["aborting", "closeJob", false], abortWhilePublishing: ["aborting", "closeJob", false], jobFault: ["faulted", "discardProvisional", false] },
-  running: { pause: ["paused", "stopScheduling", false], jobComplete: ["complete", "holdResult", false], settingsChanged: ["running", "reconfigure", true], baseChanged: ["running", "refold", true], abort: ["aborting", "closeJob", false], abortWhilePublishing: ["aborting", "closeJob", false], jobFault: ["faulted", "discardProvisional", false] },
-  paused: { resume: ["running", "schedule", false], step: ["paused", "driveOneUnit", false], jobComplete: ["complete", "holdResult", false], settingsChanged: ["paused", "reconfigure", true], baseChanged: ["paused", "refold", true], abort: ["aborting", "closeJob", false], abortWhilePublishing: ["aborting", "closeJob", false], jobFault: ["faulted", "discardProvisional", false] },
+  running: { pause: ["paused", "stopScheduling", false], finalize: ["finalizing", "beginFinalize", false], jobComplete: ["complete", "holdResult", false], settingsChanged: ["running", "reconfigure", true], baseChanged: ["running", "refold", true], abort: ["aborting", "closeJob", false], abortWhilePublishing: ["aborting", "closeJob", false], jobFault: ["faulted", "discardProvisional", false] },
+  paused: { resume: ["running", "schedule", false], step: ["paused", "driveOneUnit", false], finalize: ["finalizing", "beginFinalize", false], jobComplete: ["complete", "holdResult", false], settingsChanged: ["paused", "reconfigure", true], baseChanged: ["paused", "refold", true], abort: ["aborting", "closeJob", false], abortWhilePublishing: ["aborting", "closeJob", false], jobFault: ["faulted", "discardProvisional", false] },
   complete: { settingsChanged: ["running", "reconfigure", true], baseChanged: ["complete", "refold", true], finalize: ["finalizing", "beginFinalize", false], abort: ["aborting", "closeJob", false], abortWhilePublishing: ["aborting", "closeJob", false] },
   finalizing: { publicationComplete: ["finalized", "releaseProvisional", false], revalidationConflicts: ["complete", "retractConflicts", true], storeRejected: ["complete", "keepProvisional", true], abort: ["aborting", "cancelBatch", false], abortWhilePublishing: "toolRun.stale" },
   aborting: { abortComplete: ["aborted", "retireProvisional", false] },
@@ -1203,7 +1203,7 @@ export function isToolRunActionLegal(id: ToolRunActionId, state: ToolRunState | 
     case TOOL_RUN_STEP_ACTION_ID:
       return state === "paused";
     case TOOL_RUN_FINALIZE_ACTION_ID:
-      return state === "complete";
+      return state === "running" || state === "paused" || state === "complete";
     case TOOL_RUN_ABORT_ACTION_ID:
       return state === "starting" || state === "running" || state === "paused" || state === "complete" || state === "finalizing";
   }
@@ -1229,7 +1229,7 @@ export const TOOL_RUN_LABELS = {
   actionAbort: { en: "Abort", de: "Abbrechen" },
   actionFinalize: { en: "Finalize", de: "Abschließen" },
   actionDismiss: { en: "Dismiss", de: "Schließen" },
-  finalizeDisabled: { en: "Available once the run is complete", de: "Verfügbar, sobald der Lauf fertig ist" },
+  finalizeDisabled: { en: "Available once the run has started", de: "Verfügbar, sobald der Lauf gestartet ist" },
   readyToStart: { en: "Ready to start", de: "Bereit zum Starten" },
   rebasingStep: { en: "Artifact changed, re-applying provisional result", de: "Artefakt geändert, vorläufiges Ergebnis wird neu angewendet" },
   conflictStep: { en: "{0} provisional changes conflict with the current artifact", de: "{0} vorläufige Änderungen stehen im Konflikt mit dem aktuellen Artefakt" },

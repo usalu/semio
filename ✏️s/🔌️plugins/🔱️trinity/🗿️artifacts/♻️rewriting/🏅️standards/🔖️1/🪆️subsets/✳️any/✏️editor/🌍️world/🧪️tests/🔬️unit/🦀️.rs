@@ -228,7 +228,7 @@ async fn trinity_host_run_jack_json_and_with_fixture() {
     let before = host.graph.nodes.len();
     let out = host.run_jack_with_fixture_json("CREATE (n:Piece)").await.unwrap();
     let value: pack::JsonValue = pack::parse_json(&out).unwrap();
-    assert!(value.get("hostDocumentJson").is_some());
+    assert!(value.get("hostSnapshotJson").is_some());
     assert_eq!(host.graph.nodes.len(), before + 1);
 }
 

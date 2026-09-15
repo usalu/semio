@@ -6,16 +6,16 @@ use crate::{widget_id, Generation2dSnapshot};
 
 pub fn diff(payload: &super::ConnectSynapse, base: &Generation2dSnapshot) -> protocol::MutationOutcome<Generation2dDiff> {
     let synapse = &payload.synapse;
-    if base.host_document.synapses.iter().any(|entry| entry.id == synapse.id) {
+    if base.host_snapshot.synapses.iter().any(|entry| entry.id == synapse.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A synapse with id \"{}\" already exists.", synapse.id), [synapse.id.clone()]);
     }
-    if !base.host_document.widgets.iter().any(|widget| widget_id(widget) == synapse.from) {
+    if !base.host_snapshot.widgets.iter().any(|widget| widget_id(widget) == synapse.from) {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Source widget \"{}\" does not exist.", synapse.from), [synapse.from.clone()]);
     }
-    if !base.host_document.widgets.iter().any(|widget| widget_id(widget) == synapse.to) {
+    if !base.host_snapshot.widgets.iter().any(|widget| widget_id(widget) == synapse.to) {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Target widget \"{}\" does not exist.", synapse.to), [synapse.to.clone()]);
     }
-    if base.host_document.synapses.iter().any(|entry| entry.from == synapse.from && entry.from_port == synapse.from_port && entry.to == synapse.to && entry.to_port == synapse.to_port) {
+    if base.host_snapshot.synapses.iter().any(|entry| entry.from == synapse.from && entry.from_port == synapse.from_port && entry.to == synapse.to && entry.to_port == synapse.to_port) {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("\"{}\" is already connected to \"{}\"; parallel synapses are not allowed.", synapse.from, synapse.to));
     }
     protocol::MutationOutcome::new(diff_fixture_from_helpers(base, &WidgetsDiff::default(), &SynapsesDiff { removed: vec![], set: vec![(payload.index, synapse.clone())] }, &LayoutDiff::default(), None, None))

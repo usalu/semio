@@ -3,7 +3,7 @@
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 
 // Field-for-field conformance of the Go coordinator with the owner module
-// 🧬️schema/🔣️.json (https://semio.tech/schema/repo/server/coordinator/schema.json).
+// 🧬️schema/🔣️.json (https://json.schemas.assets.semio-tech.com/repo/server/coordinator/schema.json).
 
 // #endregion 🧲️Header
 
@@ -23,7 +23,7 @@ import (
 
 // #region 🧰️Module
 
-const coordinatorSchemaID = "https://semio.tech/schema/repo/server/coordinator/schema.json"
+const coordinatorSchemaID = "https://json.schemas.assets.semio-tech.com/repo/server/coordinator/schema.json"
 
 type schemaExport struct {
 	Type                 string                     `json:"type"`

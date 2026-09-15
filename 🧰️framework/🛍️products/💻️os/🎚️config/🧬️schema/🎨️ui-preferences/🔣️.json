@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/os/config/ui-preferences.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/os/config/ui-preferences.json",
   "title": "UiPreferences",
   "type": "object",
   "additionalProperties": false,

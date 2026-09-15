@@ -68,7 +68,7 @@ package semio.s.<plugin_key>.<artifact_key>.<facet>;
 where `<facet>` is `artifact` | `snapshot` | `diff`, e.g. `semio.s.lowpoly.lowpoly.snapshot`.
 
 ```
-"$id": "https://semio.tech/schema/s/<plugin_key>/<artifact_key>/<facet>.json"
+"$id": "https://json.schemas.assets.semio-tech.com/s/<plugin_key>/<artifact_key>/<facet>.json"
 ```
 
 ---

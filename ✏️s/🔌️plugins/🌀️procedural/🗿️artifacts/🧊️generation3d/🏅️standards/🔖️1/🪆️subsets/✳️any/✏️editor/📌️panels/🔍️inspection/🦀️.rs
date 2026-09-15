@@ -3,7 +3,7 @@
 use crate::editor::generation3d::terminology::Generation3dLabels;
 use crate::editor::generation3d::GENERATION_3D_PLAY_APP_ID;
 use crate::widget_id;
-use semio_framework_artifact_flow_flow::{FlowHostDocument, Widget};
+use semio_framework_artifact_flow_flow::{FlowHostSnapshot, Widget};
 use semio_framework_plugin::plugin_app_close_prelude::{input, Buildable, HasBase, HasChildren, InputKind, Trigger, UiAssemblyResult, UiListBuilder, UiValue};
 use semio_framework_plugin::{tree_item, ActionFactory, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
 
@@ -24,7 +24,7 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(fixture: &FlowHostDocument, selected_node_ids: &[String], labels: &Generation3dLabels) -> UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(host_snapshot: &FlowHostSnapshot, selected_node_ids: &[String], labels: &Generation3dLabels) -> UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let Some(selected_id) = selected_node_ids.first() else {
         return PanelTreeBuilder::new("procedural-play-inspector")?
             .section(
@@ -32,13 +32,13 @@ pub fn render(fixture: &FlowHostDocument, selected_node_ids: &[String], labels: 
                 Some(crate::ui_label(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL)?),
                 true,
                 crate::ui_node_list([
-                    tree_item("procedural-play-inspector.schema", format!("{} {}", labels.schema_prefix.as_str(), fixture.schema)),
-                    tree_item("procedural-play-inspector.widgets", format!("{} {}", labels.widgets_prefix.as_str(), fixture.widgets.len())),
+                    tree_item("procedural-play-inspector.schema", format!("{} {}", labels.schema_prefix.as_str(), host_snapshot.schema)),
+                    tree_item("procedural-play-inspector.widgets", format!("{} {}", labels.widgets_prefix.as_str(), host_snapshot.widgets.len())),
                 ])?,
             )?
             .build();
     };
-    let Some(widget) = fixture.widgets.iter().find(|entry| widget_id(entry) == selected_id) else {
+    let Some(widget) = host_snapshot.widgets.iter().find(|entry| widget_id(entry) == selected_id) else {
         return PanelTreeBuilder::new("procedural-play-inspector")?
             .section("procedural-play-inspector.empty", Some(crate::ui_label(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL)?), true, crate::ui_node_list([tree_item("procedural-play-inspector.none", labels.no_selection.as_str())])?)?
             .build();

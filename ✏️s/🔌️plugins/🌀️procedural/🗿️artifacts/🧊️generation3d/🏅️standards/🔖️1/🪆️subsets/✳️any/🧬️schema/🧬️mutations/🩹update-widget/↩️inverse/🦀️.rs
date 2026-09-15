@@ -8,8 +8,8 @@ use crate::{widget_id, Generation3dSnapshot};
 /// ↩️ Missing id in `base` ⇒ `Vec::new()`.
 pub fn inverse(payload: &UpdateWidget, base: &Generation3dSnapshot) -> Vec<Generation3dMutation> {
     let id = widget_id(&payload.widget);
-    match widget_index(&base.host_document, id) {
-        Some(index) => vec![Generation3dMutation::UpdateWidget(UpdateWidget { widget: base.host_document.widgets[index].clone() })],
+    match widget_index(&base.host_snapshot, id) {
+        Some(index) => vec![Generation3dMutation::UpdateWidget(UpdateWidget { widget: base.host_snapshot.widgets[index].clone() })],
         None => Vec::new(),
     }
 }

@@ -2509,7 +2509,7 @@ pub mod workflow {
         }
     }
 
-    pub fn os_workflow_to_flow_host_document_json(graph: &Workflow, camera: &OsWorkflowCamera) -> Value {
+    pub fn os_workflow_to_flow_host_snapshot_json(graph: &Workflow, camera: &OsWorkflowCamera) -> Value {
         let widgets: Vec<_> = graph
             .nodes
             .iter()
@@ -2544,7 +2544,7 @@ pub mod workflow {
             })
             .collect();
         json!({
-            "schema": "flow.host_document",
+            "schema": "flow.host_snapshot",
             "camera": { "x": camera.x, "y": camera.y, "zoom": camera.zoom },
             "widgets": widgets,
             "synapses": synapses,
@@ -2552,8 +2552,8 @@ pub mod workflow {
         })
     }
 
-    /** @emoji 🔁️ Diffs a flow fixture back into workflow operations — inverse of [`os_workflow_to_flow_host_document_json`]. */
-    pub fn apply_flow_host_document_to_os_workflow(graph: &Workflow, fixture_json: &str) -> Vec<WorkflowMutation> {
+    /** @emoji 🔁️ Diffs a flow fixture back into workflow operations — inverse of [`os_workflow_to_flow_host_snapshot_json`]. */
+    pub fn apply_flow_host_snapshot_to_os_workflow(graph: &Workflow, fixture_json: &str) -> Vec<WorkflowMutation> {
         let Ok(fixture) = serde_json::from_str::<Value>(fixture_json) else {
             return Vec::new();
         };
@@ -4894,8 +4894,8 @@ pub mod registry {
 pub use crate::space::*;
 #[cfg(any(feature = "os-host-full", feature = "space-guest"))]
 pub use crate::workflow::{
-    apply_flow_host_document_to_os_workflow, apply_workflow_operation, build_os_workflow_operator_infos, create_default_workflow_parameter, empty_workflow, empty_workflow_snapshot, export_os_app_instance_media_kind, import_os_app_instance_media_kind,
-    negotiate_media_contract, os_media_export_extension_for_format_kind, os_media_neuron_kind_for_node, os_resource_media_capability, os_workflow_to_flow_host_document_json, os_workflow_to_node_graph_payload, patch_workflow_parameter,
+    apply_flow_host_snapshot_to_os_workflow, apply_workflow_operation, build_os_workflow_operator_infos, create_default_workflow_parameter, empty_workflow, empty_workflow_snapshot, export_os_app_instance_media_kind, import_os_app_instance_media_kind,
+    negotiate_media_contract, os_media_export_extension_for_format_kind, os_media_neuron_kind_for_node, os_resource_media_capability, os_workflow_to_flow_host_snapshot_json, os_workflow_to_node_graph_payload, patch_workflow_parameter,
     placeholder_media_contract, plan_workflow, sync_workflow_parameter_ports, validate_workflow, validate_workflow_parameter_config_binding, validate_workflow_snapshot, workflow_node_for_app, workflow_parameter_id,
     workflow_parameter_id_from_port_id, workflow_parameter_name, workflow_parameter_types_compatible, workflow_parameter_value, MediaContract, OsMediaCapability, OsWorkflowCamera, OsWorkflowNodeGraphPayload, OsWorkflowOperatorInfo, Workflow,
     WorkflowDelivery, WorkflowEdge, WorkflowFixture, WorkflowInput, WorkflowInputBinding, WorkflowMediaPort, WorkflowMutation, WorkflowNode, WorkflowOutputBinding, WorkflowParameter, WorkflowParameterBinding, WorkflowParameterPatch,

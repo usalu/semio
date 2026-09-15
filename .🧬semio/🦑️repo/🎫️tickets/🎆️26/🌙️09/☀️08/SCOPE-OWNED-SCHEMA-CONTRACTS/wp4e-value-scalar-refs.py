@@ -12,7 +12,7 @@ import pathlib
 import re
 import sys
 
-OWNER = "https://semio.tech/schema/framework/value/schema.json"
+OWNER = "https://json.schemas.assets.semio-tech.com/framework/value/schema.json"
 U64 = f"{OWNER}#/$defs/U64"
 NON_ZERO = f"{OWNER}#/$defs/NonZeroU64"
 
@@ -21,13 +21,13 @@ UI = "🧰️framework/🔨️modules/🖱️ui/🖥️host/📥️input/🎟️
 ACTOR = "🧰️framework/🔨️modules/🎭️actor"
 REWRITES = [
     (f"{UI}/🧬️schema/🔣️.json", "#/$defs/DecimalU64", U64),
-    (f"{UI}/🪪️root/🧬️schema/🔣️.json", "https://semio.tech/schema/framework/ui/host/input/admission/schema.json#/$defs/DecimalU64", U64),
+    (f"{UI}/🪪️root/🧬️schema/🔣️.json", "https://json.schemas.assets.semio-tech.com/framework/ui/host/input/admission/schema.json#/$defs/DecimalU64", U64),
     (f"{ACTOR}/🚪️lifetime/🧬️schema/🔣️.json", "#/$defs/U64", NON_ZERO),
-    (f"{ACTOR}/🚪️lifetime/🩹️patch/🧬️schema/🔣️.json", "https://semio.tech/schema/framework/actor/lifetime/schema.json#/$defs/U64", NON_ZERO),
-    (f"{ACTOR}/🪪️activation/🚪️instance/📥️output/🧬️schema/🔣️.json", "https://semio.tech/schema/framework/actor/lifetime/schema.json#/$defs/U64", NON_ZERO),
+    (f"{ACTOR}/🚪️lifetime/🩹️patch/🧬️schema/🔣️.json", "https://json.schemas.assets.semio-tech.com/framework/actor/lifetime/schema.json#/$defs/U64", NON_ZERO),
+    (f"{ACTOR}/🪪️activation/🚪️instance/📥️output/🧬️schema/🔣️.json", "https://json.schemas.assets.semio-tech.com/framework/actor/lifetime/schema.json#/$defs/U64", NON_ZERO),
     (f"{ACTOR}/📤️return/🧬️schema/🔣️.json", "#/$defs/U64", NON_ZERO),
-    (f"{ACTOR}/📤️return/📨️response/🧬️schema/🔣️.json", "https://semio.tech/schema/framework/actor/return/schema.json#/$defs/U64", NON_ZERO),
-    (f"{ACTOR}/📤️return/📨️response/🎟️credit/🧬️schema/🔣️.json", "https://semio.tech/schema/framework/actor/return/schema.json#/$defs/U64", NON_ZERO),
+    (f"{ACTOR}/📤️return/📨️response/🧬️schema/🔣️.json", "https://json.schemas.assets.semio-tech.com/framework/actor/return/schema.json#/$defs/U64", NON_ZERO),
+    (f"{ACTOR}/📤️return/📨️response/🎟️credit/🧬️schema/🔣️.json", "https://json.schemas.assets.semio-tech.com/framework/actor/return/schema.json#/$defs/U64", NON_ZERO),
 ]
 
 # (file, export id) — the copies that cease to exist once their consumers address the owner.

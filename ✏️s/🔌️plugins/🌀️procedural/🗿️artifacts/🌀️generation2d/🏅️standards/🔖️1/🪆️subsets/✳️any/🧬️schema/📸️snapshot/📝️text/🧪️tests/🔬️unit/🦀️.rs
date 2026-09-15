@@ -37,7 +37,7 @@ fn dsl_round_trip_with_generation_state() {
 #[test]
 fn dsl_round_trip_covers_every_widget_kind() {
     let mut projection = Generation2dSnapshot::default();
-    projection.host_document.widgets = vec![
+    projection.host_snapshot.widgets = vec![
         Widget::InputSlider { id: "slider".into(), label: "Number".into(), value: 2.0, min: 0.0, max: 10.0, step: 0.5 },
         Widget::InputImage { id: "image".into(), src: "data:image/png;base64,abc".into() },
         Widget::Variable { id: "variable".into(), name: "value".into(), schema: "dictionary".into() },
@@ -45,7 +45,7 @@ fn dsl_round_trip_covers_every_widget_kind() {
         Widget::OutputExport { id: "export".into(), format: "svg".into() },
         Widget::Cluster { id: "cluster".into(), name: "Group".into(), tree: Default::default(), flow: Default::default() },
     ];
-    projection.host_document.synapses = vec![];
+    projection.host_snapshot.synapses = vec![];
     let projection = crate::standards::v1::subsets::any::schema::snapshot::Generation2dSnapshotRead::new(projection);
     test_support::assert_dsl_round_trip_cold(&*projection, Generation2dSnapshot::retire_cold);
     test_support::assert_dsl_pack_equivalence_cold(&*projection, Generation2dSnapshot::retire_cold);
@@ -58,7 +58,7 @@ fn dsl_round_trip_covers_every_widget_kind() {
 ///
 /// The replaced id is READ OUT of the very document the store is opened on — `replace-widget` is
 /// fail-closed on an unknown id (`mutation.target-missing`), and the 2d default document is
-/// `semio_framework_artifact_flow_flow::FlowHostDocument::default()`'s three-widget starter graph, which
+/// `semio_framework_artifact_flow_flow::FlowHostSnapshot::default()`'s three-widget starter graph, which
 /// carries no `note-*` widget at all.
 #[semio_framework_async_macros::async_test]
 async fn command_envelope_round_trip_holds_for_an_applied_operation() {
@@ -67,7 +67,7 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
     use store::ArtifactCommand;
 
     let document = crate::standards::v1::subsets::any::schema::snapshot::Generation2dSnapshotRead::new(Generation2dSnapshot::default());
-    let replaced_id = crate::widget_id(document.host_document.widgets.last().expect("the 2d default document is a non-empty starter graph")).to_string();
+    let replaced_id = crate::widget_id(document.host_snapshot.widgets.last().expect("the 2d default document is a non-empty starter graph")).to_string();
     let mut store = crate::store_fixture::document_store(Generation2dSnapshot::default()).await;
     store.dispatch(ArtifactCommand::Apply { mutations: vec![crate::standards::v1::subsets::any::schema::mutations::text::replace_widget(Widget::InputNote { id: replaced_id, text: String::new() })], description: None }).await.expect("apply");
     let edit: &Edit<Generation2dMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
@@ -79,7 +79,7 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
 //#region 🔖️DslErrorTests
 #[test]
 fn dsl_parse_rejects_malformed_text() {
-    let error = Generation2dSnapshot::parse_dsl("schema=\"flow.host_document").unwrap_err();
+    let error = Generation2dSnapshot::parse_dsl("schema=\"flow.host_snapshot").unwrap_err();
     assert!(error.message.contains("unterminated string literal"), "unexpected error: {}", error.message);
 }
 
@@ -92,7 +92,7 @@ fn dsl_parse_rejects_missing_required_field() {
 
 #[test]
 fn dsl_parse_rejects_missing_camera_block() {
-    let error = Generation2dSnapshot::parse_dsl("schema=\"flow.host_document\"\n").unwrap_err();
+    let error = Generation2dSnapshot::parse_dsl("schema=\"flow.host_snapshot\"\n").unwrap_err();
     assert!(error.message.contains("expected Record, found Absent"), "unexpected error: {}", error.message);
 }
 
@@ -105,28 +105,28 @@ fn dsl_parse_rejects_unquoted_value_for_string_field() {
 
 #[test]
 fn dsl_parse_rejects_non_numeric_value_for_number_field() {
-    let text = "schema=\"flow.host_document\"\ncamera { x=0 y=0 zoom=1 }\nwidgets { input-slider id=\"s\" value=abc min=0 max=1 step=1 }\nsynapses= [ ]\nlayout= { }\ngenerations= [ ]\n";
+    let text = "schema=\"flow.host_snapshot\"\ncamera { x=0 y=0 zoom=1 }\nwidgets { input-slider id=\"s\" value=abc min=0 max=1 step=1 }\nsynapses= [ ]\nlayout= { }\ngenerations= [ ]\n";
     let error = Generation2dSnapshot::parse_dsl(text).unwrap_err();
     assert!(error.message.contains("expected a float"), "unexpected error: {}", error.message);
 }
 
 #[test]
 fn dsl_parse_rejects_invalid_bool_value() {
-    let text = "schema=\"flow.host_document\"\ncamera { x=0 y=0 zoom=1 }\nwidgets { neuron id=\"n\" neuron-kind=math.add preview=maybe input-ports= [ ] output-ports= [ ] params= [ ] }\nsynapses= [ ]\nlayout= { }\ngenerations= [ ]\n";
+    let text = "schema=\"flow.host_snapshot\"\ncamera { x=0 y=0 zoom=1 }\nwidgets { neuron id=\"n\" neuron-kind=math.add preview=maybe input-ports= [ ] output-ports= [ ] params= [ ] }\nsynapses= [ ]\nlayout= { }\ngenerations= [ ]\n";
     let error = Generation2dSnapshot::parse_dsl(text).unwrap_err();
     assert!(error.message.contains("expected 'true' or 'false'"), "unexpected error: {}", error.message);
 }
 
 #[test]
 fn dsl_parse_rejects_malformed_value_literal() {
-    let text = "schema=\"flow.host_document\"\ncamera { x=0 y=0 zoom=1 }\nwidgets { cluster id=\"n\" name=\"n\" tree=bogusvalue flow= [ ] }\nsynapses= [ ]\nlayout= { }\ngenerations= [ ]\n";
+    let text = "schema=\"flow.host_snapshot\"\ncamera { x=0 y=0 zoom=1 }\nwidgets { cluster id=\"n\" name=\"n\" tree=bogusvalue flow= [ ] }\nsynapses= [ ]\nlayout= { }\ngenerations= [ ]\n";
     let error = Generation2dSnapshot::parse_dsl(text).unwrap_err();
     assert!(error.message.contains("expected a value literal"), "unexpected error: {}", error.message);
 }
 
 #[test]
 fn dsl_parse_rejects_unknown_widget_kind() {
-    let text = "schema=\"flow.host_document\"\ncamera { x=0 y=0 zoom=1 }\nwidgets { bogus id=\"n\" }\nsynapses= [ ]\nlayout= { }\ngenerations= [ ]\n";
+    let text = "schema=\"flow.host_snapshot\"\ncamera { x=0 y=0 zoom=1 }\nwidgets { bogus id=\"n\" }\nsynapses= [ ]\nlayout= { }\ngenerations= [ ]\n";
     let error = Generation2dSnapshot::parse_dsl(text).unwrap_err();
     assert!(error.message.contains("expected RBrace"), "unexpected error: {}", error.message);
 }

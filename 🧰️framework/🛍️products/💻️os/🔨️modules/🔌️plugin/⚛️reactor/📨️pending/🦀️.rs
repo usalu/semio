@@ -133,6 +133,31 @@ impl PendingPatchAuthority {
         self.closing_instances.iter().flatten().any(|closing| Some(closing.key.instance()) == instance)
     }
 
+    /// 🧾️ Whether this turn's page already carries a patch for `surface`.
+    ///
+    /// 🐛️ Pending slots are minted per reconcile pass and per external push, never per SURFACE, so one
+    /// `toolRunStart` leaves two of them for `framework.panel.toolRun` — the action's own panel
+    /// reconcile (`Ready to start` → `Running`) and the run's first progress reconcile — and
+    /// [`Self::take_one`] put both in ONE page, as `A` (revision n) and `A'` (base n). Those two are a
+    /// CHAIN, not a batch: a host can only open `A'` after `A`'s wire, input page and receipt outbox
+    /// have closed, so a page carrying both forced it to admit `A'` against `A`'s still-open cell and
+    /// the intake refused with `Busy instance surface owner` — after which that surface's cell stayed
+    /// busy and every later refresh, `toolRunAbort` and `toolRunFinalize` of the instance was rejected
+    /// (peer ticket 26/09/13/INTERACTIVE-TOOLS-VISIBLE-PROCESS, `abort-finalize-midrun-*.txt`, :6013
+    /// 2026-09-15 17:58). The wire contract is therefore AT MOST ONE PATCH PER SURFACE PER TURN, and
+    /// the second slot is DEFERRED rather than folded: it keeps its own sequence and rides the very
+    /// next turn, in publication order, exactly once.
+    fn turn_page_carries(&self, surface: &ui_contract::SurfaceId) -> bool {
+        self.turn_handbacks.iter().any(|cell| cell.published.as_ref().is_some_and(|(published, _)| published.0 == surface.0))
+    }
+
+    fn slot_surface(slot: &PendingPatchSlot) -> Option<&ui_contract::SurfaceId> {
+        match &slot.owner {
+            PendingPatchOwner::Reconcile(owner) => owner.surface(),
+            PendingPatchOwner::External(pending) => pending.get().map(|patch| &patch.surface),
+        }
+    }
+
     /// 🧾️ The sequences this turn's page is authorized to stage a receipt against: a cell that is
     /// borrowed AND whose patch has LEFT it, which is exactly the set of publications the host is
     /// being handed.
@@ -221,6 +246,7 @@ impl PendingPatchAuthority {
             .iter()
             .enumerate()
             .filter(|(_, cell)| !cell.patch.terminal_is_empty())
+            .filter(|(_, cell)| cell.patch.get().is_none_or(|patch| !self.turn_page_carries(&patch.surface)))
             .min_by_key(|(_, cell)| cell.sequence)
             .map(|(index, _)| index);
         if let Some(index) = retained {
@@ -241,7 +267,7 @@ impl PendingPatchAuthority {
             .slots
             .iter()
             .enumerate()
-            .filter(|(_, slot)| slot.as_ref().is_some_and(|slot| !slot.emitted && carried.is_none_or(|instance| slot.instance == Some(instance)) && !self.instance_is_closing(slot.instance)))
+            .filter(|(_, slot)| slot.as_ref().is_some_and(|slot| !slot.emitted && carried.is_none_or(|instance| slot.instance == Some(instance)) && !self.instance_is_closing(slot.instance) && Self::slot_surface(slot).is_none_or(|surface| !self.turn_page_carries(surface))))
             .min_by_key(|(_, slot)| slot.as_ref().map(|slot| slot.sequence))
             .map(|(index, _)| index)
         else {

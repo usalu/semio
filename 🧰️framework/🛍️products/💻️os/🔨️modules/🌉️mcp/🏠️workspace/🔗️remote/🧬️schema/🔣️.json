@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/os/mcp/workspace/remote/component.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/os/mcp/workspace/remote/component.json",
   "title": "Semio OS MCP Remote Workspace",
   "$defs": {
     "Sha256Hex": { "type": "string", "pattern": "^[0-9a-f]{64}$" },

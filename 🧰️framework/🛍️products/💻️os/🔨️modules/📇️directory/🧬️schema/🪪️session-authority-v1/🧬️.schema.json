@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/os/directory/session-authority/v1.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/os/directory/session-authority/v1.json",
   "title": "Directory Session Authority V1",
   "type": "object",
   "additionalProperties": false,

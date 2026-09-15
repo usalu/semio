@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/trinity/rewriting/inference.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/trinity/rewriting/inference.json",
   "title": "RewritingInference",
   "type": "object",
   "additionalProperties": false,

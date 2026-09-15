@@ -89,8 +89,6 @@ test-results
 /playwright/.auth/
 #--------------------------------------OUTPUTS--------------------------------------
 **/🤖️generated/
-!/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎞️frame-worker/🤖️generated/
-!/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎞️frame-worker/🤖️generated/🟨️.js
 **/🤖️generated.*
 /🧰️framework/🔨️modules/🖱️ui/🎨️styling/🔤️tokens/🦀️.rs
 /🧰️framework/🔨️modules/🖱️ui/🎨️styling/🔤️tokens/🐍️.py

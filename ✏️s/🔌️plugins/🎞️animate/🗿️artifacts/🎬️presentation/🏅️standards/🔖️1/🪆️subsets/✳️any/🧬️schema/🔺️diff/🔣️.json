@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/animate/presentation/diff.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/animate/presentation/diff.json",
   "title": "PresentationDiff",
   "type": "object",
   "additionalProperties": false,
@@ -11,7 +11,7 @@
           "type": "null"
         },
         {
-          "$ref": "https://semio.tech/schema/s/animate/presentation/artifact.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/animate/presentation/artifact.json"
         }
       ],
       "x-semio-state": "artifact"
@@ -29,7 +29,7 @@
           "type": "null"
         },
         {
-          "$ref": "https://semio.tech/schema/os/store/child.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child.json"
         }
       ],
       "x-semio-state": "artifact",

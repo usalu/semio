@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/os/store/composition/durable-group/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/os/store/composition/durable-group/schema.json",
   "title": "Store Durable Owned Group",
   "$defs": {
     "DurableOwnedGroupDecision": {

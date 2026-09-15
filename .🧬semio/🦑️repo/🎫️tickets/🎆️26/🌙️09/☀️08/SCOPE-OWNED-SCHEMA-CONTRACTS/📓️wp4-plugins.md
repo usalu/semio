@@ -43,17 +43,17 @@ inside `✏️s/🔌️plugins/🔋️energy/🧪️oracle/📦️packages/🐍�
 | `📕️norm/🧪️fixtures/🧫️retained-command-dispositions/🧬️.schema.json` | `s.norm` | `NormRetainedCommandDispositions` (+3 hoisted) | **new** plugin-root module |
 
 **Shared shape.** `🧰️framework/🔨️modules/🖱️ui/🧬️schema/🔣️.json` (`$id
-https://semio.tech/schema/framework/ui/schema.json`) already publishes `RetainedCommandLimits`
+https://json.schemas.assets.semio-tech.com/framework/ui/schema.json`) already publishes `RetainedCommandLimits`
 (the whole declared/corpus **document**), `RetainedCommandRoutes` (the route **array**) and
 `RetainedCommandRoutesDocument`. It has **no** `RetainedCommandRoute` singular. Nine exports now
 `$ref` it (`allOf` document level, or `allOf` at the `routes` array level) and narrow it with the
 per-artifact `const` census verbatim:
 
 ```
-$ grep -rho 'https://semio.tech/schema/framework/ui/schema.json#[^"]*' --include='🔣️.json' ✏️s | sort | uniq -c
-   4 https://semio.tech/schema/framework/ui/schema.json#/$defs/RetainedCommandLimits
-   8 https://semio.tech/schema/framework/ui/schema.json#/$defs/RetainedCommandRoutes
-   1 https://semio.tech/schema/framework/ui/schema.json#/$defs/RetainedCommandRoutesDocument
+$ grep -rho 'https://json.schemas.assets.semio-tech.com/framework/ui/schema.json#[^"]*' --include='🔣️.json' ✏️s | sort | uniq -c
+   4 https://json.schemas.assets.semio-tech.com/framework/ui/schema.json#/$defs/RetainedCommandLimits
+   8 https://json.schemas.assets.semio-tech.com/framework/ui/schema.json#/$defs/RetainedCommandRoutes
+   1 https://json.schemas.assets.semio-tech.com/framework/ui/schema.json#/$defs/RetainedCommandRoutesDocument
 ```
 
 Every one of those resolves against the module as it stands today — there are **no dangling
@@ -80,7 +80,7 @@ declared-limits shape cannot describe at all).
 ### Family 5: the 15 flow editor micro-laws → `s.flow.flow`
 
 All fifteen moved into the existing subset module `…/🪆️subsets/✳️any/🧬️schema/🔣️.json`
-(`$id https://semio.tech/schema/s/flow/flow/artifact.json`), which grew from 4 to 47 `$defs`:
+(`$id https://json.schemas.assets.semio-tech.com/s/flow/flow/artifact.json`), which grew from 4 to 47 `$defs`:
 
 `FlowChildAddWidget`, `FlowTreeProjection`, `FlowHostWire`, `FlowArtifactRecipes`,
 `FlowGrantFrontier`, `FlowSliderLabels`, `FlowArtifactCanonical`, `FlowDeleteCascade`,
@@ -160,7 +160,7 @@ leaf claims it, the export should move down and the subset module should `$ref` 
 ### Family 11: flow/note action-cohort — note's drifted copy deleted
 
 New scope `s.flow.action-cohort` at `✏️s/🔌️plugins/🌊️flow/🎬️action-cohort/🧬️schema/🔣️.json`
-(`$id https://semio.tech/schema/s/flow/action-cohort/schema.json`), export `ActionCohort`, migrated
+(`$id https://json.schemas.assets.semio-tech.com/s/flow/action-cohort/schema.json`), export `ActionCohort`, migrated
 from flow's `🎬️action-cohort/🧬️.schema.json`. `✏️s/🔌️plugins/🗒️note/🧪️action-cohort/🧬️.schema.json`
 — the narrower drifted copy — is **deleted**; note now binds `schema://s.flow.action-cohort/ActionCohort`.
 Both fixtures validate against the one export (see §4), confirming the drift was unnecessary.
@@ -416,8 +416,8 @@ Proof the framework refs are load-bearing rather than silently vacuous — compi
 
 ```
 resolution-required PresentationRetainedCommandLimits -> can't resolve reference
-  https://semio.tech/schema/framework/ui/schema.json#/$defs/RetainedCommandLimits
-  from id https://semio.tech/schema/s/animate/presentation/artifact.json
+  https://json.schemas.assets.semio-tech.com/framework/ui/schema.json#/$defs/RetainedCommandLimits
+  from id https://json.schemas.assets.semio-tech.com/s/animate/presentation/artifact.json
 … identical for Shooting, Fem3d, Remodeling, Vcs, Wires, Procedure
 WiresRetainedCommandRoutes: owner-arm-alone accepts ["transient"]=true, with framework $ref accepts=false
 ```
@@ -533,7 +533,7 @@ Each was confirmed against `HEAD` before being classified.
 **A. `🌎️hub/📦️packages/🦀️rust/📜️script.ts` — BREAKING NOW, highest priority.** Six reads of files
 migrated into `s.stdio.registry`. Load the module once
 (`✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️schema/🔣️.json`, `$id
-https://semio.tech/schema/s/stdio/registry/schema.json`, draft-07 → `ajv`, not `ajv/dist/2020.js`),
+https://json.schemas.assets.semio-tech.com/s/stdio/registry/schema.json`, draft-07 → `ajv`, not `ajv/dist/2020.js`),
 `ajv.addSchema(module)`, then compile `{ $ref: "<id>#/$defs/<Export>" }`:
 
 | Line | Was | Export |
@@ -578,7 +578,7 @@ of standing alone:
 **C. `🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/📜️script.ts`** — its
 `identityRoot`/`controlRoot` reads (lines ~144/163) now read only the gis **data** files, which is
 correct; if a schema read is reintroduced it must target
-`https://semio.tech/schema/s/gis/schema.json#/$defs/GisArtifactIdentity` /
+`https://json.schemas.assets.semio-tech.com/s/gis/schema.json#/$defs/GisArtifactIdentity` /
 `#/$defs/GisInferenceControl` with draft-07 `Ajv`, not `Ajv2020`.
 
 **D. `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🪪️plugin-identity.test.ts:89`** reads

@@ -16,7 +16,7 @@ disjoint module partitions and are folded into this report.
 | Owner | nearest real module (`🔨️modules/<m>` or a nested module dir). `🧪️fixtures`/`🧫️fixtures`/`🧪️tests`/`📦️packages`/`🎯️targets`/`🧱️elements` are never owners |
 | Layout | exactly one `<module>/🧬️schema/🔣️.json` per scope; new `$defs` merge into an existing one, never a second file |
 | Dialect | `http://json-schema.org/draft-07/schema#` at the document root only; `prefixItems`+`items:false` → `items:[…]`+`additionalItems:false`; `unevaluated*` dropped |
-| `$id` | `https://semio.tech/schema/os/<ascii module path>/component.json` |
+| `$id` | `https://json.schemas.assets.semio-tech.com/os/<ascii module path>/component.json` |
 | Export id | PascalCase `$defs` key keeping the version suffix (`…V1`) |
 | Fixtures | data only; every `*.schema.json` / `🧬️.schema.json` / `🔣️.schema.json` / `🧬️schema.json` / `🛂️schema.json` / `📐️*.schema.json` deleted |
 | Consumer | `ajv.addSchema(doc)` + `ajv.getSchema(\`${doc.$id}#/$defs/<ExportId>\`)`, draft-07 `Ajv` (never `ajv/dist/2020.js`) |
@@ -199,9 +199,9 @@ target name or `📋️project.json` entry changed. Lanes B and C do need new en
 Module compile + fixture conformance (`bun` + draft-07 `ajv` inside the react target):
 
 ```
-renderer: $id=https://semio.tech/schema/os/renderer/component.json defs=64
-directory: $id=https://semio.tech/schema/os/directory/component.json defs=140
-presence: $id=https://semio.tech/schema/os/store/presence/component.json defs=12
+renderer: $id=https://json.schemas.assets.semio-tech.com/os/renderer/component.json defs=64
+directory: $id=https://json.schemas.assets.semio-tech.com/os/directory/component.json defs=140
+presence: $id=https://json.schemas.assets.semio-tech.com/os/store/presence/component.json defs=12
 
 [verify] checks=98 failures=0
 ```
@@ -244,10 +244,10 @@ Renderer quick suite (`bun ./📜️script.ts test quick`, which is the `⚡️q
 Workflow/space modules:
 
 ```
-https://semio.tech/schema/os/workflow/artifacts/run/component.json exports=1
-https://semio.tech/schema/os/workflow/artifacts/workflow/component.json exports=1
-https://semio.tech/schema/os/space/artifacts/space/component.json exports=1
-https://semio.tech/schema/os/space/artifacts/collection/component.json exports=1
+https://json.schemas.assets.semio-tech.com/os/workflow/artifacts/run/component.json exports=1
+https://json.schemas.assets.semio-tech.com/os/workflow/artifacts/workflow/component.json exports=1
+https://json.schemas.assets.semio-tech.com/os/space/artifacts/space/component.json exports=1
+https://json.schemas.assets.semio-tech.com/os/space/artifacts/collection/component.json exports=1
 SpaceArtifactDefinitionV1 validates data: true
 CollectionArtifactDefinitionV1 validates data: true
 ```

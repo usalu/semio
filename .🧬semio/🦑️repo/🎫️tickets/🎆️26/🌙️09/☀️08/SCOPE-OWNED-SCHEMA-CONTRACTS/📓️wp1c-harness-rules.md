@@ -211,10 +211,10 @@ no `--write` and reads only `mutationPayloadSchemaLocation`. **Done.**
 
 ```
 $ python3 -c "import json;print(json.load(open('🧪️test/🧬️schema/🔣️.json'))['\$id'])"
-https://semio.tech/schema/repo/test/schema.json
+https://json.schemas.assets.semio-tech.com/repo/test/schema.json
 
 $ grep -n 'semio.tech/schema/repo/test' 📚️library/🧪️tests/🗺️testing-readme-coordinates/🟦️.ts
-127:  expect(JSON.parse(schemaBytes.toString("utf8")).$id).toBe("https://semio.tech/schema/repo/test/schema.json");
+127:  expect(JSON.parse(schemaBytes.toString("utf8")).$id).toBe("https://json.schemas.assets.semio-tech.com/repo/test/schema.json");
 ```
 
 W2c applied R-5. The catalog now also carries the scope (W1b's R-8):

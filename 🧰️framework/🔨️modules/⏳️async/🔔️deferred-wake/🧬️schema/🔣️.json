@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/framework/async/deferred-wake/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/async/deferred-wake/schema.json",
   "title": "Async Deferred-wake Schema Module",
   "$defs": {
     "DeferredWakeFixture": {
@@ -18,7 +18,7 @@
       ],
       "properties": {
         "schema": {
-          "const": "https://semio.tech/schema/framework/async/deferred-wake/schema.json#/$defs/DeferredWakeFixture"
+          "const": "https://json.schemas.assets.semio-tech.com/framework/async/deferred-wake/schema.json#/$defs/DeferredWakeFixture"
         },
         "capacity": {
           "type": "object",

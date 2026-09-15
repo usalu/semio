@@ -4,8 +4,8 @@ fn node(id: &str) -> DagNodeSpec {
     DagNodeSpec { id: id.into(), ..Default::default() }
 }
 
-fn edge(id: &str, source: &str, target: &str) -> DagHostDocumentEdge {
-    DagHostDocumentEdge { id: id.into(), source: source.into(), target: target.into(), ..Default::default() }
+fn edge(id: &str, source: &str, target: &str) -> DagHostSnapshotEdge {
+    DagHostSnapshotEdge { id: id.into(), source: source.into(), target: target.into(), ..Default::default() }
 }
 
 #[semio_framework_async_macros::async_test]
@@ -57,7 +57,7 @@ async fn topology_of_a_large_layered_dag_stays_below_the_interactive_ceiling() {
     let (layers, width) = (law["layers"].as_u64().expect("layers") as usize, law["width"].as_u64().expect("width") as usize);
     let id = |layer: usize, column: usize| format!("n{layer}-{column}");
     let nodes: Vec<DagNodeSpec> = (0..layers).flat_map(|layer| (0..width).map(move |column| (layer, column))).map(|(layer, column)| node(&id(layer, column))).collect();
-    let edges: Vec<DagHostDocumentEdge> = (0..layers - 1)
+    let edges: Vec<DagHostSnapshotEdge> = (0..layers - 1)
         .flat_map(|layer| (0..width).flat_map(move |column| [column, (column + 1) % width].into_iter().map(move |next| (layer, column, next))))
         .map(|(layer, column, next)| edge(&format!("e{layer}-{column}-{next}"), &format!("{}@out", id(layer, column)), &format!("{}@in", id(layer + 1, next))))
         .collect();

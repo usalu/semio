@@ -1,5 +1,5 @@
 {
-  "$id": "https://semio.tech/schema/s/writer/writer/diff/text.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/writer/writer/diff/text.json",
   "title": "WriterDiffText",
   "type": "object"
 }

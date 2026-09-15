@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/norm/din18599/diff.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/diff.json",
   "title": "Din18599Diff",
   "type": "object",
   "additionalProperties": false,
@@ -71,7 +71,7 @@
     "climate": {
       "anyOf": [
         {
-          "$ref": "https://semio.tech/schema/os/store/child.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child.json"
         },
         {
           "type": "null"

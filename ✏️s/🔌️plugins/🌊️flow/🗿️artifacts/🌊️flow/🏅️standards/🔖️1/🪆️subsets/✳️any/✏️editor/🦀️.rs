@@ -40,7 +40,7 @@ use crate::schema::mutations::replace_widget::ReplaceWidget;
 use crate::schema::mutations::update_synapse_endpoints::UpdateSynapseEndpoints;
 use crate::{FlowSnapshot, FlowWorkingScene, FLOW_DOCUMENT_SCHEMA};
 use flow::{flow_host_with_session, FlowEvalSession, FlowHost, FLOW_LOD_MODE_AUTOMATIC};
-use semio_framework_artifact_flow_flow::{flow_host_document_operations, CameraJson, Widget};
+use semio_framework_artifact_flow_flow::{flow_host_snapshot_operations, CameraJson, Widget};
 use semio_framework_artifact_infinite_dag::DagDrawLod;
 use semio_framework_plugin::app::{ChildEmit, InteractionView};
 use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
@@ -239,7 +239,7 @@ fn flow_context_menu_items(registry: &AppActionRegistry, snapshot: &FlowSnapshot
     let edges: Vec<String> = groups.iter().filter(|group| group.domain == "edge").flat_map(|group| group.ids.iter().cloned()).collect();
     let has_selection = !nodes.is_empty() || !edges.is_empty();
     let all_preview_off = !nodes.is_empty() && nodes.iter().all(|id| config.preview_off_node_ids.contains(id));
-    let live = snapshot.to_host_document();
+    let live = snapshot.to_host_snapshot();
     let is_image = nodes.len() == 1
         && live.widgets.iter().any(|widget| match widget {
             Widget::InputImage { id, .. } => id == &nodes[0],
@@ -751,18 +751,18 @@ fn duplicate_edge_id(source: &str, target: &str) -> String {
 }
 
 fn evaluate_generation_preview(snapshot: &FlowSnapshot, config: &FlowMainWindowConfig, values: &crate::playbook::PlaybookValues) -> String {
-    let live = snapshot.to_host_document();
+    let live = snapshot.to_host_snapshot();
     let fixture_json = dsl::json::to_json_string(&live);
     let values: dsl::json::Object = values.iter().map(|(key, value)| (key.clone(), dsl::json::from_dsl_value(value))).collect();
-    let patched = flow::forms_bridge::apply_generation_values_to_host_document(&fixture_json, &values);
-    let patched_fixture = match FlowHost::parse_host_document_json(&patched) {
+    let patched = flow::forms_bridge::apply_generation_values_to_host_snapshot(&fixture_json, &values);
+    let patched_fixture = match FlowHost::parse_host_snapshot_json(&patched) {
         Ok(parsed) => {
             live.retire_cold();
             parsed
         }
         Err(_) => live,
     };
-    let mut host = FlowHost::from_host_document(patched_fixture);
+    let mut host = FlowHost::from_host_snapshot(patched_fixture);
     seed_host_catalogue(&mut host, &config.catalogue_sections_json);
     host.evaluate().unwrap_or_default()
 }
@@ -792,8 +792,8 @@ fn generation_window_transient(
         ),
         _ => return Ok(None),
     };
-    let live = snapshot.to_host_document();
-    let spec = flow::forms_bridge::flow_host_document_to_form_spec(&live);
+    let live = snapshot.to_host_snapshot();
+    let spec = flow::forms_bridge::flow_host_snapshot_to_form_spec(&live);
     live.retire_cold();
     let mut generation = current.generation();
     if !crate::playbook::handle_generation_action(action, args.as_ref(), &mut generation, &spec, FLOW_PLAY_APP_ID) {
@@ -2383,7 +2383,7 @@ impl ArtifactEditor for FlowPlayApp {
     /// skipped entirely (see the design doc's `HierarchyProvider::Flat` note). "handle" targets have no
     /// persisted document data to register — see `flow_graph_selection_domains`'s doc comment.
     fn interaction_topology(doc: &ArtifactView<'_, FlowSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> InteractionTopology {
-        let live = doc.snapshot.to_host_document();
+        let live = doc.snapshot.to_host_snapshot();
         let mut ordered: Vec<TopologyNode> = live.widgets.iter().map(|widget| TopologyNode { id: flow_graph_node_target_id(crate::schema::widget_id(widget)), granularity: "node".into(), parent: None }).collect();
         ordered.extend(live.synapses.iter().map(|synapse| TopologyNode { id: flow_graph_edge_target_id(&synapse.id), granularity: "edge".into(), parent: None }));
         live.retire_cold();
@@ -2490,7 +2490,7 @@ pub fn apply_canvas_options(host: &mut FlowHost, config: &FlowMainWindowConfig) 
 /// 🏗️ Rebuilds the stateful `FlowHost` from the document projection + view config + eval session — the
 /// single entry point every command handler and every window renderer goes through.
 pub fn host_from_snapshot(snapshot: &FlowSnapshot, config: &FlowMainWindowConfig, session: &FlowEvalSession) -> FlowHost {
-    let live = snapshot.to_host_document();
+    let live = snapshot.to_host_snapshot();
     let mut host = flow_host_with_session(&live, session);
     live.retire_cold();
     seed_host_catalogue(&mut host, &config.catalogue_sections_json);
@@ -2506,8 +2506,8 @@ pub fn host_operations(snapshot: &FlowSnapshot, config: &FlowMainWindowConfig, s
         host.retire_cold();
         return Vec::new();
     }
-    let live = snapshot.to_host_document();
-    let operations = flow_host_document_operations(&live, &host.host_document).unwrap_or_default();
+    let live = snapshot.to_host_snapshot();
+    let operations = flow_host_snapshot_operations(&live, &host.host_snapshot).unwrap_or_default();
     live.retire_cold();
     host.retire_cold();
     operations.into_iter().filter_map(crate::schema::mutations::from_framework_mutation).collect()

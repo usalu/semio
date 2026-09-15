@@ -75,7 +75,7 @@ const tables = sqlTables();
 describe("repo client sqlite persistence module", () => {
   it("declares the canonical draft-07 identity", () => {
     expect(document.$schema).toBe("http://json-schema.org/draft-07/schema#");
-    expect(document.$id).toBe("https://semio.tech/schema/repo/client/sqlite/schema.json");
+    expect(document.$id).toBe("https://json.schemas.assets.semio-tech.com/repo/client/sqlite/schema.json");
   });
 
   it("implements the entity set the client exports", () => {

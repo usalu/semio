@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/os/directory/component.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/os/directory/component.json",
   "title": "Directory",
   "description": "Directory event log wire contract (ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS, contract C1): the hub's control-plane events, the client-issued commands that produce them, the `/directory/socket/v1` stream envelope, and the REST read DTOs.",
   "$comment": "🧭️ Deviation from contract-freeze.md's C1 prose: `space.created`'s space-kind field and `create-space`'s space-kind field are named `spaceKind`, not the prose's bare `kind` — both bodies are internally tagged (`#[serde(tag = \"kind\")]`) so a same-named payload field would collide with the discriminator on the wire. Flagged as a sharedFileRequest in lane 0-A's report for the coordinator to fold back into contract-freeze.md.",

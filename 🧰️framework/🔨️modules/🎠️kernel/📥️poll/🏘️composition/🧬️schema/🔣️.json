@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/framework/kernel/poll/composition/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/kernel/poll/composition/schema.json",
   "title": "Kernel Poll Composition Schema Module",
   "$defs": {
     "Composition": {
@@ -13,7 +13,7 @@
       ],
       "properties": {
         "composition": {
-          "$ref": "https://semio.tech/schema/framework/value/resident/schema.json#/$defs/Resident"
+          "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/resident/schema.json#/$defs/Resident"
         }
       }
     },
@@ -47,7 +47,7 @@
                 "type": "string"
               },
               "input": {
-                "$ref": "https://semio.tech/schema/framework/kernel/poll/composition/schema.json#/$defs/Composition"
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/kernel/poll/composition/schema.json#/$defs/Composition"
               },
               "words": {
                 "type": "array",
@@ -83,7 +83,7 @@
           "type": "array",
           "minItems": 3,
           "items": {
-            "$ref": "https://semio.tech/schema/framework/value/resident/schema.json#/$defs/Resident"
+            "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/resident/schema.json#/$defs/Resident"
           }
         },
         "bindingCases": {

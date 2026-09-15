@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ConnectNodes`.
 use crate::schema::diff::diff_replace_content;
 use crate::diff::DagDiff;
-use crate::{dag_working_scene, DagHostDocumentEdge, DagSnapshot};
+use crate::{dag_working_scene, DagHostSnapshotEdge, DagSnapshot};
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::mutation::ConnectNodes, base: &DagSnapshot) -> protocol::MutationOutcome<DagDiff> {
@@ -30,7 +30,7 @@ pub fn diff(payload: &super::mutation::ConnectNodes, base: &DagSnapshot) -> prot
     if would_create_cycle(&scene.edges, &source_node, &target_node) {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Connecting \"{}\" to \"{}\" would create a cycle.", source_node, target_node), [source_node, target_node]);
     }
-    let edge = DagHostDocumentEdge { id: payload.id.clone(), source: payload.source.clone(), target: payload.target.clone(), route_style: payload.route_style, properties: payload.properties.clone() };
+    let edge = DagHostSnapshotEdge { id: payload.id.clone(), source: payload.source.clone(), target: payload.target.clone(), route_style: payload.route_style, properties: payload.properties.clone() };
     let mut edges = scene.edges;
     edges.push(edge);
     protocol::MutationOutcome::new(diff_replace_content(scene.nodes, edges))
@@ -38,7 +38,7 @@ pub fn diff(payload: &super::mutation::ConnectNodes, base: &DagSnapshot) -> prot
 
 /// 🔁️ Whether adding a `source -> target` edge would create a cycle — true iff `target` can already
 /// reach `source` through the existing edge set (a DAG's core invariant).
-fn would_create_cycle(edges: &[DagHostDocumentEdge], source: &str, target: &str) -> bool {
+fn would_create_cycle(edges: &[DagHostSnapshotEdge], source: &str, target: &str) -> bool {
     let mut visited = std::collections::BTreeSet::new();
     let mut stack = vec![target.to_string()];
     while let Some(node) = stack.pop() {

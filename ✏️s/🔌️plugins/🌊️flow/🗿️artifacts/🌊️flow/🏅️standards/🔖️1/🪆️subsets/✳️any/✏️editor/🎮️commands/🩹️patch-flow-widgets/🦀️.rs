@@ -21,7 +21,7 @@ pub struct PatchFlowWidgets {
 /// mirrors `dag_engine::node_patch_for_field`'s "typed command carries the raw UI input string
 /// directly" convention) — numeric fields parse it themselves.
 fn patched_widgets_fixture(snapshot: &FlowSnapshot, widget_ids: &[String], field: &str, raw_value: &str) -> FlowSnapshot {
-    let mut fixture = snapshot.to_host_document();
+    let mut fixture = snapshot.to_host_snapshot();
     for widget in fixture.widgets.iter_mut() {
         if !widget_ids.iter().any(|id| id == widget_id(widget)) {
             continue;
@@ -36,7 +36,7 @@ fn patched_widgets_fixture(snapshot: &FlowSnapshot, widget_ids: &[String], field
             _ => {}
         }
     }
-    FlowSnapshot::from_host_document(fixture)
+    FlowSnapshot::from_host_snapshot(fixture)
 }
 
 pub fn handle(payload: &PatchFlowWidgets, doc: &ArtifactView<'_, FlowSnapshot>, _cfg: &ConfigView<'_, NoConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, NoConfigMutation>, Fault> {

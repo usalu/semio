@@ -11,7 +11,7 @@ Both Recovery 9 routes fail while AJV compiles their neutral fixture schema refe
 - `🗑️generated/flow-recovery-9-child-edit-check.txt` reports missing `FlowChildAddWidget`.
 - `🗑️generated/flow-recovery-9-add-widget-retained-check.txt` reports missing `FlowAddWidgetRetained`.
 
-The production artifact schema at `✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json` is correctly registered under `https://semio.tech/schema/s/flow/flow/artifact.json`. Its staged change deliberately reduces the artifact document to persisted `schema` and `content` fields (24 lines, from 3,095). It contains no `$defs`. This is a definition-ownership loss, not an AJV registration failure.
+The production artifact schema at `✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json` is correctly registered under `https://json.schemas.assets.semio-tech.com/s/flow/flow/artifact.json`. Its staged change deliberately reduces the artifact document to persisted `schema` and `content` fields (24 lines, from 3,095). It contains no `$defs`. This is a definition-ownership loss, not an AJV registration failure.
 
 The prior `HEAD` artifact schema contained all fixture contracts as artifact-root `$defs`. They are absent from the current tree: the fixture files and source-contract test still refer to them, but no relocated schema module currently defines them.
 
@@ -53,7 +53,7 @@ The two Recovery 9 logs establish only the pre-native AJV failure. A rerun is ne
 
 Root's `🗑️generated/flow-editor-fixture-schema-candidate.json` was compared read-only against both `HEAD` and `599a5d8450^` at the former artifact-schema path. It contains 41 definitions, all byte-identical to both preserved sources. It has its proposed distinct fixture `$id`:
 
-`https://semio.tech/schema/s/flow/flow/editor/fixtures.json`
+`https://json.schemas.assets.semio-tech.com/s/flow/flow/editor/fixtures.json`
 
 No selected definition is missing or stale. The candidate intentionally excludes only six former definitions outside the current fixture-root closure: `CameraJson`, `FlowArtifactRecipesLayout`, `FlowSceneOwnerLaw`, `SynapseSpec`, `Widget`, and `WidgetLayout`.
 

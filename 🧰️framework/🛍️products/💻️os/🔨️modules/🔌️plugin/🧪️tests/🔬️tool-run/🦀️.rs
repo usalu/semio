@@ -713,6 +713,32 @@ async fn tool_run_abort_leaves_store_generation_edits_command_log_and_outbox_unt
     close(&mut app);
 }
 
+/// ⚖️ LAW: a run that has not completed finalizes its PARTIAL result — the run job stops at its tick boundary and the one
+/// grouped edit carries exactly the provisional ops computed until the finalize, never an op the job would have computed
+/// after it; the run ends `finalized` and the document holds exactly that many units.
+#[semio_framework_async_macros::async_test]
+async fn tool_run_finalize_while_running_publishes_exactly_the_partial_result_computed_so_far() {
+    let fixture = fixture();
+    let expected = &fixture["partialFinalize"];
+    let mut app = toy_app(number(&expected["target"])).await;
+    start(&mut app, text(&fixture["toolId"])).await;
+    let ops_per_unit = number(&fixture["opsPerUnit"]);
+    pump_until(&mut app, "the partial result", |app| app.tool_runs.provisional().len() as u64 >= number(&expected["unitsBeforeFinalize"]) * ops_per_unit).await;
+    assert_eq!(app.tool_runs.state(), Some(ToolRunState::Running), "the run is still computing");
+    let computed = app.tool_runs.provisional().len();
+    let edits = app.store.envelope().vcs.edits.len();
+    let output = run_action(&mut app, "toolRunFinalize").await;
+    assert_eq!(output.get("toolRun").and_then(DslValue::as_str), Some("beginFinalize"));
+    pump_until(&mut app, "partial finalize publishes", |app| app.tool_runs.state() == Some(ToolRunState::Finalized) && !app.tool_runs.has_pending_work()).await;
+    assert_eq!((app.store.envelope().vcs.edits.len() - edits) as u64, number(&expected["editsAdded"]));
+    let edit = app.store.envelope().vcs.edits.last().expect("finalized edit");
+    assert_eq!(edit.forwards.len(), computed, "the edit carries exactly the ops computed until the finalize");
+    assert!(edit.mutation_meta.iter().all(|meta| meta.group_id.as_deref() == Some(text(&expected["groupId"]))));
+    assert_eq!(app.snapshot().expect("committed").count as u64, computed as u64 / ops_per_unit, "the document holds exactly the computed units");
+    assert!(app.tool_runs.provisional().is_empty());
+    close(&mut app);
+}
+
 #[semio_framework_async_macros::async_test]
 async fn tool_run_finalize_publishes_one_grouped_edit_one_mutations_batch_and_undo_removes_all() {
     let fixture = fixture();
@@ -779,7 +805,7 @@ async fn tool_run_remote_ingest_rebases_and_a_revalidation_conflict_returns_to_c
 }
 
 #[semio_framework_async_macros::async_test]
-async fn tool_run_stale_generation_and_run_actions_are_silent_no_ops_and_finalize_is_illegal_outside_complete() {
+async fn tool_run_stale_generation_and_run_actions_are_silent_no_ops_and_an_illegal_action_publishes_nothing() {
     let fixture = fixture();
     let mut app = toy_app(number(&fixture["abort"]["target"])).await;
     start(&mut app, text(&fixture["toolId"])).await;
@@ -791,14 +817,14 @@ async fn tool_run_stale_generation_and_run_actions_are_silent_no_ops_and_finaliz
     assert_eq!(wrong_run.get("rejected").and_then(DslValue::as_str), Some(text(&fixture["stale"]["code"])));
     assert_eq!(app.tool_runs.state(), Some(ToolRunState::Running), "stale actions change nothing");
     let generation = app.store.generation();
-    let illegal = run_action(&mut app, "toolRunFinalize").await;
+    let illegal = run_action(&mut app, "toolRunResume").await;
     assert_eq!(illegal.get("rejected").and_then(DslValue::as_str), Some(text(&fixture["illegal"]["code"])));
-    assert_eq!(app.store.generation(), generation, "an illegal finalize publishes nothing");
+    assert_eq!(app.store.generation(), generation, "an illegal action publishes nothing");
     let busy = tool_run_action(&mut app, "toolRunStart", vec![("toolId".into(), DslValue::String(text(&fixture["toolId"]).into()))]).await;
     assert_eq!(busy.get("rejected").and_then(DslValue::as_str), Some(text(&fixture["busy"]["code"])));
     let panel: Value = serde_json::from_str(&render_text(&mut app, FRAMEWORK_TOOL_RUN_BODY_KEY).await).expect("panel parses");
     let finalize = find_node(&panel, &panel_id(&fixture["panel"]["finalize"]["id"], slot.run)).expect("finalize button");
-    assert_eq!(finalize["accessibility"]["description"], fixture["panel"]["runningFinalizeDescription"], "finalize stays present and describes why it is disabled while running");
+    assert_eq!((finalize["disabled"].as_bool().unwrap_or(false), finalize["accessibility"].get("description")), (false, None), "a running run offers finalize for the partial result it holds");
     run_action(&mut app, "toolRunAbort").await;
     pump_until(&mut app, "abort settles", |app| app.tool_runs.state() == Some(ToolRunState::Aborted) && !app.tool_runs.has_pending_work()).await;
     close(&mut app);

@@ -14,14 +14,14 @@ async fn rotate_selection_accumulates_one_transform_neuron_in_the_flow_graph() {
     let mut app = app().await;
     dispatch(&mut app, Generation3dCommand::RotateSelection(RotateSelection { node_ids: vec!["extrude".into()], ax: 0.0, ay: 0.0, az: 1.0, angle: std::f64::consts::FRAC_PI_2 })).await;
     let once = context::snapshot(&app);
-    let neuron = once.host_document.widgets.iter().find(|widget| widget_id(widget) == ROTATE_ID).expect("rotate neuron spliced");
+    let neuron = once.host_snapshot.widgets.iter().find(|widget| widget_id(widget) == ROTATE_ID).expect("rotate neuron spliced");
     assert!(matches!(neuron, Widget::Neuron { neuron_kind, .. } if neuron_kind == "brep.xform.rotate"));
-    assert_eq!(with_host(&once.host_document, |host| gumball_widget_number_param(host, ROTATE_ID, "angle", 0.0)), std::f64::consts::FRAC_PI_2);
+    assert_eq!(with_host(&once.host_snapshot, |host| gumball_widget_number_param(host, ROTATE_ID, "angle", 0.0)), std::f64::consts::FRAC_PI_2);
 
     dispatch(&mut app, Generation3dCommand::RotateSelection(RotateSelection { node_ids: vec![ROTATE_ID.into()], ax: 0.0, ay: 0.0, az: 1.0, angle: std::f64::consts::FRAC_PI_2 })).await;
     let twice = context::snapshot(&app);
-    assert_eq!(twice.host_document.widgets.iter().filter(|widget| widget_id(widget) == ROTATE_ID).count(), 1);
-    assert_eq!(with_host(&twice.host_document, |host| gumball_widget_number_param(host, ROTATE_ID, "angle", 0.0)), std::f64::consts::PI);
+    assert_eq!(twice.host_snapshot.widgets.iter().filter(|widget| widget_id(widget) == ROTATE_ID).count(), 1);
+    assert_eq!(with_host(&twice.host_snapshot, |host| gumball_widget_number_param(host, ROTATE_ID, "angle", 0.0)), std::f64::consts::PI);
 }
 
 /// 🎯️ An ids-less rotate is the real context-menu shape: the payload carries nothing and the command
@@ -35,8 +35,8 @@ async fn an_ids_less_rotate_transforms_the_framework_owned_graph_selection() {
     context::select_graph(&mut app, "node", &["extrude"]).await;
     dispatch(&mut app, Generation3dCommand::RotateSelection(RotateSelection { node_ids: Vec::new(), ax: 0.0, ay: 0.0, az: 1.0, angle: std::f64::consts::FRAC_PI_4 })).await;
     let projection = context::snapshot(&app);
-    assert!(projection.host_document.widgets.iter().any(|widget| matches!(widget, Widget::Neuron { id, neuron_kind, .. } if id == ROTATE_ID && neuron_kind == "brep.xform.rotate")));
-    assert_eq!(with_host(&projection.host_document, |host| gumball_widget_number_param(host, ROTATE_ID, "angle", 0.0)), std::f64::consts::FRAC_PI_4);
+    assert!(projection.host_snapshot.widgets.iter().any(|widget| matches!(widget, Widget::Neuron { id, neuron_kind, .. } if id == ROTATE_ID && neuron_kind == "brep.xform.rotate")));
+    assert_eq!(with_host(&projection.host_snapshot, |host| gumball_widget_number_param(host, ROTATE_ID, "angle", 0.0)), std::f64::consts::FRAC_PI_4);
     drop(projection);
     semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
 }
@@ -46,9 +46,9 @@ async fn an_ids_less_rotate_transforms_the_framework_owned_graph_selection() {
 async fn a_rotate_with_no_target_leaves_the_graph_untouched() {
     let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
     let mut app = app().await;
-    let before = context::snapshot(&app).host_document.widgets.len();
+    let before = context::snapshot(&app).host_snapshot.widgets.len();
     dispatch(&mut app, Generation3dCommand::RotateSelection(RotateSelection { node_ids: Vec::new(), ax: 0.0, ay: 0.0, az: 1.0, angle: 1.0 })).await;
     let after = context::snapshot(&app);
-    assert_eq!(after.host_document.widgets.len(), before);
-    assert!(!after.host_document.widgets.iter().any(|widget| widget_id(widget) == ROTATE_ID));
+    assert_eq!(after.host_snapshot.widgets.len(), before);
+    assert!(!after.host_snapshot.widgets.iter().any(|widget| widget_id(widget) == ROTATE_ID));
 }

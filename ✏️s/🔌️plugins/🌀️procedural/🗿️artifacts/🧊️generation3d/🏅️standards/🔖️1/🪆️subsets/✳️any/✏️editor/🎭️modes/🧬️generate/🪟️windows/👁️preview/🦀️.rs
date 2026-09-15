@@ -6,8 +6,8 @@ use crate::editor::generation3d::modes::edit::windows::preview::show_mode_measur
 use crate::editor::generation3d::terminology::Generation3dLabels;
 use crate::editor::generation3d::GENERATION_3D_PLAY_APP_ID;
 use crate::editor::generation3d::{preview_camera_json, preview_payload, preview_selection_json, preview_status_json, preview_window_status_json, PreviewInteractionMarks, PreviewPayload, PreviewStatusDebug, GENERATION_3D_INTERACTION_DOMAIN, GENERATION_3D_INTERACTION_GRANULARITY};
-use crate::standards::v1::subsets::any::schema::{generation_by_id, generation_host_document_for};
-use semio_framework_artifact_flow_flow::FlowHostDocument;
+use crate::standards::v1::subsets::any::schema::{generation_by_id, generation_host_snapshot_for};
+use semio_framework_artifact_flow_flow::FlowHostSnapshot;
 use semio_framework_artifact_playbook_playbook::GenerationPlayState;
 use semio_framework_os_flow::FlowEvalSession;
 use semio_framework_plugin::{world3d_scene, world3d_sun_measures, BuiltNode, LocalizedLabel, SurfaceKind, WindowKindDefinition, WindowMeasure, WindowOptions};
@@ -66,7 +66,7 @@ fn generate_preview_status_json(session: &FlowEvalSession, run: Option<&semio_fr
 
 //#region 🔖️Render
 pub fn render(
-    fixture: &FlowHostDocument,
+    host_snapshot: &FlowHostSnapshot,
     generation: &GenerationPlayState,
     selected_id: Option<&str>,
     generation_preview_text: Option<&str>,
@@ -79,13 +79,13 @@ pub fn render(
 ) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let eval_json = generation_preview_text.unwrap_or_default();
     let (payload, preview_status) = match generation_by_id(generation, selected_id) {
-        // 🧹️ `generation_host_document_for` CLONES the document fixture, so the patched copy owns its own
+        // 🧹️ `generation_host_snapshot_for` CLONES the document host_snapshot, so the patched copy owns its own
         // `layout` ordered-map root and must be retired before it leaves scope — a bare drop aborts the
         // plugin actor with `ordered-map root must be explicitly retired before drop`. Reachable only
         // once a generation is selected, which is why no earlier render test ever hit it
         // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
         Some(_) => {
-            let gen_fixture = generation_host_document_for(fixture, generation, selected_id);
+            let gen_fixture = generation_host_snapshot_for(host_snapshot, generation, selected_id);
             let payload = preview_payload(eval_json, &gen_fixture, cfg, Some(session), marks);
             let preview_status = preview_status_json(eval_json, &gen_fixture);
             gen_fixture.retire_cold();
@@ -95,7 +95,7 @@ pub fn render(
     };
     let empty = payload.meshes_json == "[]" && payload.instances_json == "[]";
     let status_json = generate_preview_status_json(session, run, eval_json, &payload, preview_status, empty.then(|| labels.preview_hint.as_str()));
-    let fit_json = crate::preview_eval::preview_fit_json(fixture, &payload.meshes_json);
+    let fit_json = crate::preview_eval::preview_fit_json(host_snapshot, &payload.meshes_json);
     let sun = cfg.sun();
     let selection_json = preview_selection_json(cfg, active_utility, &payload);
     let _ = GENERATION_3D_PLAY_APP_ID;

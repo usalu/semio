@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/writer/writer/mutation/change-language/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/writer/writer/mutation/change-language/schema.json",
   "title": "ChangeLanguage",
   "type": "object",
   "additionalProperties": false,

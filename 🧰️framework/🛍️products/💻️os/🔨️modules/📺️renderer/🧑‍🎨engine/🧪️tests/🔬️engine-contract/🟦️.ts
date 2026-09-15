@@ -1796,8 +1796,9 @@ import {
   DAG_LABEL_ELLIPSIS,
   parseCatalogueAppDragPayload,
   parseDagSliderOverlays,
+  dagSliderValueText,
   GraphSliderOverlays,
-  resolveFixtureWidgetInstanceId,
+  resolveHostSnapshotWidgetInstanceId,
   Paint2dHost,
   TableHost,
   resolveMapInteractionSync,
@@ -4479,6 +4480,37 @@ describe("framework renderer hosts", () => {
     fireEvent.keyUp(disabled, { key: "ArrowRight" });
     expect(changes).not.toHaveBeenCalled();
   });
+
+  /** ⚖️ LAW: a knob has ONE value. The readout painted beside the track and the `aria-valuenow` a
+   * screen reader announces are two renderings of the same published number, so they can never
+   * disagree — the readout used to be painted on the GPU, where it moved only when a frame was
+   * drawn, and a released knob read `10` to a screen reader while the canvas said `0.0`
+   * (`📓️slider-reevaluation-correctness-2026-09-15.md`). */
+  it("renders a graph slider's painted readout and its aria value from one published number", () => {
+    const item = graphSliderFixture.cases[0]!;
+    const rowAt = (value: number) => ({ ...item.row, value, fontScreenPx: 9, gapScreenPx: 4 });
+    const propsAt = (value: number) => ({
+      scopeId: item.scopeId,
+      stateJson: JSON.stringify({ camera: { x: 0, y: 0, zoom: 1 }, sliders: [rowAt(value)] }),
+      logicalW: 800,
+      logicalH: 600,
+      editable: true,
+      onSliderChange: () => {},
+    });
+    const view = render(createElement(GraphSliderOverlays, propsAt(item.row.min)));
+    for (const value of [item.row.min, (item.row.min + item.row.max) / 2, item.row.max]) {
+      view.rerender(createElement(GraphSliderOverlays, propsAt(value)));
+      const knob = view.getByRole("slider", { name: item.row.label });
+      const readout = view.container.querySelector(`[data-graph-slider-value="${item.row.widgetId}"]`);
+      expect(readout, "the overlay paints the value beside the track it belongs to").not.toBeNull();
+      expect(readout!.textContent).toBe(dagSliderValueText(value));
+      expect(readout!.textContent).toBe(dagSliderValueText(Number(knob.getAttribute("aria-valuenow"))));
+      expect(readout!.getAttribute("aria-hidden")).toBe("true");
+    }
+    const parsed = parseDagSliderOverlays(JSON.stringify({ sliders: [rowAt(item.row.max)] }))[0]!;
+    expect(parsed.value).toBe(item.row.max);
+    expect(dagSliderValueText(parsed.value)).toBe(view.container.querySelector(`[data-graph-slider-value="${item.row.widgetId}"]`)!.textContent);
+  });
   //#endregion 🎚️GraphSliderAccessibility
 
   //#region 🎚️GraphParameterDispatch
@@ -4486,7 +4518,7 @@ describe("framework renderer hosts", () => {
     const validate = peerExport(flowParameterSchema, "GraphParameterV1");
     const command = peerExport(flowParameterSchema, "GraphParameterCommand");
     expect(validate(graphParameterFixture), JSON.stringify(validate.errors)).toBe(true);
-    for (const extra of ["documentJson", "hostDocumentJson", "operations"]) {
+    for (const extra of ["snapshotJson", "hostSnapshotJson", "operations"]) {
       const malformed = structuredClone(graphParameterFixture);
       (malformed.cases[0] as Record<string, unknown>)[extra] = "{}";
       expect(validate(malformed)).toBe(false);
@@ -4514,7 +4546,7 @@ describe("framework renderer hosts", () => {
       for (const item of graphParameterFixture.cases) {
         const row = { widgetId: item.widgetId, label: item.label, ...item.before, x: 0, y: 0, w: 100, h: 16 };
         const methods: Record<string, ReturnType<typeof vi.fn>> = {
-          documentJson: vi.fn(() => { throw new Error("slider must not serialize the fixture"); }),
+          snapshotJson: vi.fn(() => { throw new Error("slider must not serialize the fixture"); }),
           sliderOverlayStateJson: vi.fn(() => task(JSON.stringify({ camera: { x: 0, y: 0, zoom: 1 }, sliders: [row] }))),
           labelOverlayPaintStateJson: vi.fn(() => task("{}")),
           setSliderValue: vi.fn((_id: string, value: number) => { row.value = value; return task(undefined); }),
@@ -4530,7 +4562,7 @@ describe("framework renderer hosts", () => {
         createSpy.mockResolvedValueOnce(session);
         const onAction = vi.fn();
         const view = render(createElement(FlowGraphCanvasHost, {
-          scene: { nodes: [], edges: [], viewport: { x: 0, y: 0, zoom: 1 }, hostDocumentJson: '{"schema":"flow.host_document","widgets":[]}' },
+          scene: { nodes: [], edges: [], viewport: { x: 0, y: 0, zoom: 1 }, hostSnapshotJson: '{"schema":"flow.host_snapshot","widgets":[]}' },
           controllerId: item.controllerId, surfaceId: item.surfaceId, editable: true, onAction,
         }));
         await waitFor(() => expect(view.getByRole("slider", { name: item.label })).toBeTruthy());
@@ -4586,7 +4618,7 @@ describe("framework renderer hosts", () => {
       nodes: [],
       edges: [],
       viewport: { x: 0, y: 0, zoom: 1 },
-      hostDocumentJson: JSON.stringify({ schema: "flow.host_document", revision, widgets: [] }),
+      hostSnapshotJson: JSON.stringify({ schema: "flow.host_snapshot", revision, widgets: [] }),
     });
     const host = (id: "A" | "B", revision: number) => createElement(FlowGraphCanvasHost, {
       key: id,
@@ -4634,7 +4666,7 @@ describe("framework renderer hosts", () => {
       nodes: [],
       edges: [],
       viewport: { x: 0, y: 0, zoom: 1 },
-      hostDocumentJson: JSON.stringify({ schema: "flow.host_document", revision, widgets: [] }),
+      hostSnapshotJson: JSON.stringify({ schema: "flow.host_snapshot", revision, widgets: [] }),
     });
     const host = (id: "A" | "B", revision: number) => createElement(FlowGraphCanvasHost, {
       scene: scene(revision),
@@ -6520,7 +6552,7 @@ describe("ink canvas host", () => {
           controllerId: "note-play",
           componentKind: "ink-canvas",
           inkCanvas: {
-            documentJson: JSON.stringify(semioInkDocument),
+            snapshotJson: JSON.stringify(semioInkDocument),
             selectionJson: "[]",
             activeUtility: "selectDirect",
             viewMode: "composite",
@@ -6545,7 +6577,7 @@ describe("ink canvas host", () => {
     };
     const compositeMarkup = renderToStaticMarkup(
       createElement(InkCanvasHost, {
-        node: { ...baseNode, inkCanvas: { documentJson: JSON.stringify(semioInkDocument), selectionJson: "[]", activeUtility: "selectDirect", viewMode: "composite", interactive: true } },
+        node: { ...baseNode, inkCanvas: { snapshotJson: JSON.stringify(semioInkDocument), selectionJson: "[]", activeUtility: "selectDirect", viewMode: "composite", interactive: true } },
         onAction: noopAction,
       }) as ReactElement,
     );
@@ -6553,7 +6585,7 @@ describe("ink canvas host", () => {
 
     const navigatorMarkup = renderToStaticMarkup(
       createElement(InkCanvasHost, {
-        node: { ...baseNode, inkCanvas: { documentJson: JSON.stringify(semioInkDocument), selectionJson: "[]", activeUtility: "selectDirect", viewMode: "navigator", interactive: false } },
+        node: { ...baseNode, inkCanvas: { snapshotJson: JSON.stringify(semioInkDocument), selectionJson: "[]", activeUtility: "selectDirect", viewMode: "navigator", interactive: false } },
         onAction: noopAction,
       }) as ReactElement,
     );
@@ -7406,12 +7438,12 @@ describe("s workflow flow routing", () => {
         { id: "widget-2", params: {} },
       ],
     });
-    expect(resolveFixtureWidgetInstanceId(fixtureJson, "widget-1")).toBe("app-1");
-    expect(resolveFixtureWidgetInstanceId(fixtureJson, "widget-2")).toBeUndefined();
-    expect(resolveFixtureWidgetInstanceId(fixtureJson, "missing-widget")).toBeUndefined();
-    expect(resolveFixtureWidgetInstanceId(fixtureJson, undefined)).toBeUndefined();
-    expect(resolveFixtureWidgetInstanceId(undefined, "widget-1")).toBeUndefined();
-    expect(resolveFixtureWidgetInstanceId("not json", "widget-1")).toBeUndefined();
+    expect(resolveHostSnapshotWidgetInstanceId(fixtureJson, "widget-1")).toBe("app-1");
+    expect(resolveHostSnapshotWidgetInstanceId(fixtureJson, "widget-2")).toBeUndefined();
+    expect(resolveHostSnapshotWidgetInstanceId(fixtureJson, "missing-widget")).toBeUndefined();
+    expect(resolveHostSnapshotWidgetInstanceId(fixtureJson, undefined)).toBeUndefined();
+    expect(resolveHostSnapshotWidgetInstanceId(undefined, "widget-1")).toBeUndefined();
+    expect(resolveHostSnapshotWidgetInstanceId("not json", "widget-1")).toBeUndefined();
   });
 
   it("parses studio and studio+instance shell paths, and rejects non-studio routes", () => {
@@ -10583,7 +10615,7 @@ describe("node-graph surface sizing", () => {
     const session = vi.spyOn(flowSessionLoader, "createFlowSession").mockReturnValue(new Promise(() => {}));
     vi.stubGlobal("devicePixelRatio", 2);
     const view = render(createElement(FlowGraphCanvasHost, {
-      scene: { nodes: [], edges: [], viewport: { x: 0, y: 0, zoom: 1 }, hostDocumentJson: '{"schema":"flow.host_document","widgets":[]}' },
+      scene: { nodes: [], edges: [], viewport: { x: 0, y: 0, zoom: 1 }, hostSnapshotJson: '{"schema":"flow.host_snapshot","widgets":[]}' },
       controllerId: "procedural", surfaceId: "procedural.main", editable: true, onAction: noopAction,
     }));
     try {
@@ -10627,7 +10659,7 @@ function hexagonalMushroomColumnScene(): NodeGraphScene {
     .map(([source, target]) => ({ id: `${source}->${target}`, sourceNodeId: source!, sourcePortId: "out", targetNodeId: target!, targetPortId: "in" }));
   return {
     nodes, edges, viewport: { x: 0, y: 0, zoom: 1.78 }, editable: true,
-    hostDocumentJson: JSON.stringify({ schema: "flow.host_document", widgets: nodes.map((node) => ({ id: node.id, x: node.x, y: node.y })) }),
+    hostSnapshotJson: JSON.stringify({ schema: "flow.host_snapshot", widgets: nodes.map((node) => ({ id: node.id, x: node.x, y: node.y })) }),
   };
 }
 
@@ -10667,7 +10699,7 @@ describe("node-graph surface attachment in a hidden tab", () => {
       await waitFor(() => expect(bridge.operations).toContain(flowAbi.operations.renderFrame));
       expect(bridge.operations).toContain(flowAbi.operations.attachSurface);
       expect(bridge.operations).toContain(flowAbi.operations.surfaceStatus);
-      expect(bridge.operations).toContain(flowAbi.operations.synchronizeDocumentJson);
+      expect(bridge.operations).toContain(flowAbi.operations.synchronizeSnapshotJson);
       expect(bridge.operations).toContain(flowAbi.operations.setCamera);
       expect(bridge.operations).toContain(flowAbi.operations.setSize);
       await waitFor(() => expect(bridge.operations).toContain(flowAbi.operations.labelOverlayPaintStateJson));
@@ -10788,7 +10820,7 @@ describe("node-graph surface attachment in a hidden tab", () => {
           scene: sceneFor(refresh.statusJson),
           controllerId: String(29 + index * 2), surfaceId: retention.surface, editable: true, onAction: noopAction,
         }));
-        await waitFor(() => expect(bridge.operations).toContain(flowAbi.operations.synchronizeDocumentJson));
+        await waitFor(() => expect(bridge.operations).toContain(flowAbi.operations.synchronizeSnapshotJson));
       }
       const attaches = bridge.operations.filter((operation: number) => operation === flowAbi.operations.attachSurface).length;
       expect(attaches, `${retention.refreshes.length} refreshes must dispatch exactly one attach`).toBe(retention.expected.surfaceAttaches);

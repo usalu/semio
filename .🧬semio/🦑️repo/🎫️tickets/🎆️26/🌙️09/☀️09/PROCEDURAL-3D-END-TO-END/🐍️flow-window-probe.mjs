@@ -84,7 +84,7 @@ if (mode === "wire") {
   const surface = "window:procedural-main";
   const fixture = async () => page.evaluate((id) => {
     const probe = window.__semioFlowGraphProbe?.[id];
-    const text = probe?.fixtureJson?.() ?? null;
+    const text = probe?.hostSnapshotJson?.() ?? null;
     try { return text ? JSON.parse(text) : null; } catch { return null; }
   }, surface);
   const wires = (value) => (value?.synapses ?? []).map((s) => `${s.from}@${s.fromPort ?? s.from_port} -> ${s.to}@${s.toPort ?? s.to_port}`);
@@ -320,9 +320,14 @@ if (mode === "wire") {
 //#region 🗺️ReorganizeKeybinding
 if (mode === "reorganize") {
   const surface = "window:procedural-main";
+  // 🗺️ The surface's OWN painted node positions. `hostSnapshotJson` is a scene field the plugin does
+  // not carry for this app (and the DOM attribute beside it is only on the diagram fallback), so both
+  // of the old readings answered `null` and the probe read "nothing moved" for a reorganize that did.
   const layout = () => page.evaluate((id) => {
     const probe = window.__semioFlowGraphProbe?.[id];
-    const text = probe?.fixtureJson?.() ?? document.querySelector(`[data-surface-id="${id}"]`)?.getAttribute("data-fixture-json") ?? null;
+    const painted = probe?.nodeLayout?.() ?? null;
+    if (painted && Object.keys(painted).length > 0) return painted;
+    const text = probe?.hostSnapshotJson?.() ?? document.querySelector(`[data-surface-id="${id}"]`)?.getAttribute("data-host-snapshot-json") ?? null;
     try { const parsed = text ? JSON.parse(text) : null; return parsed?.layout ?? null; } catch { return null; }
   }, surface);
   const canvas = page.locator(`[data-surface-id="${surface}"] canvas`).first();

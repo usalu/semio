@@ -8,8 +8,8 @@ fn cursor_grant() -> DagCursorGrant {
 #[test]
 fn selected_nodes_cursor_censuses_and_emits_one_byte_per_grant() {
     let fixture =
-        DagHostDocument { schema: "dag.host_document".into(), camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 }, nodes: vec![DagNodeSpec { id: "a\"\\\n".into(), ..Default::default() }, DagNodeSpec { id: "β".into(), ..Default::default() }], edges: vec![] };
-    let mut host = DagHost::from_host_document_without_layout(fixture);
+        DagHostSnapshot { schema: "dag.host_snapshot".into(), camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 }, nodes: vec![DagNodeSpec { id: "a\"\\\n".into(), ..Default::default() }, DagNodeSpec { id: "β".into(), ..Default::default() }], edges: vec![] };
+    let mut host = DagHost::from_host_snapshot_without_layout(fixture);
     host.set_selection(&["a\"\\\n".into(), "β".into()]);
     let expected = dsl::os_pack::json::to_json_string(&host.selected_node_ids()).into_bytes();
     let mut cursor = DagSelectedNodesJsonCursor::default();
@@ -34,7 +34,7 @@ fn selected_nodes_cursor_censuses_and_emits_one_byte_per_grant() {
 #[test]
 fn selected_edges_cursor_matches_direct_encode() {
     let mut host = DagHost::default_demo();
-    let edge = host.host_document.edges.first().expect("demo edge").id.clone();
+    let edge = host.host_snapshot.edges.first().expect("demo edge").id.clone();
     host.set_selection_domains_json(&format!("{{\"nodes\":[],\"edges\":[{edge:?}],\"handles\":[]}}"));
     let expected = dsl::os_pack::json::to_json_string(&host.selected_edge_ids()).into_bytes();
     let mut cursor = DagSelectedNodesJsonCursor::edges();
@@ -54,14 +54,14 @@ fn selected_edges_cursor_matches_direct_encode() {
 
 #[test]
 fn bounded_interaction_projection_rejects_node_and_identifier_overflow() {
-    let mut fixture = DagHostDocument::default();
+    let mut fixture = DagHostSnapshot::default();
     fixture.nodes = (0..=DAG_INTERACTION_NODE_CAPACITY).map(|index| DagNodeSpec { id: format!("node-{index}"), ..Default::default() }).collect();
-    let host = DagHost::from_host_document_without_layout(fixture);
+    let host = DagHost::from_host_snapshot_without_layout(fixture);
     assert_eq!(host.bounded_interaction_projection(0).unwrap_err(), DagInteractionPlanFault::NodeCredits);
 
-    let mut fixture = DagHostDocument::default();
+    let mut fixture = DagHostSnapshot::default();
     fixture.nodes = vec![DagNodeSpec { id: "x".repeat(16 * 1024 + 1), ..Default::default() }];
-    let host = DagHost::from_host_document_without_layout(fixture);
+    let host = DagHost::from_host_snapshot_without_layout(fixture);
     assert_eq!(host.bounded_interaction_projection(0).unwrap_err(), DagInteractionPlanFault::StringCredits);
 }
 
@@ -106,8 +106,8 @@ fn app_instance_node_serializes_and_sizes_n_ports() {
 
 #[test]
 fn dag_selection_hover_and_dimmed_map_widget_ids() {
-    let fixture = DagHostDocument {
-        schema: "dag.host_document".into(),
+    let fixture = DagHostSnapshot {
+        schema: "dag.host_snapshot".into(),
         camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 },
         nodes: vec![
             DagNodeSpec::computation("a".into(), "A", "A", "emoji:🔷️".into(), vec![], vec![IoPortSpec { id: "out".into(), label: "out".into(), ..Default::default() }], false, false, 0.0, 0.0, 160.0, 24.0),
@@ -128,7 +128,7 @@ fn dag_selection_hover_and_dimmed_map_widget_ids() {
         ],
         edges: vec![],
     };
-    let mut host = DagHost::from_host_document(fixture);
+    let mut host = DagHost::from_host_snapshot(fixture);
     host.set_selection(&["a".to_string()]);
     assert_eq!(host.selected_node_ids(), vec!["a"]);
     host.set_hover(Some("b"));
@@ -144,11 +144,11 @@ fn cycle_detection_blocks_back_edge() {
     assert!(!would_create_cycle(&edges, "a", "c"));
 }
 
-/// 🧪️ Two-node/one-edge `dag.host_document` literal shared by the layout tests below.
+/// 🧪️ Two-node/one-edge `dag.host_snapshot` literal shared by the layout tests below.
 fn ab_edge_layout_fixture() -> Value {
     let node = |id: &str| dsl::os_pack::json::object([("id".to_string(), Value::from(id)), ("x".to_string(), Value::from(0)), ("y".to_string(), Value::from(0)), ("handles".to_string(), Value::Array(vec![]))]);
     dsl::os_pack::json::object([
-        ("schema".to_string(), Value::from("dag.host_document")),
+        ("schema".to_string(), Value::from("dag.host_snapshot")),
         ("nodes".to_string(), Value::Array(vec![node("a"), node("b")])),
         ("edges".to_string(), Value::Array(vec![dsl::os_pack::json::object([("id".to_string(), Value::from("e1")), ("source".to_string(), Value::from("a")), ("target".to_string(), Value::from("b"))])])),
     ])
@@ -157,7 +157,7 @@ fn ab_edge_layout_fixture() -> Value {
 #[test]
 fn dag_layout_left_right_orders_depth_on_x() {
     let mut fixture: Value = ab_edge_layout_fixture();
-    apply_dag_layout_to_host_document_v1_value(&mut fixture, &DagLayoutOptions::default()).unwrap();
+    apply_dag_layout_to_host_snapshot_v1_value(&mut fixture, &DagLayoutOptions::default()).unwrap();
     let a_x = fixture["nodes"][0]["x"].as_f64().unwrap();
     let b_x = fixture["nodes"][1]["x"].as_f64().unwrap();
     assert!(b_x > a_x + 1.0);
@@ -167,7 +167,7 @@ fn dag_layout_left_right_orders_depth_on_x() {
 fn dag_layout_top_bottom_orders_depth_on_y() {
     let mut fixture: Value = ab_edge_layout_fixture();
     let opts = DagLayoutOptions { orientation: DagLayoutOrientation::TopBottom, ..DagLayoutOptions::default() };
-    apply_dag_layout_to_host_document_v1_value(&mut fixture, &opts).unwrap();
+    apply_dag_layout_to_host_snapshot_v1_value(&mut fixture, &opts).unwrap();
     let a_y = fixture["nodes"][0]["y"].as_f64().unwrap();
     let b_y = fixture["nodes"][1]["y"].as_f64().unwrap();
     assert!(b_y > a_y + 1.0);
@@ -176,10 +176,10 @@ fn dag_layout_top_bottom_orders_depth_on_y() {
 #[test]
 fn dag_layout_spacing_scales_coordinates() {
     let mut fixture: Value = ab_edge_layout_fixture();
-    apply_dag_layout_to_host_document_v1_value(&mut fixture, &DagLayoutOptions::default()).unwrap();
+    apply_dag_layout_to_host_snapshot_v1_value(&mut fixture, &DagLayoutOptions::default()).unwrap();
     let default_gap = (fixture["nodes"][1]["x"].as_f64().unwrap() - fixture["nodes"][0]["x"].as_f64().unwrap()).abs();
     let mut wide: Value = fixture.clone();
-    apply_dag_layout_to_host_document_v1_value(&mut wide, &DagLayoutOptions { layer_spacing: 240.0, sibling_gap: 80.0, ..DagLayoutOptions::default() }).unwrap();
+    apply_dag_layout_to_host_snapshot_v1_value(&mut wide, &DagLayoutOptions { layer_spacing: 240.0, sibling_gap: 80.0, ..DagLayoutOptions::default() }).unwrap();
     let wide_gap = (wide["nodes"][1]["x"].as_f64().unwrap() - wide["nodes"][0]["x"].as_f64().unwrap()).abs();
     assert!(wide_gap > default_gap * 1.5);
 }
@@ -247,8 +247,8 @@ fn dag_node_spec_serde_round_trip_kinds() {
 
 #[test]
 fn handle_hover_does_not_hover_parent_node() {
-    let fixture = DagHostDocument {
-        schema: "dag.host_document".into(),
+    let fixture = DagHostSnapshot {
+        schema: "dag.host_snapshot".into(),
         camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 },
         nodes: vec![DagNodeSpec::computation(
             "merge".into(),
@@ -266,7 +266,7 @@ fn handle_hover_does_not_hover_parent_node() {
         )],
         edges: vec![],
     };
-    let mut host = DagHost::from_host_document(fixture);
+    let mut host = DagHost::from_host_snapshot(fixture);
     host.set_viewport(800, 600, 1.0);
     let (handle_center, node_id) = {
         let snap = host.engine.render_snapshot();
@@ -291,7 +291,7 @@ fn idle_pointer_move_updates_hover() {
 
     let mut host = DagHost::default_demo();
     host.set_viewport(800, 600, 1.0);
-    let camera = Camera { x: host.host_document.camera.x, y: host.host_document.camera.y, zoom: host.host_document.camera.zoom };
+    let camera = Camera { x: host.host_snapshot.camera.x, y: host.host_snapshot.camera.y, zoom: host.host_snapshot.camera.zoom };
     let viewport = Viewport { width: 800, height: 600, dpr: 1.0 };
     let slider = world_to_screen(&camera, &viewport, Point::new(-400.0, -40.0));
     host.pointer_move_screen(slider.x, slider.y, false, false, false);
@@ -334,8 +334,8 @@ fn dag_node_spec_port_accessors_per_kind() {
 
 #[test]
 fn dag_host_delete_selected_preserves_remaining_positions() {
-    let mut host = DagHost::from_host_document_without_layout(DagHostDocument {
-        schema: "dag.host_document".into(),
+    let mut host = DagHost::from_host_snapshot_without_layout(DagHostSnapshot {
+        schema: "dag.host_snapshot".into(),
         camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 },
         nodes: vec![
             DagNodeSpec::computation("a".into(), "A", "A", "emoji:🔷️".into(), vec![], vec![IoPortSpec { id: "out".into(), label: "out".into(), ..Default::default() }], false, false, 100.0, 200.0, 160.0, 56.0),
@@ -355,23 +355,23 @@ fn dag_host_delete_selected_preserves_remaining_positions() {
             ),
             DagNodeSpec::computation("c".into(), "C", "C", "emoji:🔷️".into(), vec![IoPortSpec { id: "in".into(), label: "in".into(), ..Default::default() }], vec![], false, false, 700.0, 300.0, 160.0, 56.0),
         ],
-        edges: vec![DagHostDocumentEdge { id: "e1".into(), source: "a@out".into(), target: "b@in".into(), ..Default::default() }, DagHostDocumentEdge { id: "e2".into(), source: "b@out".into(), target: "c@in".into(), ..Default::default() }],
+        edges: vec![DagHostSnapshotEdge { id: "e1".into(), source: "a@out".into(), target: "b@in".into(), ..Default::default() }, DagHostSnapshotEdge { id: "e2".into(), source: "b@out".into(), target: "c@in".into(), ..Default::default() }],
     });
     host.set_selection(&["b".to_string()]);
     host.delete_selected();
-    let a = host.host_document.nodes.iter().find(|n| n.id == "a").expect("a");
-    let c = host.host_document.nodes.iter().find(|n| n.id == "c").expect("c");
+    let a = host.host_snapshot.nodes.iter().find(|n| n.id == "a").expect("a");
+    let c = host.host_snapshot.nodes.iter().find(|n| n.id == "c").expect("c");
     assert!((a.x - 100.0).abs() < 0.01);
     assert!((a.y - 200.0).abs() < 0.01);
     assert!((c.x - 700.0).abs() < 0.01);
     assert!((c.y - 300.0).abs() < 0.01);
-    assert!(host.host_document.nodes.iter().all(|n| n.id != "b"));
+    assert!(host.host_snapshot.nodes.iter().all(|n| n.id != "b"));
 }
 
 #[test]
 fn dag_host_delete_selected_removes_edge_only_selection() {
-    let mut host = DagHost::from_host_document_without_layout(DagHostDocument {
-        schema: "dag.host_document".into(),
+    let mut host = DagHost::from_host_snapshot_without_layout(DagHostSnapshot {
+        schema: "dag.host_snapshot".into(),
         camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 },
         nodes: vec![
             DagNodeSpec::computation("a".into(), "A", "A", "emoji:🔷️".into(), vec![], vec![IoPortSpec { id: "out".into(), label: "out".into(), ..Default::default() }], false, false, 100.0, 200.0, 160.0, 56.0),
@@ -391,41 +391,41 @@ fn dag_host_delete_selected_removes_edge_only_selection() {
             ),
             DagNodeSpec::computation("c".into(), "C", "C", "emoji:🔷️".into(), vec![IoPortSpec { id: "in".into(), label: "in".into(), ..Default::default() }], vec![], false, false, 700.0, 300.0, 160.0, 56.0),
         ],
-        edges: vec![DagHostDocumentEdge { id: "e1".into(), source: "a@out".into(), target: "b@in".into(), ..Default::default() }, DagHostDocumentEdge { id: "e2".into(), source: "b@out".into(), target: "c@in".into(), ..Default::default() }],
+        edges: vec![DagHostSnapshotEdge { id: "e1".into(), source: "a@out".into(), target: "b@in".into(), ..Default::default() }, DagHostSnapshotEdge { id: "e2".into(), source: "b@out".into(), target: "c@in".into(), ..Default::default() }],
     });
     let edge_id = *host.engine.edges.keys().next().expect("edge");
     host.engine.selection.edge_ids.insert(edge_id);
     assert!(host.has_selection());
-    assert_eq!(host.host_document.edges.len(), 2);
+    assert_eq!(host.host_snapshot.edges.len(), 2);
     host.delete_selected();
-    assert_eq!(host.host_document.edges.len(), 1);
-    assert_eq!(host.host_document.nodes.len(), 3);
+    assert_eq!(host.host_snapshot.edges.len(), 1);
+    assert_eq!(host.host_snapshot.nodes.len(), 3);
     assert!(!host.has_selection());
 }
 
 #[test]
 fn dag_host_reorganize_updates_engine_positions() {
-    let mut host = DagHost::from_host_document_without_layout(DagHostDocument {
-        schema: "dag.host_document".into(),
+    let mut host = DagHost::from_host_snapshot_without_layout(DagHostSnapshot {
+        schema: "dag.host_snapshot".into(),
         camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 },
         nodes: vec![
             DagNodeSpec::computation("a".into(), "A", "A", "emoji:🔷️".into(), vec![], vec![IoPortSpec { id: "out".into(), label: "out".into(), ..Default::default() }], false, false, 500.0, 500.0, 160.0, 56.0),
             DagNodeSpec::computation("b".into(), "B", "B", "emoji:🔷️".into(), vec![IoPortSpec { id: "in".into(), label: "in".into(), ..Default::default() }], vec![], false, false, 500.0, 500.0, 160.0, 56.0),
         ],
-        edges: vec![DagHostDocumentEdge { id: "e1".into(), source: "a@out".into(), target: "b@in".into(), ..Default::default() }],
+        edges: vec![DagHostSnapshotEdge { id: "e1".into(), source: "a@out".into(), target: "b@in".into(), ..Default::default() }],
     });
     host.reorganize(&DagLayoutOptions::default()).unwrap();
-    let a = host.host_document.nodes.iter().find(|n| n.id == "a").expect("a");
-    let b = host.host_document.nodes.iter().find(|n| n.id == "b").expect("b");
+    let a = host.host_snapshot.nodes.iter().find(|n| n.id == "a").expect("a");
+    let b = host.host_snapshot.nodes.iter().find(|n| n.id == "b").expect("b");
     assert!(b.x > a.x);
 }
 
 #[test]
 fn dag_host_loads_demo_fixture() {
     let host = DagHost::default_demo();
-    assert_eq!(host.host_document.schema, "dag.host_document");
-    assert_eq!(host.host_document.nodes.len(), 5);
-    assert_eq!(host.host_document.edges.len(), 4);
+    assert_eq!(host.host_snapshot.schema, "dag.host_snapshot");
+    assert_eq!(host.host_snapshot.nodes.len(), 5);
+    assert_eq!(host.host_snapshot.edges.len(), 4);
     assert!(!host.engine.render_snapshot().edges.is_empty());
 }
 
@@ -457,8 +457,8 @@ fn slider_track_bounds_stay_inside_node_rect() {
 #[test]
 fn dag_host_slider_drag_mutates_value() {
     let output = IoPortSpec { id: "out".into(), label: "value".into(), ..Default::default() };
-    let mut host = DagHost::from_host_document_without_layout(DagHostDocument {
-        schema: "dag.host_document".into(),
+    let mut host = DagHost::from_host_snapshot_without_layout(DagHostSnapshot {
+        schema: "dag.host_snapshot".into(),
         camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 },
         nodes: vec![DagNodeSpec {
             id: "slider".into(),
@@ -475,12 +475,12 @@ fn dag_host_slider_drag_mutates_value() {
         edges: vec![],
     });
     host.set_viewport(800, 600, 1.0);
-    let (x0, y0, x1, y1) = slider_track_bounds(&host.host_document.nodes[0]);
+    let (x0, y0, x1, y1) = slider_track_bounds(&host.host_snapshot.nodes[0]);
     let mid_y = (y0 + y1) * 0.5;
     let (sx, sy) = world_to_screen_px(&host, canvas::Point::new((x0 + x1) * 0.5, mid_y));
     host.pointer_down(sx, sy, false);
     host.pointer_up(sx, sy);
-    let DagNodeKind::Slider { value, .. } = host.host_document.nodes[0].kind else {
+    let DagNodeKind::Slider { value, .. } = host.host_snapshot.nodes[0].kind else {
         panic!("expected slider");
     };
     assert!((value - 2.0).abs() > 0.1);
@@ -489,8 +489,8 @@ fn dag_host_slider_drag_mutates_value() {
 #[test]
 fn dag_host_slider_drag_ignored_when_controls_hidden() {
     let output = IoPortSpec { id: "out".into(), label: "value".into(), ..Default::default() };
-    let mut host = DagHost::from_host_document_without_layout(DagHostDocument {
-        schema: "dag.host_document".into(),
+    let mut host = DagHost::from_host_snapshot_without_layout(DagHostSnapshot {
+        schema: "dag.host_snapshot".into(),
         camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 },
         nodes: vec![DagNodeSpec {
             id: "slider".into(),
@@ -509,12 +509,12 @@ fn dag_host_slider_drag_ignored_when_controls_hidden() {
     host.set_automatic_lod(false);
     host.set_forced_draw_lod_label("minimap");
     host.set_viewport(800, 600, 1.0);
-    let (x0, y0, x1, y1) = slider_track_bounds(&host.host_document.nodes[0]);
+    let (x0, y0, x1, y1) = slider_track_bounds(&host.host_snapshot.nodes[0]);
     let mid_y = (y0 + y1) * 0.5;
     let (sx, sy) = world_to_screen_px(&host, canvas::Point::new((x0 + x1) * 0.5, mid_y));
     host.pointer_down(sx, sy, false);
     host.pointer_up(sx, sy);
-    let DagNodeKind::Slider { value, .. } = host.host_document.nodes[0].kind else {
+    let DagNodeKind::Slider { value, .. } = host.host_snapshot.nodes[0].kind else {
         panic!("expected slider");
     };
     assert!((value - 2.0).abs() < 1e-6, "minimap LOD should only move the node rectangle, not adjust the value");
@@ -522,8 +522,8 @@ fn dag_host_slider_drag_ignored_when_controls_hidden() {
 
 #[test]
 fn dag_host_select_click_advances_option() {
-    let mut host = DagHost::from_host_document_without_layout(DagHostDocument {
-        schema: "dag.host_document".into(),
+    let mut host = DagHost::from_host_snapshot_without_layout(DagHostSnapshot {
+        schema: "dag.host_snapshot".into(),
         camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 },
         nodes: vec![DagNodeSpec {
             id: "mode".into(),
@@ -540,10 +540,10 @@ fn dag_host_select_click_advances_option() {
         edges: vec![],
     });
     host.set_viewport(800, 600, 1.0);
-    let (x0, y0, x1, y1) = select_control_bounds(&host.host_document.nodes[0]);
+    let (x0, y0, x1, y1) = select_control_bounds(&host.host_snapshot.nodes[0]);
     let (sx, sy) = world_to_screen_px(&host, canvas::Point::new((x0 + x1) * 0.5, (y0 + y1) * 0.5));
     host.pointer_down(sx, sy, false);
-    let DagNodeKind::Select { selected, .. } = host.host_document.nodes[0].kind else {
+    let DagNodeKind::Select { selected, .. } = host.host_snapshot.nodes[0].kind else {
         panic!("expected select");
     };
     assert_eq!(selected, 1);
@@ -564,8 +564,8 @@ fn dag_host_label_overlay_paint_state_json_includes_compact_labels() {
 
 #[test]
 fn dag_host_label_overlay_paint_state_json_includes_slider_name() {
-    let mut host = DagHost::from_host_document_without_layout(DagHostDocument {
-        schema: "dag.host_document".into(),
+    let mut host = DagHost::from_host_snapshot_without_layout(DagHostSnapshot {
+        schema: "dag.host_snapshot".into(),
         camera: DagCamera { x: 0.0, y: 0.0, zoom: 2.0 },
         nodes: vec![DagNodeSpec {
             id: "slider".into(),
@@ -594,8 +594,8 @@ fn dag_host_slider_overlay_preserves_language_neutral_field_labels() {
     let fixture: Value = dsl::os_pack::json::parse(include_str!("../../🧫️fixtures/🎚️slider-overlay.json")).unwrap();
     for case in fixture["cases"].as_array().unwrap() {
         let row = &case["row"];
-        let host = DagHost::from_host_document_without_layout(DagHostDocument {
-            schema: "dag.host_document".into(),
+        let host = DagHost::from_host_snapshot_without_layout(DagHostSnapshot {
+            schema: "dag.host_snapshot".into(),
             camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 },
             nodes: vec![DagNodeSpec {
                 id: row["widgetId"].as_str().unwrap().into(),
@@ -623,8 +623,8 @@ fn dag_host_slider_overlay_preserves_language_neutral_field_labels() {
 
 #[test]
 fn dag_host_slider_overlay_state_json_includes_slider_track() {
-    let mut host = DagHost::from_host_document_without_layout(DagHostDocument {
-        schema: "dag.host_document".into(),
+    let mut host = DagHost::from_host_snapshot_without_layout(DagHostSnapshot {
+        schema: "dag.host_snapshot".into(),
         camera: DagCamera { x: 0.0, y: 0.0, zoom: 2.0 },
         nodes: vec![DagNodeSpec {
             id: "slider".into(),
@@ -653,8 +653,8 @@ fn dag_host_slider_overlay_state_json_includes_slider_track() {
 
 #[test]
 fn label_overlay_port_rows_are_not_duplicated_in_json() {
-    let mut host = DagHost::from_host_document_without_layout(DagHostDocument {
-        schema: "dag.host_document".into(),
+    let mut host = DagHost::from_host_snapshot_without_layout(DagHostSnapshot {
+        schema: "dag.host_snapshot".into(),
         camera: DagCamera { x: 0.0, y: 0.0, zoom: 2.0 },
         nodes: vec![DagNodeSpec {
             id: "combine".into(),
@@ -725,7 +725,7 @@ fn dag_host_label_overlay_port_text_follows_draw_lod() {
         ..Default::default()
     };
     let port_texts = |lod: &str| -> Vec<String> {
-        let mut host = DagHost::from_host_document_without_layout(DagHostDocument { schema: "dag.host_document".into(), camera: DagCamera { x: 0.0, y: 0.0, zoom: 2.0 }, nodes: vec![node.clone()], edges: vec![] });
+        let mut host = DagHost::from_host_snapshot_without_layout(DagHostSnapshot { schema: "dag.host_snapshot".into(), camera: DagCamera { x: 0.0, y: 0.0, zoom: 2.0 }, nodes: vec![node.clone()], edges: vec![] });
         host.set_viewport(1280, 800, 1.0);
         host.set_automatic_lod(false);
         host.set_forced_draw_lod_label(lod);
@@ -742,8 +742,8 @@ fn dag_host_label_overlay_port_text_follows_draw_lod() {
 
 #[test]
 fn dag_host_exports_screen_overlay_rect() {
-    let host = DagHost::from_host_document_without_layout(DagHostDocument {
-        schema: "dag.host_document".into(),
+    let host = DagHost::from_host_snapshot_without_layout(DagHostSnapshot {
+        schema: "dag.host_snapshot".into(),
         camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 },
         nodes: vec![DagNodeSpec {
             id: "screen".into(),
@@ -888,8 +888,8 @@ fn dag_host_entity_screen_json_unresolved_domain_or_id_never_panics() {
         }
         assert_eq!(json["visible"], false, "domain={domain} id={id}");
     }
-    let empty_fixture = DagHostDocument { schema: "dag.host_document".into(), camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 }, nodes: vec![], edges: vec![] };
-    let empty: Value = dsl::os_pack::json::parse(&DagHost::from_host_document(empty_fixture).entity_screen_json("node", "*")).unwrap();
+    let empty_fixture = DagHostSnapshot { schema: "dag.host_snapshot".into(), camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 }, nodes: vec![], edges: vec![] };
+    let empty: Value = dsl::os_pack::json::parse(&DagHost::from_host_snapshot(empty_fixture).entity_screen_json("node", "*")).unwrap();
     assert_eq!(empty["visible"], false);
 }
 
@@ -901,22 +901,22 @@ fn dag_host_minimap_bounded_drag_moves_selection_inside_union_bounds() {
     host.set_forced_draw_lod_label("minimap");
     host.set_camera(0.0, 0.0, 0.1);
     host.set_selection(&["scale".into(), "combine".into()]);
-    let scale_before = host.host_document.nodes.iter().find(|n| n.id == "scale").expect("scale").clone();
-    let combine_before = host.host_document.nodes.iter().find(|n| n.id == "combine").expect("combine").clone();
+    let scale_before = host.host_snapshot.nodes.iter().find(|n| n.id == "scale").expect("scale").clone();
+    let combine_before = host.host_snapshot.nodes.iter().find(|n| n.id == "combine").expect("combine").clone();
     let gap = canvas::Point::new(0.0, 0.0);
     use canvas::camera::{Camera as CanvasCamera, Viewport, world_to_screen};
-    let cam = CanvasCamera { x: host.host_document.camera.x, y: host.host_document.camera.y, zoom: host.host_document.camera.zoom };
+    let cam = CanvasCamera { x: host.host_snapshot.camera.x, y: host.host_snapshot.camera.y, zoom: host.host_snapshot.camera.zoom };
     let viewport = Viewport { width: 800, height: 600, dpr: 1.0 };
     let start = world_to_screen(&cam, &viewport, gap);
     host.pointer_down_screen(start.x, start.y, 0, false, false, false, false);
     assert!(matches!(host.engine.interaction, InteractionMode::DragNodes { .. }), "expected bounded drag inside selection union at minimap LOD");
     host.pointer_move_screen(start.x + 50.0, start.y + 30.0, false, false, false);
     host.pointer_up_screen(start.x + 50.0, start.y + 30.0, false, false, false);
-    let zoom = host.host_document.camera.zoom;
+    let zoom = host.host_snapshot.camera.zoom;
     let dx = 50.0 / zoom;
     let dy = 30.0 / zoom;
-    let scale_after = host.host_document.nodes.iter().find(|n| n.id == "scale").expect("scale");
-    let combine_after = host.host_document.nodes.iter().find(|n| n.id == "combine").expect("combine");
+    let scale_after = host.host_snapshot.nodes.iter().find(|n| n.id == "scale").expect("scale");
+    let combine_after = host.host_snapshot.nodes.iter().find(|n| n.id == "combine").expect("combine");
     assert!((scale_after.x - (scale_before.x + dx)).abs() < 1e-3 && (scale_after.y - (scale_before.y + dy)).abs() < 1e-3);
     assert!((combine_after.x - (combine_before.x + dx)).abs() < 1e-3 && (combine_after.y - (combine_before.y + dy)).abs() < 1e-3);
 }
@@ -937,7 +937,7 @@ fn dag_host_drags_node_in_world_space() {
         let before = host.engine.nodes.get(&nid).expect("node").center;
         host.pointer_move(sx + 40.0, sy + 30.0);
         let idx = *host.node_id_map.get(&nid).expect("fixture index");
-        let fixture = &host.host_document.nodes[idx];
+        let fixture = &host.host_snapshot.nodes[idx];
         let engine = host.engine.nodes.get(&nid).expect("node").center;
         assert!((fixture.x - engine.x).abs() < 1e-6, "fixture x should track engine during drag");
         assert!((fixture.y - engine.y).abs() < 1e-6, "fixture y should track engine during drag");
@@ -971,7 +971,7 @@ fn dag_host_grid_snap_aligns_dragged_node() {
         host.pointer_move(sx + 37.0, sy + 23.0);
         host.pointer_up(sx + 37.0, sy + 23.0);
         let idx = *host.node_id_map.get(&nid).expect("fixture index");
-        let fixture = &host.host_document.nodes[idx];
+        let fixture = &host.host_snapshot.nodes[idx];
         let step = GRID_WORLD_MEDIUM * 10.0;
         assert!(((fixture.x / step).round() * step - fixture.x).abs() < 1e-6);
         assert!(((fixture.y / step).round() * step - fixture.y).abs() < 1e-6);
@@ -985,7 +985,7 @@ fn dag_host_grid_snap_aligns_dragged_node() {
 fn dag_host_focus_selection_camera_frames_selection() {
     let mut host = DagHost::default_demo();
     host.set_viewport(1280, 800, 1.0);
-    let ids: Vec<String> = host.host_document.nodes.iter().take(2).map(|node| node.id.clone()).collect();
+    let ids: Vec<String> = host.host_snapshot.nodes.iter().take(2).map(|node| node.id.clone()).collect();
     host.set_selection(&ids);
     let camera = host.focus_selection_camera(1.2).expect("camera");
     assert!(camera.zoom > 0.0);
@@ -1004,7 +1004,7 @@ fn dag_host_reconnects_edge_endpoint() {
     assert!(matches!(host.engine.interaction, InteractionMode::DrawEdge { .. }));
     host.pointer_move(out_sx, out_sy);
     host.pointer_up(out_sx, out_sy);
-    let e3 = host.host_document.edges.iter().find(|e| e.id == "e3").expect("e3");
+    let e3 = host.host_snapshot.edges.iter().find(|e| e.id == "e3").expect("e3");
     assert_eq!(e3.source, "scale@out");
 }
 
@@ -1016,8 +1016,8 @@ fn dag_host_node_drag_proximity_preview_and_connects() {
     let tgt_w = computation_node_width("Tgt", &inputs, &outputs);
     let src_h = computation_node_height(0, 1, false, false);
     let tgt_h = computation_node_height(1, 1, false, false);
-    let mut host = DagHost::from_host_document_without_layout(DagHostDocument {
-        schema: "dag.host_document".into(),
+    let mut host = DagHost::from_host_snapshot_without_layout(DagHostSnapshot {
+        schema: "dag.host_snapshot".into(),
         camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 },
         nodes: vec![
             DagNodeSpec::computation("src".into(), "Src", "Src", "emoji:🔢️".into(), vec![], outputs.clone(), false, false, 0.0, 0.0, src_w, src_h),
@@ -1035,7 +1035,7 @@ fn dag_host_node_drag_proximity_preview_and_connects() {
     host.pointer_move_screen(sx + 200.0, sy, false, false, false);
     assert!(host.engine.render_snapshot().pending_edge.is_some(), "proximity drag should preview edge");
     host.pointer_up_screen(sx + 200.0, sy, false, false, false);
-    assert!(host.host_document.edges.iter().any(|edge| edge.source == "src@out" && edge.target == "tgt@in"), "proximity drag should commit edge");
+    assert!(host.host_snapshot.edges.iter().any(|edge| edge.source == "src@out" && edge.target == "tgt@in"), "proximity drag should commit edge");
 }
 
 #[test]
@@ -1046,15 +1046,15 @@ fn dag_host_node_drag_skips_wired_cut_inputs() {
     let cut_w = computation_node_width("Cut", &inputs, &outputs);
     let src_h = computation_node_height(0, 1, false, false);
     let cut_h = computation_node_height(2, 1, false, false);
-    let mut host = DagHost::from_host_document_without_layout(DagHostDocument {
-        schema: "dag.host_document".into(),
+    let mut host = DagHost::from_host_snapshot_without_layout(DagHostSnapshot {
+        schema: "dag.host_snapshot".into(),
         camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 },
         nodes: vec![
             DagNodeSpec::computation("sphere".into(), "Sphere", "Sphere", "emoji:🔵️".into(), vec![], outputs.clone(), false, false, 0.0, -60.0, src_w, src_h),
             DagNodeSpec::computation("torus".into(), "Torus", "Torus", "emoji:🍩️".into(), vec![], outputs.clone(), false, false, 0.0, 60.0, src_w, src_h),
             DagNodeSpec::computation("cut".into(), "Cut", "Cut", "emoji:✂️".into(), inputs, outputs, false, false, 240.0, 0.0, cut_w, cut_h),
         ],
-        edges: vec![DagHostDocumentEdge { id: "e1".into(), source: "sphere@out".into(), target: "cut@a".into(), ..Default::default() }, DagHostDocumentEdge { id: "e2".into(), source: "torus@out".into(), target: "cut@b".into(), ..Default::default() }],
+        edges: vec![DagHostSnapshotEdge { id: "e1".into(), source: "sphere@out".into(), target: "cut@a".into(), ..Default::default() }, DagHostSnapshotEdge { id: "e2".into(), source: "torus@out".into(), target: "cut@b".into(), ..Default::default() }],
     });
     assert_eq!(host.engine.edges.len(), 2, "fixture edges should load into engine");
     host.set_viewport(1280, 800, 1.0);
@@ -1068,7 +1068,7 @@ fn dag_host_node_drag_skips_wired_cut_inputs() {
     assert!(host.engine.render_snapshot().pending_edge.is_none(), "dragging wired cut near sources must not preview proximity edges to occupied inputs");
     host.pointer_up_screen(sx - 180.0, sy, false, false, false);
     assert_eq!(host.engine.edges.len(), 2);
-    assert_eq!(host.host_document.edges.len(), 2);
+    assert_eq!(host.host_snapshot.edges.len(), 2);
 }
 
 #[test]
@@ -1076,8 +1076,8 @@ fn dag_host_keeps_same_named_input_and_output_handles_distinct() {
     let solid = vec![IoPortSpec { id: "solid".into(), label: "solid".into(), ..Default::default() }];
     let brep = vec![IoPortSpec { id: "brep".into(), label: "brep".into(), ..Default::default() }];
     let list = vec![IoPortSpec { id: "list".into(), label: "list".into(), ..Default::default() }];
-    let mut host = DagHost::from_host_document_without_layout(DagHostDocument {
-        schema: "dag.host_document".into(),
+    let mut host = DagHost::from_host_snapshot_without_layout(DagHostSnapshot {
+        schema: "dag.host_snapshot".into(),
         camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 },
         nodes: vec![
             DagNodeSpec::computation("extrude".into(), "Extrude", "Extrude", "emoji:⬆️".into(), vec![], solid.clone(), false, false, 0.0, 0.0, computation_node_width("Extrude", &[], &solid), computation_node_height(0, 1, false, false)),
@@ -1098,8 +1098,8 @@ fn dag_host_keeps_same_named_input_and_output_handles_distinct() {
             ),
         ],
         edges: vec![
-            DagHostDocumentEdge { id: "e100".into(), source: "extrude@solid".into(), target: "brep@brep".into(), ..Default::default() },
-            DagHostDocumentEdge { id: "e101".into(), source: "brep@brep".into(), target: "get@list".into(), ..Default::default() },
+            DagHostSnapshotEdge { id: "e100".into(), source: "extrude@solid".into(), target: "brep@brep".into(), ..Default::default() },
+            DagHostSnapshotEdge { id: "e101".into(), source: "brep@brep".into(), target: "get@list".into(), ..Default::default() },
         ],
     });
     host.sync_edges_from_engine();
@@ -1109,8 +1109,8 @@ fn dag_host_keeps_same_named_input_and_output_handles_distinct() {
     let outgoing_source = host.engine.handles.get(&outgoing.source).expect("outgoing source handle");
     assert_eq!(incoming_target.role, HandleRole::Target);
     assert_eq!(outgoing_source.role, HandleRole::Source);
-    assert_eq!(host.host_document.edges.iter().find(|edge| edge.id == "e100").map(|edge| edge.target.as_str()), Some("brep@brep"));
-    assert_eq!(host.host_document.edges.iter().find(|edge| edge.id == "e101").map(|edge| edge.source.as_str()), Some("brep@brep"));
+    assert_eq!(host.host_snapshot.edges.iter().find(|edge| edge.id == "e100").map(|edge| edge.target.as_str()), Some("brep@brep"));
+    assert_eq!(host.host_snapshot.edges.iter().find(|edge| edge.id == "e101").map(|edge| edge.source.as_str()), Some("brep@brep"));
 }
 
 #[test]
@@ -1121,8 +1121,8 @@ fn dag_host_proximity_zero_disables_node_drag_connect() {
     let tgt_w = computation_node_width("Tgt", &inputs, &outputs);
     let src_h = computation_node_height(0, 1, false, false);
     let tgt_h = computation_node_height(1, 1, false, false);
-    let mut host = DagHost::from_host_document_without_layout(DagHostDocument {
-        schema: "dag.host_document".into(),
+    let mut host = DagHost::from_host_snapshot_without_layout(DagHostSnapshot {
+        schema: "dag.host_snapshot".into(),
         camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 },
         nodes: vec![
             DagNodeSpec::computation("src".into(), "Src", "Src", "emoji:🔢️".into(), vec![], outputs.clone(), false, false, 0.0, 0.0, src_w, src_h),
@@ -1139,7 +1139,7 @@ fn dag_host_proximity_zero_disables_node_drag_connect() {
     host.pointer_move_screen(sx + 200.0, sy, false, false, false);
     assert!(host.engine.render_snapshot().pending_edge.is_none());
     host.pointer_up_screen(sx + 200.0, sy, false, false, false);
-    assert!(host.host_document.edges.is_empty());
+    assert!(host.host_snapshot.edges.is_empty());
 }
 
 /// 🔌️ Only the whole-graph SILHOUETTE withholds ports: every tier that draws a node draws its port
@@ -1174,7 +1174,7 @@ fn normal_lod_input_row_drags_node_handle_anchor_starts_edge_draw() {
     host.set_viewport(1280, 800, 1.0);
     host.set_automatic_lod(false);
     host.set_forced_draw_lod_label("normal");
-    let combine = host.host_document.nodes.iter().find(|n| n.id == "combine").expect("combine");
+    let combine = host.host_snapshot.nodes.iter().find(|n| n.id == "combine").expect("combine");
     let port_idx = combine.inputs().iter().position(|p| p.id == "b").expect("port b");
     let (x0, y0, x1, y1) = input_port_row_hit_bounds(combine, port_idx).expect("row bounds");
     let row_center = canvas::Point::new((x0 + x1) * 0.5, (y0 + y1) * 0.5);
@@ -1216,7 +1216,7 @@ fn hovered_channel_decodes_port_handle_at_detail_lod() {
     host.set_viewport(1280, 800, 1.0);
     host.set_automatic_lod(false);
     host.set_forced_draw_lod_label("detail");
-    let combine = host.host_document.nodes.iter().find(|n| n.id == "combine").expect("combine").clone();
+    let combine = host.host_snapshot.nodes.iter().find(|n| n.id == "combine").expect("combine").clone();
     let port_idx = combine.inputs().iter().position(|p| p.id == "b").expect("port b");
     let (x0, y0, x1, y1) = input_port_row_hit_bounds(&combine, port_idx).expect("row bounds");
     let row_center = canvas::Point::new((x0 + x1) * 0.5, (y0 + y1) * 0.5);
@@ -1231,7 +1231,7 @@ fn detail_lod_non_channel_body_hovers_and_selects_node() {
     host.set_viewport(1280, 800, 1.0);
     host.set_automatic_lod(false);
     host.set_forced_draw_lod_label("detail");
-    let combine = host.host_document.nodes.iter().find(|n| n.id == "combine").expect("combine").clone();
+    let combine = host.host_snapshot.nodes.iter().find(|n| n.id == "combine").expect("combine").clone();
     let port_idx = combine.inputs().iter().position(|p| p.id == "b").expect("port b");
     let (x0, y0, x1, y1) = input_port_row_hit_bounds(&combine, port_idx).expect("row bounds");
     let row_center = canvas::Point::new((x0 + x1) * 0.5, (y0 + y1) * 0.5);
@@ -1258,7 +1258,7 @@ fn visible_handle_lod_row_center_does_not_start_edge_draw() {
     host.set_viewport(1280, 800, 1.0);
     host.set_automatic_lod(false);
     host.set_forced_draw_lod_label("detail");
-    let scale = host.host_document.nodes.iter().find(|n| n.id == "scale").expect("scale");
+    let scale = host.host_snapshot.nodes.iter().find(|n| n.id == "scale").expect("scale");
     let port_idx = scale.outputs().iter().position(|p| p.id == "out").expect("port out");
     let (x0, y0, x1, y1) = output_port_row_hit_bounds(scale, port_idx).expect("row bounds");
     let row_center = canvas::Point::new((x0 + x1) * 0.5, (y0 + y1) * 0.5);
@@ -1278,7 +1278,7 @@ fn detail_lod_channel_row_drags_node_without_prior_selection() {
     host.set_viewport(1280, 800, 1.0);
     host.set_automatic_lod(false);
     host.set_forced_draw_lod_label("micro");
-    let combine = host.host_document.nodes.iter().find(|n| n.id == "combine").expect("combine").clone();
+    let combine = host.host_snapshot.nodes.iter().find(|n| n.id == "combine").expect("combine").clone();
     let port_idx = combine.inputs().iter().position(|p| p.id == "b").expect("port b");
     let (x0, y0, x1, y1) = input_port_row_hit_bounds(&combine, port_idx).expect("row bounds");
     let row_center = canvas::Point::new((x0 + x1) * 0.5, (y0 + y1) * 0.5);
@@ -1296,7 +1296,7 @@ fn detail_lod_title_row_drags_node() {
     host.set_viewport(1280, 800, 1.0);
     host.set_automatic_lod(false);
     host.set_forced_draw_lod_label("detail");
-    let combine = host.host_document.nodes.iter().find(|n| n.id == "combine").expect("combine").clone();
+    let combine = host.host_snapshot.nodes.iter().find(|n| n.id == "combine").expect("combine").clone();
     let port_idx = combine.inputs().iter().position(|p| p.id == "a").expect("port a");
     let (x0, y0, x1, y1) = input_port_row_hit_bounds(&combine, port_idx).expect("row bounds");
     let title_probe = canvas::Point::new((x0 + x1) * 0.5, (y0 + y1) * 0.5);
@@ -1339,13 +1339,13 @@ fn variadic_plus_hit_maps_insert_index() {
     let outputs = vec![IoPortSpec { id: "out".into(), label: "out".into(), ..Default::default() }];
     let width = computation_node_width("dictionary.merge", &inputs, &outputs);
     let height = computation_node_height(2, 1, true, false);
-    let host = DagHost::from_host_document_without_layout(DagHostDocument {
-        schema: "dag.host_document".into(),
+    let host = DagHost::from_host_snapshot_without_layout(DagHostSnapshot {
+        schema: "dag.host_snapshot".into(),
         camera: DagCamera { x: 0.0, y: 0.0, zoom: 2.0 },
         nodes: vec![DagNodeSpec::computation("merge".into(), "Merge", "Merge", "emoji:🔀️".into(), inputs, outputs, true, false, 0.0, 0.0, width, height)],
         edges: vec![],
     });
-    let positions = variadic_input_insert_positions(&host.host_document.nodes[0]);
+    let positions = variadic_input_insert_positions(&host.host_snapshot.nodes[0]);
     assert_eq!(positions.len(), 1);
     let (_, px, py) = positions[0];
     let hit = host.port_insert_hit(px, py, 2.0).expect("hit");
@@ -1361,13 +1361,13 @@ fn variadic_output_plus_hit_maps_insert_index() {
     let inputs = vec![IoPortSpec { id: "list".into(), label: "list".into(), ..Default::default() }, IoPortSpec { id: "index".into(), label: "index".into(), ..Default::default() }];
     let width = computation_node_width("list.get", &inputs, &outputs);
     let height = computation_node_height(2, 1, false, true);
-    let host = DagHost::from_host_document_without_layout(DagHostDocument {
-        schema: "dag.host_document".into(),
+    let host = DagHost::from_host_snapshot_without_layout(DagHostSnapshot {
+        schema: "dag.host_snapshot".into(),
         camera: DagCamera { x: 0.0, y: 0.0, zoom: 2.0 },
         nodes: vec![DagNodeSpec::computation("get".into(), "Get", "Get", "emoji:📋️".into(), inputs, outputs, false, true, 0.0, 0.0, width, height)],
         edges: vec![],
     });
-    let positions = variadic_output_insert_positions(&host.host_document.nodes[0]);
+    let positions = variadic_output_insert_positions(&host.host_snapshot.nodes[0]);
     assert_eq!(positions.len(), 1);
     let (_, px, py) = positions[0];
     let hit = host.port_insert_hit(px, py, 2.0).expect("hit");
@@ -1659,10 +1659,10 @@ fn dag_draw_lod_progressive_disclosure_gates() {
 #[test]
 fn wheel_zoom_pins_draw_lod_until_gesture_ends() {
     let mut host = DagHost::default_demo();
-    host.host_document.camera.zoom = 1.2;
+    host.host_snapshot.camera.zoom = 1.2;
     assert_eq!(host.draw_lod_for_frame(), DagDrawLod::Normal);
     host.set_wheel_zoom_active(true);
-    host.host_document.camera.zoom = 0.45;
+    host.host_snapshot.camera.zoom = 0.45;
     assert_eq!(host.draw_lod_for_frame(), DagDrawLod::Normal);
     host.set_wheel_zoom_active(false);
     assert_eq!(host.draw_lod_for_frame(), DagDrawLod::Overview);
@@ -1674,7 +1674,7 @@ fn pointer_pan_gesture_moves_camera() {
     host.set_camera(0.0, 0.0, 2.0);
     host.pointer_down_screen(100.0, 100.0, 1, false, false, false, true);
     host.pointer_move_screen(150.0, 100.0, false, false, false);
-    assert!((host.host_document.camera.x - -25.0).abs() < 1e-6);
+    assert!((host.host_snapshot.camera.x - -25.0).abs() < 1e-6);
 }
 
 #[test]
@@ -1698,10 +1698,10 @@ fn minimap_widget_click_repositions_camera() {
     let minimap = raw.get("minimapWidget").expect("minimap");
     let x = minimap["x"].as_f64().unwrap() + minimap["width"].as_f64().unwrap() * 0.5;
     let y = minimap["y"].as_f64().unwrap() + minimap["height"].as_f64().unwrap() * 0.5;
-    let before_x = host.host_document.camera.x;
+    let before_x = host.host_snapshot.camera.x;
     host.pointer_down_screen(x, y, 0, false, false, false, false);
     host.pointer_up_screen(x, y, false, false, false);
-    assert!((host.host_document.camera.x - before_x).abs() > 1.0);
+    assert!((host.host_snapshot.camera.x - before_x).abs() > 1.0);
 }
 
 #[test]
@@ -1773,7 +1773,7 @@ fn dag_paint_scene_keeps_labels_when_lod_forced_at_low_zoom() {
     host.set_viewport(1280, 800, 1.0);
     host.set_automatic_lod(false);
     host.set_forced_draw_lod_label("compact");
-    host.host_document.camera.zoom = 0.25;
+    host.host_snapshot.camera.zoom = 0.25;
     let mut scene = canvas::Scene::new();
     host.paint_scene(&mut scene, 1280, 800, 1.0);
     // 🏷️ A captioned tier DELEGATES its captions to the overlay (`node_caption_delegated_to_js_overlay`),
@@ -1781,11 +1781,11 @@ fn dag_paint_scene_keeps_labels_when_lod_forced_at_low_zoom() {
     // path count — which is node chrome only, two paths per node. This used to assert `> 12` paths and
     // measured 10 whichever string the tier served (recorded in
     // `26/09/09/PROCEDURAL-3D-END-TO-END/📓️node-graph-camera-fit-labels-2026-09-12.md`).
-    assert!(scene.path_count() >= host.host_document.nodes.len() * 2, "a forced compact LOD must still paint every node's chrome");
+    assert!(scene.path_count() >= host.host_snapshot.nodes.len() * 2, "a forced compact LOD must still paint every node's chrome");
     let state: dsl::os_pack::json::Value = dsl::os_pack::json::parse(&host.label_overlay_paint_state_json().unwrap()).unwrap();
     let rows = state["labels"].as_array().expect("label overlay rows");
-    assert_eq!(rows.len(), host.host_document.nodes.len(), "a forced compact LOD must caption every node");
-    for (row, node) in rows.iter().zip(&host.host_document.nodes) {
+    assert_eq!(rows.len(), host.host_snapshot.nodes.len(), "a forced compact LOD must caption every node");
+    for (row, node) in rows.iter().zip(&host.host_snapshot.nodes) {
         assert_eq!(row["text"], dsl::os_pack::json::Value::from(node.name.as_str()), "a caption is the node's NAME at every captioned tier");
     }
 }
@@ -1855,12 +1855,12 @@ fn dag_handle_and_edge_stroke_use_theme_defaults() {
 #[test]
 fn manual_lod_pins_draw_tier_until_automatic_restored() {
     let mut host = DagHost::default_demo();
-    host.host_document.camera.zoom = 1.0;
+    host.host_snapshot.camera.zoom = 1.0;
     assert_eq!(host.draw_lod_label(), "normal");
     host.set_automatic_lod(false);
     host.set_forced_draw_lod_label("minimap");
     assert_eq!(host.draw_lod_for_frame(), DagDrawLod::Minimap);
-    host.host_document.camera.zoom = 5.0;
+    host.host_snapshot.camera.zoom = 5.0;
     assert_eq!(host.draw_lod_for_frame(), DagDrawLod::Minimap);
     host.set_automatic_lod(true);
     assert_eq!(host.draw_lod_for_frame(), DagDrawLod::Micro);
@@ -1878,8 +1878,8 @@ fn note_widget_size_uses_uniform_component_width() {
 
 #[test]
 fn fit_note_sizes_keeps_slider_height() {
-    let mut host = DagHost::from_host_document(DagHostDocument {
-        schema: "dag.host_document".into(),
+    let mut host = DagHost::from_host_snapshot(DagHostSnapshot {
+        schema: "dag.host_snapshot".into(),
         camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 },
         nodes: vec![DagNodeSpec {
             id: "note".into(),
@@ -1896,14 +1896,14 @@ fn fit_note_sizes_keeps_slider_height() {
         edges: vec![],
     });
     host.fit_note_sizes();
-    assert_eq!(host.host_document.nodes[0].height, DAG_CHANNEL_ROW_HEIGHT);
-    let DagNodeKind::Note { text, .. } = &mut host.host_document.nodes[0].kind else {
+    assert_eq!(host.host_snapshot.nodes[0].height, DAG_CHANNEL_ROW_HEIGHT);
+    let DagNodeKind::Note { text, .. } = &mut host.host_snapshot.nodes[0].kind else {
         panic!("expected note");
     };
     *text = "a much longer note body".into();
     host.fit_note_sizes();
-    assert_eq!(host.host_document.nodes[0].height, DAG_CHANNEL_ROW_HEIGHT);
-    assert_eq!(host.host_document.nodes[0].width, DAG_COMPONENT_WIDTH);
+    assert_eq!(host.host_snapshot.nodes[0].height, DAG_CHANNEL_ROW_HEIGHT);
+    assert_eq!(host.host_snapshot.nodes[0].width, DAG_COMPONENT_WIDTH);
 }
 
 #[test]
@@ -1917,8 +1917,8 @@ fn truncate_label_to_fit_width_adds_ellipsis() {
 
 #[test]
 fn begin_note_edit_inserts_and_backspaces_text() {
-    let mut host = DagHost::from_host_document(DagHostDocument {
-        schema: "dag.host_document".into(),
+    let mut host = DagHost::from_host_snapshot(DagHostSnapshot {
+        schema: "dag.host_snapshot".into(),
         camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 },
         nodes: vec![DagNodeSpec {
             id: "note".into(),
@@ -1934,19 +1934,19 @@ fn begin_note_edit_inserts_and_backspaces_text() {
         }],
         edges: vec![],
     });
-    let origin_x = note_text_origin_x(&host.host_document.nodes[0]);
+    let origin_x = note_text_origin_x(&host.host_snapshot.nodes[0]);
     assert!(host.begin_note_edit("note", origin_x + 100.0, 0.0));
     assert_eq!(host.editing_note_id(), Some("note"));
     assert!(host.note_insert_text("!"));
     {
-        let DagNodeKind::Note { text, .. } = &host.host_document.nodes[0].kind else {
+        let DagNodeKind::Note { text, .. } = &host.host_snapshot.nodes[0].kind else {
             panic!("expected note");
         };
         assert_eq!(text, "hi!");
     }
     assert!(host.note_backspace());
     {
-        let DagNodeKind::Note { text, .. } = &host.host_document.nodes[0].kind else {
+        let DagNodeKind::Note { text, .. } = &host.host_snapshot.nodes[0].kind else {
             panic!("expected note");
         };
         assert_eq!(text, "hi");
@@ -1957,8 +1957,8 @@ fn begin_note_edit_inserts_and_backspaces_text() {
 
 #[test]
 fn note_label_overlay_skips_title_and_ports() {
-    let mut host = DagHost::from_host_document(DagHostDocument {
-        schema: "dag.host_document".into(),
+    let mut host = DagHost::from_host_snapshot(DagHostSnapshot {
+        schema: "dag.host_snapshot".into(),
         camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 },
         nodes: vec![DagNodeSpec {
             id: "note".into(),
@@ -2078,8 +2078,8 @@ fn dag_node_spec_round_trips_display_fields() {
 #[test]
 fn preview_tree_toggle_expands_and_resizes() {
     let json = dsl::os_pack::json::to_dsl_value(&dsl::os_pack::json::object([("alpha".to_string(), dsl::os_pack::json::object([("beta".to_string(), Value::from(1))])), ("gamma".to_string(), Value::from("x"))]));
-    let mut host = DagHost::from_host_document(DagHostDocument {
-        schema: "dag.host_document".into(),
+    let mut host = DagHost::from_host_snapshot(DagHostSnapshot {
+        schema: "dag.host_snapshot".into(),
         camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 },
         nodes: vec![DagNodeSpec {
             id: "preview".into(),
@@ -2096,21 +2096,21 @@ fn preview_tree_toggle_expands_and_resizes() {
         edges: vec![],
     });
     host.set_viewport(800, 600, 1.0);
-    let collapsed_h = host.host_document.nodes[0].height;
-    let layouts = preview_tree_row_layouts(&host.host_document.nodes[0], &json, &BTreeSet::new());
+    let collapsed_h = host.host_snapshot.nodes[0].height;
+    let layouts = preview_tree_row_layouts(&host.host_snapshot.nodes[0], &json, &BTreeSet::new());
     let row = layouts.iter().find(|entry| entry.path == "alpha").expect("alpha row");
     let (x0, y0, x1, y1) = row.row_rect;
     let world_x = x0 + (x1 - x0) * 0.75;
     let world_y = (y0 + y1) * 0.5;
     use canvas::Point;
     use canvas::camera::{Camera as CanvasCamera, Viewport, world_to_screen};
-    let cam = CanvasCamera { x: host.host_document.camera.x, y: host.host_document.camera.y, zoom: host.host_document.camera.zoom };
+    let cam = CanvasCamera { x: host.host_snapshot.camera.x, y: host.host_snapshot.camera.y, zoom: host.host_snapshot.camera.zoom };
     let viewport = Viewport { width: 800, height: 600, dpr: 1.0 };
     let screen = world_to_screen(&cam, &viewport, Point::new(world_x, world_y));
     host.pointer_down(screen.x, screen.y, false);
-    let expanded_h = host.host_document.nodes[0].height;
+    let expanded_h = host.host_snapshot.nodes[0].height;
     assert!(expanded_h > collapsed_h);
-    let DagNodeKind::Preview { expanded, .. } = &host.host_document.nodes[0].kind else {
+    let DagNodeKind::Preview { expanded, .. } = &host.host_snapshot.nodes[0].kind else {
         panic!("preview kind");
     };
     assert!(expanded.contains("alpha"));
@@ -2121,9 +2121,9 @@ fn dag_paint_scene_smoke_at_overview_and_micro_zoom() {
     let mut host = DagHost::default_demo();
     host.set_viewport(1280, 800, 1.0);
     let mut scene = canvas::Scene::new();
-    host.host_document.camera.zoom = 0.3;
+    host.host_snapshot.camera.zoom = 0.3;
     host.paint_scene(&mut scene, 1280, 800, 1.0);
-    host.host_document.camera.zoom = 5.0;
+    host.host_snapshot.camera.zoom = 5.0;
     host.paint_scene(&mut scene, 1280, 800, 1.0);
 }
 

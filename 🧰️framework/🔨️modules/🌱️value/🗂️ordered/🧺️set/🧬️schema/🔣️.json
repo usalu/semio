@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/framework/value/ordered/set/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/value/ordered/set/schema.json",
   "title": "Value Ordered Set Schema Module",
   "$defs": {
     "OrderedSet": {
@@ -15,7 +15,7 @@
       ],
       "properties": {
         "schema": {
-          "const": "https://semio.tech/schema/framework/value/ordered/set/schema.json#/$defs/OrderedSet"
+          "const": "https://json.schemas.assets.semio-tech.com/framework/value/ordered/set/schema.json#/$defs/OrderedSet"
         },
         "values": {
           "type": "array",

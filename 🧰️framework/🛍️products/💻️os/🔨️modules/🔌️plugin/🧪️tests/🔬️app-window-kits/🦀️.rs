@@ -148,8 +148,8 @@ mod window_kits_tests {
         let node = TableWindowKit::render(&view).expect("bounded fixture");
         let Component::Surface(props) = node.component else { panic!("expected Surface") };
         let scene: semio_framework_ui_scene::TableScene = semio_framework_ui_scene::decode(&props).expect("table scene");
-        assert_eq!(scene.columns_json, "[\"a\",\"b\"]");
-        assert_eq!(scene.rows_json, "[[\"1\",\"2\"]]");
+        assert_eq!(scene.columns_json, r#"[{"id":"0","label":"a"},{"id":"1","label":"b"}]"#);
+        assert_eq!(scene.rows_json, r#"[{"0":"1","1":"2","id":"0"}]"#);
     }
 
     #[semio_framework_async_macros::async_test]

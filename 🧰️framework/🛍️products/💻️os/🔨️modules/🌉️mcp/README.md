@@ -80,7 +80,7 @@ the MCP protocol types (mirroring the external spec), and every tool `inputSchem
 shape the facets stamp a `semio://capability/{id}/{input|output}` `$id` onto. No facet declares a
 schema of its own.
 
-`🧬️schema/🔣️.json` (draft-07, `$id: https://semio.tech/schema/os/mcp/component.json`) and
+`🧬️schema/🔣️.json` (draft-07, `$id: https://json.schemas.assets.semio-tech.com/os/mcp/component.json`) and
 `🧬️schema/🟦️.ts` (types plus a dependency-free `parse<ExportId>` per export) are **generated** from
 that registry by `bun nx run @semio-tech/framework-os-mcp-rs:schema-mirror`, which runs the binary's
 own `semio-os-mcp schemas` emitter; `schema-mirror-check` fails on drift, and the Rust law

@@ -1,43 +1,43 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/gis/gismap/mutations.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/gis/gismap/mutations.json",
   "title": "GisMapMutation",
   "oneOf": [
     {
-      "$ref": "https://semio.tech/schema/s/gis/gismap/mutation/create-position/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/gis/gismap/mutation/create-position/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/gis/gismap/mutation/create-region/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/gis/gismap/mutation/create-region/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/gis/gismap/mutation/create-route/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/gis/gismap/mutation/create-route/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/gis/gismap/mutation/delete-position/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/gis/gismap/mutation/delete-position/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/gis/gismap/mutation/delete-region/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/gis/gismap/mutation/delete-region/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/gis/gismap/mutation/delete-route/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/gis/gismap/mutation/delete-route/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/gis/gismap/mutation/reorder-positions/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/gis/gismap/mutation/reorder-positions/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/gis/gismap/mutation/reorder-regions/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/gis/gismap/mutation/reorder-regions/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/gis/gismap/mutation/reorder-routes/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/gis/gismap/mutation/reorder-routes/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/gis/gismap/mutation/replace-position-data/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/gis/gismap/mutation/replace-position-data/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/gis/gismap/mutation/replace-region-data/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/gis/gismap/mutation/replace-region-data/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/gis/gismap/mutation/replace-route-data/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/gis/gismap/mutation/replace-route-data/schema.json"
     }
   ]
 }

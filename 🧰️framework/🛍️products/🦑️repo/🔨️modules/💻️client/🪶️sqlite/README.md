@@ -6,7 +6,7 @@ SQLite schema of the repo client checkpoint export.
 
 ## 🧬️schema
 
-Scope `repo.client.sqlite` (`https://semio.tech/schema/repo/client/sqlite/schema.json`).
+Scope `repo.client.sqlite` (`https://json.schemas.assets.semio-tech.com/repo/client/sqlite/schema.json`).
 
 - `🧬️schema/🗄️.sql` — native SQLite implementation, seven tables.
 - `🧬️schema/🔣️.json` — draft-07 contract, one `<Table>Row` export per table, each annotated

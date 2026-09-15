@@ -382,7 +382,7 @@ def write_json_facet(key: str, prefix: str, facet: str, fields: list[tuple[str, 
         }
         required = []
     doc = {
-        "$id": f"https://semio.tech/schema/s/norm/{key}/{facet}.json",
+        "$id": f"https://json.schemas.assets.semio-tech.com/s/norm/{key}/{facet}.json",
         "title": f"{prefix}{'Artifact' if facet == 'artifact' else 'Snapshot' if facet == 'snapshot' else 'Diff'}",
         "type": "object",
         "additionalProperties": False,

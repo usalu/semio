@@ -43,7 +43,7 @@ shape):
   use a real relative `import "../📸️snapshot/🛰️component.proto";` and a real message reference,
   matching ✳️mesh's own convention.
 - **JSON Schema**: cross-subset fields are absolute-URI `$ref`s to that subset's own published
-  `$id` (e.g. `"$ref": "https://semio.tech/schema/s.stdio.semio.mesh/snapshot.json"`), each with a
+  `$id` (e.g. `"$ref": "https://json.schemas.assets.semio-tech.com/s.stdio.semio.mesh/snapshot.json"`), each with a
   `description` naming the referenced Rust type — preferred over an opaque `{"type":"object"}`
   leaf per the task's own stated preference. `$id`s were read directly from each of the 13
   subsets' own `🔣️component.json` files, including two irregular singular `mutation.json` ids

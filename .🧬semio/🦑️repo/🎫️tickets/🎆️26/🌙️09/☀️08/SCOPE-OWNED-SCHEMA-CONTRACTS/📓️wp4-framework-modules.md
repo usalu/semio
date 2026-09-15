@@ -22,7 +22,7 @@ Transformer: `wp4-framework-modules.py`. Validator: `wp4-framework-validate.mjs`
 
 ```jsonc
 { "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/framework/<ascii module path>/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/<ascii module path>/schema.json",
   "title": "<Scope> Schema Module",
   "definitions": { …hoisted internal defs of every folded source… },
   "$defs":       { "<ExportId>": …the contract body… },
@@ -86,7 +86,7 @@ the fixture oracle as `<Scope>Fixture`. 20 pairs consolidated this way across
 
 ### 3.5 Modules normalized in place (WP0 class (a))
 23 already-canonical modules had legacy `$id`s (`semio.actor.byte-page.v1`, `s.framework.abi/1`,
-`semio://framework/ui/render/webgpu/surface-port/v1`, `https://semio.tech/schemas/ui-host/…`), no
+`semio://framework/ui/render/webgpu/surface-port/v1`, `https://json.schemas.assets.semio-tech.coms/ui-host/…`), no
 `$defs`, or a 2020-12 dialect. All were wrapped into the module shape and re-`$id`'d, and their old
 ids rewritten everywhere reachable (§5). `🖱️ui/🧬️contract/🧵️retained/💾️resident/🔢️scalar/🧪️tests/🧬️schema/`
 was not an eligible scope (a module inside `🧪️tests`) and was folded into `🔢️scalar/🧬️schema/` as
@@ -113,7 +113,7 @@ was not an eligible scope (a module inside `🧪️tests`) and was folded into `
 ## 4. `framework.ui` shared retained-command shape (requested by the plugins worker)
 
 `🧰️framework/🔨️modules/🖱️ui/🧬️schema/🔣️.json`,
-`$id https://semio.tech/schema/framework/ui/schema.json`. Exports:
+`$id https://json.schemas.assets.semio-tech.com/framework/ui/schema.json`. Exports:
 
 | export | use |
 |---|---|
@@ -159,7 +159,7 @@ retained-command fixtures: PASS 11 FAIL 0
 ```
 
 Per-owner schemas should `$ref`
-`https://semio.tech/schema/framework/ui/schema.json#/$defs/RetainedCommandLimits` (or
+`https://json.schemas.assets.semio-tech.com/framework/ui/schema.json#/$defs/RetainedCommandLimits` (or
 `…#/$defs/RetainedCommandRoutes`) and narrow with their own `const`s. The lane/disposition/execution
 casing split between plugins is *not* normalised here — see open question O-4.
 
@@ -285,17 +285,17 @@ Exact, ready-to-apply replacements: **`wp4-framework-cross-partition.md`** (8 fi
 
 | file | what |
 |---|---|
-| `📜️script.ts` (root) | 2 `🧵️job` fixture-schema paths → `🧰️framework/🔨️modules/🧵️job/🧬️schema/🔣️.json` (+ `$defs/SharedFrameworkActionRoutesFixture` / `FixedOperationRegistryFixture`); 2 old ids. **Also**: `⏱️trace` contention now lives at `🧰️framework/🔨️modules/⏱️trace/⏱️clock/🧬️contention/🧬️schema/🔣️.json`, export `Contention`, `$id https://semio.tech/schema/framework/trace/clock/contention/schema.json` |
+| `📜️script.ts` (root) | 2 `🧵️job` fixture-schema paths → `🧰️framework/🔨️modules/🧵️job/🧬️schema/🔣️.json` (+ `$defs/SharedFrameworkActionRoutesFixture` / `FixedOperationRegistryFixture`); 2 old ids. **Also**: `⏱️trace` contention now lives at `🧰️framework/🔨️modules/⏱️trace/⏱️clock/🧬️contention/🧬️schema/🔣️.json`, export `Contention`, `$id https://json.schemas.assets.semio-tech.com/framework/trace/clock/contention/schema.json` |
 | `💻️os/…/⚛️react/🔬️index.test.ts` | kernel descriptor-load, ui-contract fixtures, 2 manifest fixture schemas, action-argument-resolution choices (data **and** schema) |
 | `💻️os/…/⚛️react/🧯️router-plugin-faults.test.ts` | kernel app-router-plugin-faults schema → `framework.kernel` `$defs/AppRouterPluginFaultsFixture` |
 | `💻️os/…/🧱️elements/📃️UiDocumentStore/🟦️.tsx` | 40 paths (ui-contract retained fixtures + resident pair modules + actor page + value resident + scalar tests). Note: `scalarDeclarationSchemaJson` is now a 2-export module — `compile()` on it is vacuous, use `#/$defs/ScalarDeclaration` |
 | `💻️os/…/🧱️elements/🔌️PluginRuntime/🟦️.tsx` | `🌱️value/💾️resident/🧬️schema.json` → module + `$defs/Resident` |
-| `💻️os/🔨️modules/🔌️plugin/📤️return/🟦️.ts` | `getSchema("semio.actor.retained-return.v1#/definitions/result")` → `https://semio.tech/schema/framework/actor/return/schema.json#/definitions/result` |
+| `💻️os/🔨️modules/🔌️plugin/📤️return/🟦️.ts` | `getSchema("semio.actor.retained-return.v1#/definitions/result")` → `https://json.schemas.assets.semio-tech.com/framework/actor/return/schema.json#/definitions/result` |
 | `💻️os/🔨️modules/🔌️plugin/📥️poll/🏘️composition/🟦️.ts` | `semio.kernel.poll.composition.v1` → `…/framework/kernel/poll/composition/schema.json` (+ `#/$defs/Composition`); the module is now 2-export |
 | `💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🟦️.ts`, `💻️os/…/🛠️ShellHelpers/🟦️.tsx` | `semio.actor.shard-liveness.v1` → `…/framework/actor/shard-client/schema.json#/$defs/ShardClient` |
 | `💻️os/🔨️modules/🔌️plugin/⚛️reactor/📨️pending/🧬️authority.schema.json` | `semio.actor.instance-lifetime-close.v1` → `…/framework/actor/lifetime/schema.json` (+ `#/$defs/Lifetime` when bare) |
 | `💻️os/…/🧑‍🎨engine/💾️resident/🧬️schema.json` | `semio.value.resident.capacity.v1` → `…/framework/value/resident/schema.json` |
-| `💻️os/…/🛠️ShellHelpers/🧫️fixtures/🎥️tutorial-interaction/🧬️schema.json` | `https://semio.tech/schema/framework/interaction/component.json` → `…/framework/interaction/schema.json` |
+| `💻️os/…/🛠️ShellHelpers/🧫️fixtures/🎥️tutorial-interaction/🧬️schema.json` | `https://json.schemas.assets.semio-tech.com/framework/interaction/component.json` → `…/framework/interaction/schema.json` |
 | `🦑️repo/…/📚️library/🔣️taxonomy.json` | 2 literal paths (`🕸️graph/🛂️manifest/🧬️outputs.schema.json`, `🖼️assets/🔤️fonts/🧬️catalog.schema.json`) |
 | `🦑️repo/…/🧪️tests/🤝️package-language-kind-handoff/💾️resident-package/{🔣️.json,🧬️schema/🔣️.json}` | 2 value-resident paths each |
 | `🧰️framework/📦️packages/🟦️typescript/🟦️.ts` | re-export from `🕹️interaction/🧬️schema/🟦️.ts` unchanged, but the module `$id` changed |

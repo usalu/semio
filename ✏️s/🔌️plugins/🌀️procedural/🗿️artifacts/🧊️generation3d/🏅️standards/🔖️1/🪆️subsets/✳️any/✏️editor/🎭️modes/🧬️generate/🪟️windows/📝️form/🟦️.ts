@@ -1,5 +1,5 @@
 /** 📝️ Generation3d editor — Form window (generate mode): typed twin of `🦀️.rs`'s
- * view-model. Mirrors the pane's `render(fixture: &FlowFixture, generation: &GenerationPlayState,
+ * view-model. Mirrors the pane's `render(host_snapshot: &FlowHostSnapshot, generation: &GenerationPlayState,
  * labels: &Generation3dLabels)` boundary — the input-slider/note form derived from the fixture for
  * the currently selected generation, dispatching `updateGenerationValues` on edit. */
 

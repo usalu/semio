@@ -1079,7 +1079,7 @@ fn world_gumball_update_validates_one_selected_aba_token_per_turn() {
     assert!(gesture.close_step());
 }
 
-fn world_gumball_commit_host_document() -> (World3dState, WorldGumballGesture) {
+fn world_gumball_commit_host_snapshot() -> (World3dState, WorldGumballGesture) {
     let mut state = World3dState::new("surface".into(), "controller".into());
     state.interaction_revision = 3;
     state.interaction_objects.revision = 3;
@@ -1107,7 +1107,7 @@ fn world_gumball_commit_host_document() -> (World3dState, WorldGumballGesture) {
 
 #[test]
 fn world_gumball_commit_builds_one_flat_node_per_grant_then_retires_tokens() {
-    let (state, gesture) = world_gumball_commit_host_document();
+    let (state, gesture) = world_gumball_commit_host_snapshot();
     let mut job = WorldGumballCommitJob::new(8, gesture);
     let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
     assert_eq!(with_world_step_context(0, |context| job.step(&state, 8, &mut input, context)).unwrap(), WorldInteractionStep::Pending);
@@ -1133,7 +1133,7 @@ fn world_gumball_commit_builds_one_flat_node_per_grant_then_retires_tokens() {
 
 #[test]
 fn world_gumball_commit_saturation_aba_and_interrupted_close_retain_claim_authority() {
-    let (mut state, gesture) = world_gumball_commit_host_document();
+    let (mut state, gesture) = world_gumball_commit_host_snapshot();
     let mut job = WorldGumballCommitJob::new(8, gesture);
     let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
     let mut blockers = Vec::new();
@@ -1171,7 +1171,7 @@ fn world_gumball_commit_saturation_aba_and_interrupted_close_retain_claim_author
 
 #[test]
 fn world_gumball_fixed_gesture_projects_preview_without_mutating_source_draw() {
-    let (mut state, gesture) = world_gumball_commit_host_document();
+    let (mut state, gesture) = world_gumball_commit_host_snapshot();
     state.interaction_authority.as_mut().unwrap().gumball = Some(gesture);
     let source = Mat4::identity();
     let preview = retained_gumball_preview_model(&state, 0, 0, source);
@@ -1181,7 +1181,7 @@ fn world_gumball_fixed_gesture_projects_preview_without_mutating_source_draw() {
     assert_eq!(unmatched.cols, source.cols);
 }
 
-fn world_brush_commit_host_document(target: String) -> World3dState {
+fn world_brush_commit_host_snapshot(target: String) -> World3dState {
     let mut state = World3dState::new("surface".into(), "controller".into());
     state.interaction_revision = 4;
     state.brush_preview = Some(WorldBrushPreviewRecord {
@@ -1198,7 +1198,7 @@ fn world_brush_commit_host_document(target: String) -> World3dState {
 
 #[test]
 fn world_brush_commit_copies_and_revalidates_fixed_chunks_before_claimed_publication() {
-    let state = world_brush_commit_host_document("v".repeat(WORLD_BRUSH_COPY_CHUNK_BYTES * 2 + 1));
+    let state = world_brush_commit_host_snapshot("v".repeat(WORLD_BRUSH_COPY_CHUNK_BYTES * 2 + 1));
     let mut job = WorldBrushCommitJob::new(&state, 9).unwrap().expect("brush job");
     let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
     let mut turns = 0;
@@ -1219,7 +1219,7 @@ fn world_brush_commit_copies_and_revalidates_fixed_chunks_before_claimed_publica
 
 #[test]
 fn world_brush_validation_detects_same_length_replacement_and_close_releases_draft_claim() {
-    let mut state = world_brush_commit_host_document("first".into());
+    let mut state = world_brush_commit_host_snapshot("first".into());
     let mut stale = WorldBrushCommitJob::new(&state, 9).unwrap().expect("brush job");
     while !stale.validating {
         assert_eq!(with_world_step_context(1, |context| stale.step(&state, 9, &mut ui_wgpu::wgpu::InputState::default(), context)).unwrap(), WorldInteractionStep::Pending);
@@ -1227,7 +1227,7 @@ fn world_brush_validation_detects_same_length_replacement_and_close_releases_dra
     state.brush_preview.as_mut().unwrap().target_vortex_full_id = Some("other".into());
     assert!(matches!(with_world_step_context(1, |context| stale.step(&state, 9, &mut ui_wgpu::wgpu::InputState::default(), context)), Err(ui_wgpu::wgpu::BoundedActionFault::Structure)));
 
-    let state = world_brush_commit_host_document("target".into());
+    let state = world_brush_commit_host_snapshot("target".into());
     let mut interrupted = WorldBrushCommitJob::new(&state, 10).unwrap().expect("brush job");
     let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
     while !interrupted.complete {

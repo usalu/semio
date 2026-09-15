@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/json/rfc8259/i-json/mutation/upsert-member/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/json/rfc8259/i-json/mutation/upsert-member/schema.json",
   "title": "UpsertMember",
   "type": "object",
   "additionalProperties": false,

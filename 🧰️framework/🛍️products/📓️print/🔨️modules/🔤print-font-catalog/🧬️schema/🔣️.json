@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/print/print-font-catalog/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/print/print-font-catalog/schema.json",
   "title": "PrintFontCatalog",
   "description": "Fonts published into every print document build.",
   "$ref": "#/$defs/PrintFontCatalog",

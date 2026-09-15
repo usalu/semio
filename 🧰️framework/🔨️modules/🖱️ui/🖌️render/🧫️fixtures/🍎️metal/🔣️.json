@@ -1,5 +1,5 @@
 {
-  "$schema": "https://semio.tech/schema/framework/ui/render/schema.json#/$defs/MetalObjectiveCAbiFixture",
+  "$schema": "https://json.schemas.assets.semio-tech.com/framework/ui/render/schema.json#/$defs/MetalObjectiveCAbiFixture",
   "schemaVersion": 1,
   "contract": "owned-objective-c-runtime",
   "oracle": { "package": "objc2", "version": "0.6.4" },

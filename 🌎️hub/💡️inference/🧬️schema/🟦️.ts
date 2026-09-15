@@ -1,6 +1,6 @@
 /** 💡️ Scope `hub.inference` — the closed GIS inference wire contracts hub decodes and enforces.
  *
- * Schema authority: `./🔣️.json` (`https://semio.tech/schema/hub/inference/schema.json`).
+ * Schema authority: `./🔣️.json` (`https://json.schemas.assets.semio-tech.com/hub/inference/schema.json`).
  * Rust decoder authority: `./🦀️.rs`. Every `parse*` below mirrors one `$defs.<Export>`.
  */
 
@@ -12,7 +12,7 @@ export const INFERENCE_PROPOSAL_MAX_BYTES = 4096;
 export const INFERENCE_COMMAND_MAX_BYTES = 8192;
 export const INFERENCE_IDENTITY_JSON_MAX_BYTES = 8192;
 export const INFERENCE_SCHEMA_SCOPE = "hub.inference";
-export const INFERENCE_SCHEMA_ID = "https://semio.tech/schema/hub/inference/schema.json";
+export const INFERENCE_SCHEMA_ID = "https://json.schemas.assets.semio-tech.com/hub/inference/schema.json";
 
 const fail = (name: string): never => {
   throw new Error(`invalid ${name}`);

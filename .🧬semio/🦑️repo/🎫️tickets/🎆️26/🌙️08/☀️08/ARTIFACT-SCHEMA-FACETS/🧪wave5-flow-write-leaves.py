@@ -308,7 +308,7 @@ def write_json(path: Path, doc: dict) -> None:
 write_json(
     SNAP / "🔣️component.json",
     {
-        "$id": "https://semio.tech/schema/s/flow/flow/snapshot.json",
+        "$id": "https://json.schemas.assets.semio-tech.com/s/flow/flow/snapshot.json",
         "title": "FlowSnapshot",
         "type": "object",
         "additionalProperties": False,
@@ -321,7 +321,7 @@ write_json(
 write_json(
     ART / "🔣️component.json",
     {
-        "$id": "https://semio.tech/schema/s/flow/flow/artifact.json",
+        "$id": "https://json.schemas.assets.semio-tech.com/s/flow/flow/artifact.json",
         "title": "FlowArtifact",
         "type": "object",
         "additionalProperties": False,
@@ -334,7 +334,7 @@ write_json(
 write_json(
     DIFF / "🔣️component.json",
     {
-        "$id": "https://semio.tech/schema/s/flow/flow/diff.json",
+        "$id": "https://json.schemas.assets.semio-tech.com/s/flow/flow/diff.json",
         "title": "FlowDiff",
         "type": "object",
         "additionalProperties": False,

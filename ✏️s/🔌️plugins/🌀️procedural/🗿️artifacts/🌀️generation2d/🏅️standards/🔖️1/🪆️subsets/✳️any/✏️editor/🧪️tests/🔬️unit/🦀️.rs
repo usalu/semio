@@ -180,14 +180,14 @@ use semio_framework_plugin::PluginApp;
 
 fn production_initial_snapshot(label: &str) -> Generation2dSnapshot {
     let mut snapshot = Generation2dSnapshot::default();
-    snapshot.host_document.schema = label.into();
+    snapshot.host_snapshot.schema = label.into();
     for (id, text) in [("replace-target", "before replacement"), ("delete-target", "delete me"), ("move-target", "move me"), ("clear-target", "clear me")] {
-        snapshot.host_document.widgets.push(Widget::InputNote { id: id.into(), text: text.into() });
+        snapshot.host_snapshot.widgets.push(Widget::InputNote { id: id.into(), text: text.into() });
     }
-    snapshot.host_document.synapses.push(semio_framework_artifact_flow_flow::SynapseSpec { id: "replace-synapse".into(), from: "replace-target".into(), to: "move-target".into(), from_port: "old".into(), to_port: "old".into() });
-    snapshot.host_document.synapses.push(semio_framework_artifact_flow_flow::SynapseSpec { id: "disconnect-synapse".into(), from: "move-target".into(), to: "clear-target".into(), from_port: String::new(), to_port: String::new() });
-    snapshot.host_document.layout.insert("move-target".into(), semio_framework_artifact_flow_flow::WidgetLayout { x: 1.0, y: 2.0 });
-    snapshot.host_document.layout.insert("clear-target".into(), semio_framework_artifact_flow_flow::WidgetLayout { x: 3.0, y: 4.0 });
+    snapshot.host_snapshot.synapses.push(semio_framework_artifact_flow_flow::SynapseSpec { id: "replace-synapse".into(), from: "replace-target".into(), to: "move-target".into(), from_port: "old".into(), to_port: "old".into() });
+    snapshot.host_snapshot.synapses.push(semio_framework_artifact_flow_flow::SynapseSpec { id: "disconnect-synapse".into(), from: "move-target".into(), to: "clear-target".into(), from_port: String::new(), to_port: String::new() });
+    snapshot.host_snapshot.layout.insert("move-target".into(), semio_framework_artifact_flow_flow::WidgetLayout { x: 1.0, y: 2.0 });
+    snapshot.host_snapshot.layout.insert("clear-target".into(), semio_framework_artifact_flow_flow::WidgetLayout { x: 3.0, y: 4.0 });
     for (id, name) in [("delete-generation", "Delete"), ("rename-generation", "Before Rename"), ("change-generation", "Change Value")] {
         snapshot.generation.cold_builder_mut().expect("unique cold generation owner").generations.push(semio_framework_artifact_playbook_playbook::FormGeneration { id: id.into(), name: name.into(), values: Default::default() });
     }
@@ -213,7 +213,7 @@ fn production_mutations() -> Vec<Generation2dMutation> {
         move_widget("move-target".into(), semio_framework_artifact_flow_flow::WidgetLayout { x: 31.0, y: -17.0 }),
         clear_widget_layout("clear-target".into()),
         update_camera(semio_framework_artifact_flow_flow::CameraJson { x: 9.0, y: 8.0, zoom: 1.75 }),
-        change_schema("flow.host_document.production-retained".into()),
+        change_schema("flow.host_snapshot.production-retained".into()),
         create_generation(semio_framework_artifact_playbook_playbook::FormGeneration { id: "created-generation".into(), name: "Created".into(), values: Default::default() }),
         delete_generation("delete-generation".into()),
         rename_generation("rename-generation".into(), "After Rename".into()),
@@ -342,8 +342,8 @@ async fn vcs_artifact_app_non_empty_retained_maintenance_swap_is_authoritative_a
     let expected = production_read(expected);
     assert_eq!(&*snapshot, &*expected, "real maintenance must publish all P2 snapshot and all-14 replay fields");
     assert_eq!(production_semantic_digest(&snapshot), expected_digest);
-    assert!(snapshot.host_document.layout.contains_key("move-target"));
-    assert!(!snapshot.host_document.layout.contains_key("clear-target"), "2D-only clear-widget-layout must survive retained replay");
+    assert!(snapshot.host_snapshot.layout.contains_key("move-target"));
+    assert!(!snapshot.host_snapshot.layout.contains_key("clear-target"), "2D-only clear-widget-layout must survive retained replay");
     assert!(accepted.acknowledge_artifact_store_replacement(handle).expect("accepted P2 terminal ACK"));
     assert!(crate::standards::v1::subsets::any::schema::mutations::binary::generation2d_release_publication_authority(handle.operation, handle.generation));
     drop(lease);
@@ -807,7 +807,7 @@ fn node_graph_viewport_decodes_an_absent_viewport_as_identity_and_refuses_a_malf
 async fn add_widget_materializes_declared_kind_default_into_an_operation() {
     let mut app = app_with_registry().await;
     let result: Result<(usize, usize), String> = async {
-        let before = snapshot_read(&app).host_document.widgets.len();
+        let before = snapshot_read(&app).host_snapshot.widgets.len();
         app.dispatch_typed(Generation2dCommand::AddWidget(add_widget::AddWidget { kind: "inputSlider".into(), neuron_kind: None, x: None, y: None }), &semio_framework_plugin::artifact_app_laws::meta("local"))
             .await
             .map_err(|error| format!("{error:?}"))?;
@@ -815,7 +815,7 @@ async fn add_widget_materializes_declared_kind_default_into_an_operation() {
         if artifact != 1 {
             return Err(format!("addWidget must publish its artifact lane exactly once, got {artifact}"));
         }
-        Ok((before, snapshot_read(&app).host_document.widgets.len()))
+        Ok((before, snapshot_read(&app).host_snapshot.widgets.len()))
     }
     .await;
     close(app);
@@ -826,15 +826,15 @@ async fn add_widget_materializes_declared_kind_default_into_an_operation() {
 #[semio_framework_async_macros::async_test]
 async fn add_widget_undo_redo_round_trip() {
     let mut app = app().await;
-    let before = snapshot_read(&app).host_document.widgets.len();
-    assert_undo_redo_round_trip(&mut app, Generation2dCommand::AddWidget(add_widget::AddWidget { kind: "inputNote".into(), neuron_kind: None, x: None, y: None }), |app| snapshot_read(app).host_document.widgets.len(), before, before + 1).await;
+    let before = snapshot_read(&app).host_snapshot.widgets.len();
+    assert_undo_redo_round_trip(&mut app, Generation2dCommand::AddWidget(add_widget::AddWidget { kind: "inputNote".into(), neuron_kind: None, x: None, y: None }), |app| snapshot_read(app).host_snapshot.widgets.len(), before, before + 1).await;
     close(app);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn two_instances_converge_disjoint_widget_moves() {
     let fixture = app().await;
-    let widgets: Vec<String> = snapshot_read(&fixture).host_document.widgets.iter().map(|widget| crate::widget_id(widget).to_string()).collect();
+    let widgets: Vec<String> = snapshot_read(&fixture).host_snapshot.widgets.iter().map(|widget| crate::widget_id(widget).to_string()).collect();
     close(fixture);
     assert!(widgets.len() >= 2, "default fixture needs two widgets for the test");
     let (w0, w1) = (widgets[0].clone(), widgets[1].clone());
@@ -848,7 +848,7 @@ async fn two_instances_converge_disjoint_widget_moves() {
         Generation2dCommand::MoveMediaNode(move_media_node::MoveMediaNode { node_id: w1.clone(), x: 222.0, y: 6.0 }),
         move |app| {
             let projection = snapshot_read(app);
-            (projection.host_document.layout.get(&w0).map(|entry| entry.x), projection.host_document.layout.get(&w1).map(|entry| entry.x))
+            (projection.host_snapshot.layout.get(&w0).map(|entry| entry.x), projection.host_snapshot.layout.get(&w1).map(|entry| entry.x))
         },
     )
     .await;
@@ -939,7 +939,7 @@ async fn import_params_in_patches_matching_input_slider() {
     let mut app = app().await;
     crate::editor::generation2d::unit_tests::context::dispatch(&mut app, Generation2dCommand::AddWidget(add_widget::AddWidget { kind: "inputSlider".into(), neuron_kind: None, x: None, y: None })).await;
     let slider_id = snapshot_read(&app)
-        .host_document
+        .host_snapshot
         .widgets
         .iter()
         .find_map(|widget| match widget {
@@ -952,7 +952,7 @@ async fn import_params_in_patches_matching_input_slider() {
         payload: semio_framework_plugin::MediaPayload::Structured { schema: "params".into(), json: serde_json::json!({ slider_id.clone(): 42.0 }).to_string() },
     };
     app.import_media("params:in", media, &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("import params");
-    let value = snapshot_read(&app).host_document.widgets.iter().find_map(|widget| match widget {
+    let value = snapshot_read(&app).host_snapshot.widgets.iter().find_map(|widget| match widget {
         Widget::InputSlider { id, value, .. } if id == &slider_id => Some(*value),
         _ => None,
     });
@@ -982,9 +982,9 @@ async fn import_media_fails_closed_off_its_own_params_in_contract() {
         ),
     ] {
         let mut app = app().await;
-        let before = snapshot_read(&app).host_document.widgets.len();
+        let before = snapshot_read(&app).host_snapshot.widgets.len();
         let rejected = app.import_media(port, media, &semio_framework_plugin::artifact_app_laws::meta("local")).await;
-        let after = snapshot_read(&app).host_document.widgets.len();
+        let after = snapshot_read(&app).host_snapshot.widgets.len();
         close(app);
         assert!(rejected.is_err(), "generation2d import must reject '{port}' instead of publishing");
         assert_eq!(after, before, "a rejected import must leave the document untouched");
@@ -996,13 +996,13 @@ async fn import_media_fails_closed_off_its_own_params_in_contract() {
 #[semio_framework_async_macros::async_test]
 async fn import_params_skips_unmatched_keys_and_non_numeric_values() {
     let mut app = app().await;
-    let before: Vec<String> = snapshot_read(&app).host_document.widgets.iter().map(|widget| crate::widget_id(widget).to_string()).collect();
+    let before: Vec<String> = snapshot_read(&app).host_snapshot.widgets.iter().map(|widget| crate::widget_id(widget).to_string()).collect();
     let media = semio_framework_plugin::Media {
         media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
         payload: semio_framework_plugin::MediaPayload::Structured { schema: "params".into(), json: serde_json::json!({ "no-such-widget": 1.0, "another": "text" }).to_string() },
     };
     app.import_media("params:in", media, &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("import params");
-    let after: Vec<String> = snapshot_read(&app).host_document.widgets.iter().map(|widget| crate::widget_id(widget).to_string()).collect();
+    let after: Vec<String> = snapshot_read(&app).host_snapshot.widgets.iter().map(|widget| crate::widget_id(widget).to_string()).collect();
     close(app);
     assert_eq!(after, before);
 }

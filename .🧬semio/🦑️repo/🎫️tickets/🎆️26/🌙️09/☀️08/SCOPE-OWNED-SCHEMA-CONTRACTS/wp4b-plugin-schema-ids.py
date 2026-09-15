@@ -3,7 +3,7 @@
 
 Every `🧬️schema` module outside a `🧬️mutations`/`🧪️`/`🧫️` tree gets
 
-  `$id` = `https://semio.tech/schema/<scope path>/<facet>.json`   (scope path derived from the module path)
+  `$id` = `https://json.schemas.assets.semio-tech.com/<scope path>/<facet>.json`   (scope path derived from the module path)
   `$schema` = `http://json-schema.org/draft-07/schema#`           (2020-12 keywords migrated)
 
 and every facet child (`📸️snapshot`, `🔺️diff`, `💡️inferences`, `📝️text`, `💾️binary`) keeps the module's
@@ -26,7 +26,7 @@ from collections import Counter, OrderedDict
 
 REPO = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..", "..", "..", "..", ".."))
 ROOT = "✏️s"
-ID_BASE = "https://semio.tech/schema/"
+ID_BASE = "https://json.schemas.assets.semio-tech.com/"
 DRAFT07 = "http://json-schema.org/draft-07/schema#"
 SCHEMA_DIR = "🧬️schema"
 FACET_DIRS = {"📸️snapshot": "snapshot", "🔺️diff": "diff", "💡️inferences": "inference", "🧬️mutations": "mutations"}

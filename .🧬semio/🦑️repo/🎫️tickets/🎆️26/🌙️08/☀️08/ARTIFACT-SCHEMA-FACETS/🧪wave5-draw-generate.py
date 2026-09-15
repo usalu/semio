@@ -122,7 +122,7 @@ def main() -> None:
         ROOT / "🧬️schema" / "🔣️component.json",
         json.dumps(
             {
-                "$id": "https://semio.tech/schema/s/draw/draw/artifact.json",
+                "$id": "https://json.schemas.assets.semio-tech.com/s/draw/draw/artifact.json",
                 "title": "DrawArtifact",
                 "type": "object",
                 "additionalProperties": False,
@@ -137,7 +137,7 @@ def main() -> None:
         ROOT / "📸️snapshot" / "🧬️schema" / "🔣️component.json",
         json.dumps(
             {
-                "$id": "https://semio.tech/schema/s/draw/draw/snapshot.json",
+                "$id": "https://json.schemas.assets.semio-tech.com/s/draw/draw/snapshot.json",
                 "title": "DrawSnapshot",
                 "type": "object",
                 "additionalProperties": False,
@@ -280,7 +280,7 @@ def main() -> None:
         ROOT / "🔺️diff" / "🧬️schema" / "🔣️component.json",
         json.dumps(
             {
-                "$id": "https://semio.tech/schema/s/draw/draw/diff.json",
+                "$id": "https://json.schemas.assets.semio-tech.com/s/draw/draw/diff.json",
                 "title": "DrawDiff",
                 "type": "object",
                 "additionalProperties": False,

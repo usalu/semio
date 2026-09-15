@@ -260,7 +260,7 @@ impl TrinityBridge {
     }
 
     pub fn fixture_json(&self) -> Result<String, TrinityRewritingError> {
-        Ok(self.graph.host_document_json()?)
+        Ok(self.graph.host_snapshot_json()?)
     }
 
     pub fn set_viewport(&mut self, width: u32, height: u32, dpr: f64) {
@@ -563,7 +563,7 @@ struct JackRunWithFixture {
 impl dsl::ToValue for JackRunWithFixture {
     fn to_value(&self) -> dsl::DslValue {
         let dsl::DslValue::Object(mut entries) = dsl::ToValue::to_value(&self.result) else { unreachable!("QueryResult::to_value always produces an object") };
-        entries.push(("hostDocumentJson".to_string(), dsl::ToValue::to_value(&self.fixture_json)));
+        entries.push(("hostSnapshotJson".to_string(), dsl::ToValue::to_value(&self.fixture_json)));
         dsl::DslValue::Object(entries)
     }
 }

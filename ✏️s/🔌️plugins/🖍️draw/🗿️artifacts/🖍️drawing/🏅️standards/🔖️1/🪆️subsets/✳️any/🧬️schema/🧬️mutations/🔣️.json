@@ -1,49 +1,49 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/drawing/drawing/mutations.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/drawing/drawing/mutations.json",
   "title": "DrawingMutation",
   "oneOf": [
     {
-      "$ref": "https://semio.tech/schema/s/draw/drawing/1/metadata/mutation/set-layer-visible/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/draw/drawing/1/metadata/mutation/set-layer-visible/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/draw/drawing/1/metadata/mutation/set-layer-locked/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/draw/drawing/1/metadata/mutation/set-layer-locked/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/draw/drawing/1/style/mutation/set-layer-opacity/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/draw/drawing/1/style/mutation/set-layer-opacity/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/draw/drawing/1/style/mutation/set-layer-blend-mode/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/draw/drawing/1/style/mutation/set-layer-blend-mode/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/draw/drawing/1/metadata/mutation/rename-layer/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/draw/drawing/1/metadata/mutation/rename-layer/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/draw/drawing/1/transform/mutation/update-layer-transform/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/draw/drawing/1/transform/mutation/update-layer-transform/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/draw/drawing/1/style/mutation/replace-layer-fill/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/draw/drawing/1/style/mutation/replace-layer-fill/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/draw/drawing/1/style/mutation/replace-layer-stroke/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/draw/drawing/1/style/mutation/replace-layer-stroke/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/draw/drawing/1/transform/mutation/set-layer-boolean-operation/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/draw/drawing/1/transform/mutation/set-layer-boolean-operation/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/draw/drawing/1/transform/mutation/update-layer-trace-params/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/draw/drawing/1/transform/mutation/update-layer-trace-params/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/draw/drawing/1/structure/mutation/create-layer/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/draw/drawing/1/structure/mutation/create-layer/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/draw/drawing/1/structure/mutation/duplicate-layer/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/draw/drawing/1/structure/mutation/duplicate-layer/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/draw/drawing/1/structure/mutation/delete-layer/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/draw/drawing/1/structure/mutation/delete-layer/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/draw/drawing/1/structure/mutation/reorder-layer/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/draw/drawing/1/structure/mutation/reorder-layer/schema.json"
     }
   ]
 }

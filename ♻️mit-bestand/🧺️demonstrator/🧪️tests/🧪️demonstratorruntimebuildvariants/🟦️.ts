@@ -19,7 +19,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const modulePath = join(dirname(fileURLToPath(source.url)), "🔨️modules/🧩️runtime");
       const schema = JSON.parse(readFileSync(join(modulePath, "🧬️schema/🔣️.json"), "utf8"));
       expect(schema.$schema).toBe("http://json-schema.org/draft-07/schema#");
-      expect(schema.$id).toBe("https://semio.tech/schema/mit-bestand/demonstrator/runtime/schema.json");
+      expect(schema.$id).toBe("https://json.schemas.assets.semio-tech.com/mit-bestand/demonstrator/runtime/schema.json");
       const ajv = new (createRequire(source.url)("ajv").default)({ strict: false });
       const validate = ajv.compile(schema);
       expect(validate(JSON.parse(readFileSync(join(modulePath, "🔣️.json"), "utf8")))).toBe(true);

@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://semio.tech/schema/repo/identity/1",
+  "$id": "https://json.schemas.assets.semio-tech.com/repo/identity/1",
   "title": "🪪️ Repo identity fixtures and wire shapes",
   "description": "🪪️ The entity-emoji vocabulary both implementations load, the vector file the `😀️entity-emoji-codec` case reads, and the projections it compares.",
   "$defs": {

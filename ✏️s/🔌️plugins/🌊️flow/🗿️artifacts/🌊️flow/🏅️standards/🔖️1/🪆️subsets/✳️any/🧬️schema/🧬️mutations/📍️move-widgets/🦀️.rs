@@ -1,6 +1,6 @@
 //! 📍️ Absolute repositions (or clears, when an entry's `layout` is `None`) one or more widgets at
 //! once. Plural by taxonomy design (`## Bulk / plural mutations`): the framework host bridge's own
-//! diffing (`semio_framework_artifact_flow_flow::flow_host_document_operations`) already batches every changed layout key into one
+//! diffing (`semio_framework_artifact_flow_flow::flow_host_snapshot_operations`) already batches every changed layout key into one
 //! `SetLayout` op per real drag gesture, so this mirrors that batch 1:1 rather than splitting into
 //! per-widget mutations.
 

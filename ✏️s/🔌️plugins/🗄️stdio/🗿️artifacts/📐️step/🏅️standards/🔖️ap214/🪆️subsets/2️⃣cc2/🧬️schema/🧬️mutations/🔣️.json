@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/step/ap214/cc2/mutations.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/step/ap214/cc2/mutations.json",
   "title": "StepCc2Mutation",
   "description": "Discriminated union over this module's mutation leaves (externally tagged); every payload is the leaf's own schema, referenced, never restated.",
   "oneOf": [
@@ -12,7 +12,7 @@
       ],
       "properties": {
         "DemoteShapeRepresentation": {
-          "$ref": "https://semio.tech/schema/s/stdio/step/ap214/cc2/mutation/demote-shape-representation/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/step/ap214/cc2/mutation/demote-shape-representation/schema.json"
         }
       }
     },
@@ -24,7 +24,7 @@
       ],
       "properties": {
         "SetFileSchema": {
-          "$ref": "https://semio.tech/schema/s/stdio/step/ap214/cc2/mutation/set-file-schema/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/step/ap214/cc2/mutation/set-file-schema/schema.json"
         }
       }
     },
@@ -36,7 +36,7 @@
       ],
       "properties": {
         "SetProductIdentity": {
-          "$ref": "https://semio.tech/schema/s/stdio/step/ap214/cc2/mutation/set-product-identity/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/step/ap214/cc2/mutation/set-product-identity/schema.json"
         }
       }
     },
@@ -48,7 +48,7 @@
       ],
       "properties": {
         "SetShapeRepresentation": {
-          "$ref": "https://semio.tech/schema/s/stdio/step/ap214/cc2/mutation/set-shape-representation/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/step/ap214/cc2/mutation/set-shape-representation/schema.json"
         }
       }
     },
@@ -60,7 +60,7 @@
       ],
       "properties": {
         "SetSnapshot": {
-          "$ref": "https://semio.tech/schema/s/stdio/step/ap214/cc2/mutation/set-snapshot/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/step/ap214/cc2/mutation/set-snapshot/schema.json"
         }
       }
     }

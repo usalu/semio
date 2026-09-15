@@ -75,7 +75,7 @@ const tables = sqlTables();
 describe("repo server persistence module", () => {
   it("declares the canonical draft-07 identity", () => {
     expect(document.$schema).toBe("http://json-schema.org/draft-07/schema#");
-    expect(document.$id).toBe("https://semio.tech/schema/repo/server/schema.json");
+    expect(document.$id).toBe("https://json.schemas.assets.semio-tech.com/repo/server/schema.json");
   });
 
   it("compiles under an independent draft-07 validator", () => {

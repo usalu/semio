@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/os/space-artifact-creation-generation-v1.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/os/space-artifact-creation-generation-v1.json",
   "type": "object",
   "additionalProperties": false,
   "required": ["schema", "catalogGenerationId", "rotatedCatalogGenerationId", "request", "accepted", "ready", "initialPostConflict", "cases"],

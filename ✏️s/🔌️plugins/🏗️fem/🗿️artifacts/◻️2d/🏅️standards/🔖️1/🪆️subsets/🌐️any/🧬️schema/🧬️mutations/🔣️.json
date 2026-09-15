@@ -1,83 +1,83 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/fem/fem2d/mutations.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/fem/fem2d/mutations.json",
   "title": "Fem2dMutation",
   "description": "The closed semantic mutation vocabulary of the fem2d document: exactly twenty-five variants, discriminated by the internally tagged `mutation` member. Each variant is the same payload shape the kind's own `<kind>/🧬️schema/🔣️.json` declares.",
   "oneOf": [
     {
-      "$ref": "https://semio.tech/schema/s/fem/2d/1/mesh/mutation/create-node/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/fem/2d/1/mesh/mutation/create-node/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/fem/2d/1/mesh/mutation/delete-node/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/fem/2d/1/mesh/mutation/delete-node/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/fem/2d/1/mesh/mutation/create-element/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/fem/2d/1/mesh/mutation/create-element/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/fem/2d/1/mesh/mutation/delete-element/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/fem/2d/1/mesh/mutation/delete-element/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/fem/2d/1/mesh/mutation/replace-element/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/fem/2d/1/mesh/mutation/replace-element/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/fem/2d/1/material/mutation/create-material/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/fem/2d/1/material/mutation/create-material/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/fem/2d/1/material/mutation/delete-material/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/fem/2d/1/material/mutation/delete-material/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/fem/2d/1/material/mutation/replace-material/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/fem/2d/1/material/mutation/replace-material/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/fem/2d/1/mesh/mutation/create-section/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/fem/2d/1/mesh/mutation/create-section/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/fem/2d/1/mesh/mutation/delete-section/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/fem/2d/1/mesh/mutation/delete-section/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/fem/2d/1/mesh/mutation/replace-section/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/fem/2d/1/mesh/mutation/replace-section/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/fem/2d/1/boundary/mutation/create-support/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/fem/2d/1/boundary/mutation/create-support/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/fem/2d/1/boundary/mutation/delete-support/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/fem/2d/1/boundary/mutation/delete-support/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/fem/2d/1/boundary/mutation/replace-support/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/fem/2d/1/boundary/mutation/replace-support/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/fem/2d/1/mesh/mutation/create-region/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/fem/2d/1/mesh/mutation/create-region/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/fem/2d/1/mesh/mutation/delete-region/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/fem/2d/1/mesh/mutation/delete-region/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/fem/2d/1/mesh/mutation/replace-region/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/fem/2d/1/mesh/mutation/replace-region/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/fem/2d/1/load/mutation/create-load-case/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/fem/2d/1/load/mutation/create-load-case/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/fem/2d/1/load/mutation/delete-load-case/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/fem/2d/1/load/mutation/delete-load-case/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/fem/2d/1/load/mutation/add-load/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/fem/2d/1/load/mutation/add-load/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/fem/2d/1/load/mutation/remove-load/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/fem/2d/1/load/mutation/remove-load/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/fem/2d/1/load/mutation/change-load-case-self-weight/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/fem/2d/1/load/mutation/change-load-case-self-weight/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/fem/2d/1/load/mutation/create-combination/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/fem/2d/1/load/mutation/create-combination/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/fem/2d/1/load/mutation/delete-combination/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/fem/2d/1/load/mutation/delete-combination/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/fem/2d/1/analysis/mutation/update-analysis-settings/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/fem/2d/1/analysis/mutation/update-analysis-settings/schema.json"
     }
   ]
 }

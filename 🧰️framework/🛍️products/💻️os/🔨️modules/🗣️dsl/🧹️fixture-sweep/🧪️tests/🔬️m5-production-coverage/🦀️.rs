@@ -4,7 +4,7 @@ use super::pilot_resolve;
 use crate::os_dsl::{parse_grammar, Recognizer};
 use crate::os_store::semio_format::split_text_preamble;
 
-async fn dsl_body_from_host_document(text: &str) -> String {
+async fn dsl_body_from_host_snapshot(text: &str) -> String {
     if text.trim_start().starts_with("semio ") {
         split_text_preamble(text).map_or_else(|_| text.to_string(), |(env, body)| format!("{}\n{body}", env.envelope_id()))
     } else {
@@ -37,7 +37,7 @@ async fn all_discovered_grammars_report_uncovered_productions_for_their_shipped_
         // this diagnostic only covers the uncovered-productions signal once a grammar parses.
         let Ok(grammar) = parse_grammar(&grammar_text) else { continue };
         let recognizer = Recognizer::compile(&grammar);
-        let body = dsl_body_from_host_document(&fixture_text).await;
+        let body = dsl_body_from_host_snapshot(&fixture_text).await;
         let Ok(uncovered) = recognizer.uncovered_productions(&body) else { continue };
         if !uncovered.is_empty() {
             eprintln!("[DEBUG] {}: uncovered productions ({}) = {}", facet.label, uncovered.len(), uncovered.join(", "));

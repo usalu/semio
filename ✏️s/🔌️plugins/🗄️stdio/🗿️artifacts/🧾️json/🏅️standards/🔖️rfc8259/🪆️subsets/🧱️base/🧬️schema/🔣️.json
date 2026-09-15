@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/json/rfc8259/base/artifact.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/json/rfc8259/base/artifact.json",
   "title": "JsonArtifact",
   "type": "object",
   "required": [
@@ -13,7 +13,7 @@
       "x-semio-state": "artifact"
     },
     "value": {
-      "$ref": "https://semio.tech/schema/s/stdio/json/rfc8259/base/snapshot.json#/$defs/JsonValue",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/json/rfc8259/base/snapshot.json#/$defs/JsonValue",
       "x-semio-state": "artifact"
     }
   }

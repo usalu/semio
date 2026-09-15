@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/tiff/6.0/baseline/mutations.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/tiff/6.0/baseline/mutations.json",
   "title": "TiffBaselineMutation",
   "description": "Discriminated union over this module's mutation leaves (externally tagged); every payload is the leaf's own schema, referenced, never restated.",
   "oneOf": [
@@ -12,7 +12,7 @@
       ],
       "properties": {
         "InsertTileTags": {
-          "$ref": "https://semio.tech/schema/s/stdio/tiff/6.0/baseline/mutation/insert-tile-tags/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/tiff/6.0/baseline/mutation/insert-tile-tags/schema.json"
         }
       }
     },
@@ -24,7 +24,7 @@
       ],
       "properties": {
         "RemoveStripOffsets": {
-          "$ref": "https://semio.tech/schema/s/stdio/tiff/6.0/baseline/mutation/remove-strip-offsets/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/tiff/6.0/baseline/mutation/remove-strip-offsets/schema.json"
         }
       }
     },
@@ -36,7 +36,7 @@
       ],
       "properties": {
         "RemoveTileTags": {
-          "$ref": "https://semio.tech/schema/s/stdio/tiff/6.0/baseline/mutation/remove-tile-tags/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/tiff/6.0/baseline/mutation/remove-tile-tags/schema.json"
         }
       }
     },
@@ -48,7 +48,7 @@
       ],
       "properties": {
         "SetBitsPerSample": {
-          "$ref": "https://semio.tech/schema/s/stdio/tiff/6.0/baseline/mutation/set-bits-per-sample/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/tiff/6.0/baseline/mutation/set-bits-per-sample/schema.json"
         }
       }
     },
@@ -60,7 +60,7 @@
       ],
       "properties": {
         "SetCompression": {
-          "$ref": "https://semio.tech/schema/s/stdio/tiff/6.0/baseline/mutation/set-compression/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/tiff/6.0/baseline/mutation/set-compression/schema.json"
         }
       }
     },
@@ -72,7 +72,7 @@
       ],
       "properties": {
         "SetPhotometricInterpretation": {
-          "$ref": "https://semio.tech/schema/s/stdio/tiff/6.0/baseline/mutation/set-photometric-interpretation/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/tiff/6.0/baseline/mutation/set-photometric-interpretation/schema.json"
         }
       }
     },
@@ -84,7 +84,7 @@
       ],
       "properties": {
         "SetSnapshot": {
-          "$ref": "https://semio.tech/schema/s/stdio/tiff/6.0/baseline/mutation/set-snapshot/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/tiff/6.0/baseline/mutation/set-snapshot/schema.json"
         }
       }
     },
@@ -96,7 +96,7 @@
       ],
       "properties": {
         "SetStripOffsets": {
-          "$ref": "https://semio.tech/schema/s/stdio/tiff/6.0/baseline/mutation/set-strip-offsets/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/tiff/6.0/baseline/mutation/set-strip-offsets/schema.json"
         }
       }
     }

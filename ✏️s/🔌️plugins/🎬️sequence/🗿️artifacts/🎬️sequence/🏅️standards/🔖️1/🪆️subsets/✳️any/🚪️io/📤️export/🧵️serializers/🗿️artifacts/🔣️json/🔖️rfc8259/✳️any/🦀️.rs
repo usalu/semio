@@ -16,7 +16,7 @@ impl Serializer<SequenceSnapshot> for SequenceIntoJson {
     const FIDELITY: IoFidelity = IoFidelity::Exact;
     async fn serialize(from: &SequenceSnapshot) -> IoResult<IoPayload> {
         let _ = STDIO_JSON_DOCUMENT_SCHEMA;
-        let fixture = from.try_to_host_document().map_err(|error| IoError { message: format!("SequenceIntoJson: {error}"), diagnostics: Vec::new() })?;
+        let fixture = from.try_to_host_snapshot().map_err(|error| IoError { message: format!("SequenceIntoJson: {error}"), diagnostics: Vec::new() })?;
         let raw = dsl::ToValue::to_value(&fixture);
         let bytes = dsl::json::to_string_pretty(&dsl::json::from_dsl_value(&raw)).into_bytes();
         Ok(IoOutcome::clean(IoPayload::Binary(bytes)))

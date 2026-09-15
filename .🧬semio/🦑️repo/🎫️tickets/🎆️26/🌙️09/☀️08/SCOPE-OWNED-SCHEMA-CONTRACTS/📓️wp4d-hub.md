@@ -72,7 +72,7 @@ and so is the `🚧️` comment that said the GIS receipts have no scope module 
 
 **The export id is `GisNativeCodecs`, not `NativeCodecReceipts`.** The brief named
 `schema://s.gis/NativeCodecReceipts`; the module on disk
-(`✏️s/🔌️plugins/🌍️gis/🧬️schema/🔣️.json`, `$id https://semio.tech/schema/s/gis/schema.json`, draft-07,
+(`✏️s/🔌️plugins/🌍️gis/🧬️schema/🔣️.json`, `$id https://json.schemas.assets.semio-tech.com/s/gis/schema.json`, draft-07,
 catalogued as scope `s.gis`) declares `GisNativeCodecs` (the whole `📇️native-codecs/🔣️.json` document —
 `schema`/`pluginId`/`packageId`/`packageVersion`/`receipts`/`hostile`, `additionalProperties:false`) plus
 its row helper `GisNativeCodecsReceipt`. `GisNativeCodecs` is the shape the deleted flat file validated,

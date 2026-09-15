@@ -55,6 +55,51 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
       expect(PLUGIN_UI_CLOSE_ZERO_PROGRESS_STEPS).toBeLessThan(PLUGIN_UI_CONTINUATION_LIMIT);
       expect(PLUGIN_UI_CLOSE_ZERO_PROGRESS_STEPS).toBeLessThan(retainedUiCloseStepCeilingV1(1));
     });
+
+    it("counts one turn per retained item and never reads the bytes under it", () => {
+      const { createRetainedUiCloseLadderV1 } = dependencies;
+      const items = ["instance-wire-release", "instance-surface-release", "instance-close"];
+      const payload = ["surface-root-close", "node-field-retire", "typed-object-retire", "prepared-scene-source-close"];
+      const census = [1, 64, 4_096].map((payloadPerItem) => {
+        const ladder = createRetainedUiCloseLadderV1(2);
+        for (const item of items) {
+          for (let step = 0; step < payloadPerItem; step += 1) expect(ladder.admit({ phase: payload[step % payload.length], bytes: 1 })).toBeNull();
+          expect(ladder.admit({ phase: item, bytes: 128 })).toBeNull();
+        }
+        return ladder.turns;
+      });
+      expect(census).toEqual([items.length, items.length, items.length]);
+    });
+
+    it("cannot exhaust its budget on a converged instance, at any payload", () => {
+      const { createRetainedUiCloseLadderV1 } = dependencies;
+      const ladder = createRetainedUiCloseLadderV1(1);
+      const faults: string[] = [];
+      for (let item = 0; item < ladder.ceiling; item += 1) {
+        const fault = ladder.admit({ phase: "instance-surface-release", bytes: 64 });
+        if (fault) faults.push(fault);
+      }
+      expect(faults).toEqual([]);
+      expect(ladder.turns).toBe(ladder.ceiling);
+      expect(ladder.admit({ phase: "instance-close", bytes: 64 })).toMatch(/^plugin-ui\.owner-close-budget-exhausted:instance-close after \d+ turns over 1 retained surfaces$/);
+    });
+
+    it("spends no turn on the descendant phases closeChild forwards, however many arrive", () => {
+      const { createRetainedUiCloseLadderV1 } = dependencies;
+      const ladder = createRetainedUiCloseLadderV1(14);
+      for (let step = 0; step < 100_000; step += 1) expect(ladder.admit({ phase: step % 2 === 0 ? "prepared-scene-source-close" : "typed-retire", bytes: 8 })).toBeNull();
+      expect(ladder.turns).toBe(0);
+      expect(ladder.admit({ phase: "instance-surface-release", bytes: 1152 })).toBeNull();
+      expect(ladder.turns).toBe(1);
+    });
+
+    it("names the phase of a ladder that releases nothing, long before the backstop", () => {
+      const { createRetainedUiCloseLadderV1, PLUGIN_UI_CLOSE_ZERO_PROGRESS_STEPS } = dependencies;
+      const ladder = createRetainedUiCloseLadderV1(4);
+      for (let step = 0; step < PLUGIN_UI_CLOSE_ZERO_PROGRESS_STEPS; step += 1) expect(ladder.admit({ phase: "node-field-retire", bytes: 0 })).toBeNull();
+      expect(ladder.admit({ phase: "node-field-retire", bytes: 0 })).toBe(`plugin-ui.owner-close-stalled:node-field-retire released nothing for ${PLUGIN_UI_CLOSE_ZERO_PROGRESS_STEPS + 1} steps`);
+      expect(ladder.turns).toBe(0);
+    });
   });
 
   describe("isolated job admission batch", () => {
@@ -868,7 +913,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
     describe("instance-open retained UI lifecycle", () => {
       it("preserves document effects returned by a refresh even before any surface is retained", async () => {
         const { default: fixture } = await import("../../../../🔌️plugin/⚛️reactor/🧫️fixtures/🔣️.json");
-        const response = retainedUiRefreshResponse(7, { viewState: {} }, new Map(), [{ tag: "load-document", val: fixture.effects.loadDocument }]);
+        const response = retainedUiRefreshResponse(7, { viewState: {} }, new Map(), [{ tag: "load-document", val: { docPack: fixture.effects.loadDocument.pack, spr: fixture.effects.loadDocument.spr } }]);
         expect(response.requestedEffects).toEqual([{ loadDocument: fixture.effects.loadDocument }]);
       });
   
@@ -892,7 +937,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
         try {
           const response = retainedUiRefreshResponse(7, { viewState: {} }, new Map(), [
             { tag: "send-message", val: { target: { tag: "shell", val: "7" }, payload } },
-            { tag: "load-document", val: fixture.effects.loadDocument },
+            { tag: "load-document", val: { docPack: fixture.effects.loadDocument.pack, spr: fixture.effects.loadDocument.spr } },
           ]);
           expect(response.requestedEffects).toEqual([{ loadDocument: fixture.effects.loadDocument }]);
           expect(reported.mock.calls.flat().join(" ")).toContain(SURFACE_RENDER_FAULT);
@@ -2099,6 +2144,40 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
         });
       });
   
+      it("retires every result page one turn carried in a single acknowledgement crossing", async () => {
+        const { Buffer } = await import("node:buffer");
+        const { default: fixture } = await import("../../../../🔌️plugin/⚛️reactor/🧫️fixtures/🔣️.json");
+        const operations = 4;
+        const tokenBytes = (operation: number): Buffer => {
+          const token = Buffer.alloc(25);
+          token.writeUInt32LE(fixture.wire.receiver, 0);
+          token.writeBigUInt64LE(BigInt(operation + 1), 4);
+          token.writeBigUInt64LE(BigInt(fixture.wire.generation), 12);
+          token.writeUInt32LE(fixture.wire.sequence, 20);
+          token[24] = fixture.wire.attempt;
+          return token;
+        };
+        const payload = Buffer.from(fixture.wire.payload);
+        const length = Buffer.alloc(4);
+        length.writeUInt32LE(payload.length);
+        const pageEffect = (operation: number) => ({
+          tag: "send-message",
+          val: { target: { tag: "shell", val: String(fixture.wire.receiver) }, payload: Array.from(Buffer.concat([Buffer.from("semio.typed-operation-page.v1\0"), tokenBytes(operation), Buffer.from([fixture.wire.lanes[0]]), length, payload])) },
+        });
+        const crossings: string[][] = [];
+        await withFakeShardClient(async (_actor, events) => {
+          crossings.push(events.map((event) => event.kind));
+          return { uiPatches: [], effects: [], nextWake: null, status: { tag: "idle" } };
+        }, async () => {
+          const carried = { uiPatches: [], effects: Array.from({ length: operations }, (_unused, operation) => pageEffect(operation)), nextWake: null, status: { tag: "more-work" } } as unknown as WireTurnResult;
+          expect(typedOperationAcknowledgements(carried)).toHaveLength(operations);
+          await settlePluginTurn("typed-operation-batch#7", carried, "Interactive", new Set(), undefined, true);
+        });
+        expect(crossings).toHaveLength(1);
+        expect(crossings[0]).toEqual(Array.from({ length: operations }, () => "message"));
+        console.info("[DEBUG] typed-operation ack batch: %d result pages retired in %d crossing(s)", operations, crossings.length);
+      });
+
       it("does not replay already acknowledged ingress publications during settlement", async () => {
         const { Buffer } = await import("node:buffer");
         const { default: equal } = await import("fast-deep-equal");
@@ -2149,7 +2228,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
         const truncated = wire(10, "x");
         (truncated.val as { payload: number[] }).payload.pop();
         expect(() => typedOperationResult(truncated)).toThrow("authority");
-        expect(wireEffectToFriendly({ tag: "load-document", val: fixture.effects.loadDocument })).toEqual({ loadDocument: fixture.effects.loadDocument });
+        expect(wireEffectToFriendly({ tag: "load-document", val: { docPack: fixture.effects.loadDocument.pack, spr: fixture.effects.loadDocument.spr } })).toEqual({ loadDocument: fixture.effects.loadDocument });
         const download = consumeTypedOperationEffects([wire(9, JSON.stringify(fixture.effects.download))]);
         expect(download.map(wireEffectToFriendly)).toEqual([{ downloadMediaExport: { filename: fixture.effects.download[0], mimeType: fixture.effects.download[1], data: fixture.wire.operation, encoding: "semio-segmented-handle-v1:identity" } }]);
         const receipt = {
@@ -2296,6 +2375,47 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
         );
       });
   
+      /** 🎞️ The owed clause is a GRACE, not a hold: a live tool run keeps the guest in `more-work` for
+       * its whole run, and `settleOwesRequestedSurfacesV1` cannot tell that from "still reconciling my
+       * surface". Measured on release :6013 with a 100-object fill (ticket
+       * 26/09/13/INTERACTIVE-TOOLS-VISIBLE-PROCESS): 3 refreshes instead of 12, one `refresh.turn`
+       * lasting 1 281 ms, progress frames stopping at +442 ms, and the scene stuck at 36–40 of 100
+       * provisional objects 20 s after the run completed. */
+      it("lets an owed settle hold its surface for at most one crossing's wall, then yields to the progress lane", async () => {
+        const invocation = (inReplyTo: number) => ({ tag: "send-message", val: { target: { tag: "shell", val: "7" }, payload: Array.from(encodeAppFrame({ Invocation: { in_reply_to: inReplyTo, output: [], diagnostics: [], ui_scope: [1], history_patch: [], messages: [], mutations: [], inverse_group: [] } })) } });
+        const turn = (effects: unknown[]) => ({ uiPatches: [], effects, nextWake: null, status: { tag: "more-work" } }) as unknown as WireTurnResult;
+        const { settleYieldsToRefreshV1, PLUGIN_OPERATION_REFRESH_SLICE_MS, PLUGIN_OPERATION_OWED_SLICE_MS } = dependencies;
+        const results = [turn([invocation(0)])];
+        expect(PLUGIN_OPERATION_OWED_SLICE_MS, "the grace is the wall the host grants ONE crossing, never a chosen number").toBe(100);
+        expect(PLUGIN_OPERATION_OWED_SLICE_MS, "and it is strictly longer than the unowed slice, so the earlier fix still holds").toBeGreaterThan(PLUGIN_OPERATION_REFRESH_SLICE_MS);
+        expect(settleYieldsToRefreshV1(results, 0, PLUGIN_OPERATION_REFRESH_SLICE_MS, false, false, true), "inside the grace an owed settle keeps the actor").toBe(false);
+        expect(settleYieldsToRefreshV1(results, 0, PLUGIN_OPERATION_OWED_SLICE_MS - 1, false, false, true), "right up to its last millisecond").toBe(false);
+        expect(settleYieldsToRefreshV1(results, 0, PLUGIN_OPERATION_OWED_SLICE_MS, false, false, true), "and past it the progress lane is let back in").toBe(true);
+        expect(settleYieldsToRefreshV1(results, 0, 60_000, false, false, true), "a run that never publishes the surface can never hold the actor for its whole length again").toBe(true);
+        expect(settleYieldsToRefreshV1(results, 0, 60_000, true, false, true), "an acknowledgement still owed is never yielded over").toBe(false);
+        expect(settleYieldsToRefreshV1(results, 0, 60_000, false, true, true), "and neither is a REQUIRED surface that has not published").toBe(false);
+        console.info(`[DEBUG] owed settle grace: ${PLUGIN_OPERATION_OWED_SLICE_MS} ms (one crossing wall), unowed slice ${PLUGIN_OPERATION_REFRESH_SLICE_MS} ms — was unbounded`);
+      });
+
+      /** 🎞️ …and the other half of the same defect: the frames that settle produced must still reach the
+       * channel. `retainedUiRefreshEffects` decoded every non-`Error` shell frame and dropped it, so a
+       * run's unsolicited `Invocation` progress frames died inside whichever refresh happened to own the
+       * actor when they were produced. */
+      it("hands a refresh settle's unsolicited progress frames to the channel instead of dropping them", () => {
+        const { retainedUiRefreshEffects } = dependencies;
+        const shellMessage = (inReplyTo: number) => ({ tag: "send-message", val: { target: { tag: "shell", val: "7" }, payload: Array.from(encodeAppFrame({ Invocation: { in_reply_to: inReplyTo, output: [], diagnostics: [], ui_scope: [1], history_patch: [], messages: [], mutations: [], inverse_group: [] } })) } }) as unknown as WireVariant;
+        const published: Uint8Array[][] = [];
+        const requested = retainedUiRefreshEffects(7, [shellMessage(0), shellMessage(4), { tag: "notify", val: { message: "x" } } as unknown as WireVariant], (frames) => published.push([...frames]));
+        expect(published, "one publication carrying both shell frames").toHaveLength(1);
+        expect(published[0], "the unsolicited progress frame AND the correlated answer both belong to the channel").toHaveLength(2);
+        expect(requested.length, "a non-frame effect is still the refresh response's own").toBeGreaterThan(0);
+
+        const silent: Uint8Array[][] = [];
+        expect(retainedUiRefreshEffects(7, [{ tag: "notify", val: { message: "x" } } as unknown as WireVariant], (frames) => silent.push([...frames]))).toHaveLength(1);
+        expect(silent, "a settle that produced no frame publishes nothing").toHaveLength(0);
+        console.info("[DEBUG] refresh settle frames: published to the channel, not decoded and discarded");
+      });
+
       it("acknowledges each retained surface before requesting the next bounded publication", async () => {
         const { default: fixture } = await import("../../🧱️elements/🔌️PluginRuntime/🧫️fixtures/🔄️surface-refresh.json");
         const surfaces = fixture.acknowledgement.surfaces;
@@ -3096,6 +3216,44 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
     console.info(`[DEBUG] unowned command ingress: 0 further crossings, ceiling ${ceiling} (was 1024 crossings then an unnamed timeout)`);
   });
 
+  it("refuses a retired instance by REJECTION, never by a synchronous throw past the caller's catch", async () => {
+    const { adaptPluginHandle, encodePackValue, isPluginInstanceRetiredV1 } = dependencies;
+    const lease = {
+      handle: {
+        manifest: async () => encodePackValue({ pluginId: "reject-fixture", apps: [] }),
+        createApp: async () => 55,
+        destroyApp: async () => {},
+        enqueue: () => {},
+        takeSegmentedDownloadChunk: async () => undefined,
+        outcomes: { [Symbol.asyncIterator](): AsyncIterator<TurnOutcome> { return { next: () => new Promise(() => {}), return: async () => ({ done: true, value: undefined }) }; } },
+        dispose: async () => {},
+      },
+      release: async () => {},
+    };
+    const handle = await adaptPluginHandle("reject-fixture", lease);
+    const instance = await handle.createApp("fixture");
+    await handle.destroyApp(instance);
+
+    // 🧯️ The shape `ShellHost.onAction` uses: build the promise, attach `.catch`, never wrap in try.
+    // A synchronous throw escapes this entirely and reaches React's error boundary.
+    for (const [what, call] of [
+      ["handleAction", () => handle.handleAction(instance, JSON.stringify({ controllerId: "c", action: "a" }), {} as never)],
+      ["handleCommand", () => handle.handleCommand!(instance, JSON.stringify({ controllerId: "c", action: "a" }), {} as never)],
+      ["contextMenu", () => handle.contextMenu!(instance, { surfaceId: "s" } as never, {} as never)],
+    ] as const) {
+      let synchronous: unknown = null;
+      let rejected: unknown = null;
+      try {
+        await call().catch((error: unknown) => { rejected = error; });
+      } catch (error) {
+        synchronous = error;
+      }
+      expect(synchronous, `${what} must not throw synchronously past the caller's catch`).toBe(null);
+      expect(isPluginInstanceRetiredV1(rejected), `${what} rejects with the typed retirement`).toBe(true);
+    }
+    console.info("[DEBUG] retired instance: handleAction/handleCommand/contextMenu all reject, none throws synchronously");
+  });
+
   it("remembers a destroyed instance across a hot swap that replaces the handle", async () => {
     const { adaptPluginHandle, encodePackValue, isPluginInstanceRetiredV1, pluginInstanceWasRetiredV1 } = dependencies;
     const makeLease = (nextInstance: number) => ({
@@ -3155,6 +3313,185 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
     console.info("[DEBUG] completion-result.fault pack recovers code and message");
   });
 
+
+  /** 🧺️ ONE OWNING INTAKE PER INSTANCE (ticket 26/09/09, lane `concurrent-patch-intake`).
+   *
+   * 🐛️ A turn page carries every patch that was ready when the turn assembled its result, and the
+   * reactor's pending slots are minted per reconcile pass rather than per surface — so one
+   * `toolRunStart` put TWO patches for `framework.panel.toolRun` in one page (the action's own panel
+   * reconcile and the run's first progress reconcile). The host admitted every patch of a page to its
+   * acknowledgement token BEFORE acknowledging any of them, so the second met the first's still-open
+   * wire and receipt outbox in `OwnedUiInstance.beginPatch` and threw
+   * `plugin-ui.intake-rejected:intake:Foreign or busy instance surface owner`; the throw skipped the
+   * page's whole close, and that surface's cell stayed busy for the rest of the instance's life —
+   * every later refresh and every `toolRunAbort`/`toolRunFinalize` rejected, and the Tool runs panel
+   * never left `Running` (peer ticket 26/09/13/INTERACTIVE-TOOLS-VISIBLE-PROCESS,
+   * `abort-finalize-midrun-*.txt`, :6013 2026-09-15 17:58). */
+  describe("owned ui intake admission rounds", () => {
+    it("opens the next round at a repeated surface, so one round never names a surface twice", () => {
+      const { uiPatchAdmissionRoundsV1 } = dependencies;
+      expect(uiPatchAdmissionRoundsV1(["1:a", "1:b", "1:a"])).toEqual([[0, 1], [2]]);
+      expect(uiPatchAdmissionRoundsV1(["1:a", "1:b", "1:c"])).toEqual([[0, 1, 2]]);
+      expect(uiPatchAdmissionRoundsV1(["1:a", "1:a", "1:a"])).toEqual([[0], [1], [2]]);
+      expect(uiPatchAdmissionRoundsV1(["1:a", "1:b", "1:a", "1:b", "1:c"])).toEqual([[0, 1], [2, 3, 4]]);
+      expect(uiPatchAdmissionRoundsV1([])).toEqual([]);
+      expect(uiPatchAdmissionRoundsV1([null, null])).toEqual([[0, 1]]);
+      for (const surfaces of [["1:a", "1:b", "1:a"], ["1:a", "1:a", "1:a"], ["1:a", "1:b", "1:a", "1:b", "1:c"]]) {
+        const rounds = uiPatchAdmissionRoundsV1(surfaces);
+        expect(rounds.flat()).toEqual(surfaces.map((_, index) => index));
+        for (const round of rounds) expect(new Set(round.map((index) => surfaces[index]!)).size).toBe(round.length);
+      }
+      console.info("[DEBUG] intake rounds: [a,b,a] → [[0,1],[2]] — a repeated surface opens the next round, order and wire indices preserved");
+    });
+
+    it("names a foreign surface owner and a busy one apart, and answers whether a patch is still open", async () => {
+      const { default: fixture } = await import("../../🧱️elements/🔌️PluginRuntime/🧫️fixtures/⏱️lifecycle-scheduler.json");
+      const { encodeActorInstanceLifecycle } = await import("../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🟦️.ts");
+      const { encodeActorUiPatchReceipt } = await import("../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🩹️patch/🟦️.ts");
+      const { OwnedUiInstance } = await import("../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🏘️instance/🟦️.ts");
+      const sent: Array<{ kind: string; requestId: string; events?: readonly ShardEventEnvelope[] }> = [];
+      const worker: ShardWorkerLike = { onmessage: null, onerror: null, postMessage(message) { sent.push(message as typeof sent[number]); }, terminate() {} };
+      const client = new ShardClient({ residentLedger: new OwnedResidentLedger({ bytes: 1048576, slots: 4096, owners: 4096, control: { bytes: 65536, slots: 256, owners: 256 } }), shardCount: 1, createWorker: () => worker });
+      async function answer<T>(pending: Promise<T>, value: unknown): Promise<T> { await flushMicrotasks(8); worker.onmessage!({ data: { kind: "result", requestId: sent.at(-1)!.requestId, ok: true, value } }); return pending; }
+      const plain = { uiPatches: [], effects: [], nextWake: null, status: { tag: "idle" } };
+      const actorId = `${fixture.actor}-intake-rounds`;
+      await answer(client.activate(actorId, "/fixture.js", [], DEFAULT_SHARD_BUDGET), undefined);
+      const owner = client.captureInstanceLifecycle(actorId, fixture.instance);
+      const lifetime = { activationGeneration: owner.activation.activationGeneration, instanceId: fixture.instance, guestLifetime: BigInt(fixture.guestLifetime) };
+      const captured = { kind: "captured" as const, lifetime, requestSequence: owner.openRequest.requestSequence };
+      await answer(submitPluginLifecycleTurn(owner, { kind: "open", input: { appId: "fixture", actor: {}, config: new Uint8Array(), assets: [], capabilities: [], quotas: new Uint8Array() } }, "Interactive"), { ...plain, lifecycleReceipt: encodeActorInstanceLifecycle(captured) });
+      const ui = new OwnedUiInstance(owner.activation, lifetime, { maxNodes: 128, maxDepth: 16, maxChildren: 32, maxTextBytes: 4096, maxPatchOps: 128, maxPatchBytes: 65536 }, { usizeBits: 32 });
+      owner.bindHostRetirement(ui);
+      await answer(submitPluginLifecycleTurn(owner, { kind: "receipt-ack", receipt: captured }, "Interactive"), plain);
+      const value = fixture.uiAcknowledgement;
+      const grant = { maxItems: 1, maxBytes: 4096 };
+      const page = (revision: number) => ({ ...plain, uiPatchReceipt: encodeActorUiPatchReceipt({ lifetime, patchSequence: BigInt(value.patchSequence + revision) }), uiPatches: [{ surface: { instance: fixture.instance, surface: value.surface }, revision: BigInt(revision), baseRevision: BigInt(revision - 1), ops: [] }] });
+      const openSurface = async (revision: number) => {
+        const original = page(revision);
+        await answer(submitPluginLifecycleTurn(owner, { kind: "poll" }, "UserVisible"), original);
+        const source = owner.captureUiPatchAuthority(original, 0);
+        const lookup = ui.beginSurfaceLookup(owner.activation, lifetime, value.surface)!;
+        for (let count = 0; lookup.advance(grant).kind !== "ready"; count += 1) if (count > 1024) throw new Error("Fixture lookup did not complete");
+        const facade = lookup.takeResult()!;
+        lookup.beginClose();
+        while (lookup.closeStep(grant).kind !== "complete") {}
+        return { source, facade };
+      };
+      const first = await openSurface(1);
+      expect(ui.surfacePatchIsOpen(first.facade)).toBe(false);
+      const patch = ui.beginPatch(first.source, first.facade);
+      expect(ui.surfacePatchIsOpen(first.facade)).toBe(true);
+      const second = await openSurface(2);
+      expect(() => ui.beginPatch(second.source, second.facade)).toThrow("Busy instance surface owner");
+      const foreign = new OwnedUiInstance(owner.activation, lifetime, { maxNodes: 128, maxDepth: 16, maxChildren: 32, maxTextBytes: 4096, maxPatchOps: 128, maxPatchBytes: 65536 }, { usizeBits: 32 });
+      expect(() => foreign.beginPatch(second.source, second.facade)).toThrow("Foreign native instance patch owner");
+      patch.finishInput();
+      for (let count = 0; patch.advance(grant).kind !== "ready"; count += 1) if (count > 1024) throw new Error("Fixture publication did not complete");
+      const token = patch.peekAcknowledgement()!;
+      expect(ui.surfacePatchIsOpen(first.facade)).toBe(true);
+      const submitted = await answer(submitPluginLifecycleTurn(owner, { kind: "issued-ui-acks", entries: [{ source: first.source, token }] }, "Interactive"), plain);
+      expect(patch.acceptAcknowledgement(submitted.submissions![0]!)).toBe(true);
+      patch.beginClose();
+      for (let count = 0; !patch.terminalIsEmpty(); count += 1) { patch.closeStep(grant); if (count > 4096) throw new Error("Fixture patch close did not complete"); }
+      expect(ui.surfacePatchIsOpen(first.facade)).toBe(false);
+      expect(() => ui.beginPatch(second.source, second.facade)).not.toThrow();
+      console.info("[DEBUG] beginPatch faults: identity → 'Foreign …', an open previous patch → 'Busy …'; surfacePatchIsOpen tracks the wire, page and receipt outbox");
+      ui.beginClose();
+      for (let count = 0; ui.closeStep(grant).kind !== "complete"; count += 1) if (count > 65536) break;
+      foreign.beginClose();
+      teardownPluginActor(actorId);
+      client.disposeAll();
+    });
+
+    it("installs a turn page that names one surface twice, in order, and leaves no surface wedged", async () => {
+      const { default: fixture } = await import("../../🧱️elements/🔌️PluginRuntime/🧫️fixtures/⏱️lifecycle-scheduler.json");
+      const { encodeActorInstanceLifecycle } = await import("../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🟦️.ts");
+      const previous = { registry: testState.sharedActivationRegistry, shard: testState.sharedShardClient, fetch: globalThis.fetch };
+      const plain = { uiPatches: [], effects: [], nextWake: null, status: { tag: "idle" } };
+      const closeGeneration = BigInt(fixture.closeGeneration);
+      const panel = fixture.runtimeUiComposition.surface;
+      const other = `${fixture.runtimeUiComposition.surface}-other`;
+      const leaf = (text: string): UiNodeRecord => ({ id: 0, key: "root", component: { type: "text", value: text, emphasize: null, dataAttributes: null }, layout: { kind: "leaf", width: "hug", height: "hug" }, style: { variant: "plain", size: "md", density: "standard", tone: "neutral", emphasis: "regular" }, activity: "idle", disabled: false, transition: null, accessibility: { label: null, description: null, live: "off", shortcut: null, hidden: false }, bindings: [], menu: null, children: [] } as UiNodeRecord);
+      const ops = (text: string) => [{ tag: "upsert", val: { node: encodePackValue(leaf(text)) } }, { tag: "set-root", val: 0n }];
+      let lifetime: { readonly activationGeneration: bigint; readonly instanceId: number; readonly guestLifetime: bigint } | null = null;
+      let patchSequence = 0n;
+      let revision = 0n;
+      const installs: string[] = [];
+      const refusals: string[] = [];
+      const worker: ShardWorkerLike = {
+        onmessage: null,
+        onerror: null,
+        postMessage(raw) {
+          const message = raw as { readonly kind: string; readonly requestId?: string; readonly events?: readonly ShardEventEnvelope[] };
+          const requestId = message.requestId;
+          if (!requestId) return;
+          let value: unknown = undefined;
+          if (message.kind === "turn") {
+            const first = message.events?.[0];
+            if (first?.kind === "instance-open") {
+              const payload = first.payload as { readonly instance: number; readonly activationGeneration: bigint; readonly requestSequence: number };
+              lifetime = { activationGeneration: payload.activationGeneration, instanceId: payload.instance, guestLifetime: BigInt(fixture.guestLifetime) };
+              patchSequence += 1n;
+              // 🧺️ THE page the defect needs: `panel` twice, with a sibling between them, `A'.base = A.revision`.
+              value = {
+                ...plain,
+                lifecycleReceipt: encodeActorInstanceLifecycle({ kind: "captured" as const, lifetime, requestSequence: payload.requestSequence }),
+                uiPatchReceipt: encodeActorUiPatchReceipt({ lifetime, patchSequence }),
+                uiPatches: [
+                  { surface: { instance: payload.instance, surface: panel }, revision: 1n, baseRevision: 0n, ops: ops("running") },
+                  { surface: { instance: payload.instance, surface: other }, revision: 1n, baseRevision: 0n, ops: ops("sibling") },
+                  { surface: { instance: payload.instance, surface: panel }, revision: 2n, baseRevision: 1n, ops: ops("aborting") },
+                ],
+              };
+              revision = 2n;
+            } else if (first?.kind === "instance-close") {
+              const close = first.payload as { readonly requestSequence: number };
+              value = { ...plain, lifecycleReceipt: encodeActorInstanceLifecycle({ kind: "accepted", lifetime: lifetime!, requestSequence: close.requestSequence, closeGeneration }) };
+            } else if (first?.kind === "instance-lifecycle-ack") {
+              const receipt = (first.payload as { readonly receipt: { readonly kind: string; readonly requestSequence: number } }).receipt;
+              value = receipt.kind === "accepted" ? { ...plain, lifecycleReceipt: encodeActorInstanceLifecycle({ kind: "retired", lifetime: lifetime!, requestSequence: receipt.requestSequence, closeGeneration }) } : plain;
+            } else if (first?.kind === "surface-visible") {
+              // 🔁️ Every later refresh publishes the panel again — the crossing the wedged cell used to reject.
+              patchSequence += 1n;
+              revision += 1n;
+              value = { ...plain, uiPatchReceipt: encodeActorUiPatchReceipt({ lifetime: lifetime!, patchSequence }), uiPatches: [{ surface: { instance: lifetime!.instanceId, surface: panel }, revision, baseRevision: revision - 1n, ops: ops(`refresh-${revision}`) }] };
+            } else value = plain;
+          }
+          queueMicrotask(() => worker.onmessage?.({ data: { kind: "result", requestId, ok: true, value } }));
+        },
+        terminate() {},
+      };
+      const client = new ShardClient({ residentLedger: new OwnedResidentLedger({ bytes: 1048576, slots: 4096, owners: 4096, control: { bytes: 65536, slots: 256, owners: 256 } }), shardCount: 1, createWorker: () => worker });
+      testState.sharedShardClient = client;
+      testState.sharedActivationRegistry = { registerManifest: () => {}, activate: async (_plugin: string, actorId: string) => client.activate(actorId, "/fixture.js", [], DEFAULT_SHARD_BUDGET), touch: () => {}, cancel: (actorId: string) => client.dispose(actorId) } as unknown as ActivationRegistry;
+      globalThis.fetch = (async () => new Response(JSON.stringify({ manifest: { pluginId: "intake-rounds", apps: [] } }), { headers: { "content-type": "application/json" } })) as typeof fetch;
+      const consoleError = console.error;
+      console.error = (...args: unknown[]) => { refusals.push(args.map(String).join(" ")); };
+      let handle: PluginWasmHandle | null = null;
+      try {
+        handle = await loadPluginModule("intake-rounds", "https://fixture.invalid/plugin.js");
+        const instance = await handle.createApp("fixture");
+        const viewState = { locale: "en" as const, terminology: "native" as const, windowInstances: [{ id: panel, windowKindId: "fixture" }, { id: other, windowKindId: "fixture" }] };
+        const projected = await handle.refreshUi(instance, { viewState, windows: [{ key: panel, bodyKey: "root" }, { key: other, bodyKey: "root" }] });
+        for (const window of projected.windows ?? []) installs.push(`${window.key}=${(window.value as { component?: { value?: string } } | undefined)?.component?.value ?? "none"}`);
+        // 🔁️ A second refresh proves the panel's cell is not wedged: it publishes again and projects again.
+        const again = await handle.refreshUi(instance, { viewState, windows: [{ key: panel, bodyKey: "root" }] });
+        const panelAgain = (again.windows ?? []).find((window) => window.key === panel);
+        expect(installs).toContain(`${other}=sibling`);
+        expect(installs.some((entry) => entry.startsWith(`${panel}=`))).toBe(true);
+        expect((panelAgain?.value as { component?: { value?: string } } | undefined)?.component?.value).toMatch(/^refresh-/);
+        expect(refusals.filter((line) => line.includes("intake-rejected") || line.includes("Busy instance surface owner"))).toEqual([]);
+        console.info("[DEBUG] intake rounds e2e: page [panel@1, other@1, panel@2] installed in rounds, later refreshes still publish — 0 'Busy instance surface owner'");
+        await handle.destroyApp(instance);
+      } finally {
+        console.error = consoleError;
+        await handle?.dispose();
+        testState.sharedActivationRegistry = previous.registry;
+        testState.sharedShardClient = previous.shard;
+        globalThis.fetch = previous.fetch;
+      }
+    });
+  });
 
   describe("leftover brush guest hover retain", () => {
     it("keeps the leftover vortex id on an armed brush window", async () => {

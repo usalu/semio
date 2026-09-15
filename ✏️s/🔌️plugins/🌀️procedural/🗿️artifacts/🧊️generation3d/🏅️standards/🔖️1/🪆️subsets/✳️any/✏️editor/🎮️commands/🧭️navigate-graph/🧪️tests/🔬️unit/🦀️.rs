@@ -41,7 +41,7 @@ fn strings(value: &serde_json::Value) -> Vec<String> {
 fn the_shared_fixture_restates_the_bundled_hex_column_graph() {
     let fixture = fixture();
     let document = hex_column();
-    let graph = &document.host_document;
+    let graph = &document.host_snapshot;
     assert_eq!(fixture["exampleId"].as_str(), Some(PROCEDURAL_EXAMPLE_HEX_COLUMN), "the fixture names the example it restates");
     let declared = fixture["graph"]["nodes"].as_array().expect("nodes");
     assert_eq!(declared.len(), graph.widgets.len(), "the fixture states every widget of the example and no other");
@@ -68,7 +68,7 @@ fn the_shared_fixture_restates_the_bundled_hex_column_graph() {
 fn the_keyboard_order_is_the_reading_order_the_fixture_declares() {
     let fixture = fixture();
     let document = hex_column();
-    assert_eq!(document.host_document.keyboard_order(), strings(&fixture["keyboardOrder"]).iter().map(String::as_str).collect::<Vec<_>>(), "reading order");
+    assert_eq!(document.host_snapshot.keyboard_order(), strings(&fixture["keyboardOrder"]).iter().map(String::as_str).collect::<Vec<_>>(), "reading order");
 }
 
 /// ⚖️ LAW: every anchor rule the fixture states holds — a port steps from its owning node, a
@@ -80,7 +80,7 @@ fn every_anchor_rule_the_fixture_states_holds() {
     for row in fixture["anchors"].as_array().expect("anchors") {
         let selection = strings(&row["selection"]);
         let expected = row["anchor"].as_str();
-        assert_eq!(anchor_node(&document.host_document, &selection), expected, "{:?}: {}", selection, row["why"].as_str().unwrap_or_default());
+        assert_eq!(anchor_node(&document.host_snapshot, &selection), expected, "{:?}: {}", selection, row["why"].as_str().unwrap_or_default());
     }
 }
 
@@ -97,7 +97,7 @@ fn every_arrow_walk_lands_where_the_fixture_says() {
         let mut selection = strings(&walk["start"]);
         for step in walk["steps"].as_array().expect("steps") {
             let named = step["step"].as_str().expect("step");
-            if let Some(target) = step_target(&document.host_document, &selection, step_of(named)) {
+            if let Some(target) = step_target(&document.host_snapshot, &selection, step_of(named)) {
                 selection = vec![target.to_string()];
             }
             assert_eq!(selection, strings(&step["expected"]), "{name}: after {named}");
@@ -116,12 +116,12 @@ fn a_keyboard_step_authors_no_document_and_no_config_operation() {
     let document = hex_column();
     let ports = std::collections::BTreeMap::from([("extrude".to_string(), vec!["extrude@wire".to_string(), "extrude@vector".to_string()])]);
     for step in [FlowGraphStep::Next, FlowGraphStep::Previous, FlowGraphStep::Upstream, FlowGraphStep::Downstream] {
-        let target = step_target(&document.host_document, &["extrude".to_string()], step);
+        let target = step_target(&document.host_snapshot, &["extrude".to_string()], step);
         assert!(target.is_some(), "the hex column answers every direction from `extrude`");
     }
-    assert_eq!(activate_ports(&document.host_document, &ports, &["extrude".to_string()]).map(Vec::as_slice), Some(["extrude@wire".to_string(), "extrude@vector".to_string()].as_slice()), "activate opens the anchor's ports");
-    assert_eq!(activate_ports(&document.host_document, &ports, &["extrude@wire".to_string(), "extrude@vector".to_string()]), None, "an already-open node opens no further");
-    assert_eq!(activate_ports(&document.host_document, &ports, &["height".to_string()]), None, "a node with no published port opens nothing");
+    assert_eq!(activate_ports(&document.host_snapshot, &ports, &["extrude".to_string()]).map(Vec::as_slice), Some(["extrude@wire".to_string(), "extrude@vector".to_string()].as_slice()), "activate opens the anchor's ports");
+    assert_eq!(activate_ports(&document.host_snapshot, &ports, &["extrude@wire".to_string(), "extrude@vector".to_string()]), None, "an already-open node opens no further");
+    assert_eq!(activate_ports(&document.host_snapshot, &ports, &["height".to_string()]), None, "a node with no published port opens nothing");
 }
 
 /// ⚖️ LAW: the verbs the fixture names are the verbs the app declares, and the arrow chords reach
@@ -150,7 +150,7 @@ fn every_step_the_fixture_names_is_a_declared_arg_free_verb() {
 async fn an_arrow_verb_moves_the_framework_owned_graph_selection() {
     let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
     let mut app = app_with_registry().await;
-    assert!(context::snapshot(&app).host_document.widgets.iter().any(|widget| crate::widget_id(widget) == "height"), "the fixture app opens the hex column");
+    assert!(context::snapshot(&app).host_snapshot.widgets.iter().any(|widget| crate::widget_id(widget) == "height"), "the fixture app opens the hex column");
     context::select_graph(&mut app, "node", &["height"]).await;
     dispatch(&mut app, Generation3dCommand::SelectDownstreamNode(select_downstream_node::SelectDownstreamNode {})).await;
     assert_eq!(

@@ -150,7 +150,7 @@ def write_json(path: Path, title: str, fields, facet: str):
         if facet == "artifact" and req:
             required.append(name)
     obj = {
-        "$id": f"https://semio.tech/schema/s/writer/writer/{facet}.json",
+        "$id": f"https://json.schemas.assets.semio-tech.com/s/writer/writer/{facet}.json",
         "title": title,
         "type": "object",
         "additionalProperties": False,

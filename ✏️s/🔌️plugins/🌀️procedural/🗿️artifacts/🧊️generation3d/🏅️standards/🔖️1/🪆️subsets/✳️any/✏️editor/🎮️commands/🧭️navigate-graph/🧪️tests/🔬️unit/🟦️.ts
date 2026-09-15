@@ -2,7 +2,7 @@
  * @emoji 🧭️ The TypeScript half of the graph keyboard-navigation laws — a SECOND implementation of
  * the traversal, written from `🧫️fixtures/🧭️graph-keyboard-navigation.json` alone and never from the
  * Rust one, answering the very same walks `🔬️unit/🦀️.rs` answers through
- * `FlowFixture::keyboard_step`.
+ * `FlowHostSnapshot::keyboard_step`.
  *
  * The two halves are deliberately independent: Rust runs the shipped reducer against the shipped
  * example document (and a third law pins the fixture's graph EQUAL to that document, so neither half

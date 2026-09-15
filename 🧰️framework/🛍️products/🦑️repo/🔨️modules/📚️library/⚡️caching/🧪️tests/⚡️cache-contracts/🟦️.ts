@@ -820,14 +820,12 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
     const { generatePlaygroundRegistry } = await import(join(registryRoot, "🎮️playground/🔎️discovery/🟦️.ts"));
     const { buildPlaygroundSession } = await import(join(registryRoot, "🎮️playground/🧭️session/🟦️.ts"));
     const playgrounds = generatePlaygroundRegistry(root);
-    const launch = await import(join(registryRoot, "🚀️launch/🟦️.ts"));
-    const configurations = Bun.JSONC.parse(launch.generateLaunchJson(root, playgrounds, componentLaunchers)).configurations;
-    for (const project of contracts) for (const [name, target] of Object.entries(project.targets) as [string, any][]) if (target.options?.command?.includes("⚡️caching/🦀️cargo/📜️script.ts") && ["build", "check", "test"].includes(name)) assert.ok(configurations.some((row: any) => row.command === `bun nx run ${project.name}:${name}`), `Missing native editor command ${project.name}:${name}`);
+    for (const project of contracts) for (const [name, target] of Object.entries(project.targets) as [string, any][]) if (target.options?.command?.includes("⚡️caching/🦀️cargo/📜️script.ts") && ["build", "check", "test"].includes(name)) assert.ok(project.targets[name], `Missing native editor target ${project.name}:${name}`);
     const preparationProject = contracts.find((project) => project.name === vectors.playgroundPreparation.project)!;
     for (const playground of playgrounds) {
       for (const engine of playground.engines) assert.ok(contracts.some((project) => resolve(root, project.root) === resolve(root, engine) && project.targets.wasm), `Engine ${engine} must name an authored producer`);
       for (const profile of vectors.playgroundPreparation.profiles) {
-        for (const command of ["prepare", "run", "smoke"]) assert.ok(configurations.some((row: any) => row.command === `bun nx run @semio-tech/framework-os-dev:${command}-${playground.variant}-native-${profile}`), "Missing native variant editor command");
+        for (const command of ["prepare", "run", "smoke"]) assert.ok(preparationProject.targets[`${command}-${playground.variant}-native-${profile}`], "Missing native variant editor target");
 
         const targetName = `prepare-${playground.variant}-react-${profile}`, preparation = preparationProject.targets[targetName];
         assert.ok(preparation, `${targetName} needs declared prerequisites`);
@@ -845,7 +843,6 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
         assert.equal(activationTarget.cache, true, `${activationName} publishes into a variant/profile-scoped runtime root and is safe to replay`);
         assert.deepEqual(activationTarget.outputs, [`{projectRoot}/dist/runtime/react/${profile}/${playground.variant}`]);
         assert.deepEqual(activationTarget.dependsOn, [targetName]);
-        assert.equal(configurations.filter((configuration: any) => configuration.command === `bun nx run ${preparationProject.name}:${activationName}`).length, 1);
         const wgpuActivationName = `activate-${playground.variant}-wgpu-${profile}`, wgpuActivationTarget = preparationProject.targets[wgpuActivationName];
         assert.ok(wgpuActivationTarget, `${wgpuActivationName} must follow completed preparation`);
         assert.equal(wgpuActivationTarget.cache, false, `${wgpuActivationName} publishes live extensions and reload notifications on every activation`);
@@ -859,18 +856,15 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
           assert.deepEqual(server.outputs, []);
           assert.deepEqual(server.dependsOn, [activationName]);
           assert.equal(server.options.command, `bun ./📜️script.ts serve ${playground.variant} react ${profile}`);
-          assert.equal(configurations.filter((configuration: any) => configuration.command === `bun nx run ${preparationProject.name}:${serverName}`).length, 1);
         }
         const components = buildPlaygroundSession(playground.variant).plugins.map((row: any) => `${componentLaunchers.find((entry) => entry.pluginId === row.pluginId)!.project}:materialize-${profile}`);
         const engines = playground.engines.map((engine: string) => contracts.find((project) => resolve(root, project.root) === resolve(root, engine))!.name + ":wasm");
         assert.deepEqual([...preparation.dependsOn].sort(), [...new Set([`@semio-tech/plugin-registry:session-${playground.variant}`, `@semio-tech/framework-plugin-web:support-${profile}`, vectors.playgroundPreparation.fonts, ...engines, ...components])].sort());
-        assert.equal(configurations.filter((configuration: any) => configuration.command === `bun nx run ${preparationProject.name}:${targetName}`).length, 1);
       }
       const target = `session-${playground.variant}`;
       assert.ok(sessionProject.targets[target]);
-      assert.equal(configurations.filter((configuration: any) => configuration.command === `bun nx run ${sessionProject.name}:${target}`).length, 1);
     }
-    for (const entry of componentLaunchers) for (const row of [...vectors.componentProfiles, ...vectors.materialization.profiles]) assert.equal(configurations.filter((configuration: any) => configuration.command === `bun nx run ${entry.project}:${row.target}`).length, 1, `${entry.project}:${row.target} must have one editor command`);
+    for (const entry of componentLaunchers) for (const row of [...vectors.componentProfiles, ...vectors.materialization.profiles]) assert.ok(contracts.find((project) => project.name === entry.project)?.targets[row.target], `${entry.project}:${row.target} must name an Nx target`);
     assert.deepEqual(result.violations.filter((finding) => finding.rule === "ORCH-01"), [], "All public commands must use one script entrypoint");
     for (const entry of vectors.entrypoints) assert.ok(contracts.find((project) => project.name === entry.project)?.targets[entry.target].dependsOn?.includes(entry.prerequisite), `${entry.project}:${entry.target} needs ${entry.prerequisite} in Nx`);
     for (const entry of vectors.nativeBinaries) {

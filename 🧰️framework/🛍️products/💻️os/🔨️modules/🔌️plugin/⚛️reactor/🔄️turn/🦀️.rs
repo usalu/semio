@@ -1746,7 +1746,7 @@ fn live_patch_receipt<PA: crate::app::PluginApp>(runtime: &crate::plugin_runtime
 }
 
 fn route_exchange_output(instance: u32, output: crate::plugin_runtime::PluginExchangeOutput, effects: &mut Vec<Effect>) {
-    if let Some(page) = output.typed_operation_result.as_ref() {
+    for page in output.typed_operation_results.iter() {
         effects.push(Effect::SendMessage { target: MessageEndpoint::Shell { instance: semio_framework::kernel::PluginInstanceId(instance.to_string()) }, payload: page.renderer_exchange_bytes() });
     }
     for frame_bytes in output.frames {

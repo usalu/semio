@@ -1,7 +1,7 @@
 //! 🧬️ Generation3d snapshot schema — artifact-lane fields only.
 
 use ::semio_framework_schema::ArtifactSchema;
-use semio_framework_artifact_flow_flow::FlowHostDocument;
+use semio_framework_artifact_flow_flow::FlowHostSnapshot;
 pub use semio_framework_artifact_playbook_playbook::GenerationPlayRoot;
 use semio_framework_artifact_playbook_playbook::GenerationPlayState;
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -13,7 +13,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 #[artifact_schema(id = "s.procedural.generation3d")]
 pub struct Generation3dSnapshot {
     #[state(artifact)]
-    pub host_document: FlowHostDocument,
+    pub host_snapshot: FlowHostSnapshot,
     #[state(artifact)]
     pub generation: GenerationPlayRoot,
 }
@@ -21,17 +21,17 @@ pub struct Generation3dSnapshot {
 
 impl Default for Generation3dSnapshot {
     fn default() -> Self {
-        Self { host_document: FlowHostDocument::default(), generation: GenerationPlayState::default().into() }
+        Self { host_snapshot: FlowHostSnapshot::default(), generation: GenerationPlayState::default().into() }
     }
 }
 
 impl Generation3dSnapshot {
     /// 🧊️ Explicit cold-only disposal of a detached projection. Both fields reject a bare drop —
-    /// `fixture.layout` is an `OrderedMap<WidgetLayout>` whose root must be retired
+    /// `host_snapshot.layout` is an `OrderedMap<WidgetLayout>` whose root must be retired
     /// (`🧰️framework/🔨️modules/🌱️value/🗂️ordered/🦀️.rs:81`), and `generation` carries its own
     /// retirement ladder — so an owned projection is CLOSED, never dropped.
     pub fn retire_cold(self) {
-        self.host_document.retire_cold();
+        self.host_snapshot.retire_cold();
         self.generation.retire_cold();
     }
 }

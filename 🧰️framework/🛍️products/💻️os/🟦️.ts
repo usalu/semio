@@ -3403,9 +3403,14 @@ export function decodeFaultFromWire(faultBytes: readonly number[], decodePackVal
   }
 }
 
+/** @emoji 🧯️ One display rule for every app-channel fault: a pack-encoded {@link Fault} reads as
+ * `code: message`, and a guest that answered with plain UTF-8 fault text reads as that text. */
 export function faultDisplayMessage(faultBytes: readonly number[], decodePackValue: (bytes: Uint8Array) => unknown): string {
   const fault = decodeFaultFromWire(faultBytes, decodePackValue);
-  if (!fault) return "unknown fault";
+  if (!fault) {
+    const text = new TextDecoder().decode(new Uint8Array(faultBytes)).trim();
+    return text.length > 0 ? text : "unknown fault";
+  }
   const code = typeof fault.code === "string" ? fault.code : String(fault.code);
   return `${code}: ${fault.message}`;
 }

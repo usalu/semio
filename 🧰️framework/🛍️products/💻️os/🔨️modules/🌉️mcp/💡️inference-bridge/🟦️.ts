@@ -19,9 +19,9 @@
  *
  * Nonclaims: no external model provider, no WGPU or browser rendering, no live hub, no two-user
  * process journey. This module proves shapes, vocabulary and paths — never that a job ran. */
+import Ajv from "ajv";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import Ajv from "ajv";
 import { osMcpSchema } from "../🧬️schema/🟦️.ts";
 
 //#region 🔖️Surface
@@ -142,7 +142,7 @@ export const eventPageSchema = {
 };
 
 /** ✅️ NOT declared here: the approval RECEIPT (with its undo handle and the checkpoint
- * frontier inside it) is hub’s own authority, `https://semio.tech/schema/hub/inference/schema.json`
+ * frontier inside it) is hub’s own authority, `https://json.schemas.assets.semio-tech.com/hub/inference/schema.json`
  * `#/$defs/InferenceApprovalReceiptV1` → `#/$defs/GisMapApprovalUndoHandleV1` →
  * `#/$defs/GisMapDocumentFrontierV1`. [`hubInferenceExport`] compiles that export straight out of
  * hub’s document, so this oracle validates against the authority itself and a hub-side change

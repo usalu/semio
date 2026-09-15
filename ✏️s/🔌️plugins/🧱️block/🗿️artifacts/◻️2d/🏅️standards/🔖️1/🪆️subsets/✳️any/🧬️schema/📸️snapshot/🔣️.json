@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/block/block2d/snapshot.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/block/block2d/snapshot.json",
   "title": "Block2dSnapshot",
   "type": "object",
   "additionalProperties": false,
@@ -22,54 +22,54 @@
       "x-semio-state": "artifact"
     },
     "nodeKind": {
-      "$ref": "https://semio.tech/schema/s/block/block2d/artifact.json#/$defs/BlockKindIdentity",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block2d/artifact.json#/$defs/BlockKindIdentity",
       "x-semio-state": "artifact"
     },
     "presentation": {
-      "$ref": "https://semio.tech/schema/s/block/block2d/artifact.json#/$defs/Block2dPresentation",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block2d/artifact.json#/$defs/Block2dPresentation",
       "x-semio-state": "artifact"
     },
     "handleKinds": {
       "type": "array",
       "items": {
-        "$ref": "https://semio.tech/schema/s/block/block2d/artifact.json#/$defs/Block2dHandleKind"
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block2d/artifact.json#/$defs/Block2dHandleKind"
       },
       "x-semio-state": "artifact"
     },
     "handles": {
       "type": "array",
       "items": {
-        "$ref": "https://semio.tech/schema/s/block/block2d/artifact.json#/$defs/Block2dHandleTemplate"
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block2d/artifact.json#/$defs/Block2dHandleTemplate"
       },
       "x-semio-state": "artifact"
     },
     "compatibility": {
       "type": "array",
       "items": {
-        "$ref": "https://semio.tech/schema/s/block/block2d/artifact.json#/$defs/BlockCompatibilityRule"
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block2d/artifact.json#/$defs/BlockCompatibilityRule"
       },
       "x-semio-state": "artifact"
     },
     "attributes": {
       "type": "array",
       "items": {
-        "$ref": "https://semio.tech/schema/s/block/block2d/artifact.json#/$defs/BlockAttribute"
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block2d/artifact.json#/$defs/BlockAttribute"
       },
       "x-semio-state": "artifact"
     },
     "authors": {
       "type": "array",
       "items": {
-        "$ref": "https://semio.tech/schema/s/block/block2d/artifact.json#/$defs/BlockAuthor"
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block2d/artifact.json#/$defs/BlockAuthor"
       },
       "x-semio-state": "artifact"
     },
     "camera2d": {
-      "$ref": "https://semio.tech/schema/s/block/block2d/artifact.json#/$defs/BlockCamera2d",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block2d/artifact.json#/$defs/BlockCamera2d",
       "x-semio-state": "artifact"
     },
     "meta": {
-      "$ref": "https://semio.tech/schema/s/block/block2d/artifact.json#/$defs/BlockMeta",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block2d/artifact.json#/$defs/BlockMeta",
       "x-semio-state": "artifact"
     }
   }

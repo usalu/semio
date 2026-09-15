@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/os/browser-actor-view-state/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/os/browser-actor-view-state/schema.json",
   "title": "BrowserActorViewStateRequest",
   "type": "object",
   "additionalProperties": false,
@@ -35,7 +35,7 @@
       }
     },
     "viewState": {
-      "$ref": "https://semio.tech/schema/framework/view-context/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/framework/view-context/schema.json"
     }
   },
   "$defs": {

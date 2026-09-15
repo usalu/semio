@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/gis/gismap/diff.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/gis/gismap/diff.json",
   "title": "GisMapDiff",
   "type": "object",
   "additionalProperties": false,
@@ -8,7 +8,7 @@
     "artifact": {
       "anyOf": [
         {
-          "$ref": "https://semio.tech/schema/s/gis/gismap/artifact.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/gis/gismap/artifact.json"
         },
         {
           "type": "null"
@@ -58,7 +58,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "https://semio.tech/schema/s/gis/gismap/feature.json"
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/gis/gismap/feature.json"
           }
         },
         "removed": {
@@ -92,7 +92,7 @@
           "type": "string"
         },
         "patch": {
-          "$ref": "https://semio.tech/schema/s/gis/gismap/feature.json#/$defs/GisMapFeaturePatch"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/gis/gismap/feature.json#/$defs/GisMapFeaturePatch"
         }
       },
       "required": [

@@ -1287,11 +1287,11 @@ mod typed_command_full_operation_tests {
         assert!(source.contains("take_typed_operation_ui_scope"));
 
         let reactor = include_str!("../../⚛️reactor/🦀️.rs");
-        assert!(reactor.contains("output.typed_operation_result.as_ref()"));
+        assert!(reactor.contains("output.typed_operation_results.iter()"));
         assert!(reactor.contains("page.renderer_exchange_bytes()"));
         assert!(reactor.contains("TypedOperationResultPage::renderer_ack_token"));
         assert!(reactor.contains("plugin_acknowledge_typed_operation_result(runtime, token)"));
-        assert!(!reactor.contains("typed_operation_result: _"), "the old typed-result drop route must remain unreachable");
+        assert!(!reactor.contains("typed_operation_results: _"), "the old typed-result drop route must remain unreachable");
     }
 
     #[test]

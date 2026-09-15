@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/block/block2d/diff.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/block/block2d/diff.json",
   "title": "Block2dDiff",
   "type": "object",
   "additionalProperties": false,
@@ -16,11 +16,11 @@
       "x-semio-state": "artifact"
     },
     "nodeKind": {
-      "$ref": "https://semio.tech/schema/s/block/block2d/artifact.json#/$defs/BlockKindIdentity",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block2d/artifact.json#/$defs/BlockKindIdentity",
       "x-semio-state": "artifact"
     },
     "presentation": {
-      "$ref": "https://semio.tech/schema/s/block/block2d/artifact.json#/$defs/Block2dPresentation",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block2d/artifact.json#/$defs/Block2dPresentation",
       "x-semio-state": "artifact"
     },
     "handleKinds": {
@@ -44,11 +44,11 @@
       "x-semio-state": "artifact"
     },
     "camera2d": {
-      "$ref": "https://semio.tech/schema/s/block/block2d/artifact.json#/$defs/BlockCamera2d",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block2d/artifact.json#/$defs/BlockCamera2d",
       "x-semio-state": "artifact"
     },
     "meta": {
-      "$ref": "https://semio.tech/schema/s/block/block2d/artifact.json#/$defs/BlockMeta",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block2d/artifact.json#/$defs/BlockMeta",
       "x-semio-state": "artifact"
     }
   },
@@ -80,7 +80,7 @@
         "values": {
           "type": "array",
           "items": {
-            "$ref": "https://semio.tech/schema/s/block/block2d/artifact.json#/$defs/BlockAuthor"
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block2d/artifact.json#/$defs/BlockAuthor"
           }
         }
       }
@@ -98,7 +98,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "https://semio.tech/schema/s/block/block2d/artifact.json#/$defs/Block2dHandleKind"
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block2d/artifact.json#/$defs/Block2dHandleKind"
           }
         },
         "removed": {
@@ -145,7 +145,7 @@
       "required": [],
       "properties": {
         "replacement": {
-          "$ref": "https://semio.tech/schema/s/block/block2d/artifact.json#/$defs/Block2dHandleKind"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block2d/artifact.json#/$defs/Block2dHandleKind"
         }
       }
     },
@@ -162,7 +162,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "https://semio.tech/schema/s/block/block2d/artifact.json#/$defs/Block2dHandleTemplate"
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block2d/artifact.json#/$defs/Block2dHandleTemplate"
           }
         },
         "removed": {
@@ -209,7 +209,7 @@
       "required": [],
       "properties": {
         "replacement": {
-          "$ref": "https://semio.tech/schema/s/block/block2d/artifact.json#/$defs/Block2dHandleTemplate"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block2d/artifact.json#/$defs/Block2dHandleTemplate"
         }
       }
     },
@@ -226,7 +226,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "https://semio.tech/schema/s/block/block2d/artifact.json#/$defs/BlockCompatibilityRule"
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block2d/artifact.json#/$defs/BlockCompatibilityRule"
           }
         },
         "removed": {
@@ -273,7 +273,7 @@
       "required": [],
       "properties": {
         "replacement": {
-          "$ref": "https://semio.tech/schema/s/block/block2d/artifact.json#/$defs/BlockCompatibilityRule"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block2d/artifact.json#/$defs/BlockCompatibilityRule"
         }
       }
     },
@@ -290,7 +290,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "https://semio.tech/schema/s/block/block2d/artifact.json#/$defs/BlockAttribute"
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block2d/artifact.json#/$defs/BlockAttribute"
           }
         },
         "removed": {
@@ -337,7 +337,7 @@
       "required": [],
       "properties": {
         "replacement": {
-          "$ref": "https://semio.tech/schema/s/block/block2d/artifact.json#/$defs/BlockAttribute"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/block/block2d/artifact.json#/$defs/BlockAttribute"
         }
       }
     }

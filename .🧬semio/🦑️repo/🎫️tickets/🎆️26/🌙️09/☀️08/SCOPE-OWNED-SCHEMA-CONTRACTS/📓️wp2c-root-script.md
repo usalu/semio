@@ -284,7 +284,7 @@ $ bun ./📜️script.ts verify interactivity tool-jobs --fixed-operation-fixtur
 EXIT=0
 ```
 
-Both now validate their fixture against `https://semio.tech/schema/framework/job/schema.json#/$defs/…`
+Both now validate their fixture against `https://json.schemas.assets.semio-tech.com/framework/job/schema.json#/$defs/…`
 through `compileScopeExport`.
 
 ### Row 64 — the subcommands exist and dispatch

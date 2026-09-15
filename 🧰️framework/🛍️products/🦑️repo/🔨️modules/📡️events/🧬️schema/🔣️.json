@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://semio.tech/schema/repo/events.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/repo/events.json",
   "title": "Repo events",
   "description": "✉️ Wire shapes of the repo event envelope, of every typed payload and of the append-only event store record. Kind strings live in 🔣️event-kinds.json.",
   "$defs": {

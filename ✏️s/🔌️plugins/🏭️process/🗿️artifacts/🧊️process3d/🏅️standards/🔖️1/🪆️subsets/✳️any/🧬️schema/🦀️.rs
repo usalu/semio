@@ -860,23 +860,23 @@ pub fn next_step_id() -> String {
 /// (`26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 4) — `CreateStep`/`DeleteStep` are real
 /// mutations against it now, so these builders compute a real index/cursor from `fixture.step_payloads`
 /// again instead of guessing.
-pub fn insert_step_mutations(fixture: &crate::Process3dSnapshot, step: ProcessStep) -> Vec<crate::op::Process3dMutation> {
+pub fn insert_step_mutations(snapshot: &crate::Process3dSnapshot, step: ProcessStep) -> Vec<crate::op::Process3dMutation> {
     use crate::op::Process3dMutation;
     use crate::schema::mutations::{change_cursor, create_step};
-    let index = fixture.resolved_up_to.unwrap_or(fixture.step_payloads.len());
+    let index = snapshot.resolved_up_to.unwrap_or(snapshot.step_payloads.len());
     let mut operations = vec![Process3dMutation::CreateStep(create_step::CreateStep { index, step })];
-    if fixture.resolved_up_to.is_some() {
+    if snapshot.resolved_up_to.is_some() {
         operations.push(Process3dMutation::ChangeCursor(change_cursor::ChangeCursor { new_resolved_up_to: Some(index + 1) }));
     }
     operations
 }
 
-pub fn remove_step_mutations(fixture: &crate::Process3dSnapshot, id: &str) -> Option<Vec<crate::op::Process3dMutation>> {
+pub fn remove_step_mutations(snapshot: &crate::Process3dSnapshot, id: &str) -> Option<Vec<crate::op::Process3dMutation>> {
     use crate::op::Process3dMutation;
     use crate::schema::mutations::{change_cursor, delete_step};
-    let removed_index = fixture.step_payloads.iter().position(|step| step.id == id)?;
+    let removed_index = snapshot.step_payloads.iter().position(|step| step.id == id)?;
     let mut operations = vec![Process3dMutation::DeleteStep(delete_step::DeleteStep { id: id.to_string() })];
-    if let Some(cursor) = fixture.resolved_up_to {
+    if let Some(cursor) = snapshot.resolved_up_to {
         if cursor > removed_index {
             operations.push(Process3dMutation::ChangeCursor(change_cursor::ChangeCursor { new_resolved_up_to: Some(cursor.saturating_sub(1)) }));
         }

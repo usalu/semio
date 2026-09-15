@@ -3,7 +3,7 @@
 use crate::editor::generation3d::config::Generation3dConfig;
 use crate::editor::generation3d::modes::edit::windows::flow::graph_outline;
 use crate::editor::generation3d::terminology::Generation3dLabels;
-use crate::standards::v1::subsets::any::schema::{dag_host_document_to_workflow, with_host};
+use crate::standards::v1::subsets::any::schema::{dag_host_snapshot_to_workflow, with_host};
 use crate::Generation3dSnapshot;
 use semio_framework_os_flow::{flow_backed_node_graph_extras, FlowEvalSession};
 use semio_framework_plugin::plugin_app_close_prelude::UiAssemblyResult;
@@ -34,9 +34,9 @@ fn document_error(scope: &'static str) -> PluginAssemblyError {
 /// used to embed beside its canvas. The window body is the node-graph surface only; this tree is where
 /// keyboard and screen-reader users traverse nodes, ports and wires (ticket 26/09/14).
 pub fn render(document: &Generation3dSnapshot, config: &Generation3dConfig, session: &FlowEvalSession, labels: &Generation3dLabels) -> UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    let fixture = &document.host_document;
-    let (nodes, edges) = with_host(snapshot, |host| dag_host_document_to_workflow(&host.dag.host_document));
-    let flow_extras = flow_backed_node_graph_extras(fixture, &config.lod_mode, 0.0, true, false, semio_framework_ui_styling::metrics::board::GRID_FACTOR_DEFAULT, Some(session));
+    let host_snapshot = &document.host_snapshot;
+    let (nodes, edges) = with_host(host_snapshot, |host| dag_host_snapshot_to_workflow(&host.dag.host_snapshot));
+    let flow_extras = flow_backed_node_graph_extras(host_snapshot, &config.lod_mode, 0.0, true, false, semio_framework_ui_styling::metrics::board::GRID_FACTOR_DEFAULT, Some(session));
     graph_outline(&nodes, &edges, flow_extras.status_json.as_ref(), labels).map_err(|_| document_error("outline"))
 }
 //#endregion 🔖️Render

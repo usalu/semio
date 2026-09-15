@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/framework/interaction/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/interaction/schema.json",
   "title": "InteractionSchema",
   "description": "Canonical schema for the 🕹️interaction framework module: static InteractionDefinition declarations (manifest-altitude, not state-axis classified), the InteractionState shape (own persisted-local selection/mode/granularity, ephemeral-local hover), and the PresenceInteraction broadcast payload mirrored onto PresencePeer for every peer's roster.",
   "$defs": {

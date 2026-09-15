@@ -216,7 +216,7 @@ Parsed all 22,354 tracked JSON files; walked every dict for `$ref` and `$id` key
   different standard revision directories. Worth a ruling on whether standard-version schema `$id`s
   should be revision-qualified, but not obviously a bug.
   - **The 19th is a real bug, found and diffed this session:**
-    `https://semio.tech/schemas/os/gis-map-approval-history-fixture-v1.json` is shared by
+    `https://json.schemas.assets.semio-tech.coms/os/gis-map-approval-history-fixture-v1.json` is shared by
     `🧰️framework/🛍️products/💻️os/🧪️fixtures/↩️gis-map-approval-history-v1/🧬️.schema.json` **and**
     `🧰️framework/🛍️products/💻️os/🧫️fixtures/↩️gis-map-approval-history-v1/🧬️.schema.json` — same
     `$id`, **different content**: one requires `oldOwnerRetired` with `minItems`/`maxItems` 8/8 on

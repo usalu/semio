@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/space/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/space/schema.json",
   "title": "S Space Plugin Schema Module",
   "$defs": {
     "SpacePluginIdentity": {
@@ -69,7 +69,7 @@
     "SpacePlayRetainedCommandLimits": {
       "allOf": [
         {
-          "$ref": "https://semio.tech/schema/os/plugin/retained-command/component.json#/$defs/RetainedCommandLimits"
+          "$ref": "https://json.schemas.assets.semio-tech.com/os/plugin/retained-command/component.json#/$defs/RetainedCommandLimits"
         },
         {
           "type": "object",
@@ -425,7 +425,7 @@
             "routes": {
               "allOf": [
                 {
-                  "$ref": "https://semio.tech/schema/os/plugin/retained-command/component.json#/$defs/RetainedCommandRoutes"
+                  "$ref": "https://json.schemas.assets.semio-tech.com/os/plugin/retained-command/component.json#/$defs/RetainedCommandRoutes"
                 },
                 {
                   "type": "array",

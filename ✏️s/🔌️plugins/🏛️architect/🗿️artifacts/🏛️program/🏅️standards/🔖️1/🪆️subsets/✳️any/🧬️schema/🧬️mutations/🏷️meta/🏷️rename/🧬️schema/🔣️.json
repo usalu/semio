@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/architect/program/mutation/rename-meta/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/rename-meta/schema.json",
   "title": "RenameMeta",
   "type": "object",
   "additionalProperties": false,

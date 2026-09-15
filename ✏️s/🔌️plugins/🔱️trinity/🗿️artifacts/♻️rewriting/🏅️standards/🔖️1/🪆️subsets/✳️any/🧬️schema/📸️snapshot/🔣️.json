@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/trinity/rewriting/snapshot.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/trinity/rewriting/snapshot.json",
   "title": "RewritingSnapshot",
   "type": "object",
   "additionalProperties": false,
@@ -30,14 +30,14 @@
     "parameterBindings": {
       "type": "object",
       "additionalProperties": {
-        "$ref": "https://semio.tech/schema/framework/value/schema.json#/$defs/DslValue"
+        "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/DslValue"
       },
       "x-semio-state": "artifact"
     },
     "ruleLayout": {
       "type": "object",
       "additionalProperties": {
-        "$ref": "https://semio.tech/schema/s/trinity/rewriting/artifact.json#/$defs/LayoutPoint"
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/trinity/rewriting/artifact.json#/$defs/LayoutPoint"
       },
       "x-semio-state": "artifact"
     }

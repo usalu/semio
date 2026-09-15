@@ -41,8 +41,6 @@ pub const fn assembly_inference_metadata() -> semio_framework_plugin::ArtifactIn
         artifact_kind: "s.procedural.assembly",
         artifact_schema: "s.assembly",
         artifact_schema_version: 1,
-        artifact_schema: "s.assembly",
-        artifact_schema_version: 1,
         inference_schema: ASSEMBLY_INFERENCE_TOOL_ID,
         inference_schema_version: 1,
         algorithm_version: 1,

@@ -73,7 +73,7 @@ for (let i = 0; i < 20; i++) {
   handles = await page.evaluate((surface) => {
     const probe = window.__semioFlowGraphProbe?.[surface];
     if (!probe) return null;
-    let fx = null; try { fx = JSON.parse(probe.fixtureJson?.() ?? "null"); } catch {}
+    let fx = null; try { fx = JSON.parse(probe.hostSnapshotJson?.() ?? "null"); } catch {}
     const syn = fx?.synapses ?? [];
     return { api: Object.keys(probe), kinds: ["handle", "port", "node", "wire"].map((k) => ({ k, sample: probe.entity?.(k, `${syn[0]?.to}@${syn[0]?.toPort ?? syn[0]?.to_port}`) ?? null })), nodeSample: probe.entity?.("node", syn[0]?.to ?? "") ?? null, synapses: syn };
   }, SURFACE);

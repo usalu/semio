@@ -5,7 +5,7 @@ package semio.s.procedural.generation3d.mutation;
 
 message Generation3dMutation {
   // @state artifact
-  FlowFixture fixture = 1;
+  FlowHostSnapshot host_snapshot = 1;
   // @state artifact
   GenerationPlayState generation = 2;
 }
@@ -29,7 +29,7 @@ message SynapseSpec {
 message Widget {
   string json = 1;
 }
-message FlowFixture {
+message FlowHostSnapshot {
   string schema = 1;
   CameraJson camera = 2;
   repeated Widget widgets = 3;

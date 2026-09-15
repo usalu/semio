@@ -1,5 +1,5 @@
 use super::*;
-use crate::{SequenceEdge, SequenceHostDocument, SequenceStep, StepParams};
+use crate::{SequenceEdge, SequenceHostSnapshot, SequenceStep, StepParams};
 use protocol::Inference;
 
 //#region 🧸️Fixtures
@@ -8,7 +8,7 @@ fn step(id: &str) -> SequenceStep {
 }
 
 fn sample_snapshot() -> SequenceSnapshot {
-    SequenceSnapshot::from_host_document(SequenceHostDocument { schema: crate::SEQUENCE_DOCUMENT_SCHEMA.into(), steps: vec![step("a"), step("b")], edges: vec![SequenceEdge { id: "e1".into(), from: "a".into(), to: "b".into() }] })
+    SequenceSnapshot::from_host_snapshot(SequenceHostSnapshot { schema: crate::SEQUENCE_DOCUMENT_SCHEMA.into(), steps: vec![step("a"), step("b")], edges: vec![SequenceEdge { id: "e1".into(), from: "a".into(), to: "b".into() }] })
 }
 //#endregion 🧸️Fixtures
 

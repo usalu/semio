@@ -43,7 +43,7 @@ export function flowTypedRetirementSelfTests(): number {
     && value.includes("pub fn next_push_allocation_bytes") && value.includes("pub fn reserve_push_allocation")
     && value.includes("pub fn push(&mut self, owner: FlowOwner) -> Result<(), FlowOwner>") && value.includes("return Err(owner)")
     && value.includes("pub fn next_close_byte_demand") && value.includes("release_backing")
-    && value.includes("!std::thread::panicking()") && value.includes("FlowOwner::HostDocument(value)")
+    && value.includes("!std::thread::panicking()") && value.includes("FlowOwner::HostSnapshot(value)")
     && !value.includes("maximum_bytes.min(bytes.len())") && !value.includes("close_step(1, 4096)")
     && !value.includes("std::mem::forget(owner)") && !/\.clone\(|serde_json::to_/.test(value);
   if (!exact(source)) throw new Error("Flow retirement exact source ownership linkage failed");
@@ -53,7 +53,7 @@ export function flowTypedRetirementSelfTests(): number {
     source.replace("pub fn next_push_allocation_bytes", "fn next_push_allocation_bytes"),
     source.replace("return Err(owner)", "drop(owner); return Ok(())"),
     source.replace("!std::thread::panicking()", "true"),
-    source.replace("FlowOwner::HostDocument(value)", "FlowOwner::HostDocument(_value)"),
+    source.replace("FlowOwner::HostSnapshot(value)", "FlowOwner::HostSnapshot(_value)"),
   ];
   for (const value of mutants) if (exact(value)) throw new Error("Flow retirement accepted hostile source");
   return 2 + hostiles.length + mutants.length;

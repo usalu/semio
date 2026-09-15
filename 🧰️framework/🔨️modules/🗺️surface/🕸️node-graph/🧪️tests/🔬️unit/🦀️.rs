@@ -70,7 +70,7 @@ fn port_label_prefers_explicit_label() {
 
 #[test]
 fn port_to_io_copies_optional_metadata() {
-    let port = GraphPortRecord { id: "p1".into(), label: Some("Speed".into()), code: Some("SPD".into()), abbreviation: Some("Sp".into()), full_name: Some("Speed Value".into()), artifact_kind: Some("number".into()) };
+    let port = GraphPortRecord { id: "p1".into(), label: Some("Speed".into()), code: Some("SPD".into()), abbreviation: Some("Sp".into()), full_name: Some("Speed Value".into()), artifact_kind: Some("number".into()), ..Default::default() };
     let spec = port_to_io(&port);
     assert_eq!(spec.id, "p1");
     assert_eq!(spec.label, "Speed");
@@ -134,7 +134,7 @@ fn node_record_to_spec_falls_back_to_id_when_label_missing() {
 #[test]
 fn fixture_from_node_graph_records_uses_shared_default_viewport() {
     let fixture = fixture_from_node_graph_records(&[], &[], None);
-    assert_eq!(fixture.schema, "dag.host_document");
+    assert_eq!(fixture.schema, "dag.host_snapshot");
     assert!(fixture.nodes.is_empty());
     assert!(fixture.edges.is_empty());
     assert_eq!(fixture.camera.zoom, 1.0);
@@ -206,7 +206,7 @@ fn node_graph_scene_payload_from_json_reads_optional_fields() {
         "clustersJson": "clu",
         "computingJson": "{}",
         "capabilitiesJson": "cap",
-        "fixtureJson": "fix",
+        "hostSnapshotJson": "fix",
     });
     let payload = NodeGraphScenePayload::from_json(&value).expect("typed payload");
     assert_eq!(payload.nodes.len(), 1);
@@ -214,7 +214,7 @@ fn node_graph_scene_payload_from_json_reads_optional_fields() {
     assert_eq!(payload.controls_json.as_deref(), Some("ctl"));
     assert_eq!(payload.clusters_json.as_deref(), Some("clu"));
     assert_eq!(payload.capabilities_json.as_deref(), Some("cap"));
-    assert_eq!(payload.fixture_json.as_deref(), Some("fix"));
+    assert_eq!(payload.host_snapshot_json.as_deref(), Some("fix"));
 }
 //#endregion 🔖️ScenePayloadFromJson
 
@@ -306,7 +306,7 @@ fn graph_host_sync_from_scene_json_parses_raw_json() {
     let mut host = GraphHost::default();
     let scene = r#"{"nodes":[{"id":"a","x":0.0,"y":0.0,"width":1.0,"height":1.0,"outputs":[{"id":"out"}]}],"edges":[],"viewport":{"x":0,"y":0,"zoom":1}}"#;
     host.sync_from_scene_json(scene).expect("sync");
-    assert_eq!(host.dag.host_document.nodes.iter().map(|node| node.id.as_str()).collect::<Vec<_>>(), vec!["a"]);
+    assert_eq!(host.dag.host_snapshot.nodes.iter().map(|node| node.id.as_str()).collect::<Vec<_>>(), vec!["a"]);
 }
 
 #[test]
@@ -320,7 +320,7 @@ fn graph_host_sync_from_scene_pack_decodes_pack_shell() {
     let dsl = dsl::DslValue::from(&scene);
     let bytes = store::pack_rt::encode_pack_value(&dsl);
     host.sync_from_scene_pack(&bytes).expect("sync");
-    assert_eq!(host.dag.host_document.nodes.iter().map(|node| node.id.as_str()).collect::<Vec<_>>(), vec!["a"]);
+    assert_eq!(host.dag.host_snapshot.nodes.iter().map(|node| node.id.as_str()).collect::<Vec<_>>(), vec!["a"]);
 }
 
 #[test]
@@ -371,10 +371,10 @@ fn graph_host_selected_node_ids_json_matches_selection() {
 fn graph_host_wheel_screen_pan_without_zoom_gesture() {
     let mut host = GraphHost::default();
     host.set_viewport(400, 400, 1.0);
-    let before = host.dag.host_document.camera.y;
+    let before = host.dag.host_snapshot.camera.y;
     host.wheel_screen(200.0, 200.0, 10.0, false);
-    assert!(host.dag.host_document.camera.y < before);
-    assert_eq!(host.dag.host_document.camera.zoom, 1.0);
+    assert!(host.dag.host_snapshot.camera.y < before);
+    assert_eq!(host.dag.host_snapshot.camera.zoom, 1.0);
 }
 
 #[test]
@@ -382,7 +382,7 @@ fn graph_host_wheel_screen_zoom_gesture_changes_zoom() {
     let mut host = GraphHost::default();
     host.set_viewport(400, 400, 1.0);
     host.wheel_screen(200.0, 200.0, -10.0, true);
-    assert!(host.dag.host_document.camera.zoom > 1.0);
+    assert!(host.dag.host_snapshot.camera.zoom > 1.0);
 }
 
 /// 🖱️ A whole scroll gesture is board work: every tick moves the camera here, and nothing needs to
@@ -530,11 +530,11 @@ fn graph_host_align_selection_ok_for_single_node() {
 }
 
 #[test]
-fn graph_host_fixture_json_round_trips_nodes() {
+fn graph_host_host_snapshot_json_round_trips_nodes() {
     let mut host = GraphHost::default();
     let payload = payload_with_node("a");
     host.sync_from_payload(&payload).expect("sync");
-    let json = host.host_document_json().expect("fixture json");
+    let json = host.host_snapshot_json().expect("fixture json");
     assert!(json.contains("\"a\""));
 }
 

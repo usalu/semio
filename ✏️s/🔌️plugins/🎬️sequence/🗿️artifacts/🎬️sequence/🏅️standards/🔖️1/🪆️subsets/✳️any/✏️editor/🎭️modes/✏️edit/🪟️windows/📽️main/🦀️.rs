@@ -1,8 +1,8 @@
 //! 📽️ Sequence play app — the main node-graph window: the editable step/flow canvas.
 
 use super::config::SequenceMainWindowConfig;
-use crate::editor::sequence::host_from_document;
-use crate::SequenceHostDocument;
+use crate::editor::sequence::host_from_host_snapshot;
+use crate::SequenceHostSnapshot;
 use semio_framework_plugin::{BuiltNode, LocalizedLabel, NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord, NodeGraphScene, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions};
 use semio_framework_os_kernel::Viewport2d;
 
@@ -39,8 +39,8 @@ fn split_endpoint(endpoint: &str) -> (String, String) {
     endpoint.split_once('@').map_or_else(|| (endpoint.to_string(), "next".into()), |(node, port)| (node.to_string(), port.to_string()))
 }
 
-fn dag_host_document_to_workflow(host_document: &semio_framework_artifact_infinite_dag::DagHostDocument) -> (Vec<NodeGraphNodeRecord>, Vec<NodeGraphEdgeRecord>) {
-    let nodes: Vec<NodeGraphNodeRecord> = host_document
+fn dag_host_snapshot_to_workflow(host_snapshot: &semio_framework_artifact_infinite_dag::DagHostSnapshot) -> (Vec<NodeGraphNodeRecord>, Vec<NodeGraphEdgeRecord>) {
+    let nodes: Vec<NodeGraphNodeRecord> = host_snapshot
         .nodes
         .iter()
         .map(|node| NodeGraphNodeRecord {
@@ -55,7 +55,7 @@ fn dag_host_document_to_workflow(host_document: &semio_framework_artifact_infini
             ..Default::default()
         })
         .collect();
-    let edges: Vec<NodeGraphEdgeRecord> = host_document
+    let edges: Vec<NodeGraphEdgeRecord> = host_snapshot
         .edges
         .iter()
         .map(|edge| {
@@ -69,10 +69,10 @@ fn dag_host_document_to_workflow(host_document: &semio_framework_artifact_infini
 //#endregion 🔖️Helpers
 
 //#region 🔖️Render
-pub fn render(host_document: &SequenceHostDocument, config: &SequenceMainWindowConfig) -> UiAssemblyResult<BuiltNode> {
-    let mut host = neural_engine::ColdOwner::new(host_from_document(host_document));
+pub fn render(host_snapshot: &SequenceHostSnapshot, config: &SequenceMainWindowConfig) -> UiAssemblyResult<BuiltNode> {
+    let mut host = neural_engine::ColdOwner::new(host_from_host_snapshot(host_snapshot));
     host.layout_expanded_slots();
-    let (nodes, edges) = dag_host_document_to_workflow(&host.dag.host_document);
+    let (nodes, edges) = dag_host_snapshot_to_workflow(&host.dag.host_snapshot);
     let viewport = Viewport2d { x: config.camera.x, y: config.camera.y, zoom: config.camera.zoom };
     // 🕹️ `render` carries no `InteractionView` (ArtifactApp's breaking pass only added it to
     // `handle`/`copy_fragment`/`cut_operations` — see ticket 26/08/14's w3b-summary.md) and

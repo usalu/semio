@@ -223,7 +223,7 @@ push — the trigger lane).
   link-arg=-zstack-size=8388608` — **EXIT=0**, 82 MB component.
 * `vitest run --config 🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/vitest.config.ts` —
   209 passed, 12 failed. All 12 failures are pre-existing and unrelated: ajv cannot resolve
-  `https://semio.tech/schema/framework/value/schema.json#/$defs/NonZeroU64` from the actor-return
+  `https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/NonZeroU64` from the actor-return
   schema, failing the `ActorReturn*` / `ActorReturnResponse*` canonical-vector oracles. Nothing in
   `📮️shard-client` or `📃️page` failed.
 

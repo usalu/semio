@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/os/store/blob.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/os/store/blob.json",
   "title": "BlobRef",
   "type": "object",
   "additionalProperties": false,

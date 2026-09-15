@@ -110,7 +110,7 @@ type FrameworkGraphSession = GraphWasmSession & {
   setHover?(widgetId: string | null): void;
   setHoverChannel?(widgetId: string | null, port?: string | null): void;
   alignSelection?(mode: string): void;
-  fixtureJson?(): string;
+  hostSnapshotJson?(): string;
   setCanvasThemeJson?(json: string): void;
 };
 //#endregion Types
@@ -254,14 +254,14 @@ export function nodeGraphHoverActionArgs(nodeId: string | null | undefined, port
 //#region Parsing
 const DEFAULT_NODE_GRAPH_VIEWPORT: Viewport2d = { x: 0, y: 0, zoom: 1 };
 
-/** @emoji 🔎️ Resolves a flow fixture widget id to the workflow instance id it previews, used to open an app instance without depending on plugin-side selection state. */
-export function resolveFixtureWidgetInstanceId(fixtureJson: string | undefined, widgetId: string | undefined | null): string | undefined {
-  if (!fixtureJson || !widgetId) return undefined;
+/** @emoji 🔎️ Resolves a flow host snapshot widget id to the workflow instance id it previews, used to open an app instance without depending on plugin-side selection state. */
+export function resolveHostSnapshotWidgetInstanceId(hostSnapshotJson: string | undefined, widgetId: string | undefined | null): string | undefined {
+  if (!hostSnapshotJson || !widgetId) return undefined;
   try {
-    const fixture = JSON.parse(fixtureJson) as {
+    const hostSnapshot = JSON.parse(hostSnapshotJson) as {
       readonly widgets?: readonly { readonly id?: string; readonly params?: { readonly instanceId?: string } }[];
     };
-    return fixture.widgets?.find((widget) => widget.id === widgetId)?.params?.instanceId;
+    return hostSnapshot.widgets?.find((widget) => widget.id === widgetId)?.params?.instanceId;
   } catch {
     return undefined;
   }
@@ -568,10 +568,15 @@ function portHandleId(port: NodeGraphPortRecord): string {
   return segments[segments.length - 1] ?? port.id;
 }
 
-function workflowNodesToDiagramNodes(records: readonly NodeGraphNodeRecord[]): Node<WorkflowNodeData>[] {
+/** 🎯️ Diagram nodes for the React-Flow fallback board, carrying the PLUGIN's selection as their own
+ * `selected` flag — see `DiagramGraphFallback`'s ledger docstring for why an unreflected selection is
+ * an erased one. Exported for `🧪️tests/🫱️interaction-publication`. */
+export function workflowNodesToDiagramNodes(records: readonly NodeGraphNodeRecord[], selectedNodeIds: readonly string[] = []): Node<WorkflowNodeData>[] {
+  const selected = new Set(selectedNodeIds);
   return records.map((record) => ({
     id: record.id,
     type: "workflow",
+    selected: selected.has(record.id),
     position: { x: record.x, y: record.y },
     data: {
       label: record.label?.trim() || record.instanceId || record.id,
@@ -812,7 +817,7 @@ function WasmGraphSurface({
       setHover: () => {},
       setHoverChannel: () => {},
       alignSelection: () => {},
-      fixtureJson: () => "{}",
+      hostSnapshotJson: () => "{}",
       takePendingOpenInstanceId: () => null,
     } satisfies FrameworkGraphSession;
   }, [scene.viewport, wasmSession]);
@@ -835,10 +840,10 @@ function WasmGraphSurface({
 
   const commitGraphFixture = useCallback(() => {
     const session = sessionRef.current;
-    if (!session?.fixtureJson) return;
+    if (!session?.hostSnapshotJson) return;
     try {
-      const hostDocumentJson = session.fixtureJson();
-      dispatch(nodeGraphActions.edit, { operations: [{ operation: "setHostDocument", hostDocumentJson }] });
+      const hostSnapshotJson = session.hostSnapshotJson();
+      dispatch(nodeGraphActions.edit, { operations: [{ operation: "setHostSnapshot", hostSnapshotJson }] });
     } catch {
       /* session not ready */
     }
@@ -1045,7 +1050,23 @@ function DiagramGraphFallback({
   readonly onAction: (action: ActionDescriptor) => void;
 }) {
   const viewport = scene.viewport ?? DEFAULT_NODE_GRAPH_VIEWPORT;
-  const initialNodes = useMemo(() => workflowNodesToDiagramNodes(parsedNodes), [parsedNodes]);
+  /** 🎯️ The selection the PLUGIN holds, as this surface's own baseline. React Flow fires
+   * `onSelectionChange` once at mount with an empty list, and publishing that emptiness is how a
+   * selection dispatched a few milliseconds BEFORE this surface existed was wiped: measured on
+   * generation3d, `interactionSelect targets:[] domainId:graph` left this component 15 ms before
+   * `node-graph host mount`, with no pointer event anywhere in the run
+   * (`📓️hot-swap-board-remount-2026-09-15.md` §2). Adopted, never published — the ledger's own rule for
+   * a mark that arrived FROM the plugin — and reflected onto the mounted nodes, so a selection made
+   * before mount is APPLIED at mount instead of dropped. */
+  const sceneSelection = useMemo(() => [...(scene.selection ?? [])], [scene.selection]);
+  const interactionLedger = useMemo(() => createNodeGraphInteractionLedger(), []);
+  const adoptedSelectionRef = useRef<string | null>(null);
+  const sceneSelectionKey = nodeGraphSelectionMarkKey({ nodeIds: sceneSelection });
+  if (adoptedSelectionRef.current !== sceneSelectionKey) {
+    adoptedSelectionRef.current = sceneSelectionKey;
+    interactionLedger.adoptSelection({ nodeIds: sceneSelection });
+  }
+  const initialNodes = useMemo(() => workflowNodesToDiagramNodes(parsedNodes, sceneSelection), [parsedNodes, sceneSelection]);
   const initialEdges = useMemo(() => workflowEdgesToDiagramEdges(parsedEdges), [parsedEdges]);
   const [nodes, setNodes] = useState(initialNodes);
   const [edges, setEdges] = useState(initialEdges);
@@ -1165,7 +1186,7 @@ function DiagramGraphFallback({
         onNodeClick={(_event, clickedNode) => {
           const record = parsedNodes.find((entry) => entry.id === clickedNode.id);
           if (record?.instanceId) dispatch("selectInstance", { instanceId: record.instanceId });
-          dispatch(nodeGraphActions.select, nodeGraphSelectionActionArgs({ nodeIds: [clickedNode.id] }));
+          if (interactionLedger.publishSelection({ nodeIds: [clickedNode.id] })) dispatch(nodeGraphActions.select, nodeGraphSelectionActionArgs({ nodeIds: [clickedNode.id] }));
         }}
         onNodeDoubleClick={(_event, clickedNode) => {
           const record = parsedNodes.find((entry) => entry.id === clickedNode.id);
@@ -1173,7 +1194,7 @@ function DiagramGraphFallback({
         }}
         onSelectionChange={(selection) => {
           const nodeIds = selection.nodes.map((entry) => entry.id);
-          dispatch(nodeGraphActions.select, nodeGraphSelectionActionArgs({ nodeIds }));
+          if (interactionLedger.publishSelection({ nodeIds })) dispatch(nodeGraphActions.select, nodeGraphSelectionActionArgs({ nodeIds }));
         }}
       />
       <ContextMenuController
@@ -1291,14 +1312,14 @@ export function NodeGraphHost({ node, onAction, requestContextMenu }: ComponentS
 
   if (!scene) return <div className="semio-node-graph-empty">{emptySceneLabel}</div>;
 
-  const useFlowEngine = isFlowGraphScene(scene.capabilitiesJson) || Boolean(scene.hostDocumentJson);
+  const useFlowEngine = isFlowGraphScene(scene.capabilitiesJson) || Boolean(scene.hostSnapshotJson);
 
   return (
     <div
       className={NODE_GRAPH_HOST_CLASS}
       data-surface-id={node.surfaceId}
       data-status-json={scene.statusJson ?? undefined}
-      data-host-document-json={scene.hostDocumentJson ?? undefined}
+      data-host-snapshot-json={scene.hostSnapshotJson ?? undefined}
       data-selection-json={JSON.stringify(nodeGraphSurfaceSelectionDomV1(scene))}
       tabIndex={editable ? 0 : undefined}
       onKeyDown={(event) => handleGraphKeyboard(event, editable, parsedNodes, dispatch)}
@@ -1378,7 +1399,23 @@ export type DagSliderOverlayRow = {
   readonly y: number;
   readonly w: number;
   readonly h: number;
+  /** 🔢 Readout typography the board publishes alongside the row, in SCREEN pixels — the overlay
+   * divides by zoom because its wrapper is already scaled. Absent on a board that predates it. */
+  readonly fontScreenPx?: number;
+  readonly gapScreenPx?: number;
 };
+
+/** 🔢 The ONE text a published slider value is read as — the readout beside the track and the
+ * `aria-valuenow` a screen reader announces are this same number, never two. */
+export function dagSliderValueText(value: number): string {
+  return value.toFixed(1);
+}
+
+/** 📐️ A screen-pixel metric the board published, or the overlay's own floor when the board is older
+ * than the field — never `NaN`, which would silently drop the style it lands in. */
+function screenMetric(published: number | undefined, fallback: number): number {
+  return typeof published === "number" && Number.isFinite(published) && published > 0 ? published : fallback;
+}
 
 export type DagSelectionBounds = {
   readonly x: number;
@@ -1659,7 +1696,14 @@ export function parseDagSliderOverlays(stateJson: string): readonly DagSliderOve
  * node or a port on a canvas that paints itself and has no per-entity DOM. */
 export type FlowGraphSurfaceProbe = {
   readonly entity: (domain: string, id: string) => IntroductionResolvedGeometry | null;
-  readonly fixtureJson: () => string | null;
+  /** 🪪️ The node ids this surface is actually painting — the input `entity("node", id)` needs, and the
+   * only one a caller can get: `hostSnapshotJson` is a scene field the plugin may not carry at all. */
+  readonly nodeIds: () => readonly string[];
+  /** 🗺️ Where this surface is painting each node, in the graph's own world units — the read a caller
+   * needs to answer "did a reorganize move anything". Same reason as {@link nodeIds}: it comes off the
+   * scene the surface holds, not off a snapshot field the plugin may never send. */
+  readonly nodeLayout: () => Readonly<Record<string, { readonly x: number; readonly y: number }>>;
+  readonly hostSnapshotJson: () => string | null;
   readonly rect: () => { readonly x: number; readonly y: number; readonly width: number; readonly height: number } | null;
 };
 
@@ -2037,6 +2081,14 @@ export function GraphSliderOverlays({
             style={{ left: screen.x, top: screen.y, width: w, height: h, transform: `translate(-50%, -50%) scale(${zoom})`, transformOrigin: "center" }}
             onPointerDown={(event) => event.stopPropagation()}
           >
+            <span
+              aria-hidden="true"
+              className="pointer-events-none absolute whitespace-nowrap tabular-nums"
+              data-graph-slider-value={slider.widgetId}
+              style={{ right: "100%", marginRight: screenMetric(slider.gapScreenPx, 4) / zoom, fontSize: screenMetric(slider.fontScreenPx, 10) / zoom, lineHeight: 1 }}
+            >
+              {dagSliderValueText(slider.value)}
+            </span>
             <Slider
               id={`graph-slider-${encodeURIComponent(JSON.stringify([scopeId, slider.widgetId]))}`}
               aria-label={slider.label}
@@ -2199,23 +2251,167 @@ function flowSessionPayloadRecord(map: WeakMap<FlowWasmSession, Map<string, stri
   return record;
 }
 
-/** 📤️ Sends `payload` under `feature` exactly once per distinct value — see the docstring above. */
+//#region 📦️SharedFlowPayloads
+/** 📦️ Marks a content-addressed flow payload. `@<digest>\n<body>` CARRIES a body and registers it in
+ * the guest process under that digest; `@<digest>` alone REFERENCES one the guest already holds.
+ * Twin of `FLOW_SHARED_PAYLOAD_PREFIX` / `resolve_flow_shared_payload` in `🌊️flow/🖥️host/🦀️.rs`. */
+const FLOW_SHARED_PAYLOAD_REFERENCE_PREFIX = "@";
+
+/** 🧩️ Separates the PARTS of one composed payload. The operator table is the app-static catalogue
+ * plus whatever records the scene derived; carried part by part, appending 1 805 B of scene operators
+ * names the 98 642 B of app operators the guest already holds instead of re-crossing them. Twin of
+ * `FLOW_SHARED_PAYLOAD_PART_SEPARATOR`. */
+const FLOW_SHARED_PAYLOAD_PART_SEPARATOR = "";
+
+/** 🗂️ Digests this page has confirmed the guest PROCESS holds.
+ *
+ * Module-scoped, not per session, because every flow session in a page lives in ONE wasm module with
+ * one linear memory, while the app-static catalogue is the same bytes for all of them: the operator
+ * kind infos are 88 438 B and the palette sections 22 849 B, and both crossed the ABI again for every
+ * board that attached (`📓️flow-scroll-render-perf-2026-09-15.md` §9). A catalogue GENERATION that
+ * really changed hashes differently and therefore carries its body; a second surface on the same
+ * generation names it. */
+const flowSharedPayloadDigests = new Set<string>();
+
+/** 🔢 A content address for a flow payload — FNV-1a over the body in two independent lanes, tagged
+ * with its length. Not a security digest: the guest treats it as an opaque key and answers
+ * `unknown shared payload` when it does not hold it, which puts the body back on the wire. */
+function flowContentDigest(body: string): string {
+  let low = 0x811c9dc5;
+  let high = 0x01000193;
+  for (let index = 0; index < body.length; index += 1) {
+    const code = body.charCodeAt(index);
+    low = Math.imul(low ^ code, 0x01000193) >>> 0;
+    high = Math.imul(high ^ (code + index), 0x85ebca6b) >>> 0;
+  }
+  return `${body.length.toString(36)}.${low.toString(36)}.${high.toString(36)}`;
+}
+
+/** ⏲️ How long an app-static payload waits for a better version of itself before it crosses.
+ *
+ * The app catalogue arrives in STAGES: the operator table crossed at 98 644 B and again 8 ms later at
+ * 100 449 B, because a later refresh pass carried more operators than the first
+ * (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). Content addressing cannot help — the two bodies really
+ * are different — so the payload waits out the stage instead. */
+export const FLOW_SHARED_PAYLOAD_COALESCE_MS = 24;
+
+/** 🔌️ What the coalescer needs from its host, injected so a law drives the real rule over a virtual
+ * clock instead of a browser. */
+export type FlowSharedPayloadCoalescerPorts = Readonly<{
+  readonly send: (feature: string, parts: readonly string[]) => void;
+  readonly schedule: (run: () => void, delayMs: number) => unknown;
+  readonly cancel: (handle: unknown) => void;
+}>;
+
+/** 📦️ Holds an app-static payload for one settle window so a catalogue that arrives in stages crosses
+ * ONCE, carrying its final content, instead of once per stage. Each feature settles on its own clock:
+ * a new offer for the same feature replaces the pending one and restarts its window. */
+export function createFlowSharedPayloadCoalescer(ports: FlowSharedPayloadCoalescerPorts, settleMs: number = FLOW_SHARED_PAYLOAD_COALESCE_MS) {
+  const pending = new Map<string, readonly string[]>();
+  const timers = new Map<string, unknown>();
+  const flush = (feature: string) => {
+    timers.delete(feature);
+    const parts = pending.get(feature);
+    if (!parts) return;
+    pending.delete(feature);
+    ports.send(feature, parts);
+  };
+  return {
+    offer(feature: string, parts: readonly string[]): void {
+      pending.set(feature, parts);
+      const running = timers.get(feature);
+      if (running !== undefined) ports.cancel(running);
+      timers.set(feature, ports.schedule(() => flush(feature), settleMs));
+    },
+    pendingFeatures(): readonly string[] {
+      return [...pending.keys()];
+    },
+    dispose(): void {
+      for (const handle of timers.values()) ports.cancel(handle);
+      timers.clear();
+      pending.clear();
+    },
+  };
+}
+
+const flowSessionSharedCoalescers = new WeakMap<FlowWasmSession, ReturnType<typeof createFlowSharedPayloadCoalescer>>();
+const flowSessionSharedIssues = new WeakMap<FlowWasmSession, Map<string, (payload: string) => FlowTask<unknown>>>();
+//#endregion 📦️SharedFlowPayloads
+
+/** 📤️ Sends `payload` under `feature` exactly once per distinct value — see the docstring above.
+ *
+ * A `shared` payload is app-static and identical for every session in the page, so it crosses the ABI
+ * as a content-addressed reference once the guest process has confirmed the body. A reference the
+ * guest cannot resolve fails the send, which both clears the digest and clears this session's
+ * delivery record, so the next scene pass carries the body again. */
 function sendFlowPayloadOnce(session: FlowWasmSession, feature: string, payload: string, issue: (payload: string) => FlowTask<unknown>): void {
+  crossFlowPayload(session, feature, [payload], issue, false);
+}
+
+/** 📦️ Sends a payload composed of parts, each content-addressed: a part the guest process already
+ * holds crosses as its digest alone, and only the parts it has never seen carry their bytes.
+ *
+ * This is where the app-static operator catalogue stops re-crossing. The table is built from the
+ * app catalogue and the scene's own derived records, and the two arrive a few milliseconds apart, so
+ * the whole 98 642 B table used to cross twice — once for the app half, once to append 1 805 B of
+ * scene records. A part the guest cannot resolve fails the send, which clears both the digest and
+ * this session's delivery record so the next scene pass carries the bytes again. */
+function sendFlowPayloadPartsOnce(session: FlowWasmSession, feature: string, parts: readonly string[], issue: (payload: string) => FlowTask<unknown>): void {
+  let issues = flowSessionSharedIssues.get(session);
+  if (!issues) {
+    issues = new Map();
+    flowSessionSharedIssues.set(session, issues);
+  }
+  issues.set(feature, issue);
+  let coalescer = flowSessionSharedCoalescers.get(session);
+  if (!coalescer) {
+    coalescer = createFlowSharedPayloadCoalescer({
+      send: (sentFeature, sentParts) => {
+        const sentIssue = flowSessionSharedIssues.get(session)?.get(sentFeature);
+        if (sentIssue) crossFlowPayload(session, sentFeature, sentParts, sentIssue, true);
+      },
+      schedule: (run, delayMs) => setTimeout(run, delayMs),
+      cancel: (handle) => clearTimeout(handle as ReturnType<typeof setTimeout>),
+    });
+    flowSessionSharedCoalescers.set(session, coalescer);
+  }
+  coalescer.offer(feature, parts);
+}
+
+/** 📮️ Puts one composed payload on the wire, naming every part the guest process already holds. */
+function crossFlowPayload(session: FlowWasmSession, feature: string, parts: readonly string[], issue: (payload: string) => FlowTask<unknown>, shared: boolean): void {
   const delivered = flowSessionPayloadRecord(flowSessionDeliveredPayloads, session);
   const sending = flowSessionPayloadRecord(flowSessionSendingPayloads, session);
-  if (delivered.get(feature) === payload || sending.get(feature) === payload) return;
-  sending.set(feature, payload);
-  observeFlowTask(session, feature, issue(payload), undefined, (landed) => {
-    if (sending.get(feature) !== payload) return;
+  const body = parts.join(FLOW_SHARED_PAYLOAD_PART_SEPARATOR);
+  if (delivered.get(feature) === body || sending.get(feature) === body) return;
+  sending.set(feature, body);
+  const digests = shared ? parts.map(flowContentDigest) : [];
+  const named = digests.filter((digest) => flowSharedPayloadDigests.has(digest)).length;
+  const wire = shared
+    ? parts
+        .map((part, index) => (flowSharedPayloadDigests.has(digests[index]!) ? `${FLOW_SHARED_PAYLOAD_REFERENCE_PREFIX}${digests[index]}` : `${FLOW_SHARED_PAYLOAD_REFERENCE_PREFIX}${digests[index]}\n${part}`))
+        .join(FLOW_SHARED_PAYLOAD_PART_SEPARATOR)
+    : body;
+  console.log("[DEBUG] flow payload %s bytes=%d body=%d parts=%d named=%d", feature, wire.length, body.length, parts.length, named);
+  observeFlowTask(session, feature, issue(wire), undefined, (landed) => {
+    if (sending.get(feature) !== body) return;
     sending.delete(feature);
-    if (landed) delivered.set(feature, payload);
-    else delivered.delete(feature);
+    if (landed) {
+      delivered.set(feature, body);
+      for (const digest of digests) flowSharedPayloadDigests.add(digest);
+    } else {
+      delivered.delete(feature);
+      for (const digest of digests) flowSharedPayloadDigests.delete(digest);
+    }
   });
 }
 
 function cancelFlowTasks(session: FlowWasmSession): void {
   for (const task of activeFlowTasks.get(session)?.values() ?? []) task.cancel();
   activeFlowTasks.delete(session);
+  flowSessionSharedCoalescers.get(session)?.dispose();
+  flowSessionSharedCoalescers.delete(session);
+  flowSessionSharedIssues.delete(session);
 }
 
 function syncFlowCanvasTheme(session: FlowWasmSession): void {
@@ -2250,9 +2446,12 @@ function syncFlowSessionEvalFromScene(session: FlowWasmSession, scene: NodeGraph
  * workflow window derives one per workflow node). `setNeuronKindInfosJson` replaces the session's whole
  * table, so the two sources are always pushed together, never one after the other. */
 function syncFlowOperatorInfos(session: FlowWasmSession, catalogue: AppCatalogue, scene: NodeGraphScene): void {
-  const infos = [...(catalogue.operators ?? []), ...(scene.operators ?? [])];
-  if (infos.length === 0) return;
-  sendFlowPayloadOnce(session, "setNeuronKindInfosJson", JSON.stringify(infos), (json) => session.setNeuronKindInfosJson(json));
+  // 🧩️ The two sources are carried as two PARTS, not concatenated into one body: they arrive
+  // milliseconds apart, so a single body made the whole app-static table cross again just to append
+  // the scene's own records.
+  const parts = [catalogue.operators ?? [], scene.operators ?? []].filter((source) => source.length > 0).map((source) => JSON.stringify(source));
+  if (parts.length === 0) return;
+  sendFlowPayloadPartsOnce(session, "setNeuronKindInfosJson", parts, (json) => session.setNeuronKindInfosJson(json));
 }
 
 /** 🛍️ Installs the app-static catalogue on a flow session: the operator kind infos the canvas lays
@@ -2260,12 +2459,12 @@ function syncFlowOperatorInfos(session: FlowWasmSession, catalogue: AppCatalogue
  * rather than per scene sync — see {@link AppCatalogueContext}. */
 function syncFlowSessionAppCatalogue(session: FlowWasmSession, catalogue: AppCatalogue, scene: NodeGraphScene): void {
   syncFlowOperatorInfos(session, catalogue, scene);
-  if (catalogue.sections) sendFlowPayloadOnce(session, "setCatalogueJson", JSON.stringify(catalogue.sections), (json) => session.setCatalogueJson(json));
+  if (catalogue.sections) sendFlowPayloadPartsOnce(session, "setCatalogueJson", [JSON.stringify(catalogue.sections)], (json) => session.setCatalogueJson(json));
 }
 
 function syncFlowSessionStructureFromScene(session: FlowWasmSession, scene: NodeGraphScene, catalogue: AppCatalogue, skipFixture = false): void {
   if (scene.operators?.length) syncFlowOperatorInfos(session, catalogue, scene);
-  if (!skipFixture && scene.hostDocumentJson) sendFlowPayloadOnce(session, "synchronizeDocumentJson", scene.hostDocumentJson, (json) => session.synchronizeDocumentJson(json));
+  if (!skipFixture && scene.hostSnapshotJson) sendFlowPayloadOnce(session, "synchronizeSnapshotJson", scene.hostSnapshotJson, (json) => session.synchronizeSnapshotJson(json));
   if (scene.selection) observeFlowTask(session, "setSelection", session.setSelection(JSON.stringify(scene.selection)));
   applyNodeGraphHoverFromScene(session, scene.hover);
   if (scene.previewOffJson) observeFlowTask(session, "setPreviewOff", session.setPreviewOff(scene.previewOffJson));
@@ -2316,6 +2515,72 @@ function syncFlowSessionFromScene(session: FlowWasmSession, scene: NodeGraphScen
 export function flowSurfaceRenderAllowed(surfaceReady: boolean): boolean {
   return surfaceReady;
 }
+
+//#region 🫱️InteractionPublication
+/** 🫱️ What a surface can tell the plugin it selected. */
+export type NodeGraphSelectionMarks = Readonly<{
+  readonly nodeIds: readonly string[];
+  readonly edgeIds?: readonly string[];
+  readonly handleIds?: readonly string[];
+}>;
+
+/** 🫱️ What a surface can tell the plugin the pointer is over. */
+export type NodeGraphHoverMark = Readonly<{ readonly hoveredId?: string; readonly portId?: string }>;
+
+/** 🔑️ The exact selection a publication would carry, as one comparable value. Order is the domain's
+ * own — the guest answers its ids in its own order and the plugin stores them that way, so a reorder
+ * IS a different mark. */
+export function nodeGraphSelectionMarkKey(marks: NodeGraphSelectionMarks): string {
+  return JSON.stringify([marks.nodeIds, marks.edgeIds ?? [], marks.handleIds ?? []]);
+}
+
+/** 🔑️ The exact hover a publication would carry, as one comparable value. */
+export function nodeGraphHoverMarkKey(mark: NodeGraphHoverMark): string {
+  return `${mark.hoveredId ?? ""} ${mark.portId ?? ""}`;
+}
+
+/** 🧾️ What this surface has last told the plugin about its interaction marks, and therefore which
+ * lanes a new reading actually OWES it.
+ *
+ * `emitInteractionState` published selection AND hover on every non-pan pointer-up, including a plain
+ * click that changed neither — and the same pointer-up reaches it twice (the pick hook's
+ * `onSelectTarget` and the surface's own `onPointerUp`), so one click on a node cost four guest
+ * invocations and one click on empty canvas cost two. Each is a `performInvocation` → `refreshUi` →
+ * React commit over the whole interaction scope (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
+ * `📓️interaction-scope-narrowing-2026-09-15.md` §5).
+ *
+ * `adopt*` is the other half: marks that arrive FROM the plugin on a scene are what the plugin
+ * already holds, so they set the baseline without owing a hop — and a plugin-side change (a keyboard
+ * `selectAll`, an outline pick) can never be shadowed by a stale note of what we last sent. */
+export function createNodeGraphInteractionLedger() {
+  let selection: string | null = null;
+  let hover: string | null = null;
+  return {
+    publishSelection(marks: NodeGraphSelectionMarks): boolean {
+      const key = nodeGraphSelectionMarkKey(marks);
+      if (key === selection) return false;
+      selection = key;
+      return true;
+    },
+    publishHover(mark: NodeGraphHoverMark): boolean {
+      const key = nodeGraphHoverMarkKey(mark);
+      if (key === hover) return false;
+      hover = key;
+      return true;
+    },
+    adoptSelection(marks: NodeGraphSelectionMarks): void {
+      selection = nodeGraphSelectionMarkKey(marks);
+    },
+    adoptHover(mark: NodeGraphHoverMark): void {
+      hover = nodeGraphHoverMarkKey(mark);
+    },
+    retire(): void {
+      selection = null;
+      hover = null;
+    },
+  };
+}
+//#endregion 🫱️InteractionPublication
 
 /** ⏲️ How long after the last wheel tick a zoom gesture counts as settled. Long enough that one
  * continuous scroll is ONE gesture on a trackpad's own inter-tick spacing, short enough that the
@@ -2465,7 +2730,9 @@ export function FlowGraphCanvasHost({
     const registry = (host.__semioFlowGraphProbe ??= {});
     registry[surfaceId] = {
       entity: (domain, id) => resolver.entity?.(domain, id) ?? null,
-      fixtureJson: () => sceneRef.current.hostDocumentJson ?? null,
+      nodeIds: () => (sceneRef.current.nodes ?? []).map((node) => node.id),
+      nodeLayout: () => Object.fromEntries((sceneRef.current.nodes ?? []).map((node) => [node.id, { x: node.x, y: node.y }])),
+      hostSnapshotJson: () => sceneRef.current.hostSnapshotJson ?? null,
       rect: () => {
         const measured = containerRef.current?.getBoundingClientRect();
         return measured ? { x: measured.x, y: measured.y, width: measured.width, height: measured.height } : null;
@@ -2487,7 +2754,7 @@ export function FlowGraphCanvasHost({
 
   // 📮️ Effects that must NOT re-run per render (attach, scene sync) reach the dispatcher through this
   // ref: `dispatch`'s identity follows the `onAction` prop, and depending on it would re-attach the
-  // canvas — and re-issue `synchronizeDocumentJson` — on every parent render.
+  // canvas — and re-issue `synchronizeSnapshotJson` — on every parent render.
   const dispatchRef = useRef(dispatch);
   dispatchRef.current = dispatch;
 
@@ -2503,9 +2770,9 @@ export function FlowGraphCanvasHost({
         if (host) openSpotlightAtClient(x, y, host);
         return;
       }
-      dispatch(action, action === "openInstance" ? { ...args, instanceId: resolveFixtureWidgetInstanceId(scene.hostDocumentJson, widgetId) } : args);
+      dispatch(action, action === "openInstance" ? { ...args, instanceId: resolveHostSnapshotWidgetInstanceId(scene.hostSnapshotJson, widgetId) } : args);
     },
-    [dispatch, scene.hostDocumentJson],
+    [dispatch, scene.hostSnapshotJson],
   );
 
   // 🧵️ Dispatches the mutated fixture to the plugin and returns immediately — evaluation happens
@@ -2514,26 +2781,26 @@ export function FlowGraphCanvasHost({
   const commitFixture = useCallback(() => {
     const session = sessionRef.current;
     if (!session) return;
-    observeFlowTask(session, "documentJson:commit", session.documentJson(), (value) => {
-      dispatch(nodeGraphActions.edit, { operations: [{ operation: "setHostDocument", hostDocumentJson: flowJsonText(value) }] });
+    observeFlowTask(session, "snapshotJson:commit", session.snapshotJson(), (value) => {
+      dispatch(nodeGraphActions.edit, { operations: [{ operation: "setHostSnapshot", hostSnapshotJson: flowJsonText(value) }] });
     });
   }, [dispatch]);
 
   /** 🔗️ What a released gesture did, read out of `pointerUpScreen`'s own result — the gesture answers
    * for itself, so there is no second round trip and no window in which a later read could drain the
-   * journal first. Shape: `{operations:[…],hostDocumentChanged:boolean}` — `operations` in the guest's own
+   * journal first. Shape: `{operations:[…],hostSnapshotChanged:boolean}` — `operations` in the guest's own
    * `nodeGraphEdit` sub-operation vocabulary (`connect` with four ids, `disconnect` with a synapse
    * id), the identical payload the wgpu renderer writes (`⚙️EngineCanvas/🎯️targets/🧊️wgpu`'s
-   * `write_graph_edit_action`); `hostDocumentChanged` the host's own content predicate
+   * `write_graph_edit_action`); `hostSnapshotChanged` the host's own content predicate
    * (`🌊️flow/🖥️host/🦀️.rs`'s `commit_gesture_history`), which is the ONLY thing that may authorise the
    * whole-fixture commit. A gesture with neither changed nothing and is owed no dispatch at all. */
-  const graphGestureAnswer = useCallback((value: unknown): { readonly operations: readonly Record<string, unknown>[]; readonly hostDocumentChanged: boolean } => {
+  const graphGestureAnswer = useCallback((value: unknown): { readonly operations: readonly Record<string, unknown>[]; readonly hostSnapshotChanged: boolean } => {
     try {
-      const parsed = JSON.parse(flowJsonText(value)) as { readonly operations?: unknown; readonly hostDocumentChanged?: unknown } | null;
+      const parsed = JSON.parse(flowJsonText(value)) as { readonly operations?: unknown; readonly hostSnapshotChanged?: unknown } | null;
       const operations = parsed?.operations;
-      return { operations: Array.isArray(operations) ? (operations as readonly Record<string, unknown>[]) : [], hostDocumentChanged: parsed?.hostDocumentChanged === true };
+      return { operations: Array.isArray(operations) ? (operations as readonly Record<string, unknown>[]) : [], hostSnapshotChanged: parsed?.hostSnapshotChanged === true };
     } catch {
-      return { operations: [], hostDocumentChanged: false };
+      return { operations: [], hostSnapshotChanged: false };
     }
   }, []);
 
@@ -2552,9 +2819,27 @@ export function FlowGraphCanvasHost({
     schedulerRef.current?.invalidate();
   }, []);
 
+  /** 🧾️ A scene that arrived while a gesture held the session, and the camera-only gestures that owe
+   * it an apply when they end.
+   *
+   * The scene effect skips its sync while a gesture is live — a drag holds live fixture edits the
+   * session must not have overwritten — and it only ever runs again on the NEXT scene, so a scene
+   * that arrived during a gesture was dropped for good. With gestures now covering wheel and pan as
+   * well as slider drags, that window is wide enough to swallow a real edit: a `reorganize` issued
+   * just after a zoom moved every widget in the plugin and none on the board
+   * (`📓️flow-scroll-render-perf-2026-09-15.md` §7). A camera gesture holds no fixture edits, so its
+   * end can simply apply what it deferred; a content gesture's own commit brings the next scene. */
+  const deferredSceneRef = useRef(false);
+  const cameraOnlyGestureEndRef = useRef(false);
+  const applyDeferredSceneRef = useRef<() => void>(() => {});
+
   const endGesture = useCallback((reason: string) => {
     if (!gestureReasonsRef.current.delete(reason)) return;
     schedulerRef.current?.endContinuous(reason);
+    if (gestureReasonsRef.current.size === 0 && deferredSceneRef.current && (reason === "wheel" || cameraOnlyGestureEndRef.current)) {
+      deferredSceneRef.current = false;
+      applyDeferredSceneRef.current();
+    }
     schedulerRef.current?.invalidate();
   }, []);
 
@@ -2782,6 +3067,10 @@ export function FlowGraphCanvasHost({
     return () => observer.disconnect();
   }, [paintOverlays, renderFlow, syncSurfaceSize]);
 
+  /** 🧾️ What this surface last told the plugin about selection and hover — see
+   * {@link createNodeGraphInteractionLedger}. */
+  const interactionLedger = useMemo(() => createNodeGraphInteractionLedger(), []);
+
   const handleGesturePointerUp = useCallback(() => {
     endGesture("gesture");
     const session = sessionRef.current;
@@ -2801,13 +3090,17 @@ export function FlowGraphCanvasHost({
       readObservedFlowTask(session, "hoveredChannelJson:interaction", session.hoveredChannelJson()),
     ]).then(([domainsValue, hoveredValue, channelValue]) => {
       const domains = parseSelectionDomainsFromSession(flowJsonText(domainsValue));
-      dispatch(nodeGraphActions.select, nodeGraphSelectionActionArgs({ nodeIds: domains.nodes, edgeIds: domains.edges, handleIds: domains.handles }));
+      const selection = { nodeIds: domains.nodes, edgeIds: domains.edges, handleIds: domains.handles };
+      const selectionDue = interactionLedger.publishSelection(selection);
       const hovered = typeof hoveredValue === "string" ? hoveredValue : undefined;
-      void channelValue;
-      dispatch(nodeGraphActions.hover, nodeGraphHoverActionArgs(hovered));
+      const portId = parseDagChannelRefJson(flowJsonText(channelValue))?.portId;
+      const hoverDue = interactionLedger.publishHover({ hoveredId: hovered, portId });
+      console.log("[DEBUG] flow interaction publish select=%d hover=%d", selectionDue ? 1 : 0, hoverDue ? 1 : 0);
+      if (selectionDue) dispatch(nodeGraphActions.select, nodeGraphSelectionActionArgs(selection));
+      if (hoverDue) dispatch(nodeGraphActions.hover, nodeGraphHoverActionArgs(hovered, portId));
     }).catch(() => {});
     paintOverlays();
-  }, [dispatch, paintOverlays]);
+  }, [dispatch, interactionLedger, paintOverlays]);
 
   useEffect(() => {
     let cancelled = false;
@@ -2913,48 +3206,67 @@ export function FlowGraphCanvasHost({
     };
   }, [sessionReady, isGestureActive, paintOverlays, renderFlow, surfaceId, syncSurfaceSize, canvasGeneration]);
 
+  /** 🎬️ Hands the session the current scene and re-frames only when the graph left the view. Held as a
+   * callback rather than inlined in the effect so a gesture that deferred a scene can run the very
+   * same body when it ends, instead of waiting for a next scene that may never come. */
+  const applyScene = useCallback(() => {
+    const session = sessionRef.current;
+    if (!session) return;
+    const scene = sceneRef.current;
+    syncFlowSessionFromScene(session, scene, appCatalogueRef.current);
+    // 🧾️ The marks this scene carries are the plugin's OWN, so they set the publication baseline
+    // without owing a hop: a selection the plugin made itself (a keyboard verb, an outline pick) must
+    // never be re-published back at it, and must never be shadowed by a stale note of what we sent.
+    if (scene.selection) interactionLedger.adoptSelection({ nodeIds: scene.selection });
+    if (scene.hover !== undefined) interactionLedger.adoptHover({ hoveredId: scene.hover?.nodeId ?? undefined, portId: scene.hover?.portId ?? undefined });
+    // 🔀️ An example switch replaces the whole graph under a live camera. Only when the new graph left
+    // the view entirely is the camera re-framed — an ordinary edit never moves it.
+    const signature = nodeGraphContentSignature(scene.nodes);
+    const rect = containerRef.current?.getBoundingClientRect();
+    if (rect && surfaceReadyRef.current && framedGraphSignatureRef.current !== null && framedGraphSignatureRef.current !== signature) {
+      framedGraphSignatureRef.current = signature;
+      readObservedFlowTask(session, "viewport:refit", session.viewport())
+        .then((value) => {
+          const live = sessionRef.current;
+          // 🎥️ A framing decision taken before the user grabbed the camera loses to the gesture: the
+          // read is asynchronous, so a refit armed by a graph change can land mid-scroll and both snap
+          // the view away under the user's hand and publish a viewport during a gesture that owes the
+          // plugin exactly one, at its settle.
+          if (!live || isGestureActive()) return;
+          const fitted = refitFlowCameraIfContentLeftView(live, sceneRef.current, parseNodeGraphSessionViewport(value), Math.round(rect.width), Math.round(rect.height));
+          if (!fitted) return;
+          console.log("[DEBUG] node-graph refit after graph change surface=%s %s", surfaceId, JSON.stringify(fitted));
+          dispatchRef.current(nodeGraphActions.viewport, nodeGraphViewportActionArgs(fitted));
+          renderFlow();
+          paintOverlays();
+        })
+        .catch(() => {
+          /* a cancelled read is a closed session, not a framing decision */
+        });
+    }
+    renderFlow();
+    paintOverlays();
+    schedulerRef.current?.invalidate();
+  }, [interactionLedger, isGestureActive, paintOverlays, renderFlow, surfaceId]);
+  applyDeferredSceneRef.current = applyScene;
+
   useEffect(() => {
     const session = sessionRef.current;
     if (!session || !sessionReady) return;
     // 🎚️ While a slider (or other continuous) gesture is active, the wasm session already holds the live
     // fixture edits via `setSliderValue`; applying `scene.evalJson` here would install a stale baseline
-    // (new slider seeds + old channel outputs) and wipe computing chrome mid-drag. Full resync waits for
-    // `handleGesturePointerUp`.
-    if (!isGestureActive()) {
-      syncFlowSessionFromScene(session, scene, appCatalogueRef.current);
-      // 🔀️ An example switch replaces the whole graph under a live camera. Only when the new graph
-      // left the view entirely is the camera re-framed — an ordinary edit never moves it.
-      const signature = nodeGraphContentSignature(scene.nodes);
-      if (surfaceReadyRef.current && framedGraphSignatureRef.current !== null && framedGraphSignatureRef.current !== signature) {
-        framedGraphSignatureRef.current = signature;
-        const container = containerRef.current;
-        const rect = container?.getBoundingClientRect();
-        if (rect) {
-          readObservedFlowTask(session, "viewport:refit", session.viewport())
-            .then((value) => {
-              const live = sessionRef.current;
-              // 🎥️ A framing decision taken before the user grabbed the camera loses to the gesture:
-              // the read is asynchronous, so a refit armed by a graph change can land mid-scroll and
-              // both snap the view away under the user's hand and publish a viewport during a gesture
-              // that owes the plugin exactly one, at its settle.
-              if (!live || isGestureActive()) return;
-              const fitted = refitFlowCameraIfContentLeftView(live, sceneRef.current, parseNodeGraphSessionViewport(value), Math.round(rect.width), Math.round(rect.height));
-              if (!fitted) return;
-              console.log("[DEBUG] node-graph refit after graph change surface=%s %s", surfaceId, JSON.stringify(fitted));
-              dispatchRef.current(nodeGraphActions.viewport, nodeGraphViewportActionArgs(fitted));
-              renderFlow();
-              paintOverlays();
-            })
-            .catch(() => {
-              /* a cancelled read is a closed session, not a framing decision */
-            });
-        }
-      }
+    // (new slider seeds + old channel outputs) and wipe computing chrome mid-drag. The scene is not
+    // dropped: a camera gesture applies it when it ends, and a content gesture's own commit brings the
+    // next one.
+    if (isGestureActive()) {
+      deferredSceneRef.current = true;
+      renderFlow();
+      paintOverlays();
+      schedulerRef.current?.invalidate();
+      return;
     }
-    renderFlow();
-    paintOverlays();
-    schedulerRef.current?.invalidate();
-  }, [sceneSignature, isGestureActive, paintOverlays, renderFlow, scene, sessionReady, surfaceId]);
+    applyScene();
+  }, [sceneSignature, applyScene, isGestureActive, paintOverlays, renderFlow, scene, sessionReady]);
 
   const flowGraphCanvasHostShellScope = useShellScopeOptional();
   useCanvasAppearanceSync(
@@ -3001,11 +3313,9 @@ export function FlowGraphCanvasHost({
         readObservedFlowTask(session, "hoveredWidgetId:pointer", session.hoveredWidgetId()),
         readObservedFlowTask(session, "hoveredChannelJson:pointer", session.hoveredChannelJson()),
       ]).then(([hoveredValue, channelValue]) => {
-        const hoveredChannel = parseDagChannelRefJson(flowJsonText(channelValue));
-        dispatch(
-          nodeGraphActions.hover,
-          nodeGraphHoverActionArgs(typeof hoveredValue === "string" ? hoveredValue : undefined, hoveredChannel?.portId),
-        );
+        const hoveredId = typeof hoveredValue === "string" ? hoveredValue : undefined;
+        const portId = parseDagChannelRefJson(flowJsonText(channelValue))?.portId;
+        if (interactionLedger.publishHover({ hoveredId, portId })) dispatch(nodeGraphActions.hover, nodeGraphHoverActionArgs(hoveredId, portId));
       }).catch(() => {});
       schedulerRef.current?.invalidate();
     },
@@ -3165,13 +3475,13 @@ export function FlowGraphCanvasHost({
           openSpotlightAtClient(event.clientX, event.clientY, event.currentTarget);
           return;
         }
-        const instanceId = resolveFixtureWidgetInstanceId(scene.hostDocumentJson, hovered);
+        const instanceId = resolveHostSnapshotWidgetInstanceId(scene.hostSnapshotJson, hovered);
         if (instanceId) {
           dispatch("openInstance", { instanceId });
         }
       });
     },
-    [dispatch, editable, openSpotlightAtClient, scene.hostDocumentJson],
+    [dispatch, editable, openSpotlightAtClient, scene.hostSnapshotJson],
   );
 
   useEffect(() => clearGhostPreview, [clearGhostPreview]);
@@ -3374,6 +3684,7 @@ export function FlowGraphCanvasHost({
           setWireRefusal(null);
           const wasCameraPan = cameraPanRef.current;
           cameraPanRef.current = false;
+          cameraOnlyGestureEndRef.current = wasCameraPan;
           issueFlowGestureStep(session.pointerUpScreen(event.clientX - rect.left, event.clientY - rect.top, event.shiftKey, event.metaKey || event.ctrlKey, event.altKey), (value) => {
             // 🔗️ A gesture that wired or cut dispatches THAT — four ids, or one synapse id — and never
             // the whole fixture on top of it: the guest replays the narrow intent and re-publishes the
@@ -3384,10 +3695,10 @@ export function FlowGraphCanvasHost({
             // pan and a press that grabbed nothing change nothing, and used to dispatch a whole-fixture
             // `nodeGraphEdit` all the same — a retained command per click, and a re-armed preview
             // evaluation on a shell nobody touched.
-            const { operations, hostDocumentChanged } = graphGestureAnswer(value);
+            const { operations, hostSnapshotChanged } = graphGestureAnswer(value);
             if (operations.length > 0) console.log("[DEBUG] node graph wire edit dispatch", JSON.stringify(operations));
             if (operations.length > 0) dispatch(nodeGraphActions.edit, { operations });
-            else if (hostDocumentChanged) commitFixture();
+            else if (hostSnapshotChanged) commitFixture();
           });
           handleGesturePointerUp();
           // 🎥️ A pan moved the camera and nothing else, so its settle owes the plugin the viewport and

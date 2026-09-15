@@ -202,7 +202,7 @@ async fn resolve_manifest_errors_on_unknown_id() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn graph_from_host_document_rejects_port_kind_not_declared_on_node_kind() {
+async fn graph_from_host_snapshot_rejects_port_kind_not_declared_on_node_kind() {
     let fixture = mini_fixture();
     let mut nodes = fixture.nodes();
     nodes[0].ports.push(Port { id: "bad".into(), kind: "core circular bottom".into(), direction: PortDirection::Out, properties: PropertyBag::new() });
@@ -255,7 +255,7 @@ async fn graph_set_property_success_and_errors() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn graph_to_host_document_and_fixture_json() {
+async fn graph_to_host_snapshot_and_fixture_json() {
     let g = Graph::from_snapshot(mini_fixture()).unwrap();
     let fixture = g.to_snapshot();
     assert_eq!(fixture.nodes().len(), 2);

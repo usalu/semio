@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://semio.tech/schema/framework/ui/viewport/3d",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/ui/viewport/3d",
   "title": "Viewport3dOrbit",
   "$ref": "#/$defs/orbit",
   "$defs": {

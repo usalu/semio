@@ -181,34 +181,42 @@ fn box_mesh_spec(width: f64, height: f64, depth: f64) -> MeshDataSpec {
     spec
 }
 
-/// 🪟️ Builds a rectangular frame (4 mitred boxes: top/bottom rails, left/right stiles) around an opening.
-fn frame_mesh_spec(width: f64, height: f64, depth: f64, profile: f64) -> MeshDataSpec {
-    let mut spec = MeshDataSpec::default();
-    let mut add = |w: f64, h: f64, cx: f64, cy: f64| {
-        let mut piece = box_mesh_spec(w, h, depth);
-        for i in (0..piece.positions.len()).step_by(3) {
-            piece.positions[i] += cx as f32;
-            piece.positions[i + 1] += cy as f32;
+/// 🧱️ A box-built recipe as its axis-aligned boxes `(center, size)` in the recipe's own frame — a frame
+/// is its top/bottom rails and left/right stiles around the opening. `None` for a free-form `Mesh`.
+pub fn box_parts(recipe: &GeometryRecipe) -> Option<Vec<([f64; 3], [f64; 3])>> {
+    match *recipe {
+        GeometryRecipe::Box { width, height, depth } => Some(vec![([0.0, 0.0, 0.0], [width, height, depth])]),
+        GeometryRecipe::Slab { width, depth, thickness } => Some(vec![([0.0, 0.0, 0.0], [width, thickness, depth])]),
+        GeometryRecipe::Frame { width, height, depth, profile } => {
+            let (half_w, half_h, stile_h) = (width * 0.5, height * 0.5, height - profile * 2.0);
+            Some(vec![
+                ([0.0, half_h - profile * 0.5, 0.0], [width, profile, depth]),
+                ([0.0, -half_h + profile * 0.5, 0.0], [width, profile, depth]),
+                ([-half_w + profile * 0.5, 0.0, 0.0], [profile, stile_h, depth]),
+                ([half_w - profile * 0.5, 0.0, 0.0], [profile, stile_h, depth]),
+            ])
         }
-        append_mesh_spec(&mut spec, piece);
-    };
-    let half_h = height * 0.5;
-    let half_w = width * 0.5;
-    add(width, profile, 0.0, half_h - profile * 0.5);
-    add(width, profile, 0.0, -half_h + profile * 0.5);
-    let stile_h = height - profile * 2.0;
-    add(profile, stile_h, -half_w + profile * 0.5, 0.0);
-    add(profile, stile_h, half_w - profile * 0.5, 0.0);
-    spec
+        GeometryRecipe::Mesh { .. } => None,
+    }
 }
 
 /// 🧱️ Realizes a `GeometryRecipe` into flat mesh data.
 pub fn mesh_spec_for(recipe: &GeometryRecipe) -> MeshDataSpec {
-    match recipe {
-        GeometryRecipe::Box { width, height, depth } => box_mesh_spec(*width, *height, *depth),
-        GeometryRecipe::Frame { width, height, depth, profile } => frame_mesh_spec(*width, *height, *depth, *profile),
-        GeometryRecipe::Slab { width, depth, thickness } => box_mesh_spec(*width, *thickness, *depth),
-        GeometryRecipe::Mesh { positions, normals, indices } => MeshDataSpec { positions: positions.clone(), normals: normals.clone(), indices: indices.clone() },
+    match (recipe, box_parts(recipe)) {
+        (GeometryRecipe::Mesh { positions, normals, indices }, _) => MeshDataSpec { positions: positions.clone(), normals: normals.clone(), indices: indices.clone() },
+        (_, parts) => {
+            let mut spec = MeshDataSpec::default();
+            for (center, size) in parts.unwrap_or_default() {
+                let mut piece = box_mesh_spec(size[0], size[1], size[2]);
+                for vertex in piece.positions.chunks_mut(3) {
+                    vertex[0] += center[0] as f32;
+                    vertex[1] += center[1] as f32;
+                    vertex[2] += center[2] as f32;
+                }
+                append_mesh_spec(&mut spec, piece);
+            }
+            spec
+        }
     }
 }
 
@@ -230,21 +238,50 @@ pub fn bounding_extent(recipe: &GeometryRecipe) -> f64 {
 /// `26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS` — `MeshData` carries only
 /// the first-party `ToValue`/`FromValue` codec in production, `Serialize` is test-only.
 pub fn kind_mesh_json(kind: &ObjectKind) -> dsl::DslValue {
-    let spec = mesh_spec_for(&kind.geometry);
-    let mesh = semio_framework::mesh_from_indexed(&spec.positions, &spec.normals, &spec.indices);
-    dsl::DslValue::object([("id".to_string(), dsl::DslValue::String(kind.id.clone())), ("data".to_string(), dsl::ToValue::to_value(&mesh))])
+    mesh_json(&kind.id, &mesh_spec_for(&kind.geometry))
 }
 
-/// 🌐️ Instance atom placing one stock kind's mesh at `position` — shared by the preview and grid
-/// windows.
-pub fn instance_json(kind: &ObjectKind, position: [f64; 3], scale: f64, selected: bool) -> dsl::DslValue {
+/// 🧊️ The mesh id of the one unit cube every box-built recipe is instanced from.
+pub const SOURCING_UNIT_BOX_MESH_ID: &str = "sourcing.unit-box";
+
+/// 🧊️ The unit cube behind [`SOURCING_UNIT_BOX_MESH_ID`].
+pub fn unit_box_mesh_json() -> dsl::DslValue {
+    mesh_json(SOURCING_UNIT_BOX_MESH_ID, &box_mesh_spec(1.0, 1.0, 1.0))
+}
+
+fn mesh_json(id: &str, spec: &MeshDataSpec) -> dsl::DslValue {
+    let mesh = semio_framework::mesh_from_indexed(&spec.positions, &spec.normals, &spec.indices);
+    dsl::DslValue::object([("id".to_string(), dsl::DslValue::String(id.to_string())), ("data".to_string(), dsl::ToValue::to_value(&mesh))])
+}
+
+/// 🌐️ The instances drawing `kind` centered at `origin`, uniformly scaled by `scale`: one
+/// [`SOURCING_UNIT_BOX_MESH_ID`] instance per [`box_parts`] entry, or one instance of the kind's own
+/// [`kind_mesh_json`] for a free-form `Mesh`. A scene therefore carries geometry once, however much
+/// stock it lays out.
+pub fn kind_instances_json(kind: &ObjectKind, origin: [f64; 3], scale: f64, selected: bool) -> Vec<dsl::DslValue> {
+    let Some(parts) = box_parts(&kind.geometry) else {
+        return vec![instance_json(&kind.id, &kind.id, &kind.name, origin, [scale; 3], selected)];
+    };
+    let single = parts.len() == 1;
+    parts
+        .iter()
+        .enumerate()
+        .map(|(index, (center, size))| {
+            let id = if single { kind.id.clone() } else { format!("{}#{index}", kind.id) };
+            let position = [origin[0] + center[0] * scale, origin[1] + center[1] * scale, origin[2] + center[2] * scale];
+            instance_json(&id, SOURCING_UNIT_BOX_MESH_ID, &kind.name, position, [size[0] * scale, size[1] * scale, size[2] * scale], selected)
+        })
+        .collect()
+}
+
+fn instance_json(id: &str, mesh_id: &str, label: &str, position: [f64; 3], scale: [f64; 3], selected: bool) -> dsl::DslValue {
     dsl::DslValue::object([
-        ("id".to_string(), dsl::DslValue::String(kind.id.clone())),
-        ("meshId".to_string(), dsl::DslValue::String(kind.id.clone())),
+        ("id".to_string(), dsl::DslValue::String(id.to_string())),
+        ("meshId".to_string(), dsl::DslValue::String(mesh_id.to_string())),
         ("position".to_string(), dsl::ToValue::to_value(&position)),
         ("rotation".to_string(), dsl::ToValue::to_value(&[0.0, 0.0, 0.0, 1.0])),
-        ("scale".to_string(), dsl::ToValue::to_value(&[scale, scale, scale])),
-        ("label".to_string(), dsl::DslValue::String(kind.name.clone())),
+        ("scale".to_string(), dsl::ToValue::to_value(&scale)),
+        ("label".to_string(), dsl::DslValue::String(label.to_string())),
         ("selected".to_string(), dsl::DslValue::Bool(selected)),
         ("hovered".to_string(), dsl::DslValue::Bool(false)),
     ])

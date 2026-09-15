@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/repo/library/schema-scope-catalog-cases.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/repo/library/schema-scope-catalog-cases.json",
   "title": "SchemaScopeCatalogCases",
   "type": "object",
   "additionalProperties": false,

@@ -5,5 +5,5 @@ use crate::standards::v1::subsets::any::schema::mutations::{update_camera, Gener
 use crate::Generation2dSnapshot;
 
 pub fn inverse(_payload: &super::UpdateCamera, base: &Generation2dSnapshot) -> Vec<Generation2dMutation> {
-    vec![update_camera(base.host_document.camera.clone())]
+    vec![update_camera(base.host_snapshot.camera.clone())]
 }

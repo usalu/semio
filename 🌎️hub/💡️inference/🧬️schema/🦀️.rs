@@ -1,6 +1,6 @@
 //! 💡️ Scope `hub.inference` — closed client intent and immutable server-selected GIS inference identity.
 //!
-//! Schema authority: [`🔣️.json`](./🔣️.json) (`https://semio.tech/schema/hub/inference/schema.json`),
+//! Schema authority: [`🔣️.json`](./🔣️.json) (`https://json.schemas.assets.semio-tech.com/hub/inference/schema.json`),
 //! TypeScript mirror: [`🟦️.ts`](./🟦️.ts). This module is the decoder authority; the `$defs` export ids
 //! of the JSON Schema are the Rust type names below and are held field-for-field by `tests`.
 
@@ -20,7 +20,7 @@ pub type GisMapApprovalUndoRequestV1 = directory::os_directory::GisMapApprovalUn
 
 /// 🧬️ The scope id and `$id` every `hub.inference` export resolves under.
 pub const SCHEMA_SCOPE: &str = "hub.inference";
-pub const SCHEMA_ID: &str = "https://semio.tech/schema/hub/inference/schema.json";
+pub const SCHEMA_ID: &str = "https://json.schemas.assets.semio-tech.com/hub/inference/schema.json";
 
 //#region 🔖️ScopeSchemaExports
 use semio_framework_schema_registry::{register_scope_schema_exports, FacetLeaves, SchemaExport, ScopeSchemaExports};

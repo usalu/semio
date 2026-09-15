@@ -1,5 +1,5 @@
 {
-  "$schema": "https://semio.tech/schema/repository-test/language-neutral-cases.json",
+  "$schema": "https://json.schemas.assets.semio-tech.com/repository-test/language-neutral-cases.json",
   "cases": [
     {
       "id": "create-vertex-keeps-nonzero-tolerance",

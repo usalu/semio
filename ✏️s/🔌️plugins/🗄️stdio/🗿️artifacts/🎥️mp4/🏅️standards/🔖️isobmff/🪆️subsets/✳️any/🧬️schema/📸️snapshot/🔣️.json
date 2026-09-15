@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/mp4/isobmff/any/snapshot.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/mp4/isobmff/any/snapshot.json",
   "title": "Mp4Snapshot",
   "description": "ISO-BMFF logical movie, AVC tracks, and semantic encoded samples.",
   "type": "object",

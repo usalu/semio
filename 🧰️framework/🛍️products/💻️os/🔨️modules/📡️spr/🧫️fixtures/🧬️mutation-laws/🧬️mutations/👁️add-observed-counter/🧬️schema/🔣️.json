@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/framework/os/spr/fixtures/mutation-laws/mutation/add-observed-counter/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/os/spr/fixtures/mutation-laws/mutation/add-observed-counter/schema.json",
   "title": "AddObservedCounter",
   "type": "object",
   "properties": {},

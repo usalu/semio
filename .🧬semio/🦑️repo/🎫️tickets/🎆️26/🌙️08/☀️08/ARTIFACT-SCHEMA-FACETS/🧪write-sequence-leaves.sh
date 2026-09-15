@@ -6,7 +6,7 @@ BASE="/Users/ueli/Documents/semio/✏️s/🔌️plugins/🎬️sequence/🗿️
 
 cat > "$BASE/📸️snapshot/🧬️schema/🔣️component.json" <<'JSON'
 {
-  "$id": "https://semio.tech/schema/s/sequence/sequence/snapshot.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/sequence/sequence/snapshot.json",
   "title": "SequenceSnapshot",
   "type": "object",
   "additionalProperties": false,
@@ -59,7 +59,7 @@ JSON
 
 cat > "$BASE/🧬️schema/🔣️component.json" <<'JSON'
 {
-  "$id": "https://semio.tech/schema/s/sequence/sequence/artifact.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/sequence/sequence/artifact.json",
   "title": "SequenceArtifact",
   "type": "object",
   "additionalProperties": false,
@@ -128,7 +128,7 @@ JSON
 
 cat > "$BASE/🔺️diff/🧬️schema/🔣️component.json" <<'JSON'
 {
-  "$id": "https://semio.tech/schema/s/sequence/sequence/diff.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/sequence/sequence/diff.json",
   "title": "SequenceDiff",
   "type": "object",
   "additionalProperties": false,

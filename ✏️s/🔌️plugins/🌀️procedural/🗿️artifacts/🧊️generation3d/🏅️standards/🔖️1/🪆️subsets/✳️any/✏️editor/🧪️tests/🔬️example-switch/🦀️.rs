@@ -27,7 +27,7 @@ fn published_node_ids(graph: &str) -> std::collections::BTreeSet<String> {
 
 fn authored_node_ids(example_id: &str) -> std::collections::BTreeSet<String> {
     let read = Generation3dSnapshotRead::new(example_snapshot(example_id).expect("bundled example snapshot"));
-    read.host_document.widgets.iter().map(crate::widget_id).map(str::to_string).collect()
+    read.host_snapshot.widgets.iter().map(crate::widget_id).map(str::to_string).collect()
 }
 
 /// ⚖️ LAW: picking an example REPUBLISHES the flow window's graph. Boot #11 of

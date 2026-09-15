@@ -1,12 +1,12 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/semio/v1/kit/mutation/change-representation-pin/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/kit/mutation/change-representation-pin/schema.json",
   "title": "ChangeRepresentationPin",
   "type": "object",
   "additionalProperties": false,
   "required": ["index", "pin"],
   "properties": {
     "index": { "type": "integer", "minimum": 0 },
-    "pin": { "$ref": "https://semio.tech/schema/os/store/link.json#/$defs/LinkPin" }
+    "pin": { "$ref": "https://json.schemas.assets.semio-tech.com/os/store/link.json#/$defs/LinkPin" }
   }
 }

@@ -1,5 +1,5 @@
 use super::*;
-use crate::{SequenceEdge, SequenceHostDocument, SequenceStep, StepParams};
+use crate::{SequenceEdge, SequenceHostSnapshot, SequenceStep, StepParams};
 
 fn step(id: &str) -> SequenceStep {
     SequenceStep { id: id.into(), kind: "state.set".into(), params: StepParams::new(), x: 0.0, y: 0.0, slot: None, collapsed: false }
@@ -10,7 +10,7 @@ fn edge(id: &str, from: &str, to: &str) -> SequenceEdge {
 }
 
 fn snapshot_from(steps: Vec<SequenceStep>, edges: Vec<SequenceEdge>) -> neural_engine::ColdOwner<SequenceSnapshot> {
-    neural_engine::ColdOwner::new(SequenceSnapshot::from_host_document(SequenceHostDocument { schema: crate::SEQUENCE_DOCUMENT_SCHEMA.into(), steps, edges }))
+    neural_engine::ColdOwner::new(SequenceSnapshot::from_host_snapshot(SequenceHostSnapshot { schema: crate::SEQUENCE_DOCUMENT_SCHEMA.into(), steps, edges }))
 }
 
 #[semio_framework_async_macros::async_test]

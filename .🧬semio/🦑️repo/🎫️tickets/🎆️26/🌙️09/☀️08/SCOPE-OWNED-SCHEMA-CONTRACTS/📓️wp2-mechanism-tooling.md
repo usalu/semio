@@ -88,7 +88,7 @@ catalog paths and the retired placements:
 "schemaExportResolution": {
   "uriScheme": "schema",
   "uriPattern": "^schema://(?<scope>[a-z0-9]+(?:-[a-z0-9]+)*(?:\\.[a-z0-9]+(?:-[a-z0-9]+)*)*)/(?<export>[A-Z][A-Za-z0-9]*)$",
-  "idBase": "https://semio.tech/schema/",
+  "idBase": "https://json.schemas.assets.semio-tech.com/",
   "idFacetFilenamePattern": "^[a-z0-9]+(?:-[a-z0-9]+)*\\.json$",
   "scopeIdSeparator": ".",
   "scopeIdPattern": "^[a-z0-9]+(?:-[a-z0-9]+)*(?:\\.[a-z0-9]+(?:-[a-z0-9]+)*)*$",

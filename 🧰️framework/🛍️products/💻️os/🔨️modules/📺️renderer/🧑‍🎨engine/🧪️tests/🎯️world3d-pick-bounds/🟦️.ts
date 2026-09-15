@@ -11,7 +11,7 @@
  */
 import { describe, expect, it } from "vitest";
 import fixture from "../../🧱️elements/🌐️World3dHost/🧫️fixtures/🎯️pick-bounds.json" with { type: "json" };
-import { mergeWorldSelectionWithLeftoverV1, resolveClickInstanceIdFromProjected, world3dInstanceLocalCorners } from "../../🧱️elements/🌐️World3dHost/🟦️.tsx";
+import { hoveredInteractionTargetV1, mergeWorldSelectionWithLeftoverV1, resolveClickInstanceIdFromProjected, world3dInstanceLocalCorners } from "../../🧱️elements/🌐️World3dHost/🟦️.tsx";
 
 type Corner = readonly [number, number, number];
 
@@ -60,4 +60,37 @@ describe("🎯️ world-3d pick bounds", () => {
       expect(merged.activeObjectId ?? null).toBe(testCase.expectedActiveObjectId);
     });
   }
+});
+
+/** 🎯️ HOVER AND SELECT MUST AGREE ON THE SAME POINT.
+ *
+ * The pane's two hit tests are different code: hover rides R3F's raycast against the real geometry,
+ * and "did this click hit anything" is R3F's own `onPointerMissed` bookkeeping. On the generation3d
+ * preview they disagreed — sweeping the pointer over the hexagonal column resolved `extrude@solid`
+ * and clicking that very point arrived at the BACKGROUND handler, which dispatched
+ * `interactionSelect targets:[]`. So the object could be hovered and inspected but never selected, and
+ * a selection that was already standing was erased by the attempt. Measured 26/09/15 on :6023,
+ * `🐍️world-pick-recon.mjs`; the row it turned red is `Hexagonal Mushroom Column · select`
+ * (`📓️hot-swap-board-remount-2026-09-15.md` §3).
+ *
+ * The rule the background path now obeys: a pane that is PUBLISHING a hover target picks it instead of
+ * clearing. A marker layer is excluded — a vortex and a reference own dedicated pick handlers and must
+ * not be selected by a background click — and genuinely empty canvas still clears. */
+describe("🎯️ a background click never clears at a point the pane is hovering", () => {
+  it("picks the object the pane published as its hover target", () => {
+    expect(hoveredInteractionTargetV1("extrude@solid")).toEqual({ granularity: "object", id: "extrude@solid" });
+    expect(hoveredInteractionTargetV1("profile@wire")).toEqual({ granularity: "object", id: "profile@wire" });
+  });
+
+  it("still clears on genuinely empty canvas", () => {
+    expect(hoveredInteractionTargetV1(null)).toBeNull();
+    expect(hoveredInteractionTargetV1(undefined)).toBeNull();
+    expect(hoveredInteractionTargetV1("")).toBeNull();
+  });
+
+  it("leaves every MARKER layer to its own pick handler", () => {
+    expect(hoveredInteractionTargetV1("reference:datum-a")).toBeNull();
+    expect(hoveredInteractionTargetV1("vortex:node-1:out")).toBeNull();
+    expect(hoveredInteractionTargetV1("targetVolume:zone-3")).toBeNull();
+  });
 });

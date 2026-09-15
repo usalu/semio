@@ -7525,7 +7525,7 @@
         "os.flow.artifacts.flow.vcs.mutation.move-widget",
         "os.flow.artifacts.flow.vcs.mutation.remove-synapse",
         "os.flow.artifacts.flow.vcs.mutation.remove-widget",
-        "os.flow.artifacts.flow.vcs.mutation.replace-flow-host-document"
+        "os.flow.artifacts.flow.vcs.mutation.replace-flow-host-snapshot"
       ],
       "hashes": {
         "🔣️.json": "3033f383f19e445aa3ce636357645ee9fc164701b1531d5abc3ac04f509a553d",
@@ -7711,8 +7711,8 @@
         "🔣️.json": "7dbf323f94af88a823e5a537299148288079c6986438d7f24e2ad223a074ae7a"
       }
     },
-    "os.flow.artifacts.flow.vcs.mutation.replace-flow-host-document": {
-      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🌿️vcs/🧬️schema/🧬️mutations/♻️replace-flow-host-document/🧬️schema",
+    "os.flow.artifacts.flow.vcs.mutation.replace-flow-host-snapshot": {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🌿️vcs/🧬️schema/🧬️mutations/♻️replace-flow-host-snapshot/🧬️schema",
       "level": "product-module",
       "facetKind": "🧬️data",
       "formats": {
@@ -7843,7 +7843,7 @@
         "🔣️jsonschema": "🔣️.json"
       },
       "exports": {
-        "DagHostDocumentEdge": {
+        "DagHostSnapshotEdge": {
           "file": "🔣️.json",
           "facet": "schema"
         },
@@ -43693,7 +43693,7 @@
           "file": "🔣️.json",
           "facet": "artifact"
         },
-        "FlowHostDocument": {
+        "FlowHostSnapshot": {
           "file": "🔣️.json",
           "facet": "artifact"
         },
@@ -44085,7 +44085,7 @@
           "file": "🔣️.json",
           "facet": "artifact"
         },
-        "FlowHostDocument": {
+        "FlowHostSnapshot": {
           "file": "🔣️.json",
           "facet": "artifact"
         },

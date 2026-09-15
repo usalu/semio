@@ -8,7 +8,7 @@ use crate::standards::v1::subsets::any::schema::snapshot::Generation3dSnapshot;
 use crate::widget_id;
 use semio_framework_artifact_playbook_playbook::GenerationPlayRoot;
 #[cfg(feature = "component-app-assembly")]
-use semio_framework_os_flow::forms_bridge::apply_generation_values_to_host_document as apply_generation_values_to_host_document_json;
+use semio_framework_os_flow::forms_bridge::apply_generation_values_to_host_snapshot as apply_generation_values_to_host_snapshot_json;
 
 use ::semio_framework_schema::ArtifactSchema;
 #[cfg(feature = "component-app-assembly")]
@@ -23,7 +23,7 @@ use store::ArtifactDsl;
 #[artifact_schema(id = "s.procedural.generation3d")]
 pub struct Generation3dArtifact {
     #[state(artifact)]
-    pub host_document: FlowHostDocument,
+    pub host_snapshot: FlowHostSnapshot,
     #[state(artifact)]
     pub generation: GenerationPlayRoot,
 }
@@ -52,24 +52,24 @@ impl Default for Generation3dPreviewCamera {
 
 impl Default for Generation3dArtifact {
     fn default() -> Self {
-        Self { host_document: FlowHostDocument::default(), generation: GenerationPlayState::default().into() }
+        Self { host_snapshot: FlowHostSnapshot::default(), generation: GenerationPlayState::default().into() }
     }
 }
 
 impl Generation3dArtifact {
     /// 📸️ Persisted subset.
     pub fn to_snapshot(&self) -> Generation3dSnapshot {
-        Generation3dSnapshot { host_document: self.host_document.clone(), generation: self.generation.clone() }
+        Generation3dSnapshot { host_snapshot: self.host_snapshot.clone(), generation: self.generation.clone() }
     }
 
     /// 🧬️ Builds the document artifact from its snapshot.
     pub fn from_snapshot(snapshot: Generation3dSnapshot) -> Self {
-        Self { host_document: snapshot.host_document, generation: snapshot.generation }
+        Self { host_snapshot: snapshot.host_snapshot, generation: snapshot.generation }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
     pub fn set_snapshot(&mut self, snapshot: Generation3dSnapshot) {
-        self.host_document = snapshot.host_document;
+        self.host_snapshot = snapshot.host_snapshot;
         std::mem::replace(&mut self.generation, snapshot.generation).retire_cold();
     }
 }
@@ -222,7 +222,7 @@ semio_framework_plugin::derive_artifact_facets!(
 
 //#region 🔖️DocumentHelpers
 /// 🧬️ Rehomed from the deleted `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) —
-/// pure helpers over document types (`FlowHostDocument`/`DagHostDocument`/`FlowHost`), not app-referencing (the
+/// pure helpers over document types (`FlowHostSnapshot`/`DagHostSnapshot`/`FlowHost`), not app-referencing (the
 /// Config-referencing preview/mesh-export helpers that used to sit alongside these stayed in
 /// `crate::editor::generation3d` instead — see that file's own `PreviewPipeline`/`MeshBridge` regions).
 pub const PROCEDURAL_EXAMPLE_HEX_COLUMN: &str = "hexagonal-mushroom-column";
@@ -235,12 +235,12 @@ pub const PROCEDURAL_EXAMPLE_RECTANGLE_WIRE: &str = "rectangle-wire-preview";
 pub const PROCEDURAL_EXAMPLE_BOX_SHELL: &str = "box-shell-preview";
 
 /// 📄️ The `procedural3d-play` "default" document — parsed from the bundled "hexagonal mushroom
-/// column" example fixture.
+/// column" example host_snapshot.
 pub fn default_snapshot() -> Generation3dSnapshot {
     Generation3dSnapshot::parse_dsl(GENERATION3D_EXAMPLE_HEX_COLUMN_TEXT).unwrap_or_default()
 }
 
-/// 📄️ The artifact's `Default` projection. NOT empty: `FlowHostDocument::default()`
+/// 📄️ The artifact's `Default` projection. NOT empty: `FlowHostSnapshot::default()`
 /// (`🧰️framework/…/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/📸️snapshot/🦀️.rs`) is the three-widget
 /// `slider → add → preview` demo graph, so this is the DEFAULT document, not the empty one — the
 /// name it carried until ticket 26/09/09/PROCEDURAL-3D-END-TO-END said otherwise and made every
@@ -253,12 +253,12 @@ pub fn default_generation3d_snapshot() -> Generation3dSnapshot {
 /// identity element every totality law is written against.
 pub fn empty_generation3d_snapshot() -> Generation3dSnapshot {
     let mut snapshot = Generation3dSnapshot::default();
-    snapshot.host_document.widgets.clear();
-    snapshot.host_document.synapses.clear();
+    snapshot.host_snapshot.widgets.clear();
+    snapshot.host_snapshot.synapses.clear();
     snapshot
 }
 
-/// 🧾️ Whether `example_id` names a bundled procedural-3d example fixture.
+/// 🧾️ Whether `example_id` names a bundled procedural-3d example host_snapshot.
 pub fn is_generation3d_example_id(example_id: &str) -> bool {
     matches!(
         example_id,
@@ -299,7 +299,7 @@ pub fn example_document_json(example_id: &str) -> String {
 }
 
 /// 🌉️ Bridges a `FormGeneration.values` map (`semio_framework_artifact_playbook_playbook::PlaybookValues`, see `FormGeneration`
-/// in `📖️playbook/🦀️.rs`) into the `pack::json::Object` that `forms_bridge::apply_generation_values_to_host_document`
+/// in `📖️playbook/🦀️.rs`) into the `pack::json::Object` that `forms_bridge::apply_generation_values_to_host_snapshot`
 /// actually takes.
 #[cfg(feature = "component-app-assembly")]
 fn generation_values_to_pack_object(values: &semio_framework_artifact_playbook_playbook::PlaybookValues) -> dsl::json::Object {
@@ -325,11 +325,11 @@ pub fn generation_by_id<'a>(generation: &'a GenerationPlayState, selected_id: Op
     generation.generations.iter().find(|entry| entry.id == selected_id)
 }
 
-pub fn generation_host_document_for(fixture: &FlowHostDocument, generation: &GenerationPlayState, selected_id: Option<&str>) -> FlowHostDocument {
+pub fn generation_host_snapshot_for(host_snapshot: &FlowHostSnapshot, generation: &GenerationPlayState, selected_id: Option<&str>) -> FlowHostSnapshot {
     let Some(selected) = generation_by_id(generation, selected_id) else {
-        return fixture.clone();
+        return host_snapshot.clone();
     };
-    let mut patched = fixture.clone();
+    let mut patched = host_snapshot.clone();
     for widget in &mut patched.widgets {
         let Some(value) = selected.values.get(widget_id(widget)) else {
             continue;
@@ -363,14 +363,14 @@ pub fn generation_host_document_for(fixture: &FlowHostDocument, generation: &Gen
 
 /// 🏠️ Runs `body` against a catalogue-seeded host built from `fixture`, then retires that host.
 ///
-/// A `FlowHost` owns a cloned `FlowHostDocument`, whose `layout: OrderedMap<WidgetLayout>` rejects a bare
+/// A `FlowHost` owns a cloned `FlowHostSnapshot`, whose `layout: OrderedMap<WidgetLayout>` rejects a bare
 /// drop (`ordered-map root must be explicitly retired before drop`,
 /// `🧰️framework/🔨️modules/🌱️value/🗂️ordered/🦀️.rs:81`), so a host is CLOSED through
 /// [`FlowHost::retire_cold`], never dropped. This scope is the ONLY way generation3d builds one —
-/// there is no `host_from_host_document(…) -> FlowHost` to leak.
+/// there is no `host_from_host_snapshot(…) -> FlowHost` to leak.
 #[cfg(feature = "component-app-assembly")]
-pub fn with_host<R>(fixture: &FlowHostDocument, body: impl FnOnce(&mut FlowHost) -> R) -> R {
-    FlowHost::with_host_document(fixture, |host| {
+pub fn with_host<R>(host_snapshot: &FlowHostSnapshot, body: impl FnOnce(&mut FlowHost) -> R) -> R {
+    FlowHost::with_host_snapshot(host_snapshot, |host| {
         host.set_neuron_kind_info_map(semio_framework_os_flow::flow_neuron_kind_info_map());
         body(host)
     })
@@ -381,8 +381,8 @@ pub fn with_host<R>(fixture: &FlowHostDocument, body: impl FnOnce(&mut FlowHost)
 /// host because every real caller needs it mutably (`sync`/`tick`), which a captured `&mut` could
 /// not provide while the scope itself holds the session borrow.
 #[cfg(feature = "component-app-assembly")]
-pub fn with_host_session<R>(fixture: &FlowHostDocument, session: &mut FlowEvalSession, body: impl FnOnce(&mut FlowHost, &mut FlowEvalSession) -> R) -> R {
-    let mut host = flow_host_with_session(fixture, session);
+pub fn with_host_session<R>(host_snapshot: &FlowHostSnapshot, session: &mut FlowEvalSession, body: impl FnOnce(&mut FlowHost, &mut FlowEvalSession) -> R) -> R {
+    let mut host = flow_host_with_session(host_snapshot, session);
     let result = body(&mut host, session);
     host.retire_cold();
     result
@@ -391,8 +391,8 @@ pub fn with_host_session<R>(fixture: &FlowHostDocument, session: &mut FlowEvalSe
 /// 🔀️ Rebuilds the fixture the flow host would normalize `before` to, then diffs `target` against
 /// that baseline.
 #[cfg(feature = "component-app-assembly")]
-pub fn commit_host_document(before: &FlowHostDocument, target: &FlowHostDocument) -> Vec<crate::standards::v1::subsets::any::schema::mutations::text::Generation3dMutation> {
-    with_host(before, |host| crate::standards::v1::subsets::any::schema::mutations::text::generation3d_host_document_operations(&host.host_document, target))
+pub fn commit_host_snapshot(before: &FlowHostSnapshot, target: &FlowHostSnapshot) -> Vec<crate::standards::v1::subsets::any::schema::mutations::text::Generation3dMutation> {
+    with_host(before, |host| crate::standards::v1::subsets::any::schema::mutations::text::generation3d_host_snapshot_operations(&host.host_snapshot, target))
 }
 
 pub fn split_endpoint(endpoint: &str) -> (String, String) {
@@ -400,8 +400,8 @@ pub fn split_endpoint(endpoint: &str) -> (String, String) {
 }
 
 #[cfg(feature = "component-app-assembly")]
-pub fn dag_host_document_to_workflow(host_document: &semio_framework_artifact_infinite_dag::DagHostDocument) -> (Vec<semio_framework_ui::wgpu::NodeGraphNodeRecord>, Vec<semio_framework_ui::wgpu::NodeGraphEdgeRecord>) {
-    let nodes: Vec<semio_framework_ui::wgpu::NodeGraphNodeRecord> = fixture
+pub fn dag_host_snapshot_to_workflow(host_snapshot: &semio_framework_artifact_infinite_dag::DagHostSnapshot) -> (Vec<semio_framework_ui::wgpu::NodeGraphNodeRecord>, Vec<semio_framework_ui::wgpu::NodeGraphEdgeRecord>) {
+    let nodes: Vec<semio_framework_ui::wgpu::NodeGraphNodeRecord> = host_snapshot
         .nodes
         .iter()
         .map(|node| semio_framework_ui::wgpu::NodeGraphNodeRecord {
@@ -416,7 +416,7 @@ pub fn dag_host_document_to_workflow(host_document: &semio_framework_artifact_in
             ..Default::default()
         })
         .collect();
-    let edges: Vec<semio_framework_ui::wgpu::NodeGraphEdgeRecord> = fixture
+    let edges: Vec<semio_framework_ui::wgpu::NodeGraphEdgeRecord> = host_snapshot
         .edges
         .iter()
         .map(|edge| {
@@ -437,11 +437,11 @@ pub fn widget_id_from_instance_id(instance_id: &str) -> &str {
 }
 
 #[cfg(feature = "component-app-assembly")]
-pub fn evaluate_generation_preview(fixture: &FlowHostDocument, values: &semio_framework_artifact_playbook_playbook::PlaybookValues) -> String {
-    let fixture_json = dsl::json::to_json_string(fixture);
-    let patched = apply_generation_values_to_host_document_json(&fixture_json, &generation_values_to_pack_object(values));
-    let patched_fixture = FlowHost::parse_host_document_json(&patched).unwrap_or_else(|_| fixture.clone());
-    let mut host = FlowHost::from_host_document(patched_fixture);
+pub fn evaluate_generation_preview(host_snapshot: &FlowHostSnapshot, values: &semio_framework_artifact_playbook_playbook::PlaybookValues) -> String {
+    let fixture_json = dsl::json::to_json_string(host_snapshot);
+    let patched = apply_generation_values_to_host_snapshot_json(&fixture_json, &generation_values_to_pack_object(values));
+    let patched_fixture = FlowHost::parse_host_snapshot_json(&patched).unwrap_or_else(|_| host_snapshot.clone());
+    let mut host = FlowHost::from_host_snapshot(patched_fixture);
     host.set_neuron_kind_info_map(semio_framework_os_flow::flow_neuron_kind_info_map());
     let evaluated = host.evaluate().unwrap_or_default();
     host.retire_cold();
@@ -466,7 +466,7 @@ pub fn gumball_widget_id(source_id: &str, operation: &str) -> String {
 
 #[cfg(feature = "component-app-assembly")]
 pub fn gumball_widget_json(host: &FlowHost, widget_id_str: &str) -> Option<dsl::DslValue> {
-    host.host_document.widgets.iter().find(|widget| widget_id(widget) == widget_id_str).map(dsl::ToValue::to_value)
+    host.host_snapshot.widgets.iter().find(|widget| widget_id(widget) == widget_id_str).map(dsl::ToValue::to_value)
 }
 
 #[cfg(feature = "component-app-assembly")]
@@ -530,27 +530,27 @@ pub fn gumball_scale_params_json(factor: f64) -> String {
 #[cfg(feature = "component-app-assembly")]
 pub fn ensure_gumball_node(host: &mut FlowHost, selected_id: &str, operation: &str) -> Result<String, String> {
     let own_suffix = format!("__gumball_{operation}");
-    if selected_id.ends_with(&own_suffix) && host.host_document.widgets.iter().any(|widget| widget_id(widget) == selected_id) {
+    if selected_id.ends_with(&own_suffix) && host.host_snapshot.widgets.iter().any(|widget| widget_id(widget) == selected_id) {
         return Ok(selected_id.to_string());
     }
     let transform_id = gumball_widget_id(selected_id, operation);
-    if host.host_document.widgets.iter().any(|widget| widget_id(widget) == transform_id) {
+    if host.host_snapshot.widgets.iter().any(|widget| widget_id(widget) == transform_id) {
         return Ok(transform_id);
     }
-    let (source_x, source_y) = host.host_document.layout.get(selected_id).map_or((0.0, 0.0), |layout| (layout.x, layout.y));
+    let (source_x, source_y) = host.host_snapshot.layout.get(selected_id).map_or((0.0, 0.0), |layout| (layout.x, layout.y));
     let descriptor = dsl::json::to_json_string(&dsl::DslValue::object([
         ("kind".to_string(), dsl::DslValue::String("neuron".into())),
         ("id".to_string(), dsl::DslValue::String(transform_id.clone())),
         ("neuronKind".to_string(), dsl::DslValue::String(gumball_xform_kind(operation).into())),
     ]));
     host.add_widget(&descriptor, source_x + 220.0, source_y).map_err(|err| err.to_string())?;
-    let outgoing_port = host.host_document.synapses.iter().find(|synapse| synapse.from == selected_id).map(|synapse| synapse.from_port.clone());
+    let outgoing_port = host.host_snapshot.synapses.iter().find(|synapse| synapse.from == selected_id).map(|synapse| synapse.from_port.clone());
     if let Some(port) = outgoing_port {
         host.insert_between(selected_id, &port, &transform_id, "geometry", "geometry").map_err(|err| err.to_string())?;
     } else {
         host.connect(selected_id, &transform_id).map_err(|err| err.to_string())?;
     }
-    if let Some(Widget::Neuron { preview, .. }) = host.host_document.widgets.iter_mut().find(|widget| widget_id(widget) == selected_id) {
+    if let Some(Widget::Neuron { preview, .. }) = host.host_snapshot.widgets.iter_mut().find(|widget| widget_id(widget) == selected_id) {
         *preview = false;
     }
     Ok(transform_id)
@@ -560,7 +560,7 @@ pub fn ensure_gumball_node(host: &mut FlowHost, selected_id: &str, operation: &s
 //#region 🔁️Re-exports
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
 pub use semio_framework_artifact_flow_flow::CameraJson;
-pub use semio_framework_artifact_flow_flow::FlowHostDocument;
+pub use semio_framework_artifact_flow_flow::FlowHostSnapshot;
 pub use semio_framework_artifact_flow_flow::Widget;
 pub use semio_framework_artifact_playbook_playbook::GenerationPlayState;
 //#endregion 🔁️Re-exports

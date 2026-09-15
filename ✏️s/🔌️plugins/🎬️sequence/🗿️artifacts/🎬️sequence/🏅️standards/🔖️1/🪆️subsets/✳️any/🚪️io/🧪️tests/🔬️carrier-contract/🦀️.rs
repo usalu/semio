@@ -1,5 +1,5 @@
 use crate::standards::v1::subsets::any::io::{export::serializers::artifacts as export, import::deserializers::artifacts as import};
-use crate::{SequenceHostDocument, SequenceSnapshot};
+use crate::{SequenceHostSnapshot, SequenceSnapshot};
 use dsl::os_pack as pack;
 use semio_framework::io::io_mechanism::{Deserializer, Serializer};
 use semio_framework::io_schema::IoPayload;
@@ -10,9 +10,9 @@ use semio_s_artifact_stdio_md::{schema::snapshot::MdBlock, MdSnapshot};
 async fn sequence_carrier_contracts_match_the_json_oracle() {
     let vectors: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔁️carrier-contracts.json")).expect("neutral carrier vectors");
     for row in vectors["cases"].as_array().expect("cases") {
-        let fixture = neural_engine::ColdOwner::new(pack::from_json_str::<SequenceHostDocument>(&row["fixture"].to_string()).expect("owned fixture decoder"));
+        let fixture = neural_engine::ColdOwner::new(pack::from_json_str::<SequenceHostSnapshot>(&row["fixture"].to_string()).expect("owned fixture decoder"));
         assert_eq!(serde_json::from_str::<serde_json::Value>(&pack::to_json_string(&*fixture)).expect("independent fixture oracle"), row["fixture"]);
-        let snapshot = neural_engine::ColdOwner::new(SequenceSnapshot::from_host_document(fixture.into_inner()));
+        let snapshot = neural_engine::ColdOwner::new(SequenceSnapshot::from_host_snapshot(fixture.into_inner()));
         let payload = export::md::v_commonmark::any::SequenceIntoMd::serialize(&snapshot).await.expect("markdown export").value;
         let IoPayload::Binary(bytes) = &payload else { panic!("binary markdown snapshot") };
         let md = <MdSnapshot as store::ArtifactPack>::decode_pack(bytes).expect("markdown snapshot codec");
@@ -20,7 +20,7 @@ async fn sequence_carrier_contracts_match_the_json_oracle() {
         assert_eq!(info, "json");
         assert_eq!(serde_json::from_str::<serde_json::Value>(literal).expect("independent markdown oracle"), row["fixture"]);
         let restored = neural_engine::ColdOwner::new(import::md::v_commonmark::any::MdIntoSequence::deserialize(&payload).await.expect("markdown import").value);
-        assert_eq!(neural_engine::ColdOwner::new(restored.to_host_document()), neural_engine::ColdOwner::new(snapshot.to_host_document()));
+        assert_eq!(neural_engine::ColdOwner::new(restored.to_host_snapshot()), neural_engine::ColdOwner::new(snapshot.to_host_snapshot()));
         let csv_payload = export::csv::v_rfc4180::any::SequenceIntoCsv::serialize(&snapshot).await.expect("csv export").value;
         let IoPayload::Binary(bytes) = &csv_payload else { panic!("binary csv snapshot") };
         let csv = <CsvSnapshot as store::ArtifactPack>::decode_pack(bytes).expect("csv snapshot codec");

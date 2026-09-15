@@ -122,7 +122,7 @@ def write_json(path: Path, doc: dict) -> None:
 
 def artifact_json() -> dict:
     return {
-        "$id": f"https://semio.tech/schema/s/sourcing/curate/artifact.json",
+        "$id": f"https://json.schemas.assets.semio-tech.com/s/sourcing/curate/artifact.json",
         "title": "CurateArtifact",
         "type": "object",
         "additionalProperties": False,
@@ -149,7 +149,7 @@ def artifact_json() -> dict:
 
 def snapshot_json() -> dict:
     return {
-        "$id": f"https://semio.tech/schema/s/sourcing/curate/snapshot.json",
+        "$id": f"https://json.schemas.assets.semio-tech.com/s/sourcing/curate/snapshot.json",
         "title": "CurateSnapshot",
         "type": "object",
         "additionalProperties": False,
@@ -175,7 +175,7 @@ def snapshot_json() -> dict:
 
 def diff_json() -> dict:
     return {
-        "$id": f"https://semio.tech/schema/s/sourcing/curate/diff.json",
+        "$id": f"https://json.schemas.assets.semio-tech.com/s/sourcing/curate/diff.json",
         "title": "CurateDiff",
         "type": "object",
         "additionalProperties": False,

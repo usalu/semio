@@ -7046,7 +7046,7 @@ Mode: reference. Result: PASS 196/196.
         "errors": [
           {
             "instancePath": "/n",
-            "schemaPath": "https://semio.tech/schema/store-sync-demo/intrinsic/1#/$defs/i32/type",
+            "schemaPath": "https://json.schemas.assets.semio-tech.com/store-sync-demo/intrinsic/1#/$defs/i32/type",
             "keyword": "type",
             "params": {
               "type": "integer"
@@ -7214,7 +7214,7 @@ Mode: reference. Result: PASS 196/196.
         "errors": [
           {
             "instancePath": "/n",
-            "schemaPath": "https://semio.tech/schema/store-sync-demo/intrinsic/1#/$defs/i32/type",
+            "schemaPath": "https://json.schemas.assets.semio-tech.com/store-sync-demo/intrinsic/1#/$defs/i32/type",
             "keyword": "type",
             "params": {
               "type": "integer"
@@ -7610,7 +7610,7 @@ Mode: reference. Result: PASS 196/196.
         "errors": [
           {
             "instancePath": "/n",
-            "schemaPath": "https://semio.tech/schema/store-sync-demo/intrinsic/1#/$defs/i32/type",
+            "schemaPath": "https://json.schemas.assets.semio-tech.com/store-sync-demo/intrinsic/1#/$defs/i32/type",
             "keyword": "type",
             "params": {
               "type": "integer"
@@ -7629,7 +7629,7 @@ Mode: reference. Result: PASS 196/196.
         "errors": [
           {
             "instancePath": "/n",
-            "schemaPath": "https://semio.tech/schema/store-sync-demo/intrinsic/1#/$defs/i32/type",
+            "schemaPath": "https://json.schemas.assets.semio-tech.com/store-sync-demo/intrinsic/1#/$defs/i32/type",
             "keyword": "type",
             "params": {
               "type": "integer"
@@ -7648,7 +7648,7 @@ Mode: reference. Result: PASS 196/196.
         "errors": [
           {
             "instancePath": "/n",
-            "schemaPath": "https://semio.tech/schema/store-sync-demo/intrinsic/1#/$defs/i32/type",
+            "schemaPath": "https://json.schemas.assets.semio-tech.com/store-sync-demo/intrinsic/1#/$defs/i32/type",
             "keyword": "type",
             "params": {
               "type": "integer"
@@ -7667,7 +7667,7 @@ Mode: reference. Result: PASS 196/196.
         "errors": [
           {
             "instancePath": "/n",
-            "schemaPath": "https://semio.tech/schema/store-sync-demo/intrinsic/1#/$defs/i32/minimum",
+            "schemaPath": "https://json.schemas.assets.semio-tech.com/store-sync-demo/intrinsic/1#/$defs/i32/minimum",
             "keyword": "minimum",
             "params": {
               "comparison": ">=",
@@ -7687,7 +7687,7 @@ Mode: reference. Result: PASS 196/196.
         "errors": [
           {
             "instancePath": "/n",
-            "schemaPath": "https://semio.tech/schema/store-sync-demo/intrinsic/1#/$defs/i32/maximum",
+            "schemaPath": "https://json.schemas.assets.semio-tech.com/store-sync-demo/intrinsic/1#/$defs/i32/maximum",
             "keyword": "maximum",
             "params": {
               "comparison": "<=",
@@ -7707,7 +7707,7 @@ Mode: reference. Result: PASS 196/196.
         "errors": [
           {
             "instancePath": "/n",
-            "schemaPath": "https://semio.tech/schema/store-sync-demo/intrinsic/1#/$defs/i32/maximum",
+            "schemaPath": "https://json.schemas.assets.semio-tech.com/store-sync-demo/intrinsic/1#/$defs/i32/maximum",
             "keyword": "maximum",
             "params": {
               "comparison": "<=",
@@ -7727,7 +7727,7 @@ Mode: reference. Result: PASS 196/196.
         "errors": [
           {
             "instancePath": "/n",
-            "schemaPath": "https://semio.tech/schema/store-sync-demo/intrinsic/1#/$defs/i32/type",
+            "schemaPath": "https://json.schemas.assets.semio-tech.com/store-sync-demo/intrinsic/1#/$defs/i32/type",
             "keyword": "type",
             "params": {
               "type": "integer"
@@ -7746,7 +7746,7 @@ Mode: reference. Result: PASS 196/196.
         "errors": [
           {
             "instancePath": "/n",
-            "schemaPath": "https://semio.tech/schema/store-sync-demo/intrinsic/1#/$defs/i32/type",
+            "schemaPath": "https://json.schemas.assets.semio-tech.com/store-sync-demo/intrinsic/1#/$defs/i32/type",
             "keyword": "type",
             "params": {
               "type": "integer"
@@ -7765,7 +7765,7 @@ Mode: reference. Result: PASS 196/196.
         "errors": [
           {
             "instancePath": "/n",
-            "schemaPath": "https://semio.tech/schema/store-sync-demo/intrinsic/1#/$defs/i32/type",
+            "schemaPath": "https://json.schemas.assets.semio-tech.com/store-sync-demo/intrinsic/1#/$defs/i32/type",
             "keyword": "type",
             "params": {
               "type": "integer"
@@ -7784,7 +7784,7 @@ Mode: reference. Result: PASS 196/196.
         "errors": [
           {
             "instancePath": "/n",
-            "schemaPath": "https://semio.tech/schema/store-sync-demo/intrinsic/1#/$defs/i32/minimum",
+            "schemaPath": "https://json.schemas.assets.semio-tech.com/store-sync-demo/intrinsic/1#/$defs/i32/minimum",
             "keyword": "minimum",
             "params": {
               "comparison": ">=",
@@ -7804,7 +7804,7 @@ Mode: reference. Result: PASS 196/196.
         "errors": [
           {
             "instancePath": "/n",
-            "schemaPath": "https://semio.tech/schema/store-sync-demo/intrinsic/1#/$defs/i32/maximum",
+            "schemaPath": "https://json.schemas.assets.semio-tech.com/store-sync-demo/intrinsic/1#/$defs/i32/maximum",
             "keyword": "maximum",
             "params": {
               "comparison": "<=",
@@ -7824,7 +7824,7 @@ Mode: reference. Result: PASS 196/196.
         "errors": [
           {
             "instancePath": "/n",
-            "schemaPath": "https://semio.tech/schema/store-sync-demo/intrinsic/1#/$defs/i32/maximum",
+            "schemaPath": "https://json.schemas.assets.semio-tech.com/store-sync-demo/intrinsic/1#/$defs/i32/maximum",
             "keyword": "maximum",
             "params": {
               "comparison": "<=",

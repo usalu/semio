@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/framework/job/budget/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/job/budget/schema.json",
   "title": "Job Budget Schema Module",
   "definitions": {
     "u64": {
@@ -23,7 +23,7 @@
       ],
       "properties": {
         "$schema": {
-          "const": "https://semio.tech/schema/framework/job/budget/schema.json#/$defs/Budget"
+          "const": "https://json.schemas.assets.semio-tech.com/framework/job/budget/schema.json#/$defs/Budget"
         },
         "unit": {
           "const": "microseconds"
@@ -110,7 +110,7 @@
       ],
       "properties": {
         "$schema": {
-          "const": "https://semio.tech/schema/framework/job/budget/schema.json#/$defs/Clock"
+          "const": "https://json.schemas.assets.semio-tech.com/framework/job/budget/schema.json#/$defs/Clock"
         },
         "browser": {
           "type": "array",
@@ -229,7 +229,7 @@
       ],
       "properties": {
         "$schema": {
-          "const": "https://semio.tech/schema/framework/job/budget/schema.json#/$defs/Binding"
+          "const": "https://json.schemas.assets.semio-tech.com/framework/job/budget/schema.json#/$defs/Binding"
         },
         "cases": {
           "type": "array",

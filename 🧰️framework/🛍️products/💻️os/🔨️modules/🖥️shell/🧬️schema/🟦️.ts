@@ -12,17 +12,17 @@
  * @see ./🔣️.json
  * @see ./🦀️.rs
  */
-import schemaDocument from "./🔣️.json" with { type: "json" };
-
-export * from "../🤖️generated/🟦️.js";
-export { OsConfigSchemaError, parseUiAppearance, parseUiChromeLayout, parseUiDriver, parseUiLocale, parseUiPreferences, parseUiTheme } from "../../../🎚️config/🧬️schema/🟦️.ts";
-export type { UiAppearance, UiChromeLayout, UiDriver, UiLocale, UiPreferences, UiTheme } from "../../../🎚️config/🧬️schema/🟦️.ts";
 import { OsConfigSchemaError, parseUiLocale } from "../../../🎚️config/🧬️schema/🟦️.ts";
 import type { ActiveSession, Anchor, AppRole, ArtifactSyncStatus, ByAnchor, Conflict, DialogState, DockUiState, ExtraWindowInstance, IconName, InferencePortPhase, InferencePortStatus, LayoutNode, LoadedPlugin, MergePolicy, NoticeKind, PluginPanelStatus, PluginSupervisorState, ShellCapability, ShellCommand, ShellError, ShellEvent, ShellScope, ShellState, SplitOrientation, SyncCardKind, TransientNotice } from "../🤖️generated/🟦️.js";
+import schemaDocument from "./🔣️.json" with { type: "json" };
+
+export { OsConfigSchemaError, parseUiAppearance, parseUiChromeLayout, parseUiDriver, parseUiLocale, parseUiPreferences, parseUiTheme } from "../../../🎚️config/🧬️schema/🟦️.ts";
+export type { UiAppearance, UiChromeLayout, UiDriver, UiLocale, UiPreferences, UiTheme } from "../../../🎚️config/🧬️schema/🟦️.ts";
+export * from "../🤖️generated/🟦️.js";
 
 //#region 🪪️Authority
 /** 🪪️ The `$id` `🔣️.json` declares — the identity every consumer resolves `#/$defs/<ExportId>` against. */
-export const OS_SHELL_SCHEMA_ID = "https://semio.tech/schema/os/shell/component.json";
+export const OS_SHELL_SCHEMA_ID = "https://json.schemas.assets.semio-tech.com/os/shell/component.json";
 
 /** 🧬️ The draft-07 authority document itself, for consumers that want to feed it to a validator. */
 export const osShellSchemaDocument: JsonSchemaDocument = schemaDocument as unknown as JsonSchemaDocument;

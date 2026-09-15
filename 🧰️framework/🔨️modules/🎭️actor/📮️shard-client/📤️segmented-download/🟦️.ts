@@ -11,7 +11,7 @@
  * 4. the host DRAIN (`📤️SegmentedDownload/🟦️.ts`'s `drainSegmentedMediaExport`).
  *
  * Language-agnostic owner: `🧬️schema/🔣️.json`
- * (`https://semio.tech/schema/framework/actor/shard-client/segmented-download/schema.json#/$defs/SegmentedDownloadContract`)
+ * (`https://json.schemas.assets.semio-tech.com/framework/actor/shard-client/segmented-download/schema.json#/$defs/SegmentedDownloadContract`)
  * + `🧫️fixtures/🔣️.json`. This mirror is asserted field-for-field equal to that fixture — and the Rust
  * constants are asserted equal to the same fixture by the plugin crate's own law — so a literal edited
  * in one hop alone fails closed instead of turning a correct producer into a runtime fault.

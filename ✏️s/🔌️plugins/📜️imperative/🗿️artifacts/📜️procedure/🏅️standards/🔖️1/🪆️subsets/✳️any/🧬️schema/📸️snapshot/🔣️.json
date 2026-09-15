@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/imperative/procedure/snapshot.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/imperative/procedure/snapshot.json",
   "title": "ProcedureSnapshot",
   "type": "object",
   "additionalProperties": false,
@@ -10,12 +10,12 @@
       "x-semio-state": "artifact"
     },
     "flow": {
-      "$ref": "https://semio.tech/schema/os/store/child.json",
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child.json",
       "x-semio-state": "artifact",
       "x-semio-child-kind": "s.stdio.semio"
     },
     "text": {
-      "$ref": "https://semio.tech/schema/os/store/child.json",
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child.json",
       "x-semio-state": "artifact",
       "x-semio-child-kind": "s.stdio.semio"
     }

@@ -389,12 +389,12 @@ ownerless again).
 
 ### 6.2 (W2, taxonomy) `$id` of the test-protocol schema
 
-Contract §B says `$id` is `https://semio.tech/schema/<scope path>/<facet>.json`. `🧪️test/🧬️schema/🔣️.json`
+Contract §B says `$id` is `https://json.schemas.assets.semio-tech.com/<scope path>/<facet>.json`. `🧪️test/🧬️schema/🔣️.json`
 still carries `$id: "https://semio-tech.com/schema/repo/test/v2"` and I did **not** change it, because
 `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🗺️testing-readme-coordinates/🟦️.ts:127` asserts
 that exact string and that file is outside my partition. Requested, as one change:
 
-- `🧪️test/🧬️schema/🔣️.json` → `"$id": "https://semio.tech/schema/repo/test/protocol.json"` (mine to apply
+- `🧪️test/🧬️schema/🔣️.json` → `"$id": "https://json.schemas.assets.semio-tech.com/repo/test/protocol.json"` (mine to apply
   once the assertion moves)
 - `📚️library/🧪️tests/🗺️testing-readme-coordinates/🟦️.ts:127` → expect the new id
 

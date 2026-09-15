@@ -2,7 +2,7 @@
 
 use crate::os_dsl::DslValue;
 use crate::os_store::{ArtifactOwnedValueRetirementFactory, ArtifactStoreCursorDisposer, ErasedSnapshotRetirement, MemberStoreOwner, DocumentStoreOwners, SnapshotRetirementFactory, SnapshotRetirementStep};
-use crate::{DagHostDocumentEdge, DagMedia, DagMutation, DagNodeKind, DagNodeSpec, DagPreviewContent, DagSnapshot, IoPortSpec};
+use crate::{DagHostSnapshotEdge, DagMedia, DagMutation, DagNodeKind, DagNodeSpec, DagPreviewContent, DagSnapshot, IoPortSpec};
 use graph::manifest::{PropertyBag, PropertyValue};
 use std::collections::{BTreeSet, LinkedList};
 use std::mem::ManuallyDrop;
@@ -24,8 +24,8 @@ enum DagOwner {
     Kind(DagNodeKind),
     Node(DagNodeSpec),
     Nodes(Vec<DagNodeSpec>),
-    Edge(DagHostDocumentEdge),
-    Edges(Vec<DagHostDocumentEdge>),
+    Edge(DagHostSnapshotEdge),
+    Edges(Vec<DagHostSnapshotEdge>),
     Snapshot(DagSnapshot),
     Mutation(DagMutation),
 }
@@ -151,8 +151,8 @@ impl DagRetirement {
         self.push(DagOwner::Kind(kind));
     }
 
-    fn retire_edge(&mut self, edge: DagHostDocumentEdge) {
-        let DagHostDocumentEdge { id, source, target, route_style: _, properties } = edge;
+    fn retire_edge(&mut self, edge: DagHostSnapshotEdge) {
+        let DagHostSnapshotEdge { id, source, target, route_style: _, properties } = edge;
         self.text(id);
         self.text(source);
         self.text(target);

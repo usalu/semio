@@ -3,7 +3,7 @@
   "$id": "remodeling.reconstruction.run.v1",
   "title": "Remodeling Reconstruction Run",
   "description": "Source of record for the remodeling reconstruction ToolRunDefinition (📋️tool-run-contract.md §2.4). The run is mutating: every sparse cloud, mesh and raster it produces is a provisional append-content op, and one commit-reconstruction op binds them; nothing reaches the document before finalize. One unit of fuel is one pipeline decision that produced visible evidence (a frame verdict, a feature set, a batch of match verdicts, a camera, triangulated or pruned points, a depth map, a dense point batch, one product op). The checkpoint layout is `checkpoint`.",
-  "$ref": "https://semio.tech/schema/framework/tool-run/schema.json#/$defs/ToolRunDefinition",
+  "$ref": "https://json.schemas.assets.semio-tech.com/framework/tool-run/schema.json#/$defs/ToolRunDefinition",
   "x-semio-toolRun": {
     "toolId": "reconstruction",
     "label": { "en": "Reconstruction", "de": "Rekonstruktion" },

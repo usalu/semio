@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/repo/client/mcp/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/repo/client/mcp/schema.json",
   "title": "RepoGraphqlSchema",
   "description": "🔗️ The `repo.client.mcp` scope: the repo GraphQL surface the CLI executor answers and the VS Code extension queries. The sibling 🔗️.graphql is the normative SDL; this document is the JSON Schema facet of the same exports, so responses and mutation inputs can be validated outside a GraphQL runtime.",
   "$comment": "The root is one resolved `Query` selection: the `data` payload the CLI executor answers with. Every field is optional because a GraphQL selection chooses them; nullability is carried by each field's own shape.",

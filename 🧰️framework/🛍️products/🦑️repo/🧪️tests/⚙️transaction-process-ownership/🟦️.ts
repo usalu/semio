@@ -1,12 +1,12 @@
+import Ajv from "ajv";
 import { afterAll, expect, test } from "bun:test";
-import { EventEmitter } from "node:events";
+import { parse, type ParseError } from "jsonc-parser";
+import isEqual from "lodash/isEqual";
 import { createHash } from "node:crypto";
+import { EventEmitter } from "node:events";
 import { existsSync, readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { join, resolve } from "node:path";
-import Ajv from "ajv";
-import { parse, type ParseError } from "jsonc-parser";
-import isEqual from "lodash/isEqual";
 import { SmartBuffer } from "smart-buffer";
 import ts from "typescript";
 
@@ -60,7 +60,7 @@ function darwinBytes(): Buffer {
 
 test("process observation has closed neutral schema and independent JSON authority", () => {
   expect(schema.$schema).toBe("http://json-schema.org/draft-07/schema#");
-  expect(schema.$id).toBe("https://semio.tech/schema/repo/native/observe/schema.json");
+  expect(schema.$id).toBe("https://json.schemas.assets.semio-tech.com/repo/native/observe/schema.json");
   expect(schema.$ref).toBe("#/$defs/TransactionProcessOwnershipVector");
   const validate = new Ajv({ strict: true, allErrors: true }).compile(schema); expect(validate(vector), JSON.stringify(validate.errors)).toBe(true);
   for (const value of [{ ...vector, signals: true }, { ...vector, nativeProbe: { ...vector.nativeProbe, signals: true } }, { ...vector, darwinLayout: { ...vector.darwinLayout, size: 128 } }, { ...vector, scope: "pid-only" }]) expect(validate(value)).toBe(false);

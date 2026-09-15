@@ -32,7 +32,7 @@ fn dsl_pack_equivalence_with_generation_state() {
 #[test]
 fn dsl_pack_equivalence_covers_every_widget_kind() {
     let mut projection = Generation2dSnapshot::default();
-    projection.host_document.widgets = vec![
+    projection.host_snapshot.widgets = vec![
         Widget::InputSlider { id: "slider".into(), label: "Number".into(), value: 2.0, min: 0.0, max: 10.0, step: 0.5 },
         Widget::InputImage { id: "image".into(), src: "data:image/png;base64,abc".into() },
         Widget::Variable { id: "variable".into(), name: "value".into(), schema: "dictionary".into() },
@@ -40,7 +40,7 @@ fn dsl_pack_equivalence_covers_every_widget_kind() {
         Widget::OutputExport { id: "export".into(), format: "svg".into() },
         Widget::Cluster { id: "cluster".into(), name: "Group".into(), tree: Default::default(), flow: Default::default() },
     ];
-    projection.host_document.synapses = vec![];
+    projection.host_snapshot.synapses = vec![];
     let projection = crate::standards::v1::subsets::any::schema::snapshot::Generation2dSnapshotRead::new(projection);
     test_support::assert_dsl_pack_equivalence_cold(&*projection, Generation2dSnapshot::retire_cold);
 }

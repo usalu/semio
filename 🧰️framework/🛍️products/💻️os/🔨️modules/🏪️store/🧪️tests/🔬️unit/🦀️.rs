@@ -190,7 +190,7 @@ struct SerdeOneItemPublicationOracle {
 }
 
 impl SerdeOneItemPublicationOracle {
-    fn from_host_document(fixture: &serde_json::Value) -> Self {
+    fn from_host_snapshot(fixture: &serde_json::Value) -> Self {
         Self {
             maximum_items: fixture["capacities"]["maximumWorkItems"].as_u64().expect("maximum work items") as usize,
             maximum_bytes: fixture["capacities"]["maximumRetainedBytes"].as_u64().expect("maximum retained bytes") as usize,
@@ -224,7 +224,7 @@ impl SerdeOneItemPublicationOracle {
 #[test]
 fn one_item_publication_fixture_matches_the_third_party_json_oracle() {
     let fixture: serde_json::Value = serde_json::from_str(ONE_ITEM_PUBLICATION_FIXTURE).expect("language-neutral one-item publication fixture");
-    let oracle = SerdeOneItemPublicationOracle::from_host_document(&fixture);
+    let oracle = SerdeOneItemPublicationOracle::from_host_snapshot(&fixture);
     assert_eq!(fixture["capacities"]["historyItems"], crate::os_vcs::ARTIFACT_HISTORY_LEDGER_CAPACITY);
     for case in fixture["admissionCases"].as_array().expect("admission cases") {
         let actual = oracle.admits(case["workItems"].as_u64().expect("work items") as usize, case["retainedBytes"].as_u64().expect("retained bytes") as usize);

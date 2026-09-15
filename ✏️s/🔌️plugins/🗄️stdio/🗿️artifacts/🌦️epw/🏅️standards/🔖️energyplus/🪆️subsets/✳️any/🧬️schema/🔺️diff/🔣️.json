@@ -1,12 +1,12 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/epw/energyplus/any/diff.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/epw/energyplus/any/diff.json",
   "title": "EpwDiff",
   "type": "object",
   "additionalProperties": false,
   "properties": {
     "location": {
-      "$ref": "https://semio.tech/schema/s/stdio/epw/energyplus/any/snapshot.json#/$defs/EpwLocation"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/epw/energyplus/any/snapshot.json#/$defs/EpwLocation"
     },
     "designConditions": {
       "type": "string"
@@ -27,7 +27,7 @@
       "type": "string"
     },
     "dataPeriods": {
-      "$ref": "https://semio.tech/schema/s/stdio/epw/energyplus/any/snapshot.json#/$defs/EpwDataPeriods"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/epw/energyplus/any/snapshot.json#/$defs/EpwDataPeriods"
     },
     "records": {
       "$ref": "#/$defs/EpwRecordsDiff"
@@ -176,7 +176,7 @@
           "minimum": 0
         },
         "record": {
-          "$ref": "https://semio.tech/schema/s/stdio/epw/energyplus/any/snapshot.json#/$defs/EpwRecord"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/epw/energyplus/any/snapshot.json#/$defs/EpwRecord"
         }
       }
     },

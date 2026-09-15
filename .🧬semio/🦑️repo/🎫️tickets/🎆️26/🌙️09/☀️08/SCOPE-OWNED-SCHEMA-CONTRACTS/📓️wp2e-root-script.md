@@ -359,7 +359,7 @@ with `inventorySchemaScopes(root, loadCatalogTaxonomy())` on the live tree:
 ```
 
 `🧰️framework/🔨️modules/🧬️schema/🔣️.json` declares
-`$id: "https://semio.tech/schema/framework/schema/schema.json"` — scope `framework.schema` — and ten
+`$id: "https://json.schemas.assets.semio-tech.com/framework/schema/schema.json"` — scope `framework.schema` — and ten
 `$defs` exports, and the module resolves its own scope id correctly. It is dropped because the walker
 derives the *owner* as the module directory's parent, and for the framework module that **is itself named
 `🧬️schema`** the owner and the module are the same directory: the parent is the ineligible

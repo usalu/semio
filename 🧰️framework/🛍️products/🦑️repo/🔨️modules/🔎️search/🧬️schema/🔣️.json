@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://semio.tech/schema/repo/search/1",
+  "$id": "https://json.schemas.assets.semio-tech.com/repo/search/1",
   "title": "🔎️ Repo search fixtures and wire shapes",
   "description": "🔎️ The ranking vector file the `🔍️ranked-search` case reads, the persisted index event, and the projection every implementation must produce.",
   "$defs": {

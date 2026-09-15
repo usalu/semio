@@ -168,7 +168,6 @@
             },
             {
               "accessibility": {
-                "description": "Available once the run is complete",
                 "label": "Finalize",
                 "shortcut": "mod+shift+enter"
               },
@@ -193,7 +192,7 @@
                 "label": "Finalize",
                 "type": "button"
               },
-              "disabled": true,
+              "disabled": false,
               "key": "framework.toolRun.1.toolRunFinalize",
               "layout": {
                 "height": "hug",

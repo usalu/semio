@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/gis/test/map-create-region-group.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/gis/test/map-create-region-group.json",
   "$ref": "#/$defs/GisMapCreateRegionGroup",
   "$defs": {
     "Point": {

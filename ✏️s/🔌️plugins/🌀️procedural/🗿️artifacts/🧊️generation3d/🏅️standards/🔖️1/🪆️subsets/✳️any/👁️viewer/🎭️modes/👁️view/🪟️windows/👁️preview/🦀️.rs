@@ -152,8 +152,8 @@ use crate::preview_eval::{self, PreviewChannelItem, PreviewInlineGeometry};
 /// up the whole chain builds one here. `#[cfg(test)]` is the compile-time half of "render never
 /// evaluates" (`render_without_a_published_evaluation_paints_the_empty_world`).
 #[cfg(test)]
-pub fn evaluate_fixture(fixture: &semio_framework_artifact_flow_flow::FlowHostDocument) -> String {
-    crate::standards::v1::subsets::any::schema::with_host(fixture, |host| host.evaluate().unwrap_or_default())
+pub fn evaluate_host_snapshot(host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot) -> String {
+    crate::standards::v1::subsets::any::schema::with_host(host_snapshot, |host| host.evaluate().unwrap_or_default())
 }
 
 /// 👁️ One preview instance per geometry-bearing value per OUTPUT CHANNEL, each carrying its
@@ -277,7 +277,7 @@ fn build_preview_mesh_table(signature: u64, eval: &Value, preview_ids: &[String]
     PreviewMeshTable { signature, meshes_json: dsl::json::to_string(&Value::Array(meshes)), mesh_ids, mesh_id_by_handle }
 }
 
-pub fn preview_payload(eval_json: &str, fixture: &semio_framework_artifact_flow_flow::FlowHostDocument, config: &Generation3dViewConfig, session: Option<&semio_framework_os_flow::FlowEvalSession>, marks: &Generation3dViewMarks) -> ViewPreviewPayload {
+pub fn preview_payload(eval_json: &str, host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot, config: &Generation3dViewConfig, session: Option<&semio_framework_os_flow::FlowEvalSession>, marks: &Generation3dViewMarks) -> ViewPreviewPayload {
     if eval_json.is_empty() {
         return ViewPreviewPayload::default();
     }
@@ -287,7 +287,7 @@ pub fn preview_payload(eval_json: &str, fixture: &semio_framework_artifact_flow_
     };
     let tolerance = config.tolerance();
     let show_mode = config.effective_show_mode();
-    let preview_ids = preview_eval::preview_widget_ids(fixture);
+    let preview_ids = preview_eval::preview_widget_ids(host_snapshot);
     let signature = preview_mesh_signature(eval_json, tolerance.to_bits(), show_mode, &preview_ids, &eval, session);
     PREVIEW_MESH_TABLE.with(|retained| {
         let mut retained = retained.borrow_mut();
@@ -360,7 +360,7 @@ pub fn preview_selection_json(config: &Generation3dViewConfig, payload: &ViewPre
 /// framework-owned `graph` domain, geometry from the ephemeral evaluation when one exists.
 pub fn render(document: &Generation3dSnapshot, config: &Generation3dViewConfig, eval_json: Option<&str>, session: Option<&semio_framework_os_flow::FlowEvalSession>, run: Option<&semio_framework_plugin::ToolRunView>, marks: &Generation3dViewMarks, labels: &crate::editor::generation3d::terminology::Generation3dLabels) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let eval_json = eval_json.unwrap_or_default();
-    let payload = preview_payload(eval_json, &document.host_document, config, session, marks);
+    let payload = preview_payload(eval_json, &document.host_snapshot, config, session, marks);
     let selection_json = preview_selection_json(config, &payload);
     // 📈️ The SAME projection both editor preview windows publish — the surface-neutral
     // `🧵️preview-eval` one, reached at the artifact level and never through `::editor::`. A viewer
@@ -369,11 +369,11 @@ pub fn render(document: &Generation3dSnapshot, config: &Generation3dViewConfig, 
     let status_json = preview_eval::preview_window_status_json(
         session,
         run,
-        preview_eval::preview_status_json(eval_json, &document.host_document),
+        preview_eval::preview_status_json(eval_json, &document.host_snapshot),
         &preview_eval::PreviewStatusDebug { meshes_json: &payload.meshes_json, instances_json: &payload.instances_json },
         None,
     );
-    let fit_json = preview_eval::preview_fit_json(&document.host_document, &payload.meshes_json);
+    let fit_json = preview_eval::preview_fit_json(&document.host_snapshot, &payload.meshes_json);
     let sun = config.sun();
     crate::accessible_scene_surface(
         SURFACE_ID,

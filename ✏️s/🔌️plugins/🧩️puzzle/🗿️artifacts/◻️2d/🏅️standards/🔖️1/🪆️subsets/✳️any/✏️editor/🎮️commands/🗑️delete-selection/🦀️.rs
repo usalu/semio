@@ -1,9 +1,9 @@
 //! 🗂️ `delete-selection` command.
 
-use crate::editor::puzzle2d::{delete_selection_from_host_document, Puzzle2dActionCtx};
+use crate::editor::puzzle2d::{delete_selection_from_host_snapshot, Puzzle2dActionCtx};
 
 pub fn delete_selection(ctx: &mut Puzzle2dActionCtx<'_>) {
     let selected_ids = ctx.selected_ids();
     ctx.host.borrow_mut().delete_selection();
-    delete_selection_from_host_document(&mut ctx.scene.fixture, &selected_ids);
+    delete_selection_from_host_snapshot(&mut ctx.scene.fixture, &selected_ids);
 }

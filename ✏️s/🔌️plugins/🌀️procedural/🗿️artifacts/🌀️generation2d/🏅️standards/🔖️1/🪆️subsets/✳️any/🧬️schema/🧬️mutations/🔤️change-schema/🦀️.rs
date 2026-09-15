@@ -20,7 +20,7 @@ pub fn change_schema(schema: String) -> Generation2dMutation {
 }
 
 impl MutationKind<Generation2dSnapshot, Generation2dMutation> for ChangeSchema {
-    const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "fixture", kind: "change-schema", record: "ChangedSchema" };
+    const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "hostSnapshot", kind: "change-schema", record: "ChangedSchema" };
 
     fn diff(&self, base: &Generation2dSnapshot) -> protocol::MutationOutcome<Generation2dDiff> {
         super::diff::diff(self, base)

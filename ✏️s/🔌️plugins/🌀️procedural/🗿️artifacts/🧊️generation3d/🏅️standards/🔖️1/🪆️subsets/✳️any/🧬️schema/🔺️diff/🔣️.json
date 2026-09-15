@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/procedural/generation3d/diff.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/procedural/generation3d/diff.json",
   "title": "Generation3dDiff",
   "type": "object",
   "additionalProperties": false,
@@ -10,12 +10,12 @@
       "$ref": "#/$defs/Generation3dArtifact",
       "x-semio-state": "artifact"
     },
-    "fixture": {
-      "$ref": "https://semio.tech/schema/s/procedural/generation3d/artifact.json#/$defs/FlowHostDocument",
+    "hostSnapshot": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/procedural/generation3d/artifact.json#/$defs/FlowHostSnapshot",
       "x-semio-state": "artifact"
     },
     "generation": {
-      "$ref": "https://semio.tech/schema/s/procedural/generation3d/artifact.json#/$defs/GenerationPlayState",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/procedural/generation3d/artifact.json#/$defs/GenerationPlayState",
       "x-semio-state": "artifact"
     }
   },
@@ -25,15 +25,15 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "fixture",
+        "hostSnapshot",
         "generation"
       ],
       "properties": {
-        "fixture": {
-          "$ref": "https://semio.tech/schema/s/procedural/generation3d/artifact.json#/$defs/FlowHostDocument"
+        "hostSnapshot": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/procedural/generation3d/artifact.json#/$defs/FlowHostSnapshot"
         },
         "generation": {
-          "$ref": "https://semio.tech/schema/s/procedural/generation3d/artifact.json#/$defs/GenerationPlayState"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/procedural/generation3d/artifact.json#/$defs/GenerationPlayState"
         }
       }
     }

@@ -1,7 +1,7 @@
 //! 🧭 `topology` — one named inference: execution-order topology stats derived from the DAG's
 //! own node/edge graph (topological order, per-node longest-path depth, cycle-freedom, node count).
 
-use crate::{DagHostDocumentEdge, DagNodeSpec};
+use crate::{DagHostSnapshotEdge, DagNodeSpec};
 use std::collections::{BTreeMap, VecDeque};
 
 //#region 🔖️Topology
@@ -27,7 +27,7 @@ impl Default for DagTopology {
 /// 🧭 Kahn's algorithm over `nodes`/`edges` (endpoints `node@port` resolve to their node) on dense id-ordered indices,
 /// O((V + E) log V): ties break by node id and children are visited in id order; nodes left over after the queue
 /// drains (a cycle) are appended in id order so `topo_order` always stays a total permutation of every node id.
-pub fn compute_dag_topology<'a>(nodes: &'a [DagNodeSpec], edges: &'a [DagHostDocumentEdge]) -> DagTopology {
+pub fn compute_dag_topology<'a>(nodes: &'a [DagNodeSpec], edges: &'a [DagHostSnapshotEdge]) -> DagTopology {
     let mut ids: Vec<&str> = nodes.iter().map(|node| node.id.as_str()).collect();
     ids.sort_unstable();
     ids.dedup();

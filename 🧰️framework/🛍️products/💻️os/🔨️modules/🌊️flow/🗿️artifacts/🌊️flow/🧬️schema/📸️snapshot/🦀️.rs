@@ -1,4 +1,4 @@
-//! 📄️ Flow document: widgets, fixture, and DAG snapshot helpers.
+//! 📄️ Flow document: widgets, host_snapshot, and DAG snapshot helpers.
 
 use neural_engine as neural;
 
@@ -257,7 +257,7 @@ pub enum Widget {
 /// 🧩️ Flow-host retained fixture encoded through the first-party value contract.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
 #[value(rename_all = "camelCase")]
-pub struct FlowHostDocument {
+pub struct FlowHostSnapshot {
     pub schema: String,
     pub camera: CameraJson,
     pub widgets: Vec<Widget>,
@@ -266,10 +266,10 @@ pub struct FlowHostDocument {
     pub layout: OrderedMap<WidgetLayout>,
 }
 
-impl Default for FlowHostDocument {
+impl Default for FlowHostSnapshot {
     fn default() -> Self {
         Self {
-            schema: "flow.host_document".into(),
+            schema: "flow.host_snapshot".into(),
             camera: CameraJson { x: 0.0, y: 0.0, zoom: 1.0 },
             widgets: vec![
                 Widget::InputSlider { id: "slider".into(), label: "Number".into(), value: 3.0, min: FLOW_SLIDER_MIN, max: FLOW_SLIDER_MAX, step: FLOW_SLIDER_STEP },
@@ -285,7 +285,7 @@ impl Default for FlowHostDocument {
     }
 }
 
-impl FlowHostDocument {
+impl FlowHostSnapshot {
     pub fn to_artifact(&self) -> FlowArtifact {
         let mut nodes = OrderedMap::new();
         let mut previews = Vec::new();
@@ -297,7 +297,7 @@ impl FlowHostDocument {
                 previews.push(FlowPreviewGui { id: id.clone(), source, mode: "text".into(), preview: preview.clone(), expanded: expanded.clone(), layout: self.layout.get(id).cloned() });
             }
         }
-        FlowArtifact { schema: "flow.artifact".into(), tree: tree_from_host_document(self, &HashMap::new()), ui: FlowUi { camera: self.camera.clone(), nodes, previews } }
+        FlowArtifact { schema: "flow.artifact".into(), tree: tree_from_host_snapshot(self, &HashMap::new()), ui: FlowUi { camera: self.camera.clone(), nodes, previews } }
     }
 }
 
@@ -313,8 +313,8 @@ fn widget_chrome(widget: &Widget) -> NodeChrome {
     }
 }
 
-pub fn tree_from_host_document(fixture: &FlowHostDocument, kind_infos: &HashMap<String, OperatorInfo>) -> Tree {
-    let neurons = fixture
+pub fn tree_from_host_snapshot(host_snapshot: &FlowHostSnapshot, kind_infos: &HashMap<String, OperatorInfo>) -> Tree {
+    let neurons = host_snapshot
         .widgets
         .iter()
         .filter_map(|w| match w {
@@ -339,7 +339,7 @@ pub fn tree_from_host_document(fixture: &FlowHostDocument, kind_infos: &HashMap<
             _ => None,
         })
         .collect();
-    let synapses = fixture.synapses.iter().map(|s| Synapse { id: s.id.clone(), from: s.from.clone(), to: s.to.clone(), from_port: s.from_port.clone(), to_port: s.to_port.clone() }).collect();
+    let synapses = host_snapshot.synapses.iter().map(|s| Synapse { id: s.id.clone(), from: s.from.clone(), to: s.to.clone(), from_port: s.from_port.clone(), to_port: s.to_port.clone() }).collect();
     Tree { neurons, synapses }
 }
 
@@ -1129,7 +1129,7 @@ pub fn widget_from_descriptor(descriptor: &WidgetDescriptor, id: String, kind_in
 //#region 🔖️KeyboardTraversal
 /// ⌨️ One keyboard step across a flow graph — the whole vocabulary of node-by-node traversal.
 ///
-/// `Next`/`Previous` walk the READING order [`FlowHostDocument::keyboard_order`] defines and wrap, so a
+/// `Next`/`Previous` walk the READING order [`FlowHostSnapshot::keyboard_order`] defines and wrap, so a
 /// user can reach every node of a disconnected graph with one key. `Upstream`/`Downstream` follow a
 /// WIRE and deliberately do not wrap: a source node has nothing upstream of it, and pretending
 /// otherwise would teleport the selection across the canvas.
@@ -1144,17 +1144,17 @@ pub enum FlowGraphStep {
 /// ⌨️ The reading order keyboard traversal walks: ascending `layout.x`, then ascending `layout.y`,
 /// then the document's own widget order for the pairs neither coordinate separates.
 ///
-/// A node the layout map never names sits at the origin, exactly as [`FlowHostDocument::to_artifact`]
+/// A node the layout map never names sits at the origin, exactly as [`FlowHostSnapshot::to_artifact`]
 /// places it — the two must agree or the keyboard would visit a node where the canvas does not paint
 /// it. Left-to-right first because a flow graph reads left to right: inputs, operators, outputs.
-pub fn keyboard_order(fixture: &FlowHostDocument) -> Vec<&str> {
-    let mut rows: Vec<(usize, f64, f64, &str)> = fixture
+pub fn keyboard_order(host_snapshot: &FlowHostSnapshot) -> Vec<&str> {
+    let mut rows: Vec<(usize, f64, f64, &str)> = host_snapshot
         .widgets
         .iter()
         .enumerate()
         .map(|(index, widget)| {
             let id = widget_id_for(widget);
-            let layout = fixture.layout.get(id);
+            let layout = host_snapshot.layout.get(id);
             (index, layout.map_or(0.0, |layout| layout.x), layout.map_or(0.0, |layout| layout.y), id)
         })
         .collect();
@@ -1171,8 +1171,8 @@ pub fn keyboard_order(fixture: &FlowHostDocument) -> Vec<&str> {
 ///
 /// A wire step whose candidate set holds more than one node takes the first in [`keyboard_order`],
 /// never the document's synapse order: the user sees a canvas, and the canvas is laid out.
-pub fn keyboard_step<'a>(fixture: &'a FlowHostDocument, anchor: Option<&str>, step: FlowGraphStep) -> Option<&'a str> {
-    let order = keyboard_order(fixture);
+pub fn keyboard_step<'a>(host_snapshot: &'a FlowHostSnapshot, anchor: Option<&str>, step: FlowGraphStep) -> Option<&'a str> {
+    let order = keyboard_order(host_snapshot);
     if order.is_empty() {
         return None;
     }
@@ -1186,8 +1186,8 @@ pub fn keyboard_step<'a>(fixture: &'a FlowHostDocument, anchor: Option<&str>, st
     match step {
         FlowGraphStep::Next => order.get((at + 1) % order.len()).copied(),
         FlowGraphStep::Previous => order.get((at + order.len() - 1) % order.len()).copied(),
-        FlowGraphStep::Upstream => first_in_order(&order, fixture.synapses.iter().filter(|synapse| synapse.to == anchor).map(|synapse| synapse.from.as_str())),
-        FlowGraphStep::Downstream => first_in_order(&order, fixture.synapses.iter().filter(|synapse| synapse.from == anchor).map(|synapse| synapse.to.as_str())),
+        FlowGraphStep::Upstream => first_in_order(&order, host_snapshot.synapses.iter().filter(|synapse| synapse.to == anchor).map(|synapse| synapse.from.as_str())),
+        FlowGraphStep::Downstream => first_in_order(&order, host_snapshot.synapses.iter().filter(|synapse| synapse.from == anchor).map(|synapse| synapse.to.as_str())),
     }
 }
 
@@ -1195,7 +1195,7 @@ fn first_in_order<'a>(order: &[&'a str], candidates: impl Iterator<Item = &'a st
     candidates.filter_map(|id| order.iter().position(|known| *known == id).map(|at| (at, id))).min_by_key(|(at, _)| *at).map(|(_, id)| id)
 }
 
-impl FlowHostDocument {
+impl FlowHostSnapshot {
     /// ⌨️ See [`keyboard_order`].
     pub fn keyboard_order(&self) -> Vec<&str> {
         keyboard_order(self)

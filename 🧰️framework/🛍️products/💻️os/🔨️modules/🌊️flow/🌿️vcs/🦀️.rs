@@ -7,7 +7,7 @@ use crate::retained::{FlowOwner, FlowRetirement};
 use protocol::value::ordered::{Grant as LayoutGrant, UpdateCursor as LayoutUpdate};
 
 use semio_framework_artifact_flow_flow::*;
-use crate::os_store::ErasedSnapshotRetirement;
+use crate::os_store::{ErasedSnapshotRetirement, SnapshotRetirementStep};
 
 //#region 🌊️RetainedVcs
 
@@ -129,6 +129,32 @@ impl FlowVcsGrant {
     }
 }
 
+/// 🪜️ The rungs of the retained VCS close ladder, in the order
+/// [`FlowRetainedVcs::close_retired_step`] takes them.
+///
+/// `Backing` is the only rung that moves PAYLOAD: it drains the retirement frontier an owner at a
+/// time. Every other rung retires one retained item and pushes its payload onto that frontier, so a
+/// driver that anchors a turn on the non-`Backing` phase spends one turn per retained item whatever
+/// that item weighs (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum FlowVcsClosePhase {
+    Operations,
+    Backing,
+    RetiredSurface,
+    RetiredAction,
+    History,
+    DocumentSurface,
+    DocumentVersion,
+    Document,
+    Complete,
+}
+
+impl FlowVcsClosePhase {
+    pub fn is_backing(self) -> bool {
+        matches!(self, Self::Backing)
+    }
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum FlowVcsFault {
     Closed,
@@ -192,9 +218,9 @@ pub struct FlowSurfaceOwner {
 }
 
 impl FlowSurfaceOwner {
-    fn from_host_document(surface: u64, host: u64, generation: u64, fixture: &FlowHostDocument) -> Self {
-        let widget_slots = fixture.widgets.len();
-        Self { surface, host, generation, document: 1, widgets: widget_slots, synapses: fixture.synapses.len(), previews: widget_slots, expanded: widget_slots, layout: fixture.layout.len(), history: 1, edit: 1, conflict: 1, control: 1, output: 1 }
+    fn from_host_snapshot(surface: u64, host: u64, generation: u64, host_snapshot: &FlowHostSnapshot) -> Self {
+        let widget_slots = host_snapshot.widgets.len();
+        Self { surface, host, generation, document: 1, widgets: widget_slots, synapses: host_snapshot.synapses.len(), previews: widget_slots, expanded: widget_slots, layout: host_snapshot.layout.len(), history: 1, edit: 1, conflict: 1, control: 1, output: 1 }
     }
 
     fn close_one(&mut self) -> bool {
@@ -254,7 +280,7 @@ enum FlowVcsAction {
     PatchSynapse { id: String, item: SynapseSpec },
     SetLayout(FlowLayoutEntry),
     LayoutRoot(OrderedMap<WidgetLayout>),
-    ReplaceDocument(FlowHostDocument),
+    ReplaceDocument(FlowHostSnapshot),
     ActivateDocument { index: usize },
     Undo,
     Redo,
@@ -450,7 +476,7 @@ impl<T, const N: usize> FlowFixedOwners<T, N> {
 }
 
 struct FlowVcsDocument {
-    versions: FlowFixedOwners<FlowHostDocument, FLOW_VCS_MAX_HISTORY>,
+    versions: FlowFixedOwners<FlowHostSnapshot, FLOW_VCS_MAX_HISTORY>,
     active: usize,
     revision: u64,
     parent_revision: u64,
@@ -461,18 +487,18 @@ struct FlowVcsDocument {
 }
 
 impl FlowVcsDocument {
-    fn new(fixture: FlowHostDocument, revision: u64, parent_revision: u64) -> Self {
-        let committed_digest = flow_vcs_host_document_scalar_digest(&fixture);
+    fn new(host_snapshot: FlowHostSnapshot, revision: u64, parent_revision: u64) -> Self {
+        let committed_digest = flow_vcs_host_snapshot_scalar_digest(&host_snapshot);
         let mut versions = FlowFixedOwners::new();
-        let _ = versions.push(fixture);
+        let _ = versions.push(host_snapshot);
         Self { versions, active: 0, revision, parent_revision, generation: 1, committed_digest, edit_owner: None, surface: None }
     }
 
-    fn host_document(&self) -> &FlowHostDocument {
+    fn host_snapshot(&self) -> &FlowHostSnapshot {
         self.versions.get(self.active).expect("active Flow VCS document version")
     }
 
-    fn fixture_mut(&mut self) -> &mut FlowHostDocument {
+    fn host_snapshot_mut(&mut self) -> &mut FlowHostSnapshot {
         self.versions.get_mut(self.active).expect("active Flow VCS document version")
     }
 }
@@ -494,7 +520,7 @@ pub struct FlowRetainedVcs {
 }
 
 impl FlowRetainedVcs {
-    pub fn new(document: FlowHostDocument, session_generation: u32, revision: u64, parent_revision: u64) -> Self {
+    pub fn new(document: FlowHostSnapshot, session_generation: u32, revision: u64, parent_revision: u64) -> Self {
         Self {
             session_generation,
             document: Some(FlowVcsDocument::new(document, revision, parent_revision)),
@@ -559,7 +585,7 @@ impl FlowRetainedVcs {
         if document.surface.is_some() || self.retired_surfaces.len() == FLOW_VCS_MAX_HISTORY {
             return Err(FlowVcsFault::Full);
         }
-        document.surface = Some(FlowSurfaceOwner::from_host_document(surface, host, generation, document.host_document()));
+        document.surface = Some(FlowSurfaceOwner::from_host_snapshot(surface, host, generation, document.host_snapshot()));
         Ok(())
     }
 
@@ -625,7 +651,7 @@ impl FlowRetainedVcs {
         self.admit(authority, census, FlowVcsAction::SetLayout(source.take()))
     }
 
-    pub fn begin_replace_document(&mut self, authority: FlowVcsAuthority, source: &mut FlowVcsSource<FlowHostDocument>) -> Result<FlowVcsHandle, FlowVcsFault> {
+    pub fn begin_replace_document(&mut self, authority: FlowVcsAuthority, source: &mut FlowVcsSource<FlowHostSnapshot>) -> Result<FlowVcsHandle, FlowVcsFault> {
         let census = flow_vcs_fixture_census(source.get()?);
         self.preflight(census)?;
         self.admit(authority, census, FlowVcsAction::ReplaceDocument(source.take()))
@@ -922,7 +948,10 @@ impl FlowRetainedVcs {
             return Err(FlowVcsFault::ClosePending);
         }
         if !self.retirement.terminal_is_empty() {
-            self.retirement.close_page(1, grant.bytes).map_err(|_| FlowVcsFault::ClosePending)?;
+            let step = self.retirement.close_page(1, grant.bytes).map_err(|_| FlowVcsFault::ClosePending)?;
+            if matches!(step, SnapshotRetirementStep::Blocked) {
+                return Err(FlowVcsFault::ClosePending);
+            }
             return Ok(false);
         }
         if let Some(surface) = self.retired_surfaces.last_mut() {
@@ -950,13 +979,48 @@ impl FlowRetainedVcs {
                 })?;
                 return Ok(false);
             }
-            if let Some(fixture) = document.versions.pop() {
-                self.retirement.push(FlowOwner::HostDocument(fixture));
+            if let Some(host_snapshot) = document.versions.pop() {
+                self.retirement.push(FlowOwner::HostSnapshot(host_snapshot));
                 return Ok(false);
             }
             self.document = None;
         }
         Ok(true)
+    }
+
+    /// 🪜️ Names the rung [`FlowRetainedVcs::close_retired_step`] would take next, in that method's
+    /// own branch order.
+    ///
+    /// A retirement hands nothing back across the ABI, so the bytes under a retained item are not a
+    /// close turn's currency — the structure above them is. A driver that ends its turn when this
+    /// phase changes retires a whole retained item per turn and costs turns proportional to the
+    /// SURFACES a session holds rather than to their payload
+    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    pub fn close_phase(&self) -> FlowVcsClosePhase {
+        if self.terminal_is_empty() {
+            return FlowVcsClosePhase::Complete;
+        }
+        if self.credits.operations > 0 {
+            return FlowVcsClosePhase::Operations;
+        }
+        if !self.retirement.terminal_is_empty() {
+            return FlowVcsClosePhase::Backing;
+        }
+        if !self.retired_surfaces.is_empty() {
+            return FlowVcsClosePhase::RetiredSurface;
+        }
+        if !self.retired_actions.is_empty() {
+            return FlowVcsClosePhase::RetiredAction;
+        }
+        if self.closing && !(self.undo.is_empty() && self.redo.is_empty()) {
+            return FlowVcsClosePhase::History;
+        }
+        match self.document.as_ref().filter(|_| self.closing) {
+            Some(document) if document.surface.is_some() => FlowVcsClosePhase::DocumentSurface,
+            Some(document) if !document.versions.is_empty() => FlowVcsClosePhase::DocumentVersion,
+            Some(_) => FlowVcsClosePhase::Document,
+            None => FlowVcsClosePhase::Complete,
+        }
     }
 
     pub fn begin_close(&mut self) {
@@ -1186,9 +1250,9 @@ impl FlowRetainedVcs {
         let document = self.document.as_mut().expect("open Flow VCS document");
         let revision = document.revision.checked_add(1).ok_or(FlowVcsFault::Limit)?;
         let generation = document.generation.checked_add(1).ok_or(FlowVcsFault::Limit)?;
-        let widget_count = u32::try_from(document.host_document().widgets.len()).unwrap_or(u32::MAX);
-        let synapse_count = u32::try_from(document.host_document().synapses.len()).unwrap_or(u32::MAX);
-        let layout_count = u32::try_from(document.host_document().layout.len()).unwrap_or(u32::MAX);
+        let widget_count = u32::try_from(document.host_snapshot().widgets.len()).unwrap_or(u32::MAX);
+        let synapse_count = u32::try_from(document.host_snapshot().synapses.len()).unwrap_or(u32::MAX);
+        let layout_count = u32::try_from(document.host_snapshot().layout.len()).unwrap_or(u32::MAX);
         let operation = self.operations[slot].as_mut().expect("validated Flow VCS operation");
         operation.cursor.prior_generation = document.generation;
         operation.cursor.prior_digest = document.committed_digest;
@@ -1207,9 +1271,9 @@ impl FlowRetainedVcs {
             return Err(FlowVcsFault::InsufficientGrant);
         }
         let document = self.document.as_ref().ok_or(FlowVcsFault::Closed)?;
-        let widget_count = u32::try_from(document.host_document().widgets.len()).unwrap_or(u32::MAX);
-        let synapse_count = u32::try_from(document.host_document().synapses.len()).unwrap_or(u32::MAX);
-        let layout_count = u32::try_from(document.host_document().layout.len()).unwrap_or(u32::MAX);
+        let widget_count = u32::try_from(document.host_snapshot().widgets.len()).unwrap_or(u32::MAX);
+        let synapse_count = u32::try_from(document.host_snapshot().synapses.len()).unwrap_or(u32::MAX);
+        let layout_count = u32::try_from(document.host_snapshot().layout.len()).unwrap_or(u32::MAX);
         let page = FlowVcsPage {
             sequence: self.next_page,
             operation: self.operations[slot].as_ref().expect("validated Flow VCS operation").handle.operation,
@@ -1263,9 +1327,9 @@ fn flow_vcs_cursor_requires_edit(phase: FlowVcsCursorPhase) -> bool {
 
 fn flow_vcs_step_cursor(document: &mut FlowVcsDocument, operation: &mut FlowVcsOperation, grant: FlowVcsGrant) -> Result<(), FlowVcsFault> {
     match operation.cursor.phase {
-        FlowVcsCursorPhase::Scan => flow_vcs_step_scan(document.host_document(), operation),
+        FlowVcsCursorPhase::Scan => flow_vcs_step_scan(document.host_snapshot(), operation),
         FlowVcsCursorPhase::Mutate => flow_vcs_step_mutation(document, operation, grant),
-        FlowVcsCursorPhase::Shift => flow_vcs_step_shift(document.fixture_mut(), operation),
+        FlowVcsCursorPhase::Shift => flow_vcs_step_shift(document.host_snapshot_mut(), operation),
         FlowVcsCursorPhase::ReserveReplacement
         | FlowVcsCursorPhase::ReplaceSchema
         | FlowVcsCursorPhase::ReplaceCameraX
@@ -1280,24 +1344,24 @@ fn flow_vcs_step_cursor(document: &mut FlowVcsDocument, operation: &mut FlowVcsO
     }
 }
 
-fn flow_vcs_step_scan(fixture: &FlowHostDocument, operation: &mut FlowVcsOperation) -> Result<(), FlowVcsFault> {
+fn flow_vcs_step_scan(host_snapshot: &FlowHostSnapshot, operation: &mut FlowVcsOperation) -> Result<(), FlowVcsFault> {
     let index = operation.cursor.scan;
     let action = operation.action.as_ref().ok_or(FlowVcsFault::InvalidMutation)?;
     match action {
         FlowVcsAction::InsertWidget { index: target, item } => {
-            if *target > fixture.widgets.len() {
+            if *target > host_snapshot.widgets.len() {
                 return Err(FlowVcsFault::InvalidMutation);
             }
-            if index == fixture.widgets.len() {
+            if index == host_snapshot.widgets.len() {
                 operation.cursor.phase = FlowVcsCursorPhase::Mutate;
                 return Ok(());
             }
-            if widget_id_for(&fixture.widgets[index]) == widget_id_for(item) {
+            if widget_id_for(&host_snapshot.widgets[index]) == widget_id_for(item) {
                 return Err(FlowVcsFault::InvalidMutation);
             }
         }
         FlowVcsAction::RemoveWidgetAt { index: target } => {
-            if *target >= fixture.widgets.len() {
+            if *target >= host_snapshot.widgets.len() {
                 return Err(FlowVcsFault::InvalidMutation);
             }
             operation.cursor.origin = *target;
@@ -1306,10 +1370,10 @@ fn flow_vcs_step_scan(fixture: &FlowHostDocument, operation: &mut FlowVcsOperati
             return Ok(());
         }
         FlowVcsAction::RemoveWidget { id } | FlowVcsAction::MoveWidget { id, .. } | FlowVcsAction::PatchWidget { id, .. } => {
-            if index == fixture.widgets.len() {
+            if index == host_snapshot.widgets.len() {
                 return Err(FlowVcsFault::InvalidMutation);
             }
-            if widget_id_for(&fixture.widgets[index]) == id {
+            if widget_id_for(&host_snapshot.widgets[index]) == id {
                 operation.cursor.origin = index;
                 operation.cursor.current = index;
                 operation.cursor.phase = if matches!(action, FlowVcsAction::PatchWidget { .. }) { FlowVcsCursorPhase::Mutate } else { FlowVcsCursorPhase::Shift };
@@ -1317,19 +1381,19 @@ fn flow_vcs_step_scan(fixture: &FlowHostDocument, operation: &mut FlowVcsOperati
             }
         }
         FlowVcsAction::InsertSynapse { index: target, item } => {
-            if *target > fixture.synapses.len() {
+            if *target > host_snapshot.synapses.len() {
                 return Err(FlowVcsFault::InvalidMutation);
             }
-            if index == fixture.synapses.len() {
+            if index == host_snapshot.synapses.len() {
                 operation.cursor.phase = FlowVcsCursorPhase::Mutate;
                 return Ok(());
             }
-            if fixture.synapses[index].id == item.id {
+            if host_snapshot.synapses[index].id == item.id {
                 return Err(FlowVcsFault::InvalidMutation);
             }
         }
         FlowVcsAction::RemoveSynapseAt { index: target } => {
-            if *target >= fixture.synapses.len() {
+            if *target >= host_snapshot.synapses.len() {
                 return Err(FlowVcsFault::InvalidMutation);
             }
             operation.cursor.origin = *target;
@@ -1338,10 +1402,10 @@ fn flow_vcs_step_scan(fixture: &FlowHostDocument, operation: &mut FlowVcsOperati
             return Ok(());
         }
         FlowVcsAction::RemoveSynapse { id } | FlowVcsAction::MoveSynapse { id, .. } | FlowVcsAction::PatchSynapse { id, .. } => {
-            if index == fixture.synapses.len() {
+            if index == host_snapshot.synapses.len() {
                 return Err(FlowVcsFault::InvalidMutation);
             }
-            if fixture.synapses[index].id == *id {
+            if host_snapshot.synapses[index].id == *id {
                 operation.cursor.origin = index;
                 operation.cursor.current = index;
                 operation.cursor.phase = if matches!(action, FlowVcsAction::PatchSynapse { .. }) { FlowVcsCursorPhase::Mutate } else { FlowVcsCursorPhase::Shift };
@@ -1349,10 +1413,10 @@ fn flow_vcs_step_scan(fixture: &FlowHostDocument, operation: &mut FlowVcsOperati
             }
         }
         FlowVcsAction::SetLayout(entry) => {
-            if index == fixture.widgets.len() {
+            if index == host_snapshot.widgets.len() {
                 return Err(FlowVcsFault::InvalidMutation);
             }
-            if widget_id_for(&fixture.widgets[index]) == entry.id {
+            if widget_id_for(&host_snapshot.widgets[index]) == entry.id {
                 operation.cursor.origin = index;
                 operation.cursor.phase = FlowVcsCursorPhase::Mutate;
                 return Ok(());
@@ -1364,27 +1428,27 @@ fn flow_vcs_step_scan(fixture: &FlowHostDocument, operation: &mut FlowVcsOperati
     Ok(())
 }
 
-fn flow_vcs_step_shift(fixture: &mut FlowHostDocument, operation: &mut FlowVcsOperation) -> Result<(), FlowVcsFault> {
+fn flow_vcs_step_shift(host_snapshot: &mut FlowHostSnapshot, operation: &mut FlowVcsOperation) -> Result<(), FlowVcsFault> {
     let cursor = &mut operation.cursor;
     match cursor.kind {
         FlowVcsCursorKind::InsertWidget | FlowVcsCursorKind::InsertSynapse => {
             if cursor.current > cursor.target {
                 if cursor.kind == FlowVcsCursorKind::InsertWidget {
-                    fixture.widgets.swap(cursor.current, cursor.current - 1);
+                    host_snapshot.widgets.swap(cursor.current, cursor.current - 1);
                 } else {
-                    fixture.synapses.swap(cursor.current, cursor.current - 1);
+                    host_snapshot.synapses.swap(cursor.current, cursor.current - 1);
                 }
                 cursor.current -= 1;
                 return Ok(());
             }
         }
         FlowVcsCursorKind::RemoveWidget | FlowVcsCursorKind::RemoveSynapse => {
-            let length = if cursor.kind == FlowVcsCursorKind::RemoveWidget { fixture.widgets.len() } else { fixture.synapses.len() };
+            let length = if cursor.kind == FlowVcsCursorKind::RemoveWidget { host_snapshot.widgets.len() } else { host_snapshot.synapses.len() };
             if cursor.current + 1 < length {
                 if cursor.kind == FlowVcsCursorKind::RemoveWidget {
-                    fixture.widgets.swap(cursor.current, cursor.current + 1);
+                    host_snapshot.widgets.swap(cursor.current, cursor.current + 1);
                 } else {
-                    fixture.synapses.swap(cursor.current, cursor.current + 1);
+                    host_snapshot.synapses.swap(cursor.current, cursor.current + 1);
                 }
                 cursor.current += 1;
                 cursor.mutated = true;
@@ -1394,9 +1458,9 @@ fn flow_vcs_step_shift(fixture: &mut FlowHostDocument, operation: &mut FlowVcsOp
         FlowVcsCursorKind::MoveWidget | FlowVcsCursorKind::MoveSynapse => {
             if cursor.current < cursor.target {
                 if cursor.kind == FlowVcsCursorKind::MoveWidget {
-                    fixture.widgets.swap(cursor.current, cursor.current + 1);
+                    host_snapshot.widgets.swap(cursor.current, cursor.current + 1);
                 } else {
-                    fixture.synapses.swap(cursor.current, cursor.current + 1);
+                    host_snapshot.synapses.swap(cursor.current, cursor.current + 1);
                 }
                 cursor.current += 1;
                 cursor.mutated = true;
@@ -1404,9 +1468,9 @@ fn flow_vcs_step_shift(fixture: &mut FlowHostDocument, operation: &mut FlowVcsOp
             }
             if cursor.current > cursor.target {
                 if cursor.kind == FlowVcsCursorKind::MoveWidget {
-                    fixture.widgets.swap(cursor.current, cursor.current - 1);
+                    host_snapshot.widgets.swap(cursor.current, cursor.current - 1);
                 } else {
-                    fixture.synapses.swap(cursor.current, cursor.current - 1);
+                    host_snapshot.synapses.swap(cursor.current, cursor.current - 1);
                 }
                 cursor.current -= 1;
                 cursor.mutated = true;
@@ -1423,7 +1487,7 @@ fn flow_vcs_step_mutation(document: &mut FlowVcsDocument, operation: &mut FlowVc
     if let Some(update) = operation.layout_update.as_mut() {
         update.advance(LayoutGrant { maximum_items: 1, maximum_bytes: grant.bytes });
         if let Some(layout) = update.take_result() {
-            let previous = std::mem::replace(&mut document.fixture_mut().layout, layout);
+            let previous = std::mem::replace(&mut document.host_snapshot_mut().layout, layout);
             operation.action = Some(FlowVcsAction::LayoutRoot(previous));
             operation.cursor.mutated = true;
             operation.cursor.phase = FlowVcsCursorPhase::TransferHistory;
@@ -1431,11 +1495,11 @@ fn flow_vcs_step_mutation(document: &mut FlowVcsDocument, operation: &mut FlowVc
         return Ok(());
     }
     let action = operation.action.take().ok_or(FlowVcsFault::InvalidMutation)?;
-    let fixture = document.fixture_mut();
+    let host_snapshot = document.host_snapshot_mut();
     operation.action = Some(match action {
         FlowVcsAction::InsertWidget { index, item } => {
-            fixture.widgets.push(item);
-            operation.cursor.current = fixture.widgets.len() - 1;
+            host_snapshot.widgets.push(item);
+            operation.cursor.current = host_snapshot.widgets.len() - 1;
             operation.cursor.target = index;
             operation.cursor.mutated = true;
             operation.cursor.phase = FlowVcsCursorPhase::Shift;
@@ -1443,20 +1507,20 @@ fn flow_vcs_step_mutation(document: &mut FlowVcsDocument, operation: &mut FlowVc
             return Ok(());
         }
         action @ (FlowVcsAction::RemoveWidget { .. } | FlowVcsAction::RemoveWidgetAt { .. }) => {
-            let item = fixture.widgets.pop().ok_or(FlowVcsFault::InvalidMutation)?;
+            let item = host_snapshot.widgets.pop().ok_or(FlowVcsFault::InvalidMutation)?;
             operation.rollback_owner = Some(action);
             operation.cursor.mutated = true;
             FlowVcsAction::InsertWidget { index: operation.cursor.origin, item }
         }
         FlowVcsAction::MoveWidget { id, .. } => FlowVcsAction::MoveWidget { id, index: operation.cursor.origin },
         FlowVcsAction::PatchWidget { id, mut item } => {
-            std::mem::swap(&mut fixture.widgets[operation.cursor.origin], &mut item);
+            std::mem::swap(&mut host_snapshot.widgets[operation.cursor.origin], &mut item);
             operation.cursor.mutated = true;
             FlowVcsAction::PatchWidget { id, item }
         }
         FlowVcsAction::InsertSynapse { index, item } => {
-            fixture.synapses.push(item);
-            operation.cursor.current = fixture.synapses.len() - 1;
+            host_snapshot.synapses.push(item);
+            operation.cursor.current = host_snapshot.synapses.len() - 1;
             operation.cursor.target = index;
             operation.cursor.mutated = true;
             operation.cursor.phase = FlowVcsCursorPhase::Shift;
@@ -1464,27 +1528,27 @@ fn flow_vcs_step_mutation(document: &mut FlowVcsDocument, operation: &mut FlowVc
             return Ok(());
         }
         action @ (FlowVcsAction::RemoveSynapse { .. } | FlowVcsAction::RemoveSynapseAt { .. }) => {
-            let item = fixture.synapses.pop().ok_or(FlowVcsFault::InvalidMutation)?;
+            let item = host_snapshot.synapses.pop().ok_or(FlowVcsFault::InvalidMutation)?;
             operation.rollback_owner = Some(action);
             operation.cursor.mutated = true;
             FlowVcsAction::InsertSynapse { index: operation.cursor.origin, item }
         }
         FlowVcsAction::MoveSynapse { id, .. } => FlowVcsAction::MoveSynapse { id, index: operation.cursor.origin },
         FlowVcsAction::PatchSynapse { id, mut item } => {
-            std::mem::swap(&mut fixture.synapses[operation.cursor.origin], &mut item);
+            std::mem::swap(&mut host_snapshot.synapses[operation.cursor.origin], &mut item);
             operation.cursor.mutated = true;
             FlowVcsAction::PatchSynapse { id, item }
         }
         FlowVcsAction::SetLayout(entry) => {
             operation.layout_update = Some(match entry.layout {
-                Some(layout) => fixture.layout.begin_set(entry.id, layout),
-                None => fixture.layout.begin_remove(entry.id),
+                Some(layout) => host_snapshot.layout.begin_set(entry.id, layout),
+                None => host_snapshot.layout.begin_remove(entry.id),
             });
             return Ok(());
         }
         FlowVcsAction::LayoutRoot(layout) => {
             operation.cursor.mutated = true;
-            FlowVcsAction::LayoutRoot(std::mem::replace(&mut fixture.layout, layout))
+            FlowVcsAction::LayoutRoot(std::mem::replace(&mut host_snapshot.layout, layout))
         }
         FlowVcsAction::ActivateDocument { index } => {
             if document.versions.get(index).is_none() {
@@ -1516,7 +1580,7 @@ fn flow_vcs_step_document_replacement(document: &mut FlowVcsDocument, operation:
             if document.versions.is_full() {
                 return Err(FlowVcsFault::Full);
             }
-            let empty = FlowHostDocument { schema: String::new(), camera: CameraJson { x: 0.0, y: 0.0, zoom: 0.0 }, widgets: Vec::new(), synapses: Vec::new(), layout: OrderedMap::new() };
+            let empty = FlowHostSnapshot { schema: String::new(), camera: CameraJson { x: 0.0, y: 0.0, zoom: 0.0 }, widgets: Vec::new(), synapses: Vec::new(), layout: OrderedMap::new() };
             document.versions.push(empty).map_err(|_| FlowVcsFault::Full)?;
             operation.cursor.target = document.versions.len() - 1;
             operation.cursor.mutated = true;
@@ -1598,64 +1662,64 @@ fn flow_vcs_step_rollback(document: &mut FlowVcsDocument, operation: &mut FlowVc
     let cursor = &mut operation.cursor;
     match cursor.kind {
         FlowVcsCursorKind::InsertWidget => {
-            let fixture = document.fixture_mut();
-            if cursor.current + 1 < fixture.widgets.len() {
-                fixture.widgets.swap(cursor.current, cursor.current + 1);
+            let host_snapshot = document.host_snapshot_mut();
+            if cursor.current + 1 < host_snapshot.widgets.len() {
+                host_snapshot.widgets.swap(cursor.current, cursor.current + 1);
                 cursor.current += 1;
                 return Ok(false);
             }
-            let item = fixture.widgets.pop().ok_or(FlowVcsFault::InvalidMutation)?;
+            let item = host_snapshot.widgets.pop().ok_or(FlowVcsFault::InvalidMutation)?;
             operation.action = Some(FlowVcsAction::InsertWidget { index: cursor.target, item });
         }
         FlowVcsCursorKind::InsertSynapse => {
-            let fixture = document.fixture_mut();
-            if cursor.current + 1 < fixture.synapses.len() {
-                fixture.synapses.swap(cursor.current, cursor.current + 1);
+            let host_snapshot = document.host_snapshot_mut();
+            if cursor.current + 1 < host_snapshot.synapses.len() {
+                host_snapshot.synapses.swap(cursor.current, cursor.current + 1);
                 cursor.current += 1;
                 return Ok(false);
             }
-            let item = fixture.synapses.pop().ok_or(FlowVcsFault::InvalidMutation)?;
+            let item = host_snapshot.synapses.pop().ok_or(FlowVcsFault::InvalidMutation)?;
             operation.action = Some(FlowVcsAction::InsertSynapse { index: cursor.target, item });
         }
         FlowVcsCursorKind::RemoveWidget => {
-            let fixture = document.fixture_mut();
+            let host_snapshot = document.host_snapshot_mut();
             if matches!(operation.action.as_ref(), Some(FlowVcsAction::InsertWidget { .. })) {
                 let FlowVcsAction::InsertWidget { item, .. } = operation.action.take().expect("retained widget inverse") else { unreachable!() };
-                fixture.widgets.push(item);
-                cursor.current = fixture.widgets.len() - 1;
+                host_snapshot.widgets.push(item);
+                cursor.current = host_snapshot.widgets.len() - 1;
                 operation.action = Some(FlowVcsAction::Checkpoint);
                 return Ok(false);
             }
             if cursor.current > cursor.origin {
-                fixture.widgets.swap(cursor.current, cursor.current - 1);
+                host_snapshot.widgets.swap(cursor.current, cursor.current - 1);
                 cursor.current -= 1;
                 return Ok(false);
             }
         }
         FlowVcsCursorKind::RemoveSynapse => {
-            let fixture = document.fixture_mut();
+            let host_snapshot = document.host_snapshot_mut();
             if matches!(operation.action.as_ref(), Some(FlowVcsAction::InsertSynapse { .. })) {
                 let FlowVcsAction::InsertSynapse { item, .. } = operation.action.take().expect("retained synapse inverse") else { unreachable!() };
-                fixture.synapses.push(item);
-                cursor.current = fixture.synapses.len() - 1;
+                host_snapshot.synapses.push(item);
+                cursor.current = host_snapshot.synapses.len() - 1;
                 operation.action = Some(FlowVcsAction::Checkpoint);
                 return Ok(false);
             }
             if cursor.current > cursor.origin {
-                fixture.synapses.swap(cursor.current, cursor.current - 1);
+                host_snapshot.synapses.swap(cursor.current, cursor.current - 1);
                 cursor.current -= 1;
                 return Ok(false);
             }
         }
         FlowVcsCursorKind::MoveWidget => {
-            let fixture = document.fixture_mut();
+            let host_snapshot = document.host_snapshot_mut();
             if cursor.current < cursor.origin {
-                fixture.widgets.swap(cursor.current, cursor.current + 1);
+                host_snapshot.widgets.swap(cursor.current, cursor.current + 1);
                 cursor.current += 1;
                 return Ok(false);
             }
             if cursor.current > cursor.origin {
-                fixture.widgets.swap(cursor.current, cursor.current - 1);
+                host_snapshot.widgets.swap(cursor.current, cursor.current - 1);
                 cursor.current -= 1;
                 return Ok(false);
             }
@@ -1667,14 +1731,14 @@ fn flow_vcs_step_rollback(document: &mut FlowVcsDocument, operation: &mut FlowVc
             }
         }
         FlowVcsCursorKind::MoveSynapse => {
-            let fixture = document.fixture_mut();
+            let host_snapshot = document.host_snapshot_mut();
             if cursor.current < cursor.origin {
-                fixture.synapses.swap(cursor.current, cursor.current + 1);
+                host_snapshot.synapses.swap(cursor.current, cursor.current + 1);
                 cursor.current += 1;
                 return Ok(false);
             }
             if cursor.current > cursor.origin {
-                fixture.synapses.swap(cursor.current, cursor.current - 1);
+                host_snapshot.synapses.swap(cursor.current, cursor.current - 1);
                 cursor.current -= 1;
                 return Ok(false);
             }
@@ -1688,7 +1752,7 @@ fn flow_vcs_step_rollback(document: &mut FlowVcsDocument, operation: &mut FlowVc
         FlowVcsCursorKind::PatchWidget => {
             let action = operation.action.take().ok_or(FlowVcsFault::InvalidMutation)?;
             if let FlowVcsAction::PatchWidget { id, mut item } = action {
-                std::mem::swap(&mut document.fixture_mut().widgets[cursor.origin], &mut item);
+                std::mem::swap(&mut document.host_snapshot_mut().widgets[cursor.origin], &mut item);
                 operation.action = Some(FlowVcsAction::PatchWidget { id, item });
             } else {
                 return Err(FlowVcsFault::InvalidMutation);
@@ -1697,7 +1761,7 @@ fn flow_vcs_step_rollback(document: &mut FlowVcsDocument, operation: &mut FlowVc
         FlowVcsCursorKind::PatchSynapse => {
             let action = operation.action.take().ok_or(FlowVcsFault::InvalidMutation)?;
             if let FlowVcsAction::PatchSynapse { id, mut item } = action {
-                std::mem::swap(&mut document.fixture_mut().synapses[cursor.origin], &mut item);
+                std::mem::swap(&mut document.host_snapshot_mut().synapses[cursor.origin], &mut item);
                 operation.action = Some(FlowVcsAction::PatchSynapse { id, item });
             } else {
                 return Err(FlowVcsFault::InvalidMutation);
@@ -1707,7 +1771,7 @@ fn flow_vcs_step_rollback(document: &mut FlowVcsDocument, operation: &mut FlowVc
             let action = operation.action.take().ok_or(FlowVcsFault::InvalidMutation)?;
             match action {
                 FlowVcsAction::LayoutRoot(layout) => {
-                    operation.action = Some(FlowVcsAction::LayoutRoot(std::mem::replace(&mut document.fixture_mut().layout, layout)));
+                    operation.action = Some(FlowVcsAction::LayoutRoot(std::mem::replace(&mut document.host_snapshot_mut().layout, layout)));
                 }
                 _ => return Err(FlowVcsFault::InvalidMutation),
             }
@@ -1724,7 +1788,7 @@ fn flow_vcs_step_rollback(document: &mut FlowVcsDocument, operation: &mut FlowVc
                 return Err(FlowVcsFault::ClosePending);
             }
             let candidate = document.versions.pop().ok_or(FlowVcsFault::InvalidMutation)?;
-            operation.retirement.push(FlowOwner::HostDocument(candidate));
+            operation.retirement.push(FlowOwner::HostSnapshot(candidate));
         }
         FlowVcsCursorKind::None => {}
     }
@@ -1738,7 +1802,7 @@ fn flow_vcs_step_rollback(document: &mut FlowVcsDocument, operation: &mut FlowVc
 
 fn flow_vcs_retire_action(action: FlowVcsAction, retirement: &mut FlowRetirement) {
     match action {
-        FlowVcsAction::ReplaceDocument(fixture) => retirement.push(FlowOwner::HostDocument(fixture)),
+        FlowVcsAction::ReplaceDocument(host_snapshot) => retirement.push(FlowOwner::HostSnapshot(host_snapshot)),
         FlowVcsAction::LayoutRoot(layout) => retirement.push(FlowOwner::Layouts(layout)),
         FlowVcsAction::SetLayout(entry) => retirement.text(entry.id),
         FlowVcsAction::InsertWidget { item, .. } => retirement.push(FlowOwner::Widget(item)),
@@ -1757,13 +1821,13 @@ fn flow_vcs_retire_action(action: FlowVcsAction, retirement: &mut FlowRetirement
     }
 }
 
-fn flow_vcs_fixture_census(fixture: &FlowHostDocument) -> FlowVcsCensus {
-    let items = 1usize.saturating_add(fixture.widgets.len()).saturating_add(fixture.synapses.len()).saturating_add(fixture.layout.len());
-    let bytes = size_of::<FlowHostDocument>()
-        .saturating_add(fixture.schema.len())
-        .saturating_add(fixture.widgets.len().saturating_mul(size_of::<Widget>()))
-        .saturating_add(fixture.synapses.len().saturating_mul(size_of::<SynapseSpec>()))
-        .saturating_add(fixture.layout.len().saturating_mul(size_of::<(String, WidgetLayout)>()));
+fn flow_vcs_fixture_census(host_snapshot: &FlowHostSnapshot) -> FlowVcsCensus {
+    let items = 1usize.saturating_add(host_snapshot.widgets.len()).saturating_add(host_snapshot.synapses.len()).saturating_add(host_snapshot.layout.len());
+    let bytes = size_of::<FlowHostSnapshot>()
+        .saturating_add(host_snapshot.schema.len())
+        .saturating_add(host_snapshot.widgets.len().saturating_mul(size_of::<Widget>()))
+        .saturating_add(host_snapshot.synapses.len().saturating_mul(size_of::<SynapseSpec>()))
+        .saturating_add(host_snapshot.layout.len().saturating_mul(size_of::<(String, WidgetLayout)>()));
     FlowVcsCensus { items, bytes, depth: FLOW_VCS_MAX_DEPTH }
 }
 
@@ -1794,22 +1858,22 @@ fn flow_vcs_synapse_census(synapse: &SynapseSpec) -> FlowVcsCensus {
     FlowVcsCensus::leaf(synapse.id.len() + synapse.from.len() + synapse.to.len() + synapse.from_port.len() + synapse.to_port.len())
 }
 
-fn flow_vcs_host_document_scalar_digest(fixture: &FlowHostDocument) -> u64 {
+fn flow_vcs_host_snapshot_scalar_digest(host_snapshot: &FlowHostSnapshot) -> u64 {
     14_695_981_039_346_656_037
-        ^ u64::try_from(fixture.schema.len()).unwrap_or(u64::MAX).rotate_left(3)
-        ^ u64::try_from(fixture.widgets.len()).unwrap_or(u64::MAX).rotate_left(11)
-        ^ u64::try_from(fixture.synapses.len()).unwrap_or(u64::MAX).rotate_left(23)
-        ^ u64::try_from(fixture.layout.len()).unwrap_or(u64::MAX).rotate_left(37)
-        ^ fixture.camera.x.to_bits()
-        ^ fixture.camera.y.to_bits().rotate_left(17)
-        ^ fixture.camera.zoom.to_bits().rotate_left(31)
+        ^ u64::try_from(host_snapshot.schema.len()).unwrap_or(u64::MAX).rotate_left(3)
+        ^ u64::try_from(host_snapshot.widgets.len()).unwrap_or(u64::MAX).rotate_left(11)
+        ^ u64::try_from(host_snapshot.synapses.len()).unwrap_or(u64::MAX).rotate_left(23)
+        ^ u64::try_from(host_snapshot.layout.len()).unwrap_or(u64::MAX).rotate_left(37)
+        ^ host_snapshot.camera.x.to_bits()
+        ^ host_snapshot.camera.y.to_bits().rotate_left(17)
+        ^ host_snapshot.camera.zoom.to_bits().rotate_left(31)
 }
 
 //#endregion 🌊️RetainedVcs
 
 // #region 🔖️FormsBridge
 pub mod forms_bridge {
-    use super::{FlowHostDocument, Widget};
+    use super::{FlowHostSnapshot, Widget};
     use crate::playbook::{PlaybookBlock, PlaybookBlockOption, PlaybookSpec, PlaybookStep, PLAYBOOK_DOCUMENT_SCHEMA};
 
     fn humanize_widget_label(id: &str) -> String {
@@ -1957,8 +2021,8 @@ pub mod forms_bridge {
         }
     }
 
-    pub fn flow_host_document_to_form_spec(fixture: &FlowHostDocument) -> PlaybookSpec {
-        let blocks: Vec<PlaybookBlock> = fixture.widgets.iter().filter_map(widget_to_playbook_block).collect();
+    pub fn flow_host_snapshot_to_form_spec(host_snapshot: &FlowHostSnapshot) -> PlaybookSpec {
+        let blocks: Vec<PlaybookBlock> = host_snapshot.widgets.iter().filter_map(widget_to_playbook_block).collect();
         PlaybookSpec { schema: PLAYBOOK_DOCUMENT_SCHEMA.into(), id: "flow-generate".into(), version: "1".into(), title: Some("Generate".into()), steps: vec![PlaybookStep { id: "inputs".into(), title: "Inputs".into(), description: None, blocks }] }
     }
 
@@ -1982,7 +2046,7 @@ pub mod forms_bridge {
         }
     }
 
-    pub fn apply_generation_values_to_host_document(fixture_json: &str, values: &crate::os_pack::json::Object) -> String {
+    pub fn apply_generation_values_to_host_snapshot(fixture_json: &str, values: &crate::os_pack::json::Object) -> String {
         let Ok(mut root) = crate::os_pack::json::parse(fixture_json) else {
             return fixture_json.to_string();
         };

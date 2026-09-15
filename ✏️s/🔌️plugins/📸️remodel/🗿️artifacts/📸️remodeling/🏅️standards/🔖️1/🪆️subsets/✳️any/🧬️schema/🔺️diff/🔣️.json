@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/remodel/remodeling/diff.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/remodel/remodeling/diff.json",
   "title": "RemodelingDiff",
   "type": "object",
   "additionalProperties": false,
@@ -48,7 +48,7 @@
         "null"
       ],
       "additionalProperties": {
-        "$ref": "https://semio.tech/schema/s/remodel/remodeling/artifact.json#/$defs/RemodelingAssetChild"
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/remodel/remodeling/artifact.json#/$defs/RemodelingAssetChild"
       },
       "x-semio-state": "artifact"
     },
@@ -58,14 +58,14 @@
         "null"
       ],
       "additionalProperties": {
-        "$ref": "https://semio.tech/schema/s/remodel/remodeling/artifact.json#/$defs/RemodelingDurableArtifact"
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/remodel/remodeling/artifact.json#/$defs/RemodelingDurableArtifact"
       },
       "x-semio-state": "artifact"
     },
     "calibration": {
       "anyOf": [
         {
-          "$ref": "https://semio.tech/schema/s/remodel/remodeling/artifact.json#/$defs/CalibrationState"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/remodel/remodeling/artifact.json#/$defs/CalibrationState"
         },
         {
           "type": "null"
@@ -76,7 +76,7 @@
     "params": {
       "anyOf": [
         {
-          "$ref": "https://semio.tech/schema/s/remodel/remodeling/artifact.json#/$defs/ReconstructionParams"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/remodel/remodeling/artifact.json#/$defs/ReconstructionParams"
         },
         {
           "type": "null"
@@ -98,7 +98,7 @@
     "results": {
       "anyOf": [
         {
-          "$ref": "https://semio.tech/schema/s/remodel/remodeling/artifact.json#/$defs/ReconstructionResults"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/remodel/remodeling/artifact.json#/$defs/ReconstructionResults"
         },
         {
           "type": "null"
@@ -133,35 +133,35 @@
         "streams": {
           "type": "array",
           "items": {
-            "$ref": "https://semio.tech/schema/s/remodel/remodeling/artifact.json#/$defs/MediaStream"
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/remodel/remodeling/artifact.json#/$defs/MediaStream"
           }
         },
         "assets": {
           "type": "object",
           "additionalProperties": {
-            "$ref": "https://semio.tech/schema/s/remodel/remodeling/artifact.json#/$defs/RemodelingAssetChild"
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/remodel/remodeling/artifact.json#/$defs/RemodelingAssetChild"
           }
         },
         "durableArtifacts": {
           "type": "object",
           "additionalProperties": {
-            "$ref": "https://semio.tech/schema/s/remodel/remodeling/artifact.json#/$defs/RemodelingDurableArtifact"
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/remodel/remodeling/artifact.json#/$defs/RemodelingDurableArtifact"
           }
         },
         "calibration": {
-          "$ref": "https://semio.tech/schema/s/remodel/remodeling/artifact.json#/$defs/CalibrationState"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/remodel/remodeling/artifact.json#/$defs/CalibrationState"
         },
         "params": {
-          "$ref": "https://semio.tech/schema/s/remodel/remodeling/artifact.json#/$defs/ReconstructionParams"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/remodel/remodeling/artifact.json#/$defs/ReconstructionParams"
         },
         "gcps": {
           "type": "array",
           "items": {
-            "$ref": "https://semio.tech/schema/s/remodel/remodeling/artifact.json#/$defs/GroundControlPoint"
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/remodel/remodeling/artifact.json#/$defs/GroundControlPoint"
           }
         },
         "results": {
-          "$ref": "https://semio.tech/schema/s/remodel/remodeling/artifact.json#/$defs/ReconstructionResults"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/remodel/remodeling/artifact.json#/$defs/ReconstructionResults"
         }
       }
     },
@@ -176,7 +176,7 @@
         "values": {
           "type": "array",
           "items": {
-            "$ref": "https://semio.tech/schema/s/remodel/remodeling/artifact.json#/$defs/GroundControlPoint"
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/remodel/remodeling/artifact.json#/$defs/GroundControlPoint"
           }
         }
       }
@@ -192,7 +192,7 @@
         "values": {
           "type": "array",
           "items": {
-            "$ref": "https://semio.tech/schema/s/remodel/remodeling/artifact.json#/$defs/MediaStream"
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/remodel/remodeling/artifact.json#/$defs/MediaStream"
           }
         }
       }

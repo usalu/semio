@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/drawing/drawing/snapshot.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/drawing/drawing/snapshot.json",
   "title": "DrawingSnapshot",
   "type": "object",
   "additionalProperties": false,
@@ -11,16 +11,16 @@
     "title": { "type": "string", "x-semio-state": "artifact" },
     "layers": {
       "type": "array",
-      "items": { "$ref": "https://semio.tech/schema/s/drawing/drawing/artifact.json#/$defs/DrawingLayerNode" },
+      "items": { "$ref": "https://json.schemas.assets.semio-tech.com/s/drawing/drawing/artifact.json#/$defs/DrawingLayerNode" },
       "x-semio-state": "artifact"
     },
     "assets": {
       "type": "object",
-      "additionalProperties": { "$ref": "https://semio.tech/schema/s/drawing/drawing/artifact.json#/$defs/DrawingImageAsset" },
+      "additionalProperties": { "$ref": "https://json.schemas.assets.semio-tech.com/s/drawing/drawing/artifact.json#/$defs/DrawingImageAsset" },
       "x-semio-state": "artifact"
     },
     "artboard": {
-      "$ref": "https://semio.tech/schema/s/drawing/drawing/artifact.json#/$defs/DrawingArtboard",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/drawing/drawing/artifact.json#/$defs/DrawingArtboard",
       "x-semio-state": "artifact"
     }
   }

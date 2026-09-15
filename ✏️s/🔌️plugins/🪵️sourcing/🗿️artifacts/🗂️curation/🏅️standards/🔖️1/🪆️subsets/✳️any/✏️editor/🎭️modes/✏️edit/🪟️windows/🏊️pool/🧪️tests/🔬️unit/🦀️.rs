@@ -7,20 +7,34 @@ use crate::editor::sourcing::unit_tests::context::{new_app, render as render_bod
 async fn pool_render_respects_query_filter() {
     let document = crate::schema::default_document();
     let cfg = SourcingCurationConfig { filters: Filters { query: "glulam".into(), ..Default::default() }, ..Default::default() };
-    let view = pool_view(&document, &cfg, crate::editor::sourcing::terminology::sourcing_curation_labels(&semio_framework_plugin::ViewModel::default()));
-    assert!(view.rows.iter().flatten().any(|cell| cell.contains("Glulam")));
-    assert!(!view.rows.iter().flatten().any(|cell| cell.contains("Hollow Core")));
+    let names: Vec<String> = pool_kinds(&document, &cfg).into_iter().map(|kind| kind.name).collect();
+    assert!(names.iter().any(|name| name.contains("Glulam")));
+    assert!(!names.iter().any(|name| name.contains("Hollow Core")));
 }
 
 #[semio_framework_async_macros::async_test]
-async fn pool_stepper_cell_max_equals_availability() {
+async fn pool_row_carries_the_drag_payload_and_a_stepper_bounded_by_availability() {
     let document = crate::schema::default_document();
-    let cfg = SourcingCurationConfig::default();
-    let stock = crate::stock_of(&document);
-    let kind = &stock[0];
-    let view = pool_view(&document, &cfg, crate::editor::sourcing::terminology::sourcing_curation_labels(&semio_framework_plugin::ViewModel::default()));
-    let row = view.rows.iter().find(|row| row.first() == Some(&kind.name)).expect("stock row");
-    assert_eq!(row[3], kind.availability.to_string());
+    let kind = crate::stock_of(&document).remove(0);
+    let row: serde_json::Value = serde_json::from_str(&protocol::json::to_json_string(&pool_row(&document, &kind))).unwrap();
+    assert_eq!(row["id"], kind.id.as_str());
+    assert_eq!(row["_drag"]["objectId"], kind.id.as_str());
+    assert_eq!(row["curated"]["kind"], "stepper");
+    assert_eq!(row["curated"]["max"].as_f64().unwrap(), kind.availability as f64);
+    assert_eq!(row["curated"]["action"]["action"], "curationSetCount");
+    assert_eq!(row["curated"]["action"]["args"]["objectId"], kind.id.as_str());
+}
+
+#[semio_framework_async_macros::async_test]
+async fn pool_scene_names_columns_by_id_and_drops_onto_the_pool() {
+    let document = crate::schema::default_document();
+    let node = render(&document, &SourcingCurationConfig::default(), crate::editor::sourcing::terminology::sourcing_curation_labels(&semio_framework_plugin::ViewModel::default())).expect("bounded pool");
+    let semio_framework_plugin::Component::Surface(props) = node.component else { panic!("expected a table surface") };
+    let scene: semio_framework_plugin::TableScene = semio_framework_ui_scene::decode(&props).expect("table scene");
+    let columns: serde_json::Value = serde_json::from_str(&scene.columns_json).unwrap();
+    assert_eq!(columns[0]["id"], "name");
+    assert_eq!(scene.row_drag_mime.as_deref(), Some(crate::editor::sourcing::SOURCING_DRAG_MIME));
+    assert!(scene.drop_action_json.expect("drop action").contains("dropOnPool"));
 }
 
 #[semio_framework_async_macros::async_test]

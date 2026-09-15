@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/gltf/2.0/material/mutations.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/material/mutations.json",
   "title": "glTF Material Mutation",
   "description": "View over the any subset's mutation leaves (adjacently tagged); every payload is the owning leaf's own schema, referenced, never restated.",
   "oneOf": [
@@ -16,7 +16,7 @@
           "const": "changeMaterialAlphaMode"
         },
         "payload": {
-          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/change-material-alpha-mode/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/change-material-alpha-mode/schema.json"
         }
       }
     },
@@ -32,7 +32,7 @@
           "const": "changeMaterialDoubleSided"
         },
         "payload": {
-          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/change-material-double-sided/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/change-material-double-sided/schema.json"
         }
       }
     },
@@ -48,7 +48,7 @@
           "const": "createImage"
         },
         "payload": {
-          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/create-image/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/create-image/schema.json"
         }
       }
     },
@@ -64,7 +64,7 @@
           "const": "createMaterial"
         },
         "payload": {
-          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/create-material/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/create-material/schema.json"
         }
       }
     },
@@ -80,7 +80,7 @@
           "const": "createSampler"
         },
         "payload": {
-          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/create-sampler/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/create-sampler/schema.json"
         }
       }
     },
@@ -96,7 +96,7 @@
           "const": "createTexture"
         },
         "payload": {
-          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/create-texture/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/create-texture/schema.json"
         }
       }
     },
@@ -112,7 +112,7 @@
           "const": "deleteImage"
         },
         "payload": {
-          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/delete-image/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/delete-image/schema.json"
         }
       }
     },
@@ -128,7 +128,7 @@
           "const": "deleteMaterial"
         },
         "payload": {
-          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/delete-material/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/delete-material/schema.json"
         }
       }
     },
@@ -144,7 +144,7 @@
           "const": "deleteSampler"
         },
         "payload": {
-          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/delete-sampler/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/delete-sampler/schema.json"
         }
       }
     },
@@ -160,7 +160,7 @@
           "const": "deleteTexture"
         },
         "payload": {
-          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/delete-texture/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/delete-texture/schema.json"
         }
       }
     },
@@ -176,7 +176,7 @@
           "const": "moveImage"
         },
         "payload": {
-          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/move-image/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/move-image/schema.json"
         }
       }
     },
@@ -192,7 +192,7 @@
           "const": "moveMaterial"
         },
         "payload": {
-          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/move-material/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/move-material/schema.json"
         }
       }
     },
@@ -208,7 +208,7 @@
           "const": "moveSampler"
         },
         "payload": {
-          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/move-sampler/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/move-sampler/schema.json"
         }
       }
     },
@@ -224,7 +224,7 @@
           "const": "moveTexture"
         },
         "payload": {
-          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/move-texture/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/move-texture/schema.json"
         }
       }
     },
@@ -240,7 +240,7 @@
           "const": "reorderImages"
         },
         "payload": {
-          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/reorder-images/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/reorder-images/schema.json"
         }
       }
     },
@@ -256,7 +256,7 @@
           "const": "reorderMaterials"
         },
         "payload": {
-          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/reorder-materials/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/reorder-materials/schema.json"
         }
       }
     },
@@ -272,7 +272,7 @@
           "const": "reorderSamplers"
         },
         "payload": {
-          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/reorder-samplers/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/reorder-samplers/schema.json"
         }
       }
     },
@@ -288,7 +288,7 @@
           "const": "reorderTextures"
         },
         "payload": {
-          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/reorder-textures/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/reorder-textures/schema.json"
         }
       }
     }

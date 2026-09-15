@@ -4,7 +4,7 @@ use crate::standards::v1::subsets::any::schema::diff::*;
 use crate::standards::v1::subsets::any::schema::Generation2dArtifact;
 use crate::{widget_id, Generation2dSnapshot};
 use protocol::MutationDiff;
-use semio_framework_artifact_flow_flow::{CameraJson, FlowHostDocument, SynapseSpec, Widget, WidgetLayout};
+use semio_framework_artifact_flow_flow::{CameraJson, FlowHostSnapshot, SynapseSpec, Widget, WidgetLayout};
 use semio_framework_artifact_playbook_playbook::{apply_generation_mutation, GenerationMutation, GenerationPlayState};
 use semio_framework_value_derive::{FromValue, ToValue};
 //#region 📖️SemioGrammar
@@ -71,9 +71,9 @@ fn apply_layout_diff(layout: &mut semio_framework_artifact_flow_flow::OrderedMap
     }
 }
 
-/// 🧩 Applies sparse fixture-collection helpers onto a cloned fixture.
-pub fn apply_host_document_helpers(fixture: &FlowHostDocument, widgets: &WidgetsDiff, synapses: &SynapsesDiff, layout: &LayoutDiff, camera: Option<&CameraJson>, schema: Option<&str>) -> FlowHostDocument {
-    let mut next = fixture.clone();
+/// 🧩 Applies sparse fixture-collection helpers onto a cloned host_snapshot.
+pub fn apply_host_snapshot_helpers(host_snapshot: &FlowHostSnapshot, widgets: &WidgetsDiff, synapses: &SynapsesDiff, layout: &LayoutDiff, camera: Option<&CameraJson>, schema: Option<&str>) -> FlowHostSnapshot {
+    let mut next = host_snapshot.clone();
     apply_widgets_diff(&mut next.widgets, widgets);
     apply_synapses_diff(&mut next.synapses, synapses);
     apply_layout_diff(&mut next.layout, layout);
@@ -105,8 +105,8 @@ impl Generation2dDiff {
                 return Ok((**replacement).clone());
             }
             let mut next = artifact.clone();
-            if let Some(fixture) = &self.host_document {
-                std::mem::replace(&mut next.host_document, fixture.clone()).retire_cold();
+            if let Some(host_snapshot) = &self.host_snapshot {
+                std::mem::replace(&mut next.host_snapshot, host_snapshot.clone()).retire_cold();
             }
             if let Some(generation) = &self.generation {
                 std::mem::replace(&mut next.generation, generation.clone()).retire_cold();
@@ -123,8 +123,8 @@ impl MutationDiff<Generation2dSnapshot> for Generation2dDiff {
                 return Ok(replacement.to_snapshot());
             }
             let mut next = snapshot.clone();
-            if let Some(fixture) = &self.host_document {
-                std::mem::replace(&mut next.host_document, fixture.clone()).retire_cold();
+            if let Some(host_snapshot) = &self.host_snapshot {
+                std::mem::replace(&mut next.host_snapshot, host_snapshot.clone()).retire_cold();
             }
             if let Some(generation) = &self.generation {
                 std::mem::replace(&mut next.generation, generation.clone()).retire_cold();
@@ -140,9 +140,9 @@ impl MutationDiff<Generation2dSnapshot> for Generation2dDiff {
             std::mem::replace(self, other).retire_cold();
             return;
         }
-        let Self { artifact: _, fixture, generation } = other;
-        if let Some(fixture) = fixture {
-            if let Some(displaced) = self.host_document.replace(fixture) {
+        let Self { artifact: _, host_snapshot, generation } = other;
+        if let Some(replacement) = host_snapshot {
+            if let Some(displaced) = self.host_snapshot.replace(replacement) {
                 displaced.retire_cold();
             }
         }
@@ -170,8 +170,8 @@ impl MutationDiff<Generation2dSnapshot> for Generation2dDiff {
 //#region 🔖️Constructors
 /// 🏗️ Whole-fixture field delta after applying sparse collection helpers.
 pub fn diff_fixture_from_helpers(base: &Generation2dSnapshot, widgets: &WidgetsDiff, synapses: &SynapsesDiff, layout: &LayoutDiff, camera: Option<&CameraJson>, schema: Option<&str>) -> Generation2dDiff {
-    let fixture = apply_host_document_helpers(&base.host_document, widgets, synapses, layout, camera, schema);
-    Generation2dDiff { fixture: Some(fixture), ..Generation2dDiff::default() }
+    let updated = apply_host_snapshot_helpers(&base.host_snapshot, widgets, synapses, layout, camera, schema);
+    Generation2dDiff { host_snapshot: Some(updated), ..Generation2dDiff::default() }
 }
 
 /// 🏗️ Generation field delta after applying ordered generation mutations.

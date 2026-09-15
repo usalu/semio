@@ -196,7 +196,7 @@ mod conformance_laws {
     /// form — jpg's real internal marker structure is `../💾️binary/📡️.protocol.semio`'s
     /// job, not this leaf's, per the recipe's own png precedent) recognizes real `print_dsl`
     /// output for the demo snapshot — same preamble-stripped body reconstruction
-    /// `m5_handcrafted_grammar_conformance`'s own `dsl_body_from_host_document` uses.
+    /// `m5_handcrafted_grammar_conformance`'s own `dsl_body_from_host_snapshot` uses.
     #[semio_framework_async_macros::async_test]
     async fn grammar_conformance_law() {
         let grammar = dsl::parse_grammar(snapshot::text::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");

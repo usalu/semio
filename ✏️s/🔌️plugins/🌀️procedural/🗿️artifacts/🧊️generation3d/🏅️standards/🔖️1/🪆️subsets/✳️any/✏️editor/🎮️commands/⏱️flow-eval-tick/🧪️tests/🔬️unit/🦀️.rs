@@ -1,7 +1,7 @@
 use super::*;
 use crate::editor::generation3d::unit_tests::context::{app, dispatch_with_view, preview_views};
 use crate::editor::generation3d::Generation3dCommand;
-use semio_framework_artifact_flow_flow::{FlowHostDocument, Widget};
+use semio_framework_artifact_flow_flow::{FlowHostSnapshot, Widget};
 use semio_framework_os_flow::neural::{Atom, ColdRetire, Dictionary, Value};
 
 /// ⏱️ `flowEvalTick` is a WINDOW-owned retained job: its `extent` resolves only against the
@@ -63,9 +63,9 @@ fn contribution_gated_arming_fixture() -> ContributionGatedArmingFixture {
 /// 🔢 Every neuron carries its OWN `a`/`b` params: the node cache is keyed by
 /// `node_hash(kind, merged inputs)`, so identical neurons would be one miss and 599 hits, the whole
 /// graph would land inside one tick's budget, and neither arm would ever reach a re-arm decision.
-fn single_kind_graph(kind: &str, widgets: usize) -> FlowHostDocument {
-    FlowHostDocument {
-        schema: "flow.host_document".into(),
+fn single_kind_graph(kind: &str, widgets: usize) -> FlowHostSnapshot {
+    FlowHostSnapshot {
+        schema: "flow.host_snapshot".into(),
         widgets: (0..widgets)
             .map(|index| Widget::Neuron {
                 id: format!("n{index}"),

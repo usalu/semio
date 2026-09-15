@@ -1,73 +1,73 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/norm/en1994/mutations.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/mutations.json",
   "title": "En1994Mutation",
   "oneOf": [
     {
-      "$ref": "https://semio.tech/schema/s/norm/en1994/mutation/change-annex/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/mutation/change-annex/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/norm/en1994/mutation/change-d-mm/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/mutation/change-d-mm/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/norm/en1994/mutation/change-deck-type/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/mutation/change-deck-type/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/norm/en1994/mutation/change-delta-sigma-mpa/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/mutation/change-delta-sigma-mpa/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/norm/en1994/mutation/change-delta-tau-stud-mpa/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/mutation/change-delta-tau-stud-mpa/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/norm/en1994/mutation/change-e-cm-mpa/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/mutation/change-e-cm-mpa/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/norm/en1994/mutation/change-eta/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/mutation/change-eta/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/norm/en1994/mutation/change-f-ck-mpa/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/mutation/change-f-ck-mpa/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/norm/en1994/mutation/change-fatigue-detail/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/mutation/change-fatigue-detail/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/norm/en1994/mutation/change-fire-rating/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/mutation/change-fire-rating/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/norm/en1994/mutation/change-fu-mpa/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/mutation/change-fu-mpa/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/norm/en1994/mutation/change-fy-mpa/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/mutation/change-fy-mpa/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/norm/en1994/mutation/change-h-sc-mm/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/mutation/change-h-sc-mm/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/norm/en1994/mutation/change-insulation-thickness-mm/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/mutation/change-insulation-thickness-mm/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/norm/en1994/mutation/change-m-ed-knm/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/mutation/change-m-ed-knm/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/norm/en1994/mutation/change-m-pl-rd/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/mutation/change-m-pl-rd/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/norm/en1994/mutation/change-m-pla/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/mutation/change-m-pla/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/norm/en1994/mutation/change-n-cycles-stud/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/mutation/change-n-cycles-stud/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/norm/en1994/mutation/change-span-m/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/mutation/change-span-m/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/norm/en1994/mutation/change-v-ed-kn/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/mutation/change-v-ed-kn/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/norm/en1994/mutation/change-v-ed-per-stud-kn/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/mutation/change-v-ed-per-stud-kn/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/norm/en1994/mutation/change-vl-rd/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/mutation/change-vl-rd/schema.json"
     }
   ]
 }

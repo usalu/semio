@@ -30,7 +30,7 @@ export function testJackDocumentContract(): void {
   ajv.addSchema(ioSchema);
   ajv.addSchema(childSchema);
   ajv.addSchema(artifactSchema);
-  const validateArtifact = ajv.getSchema("https://semio.tech/schema/s/trinity/jack/artifact.json");
+  const validateArtifact = ajv.getSchema("https://json.schemas.assets.semio-tech.com/s/trinity/jack/artifact.json");
   const validateSnapshot = ajv.compile(snapshotSchema);
   const validateDiff = ajv.compile(diffSchema);
   assert(validateArtifact?.(snapshot), JSON.stringify(validateArtifact?.errors));

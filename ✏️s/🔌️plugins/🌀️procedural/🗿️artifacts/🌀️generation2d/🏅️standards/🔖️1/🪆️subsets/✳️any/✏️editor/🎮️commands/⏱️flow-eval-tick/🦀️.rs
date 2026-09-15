@@ -14,7 +14,7 @@ pub use crate::preview_eval::FlowEvalTick;
 /// 🔢️ The digest of the text `target` evaluates for this document and config — what a hop records and
 /// what the editor's poll compares.
 pub fn target_digest(target: PreviewEvalTarget, doc: &ArtifactView<'_, Generation2dSnapshot>, cfg: &ConfigView<'_, Generation2dConfig>) -> u64 {
-    let fixture = dsl::json::to_json_string(&doc.snapshot.host_document);
+    let fixture = dsl::json::to_json_string(&doc.snapshot.host_snapshot);
     match target {
         PreviewEvalTarget::Document => preview_eval::preview_eval_digest(&[&fixture]),
         PreviewEvalTarget::Generation => preview_eval::preview_eval_digest(&[&fixture, &dsl::json::to_json_string(doc.snapshot.generation.as_state()), cfg.snapshot.selected_generation_id.as_deref().unwrap_or_default()]),
@@ -28,7 +28,7 @@ pub fn evaluate(window_id: &str, window_kind_id: &str, target: PreviewEvalTarget
     let retained = session.eval_json().to_string();
     let retained = (!retained.is_empty()).then_some(retained);
     let outcome = match target {
-        PreviewEvalTarget::Document => preview_eval::evaluate_tick(window_id, window_kind_id, &doc.snapshot.host_document, session, retained.as_deref()),
+        PreviewEvalTarget::Document => preview_eval::evaluate_tick(window_id, window_kind_id, &doc.snapshot.host_snapshot, session, retained.as_deref()),
         PreviewEvalTarget::Generation => {
             let mut state = doc.snapshot.generation.as_state().clone();
             state.selected_generation_id.clone_from(&cfg.snapshot.selected_generation_id);
@@ -36,8 +36,8 @@ pub fn evaluate(window_id: &str, window_kind_id: &str, target: PreviewEvalTarget
                 preview_eval::settle_empty_tick(window_id, session);
                 return (Emit::default(), session.eval_publication_for(retained.as_deref()));
             };
-            let host = crate::standards::v1::subsets::any::schema::generation_preview_host(&doc.snapshot.host_document, &values);
-            let outcome = preview_eval::evaluate_tick(window_id, window_kind_id, &host.host_document, session, retained.as_deref());
+            let host = crate::standards::v1::subsets::any::schema::generation_preview_host(&doc.snapshot.host_snapshot, &values);
+            let outcome = preview_eval::evaluate_tick(window_id, window_kind_id, &host.host_snapshot, session, retained.as_deref());
             host.retire_cold();
             outcome
         }

@@ -60,7 +60,7 @@ def main() -> None:
                 text = handle.read()
         except OSError:
             continue
-        if "https://semio.tech/schema/" in text:
+        if "https://json.schemas.assets.semio-tech.com/" in text:
             for target, export in re.findall(r'"(https://semio\.tech/schema/[^"#]+)#/\$defs/([A-Za-z0-9]+)"', text):
                 referenced.add((target, export))
         for uri in re.findall(r'"schema://([a-z0-9.\-]+)/([A-Za-z0-9]+)"', text):

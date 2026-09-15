@@ -96,7 +96,7 @@ For an owner whose config type is `XConfig`:
 Mutation types are `XConfigMutation` (exists) and `XPresenceMutation` (new).
 
 Proto package and JSON Schema `$id` follow artifact spec §4's rule with `app` in place of `artifact`:
-`$id` is `https://semio.tech/schema/app/<plugin>/<owner-slug>/<facet>.json`, proto package
+`$id` is `https://json.schemas.assets.semio-tech.com/app/<plugin>/<owner-slug>/<facet>.json`, proto package
 `semio.app.<plugin>.<owner_slug>.<facet>`, both emoji-stripped and snake/lower as that section requires.
 
 ## 6. What goes in each facet
@@ -620,7 +620,7 @@ type LowpolyConfig {
 
 ```json
 {
-  "$id": "https://semio.tech/schema/app/lowpoly/lowpoly/config.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/app/lowpoly/lowpoly/config.json",
   "title": "LowpolyConfig",
   "type": "object",
   "additionalProperties": false,
@@ -1001,7 +1001,7 @@ type LowpolyPresence {
 
 ```json
 {
-  "$id": "https://semio.tech/schema/app/lowpoly/lowpoly/presence.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/app/lowpoly/lowpoly/presence.json",
   "title": "LowpolyPresence",
   "type": "object",
   "additionalProperties": false,

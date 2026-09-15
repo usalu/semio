@@ -475,7 +475,7 @@
             "class": "data",
             "form": "value"
           },
-          "documentSchema": "flow.hostDocument",
+          "documentSchema": "flow.hostSnapshot",
           "exportFormats": [],
           "importFormats": [],
           "ports": []
@@ -14430,7 +14430,7 @@
             "class": "data",
             "form": "value"
           },
-          "documentSchema": "flow.hostDocument",
+          "documentSchema": "flow.hostSnapshot",
           "exportFormats": [],
           "importFormats": [],
           "ports": []

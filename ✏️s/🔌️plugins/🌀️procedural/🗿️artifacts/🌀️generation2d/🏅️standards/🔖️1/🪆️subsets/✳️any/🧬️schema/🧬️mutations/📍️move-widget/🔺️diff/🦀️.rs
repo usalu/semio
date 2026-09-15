@@ -5,7 +5,7 @@ use crate::standards::v1::subsets::any::schema::diff::{diff_fixture_from_helpers
 use crate::{widget_id, Generation2dSnapshot};
 
 pub fn diff(payload: &super::MoveWidget, base: &Generation2dSnapshot) -> protocol::MutationOutcome<Generation2dDiff> {
-    if !base.host_document.widgets.iter().any(|widget| widget_id(widget) == payload.id) {
+    if !base.host_snapshot.widgets.iter().any(|widget| widget_id(widget) == payload.id) {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Widget \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     }
     if !payload.layout.x.is_finite() || !payload.layout.y.is_finite() {

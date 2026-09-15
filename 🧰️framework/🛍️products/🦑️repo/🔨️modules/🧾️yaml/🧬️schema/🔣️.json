@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://semio.tech/schema/repo/yaml/1",
+  "$id": "https://json.schemas.assets.semio-tech.com/repo/yaml/1",
   "title": "🧾️ Repo YAML codec fixtures and wire shapes",
   "description": "🧾️ The vector file the `🔁️codec-roundtrip` case reads and the projection every implementation of the codec must produce for it.",
   "type": "object",

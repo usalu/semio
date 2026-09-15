@@ -1,0 +1,1110 @@
+{
+ "why": "Recorded per-poll status sequences from a real journey run, so `🐍️convergence-budget.mjs`'s decision can be replayed and held to a law instead of only being exercised live. Each sample is one poll: the published `World3dComputeStatusV1` of every preview window, the picker's label, the Flow window's painted node ids and per-node statuses, the mesh oracle's own verdict, and the wall time the poll actually landed at.",
+ "recordedFrom": "🗑️generated/react-hotswap/journey/results.json (:6023, 2026-09-15 18:39, journey 25/25 green)",
+ "derived": "The law derives two further families from these recordings and labels them as derived: the same sequence with every poll stretched by a load factor (the machine busy, the product unchanged), and the same sequence cut before it converged and then left publishing its last reading (what a stalled preview does).",
+ "loadFactors": [
+  2,
+  4,
+  8
+ ],
+ "sequences": [
+  {
+   "label": "boot",
+   "expected": "converged",
+   "recordedPolls": 9,
+   "recordedReason": "settled for 3 consecutive polls",
+   "samples": [
+    {
+     "t": 2405,
+     "converged": false,
+     "oracleOk": null,
+     "example": null,
+     "widgetIds": null,
+     "nodeStatuses": null,
+     "previews": []
+    },
+    {
+     "t": 3426,
+     "converged": false,
+     "oracleOk": null,
+     "example": "Hexagonal Mushroom Column",
+     "widgetIds": null,
+     "nodeStatuses": null,
+     "previews": []
+    },
+    {
+     "t": 4523,
+     "converged": false,
+     "oracleOk": null,
+     "example": "Hexagonal Mushroom Column",
+     "widgetIds": [
+      "height",
+      "radius",
+      "sides",
+      "profile",
+      "extrusion-axis",
+      "extrude",
+      "column-preview"
+     ],
+     "nodeStatuses": [
+      "ok",
+      "ok",
+      "ok",
+      "queued",
+      "computing",
+      "queued",
+      "ok"
+     ],
+     "previews": [
+      {
+       "surfaceId": "window:procedural-preview",
+       "phase": "faulted",
+       "ratio": 1,
+       "computing": null,
+       "fault": "flow.extension-not-contributed",
+       "meshes": 0,
+       "triangles": null
+      }
+     ]
+    },
+    {
+     "t": 5624,
+     "converged": false,
+     "oracleOk": null,
+     "example": "Hexagonal Mushroom Column",
+     "widgetIds": [
+      "height",
+      "radius",
+      "sides",
+      "profile",
+      "extrusion-axis",
+      "extrude",
+      "column-preview"
+     ],
+     "nodeStatuses": [
+      "ok",
+      "ok",
+      "ok",
+      "queued",
+      "computing",
+      "blocked",
+      "ok"
+     ],
+     "previews": [
+      {
+       "surfaceId": "window:procedural-preview",
+       "phase": "computing",
+       "ratio": 0,
+       "computing": true,
+       "fault": null,
+       "meshes": 0,
+       "triangles": null
+      }
+     ]
+    },
+    {
+     "t": 6657,
+     "converged": false,
+     "oracleOk": null,
+     "example": "Hexagonal Mushroom Column",
+     "widgetIds": [
+      "height",
+      "radius",
+      "sides",
+      "profile",
+      "extrusion-axis",
+      "extrude",
+      "column-preview"
+     ],
+     "nodeStatuses": [
+      "ok",
+      "ok",
+      "ok",
+      "queued",
+      "computing",
+      "blocked",
+      "ok"
+     ],
+     "previews": [
+      {
+       "surfaceId": "window:procedural-preview",
+       "phase": "computing",
+       "ratio": 0.7142857142857143,
+       "computing": true,
+       "fault": null,
+       "meshes": 0,
+       "triangles": null
+      }
+     ]
+    },
+    {
+     "t": 7665,
+     "converged": false,
+     "oracleOk": null,
+     "example": "Hexagonal Mushroom Column",
+     "widgetIds": [
+      "height",
+      "radius",
+      "sides",
+      "profile",
+      "extrusion-axis",
+      "extrude",
+      "column-preview"
+     ],
+     "nodeStatuses": [
+      "ok",
+      "ok",
+      "ok",
+      "ok",
+      "ok",
+      "ok",
+      "ok"
+     ],
+     "previews": [
+      {
+       "surfaceId": "window:procedural-preview",
+       "phase": "meshingFaces",
+       "ratio": 0.5454545454545454,
+       "computing": true,
+       "fault": null,
+       "meshes": 2,
+       "triangles": null
+      }
+     ]
+    },
+    {
+     "t": 8694,
+     "converged": true,
+     "oracleOk": null,
+     "example": "Hexagonal Mushroom Column",
+     "widgetIds": [
+      "height",
+      "radius",
+      "sides",
+      "profile",
+      "extrusion-axis",
+      "extrude",
+      "column-preview"
+     ],
+     "nodeStatuses": [
+      "ok",
+      "ok",
+      "ok",
+      "ok",
+      "ok",
+      "ok",
+      "ok"
+     ],
+     "previews": [
+      {
+       "surfaceId": "window:procedural-preview",
+       "phase": "idle",
+       "ratio": 1,
+       "computing": null,
+       "fault": null,
+       "meshes": 3,
+       "triangles": null
+      }
+     ]
+    },
+    {
+     "t": 9704,
+     "converged": true,
+     "oracleOk": null,
+     "example": "Hexagonal Mushroom Column",
+     "widgetIds": [
+      "height",
+      "radius",
+      "sides",
+      "profile",
+      "extrusion-axis",
+      "extrude",
+      "column-preview"
+     ],
+     "nodeStatuses": [
+      "ok",
+      "ok",
+      "ok",
+      "ok",
+      "ok",
+      "ok",
+      "ok"
+     ],
+     "previews": [
+      {
+       "surfaceId": "window:procedural-preview",
+       "phase": "idle",
+       "ratio": 1,
+       "computing": null,
+       "fault": null,
+       "meshes": 3,
+       "triangles": null
+      }
+     ]
+    },
+    {
+     "t": 10710,
+     "converged": true,
+     "oracleOk": null,
+     "example": "Hexagonal Mushroom Column",
+     "widgetIds": [
+      "height",
+      "radius",
+      "sides",
+      "profile",
+      "extrusion-axis",
+      "extrude",
+      "column-preview"
+     ],
+     "nodeStatuses": [
+      "ok",
+      "ok",
+      "ok",
+      "ok",
+      "ok",
+      "ok",
+      "ok"
+     ],
+     "previews": [
+      {
+       "surfaceId": "window:procedural-preview",
+       "phase": "idle",
+       "ratio": 1,
+       "computing": null,
+       "fault": null,
+       "meshes": 3,
+       "triangles": null
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "label": "edit:No example",
+   "expected": "converged",
+   "recordedPolls": 3,
+   "recordedReason": "settled for 3 consecutive polls",
+   "samples": [
+    {
+     "t": 13104,
+     "converged": true,
+     "oracleOk": null,
+     "example": "No example",
+     "widgetIds": [],
+     "nodeStatuses": [],
+     "previews": [
+      {
+       "surfaceId": "window:procedural-preview",
+       "phase": "idle",
+       "ratio": 1,
+       "computing": null,
+       "fault": null,
+       "meshes": 0,
+       "triangles": null
+      }
+     ]
+    },
+    {
+     "t": 14113,
+     "converged": true,
+     "oracleOk": null,
+     "example": "No example",
+     "widgetIds": [],
+     "nodeStatuses": [],
+     "previews": [
+      {
+       "surfaceId": "window:procedural-preview",
+       "phase": "idle",
+       "ratio": 1,
+       "computing": null,
+       "fault": null,
+       "meshes": 0,
+       "triangles": null
+      }
+     ]
+    },
+    {
+     "t": 15122,
+     "converged": true,
+     "oracleOk": null,
+     "example": "No example",
+     "widgetIds": [],
+     "nodeStatuses": [],
+     "previews": [
+      {
+       "surfaceId": "window:procedural-preview",
+       "phase": "idle",
+       "ratio": 1,
+       "computing": null,
+       "fault": null,
+       "meshes": 0,
+       "triangles": null
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "label": "edit:Hexagonal Mushroom Column",
+   "expected": "converged",
+   "recordedPolls": 4,
+   "recordedReason": "settled for 3 consecutive polls",
+   "samples": [
+    {
+     "t": 16783,
+     "converged": false,
+     "oracleOk": false,
+     "example": "Hexagonal Mushroom Column",
+     "widgetIds": [
+      "height",
+      "radius",
+      "sides",
+      "profile",
+      "extrusion-axis",
+      "extrude",
+      "column-preview"
+     ],
+     "nodeStatuses": [
+      "ok",
+      "ok",
+      "ok",
+      "ok",
+      "ok",
+      "ok",
+      "ok"
+     ],
+     "previews": [
+      {
+       "surfaceId": "window:procedural-preview",
+       "phase": "computing",
+       "ratio": 0,
+       "computing": true,
+       "fault": null,
+       "meshes": 1,
+       "triangles": null
+      }
+     ]
+    },
+    {
+     "t": 17790,
+     "converged": true,
+     "oracleOk": true,
+     "example": "Hexagonal Mushroom Column",
+     "widgetIds": [
+      "height",
+      "radius",
+      "sides",
+      "profile",
+      "extrusion-axis",
+      "extrude",
+      "column-preview"
+     ],
+     "nodeStatuses": [
+      "ok",
+      "ok",
+      "ok",
+      "ok",
+      "ok",
+      "ok",
+      "ok"
+     ],
+     "previews": [
+      {
+       "surfaceId": "window:procedural-preview",
+       "phase": "idle",
+       "ratio": 1,
+       "computing": null,
+       "fault": null,
+       "meshes": 3,
+       "triangles": 20
+      }
+     ]
+    },
+    {
+     "t": 18805,
+     "converged": true,
+     "oracleOk": true,
+     "example": "Hexagonal Mushroom Column",
+     "widgetIds": [
+      "height",
+      "radius",
+      "sides",
+      "profile",
+      "extrusion-axis",
+      "extrude",
+      "column-preview"
+     ],
+     "nodeStatuses": [
+      "ok",
+      "ok",
+      "ok",
+      "ok",
+      "ok",
+      "ok",
+      "ok"
+     ],
+     "previews": [
+      {
+       "surfaceId": "window:procedural-preview",
+       "phase": "idle",
+       "ratio": 1,
+       "computing": null,
+       "fault": null,
+       "meshes": 3,
+       "triangles": 20
+      }
+     ]
+    },
+    {
+     "t": 19834,
+     "converged": true,
+     "oracleOk": true,
+     "example": "Hexagonal Mushroom Column",
+     "widgetIds": [
+      "height",
+      "radius",
+      "sides",
+      "profile",
+      "extrusion-axis",
+      "extrude",
+      "column-preview"
+     ],
+     "nodeStatuses": [
+      "ok",
+      "ok",
+      "ok",
+      "ok",
+      "ok",
+      "ok",
+      "ok"
+     ],
+     "previews": [
+      {
+       "surfaceId": "window:procedural-preview",
+       "phase": "idle",
+       "ratio": 1,
+       "computing": null,
+       "fault": null,
+       "meshes": 3,
+       "triangles": 20
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "label": "edit:Sphere Cut With Torus",
+   "expected": "converged",
+   "recordedPolls": 5,
+   "recordedReason": "settled for 3 consecutive polls",
+   "samples": [
+    {
+     "t": 28658,
+     "converged": false,
+     "oracleOk": false,
+     "example": "Sphere Cut With Torus",
+     "widgetIds": [
+      "slider_2",
+      "brep_prim3d_sphere_3",
+      "brep_prim3d_torus_4",
+      "brep_bool_cut_5",
+      "brep_measure_volume_2",
+      "preview_3"
+     ],
+     "nodeStatuses": [
+      "ok",
+      "queued",
+      "computing",
+      "blocked",
+      "blocked",
+      "ok"
+     ],
+     "previews": [
+      {
+       "surfaceId": "window:procedural-preview",
+       "phase": "computing",
+       "ratio": 0.875,
+       "computing": true,
+       "fault": null,
+       "meshes": 0,
+       "triangles": null
+      }
+     ]
+    },
+    {
+     "t": 29675,
+     "converged": false,
+     "oracleOk": false,
+     "example": "Sphere Cut With Torus",
+     "widgetIds": [
+      "slider_2",
+      "brep_prim3d_sphere_3",
+      "brep_prim3d_torus_4",
+      "brep_bool_cut_5",
+      "brep_measure_volume_2",
+      "preview_3"
+     ],
+     "nodeStatuses": [
+      "ok",
+      "computing",
+      "ok",
+      "blocked",
+      "blocked",
+      "ok"
+     ],
+     "previews": [
+      {
+       "surfaceId": "window:procedural-preview",
+       "phase": "computing",
+       "ratio": 0.8333333333333334,
+       "computing": true,
+       "fault": null,
+       "meshes": 0,
+       "triangles": null
+      }
+     ]
+    },
+    {
+     "t": 30776,
+     "converged": true,
+     "oracleOk": true,
+     "example": "Sphere Cut With Torus",
+     "widgetIds": [
+      "slider_2",
+      "brep_prim3d_sphere_3",
+      "brep_prim3d_torus_4",
+      "brep_bool_cut_5",
+      "brep_measure_volume_2",
+      "preview_3"
+     ],
+     "nodeStatuses": [
+      "ok",
+      "ok",
+      "ok",
+      "ok",
+      "ok",
+      "ok"
+     ],
+     "previews": [
+      {
+       "surfaceId": "window:procedural-preview",
+       "phase": "idle",
+       "ratio": 1,
+       "computing": null,
+       "fault": null,
+       "meshes": 1,
+       "triangles": 1114
+      }
+     ]
+    },
+    {
+     "t": 31798,
+     "converged": true,
+     "oracleOk": true,
+     "example": "Sphere Cut With Torus",
+     "widgetIds": [
+      "slider_2",
+      "brep_prim3d_sphere_3",
+      "brep_prim3d_torus_4",
+      "brep_bool_cut_5",
+      "brep_measure_volume_2",
+      "preview_3"
+     ],
+     "nodeStatuses": [
+      "ok",
+      "ok",
+      "ok",
+      "ok",
+      "ok",
+      "ok"
+     ],
+     "previews": [
+      {
+       "surfaceId": "window:procedural-preview",
+       "phase": "idle",
+       "ratio": 1,
+       "computing": null,
+       "fault": null,
+       "meshes": 1,
+       "triangles": 1114
+      }
+     ]
+    },
+    {
+     "t": 32920,
+     "converged": true,
+     "oracleOk": true,
+     "example": "Sphere Cut With Torus",
+     "widgetIds": [
+      "slider_2",
+      "brep_prim3d_sphere_3",
+      "brep_prim3d_torus_4",
+      "brep_bool_cut_5",
+      "brep_measure_volume_2",
+      "preview_3"
+     ],
+     "nodeStatuses": [
+      "ok",
+      "ok",
+      "ok",
+      "ok",
+      "ok",
+      "ok"
+     ],
+     "previews": [
+      {
+       "surfaceId": "window:procedural-preview",
+       "phase": "idle",
+       "ratio": 1,
+       "computing": null,
+       "fault": null,
+       "meshes": 1,
+       "triangles": 1114
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "label": "generate-mode",
+   "expected": "converged",
+   "recordedPolls": 3,
+   "recordedReason": "settled for 3 consecutive polls",
+   "samples": [
+    {
+     "t": 59714,
+     "converged": true,
+     "oracleOk": null,
+     "example": "Box Shell Preview",
+     "widgetIds": null,
+     "nodeStatuses": null,
+     "previews": [
+      {
+       "surfaceId": "window:generation3d-generate-preview",
+       "phase": "idle",
+       "ratio": 1,
+       "computing": null,
+       "fault": null,
+       "meshes": 0,
+       "triangles": null
+      }
+     ]
+    },
+    {
+     "t": 60730,
+     "converged": true,
+     "oracleOk": null,
+     "example": "Box Shell Preview",
+     "widgetIds": null,
+     "nodeStatuses": null,
+     "previews": [
+      {
+       "surfaceId": "window:generation3d-generate-preview",
+       "phase": "idle",
+       "ratio": 1,
+       "computing": null,
+       "fault": null,
+       "meshes": 0,
+       "triangles": null
+      }
+     ]
+    },
+    {
+     "t": 61734,
+     "converged": true,
+     "oracleOk": null,
+     "example": "Box Shell Preview",
+     "widgetIds": null,
+     "nodeStatuses": null,
+     "previews": [
+      {
+       "surfaceId": "window:generation3d-generate-preview",
+       "phase": "idle",
+       "ratio": 1,
+       "computing": null,
+       "fault": null,
+       "meshes": 0,
+       "triangles": null
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "label": "generate-added",
+   "expected": "converged",
+   "recordedPolls": 3,
+   "recordedReason": "settled for 3 consecutive polls",
+   "samples": [
+    {
+     "t": 63029,
+     "converged": true,
+     "oracleOk": null,
+     "example": "Box Shell Preview",
+     "widgetIds": null,
+     "nodeStatuses": null,
+     "previews": [
+      {
+       "surfaceId": "window:generation3d-generate-preview",
+       "phase": "idle",
+       "ratio": 1,
+       "computing": null,
+       "fault": null,
+       "meshes": 1,
+       "triangles": null
+      }
+     ]
+    },
+    {
+     "t": 64037,
+     "converged": true,
+     "oracleOk": null,
+     "example": "Box Shell Preview",
+     "widgetIds": null,
+     "nodeStatuses": null,
+     "previews": [
+      {
+       "surfaceId": "window:generation3d-generate-preview",
+       "phase": "idle",
+       "ratio": 1,
+       "computing": null,
+       "fault": null,
+       "meshes": 1,
+       "triangles": null
+      }
+     ]
+    },
+    {
+     "t": 65054,
+     "converged": true,
+     "oracleOk": null,
+     "example": "Box Shell Preview",
+     "widgetIds": null,
+     "nodeStatuses": null,
+     "previews": [
+      {
+       "surfaceId": "window:generation3d-generate-preview",
+       "phase": "idle",
+       "ratio": 1,
+       "computing": null,
+       "fault": null,
+       "meshes": 1,
+       "triangles": null
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "label": "back-to-edit",
+   "expected": "converged",
+   "recordedPolls": 3,
+   "recordedReason": "settled for 3 consecutive polls",
+   "samples": [
+    {
+     "t": 66387,
+     "converged": true,
+     "oracleOk": null,
+     "example": "Box Shell Preview",
+     "widgetIds": [
+      "size",
+      "thickness",
+      "box",
+      "shell"
+     ],
+     "nodeStatuses": [
+      "ok",
+      "ok",
+      "ok",
+      "ok"
+     ],
+     "previews": [
+      {
+       "surfaceId": "window:procedural-preview",
+       "phase": "idle",
+       "ratio": 1,
+       "computing": null,
+       "fault": null,
+       "meshes": 1,
+       "triangles": null
+      }
+     ]
+    },
+    {
+     "t": 67392,
+     "converged": true,
+     "oracleOk": null,
+     "example": "Box Shell Preview",
+     "widgetIds": [
+      "size",
+      "thickness",
+      "box",
+      "shell"
+     ],
+     "nodeStatuses": [
+      "ok",
+      "ok",
+      "ok",
+      "ok"
+     ],
+     "previews": [
+      {
+       "surfaceId": "window:procedural-preview",
+       "phase": "idle",
+       "ratio": 1,
+       "computing": null,
+       "fault": null,
+       "meshes": 1,
+       "triangles": null
+      }
+     ]
+    },
+    {
+     "t": 68406,
+     "converged": true,
+     "oracleOk": null,
+     "example": "Box Shell Preview",
+     "widgetIds": [
+      "size",
+      "thickness",
+      "box",
+      "shell"
+     ],
+     "nodeStatuses": [
+      "ok",
+      "ok",
+      "ok",
+      "ok"
+     ],
+     "previews": [
+      {
+       "surfaceId": "window:procedural-preview",
+       "phase": "idle",
+       "ratio": 1,
+       "computing": null,
+       "fault": null,
+       "meshes": 1,
+       "triangles": null
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "label": "viewer-role",
+   "expected": "converged",
+   "recordedPolls": 7,
+   "recordedReason": "settled for 3 consecutive polls",
+   "samples": [
+    {
+     "t": 69580,
+     "converged": false,
+     "oracleOk": null,
+     "example": "Box Shell Preview",
+     "widgetIds": [
+      "size",
+      "thickness",
+      "box",
+      "shell"
+     ],
+     "nodeStatuses": [
+      "ok",
+      "ok",
+      "ok",
+      "ok"
+     ],
+     "previews": [
+      {
+       "surfaceId": "window:procedural-preview",
+       "phase": "idle",
+       "ratio": 1,
+       "computing": null,
+       "fault": null,
+       "meshes": 1,
+       "triangles": null
+      }
+     ]
+    },
+    {
+     "t": 70596,
+     "converged": false,
+     "oracleOk": null,
+     "example": "Box Shell Preview",
+     "widgetIds": [
+      "size",
+      "thickness",
+      "box",
+      "shell"
+     ],
+     "nodeStatuses": [
+      "ok",
+      "ok",
+      "ok",
+      "ok"
+     ],
+     "previews": [
+      {
+       "surfaceId": "window:procedural-preview",
+       "phase": "idle",
+       "ratio": 1,
+       "computing": null,
+       "fault": null,
+       "meshes": 1,
+       "triangles": null
+      }
+     ]
+    },
+    {
+     "t": 71807,
+     "converged": false,
+     "oracleOk": null,
+     "example": "Box Shell Preview",
+     "widgetIds": null,
+     "nodeStatuses": null,
+     "previews": []
+    },
+    {
+     "t": 73764,
+     "converged": false,
+     "oracleOk": null,
+     "example": "Box Shell Preview",
+     "widgetIds": null,
+     "nodeStatuses": null,
+     "previews": [
+      {
+       "surfaceId": "window:procedural-view-preview",
+       "phase": "samplingEdges",
+       "ratio": 0,
+       "computing": true,
+       "fault": null,
+       "meshes": 0,
+       "triangles": null
+      }
+     ]
+    },
+    {
+     "t": 74818,
+     "converged": true,
+     "oracleOk": null,
+     "example": "Box Shell Preview",
+     "widgetIds": null,
+     "nodeStatuses": null,
+     "previews": [
+      {
+       "surfaceId": "window:procedural-view-preview",
+       "phase": "idle",
+       "ratio": 1,
+       "computing": null,
+       "fault": null,
+       "meshes": 1,
+       "triangles": null
+      }
+     ]
+    },
+    {
+     "t": 75826,
+     "converged": true,
+     "oracleOk": null,
+     "example": "Box Shell Preview",
+     "widgetIds": null,
+     "nodeStatuses": null,
+     "previews": [
+      {
+       "surfaceId": "window:procedural-view-preview",
+       "phase": "idle",
+       "ratio": 1,
+       "computing": null,
+       "fault": null,
+       "meshes": 1,
+       "triangles": null
+      }
+     ]
+    },
+    {
+     "t": 77333,
+     "converged": true,
+     "oracleOk": null,
+     "example": "Box Shell Preview",
+     "widgetIds": null,
+     "nodeStatuses": null,
+     "previews": [
+      {
+       "surfaceId": "window:procedural-view-preview",
+       "phase": "idle",
+       "ratio": 1,
+       "computing": null,
+       "fault": null,
+       "meshes": 1,
+       "triangles": null
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "label": "view:Box Shell Preview",
+   "expected": "converged",
+   "recordedPolls": 3,
+   "recordedReason": "settled for 3 consecutive polls",
+   "samples": [
+    {
+     "t": 116072,
+     "converged": true,
+     "oracleOk": true,
+     "example": "Box Shell Preview",
+     "widgetIds": null,
+     "nodeStatuses": null,
+     "previews": [
+      {
+       "surfaceId": "window:procedural-view-preview",
+       "phase": "idle",
+       "ratio": 1,
+       "computing": null,
+       "fault": null,
+       "meshes": 1,
+       "triangles": 24
+      }
+     ]
+    },
+    {
+     "t": 117082,
+     "converged": true,
+     "oracleOk": true,
+     "example": "Box Shell Preview",
+     "widgetIds": null,
+     "nodeStatuses": null,
+     "previews": [
+      {
+       "surfaceId": "window:procedural-view-preview",
+       "phase": "idle",
+       "ratio": 1,
+       "computing": null,
+       "fault": null,
+       "meshes": 1,
+       "triangles": 24
+      }
+     ]
+    },
+    {
+     "t": 118096,
+     "converged": true,
+     "oracleOk": true,
+     "example": "Box Shell Preview",
+     "widgetIds": null,
+     "nodeStatuses": null,
+     "previews": [
+      {
+       "surfaceId": "window:procedural-view-preview",
+       "phase": "idle",
+       "ratio": 1,
+       "computing": null,
+       "fault": null,
+       "meshes": 1,
+       "triangles": 24
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

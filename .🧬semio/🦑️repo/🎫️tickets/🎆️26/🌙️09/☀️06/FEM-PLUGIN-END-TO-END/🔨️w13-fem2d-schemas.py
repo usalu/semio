@@ -289,7 +289,7 @@ def mutation_schema():
         defs[title_of(kind)] = {"title": title_of(kind), "type": "object", "additionalProperties": False, "required": list(fields), "properties": fields}
     return {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "$id": "https://semio.tech/schema/s/fem/fem2d/mutation.json",
+        "$id": "https://json.schemas.assets.semio-tech.com/s/fem/fem2d/mutation.json",
         "title": "Fem2dMutation",
         "description": "The closed semantic mutation vocabulary of the fem2d document: exactly twenty-five variants, discriminated by the internally tagged `mutation` member. Each variant is the same payload shape the kind's own `<kind>/🧬️.schema.json` declares.",
         "oneOf": [{"$ref": "#/$defs/%s" % title_of(kind)} for kind in sorted(KIND_DIR)],
@@ -335,7 +335,7 @@ def snapshot_schema():
     properties["analysis"] = {"$ref": "#/$defs/FemAnalysisSettings", "x-semio-state": "artifact"}
     return {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "$id": "https://semio.tech/schema/s/fem/fem2d/snapshot.json",
+        "$id": "https://json.schemas.assets.semio-tech.com/s/fem/fem2d/snapshot.json",
         "title": "Fem2dSnapshot",
         "description": "A fem2d structural document: eight id-keyed collections and one inseparable analysis-settings facet. Every record `$def` below carries the fields the Rust struct declares AND, where the vocabulary enforces one, the bound that makes the value admissible — annotated with the `mutations::guards` function that raises it, so a reader can get from the document invariant to the code that keeps it.",
         "type": "object",

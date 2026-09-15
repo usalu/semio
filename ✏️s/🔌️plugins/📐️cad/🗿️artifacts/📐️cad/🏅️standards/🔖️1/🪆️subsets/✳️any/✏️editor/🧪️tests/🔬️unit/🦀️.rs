@@ -137,7 +137,7 @@ use context::*;
 use super::*;
 use crate::standards::v1::subsets::any::io::scene_from_spatial_payload;
 use crate::standards::v1::subsets::any::schema::inferences::{
-    align_mesh_to_host_document_centroid, default_document, object_mesh_data, run_derive_from_geometry, CAD_DEFAULT_TYPOLOGY_EXTENT, CAD_FOREST_REFERENCE_IMAGE_HEIGHT_PX, CAD_FOREST_REFERENCE_IMAGE_WIDTH_PX, CAD_FOREST_REFERENCE_PLANE_Z,
+    align_mesh_to_host_snapshot_centroid, default_document, object_mesh_data, run_derive_from_geometry, CAD_DEFAULT_TYPOLOGY_EXTENT, CAD_FOREST_REFERENCE_IMAGE_HEIGHT_PX, CAD_FOREST_REFERENCE_IMAGE_WIDTH_PX, CAD_FOREST_REFERENCE_PLANE_Z,
     CAD_FOREST_REFERENCE_WIDTH_WORLD, CAD_FOREST_REFERENCE_Y_OFFSET_RATIO,
 };
 use crate::{empty_cad_snapshot, CadNode, CAD_PLAY_DOCUMENT_SCHEMA};
@@ -436,13 +436,14 @@ fn optional_field_rows_keep_their_pre_migration_bytes() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn forest_example_uses_per_object_brep_meshes() {
+async fn forest_example_uses_kind_referenced_meshes_not_inline_tessellation() {
     let scene = forest_working_scene();
     let runtime = CadPlayRuntime::default();
     let json = edit::world_instances_json(&scene.building_objects, &runtime);
     assert!(json.contains("object-hexagonal-cut-concrete-forest-left-bim-10"));
     let meshes = edit::world_meshes_json(&scene.building_objects, scene.building_geometry.as_ref());
-    assert!(meshes.contains("object-hexagonal-cut-concrete-forest-left-bim-10"));
+    assert!(meshes.contains("\"kind\""), "viewport meshes must reference built-in kinds, not inline tessellation buffers");
+    assert!(!meshes.contains("\"data\""), "inline mesh buffers exceed fixed UI surface capacity");
     assert!(!meshes.contains("🧊️hexagonal-cut-concrete-forest-left.glb"));
     assert!(scene.building_objects.len() > 5);
     assert!(scene.building_objects.iter().all(|object| object.solid_handle.is_some()));
@@ -500,7 +501,7 @@ async fn forest_references_use_xy_ground_plane_and_z_up() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn align_mesh_to_host_document_centroid_corrects_drifted_surface() {
+async fn align_mesh_to_host_snapshot_centroid_corrects_drifted_surface() {
     let scene = forest_working_scene();
     let geometry = scene.energy_geometry.as_ref().expect("energy geometry");
     let object = scene.energy_objects.first().expect("energy object");
@@ -508,7 +509,7 @@ async fn align_mesh_to_host_document_centroid_corrects_drifted_surface() {
     for vertex in mesh.positions.as_chunks_mut::<3>().0 {
         vertex[2] = 0.0;
     }
-    align_mesh_to_host_document_centroid(&mut mesh, geometry, &object.primitives);
+    align_mesh_to_host_snapshot_centroid(&mut mesh, geometry, &object.primitives);
     let min_z = mesh.positions.as_chunks::<3>().0.iter().map(|vertex| vertex[2]).fold(f32::INFINITY, f32::min);
     assert!(min_z > 2.5, "aligned mesh min z {min_z}");
 }
@@ -521,7 +522,7 @@ async fn forest_surface_meshes_fall_back_to_typology_extent_without_pane_geometr
     // `BrepEngineHost` singleton, so `energy.solid_handle` (minted by an EARLIER, already-dropped
     // call to `forest_pane_bundle`) still resolved in whatever kernel `object_mesh_data` happened
     // to reach. `origin` on fixture-derived `CadObject`s is always `[0,0,0]`
-    // (`objects_from_host_document_model`) — the authored height lived ONLY in the solid's own vertex
+    // (`objects_from_host_snapshot_model`) — the authored height lived ONLY in the solid's own vertex
     // data, addressed by that handle. A `cad_brep_kernel()` is now a fresh, local `Brep::new()`
     // per call (doctrine tier-(d): never outlives the call that built it), so a handle from a
     // different call is honestly unresolvable, and — exactly like `mesh_from_glb`'s documented
@@ -587,7 +588,8 @@ async fn forest_example_world_scene_has_non_empty_instances_for_every_pane() {
         let instances_json = edit::world_instances_json(objects, &CadPlayRuntime::default());
         assert_ne!(instances_json, "[]", "pane {pane:?} instances_json must not be empty");
         let meshes_json = edit::world_meshes_json(objects, _geometry);
-        assert!(!meshes_json.contains(CAD_FALLBACK_MESH_KIND), "pane {pane:?} must render real brep meshes, not the universal fallback box");
+        assert!(meshes_json.contains("\"kind\""), "pane {pane:?} must publish kind-referenced meshes that fit the fixed UI surface");
+        assert!(!meshes_json.contains("\"data\""), "pane {pane:?} must not inline tessellation into meshesJson");
     }
 }
 
@@ -925,7 +927,7 @@ async fn forest_transformation_uses_live_shape_pane() {
     // whatever kernel `run_derive_from_geometry` reached — only true under the deleted
     // process-global `BrepEngineHost` singleton. `solid_for_object` (the derive's per-object
     // solid builder) has never applied `object.origin` — fixture objects carry `origin:
-    // [0,0,0]` regardless (`objects_from_host_document_model`) — so once a handle stops resolving it
+    // [0,0,0]` regardless (`objects_from_host_snapshot_model`) — so once a handle stops resolving it
     // falls back to an extent+typology-only box built at the kernel's local origin, and two
     // fixture objects sharing that origin fuse into a materially different (and no longer
     // fixture-distinguishing) hull. The real, still-true property — output tracks LIVE INPUT,

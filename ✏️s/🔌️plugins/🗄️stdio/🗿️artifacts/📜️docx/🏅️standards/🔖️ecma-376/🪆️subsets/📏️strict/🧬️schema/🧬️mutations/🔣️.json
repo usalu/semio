@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/docx/ecma-376/strict/mutations.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/docx/ecma-376/strict/mutations.json",
   "title": "DocxStrictMutation",
   "description": "Discriminated union over this module's mutation leaves (externally tagged); every payload is the leaf's own schema, referenced, never restated.",
   "oneOf": [
@@ -12,7 +12,7 @@
       ],
       "properties": {
         "InsertAlternateContent": {
-          "$ref": "https://semio.tech/schema/s/stdio/docx/ecma-376/strict/mutation/insert-alternate-content/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/docx/ecma-376/strict/mutation/insert-alternate-content/schema.json"
         }
       }
     },
@@ -24,7 +24,7 @@
       ],
       "properties": {
         "InsertVmlPart": {
-          "$ref": "https://semio.tech/schema/s/stdio/docx/ecma-376/strict/mutation/insert-vml-part/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/docx/ecma-376/strict/mutation/insert-vml-part/schema.json"
         }
       }
     },
@@ -36,7 +36,7 @@
       ],
       "properties": {
         "RemoveAlternateContent": {
-          "$ref": "https://semio.tech/schema/s/stdio/docx/ecma-376/strict/mutation/remove-alternate-content/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/docx/ecma-376/strict/mutation/remove-alternate-content/schema.json"
         }
       }
     },
@@ -48,7 +48,7 @@
       ],
       "properties": {
         "RemoveConformanceAttribute": {
-          "$ref": "https://semio.tech/schema/s/stdio/docx/ecma-376/strict/mutation/remove-conformance-attribute/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/docx/ecma-376/strict/mutation/remove-conformance-attribute/schema.json"
         }
       }
     },
@@ -60,7 +60,7 @@
       ],
       "properties": {
         "RemoveVmlPart": {
-          "$ref": "https://semio.tech/schema/s/stdio/docx/ecma-376/strict/mutation/remove-vml-part/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/docx/ecma-376/strict/mutation/remove-vml-part/schema.json"
         }
       }
     },
@@ -72,7 +72,7 @@
       ],
       "properties": {
         "SetConformanceAttribute": {
-          "$ref": "https://semio.tech/schema/s/stdio/docx/ecma-376/strict/mutation/set-conformance-attribute/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/docx/ecma-376/strict/mutation/set-conformance-attribute/schema.json"
         }
       }
     },
@@ -84,7 +84,7 @@
       ],
       "properties": {
         "SetMainNamespace": {
-          "$ref": "https://semio.tech/schema/s/stdio/docx/ecma-376/strict/mutation/set-main-namespace/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/docx/ecma-376/strict/mutation/set-main-namespace/schema.json"
         }
       }
     },
@@ -96,7 +96,7 @@
       ],
       "properties": {
         "SetRelationshipBase": {
-          "$ref": "https://semio.tech/schema/s/stdio/docx/ecma-376/strict/mutation/set-relationship-base/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/docx/ecma-376/strict/mutation/set-relationship-base/schema.json"
         }
       }
     },
@@ -108,7 +108,7 @@
       ],
       "properties": {
         "SetSnapshot": {
-          "$ref": "https://semio.tech/schema/s/stdio/docx/ecma-376/strict/mutation/set-snapshot/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/docx/ecma-376/strict/mutation/set-snapshot/schema.json"
         }
       }
     }

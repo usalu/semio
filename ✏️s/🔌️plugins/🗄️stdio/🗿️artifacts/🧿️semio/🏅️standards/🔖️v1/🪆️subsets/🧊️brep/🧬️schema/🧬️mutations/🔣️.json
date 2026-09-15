@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/semio/v1/brep/mutations.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/brep/mutations.json",
   "title": "SemioBrepMutation",
   "description": "Discriminated union over this module's mutation leaves (externally tagged); every payload is the leaf's own schema, referenced, never restated.",
   "oneOf": [
@@ -12,7 +12,7 @@
       ],
       "properties": {
         "CreateEdge": {
-          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/brep/mutation/create-edge/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/brep/mutation/create-edge/schema.json"
         }
       }
     },
@@ -24,7 +24,7 @@
       ],
       "properties": {
         "CreateFace": {
-          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/brep/mutation/create-face/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/brep/mutation/create-face/schema.json"
         }
       }
     },
@@ -36,7 +36,7 @@
       ],
       "properties": {
         "CreateShell": {
-          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/brep/mutation/create-shell/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/brep/mutation/create-shell/schema.json"
         }
       }
     },
@@ -48,7 +48,7 @@
       ],
       "properties": {
         "CreateSolid": {
-          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/brep/mutation/create-solid/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/brep/mutation/create-solid/schema.json"
         }
       }
     },
@@ -60,7 +60,7 @@
       ],
       "properties": {
         "CreateVertex": {
-          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/brep/mutation/create-vertex/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/brep/mutation/create-vertex/schema.json"
         }
       }
     },
@@ -72,7 +72,7 @@
       ],
       "properties": {
         "DeleteEdge": {
-          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/brep/mutation/delete-edge/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/brep/mutation/delete-edge/schema.json"
         }
       }
     },
@@ -84,7 +84,7 @@
       ],
       "properties": {
         "DeleteFace": {
-          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/brep/mutation/delete-face/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/brep/mutation/delete-face/schema.json"
         }
       }
     },
@@ -96,7 +96,7 @@
       ],
       "properties": {
         "DeleteShell": {
-          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/brep/mutation/delete-shell/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/brep/mutation/delete-shell/schema.json"
         }
       }
     },
@@ -108,7 +108,7 @@
       ],
       "properties": {
         "DeleteSolid": {
-          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/brep/mutation/delete-solid/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/brep/mutation/delete-solid/schema.json"
         }
       }
     },
@@ -120,7 +120,7 @@
       ],
       "properties": {
         "DeleteVertex": {
-          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/brep/mutation/delete-vertex/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/brep/mutation/delete-vertex/schema.json"
         }
       }
     },
@@ -132,7 +132,7 @@
       ],
       "properties": {
         "MoveVertex": {
-          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/brep/mutation/move-vertex/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/brep/mutation/move-vertex/schema.json"
         }
       }
     },
@@ -144,7 +144,7 @@
       ],
       "properties": {
         "ReplaceCurve": {
-          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/brep/mutation/replace-curve/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/brep/mutation/replace-curve/schema.json"
         }
       }
     },
@@ -156,7 +156,7 @@
       ],
       "properties": {
         "ReplaceSurface": {
-          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/brep/mutation/replace-surface/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/brep/mutation/replace-surface/schema.json"
         }
       }
     }

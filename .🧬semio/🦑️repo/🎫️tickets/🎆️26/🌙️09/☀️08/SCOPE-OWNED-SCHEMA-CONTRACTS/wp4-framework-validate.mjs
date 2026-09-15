@@ -32,7 +32,7 @@ for (const path of modules) {
   catch (error) { problems.push([path, `parse: ${error.message}`]); continue; }
   if (Array.isArray(document)) { problems.push([path, "root is an array, not a schema module"]); continue; }
   if (document.$schema !== DIALECT) { problems.push([path, `dialect ${document.$schema ?? "(none)"}`]); dialect++; }
-  if (typeof document.$id !== "string" || !document.$id.startsWith("https://semio.tech/schema/")) { problems.push([path, `id ${document.$id ?? "(none)"}`]); ids++; }
+  if (typeof document.$id !== "string" || !document.$id.startsWith("https://json.schemas.assets.semio-tech.com/")) { problems.push([path, `id ${document.$id ?? "(none)"}`]); ids++; }
   if (!document.$defs || Object.keys(document.$defs).length === 0) { problems.push([path, "no $defs exports"]); defs++; }
   documents.set(path, document);
 }

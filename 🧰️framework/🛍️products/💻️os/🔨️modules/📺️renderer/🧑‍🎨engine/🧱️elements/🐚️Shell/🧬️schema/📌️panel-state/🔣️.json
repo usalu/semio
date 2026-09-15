@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://semio.tech/schema/framework/os/host-panel-state.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/os/host-panel-state.json",
   "title": "HostPanelState",
   "type": "object",
   "additionalProperties": false,

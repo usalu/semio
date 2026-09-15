@@ -3,7 +3,7 @@ import { findRepoRoot } from "../../../📦️packages/🟦️typescript/🟦️
 import { policyIndexedGeneratedOutputViolations } from "../🟦️.ts";
 
 describe("indexed generated output law", () => {
-  test("git does not index wasm, wasm-pack bindings, or jco browser bundles outside the frame-worker allowlist", () => {
+  test("git does not index wasm, wasm-pack bindings, jco browser bundles, or generated trees", () => {
     const root = findRepoRoot(import.meta.dir);
     const violations = policyIndexedGeneratedOutputViolations(root);
     if (violations.length > 0) console.error("[indexed-generated-output]", violations.join("\n"));

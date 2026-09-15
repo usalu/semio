@@ -77,7 +77,7 @@ type Mp4Snapshot {
 
     write(f"{base}/🔣️component.json", """\
 {
-  "$id": "https://semio.tech/schema/stdio.mp4.snapshot.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/stdio.mp4.snapshot.json",
   "title": "Mp4Snapshot",
   "description": "ISO-BMFF: ftyp typed, decoded per-track sample tables, everything else typed-raw retained.",
   "type": "object",
@@ -372,7 +372,7 @@ type Mp4Diff {
 """)
     write(f"{base}/🔣️component.json", """\
 {
-  "$id": "https://semio.tech/schema/stdio.mp4.diff.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/stdio.mp4.diff.json",
   "title": "Mp4Diff",
   "description": "Sparse per-field diff: ftyp whole-replace, tracks/unknownBoxes index-keyed collection triples.",
   "type": "object",
@@ -481,7 +481,7 @@ type Mp4Mutation {
 """)
     write(f"{base}/🔣️component.json", """\
 {
-  "$id": "https://semio.tech/schema/stdio.mp4.mutations.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/stdio.mp4.mutations.json",
   "title": "Mp4Mutation",
   "description": "Named-variant mutation vocabulary, discriminated by the `mutation` tag.",
   "type": "object",
@@ -542,7 +542,7 @@ message AddUnknownBox { uint32 index = 1; semio.stdio_mp4.snapshot.Mp4Box item =
 #region MP4 facets — artifact root
 def gen_mp4_artifact():
     write(f"{MP4_SCHEMA}/🔗️component.graphql", "# Mp4Artifact — full artifact state, mirrors Mp4Snapshot field for field.\ntype Mp4Artifact {\n  schema: String! @state(class: PERSISTENT)\n  ftyp: Mp4Ftyp! @state(class: PERSISTENT)\n  tracks: [Mp4Track!]! @state(class: PERSISTENT)\n  unknownBoxes: [Mp4Box!]! @state(class: PERSISTENT)\n}\n")
-    write(f"{MP4_SCHEMA}/🔣️component.json", '{\n  "$id": "https://semio.tech/schema/stdio.mp4.json",\n  "title": "Mp4Artifact",\n  "description": "Full artifact state, mirrors Mp4Snapshot field for field.",\n  "type": "object",\n  "properties": {\n    "schema": { "type": "string", "x-semio-state": "persistent" },\n    "ftyp": { "type": "object", "x-semio-state": "persistent" },\n    "tracks": { "type": "array", "x-semio-state": "persistent" },\n    "unknownBoxes": { "type": "array", "x-semio-state": "persistent" }\n  }\n}\n')
+    write(f"{MP4_SCHEMA}/🔣️component.json", '{\n  "$id": "https://json.schemas.assets.semio-tech.com/stdio.mp4.json",\n  "title": "Mp4Artifact",\n  "description": "Full artifact state, mirrors Mp4Snapshot field for field.",\n  "type": "object",\n  "properties": {\n    "schema": { "type": "string", "x-semio-state": "persistent" },\n    "ftyp": { "type": "object", "x-semio-state": "persistent" },\n    "tracks": { "type": "array", "x-semio-state": "persistent" },\n    "unknownBoxes": { "type": "array", "x-semio-state": "persistent" }\n  }\n}\n')
     write(f"{MP4_SCHEMA}/🛰️component.proto", 'syntax = "proto3";\npackage semio.stdio_mp4;\nimport "snapshot.proto";\n\nmessage Mp4Artifact {\n  string schema = 1;\n  semio.stdio_mp4.snapshot.Mp4Ftyp ftyp = 2;\n  repeated semio.stdio_mp4.snapshot.Mp4Track tracks = 3;\n  repeated semio.stdio_mp4.snapshot.Mp4Box unknown_boxes = 4;\n}\n')
     write(f"{MP4_SCHEMA}/🟦️component.ts", '/** 🧬️ Mp4Artifact — full artifact state, mirrors Mp4Snapshot field for field. */\nexport interface Mp4Artifact {\n  schema: string;\n  ftyp: import("./📸️snapshot/🟦️component").Mp4Ftyp;\n  tracks: import("./📸️snapshot/🟦️component").Mp4Track[];\n  unknownBoxes: import("./📸️snapshot/🟦️component").Mp4Box[];\n}\n')
 #endregion
@@ -594,7 +594,7 @@ type AviSnapshot {
 
     write(f"{base}/🔣️component.json", """\
 {
-  "$id": "https://semio.tech/schema/stdio.avi.snapshot.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/stdio.avi.snapshot.json",
   "title": "AviSnapshot",
   "description": "RIFF/AVI 1.0: avih typed, per-stream strh typed + strf discriminated by fccType, movi chunks assigned to their stream with idx1-derived keyframe flags, everything else typed-raw.",
   "type": "object",
@@ -900,7 +900,7 @@ type AviDiff {
 """)
     write(f"{base}/🔣️component.json", """\
 {
-  "$id": "https://semio.tech/schema/stdio.avi.diff.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/stdio.avi.diff.json",
   "title": "AviDiff",
   "description": "Sparse per-field diff: mainHeader whole-replace, streams/unknownChunks index-keyed collection triples.",
   "type": "object",
@@ -990,7 +990,7 @@ type AviMutation {
 """)
     write(f"{base}/🔣️component.json", """\
 {
-  "$id": "https://semio.tech/schema/stdio.avi.mutations.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/stdio.avi.mutations.json",
   "title": "AviMutation",
   "description": "Named-variant mutation vocabulary, discriminated by the `mutation` tag.",
   "type": "object",
@@ -1052,7 +1052,7 @@ message AddUnknownChunk { uint32 index = 1; semio.stdio_avi.snapshot.RiffChunk i
 #region AVI facets — artifact root
 def gen_avi_artifact():
     write(f"{AVI_SCHEMA}/🔗️component.graphql", "# AviArtifact — full artifact state, mirrors AviSnapshot field for field.\ntype AviArtifact {\n  schema: String! @state(class: PERSISTENT)\n  mainHeader: AviMainHeader! @state(class: PERSISTENT)\n  streams: [AviStream!]! @state(class: PERSISTENT)\n  idx1Present: Boolean! @state(class: PERSISTENT)\n  unknownChunks: [RiffChunk!]! @state(class: PERSISTENT)\n}\n")
-    write(f"{AVI_SCHEMA}/🔣️component.json", '{\n  "$id": "https://semio.tech/schema/stdio.avi.json",\n  "title": "AviArtifact",\n  "description": "Full artifact state, mirrors AviSnapshot field for field.",\n  "type": "object",\n  "properties": {\n    "schema": { "type": "string", "x-semio-state": "persistent" },\n    "mainHeader": { "type": "object", "x-semio-state": "persistent" },\n    "streams": { "type": "array", "x-semio-state": "persistent" },\n    "idx1Present": { "type": "boolean", "x-semio-state": "persistent" },\n    "unknownChunks": { "type": "array", "x-semio-state": "persistent" }\n  }\n}\n')
+    write(f"{AVI_SCHEMA}/🔣️component.json", '{\n  "$id": "https://json.schemas.assets.semio-tech.com/stdio.avi.json",\n  "title": "AviArtifact",\n  "description": "Full artifact state, mirrors AviSnapshot field for field.",\n  "type": "object",\n  "properties": {\n    "schema": { "type": "string", "x-semio-state": "persistent" },\n    "mainHeader": { "type": "object", "x-semio-state": "persistent" },\n    "streams": { "type": "array", "x-semio-state": "persistent" },\n    "idx1Present": { "type": "boolean", "x-semio-state": "persistent" },\n    "unknownChunks": { "type": "array", "x-semio-state": "persistent" }\n  }\n}\n')
     write(f"{AVI_SCHEMA}/🛰️component.proto", 'syntax = "proto3";\npackage semio.stdio_avi;\nimport "snapshot.proto";\n\nmessage AviArtifact {\n  string schema = 1;\n  semio.stdio_avi.snapshot.AviMainHeader main_header = 2;\n  repeated semio.stdio_avi.snapshot.AviStream streams = 3;\n  bool idx1_present = 4;\n  repeated semio.stdio_avi.snapshot.RiffChunk unknown_chunks = 5;\n}\n')
     write(f"{AVI_SCHEMA}/🟦️component.ts", '/** 🧬️ AviArtifact — full artifact state, mirrors AviSnapshot field for field. */\nexport interface AviArtifact {\n  schema: string;\n  mainHeader: import("./📸️snapshot/🟦️component").AviMainHeader;\n  streams: import("./📸️snapshot/🟦️component").AviStream[];\n  idx1Present: boolean;\n  unknownChunks: import("./📸️snapshot/🟦️component").RiffChunk[];\n}\n')
 #endregion

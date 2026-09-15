@@ -36,7 +36,7 @@ await page.goto(url, { waitUntil: "domcontentloaded" });
 
 const surfaces = async () => page.evaluate(() => Object.keys(window.__semioFlowGraphProbe ?? {}));
 const fixtureOn = async (surface) => page.evaluate((id) => {
-  const text = window.__semioFlowGraphProbe?.[id]?.fixtureJson?.() ?? null;
+  const text = window.__semioFlowGraphProbe?.[id]?.hostSnapshotJson?.() ?? null;
   try { return text ? JSON.parse(text) : null; } catch { return null; }
 }, surface);
 const wiresOf = (value) => (value?.synapses ?? []).map((s) => `${s.from}@${s.fromPort ?? s.from_port} -> ${s.to}@${s.toPort ?? s.to_port}`).sort();

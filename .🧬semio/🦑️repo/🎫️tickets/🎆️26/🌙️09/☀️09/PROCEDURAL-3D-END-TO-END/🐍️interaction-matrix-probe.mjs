@@ -137,7 +137,26 @@ const sweepForHover = async (oracle, box) => {
 
 await page.goto(url, { waitUntil: "domcontentloaded" });
 await page.waitForTimeout(20_000);
-await page.locator('[id="framework.panel.inspection"]').first().click({ timeout: 8000 }).catch(() => {});
+/** 🩺️ Open the Inspection panel by its RESULT, not by a click and a fixed 1.5 s. The tab click is a
+ * shell action that crosses to the guest and comes back as a refresh, so on a busy box a click that
+ * landed before the tab existed was swallowed by its own `.catch` and the FIRST example was then
+ * measured against a panel that was never opened — `Hexagonal Mushroom Column · inspector` red with
+ * `rows: []` while all seven later examples were green, twice
+ * (`🗑️generated/react-hotswap/interact/results.json`, 2026-09-15 18:35 and 18:45). Same family as the
+ * journey's poll budget: a fixed wait is a load meter wearing a correctness mask. */
+const inspectionRows = () => page.evaluate(() => document.querySelectorAll('[data-slot="panel"] [id*="procedural-play-inspector"]').length);
+let inspectionOpen = 0;
+for (let attempt = 0; attempt < 4 && inspectionOpen === 0; attempt += 1) {
+  const tab = page.locator('[id="framework.panel.inspection"]').first();
+  await tab.waitFor({ state: "visible", timeout: 20_000 }).catch(() => {});
+  await tab.click({ timeout: 8000 }).catch((error) => lines.push(`inspection tab click ${attempt} failed ${String(error).slice(0, 160)}`));
+  for (let i = 0; i < 15 && inspectionOpen === 0; i += 1) {
+    await page.waitForTimeout(1000);
+    inspectionOpen = await inspectionRows();
+  }
+}
+lines.push(`inspection panel rows after open: ${inspectionOpen}`);
+console.log(`[DEBUG] inspection panel opened rows=${inspectionOpen}`);
 await page.waitForTimeout(1500);
 
 for (const oracle of oracles) {
@@ -191,9 +210,20 @@ for (const oracle of oracles) {
   const selectOk = Boolean(hover.target?.id) && selectedIds.length === 1 && selectedIds[0] === hover.target.id && activeObjectId === hover.target.id;
   await record(oracle.label, "select", selectOk, { clickedPoint: hover.point, hovered: hover.target?.id ?? null, selectedIdsBefore: before, selectedIds, guestSelectedIds, activeObjectId, offered: [...offered] });
 
-  const inspected = await paneSnap(oracle.previewMeshId);
+  /** 🩺️ The Inspection panel is asserted by POLLING, and the tab is re-opened if a refresh dropped it.
+   * A panel is a guest-rendered body that a boot refresh can replace whole — measured on the FIRST
+   * example, whose pick lands while the boot's own refreshes are still arriving: `rows: []`, i.e. the
+   * tab was not mounted at that instant, while all seven later examples read the same panel fine
+   * (`🗑️generated/react-hotswap-interact/`, 2026-09-15 18:50). Reading it once is reading a clock. */
   const widget = (activeObjectId ?? selectedIds[0] ?? "").split("@")[0].replace(/#\d+$/, "").replace(/^eval-/, "");
-  const idRow = inspected.inspector.find((row) => row.id.endsWith("procedural-play-inspector.id")) ?? null;
+  let inspected = await paneSnap(oracle.previewMeshId);
+  let idRow = inspected.inspector.find((row) => row.id.endsWith("procedural-play-inspector.id")) ?? null;
+  for (let i = 0; i < 12 && !(idRow && idRow.text.includes(widget)); i += 1) {
+    if (inspected.inspector.length === 0) await page.locator('[id="framework.panel.inspection"]').first().click({ timeout: 4000 }).catch(() => {});
+    await page.waitForTimeout(1000);
+    inspected = await paneSnap(oracle.previewMeshId);
+    idRow = inspected.inspector.find((row) => row.id.endsWith("procedural-play-inspector.id")) ?? null;
+  }
   await record(oracle.label, "inspector", Boolean(widget) && Boolean(idRow) && idRow.text.includes(widget), { widget, idRow, rows: inspected.inspector.map((row) => row.id) });
 
   const beforeOrbit = previewPane(await paneSnap(oracle.previewMeshId))?.camera ?? null;

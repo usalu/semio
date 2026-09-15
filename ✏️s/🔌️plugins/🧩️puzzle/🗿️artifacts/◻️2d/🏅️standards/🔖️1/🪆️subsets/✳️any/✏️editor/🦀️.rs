@@ -323,7 +323,7 @@ pub fn puzzle_extension_id() -> &'static str {
 //#endregion 🔖️Scene
 
 //#region 🔖️FixtureEdits
-pub fn add_node_to_host_document(fixture: &mut Value, kind: Option<&str>, args: Option<&Value>) {
+pub fn add_node_to_host_snapshot(fixture: &mut Value, kind: Option<&str>, args: Option<&Value>) {
     let Some(obj) = fixture.as_object_mut() else {
         return;
     };
@@ -358,7 +358,7 @@ pub fn add_node_to_host_document(fixture: &mut Value, kind: Option<&str>, args: 
     nodes.push(node);
 }
 
-pub fn delete_selection_from_host_document(fixture: &mut Value, selected: &[String]) {
+pub fn delete_selection_from_host_snapshot(fixture: &mut Value, selected: &[String]) {
     if selected.is_empty() {
         return;
     }
@@ -1756,7 +1756,7 @@ fn puzzle2d_retained_reduce(
         return Err(Fault::from("puzzle2d-retained-command-mismatch"));
     }
     let mut fixture = json!({ "nodes": [] });
-    add_node_to_host_document(&mut fixture, command.args().and_then(|args| args.get("kind")).and_then(Value::as_str), command.args());
+    add_node_to_host_snapshot(&mut fixture, command.args().and_then(|args| args.get("kind")).and_then(Value::as_str), command.args());
     let node = fixture.get_mut("nodes").and_then(Value::as_array_mut).and_then(Vec::pop).ok_or_else(|| Fault::from("puzzle2d-add-node-owner-lost"))?;
     let node = <crate::Puzzle2dNode as dsl::FromValue>::from_value(dsl::DslValue::from(&node)).map_err(|_| Fault::from("puzzle2d-add-node-malformed"))?;
     Ok(Emit { artifact_mutations: vec![crate::standards::v1::subsets::any::schema::mutations::create_node(node, None)], ui_scope: UiDirtyScope::Full, ..Default::default() })
@@ -2532,7 +2532,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle2dPlayApp>> for 
 }
 
 /// 🕸️ Admission ceilings and chunk size for one `redrawHandles` run. The legacy handler serialized
-/// the entire fixture and called `apply_edge_handle_snap_to_host_document_v1_json` once, with no size
+/// the entire fixture and called `apply_edge_handle_snap_to_host_snapshot_v1_json` once, with no size
 /// guard and no yield point; these bound the same three passes so a large board is refused at
 /// preflight rather than blocking a step.
 const PUZZLE2D_REDRAW_MAX_NODES: usize = 4_096;
@@ -2553,7 +2553,7 @@ enum Puzzle2dRedrawStage {
 
 /// 🔵️ The snap geometry of one node, mirroring the engine's own `NodeShapeSnap`: a node without a
 /// finite centre — or a circle without a radius, or a rectangle without extents — has no rim to
-/// snap onto and is skipped, exactly as `apply_edge_handle_snap_to_host_document_v1_value` skips it.
+/// snap onto and is skipped, exactly as `apply_edge_handle_snap_to_host_snapshot_v1_value` skips it.
 #[derive(Clone, Copy)]
 struct Puzzle2dRedrawShape {
     center: [f64; 2],

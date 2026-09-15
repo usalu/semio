@@ -729,7 +729,7 @@ export type NodeGraphScene = {
   readonly computingJson?: string;
   readonly statusJson?: string;
   readonly capabilitiesJson?: string;
-  readonly hostDocumentJson?: string;
+  readonly hostSnapshotJson?: string;
   readonly presencePeersJson?: string;
   /** 🧵️ Channel-structured eval outputs from an off-main-thread `flowEvalTick` chain, applied via
    * `FlowWasmSession.applyEvalOutputsJson` — lets the canvas session pick up results without ever
@@ -805,8 +805,10 @@ export type ContinuousGestureLane<Value> = {
  * asked for, only the one they are on now.
  *
  * The release is never dropped. `commit` marks the gesture's last value, and a `commit` is sent even
- * when it equals the value already sent — the receiver needs the release to close its coalesced edit,
- * and a gesture whose last live value happened to win the race would otherwise never be committed.
+ * when it equals the value already sent — the receiver needs the release to close its coalesced edit.
+ * A release that names no value falls back to what is owed and then to what was last offered, so a
+ * gesture whose final value happened to drain before the user let go is still committed; only a lane
+ * that was never offered anything at all commits nothing.
  *
  * A send that rejects frees the lane; the fault reaches `onFault` and the owed value is still sent,
  * because a gesture must not be wedged by one refused round trip.
@@ -814,6 +816,7 @@ export type ContinuousGestureLane<Value> = {
 export function createContinuousGestureLane<Value>(ports: ContinuousGestureLanePorts<Value>): ContinuousGestureLane<Value> {
   let inFlight = false;
   let owed: { readonly value: Value; readonly phase: ContinuousGesturePhase } | null = null;
+  let last: { readonly value: Value } | null = null;
   let sent = 0;
   const pump = (): void => {
     if (inFlight || owed === null) return;
@@ -844,13 +847,15 @@ export function createContinuousGestureLane<Value>(ports: ContinuousGestureLaneP
   };
   return {
     offer(value) {
+      last = { value };
       owed = { value, phase: "live" };
       pump();
     },
     commit(value) {
-      const last = value ?? owed?.value;
-      if (last === undefined) return;
-      owed = { value: last as Value, phase: "commit" };
+      const released = value ?? owed?.value ?? last?.value;
+      if (released === undefined) return;
+      last = { value: released as Value };
+      owed = { value: released as Value, phase: "commit" };
       pump();
     },
     inFlight: () => inFlight,
@@ -951,7 +956,7 @@ export type Board2dScene = {
 
 /** 🖊️ An ink-canvas surface scene payload — mirrors the wasm `componentScene` node's `inkCanvas` field. `documentJson` is opaque to the framework: the owning program defines its shape, conventionally an array of items (e.g. stroke | shape | text | image) each carrying its own transform; `selectionJson` is a `string[]` of selected item ids. */
 export type InkCanvasScene = {
-  readonly documentJson: string;
+  readonly snapshotJson: string;
   readonly selectionJson: string;
   readonly hoveredId?: string;
   readonly activeUtility: string;

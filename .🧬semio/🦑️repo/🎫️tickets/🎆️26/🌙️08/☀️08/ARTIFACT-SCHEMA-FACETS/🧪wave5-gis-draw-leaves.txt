@@ -99,7 +99,7 @@ type DrawArtboard {
 
 ==== 🔺️diff/🧬️schema/🔣️component.json ====
 {
-  "$id": "https://semio.tech/schema/s/draw/draw/diff.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/draw/draw/diff.json",
   "title": "DrawDiff",
   "type": "object",
   "additionalProperties": false,
@@ -734,7 +734,7 @@ type DrawArtboard {
 
 ==== 🧬️schema/🔣️component.json ====
 {
-  "$id": "https://semio.tech/schema/s/draw/draw/artifact.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/draw/draw/artifact.json",
   "title": "DrawArtifact",
   "type": "object",
   "additionalProperties": false,

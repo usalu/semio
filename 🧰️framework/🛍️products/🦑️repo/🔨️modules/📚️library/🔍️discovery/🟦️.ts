@@ -4,7 +4,7 @@
 //#endregion 🧲️Header
 
 //#region 🔌️Adapters
-import { ephemeralMap, ephemeralBox } from "@semio-tech/framework";
+import { ephemeralBox, ephemeralMap } from "@semio-tech/framework";
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { closeSync, constants, existsSync, fstatSync, lstatSync, openSync, readFileSync, readSync, readdirSync, realpathSync, statSync } from "node:fs";
@@ -5333,7 +5333,7 @@ export function parseSemanticPackageBrowserProfile(input: unknown, genericEmojiI
 
 /** 🪪️ Current WGPU package declarations, independent of frozen projection preimages. */
 export interface CanonicalWgpuPackageCatalog {
-  readonly $schema: "https://semio.tech/schema/os/renderer/component.json#/$defs/RendererPackageCatalogV1";
+  readonly $schema: "https://json.schemas.assets.semio-tech.com/os/renderer/component.json#/$defs/RendererPackageCatalogV1";
   readonly schemaVersion: 1;
   readonly kind: "canonical-wgpu-package";
   readonly ownerPath: string;
@@ -5349,7 +5349,7 @@ export function parseCanonicalWgpuPackageCatalog(bytes: string, digest: string, 
   if (createHash("sha256").update(bytes).digest("hex") !== digest) throw new Error("Current WGPU package catalog digest drift");
   const row = JSON.parse(bytes) as CanonicalWgpuPackageCatalog;
   const exact = (value: unknown, keys: readonly string[]): boolean => value !== null && typeof value === "object" && !Array.isArray(value) && Object.keys(value).sort().join("\0") === [...keys].sort().join("\0");
-  if (!exact(row, ["$schema", "schemaVersion", "kind", "ownerPath", "packageRelativePath", "nodePackageRelativePath", "identity", "entryPaths", "artifacts"]) || row.$schema !== "https://semio.tech/schema/os/renderer/component.json#/$defs/RendererPackageCatalogV1" || row.schemaVersion !== 1 || row.kind !== "canonical-wgpu-package" || row.ownerPath !== profile.ownerPath || row.packageRelativePath !== "📦️packages/🦀️rust" || row.nodePackageRelativePath !== "📦️packages/🟦️typescript") throw new Error("Current WGPU package catalog identity drift");
+  if (!exact(row, ["$schema", "schemaVersion", "kind", "ownerPath", "packageRelativePath", "nodePackageRelativePath", "identity", "entryPaths", "artifacts"]) || row.$schema !== "https://json.schemas.assets.semio-tech.com/os/renderer/component.json#/$defs/RendererPackageCatalogV1" || row.schemaVersion !== 1 || row.kind !== "canonical-wgpu-package" || row.ownerPath !== profile.ownerPath || row.packageRelativePath !== "📦️packages/🦀️rust" || row.nodePackageRelativePath !== "📦️packages/🟦️typescript") throw new Error("Current WGPU package catalog identity drift");
   if (!exact(row.identity, ["cargoPackageName", "nodePackageName", "nxProjectName"]) || row.identity.cargoPackageName !== "semio-framework-os-renderer-wgpu" || row.identity.nodePackageName !== "@semio-tech/framework-renderer-wgpu" || row.identity.nxProjectName !== row.identity.nodePackageName || !exact(row.entryPaths, ["cargoLibrary", "cargoBinary", "cargoBuild", "nodeLibrary"]) || Object.values(row.entryPaths).some((path) => !exactOwnerPath(path)) || row.entryPaths.cargoBuild !== "build.rs") throw new Error("Current WGPU package manifest authority drift");
   const ids = ["build-adapter", "binary-adapter", "typescript-adapter", "renderer-registration"];
   if (!Array.isArray(row.artifacts) || row.artifacts.length !== ids.length || row.artifacts.some((artifact, index) => !exact(artifact, ["id", "relativePath", "targetRelativePath", "language", "role", "content"]) || artifact.id !== ids[index] || !exactOwnerPath(artifact.relativePath) || artifact.targetRelativePath !== null && !exactOwnerPath(artifact.targetRelativePath) || !["rust", "typescript"].includes(artifact.language) || !["declaration", "implementation"].includes(artifact.role) || typeof artifact.content !== "string" || classifyPackageSource(artifact.content, taxonomy.packageGlueGrammar[artifact.language]).role !== artifact.role) || new Set(row.artifacts.map((artifact) => artifact.relativePath)).size !== ids.length) throw new Error("Current WGPU package artifact authority drift");

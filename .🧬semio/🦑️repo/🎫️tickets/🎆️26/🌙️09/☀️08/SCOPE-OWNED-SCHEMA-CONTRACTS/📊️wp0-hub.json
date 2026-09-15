@@ -102,7 +102,7 @@
   "owner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
   "intendedOwner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
   "exports": [
-   "https://semio.tech/schema/hub/auth/capability-v1.json"
+   "https://json.schemas.assets.semio-tech.com/hub/auth/capability-v1.json"
   ],
   "consumers": [
    {
@@ -111,7 +111,7 @@
    }
   ],
   "decision": "keep",
-  "evidence": "json.load: $id=https://semio.tech/schema/hub/auth/capability-v1.json, $schema=2020-12 (not draft-07)",
+  "evidence": "json.load: $id=https://json.schemas.assets.semio-tech.com/hub/auth/capability-v1.json, $schema=2020-12 (not draft-07)",
   "open": [
    "dialect mismatch vs taxonomy draft-07 mandate"
   ]
@@ -147,7 +147,7 @@
   "owner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
   "intendedOwner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
   "exports": [
-   "https://semio.tech/schemas/hub/local-credential-envelope-v1.json"
+   "https://json.schemas.assets.semio-tech.coms/hub/local-credential-envelope-v1.json"
   ],
   "consumers": [
    {
@@ -156,7 +156,7 @@
    }
   ],
   "decision": "keep",
-  "evidence": "json.load $id=https://semio.tech/schemas/hub/local-credential-envelope-v1.json, dialect 2020-12",
+  "evidence": "json.load $id=https://json.schemas.assets.semio-tech.coms/hub/local-credential-envelope-v1.json, dialect 2020-12",
   "open": [
    "consumer not individually confirmed — see coverage section"
   ]
@@ -169,7 +169,7 @@
   "owner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
   "intendedOwner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
   "exports": [
-   "https://semio.tech/schemas/hub/local-bootstrap-pipe-v1.json"
+   "https://json.schemas.assets.semio-tech.coms/hub/local-bootstrap-pipe-v1.json"
   ],
   "consumers": [
    {
@@ -178,7 +178,7 @@
    }
   ],
   "decision": "keep",
-  "evidence": "json.load $id=https://semio.tech/schemas/hub/local-bootstrap-pipe-v1.json, dialect 2020-12",
+  "evidence": "json.load $id=https://json.schemas.assets.semio-tech.coms/hub/local-bootstrap-pipe-v1.json, dialect 2020-12",
   "open": [
    "consumer not individually confirmed — see coverage section"
   ]
@@ -191,7 +191,7 @@
   "owner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
   "intendedOwner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
   "exports": [
-   "https://semio.tech/schemas/hub/readiness-v1.json"
+   "https://json.schemas.assets.semio-tech.coms/hub/readiness-v1.json"
   ],
   "consumers": [
    {
@@ -200,7 +200,7 @@
    }
   ],
   "decision": "keep",
-  "evidence": "json.load $id=https://semio.tech/schemas/hub/readiness-v1.json, dialect 2020-12",
+  "evidence": "json.load $id=https://json.schemas.assets.semio-tech.coms/hub/readiness-v1.json, dialect 2020-12",
   "open": [
    "consumer not individually confirmed — see coverage section"
   ]
@@ -213,7 +213,7 @@
   "owner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
   "intendedOwner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
   "exports": [
-   "https://semio.tech/schemas/hub/trusted-catalog-bundle-v2.json"
+   "https://json.schemas.assets.semio-tech.coms/hub/trusted-catalog-bundle-v2.json"
   ],
   "consumers": [],
   "decision": "keep location, but investigate: appears orphaned (0 hits repo-wide for its $id or filename outside itself)",
@@ -470,7 +470,7 @@
   "owner": "🧪️fixtures (test-owned, not scope-owned)",
   "intendedOwner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
   "exports": [
-   "https://semio.tech/schemas/hub-native-artifact-provider-frontier-v1.json"
+   "https://json.schemas.assets.semio-tech.coms/hub-native-artifact-provider-frontier-v1.json"
   ],
   "consumers": [
    {
@@ -570,7 +570,7 @@
   "owner": "🧪️fixtures (test-owned, not scope-owned)",
   "intendedOwner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
   "exports": [
-   "https://semio.tech/schema/hub/directory/document-execution-target-lease-v1.json"
+   "https://json.schemas.assets.semio-tech.com/hub/directory/document-execution-target-lease-v1.json"
   ],
   "consumers": [
    {
@@ -610,7 +610,7 @@
   "owner": "🧪️fixtures (test-owned, not scope-owned)",
   "intendedOwner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
   "exports": [
-   "https://semio.tech/schema/hub/directory-command-receipt-v1.json"
+   "https://json.schemas.assets.semio-tech.com/hub/directory-command-receipt-v1.json"
   ],
   "consumers": [
    {
@@ -790,7 +790,7 @@
   "owner": "🧪️tests (test-owned)",
   "intendedOwner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
   "exports": [
-   "https://semio.tech/schemas/hub/retained-short-admin-v1.json"
+   "https://json.schemas.assets.semio-tech.coms/hub/retained-short-admin-v1.json"
   ],
   "consumers": [
    {
@@ -810,7 +810,7 @@
   "owner": "🧪️tests (test-owned)",
   "intendedOwner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
   "exports": [
-   "https://semio.tech/schemas/hub/share-issuance-atomicity-v1.json"
+   "https://json.schemas.assets.semio-tech.coms/hub/share-issuance-atomicity-v1.json"
   ],
   "consumers": [
    {
@@ -1010,7 +1010,7 @@
   "owner": "🧪️fixtures (test-owned, not scope-owned)",
   "intendedOwner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
   "exports": [
-   "https://semio.tech/schemas/hub/compiled-stdio-dependencies-v1.json"
+   "https://json.schemas.assets.semio-tech.coms/hub/compiled-stdio-dependencies-v1.json"
   ],
   "consumers": [
    {
@@ -1030,7 +1030,7 @@
   "owner": "🧪️fixtures (test-owned, not scope-owned)",
   "intendedOwner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
   "exports": [
-   "https://semio.tech/schema/hub/trusted-catalog-opened-root.fixture.json"
+   "https://json.schemas.assets.semio-tech.com/hub/trusted-catalog-opened-root.fixture.json"
   ],
   "consumers": [
    {
@@ -1050,7 +1050,7 @@
   "owner": "🧪️fixtures (test-owned, not scope-owned)",
   "intendedOwner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
   "exports": [
-   "https://semio.tech/schemas/hub/gis-map-collaboration/v1"
+   "https://json.schemas.assets.semio-tech.coms/hub/gis-map-collaboration/v1"
   ],
   "consumers": [
    {
@@ -1110,7 +1110,7 @@
   "owner": "🧪️fixtures (test-owned, not scope-owned)",
   "intendedOwner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
   "exports": [
-   "https://semio.tech/schemas/hub/trusted-stdio-gis-bootstrap-v1.json"
+   "https://json.schemas.assets.semio-tech.coms/hub/trusted-stdio-gis-bootstrap-v1.json"
   ],
   "consumers": [
    {
@@ -1452,7 +1452,7 @@
   "owner": "🧪️fixtures per-contract directory (test-owned, misleadingly named)",
   "intendedOwner": "semio-hub (🌎️hub/📦️packages/🦀️rust/Cargo.toml) — the single registered scope covering all of 🌎️hub",
   "exports": [
-   "https://semio.tech/schema/hub/artifact-chunk-cas-v1.fixture.json"
+   "https://json.schemas.assets.semio-tech.com/hub/artifact-chunk-cas-v1.fixture.json"
   ],
   "consumers": [
    {

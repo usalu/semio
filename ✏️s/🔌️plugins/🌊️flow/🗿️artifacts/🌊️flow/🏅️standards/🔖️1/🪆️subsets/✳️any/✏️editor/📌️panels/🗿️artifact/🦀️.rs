@@ -35,7 +35,7 @@ pub fn definition() -> PanelTabDefinition {
 /// that domain (`.interaction_domain`) and prunes stale ids through that same topology, so no per-item
 /// click action is declared here anymore (clicks are translated into `interactionSelect` generically)?.
 pub fn render(snapshot: &FlowSnapshot, labels: &FlowPlayLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    let live = snapshot.to_host_document();
+    let live = snapshot.to_host_snapshot();
     let widget_items = crate::editor::flow::ui_node_list(live.widgets.iter().map(|widget| tree_item_desc(flow_graph_node_target_id(widget_id(widget)), widget_tree_label(widget), Some(widget_kind_label(widget).into()))))?;
     let synapse_items =
         crate::editor::flow::ui_node_list(live.synapses.iter().map(|synapse| tree_item_desc(flow_graph_edge_target_id(&synapse.id), format!("{} → {}", synapse.from, synapse.to), Some(format!("{} → {}", synapse.from_port, synapse.to_port)))))?;

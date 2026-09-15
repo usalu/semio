@@ -44,7 +44,7 @@
       }
     ],
     "decision": "Relocate JSON Schema (draft-07, not 2020-12) to 💻️os/🔨️modules/📇️directory/🧬️schema/🎟️invite-capability-transfer-v1/🔣️.json; keep the FSM fixture as an example only, validated against the relocated schema; ShellHost/SpaceAdministration/backbone-worker remain pure consumers.",
-    "evidence": "$id says https://semio.tech/schema/directory/invite-capability-transfer.v1.json (namespaced 'directory', not 'shellhost'); fixture.shellRoute.actionId is 'os.directory.open-administration'; the ONLY issuer+verifier of an actual InviteCapability token is hub/📇️directory/🦀️.rs (mint/verify/redeem) and hub/🔐️auth/🧬️schema/{🔣️.json,🟦️.ts} (the real multi-format InviteCapability data type, unrelated schema, already correctly owned by hub); this ShellHost schema instead describes a renderer-local clipboard-copy state machine used only by ShellHost+SpaceAdministration+backbone-worker inside 💻️os -- it never crosses into hub, so its owner is the os-side 📇️directory module, not hub.",
+    "evidence": "$id says https://json.schemas.assets.semio-tech.com/directory/invite-capability-transfer.v1.json (namespaced 'directory', not 'shellhost'); fixture.shellRoute.actionId is 'os.directory.open-administration'; the ONLY issuer+verifier of an actual InviteCapability token is hub/📇️directory/🦀️.rs (mint/verify/redeem) and hub/🔐️auth/🧬️schema/{🔣️.json,🟦️.ts} (the real multi-format InviteCapability data type, unrelated schema, already correctly owned by hub); this ShellHost schema instead describes a renderer-local clipboard-copy state machine used only by ShellHost+SpaceAdministration+backbone-worker inside 💻️os -- it never crosses into hub, so its owner is the os-side 📇️directory module, not hub.",
     "open": "Is 'invite-capability-transfer' (a UI copy-flow FSM) truly a 📇️directory domain contract, or should os/🔨️modules/📇️directory even own UI-presentation state machines (as opposed to wire/data contracts)? No other 📇️directory/🧬️schema/ entry is a pure UI FSM (all are data/wire schemas). An alternative would be a new os-level 'space-administration' module."
   },
   {
@@ -80,7 +80,7 @@
       }
     ],
     "decision": "Relocate to 💻️os/🔨️modules/📇️directory/🧬️schema/ as a properly formatted 🔣️.json; this is UI copy/labels for the same creation flow that 📇️directory/🧬️schema/🌱️space-artifact-creation-v1 already models structurally.",
-    "evidence": "$id 'https://semio.tech/schemas/os/artifact-creation-progress-ui-v1.json' -- namespaced 'os', confirming it is not ShellHost-private; fixture contains only en/de label strings + phase/catalog state names, no rendering-target-specific data; 📇️directory module already owns the underlying business schema (🌱️space-artifact-creation-v1) for the same flow.",
+    "evidence": "$id 'https://json.schemas.assets.semio-tech.coms/os/artifact-creation-progress-ui-v1.json' -- namespaced 'os', confirming it is not ShellHost-private; fixture contains only en/de label strings + phase/catalog state names, no rendering-target-specific data; 📇️directory module already owns the underlying business schema (🌱️space-artifact-creation-v1) for the same flow.",
     "open": "Should UI locale-string bundles live in the same 🧬️schema/ as data contracts, or does the taxonomy need a distinct facet for i18n-label schemas? Not resolved by current taxonomy.json (no dedicated 'labels' schemaFacetKind)."
   },
   {
@@ -247,7 +247,7 @@
     "role": "React-target host/landing-app resolution contract, misnamed+mislocated, third filename convention",
     "classification": "c-per-contract-directory-in-ineligible-element-scope",
     "owner": "🏛️ShellHost",
-    "intendedOwner": "Unclear -- content ($id 'https://semio.tech/schema/react/host-identity-bootstrap-v1.json') is React-target-specific (resolveRequiredHostApps/BootstrapStatusNotice), not a cross-app or even cross-target domain contract. Candidate: 📺️renderer/🧑‍🎨engine/📦️packages/🟦️typescript/🎯️targets/⚛️react's own module root if that becomes schema-eligible, else keep as a documented exception.",
+    "intendedOwner": "Unclear -- content ($id 'https://json.schemas.assets.semio-tech.com/react/host-identity-bootstrap-v1.json') is React-target-specific (resolveRequiredHostApps/BootstrapStatusNotice), not a cross-app or even cross-target domain contract. Candidate: 📺️renderer/🧑‍🎨engine/📦️packages/🟦️typescript/🎯️targets/⚛️react's own module root if that becomes schema-eligible, else keep as a documented exception.",
     "exports": [
       "BootstrapStatusNotice",
       "reduceBootstrapUiState",

@@ -1,7 +1,7 @@
 # WP4 — `hub.directory` scope-owned schema module
 
 Owner scope: `hub.directory` → `🌎️hub/📇️directory/🧬️schema/🔣️.json`
-`$id`: `https://semio.tech/schema/hub/directory/schema.json`
+`$id`: `https://json.schemas.assets.semio-tech.com/hub/directory/schema.json`
 Dialect: `http://json-schema.org/draft-07/schema#` (no `prefixItems`, no `unevaluated*`, no 2020-12 `$schema`).
 Root document is exactly `{ $schema, $id, $defs }`; no root `$ref`, no envelope shape anywhere in the module.
 
@@ -136,7 +136,7 @@ per export, then the real fixture member plus the negative mutations.
 
 ```
 $ bun <scratchpad>/wp4-hub-directory-verify.ts
-hub.directory $id=https://semio.tech/schema/hub/directory/schema.json
+hub.directory $id=https://json.schemas.assets.semio-tech.com/hub/directory/schema.json
 exports (30): DirectoryDocumentScopeV1, DirectorySocketScopeV1, DirectorySocketMessageRoutingV1, DocumentOpenIntentV1, ExecutionTargetAssetRouteV1, SocketGrantReceiptV1, DirectoryCommandReceiptV1, DirectorySessionBindingV1, DirectorySpaceSessionBindingV1, SpaceAdministrationSpaceV1, SpaceAdministrationMemberRowV1, SpaceAdministrationInviteRowV1, PublicSpaceDetailV1, MemberSpaceDetailV1, AuthorSpaceDetailV1, DirectoryDocumentDescriptorV1, DirectoryEventPageCursorV1, DirectoryProfileV1, LocalizedTextV1, AdminPrincipalV1, AdminCreateSpaceIntentV1, AdminOperationIntentV1, AdminActorV1, AdminRecordedConnectionV1, AdminIntentOutcomeV1, InviteRedemptionCallV1, InviteAcceptanceMarkerV1, PresenceAdmissionV1, PresenceLeaseOperationV1, PresenceScopeSummaryV1
 private helpers (25): id, identifier, text, hash, nonzeroHash, requestId, safeInteger, positiveSafeInteger, spaceKind, spaceVisibility, spaceRole, documentOwner, documentFrontier, publicSpace, memberSpace, publicDocument, scopedDocumentDescriptor, spaceDocumentView, spaceMember, spaceInvite, directoryEventHlc, directoryEventActor, directoryEvent, directoryCommandResult, presenceBoundedText
 public-space-detail: 21 fixture-declared contract rejections all denied by PublicSpaceDetailV1

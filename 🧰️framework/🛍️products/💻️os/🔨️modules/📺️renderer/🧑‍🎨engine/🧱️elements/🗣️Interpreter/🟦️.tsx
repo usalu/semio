@@ -962,10 +962,22 @@ function dispatchTrigger(context: UiInterpreterContext, record: UiNodeRecord, tr
 function useContinuousTriggerLane(context: UiInterpreterContext, record: UiNodeRecord): ContinuousGestureLane<UiValue> {
   const bindingRef = useRef({ context, record });
   bindingRef.current = { context, record };
+  const gestureRef = useRef<string | null>(null);
   const laneRef = useRef<ContinuousGestureLane<UiValue> | null>(null);
   if (laneRef.current === null) {
     laneRef.current = createContinuousGestureLane<UiValue>({
-      send: (value) => dispatchTrigger(bindingRef.current.context, bindingRef.current.record, "change", value),
+      // 🎚️ A continuous control's `Change` payload is a RECORD, not a bare scalar: the value the
+      // program reads as `value` exactly as before, plus the identity of the press it belongs to and
+      // whether this is the release. `uiIntentPayload` merges a record input's own keys into the
+      // binding's args, so `value` still arrives under its own name for every existing consumer,
+      // while a program that cares can fold a whole press into ONE undoable edit
+      // (`📓️slider-preview-update-2026-09-15.md`).
+      send: (value, phase) => {
+        if (gestureRef.current === null) gestureRef.current = `${bindingRef.current.record.key}:${Date.now()}`;
+        const gesture = gestureRef.current;
+        if (phase === "commit") gestureRef.current = null;
+        return dispatchTrigger(bindingRef.current.context, bindingRef.current.record, "change", { value, gesture, commit: phase === "commit" } as UiValue);
+      },
       onFault: (error) => console.error("[DEBUG] continuous control dispatch failed", error),
     });
   }

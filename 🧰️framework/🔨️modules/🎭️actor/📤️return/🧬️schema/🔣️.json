@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/framework/actor/return/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/actor/return/schema.json",
   "title": "Actor Return Schema Module",
   "definitions": {
     "origin": {
@@ -13,7 +13,7 @@
       ],
       "properties": {
         "activationGeneration": {
-          "$ref": "https://semio.tech/schema/framework/value/schema.json#/$defs/NonZeroU64"
+          "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/NonZeroU64"
         },
         "requestSequence": {
           "type": "integer",
@@ -34,7 +34,7 @@
           "$ref": "#/definitions/origin"
         },
         "returnSequence": {
-          "$ref": "https://semio.tech/schema/framework/value/schema.json#/$defs/NonZeroU64"
+          "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/NonZeroU64"
         }
       }
     },
@@ -246,7 +246,7 @@
           "$ref": "#/$defs/PageReceipt"
         },
         "page": {
-          "$ref": "https://semio.tech/schema/framework/actor/page/schema.json#/$defs/Page"
+          "$ref": "https://json.schemas.assets.semio-tech.com/framework/actor/page/schema.json#/$defs/Page"
         }
       }
     },
@@ -501,7 +501,7 @@
           "$ref": "#/definitions/identity"
         },
         "receipt": {
-          "$ref": "https://semio.tech/schema/framework/actor/return/schema.json#/$defs/PageReceipt"
+          "$ref": "https://json.schemas.assets.semio-tech.com/framework/actor/return/schema.json#/$defs/PageReceipt"
         },
         "originBinding": {
           "const": {
@@ -558,7 +558,7 @@
             ],
             "properties": {
               "value": {
-                "$ref": "https://semio.tech/schema/framework/actor/return/schema.json#/$defs/Result"
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/actor/return/schema.json#/$defs/Result"
               },
               "hex": {
                 "type": "string",
@@ -584,7 +584,7 @@
             ],
             "properties": {
               "receipt": {
-                "$ref": "https://semio.tech/schema/framework/actor/return/schema.json#/$defs/PageReceipt"
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/actor/return/schema.json#/$defs/PageReceipt"
               },
               "pageLength": {
                 "type": "integer",
@@ -617,7 +617,7 @@
           "items": {
             "type": "object",
             "not": {
-              "$ref": "https://semio.tech/schema/framework/actor/return/schema.json#/$defs/Result"
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/actor/return/schema.json#/$defs/Result"
             }
           }
         },
@@ -762,7 +762,7 @@
           "$ref": "#/definitions/identity"
         },
         "pageSequence": {
-          "$ref": "https://semio.tech/schema/framework/value/schema.json#/$defs/NonZeroU64"
+          "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/NonZeroU64"
         },
         "length": {
           "type": "integer",

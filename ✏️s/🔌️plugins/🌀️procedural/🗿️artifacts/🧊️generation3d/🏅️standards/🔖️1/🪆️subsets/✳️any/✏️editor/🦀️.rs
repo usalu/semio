@@ -268,10 +268,10 @@ fn parse_preview_camera_json(args: &dsl::DslValue) -> crate::editor::generation3
 }
 
 /// 🕸️ Every node's visible port ids (`{nodeId}@{portId}`), read from the SAME
-/// `dag_host_document_to_workflow` projection the node-graph window paints — so an interaction target and a
+/// `dag_host_snapshot_to_workflow` projection the node-graph window paints — so an interaction target and a
 /// graph pick can never drift apart.
-fn generation3d_port_ids_by_node(fixture: &semio_framework_artifact_flow_flow::FlowHostDocument) -> std::collections::BTreeMap<String, Vec<String>> {
-    let (graph_nodes, _) = crate::standards::v1::subsets::any::schema::with_host(snapshot, |host| crate::standards::v1::subsets::any::schema::dag_host_document_to_workflow(&host.dag.host_document));
+fn generation3d_port_ids_by_node(host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot) -> std::collections::BTreeMap<String, Vec<String>> {
+    let (graph_nodes, _) = crate::standards::v1::subsets::any::schema::with_host(host_snapshot, |host| crate::standards::v1::subsets::any::schema::dag_host_snapshot_to_workflow(&host.dag.host_snapshot));
     graph_nodes.into_iter().map(|node| (node.id, node.inputs.into_iter().chain(node.outputs).map(|port| port.id).collect())).collect()
 }
 
@@ -306,11 +306,11 @@ fn generation3d_render_body(
         flow_window::GENERATION_3D_PLAY_BODY_MAIN => flow_window::render(document, config, session, marks, labels),
         edit_preview::GENERATION_3D_PLAY_BODY_PREVIEW => edit_preview::render(document, config, preview_eval_text, session, run, active_utility, marks, labels),
         generations::GENERATION_3D_PLAY_BODY_GENERATIONS => generations::render(&document.generation, selected_generation_id, view_state.locale, view_state.terminology),
-        form::GENERATION_3D_PLAY_BODY_GENERATE_FORM => form::render(&document.host_document, &document.generation, selected_generation_id, labels),
-        generate_preview::GENERATION_3D_PLAY_BODY_GENERATE_PREVIEW => generate_preview::render(&document.host_document, &document.generation, selected_generation_id, preview_eval_text, config, labels, active_utility, marks, session, run),
+        form::GENERATION_3D_PLAY_BODY_GENERATE_FORM => form::render(&document.host_snapshot, &document.generation, selected_generation_id, labels),
+        generate_preview::GENERATION_3D_PLAY_BODY_GENERATE_PREVIEW => generate_preview::render(&document.host_snapshot, &document.generation, selected_generation_id, preview_eval_text, config, labels, active_utility, marks, session, run),
         artifact_panel::GENERATION_3D_PLAY_BODY_ARTIFACT => artifact_panel::render(document, config, session, labels),
         catalogue_panel::GENERATION_3D_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels),
-        inspection_panel::GENERATION_3D_PLAY_BODY_INSPECTION => inspection_panel::render(&document.host_document, &marks.graph_selection_ids(), labels),
+        inspection_panel::GENERATION_3D_PLAY_BODY_INSPECTION => inspection_panel::render(&document.host_snapshot, &marks.graph_selection_ids(), labels),
         _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.unknown-body", "fixed UI unknown-body admission failed")),
     }?;
     Ok(semio_framework_plugin::built_to_component_tree(node))
@@ -522,7 +522,7 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dPreview
         if !matches!(command, Generation3dCommand::AddGeneration(_) | Generation3dCommand::RemoveGeneration(_) | Generation3dCommand::RenameGeneration(_) | Generation3dCommand::UpdateGenerationValues(_) | Generation3dCommand::SelectGeneration(_)) {
             return None;
         }
-        GENERATION3D_RETAINED_CAPACITY.rows_for_items(snapshot.host_document.widgets.len().checked_add(2)?)
+        GENERATION3D_RETAINED_CAPACITY.rows_for_items(snapshot.host_snapshot.widgets.len().checked_add(2)?)
     }
 
     fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<Generation3dPlayApp>>) -> Result<ArtifactCommandWorkStep<EditorApp<Generation3dPlayApp>>, Fault> {
@@ -531,7 +531,7 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dPreview
         }
         if !self.started {
             self.started = true;
-            let servable = flow_eval_tick::may_rearm(&input.snapshot.host_document);
+            let servable = flow_eval_tick::may_rearm(&input.snapshot.host_snapshot);
             if let Generation3dCommand::SetActiveExample(payload) = input.command {
                 let doc = ArtifactView::with_operation(input.snapshot, input.history, input.operation.clone());
                 let cfg = ConfigView { snapshot: input.config, window: None };
@@ -751,7 +751,7 @@ fn generation3d_retained_reduce(
         Generation3dCommand::SelectPreviousNode(_payload) => Ok(select_previous_node::apply_selected(&doc, &selected())),
         Generation3dCommand::SelectUpstreamNode(_payload) => Ok(select_upstream_node::apply_selected(&doc, &selected())),
         Generation3dCommand::SelectDownstreamNode(_payload) => Ok(select_downstream_node::apply_selected(&doc, &selected())),
-        Generation3dCommand::ActivateSelection(_payload) => Ok(activate_selection::apply_ports(&doc, &generation3d_port_ids_by_node(&doc.snapshot.host_document), &selected())),
+        Generation3dCommand::ActivateSelection(_payload) => Ok(activate_selection::apply_ports(&doc, &generation3d_port_ids_by_node(&doc.snapshot.host_snapshot), &selected())),
         _ => command.dispatch(&doc, &cfg, session),
     }
 }
@@ -800,7 +800,7 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dSession
         // so an inspector slider moved `height` 6 → 7 and the preview kept painting the old geometry
         // (`📓️preview-rearm-after-inspector-edit-2026-09-14.md`).
         let windows = generation3d_preview_windows(input.context.and_then(|context| context.view_state.as_ref()));
-        let servable = flow_eval_tick::may_rearm(&input.snapshot.host_document);
+        let servable = flow_eval_tick::may_rearm(&input.snapshot.host_snapshot);
         let emit = self.instance_owner.with_mut::<Generation3dInstanceOperationOwner, _>(|owner| {
             let mut emit = owner.with_session(|session| generation3d_retained_reduce(input.command, input.snapshot, input.config, input.history, input.interaction, input.hover, input.context, input.operation, session))??;
             owner.owe_attached_previews_for_mutations(&windows, servable, &mut emit)?;
@@ -1041,7 +1041,7 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dDocumen
         _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Generation3dPlayApp>>>,
     ) -> Option<usize> {
         if matches!(command, Generation3dCommand::ImportDocument(_)) {
-            return GENERATION3D_RETAINED_CAPACITY.rows_for_items(snapshot.host_document.widgets.len().checked_add(3)?);
+            return GENERATION3D_RETAINED_CAPACITY.rows_for_items(snapshot.host_snapshot.widgets.len().checked_add(3)?);
         }
         generation3d_bounded_extent(command, snapshot, interaction)
     }
@@ -1063,7 +1063,7 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dDocumen
             }
             Generation3dCommand::ImportDocument(payload) => {
                 let windows = generation3d_preview_windows(input.context.and_then(|context| context.view_state.as_ref()));
-                let servable = flow_eval_tick::may_rearm(&input.snapshot.host_document);
+                let servable = flow_eval_tick::may_rearm(&input.snapshot.host_snapshot);
                 self.instance_owner.with_mut::<Generation3dInstanceOperationOwner, _>(|owner| {
                     let mut emit = import_document::emit(payload, &doc, &cfg, &mut owner.import_staging)?;
                     // 🔁️ Only a chunk that CLOSED its run moved the graph; a staged one authored no
@@ -1280,7 +1280,7 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dContrib
         let mut emit = Emit::default();
         self.instance_owner.with_mut::<Generation3dInstanceOperationOwner, _>(|owner| {
             if owner.with_session(|session| set_contributions::install(payload, session))?? {
-                let servable = flow_eval_tick::may_rearm(&input.snapshot.host_document);
+                let servable = flow_eval_tick::may_rearm(&input.snapshot.host_snapshot);
                 owner.owe_attached_previews_carrying(&windows, servable, &mut emit)?;
             }
             Ok(())
@@ -1406,7 +1406,7 @@ fn admit_generation3d_artifact_mutation(mutation: &Generation3dMutation) -> Resu
 }
 
 /// 🧬️ Raises the mutation's delta, applies it and CLOSES the delta — a `Generation3dDiff` owns the
-/// projections it displaces (a `FlowHostDocument` whose `layout` is an `OrderedMap` root that rejects a bare
+/// projections it displaces (a `FlowHostSnapshot` whose `layout` is an `OrderedMap` root that rejects a bare
 /// drop), so the intermediate delta is retired rather than dropped: leaving it to drop glue aborted the
 /// whole store-publication turn the moment a layout entry existed
 /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). Mirrors the `🌀️generation2d` twin exactly.
@@ -1923,11 +1923,11 @@ impl ArtifactEditor for Generation3dPlayApp {
                 };
                 let parsed = dsl::json::parse(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
                 let object = parsed.as_object().cloned().ok_or_else(|| MediaError::Payload(port.to_string(), "params:in payload must be a JSON object".into()))?;
-                let fixture = &doc.snapshot.host_document;
+                let host_snapshot = &doc.snapshot.host_snapshot;
                 let mut operations = Vec::new();
                 for (target_id, value) in object.iter() {
                     let Some(number) = value.as_f64() else { continue };
-                    let Some((_index, widget)) = fixture.widgets.iter().enumerate().find(|(_, widget)| crate::widget_id(widget) == target_id) else { continue };
+                    let Some((_index, widget)) = host_snapshot.widgets.iter().enumerate().find(|(_, widget)| crate::widget_id(widget) == target_id) else { continue };
                     if let semio_framework_artifact_flow_flow::Widget::InputSlider { id, label, min, max, step, .. } = widget {
                         operations.push(Generation3dMutation::UpdateWidget(crate::standards::v1::subsets::any::schema::mutations::update_widget::UpdateWidget {
                             widget: semio_framework_artifact_flow_flow::Widget::InputSlider { id: id.clone(), label: label.clone(), value: number, min: *min, max: *max, step: *step },
@@ -1971,6 +1971,7 @@ impl ArtifactEditor for Generation3dPlayApp {
                 },
                 field: str_arg(&["field"]).unwrap_or_default(),
                 value: f64_arg(&["value"]),
+                gesture: str_arg(&["gesture"]),
             })),
             "reorganize" => Ok(Generation3dCommand::Reorganize(reorganize::Reorganize {})),
             "translateSelection" => {
@@ -2021,6 +2022,7 @@ impl ArtifactEditor for Generation3dPlayApp {
                     generation_id: str_arg(&["generationId", "generation_id"]),
                     question_id: str_arg(&["questionId", "question_id"]).unwrap_or_default(),
                     value,
+                    gesture: str_arg(&["gesture"]),
                 }))
             }
             "nodeGraphViewport" => Ok(Generation3dCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport: parse_flow_viewport(&args)? })),
@@ -2115,7 +2117,7 @@ impl ArtifactEditor for Generation3dPlayApp {
             Generation3dCommand::SelectPreviousNode(_payload) => Ok(select_previous_node::apply_selected(doc, &interaction.selection("graph").ids)),
             Generation3dCommand::SelectUpstreamNode(_payload) => Ok(select_upstream_node::apply_selected(doc, &interaction.selection("graph").ids)),
             Generation3dCommand::SelectDownstreamNode(_payload) => Ok(select_downstream_node::apply_selected(doc, &interaction.selection("graph").ids)),
-            Generation3dCommand::ActivateSelection(_payload) => Ok(activate_selection::apply_ports(doc, &generation3d_port_ids_by_node(&doc.snapshot.host_document), &interaction.selection("graph").ids)),
+            Generation3dCommand::ActivateSelection(_payload) => Ok(activate_selection::apply_ports(doc, &generation3d_port_ids_by_node(&doc.snapshot.host_snapshot), &interaction.selection("graph").ids)),
             _ => command.dispatch(doc, cfg, session),
         })
     }
@@ -2138,10 +2140,10 @@ impl ArtifactEditor for Generation3dPlayApp {
                 }
             }
         }
-        let fixture = &doc.snapshot.host_document;
+        let host_snapshot = &doc.snapshot.host_snapshot;
         let mut ordered = Vec::new();
-        let ports_by_node = generation3d_port_ids_by_node(fixture);
-        for widget in &fixture.widgets {
+        let ports_by_node = generation3d_port_ids_by_node(host_snapshot);
+        for widget in &host_snapshot.widgets {
             let id = crate::widget_id(widget).to_string();
             ordered.push(TopologyNode { id: id.clone(), granularity: "node".into(), parent: None });
             for port in ports_by_node.get(&id).into_iter().flatten() {
@@ -2153,7 +2155,7 @@ impl ArtifactEditor for Generation3dPlayApp {
                 }
             }
         }
-        for synapse in &fixture.synapses {
+        for synapse in &host_snapshot.synapses {
             ordered.push(TopologyNode { id: synapse.id.clone(), granularity: "edge".into(), parent: None });
         }
         let mut domains = std::collections::BTreeMap::new();
@@ -2175,7 +2177,7 @@ impl ArtifactEditor for Generation3dPlayApp {
     /// attached preview an evaluation itself.
     fn pending_effects(owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle, doc: &ArtifactView<'_, Generation3dSnapshot>, _cfg: &ConfigView<'_, Generation3dConfig>, view: Option<&semio_framework_plugin::ViewModel>) -> Vec<Effect> {
         let windows = generation3d_preview_windows(view);
-        let servable = flow_eval_tick::may_rearm(&doc.snapshot.host_document);
+        let servable = flow_eval_tick::may_rearm(&doc.snapshot.host_snapshot);
         let applied_edits = crate::preview_eval::applied_document_edits_digest(doc.history);
         owner
             .with_mut::<Generation3dInstanceOperationOwner, _>(|owner| {
@@ -2192,7 +2194,7 @@ impl ArtifactEditor for Generation3dPlayApp {
         if request.tool_id != crate::preview_eval::PREVIEW_EVAL_TOOL_ID || request.purpose != ToolRunJobPurpose::Run {
             return Ok(None);
         }
-        let preview_widget_ids = crate::preview_eval::preview_widget_ids(&request.snapshot.host_document);
+        let preview_widget_ids = crate::preview_eval::preview_widget_ids(&request.snapshot.host_snapshot);
         Ok(Some(Box::new(crate::preview_eval::PreviewEvalRunJob::<Generation3dInstanceOperationOwner>::new(request.instance_owner, request.port, request.identity, preview_widget_ids)?)))
     }
 
@@ -2285,7 +2287,7 @@ impl Generation3dPlayApp {
         use semio_framework_plugin::{node_graph_delete_selection_spec, selection_domains_from_surface, Menu, NodeGraphDeleteDispatch};
         let labels = generation3d_labels(view_state);
         let is_de = view_state.locale == semio_framework_plugin::Locale::De;
-        let (selected_nodes, selected_edges) = marks.graph_selection_domains(&doc.snapshot.host_document);
+        let (selected_nodes, selected_edges) = marks.graph_selection_domains(&doc.snapshot.host_snapshot);
         let (nodes, edges) = selection_domains_from_surface(request.surface.as_ref(), &selected_nodes, &selected_edges);
         let has_selection = !nodes.is_empty() || !edges.is_empty();
         let mut menu = Menu::of(registry).action("reorganize");
@@ -2684,8 +2686,8 @@ pub use crate::preview_eval::{
 /// 📨 Extension invocations that tessellate this surface's pending preview handles — the editor's
 /// binding of [`crate::preview_eval::preview_tessellate_invocations`], which reads the deflection
 /// off this surface's own config LOD.
-pub fn preview_tessellate_invocations(window_id: &str, window_kind_id: &str, session: &mut FlowEvalSession, fixture: &semio_framework_artifact_flow_flow::FlowHostDocument, cfg: &Generation3dConfig) -> Vec<semio_framework_plugin::ExtensionInvocation> {
-    crate::preview_eval::preview_tessellate_invocations(window_id, window_kind_id, session, fixture, preview_tolerance(&cfg.lod_mode))
+pub fn preview_tessellate_invocations(window_id: &str, window_kind_id: &str, session: &mut FlowEvalSession, host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot, cfg: &Generation3dConfig) -> Vec<semio_framework_plugin::ExtensionInvocation> {
+    crate::preview_eval::preview_tessellate_invocations(window_id, window_kind_id, session, host_snapshot, preview_tolerance(&cfg.lod_mode))
 }
 
 pub fn preview_camera_json(cfg: &Generation3dConfig) -> String {
@@ -2792,8 +2794,8 @@ impl PreviewInteractionMarks {
     /// synapse id is an `edge`; everything else projects onto its owning widget id (a preview
     /// instance `{w}@{c}#{i}` selected in the world therefore targets its node exactly like a click
     /// in the graph does).
-    pub fn graph_selection_domains(&self, fixture: &semio_framework_artifact_flow_flow::FlowHostDocument) -> (Vec<String>, Vec<String>) {
-        let synapses: std::collections::BTreeSet<&str> = fixture.synapses.iter().map(|synapse| synapse.id.as_str()).collect();
+    pub fn graph_selection_domains(&self, host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot) -> (Vec<String>, Vec<String>) {
+        let synapses: std::collections::BTreeSet<&str> = host_snapshot.synapses.iter().map(|synapse| synapse.id.as_str()).collect();
         let mut nodes = std::collections::BTreeSet::new();
         let mut edges = std::collections::BTreeSet::new();
         for id in &self.selected {
@@ -2864,8 +2866,8 @@ impl Default for PreviewPayload {
 
 /// 🧊️ The interaction-free, session-free entry point: the mesh-export bridge and the schema tests
 /// evaluate geometry without any live window, so they carry no marks and no tessellation cache.
-pub fn preview_payload_from_eval(eval_json: &str, fixture: &semio_framework_artifact_flow_flow::FlowHostDocument, cfg: &Generation3dConfig) -> (String, String) {
-    let payload = preview_payload(eval_json, fixture, cfg, None, &PreviewInteractionMarks::default());
+pub fn preview_payload_from_eval(eval_json: &str, host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot, cfg: &Generation3dConfig) -> (String, String) {
+    let payload = preview_payload(eval_json, host_snapshot, cfg, None, &PreviewInteractionMarks::default());
     (payload.meshes_json, payload.instances_json)
 }
 
@@ -2877,7 +2879,7 @@ fn vec3_json(v: [f64; 3]) -> dsl::json::Value {
     dsl::json::Value::Array(v.into_iter().map(dsl::json::Value::from).collect())
 }
 
-pub fn preview_payload(eval_json: &str, fixture: &semio_framework_artifact_flow_flow::FlowHostDocument, cfg: &Generation3dConfig, session: Option<&FlowEvalSession>, marks: &PreviewInteractionMarks) -> PreviewPayload {
+pub fn preview_payload(eval_json: &str, host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot, cfg: &Generation3dConfig, session: Option<&FlowEvalSession>, marks: &PreviewInteractionMarks) -> PreviewPayload {
     if eval_json.is_empty() {
         return PreviewPayload::default();
     }
@@ -2897,7 +2899,7 @@ pub fn preview_payload(eval_json: &str, fixture: &semio_framework_artifact_flow_
     let mut mesh_id_by_handle: HashMap<String, String> = HashMap::new();
     let mut selected_ids: Vec<String> = Vec::new();
     let mut hovered_id: Option<String> = None;
-    for widget in &fixture.widgets {
+    for widget in &host_snapshot.widgets {
         let id = crate::widget_id(widget).to_string();
         let preview = widget_previews(widget);
         if !preview {
@@ -3010,14 +3012,14 @@ fn merged_meshes_from_payload(meshes_json: &str) -> semio_framework_plugin::Mesh
 /// them: the expensive work is the `previewEval` run the status pill reports and its abort retires,
 /// and an export taken after it settles does no kernel work.
 pub fn export_mesh_from_session(snapshot: &Generation3dSnapshot, cfg: &Generation3dConfig, session: &FlowEvalSession) -> semio_framework_plugin::MeshData {
-    let payload = preview_payload(session.eval_json(), &snapshot.host_document, cfg, Some(session), &PreviewInteractionMarks::default());
+    let payload = preview_payload(session.eval_json(), &snapshot.host_snapshot, cfg, Some(session), &PreviewInteractionMarks::default());
     merged_meshes_from_payload(&payload.meshes_json)
 }
 
 pub fn export_mesh_from_document(projection: &Generation3dSnapshot) -> semio_framework_plugin::MeshData {
     let config = Generation3dConfig::default();
-    let eval_json = crate::standards::v1::subsets::any::schema::with_host(&projection.host_document, |host| host.evaluate().unwrap_or_default());
-    let (meshes_json, _) = preview_payload_from_eval(&eval_json, &projection.host_document, &config);
+    let eval_json = crate::standards::v1::subsets::any::schema::with_host(&projection.host_snapshot, |host| host.evaluate().unwrap_or_default());
+    let (meshes_json, _) = preview_payload_from_eval(&eval_json, &projection.host_snapshot, &config);
     // 🌉️ `MeshData` has its own first-party `FromValue` (see `mesh_data_for_preview_handle`'s
     // note) — decode the per-mesh `data` field straight through the `pack::json`/`DslValue` bridge.
     merged_meshes_from_payload(&meshes_json)
@@ -3108,3 +3110,12 @@ mod mode_panels;
 #[path = "🧪️tests/🕹️interaction-scope/🦀️.rs"]
 mod interaction_scope;
 //#endregion 🧪️InteractionScope
+
+//#region 🧪️SliderValues
+/// 🎚️ What a MOVED slider DELIVERS, graded against an independent per-value oracle — its own module
+/// because the law is about the geometry a released value converges on, not about the gesture's cost
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+#[cfg(test)]
+#[path = "🧪️tests/🎚️slider-values/🦀️.rs"]
+mod slider_values;
+//#endregion 🧪️SliderValues

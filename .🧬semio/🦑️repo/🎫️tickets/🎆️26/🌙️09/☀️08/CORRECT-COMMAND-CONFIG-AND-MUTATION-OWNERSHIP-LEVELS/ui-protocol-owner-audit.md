@@ -80,14 +80,14 @@ The implementation change is bounded to the moved TypeScript file, the package b
 
 `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧬️schema/🔣️.json`
 
-Its existing `$id` is `https://semio.tech/schema/os/plugin/retained-command/component.json` (`:3`), it already owns retained-command checkpoints and `ScalarConfigCohortV1` (`:528-639`), and its tests perform real schema and owner-source checks. It is also where the plugin runtime declares `ArtifactToolPublicationLane` at `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs:12785-12802`.
+Its existing `$id` is `https://json.schemas.assets.semio-tech.com/os/plugin/retained-command/component.json` (`:3`), it already owns retained-command checkpoints and `ScalarConfigCohortV1` (`:528-639`), and its tests perform real schema and owner-source checks. It is also where the plugin runtime declares `ArtifactToolPublicationLane` at `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs:12785-12802`.
 
 Move the full retained-command group, not only the three externally referenced names:
 
 * 19 internal definitions at `🖱️ui/🧬️schema/🔣️.json:6-685`: lane, disposition, execution, byte/step/class budgets, publication contract, boundary case, oracle, three route forms and union, corpus/declared limits, cohort factory/route/app/census.
 * Five public definitions at `:686-786`: `RetainedCommandLimits`, `RetainedCommandRoute`, `RetainedCommandRoutes`, `RetainedCommandCohort`, and `RetainedCommandRoutesDocument`.
 
-Place these in the OS-plugin schema’s `$defs`, rewrite their internal references there, and remove the group from the UI schema. Change every consumer reference directly to `https://semio.tech/schema/os/plugin/retained-command/component.json#/$defs/...`; do not retain UI-schema aliases.
+Place these in the OS-plugin schema’s `$defs`, rewrite their internal references there, and remove the group from the UI schema. Change every consumer reference directly to `https://json.schemas.assets.semio-tech.com/os/plugin/retained-command/component.json#/$defs/...`; do not retain UI-schema aliases.
 
 ### Reachable schema references
 

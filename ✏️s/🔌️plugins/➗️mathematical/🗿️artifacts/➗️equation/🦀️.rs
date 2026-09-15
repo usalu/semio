@@ -395,7 +395,7 @@ pub fn equation_snapshot_with_state(graph: &EquationGraph, geometry: &EquationGe
 }
 
 /// 📥️ Rebuilds composed child handles and their exact local owner from a complete carrier fixture.
-pub fn equation_snapshot_from_host_document(fixture: EquationFixture) -> EquationSnapshot {
+pub fn equation_snapshot_from_host_snapshot(fixture: EquationFixture) -> EquationSnapshot {
     let mut snapshot = equation_snapshot_with_state(&fixture.graph, &fixture.geometry);
     snapshot.equation = fixture.equation;
     snapshot

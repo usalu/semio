@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/semio/v1/table/diff/binary.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/table/diff/binary.json",
   "title": "SemioTableDiffBinaryFrame",
   "description": "Descriptive twin of 📡️.protocol.semio — format u8, presence u8 (bit0=columns, bit1=rows), then an opaque payload tail.",
   "type": "object",

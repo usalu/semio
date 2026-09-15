@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://semio.tech/schemas/repo/dashboard/command-tree.json",
+  "$id": "https://json.schemas.assets.semio-tech.coms/repo/dashboard/command-tree.json",
   "title": "🌳️ Dashboard command tree",
   "description": "🎛️ The wizard command tree the dashboard discovers at boot: one node per wizard step, a leaf carrying either the process the pseudo-terminal window runs or the repo-domain action the Rust domain crates answer in process. `semio command-tree --dump-tree` prints exactly this document.",
   "$ref": "#/$defs/CommandNode",

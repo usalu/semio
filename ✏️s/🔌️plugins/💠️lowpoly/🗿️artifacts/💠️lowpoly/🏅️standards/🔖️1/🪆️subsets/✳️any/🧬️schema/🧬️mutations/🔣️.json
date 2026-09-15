@@ -1,59 +1,59 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/lowpoly/lowpoly/mutations.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/lowpoly/lowpoly/mutations.json",
   "title": "LowpolyMutation",
   "description": "Seventeen-variant mutation dispatch envelope — real facet mirror of the Rust `LowpolyMutation` enum (`dsl::Mutations`-derived). serde's default externally-tagged representation: exactly one key, the PascalCase Rust variant name, whose value is that variant's payload — confirmed against every mutation family's committed `🧪️tests/…/🦠️mutation/🔣️.json` fixture. Each branch references its sibling `<mutation>/🧬️schema/🔣️.json` leaf rather than duplicating it.",
   "oneOf": [
     {
-      "$ref": "https://semio.tech/schema/s/lowpoly/lowpoly/mutation/change-object-smooth-shading/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/lowpoly/lowpoly/mutation/change-object-smooth-shading/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/lowpoly/lowpoly/mutation/change-paint-layer-blend-mode/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/lowpoly/lowpoly/mutation/change-paint-layer-blend-mode/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/lowpoly/lowpoly/mutation/change-paint-layer-opacity/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/lowpoly/lowpoly/mutation/change-paint-layer-opacity/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/lowpoly/lowpoly/mutation/change-paint-layer-visible/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/lowpoly/lowpoly/mutation/change-paint-layer-visible/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/lowpoly/lowpoly/mutation/create-mesh/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/lowpoly/lowpoly/mutation/create-mesh/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/lowpoly/lowpoly/mutation/create-object/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/lowpoly/lowpoly/mutation/create-object/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/lowpoly/lowpoly/mutation/delete-mesh/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/lowpoly/lowpoly/mutation/delete-mesh/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/lowpoly/lowpoly/mutation/delete-object/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/lowpoly/lowpoly/mutation/delete-object/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/lowpoly/lowpoly/mutation/edit-paint-layer/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/lowpoly/lowpoly/mutation/edit-paint-layer/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/lowpoly/lowpoly/mutation/insert-paint-layer/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/lowpoly/lowpoly/mutation/insert-paint-layer/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/lowpoly/lowpoly/mutation/move-object/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/lowpoly/lowpoly/mutation/move-object/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/lowpoly/lowpoly/mutation/remove-paint-layer/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/lowpoly/lowpoly/mutation/remove-paint-layer/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/lowpoly/lowpoly/mutation/rename-object/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/lowpoly/lowpoly/mutation/rename-object/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/lowpoly/lowpoly/mutation/rename-paint-layer/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/lowpoly/lowpoly/mutation/rename-paint-layer/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/lowpoly/lowpoly/mutation/reorder-objects/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/lowpoly/lowpoly/mutation/reorder-objects/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/lowpoly/lowpoly/mutation/rotate-object/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/lowpoly/lowpoly/mutation/rotate-object/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/lowpoly/lowpoly/mutation/scale-object/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/lowpoly/lowpoly/mutation/scale-object/schema.json"
     }
   ]
 }

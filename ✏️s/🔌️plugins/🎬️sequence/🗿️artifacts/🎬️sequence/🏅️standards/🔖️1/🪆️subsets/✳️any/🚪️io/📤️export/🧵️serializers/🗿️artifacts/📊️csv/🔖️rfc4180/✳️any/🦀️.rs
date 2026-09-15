@@ -18,7 +18,7 @@ impl Serializer<SequenceSnapshot> for SequenceIntoCsv {
     const INTO: Dialect = CSV_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
     async fn serialize(from: &SequenceSnapshot) -> IoResult<IoPayload> {
-        let fixture = from.try_to_host_document().map_err(|error| IoError { message: format!("SequenceIntoCsv: {error}"), diagnostics: Vec::new() })?;
+        let fixture = from.try_to_host_snapshot().map_err(|error| IoError { message: format!("SequenceIntoCsv: {error}"), diagnostics: Vec::new() })?;
         let records = fixture
             .steps
             .iter()

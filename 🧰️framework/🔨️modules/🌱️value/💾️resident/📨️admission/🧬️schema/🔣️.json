@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/framework/value/resident/admission/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/value/resident/admission/schema.json",
   "title": "Value Resident Admission Schema Module",
   "$defs": {
     "AdmissionFixture": {
@@ -347,7 +347,7 @@
           "const": 1
         },
         "charge": {
-          "$ref": "https://semio.tech/schema/framework/value/resident/schema.json#/$defs/Resources"
+          "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/resident/schema.json#/$defs/Resources"
         },
         "bootstrap": {
           "const": "exact-consumer-prepare-read-claim"

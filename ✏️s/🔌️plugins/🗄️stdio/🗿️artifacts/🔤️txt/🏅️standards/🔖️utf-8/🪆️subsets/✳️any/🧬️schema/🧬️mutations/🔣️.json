@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/txt/utf-8/any/mutations.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/txt/utf-8/any/mutations.json",
   "title": "TxtMutation",
   "description": "Discriminated union over this module's mutation leaves (adjacently tagged); every payload is the leaf's own schema, referenced, never restated.",
   "oneOf": [
@@ -16,7 +16,7 @@
           "const": "insert-line"
         },
         "payload": {
-          "$ref": "https://semio.tech/schema/s/stdio/txt/utf-8/any/mutation/insert-line/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/txt/utf-8/any/mutation/insert-line/schema.json"
         }
       }
     },
@@ -32,7 +32,7 @@
           "const": "remove-line"
         },
         "payload": {
-          "$ref": "https://semio.tech/schema/s/stdio/txt/utf-8/any/mutation/remove-line/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/txt/utf-8/any/mutation/remove-line/schema.json"
         }
       }
     },
@@ -48,7 +48,7 @@
           "const": "set-line"
         },
         "payload": {
-          "$ref": "https://semio.tech/schema/s/stdio/txt/utf-8/any/mutation/set-line/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/txt/utf-8/any/mutation/set-line/schema.json"
         }
       }
     },
@@ -64,7 +64,7 @@
           "const": "set-line-ending"
         },
         "payload": {
-          "$ref": "https://semio.tech/schema/s/stdio/txt/utf-8/any/mutation/set-line-ending/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/txt/utf-8/any/mutation/set-line-ending/schema.json"
         }
       }
     },
@@ -80,7 +80,7 @@
           "const": "set-trailing-newline"
         },
         "payload": {
-          "$ref": "https://semio.tech/schema/s/stdio/txt/utf-8/any/mutation/set-trailing-newline/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/txt/utf-8/any/mutation/set-trailing-newline/schema.json"
         }
       }
     }

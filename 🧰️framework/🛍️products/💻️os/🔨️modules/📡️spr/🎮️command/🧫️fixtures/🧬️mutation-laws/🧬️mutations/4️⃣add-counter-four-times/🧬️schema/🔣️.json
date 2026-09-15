@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/framework/os/spr/command/tests/mutation-laws/mutation/add-counter-four-times/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/os/spr/command/tests/mutation-laws/mutation/add-counter-four-times/schema.json",
   "title": "AddCounterFourTimes",
   "$defs": {
     "Payload": {
@@ -10,7 +10,7 @@
       ],
       "properties": {
         "delta": {
-          "$ref": "https://semio.tech/schema/os/spr/command/component.json#/$defs/MutationLawsI64"
+          "$ref": "https://json.schemas.assets.semio-tech.com/os/spr/command/component.json#/$defs/MutationLawsI64"
         }
       }
     }

@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/semio/v1/model/mutations/text.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/model/mutations/text.json",
   "title": "SemioModelMutationText",
   "description": "One line of compact JSON for the tagged SemioModelMutation union, no envelope.",
   "type": "string"

@@ -40,10 +40,10 @@ fn widget_id(widget: &Widget) -> &str {
 /// 🧭️ Computes `topology` from a generation3d snapshot's `fixture.widgets`/`fixture.synapses` via
 /// Kahn's algorithm: widgets are nodes, synapses (`from` → `to`) are directed edges.
 pub fn compute_generation3d_topology(snapshot: &Generation3dSnapshot) -> Generation3dTopology {
-    let widget_ids: Vec<String> = snapshot.host_document.widgets.iter().map(|w| widget_id(w).to_string()).collect();
+    let widget_ids: Vec<String> = snapshot.host_snapshot.widgets.iter().map(|w| widget_id(w).to_string()).collect();
     let mut adjacency: BTreeMap<String, Vec<String>> = BTreeMap::new();
     let mut in_degree: BTreeMap<String, u32> = widget_ids.iter().map(|id| (id.clone(), 0)).collect();
-    for synapse in &snapshot.host_document.synapses {
+    for synapse in &snapshot.host_snapshot.synapses {
         adjacency.entry(synapse.from.clone()).or_default().push(synapse.to.clone());
         if let Some(degree) = in_degree.get_mut(&synapse.to) {
             *degree += 1;
@@ -76,6 +76,6 @@ pub fn compute_generation3d_topology(snapshot: &Generation3dSnapshot) -> Generat
 
     let cycle_free = order.len() == widget_ids.len();
     let depth = depth_of.values().copied().max().unwrap_or(0);
-    Generation3dTopology { node_count: widget_ids.len() as u32, edge_count: snapshot.host_document.synapses.len() as u32, topo_order: if cycle_free { order } else { Vec::new() }, depth: if cycle_free { depth } else { 0 }, cycle_free }
+    Generation3dTopology { node_count: widget_ids.len() as u32, edge_count: snapshot.host_snapshot.synapses.len() as u32, topo_order: if cycle_free { order } else { Vec::new() }, depth: if cycle_free { depth } else { 0 }, cycle_free }
 }
 //#endregion 🔖️Topology

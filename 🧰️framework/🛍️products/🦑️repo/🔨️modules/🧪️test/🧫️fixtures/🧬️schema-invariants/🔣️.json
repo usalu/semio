@@ -308,7 +308,7 @@
           "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧬️contracts/🎟️invite-capability/🧬️.schema.json",
           "json": {
             "$schema": "http://json-schema.org/draft-07/schema#",
-            "$id": "https://semio.tech/schema/os/directory/invite-capability-transfer.v1",
+            "$id": "https://json.schemas.assets.semio-tech.com/os/directory/invite-capability-transfer.v1",
             "type": "object",
             "properties": {
               "state": {
@@ -344,7 +344,7 @@
           "path": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json",
           "json": {
             "$schema": "http://json-schema.org/draft-07/schema#",
-            "$id": "https://semio.tech/schema/s/writer/writer/artifact.json",
+            "$id": "https://json.schemas.assets.semio-tech.com/s/writer/writer/artifact.json",
             "$defs": {
               "Artifact": {
                 "type": "object",
@@ -397,7 +397,7 @@
           "path": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✍️set-title/🧬️schema/🔣️.json",
           "json": {
             "$schema": "http://json-schema.org/draft-07/schema#",
-            "$id": "https://semio.tech/schema/s/writer/writer/mutations/set-title.json",
+            "$id": "https://json.schemas.assets.semio-tech.com/s/writer/writer/mutations/set-title.json",
             "title": "SetTitle",
             "type": "object",
             "additionalProperties": false,
@@ -513,7 +513,7 @@
           "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
           "json": {
             "$schema": "http://json-schema.org/draft-07/schema#",
-            "$id": "https://semio.tech/schema/repo/test/protocol.json",
+            "$id": "https://json.schemas.assets.semio-tech.com/repo/test/protocol.json",
             "$defs": {
               "TestResult": {
                 "type": "object"
@@ -533,7 +533,7 @@
           "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧬️schema/🔣️.json",
           "json": {
             "$schema": "http://json-schema.org/draft-07/schema#",
-            "$id": "https://semio.tech/schema/os/shell-host.json",
+            "$id": "https://json.schemas.assets.semio-tech.com/os/shell-host.json",
             "$defs": {
               "DialogOrigin": {
                 "type": "object"
@@ -558,7 +558,7 @@
           "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/🧬️schema/🔣️.json",
           "json": {
             "$schema": "http://json-schema.org/draft-07/schema#",
-            "$id": "https://semio.tech/schema/repo/test/package.json",
+            "$id": "https://json.schemas.assets.semio-tech.com/repo/test/package.json",
             "$defs": {
               "Row": {
                 "type": "object"
@@ -583,7 +583,7 @@
           "path": "🌎️hub/🧪️fixtures/✅️inference-approval-v1/🧬️schema/🔣️.json",
           "json": {
             "$schema": "http://json-schema.org/draft-07/schema#",
-            "$id": "https://semio.tech/schema/hub/inference-approval-fixture.json",
+            "$id": "https://json.schemas.assets.semio-tech.com/hub/inference-approval-fixture.json",
             "$defs": {
               "Request": {
                 "type": "object"
@@ -608,7 +608,7 @@
           "path": "🌎️hub/💡️inference/🧬️schema/🔣️.json",
           "json": {
             "$schema": "https://json-schema.org/draft/2020-12/schema",
-            "$id": "https://semio.tech/schema/hub/inference.json",
+            "$id": "https://json.schemas.assets.semio-tech.com/hub/inference.json",
             "$defs": {
               "Approval": {
                 "type": "object"
@@ -1033,24 +1033,24 @@
   "mutationLeafIdCases": [
     {
       "id": "single-segment-leaf",
-      "rootModuleId": "https://semio.tech/schema/s/stdio/gltf/2.0/any/artifact.json",
+      "rootModuleId": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/artifact.json",
       "semanticKind": "create-sampler",
       "leafDirectory": "🎛️sampler/🌱️create",
-      "expected": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/create-sampler/schema.json"
+      "expected": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/create-sampler/schema.json"
     },
     {
       "id": "two-segment-leaf-directory-is-keyed-by-its-semantic-kind",
-      "rootModuleId": "https://semio.tech/schema/s/stdio/gltf/2.0/any/artifact.json",
+      "rootModuleId": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/artifact.json",
       "semanticKind": "bind-node-skin",
       "leafDirectory": "🩻️node-skin/🔗️bind",
-      "expected": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/bind-node-skin/schema.json"
+      "expected": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/bind-node-skin/schema.json"
     },
     {
       "id": "a-facet-filename-other-than-artifact-does-not-deepen-the-scope",
-      "rootModuleId": "https://semio.tech/schema/framework/os/config/schema.json",
+      "rootModuleId": "https://json.schemas.assets.semio-tech.com/framework/os/config/schema.json",
       "semanticKind": "set-default-app",
       "leafDirectory": "🎛️default-app/🖊️set",
-      "expected": "https://semio.tech/schema/framework/os/config/mutation/set-default-app/schema.json"
+      "expected": "https://json.schemas.assets.semio-tech.com/framework/os/config/mutation/set-default-app/schema.json"
     }
   ],
   "validationCases": [

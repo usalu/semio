@@ -2,7 +2,7 @@
 
 export interface Generation2dArtifact {
   /** @state artifact */
-  fixture: FlowFixture;
+  hostSnapshot: FlowHostSnapshot;
   /** @state artifact */
   generation: GenerationPlayState;
 }
@@ -12,7 +12,7 @@ export type WidgetLayout = { x: number; y: number };
 export type SynapseSpec = { id: string; from: string; to: string; fromPort: string; toPort: string };
 /** @description Polymorphic flow widget — JSON blob. */
 export type Widget = string;
-export type FlowFixture = {
+export type FlowHostSnapshot = {
   schema: string;
   camera: CameraJson;
   widgets: Widget[];
@@ -76,7 +76,7 @@ export const proceduralGeneration2dArtifactGuardConstant = <T extends string | n
 export function parseGeneration2dArtifact(value: unknown, at = "$"): Generation2dArtifact {
   const row = proceduralGeneration2dArtifactGuardObject(value, at);
   return {
-    fixture: parseFlowFixture(row["fixture"], `${at}.fixture`),
+    hostSnapshot: parseFlowHostSnapshot(row["hostSnapshot"], `${at}.hostSnapshot`),
     generation: parseGenerationPlayState(row["generation"], `${at}.generation`),
   };
 }
@@ -113,7 +113,7 @@ export function parseWidget(value: unknown, at = "$"): Widget {
   return proceduralGeneration2dArtifactGuardString(value, `${at}`);
 }
 
-export function parseFlowFixture(value: unknown, at = "$"): FlowFixture {
+export function parseFlowHostSnapshot(value: unknown, at = "$"): FlowHostSnapshot {
   const row = proceduralGeneration2dArtifactGuardObject(value, at);
   return {
     schema: proceduralGeneration2dArtifactGuardString(row["schema"], `${at}.schema`),

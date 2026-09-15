@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/hub/inference/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/hub/inference/schema.json",
   "$ref": "#/$defs/InferenceRequestV1",
   "$defs": {
     "id": { "type": "string", "pattern": "^[0-9a-f]{32}$" },

@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/os/plugin/runner/component.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/os/plugin/runner/component.json",
   "title": "Semio OS Plugin Test Runner",
   "$defs": {
     "TestRunnerForwardingV1": {

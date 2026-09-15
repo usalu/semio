@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/sourcing/curation/diff.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/sourcing/curation/diff.json",
   "title": "CurationDiff",
   "type": "object",
   "additionalProperties": false,
@@ -9,7 +9,7 @@
     "artifact": {
       "anyOf": [
         {
-          "$ref": "https://semio.tech/schema/s/sourcing/curation/artifact.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/sourcing/curation/artifact.json"
         },
         {
           "type": "null"
@@ -20,7 +20,7 @@
     "catalog": {
       "anyOf": [
         {
-          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/base/child.json#/$defs/kit"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/base/child.json#/$defs/kit"
         },
         {
           "type": "null"
@@ -78,7 +78,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "https://semio.tech/schema/s/sourcing/curation/artifact.json#/$defs/ObjectKindExtra"
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/sourcing/curation/artifact.json#/$defs/ObjectKindExtra"
           }
         },
         "removed": {
@@ -121,7 +121,7 @@
           "type": "string"
         },
         "extra": {
-          "$ref": "https://semio.tech/schema/s/sourcing/curation/artifact.json#/$defs/ObjectKindExtra"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/sourcing/curation/artifact.json#/$defs/ObjectKindExtra"
         }
       }
     },
@@ -134,7 +134,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "https://semio.tech/schema/s/sourcing/curation/artifact.json#/$defs/CuratedItem"
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/sourcing/curation/artifact.json#/$defs/CuratedItem"
           }
         },
         "removed": {

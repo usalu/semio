@@ -21,7 +21,7 @@
 ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🔺️diff/🔗️component.graphql:71:  phys: PngPhysicalDims
 ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🔺️diff/🛰️component.proto:70:  optional semio.s_stdio_png.snapshot.PngPhysicalDims phys = 17;
 ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:196:    pub bytes: Option<Vec<u8>>,
-✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🔺️diff/🔣️component.json:17:    "phys": { "anyOf": [{ "$ref": "https://semio.tech/schema/s.stdio.png/snapshot.json#/$defs/PngPhysicalDims" }, { "type": "null" }] },
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🔺️diff/🔣️component.json:17:    "phys": { "anyOf": [{ "$ref": "https://json.schemas.assets.semio-tech.com/s.stdio.png/snapshot.json#/$defs/PngPhysicalDims" }, { "type": "null" }] },
 ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🔤️component.ebnf:7:            | '"setSrgbIntent"' | '"setPhysicalDims"' | '"setTimestamp"'
 ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🅰️component.g4:8:         | SET_GAMMA | SET_CHROMATICITIES | SET_SRGB_INTENT | SET_PHYSICAL_DIMS
 ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🅰️component.g4:18:SET_PHYSICAL_DIMS: '"setPhysicalDims"'; SET_TIMESTAMP: '"setTimestamp"';
@@ -47,7 +47,7 @@
 ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗️component.graphql:38:  phys: PngPhysicalDimsInput
 ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛰️component.proto:19:message SetPhysicalDims { optional semio.s_stdio_png.snapshot.PngPhysicalDims phys = 1; }
 ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛰️component.proto:39:    SetPhysicalDims set_physical_dims = 9;
-✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔣️component.json:41:      "properties": { "mutation": { "const": "setPhysicalDims" }, "phys": { "$ref": "https://semio.tech/schema/s.stdio.png/snapshot.json#/$defs/PngPhysicalDims" } }
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔣️component.json:41:      "properties": { "mutation": { "const": "setPhysicalDims" }, "phys": { "$ref": "https://json.schemas.assets.semio-tech.com/s.stdio.png/snapshot.json#/$defs/PngPhysicalDims" } }
 ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🦀️component.rs:4:use crate::artifacts::png::schema::snapshot::{PngBackground, PngChromaticities, PngChunk, PngChunkMarker, PngColorType, PngPhysicalDims, PngRgb, PngSrgbIntent, PngTextChunk, PngTextKind, PngTimestamp, PngTransparency};
 ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🦀️component.rs:42:    pub phys: Option<PngPhysicalDims>,
 ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🦀️component.rs:165:        phys: Some(PngPhysicalDims { ppu_x: 2835, ppu_y: 2835, unit_is_meter: true }),
@@ -70,7 +70,7 @@
 ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️component.json:19:    "phys": { "$ref": "#/$defs/PngPhysicalDims", "x-semio-state": "artifact" },
 ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️component.json:63:    "PngPhysicalDims": {
 ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🛰️component.proto:20:  optional semio.s_stdio_png.snapshot.PngPhysicalDims phys = 12;
-✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🔣️component.json:19:    "phys": { "$ref": "https://semio.tech/schema/s.stdio.png/snapshot.json#/$defs/PngPhysicalDims", "x-semio-state": "artifact" },
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🔣️component.json:19:    "phys": { "$ref": "https://json.schemas.assets.semio-tech.com/s.stdio.png/snapshot.json#/$defs/PngPhysicalDims", "x-semio-state": "artifact" },
 ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🚪️io/🦀️component.rs:15:    schema::snapshot::{PngBackground, PngChromaticities, PngChunk, PngChunkMarker, PngColorType, PngPhysicalDims, PngRgb, PngSrgbIntent, PngTextChunk, PngTextKind, PngTimestamp, PngTransparency},
 ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🚪️io/🦀️component.rs:587:    let mut phys_out: Option<PngPhysicalDims> = None;
 ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🚪️io/🦀️component.rs:657:            phys_out = Some(PngPhysicalDims { ppu_x: u32::from_be_bytes([chunk[0], chunk[1], chunk[2], chunk[3]]), ppu_y: u32::from_be_bytes([chunk[4], chunk[5], chunk[6], chunk[7]]), unit_is_meter: chunk[8] == 1 });

@@ -1,64 +1,64 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/cad/cad/mutations.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/cad/cad/mutations.json",
   "title": "CadMutation",
   "oneOf": [
     {
-      "$ref": "https://semio.tech/schema/s/cad/cad/mutation/change-reference-hidden/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/cad/cad/mutation/change-reference-hidden/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/cad/cad/mutation/change-reference-locked/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/cad/cad/mutation/change-reference-locked/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/cad/cad/mutation/change-reference-width/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/cad/cad/mutation/change-reference-width/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/cad/cad/mutation/create-building-model/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/cad/cad/mutation/create-building-model/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/cad/cad/mutation/create-drawing/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/cad/cad/mutation/create-drawing/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/cad/cad/mutation/create-energy-model/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/cad/cad/mutation/create-energy-model/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/cad/cad/mutation/create-node/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/cad/cad/mutation/create-node/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/cad/cad/mutation/create-shape-model/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/cad/cad/mutation/create-shape-model/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/cad/cad/mutation/create-structure-classic-model/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/cad/cad/mutation/create-structure-classic-model/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/cad/cad/mutation/delete-building-model/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/cad/cad/mutation/delete-building-model/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/cad/cad/mutation/delete-drawing/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/cad/cad/mutation/delete-drawing/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/cad/cad/mutation/delete-energy-model/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/cad/cad/mutation/delete-energy-model/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/cad/cad/mutation/delete-node/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/cad/cad/mutation/delete-node/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/cad/cad/mutation/delete-shape-model/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/cad/cad/mutation/delete-shape-model/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/cad/cad/mutation/delete-structure-classic-model/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/cad/cad/mutation/delete-structure-classic-model/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/cad/cad/mutation/move-reference/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/cad/cad/mutation/move-reference/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/cad/cad/mutation/rename-node/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/cad/cad/mutation/rename-node/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/cad/cad/mutation/replace-reference-media/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/cad/cad/mutation/replace-reference-media/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/cad/cad/mutation/replace-references/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/cad/cad/mutation/replace-references/schema.json"
     }
   ]
 }

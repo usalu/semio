@@ -1,14 +1,14 @@
 # WP4 — `hub.local-bootstrap`, `hub.lag-rebootstrap`, `hub.auth`, `hub.admin`
 
 Scope-owned schema modules for the four owner directories assigned to this work package. All four
-modules are draft-07, carry a `https://semio.tech/schema/hub/<scope>/schema.json` `$id`, and expose
+modules are draft-07, carry a `https://json.schemas.assets.semio-tech.com/hub/<scope>/schema.json` `$id`, and expose
 their contracts as PascalCase `$defs` export ids (lower-camel `$defs` keys are private helpers).
 Every fixture-owned `*.schema.json` inside these scopes is deleted; the fixture files stay as data.
 
 ## A. Scope → export tables
 
 ### `hub.local-bootstrap` — `🌎️hub/🚀️local-bootstrap/🧬️schema/🔣️.json`
-`$id` `https://semio.tech/schema/hub/local-bootstrap/schema.json`, root `$ref` `LocalBootstrapPipeV1`.
+`$id` `https://json.schemas.assets.semio-tech.com/hub/local-bootstrap/schema.json`, root `$ref` `LocalBootstrapPipeV1`.
 
 | Export id | Source it was consolidated from | Implementation it mirrors |
 |---|---|---|
@@ -29,7 +29,7 @@ Private helpers: `hex16`, `hex32`, `boundedId`, `clientClass`, `safeInteger`, `g
 `readyComponent`, `authenticated` (the signed-envelope base the five authenticated messages `allOf`).
 
 ### `hub.lag-rebootstrap` — `🌎️hub/🛰️lag-rebootstrap/🧬️schema/🔣️.json` (new)
-`$id` `https://semio.tech/schema/hub/lag-rebootstrap/schema.json`, root `$ref` `CanonicalCheckpointPairSelectionV1`.
+`$id` `https://json.schemas.assets.semio-tech.com/hub/lag-rebootstrap/schema.json`, root `$ref` `CanonicalCheckpointPairSelectionV1`.
 
 | Export id | Source | Implementation it mirrors |
 |---|---|---|
@@ -44,7 +44,7 @@ Private helpers: `hex16`, `hex32`, `boundedId`, `clientClass`, `safeInteger`, `g
 Private helpers: `hash`, `scopeText`, `safeInteger`.
 
 ### `hub.auth` — `🌎️hub/🔐️auth/🧬️schema/🔣️.json`
-`$id` `https://semio.tech/schema/hub/auth/schema.json` (was `…/hub/auth/capability-v1.json`,
+`$id` `https://json.schemas.assets.semio-tech.com/hub/auth/schema.json` (was `…/hub/auth/capability-v1.json`,
 dialect 2020-12), root `$ref` `AuthCapabilityVectorsV1`.
 
 | Export id | Was `$defs` key | Implementation it mirrors |
@@ -63,7 +63,7 @@ Private helpers (renamed from PascalCase so they are not exports): `lowerHex32`,
 `share` 106) instead of the previous single 107 bound on socket only — verified against the fixture.
 
 ### `hub.admin` — `🌎️hub/🔨️modules/🛡️admin/🧬️schema/🔣️.json` (new)
-`$id` `https://semio.tech/schema/hub/admin/schema.json`, root `$ref` `AdminEntryGraphV1`.
+`$id` `https://json.schemas.assets.semio-tech.com/hub/admin/schema.json`, root `$ref` `AdminEntryGraphV1`.
 
 | Export id | Source (fixture-owned schema, deleted) | Implementation it mirrors |
 |---|---|---|
@@ -142,10 +142,10 @@ lane must not load (a direct `await import` of it did not finish inside 120 s).
 
 ```
 $ cd /Users/ueli/Documents/semio && bun -e '<four-module load + fixture-member validation>'
-hub.local-bootstrap | https://semio.tech/schema/hub/local-bootstrap/schema.json | exports: LocalBootstrapProfileV1, LocalBootstrapPipeInitializeV1, LocalBootstrapPipeHelloV1, LocalBootstrapPipeHelloAcceptedV1, LocalBootstrapPipeIssueV1, LocalBootstrapPipeRejectV1, LocalBootstrapPipeCancelV1, LocalBootstrapPipeShutdownV1, LocalBootstrapPipeV1, LocalBootstrapCredentialEnvelopeV1, LocalBootstrapReadinessV1, LocalBootstrapIdleAdmissionV1
-hub.lag-rebootstrap | https://semio.tech/schema/hub/lag-rebootstrap/schema.json | exports: CanonicalCheckpointPairBaselineV1, CanonicalCheckpointPairBlobV1, CanonicalCheckpointPairSelectionV1, CanonicalCheckpointPairLimitsV1, CanonicalPairPartV1, CanonicalPairTerminalV1, RebootstrapTransferLimitsV1
-hub.auth | https://semio.tech/schema/hub/auth/schema.json | exports: InviteCapabilityV1, SessionCapabilityV1, ShareCapabilityV1, SocketGrantCapabilityV1, SocketGrantReceiptV1, AuthLimitsV1, AuthCapabilityVectorsV1
-hub.admin | https://semio.tech/schema/hub/admin/schema.json | exports: AdminEntryGraphV1, AdminStylesheetGraphV1
+hub.local-bootstrap | https://json.schemas.assets.semio-tech.com/hub/local-bootstrap/schema.json | exports: LocalBootstrapProfileV1, LocalBootstrapPipeInitializeV1, LocalBootstrapPipeHelloV1, LocalBootstrapPipeHelloAcceptedV1, LocalBootstrapPipeIssueV1, LocalBootstrapPipeRejectV1, LocalBootstrapPipeCancelV1, LocalBootstrapPipeShutdownV1, LocalBootstrapPipeV1, LocalBootstrapCredentialEnvelopeV1, LocalBootstrapReadinessV1, LocalBootstrapIdleAdmissionV1
+hub.lag-rebootstrap | https://json.schemas.assets.semio-tech.com/hub/lag-rebootstrap/schema.json | exports: CanonicalCheckpointPairBaselineV1, CanonicalCheckpointPairBlobV1, CanonicalCheckpointPairSelectionV1, CanonicalCheckpointPairLimitsV1, CanonicalPairPartV1, CanonicalPairTerminalV1, RebootstrapTransferLimitsV1
+hub.auth | https://json.schemas.assets.semio-tech.com/hub/auth/schema.json | exports: InviteCapabilityV1, SessionCapabilityV1, ShareCapabilityV1, SocketGrantCapabilityV1, SocketGrantReceiptV1, AuthLimitsV1, AuthCapabilityVectorsV1
+hub.admin | https://json.schemas.assets.semio-tech.com/hub/admin/schema.json | exports: AdminEntryGraphV1, AdminStylesheetGraphV1
 ---- fixture members ----
 accepted contract members: 34/34
   rejected selection-unknown-member -> unknown-member
@@ -338,7 +338,7 @@ still need a compiled binary or a browser:
    `ArtifactFrontier` / `PublishedArtifactBlob` / `RebootstrapRequired` structs live in
    `🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🦀️.rs` (scope `os.directory`), not
    here. Once `os.directory` publishes its module these two exports should become cross-scope
-   `$ref`s to `https://semio.tech/schema/os/directory/schema.json#/$defs/ArtifactFrontierV1` and
+   `$ref`s to `https://json.schemas.assets.semio-tech.com/os/directory/schema.json#/$defs/ArtifactFrontierV1` and
    `…/PublishedArtifactBlobV1`, and `CanonicalCheckpointPairBaselineV1`/`CanonicalCheckpointPairBlobV1`
    should be retired. I did not duplicate an `ArtifactFrontierV1` export id here to avoid two owners
    for one shape.

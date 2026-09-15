@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/framework/os/spr/fixtures/mutation-laws/mutations.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/os/spr/fixtures/mutation-laws/mutations.json",
   "oneOf": [
     {
       "type": "object",
@@ -9,7 +9,7 @@
           "const": "addCounter"
         },
         "payload": {
-          "$ref": "https://semio.tech/schema/framework/os/spr/fixtures/mutation-laws/mutation/add-counter/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/framework/os/spr/fixtures/mutation-laws/mutation/add-counter/schema.json"
         }
       },
       "required": [
@@ -25,7 +25,7 @@
           "const": "addMissingCounter"
         },
         "payload": {
-          "$ref": "https://semio.tech/schema/framework/os/spr/fixtures/mutation-laws/mutation/add-missing-counter/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/framework/os/spr/fixtures/mutation-laws/mutation/add-missing-counter/schema.json"
         }
       },
       "required": [
@@ -41,7 +41,7 @@
           "const": "addUncheckedCounter"
         },
         "payload": {
-          "$ref": "https://semio.tech/schema/framework/os/spr/fixtures/mutation-laws/mutation/add-unchecked-counter/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/framework/os/spr/fixtures/mutation-laws/mutation/add-unchecked-counter/schema.json"
         }
       },
       "required": [
@@ -57,7 +57,7 @@
           "const": "addObservedCounter"
         },
         "payload": {
-          "$ref": "https://semio.tech/schema/framework/os/spr/fixtures/mutation-laws/mutation/add-observed-counter/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/framework/os/spr/fixtures/mutation-laws/mutation/add-observed-counter/schema.json"
         }
       },
       "required": [
@@ -73,7 +73,7 @@
           "const": "addRejectedCounter"
         },
         "payload": {
-          "$ref": "https://semio.tech/schema/framework/os/spr/fixtures/mutation-laws/mutation/add-rejected-counter/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/framework/os/spr/fixtures/mutation-laws/mutation/add-rejected-counter/schema.json"
         }
       },
       "required": [

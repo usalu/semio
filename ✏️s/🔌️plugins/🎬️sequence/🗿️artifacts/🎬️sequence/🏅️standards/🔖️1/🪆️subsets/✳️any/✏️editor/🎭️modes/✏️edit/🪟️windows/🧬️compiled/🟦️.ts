@@ -1,5 +1,5 @@
 /** 🧬️ Sequence editor — Compiled window: typed twin of `🦀️.rs`'s view-model. Mirrors the
- * window's `render(fixture: &SequenceSnapshot)` boundary — the read-only compiled DAG wire literal,
+ * window's `render(snapshot: &SequenceSnapshot)` boundary — the read-only compiled DAG wire literal,
  * independent of window config and transient records. */
 
 /** ✏️ The Compiled window's typed view-model — mirrors the Rust `render()` boundary's inputs. */

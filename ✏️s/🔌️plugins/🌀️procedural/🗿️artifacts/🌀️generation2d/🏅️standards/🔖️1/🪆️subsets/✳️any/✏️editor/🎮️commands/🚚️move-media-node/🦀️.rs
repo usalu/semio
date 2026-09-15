@@ -17,7 +17,7 @@ pub struct MoveMediaNode {
 }
 
 pub fn handle(payload: &MoveMediaNode, doc: &ArtifactView<'_, Generation2dSnapshot>, _cfg: &ConfigView<'_, Generation2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Generation2dMutation, Generation2dConfigMutation>, Fault> {
-    let fixture = &doc.snapshot.host_document;
+    let fixture = &doc.snapshot.host_snapshot;
     Ok(Emit::mutations(host_operations(fixture, |host| {
         let _ = host.move_widget(&payload.node_id, payload.x, payload.y);
     })))

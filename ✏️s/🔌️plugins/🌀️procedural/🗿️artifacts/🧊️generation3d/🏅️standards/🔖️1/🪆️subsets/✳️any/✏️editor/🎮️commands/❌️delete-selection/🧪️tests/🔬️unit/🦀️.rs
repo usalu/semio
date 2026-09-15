@@ -12,15 +12,15 @@ async fn delete_selection_removes_the_framework_owned_graph_selection_from_the_f
     let mut app = app_with_registry().await;
     {
         let before = context::snapshot(&app);
-        assert!(before.host_document.widgets.iter().any(|widget| widget_id(widget) == "extrude"), "the default fixture owns the extrude widget");
-        assert!(before.host_document.synapses.iter().any(|synapse| synapse.from == "extrude" || synapse.to == "extrude"), "the extrude widget is wired, so its removal must prune synapses too");
+        assert!(before.host_snapshot.widgets.iter().any(|widget| widget_id(widget) == "extrude"), "the default fixture owns the extrude widget");
+        assert!(before.host_snapshot.synapses.iter().any(|synapse| synapse.from == "extrude" || synapse.to == "extrude"), "the extrude widget is wired, so its removal must prune synapses too");
     }
     context::select_graph(&mut app, "node", &["extrude"]).await;
     dispatch(&mut app, Generation3dCommand::DeleteSelection(DeleteSelection {})).await;
     {
         let after = context::snapshot(&app);
-        assert!(!after.host_document.widgets.iter().any(|widget| widget_id(widget) == "extrude"), "the selected widget survived its own delete");
-        assert!(!after.host_document.synapses.iter().any(|synapse| synapse.from == "extrude" || synapse.to == "extrude"), "a dangling synapse survived the delete");
+        assert!(!after.host_snapshot.widgets.iter().any(|widget| widget_id(widget) == "extrude"), "the selected widget survived its own delete");
+        assert!(!after.host_snapshot.synapses.iter().any(|synapse| synapse.from == "extrude" || synapse.to == "extrude"), "a dangling synapse survived the delete");
     }
     semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
 }
@@ -31,8 +31,8 @@ async fn delete_selection_removes_the_framework_owned_graph_selection_from_the_f
 async fn delete_selection_with_an_empty_graph_selection_removes_nothing() {
     let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
     let mut app = app().await;
-    let before = context::snapshot(&app).host_document.widgets.len();
+    let before = context::snapshot(&app).host_snapshot.widgets.len();
     assert!(before > 0, "the default fixture must not be empty or the law is vacuous");
     dispatch(&mut app, Generation3dCommand::DeleteSelection(DeleteSelection {})).await;
-    assert_eq!(context::snapshot(&app).host_document.widgets.len(), before);
+    assert_eq!(context::snapshot(&app).host_snapshot.widgets.len(), before);
 }

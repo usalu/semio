@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/ply/1.0/any/artifact.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/ply/1.0/any/artifact.json",
   "title": "PlyArtifact",
   "type": "object",
   "required": [
@@ -33,7 +33,7 @@
     "elements": {
       "type": "array",
       "items": {
-        "$ref": "https://semio.tech/schema/s/stdio/ply/1.0/any/snapshot.json#/$defs/PlyElement"
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/ply/1.0/any/snapshot.json#/$defs/PlyElement"
       },
       "x-semio-state": "artifact"
     }

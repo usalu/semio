@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/sourcing/curation/snapshot.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/sourcing/curation/snapshot.json",
   "title": "CurationSnapshot",
   "type": "object",
   "additionalProperties": false,
@@ -11,21 +11,21 @@
   ],
   "properties": {
     "catalog": {
-      "$ref": "https://semio.tech/schema/s/stdio/semio/v1/base/child.json#/$defs/kit",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/base/child.json#/$defs/kit",
       "x-semio-state": "artifact",
       "x-semio-child": "s.stdio.semio"
     },
     "stockExtra": {
       "type": "array",
       "items": {
-        "$ref": "https://semio.tech/schema/s/sourcing/curation/artifact.json#/$defs/ObjectKindExtra"
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/sourcing/curation/artifact.json#/$defs/ObjectKindExtra"
       },
       "x-semio-state": "artifact"
     },
     "curated": {
       "type": "array",
       "items": {
-        "$ref": "https://semio.tech/schema/s/sourcing/curation/artifact.json#/$defs/CuratedItem"
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/sourcing/curation/artifact.json#/$defs/CuratedItem"
       },
       "x-semio-state": "artifact"
     }

@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/semio/v1/mesh/mutation/change-material-base-color/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/mesh/mutation/change-material-base-color/schema.json",
   "title": "ChangeMaterialBaseColor",
   "type": "object",
   "additionalProperties": false,

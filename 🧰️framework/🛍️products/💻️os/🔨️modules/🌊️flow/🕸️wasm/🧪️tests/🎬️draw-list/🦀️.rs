@@ -8,11 +8,11 @@ const GENERATION_3D_FLOW_FIXTURE: &str = include_str!("../../🧫️fixtures/�
 
 fn generation_3d_flow_host() -> FlowHost {
     let payload: Value = serde_json::from_str(GENERATION_3D_FLOW_FIXTURE).expect("generation3d flow fixture");
-    let fixture = FlowHost::parse_host_document_json(&payload["hostDocument"].to_string()).expect("parsed flow host document");
-    FlowHost::from_host_document(fixture)
+    let fixture = FlowHost::parse_host_snapshot_json(&payload["hostSnapshot"].to_string()).expect("parsed flow host document");
+    FlowHost::from_host_snapshot(fixture)
 }
 
-/// 🧹️ `FlowHostDocument`'s ordered maps refuse to drop unretired (they panic inside the value layer), so
+/// 🧹️ `FlowHostSnapshot`'s ordered maps refuse to drop unretired (they panic inside the value layer), so
 /// every lane that builds a real host must walk it through the same retirement ladder the session
 /// close walks — see `FlowDomainAdapter::close_step`.
 fn retire(host: FlowHost) {
@@ -41,8 +41,8 @@ fn the_generation_3d_flow_window_paints_a_scene_that_survives_encoding() {
     let payload: Value = serde_json::from_str(GENERATION_3D_FLOW_FIXTURE).expect("generation3d flow fixture");
     let expect = &payload["provenance"]["expect"];
     let host = generation_3d_flow_host();
-    assert_eq!(host.host_document.widgets.len(), expect["widgets"].as_u64().expect("widget count") as usize);
-    assert_eq!(host.host_document.synapses.len(), expect["synapses"].as_u64().expect("synapse count") as usize);
+    assert_eq!(host.host_snapshot.widgets.len(), expect["widgets"].as_u64().expect("widget count") as usize);
+    assert_eq!(host.host_snapshot.synapses.len(), expect["synapses"].as_u64().expect("synapse count") as usize);
     retire(host);
 
     let (bytes, encoded) = generation_3d_draw_list(966, 814);
@@ -79,8 +79,8 @@ fn moving_the_camera_moves_the_encoded_picture() {
 fn render_frame_carries_the_draw_list_the_host_must_paint() {
     let mut adapter = FlowDomainAdapter::default();
     let payload: Value = serde_json::from_str(GENERATION_3D_FLOW_FIXTURE).expect("generation3d flow fixture");
-    let fixture = FlowHost::parse_host_document_json(&payload["hostDocument"].to_string()).expect("parsed flow host document");
-    let FlowDomainHost::Open(empty) = std::mem::replace(&mut adapter.host, FlowDomainHost::Open(FlowHost::from_host_document(fixture))) else { panic!("open flow host") };
+    let fixture = FlowHost::parse_host_snapshot_json(&payload["hostSnapshot"].to_string()).expect("parsed flow host document");
+    let FlowDomainHost::Open(empty) = std::mem::replace(&mut adapter.host, FlowDomainHost::Open(FlowHost::from_host_snapshot(fixture))) else { panic!("open flow host") };
     retire(empty);
     adapter.width = 966;
     adapter.height = 814;
@@ -98,7 +98,7 @@ fn render_frame_carries_the_draw_list_the_host_must_paint() {
     assert_eq!(frame["draw"]["version"], Value::from(canvas::draw_list::DRAW_LIST_VERSION));
     assert!(!frame["draw"]["commands"].as_array().expect("commands").is_empty(), "render_frame dropped the scene it painted");
     assert_eq!(frame["clear"].as_array().expect("clear colour").len(), 4, "the replayer needs the host's own clear colour");
-    assert!(frame["hostDocument"]["widgets"].as_array().expect("widgets").len() == 7, "the fixture half of the frame must survive the change");
+    assert!(frame["hostSnapshot"]["widgets"].as_array().expect("widgets").len() == 7, "the fixture half of the frame must survive the change");
     assert!(frame["labels"].is_object(), "the label overlay half of the frame must survive the change");
     adapter.surface = None;
     let FlowDomainHost::Open(host) = std::mem::replace(&mut adapter.host, FlowDomainHost::Closed) else { panic!("open flow host") };
@@ -167,8 +167,8 @@ fn without_a_gpu_adapter_the_frame_replays_a_list_that_covers_the_node_layout() 
     let (width, height) = (966_u32, 814_u32);
     let mut adapter = FlowDomainAdapter::default();
     let payload: Value = serde_json::from_str(GENERATION_3D_FLOW_FIXTURE).expect("generation3d flow fixture");
-    let fixture = FlowHost::parse_host_document_json(&payload["hostDocument"].to_string()).expect("parsed flow host document");
-    let FlowDomainHost::Open(empty) = std::mem::replace(&mut adapter.host, FlowDomainHost::Open(FlowHost::from_host_document(fixture))) else { panic!("open flow host") };
+    let fixture = FlowHost::parse_host_snapshot_json(&payload["hostSnapshot"].to_string()).expect("parsed flow host document");
+    let FlowDomainHost::Open(empty) = std::mem::replace(&mut adapter.host, FlowDomainHost::Open(FlowHost::from_host_snapshot(fixture))) else { panic!("open flow host") };
     retire(empty);
     adapter.width = width;
     adapter.height = height;
@@ -199,7 +199,7 @@ fn without_a_gpu_adapter_the_frame_replays_a_list_that_covers_the_node_layout() 
 
     // 🎯️ Every node the host reports as on screen must have something drawn at its own screen rect:
     // that is what makes this a CAMERA law and not just a "the list is long" law.
-    let widgets = frame["hostDocument"]["widgets"].as_array().expect("widgets").clone();
+    let widgets = frame["hostSnapshot"]["widgets"].as_array().expect("widgets").clone();
     let mut covered = 0_usize;
     for widget in &widgets {
         let id = widget["id"].as_str().expect("widget id");
@@ -256,7 +256,7 @@ fn the_generation_3d_document_camera_does_not_frame_its_own_graph_and_loses_to_t
 
     // 🎯️ Not "a number came out right": every widget the host can place has to land inside the pane.
     let mut on_screen = 0_usize;
-    for widget in host.host_document.widgets.iter() {
+    for widget in host.host_snapshot.widgets.iter() {
         let id = semio_framework_artifact_flow_flow::widget_id_for(widget).to_string();
         let geometry: Value = serde_json::from_str(&host.entity_screen_json("node", &id)).expect("entity screen json");
         assert_eq!(geometry["visible"], Value::Bool(true), "{id} is not even placed");

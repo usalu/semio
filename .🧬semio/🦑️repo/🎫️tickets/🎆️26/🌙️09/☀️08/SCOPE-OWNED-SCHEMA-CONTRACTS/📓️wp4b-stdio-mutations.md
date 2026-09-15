@@ -62,7 +62,7 @@ $ grep -rn 'schema/s/stdio' --include='*.json' --include='*.ts' --include='*.rs'
 Every hit outside a `🧬️mutations` tree is a `"$id"` **declaration** of some other stdio document
 (`🧬️schema/🔣️.json`, `📇️registry`, the `💡️inferences` facets), never a `"$ref"`. The single absolute
 `$ref` anywhere in stdio is
-`🧊️gltf/…/🚪️io/💡️inferences/📝️text/🔣️.json:13 → https://semio.tech/schema/s/stdio/gltf/inference.json`,
+`🧊️gltf/…/🚪️io/💡️inferences/📝️text/🔣️.json:13 → https://json.schemas.assets.semio-tech.com/s/stdio/gltf/inference.json`,
 which targets an inference facet, not a mutation leaf. A second sweep with no `--include` filter for the
 old id shape (`stdio.*mutation/<kebab>.json`) returned 791 files, **all** of them inside a
 `🧬️mutations` tree, i.e. the leaves' own `$id` lines. **No cross-partition request is needed for row 45.**
@@ -185,8 +185,8 @@ one Ajv instance, not filesystem resolution).
 
 ### 5.2 `mutation-leaf-id-grammar=491` — the tooling's grammar is not row 45's
 
-> `$id "https://semio.tech/schema/s/stdio/las/1.0/header/mutation/set-point/schema.json"`
-> `must be "https://semio.tech/schema/s.stdio.las/mutation/set-point/schema.json"`
+> `$id "https://json.schemas.assets.semio-tech.com/s/stdio/las/1.0/header/mutation/set-point/schema.json"`
+> `must be "https://json.schemas.assets.semio-tech.com/s.stdio.las/mutation/set-point/schema.json"`
 
 The live check expects the **dotted artifact-level** scope id `s.stdio.las`; row 45 dispatched the
 **slash subset-level** scope path `s/stdio/las/1.0/header`. I followed row 45, which is the later and
@@ -197,8 +197,8 @@ The check's own grammar is **not injective over this partition**:
 ```
 915 stdio leaves → 766 distinct ids under s.stdio.<artifact>/mutation/<kind>/schema.json
                    80 colliding ids covering 229 leaves
-   e.g. 5 × https://semio.tech/schema/s.stdio.ifc/mutation/set-snapshot/schema.json
-        3 × https://semio.tech/schema/s.stdio.svg/mutation/set-transform/schema.json
+   e.g. 5 × https://json.schemas.assets.semio-tech.com/s.stdio.ifc/mutation/set-snapshot/schema.json
+        3 × https://json.schemas.assets.semio-tech.com/s.stdio.svg/mutation/set-transform/schema.json
 ```
 
 Dropping `<standard>/<subset>` merges `ifc` 2x3-base with 4-any, `svg` 1.1's three subsets, `pdf`'s five
@@ -285,7 +285,7 @@ un-annotated enum" and moves no variant name.
      without `rename_all` are **enums** and must be excluded — on an enum the attribute re-cases variant
      names, which for eight of them is the external aggregate key and for six is a glTF spec constant.
 7. **Nobody owns the stdio non-mutation `$id`s.** `💡️inferences` facet documents across stdio declare
-   ids like `https://semio.tech/schema/s/stdio/bcf/inference.json` and
+   ids like `https://json.schemas.assets.semio-tech.com/s/stdio/bcf/inference.json` and
    `…/s/stdio/ifc/2x3/inference.json` — an artifact-level path with standard and subset dropped or
    half-dropped, matching neither grammar in §5.2. Outside my partition; flagged so it is not mistaken
    for settled. `schema check` reports 415 `document-dialect-unexpected` and 189

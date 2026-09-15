@@ -64,7 +64,7 @@ touched besides the 312 themselves.
 The exact same boilerplate contamination exists in the **non-`.ts` sibling files** in these same
 directories — e.g.
 `✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599/…/📸️snapshot/📝️text/🔣️component.json` still has
-`"$id": "https://semio.tech/schema/stdio.json/snapshot/text.json"` and `"title": "JsonSnapshotText"`.
+`"$id": "https://json.schemas.assets.semio-tech.com/stdio.json/snapshot/text.json"` and `"title": "JsonSnapshotText"`.
 The ticket's grep and scope were `.ts`-only, so these were left as-is and flagged as a background
 task (see below) rather than fixed here.
 

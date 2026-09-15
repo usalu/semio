@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/png/1.2/any/mutation/change-chromaticities/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/png/1.2/any/mutation/change-chromaticities/schema.json",
   "title": "ChangeChromaticitiesMutation",
   "type": "object",
   "additionalProperties": false,

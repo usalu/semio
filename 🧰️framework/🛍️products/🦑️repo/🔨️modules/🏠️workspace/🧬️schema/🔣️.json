@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://semio.tech/schema/repo/workspace/1",
+  "$id": "https://json.schemas.assets.semio-tech.com/repo/workspace/1",
   "title": "🏠️ Repo workspace fixtures and wire shapes",
   "description": "🏠️ The three vector files the workspace cases read, and the projections every implementation of root discovery, layout, config, glob matching and ignore matching must produce.",
   "$defs": {

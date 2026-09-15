@@ -452,5 +452,5 @@ fn every_job_supersession_row_lets_only_the_owning_job_quiesce_the_sessions() {
 fn a_preview_eval_digest_separates_its_parts() {
     assert_eq!(preview_eval_digest(&["a", "b"]), preview_eval_digest(&["a", "b"]));
     assert_ne!(preview_eval_digest(&["ab", ""]), preview_eval_digest(&["a", "b"]));
-    assert_ne!(preview_eval_digest(&["fixture", "g1"]), preview_eval_digest(&["fixture", "g2"]));
+    assert_ne!(preview_eval_digest(&["hostSnapshot", "g1"]), preview_eval_digest(&["hostSnapshot", "g2"]));
 }

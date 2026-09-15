@@ -3031,6 +3031,10 @@ pub(crate) struct FillRevalidateJob {
     cursor: usize,
     phase: FillRevalidatePhase,
     ops: Vec<ToolRunTraceOp>,
+    /// 👁️ The one placement under revalidation still on screen: the next placement's test retires it and the finish retires
+    /// the last, so a finalize never leaves a verdict mesh over every committed object (the one-candidate rule of
+    /// [`FillRunJob`]).
+    shown: Option<u64>,
     steps: Vec<ToolRunStep>,
     sequence: u64,
     page: u32,
@@ -3055,6 +3059,7 @@ impl FillRevalidateJob {
             cursor: 0,
             phase: FillRevalidatePhase::PrepareHead,
             ops: Vec::new(),
+            shown: None,
             steps: Vec::new(),
             sequence: first_sequence,
             page: 0,
@@ -3178,6 +3183,9 @@ impl FillRevalidateJob {
 
     fn finish(&mut self, context: &mut StepContext<'_>) -> StepOutcome {
         self.phase = FillRevalidatePhase::Done;
+        if let Some(previous) = self.shown.take() {
+            self.ops.push(ToolRunTraceOp::Retire { key: previous });
+        }
         let Some(first) = self.conflicts.iter().position(|conflict| *conflict) else {
             return self.flush(context, None);
         };
@@ -3234,11 +3242,15 @@ impl InteractiveJob for FillRevalidateJob {
                     };
                     let (key, subject) = (placement.key, placement.subject);
                     if self.pair_cursor == 0 && self.collision.is_none() {
+                        if let Some(previous) = self.shown.take().filter(|previous| *previous != key) {
+                            self.ops.push(ToolRunTraceOp::Retire { key: previous });
+                        }
                         self.ops.push(ToolRunTraceOp::Upsert { key, verdict: ToolRunVerdict::Testing, reason: FillRunReason::Fits.code(), subject });
                     }
                     if let Some(conflict) = self.test_placement_unit(context) {
                         let (verdict, reason) = if conflict { (ToolRunVerdict::Danger, TOOL_RUN_REASON_CONFLICT) } else { (ToolRunVerdict::Success, FillRunReason::Fits.code()) };
                         self.ops.push(ToolRunTraceOp::Upsert { key, verdict, reason, subject });
+                        self.shown = Some(key);
                         self.conflicts.push(conflict);
                         self.cursor += 1;
                         self.pair_cursor = 0;

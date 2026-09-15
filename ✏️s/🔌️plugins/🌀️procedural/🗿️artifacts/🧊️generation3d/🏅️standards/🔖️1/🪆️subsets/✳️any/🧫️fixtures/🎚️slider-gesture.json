@@ -1,0 +1,85 @@
+{
+  "$comment": "🎚️ What a dragged inline slider costs, as rows. A press is a run of `setSlider` sub-operations carrying ONE gesture id; the document must end on the value the user released on, and the whole press must fold into ONE undoable edit. Language-agnostic: the Rust law is `✏️editor/🎮️commands/✏️node-graph-edit/🧪️tests/🔬️unit`, the host half's twin is `📺️renderer/🧑‍🎨engine/🧪️tests/🎚️continuous-gesture-lane`. See `📓️slider-preview-update-2026-09-15.md`.",
+  "schema": "s.procedural.generation3d.slider-gesture/v1",
+  "coalescing": [
+    {
+      "row": "one-press-folds-into-one-edit",
+      "why": "a 1 s drag produced 29 history entries and 24 evaluations before this rule",
+      "dispatches": [
+        { "operations": [{ "operation": "setSlider", "widgetId": "height", "value": 6.5, "gesture": "g1", "commit": false }] },
+        { "operations": [{ "operation": "setSlider", "widgetId": "height", "value": 7.5, "gesture": "g1", "commit": false }] },
+        { "operations": [{ "operation": "setSlider", "widgetId": "height", "value": 9.0, "gesture": "g1", "commit": true }] }
+      ],
+      "coalesceKeys": ["graph-slider:g1", "graph-slider:g1", "graph-slider:g1"],
+      "finalValue": 9.0,
+      "undoableEdits": 1
+    },
+    {
+      "row": "a-second-press-is-a-second-edit",
+      "why": "keying on the widget alone would swallow every later press of that slider into one undo step",
+      "dispatches": [
+        { "operations": [{ "operation": "setSlider", "widgetId": "height", "value": 8.0, "gesture": "g1", "commit": true }] },
+        { "operations": [{ "operation": "setSlider", "widgetId": "height", "value": 3.0, "gesture": "g2", "commit": true }] }
+      ],
+      "coalesceKeys": ["graph-slider:g1", "graph-slider:g2"],
+      "finalValue": 3.0,
+      "undoableEdits": 2
+    },
+    {
+      "row": "a-slider-edit-with-no-press-identity-is-its-own-edit",
+      "why": "an anonymous amend would fold into whatever edit happens to be last",
+      "dispatches": [{ "operations": [{ "operation": "setSlider", "widgetId": "height", "value": 4.0 }] }],
+      "coalesceKeys": [null],
+      "finalValue": 4.0,
+      "undoableEdits": 1
+    },
+    {
+      "row": "a-mixed-batch-is-a-described-edit",
+      "why": "a press must not swallow a structural edit that rode along with it",
+      "dispatches": [
+        {
+          "operations": [
+            { "operation": "setSlider", "widgetId": "height", "value": 5.0, "gesture": "g3", "commit": false },
+            { "operation": "move", "nodeId": "height", "x": 10.0, "y": 20.0 }
+          ]
+        }
+      ],
+      "coalesceKeys": [null],
+      "finalValue": 5.0,
+      "undoableEdits": 1
+    },
+    {
+      "row": "two-sliders-of-one-batch-fold-only-under-a-shared-press",
+      "why": "a batch spanning two presses has no single identity to fold under",
+      "dispatches": [
+        {
+          "operations": [
+            { "operation": "setSlider", "widgetId": "height", "value": 5.0, "gesture": "g4", "commit": false },
+            { "operation": "setSlider", "widgetId": "radius", "value": 1.5, "gesture": "g5", "commit": false }
+          ]
+        }
+      ],
+      "coalesceKeys": [null],
+      "finalValue": 5.0,
+      "undoableEdits": 1
+    }
+  ],
+  "uiScope": {
+    "$comment": "🐢️ What ONE slider tick invalidates. Everything absent here was re-rendered on every frame of a drag before this rule.",
+    "windowBodies": ["procedural.play.main", "procedural.play.preview"],
+    "panelBodies": ["procedural.play.inspection", "procedural.play.artifact"],
+    "utilities": false,
+    "tools": false,
+    "engagements": false,
+    "measures": false,
+    "labels": false
+  },
+  "liveEvaluations": {
+    "$comment": "🎚️ The host lane's ceiling, asserted by the TypeScript twin over the same numbers: one round trip in flight and one owed value, however fast the user drags.",
+    "offeredValues": 60,
+    "maxInFlight": 1,
+    "maxOwed": 1,
+    "maxLiveRoundTrips": 2,
+    "commitsPerPress": 1
+  }
+}

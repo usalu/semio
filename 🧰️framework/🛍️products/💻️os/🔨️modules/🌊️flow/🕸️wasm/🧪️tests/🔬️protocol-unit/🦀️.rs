@@ -103,8 +103,8 @@ fn open(bridge: &mut FlowBridge<MockDomain>, request_id: u64, generation: u32) -
 fn schema_and_fixtures_publish_every_operation_and_fixed_law() {
     assert!(FLOW_ABI_SCHEMA.contains("\"open\": 2500"));
     assert!(FLOW_ABI_SCHEMA.contains("\"renderDrawingScene\": 2600"));
-    assert!(FLOW_ABI_SCHEMA.contains("\"documentJson\": 2609"));
-    assert!(FLOW_ABI_SCHEMA.contains("\"synchronizeDocumentJson\": 2610"));
+    assert!(FLOW_ABI_SCHEMA.contains("\"snapshotJson\": 2609"));
+    assert!(FLOW_ABI_SCHEMA.contains("\"synchronizeSnapshotJson\": 2610"));
     for operation in (FLOW_OPERATION_FIRST..=FLOW_OPERATION_LAST).filter(|operation| !matches!(operation, 2_603 | 2_604 | 2_608)) {
         assert!(FLOW_ABI_SCHEMA.contains(&format!(": {operation}")));
     }

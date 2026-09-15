@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/wav/riff-pcm/any/snapshot/text.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/wav/riff-pcm/any/snapshot/text.json",
   "title": "WavSnapshotText",
   "description": "🚧 scaffolded by W1b — generic facet mirror.",
   "type": "object",

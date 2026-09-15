@@ -11,7 +11,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 
 use crate::Generation3dSnapshot;
 use semio_framework_artifact_flow_flow::neural::{Atom, Dictionary, Value as NeuralValue};
-use semio_framework_artifact_flow_flow::{CameraJson, FlowHostDocument, SynapseSpec, Widget, WidgetLayout};
+use semio_framework_artifact_flow_flow::{CameraJson, FlowHostSnapshot, SynapseSpec, Widget, WidgetLayout};
 use semio_framework_artifact_playbook_playbook::{FormGeneration, GenerationPlayState};
 use std::collections::BTreeMap;
 
@@ -307,14 +307,14 @@ impl store::ArtifactPack for Generation3dSnapshotDsl {
 //#endregion 🔖️HandcraftedArtifactCodecs
 
 fn generation3d_document_to_dsl(document: &Generation3dSnapshot) -> Generation3dSnapshotDsl {
-    let fixture = &document.host_document;
+    let host_snapshot = &document.host_snapshot;
     let generation = &document.generation;
     Generation3dSnapshotDsl {
-        schema: fixture.schema.clone(),
-        camera: camera_to_dsl(&fixture.camera),
-        widgets: fixture.widgets.iter().map(widget_to_dsl).collect(),
-        synapses: fixture.synapses.iter().map(synapse_to_dsl).collect(),
-        layout: fixture.layout.iter().map(|(id, entry)| (id.clone(), layout_to_dsl(entry))).collect(),
+        schema: host_snapshot.schema.clone(),
+        camera: camera_to_dsl(&host_snapshot.camera),
+        widgets: host_snapshot.widgets.iter().map(widget_to_dsl).collect(),
+        synapses: host_snapshot.synapses.iter().map(synapse_to_dsl).collect(),
+        layout: host_snapshot.layout.iter().map(|(id, entry)| (id.clone(), layout_to_dsl(entry))).collect(),
         selected_generation_id: generation.selected_generation_id.clone(),
         preview_text: generation.preview_text.clone(),
         generations: generation.generations.iter().map(form_generation_to_dsl).collect(),
@@ -326,7 +326,7 @@ fn generation3d_document_from_dsl(parsed: Generation3dSnapshotDsl) -> Result<Gen
     let synapses = parsed.synapses.into_iter().map(synapse_from_dsl).collect();
     let layout = parsed.layout.into_iter().map(|(id, entry)| (id, layout_from_dsl(&entry))).collect();
     Ok(Generation3dSnapshot {
-        fixture: FlowHostDocument { schema: parsed.schema, camera: camera_from_dsl(&parsed.camera), widgets, synapses, layout },
+        host_snapshot: FlowHostSnapshot { schema: parsed.schema, camera: camera_from_dsl(&parsed.camera), widgets, synapses, layout },
         generation: GenerationPlayState { generations: parsed.generations.into_iter().map(form_generation_from_dsl).collect(), selected_generation_id: parsed.selected_generation_id, preview_text: parsed.preview_text }.into(),
     })
 }

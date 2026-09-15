@@ -139,7 +139,7 @@ package semio.s.<plugin_key>.<artifact_key>.<facet>;
 where `<facet>` is `artifact` | `snapshot` | `diff`, e.g. `semio.s.lowpoly.lowpoly.snapshot`.
 
 ```
-"$id": "https://semio.tech/schema/s/<plugin_key>/<artifact_key>/<facet>.json"
+"$id": "https://json.schemas.assets.semio-tech.com/s/<plugin_key>/<artifact_key>/<facet>.json"
 ```
 
 ---
@@ -839,7 +839,7 @@ type LowpolyObject {
 
 ```json
 {
-  "$id": "https://semio.tech/schema/s/lowpoly/lowpoly/artifact.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/lowpoly/lowpoly/artifact.json",
   "title": "LowpolyArtifact",
   "type": "object",
   "additionalProperties": false,
@@ -1553,7 +1553,7 @@ type LowpolyObject {
 
 ```json
 {
-  "$id": "https://semio.tech/schema/s/lowpoly/lowpoly/snapshot.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/lowpoly/lowpoly/snapshot.json",
   "title": "LowpolySnapshot",
   "type": "object",
   "additionalProperties": false,
@@ -2175,7 +2175,7 @@ type LowpolyObject {
 
 ```json
 {
-  "$id": "https://semio.tech/schema/s/lowpoly/lowpoly/diff.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/lowpoly/lowpoly/diff.json",
   "title": "LowpolyDiff",
   "type": "object",
   "additionalProperties": false,

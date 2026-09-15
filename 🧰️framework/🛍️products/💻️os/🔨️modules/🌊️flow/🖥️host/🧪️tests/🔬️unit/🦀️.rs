@@ -9,7 +9,7 @@ use neural::{ChannelSpec as InputSpec, OperatorInfo as NeuronKindInfo};
 use semio_framework_artifact_infinite_dag::DagPreviewContent;
 // 🌿️ The flow ARTIFACT crate's own vcs surface — `crate::vcs` glob-imports it privately, so the
 // undo/redo law names it at its source.
-use semio_framework_artifact_flow_flow::{flow_host_document_operations, FlowEnvelope};
+use semio_framework_artifact_flow_flow::{flow_host_snapshot_operations, FlowEnvelope};
 use std::sync::{Mutex, OnceLock};
 
 const NUMBER_OPS: &[&str] = &["core.number"];
@@ -262,9 +262,9 @@ fn host_with_test_bridge() -> FlowHost {
 }
 
 fn widget_slider_track_screen_point(host: &FlowHost, widget_id: &str) -> (f64, f64) {
-    let node = host.dag.host_document.nodes.iter().find(|n| n.id == widget_id).expect("node");
+    let node = host.dag.host_snapshot.nodes.iter().find(|n| n.id == widget_id).expect("node");
     let (wx, wy) = dag::slider_track_center(node).expect("slider track");
-    let cam = Camera { x: host.host_document.camera.x, y: host.host_document.camera.y, zoom: host.host_document.camera.zoom };
+    let cam = Camera { x: host.host_snapshot.camera.x, y: host.host_snapshot.camera.y, zoom: host.host_snapshot.camera.zoom };
     let viewport = Viewport { width: host.viewport_w, height: host.viewport_h, dpr: host.viewport_dpr };
     let screen = world_to_screen(&cam, &viewport, Point::new(wx, wy));
     (screen.x, screen.y)
@@ -273,14 +273,14 @@ fn widget_slider_track_screen_point(host: &FlowHost, widget_id: &str) -> (f64, f
 #[test]
 fn default_fixture_maps_widgets_to_native_dag_kinds() {
     let host = host_with_test_bridge();
-    let slider = host.dag.host_document.nodes.iter().find(|n| n.id == "slider").expect("slider");
+    let slider = host.dag.host_snapshot.nodes.iter().find(|n| n.id == "slider").expect("slider");
     assert!(matches!(slider.kind, DagNodeKind::Slider { .. }));
     assert_eq!(slider.height, slider_widget_height());
-    let add = host.dag.host_document.nodes.iter().find(|n| n.id == "add").expect("add");
+    let add = host.dag.host_snapshot.nodes.iter().find(|n| n.id == "add").expect("add");
     assert!(matches!(add.kind, DagNodeKind::Computation { .. }));
     assert_eq!(slider.width, add.width, "all components should share one width");
     assert_eq!(slider.width, computation_node_width(&slider.name, &[], &[]));
-    let preview = host.dag.host_document.nodes.iter().find(|n| n.id == "preview").expect("preview");
+    let preview = host.dag.host_snapshot.nodes.iter().find(|n| n.id == "preview").expect("preview");
     assert!(matches!(preview.kind, DagNodeKind::Preview { .. }));
     host.retire_cold();
 }
@@ -390,7 +390,7 @@ fn flow_eval_session_retains_baseline_across_ephemeral_hosts() {
     let mut replay = FlowHost::default();
     replay.set_eval_bridge_fn(Box::new(test_math_bridge));
     replay.set_neuron_kind_infos_json(&test_kind_infos_json());
-    replay.replace_host_document(host.host_document.clone());
+    replay.replace_host_snapshot(host.host_snapshot.clone());
     session.install_baseline_into(&mut replay);
     let pending = replay.pending_eval_widget_ids();
     assert!(pending.contains(&"add".to_string()));
@@ -421,7 +421,7 @@ fn host_with_two_node_chain() -> (FlowHost, String) {
     let pass_id = host.add_widget(r#"{"kind":"neuron","id":"pass","neuronKind":"math.passThrough","params":{},"input_ports":[],"preview":false}"#, 240.0, 0.0).unwrap();
     host.connect_ports("add", "sum", &pass_id, "number").unwrap();
     host.connect_ports(&pass_id, "number", "preview", "").unwrap();
-    let stale_link = host.host_document.synapses.iter().find(|s| s.from == "add" && s.to == "preview").map(|s| s.id.clone());
+    let stale_link = host.host_snapshot.synapses.iter().find(|s| s.from == "add" && s.to == "preview").map(|s| s.id.clone());
     if let Some(id) = stale_link {
         host.disconnect(&id).unwrap();
     }
@@ -590,7 +590,7 @@ fn replay_host_of(host: &FlowHost) -> FlowHost {
     let mut replay = FlowHost::default();
     replay.set_eval_bridge_fn(Box::new(test_math_bridge));
     replay.set_neuron_kind_infos_json(&test_kind_infos_json());
-    replay.replace_host_document(host.host_document.clone());
+    replay.replace_host_snapshot(host.host_snapshot.clone());
     replay
 }
 
@@ -639,7 +639,7 @@ fn counting_replay_host_of(host: &FlowHost, dispatches: &std::sync::Arc<std::syn
         test_math_bridge(kind, input)
     }));
     replay.set_neuron_kind_infos_json(&test_kind_infos_json());
-    replay.replace_host_document(host.host_document.clone());
+    replay.replace_host_snapshot(host.host_snapshot.clone());
     replay
 }
 
@@ -701,7 +701,7 @@ fn connect_ports_allows_fan_out_from_same_output() {
     let mut host = host_with_test_bridge();
     let pass_id = host.add_widget(r#"{"kind":"neuron","id":"pass","neuronKind":"math.passThrough","params":{},"input_ports":[],"preview":false}"#, 120.0, 120.0).unwrap();
     host.connect_ports("add", "sum", &pass_id, "number").unwrap();
-    let fan_out: Vec<_> = host.host_document.synapses.iter().filter(|s| s.from == "add" && s.from_port == "sum").collect();
+    let fan_out: Vec<_> = host.host_snapshot.synapses.iter().filter(|s| s.from == "add" && s.from_port == "sum").collect();
     assert_eq!(fan_out.len(), 2);
     assert!(fan_out.iter().any(|s| s.to == "preview"));
     assert!(fan_out.iter().any(|s| s.to == pass_id));
@@ -711,13 +711,13 @@ fn connect_ports_allows_fan_out_from_same_output() {
 #[test]
 fn connect_ports_replaces_existing_incoming_on_same_input() {
     let mut host = host_with_test_bridge();
-    assert!(host.host_document.synapses.iter().any(|s| s.from == "slider" && s.to == "add" && s.to_port == "a"));
+    assert!(host.host_snapshot.synapses.iter().any(|s| s.from == "slider" && s.to == "add" && s.to_port == "a"));
     let note_id = host.add_widget(r#"{"kind":"inputNote","id":"note","text":"2"}"#, -120.0, 0.0).unwrap();
     host.connect_ports(&note_id, "text", "add", "a").unwrap();
-    let incoming_a: Vec<_> = host.host_document.synapses.iter().filter(|s| s.to == "add" && s.to_port == "a").collect();
+    let incoming_a: Vec<_> = host.host_snapshot.synapses.iter().filter(|s| s.to == "add" && s.to_port == "a").collect();
     assert_eq!(incoming_a.len(), 1);
     assert_eq!(incoming_a[0].from, note_id);
-    assert!(!host.host_document.synapses.iter().any(|s| s.from == "slider" && s.to == "add" && s.to_port == "a"));
+    assert!(!host.host_snapshot.synapses.iter().any(|s| s.from == "slider" && s.to == "add" && s.to_port == "a"));
     host.retire_cold();
 }
 
@@ -887,9 +887,9 @@ fn preview_scalar_content_from_number_dict() {
 fn image_input_seed_and_preview_content() {
     let mut host = host_with_test_bridge();
     let png = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==";
-    host.host_document.widgets.push(Widget::InputImage { id: "image".into(), src: png.into() });
+    host.host_snapshot.widgets.push(Widget::InputImage { id: "image".into(), src: png.into() });
     host.rebuild_dag();
-    let node = host.dag.host_document.nodes.iter().find(|n| n.id == "image").expect("image node");
+    let node = host.dag.host_snapshot.nodes.iter().find(|n| n.id == "image").expect("image node");
     assert!(matches!(node.kind, DagNodeKind::Image { .. }));
     let seeds = host.build_seeds();
     assert_eq!(seeds.get("image").and_then(|d| d.get("image")).and_then(|v| v.as_dictionary()).and_then(|d| d.get("dataUrl")).and_then(|v| v.as_atom()).and_then(|a| a.as_str()), Some(png));
@@ -921,7 +921,7 @@ fn slider_drag_does_not_evaluate_until_explicit_evaluate() {
 fn dag_slider_drag_syncs_fixture_value() {
     let mut host = host_with_test_bridge();
     host.set_viewport(800, 600, 1.0);
-    let slider_node = host.dag.host_document.nodes.iter().find(|n| n.id == "slider").expect("slider").clone();
+    let slider_node = host.dag.host_snapshot.nodes.iter().find(|n| n.id == "slider").expect("slider").clone();
     let DagNodeKind::Slider { .. } = slider_node.kind else {
         panic!("expected slider kind");
     };
@@ -930,11 +930,11 @@ fn dag_slider_drag_syncs_fixture_value() {
     host.pointer_move_screen(sx + 80.0, sy, false, false, false);
     host.pointer_up_screen(sx + 80.0, sy, false, false, false);
     let value = host
-        .fixture
+        .host_snapshot
         .widgets
         .iter()
         .find_map(|w| match w {
-            Widget::InputSlider { id, value, .. } if id == "slider" => Some(*value),
+            Widget::InputSlider { id, value, .. } if id.as_str() == "slider" => Some(*value),
             _ => None,
         })
         .unwrap();
@@ -945,7 +945,7 @@ fn dag_slider_drag_syncs_fixture_value() {
 /// 📐️ A world point projected through the host's own camera — the projection every screen pointer
 /// method is addressed in.
 fn world_screen_point(host: &FlowHost, wx: f64, wy: f64) -> (f64, f64) {
-    let cam = Camera { x: host.host_document.camera.x, y: host.host_document.camera.y, zoom: host.host_document.camera.zoom };
+    let cam = Camera { x: host.host_snapshot.camera.x, y: host.host_snapshot.camera.y, zoom: host.host_snapshot.camera.zoom };
     let viewport = Viewport { width: host.viewport_w, height: host.viewport_h, dpr: host.viewport_dpr };
     let screen = world_to_screen(&cam, &viewport, Point::new(wx, wy));
     (screen.x, screen.y)
@@ -954,7 +954,7 @@ fn world_screen_point(host: &FlowHost, wx: f64, wy: f64) -> (f64, f64) {
 /// 🫥️ A world point no node's rect covers — where a press grabs nothing at all.
 fn empty_canvas_world_point(host: &FlowHost) -> (f64, f64) {
     let point = (0.0, 260.0);
-    for node in &host.dag.host_document.nodes {
+    for node in &host.dag.host_snapshot.nodes {
         let covered = (point.0 - node.x).abs() <= node.width * 0.5 + 8.0 && (point.1 - node.y).abs() <= node.height * 0.5 + 8.0;
         assert!(!covered, "{} covers the point this law needs empty", node.id);
     }
@@ -963,7 +963,7 @@ fn empty_canvas_world_point(host: &FlowHost) -> (f64, f64) {
 
 fn gesture_answer(host: &mut FlowHost) -> (usize, bool) {
     let answer: serde_json::Value = serde_json::from_str(&host.take_graph_edits_json()).expect("gesture answer json");
-    (answer["operations"].as_array().expect("operations array").len(), answer["hostDocumentChanged"].as_bool().expect("hostDocumentChanged flag"))
+    (answer["operations"].as_array().expect("operations array").len(), answer["hostSnapshotChanged"].as_bool().expect("hostSnapshotChanged flag"))
 }
 
 /// 🪶 LAW: a pointer gesture that changed nothing answers with nothing — no narrow operation AND no
@@ -981,14 +981,14 @@ fn a_gesture_that_changed_nothing_answers_no_operations_and_no_fixture_commit() 
     host.set_viewport(800, 600, 1.0);
     let (wx, wy) = empty_canvas_world_point(&host);
     let (sx, sy) = world_screen_point(&host, wx, wy);
-    let positions_before: Vec<(String, f64, f64)> = host.dag.host_document.nodes.iter().map(|node| (node.id.clone(), node.x, node.y)).collect();
+    let positions_before: Vec<(String, f64, f64)> = host.dag.host_snapshot.nodes.iter().map(|node| (node.id.clone(), node.x, node.y)).collect();
     host.pointer_down_screen(sx, sy, 0, false, false, false, false);
     host.pointer_up_screen(sx, sy, false, false, false);
     let (operations, fixture_changed) = gesture_answer(&mut host);
-    println!("[DEBUG] quiet click answer operations={operations} hostDocumentChanged={fixture_changed}");
+    println!("[DEBUG] quiet click answer operations={operations} hostSnapshotChanged={fixture_changed}");
     assert_eq!(operations, 0, "a click that wired nothing journals no narrow operation");
     assert!(!fixture_changed, "a click that moved no widget, no synapse and no layout owes no fixture commit");
-    let positions_after: Vec<(String, f64, f64)> = host.dag.host_document.nodes.iter().map(|node| (node.id.clone(), node.x, node.y)).collect();
+    let positions_after: Vec<(String, f64, f64)> = host.dag.host_snapshot.nodes.iter().map(|node| (node.id.clone(), node.x, node.y)).collect();
     assert_eq!(positions_after, positions_before, "the click must not have moved the graph either");
     host.retire_cold();
 }
@@ -1000,13 +1000,13 @@ fn a_gesture_that_changed_nothing_answers_no_operations_and_no_fixture_commit() 
 fn a_drag_that_moved_a_node_answers_a_fixture_commit() {
     let mut host = host_with_test_bridge();
     host.set_viewport(800, 600, 1.0);
-    let node = host.dag.host_document.nodes.iter().find(|node| node.id == "add").expect("add node").clone();
+    let node = host.dag.host_snapshot.nodes.iter().find(|node| node.id == "add").expect("add node").clone();
     let (sx, sy) = world_screen_point(&host, node.x, node.y - node.height * 0.25);
     host.pointer_down_screen(sx, sy, 0, false, false, false, false);
     host.pointer_move_screen(sx + 60.0, sy + 40.0, false, false, false);
     host.pointer_up_screen(sx + 60.0, sy + 40.0, false, false, false);
     let (operations, fixture_changed) = gesture_answer(&mut host);
-    println!("[DEBUG] node drag answer operations={operations} hostDocumentChanged={fixture_changed}");
+    println!("[DEBUG] node drag answer operations={operations} hostSnapshotChanged={fixture_changed}");
     assert_eq!(operations, 0, "the screen path journals wires only, so a move is not a narrow operation");
     assert!(fixture_changed, "a drag that moved a node owes the fixture commit that carries it");
     host.retire_cold();
@@ -1015,9 +1015,9 @@ fn a_drag_that_moved_a_node_answers_a_fixture_commit() {
 #[test]
 fn default_fixture_does_not_auto_layout() {
     let host = host_with_test_bridge();
-    let slider = host.host_document.layout.get("slider").expect("slider");
-    let add = host.host_document.layout.get("add").expect("add");
-    let preview = host.host_document.layout.get("preview").expect("preview");
+    let slider = host.host_snapshot.layout.get("slider").expect("slider");
+    let add = host.host_snapshot.layout.get("add").expect("add");
+    let preview = host.host_snapshot.layout.get("preview").expect("preview");
     assert_eq!(slider.x, 0.0);
     assert_eq!(add.x, 200.0);
     assert_eq!(preview.x, 400.0);
@@ -1033,11 +1033,11 @@ fn canvas_slider_hit_adjusts_value_playground_viewport() {
     host.pointer_move_screen(sx + 90.0, sy, false, false, false);
     host.pointer_up_screen(sx + 90.0, sy, false, false, false);
     let slider = host
-        .fixture
+        .host_snapshot
         .widgets
         .iter()
         .find_map(|w| match w {
-            Widget::InputSlider { id, value, .. } if id == "slider" => Some(*value),
+            Widget::InputSlider { id, value, .. } if id.as_str() == "slider" => Some(*value),
             _ => None,
         })
         .unwrap();
@@ -1054,11 +1054,11 @@ fn canvas_slider_hit_adjusts_value() {
     host.pointer_move_screen(sx + 80.0, sy, false, false, false);
     host.pointer_up_screen(sx + 80.0, sy, false, false, false);
     let slider = host
-        .fixture
+        .host_snapshot
         .widgets
         .iter()
         .find_map(|w| match w {
-            Widget::InputSlider { id, value, .. } if id == "slider" => Some(*value),
+            Widget::InputSlider { id, value, .. } if id.as_str() == "slider" => Some(*value),
             _ => None,
         })
         .unwrap();
@@ -1069,14 +1069,14 @@ fn canvas_slider_hit_adjusts_value() {
 #[test]
 fn reorganize_overwrites_saved_layout_left_to_right() {
     let mut host = host_with_test_bridge();
-    host.host_document.layout.insert("slider".into(), WidgetLayout { x: -900.0, y: -900.0 });
-    host.host_document.layout.insert("add".into(), WidgetLayout { x: -900.0, y: -900.0 });
-    host.host_document.layout.insert("preview".into(), WidgetLayout { x: -900.0, y: -900.0 });
+    host.host_snapshot.layout.insert("slider".into(), WidgetLayout { x: -900.0, y: -900.0 });
+    host.host_snapshot.layout.insert("add".into(), WidgetLayout { x: -900.0, y: -900.0 });
+    host.host_snapshot.layout.insert("preview".into(), WidgetLayout { x: -900.0, y: -900.0 });
     host.rebuild_dag();
     host.reorganize("").unwrap();
-    let slider = host.host_document.layout.get("slider").expect("slider layout");
-    let add = host.host_document.layout.get("add").expect("add layout");
-    let preview = host.host_document.layout.get("preview").expect("preview layout");
+    let slider = host.host_snapshot.layout.get("slider").expect("slider layout");
+    let add = host.host_snapshot.layout.get("add").expect("add layout");
+    let preview = host.host_snapshot.layout.get("preview").expect("preview layout");
     assert!(add.x > slider.x);
     assert!(preview.x > add.x);
     host.retire_cold();
@@ -1085,9 +1085,9 @@ fn reorganize_overwrites_saved_layout_left_to_right() {
 #[test]
 fn fixture_json_round_trip() {
     let host = FlowHost::default();
-    let json = host.host_document_json().unwrap();
-    let parsed = FlowHost::parse_host_document_json(&json).unwrap();
-    assert_eq!(parsed.schema, "flow.host_document");
+    let json = host.host_snapshot_json().unwrap();
+    let parsed = FlowHost::parse_host_snapshot_json(&json).unwrap();
+    assert_eq!(parsed.schema, "flow.host_snapshot");
     parsed.retire_cold();
     host.retire_cold();
 }
@@ -1175,8 +1175,8 @@ fn camera_law_column_host() -> FlowHost {
     for (id, x, y) in [("height", -197.19, -102.70), ("radius", -156.03, -177.33), ("sides", -156.43, -155.28), ("profile", -64.49, -163.40), ("extrusion-axis", -65.26, -116.45), ("extrude", 34.84, -154.18)] {
         layout.insert(id.to_string(), WidgetLayout { x, y });
     }
-    host.replace_host_document(FlowHostDocument {
-        schema: "flow.host_document".into(),
+    host.replace_host_snapshot(FlowHostSnapshot {
+        schema: "flow.host_snapshot".into(),
         camera: CameraJson { x: 0.0, y: 0.0, zoom: 1.0 },
         widgets: vec![
             Widget::InputSlider { id: "height".into(), label: "Column Height".into(), value: 6.0, min: 0.0, max: 10.0, step: 0.5 },
@@ -1212,7 +1212,7 @@ fn a_fitted_flow_surface_publishes_the_camera_it_computed() {
         let published = host.camera();
         assert_ne!(published, before, "{name}: a fit that reports success must move the published camera off the pre-fit one");
 
-        let painted = [host.dag.host_document.camera.x, host.dag.host_document.camera.y, host.dag.host_document.camera.zoom];
+        let painted = [host.dag.host_snapshot.camera.x, host.dag.host_snapshot.camera.y, host.dag.host_snapshot.camera.zoom];
         if row["expect"]["publishedEqualsPainted"].as_bool().unwrap_or(false) {
             assert_eq!(published, painted, "{name}: the published camera and the painted camera are one camera");
         }
@@ -1251,14 +1251,14 @@ fn a_flow_surface_projects_screen_points_with_the_camera_it_published() {
 #[test]
 fn replace_fixture_preserves_kind_infos_and_named_input_ports() {
     let mut host = host_with_test_bridge();
-    host.replace_host_document(FlowHostDocument {
-        schema: "flow.host_document".into(),
+    host.replace_host_snapshot(FlowHostSnapshot {
+        schema: "flow.host_snapshot".into(),
         camera: CameraJson { x: 0.0, y: 0.0, zoom: 1.0 },
         widgets: vec![Widget::Neuron { id: "add".into(), neuron_kind: "math.add".into(), params: Dictionary::new(), input_ports: vec![], output_ports: vec![], preview: true }],
         synapses: vec![],
         layout: crate::OrderedMap::new(),
     });
-    let node = host.dag.host_document.nodes.iter().find(|node| node.id == "add").expect("add node");
+    let node = host.dag.host_snapshot.nodes.iter().find(|node| node.id == "add").expect("add node");
     let input_ids: Vec<&str> = node.inputs().iter().map(|port| port.id.as_str()).collect();
     assert_eq!(input_ids, vec!["a", "b"]);
     host.retire_cold();
@@ -1301,8 +1301,8 @@ fn catalogue_has_module_sections() {
 fn flow_backed_node_graph_extras_include_fixture_and_flow_engine() {
     install_first_party_light_flow_extensions_for_tests();
     let host = host_with_test_bridge();
-    let extras = flow_backed_node_graph_extras(&host.host_document, FLOW_LOD_MODE_AUTOMATIC, 0.0, true, false, ui_styling::metrics::board::GRID_FACTOR_DEFAULT, None);
-    assert!(extras.host_document_json.as_ref().is_some_and(|json| json.contains("flow.host_document")));
+    let extras = flow_backed_node_graph_extras(&host.host_snapshot, FLOW_LOD_MODE_AUTOMATIC, 0.0, true, false, ui_styling::metrics::board::GRID_FACTOR_DEFAULT, None);
+    assert!(extras.host_snapshot_json.as_ref().is_some_and(|json| json.contains("flow.host_snapshot")));
     assert!(extras.capabilities_json.as_ref().is_some_and(|json| json.contains(r#""engine":"flow""#)));
     assert!(extras.lod_json.as_ref().is_some_and(|json| json.contains(r#""automatic":true"#)));
     host.retire_cold();
@@ -1346,13 +1346,13 @@ fn a_node_graph_surface_stays_under_the_fixed_admission_with_five_hundred_operat
     let registered = flow_app_catalogue().operators.len();
     assert!(registered >= OPERATORS, "the registry must actually hold the bulk operators, holds {registered}");
 
-    let fixture = FlowHostDocument::default();
+    let fixture = FlowHostSnapshot::default();
     let extras = flow_backed_node_graph_extras(&fixture, FLOW_LOD_MODE_AUTOMATIC, 0.0, true, false, ui_styling::metrics::board::GRID_FACTOR_DEFAULT, None);
     let scene = ui_wgpu::wgpu::NodeGraphScene {
         editable: Some(true),
         capabilities_json: extras.capabilities_json,
         lod_json: extras.lod_json,
-        host_document_json: extras.host_document_json,
+        host_snapshot_json: extras.host_snapshot_json,
         eval_json: extras.eval_json,
         status_json: extras.status_json,
         ..ui_wgpu::wgpu::NodeGraphScene::base(Vec::new(), Vec::new(), semio_framework_os_kernel::Viewport2d { x: 0.0, y: 0.0, zoom: 1.0 })
@@ -1383,9 +1383,9 @@ fn flow_fixture_with_synapses_builds_dag_edges_and_ports() {
     install_first_party_light_flow_extensions_for_tests();
     let mut host = host_with_test_bridge();
     host.set_neuron_kind_infos_json(&flow_neuron_kind_infos_json());
-    host.replace_host_document(<FlowHostDocument as crate::os_store::ArtifactDsl>::parse_dsl(include_str!("../../../📚️examples/🗣️.dsl.semio")).expect("fixture"));
-    assert!(!host.dag.host_document.edges.is_empty(), "synapses should become dag edges");
-    let add = host.dag.host_document.nodes.iter().find(|node| node.id == "add").expect("add node");
+    host.replace_host_snapshot(<FlowHostSnapshot as crate::os_store::ArtifactDsl>::parse_dsl(include_str!("../../../📚️examples/🗣️.dsl.semio")).expect("fixture"));
+    assert!(!host.dag.host_snapshot.edges.is_empty(), "synapses should become dag edges");
+    let add = host.dag.host_snapshot.nodes.iter().find(|node| node.id == "add").expect("add node");
     assert_eq!(add.inputs().len(), 2);
     assert_eq!(add.outputs().len(), 1);
     let mut scene = canvas::Scene::new();
@@ -1421,24 +1421,24 @@ fn output_export_widget_catalogue_descriptor_and_payload() {
     let payload_json = host.export_payload_json(&id).expect("export payload");
     assert_ne!(payload_json, "{}");
     assert!(payload_json.contains("4") || payload_json.contains("value") || payload_json.contains("sum"));
-    let node = host.dag.host_document.nodes.iter().find(|node| node.id == id).expect("export node");
+    let node = host.dag.host_snapshot.nodes.iter().find(|node| node.id == id).expect("export node");
     assert!(matches!(node.kind, DagNodeKind::Export { .. }));
     host.retire_cold();
 }
 
-/// ↩️ Exercises the standard `crate::os_store::ArtifactStore<FlowHostDocument, FlowMutation>` undo/redo
+/// ↩️ Exercises the standard `crate::os_store::ArtifactStore<FlowHostSnapshot, FlowMutation>` undo/redo
 /// mechanism directly (the same one `FlowHost::undo`/`redo` are built on) — add a widget, undo,
 /// confirm it's gone, redo, confirm it's back — in place of the old test's direct assertions on a
-/// hand-rolled `Vec<FlowHostDocument>` snapshot stack.
+/// hand-rolled `Vec<FlowHostSnapshot>` snapshot stack.
 #[semio_framework_async_macros::async_test]
 async fn undo_redo_add_widget() {
     let mut host = host_with_test_bridge();
-    let fixture_before = host.host_document.clone();
+    let fixture_before = host.host_snapshot.clone();
     let count_before = fixture_before.widgets.len();
     let id = host.add_widget(r#"{"kind":"inputNote","text":"undo me"}"#, 42.0, 42.0).unwrap();
-    assert_eq!(host.host_document.widgets.len(), count_before + 1);
+    assert_eq!(host.host_snapshot.widgets.len(), count_before + 1);
 
-    let operations = flow_host_document_operations(&fixture_before, &host.host_document).expect("wire-representable flow fixture");
+    let operations = flow_host_snapshot_operations(&fixture_before, &host.host_snapshot).expect("wire-representable flow fixture");
     assert!(!operations.is_empty(), "add_widget must diff into vcs operations");
 
     let envelope: FlowEnvelope = create_document_envelope(FLOW_DOCUMENT_SCHEMA, "test", fixture_before, None);
@@ -1449,7 +1449,7 @@ async fn undo_redo_add_widget() {
     // saw was `ordered-map root must be explicitly retired before drop` from inside `apply_command`,
     // never the validation that caused it. The flow host installs the same catalog on its own history
     // store (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-    store.install_document_store_owners_exact(FlowHostDocument::member_store_owners());
+    store.install_document_store_owners_exact(FlowHostSnapshot::member_store_owners());
     store.dispatch(ArtifactCommand::Apply { mutations: operations, description: None }).await.expect("apply add-widget operations");
     let applied = store.snapshot().expect("projection");
     assert_eq!(applied.widgets.len(), count_before + 1);
@@ -1472,16 +1472,16 @@ async fn undo_redo_add_widget() {
 #[test]
 fn camera_change_does_not_create_undo_step() {
     let mut host = host_with_test_bridge();
-    let camera_before = host.host_document.camera.clone();
+    let camera_before = host.host_snapshot.camera.clone();
     host.set_camera(camera_before.x + 50.0, camera_before.y - 30.0, camera_before.zoom * 1.5);
     assert!(!host.can_undo());
     let id = host.add_widget(r#"{"kind":"inputNote","text":"x"}"#, 0.0, 0.0).unwrap();
     assert!(host.can_undo());
     assert!(host.undo());
-    assert_eq!(host.host_document.camera.x, camera_before.x + 50.0);
-    assert_eq!(host.host_document.camera.y, camera_before.y - 30.0);
-    assert!((host.host_document.camera.zoom - camera_before.zoom * 1.5).abs() < 1e-9);
-    assert!(!host.host_document.widgets.iter().any(|w| widget_id_for(w) == id));
+    assert_eq!(host.host_snapshot.camera.x, camera_before.x + 50.0);
+    assert_eq!(host.host_snapshot.camera.y, camera_before.y - 30.0);
+    assert!((host.host_snapshot.camera.zoom - camera_before.zoom * 1.5).abs() < 1e-9);
+    assert!(!host.host_snapshot.widgets.iter().any(|w| widget_id_for(w) == id));
     host.retire_cold();
 }
 
@@ -1489,17 +1489,17 @@ fn camera_change_does_not_create_undo_step() {
 fn replace_fixture_preserves_live_camera() {
     let mut host = host_with_test_bridge();
     host.set_camera(120.0, -45.0, 1.75);
-    host.replace_host_document(FlowHostDocument {
-        schema: "flow.host_document".into(),
+    host.replace_host_snapshot(FlowHostSnapshot {
+        schema: "flow.host_snapshot".into(),
         camera: CameraJson { x: 0.0, y: 0.0, zoom: 1.0 },
         widgets: vec![Widget::InputNote { id: "note".into(), text: "hello".into() }],
         synapses: vec![],
         layout: crate::OrderedMap::new(),
     });
-    assert_eq!(host.host_document.camera.x, 120.0);
-    assert_eq!(host.host_document.camera.y, -45.0);
-    assert!((host.host_document.camera.zoom - 1.75).abs() < 1e-9);
-    assert!(host.host_document.widgets.iter().any(|w| widget_id_for(w) == "note"));
+    assert_eq!(host.host_snapshot.camera.x, 120.0);
+    assert_eq!(host.host_snapshot.camera.y, -45.0);
+    assert!((host.host_snapshot.camera.zoom - 1.75).abs() < 1e-9);
+    assert!(host.host_snapshot.widgets.iter().any(|w| widget_id_for(w) == "note"));
     host.retire_cold();
 }
 
@@ -1528,8 +1528,8 @@ fn test_dictionary_merge_bridge(kind: &str, input: &Dictionary) -> Result<Dictio
 
 #[test]
 fn variadic_merge_evaluates_port_routed_inputs() {
-    let mut host = FlowHost::from_host_document(FlowHostDocument {
-        schema: "flow.host_document".into(),
+    let mut host = FlowHost::from_host_snapshot(FlowHostSnapshot {
+        schema: "flow.host_snapshot".into(),
         camera: CameraJson { x: 0.0, y: 0.0, zoom: 1.0 },
         widgets: vec![
             Widget::InputSlider { id: "a".into(), label: "A".into(), value: 1.0, min: FLOW_SLIDER_MIN, max: FLOW_SLIDER_MAX, step: FLOW_SLIDER_STEP },
@@ -1561,7 +1561,7 @@ fn variadic_merge_evaluates_port_routed_inputs() {
     std::mem::take(&mut host.outputs).retire_cold();
     host.evaluate_internal();
     let preview = host
-        .fixture
+        .host_snapshot
         .widgets
         .iter()
         .find_map(|widget| match widget {
@@ -1577,7 +1577,7 @@ fn variadic_merge_evaluates_port_routed_inputs() {
 fn widget_to_dag_node_carries_display_meta() {
     let mut host = host_with_test_bridge();
     let id = host.add_widget(r#"{"kind":"neuron","neuronKind":"math.add"}"#, 0.0, 0.0).unwrap();
-    let node = host.dag.host_document.nodes.iter().find(|node| node.id == id).expect("node");
+    let node = host.dag.host_snapshot.nodes.iter().find(|node| node.id == id).expect("node");
     assert_eq!(node.name, "Add");
     assert_eq!(node.abbreviation, "Add");
     assert_eq!(node.icon, "emoji:➕️");
@@ -1588,7 +1588,7 @@ fn widget_to_dag_node_carries_display_meta() {
 fn add_slider_widget_with_explicit_range() {
     let mut host = host_with_test_bridge();
     let id = host.add_widget(r#"{"kind":"inputSlider","label":"Number","value":10.2,"min":10.2,"max":15.0,"step":0.1}"#, 0.0, 0.0).unwrap();
-    let widget = host.host_document.widgets.iter().find(|w| widget_id_for(w) == id).expect("widget");
+    let widget = host.host_snapshot.widgets.iter().find(|w| widget_id_for(w) == id).expect("widget");
     let Widget::InputSlider { value, min, max, step, .. } = widget else {
         panic!("expected slider widget");
     };
@@ -1596,7 +1596,7 @@ fn add_slider_widget_with_explicit_range() {
     assert!((min - 10.2).abs() < 1e-6);
     assert!((max - 15.0).abs() < 1e-6);
     assert!((step - 0.1).abs() < 1e-6);
-    let node = host.dag.host_document.nodes.iter().find(|n| n.id == id).expect("node");
+    let node = host.dag.host_snapshot.nodes.iter().find(|n| n.id == id).expect("node");
     let DagNodeKind::Slider { min: dag_min, max: dag_max, step: dag_step, value: dag_value, .. } = &node.kind else {
         panic!("expected slider node");
     };
@@ -1611,12 +1611,12 @@ fn add_slider_widget_with_explicit_range() {
 fn add_note_widget_with_text() {
     let mut host = host_with_test_bridge();
     let id = host.add_widget(r#"{"kind":"inputNote","text":"some text"}"#, 0.0, 0.0).unwrap();
-    let widget = host.host_document.widgets.iter().find(|w| widget_id_for(w) == id).expect("widget");
+    let widget = host.host_snapshot.widgets.iter().find(|w| widget_id_for(w) == id).expect("widget");
     let Widget::InputNote { text, .. } = widget else {
         panic!("expected note widget");
     };
     assert_eq!(text, "some text");
-    let node = host.dag.host_document.nodes.iter().find(|n| n.id == id).expect("node");
+    let node = host.dag.host_snapshot.nodes.iter().find(|n| n.id == id).expect("node");
     let DagNodeKind::Note { text: dag_text, .. } = &node.kind else {
         panic!("expected note node");
     };
@@ -1630,18 +1630,18 @@ fn add_note_widget_with_text() {
 fn begin_note_edit_groups_undo_into_single_gesture() {
     let mut host = host_with_test_bridge();
     let id = host.add_widget(r#"{"kind":"inputNote","text":"hi"}"#, 0.0, 0.0).unwrap();
-    let node = host.dag.host_document.nodes.iter().find(|n| n.id == id).expect("node");
+    let node = host.dag.host_snapshot.nodes.iter().find(|n| n.id == id).expect("node");
     let origin_x = node.x - node.width * 0.5 + 4.0;
     host.begin_note_edit(&id, origin_x + 40.0, node.y);
     host.note_insert_text("!");
     host.note_commit_edit();
-    let widget = host.host_document.widgets.iter().find(|w| widget_id_for(w) == id).expect("widget");
+    let widget = host.host_snapshot.widgets.iter().find(|w| widget_id_for(w) == id).expect("widget");
     let Widget::InputNote { text, .. } = widget else {
         panic!("expected note widget");
     };
     assert_eq!(text, "hi!");
     assert!(host.undo());
-    let Widget::InputNote { text: restored, .. } = host.host_document.widgets.iter().find(|w| widget_id_for(w) == id).expect("widget") else {
+    let Widget::InputNote { text: restored, .. } = host.host_snapshot.widgets.iter().find(|w| widget_id_for(w) == id).expect("widget") else {
         panic!("expected note widget");
     };
     assert_eq!(restored, "hi");
@@ -1651,9 +1651,9 @@ fn begin_note_edit_groups_undo_into_single_gesture() {
 #[test]
 fn wheel_screen_zoom_gesture_changes_zoom() {
     let mut host = host_with_test_bridge();
-    let z0 = host.host_document.camera.zoom;
+    let z0 = host.host_snapshot.camera.zoom;
     host.wheel_screen(400.0, 300.0, 0.0, -10.0, true);
-    assert_ne!(host.host_document.camera.zoom, z0);
+    assert_ne!(host.host_snapshot.camera.zoom, z0);
     host.retire_cold();
 }
 
@@ -1666,13 +1666,13 @@ fn wheel_plan_matches_direct_and_rejects_stale_revision() {
     direct.wheel_screen(320.0, 240.0, 0.0, -10.0, true);
     let plan = planned.plan_wheel(320.0, 240.0, 0.0, -10.0, true);
     assert!(planned.commit_wheel(plan));
-    assert_eq!(direct.fixture.camera, planned.fixture.camera);
+    assert_eq!(direct.host_snapshot.camera, planned.host_snapshot.camera);
 
     let stale = planned.plan_wheel(320.0, 240.0, 0.0, -10.0, true);
     planned.pointer_down_screen(10.0, 10.0, 0, false, false, false, true);
-    let replacement = planned.fixture.camera.clone();
+    let replacement = planned.host_snapshot.camera.clone();
     assert!(!planned.commit_wheel(stale));
-    assert_eq!(planned.fixture.camera, replacement);
+    assert_eq!(planned.host_snapshot.camera, replacement);
     planned.retire_cold();
     direct.retire_cold();
 }
@@ -1681,9 +1681,9 @@ fn wheel_plan_matches_direct_and_rejects_stale_revision() {
 fn set_note_text_keeps_uniform_component_width() {
     let mut host = host_with_test_bridge();
     let id = host.add_widget(r#"{"kind":"inputNote","text":"hi"}"#, 0.0, 0.0).unwrap();
-    let short_w = host.dag.host_document.nodes.iter().find(|n| n.id == id).expect("node").width;
+    let short_w = host.dag.host_snapshot.nodes.iter().find(|n| n.id == id).expect("node").width;
     host.set_note_text(&id, "a much longer note string");
-    let node = host.dag.host_document.nodes.iter().find(|n| n.id == id).expect("node");
+    let node = host.dag.host_snapshot.nodes.iter().find(|n| n.id == id).expect("node");
     let DagNodeKind::Note { text, .. } = &node.kind else {
         panic!("expected note node");
     };
@@ -1696,7 +1696,7 @@ fn set_note_text_keeps_uniform_component_width() {
 fn add_slider_widget_with_single_value_uses_sensible_range() {
     let mut host = host_with_test_bridge();
     let id = host.add_widget(r#"{"kind":"inputSlider","label":"Number","value":5.0}"#, 0.0, 0.0).unwrap();
-    let widget = host.host_document.widgets.iter().find(|w| widget_id_for(w) == id).expect("widget");
+    let widget = host.host_snapshot.widgets.iter().find(|w| widget_id_for(w) == id).expect("widget");
     let Widget::InputSlider { value, min, max, step, .. } = widget else {
         panic!("expected slider widget");
     };
@@ -1711,7 +1711,7 @@ fn add_slider_widget_with_single_value_uses_sensible_range() {
 fn add_slider_widget_with_decimal_value_uses_matching_step() {
     let mut host = host_with_test_bridge();
     let id = host.add_widget(r#"{"kind":"inputSlider","label":"Number","value":1.3}"#, 0.0, 0.0).unwrap();
-    let widget = host.host_document.widgets.iter().find(|w| widget_id_for(w) == id).expect("widget");
+    let widget = host.host_snapshot.widgets.iter().find(|w| widget_id_for(w) == id).expect("widget");
     let Widget::InputSlider { value, min, max, step, .. } = widget else {
         panic!("expected slider widget");
     };
@@ -1719,7 +1719,7 @@ fn add_slider_widget_with_decimal_value_uses_matching_step() {
     assert!((min - 0.0).abs() < 1e-6);
     assert!((max - 10.0).abs() < 1e-6);
     assert!((step - 0.1).abs() < 1e-6);
-    let node = host.dag.host_document.nodes.iter().find(|n| n.id == id).expect("node");
+    let node = host.dag.host_snapshot.nodes.iter().find(|n| n.id == id).expect("node");
     let DagNodeKind::Slider { min: dag_min, max: dag_max, step: dag_step, value: dag_value, .. } = &node.kind else {
         panic!("expected slider node");
     };
@@ -1734,7 +1734,7 @@ fn add_slider_widget_with_decimal_value_uses_matching_step() {
 fn add_slider_widget_with_two_decimal_places_uses_finer_step() {
     let mut host = host_with_test_bridge();
     let id = host.add_widget(r#"{"kind":"inputSlider","label":"Number","value":1.25}"#, 0.0, 0.0).unwrap();
-    let widget = host.host_document.widgets.iter().find(|w| widget_id_for(w) == id).expect("widget");
+    let widget = host.host_snapshot.widgets.iter().find(|w| widget_id_for(w) == id).expect("widget");
     let Widget::InputSlider { step, .. } = widget else {
         panic!("expected slider widget");
     };
@@ -1747,7 +1747,7 @@ fn set_slider_value_expands_bounds_when_out_of_range() {
     let mut host = host_with_test_bridge();
     let id = host.add_widget(r#"{"kind":"inputSlider","label":"Number","value":3.0,"min":0.0,"max":10.0,"step":1.0}"#, 0.0, 0.0).unwrap();
     host.set_slider_value(&id, 12.0);
-    let widget = host.host_document.widgets.iter().find(|w| widget_id_for(w) == id).expect("widget");
+    let widget = host.host_snapshot.widgets.iter().find(|w| widget_id_for(w) == id).expect("widget");
     let Widget::InputSlider { value, min, max, .. } = widget else {
         panic!("expected slider widget");
     };
@@ -1775,7 +1775,7 @@ fn ghost_widget_matches_placed_neuron_size() {
     host.set_ghost_widget(descriptor, 40.0, 40.0).unwrap();
     let ghost_width = host.ghost_node.as_ref().expect("ghost").width;
     let placed_id = host.add_widget(descriptor, 80.0, 80.0).unwrap();
-    let placed_width = host.dag.host_document.nodes.iter().find(|node| node.id == placed_id).expect("placed").width;
+    let placed_width = host.dag.host_snapshot.nodes.iter().find(|node| node.id == placed_id).expect("placed").width;
     assert!((ghost_width - placed_width).abs() < 1e-6, "ghost width {ghost_width} != placed {placed_width}");
     host.retire_cold();
 }
@@ -1935,17 +1935,17 @@ fn drag_merge_node_preserves_single_fixture_widget() {
     }]));
     let merge_id = host.add_widget(r#"{"kind":"neuron","neuronKind":"dictionary.merge"}"#, 120.0, 80.0).unwrap();
     host.set_viewport(800, 600, 1.0);
-    let merge = host.dag.host_document.nodes.iter().find(|n| n.id == merge_id).expect("merge").clone();
+    let merge = host.dag.host_snapshot.nodes.iter().find(|n| n.id == merge_id).expect("merge").clone();
     let grab = Point::new(merge.x, merge.y);
-    let cam = Camera { x: host.host_document.camera.x, y: host.host_document.camera.y, zoom: host.host_document.camera.zoom };
+    let cam = Camera { x: host.host_snapshot.camera.x, y: host.host_snapshot.camera.y, zoom: host.host_snapshot.camera.zoom };
     let viewport = Viewport { width: host.viewport_w, height: host.viewport_h, dpr: host.viewport_dpr };
     let screen = world_to_screen(&cam, &viewport, grab);
     host.pointer_down_screen(screen.x, screen.y, 0, false, false, false, false);
     host.pointer_move_screen(screen.x + 80.0, screen.y + 40.0, false, false, false);
     host.pointer_up_screen(screen.x + 80.0, screen.y + 40.0, false, false, false);
-    assert_eq!(host.host_document.widgets.iter().filter(|w| widget_id_for(w) == merge_id).count(), 1);
-    assert_eq!(host.dag.host_document.nodes.iter().filter(|n| n.id == merge_id).count(), 1);
-    let moved = host.host_document.layout.get(&merge_id).expect("merge layout");
+    assert_eq!(host.host_snapshot.widgets.iter().filter(|w| widget_id_for(w) == merge_id).count(), 1);
+    assert_eq!(host.dag.host_snapshot.nodes.iter().filter(|n| n.id == merge_id).count(), 1);
+    let moved = host.host_snapshot.layout.get(&merge_id).expect("merge layout");
     assert!((moved.x - merge.x).abs() > 1.0);
     host.retire_cold();
 }
@@ -1960,18 +1960,18 @@ fn ghost_widget_cleared_on_pointer_down_and_add_widget() {
     host.set_ghost_widget(r#"{"kind":"inputSlider","label":"Number"}"#, 0.0, 0.0).unwrap();
     let _ = host.add_widget(r#"{"kind":"inputSlider","label":"Number"}"#, 40.0, 40.0).unwrap();
     assert!(host.ghost_node.is_none());
-    assert_eq!(host.host_document.widgets.iter().filter(|w| widget_id_for(w).starts_with("slider")).count(), 2);
-    assert_eq!(host.dag.host_document.nodes.iter().filter(|n| n.id == "slider").count(), 1);
+    assert_eq!(host.host_snapshot.widgets.iter().filter(|w| widget_id_for(w).starts_with("slider")).count(), 2);
+    assert_eq!(host.dag.host_snapshot.nodes.iter().filter(|n| n.id == "slider").count(), 1);
     host.retire_cold();
 }
 
 #[test]
-fn delete_selection_removes_widget_from_host_document() {
+fn delete_selection_removes_widget_from_host_snapshot() {
     let mut host = host_with_test_bridge();
     host.dag.set_selection(&["slider".into()]);
     host.delete_selection().unwrap();
-    assert!(host.host_document.widgets.iter().all(|w| widget_id_for(w) != "slider"));
-    assert!(host.dag.host_document.nodes.iter().all(|n| n.id != "slider"));
+    assert!(host.host_snapshot.widgets.iter().all(|w| widget_id_for(w) != "slider"));
+    assert!(host.dag.host_snapshot.nodes.iter().all(|n| n.id != "slider"));
     host.retire_cold();
 }
 
@@ -1981,18 +1981,18 @@ fn node_drag_proximity_skips_wired_cut_inputs_in_flow() {
     use canvas::Point;
     let mut host = FlowHost::default();
     host.set_viewport(1280, 800, 1.0);
-    host.host_document.replace_widgets(vec![
+    host.host_snapshot.replace_widgets(vec![
         Widget::Neuron { id: "sphere".into(), neuron_kind: "brep.prim3d.sphere".into(), params: Dictionary::new(), input_ports: vec![], output_ports: vec![], preview: false },
         Widget::Neuron { id: "torus".into(), neuron_kind: "brep.prim3d.torus".into(), params: Dictionary::new(), input_ports: vec![], output_ports: vec![], preview: false },
         Widget::Neuron { id: "cut".into(), neuron_kind: "brep.bool.cut".into(), params: Dictionary::new(), input_ports: vec!["a".into(), "b".into()], output_ports: vec![], preview: true },
     ]);
-    host.host_document.synapses = vec![
+    host.host_snapshot.synapses = vec![
         SynapseSpec { id: "e1".into(), from: "sphere".into(), to: "cut".into(), from_port: "solid".into(), to_port: "a".into() },
         SynapseSpec { id: "e2".into(), from: "torus".into(), to: "cut".into(), from_port: "solid".into(), to_port: "b".into() },
     ];
-    host.host_document.layout.insert("sphere".into(), WidgetLayout { x: 0.0, y: -60.0 });
-    host.host_document.layout.insert("torus".into(), WidgetLayout { x: 0.0, y: 60.0 });
-    host.host_document.layout.insert("cut".into(), WidgetLayout { x: 240.0, y: 0.0 });
+    host.host_snapshot.layout.insert("sphere".into(), WidgetLayout { x: 0.0, y: -60.0 });
+    host.host_snapshot.layout.insert("torus".into(), WidgetLayout { x: 0.0, y: 60.0 });
+    host.host_snapshot.layout.insert("cut".into(), WidgetLayout { x: 240.0, y: 0.0 });
     let solid_out = vec![InputSpec::named("S", "Sld", "solid", "Solid")];
     host.set_neuron_kind_infos_json(&kind_infos_json(vec![
         NeuronKindInfo {
@@ -2034,9 +2034,9 @@ fn node_drag_proximity_skips_wired_cut_inputs_in_flow() {
     host.dag.set_automatic_lod(false);
     host.dag.set_forced_draw_lod_label("normal");
     assert_eq!(host.dag.engine.edges.len(), 2, "synapses should load as engine edges");
-    let cut = host.dag.host_document.nodes.iter().find(|node| node.id == "cut").expect("cut");
+    let cut = host.dag.host_snapshot.nodes.iter().find(|node| node.id == "cut").expect("cut");
     let grab = Point::new(cut.x, cut.y);
-    let cam = Camera { x: host.host_document.camera.x, y: host.host_document.camera.y, zoom: host.host_document.camera.zoom };
+    let cam = Camera { x: host.host_snapshot.camera.x, y: host.host_snapshot.camera.y, zoom: host.host_snapshot.camera.zoom };
     let viewport = Viewport { width: host.viewport_w, height: host.viewport_h, dpr: host.viewport_dpr };
     let screen = world_to_screen(&cam, &viewport, grab);
     host.pointer_down_screen(screen.x, screen.y, 0, false, false, false, false);
@@ -2044,25 +2044,25 @@ fn node_drag_proximity_skips_wired_cut_inputs_in_flow() {
     assert!(host.dag.engine.render_snapshot().pending_edge.is_none(), "dragging wired cut near sources must not preview proximity edges");
     host.pointer_up_screen(screen.x - 180.0, screen.y, false, false, false);
     assert_eq!(host.dag.engine.edges.len(), 2);
-    assert_eq!(host.host_document.synapses.len(), 2);
+    assert_eq!(host.host_snapshot.synapses.len(), 2);
     host.retire_cold();
 }
 
 #[test]
 fn dag_bridge_keeps_same_named_brep_input_and_output_distinct() {
     let mut host = FlowHost::default();
-    host.host_document.replace_widgets(vec![
+    host.host_snapshot.replace_widgets(vec![
         Widget::Neuron { id: "extrude".into(), neuron_kind: "brep.solid.extrude".into(), params: Dictionary::new(), input_ports: vec!["wire".into(), "vector".into()], output_ports: vec![], preview: true },
         Widget::Neuron { id: "brep".into(), neuron_kind: "brep.brep".into(), params: Dictionary::new(), input_ports: vec!["brep".into(), "vertex".into(), "edge".into(), "face".into()], output_ports: vec![], preview: true },
         Widget::Neuron { id: "get".into(), neuron_kind: "list.get".into(), params: Dictionary::new(), input_ports: vec!["list".into(), "index".into(), "wrap".into()], output_ports: vec!["0".into()], preview: true },
     ]);
-    host.host_document.synapses = vec![
+    host.host_snapshot.synapses = vec![
         SynapseSpec { id: "e112".into(), from: "extrude".into(), to: "brep".into(), from_port: "solid".into(), to_port: "brep".into() },
         SynapseSpec { id: "e113".into(), from: "brep".into(), to: "get".into(), from_port: "brep".into(), to_port: "list".into() },
     ];
-    host.host_document.layout.insert("extrude".into(), WidgetLayout { x: 0.0, y: 0.0 });
-    host.host_document.layout.insert("brep".into(), WidgetLayout { x: 200.0, y: 0.0 });
-    host.host_document.layout.insert("get".into(), WidgetLayout { x: 400.0, y: 0.0 });
+    host.host_snapshot.layout.insert("extrude".into(), WidgetLayout { x: 0.0, y: 0.0 });
+    host.host_snapshot.layout.insert("brep".into(), WidgetLayout { x: 200.0, y: 0.0 });
+    host.host_snapshot.layout.insert("get".into(), WidgetLayout { x: 400.0, y: 0.0 });
     host.set_neuron_kind_infos_json(&kind_infos_json(vec![
         NeuronKindInfo {
             id: "brep.solid.extrude".into(),
@@ -2109,15 +2109,15 @@ fn dag_bridge_keeps_same_named_brep_input_and_output_distinct() {
 }
 
 #[test]
-fn delete_selection_removes_selected_edge_from_host_document() {
+fn delete_selection_removes_selected_edge_from_host_snapshot() {
     let mut host = host_with_test_bridge();
-    let synapse_count_before = host.host_document.synapses.len();
+    let synapse_count_before = host.host_snapshot.synapses.len();
     assert!(synapse_count_before > 0);
     let edge_id = *host.dag.engine.edges.keys().next().expect("edge");
     host.dag.engine.selection.edge_ids.insert(edge_id);
     assert!(host.has_selection());
     host.delete_selection().unwrap();
-    assert!(host.host_document.synapses.len() < synapse_count_before);
+    assert!(host.host_snapshot.synapses.len() < synapse_count_before);
     assert!(!host.has_selection());
     host.retire_cold();
 }
@@ -2125,12 +2125,12 @@ fn delete_selection_removes_selected_edge_from_host_document() {
 #[test]
 fn delete_selection_removes_edge_selected_by_synapse_id_domain() {
     let mut host = host_with_test_bridge();
-    let before = host.host_document.synapses.len();
+    let before = host.host_snapshot.synapses.len();
     host.dag.set_selection_domains_json(r#"{"nodes":[],"edges":["s1"],"🐙️handles":[]}"#);
     assert!(host.has_selection(), "synapse id s1 must map into engine edge selection");
     host.delete_selection().unwrap();
-    assert!(host.host_document.synapses.len() < before);
-    assert!(!host.host_document.synapses.iter().any(|synapse| synapse.id == "s1"));
+    assert!(host.host_snapshot.synapses.len() < before);
+    assert!(!host.host_snapshot.synapses.iter().any(|synapse| synapse.id == "s1"));
     host.retire_cold();
 }
 
@@ -2141,13 +2141,13 @@ fn align_selection_left_aligns_selected_widget_layout() {
     host.move_widget("add", 180.0, -40.0).unwrap();
     host.dag.set_selection(&["slider".into(), "add".into()]);
     host.align_selection("alignLeft").unwrap();
-    let slider = host.dag.host_document.nodes.iter().find(|node| node.id == "slider").expect("slider");
-    let add = host.dag.host_document.nodes.iter().find(|node| node.id == "add").expect("add");
+    let slider = host.dag.host_snapshot.nodes.iter().find(|node| node.id == "slider").expect("slider");
+    let add = host.dag.host_snapshot.nodes.iter().find(|node| node.id == "add").expect("add");
     let slider_left = slider.x - slider.width * 0.5;
     let add_left = add.x - add.width * 0.5;
     assert!((slider_left - add_left).abs() < 1e-6, "left edges should match after alignLeft");
-    assert!(host.host_document.layout.contains_key("slider"));
-    assert!(host.host_document.layout.contains_key("add"));
+    assert!(host.host_snapshot.layout.contains_key("slider"));
+    assert!(host.host_snapshot.layout.contains_key("add"));
     host.retire_cold();
 }
 
@@ -2168,7 +2168,7 @@ fn add_input_port_inserts_variadic_slot() {
     }]));
     let merge_id = host.add_widget(r#"{"kind":"neuron","neuronKind":"dictionary.merge"}"#, 0.0, 0.0).unwrap();
     host.add_input_port(&merge_id, 1).unwrap();
-    let widget = host.host_document.widgets.iter().find(|widget| widget_id_for(widget) == merge_id).expect("merge");
+    let widget = host.host_snapshot.widgets.iter().find(|widget| widget_id_for(widget) == merge_id).expect("merge");
     let Widget::Neuron { input_ports, .. } = widget else { panic!("neuron") };
     assert_eq!(input_ports.len(), 3);
     host.retire_cold();
@@ -2190,14 +2190,14 @@ fn add_output_port_inserts_variadic_get_slot() {
         ..Default::default()
     }]));
     let get_id = host.add_widget(r#"{"kind":"neuron","neuronKind":"list.get"}"#, 0.0, 0.0).unwrap();
-    let node = host.dag.host_document.nodes.iter().find(|node| node.id == get_id).expect("get");
+    let node = host.dag.host_snapshot.nodes.iter().find(|node| node.id == get_id).expect("get");
     let labels: Vec<&str> = node.outputs().iter().map(|port| port.label.as_str()).collect();
     assert_eq!(labels, vec!["i"]);
     host.add_output_port(&get_id, 1).unwrap();
-    let widget = host.host_document.widgets.iter().find(|widget| widget_id_for(widget) == get_id).expect("get");
+    let widget = host.host_snapshot.widgets.iter().find(|widget| widget_id_for(widget) == get_id).expect("get");
     let Widget::Neuron { output_ports, .. } = widget else { panic!("neuron") };
     assert_eq!(output_ports.len(), 2);
-    let node = host.dag.host_document.nodes.iter().find(|node| node.id == get_id).expect("get");
+    let node = host.dag.host_snapshot.nodes.iter().find(|node| node.id == get_id).expect("get");
     let labels: Vec<&str> = node.outputs().iter().map(|port| port.label.as_str()).collect();
     assert_eq!(labels, vec!["i", "i+1"]);
     host.retire_cold();
@@ -2216,10 +2216,10 @@ fn insert_between_rewires_downstream_and_connects_anchor() {
     let mut host = host_with_test_bridge();
     let mid = host.add_widget(r#"{"kind":"neuron","id":"mid","neuronKind":"math.passThrough"}"#, 120.0, 0.0).unwrap();
     host.insert_between("slider", "number", &mid, "number", "number").unwrap();
-    assert!(host.host_document.synapses.iter().any(|synapse| synapse.from == "slider" && synapse.to == "mid"));
-    assert!(host.host_document.synapses.iter().any(|synapse| synapse.from == "mid" && synapse.to == "add"));
-    assert!(host.host_document.synapses.iter().any(|synapse| synapse.from == "add" && synapse.to == "preview"));
-    assert!(!host.host_document.synapses.iter().any(|synapse| synapse.from == "slider" && synapse.to == "add"));
+    assert!(host.host_snapshot.synapses.iter().any(|synapse| synapse.from == "slider" && synapse.to == "mid"));
+    assert!(host.host_snapshot.synapses.iter().any(|synapse| synapse.from == "mid" && synapse.to == "add"));
+    assert!(host.host_snapshot.synapses.iter().any(|synapse| synapse.from == "add" && synapse.to == "preview"));
+    assert!(!host.host_snapshot.synapses.iter().any(|synapse| synapse.from == "slider" && synapse.to == "add"));
     host.retire_cold();
 }
 
@@ -2229,29 +2229,29 @@ fn insert_between_preserves_existing_mid_inputs() {
     let variable_id = host.add_widget(r#"{"kind":"variable","name":"width","schema":"number"}"#, 120.0, 0.0).unwrap();
     host.connect_ports("slider", "number", &variable_id, "width").unwrap();
     host.insert_between("slider", "number", &variable_id, "width", "width").unwrap();
-    assert!(host.host_document.synapses.iter().any(|synapse| synapse.from == "slider" && synapse.to == variable_id && synapse.to_port == "width"));
-    assert!(!host.host_document.synapses.iter().any(|synapse| synapse.from == variable_id && synapse.to == variable_id));
+    assert!(host.host_snapshot.synapses.iter().any(|synapse| synapse.from == "slider" && synapse.to == variable_id && synapse.to_port == "width"));
+    assert!(!host.host_snapshot.synapses.iter().any(|synapse| synapse.from == variable_id && synapse.to == variable_id));
     host.retire_cold();
 }
 
 #[test]
 fn make_space_shifts_widgets_right_of_anchor() {
     let mut host = host_with_test_bridge();
-    host.host_document.layout.insert("slider".into(), WidgetLayout { x: 0.0, y: 0.0 });
-    host.host_document.layout.insert("add".into(), WidgetLayout { x: 200.0, y: 0.0 });
-    host.host_document.layout.insert("preview".into(), WidgetLayout { x: 400.0, y: 0.0 });
+    host.host_snapshot.layout.insert("slider".into(), WidgetLayout { x: 0.0, y: 0.0 });
+    host.host_snapshot.layout.insert("add".into(), WidgetLayout { x: 200.0, y: 0.0 });
+    host.host_snapshot.layout.insert("preview".into(), WidgetLayout { x: 400.0, y: 0.0 });
     host.rebuild_dag();
     host.make_space("slider", 100.0, 0.0).unwrap();
-    assert!((host.host_document.layout.get("slider").expect("slider").x - 0.0).abs() < 1e-6);
-    assert!((host.host_document.layout.get("add").expect("add").x - 300.0).abs() < 1e-6);
-    assert!((host.host_document.layout.get("preview").expect("preview").x - 500.0).abs() < 1e-6);
+    assert!((host.host_snapshot.layout.get("slider").expect("slider").x - 0.0).abs() < 1e-6);
+    assert!((host.host_snapshot.layout.get("add").expect("add").x - 300.0).abs() < 1e-6);
+    assert!((host.host_snapshot.layout.get("preview").expect("preview").x - 500.0).abs() < 1e-6);
     host.retire_cold();
 }
 
 #[test]
 fn set_neuron_params_merges_into_eval_input() {
     let mut host = host_with_test_bridge();
-    let preview_synapse = host.host_document.synapses.iter().find(|synapse| synapse.from == "add" && synapse.to == "preview").map(|synapse| synapse.id.clone()).expect("preview synapse");
+    let preview_synapse = host.host_snapshot.synapses.iter().find(|synapse| synapse.from == "add" && synapse.to == "preview").map(|synapse| synapse.id.clone()).expect("preview synapse");
     host.disconnect(&preview_synapse).unwrap();
     let id = host.add_widget(r#"{"kind":"neuron","id":"pass","neuronKind":"math.passThrough"}"#, 100.0, 0.0).unwrap();
     host.connect_ports(&id, "number", "preview", "").unwrap();
@@ -2295,16 +2295,16 @@ fn variable_relay_evaluates_through_flow_host() {
 #[test]
 fn collapse_uses_variable_name_as_cluster_input_port() {
     let mut host = host_with_test_bridge();
-    host.host_document.layout.insert("slider".into(), WidgetLayout { x: 0.0, y: 0.0 });
+    host.host_snapshot.layout.insert("slider".into(), WidgetLayout { x: 0.0, y: 0.0 });
     let variable_id = host.add_widget(r#"{"kind":"variable","name":"width","schema":"number"}"#, 100.0, 0.0).unwrap();
-    host.host_document.layout.insert("add".into(), WidgetLayout { x: 200.0, y: 0.0 });
-    host.host_document.synapses.retain(|synapse| synapse.from != "slider" || synapse.to != "add");
+    host.host_snapshot.layout.insert("add".into(), WidgetLayout { x: 200.0, y: 0.0 });
+    host.host_snapshot.synapses.retain(|synapse| synapse.from != "slider" || synapse.to != "add");
     host.connect_ports("slider", "number", &variable_id, "width").unwrap();
     host.connect_ports(&variable_id, "width", "add", "a").unwrap();
     host.rebuild_dag();
     let cluster_id = host.collapse_selection(&[variable_id.clone(), "add".into()]).unwrap();
     let cluster = host
-        .fixture
+        .host_snapshot
         .widgets
         .iter()
         .find_map(|widget| match widget {
@@ -2315,7 +2315,7 @@ fn collapse_uses_variable_name_as_cluster_input_port() {
     let (inputs, _) = cluster.contract();
     assert!(inputs.iter().any(|port| port.name == "width"));
     host.explode_cluster(&cluster_id).unwrap();
-    assert!(host.host_document.widgets.iter().any(|widget| matches!(widget, Widget::Variable { name, .. } if name == "width")));
+    assert!(host.host_snapshot.widgets.iter().any(|widget| matches!(widget, Widget::Variable { name, .. } if name == "width")));
     cluster.retire_cold();
     host.retire_cold();
 }
@@ -2323,14 +2323,14 @@ fn collapse_uses_variable_name_as_cluster_input_port() {
 #[test]
 fn collapse_then_explode_round_trips() {
     let mut host = host_with_test_bridge();
-    host.host_document.layout.insert("slider".into(), WidgetLayout { x: 0.0, y: 0.0 });
-    host.host_document.layout.insert("add".into(), WidgetLayout { x: 200.0, y: 0.0 });
+    host.host_snapshot.layout.insert("slider".into(), WidgetLayout { x: 0.0, y: 0.0 });
+    host.host_snapshot.layout.insert("add".into(), WidgetLayout { x: 200.0, y: 0.0 });
     host.rebuild_dag();
     let cluster_id = host.collapse_selection(&["slider".into(), "add".into()]).unwrap();
-    assert!(host.host_document.widgets.iter().any(|widget| matches!(widget, Widget::Cluster { id, .. } if id == &cluster_id)));
+    assert!(host.host_snapshot.widgets.iter().any(|widget| matches!(widget, Widget::Cluster { id, .. } if id == &cluster_id)));
     host.explode_cluster(&cluster_id).unwrap();
-    assert!(host.host_document.widgets.iter().any(|widget| widget_id_for(widget).starts_with(&format!("{cluster_id}/"))));
-    assert!(!host.host_document.widgets.iter().any(|widget| matches!(widget, Widget::Cluster { .. })));
+    assert!(host.host_snapshot.widgets.iter().any(|widget| widget_id_for(widget).starts_with(&format!("{cluster_id}/"))));
+    assert!(!host.host_snapshot.widgets.iter().any(|widget| matches!(widget, Widget::Cluster { .. })));
     host.retire_cold();
 }
 
@@ -2339,9 +2339,9 @@ fn rectangle_extrude_fixture_port_labels_follow_draw_lod() {
     let _guard = RECTANGLE_EXTRUDE_FIXTURE_TEST_LOCK.get_or_init(|| Mutex::new(())).lock().unwrap_or_else(|error| error.into_inner());
     // 🩹️ Was `include_str!` of procedural's example fixture; procedural migrated that fixture to a
     // handcrafted DSL (`crate::os_store::ArtifactDsl`) — inlined the same flow-fixture JSON this test actually
-    // parses (`FlowHost::parse_host_document_json`), decoupled from procedural's document format.
+    // parses (`FlowHost::parse_host_snapshot_json`), decoupled from procedural's document format.
     let json = r#"{
-  "schema": "flow.host_document",
+  "schema": "flow.host_snapshot",
   "camera": { "x": 140, "y": -60, "zoom": 2.2 },
   "widgets": [
     { "kind": "inputSlider", "id": "width", "label": "Width", "value": 2, "min": 0.1, "max": 10, "step": 0.1 },
@@ -2399,11 +2399,11 @@ fn rectangle_extrude_fixture_port_labels_follow_draw_lod() {
   }
 }
 "#;
-    let fixture = FlowHost::parse_host_document_json(json).expect("fixture json");
-    let mut host = FlowHost::from_host_document(fixture);
+    let fixture = FlowHost::parse_host_snapshot_json(json).expect("fixture json");
+    let mut host = FlowHost::from_host_snapshot(fixture);
     host.set_neuron_kind_infos_json(&fixture_kind_infos_json());
     host.set_viewport(1280, 800, 1.0);
-    host.host_document.camera.zoom = 1.0;
+    host.host_snapshot.camera.zoom = 1.0;
     host.rebuild_dag();
     let mut port_texts = |lod: &str| -> Vec<String> {
         host.dag.set_automatic_lod(false);
@@ -2429,9 +2429,9 @@ fn rectangle_extrude_fixture_evaluates_solid_output() {
     let _guard = RECTANGLE_EXTRUDE_FIXTURE_TEST_LOCK.get_or_init(|| Mutex::new(())).lock().unwrap_or_else(|error| error.into_inner());
     // 🩹️ Was `include_str!` of procedural's example fixture; procedural migrated that fixture to a
     // handcrafted DSL (`crate::os_store::ArtifactDsl`) — inlined the same flow-fixture JSON this test actually
-    // parses (`FlowHost::parse_host_document_json`), decoupled from procedural's document format.
+    // parses (`FlowHost::parse_host_snapshot_json`), decoupled from procedural's document format.
     let json = r#"{
-  "schema": "flow.host_document",
+  "schema": "flow.host_snapshot",
   "camera": { "x": 140, "y": -60, "zoom": 2.2 },
   "widgets": [
     { "kind": "inputSlider", "id": "width", "label": "Width", "value": 2, "min": 0.1, "max": 10, "step": 0.1 },
@@ -2489,8 +2489,8 @@ fn rectangle_extrude_fixture_evaluates_solid_output() {
   }
 }
 "#;
-    let fixture = FlowHost::parse_host_document_json(json).expect("fixture json");
-    let mut host = FlowHost::from_host_document(fixture);
+    let fixture = FlowHost::parse_host_snapshot_json(json).expect("fixture json");
+    let mut host = FlowHost::from_host_snapshot(fixture);
     host.set_neuron_kind_infos_json(&fixture_kind_infos_json());
     let eval_json = host.evaluate().expect("evaluate");
     let parsed: serde_json::Value = serde_json::from_str(&eval_json).expect("eval json");
@@ -2503,9 +2503,9 @@ fn rectangle_extrude_fixture_evaluates_solid_output() {
 fn hexagonal_mushroom_fixture_reports_extruded_solid_output() {
     // 🩹️ Was `include_str!` of procedural's example fixture; procedural migrated that fixture to a
     // handcrafted DSL (`crate::os_store::ArtifactDsl`) — inlined the same flow-fixture JSON this test actually
-    // parses (`FlowHost::parse_host_document_json`), decoupled from procedural's document format.
+    // parses (`FlowHost::parse_host_snapshot_json`), decoupled from procedural's document format.
     let json = r#"{
-  "schema": "flow.host_document",
+  "schema": "flow.host_snapshot",
   "camera": { "x": 94.75581571737445, "y": -97.50833134679668, "zoom": 1.7844325616011099 },
   "widgets": [
     { "kind": "inputSlider", "id": "height", "label": "Column Height", "value": 6.0, "min": 0.0, "max": 10.0, "step": 0.5, "unit": "m" },
@@ -2535,8 +2535,8 @@ fn hexagonal_mushroom_fixture_reports_extruded_solid_output() {
   }
 }
 "#;
-    let fixture = FlowHost::parse_host_document_json(json).expect("fixture json");
-    let mut host = FlowHost::from_host_document(fixture);
+    let fixture = FlowHost::parse_host_snapshot_json(json).expect("fixture json");
+    let mut host = FlowHost::from_host_snapshot(fixture);
     host.set_neuron_kind_infos_json(&fixture_kind_infos_json());
     let eval_json = host.evaluate().expect("evaluate");
     let parsed: serde_json::Value = serde_json::from_str(&eval_json).expect("eval json");
@@ -2560,24 +2560,24 @@ fn compiled_wire_literal_includes_operator_kinds() {
 }
 
 #[test]
-fn flow_host_document_to_form_spec_maps_input_widgets() {
-    use self::forms_bridge::flow_host_document_to_form_spec;
-    let fixture = FlowHostDocument::default();
-    let spec = flow_host_document_to_form_spec(&fixture);
+fn flow_host_snapshot_to_form_spec_maps_input_widgets() {
+    use self::forms_bridge::flow_host_snapshot_to_form_spec;
+    let fixture = FlowHostSnapshot::default();
+    let spec = flow_host_snapshot_to_form_spec(&fixture);
     let kinds: Vec<&str> = spec.steps[0].blocks.iter().map(|question| question.kind.as_str()).collect();
     assert!(kinds.contains(&"slider"));
 }
 
 #[test]
-fn apply_generation_values_to_host_document_patches_slider_value() {
-    use self::forms_bridge::{apply_generation_values_to_host_document, flow_host_document_to_form_spec};
-    let fixture = FlowHostDocument::default();
-    let spec = flow_host_document_to_form_spec(&fixture);
+fn apply_generation_values_to_host_snapshot_patches_slider_value() {
+    use self::forms_bridge::{apply_generation_values_to_host_snapshot, flow_host_snapshot_to_form_spec};
+    let fixture = FlowHostSnapshot::default();
+    let spec = flow_host_snapshot_to_form_spec(&fixture);
     let slider_id = spec.steps[0].blocks.iter().find(|question| question.kind == "slider").map(|question| question.id.clone()).expect("slider question");
     let fixture_json = crate::os_pack::json::to_json_string(&fixture);
     let mut values = crate::os_pack::json::Object::new();
     values.insert(slider_id.clone(), crate::os_pack::json::Value::Number(8.0.into()));
-    let patched = apply_generation_values_to_host_document(&fixture_json, &values);
+    let patched = apply_generation_values_to_host_snapshot(&fixture_json, &values);
     let reparsed = crate::os_pack::json::parse(&patched).expect("patched json");
     let slider = reparsed.get("widgets").and_then(|widgets| widgets.as_array()).and_then(|widgets| widgets.iter().find(|widget| widget.get("id").and_then(|id| id.as_str()) == Some(slider_id.as_str()))).expect("slider widget");
     assert_eq!(slider.get("value").and_then(|value| value.as_f64()), Some(8.0));

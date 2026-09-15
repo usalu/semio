@@ -410,7 +410,7 @@ pub trait BrepKernel {
 
 use crate::standards::v1::subsets::brep::schema::snapshot::arena::ShellId;
 use crate::standards::v1::subsets::brep::schema::snapshot::topology::history::PersistentLabel;
-use crate::standards::v1::subsets::brep::schema::snapshot::topology::EntityRef;
+use crate::standards::v1::subsets::brep::schema::snapshot::topology::{EntityRef, ReachSet};
 
 /// 🧠 One live registry entry. Vertex/Edge/Face/🐚️Shell/Solid wrap the arena id whose own
 /// [`crate::standards::v1::subsets::brep::schema::snapshot::topology::history::PersistentLabel`]
@@ -619,29 +619,24 @@ impl Brep {
     /// since nothing else would otherwise keep them alive while the wire handle is live.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn live_roots(&self) -> Vec<EntityRef> {
-        let mut roots = Vec::new();
-        for entity in self.live.values() {
-            match entity {
-                Entity::Vertex(id) => roots.push(EntityRef::Vertex(*id)),
-                Entity::Edge(id) => roots.push(EntityRef::Edge(*id)),
-                Entity::Face(id) => roots.push(EntityRef::Face(*id)),
-                Entity::Shell(id) => roots.push(EntityRef::Shell(*id)),
-                Entity::Solid(id) => roots.push(EntityRef::Solid(*id)),
-                Entity::Compound(solids, _) => roots.extend(solids.iter().map(|s| EntityRef::Solid(*s))),
-                Entity::Wire(wire, _) => {
-                    roots.extend(wire.members.iter().map(|(edge, _)| EntityRef::Edge(*edge)));
-                    roots.extend(wire.vertices.iter().map(|v| EntityRef::Vertex(*v)));
-                }
-                Entity::Curve(_, _) | Entity::Surface(_, _) => {}
-            }
-        }
-        roots
+        self.live.values().flat_map(entity_roots).collect()
     }
 
     /// ♻️ Frees every arena entity no surviving live handle still reaches — the GC step `dispose`
     /// and `retain` both run after touching `self.live`.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    /// ⚠️ A live entry whose entity no longer RESOLVES is dropped first, and that ordering is the
+    /// whole point. A stale `(index, generation)` marks its own id into the protection set while the
+    /// arena's CURRENT id for that index is a different generation — so the compactor, seeing the
+    /// live id absent, frees a perfectly good entity, whose own handle then goes stale in turn. One
+    /// stale entry therefore eats the store one compaction at a time; measured as a boolean operator
+    /// answering `missing entity: solid solid-9-0` for a box whose handle every later evaluation
+    /// still named, which emptied the preview of every example built on it
+    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️slider-reevaluation-correctness-2026-09-15.md`).
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn compact_unreachable(&mut self) {
+        let body = &self.body;
+        self.live.retain(|_, entity| label_of_entity(body, entity).is_some());
         let roots = self.live_roots();
         let keep = self.body.reachable_from(&roots);
         self.body.compact(&keep);
@@ -689,6 +684,56 @@ impl Brep {
             _ => Err(BrepError::InvalidInput(format!("{} is not an edge", handle.as_str()))),
         }
     }
+}
+
+/// ♻️ The arena roots ONE live handle's entity keeps alive — the unit both the GC's protection set
+/// ([`Brep::live_roots`]) and the per-shape validation scope ([`Brep::validate_gate_sync`]) are built
+/// from, so a shape's reach means exactly the same thing to both.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn entity_roots(entity: &Entity) -> Vec<EntityRef> {
+    match entity {
+        Entity::Vertex(id) => vec![EntityRef::Vertex(*id)],
+        Entity::Edge(id) => vec![EntityRef::Edge(*id)],
+        Entity::Face(id) => vec![EntityRef::Face(*id)],
+        Entity::Shell(id) => vec![EntityRef::Shell(*id)],
+        Entity::Solid(id) => vec![EntityRef::Solid(*id)],
+        Entity::Compound(solids, _) => solids.iter().map(|solid| EntityRef::Solid(*solid)).collect(),
+        Entity::Wire(wire, _) => wire.members.iter().map(|(edge, _)| EntityRef::Edge(*edge)).chain(wire.vertices.iter().map(|vertex| EntityRef::Vertex(*vertex))).collect(),
+        Entity::Curve(_, _) | Entity::Surface(_, _) => Vec::new(),
+    }
+}
+
+/// 🎯️ Whether one [`ValidationIssue`]'s entity label names anything inside `reach`.
+///
+/// A label is a run of `<store>-<raw index>` pairs — `"edge-3"`, `"solid-11-void-shell-12"`,
+/// `"face-4-face-9"` — and the issue belongs to this shape when ANY pair it names is reachable from
+/// it. A label none of whose pairs can be read is treated as belonging to every shape: the gate's
+/// job is to refuse a shape it cannot vouch for, and an unreadable diagnostic is not a clean bill of
+/// health (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn validation_issue_reaches(reach: &ReachSet, label: &str) -> bool {
+    let parts: Vec<&str> = label.split('-').collect();
+    let mut readable = false;
+    for pair in parts.windows(2) {
+        let Ok(index) = pair[1].parse::<u32>() else { continue };
+        let matched = match pair[0] {
+            "vertex" => reach.vertices.iter().any(|id| id.raw_index() == index),
+            "edge" => reach.edges.iter().any(|id| id.raw_index() == index),
+            "coedge" => reach.coedges.iter().any(|id| id.raw_index() == index),
+            "loop" => reach.loops.iter().any(|id| id.raw_index() == index),
+            "face" => reach.faces.iter().any(|id| id.raw_index() == index),
+            "shell" => reach.shells.iter().any(|id| id.raw_index() == index),
+            "solid" => reach.solids.iter().any(|id| id.raw_index() == index),
+            "curve" => reach.curves3.iter().any(|id| id.raw_index() == index),
+            "surface" => reach.surfaces.iter().any(|id| id.raw_index() == index),
+            _ => continue,
+        };
+        readable = true;
+        if matched {
+            return true;
+        }
+    }
+    !readable
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -1610,10 +1655,20 @@ impl Brep {
         &self.body
     }
 
-    /// 🩺️ The structured validation gate every preview tessellation runs first: `Ok(())` when the
-    /// shape carries no ERROR-class issue, `Err(issues)` otherwise. Advisory `warning-` codes never
-    /// block. Unlike [`Brep::validate_sync`] this returns the typed issues instead of a JSON string,
-    /// so a host can route them into a typed diagnostic rather than re-parsing prose.
+    /// 🩺️ The structured validation gate every preview tessellation runs first: `Ok(())` when THE
+    /// SHAPE ASKED ABOUT carries no ERROR-class issue, `Err(issues)` otherwise. Advisory `warning-`
+    /// codes never block. Unlike [`Brep::validate_sync`] this returns the typed issues instead of a
+    /// JSON string, so a host can route them into a typed diagnostic rather than re-parsing prose.
+    ///
+    /// 🎯️ The verdict is SCOPED to the entities `shape` reaches. [`validate_body`] walks the whole
+    /// arena, and this kernel is process-wide: one invalid solid anywhere — a boolean result whose
+    /// void shell is not inverted, say — used to block the tessellation of every OTHER live handle
+    /// for as long as it stayed live. In the procedural playground that read as six of eight
+    /// examples settling on an empty preview payload reported as `idle`, with the geometry simply
+    /// gone (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
+    /// `📓️slider-reevaluation-correctness-2026-09-15.md`). An issue whose label names no entity this
+    /// shape reaches is somebody else's problem; an issue whose label this rule cannot read at all
+    /// still blocks, because an unreadable diagnostic is not evidence of health.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn validate_gate_sync(&self, shape: &GeometryHandle) -> Result<(), Vec<ValidationIssue>> {
         let Ok(entity) = self.entity(shape) else {
@@ -1622,7 +1677,8 @@ impl Brep {
         if !matches!(entity, Entity::Solid(_) | Entity::Shell(_) | Entity::Compound(_, _)) {
             return Ok(());
         }
-        let blocking: Vec<ValidationIssue> = validate_body(&self.body).into_iter().filter(|issue| !issue.code.starts_with("warning-")).collect();
+        let reach = self.body.reachable_from(&entity_roots(entity));
+        let blocking: Vec<ValidationIssue> = validate_body(&self.body).into_iter().filter(|issue| !issue.code.starts_with("warning-")).filter(|issue| validation_issue_reaches(&reach, &issue.entity)).collect();
         if blocking.is_empty() {
             Ok(())
         } else {

@@ -23,7 +23,7 @@ struct SyntheticSnapshot {
 }
 
 const SYNTHETIC_SNAPSHOT_JSON_SCHEMA: &str = r#"{
-  "$id": "https://semio.tech/schema/s/wave3/synthetic/snapshot.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/wave3/synthetic/snapshot.json",
   "title": "SyntheticSnapshot",
   "type": "object",
   "additionalProperties": false,
@@ -402,7 +402,7 @@ async fn empty_app_facet_leaves() -> FacetLeaves {
         typescript: "",
         graphql: "",
         json_schema: r#"{
-  "$id": "https://semio.tech/schema/app/placeholder/empty/config.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/app/placeholder/empty/config.json",
   "title": "EmptyConfig",
   "type": "object",
   "additionalProperties": false,
@@ -421,7 +421,7 @@ async fn app_schema_registry_accepts_placeholder_owner_for_wave_structure() {
         config: empty,
         presence: FacetLeaves {
             json_schema: r#"{
-  "$id": "https://semio.tech/schema/app/placeholder/empty/presence.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/app/placeholder/empty/presence.json",
   "title": "EmptyPresence",
   "type": "object",
   "additionalProperties": false,
@@ -438,7 +438,7 @@ async fn app_schema_registry_accepts_placeholder_owner_for_wave_structure() {
 
 //#region 🔖️SchemaExportResolution
 const EXPORT_LEAVES: FacetLeaves =
-    FacetLeaves { rust: "pub struct Thing;", typescript: "export type Thing = {};", graphql: "type Thing { id: String! }", json_schema: r#"{"$id":"https://semio.tech/schema/test/thing.json","type":"object"}"#, proto: "" };
+    FacetLeaves { rust: "pub struct Thing;", typescript: "export type Thing = {};", graphql: "type Thing { id: String! }", json_schema: r#"{"$id":"https://json.schemas.assets.semio-tech.com/test/thing.json","type":"object"}"#, proto: "" };
 
 #[semio_framework_async_macros::async_test]
 async fn artifact_schema_descriptor_registration_mirrors_its_facets_into_the_export_registry() {
@@ -513,7 +513,7 @@ async fn validation_diagnostics_round_trip_through_the_validation_error() {
 async fn structural_validator_resolves_cross_scope_refs_by_document_id() {
     const SHARED: [SchemaExport; 1] = [SchemaExport {
         id: "ScopeId",
-        leaves: FacetLeaves { rust: "", typescript: "", graphql: "", json_schema: r#"{"$id":"https://semio.tech/schema/test/shared.json","definitions":{"ScopeId":{"type":"string","pattern":"^[a-z][a-z0-9]*(\\.[a-z][a-z0-9-]*)+$"}}}"#, proto: "" },
+        leaves: FacetLeaves { rust: "", typescript: "", graphql: "", json_schema: r#"{"$id":"https://json.schemas.assets.semio-tech.com/test/shared.json","definitions":{"ScopeId":{"type":"string","pattern":"^[a-z][a-z0-9]*(\\.[a-z][a-z0-9-]*)+$"}}}"#, proto: "" },
     }];
     const CONSUMER: [SchemaExport; 1] = [SchemaExport {
         id: "Binding",
@@ -521,7 +521,7 @@ async fn structural_validator_resolves_cross_scope_refs_by_document_id() {
             rust: "",
             typescript: "",
             graphql: "",
-            json_schema: r#"{"$id":"https://semio.tech/schema/test/binding.json","type":"object","required":["scope"],"additionalProperties":false,"properties":{"scope":{"$ref":"https://semio.tech/schema/test/shared.json#/definitions/ScopeId"}}}"#,
+            json_schema: r#"{"$id":"https://json.schemas.assets.semio-tech.com/test/binding.json","type":"object","required":["scope"],"additionalProperties":false,"properties":{"scope":{"$ref":"https://json.schemas.assets.semio-tech.com/test/shared.json#/definitions/ScopeId"}}}"#,
             proto: "",
         },
     }];

@@ -94,7 +94,7 @@ def build_json(facet: str, title: str, fields: list, extra_defs: dict) -> str:
         **extra_defs,
     }
     doc = {
-        "$id": f"https://semio.tech/schema/s/reasoning/wires/{facet}.json",
+        "$id": f"https://json.schemas.assets.semio-tech.com/s/reasoning/wires/{facet}.json",
         "title": title,
         "type": "object",
         "additionalProperties": False,

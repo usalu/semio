@@ -1,7 +1,7 @@
 # 🧬️ Generation2d snapshot schema — artifact-lane fields only.
 
 type Generation2dSnapshot {
-  fixture: FlowFixture! @state(class: ARTIFACT)
+  hostSnapshot: FlowHostSnapshot! @state(class: ARTIFACT)
   generation: GenerationPlayState! @state(class: ARTIFACT)
 }
 
@@ -22,14 +22,14 @@ type SynapseSpec {
   toPort: String!
 }
 scalar Widget
-type FlowFixture {
+type FlowHostSnapshot {
   schema: String!
   camera: CameraJson!
   widgets: [Widget!]!
   synapses: [SynapseSpec!]!
-  layout: [FlowFixtureLayoutEntry!]!
+  layout: [FlowHostSnapshotLayoutEntry!]!
 }
-type FlowFixtureLayoutEntry {
+type FlowHostSnapshotLayoutEntry {
   key: String!
   value: WidgetLayout!
 }

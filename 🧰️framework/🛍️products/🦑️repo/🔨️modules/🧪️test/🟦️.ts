@@ -7,15 +7,15 @@
 //#endregion 🧲️Header
 
 //#region 🔌️Adapters
-import { packagesForOwner } from "./🕸️dependencies/🟨️.mjs";
 import { createHash } from "node:crypto";
 import { constants, cpSync, existsSync, linkSync, lstatSync, mkdirSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { opendir, readFile as readFileAsync } from "node:fs/promises";
 import { basename, dirname, isAbsolute, join, posix, relative, resolve, sep } from "node:path";
 import ts from "typescript";
+import { repoCacheDirectory } from "../📚️library/⚡️caching/🟦️.ts";
 import { type BreachRecord, TEST_LEVELS, type TestLevel, findRepoRoot, getRepoMetaDir, runProbe, testLevelBudgetMs } from "../📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { type Taxonomy, leadingEmojiIdentity, loadCatalogTaxonomy, mutationCatalogSourceOwner, mutationOwnerRelativePath, pathEmojiStatuteFindings } from "../📚️library/🔍️discovery/🟦️.ts";
-import { repoCacheDirectory } from "../📚️library/⚡️caching/🟦️.ts";
+import { packagesForOwner } from "./🕸️dependencies/🟨️.mjs";
 //#endregion 🔌️Adapters
 
 //#region 🔣️Contract
@@ -4296,7 +4296,7 @@ export const SCHEMA_DIAGNOSTIC_CODE_TABLE = {
   "schema-dialect-not-draft-07": { emitters: ["harness", "check"], description: "a schema document declares a `$schema` dialect other than the single one the taxonomy allows" },
   "schema-module-id-missing": { emitters: ["harness", "check"], description: "a schema module declares no `$id`, so nothing can `$ref` it across scopes" },
   "schema-document-id-duplicate": { emitters: ["check"], description: "two schema documents declare the same `$id`, so a cross-scope `$ref` to it addresses either of them" },
-  "schema-document-id-unaddressable": { emitters: ["check"], description: "a schema document's `$id` is not the `https://semio.tech/schema/<scope path>/<facet>.json` form the catalog resolves" },
+  "schema-document-id-unaddressable": { emitters: ["check"], description: "a schema document's `$id` is not the `https://json.schemas.assets.semio-tech.com/<scope path>/<facet>.json` form the catalog resolves" },
   "schema-module-id-inconsistent": { emitters: ["check"], description: "a facet document's `$id` deepens or leaves its module's scope path instead of varying only the facet filename" },
   "schema-document-unparseable": { emitters: ["check"], description: "a file in the canonical schema slot is not parseable JSON at all" },
   "schema-document-not-object": { emitters: ["check"], description: "a schema module leaf parses but is not a JSON Schema object" },

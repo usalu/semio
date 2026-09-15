@@ -23,13 +23,13 @@ use crate::editor::sequence::panels::{catalogue as catalogue_panel, document as 
 use crate::editor::sequence::terminology::sequence_play_labels;
 use crate::mutations::SequenceMutation;
 use crate::op::sequence_snapshot_mutations;
-use crate::{default_snapshot, SequenceCamera, SequenceEdge, SequenceHostDocument, SequenceSnapshot, SequenceStep, SequenceWorkingScene, SlotRef, StepParams, SEQUENCE_DOCUMENT_SCHEMA};
+use crate::{default_snapshot, SequenceCamera, SequenceEdge, SequenceHostSnapshot, SequenceSnapshot, SequenceStep, SequenceWorkingScene, SlotRef, StepParams, SEQUENCE_DOCUMENT_SCHEMA};
 use dag::{would_create_cycle, DagHost, DagLayoutOptions};
 use graph::manifest::PropertyBag;
 use imperative_engine::{compile_to_text as imperative_compile_to_text, imperative_catalogue_json, imperative_module_registry, Executor, Path, RunResult, Step};
 use infinite_board_port_directed_dag as dag;
 use neural_engine::{ChannelSpec, ColdOwner, Dictionary, Registry, RegistryRetirement, SharedRegistry, Value as NeuralValue, ValueRetirement, ValueRetirementStep};
-use semio_framework_artifact_infinite_dag::{dag_fixture_to_wire_literal, DagCamera, DagHostDocument, DagHostDocumentEdge, DagNodeSpec, EdgeRouteStyle, IoPortSpec, PortShape};
+use semio_framework_artifact_infinite_dag::{dag_host_snapshot_to_wire_literal, DagCamera, DagHostSnapshot, DagHostSnapshotEdge, DagNodeSpec, EdgeRouteStyle, IoPortSpec, PortShape};
 use semio_framework_plugin::{
     app::{ChildEmit, InteractionView}, ActionArgDef, ActionArgOption, ActionDefinition, ActionKind, AppActionRegistry, AppDefinition, AppIo, ArtifactEditor, ArtifactView, ConfigView, ContextMenuItemSpec,
     ContextMenuRequest, Dialect, DomainTopology, DraftView, DslValue, Editor, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractionTopology, Label, LocalizedLabel, Media, MediaError,
@@ -141,7 +141,7 @@ pub fn sequence_io() -> AppIo {
 /// `ArtifactApp::import_media` call): derives the next id purely from the snapshot's own existing
 /// `step-N`/`edge-N` ids, exactly like `SequenceHost::from_snapshot`'s own initial-serial derivation.
 pub fn next_available_step_id(snapshot: &SequenceSnapshot) -> String {
-    format!("step-{}", max_serial_in_snapshot(&snapshot.to_host_document()).max(100) + 1)
+    format!("step-{}", max_serial_in_snapshot(&snapshot.to_host_snapshot()).max(100) + 1)
 }
 
 /// 🧸️ Resolves the document's exact published content child through its captured member-store view.
@@ -157,9 +157,9 @@ pub fn sequence_working_scene_from_children(snapshot: &SequenceSnapshot, childre
 }
 
 /// 🎬️ Projects the published content child into the editor's plain execution snapshot.
-pub fn sequence_host_document_from_children(snapshot: &SequenceSnapshot, children: &semio_framework_plugin::app::ChildContentView) -> Result<ColdOwner<SequenceHostDocument>, Fault> {
+pub fn sequence_host_snapshot_from_children(snapshot: &SequenceSnapshot, children: &semio_framework_plugin::app::ChildContentView) -> Result<ColdOwner<SequenceHostSnapshot>, Fault> {
     let SequenceWorkingScene { steps, edges } = sequence_working_scene_from_children(snapshot, children)?.into_inner();
-    Ok(ColdOwner::new(SequenceHostDocument { schema: snapshot.schema.clone(), steps, edges }))
+    Ok(ColdOwner::new(SequenceHostSnapshot { schema: snapshot.schema.clone(), steps, edges }))
 }
 
 /// 🌊️ Publishes an edited Sequence working scene on its exact composed Flow child lane.
@@ -179,8 +179,8 @@ fn sequence_child_replace_emit_from_parts(snapshot: &SequenceSnapshot, steps: &[
 
 /// 🧰️ Applies one editor host mutation to the captured typed child and emits its exact replacement.
 pub fn sequence_child_emit_from_host_mutation(doc: &ArtifactView<'_, SequenceSnapshot>, mutate: impl FnOnce(&mut SequenceHost)) -> Result<Emit<SequenceMutation, NoConfigMutation>, Fault> {
-    let live = sequence_host_document_from_children(doc.snapshot, &doc.children)?;
-    let mut host = ColdOwner::new(host_from_document(&live));
+    let live = sequence_host_snapshot_from_children(doc.snapshot, &doc.children)?;
+    let mut host = ColdOwner::new(host_from_host_snapshot(&live));
     mutate(&mut host);
     if host.snapshot == *live {
         return Ok(Emit::default());
@@ -345,7 +345,7 @@ fn parse_serial_suffix(prefix: &str, id: &str) -> Option<u64> {
     id.strip_prefix(prefix)?.parse().ok()
 }
 
-fn max_serial_in_snapshot(snapshot: &SequenceHostDocument) -> u64 {
+fn max_serial_in_snapshot(snapshot: &SequenceHostSnapshot) -> u64 {
     let mut max = 0u64;
     for step in &snapshot.steps {
         if let Some(serial) = parse_serial_suffix("step-", &step.id) {
@@ -466,11 +466,11 @@ fn ensure_imperative_modules_for_tests() {
 
 pub struct SequenceHost {
     /// 🌊️ The plain pre-migration document shape (`{schema, steps, edges}`) — this plugin's own
-    /// working representation, matching `SequenceHostDocument`'s doc comment. `SequenceHost` edits this
+    /// working representation, matching `SequenceHostSnapshot`'s doc comment. `SequenceHost` edits this
     /// in place exactly as it edited `SequenceSnapshot.steps`/`.edges` directly before the
     /// `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` migration (`sequence→C:flow`) — only the
     /// boundary conversions (`from_snapshot`/`replace_snapshot`/`to_json`/`load_json`) changed.
-    pub snapshot: SequenceHostDocument,
+    pub snapshot: SequenceHostSnapshot,
     /// 🎥️ The canvas camera — session-only host state (never a `SequenceSnapshot` document field; see
     /// the exact main-window camera). Persists across `rebuild_dag()` calls
     /// within this `SequenceHost` instance (each document mutation rebuilds `dag` from scratch, so
@@ -497,21 +497,21 @@ impl Default for SequenceHost {
 
 impl SequenceHost {
     /// 🌊️ Builds a live host from a persisted composed-child snapshot — reads the real steps/edges
-    /// off the working-scene cache via `to_host_document()` (see `SequenceHostDocument`'s doc comment).
+    /// off the working-scene cache via `to_host_snapshot()` (see `SequenceHostSnapshot`'s doc comment).
     pub fn from_snapshot(snapshot: &SequenceSnapshot) -> Self {
-        Self::from_host_document(snapshot.to_host_document())
+        Self::from_host_snapshot(snapshot.to_host_snapshot())
     }
 
     /// 🌊️ Builds a live host directly from a plain snapshot (the WASM bridge's `loadFixtureJson`/
     /// `SequenceHost::load_json` entry point).
-    pub fn from_host_document(host_document: SequenceHostDocument) -> Self {
+    pub fn from_host_snapshot(host_snapshot: SequenceHostSnapshot) -> Self {
         #[cfg(test)]
         ensure_imperative_modules_for_tests();
-        let next_serial = max_serial_in_snapshot(&host_document).max(100);
+        let next_serial = max_serial_in_snapshot(&host_snapshot).max(100);
         let mut host = Self {
-            snapshot: host_document,
+            snapshot: host_snapshot,
             camera: SequenceCamera::default(),
-            dag: DagHost::from_host_document_without_layout(DagHostDocument { schema: "dag.host_document".into(), camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 }, nodes: vec![], edges: vec![] }),
+            dag: DagHost::from_host_snapshot_without_layout(DagHostSnapshot { schema: "dag.host_snapshot".into(), camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 }, nodes: vec![], edges: vec![] }),
             registry: imperative_module_registry(),
             next_serial,
         };
@@ -519,7 +519,7 @@ impl SequenceHost {
         host
     }
 
-    pub fn replace_snapshot(&mut self, snapshot: SequenceHostDocument) -> Result<(), SequenceCoreError> {
+    pub fn replace_snapshot(&mut self, snapshot: SequenceHostSnapshot) -> Result<(), SequenceCoreError> {
         if snapshot.schema != "sequence.sequence" {
             return Err(SequenceCoreError::UnsupportedSchema(snapshot.schema));
         }
@@ -530,11 +530,11 @@ impl SequenceHost {
     }
 
     pub fn load_json(json: &str) -> Result<Self, SequenceCoreError> {
-        let snapshot: SequenceHostDocument = dsl::os_pack::from_json_str(json).map_err(|error| SequenceCoreError::Json(error.to_string()))?;
+        let snapshot: SequenceHostSnapshot = dsl::os_pack::from_json_str(json).map_err(|error| SequenceCoreError::Json(error.to_string()))?;
         if snapshot.schema != "sequence.sequence" {
             return Err(SequenceCoreError::UnsupportedSchema(snapshot.schema));
         }
-        Ok(Self::from_host_document(snapshot))
+        Ok(Self::from_host_snapshot(snapshot))
     }
 
     pub fn to_json(&self) -> Result<String, SequenceCoreError> {
@@ -549,9 +549,9 @@ impl SequenceHost {
         use infinite_canvas::camera::{screen_to_world, Camera as CanvasCamera, Viewport};
         use infinite_canvas::Point;
         let viewport = Viewport { width: width.max(1), height: height.max(1), dpr: dpr.max(1.0) };
-        let camera = CanvasCamera { x: self.dag.host_document.camera.x, y: self.dag.host_document.camera.y, zoom: self.dag.host_document.camera.zoom };
+        let camera = CanvasCamera { x: self.dag.host_snapshot.camera.x, y: self.dag.host_snapshot.camera.y, zoom: self.dag.host_snapshot.camera.zoom };
         let world = screen_to_world(&camera, &viewport, Point::new(sx, sy));
-        for node in self.dag.host_document.nodes.iter().rev() {
+        for node in self.dag.host_snapshot.nodes.iter().rev() {
             let hw = node.width * 0.5;
             let hh = node.height * 0.5;
             if world.x >= node.x - hw && world.x <= node.x + hw && world.y >= node.y - hh && world.y <= node.y + hh {
@@ -683,7 +683,7 @@ impl SequenceHost {
     pub fn sync_edges_from_dag(&mut self) {
         let dag_pairs: Vec<(String, String)> = self
             .dag
-            .host_document
+            .host_snapshot
             .edges
             .iter()
             .filter_map(|dag_edge| {
@@ -708,10 +708,10 @@ impl SequenceHost {
     }
 
     pub fn sync_from_dag(&mut self) {
-        self.camera = sequence_camera_from_dag(&self.dag.host_document.camera);
+        self.camera = sequence_camera_from_dag(&self.dag.host_snapshot.camera);
         self.sync_edges_from_dag();
         for step in &mut self.snapshot.steps {
-            let Some(node) = self.dag.host_document.nodes.iter().find(|node| node.id == step.id) else {
+            let Some(node) = self.dag.host_snapshot.nodes.iter().find(|node| node.id == step.id) else {
                 continue;
             };
             step.x = node.x;
@@ -812,7 +812,7 @@ impl SequenceHost {
     /// 🌳️ Recomputes visible step positions using the shared layered DAG tree layout, then rebuilds the DAG view.
     pub fn reorganize(&mut self, opts: &DagLayoutOptions) -> Result<(), SequenceCoreError> {
         self.dag.reorganize(opts).map_err(|e| SequenceCoreError::Dag(e.to_string()))?;
-        let positions: HashMap<String, (f64, f64)> = self.dag.host_document.nodes.iter().map(|node| (node.id.clone(), (node.x, node.y))).collect();
+        let positions: HashMap<String, (f64, f64)> = self.dag.host_snapshot.nodes.iter().map(|node| (node.id.clone(), (node.x, node.y))).collect();
         for step in self.snapshot.steps.iter_mut() {
             if let Some(&(x, y)) = positions.get(&step.id) {
                 step.x = x;
@@ -833,32 +833,32 @@ impl SequenceHost {
 
     /// 📝️ Renders the compiled DAG snapshot as wire-literal text.
     pub fn compiled_wire_literal(&self) -> String {
-        dag_fixture_to_wire_literal(&self.build_dag_fixture())
+        dag_host_snapshot_to_wire_literal(&self.build_dag_host_snapshot())
     }
 
     fn rebuild_dag(&mut self) {
         let selected = self.dag.selected_node_ids();
-        let dag_fixture = self.build_dag_fixture();
-        self.dag = DagHost::from_host_document_without_layout(dag_fixture);
+        let dag_fixture = self.build_dag_host_snapshot();
+        self.dag = DagHost::from_host_snapshot_without_layout(dag_fixture);
         self.dag.set_camera(self.camera.x, self.camera.y, self.camera.zoom);
         if !selected.is_empty() {
             self.dag.set_selection(&selected);
         }
     }
 
-    fn build_dag_fixture(&self) -> DagHostDocument {
+    fn build_dag_host_snapshot(&self) -> DagHostSnapshot {
         let nodes: Vec<DagNodeSpec> = self.snapshot.steps.iter().filter(|step| self.is_step_visible(step)).map(|step| self.step_to_dag_node(step)).collect();
         let visible_ids: std::collections::HashSet<String> = nodes.iter().map(|node| node.id.clone()).collect();
         let existing: Vec<(String, String)> = self.snapshot.edges.iter().map(|edge| (edge.from.clone(), edge.to.clone())).collect();
-        let edges: Vec<DagHostDocumentEdge> = self
+        let edges: Vec<DagHostSnapshotEdge> = self
             .snapshot
             .edges
             .iter()
             .filter(|edge| visible_ids.contains(&edge.from) && visible_ids.contains(&edge.to))
             .filter(|edge| !would_create_cycle(&existing, &edge.from, &edge.to))
-            .map(|edge| DagHostDocumentEdge { id: edge.id.clone(), source: format!("{}@{}", edge.from, FLOW_OUTPUT_PORT), target: format!("{}@{}", edge.to, FLOW_INPUT_PORT), route_style: EdgeRouteStyle::SharpSz, properties: PropertyBag::new() })
+            .map(|edge| DagHostSnapshotEdge { id: edge.id.clone(), source: format!("{}@{}", edge.from, FLOW_OUTPUT_PORT), target: format!("{}@{}", edge.to, FLOW_INPUT_PORT), route_style: EdgeRouteStyle::SharpSz, properties: PropertyBag::new() })
             .collect();
-        DagHostDocument { schema: "dag.host_document".into(), camera: dag_camera_from_sequence(&self.camera), nodes, edges }
+        DagHostSnapshot { schema: "dag.host_snapshot".into(), camera: dag_camera_from_sequence(&self.camera), nodes, edges }
     }
 
     fn step_to_dag_node(&self, step: &SequenceStep) -> DagNodeSpec {
@@ -912,9 +912,9 @@ pub fn host_from_snapshot(snapshot: &SequenceSnapshot) -> SequenceHost {
     SequenceHost::from_snapshot(snapshot)
 }
 
-/// 🧸️ Builds a host from an already resolved typed child projection.
-pub fn host_from_document(host_document: &SequenceHostDocument) -> SequenceHost {
-    SequenceHost::from_host_document(host_document.clone())
+/// 🧸️ Builds a host from an already resolved typed host snapshot projection.
+pub fn host_from_host_snapshot(host_snapshot: &SequenceHostSnapshot) -> SequenceHost {
+    SequenceHost::from_host_snapshot(host_snapshot.clone())
 }
 
 /// 🧊️ Retires one synchronous execution result through its domain-owned dictionaries.
@@ -934,7 +934,7 @@ pub fn retire_run_result_cold(result: RunResult) {
 pub fn ops_from_host_mutation(snapshot: &SequenceSnapshot, mutate: impl FnOnce(&mut SequenceHost)) -> Vec<SequenceMutation> {
     let mut host = host_from_snapshot(snapshot);
     mutate(&mut host);
-    sequence_snapshot_mutations(&snapshot.to_host_document(), &host.snapshot)
+    sequence_snapshot_mutations(&snapshot.to_host_snapshot(), &host.snapshot)
 }
 //#endregion 🔖️HostHelpers
 
@@ -1904,8 +1904,8 @@ impl SequenceNodeGraphState {
                 let operation = &self.operations[self.operation];
                 let target = self.target.as_mut().ok_or_else(|| Fault::from("sequence-node-graph-target"))?;
                 match operation.get("operation").and_then(Value::as_str).unwrap_or("") {
-                    "setHostDocument" => {
-                        if let Some(mut snapshot) = operation.get("hostDocumentJson").and_then(Value::as_str).and_then(|json| dsl::os_pack::from_json_str::<SequenceHostDocument>(json).ok()) {
+                    "setHostSnapshot" => {
+                        if let Some(mut snapshot) = operation.get("hostSnapshotJson").and_then(Value::as_str).and_then(|json| dsl::os_pack::from_json_str::<SequenceHostSnapshot>(json).ok()) {
                             if snapshot.schema == SEQUENCE_DOCUMENT_SCHEMA && snapshot.steps.len() <= SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS && snapshot.edges.len() <= SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS {
                                 self.discarded_steps.extend(target.steps.drain(..));
                                 target.edges.clear();
@@ -3180,7 +3180,7 @@ impl ArtifactEditor for SequencePlayApp {
         let value: Value = serde_json::from_str(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
         let params_value = if value.is_object() { value } else { json!({ "value": value }) };
         let params: StepParams = dsl::os_pack::from_json_str(&params_value.to_string()).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
-        let mut live = sequence_host_document_from_children(doc.snapshot, &doc.children).map_err(|error| MediaError::Payload(port.to_string(), format!("{error:?}")))?;
+        let mut live = sequence_host_snapshot_from_children(doc.snapshot, &doc.children).map_err(|error| MediaError::Payload(port.to_string(), format!("{error:?}")))?;
         let id = format!("step-{}", max_serial_in_snapshot(&live).max(100) + 1);
         let x = live.steps.iter().map(|step| step.x).fold(0.0_f64, f64::max) + if live.steps.is_empty() { 0.0 } else { 280.0 };
         let step = SequenceStep { id, kind: "computation.import".into(), params, x, y: 0.0, slot: None, collapsed: false };
@@ -3228,7 +3228,7 @@ impl ArtifactEditor for SequencePlayApp {
     }
 
     fn render(body_key: &str, doc: &ArtifactView<'_, SequenceSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
-        let live = sequence_host_document_from_children(doc.snapshot, &doc.children)
+        let live = sequence_host_snapshot_from_children(doc.snapshot, &doc.children)
             .map_err(|error| semio_framework_plugin::PluginAssemblyError::new("sequence.child-content", format!("{error:?}")))?;
         let config = main::config::current(cfg);
         let transient = SequenceScriptWindowTransient::default();
@@ -3261,7 +3261,7 @@ impl ArtifactEditor for SequencePlayApp {
         transient: &semio_framework_plugin::TransientView<'_, semio_framework_plugin::NoTransient>,
         _interaction: &InteractionView<'_>,
     ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
-        let live = sequence_host_document_from_children(doc.snapshot, &doc.children)
+        let live = sequence_host_snapshot_from_children(doc.snapshot, &doc.children)
             .map_err(|error| semio_framework_plugin::PluginAssemblyError::new("sequence.child-content", format!("{error:?}")))?;
         let config = main::config::current(cfg);
         let transient = script::transient::current(transient);

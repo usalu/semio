@@ -10,15 +10,15 @@
  */
 // #endregion Header
 
+import Ajv from "ajv";
 import { type ChildProcessByStdio, spawn } from "node:child_process";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { createServer } from "node:net";
 import { join } from "node:path";
 import type { Readable } from "node:stream";
-import Ajv from "ajv";
+import { cargoTargetDirectory } from "../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
 
 export { getWorkspaceRoot } from "../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { cargoTargetDirectory } from "../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
 
 //#region 🧬️Scope-owned schema resolution
 
@@ -71,7 +71,7 @@ function schemaModulePath(repoRoot: string, scope: string): string {
 const schemaAjv = new Ajv({ strict: true, allErrors: true }).addKeyword({ keyword: "x-semio-formats", metaSchema: { type: "array", minItems: 1, items: { type: "string" } } });
 const schemaModuleIds = new Map<string, string>();
 
-const SCHEMA_ID_PREFIX = "https://semio.tech/schema/";
+const SCHEMA_ID_PREFIX = "https://json.schemas.assets.semio-tech.com/";
 
 /** 🧬️ Scope id of a document `$id`, per the `<scope path>/<facet>.json` grammar of the contract. */
 function schemaScopeOfId(id: string): string {

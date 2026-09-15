@@ -141,7 +141,7 @@ fn rename_fixture() -> J {
     ];
 
     J::O(vec![
-        ("schema".to_string(), s("https://semio.tech/schema/repo/move/1#/$defs/RenameVectorFile")),
+        ("schema".to_string(), s("https://json.schemas.assets.semio-tech.com/repo/move/1#/$defs/RenameVectorFile")),
         ("tokenVectors".to_string(), J::A(vectors)),
         ("trees".to_string(), J::A(trees)),
         ("errors".to_string(), J::A(errors)),
@@ -222,7 +222,7 @@ fn section_move_fixture() -> J {
     let missing = Workspace::new().with_file("sample.ts", TYPESCRIPT_FILE);
     let error = plan_section_move(&missing, "absent.ts", "Alpha", "Gamma").err().expect("refused").0;
     J::O(vec![
-        ("schema".to_string(), s("https://semio.tech/schema/repo/move/1#/$defs/SectionMoveFile")),
+        ("schema".to_string(), s("https://json.schemas.assets.semio-tech.com/repo/move/1#/$defs/SectionMoveFile")),
         ("cases".to_string(), J::A(cases)),
         (
             "errors".to_string(),
@@ -269,7 +269,7 @@ fn section_extract_fixture() -> J {
         extract_error(&workspace, "a-sectionless-language-is-refused", "plain.txt", "Alpha", "out.txt"),
     ];
     J::O(vec![
-        ("schema".to_string(), s("https://semio.tech/schema/repo/move/1#/$defs/SectionExtractFile")),
+        ("schema".to_string(), s("https://json.schemas.assets.semio-tech.com/repo/move/1#/$defs/SectionExtractFile")),
         ("cases".to_string(), J::A(cases)),
         ("errors".to_string(), J::A(errors)),
     ])
@@ -326,7 +326,7 @@ fn file_integrate_fixture() -> J {
         integrate_error(&workspace, "an-unknown-parent-section-is-refused", "gamma.ts", "Gamma", "sample.ts", "Missing"),
     ];
     J::O(vec![
-        ("schema".to_string(), s("https://semio.tech/schema/repo/move/1#/$defs/FileIntegrateFile")),
+        ("schema".to_string(), s("https://json.schemas.assets.semio-tech.com/repo/move/1#/$defs/FileIntegrateFile")),
         ("cases".to_string(), J::A(cases)),
         ("errors".to_string(), J::A(errors)),
     ])
@@ -393,7 +393,7 @@ fn file_folder_move_fixture() -> J {
         move_error(&before, "an-occupied-file-target-is-refused", "file", "src/keep.ts", "src/old/main.ts"),
     ];
     J::O(vec![
-        ("schema".to_string(), s("https://semio.tech/schema/repo/move/1#/$defs/FileFolderMoveFile")),
+        ("schema".to_string(), s("https://json.schemas.assets.semio-tech.com/repo/move/1#/$defs/FileFolderMoveFile")),
         ("cases".to_string(), J::A(cases)),
         ("errors".to_string(), J::A(errors)),
     ])

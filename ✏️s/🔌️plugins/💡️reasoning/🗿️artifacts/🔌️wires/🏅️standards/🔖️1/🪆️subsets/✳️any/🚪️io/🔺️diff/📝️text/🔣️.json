@@ -1,5 +1,5 @@
 {
-  "$id": "https://semio.tech/schema/s/reasoning/wires/diff/text.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/reasoning/wires/diff/text.json",
   "title": "WiresDiffText",
   "type": "object"
 }

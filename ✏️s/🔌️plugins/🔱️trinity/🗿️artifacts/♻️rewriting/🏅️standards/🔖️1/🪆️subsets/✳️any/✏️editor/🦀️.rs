@@ -199,7 +199,7 @@ fn apply_rewriting_to_fixture(before_json: &str, state: &RewritingSnapshot) -> S
         return before_json.into();
     };
     if schema::apply_rule(&mut graph, &rule, &state.parameter_bindings).is_ok() {
-        graph.host_document_json().unwrap_or_else(|_| before_json.into())
+        graph.host_snapshot_json().unwrap_or_else(|_| before_json.into())
     } else {
         before_json.into()
     }
@@ -269,14 +269,14 @@ pub(crate) fn lhs_graph_fixture_json(lhs_json: &str, rule_layout: &BTreeMap<Stri
     let Ok(lhs) = pack::from_json_str::<schema::Lhs>(lhs_json) else {
         return nakagin_fixture_json();
     };
-    semio_s_artifact_trinity_jack::Graph::from_snapshot(lhs_semantic_graph_fixture(&lhs, rule_layout)).ok().and_then(|graph| graph.host_document_json().ok()).unwrap_or_else(nakagin_fixture_json)
+    semio_s_artifact_trinity_jack::Graph::from_snapshot(lhs_semantic_graph_fixture(&lhs, rule_layout)).ok().and_then(|graph| graph.host_snapshot_json().ok()).unwrap_or_else(nakagin_fixture_json)
 }
 
 pub(crate) fn rhs_graph_fixture_json(rhs_json: &str, rule_layout: &BTreeMap<String, LayoutPoint>) -> String {
     let Ok(rhs) = pack::from_json_str::<Rhs>(rhs_json) else {
         return nakagin_fixture_json();
     };
-    semio_s_artifact_trinity_jack::Graph::from_snapshot(rhs_semantic_graph_fixture(&rhs, rule_layout)).ok().and_then(|graph| graph.host_document_json().ok()).unwrap_or_else(nakagin_fixture_json)
+    semio_s_artifact_trinity_jack::Graph::from_snapshot(rhs_semantic_graph_fixture(&rhs, rule_layout)).ok().and_then(|graph| graph.host_snapshot_json().ok()).unwrap_or_else(nakagin_fixture_json)
 }
 
 /// 🕹️ Used by `interaction_topology` to hang a var-reference `TopologyNode` off its graph node
@@ -372,7 +372,7 @@ pub(crate) fn render_fixture_graph(surface_id: &str, fixture_json: &str, cfg: &w
 /// 🎯️ `TrinityRewritingPlayApp::Command` — the SOLE dispatch surface for rewriting's own behavior. Kept
 /// hand-rolled (see `jack::TrinityJackCommand`'s doc comment for the rationale). `NodeGraphEdit` keeps
 /// its JSON-array `operations` shape (rather than a typed sub-enum) — the same
-/// `{"operation":"setHostDocument"|"deleteSelection", ...}` payload `apply_rewriting_node_graph_edit_operations`
+/// `{"operation":"setHostSnapshot"|"deleteSelection", ...}` payload `apply_rewriting_node_graph_edit_operations`
 /// already parses, carried as an opaque string field.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslOps)]
 pub enum TrinityRewritingCommand {

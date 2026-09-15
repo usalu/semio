@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/gltf/2.0/any/diff.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/diff.json",
   "title": "GltfDiff",
   "description": "Sparse per-field diff. Index-keyed collection triples per top-level array; no full-replace snapshot slot.",
   "type": "object",

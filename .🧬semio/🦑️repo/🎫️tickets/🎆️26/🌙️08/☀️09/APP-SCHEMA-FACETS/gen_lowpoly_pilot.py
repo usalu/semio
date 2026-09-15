@@ -140,10 +140,10 @@ for d in [config_schema, presence, presence_schema]:
     d.mkdir(parents=True, exist_ok=True)
 
 (config_schema / "🔣️component.json").write_text(
-    json.dumps(emit_json("LowpolyConfig", fields, "local-ui", "https://semio.tech/schema/app/lowpoly/lowpoly/config.json"), indent=2) + "\n"
+    json.dumps(emit_json("LowpolyConfig", fields, "local-ui", "https://json.schemas.assets.semio-tech.com/app/lowpoly/lowpoly/config.json"), indent=2) + "\n"
 )
 (presence_schema / "🔣️component.json").write_text(
-    json.dumps(emit_json("LowpolyPresence", presence_fields, "shared-ui", "https://semio.tech/schema/app/lowpoly/lowpoly/presence.json"), indent=2) + "\n"
+    json.dumps(emit_json("LowpolyPresence", presence_fields, "shared-ui", "https://json.schemas.assets.semio-tech.com/app/lowpoly/lowpoly/presence.json"), indent=2) + "\n"
 )
 
 (config_schema / "🦀️component.rs").write_text(

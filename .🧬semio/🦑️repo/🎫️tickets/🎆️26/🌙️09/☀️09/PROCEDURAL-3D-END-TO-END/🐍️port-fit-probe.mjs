@@ -202,7 +202,7 @@ if (wgpu) {
 if (!wgpu) {
   // 🪟️ React paints its node graph on ONE canvas, so the ports are not in the DOM. The host publishes
   // its own geometry through `window.__semioFlowGraphProbe[surfaceId]` — `entity(domain, id)`,
-  // `fixtureJson()`, `rect()` — the same door the wire-drag lane aimed through
+  // `hostSnapshotJson()`, `rect()` — the same door the wire-drag lane aimed through
   // (`📓️node-graph-wire-drag-2026-09-13.md` §4). Entity warm-up is asynchronous, so every read polls.
   await waitFor("converged", 90).catch(() => false);
   await settle(12000);
@@ -213,7 +213,7 @@ if (!wgpu) {
   const fixture = async () =>
     page.evaluate((id) => {
       try {
-        return JSON.parse(globalThis.__semioFlowGraphProbe?.[id]?.fixtureJson() ?? "null");
+        return JSON.parse(globalThis.__semioFlowGraphProbe?.[id]?.hostSnapshotJson() ?? "null");
       } catch {
         return null;
       }
@@ -292,7 +292,7 @@ if (!wgpu) {
     }
     await settle(2000);
     const zoomed = await cameraOf();
-    // 📐️ `fixtureJson().camera` is the DOCUMENT camera — the guest republishes it, so it does not move
+    // 📐️ `hostSnapshotJson().camera` is the DOCUMENT camera — the guest republishes it, so it does not move
     // under a live wheel. What moves is where the host places the nodes, so the fit is measured on the
     // NODE RECTS the host resolves, before and after.
     const rectOf = async (widget) => (await entity("node", widget, 6))?.rect ?? null;

@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/window/gis/map/config/mutation/set-render-mode/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/window/gis/map/config/mutation/set-render-mode/schema.json",
   "title": "SetRenderMode",
   "type": "object",
   "$defs": {

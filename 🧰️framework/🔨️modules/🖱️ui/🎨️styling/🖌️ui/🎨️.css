@@ -7067,8 +7067,16 @@
   transition: border-color 120ms ease;
 }
 
-:is([data-slot="panel"][data-panel="mobilePanel"]):hover [data-slot="chrome-frame"] {
+:is([data-slot="panel"], [data-slot="pane"]):hover [data-slot="chrome-frame"] {
   border-color: var(--border-emphasized-color) !important;
+}
+
+/* 🪟️ Window / panel / pane silhouette stacks: emphasize this stack's own SVG stroke while the pointer is
+ * inside the unit (`:hover` only — never `:focus-within`). Direct-child only — nested pane/panel chips
+ * inside a window body must not inherit the enclosing window's hover emphasis. Only `data-kind="normal"`. */
+[data-window-silhouette]:hover > [data-window-silhouette-border][data-kind="normal"]:not([data-pending]) path {
+  stroke: var(--border-emphasized-color);
+  transition: stroke 120ms ease;
 }
 
 /* 🎓️ Introduction step body: emphasize only the paragraph under the pointer — never sibling

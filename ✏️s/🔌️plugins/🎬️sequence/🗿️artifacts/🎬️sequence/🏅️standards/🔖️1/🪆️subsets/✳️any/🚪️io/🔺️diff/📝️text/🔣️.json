@@ -1,5 +1,5 @@
 {
-  "$id": "https://semio.tech/schema/s/sequence/sequence/diff/text.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/sequence/sequence/diff/text.json",
   "title": "SequenceDiffText",
   "type": "object"
 }

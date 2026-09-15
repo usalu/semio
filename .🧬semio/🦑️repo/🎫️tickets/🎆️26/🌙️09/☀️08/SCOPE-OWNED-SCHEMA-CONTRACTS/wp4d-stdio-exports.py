@@ -27,7 +27,7 @@ from collections import Counter, OrderedDict, defaultdict
 REPO = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..", "..", "..", "..", ".."))
 ARTIFACTS = os.path.join(REPO, "✏️s", "🔌️plugins", "🗄️stdio", "🗿️artifacts")
 DIALECT = "http://json-schema.org/draft-07/schema#"
-ID_BASE = "https://semio.tech/schema/"
+ID_BASE = "https://json.schemas.assets.semio-tech.com/"
 SCHEMA_DIR = "🧬️schema"
 MUTATIONS_DIR = "🧬️mutations"
 LEAF = "🔣️.json"

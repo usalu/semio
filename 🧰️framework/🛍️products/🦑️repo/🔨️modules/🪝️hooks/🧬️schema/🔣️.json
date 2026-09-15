@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://semio.tech/schema/repo/hooks.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/repo/hooks.json",
   "title": "🪝️ repo hooks",
   "description": "🪝️ Wire shapes of the repo hooks module: the native payload each IDE writes to the hook binary's stdin, the neutral hook context it is normalised into, the hook result records that come back, and the session log the invocation is recorded in.",
   "type": "object",

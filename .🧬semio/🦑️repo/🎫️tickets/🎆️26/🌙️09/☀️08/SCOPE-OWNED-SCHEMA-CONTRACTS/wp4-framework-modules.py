@@ -56,7 +56,7 @@ def scope_path(module):
 
 
 def module_id(module):
-    return f"https://semio.tech/schema/{scope_path(module)}/schema.json"
+    return f"https://json.schemas.assets.semio-tech.com/{scope_path(module)}/schema.json"
 
 
 def scope_id(module):
@@ -353,7 +353,7 @@ def main():
         # fold an already-present module file in first
         if target in fset and not any(r["src"] == target for r in rows):
             cur = load(target)
-            if isinstance(cur, dict) and "$defs" in cur and str(cur.get("$id", "")).startswith("https://semio.tech/schema/framework/"):
+            if isinstance(cur, dict) and "$defs" in cur and str(cur.get("$id", "")).startswith("https://json.schemas.assets.semio-tech.com/framework/"):
                 defs.update(cur["$defs"])
                 definitions.update(cur.get("definitions", {}) or {})
             else:

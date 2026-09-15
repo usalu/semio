@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/os/config/mutation/set-default-app/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/os/config/mutation/set-default-app/schema.json",
   "title": "SetDefaultApp",
   "type": "object",
   "additionalProperties": false,
@@ -11,13 +11,13 @@
   ],
   "properties": {
     "dialect": {
-      "$ref": "https://semio.tech/schema/framework/io/schema.json#/$defs/ArtifactDialect"
+      "$ref": "https://json.schemas.assets.semio-tech.com/framework/io/schema.json#/$defs/ArtifactDialect"
     },
     "role": {
-      "$ref": "https://semio.tech/schema/framework/manifest/schema.json#/$defs/AppRole"
+      "$ref": "https://json.schemas.assets.semio-tech.com/framework/manifest/schema.json#/$defs/AppRole"
     },
     "app": {
-      "$ref": "https://semio.tech/schema/framework/manifest/schema.json#/$defs/AppRef"
+      "$ref": "https://json.schemas.assets.semio-tech.com/framework/manifest/schema.json#/$defs/AppRef"
     }
   }
 }

@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/framework/actor/return/response/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/actor/return/response/schema.json",
   "title": "Actor Return Response Schema Module",
   "definitions": {
     "hex": {
@@ -30,7 +30,7 @@
           ]
         },
         "activationGeneration": {
-          "$ref": "https://semio.tech/schema/framework/value/schema.json#/$defs/NonZeroU64"
+          "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/NonZeroU64"
         },
         "transportRequestSequence": {
           "$ref": "#/$defs/TransportRequestSequence"
@@ -51,13 +51,13 @@
           "const": "result"
         },
         "activationGeneration": {
-          "$ref": "https://semio.tech/schema/framework/value/schema.json#/$defs/NonZeroU64"
+          "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/NonZeroU64"
         },
         "transportRequestSequence": {
           "$ref": "#/$defs/TransportRequestSequence"
         },
         "result": {
-          "$ref": "https://semio.tech/schema/framework/actor/return/schema.json#/$defs/Result"
+          "$ref": "https://json.schemas.assets.semio-tech.com/framework/actor/return/schema.json#/$defs/Result"
         }
       }
     },
@@ -75,7 +75,7 @@
           "const": "fault"
         },
         "activationGeneration": {
-          "$ref": "https://semio.tech/schema/framework/value/schema.json#/$defs/NonZeroU64"
+          "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/NonZeroU64"
         },
         "transportRequestSequence": {
           "$ref": "#/$defs/TransportRequestSequence"
@@ -141,7 +141,7 @@
             ],
             "properties": {
               "value": {
-                "$ref": "https://semio.tech/schema/framework/actor/return/response/schema.json#/$defs/Response"
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/actor/return/response/schema.json#/$defs/Response"
               },
               "resultHex": {
                 "$ref": "#/definitions/hex"

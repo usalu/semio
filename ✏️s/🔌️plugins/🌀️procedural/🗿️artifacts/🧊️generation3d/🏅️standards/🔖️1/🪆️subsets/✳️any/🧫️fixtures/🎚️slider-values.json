@@ -1,0 +1,107 @@
+{
+  "$comment": "🎚️ What a MOVED slider must deliver. One row per gesture shape per example: a short drag inside the range, each range end, and a burst whose values land before any evaluation answers. The delivered preview payload must equal the ORACLE for the value the gesture released on — the same graph evaluated at that value and tessellated at the same preview LOD — and a value the kernel genuinely cannot build must publish that node's `error` with a message, never an empty payload under `idle`. Language-agnostic: the Rust law is `✏️editor/🧪️tests/🎚️slider-values`. See `📓️slider-reevaluation-correctness-2026-09-15.md`.",
+  "schema": "s.procedural.generation3d.slider-values/v1",
+  "lodMode": "",
+  "boundsTolerance": 0.001,
+  "handedOn": {
+    "brep-input-handle-lifetime": "A boolean operator leaves its INPUT solid unusable: after one `brep.bool.fuse`/`cut`, the box handle its sibling node still names resolves to a freed arena slot, so the next evaluation of the same graph answers `missing handle: <digest>` for an input whose own node never changed. The oracle — a fresh host that rebuilds the input — succeeds at the same value. Witnessed as `retain left dangling live handles: [<handle>=ssolid-9-0]` inside the kernel's own compaction. Owner: the brep boolean's input lifetime (`🧊️brep/🧬️schema/🔺️diff/🔀️boolean`), not the gesture chain. A handed-on row must still FAIL, so a fix cannot rot unnoticed."
+  },
+  "rows": [
+    {
+      "example": "hexagonal-mushroom-column",
+      "slider": "height",
+      "min": 0.0,
+      "max": 10.0,
+      "gestures": [
+        { "row": "inside", "kind": "drag", "values": [6.5, 7.0, 7.5, 8.0] },
+        { "row": "max-end", "kind": "drag", "values": [9.0, 9.5, 10.0] },
+        { "row": "min-end", "kind": "drag", "values": [2.0, 1.0, 0.0] },
+        { "row": "burst", "kind": "burst", "values": [1.5, 4.5, 9.5, 3.5] }
+      ]
+    },
+    {
+      "example": "rectangle-extrude-volume",
+      "slider": "distance",
+      "min": 0.1,
+      "max": 10.0,
+      "gestures": [
+        { "row": "inside", "kind": "drag", "values": [4.0, 5.0, 6.0] },
+        { "row": "max-end", "kind": "drag", "values": [9.0, 10.0] },
+        { "row": "min-end", "kind": "drag", "values": [1.0, 0.1] },
+        { "row": "burst", "kind": "burst", "values": [2.5, 7.5, 3.0] }
+      ]
+    },
+    {
+      "example": "sphere-cut-with-torus",
+      "slider": "slider_2",
+      "min": 0.0,
+      "max": 10.0,
+      "gestures": [
+        { "row": "inside", "kind": "drag", "values": [2.5, 3.0, 3.5] },
+        { "row": "max-end", "kind": "drag", "values": [8.0, 10.0] },
+        { "row": "min-end", "kind": "drag", "values": [1.0, 0.0] },
+        { "row": "burst", "kind": "burst", "values": [1.5, 6.0, 2.8] }
+      ]
+    },
+    {
+      "example": "box-fillet-preview",
+      "slider": "radius",
+      "min": 0.01,
+      "max": 0.5,
+      "gestures": [
+        { "row": "inside", "kind": "drag", "values": [0.2, 0.25, 0.3] },
+        { "row": "max-end", "kind": "drag", "values": [0.4, 0.5] },
+        { "row": "min-end", "kind": "drag", "values": [0.05, 0.01] },
+        { "row": "burst", "kind": "burst", "values": [0.12, 0.45, 0.22] }
+      ]
+    },
+    {
+      "example": "sphere-box-fuse",
+      "slider": "radius",
+      "min": 0.2,
+      "max": 3.0,
+      "gestures": [
+        { "row": "inside", "kind": "drag", "values": [1.4, 1.8, 2.2] },
+        { "row": "max-end", "kind": "drag", "values": [2.6, 3.0], "handedOn": "brep-input-handle-lifetime" },
+        { "row": "min-end", "kind": "drag", "values": [0.6, 0.2], "handedOn": "brep-input-handle-lifetime" },
+        { "row": "burst", "kind": "burst", "values": [0.8, 2.7, 1.6] }
+      ]
+    },
+    {
+      "example": "face-sweep-extrude",
+      "slider": "distance",
+      "min": 0.5,
+      "max": 10.0,
+      "gestures": [
+        { "row": "inside", "kind": "drag", "values": [5.0, 6.0, 7.0] },
+        { "row": "max-end", "kind": "drag", "values": [9.0, 10.0] },
+        { "row": "min-end", "kind": "drag", "values": [1.5, 0.5] },
+        { "row": "burst", "kind": "burst", "values": [2.0, 8.5, 3.5] }
+      ]
+    },
+    {
+      "example": "rectangle-wire-preview",
+      "slider": "width",
+      "min": 0.2,
+      "max": 6.0,
+      "gestures": [
+        { "row": "inside", "kind": "drag", "values": [2.5, 3.0, 3.5] },
+        { "row": "max-end", "kind": "drag", "values": [5.0, 6.0] },
+        { "row": "min-end", "kind": "drag", "values": [1.0, 0.2] },
+        { "row": "burst", "kind": "burst", "values": [1.2, 5.5, 2.4] }
+      ]
+    },
+    {
+      "example": "box-shell-preview",
+      "slider": "thickness",
+      "min": 0.05,
+      "max": 0.8,
+      "gestures": [
+        { "row": "inside", "kind": "drag", "values": [0.3, 0.4, 0.5] },
+        { "row": "max-end", "kind": "drag", "values": [0.7, 0.8] },
+        { "row": "min-end", "kind": "drag", "values": [0.1, 0.05] },
+        { "row": "burst", "kind": "burst", "values": [0.15, 0.75, 0.35] }
+      ]
+    }
+  ]
+}

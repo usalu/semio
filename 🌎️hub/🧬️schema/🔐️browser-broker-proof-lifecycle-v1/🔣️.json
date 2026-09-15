@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/hub/browser-broker-proof-lifecycle-fixture/v1",
+  "$id": "https://json.schemas.assets.semio-tech.com/hub/browser-broker-proof-lifecycle-fixture/v1",
   "type": "object",
   "additionalProperties": false,
   "required": ["schema", "limits", "delayedBootstrap", "bootstrapExpiry", "expected"],

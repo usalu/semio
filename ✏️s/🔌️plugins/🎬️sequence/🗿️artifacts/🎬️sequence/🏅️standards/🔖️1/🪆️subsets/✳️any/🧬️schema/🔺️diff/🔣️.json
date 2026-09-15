@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/sequence/sequence/diff.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/sequence/sequence/diff.json",
   "title": "SequenceDiff",
   "type": "object",
   "additionalProperties": false,
@@ -16,7 +16,7 @@
       "x-semio-state": "artifact"
     },
     "content": {
-      "$ref": "https://semio.tech/schema/os/store/child.json",
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child.json",
       "x-semio-state": "artifact",
       "x-semio-child-kind": "s.stdio.semio.flow"
     }
@@ -51,7 +51,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "https://semio.tech/schema/s/sequence/sequence/artifact.json#/$defs/SequenceStep"
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/sequence/sequence/artifact.json#/$defs/SequenceStep"
           }
         },
         "removed": {
@@ -87,7 +87,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "https://semio.tech/schema/s/sequence/sequence/artifact.json#/$defs/SequenceEdge"
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/sequence/sequence/artifact.json#/$defs/SequenceEdge"
           }
         },
         "removed": {

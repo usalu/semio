@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/pdf/1.7/ua/mutation/set-display-doc-title/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/ua/mutation/set-display-doc-title/schema.json",
   "title": "SetDisplayDocTitle",
   "type": "object",
   "additionalProperties": false,

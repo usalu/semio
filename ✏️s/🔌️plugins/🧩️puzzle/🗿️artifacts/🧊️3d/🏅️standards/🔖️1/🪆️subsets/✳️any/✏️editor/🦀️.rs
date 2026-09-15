@@ -10,7 +10,7 @@
 //! `serde_json::Value` fixture (see `crate::standards::v1::subsets::any::schema::mutations::text`'s `🔖️ValueBridge`), not the typed
 //! `Puzzle3dSnapshot` — the `Puzzle3dFixture` model below is this app's own structural twin of it,
 //! and each action emits the granular typed operation delta
-//! (`puzzle3d_operations_from_host_document_change`) turning the old fixture into the new one.
+//! (`puzzle3d_operations_from_host_snapshot_change`) turning the old fixture into the new one.
 
 use crate::editor::puzzle3d::commands::{
     accept_suggestion, add_brush_object, add_object_kind, add_target_volume, apply_sun, close_vortex_suggestions, create_attraction, cycle_candidate, delete_attraction, delete_selection, delete_target_volume, duplicate_selection, engagement_abort, export_fixture,
@@ -321,8 +321,8 @@ pub fn puzzle3d_fixture_from_projection(projection: &Value) -> Puzzle3dFixture {
 }
 
 fn puzzle3d_mutations_between(before: &Puzzle3dFixture, after: &Puzzle3dFixture) -> Vec<Puzzle3dMutation> {
-    let before_snapshot = puzzle3d_snapshot_from_host_document(before);
-    let after_snapshot = puzzle3d_snapshot_from_host_document(after);
+    let before_snapshot = puzzle3d_snapshot_from_host_snapshot(before);
+    let after_snapshot = puzzle3d_snapshot_from_host_snapshot(after);
     if before_snapshot == after_snapshot {
         return Vec::new();
     }
@@ -478,7 +478,7 @@ pub fn puzzle3d_fixture_from_snapshot(document: &Puzzle3dSnapshot) -> Puzzle3dFi
 
 /// 🧬️ Inverse of [`puzzle3d_fixture_from_snapshot`] — the document delta must compare typed snapshots,
 /// not a camelCase fixture `ToValue` re-parsed as `Puzzle3dSnapshot` (that FromValue fails closed to empty).
-pub fn puzzle3d_snapshot_from_host_document(fixture: &Puzzle3dFixture) -> Puzzle3dSnapshot {
+pub fn puzzle3d_snapshot_from_host_snapshot(fixture: &Puzzle3dFixture) -> Puzzle3dSnapshot {
     Puzzle3dSnapshot {
         schema: fixture.schema.clone(),
         domain: fixture.domain.clone(),
@@ -486,14 +486,14 @@ pub fn puzzle3d_snapshot_from_host_document(fixture: &Puzzle3dFixture) -> Puzzle
             kind_catalogs: fixture.meta.kind_catalogs.clone().and_then(|value| dsl::FromValue::from_value(value).ok()),
             kind_compatibility: fixture.meta.kind_compatibility.clone().and_then(|value| dsl::FromValue::from_value(value).ok()).unwrap_or_default(),
         },
-        objects: fixture.objects.iter().map(snapshot_object_from_host_document).collect(),
-        attractions: fixture.attractions.iter().map(snapshot_attraction_from_host_document).collect(),
-        target_volumes: fixture.target_volumes.iter().map(snapshot_target_volume_from_host_document).collect(),
-        references: fixture.references.iter().map(snapshot_reference_from_host_document).collect(),
+        objects: fixture.objects.iter().map(snapshot_object_from_host_snapshot).collect(),
+        attractions: fixture.attractions.iter().map(snapshot_attraction_from_host_snapshot).collect(),
+        target_volumes: fixture.target_volumes.iter().map(snapshot_target_volume_from_host_snapshot).collect(),
+        references: fixture.references.iter().map(snapshot_reference_from_host_snapshot).collect(),
     }
 }
 
-fn snapshot_object_from_host_document(object: &Puzzle3dObject) -> crate::Puzzle3dObject {
+fn snapshot_object_from_host_snapshot(object: &Puzzle3dObject) -> crate::Puzzle3dObject {
     crate::Puzzle3dObject {
         id: object.id.clone(),
         label: object.label.clone(),
@@ -503,17 +503,17 @@ fn snapshot_object_from_host_document(object: &Puzzle3dObject) -> crate::Puzzle3
         orientation: object.orientation,
         scale: object.scale.clone().and_then(|value| dsl::FromValue::from_value(value).ok()),
         mesh_url: object.mesh_url.clone(),
-        vortices: object.vortices.iter().map(snapshot_vortex_from_host_document).collect(),
+        vortices: object.vortices.iter().map(snapshot_vortex_from_host_snapshot).collect(),
         hidden: object.hidden,
         locked: object.locked,
     }
 }
 
-fn snapshot_vortex_from_host_document(vortex: &Puzzle3dVortex) -> crate::Puzzle3dVortex {
+fn snapshot_vortex_from_host_snapshot(vortex: &Puzzle3dVortex) -> crate::Puzzle3dVortex {
     crate::Puzzle3dVortex { id: vortex.id.clone(), vortex_kind: vortex.vortex_kind.clone(), label: None, position: vortex.position, direction: vortex.direction, radius: vortex.radius, hidden: vortex.hidden, locked: vortex.locked }
 }
 
-fn snapshot_attraction_from_host_document(attraction: &Puzzle3dAttraction) -> crate::Puzzle3dAttraction {
+fn snapshot_attraction_from_host_snapshot(attraction: &Puzzle3dAttraction) -> crate::Puzzle3dAttraction {
     crate::Puzzle3dAttraction {
         id: attraction.id.clone(),
         attracting: attraction.attracting.clone(),
@@ -529,11 +529,11 @@ fn snapshot_attraction_from_host_document(attraction: &Puzzle3dAttraction) -> cr
     }
 }
 
-fn snapshot_target_volume_from_host_document(volume: &Puzzle3dTargetVolume) -> crate::Puzzle3dTargetVolume {
+fn snapshot_target_volume_from_host_snapshot(volume: &Puzzle3dTargetVolume) -> crate::Puzzle3dTargetVolume {
     crate::Puzzle3dTargetVolume { id: volume.id.clone(), origin: volume.origin, orientation: volume.orientation, scale: volume.scale.clone().and_then(|value| dsl::FromValue::from_value(value).ok()), hidden: volume.hidden, locked: volume.locked }
 }
 
-fn snapshot_reference_from_host_document(reference: &Puzzle3dReference) -> crate::Puzzle3dReference {
+fn snapshot_reference_from_host_snapshot(reference: &Puzzle3dReference) -> crate::Puzzle3dReference {
     crate::Puzzle3dReference {
         id: reference.id.clone(),
         source: crate::Puzzle3dReferenceSource { url: reference.source.url.clone(), media_kind: reference.source.media_kind.clone() },
@@ -593,10 +593,10 @@ fn fixture_reference_from_snapshot(reference: &crate::Puzzle3dReference) -> Puzz
 }
 
 /// 🧮️ Document operations for a fixture mutation through the typed semantic delta vocabulary.
-pub fn puzzle3d_operations_from_host_document_change(before: &Value, after_fixture: &Puzzle3dFixture) -> Vec<Puzzle3dMutation> {
+pub fn puzzle3d_operations_from_host_snapshot_change(before: &Value, after_fixture: &Puzzle3dFixture) -> Vec<Puzzle3dMutation> {
     let before_fixture: Puzzle3dFixture = dsl::FromValue::from_value(json::to_dsl_value(before)).unwrap_or_else(|_| empty_fixture());
-    let before_snapshot = puzzle3d_snapshot_from_host_document(&before_fixture);
-    let after_snapshot = puzzle3d_snapshot_from_host_document(after_fixture);
+    let before_snapshot = puzzle3d_snapshot_from_host_snapshot(&before_fixture);
+    let after_snapshot = puzzle3d_snapshot_from_host_snapshot(after_fixture);
     if before_snapshot == after_snapshot {
         return Vec::new();
     }
@@ -762,7 +762,12 @@ impl<'a> Puzzle3dKindMeshIndex<'a> {
         let rows = meta.kind_catalogs.as_ref().and_then(|catalogs| catalogs.get("objects")).and_then(dsl::DslValue::as_array).unwrap_or_default();
         let mut by_kind = HashMap::with_capacity(rows.len());
         for entry in rows {
-            let (Some(id), Some(url)) = (entry.get("id").and_then(dsl::DslValue::as_str), entry.get("meshUrl").and_then(dsl::DslValue::as_str)) else {
+            // 🐛️ Imported rows are normalized to `representations` (`puzzle3d_normalize_object_kind_row` drops
+            // `meshUrl`), so reading `meshUrl` alone dropped every kind no placed object renders: the fill's
+            // mesh lane had no body for it and each of its candidates was rejected `mesh-unavailable`. Same
+            // order as `resolve_object_kind_mesh_url`, so the lane key IS the key a candidate looks up.
+            let url = entry.get("representations").and_then(dsl::DslValue::as_array).into_iter().flatten().filter_map(|rep| rep.get("url").and_then(dsl::DslValue::as_str)).map(str::trim).find(|url| !url.is_empty());
+            let (Some(id), Some(url)) = (entry.get("id").and_then(dsl::DslValue::as_str), url.or_else(|| entry.get("meshUrl").and_then(dsl::DslValue::as_str))) else {
                 continue;
             };
             by_kind.insert(id, url);
@@ -3372,7 +3377,7 @@ pub(crate) struct Puzzle3dActionPrologue {
 impl Puzzle3dActionPrologue {
     /// 🧾️ Half one: the transient scene, straight off the snapshot's typed authority. The persisted
     /// projection `Value` is materialized ONLY for an artifact-intent action, which is its one reader
-    /// (`puzzle3d_operations_from_host_document_change`'s `before`).
+    /// (`puzzle3d_operations_from_host_snapshot_change`'s `before`).
     pub(crate) fn scene_step(&mut self, action: &str, snapshot: &Puzzle3dPlaySnapshot, config: &Puzzle3dRuntime, view_state: Option<&semio_framework_plugin::ViewModel>, window_id: Option<&str>) {
         let active_utility = puzzle3d_scene_active_utility(config, view_state, window_id);
         let map_hit = window_id.and_then(|wid| view_state.and_then(|view| puzzle3d_utility_map_hit(view, wid))).is_some();
@@ -3461,7 +3466,7 @@ impl Puzzle3dActionPrologue {
         }
         let next_active_utility = scene.active_utility.clone();
         let operations = if let Some(before) = before.as_ref() {
-            puzzle3d_operations_from_host_document_change(before, &scene.fixture)
+            puzzle3d_operations_from_host_snapshot_change(before, &scene.fixture)
         } else {
             debug_assert!(!puzzle3d_action_artifact_intent(action));
             Vec::new()
@@ -7991,7 +7996,7 @@ impl ArtifactEditor for Puzzle3dPlayApp {
     /// `cableKinds`/`attractionKinds`/`kindCompatibility`) into puzzle3d's own `meta.kind_catalogs`
     /// vocabulary (`objects`/`vortices`/`cables`/`attractions`) and upserts it (keyed by row `id`,
     /// deterministic/order-independent — safe for `multiplicity: Many` fan-in) via the same
-    /// `puzzle3d_operations_from_host_document_change` delta bridge every other fixture-mutating action
+    /// `puzzle3d_operations_from_host_snapshot_change` delta bridge every other fixture-mutating action
     /// already uses, so this never mutates anything directly — only real, undoable operations.
     fn import_media(port: &str, media: &Media, doc: &ArtifactView<'_, Puzzle3dPlaySnapshot>) -> Result<Emit<Puzzle3dMutation, Puzzle3dConfigMutation, Self::DraftMutation>, MediaError> {
         if port != "kit:in" {
@@ -8031,7 +8036,7 @@ impl ArtifactEditor for Puzzle3dPlayApp {
             fixture.meta.kind_compatibility = Some(dsl::DslValue::Array(compat));
         }
 
-        let operations = puzzle3d_operations_from_host_document_change(&puzzle3d_projection_value(doc.snapshot.value()), &fixture);
+        let operations = puzzle3d_operations_from_host_snapshot_change(&puzzle3d_projection_value(doc.snapshot.value()), &fixture);
         Ok(Emit::mutations(operations))
     }
 

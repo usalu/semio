@@ -146,7 +146,7 @@ def gen_artifact_json(prefix, plugin_key, art_key, fields, defs):
             required.append(camel)
     doc = {
         '$schema': 'https://json-schema.org/draft/2020-12/schema',
-        '$id': f'https://semio.tech/schema/s/{plugin_key}/{art_key}/artifact.json',
+        '$id': f'https://json.schemas.assets.semio-tech.com/s/{plugin_key}/{art_key}/artifact.json',
         'title': f'{prefix}Artifact',
         'type': 'object',
         'additionalProperties': False,
@@ -165,7 +165,7 @@ def gen_snapshot_json(prefix, plugin_key, art_key, fields, defs):
             required.append(camel)
     doc = {
         '$schema': 'https://json-schema.org/draft/2020-12/schema',
-        '$id': f'https://semio.tech/schema/s/{plugin_key}/{art_key}/snapshot.json',
+        '$id': f'https://json.schemas.assets.semio-tech.com/s/{plugin_key}/{art_key}/snapshot.json',
         'title': f'{prefix}Snapshot',
         'type': 'object',
         'additionalProperties': False,
@@ -235,7 +235,7 @@ def gen_diff_json(prefix, plugin_key, art_key, art_fields, collections, defs):
         }
     doc = {
         '$schema': 'https://json-schema.org/draft/2020-12/schema',
-        '$id': f'https://semio.tech/schema/s/{plugin_key}/{art_key}/diff.json',
+        '$id': f'https://json.schemas.assets.semio-tech.com/s/{plugin_key}/{art_key}/diff.json',
         'title': f'{prefix}Diff',
         'type': 'object',
         'additionalProperties': False,

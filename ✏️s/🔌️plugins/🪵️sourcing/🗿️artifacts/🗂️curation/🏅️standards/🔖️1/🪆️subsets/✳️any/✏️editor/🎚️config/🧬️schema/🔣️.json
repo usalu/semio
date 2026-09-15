@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/app/sourcing/curation/config/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/app/sourcing/curation/config/schema.json",
   "title": "SourcingCurationConfig",
   "type": "object",
   "additionalProperties": false,
@@ -51,7 +51,7 @@
           "minimum": 0
         },
         "sort": {
-          "$ref": "https://semio.tech/schema/s/sourcing/curation/artifact.json#/$defs/TableSort"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/sourcing/curation/artifact.json#/$defs/TableSort"
         }
       }
     }

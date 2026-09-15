@@ -375,7 +375,7 @@ fn extent_from_positions(positions: &[[f64; 3]]) -> Option<[f64; 3]> {
 
 /// Derives an object's world-space bounding extent from its authored geometry, trying each
 /// primitive slot in order (mirrors `resolve_primitive_handle`'s slot priority).
-pub(crate) fn extent_from_host_document_primitives(geometry: &CadGeometry, primitives: &[CadPrimitiveSlot]) -> Option<[f64; 3]> {
+pub(crate) fn extent_from_host_snapshot_primitives(geometry: &CadGeometry, primitives: &[CadPrimitiveSlot]) -> Option<[f64; 3]> {
     primitives.iter().find_map(|primitive| extent_from_positions(&primitive_vertex_positions(geometry, &primitive.primitive_id)))
 }
 
@@ -395,7 +395,7 @@ fn centroid_from_positions(positions: &[[f64; 3]]) -> Option<[f64; 3]> {
 }
 
 /// 🎯️ World-space centroid of the first primitive slot that resolves against authored geometry.
-pub(crate) fn centroid_from_host_document_primitives(geometry: &CadGeometry, primitives: &[CadPrimitiveSlot]) -> Option<[f64; 3]> {
+pub(crate) fn centroid_from_host_snapshot_primitives(geometry: &CadGeometry, primitives: &[CadPrimitiveSlot]) -> Option<[f64; 3]> {
     primitives.iter().find_map(|primitive| centroid_from_positions(&primitive_vertex_positions(geometry, &primitive.primitive_id)))
 }
 
@@ -409,7 +409,7 @@ pub(crate) fn tessellate_object_mesh(kernel: &mut Brep, object: &CadObject, kind
 }
 
 /// 🧵️ Re-imports fixture geometry and tessellates the object's primitive slots.
-pub(crate) fn tessellate_object_mesh_from_host_document(kernel: &mut Brep, object: &CadObject, geometry: &CadGeometry) -> Option<MeshData> {
+pub(crate) fn tessellate_object_mesh_from_host_snapshot(kernel: &mut Brep, object: &CadObject, geometry: &CadGeometry) -> Option<MeshData> {
     if object.primitives.is_empty() {
         return None;
     }
@@ -527,7 +527,7 @@ pub fn object_label_from_id(object_id: &str) -> String {
     object_id.split('-').next_back().map_or_else(|| object_id.to_string(), str::to_string)
 }
 
-pub(crate) fn objects_from_host_document_model(kernel: &mut Brep, objects_value: &[DslValue], geometry: &CadGeometry) -> Vec<CadObject> {
+pub(crate) fn objects_from_host_snapshot_model(kernel: &mut Brep, objects_value: &[DslValue], geometry: &CadGeometry) -> Vec<CadObject> {
     let handles = import_geometry_handles(kernel, geometry);
     objects_value
         .iter()
@@ -536,7 +536,7 @@ pub(crate) fn objects_from_host_document_model(kernel: &mut Brep, objects_value:
             let typology = entry.get("typology").and_then(|value| value.as_str()).unwrap_or("").to_string();
             let primitives = primitives_from_json(entry);
             let (solid_handle, _primary_kind) = resolve_primitive_handle(&primitives, &handles).map_or((None, String::new()), |(handle, kind)| (Some(handle), kind));
-            let extent = extent_from_host_document_primitives(geometry, &primitives);
+            let extent = extent_from_host_snapshot_primitives(geometry, &primitives);
             Some(CadObject {
                 id: object_id.into(),
                 label: object_label_from_id(object_id),

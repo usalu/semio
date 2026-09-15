@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/semio/v1/image/diff.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/image/diff.json",
   "title": "SemioImageDiff",
   "description": "Sparse per-field diff; width/height/colorspace/bitDepth scalars, tri-state icc, frames (index-keyed triple) and metadata (name-keyed triple).",
   "type": "object",

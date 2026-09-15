@@ -14,14 +14,14 @@ Repo MCP was down for the whole session; no MCP tool was called, no ticket was o
 
 | Scope id | Module path | `$id` | Formats |
 |---|---|---|---|
-| `repo.server.coordinator` | `🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🧬️schema/` | `https://semio.tech/schema/repo/server/coordinator/schema.json` | `🔣️.json` (draft-07), `🟦️.ts` |
-| `repo.server` | `🦑️repo/🔨️modules/🖥️server/🧬️schema/` | `https://semio.tech/schema/repo/server/schema.json` | `🔣️.json` (draft-07), native `🐘️postgres/🗄️.sql` (pre-existing, kept) |
-| `print.print-font-catalog` | `📓️print/🔨️modules/🔤print-font-catalog/🧬️schema/` | `https://semio.tech/schema/print/print-font-catalog/schema.json` | `🔣️.json` |
-| `print.tectonic-template-compilation.catalog` | `…/🖨️tectonic-template-compilation/📇️catalog/🧬️schema/` | `https://semio.tech/schema/print/tectonic-template-compilation/catalog/schema.json` | `🔣️.json` |
-| `print.tectonic-template-compilation.bundle` | `…/🖨️tectonic-template-compilation/📚️bundle/🧬️schema/` | `https://semio.tech/schema/print/tectonic-template-compilation/bundle/schema.json` | `🔣️.json` |
-| `print.tectonic-template-compilation.toolchain` | `…/🖨️tectonic-template-compilation/🔧️toolchain/🧬️schema/` | `https://semio.tech/schema/print/tectonic-template-compilation/toolchain/schema.json` | `🔣️.json` |
-| `mit-bestand.bericht.documents` | `♻️mit-bestand/📋️bericht/🔨️modules/📄️documents/🧬️schema/` | `https://semio.tech/schema/mit-bestand/bericht/documents/schema.json` | `🔣️.json` |
-| `mit-bestand.demonstrator.runtime` | `♻️mit-bestand/🧺️demonstrator/🔨️modules/🧩️runtime/🧬️schema/` | `https://semio.tech/schema/mit-bestand/demonstrator/runtime/schema.json` | `🔣️.json` |
+| `repo.server.coordinator` | `🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🧬️schema/` | `https://json.schemas.assets.semio-tech.com/repo/server/coordinator/schema.json` | `🔣️.json` (draft-07), `🟦️.ts` |
+| `repo.server` | `🦑️repo/🔨️modules/🖥️server/🧬️schema/` | `https://json.schemas.assets.semio-tech.com/repo/server/schema.json` | `🔣️.json` (draft-07), native `🐘️postgres/🗄️.sql` (pre-existing, kept) |
+| `print.print-font-catalog` | `📓️print/🔨️modules/🔤print-font-catalog/🧬️schema/` | `https://json.schemas.assets.semio-tech.com/print/print-font-catalog/schema.json` | `🔣️.json` |
+| `print.tectonic-template-compilation.catalog` | `…/🖨️tectonic-template-compilation/📇️catalog/🧬️schema/` | `https://json.schemas.assets.semio-tech.com/print/tectonic-template-compilation/catalog/schema.json` | `🔣️.json` |
+| `print.tectonic-template-compilation.bundle` | `…/🖨️tectonic-template-compilation/📚️bundle/🧬️schema/` | `https://json.schemas.assets.semio-tech.com/print/tectonic-template-compilation/bundle/schema.json` | `🔣️.json` |
+| `print.tectonic-template-compilation.toolchain` | `…/🖨️tectonic-template-compilation/🔧️toolchain/🧬️schema/` | `https://json.schemas.assets.semio-tech.com/print/tectonic-template-compilation/toolchain/schema.json` | `🔣️.json` |
+| `mit-bestand.bericht.documents` | `♻️mit-bestand/📋️bericht/🔨️modules/📄️documents/🧬️schema/` | `https://json.schemas.assets.semio-tech.com/mit-bestand/bericht/documents/schema.json` | `🔣️.json` |
+| `mit-bestand.demonstrator.runtime` | `♻️mit-bestand/🧺️demonstrator/🔨️modules/🧩️runtime/🧬️schema/` | `https://json.schemas.assets.semio-tech.com/mit-bestand/demonstrator/runtime/schema.json` | `🔣️.json` |
 
 ### 1.1 `repo.server.coordinator` exports (39 `$defs`, one `parse<Export>` each)
 
@@ -158,7 +158,7 @@ from the parity map by construction, not by a skip.
 - `duplicateIds` (19 groups) — **0** group contains a path in this partition (all 19 are `✏️s/🔌️plugins/…` artifact standard subsets).
 
 So there was nothing to repair here. Every `$id` this WP introduced is new and unique
-(`https://semio.tech/schema/repo/server/…`, `…/print/…`, `…/mit-bestand/…`); all `$ref`s in the eight
+(`https://json.schemas.assets.semio-tech.com/repo/server/…`, `…/print/…`, `…/mit-bestand/…`); all `$ref`s in the eight
 modules are local `#/$defs/…` pointers and resolve — proven by ajv compiling every one of them in §6.
 
 ---

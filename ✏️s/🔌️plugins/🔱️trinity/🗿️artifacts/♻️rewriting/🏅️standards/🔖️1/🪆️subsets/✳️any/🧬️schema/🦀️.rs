@@ -292,7 +292,7 @@ pub fn apply_rule_json(graph: &mut Graph, rule_json: &str, bindings_json: &str) 
     let rule: Rule = pack::from_json_str(rule_json)?;
     let bindings = parse_bindings_json(bindings_json)?;
     let result = apply_rule(graph, &rule, &bindings)?;
-    Ok(pack::to_json_string(&ApplyRuleResult { fixture: graph.host_document_json()?, query: result }))
+    Ok(pack::to_json_string(&ApplyRuleResult { fixture: graph.host_snapshot_json()?, query: result }))
 }
 
 /// 🧵️ Build a rewrite rule Jack query from JSON without a graph.

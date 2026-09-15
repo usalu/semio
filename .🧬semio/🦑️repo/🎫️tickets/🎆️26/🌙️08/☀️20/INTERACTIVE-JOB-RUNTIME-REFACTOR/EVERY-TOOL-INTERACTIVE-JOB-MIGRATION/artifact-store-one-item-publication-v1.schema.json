@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://semio.tech/schema/artifact-store-one-item-publication-v1.schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/artifact-store-one-item-publication-v1.schema.json",
   "type": "object",
   "required": ["version", "capacities", "admissionCases", "authorityCases", "lifecycleCases", "publicationPhases"],
   "properties": {

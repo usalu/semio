@@ -647,7 +647,7 @@ impl ArtifactEditor for DagPlayApp {
         let document = doc.snapshot;
         let nodes = document.nodes();
         let edges = document.edges();
-        // 🧵️ `DagHostDocumentEdge.source`/`.target` are "nodeId@portId" endpoint strings (defaulting to the
+        // 🧵️ `DagHostSnapshotEdge.source`/`.target` are "nodeId@portId" endpoint strings (defaulting to the
         // "out" port when bare) — `split_endpoint` peels the node id back off before it can be matched
         // against a plain `DagNodeSpec.id`.
         let node_id_of = |endpoint: &str| crate::schema::split_endpoint(endpoint).0;

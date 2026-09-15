@@ -18,8 +18,8 @@ export function sequenceSnapshotFixtureAssetSelfTests(): number {
   ];
   for (const source of sources) {
     assert(!/\bfixture:\s*&\w+Snapshot\b/.test(source), "snapshot parameters must not be named fixture");
-    assert(!/\bSequenceFixture\b/.test(source), "use SequenceHostDocument");
-    assert(!/\.to_fixture\s*\(/.test(source), "SequenceSnapshot bridges must call to_host_document");
+    assert(!/\bSequenceFixture\b/.test(source), "use SequenceHostSnapshot");
+    assert(!/\.to_fixture\s*\(/.test(source), "SequenceSnapshot bridges must call to_host_snapshot");
   }
   console.log("[DEBUG] Sequence snapshot/fixture/asset terminology lint: 3 sources, 0 forbidden patterns");
   return sources.length;

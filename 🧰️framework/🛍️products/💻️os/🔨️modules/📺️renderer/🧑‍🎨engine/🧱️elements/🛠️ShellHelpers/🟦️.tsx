@@ -10,206 +10,197 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import type { ShellDialogV1 } from "../🏛️ShellHost/🗨️dialog-origin/🟦️.ts";
-import { segmentedDownloadSinkFactory, type SegmentedDownloadSinkFactory } from "../📤️SegmentedDownload/🟦️.ts";
-import React, {
-  type KeyboardEvent,
-  type ReactElement,
-  type ReactNode,
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
 import {
-  isIconName,
+    isIconName,
 } from "@semio-tech/assets";
 import {
-  type ActionArgControl,
-  type ActionArgDef,
-  // 🎫️ ticket 26/08/17/LLM-FIRST-OS-VIA-THE-SEMIO-OS-MCP-GATEWAY packet P3-manifest-schema, D6:
-  // `ActionArgDef.control` is gone (derived, not stored) — every reader below now calls this instead.
-  argControl,
-  artifactKindChoices,
-  encodeArtifactKindChoice,
-  actionSemanticsForKind,
-  type ActionDefinition,
-  type ActionDescriptor,
-  hostEffectInvocationV1,
-  type HostEffectDispatchScope,
-  type AppDefinition,
-  type AppModeDefinition,
-  type AppPanelTabDefinition,
-  type AppRef,
-  type AppRole,
-  type AppRouter,
-  type AppWindowKindDefinition,
-  type ArtifactKindChoice,
-  type ArtifactDialect,
-  type BuiltNode,
-  dialectCoordinate,
-  type CommandAddress,
-  type CommandDefinition,
-  CONTEXT_MENU_GROUP_ID_PREFIX,
-  CONTEXT_MENU_OVERFLOW_CATEGORY,
-  type DerivedUtilitySpec,
-  deriveUtilityNodes,
-  type DialogDefinition,
-  DockLayoutStore,
-  DockUiStateStore,
-  effectiveActionArgs,
-  FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID,
-  FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
-  FRAMEWORK_PANEL_TAB_ARTIFACT_ICON_ID,
-  FRAMEWORK_PANEL_TAB_ARTIFACT_ID,
-  FRAMEWORK_HISTORY_BODY_KEY,
-  FRAMEWORK_PANEL_TAB_HISTORY_ID,
-  FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID,
-  FRAMEWORK_PANEL_TAB_INSPECTION_ID,
-  FRAMEWORK_PANEL_TAB_PARAMETERS_ICON_ID,
-  FRAMEWORK_PANEL_TAB_PARAMETERS_ID,
-  type Effect,
-  type IntroductionDefinition,
-  type IntroductionStepDefinition,
-  type LocalizedLabel,
-  type MergeMode,
-  unresolvedActionArgs,
-  type PanelTabKind,
-  panelTabKindId,
-  partitionWindowMeasures,
-  pendingPanelUiNode,
-  type AppCatalogue,
-  type PluginAppLabelsOverlay,
-  type PluginCatalog,
-  type PluginUiRefreshRequest,
-  type PluginUiRefreshResponse,
-  type PluginUiRefreshSectionResponse,
-  type PluginViewState,
-  type Platform,
-  RECORD_TUTORIAL_ACTION_ID,
-  resolvePluginHostConfig,
-  resolveUiDirtyScope,
-  resolveWindowActions,
-  SET_ACTIVE_UTILITY_ACTION_ID,
-  SHELL_LOCALES,
-  START_INTRODUCTION_ACTION_ID,
-  START_TUTORIAL_ACTION_ID,
-  type ToolDefinition,
-  type TutorialUiChange,
-  type TutorialUiSnapshot,
-  type UiDirtyScope,
-  type UiIntent,
-  type UtilityDefinition,
-  type UtilityNode,
-  type WindowEngagement,
-  type WindowEngagementControl,
-  type WindowLayout,
-  type WindowLayoutAxisNode,
-  type WindowLayoutStackNode,
-  type WindowLayoutWindowNode,
-  type WindowStackCorner,
-  type WindowMeasure,
-  blake3Hex,
+    type ActionArgControl,
+    type ActionArgDef,
+    type ActionDefinition,
+    type ActionDescriptor,
+    actionSemanticsForKind,
+    type AppCatalogue,
+    type AppDefinition,
+    type AppModeDefinition,
+    type AppPanelTabDefinition,
+    type AppRef,
+    type AppRole,
+    type AppRouter,
+    type AppWindowKindDefinition,
+    // 🎫️ ticket 26/08/17/LLM-FIRST-OS-VIA-THE-SEMIO-OS-MCP-GATEWAY packet P3-manifest-schema, D6:
+    // `ActionArgDef.control` is gone (derived, not stored) — every reader below now calls this instead.
+    argControl,
+    type ArtifactDialect,
+    type ArtifactKindChoice,
+    artifactKindChoices,
+    blake3Hex,
+    type BuiltNode,
+    type CommandAddress,
+    type CommandDefinition,
+    CONTEXT_MENU_GROUP_ID_PREFIX,
+    CONTEXT_MENU_OVERFLOW_CATEGORY,
+    type DerivedUtilitySpec,
+    deriveUtilityNodes,
+    type DialogDefinition,
+    DockLayoutStore,
+    DockUiStateStore,
+    type Effect,
+    effectiveActionArgs,
+    encodeArtifactKindChoice,
+    FRAMEWORK_HISTORY_BODY_KEY,
+    FRAMEWORK_PANEL_TAB_ARTIFACT_ICON_ID,
+    FRAMEWORK_PANEL_TAB_ARTIFACT_ID,
+    FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID,
+    FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
+    FRAMEWORK_PANEL_TAB_HISTORY_ID,
+    FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID,
+    FRAMEWORK_PANEL_TAB_INSPECTION_ID,
+    FRAMEWORK_PANEL_TAB_PARAMETERS_ICON_ID,
+    FRAMEWORK_PANEL_TAB_PARAMETERS_ID,
+    type HostEffectDispatchScope,
+    hostEffectInvocationV1,
+    type IntroductionDefinition,
+    type IntroductionStepDefinition,
+    type LocalizedLabel,
+    type MergeMode,
+    type PanelTabKind,
+    panelTabKindId,
+    partitionWindowMeasures,
+    pendingPanelUiNode,
+    type Platform,
+    type PluginAppLabelsOverlay,
+    type PluginCatalog,
+    type PluginUiRefreshRequest,
+    type PluginUiRefreshResponse,
+    type PluginUiRefreshSectionResponse,
+    type PluginViewState,
+    RECORD_TUTORIAL_ACTION_ID,
+    resolvePluginHostConfig,
+    resolveUiDirtyScope,
+    resolveWindowActions,
+    SET_ACTIVE_UTILITY_ACTION_ID,
+    SHELL_LOCALES,
+    START_INTRODUCTION_ACTION_ID,
+    START_TUTORIAL_ACTION_ID,
+    type ToolDefinition,
+    type TutorialUiChange,
+    type TutorialUiSnapshot,
+    type UiDirtyScope,
+    type UiIntent,
+    unresolvedActionArgs,
+    type UtilityDefinition,
+    type UtilityNode,
+    type WindowEngagement,
+    type WindowEngagementControl,
+    type WindowLayout,
+    type WindowLayoutAxisNode,
+    type WindowLayoutStackNode,
+    type WindowLayoutWindowNode,
+    type WindowMeasure,
+    type WindowStackCorner
 } from "@semio-tech/framework";
 import {
-  type ArtifactSyncStatus,
-  packValueFromBase64,
-  packValueToBase64,
+    type ArtifactSyncStatus,
+    packValueFromBase64,
+    packValueToBase64,
 } from "@semio-tech/framework-os";
-import { type UiPreferencesConfigMutation, setAppearance, setDriver, setLayout, setLocale, setTerminology, setTheme } from "../../../../../🎚️config/🧬️schema/🧬️mutations/🟦️.ts";
-import type { DomainSelection, InteractionState } from "../../../../../../../🔨️modules/🕹️interaction/🟦️.ts";
-import { hostContinuations, type ContinuationCancel, type ContinuationScheduler } from "../../../../../../../🔨️modules/⏳️async/🪃️continuation/🟦️.ts";
-import { hopTrace } from "../../../../../../../🔨️modules/⏱️trace/🟦️.ts";
-import { mediaExportBytes, IMPORT_CHUNK_BYTES, importPayloadChunks, importChunkArguments, type ImportChunk, type UiDirtySection, mergeUiDirtyScopes, uiDirtyScopeWantsWindowBody, uiDirtyScopeWantsPanelBody, uiDirtyScopeWantsSection, uiDirtyScopeWantsCatalogue } from "../../../../../../../🔨️modules/🎠️kernel/🟦️.ts";
-import { wireMediaExportEncoding } from "../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🟦️.ts";
 import {
-  decodeWorldProjectionTemplateId,
+    decodeWorldProjectionTemplateId,
 } from "@semio-tech/infinite-world-r3f";
 import {
-  type Anchor,
-  ANCHORS,
-  builtinUiDrivers,
-  childElementId,
-  ChromeAwareWindowScrollSurface,
-  classifyIconSelectorMode,
-  createEvenWindowLayout,
-  elementIdSegment,
-  type ElementsSurfaceAppearance,
-  type EngagementControl,
-  type EngagementSpec,
-  Icon,
-  type IconName,
-  IconSelector,
-  Input,
-  type UIDialogFieldBinding,
-  type PanelTabNode,
-  resolveTranslationLabel,
-  RibbonDivider,
-  type SearchSpec,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-  singleTreeLeaf,
-  Slider,
-  staticTreePanelDefinition,
-  Toggle,
-  ToggleGroup,
-  Tree,
-  TreeCheckbox,
-  type TreeDataItem,
-  type TreeDataSection,
-  type TreePanelConfig,
-  UI_RIBBON_PARENT_CATEGORIES,
-  UI_TERMINOLOGY_NATIVE,
-  type UiChromeLayout,
-  type UiChromeTerminologyId,
-  uiDataLabel,
-  type UiDriver,
-  uiI18n,
-  type UiLabel,
-  type UiLocale,
-  type UiRibbonParentCategory,
-  type UiTheme,
-  type UiTranslationKey,
-  useLabel,
-  useShellScope,
-  type WindowLayoutNode,
-  WindowMeasuresTree,
-  WindowMeasureTreeGroup,
-  WindowMeasureTreeLeaf,
+    type Anchor,
+    ANCHORS,
+    builtinUiDrivers,
+    childElementId,
+    createEvenWindowLayout,
+    elementIdSegment,
+    type ElementsSurfaceAppearance,
+    type EngagementControl,
+    type EngagementSpec,
+    Icon,
+    type IconName,
+    IconSelector,
+    Input,
+    type PanelTabNode,
+    resolveTranslationLabel,
+    RibbonDivider,
+    type SearchSpec,
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+    singleTreeLeaf,
+    Slider,
+    staticTreePanelDefinition,
+    Toggle,
+    ToggleGroup,
+    Tree,
+    type TreeDataItem,
+    type TreeDataSection,
+    type TreePanelConfig,
+    UI_RIBBON_PARENT_CATEGORIES,
+    UI_TERMINOLOGY_NATIVE,
+    type UiChromeLayout,
+    type UiChromeTerminologyId,
+    uiDataLabel,
+    type UIDialogFieldBinding,
+    type UiDriver,
+    uiI18n,
+    type UiLabel,
+    type UiLocale,
+    type UiTheme,
+    type UiTranslationKey,
+    useLabel,
+    useShellScope,
+    type WindowLayoutNode,
+    WindowMeasuresTree,
+    WindowMeasureTreeGroup,
+    WindowMeasureTreeLeaf
 } from "@semio-tech/ui-react";
+import React, {
+    type ReactElement,
+    type ReactNode,
+    useCallback,
+    useEffect,
+    useMemo,
+    useState
+} from "react";
+import { hopTrace } from "../../../../../../../🔨️modules/⏱️trace/🟦️.ts";
+import { type ContinuationCancel, type ContinuationScheduler, hostContinuations } from "../../../../../../../🔨️modules/⏳️async/🪃️continuation/🟦️.ts";
+import { IMPORT_CHUNK_BYTES, type ImportChunk, importChunkArguments, importPayloadChunks, mediaExportBytes, mergeUiDirtyScopes, uiDirtyScopeWantsCatalogue, uiDirtyScopeWantsPanelBody, uiDirtyScopeWantsSection, uiDirtyScopeWantsWindowBody, type UiDirtySection } from "../../../../../../../🔨️modules/🎠️kernel/🟦️.ts";
+import { wireMediaExportEncoding } from "../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🟦️.ts";
+import type { DomainSelection, InteractionState } from "../../../../../../../🔨️modules/🕹️interaction/🟦️.ts";
+import { setAppearance, setDriver, setLayout, setLocale, setTerminology, setTheme, type UiPreferencesConfigMutation } from "../../../../../🎚️config/🧬️schema/🧬️mutations/🟦️.ts";
 import {
-  InterpretedUiNode,
-  wireLabel,
-} from "../🗣️Interpreter/🟦️.tsx";
-import { builtNodeToSnapshot, UiDocumentStore } from "../📃️UiDocumentStore/🟦️.tsx";
-import {
-  type ActionPaneState,
-  actionStageKey,
-  type ActiveSession,
-  EMPTY_SHELL_LOCKS,
-  type ExtraWindowInstance,
-  type LoadedProgramState,
-  type PluginManifest,
-  type ResolvedShellLocks,
-  type ShellAction,
-  ShellFaultBoundary,
-  type ShellState,
-  type SpacePanelState,
-  type SpaceProgramEntry,
-  type SpawnedAppEntry,
-  type UIHistory,
-  type ViewModel,
-} from "../🐚️Shell/🟦️.tsx";
-import {
-  registerPendingWorldProjection,
-  type WorldInstanceRecord,
+    registerPendingWorldProjection
 } from "../🌐️World3dHost/🟦️.tsx";
 import { groupUtilityNodesByCategory, UTILITY_CATEGORIES, UtilityTree } from "../🎛️UtilityTree/🟦️.tsx";
+import type { ShellDialogV1 } from "../🏛️ShellHost/🗨️dialog-origin/🟦️.ts";
+import {
+    type ActionPaneState,
+    actionStageKey,
+    type ActiveSession,
+    EMPTY_SHELL_LOCKS,
+    type ExtraWindowInstance,
+    type LoadedProgramState,
+    type PluginManifest,
+    type ResolvedShellLocks,
+    type ShellAction,
+    ShellFaultBoundary,
+    type ShellState,
+    type SpacePanelState,
+    type UIHistory,
+    type ViewModel
+} from "../🐚️Shell/🟦️.tsx";
+import { builtNodeToSnapshot, UiDocumentStore } from "../📃️UiDocumentStore/🟦️.tsx";
+import { segmentedDownloadSinkFactory, type SegmentedDownloadSinkFactory } from "../📤️SegmentedDownload/🟦️.ts";
+import { loadPluginModule, pluginLoadProgressAt, type PluginWasmHandle, SHARD_LIVENESS_POLICY } from "../🔌️PluginRuntime/🟦️.tsx";
+import {
+    InterpretedUiNode,
+    wireLabel,
+} from "../🗣️Interpreter/🟦️.tsx";
 import { WindowMeasureNumber, WindowMeasureSelect, WindowMeasureToggle } from "./🎚️measure-controls/🟦️.tsx";
-import { loadPluginModule, pluginLoadProgressAt, SHARD_LIVENESS_POLICY, type PluginWasmHandle } from "../🔌️PluginRuntime/🟦️.tsx";
 // #endregion 🔌️Adapters
 
 //#region ShellHelpers
@@ -675,17 +666,12 @@ export function downloadMediaExportBytes(filename: string, mimeType: string, byt
 export const shellSegmentedDownloadSinkFactory: SegmentedDownloadSinkFactory = segmentedDownloadSinkFactory(downloadMediaExportBytes);
 
 export {
-  createBufferedDownloadSink,
-  createSegmentedDownloadSink,
-  drainSegmentedMediaExport,
-  SEGMENTED_DOWNLOAD_CONTRACT,
-  SEGMENTED_DOWNLOAD_REFUSAL,
-  parseSegmentedDownloadMarker,
-  parseSegmentedDownloadOperationId,
-  SEGMENTED_DOWNLOAD_MARKER_PREFIX,
-  type SegmentedDownloadEncoding,
-  type SegmentedDownloadSink,
-  type SegmentedDownloadSinkFactory,
+    createBufferedDownloadSink,
+    createSegmentedDownloadSink,
+    drainSegmentedMediaExport, parseSegmentedDownloadMarker,
+    parseSegmentedDownloadOperationId, SEGMENTED_DOWNLOAD_CONTRACT, SEGMENTED_DOWNLOAD_MARKER_PREFIX, SEGMENTED_DOWNLOAD_REFUSAL, type SegmentedDownloadEncoding,
+    type SegmentedDownloadSink,
+    type SegmentedDownloadSinkFactory
 } from "../📤️SegmentedDownload/🟦️.ts";
 
 export function downloadDataUrl(filename: string, dataUrl: string): void {
@@ -807,7 +793,7 @@ export function makeEffectDispatchOne(
  * 📏️ It is also the host half of `PUZZLE3D_IMPORT_CHUNK_BYTES`
  * (`✏️s/🔌️plugins/🧩️puzzle/…/🎮️commands/📥️import-fixture/🦀️.rs`), held equal to it by the engine
  * contract's own law. */
-export { IMPORT_CHUNK_BYTES, importPayloadChunks, importChunkArguments };
+export { IMPORT_CHUNK_BYTES, importChunkArguments, importPayloadChunks };
 export type { ImportChunk };
 //#endregion 📥️ChunkedImport
 
@@ -1720,7 +1706,7 @@ function windowEngagementControlToSpec(control: WindowEngagementControl | undefi
   return { ...numeric, kind: "stepper" };
 }
 
-/** 🫀️ Both numbers come from the ONE schema-owned liveness policy (`https://semio.tech/schema/framework/actor/shard-client/schema.json#/$defs/ShardClient`,
+/** 🫀️ Both numbers come from the ONE schema-owned liveness policy (`https://json.schemas.assets.semio-tech.com/framework/actor/shard-client/schema.json#/$defs/ShardClient`,
  * re-exported through `🔌️PluginRuntime`) — never a literal here. `pluginLoadIdleTimeoutMs` is an IDLE
  * budget, not a total one: the deadline is pushed forward every time this plugin's own load reports
  * progress, so a multi-MB wasm component fetching, compiling and instantiating for two minutes on a
@@ -2906,7 +2892,7 @@ export function createInFlightSkippingInterval<Timer>(run: () => unknown, delayM
   };
 }
 
-export { beginIsolatedJobDrive, endIsolatedJobDrive, requestIsolatedJobUiPoll, takeIsolatedJobUiPoll, isolatedJobDriveIsActive, subscribeIsolatedJobDrive, isolatedJobDriveSnapshot } from "../🔌️PluginRuntime/🟦️.tsx";
+export { beginIsolatedJobDrive, endIsolatedJobDrive, isolatedJobDriveIsActive, isolatedJobDriveSnapshot, requestIsolatedJobUiPoll, subscribeIsolatedJobDrive, takeIsolatedJobUiPoll } from "../🔌️PluginRuntime/🟦️.tsx";
 
 /**
  * @emoji 🎯️ Coalesces rapid dispatches to the latest value — skips when unchanged and keeps at most one

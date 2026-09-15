@@ -1468,6 +1468,72 @@ mod plugin_builder_contract_tests {
         semio_framework::kernel::Budget { fuel: 50_000_000, deadline_ms: 100, max_effects: 64, max_patch_bytes: 1 << 20, max_frames: 8 }
     }
 
+    /// 📄️ LAW: k live operations each holding a presentable result page retire in ONE host crossing.
+    ///
+    /// 🐛️ `advance_typed_operation_output` took exactly one page and `TypedOperationGrant::spent` ended
+    /// the turn the instant it existed, so every acknowledgeable publication unit of every live
+    /// operation cost its own worker round trip. Served measurement on the React door of 🧊️generation3d
+    /// (`📓️shard-message-crossings-2026-09-15.md` §2): 200 acknowledgement crossings over 69
+    /// operations, **every one of them exactly one ack wide**, 10.0 of a `flowEvalTick` hop's 36.2
+    /// crossings. A page's ACK is per-page by protocol; the crossing that carries it is not — the wire's
+    /// `Event::Message` is a list and the reactor's poll acknowledges every entry of it.
+    ///
+    /// The law is about CARDINALITY, so it admits whatever lane each page carries: four simultaneous
+    /// edits of one immutable document root make three of them rebase refusals, and a refusal is
+    /// published as its own acknowledgeable `Fault` page on exactly the wire this law measures.
+    #[semio_framework_async_macros::async_test]
+    async fn concurrent_typed_operations_hand_every_presentable_page_to_one_turn() {
+        const OPERATIONS: usize = 4;
+        let fixture: Value = serde_json::from_str(include_str!("../../⚛️reactor/🧫️fixtures/🔣️.json")).unwrap();
+        let id = fixture["wire"]["receiver"].as_u64().unwrap() as u32;
+        let mut app = VcsArtifactApp::<KeyedTestApp>::with_registry(KeyedTestApp, keyed_test_registry().await).await;
+        app.bind_instance_id(id).await;
+        let meta = ActionMeta { actor: "fixture".into(), instance_id: id, view_state: None };
+        for index in 0..OPERATIONS {
+            let command = TestCommand::CompositeEdit { slot: String::new(), child_id: format!("batch-{index}").into(), child_value: index as i32 + 1 };
+            app.dispatch_typed(command, &meta).await.unwrap();
+        }
+        let runtime = super::PluginRuntime::new();
+        let cell = std::sync::Arc::new(super::RuntimeAppCell::new(AppInstance { id, app, surface_contexts: Default::default() }));
+        runtime.instances.borrow_mut().insert_admitted(id, cell.clone());
+        let (mut pages, mut crossings, mut widest) = (0usize, 0usize, 0usize);
+        for _ in 0..fixture["command"]["maximumTurns"].as_u64().unwrap() * OPERATIONS as u64 {
+            super::plugin_step_live_cleanup(&runtime).unwrap();
+            let (output, scan) = super::plugin_continue_typed_operations(&runtime, super::TypedOperationGrant::turn(reactor_native_budget())).await.unwrap();
+            let more = scan.runnable || scan.contended;
+            if let Some((receiver, output)) = output {
+                assert_eq!(receiver, id);
+                if !output.typed_operation_results.is_empty() {
+                    crossings += 1;
+                    widest = widest.max(output.typed_operation_results.len());
+                }
+                for page in output.typed_operation_results {
+                    pages += 1;
+                    super::plugin_acknowledge_typed_operation_result(&runtime, page.token).await.unwrap();
+                }
+            }
+            if !more {
+                break;
+            }
+            std::thread::yield_now();
+        }
+        assert!(pages >= OPERATIONS, "each of the {OPERATIONS} admitted operations owes at least one result page, saw {pages}");
+        assert!(widest >= 2, "{OPERATIONS} concurrently publishing operations must share a crossing; the widest batch was {widest}");
+        assert!(crossings < pages, "{pages} result pages retired in {crossings} crossings — a page per crossing is the cardinality this law removes");
+        eprintln!("[DEBUG] actual {pages} typed-operation result pages retired in {crossings} host crossings, widest batch {widest}");
+        let active = cell.instance.lock().unwrap();
+        assert!(!active.app.has_pending_typed_operations());
+        drop(active);
+        drop(cell);
+        super::plugin_destroy_app(&runtime, id).await.unwrap();
+        for _ in 0..100_000 {
+            super::plugin_step_close_cleanup(&runtime).unwrap();
+            if runtime.close_quarantine.borrow().get(id).is_none() {
+                break;
+            }
+        }
+    }
+
     #[semio_framework_async_macros::async_test]
     async fn retained_operation_continues_after_command_admission_until_publication_and_retirement() {
         let fixture: Value = serde_json::from_str(include_str!("../../⚛️reactor/🧫️fixtures/🔣️.json")).unwrap();
@@ -1490,7 +1556,7 @@ mod plugin_builder_contract_tests {
             spent += 1;
             if let Some((receiver, output)) = output {
                 assert_eq!(receiver, id);
-                if let Some(page) = output.typed_operation_result {
+                for page in output.typed_operation_results {
                     assert_ne!(page.lane, TypedOperationResultLane::Fault, "{}", String::from_utf8_lossy(page.bytes()));
                     terminal |= page.lane == TypedOperationResultLane::Terminal;
                     receipts += 1;
@@ -1587,7 +1653,7 @@ mod plugin_builder_contract_tests {
             let mut more = scan.runnable || scan.contended;
             if let Some((receiver, output)) = output {
                 assert_eq!(receiver, id);
-                if let Some(page) = output.typed_operation_result {
+                for page in output.typed_operation_results {
                     assert_ne!(page.lane, TypedOperationResultLane::Fault, "{}", String::from_utf8_lossy(page.bytes()));
                     lanes.push(page.lane);
                     if page.lane == TypedOperationResultLane::Child {
@@ -1611,7 +1677,7 @@ mod plugin_builder_contract_tests {
                             }
                             assert!(cell.maintenance_probe_entries.load(std::sync::atomic::Ordering::Relaxed) >= expected_entries, "production maintenance callback must execute before counting one delayed ACK poll");
                             let (output, _) = super::plugin_continue_typed_operations(&runtime, super::TypedOperationGrant::UNIT).await.expect("delayed renderer ACK does not fault continuation");
-                            assert!(output.as_ref().and_then(|(_, output)| output.typed_operation_result.as_ref()).is_none(), "presented result page must not be republished before an explicit retry deadline");
+                            assert!(output.as_ref().and_then(|(_, output)| output.typed_operation_results.first()).is_none(), "presented result page must not be republished before an explicit retry deadline");
                         }
                         assert!(cell.maintenance_probe_entries.load(std::sync::atomic::Ordering::Relaxed) >= maintenance_entries_before + pre_ack_polls);
                         let input_waits_before_alignment = cell.maintenance_probe_input_waits.load(std::sync::atomic::Ordering::SeqCst);

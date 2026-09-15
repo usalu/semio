@@ -15,7 +15,7 @@ Rows worked: `📋️cross-partition-requests.md` **92** (disposition vocabulary
 ## 2. Row 92 — the disposition vocabulary
 
 `🧰️framework/🔨️modules/🖱️ui/🧬️schema/🔣️.json`, `definitions.retainedCommandDisposition`
-(`$id https://semio.tech/schema/framework/ui/schema.json`, referenced by
+(`$id https://json.schemas.assets.semio-tech.com/framework/ui/schema.json`, referenced by
 `retainedCommandRouteDisposition.disposition`, `retainedCommandRouteExecutionFeature.admission`
 and `.status`, and `retainedCommandCohortRoute.admission`):
 

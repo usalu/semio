@@ -1,23 +1,23 @@
 //! 📑️ Borrowed ordered validation precedes owned Flow snapshot materialization.
 use super::FlowDelta;
-use super::super::{apply_flow_collection_delta, FlowHostDocument, FlowLayoutEntry, Identified, MutationApplyError, MutationApplyResult, SynapseSpec, Widget, WidgetLayout};
+use super::super::{apply_flow_collection_delta, FlowHostSnapshot, FlowLayoutEntry, Identified, MutationApplyError, MutationApplyResult, SynapseSpec, Widget, WidgetLayout};
 use std::collections::BTreeMap;
 
 //#region 📑️Projection
 pub(super) struct FlowProjection<'a> {
-    host_document: &'a FlowHostDocument,
+    host_snapshot: &'a FlowHostSnapshot,
     widgets: Vec<&'a Widget>,
     synapses: Vec<&'a SynapseSpec>,
     layout: BTreeMap<&'a str, &'a WidgetLayout>,
 }
 
 impl<'a> FlowProjection<'a> {
-    pub(super) fn new(fixture: &'a FlowHostDocument) -> Self {
+    pub(super) fn new(host_snapshot: &'a FlowHostSnapshot) -> Self {
         Self {
-            host_document: fixture,
-            widgets: fixture.widgets.iter().collect(),
-            synapses: fixture.synapses.iter().collect(),
-            layout: fixture.layout.iter().map(|(id, layout)| (id.as_str(), layout)).collect(),
+            host_snapshot,
+            widgets: host_snapshot.widgets.iter().collect(),
+            synapses: host_snapshot.synapses.iter().collect(),
+            layout: host_snapshot.layout.iter().map(|(id, layout)| (id.as_str(), layout)).collect(),
         }
     }
 
@@ -26,7 +26,7 @@ impl<'a> FlowProjection<'a> {
             FlowDelta::Widgets(delta) => apply_flow_collection_delta(&mut self.widgets, delta).map_err(|error| error.under(["widgets"])),
             FlowDelta::Synapses(delta) => apply_flow_collection_delta(&mut self.synapses, delta).map_err(|error| error.under(["synapses"])),
             FlowDelta::Layout(entries) => self.apply_layout(entries),
-            FlowDelta::HostDocument(fixture) => { *self = Self::new(fixture); Ok(()) }
+            FlowDelta::HostSnapshot(fixture) => { *self = Self::new(fixture); Ok(()) }
         }
     }
 
@@ -47,10 +47,10 @@ impl<'a> FlowProjection<'a> {
         Ok(())
     }
 
-    pub(super) fn materialize(self) -> FlowHostDocument {
-        FlowHostDocument {
-            schema: self.host_document.schema.clone(),
-            camera: self.host_document.camera.clone(),
+    pub(super) fn materialize(self) -> FlowHostSnapshot {
+        FlowHostSnapshot {
+            schema: self.host_snapshot.schema.clone(),
+            camera: self.host_snapshot.camera.clone(),
             widgets: self.widgets.into_iter().cloned().collect(),
             synapses: self.synapses.into_iter().cloned().collect(),
             layout: self.layout.into_iter().map(|(id, layout)| (id.to_owned(), layout.clone())).collect(),

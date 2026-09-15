@@ -100,7 +100,7 @@ in vcs (`✏️editor/🦀️.rs:1212`), reasoning/wires (`:621`), imperative/pr
 ### 3. `equation-retained-command` — 1 instance, VIOLATION
 
 `➗️mathematical/…/➗️equation/🧪️fixtures/🧬️equation-retained-command.schema.json`,
-`$id=https://semio.tech/schema/equation-retained-command-law.json`. Same family as
+`$id=https://json.schemas.assets.semio-tech.com/equation-retained-command-law.json`. Same family as
 #1/#2 in spirit (an editor retained-command law) but named/shaped differently.
 Consumers: `equation/🦀️.rs` and `equation/…/✏️editor/🦀️.rs` (grep hits, exact
 `include_str!` line not isolated).
@@ -213,7 +213,7 @@ which currently exist.
 ### 8. stdio rust-package fixtures — 2 instances (+ #7's dwg file), VIOLATION
 
 `🗄️stdio/📦️packages/🦀️rust/🧫️fixtures/🌳️catalog-root/🧬️.schema.json` and
-`…/🏠️home-io-surface/🧬️.schema.json` (`$id=https://semio.tech/schemas/stdio-home-io-surface-v1.json`).
+`…/🏠️home-io-surface/🧬️.schema.json` (`$id=https://json.schemas.assets.semio-tech.coms/stdio-home-io-surface-v1.json`).
 No package-level `🧬️schema` module exists for stdio's rust package. **Decision**:
 create one and fold catalog-root + home-io-surface + dwg-artifact-ownership (#7)
 into it together, since they're siblings under the same `🧫️fixtures` root.
@@ -287,7 +287,7 @@ owns the flow/note action-cohort integration before deleting either copy.
 ### 12. `norm` — 3 files
 
 - `📕️norm/🎚️config/🧪️tests/🧬️.schema.json` — **ambiguous**. norm's *real* config
-  schema (`📕️norm/🎚️config/🧬️schema/🔣️.json`, `$id=https://semio.tech/schema/app/norm/norm/config.json`,
+  schema (`📕️norm/🎚️config/🧬️schema/🔣️.json`, `$id=https://json.schemas.assets.semio-tech.com/app/norm/norm/config.json`,
   `title=NormConfig`, `properties=['selectedCheckIndex']`) has a **completely
   different shape** from this test schema
   (`properties=['contractId','cases','invalid','text','binary']`). This is not
@@ -343,7 +343,7 @@ note, not a relocation:
 
 - **gis** (3): `🏔️gisterrain/…/✏️editor/🎚️config/🧪️tests/🧬️direct-leaves/🧬️schema/🔣️.json`;
   `🗺️gismap/…/✏️editor/👥️presence/🧬️schema/🧪️tests/🔣️.json` (data) and
-  `…/🧬️schema/🔣️.json` (schema, `$id=https://semio.tech/schema/gis/gis2d-presence/tests`)
+  `…/🧬️schema/🔣️.json` (schema, `$id=https://json.schemas.assets.semio-tech.com/gis/gis2d-presence/tests`)
   — both already inside presence's own `🧬️schema` module.
 - **sequence** (2): `…/✏️editor/🌉️wasm/🧬️schema/🧪️oracle/🔣️.json`
   (`$id=semio://sequence.browser-abi/oracle/v1`, likely validated by the JS test

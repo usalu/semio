@@ -575,7 +575,7 @@ pub use construct_query::*;
 // `⚙️engine` (D5 behavioural).
 mod scene_compute {
     use crate::standards::v1::subsets::any::io::geometry_import::{
-        centroid_from_host_document_primitives, objects_from_host_document_model, parse_geometry, semio_model_snapshot_from_objects, tessellate_object_mesh, tessellate_object_mesh_from_host_document, CadGeometry, CadObject, CadPrimitiveSlot,
+        centroid_from_host_snapshot_primitives, objects_from_host_snapshot_model, parse_geometry, semio_model_snapshot_from_objects, tessellate_object_mesh, tessellate_object_mesh_from_host_snapshot, CadGeometry, CadObject, CadPrimitiveSlot,
     };
     use crate::{cad_model_child_handle, CadCamera, CadModelChild, CadNode, CadPaneId, CadProjectionDsl, CadReference, CadSnapshot, CadWorkingScene, CAD_PLAY_DOCUMENT_SCHEMA};
     use semio_framework::parse_contributions;
@@ -680,8 +680,8 @@ mod scene_compute {
     }
 
     /// @emoji 📐️ Shifts a tessellated mesh onto the authored fixture primitive centroid when kernel output drifts.
-    pub(crate) fn align_mesh_to_host_document_centroid(mesh: &mut MeshData, geometry: &CadGeometry, primitives: &[CadPrimitiveSlot]) {
-        let Some(target) = centroid_from_host_document_primitives(geometry, primitives) else {
+    pub(crate) fn align_mesh_to_host_snapshot_centroid(mesh: &mut MeshData, geometry: &CadGeometry, primitives: &[CadPrimitiveSlot]) {
+        let Some(target) = centroid_from_host_snapshot_primitives(geometry, primitives) else {
             return;
         };
         let Some(current) = mesh_centroid(mesh) else {
@@ -727,7 +727,7 @@ mod scene_compute {
         };
         let objects_value: Vec<protocol::DslValue> = objects_value.iter().map(protocol::json::to_dsl_value).collect();
         let mut kernel = cad_brep_kernel();
-        let objects = objects_from_host_document_model(&mut kernel, &objects_value, &geometry);
+        let objects = objects_from_host_snapshot_model(&mut kernel, &objects_value, &geometry);
         (objects, geometry)
     }
 
@@ -949,15 +949,15 @@ mod scene_compute {
         let kind = primary_primitive_kind(object);
         {
             let mut kernel = cad_brep_kernel();
-            let mesh = geometry.filter(|_| !object.primitives.is_empty()).and_then(|geometry| tessellate_object_mesh_from_host_document(&mut kernel, object, geometry)).or_else(|| tessellate_object_mesh(&mut kernel, object, kind));
+            let mesh = geometry.filter(|_| !object.primitives.is_empty()).and_then(|geometry| tessellate_object_mesh_from_host_snapshot(&mut kernel, object, geometry)).or_else(|| tessellate_object_mesh(&mut kernel, object, kind));
             if let Some(mut mesh) = mesh {
                 if let Some(geometry) = geometry {
-                    align_mesh_to_host_document_centroid(&mut mesh, geometry, &object.primitives);
+                    align_mesh_to_host_snapshot_centroid(&mut mesh, geometry, &object.primitives);
                 }
                 return mesh;
             }
         }
-        let centroid = geometry.and_then(|geometry| centroid_from_host_document_primitives(geometry, &object.primitives));
+        let centroid = geometry.and_then(|geometry| centroid_from_host_snapshot_primitives(geometry, &object.primitives));
         typology_brep_mesh(&object.typology, object.extent, object.solid_handle.as_deref(), centroid)
     }
 

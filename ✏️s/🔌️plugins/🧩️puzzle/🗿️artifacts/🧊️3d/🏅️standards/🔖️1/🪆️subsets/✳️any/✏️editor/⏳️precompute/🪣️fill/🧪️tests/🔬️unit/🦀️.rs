@@ -1505,7 +1505,7 @@ fn drive_revalidation(job: &mut FillRevalidateJob, operation: Operation) -> Vec<
 /// ⚖️ LAW: revalidating provisional placements against an unchanged head keeps every one; against a head
 /// that gained a body where one placement stands, that placement turns `danger` with the framework
 /// conflict reason, the final tick retracts to it and re-appends every later survivor's exact ops and
-/// entity, and one `danger` conflict step counts the conflicts.
+/// entity, and one `danger` conflict step counts the conflicts. Its trace shows one placement at a time and none once done.
 #[test]
 fn fill_revalidate_job_retracts_conflicting_placements_and_reappends_survivors() {
     const PLACED: usize = 8;
@@ -1519,6 +1519,16 @@ fn fill_revalidate_job_retracts_conflicting_placements_and_reappends_survivors()
     let ticks = drive_revalidation(&mut clean, operation);
     assert!(clean.conflicts().iter().all(|conflict| !conflict) && clean.conflicts().len() == PLACED);
     assert!(ticks.iter().all(|tick| tick.retract_to.is_none() && tick.append_ops.is_empty()));
+    // 👁️ One placement on screen at a time, none after the finish: a finalize never leaves a verdict mesh over every
+    // committed object.
+    let mut screen = ToolRunTraceStore::new(fill_run_identity());
+    for tick in &ticks {
+        for page in &tick.trace {
+            screen.apply_ops(&page.ops);
+            assert!(screen.len() <= 1, "revalidation shows one placement at a time, resident {:?}", screen.records().map(|(key, record)| (key, record.verdict)).collect::<Vec<_>>());
+        }
+    }
+    assert_eq!(screen.len(), 0, "the finished revalidation leaves no verdict record on screen");
 
     let mut scene = (*head.scene).clone();
     let mut intruder = placements[INTRUDED].object.clone();

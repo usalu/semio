@@ -1,49 +1,49 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/dag/dag/mutations.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/dag/dag/mutations.json",
   "title": "DagMutation",
   "oneOf": [
     {
-      "$ref": "https://semio.tech/schema/s/dag/dag/mutation/change-node-abbreviation/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/dag/dag/mutation/change-node-abbreviation/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/dag/dag/mutation/change-node-icon/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/dag/dag/mutation/change-node-icon/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/dag/dag/mutation/change-node-name/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/dag/dag/mutation/change-node-name/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/dag/dag/mutation/change-node-operator-kind/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/dag/dag/mutation/change-node-operator-kind/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/dag/dag/mutation/connect-nodes/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/dag/dag/mutation/connect-nodes/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/dag/dag/mutation/create-node/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/dag/dag/mutation/create-node/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/dag/dag/mutation/delete-node/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/dag/dag/mutation/delete-node/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/dag/dag/mutation/disconnect-nodes/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/dag/dag/mutation/disconnect-nodes/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/dag/dag/mutation/move-node/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/dag/dag/mutation/move-node/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/dag/dag/mutation/rename-node/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/dag/dag/mutation/rename-node/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/dag/dag/mutation/reorder-nodes/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/dag/dag/mutation/reorder-nodes/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/dag/dag/mutation/replace-node-kind/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/dag/dag/mutation/replace-node-kind/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/dag/dag/mutation/replace-node-properties/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/dag/dag/mutation/replace-node-properties/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/dag/dag/mutation/resize-node/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/dag/dag/mutation/resize-node/schema.json"
     }
   ]
 }

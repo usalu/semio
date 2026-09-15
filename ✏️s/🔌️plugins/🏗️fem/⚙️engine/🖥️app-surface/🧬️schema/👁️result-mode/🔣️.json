@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/fem/result-mode/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/fem/result-mode/schema.json",
   "title": "FEM Result Mode",
   "type": "string",
   "enum": [

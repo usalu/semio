@@ -11,61 +11,61 @@ import { describe, expect, test } from "bun:test";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
+import {
+    type SchemaBoundFixture,
+    type SchemaDiagnostic,
+    type SchemaDiagnosticCode,
+    GRAPHQL_EXPORT_KEYWORDS,
+    SCHEMA_DIAGNOSTIC_CODES,
+    SCHEMA_DIAGNOSTIC_CODE_TABLE,
+    SCHEMA_DIAGNOSTIC_EMITTERS,
+    SCHEMA_FIXTURE_STAGES,
+    TAXONOMY_REL_PATH,
+    TEST_DOMAIN_REL_PATH,
+    clearSchemaContractCache,
+    declaresSchemaExport,
+    declaresSchemaExportParser,
+    discoverSchemaFixtures,
+    fixtureUrisIn,
+    isFixtureOwnedPath,
+    isJsonSchemaDefinition,
+    leafDescriptorCoverage,
+    matchesTaxonomyPathPattern,
+    mutationLeafDirectories,
+    mutationLeafSchemaId,
+    parseFeature,
+    parseSchemaUri,
+    readLeafDescriptors,
+    readSchemaCatalog,
+    repoRootFromHere,
+    resolveFixtures,
+    resolvePayloadSchemas,
+    resolveSchemaExport,
+    runSchemaFixture,
+    schemaContractDiagnostics,
+    schemaDiagnosticCodesEmittedBy,
+    schemaExportCompletenessDiagnostics,
+    schemaFixtureIsolationDiagnostics,
+    schemaMeasurementDisagreementDiagnostics,
+    schemaOwnerEligibilityDiagnostics,
+    schemaPlacementDiagnostics,
+    schemaResolutionDiagnostics,
+    schemaScopeEligibility,
+    schemaTreeFiles,
+    submodulePaths,
+    validateAgainstJsonSchema,
+} from "../../📦️packages/🟦️typescript/🟦️.ts";
 import cases from "../../🧫️fixtures/🧬️schema-invariants/🔣️.json";
 import protocolSchema from "../../🧬️schema/🔣️.json";
-import {
-  type SchemaBoundFixture,
-  type SchemaDiagnostic,
-  type SchemaDiagnosticCode,
-  GRAPHQL_EXPORT_KEYWORDS,
-  SCHEMA_DIAGNOSTIC_CODES,
-  SCHEMA_DIAGNOSTIC_CODE_TABLE,
-  SCHEMA_DIAGNOSTIC_EMITTERS,
-  SCHEMA_FIXTURE_STAGES,
-  TAXONOMY_REL_PATH,
-  TEST_DOMAIN_REL_PATH,
-  clearSchemaContractCache,
-  declaresSchemaExport,
-  declaresSchemaExportParser,
-  discoverSchemaFixtures,
-  fixtureUrisIn,
-  isFixtureOwnedPath,
-  isJsonSchemaDefinition,
-  leafDescriptorCoverage,
-  matchesTaxonomyPathPattern,
-  mutationLeafDirectories,
-  mutationLeafSchemaId,
-  parseFeature,
-  parseSchemaUri,
-  readLeafDescriptors,
-  readSchemaCatalog,
-  repoRootFromHere,
-  resolveFixtures,
-  resolvePayloadSchemas,
-  resolveSchemaExport,
-  schemaContractDiagnostics,
-  schemaDiagnosticCodesEmittedBy,
-  schemaExportCompletenessDiagnostics,
-  schemaFixtureIsolationDiagnostics,
-  schemaMeasurementDisagreementDiagnostics,
-  schemaOwnerEligibilityDiagnostics,
-  schemaPlacementDiagnostics,
-  schemaResolutionDiagnostics,
-  schemaScopeEligibility,
-  schemaTreeFiles,
-  submodulePaths,
-  runSchemaFixture,
-  validateAgainstJsonSchema,
-} from "../../📦️packages/🟦️typescript/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🧭️Scaffold
 const repoRoot = repoRootFromHere();
 const CATALOG_REL = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️schema-catalog.json";
 const WRITER_OWNER = "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any";
-const WRITER_ID = "https://semio.tech/schema/s/writer/writer/artifact.json";
+const WRITER_ID = "https://json.schemas.assets.semio-tech.com/s/writer/writer/artifact.json";
 const HUB_OWNER = "🌎️hub/💡️inference";
-const HUB_ID = "https://semio.tech/schema/hub/inference.json";
+const HUB_ID = "https://json.schemas.assets.semio-tech.com/hub/inference.json";
 const CASE_DIR = "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧬️schema-invariants";
 const FORMAT_FILENAMES: Readonly<Record<string, string>> = { "🔣️jsonschema": "🔣️.json", "🦀️rust": "🦀️.rs", "🟦️typescript": "🟦️.ts", "🔗️graphql": "🔗️.graphql", "🛰️protobuf": "🛰️.proto" };
 
@@ -125,7 +125,7 @@ const ARTIFACT_DEF = { type: "object", additionalProperties: false, required: ["
 function resolutionRepo(options: { declareResolution?: boolean; omitCatalog?: boolean; duplicateScopeId?: string; aliasScopeId?: string; fixtureOwnedScope?: boolean; dropRustExport?: boolean; rootExport?: boolean } = {}): string {
   const root = scaffold(options.declareResolution !== false);
   if (options.fixtureOwnedScope === true) {
-    const scope = writeSchemaModule(root, "🌎️hub/🧪️fixtures/✅️inference-approval-v1", "https://semio.tech/schema/hub/inference-approval-fixture.json", { Approval: { type: "object" } }, {});
+    const scope = writeSchemaModule(root, "🌎️hub/🧪️fixtures/✅️inference-approval-v1", "https://json.schemas.assets.semio-tech.com/hub/inference-approval-fixture.json", { Approval: { type: "object" } }, {});
     writeCatalog(root, { "hub.inference": { ...scope, exports: rootExportRow("Approval"), dependsOn: [], hashes: {} } });
     return root;
   }
@@ -193,7 +193,7 @@ function graphqlModule(exported: string, keyword: CatalogCaseOptions["graphqlKey
 const LEAF_SEMANTIC_KIND = "create-artifact";
 const LEAF_SCOPE_ID = "s.writer.writer.mutation.create-artifact";
 const LEAF_OWNER = `${WRITER_OWNER}/🧬️schema/🧬️mutations/🌱️create`;
-const AGGREGATE_ID = "https://semio.tech/schema/s/writer/writer/mutations.json";
+const AGGREGATE_ID = "https://json.schemas.assets.semio-tech.com/s/writer/writer/mutations.json";
 
 /** 🧪️ The repository every catalog case is judged against: two scopes, five formats each. */
 function catalogRepo(options: CatalogCaseOptions = {}): string {
@@ -400,7 +400,7 @@ describe("🏛️ owner eligibility", () => {
 describe("🍃️ mutation leaves at depth one and two", () => {
   const OWNER = `${WRITER_OWNER}`;
   const descriptor = (kind: string, variant: string) => ({ schemaVersion: 1, owner: `${OWNER}/🧬️schema/🧬️mutations`, semanticKind: kind, displayName: kind, emoji: "🌱️", aggregateVariant: variant, payloadSchema: "🧬️schema/🔣️.json", outcomeClasses: ["applied"] });
-  const payload = { $schema: "http://json-schema.org/draft-07/schema#", $id: `https://semio.tech/schema/s/writer/writer/mutation/x/schema.json`, type: "object" };
+  const payload = { $schema: "http://json-schema.org/draft-07/schema#", $id: `https://json.schemas.assets.semio-tech.com/s/writer/writer/mutation/x/schema.json`, type: "object" };
 
   function repoWithLeaves(): string {
     const root = scaffold();
@@ -485,7 +485,7 @@ describe("⚖️ the two measurements", () => {
     const root = catalogRepo();
     try {
       expect(schemaMeasurementDisagreementDiagnostics(root)).toEqual([]);
-      write(root, `${WRITER_OWNER}/✏️editor/🎚️config/🧬️schema/🔣️.json`, `${JSON.stringify({ $schema: "http://json-schema.org/draft-07/schema#", $id: "https://semio.tech/schema/s/writer/writer/config/schema.json", $defs: { Config: { type: "object" } } }, null, 2)}\n`);
+      write(root, `${WRITER_OWNER}/✏️editor/🎚️config/🧬️schema/🔣️.json`, `${JSON.stringify({ $schema: "http://json-schema.org/draft-07/schema#", $id: "https://json.schemas.assets.semio-tech.com/s/writer/writer/config/schema.json", $defs: { Config: { type: "object" } } }, null, 2)}\n`);
       clearSchemaContractCache();
       const found = schemaMeasurementDisagreementDiagnostics(root);
       expect(locatedOf(found)).toEqual([`schema-catalog-stale ${WRITER_OWNER}/✏️editor/🎚️config/🧬️schema`]);
@@ -509,7 +509,7 @@ describe("⚖️ the two measurements", () => {
 });
 
 describe("🚶️ the tree walk's boundaries", () => {
-  const definition = { $schema: "http://json-schema.org/draft-07/schema#", $id: "https://semio.tech/schema/foreign/schema.json", type: "object" };
+  const definition = { $schema: "http://json-schema.org/draft-07/schema#", $id: "https://json.schemas.assets.semio-tech.com/foreign/schema.json", type: "object" };
 
   test("a git submodule declared in .gitmodules is a foreign repository and is never walked", () => {
     const root = scaffold();
@@ -723,7 +723,7 @@ describe("🧬️ a mutation leaf's own $id", () => {
   test("a facet filename never deepens the scope a leaf hangs off", () => {
     const root = scaffold();
     try {
-      expect(mutationLeafSchemaId(root, "https://semio.tech/schema/hub/inference/snapshot.json", "approve")).toBe(mutationLeafSchemaId(root, "https://semio.tech/schema/hub/inference/schema.json", "approve"));
+      expect(mutationLeafSchemaId(root, "https://json.schemas.assets.semio-tech.com/hub/inference/snapshot.json", "approve")).toBe(mutationLeafSchemaId(root, "https://json.schemas.assets.semio-tech.com/hub/inference/schema.json", "approve"));
     } finally {
       discard(root);
     }

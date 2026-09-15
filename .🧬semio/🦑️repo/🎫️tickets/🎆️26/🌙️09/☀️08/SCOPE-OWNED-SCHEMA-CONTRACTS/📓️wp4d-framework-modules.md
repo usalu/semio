@@ -307,7 +307,7 @@ initializer, a temporal-dead-zone throw. The file is unmodified in `git status` 
 ### 6.1 ui partition — the last `schema-ref-unresolved` under `🧰️framework/🔨️modules`
 
 `🧰️framework/🔨️modules/🖱️ui/🖥️host/📥️input/🎟️admission/🪪️root/🧬️schema/🔣️.json:7` references
-`https://semio.tech/schema/framework/ui/host/input/admission/schema.json#/definitions/u64`, a private
+`https://json.schemas.assets.semio-tech.com/framework/ui/host/input/admission/schema.json#/definitions/u64`, a private
 helper of a ui-owned module. Both files are yours. Exact change, mirroring §2.2:
 
 ```
@@ -317,8 +317,8 @@ helper of a ui-owned module. Both files are yours. Exact change, mirroring §2.2
    (and every internal "#/definitions/u64" in that document → "#/$defs/U64")
 
 🧰️framework/🔨️modules/🖱️ui/🖥️host/📥️input/🎟️admission/🪪️root/🧬️schema/🔣️.json:7
--  "$ref": "https://semio.tech/schema/framework/ui/host/input/admission/schema.json#/definitions/u64"
-+  "$ref": "https://semio.tech/schema/framework/ui/host/input/admission/schema.json#/$defs/U64"
+-  "$ref": "https://json.schemas.assets.semio-tech.com/framework/ui/host/input/admission/schema.json#/definitions/u64"
++  "$ref": "https://json.schemas.assets.semio-tech.com/framework/ui/host/input/admission/schema.json#/$defs/U64"
 ```
 
 **Two ui files were edited by this pass** and are listed here so you do not lose them: the export

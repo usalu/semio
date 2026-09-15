@@ -2,10 +2,11 @@
 
 use crate::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
 use crate::standards::v1::subsets::any::schema::mutations::text::Generation3dMutation;
-use crate::standards::v1::subsets::any::schema::{commit_host_document, with_host};
+use crate::standards::v1::subsets::any::schema::{commit_host_snapshot, with_host};
 use crate::Generation3dSnapshot;
-use semio_framework_artifact_flow_flow::FlowHostDocument;
+use semio_framework_artifact_flow_flow::FlowHostSnapshot;
 use semio_framework_os_flow::FlowEvalSession;
+use semio_framework::kernel::UiDirtyScope;
 use semio_framework_plugin::{app::InteractionView, ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -38,13 +39,13 @@ fn parse_sub_operations(text: &str) -> Vec<dsl::json::Value> {
 /// (`📓️slider-preview-update-2026-09-15.md`). Before this, the overlay dispatched an undeclared
 /// `setGraphParameter` action that the shell dropped, so the document — and the preview — never moved
 /// at all.
-fn apply_operations(fixture: &FlowHostDocument, sub_operations: &[dsl::json::Value], selected: &[String]) -> Emit<Generation3dMutation, Generation3dConfigMutation> {
-    let operations = with_host(fixture, |host| {
+fn apply_operations(host_snapshot: &FlowHostSnapshot, sub_operations: &[dsl::json::Value], selected: &[String]) -> Emit<Generation3dMutation, Generation3dConfigMutation> {
+    let operations = with_host(host_snapshot, |host| {
         for operation in sub_operations {
             match operation.get("operation").and_then(|value| value.as_str()).unwrap_or("") {
-                "setHostDocument" => {
-                    if let Some(new_fixture) = operation.get("hostDocumentJson").and_then(|value| value.as_str()).and_then(|json| semio_framework_os_flow::os_pack::json::from_json_str::<FlowHostDocument>(json).ok()) {
-                        host.replace_host_document(new_fixture);
+                "setHostSnapshot" => {
+                    if let Some(new_fixture) = operation.get("hostSnapshotJson").and_then(|value| value.as_str()).and_then(|json| semio_framework_os_flow::os_pack::json::from_json_str::<FlowHostSnapshot>(json).ok()) {
+                        host.replace_host_snapshot(new_fixture);
                     }
                 }
                 "deleteSelection" => {
@@ -84,9 +85,33 @@ fn apply_operations(fixture: &FlowHostDocument, sub_operations: &[dsl::json::Val
                 _ => {}
             }
         }
-        commit_host_document(fixture, &host.host_document)
+        commit_host_snapshot(host_snapshot, &host.host_snapshot)
     });
-    Emit { artifact_mutations: operations, coalesce_key: gesture_coalesce_key(sub_operations), ..Default::default() }
+    let coalesce_key = gesture_coalesce_key(sub_operations);
+    let ui_scope = if coalesce_key.is_some() { slider_gesture_ui_scope() } else { UiDirtyScope::default() };
+    Emit { artifact_mutations: operations, coalesce_key, ui_scope, ..Default::default() }
+}
+
+/// 🐢️ What ONE slider tick actually invalidates: the graph that draws the knob, the preview that
+/// re-evaluates, and the two panels that read the moved value back. Everything else — the catalogue,
+/// the utilities, tools, engagements, measures and labels — is identical before and after, and
+/// re-rendering it was a whole-shell refresh charged to every frame of a drag.
+pub(crate) fn slider_gesture_ui_scope() -> UiDirtyScope {
+    UiDirtyScope::Partial {
+        window_bodies: vec![
+            crate::editor::generation3d::modes::edit::windows::flow::GENERATION_3D_PLAY_BODY_MAIN.to_string(),
+            crate::editor::generation3d::modes::edit::windows::preview::GENERATION_3D_PLAY_BODY_PREVIEW.to_string(),
+        ],
+        panel_bodies: vec![
+            crate::editor::generation3d::panels::inspection::GENERATION_3D_PLAY_BODY_INSPECTION.to_string(),
+            crate::editor::generation3d::panels::artifact::GENERATION_3D_PLAY_BODY_ARTIFACT.to_string(),
+        ],
+        utilities: false,
+        tools: false,
+        engagements: false,
+        measures: false,
+        labels: false,
+    }
 }
 
 /// 🎚️ The coalesce key one continuous gesture's edits fold under, or `None` for a discrete edit.
@@ -117,7 +142,7 @@ fn gesture_coalesce_key(sub_operations: &[dsl::json::Value]) -> Option<String> {
 /// the selection as empty.
 pub fn handle(payload: &NodeGraphEdit, doc: &ArtifactView<'_, Generation3dSnapshot>, _cfg: &ConfigView<'_, Generation3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation>, Fault> {
     let sub_operations = parse_sub_operations(&payload.operations_json);
-    Ok(apply_operations(&doc.snapshot.host_document, &sub_operations, &[]))
+    Ok(apply_operations(&doc.snapshot.host_snapshot, &sub_operations, &[]))
 }
 
 /// 🕹️ `"deleteSelection"` reads the `graph` domain's current selection instead of a deleted config
@@ -131,7 +156,7 @@ pub fn apply(
     _session: &mut FlowEvalSession,
 ) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation>, Fault> {
     let sub_operations = parse_sub_operations(&payload.operations_json);
-    Ok(apply_operations(&doc.snapshot.host_document, &sub_operations, &interaction.selection("graph").ids))
+    Ok(apply_operations(&doc.snapshot.host_snapshot, &sub_operations, &interaction.selection("graph").ids))
 }
 
 /// 🕹️ Retained-command-job entry point (`generation3d_retained_reduce`, editor `🦀️.rs`) — same real-selection
@@ -140,7 +165,7 @@ pub fn apply(
 /// `protocol::InteractionState` by the caller.
 pub(crate) fn apply_selected(payload: &NodeGraphEdit, doc: &ArtifactView<'_, Generation3dSnapshot>, selected: &[String]) -> Emit<Generation3dMutation, Generation3dConfigMutation> {
     let sub_operations = parse_sub_operations(&payload.operations_json);
-    apply_operations(&doc.snapshot.host_document, &sub_operations, selected)
+    apply_operations(&doc.snapshot.host_snapshot, &sub_operations, selected)
 }
 
 //#region 🧪️Tests

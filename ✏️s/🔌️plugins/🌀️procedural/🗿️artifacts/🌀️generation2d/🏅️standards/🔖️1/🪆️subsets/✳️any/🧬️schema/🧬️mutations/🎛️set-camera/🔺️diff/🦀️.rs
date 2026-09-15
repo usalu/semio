@@ -9,7 +9,7 @@ pub fn diff(payload: &super::UpdateCamera, base: &Generation2dSnapshot) -> proto
     if !camera.x.is_finite() || !camera.y.is_finite() || !camera.zoom.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", "Camera x/y/zoom must be finite.".to_string(), Vec::<String>::new());
     }
-    if base.host_document.camera == *camera {
+    if base.host_snapshot.camera == *camera {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Camera is already at the requested position.".to_string());
     }
     protocol::MutationOutcome::new(diff_fixture_from_helpers(base, &WidgetsDiff::default(), &SynapsesDiff::default(), &LayoutDiff::default(), Some(&camera), None))

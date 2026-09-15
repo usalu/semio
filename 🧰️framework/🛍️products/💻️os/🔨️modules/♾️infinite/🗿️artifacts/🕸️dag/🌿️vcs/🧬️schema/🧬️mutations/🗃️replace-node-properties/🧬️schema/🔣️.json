@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/os/infinite/artifacts/dag/vcs/mutation/replace-node-properties/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/os/infinite/artifacts/dag/vcs/mutation/replace-node-properties/schema.json",
   "title": "ReplaceNodeProperties",
   "type": "object",
   "$defs": {
@@ -15,7 +15,7 @@
           "type": "string"
         },
         "newProperties": {
-          "$ref": "https://semio.tech/schema/os/infinite/artifacts/dag/vcs/schema.json#/$defs/PropertyBag"
+          "$ref": "https://json.schemas.assets.semio-tech.com/os/infinite/artifacts/dag/vcs/schema.json#/$defs/PropertyBag"
         }
       }
     }

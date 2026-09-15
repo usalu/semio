@@ -1,13 +1,13 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/equation/equation/diff.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/equation/equation/diff.json",
   "title": "EquationDiff",
   "type": "object",
   "additionalProperties": false,
   "properties": {
-    "notation": { "anyOf": [{ "$ref": "https://semio.tech/schema/os/store/child.json" }, { "type": "null" }], "x-semio-state": "artifact" },
-    "results": { "anyOf": [{ "$ref": "https://semio.tech/schema/os/store/child.json" }, { "type": "null" }], "x-semio-state": "artifact" },
-    "computed": { "anyOf": [{ "$ref": "https://semio.tech/schema/os/store/child.json" }, { "type": "null" }], "x-semio-state": "artifact" },
-    "equation": { "anyOf": [{ "$ref": "https://semio.tech/schema/framework/value/schema.json" }, { "type": "null" }], "x-semio-state": "artifact" }
+    "notation": { "anyOf": [{ "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child.json" }, { "type": "null" }], "x-semio-state": "artifact" },
+    "results": { "anyOf": [{ "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child.json" }, { "type": "null" }], "x-semio-state": "artifact" },
+    "computed": { "anyOf": [{ "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child.json" }, { "type": "null" }], "x-semio-state": "artifact" },
+    "equation": { "anyOf": [{ "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json" }, { "type": "null" }], "x-semio-state": "artifact" }
   }
 }

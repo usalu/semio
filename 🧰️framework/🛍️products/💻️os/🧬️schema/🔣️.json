@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/os/component.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/os/component.json",
   "title": "OS",
   "description": "Product-level os contracts owned by the os shell itself: the wire shapes its product-root backbone worker and TypeScript package exchange with the hub and with plugin runtimes. Module-level concerns live in the owning 🔨️modules/<m>/🧬️schema module instead.",
   "$defs": {

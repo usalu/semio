@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/semio/v1/drawing/inference.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/drawing/inference.json",
   "title": "SemioDrawingInference",
   "type": "object",
   "additionalProperties": false,
@@ -25,10 +25,10 @@
       ],
       "properties": {
         "worldTransform": {
-          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/drawing/snapshot.json#/$defs/Transform"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/drawing/snapshot.json#/$defs/Transform"
         },
         "resolvedStyle": {
-          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/drawing/snapshot.json#/$defs/DrawStyle"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/drawing/snapshot.json#/$defs/DrawStyle"
         }
       }
     }

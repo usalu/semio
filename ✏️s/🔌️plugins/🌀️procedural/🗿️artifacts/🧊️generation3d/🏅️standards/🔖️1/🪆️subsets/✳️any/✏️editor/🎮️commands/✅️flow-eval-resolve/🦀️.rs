@@ -34,7 +34,7 @@ pub fn resolve(
 
 pub fn handle(payload: &FlowEvalResolve, _doc: &ArtifactView<'_, Generation3dSnapshot>, _cfg: &ConfigView<'_, Generation3dConfig>, session: &mut FlowEvalSession) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation>, Fault> {
     preview_eval::resolve_eval(payload, session);
-    Ok(Emit::default())
+    Ok(Emit { ui_scope: flow_eval_tick::chain_ui_scope(&payload.window_kind_id, true), ..Default::default() })
 }
 
 //#region 🧪️Tests

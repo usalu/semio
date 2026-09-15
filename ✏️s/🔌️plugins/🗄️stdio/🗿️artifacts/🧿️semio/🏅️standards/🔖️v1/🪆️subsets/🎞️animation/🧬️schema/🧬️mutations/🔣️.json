@@ -1,13 +1,13 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/semio/v1/animation/mutations.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/animation/mutations.json",
   "title": "SemioAnimationMutation",
   "description": "Discriminated union over this module's mutation leaves (internally tagged); every payload is the leaf's own schema, referenced, never restated.",
   "oneOf": [
     {
       "allOf": [
         {
-          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/animation/mutation/insert-channel/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/animation/mutation/insert-channel/schema.json"
         },
         {
           "type": "object",
@@ -25,7 +25,7 @@
     {
       "allOf": [
         {
-          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/animation/mutation/insert-keyframe/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/animation/mutation/insert-keyframe/schema.json"
         },
         {
           "type": "object",
@@ -43,7 +43,7 @@
     {
       "allOf": [
         {
-          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/animation/mutation/insert-timeline/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/animation/mutation/insert-timeline/schema.json"
         },
         {
           "type": "object",
@@ -61,7 +61,7 @@
     {
       "allOf": [
         {
-          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/animation/mutation/remove-channel/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/animation/mutation/remove-channel/schema.json"
         },
         {
           "type": "object",
@@ -79,7 +79,7 @@
     {
       "allOf": [
         {
-          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/animation/mutation/remove-keyframe/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/animation/mutation/remove-keyframe/schema.json"
         },
         {
           "type": "object",
@@ -97,7 +97,7 @@
     {
       "allOf": [
         {
-          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/animation/mutation/remove-timeline/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/animation/mutation/remove-timeline/schema.json"
         },
         {
           "type": "object",
@@ -115,7 +115,7 @@
     {
       "allOf": [
         {
-          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/animation/mutation/set-channel-interpolation/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/animation/mutation/set-channel-interpolation/schema.json"
         },
         {
           "type": "object",
@@ -133,7 +133,7 @@
     {
       "allOf": [
         {
-          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/animation/mutation/set-channel-target/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/animation/mutation/set-channel-target/schema.json"
         },
         {
           "type": "object",
@@ -151,7 +151,7 @@
     {
       "allOf": [
         {
-          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/animation/mutation/set-keyframe-time/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/animation/mutation/set-keyframe-time/schema.json"
         },
         {
           "type": "object",
@@ -169,7 +169,7 @@
     {
       "allOf": [
         {
-          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/animation/mutation/set-keyframe-value/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/animation/mutation/set-keyframe-value/schema.json"
         },
         {
           "type": "object",
@@ -187,7 +187,7 @@
     {
       "allOf": [
         {
-          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/animation/mutation/set-snapshot/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/animation/mutation/set-snapshot/schema.json"
         },
         {
           "type": "object",
@@ -205,7 +205,7 @@
     {
       "allOf": [
         {
-          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/animation/mutation/set-timeline-name/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/animation/mutation/set-timeline-name/schema.json"
         },
         {
           "type": "object",

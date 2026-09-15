@@ -233,7 +233,7 @@ fn detaching_a_wired_input_from_its_port_publishes_disconnect() {
         ENGINE_SURFACES.with(|cell| {
             let map = cell.borrow();
             let Some(NodeGraphEngine::Flow(host)) = map.get(surface_id).and_then(|entry| entry.node_graph.as_ref()) else { panic!("live flow host for {label}") };
-            host.dag.host_document.edges.iter().map(|edge| edge.id.clone()).collect::<Vec<_>>()
+            host.dag.host_snapshot.edges.iter().map(|edge| edge.id.clone()).collect::<Vec<_>>()
         })
     };
     assert!(wired_ids("before").iter().any(|id| id == synapse), "{synapse} is wired before the cut");
@@ -257,7 +257,7 @@ fn a_minimap_press_publishes_the_camera_it_moved() {
         ENGINE_SURFACES.with(|cell| {
             let map = cell.borrow();
             let Some(NodeGraphEngine::Flow(host)) = map.get(surface_id).and_then(|entry| entry.node_graph.as_ref()) else { panic!("live flow host for {label}") };
-            [host.dag.host_document.camera.x, host.dag.host_document.camera.y]
+            [host.dag.host_snapshot.camera.x, host.dag.host_snapshot.camera.y]
         })
     };
     let mut point = None;
@@ -291,7 +291,7 @@ fn a_minimap_press_publishes_the_camera_it_moved() {
         viewport.args,
         semio_framework::optional_json_to_dsl(Some(json!({
             "surfaceId": surface_id,
-            "viewport": { "x": after[0], "y": after[1], "zoom": ENGINE_SURFACES.with(|cell| { let map = cell.borrow(); let Some(NodeGraphEngine::Flow(host)) = map.get(surface_id).and_then(|entry| entry.node_graph.as_ref()) else { panic!("live flow host") }; host.dag.host_document.camera.zoom }) },
+            "viewport": { "x": after[0], "y": after[1], "zoom": ENGINE_SURFACES.with(|cell| { let map = cell.borrow(); let Some(NodeGraphEngine::Flow(host)) = map.get(surface_id).and_then(|entry| entry.node_graph.as_ref()) else { panic!("live flow host") }; host.dag.host_snapshot.camera.zoom }) },
         }))),
         "the published viewport is exactly the camera the minimap committed"
     );

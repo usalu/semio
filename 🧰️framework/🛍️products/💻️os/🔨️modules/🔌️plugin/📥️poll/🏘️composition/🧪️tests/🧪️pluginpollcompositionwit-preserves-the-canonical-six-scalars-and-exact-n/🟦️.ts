@@ -9,7 +9,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     const api = await import("../../🟦️.ts"); const { default: fixture } = await import("../../../../../../../../🔨️modules/🎠️kernel/📥️poll/🏘️composition/🧫️fixtures/🔣️.json"); const { default: contract } = await import("../../../../../../../../🔨️modules/🎠️kernel/📥️poll/🏘️composition/📜️contract/🔣️.json");
     const { default: schema } = await import("../../../../../../../../🔨️modules/🎠️kernel/📥️poll/🏘️composition/🧬️schema/🔣️.json"); const { default: capacitySchema } = await import("../../../../../../../../🔨️modules/🌱️value/💾️resident/🧬️schema/🔣️.json");
     const { default: Ajv } = await import("ajv"); const library = "lodash"; const { default: _ } = await import(library); const { Buffer } = await import("node:buffer");
-    const oracle = new Ajv({ strict: true }).addSchema(capacitySchema).addSchema(schema); expect(oracle.getSchema("https://semio.tech/schema/framework/kernel/poll/composition/schema.json#/$defs/CompositionFixture")!(fixture)).toBe(true);
+    const oracle = new Ajv({ strict: true }).addSchema(capacitySchema).addSchema(schema); expect(oracle.getSchema("https://json.schemas.assets.semio-tech.com/framework/kernel/poll/composition/schema.json#/$defs/CompositionFixture")!(fixture)).toBe(true);
     for (const row of fixture.valid) {
       const bytes = Buffer.alloc(48); const expected = {};
       contract.wireOrder.forEach((path, index) => { bytes.writeBigUInt64LE(BigInt(_.get(row.input.composition, path)), index * 8); _.set(expected, path, bytes.readBigUInt64LE(index * 8)); });
@@ -18,7 +18,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(Object.isFrozen(wire)).toBe(true); expect(Object.isFrozen(wire.control)).toBe(true); expect(Object.keys(wire)).toEqual(["bytes", "slots", "owners", "control"]);
       expect(Object.keys(wire.control)).toEqual(["bytes", "slots", "owners"]); expect("identity" in wire).toBe(false);
     }
-    const validate = oracle.getSchema("https://semio.tech/schema/framework/kernel/poll/composition/schema.json#/$defs/Composition")!;
+    const validate = oracle.getSchema("https://json.schemas.assets.semio-tech.com/framework/kernel/poll/composition/schema.json#/$defs/Composition")!;
     for (const row of fixture.invalid) { expect(validate(row.input)).toBe(false); expect(() => api.pluginPollCompositionToWit(_.get(row.input, "composition"))).toThrow(/composition/); }
     for (const row of fixture.partitionRefusals) { expect(() => api.pluginPollCompositionToWit(row)).toThrow(/partition/); const wire = _.cloneDeep(row); for (const path of contract.wireOrder) _.set(wire, path, BigInt(_.get(row, path))); expect(() => api.pluginPollCompositionFromWit(wire)).toThrow(/partition/); }
   });

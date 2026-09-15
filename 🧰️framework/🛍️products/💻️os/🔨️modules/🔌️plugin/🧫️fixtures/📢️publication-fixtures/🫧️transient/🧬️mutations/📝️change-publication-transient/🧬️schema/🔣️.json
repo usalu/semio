@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/framework/os/plugin/tests/publication-fixtures/transient/mutation/change-publication-transient/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/os/plugin/tests/publication-fixtures/transient/mutation/change-publication-transient/schema.json",
   "title": "ChangePublicationTransient",
   "description": "Change Publication Transient",
   "type": "object",

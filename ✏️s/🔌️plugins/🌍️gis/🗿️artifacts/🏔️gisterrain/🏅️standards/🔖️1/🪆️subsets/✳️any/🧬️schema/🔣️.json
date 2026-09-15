@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/gis/gisterrain/artifact.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/gis/gisterrain/artifact.json",
   "title": "GisTerrainArtifact",
   "type": "object",
   "additionalProperties": false,
@@ -20,7 +20,7 @@
     "mesh": {
       "anyOf": [
         {
-          "$ref": "https://semio.tech/schema/os/store/child.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child.json"
         },
         {
           "type": "null"

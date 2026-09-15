@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/framework/actor/activation/return/retirement/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/actor/activation/return/retirement/schema.json",
   "title": "Unused Captured Return Retirement",
   "type": "object", "additionalProperties": false,
   "required": ["version", "grant", "prefixes", "maximumSteps", "terminal", "denied"],

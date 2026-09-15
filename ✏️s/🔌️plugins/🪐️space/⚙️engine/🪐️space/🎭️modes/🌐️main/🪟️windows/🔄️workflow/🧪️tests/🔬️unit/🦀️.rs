@@ -18,5 +18,5 @@ async fn workflow_scene_uses_flow_engine_with_fixture() {
     let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(node).expect("workflow tree projection");
     assert!(json.contains(r#"\"engine\":\"flow\""#));
     assert!(json.contains("fixtureJson"));
-    assert!(json.contains(r#"\"schema\":\"flow.host_document\""#));
+    assert!(json.contains(r#"\"schema\":\"flow.host_snapshot\""#));
 }

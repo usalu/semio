@@ -56,7 +56,7 @@ pub(super) fn every_command() -> Vec<DagCommand> {
         DagCommand::DeleteSelection(delete_selection::DeleteSelection {}),
         DagCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit {
             operations: vec![
-                node_graph_edit::DagNodeGraphEditOp::SetHostDocument { host_document_json: "{}".into() },
+                node_graph_edit::DagNodeGraphEditOp::SetHostSnapshot { host_snapshot_json: "{}".into() },
                 node_graph_edit::DagNodeGraphEditOp::DeleteSelection,
                 node_graph_edit::DagNodeGraphEditOp::Connect { source_node_id: "n1".into(), source_port_id: "out".into(), target_node_id: "n2".into(), target_port_id: "in".into() },
             ],

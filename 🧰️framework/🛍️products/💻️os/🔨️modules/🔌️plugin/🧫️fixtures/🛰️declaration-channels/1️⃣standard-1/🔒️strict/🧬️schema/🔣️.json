@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/os/plugin/tests/declaration-channels/standard-1/strict/component.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/os/plugin/tests/declaration-channels/standard-1/strict/component.json",
   "title": "Std1Strict Declaration Channel",
   "$defs": {
     "I32": {

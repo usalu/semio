@@ -34,8 +34,8 @@ fn shot_mutation_for_field(id: String, field: &str, value: &Value) -> Option<Sho
     }
 }
 
-fn active_shot_id(fixture: &crate::ShootingSnapshot) -> Option<String> {
-    crate::standards::v1::subsets::any::schema::active_shot(fixture).map(|shot| shot.id.clone())
+fn active_shot_id(snapshot: &crate::ShootingSnapshot) -> Option<String> {
+    crate::standards::v1::subsets::any::schema::active_shot(snapshot).map(|shot| shot.id.clone())
 }
 
 //#region 🔖️SetActiveShot

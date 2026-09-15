@@ -390,7 +390,7 @@ type VcsSnapshot {
 📸️snapshot/🧬️schema/🔣️component.json
 ================================================================================
 {
-  "$id": "https://semio.tech/schema/s/vcs/vcs/snapshot.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/vcs/vcs/snapshot.json",
   "title": "VcsSnapshot",
   "type": "object",
   "additionalProperties": false,
@@ -880,7 +880,7 @@ type VcsTagsDelta {
 🔺️diff/🧬️schema/🔣️component.json
 ================================================================================
 {
-  "$id": "https://semio.tech/schema/s/vcs/vcs/diff.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/vcs/vcs/diff.json",
   "title": "VcsDiff",
   "type": "object",
   "additionalProperties": false,
@@ -1359,7 +1359,7 @@ type VcsArtifact {
 🧬️schema/🔣️component.json
 ================================================================================
 {
-  "$id": "https://semio.tech/schema/s/vcs/vcs/artifact.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/vcs/vcs/artifact.json",
   "title": "VcsArtifact",
   "type": "object",
   "additionalProperties": false,

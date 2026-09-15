@@ -43,7 +43,7 @@ async fn forest_shape_geometry_imports_solid_handle() {
     let geometry = parse_geometry(geometry_value.as_ref());
     let objects: Vec<DslValue> = root.pointer("/models/0/model/objects").and_then(|value| value.as_array()).map(|entries| entries.iter().map(protocol::json::to_dsl_value).collect()).unwrap_or_default();
     let mut kernel = Brep::new();
-    let imported = objects_from_host_document_model(&mut kernel, &objects, &geometry);
+    let imported = objects_from_host_snapshot_model(&mut kernel, &objects, &geometry);
     assert_eq!(imported.len(), 1);
     assert!(imported[0].solid_handle.is_some());
     let mesh = tessellate_geometry_handle(&mut kernel, imported[0].solid_handle.as_ref().expect("handle"), "solid").expect("mesh");
@@ -63,7 +63,7 @@ async fn forest_energy_surface_tessellates_at_authored_height() {
     let geometry = parse_geometry(geometry_value.as_ref());
     let objects: Vec<DslValue> = root.pointer("/models/2/model/objects").and_then(|value| value.as_array()).map(|entries| entries.iter().map(protocol::json::to_dsl_value).collect()).unwrap_or_default();
     let mut kernel = Brep::new();
-    let imported = objects_from_host_document_model(&mut kernel, &objects, &geometry);
+    let imported = objects_from_host_snapshot_model(&mut kernel, &objects, &geometry);
     assert_eq!(imported.len(), 1);
     assert!(imported[0].solid_handle.is_some(), "energy face handle");
     let handle_id = imported[0].solid_handle.as_ref().expect("handle");
@@ -82,7 +82,7 @@ async fn forest_structure_surface_tessellates_at_authored_height() {
     let geometry = parse_geometry(geometry_value.as_ref());
     let objects: Vec<DslValue> = root.pointer("/models/3/model/objects").and_then(|value| value.as_array()).map(|entries| entries.iter().map(protocol::json::to_dsl_value).collect()).unwrap_or_default();
     let mut kernel = Brep::new();
-    let imported = objects_from_host_document_model(&mut kernel, &objects, &geometry);
+    let imported = objects_from_host_snapshot_model(&mut kernel, &objects, &geometry);
     let slab = imported.iter().find(|object| object.primitives.iter().any(|primitive| primitive.kind == "surface")).expect("surface object");
     let mesh = tessellate_geometry_handle(&mut kernel, slab.solid_handle.as_ref().expect("handle"), "surface").expect("surface mesh");
     let min_z = mesh.positions.as_chunks::<3>().0.iter().map(|vertex| vertex[2]).fold(f32::INFINITY, f32::min);
@@ -97,7 +97,7 @@ async fn forest_structure_curve_wires_tessellate_as_centerlines() {
     let geometry = parse_geometry(geometry_value.as_ref());
     let objects: Vec<DslValue> = root.pointer("/models/3/model/objects").and_then(|value| value.as_array()).map(|entries| entries.iter().map(protocol::json::to_dsl_value).collect()).unwrap_or_default();
     let mut kernel = Brep::new();
-    let imported = objects_from_host_document_model(&mut kernel, &objects, &geometry);
+    let imported = objects_from_host_snapshot_model(&mut kernel, &objects, &geometry);
     assert!(!imported.is_empty());
     let curve_object = imported.iter().find(|object| object.primitives.iter().any(|primitive| primitive.kind == "curve")).expect("curve object");
     let handle = curve_object.solid_handle.as_ref().expect("curve handle");

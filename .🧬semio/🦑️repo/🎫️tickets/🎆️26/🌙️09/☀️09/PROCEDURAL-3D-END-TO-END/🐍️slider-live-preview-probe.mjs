@@ -35,9 +35,10 @@
 import { chromium } from "playwright";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { loadExampleOracles } from "./🐍️example-oracle.mjs";
 
 const url = process.env.SEMIO_PROBE_URL ?? "http://127.0.0.1:6018/?plugin=generation3d";
-const example = process.env.SEMIO_PROBE_EXAMPLE ?? "hexagonal-mushroom-column";
+const examples = (process.env.SEMIO_PROBE_EXAMPLES ?? process.env.SEMIO_PROBE_EXAMPLE ?? "hexagonal-mushroom-column").split(",").map((entry) => entry.trim()).filter(Boolean);
 const kinds = (process.env.SEMIO_PROBE_KINDS ?? "graph,inspector,form").split(",").map((kind) => kind.trim()).filter(Boolean);
 const outDir = join(import.meta.dir, "🗑️generated", process.env.SEMIO_PROBE_OUT ?? "slider/run");
 const dragMs = Number(process.env.SEMIO_PROBE_DRAG_MS ?? 1000);
@@ -49,7 +50,8 @@ mkdirSync(outDir, { recursive: true });
 
 const lines = [];
 const t0 = Date.now();
-const report = { url, example, kinds, budgets: { latencyBudgetMs, evaluationsPerChange: 1, liveEvaluations: 2 }, rows: [] };
+const exampleOracles = loadExampleOracles();
+const report = { url, examples, kinds, budgets: { latencyBudgetMs, evaluationsPerChange: 1, liveEvaluations: 2 }, rows: [] };
 const flush = () => {
   writeFileSync(join(outDir, "results.json"), JSON.stringify(report, null, 2));
   writeFileSync(join(outDir, "console.txt"), lines.join("\n"));
@@ -146,6 +148,9 @@ const SAMPLER = () => {
       phase: status?.phase ?? null,
       ratio: status?.progress?.ratio ?? null,
       fault: status?.fault?.code ?? null,
+      // 🚦️ What the surface NAMES when it delivers nothing: a per-node evaluation error, or a typed
+      // kernel diagnostic. An empty payload with neither is the silent vanish this probe grades.
+      named: [...Object.entries(status?.widgetErrors ?? {}).map(([widget, message]) => `${widget}: ${message}`), ...(Array.isArray(status?.diagnostics) ? status.diagnostics.map((issue) => `${issue?.entity}: ${issue?.message}`) : [])].filter((entry) => entry && entry.trim().length > 0),
       history: history ? { entries: history.entries ?? history.length ?? null, index: history.index ?? history.cursor ?? null, canUndo: history.canUndo ?? null } : null,
     };
   };
@@ -313,6 +318,7 @@ const measure = (samples, values, ledger, window_) => {
     settledBbox: final?.bbox ?? null,
     settledMeshes: final?.meshes ?? null,
     settledPhase: final?.phase ?? null,
+    settledNamed: final?.named ?? [],
     fault: final?.fault ?? null,
   };
 };
@@ -321,6 +327,7 @@ const measure = (samples, values, ledger, window_) => {
 //#region 🎬️Run
 /** 🚀️ A fresh load, converged, with the example's OWN node graph in place — the node graph publishes
  * a fallback two-widget fixture first, and a slider located before that swap is the wrong slider. */
+let example = examples[0];
 const boot = async () => {
   await page.goto(`${url}&example=${example}`, { waitUntil: "domcontentloaded" });
   const booted = await untilSurface((state) => state.some((entry) => entry.id === "window:procedural-preview" && entry.meshes > 0 && entry.phase === "idle"), bootSeconds);
@@ -335,7 +342,7 @@ const boot = async () => {
 
 /** 🎬️ One measured gesture on one located slider: baseline, drag, settle, drag back, settle. */
 const runKind = async (kind, locate) => {
-  const row = { kind, ok: false };
+  const row = { kind, example, ok: false };
   // 🧼️ Every kind starts from a fresh load: one shell carries the previous kind's open panels, mode
   // and selection, and a locator that answers differently per predecessor measures the predecessor.
   await boot();
@@ -366,7 +373,7 @@ const runKind = async (kind, locate) => {
   if (!row.reacquired) {
     row.detail = "control vanished before the gesture";
     row.domAtFailure = await page.evaluate(() => [...document.querySelectorAll('[id*="procedural-play-inspector"], [id*="generate.form."], [role="slider"]')].map((el) => el.id || el.getAttribute("aria-label")).slice(0, 40));
-    await page.screenshot({ path: join(outDir, `${kind}-vanished.png`) });
+    await page.screenshot({ path: join(outDir, `${example}-${kind}-vanished.png`) });
     report.rows.push(row);
     flush();
     return row;
@@ -393,7 +400,7 @@ const runKind = async (kind, locate) => {
   if (!(await ensure())) {
     row.detail = "control vanished between the baseline reading and the gesture";
     row.domAtFailure = await page.evaluate(() => [...document.querySelectorAll('[id*="procedural-play-inspector"], [id*="generate.form."], [role="slider"]')].map((el) => el.id || el.getAttribute("aria-label")).slice(0, 40));
-    await page.screenshot({ path: join(outDir, `${kind}-vanished.png`) });
+    await page.screenshot({ path: join(outDir, `${example}-${kind}-vanished.png`) });
     report.rows.push(row);
     flush();
     return row;
@@ -405,7 +412,7 @@ const runKind = async (kind, locate) => {
     const quiet = await page.evaluate(() => {
       const samples = window.__sliderSamples ?? [];
       const tail = samples.slice(-12);
-      return tail.length >= 12 && tail.every((entry) => entry.digest === tail[0].digest) && tail.at(-1).phase !== "computing";
+      return tail.length >= 12 && tail.every((entry) => entry.digest === tail[0].digest) && (tail.at(-1).phase === "idle" || tail.at(-1).phase === null);
     });
     if (quiet) break;
   }
@@ -416,7 +423,7 @@ const runKind = async (kind, locate) => {
   row.droppedActions = (await page.evaluate(() => window.__sliderDrops ?? [])).filter((entry) => entry.t >= beforeDrag && entry.t <= settledAt).map((entry) => entry.action);
   row.releaseToSettleMs = Math.round(settledAt - releasedAt);
   row.samples = samples.length;
-  writeFileSync(join(outDir, `${kind}-samples.json`), JSON.stringify({ samples, values }, null, 2));
+  writeFileSync(join(outDir, `${example}-${kind}-samples.json`), JSON.stringify({ samples, values }, null, 2));
 
   const historyBefore = baseline.history;
   const historyAfter = samples.at(-1)?.history ?? null;
@@ -433,7 +440,7 @@ const runKind = async (kind, locate) => {
     const quiet = await page.evaluate(() => {
       const samples = window.__sliderSamples ?? [];
       const tail = samples.slice(-12);
-      return tail.length >= 12 && tail.every((entry) => entry.digest === tail[0].digest) && tail.at(-1).phase !== "computing";
+      return tail.length >= 12 && tail.every((entry) => entry.digest === tail[0].digest) && (tail.at(-1).phase === "idle" || tail.at(-1).phase === null);
     });
     if (quiet) break;
   }
@@ -444,9 +451,33 @@ const runKind = async (kind, locate) => {
   row.roundTrip = Boolean(back && backValue === baseline.value && back.digest === baseline.digest);
   row.movedAtAll = row.drag.publications > 0;
 
+  // 🧿️ What the RELEASED value must actually deliver, graded against the committed example oracle
+  // (`🐍️example-oracle.mjs`, the same fixture `cargo test --test example-geometry` reads). A slider
+  // moves sizes, never topology, so the published mesh COUNT is the value-independent number the
+  // oracle commits; the extent must exist and be finite; and the chain must rest in `idle`. A value
+  // the kernel genuinely cannot build is not exempt — it owes a NAMED fault instead of an empty
+  // payload, which is exactly the "settles empty under idle" defect this row exists to catch
+  // (`📓️slider-reevaluation-correctness-2026-09-15.md`).
+  const oracle = exampleOracles[example] ?? null;
+  const finiteBox = (box) => Array.isArray(box) && box.length === 6 && box.every((entry) => Number.isFinite(entry));
+  const releaseVerdict = (settledMeshes, settledBbox, settledPhase, named) => {
+    if (Array.isArray(named) && named.length > 0) return { ok: true, why: `named fault: ${named[0]}` };
+    if (!oracle) return { ok: false, why: `no committed oracle for ${example}` };
+    if (!settledMeshes) return { ok: false, why: `settled EMPTY under phase ${settledPhase} and named nothing` };
+    if (settledMeshes !== oracle.meshes) return { ok: false, why: `published ${settledMeshes} meshes, the example commits ${oracle.meshes}` };
+    if (!finiteBox(settledBbox)) return { ok: false, why: `published no finite extent (${JSON.stringify(settledBbox)})` };
+    if (settledPhase !== "idle" && settledPhase !== null) return { ok: false, why: `carries the geometry but rests in phase ${settledPhase}` };
+    return { ok: true, why: "" };
+  };
+  row.releasedDelivery = releaseVerdict(row.drag.settledMeshes, row.drag.settledBbox, row.drag.settledPhase, row.drag.settledNamed);
+  row.returnedDelivery = releaseVerdict(row.returned.meshes, row.returned.bbox, back?.phase ?? null, back?.named ?? []);
+  row.oracle = oracle ? { meshes: oracle.meshes, boundingBoxMin: oracle.boundingBoxMin, boundingBoxMax: oracle.boundingBoxMax } : null;
+
   row.ok = Boolean(
     row.drag.valueChanges >= 2 &&
       row.movedAtAll &&
+      row.releasedDelivery.ok &&
+      row.returnedDelivery.ok &&
       row.drag.staleTail === false &&
       row.drag.latencyP95Ms != null &&
       row.drag.latencyP95Ms <= latencyBudgetMs &&
@@ -458,19 +489,29 @@ const runKind = async (kind, locate) => {
   );
   report.rows.push(row);
   flush();
-  console.log(`[DEBUG] ${kind} ok=${row.ok} ${JSON.stringify({ ...row.drag, samples: undefined })}`);
-  await page.screenshot({ path: join(outDir, `${kind}.png`) });
+  console.log(`[DEBUG] ${example}/${kind} ok=${row.ok} released=${JSON.stringify(row.releasedDelivery)} returned=${JSON.stringify(row.returnedDelivery)} ${JSON.stringify({ ...row.drag, samples: undefined })}`);
+  await page.screenshot({ path: join(outDir, `${example}-${kind}.png`) });
   return row;
 };
 //#endregion 🎬️Run
 
 //#region 🧭️Locators
+/** 🕸️ Any inline slider the example's own graph paints. The label is example-specific (`Column
+ * Height`, `Torus Major Radius`, …), so the locator addresses the OVERLAY (`graph-slider-…`) and
+ * takes the first knob that is not the fallback fixture's bare `Number`. */
 const graphSlider = async () => {
-  const label = process.env.SEMIO_PROBE_GRAPH_SLIDER ?? "Column Height";
-  const handle = page.locator(`[role="slider"][aria-label="${label}"]`).first();
+  const wanted = process.env.SEMIO_PROBE_GRAPH_SLIDER;
+  const label = await page.evaluate((preferred) => {
+    const knobs = [...document.querySelectorAll('[role="slider"]')].filter((el) => (el.closest("[id]")?.id ?? "").startsWith("graph-slider-"));
+    const chosen = (preferred ? knobs.find((el) => el.getAttribute("aria-label") === preferred) : undefined) ?? knobs.find((el) => el.getAttribute("aria-label") !== "Number") ?? knobs[0];
+    return chosen?.getAttribute("aria-label") ?? null;
+  }, wanted ?? null);
+  if (!label) throw new Error("this example paints no inline graph slider");
+  const selector = `[role="slider"][aria-label="${label.replace(/"/g, '\\"')}"]`;
+  const handle = page.locator(selector).first();
   await handle.waitFor({ state: "visible", timeout: 30000 });
   await handle.scrollIntoViewIfNeeded().catch(() => {});
-  return { handle, selector: `[role="slider"][aria-label="${JSON.stringify(label).slice(1, -1)}"]`, surfaceId: "window:procedural-preview" };
+  return { handle, selector, surfaceId: "window:procedural-preview" };
 };
 
 /** 🔍️ The inspector's number field for one `InputSlider` widget. The Artifact panel's own graph row
@@ -535,17 +576,20 @@ const formSlider = async () => {
 //#endregion 🧭️Locators
 
 const locators = { graph: graphSlider, inspector: inspectorField, form: formSlider };
-for (const kind of kinds) {
-  if (!locators[kind]) continue;
-  await runKind(kind, locators[kind]).catch((error) => {
-    report.rows.push({ kind, ok: false, runError: String(error).slice(0, 400) });
-    flush();
-  });
+for (const entry of examples) {
+  example = entry;
+  for (const kind of kinds) {
+    if (!locators[kind]) continue;
+    await runKind(kind, locators[kind]).catch((error) => {
+      report.rows.push({ kind, example, ok: false, runError: String(error).slice(0, 400) });
+      flush();
+    });
+  }
 }
 
 report.faults = lines.filter((line) => /pageerror|SemioFaultError|Rejected|dispatch failed|command failed/i.test(line)).slice(0, 40);
 report.green = report.rows.filter((row) => row.ok).length;
-report.red = report.rows.filter((row) => !row.ok).map((row) => row.kind);
+report.red = report.rows.filter((row) => !row.ok).map((row) => `${row.example}/${row.kind}`);
 flush();
 console.log(`SLIDER LIVE PREVIEW DONE green=${report.green}/${report.rows.length} red=${JSON.stringify(report.red)} faults=${report.faults.length}`);
 await browser.close();

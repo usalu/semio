@@ -79,7 +79,7 @@ impl store::ArtifactPack for DagConfig {
 
 impl Default for DagConfig {
     fn default() -> Self {
-        // 🎥️ Matches `DagCamera`'s own implicit default (`x: 0.0, y: 0.0, zoom: 1.0`, see `DagHostDocument`'s
+        // 🎥️ Matches `DagCamera`'s own implicit default (`x: 0.0, y: 0.0, zoom: 1.0`, see `DagHostSnapshot`'s
         // `Default` impl in the kernel crate) without needing to parse the bundled demo document just to
         // read a trivial camera default.
         Self { camera_x: 0.0, camera_y: 0.0, camera_zoom: 1.0 }

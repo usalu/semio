@@ -234,3 +234,34 @@ async fn label_and_handle_for_label_round_trip() {
     let via_label = k.handle_for_label(PersistentLabel(label));
     assert_eq!(via_label, Some(solid));
 }
+
+/// ⚖️ LAW: the validation gate judges the SHAPE it was asked about, never the arena around it.
+///
+/// 🐛️ It used to run `validate_body` over the whole body and block on any error-class issue found
+/// anywhere, and this kernel is process-wide: one invalid solid — a boolean result whose void shell
+/// is not inverted, say — refused the tessellation of every other live handle for as long as it
+/// stayed live. In the procedural playground that read as six of eight examples settling on an empty
+/// preview payload reported as `idle` (`📓️slider-reevaluation-correctness-2026-09-15.md`).
+#[semio_framework_async_macros::async_test]
+async fn the_validate_gate_judges_the_shape_it_was_asked_about_and_not_the_arena_around_it() {
+    let mut kernel = Brep::new();
+    let healthy = kernel.box_prim_sync(1.0, 1.0, 1.0).expect("a plain box is valid geometry");
+    assert!(kernel.validate_gate_sync(&healthy).is_ok(), "a plain box must pass its own gate");
+    let solid = kernel.solid_id(&healthy).expect("the box is a solid");
+    let stranger = kernel.box_prim_sync(2.0, 2.0, 2.0).expect("a second box");
+    let stranger_solid = kernel.solid_id(&stranger).expect("the second box is a solid");
+    assert_ne!(solid, stranger_solid, "the two boxes are different solids");
+    // 🧨️ Break the STRANGER's outer shell orientation, which `validate_body` reports as a blocking
+    // `shell-orientation-inward` issue against that solid alone.
+    let outer = kernel.body.solids.get(stranger_solid).expect("stranger solid").outer;
+    let faces = kernel.body.shells.get(outer).expect("stranger shell").faces.clone();
+    for face in faces {
+        if let Some(entry) = kernel.body.faces.get_mut(face) {
+            entry.flipped = !entry.flipped;
+        }
+    }
+    let stranger_issues = kernel.validate_gate_sync(&stranger).expect_err("the broken box must fail its own gate");
+    assert!(!stranger_issues.is_empty(), "the broken box's gate must name at least one issue");
+    assert!(kernel.validate_gate_sync(&healthy).is_ok(), "the healthy box must still pass while a STRANGER is broken: {stranger_issues:?}");
+    eprintln!("[DEBUG] scoped gate: healthy=ok stranger={:?}", stranger_issues.iter().map(|issue| format!("{}:{}", issue.entity, issue.code)).collect::<Vec<_>>());
+}

@@ -1,16 +1,16 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/procedural/generation3d/artifact.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/procedural/generation3d/artifact.json",
   "title": "Generation3dArtifact",
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "fixture",
+    "hostSnapshot",
     "generation"
   ],
   "properties": {
-    "fixture": {
-      "$ref": "#/$defs/FlowHostDocument",
+    "hostSnapshot": {
+      "$ref": "#/$defs/FlowHostSnapshot",
       "x-semio-state": "artifact"
     },
     "generation": {
@@ -96,8 +96,8 @@
       "type": "string",
       "contentMediaType": "application/json"
     },
-    "FlowHostDocument": {
-      "title": "FlowHostDocument",
+    "FlowHostSnapshot": {
+      "title": "FlowHostSnapshot",
       "type": "object",
       "additionalProperties": false,
       "required": [

@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/layout/layout/diff.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/layout/layout/diff.json",
   "title": "LayoutDiff",
   "type": "object",
   "additionalProperties": false,
@@ -25,7 +25,7 @@
     "artifact": {
       "anyOf": [
         {
-          "$ref": "https://semio.tech/schema/s/layout/layout/artifact.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/artifact.json"
         },
         {
           "type": "null"
@@ -189,7 +189,7 @@
     "referencedModel": {
       "anyOf": [
         {
-          "$ref": "https://semio.tech/schema/os/store/link.json",
+          "$ref": "https://json.schemas.assets.semio-tech.com/os/store/link.json",
           "x-semio-link-roles": [
             "model"
           ]
@@ -1023,10 +1023,10 @@
       ],
       "properties": {
         "handle": {
-          "$ref": "https://semio.tech/schema/os/store/child.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child.json"
         },
         "content": {
-          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/drawing/snapshot.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/drawing/snapshot.json"
         }
       }
     },

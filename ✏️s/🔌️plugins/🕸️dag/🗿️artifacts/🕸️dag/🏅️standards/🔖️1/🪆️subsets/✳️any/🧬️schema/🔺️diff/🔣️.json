@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/dag/dag/diff.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/dag/dag/diff.json",
   "title": "DagDiff",
   "type": "object",
   "additionalProperties": false,
@@ -10,7 +10,7 @@
       "x-semio-state": "artifact"
     },
     "content": {
-      "$ref": "https://semio.tech/schema/s/stdio/semio/v1/base/child.json#/$defs/graph",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/base/child.json#/$defs/graph",
       "x-semio-state": "artifact",
       "x-semio-child-kind": "s.stdio.semio"
     }

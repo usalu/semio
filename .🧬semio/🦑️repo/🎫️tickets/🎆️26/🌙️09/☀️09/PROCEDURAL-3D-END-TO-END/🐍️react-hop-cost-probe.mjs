@@ -309,6 +309,13 @@ for (const text of await listOptions()) {
   await runStep(`edit:${text}`, stepWait);
 }
 
+/** 🧾️ The host's own crossing census (`globalThis.__semioCrossingCensus`, published by
+ * `🔌️PluginRuntime/🟦️.tsx`): every worker round trip classified by the events it CARRIED — with a
+ * `message` split into its typed-operation-ack / backbone / shell sub-kinds and a per-crossing batch
+ * width — which is what the worker's own `eventKinds` string cannot say. */
+const census = await page.evaluate(() => globalThis.__semioCrossingCensus ?? null).catch(() => null);
+const typedOpCensus = await page.evaluate(() => globalThis.__semioTypedOpAckCensus ?? null).catch(() => null);
+
 //#region 📝️Report
 const cell = (value, width) => String(value).padStart(width);
 const stageColumns = ["channel", "refresh.turn", "refresh.project", "commit", "arm", "worker.turn", "worker.receive", "worker.decode", "worker.guest", "worker.reply"];
@@ -363,6 +370,19 @@ for (const row of results) for (const [stop, count] of Object.entries(row.driveS
 const totalDrivePolls = results.reduce((sum, row) => sum + (row.drivePolls ?? 0), 0);
 const totalDriveSamples = results.reduce((sum, row) => sum + (row.driveSamples ?? 0), 0);
 if (totalDriveSamples) table.push("", `worker MoreWork drive: ${totalDrivePolls} guest turns absorbed over ${totalDriveSamples} crossings (${(totalDrivePolls / totalDriveSamples).toFixed(2)} per crossing, ${totalHops ? (totalDrivePolls / totalHops).toFixed(1) : "-"} per hop); stops ${Object.entries(driveStopTotals).sort((left, right) => right[1] - left[1]).map(([stop, count]) => `${stop}=${count}`).join(" ") || "-"}`);
+if (census && Object.keys(census).length) {
+  table.push("", "| host crossing census (carried events) | crossings | per hop | events | reply patches | reply effects | widths |", "|---|---:|---:|---:|---:|---:|---|");
+  for (const [kind, entry] of Object.entries(census).sort((left, right) => right[1].crossings - left[1].crossings)) {
+    const widths = Object.entries(entry.width ?? {}).sort((left, right) => Number(left[0]) - Number(right[0])).map(([width, count]) => `${width}×${count}`).join(" ");
+    table.push(`| ${kind} | ${entry.crossings} | ${totalHops ? (entry.crossings / totalHops).toFixed(1) : "-"} | ${entry.events} | ${entry.patches} | ${entry.effects} | ${widths} |`);
+  }
+}
+if (typedOpCensus && Object.keys(typedOpCensus).length) {
+  const rows = Object.entries(typedOpCensus);
+  const acks = rows.reduce((sum, [, entry]) => sum + entry.acks, 0);
+  const widest = rows.sort((left, right) => right[1].acks - left[1].acks).slice(0, 6).map(([operation, entry]) => `op${operation}:${entry.acks}acks seq${entry.minSequence}..${entry.maxSequence}`).join(", ");
+  table.push("", `typed-operation ack ladder: ${acks} acks over ${rows.length} operations (${(acks / rows.length).toFixed(1)} pages per operation); widest — ${widest}`);
+}
 const totalClone = results.reduce((sum, row) => sum + row.replyCloneMs, 0);
 const totalCloneSamples = results.reduce((sum, row) => sum + row.replyCloneSamples, 0);
 const totalReply = results.reduce((sum, row) => sum + (row.totals["worker.reply"]?.totalMs ?? 0), 0);

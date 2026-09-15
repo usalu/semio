@@ -3,7 +3,7 @@
   "$id": "energy.simulation.run.v1",
   "title": "Energy Simulation Run",
   "description": "Source of record for the energy simulation ToolRunDefinition (📋️tool-run-contract.md §2.4). The run is read-only: finalize publishes no document edit. One unit of fuel is one computed warmup or run timestep.",
-  "$ref": "https://semio.tech/schema/framework/tool-run/schema.json#/$defs/ToolRunDefinition",
+  "$ref": "https://json.schemas.assets.semio-tech.com/framework/tool-run/schema.json#/$defs/ToolRunDefinition",
   "x-semio-toolRun": {
     "toolId": "energySimulation",
     "label": { "en": "Energy simulation", "de": "Energiesimulation" },

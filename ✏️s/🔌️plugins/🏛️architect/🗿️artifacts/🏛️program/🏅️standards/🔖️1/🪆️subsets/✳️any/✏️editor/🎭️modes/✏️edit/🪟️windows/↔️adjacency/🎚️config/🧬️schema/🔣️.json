@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://semio.tech/schema/app/architect/program/adjacency-window-config",
+  "$id": "https://json.schemas.assets.semio-tech.com/app/architect/program/adjacency-window-config",
   "title": "ArchitectAdjacencyWindowConfig",
   "type": "object",
   "additionalProperties": false,

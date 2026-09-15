@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/os/renderer/component.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/os/renderer/component.json",
   "title": "Renderer",
   "description": "Renderer-owned presentation contracts: shell dialog/effect origin admission, tutorial drive and playback, document opening and instance admission, host identity bootstrap, extension invocation, mounted probe projection, and the runtime/graph/helper element contracts. Renderer elements (🧱️elements/*) and rendering targets (🎯️targets/*) are consumers; this module is the sole owner.",
   "$defs": {
@@ -1645,7 +1645,7 @@
       ],
       "properties": {
         "$schema": {
-          "const": "https://semio.tech/schema/os/renderer/component.json#/$defs/RendererPackageCatalogV1"
+          "const": "https://json.schemas.assets.semio-tech.com/os/renderer/component.json#/$defs/RendererPackageCatalogV1"
         },
         "schemaVersion": {
           "const": 1
@@ -1767,7 +1767,7 @@
     "RendererResidentPolicyV1": {
       "allOf": [
         {
-          "$ref": "https://semio.tech/schema/framework/value/resident/schema.json#/$defs/Resident"
+          "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/resident/schema.json#/$defs/Resident"
         },
         {
           "const": {
@@ -2171,7 +2171,7 @@
         "activeMode": {
           "type": "object",
           "additionalProperties": {
-            "$ref": "https://semio.tech/schema/framework/interaction/schema.json#/$defs/SelectionMode"
+            "$ref": "https://json.schemas.assets.semio-tech.com/framework/interaction/schema.json#/$defs/SelectionMode"
           }
         },
         "activeGranularity": {
@@ -2186,7 +2186,7 @@
     "TutorialInteractionCaptureSelection": {
       "type": "object",
       "additionalProperties": {
-        "$ref": "https://semio.tech/schema/framework/interaction/schema.json#/$defs/DomainSelection"
+        "$ref": "https://json.schemas.assets.semio-tech.com/framework/interaction/schema.json#/$defs/DomainSelection"
       }
     },
     "TutorialInteractionCaptureChange": {
@@ -2236,10 +2236,10 @@
           "$ref": "#/$defs/TutorialInteractionCaptureCapture"
         },
         "observed": {
-          "$ref": "https://semio.tech/schema/framework/interaction/schema.json#/$defs/InteractionState"
+          "$ref": "https://json.schemas.assets.semio-tech.com/framework/interaction/schema.json#/$defs/InteractionState"
         },
         "playbackBefore": {
-          "$ref": "https://semio.tech/schema/framework/interaction/schema.json#/$defs/InteractionState"
+          "$ref": "https://json.schemas.assets.semio-tech.com/framework/interaction/schema.json#/$defs/InteractionState"
         },
         "snapshotSelection": {
           "$ref": "#/$defs/TutorialInteractionCaptureSelection"
@@ -2248,13 +2248,13 @@
           "$ref": "#/$defs/TutorialInteractionCaptureChange"
         },
         "afterDelta": {
-          "$ref": "https://semio.tech/schema/framework/interaction/schema.json#/$defs/InteractionState"
+          "$ref": "https://json.schemas.assets.semio-tech.com/framework/interaction/schema.json#/$defs/InteractionState"
         },
         "clearDelta": {
           "$ref": "#/$defs/TutorialInteractionCaptureChange"
         },
         "afterClear": {
-          "$ref": "https://semio.tech/schema/framework/interaction/schema.json#/$defs/InteractionState"
+          "$ref": "https://json.schemas.assets.semio-tech.com/framework/interaction/schema.json#/$defs/InteractionState"
         }
       }
     },

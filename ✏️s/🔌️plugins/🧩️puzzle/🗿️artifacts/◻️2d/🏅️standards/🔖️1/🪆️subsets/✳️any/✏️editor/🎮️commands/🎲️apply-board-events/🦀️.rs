@@ -2,7 +2,7 @@
 
 use crate::editor::puzzle2d::modes::edit::windows::{detail, overview, selection};
 use crate::editor::puzzle2d::panels::{artifact, inspection};
-use crate::editor::puzzle2d::{apply_brush_place_payload, delete_selection_from_host_document, patch_inspector_nodes, set_runtime_camera, Puzzle2dActionCtx, Puzzle2dScene};
+use crate::editor::puzzle2d::{apply_brush_place_payload, delete_selection_from_host_snapshot, patch_inspector_nodes, set_runtime_camera, Puzzle2dActionCtx, Puzzle2dScene};
 use semio_framework::kernel::UiDirtyScope;
 use serde_json::{json, Value};
 
@@ -119,7 +119,7 @@ pub fn apply_board_events_from_json(events_json: &str, envelope: &mut Puzzle2dSc
             }
             "nodeDelete" => {
                 if let Some(id) = payload.get("id").and_then(|value| value.as_str()) {
-                    delete_selection_from_host_document(&mut envelope.fixture, &[id.to_string()]);
+                    delete_selection_from_host_snapshot(&mut envelope.fixture, &[id.to_string()]);
                 }
             }
             "edgeDelete" => {

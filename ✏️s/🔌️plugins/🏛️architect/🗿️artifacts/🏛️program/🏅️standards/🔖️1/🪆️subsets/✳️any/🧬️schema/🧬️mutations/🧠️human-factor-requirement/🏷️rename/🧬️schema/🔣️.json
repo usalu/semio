@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/architect/program/mutation/rename-human-factor-requirement/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/rename-human-factor-requirement/schema.json",
   "title": "RenameHumanFactorRequirement",
   "type": "object",
   "additionalProperties": false,

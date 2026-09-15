@@ -1,13 +1,13 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/gif/87a/any/mutations.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/gif/87a/any/mutations.json",
   "title": "GifMutation",
   "description": "Discriminated union over this module's mutation leaves (internally tagged); every payload is the leaf's own schema, referenced, never restated.",
   "oneOf": [
     {
       "allOf": [
         {
-          "$ref": "https://semio.tech/schema/s/stdio/gif/87a/any/mutation/insert-image/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gif/87a/any/mutation/insert-image/schema.json"
         },
         {
           "type": "object",
@@ -25,7 +25,7 @@
     {
       "allOf": [
         {
-          "$ref": "https://semio.tech/schema/s/stdio/gif/87a/any/mutation/move-image/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gif/87a/any/mutation/move-image/schema.json"
         },
         {
           "type": "object",
@@ -43,7 +43,7 @@
     {
       "allOf": [
         {
-          "$ref": "https://semio.tech/schema/s/stdio/gif/87a/any/mutation/remove-image/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gif/87a/any/mutation/remove-image/schema.json"
         },
         {
           "type": "object",
@@ -61,7 +61,7 @@
     {
       "allOf": [
         {
-          "$ref": "https://semio.tech/schema/s/stdio/gif/87a/any/mutation/set-background-color-index/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gif/87a/any/mutation/set-background-color-index/schema.json"
         },
         {
           "type": "object",
@@ -79,7 +79,7 @@
     {
       "allOf": [
         {
-          "$ref": "https://semio.tech/schema/s/stdio/gif/87a/any/mutation/set-global-color-table/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gif/87a/any/mutation/set-global-color-table/schema.json"
         },
         {
           "type": "object",
@@ -97,7 +97,7 @@
     {
       "allOf": [
         {
-          "$ref": "https://semio.tech/schema/s/stdio/gif/87a/any/mutation/set-image-geometry/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gif/87a/any/mutation/set-image-geometry/schema.json"
         },
         {
           "type": "object",
@@ -115,7 +115,7 @@
     {
       "allOf": [
         {
-          "$ref": "https://semio.tech/schema/s/stdio/gif/87a/any/mutation/set-image-interlace/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gif/87a/any/mutation/set-image-interlace/schema.json"
         },
         {
           "type": "object",
@@ -133,7 +133,7 @@
     {
       "allOf": [
         {
-          "$ref": "https://semio.tech/schema/s/stdio/gif/87a/any/mutation/set-image-pixels/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gif/87a/any/mutation/set-image-pixels/schema.json"
         },
         {
           "type": "object",
@@ -151,7 +151,7 @@
     {
       "allOf": [
         {
-          "$ref": "https://semio.tech/schema/s/stdio/gif/87a/any/mutation/set-pixel-aspect-ratio/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gif/87a/any/mutation/set-pixel-aspect-ratio/schema.json"
         },
         {
           "type": "object",
@@ -169,7 +169,7 @@
     {
       "allOf": [
         {
-          "$ref": "https://semio.tech/schema/s/stdio/gif/87a/any/mutation/set-screen-size/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gif/87a/any/mutation/set-screen-size/schema.json"
         },
         {
           "type": "object",
@@ -187,7 +187,7 @@
     {
       "allOf": [
         {
-          "$ref": "https://semio.tech/schema/s/stdio/gif/87a/any/mutation/set-snapshot/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gif/87a/any/mutation/set-snapshot/schema.json"
         },
         {
           "type": "object",

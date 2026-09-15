@@ -45,7 +45,7 @@ for name in variant_order:
     }
 json_schema = {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "https://semio.tech/schema/s/architect/program/mutation.json",
+    "$id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation.json",
     "title": "ProgramMutation",
     "description": "One real per-mutation record per SEMANTIC-MUTATIONS-OVERHAUL — 266 semantic kinds, matching the Rust dispatch enum 1:1 (Wave C rewrite; supersedes the pre-migration whole-snapshot-shaped generic schema).",
     "oneOf": [{"$ref": f"#/$defs/{name}"} for name in variant_order],

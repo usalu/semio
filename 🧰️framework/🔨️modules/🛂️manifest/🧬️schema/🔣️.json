@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/framework/manifest/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/manifest/schema.json",
   "title": "Manifest Schema Module",
   "$defs": {
     "TutorialLocalInteractionFixture": {
@@ -36,10 +36,10 @@
                 "minLength": 1
               },
               "before": {
-                "$ref": "https://semio.tech/schema/framework/replication/wire/local-interaction/schema.json#/$defs/State"
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/replication/wire/local-interaction/schema.json#/$defs/State"
               },
               "after": {
-                "$ref": "https://semio.tech/schema/framework/replication/wire/local-interaction/schema.json#/$defs/State"
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/replication/wire/local-interaction/schema.json#/$defs/State"
               },
               "changes": {
                 "type": "array",
@@ -60,7 +60,7 @@
                       "minLength": 1
                     },
                     "patch": {
-                      "$ref": "https://semio.tech/schema/framework/replication/wire/local-interaction/schema.json#/$defs/DomainPatch"
+                      "$ref": "https://json.schemas.assets.semio-tech.com/framework/replication/wire/local-interaction/schema.json#/$defs/DomainPatch"
                     }
                   }
                 }
@@ -277,7 +277,7 @@
           "const": "fixture.document"
         },
         "componentKind": {
-          "const": "hostDocument"
+          "const": "hostSnapshot"
         },
         "dimension": {
           "const": "2d"
@@ -531,7 +531,7 @@
       }
     },
     "ToolRunDefinition": {
-      "$ref": "https://semio.tech/schema/framework/tool-run/schema.json#/$defs/ToolRunDefinition"
+      "$ref": "https://json.schemas.assets.semio-tech.com/framework/tool-run/schema.json#/$defs/ToolRunDefinition"
     },
     "ToolDefinition": {
       "type": "object",
@@ -547,7 +547,7 @@
           "minLength": 1
         },
         "label": {
-          "$ref": "https://semio.tech/schema/framework/tool-run/schema.json#/$defs/LocalizedLabel"
+          "$ref": "https://json.schemas.assets.semio-tech.com/framework/tool-run/schema.json#/$defs/LocalizedLabel"
         },
         "iconId": {
           "type": "string",
@@ -576,7 +576,7 @@
           "minLength": 1
         },
         "label": {
-          "$ref": "https://semio.tech/schema/framework/tool-run/schema.json#/$defs/LocalizedLabel"
+          "$ref": "https://json.schemas.assets.semio-tech.com/framework/tool-run/schema.json#/$defs/LocalizedLabel"
         },
         "iconId": {
           "type": "string",
@@ -658,7 +658,7 @@
             ],
             "properties": {
               "id": {
-                "$ref": "https://semio.tech/schema/framework/tool-run/schema.json#/$defs/ToolRunActionId"
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/tool-run/schema.json#/$defs/ToolRunActionId"
               },
               "iconId": {
                 "type": "string",
@@ -673,7 +673,7 @@
                 "pattern": "^[a-z0-9.+]+$"
               },
               "label": {
-                "$ref": "https://semio.tech/schema/framework/tool-run/schema.json#/$defs/LocaleText"
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/tool-run/schema.json#/$defs/LocaleText"
               },
               "args": {
                 "type": "array",
@@ -707,7 +707,7 @@
                       "type": "boolean"
                     },
                     "label": {
-                      "$ref": "https://semio.tech/schema/framework/tool-run/schema.json#/$defs/LocaleText"
+                      "$ref": "https://json.schemas.assets.semio-tech.com/framework/tool-run/schema.json#/$defs/LocaleText"
                     }
                   }
                 }

@@ -4,7 +4,7 @@
 use crate::editor::sequence::terminology::SequenceLabels;
 use crate::editor::sequence::{control_slots, is_control_kind};
 use crate::editor::sequence::{sequence_action, ui_label};
-use crate::SequenceHostDocument;
+use crate::SequenceHostSnapshot;
 use semio_framework_plugin::{tree_item_with_action, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL};
 
 //#region 🔖️Constants
@@ -24,7 +24,7 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(host_document: &SequenceHostDocument, labels: &SequenceLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(host_snapshot: &SequenceHostSnapshot, labels: &SequenceLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let actions = [("state.set", labels.action_set_state), ("log.print", labels.action_log_print), ("control.if", labels.action_if), ("control.while", labels.action_while), ("math.add", labels.action_add)];
     let mut items = semio_framework_plugin::UiFixedList::default();
     for (kind, label) in actions {
@@ -32,7 +32,7 @@ pub fn render(host_document: &SequenceHostDocument, labels: &SequenceLabels) -> 
         let item = tree_item_with_action(format!("sequence-play-catalogue.action.{kind}"), label.as_str(), Some(kind.into()), sequence_action("addStep", Some(args))?)?;
         items.try_push(item).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.catalogue.items", "fixed catalogue admission failed"))?;
     }
-    for owner in host_document.steps.iter().filter(|step| is_control_kind(&step.kind)) {
+    for owner in host_snapshot.steps.iter().filter(|step| is_control_kind(&step.kind)) {
         for slot_name in control_slots(&owner.kind) {
             let args =
                 crate::editor::sequence::ui_value_map([("kind", crate::editor::sequence::ui_value_text("log.print")?), ("owner", crate::editor::sequence::ui_value_text(&owner.id)?), ("slotName", crate::editor::sequence::ui_value_text(slot_name)?)])?;

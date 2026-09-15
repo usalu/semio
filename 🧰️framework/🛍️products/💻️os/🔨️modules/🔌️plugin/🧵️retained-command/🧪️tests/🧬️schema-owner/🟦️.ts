@@ -1,15 +1,15 @@
+import Ajv from "ajv";
+import { Validator } from "jsonschema";
 import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import Ajv from "ajv";
-import { Validator } from "jsonschema";
 
 type SchemaModule = { readonly $id: string; readonly $defs: Readonly<Record<string, unknown>>; readonly definitions?: Readonly<Record<string, unknown>> };
 type FixtureTarget = { readonly schema: string; readonly definition: string; readonly fixture: string };
 
-const OWNER_ID = "https://semio.tech/schema/os/plugin/retained-command/component.json";
-const UI_ID = "https://semio.tech/schema/framework/ui/schema.json";
+const OWNER_ID = "https://json.schemas.assets.semio-tech.com/os/plugin/retained-command/component.json";
+const UI_ID = "https://json.schemas.assets.semio-tech.com/framework/ui/schema.json";
 const LANES = ["HostOnly", "Artifact", "Config", "Draft", "Presence", "Transient", "WindowConfig", "WindowTransient", "Child", "Interaction"] as const;
 const CLASSIFICATIONS = ["Unclassified", "Migrated", "BatchOnlyPendingRewrite", "ForbiddenFromUi", "Deleted"] as const;
 const MOVED_EXPORTS = [

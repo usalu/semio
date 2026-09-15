@@ -287,10 +287,10 @@ a Draft-07 document without duplicate keys — are verified independently above 
 
 ## 9. Open questions
 
-- **`$id` shape.** The brief specified `https://semio.tech/schema/s/stdio/<artifact>/<standard>/<subset>/mutation/<leaf>.json`
+- **`$id` shape.** The brief specified `https://json.schemas.assets.semio-tech.com/s/stdio/<artifact>/<standard>/<subset>/mutation/<leaf>.json`
   (slash form) and that is what all 915 leaves and 96 aggregates now carry. It **diverges from the 206
   pre-existing stdio `$id`s**, which used the contract §A dotted scope form
-  (`https://semio.tech/schema/s.stdio.pdf.1.7.e/mutation/set-output-intent.json`). stdio is now
+  (`https://json.schemas.assets.semio-tech.com/s.stdio.pdf.1.7.e/mutation/set-output-intent.json`). stdio is now
   internally uniform on the slash form; if §A's dotted scope id is the repo-wide rule, all 1011 ids
   here are a one-line change in `ID_ROOT`/`leaves()` and a re-run of `audit --write` + `aggregates
   --write`. **Coordinator decision needed** — I followed the brief over the contract because the

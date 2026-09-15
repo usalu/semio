@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/lowpoly/lowpoly/snapshot.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/lowpoly/lowpoly/snapshot.json",
   "title": "LowpolySnapshot",
   "type": "object",
   "additionalProperties": false,
@@ -16,7 +16,7 @@
     "objects": {
       "type": "array",
       "items": {
-        "$ref": "https://semio.tech/schema/s/lowpoly/lowpoly/artifact.json#/$defs/LowpolyObject"
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/lowpoly/lowpoly/artifact.json#/$defs/LowpolyObject"
       },
       "x-semio-state": "artifact"
     }

@@ -11,7 +11,9 @@ use semio_framework_plugin::app::declarations::{editor_surface, viewer_surface, 
 use semio_framework_plugin::ExampleSource;
 use std::sync::OnceLock;
 
-fn examples() -> &'static [ExampleSource] {
+/// 📚️ The subset's registered examples — the one source the manifest picker, the `setActiveExample`
+/// argument form and its handler all resolve ids against.
+pub fn examples() -> &'static [ExampleSource] {
     static EXAMPLES: OnceLock<Vec<ExampleSource>> = OnceLock::new();
     EXAMPLES.get_or_init(|| vec![crate::examples::demo::source()]).as_slice()
 }

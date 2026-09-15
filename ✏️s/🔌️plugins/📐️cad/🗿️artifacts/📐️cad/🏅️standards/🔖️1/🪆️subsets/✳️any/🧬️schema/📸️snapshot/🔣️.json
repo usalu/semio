@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/cad/cad/snapshot.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/cad/cad/snapshot.json",
   "title": "CadSnapshot",
   "type": "object",
   "additionalProperties": false,
@@ -51,14 +51,14 @@
     "referencesByModelDefinitionId": {
       "type": "object",
       "additionalProperties": {
-        "$ref": "https://semio.tech/schema/s/cad/cad/artifact.json#/$defs/CadReferenceList"
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/cad/cad/artifact.json#/$defs/CadReferenceList"
       },
       "x-semio-state": "artifact"
     },
     "nodes": {
       "type": "array",
       "items": {
-        "$ref": "https://semio.tech/schema/s/cad/cad/artifact.json#/$defs/CadNode"
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/cad/cad/artifact.json#/$defs/CadNode"
       },
       "x-semio-state": "artifact"
     }
@@ -67,7 +67,7 @@
     "CadModelChild": {
       "allOf": [
         {
-          "$ref": "https://semio.tech/schema/os/store/child.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child.json"
         },
         {
           "type": "object",
@@ -98,7 +98,7 @@
     "CadDrawingChild": {
       "allOf": [
         {
-          "$ref": "https://semio.tech/schema/os/store/child.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child.json"
         },
         {
           "type": "object",

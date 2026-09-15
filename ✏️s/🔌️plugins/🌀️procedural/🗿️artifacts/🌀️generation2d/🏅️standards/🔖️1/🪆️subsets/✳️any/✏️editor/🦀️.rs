@@ -354,7 +354,7 @@ impl ArtifactCommandWork<EditorApp<Generation2dPlayApp>> for Generation2dSession
         }
         self.consumed = true;
         let windows = generation2d_preview_windows(input.context.and_then(|context| context.view_state.as_ref()));
-        let servable = crate::preview_eval::may_rearm(&input.snapshot.host_document);
+        let servable = crate::preview_eval::may_rearm(&input.snapshot.host_snapshot);
         let emit = self.instance_owner.with_mut::<Generation2dInstanceOperationOwner, _>(|owner| {
             let mut emit = owner.with_session(|session| generation2d_retained_reduce(input.command, input.snapshot, input.config, input.history, input.interaction, input.hover, input.context, input.operation, session))??;
             owner.owe_attached_previews_for_mutations(&windows, servable, &mut emit)?;
@@ -459,7 +459,7 @@ impl ArtifactCommandWork<EditorApp<Generation2dPlayApp>> for Generation2dGenerat
         _interaction: &protocol::InteractionState,
         _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Generation2dPlayApp>>>,
     ) -> Option<usize> {
-        GENERATION2D_RETAINED_CAPACITY.rows_for_items(snapshot.host_document.widgets.len().checked_add(2)?)
+        GENERATION2D_RETAINED_CAPACITY.rows_for_items(snapshot.host_snapshot.widgets.len().checked_add(2)?)
     }
 
     fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<Generation2dPlayApp>>) -> Result<ArtifactCommandWorkStep<EditorApp<Generation2dPlayApp>>, Fault> {
@@ -473,7 +473,7 @@ impl ArtifactCommandWork<EditorApp<Generation2dPlayApp>> for Generation2dGenerat
         let mut emit = result.emit;
         if result.publishes_preview {
             let windows = generation2d_preview_windows(input.context.and_then(|context| context.view_state.as_ref()));
-            let servable = crate::preview_eval::may_rearm(&input.snapshot.host_document);
+            let servable = crate::preview_eval::may_rearm(&input.snapshot.host_snapshot);
             self.instance_owner.with_mut::<Generation2dInstanceOperationOwner, _>(|owner| owner.owe_attached_previews_carrying(&windows, servable, &mut emit))?;
         }
         Ok(ArtifactCommandWorkStep::Complete(emit))
@@ -608,7 +608,7 @@ impl ArtifactCommandWork<EditorApp<Generation2dPlayApp>> for Generation2dContrib
             return Err(Fault::from("generation2d-contributions-route-rejected"));
         };
         let windows = generation2d_preview_windows(input.context.and_then(|context| context.view_state.as_ref()));
-        let servable = crate::preview_eval::may_rearm(&input.snapshot.host_document);
+        let servable = crate::preview_eval::may_rearm(&input.snapshot.host_snapshot);
         let emit = self.instance_owner.with_mut::<Generation2dInstanceOperationOwner, _>(|owner| {
             let mut emit = Emit::default();
             let invalidated = {
@@ -1160,7 +1160,7 @@ impl Generation2dImportJob {
         let mut rows = Vec::new();
         for (widget_id_key, value) in object.iter() {
             let Some(number) = value.as_f64() else { continue };
-            let Some(semio_framework_artifact_flow_flow::Widget::InputSlider { id, label, min, max, step, .. }) = snapshot.host_document.widgets.iter().find(|widget| crate::widget_id(widget) == widget_id_key) else { continue };
+            let Some(semio_framework_artifact_flow_flow::Widget::InputSlider { id, label, min, max, step, .. }) = snapshot.host_snapshot.widgets.iter().find(|widget| crate::widget_id(widget) == widget_id_key) else { continue };
             rows.push(crate::standards::v1::subsets::any::schema::mutations::text::replace_widget(semio_framework_artifact_flow_flow::Widget::InputSlider {
                 id: id.clone(),
                 label: label.clone(),
@@ -1615,7 +1615,7 @@ impl ArtifactEditor for Generation2dPlayApp {
                 }
             }
         }
-        let fixture = &doc.snapshot.host_document;
+        let fixture = &doc.snapshot.host_snapshot;
         let mut ordered = Vec::new();
         for widget in &fixture.widgets {
             let id = crate::widget_id(widget).to_string();
@@ -1642,7 +1642,7 @@ impl ArtifactEditor for Generation2dPlayApp {
     /// `setContributions` can move it.
     fn pending_effects(owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle, doc: &ArtifactView<'_, Generation2dSnapshot>, cfg: &ConfigView<'_, Generation2dConfig>, view: Option<&semio_framework_plugin::ViewModel>) -> Vec<Effect> {
         let windows = generation2d_preview_windows(view);
-        let servable = crate::preview_eval::may_rearm(&doc.snapshot.host_document);
+        let servable = crate::preview_eval::may_rearm(&doc.snapshot.host_snapshot);
         let mut targets: Vec<PreviewEvalTarget> = windows.iter().map(|(_, _, target)| *target).collect();
         targets.sort_unstable();
         targets.dedup();
@@ -1726,7 +1726,7 @@ impl ArtifactEditor for Generation2dPlayApp {
     fn export_media(port: &str, doc: &ArtifactView<'_, Generation2dSnapshot>) -> Result<semio_framework_plugin::Media, semio_framework_plugin::MediaError> {
         match port {
             "drawing:out" => {
-                let eval_json = crate::standards::v1::subsets::any::schema::evaluate_generation_preview(&doc.snapshot.host_document, &semio_framework_artifact_playbook_playbook::PlaybookValues::new());
+                let eval_json = crate::standards::v1::subsets::any::schema::evaluate_generation_preview(&doc.snapshot.host_snapshot, &semio_framework_artifact_playbook_playbook::PlaybookValues::new());
                 let layers_json = crate::standards::v1::subsets::any::schema::generation_preview_layers(&eval_json);
                 Ok(semio_framework_plugin::Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, payload: semio_framework_plugin::MediaPayload::Structured { schema: "2d.drawing".into(), json: layers_json } })
             }
@@ -1757,7 +1757,7 @@ impl ArtifactEditor for Generation2dPlayApp {
         let mut operations = Vec::new();
         for (widget_id_key, value) in object.iter() {
             let Some(number) = value.as_f64() else { continue };
-            let Some(widget) = doc.snapshot.host_document.widgets.iter().find(|widget| crate::widget_id(widget) == widget_id_key) else { continue };
+            let Some(widget) = doc.snapshot.host_snapshot.widgets.iter().find(|widget| crate::widget_id(widget) == widget_id_key) else { continue };
             if let semio_framework_artifact_flow_flow::Widget::InputSlider { id, label, min, max, step, .. } = widget {
                 operations.push(crate::standards::v1::subsets::any::schema::mutations::text::replace_widget(semio_framework_artifact_flow_flow::Widget::InputSlider {
                     id: id.clone(),

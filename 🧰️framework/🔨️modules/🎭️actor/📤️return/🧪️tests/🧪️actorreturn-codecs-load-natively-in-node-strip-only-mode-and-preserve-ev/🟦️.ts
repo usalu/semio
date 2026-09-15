@@ -209,7 +209,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     const { default: valueSchema } = await import("../../../../🌱️value/🧬️schema/🔣️.json");
     const { default: pageSchema } = await import("../../../📃️page/🧬️schema/🔣️.json");
     const { default: Ajv } = await import("ajv");
-    const validate = new Ajv({ strict: true }).addSchema(valueSchema).addSchema(lifetimeSchema).addSchema(pageSchema).addSchema(schema).getSchema("https://semio.tech/schema/framework/actor/return/schema.json#/$defs/Result")!;
+    const validate = new Ajv({ strict: true }).addSchema(valueSchema).addSchema(lifetimeSchema).addSchema(pageSchema).addSchema(schema).getSchema("https://json.schemas.assets.semio-tech.com/framework/actor/return/schema.json#/$defs/Result")!;
     const oracle = await resultOracle();
     for (const row of fixture.resultContradictions) {
       expect(validate(row)).toBe(false);

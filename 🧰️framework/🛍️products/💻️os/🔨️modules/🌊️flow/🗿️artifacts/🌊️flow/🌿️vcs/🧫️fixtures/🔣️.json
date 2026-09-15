@@ -124,17 +124,17 @@
       "operation": "changeLayout"
     },
     {
-      "folder": "♻️replace-flow-host-document",
-      "name": "ReplaceFlowHostDocument",
+      "folder": "♻️replace-flow-host-snapshot",
+      "name": "ReplaceFlowHostSnapshot",
       "verb": "replace",
       "entity": "flow-host-document",
-      "record": "ReplacedFlowHostDocument",
+      "record": "ReplacedFlowHostSnapshot",
       "required": [
-        "hostDocument"
+        "hostSnapshot"
       ],
       "tag": 9,
-      "kind": "replace-flow-host-document",
-      "operation": "replaceFlowHostDocument"
+      "kind": "replace-flow-host-snapshot",
+      "operation": "replaceFlowHostSnapshot"
     }
   ],
   "widgets": [
@@ -336,7 +336,7 @@
       ]
     },
     {
-      "hostDocument": {
+      "hostSnapshot": {
         "schema": "flow.import",
         "camera": {
           "x": 12,
@@ -575,8 +575,8 @@
       "error": true
     }
   ],
-  "hostDocument": {
-    "schema": "flow.hostDocument",
+  "hostSnapshot": {
+    "schema": "flow.hostSnapshot",
     "camera": {
       "x": 0,
       "y": 0,

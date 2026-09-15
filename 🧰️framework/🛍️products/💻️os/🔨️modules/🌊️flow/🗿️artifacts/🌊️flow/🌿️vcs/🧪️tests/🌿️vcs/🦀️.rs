@@ -8,7 +8,7 @@ fn cases() -> serde_json::Value { serde_json::from_str(include_str!("../../🧫�
 fn third_party_json<T: ToValue>(value: &T) -> serde_json::Value {
     serde_json::from_str(&crate::os_pack::json::to_json_string(value)).expect("first-party JSON must remain valid RFC 8259")
 }
-fn base() -> FlowHostDocument { FlowHostDocument::from_value(DslValue::from(&cases()["hostDocument"])).expect("Flow host document") }
+fn base() -> FlowHostSnapshot { FlowHostSnapshot::from_value(DslValue::from(&cases()["hostSnapshot"])).expect("Flow host document") }
 fn operation(index: usize) -> FlowMutation {
     let cases = cases();
     let mut value = cases["positives"][index].clone();
@@ -22,12 +22,12 @@ fn retire_diff(diff: FlowDiff) {
                 for (_, widget) in delta.inserted { widget.retire_cold(); }
                 for (_, widget) in delta.replaced { widget.retire_cold(); }
             }
-            FlowDelta::HostDocument(fixture) => fixture.retire_cold(),
+            FlowDelta::HostSnapshot(fixture) => fixture.retire_cold(),
             _ => {}
         }
     }
 }
-fn apply(base: &FlowHostDocument, mutation: &FlowMutation) -> FlowHostDocument {
+fn apply(base: &FlowHostSnapshot, mutation: &FlowMutation) -> FlowHostSnapshot {
     let (diff, _) = mutation.diff(base).into_parts();
     let next = diff.apply(base).expect("valid Flow delta");
     retire_diff(diff);
@@ -37,7 +37,7 @@ fn retire_mutation(mutation: FlowMutation) {
     match mutation {
         FlowMutation::AddWidget(leaf) => leaf.widget.retire_cold(),
         FlowMutation::ChangeWidget(leaf) => leaf.widget.retire_cold(),
-        FlowMutation::ReplaceFlowHostDocument(leaf) => leaf.host_document.retire_cold(),
+        FlowMutation::ReplaceFlowHostSnapshot(leaf) => leaf.host_snapshot.retire_cold(),
         _ => {}
     }
 }
@@ -98,7 +98,7 @@ where T: MutationLeaf + ToValue + FromValue {
 //#region 🧪️Laws
 #[test]
 fn all_ten_codecs_and_descriptors() {
-    assert_eq!(<FlowMutation as Mutation<FlowHostDocument>>::DESCRIPTORS.len(), 10);
+    assert_eq!(<FlowMutation as Mutation<FlowHostSnapshot>>::DESCRIPTORS.len(), 10);
     for index in 0..10 { let mutation = operation(index); assert_codecs(&mutation); retire_mutation(mutation); }
     for index in [0, 2, 4, 6] {
         for value in ["-1", "0.5", "4294967296", "1e21"] {
@@ -256,7 +256,7 @@ fn actual_nested_first_party_shapes() {
         let mutation = FlowMutation::AddWidget(AddWidget{index:0,widget});
         assert_codecs(&mutation);
         let FlowMutation::AddWidget(AddWidget{widget,..}) = mutation else { unreachable!() };
-        FlowHostDocument{schema:String::new(),camera:CameraJson::default(),widgets:vec![widget],synapses:vec![],layout:crate::OrderedMap::new()}.retire_cold();
+        FlowHostSnapshot{schema:String::new(),camera:CameraJson::default(),widgets:vec![widget],synapses:vec![],layout:crate::OrderedMap::new()}.retire_cold();
     }
     for text in [r#"{"index":0,"widget":{}}"#, r#"{"index":0,"widget":{"kind":"neuron","id":"n"}}"#, r#"{"index":0,"widget":{"kind":"neuron","id":"n","neuronKind":"x","params":{"bad":[]}}}"#] {
         let value: serde_json::Value = serde_json::from_str(text).expect("JSON syntax");

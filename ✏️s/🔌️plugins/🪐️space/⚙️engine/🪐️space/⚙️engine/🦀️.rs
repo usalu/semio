@@ -5,7 +5,7 @@
 //! `workflow` crate via os-core's re-export) — building `WorkflowMutation` values from arguments is
 //! still pure compute, not an `apply_X_mutation` match on a locally-owned enum.
 
-use semio_framework_artifact_infinite_dag::{dag_fixture_to_wire_literal, DagCamera, DagHostDocument, DagHostDocumentEdge, DagNodeKind, DagNodeSpec, IoPortSpec};
+use semio_framework_artifact_infinite_dag::{dag_host_snapshot_to_wire_literal, DagCamera, DagHostSnapshot, DagHostSnapshotEdge, DagNodeKind, DagNodeSpec, IoPortSpec};
 use pack::json::Value;
 use semio_framework_os::workflow::{AddNode, AddParameter, ChangeParameter};
 use semio_framework_os::{
@@ -220,7 +220,7 @@ pub async fn media_port_label(port_id: &str, parameter_by_id: &HashMap<String, &
 /// @emoji 🕸️ Projects the workflow onto the generic port-directed-DAG fixture the Compiled DAG window
 /// renders — every `WorkflowNode` becomes one `DagNodeKind::AppInstance` directly (node IS instance
 /// now; no separate join through `OsAppInstance`).
-pub async fn workflow_to_dag_fixture(projection: &WorkflowSnapshot) -> DagHostDocument {
+pub async fn workflow_to_dag_fixture(projection: &WorkflowSnapshot) -> DagHostSnapshot {
     let mut parameter_by_id: HashMap<String, &WorkflowParameter> = HashMap::new();
     for row in &projection.parameters {
         parameter_by_id.insert(parameter_entity_id(row).await.to_string(), row);
@@ -259,14 +259,14 @@ pub async fn workflow_to_dag_fixture(projection: &WorkflowSnapshot) -> DagHostDo
         .graph
         .edges
         .iter()
-        .map(|edge| DagHostDocumentEdge { id: edge.id.clone(), source: format!("{}@{}", edge.source_node_id, edge.source_port_id), target: format!("{}@{}", edge.target_node_id, edge.target_port_id), ..Default::default() })
+        .map(|edge| DagHostSnapshotEdge { id: edge.id.clone(), source: format!("{}@{}", edge.source_node_id, edge.source_port_id), target: format!("{}@{}", edge.target_node_id, edge.target_port_id), ..Default::default() })
         .collect();
-    DagHostDocument { schema: "dag.host_document".into(), camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 }, nodes, edges }
+    DagHostSnapshot { schema: "dag.host_snapshot".into(), camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 }, nodes, edges }
 }
 
 pub async fn compiled_dag_wire_literal(projection: &WorkflowSnapshot) -> String {
     let fixture = workflow_to_dag_fixture(projection).await;
-    dag_fixture_to_wire_literal(&fixture)
+    dag_host_snapshot_to_wire_literal(&fixture)
 }
 //#endregion 🔖️CompiledDag
 

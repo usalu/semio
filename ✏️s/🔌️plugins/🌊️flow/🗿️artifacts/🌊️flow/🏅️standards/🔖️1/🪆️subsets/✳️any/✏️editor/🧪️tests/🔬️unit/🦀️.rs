@@ -91,13 +91,13 @@ pub(crate) mod context {
     
     pub(crate) async fn register_content_child(app: &mut FlowApp) {
         let snapshot = app.snapshot().expect("Flow parent snapshot");
-        let fixture = snapshot.to_host_document();
+        let fixture = snapshot.to_host_snapshot();
         let content = crate::flow_content_snapshot_from_working(&fixture.widgets, &fixture.synapses, &fixture.layout);
-        // 🧹️ `FlowHostDocument` owns an `OrderedMap` layout root that rejects a bare drop ("ordered-map root
+        // 🧹️ `FlowHostSnapshot` owns an `OrderedMap` layout root that rejects a bare drop ("ordered-map root
         // must be explicitly retired before drop") — retired here so the shared fixture builder cannot
         // abort a whole test binary (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
         let mut retirement = semio_framework_artifact_flow_flow::retained::FlowRetirement::default();
-        retirement.push(semio_framework_artifact_flow_flow::retained::FlowOwner::HostDocument(fixture));
+        retirement.push(semio_framework_artifact_flow_flow::retained::FlowOwner::HostSnapshot(fixture));
         retirement.retire_cold();
         let dialect = snapshot.content.target.dialect.clone();
         let member = create_semio_member(&snapshot.content.child_id, &dialect, &content.encode_pack()).await.expect("Flow child member");
@@ -501,7 +501,7 @@ async fn interaction_topology_registers_every_widget_and_synapse_as_a_root() {
     let cfg = ConfigView { snapshot: &config, window: None };
     let topology = FlowPlayApp::interaction_topology(&doc, &cfg);
     let graph = topology.domains.get(FLOW_INTERACTION_GRAPH).expect("graph domain present in topology");
-    let live = document.to_host_document();
+    let live = document.to_host_snapshot();
     assert_eq!(graph.ordered.len(), live.widgets.len() + live.synapses.len());
     assert!(graph.ordered.iter().all(|node| node.parent.is_none()), "every node/edge is a root — no real group membership at this level");
     assert!(graph.ordered.iter().any(|node| node.id == flow_graph_node_target_id("slider") && node.granularity == "node"));
@@ -513,13 +513,13 @@ async fn interaction_topology_registers_every_widget_and_synapse_as_a_root() {
 #[semio_framework_async_macros::async_test]
 async fn undo_restores_fixture_after_add_widget() {
     let mut app = flow_app().await;
-    let before = app.snapshot().expect("snapshot").to_host_document().widgets.len();
+    let before = app.snapshot().expect("snapshot").to_host_snapshot().widgets.len();
     dispatch(&mut app, FlowCommand::AddWidget(add_widget::AddWidget { kind: "inputNote".into(), neuron_kind: None, x: Some(40.0), y: Some(40.0) })).await;
-    assert_eq!(app.snapshot().expect("snapshot").to_host_document().widgets.len(), before + 1);
+    assert_eq!(app.snapshot().expect("snapshot").to_host_snapshot().widgets.len(), before + 1);
     app.handle_action("undo", None, &meta("local")).await.expect("undo");
-    assert_eq!(app.snapshot().expect("snapshot").to_host_document().widgets.len(), before);
+    assert_eq!(app.snapshot().expect("snapshot").to_host_snapshot().widgets.len(), before);
     app.handle_action("redo", None, &meta("local")).await.expect("redo");
-    assert_eq!(app.snapshot().expect("snapshot").to_host_document().widgets.len(), before + 1);
+    assert_eq!(app.snapshot().expect("snapshot").to_host_snapshot().widgets.len(), before + 1);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -547,7 +547,7 @@ async fn host_from_snapshot_deletes_edge_selected_by_synapse_domain() {
     sync_host_selection_domains(&mut host, &[], &["s1".into()], &[]);
     assert!(host.has_selection(), "s1 must resolve through host_from_snapshot edge map");
     host.delete_selection().expect("deleteSelection");
-    assert!(!host.host_document.synapses.iter().any(|synapse| synapse.id == "s1"));
+    assert!(!host.host_snapshot.synapses.iter().any(|synapse| synapse.id == "s1"));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -563,8 +563,8 @@ async fn two_instances_converge_on_disjoint_edits() {
     instance_a.handle_action("commitCheckpoint", None, &meta("actor-a")).await.expect("pump a");
     instance_b.handle_action("commitCheckpoint", None, &meta("actor-b")).await.expect("pump b");
 
-    let projection_a = instance_a.snapshot().expect("snapshot a").to_host_document();
-    let projection_b = instance_b.snapshot().expect("snapshot b").to_host_document();
+    let projection_a = instance_a.snapshot().expect("snapshot a").to_host_snapshot();
+    let projection_b = instance_b.snapshot().expect("snapshot b").to_host_snapshot();
     assert!(projection_a.widgets.iter().any(|widget| widget_id(widget) == "input"), "A keeps its rename");
     assert!(projection_a.widgets.iter().any(|widget| matches!(widget, Widget::InputNote { .. })), "A absorbs B's note");
     assert_eq!(projection_a.widgets.len(), projection_b.widgets.len(), "both instances converge to the same widget set");

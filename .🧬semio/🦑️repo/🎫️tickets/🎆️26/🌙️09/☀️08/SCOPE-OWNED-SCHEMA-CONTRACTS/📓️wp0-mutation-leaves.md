@@ -419,8 +419,8 @@ Two sub-patterns observed, not one:
   aggregate duplicates and drifts.
 - **G-B, `$ref` composition (space, gis, vcs-wire):** aggregate is a thin `oneOf`/`allOf` union that `$ref`s
   each leaf's own schema file (relative path for space: `"$ref": "./🔢️change-catalog-generation/🧬️.schema.json"`;
-  `$id`-URL for gis: `"$ref": "https://semio.tech/schema/gis/gis3d/set-camera#/$defs/payload"`; `$id`-URL
-  for vcs wire: `"$ref": "https://semio.tech/schema/s/vcs/vcs/mutation/add-tag/payload.json#/properties/tag"`).
+  `$id`-URL for gis: `"$ref": "https://json.schemas.assets.semio-tech.com/gis/gis3d/set-camera#/$defs/payload"`; `$id`-URL
+  for vcs wire: `"$ref": "https://json.schemas.assets.semio-tech.com/s/vcs/vcs/mutation/add-tag/payload.json#/properties/tag"`).
   Zero duplication, zero drift surface, and it's what "consumers resolve named exports" (this ticket's
   stated goal) literally looks like in JSON Schema.
 - **Blob count:** ~256 aggregate `🔣️.json` files repo-wide in this partition (one per `🧬️mutations` root);

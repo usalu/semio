@@ -1,5 +1,5 @@
 //! 🧬️ `os.shell` schema module — the AUTHORITY for every shell wire type. `🔣️.json` (draft-07,
-//! `$id: https://semio.tech/schema/os/shell/component.json`) is the language-neutral contract;
+//! `$id: https://json.schemas.assets.semio-tech.com/os/shell/component.json`) is the language-neutral contract;
 //! [`schema_registry::TYPES`] is its Rust registry and the single input the TypeScript mirror at
 //! `../🤖️generated/🟦️.ts` is rendered from (`bun nx run @semio-tech/framework-os-shell-rs:typegen`);
 //! `🟦️.ts` is the hand-written TypeScript consumer of the same `🔣️.json`. `../🦀️.rs` owns only the
@@ -89,7 +89,7 @@ pub mod schema_registry {
     pub const OWNED_JSON_SCHEMA: &str = include_str!("🔣️.json");
 
     /// 🪪️ The `$id` `🔣️.json` MUST declare, and the dialect it MUST be written in.
-    pub const OWNED_JSON_SCHEMA_ID: &str = "https://semio.tech/schema/os/shell/component.json";
+    pub const OWNED_JSON_SCHEMA_ID: &str = "https://json.schemas.assets.semio-tech.com/os/shell/component.json";
     pub const OWNED_JSON_SCHEMA_DIALECT: &str = "http://json-schema.org/draft-07/schema#";
 
     /// 🧾️ Every export id this registry declares, in declaration order.

@@ -7,7 +7,7 @@ message Generation3dDiff {
   // @state artifact
   optional Generation3dArtifact artifact = 1;
   // @state artifact
-  optional FlowFixture fixture = 2;
+  optional FlowHostSnapshot host_snapshot = 2;
   // @state artifact
   optional GenerationPlayState generation = 3;
   // @state presence
@@ -33,7 +33,7 @@ message SynapseSpec {
 message Widget {
   string json = 1;
 }
-message FlowFixture {
+message FlowHostSnapshot {
   string schema = 1;
   CameraJson camera = 2;
   repeated Widget widgets = 3;
@@ -63,6 +63,6 @@ message Generation3dStringList {
   repeated string values = 1;
 }
 message Generation3dArtifact {
-  FlowFixture fixture = 1;
+  FlowHostSnapshot host_snapshot = 1;
   GenerationPlayState generation = 2;
 }

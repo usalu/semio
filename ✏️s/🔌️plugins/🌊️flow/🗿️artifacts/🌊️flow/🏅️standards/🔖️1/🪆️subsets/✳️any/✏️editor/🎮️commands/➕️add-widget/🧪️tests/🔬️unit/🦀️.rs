@@ -164,7 +164,7 @@ async fn patch_flow_widgets_parses_the_raw_value_string_into_the_slider() {
     let mut app = flow_app().await;
     dispatch(&mut app, FlowCommand::PatchFlowWidgets(crate::editor::flow::commands::patch_flow_widgets::PatchFlowWidgets { widget_ids: vec!["slider".into()], field: "value".into(), value: "7.5".into() })).await;
     let patched = app.snapshot().expect("snapshot");
-    let patched_widgets = patched.to_host_document().widgets;
+    let patched_widgets = patched.to_host_snapshot().widgets;
     assert!(
         patched_widgets.iter().any(|widget| matches!(widget, semio_framework_artifact_flow_flow::Widget::InputSlider { id, value, .. } if id == "slider" && (value - 7.5).abs() < f64::EPSILON)),
         "slider must carry the parsed value: {patched_widgets:?}"

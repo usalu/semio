@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/semio/v1/model/snapshot/text.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/model/snapshot/text.json",
   "title": "SemioModelSnapshotText",
   "description": "semio_format preamble line + hex-encoded compact-JSON snapshot body.",
   "type": "object",

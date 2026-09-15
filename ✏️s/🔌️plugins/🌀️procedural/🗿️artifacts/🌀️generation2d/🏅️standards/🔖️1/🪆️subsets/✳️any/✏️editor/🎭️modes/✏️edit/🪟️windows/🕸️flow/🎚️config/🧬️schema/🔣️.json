@@ -1,10 +1,10 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://semio.tech/schema/app/procedural/generation2d/main-window-config/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/app/procedural/generation2d/main-window-config/schema.json",
   "type": "object",
   "additionalProperties": false,
   "required": ["viewport"],
   "properties": {
-    "viewport": { "$ref": "https://semio.tech/schema/framework/ui/viewport/2d" }
+    "viewport": { "$ref": "https://json.schemas.assets.semio-tech.com/framework/ui/viewport/2d" }
   }
 }

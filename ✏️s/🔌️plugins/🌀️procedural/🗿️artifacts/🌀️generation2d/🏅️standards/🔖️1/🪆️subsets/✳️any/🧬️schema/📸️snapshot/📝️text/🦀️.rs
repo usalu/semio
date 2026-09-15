@@ -1,6 +1,6 @@
 //! 📜️ Generation2d artifact — textual document grammar surface + laws (constitutional: dsl).
 //!
-//! `FlowHostDocument`/`Widget`/`SynapseSpec`/`WidgetLayout`/`CameraJson` (from `flow`) and
+//! `FlowHostSnapshot`/`Widget`/`SynapseSpec`/`WidgetLayout`/`CameraJson` (from `flow`) and
 //! `GenerationPlayState`/`FormGeneration`/`GenerationMutation` (from `playbook`) are all foreign to
 //! this crate, so none can carry a `#[derive(dsl::Dsl...)]` themselves — Rust's orphan rule requires
 //! the impl target type to live in the crate that also owns the trait or the type, and neither is
@@ -17,13 +17,13 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 
 use crate::Generation2dSnapshot;
 use semio_framework_artifact_flow_flow::neural::{Atom, Dictionary, Value as NeuralValue};
-use semio_framework_artifact_flow_flow::{CameraJson, FlowHostDocument, SynapseSpec, Widget, WidgetLayout};
+use semio_framework_artifact_flow_flow::{CameraJson, FlowHostSnapshot, SynapseSpec, Widget, WidgetLayout};
 use semio_framework_artifact_playbook_playbook::{FormGeneration, GenerationPlayState};
 use std::collections::BTreeMap;
 
 /// 📦️ The `procedural2d-play` "default" example, embedded at compile time as handcrafted `.generation2d`
 /// DSL text — shared by the manifest's `.example(...)` registration, the `default_snapshot` fallback,
-/// and every test fixture.
+/// and every test host_snapshot.
 pub const GENERATION2D_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio");
 
 //#region 🔖️DslMirror
@@ -262,7 +262,7 @@ pub fn form_generation_from_dsl(generation: FormGenerationDsl) -> FormGeneration
     FormGeneration { id: generation.id, name: generation.name, values: generation.values.into_iter().collect() }
 }
 
-/// 🧾️ Local twin of `Generation2dSnapshot`, flattening `FlowHostDocument`/`GenerationPlayState`'s fields
+/// 🧾️ Local twin of `Generation2dSnapshot`, flattening `FlowHostSnapshot`/`GenerationPlayState`'s fields
 /// into one top-level `#[derive(dsl::DslRecord)]` grammar.
 #[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
 #[dsl(id = "procedural.generation2d", layout = "lines")]
@@ -324,14 +324,14 @@ impl store::ArtifactPack for Generation2dSnapshotDsl {
 //#endregion 🔖️HandcraftedArtifactCodecs
 
 fn generation2d_document_to_dsl(document: &Generation2dSnapshot) -> Generation2dSnapshotDsl {
-    let fixture = &document.host_document;
+    let host_snapshot = &document.host_snapshot;
     let generation = &document.generation;
     Generation2dSnapshotDsl {
-        schema: fixture.schema.clone(),
-        camera: camera_to_dsl(&fixture.camera),
-        widgets: fixture.widgets.iter().map(widget_to_dsl).collect(),
-        synapses: fixture.synapses.iter().map(synapse_to_dsl).collect(),
-        layout: fixture.layout.iter().map(|(id, entry)| (id.clone(), layout_to_dsl(entry))).collect(),
+        schema: host_snapshot.schema.clone(),
+        camera: camera_to_dsl(&host_snapshot.camera),
+        widgets: host_snapshot.widgets.iter().map(widget_to_dsl).collect(),
+        synapses: host_snapshot.synapses.iter().map(synapse_to_dsl).collect(),
+        layout: host_snapshot.layout.iter().map(|(id, entry)| (id.clone(), layout_to_dsl(entry))).collect(),
         selected_generation_id: generation.selected_generation_id.clone(),
         preview_text: generation.preview_text.clone(),
         generations: generation.generations.iter().map(form_generation_to_dsl).collect(),
@@ -343,7 +343,7 @@ fn generation2d_document_from_dsl(parsed: Generation2dSnapshotDsl) -> Result<Gen
     let synapses = parsed.synapses.into_iter().map(synapse_from_dsl).collect();
     let layout = parsed.layout.into_iter().map(|(id, entry)| (id, layout_from_dsl(&entry))).collect();
     Ok(Generation2dSnapshot {
-        fixture: FlowHostDocument { schema: parsed.schema, camera: camera_from_dsl(&parsed.camera), widgets, synapses, layout },
+        host_snapshot: FlowHostSnapshot { schema: parsed.schema, camera: camera_from_dsl(&parsed.camera), widgets, synapses, layout },
         generation: GenerationPlayState { generations: parsed.generations.into_iter().map(form_generation_from_dsl).collect(), selected_generation_id: parsed.selected_generation_id, preview_text: parsed.preview_text }.into(),
     })
 }

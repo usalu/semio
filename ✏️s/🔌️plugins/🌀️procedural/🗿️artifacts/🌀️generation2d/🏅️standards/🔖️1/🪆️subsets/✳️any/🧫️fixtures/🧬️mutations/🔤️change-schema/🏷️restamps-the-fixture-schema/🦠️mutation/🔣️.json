@@ -1,5 +1,5 @@
 {
   "ChangeSchema": {
-    "schema": "flow.hostDocument.revised"
+    "schema": "flow.hostSnapshot.revised"
   }
 }

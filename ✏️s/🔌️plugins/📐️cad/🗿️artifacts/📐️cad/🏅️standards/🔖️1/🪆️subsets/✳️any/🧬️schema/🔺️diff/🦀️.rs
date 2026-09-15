@@ -32,7 +32,6 @@ pub struct CadDiff {
     pub references_by_model_definition_id: Option<BTreeMap<String, CadReferenceList>>,
     #[state(artifact)]
     pub nodes: Option<CadNodesDelta>,
-    #[state(artifact)]
 }
 //#endregion 🔖️Diff
 

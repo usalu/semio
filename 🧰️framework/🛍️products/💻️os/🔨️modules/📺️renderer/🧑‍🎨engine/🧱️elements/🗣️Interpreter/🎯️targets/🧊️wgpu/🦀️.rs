@@ -158,7 +158,7 @@ pub fn validate_component_scene(scene: &UiComponentSceneNode, limits: &RenderPla
         check_optional_json_payload(&format!("{scene_label} nodeGraph.clusters"), &graph.clusters_json, limits)?;
         check_optional_json_payload(&format!("{scene_label} nodeGraph.computing"), &graph.computing_json, limits)?;
         check_optional_json_payload(&format!("{scene_label} nodeGraph.capabilities"), &graph.capabilities_json, limits)?;
-        check_optional_json_payload(&format!("{scene_label} nodeGraph.hostDocument"), &graph.host_document_json, limits)?;
+        check_optional_json_payload(&format!("{scene_label} nodeGraph.hostDocument"), &graph.host_snapshot_json, limits)?;
         check_optional_json_payload(&format!("{scene_label} nodeGraph.presencePeers"), &graph.presence_peers_json, limits)?;
     }
     if let Some(editor) = &scene.text_editor {

@@ -18,7 +18,7 @@ that was kept; the rest of this report is what was finished on top of it.
 | `…/📚️library/🧪️tests/🧬️schema-scope-catalog/🛂️schema/🔣️.json` | Case authority: `Scope.exports` is an object of `{file, facet}`. |
 | `…/📚️library/🧪️tests/🧬️schema-rust-entries/🧫️fixtures/🔣️.json` + `🛂️schema/🔣️.json` | Same shape change for the Rust-registry cross-check cases (7 scopes converted). |
 | `…/📚️library/🧪️tests/🔬️index/🟦️.ts` | New `exports` shape in the catalog spec; **repaired 9 corrupted string literals** and 8 stale fixture base paths left by the suite relocation (see §7). |
-| `…/📚️library/🧪️tests/🗺️testing-readme-coordinates/🟦️.ts:127` | `$id` expectation → `https://semio.tech/schema/repo/test/schema.json` (row 61). |
+| `…/📚️library/🧪️tests/🗺️testing-readme-coordinates/🟦️.ts:127` | `$id` expectation → `https://json.schemas.assets.semio-tech.com/repo/test/schema.json` (row 61). |
 | `…/📚️library/🐹️.go:345` | `/api/v1/events` → `/api/v1/event` (row 17). |
 | `…/📚️library/📦️packages/🟦️typescript/🧫️fixtures/🧼️remaining-package-purity-authority/🔣️.json` | Dropped the two rows for deleted coordinator files and recomputed the derived census counts (row 16). |
 | ticket-owned `wp2-schema-cases.ts` | Runner updated to the new `exports` shape (kept as an input file). |

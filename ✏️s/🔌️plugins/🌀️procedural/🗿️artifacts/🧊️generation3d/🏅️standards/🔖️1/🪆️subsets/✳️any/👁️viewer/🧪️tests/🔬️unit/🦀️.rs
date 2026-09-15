@@ -398,14 +398,14 @@ fn the_viewer_exports_the_example_it_is_showing_not_the_opened_document() {
     for example_id in ["hexagonal-mushroom-column", "rectangle-extrude-volume"] {
         let config = Generation3dViewConfig { active_example_id: Some(example_id.to_string()), ..Default::default() };
         let viewed = super::Generation3dViewedDocument::resolve(&opened, &config);
-        let widgets = viewed.snapshot().host_document.widgets.len();
+        let widgets = viewed.snapshot().host_snapshot.widgets.len();
         println!("[DEBUG] viewer export document for {example_id}: widgets={widgets}");
         assert!(widgets > 0, "{example_id}: the viewed document must carry the example's widgets, not the opened document's none");
         viewed.retire();
     }
     let none = Generation3dViewConfig { active_example_id: None, ..Default::default() };
     let viewed = super::Generation3dViewedDocument::resolve(&opened, &none);
-    assert_eq!(viewed.snapshot().host_document.widgets.len(), opened.host_document.widgets.len(), "with no example picked the viewer exports the opened document itself");
+    assert_eq!(viewed.snapshot().host_snapshot.widgets.len(), opened.host_snapshot.widgets.len(), "with no example picked the viewer exports the opened document itself");
     viewed.retire();
     opened.retire_cold();
 }

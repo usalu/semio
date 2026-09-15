@@ -1,11 +1,11 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://semio.tech/schema/app/architect/program/graph-window-config",
+  "$id": "https://json.schemas.assets.semio-tech.com/app/architect/program/graph-window-config",
   "title": "ArchitectGraphWindowConfig",
   "type": "object",
   "additionalProperties": false,
   "required": ["viewport"],
   "properties": {
-    "viewport": { "$ref": "https://semio.tech/schema/framework/ui/viewport/2d" }
+    "viewport": { "$ref": "https://json.schemas.assets.semio-tech.com/framework/ui/viewport/2d" }
   }
 }

@@ -6,7 +6,7 @@ use crate::editor::generation3d::PreviewInteractionMarks;
 use crate::editor::generation3d::GENERATION_3D_INTERACTION_CHANNEL;
 use crate::editor::generation3d::GENERATION_3D_INTERACTION_DOMAIN;
 use crate::editor::generation3d::GENERATION_3D_PLAY_APP_ID;
-use crate::standards::v1::subsets::any::schema::{dag_host_document_to_workflow, with_host};
+use crate::standards::v1::subsets::any::schema::{dag_host_snapshot_to_workflow, with_host};
 use crate::Generation3dSnapshot;
 use semio_framework_os_flow::{flow_backed_node_graph_extras, FlowEvalSession};
 use semio_framework_os_kernel::Viewport2d;
@@ -203,7 +203,7 @@ fn kind_extension_name(kind: &str) -> (String, String) {
 /// the OS workflow window seeds `NodeGraphScene.operators` so the canvas can lay ports out without
 /// waiting for the app-static catalogue (which may not have been contributed yet). Built-in `core.*`
 /// widgets are omitted: the engine already knows them. Never the registered catalogue.
-fn document_operator_records(dag: &semio_framework_artifact_infinite_dag::DagHostDocument, nodes: &[NodeGraphNodeRecord]) -> Vec<NodeGraphOperatorRecord> {
+fn document_operator_records(dag: &semio_framework_artifact_infinite_dag::DagHostSnapshot, nodes: &[NodeGraphNodeRecord]) -> Vec<NodeGraphOperatorRecord> {
     let catalogue = semio_framework_os_flow::flow_operator_catalogue_records();
     let node_by_id: std::collections::BTreeMap<&str, &NodeGraphNodeRecord> = nodes.iter().map(|node| (node.id.as_str(), node)).collect();
     let mut kinds: Vec<String> = Vec::new();
@@ -268,14 +268,14 @@ fn graph_find_items(nodes: &[NodeGraphNodeRecord], category: &str) -> Vec<NodeGr
 
 //#region 🔖️Render
 pub fn render(document: &Generation3dSnapshot, config: &Generation3dConfig, session: &FlowEvalSession, marks: &PreviewInteractionMarks, labels: &Generation3dLabels) -> UiAssemblyResult<BuiltNode> {
-    let fixture = &document.host_document;
-    let (nodes, edges, operators) = with_host(snapshot, |host| {
-        let (nodes, edges) = dag_host_document_to_workflow(&host.dag.host_document);
-        let operators = document_operator_records(&host.dag.host_document, &nodes);
+    let host_snapshot = &document.host_snapshot;
+    let (nodes, edges, operators) = with_host(host_snapshot, |host| {
+        let (nodes, edges) = dag_host_snapshot_to_workflow(&host.dag.host_snapshot);
+        let operators = document_operator_records(&host.dag.host_snapshot, &nodes);
         (nodes, edges, operators)
     });
-    let viewport = Viewport2d { x: fixture.camera.x, y: fixture.camera.y, zoom: fixture.camera.zoom };
-    let flow_extras = flow_backed_node_graph_extras(fixture, &config.lod_mode, 0.0, true, false, semio_framework_ui_styling::metrics::board::GRID_FACTOR_DEFAULT, Some(session));
+    let viewport = Viewport2d { x: host_snapshot.camera.x, y: host_snapshot.camera.y, zoom: host_snapshot.camera.zoom };
+    let flow_extras = flow_backed_node_graph_extras(host_snapshot, &config.lod_mode, 0.0, true, false, semio_framework_ui_styling::metrics::board::GRID_FACTOR_DEFAULT, Some(session));
     let hover = marks.hovered_graph_target().map(|(node_id, port_id)| NodeGraphHover { node_id: Some(node_id), port_id });
     let surface = crate::accessible_scene_surface(
         GENERATION_3D_PLAY_SURFACE_MAIN,
@@ -284,7 +284,7 @@ pub fn render(document: &Generation3dSnapshot, config: &Generation3dConfig, sess
             editable: Some(true),
             capabilities_json: flow_extras.capabilities_json,
             lod_json: flow_extras.lod_json,
-            host_document_json: flow_extras.host_document_json,
+            host_snapshot_json: flow_extras.host_snapshot_json,
             eval_json: flow_extras.eval_json,
             status_json: flow_extras.status_json,
             operators,

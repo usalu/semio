@@ -296,7 +296,10 @@
     {
       "from": "running",
       "event": "finalize",
-      "rejection": "toolRun.illegal"
+      "to": "finalizing",
+      "effect": "beginFinalize",
+      "generation": "keep",
+      "commits": false
     },
     {
       "from": "running",
@@ -413,7 +416,10 @@
     {
       "from": "paused",
       "event": "finalize",
-      "rejection": "toolRun.illegal"
+      "to": "finalizing",
+      "effect": "beginFinalize",
+      "generation": "keep",
+      "commits": false
     },
     {
       "from": "paused",
@@ -1330,7 +1336,7 @@
       }
     },
     {
-      "name": "finalize is illegal while running",
+      "name": "finalize while running publishes the partial result",
       "slot": {
         "run": 7,
         "generation": 2,
@@ -1342,7 +1348,14 @@
         "generation": 2
       },
       "expect": {
-        "rejection": "toolRun.illegal"
+        "transition": {
+          "slot": {
+            "run": 7,
+            "generation": 2,
+            "state": "finalizing"
+          },
+          "effect": "beginFinalize"
+        }
       }
     },
     {
@@ -1451,6 +1464,42 @@
     }
   ],
   "scenarios": [
+    {
+      "name": "run finalize partial dismiss",
+      "events": [
+        {
+          "type": "start",
+          "run": 1
+        },
+        {
+          "type": "jobAdmitted",
+          "run": 1,
+          "generation": 0
+        },
+        {
+          "type": "finalize",
+          "run": 1,
+          "generation": 0
+        },
+        {
+          "type": "publicationComplete",
+          "run": 1,
+          "generation": 0
+        },
+        {
+          "type": "dismiss",
+          "run": 1
+        }
+      ],
+      "states": [
+        "starting",
+        "running",
+        "finalizing",
+        "finalized",
+        "none"
+      ],
+      "commits": 1
+    },
     {
       "name": "run pause step resume complete finalize dismiss",
       "events": [
@@ -1713,8 +1762,8 @@
   ],
   "invariants": [
     {
-      "id": "finalizeOnlyInComplete",
-      "statement": "finalize is accepted only in complete"
+      "id": "finalizeOnlyWithAResult",
+      "statement": "finalize is accepted in running, paused and complete: a run that has not completed finalizes the partial result computed so far"
     },
     {
       "id": "storeGenerationOnlyOnFinalized",
@@ -1844,6 +1893,8 @@
         }
       ],
       "legalIn": [
+        "running",
+        "paused",
         "complete"
       ],
       "chord": "mod+shift+enter",
@@ -1949,8 +2000,8 @@
     },
     {
       "key": "finalizeDisabled",
-      "en": "Available once the run is complete",
-      "de": "Verfügbar, sobald der Lauf fertig ist"
+      "en": "Available once the run has started",
+      "de": "Verfügbar, sobald der Lauf gestartet ist"
     },
     {
       "key": "readyToStart",

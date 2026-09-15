@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/gltf/2.0/animation/mutations.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/animation/mutations.json",
   "title": "glTF Animation Mutation",
   "description": "View over the any subset's mutation leaves (adjacently tagged); every payload is the owning leaf's own schema, referenced, never restated.",
   "oneOf": [
@@ -16,7 +16,7 @@
           "const": "createAnimation"
         },
         "payload": {
-          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/create-animation/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/create-animation/schema.json"
         }
       }
     },
@@ -32,7 +32,7 @@
           "const": "deleteAnimation"
         },
         "payload": {
-          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/delete-animation/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/delete-animation/schema.json"
         }
       }
     },
@@ -48,7 +48,7 @@
           "const": "moveAnimation"
         },
         "payload": {
-          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/move-animation/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/move-animation/schema.json"
         }
       }
     },
@@ -64,7 +64,7 @@
           "const": "reorderAnimations"
         },
         "payload": {
-          "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/reorder-animations/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/reorder-animations/schema.json"
         }
       }
     }

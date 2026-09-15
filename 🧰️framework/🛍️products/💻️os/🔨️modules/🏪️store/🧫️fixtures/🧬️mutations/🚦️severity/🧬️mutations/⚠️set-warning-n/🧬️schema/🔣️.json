@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/framework/os/store/fixtures/severity/mutation/set-warning-n/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/os/store/fixtures/severity/mutation/set-warning-n/schema.json",
   "title": "SetWarningN",
   "type": "object",
   "$defs": {
@@ -8,7 +8,7 @@
       "type": "object",
       "properties": {
         "n": {
-          "$ref": "https://semio.tech/schema/os/store/fixtures/schema.json#/$defs/I32"
+          "$ref": "https://json.schemas.assets.semio-tech.com/os/store/fixtures/schema.json#/$defs/I32"
         }
       },
       "required": [

@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/framework/ui/runtime/patch/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/ui/runtime/patch/schema.json",
   "title": "Ui Runtime Patch Schema Module",
   "$defs": {
     "Patch": {

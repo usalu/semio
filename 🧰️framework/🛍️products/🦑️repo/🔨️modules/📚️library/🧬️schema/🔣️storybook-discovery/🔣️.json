@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://semio.tech/schema/repo/storybook-discovery-v1.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/repo/storybook-discovery-v1.json",
   "title": "Storybook discovery identity",
   "type": "object",
   "additionalProperties": false,

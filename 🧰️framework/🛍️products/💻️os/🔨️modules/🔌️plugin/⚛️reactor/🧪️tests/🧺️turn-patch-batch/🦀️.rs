@@ -241,6 +241,45 @@ fn a_turn_patch_page_never_asks_the_guest_for_more_than_one_contiguous_ceiling()
     eprintln!("[DEBUG] turn-patch-batch capacity={UI_TURN_PATCHES_MAXIMUM} page={}B ceiling={}B budget={UI_TURN_PATCH_BUDGET_BYTES}B", size_of::<UiTurnPatches>(), semio_framework_trace::GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES);
 }
 
+/// 🔒️ THE per-surface law: two queued publications of the SAME surface are a chain, never a batch, so
+/// one turn's page carries at most one patch per surface and the second rides the next turn — in
+/// order, exactly once, with no slot lost.
+///
+/// 🐛️ Pending slots are minted per reconcile pass, never per surface, so one `toolRunStart` leaves two
+/// of them for `framework.panel.toolRun` (the action's own panel reconcile and the run's first progress
+/// reconcile). A page carrying both forced the host to open the second patch against the first one's
+/// still-open wire and receipt outbox — `plugin-ui.intake-rejected:intake:Busy instance surface owner`,
+/// after which that surface's cell stayed busy and every later refresh, `toolRunAbort` and
+/// `toolRunFinalize` of the instance was rejected (peer ticket
+/// 26/09/13/INTERACTIVE-TOOLS-VISIBLE-PROCESS, `abort-finalize-midrun-*.txt`, :6013 2026-09-15 17:58).
+#[test]
+fn two_queued_patches_of_one_surface_never_travel_in_the_same_turn_page() {
+    let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
+    let instance = 82u32;
+    let name = format!("{instance}:framework.panel.toolRun");
+    let other = format!("{instance}:surface-other");
+    let push = |surface: &str, revision: u64| {
+        let id = ui_contract::SurfaceId::try_from(surface.to_string()).expect("fixture surface id");
+        with_pending(|pending| pending.borrow_mut().push_external(ui_contract::UiPatch { surface: id, base_revision: ui_contract::UiRevision(revision - 1), revision: ui_contract::UiRevision(revision), ops: Default::default() })).expect("external publication");
+    };
+    push(&name, 1);
+    push(&other, 1);
+    push(&name, 2);
+    let mut first = take_turn_patch_page(generous_budget()).expect("turn patch page");
+    let carried = first.iter().map(|patch| (patch.surface.0.to_string(), patch.revision.0)).collect::<Vec<_>>();
+    assert_eq!(carried, vec![(name.clone(), 1), (other.clone(), 1)], "the page stops at the repeat and carries every other ready surface");
+    assert_eq!(carried.iter().filter(|(surface, _)| *surface == name).count(), 1, "one surface is named at most once in a turn page");
+    let receipt = ActorUiPatchReceipt { lifetime: ActorInstanceLifetime { activation_generation: 1, instance_id: instance, guest_lifetime: 1 }, patch_sequence: 1 };
+    with_pending(|pending| pending.borrow_mut().stage_emission(receipt, first.iter())).expect("staged emission");
+    with_pending(|pending| pending.borrow_mut().commit_emission());
+    drain_page(&mut first);
+    let mut second = take_turn_patch_page(generous_budget()).expect("turn patch page");
+    assert_eq!(second.iter().map(|patch| (patch.surface.0.to_string(), patch.revision.0)).collect::<Vec<_>>(), vec![(name.clone(), 2)], "the deferred publication rides the very next turn, in order");
+    eprintln!("[DEBUG] turn-patch-batch per-surface deferral: page1={carried:?} page2=[({name}, 2)]");
+    drain_page(&mut second);
+    retire_pending_authority();
+}
+
 /// 📥️ Queues `count` external publications on one instance and reports the order they must come back.
 fn queue_external(instance: u32, count: usize) -> Vec<(String, u64)> {
     let mut expected = Vec::new();

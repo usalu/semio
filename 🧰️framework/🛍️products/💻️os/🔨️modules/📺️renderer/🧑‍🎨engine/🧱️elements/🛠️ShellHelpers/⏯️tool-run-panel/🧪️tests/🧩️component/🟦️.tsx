@@ -31,7 +31,7 @@ describe("⏯️ framework ToolRun panel", () => {
     expect(screen.getByRole("progressbar")).toBeTruthy();
     const pause = screen.getByRole("button", { name: "Pause" });
     const disabled = (name: string) => { const button = screen.getByRole("button", { name }) as HTMLButtonElement; return button.disabled || button.getAttribute("aria-disabled") === "true"; };
-    expect(["Pause", "Step", "Abort", "Finalize"].map(disabled)).toEqual([false, true, false, true]);
+    expect(["Pause", "Step", "Abort", "Finalize"].map(disabled)).toEqual([false, true, false, false]);
     pause.focus();
     expect(document.activeElement).toBe(pause);
     pause.click();

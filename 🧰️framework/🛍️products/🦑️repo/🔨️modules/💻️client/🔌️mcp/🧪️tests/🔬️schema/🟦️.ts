@@ -62,7 +62,7 @@ const definitions = sdlDefinitions();
 describe("repo client mcp graphql module", () => {
   it("declares the canonical draft-07 identity", () => {
     expect(document.$schema).toBe("http://json-schema.org/draft-07/schema#");
-    expect(document.$id).toBe("https://semio.tech/schema/repo/client/mcp/schema.json");
+    expect(document.$id).toBe("https://json.schemas.assets.semio-tech.com/repo/client/mcp/schema.json");
     expect(document.$ref).toBe("#/$defs/Query");
   });
 

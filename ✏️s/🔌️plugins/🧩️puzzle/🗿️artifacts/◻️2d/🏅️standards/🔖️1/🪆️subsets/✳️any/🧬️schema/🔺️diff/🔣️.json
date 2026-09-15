@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/puzzle/puzzle2d/diff.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle2d/diff.json",
   "title": "Puzzle2dDiff",
   "type": "object",
   "additionalProperties": false,
@@ -35,7 +35,7 @@
           "type": "null"
         },
         {
-          "$ref": "https://semio.tech/schema/s/puzzle/puzzle2d/artifact.json#/$defs/Puzzle2dCamera"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle2d/artifact.json#/$defs/Puzzle2dCamera"
         }
       ],
       "x-semio-state": "artifact"
@@ -68,7 +68,7 @@
           "type": "null"
         },
         {
-          "$ref": "https://semio.tech/schema/s/puzzle/puzzle2d/artifact.json#/$defs/Puzzle2dMeta"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle2d/artifact.json#/$defs/Puzzle2dMeta"
         }
       ],
       "x-semio-state": "artifact"
@@ -104,7 +104,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "https://semio.tech/schema/s/puzzle/puzzle2d/artifact.json#/$defs/Puzzle2dNode"
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle2d/artifact.json#/$defs/Puzzle2dNode"
           }
         },
         "removed": {
@@ -163,7 +163,7 @@
               "type": "null"
             },
             {
-              "$ref": "https://semio.tech/schema/s/puzzle/puzzle2d/artifact.json#/$defs/Puzzle2dNode"
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle2d/artifact.json#/$defs/Puzzle2dNode"
             }
           ]
         }
@@ -182,7 +182,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "https://semio.tech/schema/s/puzzle/puzzle2d/artifact.json#/$defs/Puzzle2dEdge"
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle2d/artifact.json#/$defs/Puzzle2dEdge"
           }
         },
         "removed": {
@@ -241,7 +241,7 @@
               "type": "null"
             },
             {
-              "$ref": "https://semio.tech/schema/s/puzzle/puzzle2d/artifact.json#/$defs/Puzzle2dEdge"
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle2d/artifact.json#/$defs/Puzzle2dEdge"
             }
           ]
         }

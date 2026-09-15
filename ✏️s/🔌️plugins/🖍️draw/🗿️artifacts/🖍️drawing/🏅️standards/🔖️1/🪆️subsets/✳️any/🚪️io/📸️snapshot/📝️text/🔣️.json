@@ -1,5 +1,5 @@
 {
-  "$id": "https://semio.tech/schema/s/drawing/drawing/snapshot/text.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/drawing/drawing/snapshot/text.json",
   "title": "DrawingSnapshotText",
   "type": "object"
 }

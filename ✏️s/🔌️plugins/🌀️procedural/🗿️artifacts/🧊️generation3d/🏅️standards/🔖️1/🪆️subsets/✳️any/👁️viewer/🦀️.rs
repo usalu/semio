@@ -394,7 +394,7 @@ impl ArtifactCommandWork<ViewerApp<Generation3dViewer>> for Generation3dViewComm
         if next.active_example_id != input.config.active_example_id || next.tolerance().to_bits() != input.config.tolerance().to_bits() {
             let windows = generation3d_view_preview_windows(input.context.and_then(|context| context.view_state.as_ref()));
             let viewed = Generation3dViewedDocument::resolve(input.snapshot, &next);
-            let servable = preview_eval::may_rearm(&viewed.snapshot().host_document);
+            let servable = preview_eval::may_rearm(&viewed.snapshot().host_snapshot);
             viewed.retire();
             self.instance_owner.with_mut::<Generation3dViewInstanceOperationOwner, _>(|owner| owner.owe_attached_previews_carrying(&windows, servable, &mut emit))?;
         }
@@ -457,17 +457,24 @@ impl Generation3dViewFlowEvalWindowWork {
 fn generation3d_view_continue_inline(
     window_id: &str,
     window_kind_id: &str,
-    fixture: &semio_framework_artifact_flow_flow::FlowHostDocument,
+    host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot,
     tolerance: f64,
     session: &mut FlowEvalSession,
     retained_eval: Option<&str>,
     turn_started_us: Option<u64>,
 ) -> preview_eval::FlowEvalTickOutcome {
     if !session.inline_continuation_admitted(window_id, turn_started_us, semio_framework_job::default_now_us()) {
-        return preview_eval::FlowEvalTickOutcome { extension_invocations: Vec::new(), publication: semio_framework_os_flow::FlowEvalPublication::Retained };
+        return preview_eval::FlowEvalTickOutcome { extension_invocations: Vec::new(), publication: semio_framework_os_flow::FlowEvalPublication::Retained, census_moved: false };
     }
     session.arm_window_tick(window_id);
-    preview_eval::evaluate_tick(window_id, window_kind_id, fixture, tolerance, session, retained_eval, turn_started_us)
+    preview_eval::evaluate_tick(window_id, window_kind_id, host_snapshot, tolerance, session, retained_eval, turn_started_us)
+}
+
+/// 🐢️ The viewer's binding of [`preview_eval::chain_ui_scope`] — one preview body, no graph body
+/// (a read-only surface paints no node-graph computing chrome) and the framework tool-run panel that
+/// carries the abort affordance.
+fn generation3d_view_chain_ui_scope(census_moved: bool) -> semio_framework::kernel::UiDirtyScope {
+    preview_eval::chain_ui_scope(preview::BODY_KEY, None, &[semio_framework_plugin::FRAMEWORK_TOOL_RUN_BODY_KEY], census_moved)
 }
 
 /// 🪟️ The preview window one chain route addresses, or `None` for a route that addresses none.
@@ -517,20 +524,20 @@ impl ArtifactCommandWork<ViewerApp<Generation3dViewer>> for Generation3dViewFlow
         let retained_eval = window.get::<preview::transient::Generation3dViewPreviewWindowTransientOwner>().map(|state| state.preview_eval_text.as_deref()).ok_or_else(|| Fault::from("generation3d-view-flow-eval-window-owner-required"))?;
         let tolerance = input.config.tolerance();
         // 📚️ The tick evaluates what this surface is LOOKING at, which is the picked example once the
-        // navbar named one — the read-only counterpart of the editor switch replacing its fixture.
+        // navbar named one — the read-only counterpart of the editor switch replacing its host_snapshot.
         let viewed = Generation3dViewedDocument::resolve(input.snapshot, input.config);
         let outcome = self.instance_owner.with_mut::<Generation3dViewInstanceOperationOwner, _>(|owner| {
             owner.with_session_waking(|session| {
-                let fixture = &viewed.snapshot().host_document;
+                let host_snapshot = &viewed.snapshot().host_snapshot;
                 match input.command {
-                    Generation3dViewCommand::FlowEvalTick(_) => Ok(preview_eval::evaluate_tick(window.window_id(), window.window_kind_id(), fixture, tolerance, session, retained_eval, None)),
+                    Generation3dViewCommand::FlowEvalTick(_) => Ok(preview_eval::evaluate_tick(window.window_id(), window.window_kind_id(), host_snapshot, tolerance, session, retained_eval, None)),
                     Generation3dViewCommand::FlowEvalResolve(payload) => {
                         preview_eval::resolve_eval(payload, session);
-                        Ok(generation3d_view_continue_inline(window.window_id(), window.window_kind_id(), fixture, tolerance, session, retained_eval, turn_started_us))
+                        Ok(generation3d_view_continue_inline(window.window_id(), window.window_kind_id(), host_snapshot, tolerance, session, retained_eval, turn_started_us))
                     }
                     Generation3dViewCommand::FlowTessellateResolve(payload) => {
                         preview_eval::resolve_tessellate(payload, session);
-                        Ok(generation3d_view_continue_inline(window.window_id(), window.window_kind_id(), fixture, tolerance, session, retained_eval, turn_started_us))
+                        Ok(generation3d_view_continue_inline(window.window_id(), window.window_kind_id(), host_snapshot, tolerance, session, retained_eval, turn_started_us))
                     }
                     _ => Err(Fault::from("generation3d-view-flow-eval-window-command-mismatch")),
                 }
@@ -544,7 +551,7 @@ impl ArtifactCommandWork<ViewerApp<Generation3dViewer>> for Generation3dViewFlow
             semio_framework_os_flow::FlowEvalPublication::Changed(eval_text) => vec![preview::transient::addressed(window, eval_text)?],
         };
         Ok(ArtifactCommandWorkStep::CompleteWithEphemeral {
-            emit: Emit { extension_invocations: outcome.extension_invocations, ..Default::default() },
+            emit: Emit { extension_invocations: outcome.extension_invocations, ui_scope: generation3d_view_chain_ui_scope(outcome.census_moved), ..Default::default() },
             ephemeral: EphemeralEmit { presence: Vec::new(), transient: Vec::new(), window_transient },
         })
     }
@@ -738,7 +745,7 @@ impl ArtifactCommandWork<ViewerApp<Generation3dViewer>> for Generation3dViewCont
         self.instance_owner.with_mut::<Generation3dViewInstanceOperationOwner, _>(|owner| {
             if owner.with_session(|session| set_contributions::install(payload, session))?? {
                 let viewed = Generation3dViewedDocument::resolve(input.snapshot, input.config);
-                let servable = preview_eval::may_rearm(&viewed.snapshot().host_document);
+                let servable = preview_eval::may_rearm(&viewed.snapshot().host_snapshot);
                 viewed.retire();
                 owner.owe_attached_previews_carrying(&windows, servable, &mut emit)?;
             }
@@ -1143,8 +1150,8 @@ impl Generation3dViewDocumentIoJobFactoryProofs {
 //#region 🔖️InteractionTopology
 /// 🕸️ Every node's visible port ids (`{nodeId}@{portId}`) — read-only twin of the sibling surface's
 /// own projection, so a world pick in this viewer names the exact same declared target ids.
-fn generation3d_view_port_ids_by_node(fixture: &semio_framework_artifact_flow_flow::FlowHostDocument) -> std::collections::BTreeMap<String, Vec<String>> {
-    let (graph_nodes, _) = crate::standards::v1::subsets::any::schema::with_host(snapshot, |host| crate::standards::v1::subsets::any::schema::dag_host_document_to_workflow(&host.dag.host_document));
+fn generation3d_view_port_ids_by_node(host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot) -> std::collections::BTreeMap<String, Vec<String>> {
+    let (graph_nodes, _) = crate::standards::v1::subsets::any::schema::with_host(host_snapshot, |host| crate::standards::v1::subsets::any::schema::dag_host_snapshot_to_workflow(&host.dag.host_snapshot));
     graph_nodes.into_iter().map(|node| (node.id, node.inputs.into_iter().chain(node.outputs).map(|port| port.id).collect())).collect()
 }
 //#endregion 🔖️InteractionTopology
@@ -1271,7 +1278,7 @@ impl semio_framework_plugin::ArtifactViewer for Generation3dViewer {
     fn pending_effects(owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view: Option<&semio_framework_plugin::ViewModel>) -> Vec<semio_framework_plugin::Effect> {
         let windows = generation3d_view_preview_windows(view);
         let viewed = Generation3dViewedDocument::resolve(doc.snapshot, cfg.snapshot);
-        let servable = preview_eval::may_rearm(&viewed.snapshot().host_document);
+        let servable = preview_eval::may_rearm(&viewed.snapshot().host_snapshot);
         viewed.retire();
         let applied_edits = preview_eval::applied_document_edits_digest(doc.history);
         owner
@@ -1289,7 +1296,7 @@ impl semio_framework_plugin::ArtifactViewer for Generation3dViewer {
             return Ok(None);
         }
         let viewed = Generation3dViewedDocument::resolve(&request.snapshot, &request.config);
-        let preview_widget_ids = preview_eval::preview_widget_ids(&viewed.snapshot().host_document);
+        let preview_widget_ids = preview_eval::preview_widget_ids(&viewed.snapshot().host_snapshot);
         viewed.retire();
         Ok(Some(Box::new(preview_eval::PreviewEvalRunJob::<Generation3dViewInstanceOperationOwner>::new(request.instance_owner, request.port, request.identity, preview_widget_ids)?)))
     }
@@ -1478,10 +1485,10 @@ impl semio_framework_plugin::ArtifactViewer for Generation3dViewer {
             }
         }
         let viewed = Generation3dViewedDocument::resolve(doc.snapshot, cfg.snapshot);
-        let fixture = &viewed.snapshot().host_document;
+        let host_snapshot = &viewed.snapshot().host_snapshot;
         let mut ordered = Vec::new();
-        let ports_by_node = generation3d_view_port_ids_by_node(fixture);
-        for widget in &fixture.widgets {
+        let ports_by_node = generation3d_view_port_ids_by_node(host_snapshot);
+        for widget in &host_snapshot.widgets {
             let id = crate::widget_id(widget).to_string();
             ordered.push(TopologyNode { id: id.clone(), granularity: "node".into(), parent: None });
             for port in ports_by_node.get(&id).into_iter().flatten() {
@@ -1493,7 +1500,7 @@ impl semio_framework_plugin::ArtifactViewer for Generation3dViewer {
                 }
             }
         }
-        for synapse in &fixture.synapses {
+        for synapse in &host_snapshot.synapses {
             ordered.push(TopologyNode { id: synapse.id.clone(), granularity: "edge".into(), parent: None });
         }
         let mut domains = std::collections::BTreeMap::new();

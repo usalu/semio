@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/obj/3.0/geometry/snapshot.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/obj/3.0/geometry/snapshot.json",
   "title": "ObjSnapshot",
   "type": "object",
   "additionalProperties": false,
@@ -25,42 +25,42 @@
       "type": "array",
       "x-semio-state": "artifact",
       "items": {
-        "$ref": "https://semio.tech/schema/s/stdio/obj/3.0/geometry/artifact.json#/$defs/ObjVertex"
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/obj/3.0/geometry/artifact.json#/$defs/ObjVertex"
       }
     },
     "texcoords": {
       "type": "array",
       "x-semio-state": "artifact",
       "items": {
-        "$ref": "https://semio.tech/schema/s/stdio/obj/3.0/geometry/artifact.json#/$defs/ObjTexCoord"
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/obj/3.0/geometry/artifact.json#/$defs/ObjTexCoord"
       }
     },
     "normals": {
       "type": "array",
       "x-semio-state": "artifact",
       "items": {
-        "$ref": "https://semio.tech/schema/s/stdio/obj/3.0/geometry/artifact.json#/$defs/ObjNormal"
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/obj/3.0/geometry/artifact.json#/$defs/ObjNormal"
       }
     },
     "faces": {
       "type": "array",
       "x-semio-state": "artifact",
       "items": {
-        "$ref": "https://semio.tech/schema/s/stdio/obj/3.0/geometry/artifact.json#/$defs/ObjFace"
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/obj/3.0/geometry/artifact.json#/$defs/ObjFace"
       }
     },
     "groups": {
       "type": "array",
       "x-semio-state": "artifact",
       "items": {
-        "$ref": "https://semio.tech/schema/s/stdio/obj/3.0/geometry/artifact.json#/$defs/ObjGroup"
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/obj/3.0/geometry/artifact.json#/$defs/ObjGroup"
       }
     },
     "objects": {
       "type": "array",
       "x-semio-state": "artifact",
       "items": {
-        "$ref": "https://semio.tech/schema/s/stdio/obj/3.0/geometry/artifact.json#/$defs/ObjObject"
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/obj/3.0/geometry/artifact.json#/$defs/ObjObject"
       }
     },
     "mtllib": {
@@ -71,21 +71,21 @@
       "type": "array",
       "x-semio-state": "artifact",
       "items": {
-        "$ref": "https://semio.tech/schema/s/stdio/obj/3.0/geometry/artifact.json#/$defs/ObjUsemtlRange"
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/obj/3.0/geometry/artifact.json#/$defs/ObjUsemtlRange"
       }
     },
     "smoothingGroups": {
       "type": "array",
       "x-semio-state": "artifact",
       "items": {
-        "$ref": "https://semio.tech/schema/s/stdio/obj/3.0/geometry/artifact.json#/$defs/ObjSmoothingRange"
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/obj/3.0/geometry/artifact.json#/$defs/ObjSmoothingRange"
       }
     },
     "unknownStatements": {
       "type": "array",
       "x-semio-state": "artifact",
       "items": {
-        "$ref": "https://semio.tech/schema/s/stdio/obj/3.0/geometry/artifact.json#/$defs/ObjUnknownStatement"
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/obj/3.0/geometry/artifact.json#/$defs/ObjUnknownStatement"
       }
     }
   }

@@ -6,7 +6,7 @@ MCP server exposing the repo CLI's GraphQL surface to agent clients.
 
 ## 🧬️schema
 
-Scope `repo.client.mcp` (`https://semio.tech/schema/repo/client/mcp/schema.json`).
+Scope `repo.client.mcp` (`https://json.schemas.assets.semio-tech.com/repo/client/mcp/schema.json`).
 
 - `🧬️schema/🔗️.graphql` — the normative SDL: the query, mutation, input, enum and object types the CLI
   executor answers and the VS Code extension's typed documents are written against.

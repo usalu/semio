@@ -16,11 +16,11 @@ pub struct RenameFlowWidget {
 }
 
 /// ✏️ Renames a widget id (rewiring synapses and layout) purely in the fixture; `None` if the target
-/// id is blank, unchanged, or already taken. Operates on the live `semio_framework_artifact_flow_flow::FlowHostDocument` (via
-/// `to_host_document`/`from_host_document`) rather than `FlowSnapshot`'s own composed `content` handle.
+/// id is blank, unchanged, or already taken. Operates on the live `semio_framework_artifact_flow_flow::FlowHostSnapshot` (via
+/// `to_host_snapshot`/`from_host_snapshot`) rather than `FlowSnapshot`'s own composed `content` handle.
 fn renamed_fixture(snapshot: &FlowSnapshot, old_id: &str, new_id: &str) -> Option<FlowSnapshot> {
     let trimmed = new_id.trim();
-    let mut fixture = snapshot.to_host_document();
+    let mut fixture = snapshot.to_host_snapshot();
     if trimmed.is_empty() || trimmed == old_id || fixture.widgets.iter().any(|widget| widget_id(widget) == trimmed) {
         fixture.retire_cold();
         return None;
@@ -51,7 +51,7 @@ fn renamed_fixture(snapshot: &FlowSnapshot, old_id: &str, new_id: &str) -> Optio
     if let Some(layout) = fixture.layout.remove(old_id) {
         fixture.layout.insert(trimmed.into(), (*layout).clone());
     }
-    Some(FlowSnapshot::from_host_document(fixture))
+    Some(FlowSnapshot::from_host_snapshot(fixture))
 }
 
 /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the renamed widget used to also

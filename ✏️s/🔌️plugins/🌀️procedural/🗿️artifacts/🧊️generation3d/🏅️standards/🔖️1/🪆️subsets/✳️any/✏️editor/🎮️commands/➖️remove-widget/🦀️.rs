@@ -2,7 +2,7 @@
 
 use crate::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
 use crate::standards::v1::subsets::any::schema::mutations::text::Generation3dMutation;
-use crate::standards::v1::subsets::any::schema::{commit_host_document, with_host};
+use crate::standards::v1::subsets::any::schema::{commit_host_snapshot, with_host};
 use crate::Generation3dSnapshot;
 use semio_framework_os_flow::FlowEvalSession;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
@@ -17,11 +17,11 @@ pub struct RemoveWidget {
 /// 🕹️ No longer prunes selection itself — the framework auto-prunes `graph`'s selection after any
 /// document mutation that deletes a selected id (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
 pub fn handle(payload: &RemoveWidget, doc: &ArtifactView<'_, Generation3dSnapshot>, _cfg: &ConfigView<'_, Generation3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation>, Fault> {
-    let fixture = &doc.snapshot.host_document;
+    let host_snapshot = &doc.snapshot.host_snapshot;
     let target_id = &payload.widget_id;
-    with_host(fixture, |host| {
+    with_host(host_snapshot, |host| {
         if host.remove_widget(target_id).is_ok() {
-            let operations = commit_host_document(fixture, &host.host_document);
+            let operations = commit_host_snapshot(host_snapshot, &host.host_snapshot);
             Ok(Emit { artifact_mutations: operations, ..Default::default() })
         } else {
             Ok(Emit::default())

@@ -162,8 +162,8 @@ fn hop_effect(action: &str, window_id: &str, window_kind_id: &str) -> Effect {
 /// not JSON) and says nothing about who owes the next tick. Symmetry of encoding is not symmetry of
 /// continuation — a fault nothing in this process can clear owes no continuation at all. The run
 /// therefore neither starts on such a graph nor continues it.
-pub fn may_rearm(fixture: &semio_framework_artifact_flow_flow::FlowHostDocument) -> bool {
-    semio_framework_os_flow::unserved_flow_operator_kinds(fixture).is_empty()
+pub fn may_rearm(host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot) -> bool {
+    semio_framework_os_flow::unserved_flow_operator_kinds(host_snapshot).is_empty()
 }
 
 /// 🪟️ The one argument object every hop of the chain carries, on the redispatch and on the
@@ -446,9 +446,9 @@ pub fn widget_previews(widget: &semio_framework_artifact_flow_flow::Widget) -> b
     matches!(widget, semio_framework_artifact_flow_flow::Widget::Neuron { preview: true, .. } | semio_framework_artifact_flow_flow::Widget::OutputPreview { .. } | semio_framework_artifact_flow_flow::Widget::Cluster { .. })
 }
 
-/// 🪪️ Every preview-bearing widget id of a fixture, in declaration order.
-pub fn preview_widget_ids(fixture: &semio_framework_artifact_flow_flow::FlowHostDocument) -> Vec<String> {
-    fixture.widgets.iter().filter(|widget| widget_previews(widget)).map(|widget| crate::widget_id(widget).to_string()).collect()
+/// 🪪️ Every preview-bearing widget id of a host_snapshot, in declaration order.
+pub fn preview_widget_ids(host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot) -> Vec<String> {
+    host_snapshot.widgets.iter().filter(|widget| widget_previews(widget)).map(|widget| crate::widget_id(widget).to_string()).collect()
 }
 
 pub fn mesh_has_preview_geometry(data: &MeshData) -> bool {
@@ -526,7 +526,7 @@ pub const PREVIEW_FIT_PADDING: f64 = 1.12;
 /// out from under an edit". Every re-evaluation of one example answers the same revision, which is
 /// what makes the hosts' framing one-shot at all
 /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️boot-camera-framing-2026-09-15.md`).
-pub fn preview_fit_revision(fixture: &semio_framework_artifact_flow_flow::FlowHostDocument) -> u32 {
+pub fn preview_fit_revision(host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot) -> u32 {
     let mut hash = 0xcbf2_9ce4_8422_2325u64;
     let mut eat = |text: &str| {
         for byte in text.as_bytes() {
@@ -536,12 +536,12 @@ pub fn preview_fit_revision(fixture: &semio_framework_artifact_flow_flow::FlowHo
         hash ^= 0xff;
         hash = hash.wrapping_mul(0x0000_0100_0000_01b3);
     };
-    eat(&fixture.schema);
-    for widget in &fixture.widgets {
+    eat(&host_snapshot.schema);
+    for widget in &host_snapshot.widgets {
         eat(crate::widget_id(widget));
         eat(widget_kind_tag(widget));
     }
-    for synapse in &fixture.synapses {
+    for synapse in &host_snapshot.synapses {
         eat(&synapse.from);
         eat(&synapse.from_port);
         eat(&synapse.to);
@@ -564,8 +564,8 @@ fn widget_kind_tag(widget: &semio_framework_artifact_flow_flow::Widget) -> &str 
 
 /// 🎯️ The `World3dScene.fit_json` every generation3d preview window publishes: frame the delivered
 /// bounds once per document, never again while that document is on screen.
-pub fn preview_fit_json(fixture: &semio_framework_artifact_flow_flow::FlowHostDocument, meshes_json: &str) -> String {
-    semio_framework_ui::wgpu::world3d_fit_json(preview_fit_revision(fixture), PREVIEW_FIT_PADDING, preview_payload_bounds(meshes_json))
+pub fn preview_fit_json(host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot, meshes_json: &str) -> String {
+    semio_framework_ui::wgpu::world3d_fit_json(preview_fit_revision(host_snapshot), PREVIEW_FIT_PADDING, preview_payload_bounds(meshes_json))
 }
 
 /// 🔌️ Half-extent (world units) of the axis cross drawn for a [`PreviewInlineGeometry::Point`].
@@ -646,9 +646,9 @@ pub fn mesh_data_for_preview_handle(handle: &str, tolerance: f64, session: Optio
 /// 🧊 Geometry handles on preview widgets that still need an extension tessellate. Takes the ALREADY
 /// PARSED evaluation: its caller parses the same document one line earlier to collect the live
 /// handle set, and re-parsing a whole eval session per tick is the cost this path exists to avoid.
-pub fn pending_preview_tessellate_handles(eval: &dsl::json::Value, fixture: &semio_framework_artifact_flow_flow::FlowHostDocument, session: &FlowEvalSession) -> Vec<String> {
+pub fn pending_preview_tessellate_handles(eval: &dsl::json::Value, host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot, session: &FlowEvalSession) -> Vec<String> {
     let mut handles = Vec::new();
-    for id in preview_widget_ids(fixture) {
+    for id in preview_widget_ids(host_snapshot) {
         for handle in preview_channel_items_for_widget(eval, &id).into_iter().filter_map(|item| (!item.handle.is_empty()).then_some(item.handle)) {
             if session.preview_diagnostics(&handle).is_some() {
                 continue;
@@ -666,19 +666,25 @@ pub fn pending_preview_tessellate_handles(eval: &dsl::json::Value, fixture: &sem
 /// mints the `req`, parks the continuation and dispatches the mesh JSON straight back into the
 /// addressed surface — a hand-minted `RequestId` owns no registry slot, so every tessellation result
 /// would be discarded and the 3d preview could never paint.
-pub fn preview_tessellate_invocations(window_id: &str, window_kind_id: &str, session: &mut FlowEvalSession, fixture: &semio_framework_artifact_flow_flow::FlowHostDocument, tolerance: f64) -> Vec<ExtensionInvocation> {
+pub fn preview_tessellate_invocations(window_id: &str, window_kind_id: &str, session: &mut FlowEvalSession, host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot, tolerance: f64) -> Vec<ExtensionInvocation> {
     let Ok(geometry_extension_address) = geometry_extension_address() else {
         return Vec::new();
     };
     let tolerance_bits = tolerance.to_bits();
+    // 🖼️ The PAINTED evaluation, not the live walk's own: `retain_preview_meshes` below drops every
+    // mesh whose handle is not in this set, and a node that is merely recomputing has no handle in
+    // the live answer at all — so retaining against it threw away the very mesh the preview is still
+    // showing, and the geometry could not come back without a fresh round trip it had already paid
+    // (`📓️slider-latency-incremental-eval-2026-09-15.md` §3.2). A stale handle that already holds a
+    // mesh is skipped by `pending_preview_tessellate_handles`, so nothing is re-tessellated for it.
     let (live, pending) = {
-        let eval_json = session.eval_json();
+        let eval_json = session.painted_eval_json();
         if eval_json.is_empty() {
             return Vec::new();
         }
         let eval = dsl::json::parse(eval_json).unwrap_or_else(|_| dsl::json::Value::Object(dsl::json::Object::new()));
         let mut live = std::collections::HashSet::new();
-        for widget in &fixture.widgets {
+        for widget in &host_snapshot.widgets {
             let id = crate::widget_id(widget).to_string();
             for item in preview_channel_items_for_widget(&eval, &id) {
                 if !item.handle.is_empty() {
@@ -686,7 +692,7 @@ pub fn preview_tessellate_invocations(window_id: &str, window_kind_id: &str, ses
                 }
             }
         }
-        (live, pending_preview_tessellate_handles(&eval, fixture, session))
+        (live, pending_preview_tessellate_handles(&eval, host_snapshot, session))
     };
     session.retain_preview_meshes(&live);
     let mut invocations = Vec::new();
@@ -717,6 +723,33 @@ pub fn preview_tessellate_invocations(window_id: &str, window_kind_id: &str, ses
 pub struct FlowEvalTickOutcome {
     pub extension_invocations: Vec<ExtensionInvocation>,
     pub publication: FlowEvalPublication,
+    /// 🕸️ Whether this tick moved the per-node evaluation census the GRAPH body paints. The preview
+    /// is republished on every hop because that is what delivers geometry; the graph is the most
+    /// expensive body in the app and only its computing chrome depends on the chain, so it is
+    /// republished exactly when that chrome moved (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    pub census_moved: bool,
+}
+
+/// 🐢️ What ONE evaluation hop of the chain actually invalidates: the preview window it is addressed
+/// to, the panels that read the chain's own status back, and — only when this hop moved the per-node
+/// census — the graph body that paints the computing chrome.
+///
+/// 🐛️ Every hop used to declare the default [`UiDirtyScope::Full`], so one slider step paid THREE
+/// whole-shell refreshes of 452, 574 and 558 ms, each re-rendering `procedural.play.main` at a
+/// 183–266 ms patch install, for a walk whose own guest work measured 2.3 ms. Worse, the geometry a
+/// hop published could not reach the screen until that refresh finished: the first mesh landed 474 ms
+/// after the tick that produced it had already settled
+/// (`📓️slider-latency-incremental-eval-2026-09-15.md` §1).
+///
+/// 🚦️ Never [`UiDirtyScope::None`]: the host polls `pending_effects` once per `refreshUi`, so a hop
+/// that asked for no refresh at all would be the last hop a settled chain could ever take — the same
+/// reason [`owe_attached_previews_carrying`] carries a run start rather than trusting a poll.
+pub fn chain_ui_scope(preview_body: &str, graph_body: Option<&str>, panel_bodies: &[&str], census_moved: bool) -> semio_framework::kernel::UiDirtyScope {
+    let mut window_bodies = vec![preview_body.to_string()];
+    if census_moved {
+        window_bodies.extend(graph_body.map(str::to_string));
+    }
+    semio_framework::kernel::UiDirtyScope::Partial { window_bodies, panel_bodies: panel_bodies.iter().map(|body| (*body).to_string()).collect(), utilities: false, tools: false, engagements: false, measures: false, labels: false }
 }
 
 /// 🏁️ Whether the tick that just ran leaves its window UNFINISHED — the one rule the run job's
@@ -749,7 +782,7 @@ pub fn tick_is_unfinished(more: bool, parked_extension_invocations: usize) -> bo
 pub fn evaluate_tick(
     window_id: &str,
     window_kind_id: &str,
-    fixture: &semio_framework_artifact_flow_flow::FlowHostDocument,
+    host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot,
     tolerance: f64,
     session: &mut FlowEvalSession,
     retained_eval: Option<&str>,
@@ -758,7 +791,8 @@ pub fn evaluate_tick(
     let started_us = semio_framework_job::runtime_diagnostics_enabled().then(semio_framework_job::default_now_us).flatten();
     // ▶️ The armed tick is now RUNNING, so its latch is free for whatever THIS tick decides to arm.
     session.begin_window_tick(window_id);
-    let mut host = flow_host_with_session(fixture, session);
+    let census_before = node_census_digest(session.status_json());
+    let mut host = flow_host_with_session(host_snapshot, session);
     let more = session.tick(&mut host, turn_started_us);
     let pending_extension_evals = host.take_pending_extension_evals();
     host.retire_cold();
@@ -792,7 +826,7 @@ pub fn evaluate_tick(
         extension_invocations.push(ExtensionInvocation::new(pending.extension_id, "evaluate", request_json, "flowEvalResolve"));
     }
     if extension_invocations.is_empty() && !more {
-        extension_invocations.extend(preview_tessellate_invocations(window_id, window_kind_id, session, fixture, tolerance));
+        extension_invocations.extend(preview_tessellate_invocations(window_id, window_kind_id, session, host_snapshot, tolerance));
     }
     // ⏳️ A tick that parked extension work is emphatically NOT FINISHED, whatever the evaluation's own
     // `more` says: `!more` is exactly the branch above that parks `tessellate`, and a window recorded
@@ -801,14 +835,63 @@ pub fn evaluate_tick(
     session.note_window_tick_outcome(window_id, tick_is_unfinished(more, extension_invocations.len()));
     if !extension_invocations.is_empty() {
         session.note_window_extensions_in_flight(window_id, extension_invocations.len());
-    } else if more && !may_rearm(fixture) {
+    } else if more && !may_rearm(host_snapshot) {
         session.abandon_window_tick(window_id);
     }
     let publication = session.eval_publication_for(retained_eval);
     if let (Some(started_us), Some(finished_us)) = (started_us, started_us.and_then(|_| semio_framework_job::default_now_us())) {
         semio_framework_os_flow::record_flow_eval_step(finished_us.saturating_sub(started_us));
     }
-    FlowEvalTickOutcome { extension_invocations, publication }
+    FlowEvalTickOutcome { extension_invocations, publication, census_moved: node_census_digest(session.status_json()) != census_before }
+}
+
+/// 🕸️ One number over the part of the per-node census that is worth re-rendering the GRAPH body for:
+/// whether the computing chrome is on screen at all, and which nodes carry a fault the user has to
+/// see.
+///
+/// ⚖️ Deliberately NOT the whole census. Every hop of a live evaluation reshuffles `computing` and
+/// `queued` among nodes that are all already busy, and paying a 188–265 ms `patch.install` of
+/// `procedural.play.main` for that reshuffle costs four times per evaluation — measured at 974 ms of
+/// a 2 529 ms re-evaluation, in front of the very geometry whose progress it is reporting. A progress
+/// indicator may not outrank the thing whose progress it reports: the chrome is painted when it
+/// APPEARS and when it CLEARS, a fault moves it whenever it lands, and the per-hop advance the user
+/// actually watches is the preview's own status pill, which is republished every hop
+/// (`📓️slider-latency-incremental-eval-2026-09-15.md` §3.1).
+fn node_census_digest(status_json: &str) -> u64 {
+    const OFFSET: u64 = 0xcbf2_9ce4_8422_2325;
+    const PRIME: u64 = 0x0000_0100_0000_01b3;
+    let mut digest = OFFSET;
+    for byte in census_chrome_marks(status_json).as_bytes() {
+        digest = (digest ^ u64::from(*byte)).wrapping_mul(PRIME);
+    }
+    digest
+}
+
+/// 🕸️ The census reduced to what the graph body actually paints differently: one mark per widget that
+/// is NOT `ok` — `e` for an error, `b` for a blocked port, `·` for merely busy — in declaration
+/// order. Two censuses that differ only in WHICH busy node is the active one reduce to the same
+/// marks, and an empty answer means the chrome is off.
+pub fn census_chrome_marks(status_json: &str) -> String {
+    let Ok(status) = dsl::json::parse(status_json) else {
+        return status_json.to_string();
+    };
+    let Some(map) = status.as_object() else {
+        return status_json.to_string();
+    };
+    let mut marks = String::new();
+    for (id, entry) in map.iter() {
+        match entry.get("status").and_then(dsl::json::Value::as_str).unwrap_or("ok") {
+            "ok" => continue,
+            "error" => {
+                marks.push('e');
+                marks.push_str(entry.get("message").and_then(dsl::json::Value::as_str).unwrap_or_default());
+            }
+            "blocked" => marks.push('b'),
+            _ => marks.push('\u{b7}'),
+        }
+        marks.push_str(id);
+    }
+    marks
 }
 
 /// ✅️ Folds one `evaluate` answer into the retained session and settles the window's outstanding
@@ -926,7 +1009,7 @@ pub fn resolve_tessellate(payload: &FlowTessellateResolve, session: &mut FlowEva
 /// 📈️ The per-widget half: the evaluation's own `error`, or the `widgetErrors` map of every widget
 /// whose evaluation carries one. Surface-neutral — it reads the evaluation text and the fixture the
 /// surface is looking at, nothing else.
-pub fn preview_status_json(eval_json: &str, fixture: &semio_framework_artifact_flow_flow::FlowHostDocument) -> Option<String> {
+pub fn preview_status_json(eval_json: &str, host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot) -> Option<String> {
     let eval = dsl::json::parse(eval_json).ok()?;
     if eval.get("error").and_then(dsl::json::Value::as_str).is_some() {
         let mut error_object = dsl::json::Object::new();
@@ -934,7 +1017,7 @@ pub fn preview_status_json(eval_json: &str, fixture: &semio_framework_artifact_f
         return Some(dsl::json::to_string(&dsl::json::Value::Object(error_object)));
     }
     let mut errors = dsl::json::Object::new();
-    for widget in &fixture.widgets {
+    for widget in &host_snapshot.widgets {
         let id = crate::widget_id(widget).to_string();
         let Some(entry) = eval.get(&id) else { continue };
         if let Some(error) = entry.get("error").and_then(dsl::json::Value::as_str) {

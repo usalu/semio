@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/reasoning/wires/diff.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/reasoning/wires/diff.json",
   "title": "WiresDiff",
   "type": "object",
   "additionalProperties": false,
@@ -17,13 +17,13 @@
           "type": "null"
         },
         {
-          "$ref": "https://semio.tech/schema/s/reasoning/wires/artifact.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/reasoning/wires/artifact.json"
         }
       ],
       "x-semio-state": "artifact"
     },
     "wiresFixture": {
-      "$ref": "https://semio.tech/schema/framework/value/schema.json",
+      "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json",
       "x-semio-state": "artifact"
     },
     "content": {
@@ -32,14 +32,14 @@
           "type": "null"
         },
         {
-          "$ref": "https://semio.tech/schema/os/store/child.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child.json"
         }
       ],
       "x-semio-state": "artifact",
       "x-semio-child-kind": "s.stdio.semio"
     },
     "meta": {
-      "$ref": "https://semio.tech/schema/framework/value/schema.json",
+      "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json",
       "x-semio-state": "artifact"
     }
   }

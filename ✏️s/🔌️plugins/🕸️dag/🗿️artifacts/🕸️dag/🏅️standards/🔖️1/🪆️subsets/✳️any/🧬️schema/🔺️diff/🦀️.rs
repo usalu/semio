@@ -12,10 +12,10 @@
 //! already dead (never constructed anywhere; `DagPlayApp` never overrides `whole_document_operation`)
 //! and is exactly the forbidden whole-document-replace-via-diff shape `📌️important.md`'s vocabulary
 //! policy bans. `DagNodesDelta`/`DagEdgesDelta`/`DagNodePatchEntry`/`DagNodeExtraPatch*`/
-//! `DagEdgePatchEntry`/`DagNodeSpecList`/`DagHostDocumentEdgeList` are all dead with it — confirmed zero
+//! `DagEdgePatchEntry`/`DagNodeSpecList`/`DagHostSnapshotEdgeList` are all dead with it — confirmed zero
 //! remaining references after this pass.
 
-use crate::{DagContentChild, DagHostDocumentEdge, DagNodeSpec, DagSnapshot};
+use crate::{DagContentChild, DagHostSnapshotEdge, DagNodeSpec, DagSnapshot};
 use crate::schema::DagArtifact;
 use protocol::MutationDiff;
 use framework_schema::ArtifactSchema;
@@ -77,7 +77,7 @@ pub struct DagStringList {
 /// via `crate::dag_working_scene`, apply its own specific semantics to a clone of
 /// that scene, then mint+cache a whole new content handle here — the "mint+cache whole handle, never
 /// apply-then-capture" pattern flow's `diff_replace_content`/writer's `diff_set_text` established.
-pub fn diff_replace_content(nodes: Vec<DagNodeSpec>, edges: Vec<DagHostDocumentEdge>) -> DagDiff {
+pub fn diff_replace_content(nodes: Vec<DagNodeSpec>, edges: Vec<DagHostSnapshotEdge>) -> DagDiff {
     DagDiff { content: Some(crate::dag_content_child_with_owner(nodes, edges)), ..Default::default() }
 }
 //#endregion 🔖️ReplaceContent

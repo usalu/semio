@@ -608,11 +608,7 @@ function commandIngressFaultDisplay(status: WireVariant | undefined): string {
   if (option && option.tag === "none") return "unknown fault";
   const raw = option && option.tag === "some" ? option.val : fault && typeof fault === "object" && "val" in fault ? (fault as { readonly val?: unknown }).val : fault;
   if (raw === undefined || raw === null) return "unknown fault";
-  const bytes = coerceWireBytes(raw);
-  const decoded = faultDisplayMessage(Array.from(bytes), decodePackValue);
-  if (decoded !== "unknown fault") return decoded;
-  const text = new TextDecoder().decode(bytes).trim();
-  return text.length > 0 ? text : decoded;
+  return faultDisplayMessage(Array.from(coerceWireBytes(raw)), decodePackValue);
 }
 
 /** 🔀️ `Effect::SendMessage{target: Shell{instance}}` → the raw `AppFrame` bytes it wraps. The
@@ -986,7 +982,7 @@ function wireEffectToFriendly(effect: WireVariant): Effect | null {
     case "request-sync":
       return "requestSync";
     case "load-document":
-      return { loadDocument: { pack: Array.from(coerceWireBytes(val.pack)), spr: Array.from(coerceWireBytes(val.spr)) } };
+      return { loadDocument: { pack: Array.from(coerceWireBytes(val.docPack)), spr: Array.from(coerceWireBytes(val.spr)) } };
     // ⬇️ ONE decoder for both renderers (`🖼️wire-turn.ts`) — this door used to read `encoding` flat,
     // and a WIT `option<string>` reaches it as `{tag:"some", val}`, so `typeof … === "string"` was
     // always false and every binary export was saved as base64 TEXT under a binary file name.
@@ -1330,6 +1326,52 @@ const pendingCoalescedTurns = new Map<string, PluginTurnPayload>();
 const pendingLifecycleTurns = new Map<string, number>();
 const tearingDownPluginActors = new Set<string>();
 
+/** 🧾️ [DEBUG] Crossing census — every worker round trip this host posts, classified by the events it
+ * carried and by what came back, so "172 `message` crossings carrying nothing" becomes a taxonomy
+ * instead of one bucket. Read off `globalThis.__semioCrossingCensus` by `🐍️react-hop-cost-probe.mjs`. */
+type CrossingCensusRowV1 = { crossings: number; events: number; patches: number; effects: number; width: Record<number, number> };
+const crossingCensusV1 = new Map<string, CrossingCensusRowV1>();
+
+const typedOpAckCensusV1 = new Map<string, { acks: number; minSequence: number; maxSequence: number }>();
+
+function messageCrossingClassV1(event: ShardEventEnvelope): string {
+  const payload = event.payload as { readonly source?: { readonly tag?: string; readonly val?: string }; readonly payload?: readonly number[] } | undefined;
+  const tag = payload?.source?.tag ?? "?";
+  const bytes = payload?.payload;
+  if (tag === "shell" && Array.isArray(bytes) && TYPED_OPERATION_ACK_MAGIC.every((byte, index) => bytes[index] === byte)) {
+    const token = new DataView(Uint8Array.from(bytes.slice(TYPED_OPERATION_ACK_MAGIC.length)).buffer);
+    const operation = String(token.getBigUint64(4, true));
+    const sequence = token.getUint32(20, true);
+    const row = typedOpAckCensusV1.get(operation) ?? { acks: 0, minSequence: sequence, maxSequence: sequence };
+    row.acks += 1;
+    row.minSequence = Math.min(row.minSequence, sequence);
+    row.maxSequence = Math.max(row.maxSequence, sequence);
+    typedOpAckCensusV1.set(operation, row);
+    return "message.typed-op-ack";
+  }
+  return `message.${tag}`;
+}
+
+function crossingCensusClassV1(events: readonly ShardEventEnvelope[]): string {
+  if (events.length === 0) return "(none)";
+  const kinds = new Set(events.map((event) => (event.kind === "message" ? messageCrossingClassV1(event) : event.kind)));
+  return [...kinds].sort().join("+");
+}
+
+function noteCrossingCensusV1(events: readonly ShardEventEnvelope[], result: WireTurnResult | null): void {
+  const key = crossingCensusClassV1(events);
+  const row = crossingCensusV1.get(key) ?? { crossings: 0, events: 0, patches: 0, effects: 0, width: {} };
+  row.crossings += 1;
+  row.events += events.length;
+  row.patches += result?.uiPatches.length ?? 0;
+  row.effects += result?.effects.length ?? 0;
+  row.width[events.length] = (row.width[events.length] ?? 0) + 1;
+  crossingCensusV1.set(key, row);
+}
+
+Object.defineProperty(globalThis, "__semioCrossingCensus", { configurable: true, get: () => Object.fromEntries(crossingCensusV1), set: () => {} });
+Object.defineProperty(globalThis, "__semioTypedOpAckCensus", { configurable: true, get: () => Object.fromEntries(typedOpAckCensusV1), set: () => {} });
+
 let sharedPluginTurnScheduler: TurnScheduler<PendingPluginTurn, ShardBudget> | null = null;
 /** 🧵️ Reads `getShardClient()` INSIDE `runTurn` (not once at construction) purely so a test can swap
  * the module-private `sharedShardClient` for a fake between calls without this scheduler ever pinning
@@ -1342,11 +1384,17 @@ function getPluginTurnScheduler(): TurnScheduler<PendingPluginTurn, ShardBudget>
       if (payload.kind === "lifecycle") releasePendingLifecycleTurn(actorId);
       if (payload.kind === "operation" && payload.coalesceMapKey) pendingCoalescedTurns.delete(payload.coalesceMapKey);
       try {
-        if (payload.kind === "lifecycle") { payload.resolve(await runPluginLifecycleTurn(payload.owner, payload.work, budget)); return; }
+        if (payload.kind === "lifecycle") {
+          const settled = await runPluginLifecycleTurn(payload.owner, payload.work, budget);
+          noteCrossingCensusV1(payload.work.kind === "issued-ui-acks" ? payload.work.entries.map(() => ({ kind: "patch-ack", payload: null })) : [{ kind: `lifecycle.${payload.work.kind}`, payload: null }], settled.turn);
+          payload.resolve(settled);
+          return;
+        }
         payload.activation?.assertActive();
         const raw = await (payload.activation ? payload.activation.turn(payload.events, budget, payload.commandPage) : getShardClient().turn(actorId, payload.events, budget, payload.commandPage));
         payload.activation?.assertActive();
         const result = coerceTurnResult(raw);
+        noteCrossingCensusV1(payload.commandPage ? [...payload.events, { kind: "command-page", payload: null }] : payload.events, result);
         for (const waiter of payload.waiters) waiter.resolve(result);
       } catch (error) {
         if (payload.kind === "lifecycle") payload.reject(error);
@@ -1468,6 +1516,41 @@ function wirePatchSurfaceId(patch: WireUiPatch): string | null {
   return patch.surface && body ? retainedSurfaceId(wireNatural(patch.surface.instance), body) : null;
 }
 
+/** 🧺️ Splits one turn's patch page into consecutive ADMISSION ROUNDS: a surface may appear at most once
+ * per round, a repeat opens the next round, and the guest's publication order survives unchanged (the
+ * returned numbers are the patch's own index in `turn.uiPatches`, which is what
+ * `captureUiPatchAuthority(turn.original, index)` is addressed by).
+ *
+ * 🐛️ A turn page holds EVERY patch that was ready when the turn assembled its result (the batching lane
+ * removed the one-patch floor on 2026-09-15), and a run's first progress tick re-dirties the tool-run
+ * panel while its own first patch is still in the page — so one turn legitimately carries
+ * `[…, "1:framework.panel.toolRun", …, "1:framework.panel.toolRun"]` as two consecutive deltas of the
+ * same surface. The host admitted all of them BEFORE acknowledging any, so the second met the first's
+ * still-open wire and receipt outbox in `OwnedUiInstance.beginPatch` and threw
+ * `plugin-ui.intake-rejected:intake:Foreign or busy instance surface owner`; the throw skipped the whole
+ * round's close, and the panel's cell stayed busy for the rest of the instance's life — every later
+ * refresh and every `toolRunAbort`/`toolRunFinalize` rejected (peer ticket
+ * 26/09/13/INTERACTIVE-TOOLS-VISIBLE-PROCESS, `abort-finalize-midrun-*.txt`, :6013 2026-09-15 17:58).
+ * Two deltas of one surface are a chain, not a conflict: they must be applied one after the other, which
+ * is exactly what a round boundary is. */
+export function uiPatchAdmissionRoundsV1(surfaceIds: readonly (string | null)[]): readonly (readonly number[])[] {
+  const rounds: number[][] = [];
+  let current: number[] = [];
+  let seen = new Set<string>();
+  for (const [index, surfaceId] of surfaceIds.entries()) {
+    const key = surfaceId ?? `unnamed#${index}`;
+    if (seen.has(key)) {
+      rounds.push(current);
+      current = [];
+      seen = new Set<string>();
+    }
+    seen.add(key);
+    current.push(index);
+  }
+  if (current.length > 0) rounds.push(current);
+  return rounds;
+}
+
 function hasRequiredUiPatches(results: readonly WireTurnResult[], requiredSurfaceIds?: ReadonlySet<string>): boolean {
   if (!requiredSurfaceIds) return results.some((result) => result.uiPatches.length > 0);
   if (requiredSurfaceIds.size === 0) return true;
@@ -1527,7 +1610,16 @@ const PLUGIN_UI_CLOSE_STEPS_PER_NODE = 16;
  * The ceiling is a backstop and never the progress guarantee — {@link PLUGIN_UI_CLOSE_ZERO_PROGRESS_STEPS}
  * is. `📓️close-ladder-budget-2026-09-12.md` §3.1 is right that raising a budget is not a fix; this is
  * not a raise but a re-derivation of a number that was measuring the wrong thing, landed together with
- * a STRICTER stall rule (33 steps to a named fault, where 4 096 unnamed ones used to grind first). */
+ * a STRICTER stall rule (33 steps to a named fault, where 4 096 unnamed ones used to grind first).
+ *
+ * What it is compared against is a count of close TURNS — runs of consecutive steps reporting the same
+ * ladder phase — and not of steps. `closeChild` caps every step at ONE item however large the grant
+ * (`uiGrant` offers 256), so a step count is a count of the retained BYTES under an instance and has
+ * nothing to do with the surfaces this bound is derived from: that mismatch is the same per-byte ladder
+ * the Flow domain's own session close had, where a 32 KB retained document needed 5 719 close turns
+ * against a declared bound of 4 096 (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
+ * `📓️flow-surface-followup-2026-09-15.md` §2.4). A turn is one retained item, so the count and the
+ * ceiling now measure the same quantity and a converged instance cannot exhaust it. */
 const retainedUiCloseStepCeilingV1 = (surfaces: number): number => Math.max(1, surfaces) * DEFAULT_UI_DOCUMENT_LIMITS.maxNodes * PLUGIN_UI_CLOSE_STEPS_PER_NODE;
 /** 🚪️ Consecutive close steps that may release NOTHING before the ladder is declared stalled.
  *
@@ -1537,6 +1629,45 @@ const retainedUiCloseStepCeilingV1 = (surfaces: number): number => Math.max(1, s
  * released; a ladder that keeps answering with none is not slow, it is stuck, and the fault names the
  * phase it is stuck in instead of a step count. */
 const PLUGIN_UI_CLOSE_ZERO_PROGRESS_STEPS = 32;
+/** 🪜️ One step of a retained-UI close ladder, as `OwnedUiInstance.closeStep` reports it. */
+export interface RetainedUiCloseLadderStepV1 { readonly phase: string; readonly bytes: number }
+/** 🪜️ The running account of ONE whole-instance UI close: how many TURNS it has spent and the fault
+ * that ends it, if any. */
+export interface RetainedUiCloseLadderV1 { readonly ceiling: number; readonly turns: number; admit(step: RetainedUiCloseLadderStepV1): string | null }
+/** 🪜️ The namespace `OwnedUiInstance.closeStep` gives its OWN branches — the instance's retained items,
+ * one turn each: a lookup, a work-queue release, an input retirement, a receipt outbox, a wire, a
+ * surface, the instance itself. Every other phase a close step reports arrives through `closeChild`
+ * from a descendant and is payload UNDER the item the ladder is on, measured live on the converged
+ * hexagonal column at `node-field-retire:1085`, `typed-object-retire:1282`,
+ * `prepared-scene-source-close:3920` against `instance-surface-release:14`
+ * (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `🗑️generated/react-retire/phases/`). */
+const RETAINED_UI_CLOSE_OWNER_PHASE_PREFIX = "instance-";
+/** 🪜️ Prices a whole-instance UI close in retained ITEMS, never in the bytes under them.
+ *
+ * `closeChild` caps every ladder step at ONE item however large the grant (`uiGrant` offers 256), so
+ * counting steps counts an instance's retained BYTES — the quantity
+ * {@link retainedUiCloseStepCeilingV1} is explicitly NOT derived from. A turn here is one step in
+ * {@link RETAINED_UI_CLOSE_OWNER_PHASE_PREFIX}'s namespace, so the count and the ceiling measure the
+ * same quantity and a converged instance cannot exhaust it. The byte-aware
+ * {@link PLUGIN_UI_CLOSE_ZERO_PROGRESS_STEPS} rule stays on the STEPS, because a stall is a property
+ * of a step and not of a turn (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). */
+export function createRetainedUiCloseLadderV1(retainedSurfaces: number): RetainedUiCloseLadderV1 {
+  const ceiling = retainedUiCloseStepCeilingV1(retainedSurfaces);
+  let turns = 0;
+  let idle = 0;
+  return {
+    ceiling,
+    get turns() { return turns; },
+    admit(current: RetainedUiCloseLadderStepV1): string | null {
+      if (current.phase.startsWith(RETAINED_UI_CLOSE_OWNER_PHASE_PREFIX)) {
+        turns += 1;
+        if (turns > ceiling) return `plugin-ui.owner-close-budget-exhausted:${current.phase} after ${turns - 1} turns over ${retainedSurfaces} retained surfaces`;
+      }
+      idle = current.bytes > 0 ? 0 : idle + 1;
+      return idle > PLUGIN_UI_CLOSE_ZERO_PROGRESS_STEPS ? `plugin-ui.owner-close-stalled:${current.phase} released nothing for ${idle} steps` : null;
+    },
+  };
+}
 /** 🪃️ Intake steps per macrotask yield. One yield per 8 steps is the continuation cadence for TURNS,
  * where a step is a whole guest turn; an intake step is one wire phase costing ~3.4 µs, and a
  * Nakagin-scale world-3d publication takes 669 403 of them (`OwnedIntake drives a Nakagin-scale paged
@@ -1585,6 +1716,21 @@ function isPluginPatchAcceptance(value: readonly ShardEventEnvelope[] | PluginPa
  * operation never waits on the renderer, and the renderer shows as much of the process as it keeps up with. */
 const PLUGIN_OPERATION_REFRESH_SLICE_MS = 16;
 
+/** 🎞️ The LONGEST a draining settle may hold the actor past that slice because a surface it asked for
+ * is still reconciling — `DEFAULT_SHARD_BUDGET.wallMs`, the wall the host grants ONE crossing, which is
+ * also the wall the worker's own `MoreWork` drive spends before it crosses back.
+ *
+ * 🐛️ The owed clause below had no wall at all, and `settleOwesRequestedSurfacesV1` cannot tell "the
+ * guest is still reconciling MY surface" from "the guest is in `more-work` for something else": a live
+ * tool run keeps the guest in `more-work` for the whole run, so an owed refresh held the actor from the
+ * first frame to the last. Measured on release :6013 with a 100-object fill (ticket
+ * 26/09/13/INTERACTIVE-TOOLS-VISIBLE-PROCESS, `🔍️w5-fill-timeline-probe.ts --settle=20000`): 3
+ * refreshes instead of 12, one `refresh.turn` lasting 1 281 ms, and the scene stuck at 36–40 of 100
+ * provisional objects twenty seconds after the run completed. One crossing's wall is the grace the
+ * owed surface gets; past it the refresh lane is let back in and re-asks, which is the whole point of
+ * a lane that coalesces. */
+const PLUGIN_OPERATION_OWED_SLICE_MS = DEFAULT_SHARD_BUDGET.wallMs;
+
 /** 🎞️ Whether a draining settle should return now so a refresh the operation asked for can run: the operation asked for one,
  * the slice is spent, and nothing is owed — no acknowledgement to submit, no required surface still unpublished, and no
  * surface this settle itself ASKED the guest to publish still reconciling.
@@ -1597,7 +1743,8 @@ const PLUGIN_OPERATION_REFRESH_SLICE_MS = 16;
  * (ticket 26/09/13/INTERACTIVE-TOOLS-VISIBLE-PROCESS phase 8). A settle may hand the actor back to the operation's own
  * refresh lane only once it owes that lane nothing itself. */
 function settleYieldsToRefreshV1(results: readonly WireTurnResult[], startedMs: number, nowMs: number, acknowledgementsOwed: boolean, outstanding: boolean, owed = false): boolean {
-  return !acknowledgementsOwed && !outstanding && !owed && nowMs - startedMs >= PLUGIN_OPERATION_REFRESH_SLICE_MS && results.some((result) => effectsRequestOperationProgressV1(result.effects));
+  if (acknowledgementsOwed || outstanding) return false;
+  return nowMs - startedMs >= (owed ? PLUGIN_OPERATION_OWED_SLICE_MS : PLUGIN_OPERATION_REFRESH_SLICE_MS) && results.some((result) => effectsRequestOperationProgressV1(result.effects));
 }
 
 /** 🪟️ Whether a surface this settle ASKED to be made visible is still owed: the guest has not published it in this
@@ -1914,12 +2061,25 @@ export const SURFACE_RENDER_FAULT = "ui.surface-render";
  * `🗑️generated/react-s5/boot`). The surface's own terminal is already closed by the guest and the
  * surface re-produces on its next dirty pass, so the honest host answer is to report it and keep
  * the turn's remaining effects. Every OTHER `Error` frame IS this turn's answer and still throws. */
-function retainedUiRefreshEffects(instanceId: number, effects: readonly WireVariant[]): Effect[] {
+/** 🎞️ Shell frames a REFRESH settle produced, handed to the channel instead of dropped.
+ *
+ * 🐛️ Every non-`Error` shell frame used to be decoded and discarded here. A long typed operation
+ * publishes its process as unsolicited `Invocation` frames (`in_reply_to: 0`, carrying the dirty
+ * scope), and a refresh settle that runs DURING that operation is exactly where those frames land —
+ * so a live tool run's progress reached `AppChannelClient.publishOperationProgress` only until the
+ * first refresh took the actor, and then never again while the run continued (measured on release
+ * :6013, 100-object fill: progress frames stop at +442 ms, the run completes at ~2.1 s, the scene
+ * stays at 36–40 of 100 provisional objects 20 s later — ticket
+ * 26/09/13/INTERACTIVE-TOOLS-VISIBLE-PROCESS, `🔍️w5-fill-timeline-probe.ts --settle=20000`). A frame
+ * is the channel's to route, whichever settle produced it. */
+function retainedUiRefreshEffects(instanceId: number, effects: readonly WireVariant[], publishShellFrames: (frames: readonly Uint8Array[]) => void = () => {}): Effect[] {
   const requestedEffects: Effect[] = [];
+  const shellFrames: Uint8Array[] = [];
   for (const effect of effects) {
     const bytes = shellFrameBytes(effect, instanceId);
     if (bytes) {
       const frame = decodeAppFrame(bytes);
+      if (!("Error" in frame)) shellFrames.push(bytes);
       if ("Error" in frame) {
         const fault = decodeFaultFromWire(frame.Error.fault, decodePackValue);
         if (fault?.code === SURFACE_RENDER_FAULT) {
@@ -1934,6 +2094,7 @@ function retainedUiRefreshEffects(instanceId: number, effects: readonly WireVari
       if (requested) requestedEffects.push(requested);
     }
   }
+  if (shellFrames.length > 0) publishShellFrames(shellFrames);
   return requestedEffects;
 }
 
@@ -2099,6 +2260,15 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
    * 4 096-item ceiling on a single surface patch (a 180-object world scene exhausts it); 256 items /
    * 64 KiB per step keeps each slice sub-millisecond while the budget bounds a patch at ~1 M items. */
   const uiGrant = Object.freeze({ maxItems: 256, maxBytes: 65_536 });
+  /** 🚦 The instance's ONE owning intake. Every path that accepts UI patches for an instance — the
+   * `settlePluginTurn` accept callback of a command turn, the owed/drain settle, the ShellHost progress
+   * subscription's refresh, a job completion, the hot-swap close — enters through here, so a patch
+   * offered while another is open WAITS instead of meeting a busy surface cell. Keyed by the
+   * plugin-qualified instance id (never reused) so a hot swap that replaces the handle keeps the same
+   * queue, and backed by the file's own bounded {@link serializePerActor} rather than a second
+   * mechanism. The recursion over each round's acknowledgement turn deliberately does NOT re-enter:
+   * it is already inside this queue's one admission. */
+  const serializeInstanceUiIntake = <T,>(instanceId: number, run: () => Promise<T>): Promise<T> => serializePerActor(`ui-intake:${pluginId}#${instanceId}`, run);
   const closeIntake = async (instanceId: number, intake: OwnedUiPatchIntake): Promise<void> => {
     intake.beginClose();
     for (let step = 1; !intake.terminalIsEmpty(); step += 1) {
@@ -2109,35 +2279,14 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
     }
     uiIntakesByInstance.get(instanceId)?.delete(intake);
   };
-  const acceptUiPatches = async (instanceId: number, turn: WireTurnResult): Promise<PluginPatchAcceptance> => {
-    if (turn.uiPatches.length === 0) return { acknowledgements: [], turns: [] };
-    requireActorId(instanceId);
-    const lease = lifecycleByInstance.get(instanceId);
-    const owner = uiOwnerByInstance.get(instanceId);
-    if (!lease || !owner || !turn.original || !turn.uiPatchReceipt) throw new Error("plugin-ui.native-owner-required");
-    const admitted: { readonly surfaceId: string; readonly intake: OwnedUiPatchIntake; readonly entry: OwnedUiPatchAcknowledgementEntry; readonly startedMs: number }[] = [];
-    for (const [index, patch] of turn.uiPatches.entries()) {
-      const source = lease.captureUiPatchAuthority(turn.original, index);
-      const surfaceId = wirePatchSurfaceId(patch);
-      if (!surfaceId) throw new Error("plugin-ui.projection-surface-required");
-      const startedMs = performance.now();
-      const intake = new OwnedUiPatchIntake(owner, source);
-      const intakes = uiIntakesByInstance.get(instanceId) ?? new Set<OwnedUiPatchIntake>();
-      intakes.add(intake); uiIntakesByInstance.set(instanceId, intakes);
-      let token: OwnedUiPatchAcknowledgement | null = null;
-      for (let step = 1; token === null; step += 1) {
-        if (step > PLUGIN_UI_INTAKE_STEP_CEILING) throw new Error(`plugin-ui.intake-budget-exhausted:${surfaceId}:${PLUGIN_UI_INTAKE_STEP_CEILING}`);
-        const current = intake.advance(uiGrant);
-        token = intake.peekAcknowledgement();
-        if (current.kind === "rejected") throw new Error(`plugin-ui.intake-rejected:${current.phase}:${intake.failure ?? "unknown"}`);
-        if (current.kind === "blocked" && token === null) throw new Error(`plugin-ui.intake-blocked:${current.phase}`);
-        if (uiIntakeOwesYieldV1(step)) await yieldPluginUiContinuation();
-      }
-      admitted.push({ surfaceId, intake, entry: { source, token }, startedMs });
-    }
+  type AdmittedUiPatch = { readonly surfaceId: string; readonly intake: OwnedUiPatchIntake; readonly entry: OwnedUiPatchAcknowledgementEntry; readonly startedMs: number };
+  /** 🧺️ Admits one round's patches, acknowledges the WHOLE round in one crossing, installs each surface
+   * and closes its intake — the shape the patch-batching lane bought, now applied per round instead of
+   * per turn. `submitUiAcknowledgements` admits any non-empty SUBSET of a turn's patches (it is the same
+   * path the one-patch case took before batching), so a round is a legal acknowledgement unit. */
+  const installUiPatchRound = async (instanceId: number, lease: ShardInstanceLifecycleLease, admitted: readonly AdmittedUiPatch[]): Promise<WireTurnResult> => {
     const acknowledged = await submitPluginLifecycleTurn(lease, { kind: "issued-ui-acks", entries: admitted.map(({ entry }) => entry) }, "Interactive");
     if (!acknowledged.submissions || acknowledged.submissions.length !== admitted.length) throw new Error("plugin-ui.acknowledgement-refused");
-    const supplemental: WireTurnResult[] = [];
     const installed: string[] = [];
     for (const [index, { surfaceId, intake, startedMs }] of admitted.entries()) {
       if (!intake.acceptAcknowledgement(acknowledged.submissions[index]!)) throw new Error("plugin-ui.acknowledgement-refused");
@@ -2159,10 +2308,70 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
       await closeIntake(instanceId, intake);
     }
     announceSurfacePublications(instanceId, installed);
-    supplemental.push(acknowledged.turn);
-    const nested = await acceptUiPatches(instanceId, acknowledged.turn);
-    supplemental.push(...nested.turns);
-    if (nested.acknowledgements.length > 0) throw new Error("plugin-ui.unexpected-generic-acknowledgement");
+    return acknowledged.turn;
+  };
+  /** 🧯️ Retires patches this round already admitted when a LATER one in the same round failed: their
+   * acknowledgement still crosses (a subset is a legal batch) so every cell they hold is released. One
+   * admission fault can therefore never leave a surface with an open wire, input page or receipt outbox —
+   * the state that made `beginPatch` answer busy for the rest of the instance's life. */
+  const retireAdmittedUiPatches = async (instanceId: number, lease: ShardInstanceLifecycleLease, admitted: readonly AdmittedUiPatch[]): Promise<void> => {
+    if (admitted.length === 0) return;
+    try {
+      await installUiPatchRound(instanceId, lease, admitted);
+    } catch (error) {
+      console.error(`plugin-ui.intake-retirement-failed: instance ${instanceId} could not retire ${admitted.length} admitted patch(es) (${admitted.map(({ surfaceId }) => surfaceId).join(", ")})`, error);
+    }
+  };
+  const acceptUiPatches = async (instanceId: number, turn: WireTurnResult): Promise<PluginPatchAcceptance> => {
+    if (turn.uiPatches.length === 0) return { acknowledgements: [], turns: [] };
+    return serializeInstanceUiIntake(instanceId, () => acceptOwnedUiPatches(instanceId, turn));
+  };
+  /** 📥️ Installs one turn's whole patch page. Runs INSIDE {@link serializeInstanceUiIntake}, so it —
+   * and its own recursion over each round's acknowledgement turn — is the instance's single intake. */
+  const acceptOwnedUiPatches = async (instanceId: number, turn: WireTurnResult): Promise<PluginPatchAcceptance> => {
+    if (turn.uiPatches.length === 0) return { acknowledgements: [], turns: [] };
+    requireActorId(instanceId);
+    const lease = lifecycleByInstance.get(instanceId);
+    const owner = uiOwnerByInstance.get(instanceId);
+    if (!lease || !owner || !turn.original || !turn.uiPatchReceipt) throw new Error("plugin-ui.native-owner-required");
+    const surfaceIds = turn.uiPatches.map(wirePatchSurfaceId);
+    const supplemental: WireTurnResult[] = [];
+    for (const round of uiPatchAdmissionRoundsV1(surfaceIds)) {
+      const admitted: AdmittedUiPatch[] = [];
+      let pending: OwnedUiPatchIntake | null = null;
+      try {
+        for (const index of round) {
+          const surfaceId = surfaceIds[index];
+          if (!surfaceId) throw new Error("plugin-ui.projection-surface-required");
+          const source = lease.captureUiPatchAuthority(turn.original, index);
+          const startedMs = performance.now();
+          const intake = new OwnedUiPatchIntake(owner, source);
+          pending = intake;
+          const intakes = uiIntakesByInstance.get(instanceId) ?? new Set<OwnedUiPatchIntake>();
+          intakes.add(intake); uiIntakesByInstance.set(instanceId, intakes);
+          let token: OwnedUiPatchAcknowledgement | null = null;
+          for (let step = 1; token === null; step += 1) {
+            if (step > PLUGIN_UI_INTAKE_STEP_CEILING) throw new Error(`plugin-ui.intake-budget-exhausted:${surfaceId}:${PLUGIN_UI_INTAKE_STEP_CEILING}`);
+            const current = intake.advance(uiGrant);
+            token = intake.peekAcknowledgement();
+            if (current.kind === "rejected") throw new Error(`plugin-ui.intake-rejected:${current.phase}:${intake.failure ?? "unknown"}`);
+            if (current.kind === "blocked" && token === null) throw new Error(`plugin-ui.intake-blocked:${current.phase}`);
+            if (uiIntakeOwesYieldV1(step)) await yieldPluginUiContinuation();
+          }
+          admitted.push({ surfaceId, intake, entry: { source, token }, startedMs });
+          pending = null;
+        }
+      } catch (error) {
+        if (pending) await closeIntake(instanceId, pending).catch((closeError) => console.error(`plugin-ui.intake-retirement-failed: instance ${instanceId} could not close the intake that faulted`, closeError));
+        await retireAdmittedUiPatches(instanceId, lease, admitted);
+        throw error;
+      }
+      const acknowledgedTurn = await installUiPatchRound(instanceId, lease, admitted);
+      supplemental.push(acknowledgedTurn);
+      const nested = await acceptOwnedUiPatches(instanceId, acknowledgedTurn);
+      supplemental.push(...nested.turns);
+      if (nested.acknowledgements.length > 0) throw new Error("plugin-ui.unexpected-generic-acknowledgement");
+    }
     return { acknowledgements: [], turns: supplemental };
   };
   const advanceUiMaintenance = async (owner: OwnedUiInstance, budget: { steps: number }, phase: string): Promise<void> => {
@@ -2261,31 +2470,35 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
     reads.add(read); uiReadsByInstance.set(instanceId, reads);
     try {
       const projected = await read;
-      return { ...projected, requestedEffects: retainedUiRefreshEffects(instanceId, effects) };
+      return { ...projected, requestedEffects: retainedUiRefreshEffects(instanceId, effects, (frames) => turnOutcomes.push({ instanceId, frames })) };
     } finally {
       reads.delete(read);
     }
   };
-  const closeUiOwner = async (instanceId: number, owner: OwnedUiInstance): Promise<OwnedUiInstanceRetirement> => {
+  const closeUiOwner = (instanceId: number, owner: OwnedUiInstance): Promise<OwnedUiInstanceRetirement> => serializeInstanceUiIntake(instanceId, () => closeOwnedUiInstance(instanceId, owner));
+  /** 🧹 Runs inside {@link serializeInstanceUiIntake}: a hot swap can never tear an instance's surfaces
+   * down while one of its patches is mid-admission. */
+  const closeOwnedUiInstance = async (instanceId: number, owner: OwnedUiInstance): Promise<OwnedUiInstanceRetirement> => {
     const retained = uiRetirementByInstance.get(instanceId);
     if (retained) return retained;
     if ((uiReadsByInstance.get(instanceId)?.size ?? 0) !== 0) throw new Error("plugin-ui.read-retirement-pending");
     for (const intake of uiIntakesByInstance.get(instanceId) ?? []) await closeIntake(instanceId, intake);
     const retainedSurfaces = uiSurfaceByInstance.get(instanceId)?.size ?? 0;
     uiSurfaceByInstance.get(instanceId)?.clear();
-    const ceiling = retainedUiCloseStepCeilingV1(retainedSurfaces);
+    const ladder = createRetainedUiCloseLadderV1(retainedSurfaces);
     owner.beginClose();
-    let idle = 0;
-    let last = "instance-close";
+    let steps = 0;
+    const phaseCensus = new Map<string, number>();
     for (let step = 1; !owner.terminalIsEmpty(); step += 1) {
-      if (step > ceiling) throw new Error(`plugin-ui.owner-close-budget-exhausted:${last} after ${step - 1} steps over ${retainedSurfaces} retained surfaces`);
+      steps = step;
       const current = owner.closeStep(uiGrant);
-      last = current.phase;
       if (current.kind === "blocked" || current.kind === "rejected") throw new Error(`plugin-ui.owner-close-${current.kind}:${current.phase}`);
-      idle = current.bytes > 0 ? 0 : idle + 1;
-      if (idle > PLUGIN_UI_CLOSE_ZERO_PROGRESS_STEPS) throw new Error(`plugin-ui.owner-close-stalled:${current.phase} released nothing for ${idle} steps`);
+      phaseCensus.set(current.phase, (phaseCensus.get(current.phase) ?? 0) + 1);
+      const fault = ladder.admit(current);
+      if (fault) throw new Error(fault);
       if (uiIntakeOwesYieldV1(step)) await yieldPluginUiContinuation();
     }
+    console.debug(`[DEBUG] plugin-ui close ladder instance=${instanceId} surfaces=${retainedSurfaces} turns=${ladder.turns} steps=${steps} ceiling=${ladder.ceiling} phases=${[...phaseCensus].map(([phase, count]) => `${phase}:${count}`).join(",")}`);
     const witness = owner.takeRetirementWitness();
     if (!witness) throw new Error("plugin-ui.retirement-witness-missing");
     uiRetirementByInstance.set(instanceId, witness);
@@ -3445,8 +3658,15 @@ export async function adaptPluginHandle(pluginId: string, lease: { readonly hand
       if (channels.get(instanceId) === channel) channels.delete(instanceId);
     },
     takeSegmentedDownloadChunk: (instanceId, operationId) => handle.takeSegmentedDownloadChunk(instanceId, operationId),
-    handleAction: (instanceId, actionJson, viewState) => performInvocation(requireChannel(instanceId), instanceId, JSON.parse(actionJson), "action", viewState),
-    handleCommand: (instanceId, commandJson, viewState) => performInvocation(requireChannel(instanceId), instanceId, JSON.parse(commandJson), "command", viewState),
+    // 🪦️ `async` on purpose, all three of them: `requireChannel` REFUSES a retired instance, and a
+    // synchronous throw from a method the caller only ever `.catch`es escapes past that `.catch`
+    // entirely — out of `ShellHost`'s `onAction` and into React's nearest error boundary, which tears
+    // the surface down. Measured on the served 16:57 guest: a role switch destroyed instance 1, the
+    // node-graph surface dispatched one more action at it, and the typed retirement arrived as
+    // `[DEBUG] shell fault surface-node-graph` instead of the drop the ledger had already earned
+    // (`🗑️generated/host-refresh/served-journey/console.txt`, +147.5 s). A refusal is a rejection.
+    handleAction: async (instanceId, actionJson, viewState) => performInvocation(requireChannel(instanceId), instanceId, JSON.parse(actionJson), "action", viewState),
+    handleCommand: async (instanceId, commandJson, viewState) => performInvocation(requireChannel(instanceId), instanceId, JSON.parse(commandJson), "command", viewState),
     // 🚧️ H1-react — window-body refresh needs the ActivationRegistry/ShardClient `Event::SurfaceVisible`
     // path this bare adapter has no access to (only the raw `enqueue`/`outcomes` `handle`, no actorId);
     // `loadPluginModule` overrides this field with the real implementation right after calling this
@@ -3454,7 +3674,7 @@ export async function adaptPluginHandle(pluginId: string, lease: { readonly hand
     // gets an honest empty result rather than a throw — `AppCommand::RefreshUi`/`SectionProbe` no
     // longer exist on the wire regardless (channel v12), so there is no fallback command to send here.
     refreshUi: async () => ({}),
-    contextMenu: (instanceId, request, viewState) => performContextMenu(requireChannel(instanceId), request, viewState),
+    contextMenu: async (instanceId, request, viewState) => performContextMenu(requireChannel(instanceId), request, viewState),
     readHistory: async (instanceId) => {
       const frames = await requireChannel(instanceId).readHistory();
       const frame = frames.find((candidate): candidate is Extract<AppFrameValue, { readonly HistorySnapshot: unknown }> => "HistorySnapshot" in candidate);
@@ -4066,7 +4286,7 @@ function pluginRuntimeTestDependenciesV1() {
     get sharedShardClient() { return sharedShardClient; },
     set sharedShardClient(value: typeof sharedShardClient) { sharedShardClient = value; },
   };
-  return { testState, guestIngressGenerationV1, leftoverShellInvocationFrames, settleYieldsToRefreshV1, effectsRequestOperationProgressV1, PLUGIN_OPERATION_REFRESH_SLICE_MS, promoteShellSendMessages, leftoverInspectionRefreshScope, leftoverInspectionPanelHash, windowHostContextBindings, isolatedJobStepsPerSerializedAdmission, isolatedJobUiPollEverySteps, ActivationRegistry, ActorDocumentBindingV1, adaptPluginHandle, assertAddressedInvocation, AppChannelClient, AppChannelRequestSequence, applyRetainedWindowPatches, applyUiPatch, applyUiPatchToRetained, ArtifactMutationRouter, assertShardJspiAvailable, BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES, buildShardClientOptions, coerceTurnResult, coerceWireBytes, commandIngressFaultDisplay, computeDependencyLevels, consumeTypedOperationEffects, createShardCommandIngressPages, createTurnOutcomeBroadcast, currentPluginRuntimeActor, decodeActorUiPatchReceipt, decodeAppFrame, decodeBackboneMessage, decodeConflictsFromWire, decodeFaultFromWire, decodeForeignStep, decodeInvocationResultPacks, decodeLocalInteractionCaptureJson, decodeMergeReportFromWire, decodeMutationEnvelopesPack, decodePackValue, decodePackWire, decodeWirePack, decodeWirePatchOps, DEFAULT_SHARD_BUDGET, drainTypedOperationTurns, DIRECTORY_PROJECTION_RECEIPT_SCHEMA, emptyUiDocumentState, encodeActorUiPatchReceipt, encodeDocumentBackboneControlV1, encodeMutationOrigin, encodePackValue, enqueuePluginTurn, faultDisplayMessage, fetchDescriptorManifest, fnv1aHex, getActivationRegistry, getPluginTurnScheduler, getShardClient, getThunkScheduler, handlePluginShardLost, forgetInstanceForRecovery, onPluginInstancesLost, PLUGIN_ACTOR_INSTANCE_LOST_FAULT, rememberInstanceForRecovery, hasRequiredUiPatches, InstanceDirectory, invocationFromFrames, isPluginInstanceRetiredV1, isShardLostError, loadPluginModule, loadPluginModulesInDependencyOrder, LOCAL_INTERACTION_CAPTURE_MAX_BYTES, localInteractionIdentityEquals, markPluginInstanceRetiredV1, MAX_TRANSACTION_DEPTH, nextGlobalInstanceId, normalizeWireUiNodeRecord, notePluginLoadProgress, orderPluginRegistryEntries, OwnedResidentLedger, packWireNatural, patchAckEvents, pendingCoalescedTurns, pendingCompletionEffects, pendingLifecycleTurns, pendingTurnEffects, performContextMenu, performInvocation, PLUGIN_BOOT_SHARD_LOST_FAULT, PLUGIN_OPERATION_DRAIN_BUDGET, PLUGIN_OPERATION_EFFECT_CAPACITY, PLUGIN_OPERATION_WAKE_MAX_MS, PLUGIN_TURN_MAILBOX_CAPACITY, PLUGIN_UI_CONTINUATION_BATCH_SIZE, PLUGIN_UI_CONTINUATION_LIMIT, PLUGIN_UI_QUIESCENT_CONTINUATIONS, PLUGIN_UI_ZERO_PROGRESS_CONTINUATION_LIMIT, PLUGIN_UI_INTAKE_STEP_CEILING, PLUGIN_UI_INTAKE_YIELD_STRIDE, PLUGIN_UI_CLOSE_STEPS_PER_NODE, PLUGIN_UI_CLOSE_ZERO_PROGRESS_STEPS, retainedUiCloseStepCeilingV1, retainedUiIntakeStepCeiling, PluginBootShardLostError, pluginLoadProgress, pluginLoadProgressAt, pluginSurfaceRef, poolConcurrency, rejectionCodeFromBytes, releasePendingLifecycleTurn, rendererResidentLedger, resolveDescriptorBeforeRuntime, retainedSurfaceHash, retainedSurfaceId, retainedSurfacesForActor, retainedSurfaceToBuiltNode, retainedSurfaceToSnapshot, retainedUiRefreshResponse, uiRefreshSectionUnchanged, retainedWindowByActor, retainTurnUiPatches, runBounded, sectionValueFromBuiltNode, runPluginLifecycleTurn, SEGMENTED_DOWNLOAD_MARKER_PREFIX, SemioFaultError, SURFACE_RENDER_FAULT, SERIALIZE_PER_ACTOR_MAILBOX_CAPACITY, serializeCommandIngressForActor, serializePerActor, commandIngressLaneForActionV1, commandIngressNeedsReplyStampV1, commandIngressContinuationCeilingV1, commandIngressUnownedV1, markPluginInstanceRetiredForPluginV1, pluginInstanceWasRetiredV1, forgetPluginInstanceRetirementV1, setPluginRuntimeActor, settleAcknowledgedPluginTurns, settlePluginTurn, SHARD_LIVENESS_POLICY, SHARD_WORKER_URL, ShardClient, sharedPluginTurnScheduler, sharedThunkScheduler, shellFrameBytes, submitPluginLifecycleTurn, submitPluginTurn, teardownPluginActor, tearingDownPluginActors, TransactionCoordinator, TurnScheduler, TYPED_OPERATION_ACK_MAGIC, TYPED_OPERATION_PAGE_MAGIC, TYPED_OPERATION_PARK_CAPACITY, TYPED_OPERATION_PARK_EVICTION_FAULT, TYPED_OPERATION_PENDING_OUTPUT, TYPED_OPERATION_TERMINAL_OUTPUT, TYPED_OPERATION_TERMINAL_SEEN, TYPED_OPERATION_UNATTRIBUTED_FAULT, typedOperationAcknowledgements, TypedOperationCall, TypedOperationRouter, typedOperationResult, uiRefreshBodyKeys, uiRefreshSectionTargets, uiRefreshSurfaceEvents, wireEffectToFriendly, wireExtensionInvocation, wireNatural, wirePatchSurfaceId, wireTurnStatusTag, withTypedOperationCall, yieldPluginUiContinuation };
+  return { testState, guestIngressGenerationV1, leftoverShellInvocationFrames, settleYieldsToRefreshV1, effectsRequestOperationProgressV1, PLUGIN_OPERATION_REFRESH_SLICE_MS, promoteShellSendMessages, leftoverInspectionRefreshScope, leftoverInspectionPanelHash, windowHostContextBindings, isolatedJobStepsPerSerializedAdmission, isolatedJobUiPollEverySteps, ActivationRegistry, ActorDocumentBindingV1, adaptPluginHandle, assertAddressedInvocation, AppChannelClient, AppChannelRequestSequence, applyRetainedWindowPatches, applyUiPatch, applyUiPatchToRetained, ArtifactMutationRouter, assertShardJspiAvailable, BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES, buildShardClientOptions, coerceTurnResult, coerceWireBytes, commandIngressFaultDisplay, computeDependencyLevels, consumeTypedOperationEffects, createShardCommandIngressPages, createTurnOutcomeBroadcast, currentPluginRuntimeActor, decodeActorUiPatchReceipt, decodeAppFrame, decodeBackboneMessage, decodeConflictsFromWire, decodeFaultFromWire, decodeForeignStep, decodeInvocationResultPacks, decodeLocalInteractionCaptureJson, decodeMergeReportFromWire, decodeMutationEnvelopesPack, decodePackValue, decodePackWire, decodeWirePack, decodeWirePatchOps, DEFAULT_SHARD_BUDGET, drainTypedOperationTurns, DIRECTORY_PROJECTION_RECEIPT_SCHEMA, emptyUiDocumentState, encodeActorUiPatchReceipt, encodeDocumentBackboneControlV1, encodeMutationOrigin, encodePackValue, enqueuePluginTurn, faultDisplayMessage, fetchDescriptorManifest, fnv1aHex, getActivationRegistry, getPluginTurnScheduler, getShardClient, getThunkScheduler, handlePluginShardLost, forgetInstanceForRecovery, onPluginInstancesLost, PLUGIN_ACTOR_INSTANCE_LOST_FAULT, rememberInstanceForRecovery, hasRequiredUiPatches, InstanceDirectory, invocationFromFrames, isPluginInstanceRetiredV1, isShardLostError, loadPluginModule, loadPluginModulesInDependencyOrder, LOCAL_INTERACTION_CAPTURE_MAX_BYTES, localInteractionIdentityEquals, markPluginInstanceRetiredV1, MAX_TRANSACTION_DEPTH, nextGlobalInstanceId, normalizeWireUiNodeRecord, notePluginLoadProgress, orderPluginRegistryEntries, OwnedResidentLedger, packWireNatural, patchAckEvents, pendingCoalescedTurns, pendingCompletionEffects, pendingLifecycleTurns, pendingTurnEffects, performContextMenu, performInvocation, PLUGIN_BOOT_SHARD_LOST_FAULT, PLUGIN_OPERATION_DRAIN_BUDGET, PLUGIN_OPERATION_EFFECT_CAPACITY, PLUGIN_OPERATION_WAKE_MAX_MS, PLUGIN_TURN_MAILBOX_CAPACITY, PLUGIN_UI_CONTINUATION_BATCH_SIZE, PLUGIN_UI_CONTINUATION_LIMIT, PLUGIN_UI_QUIESCENT_CONTINUATIONS, PLUGIN_UI_ZERO_PROGRESS_CONTINUATION_LIMIT, PLUGIN_UI_INTAKE_STEP_CEILING, PLUGIN_UI_INTAKE_YIELD_STRIDE, PLUGIN_UI_CLOSE_STEPS_PER_NODE, PLUGIN_UI_CLOSE_ZERO_PROGRESS_STEPS, retainedUiCloseStepCeilingV1, createRetainedUiCloseLadderV1, retainedUiIntakeStepCeiling, PluginBootShardLostError, pluginLoadProgress, pluginLoadProgressAt, pluginSurfaceRef, poolConcurrency, rejectionCodeFromBytes, releasePendingLifecycleTurn, rendererResidentLedger, resolveDescriptorBeforeRuntime, retainedSurfaceHash, retainedSurfaceId, retainedSurfacesForActor, retainedSurfaceToBuiltNode, retainedSurfaceToSnapshot, retainedUiRefreshResponse, uiRefreshSectionUnchanged, retainedWindowByActor, retainTurnUiPatches, runBounded, sectionValueFromBuiltNode, runPluginLifecycleTurn, SEGMENTED_DOWNLOAD_MARKER_PREFIX, SemioFaultError, SURFACE_RENDER_FAULT, SERIALIZE_PER_ACTOR_MAILBOX_CAPACITY, serializeCommandIngressForActor, serializePerActor, commandIngressLaneForActionV1, commandIngressNeedsReplyStampV1, commandIngressContinuationCeilingV1, commandIngressUnownedV1, PLUGIN_OPERATION_OWED_SLICE_MS, retainedUiRefreshEffects, markPluginInstanceRetiredForPluginV1, pluginInstanceWasRetiredV1, forgetPluginInstanceRetirementV1, setPluginRuntimeActor, settleAcknowledgedPluginTurns, settlePluginTurn, SHARD_LIVENESS_POLICY, SHARD_WORKER_URL, ShardClient, sharedPluginTurnScheduler, sharedThunkScheduler, shellFrameBytes, submitPluginLifecycleTurn, submitPluginTurn, teardownPluginActor, tearingDownPluginActors, TransactionCoordinator, TurnScheduler, TYPED_OPERATION_ACK_MAGIC, TYPED_OPERATION_PAGE_MAGIC, TYPED_OPERATION_PARK_CAPACITY, TYPED_OPERATION_PARK_EVICTION_FAULT, TYPED_OPERATION_PENDING_OUTPUT, TYPED_OPERATION_TERMINAL_OUTPUT, TYPED_OPERATION_TERMINAL_SEEN, TYPED_OPERATION_UNATTRIBUTED_FAULT, typedOperationAcknowledgements, TypedOperationCall, TypedOperationRouter, typedOperationResult, uiRefreshBodyKeys, uiRefreshSectionTargets, uiRefreshSurfaceEvents, wireEffectToFriendly, wireExtensionInvocation, wireNatural, wirePatchSurfaceId, wireTurnStatusTag, withTypedOperationCall, yieldPluginUiContinuation, uiPatchAdmissionRoundsV1 };
 }
 
 export type PluginRuntimeTestDependenciesV1 = ReturnType<typeof pluginRuntimeTestDependenciesV1>;

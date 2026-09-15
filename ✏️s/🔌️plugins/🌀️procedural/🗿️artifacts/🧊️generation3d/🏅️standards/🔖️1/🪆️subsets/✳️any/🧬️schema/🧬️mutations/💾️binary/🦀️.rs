@@ -418,34 +418,34 @@ pub fn generation3d_release_publication_authority(operation: semio_framework_job
 /// 🧭️ Fixed ownership grammar for every Generation3d retained domain and lifecycle owner.
 /// The 3d-only DeleteWidgetPosition entry is deliberately explicit: a 2d mutation catalog cannot satisfy this table.
 pub const GENERATION3D_RETAINED_OWNER_CATALOG: &[&str] = &[
-    "snapshot.host_document.schema",
-    "snapshot.host_document.camera.x",
-    "snapshot.host_document.camera.y",
-    "snapshot.host_document.camera.zoom",
-    "snapshot.host_document.widgets.length",
-    "snapshot.host_document.widgets.item.neuron",
-    "snapshot.host_document.widgets.item.input-slider",
-    "snapshot.host_document.widgets.item.input-note",
-    "snapshot.host_document.widgets.item.input-image",
-    "snapshot.host_document.widgets.item.variable",
-    "snapshot.host_document.widgets.item.output-preview",
-    "snapshot.host_document.widgets.item.output-action",
-    "snapshot.host_document.widgets.item.output-export",
-    "snapshot.host_document.widgets.item.cluster",
-    "snapshot.host_document.widgets.item.strings",
-    "snapshot.host_document.widgets.item.dictionary.entries",
-    "snapshot.host_document.widgets.item.tree",
-    "snapshot.host_document.widgets.item.flow",
-    "snapshot.host_document.synapses.length",
-    "snapshot.host_document.synapses.item.id",
-    "snapshot.host_document.synapses.item.from",
-    "snapshot.host_document.synapses.item.to",
-    "snapshot.host_document.synapses.item.from-port",
-    "snapshot.host_document.synapses.item.to-port",
-    "snapshot.host_document.layout.length",
-    "snapshot.host_document.layout.item.id",
-    "snapshot.host_document.layout.item.x",
-    "snapshot.host_document.layout.item.y",
+    "snapshot.host_snapshot.schema",
+    "snapshot.host_snapshot.camera.x",
+    "snapshot.host_snapshot.camera.y",
+    "snapshot.host_snapshot.camera.zoom",
+    "snapshot.host_snapshot.widgets.length",
+    "snapshot.host_snapshot.widgets.item.neuron",
+    "snapshot.host_snapshot.widgets.item.input-slider",
+    "snapshot.host_snapshot.widgets.item.input-note",
+    "snapshot.host_snapshot.widgets.item.input-image",
+    "snapshot.host_snapshot.widgets.item.variable",
+    "snapshot.host_snapshot.widgets.item.output-preview",
+    "snapshot.host_snapshot.widgets.item.output-action",
+    "snapshot.host_snapshot.widgets.item.output-export",
+    "snapshot.host_snapshot.widgets.item.cluster",
+    "snapshot.host_snapshot.widgets.item.strings",
+    "snapshot.host_snapshot.widgets.item.dictionary.entries",
+    "snapshot.host_snapshot.widgets.item.tree",
+    "snapshot.host_snapshot.widgets.item.flow",
+    "snapshot.host_snapshot.synapses.length",
+    "snapshot.host_snapshot.synapses.item.id",
+    "snapshot.host_snapshot.synapses.item.from",
+    "snapshot.host_snapshot.synapses.item.to",
+    "snapshot.host_snapshot.synapses.item.from-port",
+    "snapshot.host_snapshot.synapses.item.to-port",
+    "snapshot.host_snapshot.layout.length",
+    "snapshot.host_snapshot.layout.item.id",
+    "snapshot.host_snapshot.layout.item.x",
+    "snapshot.host_snapshot.layout.item.y",
     "snapshot.generation.generations.length",
     "snapshot.generation.generations.item.id",
     "snapshot.generation.generations.item.name",
@@ -593,57 +593,57 @@ fn generation3d_retire_displaced(value: Generation3dReplayDisplaced) -> Box<dyn 
 fn generation3d_apply_initialization_mutation(snapshot: &mut Generation3dSnapshot, mutation: &Generation3dMutation) -> Result<Option<Box<dyn ErasedSnapshotRetirement>>, &'static str> {
     let retired = match mutation {
         Generation3dMutation::CreateWidget(payload) => {
-            if snapshot.host_document.widgets.iter().any(|entry| crate::widget_id(entry) == crate::widget_id(&payload.widget)) {
+            if snapshot.host_snapshot.widgets.iter().any(|entry| crate::widget_id(entry) == crate::widget_id(&payload.widget)) {
                 return Err("generation3d-replay.widget-duplicate");
             }
-            let index = payload.index.min(snapshot.host_document.widgets.len());
-            snapshot.host_document.widgets.insert(index, generation3d_copy_widget(&payload.widget)?);
+            let index = payload.index.min(snapshot.host_snapshot.widgets.len());
+            snapshot.host_snapshot.widgets.insert(index, generation3d_copy_widget(&payload.widget)?);
             None
         }
         Generation3dMutation::UpdateWidget(payload) => {
             let id = crate::widget_id(&payload.widget);
-            let index = snapshot.host_document.widgets.iter().position(|entry| crate::widget_id(entry) == id).ok_or("generation3d-replay.widget-missing")?;
-            Some(generation3d_retire_displaced(Generation3dReplayDisplaced::Widget(std::mem::replace(&mut snapshot.host_document.widgets[index], generation3d_copy_widget(&payload.widget)?))))
+            let index = snapshot.host_snapshot.widgets.iter().position(|entry| crate::widget_id(entry) == id).ok_or("generation3d-replay.widget-missing")?;
+            Some(generation3d_retire_displaced(Generation3dReplayDisplaced::Widget(std::mem::replace(&mut snapshot.host_snapshot.widgets[index], generation3d_copy_widget(&payload.widget)?))))
         }
         Generation3dMutation::DeleteWidget(payload) => {
-            let index = snapshot.host_document.widgets.iter().position(|entry| crate::widget_id(entry) == payload.id).ok_or("generation3d-replay.widget-missing")?;
-            Some(generation3d_retire_displaced(Generation3dReplayDisplaced::Widget(snapshot.host_document.widgets.remove(index))))
+            let index = snapshot.host_snapshot.widgets.iter().position(|entry| crate::widget_id(entry) == payload.id).ok_or("generation3d-replay.widget-missing")?;
+            Some(generation3d_retire_displaced(Generation3dReplayDisplaced::Widget(snapshot.host_snapshot.widgets.remove(index))))
         }
         Generation3dMutation::ConnectSynapse(payload) => {
-            if snapshot.host_document.synapses.iter().any(|entry| entry.id == payload.synapse.id) {
+            if snapshot.host_snapshot.synapses.iter().any(|entry| entry.id == payload.synapse.id) {
                 return Err("generation3d-replay.synapse-duplicate");
             }
-            let index = payload.index.min(snapshot.host_document.synapses.len());
-            snapshot.host_document.synapses.insert(index, generation3d_copy_synapse(&payload.synapse)?);
+            let index = payload.index.min(snapshot.host_snapshot.synapses.len());
+            snapshot.host_snapshot.synapses.insert(index, generation3d_copy_synapse(&payload.synapse)?);
             None
         }
         Generation3dMutation::UpdateSynapse(payload) => {
-            let index = snapshot.host_document.synapses.iter().position(|entry| entry.id == payload.synapse.id).ok_or("generation3d-replay.synapse-missing")?;
-            Some(generation3d_retire_displaced(Generation3dReplayDisplaced::Synapse(std::mem::replace(&mut snapshot.host_document.synapses[index], generation3d_copy_synapse(&payload.synapse)?))))
+            let index = snapshot.host_snapshot.synapses.iter().position(|entry| entry.id == payload.synapse.id).ok_or("generation3d-replay.synapse-missing")?;
+            Some(generation3d_retire_displaced(Generation3dReplayDisplaced::Synapse(std::mem::replace(&mut snapshot.host_snapshot.synapses[index], generation3d_copy_synapse(&payload.synapse)?))))
         }
         Generation3dMutation::DisconnectSynapse(payload) => {
-            let index = snapshot.host_document.synapses.iter().position(|entry| entry.id == payload.id).ok_or("generation3d-replay.synapse-missing")?;
-            Some(generation3d_retire_displaced(Generation3dReplayDisplaced::Synapse(snapshot.host_document.synapses.remove(index))))
+            let index = snapshot.host_snapshot.synapses.iter().position(|entry| entry.id == payload.id).ok_or("generation3d-replay.synapse-missing")?;
+            Some(generation3d_retire_displaced(Generation3dReplayDisplaced::Synapse(snapshot.host_snapshot.synapses.remove(index))))
         }
         Generation3dMutation::MoveWidget(payload) => {
             if !payload.layout.x.is_finite() || !payload.layout.y.is_finite() {
                 return Err("generation3d-replay.layout-nonfinite");
             }
             snapshot
-                .host_document
+                .host_snapshot
                 .layout
                 .insert(generation3d_copy_string(&payload.id)?, semio_framework_artifact_flow_flow::WidgetLayout { x: payload.layout.x, y: payload.layout.y })
                 .map(Generation3dReplayDisplaced::Layout)
                 .map(generation3d_retire_displaced)
         }
-        Generation3dMutation::DeleteWidgetPosition(payload) => snapshot.host_document.layout.remove(&payload.id).map(Generation3dReplayDisplaced::Layout).map(generation3d_retire_displaced),
+        Generation3dMutation::DeleteWidgetPosition(payload) => snapshot.host_snapshot.layout.remove(&payload.id).map(Generation3dReplayDisplaced::Layout).map(generation3d_retire_displaced),
         Generation3dMutation::UpdateCamera(payload) => {
             if !payload.camera.x.is_finite() || !payload.camera.y.is_finite() || !payload.camera.zoom.is_finite() {
                 return Err("generation3d-replay.camera-nonfinite");
             }
-            Some(generation3d_retire_displaced(Generation3dReplayDisplaced::Camera(std::mem::replace(&mut snapshot.host_document.camera, semio_framework_artifact_flow_flow::CameraJson { x: payload.camera.x, y: payload.camera.y, zoom: payload.camera.zoom }))))
+            Some(generation3d_retire_displaced(Generation3dReplayDisplaced::Camera(std::mem::replace(&mut snapshot.host_snapshot.camera, semio_framework_artifact_flow_flow::CameraJson { x: payload.camera.x, y: payload.camera.y, zoom: payload.camera.zoom }))))
         }
-        Generation3dMutation::ChangeSchema(payload) => Some(generation3d_retire_displaced(Generation3dReplayDisplaced::Text(std::mem::replace(&mut snapshot.host_document.schema, generation3d_copy_string(&payload.new_schema)?)))),
+        Generation3dMutation::ChangeSchema(payload) => Some(generation3d_retire_displaced(Generation3dReplayDisplaced::Text(std::mem::replace(&mut snapshot.host_snapshot.schema, generation3d_copy_string(&payload.new_schema)?)))),
         Generation3dMutation::CreateGeneration(payload) => {
             let generation = snapshot.generation.cold_builder_mut()?;
             if generation.generations.iter().any(|entry| entry.id == payload.generation.id) {
@@ -719,7 +719,7 @@ impl ErasedSnapshotRetirement for Generation3dRetainedSnapshotRetirement {
             return generation3d_close_flow_frontier(&mut self.flow, maximum_items, maximum_bytes);
         }
         if let Some(value) = self.value.take() {
-            self.flow.push(semio_framework_artifact_flow_flow::retained::FlowOwner::HostDocument(value.host_document));
+            self.flow.push(semio_framework_artifact_flow_flow::retained::FlowOwner::HostSnapshot(value.host_snapshot));
             *self.generation = Some(Box::new(value.generation.into_retirement()));
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
@@ -2757,7 +2757,7 @@ struct Generation3dSnapshotCopyCursor {
 impl Generation3dSnapshotCopyCursor {
     fn new(source: &Generation3dSnapshot) -> Result<Self, &'static str> {
         let mut target = Generation3dSnapshot {
-            fixture: semio_framework_artifact_flow_flow::FlowHostDocument {
+            host_snapshot: semio_framework_artifact_flow_flow::FlowHostSnapshot {
                 schema: String::new(),
                 camera: semio_framework_artifact_flow_flow::CameraJson::default(),
                 widgets: Vec::new(),
@@ -2766,8 +2766,8 @@ impl Generation3dSnapshotCopyCursor {
             },
             generation: semio_framework_artifact_playbook_playbook::GenerationPlayState::default().into(),
         };
-        target.host_document.widgets.try_reserve_exact(source.host_document.widgets.len()).map_err(|_| "generation3d-initializer.widgets-preflight")?;
-        target.host_document.synapses.try_reserve_exact(source.host_document.synapses.len()).map_err(|_| "generation3d-initializer.synapses-preflight")?;
+        target.host_snapshot.widgets.try_reserve_exact(source.host_snapshot.widgets.len()).map_err(|_| "generation3d-initializer.widgets-preflight")?;
+        target.host_snapshot.synapses.try_reserve_exact(source.host_snapshot.synapses.len()).map_err(|_| "generation3d-initializer.synapses-preflight")?;
         target.generation.cold_builder_mut()?.generations.try_reserve_exact(source.generation.generations.len()).map_err(|_| "generation3d-initializer.generations-preflight")?;
         Ok(Self { target: std::mem::ManuallyDrop::new(Some(target)), phase: 0, index: 0, handed_back: false })
     }
@@ -2776,46 +2776,46 @@ impl Generation3dSnapshotCopyCursor {
         let target = self.target.as_mut().ok_or("generation3d-initializer.copy-owner")?;
         match self.phase {
             0 => {
-                target.host_document.schema = generation3d_copy_string(&source.host_document.schema)?;
-                digest.observe(source.host_document.schema.as_bytes());
+                target.host_snapshot.schema = generation3d_copy_string(&source.host_snapshot.schema)?;
+                digest.observe(source.host_snapshot.schema.as_bytes());
                 self.phase = 1;
             }
             1 => {
-                target.host_document.camera.x = source.host_document.camera.x;
-                digest.observe(&source.host_document.camera.x.to_bits().to_be_bytes());
+                target.host_snapshot.camera.x = source.host_snapshot.camera.x;
+                digest.observe(&source.host_snapshot.camera.x.to_bits().to_be_bytes());
                 self.phase = 2;
             }
             2 => {
-                target.host_document.camera.y = source.host_document.camera.y;
-                digest.observe(&source.host_document.camera.y.to_bits().to_be_bytes());
+                target.host_snapshot.camera.y = source.host_snapshot.camera.y;
+                digest.observe(&source.host_snapshot.camera.y.to_bits().to_be_bytes());
                 self.phase = 3;
             }
             3 => {
-                target.host_document.camera.zoom = source.host_document.camera.zoom;
-                digest.observe(&source.host_document.camera.zoom.to_bits().to_be_bytes());
+                target.host_snapshot.camera.zoom = source.host_snapshot.camera.zoom;
+                digest.observe(&source.host_snapshot.camera.zoom.to_bits().to_be_bytes());
                 self.phase = 4;
             }
-            4 if self.index < source.host_document.widgets.len() => {
-                target.host_document.widgets.push(generation3d_copy_widget(&source.host_document.widgets[self.index])?);
-                digest.observe(crate::widget_id(&source.host_document.widgets[self.index]).as_bytes());
+            4 if self.index < source.host_snapshot.widgets.len() => {
+                target.host_snapshot.widgets.push(generation3d_copy_widget(&source.host_snapshot.widgets[self.index])?);
+                digest.observe(crate::widget_id(&source.host_snapshot.widgets[self.index]).as_bytes());
                 self.index += 1;
             }
             4 => {
                 self.phase = 5;
                 self.index = 0;
             }
-            5 if self.index < source.host_document.synapses.len() => {
-                target.host_document.synapses.push(generation3d_copy_synapse(&source.host_document.synapses[self.index])?);
-                digest.observe(source.host_document.synapses[self.index].id.as_bytes());
+            5 if self.index < source.host_snapshot.synapses.len() => {
+                target.host_snapshot.synapses.push(generation3d_copy_synapse(&source.host_snapshot.synapses[self.index])?);
+                digest.observe(source.host_snapshot.synapses[self.index].id.as_bytes());
                 self.index += 1;
             }
             5 => {
                 self.phase = 6;
                 self.index = 0;
             }
-            6 if self.index < source.host_document.layout.len() => {
-                let (id, layout) = source.host_document.layout.iter().nth(self.index).ok_or("generation3d-initializer.layout-owner")?;
-                target.host_document.layout.insert(generation3d_copy_string(id)?, semio_framework_artifact_flow_flow::WidgetLayout { x: layout.x, y: layout.y });
+            6 if self.index < source.host_snapshot.layout.len() => {
+                let (id, layout) = source.host_snapshot.layout.iter().nth(self.index).ok_or("generation3d-initializer.layout-owner")?;
+                target.host_snapshot.layout.insert(generation3d_copy_string(id)?, semio_framework_artifact_flow_flow::WidgetLayout { x: layout.x, y: layout.y });
                 digest.observe(id.as_bytes());
                 self.index += 1;
             }
@@ -3652,7 +3652,7 @@ pub fn generation3d_all_retained_mutation_fixtures_for_test() -> Vec<Generation3
         Generation3dMutation::MoveWidget(MoveWidget { id: "retained-a".into(), layout: semio_framework_artifact_flow_flow::WidgetLayout { x: 11.0, y: -7.0 } }),
         Generation3dMutation::DeleteWidgetPosition(DeleteWidgetPosition { id: "retained-a".into() }),
         Generation3dMutation::UpdateCamera(UpdateCamera { camera: semio_framework_artifact_flow_flow::CameraJson { x: 3.0, y: 4.0, zoom: 1.5 } }),
-        Generation3dMutation::ChangeSchema(ChangeSchema { new_schema: "flow.host_document.retained".into() }),
+        Generation3dMutation::ChangeSchema(ChangeSchema { new_schema: "flow.host_snapshot.retained".into() }),
         Generation3dMutation::CreateGeneration(CreateGeneration { generation: semio_framework_artifact_playbook_playbook::FormGeneration { id: "retained-generation".into(), name: "Retained Generation".into(), values } }),
         Generation3dMutation::DeleteGeneration(DeleteGeneration { id: "retained-generation".into() }),
         Generation3dMutation::RenameGeneration(RenameGeneration { id: "retained-generation".into(), new_name: "Renamed Generation".into() }),

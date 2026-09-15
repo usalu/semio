@@ -1,7 +1,7 @@
 //! 🕸️ Generation2d play app — the main node-graph window: the editable flow canvas.
 
 use crate::editor::generation2d::GENERATION2D_PLAY_APP_ID;
-use crate::standards::v1::subsets::any::schema::{dag_host_document_to_workflow, with_host};
+use crate::standards::v1::subsets::any::schema::{dag_host_snapshot_to_workflow, with_host};
 use crate::Generation2dSnapshot;
 use semio_framework_os_flow::{flow_backed_node_graph_extras, FlowEvalSession};
 use semio_framework_os_kernel::Viewport2d;
@@ -39,10 +39,10 @@ pub fn definition() -> WindowKindDefinition {
 
 //#region 🔖️Render
 pub fn render(document: &Generation2dSnapshot, config: &config::Generation2dMainWindowConfig, session: &FlowEvalSession) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    let fixture = &document.host_document;
-    let (nodes, edges) = with_host(snapshot, |host| dag_host_document_to_workflow(&host.dag.host_document));
+    let host_snapshot = &document.host_snapshot;
+    let (nodes, edges) = with_host(host_snapshot, |host| dag_host_snapshot_to_workflow(&host.dag.host_snapshot));
     let viewport = Viewport2d { x: config.viewport.x, y: config.viewport.y, zoom: config.viewport.zoom };
-    let flow_extras = flow_backed_node_graph_extras(fixture, "", 0.0, true, false, semio_framework_ui_styling::metrics::board::GRID_FACTOR_DEFAULT, Some(session));
+    let flow_extras = flow_backed_node_graph_extras(host_snapshot, "", 0.0, true, false, semio_framework_ui_styling::metrics::board::GRID_FACTOR_DEFAULT, Some(session));
     // 🕹️ `render` carries no `InteractionView` and `NodeGraphScene` has no `interaction_domain` field
     // for the wrapper to stamp post-render either (see the `🧊️3d` sibling window's identical note,
     // ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) — `selection` is left at
@@ -55,7 +55,7 @@ pub fn render(document: &Generation2dSnapshot, config: &config::Generation2dMain
             editable: Some(true),
             capabilities_json: flow_extras.capabilities_json,
             lod_json: flow_extras.lod_json,
-            host_document_json: flow_extras.host_document_json,
+            host_snapshot_json: flow_extras.host_snapshot_json,
             eval_json: flow_extras.eval_json,
             status_json: flow_extras.status_json,
             ..NodeGraphScene::base(nodes, edges, viewport)

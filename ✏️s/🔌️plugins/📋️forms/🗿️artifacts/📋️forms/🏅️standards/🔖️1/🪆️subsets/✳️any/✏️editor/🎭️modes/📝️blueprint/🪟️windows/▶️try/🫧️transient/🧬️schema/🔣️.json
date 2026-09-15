@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://semio.tech/schema/forms/try-window-transient.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/forms/try-window-transient.json",
   "title": "FormsTryWindowTransient",
   "type": "object",
   "additionalProperties": false,

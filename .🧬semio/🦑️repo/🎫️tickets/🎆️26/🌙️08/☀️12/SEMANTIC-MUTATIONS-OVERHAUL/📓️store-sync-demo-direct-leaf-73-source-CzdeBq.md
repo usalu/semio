@@ -9096,7 +9096,7 @@ Mode: source. Result: FAIL 196/230.
         "errors": [
           {
             "instancePath": "/n",
-            "schemaPath": "https://semio.tech/schema/store-sync-demo/intrinsic/1#/$defs/i32/type",
+            "schemaPath": "https://json.schemas.assets.semio-tech.com/store-sync-demo/intrinsic/1#/$defs/i32/type",
             "keyword": "type",
             "params": {
               "type": "integer"
@@ -9264,7 +9264,7 @@ Mode: source. Result: FAIL 196/230.
         "errors": [
           {
             "instancePath": "/n",
-            "schemaPath": "https://semio.tech/schema/store-sync-demo/intrinsic/1#/$defs/i32/type",
+            "schemaPath": "https://json.schemas.assets.semio-tech.com/store-sync-demo/intrinsic/1#/$defs/i32/type",
             "keyword": "type",
             "params": {
               "type": "integer"
@@ -9660,7 +9660,7 @@ Mode: source. Result: FAIL 196/230.
         "errors": [
           {
             "instancePath": "/n",
-            "schemaPath": "https://semio.tech/schema/store-sync-demo/intrinsic/1#/$defs/i32/type",
+            "schemaPath": "https://json.schemas.assets.semio-tech.com/store-sync-demo/intrinsic/1#/$defs/i32/type",
             "keyword": "type",
             "params": {
               "type": "integer"
@@ -9679,7 +9679,7 @@ Mode: source. Result: FAIL 196/230.
         "errors": [
           {
             "instancePath": "/n",
-            "schemaPath": "https://semio.tech/schema/store-sync-demo/intrinsic/1#/$defs/i32/type",
+            "schemaPath": "https://json.schemas.assets.semio-tech.com/store-sync-demo/intrinsic/1#/$defs/i32/type",
             "keyword": "type",
             "params": {
               "type": "integer"
@@ -9698,7 +9698,7 @@ Mode: source. Result: FAIL 196/230.
         "errors": [
           {
             "instancePath": "/n",
-            "schemaPath": "https://semio.tech/schema/store-sync-demo/intrinsic/1#/$defs/i32/type",
+            "schemaPath": "https://json.schemas.assets.semio-tech.com/store-sync-demo/intrinsic/1#/$defs/i32/type",
             "keyword": "type",
             "params": {
               "type": "integer"
@@ -9717,7 +9717,7 @@ Mode: source. Result: FAIL 196/230.
         "errors": [
           {
             "instancePath": "/n",
-            "schemaPath": "https://semio.tech/schema/store-sync-demo/intrinsic/1#/$defs/i32/minimum",
+            "schemaPath": "https://json.schemas.assets.semio-tech.com/store-sync-demo/intrinsic/1#/$defs/i32/minimum",
             "keyword": "minimum",
             "params": {
               "comparison": ">=",
@@ -9737,7 +9737,7 @@ Mode: source. Result: FAIL 196/230.
         "errors": [
           {
             "instancePath": "/n",
-            "schemaPath": "https://semio.tech/schema/store-sync-demo/intrinsic/1#/$defs/i32/maximum",
+            "schemaPath": "https://json.schemas.assets.semio-tech.com/store-sync-demo/intrinsic/1#/$defs/i32/maximum",
             "keyword": "maximum",
             "params": {
               "comparison": "<=",
@@ -9757,7 +9757,7 @@ Mode: source. Result: FAIL 196/230.
         "errors": [
           {
             "instancePath": "/n",
-            "schemaPath": "https://semio.tech/schema/store-sync-demo/intrinsic/1#/$defs/i32/maximum",
+            "schemaPath": "https://json.schemas.assets.semio-tech.com/store-sync-demo/intrinsic/1#/$defs/i32/maximum",
             "keyword": "maximum",
             "params": {
               "comparison": "<=",
@@ -9777,7 +9777,7 @@ Mode: source. Result: FAIL 196/230.
         "errors": [
           {
             "instancePath": "/n",
-            "schemaPath": "https://semio.tech/schema/store-sync-demo/intrinsic/1#/$defs/i32/type",
+            "schemaPath": "https://json.schemas.assets.semio-tech.com/store-sync-demo/intrinsic/1#/$defs/i32/type",
             "keyword": "type",
             "params": {
               "type": "integer"
@@ -9796,7 +9796,7 @@ Mode: source. Result: FAIL 196/230.
         "errors": [
           {
             "instancePath": "/n",
-            "schemaPath": "https://semio.tech/schema/store-sync-demo/intrinsic/1#/$defs/i32/type",
+            "schemaPath": "https://json.schemas.assets.semio-tech.com/store-sync-demo/intrinsic/1#/$defs/i32/type",
             "keyword": "type",
             "params": {
               "type": "integer"
@@ -9815,7 +9815,7 @@ Mode: source. Result: FAIL 196/230.
         "errors": [
           {
             "instancePath": "/n",
-            "schemaPath": "https://semio.tech/schema/store-sync-demo/intrinsic/1#/$defs/i32/type",
+            "schemaPath": "https://json.schemas.assets.semio-tech.com/store-sync-demo/intrinsic/1#/$defs/i32/type",
             "keyword": "type",
             "params": {
               "type": "integer"
@@ -9834,7 +9834,7 @@ Mode: source. Result: FAIL 196/230.
         "errors": [
           {
             "instancePath": "/n",
-            "schemaPath": "https://semio.tech/schema/store-sync-demo/intrinsic/1#/$defs/i32/minimum",
+            "schemaPath": "https://json.schemas.assets.semio-tech.com/store-sync-demo/intrinsic/1#/$defs/i32/minimum",
             "keyword": "minimum",
             "params": {
               "comparison": ">=",
@@ -9854,7 +9854,7 @@ Mode: source. Result: FAIL 196/230.
         "errors": [
           {
             "instancePath": "/n",
-            "schemaPath": "https://semio.tech/schema/store-sync-demo/intrinsic/1#/$defs/i32/maximum",
+            "schemaPath": "https://json.schemas.assets.semio-tech.com/store-sync-demo/intrinsic/1#/$defs/i32/maximum",
             "keyword": "maximum",
             "params": {
               "comparison": "<=",
@@ -9874,7 +9874,7 @@ Mode: source. Result: FAIL 196/230.
         "errors": [
           {
             "instancePath": "/n",
-            "schemaPath": "https://semio.tech/schema/store-sync-demo/intrinsic/1#/$defs/i32/maximum",
+            "schemaPath": "https://json.schemas.assets.semio-tech.com/store-sync-demo/intrinsic/1#/$defs/i32/maximum",
             "keyword": "maximum",
             "params": {
               "comparison": "<=",

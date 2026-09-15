@@ -1938,7 +1938,7 @@ pub fn take_engine_surface_registrations() -> Vec<EngineSurfaceRegistration> {
 /// @see `🧱️elements/🕸️NodeGraph/🟦️.tsx` — `NodeGraphHost`
 /// @see `🧱️elements/🪪️WasmSessionLoader/🟦️.tsx` — `isFlowGraphScene`
 fn node_graph_scene_uses_flow_engine(graph: &ui_wgpu::wgpu::NodeGraphScene) -> bool {
-    if graph.host_document_json.as_deref().is_some_and(|json| !json.trim().is_empty()) {
+    if graph.host_snapshot_json.as_deref().is_some_and(|json| !json.trim().is_empty()) {
         return true;
     }
     let Some(capabilities) = graph.capabilities_json.as_deref() else {
@@ -1952,8 +1952,8 @@ fn node_graph_scene_uses_flow_engine(graph: &ui_wgpu::wgpu::NodeGraphScene) -> b
 
 fn node_graph_engine_from_scene(graph: &ui_wgpu::wgpu::NodeGraphScene, dark: bool) -> NodeGraphEngine {
     if node_graph_scene_uses_flow_engine(graph) {
-        let fixture = graph.host_document_json.as_deref().and_then(|json| FlowHost::parse_host_document_json(json).ok()).unwrap_or_default();
-        let mut host = FlowHost::from_host_document(fixture);
+        let fixture = graph.host_snapshot_json.as_deref().and_then(|json| FlowHost::parse_host_snapshot_json(json).ok()).unwrap_or_default();
+        let mut host = FlowHost::from_host_snapshot(fixture);
         host.set_canvas_theme_dark(dark);
         return NodeGraphEngine::Flow(host);
     }
@@ -2014,11 +2014,11 @@ fn sync_node_graph_engine(engine: &mut NodeGraphEngine, cache: &mut NodeGraphSyn
             cache.operator_ids = Some(operator_ids);
             changed = true;
         }
-        if cache.fixture_json.as_deref() != graph.host_document_json.as_deref() {
-            if let Some(fixture) = graph.host_document_json.as_deref().and_then(|json| FlowHost::parse_host_document_json(json).ok()) {
-                host.resync_host_document_from_scene(fixture);
+        if cache.fixture_json.as_deref() != graph.host_snapshot_json.as_deref() {
+            if let Some(fixture) = graph.host_snapshot_json.as_deref().and_then(|json| FlowHost::parse_host_snapshot_json(json).ok()) {
+                host.resync_host_snapshot_from_scene(fixture);
             }
-            cache.fixture_json = graph.host_document_json.clone();
+            cache.fixture_json = graph.host_snapshot_json.clone();
             fixture_changed = true;
             changed = true;
         }
@@ -2679,7 +2679,7 @@ pub fn node_graph_fit_camera(surface_id: &str) -> Option<[f64; 3]> {
         let engine = surfaces.get_mut(surface_id)?.node_graph.as_mut()?;
         match engine {
             NodeGraphEngine::Flow(host) => host.fit_camera_to_content().then(|| host.camera()),
-            NodeGraphEngine::Dag(host) => host.dag.fit_camera_to_content().then(|| [host.dag.host_document.camera.x, host.dag.host_document.camera.y, host.dag.host_document.camera.zoom]),
+            NodeGraphEngine::Dag(host) => host.dag.fit_camera_to_content().then(|| [host.dag.host_snapshot.camera.x, host.dag.host_snapshot.camera.y, host.dag.host_snapshot.camera.zoom]),
         }
     })
 }
@@ -3215,13 +3215,13 @@ fn apply_node_graph_screen_pointer(surface_id: &str, intent: flow::dag::DagPoint
             NodeGraphEngine::Flow(host) => {
                 host.resync_interaction_projection();
                 let edits = host.dag.take_graph_edits();
-                let camera = &host.dag.host_document.camera;
+                let camera = &host.dag.host_snapshot.camera;
                 (edits, host.dag.selected_node_ids(), host.dag.hovered_node_id_ref().map(str::to_owned), [camera.x, camera.y, camera.zoom])
             }
             NodeGraphEngine::Dag(host) => {
                 host.resync_interaction_projection();
                 let edits = host.dag.take_graph_edits();
-                let camera = &host.dag.host_document.camera;
+                let camera = &host.dag.host_snapshot.camera;
                 (edits, host.dag.selected_node_ids(), host.dag.hovered_node_id_ref().map(str::to_owned), [camera.x, camera.y, camera.zoom])
             }
         };
@@ -3398,11 +3398,11 @@ fn graph_interaction_snapshot(entry: &EngineSurface, camera: Option<[f64; 3]>) -
     let (node_ids, hovered_id, current_camera) = match entry.node_graph.as_ref() {
         Some(NodeGraphEngine::Flow(host)) => {
             let (selected, hovered) = bounded_graph_selection(&host.dag)?;
-            (selected, hovered, [host.host_document.camera.x, host.host_document.camera.y, host.host_document.camera.zoom])
+            (selected, hovered, [host.host_snapshot.camera.x, host.host_snapshot.camera.y, host.host_snapshot.camera.zoom])
         }
         Some(NodeGraphEngine::Dag(host)) => {
             let (selected, hovered) = bounded_graph_selection(&host.dag)?;
-            (selected, hovered, [host.dag.host_document.camera.x, host.dag.host_document.camera.y, host.dag.host_document.camera.zoom])
+            (selected, hovered, [host.dag.host_snapshot.camera.x, host.dag.host_snapshot.camera.y, host.dag.host_snapshot.camera.zoom])
         }
         None => return Err(ui_wgpu::wgpu::BoundedActionFault::Structure),
     };

@@ -1,7 +1,7 @@
 //! 🎨️ 🎨️ Generation3d play app commands command — `set-active-example`.
 
 use crate::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
-use crate::standards::v1::subsets::any::schema::mutations::text::{generation3d_host_document_operations, generation_mutation_to_generation3d, Generation3dMutation};
+use crate::standards::v1::subsets::any::schema::mutations::text::{generation3d_host_snapshot_operations, generation_mutation_to_generation3d, Generation3dMutation};
 use crate::standards::v1::subsets::any::schema::{empty_generation3d_snapshot, example_snapshot, is_generation3d_example_id};
 use crate::Generation3dSnapshot;
 use semio_framework_artifact_flow_flow::CameraJson;
@@ -49,7 +49,7 @@ pub struct SetActiveExample {
 /// picker can only ever offer declared ids and a typo must not destroy a graph
 /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
 pub fn emit(payload: &SetActiveExample, doc: &ArtifactView<'_, Generation3dSnapshot>, cfg: &ConfigView<'_, Generation3dConfig>) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation>, Fault> {
-    let fixture = &doc.snapshot.host_document;
+    let host_snapshot = &doc.snapshot.host_snapshot;
     let target = if payload.example_id.is_empty() {
         empty_generation3d_snapshot()
     } else if is_generation3d_example_id(&payload.example_id) {
@@ -58,8 +58,8 @@ pub fn emit(payload: &SetActiveExample, doc: &ArtifactView<'_, Generation3dSnaps
         return Ok(Emit::default());
     };
     let mut operations: Vec<Generation3dMutation> = doc.snapshot.generation.generations.iter().map(|generation| generation_mutation_to_generation3d(GenerationMutation::Remove { id: generation.id.clone() })).collect();
-    operations.extend(generation3d_host_document_operations(fixture, &target.host_document));
-    let config = config_after_document_load(cfg.snapshot, &target.host_document.camera);
+    operations.extend(generation3d_host_snapshot_operations(host_snapshot, &target.host_snapshot));
+    let config = config_after_document_load(cfg.snapshot, &target.host_snapshot.camera);
     // 🧹️ The loaded example projection is dead once its operations and camera are read — close it
     // through its explicit ladder, never leave the fixture's ordered layout root to drop glue.
     target.retire_cold();

@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/framework/actor/return/response/credit/metadata/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/actor/return/response/credit/metadata/schema.json",
   "title": "Actor Return Response Credit Metadata Schema Module",
   "definitions": {
     "layout": {
@@ -129,7 +129,7 @@
             "roster": {
               "allOf": [
                 {
-                  "$ref": "https://semio.tech/schema/framework/value/resident/schema.json#/$defs/Resources"
+                  "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/resident/schema.json#/$defs/Resources"
                 },
                 {
                   "const": {
@@ -143,7 +143,7 @@
             "pending": {
               "allOf": [
                 {
-                  "$ref": "https://semio.tech/schema/framework/value/resident/schema.json#/$defs/Resources"
+                  "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/resident/schema.json#/$defs/Resources"
                 },
                 {
                   "const": {
@@ -157,7 +157,7 @@
             "framing": {
               "allOf": [
                 {
-                  "$ref": "https://semio.tech/schema/framework/value/resident/schema.json#/$defs/Resources"
+                  "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/resident/schema.json#/$defs/Resources"
                 },
                 {
                   "const": {

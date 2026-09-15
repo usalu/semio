@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://semio.tech/schema/repo/languages.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/repo/languages.json",
   "title": "🗣️ Repo language table and parsing records",
   "description": "Single source of truth for the repo language plugins. `🔣️languages.json` validates against `#/$defs/languageTable`; every implementation (Rust, Go) loads that table verbatim and interprets the declarative pattern language below. Host regular expressions are forbidden: a pattern is an ordered token list matched anchored at the start of a single line with ordered backtracking, which reproduces Go RE2 leftmost-first submatch semantics exactly.",
   "type": "object",

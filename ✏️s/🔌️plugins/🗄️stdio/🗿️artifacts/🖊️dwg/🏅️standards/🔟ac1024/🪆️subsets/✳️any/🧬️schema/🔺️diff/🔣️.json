@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/dwg/ac1024/any/diff.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/dwg/ac1024/any/diff.json",
   "title": "DwgDiff",
   "type": "object",
   "properties": {
@@ -21,11 +21,11 @@
       "x-semio-state": "artifact"
     },
     "drawing": {
-      "$ref": "https://semio.tech/schema/s/stdio/dwg/ac1024/any/artifact.json#/$defs/DwgLogicalDrawing",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/dwg/ac1024/any/artifact.json#/$defs/DwgLogicalDrawing",
       "x-semio-state": "artifact"
     },
     "header": {
-      "$ref": "https://semio.tech/schema/s/stdio/dwg/ac1024/any/artifact.json#/$defs/headerVariables",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/dwg/ac1024/any/artifact.json#/$defs/headerVariables",
       "x-semio-state": "artifact"
     },
     "classes": {
@@ -55,19 +55,19 @@
       "x-semio-state": "artifact"
     },
     "auxiliaryHeader": {
-      "$ref": "https://semio.tech/schema/s/stdio/dwg/ac1024/any/artifact.json#/$defs/auxiliaryHeader",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/dwg/ac1024/any/artifact.json#/$defs/auxiliaryHeader",
       "x-semio-state": "artifact"
     },
     "revisionHistory": {
-      "$ref": "https://semio.tech/schema/s/stdio/dwg/ac1024/any/artifact.json#/$defs/revisionHistory",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/dwg/ac1024/any/artifact.json#/$defs/revisionHistory",
       "x-semio-state": "artifact"
     },
     "preview": {
-      "$ref": "https://semio.tech/schema/s/stdio/dwg/ac1024/any/artifact.json#/$defs/indexedPreview",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/dwg/ac1024/any/artifact.json#/$defs/indexedPreview",
       "x-semio-state": "artifact"
     },
     "applicationHistory": {
-      "$ref": "https://semio.tech/schema/s/stdio/dwg/ac1024/any/artifact.json#/$defs/applicationHistory",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/dwg/ac1024/any/artifact.json#/$defs/applicationHistory",
       "x-semio-state": "artifact"
     }
   },

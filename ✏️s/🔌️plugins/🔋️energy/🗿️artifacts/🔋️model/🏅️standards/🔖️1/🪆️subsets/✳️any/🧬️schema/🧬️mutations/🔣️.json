@@ -1,836 +1,836 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/energy/model/mutations.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutations.json",
   "title": "EnergyModelMutation",
   "description": "One handcrafted semantic mutation kind per $defs entry - the tagged union EnergyModelMutation dispatches on.",
   "oneOf": [
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/add-air-loop-terminal-zone/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/add-air-loop-terminal-zone/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/add-annual-schedule-holiday/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/add-annual-schedule-holiday/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/add-construction-layer/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/add-construction-layer/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/add-electrical-load-center-battery/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/add-electrical-load-center-battery/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/add-electrical-load-center-pv/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/add-electrical-load-center-pv/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/add-output-variable/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/add-output-variable/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/add-plant-loop-equipment/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/add-plant-loop-equipment/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/add-space-list-member/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/add-space-list-member/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/add-thermal-enclosure-zone/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/add-thermal-enclosure-zone/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/bind-fenestration-glazing-construction/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/bind-fenestration-glazing-construction/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/bind-weather-file/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/bind-weather-file/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-air-loop-design-supply-air-flow/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-air-loop-design-supply-air-flow/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-air-loop-return-node/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-air-loop-return-node/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-air-loop-supply-node/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-air-loop-supply-node/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-annual-schedule-default-daily-schedule/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-annual-schedule-default-daily-schedule/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-annual-schedule-holiday-daily-schedule/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-annual-schedule-holiday-daily-schedule/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-battery-capacity/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-battery-capacity/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-battery-max-charge/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-battery-max-charge/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-battery-max-discharge/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-battery-max-discharge/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-battery-round-trip-efficiency/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-battery-round-trip-efficiency/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-constant-schedule-value/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-constant-schedule-value/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-daily-schedule-interpolation/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-daily-schedule-interpolation/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-daily-schedule-limits/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-daily-schedule-limits/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-daylight-zone-glare-limit/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-daylight-zone-glare-limit/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-daylight-zone-illuminance-target/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-daylight-zone-illuminance-target/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-daylight-zone-window-transmittance/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-daylight-zone-window-transmittance/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-daylight-zone-zone/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-daylight-zone-zone/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-equipment-gain-latent-fraction/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-equipment-gain-latent-fraction/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-equipment-gain-radiant-fraction/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-equipment-gain-radiant-fraction/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-equipment-gain-schedule/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-equipment-gain-schedule/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-equipment-gain-watts-per-area/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-equipment-gain-watts-per-area/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-equipment-gain-zone/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-equipment-gain-zone/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-fault-severity/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-fault-severity/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-fault-start-schedule/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-fault-start-schedule/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-fault-target-equipment/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-fault-target-equipment/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-fault-type/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-fault-type/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-fenestration-area/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-fenestration-area/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-fenestration-divider-conductance/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-fenestration-divider-conductance/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-fenestration-fin-depth/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-fenestration-fin-depth/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-fenestration-fin-offset/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-fenestration-fin-offset/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-fenestration-frame-conductance/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-fenestration-frame-conductance/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-fenestration-height/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-fenestration-height/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-fenestration-overhang-depth/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-fenestration-overhang-depth/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-fenestration-overhang-offset/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-fenestration-overhang-offset/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-fenestration-shgc/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-fenestration-shgc/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-fenestration-sill-height/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-fenestration-sill-height/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-fenestration-surface/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-fenestration-surface/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-fenestration-u-value/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-fenestration-u-value/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-fenestration-vlt/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-fenestration-vlt/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-humidistat-dehumidifying-setpoint-schedule/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-humidistat-dehumidifying-setpoint-schedule/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-humidistat-dehumidifying-throttle-range/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-humidistat-dehumidifying-throttle-range/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-humidistat-humidifying-setpoint-schedule/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-humidistat-humidifying-setpoint-schedule/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-humidistat-humidifying-throttle-range/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-humidistat-humidifying-throttle-range/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-humidistat-zone/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-humidistat-zone/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-ideal-loads-system-max-cooling-capacity/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-ideal-loads-system-max-cooling-capacity/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-ideal-loads-system-max-heating-capacity/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-ideal-loads-system-max-heating-capacity/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-ideal-loads-system-max-heating-supply-air-temp/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-ideal-loads-system-max-heating-supply-air-temp/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-ideal-loads-system-min-cooling-supply-air-temp/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-ideal-loads-system-min-cooling-supply-air-temp/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-ideal-loads-system-outdoor-air-per-area/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-ideal-loads-system-outdoor-air-per-area/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-ideal-loads-system-outdoor-air-per-person/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-ideal-loads-system-outdoor-air-per-person/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-ideal-loads-system-zone/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-ideal-loads-system-zone/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-infiltration-constant-term-coefficient/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-infiltration-constant-term-coefficient/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-infiltration-design-flow-ach/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-infiltration-design-flow-ach/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-infiltration-discharge-coefficient/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-infiltration-discharge-coefficient/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-infiltration-effective-leakage-area/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-infiltration-effective-leakage-area/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-infiltration-flow-per-exterior-area/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-infiltration-flow-per-exterior-area/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-infiltration-method/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-infiltration-method/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-infiltration-schedule/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-infiltration-schedule/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-infiltration-stack-height/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-infiltration-stack-height/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-infiltration-temperature-term-coefficient/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-infiltration-temperature-term-coefficient/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-infiltration-velocity-squared-term-coefficient/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-infiltration-velocity-squared-term-coefficient/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-infiltration-velocity-term-coefficient/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-infiltration-velocity-term-coefficient/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-infiltration-zone/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-infiltration-zone/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-lighting-gain-radiant-fraction/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-lighting-gain-radiant-fraction/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-lighting-gain-return-air-fraction/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-lighting-gain-return-air-fraction/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-lighting-gain-schedule/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-lighting-gain-schedule/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-lighting-gain-visible-fraction/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-lighting-gain-visible-fraction/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-lighting-gain-watts-per-area/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-lighting-gain-watts-per-area/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-lighting-gain-zone/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-lighting-gain-zone/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-material-conductivity/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-material-conductivity/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-material-density/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-material-density/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-material-solar-absorptance/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-material-solar-absorptance/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-material-specific-heat/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-material-specific-heat/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-material-thermal-absorptance/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-material-thermal-absorptance/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-material-thickness/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-material-thickness/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-material-visible-absorptance/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-material-visible-absorptance/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-mechanical-ventilation-design-flow/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-mechanical-ventilation-design-flow/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-mechanical-ventilation-fan-delta-pressure/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-mechanical-ventilation-fan-delta-pressure/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-mechanical-ventilation-fan-total-efficiency/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-mechanical-ventilation-fan-total-efficiency/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-mechanical-ventilation-schedule/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-mechanical-ventilation-schedule/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-mechanical-ventilation-zone/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-mechanical-ventilation-zone/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-model-version/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-model-version/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-outdoor-air-system-air-loop/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-outdoor-air-system-air-loop/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-outdoor-air-system-economizer-enabled/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-outdoor-air-system-economizer-enabled/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-outdoor-air-system-min-oa-flow/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-outdoor-air-system-min-oa-flow/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-people-gain-activity-schedule/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-people-gain-activity-schedule/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-people-gain-latent-fraction/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-people-gain-latent-fraction/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-people-gain-people-per-area/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-people-gain-people-per-area/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-people-gain-radiant-fraction/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-people-gain-radiant-fraction/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-people-gain-schedule/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-people-gain-schedule/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-people-gain-sensible-fraction/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-people-gain-sensible-fraction/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-people-gain-zone/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-people-gain-zone/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-plant-loop-design-flow/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-plant-loop-design-flow/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-plant-loop-return-temperature/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-plant-loop-return-temperature/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-plant-loop-supply-temperature/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-plant-loop-supply-temperature/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-plant-loop-type/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-plant-loop-type/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-pv-system-area/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-pv-system-area/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-pv-system-azimuth/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-pv-system-azimuth/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-pv-system-dc-capacity/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-pv-system-dc-capacity/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-pv-system-inverter-efficiency/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-pv-system-inverter-efficiency/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-pv-system-module-efficiency/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-pv-system-module-efficiency/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-pv-system-tilt/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-pv-system-tilt/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-refrigeration-system-case-count/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-refrigeration-system-case-count/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-refrigeration-system-defrost-schedule/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-refrigeration-system-defrost-schedule/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-refrigeration-system-design-load/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-refrigeration-system-design-load/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-room-air-model/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-room-air-model/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-setpoint-manager-schedule/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-setpoint-manager-schedule/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-shading-surface-transmittance-schedule/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-shading-surface-transmittance-schedule/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-shw-system-heater-capacity/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-shw-system-heater-capacity/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-shw-system-schedule/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-shw-system-schedule/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-shw-system-setpoint/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-shw-system-setpoint/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-shw-system-storage-volume/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-shw-system-storage-volume/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-sizing-object-design-day-type/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-sizing-object-design-day-type/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-sizing-object-sizing-type/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-sizing-object-sizing-type/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-sizing-object-zone/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-sizing-object-zone/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-solar-thermal-system-azimuth/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-solar-thermal-system-azimuth/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-solar-thermal-system-collector-area/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-solar-thermal-system-collector-area/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-solar-thermal-system-efficiency/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-solar-thermal-system-efficiency/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-solar-thermal-system-storage-volume/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-solar-thermal-system-storage-volume/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-solar-thermal-system-tilt/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-solar-thermal-system-tilt/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-space-floor-area/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-space-floor-area/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-space-zone/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-space-zone/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-surface-boundary-condition/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-surface-boundary-condition/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-surface-class/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-surface-class/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-surface-construction/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-surface-construction/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-surface-multiplier/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-surface-multiplier/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-surface-sun-exposed/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-surface-sun-exposed/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-surface-wind-exposed/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-surface-wind-exposed/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-surface-zone/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-surface-zone/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-thermostat-cooling-setpoint-schedule/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-thermostat-cooling-setpoint-schedule/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-thermostat-cooling-throttle-range/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-thermostat-cooling-throttle-range/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-thermostat-heating-setpoint-schedule/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-thermostat-heating-setpoint-schedule/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-thermostat-heating-throttle-range/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-thermostat-heating-throttle-range/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-thermostat-zone/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-thermostat-zone/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-time-series-schedule-timestep/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-time-series-schedule-timestep/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-water-system-fixture-count/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-water-system-fixture-count/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-water-system-peak-flow/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-water-system-peak-flow/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-water-system-schedule/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-water-system-schedule/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-weekly-schedule-day/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-weekly-schedule-day/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-zone-conditioned/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-zone-conditioned/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-zone-equipment-cooling-capacity/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-zone-equipment-cooling-capacity/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-zone-equipment-heating-capacity/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-zone-equipment-heating-capacity/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-zone-equipment-priority/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-zone-equipment-priority/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-zone-equipment-type/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-zone-equipment-type/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-zone-equipment-zone/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-zone-equipment-zone/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-zone-floor-area-participation/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-zone-floor-area-participation/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-zone-multiplier/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-zone-multiplier/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/change-zone-volume/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-zone-volume/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/clear-fenestration-glazing-construction/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/clear-fenestration-glazing-construction/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/connect-referenced-model/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/connect-referenced-model/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/connect-surfaces/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/connect-surfaces/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/create-air-loop/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/create-air-loop/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/create-annual-schedule/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/create-annual-schedule/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/create-battery/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/create-battery/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/create-constant-schedule/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/create-constant-schedule/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/create-construction/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/create-construction/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/create-daily-schedule/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/create-daily-schedule/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/create-daylight-zone/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/create-daylight-zone/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/create-electrical-load-center/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/create-electrical-load-center/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/create-equipment-gain/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/create-equipment-gain/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/create-fault/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/create-fault/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/create-fenestration/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/create-fenestration/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/create-humidistat/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/create-humidistat/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/create-ideal-loads-system/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/create-ideal-loads-system/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/create-infiltration/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/create-infiltration/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/create-lighting-gain/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/create-lighting-gain/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/create-material/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/create-material/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/create-mechanical-ventilation/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/create-mechanical-ventilation/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/create-outdoor-air-system/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/create-outdoor-air-system/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/create-people-gain/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/create-people-gain/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/create-plant-loop/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/create-plant-loop/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/create-pv-system/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/create-pv-system/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/create-refrigeration-system/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/create-refrigeration-system/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/create-room-air-model-assignment/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/create-room-air-model-assignment/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/create-setpoint-manager/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/create-setpoint-manager/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/create-shading-surface/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/create-shading-surface/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/create-shw-system/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/create-shw-system/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/create-sizing-object/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/create-sizing-object/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/create-solar-thermal-system/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/create-solar-thermal-system/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/create-space/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/create-space/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/create-space-list/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/create-space-list/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/create-surface/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/create-surface/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/create-thermal-enclosure/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/create-thermal-enclosure/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/create-thermostat/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/create-thermostat/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/create-time-series-schedule/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/create-time-series-schedule/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/create-water-system/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/create-water-system/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/create-weekly-schedule/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/create-weekly-schedule/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/create-zone/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/create-zone/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/create-zone-equipment/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/create-zone-equipment/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/delete-air-loop/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/delete-air-loop/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/delete-annual-schedule/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/delete-annual-schedule/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/delete-battery/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/delete-battery/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/delete-constant-schedule/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/delete-constant-schedule/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/delete-construction/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/delete-construction/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/delete-daily-schedule/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/delete-daily-schedule/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/delete-daylight-zone/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/delete-daylight-zone/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/delete-electrical-load-center/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/delete-electrical-load-center/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/delete-equipment-gain/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/delete-equipment-gain/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/delete-fault/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/delete-fault/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/delete-fenestration/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/delete-fenestration/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/delete-humidistat/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/delete-humidistat/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/delete-ideal-loads-system/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/delete-ideal-loads-system/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/delete-infiltration/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/delete-infiltration/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/delete-lighting-gain/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/delete-lighting-gain/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/delete-material/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/delete-material/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/delete-mechanical-ventilation/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/delete-mechanical-ventilation/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/delete-outdoor-air-system/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/delete-outdoor-air-system/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/delete-people-gain/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/delete-people-gain/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/delete-plant-loop/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/delete-plant-loop/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/delete-pv-system/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/delete-pv-system/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/delete-refrigeration-system/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/delete-refrigeration-system/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/delete-room-air-model-assignment/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/delete-room-air-model-assignment/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/delete-setpoint-manager/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/delete-setpoint-manager/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/delete-shading-surface/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/delete-shading-surface/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/delete-shw-system/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/delete-shw-system/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/delete-sizing-object/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/delete-sizing-object/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/delete-solar-thermal-system/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/delete-solar-thermal-system/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/delete-space/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/delete-space/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/delete-space-list/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/delete-space-list/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/delete-surface/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/delete-surface/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/delete-thermal-enclosure/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/delete-thermal-enclosure/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/delete-thermostat/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/delete-thermostat/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/delete-time-series-schedule/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/delete-time-series-schedule/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/delete-water-system/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/delete-water-system/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/delete-weekly-schedule/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/delete-weekly-schedule/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/delete-zone/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/delete-zone/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/delete-zone-equipment/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/delete-zone-equipment/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/disconnect-referenced-model/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/disconnect-referenced-model/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/disconnect-surfaces/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/disconnect-surfaces/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/insert-annual-schedule-rule/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/insert-annual-schedule-rule/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/remove-air-loop-terminal-zone/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/remove-air-loop-terminal-zone/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/remove-annual-schedule-holiday/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/remove-annual-schedule-holiday/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/remove-annual-schedule-rule/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/remove-annual-schedule-rule/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/remove-construction-layer/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/remove-construction-layer/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/remove-electrical-load-center-battery/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/remove-electrical-load-center-battery/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/remove-electrical-load-center-pv/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/remove-electrical-load-center-pv/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/remove-output-variable/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/remove-output-variable/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/remove-plant-loop-equipment/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/remove-plant-loop-equipment/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/remove-space-list-member/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/remove-space-list-member/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/remove-thermal-enclosure-zone/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/remove-thermal-enclosure-zone/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/rename-air-loop/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/rename-air-loop/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/rename-construction/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/rename-construction/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/rename-electrical-load-center/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/rename-electrical-load-center/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/rename-fenestration/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/rename-fenestration/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/rename-material/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/rename-material/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/rename-model/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/rename-model/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/rename-plant-loop/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/rename-plant-loop/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/rename-setpoint-manager/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/rename-setpoint-manager/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/rename-shading-surface/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/rename-shading-surface/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/rename-space/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/rename-space/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/rename-space-list/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/rename-space-list/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/rename-surface/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/rename-surface/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/rename-thermal-enclosure/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/rename-thermal-enclosure/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/rename-zone/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/rename-zone/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/reorder-annual-schedule-rules/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/reorder-annual-schedule-rules/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/reorder-construction-layers/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/reorder-construction-layers/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/replace-airflow-network/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/replace-airflow-network/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/replace-daily-schedule-hourly-values/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/replace-daily-schedule-hourly-values/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/replace-setpoint-manager-kind/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/replace-setpoint-manager-kind/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/replace-shading-surface-vertices/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/replace-shading-surface-vertices/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/replace-surface-vertices/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/replace-surface-vertices/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/replace-time-series-schedule-values/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/replace-time-series-schedule-values/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/unbind-weather-file/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/unbind-weather-file/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/update-ground-temperature/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/update-ground-temperature/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/update-run-period/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/update-run-period/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/s/energy/model/mutation/update-site/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/update-site/schema.json"
     }
   ]
 }

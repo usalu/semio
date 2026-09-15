@@ -6,8 +6,8 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 //#region 🧪️RootAuthority
 fn allocation() -> FlowCopyAllocationBudget { FlowCopyAllocationBudget::new(16 * 1024 * 1024, 32 * 1024 * 1024) }
 #[derive(Debug)]
-struct Root { host_document: Option<FlowHostDocument>, drops: Arc<AtomicUsize> }
-impl Drop for Root { fn drop(&mut self) { assert!(self.host_document.is_none()); self.drops.fetch_add(1, Ordering::SeqCst); } }
+struct Root { host_snapshot: Option<FlowHostSnapshot>, drops: Arc<AtomicUsize> }
+impl Drop for Root { fn drop(&mut self) { assert!(self.host_snapshot.is_none()); self.drops.fetch_add(1, Ordering::SeqCst); } }
 struct RootFactory;
 struct RootRetirement { root: Option<Arc<Root>>, retirement: Retirement }
 impl SnapshotRetirementFactory<Root> for RootFactory {
@@ -22,7 +22,7 @@ impl ErasedSnapshotRetirement for RootRetirement {
         if !self.retirement.is_empty() { return self.retirement.close_step(maximum_items, maximum_bytes); }
         if let Some(root) = self.root.take() {
             let mut root = Arc::into_inner(root).expect("final selected copy source");
-            self.retirement.push(Owner::HostDocument(root.host_document.take().unwrap()));
+            self.retirement.push(Owner::HostSnapshot(root.host_snapshot.take().unwrap()));
             return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
         Ok(SnapshotRetirementStep::Complete)
@@ -31,9 +31,9 @@ impl ErasedSnapshotRetirement for RootRetirement {
 }
 fn source() -> (Arc<Root>, Arc<AtomicUsize>) {
     let fixture = crate::os_pack::json::parse(include_str!("../../../🧫️fixtures/🔣️.json")).unwrap();
-    let fixture: FlowHostDocument = crate::os_dsl::FromValue::from_value(crate::os_pack::json::to_dsl_value(fixture.get("hostDocument").unwrap())).unwrap();
+    let host_snapshot: FlowHostSnapshot = crate::os_dsl::FromValue::from_value(crate::os_pack::json::to_dsl_value(host_snapshot.get("hostSnapshot").unwrap())).unwrap();
     let drops = Arc::new(AtomicUsize::new(0));
-    (Arc::new(Root { host_document: Some(fixture), drops: drops.clone() }), drops)
+    (Arc::new(Root { host_snapshot: Some(host_snapshot), drops: drops.clone() }), drops)
 }
 fn close<R: Send + Sync + 'static, T: Copy>(cursor: &mut CopyCursor<R, T>, grant: usize) {
     cursor.begin_close();
@@ -55,7 +55,7 @@ fn flow_selected_copy_matches_serde_and_shares_unchanged_ordered_roots() {
     for grant in [1, 4096] {
         for case in vectors.get("cases").and_then(crate::os_pack::json::Value::as_array).unwrap() {
             let (root, drops) = source();
-            let before = crate::os_pack::json::from_dsl_value(&crate::os_dsl::ToValue::to_value(root.host_document.as_ref().unwrap()));
+            let before = crate::os_pack::json::from_dsl_value(&crate::os_dsl::ToValue::to_value(root.host_snapshot.as_ref().unwrap()));
             let source_pointer = Arc::as_ptr(&root);
             let kind = case.get("kind").and_then(crate::os_pack::json::Value::as_str).unwrap();
             let index = case.get("index").and_then(crate::os_pack::json::Value::as_u64).unwrap() as usize;
@@ -73,19 +73,19 @@ fn flow_selected_copy_matches_serde_and_shares_unchanged_ordered_roots() {
                     assert!(cursor.complete());
                     let copied = cursor.take().unwrap();
                     assert_eq!(crate::os_pack::json::from_dsl_value(&crate::os_dsl::ToValue::to_value(&copied)), *before.pointer(case.get("pointer").and_then(crate::os_pack::json::Value::as_str).unwrap()).unwrap());
-                    assert_eq!(crate::os_pack::json::from_dsl_value(&crate::os_dsl::ToValue::to_value(cursor.owned.source.as_ref().unwrap().host_document.as_ref().unwrap())), before);
+                    assert_eq!(crate::os_pack::json::from_dsl_value(&crate::os_dsl::ToValue::to_value(cursor.owned.source.as_ref().unwrap().host_snapshot.as_ref().unwrap())), before);
                     copied.retire(&mut cursor.owned.retirement);
                     std::thread::spawn(move || { close(&mut cursor, grant); }).join().unwrap();
                 }};
             }
             match kind {
-                "widget" => run!(Widget, |root, index| root.host_document.as_ref()?.widgets.get(index)),
-                "synapse" => run!(SynapseSpec, |root, index| root.host_document.as_ref()?.synapses.get(index)),
-                "hostDocument" => {
-                    let mut cursor = FlowHostDocumentCopy::new(root, index, |root, index| (index == 0).then_some(root.host_document.as_ref()?), Arc::new(RootFactory), allocation());
+                "widget" => run!(Widget, |root, index| root.host_snapshot.as_ref()?.widgets.get(index)),
+                "synapse" => run!(SynapseSpec, |root, index| root.host_snapshot.as_ref()?.synapses.get(index)),
+                "hostSnapshot" => {
+                    let mut cursor = FlowHostSnapshotCopy::new(root, index, |root, index| (index == 0).then_some(root.host_snapshot.as_ref()?), Arc::new(RootFactory), allocation());
                     while !cursor.complete() { assert!(cursor.advance(1, grant).unwrap().unwrap() <= grant); }
                     let copied = cursor.take().unwrap();
-                    let original = cursor.cursor.owned.source.as_ref().unwrap().host_document.as_ref().unwrap();
+                    let original = cursor.cursor.owned.source.as_ref().unwrap().host_snapshot.as_ref().unwrap();
                     assert_eq!(crate::os_pack::json::from_dsl_value(&crate::os_dsl::ToValue::to_value(&copied)), before);
                     for ((left_key, left), (right_key, right)) in copied.layout.iter().zip(original.layout.iter()) {
                         assert!(std::ptr::eq(left_key, right_key) && std::ptr::eq(left, right));
@@ -105,7 +105,7 @@ fn flow_selected_copy_cancellation_and_invalid_projection_preserve_root_until_cl
     for polls in [0, 1, 4, 25, 4097] {
         let (root, drops) = source();
         let weak = Arc::downgrade(&root);
-        let mut cursor = FlowHostDocumentCopy::new(root, 0, |root, _| root.host_document.as_ref(), Arc::new(RootFactory), allocation());
+        let mut cursor = FlowHostSnapshotCopy::new(root, 0, |root, _| root.host_snapshot.as_ref(), Arc::new(RootFactory), allocation());
         for _ in 0..polls { cursor.advance(1, 1).unwrap(); }
         cursor.begin_close();
         assert!(!cursor.complete());
@@ -118,7 +118,7 @@ fn flow_selected_copy_cancellation_and_invalid_projection_preserve_root_until_cl
         assert_eq!(drops.load(Ordering::SeqCst), 1);
     }
     let (root, drops) = source();
-    let mut cursor = FlowWidgetCopy::new(root, usize::MAX, |root, index| root.host_document.as_ref()?.widgets.get(index), Arc::new(RootFactory), allocation());
+    let mut cursor = FlowWidgetCopy::new(root, usize::MAX, |root, index| root.host_snapshot.as_ref()?.widgets.get(index), Arc::new(RootFactory), allocation());
     assert!(cursor.advance(1, 1).is_err());
     assert!(cursor.advance(1, 1).unwrap().is_none());
     assert_eq!(drops.load(Ordering::SeqCst), 0);
@@ -129,13 +129,13 @@ fn flow_selected_copy_cancellation_and_invalid_projection_preserve_root_until_cl
 #[test]
 fn flow_selected_copy_nonterminal_drop_is_guarded_without_destroying_root() {
     let (root, drops) = source();
-    let mut cursor = FlowWidgetCopy::new(root, 0, |root, index| root.host_document.as_ref()?.widgets.get(index), Arc::new(RootFactory), allocation());
+    let mut cursor = FlowWidgetCopy::new(root, 0, |root, index| root.host_snapshot.as_ref()?.widgets.get(index), Arc::new(RootFactory), allocation());
     cursor.advance(1, 1).unwrap();
     assert!(std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| drop(cursor))).is_err());
     assert_eq!(drops.load(Ordering::SeqCst), 0);
     assert!(std::thread::spawn(|| {
         let (root, _) = source();
-        let _cursor = FlowHostDocumentCopy::new(root, 0, |root, _| root.host_document.as_ref(), Arc::new(RootFactory), allocation());
+        let _cursor = FlowHostSnapshotCopy::new(root, 0, |root, _| root.host_snapshot.as_ref(), Arc::new(RootFactory), allocation());
         panic!("primary selected Flow fault");
     }).join().is_err());
 }
@@ -159,7 +159,7 @@ fn flow_selected_copy_rejects_root_retirement_overgrant_and_closes_factory_owner
     }
     let (root, root_drops) = source();
     let factory_drops = Arc::new(AtomicUsize::new(0));
-    let mut cursor = FlowWidgetCopy::new(root, 0, |root, index| root.host_document.as_ref()?.widgets.get(index), Arc::new(Factory { drops: factory_drops.clone() }), allocation());
+    let mut cursor = FlowWidgetCopy::new(root, 0, |root, index| root.host_snapshot.as_ref()?.widgets.get(index), Arc::new(Factory { drops: factory_drops.clone() }), allocation());
     cursor.begin_close();
     assert!(matches!(cursor.close_step(1, 1).unwrap(), SnapshotRetirementStep::Pending { .. }));
     assert!(cursor.close_step(1, 1).unwrap_err().contains("exceeded its grant"));
@@ -174,7 +174,7 @@ fn flow_selected_copy_rejects_root_retirement_overgrant_and_closes_factory_owner
 fn flow_selected_copy_allocation_admission_is_separate_and_never_reallocates_payload_pages() {
     for (single, total) in [(1, 1_000_000), (1_000_000, 1)] {
         let (root, drops) = source();
-        let mut cursor = FlowWidgetCopy::new(root, 0, |root, index| root.host_document.as_ref()?.widgets.get(index), Arc::new(RootFactory), FlowCopyAllocationBudget::new(single, total));
+        let mut cursor = FlowWidgetCopy::new(root, 0, |root, index| root.host_snapshot.as_ref()?.widgets.get(index), Arc::new(RootFactory), FlowCopyAllocationBudget::new(single, total));
         let mut failed = false;
         for _ in 0..100 {
             if cursor.advance(1, 1).is_err() { failed = true; break; }
@@ -185,7 +185,7 @@ fn flow_selected_copy_allocation_admission_is_separate_and_never_reallocates_pay
         assert_eq!(drops.load(Ordering::SeqCst), 1);
     }
     let (root, drops) = source();
-    let mut cursor = FlowHostDocumentCopy::new(root, 0, |root, _| root.host_document.as_ref(), Arc::new(RootFactory), allocation());
+    let mut cursor = FlowHostSnapshotCopy::new(root, 0, |root, _| root.host_snapshot.as_ref(), Arc::new(RootFactory), allocation());
     assert_eq!(cursor.allocation().reservation_count(), 0);
     let mut maximum_reservation = std::time::Duration::ZERO;
     while !cursor.complete() {
@@ -203,7 +203,7 @@ fn flow_selected_copy_allocation_admission_is_separate_and_never_reallocates_pay
     close(&mut cursor.cursor, 4096);
     assert_eq!(drops.load(Ordering::SeqCst), 1);
     let (root, _) = source();
-    let source = Rooted { root: root.clone(), pointer: &root.host_document.as_ref().unwrap().schema as *const String };
+    let source = Rooted { root: root.clone(), pointer: &root.host_snapshot.as_ref().unwrap().schema as *const String };
     let mut task = TextTask { source, bytes: Vec::new(), reserved: false };
     let mut admission = allocation();
     assert!(matches!(task.advance(1, &mut admission), Advance::Bytes(0)));

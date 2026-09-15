@@ -70,7 +70,7 @@ type GenerationPlayState {
 
 ===== 📸️snapshot/🧬️schema/🔣️component.json =====
 {
-  "$id": "https://semio.tech/schema/s/procedural/procedural2d/snapshot.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/procedural/procedural2d/snapshot.json",
   "title": "Procedural2dSnapshot",
   "type": "object",
   "additionalProperties": false,
@@ -427,7 +427,7 @@ type Procedural2dArtifact {
 
 ===== 🔺️diff/🧬️schema/🔣️component.json =====
 {
-  "$id": "https://semio.tech/schema/s/procedural/procedural2d/diff.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/procedural/procedural2d/diff.json",
   "title": "Procedural2dDiff",
   "type": "object",
   "additionalProperties": false,
@@ -965,7 +965,7 @@ type GenerationPlayState {
 
 ===== 🧬️schema/🔣️component.json =====
 {
-  "$id": "https://semio.tech/schema/s/procedural/procedural2d/artifact.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/procedural/procedural2d/artifact.json",
   "title": "Procedural2dArtifact",
   "type": "object",
   "additionalProperties": false,

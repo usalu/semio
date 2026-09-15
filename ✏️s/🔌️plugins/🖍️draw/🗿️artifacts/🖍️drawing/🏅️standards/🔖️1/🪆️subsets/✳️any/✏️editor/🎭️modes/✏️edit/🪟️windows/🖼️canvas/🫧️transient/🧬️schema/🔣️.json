@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://semio.tech/schema/app/drawing/drawing/canvas-window-transient/schema.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/app/drawing/drawing/canvas-window-transient/schema.json",
   "type": "object",
   "additionalProperties": false,
   "required": ["engagementInput", "tracePointerGeneration", "tracePointerCompletedWork", "tracePointerPendingWork"],

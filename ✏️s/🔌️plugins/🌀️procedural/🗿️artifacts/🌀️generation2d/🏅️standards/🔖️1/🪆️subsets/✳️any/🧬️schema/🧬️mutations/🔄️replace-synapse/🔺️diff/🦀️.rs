@@ -6,7 +6,7 @@ use crate::{Generation2dDiff, Generation2dSnapshot};
 
 //#region 🔖️Diff
 pub fn diff(payload: &ReplaceSynapse, base: &Generation2dSnapshot) -> protocol::MutationOutcome<Generation2dDiff> {
-    let Some(index) = synapse_index(&base.host_document, &payload.synapse.id) else {
+    let Some(index) = synapse_index(&base.host_snapshot, &payload.synapse.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Synapse \"{}\" does not exist.", payload.synapse.id), [payload.synapse.id.clone()]);
     };
     protocol::MutationOutcome::new(diff_fixture_from_helpers(base, &WidgetsDiff::default(), &SynapsesDiff { removed: vec![], set: vec![(index, payload.synapse.clone())] }, &LayoutDiff::default(), None, None))

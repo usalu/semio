@@ -12527,7 +12527,7 @@ impl ShellState {
                 let ui_state = semio_framework::compose_tutorial_ui(&runtime.definition, target_ms);
                 tutorial_apply_ui_snapshot(self, &ui_state);
                 let slice = semio_framework::tutorial_slice(&runtime.definition, runtime.applied_ms, target_ms);
-                for entry in &slice.document {
+                for entry in &slice.artifact {
                     self.tutorial_pending_document_ops.push(tutorial_pending_op_for_edit(entry, slice.forward));
                 }
                 let now = chrome_now_ms();
@@ -12564,7 +12564,7 @@ impl ShellState {
         let ui_state = semio_framework::compose_tutorial_ui(&runtime.definition, target_ms);
         tutorial_apply_ui_snapshot(self, &ui_state);
         let slice = semio_framework::tutorial_slice(&runtime.definition, runtime.applied_ms, target_ms);
-        for entry in &slice.document {
+        for entry in &slice.artifact {
             self.tutorial_pending_document_ops.push(tutorial_pending_op_for_edit(entry, slice.forward));
         }
         for window_id in tutorial_camera_window_ids(&runtime.definition) {
@@ -12613,7 +12613,7 @@ impl ShellState {
             for change in &slice.ui_changes {
                 tutorial_apply_ui_change_to_shell(self, change);
             }
-            for entry in &slice.document {
+            for entry in &slice.artifact {
                 self.tutorial_pending_document_ops.push(tutorial_pending_op_for_edit(entry, slice.forward));
             }
             runtime.applied_ms = to_ms;
