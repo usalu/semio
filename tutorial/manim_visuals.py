@@ -596,6 +596,14 @@ def note_line(text: str, *, color: str = P_TEAL, font_size: int | None = None, y
     if font_size is None:
         font_size = LABEL_FONT_SIZE
     note = centered_body_text(text, font_size=font_size, color=color, max_width=NOTE_MAX_WIDTH)
+    from manim import VGroup as _VGroup
+
+    if isinstance(note, _VGroup):
+        import warnings
+
+        # The band holds one line; a second one spills up against the beat
+        # subtitle. Same contract caption_bar enforces for its two lines.
+        warnings.warn(f"note_line wrapped to {len(note.submobjects)} lines; shorten it: {text!r}", stacklevel=2)
     note.move_to(UP * y)
     note.set_x(0)
     return note
@@ -617,7 +625,9 @@ def stat_card(
 
     Two stacked lines inside a rounded frame: a dim caption naming the thing and
     a coloured value. Passing ``width``/``height`` forces a fixed frame so a row
-    of cards lines up — which is what ``card_grid`` does.
+    of cards lines up — which is what ``card_grid`` does. Filled with the same
+    translucent backdrop as ``caption_bar`` so a curve or gridline sitting behind
+    the card never bleeds through the text.
     """
     from manim import DOWN, RoundedRectangle, VGroup
     from manim_fonts import BODY_FONT_SIZE, LABEL_FONT_SIZE, body_text
@@ -637,6 +647,7 @@ def stat_card(
         width=width if width is not None else body.width + 0.36,
         height=height if height is not None else body.height + 0.30,
         corner_radius=0.1, color=color, stroke_width=1.8,
+        fill_color=P_DEEP_DARK, fill_opacity=0.82,
     )
     body.move_to(frame.get_center())
     return VGroup(frame, body)

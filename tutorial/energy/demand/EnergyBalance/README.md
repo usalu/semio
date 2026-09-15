@@ -34,17 +34,32 @@ the next one a number:
 | Ergebnis | Effizienzklasse auf dem Ausweis | Kapitel 6 |
 | Realität | Bedarf ≠ Verbrauch | Kapitel 7 |
 
-One worked example runs through Kapitel 4 to 6 unchanged, so the numbers on
-screen stay the same building throughout:
+One schematic worked example runs through Kapitel 4 to 7 unchanged, so the
+numbers on screen stay the same building throughout:
 
 ```
 Q_h  = 100 kWh/(m²·a)
-  · e_p = 1,35 (Gaskessel)   → Q_E = 135  → · f_p = 1,1 → Q_P = 149  → Klasse E
-  · e_p = 0,29 (Wärmepumpe)  → Q_E =  29  → · f_p = 1,8 → Q_P =  52  → Klasse A+
+  · e_p = 1,04 · 1,08 · 1,06 · 1,18 ≈ 1,40 (Gaskessel)  → Q_E = 140 → · f_p = 1,1 → Q_P = 154 → Klasse E
+  · e_p = 1,04 · 1,08 · 1,06 · 0,26 ≈ 0,31 (Wärmepumpe) → Q_E =  31 → · f_p = 1,8 → Q_P ≈  56 → Klasse A
 ```
 
-Standards cited per beat via the `_din_ref()` chip: GEG, DIN V 18599-1/-2/-5/-6/-10,
-DIN EN 12831-1, DIN 4108-2, VDI 2078, VDI 3807, VDI 4645, VDI 4650, VOB/C DIN 18380.
+Where each number lives, so a change is made once:
+
+| Value | Source of truth | Mirrored in |
+|-------|-----------------|-------------|
+| `e_ü`, `e_d`, `e_s`, `e_g` and `Q_E` | `4_system_losses/scene_4.py` (`E_*`, `Q_E_GAS`, `Q_E_WP`) — Beat 1's staircase is derived from the same factors | `5_primary_energy/scene_5.py` (`E_P_*`) |
+| `f_p` (GEG Anlage 4), `Q_P`, example GEG limit | `5_primary_energy/scene_5.py` | `7_praxis_vs_theorie/scene_7.py` (`CHAIN_*`) |
+| displayed `Q_E` and the efficiency class | `6_energieausweis/scene_6.py` (`GAS_END`, `WP_END`, `_class_letter`) | `7_praxis_vs_theorie/scene_7.py` |
+
+Kapitel 5 Beat 4 compares these against a GEG limit of 66 kWh/(m²·a) — 55 % of
+a **schematic** reference-building value of 120 (GEG § 15). The real reference
+value is building-specific; the beat labels it as an example on screen.
+
+Standards cited per beat via the `_din_ref()` chip, with editions where it
+matters: GEG (§ 15/16, § 20, § 60c, § 71, § 79–87, Anlagen 1/4/10),
+DIN V 18599:2018-09 (Teile 1/2/5/6/10) and its 2025 continuation DIN/TS 18599,
+DIN EN 12831-1:2017-09 / DIN/TS 12831-1:2020-04, DIN 4108-2/-6, VDI 2078,
+VDI 3807, VDI 4645, VDI 4650-1:2024, VOB/C DIN 18380.
 
 ---
 

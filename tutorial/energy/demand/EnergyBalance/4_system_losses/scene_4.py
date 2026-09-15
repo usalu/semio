@@ -41,15 +41,49 @@ END_RED = "#DC2626"
 AMBIENT_GREEN = "#22C55E"
 
 # The one worked example the rest of the series keeps quoting: 100 kWh/(m²·a)
-# of useful heat, delivered once by a gas boiler and once by a heat pump.
+# of useful heat, delivered once by a gas boiler and once by a heat pump. Every
+# number below is a schematic teaching example, not a measured or normed value.
 Q_NUTZ = 100.0
-STAGES = (
-    ("Übergabe", 4.0, UEBER_RED),
-    ("Verteilung", 8.0, VERT_ORANGE),
-    ("Speicherung", 6.0, SPEI_YELLOW),
-    ("Erzeugung", 17.0, ERZ_AMBER),
-)
-Q_END_GAS = Q_NUTZ + sum(v for _n, v, _c in STAGES)  # 135 kWh/(m²·a)
+
+# —— The Anlagenaufwandszahl chain (Beats 2–4) — one set of factors used
+# everywhere, so the multiplication a viewer reproduces by hand always matches
+# what is on screen. Erzeugung is kept separate for the plain and the
+# condensing boiler, since Beat 3 shows both and they must not share a label.
+E_UEBERGABE = 1.04
+E_VERTEILUNG = 1.08
+E_SPEICHERUNG = 1.06
+E_ERZEUGUNG_GAS = 1.18            # Gaskessel: 118 kWh Erdgas → 100 kWh Wärme
+E_ERZEUGUNG_GAS_BRENNWERT = 1.07  # nach Kondensation: 107 kWh → 100 kWh
+E_ERZEUGUNG_WP = 0.26             # Wärmepumpe: 26 kWh Strom → 100 kWh Wärme
+
+E_P_GAS = E_UEBERGABE * E_VERTEILUNG * E_SPEICHERUNG * E_ERZEUGUNG_GAS  # ≈ 1.40
+E_P_WP = E_UEBERGABE * E_VERTEILUNG * E_SPEICHERUNG * E_ERZEUGUNG_WP    # ≈ 0.31
+Q_E_GAS = Q_NUTZ * E_P_GAS  # ≈ 140 kWh/(m²·a)
+Q_E_WP = Q_NUTZ * E_P_WP    # ≈ 31 kWh/(m²·a)
+
+
+def _cascade(factors) -> tuple[float, ...]:
+    """🪜 Energy each stage adds when the useful heat is multiplied up the chain."""
+    added, level = [], Q_NUTZ
+    for factor in factors:
+        added.append(level * factor - level)
+        level *= factor
+    return tuple(added)
+
+
+# Beat 1's staircase is the same multiplication Beat 4 shows as e_p, so its
+# segments are derived from the factors rather than typed — typed values once
+# summed to 135 while Beat 4 printed 140 for the very same boiler.
+STAGES = tuple(zip(
+    ("Übergabe", "Verteilung", "Speicherung", "Erzeugung"),
+    _cascade((E_UEBERGABE, E_VERTEILUNG, E_SPEICHERUNG, E_ERZEUGUNG_GAS)),
+    (UEBER_RED, VERT_ORANGE, SPEI_YELLOW, ERZ_AMBER),
+))  # ≈ +4, +8, +7, +21 kWh → Q_E_GAS
+
+
+def _de_num(value: float, decimals: int = 2) -> str:
+    """🔢 Format a factor with a German decimal comma, e.g. 1.40 → '1,40'."""
+    return f"{value:.{decimals}f}".replace(".", ",")
 
 
 #region DIN citation
@@ -124,11 +158,11 @@ class Beat1_Verlustkette(Scene):
          "Start from the demand we calculated: a hundred kilowatt-hours per square metre and year of useful heat.",
          "Wir starten beim berechneten Bedarf: hundert Kilowattstunden je Quadratmeter und Jahr Nutzenergie."),
         ("stufen",
-         "Between that room and the gas meter sit four stages, and each one adds its own loss on top.",
-         "Zwischen diesem Raum und dem Gaszähler liegen vier Stufen — jede legt ihren eigenen Verlust obendrauf."),
+         "Between that room and the gas meter sit four stages, each needing extra energy — how it is counted depends on where it happens.",
+         "Zwischen Raum und Gaszähler liegen vier Stufen, jede braucht zusätzliche Energie — wie sie zählt, hängt vom Ort des Verlusts ab."),
         ("ende",
-         "What the meter finally counts is the final energy — here thirty-five percent more than the room ever received.",
-         "Was der Zähler am Ende zählt, ist die Endenergie — hier fünfunddreißig Prozent mehr, als der Raum je bekommen hat."),
+         "The energy billed at the building boundary is counted as final energy — here roughly forty percent more than the room ever received.",
+         "Die am Gebäude bezogene Energie wird als Endenergie bilanziert — hier rund vierzig Prozent mehr, als der Raum je bekommen hat."),
     ]
 
     def construct(self):
@@ -137,11 +171,15 @@ class Beat1_Verlustkette(Scene):
         title = scene_title(TITLE_DE)
         play_scene_title(self, title)
         subtitle = beat_subtitle("Die Verlustkette vom Raum zum Zähler", title)
-        din = _din_ref("DIN V 18599-5")
+        din = _din_ref("DIN V 18599-5:2018-09")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
-        self.play(FadeIn(caption), run_time=0.3)
+        revision_note = note_line(
+            "Seit 2025 als DIN/TS 18599-5:2025-10 fortgeschrieben — GEG nutzt weiterhin 2018",
+            color=P_TEAL,
+        )
+        self.play(FadeIn(caption), FadeIn(revision_note), run_time=0.3)
         hold_for(self, self.NARRATION, "intro", used=TITLE_RUN_TIME + BEAT_SUBTITLE_FADE + 0.3)
 
         # Columns occupy the left two thirds; the stage legend and the two summary
@@ -166,8 +204,11 @@ class Beat1_Verlustkette(Scene):
 
         start_card = stat_card("Nutzenergie Q_h", "100 kWh/(m²·a)", color=NUTZ_BLUE)
         start_card.move_to(np.array([5.25, 1.55, 0]))
-        self.play(Create(ground), GrowFromEdge(columns[0]["bars"][0], DOWN),
-                  FadeIn(captions[0]), FadeIn(start_card), run_time=1.4)
+        self.play(
+            FadeOut(revision_note),
+            Create(ground), GrowFromEdge(columns[0]["bars"][0], DOWN),
+            FadeIn(captions[0]), FadeIn(start_card), run_time=1.4,
+        )
         hold_for(self, self.NARRATION, "nutz", used=1.4 + 0.35)
 
         # —— The four stages stack up ——
@@ -180,7 +221,7 @@ class Beat1_Verlustkette(Scene):
             )
             self.play(GrowFromEdge(columns[i]["bars"][-1], DOWN), run_time=0.45)
         legend, legend_leaders = side_labels(
-            [(columns[4]["anchors"][k + 1], f"{name}  + {int(value)} kWh", colour)
+            [(columns[4]["anchors"][k + 1], f"{name}  + {round(value)} kWh", colour)
              for k, (name, value, colour) in enumerate(STAGES)],
             x=xs[-1] + 0.78, align="left", font_size=LABEL_FONT_SIZE - 2,
         )
@@ -189,17 +230,18 @@ class Beat1_Verlustkette(Scene):
 
         # —— Final energy ——
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "ende"))
-        end_card = stat_card("Endenergie Q_E", f"{int(Q_END_GAS)} kWh/(m²·a)", color=END_RED)
+        end_card = stat_card("Endenergie Q_E", f"{round(Q_E_GAS)} kWh/(m²·a)", color=END_RED)
         end_card.move_to(np.array([5.25, 0.42, 0]))
         arrow = Arrow(start_card.get_bottom(), end_card.get_top(), buff=0.08, color=P_WHITE,
                       stroke_width=3, max_tip_length_to_length_ratio=0.25)
-        self.play(GrowArrow(arrow), FadeIn(end_card, shift=DOWN * 0.12), run_time=1.2)
+        example_note = note_line("Schematische Beispielrechnung — keine Normwerte", color=P_TEAL)
+        self.play(GrowArrow(arrow), FadeIn(end_card, shift=DOWN * 0.12), FadeIn(example_note), run_time=1.2)
         hold_for(self, self.NARRATION, "ende", used=1.2 + 0.35)
 
         self.play(
             FadeOut(caption), FadeOut(start_card), FadeOut(end_card), FadeOut(arrow),
             FadeOut(legend), FadeOut(legend_leaders), FadeOut(captions), FadeOut(ground),
-            *[FadeOut(c["bars"]) for c in columns], run_time=0.6,
+            FadeOut(example_note), *[FadeOut(c["bars"]) for c in columns], run_time=0.6,
         )
         self.wait(0.4)
 
@@ -220,8 +262,8 @@ class Beat2_UebergabeVerteilungSpeicherung(Scene):
          "Distribution: every pipe metre loses heat. Outside the envelope it is lost for good — inside it partly comes back as a gain.",
          "Verteilung: Jeder Rohrmeter verliert Wärme. Außerhalb der Hülle ist sie weg — innerhalb kommt sie teilweise als Gewinn zurück."),
         ("speicher",
-         "Storage: the tank stands warm around the clock, so it loses heat even in a week when nobody showers.",
-         "Speicherung: Der Speicher steht rund um die Uhr warm — er verliert auch in einer Woche ohne Duschen Wärme."),
+         "Storage: a tank kept warm around the clock loses heat even without any draw-off, for as long as a whole week.",
+         "Speicherung: Ein warm gehaltener Speicher verliert auch ohne Zapfung Wärme — selbst eine ganze Woche lang."),
         ("kennzahl",
          "Each stage gets one expense figure: how much has to go in for one unit to come out.",
          "Jede Stufe bekommt eine Aufwandszahl: wie viel hinein muss, damit eine Einheit herauskommt."),
@@ -233,7 +275,7 @@ class Beat2_UebergabeVerteilungSpeicherung(Scene):
         title = scene_title(TITLE_DE)
         self.add(title)
         subtitle = beat_subtitle("Übergabe, Verteilung, Speicherung", title)
-        din = _din_ref("DIN V 18599-5 · -6")
+        din = _din_ref("DIN V 18599-5:2018-09 · -6")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
@@ -262,10 +304,10 @@ class Beat2_UebergabeVerteilungSpeicherung(Scene):
         # —— Emission ——
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "uebergabe"))
         radiator = _radiator(np.array([-3.55, 0.78, 0]), width=0.95, height=0.68)
-        rad_tag = body_text("Heizkörper · 55 °C", font_size=LABEL_FONT_SIZE - 3, color=UEBER_RED)
+        rad_tag = body_text("Heizkörper · z. B. 55 °C", font_size=LABEL_FONT_SIZE - 3, color=UEBER_RED)
         rad_tag.next_to(radiator, UP, buff=0.16)
         loop = _floor_loop(np.array([1.05, SLAB_Y + 0.06, 0]), width=2.1)
-        loop_tag = body_text("Fußbodenheizung · 35 °C", font_size=LABEL_FONT_SIZE - 3, color=P_CYAN)
+        loop_tag = body_text("Fußbodenheizung · z. B. 35 °C", font_size=LABEL_FONT_SIZE - 3, color=P_CYAN)
         loop_tag.next_to(loop, UP, buff=0.18)
         self.play(Create(radiator), FadeIn(rad_tag), run_time=1.0)
         self.play(Create(loop), FadeIn(loop_tag), run_time=1.0)
@@ -300,9 +342,12 @@ class Beat2_UebergabeVerteilungSpeicherung(Scene):
         tank = _tank(np.array([2.55, SLAB_Y - 0.53, 0]))
         tank_tag = body_text("Speicher", font_size=LABEL_FONT_SIZE - 3, color=SPEI_YELLOW)
         tank_tag.move_to(np.array([2.55, SLAB_Y - 1.15, 0]))
-        # Arcs open rightward by construction — rotating the group to move them to
-        # the other side pivots about the group centroid and lands them on the tank.
-        tank_waves = _loss_waves(tank.get_right() + RIGHT * 0.12, color=SPEI_YELLOW, n=3)
+        # _loss_waves opens upward by construction (it reads right on a horizontal
+        # pipe) — rotated -90° here so it reads as heat radiating sideways off the
+        # tank's flank instead of diagonally off its corner.
+        tank_wave_anchor = tank.get_right() + RIGHT * 0.12
+        tank_waves = _loss_waves(tank_wave_anchor, color=SPEI_YELLOW, n=3)
+        tank_waves.rotate(-PI / 2, about_point=tank_wave_anchor)
         self.play(Create(tank), FadeIn(tank_tag), run_time=1.0)
         self.play(LaggedStart(*[Create(w) for w in tank_waves], lag_ratio=0.2), run_time=0.9)
         hold_for(self, self.NARRATION, "speicher", used=0.3 + 1.0 + 0.9 + 0.35)
@@ -335,20 +380,20 @@ class Beat2_UebergabeVerteilungSpeicherung(Scene):
 class Beat3_Erzeugung(Scene):
     NARRATION = [
         ("intro",
-         "The last stage is the biggest, and it is the only one where two technologies behave completely differently.",
-         "Die letzte Stufe ist die größte — und die einzige, in der sich zwei Technologien völlig unterschiedlich verhalten."),
+         "The last stage is the biggest — and this is where a combustion boiler and a heat pump differ fundamentally.",
+         "Die letzte Stufe ist die größte — hier unterscheiden sich Verbrennungskessel und Wärmepumpe grundlegend."),
         ("kessel",
          "A boiler burns fuel. Part of the heat leaves through the flue, so more always goes in than comes out.",
          "Ein Kessel verbrennt Brennstoff. Ein Teil der Wärme geht durch den Schornstein — es muss immer mehr hinein als heraus."),
         ("brennwert",
-         "A condensing boiler wins part of that back by cooling the flue gas below its dew point — the latent heat from the fundamentals video.",
-         "Ein Brennwertkessel holt einen Teil zurück, indem er das Abgas unter den Taupunkt kühlt — die latente Wärme aus dem Grundlagen-Video."),
+         "A condensing boiler cools the flue gas until its water vapour condenses — the latent heat from the fundamentals video becomes usable.",
+         "Ein Brennwertkessel kühlt das Abgas, bis Wasserdampf darin kondensiert — die latente Wärme aus dem Grundlagen-Video wird nutzbar."),
         ("waermepumpe",
-         "A heat pump burns nothing. It lifts ambient heat, so three quarters of what it delivers was never bought.",
-         "Eine Wärmepumpe verbrennt nichts. Sie hebt Umgebungswärme an — drei Viertel der Lieferung wurden nie gekauft."),
+         "A heat pump burns nothing. It lifts ambient heat, so three quarters of what it delivers is not purchased final energy.",
+         "Eine Wärmepumpe verbrennt nichts. Sie hebt Umweltwärme an — drei Viertel der Lieferung sind keine zugekaufte Endenergie."),
         ("jaz",
-         "Its seasonal performance factor counts only the purchased part: here twenty-six units of electricity for a hundred of heat.",
-         "Ihre Jahresarbeitszahl zählt nur den gekauften Teil: hier sechsundzwanzig Einheiten Strom für hundert Einheiten Wärme."),
+         "Its seasonal performance factor is the ratio of heat delivered over the year to the electricity that drove it: here a hundred to twenty-six.",
+         "Ihre Jahresarbeitszahl ist das Verhältnis von Wärme zu eingesetztem Strom im Jahr: hier hundert zu sechsundzwanzig."),
     ]
 
     def construct(self):
@@ -357,7 +402,7 @@ class Beat3_Erzeugung(Scene):
         title = scene_title(TITLE_DE)
         self.add(title)
         subtitle = beat_subtitle("Erzeugung: Wirkungsgrad oder Arbeitszahl", title)
-        din = _din_ref("DIN V 18599-5 · VDI 4650")
+        din = _din_ref("DIN V 18599-5 · VDI 4650-1")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
@@ -388,7 +433,7 @@ class Beat3_Erzeugung(Scene):
                           max_tip_length_to_length_ratio=0.22)
         gas_caps = VGroup(_caption("Erdgas 118", -4.95, ERZ_AMBER),
                           _caption("Wärme 100", -2.35, NUTZ_BLUE))
-        gas_tag = stat_card("Gaskessel", "e_g ≈ 1,15", color=ERZ_AMBER)
+        gas_tag = stat_card("Gaskessel", f"e_g ≈ {_de_num(E_ERZEUGUNG_GAS)}", color=ERZ_AMBER)
         gas_tag.move_to(np.array([-3.65, 1.62, 0]))
         flue_tag = body_text("Abgasverlust 18", font_size=LABEL_FONT_SIZE - 3, color=P_RED)
         flue_tag.next_to(gas_in["bars"][1], RIGHT, buff=0.18)
@@ -407,7 +452,7 @@ class Beat3_Erzeugung(Scene):
         recovered = Rectangle(width=bar_w, height=7.0 * unit, color=P_CYAN,
                               fill_color=P_CYAN, fill_opacity=0.8, stroke_width=1.2)
         recovered.move_to(np.array([-4.95, base_y + (100.0 + 3.5) * unit, 0]))
-        cond_note = note_line("Brennwert: Abgas unter den Taupunkt kühlen → Kondensationswärme zurück",
+        cond_note = note_line("Brennwert: Wasserdampf im Abgas kondensiert → latente Wärme wird nutzbar",
                               color=P_CYAN)
         self.play(
             Transform(gas_in["bars"][1], recovered),
@@ -415,6 +460,9 @@ class Beat3_Erzeugung(Scene):
                 body_text("Restverlust 7", font_size=LABEL_FONT_SIZE - 3, color=P_CYAN)
                 .next_to(recovered, RIGHT, buff=0.18)),
             gas_caps[0].animate.become(_caption("Erdgas 107", -4.95, ERZ_AMBER)),
+            gas_tag.animate.become(
+                stat_card("Brennwertkessel", f"e_g ≈ {_de_num(E_ERZEUGUNG_GAS_BRENNWERT)}", color=P_CYAN)
+                .move_to(gas_tag)),
             FadeIn(cond_note), run_time=1.5,
         )
         hold_for(self, self.NARRATION, "brennwert", used=1.5 + 0.35)
@@ -431,11 +479,11 @@ class Beat3_Erzeugung(Scene):
                          max_tip_length_to_length_ratio=0.22)
         hp_caps = VGroup(_caption("Strom 26 + Umwelt 74", 2.35, P_WHITE),
                          _caption("Wärme 100", 4.95, NUTZ_BLUE))
-        hp_tag = stat_card("Wärmepumpe", "e_g ≈ 0,26", color=AMBIENT_GREEN)
+        hp_tag = stat_card("Wärmepumpe", f"e_g ≈ {_de_num(E_ERZEUGUNG_WP)}", color=AMBIENT_GREEN)
         hp_tag.move_to(np.array([3.65, 1.62, 0]))
         hp_labels, hp_leaders = side_labels(
-            [(hp_in["anchors"][0], "bezahlt", P_YELLOW),
-             (hp_in["anchors"][1], "kostenlos", AMBIENT_GREEN)],
+            [(hp_in["anchors"][0], "zugekauft", P_YELLOW),
+             (hp_in["anchors"][1], "nicht zugekauft", AMBIENT_GREEN)],
             x=1.75, align="right", font_size=LABEL_FONT_SIZE - 2,
         )
         self.play(
@@ -478,17 +526,17 @@ class Beat4_Anlagenaufwandszahl(Scene):
          "Multiply the four stages together and the whole plant collapses into a single number.",
          "Multipliziert man die vier Stufen, schrumpft die ganze Anlage auf eine einzige Zahl."),
         ("kette",
-         "That is the plant expense figure: how much final energy one unit of useful heat costs.",
-         "Das ist die Anlagenaufwandszahl: wie viel Endenergie eine Einheit Nutzwärme kostet."),
+         "That is the plant expense figure: how much final energy is required per unit of useful heat.",
+         "Das ist die Anlagenaufwandszahl: wie viel Endenergie je Einheit Nutzenergie erforderlich ist."),
         ("gas",
-         "For the gas boiler it lands at one point three five — a hundred becomes a hundred and thirty-five.",
-         "Beim Gaskessel liegt sie bei eins Komma drei fünf — aus hundert werden hundertfünfunddreißig."),
+         "For the gas boiler it lands at one point four — a hundred becomes about a hundred and forty.",
+         "Beim Gaskessel liegt sie bei eins Komma vier — aus hundert werden etwa hundertvierzig."),
         ("wp",
          "For the heat pump it drops below one, because three quarters of the delivered heat came from the environment.",
          "Bei der Wärmepumpe fällt sie unter eins — drei Viertel der gelieferten Wärme kamen aus der Umwelt."),
         ("brueck",
-         "But twenty-nine kilowatt-hours of electricity and a hundred and thirty-five of gas are still not comparable. That is the next chapter.",
-         "Doch neunundzwanzig Kilowattstunden Strom und hundertfünfunddreißig Gas sind noch nicht vergleichbar. Das ist das nächste Kapitel."),
+         "But thirty-one kilowatt-hours of electricity and a hundred and forty of gas are still not comparable. That is the next chapter.",
+         "Doch einunddreißig Kilowattstunden Strom und hundertvierzig Gas sind noch nicht vergleichbar. Das ist das nächste Kapitel."),
     ]
 
     def construct(self):
@@ -497,7 +545,7 @@ class Beat4_Anlagenaufwandszahl(Scene):
         title = scene_title(TITLE_DE)
         self.add(title)
         subtitle = beat_subtitle("Die Anlagenaufwandszahl e_p", title)
-        din = _din_ref("DIN V 18599-5")
+        din = _din_ref("DIN V 18599-5:2018-09")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
@@ -526,9 +574,12 @@ class Beat4_Anlagenaufwandszahl(Scene):
             ("eg", "e_g", ERZ_AMBER),
         ])
         row, box = formula_panel(row)
+        schematic_note = note_line(
+            "Schematische Darstellung — DIN/TS 18599-5 rechnet deutlich detaillierter", color=P_TEAL,
+        )
         self.play(
             LaggedStart(*[FadeIn(c, shift=DOWN * 0.1) for c in factors], lag_ratio=0.15),
-            FadeIn(dots), run_time=1.5,
+            FadeIn(dots), FadeIn(schematic_note), run_time=1.5,
         )
         self.play(Create(box), FadeIn(row), run_time=1.0)
         hold_for(self, self.NARRATION, "kette", used=1.5 + 1.0 + 0.35)
@@ -536,22 +587,22 @@ class Beat4_Anlagenaufwandszahl(Scene):
         # —— Gas result ——
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "gas"))
         gas_card = card_grid([
-            ("Gaskessel", "e_p ≈ 1,35", ERZ_AMBER),
-            ("Endenergie", "135 kWh/(m²·a)", END_RED),
+            ("Gaskessel", f"e_p ≈ {_de_num(E_P_GAS)}", ERZ_AMBER),
+            ("Endenergie", f"{round(Q_E_GAS)} kWh/(m²·a)", END_RED),
         ], rows=1, buff=0.30)
         gas_card.move_to(np.array([0.0, -0.20, 0]))
-        self.play(FadeIn(gas_card, shift=UP * 0.12), run_time=1.2)
+        self.play(FadeOut(schematic_note), FadeIn(gas_card, shift=UP * 0.12), run_time=1.2)
         hold_for(self, self.NARRATION, "gas", used=1.2 + 0.35)
 
         # —— Heat pump result ——
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "wp"))
         hp_card = card_grid([
-            ("Wärmepumpe", "e_p ≈ 0,29", AMBIENT_GREEN),
-            ("Endenergie", "29 kWh/(m²·a)", AMBIENT_GREEN),
+            ("Wärmepumpe", f"e_p ≈ {_de_num(E_P_WP)}", AMBIENT_GREEN),
+            ("Endenergie", f"{round(Q_E_WP)} kWh/(m²·a)", AMBIENT_GREEN),
         ], rows=1, buff=0.30)
         hp_card.move_to(np.array([0.0, -1.20, 0]))
         self.play(FadeIn(hp_card, shift=UP * 0.12), run_time=1.2)
-        why = note_line("e_p < 1 nur, weil Umweltwärme kostenlos dazukommt", color=AMBIENT_GREEN)
+        why = note_line("e_p < 1 nur, weil Umweltwärme ohne zugekaufte Endenergie dazukommt", color=AMBIENT_GREEN)
         self.play(FadeIn(why), run_time=0.7)
         hold_for(self, self.NARRATION, "wp", used=1.2 + 0.7 + 0.35)
 

@@ -151,8 +151,8 @@ class Beat1_GEGundNormen(Scene):
          "The Gebäudeenergiegesetz sets the target. It caps a building's primary energy demand, but never says how to compute it.",
          "Das Gebäudeenergiegesetz setzt das Ziel: Es begrenzt den Primärenergiebedarf, sagt aber nicht, wie man ihn berechnet."),
         ("din",
-         "For that it points to DIN V 18599 — eleven parts that turn the balance we drew into one binding procedure.",
-         "Dafür verweist es auf DIN V 18599 — elf Teile, die unsere Bilanz in ein verbindliches Verfahren übersetzen."),
+         "For that it points to DIN V 18599:2018-09 — the calculation method the GEG references.",
+         "Dafür verweist es auf DIN V 18599:2018-09 – die vom GEG referenzierte Berechnungsmethodik."),
         ("nachbarn",
          "Beside it sit the standards from the earlier videos: peak heating load, cooling load, and summer overheating.",
          "Daneben stehen die Normen der früheren Videos: Heizlast, Kühllast und sommerlicher Wärmeschutz."),
@@ -182,13 +182,17 @@ class Beat1_GEGundNormen(Scene):
 
         # —— Tier 2: the method ——
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "din"))
-        method = card_grid([("Rechenverfahren", "DIN V 18599 — Energetische Bewertung", P_CYAN)], rows=1,
+        method = card_grid([("Rechenverfahren", "DIN V 18599:2018-09 — Energetische Bewertung", P_CYAN)], rows=1,
                            value_size=BODY_FONT_SIZE)
         method.move_to(UP * 0.30)
         link = Arrow(law.get_bottom(), method.get_top(), buff=0.10, color=P_WHITE,
                      stroke_width=3, max_tip_length_to_length_ratio=0.22)
+        # On the note band, replacing the goal line: directly under the method card
+        # it sat in the gap the three spoke arrows cross and was struck through.
+        revision_note = note_line("Die Normenreihe wurde 2025 als DIN/TS 18599 überarbeitet.", color=P_TEAL)
         self.play(GrowArrow(link), FadeIn(method, shift=DOWN * 0.15), run_time=1.2)
-        hold_for(self, self.NARRATION, "din", used=1.2 + 0.35)
+        self.play(FadeOut(law_goal), FadeIn(revision_note), run_time=0.5)
+        hold_for(self, self.NARRATION, "din", used=1.2 + 0.5 + 0.35)
 
         # —— Tier 3: the neighbouring standards from the earlier videos ——
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "nachbarn"))
@@ -211,8 +215,8 @@ class Beat1_GEGundNormen(Scene):
         hold_for(self, self.NARRATION, "nachbarn", used=1.8 + 0.35)
 
         self.play(
-            FadeOut(caption), FadeOut(law), FadeOut(law_goal), FadeOut(method),
-            FadeOut(link), FadeOut(neighbours), FadeOut(spokes), run_time=0.6,
+            FadeOut(caption), FadeOut(law), FadeOut(method),
+            FadeOut(revision_note), FadeOut(link), FadeOut(neighbours), FadeOut(spokes), run_time=0.6,
         )
         self.wait(0.4)
 
@@ -370,8 +374,8 @@ class Beat3_Klimadaten(Scene):
          "Both come from the German weather service as a test reference year, a synthetic but representative twelve months.",
          "Beides liefert der Deutsche Wetterdienst als Testreferenzjahr — zwölf synthetische, aber repräsentative Monate."),
         ("potsdam",
-         "For the legal proof every building in Germany is calculated with one single reference climate, so results stay comparable.",
-         "Für den Nachweis wird jedes Gebäude in Deutschland mit einem einzigen Referenzklima gerechnet — damit Ergebnisse vergleichbar bleiben."),
+         "For certain GEG proofs a standardised reference climate is fixed, and the Potsdam reference climate zone plays the central role in it.",
+         "Für bestimmte GEG-Nachweise ist ein standardisiertes Referenzklima festgelegt; die Referenzklimazone Potsdam spielt dabei eine zentrale Rolle."),
     ]
 
     def construct(self):
@@ -386,7 +390,8 @@ class Beat3_Klimadaten(Scene):
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
         self.play(FadeIn(caption), run_time=0.3)
 
-        axes = labeled_axes(CHART_ORIGIN, x_len=CHART_W, y_len=CHART_H, color=P_WHITE)
+        axes = labeled_axes(CHART_ORIGIN, x_len=CHART_W, y_len=CHART_H,
+                            y_label="θ_e [°C]", color=P_WHITE)
         months = _month_ticks(axes)
         self.play(Create(axes["group"]), FadeIn(months), run_time=1.1)
         hold_for(self, self.NARRATION, "intro", used=BEAT_SUBTITLE_FADE + 0.3 + 1.1)
@@ -412,7 +417,7 @@ class Beat3_Klimadaten(Scene):
             _column(axes, i, v, color=SOLAR_YELLOW, opacity=0.55, width=0.42)
             for i, v in enumerate(IRRADIATION)
         ])
-        sun_tag = stat_card("Einstrahlung", "I_S [kWh/(m²·Monat)]", color=SOLAR_YELLOW)
+        sun_tag = stat_card("relative Einstrahlung", "schematische Darstellung", color=SOLAR_YELLOW)
         sun_tag.next_to(theta_tag, DOWN, buff=0.22).align_to(theta_tag, RIGHT)
         self.play(
             LaggedStart(*[GrowFromEdge(c, DOWN) for c in sun_cols], lag_ratio=0.06),
@@ -430,7 +435,7 @@ class Beat3_Klimadaten(Scene):
 
         # —— One reference climate for the legal proof ——
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "potsdam"))
-        ref_note = note_line("GEG-Nachweis: einheitliches Referenzklima für ganz Deutschland", color=P_CYAN)
+        ref_note = note_line("GEG-Nachweis: standardisiertes Referenzklima — Referenzklimazone Potsdam zentral", color=P_CYAN)
         self.play(FadeIn(ref_note), run_time=0.9)
         hold_for(self, self.NARRATION, "potsdam", used=0.9 + 0.35)
 
@@ -452,14 +457,14 @@ class Beat4_Gradtagszahl(Scene):
          "One number compresses that whole weather year into a single figure engineers actually quote.",
          "Eine Kennzahl verdichtet dieses ganze Wetterjahr zu einer Zahl, die Planer wirklich nennen."),
         ("heizgrenze",
-         "Above a certain outdoor temperature the free gains already cover the losses. That is the heating limit.",
-         "Oberhalb einer bestimmten Außentemperatur decken die freien Gewinne die Verluste bereits. Das ist die Heizgrenze."),
+         "Above a defined reference temperature the free gains cover the losses — a calculation convention, not a physical limit.",
+         "Oberhalb einer festgelegten Referenztemperatur decken die freien Gewinne die Verluste — eine Rechenkonvention, keine physikalische Grenze."),
         ("flaeche",
-         "Below it, every degree and every day counts. The shaded area is the degree-day figure of the year.",
-         "Darunter zählt jedes Grad und jeder Tag. Die schraffierte Fläche ist die Gradtagszahl des Jahres."),
+         "Below it, every degree and every day counts. The area shows the principle — the real degree-day figure comes from daily values on the heating days.",
+         "Darunter zählt jedes Grad und jeder Tag. Die Fläche zeigt das Prinzip — real wird die Gradtagszahl aus Tageswerten der Heiztage berechnet."),
         ("nutzen",
-         "It scales transmission and ventilation losses directly — and it lets a cold winter be compared with a mild one.",
-         "Sie skaliert Transmissions- und Lüftungsverluste direkt — und macht einen kalten mit einem milden Winter vergleichbar."),
+         "As a simplified indicator of temperature-dependent losses it makes a cold winter comparable with a mild one.",
+         "Als vereinfachter Indikator temperaturabhängiger Verluste macht sie einen kalten mit einem milden Winter vergleichbar."),
     ]
 
     def construct(self):
@@ -488,7 +493,7 @@ class Beat4_Gradtagszahl(Scene):
         limit_f = theta_norm(15.0)
         limit = DashedLine(axes["pt"](0.0, limit_f), axes["pt"](1.0, limit_f),
                            color=P_ORANGE, stroke_width=2.5)
-        limit_tag = stat_card("Heizgrenze", "θ_HG ≈ 15 °C", color=P_ORANGE)
+        limit_tag = stat_card("Referenz-Heizgrenze", "θ_HG = 15 °C", color=P_ORANGE)
         limit_tag.move_to(np.array([TAG_X, 1.55, 0]))
         self.play(Create(theta_curve), run_time=1.4)
         self.play(Create(limit), FadeIn(limit_tag), run_time=1.0)
@@ -503,15 +508,15 @@ class Beat4_Gradtagszahl(Scene):
         self.add(area)
         self.play(*[patch.animate.set_fill(opacity=0.32) for patch in area],
                   FadeIn(gt_tag), run_time=1.4)
-        heiz_note = note_line("Heizperiode: nur die Monate unter der Heizgrenze", color=P_ORANGE)
+        heiz_note = note_line("Prinzipdarstellung — reale Gradtagszahlen aus Tageswerten", color=P_ORANGE)
         self.play(FadeIn(heiz_note), run_time=0.7)
         hold_for(self, self.NARRATION, "flaeche", used=1.4 + 0.7 + 0.35)
 
         # —— What it is used for ——
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "nutzen"))
         row, items = equation_row([
-            ("q", "Q_T + Q_V", LOSS_BLUE), (None, "∝", P_WHITE),
-            ("gt", "G_t", P_ORANGE), (None, "   →  Witterungsbereinigung", P_TEAL),
+            ("q", "Q_temp.-abh.", LOSS_BLUE), (None, "~", P_WHITE),
+            ("gt", "G_t", P_ORANGE), (None, "   →  vereinfachtes Prinzip der Witterungsbereinigung", P_TEAL),
         ], font_size=BODY_FONT_SIZE)
         row, box = formula_panel(row)
         self.play(FadeOut(heiz_note), Create(box), FadeIn(row), run_time=1.0)

@@ -38,9 +38,16 @@ LOAD_RED = "#EF4444"
 ENERGY_CYAN = "#22D3EE"
 ETA_GREEN = "#22C55E"
 
-# Sample count of the synthetic annual profile. One point per two days keeps the
-# polyline light enough to Transform smoothly while still looking like weather.
-PROFILE_N = 183
+# Sample count of the synthetic annual profile — one point per hour of a real
+# year, so Beat 3's "jede Stunde des Jahres" narration and its x-axis label are
+# actually true of the data being sorted, not a coarser stand-in for it.
+PROFILE_N = 8760
+
+# Assumed peak heating power of the synthetic example building. The profile
+# itself stays normalised to 0..1 for plotting (axes map fractions, not kW), but
+# every displayed number — P(t), Q, t_VL — is this constant times that fraction,
+# so the chapter's kW/kWh figures are physically meaningful instead of symbolic.
+PEAK_KW = 10.0
 
 
 #region DIN citation
@@ -63,8 +70,8 @@ def _annual_load(n: int = PROFILE_N, seed: int = 5) -> np.ndarray:
     """📉 Synthetic annual heating-power profile, normalised to its own peak.
 
     Shape only — a cosine season driving ``θ_i − θ_e`` above the heating limit
-    plus weather noise. It is deliberately not measured data; what the beats
-    teach is the difference between the curve's height and its area.
+    plus weather noise, one sample per hour of the year. It is deliberately not
+    measured data; multiplying by ``PEAK_KW`` is what gives the beats real kW/kWh.
     """
     rng = np.random.default_rng(seed)
     t = np.linspace(0.0, 1.0, n)
@@ -108,8 +115,8 @@ class Beat1_LeistungUndEnergie(Scene):
          "Power is the height of the curve at one moment — kilowatts, how fast energy flows right now.",
          "Leistung ist die Höhe der Kurve in einem Moment — Kilowatt, wie schnell Energie gerade fließt."),
         ("energie",
-         "Energy is the area under it — kilowatt-hours, how much flowed in total over the whole year.",
-         "Energie ist die Fläche darunter — Kilowattstunden, wie viel insgesamt über das Jahr geflossen ist."),
+         "Energy is the running sum of power over time — the area under the curve. Its unit is the kilowatt-hour.",
+         "Energie ist die zeitliche Summe der Leistung — die Fläche unter der Kurve. Einheit: Kilowattstunden."),
         ("formel",
          "Power times time gives energy. That single relation from the fundamentals separates the load from the demand.",
          "Leistung mal Zeit ergibt Energie. Diese eine Beziehung aus den Grundlagen trennt Last von Bedarf."),
@@ -136,7 +143,10 @@ class Beat1_LeistungUndEnergie(Scene):
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "kurve"))
         load = _annual_load()
         curve = _polyline(axes, load, color=LOAD_RED)
-        self.play(Create(curve), run_time=2.2)
+        peak_note = note_line(
+            f"Beispielgebäude, angenommen: Φ_HL ≈ {PEAK_KW:.0f} kW", color=P_TEAL,
+        )
+        self.play(Create(curve), FadeIn(peak_note), run_time=2.2)
         hold_for(self, self.NARRATION, "kurve", used=2.2 + 0.35)
 
         # —— Height = power ——
@@ -147,7 +157,7 @@ class Beat1_LeistungUndEnergie(Scene):
         stem = DashedLine(axes["pt"](probe_x, 0.0), axes["pt"](probe_x, probe_y),
                           color=P_YELLOW, stroke_width=2.4)
         knob = Dot(axes["pt"](probe_x, probe_y), radius=0.075, color=P_YELLOW)
-        power_card = stat_card("Leistung — Höhe", "P(t)  [kW]", color=P_YELLOW)
+        power_card = stat_card("Leistung — Höhe", f"P(t) ≈ {probe_y * PEAK_KW:.1f} kW", color=P_YELLOW)
         power_card.move_to(np.array([3.5, 1.52, 0]))
         power_leader = Line(power_card.get_bottom(), knob.get_center(),
                             color=P_YELLOW, stroke_width=1.4, stroke_opacity=0.5)
@@ -158,7 +168,11 @@ class Beat1_LeistungUndEnergie(Scene):
         # —— Area = energy ——
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "energie"))
         area = _area_under(axes, load, color=ENERGY_CYAN, opacity=0.0)
-        energy_card = stat_card("Energie — Fläche", "Q  [kWh/a]", color=ENERGY_CYAN)
+        # Rectangle rule at hourly resolution: Q = Σ P·Δt with Δt = 1 h.
+        q_total = float(np.sum(load) * PEAK_KW * (8760.0 / len(load)))
+        energy_card = stat_card(
+            "Energie — Fläche", f"Q ≈ {q_total:,.0f} kWh/a".replace(",", " "), color=ENERGY_CYAN,
+        )
         energy_card.next_to(power_card, DOWN, buff=0.24).align_to(power_card, LEFT)
         self.add(area)
         self.play(
@@ -181,7 +195,8 @@ class Beat1_LeistungUndEnergie(Scene):
 
         self.play(
             FadeOut(caption), FadeOut(box), FadeOut(row), FadeOut(area), FadeOut(curve),
-            FadeOut(power_card), FadeOut(energy_card), FadeOut(axes["group"]), run_time=0.6,
+            FadeOut(power_card), FadeOut(energy_card), FadeOut(peak_note),
+            FadeOut(axes["group"]), run_time=0.6,
         )
         self.wait(0.4)
 
@@ -199,14 +214,14 @@ class Beat2_Normheizlast(Scene):
          "It is computed for one artificial worst case: the design outdoor temperature of the site, room by room.",
          "Sie wird für einen künstlichen Extremfall berechnet: die Norm-Außentemperatur des Standorts, Raum für Raum."),
         ("keine",
-         "And crucially, no solar and no internal gains are credited — a cloudy night with an empty house.",
-         "Und entscheidend: Weder solare noch interne Gewinne werden angerechnet — eine bewölkte Nacht im leeren Haus."),
+         "And crucially: only the losses under these design conditions count — solar or internal gains are not credited as reliable heating power.",
+         "Entscheidend: Nur die Verluste unter diesen Normbedingungen zählen — solare oder interne Gewinne gelten nicht als verlässliche Heizleistung."),
         ("formel",
-         "So the load is simply the transmission and ventilation heat transfer coefficients times the design difference.",
-         "Die Heizlast ist damit schlicht der Transmissions- und Lüftungs-Wärmetransferkoeffizient mal der Auslegungsdifferenz."),
+         "So, as a schematic simplification, the load is the transmission and ventilation heat transfer coefficients times the design difference.",
+         "Als schematische Vereinfachung ist die Heizlast der Transmissions- und Lüftungs-Wärmetransferkoeffizient mal der Auslegungsdifferenz."),
         ("einheit",
-         "The result is kilowatts, not kilowatt-hours. It sizes the boiler or the heat pump — nothing else.",
-         "Das Ergebnis sind Kilowatt, nicht Kilowattstunden. Es dimensioniert Kessel oder Wärmepumpe — sonst nichts."),
+         "The result is kilowatts, not kilowatt-hours — an important basis for sizing the whole heating system.",
+         "Das Ergebnis sind Kilowatt, nicht Kilowattstunden — eine wichtige Grundlage für die Auslegung der Heizungsanlage."),
     ]
 
     def construct(self):
@@ -215,7 +230,7 @@ class Beat2_Normheizlast(Scene):
         title = scene_title(TITLE_DE)
         self.add(title)
         subtitle = beat_subtitle("Die Norm-Heizlast nach DIN EN 12831-1", title)
-        din = _din_ref("DIN EN 12831-1")
+        din = _din_ref("DIN EN 12831-1 · DIN/TS 12831-1")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
@@ -226,7 +241,7 @@ class Beat2_Normheizlast(Scene):
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "bedingungen"))
         conditions = card_grid([
             ("Innentemperatur", "θ_int = 20 °C", DEMAND_RED),
-            ("Norm-Außentemperatur", "θ_e = −12 °C", P_BLUE),
+            ("Beispielstandort", "θ_e = −12 °C", P_BLUE),
             ("Auslegungsdifferenz", "Δθ = 32 K", P_YELLOW),
         ], rows=1, buff=0.32)
         conditions.move_to(UP * 1.15)
@@ -269,14 +284,18 @@ class Beat2_Normheizlast(Scene):
             ("dt", "Δθ", P_YELLOW), (None, "  [kW]", P_TEAL),
         ])
         row, box = formula_panel(row)
-        self.play(FadeOut(contrast), Create(box), FadeIn(row), run_time=1.1)
+        simplif_note = note_line(
+            "Schematisch vereinfacht — die Norm enthält weitere Terme",
+            color=P_TEAL,
+        )
+        self.play(FadeOut(contrast), Create(box), FadeIn(row), FadeIn(simplif_note), run_time=1.1)
         ring = highlight_param(items, "h", color=LOSS_BLUE)
         self.play(Create(ring), run_time=0.5)
         hold_for(self, self.NARRATION, "formel", used=1.1 + 0.5 + 0.35)
 
         # —— Unit reminder ——
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "einheit"))
-        self.play(FadeOut(ring), run_time=0.3)
+        self.play(FadeOut(ring), FadeOut(simplif_note), run_time=0.3)
         unit_note = note_line("Φ_HL in kW → Anlagengröße   ·   Q_h in kWh/a → Betriebskosten", color=P_CYAN)
         self.play(FadeIn(unit_note), run_time=0.9)
         hold_for(self, self.NARRATION, "einheit", used=0.3 + 0.9 + 0.35)
@@ -342,7 +361,7 @@ class Beat3_Jahresdauerlinie(Scene):
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "spitze"))
         peak_line = DashedLine(axes["pt"](0.0, 1.0), axes["pt"](1.0, 1.0),
                                color=LOAD_RED, stroke_width=2.2, stroke_opacity=0.8)
-        peak_card = stat_card("Heizlast — Höhe", "Φ_HL  [kW]", color=LOAD_RED)
+        peak_card = stat_card("Heizlast — Höhe", f"Φ_HL = {PEAK_KW:.0f} kW", color=LOAD_RED)
         peak_card.move_to(np.array([3.7, 1.52, 0]))
         self.play(Create(peak_line), FadeIn(peak_card), run_time=1.1)
         hold_for(self, self.NARRATION, "spitze", used=1.1 + 0.35)
@@ -350,7 +369,12 @@ class Beat3_Jahresdauerlinie(Scene):
         # —— The area ——
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "flaeche"))
         area = _area_under(axes, ordered, color=ENERGY_CYAN, opacity=0.0)
-        demand_card = stat_card("Heizwärmebedarf — Fläche", "Q_h  [kWh/a]", color=ENERGY_CYAN)
+        # Rectangle rule at hourly resolution: Q_h = Σ Φ·Δt with Δt = 1 h — the
+        # same PEAK_KW-scaled definition Beat 1 used, so the two beats agree.
+        q_h = float(np.sum(ordered) * PEAK_KW * (8760.0 / len(ordered)))
+        demand_card = stat_card(
+            "Heizwärmebedarf — Fläche", f"Q_h ≈ {q_h:,.0f} kWh/a".replace(",", " "), color=ENERGY_CYAN,
+        )
         demand_card.next_to(peak_card, DOWN, buff=0.24).align_to(peak_card, RIGHT)
         self.add(area)
         self.play(area.animate.set_fill(opacity=0.30), FadeIn(demand_card), run_time=1.5)
@@ -364,10 +388,14 @@ class Beat3_Jahresdauerlinie(Scene):
             color=P_YELLOW, stroke_width=2.2, fill_opacity=0.0,
         )
         equiv.move_to(axes["pt"](equiv_f / 2, 0.5))
+        # Computed from the actual profile above (t_VL = Q_h / Φ_HL), not a fixed
+        # literature range — so the number on screen can never drift out of sync
+        # with the curve the viewer is looking at.
+        t_vl = q_h / PEAK_KW
         row, items = equation_row([
             ("t", "t_VL", P_YELLOW), (None, "=", P_WHITE),
             ("q", "Q_h", ENERGY_CYAN), (None, "/", P_WHITE),
-            ("p", "Φ_HL", LOAD_RED), (None, "   ≈ 1 500 – 2 200 h/a", P_TEAL),
+            ("p", "Φ_HL", LOAD_RED), (None, f"   ≈ {t_vl:,.0f} h/a".replace(",", " "), P_TEAL),
         ], font_size=BODY_FONT_SIZE)
         row, box = formula_panel(row)
         self.play(Create(equiv), run_time=1.2)
@@ -392,17 +420,17 @@ class Beat4_RichtigAuslegen(Scene):
          "On that same curve you can see, directly, what happens when a plant is sized wrongly.",
          "An derselben Kurve sieht man unmittelbar, was passiert, wenn eine Anlage falsch ausgelegt wird."),
         ("zuklein",
-         "Size it on the average and the shaded hours at the top are simply not covered — the house cools down exactly in the cold snap.",
-         "Legt man auf den Mittelwert aus, bleiben die Stunden oben ungedeckt — das Haus kühlt genau in der Kältewelle aus."),
+         "Size it on the average and a power deficit remains at high load — without reserve capacity the indoor temperature can no longer be held.",
+         "Legt man auf den Mittelwert aus, bleibt bei hoher Last ein Leistungsdefizit — ohne Reserve lässt sich die Raumtemperatur dann nicht halten."),
         ("zugross",
-         "Size it far above the peak and the opposite happens: for most of the year the plant is far too large and starts cycling.",
-         "Legt man weit über die Spitze aus, passiert das Gegenteil: Fast das ganze Jahr ist die Anlage zu groß und beginnt zu takten."),
+         "Size it far above the peak and the plant is oversized almost all year — at too high a minimum output that means more cycling.",
+         "Legt man weit über die Spitze aus, ist die Anlage fast das ganze Jahr überdimensioniert — das begünstigt häufigeres Takten."),
         ("richtig",
-         "The design heat load is the sizing point — it covers the coldest hours without oversizing the rest of the year.",
-         "Die Norm-Heizlast ist der Auslegungspunkt — sie deckt die kältesten Stunden, ohne den Rest des Jahres zu überdimensionieren."),
+         "The design heat load gives the central sizing point — the actual plant also depends on the heat generator, controls and storage.",
+         "Die Norm-Heizlast liefert den zentralen Auslegungspunkt — die reale Anlage hängt zusätzlich von Erzeuger, Regelung und Speicher ab."),
         ("brueck",
-         "And the demand under the curve is what turns into a fuel bill — which is where the next chapter starts.",
-         "Und die Fläche darunter wird zur Energierechnung — genau dort beginnt das nächste Kapitel."),
+         "The area under the curve is the useful heat demand — the heating system turns that into end energy, and only that into cost.",
+         "Die Fläche darunter ist der Nutzwärmebedarf — das Heizsystem macht daraus den Endenergiebedarf, und erst daraus die Kosten."),
     ]
 
     def construct(self):
@@ -411,7 +439,7 @@ class Beat4_RichtigAuslegen(Scene):
         title = scene_title(TITLE_DE)
         self.add(title)
         subtitle = beat_subtitle("Auslegen auf die Spitze, nicht auf den Mittelwert", title)
-        din = _din_ref("DIN EN 12831-1 · VDI 4645")
+        din = _din_ref("DIN EN 12831-1 · DIN/TS 12831-1 · VDI 4645")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
@@ -434,9 +462,12 @@ class Beat4_RichtigAuslegen(Scene):
             axes["pt"](0.0, capacity.get_value()), axes["pt"](1.0, capacity.get_value()),
             color=P_GREEN, stroke_width=2.6,
         ))
-        cap_tag = always_redraw(lambda: stat_card(
-            "gewählte Anlagenleistung", "Φ_Anlage", color=P_GREEN,
-        ).move_to(np.array([3.7, 1.52, 0])))
+        # Static and opaque: the oversized capacity line rises to the card's height,
+        # and a transparent frame let it strike straight through "Φ_Anlage".
+        # Added after the line so the line passes behind it.
+        cap_tag = stat_card("gewählte Anlagenleistung", "Φ_Anlage", color=P_GREEN)
+        cap_tag[0].set_fill(P_DEEP_DARK, opacity=1.0)
+        cap_tag.move_to(np.array([3.7, 1.52, 0]))
         self.add(cap_line, cap_tag)
 
         # —— Undersized ——
@@ -459,7 +490,9 @@ class Beat4_RichtigAuslegen(Scene):
 
         # —— Oversized ——
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "zugross"))
-        over_note = note_line("dauerhafte Teillast → Takten, schlechtere Jahresarbeitszahl", color=P_ORANGE)
+        over_note = note_line(
+            "bei zu hoher Mindestleistung: häufigeres Takten und mögliche Effizienzverluste", color=P_ORANGE,
+        )
         self.play(FadeOut(gap), FadeOut(under_note), run_time=0.35)
         self.play(capacity.animate.set_value(PEAK_F * 1.42), run_time=1.6, rate_func=smooth)
         self.play(FadeIn(over_note), run_time=0.7)
@@ -467,7 +500,9 @@ class Beat4_RichtigAuslegen(Scene):
 
         # —— Correct ——
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "richtig"))
-        right_note = note_line("Auslegungspunkt: Φ_Anlage ≈ Φ_HL", color=ETA_GREEN)
+        right_note = note_line(
+            "zentraler Auslegungspunkt — reale Anlage hängt auch von Regelung und Speicher ab", color=ETA_GREEN,
+        )
         self.play(FadeOut(over_note), run_time=0.3)
         self.play(capacity.animate.set_value(PEAK_F), run_time=1.5, rate_func=smooth)
         self.play(FadeIn(right_note), run_time=0.7)
@@ -478,7 +513,7 @@ class Beat4_RichtigAuslegen(Scene):
         area = _area_under(axes, ordered, color=ENERGY_CYAN, opacity=0.0)
         self.add(area)
         row, items = equation_row([
-            ("q", "Q_h", ENERGY_CYAN), (None, "  →  Endenergie  →  Primärenergie", P_TEAL),
+            ("q", "Q_h", ENERGY_CYAN), (None, "  →  Endenergie  →  Kosten", P_TEAL),
         ], font_size=BODY_FONT_SIZE)
         row, box = formula_panel(row)
         self.play(FadeOut(right_note), area.animate.set_fill(opacity=0.30),

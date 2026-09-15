@@ -19,7 +19,7 @@ from manim_fonts import (
 from manim_visuals import (
     P_DEEP_DARK, P_WHITE, P_CYAN, P_TEAL, P_ORANGE, P_YELLOW, P_RED, P_BLUE, P_GREEN,
     SAFE_TOP, SAFE_BOTTOM_FORMULA, CONTENT_TOP,
-    solar_wave_ray, chip, note_line, card_grid, side_labels, stacked_bar, fit_band,
+    chip, note_line, card_grid, side_labels, stacked_bar, fit_band,
     equation_row, formula_panel, highlight_param,
     caption_bar, swap_caption, hold_for, subtitle_text,
     set_vo_language, load_vo_timing,
@@ -299,9 +299,12 @@ class Beat2_Verlustseite(Scene):
             ("Lüftung", 2.6, VENT_BLUE),
         ]
         stack = stacked_bar(segments, base=RIGHT * 1.15 + DOWN * 1.55, width=1.15, unit=0.30)
+        # Boden and Wärmebrücken sit only 0.285 apart — the default 0.40 min_gap
+        # cascades from Lüftung above and bends the Boden leader; a tighter gap
+        # tuned to this stack's own label heights keeps every leader horizontal.
         labels, leaders = side_labels(
             [(a, f"{name}", col) for a, (name, _v, col) in zip(stack["anchors"], segments)],
-            x=2.60, align="left",
+            x=2.60, align="left", min_gap=0.30, pad=0.08,
         )
 
         # —— Transmission ——
@@ -452,10 +455,8 @@ class Beat3_Gewinnseite(Scene):
         sun = _sun([5.2, 1.35, 0], scale=0.9)
         window = Square(side_length=0.75, color=P_CYAN, stroke_width=2.5).move_to([3.3, -0.05, 0])
         window.add(Line(window.get_top(), window.get_bottom(), color=P_CYAN, stroke_width=1.5))
-        ray = solar_wave_ray(sun.get_center() + LEFT * 0.55 + DOWN * 0.35, window.get_center(),
-                             color=SOLAR_YELLOW, stroke_width=2.6)
         self.play(FadeIn(sun, scale=0.7), Create(window), run_time=0.9)
-        self.play(Create(ray), FadeIn(gain_cap), run_time=0.6)
+        self.play(FadeIn(gain_cap), run_time=0.6)
         solar_only = Rectangle(width=1.25, height=v_sol * unit, color=SOLAR_YELLOW,
                                fill_color=SOLAR_YELLOW, fill_opacity=0.78, stroke_width=1.2)
         solar_only.move_to(np.array([x_gain, base_y + v_sol * unit / 2, 0]))
@@ -494,7 +495,7 @@ class Beat3_Gewinnseite(Scene):
         # —— Utilisation factor cuts the gain column down ——
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "eta"))
         self.play(
-            FadeOut(sun), FadeOut(ray), FadeOut(window), FadeOut(people),
+            FadeOut(sun), FadeOut(window), FadeOut(people),
             FadeOut(int_box), FadeOut(int_row), run_time=0.5,
         )
         v_use = (v_int + v_sol) * eta

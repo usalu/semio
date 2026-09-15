@@ -1,4 +1,4 @@
-<import numpy as np
+import numpy as np
 from manim import *
 
 from pathlib import Path as _Path
@@ -30,7 +30,7 @@ _VO_TIMING = _Path(__file__).resolve().parent / "vo_timing.json"
 if _VO_TIMING.is_file():
     load_vo_timing(_VO_TIMING)
 
-TITLE_DE  = "Primärenergie & das GEG"
+TITLE_DE = "Primärenergie & das GEG"
 
 NUTZ_BLUE = "#38BDF8"
 END_RED = "#DC2626"
@@ -38,16 +38,34 @@ PRIM_VIOLET = "#A78BFA"
 AMBIENT_GREEN = "#22C55E"
 GAS_AMBER = "#F59E0B"
 
-# The worked example carried over from Chapter 4, continued to primary energy.
+# The schematic worked example carried over from Chapter 4. The plant factors
+# mirror ``4_system_losses/scene_4.py`` (E_UEBERGABE · E_VERTEILUNG ·
+# E_SPEICHERUNG · E_ERZEUGUNG_*) so final energy here is the value Chapter 4
+# puts on screen, not a separately typed number.
 Q_NUTZ = 100
-Q_END_GAS, Q_END_WP = 135, 29
-F_P_GAS, F_P_STROM = 1.1, 1.8
-# Round half up — Python's round() is banker's rounding and would turn the
-# gas case's exact 148,5 into 148, contradicting every other slide.
-Q_PRIM_GAS = int(Q_END_GAS * F_P_GAS + 0.5)    # 149 kWh/(m²·a)
-Q_PRIM_WP = int(Q_END_WP * F_P_STROM + 0.5)    #  52 kWh/(m²·a)
-Q_REF, REF_SHARE = 100, 0.55                    # Referenzgebäude and the new-build share
-Q_LIMIT = int(round(Q_REF * REF_SHARE))         #  55 kWh/(m²·a)
+E_P_GAS = 1.04 * 1.08 * 1.06 * 1.18   # ≈ 1,40
+E_P_WP = 1.04 * 1.08 * 1.06 * 0.26    # ≈ 0,31
+Q_END_GAS = round(Q_NUTZ * E_P_GAS)   # 140 kWh/(m²·a)
+Q_END_WP = round(Q_NUTZ * E_P_WP)     #  31 kWh/(m²·a)
+F_P_GAS, F_P_STROM = 1.1, 1.8          # GEG Anlage 4, nicht erneuerbarer Anteil
+# From the *displayed* final energy, so the multiplication on screen checks out
+# by hand; half-up because round() is banker's rounding.
+Q_PRIM_GAS = int(Q_END_GAS * F_P_GAS + 0.5)    # 154 kWh/(m²·a)
+Q_PRIM_WP = int(Q_END_WP * F_P_STROM + 0.5)    #  56 kWh/(m²·a)
+# Reference-building value is building-specific; this one is a schematic
+# example. The 55 % share is the GEG § 15 requirement for new residential builds.
+Q_REF, REF_SHARE = 120, 0.55
+Q_LIMIT = int(Q_REF * REF_SHARE + 0.5)          #  66 kWh/(m²·a)
+
+
+def _de_num(value: float, decimals: int) -> str:
+    """🔢 German decimal comma, e.g. 1.40 → '1,40' — same helper as Chapter 4."""
+    return f"{value:.{decimals}f}".replace(".", ",")
+
+
+def _eq(product: float) -> str:
+    """🟰 '=' only when the shown product is exact — 140 · 1,1 = 154 but 31 · 1,8 ≈ 56."""
+    return "=" if abs(product - round(product)) < 1e-9 else "≈"
 
 
 #region DIN citation
@@ -119,8 +137,8 @@ class Beat1_DreiBilanzgrenzen(Scene):
          "Draw it all the way back to the source and you count primary energy: extraction, conversion and transport as well.",
          "Zieht man sie bis zur Quelle, zählt man Primärenergie — Gewinnung, Umwandlung und Transport inklusive."),
         ("geg",
-         "And primary energy is the one the law actually regulates, because only it compares different fuels fairly.",
-         "Und genau die Primärenergie reguliert das Gesetz — nur sie vergleicht verschiedene Energieträger fair."),
+         "That is why the GEG caps primary energy demand: it makes different energy carriers comparable.",
+         "Deshalb begrenzt das GEG den Primärenergiebedarf: Er macht verschiedene Energieträger vergleichbar."),
     ]
 
     def construct(self):
@@ -129,16 +147,20 @@ class Beat1_DreiBilanzgrenzen(Scene):
         title = scene_title(TITLE_DE)
         play_scene_title(self, title)
         subtitle = beat_subtitle("Drei Bilanzgrenzen", title)
-        din = _din_ref("DIN V 18599-1 · GEG § 20")
+        din = _din_ref("DIN V 18599-1:2018-09 · GEG § 20")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
-        self.play(FadeIn(caption), run_time=0.3)
+        revision_note = note_line(
+            "Seit 2025 als DIN/TS 18599-1:2025-10 fortgeschrieben — GEG § 20 nutzt weiterhin 2018",
+            color=P_TEAL,
+        )
+        self.play(FadeIn(caption), FadeIn(revision_note), run_time=0.3)
 
         # The outermost ring fills the free band; the house fills the innermost.
         hub = np.array([-3.60, 0.16, 0])
         house = _small_house(hub + DOWN * 0.08, width=1.55, height=0.90, roof=0.46)
-        self.play(Create(house), run_time=1.0)
+        self.play(FadeOut(revision_note), Create(house), run_time=1.0)
         hold_for(self, self.NARRATION, "intro", used=TITLE_RUN_TIME + BEAT_SUBTITLE_FADE + 0.3 + 1.0)
 
         sizes = ((2.10, 1.42), (3.30, 2.46), (4.50, 3.50))
@@ -194,17 +216,17 @@ class Beat2_Primaerenergiefaktor(Scene):
          "The step from final to primary energy is one multiplication, with one number per energy carrier.",
          "Der Schritt von End- zu Primärenergie ist eine Multiplikation — mit einer Zahl je Energieträger."),
         ("strom",
-         "Grid electricity carries the largest factor, because power stations and the grid lose energy before it arrives.",
-         "Netzstrom trägt den größten Faktor — Kraftwerke und Netz verlieren Energie, bevor er ankommt."),
+         "Grid electricity carries the largest factor — its generation mix still has a large fossil share. The value is fixed in the GEG.",
+         "Netzstrom trägt den größten Faktor — sein Erzeugungsmix hat noch einen großen fossilen Anteil. Der Wert ist im GEG festgelegt."),
         ("gas",
-         "Gas and oil sit just above one: burning them at home wastes comparatively little upstream.",
-         "Gas und Öl liegen knapp über eins: Ihre Vorkette verschwendet vergleichsweise wenig."),
+         "Gas and oil sit just above one: the fuel itself is fossil, plus a small share for the supply chain.",
+         "Gas und Öl liegen knapp über eins: Der Brennstoff selbst ist fossil, dazu kommt ein kleiner Anteil für die Vorkette."),
         ("holz",
          "Wood is counted at a fifth, and ambient heat a heat pump draws from air or ground counts as zero.",
          "Holz wird mit einem Fünftel angesetzt, und Umweltwärme aus Luft oder Erdreich zählt als null."),
         ("erneuerbar",
-         "These are the non-renewable shares — the law only counts the part of the chain that burns something finite.",
-         "Das sind die nicht erneuerbaren Anteile — das Gesetz zählt nur den Teil der Kette, der Endliches verbrennt."),
+         "These are the non-renewable shares — fixed calculation values, not measurements of any individual delivery.",
+         "Das sind die nicht erneuerbaren Anteile — festgelegte Rechenwerte, keine Messgrößen einzelner Lieferungen."),
     ]
 
     def construct(self):
@@ -212,7 +234,7 @@ class Beat2_Primaerenergiefaktor(Scene):
 
         title = scene_title(TITLE_DE)
         self.add(title)
-        subtitle = beat_subtitle("Der Primärenergiefaktor f_p", title)
+        subtitle = beat_subtitle("Der nicht erneuerbare Primärenergiefaktor f_p", title)
         din = _din_ref("GEG Anlage 4")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
@@ -247,7 +269,7 @@ class Beat2_Primaerenergiefaktor(Scene):
 
         # —— The non-renewable share ——
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "erneuerbar"))
-        note = note_line("f_p im GEG = nicht erneuerbarer Anteil der Vorkette", color=P_TEAL)
+        note = note_line("f_p nach GEG Anlage 4: nicht erneuerbarer Anteil — festgelegter Rechenwert", color=P_TEAL)
         row, items = equation_row([
             ("qp", "Q_P", PRIM_VIOLET), (None, "=", P_WHITE),
             ("qe", "Q_E", END_RED), (None, "·", P_WHITE),
@@ -277,17 +299,17 @@ class Beat3_Rechenbeispiel(Scene):
          "Now the whole chain on one building — the same hundred kilowatt-hours of useful heat as in the last chapter.",
          "Jetzt die ganze Kette an einem Gebäude — dieselben hundert Kilowattstunden Nutzwärme wie im letzten Kapitel."),
         ("end",
-         "The plant turns that into final energy: a hundred and thirty-five of gas, or twenty-nine of electricity.",
-         "Die Anlage macht daraus Endenergie: hundertfünfunddreißig Gas oder neunundzwanzig Strom."),
+         "The plant turns that into final energy: a hundred and forty of gas, or thirty-one of electricity.",
+         "Die Anlage macht daraus Endenergie: hundertvierzig Gas oder einunddreißig Strom."),
         ("prim",
          "Now apply the factors. Gas is multiplied by one point one, electricity by one point eight.",
          "Jetzt die Faktoren: Gas mal eins Komma eins, Strom mal eins Komma acht."),
         ("ergebnis",
-         "A hundred and forty-nine against fifty-two. The electricity factor is higher, yet the heat pump ends up far lower.",
-         "Hundertneunundvierzig gegen zweiundfünfzig. Der Stromfaktor ist höher — und die Wärmepumpe liegt trotzdem weit darunter."),
+         "A hundred and fifty-four against fifty-six. The electricity factor is higher, yet the heat pump ends up far lower.",
+         "Hundertvierundfünfzig gegen sechsundfünfzig. Der Stromfaktor ist höher — und die Wärmepumpe liegt trotzdem weit darunter."),
         ("warum",
-         "Because the factor is applied to a number that was already three quarters smaller. Efficiency beats the factor.",
-         "Weil der Faktor auf eine Zahl trifft, die schon drei Viertel kleiner war. Effizienz schlägt den Faktor."),
+         "Because the factor is applied to a number that was already more than three quarters smaller. Efficiency beats the factor.",
+         "Weil der Faktor auf eine Zahl trifft, die schon gut drei Viertel kleiner war. Effizienz schlägt den Faktor."),
     ]
 
     def construct(self):
@@ -296,37 +318,38 @@ class Beat3_Rechenbeispiel(Scene):
         title = scene_title(TITLE_DE)
         self.add(title)
         subtitle = beat_subtitle("Ein Gebäude, zwei Anlagen", title)
-        din = _din_ref("GEG § 20 · DIN V 18599")
+        din = _din_ref("GEG § 20 · DIN V 18599:2018-09")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
-        self.play(FadeIn(caption), run_time=0.3)
+        schematic_note = note_line("Vereinfachtes Rechenbeispiel — keine vollständige DIN/GEG-Berechnung", color=P_TEAL)
+        self.play(FadeIn(caption), FadeIn(schematic_note), run_time=0.3)
 
         x_gas, x_wp = -3.55, 3.55
-        y_rows = (1.52, 0.42, -0.68)
+        y_rows = (1.30, 0.20, -0.90)
         step_labels = VGroup(*[
             body_text(text, font_size=LABEL_FONT_SIZE - 2, color=P_TEAL).move_to(np.array([0.0, y, 0]))
             for text, y in zip(("Nutzenergie Q_h", "× e_p  →  Endenergie Q_E",
                                 "× f_p  →  Primärenergie Q_P"), y_rows)
         ])
         heads = VGroup(
-            stat_card("Anlage", "Gaskessel", color=GAS_AMBER).move_to(np.array([x_gas, 2.12, 0])),
-            stat_card("Anlage", "Wärmepumpe", color=AMBIENT_GREEN).move_to(np.array([x_wp, 2.12, 0])),
+            body_text("Gaskessel", font_size=BODY_FONT_SIZE, color=GAS_AMBER).move_to(np.array([x_gas, 2.02, 0])),
+            body_text("Wärmepumpe", font_size=BODY_FONT_SIZE, color=AMBIENT_GREEN).move_to(np.array([x_wp, 2.02, 0])),
         )
 
         nutz = VGroup(*[
             stat_card("", f"{Q_NUTZ} kWh/(m²·a)", color=NUTZ_BLUE).move_to(np.array([x, y_rows[0], 0]))
             for x in (x_gas, x_wp)
         ])
-        self.play(FadeIn(heads), FadeIn(step_labels[0]), FadeIn(nutz), run_time=1.5)
+        self.play(FadeOut(schematic_note), FadeIn(heads), FadeIn(step_labels[0]), FadeIn(nutz), run_time=1.5)
         hold_for(self, self.NARRATION, "intro", used=BEAT_SUBTITLE_FADE + 0.3 + 1.5)
 
         # —— Final energy ——
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "end"))
         end_cards = VGroup(
-            stat_card("e_p = 1,35", f"{Q_END_GAS} kWh/(m²·a)", color=END_RED).move_to(
+            stat_card(f"e_p ≈ {_de_num(E_P_GAS, 2)}", f"{Q_END_GAS} kWh/(m²·a)", color=END_RED).move_to(
                 np.array([x_gas, y_rows[1], 0])),
-            stat_card("e_p = 0,29", f"{Q_END_WP} kWh/(m²·a)", color=AMBIENT_GREEN).move_to(
+            stat_card(f"e_p ≈ {_de_num(E_P_WP, 2)}", f"{Q_END_WP} kWh/(m²·a)", color=AMBIENT_GREEN).move_to(
                 np.array([x_wp, y_rows[1], 0])),
         )
         drops_1 = VGroup(*[
@@ -358,8 +381,8 @@ class Beat3_Rechenbeispiel(Scene):
         # —— The comparison ——
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "ergebnis"))
         self.play(
-            prim_cards[0].animate.set_stroke(color=P_RED, width=3),
-            prim_cards[1].animate.set_stroke(color=AMBIENT_GREEN, width=3),
+            prim_cards[0][0].animate.set_stroke(color=P_RED, width=3),
+            prim_cards[1][0].animate.set_stroke(color=AMBIENT_GREEN, width=3),
             run_time=1.0,
         )
         hold_for(self, self.NARRATION, "ergebnis", used=1.0 + 0.35)
@@ -367,9 +390,9 @@ class Beat3_Rechenbeispiel(Scene):
         # —— Why ——
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "warum"))
         row, items = equation_row([
-            ("gas", f"{Q_END_GAS} · {F_P_GAS:.1f} = {Q_PRIM_GAS}".replace(".", ","), GAS_AMBER),
+            ("gas", f"{Q_END_GAS} · {_de_num(F_P_GAS, 1)} {_eq(Q_END_GAS * F_P_GAS)} {Q_PRIM_GAS}", GAS_AMBER),
             (None, "     ", P_WHITE),
-            ("wp", f"{Q_END_WP} · {F_P_STROM:.1f} = {Q_PRIM_WP}".replace(".", ","), AMBIENT_GREEN),
+            ("wp", f"{Q_END_WP} · {_de_num(F_P_STROM, 1)} {_eq(Q_END_WP * F_P_STROM)} {Q_PRIM_WP}", AMBIENT_GREEN),
             (None, "  kWh/(m²·a)", P_TEAL),
         ], font_size=BODY_FONT_SIZE)
         row, box = formula_panel(row)
@@ -391,17 +414,20 @@ class Beat3_Rechenbeispiel(Scene):
 class Beat4_Referenzgebaeude(Scene):
     NARRATION = [
         ("intro",
-         "So what does the law compare those numbers against? Not a fixed value — against your own building.",
-         "Womit vergleicht das Gesetz diese Zahlen? Nicht mit einem festen Wert — sondern mit Ihrem eigenen Gebäude."),
+         "So what does the law compare those numbers against? Not a flat limit — against a reference building with your own geometry.",
+         "Womit vergleicht das Gesetz diese Zahlen? Nicht mit einem pauschalen Grenzwert — sondern mit einem Referenzgebäude Ihrer Geometrie."),
         ("referenz",
-         "It takes the identical geometry and fills it with standardised components and a standardised plant: the reference building.",
-         "Es nimmt dieselbe Geometrie und füllt sie mit genormten Bauteilen und einer genormten Anlage: das Referenzgebäude."),
+         "It takes the identical geometry and fills it with the technical reference specification from Annex 1: the reference building.",
+         "Es nimmt dieselbe Geometrie und füllt sie mit der technischen Referenzausführung nach Anlage 1: das Referenzgebäude."),
         ("grenze",
-         "Its calculated primary energy sets the benchmark, and a new building has to stay clearly below a fixed share of it.",
-         "Dessen Primärenergiebedarf setzt den Maßstab — ein Neubau muss deutlich unter einem festen Anteil davon bleiben."),
+         "Its calculated primary energy sets the benchmark — a new residential building may reach at most fifty-five percent of it.",
+         "Dessen Primärenergiebedarf setzt den Maßstab — ein neues Wohngebäude darf höchstens fünfundfünfzig Prozent davon erreichen."),
         ("ergebnis",
-         "Our heat pump clears that line. The gas boiler misses it by a factor of three — which is why new builds look the way they do.",
-         "Unsere Wärmepumpe unterschreitet die Linie. Der Gaskessel verfehlt sie um das Dreifache — deshalb sehen Neubauten heute so aus."),
+         "In this example the heat pump clears the line; the gas boiler misses it by more than a factor of two.",
+         "Im Beispiel unterschreitet die Wärmepumpe die Linie — der Gaskessel verfehlt sie um mehr als das Doppelte."),
+        ("zusatz",
+         "The GEG also demands thermal protection of the envelope, and new heating systems — with transition periods — 65 percent renewable energy.",
+         "Daneben verlangt das GEG baulichen Wärmeschutz und für neue Heizungen, mit Übergangsfristen, 65 Prozent erneuerbare Energie."),
     ]
 
     def construct(self):
@@ -410,7 +436,7 @@ class Beat4_Referenzgebaeude(Scene):
         title = scene_title(TITLE_DE)
         self.add(title)
         subtitle = beat_subtitle("Der Grenzwert: das Referenzgebäude", title)
-        din = _din_ref("GEG § 15 f. · Anlage 1")
+        din = _din_ref("GEG §§ 15–17 · § 71 · Anlage 1")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
@@ -419,16 +445,16 @@ class Beat4_Referenzgebaeude(Scene):
 
         # —— Same geometry, standardised build-up ——
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "referenz"))
-        design = _small_house([-4.85, 1.30, 0], width=1.9, height=1.05, roof=0.55, color=P_CYAN)
-        reference = _small_house([-2.15, 1.30, 0], width=1.9, height=1.05, roof=0.55, color=P_TEAL)
+        design = _small_house([-4.85, 1.02, 0], width=1.9, height=1.05, roof=0.48, color=P_CYAN)
+        reference = _small_house([-2.15, 1.02, 0], width=1.9, height=1.05, roof=0.48, color=P_TEAL)
         design_tag = body_text("Ihr Entwurf", font_size=LABEL_FONT_SIZE - 2, color=P_CYAN)
         design_tag.next_to(design, DOWN, buff=0.18)
         ref_tag = body_text("Referenzgebäude", font_size=LABEL_FONT_SIZE - 2, color=P_TEAL)
         ref_tag.next_to(reference, DOWN, buff=0.18)
-        same = body_text("gleiche Geometrie · genormte Bauteile & Anlage",
+        same = body_text("gleiche Geometrie · technische Referenzausführung nach Anlage 1",
                          font_size=LABEL_FONT_SIZE - 3, color=P_WHITE)
         same.set_opacity(0.75)
-        same.move_to(np.array([-3.50, 0.25, 0]))
+        same.move_to(np.array([-3.50, -0.08, 0]))
         self.play(Create(design), Create(reference), FadeIn(design_tag), FadeIn(ref_tag), run_time=1.5)
         self.play(FadeIn(same), run_time=0.6)
         hold_for(self, self.NARRATION, "referenz", used=1.5 + 0.6 + 0.35)
@@ -441,10 +467,16 @@ class Beat4_Referenzgebaeude(Scene):
         limit_y = base_y + Q_LIMIT * unit
         limit = DashedLine(np.array([0.55, limit_y, 0]), np.array([6.55, limit_y, 0]),
                            color=P_RED, stroke_width=2.6)
-        limit_tag = body_text(f"GEG-Grenze {Q_LIMIT} kWh/(m²·a)", font_size=LABEL_FONT_SIZE - 2, color=P_RED)
-        limit_tag.next_to(limit, UP, buff=0.20).align_to(limit, LEFT)
-        share_note = note_line(f"Neubau: höchstens {int(REF_SHARE * 100)} % des Referenzgebäude-Werts", color=P_RED)
-        self.play(Create(ground), Create(limit), FadeIn(limit_tag), FadeIn(share_note), run_time=1.4)
+        limit_tag = stat_card("Grenzwert im Beispiel", f"{Q_LIMIT} kWh/(m²·a)", color=P_RED)
+        limit_tag.move_to(np.array([4.95, 0.78, 0]))
+        limit_leader = DashedLine(limit_tag.get_bottom(), np.array([4.95, limit_y, 0]),
+                                  color=P_RED, stroke_width=1.6, stroke_opacity=0.6)
+        share_note = note_line(
+            f"Neubau (Wohngebäude): max. {int(REF_SHARE * 100)} % des Referenzwerts — hier schematisch",
+            color=P_RED,
+        )
+        self.play(Create(ground), Create(limit), FadeIn(limit_tag), Create(limit_leader),
+                  FadeIn(share_note), run_time=1.4)
         hold_for(self, self.NARRATION, "grenze", used=1.4 + 0.35)
 
         # —— The two designs against it ——
@@ -460,14 +492,25 @@ class Beat4_Referenzgebaeude(Scene):
         self.play(FadeOut(share_note), run_time=0.3)
         self.play(GrowFromEdge(gas_bar["bars"][0], DOWN), FadeIn(gas_cap), run_time=1.1)
         self.play(GrowFromEdge(wp_bar["bars"][0], DOWN), FadeIn(wp_cap), run_time=1.1)
-        verdict = note_line("nur die Wärmepumpe unterschreitet den Grenzwert", color=AMBIENT_GREEN)
+        verdict = note_line("im Beispiel unterschreitet nur die Wärmepumpe den Grenzwert", color=AMBIENT_GREEN)
         self.play(FadeIn(verdict), run_time=0.7)
         hold_for(self, self.NARRATION, "ergebnis", used=0.3 + 1.1 + 1.1 + 0.7 + 0.35)
 
+        # —— The primary-energy limit is not the only requirement ——
+        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "zusatz"))
+        row, _items = equation_row([
+            ("ht", "Wärmeschutz H′_T", P_CYAN), (None, "(§ 16)", P_TEAL), (None, "·", P_WHITE),
+            ("ee", "65 % erneuerbar", AMBIENT_GREEN), (None, "für neue Heizungen (§ 71)", P_TEAL),
+        ], font_size=BODY_FONT_SIZE)
+        row, box = formula_panel(row)
+        self.play(FadeOut(verdict), Create(box), FadeIn(row), run_time=1.1)
+        hold_for(self, self.NARRATION, "zusatz", used=1.1 + 0.35)
+
         self.play(
-            FadeOut(caption), FadeOut(verdict), FadeOut(design), FadeOut(reference),
+            FadeOut(caption), FadeOut(box), FadeOut(row), FadeOut(design), FadeOut(reference),
             FadeOut(design_tag), FadeOut(ref_tag), FadeOut(same), FadeOut(ground),
-            FadeOut(limit), FadeOut(limit_tag), FadeOut(gas_bar["bars"]), FadeOut(wp_bar["bars"]),
+            FadeOut(limit), FadeOut(limit_tag), FadeOut(limit_leader),
+            FadeOut(gas_bar["bars"]), FadeOut(wp_bar["bars"]),
             FadeOut(gas_cap), FadeOut(wp_cap), run_time=0.6,
         )
         self.wait(0.4)
