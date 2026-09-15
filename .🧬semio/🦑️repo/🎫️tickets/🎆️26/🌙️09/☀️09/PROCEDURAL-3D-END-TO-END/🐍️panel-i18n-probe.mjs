@@ -41,10 +41,6 @@ const GERMAN = {
   widget_group: "Element",
   generate_hint: "Erstelle eine Generation, um Eingabewerte zu bearbeiten.",
   preview_hint: "(Generation auswerten, um die Ausgabe in der Vorschau zu sehen)",
-  catalog_neuron: "Neuron",
-  catalog_slider: "Schieberegler",
-  catalog_note: "Notiz",
-  catalog_preview: "Vorschau",
   window_flow: "Workflow",
   window_preview: "Vorschau",
   window_generations: "Generationen",
@@ -63,7 +59,7 @@ const GERMAN = {
   preview_canvas_hint: "Interaktive 3D-Vorschau des ausgewerteten Workflows.",
 };
 /** 🟰️ German that is the same word as the English by design — present on screen proves nothing. */
-const IDENTICAL_BY_DESIGN = ["catalog_neuron", "schema_prefix"];
+const IDENTICAL_BY_DESIGN = ["schema_prefix"];
 /** 🚦 Driven and read by `🐍️status-states-probe.mjs`, which is the only probe that reaches all six. */
 const OWNED_ELSEWHERE = ["status_ok", "status_stale", "status_queued", "status_computing", "status_error", "status_blocked"];
 
@@ -103,12 +99,24 @@ const harvest = async (tag) => {
 
 const clickId = (id) => page.locator(`[id="${id}"]`).first().click({ timeout: 8000 });
 
+/** 🎯️ A PANEL TAB is clicked at its LEFT EDGE, never its centre — and only a panel tab, because the
+ * navbar's own wide controls (`framework.settings`, `playground.navbar.fixture`) want their centre. The
+ * top-right dock's `Collapse` fold control paints over the trailing two thirds of the Inspection tab, so
+ * a centre click there collapses the dock instead of opening the panel (measured in
+ * `🐍️panel-tab-occlusion-recon.mjs`; the product fix is lane `react-remaining-reds`'). The left edge is
+ * the tab's own label and resolves to the tab. */
+const clickTabId = async (id) => {
+  const target = page.locator(`[id="${id}"]`).first();
+  const box = await target.boundingBox().catch(() => null);
+  return target.click({ position: { x: 8, y: Math.round((box?.height ?? 22) / 2) }, timeout: 8000 });
+};
+
 /** 🗂️ Opens a panel and CONFIRMS its own body is on screen. A panel tab toggles, and the three tabs do
  * not share one dock, so a single click can leave the previous panel showing — which is how the
  * Inspection fields read as missing while the Document panel's own strings were being harvested. */
 const openPanel = async (tabId, bodyMarker) => {
   for (let attempt = 0; attempt < 3; attempt += 1) {
-    await tryClickId(tabId);
+    await clickTabId(tabId).catch((e) => lines.push(`tab ${tabId} ${String(e).replace(/\s+/gu, " ").slice(0, 140)}`));
     await page.waitForTimeout(2500);
     const present = await page.evaluate((marker) => document.querySelectorAll(`[id*="${marker}"]`).length, bodyMarker);
     if (present > 0) return { opened: true, attempt, present };
@@ -213,10 +221,19 @@ for (const [tag, id, marker] of [
 
 //#region 🗑️ The context menu's delete row, which only a standing selection paints
 {
-  const outlineRow = page.locator('[data-slot="window"][id="procedural-main"] [role="treeitem"]').first();
+  /** 🌳️ The outline that arms a selection lives in the Artifact panel now, not in the window body. */
+  await page.locator('[id="framework.panel.artifact"]').first().click({ position: { x: 8, y: 11 }, timeout: 8000 }).catch((e) => lines.push(`artifact tab ${String(e).replace(/\s+/gu, " ").slice(0, 140)}`));
+  await page.waitForTimeout(2500);
+  const outlineRow = page.locator('[data-slot="panel"] [role="treeitem"], [data-slot="window"][id="procedural-main"] [role="treeitem"]').first();
   await outlineRow.click({ timeout: 8000 }).catch((e) => lines.push(`outline row ${String(e).replace(/\s+/gu, " ").slice(0, 140)}`));
   await page.waitForTimeout(2500);
-  const box = await page.locator('[data-surface-id="window:procedural-main"]').first().boundingBox();
+  /** 🛟️ A probe that CRASHES writes no `result.json` at all, and the battery then reads an empty object
+   * and reports every field unreached — which is exactly what happened on the 23:46 run. Every locator
+   * that can legitimately be absent is guarded from here on. */
+  const box = await page.locator('[data-surface-id="window:procedural-main"]').first().boundingBox().catch((e) => {
+    lines.push(`main window box ${String(e).replace(/\s+/gu, " ").slice(0, 140)}`);
+    return null;
+  });
   if (box) {
     await page.mouse.click(box.x + box.width * 0.5, box.y + box.height * 0.82, { button: "right" });
     await page.waitForTimeout(1800);

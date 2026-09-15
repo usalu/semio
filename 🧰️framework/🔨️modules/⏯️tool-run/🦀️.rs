@@ -2029,8 +2029,6 @@ pub const TOOL_RUN_DISMISS_ACTION_ID: &str = "toolRunDismiss";
 pub const TOOL_RUN_ACTION_IDS: [&str; 7] = [TOOL_RUN_START_ACTION_ID, TOOL_RUN_PAUSE_ACTION_ID, TOOL_RUN_RESUME_ACTION_ID, TOOL_RUN_STEP_ACTION_ID, TOOL_RUN_ABORT_ACTION_ID, TOOL_RUN_FINALIZE_ACTION_ID, TOOL_RUN_DISMISS_ACTION_ID];
 
 /// 🎹️ Chord of `toolRunStart`.
-/// 🐢️ The viewer's default tool run pace: visible algorithm units per second, so every attempt is on screen before the next.
-pub const TOOL_RUN_VISIBLE_UNITS_PER_SECOND: f64 = 20.0;
 pub const TOOL_RUN_START_CHORD: &str = "mod+enter";
 /// 🔀️ Toggle chord shared by `toolRunPause` and `toolRunResume`.
 pub const TOOL_RUN_PAUSE_RESUME_CHORD: &str = "mod+alt+enter";

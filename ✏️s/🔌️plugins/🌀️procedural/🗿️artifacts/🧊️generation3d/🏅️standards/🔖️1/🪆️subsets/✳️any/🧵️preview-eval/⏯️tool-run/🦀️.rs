@@ -157,8 +157,17 @@ impl PreviewEvalObservation {
         self.nodes.values().filter(|candidate| **candidate == reason).count() as u64
     }
 
+    /// 🪜️ The stage the run is IN: nodes are still being evaluated while any of them is queued or
+    /// computing, or while the evaluation has produced no preview mesh at all; anything else has
+    /// reached tessellation and stays there.
+    ///
+    /// ⚖️ `meshes == tessellated` used to answer `Evaluate`, which is true of a run that has not
+    /// reached a mesh yet (`0 == 0`) and equally true of a run whose every mesh is DONE — so the
+    /// stage fell back to the first one at the exact moment the run converged, and the Tool runs
+    /// pill read `Finalized · Evaluating nodes (1/2)` over a finished evaluation on 6027 at 23:06
+    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). A terminal run shows its TERMINAL stage.
     pub fn stage(&self) -> PreviewEvalRunStage {
-        if self.nodes.values().any(|reason| matches!(reason, PreviewEvalRunReason::Queued | PreviewEvalRunReason::Computing)) || self.meshes == self.tessellated {
+        if self.nodes.values().any(|reason| matches!(reason, PreviewEvalRunReason::Queued | PreviewEvalRunReason::Computing)) || self.meshes == 0 {
             PreviewEvalRunStage::Evaluate
         } else {
             PreviewEvalRunStage::Tessellate
@@ -175,6 +184,14 @@ impl PreviewEvalObservation {
 /// 🔎️ Reads one observation off the session's published per-widget status and evaluation — pure, so
 /// the verdict law is a fixture table. A preview widget that evaluated refines into its meshes:
 /// diagnostics warn, all ready succeed, otherwise it is still tessellating, or missing once `settled`.
+///
+/// ⚖️ The census counts EVERY geometry-bearing channel item, because the preview publishes exactly one
+/// mesh per such item ([`preview_mesh_role`]). An inline point or vector marker carries no kernel
+/// handle — [`collect_preview_channel_items`] mints it with an empty one and [`point_marker_mesh`]
+/// builds it without a kernel round-trip — so it is READY the moment it is observed. Skipping the
+/// handle-less items made the pill disagree with the geometry on screen: the hex column delivers a
+/// wire, a vector and a solid and the pill counted `2 meshes tessellated` on 6027 at 23:06
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
 pub fn observe_preview_eval(status_json: &str, eval_json: &str, preview_widget_ids: &[String], mesh_state: impl Fn(&str) -> PreviewEvalMeshState, settled: bool) -> PreviewEvalObservation {
     let mut observation = PreviewEvalObservation::default();
     let Ok(status) = dsl::json::parse(status_json) else { return observation };
@@ -189,7 +206,7 @@ pub fn observe_preview_eval(status_json: &str, eval_json: &str, preview_widget_i
             _ => PreviewEvalRunReason::Queued,
         };
         if reason == PreviewEvalRunReason::Evaluated && preview_widget_ids.iter().any(|id| id == widget_id) {
-            let states: Vec<PreviewEvalMeshState> = preview_channel_items_for_widget(&eval, widget_id).into_iter().filter(|item| !item.handle.is_empty()).map(|item| mesh_state(&item.handle)).collect();
+            let states: Vec<PreviewEvalMeshState> = preview_channel_items_for_widget(&eval, widget_id).into_iter().map(|item| if item.handle.is_empty() { PreviewEvalMeshState::Ready } else { mesh_state(&item.handle) }).collect();
             observation.meshes += states.len() as u64;
             observation.tessellated += states.iter().filter(|state| **state == PreviewEvalMeshState::Ready).count() as u64;
             reason = if states.is_empty() {

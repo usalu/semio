@@ -15,10 +15,6 @@ semio_framework_plugin::app_labels! {
         widget_group: native_en "Widget", native_de "Element", reuse_en "Widget", reuse_de "Element";
         generate_hint: native_en "Add a generation to edit input values.", native_de "Erstelle eine Generation, um Eingabewerte zu bearbeiten.", reuse_en "Add a generation to edit input values.", reuse_de "Erstelle eine Generation, um Eingabewerte zu bearbeiten.";
         preview_hint: native_en "(evaluate a generation to preview output)", native_de "(Generation auswerten, um die Ausgabe in der Vorschau zu sehen)", reuse_en "(evaluate a generation to preview output)", reuse_de "(Generation auswerten, um die Ausgabe in der Vorschau zu sehen)";
-        catalog_neuron: native_en "Neuron", native_de "Neuron", reuse_en "Neuron", reuse_de "Neuron";
-        catalog_slider: native_en "Slider", native_de "Schieberegler", reuse_en "Slider", reuse_de "Schieberegler";
-        catalog_note: native_en "Note", native_de "Notiz", reuse_en "Note", reuse_de "Notiz";
-        catalog_preview: native_en "Preview", native_de "Vorschau", reuse_en "Preview", reuse_de "Vorschau";
         window_flow: native_en "Flow", native_de "Workflow", reuse_en "Flow", reuse_de "Workflow";
         window_preview: native_en "Preview", native_de "Vorschau", reuse_en "Preview", reuse_de "Vorschau";
         window_generations: native_en "Generations", native_de "Generationen", reuse_en "Generations", reuse_de "Generationen";
@@ -49,17 +45,6 @@ pub fn generation3d_labels(view_state: &semio_framework_plugin::ViewModel) -> &'
     semio_framework_plugin::resolve_labels::<Generation3dLabels>(view_state)
 }
 
-/// 🗣️ Resolves a catalogue widget kind's display label from its stable id; unknown kinds fall back to
-/// the id itself.
-pub fn generation3d_catalog_label(kind: &'static str, labels: &Generation3dLabels) -> &'static str {
-    match kind {
-        "neuron" => labels.catalog_neuron.as_str(),
-        "inputSlider" => labels.catalog_slider.as_str(),
-        "inputNote" => labels.catalog_note.as_str(),
-        "outputPreview" => labels.catalog_preview.as_str(),
-        _ => kind,
-    }
-}
 //#endregion 🔖️Labels
 
 //#region 🧪️Tests

@@ -27,8 +27,7 @@
         "generation": 1,
         "page": 12
       }
-    },
-    "toolRunUnitsPerSecond": 20
+    }
   },
   "invalid": [
     {
@@ -164,24 +163,6 @@
       "name": "contributions-in-view-state",
       "set": {
         "contributionsJson": "[]"
-      }
-    },
-    {
-      "name": "zero-tool-run-pace",
-      "set": {
-        "toolRunUnitsPerSecond": 0
-      }
-    },
-    {
-      "name": "excessive-tool-run-pace",
-      "set": {
-        "toolRunUnitsPerSecond": 1001
-      }
-    },
-    {
-      "name": "textual-tool-run-pace",
-      "set": {
-        "toolRunUnitsPerSecond": "20"
       }
     },
     {

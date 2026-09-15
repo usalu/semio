@@ -39,7 +39,7 @@ const MAIN = "window:procedural-main";
 /** 🗣️ The six `Generation3dLabels` status words, per locale — the exact strings `🗣️terminology/🦀️.rs` declares. */
 const STATUS_WORDS = {
   en: { ok: "Evaluated", stale: "Stale", queued: "Queued", computing: "Computing", error: "Error", blocked: "Blocked" },
-  de: { ok: "Ausgewertet", stale: "Veraltet", queued: "In Warteschlange", computing: "Berechnet", error: "Fehler", blocked: "Blockiert" },
+  de: { ok: "Ausgewertet", stale: "Veraltet", queued: "In Warteschlange", computing: "Berechnen", error: "Fehler", blocked: "Blockiert" },
 };
 const TAGS = ["ok", "stale", "queued", "computing", "error", "blocked"];
 
@@ -71,7 +71,7 @@ const sample = () =>
       } catch {
         status = null;
       }
-      const rows = [...document.querySelectorAll('[data-slot="window"][id="procedural-main"] [role="treeitem"]')].map((el) => ({ id: (el.id ?? "").split("/").pop(), text: (el.textContent ?? "").replace(/\s+/gu, " ").trim().slice(0, 120) }));
+      const rows = [...document.querySelectorAll('[data-slot="panel"] [role="treeitem"], [data-slot="window"][id="procedural-main"] [role="treeitem"]')].map((el) => ({ id: (el.id ?? "").split("/").pop(), text: (el.textContent ?? "").replace(/\s+/gu, " ").trim().slice(0, 120) }));
       return { status, rows, lang: document.documentElement.lang };
     },
     MAIN,
@@ -146,6 +146,10 @@ const driveError = async (seen) => {
       await field.fill(value, { timeout: 8000 }).catch(() => {});
       await page.keyboard.press("Enter");
       await field.blur().catch(() => {});
+      /** 🌳️ Typing happens in the Inspection panel, reading happens on the Artifact panel's outline
+       * rows, and the two share one dock slot — so the panel has to go back before polling. */
+      await clickId("framework.panel.artifact").catch(() => {});
+      await page.waitForTimeout(2000);
       await poll(seen, 40);
       attempts.push({ row: row.id, field: true, typed: value, error: seen.error ?? null });
       if (seen.error?.rowText) return attempts;
@@ -170,6 +174,11 @@ const setLocale = async (label) => {
  * provoked ones. */
 const runPass = async (locale) => {
   const seen = {};
+  /** 🌳️ The status word is painted on the OUTLINE row, and the outline lives in the Artifact panel now
+   * (a peer moved it out of the window body; the canvas hint says so in both locales). It has to be the
+   * open panel before the first poll, or every transient state is sampled with no row to read it off. */
+  await clickId("framework.panel.artifact").catch((e) => lines.push(`artifact tab ${String(e).replace(/\s+/gu, " ").slice(0, 140)}`));
+  await page.waitForTimeout(2500);
   await poll(seen, 25);
   await pickExample(/Rectangle Extrude|Rechteck/u);
   await poll(seen, 60);

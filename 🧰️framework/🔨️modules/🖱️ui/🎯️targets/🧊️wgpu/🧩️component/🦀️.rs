@@ -3032,13 +3032,16 @@ pub mod ui {
     /// every edit. Without a fit lane the camera after a document swap is whatever the previous
     /// document left behind — a fixture centred elsewhere is simply off-screen (ticket 26/09/02 W-P5
     /// §7, W-S2).
-    pub fn world3d_fit_json(revision: u32, padding: f64) -> String {
-        serde_json::json!({
-            "enabled": true,
-            "revision": revision,
-            "padding": padding,
-        })
-        .to_string()
+    /// 📦️ `bounds` is the producer's OWN delivered extent, published rather than rediscovered: a
+    /// render host that measures its scene graph instead can only frame what it has already
+    /// uploaded, and the wgpu surface has no scene graph to measure at all — so without this lane
+    /// the two renderers frame differently by construction
+    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️boot-camera-framing-2026-09-15.md`).
+    pub fn world3d_fit_json(revision: u32, padding: f64, bounds: Option<([f64; 3], [f64; 3])>) -> String {
+        match bounds {
+            Some((minimum, maximum)) => serde_json::json!({ "enabled": true, "revision": revision, "padding": padding, "boundsMin": minimum, "boundsMax": maximum }).to_string(),
+            None => serde_json::json!({ "enabled": true, "revision": revision, "padding": padding }).to_string(),
+        }
     }
 
     // 🎬️ `world3d_default_selection_json`/`world3d_default_meshes_json` moved with `World3dScene`

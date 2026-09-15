@@ -385,3 +385,27 @@ async fn every_emitted_action_is_declared_on_the_preview_window_kind() {
     assert_eq!(emitted, GENERATION3D_VIEW_TOOL_IDS.iter().map(|id| (*id).to_string()).collect::<std::collections::BTreeSet<String>>(), "the viewer's one window kind must dispatch exactly the app's own view actions");
 }
 //#endregion 📇️WindowActionLawTests
+
+/// 👁️ A viewer exports WHAT IT SHOWS. With an active example picked, every other viewer surface reads
+/// `Generation3dViewedDocument::resolve(snapshot, config)` and paints that example; the export path
+/// alone read the opened snapshot raw, so it encoded a document the retained session never evaluated
+/// and every one of the seven formats failed with `generation3d export: the document evaluates to no
+/// preview geometry (no positions)` while three meshes stood on screen (measured on :6023,
+/// ticket 26/09/09/PROCEDURAL-3D-END-TO-END gap F2).
+#[test]
+fn the_viewer_exports_the_example_it_is_showing_not_the_opened_document() {
+    let opened = crate::standards::v1::subsets::any::schema::empty_generation3d_snapshot();
+    for example_id in ["hexagonal-mushroom-column", "rectangle-extrude-volume"] {
+        let config = Generation3dViewConfig { active_example_id: Some(example_id.to_string()), ..Default::default() };
+        let viewed = super::Generation3dViewedDocument::resolve(&opened, &config);
+        let widgets = viewed.snapshot().fixture.widgets.len();
+        println!("[DEBUG] viewer export document for {example_id}: widgets={widgets}");
+        assert!(widgets > 0, "{example_id}: the viewed document must carry the example's widgets, not the opened document's none");
+        viewed.retire();
+    }
+    let none = Generation3dViewConfig { active_example_id: None, ..Default::default() };
+    let viewed = super::Generation3dViewedDocument::resolve(&opened, &none);
+    assert_eq!(viewed.snapshot().fixture.widgets.len(), opened.fixture.widgets.len(), "with no example picked the viewer exports the opened document itself");
+    viewed.retire();
+    opened.retire_cold();
+}

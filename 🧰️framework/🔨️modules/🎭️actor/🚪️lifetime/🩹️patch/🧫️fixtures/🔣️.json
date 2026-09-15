@@ -13,7 +13,10 @@
     { "patchCount": 0, "hasReceipt": true, "accepted": false },
     { "patchCount": 1, "hasReceipt": false, "accepted": false },
     { "patchCount": 1, "hasReceipt": true, "accepted": true },
-    { "patchCount": 2, "hasReceipt": true, "accepted": false }
+    { "patchCount": 2, "hasReceipt": false, "accepted": false },
+    { "patchCount": 2, "hasReceipt": true, "accepted": true },
+    { "patchCount": 6, "hasReceipt": true, "accepted": true },
+    { "patchCount": 16, "hasReceipt": true, "accepted": true }
   ],
   "feedback": { "kinds": ["ack", "rejected"], "surface": "7:保留,🙂", "revision": "1", "oldGuestAccepted": false, "oldSequenceAccepted": false, "duplicateConsumesTwice": false, "clockFaultRetainsReceipt": true },
   "wireEmptyPatchPayloadBytes": 0,

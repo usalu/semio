@@ -280,6 +280,35 @@ impl OrbitController {
         self.distance = (self.distance * (1.0 - delta * 0.001)).clamp(0.5, 500.0);
     }
 }
+
+/// 🎯️ The headroom a boot framing leaves around the delivered bounds, as a multiple of the exact
+/// fitting distance. 12 % is the difference between "the outermost vertex sits on the viewport
+/// edge" and "the user sees the whole example with air around it".
+pub const WORLD_FRAME_BOUNDS_MARGIN: f32 = 1.12;
+
+/// 📐️ How far a perspective eye must stand off a bounding sphere of `radius` for the WHOLE sphere
+/// to project inside a `fov_y`/`aspect` frustum, times `margin`.
+///
+/// ⚖️ The BINDING half-angle is the smaller of the vertical and horizontal ones: a wide viewport
+/// (`aspect > 1`) is limited by its vertical field, a tall one by its horizontal field. Fitting a
+/// box by `radius * constant` — which is what every ad-hoc fit rule in this repo used to do — is
+/// short by a factor of `1 / sin(half_angle)` ≈ 2.6 at the default 45° field, which is exactly how
+/// a converged example arrived clipped at the corner of the preview
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️boot-camera-framing-2026-09-15.md`).
+pub fn frame_distance_for_radius(radius: f32, fov_y: f32, aspect: f32, margin: f32) -> f32 {
+    let vertical = (fov_y * 0.5).clamp(0.02, 1.5);
+    let horizontal = (vertical.tan() * aspect.max(0.05)).atan().clamp(0.02, 1.5);
+    let half = vertical.min(horizontal);
+    (radius.max(1e-4) / half.sin() * margin.max(1.0)).max(0.5)
+}
+
+/// 🎯️ Frames an orbit on an axis-aligned box while keeping its current look direction — the ONE
+/// framing rule the wgpu world surface and its React twin (`world3dFrameOrbitToBounds`) both obey.
+pub fn frame_orbit_to_bounds(orbit: &OrbitController, minimum: [f32; 3], maximum: [f32; 3], aspect: f32, margin: f32) -> OrbitController {
+    let center = vec3_new_m((minimum[0] + maximum[0]) * 0.5, (minimum[1] + maximum[1]) * 0.5, (minimum[2] + maximum[2]) * 0.5);
+    let radius = (((maximum[0] - minimum[0]).powi(2) + (maximum[1] - minimum[1]).powi(2) + (maximum[2] - minimum[2]).powi(2)).sqrt()) * 0.5;
+    OrbitController { target: center, distance: frame_distance_for_radius(radius, orbit.fov_y, aspect, margin), yaw: orbit.yaw, pitch: orbit.pitch, fov_y: orbit.fov_y }
+}
 //#endregion Camera
 
 //#region Mesh

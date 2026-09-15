@@ -1,0 +1,10 @@
+{
+  "$comment": "🧺️ Language-agnostic budget of the turn patch BATCH. A crossing is one host↔guest round trip; before 2026-09-15 a turn carried at most ONE patch, so N published surfaces cost N + 1 crossings by wire contract. The admission rule is now a byte budget, and the count is only the page's derived capacity. Owner: 📓️ui-turn-patch-batching-2026-09-15.md.",
+  "surfaceCounts": [1, 3, 6, 8],
+  "crossingsPerBatch": 2,
+  "idleCrossingsAllowed": 0,
+  "batchSurfaces": 5,
+  "budgetPatchesThatFit": 2,
+  "overBudgetBytes": 1,
+  "laneDeclarations": [262144, 524288, 1048576, 2097152]
+}

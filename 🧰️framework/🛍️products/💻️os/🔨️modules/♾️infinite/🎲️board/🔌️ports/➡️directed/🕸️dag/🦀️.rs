@@ -4063,6 +4063,9 @@ impl DagHost {
                 let (_, source_center) = world_rect_to_screen(source_bounds.0, source_bounds.1, source_bounds.2, source_bounds.3);
                 let (_, target_center) = world_rect_to_screen(target_bounds.0, target_bounds.1, target_bounds.2, target_bounds.3);
                 let midpoint = ((source_center.0 + target_center.0) * 0.5, (source_center.1 + target_center.1) * 0.5);
+                if !self.screen_point_is_on_surface(midpoint) {
+                    return os_pack::json::to_json_string(&unresolved);
+                }
                 return os_pack::json::to_json_string(&EntityGeometry { visible: true, x: Some(midpoint.0), y: Some(midpoint.1), rect: None, polyline: Some(vec![[source_center.0, source_center.1], [target_center.0, target_center.1]]) });
             }
             _ => None,
@@ -4070,7 +4073,24 @@ impl DagHost {
 
         let Some(bounds) = bounds_result else { return os_pack::json::to_json_string(&unresolved) };
         let (rect, center) = world_rect_to_screen(bounds.0, bounds.1, bounds.2, bounds.3);
+        if !self.screen_point_is_on_surface(center) {
+            return os_pack::json::to_json_string(&unresolved);
+        }
         os_pack::json::to_json_string(&EntityGeometry { visible: true, x: Some(center.0), y: Some(center.1), rect: Some(rect), polyline: None })
+    }
+
+    /// 👁️ Whether the point a caller would AIM at is actually on the surface this geometry is
+    /// published in. The centre is that point — `entity_screen_json` publishes a rect whose centre is
+    /// where anything trusting the host presses — so the centre is what `visible` has to be true of.
+    ///
+    /// 🩸️ `visible` used to mean "the entity EXISTS", never "you can aim at it": a port the camera had
+    /// scrolled past was published as `visible: true` with its centre at `x = -4.9` in surface space,
+    /// so a caller that trusts the published geometry — a demonstration, an assistive caller, a
+    /// scripted drag — pressed OUTSIDE the canvas and the press reached nothing at all. Measured on
+    /// 6026 as the wire row's redraw press, twice, with the two aims byte-identical
+    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️generate-add-flow-wire-quiet-tick-2026-09-14.md`).
+    fn screen_point_is_on_surface(&self, point: (f64, f64)) -> bool {
+        point.0 >= 0.0 && point.1 >= 0.0 && point.0 <= f64::from(self.width.max(1)) && point.1 <= f64::from(self.height.max(1))
     }
 
     /// 📐️ Aligns or distributes the current multi-node selection.

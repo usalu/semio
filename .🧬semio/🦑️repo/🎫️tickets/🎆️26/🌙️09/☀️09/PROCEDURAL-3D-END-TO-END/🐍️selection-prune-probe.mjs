@@ -35,7 +35,10 @@ page.on("pageerror", (e) => lines.push(`${Date.now() - t0} pageerror ${String(e)
 const snap = () =>
   page.evaluate(() => {
     const parse = (raw) => { try { return JSON.parse(raw ?? "null"); } catch { return null; } };
-    const pane = document.querySelector("[data-selection-json]");
+    // 🎯️ Keyed on the lane only the WORLD pane publishes: since 2026-09-15 the node-graph host publishes
+    // its own `data-selection-json` too (the graph twin of this attribute), and it comes FIRST in document
+    // order — so a bare `[data-selection-json]` now answers the Flow window, not the 3D pane this probe reads.
+    const pane = document.querySelector("[data-guest-selection-json]");
     const combo = document.querySelector('[role="combobox"]');
     const idRow = [...document.querySelectorAll('[data-slot="panel"] [id*="procedural-play-inspector"]')].find((el) => el.id.endsWith("procedural-play-inspector.id")) ?? null;
     return {

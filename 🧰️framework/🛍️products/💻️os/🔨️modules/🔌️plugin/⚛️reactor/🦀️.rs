@@ -1781,6 +1781,16 @@ mod reconcile_budget_tests;
 mod reconcile_spin_tests;
 //#endregion 🧪️ReconcileSpinTests
 
+//#region 🧪️TurnPatchBatchTests
+/// 🧺️ The batching laws of the turn patch page: N surfaces that are ready together cost TWO
+/// crossings, a batch the byte budget cuts still delivers every publication exactly once and in
+/// order, the first ready patch is always admitted, and the page never becomes a contiguous guest
+/// request past the declared ceiling. See `📓️ui-turn-patch-batching-2026-09-15.md`.
+#[cfg(test)]
+#[path = "🧪️tests/🧺️turn-patch-batch/🦀️.rs"]
+mod turn_patch_batch_tests;
+//#endregion 🧪️TurnPatchBatchTests
+
 //#region 🧪️ExtensionContinuationTests
 #[cfg(test)]
 #[path = "🧪️tests/🔬️extension-continuation/🦀️.rs"]

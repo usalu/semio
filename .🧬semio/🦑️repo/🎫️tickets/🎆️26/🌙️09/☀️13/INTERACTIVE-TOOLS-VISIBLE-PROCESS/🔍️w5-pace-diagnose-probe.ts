@@ -8,7 +8,7 @@ const out = `${import.meta.dir}/🗑️generated/W5-mac-react-e2e/pace-diagnose-
 const lines: string[] = [];
 const t0 = Date.now();
 const log = (line: string) => lines.push(`[${((Date.now() - t0) / 1000).toFixed(1)}s] ${line}`);
-const browser = await chromium.launch({ headless: true });
+const browser = await chromium.launch({ headless: true, args: ["--use-angle=metal", "--enable-gpu", "--ignore-gpu-blocklist"] });
 const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
 await page.routeWebSocket(/\/\?token=/, () => {});
 page.on("console", (msg) => {

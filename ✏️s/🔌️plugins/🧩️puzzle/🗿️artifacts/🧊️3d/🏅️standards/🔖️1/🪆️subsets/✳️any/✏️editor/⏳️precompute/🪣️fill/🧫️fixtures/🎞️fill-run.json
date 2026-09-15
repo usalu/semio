@@ -1,5 +1,5 @@
 {
-  "$comment": "🎞️ Language-neutral fill tool run law of s.puzzle3d's ⏳️precompute/🪣️fill run job (ticket 26/09/13/INTERACTIVE-TOOLS-VISIBLE-PROCESS lane W1-A). A case seeds a shipped example document (scaled box fallback for every mesh identity, as the app registers before real GLBs arrive) and a requested count; `expected` is the verdict prefix as `verdict:reasonId`, the run counters, provisional op and entity counts, checkpoints and the stall reason id.",
+  "$comment": "🎞️ Language-neutral fill tool run law of s.puzzle3d's ⏳️precompute/🪣️fill run job (ticket 26/09/13/INTERACTIVE-TOOLS-VISIBLE-PROCESS lane W1-A). A case seeds a shipped example document (scaled box fallback for every mesh identity, as the app registers before real GLBs arrive) and a requested count; `expected` is the verdict prefix as `verdict:reasonId` (a marked vortex — every compatible candidate at a drawn vortex refused — is one `danger:vortex-exhausted` record), the run counters including marked vortices, provisional op and entity counts, checkpoints and the stall reason id.",
   "laws": {
     "documentCapacities": { "bookkeepingSlots": 32, "bookkeepingPageBytes": 16384, "documentPageBytes": 1048576, "objectSlots": 2048, "attractionSlots": 2048, "vortexSlots": 4096, "volumeSlots": 256, "kindSlots": 256, "candidateSlots": 1024, "cellSlots": 8192, "cellMemberSlots": 2048, "nakagin": { "objects": 180, "vortices": 358, "objectKinds": 12, "vortexKinds": 18, "compatibilityRows": 14, "attractions": 358 } },
     "opsPerPlacement": 2,
@@ -17,20 +17,20 @@
       "kindMeshOffset": 40,
       "cases": [
         { "name": "clear", "blocker": false, "requested": 1, "expected": { "verdicts": ["success:fits"], "locked": 1, "collisions": 0, "stall": null, "revalidateConflicts": [false] } },
-        { "name": "own-mesh-blocker", "blocker": true, "requested": 1, "expected": { "verdicts": ["danger:solid-overlap", "danger:solid-overlap"], "locked": 0, "collisions": 2, "stall": "no-free-placement", "revalidateConflicts": [true] } }
+        { "name": "own-mesh-blocker", "blocker": true, "requested": 1, "expected": { "verdicts": ["danger:solid-overlap", "danger:solid-overlap", "danger:vortex-exhausted"], "locked": 0, "collisions": 2, "stall": "no-free-placement", "revalidateConflicts": [true] } }
       ]
     },
     "visibleEnd": {
       "$comment": "🏁️ Every fill run ends where the user can see why (ticket lane W1-H): its last step is `success:requested-reached` over a met request or a `warning` step naming a declared stall reason, and a run that tested nothing always names its stall. Each case is an own-mesh variant (every second document body carries its own mesh, `ownMeshScale` times its kind's box), which packs more than one bookkeeping page of bodies into one 8-unit spatial cell. `expected` holds the run counters and the stall reason id.",
       "cases": [
-        { "document": "nakagin", "seed": 1, "requested": 12, "ownMeshScale": 1.5, "expected": { "tested": 3344, "locked": 1, "collisions": 3343, "rejected": 0, "stall": "no-free-placement" } }
+        { "document": "nakagin", "seed": 1, "requested": 12, "ownMeshScale": 1.5, "expected": { "tested": 2187, "locked": 1, "collisions": 2186, "rejected": 0, "marked": 358, "stall": "no-free-placement" } }
       ]
     },
     "delivery": {
       "document": "concrete-forest",
       "seed": 7,
       "requested": 1000000,
-      "candidates": 5000,
+      "candidates": 2500,
       "deltaBudgetBytes": 65536
     },
     "interactive": {
@@ -61,15 +61,16 @@
           "danger:solid-overlap",
           "danger:solid-overlap",
           "danger:solid-overlap",
-          "danger:solid-overlap",
+          "danger:vortex-exhausted",
           "danger:solid-overlap",
           "danger:solid-overlap",
           "danger:solid-overlap"
         ],
-        "tested": 3344,
+        "tested": 2187,
         "locked": 1,
-        "collisions": 3343,
+        "collisions": 2186,
         "rejected": 0,
+        "marked": 358,
         "appendOps": 2,
         "appendEntities": 1,
         "checkpoints": 1,
@@ -83,22 +84,23 @@
       "expected": {
         "verdictPrefix": [
           "success:fits",
+          "danger:solid-overlap",
+          "success:fits",
+          "danger:solid-overlap",
+          "success:fits",
           "success:fits",
           "success:fits",
           "success:fits",
           "danger:solid-overlap",
           "danger:solid-overlap",
-          "danger:solid-overlap",
           "success:fits",
-          "success:fits",
-          "success:fits",
-          "danger:solid-overlap",
-          "success:fits"
+          "danger:solid-overlap"
         ],
-        "tested": 12,
+        "tested": 13,
         "locked": 8,
-        "collisions": 4,
+        "collisions": 5,
         "rejected": 0,
+        "marked": 0,
         "appendOps": 16,
         "appendEntities": 8,
         "checkpoints": 8,
@@ -112,13 +114,11 @@
       "expected": {
         "verdictPrefix": [
           "success:fits",
+          "danger:solid-overlap",
           "success:fits",
           "success:fits",
           "success:fits",
-          "success:fits",
-          "success:fits",
-          "success:fits",
-          "success:fits",
+          "danger:solid-overlap",
           "success:fits",
           "success:fits",
           "success:fits",
@@ -126,20 +126,23 @@
           "success:fits",
           "success:fits",
           "danger:solid-overlap",
+          "success:fits",
+          "danger:solid-overlap",
+          "success:fits",
+          "success:fits",
           "danger:solid-overlap",
           "danger:solid-overlap",
-          "success:fits",
-          "success:fits",
-          "success:fits",
-          "success:fits",
-          "success:fits",
-          "success:fits",
+          "danger:vortex-exhausted",
+          "danger:solid-overlap",
+          "danger:solid-overlap",
+          "danger:solid-overlap",
           "success:fits"
         ],
-        "tested": 93,
+        "tested": 94,
         "locked": 40,
-        "collisions": 53,
+        "collisions": 54,
         "rejected": 0,
+        "marked": 7,
         "appendOps": 80,
         "appendEntities": 40,
         "checkpoints": 40,

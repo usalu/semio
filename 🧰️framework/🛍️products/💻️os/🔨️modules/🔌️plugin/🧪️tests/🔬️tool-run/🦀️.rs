@@ -1667,85 +1667,52 @@ async fn tool_run_panel_offers_start_for_the_active_run_tool_until_its_run_exist
     abort_and_close(&mut app).await;
 }
 
-/// 🪃️ The one pace wake a turn handed the host: its `(args, delay_ms)`; panics unless there is exactly one.
-fn one_pace_wake(app: &mut ToyApp, what: &str) -> (Option<DslValue>, u64) {
-    let effects: Vec<Effect> = std::iter::from_fn(|| app.take_typed_operation_effect()).collect();
-    match effects.as_slice() {
-        [Effect::DispatchAction { action, args, delay_ms, .. }] if action == tool_run::TOOL_RUN_PACE_ACTION_ID => (args.clone(), *delay_ms),
-        _ => panic!("{what}: exactly one pace wake reaches the host, got {effects:?}"),
-    }
-}
-
-/// ⚖️ LAW: a run started under the viewer's pace (`ViewModel::tool_run_units_per_second`) shows one visible unit per
-/// pace interval — after each unit the run is no driver work and hands the host exactly one `toolRunPace` wake delayed
-/// by the interval; a wake that arrives early re-arms once for the remainder and shows nothing, and the wake after the
-/// interval itself shows the next unit (so its action result carries the refresh) and arms the next wake.
+/// ⚖️ LAW: a TERMINAL run arms nothing. Once a run is finalized or aborted the ledger owes the driver no work
+/// and hands the host no effect, however many turns the host takes.
+///
+/// 🪪️ Every wake a run hands the host is a REQUEST the host answers by dispatching an action back into the
+/// guest, so a request a run that is OVER keeps re-making is an endless action storm on a shell nobody is
+/// touching. Generation3d's finalized read-only `previewEval` re-armed its pace wake once per presentation
+/// retry and filled the console with `toolRunPace` on a quiet, converged editor — seq 107…116 within seconds,
+/// 2 800 dropped console lines (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, 2026-09-14 23:25). The latch is read
+/// once per ANSWER, never once per REFRESH, and a terminal run answers nothing.
 #[semio_framework_async_macros::async_test]
-async fn a_paced_run_shows_one_unit_per_interval_and_waits_for_the_host_wake() {
+async fn a_terminal_run_arms_no_further_work_however_many_turns_the_host_takes() {
     let fixture = fixture();
-    let expected = &fixture["pace"];
-    let ops_per_unit = number(&expected["opsPerUnit"]) as usize;
-    let delay = number(&expected["delayMs"]);
-    let target = number(&expected["target"]) as usize;
-    let mut app = toy_app(target as u64).await;
-    let paced = ActionMeta { view_state: Some(ViewModel { tool_run_units_per_second: expected["unitsPerSecond"].as_f64(), ..ViewModel::default() }), ..toy_meta() };
-    let started = app.handle_action("toolRunStart", Some(&DslValue::Object(vec![("toolId".into(), DslValue::String(text(&expected["toolId"]).into()))])), &paced).await.expect("paced start").output;
-    assert_eq!(started.get("toolRun").and_then(DslValue::as_str), Some("spawnJob"));
-    pump_until(&mut app, "the first paced unit is shown", |app| app.tool_runs.provisional().len() == ops_per_unit).await;
-    let (mut wake, first_delay) = one_pace_wake(&mut app, "unit 1");
-    assert_eq!(first_delay, delay, "the wake is delayed by one pace interval");
-    for unit in 2..=target {
-        assert!(!app.tool_runs.has_pending_work(), "unit {unit}: a paced run idles until its interval elapsed");
-        app.advance_typed_operation_publication().await.expect("an idle turn");
-        assert_eq!(app.tool_runs.provisional().len(), (unit - 1) * ops_per_unit, "unit {unit}: an idle turn shows nothing more");
-        if unit == 2 {
-            app.handle_action(tool_run::TOOL_RUN_PACE_ACTION_ID, wake.as_ref(), &paced).await.expect("an early wake");
-            let (rearmed, remainder) = one_pace_wake(&mut app, "an early wake");
-            assert!(remainder > 0 && remainder <= delay, "an early wake re-arms for the remainder, got {remainder} ms");
-            assert_eq!(app.tool_runs.provisional().len(), ops_per_unit, "an early wake shows nothing");
-            wake = rearmed;
+    let expected = &fixture["terminalQuiet"];
+    let turns = number(&expected["turns"]);
+    for row in expected["rows"].as_array().expect("the terminalQuiet rows") {
+        let id = text(&row["id"]);
+        let mut app = toy_app(number(&row["units"])).await;
+        start(&mut app, text(&row["toolId"])).await;
+        if text(&row["terminalBy"]) == "abort" {
+            pump_until(&mut app, "the run leaves starting", |app| app.tool_runs.state().is_some_and(|state| state != ToolRunState::Starting)).await;
+            run_action(&mut app, "toolRunAbort").await;
         }
-        std::thread::sleep(std::time::Duration::from_millis(delay));
-        app.handle_action(tool_run::TOOL_RUN_PACE_ACTION_ID, wake.as_ref(), &paced).await.expect("the host wake");
-        assert_eq!(app.tool_runs.provisional().len(), unit * ops_per_unit, "unit {unit}: the wake after the interval shows the next unit");
-        let (next, next_delay) = one_pace_wake(&mut app, &format!("unit {unit}"));
-        assert_eq!(next_delay, delay, "unit {unit}: the next wake is one interval away");
-        wake = next;
+        pump_until(&mut app, "the run reaches a terminal state", |app| app.tool_runs.state().is_some_and(ToolRunState::is_terminal) && !app.tool_runs.has_pending_work()).await;
+        while app.take_typed_operation_effect().is_some() {}
+        let mut armed: Vec<String> = Vec::new();
+        let mut pending_turns = 0u64;
+        for _ in 0..turns {
+            if app.tool_runs.has_pending_work() {
+                pending_turns += 1;
+            }
+            app.advance_typed_operation_publication().await.unwrap_or_else(|fault| panic!("{id}: a quiet turn faulted: {fault:?}"));
+            while let Some(effect) = app.take_typed_operation_effect() {
+                armed.push(format!("{effect:?}"));
+            }
+        }
+        let state = app.tool_runs.state().expect("a terminal state");
+        println!("[STATS] terminalQuiet {id}: state={} turns={turns} pendingWorkTurns={pending_turns} armed={}", state.as_str(), armed.len());
+        assert!(state.is_terminal(), "{id}: the run stays terminal");
+        assert_eq!(pending_turns == 0, expected_flag(&row["expected"]["hasPendingWork"]) == false, "{id}: a terminal run is no driver work over {turns} turns");
+        assert_eq!(armed.len() as u64, number(&row["expected"]["effects"]), "{id}: a terminal run arms nothing, got {armed:?}");
+        close(&mut app);
     }
-    std::thread::sleep(std::time::Duration::from_millis(delay));
-    app.handle_action(tool_run::TOOL_RUN_PACE_ACTION_ID, wake.as_ref(), &paced).await.expect("the last wake");
-    pump_until(&mut app, "the paced run completes", |app| app.tool_runs.state() == Some(ToolRunState::Complete)).await;
-    abort_and_close(&mut app).await;
 }
 
-/// ⚖️ LAW: a paced run shows its next unit only once every scene window its trace reaches has echoed the last one —
-/// with the interval elapsed but the renderer's cursor behind, the run stays idle and its wake re-arms at the
-/// presentation retry; the echo the next wake carries in its view state releases it, and that wake shows the next unit.
-#[semio_framework_async_macros::async_test]
-async fn a_paced_run_waits_until_its_renderer_presented_the_last_unit() {
-    let fixture = fixture();
-    let expected = &fixture["pace"];
-    let delay = number(&expected["delayMs"]);
-    let ops_per_unit = number(&expected["opsPerUnit"]) as usize;
-    let mut app = toy_app(number(&expected["target"])).await;
-    let paced = ActionMeta { view_state: Some(ViewModel { tool_run_units_per_second: expected["unitsPerSecond"].as_f64(), ..ViewModel::default() }), ..toy_meta() };
-    app.handle_action("toolRunStart", Some(&DslValue::Object(vec![("toolId".into(), DslValue::String(text(&expected["toolId"]).into()))])), &paced).await.expect("paced start");
-    pump_until(&mut app, "the first paced unit is shown", |app| app.tool_runs.provisional().len() == ops_per_unit).await;
-    let (wake, _) = one_pace_wake(&mut app, "unit 1");
-    let (_, delta) = render_world(&mut app, None).await;
-    let delta = delta.expect("the renderer receives the unit's trace page");
-    std::thread::sleep(std::time::Duration::from_millis(delay));
-    assert!(!app.tool_runs.has_pending_work(), "the interval elapsed but no renderer presented the unit");
-    app.handle_action(tool_run::TOOL_RUN_PACE_ACTION_ID, wake.as_ref(), &paced).await.expect("the host wake");
-    let (retry, retry_delay) = one_pace_wake(&mut app, "an unpresented unit");
-    assert_eq!(retry_delay, tool_run::TOOL_RUN_PACE_PRESENTATION_RETRY_MS, "an unpresented unit re-arms the wake at the presentation retry");
-    assert_eq!(app.tool_runs.provisional().len(), ops_per_unit, "an unpresented unit holds the run");
-    let lane = &fixture["traceLane"];
-    let echoing = ActionMeta { view_state: Some(ViewModel { tool_run_trace_cursor_by_window_id: [(text(&lane["windowId"]).to_string(), cursor_after(&delta))].into_iter().collect(), ..paced.view_state.clone().expect("paced view") }), ..toy_meta() };
-    let released = app.handle_action(tool_run::TOOL_RUN_PACE_ACTION_ID, retry.as_ref(), &echoing).await.expect("the echoing wake");
-    assert_eq!(app.tool_runs.provisional().len(), 2 * ops_per_unit, "the echo the wake carries presents the unit and the wake shows the next one");
-    assert!(!matches!(released.ui_scope, UiDirtyScope::None), "the releasing wake carries the refresh of the unit it showed");
-    one_pace_wake(&mut app, "the next unit");
-    abort_and_close(&mut app).await;
+fn expected_flag(value: &Value) -> bool {
+    value.as_bool().expect("a boolean expectation")
 }
+
 //#endregion 🎯️RetargetAndSettings

@@ -199,3 +199,28 @@ fn an_item_counted_extent_cannot_stand_in_for_a_row_counted_footprint() {
     assert_eq!(empty.rows_for_items(1), None);
 }
 //#endregion 🧮️WorkCapacity
+
+/// 🧯️ A refused reducer step must report the APP's own fault, not a fixed sentence. Every refusal used
+/// to read `retained command reducer rejected operation` — a missing retained session, an unsupported
+/// export format and a rejected route were one indistinguishable message, which is why the viewer's
+/// broken export took a browser probe to diagnose (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+#[test]
+fn a_refused_reducer_step_reports_the_apps_own_fault_code_and_message() {
+    let fault = semio_framework::Fault::new(semio_framework::FaultOrigin::App, semio_framework::FaultCode::new("generation3d.io.export"), "format `dwg` has no readable descriptor set");
+    let detail = super::reducer_fault_detail(&fault);
+    println!("[DEBUG] reducer fault detail: {detail}");
+    assert!(detail.starts_with("retained command reducer rejected operation: "), "the prefix every reader keys on must survive: {detail}");
+    assert!(detail.contains("generation3d.io.export"), "the app's own code must reach the reader: {detail}");
+    assert!(detail.contains("format `dwg` has no readable descriptor set"), "the app's own message must reach the reader: {detail}");
+}
+
+/// 🧯️ A runaway message narrows the report rather than losing it, and never truncates mid-codepoint.
+#[test]
+fn an_oversized_reducer_fault_detail_is_clipped_on_a_char_boundary() {
+    let fault = semio_framework::Fault::new(semio_framework::FaultOrigin::App, semio_framework::FaultCode::new("x"), "ü".repeat(4096));
+    let detail = super::reducer_fault_detail(&fault);
+    println!("[DEBUG] clipped detail bytes: {}", detail.len());
+    assert!(detail.len() <= super::ARTIFACT_COMMAND_FAULT_DETAIL_MAXIMUM_BYTES);
+    assert!(detail.starts_with("retained command reducer rejected operation: x "));
+    assert_eq!(detail, String::from_utf8(detail.clone().into_bytes()).expect("a clipped detail stays valid utf-8"));
+}

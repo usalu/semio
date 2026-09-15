@@ -1296,19 +1296,7 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
     });
 
     let lifecycle_receipt = focus.map(|instance| runtime.guest_lifetimes.borrow_mut().prepare_turn(instance)).transpose()?.flatten();
-    let mut ui_patches = semio_framework::kernel::UiTurnPatches::default();
-    let mut ui_patch_receipt = None;
-    let taken = with_pending_patches(|pending| pending.borrow_mut().take_one(semio_framework_ui_runtime::SURFACE_RECONCILE_PAGE_BYTES))
-        .map_err(|reason| semio_framework::Fault::new(semio_framework::FaultOrigin::Os, semio_framework::FaultCode::new("ui.pending-patch-authority"), reason))?;
-    if let Some(patch) = taken {
-        let instance = parse_surface_instance(&patch.surface.0);
-        match ui_patches.try_push_ui_patch(patch) {
-            Ok(()) => ui_patch_receipt = instance.and_then(|instance| runtime.guest_lifetimes.borrow_mut().next_patch_receipt(instance)),
-            Err(patch) => {
-                with_pending_patches(|pending| pending.borrow_mut().hand_back_turn(patch)).expect("exact unpublished patch returns to its reserved slot");
-            }
-        }
-    }
+    let (ui_patches, ui_patch_receipt) = fill_turn_patch_page(runtime, turn_patch_budget_bytes(budget))?;
     // 👥️ M2: once per poll — expire ages-out peer marks, then flush drains every key touched since
     // the last flush into one coalesced `PresenceUpdate` each (free burst coalescing: a hover storm
     // between polls still costs exactly one update per `(surface, node_key)`).
@@ -1325,7 +1313,7 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
         let prepared = (|| {
             result.validate_ui_patch_receipt().map_err(reactor_close_fault)?;
             if let Some(receipt) = result.ui_patch_receipt {
-                pending.stage_emission(receipt, result.ui_patches.iter().next().expect("paired patch owner")).map_err(reactor_close_fault)?;
+                pending.stage_emission(receipt, result.ui_patches.iter()).map_err(reactor_close_fault)?;
             }
             let prepared = prepare(&result)?;
             if let Some(instance) = focus {
@@ -1341,8 +1329,13 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
         })();
         match prepared {
             Err(fault) => {
-                let returned = result.ui_patches.try_transfer_one(|patch| pending.hand_back_turn(patch));
-                assert!(!matches!(returned, semio_framework::kernel::UiTurnPatchTransfer::Refused), "failed output retains its exact pending patch slot");
+                loop {
+                    let returned = result.ui_patches.try_transfer_one(|patch| pending.hand_back_turn(patch));
+                    assert!(!matches!(returned, semio_framework::kernel::UiTurnPatchTransfer::Refused), "failed output retains its exact pending patch slot");
+                    if matches!(returned, semio_framework::kernel::UiTurnPatchTransfer::Empty) {
+                        break;
+                    }
+                }
                 Err(fault)
             }
             Ok(prepared) => {
@@ -1355,6 +1348,68 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
             }
         }
     })
+}
+
+/// 📏️ The per-turn patch BYTE budget this turn admits against — the host's own declaration
+/// (`Budget::max_patch_bytes`), clamped into the window the guest's declared linear-memory budget
+/// leaves open: never below one contiguous request ceiling (a lane that declared less could not carry
+/// one document-scaled publication at all) and never above
+/// [`semio_framework::kernel::UI_TURN_PATCH_BUDGET_BYTES`].
+pub(crate) fn turn_patch_budget_bytes(budget: semio_framework::kernel::Budget) -> usize {
+    usize::try_from(budget.max_patch_bytes).unwrap_or(semio_framework::kernel::UI_TURN_PATCH_BUDGET_BYTES).clamp(semio_framework_trace::GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES, semio_framework::kernel::UI_TURN_PATCH_BUDGET_BYTES)
+}
+
+/// 📤️ Fills this turn's patch page with EVERY publication that is ready and fits, and mints the one
+/// receipt that authorizes the whole batch.
+///
+/// 🐛️ Until 2026-09-15 this took exactly one patch per turn, because `UI_TURN_PATCHES_MAXIMUM` was 1:
+/// N published surfaces cost N + 1 host round trips by construction, and the React renderer publishes
+/// about six per hop (`📓️reactor-reconcile-spin-2026-09-14.md` §7 named this floor and could not move
+/// it). The admission rule is now a BYTE budget, not a count:
+///
+/// 1. the FIRST ready patch is always admitted, whatever it costs — otherwise a publication larger
+///    than the whole budget could never leave the guest and the surface would never converge;
+/// 2. every further patch joins only while the page's own [`semio_framework::kernel::ui_patch_turn_bytes`]
+///    sum stays inside the budget — the one that does not fit is handed straight back to its reserved
+///    slot and travels on the next turn, in order, still exactly once;
+/// 3. the page's fixed capacity stops the loop at [`semio_framework::kernel::UI_TURN_PATCHES_MAXIMUM`],
+///    which is itself derived so the page never becomes a contiguous request past the guest's ceiling.
+#[expect(clippy::result_large_err, reason = "A refused publication returns its exact patch owner to the reserved pending slot without allocating an error wrapper.")]
+pub(crate) fn take_turn_patch_page(budget_bytes: usize) -> Result<semio_framework::kernel::UiTurnPatches, semio_framework::Fault> {
+    let mut page = semio_framework::kernel::UiTurnPatches::default();
+    let mut spent = 0usize;
+    while page.len() < semio_framework::kernel::UI_TURN_PATCHES_MAXIMUM {
+        let taken = with_pending_patches(|pending| pending.borrow_mut().take_one(semio_framework_ui_runtime::SURFACE_RECONCILE_PAGE_BYTES))
+            .map_err(|reason| semio_framework::Fault::new(semio_framework::FaultOrigin::Os, semio_framework::FaultCode::new("ui.pending-patch-authority"), reason))?;
+        let Some(patch) = taken else { break };
+        let cost = semio_framework::kernel::ui_patch_turn_bytes(&patch);
+        if !page.is_empty() && spent.saturating_add(cost) > budget_bytes {
+            with_pending_patches(|pending| pending.borrow_mut().hand_back_turn(patch)).expect("a patch over the turn byte budget returns to its reserved slot");
+            break;
+        }
+        match page.try_push_ui_patch(patch) {
+            Ok(()) => spent = spent.saturating_add(cost),
+            Err(patch) => {
+                with_pending_patches(|pending| pending.borrow_mut().hand_back_turn(patch)).expect("exact unpublished patch returns to its reserved slot");
+                break;
+            }
+        }
+    }
+    Ok(page)
+}
+
+/// 🧾️ The page plus the ONE receipt that authorizes it — minted for the instance the batch belongs
+/// to, which is single by construction (the pending authority only adds to a batch that already
+/// names an instance).
+#[expect(clippy::result_large_err, reason = "A refused publication returns its exact patch owner to the reserved pending slot without allocating an error wrapper.")]
+fn fill_turn_patch_page<PA: crate::app::PluginApp>(
+    runtime: &crate::plugin_runtime::PluginRuntime<PA>,
+    budget_bytes: usize,
+) -> Result<(semio_framework::kernel::UiTurnPatches, Option<ActorUiPatchReceipt>), semio_framework::Fault> {
+    let page = take_turn_patch_page(budget_bytes)?;
+    let instance = page.iter().next().and_then(|patch| parse_surface_instance(&patch.surface.0));
+    let receipt = instance.and_then(|instance| runtime.guest_lifetimes.borrow_mut().next_patch_receipt(instance));
+    Ok((page, receipt))
 }
 
 /// 🏃️ Runs queued process-pool job steps inside this turn on wasm, where the pool has no threads and

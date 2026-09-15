@@ -3,7 +3,7 @@
  * Ticket 26/09/13/INTERACTIVE-TOOLS-VISIBLE-PROCESS. Run from the ticket folder: `bun 🔍️w5-echo-map-probe.ts`. */
 import { chromium } from "@playwright/test";
 
-const browser = await chromium.launch({ headless: true });
+const browser = await chromium.launch({ headless: true, args: ["--use-angle=metal", "--enable-gpu", "--ignore-gpu-blocklist"] });
 const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
 await page.routeWebSocket(/\/\?token=/, () => {});
 const modules: string[] = [];

@@ -74,11 +74,11 @@ import {
   type SpawnedJobCompletion,
   type TurnOutcome,
 } from "@semio-tech/framework";
-import { AppChannelClient, AppChannelRequestSequence, type WindowConfigPackEntry, decodeFaultFromWire, decodeInvocationResultPacks, decodePackValue, decodePackWire, encodeAppCommand, encodePackValue, faultDisplayMessage, packValueFromBase64, packWireNatural } from "@semio-tech/framework-os";
+import { AppChannelClient, AppChannelRequestSequence, type AppFrameValue, type WindowConfigPackEntry, decodeAppFrame, decodeFaultFromWire, decodeInvocationResultPacks, decodePackValue, decodePackWire, encodeAppCommand, encodePackValue, faultDisplayMessage, packValueFromBase64, packWireNatural } from "@semio-tech/framework-os";
 import { createShardCommandIngressPages, settleFailedInstanceOpen, ShardClient, SHARD_COMMAND_MAXIMUM_PAGES, type ShardCommandIngressPage, type ShardEventEnvelope } from "../../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
 import { createPooledActorRuntime, DEFAULT_SHARD_BUDGET, type PooledActorRuntime } from "../../../../../../../../🔨️modules/🎭️actor/🧵️shard-runtime/🟦️.ts"
 import { SHARD_WORKER_URL } from "../../../../../../../../🔨️modules/🎭️actor/🧵️shard-runtime/🟦️.ts";
-import type { ShardInstanceLifecycleLease, ShardWorkerLike } from "../../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
+import type { OwnedUiPatchAcknowledgementEntry, ShardInstanceLifecycleLease, ShardWorkerLike } from "../../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
 import { WORKER_STEP_BUDGET_MS, turnDiagnosticsEnabled } from "../⏱️turn-budget/🟦️.ts";
 import { rendererResidentLedger } from "../../../💾️resident/🟦️.ts";
 import { DEFAULT_UI_DOCUMENT_LIMITS } from "../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🛡️limits/🟦️.ts";
@@ -93,6 +93,7 @@ import {
   driveInboundRequest,
   driveSpawnedJob,
   INBOUND_REQUEST_TURN_BUDGET,
+  leftoverShellInvocationFrames,
   drainTypedOperationTurns,
   scanTypedOperationPages,
   shellFrameBytes,
@@ -433,7 +434,7 @@ export class WgpuOwnedUiInstanceRoute {
       return [];
     }
     if (!turn.original || !turn.uiPatchReceipt) throw new Error("wgpu-ui.native-owner-required");
-    const supplemental: WireTurnResult[] = [];
+    const admitted: { readonly surfaceId: string; readonly intake: OwnedUiPatchIntake; readonly cursor: WgpuUiIntakeCursor; readonly entry: OwnedUiPatchAcknowledgementEntry }[] = [];
     for (const [index, patch] of turn.uiPatches.entries()) {
       const surfaceId = patch.surface?.surface;
       if (!surfaceId) throw new Error("wgpu-ui.projection-surface-required");
@@ -449,8 +450,12 @@ export class WgpuOwnedUiInstanceRoute {
         if (current.kind === "blocked" && token === null) throw new Error(`wgpu-ui.intake-blocked:${current.phase}`);
         { const pending = cursor.next("intake"); if (pending) await pending; }
       }
-      const acknowledged = await execute(() => this.lifecycle.submitUiAcknowledgement(source, token, DEFAULT_SHARD_BUDGET));
-      if (!intake.acceptAcknowledgement(acknowledged.receipt)) throw new Error("wgpu-ui.acknowledgement-refused");
+      admitted.push({ surfaceId, intake, cursor, entry: { source, token } });
+    }
+    const acknowledged = await execute(() => this.lifecycle.submitUiAcknowledgements(admitted.map(({ entry }) => entry), DEFAULT_SHARD_BUDGET));
+    if (acknowledged.receipts.length !== admitted.length) throw new Error("wgpu-ui.acknowledgement-refused");
+    for (const [index, { surfaceId, intake, cursor }] of admitted.entries()) {
+      if (!intake.acceptAcknowledgement(acknowledged.receipts[index]!)) throw new Error("wgpu-ui.acknowledgement-refused");
       for (;;) {
         const current = intake.advance(WGPU_UI_GRANT);
         if (current.kind === "ready") break;
@@ -462,10 +467,9 @@ export class WgpuOwnedUiInstanceRoute {
       this.#surfaces.set(surfaceId, surface);
       this.#intakeSteps += cursor.steps;
       await this.#closeIntake(intake);
-      const next = coerceTurnResult(acknowledged.result);
-      supplemental.push(next, ...await this.accept(next, execute));
     }
-    return supplemental;
+    const next = coerceTurnResult(acknowledged.result);
+    return [next, ...await this.accept(next, execute)];
   }
 
   async project(surfaceId: string): Promise<WgpuOwnedUiProjection | null> {
@@ -876,7 +880,9 @@ let nextGlobalInstanceId = 1;
  * codec returns lossless integer carriers, so a raw decode would hand the shell `{kind, value}` objects
  * wherever a plugin returned a `u64` — the `render`/`handleAction` output, the diagnostics list, the UI
  * scope and the history patch all cross this one boundary. */
-export function decodeInvocationPayloads(frame: { readonly output: ArrayLike<number>; readonly diagnostics: ArrayLike<number>; readonly ui_scope: ArrayLike<number>; readonly history_patch: ArrayLike<number>; readonly mutations: ArrayLike<number>; readonly inverse_group: ArrayLike<number> }): Pick<InvocationResponse, "output" | "diagnostics" | "uiScope" | "historyPatch" | "mutations" | "inverseGroup"> {
+export type AppFrameInvocationPayload = { readonly output: ArrayLike<number>; readonly diagnostics: ArrayLike<number>; readonly ui_scope: ArrayLike<number>; readonly history_patch: ArrayLike<number>; readonly mutations: ArrayLike<number>; readonly inverse_group: ArrayLike<number> };
+
+export function decodeInvocationPayloads(frame: AppFrameInvocationPayload): Pick<InvocationResponse, "output" | "diagnostics" | "uiScope" | "historyPatch" | "mutations" | "inverseGroup"> {
   const diagnostics = decodePackWire(new Uint8Array(frame.diagnostics), "invocation.diagnostics");
   const historyPatch = decodePackWire(new Uint8Array(frame.history_patch), "invocation.historyPatch");
   return {
@@ -896,9 +902,18 @@ async function performInvocation(client: AppChannelClient, instanceId: number, i
   let historyPatch: InvocationResponse["historyPatch"];
   let mutations: InvocationResponse["mutations"] = [];
   let inverseGroup: InvocationResponse["inverseGroup"] = { invocationId: "", mutations: [], inverseMutations: [] };
+  const applyInvocationFrame = (frame: AppFrameInvocationPayload): void => {
+    const payloads = decodeInvocationPayloads(frame);
+    if (frame.output.length) output = payloads.output;
+    if (frame.diagnostics.length) diagnostics = payloads.diagnostics;
+    if (frame.ui_scope.length) uiScope = payloads.uiScope;
+    if (frame.history_patch.length) historyPatch = payloads.historyPatch;
+    mutations = payloads.mutations;
+    inverseGroup = payloads.inverseGroup;
+  };
   for (const frame of frames) {
     if ("Invocation" in frame) {
-      ({ output, diagnostics, uiScope, historyPatch, mutations, inverseGroup } = decodeInvocationPayloads(frame.Invocation));
+      applyInvocationFrame(frame.Invocation);
     } else if ("Error" in frame) {
       const fault = decodeFaultFromWire(frame.Error.fault, decodePackValue);
       if (fault) throw new SemioFaultError(fault);
@@ -907,6 +922,14 @@ async function performInvocation(client: AppChannelClient, instanceId: number, i
   }
   const leftover = pendingTurnEffects.get(instanceId) ?? [];
   pendingTurnEffects.delete(instanceId);
+  // 🕹️ The reserved tool verbs answer on a LATER turn than the one that admitted them, so their whole
+  // `InvocationResult` — `output.interactionView` and the app-declared refresh scope — rides the
+  // leftover lane. Folding it here is the same law `PluginRuntime`'s `invocationFromFrames` applies;
+  // without it this target read the admission's empty answer, refreshed nothing, and the guest never
+  // republished its `selectionJson` after a pick (`leftoverShellInvocationFrames`, `🖼️wire-turn.ts`).
+  for (const frame of leftoverShellInvocationFrames<AppFrameValue>(leftover, decodeAppFrame)) {
+    if ("Invocation" in frame) applyInvocationFrame(frame.Invocation);
+  }
   const requestedEffects = leftover.map((effect) => wireEffectToFriendly(effect, decodePackWire)).filter((effect): effect is Effect => effect !== null);
   return { output, mutations, inverseGroup, diagnostics, requestedEffects, events: [], uiScope, historyPatch };
 }

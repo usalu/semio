@@ -875,9 +875,6 @@ export type PluginViewState = {
    * next trace page it expects of `run` at `generation`. The guest answers the pages after it inside the
    * scene's `toolRunTrace` lane (`📋️tool-run-contract.md` §3.2). */
   readonly toolRunTraceCursorByWindowId?: Readonly<Record<string, ViewToolRunTraceCursor>>;
-  /** ⏯️ The viewer's tool run pace — visible algorithm units per second a running tool run advances at, so every
-   * attempt is on screen before the next one (host-owned, persisted local-only). Absent runs a tool run unpaced. */
-  readonly toolRunUnitsPerSecond?: number;
 };
 
 /** 🧭️ View-context form of the tool run `ToolRunTraceCursor` — `run` bounded to exact JavaScript integers. */
@@ -968,7 +965,7 @@ export function parseResolvedPluginViewState(value: unknown): ResolvedPluginView
   const row = object(value);
   const short = ["activeModeId", "activeWindowKindId", "activeUtilityId", "activeToolId", "windowId", "focusedWindowId"];
   const long = VIEW_CONTEXT_LONG_STRING_FIELDS;
-  const allowed = new Set([...short, ...long, "locale", "terminology", "sessionIdentity", "activeUtilityByWindowId", "windowInstances", "toolRunTraceCursorByWindowId", "toolRunUnitsPerSecond"]);
+  const allowed = new Set([...short, ...long, "locale", "terminology", "sessionIdentity", "activeUtilityByWindowId", "windowInstances", "toolRunTraceCursorByWindowId"]);
   if (Object.keys(row).some((key) => !allowed.has(key)) || !["en", "de"].includes(row.locale as string) || !["native", "reuse"].includes(row.terminology as string)) throw new Error("view context: explicit supported preferences required");
   for (const key of short) if (row[key] !== undefined) identifier(row[key]);
   for (const key of long) if (row[key] !== undefined && (typeof row[key] !== "string" || Array.from(row[key]).length > VIEW_CONTEXT_LONG_STRING_CHARS)) throw new Error(`view context: invalid panel data at ${key}`);
@@ -1005,7 +1002,6 @@ export function parseResolvedPluginViewState(value: unknown): ResolvedPluginView
       if (Object.keys(cursor).sort().join(",") !== "generation,page,run" || !bounded(cursor.run, Number.MAX_SAFE_INTEGER) || !bounded(cursor.generation, 0xffff_ffff) || !bounded(cursor.page, 0xffff_ffff)) throw new Error("view context: invalid tool run trace cursor");
     }
   }
-  if (row.toolRunUnitsPerSecond !== undefined && !(typeof row.toolRunUnitsPerSecond === "number" && row.toolRunUnitsPerSecond > 0 && row.toolRunUnitsPerSecond <= 1000)) throw new Error("view context: invalid tool run pace");
   return structuredClone(row) as ResolvedPluginViewState;
 }
 

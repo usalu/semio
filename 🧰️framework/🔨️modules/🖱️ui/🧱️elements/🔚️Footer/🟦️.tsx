@@ -8,7 +8,7 @@
 // #region 🔌️Adapters
 import * as React from "react";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
-import { type NavbarItem } from "../🔝️Navbar/🟦️.tsx";
+import { NavbarBandBody, type NavbarItem } from "../🔝️Navbar/🟦️.tsx";
 import { shellFloorPaints, shellFloorFillClass } from "../../🔨️modules/🏠️shell-floor-presentation/🟦️.ts";
 import { useSurface, SurfaceScope, getLevelZClass } from "../🌈️Surface/🟦️.tsx";
 // #endregion 🔌️Adapters
@@ -32,22 +32,7 @@ const Footer: React.FC<FooterProps> = ({ items, className = "" }) => {
   const bgClass = shellFloorFillClass(parent);
   const normalItems = items.filter((item) => !item.centered);
   const centeredItems = items.filter((item) => item.centered);
-  const body = (
-    <>
-      <div className="p-single flex gap-single items-center min-w-0 h-full">
-        {normalItems.map((item, index) => (
-          <div key={item.key ?? index} className={cn("h-medium flex shrink-0 items-center min-w-0", item.className)}>
-            {item.content}
-          </div>
-        ))}
-      </div>
-      {centeredItems.map((item, index) => (
-        <div key={item.key ?? index} className="pointer-events-none absolute inset-0 flex items-center justify-center">
-          <div className={cn("pointer-events-auto h-medium flex items-center", item.className)}>{item.content}</div>
-        </div>
-      ))}
-    </>
-  );
+  const body = <NavbarBandBody normalItems={normalItems} centeredItems={centeredItems} />;
   return (
     <footer id="ui.footer" data-slot="footer" data-level="base" data-ui-reveal-region="footer" data-elevation-root="" className={cn("relative h-large", getLevelZClass("base"), bgClass, className)}>
       {paints ? <SurfaceScope level="base" fill="surface">{body}</SurfaceScope> : body}

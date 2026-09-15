@@ -664,7 +664,7 @@ function actorUiPatchReceiptEquals(left, right) {
   return left.lifetime.activationGeneration === right.lifetime.activationGeneration && left.lifetime.instanceId === right.lifetime.instanceId && left.lifetime.guestLifetime === right.lifetime.guestLifetime && left.patchSequence === right.patchSequence;
 }
 function validateActorUiPatchPairing(patchCount, receipt) {
-  if (patchCount !== 0 && patchCount !== 1 || patchCount === 1 !== (receipt != null))
+  if (!Number.isSafeInteger(patchCount) || patchCount < 0 || patchCount > 0 !== (receipt != null))
     throw new Error("actor-ui-patch.pairing");
   if (receipt != null)
     encodeActorUiPatchReceipt(receipt);
@@ -17067,7 +17067,7 @@ class ShardClient {
     const operation = this.captureActorActivation(actorId);
     this.nextRequestId();
     const open = Object.freeze({ kind: "open", activationGeneration: activation.generation, instanceId, requestSequence: this.requestSeq });
-    const owner = { activation, operation, open, phase: "opening", lifetime: null, receipt: null, accepted: null, close: null, host: null, inFlight: false, failure: null, interruptedTurn: null, cancellation: null, lastPatchSequence: 0n, returnCell: null, returnRecord: null, returnPhase: "empty", returnFault: NO_RETURN_FAULT, returnCapacity: 0 };
+    const owner = { activation, operation, open, phase: "opening", lifetime: null, receipt: null, accepted: null, close: null, host: null, inFlight: false, failure: null, interruptedTurn: null, cancellation: null, lastPatchSequence: 0n, lastPatchTurn: null, returnCell: null, returnRecord: null, returnPhase: "empty", returnFault: NO_RETURN_FAULT, returnCapacity: 0 };
     activation.instance = owner;
     this.instanceLifecycles.set(open.requestSequence, owner);
     return Object.freeze({
@@ -17115,6 +17115,7 @@ class ShardClient {
       },
       captureUiPatchAuthority: (originalTurn, patchIndex) => this.captureInstanceUiPatch(owner, originalTurn, patchIndex),
       submitUiAcknowledgement: (source, token, budget) => this.submitInstanceUiAcknowledgement(owner, source, token, budget),
+      submitUiAcknowledgements: (entries, budget) => this.submitInstanceUiAcknowledgements(owner, entries, budget),
       dispose: () => {
         if (owner.phase !== "complete")
           throw new Error("actor-close.native-retirement-pending");
@@ -17593,7 +17594,7 @@ class ShardClient {
         throw new Error("actor-ui-patch.receipt-mismatch");
       return existing;
     }
-    if (decoded.patchSequence <= owner.lastPatchSequence)
+    if (decoded.patchSequence < owner.lastPatchSequence || decoded.patchSequence === owner.lastPatchSequence && owner.lastPatchTurn !== turn)
       throw new Error("actor-ui-patch.duplicate-sequence");
     const surface = Reflect.get(patch, "surface");
     const operations = Reflect.get(patch, "ops");
@@ -17616,9 +17617,10 @@ class ShardClient {
     const authority = mintNativePatch({ owner, turn, patch, operations, value, ordinal: 0, read: false, original: undefined, input: null, token: null, submission: null });
     captured.patches.set(patch, authority);
     owner.lastPatchSequence = receipt.patchSequence;
+    owner.lastPatchTurn = turn;
     return authority;
   }
-  async submitInstanceUiAcknowledgement(owner, source, token, budget) {
+  admitInstanceUiAcknowledgement(owner, source, token) {
     if (!owner.lifetime || !OwnedNativeUiPatchAuthority.matches(source, owner.operation, owner.lifetime) || !OwnedUiPatchAcknowledgement.matches(token, source))
       throw new Error("actor-lifecycle.ui-ack-mismatch");
     const state7 = nativePatchState(source);
@@ -17627,22 +17629,45 @@ class ShardClient {
       throw new Error("actor-lifecycle.ui-ack-mismatch");
     if (!source.inputRetired)
       throw new Error("actor-lifecycle.ui-input-pending");
-    if (state7.submission)
-      return state7.submission;
-    state7.token = token;
-    state7.submission = (async () => {
-      const result3 = await this.sendInstanceLifecycle(owner, [{ kind: "patch-ack", payload: { receipt: state7.value.receipt, surface: { instance: owner.lifetime.instanceId, surface: state7.value.surface }, revision: BigInt(state7.value.revision) } }], budget);
+    return state7;
+  }
+  patchAckEvent(owner, state7) {
+    return { kind: "patch-ack", payload: { receipt: state7.value.receipt, surface: { instance: owner.lifetime.instanceId, surface: state7.value.surface }, revision: BigInt(state7.value.revision) } };
+  }
+  async submitInstanceUiAcknowledgements(owner, entries, budget) {
+    if (entries.length === 0)
+      throw new Error("actor-lifecycle.ui-ack-mismatch");
+    const states = entries.map((entry) => this.admitInstanceUiAcknowledgement(owner, entry.source, entry.token));
+    if (states.every((state7) => state7.submission !== null)) {
+      const settled = await Promise.all(states.map((state7) => state7.submission));
+      return Object.freeze({ receipts: settled.map((value) => value.receipt), result: settled[0].result });
+    }
+    if (states.some((state7) => state7.submission !== null))
+      throw new Error("actor-lifecycle.ui-ack-mismatch");
+    const crossing = (async () => {
+      const result3 = await this.sendInstanceLifecycle(owner, states.map((state7) => this.patchAckEvent(owner, state7)), budget);
       const status = result3 !== null && typeof result3 === "object" ? Reflect.get(result3, "status") : undefined;
       if (!status || typeof status !== "object" || !["idle", "more-work"].includes(Reflect.get(status, "tag")))
         throw new Error("actor-lifecycle.ui-ack-not-admitted");
-      return Object.freeze({ receipt: mintNativeSubmission(source, token), result: result3 });
+      return result3;
     })();
+    entries.forEach((entry, index) => {
+      const state7 = states[index];
+      state7.token = entry.token;
+      state7.submission = crossing.then((result3) => Object.freeze({ receipt: mintNativeSubmission(entry.source, entry.token), result: result3 }));
+    });
     try {
-      return await state7.submission;
+      const settled = await Promise.all(states.map((state7) => state7.submission));
+      return Object.freeze({ receipts: settled.map((value) => value.receipt), result: settled[0].result });
     } catch (error) {
-      state7.submission = null;
+      for (const state7 of states)
+        state7.submission = null;
       throw error;
     }
+  }
+  async submitInstanceUiAcknowledgement(owner, source, token, budget) {
+    const batch = await this.submitInstanceUiAcknowledgements(owner, [{ source, token }], budget);
+    return Object.freeze({ receipt: batch.receipts[0], result: batch.result });
   }
   acceptInstanceLifecycleResult(owner, result3, acknowledged) {
     const wire = result3 && typeof result3 === "object" ? Reflect.get(result3, "lifecycleReceipt") : undefined;
@@ -23931,6 +23956,7 @@ class AppChannelClient {
   localQuery = null;
   completionListeners = new Set;
   disposed = false;
+  retired = false;
   handle;
   instanceId;
   appId;
@@ -24028,8 +24054,10 @@ class AppChannelClient {
       }
     }
   }
-  dispose() {
-    this.disposed = true;
+  retire() {
+    if (this.retired)
+      return;
+    this.retired = true;
     this.completionListeners.clear();
     this.cachedPack = null;
     this.cachedSpr = null;
@@ -24039,6 +24067,10 @@ class AppChannelClient {
     }
     if (this.localQuery)
       this.cancelLocalInteractionQuery(new Error("local-interaction.disposed"));
+  }
+  dispose() {
+    this.retire();
+    this.disposed = true;
     this.finishDisposal();
   }
   finishDisposal() {
@@ -24066,7 +24098,7 @@ class AppChannelClient {
     return this.cachedPack && this.cachedSpr ? { pack: this.cachedPack.slice(), spr: this.cachedSpr.slice() } : null;
   }
   sendCommand(command) {
-    if (this.disposed)
+    if (this.disposed || this.retired)
       return Promise.reject(new Error("app-channel.disposed"));
     return new Promise((resolve, reject) => {
       const seq = Object.values(command)[0].seq;
@@ -24084,7 +24116,7 @@ class AppChannelClient {
     });
   }
   readLocalInteractionPages(consume, signal) {
-    if (this.disposed)
+    if (this.disposed || this.retired)
       return Promise.reject(new Error("app-channel.disposed"));
     if (this.localQuery)
       return Promise.reject(new Error("local-interaction.busy"));
@@ -24803,6 +24835,7 @@ function coerceTurnResult(raw) {
   const record = raw && typeof raw === "object" ? raw : {};
   const uiPatches = Array.isArray(record.uiPatches) ? record.uiPatches : [];
   const effects = Array.isArray(record.effects) ? record.effects : [];
+  const presence = Array.isArray(record.presence) ? record.presence : [];
   const nextWake = typeof record.nextWake === "number" ? record.nextWake : null;
   const lifecycleReceipt = record.lifecycleReceipt;
   if (lifecycleReceipt !== undefined && lifecycleReceipt !== null && !(lifecycleReceipt instanceof Uint8Array))
@@ -24818,6 +24851,7 @@ function coerceTurnResult(raw) {
     uiPatchReceipt: uiPatchReceipt ?? undefined,
     uiPatches,
     effects,
+    presence,
     nextWake,
     status: record.status,
     commandIngress,
@@ -25373,7 +25407,7 @@ class WgpuOwnedUiInstanceRoute {
     }
     if (!turn.original || !turn.uiPatchReceipt)
       throw new Error("wgpu-ui.native-owner-required");
-    const supplemental = [];
+    const admitted21 = [];
     for (const [index, patch] of turn.uiPatches.entries()) {
       const surfaceId = patch.surface?.surface;
       if (!surfaceId)
@@ -25396,8 +25430,13 @@ class WgpuOwnedUiInstanceRoute {
             await pending2;
         }
       }
-      const acknowledged = await execute(() => this.lifecycle.submitUiAcknowledgement(source, token2, DEFAULT_SHARD_BUDGET));
-      if (!intake.acceptAcknowledgement(acknowledged.receipt))
+      admitted21.push({ surfaceId, intake, cursor, entry: { source, token: token2 } });
+    }
+    const acknowledged = await execute(() => this.lifecycle.submitUiAcknowledgements(admitted21.map(({ entry }) => entry), DEFAULT_SHARD_BUDGET));
+    if (acknowledged.receipts.length !== admitted21.length)
+      throw new Error("wgpu-ui.acknowledgement-refused");
+    for (const [index, { surfaceId, intake, cursor }] of admitted21.entries()) {
+      if (!intake.acceptAcknowledgement(acknowledged.receipts[index]))
         throw new Error("wgpu-ui.acknowledgement-refused");
       for (;; ) {
         const current = intake.advance(WGPU_UI_GRANT);
@@ -25417,10 +25456,9 @@ class WgpuOwnedUiInstanceRoute {
       this.#surfaces.set(surfaceId, surface);
       this.#intakeSteps += cursor.steps;
       await this.#closeIntake(intake);
-      const next = coerceTurnResult(acknowledged.result);
-      supplemental.push(next, ...await this.accept(next, execute));
     }
-    return supplemental;
+    const next = coerceTurnResult(acknowledged.result);
+    return [next, ...await this.accept(next, execute)];
   }
   async project(surfaceId) {
     if (this.#closing)

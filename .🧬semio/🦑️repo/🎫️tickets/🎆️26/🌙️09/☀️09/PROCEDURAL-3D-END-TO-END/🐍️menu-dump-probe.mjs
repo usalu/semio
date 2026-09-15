@@ -102,7 +102,14 @@ const expandGroups = async () => {
 /** 🖱️ Right-click the node-graph canvas well inside its bounds, so the gesture lands on the graph
  * rather than on a floating pane chip. */
 const openContextMenu = async () => {
-  const box = await page.locator(`[data-surface-id="${MAIN}"]`).first().boundingBox();
+  /** 🛟️ The window surface can be momentarily unmounted (a selection change re-keys the flow host), and
+   * an unguarded `boundingBox` there THROWS — which ends the probe and loses every later step's verdict
+   * rather than reporting one. Waited for, then guarded. */
+  await page.locator(`[data-surface-id="${MAIN}"]`).first().waitFor({ state: "attached", timeout: 60000 }).catch((e) => lines.push(`main surface ${String(e).replace(/\s+/gu, " ").slice(0, 120)}`));
+  const box = await page.locator(`[data-surface-id="${MAIN}"]`).first().boundingBox().catch((e) => {
+    lines.push(`main surface box ${String(e).replace(/\s+/gu, " ").slice(0, 120)}`);
+    return null;
+  });
   if (!box) return { opened: false, rows: [] };
   await page.mouse.click(box.x + box.width * 0.5, box.y + box.height * 0.82, { button: "right" });
   await page.waitForTimeout(1500);
@@ -137,24 +144,46 @@ await page.waitForTimeout(8000);
 
 //#region 🎯️ Context menu with a node selected
 {
-  // 🌳️ The Flow outline's rows: `role="treeitem"` where the shell paints a tree, `tree-item-row`
-  // where it paints the window-body variant.
-  const row = page.locator('[data-slot="window"][id="procedural-main"] [role="treeitem"], [data-slot="window"][id="procedural-main"] [data-slot="tree-item-row"]').first();
-  const selected = await row
-    .click({ timeout: 8000 })
-    .then(() => true)
-    .catch((e) => {
-      lines.push(`outline row ${String(e).replace(/\s+/gu, " ").slice(0, 160)}`);
-      return false;
-    });
-  await page.waitForTimeout(2500);
+  // 🌳️ The Flow graph's accessible outline lives in the ARTIFACT PANEL, not inline in the window —
+  // a peer moved it there deliberately (the canvas hint now says so in both locales), so the row that
+  // arms a `graph` selection has to be reached through that panel. The tab is clicked at its LEFT edge
+  // because the top-right dock's `Collapse` fold control paints over the trailing two thirds of it
+  // (measured in `🐍️panel-tab-occlusion-recon.mjs`).
+  const artifactTab = page.locator("button#framework\\.panel\\.artifact");
+  /** 🗂️ A tab TOGGLES, so one click can leave the panel shut and the outline row unreachable — which is
+   * how this step oscillated between green and "no row to click". Retried until the outline's own body
+   * is on screen. */
+  for (let attempt = 0; attempt < 3 && (await artifactTab.count()) > 0; attempt += 1) {
+    if ((await page.locator('[data-slot="panel"] [id*="procedural-play-graph"]').count()) > 0) break;
+    const tabBox = await artifactTab.first().boundingBox().catch(() => null);
+    await artifactTab.first().click({ position: { x: 8, y: Math.round((tabBox?.height ?? 22) / 2) } }).catch((e) => lines.push(`artifact tab ${String(e).replace(/\s+/gu, " ").slice(0, 120)}`));
+    await page.waitForTimeout(3000);
+  }
+  /** 🎯️ A NODE row, retried until the shell actually paints the mark. `.first()` over every `treeitem`
+   * can land on a section header or a port row — neither of which carries the activate binding that arms
+   * the `graph` selection — and a click that dispatches nothing looked exactly like a green click here,
+   * which is what made this step oscillate between 5/6 and 3/6. */
+  let selected = false;
+  for (let attempt = 0; attempt < 3 && !selected; attempt += 1) {
+    const row = page.locator('[data-slot="panel"] [role="treeitem"]').filter({ hasText: /Column Height|Side Count|Radius/u }).first();
+    if ((await row.count()) === 0) { lines.push(`outline node row absent (attempt ${attempt})`); await page.waitForTimeout(2000); continue; }
+    await row.click({ timeout: 8000 }).catch((e) => lines.push(`outline row ${String(e).replace(/\s+/gu, " ").slice(0, 160)}`));
+    await page.waitForTimeout(3000);
+    selected = (await page.evaluate(() => document.querySelectorAll('[role="treeitem"][aria-selected="true"]').length)) > 0;
+  }
+  await page.waitForTimeout(3500);
+  /** 🎯️ A click that dispatched but marked nothing is not an armed selection — the menu is conditioned
+   * on the guest's own `graph` selection, so the verdict reads the mark the shell painted. */
+  const marked = await page.evaluate(() => [...document.querySelectorAll('[role="treeitem"][aria-selected="true"]')].map((el) => (el.textContent ?? "").replace(/\s+/gu, " ").trim().slice(0, 40)));
+  lines.push(`selection marked ${JSON.stringify(marked)}`);
   const { opened } = await openContextMenu();
   const { rows } = await expandGroups();
   const missingAlways = ALWAYS.filter((id) => !named(rows, id));
   const missingSelected = SELECTED_ONLY.filter((id) => !named(rows, id));
   const deleteRow = rows.find((r) => /delete-selection/.test(r.action ?? "") || /Delete selection|Auswahl löschen/u.test(r.label));
-  await note("context-menu-selected", selected && opened && missingAlways.length === 0 && missingSelected.length === 0 && Boolean(deleteRow), {
+  await note("context-menu-selected", selected && marked.length > 0 && opened && missingAlways.length === 0 && missingSelected.length === 0 && Boolean(deleteRow), {
     selected,
+    marked,
     opened,
     rowCount: rows.length,
     missingAlways,
@@ -204,21 +233,50 @@ await page.waitForTimeout(8000);
   // 🎬️ `exportDocument` is a STAGED action: dispatching it opens the arg form whose `format` select
   // carries the artifact's own table. The context menu is the shortest live path to it.
   await openContextMenu();
-  const { rows } = await expandGroups();
+  const { groups, rows } = await expandGroups();
   const row = rows.find((r) => (r.action ?? "") === "exportDocument");
+  /** 🗂️ `exportDocument` lives INSIDE a `menu.group.*` submenu, and hovering the next group closes the
+   * previous one — so `expandGroups`'s accumulated roster names a row whose element is no longer in the
+   * document. The row has to be clicked while ITS OWN group is the hovered one, which is why this
+   * re-hovers each group and clicks inside that open submenu. */
   let reached = false;
-  if (row) {
-    reached = await page
-      .locator('[id="exportDocument"]')
-      .first()
-      .click({ timeout: 8000 })
-      .then(() => true)
-      .catch((e) => {
-        lines.push(`export row ${String(e).replace(/\s+/gu, " ").slice(0, 160)}`);
-        return false;
-      });
-    await page.waitForTimeout(3000);
+  for (const group of groups) {
+    await page.locator(`[id="${group.action}"]`).first().hover({ timeout: 4000 }).catch(() => {});
+    await page.waitForTimeout(1100);
+    const exportRow = page.locator('[id="exportDocument"], [data-action-id="exportDocument"]');
+    if ((await exportRow.count()) === 0) continue;
+    /** 🖱️ HOVERED, then clicked. A submenu stays open only while the pointer is inside the group→child
+     * chain, and Playwright's `click` moves the pointer straight to the target — leaving the group, which
+     * closes the submenu out from under the very click being delivered (measured: the locator resolves,
+     * then the click times out at 8 s). Hovering first walks the pointer into the open submenu and keeps
+     * it there, which is also what a real pointer does. */
+    /** ⌨️ Reached by KEYBOARD, not by pointer. The row is a real `<button role="menuitem">` — Playwright
+     * resolves it — but both `hover` and `click` time out on it: a submenu stays open only while the
+     * pointer is inside the group→child chain, and moving the pointer to the child leaves the group,
+     * which closes the submenu out from under the gesture. Arrow keys walk the same menu without moving
+     * the pointer at all, and they are the route a keyboard user has anyway. */
+    await page.locator(`[id="${group.action}"]`).first().focus().catch(() => {});
+    await page.waitForTimeout(300);
+    await page.keyboard.press("ArrowRight");
+    await page.waitForTimeout(500);
+    if ((await page.evaluate(() => document.activeElement?.id ?? "")) === group.action) {
+      await page.keyboard.press("ArrowDown");
+      await page.waitForTimeout(400);
+    }
+    for (let hop = 0; hop < 12 && !reached; hop += 1) {
+      const focused = await page.evaluate(() => document.activeElement?.id ?? "");
+      if (focused === "exportDocument") {
+        await page.keyboard.press("Enter");
+        reached = true;
+        break;
+      }
+      await page.keyboard.press("ArrowDown");
+      await page.waitForTimeout(250);
+    }
+    if (!reached) lines.push(`export row never took focus inside ${group.action}`);
+    if (reached) break;
   }
+  if (reached) await page.waitForTimeout(3000);
   const select = page.locator('[role="combobox"]').filter({ hasText: /STL|OBJ|Netz|Mesh/u }).first();
   let formats = [];
   if ((await select.count()) > 0) {

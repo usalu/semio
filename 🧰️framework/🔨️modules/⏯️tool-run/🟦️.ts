@@ -1152,8 +1152,6 @@ export const TOOL_RUN_DISMISS_ACTION_ID = "toolRunDismiss";
 export const TOOL_RUN_ACTION_IDS = [TOOL_RUN_START_ACTION_ID, TOOL_RUN_PAUSE_ACTION_ID, TOOL_RUN_RESUME_ACTION_ID, TOOL_RUN_STEP_ACTION_ID, TOOL_RUN_ABORT_ACTION_ID, TOOL_RUN_FINALIZE_ACTION_ID, TOOL_RUN_DISMISS_ACTION_ID] as const;
 export type ToolRunActionId = (typeof TOOL_RUN_ACTION_IDS)[number];
 
-/** 🐢️ The viewer's default tool run pace: visible algorithm units per second, so every attempt is on screen before the next. */
-export const TOOL_RUN_VISIBLE_UNITS_PER_SECOND = 20;
 export const TOOL_RUN_START_CHORD = "mod+enter";
 export const TOOL_RUN_PAUSE_RESUME_CHORD = "mod+alt+enter";
 export const TOOL_RUN_STEP_CHORD = "mod+alt+arrowright";

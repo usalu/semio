@@ -6,7 +6,7 @@
   "twinBit": 4611686018427387904,
   "twinShape": 0,
   "cases": [
-    { "id": "concrete-forest-8", "example": "concrete-forest", "requested": 8, "verdictPrefix": ["success:fits", "success:fits", "success:fits", "danger:solid-overlap", "success:fits", "success:fits", "success:fits", "success:fits", "success:fits"], "tested": 9, "placed": 8, "stall": null },
+    { "id": "concrete-forest-8", "example": "concrete-forest", "requested": 8, "verdictPrefix": ["success:fits", "success:fits", "success:fits", "success:fits", "danger:solid-overlap", "danger:solid-overlap", "danger:vortex-exhausted", "success:fits", "success:fits"], "tested": 12, "placed": 8, "stall": null },
     { "id": "nakagin-12", "example": "nakagin-capsule-tower", "requested": 12, "verdictPrefix": [], "tested": 0, "placed": 0, "stall": "no-open-vortex" }
   ],
   "laws": {

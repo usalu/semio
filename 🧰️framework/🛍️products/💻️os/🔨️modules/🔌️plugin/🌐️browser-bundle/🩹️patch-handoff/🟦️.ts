@@ -180,7 +180,12 @@ function parseCanonicalOps(value: unknown): UiPatchOp[] {
   });
 }
 
-/** 🪪️ Preserves the exact guest-issued receipt while decoding at most one canonical UI patch. */
+/** 🪪️ Preserves the exact guest-issued receipt while decoding the ONE canonical UI patch this reader's
+ * surface owns out of the turn's batch.
+ *
+ * 🐛️ Until 2026-09-15 a turn carried at most one patch, so this read `patches[0]` and demanded it
+ * name `expectedSurface`; a turn that now publishes every ready surface would have made the reader
+ * throw on any batch whose first patch belonged to someone else. */
 export function captureBrowserActorUiPatchV1(
   patches: unknown,
   receiptValue: unknown,
@@ -194,11 +199,17 @@ export function captureBrowserActorUiPatchV1(
   validateActorUiPatchPairing(patches.length, receipt);
   if (patches.length === 0) return null;
   if (receipt === null || !actorInstanceLifetimeEquals(receipt.lifetime, expectedLifetime)) throw new Error("uiPatch: lifetime mismatch");
-  const patch = object(patches[0], "uiPatch", ["baseRevision", "ops", "revision", "surface"]) as WirePatch;
-  const surface = object(patch.surface, "uiPatch.surface", ["instance", "surface"]);
-  const instanceId = port.natural(surface.instance, "uiPatch.surface.instance");
-  const surfaceId = text(surface.surface, "uiPatch.surface.surface");
-  if (instanceId !== expectedLifetime.instanceId || surfaceId !== expectedSurface) throw new Error("uiPatch: surface mismatch");
+  const named = patches.map((candidate, index) => {
+    const patch = object(candidate, "uiPatch", ["baseRevision", "ops", "revision", "surface"]) as WirePatch;
+    const surface = object(patch.surface, "uiPatch.surface", ["instance", "surface"]);
+    const instanceId = port.natural(surface.instance, "uiPatch.surface.instance");
+    const surfaceId = text(surface.surface, "uiPatch.surface.surface");
+    if (instanceId !== expectedLifetime.instanceId) throw new Error("uiPatch: surface mismatch");
+    return { index, patch, instanceId, surfaceId };
+  });
+  const selected = named.find((entry) => entry.surfaceId === expectedSurface);
+  if (!selected) throw new Error("uiPatch: surface mismatch");
+  const { patch, instanceId, surfaceId } = selected;
   return {
     instanceId,
     patch: { surface: surfaceId, baseRevision: port.natural(patch.baseRevision, "uiPatch.baseRevision"), revision: port.natural(patch.revision, "uiPatch.revision"), ops: decodeOps(patch.ops, port) },

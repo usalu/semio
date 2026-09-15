@@ -133,6 +133,9 @@ export function createFlowHost({ exports, memory, schedule = (step) => setTimeou
         if (!state.closing) for (const owner of state.sessions.values()) {
           if (owner.closing && !owner.controlSent) transferControl(encodeClose(owner.handle), () => { owner.controlSent = true; });
         }
+        for (const [requestId, pending] of state.pending) {
+          if (pending.cancelRequested && !pending.cancelSent) transferControl(encodeCancel(requestId, state.generation), () => { pending.cancelSent = true; });
+        }
         for (let count = 0; count < 64; count += 1) {
           if (state.blocked) { if (!accept(state.blocked)) break; state.blocked = undefined; continue; }
           const result = pollExact();
@@ -176,9 +179,17 @@ export function createFlowHost({ exports, memory, schedule = (step) => setTimeou
     try { pump(); } catch (error) { state.pending.delete(requestId); settled.reject(error); }
     return { requestId, result, cancel: () => cancel(requestId), subscribe(observer) { settled.observers.add(observer); return () => settled.observers.delete(observer); } };
   };
+  // 🛑️ A cancel the guest REFUSES is backpressure, not a failure: `flow_bridge_send` answers "no credit
+  // right now", and the request is still pending, so the cancel is re-sent by the pump exactly as a
+  // session close is (`owner.closing && !owner.controlSent`). Throwing `FlowMessageRejected` straight
+  // out of `cancel` put it in whatever called it — and `observeFlowTask` cancels the previous task per
+  // feature key on EVERY pointer move, so a drag over a saturated guest raised an uncaught
+  // `FlowMessageRejected` page error mid-gesture (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
+  // `📓️generate-add-flow-wire-quiet-tick-2026-09-14.md`).
   const cancel = (requestId) => {
-    if (!state.pending.has(requestId)) return false;
-    transfer(encodeCancel(requestId, state.generation));
+    const pending = state.pending.get(requestId);
+    if (!pending) return false;
+    pending.cancelRequested = true;
     pump();
     return true;
   };

@@ -3992,7 +3992,6 @@ impl ShellState {
                 active_tool_id: None,
                 active_utility_by_window_id: HashMap::new(),
                 tool_run_trace_cursor_by_window_id: HashMap::new(),
-                tool_run_units_per_second: None,
             };
             self.active_window_id = Some(s_app.window_kinds.first().id.clone());
             let session = ActiveSession { plugin_id: host_plugin_id, instance_id, app: s_app, view_state };
@@ -4035,7 +4034,6 @@ impl ShellState {
                     active_tool_id: None,
                     active_utility_by_window_id: HashMap::new(),
                     tool_run_trace_cursor_by_window_id: HashMap::new(),
-                    tool_run_units_per_second: None,
                 },
             });
         }
@@ -4594,7 +4592,6 @@ impl ShellState {
                                 active_tool_id: None,
                                 active_utility_by_window_id: HashMap::new(),
                                 tool_run_trace_cursor_by_window_id: HashMap::new(),
-                                tool_run_units_per_second: None,
                             };
                             if let Some(document) = self.spawned_ui.take() {
                                 if let Err(document) = self.retain_document_for_close(document) {
@@ -6855,7 +6852,6 @@ impl ShellState {
             active_tool_id: None,
             active_utility_by_window_id: HashMap::new(),
             tool_run_trace_cursor_by_window_id: HashMap::new(),
-            tool_run_units_per_second: None,
         };
         let next_view_state = view_state.unwrap_or(default_view_state);
         self.active_window_id = Some(app.window_kinds.first().id.clone());
@@ -6917,7 +6913,6 @@ impl ShellState {
             active_tool_id: None,
             active_utility_by_window_id: HashMap::new(),
             tool_run_trace_cursor_by_window_id: HashMap::new(),
-            tool_run_units_per_second: None,
         };
         self.layout_override = None;
         self.active_window_id = Some(landing_window_id);
@@ -7021,7 +7016,6 @@ impl ShellState {
             active_tool_id: None,
             active_utility_by_window_id: HashMap::new(),
             tool_run_trace_cursor_by_window_id: HashMap::new(),
-            tool_run_units_per_second: None,
         };
         self.active_window_id = Some(app.window_kinds.first().id.clone());
         self.session = Some(ActiveSession { plugin_id: plugin_id.to_string(), instance_id, app, view_state });

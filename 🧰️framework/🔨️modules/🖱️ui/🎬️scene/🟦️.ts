@@ -750,6 +750,7 @@ export type TextEditorScene = {
 export const nodeGraphActions = {
   select: "interactionSelect",
   hover: "interactionHover",
+  clearSelection: "clearSelection",
   edit: "nodeGraphEdit",
   parameter: "setGraphParameter",
   viewport: "nodeGraphViewport",

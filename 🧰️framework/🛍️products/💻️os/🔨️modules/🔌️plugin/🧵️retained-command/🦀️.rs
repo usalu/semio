@@ -9,6 +9,9 @@ use std::sync::Arc;
 //#region 🔖️Work
 pub const ARTIFACT_COMMAND_CHECKPOINT_MAXIMUM_BYTES: usize = 512;
 const ARTIFACT_COMMAND_CHECKPOINT_HEADER_BYTES: usize = 48;
+/// 🧯️ The longest reducer fault detail one job fault carries — the app's own code and message, clipped
+/// to a single fault page so a runaway message narrows the report instead of losing it.
+const ARTIFACT_COMMAND_FAULT_DETAIL_MAXIMUM_BYTES: usize = 480;
 const ARTIFACT_COMMAND_CHECKPOINT_MAGIC: [u8; 4] = *b"ARC1";
 
 #[derive(Clone, Copy)]
@@ -412,10 +415,37 @@ impl<A: ArtifactApp> ArtifactRetainedCommandJob<A> {
         StepOutcome::Fault(JobFault { detail: Self::retained_payload(cx, JobPayloadStream::Fault, bytes) })
     }
 
+    /// 🧯️ Carries the REDUCER's own fault code and message into the job fault instead of replacing it
+    /// with a fixed sentence. The app's `step` is the only party that knows why an operation was
+    /// refused, and dropping its `Fault` made every refusal read `retained command reducer rejected
+    /// operation` — one message for a missing session, an unsupported format and a rejected route
+    /// alike, which is a defect this lane had to reach for a browser probe to diagnose at all
+    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). Truncated to the fault stream's own page, so an
+    /// oversized message narrows rather than replacing the report with nothing.
+    fn reducer_fault(&mut self, cx: &mut StepContext<'_>, fault: &Fault) -> StepOutcome {
+        self.phase = ArtifactRetainedCommandPhase::Fault;
+        StepOutcome::Fault(JobFault { detail: Self::retained_payload(cx, JobPayloadStream::Fault, reducer_fault_detail(fault).as_bytes()) })
+    }
+
     #[cfg(test)]
     pub(crate) fn test_pending_emit_shape(&self) -> Option<(usize, usize, Vec<String>)> {
         self.emit.as_ref().map(|emit| (emit.child_emits.len(), emit.artifact_mutations.len(), emit.child_emits.iter().map(|child| child.child_id.clone()).collect()))
     }
+}
+
+/// 🧯️ The fault detail one refused reducer step reports: the fixed prefix every reader already keys on,
+/// then the app's OWN code and message. Clipped to [`ARTIFACT_COMMAND_FAULT_DETAIL_MAXIMUM_BYTES`] on a
+/// char boundary, so a runaway message narrows the report instead of truncating mid-codepoint.
+pub fn reducer_fault_detail(fault: &Fault) -> String {
+    let mut detail = format!("retained command reducer rejected operation: {} {}", fault.code.0.as_str(), fault.message);
+    if detail.len() > ARTIFACT_COMMAND_FAULT_DETAIL_MAXIMUM_BYTES {
+        let mut end = ARTIFACT_COMMAND_FAULT_DETAIL_MAXIMUM_BYTES;
+        while end > 0 && !detail.is_char_boundary(end) {
+            end -= 1;
+        }
+        detail.truncate(end);
+    }
+    detail
 }
 
 impl<A: ArtifactApp> InteractiveJob for ArtifactRetainedCommandJob<A> {
@@ -542,7 +572,7 @@ impl<A: ArtifactApp> InteractiveJob for ArtifactRetainedCommandJob<A> {
                         self.phase = ArtifactRetainedCommandPhase::Publish;
                         self.preview(cx, b"{\"en\":\"Publishing result\",\"de\":\"Ergebnis wird ver\xC3\xB6ffentlicht\"}")
                     }
-                    Err(_) => self.fault(cx, b"retained command reducer rejected operation"),
+                    Err(fault) => self.reducer_fault(cx, &fault),
                 }
             }
             ArtifactRetainedCommandPhase::Publish => {

@@ -18,7 +18,7 @@
  *   `orbit`     — a drag moves the camera POSITION while keeping its target, i.e. an orbit rather
  *                 than a pan or a no-op.
  *   `fit`       — the `Frame visible` overlay button reproduces the product's own fit rule over the
- *                 payload ({@link gradeCameraFit}), which — with `payload` green — means the camera
+ *                 payload ({@link gradeCameraFrames}), which — with `payload` green — means the camera
  *                 frames the fixture's committed bounding box.
  *
  * The DOM lanes and the fixture schema are documented in `🐍️example-oracle.mjs`.
@@ -29,7 +29,7 @@
 import { chromium } from "playwright";
 import { writeFileSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
-import { ORACLES, gradeCameraFit, gradeMeshes, meshStatsScript } from "./🐍️example-oracle.mjs";
+import { ORACLES, gradeCameraFrames, gradeMeshes, meshStatsScript } from "./🐍️example-oracle.mjs";
 
 const url = process.env.SEMIO_PROBE_URL ?? "http://127.0.0.1:6022/?plugin=generation3d";
 const outDir = join(import.meta.dir, "🗑️generated", process.env.SEMIO_PROBE_OUT ?? "react-oracle/interaction");
@@ -246,8 +246,8 @@ for (const oracle of oracles) {
   if (fitPresent) await fitButton.click({ timeout: 6000 }).catch((error) => { fitClickError = String(error).split("\n")[0].slice(0, 160); });
   await page.waitForTimeout(2500);
   const fitted = previewPane(await paneSnap(oracle.previewMeshId));
-  const fitGrade = gradeCameraFit(fitted?.camera ?? null, fitted?.allBounds ?? null);
-  await record(oracle.label, "fit", fitPresent && !fitClickError && fitGrade.ok, { fitPresent, obstruction, fitClickError, camera: fitted?.camera ?? null, framedBounds: fitted?.allBounds ?? null, centre: fitGrade.centre, radius: fitGrade.radius, offCentre: fitGrade.offCentre, distance: fitGrade.distance, expectedDistance: fitGrade.expected, reasons: fitGrade.reasons });
+  const fitGrade = gradeCameraFrames(fitted?.camera ?? null, fitted?.allBounds ?? null, box.width / box.height);
+  await record(oracle.label, "fit", fitPresent && !fitClickError && fitGrade.ok, { fitPresent, obstruction, fitClickError, camera: fitted?.camera ?? null, framedBounds: fitted?.allBounds ?? null, worstX: fitGrade.worstX, worstY: fitGrade.worstY, behind: fitGrade.behind, aspect: fitGrade.aspect, reasons: fitGrade.reasons });
 
   await page.screenshot({ path: join(outDir, `${oracle.slug}.png`) });
 }

@@ -749,6 +749,7 @@ export interface ShardInstanceLifecycleLease {
   bindHostRetirement(participant: OwnedUiInstance): void;
   captureUiPatchAuthority(originalTurn: object, patchIndex: number): OwnedNativeUiPatchAuthority;
   submitUiAcknowledgement(source: OwnedNativeUiPatchAuthority, token: OwnedUiPatchAcknowledgement, budget: ShardBudget): Promise<{ readonly receipt: OwnedNativeUiPatchSubmissionReceipt; readonly result: unknown }>;
+  submitUiAcknowledgements(entries: readonly OwnedUiPatchAcknowledgementEntry[], budget: ShardBudget): Promise<{ readonly receipts: readonly OwnedNativeUiPatchSubmissionReceipt[]; readonly result: unknown }>;
   dispose(): void;
   progress(): { readonly kind: ShardInstancePhase | "blocked"; readonly failure: ShardInstanceFailure | null };
 }
@@ -801,6 +802,7 @@ type ShardInstanceOwner = {
   interruptedTurn: unknown;
   cancellation: HostEffectLedger | null;
   lastPatchSequence: bigint;
+  lastPatchTurn: object | null;
   returnCell: OwnedResidentAdmission | null;
   returnRecord: OwnedResidentRecord | null;
   returnPhase: ReturnAdmissionPhase;
@@ -879,6 +881,9 @@ export class OwnedShardReturnPage {
 //#region 🩹️NativePatchAuthority
 export type OwnedNativeUiPatchValue = { readonly activation: ShardActorActivationLease; readonly lifetime: ActorInstanceLifetime; readonly receipt: ActorUiPatchReceipt; readonly surface: string; readonly baseRevision: number; readonly revision: number; readonly operationCount: number };
 type NativeUiPatchState = { readonly owner: ShardInstanceOwner; readonly turn: object; readonly patch: object; readonly operations: readonly unknown[]; readonly value: OwnedNativeUiPatchValue; ordinal: number; read: boolean; original: unknown; input: OwnedUiPatchInputAcceptance | null; token: OwnedUiPatchAcknowledgement | null; submission: Promise<{ readonly receipt: OwnedNativeUiPatchSubmissionReceipt; readonly result: unknown }> | null };
+/** 🩹️ One (patch, acknowledgement) pair of a turn's patch BATCH, as the host hands it back. */
+export type OwnedUiPatchAcknowledgementEntry = { readonly source: OwnedNativeUiPatchAuthority; readonly token: OwnedUiPatchAcknowledgement };
+
 const NATIVE_PATCH_MINT = Object.freeze({});
 let mintNativePatch: (state: NativeUiPatchState) => OwnedNativeUiPatchAuthority;
 let nativePatchState: (source: OwnedNativeUiPatchAuthority) => NativeUiPatchState;
@@ -1659,7 +1664,7 @@ export class ShardClient {
     const operation = this.captureActorActivation(actorId);
     this.nextRequestId();
     const open: ActorInstanceOpenRequest = Object.freeze({ kind: "open", activationGeneration: activation.generation, instanceId, requestSequence: this.requestSeq });
-    const owner: ShardInstanceOwner = { activation, operation, open, phase: "opening", lifetime: null, receipt: null, accepted: null, close: null, host: null, inFlight: false, failure: null, interruptedTurn: null, cancellation: null, lastPatchSequence: 0n, returnCell: null, returnRecord: null, returnPhase: "empty", returnFault: NO_RETURN_FAULT, returnCapacity: 0 };
+    const owner: ShardInstanceOwner = { activation, operation, open, phase: "opening", lifetime: null, receipt: null, accepted: null, close: null, host: null, inFlight: false, failure: null, interruptedTurn: null, cancellation: null, lastPatchSequence: 0n, lastPatchTurn: null, returnCell: null, returnRecord: null, returnPhase: "empty", returnFault: NO_RETURN_FAULT, returnCapacity: 0 };
     activation.instance = owner;
     this.instanceLifecycles.set(open.requestSequence, owner);
     return Object.freeze({
@@ -1694,6 +1699,7 @@ export class ShardClient {
       },
       captureUiPatchAuthority: (originalTurn: object, patchIndex: number) => this.captureInstanceUiPatch(owner, originalTurn, patchIndex),
       submitUiAcknowledgement: (source: OwnedNativeUiPatchAuthority, token: OwnedUiPatchAcknowledgement, budget: ShardBudget) => this.submitInstanceUiAcknowledgement(owner, source, token, budget),
+      submitUiAcknowledgements: (entries: readonly OwnedUiPatchAcknowledgementEntry[], budget: ShardBudget) => this.submitInstanceUiAcknowledgements(owner, entries, budget),
       dispose: () => {
         if (owner.phase !== "complete") throw new Error("actor-close.native-retirement-pending");
         this.disposeActivation(owner.activation);
@@ -2006,7 +2012,7 @@ export class ShardClient {
       if (!actorUiPatchReceiptEquals(existing.value.receipt, decoded)) throw new Error("actor-ui-patch.receipt-mismatch");
       return existing;
     }
-    if (decoded.patchSequence <= owner.lastPatchSequence) throw new Error("actor-ui-patch.duplicate-sequence");
+    if (decoded.patchSequence < owner.lastPatchSequence || (decoded.patchSequence === owner.lastPatchSequence && owner.lastPatchTurn !== turn)) throw new Error("actor-ui-patch.duplicate-sequence");
     const surface: unknown = Reflect.get(patch, "surface");
     const operations: unknown = Reflect.get(patch, "ops");
     const revision: unknown = Reflect.get(patch, "revision");
@@ -2024,24 +2030,64 @@ export class ShardClient {
     const authority = mintNativePatch({ owner, turn, patch, operations, value, ordinal: 0, read: false, original: undefined, input: null, token: null, submission: null });
     captured.patches.set(patch, authority);
     owner.lastPatchSequence = receipt.patchSequence;
+    owner.lastPatchTurn = turn;
     return authority;
   }
 
-  private async submitInstanceUiAcknowledgement(owner: ShardInstanceOwner, source: OwnedNativeUiPatchAuthority, token: OwnedUiPatchAcknowledgement, budget: ShardBudget): Promise<{ readonly receipt: OwnedNativeUiPatchSubmissionReceipt; readonly result: unknown }> {
+  /** 🧾️ Validates ONE (patch, acknowledgement) pair against the instance owner and returns its
+   * private state, so the single and the batched submission agree on every clause by construction. */
+  private admitInstanceUiAcknowledgement(owner: ShardInstanceOwner, source: OwnedNativeUiPatchAuthority, token: OwnedUiPatchAcknowledgement): NativeUiPatchState {
     if (!owner.lifetime || !OwnedNativeUiPatchAuthority.matches(source, owner.operation, owner.lifetime) || !OwnedUiPatchAcknowledgement.matches(token, source)) throw new Error("actor-lifecycle.ui-ack-mismatch");
     const state = nativePatchState(source);
     const value = token.value;
     if (state.owner !== owner || state.token !== null && state.token !== token || value.actor !== owner.activation.actorId || value.instance !== owner.lifetime.instanceId || value.surface !== state.value.surface || value.revision !== state.value.revision || !actorInstanceLifetimeEquals(value.lifetime, owner.lifetime) || !actorUiPatchReceiptEquals(value.receipt, state.value.receipt)) throw new Error("actor-lifecycle.ui-ack-mismatch");
     if (!source.inputRetired) throw new Error("actor-lifecycle.ui-input-pending");
-    if (state.submission) return state.submission;
-    state.token = token;
-    state.submission = (async () => {
-      const result = await this.sendInstanceLifecycle(owner, [{ kind: "patch-ack", payload: { receipt: state.value.receipt, surface: { instance: owner.lifetime!.instanceId, surface: state.value.surface }, revision: BigInt(state.value.revision) } }], budget);
+    return state;
+  }
+
+  private patchAckEvent(owner: ShardInstanceOwner, state: NativeUiPatchState): ShardEventEnvelope {
+    return { kind: "patch-ack", payload: { receipt: state.value.receipt, surface: { instance: owner.lifetime!.instanceId, surface: state.value.surface }, revision: BigInt(state.value.revision) } };
+  }
+
+  /** 📥️ Acknowledges a whole turn's patch BATCH in ONE lifecycle crossing.
+   *
+   * 🐛️ A turn result may now carry every surface that was ready, and acknowledging them one at a time
+   * put the N host round trips the guest had just stopped paying straight back on the inbound side —
+   * the reactor's `poll` takes a LIST of events, so N `patch-ack`s ride one crossing and the guest
+   * retires all N in the same turn. */
+  private async submitInstanceUiAcknowledgements(owner: ShardInstanceOwner, entries: readonly OwnedUiPatchAcknowledgementEntry[], budget: ShardBudget): Promise<{ readonly receipts: readonly OwnedNativeUiPatchSubmissionReceipt[]; readonly result: unknown }> {
+    if (entries.length === 0) throw new Error("actor-lifecycle.ui-ack-mismatch");
+    const states = entries.map((entry) => this.admitInstanceUiAcknowledgement(owner, entry.source, entry.token));
+    if (states.every((state) => state.submission !== null)) {
+      const settled = await Promise.all(states.map((state) => state.submission!));
+      return Object.freeze({ receipts: settled.map((value) => value.receipt), result: settled[0]!.result });
+    }
+    if (states.some((state) => state.submission !== null)) throw new Error("actor-lifecycle.ui-ack-mismatch");
+    const crossing = (async () => {
+      const result = await this.sendInstanceLifecycle(owner, states.map((state) => this.patchAckEvent(owner, state)), budget);
       const status = result !== null && typeof result === "object" ? Reflect.get(result, "status") : undefined;
       if (!status || typeof status !== "object" || !["idle", "more-work"].includes(Reflect.get(status, "tag"))) throw new Error("actor-lifecycle.ui-ack-not-admitted");
-      return Object.freeze({ receipt: mintNativeSubmission(source, token), result });
+      return result;
     })();
-    try { return await state.submission; } catch (error) { state.submission = null; throw error; }
+    entries.forEach((entry, index) => {
+      const state = states[index]!;
+      state.token = entry.token;
+      state.submission = crossing.then((result) => Object.freeze({ receipt: mintNativeSubmission(entry.source, entry.token), result }));
+    });
+    try {
+      const settled = await Promise.all(states.map((state) => state.submission!));
+      return Object.freeze({ receipts: settled.map((value) => value.receipt), result: settled[0]!.result });
+    } catch (error) {
+      for (const state of states) state.submission = null;
+      throw error;
+    }
+  }
+
+  /** 📥️ The one-patch case of [`submitInstanceUiAcknowledgements`] — a batch of one, so both paths
+   * admit, cross and memoize through exactly the same code. */
+  private async submitInstanceUiAcknowledgement(owner: ShardInstanceOwner, source: OwnedNativeUiPatchAuthority, token: OwnedUiPatchAcknowledgement, budget: ShardBudget): Promise<{ readonly receipt: OwnedNativeUiPatchSubmissionReceipt; readonly result: unknown }> {
+    const batch = await this.submitInstanceUiAcknowledgements(owner, [{ source, token }], budget);
+    return Object.freeze({ receipt: batch.receipts[0]!, result: batch.result });
   }
 
   private acceptInstanceLifecycleResult(owner: ShardInstanceOwner, result: unknown, acknowledged?: ActorInstanceLifecycleReceipt): void {

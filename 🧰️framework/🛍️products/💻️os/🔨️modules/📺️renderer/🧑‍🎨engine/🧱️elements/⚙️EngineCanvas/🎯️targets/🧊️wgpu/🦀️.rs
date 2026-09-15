@@ -1220,11 +1220,25 @@ pub(crate) struct EngineCanvasPresenter {
     slots: ManuallyDrop<Option<Box<[EngineGpuSlot; ENGINE_SURFACE_CAPACITY]>>>,
     primary_metrics_generation: u64,
     metrics_invalidation_scan: Option<usize>,
+    /// 🩺️ Consecutive `Ok(false)` answers from [`Self::realize_step`], and which arm gave the last
+    /// one. A permanent `Ok(false)` here stops EVERY frame in the shell — the present cursor stays
+    /// pending and the frame gate admits no build — and the two arms that can answer it forever are
+    /// indistinguishable from outside, so the host's own `frame gate blocked=true phase=Some(Engine)`
+    /// line names the phase and nothing names the holder
+    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-wheel-zoom-a11y-live-2026-09-14.md` §3.4).
+    stall_steps: u64,
+    stall_arm: &'static str,
 }
 
 impl Default for EngineCanvasPresenter {
     fn default() -> Self {
-        Self { slots: ManuallyDrop::new(Some(semio_framework_async::boxed_fixed_slots(EngineGpuSlot::new))), primary_metrics_generation: 0, metrics_invalidation_scan: None }
+        Self {
+            slots: ManuallyDrop::new(Some(semio_framework_async::boxed_fixed_slots(EngineGpuSlot::new))),
+            primary_metrics_generation: 0,
+            metrics_invalidation_scan: None,
+            stall_steps: 0,
+            stall_arm: "",
+        }
     }
 }
 
@@ -1261,6 +1275,20 @@ impl EngineCanvasPresenter {
         self.metrics_invalidation_scan.is_none()
     }
 
+    /// 🩺️ Names the arm that answered `Ok(false)`, on a power-of-two cadence so a healthy step costs
+    /// one line and a wedge names itself instead of leaving `phase=Some(Engine)` unexplained. Reset by
+    /// the first `Ok(true)`/`Err` [`Self::realize_step`] takes.
+    fn note_realize_stall(&mut self, arm: &'static str) {
+        if self.stall_arm != arm {
+            self.stall_arm = arm;
+            self.stall_steps = 0;
+        }
+        self.stall_steps = self.stall_steps.saturating_add(1);
+        if self.stall_steps.is_power_of_two() && self.stall_steps >= 64 {
+            engine_canvas_debug_log(&format!("[DEBUG] engine realize stalled arm={arm} steps={} scan={:?}", self.stall_steps, self.metrics_invalidation_scan));
+        }
+    }
+
     pub(crate) fn realize_step(&mut self, gpu: &mut GpuContext, packet: &EngineCanvasPacket, candidate_generation: ui_wgpu::wgpu::RasterTextureWitness, expected: ui_wgpu::wgpu::RasterTextureWitness) -> Result<bool, String> {
         if candidate_generation != expected {
             return Err("engine raster operation authority was stale before realization".to_string());
@@ -1273,10 +1301,12 @@ impl EngineCanvasPresenter {
         // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
         if self.metrics_invalidation_scan.is_some() {
             self.invalidate_primary_metrics_step();
+            self.note_realize_stall("metrics-invalidation-scan");
             return Ok(false);
         }
         let primary_metrics_generation = self.primary_metrics_generation;
         let index = usize::from(packet.surface.token.slot);
+        let mut retiring = false;
         let slot = self.slots_mut()?.get_mut(index).ok_or_else(|| "engine surface token exceeded fixed GPU slots".to_string())?;
         if slot.closing || slot.exhausted {
             return Err("engine surface slot was closing or exhausted".to_string());
@@ -1285,8 +1315,15 @@ impl EngineCanvasPresenter {
             if retirement.close_step() && retirement.terminal_is_empty() {
                 slot.retirement = None;
             }
+            retiring = true;
+        }
+        if retiring {
+            self.note_realize_stall("slot-retirement");
             return Ok(false);
         }
+        self.stall_arm = "";
+        self.stall_steps = 0;
+        let slot = self.slots_mut()?.get_mut(index).ok_or_else(|| "engine surface token exceeded fixed GPU slots".to_string())?;
         if slot.id.is_none() {
             if slot.generation != 0 && slot.generation != packet.surface.token.generation {
                 return Err("engine surface GPU generation was stale before reservation".to_string());
@@ -1454,6 +1491,7 @@ impl EngineCanvasPresenter {
             if retirement.close_step() && retirement.terminal_is_empty() {
                 slot.retirement = None;
             }
+            self.note_realize_stall("slot-retirement");
             return Ok(false);
         }
         if let Some(id) = slot.id.as_mut() {

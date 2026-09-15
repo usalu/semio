@@ -14,7 +14,7 @@
  * @see 🐍️react-battery.mjs, 👁️viewer/🎭️modes/👁️view/🪟️windows/👁️preview/🦀️.rs
  */
 import { chromium } from "playwright";
-import { mkdirSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 const url = process.env.SEMIO_PROBE_URL ?? "http://127.0.0.1:6018/?plugin=generation3d";
@@ -218,33 +218,91 @@ for (const [mode, label] of [
 }
 //#endregion
 
-//#region 📤️ Export, from inside the viewer
+//#region 📤️ Export, from inside the viewer — every declared format, as real bytes
 {
+  /** 📤️ `exportDocument` is reached through the viewer window's OWN Actions rail, which is the route a
+   * viewer user actually has: the right-click the earlier revision used is claimed by the World3d
+   * surface (it answers `interactionSelect`/`setCamera`), so no plugin menu ever opened there and the
+   * row was never reached. Reported separately as an unfixed surface-menu gap.
+   *
+   * Every row of `document_io::EXPORT_FORMATS` is driven, and each download's FIRST BYTES are asserted
+   * against that format's own signature — a download that arrives empty, or carrying another format's
+   * body, fails here rather than counting as "export works". */
+  const EXPECTED = {
+    stl: (bytes) => bytes.toString("latin1").startsWith("solid"),
+    obj: (bytes) => /(^|\n)\s*(v|#|o|g|f)\s/u.test(bytes.toString("utf8").slice(0, 400)),
+    ply: (bytes) => bytes.toString("latin1").startsWith("ply"),
+    gltf: (bytes) => bytes.toString("utf8").trimStart().startsWith("{") || bytes.subarray(0, 4).toString("latin1") === "glTF",
+    las: (bytes) => bytes.subarray(0, 4).toString("latin1") === "LASF",
+    dwg: (bytes) => bytes.subarray(0, 2).toString("latin1") === "AC",
+    txt: (bytes) => bytes.length > 0 && bytes.toString("utf8").trim().length > 0,
+  };
+  const FORMATS = Object.keys(EXPECTED);
+  /** 🏷️ The label `document_io::EXPORT_FORMATS` gives each row — matched verbatim rather than by the
+   * format id, because `txt` is spelled "Semio Text (whole document)" and an id regex silently misses it. */
+  const FORMAT_LABEL = { stl: "STL Mesh", obj: "OBJ Mesh", ply: "PLY Mesh", gltf: "glTF Mesh", las: "LAS Point Cloud", dwg: "DWG Drawing", txt: "Semio Text" };
   const mark = lines.length;
-  const downloadPromise = page.waitForEvent("download", { timeout: 60_000 }).catch(() => null);
-  let reached = false;
-  const box = await page.locator(`[data-surface-id="${VIEW}"]`).first().boundingBox();
-  if (box) {
-    await page.mouse.click(box.x + box.width * 0.5, box.y + box.height * 0.85, { button: "right" });
-    await page.waitForTimeout(1600);
-    for (const group of await page.evaluate(() => [...document.querySelectorAll('[role="menu"] [id^="menu.group."]')].map((el) => el.id))) {
-      await page.locator(`[id="${group}"]`).first().hover({ timeout: 4000 }).catch(() => {});
-      await page.waitForTimeout(800);
+  await page.locator(`[data-surface-id="${VIEW}"]`).first().click({ position: { x: 20, y: 20 } }).catch(() => {});
+  await page.waitForTimeout(800);
+  const railOpened = await byId("framework.window.proceduralViewPreview.engagement.toggle")
+    .click({ timeout: 8000 })
+    .then(() => true)
+    .catch((e) => {
+      lines.push(`viewer actions rail ${String(e).replace(/\s+/gu, " ").slice(0, 200)}`);
+      return false;
+    });
+  await page.waitForTimeout(1800);
+  const exportRow = await page.locator('[id="action.exportDocument"]').count();
+  await note("viewer-export-row", railOpened && exportRow > 0, { railOpened, exportRow });
+
+  const openForm = async () => {
+    for (let attempt = 0; attempt < 3 && (await page.locator("#format").count()) === 0; attempt += 1) {
+      await page.locator('[id="action.exportDocument"]').first().click({ timeout: 8000 }).catch(() => {});
+      await page.waitForTimeout(1800);
     }
-    reached = await byId("exportDocument")
-      .click({ timeout: 8000 })
-      .then(() => true)
-      .catch((e) => {
-        lines.push(`viewer export ${String(e).replace(/\s+/gu, " ").slice(0, 150)}`);
-        return false;
-      });
-    await page.waitForTimeout(2500);
+    return (await page.locator("#format").count()) > 0;
+  };
+
+  let listed = [];
+  if (await openForm()) {
+    await page.locator("#format").click({ timeout: 8000 }).catch(() => {});
+    await page.waitForTimeout(900);
+    listed = await page.evaluate(() => [...document.querySelectorAll('[role="option"]')].map((node) => (node.textContent ?? "").replace(/\s+/gu, " ").trim()));
+    await page.keyboard.press("Escape");
+    await page.waitForTimeout(500);
   }
-  const confirm = page.locator('button').filter({ hasText: /^(Export|Exportieren|Confirm|Bestätigen|Dokument exportieren)$/u }).first();
-  if ((await confirm.count()) > 0) await confirm.click({ timeout: 8000 }).catch(() => {});
-  const download = await downloadPromise;
-  const filename = download ? download.suggestedFilename() : null;
-  await note("viewer-export", reached && Boolean(download), { reached, filename, invoked: invoked(mark) });
+  const missingFromMenu = FORMATS.filter((id) => !listed.some((text) => text.includes(FORMAT_LABEL[id])));
+  await note("viewer-export-lists-every-format", listed.length === FORMATS.length && missingFromMenu.length === 0, { listed, missingFromMenu, declared: FORMATS.length });
+
+  const exported = [];
+  for (const format of FORMATS) {
+    let row = { format };
+    try {
+      if (!(await openForm())) throw new Error("the staged export form did not appear");
+      await page.locator("#format").click({ timeout: 8000 });
+      await page.waitForTimeout(900);
+      const options = await page.evaluate(() => [...document.querySelectorAll('[role="option"]')].map((node, index) => ({ index, text: (node.textContent ?? "").replace(/\s+/gu, " ").trim() })));
+      const wanted = options.find((option) => option.text.includes(FORMAT_LABEL[format]));
+      if (!wanted) throw new Error(`no option for ${format}: ${JSON.stringify(options)}`);
+      await page.locator('[role="option"]').nth(wanted.index).click({ timeout: 8000 });
+      await page.waitForTimeout(900);
+      const [download] = await Promise.all([
+        page.waitForEvent("download", { timeout: 120000 }),
+        page.locator("#framework\\.window\\.proceduralViewPreview\\.action\\.exportDocument\\.execute").click({ timeout: 10000 }),
+      ]);
+      const saved = join(outDir, download.suggestedFilename() || `export-${format}.bin`);
+      await download.saveAs(saved);
+      const bytes = readFileSync(saved);
+      row = { ...row, filename: download.suggestedFilename(), bytes: bytes.length, head: bytes.subarray(0, 24).toString("latin1"), signature: EXPECTED[format](bytes) };
+    } catch (error) {
+      row = { ...row, error: String(error).replace(/\s+/gu, " ").slice(0, 240) };
+    }
+    exported.push(row);
+    console.log(`[DEBUG] viewer export ${format}: ${JSON.stringify(row)}`);
+    await page.waitForTimeout(800);
+  }
+  const good = exported.filter((entry) => entry.signature === true && (entry.bytes ?? 0) > 0);
+  await note("viewer-export", good.length === FORMATS.length, { exported, downloaded: good.length, declared: FORMATS.length, invoked: invoked(mark) });
   await page.keyboard.press("Escape");
   await page.waitForTimeout(600);
 }

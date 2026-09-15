@@ -85,6 +85,7 @@ import {
   settleFailedInstanceOpen,
   type OwnedNativeUiPatchAuthority,
   type OwnedNativeUiPatchSubmissionReceipt,
+  type OwnedUiPatchAcknowledgementEntry,
   type ShardActorActivationLease,
   type ShardBudget,
   type ShardCommandIngressPage,
@@ -104,7 +105,7 @@ import type { RetainedUiNodeRecord } from "../../../../../../../🔨️modules/�
 import { TurnScheduler, type Lane } from "../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🟦️.ts";
 import { hostContinuations } from "../../../../../../../🔨️modules/⏳️async/🪃️continuation/🟦️.ts";
 import { hopTrace } from "../../../../../../../🔨️modules/⏱️trace/🟦️.ts";
-import { drainTypedOperationTurns as driveTypedOperationDrain, driveInboundRequest, INBOUND_REQUEST_TURN_BUDGET, isRoutedWireSendMessage, shellFrameBytes as wireShellFrameBytes, TYPED_OPERATION_ACK_MAGIC, TYPED_OPERATION_LANE_FAULT, TYPED_OPERATION_LANE_TERMINAL, TYPED_OPERATION_PAGE_MAGIC, typedOperationAcknowledgements as wireTypedOperationAcknowledgements, typedOperationResult as wireTypedOperationResult, WIRE_SEND_MESSAGE_ROUTED_TARGETS, wireDownloadMediaExport, wireExtensionInvocation, wireOptionValue, wireRespondAnswer, wireSendMessageTargetTag, wireTurnStatusTag } from "../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🟦️.ts";
+import { drainTypedOperationTurns as driveTypedOperationDrain, driveInboundRequest, INBOUND_REQUEST_TURN_BUDGET, isRoutedWireSendMessage, leftoverShellInvocationFrames as wireLeftoverShellInvocationFrames, shellFrameBytes as wireShellFrameBytes, TYPED_OPERATION_ACK_MAGIC, TYPED_OPERATION_LANE_FAULT, TYPED_OPERATION_LANE_TERMINAL, TYPED_OPERATION_PAGE_MAGIC, typedOperationAcknowledgements as wireTypedOperationAcknowledgements, typedOperationResult as wireTypedOperationResult, WIRE_SEND_MESSAGE_ROUTED_TARGETS, wireDownloadMediaExport, wireExtensionInvocation, wireOptionValue, wireRespondAnswer, wireSendMessageTargetTag, wireTurnStatusTag } from "../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🟦️.ts";
 import { type PluginManifest, type ViewModel } from "../🐚️Shell/🟦️.tsx";
 import { SEGMENTED_DOWNLOAD_MARKER_PREFIX } from "../📤️SegmentedDownload/🟦️.ts";
 import { BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES, decodeBackboneMessage } from "@semio-tech/framework-os";
@@ -568,6 +569,10 @@ export type WireTurnResult = {
   readonly uiPatchReceipt?: Uint8Array;
   readonly uiPatches: readonly WireUiPatch[];
   readonly effects: readonly WireVariant[];
+  /** 👥️ WIT `turn-result.presence` — one `{ update: pack }` per `(surface, node key)` whose own/peer
+   * selection or hover moved. Selection deliberately never rides a revisioned `UiPatch`, so this array
+   * is the ONLY channel by which a guest-owned selection reaches a rendered row. */
+  readonly presence?: readonly { readonly update?: unknown }[];
   readonly nextWake: number | null;
   readonly status?: unknown;
   readonly commandIngress?: WireVariant;
@@ -580,6 +585,7 @@ function coerceTurnResult(raw: unknown): WireTurnResult {
   const record = (raw && typeof raw === "object" ? raw : {}) as Record<string, unknown>;
   const uiPatches = Array.isArray(record.uiPatches) ? (record.uiPatches as WireUiPatch[]) : [];
   const effects = Array.isArray(record.effects) ? (record.effects as WireVariant[]) : [];
+  const presence = Array.isArray(record.presence) ? (record.presence as { readonly update?: unknown }[]) : [];
   const nextWake = typeof record.nextWake === "number" ? record.nextWake : null;
   const status = record.status;
   const commandIngress = record.commandIngress && typeof record.commandIngress === "object" ? (record.commandIngress as WireVariant) : undefined;
@@ -587,7 +593,7 @@ function coerceTurnResult(raw: unknown): WireTurnResult {
   if (lifecycleReceipt !== undefined && lifecycleReceipt !== null && !(lifecycleReceipt instanceof Uint8Array)) throw new Error("actor-lifecycle.receipt-bytes");
   const uiPatchReceipt = record.uiPatchReceipt;
   if (uiPatchReceipt !== undefined && uiPatchReceipt !== null && !(uiPatchReceipt instanceof Uint8Array)) throw new Error("actor-ui-patch.receipt-bytes");
-  return { original: raw !== null && typeof raw === "object" ? raw : undefined, lifecycleReceipt: lifecycleReceipt ?? undefined, uiPatchReceipt: uiPatchReceipt ?? undefined, uiPatches, effects, nextWake, status, commandIngress };
+  return { original: raw !== null && typeof raw === "object" ? raw : undefined, lifecycleReceipt: lifecycleReceipt ?? undefined, uiPatchReceipt: uiPatchReceipt ?? undefined, uiPatches, effects, presence, nextWake, status, commandIngress };
 }
 
 /** 🧯️ Decodes the scalar WIT command-ingress fault envelope while retaining readable kernel
@@ -1261,24 +1267,24 @@ type PluginLifecycleWork =
   | { readonly kind: "poll" }
   | { readonly kind: "close" }
   | { readonly kind: "receipt-ack"; readonly receipt: ActorInstanceLifecycleReceipt; readonly retirement?: OwnedUiInstanceRetirement }
-  | { readonly kind: "issued-ui-ack"; readonly source: OwnedNativeUiPatchAuthority; readonly token: OwnedUiPatchAcknowledgement };
-type PluginLifecycleTurnResult = { readonly owner: ShardInstanceLifecycleLease; readonly raw: unknown; readonly turn: WireTurnResult; readonly submission: OwnedNativeUiPatchSubmissionReceipt | null };
+  | { readonly kind: "issued-ui-acks"; readonly entries: readonly OwnedUiPatchAcknowledgementEntry[] };
+type PluginLifecycleTurnResult = { readonly owner: ShardInstanceLifecycleLease; readonly raw: unknown; readonly turn: WireTurnResult; readonly submissions: readonly OwnedNativeUiPatchSubmissionReceipt[] | null };
 type PluginLifecycleTurnPayload = { readonly kind: "lifecycle"; readonly owner: ShardInstanceLifecycleLease; readonly work: PluginLifecycleWork; readonly resolve: (result: PluginLifecycleTurnResult) => void; readonly reject: (error: unknown) => void };
 type PendingPluginTurn = PluginTurnPayload | PluginLifecycleTurnPayload;
 
 /** 🚪️ Only the captured lifecycle owner can dispatch retirement-authorized work. */
 async function runPluginLifecycleTurn(owner: ShardInstanceLifecycleLease, work: PluginLifecycleWork, budget: ShardBudget): Promise<PluginLifecycleTurnResult> {
   let raw: unknown;
-  let submission: OwnedNativeUiPatchSubmissionReceipt | null = null;
+  let submissions: readonly OwnedNativeUiPatchSubmissionReceipt[] | null = null;
   switch (work.kind) {
     case "open": raw = await owner.open(work.input, budget); break;
     case "poll": raw = await owner.poll(budget); break;
     case "close": raw = await owner.close(budget); break;
     case "receipt-ack": raw = await owner.acknowledge(work.receipt, budget, work.retirement); break;
-    case "issued-ui-ack": { const result = await owner.submitUiAcknowledgement(work.source, work.token, budget); raw = result.result; submission = result.receipt; break; }
+    case "issued-ui-acks": { const result = await owner.submitUiAcknowledgements(work.entries, budget); raw = result.result; submissions = result.receipts; break; }
     default: throw new Error("actor-lifecycle.work-kind");
   }
-  return Object.freeze({ owner, raw, turn: coerceTurnResult(raw), submission });
+  return Object.freeze({ owner, raw, turn: coerceTurnResult(raw), submissions });
 }
 
 /** 🧮️ Matches `ActivationRegistry`'s own `DEFAULT_TURN_MAILBOX_CAPACITY` — no reason for this file's
@@ -1388,7 +1394,7 @@ function submitPluginLifecycleTurn(owner: ShardInstanceLifecycleLease, work: Plu
       case "open": captured = Object.freeze({ kind: work.kind, input: work.input }); break;
       case "poll": case "close": captured = Object.freeze({ kind: work.kind }); break;
       case "receipt-ack": captured = Object.freeze({ kind: work.kind, receipt: work.receipt, retirement: work.retirement }); break;
-      case "issued-ui-ack": captured = Object.freeze({ kind: work.kind, source: work.source, token: work.token }); break;
+      case "issued-ui-acks": captured = Object.freeze({ kind: work.kind, entries: work.entries }); break;
       default: throw new Error("actor-lifecycle.work-kind");
     }
     const actorId = owner.activation.actorId;
@@ -1501,6 +1507,20 @@ function isPluginPatchAcceptance(value: readonly ShardEventEnvelope[] | PluginPa
  * one tick per second in a hidden tab (once per minute under Chrome's intensive throttling), which
  * turned a few thousand intake steps into minutes of silence; a `MessageChannel` message is a
  * macrotask page visibility never throttles. */
+/** 🎞️ Wall slice a draining settle keeps the actor once a continuation asked the shell for a refresh mid-operation (an
+ * unsolicited `Invocation` frame, `in_reply_to` 0, carrying the operation's dirty scope). A long typed operation — a tool
+ * run testing thousands of candidates — used to run to completion inside ONE settle, holding the actor's ingress while the
+ * refreshes it asked for queued behind it, so the renderer saw nothing and then everything at once. Ending the settle after
+ * one frame hands the rest to the yielding operation drain, and the queued refreshes interleave with its polls: the
+ * operation never waits on the renderer, and the renderer shows as much of the process as it keeps up with. */
+const PLUGIN_OPERATION_REFRESH_SLICE_MS = 16;
+
+/** 🎞️ Whether a draining settle should return now so a refresh the operation asked for can run: the operation asked for one,
+ * the slice is spent, and nothing is owed — no acknowledgement to submit, no required surface still unpublished. */
+function settleYieldsToRefreshV1(results: readonly WireTurnResult[], startedMs: number, nowMs: number, acknowledgementsOwed: boolean, outstanding: boolean): boolean {
+  return !acknowledgementsOwed && !outstanding && nowMs - startedMs >= PLUGIN_OPERATION_REFRESH_SLICE_MS && results.some((result) => leftoverShellInvocationFrames(result.effects).some((frame) => "Invocation" in frame && frame.Invocation.in_reply_to === 0 && frame.Invocation.ui_scope.length > 0));
+}
+
 async function yieldPluginUiContinuation(): Promise<void> {
   await hostContinuations.yieldContinuation();
 }
@@ -1543,8 +1563,10 @@ async function settlePluginTurn(actorId: string, initial: WireTurnResult, lane: 
   const outstanding = () => !hasRequiredUiPatches(results, requiredSurfaceIds);
   let acknowledgements = await hopTrace.timeAsync("turn.accept", { actorId, patches: initial.uiPatches.length }, () => acknowledge(initial));
   let quiesced = false;
+  let sliced = false;
   let zeroProgress = 0;
-  for (let continuation = 0; !quiesced && (acknowledgements.length > 0 || hasWork()) && continuation < PLUGIN_UI_CONTINUATION_LIMIT; continuation += 1) {
+  const startedMs = performance.now();
+  for (let continuation = 0; !quiesced && !sliced && (acknowledgements.length > 0 || hasWork()) && continuation < PLUGIN_UI_CONTINUATION_LIMIT; continuation += 1) {
     const collected = results.length;
     const continued = await submitPluginTurn(actorId, acknowledgements, lane, undefined, undefined, activation);
     results.push(continued);
@@ -1554,11 +1576,12 @@ async function settlePluginTurn(actorId: string, initial: WireTurnResult, lane: 
     zeroProgress = progressed ? 0 : zeroProgress + 1;
     if (zeroProgress >= PLUGIN_UI_QUIESCENT_CONTINUATIONS && !outstanding()) quiesced = true;
     else if (zeroProgress >= PLUGIN_UI_ZERO_PROGRESS_CONTINUATION_LIMIT) { closeDecide(); throw pluginTurnStalledError(actorId, results, requiredSurfaceIds, zeroProgress, continuation + 1, call); }
-    const yielding = !quiesced && (continuation + 1) % PLUGIN_UI_CONTINUATION_BATCH_SIZE === 0 && hasWork();
+    sliced = drainOperations && !quiesced && settleYieldsToRefreshV1(results, startedMs, performance.now(), acknowledgements.length > 0, outstanding());
+    const yielding = !quiesced && !sliced && (continuation + 1) % PLUGIN_UI_CONTINUATION_BATCH_SIZE === 0 && hasWork();
     closeDecide();
     if (yielding) await hopTrace.timeAsync("turn.yield", { actorId }, () => yieldPluginUiContinuation());
   }
-  if (!quiesced && (acknowledgements.length > 0 || hasWork())) {
+  if (!quiesced && !sliced && (acknowledgements.length > 0 || hasWork())) {
     const published = results.flatMap((result) => result.uiPatches.map(wirePatchSurfaceId).filter((surface): surface is string => surface !== null));
     throw new Error(
       `[DEBUG] PluginRuntime: actor ${actorId} did not publish its requested UI surfaces within ${PLUGIN_UI_CONTINUATION_LIMIT} continuations ` +
@@ -1846,6 +1869,35 @@ function retainedSurfacesForActor(actorId: string): Map<string, RetainedSurface>
 
 //#endregion 🔖️ActorAdapter
 
+//#region 🪦️InstanceRetirement
+/** 🪦️ An instance the host has RETIRED — its dispatch queue is closed and its actor is gone or going.
+ *
+ * Every late arrival for such an instance is a teardown race by construction, not a failure: a canvas
+ * host that remounts and republishes its selection reset, a gesture already in flight when a role
+ * switch or a hot-swap tore the instance down, an operation-completion subscription an effect pass
+ * re-establishes one render too late. The shell answers those by DROPPING them typed — one line naming
+ * the instance — instead of surfacing a stack, which is what turned a whole journey red on a single
+ * `interactionSelect` (`📓️react-current-tree-battery-2026-09-14.md` §6).
+ *
+ * The message text of the two throwing gates below is deliberately left verbatim — several probes count
+ * `no actor for instance` / `no channel for instance` as their own evidence — so the RETIREMENT is
+ * carried as a property on the error rather than by rewording it. */
+export const PLUGIN_INSTANCE_RETIRED = "pluginInstanceRetired" as const;
+
+export function markPluginInstanceRetiredV1<TError extends Error>(error: TError): TError {
+  Object.defineProperty(error, PLUGIN_INSTANCE_RETIRED, { value: true, enumerable: false });
+  return error;
+}
+
+/** 🪦️ Whether this failure means "the instance it addressed is retired", covering both throwing gates
+ * and the two channel terminals `AppChannelClient` itself raises once its queue is closed. */
+export function isPluginInstanceRetiredV1(error: unknown): boolean {
+  if (typeof error === "object" && error !== null && (error as Record<string, unknown>)[PLUGIN_INSTANCE_RETIRED] === true) return true;
+  const message = error instanceof Error ? error.message : String(error ?? "");
+  return message.includes("app-channel.disposed") || message.includes("app-channel.closed") || message.includes("plugin-handle.closed");
+}
+//#endregion 🪦️InstanceRetirement
+
 /** 🚦️ Resolves the small descriptor request before starting the shard-worker module graph, keeping
  * cold browser connection capacity available for the request that lets plugin loading complete. */
 export async function resolveDescriptorBeforeRuntime<TManifest, TRuntime>(loadDescriptor: () => Promise<TManifest>, initializeRuntime: () => TRuntime): Promise<{ readonly manifest: TManifest; readonly runtime: TRuntime }> {
@@ -1902,7 +1954,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
     const lease = lifecycleByInstance.get(instanceId);
     const owner = uiOwnerByInstance.get(instanceId);
     if (!lease || !owner || !turn.original || !turn.uiPatchReceipt) throw new Error("plugin-ui.native-owner-required");
-    const supplemental: WireTurnResult[] = [];
+    const admitted: { readonly surfaceId: string; readonly intake: OwnedUiPatchIntake; readonly entry: OwnedUiPatchAcknowledgementEntry }[] = [];
     for (const [index, patch] of turn.uiPatches.entries()) {
       const source = lease.captureUiPatchAuthority(turn.original, index);
       const surfaceId = wirePatchSurfaceId(patch);
@@ -1919,8 +1971,13 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
         if (current.kind === "blocked" && token === null) throw new Error(`plugin-ui.intake-blocked:${current.phase}`);
         if (uiIntakeOwesYieldV1(step)) await yieldPluginUiContinuation();
       }
-      const acknowledged = await submitPluginLifecycleTurn(lease, { kind: "issued-ui-ack", source, token }, "Interactive");
-      if (!intake.acceptAcknowledgement(acknowledged.submission)) throw new Error("plugin-ui.acknowledgement-refused");
+      admitted.push({ surfaceId, intake, entry: { source, token } });
+    }
+    const acknowledged = await submitPluginLifecycleTurn(lease, { kind: "issued-ui-acks", entries: admitted.map(({ entry }) => entry) }, "Interactive");
+    if (!acknowledged.submissions || acknowledged.submissions.length !== admitted.length) throw new Error("plugin-ui.acknowledgement-refused");
+    const supplemental: WireTurnResult[] = [];
+    for (const [index, { surfaceId, intake }] of admitted.entries()) {
+      if (!intake.acceptAcknowledgement(acknowledged.submissions[index]!)) throw new Error("plugin-ui.acknowledgement-refused");
       for (let step = 1; ; step += 1) {
         if (step > PLUGIN_UI_INTAKE_STEP_CEILING) throw new Error(`plugin-ui.publication-close-budget-exhausted:${surfaceId}:${PLUGIN_UI_INTAKE_STEP_CEILING}`);
         const current = intake.advance(uiGrant);
@@ -1933,11 +1990,11 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
       const surfaces = uiSurfaceByInstance.get(instanceId) ?? new Map<string, OwnedUiInstanceSurface>();
       surfaces.set(surfaceId, surface); uiSurfaceByInstance.set(instanceId, surfaces);
       await closeIntake(instanceId, intake);
-      supplemental.push(acknowledged.turn);
-      const nested = await acceptUiPatches(instanceId, acknowledged.turn);
-      supplemental.push(...nested.turns);
-      if (nested.acknowledgements.length > 0) throw new Error("plugin-ui.unexpected-generic-acknowledgement");
     }
+    supplemental.push(acknowledged.turn);
+    const nested = await acceptUiPatches(instanceId, acknowledged.turn);
+    supplemental.push(...nested.turns);
+    if (nested.acknowledgements.length > 0) throw new Error("plugin-ui.unexpected-generic-acknowledgement");
     return { acknowledgements: [], turns: supplemental };
   };
   const advanceUiMaintenance = async (owner: OwnedUiInstance, budget: { steps: number }, phase: string): Promise<void> => {
@@ -2088,7 +2145,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
   const requireActorId = (instanceId: number): string => {
     const actorId = actorIdByInstance.get(instanceId);
     if (disposing) throw new Error("plugin-handle.closed");
-    if (!actorId || closingInstances.has(instanceId)) throw new Error(`[DEBUG] program ${pluginId}: no actor for instance ${instanceId} (createApp not called, or already destroyed)`);
+    if (!actorId || closingInstances.has(instanceId)) throw markPluginInstanceRetiredV1(new Error(`[DEBUG] program ${pluginId}: no actor for instance ${instanceId} (createApp not called, or already destroyed)`));
     return actorId;
   };
   const releaseInstanceMaps = (instanceId: number, actorId: string): void => {
@@ -2438,6 +2495,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
         console.warn("[DEBUG] command ingress stamped Done", JSON.stringify({ instanceId, actionId: inspected.actionId, seq: inspected.seq, leftover: leftover.length, frames: outFrames.length }));
       }
       turnOutcomes.push({ instanceId, frames: outFrames });
+      console.warn("[DEBUG] slice command status", JSON.stringify({ instanceId, status: wireTurnStatusTag(result.status) }));
       if (wireTurnStatusTag(result.status) === "more-work") void drainTypedOperations(instanceId);
     } catch (error) {
       turnOutcomes.push({ instanceId, error });
@@ -2457,6 +2515,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
   const drainingInstances = new Set<number>();
   const drainTypedOperations = async (instanceId: number): Promise<void> => {
     const live = (): boolean => !disposing && !closingInstances.has(instanceId) && actorIdByInstance.has(instanceId);
+    console.warn("[DEBUG] slice drain enter", JSON.stringify({ instanceId, draining: drainingInstances.has(instanceId), live: live() }));
     if (drainingInstances.has(instanceId) || !live()) return;
     drainingInstances.add(instanceId);
     try {
@@ -2482,6 +2541,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
         if (frames.length > 0) turnOutcomes.push({ instanceId, frames });
         return { status: settled.status, nextWake: settled.nextWake };
       });
+      console.warn("[DEBUG] slice drain outcome", JSON.stringify(outcome));
       if (outcome.stopped === "budget") console.warn(`[DEBUG] typed-operation drain for instance ${instanceId} exhausted its ${PLUGIN_OPERATION_DRAIN_BUDGET}-poll budget`);
       if (outcome.stopped === "idle" && outcome.nextWake !== null && live()) {
         // 🪃️ The guest's own requested wake. `nextWake: 0` means "immediately" and MUST cost one
@@ -2891,7 +2951,6 @@ export function decodeGuestPresenceUpdateV1(decoded: unknown): { readonly surfac
  * guest's `graph` domain moved (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, gap F1).
  */
 function retainTurnPresence(result: { readonly presence?: unknown }): void {
-  console.log(`[DEBUG] retainTurnPresence seen type=${Array.isArray(result.presence) ? `array:${result.presence.length}` : typeof result.presence} keys=${Object.keys(result as object).join(",")}`);
   if (!Array.isArray(result.presence) || result.presence.length === 0) return;
   const updates: { readonly surface: string; readonly nodeKey: string; readonly own: GuestPresenceMarkV1 }[] = [];
   for (const entry of result.presence) {
@@ -2906,7 +2965,6 @@ function retainTurnPresence(result: { readonly presence?: unknown }): void {
     const update = decodeGuestPresenceUpdateV1(decoded);
     if (update) updates.push(update);
   }
-  console.log(`[DEBUG] retainTurnPresence carriers=${result.presence.length} decoded=${updates.length} ${JSON.stringify(updates.slice(0, 4))}`);
   if (updates.length > 0) publishGuestPresenceV1(updates);
 }
 
@@ -2915,19 +2973,11 @@ function retainTurnPresence(result: { readonly presence?: unknown }): void {
  * object — used both for the old DSL-pack byte fields AND (H1-react) for `pack`-typed fields inside a
  * raw WIT `effect`/`patch-op` variant, which jco represents as a plain byte array or `Uint8Array`. */
 
+/** 🕹️ ONE law for both renderer targets (`🖼️wire-turn.ts`) — a reserved tool job publishes the whole
+ * answer of its verb on a later turn than the dispatch that admitted it, and both hosts fold it
+ * through this same peel. */
 function leftoverShellInvocationFrames(leftover: readonly WireVariant[]): AppFrameValue[] {
-  const frames: AppFrameValue[] = [];
-  for (const effect of leftover) {
-    const value = effect.val as { target?: WireVariant; payload?: unknown } | undefined;
-    if (effect.tag !== "send-message" || value?.target?.tag !== "shell" || value.payload === undefined) continue;
-    try {
-      const frame = decodeAppFrame(coerceWireBytes(value.payload));
-      if ("Invocation" in frame) frames.push(frame);
-    } catch {
-      /* leftover host effect, not an AppFrame */
-    }
-  }
-  return frames;
+  return wireLeftoverShellInvocationFrames<AppFrameValue>(leftover, (bytes) => decodeAppFrame(bytes));
 }
 
 /** 📋️ Passes a job completion's leftover effects through unchanged, tracing the `Invocation` frames it
@@ -3143,10 +3193,14 @@ export async function adaptPluginHandle(pluginId: string, lease: { readonly hand
   const channelRequests = new AppChannelRequestSequence();
   let disposal: Promise<void> | null = null;
   let disposing = false;
+  const retiredInstances = new Set<number>();
   const requireChannel = (instanceId: number): AppChannelClient => {
     if (disposing) throw new Error("plugin-handle.closed");
     const client = channels.get(instanceId);
-    if (!client) throw new Error(`[DEBUG] program ${pluginId}: no channel for instance ${instanceId} (createApp not called, or already destroyed)`);
+    if (!client) {
+      const missing = new Error(`[DEBUG] program ${pluginId}: no channel for instance ${instanceId} (createApp not called, or already destroyed)`);
+      throw retiredInstances.has(instanceId) ? markPluginInstanceRetiredV1(missing) : missing;
+    }
     return client;
   };
   return {
@@ -3156,11 +3210,25 @@ export async function adaptPluginHandle(pluginId: string, lease: { readonly hand
       if (disposing) throw new Error("plugin-handle.closed");
       const instanceId = await handle.createApp(appId);
       if (disposing) { await handle.destroyApp(instanceId); throw new Error("plugin-handle.closed"); }
+      retiredInstances.delete(instanceId);
       channels.set(instanceId, new AppChannelClient(handle, channelRequests, instanceId, appId, currentPluginRuntimeActor));
       return instanceId;
     },
+    /** 🪦️ Retires this instance's DISPATCH QUEUE before its actor is destroyed, never after.
+     *
+     * The close ladder runs on the actor's own lifecycle lease, not on this channel, so the channel
+     * used to stay open and reachable for the whole of it: `requireChannel` answered, the command
+     * crossed into `AppChannelClient.sendCommand`, and only `requireActorId` — one layer down, with the
+     * actor already revoked — refused it. A late gesture therefore surfaced as a stack instead of a
+     * drop (measured on generation3d 6018: a node-graph host remount republished
+     * `interactionSelect targets:[]` at +68 s onto the instance a hot-swap had destroyed,
+     * `🗑️generated/react-verify/journey/console.txt`). Closing the queue first makes every such arrival
+     * a typed {@link isPluginInstanceRetiredV1} refusal raised by the layer that OWNS the queue, and
+     * settles the pending gestures that were already in it with the same terminal. */
     destroyApp: async (instanceId) => {
       const channel = channels.get(instanceId);
+      retiredInstances.add(instanceId);
+      channel?.retire();
       await handle.destroyApp(instanceId);
       channel?.dispose();
       if (channels.get(instanceId) === channel) channels.delete(instanceId);
@@ -3779,7 +3847,7 @@ function pluginRuntimeTestDependenciesV1() {
     get sharedShardClient() { return sharedShardClient; },
     set sharedShardClient(value: typeof sharedShardClient) { sharedShardClient = value; },
   };
-  return { testState, guestIngressGenerationV1, leftoverShellInvocationFrames, promoteShellSendMessages, leftoverInspectionRefreshScope, leftoverInspectionPanelHash, windowHostContextBindings, isolatedJobStepsPerSerializedAdmission, isolatedJobUiPollEverySteps, ActivationRegistry, ActorDocumentBindingV1, adaptPluginHandle, assertAddressedInvocation, AppChannelClient, AppChannelRequestSequence, applyRetainedWindowPatches, applyUiPatch, applyUiPatchToRetained, ArtifactMutationRouter, assertShardJspiAvailable, BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES, buildShardClientOptions, coerceTurnResult, coerceWireBytes, commandIngressFaultDisplay, computeDependencyLevels, consumeTypedOperationEffects, createShardCommandIngressPages, createTurnOutcomeBroadcast, currentPluginRuntimeActor, decodeActorUiPatchReceipt, decodeAppFrame, decodeBackboneMessage, decodeConflictsFromWire, decodeFaultFromWire, decodeForeignStep, decodeInvocationResultPacks, decodeLocalInteractionCaptureJson, decodeMergeReportFromWire, decodeMutationEnvelopesPack, decodePackValue, decodePackWire, decodeWirePack, decodeWirePatchOps, DEFAULT_SHARD_BUDGET, drainTypedOperationTurns, DIRECTORY_PROJECTION_RECEIPT_SCHEMA, emptyUiDocumentState, encodeActorUiPatchReceipt, encodeDocumentBackboneControlV1, encodeMutationOrigin, encodePackValue, enqueuePluginTurn, faultDisplayMessage, fetchDescriptorManifest, fnv1aHex, getActivationRegistry, getPluginTurnScheduler, getShardClient, getThunkScheduler, handlePluginShardLost, forgetInstanceForRecovery, onPluginInstancesLost, PLUGIN_ACTOR_INSTANCE_LOST_FAULT, rememberInstanceForRecovery, hasRequiredUiPatches, InstanceDirectory, invocationFromFrames, isShardLostError, loadPluginModule, loadPluginModulesInDependencyOrder, LOCAL_INTERACTION_CAPTURE_MAX_BYTES, localInteractionIdentityEquals, MAX_TRANSACTION_DEPTH, nextGlobalInstanceId, normalizeWireUiNodeRecord, notePluginLoadProgress, orderPluginRegistryEntries, OwnedResidentLedger, packWireNatural, patchAckEvents, pendingCoalescedTurns, pendingCompletionEffects, pendingLifecycleTurns, pendingTurnEffects, performContextMenu, performInvocation, PLUGIN_BOOT_SHARD_LOST_FAULT, PLUGIN_OPERATION_DRAIN_BUDGET, PLUGIN_OPERATION_EFFECT_CAPACITY, PLUGIN_OPERATION_WAKE_MAX_MS, PLUGIN_TURN_MAILBOX_CAPACITY, PLUGIN_UI_CONTINUATION_BATCH_SIZE, PLUGIN_UI_CONTINUATION_LIMIT, PLUGIN_UI_QUIESCENT_CONTINUATIONS, PLUGIN_UI_ZERO_PROGRESS_CONTINUATION_LIMIT, PLUGIN_UI_INTAKE_STEP_CEILING, PLUGIN_UI_INTAKE_YIELD_STRIDE, retainedUiIntakeStepCeiling, PluginBootShardLostError, pluginLoadProgress, pluginLoadProgressAt, pluginSurfaceRef, poolConcurrency, rejectionCodeFromBytes, releasePendingLifecycleTurn, rendererResidentLedger, resolveDescriptorBeforeRuntime, retainedSurfaceHash, retainedSurfaceId, retainedSurfacesForActor, retainedSurfaceToBuiltNode, retainedSurfaceToSnapshot, retainedUiRefreshResponse, uiRefreshSectionUnchanged, retainedWindowByActor, retainTurnUiPatches, runBounded, sectionValueFromBuiltNode, runPluginLifecycleTurn, SEGMENTED_DOWNLOAD_MARKER_PREFIX, SemioFaultError, SURFACE_RENDER_FAULT, SERIALIZE_PER_ACTOR_MAILBOX_CAPACITY, serializeCommandIngressForActor, serializePerActor, commandIngressLaneForActionV1, commandIngressNeedsReplyStampV1, setPluginRuntimeActor, settleAcknowledgedPluginTurns, settlePluginTurn, SHARD_LIVENESS_POLICY, SHARD_WORKER_URL, ShardClient, sharedPluginTurnScheduler, sharedThunkScheduler, shellFrameBytes, submitPluginLifecycleTurn, submitPluginTurn, teardownPluginActor, tearingDownPluginActors, TransactionCoordinator, TurnScheduler, TYPED_OPERATION_ACK_MAGIC, TYPED_OPERATION_PAGE_MAGIC, TYPED_OPERATION_PARK_CAPACITY, TYPED_OPERATION_PARK_EVICTION_FAULT, TYPED_OPERATION_PENDING_OUTPUT, TYPED_OPERATION_TERMINAL_OUTPUT, TYPED_OPERATION_TERMINAL_SEEN, TYPED_OPERATION_UNATTRIBUTED_FAULT, typedOperationAcknowledgements, TypedOperationCall, TypedOperationRouter, typedOperationResult, uiRefreshBodyKeys, uiRefreshSectionTargets, uiRefreshSurfaceEvents, wireEffectToFriendly, wireExtensionInvocation, wireNatural, wirePatchSurfaceId, wireTurnStatusTag, withTypedOperationCall, yieldPluginUiContinuation };
+  return { testState, guestIngressGenerationV1, leftoverShellInvocationFrames, settleYieldsToRefreshV1, PLUGIN_OPERATION_REFRESH_SLICE_MS, promoteShellSendMessages, leftoverInspectionRefreshScope, leftoverInspectionPanelHash, windowHostContextBindings, isolatedJobStepsPerSerializedAdmission, isolatedJobUiPollEverySteps, ActivationRegistry, ActorDocumentBindingV1, adaptPluginHandle, assertAddressedInvocation, AppChannelClient, AppChannelRequestSequence, applyRetainedWindowPatches, applyUiPatch, applyUiPatchToRetained, ArtifactMutationRouter, assertShardJspiAvailable, BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES, buildShardClientOptions, coerceTurnResult, coerceWireBytes, commandIngressFaultDisplay, computeDependencyLevels, consumeTypedOperationEffects, createShardCommandIngressPages, createTurnOutcomeBroadcast, currentPluginRuntimeActor, decodeActorUiPatchReceipt, decodeAppFrame, decodeBackboneMessage, decodeConflictsFromWire, decodeFaultFromWire, decodeForeignStep, decodeInvocationResultPacks, decodeLocalInteractionCaptureJson, decodeMergeReportFromWire, decodeMutationEnvelopesPack, decodePackValue, decodePackWire, decodeWirePack, decodeWirePatchOps, DEFAULT_SHARD_BUDGET, drainTypedOperationTurns, DIRECTORY_PROJECTION_RECEIPT_SCHEMA, emptyUiDocumentState, encodeActorUiPatchReceipt, encodeDocumentBackboneControlV1, encodeMutationOrigin, encodePackValue, enqueuePluginTurn, faultDisplayMessage, fetchDescriptorManifest, fnv1aHex, getActivationRegistry, getPluginTurnScheduler, getShardClient, getThunkScheduler, handlePluginShardLost, forgetInstanceForRecovery, onPluginInstancesLost, PLUGIN_ACTOR_INSTANCE_LOST_FAULT, rememberInstanceForRecovery, hasRequiredUiPatches, InstanceDirectory, invocationFromFrames, isPluginInstanceRetiredV1, isShardLostError, loadPluginModule, loadPluginModulesInDependencyOrder, LOCAL_INTERACTION_CAPTURE_MAX_BYTES, localInteractionIdentityEquals, markPluginInstanceRetiredV1, MAX_TRANSACTION_DEPTH, nextGlobalInstanceId, normalizeWireUiNodeRecord, notePluginLoadProgress, orderPluginRegistryEntries, OwnedResidentLedger, packWireNatural, patchAckEvents, pendingCoalescedTurns, pendingCompletionEffects, pendingLifecycleTurns, pendingTurnEffects, performContextMenu, performInvocation, PLUGIN_BOOT_SHARD_LOST_FAULT, PLUGIN_OPERATION_DRAIN_BUDGET, PLUGIN_OPERATION_EFFECT_CAPACITY, PLUGIN_OPERATION_WAKE_MAX_MS, PLUGIN_TURN_MAILBOX_CAPACITY, PLUGIN_UI_CONTINUATION_BATCH_SIZE, PLUGIN_UI_CONTINUATION_LIMIT, PLUGIN_UI_QUIESCENT_CONTINUATIONS, PLUGIN_UI_ZERO_PROGRESS_CONTINUATION_LIMIT, PLUGIN_UI_INTAKE_STEP_CEILING, PLUGIN_UI_INTAKE_YIELD_STRIDE, retainedUiIntakeStepCeiling, PluginBootShardLostError, pluginLoadProgress, pluginLoadProgressAt, pluginSurfaceRef, poolConcurrency, rejectionCodeFromBytes, releasePendingLifecycleTurn, rendererResidentLedger, resolveDescriptorBeforeRuntime, retainedSurfaceHash, retainedSurfaceId, retainedSurfacesForActor, retainedSurfaceToBuiltNode, retainedSurfaceToSnapshot, retainedUiRefreshResponse, uiRefreshSectionUnchanged, retainedWindowByActor, retainTurnUiPatches, runBounded, sectionValueFromBuiltNode, runPluginLifecycleTurn, SEGMENTED_DOWNLOAD_MARKER_PREFIX, SemioFaultError, SURFACE_RENDER_FAULT, SERIALIZE_PER_ACTOR_MAILBOX_CAPACITY, serializeCommandIngressForActor, serializePerActor, commandIngressLaneForActionV1, commandIngressNeedsReplyStampV1, setPluginRuntimeActor, settleAcknowledgedPluginTurns, settlePluginTurn, SHARD_LIVENESS_POLICY, SHARD_WORKER_URL, ShardClient, sharedPluginTurnScheduler, sharedThunkScheduler, shellFrameBytes, submitPluginLifecycleTurn, submitPluginTurn, teardownPluginActor, tearingDownPluginActors, TransactionCoordinator, TurnScheduler, TYPED_OPERATION_ACK_MAGIC, TYPED_OPERATION_PAGE_MAGIC, TYPED_OPERATION_PARK_CAPACITY, TYPED_OPERATION_PARK_EVICTION_FAULT, TYPED_OPERATION_PENDING_OUTPUT, TYPED_OPERATION_TERMINAL_OUTPUT, TYPED_OPERATION_TERMINAL_SEEN, TYPED_OPERATION_UNATTRIBUTED_FAULT, typedOperationAcknowledgements, TypedOperationCall, TypedOperationRouter, typedOperationResult, uiRefreshBodyKeys, uiRefreshSectionTargets, uiRefreshSurfaceEvents, wireEffectToFriendly, wireExtensionInvocation, wireNatural, wirePatchSurfaceId, wireTurnStatusTag, withTypedOperationCall, yieldPluginUiContinuation };
 }
 
 export type PluginRuntimeTestDependenciesV1 = ReturnType<typeof pluginRuntimeTestDependenciesV1>;

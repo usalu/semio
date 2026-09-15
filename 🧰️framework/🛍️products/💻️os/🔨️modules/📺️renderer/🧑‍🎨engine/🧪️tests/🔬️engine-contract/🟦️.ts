@@ -1729,7 +1729,7 @@ import {
 import { ENTWERFEN_MIT_BESTAND_BRAND_IDS, ENTWERFEN_MIT_BESTAND_GENERAL_INTRODUCTION } from "../../../../../../../../♻️mit-bestand/🧺️demonstrator/🪧️brand.ts";
 import { Footer, navbarFillItem, progressPanelTabSelection, resolvePanelBranchBodyLeaf, resolveTranslationLabel, SelectionMarquee, uiDataLabel, formatKeybindingShortcut, buildKeysByActionId, type PanelTabNode, type TreeDataSection } from "@semio-tech/ui-react";
 import { renderUiControl } from "../../🧱️elements/🗣️Interpreter/🟦️.tsx";
-import { WorldOrbitProjectionSwitchPane, world3dProjectionPaneElementId, resolveClickInstanceIdFromProjected, world3dInstancePickUsesInteractionDomain, world3dMarqueePointerCaptureArmed, world3dProjectedAabbContainsClick, world3dFrameCameraFromBounds, world3dFrameCameraFromInstances, world3dSuggestionsGestureArmed, world3dRetainLocalVortexHover, leftoverHoveredVortexFullIdV1, leftoverOverlayCarryingSelectionV1, leftoverSelectIdsMustNameHoverPickV1, leftoverOverlayCarryingUtilityV1, leftoverOverlayArmedBrushUtilityV1, leftoverTreeItemSelectedV1, leftoverWorldOverlayAppliesV1, mergeWorldInteractionWithLeftoverV1, mergeWorldSelectionWithLeftoverV1, gumballPreviewWorldPoint, world3dSuggestionsGestureConsumesContextMenu, world3dSuggestionsRightDownRoutesOnWindowCapture, worldVortexHitProxy, worldInstanceMeshRaycast, applyWorldInstanceMeshRaycast } from "../../🧱️elements/🌐️World3dHost/🟦️.tsx";
+import { WorldOrbitProjectionSwitchPane, world3dProjectionPaneElementId, resolveClickInstanceIdFromProjected, world3dInstancePickUsesInteractionDomain, world3dMarqueePointerCaptureArmed, world3dProjectedAabbContainsClick, world3dFrameCameraFromBounds, world3dFrameDistanceForRadius, world3dBoundsRadius, world3dAutoFitOwed, world3dFrameCameraFromInstances, world3dSuggestionsGestureArmed, world3dRetainLocalVortexHover, leftoverHoveredVortexFullIdV1, leftoverOverlayCarryingSelectionV1, leftoverSelectIdsMustNameHoverPickV1, leftoverOverlayCarryingUtilityV1, leftoverOverlayArmedBrushUtilityV1, leftoverTreeItemSelectedV1, leftoverWorldOverlayAppliesV1, mergeWorldInteractionWithLeftoverV1, mergeWorldSelectionWithLeftoverV1, gumballPreviewWorldPoint, world3dSuggestionsGestureConsumesContextMenu, world3dSuggestionsRightDownRoutesOnWindowCapture, worldVortexHitProxy, worldInstanceMeshRaycast, applyWorldInstanceMeshRaycast } from "../../🧱️elements/🌐️World3dHost/🟦️.tsx";
 import { leftoverInspectionPanelHash, leftoverInspectionRefreshScope, uiRefreshSectionUnchanged } from "../../🧱️elements/🔌️PluginRuntime/🟦️.tsx";
 
 import { aProjectOfLuhUdkFooterItem, fundedByZukunftBauFooterItem, LUH_LOGO_URL, LUH_URL, UDK_LOGO_URL, UDK_URL, ZUKUNFT_BAU_PROJECT_URL } from "../../../../../../../../♻️mit-bestand/🧺️demonstrator/⚛️footer.tsx";
@@ -5620,10 +5620,85 @@ describe("framework renderer hosts", () => {
     expect(world3dProjectionContentFrameMounted(false, true, false)).toBe(true);
   });
 
-  it("world3dFrameVisibleOverlayOffered defers to an enabled fit lane", () => {
-    expect(world3dFrameVisibleOverlayOffered(null)).toBe(true);
-    expect(world3dFrameVisibleOverlayOffered({ enabled: false })).toBe(true);
-    expect(world3dFrameVisibleOverlayOffered({ enabled: true, revision: 1, padding: 1.25 })).toBe(false);
+  it("world3dFrameVisibleOverlayOffered survives an enabled fit lane, because boot framing is not a reframe affordance", () => {
+    expect(world3dFrameVisibleOverlayOffered()).toBe(true);
+  });
+
+  it("world3dFrameDistanceForRadius stands the eye off far enough that the whole bounding sphere projects inside the frustum", () => {
+    for (const [fov, aspect] of [
+      [45, 1],
+      [45, 1.8],
+      [45, 0.6],
+      [30, 2.2],
+      [60, 1.3],
+    ] as const) {
+      const radius = 1.7320508;
+      const distance = world3dFrameDistanceForRadius(radius, fov, aspect);
+      const vertical = ((fov * Math.PI) / 180) * 0.5;
+      const horizontal = Math.atan(Math.tan(vertical) * aspect);
+      expect(Math.asin(radius / distance)).toBeLessThan(Math.min(vertical, horizontal));
+      expect(distance).toBeLessThan((radius / Math.sin(Math.min(vertical, horizontal))) * 1.25);
+    }
+  });
+
+  it("world3dBoundsRadius is the bounding-sphere radius, never half the longest edge", () => {
+    expect(world3dBoundsRadius([0, 0, 0], [2, 2, 2])).toBeCloseTo(Math.sqrt(3), 6);
+    expect(world3dBoundsRadius([-1.2, -1.2, -1.2], [1.5, 1.5, 1.5])).toBeCloseTo((Math.sqrt(3) * 2.7) / 2, 6);
+  });
+
+  it("world3dAutoFitOwed frames the first delivery of a document and never yanks a camera the user moved on it", () => {
+    expect(world3dAutoFitOwed("", "7:a,b", false)).toBe(true);
+    expect(world3dAutoFitOwed("7:a,b", "7:a,b", false)).toBe(false);
+    expect(world3dAutoFitOwed("", "7:a,b", true)).toBe(false);
+    expect(world3dAutoFitOwed("7:a,b", "7:a,b,c", true)).toBe(false);
+    expect(world3dAutoFitOwed("7:a,b", "9:x", false)).toBe(true);
+  });
+
+  it("a framed camera puts every corner of the delivered box inside the viewport, for every bundled generation3d example", () => {
+    const examples: readonly (readonly [string, readonly [number, number, number], readonly [number, number, number]])[] = [
+      ["hexagonal-mushroom-column", [-0.5, -0.43301, 0], [0.5, 0.43301, 6]],
+      ["rectangle-extrude-volume", [0, 0, 0], [2, 2, 3]],
+      ["face-sweep-extrude", [0, 0, 0], [2, 1.5, 4]],
+      ["box-shell-preview", [0, 0, 0], [2, 2, 2]],
+      ["box-fillet-preview", [0, 0, 0], [2, 2, 2]],
+      ["rectangle-wire-preview", [0, 0, 0], [2, 1.5, 0]],
+      ["sphere-box-fuse", [-1.2, -1.2, -1.2], [1.5, 1.5, 1.5]],
+      ["sphere-cut-with-torus", [-2.2, -2.2, -2.2], [2.2, 2.2, 2.2]],
+    ];
+    const seed = { position: [4, -4, 3] as [number, number, number], target: [0, 0, 0] as [number, number, number], zoom: 1, projection: "perspective" as const, fov: 45, explicitProjection: false };
+    for (const [name, minimum, maximum] of examples) {
+      for (const aspect of [1.7, 1.0, 0.7]) {
+        const center: [number, number, number] = [(minimum[0] + maximum[0]) / 2, (minimum[1] + maximum[1]) / 2, (minimum[2] + maximum[2]) / 2];
+        const framed = world3dFrameCameraFromBounds(center, world3dBoundsRadius(minimum, maximum), seed, undefined, aspect);
+        const forward = [framed.target[0] - framed.position[0], framed.target[1] - framed.position[1], framed.target[2] - framed.position[2]];
+        const forwardLength = Math.hypot(...forward);
+        const unitForward = forward.map((value) => value / forwardLength);
+        const worldUp = [0, 0, 1];
+        const right = [unitForward[1] * worldUp[2] - unitForward[2] * worldUp[1], unitForward[2] * worldUp[0] - unitForward[0] * worldUp[2], unitForward[0] * worldUp[1] - unitForward[1] * worldUp[0]];
+        const rightLength = Math.hypot(...right);
+        const unitRight = right.map((value) => value / rightLength);
+        const unitUp = [unitRight[1] * unitForward[2] - unitRight[2] * unitForward[1], unitRight[2] * unitForward[0] - unitRight[0] * unitForward[2], unitRight[0] * unitForward[1] - unitRight[1] * unitForward[0]];
+        const halfVertical = Math.tan(((seed.fov * Math.PI) / 180) * 0.5);
+        for (const corner of [
+          [minimum[0], minimum[1], minimum[2]],
+          [minimum[0], minimum[1], maximum[2]],
+          [minimum[0], maximum[1], minimum[2]],
+          [minimum[0], maximum[1], maximum[2]],
+          [maximum[0], minimum[1], minimum[2]],
+          [maximum[0], minimum[1], maximum[2]],
+          [maximum[0], maximum[1], minimum[2]],
+          [maximum[0], maximum[1], maximum[2]],
+        ]) {
+          const relative = [corner[0] - framed.position[0], corner[1] - framed.position[1], corner[2] - framed.position[2]];
+          const depth = relative[0] * unitForward[0] + relative[1] * unitForward[1] + relative[2] * unitForward[2];
+          expect(depth).toBeGreaterThan(0);
+          const ndcY = (relative[0] * unitUp[0] + relative[1] * unitUp[1] + relative[2] * unitUp[2]) / (depth * halfVertical);
+          const ndcX = (relative[0] * unitRight[0] + relative[1] * unitRight[1] + relative[2] * unitRight[2]) / (depth * halfVertical * aspect);
+          expect(`${name}@${aspect} x=${ndcX.toFixed(3)}`).toBe(`${name}@${aspect} x=${Math.max(Math.min(ndcX, 0.999), -0.999).toFixed(3)}`);
+          expect(`${name}@${aspect} y=${ndcY.toFixed(3)}`).toBe(`${name}@${aspect} y=${Math.max(Math.min(ndcY, 0.999), -0.999).toFixed(3)}`);
+        }
+      }
+    }
   });
 
   it("buildWorldCameraDispatchArgs carries position/target/zoom/up but never a projection field", () => {
@@ -11702,3 +11777,107 @@ describe("node-graph port types", () => {
   });
 });
 //#endregion 🔌️PortTypeTwin
+
+//#region 🎫️RemainingReds
+/** 🎫️ Ticket 26/09/09/PROCEDURAL-3D-END-TO-END, lane `react-remaining-reds`. Four surfaces of the shell
+ * that a user reads or clicks and that published nothing — or published over each other — measured on
+ * the generation3d React serve (:6018) and closed on the layer that owns each one. */
+describe("🎫️ the shell says what it holds", () => {
+  it("Escape on a graph surface clears the FRAMEWORK selection, not a deleted media-graph verb", async () => {
+    const { readFileSync } = await import("node:fs");
+    const { dirname, resolve } = await import("node:path");
+    const { fileURLToPath } = await import("node:url");
+    const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../../../../../../..");
+    const nodeGraph = readFileSync(resolve(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/🟦️.tsx"), "utf8");
+    const manifest = readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/🛂️manifest/🟦️.ts"), "utf8");
+    const { nodeGraphActions } = await import("../../../../../../../🔨️modules/🖱️ui/🎬️scene/🟦️.ts");
+
+    const reserved = /export const CLEAR_SELECTION_ACTION_ID = "([^"]+)";/u.exec(manifest)?.[1];
+    expect(reserved, "the framework declares the reserved clear verb").toBe("clearSelection");
+    expect(nodeGraphActions.clearSelection, "and the graph scene's action table names that very verb").toBe(reserved);
+
+    const handler = nodeGraph.slice(nodeGraph.indexOf("function handleGraphKeyboard"));
+    const body = handler.slice(0, handler.indexOf("\n}"));
+    expect(body, "Escape must dispatch the reserved clear verb").toContain("dispatch(nodeGraphActions.clearSelection)");
+    expect(nodeGraph, "`setMediaNodeSelection` was deleted with the first-class selection mechanism — no window kind declares it, so every press was dropped").not.toMatch(/dispatch\(\s*"setMediaNodeSelection"/u);
+  });
+
+  it("a graph surface publishes the selection it paints, in the same shape the 3D pane does", async () => {
+    const { nodeGraphSurfaceSelectionDomV1 } = await import("../../🧱️elements/🕸️NodeGraph/🟦️.tsx");
+    expect(nodeGraphSurfaceSelectionDomV1(undefined)).toEqual({ selectedIds: [], highlightedIds: [], hoverTarget: null, editable: true });
+    const picked = nodeGraphSurfaceSelectionDomV1({
+      nodes: [], edges: [], editable: true,
+      selection: ["height"], highlighted: ["height@number"], hover: { nodeId: "profile", portId: "radius" },
+    });
+    expect(picked.selectedIds, "the node the Artifact panel's outline row picked").toEqual(["height"]);
+    expect(picked.highlightedIds).toEqual(["height@number"]);
+    expect(picked.hoverTarget).toEqual({ nodeId: "profile", portId: "radius" });
+    const hoverOnly = nodeGraphSurfaceSelectionDomV1({ nodes: [], edges: [], hover: { nodeId: "extrude" } });
+    expect(hoverOnly.hoverTarget).toEqual({ nodeId: "extrude", portId: null });
+    expect(hoverOnly.selectedIds, "an unhovered graph publishes an EMPTY lane, never a missing one").toEqual([]);
+  });
+
+  it("the shell publishes the framework history cursor undo and redo are decided by", async () => {
+    const { shellHistoryCursorDomV1, SHELL_HISTORY_DOM_LABELS } = await import("../../🧱️elements/🛠️ShellHelpers/🟦️.tsx");
+    const entry = (seq: number, label: string) => [seq, { seq, label, actionId: `action-${seq}`, kind: "app", timestamp: "0" }] as const;
+    const empty = shellHistoryCursorDomV1({ cursor: 0, entries: {}, canUndo: false, canRedo: false });
+    expect(empty).toEqual({ cursor: 0, canUndo: false, canRedo: false, entries: 0, currentCheckpointId: null, labels: [], actionIds: [], undoLabel: null, redoLabel: null });
+
+    const entries = Object.fromEntries([entry(1, "Add Widget"), entry(2, "Move Widget"), entry(3, "Delete Selection")]);
+    const midway = shellHistoryCursorDomV1({ cursor: 2, entries, canUndo: true, canRedo: true, currentCheckpointId: "check-1" });
+    expect(midway.cursor).toBe(2);
+    expect(midway.undoLabel, "undo reverts the newest entry at or below the cursor").toBe("Move Widget");
+    expect(midway.redoLabel, "redo re-applies the first entry above it").toBe("Delete Selection");
+    expect(midway.labels).toEqual(["Add Widget", "Move Widget", "Delete Selection"]);
+    expect(midway.currentCheckpointId).toBe("check-1");
+
+    const bounded = shellHistoryCursorDomV1({ cursor: 40, canUndo: true, canRedo: false, entries: Object.fromEntries(Array.from({ length: 40 }, (_, index) => entry(index + 1, `Step ${index + 1}`))) });
+    expect((bounded.labels as readonly string[]).length, "a DOM attribute carries a bounded tail, never the whole log").toBe(SHELL_HISTORY_DOM_LABELS);
+    expect((bounded.labels as readonly string[])[SHELL_HISTORY_DOM_LABELS - 1]).toBe("Step 40");
+    expect(bounded.redoLabel, "nothing above the cursor to redo").toBeNull();
+  });
+
+  it("a cleared leftover overlay carries no ids, so an outline row it named goes idle on the clearing turn", async () => {
+    const { leftoverOverlayCarryingSelectionV1, leftoverTreeItemSelectedV1, leftoverWorldOverlayAppliesV1, mergeWorldSelectionWithLeftoverV1 } = await import("../../🧱️elements/🌐️World3dHost/🟦️.tsx");
+    const prior = { ids: ["extrusion-axis"], hoveredId: null, gumballActive: true, gumballAnchorId: "extrusion-axis", activeUtility: "select" };
+    /** 🧹️ The publication generation3d's `clearSelection` really sends, measured on 6018:
+     * `selectionCleared: true` alongside the ids it has just retired. */
+    const cleared = leftoverOverlayCarryingSelectionV1({ ids: ["extrusion-axis"], hoveredId: null, gumballActive: false, gumballAnchorId: null, selectionCleared: true }, prior, true);
+    expect(cleared.selectionCleared).toBe(true);
+    expect(cleared.ids, "a clear is an ABSENCE — it cannot carry the ids it retired").toEqual([]);
+    expect(cleared.gumballActive).toBe(false);
+    expect(leftoverWorldOverlayAppliesV1(cleared), "and it still applies, or the one publication that REMOVES a selection would be the one nothing acts on").toBe(true);
+    expect(leftoverTreeItemSelectedV1("panel:procedural-play-graph/extrusion-axis", cleared.ids), "the outline row the clear retired reads idle").toBe(false);
+    expect(leftoverTreeItemSelectedV1("panel:procedural-play-graph/extrusion-axis", prior.ids), "fails-before: the same row read selected off the overlay's retained ids").toBe(true);
+    expect(mergeWorldSelectionWithLeftoverV1({ ids: ["extrusion-axis"], activeObjectId: "extrusion-axis", gumballActive: true }, cleared).ids).toEqual([]);
+
+    const kept = leftoverOverlayCarryingSelectionV1({ ids: ["height"], hoveredId: null, gumballActive: false, gumballAnchorId: null }, prior);
+    expect(kept.ids, "an ordinary pick is untouched").toEqual(["height"]);
+  });
+
+  it("an open chrome-hosted dock lays its fold control BESIDE the tab strip, never under it", async () => {
+    const { chromeHostedPanelCapRowStyle, uiSpacingPx } = await import("@semio-tech/ui-react");
+    /** 📐️ The measured 6018 geometry (`🐍️remaining-reds-recon.mjs` → `🗑️generated/react-reds/recon/recon.json`):
+     * a 300 px dock body, a 238 px tab strip, a 64 px `Collapse` control and a 92 px navbar trailing-end
+     * reserve — 394 px of content for 300 px of body. */
+    const body = 300, strip = 238, controls = 64, reserve = 92;
+    const style = chromeHostedPanelCapRowStyle("top-right", reserve);
+    expect(style.paddingInlineStart, "the navbar's trailing end is still cleared").toBe(`${reserve + uiSpacingPx(1)}px`);
+    expect(style.width, "the cap row sizes to its content").toBe("max-content");
+    expect(style.minWidth, "and never shrinks below the body it caps").toBe("100%");
+
+    /** 📐️ One inline axis, laid out right-to-left from the dock's own right edge, the way the panel root's
+     * `dir="rtl"` lays a right-anchored cap out. Before the fix the row was pinned to `body`, so the strip
+     * was allotted `body - controls - reserve` and painted its full width anyway — over the controls. */
+    const rowWidth = Math.max(body, reserve + strip + controls);
+    const stripBox = { start: rowWidth - reserve - strip, end: rowWidth - reserve };
+    const controlsBox = { start: rowWidth - reserve - strip - controls, end: rowWidth - reserve - strip };
+    expect(controlsBox.end, "the fold control ends exactly where the strip begins").toBe(stripBox.start);
+    expect(Math.max(stripBox.start, controlsBox.start) < Math.min(stripBox.end, controlsBox.end), "no overlap").toBe(false);
+
+    const pinnedStripBox = { start: body - reserve - strip, end: body - reserve };
+    const pinnedControlsBox = { start: 0, end: controls };
+    expect(Math.max(pinnedStripBox.start, pinnedControlsBox.start) < Math.min(pinnedStripBox.end, pinnedControlsBox.end), "fails-before: pinned to the body, the strip painted over the fold control").toBe(true);
+  });
+});
+//#endregion 🎫️RemainingReds

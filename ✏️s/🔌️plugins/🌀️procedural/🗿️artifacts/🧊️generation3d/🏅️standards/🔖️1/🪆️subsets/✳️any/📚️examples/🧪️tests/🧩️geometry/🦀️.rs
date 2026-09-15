@@ -82,6 +82,18 @@ struct DeliveryExpectation {
     meshes: usize,
     min_triangles: usize,
     min_edge_segments: usize,
+    /// 📦️ The extent the DELIVERED payload occupies, hand-written per example from `run_delivery`'s own
+    /// `preview_payload`. Deliberately its own row beside `expect.boundingBox*`: `expect` measures the
+    /// FINE tessellation this lane computes, the delivery paints the preview LOD, and an inscribed
+    /// coarse mesh is legitimately smaller. Without both committed, a browser oracle can only grade the
+    /// delivered extent against a stated envelope rather than a number — which is exactly what
+    /// `📓️react-oracle-hardening-2026-09-14.md` §1.1 had to do (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    ///
+    /// 🎯️ It is also what the preview FRAMES: the render hosts read these bounds off the `fit` lane, so a
+    /// wrong number here is a camera that cuts the example off, not merely a weak assertion.
+    bounding_box_min: [f64; 3],
+    bounding_box_max: [f64; 3],
+    bounding_box_tolerance: f64,
     max_round_trips: usize,
     max_chunks: u32,
 }
@@ -757,6 +769,11 @@ struct DeliveryRun {
     payload_triangles: usize,
     /// 🏷️ How many published meshes carry each role, keyed by the payload's own `role` stamp.
     payload_mesh_roles: BTreeMap<String, usize>,
+    /// 📦️ The editor payload's own extent, and the VIEWER payload's, built from the same delivered
+    /// session — one number per role, because the preview a viewer frames must be the preview an editor
+    /// frames (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️boot-camera-framing-2026-09-15.md`).
+    payload_bounds: Option<([f64; 3], [f64; 3])>,
+    view_payload_bounds: Option<([f64; 3], [f64; 3])>,
     step_micros: Vec<u64>,
 }
 
@@ -832,7 +849,11 @@ fn run_delivery(dsl: &str, fixture: &ExampleGeometryFixture, lod_mode: &str) -> 
     for entry in &published {
         *payload_mesh_roles.entry(entry.get("role").and_then(serde_json::Value::as_str).unwrap_or("(unstamped)").to_string()).or_default() += 1;
     }
+    let view_config = semio_s_artifact_procedural_generation3d::viewer::generation3d::config::Generation3dViewConfig { lod_mode: lod_mode.to_string(), ..Default::default() };
+    let view_payload = semio_s_artifact_procedural_generation3d::viewer::generation3d::modes::view::windows::preview::preview_payload(&eval_json, &host.fixture, &view_config, Some(&session), &Default::default());
     let run = DeliveryRun {
+        payload_bounds: semio_s_artifact_procedural_generation3d::preview_eval::preview_payload_bounds(&payload.meshes_json),
+        view_payload_bounds: semio_s_artifact_procedural_generation3d::preview_eval::preview_payload_bounds(&view_payload.meshes_json),
         payload_meshes: published.len(),
         payload_instances: payload_instances.as_array().map(Vec::len).unwrap_or_default(),
         payload_edge_segments,
@@ -858,6 +879,7 @@ fn assert_delivery(dsl: &str, fixture_json: &str) {
     let fixture: ExampleGeometryFixture = serde_json::from_str(fixture_json).expect("expected-stats fixture parses");
     assert_budget_contract(&fixture);
     let run = run_delivery(dsl, &fixture, &fixture.delivery.lod_mode.clone());
+    println!("[DELIVERY-BOUNDS] {} editPayload={:?} viewPayload={:?}", fixture.example, run.payload_bounds, run.view_payload_bounds);
     println!("[DELIVERY] {} roundTrips={} chunks={} packBase64Bytes={} triangles={} edgeSegments={} phase={} diagnostics={:?} payloadMeshes={} payloadInstances={} payloadTriangles={} payloadEdgeSegments={} payloadMeshRoles={:?} stepMicros={:?} totalMicros={}", fixture.example, run.round_trips, run.chunks, run.pack_base64_bytes, run.triangles, run.edge_segments, run.phase, run.diagnostics, run.payload_meshes, run.payload_instances, run.payload_triangles, run.payload_edge_segments, run.payload_mesh_roles, run.step_micros, run.step_micros.iter().sum::<u64>());
     let delivery = &fixture.delivery;
     assert_eq!(run.diagnostics, None, "{}: the validate gate rejected the preview solid", fixture.example);
@@ -878,9 +900,89 @@ fn assert_delivery(dsl: &str, fixture_json: &str) {
     assert!(run.payload_triangles >= delivery.min_triangles, "{}: the published payload carries {} triangles, expected at least {}", fixture.example, run.payload_triangles, delivery.min_triangles);
     assert!(run.payload_edge_segments >= delivery.min_edge_segments, "{}: the published payload carries {} edge segments, expected at least {}", fixture.example, run.payload_edge_segments, delivery.min_edge_segments);
     assert!(run.chunks <= delivery.max_chunks, "{}: the mesh body crossed in {} chunks, budget {}", fixture.example, run.chunks, delivery.max_chunks);
+    assert_delivery_bounds(&fixture, &run);
+    assert_delivered_bounds_frame_inside_the_viewport(&fixture);
     let (preview_micros, round_trips) = best_delivery(dsl, &fixture, &run);
     assert_phase_budget(&fixture.example, "the preview LOD tessellation", preview_micros, fixture.budget.max_preview_tessellate_micros, "a step that overruns the kernel's own budget here is seconds in a served wasm build");
     assert_round_trip_budget(&fixture.example, round_trips, delivery.max_round_trips);
+}
+
+/// 📦️ Holds the delivered extent — the number the render hosts FRAME — to its committed row, in both
+/// roles. A preview whose payload is a different size than the fixture says is a preview the boot
+/// camera frames wrongly, and nothing else in this lane can see it: `expect.boundingBox*` grades the
+/// fine tessellation, not what crosses the extension boundary
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️boot-camera-framing-2026-09-15.md`).
+fn assert_delivery_bounds(fixture: &ExampleGeometryFixture, run: &DeliveryRun) {
+    let delivery = &fixture.delivery;
+    for (role, measured) in [("edit", run.payload_bounds), ("view", run.view_payload_bounds)] {
+        let Some((minimum, maximum)) = measured else {
+            panic!("{}: the {role} preview payload published no extent at all", fixture.example);
+        };
+        for axis in 0..3 {
+            assert!(
+                (minimum[axis] - delivery.bounding_box_min[axis]).abs() <= delivery.bounding_box_tolerance,
+                "{}: {role} delivered bbox min axis {axis} is {} vs committed {}",
+                fixture.example,
+                minimum[axis],
+                delivery.bounding_box_min[axis]
+            );
+            assert!(
+                (maximum[axis] - delivery.bounding_box_max[axis]).abs() <= delivery.bounding_box_tolerance,
+                "{}: {role} delivered bbox max axis {axis} is {} vs committed {}",
+                fixture.example,
+                maximum[axis],
+                delivery.bounding_box_max[axis]
+            );
+            assert!(
+                delivery.bounding_box_min[axis] >= fixture.expect.bounding_box_min[axis] - fixture.expect.bounding_box_tolerance && delivery.bounding_box_max[axis] <= fixture.expect.bounding_box_max[axis] + fixture.expect.bounding_box_tolerance,
+                "{}: the committed DELIVERY extent reaches past the committed EXPECT extent on axis {axis} — a coarse tessellation inscribes a fine one, it never exceeds it",
+                fixture.example
+            );
+        }
+    }
+}
+
+/// 🎯️ The boot-framing law: the camera the render hosts derive from this example's committed delivery
+/// bounds puts every corner of that box inside the viewport, with margin, at every viewport shape a
+/// user plausibly has — and it is the SAME rule the React host runs
+/// (`world3dFrameDistanceForRadius`/`frame_distance_for_radius`). A rule that merely moves the camera
+/// closer is not a framing: the defect this law convicts is a converged example clipped at the corner
+/// of the preview (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️boot-camera-framing-2026-09-15.md`).
+fn assert_delivered_bounds_frame_inside_the_viewport(fixture: &ExampleGeometryFixture) {
+    use semio_framework_ui::wgpu::{frame_orbit_to_bounds, OrbitController, WORLD_FRAME_BOUNDS_MARGIN};
+    let delivery = &fixture.delivery;
+    let minimum = [delivery.bounding_box_min[0] as f32, delivery.bounding_box_min[1] as f32, delivery.bounding_box_min[2] as f32];
+    let maximum = [delivery.bounding_box_max[0] as f32, delivery.bounding_box_max[1] as f32, delivery.bounding_box_max[2] as f32];
+    for aspect in [1.7f32, 1.0, 0.7] {
+        let seed = OrbitController::default();
+        let framed = frame_orbit_to_bounds(&seed, minimum, maximum, aspect, WORLD_FRAME_BOUNDS_MARGIN);
+        let camera = framed.to_camera();
+        let half_vertical = (camera.fov_y * 0.5).tan();
+        let forward = [camera.target.x - camera.position.x, camera.target.y - camera.position.y, camera.target.z - camera.position.z];
+        let forward_length = (forward[0] * forward[0] + forward[1] * forward[1] + forward[2] * forward[2]).sqrt();
+        let unit_forward = [forward[0] / forward_length, forward[1] / forward_length, forward[2] / forward_length];
+        let right = [unit_forward[1] * camera.up.z - unit_forward[2] * camera.up.y, unit_forward[2] * camera.up.x - unit_forward[0] * camera.up.z, unit_forward[0] * camera.up.y - unit_forward[1] * camera.up.x];
+        let right_length = (right[0] * right[0] + right[1] * right[1] + right[2] * right[2]).sqrt();
+        let unit_right = [right[0] / right_length, right[1] / right_length, right[2] / right_length];
+        let unit_up = [
+            unit_right[1] * unit_forward[2] - unit_right[2] * unit_forward[1],
+            unit_right[2] * unit_forward[0] - unit_right[0] * unit_forward[2],
+            unit_right[0] * unit_forward[1] - unit_right[1] * unit_forward[0],
+        ];
+        for corner in 0..8 {
+            let point = [
+                if corner & 1 == 0 { minimum[0] } else { maximum[0] },
+                if corner & 2 == 0 { minimum[1] } else { maximum[1] },
+                if corner & 4 == 0 { minimum[2] } else { maximum[2] },
+            ];
+            let relative = [point[0] - camera.position.x, point[1] - camera.position.y, point[2] - camera.position.z];
+            let depth = relative[0] * unit_forward[0] + relative[1] * unit_forward[1] + relative[2] * unit_forward[2];
+            assert!(depth > 0.0, "{}: corner {corner} sits behind the framed camera at aspect {aspect}", fixture.example);
+            let ndc_y = (relative[0] * unit_up[0] + relative[1] * unit_up[1] + relative[2] * unit_up[2]) / (depth * half_vertical);
+            let ndc_x = (relative[0] * unit_right[0] + relative[1] * unit_right[1] + relative[2] * unit_right[2]) / (depth * half_vertical * aspect);
+            assert!(ndc_x.abs() <= 1.0 && ndc_y.abs() <= 1.0, "{}: corner {corner} projects to ({ndc_x}, {ndc_y}) at aspect {aspect} — outside the viewport", fixture.example);
+        }
+    }
 }
 
 /// ⏱️ The delivery's two WALL-DERIVED readings, improved by re-running only when one of them

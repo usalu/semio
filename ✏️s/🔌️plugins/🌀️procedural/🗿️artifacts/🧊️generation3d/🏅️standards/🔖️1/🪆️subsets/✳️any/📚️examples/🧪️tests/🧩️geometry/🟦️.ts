@@ -106,6 +106,14 @@ export type ExampleDeliveryExpectation = {
   meshRoles: Record<string, number>;
   minTriangles: number;
   minEdgeSegments: number;
+  /** 📦️ The extent the DELIVERED payload occupies — its own row beside `expect.boundingBox*`, which
+   * measures the FINE tessellation: the preview paints the LOD mesh, which inscribes it. Both are
+   * committed so a browser oracle grades the delivered extent against a NUMBER rather than an
+   * envelope, and so the render hosts have something exact to frame the boot camera on
+   * (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️boot-camera-framing-2026-09-15.md`). */
+  boundingBoxMin: [number, number, number];
+  boundingBoxMax: [number, number, number];
+  boundingBoxTolerance: number;
   maxRoundTrips: number;
   maxChunks: number;
 };
@@ -264,6 +272,17 @@ export function assertDeliveryContract(fixture: ExampleGeometryFixture): void {
   } else {
     expect(delivery.minTriangles).toBeGreaterThanOrEqual(fixture.expect.minTriangles);
   }
+  expect(delivery.boundingBoxMin.length).toBe(3);
+  expect(delivery.boundingBoxMax.length).toBe(3);
+  expect(delivery.boundingBoxTolerance).toBeGreaterThan(0);
+  let extent = 0;
+  for (let axis = 0; axis < 3; axis += 1) {
+    expect(delivery.boundingBoxMax[axis]).toBeGreaterThanOrEqual(delivery.boundingBoxMin[axis]);
+    expect(delivery.boundingBoxMin[axis]).toBeGreaterThanOrEqual(fixture.expect.boundingBoxMin[axis] - fixture.expect.boundingBoxTolerance);
+    expect(delivery.boundingBoxMax[axis]).toBeLessThanOrEqual(fixture.expect.boundingBoxMax[axis] + fixture.expect.boundingBoxTolerance);
+    extent = Math.max(extent, delivery.boundingBoxMax[axis] - delivery.boundingBoxMin[axis]);
+  }
+  expect(extent).toBeGreaterThan(0);
 }
 
 /** 🔗️ The op chain the fixture claims is exactly what the example's DSL wires, node by node. */

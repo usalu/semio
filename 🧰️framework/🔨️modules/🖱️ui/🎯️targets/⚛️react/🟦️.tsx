@@ -8975,6 +8975,25 @@ export function shellNavbarTrailingEndReserveStyle(widthPx: number): React.CSSPr
   return { paddingInlineStart: `${widthPx + uiSpacingPx(1)}px` };
 }
 
+/** @emoji 🧢 One OPEN chrome-hosted dock's cap row: it sizes to its CONTENT and never below the body it
+ * caps, so the fold control is laid out BESIDE the tab strip instead of underneath it.
+ *
+ * The cap row is a flex row of `[tab strip | gap | controls]` inside a panel root pinned to the body
+ * width, and the strip is `flex: 0 1 auto` over a container with visible overflow. Pinned to the body,
+ * a strip whose tabs need more room than is left after the fold control and the navbar reserve keeps
+ * its own content width and simply PAINTS outside the box flex gave it — over the controls, which carry
+ * `z-[2]` and therefore win the hit test. Measured on generation3d 6018 at 1600×1000
+ * (`🐍️panel-tab-occlusion-recon.mjs`, `🗑️generated/react-reds/recon/recon.json`): cap `[1297,3,300,22]`,
+ * chip box 144 px wide for a 238 px strip, fold `[1297,3,64,22]` — so the Inspection tab
+ * `[1267,2,92,22]` had the fold button at its own centre and a user clicking the middle of that tab
+ * COLLAPSED the dock instead of opening Inspection. A chrome-hosted cap lives in the shell chrome band
+ * with free space beside it, so growing along the inline axis is what the band is for; `minWidth: 100%`
+ * keeps the row flush with its body whenever the strip does fit. */
+export function chromeHostedPanelCapRowStyle(anchor: Anchor, trailingEndWidthPx: number): React.CSSProperties {
+  const reserve = anchor === "top-right" ? shellNavbarTrailingEndReserveStyle(trailingEndWidthPx) : undefined;
+  return { ...reserve, width: "max-content", minWidth: "100%" };
+}
+
 // #region 🛟️ChromePanelSafeArea
 /** @emoji 🛟️ An axis-aligned viewport box in CSS pixels — the one geometry currency of the safe area,
  * so a caller can state a box it has not laid out yet ({@link Window}'s right-edge chrome column) as
@@ -9263,8 +9282,8 @@ export function NavbarTrailingFullscreenSlot({ onToggle }: { readonly onToggle?:
 // #endregion 🖥️Fullscreen
 
 // #region 🩺️Navbar
-import { Navbar, type NavbarItem, type NavbarProps, SemioLogo, ShellBrandLogo, navbarFillItem } from "../../🧱️elements/🔝️Navbar/🟦️.tsx";
-export { Navbar, type NavbarItem, type NavbarProps, SemioLogo, ShellBrandLogo, navbarFillItem };
+import { Navbar, type NavbarItem, type NavbarProps, type NavbarSpanV1, SemioLogo, ShellBrandLogo, navbarCenteredLeftV1, navbarFillItem, navbarFlowChildOccupiesV1, navbarFreeBandV1 } from "../../🧱️elements/🔝️Navbar/🟦️.tsx";
+export { Navbar, type NavbarItem, type NavbarProps, type NavbarSpanV1, SemioLogo, ShellBrandLogo, navbarCenteredLeftV1, navbarFillItem, navbarFlowChildOccupiesV1, navbarFreeBandV1 };
 // #endregion 🩺️Navbar
 
 // #region 🧪️NavbarExampleSelect

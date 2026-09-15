@@ -89,6 +89,33 @@ const record = async (label, chord, snapshot, ok, oracle, evidence = {}) => {
   return entry;
 };
 
+/** ⏪️ `mod+z` / `mod+shift+z`, decided by the FRAMEWORK HISTORY they are supposed to move, not by the
+ * invocation they mint.
+ *
+ * The shell publishes its history projection on `data-history-json` (`shellHistoryCursorDomV1`,
+ * `🛠️ShellHelpers/🟦️.tsx`) — cursor, `canUndo`/`canRedo` and the labels the two presses would act on.
+ * Until that attribute existed these two rows could only watch an action id cross the console, which a
+ * chord bound to nothing at all would also produce (`📓️react-current-tree-battery-2026-09-14.md` §6,
+ * `historyJsonPublished: false`). An `armed` row is recorded alongside so a red says whether the CHORD
+ * missed or the history was empty when it was pressed. */
+const historyChordStep = async (label, chord, direction) => {
+  const before = (await snap()).history;
+  const armed = Boolean(before && (direction === "undo" ? before.canUndo : before.canRedo));
+  await record(`${label}-armed`, null, await snap(), Boolean(before), "the shell publishes its history cursor on data-history-json", { history: before, armed });
+  const mark = lines.length;
+  await page.keyboard.press(chord);
+  const settled = await until(`${label} history`, 20, (s) => !armed || (s.history != null && before != null && s.history.cursor !== before.cursor));
+  const invoked = invocationsSince(mark);
+  const after = settled.history;
+  const moved = Boolean(before && after && (direction === "undo" ? after.cursor < before.cursor : after.cursor > before.cursor));
+  const ok = invoked.includes(direction) && (armed ? moved : Boolean(after) && after.cursor === before.cursor);
+  await record(label, chord, settled, ok, armed
+    ? `the chord invokes ${direction} AND the published history cursor moves ${direction === "undo" ? "back" : "forward"}`
+    : `the published history had nothing to ${direction}, so the chord must invoke ${direction} and leave the cursor where it is`,
+    { invoked, armed, cursorBefore: before?.cursor ?? null, cursorAfter: after?.cursor ?? null, moved, undoLabel: before?.undoLabel ?? null, redoLabel: before?.redoLabel ?? null });
+  return settled;
+};
+
 /** ⌨️ A mode-independent chord: pressed where it is already bound, decided by the invocation it mints. */
 const chordStep = async (label, chord) => {
   const mark = lines.length;
@@ -126,15 +153,23 @@ if (focusSelector) {
 await page.waitForTimeout(1500);
 
 //#region 🧭️Baseline
+/** ⌨️ Every verb a chord under test can mint. The baseline forbids exactly these without a gesture;
+ * the app's own self-driven evaluation (`toolRunStart`, `flowEvalTick`, `toolRunPace`, the refreshes)
+ * is not a gesture and runs at boot by design, so counting ALL invocations scored a converging
+ * preview as a phantom keypress. */
+const GESTURE_VERBS = ["cycleShowMode", "cycleLodMode", "addGeneration", "undo", "redo", "toolRunAbort"];
 const baselineMark = lines.length;
 await page.waitForTimeout(2500);
 const baseline = await snap();
 const baselineInvoked = invocationsSince(baselineMark);
-await record("baseline", null, baseline, editPreview(baseline)?.status != null && baselineInvoked.length === 0, "with no gesture the preview window publishes a status and the shell invokes nothing", { invoked: baselineInvoked, previewStatus: editPreview(baseline)?.status ?? null });
+const baselineGestures = baselineInvoked.filter((verb) => GESTURE_VERBS.includes(verb));
+await record("baseline", null, baseline, editPreview(baseline)?.status != null && baselineGestures.length === 0, "with no gesture the preview window publishes a status and no chord-bound verb is invoked", { invoked: baselineInvoked, gestures: baselineGestures, previewStatus: editPreview(baseline)?.status ?? null });
 //#endregion
 
 //#region ⌨️Mode-independent chords
-for (const [label, chord] of [["cycle-show-mode", "Control+Alt+d"], ["cycle-show-mode-again", "Control+Alt+d"], ["cycle-lod-mode", "Control+Alt+k"], ["undo", "Control+z"], ["redo", "Control+Shift+z"]]) await chordStep(label, chord);
+for (const [label, chord] of [["cycle-show-mode", "Control+Alt+d"], ["cycle-show-mode-again", "Control+Alt+d"], ["cycle-lod-mode", "Control+Alt+k"]]) await chordStep(label, chord);
+await historyChordStep("undo", "Control+z", "undo");
+await historyChordStep("redo", "Control+Shift+z", "redo");
 //#endregion
 
 //#region ➕️add-generation, in the mode that owns the Generations window
@@ -170,6 +205,27 @@ const cancelled = await until("the evaluation reports cancelled", cancelWait, (s
 const cancelInvoked = invocationsSince(cancelMark);
 const cancelledStatus = editPreview(cancelled)?.status ?? null;
 await record("cancel-preview-eval", "Control+.", cancelled, cancelInvoked.includes("toolRunAbort") && cancelledStatus?.phase === "cancelled" && cancelledStatus?.cancellable === false, "pressed on work in flight the chord aborts the run: toolRunAbort is invoked and the preview stamps phase cancelled with cancellable false", { invoked: cancelInvoked, armedStatus, status: cancelledStatus });
+
+/** 🖱️ The SAME verb through the affordance the status itself declares (`cancelAction` + `cancelArgs`),
+ * on a freshly armed evaluation. It is the discriminator the chord row needs: the chord dispatches
+ * `toolRunAbort` with no run address, the button dispatches it with `runId`/`generation`, so a row
+ * where the button cancels and the chord does not names the chord's addressing as the defect rather
+ * than the cancellation itself. */
+if (cancelledStatus?.phase !== "cancelled") {
+  try {
+    await page.locator('[role="combobox"]').first().click({ timeout: 10000 });
+    await page.waitForTimeout(400);
+    await page.locator('[role="option"]').filter({ hasText: slowExample }).first().click({ timeout: 10000 });
+  } catch (error) {
+    console.log(`[DEBUG] example re-switch unavailable: ${String(error).slice(0, 200)}`);
+  }
+  const rearmed = await until("a second evaluation is cancellable", armWait, (s) => editPreview(s)?.status?.cancellable === true);
+  const buttonMark = lines.length;
+  const clicked = await page.locator('[data-slot="world-compute-cancel"]').first().click({ timeout: 5000 }).then(() => true).catch(() => false);
+  const buttonCancelled = await until("the button cancel reports cancelled", cancelWait, (s) => editPreview(s)?.status?.phase === "cancelled");
+  const buttonStatus = editPreview(buttonCancelled)?.status ?? null;
+  await record("cancel-affordance-discriminator", null, buttonCancelled, clicked && buttonStatus?.phase === "cancelled" && buttonStatus?.cancellable === false, "the status's OWN cancel affordance, carrying runId and generation, stamps phase cancelled with cancellable false", { invoked: invocationsSince(buttonMark), clicked, armedStatus: editPreview(rearmed)?.status ?? null, status: buttonStatus });
+}
 //#endregion
 
 writeFileSync(join(outDir, "results.json"), JSON.stringify(results, null, 2));

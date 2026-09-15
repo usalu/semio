@@ -53,9 +53,13 @@ export function actorUiPatchReceiptEquals(left: ActorUiPatchReceipt, right: Acto
   return left.lifetime.activationGeneration === right.lifetime.activationGeneration && left.lifetime.instanceId === right.lifetime.instanceId && left.lifetime.guestLifetime === right.lifetime.guestLifetime && left.patchSequence === right.patchSequence;
 }
 
-/** 🩹️ Enforces the canonical single-patch turn cardinality before receipt consumption. */
+/** 🩹️ Enforces the turn's patch-batch cardinality before receipt consumption: ONE receipt authorizes
+ * every patch a turn carries, and each patch inside the batch is addressed by its own
+ * `(receipt, surface, revision)` when the host acknowledges it. The twin of `validate_pairing` in
+ * `🩹️patch/🦀️.rs`; before 2026-09-15 both capped the count at one, which is what made N published
+ * surfaces cost N + 1 host round trips. */
 export function validateActorUiPatchPairing(patchCount: number, receipt: ActorUiPatchReceipt | null | undefined): void {
-  if (patchCount !== 0 && patchCount !== 1 || (patchCount === 1) !== (receipt != null)) throw new Error("actor-ui-patch.pairing");
+  if (!Number.isSafeInteger(patchCount) || patchCount < 0 || (patchCount > 0) !== (receipt != null)) throw new Error("actor-ui-patch.pairing");
   if (receipt != null) encodeActorUiPatchReceipt(receipt);
 }
 //#endregion 🧬️IssuedPatchReceipt

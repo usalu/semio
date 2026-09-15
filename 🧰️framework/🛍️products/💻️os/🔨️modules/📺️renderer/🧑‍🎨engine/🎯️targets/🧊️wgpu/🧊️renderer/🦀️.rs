@@ -13002,6 +13002,15 @@ impl AppPresenter {
                         Err(error) => {
                             cursor.phase = AppPresentPhase::Aborted;
                             if self.retained_fault.is_none() {
+                                // 🩺️ The stored string is only ever surfaced by this fn's `Err` return,
+                                // and that return is unreachable while `pending` is still held by the
+                                // `Aborted` phase this line just entered — so an abort that never
+                                // finishes closing its candidate reported NOTHING at all, leaving the
+                                // host's own `frame gate blocked=true phase=Some(Aborted)
+                                // retained-fault=true` as the only trace and the REASON invisible
+                                // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
+                                // `📓️wgpu-wheel-zoom-a11y-live-2026-09-14.md` §3.4a).
+                                log_debug(&format!("[DEBUG] os_host present aborted engine={} fault={error}", cursor.engine));
                                 self.retained_fault = Some(format!("engine canvas present: {error}"));
                             }
                             return Ok(AppPresentStep::Pending);

@@ -2818,3 +2818,34 @@ fn every_dag_walk_of_one_guest_turn_shares_one_wall_deadline_and_a_spent_turn_pa
     assert!(FLOW_EVAL_INLINE_CONTINUATION_RESERVE_US > 0 && FLOW_EVAL_INLINE_CONTINUATION_RESERVE_US < FLOW_EVAL_TICK_ELAPSED_CEILING_US, "the reserve is a slice of the allowance, not all of it and not none of it");
     eprintln!("[DEBUG] turn deadline: ceiling={FLOW_EVAL_TICK_ELAPSED_CEILING_US}us reserve={FLOW_EVAL_INLINE_CONTINUATION_RESERVE_US}us ownTurnDeadline={own_turn:?}");
 }
+
+/// ⚖️ LAW: a chain that has settled its own census says so, and a chain that has published no census
+/// yet does NOT — the two windows in which the run view legitimately knows more, and less, than the
+/// evaluation it is pacing.
+///
+/// 🩸️ `computing` and the `toolRunAbort` affordance were ORed straight off `ToolRunView`, which is a
+/// host artifact that reaches a surface on a render and therefore lags its own job. Once the inline
+/// continuation let a chain finish inside an extension answer's turn, the guest went quiet with the
+/// run's terminal state still unrendered — and the preview published `phase: "idle", ratio: 1.0,
+/// nodesDone 7/7` beside `computing: true, cancellable: true`, for good: a spinner that outlived its
+/// work and a Cancel for an evaluation with nothing left to cancel. Measured on 6024 in two picks
+/// (`📓️flow-inline-continuation-2026-09-14.md`).
+#[test]
+fn a_settled_chain_census_outranks_a_lagging_run_view_and_an_empty_one_does_not() {
+    let working = PreviewChainStatus { nodes_done: 3, nodes_total: 7, in_flight: 1, working: true };
+    assert!(!working.settled(), "a chain with work in flight has not settled");
+
+    let half = PreviewChainStatus { nodes_done: 3, nodes_total: 7, in_flight: 0, working: false };
+    assert!(!half.settled(), "a quiesced chain whose census is incomplete has not settled either");
+
+    let census_free = PreviewChainStatus { nodes_done: 0, nodes_total: 0, in_flight: 0, working: false };
+    assert!(!census_free.settled(), "a chain that has published NO census may not silence the run: this is the window a gesture's own start lives in, before its first hop ran");
+
+    let done = PreviewChainStatus { nodes_done: 7, nodes_total: 7, in_flight: 0, working: false };
+    assert!(done.settled(), "nothing owed, nothing in flight, every published node accounted for");
+    assert_eq!(done.units(), (7, 7), "and its published fraction is complete");
+
+    let overshoot = PreviewChainStatus { nodes_done: 9, nodes_total: 7, in_flight: 0, working: false };
+    assert!(overshoot.settled(), "a census that counted more than it declared is settled, never unsettled");
+    eprintln!("[DEBUG] chain settled: working={} half={} censusFree={} done={}", working.settled(), half.settled(), census_free.settled(), done.settled());
+}

@@ -93,19 +93,38 @@ struct ClosingPending {
     complete: bool,
 }
 
+/// 📤️ One slot of the OUTBOUND page a single turn may carry: the cell a publication is moved
+/// through, and the pending sequence it belongs to for as long as this turn borrows it.
+///
+/// 🧾️ Cells are borrowed in ascending index and a refused output returns its patches in the same
+/// publication order, so cell `i` always belongs to the `i`-th patch of the turn — the pairing is
+/// positional, and no surface identity has to be re-derived to return a patch to its own slot.
+#[derive(Default)]
+struct TurnPatchCell {
+    patch: ui_contract::UiPendingPatch,
+    sequence: Option<u64>,
+}
+
 pub(super) struct PendingPatchAuthority {
     slots: [Option<PendingPatchSlot>; PENDING_PATCH_CAPACITY],
     closing_instances: [Option<ClosingPending>; PENDING_PATCH_CAPACITY],
-    turn_handback: ui_contract::UiPendingPatch,
+    turn_handbacks: [TurnPatchCell; semio_framework::kernel::UI_TURN_PATCHES_MAXIMUM],
     turn_handback_instance: Option<u32>,
-    turn_handback_sequence: Option<u64>,
     next_sequence: u64,
     exhausted: bool,
 }
 
 impl PendingPatchAuthority {
     pub(super) fn new() -> Self {
-        Self { slots: std::array::from_fn(|_| None), closing_instances: [None; PENDING_PATCH_CAPACITY], turn_handback: Default::default(), turn_handback_instance: None, turn_handback_sequence: None, next_sequence: 0, exhausted: false }
+        Self { slots: std::array::from_fn(|_| None), closing_instances: [None; PENDING_PATCH_CAPACITY], turn_handbacks: std::array::from_fn(|_| TurnPatchCell::default()), turn_handback_instance: None, next_sequence: 0, exhausted: false }
+    }
+
+    fn instance_is_closing(&self, instance: Option<u32>) -> bool {
+        self.closing_instances.iter().flatten().any(|closing| Some(closing.key.instance()) == instance)
+    }
+
+    pub(super) fn borrowed_sequences(&self) -> impl Iterator<Item = u64> + '_ {
+        self.turn_handbacks.iter().filter_map(|cell| cell.sequence)
     }
 
     pub(super) fn reserve_sequence(&mut self) -> Option<u64> {
@@ -153,65 +172,80 @@ impl PendingPatchAuthority {
         Ok(())
     }
 
-    /// 📤️ Hands THIS turn the one patch it may carry, publishing it out of its slot in the same call.
+    /// 📤️ Hands THIS turn the NEXT patch of its batch, publishing it out of its slot in the same call.
     ///
     /// 🐛️ The reconcile and external arms used to `publish_into` the turn handback and answer `None`,
     /// so the patch left the guest only on the NEXT call — one whole host round trip per published
     /// surface whose only work was moving a patch from `turn_handback` into `UiTurnPatches`, measured
     /// as the `<n>:e---p / handback_sequence=Some(n)` half of the two-state ping-pong in
     /// `📓️reactor-reconcile-spin-2026-09-14.md` §1. `publish_into` is atomic (it moves the whole
-    /// source or nothing), so the extraction belongs to the same call; the handback slot keeps its
+    /// source or nothing), so the extraction belongs to the same call; the handback cell keeps its
     /// role for [`Self::hand_back_turn`], which is what a REFUSED output returns through.
+    ///
+    /// 🐛️ It also answered `"pending patch turn is already borrowed"` for the SECOND call of one
+    /// turn, because the authority had exactly one handback cell — the pending half of the
+    /// `UI_TURN_PATCHES_MAXIMUM = 1` floor. It now has one cell per patch the turn page can carry, and
+    /// the batch is single-instance because ONE `ui-patch-receipt` authorizes all of it.
     pub(super) fn take_one(&mut self, admitted_bytes: usize) -> Result<Option<UiPatch>, &'static str> {
-        if !self.turn_handback.terminal_is_empty() && self.closing_instances.iter().flatten().any(|closing| Some(closing.key.instance()) == self.turn_handback_instance) {
+        if self.instance_is_closing(self.turn_handback_instance) && self.turn_handbacks.iter().any(|cell| !cell.patch.terminal_is_empty()) {
             return Ok(None);
         }
-        if let Some(patch) = self.turn_handback.source_mut()?.take() {
-            return Ok(Some(patch));
+        for index in 0..self.turn_handbacks.len() {
+            if self.turn_handbacks[index].patch.terminal_is_empty() {
+                continue;
+            }
+            if let Some(patch) = self.turn_handbacks[index].patch.source_mut()?.take() {
+                return Ok(Some(patch));
+            }
         }
-        if self.turn_handback_sequence.is_some() {
-            return Err("pending patch turn is already borrowed");
-        }
+        let Some(cell) = self.turn_handbacks.iter().position(|cell| cell.sequence.is_none()) else {
+            return Ok(None);
+        };
+        let carried = self.turn_handback_instance;
         let Some(index) = self
             .slots
             .iter()
             .enumerate()
-            .filter(|(_, slot)| slot.as_ref().is_some_and(|slot| !slot.emitted && !self.closing_instances.iter().flatten().any(|closing| Some(closing.key.instance()) == slot.instance)))
+            .filter(|(_, slot)| slot.as_ref().is_some_and(|slot| !slot.emitted && carried.is_none_or(|instance| slot.instance == Some(instance)) && !self.instance_is_closing(slot.instance)))
             .min_by_key(|(_, slot)| slot.as_ref().map(|slot| slot.sequence))
             .map(|(index, _)| index)
         else {
             return Ok(None);
         };
-        let slot = self.slots[index].as_mut().ok_or("pending publication source disappeared")?;
+        let (slots, handbacks) = (&mut self.slots, &mut self.turn_handbacks);
+        let slot = slots[index].as_mut().ok_or("pending publication source disappeared")?;
         match &mut slot.owner {
             PendingPatchOwner::Reconcile(owner) => {
-                if owner.publish_into(&mut self.turn_handback, &mut slot.published, admitted_bytes)? == 0 {
+                if owner.publish_into(&mut handbacks[cell].patch, &mut slot.published, admitted_bytes)? == 0 {
                     return Ok(None);
                 }
-                self.turn_handback_instance = slot.instance;
-                self.turn_handback_sequence = Some(slot.sequence);
-                slot.emitted = true;
-                self.turn_handback.source_mut()?.take().map_or(Ok(None), |patch| Ok(Some(patch)))
             }
             PendingPatchOwner::External(patch) => {
                 if admitted_bytes < size_of::<UiPatch>() {
                     return Ok(None);
                 }
-                *self.turn_handback.source_mut()? = patch.source_mut()?.take();
-                self.turn_handback_instance = slot.instance;
-                self.turn_handback_sequence = Some(slot.sequence);
-                slot.emitted = true;
-                self.turn_handback.source_mut()?.take().map_or(Ok(None), |patch| Ok(Some(patch)))
+                *handbacks[cell].patch.source_mut()? = patch.source_mut()?.take();
             }
         }
+        self.turn_handback_instance = slot.instance;
+        handbacks[cell].sequence = Some(slot.sequence);
+        slot.emitted = true;
+        handbacks[cell].patch.source_mut()?.take().map_or(Ok(None), |patch| Ok(Some(patch)))
     }
 
+    /// 📥️ Returns one REFUSED patch of this turn's batch to the cell it came out of — cells are
+    /// borrowed in ascending index and a refused page is drained in publication order, so the first
+    /// borrowed-and-empty cell is exactly this patch's own.
     #[expect(clippy::result_large_err, reason = "Refusal must hand back the exact retained patch owner without allocating or releasing its publication credit.")]
     pub(super) fn hand_back_turn(&mut self, patch: UiPatch) -> Result<(), UiPatch> {
-        if !self.turn_handback.terminal_is_empty() || self.turn_handback_sequence.is_none() || self.turn_handback_instance != parse_surface_instance(&patch.surface.0) {
+        if self.turn_handback_instance != parse_surface_instance(&patch.surface.0) {
             return Err(patch);
         }
-        if let Some(slot) = self.slots.iter_mut().flatten().find(|slot| Some(slot.sequence) == self.turn_handback_sequence) {
+        let Some(cell) = self.turn_handbacks.iter().position(|cell| cell.sequence.is_some() && cell.patch.terminal_is_empty()) else {
+            return Err(patch);
+        };
+        let sequence = self.turn_handbacks[cell].sequence;
+        if let Some(slot) = self.slots.iter_mut().flatten().find(|slot| Some(slot.sequence) == sequence) {
             if slot.issued.as_ref().is_some_and(|issued| issued.committed) {
                 return Err(patch);
             }
@@ -219,32 +253,52 @@ impl PendingPatchAuthority {
         } else {
             return Err(patch);
         }
-        let Ok(source) = self.turn_handback.source_mut() else {
+        let Ok(source) = self.turn_handbacks[cell].patch.source_mut() else {
             return Err(patch);
         };
-        self.turn_handback_instance = parse_surface_instance(&patch.surface.0);
         *source = Some(patch);
         Ok(())
     }
 
-    pub(super) fn stage_emission(&mut self, receipt: ActorUiPatchReceipt, patch: &UiPatch) -> Result<(), &'static str> {
-        if !receipt.is_valid() || Some(receipt.lifetime.instance_id) != self.turn_handback_instance || parse_surface_instance(&patch.surface.0) != self.turn_handback_instance {
+    /// 🧾️ Stages the ONE receipt that authorizes this turn's whole batch against every slot it
+    /// borrowed, positionally: the `i`-th patch of the page belongs to the `i`-th borrowed cell.
+    pub(super) fn stage_emission<'a>(&mut self, receipt: ActorUiPatchReceipt, patches: impl Iterator<Item = &'a UiPatch>) -> Result<(), &'static str> {
+        if !receipt.is_valid() || Some(receipt.lifetime.instance_id) != self.turn_handback_instance {
             return Err("patch receipt names another lifetime");
         }
-        let slot = self.slots.iter_mut().flatten().find(|slot| Some(slot.sequence) == self.turn_handback_sequence).ok_or("pending patch emission source absent")?;
-        if slot.issued.is_some() {
-            return Err("pending patch emission already staged");
+        let sequences: Vec<u64> = self.borrowed_sequences().collect();
+        let mut staged = 0usize;
+        for patch in patches {
+            if parse_surface_instance(&patch.surface.0) != self.turn_handback_instance {
+                return Err("patch receipt names another lifetime");
+            }
+            let sequence = *sequences.get(staged).ok_or("pending patch emission source absent")?;
+            let slot = self.slots.iter_mut().flatten().find(|slot| slot.sequence == sequence).ok_or("pending patch emission source absent")?;
+            if slot.issued.is_some() {
+                return Err("pending patch emission already staged");
+            }
+            slot.issued = Some(IssuedPatchAck { receipt, surface: patch.surface.clone(), revision: patch.revision.0, committed: false });
+            staged += 1;
         }
-        slot.issued = Some(IssuedPatchAck { receipt, surface: patch.surface.clone(), revision: patch.revision.0, committed: false });
+        if staged != sequences.len() {
+            return Err("pending patch emission left a borrowed publication unstaged");
+        }
         Ok(())
     }
 
     pub(super) fn commit_emission(&mut self) {
-        let sequence = self.turn_handback_sequence.take().expect("prepared patch emission sequence");
-        let slot = self.slots.iter_mut().flatten().find(|slot| slot.sequence == sequence).expect("prepared patch emission owner");
-        let issued = slot.issued.as_mut().expect("prepared patch receipt");
-        assert!(!issued.committed && self.turn_handback.terminal_is_empty());
-        issued.committed = true;
+        let sequences: Vec<u64> = self.borrowed_sequences().collect();
+        assert!(!sequences.is_empty(), "prepared patch emission sequence");
+        assert!(self.turn_handbacks.iter().all(|cell| cell.patch.terminal_is_empty()), "committed patch emissions leave no borrowed patch behind");
+        for sequence in sequences {
+            let slot = self.slots.iter_mut().flatten().find(|slot| slot.sequence == sequence).expect("prepared patch emission owner");
+            let issued = slot.issued.as_mut().expect("prepared patch receipt");
+            assert!(!issued.committed);
+            issued.committed = true;
+        }
+        for cell in &mut self.turn_handbacks {
+            cell.sequence = None;
+        }
         self.turn_handback_instance = None;
     }
 
@@ -303,14 +357,18 @@ impl PendingPatchAuthority {
             return Ok(ui_contract::UiValueRetirementStep::default());
         }
         if self.turn_handback_instance == Some(instance) {
-            let mut step = self.turn_handback.close_step(maximum_items, maximum_bytes)?;
-            if self.turn_handback.terminal_is_empty() {
-                self.turn_handback_instance = None;
-                self.turn_handback_sequence = None;
-                self.turn_handback = Default::default();
+            if let Some(cell) = self.turn_handbacks.iter().position(|cell| !cell.patch.terminal_is_empty()) {
+                let mut step = self.turn_handbacks[cell].patch.close_step(maximum_items, maximum_bytes)?;
+                if self.turn_handbacks[cell].patch.terminal_is_empty() {
+                    self.turn_handbacks[cell] = TurnPatchCell::default();
+                }
+                step.complete = false;
+                return Ok(step);
             }
-            step.complete = false;
-            return Ok(step);
+            self.turn_handback_instance = None;
+            for cell in &mut self.turn_handbacks {
+                cell.sequence = None;
+            }
         }
         let Some(index) = self.slots.iter().position(|slot| slot.as_ref().is_some_and(|slot| slot.instance == Some(instance))) else {
             return Ok(ui_contract::UiValueRetirementStep { complete: true, ..Default::default() });
@@ -419,14 +477,21 @@ impl PendingPatchAuthority {
             .flatten()
             .map(|slot| format!("{}:{:?}:{}{}{}{}{}", slot.sequence, slot.phase(), if slot.emitted { "e" } else { "-" }, if slot.acknowledged { "a" } else { "-" }, match &slot.issued { Some(issued) if issued.committed => "c", Some(_) => "i", None => "-" }, if slot.rejection_requested { "r" } else { "-" }, if slot.published.is_some() { "p" } else { "-" }))
             .collect();
-        format!("slots=[{}] handback_empty={} handback_sequence={:?} exhausted={} closing={}", slots.join(","), self.turn_handback.terminal_is_empty(), self.turn_handback_sequence, self.exhausted, self.closing_instances.iter().flatten().count())
+        format!(
+            "slots=[{}] handback_empty={} handback_sequences={:?} exhausted={} closing={}",
+            slots.join(","),
+            self.turn_handbacks.iter().all(|cell| cell.patch.terminal_is_empty()),
+            self.borrowed_sequences().collect::<Vec<_>>(),
+            self.exhausted,
+            self.closing_instances.iter().flatten().count()
+        )
     }
 
     /// 📬️ Whether a patch is queued for a FUTURE turn to hand out. A [`PendingPatchPhase::Issued`]
     /// slot is deliberately NOT one: it is waiting on the host, whose answer arrives as its own
     /// event-carrying turn, so counting it here only buys a round trip that carries nothing.
     pub(super) fn has_undelivered(&self) -> bool {
-        !self.turn_handback.terminal_is_empty() || self.slots.iter().flatten().any(|slot| slot.phase() == PendingPatchPhase::Queued)
+        self.turn_handbacks.iter().any(|cell| !cell.patch.terminal_is_empty()) || self.slots.iter().flatten().any(|slot| slot.phase() == PendingPatchPhase::Queued)
     }
 
     /// 🧹️ Whether a slot or a closing instance still owes RETIREMENT. The turn drives this itself
@@ -442,7 +507,14 @@ impl PendingPatchAuthority {
     /// own is exactly [`Self::has_undelivered`] ∪ [`Self::has_retiring`], and nothing else arms.
     #[cfg(test)]
     pub(super) fn has_unpublished(&self) -> bool {
-        !self.turn_handback.terminal_is_empty() || self.slots.iter().flatten().any(|slot| slot.phase().guest_owes_turn()) || self.closing_instances.iter().any(Option::is_some)
+        self.turn_handbacks.iter().any(|cell| !cell.patch.terminal_is_empty()) || self.slots.iter().flatten().any(|slot| slot.phase().guest_owes_turn()) || self.closing_instances.iter().any(Option::is_some)
+    }
+
+    /// 🔍️ The patch parked in ONE borrowed turn cell, for the laws that weigh a publication's own
+    /// retirement without reaching into the authority's storage.
+    #[cfg(test)]
+    pub(super) fn borrowed_patch(&self, cell: usize) -> Option<&UiPatch> {
+        self.turn_handbacks.get(cell).and_then(|cell| cell.patch.get())
     }
 
     #[cfg(test)]

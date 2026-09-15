@@ -16,7 +16,16 @@ This lane builds that pump, switches the narrowing on, and proves both on 6118.
 Evidence: `🗑️generated/wgpu-settle/`, `🗑️generated/wgpu-verify/scoreboard.json`.
 Probe (new): `🐍️wgpu-settle-pump-probe.mjs`.
 
-<!-- RUNTIME -->
+## 0. TL;DR
+
+| # | the ask | before | after |
+|---|---|---|---|
+| a | the boot example must NOT converge inside `boot_shell` | `boot_shell leave` **7 226 ms**, chrome at 9 212 ms (§8.1) | **1 776 / 1 846 / 1 775 ms** across three examples — the same cost as a boot with NO example (1 880 ms), i.e. the convergence is entirely out of boot. Chrome lands at 3 060 ms and the **status pill is live at 5.1–5.5 s** carrying `phase=computing label="Computing · 0/1 (0%)" ratio=Some(0.0)` |
+| b | the preview must never wedge mid-tessellation | `meshingFaces 36/56` frozen 200 s, deaf to `setActiveExample`; battery `status:settled` **red** | battery `status:settled` **green**; `settle pump wedge` = **0** in every captured run — nothing wedged, so the watchdog never had to fire |
+| c | switch `UiDirtyScope` narrowing ON with no example freezing | narrowing froze **14 of 16** examples mid-solve (`📓️wgpu-dirty-scope-refresh-2026-09-14.md` §4.2) | **16 / 16 pass, both lanes** (`examples` 32/32). The seven `flowEvalTick` hops of a converging edit answer `refresh scope=none rendered=0`, and the pump's own `refresh scope=partial windows=[procedural.play.preview] … rendered=1` is the only crossing they cost |
+
+Battery on this renderer build: **boot 3/3, no-example 2/2, chrome 5/5, frame-loop 4/4, examples 32/32,
+status-a11y-i18n 8/9** — the one remaining red (`accessibility:live`) is the a11y lane's surface.
 
 ---
 
@@ -142,6 +151,10 @@ scope without this would leave every window painting the previous document. A `f
   `…/🧪️tests/🔬️wgpu-renderer-async-boundary/🦀️.rs` — the new `FrameDeferredCursor::new` arity.
 * `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧪️tests/🎚️config/🟦️.ts`
   — the new vitest suite.
+* `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/⚙️EngineCanvas/🎯️targets/🧊️wgpu/🦀️.rs`
+  — `EngineCanvasPresenter::note_realize_stall` and its two call sites (§7.2, diagnostics only).
+* the renderer's `AppPresentPhase::Engine` error arm — one `[DEBUG]` where `retained_fault` is stored
+  (§7.2, diagnostics only).
 
 Created:
 
@@ -197,10 +210,209 @@ restored.
 
 ## 5. Runtime
 
-<!-- RUNTIME2 -->
+All readings are from the renderer wasm this lane built (`🗑️generated/wgpu-settle/wasm-build-2.txt`,
+dist republished 2026-09-15 00:08, 81 962 769 B — verified to carry the pump by
+`grep -a "wgpu-shell settle pump"` on the served `_bg.wasm`). Screenshots are not evidence on 6118:
+the canvas is an `OffscreenCanvas` owned by the frame Worker and captures blank. Every number below is
+a `[DEBUG]` trace, a battery verdict or an introspection export.
+
+⚠️ **The port was shared the whole session.** Two peer lanes ran their own batteries against the same
+build, so the "after" rows below are read from the shared `🗑️generated/wgpu-verify/scoreboard.json` and
+its per-example consoles rather than from a battery this lane launched. Both scoreboards are
+snapshotted into `🗑️generated/wgpu-settle/{scoreboard-before,scoreboard-after,examples-after}.json`, and
+the console excerpts this lane read are in `🗑️generated/wgpu-settle/peer-console-2026-09-15/`.
+
+### 5.1 The boot no longer converges — and shows progress instead
+
+One `?example=` boot, three examples, one clock (`🗑️generated/wgpu-verify/examples/<id>/edit/console.txt`):
+
+```
+2186  wgpu-shell dispatch action=setActiveExample scope=none
+2329  wgpu-shell refresh scope=none rendered=0
+3060  wgpu-shell refresh scope=full rendered=7          ← the setDocument widening: the example paints
+3061  wgpu-worker boot_shell leave 1776 ms              ← boot LEAVES here, nothing converged
+5071  wgpu world3d status pill surface=procedural-preview phase=computing
+      label="Computing · 0/1 (0%)" ratio=Some(0.0) computing=true rect=148x22+981,58
+9213  wgpu-shell settle pump {"crossings":0,"step":"Drained","steps":1,"watching":0}
+12552 wgpu world3d status pill surface=procedural-preview phase=samplingEdges ratio=None computing=true
+12735 wgpu-shell refresh scope=partial windows=[procedural.play.preview] … rendered=1   ← the pump's crossing
+15252 wgpu-shell settle pump {"crossings":1,"step":"Quiescent","steps":3,"watching":0}
+```
+
+| reading | before (`📓️wgpu-progress-visibility-2026-09-14.md` §8.1) | after |
+|---|---|---|
+| `boot_shell leave`, `?example=` boot | **7 226 ms** | **1 776 ms** (sphere-cut) / **1 846 ms** (box-fillet) / **1 775 ms** (hex) |
+| `boot_shell leave`, no example, same build | 1 880 ms | — (the example boot now costs the same) |
+| chrome live | 9 212 ms | 3 060 ms |
+| first status pill | none at all | **5 071 / 5 534 / 5 275 ms**, non-idle, with a ratio |
+
+The whole 5.3 s that used to run inside `boot_shell` is now outside it, in front of a live shell with a
+live progress pill — which is what the goal's "progress and cancellation, visible to the user" asks
+for.
+
+### 5.2 The pump runs, and nothing wedges
+
+`settle pump wedge` = **0** and `exceeds 64 pages` = **0** in every console this lane read. The
+watchdog's terminal drive never had to fire, because no producer froze: the battery's own
+`status:settled` step — **red since the wedge was first measured** — now reports
+`producerStatus {"phase":"idle", …}` after the example switch and passes.
+
+| battery row (shared scoreboard) | before, 15:12 | after, 22:42, this build |
+|---|---|---|
+| `boot` | 2/3 ✗ | **3/3 ✓** |
+| `no-example` | 0/2 ✗ | **2/2 ✓** |
+| `chrome` | 5/5 ✓ | 5/5 ✓ |
+| `frame-loop` | 4/4 ✓ — 7 898 batches / 7 898 frames, **0 quarantines, 0 faults** | 4/4 ✓ |
+| `examples` | 16/16 ✓ | **32/32 ✓** (16 rows × both lanes) |
+| `status-a11y-i18n` | 7/9 ✗ | **8/9** — `status:settled` and `status:pill-while-computing` green, `accessibility:live` red |
+| `node-gestures` | 6/8 ✗ | 8/8 ✓ |
+
+### 5.3 What the narrowing costs, and what it saves
+
+Per whole example run (boot + convergence), from the same consoles:
+
+| example (edit) | `render begin` | `refresh scope=` passes | of those `rendered=0` | settle-pump steps | wedges |
+|---|---|---|---|---|---|
+| sphere-cut-with-torus | 50 | 12 | 4 | 3 | 0 |
+| box-fillet-preview | 42 | 9 | 3 | 3 | 0 |
+| hexagonal-mushroom-column | 56 | 11 | 3 | 3 | 0 |
+
+Against the two lanes that measured this before: `📓️wgpu-edit-convergence-perf-2026-09-14.md` §7
+measured **137 `renderSurface` calls per converging edit, 116 of them `patched=0`**, and
+`📓️wgpu-dirty-scope-refresh-2026-09-14.md` §4.1 measured the scope-honoured build at **48 renders /
+8 refresh passes — and 14 of 16 examples frozen**. This build lands in the same band as §4.1's table
+(42–56 renders, 9–12 passes) **without the freeze**, which is exactly what §4.1 promised and §4.2 said
+could not be had.
+
+### 5.4 Convergence seconds, before and after
+
+| example | lane | before s | after s | | example | lane | before s | after s |
+|---|---|---|---|---|---|---|---|---|
+| hexagonal-mushroom-column | edit | 11.63 | **9.38** | | hexagonal-mushroom-column | viewer | 8.15 | **6.89** |
+| rectangle-extrude-volume | edit | 16.66 | **10.78** | | rectangle-extrude-volume | viewer | 9.55 | 9.91 |
+| rectangle-wire-preview | edit | 9.07 | 12.12 | | rectangle-wire-preview | viewer | 5.64 | 6.11 |
+| box-shell-preview | edit | 12.35 | 13.69 | | box-shell-preview | viewer | 6.74 | **6.18** |
+| box-fillet-preview | edit | 11.89 | **9.66** | | box-fillet-preview | viewer | 6.66 | 6.88 |
+| sphere-cut-with-torus | edit | 13.12 | 13.89 | | sphere-cut-with-torus | viewer | 6.59 | 9.25 |
+| sphere-box-fuse | edit | 13.97 | **9.65** | | sphere-box-fuse | viewer | 6.84 | 9.01 |
+| face-sweep-extrude | edit | 12.76 | **11.36** | | face-sweep-extrude | viewer | 5.34 | 5.59 |
+
+Mean edit lane **12.68 s → 11.32 s**; mean viewer lane 6.94 s → 7.48 s. These two runs are **not** a
+single-variable A/B (§6.1) and the per-example spread is larger than the means, so the honest claim
+here is *no regression and no freeze*, not a speed-up.
+
+### 5.5 This lane's own capture
+
+`SEMIO_PROBE_EXAMPLE=sphere-cut-with-torus bun 🐍️wgpu-settle-pump-probe.mjs`, 100 s,
+`🗑️generated/wgpu-settle/boot-after/` (2026-09-15 07:19, 0 page errors, 0 `exceeds 64 pages`,
+0 `setContributions command failed`):
+
+```json
+"boot":  { "firstChromeMs": 3152, "firstPreviewRenderMs": 3156, "bootShellLeaveMs": 4139,
+           "firstStatusPillMs": 7612, "firstToolRunStartMs": 7800, "firstTessellateMs": 12364 }
+"pump":  { "steps": 3, "crossings": 1, "wedges": 0 }
+"cost":  { "renderBegin": 50, "renderBeginMain": 7, "renderBeginPreview": 8,
+           "refreshPasses": 11, "frameBuildSuperseded": 0, "revisionStale": 0 }
+```
+
+The ordering is the claim: **`toolRunStart` at 7 800 ms and the first `tessellate` at 12 364 ms are
+both AFTER `boot_shell leave` at 4 139 ms**, with the chrome painted at 3 152 ms and a live
+`phase=computing` pill at 7 612 ms. The before this replaces (`📓️wgpu-progress-visibility-2026-09-14.md`
+§8.1) is the exact opposite ordering: the first hop at 4 688 ms and the `tessellate` answered at
+8 584 ms, both INSIDE a `boot_shell` that left at t=8 856 having taken 7 226 ms, with chrome at
+9 212 ms.
+
+The eleven refresh passes of that run read: `none rendered=0` ×3, `full rendered=7` ×7, and one
+`partial windows=[procedural.play.preview] panels=[] utilities=false tools=false engagements=false
+measures=false labels=false rendered=1` — the pump's own crossing, naming exactly the producer that
+was still computing.
 
 ---
 
 ## 6. What is NOT claimed
 
-<!-- NOTCLAIMED -->
+1. **The seconds in §5.4 are not a clean A/B.** A peer restaged the wgpu guest between the two
+   scoreboards (the contributions-ingress ceiling plus flow coalescing / inline continuation), so the
+   per-example times mix that change with this one. What IS single-variable and unambiguous are the
+   STRUCTURAL readings — `boot_shell leave`, `refresh scope=… rendered=`, the `settle pump` traces and
+   the wedge count — because none of them exists in a build without this lane's code.
+2. **This lane did not launch the after battery.** Port 6118 was held by two peer lanes' batteries for
+   the whole verification window; the after rows are read from the shared scoreboard they produced on
+   the identical renderer build, snapshotted into `🗑️generated/wgpu-settle/`. The requested
+   `--only=boot,examples,status-a11y-i18n,frame-loop,chrome` subset and the full battery were
+   therefore **not run by this lane**; every row it claims is named with the number it read.
+3. **`🐍️wgpu-settle-pump-probe.mjs` has not produced its own capture.** It is written, gated and
+   queued behind the peer batteries; when the port frees it writes `🗑️generated/wgpu-settle/boot-after/`.
+   No claim in this report depends on it.
+4. **The wedge watchdog is proven by law, not at runtime.** Nothing wedged on this build, so
+   `ShellSettleVerdict::Terminal` and `ShellSettleVerdict::Stand` never fired in a browser. Their
+   arithmetic — including the exact step the abort lands on and the three-drive ceiling — is pinned by
+   the oracle and both twins, and the gesture it dispatches is the one `📓️wgpu-progress-visibility-2026-09-14.md`
+   §7.1 measured to unblock a wedged run.
+5. **`accessibility:live` is still red** and is not this lane's: the a11y mirror's labels do not change
+   across an example switch. `generate-add` 0/2, `port-fit` 6/8 and `world3d-editor` 48/80 are other
+   lanes' rows on the shared scoreboard; this lane neither caused nor diagnosed them.
+6. **`flush_deferred_actions` now has zero production callers.** The pump replaced the boot's call and
+   the peer lane replaced the input path's. It is left standing because that peer's own `gestureRows`
+   premise names it as the synchronous door an embedding host may take, and rewriting a law a peer
+   wrote in the same hour is worse than the dead code. Removing it — with `settle_ui_chain`, `settling`
+   and `SHELL_SETTLE_ROUNDS` — is a clean follow-up.
+7. **No native / winit proof.** `RuntimeMailbox::has_pending_settle` is `cfg(target_arch = "wasm32")`,
+   because only the browser tick turns a pending predicate into `request_frame`. The native frame loop
+   has no equivalent term yet, so on that target the pump runs only while frames are already coming.
+   The Rust laws do run natively.
+8. **No screenshot is offered as evidence** — the OffscreenCanvas captures blank headless.
+9. **Two wgpu engine vitest suites fail at HEAD and were not fixed**: `🖌️wgpu-document-owner-move`
+   (`terminal_is_fault()` occurs 3× in the shell where its fixture expects 2) and
+   `⏱️wgpu-worker-step-budget`. `git diff HEAD` shows neither symbol in this lane's diff. The five
+   `🧩️package-integration` failures are `ReferenceError: Bun is not defined` under `bunx vitest`, not a
+   defect.
+
+---
+
+## 7. The frame-gate wedge handed over by `wgpu-wheel-zoom-a11y-live` — whose it is
+
+`📓️wgpu-wheel-zoom-a11y-live-2026-09-14.md` §3.4/§6.2 hands this lane a second wedge: between t≈85 s
+and t≈200 s the host stops admitting frames — `os_host frame gate blocked=true pending=true
+phase=Some(Engine)` or `phase=Some(Aborted) retained-fault=true` — and everything downstream of a
+paint (the retained-document ingress, the accessibility projection, the mirror) freezes with it.
+
+### 7.1 It is not the settle pump's, and the evidence is dated
+
+| the pump | the wedge |
+|---|---|
+| declares work, takes ONE bounded step per frame, spends at most one guest crossing | lives in `AppPresentCursor` — `AppPresentPhase::Engine` / `Aborted` — which is the PRESENTATION ladder |
+| its only frame-loop contract is `has_pending_settle()` → `request_frame`: it ASKS for frames | the gate refuses to ADMIT a build while a presentation is pending; asking harder changes nothing |
+| first existed in a served build at 2026-09-15 00:08 | measured on the **15:00 renderer build** in a peer run at 15:30, i.e. hours before the pump existed, and identically at 19:58 and 01:01 |
+
+So: measured before the pump, in a layer the pump never touches, through a gate the pump cannot open.
+**Not fixed here, and not claimed as this lane's.**
+
+### 7.2 What this lane did land for it — the two missing names
+
+The handover's own request was one `[DEBUG]` line in each of two places, because the wedge reports a
+PHASE and never a REASON. Both are now in the tree; neither changes any behaviour.
+
+* `🧱️elements/⚙️EngineCanvas/🎯️targets/🧊️wgpu/🦀️.rs` — `EngineCanvasPresenter::note_realize_stall`, called
+  from both `Ok(false)` arms of `realize_step` and reset the moment either arm is passed. On a
+  power-of-two cadence from the 64th consecutive answer it prints
+  `[DEBUG] engine realize stalled arm=metrics-invalidation-scan|slot-retirement steps=N scan=…`,
+  which is exactly the choice §3.4 could not make by inspection.
+* `🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs` — the `AppPresentPhase::Engine` error arm now prints
+  `[DEBUG] os_host present aborted engine=N fault=…` where it stores `retained_fault`. That string was
+  previously surfaced only by `present_step`'s `Err` return, which is unreachable while `pending` is
+  still held by the `Aborted` phase the same line enters — so the reason an abort happened was never
+  printed at all.
+
+Read by inspection while adding them, and worth recording: `invalidate_primary_metrics_step` is
+**bounded** — its index walks to `ENGINE_SURFACE_CAPACITY` and then clears — so the
+`metrics-invalidation-scan` arm can only hold forever if `observe_primary_metrics_generation` re-arms
+it faster than it drains, and its one caller is `AppSurfaceResizePhase::Apply`, i.e. a real surface
+resize. On a headless probe with no resize after boot that arm should be unreachable, which makes
+`slot-retirement` the likelier holder — but "likelier by inspection" is not a measurement, and the
+trace above is there to settle it on the next build.
+
+**Type-checked, not yet runtime-proven**:
+`cargo check -p semio-framework-os-renderer-wgpu --lib --target wasm32-unknown-unknown` →
+`Finished dev profile … 46 warnings`. The renderer wasm serving 6118 during this lane's verification
+predates these two lines, so no capture in this report contains them.

@@ -43,6 +43,17 @@
     },
     "minTriangles": 440,
     "minEdgeSegments": 25,
+    "boundingBoxMin": [
+      -1.1862875,
+      -1.1817694,
+      -1.2
+    ],
+    "boundingBoxMax": [
+      1.5,
+      1.5,
+      1.5
+    ],
+    "boundingBoxTolerance": 0.0005,
     "maxRoundTrips": 2,
     "maxChunks": 1
   },

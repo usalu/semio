@@ -1,7 +1,7 @@
 #!/bin/zsh
 # 🛰️ Direct vite serve for the procedural 3d react editor playground (port 6028), bypassing `📜️script.ts serve`
 # when a peer's in-flight taxonomy/registry change breaks the script's registry load. Run under `screen -dmS g3dreact`.
-LOG="/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️09/PROCEDURAL-3D-END-TO-END/🗑️generated/flow-inline/serve-react-6028.txt"
+LOG="/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️09/PROCEDURAL-3D-END-TO-END/🗑️generated/boot-frame/serve-react-6028.txt"
 exec > "$LOG" 2>&1
 cd "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript"
 export NX_DAEMON=false

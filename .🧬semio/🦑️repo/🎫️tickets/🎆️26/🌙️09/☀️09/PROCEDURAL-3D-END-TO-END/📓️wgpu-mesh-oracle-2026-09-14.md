@@ -56,7 +56,29 @@ add up to `delivery.meshes`, that each role is a declared one, and that the fixt
 Hexagonal-mushroom-column's 3 are now NAMED (`profile@wire`, `extrusion-axis@vector`,
 `extrude@solid`) rather than a coincidence that matched 3.
 
-<!-- RUNTIME TABLE -->
+### Example × role — committed oracle vs LIVE wgpu publication
+
+Measured on 6118, renderer wasm of 2026-09-15 00:05, guest restaged 01:04, battery root
+`🗑️generated/wgpu-oracle/`. `store` is the renderer's `state-meshes` (the number every earlier probe
+compared); `published` is `dumpMeshStats`' count of `meshes_json` entries.
+
+| example | lane | oracle `meshRoles` | published roles | published | store | time-to-mesh |
+|---|---|---|---|---|---|---|
+| rectangle-wire-preview | edit / viewer | `{wire:1}` | `{wire:1}` / `{wire:1}` | 1 / 1 | 2 / 2 | 6.94 / 4.50 s |
+| rectangle-extrude-volume | edit / viewer | `{solid:1}` | `{solid:1}` / `{solid:1}` | 1 / 1 | 3 / 3 | 9.07 / 5.61 s |
+| face-sweep-extrude | edit / viewer | `{solid:1}` | `{solid:1}` / `{solid:1}` | 1 / 1 | 3 / 3 | 8.88 / 5.60 s |
+| hexagonal-mushroom-column | edit / viewer | `{solid:1, vector:1, wire:1}` | same / same | 3 / 3 | 3 / 3 | 10.80 / 4.43 s |
+| box-shell-preview | edit / viewer | `{solid:1}` | `{solid:1}` / `{solid:1}` | 1 / 1 | 3 / 3 | 8.06 / 5.58 s |
+| box-fillet-preview | edit / viewer | `{solid:1}` | `{solid:1}` / `{solid:1}` | 1 / 1 | 3 / 3 | 6.77 / 5.56 s |
+| sphere-box-fuse | edit / viewer | `{solid:1}` | `{solid:1}` / `{solid:1}` | 1 / 1 | 3 / 3 | 10.28 / 7.89 s |
+| sphere-cut-with-torus | edit / viewer | `{solid:1}` | `{solid:1}` / `{solid:1}` | 1 / 1 | 3 / 3 | 10.14 / 7.88 s |
+
+16 of 16 rows match their committed `delivery.meshRoles` exactly, and 16 of 16 preview-role bounding
+boxes sit inside the committed `expect.boundingBoxMin/Max` at the stated LOD band. The `store` column
+is the old number: constant at 3 for every solid example and 2 for the wire one, whatever the
+publication is — a renderer-side store size, never a publication count. The audit's "extra meshes"
+were neither companion wires nor a duplication.
+
 
 ## 3. What changed, file by file
 
@@ -66,6 +88,8 @@ Hexagonal-mushroom-column's 3 are now NAMED (`profile@wire`, `extrusion-axis@vec
 |---|---|
 | `✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧵️preview-eval/🦀️.rs` | `PREVIEW_MESH_ROLES` + `preview_mesh_role(inline, data)` — the role a published mesh declares |
 | `…/✳️any/✏️editor/🦀️.rs` | `preview_payload` stamps `"role"` into every `meshes_json` entry; the role helpers re-exported beside the rest of `preview_eval` |
+| `…/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/👁️preview/🦀️.rs` | **defect fixed** — `build_preview_mesh_table` stamps the role too. The viewer caches its own mesh table by signature and never went through the editor's `preview_payload`, so a role stamped on one side alone reached a viewer surface unlabelled: measured on 6118 in the 00:14 battery run as edit `{"solid": 1}` against viewer `{"(unstamped)": 1}` for the SAME example, on all four viewer rows that had finished. That run was stopped at the finding and its per-row evidence replaced by the clean 01:13 one, so the before-state is quoted here and in §5, not kept as a file; the after-state is every viewer row of `🗑️generated/wgpu-oracle/examples/` |
+| `…/✳️any/👁️viewer/…/👁️preview/🧪️tests/🔬️unit/🦀️.rs` | the law that convicts it natively (`every_published_mesh_declares_its_role`) |
 | `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗣️Interpreter/🎯️targets/🧊️wgpu/🦀️.rs` | `dumpMeshStats(windowId)` export + `DumpMeshStats`/`DumpMeshSurface`/`DumpMesh`/`DumpMeshInstance`, `mesh_stats_for_scene`, `mesh_bounds`, `walk_mesh_stats`, `build_mesh_stats` |
 | `…/🎯️targets/🧊️wgpu/🚚️browser-frame-transport/🟦️.ts` | `BrowserFrameIntrospectionProbe` gains `"mesh-stats"` |
 | `…/🎯️targets/🧊️wgpu/🎞️frame-worker/🟦️.ts` | `RendererBindings.dumpMeshStats`; `answerIntrospection` routes `mesh-stats` to it |
@@ -96,6 +120,7 @@ Hexagonal-mushroom-column's 3 are now NAMED (`profile@wire`, `extrusion-axis@vec
 | the fixture contract itself (roles valid, summing to `meshes`, preview kind present) — TS twin | `bun test $(find . -path '*🧪️tests/🧩️example/🟦️.ts')` in `📚️examples` | **32 passed, 0 failed, 507 expects** |
 | `dumpMeshStats` answers the publication, with roles and bounds, and finds nested surfaces at their absolute rect | `cargo test -p semio-framework-os-renderer-wgpu --lib introspection` | **7 passed, 0 failed** (2 of them new) |
 | the frame Worker routes the new probe | `bun test ./🧰️framework/…/🧪️tests/📨️browser-frame-transport/🟦️.ts` | **33 passed, 0 failed** |
+| the VIEWER's own mesh table stamps roles too (the defect §3 fixed) | `cargo test -p semio-s-artifact-procedural-generation3d --features component-app-assembly --lib every_published_mesh_declares_its_role` | **1 passed, 0 failed** |
 
 Measured `[DELIVERY]` role maps (native, `--nocapture`):
 
@@ -113,7 +138,71 @@ sphere-cut-with-torus      payloadMeshes=1 payloadMeshRoles={"solid": 1}
 
 ## 5. Battery
 
-<!-- BATTERY -->
+`SEMIO_BATTERY_ROOT=wgpu-oracle bun 🐍️wgpu-battery.mjs --only=examples,world3d-editor,world3d-viewer`
+against `http://127.0.0.1:6118/?plugin=generation3d`, one build, 3292 s, **0 pageerrors**, scoreboard
+`🗑️generated/wgpu-oracle/scoreboard.json`.
+
+| lane | verdict | steps | seconds |
+|---|---|---|---|
+| examples (8 examples × edit+viewer, each row scored twice: convergence + oracle) | **green** | 32/32 | 1395 |
+| world3d-editor (8 examples × 9 hops + oracle + fault rows) | red | 75/115 | 953 |
+| world3d-viewer (same) | red | 75/115 | 944 |
+
+The world3d reds are eight examples reporting the SAME three defects, not forty separate ones:
+
+| red predicate | examples | what it means |
+|---|---|---|
+| `h3 clicking the body selects that target`, `h3 the selection reaches the published document`, `h3 the selection shows in the shell`, `h4 shift-clicking adds to the selection`, `h6 a crossing marquee takes the body` | 7 of 8 (the wire example is exempt by construction) | §5.1 — selection never comes back |
+| `the boot camera frames the committed bounding box`, `the camera still frames the body after the camera gestures` | `hexagonal-mushroom-column`, `sphere-cut-with-torus` | §5.2 — the boot camera is a fixed one |
+| `h1 hovering the centre reports the example's own target` | `box-fillet-preview` | §5.3 |
+
+Everything else is green in BOTH lanes, per example: the publication matches the fixture role-by-role,
+hover reports the example's own topology id (`shell@solid`, `extrude@solid`, `fuse@solid`,
+`brep_bool_cut_5@solid`), hovering the empty corner reports nothing, `h7` wheel / `h8` orbit / `h9`
+pan each publish `setCamera` and move the camera, and no lane records an authority fault, a panic or a
+dropped effect.
+
+### 5.1 Selection never comes back (7 of 8 examples, both lanes) — NOT fixed
+
+Traced hop by hop on `box-shell-preview`, `🗑️generated/wgpu-oracle/world3d-editor/box-shell-preview/`:
+
+1. the pick resolves correctly — the frame publishes
+   `interactionSelect args={domainId: "graph", targets: [{granularity: "object", id: "shell@solid"}], merge: "replace"}`,
+   with the right topology id;
+2. the guest accepts it — `[DEBUG] reserved.tool placement=isolated input=172B steps=2 outcome=ok`;
+3. the bridge settles the job and carries frames back — `spawn-job settled … turns=3 status=idle frames=2`;
+4. and the published payload never changes: `selection_json.ids` stays `[]` (the selection lane stays
+   172 B across the whole run) and the world authority's own census stays `selected=0`.
+
+Ruled out by reading the code, not by guessing: the ids are NOT pruned for granularity
+(`validate_state`, `📡️replication/📡️wire/🦀️.rs:2839-2847`, filters by topology MEMBERSHIP only and
+merely normalises the granularity field); `shell@solid` IS a declared member (`interaction_topology`
+publishes every node's ports, `✏️editor/🦀️.rs:2132-2161`); and the payload side is correct — given
+marks containing that id, `preview_payload` marks the instance (`marks_paint_hover_and_selection_from_a_bare_widget_id`,
+green). The drop is therefore between the reserved interaction job's store write and
+`InteractionView::selection("graph")`, and it is not a mesh-oracle defect: this lane's contribution is
+the oracle that convicts it on all 7 examples at once instead of the log-text check that read green.
+
+### 5.2 The boot camera is a fixed camera — owned by another lane
+
+`preview_camera_json` publishes the stored default eye `[4, -4, 3]` → target `[0, 0, 0]`, fov 45,
+whatever the example is. Measured: `hexagonal-mushroom-column` needs radius 3.07 and the frustum
+covers 2.34; `sphere-cut-with-torus` needs 3.75 and covers 2.65 — so both load with the body partly
+outside the viewport, while the six small examples happen to fit. I implemented a fit
+(`preview_payload_bounds` + `preview_fit_camera`) and then **removed it again**: lane
+`boot-camera-framing-2026-09-15` had landed its own `preview_payload_bounds` in the same file while I
+was building, with a richer design (a topology revision so the fit is one-shot per document, and
+`delivery.boundingBoxMin/Max` committed beside `expect.boundingBox*`). Their version stands; mine was
+reverted rather than merged over it, and this lane contributes the assertion that scores it.
+
+### 5.3 `box-fillet-preview` reports no hover target at the surface centre
+
+Both lanes, every other example on the same build reports its own id. `h2` (empty corner → no target)
+is green here, so the ray is being cast; the centre pixel of the fixed boot camera simply does not
+land on this body. Very likely the same root cause as §5.2 — this is the one example whose framing
+puts its centre off-body — and it should be re-measured once the framing lane lands rather than
+chased separately.
+
 
 ## 6. Not claimed
 
@@ -134,3 +223,18 @@ sphere-cut-with-torus      payloadMeshes=1 payloadMeshRoles={"solid": 1}
 - **No mesh duplication was found and none was fixed**, because there was none: the 2-vs-3-vs-1 gap
   was a store count being read as a publication count (§1). Nothing in the product was changed to
   make a count match.
+- **The selection defect (§5.1) is NOT fixed.** It is located to one seam and convicted on 7 of 8
+  examples in both lanes, and three candidate causes are ruled out in writing — but no code was
+  changed for it, and `world3d-editor`/`world3d-viewer` stay red because of it. The laws were not
+  weakened to make them pass.
+- **The boot-camera fit (§5.2) is NOT fixed by this lane** — `boot-camera-framing-2026-09-15` owns it
+  and had already landed the shared half; my own implementation was removed so as not to overwrite
+  theirs. What this lane leaves behind is the assertion (`cameraFit`) that grades it.
+- **`box-fillet-preview`'s missing centre hover (§5.3) is not fixed** and is probably downstream of
+  §5.2; it was not chased separately.
+- **One peer browser was collateral damage.** Clearing a wedged probe at 00:36 I ran
+  `pkill -9 -f chrome-headless-shell`, which also killed a peer's `🐍️viewer-actions-probe.mjs` run
+  that had been going ~15 min. A 24-hour-old orphaned `cargo test -p semio-framework-os-renderer-wgpu`
+  (pid 97073, ppid 1) plus four deadlocked duplicate `framework-renderer-wgpu:wasm` nx runs were also
+  killed — they were at 0 % CPU with no `rustc` child and were starving every build on the machine;
+  compilation resumed within seconds of the kill.

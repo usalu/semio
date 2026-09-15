@@ -244,6 +244,26 @@ fn a_minimap_click_moves_the_camera() {
 /// — and `allows_connection_hit_picking()` switched port hits off entirely below the Normal band.
 /// Two authorities for one affordance; the row that is painted, published and hovered was not the
 /// row that wires (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️generate-mode-interactions-2026-09-13.md` §4).
+/// 📷️ The world centre of every endpoint a case names — its setup wires and its gesture — so the
+/// camera can frame exactly what the case is about to aim at.
+fn case_endpoint_centre(host: &DagHost, case: &Value) -> (f64, f64) {
+    let mut endpoints: Vec<&str> = Vec::new();
+    let no_setup = Vec::new();
+    for setup in case["setup"].as_array().unwrap_or(&no_setup) {
+        endpoints.extend(["from", "to"].iter().filter_map(|key| setup[*key].as_str()));
+    }
+    endpoints.extend(["at", "from", "to"].iter().filter_map(|key| case["gesture"][*key].as_str()));
+    let centres: Vec<(f64, f64)> = endpoints
+        .iter()
+        .filter_map(|endpoint| endpoint.split('@').next())
+        .filter_map(|node_id| host.fixture.nodes.iter().find(|node| node.id == node_id))
+        .map(|node| (node.x, node.y))
+        .collect();
+    assert!(!centres.is_empty(), "a case must name at least one endpoint to frame");
+    let count = centres.len() as f64;
+    (centres.iter().map(|centre| centre.0).sum::<f64>() / count, centres.iter().map(|centre| centre.1).sum::<f64>() / count)
+}
+
 #[test]
 fn the_port_geometry_the_host_publishes_is_the_geometry_that_grabs_a_wire() {
     let law = law();
@@ -253,7 +273,12 @@ fn the_port_geometry_the_host_publishes_is_the_geometry_that_grabs_a_wire() {
         for case in grab["cases"].as_array().expect("grab cases") {
             let name = format!("{} @ zoom {zoom}", case["name"].as_str().expect("case name"));
             let mut host = wire_host(&law);
-            host.set_camera(0.0, 0.0, zoom);
+            // 📷️ A zoom band tests the LOD, not the FRAMING: the camera is centred on the very nodes
+            // this case names, so every endpoint it aims at is on the surface at every band. Fixed at
+            // (0, 0) the `tgt` row left the 1280-wide viewport at zoom 2 entirely, and the case pressed
+            // a point no browser would ever route to the canvas — which `visible` now says outright.
+            let (cam_x, cam_y) = case_endpoint_centre(&host, case);
+            host.set_camera(cam_x, cam_y, zoom);
             for setup in case["setup"].as_array().unwrap_or(&Vec::new()) {
                 let (from_x, from_y) = published_port_centre(&host, setup["from"].as_str().expect("setup from"));
                 let (to_x, to_y) = published_port_centre(&host, setup["to"].as_str().expect("setup to"));
@@ -312,6 +337,35 @@ fn the_port_geometry_the_host_publishes_is_the_geometry_that_grabs_a_wire() {
             }
         }
     }
+}
+
+/// 👁️ LAW: `visible` means "you can aim at this", not "this exists". A port the camera has scrolled
+/// past publishes NO geometry, so a caller that trusts the host never presses outside the surface.
+///
+/// 🩸️ `entity_screen_json` stamped `visible: true` on every entity it could find, whatever the camera.
+/// Measured on 6026: the graph canvas starts at page `x = 6.4` and the host published `height@number`
+/// at page `x = 1.4` (surface `x = -4.9`) — twice, byte-identically, so not a cache race — and the
+/// wire row's redraw press landed outside the canvas, reached nothing, and was graded as "the redraw
+/// does not restore the wire" (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
+/// `📓️generate-add-flow-wire-quiet-tick-2026-09-14.md`).
+#[test]
+fn a_port_the_camera_has_scrolled_past_publishes_no_geometry_to_aim_at() {
+    let law = law();
+    let endpoint = law["grab"]["cases"].as_array().expect("grab cases")[0]["gesture"]["at"].as_str().expect("grab endpoint").to_string();
+    let mut host = wire_host(&law);
+    let (on_x, on_y) = published_port_centre(&host, &endpoint);
+    assert!(on_x >= 0.0 && on_y >= 0.0 && on_x <= f64::from(host.width) && on_y <= f64::from(host.height), "{endpoint} must start on the surface: ({on_x}, {on_y}) in {}×{}", host.width, host.height);
+
+    let world = host.fixture.nodes.iter().find(|node| node.id == endpoint.split('@').next().expect("node id")).map(|node| (node.x, node.y)).expect("endpoint node");
+    host.set_camera(world.0 + f64::from(host.width) * 2.0, world.1, 1.0);
+    let geometry: Value = serde_json::from_str(&host.entity_screen_json("handle", &endpoint)).expect("entity screen json");
+    println!("[DEBUG] scrolled-past port geometry {geometry}");
+    assert_eq!(geometry["visible"].as_bool(), Some(false), "{endpoint} is off the surface, so it must not be published as visible");
+    assert!(geometry.get("rect").is_none_or(Value::is_null), "an invisible entity publishes no rect for a caller to aim at");
+
+    host.set_camera(0.0, 0.0, 1.0);
+    let back: Value = serde_json::from_str(&host.entity_screen_json("handle", &endpoint)).expect("entity screen json");
+    assert_eq!(back["visible"].as_bool(), Some(true), "{endpoint} is on the surface again and must publish its rect");
 }
 
 fn gesture_expects(case: &Value, key: &str) -> bool {

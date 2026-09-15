@@ -331,7 +331,7 @@
         },
         "meshes": 1,
         "tessellated": 1,
-        "stage": "evaluate",
+        "stage": "tessellate",
         "progress": [
           2,
           2
@@ -353,6 +353,122 @@
         "progress": [
           0,
           0
+        ]
+      }
+    },
+    {
+      "id": "an-inline-marker-channel-is-one-published-mesh",
+      "note": "The hex column: a wire handle, an inline vector marker with no kernel handle, and a solid handle — three channels, three published meshes, and a run whose terminal stage is tessellate.",
+      "statusJson": {
+        "profile": {
+          "status": "ok"
+        },
+        "axis": {
+          "status": "ok"
+        },
+        "extrude": {
+          "status": "ok"
+        }
+      },
+      "evalJson": {
+        "profile": {
+          "out": {
+            "wire": {
+              "handle": "wire-1"
+            }
+          }
+        },
+        "axis": {
+          "out": {
+            "vectorOut": {
+              "$schema": "vector",
+              "x": 0.0,
+              "y": 0.0,
+              "z": 1.0
+            }
+          }
+        },
+        "extrude": {
+          "out": {
+            "solid": {
+              "handle": "solid-1"
+            }
+          }
+        }
+      },
+      "previewWidgetIds": [
+        "profile",
+        "axis",
+        "extrude"
+      ],
+      "meshStates": {
+        "wire-1": "ready",
+        "solid-1": "ready"
+      },
+      "settled": true,
+      "expected": {
+        "nodes": {
+          "axis": "tessellated",
+          "extrude": "tessellated",
+          "profile": "tessellated"
+        },
+        "meshes": 3,
+        "tessellated": 3,
+        "stage": "tessellate",
+        "progress": [
+          6,
+          6
+        ]
+      }
+    },
+    {
+      "id": "an-inline-marker-beside-a-mesh-that-has-not-arrived",
+      "note": "An inline marker needs no kernel round trip, so it is ready while the solid beside it is still pending.",
+      "statusJson": {
+        "axis": {
+          "status": "ok"
+        },
+        "extrude": {
+          "status": "ok"
+        }
+      },
+      "evalJson": {
+        "axis": {
+          "out": {
+            "pointOut": {
+              "x": 1.0,
+              "y": 2.0,
+              "z": 3.0
+            }
+          }
+        },
+        "extrude": {
+          "out": {
+            "solid": {
+              "handle": "solid-1"
+            }
+          }
+        }
+      },
+      "previewWidgetIds": [
+        "axis",
+        "extrude"
+      ],
+      "meshStates": {
+        "solid-1": "pending"
+      },
+      "settled": false,
+      "expected": {
+        "nodes": {
+          "axis": "tessellated",
+          "extrude": "tessellating"
+        },
+        "meshes": 2,
+        "tessellated": 1,
+        "stage": "tessellate",
+        "progress": [
+          3,
+          4
         ]
       }
     }

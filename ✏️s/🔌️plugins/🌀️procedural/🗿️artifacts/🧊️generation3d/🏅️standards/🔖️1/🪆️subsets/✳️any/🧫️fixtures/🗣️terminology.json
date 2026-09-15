@@ -2,7 +2,6 @@
   "note": "🗣️ The language-neutral roster of every user-visible generation3d label, one row per `app_labels!` field. The `app_labels!` macro already makes a MISSING locale a compile error; this fixture is what catches a locale that is PRESENT but wrong — English pasted into the German slot, or an empty string — and it pins the exact text both the Rust law (against `Generation3dLabels`' own consts) and the TypeScript twin (structural: every row bilingual, German distinct unless declared identical) answer. A label added without German fails both halves. Ticket 26/09/09/PROCEDURAL-3D-END-TO-END.",
   "identicalByDesignNote": "🟰️ Fields whose German is legitimately the SAME word as the English — a proper noun or an international term. Every other field must differ, or the German slot was never translated.",
   "identicalByDesign": [
-    "catalog_neuron",
     "schema_prefix"
   ],
   "labels": {
@@ -65,30 +64,6 @@
       "nativeDe": "(Generation auswerten, um die Ausgabe in der Vorschau zu sehen)",
       "reuseEn": "(evaluate a generation to preview output)",
       "reuseDe": "(Generation auswerten, um die Ausgabe in der Vorschau zu sehen)"
-    },
-    "catalog_neuron": {
-      "nativeEn": "Neuron",
-      "nativeDe": "Neuron",
-      "reuseEn": "Neuron",
-      "reuseDe": "Neuron"
-    },
-    "catalog_slider": {
-      "nativeEn": "Slider",
-      "nativeDe": "Schieberegler",
-      "reuseEn": "Slider",
-      "reuseDe": "Schieberegler"
-    },
-    "catalog_note": {
-      "nativeEn": "Note",
-      "nativeDe": "Notiz",
-      "reuseEn": "Note",
-      "reuseDe": "Notiz"
-    },
-    "catalog_preview": {
-      "nativeEn": "Preview",
-      "nativeDe": "Vorschau",
-      "reuseEn": "Preview",
-      "reuseDe": "Vorschau"
     },
     "window_flow": {
       "nativeEn": "Flow",
@@ -205,10 +180,10 @@
       "reuseDe": "Knotengraph-Leinwand"
     },
     "graph_canvas_hint": {
-      "nativeEn": "Interactive node graph. The outline beside it lists every node, port and wire for keyboard and screen-reader use.",
-      "nativeDe": "Interaktiver Knotengraph. Die Gliederung daneben listet alle Knoten, Anschlüsse und Leitungen für Tastatur und Screenreader.",
-      "reuseEn": "Interactive node graph. The outline beside it lists every node, port and wire for keyboard and screen-reader use.",
-      "reuseDe": "Interaktiver Knotengraph. Die Gliederung daneben listet alle Knoten, Anschlüsse und Leitungen für Tastatur und Screenreader."
+      "nativeEn": "Interactive node graph. The Artifact panel lists every node, port and wire for keyboard and screen-reader use.",
+      "nativeDe": "Interaktiver Knotengraph. Das Artefakt-Panel listet alle Knoten, Anschlüsse und Leitungen für Tastatur und Screenreader.",
+      "reuseEn": "Interactive node graph. The Artifact panel lists every node, port and wire for keyboard and screen-reader use.",
+      "reuseDe": "Interaktiver Knotengraph. Das Artefakt-Panel listet alle Knoten, Anschlüsse und Leitungen für Tastatur und Screenreader."
     },
     "preview_canvas": {
       "nativeEn": "3D preview canvas",

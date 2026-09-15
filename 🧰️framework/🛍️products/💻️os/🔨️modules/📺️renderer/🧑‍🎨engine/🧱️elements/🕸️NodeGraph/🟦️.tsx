@@ -600,11 +600,22 @@ function isEditableGraphKeyTarget(target: EventTarget | null): boolean {
   return target.closest("[contenteditable='true'], [role='textbox']") != null;
 }
 
+/** ⎋️ `Escape` on a graph surface clears the FRAMEWORK selection — `clearSelection`, one of the six
+ * reserved interaction verbs every app answers, which is what retires the mark the Artifact panel's
+ * outline rows and the canvas both paint.
+ *
+ * It used to dispatch `setMediaNodeSelection`, an action builder ticket
+ * 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM DELETED when selection became framework-owned
+ * (`space_interaction_select`'s own doc names it among the four it replaced). No window kind declares
+ * it any more, so the shell dropped every press — measured on generation3d 6018,
+ * `🗑️generated/react-reds/outline-selection/console.txt`: `dropped action "setMediaNodeSelection"
+ * dispatched from window kind "procedural-main"` between the last arrow and the re-entry, with the
+ * previously selected outline row still `aria-selected="true"` afterwards. */
 function handleGraphKeyboard(event: KeyboardEvent<HTMLDivElement>, editable: boolean, _parsedNodes: readonly NodeGraphNodeRecord[], dispatch: (action: string, args?: Record<string, unknown>) => void) {
   if (!editable || isEditableGraphKeyTarget(event.target)) return;
   if (event.key === "Escape") {
     event.preventDefault();
-    dispatch("setMediaNodeSelection", { nodeIds: [] });
+    dispatch(nodeGraphActions.clearSelection);
   }
 }
 //#endregion Keyboard
@@ -1208,6 +1219,27 @@ function PresencePeersOverlay({ peers }: { readonly peers: readonly PresencePeer
  * (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
  */
 export const NODE_GRAPH_HOST_CLASS = "semio-node-graph-host isolate relative h-full min-h-0 w-full overflow-hidden";
+
+/** 🎯️ What THIS graph surface has selected, hovered and highlighted, exactly as the guest published it
+ * in `NodeGraphScene` — the graph twin of `🌐️World3dHost`'s `data-selection-json`.
+ *
+ * A node picked from the Artifact panel's outline row, from the canvas, or by a traversal chord is one
+ * and the same `graph`-domain selection, and until this existed the ONLY surface in the shell that
+ * published a selection lane was the 3D pane — whose ids are mesh ids (`extrude@solid`), never node ids.
+ * So "selecting through the document panel does not select" could not be told from "the surface that
+ * holds the selection never says so": measured on generation3d 6018, clicking
+ * `panel:procedural-play-graph/height` marked its row and invoked `interactionSelect`, while the only
+ * `[data-selection-json]` in the document was the preview's, with `selectedIds: []`
+ * (`🗑️generated/react-reds/recon/recon.json` `doc-panel-select`). */
+export function nodeGraphSurfaceSelectionDomV1(scene: NodeGraphScene | undefined): Record<string, unknown> {
+  const hover = scene?.hover;
+  return {
+    selectedIds: [...(scene?.selection ?? [])],
+    highlightedIds: [...(scene?.highlighted ?? [])],
+    hoverTarget: hover?.nodeId ? { nodeId: hover.nodeId, portId: hover.portId ?? null } : null,
+    editable: scene?.editable ?? true,
+  };
+}
 //#endregion Helpers
 
 //#region Component
@@ -1258,6 +1290,7 @@ export function NodeGraphHost({ node, onAction, requestContextMenu }: ComponentS
       data-surface-id={node.surfaceId}
       data-status-json={scene.statusJson ?? undefined}
       data-fixture-json={scene.fixtureJson ?? undefined}
+      data-selection-json={JSON.stringify(nodeGraphSurfaceSelectionDomV1(scene))}
       tabIndex={editable ? 0 : undefined}
       onKeyDown={(event) => handleGraphKeyboard(event, editable, parsedNodes, dispatch)}
     >

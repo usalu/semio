@@ -4092,6 +4092,23 @@ impl PreviewChainStatus {
         (self.nodes_done, self.nodes_total.max(self.nodes_done.saturating_add(1)))
     }
 
+    /// 🏁️ Whether this chain has SETTLED: it owes, awaits and runs nothing, and its own census
+    /// accounts for every node it published.
+    ///
+    /// ⚖️ This is the guest's OWN answer to "is the evaluation over", and it outranks the run view on
+    /// that question. A `ToolRunView` is a host artifact that reaches a surface on a render, so it
+    /// LAGS — and a run whose job has finished but whose terminal state has not been rendered back
+    /// yet kept `computing` and the `toolRunAbort` affordance raised for good: a spinner that
+    /// outlives its work and a Cancel button for an evaluation with nothing left to cancel
+    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️flow-inline-continuation-2026-09-14.md`).
+    ///
+    /// 🚦️ A census of ZERO nodes is deliberately NOT settled. Before the first hop publishes one
+    /// there is nothing to be done with, and that is exactly the window in which the run legitimately
+    /// knows more than the chain — it was started by a gesture whose first tick has not run yet.
+    pub fn settled(&self) -> bool {
+        !self.working && self.nodes_total > 0 && self.nodes_done >= self.nodes_total
+    }
+
     /// 📈 Fraction of the chain's units already done, in `[0, 1]`. A working chain never reports `1`:
     /// "done" is the one answer a live evaluation may not give.
     pub fn ratio(&self) -> f64 {

@@ -83,6 +83,7 @@ fn every_wit_patch_variant_moves_into_one_exact_kernel_owner() {
 fn emitted_and_returned_channels_are_atomic_bounded_and_drained_once() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).expect("neutral fixture");
     assert_eq!(fixture["operationKinds"].as_array().unwrap().len(), 11);
+    assert_eq!(fixture["maximumPatches"].as_u64().unwrap() as usize, semio_framework::kernel::UI_TURN_PATCHES_MAXIMUM);
     for row in fixture["cases"].as_array().unwrap() {
         let emitted = (0..row["emitted"].as_u64().unwrap()).map(|_| wit_patch(7)).collect();
         let returned = (0..row["returned"].as_u64().unwrap()).map(|_| wit_patch(7)).collect();

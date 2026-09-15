@@ -21,6 +21,10 @@ const engineSuite = (name: string, extension = "ts") => resolve(repoRoot, `./�
 // include list at all — ticket 26/09/02 wave B38).
 const elementSuite = (element: string, name: string, extension = "ts") =>
   resolve(repoRoot, `./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/${element}/🧪️tests/${name}/🟦️.${extension}`);
+// 🖱️ Laws owned by the `ui` module whose only consumer is this renderer — the shell's chrome bands are
+// `ui` elements, and the `ui` module declares no vitest project of its own, so a suite named nowhere else
+// would never run (the same blind gate `elementSuite` exists for).
+const uiSuite = (name: string, extension = "ts") => resolve(repoRoot, `./🧰️framework/🔨️modules/🖱️ui/🧪️tests/${name}/🟦️.${extension}`);
 const engineTestSuites = [
   engineSuite("⚡️quick"),
   engineSuite("🎮️browser-interactive-job-port"),
@@ -34,6 +38,7 @@ const engineTestSuites = [
   engineSuite("🪟️mounted-window-fetch"),
   engineSuite("🚪️ingress-generation-gate"),
   engineSuite("🤫️silent-turn-hold"),
+  engineSuite("🧺️turn-patch-batch"),
   engineSuite("🎯️world3d-pick-bounds"),
   engineSuite("📇️directory-home-bootstrap", "tsx"),
   engineSuite("📇️session-authority-notice", "tsx"),
@@ -64,6 +69,7 @@ const engineTestSuites = [
   elementSuite("📐️Canvas2dHost/⏯️tool-run-trace", "🧩️component"),
   elementSuite("🖥️Board2dHost/⏯️tool-run-trace", "🧩️component"),
   elementSuite("📃️UiDocumentStore/📥️intake", "📏️step-ceiling"),
+  uiSuite("🔝️navbar-centered-band"),
 ] as const;
 const playwrightEngineTestSuites = [engineSuite("📚️storybook-hosts-no-wasm"), engineSuite("📚️storybook-hosts-wasm")] as const;
 const rootPolicySelfTestSuites = ["interactivity-live-reconcile", "interactivity-mounted-engine-surface-lifetime", "interactivity-mounted-frame-transaction"].map((id) => resolve(repoRoot, `./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️${id}/🟦️.ts`));

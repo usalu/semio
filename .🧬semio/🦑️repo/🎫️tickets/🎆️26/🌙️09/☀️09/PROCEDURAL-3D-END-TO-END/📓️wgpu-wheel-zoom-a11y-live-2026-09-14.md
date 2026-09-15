@@ -11,8 +11,8 @@ Two reds of the full sequential battery were assigned to this lane:
 
 | row / step | verdict of this lane |
 |---|---|
-| `world3d-editor` → `h7_wheel_zoom` | **fixed at its layer** — the wheel accumulator merged notches ACROSS points (§2) |
-| `status-a11y-i18n` → `accessibility:live` | **not the mirror** — the mirror is byte-exact against the renderer's own projection on every one of 370 samples; the row is red because the wgpu host STOPS BUILDING FRAMES (§3), which is also what `status:settled` reports |
+| `world3d-editor` → `h7_wheel_zoom` | **FIXED at its layer, green 8/8 on 6118** — the wheel accumulator merged notches ACROSS points (§2) |
+| `status-a11y-i18n` → `accessibility:live` | **not the mirror, still red** — the mirror is byte-exact against the renderer's own projection in every one of ~400 samples; the row is red because the wgpu host STOPS BUILDING FRAMES ~85 s in, always before the gesture (§3). Handed to `wgpu-host-settle-pump` with the present phase named |
 
 ---
 
@@ -20,9 +20,9 @@ Two reds of the full sequential battery were assigned to this lane:
 
 | item | root cause, in one line | proof on 6118 |
 |---|---|---|
-| 🖱️ `world3d-editor / h7_wheel_zoom` | `AppWheel` coalesced wheel notches ACROSS points and kept only the NEWEST — so the battery's five notches (preview centre, then four 1 px corner nudges) became ONE application in the corner, where no world3d surface's bounds contain it and the authority saw `wheel=0` on all 337 intents | the accumulator is now one application PER POINT, drained oldest first inside the same frame (§2.4); laws in Rust + TypeScript over one shared fixture, both proven RED against the pre-fix rule (§4); battery numbers in §2.5 |
+| 🖱️ `world3d-editor / h7_wheel_zoom` | `AppWheel` coalesced wheel notches ACROSS points and kept only the NEWEST — so the battery's five notches (preview centre, then four 1 px corner nudges) became ONE application in the corner, where no world3d surface's bounds contain it and the authority saw `wheel=0` on all 337 intents | **h7 8/8 green** (was 0/8 on the same 8-example row 90 minutes earlier), `wheel=200` on 7 intents, five `wheel apply` lines at five points (§2.5–§2.7); laws in Rust (2 tests, 9 cases) + TypeScript (10 tests) over one shared fixture, both proven RED against the pre-fix rule (§4) |
 | ♿️ `status-a11y-i18n / accessibility:live` | **not the ARIA mirror.** The mirror is byte-exact against the renderer's own `dumpAccessibility()` in EVERY sample of two 410 s runs. The row is red because the wgpu host STOPS ADMITTING FRAMES (`os_host frame gate blocked=true … phase=Some(Engine)`), and the retained-document ingress runs inside the frame's paint — so after the wedge the guest's new example document (`nodes=29 rev=17`) never reaches the renderer's trees at all: the paint, the projection and the mirror are all pinned to `nodes=38 rev=8` | §3.2–§3.4; **no source was changed for this row**, and the wedge is handed to lane `wgpu-host-settle-pump` with the phase named |
-| ⏳️ `status-a11y-i18n / status:settled` | measured only, as instructed: the producer's progress is byte-identical at t=161 s and t=181 s (`meshingFaces 36/56`), and in that same run the host had already stopped building frames at t=115 s | §3.5, **not claimed, not fixed** |
+| ⏳️ `status-a11y-i18n / status:settled` | measured only, as instructed: in the 15:30 run the producer's progress was byte-identical at t=161 s and t=181 s (`meshingFaces 36/56`) while the host had already stopped building frames at t=115 s. In this lane's two runs the step answered `unknown` (19:58) and then **pass** (01:01) — so it is flaky on the producer's side and independent of the wheel fix | §3.5, **not claimed, not fixed** |
 
 ---
 
@@ -153,7 +153,48 @@ gets to it.
 
 ### 2.7 Proof on 6118, after the fix
 
-*(filled in from the post-fix battery row)*
+Renderer wasm rebuilt at 00:08 (2026-09-15) — the served
+`📦️packages/🦀️rust/dist/wasm-dev/semio-framework-os-renderer-wgpu_bg.wasm` carries the new
+`wheel apply` string, so the build under test is provably this lane's. Battery, 00:42–01:01:
+
+```
+bun 🐍️wgpu-battery.mjs --only=world3d-editor,status-a11y-i18n
+  → world3d-editor    989 s, 75/115 steps, 0 page errors
+      ✓ hexagonal-mushroom-column: h7 the wheel moves the camera {"actions":["interactionHover","setCamera"],"localCameraChanged":true}
+      ✓ rectangle-extrude-volume  ✓ rectangle-wire-preview  ✓ box-shell-preview
+      ✓ box-fillet-preview        ✓ sphere-cut-with-torus   ✓ sphere-box-fuse
+      ✓ face-sweep-extrude
+      → h7 is 8/8 where the same row was 0/8 ninety minutes earlier (§2.5)
+```
+
+The frame's own trace, from the hexagonal run, is the fix in one block
+(`🗑️generated/wgpu-verify/world3d-editor/hexagonal-mushroom-column/console.txt`):
+
+```
+101091 wheel apply x=1208.0 y=461.0 delta=200 hit=Some(World3d) control=Some("procedural-preview") propagates=true owed=true
+101091 wheel apply x=3.0    y=3.0   delta=200 hit=None          control=None                       propagates=true owed=false
+103504 wheel apply x=4.0    y=4.0   delta=200 …                                                                    owed=true
+103506 wheel apply x=5.0    y=5.0   delta=200 …                                                                    owed=true
+103506 wheel apply x=6.0    y=6.0   delta=200 …                                                                    owed=false
+```
+
+Five notches, five applications, each at its own point; the centre one lands on the preview
+(`hit=Some(World3d)`), the corner ones on nothing; and `owed=true` twice shows one frame draining two
+applications in a row rather than leaving the second for the next event. The world authority's own
+intents, same run:
+
+```
+  7 × wheel=200      (was: 337 × wheel=0, nothing else, §2.1)
+323 × wheel=0        (every non-wheel intent)
+frame input action … action=setCamera args={"windowId":"procedural-preview","camera":…}
+```
+
+**What is still red in that row is not the wheel.** `world3d-editor` grew from 10 steps to 115 while
+this lane was building (a peer widened it to all eight examples with new selection, hover-target and
+camera-framing oracles). Its 40 remaining reds are `h3/h4/h6` (a click, a shift-click and a marquee
+publish `interactionSelect` but the document comes back `selected: []`), one `h1` hover target, and
+`the boot camera frames the committed bounding box`. None of them is a wheel step, none of them
+regressed against §2.5 — the same steps were red on the pre-fix build — and none is claimed here.
 
 ---
 
@@ -262,6 +303,32 @@ stored — but the stored string is only ever surfaced by `present_step`'s `Err`
 is empty, so on this path **the reason the presentation aborted is never printed at all**. One
 `[DEBUG]` line where `self.retained_fault = Some(…)` is set would name it.
 
+### 3.4b The same row on the FIXED build (01:01, 2026-09-15)
+
+```
+bun 🐍️wgpu-battery.mjs --only=world3d-editor,status-a11y-i18n
+  → status-a11y-i18n 177 s, 8/9 steps, 0 page errors
+    ✓ boot  ✓ accessibility:mirror (48 nodes)  ✓ accessibility:per-window  ✓ status:trigger
+    ✓ status:pill-while-computing {"phase":"computing","label":"Computing · 0/1 (0%)"}
+    ✓ status:settled  ← passed this run: the producer DID settle to idle
+    ✗ accessibility:live
+    ✓ locale:palette-dispatch  ✓ locale:german-via-palette
+```
+
+and the host wedge again, in that run's own console:
+
+```
+frame build admitted   549 total, LAST at t=85 749 ms
+86722 os_host frame gate blocked=true pending=true phase=Some(Aborted) retained-fault=true
+       ← the example is picked at t≈142 000 ms, 55 s after the last frame the shell ever builds
+ui-doc ingress window=procedural-main generation=1, generation=4   ← and nothing after the wedge
+```
+
+Three runs of this row (15:30 peer, 19:58 this lane, 01:01 this lane) and two runs of
+`🐍️wgpu-aria-live-probe.mjs` all wedge the same way, between t=85 s and t=200 s, always before the
+gesture. `status:settled` passing here while `accessibility:live` still fails is the cleanest
+separation available: the PRODUCER settled, the HOST did not come back.
+
 ### 3.5 `status:settled`, measured and NOT claimed
 
 The battery's `status:settled` read `verdict: unknown` with the producer still publishing
@@ -295,15 +362,40 @@ the fixture itself — the whole delta as ONE application at wherever the pointe
 what the original accumulator did with `last_pointer_x/y` AND what the newest-point-wins accumulator
 did whenever the stream's last event was a scroll — and assert it DIFFERS from the answer.
 
-**Failing-first, measured.** With the TypeScript twin's `accumulate` reverted to the pre-fix rule
-(merge into the newest notch unconditionally):
+**Green, both sides** (`🗑️generated/wgpu-wheel-a11y/rust-law-1.txt`, `rust-law-2.txt`):
 
 ```
+cargo test -p semio-framework-os-renderer-wgpu --lib -- wheel_application_point --nocapture
+  → test result: ok. 2 passed; 0 failed (604 filtered out)
+    [DEBUG] wheel-application-point notches-at-two-points-are-two-applications:
+            applications=[[1207.5, 461.0, 200.0], [3.0, 3.0, 200.0], [4.0, 4.0, 200.0]] pointer=(4.0, 4.0)
+    [DEBUG] wheel-application-point a-stationary-burst-is-one-application:
+            applications=[[640.0, 400.0, 120.0]] pointer=(640.0, 400.0)
+    [DEBUG] wheel-application-point a-stream-longer-than-the-capacity-…:
+            applications=[…8 entries…, [90.0, 90.0, 20.0]] pointer=(90.0, 90.0)
+
 bunx vitest run --config 🎯️targets/🧊️wgpu/🧪️tests/🎚️config/🟦️.ts 🧪️tests/🖱️wheel-application-point/🟦️.ts
+  → Test Files 1 passed, Tests 10 passed (10)
+```
+
+**Failing-first, measured on BOTH implementations.** The production `accumulate` temporarily reverted
+to the pre-fix rule (`let saturated = true`, i.e. always merge into the newest notch), same fixture
+(`🗑️generated/wgpu-wheel-a11y/rust-law-prefix.txt`):
+
+```
+assertion `left == right` failed: notches-at-two-points-are-two-applications
+assertion `left == right` failed: a stream longer than the credits coalesces rather than growing
+  left: 1   right: 8
+  → test result: FAILED. 0 passed; 2 failed
+```
+
+and the TypeScript twin's own `accumulate` reverted the same way:
+
+```
   → Tests  3 failed | 7 passed (10)
 ```
 
-restored → `Tests 10 passed (10)`.
+Both restored → Rust `2 passed`, TypeScript `10 passed`.
 
 ---
 
@@ -329,12 +421,55 @@ restored → `Tests 10 passed (10)`.
 - `📓️wgpu-wheel-zoom-a11y-live-2026-09-14.md` (this report)
 - `🐍️wgpu-aria-live-probe.mjs` (new) — mirror-vs-projection liveness, with the frame/ingress census.
 - `🐍️wgpu-wheel-zoom-probe.mjs` (new) — the three wheel shapes, reading the frame's own application.
-- `🗑️generated/wgpu-wheel-a11y/` — `aria-1/`, `aria-2/`, `wheel-baseline/`, `wheel-fixed/`,
-  `battery-editor-prefix.txt`, `battery-a11y-prefix.txt`, `battery-a11y-prefix-evidence/`,
-  `battery-fixed.txt`, `wasm-build-*.txt`, `scoreboard-before-lane.json`.
+- `🗑️generated/wgpu-wheel-a11y/` — `aria-1/`, `aria-2/` (mirror liveness), `wheel-baseline/` (the
+  three wheel shapes pre-fix), `battery-editor-prefix.txt` + `battery-a11y-prefix.txt` +
+  `battery-a11y-prefix-evidence/` (the reds reproduced), `battery-fixed.txt` +
+  `battery-fixed-evidence/` (h7 8/8 and the `wheel apply` traces), `rust-law-{1,2,prefix}.txt` (the
+  law green, green-again and RED against the pre-fix rule), `wasm-build-*.txt`,
+  `scoreboard-before-lane.json`.
 
 **Not changed, deliberately**
 
 - `🚀️browser-boot/🟦️.ts` (the ARIA mirror), `🗣️Interpreter/🎯️targets/🧊️wgpu/🦀️.rs` (the dump),
   `⚙️EngineCanvas/🎯️targets/🧊️wgpu/🦀️.rs` and the present cursor (the wedge, §3.4).
 - No guest Rust, so `generation3d` was NOT restaged by this lane.
+
+---
+
+## 6. 🚫 What is NOT claimed
+
+1. **`status-a11y-i18n` is NOT green.** It is 8/9; `accessibility:live` is still red, and this lane
+   deliberately did not fix its cause (§3.3–§3.4). No source file of the accessibility path — the
+   mirror, the dump, the projection — was touched, because every measurement says they are correct.
+2. **The host wedge is characterised, not fixed.** Two variants were observed —
+   `phase=Some(Engine)` (`EngineCanvasPresenter::realize_step` answering `Ok(false)` forever) and
+   `phase=Some(Aborted) retained-fault=true` (`close_active_candidate_step` never completing) — and
+   the second stores a fault string that is never printed. Which of the two `Ok(false)` paths (an
+   ever-re-armed `metrics_invalidation_scan`, or a `slot.retirement` that never terminates) holds it
+   is NOT determined here: it needs one `[DEBUG]` line in that arm and a rebuild. Lane
+   `wgpu-host-settle-pump`.
+3. **`world3d-editor` is NOT green either** — 75/115. Its other 40 reds (selection `h3`/`h4`/`h6`
+   publishing `interactionSelect` while the document answers `selected: []`, one `h1` hover target,
+   and the two camera-framing steps) were red before this lane's fix as well and belong to the
+   selection and camera-fit lanes. This lane claims only the 8 wheel steps.
+4. **`guestCameraChanged` is false on every h7.** The wheel publishes `setCamera` and the shell's own
+   camera moves (`localCameraChanged: true`, `[3.200,-3.200,2.400]`), but the probe's final sample
+   reads the guest's published camera before the guest has applied the verb. The battery's own
+   oracle for that hop is the published action, and h8/h9 (which the probe samples later) do show the
+   guest camera moving. No claim is made that the guest's camera round-trip is faster than one
+   sample.
+5. **The wheel's ZOOM DIRECTION and step size are unchanged and unverified here.** This lane proves
+   where a notch is applied, not how far it zooms.
+6. **`ui.panelToggle.details` changed nothing measurable** in `aria-1` — the toggle produced no
+   document change on either side, so the cheap-gesture half of that probe proved nothing about the
+   mirror. The boot transition (0 → 84 nodes across 5 windows) and the ~400 byte-exact samples are
+   what carry the mirror claim.
+7. **No screenshot is evidence.** The canvas is an `OffscreenCanvas` owned by the frame Worker; every
+   capture is blank. Everything above rests on the DOM, the introspection exports and `[DEBUG]`
+   traces.
+8. **One renderer build, several guest builds.** The wheel numbers come from the 00:08 (2026-09-15)
+   renderer wasm; the guest on 6118 was NOT restaged by this lane (no guest Rust changed), and peers
+   restaged it during the session. No `exceeds 64 pages` contributions fault appears in any console
+   this lane collected.
+9. **No suite-wide green is claimed.** Only `--lib -- wheel_application_point` (2 passed) and the
+   one vitest suite (10 passed) were run; the crate's other suites were not.

@@ -381,6 +381,21 @@ const PROBES = [
     },
   },
   {
+    name: "outline-selection", script: "🐍️outline-selection-probe.mjs", dir: "outline-selection", minutes: 12,
+    env: { SEMIO_PROBE_OUT: out("outline-selection"), SEMIO_BATTERY_URL: URL },
+    /** 🌳️ F1's DOM half, as a battery row. The probe states its own verdict per step — the outline
+     * paints rows, a traversal marks exactly one of them, `Escape` retires the mark and a traversal
+     * after it re-marks exactly one — so a row without an `ok` is red rather than skipped. It was
+     * written by lane `window-gaps-followup` and never registered anywhere, which is a gate that
+     * measures nothing (`📓️window-gaps-followup-2026-09-14.md` §6). */
+    verdict: (dir) => {
+      const r = readJson(join(dir, "results.json")) ?? {};
+      const console_ = readText(join(dir, "console.txt"));
+      const steps = (r.verdicts ?? []).map((v) => ({ step: v.step, ok: Boolean(v.ok), detail: v.detail }));
+      return { steps, key: { steps: steps.length, ok: steps.filter((s) => s.ok).length }, pageerrors: countPageErrors(console_), faults: faultLines(console_) };
+    },
+  },
+  {
     name: "panel-i18n", script: "🐍️panel-i18n-probe.mjs", dir: "panel-i18n", minutes: 22,
     env: { SEMIO_PROBE_OUT: `../${ROOT_NAME}/panel-i18n`, SEMIO_PROBE_BASE: BASE },
     /** 🇩🇪️ One step per `Generation3dLabels` field this probe can reach; a field whose German never

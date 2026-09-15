@@ -594,6 +594,7 @@ All folders plural
 violations e.g.
 ✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🧪️tests
 binary
+
 ---
 
 All tools, commands and utlities must be
@@ -724,7 +725,6 @@ e.g. present should be presentation, etc
 Also some artifacts are duplicated, make sure all semio scoped artifacts are just defined once.
 e.g.
 ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️presentation/
----
 
 ---
 
@@ -3074,6 +3074,10 @@ Implement it general for infinite worlds so that puzzle 3d, cad, etc have it
 ---
 
 ## 🧩️puzzle
+
+---
+
+The fill algorithm should randomly pick an existing free vortex then randomly pick a compatible vortex (acording to distribution) and check wheather it collides (show it in the ui - if it collides then it has the danger mesh color). If it doesnt collide show the new object with sucess mesh color and add the new object to the pool of objects. Repeat the fill algorithm. If it collides, then pick another random comaptible vortex (acording to distribution) and again check wheather it collides. If no vortex can be found that is collision free then mark the vortex with danger color and pick a new random existing vortex (acording to distribution). Repeat process until either target count is reached or all vortices have been marked. Return also partial results with a warning. The algorithm is not ui bound and the ui is only rendering the results - in case the algorithm is faster than the ui can render the ui skips the visualization. The visualization is best effort.
 
 ---
 

@@ -82,6 +82,7 @@ pub fn render(document: &Generation3dSnapshot, config: &Generation3dConfig, prev
     let selection_json = preview_selection_json(config, active_utility, &payload);
     let (meshes_json, instances_json) = (payload.meshes_json, payload.instances_json);
     let preview_status = preview_status_json(&eval_json, &document.fixture);
+    let fit_json = crate::preview_eval::preview_fit_json(&document.fixture, &meshes_json);
     let sun = config.sun();
     let status_json = preview_window_status_json(Some(session), run, preview_status, &PreviewStatusDebug { meshes_json: &meshes_json, instances_json: &instances_json }, None);
     let _ = GENERATION_3D_PLAY_APP_ID;
@@ -90,6 +91,7 @@ pub fn render(document: &Generation3dSnapshot, config: &Generation3dConfig, prev
         semio_framework_plugin::plugin_app_close_prelude::SurfaceKind::World3d,
         &semio_framework_ui::wgpu::World3dScene {
             status_json,
+            fit_json: Some(fit_json),
             domain_id: Some(GENERATION_3D_INTERACTION_DOMAIN.into()),
             domain_granularity_id: Some(GENERATION_3D_INTERACTION_GRANULARITY.into()),
             ..world3d_scene(preview_camera_json(config), meshes_json, instances_json, selection_json, &sun)

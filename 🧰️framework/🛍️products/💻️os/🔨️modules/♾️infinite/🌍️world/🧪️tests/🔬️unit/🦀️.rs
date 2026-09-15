@@ -1605,6 +1605,74 @@ fn sync_parses_selection_targets_and_active_object() {
     assert_eq!(state.active_object_id.as_deref(), Some("obj-1"));
 }
 
+/// 🎯️ One world surface fed a `fit` lane, as the generation3d preview publishes it.
+fn scene_with_fit(fit_json: Option<&str>) -> UiComponentSceneNode {
+    let mut scene = scene_with_selection("{}");
+    if let Some(world) = scene.world_3d.as_mut() {
+        world.fit_json = fit_json.map(str::to_string);
+    }
+    scene
+}
+
+/// 🎯️ The generation3d `box-fillet-preview` delivery extent, as `📚️examples/📐️box-fillet-preview/🧫️fixtures/🧩️example/🔣️.json` commits it.
+const BOOT_FRAME_FIT_JSON: &str = r#"{"enabled":true,"revision":7,"padding":1.12,"boundsMin":[0.0,0.0,0.0],"boundsMax":[2.0,2.0,2.0]}"#;
+
+#[test]
+fn a_world_surface_frames_the_producers_delivered_bounds_on_the_first_delivery_of_a_document() {
+    let bounds = Rect { x: 0.0, y: 0.0, w: 1600.0, h: 900.0 };
+    let mut state = World3dState::new("surface-1".into(), "controller-1".into());
+    let seed = state.orbit.clone();
+    sync_world3d_state(&mut state, &scene_with_fit(Some(r#"{"enabled":true,"revision":7,"padding":1.12}"#)), bounds);
+    assert_eq!(state.orbit.distance, seed.distance, "a fit lane without an extent has nothing to frame");
+    sync_world3d_state(&mut state, &scene_with_fit(Some(BOOT_FRAME_FIT_JSON)), bounds);
+    assert_eq!([state.orbit.target.x, state.orbit.target.y, state.orbit.target.z], [1.0, 1.0, 1.0], "the framed camera looks at the delivered box centre");
+    let camera = state.orbit.to_camera();
+    let half_vertical = (camera.fov_y * 0.5).tan();
+    let aspect = bounds.w / bounds.h;
+    let forward = [camera.target.x - camera.position.x, camera.target.y - camera.position.y, camera.target.z - camera.position.z];
+    let forward_length = (forward[0] * forward[0] + forward[1] * forward[1] + forward[2] * forward[2]).sqrt();
+    let unit_forward = [forward[0] / forward_length, forward[1] / forward_length, forward[2] / forward_length];
+    let right = [unit_forward[1] * camera.up.z - unit_forward[2] * camera.up.y, unit_forward[2] * camera.up.x - unit_forward[0] * camera.up.z, unit_forward[0] * camera.up.y - unit_forward[1] * camera.up.x];
+    let right_length = (right[0] * right[0] + right[1] * right[1] + right[2] * right[2]).sqrt();
+    let unit_right = [right[0] / right_length, right[1] / right_length, right[2] / right_length];
+    let unit_up = [
+        unit_right[1] * unit_forward[2] - unit_right[2] * unit_forward[1],
+        unit_right[2] * unit_forward[0] - unit_right[0] * unit_forward[2],
+        unit_right[0] * unit_forward[1] - unit_right[1] * unit_forward[0],
+    ];
+    for corner in 0..8 {
+        let point = [if corner & 1 == 0 { 0.0 } else { 2.0 }, if corner & 2 == 0 { 0.0 } else { 2.0 }, if corner & 4 == 0 { 0.0 } else { 2.0 }];
+        let relative = [point[0] - camera.position.x, point[1] - camera.position.y, point[2] - camera.position.z];
+        let depth = relative[0] * unit_forward[0] + relative[1] * unit_forward[1] + relative[2] * unit_forward[2];
+        assert!(depth > 0.0, "corner {corner} is behind the framed camera");
+        let ndc_y = (relative[0] * unit_up[0] + relative[1] * unit_up[1] + relative[2] * unit_up[2]) / (depth * half_vertical);
+        let ndc_x = (relative[0] * unit_right[0] + relative[1] * unit_right[1] + relative[2] * unit_right[2]) / (depth * half_vertical * aspect);
+        assert!(ndc_x.abs() <= 1.0 && ndc_y.abs() <= 1.0, "corner {corner} projects to ({ndc_x}, {ndc_y}) — outside the viewport");
+    }
+}
+
+#[test]
+fn a_re_delivery_of_the_same_document_never_takes_back_a_camera_the_user_moved() {
+    let bounds = Rect { x: 0.0, y: 0.0, w: 1600.0, h: 900.0 };
+    let mut state = World3dState::new("surface-1".into(), "controller-1".into());
+    sync_world3d_state(&mut state, &scene_with_fit(Some(BOOT_FRAME_FIT_JSON)), bounds);
+    let framed = state.orbit.clone();
+    state.orbit.orbit(40.0, 12.0);
+    state.orbit.zoom(-120.0);
+    state.camera_user_moved = true;
+    let moved = state.orbit.clone();
+    state.scene_bridge_digest = None;
+    sync_world3d_state(&mut state, &scene_with_fit(Some(BOOT_FRAME_FIT_JSON)), bounds);
+    assert_eq!(state.orbit.yaw, moved.yaw, "a second delivery of the same document re-framed a camera the user had moved");
+    assert_eq!(state.orbit.distance, moved.distance);
+    assert_ne!(moved.yaw, framed.yaw, "the gesture must actually have moved the camera for this law to say anything");
+    let next_document = BOOT_FRAME_FIT_JSON.replace("\"revision\":7", "\"revision\":8");
+    sync_world3d_state(&mut state, &scene_with_fit(Some(&next_document)), bounds);
+    assert_eq!(state.orbit.yaw, moved.yaw, "framing a new document keeps the look direction the user chose");
+    assert_eq!([state.orbit.target.x, state.orbit.target.y, state.orbit.target.z], [1.0, 1.0, 1.0]);
+    assert!((state.orbit.distance - framed.distance).abs() < 1e-3, "the new document is framed again, at the fitting distance");
+}
+
 #[test]
 fn sync_parses_numeric_component_ids_and_hovered_component() {
     let selection = r#"{

@@ -528,7 +528,8 @@
           "tested",
           "locked",
           "collisions",
-          "rejected"
+          "rejected",
+          "marked"
         ],
         "reasons": [
           {
@@ -645,6 +646,11 @@
             "code": 22,
             "id": "retracted",
             "verdict": "testing"
+          },
+          {
+            "code": 23,
+            "id": "vortex-exhausted",
+            "verdict": "danger"
           }
         ],
         "checkpoint": {
@@ -679,7 +685,8 @@
         "tested",
         "locked",
         "collisions",
-        "rejected"
+        "rejected",
+        "marked"
       ]
     },
     "Puzzle3dFillRunReason": {

@@ -241,15 +241,22 @@ const hostileBridge = new MockFlowBridge(memory, { hold: FlowOperation.catalogue
 const hostileHost = createFlowHost({ exports: hostileBridge.exports, memory });
 const hostileFeatures = await createFlowFeatures(hostileHost);
 const held = hostileFeatures.document.catalogueJson({});
+// 🛑️ A refused control is BACKPRESSURE, and the caller is never handed it: `cancel` answers "this
+// request is cancelling" and the pump re-sends the cancel until the guest takes it, exactly as it
+// re-sends a session close. Throwing `FlowMessageRejected` out of `cancel` put it in whatever called
+// it — and `observeFlowTask` cancels the previous task per feature key on EVERY pointer move, so a
+// drag over a saturated guest raised an uncaught page error mid-gesture
+// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️generate-add-flow-wire-quiet-tick-2026-09-14.md`).
 for (let attempt = 0; attempt < 9; attempt += 1) {
-  let rejected = false;
-  try { held.cancel(); } catch { rejected = true; }
-  equal(rejected, true, "rejected-control");
+  let threw = false;
+  let answer = false;
+  try { answer = held.cancel(); } catch { threw = true; }
+  equal(threw, false, "a refused control never reaches the caller");
+  equal(answer, true, "cancel-requested-under-rejection");
 }
-equal(held.cancel(), true, "valid-control-after-rejections");
 let cancelled = false;
 try { await held.result; } catch (error) { cancelled = error.message === "cancelled"; }
-equal(cancelled, true, "cancel-terminal");
+equal(cancelled, true, "cancel-terminal-after-nine-refused-controls");
 await hostileHost.close();
 
 await features.lifetime.close();

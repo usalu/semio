@@ -747,7 +747,7 @@ fn issued_obsolete_reconcile_feedback_retires_only_the_old_pending_owner() {
         pending.push_reconcile(ready.expect("real reconcile publication")).unwrap_or_else(|_| panic!("empty pending slot"));
         let patch = pending.take_one(65536).unwrap().unwrap();
         let issued = ActorUiPatchReceipt { lifetime: ActorInstanceLifetime { activation_generation: 41, instance_id: 7, guest_lifetime: 3 }, patch_sequence: 8 };
-        pending.stage_emission(issued, &patch).unwrap();
+        pending.stage_emission(issued, std::iter::once(&patch)).unwrap();
         pending.commit_emission();
         let revision = patch.revision.0;
         close_test_patch(patch);

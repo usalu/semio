@@ -456,6 +456,91 @@ pub fn preview_mesh_role(inline: Option<&PreviewInlineGeometry>, data: &MeshData
     }
 }
 
+/// 📦️ The axis-aligned extent of everything ONE published preview payload puts on screen, read back
+/// off the payload itself (`positions` plus `edgePositions`, so a wire-only example has an extent
+/// too) rather than recomputed from the handles.
+///
+/// ⚖️ This is the delivery's own extent, and it is deliberately not `expect.boundingBox*`: the
+/// committed `expect` box is the FINE tessellation the native lane measures, while the surface
+/// paints the preview LOD, which inscribes it. The example fixtures commit both
+/// (`delivery.boundingBoxMin/Max` beside `expect.boundingBoxMin/Max`), which is what lets the
+/// browser oracle and the native lane grade the same number instead of an envelope
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️boot-camera-framing-2026-09-15.md`).
+pub fn preview_payload_bounds(meshes_json: &str) -> Option<([f64; 3], [f64; 3])> {
+    let parsed = dsl::json::parse(meshes_json).ok()?;
+    let entries = parsed.as_array()?;
+    let mut minimum = [f64::INFINITY; 3];
+    let mut maximum = [f64::NEG_INFINITY; 3];
+    for entry in entries {
+        let Some(data) = entry.get("data") else { continue };
+        for lane in ["positions", "edgePositions"] {
+            let Some(values) = data.get(lane).and_then(dsl::json::Value::as_array) else { continue };
+            for point in values.chunks_exact(3) {
+                for axis in 0..3 {
+                    let Some(value) = point[axis].as_f64() else { continue };
+                    minimum[axis] = minimum[axis].min(value);
+                    maximum[axis] = maximum[axis].max(value);
+                }
+            }
+        }
+    }
+    (0..3).all(|axis| minimum[axis].is_finite() && maximum[axis].is_finite()).then_some((minimum, maximum))
+}
+
+/// 🎯️ Headroom the preview leaves around the delivered bounds — the render hosts' own margin rides
+/// on top of the exact fitting distance, so this padding only has to say "do not hug the box".
+pub const PREVIEW_FIT_PADDING: f64 = 1.12;
+
+/// 🎯️ Which DOCUMENT the preview is framing, as a number the render hosts key their one-shot fit on.
+///
+/// ⚖️ Hashed over the graph's TOPOLOGY (widget ids, their kinds, the synapse wiring) and never over
+/// parameter values: switching example replaces the whole graph, while dragging a slider keeps it,
+/// so this is exactly the line between "frame the example the user just opened" and "yank the camera
+/// out from under an edit". Every re-evaluation of one example answers the same revision, which is
+/// what makes the hosts' framing one-shot at all
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️boot-camera-framing-2026-09-15.md`).
+pub fn preview_fit_revision(fixture: &semio_framework_artifact_flow_flow::FlowFixture) -> u32 {
+    let mut hash = 0xcbf2_9ce4_8422_2325u64;
+    let mut eat = |text: &str| {
+        for byte in text.as_bytes() {
+            hash ^= u64::from(*byte);
+            hash = hash.wrapping_mul(0x0000_0100_0000_01b3);
+        }
+        hash ^= 0xff;
+        hash = hash.wrapping_mul(0x0000_0100_0000_01b3);
+    };
+    eat(&fixture.schema);
+    for widget in &fixture.widgets {
+        eat(crate::widget_id(widget));
+        eat(widget_kind_tag(widget));
+    }
+    for synapse in &fixture.synapses {
+        eat(&synapse.from);
+        eat(&synapse.from_port);
+        eat(&synapse.to);
+        eat(&synapse.to_port);
+    }
+    (hash >> 32) as u32
+}
+
+/// 🏷️ The kind tag [`preview_fit_revision`] hashes per widget — what the node IS, never what it is
+/// currently set to.
+fn widget_kind_tag(widget: &semio_framework_artifact_flow_flow::Widget) -> &str {
+    use semio_framework_artifact_flow_flow::Widget;
+    match widget {
+        Widget::Neuron { neuron_kind, .. } => neuron_kind.as_str(),
+        Widget::InputSlider { .. } => "input.slider",
+        Widget::OutputPreview { .. } => "output.preview",
+        _ => "widget",
+    }
+}
+
+/// 🎯️ The `World3dScene.fit_json` every generation3d preview window publishes: frame the delivered
+/// bounds once per document, never again while that document is on screen.
+pub fn preview_fit_json(fixture: &semio_framework_artifact_flow_flow::FlowFixture, meshes_json: &str) -> String {
+    semio_framework_ui::wgpu::world3d_fit_json(preview_fit_revision(fixture), PREVIEW_FIT_PADDING, preview_payload_bounds(meshes_json))
+}
+
 /// 🔌️ Half-extent (world units) of the axis cross drawn for a [`PreviewInlineGeometry::Point`].
 const PREVIEW_POINT_MARKER_HALF_EXTENT: f64 = 0.05;
 
@@ -865,7 +950,11 @@ pub fn preview_scene_status_json(session: Option<&FlowEvalSession>, run: Option<
     // ⛓️ `FlowEvalSession::pending` is `tick_scheduled` alone, which is FALSE at every hop boundary
     // of a chain — a window waiting on an extension answer is marked owed, not armed. The chain
     // ledger is the one that stays live for the whole evaluation (see `preview_chain_status`).
-    let computing = (session.is_some_and(|session| session.preview_chain_status().working) || run.is_some_and(preview_eval_run_is_abortable)).then(|| r#"{"computing":true}"#.to_string());
+    // 🏁️ The chain is the LIVE ledger and the run view LAGS it, so the run may raise `computing`
+    // only while the chain has not settled — before the first hop publishes a census the run
+    // legitimately knows more, and after the last one it knows less.
+    let chain = session.map(FlowEvalSession::preview_chain_status).unwrap_or_default();
+    let computing = (chain.working || (run.is_some_and(preview_eval_run_is_abortable) && !chain.settled())).then(|| r#"{"computing":true}"#.to_string());
     merge_status_json(merge_status_json(computing, Some(preview_progress_status_json(session, run))), preview_status)
 }
 
@@ -914,8 +1003,12 @@ pub fn preview_progress_status_json_for(session: Option<&FlowEvalSession>, run: 
         status.phase
     };
     // 🛑 The abort affordance is the RUN's: it exists exactly while the framework would accept
-    // `toolRunAbort` for work that is still outstanding, and it names the run it stops.
-    let abortable = run.filter(|run| preview_eval_run_is_abortable(run) && address.is_ok());
+    // `toolRunAbort` for WORK THAT IS STILL OUTSTANDING, and it names the run it stops. A settled
+    // chain has none, whatever the run view still says — see [`PreviewChainStatus::settled`]: the
+    // view is a host artifact that reaches this surface on a render, so a run whose job has finished
+    // but whose terminal state has not been rendered back yet would otherwise offer a Cancel for an
+    // evaluation with nothing left to cancel (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    let abortable = run.filter(|run| preview_eval_run_is_abortable(run) && address.is_ok() && !chain.settled());
     // ⏱️ While a budgeted evaluation is the ONLY work outstanding, the surface names THAT phase —
     // the tessellation ledger would say `idle` for the whole of it.
     let show_eval_phase = eval_status.in_flight > 0 && status.in_flight == 0 && matches!(phase, semio_framework_os_flow::PreviewTessellatePhase::Idle);

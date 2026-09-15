@@ -36,7 +36,7 @@ fn reactor_issued_patch_ack_and_rejection_match_neutral_exact_tuple() {
             pending.push_external(patch(&fixture["issued"])).unwrap();
             let patch = take(&mut pending);
             let issued = receipt(&fixture["issued"]);
-            pending.stage_emission(issued, &patch).unwrap();
+            pending.stage_emission(issued, std::iter::once(&patch)).unwrap();
             if row["committed"].as_bool().unwrap() {
                 pending.commit_emission();
             }
@@ -75,7 +75,7 @@ fn reactor_issued_parallel_patch_slots_and_duplicate_ack_remain_independent() {
     for receipt in [first, second] {
         pending.push_external(patch(&fixture["issued"])).unwrap();
         let patch = take(&mut pending);
-        pending.stage_emission(receipt, &patch).unwrap();
+        pending.stage_emission(receipt, std::iter::once(&patch)).unwrap();
         pending.commit_emission();
     }
     assert_eq!(pending.slots.iter().flatten().filter(|slot| slot.issued.is_some()).count(), 2);
@@ -93,15 +93,15 @@ fn reactor_uncommitted_patch_handback_preserves_exact_slot_and_retry() {
     let mut pending = PendingPatchAuthority::new();
     pending.push_external(patch(&fixture["issued"])).unwrap();
     let patch = take(&mut pending);
-    let sequence = pending.turn_handback_sequence;
+    let sequence: Vec<u64> = pending.borrowed_sequences().collect();
     let old = receipt(&fixture["issued"]);
-    pending.stage_emission(old, &patch).unwrap();
+    pending.stage_emission(old, std::iter::once(&patch)).unwrap();
     assert!(!pending.apply_issued_ack(old, "7:window", 2, 65536, |_| unreachable!()).unwrap());
     pending.hand_back_turn(patch).unwrap();
-    assert_eq!(pending.turn_handback_sequence, sequence);
+    assert_eq!(pending.borrowed_sequences().collect::<Vec<_>>(), sequence);
     let patch = pending.take_one(65536).unwrap().unwrap();
     let current = ActorUiPatchReceipt { patch_sequence: old.patch_sequence + 1, ..old };
-    pending.stage_emission(current, &patch).unwrap();
+    pending.stage_emission(current, std::iter::once(&patch)).unwrap();
     pending.commit_emission();
     assert!(!pending.apply_issued_ack(old, "7:window", 2, 65536, |_| unreachable!()).unwrap());
     assert!(pending.apply_issued_ack(current, "7:window", 2, 65536, |_| unreachable!()).unwrap());
@@ -118,7 +118,7 @@ fn reactor_acknowledged_patch_slots_retire_without_instance_close() {
             let receipt = ActorUiPatchReceipt { patch_sequence: sequence, ..receipt(&fixture["issued"]) };
             pending.push_external(patch(&fixture["issued"])).unwrap();
             let patch = take(&mut pending);
-            pending.stage_emission(receipt, &patch).unwrap();
+            pending.stage_emission(receipt, std::iter::once(&patch)).unwrap();
             pending.commit_emission();
             if rejection {
                 assert!(pending.apply_issued_rejection(receipt, "7:window", 2, |_| unreachable!()));

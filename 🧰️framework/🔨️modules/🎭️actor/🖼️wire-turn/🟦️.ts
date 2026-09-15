@@ -148,6 +148,42 @@ export function shellMessageKind(effect: WireVariant, instanceId: number): "app-
   return "app-frame";
 }
 
+/** 🕹️ Every `Invocation` frame a turn's LEFTOVER effects carry — the answer of a call whose real work
+ * ran on a later turn than the one that admitted it.
+ *
+ * ⚖️ This is the whole answer of a framework-reserved tool verb. `interactionSelect`/
+ * `interactionHover`/`clearSelection` are admitted by the dispatch turn with an EMPTY
+ * `InvocationResult` (`output: null`, `ui_scope: None`) and a `SpawnJob`; the real
+ * `InvocationResult` — `output.interactionView` plus the app-declared refresh scope
+ * (`dispatch_interaction_action`, `💻️os/🔨️modules/🔌️plugin/🦀️.rs`) — is published by the job's
+ * completion turn, which lands in the leftover lane, never in the frames the dispatch itself
+ * resolved with. A host that folds only the dispatch's own frames therefore reads `scope=none` and
+ * no `interactionView`, so the guest is never asked to re-render and its `selectionJson` stays
+ * empty however the pick went — measured on the wgpu target of the generation3d playground, 7 of 8
+ * examples in both roles (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
+ * `📓️wgpu-selection-roundtrip-2026-09-15.md`).
+ *
+ * `decodeAppFrame` is injected because the codec lives in `@semio-tech/framework-os`, one layer
+ * above this module — the same shape {@link decodeWirePatchOps} already uses for `decodePackValue`.
+ * A leftover that is not an `AppFrame` at all (a typed-operation page, a foreign host effect) is
+ * skipped rather than decoded. */
+export function leftoverShellInvocationFrames<Frame>(leftover: readonly WireVariant[], decodeAppFrame: (bytes: Uint8Array) => Frame): Frame[] {
+  const frames: Frame[] = [];
+  for (const effect of leftover) {
+    const value = effect.val as { readonly target?: WireVariant; readonly payload?: unknown } | undefined;
+    if (effect.tag !== "send-message" || value?.target?.tag !== "shell" || value.payload === undefined) continue;
+    const payload = coerceWireBytes(value.payload);
+    if (bytesStartWith(payload, TYPED_OPERATION_PAGE_MAGIC) || bytesStartWith(payload, TYPED_OPERATION_ACK_MAGIC)) continue;
+    try {
+      const frame = decodeAppFrame(payload);
+      if (frame !== null && typeof frame === "object" && "Invocation" in frame) frames.push(frame);
+    } catch {
+      continue;
+    }
+  }
+  return frames;
+}
+
 /** 📨️ The `MessageEndpoint` tag a `send-message` effect addresses (`""` when the effect carries no
  * target at all), `null` for any other effect kind. */
 export function wireSendMessageTargetTag(effect: WireVariant): string | null {

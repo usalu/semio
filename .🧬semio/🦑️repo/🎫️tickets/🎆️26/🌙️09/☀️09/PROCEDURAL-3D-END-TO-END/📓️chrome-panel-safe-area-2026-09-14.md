@@ -267,7 +267,50 @@ unreachable. The standing rule — every expensive operation offers cancellation
 
 ### 7.2 wgpu :6118
 
-<!--WGPU-->
+**Not run — the renderer wasm could not be rebuilt in this window, and a :6118 battery on a stale wasm
+would measure the OLD shell.** `CARGO_PROFILE_WASM_DEV_DEBUG=false NX_DAEMON=false bunx nx run
+@semio-tech/framework-renderer-wgpu:wasm` was started foreground at 23:10 and is still queued
+(`🗑️generated/safe-area-wgpu-wasm.txt`): **five** concurrent peer `trunk build` runs of this same crate
+(pids 65152/65284/65759/65907/66594, 26–28 min each) serialize on the one shared
+`⚡️cache/cargo/build/debug/.cargo-build-lock`, and the machine is additionally saturated by three
+headless-Chrome probe runs and a GitKraken repo scan. Two further obstacles observed while waiting, both
+peers' and neither this lane's:
+
+- `cargo test -p semio-framework-os-renderer-wgpu --lib` (the full 606-test native suite) aborts on
+  `async_boundary_tests::native_binary_owns_exactly_one_entrypoint_driver`, which asserts on the native
+  entrypoint's own source text — that file is unmodified in the working tree, so the law fails at HEAD;
+- a second attempt could not even compile: `semio-s-artifact-puzzle-3d` is mid-refactor in the working
+  tree and fails `E0004` (`&FillRunEvent::VortexMarked { .. }` not covered), which is a peer's in-flight
+  edit in an unrelated plugin crate.
+
+What IS measured on the wgpu side, on the current tree, without a browser:
+
+```
+cargo test -p semio-framework-os-renderer-wgpu --lib shell_chrome_parity_tests
+test result: ok. 28 passed; 0 failed; 0 ignored; 0 measured; 578 filtered out
+```
+
+— 28/28, including the two new laws: the nine shared `chromePanelSafeArea` fixture rows answered by
+`chrome_panel_safe_area` with the same numbers the TypeScript twin produces, and the real placement law
+over `surface_status_pills_for` / `surface_overlay_controls_for`
+(`[DEBUG] wgpu overlay row safe area: flush x=7.2 reserved x=307.2 panel right=304`), which is the
+behaviour a `chrome` / `world3d-editor` battery would exercise from the outside.
+
+**The exact two commands to finish it**, once the build queue drains (they are the only thing missing;
+the guest wasm on :6118 needs no restage for a renderer rebuild):
+
+```
+cd /Users/ueli/Documents/semio && CARGO_PROFILE_WASM_DEV_DEBUG=false NX_DAEMON=false \
+  bunx nx run @semio-tech/framework-renderer-wgpu:wasm
+cd <ticket> && until [ -z "$(pgrep -f 'wgpu-batter[y]|wgpu-.*-pro[b]e')" ]; do sleep 5; done
+SEMIO_BATTERY_URL=http://127.0.0.1:6118/?plugin=generation3d SEMIO_BATTERY_ROOT=wgpu-safe-area \
+  bun 🐍️wgpu-battery.mjs --only=chrome,world3d-editor
+```
+
+The expected result is no change from the last wgpu battery on these two lanes: the safe area is inert on
+:6118 unless a floating panel is open over a live surface, and it reserves nothing when none is. A red
+`chrome` or `world3d-editor` row whose detail names a surface-overlay control anchor would be the one
+outcome to read as this lane's.
 
 
 ---

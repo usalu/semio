@@ -4488,11 +4488,6 @@ pub struct ViewModel {
     #[serde(default, skip_serializing_if = "std::collections::HashMap::is_empty")]
     #[value(default, skip_serializing_if = "std::collections::HashMap::is_empty")]
     pub tool_run_trace_cursor_by_window_id: std::collections::HashMap<String, semio_framework_tool_run::ToolRunTraceCursor>,
-    /// ⏯️ The viewer's tool run pace — visible algorithm units per second a running tool run advances at, so every
-    /// attempt is on screen before the next one (host-owned, persisted local-only). Absent runs a tool run unpaced.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    #[value(skip_serializing_if = "Option::is_none")]
-    pub tool_run_units_per_second: Option<f64>,
 }
 
 /// 🪟️ One live window instance, as seen by a plugin: `id` is the instance id (equal to `window_kind_id`

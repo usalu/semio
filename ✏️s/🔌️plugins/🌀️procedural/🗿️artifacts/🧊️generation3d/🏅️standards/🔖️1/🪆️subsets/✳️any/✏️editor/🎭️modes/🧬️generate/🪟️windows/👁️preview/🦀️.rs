@@ -95,6 +95,7 @@ pub fn render(
     };
     let empty = payload.meshes_json == "[]" && payload.instances_json == "[]";
     let status_json = generate_preview_status_json(session, run, eval_json, &payload, preview_status, empty.then(|| labels.preview_hint.as_str()));
+    let fit_json = crate::preview_eval::preview_fit_json(fixture, &payload.meshes_json);
     let sun = cfg.sun();
     let selection_json = preview_selection_json(cfg, active_utility, &payload);
     let _ = GENERATION_3D_PLAY_APP_ID;
@@ -103,6 +104,7 @@ pub fn render(
         semio_framework_plugin::plugin_app_close_prelude::SurfaceKind::World3d,
         &semio_framework_ui::wgpu::World3dScene {
             status_json,
+            fit_json: Some(fit_json),
             domain_id: Some(GENERATION_3D_INTERACTION_DOMAIN.into()),
             domain_granularity_id: Some(GENERATION_3D_INTERACTION_GRANULARITY.into()),
             ..world3d_scene(preview_camera_json(cfg), payload.meshes_json, payload.instances_json, selection_json, &sun)

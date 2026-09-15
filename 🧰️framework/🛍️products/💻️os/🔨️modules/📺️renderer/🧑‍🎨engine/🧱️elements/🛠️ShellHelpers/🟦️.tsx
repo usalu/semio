@@ -269,6 +269,41 @@ export function historyPatchShouldApplyV1(
   return patch.cursor === currentCursor && (patch.upserts?.length ?? 0) > 0;
 }
 
+/** 🧾️ The framework history cursor as the shell publishes it on `data-history-json` — the ONE readable
+ * statement of what undo and redo would actually do right now.
+ *
+ * `historyProjection` is the shell's own reduction of every `HistoryPatch` the guest sent, and it is what
+ * gates the `framework.history.undo`/`.redo` controls. Until this existed nothing carried it into the
+ * document, so an undo/redo assertion could only watch WHICH ACTION a chord minted and never whether the
+ * history it acted on had anything to undo — measured on generation3d 6018, `historyJsonPublished: false`
+ * with zero `[data-history-json]` carriers in the page (`📓️react-current-tree-battery-2026-09-14.md` §6).
+ * The newest few labels ride along in cursor order so a reader can name the entry a press would revert
+ * without a second round trip; the list is bounded because this is chrome state on a DOM attribute, not
+ * the History panel. */
+export const SHELL_HISTORY_DOM_LABELS = 8;
+
+export function shellHistoryCursorDomV1(projection: {
+  readonly cursor: number;
+  readonly entries: Readonly<Record<number, { readonly seq: number; readonly label: string; readonly actionId: string }>>;
+  readonly canUndo: boolean;
+  readonly canRedo: boolean;
+  readonly currentCheckpointId?: string;
+}): Record<string, unknown> {
+  const ordered = Object.values(projection.entries ?? {}).sort((left, right) => left.seq - right.seq);
+  const recent = ordered.slice(-SHELL_HISTORY_DOM_LABELS);
+  return {
+    cursor: projection.cursor,
+    canUndo: Boolean(projection.canUndo),
+    canRedo: Boolean(projection.canRedo),
+    entries: ordered.length,
+    currentCheckpointId: projection.currentCheckpointId ?? null,
+    labels: recent.map((entry) => entry.label),
+    actionIds: recent.map((entry) => entry.actionId),
+    undoLabel: projection.canUndo ? (ordered.findLast((entry) => entry.seq <= projection.cursor)?.label ?? null) : null,
+    redoLabel: projection.canRedo ? (ordered.find((entry) => entry.seq > projection.cursor)?.label ?? null) : null,
+  };
+}
+
 /** 🔄 Catalog example switch does not carry a history_patch on the first Invocation; chrome must re-snapshot. */
 export function historyRefreshNeededV1(actionId: string, patch: Readonly<{ upserts?: readonly unknown[] }> | undefined): boolean {
   return actionId === SET_ACTIVE_EXAMPLE_ACTION_ID && (patch?.upserts?.length ?? 0) === 0;
@@ -3824,6 +3859,13 @@ export function buildActionCategoryTree(
       const missing = unresolvedActionArgs(expandedAction.args, effective);
       sections.push({
         id: `action.category.${category.id}.form`,
+        // 🏷️ The staged-argument form is a SECTION of the Actions pane and every section a user reads
+        // carries a name. It had none, so the export dialog's own argument list announced as an unnamed
+        // group to a screen reader and read as an untranslated row to the German pass (measured on
+        // generation3d 6018: `actions-pane-de` → `unlabelled: ["action.category.actions.form"]`). The
+        // expanded action's OWN label is already resolved against the host's locale, and it is what the
+        // form is for — no second string to translate, and it says WHICH action is being staged.
+        label: expandedAction.label,
         defaultOpen: true,
         items: expandedAction.args.map(
           (def): TreeDataItem => ({
@@ -4318,6 +4360,8 @@ export function buildCommandCategoryTree(
     const missing = unresolvedActionArgs(expanded.definition.args, effective);
     sections.push({
       id: `command.category.${expanded.definition.category}.form`,
+      // 🏷️ The command palette's twin of the Actions pane form section above — same rule, same reason.
+      label: expanded.definition.label,
       items: expanded.definition.args.map(
         (def): TreeDataItem => ({
           id: `command.${expandedElementKey}.arg.${def.id}`,

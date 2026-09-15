@@ -569,6 +569,62 @@ fn nakagin_plan(requested: usize, turns: usize) -> FillBuilder {
     builder
 }
 
+/// ⚖️ LAW (the dev's fill procedure, ticket 26/09/13/INTERACTIVE-TOOLS-VISIBLE-PROCESS 2026-09-14): the planner draws a free
+/// vortex by distribution and tests compatible candidates there — after a refusal the next candidate is tested at the SAME
+/// vortex — until one fits (placed, its vortex consumed) or none is left (the vortex is marked and never drawn again). It
+/// stalls only once every vortex of the pool is consumed or marked, keeping every placement made so far.
+#[test]
+fn fill_plan_retries_one_drawn_vortex_until_it_places_or_is_marked_and_never_draws_a_marked_vortex() {
+    let (roots, _, _) = example_fill_roots("nakagin", 1);
+    let mut builder = FillBuilder::begin_preparation(roots, Operation::new(OperationId(101), RevisionId(1), Generation(1), 1), 1_000_000);
+    builder.observe_run();
+    let (mut sequence, mut events) = (0, Vec::new());
+    let (mut last_target, mut open): (Option<String>, Option<String>) = (None, None);
+    let mut marked = std::collections::HashSet::new();
+    let (mut placements, mut retries) = (0usize, 0usize);
+    for _ in 0..50_000_000 {
+        if matches!(builder.stage, FillJobStage::Complete(_)) {
+            break;
+        }
+        let mut context = test_context(&builder, root_cancel_token(), &mut sequence);
+        let outcome = builder.step(&mut context);
+        assert!(!faulted(outcome), "the planner never faults: {:?}", builder.last_rejection);
+        let current = builder.current_target.as_ref().map(|target| target.full_id.clone());
+        builder.swap_run_events(&mut events);
+        for event in &events {
+            match event {
+                FillRunEvent::Constructed { .. } => {
+                    let target = current.clone().or_else(|| last_target.clone()).expect("a candidate is constructed at a drawn vortex");
+                    assert!(!marked.contains(&target), "the marked vortex {target} is never drawn again");
+                    if let Some(open) = &open {
+                        assert_eq!(open, &target, "a refused candidate is followed by another candidate at the same vortex");
+                        retries += 1;
+                    }
+                    open = Some(target);
+                }
+                FillRunEvent::Accepted => {
+                    open = None;
+                    placements += 1;
+                }
+                FillRunEvent::VortexMarked { .. } => {
+                    let target = last_target.clone().expect("a marked vortex was drawn");
+                    assert!(marked.insert(target), "a vortex is marked once");
+                    open = None;
+                }
+                _ => {}
+            }
+        }
+        if current.is_some() {
+            last_target = current;
+        }
+    }
+    assert_eq!(builder.end(), Some(FillPlanEnd::Stalled(FillStall::NoFreePlacement)), "a million requested objects on Nakagin end in the no-free-placement stall");
+    assert_eq!(builder.sequence.len(), placements, "the partial plan keeps every placement");
+    assert!(placements > 0 && !marked.is_empty() && retries > 0, "the law needs placements ({placements}), marks ({}) and retries at one vortex ({retries})", marked.len());
+    assert!(builder.target_weights.iter().all(|weight| *weight == 0.0), "the plan stalls only once no pool vortex can be drawn");
+    assert_eq!(builder.targets.len(), placements + marked.len(), "every pool vortex ended consumed by exactly one placement or marked");
+}
+
 fn plan_identity(builder: &FillBuilder) -> Vec<(String, String, usize)> {
     builder.sequence.iter().map(|payload| (payload.target_vortex_full_id.clone(), payload.object_kind_id.clone(), payload.source_vortex_index)).collect()
 }
@@ -587,7 +643,7 @@ fn raising_the_requested_count_continues_the_plan_as_an_exact_prefix() {
     let short_rng = raised.rng_state;
 
     raised.set_requested_count(LONG);
-    assert_eq!((raised.requested_count(), raised.stage, raised.end()), (LONG, FillJobStage::PrepareTargets, None), "a completed planner wakes up at target selection");
+    assert_eq!((raised.requested_count(), raised.stage, raised.end()), (LONG, FillJobStage::SelectTarget, None), "a completed planner wakes up at target selection over its resident vortex pool");
     assert_eq!(raised.rng_state, short_rng, "raising never rewinds the stream");
     drive_until_settled(&mut raised, 4_000_000);
     assert_eq!(raised.sequence.len(), LONG);
@@ -779,7 +835,7 @@ impl FillRunMirror {
 }
 
 fn fill_run_summary(job: &FillRunJob, mirror: &FillRunMirror, prefix: usize) -> serde_json::Value {
-    let [tested, locked, collisions, rejected] = job.counters();
+    let [tested, locked, collisions, rejected, marked] = job.counters();
     let stall = mirror.steps.iter().rev().find(|step| step.kind == ToolRunStepKind::Warning).and_then(|step| FillRunReason::from_code(step.reason)).map(FillRunReason::id);
     serde_json::json!({
         "verdictPrefix": mirror.verdict_words().into_iter().take(prefix).collect::<Vec<_>>(),
@@ -787,6 +843,7 @@ fn fill_run_summary(job: &FillRunJob, mirror: &FillRunMirror, prefix: usize) -> 
         "locked": locked,
         "collisions": collisions,
         "rejected": rejected,
+        "marked": marked,
         "appendOps": mirror.ops.len(),
         "appendEntities": mirror.entities.len(),
         "checkpoints": mirror.checkpoints.len(),
@@ -825,11 +882,11 @@ fn fill_run_job_matches_the_language_neutral_fill_run_fixture() {
         if &actual != expected {
             disagreements.push(format!("{document} seed {seed} requested {requested}: actual {actual}"));
         }
-        let [tested, locked, collisions, rejected] = job.counters();
+        let [tested, locked, collisions, rejected, marked] = job.counters();
         let count = |wanted: ToolRunVerdict| mirror.verdicts.iter().filter(|(_, verdict, _)| *verdict == wanted).count() as u64;
-        assert_eq!((count(ToolRunVerdict::Success), count(ToolRunVerdict::Danger), count(ToolRunVerdict::Warning)), (locked, collisions, rejected));
-        assert_eq!(mirror.verdicts.len() as u64, tested, "every constructed candidate reached exactly one verdict");
-        assert_eq!(mirror.trace.len() as u64, tested, "every tested candidate stays resident");
+        assert_eq!((count(ToolRunVerdict::Success), count(ToolRunVerdict::Danger), count(ToolRunVerdict::Warning)), (locked, collisions + marked, rejected));
+        assert_eq!(mirror.verdicts.len() as u64, tested + marked, "every constructed candidate reached exactly one verdict and every marked vortex one danger record");
+        assert_eq!(mirror.trace.len() as u64, tested + marked, "every tested candidate and every marked vortex stays resident");
         for (index, pair) in mirror.ops.chunks(2).enumerate() {
             let Ok(Puzzle3dMutation::CreateObject(create)) = crate::standards::v1::subsets::any::schema::mutations::binary::decode_op(&pair[0]) else { panic!("op {} is create_object", 2 * index) };
             let Ok(Puzzle3dMutation::ConnectVortices(connect)) = crate::standards::v1::subsets::any::schema::mutations::binary::decode_op(&pair[1]) else { panic!("op {} is connect_vortices", 2 * index + 1) };
@@ -839,7 +896,7 @@ fn fill_run_job_matches_the_language_neutral_fill_run_fixture() {
         }
         let progress = mirror.progress.as_ref().expect("progress");
         assert_eq!((progress.state, progress.completed, progress.total), (ToolRunState::Complete, locked, Some(requested as u64)));
-        assert_eq!(progress.counters.iter().map(|counter| counter.value).collect::<Vec<_>>(), vec![tested, locked, collisions, rejected]);
+        assert_eq!(progress.counters.iter().map(|counter| counter.value).collect::<Vec<_>>(), vec![tested, locked, collisions, rejected, marked]);
     }
     assert!(disagreements.is_empty(), "the fill run fixture disagrees:\n{}", disagreements.join("\n"));
 }
@@ -1006,11 +1063,11 @@ fn fill_run_job_collision_verdicts_agree_with_the_parry3d_oracle() {
     assert!(collisions > 0 && fits > 0, "the oracle documents must decide both collisions ({collisions}) and fits ({fits})");
 }
 
-/// ⚖️ LAW: a run of at least 5 000 tested candidates delivers every trace record — the ledger's resident
-/// store and a renderer that only ever reads byte-budgeted deltas through its echoed cursor hold exactly
-/// the key set the job reported, with the verdict the job reported last.
+/// ⚖️ LAW: a long run (at least the fixture's `candidates` tested) delivers every trace record — the ledger's resident
+/// store and a renderer that only ever reads byte-budgeted deltas through its echoed cursor hold exactly the key set the
+/// job reported (one per tested candidate and one per marked vortex), with the verdict the job reported last.
 #[test]
-fn fill_run_job_delivers_every_trace_record_of_a_5000_candidate_run() {
+fn fill_run_job_delivers_every_trace_record_of_a_long_run() {
     let fixture: serde_json::Value = serde_json::from_str(FILL_RUN_FIXTURE).expect("fill run fixture");
     let law = &fixture["laws"]["delivery"];
     let minimum = law["candidates"].as_u64().expect("candidates");
@@ -1070,7 +1127,7 @@ fn fill_run_job_delivers_every_trace_record_of_a_5000_candidate_run() {
     }
     assert!(job.counters()[0] >= minimum, "the delivery law needs at least {minimum} tested candidates, the run reached {:?}", job.counters());
     let keys = |store: &ToolRunTraceStore| store.records().map(|(key, record)| (key, record.verdict)).collect::<HashMap<_, _>>();
-    assert_eq!(expected.len() as u64, job.counters()[0]);
+    assert_eq!(expected.len() as u64, job.counters()[0] + job.counters()[4]);
     assert_eq!(keys(&ledger.trace), expected, "the ledger holds every reported record");
     assert_eq!(keys(&renderer), expected, "a cursor-driven renderer holds every reported record");
 }
@@ -1138,7 +1195,7 @@ fn fill_run_job_step_and_overlay_append_stay_below_the_interactive_ceiling_for_n
     let mut expiries: Vec<Option<u64>> = Vec::new();
     let mut best: Vec<Duration> = Vec::new();
     let mut best_appends: Vec<Duration> = Vec::new();
-    let mut counters = [0; 4];
+    let mut counters = [0; 5];
     for run in 0..runs {
         let (roots, lane, _) = example_fill_roots(law["document"].as_str().expect("document"), seed as u32);
         let mut overlay = Puzzle3dPlaySnapshot::new((&dsl::ToValue::to_value(&crate::standards::v1::subsets::any::schema::snapshot::text::parse_dsl(crate::standards::v1::subsets::any::schema::snapshot::text::PUZZLE3D_NAKAGIN_EXAMPLE_TEXT).expect("example parses"))).into());
@@ -1514,7 +1571,7 @@ fn fill_run_and_revalidation_collide_with_a_placed_body_carrying_its_own_mesh() 
         let blocker = case["blocker"].as_bool().expect("blocker");
         let expected = &case["expected"];
         let (job, mirror) = run(blocker, case["requested"].as_u64().expect("requested") as usize);
-        let [_, locked, collisions, _] = job.counters();
+        let [_, locked, collisions, _, _] = job.counters();
         let stall = mirror.steps.iter().rev().find(|step| step.kind == ToolRunStepKind::Warning).and_then(|step| FillRunReason::from_code(step.reason)).map(FillRunReason::id);
         let mut actual = serde_json::json!({ "verdicts": mirror.verdict_words(), "locked": locked, "collisions": collisions, "stall": stall });
         let operation = Operation::new(OperationId(98), RevisionId(2), Generation(1), 1);
@@ -1537,9 +1594,10 @@ fn fill_run_job_reports_rule_refusals_as_warnings_and_the_stall_as_a_warning_ste
     let mut job = FillRunJob::new(FillBuilder::begin_preparation(FillPreparationRoots::new(Arc::new(scene), roots.meshes.clone()), Operation::new(OperationId(89), RevisionId(1), Generation(1), 43), 10), fill_run_identity(), vec![NAKAGIN_MESH_URL.to_string()], [0; 32]);
     let mut mirror = FillRunMirror::new();
     mirror.drive(&mut job, u64::MAX, 1_000_000);
-    let [tested, locked, collisions, rejected] = job.counters();
-    assert!(tested > 0 && tested == rejected && locked == 0 && collisions == 0, "{:?}", job.counters());
-    assert!(mirror.verdicts.iter().all(|(_, verdict, reason)| *verdict == ToolRunVerdict::Warning && *reason == FillRunReason::OutsideTargetVolume.code()));
+    let [tested, locked, collisions, rejected, marked] = job.counters();
+    assert!(tested > 0 && tested == rejected && locked == 0 && collisions == 0 && marked > 0, "{:?}", job.counters());
+    assert!(mirror.verdicts.iter().all(|(_, verdict, reason)| (*verdict == ToolRunVerdict::Warning && *reason == FillRunReason::OutsideTargetVolume.code()) || (*verdict == ToolRunVerdict::Danger && *reason == FillRunReason::VortexExhausted.code())));
+    assert_eq!(mirror.verdicts.iter().filter(|(_, _, reason)| *reason == FillRunReason::VortexExhausted.code()).count() as u64, marked, "every vortex whose candidates were all refused is marked once");
     assert!(mirror.ops.is_empty() && mirror.entities.is_empty());
     let last = mirror.steps.last().expect("stall step");
     assert_eq!((last.kind, last.reason, last.args.clone()), (ToolRunStepKind::Warning, FillRunReason::NoFreePlacement.code(), vec![ToolRunStepArg::Unsigned(0)]));
@@ -1551,7 +1609,7 @@ fn fill_run_job_reports_rule_refusals_as_warnings_and_the_stall_as_a_warning_ste
 /// the declared stall reason its `warning` step names. A run that ended without a step, with an undeclared reason, or with
 /// zero verdicts and no stall reason fails the law.
 fn fill_run_visible_end(name: &str, job: &FillRunJob, mirror: &FillRunMirror, requested: usize) -> Option<&'static str> {
-    let [tested, locked, _, _] = job.counters();
+    let [tested, locked, _, _, _] = job.counters();
     assert_eq!(mirror.progress.as_ref().map(|progress| progress.state), Some(ToolRunState::Complete), "{name}: the run's last progress is complete");
     let last = mirror.steps.last().unwrap_or_else(|| panic!("{name}: the run ended with counters {:?} and no step", job.counters()));
     assert_eq!(last.args, vec![ToolRunStepArg::Unsigned(locked)], "{name}: the terminal step carries the placement count");
@@ -1590,9 +1648,9 @@ fn fill_run_ends_visibly_with_a_declared_reason_for_every_case_and_own_mesh_vari
         mirror.drive(&mut job, u64::MAX, 1_000_000);
         let name = format!("{document} seed {seed} requested {requested} own-mesh {scale}");
         let stall = fill_run_visible_end(&name, &job, &mirror, requested);
-        let [tested, locked, collisions, rejected] = job.counters();
+        let [tested, locked, collisions, rejected, marked] = job.counters();
         assert!(tested > 0 || stall.is_some(), "{name}: zero verdicts always name their stall");
-        let actual = serde_json::json!({ "tested": tested, "locked": locked, "collisions": collisions, "rejected": rejected, "stall": stall });
+        let actual = serde_json::json!({ "tested": tested, "locked": locked, "collisions": collisions, "rejected": rejected, "marked": marked, "stall": stall });
         if actual != case["expected"] {
             disagreements.push(format!("{name}: actual {actual}"));
         }
@@ -1623,6 +1681,6 @@ fn fill_run_job_mid_plan_capacity_stall_ends_with_a_visible_warning_step() {
     job.builder.collection_over_capacity = true;
     mirror.drive(&mut job, u64::MAX, 1_000);
     assert_eq!(fill_run_visible_end("mid-plan capacity", &job, &mirror, 8), Some(FillRunReason::DocumentCapacity.id()));
-    let [tested, locked, _, _] = job.counters();
+    let [tested, locked, _, _, _] = job.counters();
     assert_eq!((locked, mirror.verdicts.len() as u64), (1, tested), "one placement, and every tested candidate reached its verdict");
 }

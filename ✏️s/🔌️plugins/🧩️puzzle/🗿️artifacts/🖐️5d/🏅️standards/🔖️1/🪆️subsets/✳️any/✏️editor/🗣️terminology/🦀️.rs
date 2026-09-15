@@ -29,6 +29,7 @@ semio_framework_plugin::app_labels! {
         fill_counter_placed: native_en "Placed", native_de "Platziert", reuse_en "Placed", reuse_de "Platziert";
         fill_counter_collisions: native_en "Collisions", native_de "Kollisionen", reuse_en "Collisions", reuse_de "Kollisionen";
         fill_counter_rejected: native_en "Rejected", native_de "Abgelehnt", reuse_en "Rejected", reuse_de "Abgelehnt";
+        fill_counter_marked: native_en "Marked grips", native_de "Markierte Griffe", reuse_en "Marked connection points", reuse_de "Markierte Verbindungspunkte";
         fill_reason_fits: native_en "Fits", native_de "Passt", reuse_en "Fits", reuse_de "Passt";
         fill_reason_solid_overlap: native_en "Collides with a placed part", native_de "Kollidiert mit einem platzierten Teil", reuse_en "Collides with a placed building component", reuse_de "Kollidiert mit einer platzierten Baukomponente";
         fill_reason_outside_target_volume: native_en "Outside the target volume", native_de "Außerhalb des Zielvolumens", reuse_en "Outside the target volume", reuse_de "Außerhalb des Zielvolumens";
@@ -52,6 +53,7 @@ semio_framework_plugin::app_labels! {
         fill_reason_document_capacity: native_en "Document capacity reached at {0}", native_de "Dokumentkapazität bei {0} erreicht", reuse_en "Document capacity reached at {0}", reuse_de "Dokumentkapazität bei {0} erreicht";
         fill_reason_requested_reached: native_en "Placed all {0} requested parts", native_de "Alle {0} angeforderten Teile platziert", reuse_en "Placed all {0} requested building components", reuse_de "Alle {0} angeforderten Baukomponenten platziert";
         fill_reason_retracted: native_en "Retracted placements above the new count", native_de "Platzierungen über der neuen Anzahl zurückgenommen", reuse_en "Retracted placements above the new count", reuse_de "Platzierungen über der neuen Anzahl zurückgenommen";
+        fill_reason_vortex_exhausted: native_en "No collision-free candidate at this grip", native_de "Kein kollisionsfreier Kandidat an diesem Griff", reuse_en "No collision-free candidate at this connection point", reuse_de "Kein kollisionsfreier Kandidat an diesem Verbindungspunkt";
         brush_run_unit: native_en "candidates", native_de "Kandidaten", reuse_en "candidates", reuse_de "Kandidaten";
         brush_stage_prepare: native_en "Preparing", native_de "Vorbereiten", reuse_en "Preparing", reuse_de "Vorbereiten";
         brush_stage_target: native_en "Listing compatible parts", native_de "Passende Teile auflisten", reuse_en "Listing compatible building components", reuse_de "Passende Baukomponenten auflisten";
@@ -164,14 +166,14 @@ pub fn puzzle5d_fill_run_stages() -> Vec<ToolRunStageDefinition> {
 
 /// 🔢️ The fill run's counters in `FillRunCounter::ALL` order.
 pub fn puzzle5d_fill_run_counters() -> Vec<ToolRunCounterDefinition> {
-    let label = [puzzle5d_localized(|labels| labels.fill_counter_tested), puzzle5d_localized(|labels| labels.fill_counter_placed), puzzle5d_localized(|labels| labels.fill_counter_collisions), puzzle5d_localized(|labels| labels.fill_counter_rejected)];
+    let label = [puzzle5d_localized(|labels| labels.fill_counter_tested), puzzle5d_localized(|labels| labels.fill_counter_placed), puzzle5d_localized(|labels| labels.fill_counter_collisions), puzzle5d_localized(|labels| labels.fill_counter_rejected), puzzle5d_localized(|labels| labels.fill_counter_marked)];
     FillRunCounter::ALL.iter().zip(label).map(|(counter, label)| ToolRunCounterDefinition { id: counter.id().into(), label }).collect()
 }
 
 /// 🏷️ Every fill run reason in `FillRunReason::ALL` order with the planner's code and verdict and a 5d template;
 /// steps substitute `{0}` with their first argument.
 pub fn puzzle5d_fill_run_reasons() -> Vec<ToolRunReasonDefinition> {
-    let template: [fn(&Puzzle5dLabels) -> LabelText; 23] = [
+    let template: [fn(&Puzzle5dLabels) -> LabelText; 24] = [
         |labels| labels.fill_reason_fits,
         |labels| labels.fill_reason_solid_overlap,
         |labels| labels.fill_reason_outside_target_volume,
@@ -195,6 +197,7 @@ pub fn puzzle5d_fill_run_reasons() -> Vec<ToolRunReasonDefinition> {
         |labels| labels.fill_reason_document_capacity,
         |labels| labels.fill_reason_requested_reached,
         |labels| labels.fill_reason_retracted,
+        |labels| labels.fill_reason_vortex_exhausted,
     ];
     FillRunReason::ALL.iter().zip(template).map(|(reason, template)| ToolRunReasonDefinition { code: reason.code(), id: reason.id().into(), verdict: reason.verdict(), template: puzzle5d_localized(template) }).collect()
 }

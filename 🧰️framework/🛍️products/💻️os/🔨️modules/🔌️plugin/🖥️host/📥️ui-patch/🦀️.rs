@@ -88,12 +88,19 @@ fn patch(value: wit_ui::UiPatch, expected_instance: u32) -> Result<UiPatch, Stri
     Ok(UiPatch { surface, base_revision: ui::UiRevision(value.base_revision), revision: ui::UiRevision(value.revision), ops })
 }
 
-/// 🧷️ Moves exactly one emitted-first WIT patch into the retained kernel turn owner.
+/// 🧷️ Moves the emitted-first WIT patch BATCH into the retained kernel turn owner, in the order the
+/// guest published it, under the turn's declared byte budget.
+///
+/// 🐛️ Until 2026-09-15 this admitted exactly one patch per turn and dropped the rest on the floor
+/// (`emitted.into_iter().chain(returned).next()`), which is why the count cap above it could not move.
 pub(super) fn wit_ui_patches_to_kernel(expected_instance: u32, max_patch_bytes: u32, emitted: Vec<wit_ui::UiPatch>, returned: Vec<wit_ui::UiPatch>, receipt: Option<ActorUiPatchReceipt>) -> Result<UiTurnPatches, String> {
     let count = emitted.len().checked_add(returned.len()).ok_or_else(|| "ui patch count overflow".to_string())?;
     ActorUiPatchReceipt::validate_pairing(receipt, count).map_err(|error| error.to_string())?;
     if receipt.is_some_and(|receipt| receipt.lifetime.instance_id != expected_instance) {
         return Err("ui patch receipt instance mismatch".to_string());
+    }
+    if !emitted.is_empty() && !returned.is_empty() {
+        return Err("ui patch turn mixes the imported and returned channels".to_string());
     }
     if count > UI_TURN_PATCHES_MAXIMUM {
         return Err("ui patch turn capacity exceeded".to_string());
@@ -106,10 +113,11 @@ pub(super) fn wit_ui_patches_to_kernel(expected_instance: u32, max_patch_bytes: 
     if measured > admitted {
         return Err("ui patch byte budget exceeded".to_string());
     }
-    let Some(value) = emitted.into_iter().chain(returned).next() else { return Ok(UiTurnPatches::default()) };
-    let patch = patch(value, expected_instance)?;
     let mut owner = UiTurnPatches::default();
-    owner.try_push_ui_patch(patch).map_err(|_| "ui patch retained owner admission refused".to_string())?;
+    for value in emitted.into_iter().chain(returned) {
+        let patch = patch(value, expected_instance)?;
+        owner.try_push_ui_patch(patch).map_err(|_| "ui patch retained owner admission refused".to_string())?;
+    }
     Ok(owner)
 }
 

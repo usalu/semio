@@ -1046,10 +1046,22 @@ impl ArtifactCommandWork<ViewerApp<Generation3dViewer>> for Generation3dViewDocu
         let Generation3dViewCommand::ExportDocument(payload) = input.command else {
             return Err(Fault::from("generation3d-view-document-io-route-rejected"));
         };
-        let doc = ArtifactView::with_operation(input.snapshot, input.history, input.operation.clone());
+        /// 👁️ A viewer exports WHAT IT SHOWS. Every other viewer surface resolves the viewed document
+        /// through `Generation3dViewedDocument::resolve` — the active example replaces the opened
+        /// snapshot — and this one alone read `input.snapshot` raw. With an example picked, the export
+        /// therefore encoded a document the session never evaluated, and every format failed with
+        /// `the document evaluates to no preview geometry (no positions)` while three meshes stood on
+        /// screen (measured on :6023, ticket 26/09/09/PROCEDURAL-3D-END-TO-END gap F2).
+        let viewed = Generation3dViewedDocument::resolve(input.snapshot, input.config);
         let cfg = ConfigView { snapshot: input.config, window: None };
-        let preview = self.instance_owner.with_mut::<Generation3dViewInstanceOperationOwner, _>(|owner| owner.with_session(|session| export_document::retained_preview(&doc, &cfg, session)))?;
-        let view_emit = export_document::emit(payload, &doc, preview.as_ref())?;
+        let emitted = {
+            let doc = ArtifactView::with_operation(viewed.snapshot(), input.history, input.operation.clone());
+            self.instance_owner
+                .with_mut::<Generation3dViewInstanceOperationOwner, _>(|owner| owner.with_session(|session| export_document::retained_preview(&doc, &cfg, session)))
+                .and_then(|preview| export_document::emit(payload, &doc, preview.as_ref()))
+        };
+        viewed.retire();
+        let view_emit = emitted?;
         Ok(ArtifactCommandWorkStep::Complete(Emit { effects: view_emit.effects, ui_scope: view_emit.ui_dirty, ..Default::default() }))
     }
 }

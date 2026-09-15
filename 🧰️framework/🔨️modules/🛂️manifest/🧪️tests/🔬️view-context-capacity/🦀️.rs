@@ -65,7 +65,6 @@ async fn a_capacity_filled_context_fits_the_bound() {
         focused_window_id: Some(identifier()),
         window_instances: (0..VIEW_CONTEXT_WINDOW_INSTANCES).map(|index| ViewWindowInstance { id: format!("{index}{}", identifier()), window_kind_id: identifier() }).collect(),
         tool_run_trace_cursor_by_window_id: (0..VIEW_CONTEXT_TRACE_CURSOR_ENTRIES).map(|index| (format!("{index}{}", identifier()), semio_framework_tool_run::ToolRunTraceCursor { run: (1 << 53) - 1, generation: u32::MAX, page: u32::MAX })).collect(),
-        tool_run_units_per_second: Some(1000.0),
     };
     let encoded = serde_json::to_vec(&view).unwrap();
     println!("[STATS] capacity-filled view context encoded={} bound={}", encoded.len(), MAX_SURFACE_VIEW_CONTEXT_BYTES);

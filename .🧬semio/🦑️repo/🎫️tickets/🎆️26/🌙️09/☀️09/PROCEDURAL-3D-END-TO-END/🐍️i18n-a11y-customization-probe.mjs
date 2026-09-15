@@ -104,11 +104,34 @@ async function setCombo(page, id, optionRe) {
   return true;
 }
 
+/** 🌳️ Opens the Artifact panel and waits for the graph outline's own rows.
+ *
+ * `graph_nodes`/`graph_wires`/`graph_input_port`/`graph_output_port`/`status_ok` are painted NOWHERE
+ * else — the Flow window draws its nodes on a GPU canvas with no DOM text at all, and this outline is
+ * the whole keyboard/screen-reader route through the graph. Reading `document.body.innerText` with the
+ * panel closed therefore scored five correctly translated fields as missing (measured 2026-09-15 on
+ * 6018: with the panel OPEN the same build reads `KNOTEN`, `LEITUNGEN`, `Eingang`, `Ausgang`,
+ * `Ausgewertet` — `🐍️german-outline-recon.mjs`). The tab TOGGLES, so this presses until the dock
+ * reports it active rather than pressing once and hoping.
+ */
+async function openArtifactOutline(page, tag) {
+  for (let attempt = 0; attempt < 4; attempt += 1) {
+    const rows = await page.locator('[data-slot="panel"] [role="treeitem"]').count();
+    const active = await page.evaluate(() => document.querySelector('[data-slot="panel"][data-anchor="top-left"]')?.getAttribute("data-active-tab-id") ?? null);
+    if (rows > 0 && active === "framework.panel.artifact") return true;
+    await page.locator("button#framework\\.panel\\.artifact").first().click({ position: { x: 8, y: 11 }, timeout: 8000 }).catch(() => {});
+    await page.waitForTimeout(2500);
+  }
+  console.log(`[DEBUG] ${tag}: the Artifact outline never opened`);
+  return false;
+}
+
 // ── 1. edit mode, English baseline ───────────────────────────────────────────
 const page = await context.newPage();
 page.on("pageerror", (e) => results.errors.push(String(e).slice(0, 300)));
 await page.goto(`${BASE}/?plugin=generation3d`, { waitUntil: "domcontentloaded" });
 await boot(page, "edit-en");
+results.outlineOpenEn = await openArtifactOutline(page, "1-edit-en");
 await capture(page, "1-edit-en");
 
 // ── 2. switch to German ──────────────────────────────────────────────────────
@@ -116,6 +139,7 @@ console.log("[DEBUG] switching locale to German");
 await setCombo(page, "framework.settings.language", /Deutsch/);
 await page.keyboard.press("Escape");
 await page.waitForTimeout(2500);
+results.outlineOpenDe = await openArtifactOutline(page, "2-edit-de");
 await capture(page, "2-edit-de");
 
 // ── 3. keyboard reach: can a canvas take focus? ──────────────────────────────
@@ -174,6 +198,7 @@ await page.waitForTimeout(2000);
 const beforeReload = await domCensus(page);
 await page.reload({ waitUntil: "domcontentloaded" });
 await boot(page, "after-reload");
+results.outlineOpenReload = await openArtifactOutline(page, "6-after-reload");
 const afterReload = await capture(page, "6-after-reload");
 results.persistence = {
   localeBefore: beforeReload.htmlLang, localeAfter: afterReload.htmlLang,

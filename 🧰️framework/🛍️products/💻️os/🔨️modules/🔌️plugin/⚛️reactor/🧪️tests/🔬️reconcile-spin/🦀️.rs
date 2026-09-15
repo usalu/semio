@@ -45,7 +45,8 @@ struct CrossingLedger {
 
 /// 🔁️ The browser loop, exactly as `PluginRuntime.settlePluginTurn` drives it: post a turn carrying
 /// the acknowledgements the previous turn earned, run the guest's own publication ladder, take the
-/// one patch a turn may carry (`UI_TURN_PATCHES_MAXIMUM`), and stop when the guest stops answering
+/// patches one at a time through `take_one` (the batching ladder above it is priced by
+/// `🧺️turn-patch-batch`), and stop when the guest stops answering
 /// `MoreWork` with nothing left to acknowledge. Every lap is one worker round trip.
 fn settle_surfaces(instance: u32, count: usize) -> (CrossingLedger, usize) {
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
@@ -100,7 +101,7 @@ fn settle_tracker(tracker: &patches::PatchTracker, instance: u32) -> (CrossingLe
             published += 1;
             ledger.with_patch += 1;
             let receipt = ActorUiPatchReceipt { lifetime: ActorInstanceLifetime { activation_generation: 1, instance_id: instance, guest_lifetime: 1 }, patch_sequence: sequence };
-            with_pending(|pending| pending.borrow_mut().stage_emission(receipt, &patch)).expect("staged emission");
+            with_pending(|pending| pending.borrow_mut().stage_emission(receipt, std::iter::once(&patch))).expect("staged emission");
             with_pending(|pending| pending.borrow_mut().commit_emission());
             acknowledgements.push((receipt, patch.surface.0.to_string(), patch.revision.0));
             let mut owner = ui_contract::UiPendingPatch::default();
@@ -188,7 +189,7 @@ fn a_host_blocked_ready_output_spends_no_opportunity_and_arms_nothing() {
         with_pending(|pending| pending.borrow_mut().push_external(ui_contract::UiPatch { surface, base_revision: ui_contract::UiRevision(0), revision: ui_contract::UiRevision(sequence), ops: Default::default() })).expect("external publication");
         let patch = with_pending(|pending| pending.borrow_mut().take_one(semio_framework_ui_runtime::SURFACE_RECONCILE_PAGE_BYTES)).expect("publication").expect("queued filler");
         let receipt = ActorUiPatchReceipt { lifetime: ActorInstanceLifetime { activation_generation: 1, instance_id: instance, guest_lifetime: 1 }, patch_sequence: sequence };
-        with_pending(|pending| pending.borrow_mut().stage_emission(receipt, &patch)).expect("staged emission");
+        with_pending(|pending| pending.borrow_mut().stage_emission(receipt, std::iter::once(&patch))).expect("staged emission");
         with_pending(|pending| pending.borrow_mut().commit_emission());
         issued.push((receipt, patch.surface.0.to_string(), patch.revision.0));
         retire_host_patch(patch);
@@ -329,7 +330,7 @@ fn the_pending_publication_phases_partition_what_arms_a_turn() {
     });
     let patch = with_pending(|pending| pending.borrow_mut().take_one(semio_framework_ui_runtime::SURFACE_RECONCILE_PAGE_BYTES)).expect("publication").expect("queued patch");
     let receipt = ActorUiPatchReceipt { lifetime: ActorInstanceLifetime { activation_generation: 1, instance_id: 55, guest_lifetime: 1 }, patch_sequence: 1 };
-    with_pending(|pending| pending.borrow_mut().stage_emission(receipt, &patch)).expect("staged emission");
+    with_pending(|pending| pending.borrow_mut().stage_emission(receipt, std::iter::once(&patch))).expect("staged emission");
     with_pending(|pending| pending.borrow_mut().commit_emission());
     with_pending(|pending| {
         let pending = pending.borrow();

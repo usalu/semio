@@ -431,3 +431,62 @@ fn the_viewer_preview_window_offers_the_cancel_verb_the_fixture_names() {
     let window = definition.window_kinds.iter().find(|window| window.id == window_kind_id).unwrap_or_else(|| panic!("{window_kind_id} is a declared window kind"));
     assert!(window.actions.iter().any(|action| action.id == verb), "{window_kind_id} must offer {verb}: {:?}", window.actions.iter().map(|action| action.id.as_str()).collect::<Vec<_>>());
 }
+
+/// ⚖️ LAW: once the chain has SETTLED its census, the preview publishes neither `computing` nor a
+/// `cancellable` abort — even while the `ToolRunView` it was handed still says the run is live.
+///
+/// 🩸️ The two are ORed off the run view, which is a host artifact delivered on a render and therefore
+/// lags its own job. The inline continuation lets a chain finish inside an extension answer's turn,
+/// after which the guest has nothing further to say and no render carries the run's terminal state
+/// back — so the preview published `phase: "idle", ratio: 1.0, nodesDone 7/7` beside
+/// `computing: true, cancellable: true` FOREVER. Reproduced on 6024 in two picks
+/// (`🗑️generated/flow-inline/run-settle2/`), and it is a false affordance as much as a false
+/// spinner: `toolRunAbort` there stops nothing, because nothing is running.
+///
+/// 🚦️ The counter-case is asserted with it: before any hop has published a census the run DOES speak
+/// for the evaluation, because it is the only thing that knows a gesture started one.
+#[test]
+fn a_settled_chain_publishes_no_spinner_and_no_abort_however_stale_the_run_view_is() {
+    let live_run = semio_framework_plugin::ToolRunView::new(
+        crate::preview_eval::PREVIEW_EVAL_TOOL_ID,
+        semio_framework_tool_run::ToolRunIdentity { id: semio_framework_tool_run::ToolRunId { app_instance_id: 1, run: 1 }, generation: 0, base_revision: [0; 32] },
+        semio_framework_tool_run::ToolRunState::Running,
+    );
+
+    let started = crate::preview_eval::preview_scene_status_json(None, Some(&live_run), None).expect("a live run publishes a status");
+    let started: serde_json::Value = serde_json::from_str(&started).expect("status json");
+    assert_eq!(started["computing"], serde_json::json!(true), "a run with no census behind it still speaks for the evaluation it started");
+
+    let mut host = semio_framework_os_flow::FlowHost::default();
+    let mut session = FlowEvalSession::new();
+    assert!(session.sync(&host), "the default demo graph has pending nodes, so a census exists to settle");
+    session.arm_window_tick("preview-1");
+    session.begin_window_tick("preview-1");
+    session.note_window_extensions_in_flight("preview-1", 1);
+    session.note_window_tick_outcome("preview-1", true);
+    let working = crate::preview_eval::preview_scene_status_json(Some(&session), Some(&live_run), None).expect("a working chain publishes a status");
+    let working: serde_json::Value = serde_json::from_str(&working).expect("status json");
+    assert_eq!(working["computing"], serde_json::json!(true), "a working chain is computing");
+    // 🛑 The abort affordance is asserted through the ADDRESS-RESOLVED projection: the scene status
+    // resolves the geometry extension itself, and a native `--lib` binary addresses none, which would
+    // make `cancellable` false for a reason that has nothing to do with this law.
+    let working_addressed: serde_json::Value = serde_json::from_str(&crate::preview_eval::preview_progress_status_json_for(Some(&session), Some(&live_run), Ok(GEOMETRY_EXTENSION_PLUGIN_ID.to_string()))).expect("status json");
+    assert_eq!(working_addressed["cancellable"], serde_json::json!(true), "and its work can be stopped");
+
+    session.settle_window_extension("preview-1");
+    while session.tick(&mut host, None) {}
+    session.note_window_tick_outcome("preview-1", false);
+    let chain = session.preview_chain_status();
+    assert!(chain.settled(), "the chain settled its whole census: {chain:?}");
+
+    let settled = crate::preview_eval::preview_scene_status_json(Some(&session), Some(&live_run), None).expect("a settled chain still publishes a status");
+    let settled: serde_json::Value = serde_json::from_str(&settled).expect("status json");
+    assert!(settled.get("computing").is_none() || settled["computing"] == serde_json::json!(false), "a settled chain publishes no spinner, whatever the run view still says: {settled}");
+    let settled_addressed: serde_json::Value = serde_json::from_str(&crate::preview_eval::preview_progress_status_json_for(Some(&session), Some(&live_run), Ok(GEOMETRY_EXTENSION_PLUGIN_ID.to_string()))).expect("status json");
+    assert_eq!(settled_addressed["phase"], serde_json::json!("idle"), "a settled chain is idle");
+    assert!((settled_addressed["progress"]["ratio"].as_f64().expect("ratio") - 1.0).abs() < 1e-9, "and complete");
+    assert_eq!(settled_addressed["cancellable"], serde_json::json!(false), "and offers no abort for work that no longer exists: {settled_addressed}");
+    eprintln!("[DEBUG] settled-vs-stale-run status: {settled}");
+    session.retire_cold();
+    host.retire_cold();
+}

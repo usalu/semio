@@ -750,10 +750,11 @@ pub enum FillRunCounter {
     Locked,
     Collisions,
     Rejected,
+    Marked,
 }
 
 impl FillRunCounter {
-    pub const ALL: [Self; 4] = [Self::Tested, Self::Locked, Self::Collisions, Self::Rejected];
+    pub const ALL: [Self; 5] = [Self::Tested, Self::Locked, Self::Collisions, Self::Rejected, Self::Marked];
 
     pub fn index(self) -> u16 {
         self as u16
@@ -765,6 +766,7 @@ impl FillRunCounter {
             Self::Locked => "locked",
             Self::Collisions => "collisions",
             Self::Rejected => "rejected",
+            Self::Marked => "marked",
         }
     }
 }
@@ -795,10 +797,11 @@ pub enum FillRunReason {
     DocumentCapacity,
     RequestedReached,
     Retracted,
+    VortexExhausted,
 }
 
 impl FillRunReason {
-    pub const ALL: [Self; 23] = [
+    pub const ALL: [Self; 24] = [
         Self::Fits,
         Self::SolidOverlap,
         Self::OutsideTargetVolume,
@@ -822,6 +825,7 @@ impl FillRunReason {
         Self::DocumentCapacity,
         Self::RequestedReached,
         Self::Retracted,
+        Self::VortexExhausted,
     ];
 
     pub fn code(self) -> u16 {
@@ -857,6 +861,7 @@ impl FillRunReason {
             Self::DocumentCapacity => "document-capacity",
             Self::RequestedReached => "requested-reached",
             Self::Retracted => "retracted",
+            Self::VortexExhausted => "vortex-exhausted",
         }
     }
 
@@ -870,11 +875,12 @@ impl FillRunReason {
     }
 
     /// 🚥️ `fits` succeeds, `solid-overlap` is a collision, every other candidate refusal is a rule warning,
-    /// the stalls warn, reaching the request succeeds and a retraction informs.
+    /// the stalls warn, reaching the request succeeds, a retraction informs and a vortex without any collision-free
+    /// candidate is marked as danger.
     pub fn verdict(self) -> semio_framework_tool_run::ToolRunVerdict {
         match self {
             Self::Fits | Self::RequestedReached => semio_framework_tool_run::ToolRunVerdict::Success,
-            Self::SolidOverlap => semio_framework_tool_run::ToolRunVerdict::Danger,
+            Self::SolidOverlap | Self::VortexExhausted => semio_framework_tool_run::ToolRunVerdict::Danger,
             Self::Retracted => semio_framework_tool_run::ToolRunVerdict::Testing,
             _ => semio_framework_tool_run::ToolRunVerdict::Warning,
         }

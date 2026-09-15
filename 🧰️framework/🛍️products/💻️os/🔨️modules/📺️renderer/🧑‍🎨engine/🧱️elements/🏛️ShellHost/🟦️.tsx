@@ -538,6 +538,7 @@ import {
   undeclaredActionDiagnostic,
   historyPatchShouldApplyV1,
   historyRefreshNeededV1,
+  shellHistoryCursorDomV1,
   resolveUtilityNodes,
   resolveWindowEngagement,
   retitleWindowLayoutNode,
@@ -583,7 +584,6 @@ import {
   type UiRefreshCache,
 } from "../🛠️ShellHelpers/🟦️.tsx";
 import { toolRunPanelReveal } from "../🛠️ShellHelpers/⏯️tool-run-panel/🟦️.ts";
-import { TOOL_RUN_VISIBLE_UNITS_PER_SECOND } from "../../../../../../../🔨️modules/⏯️tool-run/🟦️.ts";
 import { createContributionsPublisher, type ContributionsOperatorScope, type ContributionsPublishOutcome, type ContributionsSessionKey } from "../🛠️ShellHelpers/🧩️contributions/🟦️.ts";
 
 import { aProjectOfLuhUdkFooterItem, fundedByZukunftBauFooterItem } from "../../../../../../../../♻️mit-bestand/🧺️demonstrator/⚛️footer.tsx";
@@ -609,7 +609,7 @@ import {
   ShellRouteNotFoundPage,
   useNamedLayoutHost,
 } from "../📌️ChromePanels/🟦️.tsx";
-import { guestIngressGenerationV1, onPluginInstancesLost, PluginBootShardLostError, leftoverInspectionRefreshScope, leftoverInspectionPanelHash, type PluginWasmHandle, type PluginExtensionCompletion, serializePerActor, setPluginRuntimeActor } from "../🔌️PluginRuntime/🟦️.tsx";
+import { guestIngressGenerationV1, isPluginInstanceRetiredV1, onPluginInstancesLost, PluginBootShardLostError, leftoverInspectionRefreshScope, leftoverInspectionPanelHash, type PluginWasmHandle, type PluginExtensionCompletion, serializePerActor, setPluginRuntimeActor } from "../🔌️PluginRuntime/🟦️.tsx";
 import { documentBackboneEffectV1, type ActorDocumentMessagePortV1 } from "../../../../🔌️plugin/📡️backbone/🔗️binding/🟦️.ts";
 import { BrowserActorActionMailboxV1 } from "../../../../🔌️plugin/🌐️browser-bundle/🎯️action-handoff/📮️requests/🟦️.ts";
 import { BROWSER_ACTOR_ACTION_APP_CHANNEL_VERSION } from "../../../../🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🟦️.ts";
@@ -2275,6 +2275,16 @@ function FrameworkOsShellInner({
   const dropForSealedInstance = useCallback((target: { readonly pluginId: string; readonly instanceId: number }, what: string, detail?: string): boolean => {
     if (!sealedInstancesRef.current.sealed(target.pluginId, target.instanceId)) return false;
     console.warn(sealedInstanceDropTextV1(sealedInstanceDropV1(target.pluginId, target.instanceId, what, detail)));
+    return true;
+  }, []);
+  /** 🪦️ The same drop for the OTHER way an instance goes away. `sealedInstancesRef` is written by the
+   * session-switch gate only, so a hot-swap — which destroys the session-owning plugin's live instance
+   * without any switch at all — left every late arrival to fall through to a stack. The runtime layer
+   * that owns the dispatch queue now says so on the failure itself
+   * ({@link isPluginInstanceRetiredV1}), so this reads the answer rather than keeping a second ledger. */
+  const dropForRetiredInstance = useCallback((target: { readonly pluginId: string; readonly instanceId: number }, what: string, error: unknown): boolean => {
+    if (!isPluginInstanceRetiredV1(error)) return false;
+    console.warn(`[DEBUG] dropped ${what} for retired instance ${target.pluginId}#${target.instanceId}`);
     return true;
   }, []);
   //#endregion 🔀️SurfaceSwitch
@@ -4216,8 +4226,10 @@ function FrameworkOsShellInner({
     return capture.state;
   }, []);
   const observeLocalInteraction = useMemo(
-    () => createLatestAsyncDispatcher(({ plugin, instanceId }: { readonly plugin: PluginWasmHandle; readonly instanceId: number }) => publishLocalInteraction(plugin, instanceId).catch((error) => console.error("[DEBUG] local interaction observation failed", error))),
-    [publishLocalInteraction],
+    () => createLatestAsyncDispatcher(({ plugin, instanceId }: { readonly plugin: PluginWasmHandle; readonly instanceId: number }) => publishLocalInteraction(plugin, instanceId).catch((error) => {
+      if (!dropForRetiredInstance({ pluginId: plugin.pluginId, instanceId }, "local interaction observation", error)) console.error("[DEBUG] local interaction observation failed", error);
+    })),
+    [dropForRetiredInstance, publishLocalInteraction],
   );
   useEffect(() => {
     if (!session) return;
@@ -4328,8 +4340,6 @@ function FrameworkOsShellInner({
           windowInstances: sessionWindowInstances(targetSession.app, extraWindowInstancesRef.current).map((instance) => ({ id: instance.id, windowKindId: instance.windowKindId })),
           activeUtilityByWindowId: buildActiveUtilityByWindowId(activeUtilityByWindowIdRef.current),
           activeUtilityId: undefined,
-          toolRunUnitsPerSecond: TOOL_RUN_VISIBLE_UNITS_PER_SECOND,
-          toolRunTraceCursorByWindowId: toolRunTraceCursorViewState(sessionWindowInstances(targetSession.app, extraWindowInstancesRef.current).map((instance) => instance.id)),
         }),
       ),
     [injectActiveTool, uiLocale, uiTerminology],
@@ -5828,10 +5838,10 @@ function FrameworkOsShellInner({
         void applyHostEffects(completion.requestedEffects, target, refresh, owner).catch((error) => console.error("typed-operation completion effects failed", error));
       });
     } catch (error) {
-      console.error("[DEBUG] typed-operation completion subscription failed", error);
+      if (!dropForRetiredInstance(target, "typed-operation completion subscription", error)) console.error("[DEBUG] typed-operation completion subscription failed", error);
       return;
     }
-  }, [applyHistoryPatch, applyLeftoverInteractionView, applyHostEffects, captureDialogOrigin, captureEffectOwner, isCurrentEffectOwner, session, settleOperation]);
+  }, [applyHistoryPatch, applyLeftoverInteractionView, applyHostEffects, captureDialogOrigin, captureEffectOwner, dropForRetiredInstance, isCurrentEffectOwner, session, settleOperation]);
 
   const applyShellUri = useCallback(
     async (uri: string, preservedViewState?: ViewModel) => {
@@ -6559,6 +6569,15 @@ function FrameworkOsShellInner({
       // per-window option mutation off `view_state.windowId` instead of ever guessing at the active window.
       const actionWindowId = typeof action.args === "object" && action.args != null && typeof (action.args as { windowId?: unknown }).windowId === "string" ? (action.args as { windowId: string }).windowId : undefined;
       const dispatchWindowId = actionWindowId ?? activeWindowIdRef.current ?? undefined;
+      // 🧹️ `clearSelection` retires the host's own leftover overlay on the SAME turn it is dispatched.
+      // The guest's half of the clear is exact — measured on 6018, the clearing turn's
+      // `turn-result.presence` carries the cleared mark for the row that lost the selection — but the
+      // leftover overlay is a HOST lane that `treeItemToTreeData` ORs into `isSelected`
+      // (`leftoverTreeItemSelectedV1`), and it is only ever rewritten by a leftover `interactionView` a
+      // later gesture publishes. So the row the guest had just retired kept `aria-selected="true"` until
+      // the next pick, which is exactly the one-keystroke-wide window
+      // `📓️window-gaps-followup-2026-09-14.md` G1 measured.
+      if (action.action === CLEAR_SELECTION_ACTION_ID) applyLeftoverInteractionView({ interactionView: { selectedIds: [], selectionCleared: true } }, dispatchWindowId);
       const baseDispatchViewState: ViewModel = {
         ...targetSession.viewState,
         locale: uiLocale,
@@ -6566,8 +6585,6 @@ function FrameworkOsShellInner({
         windowInstances: sessionWindowInstances(targetSession.app, extraWindowInstancesRef.current).map((instance) => ({ id: instance.id, windowKindId: instance.windowKindId })),
         activeUtilityByWindowId: buildActiveUtilityByWindowId(activeUtilityByWindowIdRef.current),
         focusedWindowId: activeWindowIdRef.current ?? undefined,
-        toolRunUnitsPerSecond: TOOL_RUN_VISIBLE_UNITS_PER_SECOND,
-        toolRunTraceCursorByWindowId: toolRunTraceCursorViewState(sessionWindowInstances(targetSession.app, extraWindowInstancesRef.current).map((instance) => instance.id)),
       };
       const dispatchViewState = hostArmedViewContext(baseDispatchViewState, activeToolIdRef.current, dispatchWindowId);
       if (!dispatchViewState) {
@@ -6674,6 +6691,7 @@ function FrameworkOsShellInner({
             return;
           }
           if (dropForSealedInstance(targetSession, "action failure", action.action)) return;
+          if (dropForRetiredInstance(targetSession, `action ${action.action}`, actionError)) return;
           console.error("[DEBUG] action failed", action.action, action.args, actionError);
         })
         .finally(() => {
@@ -6682,6 +6700,7 @@ function FrameworkOsShellInner({
     },
     [
       applyHostEffects,
+      dropForRetiredInstance,
       dropForSealedInstance,
       refreshHistorySnapshot,
       awaitOperationSettle,
@@ -10700,7 +10719,7 @@ function FrameworkOsShellInner({
     <ShellFaultBoundary boundaryId="shell-root" fallbackLabel={shellLabel("ui.common.renderError")}>
     <UIFindProvider>
       <LevelProvider level="base">
-        <div className="flex h-screen min-h-0 w-screen flex-col bg-transparent" data-level="base" data-semio-os-ready={session && !error ? "" : undefined}>
+        <div className="flex h-screen min-h-0 w-screen flex-col bg-transparent" data-level="base" data-semio-os-ready={session && !error ? "" : undefined} data-history-json={JSON.stringify(shellHistoryCursorDomV1(historyProjection))}>
           {hubEnv && verifiedSessionAuthority === null ? <SessionAuthorityNotice state={identityOffline ? "unavailable" : "pending"} locale={uiLocale} onCancel={cancelSessionAuthorityBootstrap} /> : null}
           {Object.values(bootstrapUiByDocument).length > 0 ? (
             <div className="pointer-events-auto absolute top-workbench left-1/2 z-50 flex -translate-x-1/2 flex-col gap-single rounded-sm border bg-base px-double py-single text-sm shadow-sm">

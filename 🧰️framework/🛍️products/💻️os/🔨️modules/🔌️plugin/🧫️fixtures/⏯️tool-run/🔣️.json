@@ -354,11 +354,30 @@
     "status": "Ready to start",
     "startLabel": "Start"
   },
-  "pace": {
-    "toolId": "toyFill",
-    "target": 5,
-    "unitsPerSecond": 2,
-    "delayMs": 500,
-    "opsPerUnit": 2
+  "terminalQuiet": {
+    "note": "A run that is OVER cannot ask to be driven again. Every wake a tool run hands the host is a request the host answers by dispatching an action back into the guest, so a request a TERMINAL run keeps re-making is an endless action storm on a shell nobody is touching: generation3d's finalized `previewEval` re-armed its pace wake once per presentation retry and filled the console with `toolRunPace` on a quiet, converged editor (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, 2026-09-14 23:25). The latch is read once per ANSWER, never once per REFRESH.",
+    "turns": 64,
+    "rows": [
+      {
+        "id": "a-read-only-run-that-finalized-itself",
+        "toolId": "toyReadOnlyFill",
+        "units": 3,
+        "terminalBy": "self",
+        "expected": {
+          "hasPendingWork": false,
+          "effects": 0
+        }
+      },
+      {
+        "id": "a-mutating-run-the-user-aborted",
+        "toolId": "toyFill",
+        "units": 3,
+        "terminalBy": "abort",
+        "expected": {
+          "hasPendingWork": false,
+          "effects": 0
+        }
+      }
+    ]
   }
 }

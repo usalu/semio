@@ -118,6 +118,33 @@ if (mode === "wire") {
     return null;
   };
 
+  /** 👁️ One read of what the host publishes for a port RIGHT NOW — `null` when it publishes nothing,
+   * which since the visibility fix means "that port is not on this surface, do not aim at it". */
+  const readPort = async (portId) =>
+    page.evaluate(([id, port]) => {
+      const probe = window.__semioFlowGraphProbe?.[id];
+      const resolved = probe?.entity?.("handle", port) ?? null;
+      return resolved?.visible ? { point: resolved.point, rect: resolved.rect ?? null } : null;
+    }, [surface, portId]);
+
+  /** 🔭️ Brings both endpoints onto the surface the way a USER would before wiring them: wheel out at
+   * the canvas centre until the host publishes geometry for both. A port the camera has scrolled past
+   * publishes nothing at all now, so aiming at a remembered rect would press outside the canvas — which
+   * is exactly what made this row red twice with byte-identical aims. */
+  const bringPortsIntoView = async (...portIds) => {
+    const host = await page.evaluate((id) => { const el = document.querySelector(`[data-surface-id="${id}"]`) ?? document.querySelector(".semio-node-graph-host"); const r = el?.getBoundingClientRect(); return r ? { x: r.x, y: r.y, width: r.width, height: r.height } : null; }, surface);
+    if (!host) return { onSurface: false, zoomOuts: 0 };
+    const centre = { x: host.x + host.width * 0.5, y: host.y + host.height * 0.5 };
+    for (let step = 0; step <= 24; step++) {
+      const resolved = await Promise.all(portIds.map(readPort));
+      if (resolved.every(Boolean)) return { onSurface: true, zoomOuts: step };
+      await page.mouse.move(centre.x, centre.y);
+      await page.mouse.wheel(0, 40);
+      await page.waitForTimeout(400);
+    }
+    return { onSurface: false, zoomOuts: 24 };
+  };
+
   /** 🎯️ Whether the host's own press log says the gesture that just ran ENTERED a wire draw at `portId`.
    * A press that never reached a port cannot be evidence about wiring, and used to be indistinguishable
    * from a refusal to wire — the row simply read red. */
@@ -158,6 +185,10 @@ if (mode === "wire") {
   } else {
     const fromPort = `${target.from}@${target.fromPort ?? target.from_port}`;
     const toPort = `${target.to}@${target.toPort ?? target.to_port}`;
+    // 🔭️ Both endpoints first: a boot camera that leaves one of them off the surface is a framing, not
+    // a finding, and the host now publishes NOTHING for a port you cannot aim at.
+    const bootInView = await bringPortsIntoView(fromPort, toPort);
+    console.log("[DEBUG] wire: ports on surface before the cut", JSON.stringify(bootInView));
     const source = await publishedPort(fromPort);
     const sink = await publishedPort(toPort);
     console.log("[DEBUG] published port geometry", JSON.stringify({ fromPort, toPort, source, sink }));
@@ -216,6 +247,8 @@ if (mode === "wire") {
       let aimedFrom = centreOf(source);
       let aimedTo = centreOf(sink);
       let redrawPressLanded = false;
+      const inView = await bringPortsIntoView(fromPort, toPort);
+      console.log("[DEBUG] wire: ports on surface before the redraw", JSON.stringify(inView));
       for (let aim = 0; aim < 2; aim++) {
         const sourceAgain = await publishedPort(fromPort);
         const sinkAgain = await publishedPort(toPort);
@@ -244,6 +277,7 @@ if (mode === "wire") {
         redrawRestoredTheWire: wires(redrawn).sort().join("|") === wires(before).sort().join("|"),
         redrawPressLanded,
         staleAim,
+        portsInView: { beforeCut: bootInView, beforeRedraw: inView },
         dispatched,
         preview: { before: previewBefore, afterCut: previewCut, afterRedraw: previewAfter },
         published: { source, sink },
@@ -251,8 +285,13 @@ if (mode === "wire") {
       };
       // 3️⃣ The same gesture in a LOWER zoom band — where port hit-picking used to be switched off.
       const zoomReached = await zoomToBand(["compact", "overview"]);
-      const zoomedSink = await publishedPort(toPort);
-      const zoomedSource = await publishedPort(fromPort);
+      // 📶️ The `minimap` tier is a whole-graph silhouette and withholds ports BY DESIGN, so there is no
+      // port gesture to run there. Running one anyway grabbed a NODE and hurled it across the graph —
+      // a gesture this row never tests, whose burst of moves is what produced the run's lone
+      // `FlowMessageRejected` page error. The phase now runs only in the port-bearing bands it asks for.
+      const zoomWithholdsPorts = zoomReached?.lod === "minimap";
+      const zoomedSink = zoomWithholdsPorts ? null : await publishedPort(toPort);
+      const zoomedSource = zoomWithholdsPorts ? null : await publishedPort(fromPort);
       let zoomedCut = null;
       let zoomedRedraw = null;
       if (zoomedSink && zoomedSource) {
@@ -267,8 +306,7 @@ if (mode === "wire") {
       // pixels wide — so a no-op there is the rule holding, not the gesture failing. Zoom coverage of
       // the port-bearing bands (0.5 / 1 / 2) is carried deterministically by the Rust law over the
       // real `DagHost` (`🕸️dag/🧪️tests/🔗️wire-edit/🦀️.rs`).
-      const withholdsPorts = zoomReached?.lod === "minimap";
-      result.lowZoom = { zoomReached, bandWithholdsPortsByDesign: withholdsPorts, publishedSink: zoomedSink, cut: zoomedCut, redraw: zoomedRedraw, cutRemovedTheWire: zoomedCut ? zoomedCut.length === wires(before).length - 1 : null };
+      result.lowZoom = { zoomReached, bandWithholdsPortsByDesign: zoomWithholdsPorts, publishedSink: zoomedSink, cut: zoomedCut, redraw: zoomedRedraw, cutRemovedTheWire: zoomedCut ? zoomedCut.length === wires(before).length - 1 : null };
       result.dispatched = lines.filter((line) => line.includes("node graph wire edit dispatch"));
       console.log("[DEBUG] low zoom wire result", JSON.stringify(result.lowZoom));
       await page.screenshot({ path: join(outDir, "7-wire-low-zoom.png") });

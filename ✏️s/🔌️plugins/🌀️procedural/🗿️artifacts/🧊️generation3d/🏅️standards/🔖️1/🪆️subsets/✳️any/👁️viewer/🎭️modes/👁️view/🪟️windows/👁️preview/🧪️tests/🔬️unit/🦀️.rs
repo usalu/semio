@@ -182,3 +182,24 @@ fn render_without_a_published_evaluation_paints_the_empty_world() {
     assert_eq!(preview_tessellation_count(), before, "a pure render must never reach the geometry kernel");
     document.retire_cold();
 }
+/// 🏷️ Every published mesh declares its ROLE, exactly as the editor's own payload does. The viewer
+/// builds its mesh table itself (it caches by signature across renders), so a role stamped only on
+/// the editor side reaches a viewer surface as an unlabelled mesh — measured on 6118, where the edit
+/// lane reported `{"solid": 1}` and the viewer lane `{"(unstamped)": 1}` for the same example
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-mesh-oracle-2026-09-14.md`).
+#[test]
+fn every_published_mesh_declares_its_role() {
+    let _serial = crate::viewer::generation3d::unit_tests::context::lock();
+    let document = default_document();
+    let config = Generation3dViewConfig::default();
+    let eval = evaluate_fixture(&document.fixture);
+    let payload = preview_payload(&eval, &document.fixture, &config, None, &Generation3dViewMarks::default());
+    let meshes = dsl::json::parse(&payload.meshes_json).expect("meshes json");
+    let meshes = meshes.as_array().expect("meshes array").clone();
+    assert!(!meshes.is_empty(), "the default fixture publishes at least one mesh");
+    for mesh in &meshes {
+        let role = mesh.get("role").and_then(Value::as_str).expect("every published mesh declares a role");
+        assert!(preview_eval::PREVIEW_MESH_ROLES.contains(&role), "{role:?} is not a declared preview mesh role");
+    }
+    document.retire_cold();
+}

@@ -887,7 +887,7 @@ pub fn render(
     scene.lod_json = Some(world3d_lod_json(&envelope.runtime));
     scene.chunking_json = Some(world3d_chunking_json(envelope.runtime.chunk_size, 8000.0));
     scene.environment_json = Some(world3d_environment_json(&envelope.runtime.sun));
-    scene.fit_json = Some(world3d_fit_json(world_fit_revision(&envelope.fixture), PUZZLE3D_FIT_PADDING));
+    scene.fit_json = Some(world3d_fit_json(world_fit_revision(&envelope.fixture), PUZZLE3D_FIT_PADDING, None));
     // 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): bound, so `World3dHost`'s generic
     // dispatch path emits `interactionSelect`/`interactionHover` for this domain
     // (`world3dSelectionActionArgs`/`world3dHoverActionArgs`) instead of the legacy

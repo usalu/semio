@@ -4,8 +4,9 @@
 //! tool run ledger owns and steps (ticket 26/09/13/INTERACTIVE-TOOLS-VISIBLE-PROCESS `📋️tool-run-contract.md`
 //! §2.7, §3.7).
 
+use crate::editor::puzzle3d::modes::edit::windows::main::VORTEX_MARKER_MESH_KIND;
 use crate::editor::puzzle3d::precompute::brush::{
-    brush_fill_candidate_at, brush_object_id, brush_preview_from_candidate, brush_stack_mate_pair, fill_candidate_diversity_score, fill_rng, resolve_object_kind_mesh_url, resolve_placed_object_mesh_url, vortex_world_from_object, AttractionVortexContext, BrushCatalogView,
+    brush_fill_candidate_at, brush_object_id, brush_preview_from_candidate, fill_rng, resolve_object_kind_mesh_url, resolve_placed_object_mesh_url, vortex_world_from_object, AttractionVortexContext, BrushCatalogView,
     BrushFillVortexTarget, BrushFixtureView, TargetVortexWorld,
 };
 use crate::editor::puzzle3d::precompute::geometry::{
@@ -99,6 +100,8 @@ impl FillStepContext for StepContext<'_> {
 pub(crate) enum FillRunEvent {
     Constructed { mesh_url: String, origin: [f64; 3], orientation: [f64; 4], scale: f32 },
     Refused(FillRunReason),
+    /// 🎯️ A vortex whose every compatible candidate was refused: it is marked and never picked again.
+    VortexMarked { position: [f64; 3] },
     Accepted,
     Abandoned,
     Discarded,
@@ -155,6 +158,36 @@ fn fenwick_pick(tree: &[f64], target: f64) -> usize {
     index.min(tree.len().saturating_sub(2))
 }
 
+fn fenwick_prefix(tree: &[f64], count: usize) -> f64 {
+    let mut cursor = count.min(tree.len().saturating_sub(1));
+    let mut total = 0.0;
+    while cursor > 0 {
+        total += tree[cursor];
+        cursor &= cursor - 1;
+    }
+    total
+}
+
+/// ➕️ Appends one weight to a Fenwick tree in O(log n): the new node covers `(i - lowbit(i), i]`.
+fn fenwick_push(tree: &mut Vec<f64>, weight: f64) {
+    let index = tree.len();
+    let covered = weight + fenwick_prefix(tree, index - 1) - fenwick_prefix(tree, index - (index & index.wrapping_neg()));
+    tree.push(covered);
+}
+
+/// 🎲️ One index drawn with probability proportional to its weight, the weights left as they are.
+fn weighted_draw(weights: &[f64], tree: &[f64], rng_state: &mut u32) -> Option<usize> {
+    let total = fenwick_total(tree);
+    if total <= 0.0 {
+        return None;
+    }
+    let index = fenwick_pick(tree, (fill_rng(rng_state) * total).max(f64::MIN_POSITIVE));
+    if weights.get(index).is_some_and(|weight| *weight > 0.0) {
+        return Some(index);
+    }
+    weights.iter().position(|weight| *weight > 0.0)
+}
+
 fn weighted_pick(weights: &mut [f64], tree: &mut [f64], remaining: usize, rng_state: &mut u32) -> Option<usize> {
     if remaining == 0 {
         return None;
@@ -196,22 +229,13 @@ enum TargetPreparePhase {
     Reset,
     Blocked,
     Enumerate,
-    BuildSeedWeights,
-    BuildFrontierWeights,
-    OrderSeed,
-    OrderFrontier,
-    Finish,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum CandidatePreparePhase {
     Reset,
     Enumerate,
-    Classify,
-    DrainCross,
-    DrainSame,
-    BuildSameWeights,
-    OrderSame,
+    Order,
     Finish,
 }
 
@@ -223,6 +247,7 @@ enum AcceptPhase {
     BeginSpatial,
     StepSpatial,
     InstallLookup,
+    AppendTargets,
     Commit,
 }
 
@@ -383,15 +408,14 @@ pub(crate) struct FillBuilder {
     /// yet, so this owner exists for the census/retirement walk only and never reaches document
     /// scale. Wiring a real cache means widening it to `DOCUMENT_VORTEX_SLOTS` in the same move.
     pub(crate) candidate_cache: FixedOwnerMap<String, Vec<BrushCompatibleCandidate>>,
-    pub(crate) seed_object_ids: FixedOwnerSet<String, DOCUMENT_OBJECT_SLOTS>,
     pub(crate) rng_state: u32,
     pub(crate) max_count: usize,
     /// 🪜️ Where a running tail discard stops: the applied prefix for a weight replan, the newly
     /// requested count for a lowered ask.
     tail_floor: usize,
-    /// 🔎️ Whether this target round ever built a pose, which tells a bare document apart from one
-    /// whose every candidate was refused.
-    round_constructed: bool,
+    /// 🔎️ Whether the plan ever built a pose, which tells a bare document apart from one whose every
+    /// candidate was refused.
+    ever_constructed: bool,
     pub(crate) operation: Operation,
     pub(crate) stage: FillJobStage,
     catalogs: FixedCatalogOwner,
@@ -401,23 +425,18 @@ pub(crate) struct FillBuilder {
     overlap_budget: f64,
     meshes: FixedOwnerMap<String, CollisionBody, DOCUMENT_KIND_SLOTS>,
     spatial_index: CollisionSpatialIndex,
+    /// 🌀️ The pool of free vortices, drawn from by `target_weights` (a vortex kind's distribution weight, zero once the
+    /// vortex is consumed by a placement or marked) through the Fenwick tree `target_tree`.
     targets: Vec<BrushFillVortexTarget>,
-    target_cursor: usize,
-    target_rotation: usize,
+    target_weights: Vec<f64>,
+    target_tree: Vec<f64>,
+    targets_ready: bool,
+    current_target_index: Option<usize>,
     target_prepare_phase: TargetPreparePhase,
     blocked_vortex_ids: FixedOwnerSet<String, DOCUMENT_VORTEX_SLOTS>,
     target_attraction_cursor: usize,
     target_object_cursor: usize,
     target_vortex_cursor: usize,
-    seed_targets: Vec<BrushFillVortexTarget>,
-    frontier_targets: Vec<BrushFillVortexTarget>,
-    seed_target_weights: Vec<f64>,
-    frontier_target_weights: Vec<f64>,
-    seed_target_tree: Vec<f64>,
-    frontier_target_tree: Vec<f64>,
-    target_prepare_cursor: usize,
-    seed_target_remaining: usize,
-    frontier_target_remaining: usize,
     current_target: Option<BrushFillVortexTarget>,
     candidates: Vec<BrushCompatibleCandidate>,
     candidate_cursor: usize,
@@ -427,12 +446,9 @@ pub(crate) struct FillBuilder {
     candidate_prepare_cursor: usize,
     candidate_seen: FixedOwnerSet<String, DOCUMENT_CANDIDATE_SLOTS>,
     candidate_raw: Vec<BrushCompatibleCandidate>,
-    candidate_cross: FixedOwnerMap<String, BrushCompatibleCandidate, DOCUMENT_CANDIDATE_SLOTS>,
-    candidate_same: FixedOwnerMap<String, BrushCompatibleCandidate, DOCUMENT_CANDIDATE_SLOTS>,
-    candidate_same_sorted: Vec<BrushCompatibleCandidate>,
-    candidate_same_weights: Vec<f64>,
-    candidate_same_tree: Vec<f64>,
-    candidate_same_remaining: usize,
+    candidate_weights: Vec<f64>,
+    candidate_tree: Vec<f64>,
+    candidate_remaining: usize,
     current_preview: Option<BrushPreviewState>,
     broad_phase_query: Option<CollisionQueryCursor>,
     broad_phase_cursor: usize,
@@ -504,7 +520,6 @@ enum FillRetiredOwner {
     CableKind(CableKindCatalog),
     Compat(KindCompatEntry),
     CandidateCache(String, Vec<BrushCompatibleCandidate>),
-    CandidateMap(String, BrushCompatibleCandidate),
     Mesh(String, CollisionBody),
     Spatial(CollisionIndexRejectedOwner),
 }
@@ -724,7 +739,6 @@ fn retire_retained_owner(owner: &mut FillRetiredOwner) -> bool {
             }
             true
         }
-        FillRetiredOwner::CandidateMap(key, value) => retire_string(key) && retire_candidate(value),
         FillRetiredOwner::Mesh(key, body) => {
             if !retire_string(key) {
                 return false;
@@ -811,10 +825,6 @@ fn take_lookup_owner(fill: &mut FillBuilder, current: &mut Option<FillRetiredOwn
         *current = Some(FillRetiredOwner::CandidateCache(key, values));
         return true;
     }
-    if let Some(value) = fill.seed_object_ids.pop_first() {
-        *current = Some(FillRetiredOwner::String(value));
-        return true;
-    }
     false
 }
 
@@ -878,18 +888,7 @@ fn take_target_owner(fill: &mut FillBuilder, current: &mut Option<FillRetiredOwn
         *current = Some(FillRetiredOwner::String(value));
         return true;
     }
-    if let Some(value) = fill.seed_targets.pop() {
-        *current = Some(FillRetiredOwner::Target(value));
-        return true;
-    }
-    if release_vec_backing(&mut fill.seed_targets) {
-        return true;
-    }
-    if let Some(value) = fill.frontier_targets.pop() {
-        *current = Some(FillRetiredOwner::Target(value));
-        return true;
-    }
-    release_vec_backing(&mut fill.frontier_targets)
+    false
 }
 
 fn take_candidate_owner(fill: &mut FillBuilder, current: &mut Option<FillRetiredOwner>) -> bool {
@@ -908,29 +907,11 @@ fn take_candidate_owner(fill: &mut FillBuilder, current: &mut Option<FillRetired
         *current = Some(FillRetiredOwner::Candidate(value));
         return true;
     }
-    if release_vec_backing(&mut fill.candidate_raw) {
-        return true;
-    }
-    if let Some((key, value)) = fill.candidate_cross.pop_first() {
-        *current = Some(FillRetiredOwner::CandidateMap(key, value));
-        return true;
-    }
-    false
+    release_vec_backing(&mut fill.candidate_raw)
 }
 
-fn take_candidate_order_owner(fill: &mut FillBuilder, current: &mut Option<FillRetiredOwner>) -> bool {
-    if let Some((key, value)) = fill.candidate_same.pop_first() {
-        *current = Some(FillRetiredOwner::CandidateMap(key, value));
-        return true;
-    }
-    if let Some(value) = fill.candidate_same_sorted.pop() {
-        *current = Some(FillRetiredOwner::Candidate(value));
-        return true;
-    }
-    if release_vec_backing(&mut fill.candidate_same_sorted) {
-        return true;
-    }
-    for values in [&mut fill.candidate_same_weights, &mut fill.candidate_same_tree] {
+fn take_candidate_order_owner(fill: &mut FillBuilder) -> bool {
+    for values in [&mut fill.candidate_weights, &mut fill.candidate_tree] {
         if values.pop().is_some() || release_vec_backing(values) {
             return true;
         }
@@ -941,18 +922,15 @@ fn take_candidate_order_owner(fill: &mut FillBuilder, current: &mut Option<FillR
 fn retire_fixed_collection_backing(fill: &mut FillBuilder) -> bool {
     fill.placed_lookup.retire_backing()
         || fill.candidate_cache.retire_backing()
-        || fill.seed_object_ids.retire_backing()
         || fill.weights.object_weights.retire_backing()
         || fill.weights.vortex_weights.retire_backing()
         || fill.meshes.retire_backing()
         || fill.blocked_vortex_ids.retire_backing()
         || fill.candidate_seen.retire_backing()
-        || fill.candidate_cross.retire_backing()
-        || fill.candidate_same.retire_backing()
 }
 
 fn take_target_weight_owner(fill: &mut FillBuilder) -> bool {
-    for values in [&mut fill.seed_target_weights, &mut fill.frontier_target_weights, &mut fill.seed_target_tree, &mut fill.frontier_target_tree] {
+    for values in [&mut fill.target_weights, &mut fill.target_tree] {
         if values.pop().is_some() || release_vec_backing(values) {
             return true;
         }
@@ -1007,7 +985,6 @@ impl FillBuilder {
             ("placed.capacity 0", self.placed.capacity() == 0),
             ("placed_lookup.is_empty", self.placed_lookup.is_empty()),
             ("candidate_cache.is_empty", self.candidate_cache.is_empty()),
-            ("seed_object_ids.is_empty", self.seed_object_ids.is_empty()),
             ("catalogs.objects.terminal_owners_empty", self.catalogs.objects.terminal_owners_empty()),
             ("catalogs.vortices.terminal_owners_empty", self.catalogs.vortices.terminal_owners_empty()),
             ("catalogs.cables.terminal_owners_empty", self.catalogs.cables.terminal_owners_empty()),
@@ -1019,32 +996,20 @@ impl FillBuilder {
             ("targets.is_empty", self.targets.is_empty()),
             ("targets.capacity 0", self.targets.capacity() == 0),
             ("blocked_vortex_ids.is_empty", self.blocked_vortex_ids.is_empty()),
-            ("seed_targets.is_empty", self.seed_targets.is_empty()),
-            ("seed_targets.capacity 0", self.seed_targets.capacity() == 0),
-            ("frontier_targets.is_empty", self.frontier_targets.is_empty()),
-            ("frontier_targets.capacity 0", self.frontier_targets.capacity() == 0),
-            ("seed_target_weights.is_empty", self.seed_target_weights.is_empty()),
-            ("seed_target_weights.capacity 0", self.seed_target_weights.capacity() == 0),
-            ("frontier_target_weights.is_empty", self.frontier_target_weights.is_empty()),
-            ("frontier_target_weights.capacity 0", self.frontier_target_weights.capacity() == 0),
-            ("seed_target_tree.is_empty", self.seed_target_tree.is_empty()),
-            ("seed_target_tree.capacity 0", self.seed_target_tree.capacity() == 0),
-            ("frontier_target_tree.is_empty", self.frontier_target_tree.is_empty()),
-            ("frontier_target_tree.capacity 0", self.frontier_target_tree.capacity() == 0),
+            ("target_weights.is_empty", self.target_weights.is_empty()),
+            ("target_weights.capacity 0", self.target_weights.capacity() == 0),
+            ("target_tree.is_empty", self.target_tree.is_empty()),
+            ("target_tree.capacity 0", self.target_tree.capacity() == 0),
             ("current_target.is_none", self.current_target.is_none()),
             ("candidates.is_empty", self.candidates.is_empty()),
             ("candidates.capacity 0", self.candidates.capacity() == 0),
             ("candidate_seen.is_empty", self.candidate_seen.is_empty()),
             ("candidate_raw.is_empty", self.candidate_raw.is_empty()),
             ("candidate_raw.capacity 0", self.candidate_raw.capacity() == 0),
-            ("candidate_cross.is_empty", self.candidate_cross.is_empty()),
-            ("candidate_same.is_empty", self.candidate_same.is_empty()),
-            ("candidate_same_sorted.is_empty", self.candidate_same_sorted.is_empty()),
-            ("candidate_same_sorted.capacity 0", self.candidate_same_sorted.capacity() == 0),
-            ("candidate_same_weights.is_empty", self.candidate_same_weights.is_empty()),
-            ("candidate_same_weights.capacity 0", self.candidate_same_weights.capacity() == 0),
-            ("candidate_same_tree.is_empty", self.candidate_same_tree.is_empty()),
-            ("candidate_same_tree.capacity 0", self.candidate_same_tree.capacity() == 0),
+            ("candidate_weights.is_empty", self.candidate_weights.is_empty()),
+            ("candidate_weights.capacity 0", self.candidate_weights.capacity() == 0),
+            ("candidate_tree.is_empty", self.candidate_tree.is_empty()),
+            ("candidate_tree.capacity 0", self.candidate_tree.capacity() == 0),
             ("current_preview.is_none", self.current_preview.is_none()),
             ("broad_phase_query.as_ref .is_none_or CollisionQueryCursor terminal_owners_empty", self.broad_phase_query.as_ref().is_none_or(CollisionQueryCursor::terminal_owners_empty)),
             ("collision.is_none", self.collision.is_none()),
@@ -1061,14 +1026,11 @@ impl FillBuilder {
             ("collection_over_capacity", !self.collection_over_capacity),
             ("placed_lookup.terminal_owners_empty", self.placed_lookup.terminal_owners_empty()),
             ("candidate_cache.terminal_owners_empty", self.candidate_cache.terminal_owners_empty()),
-            ("seed_object_ids.terminal_owners_empty", self.seed_object_ids.terminal_owners_empty()),
             ("weights.object_weights.terminal_owners_empty", self.weights.object_weights.terminal_owners_empty()),
             ("weights.vortex_weights.terminal_owners_empty", self.weights.vortex_weights.terminal_owners_empty()),
             ("meshes.terminal_owners_empty", self.meshes.terminal_owners_empty()),
             ("blocked_vortex_ids.terminal_owners_empty", self.blocked_vortex_ids.terminal_owners_empty()),
             ("candidate_seen.terminal_owners_empty", self.candidate_seen.terminal_owners_empty()),
-            ("candidate_cross.terminal_owners_empty", self.candidate_cross.terminal_owners_empty()),
-            ("candidate_same.terminal_owners_empty", self.candidate_same.terminal_owners_empty()),
             ("run_events.is_none", self.run_events.is_none()),
         ]
         .into_iter()
@@ -1099,11 +1061,10 @@ impl FillBuilder {
             placed: Vec::new(),
             placed_lookup: FixedOwnerMap::new(),
             candidate_cache: FixedOwnerMap::new(),
-            seed_object_ids: FixedOwnerSet::new(),
             rng_state: seed,
             max_count: requested_count,
             tail_floor: 0,
-            round_constructed: false,
+            ever_constructed: false,
             operation,
             stage: FillJobStage::PrepareFixture,
             catalogs: FixedCatalogOwner::new(),
@@ -1114,22 +1075,15 @@ impl FillBuilder {
             meshes: FixedOwnerMap::new(),
             spatial_index: CollisionSpatialIndex::new(8.0),
             targets: Vec::new(),
-            target_cursor: 0,
-            target_rotation: 0,
+            target_weights: Vec::new(),
+            target_tree: vec![0.0],
+            targets_ready: false,
+            current_target_index: None,
             target_prepare_phase: TargetPreparePhase::Reset,
             blocked_vortex_ids: FixedOwnerSet::new(),
             target_attraction_cursor: 0,
             target_object_cursor: 0,
             target_vortex_cursor: 0,
-            seed_targets: Vec::new(),
-            frontier_targets: Vec::new(),
-            seed_target_weights: Vec::new(),
-            frontier_target_weights: Vec::new(),
-            seed_target_tree: vec![0.0],
-            frontier_target_tree: vec![0.0],
-            target_prepare_cursor: 0,
-            seed_target_remaining: 0,
-            frontier_target_remaining: 0,
             current_target: None,
             candidates: Vec::new(),
             candidate_cursor: 0,
@@ -1139,12 +1093,9 @@ impl FillBuilder {
             candidate_prepare_cursor: 0,
             candidate_seen: FixedOwnerSet::new(),
             candidate_raw: Vec::new(),
-            candidate_cross: FixedOwnerMap::new(),
-            candidate_same: FixedOwnerMap::new(),
-            candidate_same_sorted: Vec::new(),
-            candidate_same_weights: Vec::new(),
-            candidate_same_tree: vec![0.0],
-            candidate_same_remaining: 0,
+            candidate_weights: Vec::new(),
+            candidate_tree: vec![0.0],
+            candidate_remaining: 0,
             current_preview: None,
             broad_phase_query: None,
             broad_phase_cursor: 0,
@@ -1188,7 +1139,7 @@ impl FillBuilder {
             6 => take_target_owner(self, &mut current),
             7 => take_target_weight_owner(self),
             8 => take_candidate_owner(self, &mut current),
-            9 => take_candidate_order_owner(self, &mut current),
+            9 => take_candidate_order_owner(self),
             10 => match self.broad_phase_query.as_mut() {
                 Some(query) => {
                     if query.retire_one_owner() {
@@ -1306,9 +1257,15 @@ impl FillBuilder {
     }
 
     /// 🔁️ Where a round goes after it placed or retracted: complete as reached once the plan holds what was asked for,
-    /// else the next target round.
+    /// else the next vortex draw — from the resident pool, or after rebuilding it when a retraction dropped it.
     fn next_round_stage(&self) -> FillJobStage {
-        if self.sequence.len() >= self.max_count { FillJobStage::Complete(FillPlanEnd::Reached) } else { FillJobStage::PrepareTargets }
+        if self.sequence.len() >= self.max_count {
+            FillJobStage::Complete(FillPlanEnd::Reached)
+        } else if self.targets_ready {
+            FillJobStage::SelectTarget
+        } else {
+            FillJobStage::PrepareTargets
+        }
     }
 
     /// 🎯️ What the user is asking for right now.
@@ -1329,7 +1286,7 @@ impl FillBuilder {
         self.max_count = requested;
         if raising {
             if matches!(self.stage, FillJobStage::Complete(_)) && self.sequence.len() < self.max_count {
-                self.stage = FillJobStage::PrepareTargets;
+                self.stage = self.next_round_stage();
             }
             return;
         }
@@ -1359,18 +1316,13 @@ impl FillBuilder {
             return Ok(());
         }
         if self.appended_objects.len() <= self.tail_floor {
-            self.targets.clear();
-            self.target_cursor = 0;
-            self.target_rotation = 0;
-            self.target_prepare_phase = TargetPreparePhase::Reset;
-            self.reset_candidate_preparation();
+            self.reset_targets();
             self.reset_candidate();
-            self.reset_collision();
-            self.reset_acceptance();
             self.stage = self.next_round_stage();
             return Ok(());
         }
         let Some(object) = self.appended_objects.pop() else {
+            self.reset_targets();
             self.stage = FillJobStage::PrepareTargets;
             return Ok(());
         };
@@ -1495,15 +1447,6 @@ impl FillBuilder {
             return;
         };
         self.preparation_cursor += 1;
-        match self.seed_object_ids.try_insert(object.id.clone()) {
-            Ok(FixedOwnerSetInsert::Inserted) => {}
-            Ok(FixedOwnerSetInsert::Present { input }) => drop(input),
-            Err(input) => {
-                self.fixed_rejection = Some(FillRetiredOwner::String(input));
-                self.collection_over_capacity = true;
-                return;
-            }
-        }
         let fixture = FillFixtureView { base: &self.base, appended: &self.appended_objects };
         let Some(mesh_url) = resolve_placed_object_mesh_url(object, &self.catalogs, &fixture) else {
             return;
@@ -1594,46 +1537,41 @@ impl FillBuilder {
 
 //#region 🧵️InteractiveFillJob
 impl FillBuilder {
+    /// 🌀️ Builds the free vortex pool one bounded unit per transition: forget the previous blocked set, block every vortex
+    /// an attraction already occupies, then add every open vortex with its distribution weight.
     fn prepare_targets(&mut self) {
         match self.target_prepare_phase {
             TargetPreparePhase::Reset => {
                 if let Some(value) = self.blocked_vortex_ids.pop_first() {
                     drop(value);
                 } else {
+                    self.target_attraction_cursor = 0;
                     self.target_prepare_phase = TargetPreparePhase::Blocked;
                 }
             }
             TargetPreparePhase::Blocked => {
                 if let Some((attracting, attracted)) = self.fixture_attraction(self.target_attraction_cursor).map(|attraction| (attraction.attracting.clone(), attraction.attracted.clone())) {
-                    match self.blocked_vortex_ids.try_insert(attracting) {
-                        Ok(FixedOwnerSetInsert::Inserted) => {}
-                        Ok(FixedOwnerSetInsert::Present { input }) => drop(input),
-                        Err(value) => {
-                            self.fixed_rejection = Some(FillRetiredOwner::String(value));
-                            return;
-                        }
-                    }
-                    match self.blocked_vortex_ids.try_insert(attracted) {
-                        Ok(FixedOwnerSetInsert::Inserted) => {}
-                        Ok(FixedOwnerSetInsert::Present { input }) => drop(input),
-                        Err(value) => {
-                            self.fixed_rejection = Some(FillRetiredOwner::String(value));
-                            return;
+                    for id in [attracting, attracted] {
+                        match self.blocked_vortex_ids.try_insert(id) {
+                            Ok(FixedOwnerSetInsert::Inserted) => {}
+                            Ok(FixedOwnerSetInsert::Present { input }) => drop(input),
+                            Err(value) => {
+                                self.fixed_rejection = Some(FillRetiredOwner::String(value));
+                                return;
+                            }
                         }
                     }
                     self.target_attraction_cursor += 1;
                 } else {
+                    self.target_object_cursor = 0;
+                    self.target_vortex_cursor = 0;
                     self.target_prepare_phase = TargetPreparePhase::Enumerate;
                 }
             }
             TargetPreparePhase::Enumerate => {
                 let Some(object) = self.fixture_object(self.target_object_cursor) else {
-                    self.seed_target_tree = vec![0.0; self.seed_target_weights.len() + 1];
-                    self.frontier_target_tree = vec![0.0; self.frontier_target_weights.len() + 1];
-                    self.seed_target_remaining = self.seed_targets.len();
-                    self.frontier_target_remaining = self.frontier_targets.len();
-                    self.target_prepare_cursor = 0;
-                    self.target_prepare_phase = TargetPreparePhase::BuildSeedWeights;
+                    self.targets_ready = true;
+                    self.stage = FillJobStage::SelectTarget;
                     return;
                 };
                 let Some(vortex) = object.vortices.get(self.target_vortex_cursor) else {
@@ -1641,104 +1579,68 @@ impl FillBuilder {
                     self.target_vortex_cursor = 0;
                     return;
                 };
-                let object_id = object.id.clone();
-                let object_kind = object.object_kind.clone();
-                let vortex_id = vortex.id.clone();
-                let vortex_kind = vortex.vortex_kind.clone();
-                let vortex_index = self.target_vortex_cursor;
+                let full_id = puzzle3d_vortex_full_id(&object.id, &vortex.id);
+                let target = BrushFillVortexTarget { full_id, object_id: object.id.clone(), object_kind: object.object_kind.clone(), vortex_kind: vortex.vortex_kind.clone(), vortex_index: self.target_vortex_cursor };
                 self.target_vortex_cursor += 1;
-                let full_id = puzzle3d_vortex_full_id(&object_id, &vortex_id);
-                if self.blocked_vortex_ids.contains(&full_id) {
-                    return;
+                if !self.blocked_vortex_ids.contains(&target.full_id) {
+                    self.push_target(target);
                 }
-                let target = BrushFillVortexTarget { full_id, object_id, object_kind, vortex_kind, vortex_index };
-                let weight = retained_fill_vortex_target_weight(&target, &self.weights);
-                if weight <= 0.0 {
-                    return;
-                }
-                if self.seed_object_ids.contains(&target.object_id) {
-                    self.seed_targets.push(target);
-                    self.seed_target_weights.push(weight);
-                } else {
-                    self.frontier_targets.push(target);
-                    self.frontier_target_weights.push(weight);
-                }
-            }
-            TargetPreparePhase::BuildSeedWeights => {
-                if let Some(weight) = self.seed_target_weights.get(self.target_prepare_cursor).copied() {
-                    fenwick_add(&mut self.seed_target_tree, self.target_prepare_cursor, weight);
-                    self.target_prepare_cursor += 1;
-                } else {
-                    self.target_prepare_cursor = 0;
-                    self.target_prepare_phase = TargetPreparePhase::BuildFrontierWeights;
-                }
-            }
-            TargetPreparePhase::BuildFrontierWeights => {
-                if let Some(weight) = self.frontier_target_weights.get(self.target_prepare_cursor).copied() {
-                    fenwick_add(&mut self.frontier_target_tree, self.target_prepare_cursor, weight);
-                    self.target_prepare_cursor += 1;
-                } else {
-                    self.target_prepare_phase = TargetPreparePhase::OrderSeed;
-                }
-            }
-            TargetPreparePhase::OrderSeed => {
-                if let Some(index) = weighted_pick(&mut self.seed_target_weights, &mut self.seed_target_tree, self.seed_target_remaining, &mut self.rng_state) {
-                    self.targets.push(self.seed_targets[index].clone());
-                    self.seed_target_remaining -= 1;
-                } else {
-                    self.target_prepare_phase = TargetPreparePhase::OrderFrontier;
-                }
-            }
-            TargetPreparePhase::OrderFrontier => {
-                if let Some(index) = weighted_pick(&mut self.frontier_target_weights, &mut self.frontier_target_tree, self.frontier_target_remaining, &mut self.rng_state) {
-                    self.targets.push(self.frontier_targets[index].clone());
-                    self.frontier_target_remaining -= 1;
-                } else {
-                    self.target_prepare_phase = TargetPreparePhase::Finish;
-                }
-            }
-            TargetPreparePhase::Finish => {
-                if self.targets.is_empty() {
-                    self.stall(FillStall::NoOpenVortex);
-                    return;
-                }
-                self.target_rotation = self.sequence.len() % self.targets.len();
-                self.target_cursor = 0;
-                self.stage = FillJobStage::SelectTarget;
             }
         }
     }
 
-    /// 🛑️ Why a round that walked every target placed nothing: a document with no candidate pose at
-    /// all is a compatibility gap, one where every pose was refused has simply run out of room.
+    /// ➕️ Adds one free vortex to the pool; a vortex kind the distribution weighs zero is never drawn, so it is not kept.
+    fn push_target(&mut self, target: BrushFillVortexTarget) {
+        let weight = retained_fill_vortex_target_weight(&target, &self.weights);
+        if weight <= 0.0 {
+            return;
+        }
+        if self.targets.len() >= DOCUMENT_VORTEX_SLOTS {
+            self.collection_over_capacity = true;
+            return;
+        }
+        self.targets.push(target);
+        self.target_weights.push(weight);
+        fenwick_push(&mut self.target_tree, weight);
+    }
+
+    /// 🚫️ Takes one vortex out of the draw for good (consumed by a placement, or marked).
+    fn retire_target_weight(&mut self, index: usize) {
+        if let Some(weight) = self.target_weights.get_mut(index) {
+            let removed = std::mem::replace(weight, 0.0);
+            fenwick_add(&mut self.target_tree, index, -removed);
+        }
+    }
+
+    /// 🛑️ Why the pool ran dry before the requested count: no free vortex ever, no vortex with a compatible kind, or every
+    /// tested pose collided.
     fn exhausted_targets_stall(&self) -> FillStall {
         if self.targets.is_empty() {
             FillStall::NoOpenVortex
-        } else if self.round_constructed {
+        } else if self.ever_constructed {
             FillStall::NoFreePlacement
         } else {
             FillStall::NoCompatibleKind
         }
     }
 
+    /// 🎲️ Draws one free vortex by its distribution weight; a pool whose every vortex is consumed or marked ends the plan.
     fn select_target(&mut self) {
-        if self.target_cursor >= self.targets.len() {
-            self.stall(self.exhausted_targets_stall());
-            return;
-        }
-        let index = self.target_rotation.checked_add(self.target_cursor).map(|value| value % self.targets.len().max(1));
-        let Some(target) = index.and_then(|index| self.targets.get(index)).cloned() else {
+        let Some(index) = weighted_draw(&self.target_weights, &self.target_tree, &mut self.rng_state) else {
             self.stall(self.exhausted_targets_stall());
             return;
         };
-        self.current_target = Some(target);
+        self.current_target = self.targets.get(index).cloned();
+        self.current_target_index = Some(index);
         self.reset_candidate_preparation();
         self.stage = FillJobStage::PrepareCandidates;
     }
 
+    /// 🧩️ Lists the compatible vortices of the drawn vortex and orders them by weighted random draws without replacement,
+    /// so testing them in order is the same as drawing a fresh random compatible vortex after every collision.
     fn prepare_candidates(&mut self) {
         let Some(target) = self.current_target.clone() else {
-            self.reject_target("missing-target");
+            self.mark_target("missing-target");
             return;
         };
         let target_context = AttractionVortexContext { object_kind: target.object_kind.clone(), vortex_kind: target.vortex_kind.clone() };
@@ -1746,18 +1648,14 @@ impl FillBuilder {
             CandidatePreparePhase::Reset => {
                 if let Some(value) = self.candidate_seen.pop_first() {
                     drop(value);
-                } else if let Some(value) = self.candidate_cross.pop_first() {
-                    drop(value);
-                } else if let Some(value) = self.candidate_same.pop_first() {
-                    drop(value);
                 } else {
                     self.candidate_prepare_phase = CandidatePreparePhase::Enumerate;
                 }
             }
             CandidatePreparePhase::Enumerate => {
                 let Some(kind) = self.catalogs.objects.get(self.candidate_kind_cursor) else {
-                    self.candidate_prepare_cursor = 0;
-                    self.candidate_prepare_phase = CandidatePreparePhase::Classify;
+                    self.candidate_remaining = self.candidate_raw.len();
+                    self.candidate_prepare_phase = CandidatePreparePhase::Order;
                     return;
                 };
                 if self.candidate_vortex_cursor >= kind.vortices.len() {
@@ -1768,73 +1666,25 @@ impl FillBuilder {
                 let vortex_index = self.candidate_vortex_cursor;
                 self.candidate_vortex_cursor += 1;
                 let Some((candidate, _)) = brush_fill_candidate_at(&target_context, &self.catalogs, self.kind_compatibility.as_slice(), &self.host_rules, self.candidate_kind_cursor, vortex_index) else { return };
+                let weight = retained_candidate_suggestion_weight(&candidate, &self.weights, &self.catalogs);
+                if weight <= 0.0 {
+                    return;
+                }
                 let key = format!("{}\u{1}{}", candidate.object_kind_id, candidate.source_vortex_index);
                 match self.candidate_seen.try_insert(key) {
-                    Ok(FixedOwnerSetInsert::Inserted) => self.candidate_raw.push(candidate),
+                    Ok(FixedOwnerSetInsert::Inserted) => {
+                        self.candidate_raw.push(candidate);
+                        self.candidate_weights.push(weight);
+                        fenwick_push(&mut self.candidate_tree, weight);
+                    }
                     Ok(FixedOwnerSetInsert::Present { input }) => drop(input),
                     Err(key) => self.fixed_rejection = Some(FillRetiredOwner::String(key)),
                 }
             }
-            CandidatePreparePhase::Classify => {
-                let Some(candidate) = self.candidate_raw.get(self.candidate_prepare_cursor).cloned() else {
-                    self.candidate_prepare_phase = CandidatePreparePhase::DrainCross;
-                    return;
-                };
-                self.candidate_prepare_cursor += 1;
-                if retained_candidate_suggestion_weight(&candidate, &self.weights, &self.catalogs) <= 0.0 {
-                    return;
-                }
-                let source_vortex = self.catalogs.objects.iter().find(|kind| kind.id == candidate.object_kind_id).and_then(|kind| kind.vortices.get(candidate.source_vortex_index)).and_then(|vortex| vortex.vortex_kind.as_deref()).unwrap_or("");
-                let target_vortex = target.vortex_kind.as_deref().unwrap_or("");
-                if source_vortex != target_vortex || brush_stack_mate_pair(source_vortex, target_vortex) {
-                    let score = fill_candidate_diversity_score(&candidate, target.vortex_index, target.object_kind.as_deref()).max(0) as u64;
-                    let key = format!("{:016x}\u{1}{}\u{1}{:016x}", u64::MAX - score, candidate.object_kind_id, candidate.source_vortex_index);
-                    match self.candidate_cross.try_insert(key, candidate) {
-                        Ok(FixedOwnerMapInsert::Inserted) => {}
-                        Ok(FixedOwnerMapInsert::Occupied { input_key: key, input_value: candidate }) | Err((key, candidate)) => {
-                            self.fixed_rejection = Some(FillRetiredOwner::CandidateMap(key, candidate));
-                        }
-                    }
-                } else {
-                    let key = format!("{}\u{1}{:016x}", candidate.object_kind_id, candidate.source_vortex_index);
-                    match self.candidate_same.try_insert(key, candidate) {
-                        Ok(FixedOwnerMapInsert::Inserted) => {}
-                        Ok(FixedOwnerMapInsert::Occupied { input_key: key, input_value: candidate }) | Err((key, candidate)) => {
-                            self.fixed_rejection = Some(FillRetiredOwner::CandidateMap(key, candidate));
-                        }
-                    }
-                }
-            }
-            CandidatePreparePhase::DrainCross => {
-                if let Some((_, candidate)) = self.candidate_cross.pop_first() {
-                    self.candidates.push(candidate);
-                } else {
-                    self.candidate_prepare_phase = CandidatePreparePhase::DrainSame;
-                }
-            }
-            CandidatePreparePhase::DrainSame => {
-                if let Some((_, candidate)) = self.candidate_same.pop_first() {
-                    self.candidate_same_weights.push(retained_candidate_suggestion_weight(&candidate, &self.weights, &self.catalogs));
-                    self.candidate_same_sorted.push(candidate);
-                } else {
-                    self.candidate_same_remaining = self.candidate_same_sorted.len();
-                    self.candidate_same_tree = vec![0.0; self.candidate_same_weights.len() + 1];
-                    self.candidate_prepare_cursor = 0;
-                    self.candidate_prepare_phase = CandidatePreparePhase::BuildSameWeights;
-                }
-            }
-            CandidatePreparePhase::BuildSameWeights => {
-                if let Some(weight) = self.candidate_same_weights.get(self.candidate_prepare_cursor).copied() {
-                    fenwick_add(&mut self.candidate_same_tree, self.candidate_prepare_cursor, weight);
-                    self.candidate_prepare_cursor += 1;
-                } else {
-                    self.candidate_prepare_phase = CandidatePreparePhase::OrderSame;
-                }
-            }
-            CandidatePreparePhase::OrderSame => {
-                if let Some(index) = weighted_pick(&mut self.candidate_same_weights, &mut self.candidate_same_tree, self.candidate_same_remaining, &mut self.rng_state) {
-                    self.candidates.push(self.candidate_same_sorted[index].clone());
-                    self.candidate_same_remaining -= 1;
+            CandidatePreparePhase::Order => {
+                if let Some(index) = weighted_pick(&mut self.candidate_weights, &mut self.candidate_tree, self.candidate_remaining, &mut self.rng_state) {
+                    self.candidates.push(self.candidate_raw[index].clone());
+                    self.candidate_remaining -= 1;
                 } else {
                     self.candidate_prepare_phase = CandidatePreparePhase::Finish;
                 }
@@ -1842,7 +1692,7 @@ impl FillBuilder {
             CandidatePreparePhase::Finish => {
                 self.candidate_cursor = 0;
                 if self.candidates.is_empty() {
-                    self.reject_target("no-compatible-candidate");
+                    self.mark_target("no-compatible-candidate");
                 } else {
                     self.stage = FillJobStage::SelectCandidate;
                 }
@@ -1852,7 +1702,7 @@ impl FillBuilder {
 
     fn select_candidate(&mut self) {
         if self.candidate_cursor >= self.candidates.len() {
-            self.reject_target("candidates-exhausted");
+            self.mark_target("candidates-exhausted");
             return;
         }
         self.stage = FillJobStage::ConstructPreview;
@@ -1860,15 +1710,15 @@ impl FillBuilder {
 
     fn construct_preview(&mut self) {
         let Some(target) = &self.current_target else {
-            self.reject_target("missing-target");
+            self.mark_target("missing-target");
             return;
         };
         let Some(candidate) = self.candidates.get(self.candidate_cursor) else {
-            self.reject_target("missing-candidate");
+            self.mark_target("missing-candidate");
             return;
         };
         let Some(host) = self.base.objects.iter().chain(&self.appended_objects).find(|object| object.id == target.object_id) else {
-            self.reject_target("missing-host");
+            self.mark_target("missing-host");
             return;
         };
         let Some((position, direction)) = vortex_world_from_object(host, target.vortex_index) else {
@@ -1882,7 +1732,7 @@ impl FillBuilder {
             self.reject_candidate("preview-unavailable");
             return;
         };
-        self.round_constructed = true;
+        self.ever_constructed = true;
         if self.run_events.is_some() {
             self.run_candidate_live = true;
             self.run_event(FillRunEvent::Constructed { mesh_url: preview.mesh_url.clone(), origin: preview.origin, orientation: preview.orientation, scale: fill_run_scale(&preview.scale) });
@@ -1904,7 +1754,7 @@ impl FillBuilder {
 
     fn query_broad_phase(&mut self) {
         let Some(_target) = &self.current_target else {
-            self.reject_target("missing-target");
+            self.mark_target("missing-target");
             return;
         };
         let Some(preview) = &self.current_preview else {
@@ -2127,7 +1977,25 @@ impl FillBuilder {
                     }
                 }
                 self.placed.push(PlacedCollisionEntry { object_id: object.id.clone(), mesh_url: mesh_url.clone(), world: pose_isometry(object.origin, object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]), &object.scale) });
-                self.accept_phase = AcceptPhase::Commit;
+                self.accept_vortex_cursor = 0;
+                self.accept_phase = AcceptPhase::AppendTargets;
+                StepOutcome::Yield
+            }
+            AcceptPhase::AppendTargets => {
+                let (Some(object), Some(payload)) = (self.pending_object.as_ref(), self.pending_payload.as_ref()) else {
+                    self.reject_candidate("placement-state-missing");
+                    return StepOutcome::Yield;
+                };
+                let index = self.accept_vortex_cursor;
+                let Some(vortex) = object.vortices.get(index) else {
+                    self.accept_phase = AcceptPhase::Commit;
+                    return StepOutcome::Yield;
+                };
+                self.accept_vortex_cursor += 1;
+                if index != payload.source_vortex_index {
+                    let target = BrushFillVortexTarget { full_id: puzzle3d_vortex_full_id(&object.id, &vortex.id), object_id: object.id.clone(), object_kind: object.object_kind.clone(), vortex_kind: vortex.vortex_kind.clone(), vortex_index: index };
+                    self.push_target(target);
+                }
                 StepOutcome::Yield
             }
             AcceptPhase::Commit => {
@@ -2148,6 +2016,9 @@ impl FillBuilder {
                 self.appended_attractions.push(attraction);
                 if std::mem::take(&mut self.run_candidate_live) {
                     self.run_event(FillRunEvent::Accepted);
+                }
+                if let Some(index) = self.current_target_index {
+                    self.retire_target_weight(index);
                 }
                 self.reset_candidate();
                 self.stage = self.next_round_stage();
@@ -2178,11 +2049,21 @@ impl FillBuilder {
         self.stage = FillJobStage::SelectCandidate;
     }
 
-    fn reject_target(&mut self, reason: &str) {
+    /// 🎯️ Marks the drawn vortex: every compatible candidate was refused (or it has none), so it leaves the draw for good,
+    /// shows as a danger marker, and the next round draws another free vortex.
+    fn mark_target(&mut self, reason: &str) {
         self.refuse_run_candidate(reason);
         self.last_rejection = Some(reason.to_string());
         self.rejected_count += 1;
-        self.target_cursor += 1;
+        if let Some(index) = self.current_target_index.take() {
+            self.retire_target_weight(index);
+        }
+        if self.run_events.is_some() {
+            let host = self.current_target.as_ref().and_then(|target| self.base.objects.iter().chain(&self.appended_objects).find(|object| object.id == target.object_id).and_then(|host| vortex_world_from_object(host, target.vortex_index)));
+            if let Some((position, _)) = host {
+                self.run_event(FillRunEvent::VortexMarked { position });
+            }
+        }
         self.current_target = None;
         self.reset_candidate_preparation();
         self.reset_acceptance();
@@ -2198,29 +2079,27 @@ impl FillBuilder {
         self.collision = None;
     }
 
+    /// 🔄️ Ends one vortex round: the drawn vortex, its candidates, the acceptance and the collision state. The pool stays.
     fn reset_candidate(&mut self) {
-        self.round_constructed = false;
-        self.targets.clear();
-        self.target_cursor = 0;
-        self.target_rotation = 0;
-        self.target_prepare_phase = TargetPreparePhase::Reset;
-        self.target_attraction_cursor = 0;
-        self.target_object_cursor = 0;
-        self.target_vortex_cursor = 0;
-        self.seed_targets.clear();
-        self.frontier_targets.clear();
-        self.seed_target_weights.clear();
-        self.frontier_target_weights.clear();
-        self.seed_target_tree = vec![0.0];
-        self.frontier_target_tree = vec![0.0];
-        self.target_prepare_cursor = 0;
-        self.seed_target_remaining = 0;
-        self.frontier_target_remaining = 0;
         self.current_target = None;
+        self.current_target_index = None;
         self.reset_candidate_preparation();
         self.reset_acceptance();
         self.last_rejection = None;
         self.reset_collision();
+    }
+
+    /// 🌀️ Drops the free vortex pool so the next round rebuilds it from the (retracted) document; marks are forgotten
+    /// because fewer placed objects can free a vortex again.
+    fn reset_targets(&mut self) {
+        self.targets.clear();
+        self.target_weights.clear();
+        self.target_tree = vec![0.0];
+        self.targets_ready = false;
+        self.target_prepare_phase = TargetPreparePhase::Reset;
+        self.target_attraction_cursor = 0;
+        self.target_object_cursor = 0;
+        self.target_vortex_cursor = 0;
     }
 
     fn reset_candidate_preparation(&mut self) {
@@ -2231,10 +2110,9 @@ impl FillBuilder {
         self.candidate_vortex_cursor = 0;
         self.candidate_prepare_cursor = 0;
         self.candidate_raw.clear();
-        self.candidate_same_sorted.clear();
-        self.candidate_same_weights.clear();
-        self.candidate_same_tree = vec![0.0];
-        self.candidate_same_remaining = 0;
+        self.candidate_weights.clear();
+        self.candidate_tree = vec![0.0];
+        self.candidate_remaining = 0;
     }
 
     fn reset_acceptance(&mut self) {
@@ -2461,6 +2339,8 @@ impl InteractiveJob for FillBuilder {
 pub(crate) const FILL_RUN_TICK_FLUSH_BYTES: usize = 8 * 1024;
 /// 🧬️ Provisional ops one accepted placement appends: `create_object` then `connect_vortices`.
 pub(crate) const FILL_RUN_OPS_PER_PLACEMENT: u32 = 2;
+/// 🎯️ Trace scale of a marked vortex over the vortex marker mesh, so an exhausted vortex stands out from the open ones.
+pub(crate) const FILL_RUN_MARKED_VORTEX_SCALE: f32 = 2.0;
 
 /// 🆔️ Stable provisional entity of a placed object: the first eight little-endian bytes of its id digest.
 pub(crate) fn fill_run_entity(object_id: &str) -> u64 {
@@ -2600,6 +2480,7 @@ pub(crate) struct FillRunJob {
     next_key: u64,
     placement_keys: Vec<(u64, ToolRunTraceSubject)>,
     tested: u64,
+    marked: u64,
     collisions: u64,
     rejected: u64,
     stage: FillRunStage,
@@ -2682,6 +2563,7 @@ impl FillRunJob {
             next_key: 0,
             placement_keys: Vec::new(),
             tested: 0,
+            marked: 0,
             collisions: 0,
             rejected: 0,
             stage: FillRunStage::Prepare,
@@ -2711,9 +2593,9 @@ impl FillRunJob {
         &self.mesh_lane
     }
 
-    /// 📟️ `[tested, locked, collisions, rejected]`, in [`FillRunCounter::ALL`] order.
-    pub(crate) fn counters(&self) -> [u64; 4] {
-        [self.tested, self.placement_keys.len() as u64, self.collisions, self.rejected]
+    /// 📟️ `[tested, locked, collisions, rejected, marked]`, in [`FillRunCounter::ALL`] order.
+    pub(crate) fn counters(&self) -> [u64; 5] {
+        [self.tested, self.placement_keys.len() as u64, self.collisions, self.rejected, self.marked]
     }
 
     /// 📸️ Where this run stands right now.
@@ -2878,6 +2760,16 @@ impl FillRunJob {
                     self.writer.append_entity(entity);
                     self.placement_keys.push(placement);
                     accepted = true;
+                }
+                FillRunEvent::VortexMarked { position } => {
+                    let key = self.next_key;
+                    self.next_key += 1;
+                    let subject = ToolRunTraceSubject::Instance3d { mesh: self.mesh(VORTEX_MARKER_MESH_KIND), position: position.map(|value| value as f32), rotation: [0.0, 0.0, 0.0, 1.0], scale: FILL_RUN_MARKED_VORTEX_SCALE };
+                    self.writer.upsert(key, ToolRunVerdict::Danger, FillRunReason::VortexExhausted.code(), subject);
+                    self.marked += 1;
+                    if self.replay.is_none() {
+                        context.consume_fuel(1);
+                    }
                 }
                 FillRunEvent::Abandoned => {
                     if let Some((key, _)) = self.live.take() {

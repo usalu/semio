@@ -1,4 +1,4 @@
-# Flow Inline Continuation — One Owning Publication Layer, One Dispatched Hop (2026-09-14)
+# Flow Inline Continuation — One Owning Publication Layer, One Hop Per Lane (2026-09-14)
 
 Opus execution lane `flow-inline-continuation`. Lands §7 item **4** of
 `📓️flow-tick-coalescing-2026-09-14.md`: the `flowEvalResolve` → `flowEvalTick` round-trip pair the
@@ -113,8 +113,10 @@ throughout, hop 1 is dispatched and hops 2..N+1 all run inline.
 | Face Sweep Extrude | 4 | `[2,1,1]` | 8 | 4 | **1** |
 | **eight examples** | 23 | — | **47** | **26** | **8** |
 
-Priced at the peer lane's measured 1 391 ms/hop, the eight example loads drop from 47 hops (≈65.4 s)
-to 8 (≈11.1 s). §7 says exactly how much of that is measured and how much is modelled.
+§8 measures this in a browser. The measured floor is **2** dispatched hops per edit example and
+**1** per viewer example, not 1 — the edit lane's gesture (`setActiveExample`) arms one hop of its
+own before the run job's, and both then run their chains inline. What the model gets exactly right is
+the SHAPE: the count no longer depends on the graph's depth at all.
 
 The tessellate half matters as much as the evaluate half: a mesh body arrives one CHUNK per round
 trip and each chunk used to cost its own `flowEvalTick`. That is why `flowTessellateResolve` joined
@@ -163,7 +165,11 @@ prose alone.
 | `✏️s/…/🌀️generation2d/…/🧵️preview-eval/🦀️.rs`, `✏️s/…/🌊️flow/…/⏱️flow-eval-tick/🦀️.rs` | `session.tick(host, None)` |
 | `✏️s/…/🧊️generation3d/…/🧫️fixtures/⏱️evaluate-budget.json` | `inlineContinuation` section; `answersArmNothing` rewritten |
 | `✏️s/…/✅️flow-eval-resolve/🧪️tests/🔬️budget/🦀️.rs` + `🟦️.ts` | the ladder law in both languages |
-| `🧰️framework/…/🌊️flow/🖥️host/🧪️tests/🔬️unit/🦀️.rs` | three admission/cancel/wall laws |
+| `🧰️framework/…/🌊️flow/🖥️host/🧪️tests/🔬️unit/🦀️.rs` | three admission/cancel/wall laws, plus §7.1's settled-census law |
+| `🧰️framework/…/🌊️flow/🖥️host/🦀️.rs` (§7.1) | `PreviewChainStatus::settled()` |
+| `✏️s/…/🧊️generation3d/…/🧵️preview-eval/🦀️.rs` (§7.1) | `computing` and the abort affordance stop reading a settled chain's stale run view |
+| `✏️s/…/🧊️generation3d/…/👁️viewer/🧪️tests/🔬️status-contract/🦀️.rs` (§7.1) | the projection law over a `Running` run view |
+| `.🧬semio/…/PROCEDURAL-3D-END-TO-END/🐍️run-settle-probe.mjs` | the two-pick browser reproduction of §7.1 |
 
 ### 5.1 One framework change this lane depends on and did not author
 
@@ -223,10 +229,10 @@ bun 🔍️evaluate-budget-contract.ts
 | suite | result | note |
 |---|---|---|
 | `semio-framework-os-kernel-neural-engine --lib` | **56 passed, 0 failed** | unchanged from the coalescing lane's 56/0 |
-| `semio-s-artifact-procedural-generation3d --lib` (full) | 458 passed, **5 failed** | the coalescing lane's 3 (`generation_preview_is_one_app_transient…`, `two_instances_converge_disjoint_widget_moves`, `vcs_artifact_app_non_empty_retained_maintenance_swap…`) plus 2 in peer-owned files this lane never touched — `every_panel_publishes_its_body_in_generate_mode_as_well_as_edit` (`📌️panels/🗿️artifact`, modified in the working tree by the flow-window-artifact-tree lane) and `every_user_visible_label_is_declared_in_every_locale…` (`🗣️terminology`, modified in the working tree) |
+| `semio-s-artifact-procedural-generation3d --lib` (full) | **459 passed, 4 failed** | the coalescing lane's 3 (`generation_preview_is_one_app_transient…`, `two_instances_converge_disjoint_widget_moves`, `vcs_artifact_app_non_empty_retained_maintenance_swap…`) plus `every_panel_publishes_its_body_in_generate_mode_as_well_as_edit`, which lives in `📌️panels/🗿️artifact` — a file this lane never touched, modified in the working tree by the flow-window-artifact-tree lane |
 | `--lib -- a_late_contributions_install` (native twin of the served shape) | **2 passed, 0 failed** | editor + viewer |
 | `--test example-geometry` (kernel oracle) | **18 passed, 0 failed** | geometry untouched |
-| `semio-framework-os-flow --lib -- host::` | 117 passed, **5 failed** | 3 are the coalescing lane's documented pre-existing set; the 2 additions (`hexagonal_mushroom_fixture_reports_extruded_solid_output`, `rectangle_extrude_fixture_evaluates_solid_output`) reach the kernel only through the UNBUDGETED `FlowHost::evaluate`, which no part of this change touches, and the authoritative geometry gate (`--test example-geometry`, 18/18, includes `hexagonal_mushroom_column_evaluates_to_the_analytic_prism`) is green — they sit in `📐️brep-geometry`/`🧠️neural`, both under heavy peer edit in the working tree |
+| `semio-framework-os-flow --lib -- host::` | **119 passed, 4 failed** | 2 are the coalescing lane's documented pre-existing set (`connect_ports_replaces_existing_incoming_on_same_input`, `delete_selection_removes_edge_selected_by_synapse_id_domain` — pure DAG edge selection, unreachable from an evaluator change); the other 2 (`hexagonal_mushroom_fixture_reports_extruded_solid_output`, `rectangle_extrude_fixture_evaluates_solid_output`) reach the kernel only through the UNBUDGETED `FlowHost::evaluate`, which no part of this change touches, and the authoritative geometry gate (`--test example-geometry`, 18/18, includes `hexagonal_mushroom_column_evaluates_to_the_analytic_prism`) is green — they sit in `📐️brep-geometry`/`🧠️neural`, both under heavy peer edit in the working tree |
 | `cargo check` gen3d / gen2d / flow-plugin / flow-host | **0 errors** each | |
 
 ### 6.4 Two laws this change had to repair, and why that is the finding
@@ -244,8 +250,10 @@ defect, in the harness first and in the real React shell minutes later.
 
 ## 7. What is NOT claimed
 
-1. **The `after inline` column of §3 is a model, not a browser count** — see §8 for what was actually
-   counted in a browser.
+1. **§3's `after inline` column is a MODEL and §8's is the measurement, and they differ.** The model
+   says 1 dispatched hop per example; the browser measures 2 in the edit lane and 1 in the viewer
+   lane, because `setActiveExample` arms a hop of its own before the run job's. What the model gets
+   right is that the count stops depending on graph depth. Quote §8, not §3, for hops.
 2. **The native `--lib` harness cannot exhibit the contributed hop ladder.** A `--lib` binary LINKS
    the brep and math operator packs, so `evaluate` never parks an extension request there and only
    the tessellate half of the chain round-trips. Measured on `hex_column_boot`: with the continuation
@@ -258,4 +266,178 @@ defect, in the harness first and in the real React shell minutes later.
 4. **`nodesDone`/`nodesTotal` are still absent from `statusContract.progressKeys`**
    (`flow-tick-coalescing` §7 item 5) — untouched here.
 5. **The framework continuation-view fix (§5.1) is not this lane's work.** It is load-bearing for
-   every number below it.
+   every number in §8.
+6. **The `previewEval` RUN still does not reach a terminal state promptly after a chain settles.**
+   §7.1 fixes what a surface PUBLISHES about that, with a law; it does not fix the run's own
+   finalize handshake, which is host-paced and belongs to `⏯️tool-run`. Measured symptom that
+   remains: `toolRunFinalize` never appears in a whole journey's console.
+7. **The wgpu twin was measured only by its own battery (§8.3), not by the journey probe**, which is
+   React-only — so there is no wgpu HOP count, only a per-example geometry and status verdict.
+8. **`accessibility:live` on wgpu is red and unattributed** (§8.3). It may or may not be downstream of
+   §7.1; this lane did not chase it.
+
+---
+
+## 7.1 The defect the speed-up exposed: a spinner that outlived its work
+
+Landing §2 turned the last thing that happens in a chain from a DISPATCHED `flowEvalTick` into an
+extension answer's own guest turn. After it the guest has nothing further to say, so no further
+`refreshUi` runs, so the `previewEval` run's terminal state is never rendered back — and
+`preview_scene_status_json` / `preview_progress_status_json_for` raised `computing` and the
+`toolRunAbort` affordance straight off that stale `ToolRunView`:
+
+```
+window:procedural-preview  phase=idle ratio=1 inFlight=0 nodesDone=7 nodesTotal=7
+                           computing=true cancellable=true      ← forever
+```
+
+Reproduced deterministically on 6024 in two picks (boot → `No example` → `Hexagonal Mushroom Column`,
+`🐍️run-settle-probe.mjs`, raw in `🗑️generated/flow-inline/run-settle2/`), and it cost 2 of 23 journey
+rows in one run and 4 of 23 in another.
+
+**The rule, at its owner.** `PreviewChainStatus::settled()` (`🌊️flow/🖥️host/🦀️.rs`): a chain that owes,
+awaits and runs nothing, and whose own census accounts for every node it published, has settled. The
+chain is the LIVE ledger; a `ToolRunView` is a host artifact delivered on a render and therefore lags
+its own job. So the run may raise `computing`/`cancellable` only while the chain has NOT settled —
+before the first hop publishes a census the run legitimately knows more (it is the only thing that
+knows a gesture started one), and after the last one it knows less. A census of ZERO nodes is
+deliberately not settled, which is exactly that opening window.
+
+This is not cosmetic: `toolRunAbort` offered beside `7/7, ratio 1.0, inFlight 0` stops nothing,
+because nothing is running. A false affordance is as much a defect as a false spinner.
+
+**Laws** (both green, output in §8.4):
+* `a_settled_chain_census_outranks_a_lagging_run_view_and_an_empty_one_does_not`
+  (`🌊️flow/🖥️host/🧪️tests/🔬️unit/🦀️.rs`) — the predicate itself, including the empty-census counter-case.
+* `a_settled_chain_publishes_no_spinner_and_no_abort_however_stale_the_run_view_is`
+  (`👁️viewer/🧪️tests/🔬️status-contract/🦀️.rs`) — the real projection, driven with a `ToolRunState::Running`
+  view across all three windows (no census → working → settled).
+
+---
+
+## 8. Measured in a browser
+
+React, port 6024, guest restaged from this tree, `🐍️journey-probe.mjs`.
+**23/23 converged, every mesh oracle green** (`🗑️generated/flow-inline/journey4/`).
+
+`hops` = `performInvocation settled {"actionId":"flowEvalTick"}` counted per journey row — the same
+instrument and the same probe as the before-column, which is re-counted here from the stored
+`🗑️generated/react-u64/journey/` run rather than quoted.
+
+### 8.1 Hops per example
+
+| journey row | before | after |
+|---|---:|---:|
+| boot | 7 | **2** |
+| edit: No example | 2 | 2 |
+| edit: Hexagonal Mushroom Column | 3 | **2** |
+| edit: Rectangle Extrude Volume | 7 | **2** |
+| edit: Sphere Cut With Torus | 7 | **2** |
+| edit: Box Fillet Preview | 6 | **2** |
+| edit: Sphere Box Fuse | 7 | **2** |
+| edit: Face Sweep Extrude | 8 | **2** |
+| edit: Rectangle Wire Preview | 3 | **2** |
+| edit: Box Shell Preview | 6 | **2** |
+| generate-added | 2 | 2 |
+| viewer-role | 5 | **1** |
+| view: No example | 1 | 1 |
+| view: Hexagonal Mushroom Column | 6 | **1** |
+| view: Rectangle Extrude Volume | 7 | **1** |
+| view: Sphere Cut With Torus | 6 | **1** |
+| view: Box Fillet Preview | 5 | **1** |
+| view: Sphere Box Fuse | 6 | **1** |
+| view: Face Sweep Extrude | 7 | **1** |
+| view: Rectangle Wire Preview | 2 | **1** |
+| view: Box Shell Preview | 5 | **1** |
+| **whole 23-step journey** | **108** | **32** |
+| eight edit examples | 47 | **16** |
+| eight viewer examples | 44 | **8** |
+
+**The count is now FLAT.** Before, a row cost 3–8 hops depending on how deep its graph was; after, it
+is 2 in the edit lane and 1 in the viewer lane for every example — `Face Sweep Extrude` (three
+contributed levels) costs exactly what `Rectangle Wire Preview` (one) costs. That is the shape §3
+predicted; the constant is 2 rather than 1 in the edit lane because `setActiveExample` arms a hop of
+its own before the run job's, and the chain then runs inline from whichever ran first.
+
+Priced at the peer lane's measured 1 391 ms/hop (`📓️react-hop-latency-2026-09-14.md` §2.1), the 76
+removed hops are ≈**106 s** off one 23-step journey.
+
+### 8.2 Seconds per row (same two runs, probe wall clock)
+
+| row | before | after |
+|---|---:|---:|
+| boot | 11 | **8** |
+| edit: Hexagonal Mushroom Column | 4 | **4** |
+| edit: Rectangle Extrude Volume | 9 | **6** |
+| edit: Sphere Cut With Torus | 8 | **6** |
+| edit: Box Fillet Preview | 7 | **5** |
+| edit: Sphere Box Fuse | 8 | **6** |
+| edit: Face Sweep Extrude | 10 | **6** |
+| edit: Rectangle Wire Preview | 4 | **4** |
+| edit: Box Shell Preview | 6 | **5** |
+| eight viewer examples | 4 each | **3–4 each** |
+
+The probe samples once per second and requires three stable samples, so ~3 s of every row is the
+instrument, not the app; the edit lane's deep examples are where the change is visible (9→6, 10→6).
+
+### 8.3 wgpu
+
+`activate-generation3d-wgpu-dev` restaged from this tree (12m11s, 5/40 cache hits — the wgpu guest
+had not been rebuilt for a while, so this run also carries a batch of peers' changes), then
+`bun 🐍️wgpu-battery.mjs --only=examples,status-a11y-i18n` on 6118 behind the
+`wgpu-batter[y]|wgpu-.*-pro[b]e` quiet gate (which took ~10 min to clear). Raw in
+`🗑️generated/wgpu-verify/` (the battery's own root; it ignores `SEMIO_PROBE_OUT`).
+
+* **`examples`: every row green, `pageerrors=0`.** Both surfaces, all eight examples, each checked
+  against its committed mesh ids and bounding box — e.g. `viewer: sphere-cut-with-torus publishes the
+  committed meshes and box … box {min:[-2.1006,-2.1357,-2.2], max:[2.1475,2.1357,2.2]}`, `viewer:
+  box-shell-preview … ids:["eval-shell@solid#0"]`. Editor rows likewise. The chain is renderer-neutral
+  by construction and this is the measurement that says so.
+* **`status-a11y-i18n`: 8 of 9 steps green.** The two that matter here both pass:
+  `status:pill-while-computing` (`Computing · 0/1 (0%)`, `computing: true`, a published ratio) and
+  `status:settled` (`phase: "idle"`). So §7.1 did not flatten the live pill — it still goes computing
+  → settled on wgpu.
+* **One red: `accessibility:live`.** After the example-switch gesture the accessibility mirror is
+  byte-identical — `nodeCount 50 → 50`, `labels 30 → 30`, `arrived: []`, `left: []` — and the probe
+  requires the mirror to move. This step was green in the previous full battery (22:42) and is red
+  now. It is **not attributed**: the mirror carries window controls (`LOD`, `Show`, the two canvas
+  labels), which an example switch does not change, and this run restaged a large batch of peer work
+  alongside §7.1 — but §7.1 does remove a `computing` publication sooner, so a mirror that carried a
+  transient pill node would sample identically at both ends. The a11y-live lane
+  (`📓️wgpu-wheel-zoom-a11y-live-2026-09-14.md`) owns that mirror; this lane flags it rather than
+  guessing.
+* The scoreboard's other three reds (`port-fit`, `generate-add`, `world3d-editor`) are stale entries
+  from the 22:42 full battery that this two-lane run did not re-execute, not results of it.
+
+
+
+### 8.4 §7.1's laws, with output
+
+```
+cargo test -p semio-framework-os-flow --lib -- host::tests::a_settled_chain_census
+test host::tests::a_settled_chain_census_outranks_a_lagging_run_view_and_an_empty_one_does_not ... ok
+[DEBUG] chain settled: working=false half=false censusFree=false done=true
+
+cargo test -p semio-s-artifact-procedural-generation3d --features component-app-assembly --lib -- a_settled_chain_publishes_no_spinner
+test viewer::…::status_contract_tests::a_settled_chain_publishes_no_spinner_and_no_abort_however_stale_the_run_view_is ... ok
+[DEBUG] settled-vs-stale-run status: {"cancellable":false,"progress":{"inFlight":0,"nodesDone":3,"nodesTotal":3,"ratio":1.0,…}}
+```
+
+Live before/after of the same reproduction (`🐍️run-settle-probe.mjs`, boot → `No example` →
+`Hexagonal Mushroom Column`, 6024):
+
+```
+before (🗑️generated/flow-inline/run-settle2/)  computing=true  phase=idle ratio=1 nodesDone=7/7 cancellable=true   ← 40 s, never clears
+after  (🗑️generated/flow-inline/run-settle4/)  computing=null  phase=idle ratio=1 nodesDone=7/7 cancellable=false
+```
+
+### 8.5 Regression suites after §7.1
+
+| suite | result |
+|---|---|
+| `semio-s-artifact-procedural-generation3d --lib` | **459 passed, 4 failed** (the 3 pre-existing + 1 peer-owned panel red; see §6.3) |
+| `semio-framework-os-flow --lib -- host::` | **119 passed, 4 failed** (see §6.3) |
+| `semio-framework-os-kernel-neural-engine --lib` | **56 passed, 0 failed** |
+| `--test example-geometry` | **18 passed, 0 failed** |
+| `bun 🔍️evaluate-budget-contract.ts` | evaluate-budget twin OK, inline-continuation twin OK |
+| `bun 🔍️preview-status-contract.ts` | OK |

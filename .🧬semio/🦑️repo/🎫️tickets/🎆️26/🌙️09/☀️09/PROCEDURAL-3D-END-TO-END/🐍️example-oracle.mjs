@@ -88,6 +88,14 @@ export const loadExampleOracles = (dir = EXAMPLES_DIR) => {
        * `run_delivery`'s own payload in `📚️examples/🧪️tests/🧩️geometry/🦀️.rs` — then both halves are
        * exact and this envelope goes away. That needs a native run this lane did not make. */
       boundingBoxTolerance: fixture.expect.boundingBoxTolerance,
+      /** 📦️ The extent the DELIVERY commits, as of 2026-09-15 — hand-written into every fixture from
+       * `run_delivery`'s own `preview_payload` and asserted natively by `assert_delivery_bounds`
+       * (`📚️examples/🧪️tests/🧩️geometry/🦀️.rs`). This is what the runtime payload is graded against and
+       * what the render hosts FRAME, so the shortfall envelope the note above described is gone: both
+       * halves are now exact numbers (ticket 26/09/09, `📓️boot-camera-framing-2026-09-15.md`). */
+      deliveryBoundingBoxMin: fixture.delivery.boundingBoxMin,
+      deliveryBoundingBoxMax: fixture.delivery.boundingBoxMax,
+      deliveryBoundingBoxTolerance: fixture.delivery.boundingBoxTolerance,
       boundingBoxShortfall: Math.max(
         fixture.expect.boundingBoxTolerance + fixture.tessellationTolerance,
         0.02 * Math.max(...fixture.expect.boundingBoxMax.map((max, axis) => max - fixture.expect.boundingBoxMin[axis])),
@@ -188,31 +196,56 @@ export const gradeMeshes = (oracle, host) => {
   return { ok: reasons.length === 0, reasons };
 };
 
-/** 🎥️ Does the camera actually FRAME this example's committed bounding box?
+/** 🎥️ Does the camera actually FRAME this example's bounding box?
  *
- * A camera that merely CHANGED proves nothing — that is all any probe in this ticket checked before.
- * The product's own fit rule is `fitCameraFromBounds` (`World3dHost/🟦️.tsx:860`), reached from the
- * `Frame visible` overlay button (`:6733` → `handleFrameVisibleInstances`, `:5592`): it points the
- * camera at the CENTRE of the painted instance group's AABB and stands
- * `max(radius * padding, 2)` away along the current look direction, where `radius` is HALF THE
- * LARGEST axis extent and the manual path's padding is `1.8`. So a fit is provably correct when the
- * published camera reproduces that rule over the payload this pane actually holds — and, since
- * {@link gradeMeshes} separately holds that payload to the committed fixture, the camera then
- * provably frames the fixture's own box.
+ * ⚖️ Graded by PROJECTION, not by reproducing an implementation constant: every corner of the box
+ * must land inside the viewport's normalized device square, in front of the eye, with margin. That is
+ * the user-facing statement ("the whole example is on screen"), and it stays true across any change to
+ * the host's fit arithmetic — where the previous grader, which re-derived `max(radius * 1.8, 2)` from
+ * `fitCameraFromBounds`, could only ever agree with whatever the host did, including standing so close
+ * that the box's own corners fell outside the frustum
+ * (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️boot-camera-framing-2026-09-15.md`).
  *
- * `bounds` is the pane's whole published payload (`stats.allBounds`), which is what the fit reads —
- * the preview mesh alone would miss an example's companion wires. */
-export const CAMERA_FIT_PADDING = 1.8;
-export const gradeCameraFit = (camera, bounds) => {
+ * `bounds` is the box to contain — the pane's whole published payload (`stats.allBounds`) for a fit
+ * over what is on screen, or the fixture's committed `delivery.boundingBox*` for a boot framing.
+ * `aspect` is the preview canvas's own width/height. */
+export const CAMERA_FRAME_NDC_LIMIT = 1.0;
+export const gradeCameraFrames = (camera, bounds, aspect = 1) => {
   const reasons = [];
   if (!camera || !Array.isArray(camera.position) || !Array.isArray(camera.target)) return { ok: false, reasons: [`no camera published: ${JSON.stringify(camera)}`] };
-  if (!bounds) return { ok: false, reasons: ["the pane published no geometry to frame"] };
-  const centre = bounds.min.map((min, axis) => (min + bounds.max[axis]) / 2);
-  const radius = Math.max(...bounds.max.map((max, axis) => max - bounds.min[axis])) / 2;
-  const offCentre = Math.hypot(...camera.target.map((value, axis) => value - centre[axis]));
-  const distance = Math.hypot(...camera.position.map((value, axis) => value - camera.target[axis]));
-  const expected = Math.max(radius * CAMERA_FIT_PADDING, 2);
-  if (offCentre > Math.max(radius * 0.1, 0.02)) reasons.push(`camera target ${JSON.stringify(camera.target)} is ${offCentre.toFixed(4)} off the framed centre ${JSON.stringify(centre.map((v) => Number(v.toFixed(4))))}`);
-  if (Math.abs(distance - expected) > Math.max(expected * 0.1, 0.05)) reasons.push(`camera stands ${distance.toFixed(4)} from its target, not the ${expected.toFixed(4)} a radius of ${radius.toFixed(4)} at padding ${CAMERA_FIT_PADDING} asks for`);
-  return { ok: reasons.length === 0, reasons, centre, radius, offCentre, distance, expected };
+  if (!bounds || !Array.isArray(bounds.min) || !Array.isArray(bounds.max)) return { ok: false, reasons: ["no geometry to frame"] };
+  const forward = camera.target.map((value, axis) => value - camera.position[axis]);
+  const forwardLength = Math.hypot(...forward);
+  if (!(forwardLength > 1e-6)) return { ok: false, reasons: ["the camera sits on its own target"] };
+  const unitForward = forward.map((value) => value / forwardLength);
+  const up = Array.isArray(camera.up) && Math.hypot(...camera.up) > 1e-6 ? camera.up : [0, 0, 1];
+  const right = [unitForward[1] * up[2] - unitForward[2] * up[1], unitForward[2] * up[0] - unitForward[0] * up[2], unitForward[0] * up[1] - unitForward[1] * up[0]];
+  const rightLength = Math.hypot(...right);
+  if (!(rightLength > 1e-6)) return { ok: false, reasons: ["the camera looks straight along its own up axis"] };
+  const unitRight = right.map((value) => value / rightLength);
+  const unitUp = [
+    unitRight[1] * unitForward[2] - unitRight[2] * unitForward[1],
+    unitRight[2] * unitForward[0] - unitRight[0] * unitForward[2],
+    unitRight[0] * unitForward[1] - unitRight[1] * unitForward[0],
+  ];
+  const halfVertical = Math.tan((((typeof camera.fov === "number" && camera.fov > 0 ? camera.fov : 45) * Math.PI) / 180) * 0.5);
+  let worstX = 0;
+  let worstY = 0;
+  let behind = 0;
+  for (let corner = 0; corner < 8; corner += 1) {
+    const point = [corner & 1 ? bounds.max[0] : bounds.min[0], corner & 2 ? bounds.max[1] : bounds.min[1], corner & 4 ? bounds.max[2] : bounds.min[2]];
+    const relative = point.map((value, axis) => value - camera.position[axis]);
+    const depth = relative.reduce((sum, value, axis) => sum + value * unitForward[axis], 0);
+    if (!(depth > 0)) { behind += 1; continue; }
+    const ndcY = relative.reduce((sum, value, axis) => sum + value * unitUp[axis], 0) / (depth * halfVertical);
+    const ndcX = relative.reduce((sum, value, axis) => sum + value * unitRight[axis], 0) / (depth * halfVertical * Math.max(aspect, 0.05));
+    worstX = Math.max(worstX, Math.abs(ndcX));
+    worstY = Math.max(worstY, Math.abs(ndcY));
+  }
+  if (behind > 0) reasons.push(`${behind} of the box's 8 corners are behind the camera`);
+  if (worstX > CAMERA_FRAME_NDC_LIMIT) reasons.push(`the box reaches ${worstX.toFixed(3)} of the half-width — clipped left/right`);
+  if (worstY > CAMERA_FRAME_NDC_LIMIT) reasons.push(`the box reaches ${worstY.toFixed(3)} of the half-height — clipped top/bottom`);
+  /** 🔭️ A camera parked in the next county contains every corner and shows the user a dot. */
+  if (worstX < 0.12 && worstY < 0.12) reasons.push(`the box fills only ${Math.max(worstX, worstY).toFixed(3)} of the viewport — framed from too far away`);
+  return { ok: reasons.length === 0, reasons, worstX, worstY, behind, aspect };
 };

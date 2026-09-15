@@ -177,6 +177,7 @@ pub fn puzzle3d_fill_run_counters() -> Vec<ToolRunCounterDefinition> {
         ToolRunCounterDefinition { id: FillRunCounter::Locked.id().into(), label: LocalizedLabel::native("Placed", "Platziert") },
         ToolRunCounterDefinition { id: FillRunCounter::Collisions.id().into(), label: LocalizedLabel::native("Collisions", "Kollisionen") },
         ToolRunCounterDefinition { id: FillRunCounter::Rejected.id().into(), label: LocalizedLabel::native("Rejected", "Abgelehnt") },
+        ToolRunCounterDefinition { id: FillRunCounter::Marked.id().into(), label: LocalizedLabel::native("Marked vortices", "Markierte Vortices") },
     ]
 }
 
@@ -209,6 +210,7 @@ pub fn puzzle3d_fill_run_reasons() -> Vec<ToolRunReasonDefinition> {
         reason(FillRunReason::DocumentCapacity, ToolRunVerdict::Warning, "Document capacity reached at {0}", "Dokumentkapazität bei {0} erreicht"),
         reason(FillRunReason::RequestedReached, ToolRunVerdict::Success, "Placed all {0} requested objects", "Alle {0} angeforderten Objekte platziert"),
         reason(FillRunReason::Retracted, ToolRunVerdict::Testing, "Retracted placements above the new count", "Platzierungen über der neuen Anzahl zurückgenommen"),
+        reason(FillRunReason::VortexExhausted, ToolRunVerdict::Danger, "No collision-free candidate at this vortex", "Kein kollisionsfreier Kandidat an diesem Vortex"),
     ]
 }
 //#endregion 🔖️FillRun

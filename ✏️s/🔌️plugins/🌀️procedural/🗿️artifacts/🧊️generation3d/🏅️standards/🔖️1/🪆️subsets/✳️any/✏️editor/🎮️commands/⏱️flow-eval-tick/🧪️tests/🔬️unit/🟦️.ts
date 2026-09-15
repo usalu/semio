@@ -122,8 +122,8 @@ function observe(statusJson: unknown, evalJson: Record<string, unknown>, preview
     }
   }
   if (typeof status !== "object" || status === null || Array.isArray(status)) return observation;
-  const handlesOf = (value: unknown, found: string[]): void => {
-    if (Array.isArray(value)) return value.forEach((entry) => handlesOf(entry, found));
+  const itemsOf = (value: unknown, found: (string | null)[]): void => {
+    if (Array.isArray(value)) return value.forEach((entry) => itemsOf(entry, found));
     if (typeof value !== "object" || value === null) return;
     const record = value as Record<string, unknown>;
     if (typeof record.handle === "string" && /^(solid|shell|face|wire|edge|vertex|compound|curve|surface)-/.test(record.handle)) {
@@ -131,17 +131,19 @@ function observe(statusJson: unknown, evalJson: Record<string, unknown>, preview
       return;
     }
     if (record.$schema === "list") {
-      Object.keys(record).filter((key) => /^\d+$/.test(key)).sort((a, b) => Number(a) - Number(b)).forEach((key) => handlesOf(record[key], found));
+      Object.keys(record).filter((key) => /^\d+$/.test(key)).sort((a, b) => Number(a) - Number(b)).forEach((key) => itemsOf(record[key], found));
+      return;
     }
+    if (["x", "y", "z"].every((key) => typeof record[key] === "number")) found.push(null);
   };
   for (const [node, entry] of Object.entries(status as Record<string, { status?: string }>)) {
     let reason = ({ ok: "evaluated", computing: "computing", error: "failed", blocked: "blocked" } as Record<string, string>)[entry.status ?? ""] ?? "queued";
     if (reason === "evaluated" && previewWidgetIds.includes(node)) {
       const widget = evalJson[node] as { out?: Record<string, unknown>; in?: Record<string, unknown> } | undefined;
       const channels = widget?.out ?? widget?.in ?? {};
-      const handles: string[] = [];
-      for (const key of Object.keys(channels).sort()) handlesOf(channels[key], handles);
-      const states = handles.map((handle) => meshStates[handle] ?? "pending");
+      const items: (string | null)[] = [];
+      for (const key of Object.keys(channels).sort()) itemsOf(channels[key], items);
+      const states = items.map((handle) => (handle === null ? "ready" : (meshStates[handle] ?? "pending")));
       observation.meshes += states.length;
       observation.tessellated += states.filter((state) => state === "ready").length;
       if (states.length > 0) reason = states.includes("diagnostics") ? "meshDiagnostics" : states.every((state) => state === "ready") ? "tessellated" : settled ? "meshMissing" : "tessellating";
@@ -150,7 +152,7 @@ function observe(statusJson: unknown, evalJson: Record<string, unknown>, preview
   }
   const reasons = Object.values(observation.nodes);
   const unsettled = reasons.filter((reason) => reason === "queued" || reason === "computing").length;
-  observation.stage = unsettled > 0 || observation.meshes === observation.tessellated ? "evaluate" : "tessellate";
+  observation.stage = unsettled > 0 || observation.meshes === 0 ? "evaluate" : "tessellate";
   observation.progress = [reasons.length - unsettled + observation.tessellated, reasons.length + observation.meshes];
   return observation;
 }

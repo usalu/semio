@@ -9089,6 +9089,9 @@ const INTERACTIVITY_AUDIT_UI_LIMITS_FILE = "🧰️framework/🔨️modules/🖱
 const INTERACTIVITY_AUDIT_UI_PRESENT_FILE = "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/🎭️present/🦀️.rs";
 const INTERACTIVITY_AUDIT_REACTOR_PATCHES_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🩹️patches/🦀️.rs";
 const INTERACTIVITY_AUDIT_REACTOR_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🦀️.rs";
+// 🧺️ The turn's own file. The turn patch page is assembled HERE, not in `⚛️reactor/🦀️.rs`, so every
+// gate string below that names it was reading a file it does not live in and measured nothing.
+const INTERACTIVITY_AUDIT_REACTOR_TURN_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🔄️turn/🦀️.rs";
 const INTERACTIVITY_AUDIT_KERNEL_FILE = "🧰️framework/🔨️modules/🎠️kernel/🦀️.rs";
 const INTERACTIVITY_AUDIT_SHARD_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🦀️.rs";
 const INTERACTIVITY_AUDIT_RUN_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🏃️run/🦀️.rs";
@@ -9462,7 +9465,7 @@ function interactivityAuditRun(repoRoot: string): InteractivityAuditReport {
     INTERACTIVITY_AUDIT_UI_PRESENT_FILE,
   ].map((file) => policyReadFileSafe(repoRoot, file)).join("\n") + kernelTurn + tableKit + tableKitFixtures + commandBridge + commandBridgeFixtures;
   const reactorPatches = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_REACTOR_PATCHES_FILE);
-  const reactor = [INTERACTIVITY_AUDIT_REACTOR_FILE, INTERACTIVITY_AUDIT_SHARD_FILE, INTERACTIVITY_AUDIT_RENDERER_GLUE_FILE, INTERACTIVITY_AUDIT_RUN_FILE, INTERACTIVITY_AUDIT_OS_ACTIVATION_FILE, INTERACTIVITY_AUDIT_RENDERER_RUNTIME_FILE, INTERACTIVITY_AUDIT_WINDOW_MEASURE_FILE, INTERACTIVITY_AUDIT_SHELL_FILE].map((file) => policyReadFileSafe(repoRoot, file)).join("\n");
+  const reactor = [INTERACTIVITY_AUDIT_REACTOR_FILE, INTERACTIVITY_AUDIT_REACTOR_TURN_FILE, INTERACTIVITY_AUDIT_SHARD_FILE, INTERACTIVITY_AUDIT_RENDERER_GLUE_FILE, INTERACTIVITY_AUDIT_RUN_FILE, INTERACTIVITY_AUDIT_OS_ACTIVATION_FILE, INTERACTIVITY_AUDIT_RENDERER_RUNTIME_FILE, INTERACTIVITY_AUDIT_WINDOW_MEASURE_FILE, INTERACTIVITY_AUDIT_SHELL_FILE].map((file) => policyReadFileSafe(repoRoot, file)).join("\n");
   for (const failure of interactivityLiveReconcileFailures(uiReconcile, reactorPatches, reactor, uiValue, uiSchema)) findings.push({ category: "blocking-bridge", file: INTERACTIVITY_AUDIT_UI_RECONCILE_FILE, line: 0, text: failure });
   interactivityMountedLayoutTextSelfTests(repoRoot);
   const mountedLayout = policyReadFileSafe(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/📌️mounted_layout/🦀️.rs");
@@ -10307,9 +10310,13 @@ export function interactivityLiveReconcileFailures(reconcileSource: string, patc
     schema.includes("pub fn apply_patch(state: &mut crate::UiSnapshotState")
   ) failures.push("renderer patch application is not a by-value retained generation-qualified transactional producer with exact outcome/rejection retirement");
   if (
-    !schema.includes("pub const UI_TURN_PATCHES_MAXIMUM: usize = 1") ||
+    !schema.includes("pub const UI_TURN_PATCHES_MAXIMUM: usize = semio_framework_trace::GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES / UI_TURN_PATCH_OWNER_BYTES") ||
+    !schema.includes("pub const UI_TURN_PATCH_BUDGET_BYTES: usize = semio_framework_trace::GUEST_HOST_ANSWER_CEILING_BYTES / 4") ||
+    !schema.includes("pub fn ui_patch_turn_bytes(patch: &UiPatch) -> usize") ||
+    schema.includes("pub const UI_TURN_PATCHES_MAXIMUM: usize = 1") ||
     !schema.includes("pub struct UiTurnPatches") ||
-    !schema.includes("patches: semio_framework_ui_contract::UiFixedList<UiPatch, UI_TURN_PATCHES_MAXIMUM>") ||
+    !schema.includes("entries: [UiTurnPatchEntry; UI_TURN_PATCHES_MAXIMUM]") ||
+    !schema.includes("assert!(size_of::<UiTurnPatches>() <= semio_framework_trace::GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES)") ||
     !schema.includes("pub fn try_push_ui_patch(&mut self, patch: UiPatch) -> Result<(), UiPatch>") ||
     !schema.includes("pub const UI_TURN_PATCH_RETIRE_SLOTS: usize = 64") ||
     !schema.includes("slots: [UiTurnPatchRetireSlot; UI_TURN_PATCH_RETIRE_SLOTS]") ||
@@ -10327,10 +10334,12 @@ export function interactivityLiveReconcileFailures(reconcileSource: string, patc
     !schema.includes("struct UiTurnPatchesVisitor") ||
     !schema.includes("pub ui_patches: UiTurnPatches") ||
     schema.includes("pub ui_patches: Vec<UiPatch>") ||
-    !reactor.includes("let mut ui_patches = semio_framework::kernel::UiTurnPatches::default()") ||
-    !reactor.includes("ui_patches.try_push_ui_patch(patch)") ||
+    !reactor.includes("let mut page = semio_framework::kernel::UiTurnPatches::default()") ||
+    !reactor.includes("page.try_push_ui_patch(patch)") ||
+    !reactor.includes("pub(crate) fn take_turn_patch_page(budget_bytes: usize)") ||
+    !reactor.includes("semio_framework::kernel::ui_patch_turn_bytes(&patch)") ||
     !reactor.includes("close_ui_turn_patch_owner_one()") ||
-    !reactor.includes("result.ui_patches.into_iter().map(kernel_ui_patch_to_wit)") ||
+    !reactor.includes("result.ui_patches.iter().map(kernel_ui_patch_to_wit)") ||
     !reactor.includes("Result<semio_framework_actor::TurnResult, semio_framework::Fault>") ||
     !reactor.includes("to_actor_turn_result(mut result: TurnResult") ||
     !reactor.includes("UiTurnPatchTransportProducer::try_new(session, owner)") ||

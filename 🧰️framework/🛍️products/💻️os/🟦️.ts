@@ -3561,6 +3561,7 @@ export class AppChannelClient {
   private localQuery: LocalInteractionClientQuery | null = null;
   private readonly completionListeners = new Set<(completion: OperationCompletionV1) => void>();
   private disposed = false;
+  private retired = false;
   private readonly handle: AppChannelHandle;
   private readonly instanceId: number;
   private readonly appId: string;
@@ -3664,11 +3665,19 @@ export class AppChannelClient {
     }
   }
 
-  /** 🔌️ Ends this client's background {@link pumpOutcomes} subscription — call once from
-   * `destroyApp` (`PluginRuntime/🟦️.tsx`) so a torn-down instance doesn't leak a live
-   * subscriber against the handle-wide outcome stream for the rest of the handle's lifetime. */
-  dispose(): void {
-    this.disposed = true;
+  /** 🪦️ Closes this instance's COMMAND QUEUE and settles everything already in it, WITHOUT ending the
+   * background {@link pumpOutcomes} subscription — the first half of `destroyApp`
+   * (`PluginRuntime/🟦️.tsx`), run before the actor's close ladder rather than after it.
+   *
+   * The ladder runs on the actor's own lifecycle lease and never speaks through this channel, so while
+   * it ran the queue stayed open: a gesture dispatched into a dying instance was admitted here and only
+   * refused one layer down by `requireActorId`, as `no actor for instance N` plus a stack. Retiring the
+   * queue first turns every such arrival into this channel's own typed terminal. The subscription is
+   * deliberately NOT ended here — {@link dispose} still owns that, so a close the native side REFUSES
+   * leaves the iterator exactly where it was and the retry can still retire it. */
+  retire(): void {
+    if (this.retired) return;
+    this.retired = true;
     this.completionListeners.clear();
     this.cachedPack = null;
     this.cachedSpr = null;
@@ -3676,6 +3685,14 @@ export class AppChannelClient {
       if (!this.pending[index]!.queryReceipt) this.pending.splice(index, 1)[0]!.reject(new Error("app-channel.disposed"));
     }
     if (this.localQuery) this.cancelLocalInteractionQuery(new Error("local-interaction.disposed"));
+  }
+
+  /** 🔌️ Ends this client's background {@link pumpOutcomes} subscription — call once from
+   * `destroyApp` (`PluginRuntime/🟦️.tsx`) so a torn-down instance doesn't leak a live
+   * subscriber against the handle-wide outcome stream for the rest of the handle's lifetime. */
+  dispose(): void {
+    this.retire();
+    this.disposed = true;
     this.finishDisposal();
   }
 
@@ -3715,7 +3732,7 @@ export class AppChannelClient {
   /** 🔀️ Queues one encoded command and resolves with every frame its matching {@link TurnOutcome}
    * carries — see this class's own header doc for how the reply gets correlated back to this call. */
   private sendCommand(command: AppCommandValue): Promise<AppFrameValue[]> {
-    if (this.disposed) return Promise.reject(new Error("app-channel.disposed"));
+    if (this.disposed || this.retired) return Promise.reject(new Error("app-channel.disposed"));
     return new Promise<AppFrameValue[]>((resolve, reject) => {
       const seq = Object.values(command)[0]!.seq;
       const document = "LoadDocument" in command ? { pack: Uint8Array.from(command.LoadDocument.pack), spr: Uint8Array.from(command.LoadDocument.spr) } : null;
@@ -3733,7 +3750,7 @@ export class AppChannelClient {
   //#region 🏠️LocalInteractionQuery
   /** 📃️ Each page remains native-owned until its consumer resolves; completion waits for exact native root retirement. */
   readLocalInteractionPages(consume: (page: LocalInteractionPage) => Promise<void>, signal?: AbortSignal): Promise<LocalInteractionIdentity> {
-    if (this.disposed) return Promise.reject(new Error("app-channel.disposed"));
+    if (this.disposed || this.retired) return Promise.reject(new Error("app-channel.disposed"));
     if (this.localQuery) return Promise.reject(new Error("local-interaction.busy"));
     if (signal?.aborted) return Promise.reject(new Error("local-interaction.cancelled"));
     let admission: ReturnType<AppChannelRequestSequence["nextQuery"]>;

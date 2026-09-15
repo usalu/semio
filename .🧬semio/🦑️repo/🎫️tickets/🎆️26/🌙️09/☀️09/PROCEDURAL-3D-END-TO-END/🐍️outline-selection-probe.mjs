@@ -29,8 +29,13 @@ const snap = () =>
       rows: rows.length,
       selected: rows.filter((el) => el.getAttribute("aria-selected") === "true").map(label),
       dataSelected: rows.filter((el) => el.getAttribute("data-selected") === "true").map(label),
-      styled: rows.filter((el) => el.getAttribute("data-selected") === "true").map((el) => getComputedStyle(el).backgroundColor),
+      styled: rows.filter((el) => el.getAttribute("data-selected") === "true").map((el) => getComputedStyle(el).color),
+      idleStyled: [...new Set(rows.filter((el) => el.getAttribute("data-selected") !== "true").map((el) => getComputedStyle(el).color))],
       idle: rows.filter((el) => el.getAttribute("aria-selected") !== "true").length,
+      /** 🆔️ The outline's own namespaced ids (`procedural-play-graph`, `.nodes`, `.wires`) — the proof
+       * that the rows read above ARE the Flow graph's accessible outline and not some other tree that
+       * happens to be in the panel. */
+      outlineIds: [...document.querySelectorAll('[data-slot="panel"] [id*="procedural-play-graph"]')].map((el) => (el.id ?? "").split("/").pop()).slice(0, 6),
     };
   });
 
@@ -63,22 +68,28 @@ for (const key of ["ArrowDown", "ArrowDown", "ArrowRight", "ArrowUp"]) {
   steps.push({ step: key, ...(await snap()) });
 }
 await page.keyboard.press("Escape");
-await page.waitForTimeout(2500);
-steps.push({ step: "Escape retires the mark", ...(await snap()) });
+await page.waitForTimeout(8000);
+const escaped = { step: "Escape retires the mark", ...(await snap()) };
+steps.push(escaped);
+await page.keyboard.press("ArrowDown");
+await page.waitForTimeout(3000);
+const reentered = { step: "ArrowDown after Escape", ...(await snap()) };
+steps.push(reentered);
 
 const marked = steps.filter((s) => s.selected.length > 0);
 const distinct = new Set(marked.map((s) => s.selected.join("|")));
-const cleared = steps.at(-1);
 const result = {
   steps,
   verdicts: [
     { step: "the outline paints rows", ok: steps[0].rows > 0, detail: { rows: steps[0].rows } },
+    { step: "the rows are the procedural-play-graph outline", ok: steps[0].outlineIds.length > 0, detail: steps[0].outlineIds },
     { step: "a traversal marks a row aria-selected", ok: marked.length > 0, detail: { marked: marked.map((s) => ({ step: s.step, selected: s.selected })) } },
     { step: "the same row carries data-selected", ok: marked.every((s) => s.dataSelected.length === s.selected.length) && marked.length > 0, detail: marked.map((s) => s.dataSelected) },
-    { step: "a marked row is visually distinct", ok: marked.every((s) => s.styled.every((color) => color !== "rgba(0, 0, 0, 0)")) && marked.length > 0, detail: marked.map((s) => s.styled) },
+    { step: "a marked row is visually distinct from an idle row", ok: marked.length > 0 && marked.every((s) => s.styled.every((color) => color !== "none" && !s.idleStyled.includes(color))), detail: marked.map((s) => ({ selected: s.styled, idle: s.idleStyled })) },
     { step: "traversal moves the mark between rows", ok: distinct.size > 1, detail: [...distinct] },
     { step: "exactly one row is marked at a time", ok: marked.every((s) => s.selected.length === 1), detail: marked.map((s) => s.selected.length) },
-    { step: "Escape retires the mark", ok: cleared.selected.length === 0, detail: cleared.selected },
+    { step: "Escape retires the mark", ok: escaped.selected.length === 0, detail: escaped.selected },
+    { step: "a traversal after Escape re-marks exactly one row", ok: reentered.selected.length === 1, detail: reentered.selected },
     { step: "no page errors", ok: !console_.some((line) => line.startsWith("pageerror")), detail: console_.filter((line) => line.startsWith("pageerror")).slice(0, 4) },
   ],
 };

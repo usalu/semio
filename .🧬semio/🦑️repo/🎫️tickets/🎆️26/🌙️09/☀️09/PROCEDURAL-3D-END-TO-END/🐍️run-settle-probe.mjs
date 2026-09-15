@@ -11,7 +11,8 @@ import { writeFileSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 
 const url = process.env.SEMIO_PROBE_URL ?? "http://127.0.0.1:6024/?plugin=generation3d";
-const pickText = process.env.SEMIO_PROBE_PICK ?? "Hexagonal Mushroom Column";
+const pickList = (process.env.SEMIO_PROBE_PICK ?? "No example|Hexagonal Mushroom Column").split("|").map((text) => text.trim()).filter(Boolean);
+const pickGapMs = Number(process.env.SEMIO_PROBE_PICK_GAP_MS ?? 5000);
 const seconds = Number(process.env.SEMIO_PROBE_SECONDS ?? 45);
 const bootWait = Number(process.env.SEMIO_PROBE_BOOT ?? 30);
 const outDir = join(import.meta.dir, "🗑️generated", process.env.SEMIO_PROBE_OUT ?? "run-settle");
@@ -34,11 +35,17 @@ await page.waitForTimeout(bootWait * 1000);
 lines.push(`${Date.now() - t0} probe BOOT-SETTLED ${JSON.stringify(await snap())}`);
 
 try {
-  const combo = page.locator('[role="combobox"]').first();
-  await combo.click({ timeout: 20000 });
-  await page.waitForTimeout(400);
-  await page.locator('[role="option"]').filter({ hasText: pickText }).first().click({ timeout: 20000 });
-  lines.push(`${Date.now() - t0} probe PICKED ${pickText}`);
+  for (const [index, pickText] of pickList.entries()) {
+    if (index > 0) {
+      await page.waitForTimeout(pickGapMs);
+      lines.push(`${Date.now() - t0} probe BETWEEN-PICKS ${JSON.stringify(await snap())}`);
+    }
+    const combo = page.locator('[role="combobox"]').first();
+    await combo.click({ timeout: 20000 });
+    await page.waitForTimeout(400);
+    await page.locator('[role="option"]').filter({ hasText: pickText }).first().click({ timeout: 20000 });
+    lines.push(`${Date.now() - t0} probe PICKED ${pickText}`);
+  }
 } catch (error) {
   lines.push(`${Date.now() - t0} probe PICK-FAILED ${String(error).slice(0, 400)}`);
   writeFileSync(join(outDir, "console.txt"), lines.join("\n"));

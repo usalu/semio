@@ -30,7 +30,7 @@ function packedCarrierRoot(bodyKey: string, children: readonly number[]): UiNode
 }
 
 export async function registerTests1(vitest: Pick<typeof import("vitest"), "describe" | "expect" | "it" | "vi">, dependencies: PluginRuntimeTestDependenciesV1, source: { url: string }): Promise<void> {
-  const { testState, leftoverShellInvocationFrames, ActivationRegistry, ActorDocumentBindingV1, adaptPluginHandle, assertAddressedInvocation, AppChannelClient, AppChannelRequestSequence, applyRetainedWindowPatches, applyUiPatch, applyUiPatchToRetained, ArtifactMutationRouter, assertShardJspiAvailable, BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES, buildShardClientOptions, coerceTurnResult, coerceWireBytes, commandIngressFaultDisplay, computeDependencyLevels, consumeTypedOperationEffects, createShardCommandIngressPages, createTurnOutcomeBroadcast, currentPluginRuntimeActor, decodeActorUiPatchReceipt, decodeAppFrame, decodeBackboneMessage, decodeConflictsFromWire, decodeFaultFromWire, decodeForeignStep, decodeInvocationResultPacks, decodeLocalInteractionCaptureJson, decodeMergeReportFromWire, decodeMutationEnvelopesPack, decodePackValue, decodePackWire, decodeWirePack, decodeWirePatchOps, DEFAULT_SHARD_BUDGET, drainTypedOperationTurns, DIRECTORY_PROJECTION_RECEIPT_SCHEMA, emptyUiDocumentState, encodeActorUiPatchReceipt, encodeDocumentBackboneControlV1, encodeMutationOrigin, encodePackValue, enqueuePluginTurn, faultDisplayMessage, fetchDescriptorManifest, fnv1aHex, getActivationRegistry, getPluginTurnScheduler, getShardClient, getThunkScheduler, handlePluginShardLost, forgetInstanceForRecovery, onPluginInstancesLost, PLUGIN_ACTOR_INSTANCE_LOST_FAULT, rememberInstanceForRecovery, hasRequiredUiPatches, InstanceDirectory, invocationFromFrames, isShardLostError, loadPluginModule, loadPluginModulesInDependencyOrder, LOCAL_INTERACTION_CAPTURE_MAX_BYTES, localInteractionIdentityEquals, MAX_TRANSACTION_DEPTH, nextGlobalInstanceId, normalizeWireUiNodeRecord, notePluginLoadProgress, orderPluginRegistryEntries, OwnedResidentLedger, packWireNatural, patchAckEvents, pendingCoalescedTurns, pendingCompletionEffects, pendingLifecycleTurns, pendingTurnEffects, performContextMenu, performInvocation, PLUGIN_BOOT_SHARD_LOST_FAULT, PLUGIN_OPERATION_DRAIN_BUDGET, PLUGIN_TURN_MAILBOX_CAPACITY, PLUGIN_UI_CONTINUATION_BATCH_SIZE, PLUGIN_UI_CONTINUATION_LIMIT, PLUGIN_UI_QUIESCENT_CONTINUATIONS, PLUGIN_UI_ZERO_PROGRESS_CONTINUATION_LIMIT, PluginBootShardLostError, pluginLoadProgress, pluginLoadProgressAt, pluginSurfaceRef, poolConcurrency, rejectionCodeFromBytes, releasePendingLifecycleTurn, rendererResidentLedger, resolveDescriptorBeforeRuntime, retainedSurfaceHash, retainedSurfaceId, retainedSurfacesForActor, retainedSurfaceToBuiltNode, retainedSurfaceToSnapshot, retainedUiRefreshResponse, uiRefreshSectionUnchanged, retainedWindowByActor, retainTurnUiPatches, runBounded, sectionValueFromBuiltNode, runPluginLifecycleTurn, SEGMENTED_DOWNLOAD_MARKER_PREFIX, SemioFaultError, SURFACE_RENDER_FAULT, SERIALIZE_PER_ACTOR_MAILBOX_CAPACITY, serializeCommandIngressForActor, serializePerActor, setPluginRuntimeActor, settleAcknowledgedPluginTurns, settlePluginTurn, SHARD_LIVENESS_POLICY, SHARD_WORKER_URL, ShardClient, sharedPluginTurnScheduler, sharedThunkScheduler, shellFrameBytes, submitPluginLifecycleTurn, submitPluginTurn, teardownPluginActor, tearingDownPluginActors, TransactionCoordinator, TurnScheduler, TYPED_OPERATION_ACK_MAGIC, TYPED_OPERATION_PAGE_MAGIC, TYPED_OPERATION_PARK_CAPACITY, TYPED_OPERATION_PARK_EVICTION_FAULT, TYPED_OPERATION_PENDING_OUTPUT, TYPED_OPERATION_TERMINAL_OUTPUT, TYPED_OPERATION_TERMINAL_SEEN, TYPED_OPERATION_UNATTRIBUTED_FAULT, typedOperationAcknowledgements, TypedOperationCall, TypedOperationRouter, typedOperationResult, uiRefreshBodyKeys, uiRefreshSectionTargets, uiRefreshSurfaceEvents, wireEffectToFriendly, wireExtensionInvocation, wireNatural, wirePatchSurfaceId, wireTurnStatusTag, withTypedOperationCall, yieldPluginUiContinuation } = dependencies;
+  const { testState, leftoverShellInvocationFrames, ActivationRegistry, ActorDocumentBindingV1, adaptPluginHandle, assertAddressedInvocation, AppChannelClient, AppChannelRequestSequence, applyRetainedWindowPatches, applyUiPatch, applyUiPatchToRetained, ArtifactMutationRouter, assertShardJspiAvailable, BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES, buildShardClientOptions, coerceTurnResult, coerceWireBytes, commandIngressFaultDisplay, computeDependencyLevels, consumeTypedOperationEffects, createShardCommandIngressPages, createTurnOutcomeBroadcast, currentPluginRuntimeActor, decodeActorUiPatchReceipt, decodeAppFrame, decodeBackboneMessage, decodeConflictsFromWire, decodeFaultFromWire, decodeForeignStep, decodeInvocationResultPacks, decodeLocalInteractionCaptureJson, decodeMergeReportFromWire, decodeMutationEnvelopesPack, decodePackValue, decodePackWire, decodeWirePack, decodeWirePatchOps, DEFAULT_SHARD_BUDGET, drainTypedOperationTurns, DIRECTORY_PROJECTION_RECEIPT_SCHEMA, emptyUiDocumentState, encodeActorUiPatchReceipt, encodeDocumentBackboneControlV1, encodeMutationOrigin, encodePackValue, enqueuePluginTurn, faultDisplayMessage, fetchDescriptorManifest, fnv1aHex, getActivationRegistry, getPluginTurnScheduler, getShardClient, getThunkScheduler, handlePluginShardLost, forgetInstanceForRecovery, onPluginInstancesLost, PLUGIN_ACTOR_INSTANCE_LOST_FAULT, rememberInstanceForRecovery, hasRequiredUiPatches, InstanceDirectory, invocationFromFrames, isPluginInstanceRetiredV1, isShardLostError, loadPluginModule, loadPluginModulesInDependencyOrder, LOCAL_INTERACTION_CAPTURE_MAX_BYTES, localInteractionIdentityEquals, MAX_TRANSACTION_DEPTH, nextGlobalInstanceId, normalizeWireUiNodeRecord, notePluginLoadProgress, orderPluginRegistryEntries, OwnedResidentLedger, packWireNatural, patchAckEvents, pendingCoalescedTurns, pendingCompletionEffects, pendingLifecycleTurns, pendingTurnEffects, performContextMenu, performInvocation, PLUGIN_BOOT_SHARD_LOST_FAULT, PLUGIN_OPERATION_DRAIN_BUDGET, PLUGIN_TURN_MAILBOX_CAPACITY, PLUGIN_UI_CONTINUATION_BATCH_SIZE, PLUGIN_UI_CONTINUATION_LIMIT, PLUGIN_UI_QUIESCENT_CONTINUATIONS, PLUGIN_UI_ZERO_PROGRESS_CONTINUATION_LIMIT, PluginBootShardLostError, pluginLoadProgress, pluginLoadProgressAt, pluginSurfaceRef, poolConcurrency, rejectionCodeFromBytes, releasePendingLifecycleTurn, rendererResidentLedger, resolveDescriptorBeforeRuntime, retainedSurfaceHash, retainedSurfaceId, retainedSurfacesForActor, retainedSurfaceToBuiltNode, retainedSurfaceToSnapshot, retainedUiRefreshResponse, uiRefreshSectionUnchanged, retainedWindowByActor, retainTurnUiPatches, runBounded, sectionValueFromBuiltNode, runPluginLifecycleTurn, SEGMENTED_DOWNLOAD_MARKER_PREFIX, SemioFaultError, SURFACE_RENDER_FAULT, SERIALIZE_PER_ACTOR_MAILBOX_CAPACITY, serializeCommandIngressForActor, serializePerActor, setPluginRuntimeActor, settleAcknowledgedPluginTurns, settlePluginTurn, SHARD_LIVENESS_POLICY, SHARD_WORKER_URL, ShardClient, sharedPluginTurnScheduler, sharedThunkScheduler, shellFrameBytes, submitPluginLifecycleTurn, submitPluginTurn, teardownPluginActor, tearingDownPluginActors, TransactionCoordinator, TurnScheduler, TYPED_OPERATION_ACK_MAGIC, TYPED_OPERATION_PAGE_MAGIC, TYPED_OPERATION_PARK_CAPACITY, TYPED_OPERATION_PARK_EVICTION_FAULT, TYPED_OPERATION_PENDING_OUTPUT, TYPED_OPERATION_TERMINAL_OUTPUT, TYPED_OPERATION_TERMINAL_SEEN, TYPED_OPERATION_UNATTRIBUTED_FAULT, typedOperationAcknowledgements, TypedOperationCall, TypedOperationRouter, typedOperationResult, uiRefreshBodyKeys, uiRefreshSectionTargets, uiRefreshSurfaceEvents, wireEffectToFriendly, wireExtensionInvocation, wireNatural, wirePatchSurfaceId, wireTurnStatusTag, withTypedOperationCall, yieldPluginUiContinuation } = dependencies;
   const { describe, expect, it, vi } = vitest;
   describe("isolated job admission batch", () => {
     it("fails-before one slice per admission; passes-after a yield-sized batch", () => {
@@ -1450,6 +1450,65 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
         expect(returned).toEqual(fixture.replacement.afterReplacementClose);
       });
   
+      /** 🪦️ The teardown race, as a law. A gesture that arrives while an instance is being destroyed —
+       * a canvas host remounting and republishing its selection reset, a chord already in flight when a
+       * role switch or a hot-swap tore the instance down — used to be ADMITTED by the channel (whose
+       * queue stayed open for the whole close ladder) and refused one layer lower by `requireActorId`,
+       * as `no actor for instance N` plus a stack. Both halves are pinned here: the actor never sees the
+       * late command, and what the caller gets back is a typed retirement it can drop. */
+      it("retires an instance's dispatch queue before its actor, so a gesture arriving during teardown never reaches the actor", async () => {
+        const enqueued: number[] = [];
+        let resolveClose!: () => void;
+        const lease = {
+          handle: {
+            manifest: async () => encodePackValue({ pluginId: "retire-fixture", apps: [] }),
+            createApp: async () => 7,
+            destroyApp: () => new Promise<void>((resolve) => { resolveClose = resolve; }),
+            enqueue: (instanceId: number) => { enqueued.push(instanceId); },
+            takeSegmentedDownloadChunk: async () => undefined,
+            outcomes: { [Symbol.asyncIterator](): AsyncIterator<TurnOutcome> { return { next: () => new Promise(() => {}), return: async () => ({ done: true, value: undefined }) }; } },
+            dispose: async () => {},
+          },
+          release: async () => {},
+        };
+        const handle = await adaptPluginHandle("retire-fixture", lease);
+        const instance = await handle.createApp("fixture");
+        const attempt = async (): Promise<unknown> => { try { return await handle.readHistory(instance); } catch (error) { return error; } };
+
+        const inFlight = attempt();
+        expect(enqueued, "a live instance still crosses to its actor").toEqual([instance]);
+
+        const closing = handle.destroyApp(instance);
+        expect(isPluginInstanceRetiredV1(await inFlight), "the gesture already in the queue is settled by the retirement").toBe(true);
+        expect(isPluginInstanceRetiredV1(await attempt()), "a gesture dispatched DURING the close ladder is a typed retirement").toBe(true);
+        expect(enqueued, "and never reached the actor").toEqual([instance]);
+
+        resolveClose();
+        await closing;
+        expect(isPluginInstanceRetiredV1(await attempt()), "a gesture dispatched after the close ladder is the same typed retirement").toBe(true);
+        expect(enqueued).toEqual([instance]);
+      });
+
+      it("keeps a never-created instance a loud failure rather than a retirement", async () => {
+        const lease = {
+          handle: {
+            manifest: async () => encodePackValue({ pluginId: "retire-fixture", apps: [] }),
+            createApp: async () => 7,
+            destroyApp: async () => {},
+            enqueue: () => {},
+            takeSegmentedDownloadChunk: async () => undefined,
+            outcomes: { [Symbol.asyncIterator](): AsyncIterator<TurnOutcome> { return { next: () => new Promise(() => {}), return: async () => ({ done: true, value: undefined }) }; } },
+            dispose: async () => {},
+          },
+          release: async () => {},
+        };
+        const handle = await adaptPluginHandle("retire-fixture", lease);
+        let raised: unknown = null;
+        try { await handle.readHistory(99); } catch (error) { raised = error; }
+        expect(String(raised)).toContain("no channel for instance 99");
+        expect(isPluginInstanceRetiredV1(raised), "nothing ever created instance 99 — that is a bug, not a teardown race").toBe(false);
+      });
+
       it("adaptPluginHandle's documentPack/transactionPrepare/transactionCommit/transactionRollback/transactionUndo/transactionRedo frame through AppChannelClient", async () => {
         const { decodeAppCommand, encodeAppFrame } = await import("@semio-tech/framework-os");
         const seenCommands: unknown[] = [];
@@ -1680,12 +1739,14 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
         const token = patch.peekAcknowledgement()!;
         const close = owner.beginClose(); ui.beginClose();
         const post = worker.postMessage; worker.postMessage = () => { throw new Error("fixture post refusal"); };
-        await expect(submitPluginLifecycleTurn(owner, { kind: "issued-ui-ack", source, token }, "Interactive")).rejects.toThrow("fixture post refusal");
+        await expect(submitPluginLifecycleTurn(owner, { kind: "issued-ui-acks", entries: [{ source, token }] }, "Interactive")).rejects.toThrow("fixture post refusal");
         expect(patch.peekAcknowledgement()).toBe(token); worker.postMessage = post;
-        const submitted = await answer(submitPluginLifecycleTurn(owner, { kind: "issued-ui-ack", source, token }, "Interactive"), plain);
+        const submitted = await answer(submitPluginLifecycleTurn(owner, { kind: "issued-ui-acks", entries: [{ source, token }] }, "Interactive"), plain);
         expect(submitted.owner).toBe(owner); expect(submitted.raw).toBe(plain); expect(sent.at(-1)!.events?.[0]?.kind).toBe("patch-ack");
+        expect(sent.at(-1)!.events).toHaveLength(1);
         expect(sent.at(-1)!.events?.[0]?.payload).toEqual({ receipt, surface: { instance: fixture.instance, surface: value.surface }, revision: BigInt(value.revision) });
-        expect(patch.acceptAcknowledgement(submitted.submission)).toBe(true); expect(patch.acceptAcknowledgement(submitted.submission)).toBe(false);
+        expect(submitted.submissions).toHaveLength(1);
+        expect(patch.acceptAcknowledgement(submitted.submissions![0]!)).toBe(true); expect(patch.acceptAcknowledgement(submitted.submissions![0]!)).toBe(false);
         const accepted = { kind: "accepted" as const, lifetime, requestSequence: close.requestSequence, closeGeneration: BigInt(fixture.closeGeneration) };
         const retired = { ...accepted, kind: "retired" as const };
         await answer(submitPluginLifecycleTurn(owner, { kind: "close" }, "Interactive"), { ...plain, lifecycleReceipt: encodeActorInstanceLifecycle(accepted) });
@@ -2180,6 +2241,30 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
             const result = await settlePluginTurn(actorId, { uiPatches: [], effects: [], nextWake: null, status: { tag: "more-work" } } as unknown as WireTurnResult, "UserVisible");
             expect(continuationCount).toBe(1);
             expect(result.uiPatches).toHaveLength(1);
+          },
+        );
+      });
+
+      it("ends a draining settle one slice after the operation asked for a refresh, leaving the rest to the yielding drain", async () => {
+        const invocation = (inReplyTo: number) => ({ tag: "send-message", val: { target: { tag: "shell", val: "7" }, payload: Array.from(encodeAppFrame({ Invocation: { in_reply_to: inReplyTo, output: [], diagnostics: [], ui_scope: [1], history_patch: [], messages: [], mutations: [], inverse_group: [] } })) } });
+        const turn = (effects: unknown[]) => ({ uiPatches: [], effects, nextWake: null, status: { tag: "more-work" } }) as unknown as WireTurnResult;
+        const { settleYieldsToRefreshV1, PLUGIN_OPERATION_REFRESH_SLICE_MS } = dependencies;
+        expect(settleYieldsToRefreshV1([turn([invocation(0)])], 0, PLUGIN_OPERATION_REFRESH_SLICE_MS, false, false)).toBe(true);
+        expect(settleYieldsToRefreshV1([turn([invocation(0)])], 0, PLUGIN_OPERATION_REFRESH_SLICE_MS - 1, false, false)).toBe(false);
+        expect(settleYieldsToRefreshV1([turn([invocation(9)])], 0, PLUGIN_OPERATION_REFRESH_SLICE_MS, false, false)).toBe(false);
+        expect(settleYieldsToRefreshV1([turn([invocation(0)])], 0, PLUGIN_OPERATION_REFRESH_SLICE_MS, true, false)).toBe(false);
+        expect(settleYieldsToRefreshV1([turn([invocation(0)])], 0, PLUGIN_OPERATION_REFRESH_SLICE_MS, false, true)).toBe(false);
+        let turns = 0;
+        await withFakeShardClient(
+          async () => {
+            turns += 1;
+            await new Promise((resolve) => setTimeout(resolve, 4));
+            return { ...turn([invocation(0)]), status: { tag: turns >= 400 ? "idle" : "more-work" } };
+          },
+          async () => {
+            const result = await settlePluginTurn("refresh-slice-actor", turn([]), "UserVisible", new Set(), undefined, true);
+            expect((result.status as { tag: string }).tag).toBe("more-work");
+            expect(turns).toBeLessThan(40);
           },
         );
       });

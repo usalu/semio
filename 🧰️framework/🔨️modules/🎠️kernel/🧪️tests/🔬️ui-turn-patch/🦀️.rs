@@ -5,7 +5,7 @@ fn ui_turn_patch_owner_drop_hands_back_without_waiting_for_arena() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🚪️turn-patch-owner/🔣️.json")).unwrap();
     let mut owner = UiTurnPatches::default();
     owner.try_push_ui_patch(patch(1)).unwrap();
-    let key = owner.retirement.unwrap();
+    let key = owner.entries[0].retirement.unwrap();
     let (send, receive) = std::sync::mpsc::channel();
     let (waited, worker) = with_ui_turn_patch_retire_arena(|_| {
         let worker = std::thread::spawn(move || {
@@ -67,7 +67,7 @@ fn ui_turn_patch_owner_typed_descendants_preserve_exact_one_byte_grants() {
             assert!(turn < 65_535);
         }
         assert_eq!(bytes, surface.len() + text.len());
-        assert!(owner.contents.terminal_is_empty() && owner.retirement.is_none());
+        assert!(owner.entries[0].contents.terminal_is_empty() && owner.entries[0].retirement.is_none());
     }
 }
 
@@ -80,13 +80,23 @@ fn patch(revision: u64) -> UiPatch {
     }
 }
 
+/// 🧾️ The page carries every publication up to its DERIVED capacity, in order, and the one past the
+/// capacity comes back as the exact owner its caller handed in — the count is no longer `1`, so this
+/// law also pins the derivation and the contiguous extent the page may not exceed.
 #[test]
 fn ui_turn_patches_max_plus_one_returns_the_exact_patch_owner() {
+    assert_eq!(UI_TURN_PATCHES_MAXIMUM, semio_framework_trace::GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES / UI_TURN_PATCH_OWNER_BYTES);
+    assert!(UI_TURN_PATCHES_MAXIMUM > 1 && size_of::<UiTurnPatches>() <= semio_framework_trace::GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES);
     let mut patches = UiTurnPatches::default();
-    patches.try_push_ui_patch(patch(1)).expect("maximum owner");
-    let rejected = patches.try_push_ui_patch(patch(2)).expect_err("maximum plus one");
-    assert_eq!(rejected.revision, semio_framework_ui_contract::UiRevision(2));
+    for revision in 1..=UI_TURN_PATCHES_MAXIMUM {
+        patches.try_push_ui_patch(patch(revision as u64)).expect("maximum owner");
+    }
+    let rejected = patches.try_push_ui_patch(patch(9_001)).expect_err("maximum plus one");
+    assert_eq!(rejected.revision, semio_framework_ui_contract::UiRevision(9_001));
     assert_eq!(patches.len(), UI_TURN_PATCHES_MAXIMUM);
+    assert_eq!(patches.iter().map(|patch| patch.revision.0).collect::<Vec<_>>(), (1..=UI_TURN_PATCHES_MAXIMUM as u64).collect::<Vec<_>>());
+    drop(patches);
+    while close_ui_turn_patch_owner_one() {}
 }
 
 #[test]
@@ -102,7 +112,7 @@ fn refused_turn_patch_transfer_restores_the_exact_retirement_owner() {
 
 #[test]
 fn ui_turn_patches_fixed_serde_visitor_rejects_plus_one() {
-    let encoded = serde_json::to_vec(&[patch(1), patch(2)]).expect("bounded fixture encoding");
+    let encoded = serde_json::to_vec(&(1..=UI_TURN_PATCHES_MAXIMUM as u64 + 1).map(patch).collect::<Vec<_>>()).expect("bounded fixture encoding");
     let error = serde_json::from_slice::<UiTurnPatches>(&encoded).expect_err("visitor maximum plus one");
     assert!(error.to_string().contains("turn patch page capacity exceeded"));
 }
@@ -121,8 +131,7 @@ fn ui_turn_patches_close_retires_one_op_or_patch_owner_per_step() {
         }
         assert!(turn < 4095);
     }
-    assert!(patches.contents.terminal_is_empty());
-    assert!(patches.retirement.is_none());
+    assert!(patches.entries.iter().all(|entry| entry.contents.terminal_is_empty() && entry.retirement.is_none()));
 }
 
 #[test]

@@ -47,8 +47,9 @@ const PREVIEW = "window:procedural-preview";
  * below is reading real labels and not, say, two identical fallback strings. */
 const ACTION_DE = { addWidget: ["Add Widget", "Element hinzufügen"], exportDocument: ["Export Document", "Dokument exportieren"], importDocumentRequest: ["Import Document…", "Dokument importieren…"], reorganize: ["Reorganize", "Neu anordnen"], deleteSelection: ["Delete Selection", "Auswahl löschen"] };
 /** 🟰️ Action ids whose German is legitimately the same text as the English — proper nouns and
- * international terms. Everything else in the pane must differ between the two passes. */
-const ACTION_DE_IDENTICAL_BY_DESIGN = [];
+ * international terms. Everything else in the pane must differ between the two passes.
+ * `exportDocument.arg.format`: "Format" IS the German word, spelled identically. */
+const ACTION_DE_IDENTICAL_BY_DESIGN = ["exportDocument.arg.format"];
 
 const lines = [];
 const t0 = Date.now();
@@ -113,6 +114,19 @@ const clearSelection = async () => {
   await page.waitForTimeout(1200);
 };
 const hasId = async (id) => (await page.locator(`[id="${id}"]`).count()) > 0;
+/** 🎯️ Gives the flow window focus by clicking a pixel of its canvas that belongs to the CANVAS.
+ *
+ * The window's engagement zone hangs its `Actions`/`Utilities` pane toggle over the body's leading
+ * corner by design, so `(x+20, y+20)` of the surface answers
+ * `button#framework.window.proceduralMain.engagement.toggle` and Playwright retries the click for the
+ * whole timeout (measured 2026-09-15 on 6018, `🗑️generated/react-reds/recon/recon.json`
+ * `export-blocker.at20`). The low centre band is the same empty aim point `clearSelection` already uses. */
+const focusMainSurface = async () => {
+  const host = await page.evaluate((id) => { const r = document.querySelector(`[data-surface-id="${id}"]`)?.getBoundingClientRect(); return r ? { x: r.x, y: r.y, width: r.width, height: r.height } : null; }, SURFACE);
+  if (!host) return false;
+  await page.mouse.click(Math.round(host.x + host.width * 0.5), Math.round(host.y + host.height - 40));
+  return true;
+};
 /** ⏳️ Poll `read` until `pred`, then hand back the last reading — never a single blind sample. */
 const until = async (read, pred, seconds) => { let v = await read(); for (let i = 0; i < seconds && !pred(v); i++) { await page.waitForTimeout(1000); v = await read(); } return v; };
 
@@ -121,6 +135,26 @@ await page.goto(url, { waitUntil: "domcontentloaded" });
 const afterBoot = await until(snap, (s) => s.widgetIds.length > 0 && s.previews.some((p) => p.meshes > 0), bootWait);
 await note("boot", afterBoot.widgetIds.length > 0 && afterBoot.previews.some((p) => p.meshes > 0), { widgets: afterBoot.widgetIds, previews: afterBoot.previews, activeWindow: afterBoot.activeWindow });
 const slider = afterBoot.widgets.find((w) => /slider/i.test(String(w.kind ?? "")));
+
+// ── 0. Every dock tab owns the pixel at its own centre ───────────────────────
+{
+  // 🧢 The open dock's `Collapse` fold control used to be laid out UNDER the tab strip, so the centre of
+  // the Inspection tab (x = 1313 at 1600×1000) belonged to `button#framework.panel.top-right.fold` and a
+  // user clicking the middle of that tab collapsed the dock instead of opening Inspection
+  // (`📓️window-gaps-followup-2026-09-14.md` G2). `elementsFromPoint` is the only honest answer: a rect
+  // comparison cannot see which element paints on top.
+  await page.hover("button#framework\\.panel\\.inspection").catch(() => {});
+  await page.waitForTimeout(800);
+  const tabs = await page.evaluate(() => [...document.querySelectorAll('[data-slot="panel-tab-button"]')].map((el) => {
+    const r = el.getBoundingClientRect();
+    const cx = Math.round(r.x + r.width / 2), cy = Math.round(r.y + r.height / 2);
+    const stack = document.elementsFromPoint(cx, cy);
+    const describe = (n) => (n ? `${n.tagName.toLowerCase()}#${n.id || "-"}[${n.getAttribute("data-slot") ?? "-"}]` : "none");
+    return { id: el.id, rect: [Math.round(r.x), Math.round(r.y), Math.round(r.width), Math.round(r.height)], centre: [cx, cy], reachable: stack[0] === el || el.contains(stack[0]), top: describe(stack[0]) };
+  }));
+  const unreachable = tabs.filter((tab) => !tab.reachable);
+  await note("panel-tab-reachable", tabs.length > 0 && unreachable.length === 0, { tabs: tabs.length, unreachable });
+}
 
 // ── 1. Dock resizing ─────────────────────────────────────────────────────────
 {
@@ -157,7 +191,7 @@ const slider = afterBoot.widgets.find((w) => /slider/i.test(String(w.kind ?? "")
   await page.waitForTimeout(8000);
   let row = {};
   try {
-    await page.locator(`[data-surface-id="${SURFACE}"]`).first().click({ position: { x: 20, y: 20 } });
+    await focusMainSurface();
     await page.waitForTimeout(1500);
     // 🪟️ The toggle TOGGLES: a pane left open by an earlier step is folded by an unconditional click,
     // and every row this step needs then disappears. Only unfold a pane that is actually folded.
@@ -179,7 +213,13 @@ const slider = afterBoot.widgets.find((w) => /slider/i.test(String(w.kind ?? "")
     const bytes = readFileSync(saved);
     row = { picked: wanted.text, filename: download.suggestedFilename(), bytes: bytes.length, head: bytes.subarray(0, 24).toString("latin1") };
   } catch (e) { row = { error: String(e).slice(0, 300) }; }
-  await note("export-after-generate", addFound && generated.some((p) => p.meshes > 0) && (row.bytes ?? 0) > 0, { addFound, genInvoked, generated, export: row });
+  // 🪟️ Fold the Actions pane again — this probe's own ordering rule (see the header): an expanded pane
+  // sits OVER the flow canvas, and the next step drags on a port handle the graph paints underneath it.
+  // While this step still aborted on its click timeout the pane was never opened, so `wire-undo` read a
+  // bare canvas by accident; once the export really runs, leaving it open moves the drag onto chrome.
+  if (!(await paneFolded())) await clickId("framework.window.proceduralMain.engagement.toggle").catch((e) => lines.push(`export fold ${String(e).slice(0, 160)}`));
+  await page.waitForTimeout(1500);
+  await note("export-after-generate", addFound && generated.some((p) => p.meshes > 0) && (row.bytes ?? 0) > 0, { addFound, genInvoked, generated, export: row, paneFolded: await paneFolded() });
 }
 
 // ── 3. Cut a wire, then mod+z ────────────────────────────────────────────────
@@ -223,7 +263,10 @@ const slider = afterBoot.widgets.find((w) => /slider/i.test(String(w.kind ?? "")
   let after = await snap();
   if (wanted) {
     await page.locator(`[data-slot="panel"] [id="${wanted.id}"]`).first().click({ timeout: 8000 }).catch((e) => lines.push(`doc row click ${String(e).slice(0, 160)}`));
-    after = await until(snap, (s) => s.selection.some((x) => (x.selectedIds ?? []).includes(target)) || s.treeSelected.some((id) => id.endsWith(`/${target}`)), 25);
+    // 🎯️ Wait for the SURFACE to publish the selection, which is what this step's verdict asserts —
+    // the tree row marks itself from the host's presence table a beat earlier, so accepting it here
+    // returned on the first poll and read `window:procedural-main` before it had re-rendered.
+    after = await until(snap, (s) => s.selection.some((x) => (x.selectedIds ?? []).includes(target)), 25);
   }
   const selectedHere = after.treeSelected.some((id) => id === wanted?.id || id.endsWith(`/${target}`));
   const published = after.selection.some((x) => (x.selectedIds ?? []).includes(target));

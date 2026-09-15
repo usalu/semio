@@ -1398,6 +1398,15 @@ pub struct World3dState {
     scene_bridge_generation: u64,
     scene_bridge_digest: Option<u64>,
     scene_camera_digest: Option<u64>,
+    /// 🎯️ The `fit` revision this surface last FRAMED, and the last one it SAW. The two differ while a
+    /// document is on screen whose delivery has not published an extent yet (a freshly switched example
+    /// before its first mesh arrives), which is precisely the window the boot framing must still fire in.
+    fit_framed_revision: Option<u32>,
+    fit_seen_revision: Option<u32>,
+    /// 🔒️ The user has moved this camera since the live fit revision arrived — the latch that keeps a
+    /// re-evaluation of the SAME document from yanking the view back
+    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️boot-camera-framing-2026-09-15.md`).
+    camera_user_moved: bool,
     scene_selection_digest: Option<u64>,
     scene_mesh_digests: HashMap<String, u64>,
     prepared_status: [Option<World3dPreparedStatus>; 2],
@@ -1637,6 +1646,9 @@ impl World3dState {
             scene_bridge_generation: 0,
             scene_bridge_digest: None,
             scene_camera_digest: None,
+            fit_framed_revision: None,
+            fit_seen_revision: None,
+            camera_user_moved: false,
             scene_selection_digest: None,
             scene_mesh_digests: HashMap::new(),
             snapshot_apply: None,
@@ -6410,6 +6422,7 @@ pub fn publish_world3d_plan_step(
                     2 => state.orbit.orbit(first, second),
                     _ => unreachable!("world camera plan operation is schema-bounded"),
                 }
+                state.camera_user_moved = true;
                 state.interaction_revision = state.interaction_revision.wrapping_add(1);
             })?;
         }
@@ -9633,6 +9646,56 @@ struct World3dSceneCameraRecord {
     fov: Option<f64>,
 }
 
+/// 🎯️ `World3dScene.fit_json` — the producer's "frame this document once" lane, with the delivered
+/// extent it wants framed (`world3d_fit_json`, `🖱️ui/🎯️targets/🧊️wgpu/🧩️component/🦀️.rs`).
+#[derive(Clone, Debug, Default, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct World3dSceneFitRecord {
+    #[serde(default)]
+    enabled: bool,
+    #[serde(default)]
+    revision: u32,
+    #[serde(default)]
+    padding: Option<f64>,
+    #[serde(default)]
+    bounds_min: Option<[f64; 3]>,
+    #[serde(default)]
+    bounds_max: Option<[f64; 3]>,
+}
+
+/// 🎯️ Frames this surface's orbit on the producer's published extent, ONCE per fit revision.
+///
+/// ⚖️ Three conditions, and each one is a defect this surface shipped: without the extent it frames
+/// nothing (the wgpu world has no scene graph to measure, unlike its React twin); without the
+/// revision it re-frames on every re-evaluation; without the latch it takes back a camera the user
+/// moved. A new revision clears the latch, because a new document is a framing the user has not
+/// refused yet (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️boot-camera-framing-2026-09-15.md`).
+fn sync_world3d_scene_fit(state: &mut World3dState, fit_json: Option<&str>) {
+    let Some(fit) = fit_json.and_then(|json| serde_json::from_str::<World3dSceneFitRecord>(json).ok()).filter(|fit| fit.enabled) else { return };
+    if state.fit_seen_revision != Some(fit.revision) {
+        state.fit_seen_revision = Some(fit.revision);
+        state.camera_user_moved = false;
+    }
+    if state.fit_framed_revision == Some(fit.revision) || state.camera_user_moved {
+        return;
+    }
+    let (Some(minimum), Some(maximum)) = (fit.bounds_min, fit.bounds_max) else { return };
+    if (0..3).any(|axis| !minimum[axis].is_finite() || !maximum[axis].is_finite() || maximum[axis] < minimum[axis]) {
+        return;
+    }
+    let aspect = if state.bounds.h > 1.0 { state.bounds.w / state.bounds.h } else { 1.0 };
+    let margin = fit.padding.unwrap_or(f64::from(ui_wgpu::wgpu::WORLD_FRAME_BOUNDS_MARGIN)) as f32;
+    state.orbit = ui_wgpu::wgpu::frame_orbit_to_bounds(
+        &state.orbit,
+        [minimum[0] as f32, minimum[1] as f32, minimum[2] as f32],
+        [maximum[0] as f32, maximum[1] as f32, maximum[2] as f32],
+        aspect,
+        margin,
+    );
+    state.fit_framed_revision = Some(fit.revision);
+    state.interaction_revision = state.interaction_revision.wrapping_add(1);
+}
+
 /// 🎯️ `World3dScene.selection_json` — both the plain-instance half (`ids`/`hoveredId`, what the
 /// framework `interactionSelect`/`interactionHover` verbs address) and the component half
 /// (`granularity`/`componentIds`/`hoveredComponent`, the unconverted `worldPick` mechanism).
@@ -10135,6 +10198,7 @@ pub fn sync_world3d_state(state: &mut World3dState, scene: &UiComponentSceneNode
     state.bound_domain_granularity_id = world.domain_granularity_id.clone();
     state.environment = world.environment_json.as_deref().and_then(|json| serde_json::from_str(json).ok()).unwrap_or_default();
     sync_world3d_tool_run_trace(state, world);
+    sync_world3d_scene_fit(state, world.fit_json.as_deref());
     sync_world3d_scene_selection(state, &world.selection_json);
     let lease = match world.snapshot {
         Some(lease) => lease,

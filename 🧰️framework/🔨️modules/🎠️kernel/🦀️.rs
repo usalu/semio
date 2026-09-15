@@ -1611,7 +1611,48 @@ pub struct Usage {
 }
 
 /// 🏁️ Result of one `reactor::poll` call — `📜️wit/📜️reactor.wit`'s `turn-result` record.
-pub const UI_TURN_PATCHES_MAXIMUM: usize = 1;
+///
+/// 📏️ Inline extent of ONE exact patch owner — the block every arena slot that parks a publication
+/// reserves by value, and the number [`UI_TURN_PATCHES_MAXIMUM`] is read off.
+pub const UI_TURN_PATCH_OWNER_BYTES: usize = 4_096;
+
+/// 📏️ How many surfaces one turn result may carry. This is the fixed CAPACITY of [`UiTurnPatches`],
+/// not the admission rule — admission is the per-turn BYTE budget (`Budget::max_patch_bytes`, bounded
+/// by [`UI_TURN_PATCH_BUDGET_BYTES`]), so a turn carries every patch that is ready and fits.
+///
+/// 🐛️ Until 2026-09-15 this was `1`, and the wire contract "one patch per crossing" made N published
+/// surfaces cost N + 1 host round trips by construction — the floor
+/// `📓️reactor-reconcile-spin-2026-09-14.md` §7 named and could not move. It is DERIVED, never chosen:
+/// the page is an inline exact owner parked by value in every transport slot and every handback, so
+/// the guest's declared contiguous-request ceiling is what one such block may cost, at
+/// [`UI_TURN_PATCH_OWNER_BYTES`] per publication.
+pub const UI_TURN_PATCHES_MAXIMUM: usize = semio_framework_trace::GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES / UI_TURN_PATCH_OWNER_BYTES;
+
+/// 📏️ Ceiling every lane's `Budget::max_patch_bytes` declaration must stay under — a turn result is
+/// an ASSEMBLED answer crossing the boundary, and a single assembled answer may claim a quarter of
+/// what the declared budget admits (`🧮️memory/🦀️.rs`'s `GUEST_HOST_ANSWER_CEILING_BYTES`). The floor
+/// is the contiguous ceiling itself: a lane that declared less than one contiguous page could not
+/// carry one document-scaled publication at all.
+pub const UI_TURN_PATCH_BUDGET_BYTES: usize = semio_framework_trace::GUEST_HOST_ANSWER_CEILING_BYTES / 4;
+
+/// 📏️ Fixed wire envelope of one patch, and of one of its operations — the same two numbers the
+/// native host's own `patch_wire_bytes` charges (`🔌️plugin/🖥️host/📥️ui-patch/🦀️.rs`), so the guest
+/// that admits a batch and the host that refuses one price the envelope identically.
+pub const UI_TURN_PATCH_WIRE_ENVELOPE_BYTES: usize = 32;
+pub const UI_TURN_PATCH_OP_WIRE_ENVELOPE_BYTES: usize = 16;
+
+/// 📐️ What ONE patch costs the turn it joins: its wire envelope, its surface name, one operation
+/// envelope per operation, and the physical backing its operation storage actually holds. The last
+/// term is what makes this an UPPER bound of the host's wire measure — an operation's pack payload is
+/// never larger than the inline `UiPatchOp` that produced it — so a batch the guest admits can never
+/// be a batch the host refuses.
+pub fn ui_patch_turn_bytes(patch: &UiPatch) -> usize {
+    UI_TURN_PATCH_WIRE_ENVELOPE_BYTES
+        .saturating_add(patch.surface.as_ref().len())
+        .saturating_add(patch.ops.len().saturating_mul(UI_TURN_PATCH_OP_WIRE_ENVELOPE_BYTES))
+        .saturating_add(patch.ops.allocated_bytes())
+}
+
 pub const UI_TURN_PATCH_RETIRE_SLOTS: usize = 64;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -1679,7 +1720,7 @@ impl UiTurnPatchHandback {
     }
 }
 
-const _: () = assert!(size_of::<(UiTurnPatchRetireKey, UiTurnPatchContents)>() <= 4096);
+const _: () = assert!(size_of::<(UiTurnPatchRetireKey, UiTurnPatchContents)>() <= UI_TURN_PATCH_OWNER_BYTES);
 static UI_TURN_PATCH_HANDBACKS: [UiTurnPatchHandback; UI_TURN_PATCH_RETIRE_SLOTS] = [const { UiTurnPatchHandback::new() }; UI_TURN_PATCH_RETIRE_SLOTS];
 static UI_TURN_PATCH_RETIRE_ARENA: std::sync::Mutex<UiTurnPatchRetireArena> =
     std::sync::Mutex::new(UiTurnPatchRetireArena { slots: [const { UiTurnPatchRetireSlot { epoch: 0, reserved: false, contents: None } }; UI_TURN_PATCH_RETIRE_SLOTS], next_epoch: 1, epoch_exhausted: false, close_cursor: 0 });
@@ -1914,7 +1955,7 @@ impl UiTurnPatchTransportHandback {
     }
 }
 
-const _: () = assert!(size_of::<(UiTurnPatchTransportKey, Option<UiTurnPatches>)>() <= 4096);
+const _: () = assert!(size_of::<(UiTurnPatchTransportKey, Option<UiTurnPatches>)>() <= semio_framework_trace::GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES);
 static UI_TURN_PATCH_TRANSPORT_HANDBACKS: [UiTurnPatchTransportHandback; UI_TURN_PATCH_TRANSPORT_SLOTS] = [const { UiTurnPatchTransportHandback::new() }; UI_TURN_PATCH_TRANSPORT_SLOTS];
 
 #[cfg(test)]
@@ -2150,12 +2191,37 @@ pub fn close_ui_turn_patch_transport_session_one(session: u64) -> Result<UiTurnP
     Ok(if arena.slots.iter().any(|slot| slot.session == session && slot.state != UiTurnPatchTransportState::Vacant) { UiTurnPatchTransportProgress::Blocked } else { UiTurnPatchTransportProgress::Idle })
 }
 
-/// 🧰️ The fixed exact-owner patch page emitted by one turn.
+/// 🧰️ One publication slot of the turn page: an exact patch owner and the retirement reservation it
+/// hands back when it is dropped.
 #[derive(Debug, Default)]
-pub struct UiTurnPatches {
+struct UiTurnPatchEntry {
     contents: UiTurnPatchContents,
     retirement: Option<UiTurnPatchRetireKey>,
 }
+
+/// 🧰️ The fixed exact-owner patch page emitted by one turn — every patch that was ready when the turn
+/// assembled its result, in publication order, bounded by [`UI_TURN_PATCHES_MAXIMUM`] slots and by the
+/// caller's own byte budget.
+///
+/// 📐️ `length` is the pushed prefix and `cursor` the next slot a reader takes, so `[cursor, length)`
+/// is exactly the patches still in the page and slots below `cursor` hold nothing but the retirement
+/// reservation their patch left behind.
+#[derive(Debug)]
+pub struct UiTurnPatches {
+    entries: [UiTurnPatchEntry; UI_TURN_PATCHES_MAXIMUM],
+    length: usize,
+    cursor: usize,
+}
+
+impl Default for UiTurnPatches {
+    fn default() -> Self {
+        Self { entries: std::array::from_fn(|_| UiTurnPatchEntry::default()), length: 0, cursor: 0 }
+    }
+}
+
+/// 🧨️ The page is parked BY VALUE in every transport slot and every transport handback, so its own
+/// extent is the one block the guest's declared contiguous-request ceiling has to fund.
+const _: () = assert!(size_of::<UiTurnPatches>() <= semio_framework_trace::GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES);
 
 pub enum UiTurnPatchTransfer<T> {
     Empty,
@@ -2165,48 +2231,71 @@ pub enum UiTurnPatchTransfer<T> {
 
 impl PartialEq for UiTurnPatches {
     fn eq(&self, other: &Self) -> bool {
-        self.contents.pending.get() == other.contents.pending.get()
+        self.len() == other.len() && self.iter().zip(other.iter()).all(|(left, right)| left == right)
     }
 }
 
 impl UiTurnPatches {
+    /// 📥️ Appends one patch to the page's publication order, reserving that slot's own retirement.
+    ///
+    /// 🐛️ Until 2026-09-15 the page held exactly ONE patch, so the second surface a turn had ready was
+    /// refused here and cost a whole host round trip of its own.
     #[expect(clippy::result_large_err, reason = "Refusal returns the exact fixed patch so the caller retains its retirement obligation.")]
     pub fn try_push_ui_patch(&mut self, patch: UiPatch) -> Result<(), UiPatch> {
-        if !self.contents.terminal_is_empty() || self.contents.pending.source_mut().is_err() {
+        if self.length == UI_TURN_PATCHES_MAXIMUM {
             return Err(patch);
         }
-        if self.retirement.is_none() {
+        let index = self.length;
+        if !self.entries[index].contents.terminal_is_empty() || self.entries[index].contents.pending.source_mut().is_err() {
+            return Err(patch);
+        }
+        if self.entries[index].retirement.is_none() {
             let Ok(mut arena) = UI_TURN_PATCH_RETIRE_ARENA.try_lock() else {
                 return Err(patch);
             };
             let Some(retirement) = arena.reserve() else { return Err(patch) };
-            self.retirement = Some(retirement);
+            self.entries[index].retirement = Some(retirement);
         }
-        *self.contents.pending.source_mut().expect("preflighted pending patch slot") = Some(patch);
+        *self.entries[index].contents.pending.source_mut().expect("preflighted pending patch slot") = Some(patch);
+        self.length = index + 1;
         Ok(())
     }
 
     pub fn iter(&self) -> impl Iterator<Item = &UiPatch> {
-        self.contents.pending.get().into_iter()
+        self.entries[self.cursor..self.length].iter().filter_map(|entry| entry.contents.pending.get())
     }
 
     pub fn len(&self) -> usize {
-        usize::from(!self.contents.terminal_is_empty())
+        self.length - self.cursor
     }
 
     pub fn is_empty(&self) -> bool {
-        self.contents.terminal_is_empty()
+        self.len() == 0
     }
 
+    /// 📏️ What this page costs its turn's byte budget — the sum every admitting caller compares.
+    pub fn turn_bytes(&self) -> usize {
+        self.iter().fold(0usize, |total, patch| total.saturating_add(ui_patch_turn_bytes(patch)))
+    }
+
+    /// 📤️ Hands out the NEXT patch in publication order, so a reader that loops until `Empty` sees
+    /// every surface this turn published exactly once and in the order the guest published it.
     pub fn try_transfer_one<T>(&mut self, transfer: impl FnOnce(UiPatch) -> Result<T, UiPatch>) -> UiTurnPatchTransfer<T> {
-        let Ok(source) = self.contents.pending.source_mut() else {
+        if self.cursor == self.length {
+            return UiTurnPatchTransfer::Empty;
+        }
+        let index = self.cursor;
+        let Ok(source) = self.entries[index].contents.pending.source_mut() else {
             return UiTurnPatchTransfer::Refused;
         };
         let Some(patch) = source.take() else { return UiTurnPatchTransfer::Empty };
         match transfer(patch) {
-            Ok(value) => UiTurnPatchTransfer::Transferred(value),
+            Ok(value) => {
+                self.cursor = index + 1;
+                UiTurnPatchTransfer::Transferred(value)
+            }
             Err(patch) => {
-                *source = Some(patch);
+                *self.entries[index].contents.pending.source_mut().expect("preflighted pending patch slot") = Some(patch);
                 UiTurnPatchTransfer::Refused
             }
         }
@@ -2221,12 +2310,13 @@ impl UiTurnPatches {
         if items == 0 || bytes == 0 {
             return Ok(UiValueRetirementStep::default());
         }
-        if !self.contents.terminal_is_empty() {
-            let mut step = self.contents.close_step(items, bytes)?;
-            step.complete = false;
-            return Ok(step);
-        }
-        if let Some(retirement) = self.retirement {
+        for index in 0..self.length {
+            if !self.entries[index].contents.terminal_is_empty() {
+                let mut step = self.entries[index].contents.close_step(items, bytes)?;
+                step.complete = false;
+                return Ok(step);
+            }
+            let Some(retirement) = self.entries[index].retirement else { continue };
             let mut arena = match UI_TURN_PATCH_RETIRE_ARENA.try_lock() {
                 Ok(arena) => arena,
                 Err(std::sync::TryLockError::WouldBlock) => return Ok(UiValueRetirementStep::default()),
@@ -2235,28 +2325,48 @@ impl UiTurnPatches {
             if !arena.release_empty(retirement) {
                 return Err("exact turn patch retirement reservation missing");
             }
-            self.retirement = None;
+            self.entries[index].retirement = None;
             return Ok(UiValueRetirementStep { progressed: true, released_items: 1, ..Default::default() });
         }
+        self.length = 0;
+        self.cursor = 0;
         Ok(UiValueRetirementStep { complete: true, ..Default::default() })
+    }
+}
+
+/// 📤️ Drains the page in publication order; whatever the reader leaves behind retires through the
+/// page's own [`Drop`], exactly as a partially transferred page does.
+pub struct UiTurnPatchesIntoIter {
+    owner: UiTurnPatches,
+}
+
+impl Iterator for UiTurnPatchesIntoIter {
+    type Item = UiPatch;
+
+    fn next(&mut self) -> Option<UiPatch> {
+        match self.owner.try_transfer_one(Ok::<UiPatch, UiPatch>) {
+            UiTurnPatchTransfer::Transferred(patch) => Some(patch),
+            UiTurnPatchTransfer::Empty | UiTurnPatchTransfer::Refused => None,
+        }
     }
 }
 
 impl IntoIterator for UiTurnPatches {
     type Item = UiPatch;
-    type IntoIter = std::option::IntoIter<UiPatch>;
+    type IntoIter = UiTurnPatchesIntoIter;
 
     fn into_iter(self) -> Self::IntoIter {
-        let mut owner = self;
-        owner.contents.pending.source_mut().expect("only a readable turn patch can be transferred").take().into_iter()
+        UiTurnPatchesIntoIter { owner: self }
     }
 }
 
 impl Drop for UiTurnPatches {
     fn drop(&mut self) {
-        let Some(retirement) = self.retirement.take() else { return };
-        let contents = std::mem::take(&mut self.contents);
-        UI_TURN_PATCH_HANDBACKS[retirement.slot].publish(retirement, contents);
+        for index in 0..self.entries.len() {
+            let Some(retirement) = self.entries[index].retirement.take() else { continue };
+            let contents = std::mem::take(&mut self.entries[index].contents);
+            UI_TURN_PATCH_HANDBACKS[retirement.slot].publish(retirement, contents);
+        }
     }
 }
 

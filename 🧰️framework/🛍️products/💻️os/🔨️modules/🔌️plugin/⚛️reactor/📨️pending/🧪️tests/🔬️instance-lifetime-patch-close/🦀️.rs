@@ -12,7 +12,6 @@ fn guest_instance_lifecycle_pending_patch_handback_preserves_rejected_owner_and_
         let first = fixture["pendingPatch"]["surfaces"][0].as_str().unwrap();
         let second = fixture["pendingPatch"]["surfaces"][1].as_str().unwrap();
         pending.push_external(patch(first)).unwrap();
-        assert!(pending.take_one(65536).unwrap().is_none());
         let first_patch = pending.take_one(65536).unwrap().unwrap();
         pending.hand_back_turn(first_patch).unwrap();
         let rejected = pending.hand_back_turn(patch(second)).unwrap_err();
@@ -25,10 +24,10 @@ fn guest_instance_lifecycle_pending_patch_handback_preserves_rejected_owner_and_
         let key = super::super::instance_lifetime::NativeCloseKey::fixture(7, 1);
         pending.reserve_close_instance(key).unwrap();
         pending.activate_close_instance(key).unwrap();
-        let before = serde_json::to_value(pending.turn_handback.get().unwrap()).unwrap();
+        let before = serde_json::to_value(pending.borrowed_patch(0).unwrap()).unwrap();
         assert_eq!(pending.close_instance_step(7, 0, 4096).unwrap(), ui_contract::UiValueRetirementStep::default());
         assert_eq!(pending.close_instance_step(7, 1, 0).unwrap(), ui_contract::UiValueRetirementStep::default());
-        assert_eq!(serde_json::to_value(pending.turn_handback.get().unwrap()).unwrap(), before);
+        assert_eq!(serde_json::to_value(pending.borrowed_patch(0).unwrap()).unwrap(), before);
         let mut bytes = 0;
         let grant = grant.as_u64().unwrap() as usize;
         for turn in 0..1024 {
@@ -41,7 +40,7 @@ fn guest_instance_lifecycle_pending_patch_handback_preserves_rejected_owner_and_
             assert!(turn < 1023);
         }
         assert_eq!(bytes, first.as_bytes().len());
-        assert!(pending.turn_handback.terminal_is_empty());
+        assert!(pending.borrowed_patch(0).is_none());
         assert!(!pending.close_instance_complete(key).unwrap());
         pending.close_step(1, 4096).unwrap();
         assert!(pending.close_instance_complete(key).unwrap());

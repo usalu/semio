@@ -265,6 +265,7 @@ fn build_preview_mesh_table(signature: u64, eval: &Value, preview_ids: &[String]
             };
             let mut mesh_object = Object::new();
             mesh_object.insert("id", Value::String(mesh_id.clone()));
+            mesh_object.insert("role", Value::String(preview_eval::preview_mesh_role(inline.as_ref(), &data).to_string()));
             mesh_object.insert("data", Value::from(data));
             meshes.push(Value::Object(mesh_object));
             if !handle.is_empty() {
@@ -372,12 +373,14 @@ pub fn render(document: &Generation3dSnapshot, config: &Generation3dViewConfig, 
         &preview_eval::PreviewStatusDebug { meshes_json: &payload.meshes_json, instances_json: &payload.instances_json },
         None,
     );
+    let fit_json = preview_eval::preview_fit_json(&document.fixture, &payload.meshes_json);
     let sun = config.sun();
     crate::accessible_scene_surface(
         SURFACE_ID,
         semio_framework_plugin::plugin_app_close_prelude::SurfaceKind::World3d,
         &semio_framework_ui::wgpu::World3dScene {
             status_json,
+            fit_json: Some(fit_json),
             domain_id: Some(GENERATION3D_VIEW_INTERACTION_DOMAIN.into()),
             domain_granularity_id: Some(GENERATION3D_VIEW_INTERACTION_GRANULARITY.into()),
             ..world3d_scene(

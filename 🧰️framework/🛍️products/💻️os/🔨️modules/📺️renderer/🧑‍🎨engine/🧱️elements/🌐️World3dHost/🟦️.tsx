@@ -732,9 +732,15 @@ export function world3dProjectionContentFrameMounted(fitProjectionContent: boole
   return (fitProjectionContent || projectionFramePending) && !cameraNavigating;
 }
 
-/** 🎯️ Whether the host may paint the manual frame-visible-instances overlay — off when the guest publishes an enabled fit lane ({@link WorldAutoFit}). */
-export function world3dFrameVisibleOverlayOffered(fit: { readonly enabled?: boolean } | null | undefined): boolean {
-  return fit?.enabled !== true;
+/** 🎯️ Whether the host may paint the manual frame-visible-instances overlay.
+ *
+ * ⚖️ An enabled fit lane no longer suppresses it, and that reversal is the point: {@link WorldAutoFit}
+ * frames ONCE per document and then stands down for good the moment the user moves the camera, so
+ * without this button a user who has orbited away has no way back to the geometry at all. Boot framing
+ * and a user-invoked reframe are two different affordances, not two spellings of one
+ * (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️boot-camera-framing-2026-09-15.md`). */
+export function world3dFrameVisibleOverlayOffered(): boolean {
+  return true;
 }
 
 /** 📷️ Builds the `setCamera` dispatch payload from a viewport camera pose — deliberately omits `projection`
@@ -864,6 +870,11 @@ type WorldFitRecord = {
   readonly enabled?: boolean;
   readonly revision?: number;
   readonly padding?: number;
+  /** 📦️ The producer's OWN delivered extent (`world3d_fit_json`'s `bounds`). Preferred over the scene
+   * graph's `Box3`, which can only measure what this renderer has already uploaded — and which the wgpu
+   * renderer has no equivalent of at all, so without it the two renderers frame differently. */
+  readonly boundsMin?: readonly number[];
+  readonly boundsMax?: readonly number[];
 };
 
 function parseJsonRecord<T>(json?: string): T | null {
@@ -884,8 +895,35 @@ function isTransparentWorldBackground(background?: string): boolean {
   return !background || background === "transparent";
 }
 
-function fitCameraFromBounds(center: readonly [number, number, number], radius: number, camera: WorldParsedCameraState, padding: number): { position: [number, number, number]; target: [number, number, number]; zoom: number } {
-  const distance = Math.max(radius * padding, 2);
+/** 🎯️ The headroom a framing leaves around the bounds, as a multiple of the EXACT fitting distance —
+ * the twin of `WORLD_FRAME_BOUNDS_MARGIN` (`🖱️ui/🎬️scene/📐️math/🦀️.rs`). */
+export const WORLD3D_FRAME_BOUNDS_MARGIN = 1.12;
+
+/** 📐️ How far a perspective eye must stand off a bounding sphere of `radius` for the WHOLE sphere to
+ * project inside a `fovDeg`/`aspect` frustum, times `margin`.
+ *
+ * ⚖️ The binding half-angle is the SMALLER of the vertical and horizontal ones: a wide viewport is
+ * limited by its vertical field, a tall one by its horizontal field. Fitting by `radius * constant` —
+ * what every ad-hoc rule here used to do — is short by `1 / sin(halfAngle)` ≈ 2.6 at the default 45°
+ * field, which is exactly how a converged example arrived clipped at the corner of the preview
+ * (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️boot-camera-framing-2026-09-15.md`).
+ *
+ * @see ../../../../../../🔨️modules/🖱️ui/🎬️scene/📐️math/🦀️.rs — `frame_distance_for_radius`, the Rust twin. */
+export function world3dFrameDistanceForRadius(radius: number, fovDeg: number, aspect: number, margin: number = WORLD3D_FRAME_BOUNDS_MARGIN): number {
+  const vertical = Math.min(Math.max((((Number.isFinite(fovDeg) ? fovDeg : 45) * Math.PI) / 180) * 0.5, 0.02), 1.5);
+  const horizontal = Math.min(Math.max(Math.atan(Math.tan(vertical) * Math.max(Number.isFinite(aspect) ? aspect : 1, 0.05)), 0.02), 1.5);
+  const half = Math.min(vertical, horizontal);
+  return Math.max((Math.max(radius, 1e-4) / Math.sin(half)) * Math.max(margin, 1), 0.5);
+}
+
+/** 📦️ Bounding-sphere radius of an axis-aligned box — half its diagonal, never half its longest edge:
+ * a cube framed by `max(size) / 2` leaves its own corners outside the frustum. */
+export function world3dBoundsRadius(minimum: readonly number[], maximum: readonly number[]): number {
+  return Math.hypot((maximum[0] ?? 0) - (minimum[0] ?? 0), (maximum[1] ?? 0) - (minimum[1] ?? 0), (maximum[2] ?? 0) - (minimum[2] ?? 0)) * 0.5;
+}
+
+function fitCameraFromBounds(center: readonly [number, number, number], radius: number, camera: WorldParsedCameraState, padding: number, aspect = 1): { position: [number, number, number]; target: [number, number, number]; zoom: number } {
+  const distance = world3dFrameDistanceForRadius(radius, camera.fov ?? 45, aspect, padding);
   const dx = camera.position[0] - camera.target[0];
   const dy = camera.position[1] - camera.target[1];
   const dz = camera.position[2] - camera.target[2];
@@ -901,18 +939,36 @@ function fitCameraFromBounds(center: readonly [number, number, number], radius: 
   };
 }
 
-/** @emoji 🎯️ Fits the orbit camera to the bounds of a scene group once per fit key, preserving the view direction. */
+/** 🎯️ Whether a fit lane owes the viewport a framing right now: the producer's document identity
+ * (`revision`) must have moved since the last one applied, OR nothing has been framed for this
+ * document yet — and in the latter case a camera the USER has moved is never taken back.
+ *
+ * ⚖️ `userMoved` is cleared by the caller on a revision change, which is the whole "frame on example
+ * switch, never yank a moved camera on re-evaluation" rule in one predicate: a re-delivery of the same
+ * document answers the same revision, so only the first delivery of it frames
+ * (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️boot-camera-framing-2026-09-15.md`). */
+export function world3dAutoFitOwed(appliedKey: string, fitKey: string, userMoved: boolean): boolean {
+  if (appliedKey === fitKey) return false;
+  return !userMoved;
+}
+
+/** @emoji 🎯️ Fits the orbit camera to the producer's published bounds (or, absent those, the scene
+ * group's own AABB) once per fit key, preserving the view direction. */
 function WorldAutoFit({
   groupRef,
   fitKey,
   padding,
   camera,
+  bounds,
+  userMoved,
   onFitted,
 }: {
   readonly groupRef: React.RefObject<Group | null>;
   readonly fitKey: string;
   readonly padding: number;
   readonly camera: WorldParsedCameraState;
+  readonly bounds: readonly [readonly number[], readonly number[]] | null;
+  readonly userMoved: boolean;
   readonly onFitted: (state: WorldCameraState) => void;
 }): null {
   const { camera: sceneCamera, controls, invalidate } = useThree();
@@ -922,15 +978,26 @@ function WorldAutoFit({
     if (!sceneCamera) return;
     const group = groupRef.current;
     if (!group) return;
-    if (appliedKeyRef.current === fitKey) return;
-    const box = new Box3().setFromObject(group);
-    if (box.isEmpty()) return;
-    const center = box.getCenter(new Vector3());
-    const size = box.getSize(new Vector3());
-    const radius = Math.max(size.x, size.y, size.z) * 0.5;
+    if (!world3dAutoFitOwed(appliedKeyRef.current, fitKey, userMoved)) return;
+    let center: readonly [number, number, number];
+    let radius: number;
+    if (bounds) {
+      const [minimum, maximum] = bounds;
+      center = [((minimum[0] ?? 0) + (maximum[0] ?? 0)) * 0.5, ((minimum[1] ?? 0) + (maximum[1] ?? 0)) * 0.5, ((minimum[2] ?? 0) + (maximum[2] ?? 0)) * 0.5];
+      radius = world3dBoundsRadius(minimum, maximum);
+    } else {
+      const box = new Box3().setFromObject(group);
+      if (box.isEmpty()) return;
+      const boxCenter = box.getCenter(new Vector3());
+      const boxMinimum = box.min;
+      const boxMaximum = box.max;
+      center = [boxCenter.x, boxCenter.y, boxCenter.z];
+      radius = world3dBoundsRadius([boxMinimum.x, boxMinimum.y, boxMinimum.z], [boxMaximum.x, boxMaximum.y, boxMaximum.z]);
+    }
     if (radius <= 0) return;
     appliedKeyRef.current = fitKey;
-    const fitted = fitCameraFromBounds([center.x, center.y, center.z], radius, camera, padding);
+    const aspect = (sceneCamera as { aspect?: number }).aspect ?? 1;
+    const fitted = fitCameraFromBounds(center, radius, camera, padding, aspect);
     const orbit = controls as { target: Vector3; update?: () => void } | null;
     const target = orbit?.target ?? targetScratch;
     target.set(fitted.target[0], fitted.target[1], fitted.target[2]);
@@ -945,14 +1012,16 @@ function WorldAutoFit({
   return null;
 }
 
-/** @emoji 📷️ Frames the orbit camera on a live world AABB while keeping the current look direction. */
+/** @emoji 📷️ Frames the orbit camera on a live world AABB while keeping the current look direction.
+ * `radius` is the BOUNDING-SPHERE radius ({@link world3dBoundsRadius}), not half the longest edge. */
 export function world3dFrameCameraFromBounds(
   center: readonly [number, number, number],
   radius: number,
   camera: WorldParsedCameraState,
-  padding = 1.8,
+  padding = WORLD3D_FRAME_BOUNDS_MARGIN,
+  aspect = 1,
 ): WorldParsedCameraState {
-  const fitted = fitCameraFromBounds(center, Math.max(radius, 0.5), camera, padding);
+  const fitted = fitCameraFromBounds(center, Math.max(radius, 0.5), camera, padding, aspect);
   return { ...camera, position: fitted.position, target: fitted.target, zoom: fitted.zoom };
 }
 
@@ -1446,7 +1515,15 @@ export function leftoverOverlayCarryingSelectionV1(next: LeftoverWorldSelectionO
     ? { ...carried, activeUtility: prior?.activeUtility }
     : carried;
   const cleared = selectionCleared || utility.selectionCleared === true;
-  if (cleared) return { ...utility, selectionCleared: true };
+  // 🧹️ A CLEARED overlay is an absence, so it carries no ids — see {@link leftoverWorldOverlayAppliesV1}'s
+  // own note. Every other reader of this overlay already projects it that way (`applyLeftoverInteractionView`
+  // dispatches `selectedIds: []`, `mergeWorldSelectionWithLeftoverV1` returns `ids: []`), but the object
+  // itself kept whatever ids the publication carried — and `leftoverTreeItemSelectedV1` reads `ids` BLIND,
+  // ORing them into every outline row's `isSelected`. Measured on generation3d 6018: `clearSelection`
+  // publishes `{selectedIds:["extrusion-axis"], selectionCleared:true}`, the guest's own turn retires that
+  // row's presence in the same turn, and the row still read `aria-selected="true"` until the next pick
+  // (`📓️window-gaps-followup-2026-09-14.md` G1).
+  if (cleared) return { ...utility, ids: [], gumballActive: false, gumballAnchorId: null, selectionCleared: true };
   if (utility.ids.length > 0 || !prior?.ids.length) return utility;
   return {
     ...utility,
@@ -5171,6 +5248,12 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
   const [projectionFramePending, setProjectionFramePending] = useState(() => pendingProjectionSpecRef.current !== null);
   const [viewportOwned, setViewportOwned] = useState(false);
   const [cameraNavigating, setCameraNavigating] = useState(false);
+  /** 🔒️ The fit revision the USER last moved this camera on. While it names the live revision the auto-fit
+   * lane stands down; a new revision (a document/example swap) is a new framing the user has not refused yet.
+   * Deliberately not `viewportOwned`, which the auto-fit's own `onFitted` sets. */
+  const [userMovedFitRevision, setUserMovedFitRevision] = useState<number | null>(null);
+  const liveFitRevisionRef = useRef(0);
+  const noteUserMovedCamera = useCallback(() => setUserMovedFitRevision(liveFitRevisionRef.current), []);
   const [detachEpoch, setDetachEpoch] = useState(0);
   /** 📷️ First content-frame remounts orbit controls; later tool-driven bound expansions only soft-update the camera. */
   const projectionContentFrameSeededRef = useRef(false);
@@ -5178,21 +5261,42 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
   /** 🧭️ The last camera pose this component itself dispatched via debounced `setCamera` — lets the reattach
    * effect below recognize the plugin echoing it straight back (see `shouldReattachWorldViewportCamera`). */
   const lastDispatchedWorldCameraRef = useRef<WorldCameraState | null>(null);
+  /** 📷️ The scene-camera text the RIG is seeded from — advanced only by a genuine EXTERNAL camera change,
+   * never by the plugin echoing this component's own `setCamera` straight back.
+   *
+   * ⚖️ Keying the rig on the raw `scene.cameraJson` made every completed gesture remount the camera: the
+   * debounced `setCamera` reaches the guest, the guest republishes the pose on the window config lane, the
+   * key changes, `WorldProjectionRig` mounts a fresh camera element, and `WorldOrbitControlsBridge`'s effect
+   * then constructs a NEW `OrbitControls` — whose target starts at the world origin. Measured 2026-09-15 on
+   * the generation3d preview: an orbit round-tripped with `target [1,1,1]`, and the very next wheel reported
+   * `target [0,0,0]`, dragging the framed camera off the example
+   * (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️boot-camera-framing-2026-09-15.md`). The reattach
+   * predicate already knows which changes are external; the seed key now reads its verdict instead of
+   * re-deciding from the text. */
+  const [sceneCameraAttachJson, setSceneCameraAttachJson] = useState(sceneCameraJson);
   useEffect(() => {
     // 🧭️ Always advance the tracking ref, even when we're about to suppress a reattach below — otherwise the
     // NEXT comparison would still diff against this stale value instead of the pose we just saw.
     const previousSceneCameraJson = previousSceneCameraJsonRef.current;
     previousSceneCameraJsonRef.current = sceneCameraJson;
     if (!shouldReattachWorldViewportCamera(previousSceneCameraJson, sceneCameraJson, lastDispatchedWorldCameraRef.current)) return;
+    setSceneCameraAttachJson(sceneCameraJson);
     setViewportCamera(null);
     setViewportOwned(false);
+    // 🎯️ A reattach DISCARDS whatever pose the viewport held — the auto-fit's framing and the user's own
+    // gesture alike — so the one-shot framing is re-armed with it. Measured 2026-09-15: the generation3d
+    // editor framed `rectangle-extrude-volume`, the guest then republished its seed camera on the window
+    // config lane, the reattach reset the viewport to that seed, and `WorldAutoFit` never fired again
+    // because its key had already been consumed — leaving the example cut off on exactly the boot a user
+    // sees (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️boot-camera-framing-2026-09-15.md`).
+    setUserMovedFitRevision(null);
     setCameraNavigating(false);
     setDetachEpoch(0);
     setProjectionFramePending(Boolean(pendingProjectionSpecRef.current));
     projectionContentFrameSeededRef.current = false;
   }, [sceneCameraJson]);
   const cameraState = viewportCamera ?? sceneCamera;
-  const cameraSeedKey = world3dViewportCameraSeedKey(sceneCameraJson, detachEpoch);
+  const cameraSeedKey = world3dViewportCameraSeedKey(sceneCameraAttachJson, detachEpoch);
 
   // 🎥️ Registers this window's live camera get/set for tutorial playback/recording (see
   // `registerTutorialCameraDriver` — modeled on `registerIntroductionSurfaceResolver`). `get` reads the
@@ -5245,6 +5349,24 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
   const environment = useMemo(() => parseEnvironment(scene?.environmentJson), [scene?.environmentJson]);
   const frame = useMemo(() => parseFrame(scene?.frameJson), [scene?.frameJson]);
   const fit = useMemo(() => parseFit(scene?.fitJson), [scene?.fitJson]);
+  /** 📦️ The producer's OWN delivered extent, when it published one — the single thing this pane frames,
+   * for the boot framing AND for the `Frame visible` button.
+   *
+   * ⚖️ Measured 2026-09-15 on the served generation3d preview: `Frame visible` left the camera on its seed
+   * pose because `Box3.setFromObject(instancesGroupRef)` came back empty for a payload whose geometry rides
+   * inline `data` buffers, and the instance fallback then framed a table of instances that all sit at the
+   * origin (the geometry is baked into the mesh, not into the instance transform). A pane can only frame
+   * what it can measure — so the producer publishes what it delivered
+   * (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️boot-camera-framing-2026-09-15.md`). */
+  const autoFitBounds = useMemo<readonly [readonly number[], readonly number[]] | null>(() => {
+    const minimum = fit?.boundsMin;
+    const maximum = fit?.boundsMax;
+    if (!Array.isArray(minimum) || !Array.isArray(maximum) || minimum.length < 3 || maximum.length < 3) return null;
+    if (!minimum.every((value) => Number.isFinite(value)) || !maximum.every((value) => Number.isFinite(value))) return null;
+    if ((minimum as number[]).every((value, axis) => value === (maximum as number[])[axis])) return null;
+    return [minimum, maximum];
+  }, [fit?.boundsMin, fit?.boundsMax]);
+  liveFitRevisionRef.current = fit?.revision ?? 0;
   // 🧵️ Off-main-thread compute status (see `World3dScene.statusJson`) — the meshes above stay the
   // last-known-good (stale) cache while a plugin worker's `flowEvalTick` chain is still resolving.
   const computeStatus = useMemo(() => world3dComputeStatusV1(scene?.statusJson), [scene?.statusJson]);
@@ -5661,19 +5783,28 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
   const brushMeshUrls = useMemo(() => [...new Set(meshes.map((mesh) => mesh.url).filter((url): url is string => Boolean(url)))], [meshes]);
 
   const handleFrameVisibleInstances = useCallback(() => {
+    noteUserMovedCamera();
+    const aspect = hostRef.current ? Math.max(hostRef.current.clientWidth, 1) / Math.max(hostRef.current.clientHeight, 1) : 1;
+    if (autoFitBounds) {
+      const [minimum, maximum] = autoFitBounds;
+      const center: [number, number, number] = [((minimum[0] ?? 0) + (maximum[0] ?? 0)) * 0.5, ((minimum[1] ?? 0) + (maximum[1] ?? 0)) * 0.5, ((minimum[2] ?? 0) + (maximum[2] ?? 0)) * 0.5];
+      adoptViewportCamera(world3dFrameCameraFromBounds(center, world3dBoundsRadius(minimum, maximum), cameraState, undefined, aspect), true);
+      return;
+    }
     const group = instancesGroupRef.current;
     if (group) {
       const box = new Box3().setFromObject(group);
       if (!box.isEmpty()) {
         const center = box.getCenter(new Vector3());
-        const size = box.getSize(new Vector3());
-        const radius = Math.max(size.x, size.y, size.z) * 0.5;
-        adoptViewportCamera(world3dFrameCameraFromBounds([center.x, center.y, center.z], radius, cameraState), true);
-        return;
+        const radius = world3dBoundsRadius([box.min.x, box.min.y, box.min.z], [box.max.x, box.max.y, box.max.z]);
+        if (radius > 1e-6) {
+          adoptViewportCamera(world3dFrameCameraFromBounds([center.x, center.y, center.z], radius, cameraState, undefined, aspect), true);
+          return;
+        }
       }
     }
     adoptViewportCamera(world3dFrameCameraFromInstances(instances, cameraState), true);
-  }, [adoptViewportCamera, cameraState, instances]);
+  }, [adoptViewportCamera, autoFitBounds, noteUserMovedCamera, cameraState, instances]);
 
   const handleZoomToSelection = useCallback(() => {
     const selectedIds = new Set(selection.ids ?? []);
@@ -6082,15 +6213,22 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
   const handleCameraChange = useCallback(
     (state: WorldCameraState) => {
       adoptViewportCamera(state, false);
+      noteUserMovedCamera();
       dispatchWorldCameraDebounced(state);
     },
-    [adoptViewportCamera, dispatchWorldCameraDebounced],
+    [adoptViewportCamera, noteUserMovedCamera, dispatchWorldCameraDebounced],
   );
 
-  const handleCameraNavigate = useCallback((active: boolean) => {
-    setCameraNavigating((prev) => (prev === active ? prev : active));
-    if (active) setViewportOwned(true);
-  }, []);
+  const handleCameraNavigate = useCallback(
+    (active: boolean) => {
+      setCameraNavigating((prev) => (prev === active ? prev : active));
+      if (active) {
+        setViewportOwned(true);
+        noteUserMovedCamera();
+      }
+    },
+    [noteUserMovedCamera],
+  );
 
   // 🧭️ Programmatic auto-fit-to-content camera change (`WorldAutoFit.onFitted`, runs after a document/scene
   // loads or content changes) — deliberately split from `handleCameraChange` so this path never dispatches;
@@ -6121,10 +6259,11 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
   const handleGizmoCameraChange = useCallback(
     (state: WorldCameraState) => {
       adoptViewportCamera(state, true);
+      noteUserMovedCamera();
       if (state.projectionSpec) syncProjectionWindowChrome(state.projectionSpec);
       dispatchWorldCameraDebounced(state);
     },
-    [adoptViewportCamera, syncProjectionWindowChrome, dispatchWorldCameraDebounced],
+    [adoptViewportCamera, noteUserMovedCamera, syncProjectionWindowChrome, dispatchWorldCameraDebounced],
   );
 
   const [externalPendingProjectionSpec, setExternalPendingProjectionSpec] = useState<WorldProjectionSpec | null>(null);
@@ -6161,7 +6300,8 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
   const hasProjectionSeed = Boolean(pendingProjectionSpecRef.current ?? cameraState.projectionSpec);
   const fitProjectionContent = world3dFitProjectionContent(viewportOwned, cameraNavigating, hasProjectionSeed);
   const projectionContentFrameMounted = world3dProjectionContentFrameMounted(fitProjectionContent, projectionFramePending, cameraNavigating);
-  const frameVisibleOverlayOffered = world3dFrameVisibleOverlayOffered(fit);
+  const frameVisibleOverlayOffered = world3dFrameVisibleOverlayOffered();
+  const autoFitUserMoved = userMovedFitRevision === (fit?.revision ?? 0);
   const worldOrbitConstraints = useMemo(() => worldProjectionOrbitConstraints(cameraState.projectionSpec), [cameraState.projectionSpec]);
 
   const marqueePreview = useMemo<{ readonly mergedComponentIds: readonly number[] | null; readonly mergedInstanceIds: readonly string[] | null }>(() => {
@@ -6886,7 +7026,17 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
                 <directionalLight position={[0, 0, -16]} intensity={0.75} />
               </>
             )}
-            {fit?.enabled ? <WorldAutoFit groupRef={instancesGroupRef} fitKey={`${fit.revision ?? 0}:${meshes.map((mesh) => mesh.url ?? mesh.id).join(",")}`} padding={fit.padding ?? 1.25} camera={cameraState} onFitted={handleAutoFitCameraChange} /> : null}
+            {fit?.enabled ? (
+              <WorldAutoFit
+                groupRef={instancesGroupRef}
+                fitKey={`${fit.revision ?? 0}:${sceneCameraAttachJson}:${meshes.map((mesh) => mesh.url ?? mesh.id).join(",")}`}
+                padding={fit.padding ?? WORLD3D_FRAME_BOUNDS_MARGIN}
+                camera={cameraState}
+                bounds={autoFitBounds}
+                userMoved={autoFitUserMoved}
+                onFitted={handleAutoFitCameraChange}
+              />
+            ) : null}
             <CameraRefBridge cameraRef={cameraRef} />
             <CatalogueDropPreviewInvalidate preview={catalogueDropPreview} />
             <RaycasterPickTuning />

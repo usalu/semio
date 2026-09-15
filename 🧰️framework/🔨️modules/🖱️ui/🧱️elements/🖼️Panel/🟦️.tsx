@@ -22,7 +22,7 @@ import { FlowProvider, useFlow } from "../../🔨️modules/🧭️flow-directio
 import { LevelProvider, getLevelZClass, useSurfaceActive } from "../🌈️Surface/🟦️.tsx";
 import { useLabel } from "../🏷️Label/🟦️.tsx";
 import { useShellScopeOptional } from "../🐚️ShellScope/🟦️.tsx";
-import { type Anchor, PANEL_TREE_UNIT_MIME, PanelGhostRoot, WindowChrome, anchorHorizontal, anchorPositionStyle, beginPanelTreeUnitDrag, chromeHostedOpenPanelPositionStyle, endPanelTreeUnitDrag, flowFromAnchor, publishShellChromePanelBox, readActivePanelTreeUnitDrag, safeAreaBoxFromRect, shellNavbarTrailingEndReserveStyle, useNativeDragArm, usePanelDockContext, usePanelTreeUnitDragActive, useShellNavbarTrailingEndWidthPx, useUiDriverDragSurface, type UiStatus } from "../../🎯️targets/⚛️react/🟦️";
+import { type Anchor, PANEL_TREE_UNIT_MIME, PanelGhostRoot, WindowChrome, anchorHorizontal, anchorPositionStyle, beginPanelTreeUnitDrag, chromeHostedOpenPanelPositionStyle, chromeHostedPanelCapRowStyle, endPanelTreeUnitDrag, flowFromAnchor, publishShellChromePanelBox, readActivePanelTreeUnitDrag, safeAreaBoxFromRect, useNativeDragArm, usePanelDockContext, usePanelTreeUnitDragActive, useShellNavbarTrailingEndWidthPx, useUiDriverDragSurface, type UiStatus } from "../../🎯️targets/⚛️react/🟦️";
 import { PanelTabBar, type PanelTabNode, type PanelTabSelectionOptions, type PanelTreeUnit, findPanelTabNode, progressPanelTabSelection, resolvePanelBranchBodyLeaf, usePanelTabSelection } from "../🧭️PanelTabBar/🟦️.tsx";
 import { CloseIcon, Icon } from "../🔣️Icons/🟦️.tsx";
 import { DragHandle } from "../🧱️DragHandle/🟦️.tsx";
@@ -479,8 +479,7 @@ const Panel: React.FC<PanelProps> = ({
           onClick: () => onVisibleChange(false),
         }
       : undefined;
-  const chromeHostedTrailingEndReserveStyle =
-    isChromeHosted && visible && anchor === "top-right" ? shellNavbarTrailingEndReserveStyle(trailingEndWidthPx) : undefined;
+  const chromeHostedCapRowStyle = isChromeHosted && visible ? chromeHostedPanelCapRowStyle(anchor, trailingEndWidthPx) : undefined;
 
   // 🎯️ An anchor with no tabs renders nothing at rest. Panel-hosted: it becomes a drop target only while a dock
   // drag is in flight, so a tab can be dragged into an otherwise-empty anchor. Chrome-hosted: the sibling
@@ -535,7 +534,7 @@ const Panel: React.FC<PanelProps> = ({
                 level="panel"
                 borderKind={status === "loading" ? "loading" : status === "waiting" ? "waiting" : undefined}
                 capDock={isBottom ? "bottom" : "top"}
-                capRowStyle={chromeHostedTrailingEndReserveStyle}
+                capRowStyle={chromeHostedCapRowStyle}
                 stackClassName="w-full flex-1 min-h-0 bg-transparent"
                 bodyClassName="flex min-h-0 flex-1 flex-col"
                 bodySlot="panel-content"
