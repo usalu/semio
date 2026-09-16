@@ -4452,6 +4452,21 @@
               "directoryName": "⛔️refuses"
             }
           ]
+        },
+        {
+          "mutationId": "change-material-roughness",
+          "sourceMutationDirectoryName": "🗻️change-material-roughness",
+          "mutationDirectoryName": "🗻️change-material-roughness",
+          "scenarios": [
+            {
+              "id": "change-material-roughness-applies",
+              "directoryName": "✅️applies"
+            },
+            {
+              "id": "change-material-roughness-refuses",
+              "directoryName": "⛔️refuses"
+            }
+          ]
         }
       ],
       "kinds": [
@@ -4740,7 +4755,8 @@
         "rename-glazing-material",
         "change-gas-material-thickness",
         "change-gas-material-gas",
-        "rename-gas-material"
+        "rename-gas-material",
+        "change-material-roughness"
       ]
     }
   ],
@@ -10465,6 +10481,26 @@
             "operation": "rename-gas-material",
             "bridgeVersion": 1,
             "variant": "RenameGasMaterial"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "energy-model-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-material-roughness",
+          "capability": "energy-model-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-material-roughness",
+            "bridgeVersion": 1,
+            "variant": "ChangeMaterialRoughness"
           },
           "oracleRequirements": [
             {

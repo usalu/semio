@@ -15,8 +15,11 @@
 //! baked here too; the per-instance `selected`/`hovered` flags are still published so the host's
 //! outline/chrome stays correct.
 //!
-//! 🚫️ There is no alpha lane for a data mesh (`transparent` follows the style's own opacity, never
-//! the payload), so a window renders as a solid light blue rather than a translucent one.
+//! 🚫️ There is no NUMERIC alpha lane for a data mesh — `transparent` follows the style kind's own
+//! opacity, never the payload — so a window renders as a solid light blue rather than a translucent
+//! one. The one translucency a payload CAN ask for is the instance flag `disabled: true`, whose
+//! `MESH_STYLE_PAINT.disabled` entry is the only style with `opacity < 1` (0.45) and which also turns
+//! the instance's raycast off entirely. That is exactly what a zone volume wants, and what it uses.
 
 use crate::model::{EntityId, Fenestration, Model, Surface, SurfaceClass};
 use serde_json::{json, Value};
@@ -52,6 +55,9 @@ pub const ENERGY_SCENE_GROUND_COLOR: [f64; 3] = [0.376, 0.353, 0.322];
 pub const ENERGY_SCENE_FENESTRATION_COLOR: [f64; 3] = [0.537, 0.745, 0.898];
 /// 🌳️ Shading swatch — a muted green that never reads as envelope.
 pub const ENERGY_SCENE_SHADING_COLOR: [f64; 3] = [0.518, 0.600, 0.478];
+/// 📦️ Zone-volume swatch — a soft violet no envelope class or family uses, so the translucent hull
+/// reads as "air", never as a surface.
+pub const ENERGY_SCENE_ZONE_COLOR: [f64; 3] = [0.686, 0.612, 0.902];
 
 /// 🪪️ Mesh-id prefixes. The INSTANCE id is always the bare entity id (see
 /// [`energy_scene_target_id`]); only the mesh id is namespaced, because a mesh id is private to the
@@ -59,11 +65,20 @@ pub const ENERGY_SCENE_SHADING_COLOR: [f64; 3] = [0.518, 0.600, 0.478];
 pub const ENERGY_SCENE_SURFACE_MESH_PREFIX: &str = "energy-surface-";
 pub const ENERGY_SCENE_FENESTRATION_MESH_PREFIX: &str = "energy-window-";
 pub const ENERGY_SCENE_SHADING_MESH_PREFIX: &str = "energy-shading-";
+pub const ENERGY_SCENE_ZONE_MESH_PREFIX: &str = "energy-zone-";
 
 /// 🏷️ `objectKind` published per instance, so a host-side kind filter/legend can group by family.
+/// The four spellings are exactly the interaction domain's granularity ids for the same families
+/// (`crate::editor::model::interaction::ENERGY_GRANULARITY_*`).
 pub const ENERGY_SCENE_OBJECT_KIND_SURFACE: &str = "surface";
 pub const ENERGY_SCENE_OBJECT_KIND_FENESTRATION: &str = "fenestration";
 pub const ENERGY_SCENE_OBJECT_KIND_SHADING: &str = "shading";
+pub const ENERGY_SCENE_OBJECT_KIND_ZONE: &str = "zone";
+
+/// 📦️ Refusal bound on the hull input: a zone whose member surfaces carry more corners than this
+/// draws no volume rather than running an O(n²) dedupe over an unbounded set. 4 096 corners is ~1 000
+/// quad faces in ONE zone, two orders of magnitude above any authored example.
+pub const ENERGY_SCENE_ZONE_HULL_MAXIMUM_POINTS: usize = 4_096;
 //#endregion 🔖️Constants
 
 //#region 🔖️Identity
@@ -135,6 +150,14 @@ fn dot(a: [f64; 3], b: [f64; 3]) -> f64 {
     a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
 }
 
+fn sub3(a: [f64; 3], b: [f64; 3]) -> [f64; 3] {
+    [a[0] - b[0], a[1] - b[1], a[2] - b[2]]
+}
+
+fn cross3(a: [f64; 3], b: [f64; 3]) -> [f64; 3] {
+    [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]
+}
+
 fn normalized(a: [f64; 3]) -> Option<[f64; 3]> {
     let length = dot(a, a).sqrt();
     if length <= 1e-12 {
@@ -194,6 +217,18 @@ fn push_polygon(vertices: &[[f64; 3]], color: [f64; 3], positions: &mut Vec<f64>
     }
 }
 
+/// 🔺️ One data mesh out of a triangle soup (the zone hull's faces), one flat normal per triangle.
+fn triangles_mesh(mesh_id: &str, triangles: &[[[f64; 3]; 3]], color: [f64; 3]) -> Option<Value> {
+    let (mut positions, mut normals, mut colors, mut indices) = (Vec::new(), Vec::new(), Vec::new(), Vec::new());
+    for triangle in triangles {
+        push_polygon(triangle, color, &mut positions, &mut normals, &mut colors, &mut indices);
+    }
+    if indices.is_empty() {
+        return None;
+    }
+    Some(json!({ "id": mesh_id, "data": { "positions": positions, "normals": normals, "colors": colors, "indices": indices } }))
+}
+
 /// 🔺️ One data mesh out of one planar polygon.
 fn polygon_mesh(mesh_id: &str, vertices: &[[f64; 3]], color: [f64; 3]) -> Option<Value> {
     let (mut positions, mut normals, mut colors, mut indices) = (Vec::new(), Vec::new(), Vec::new(), Vec::new());
@@ -220,12 +255,196 @@ fn instance(target_id: &str, mesh_id: &str, label: &str, object_kind: &str, sele
         "hovered": hovered,
     })
 }
+
+/// 📦️ One zone volume's instance. It carries `disabled: true`, which is the ONE lane the react
+/// `World3dHost` gives a payload over a mesh's opacity AND its pickability:
+/// `MESH_STYLE_PAINT.disabled` is the only style with `opacity < 1` (0.45 — `transparent` follows the
+/// style's opacity even for a vertex-coloured mesh, `PaintTexturedMesh`'s `transparent={style.opacity
+/// < 1}`), and `instancePickEnabled = pickEnabled && !instance.disabled && !provisional` makes
+/// `worldInstanceMeshRaycast` answer `() => null`, so the hull is INVISIBLE to every raycast and can
+/// never occlude the pick of a wall inside it. There is no payload alpha lane, so 0.45 is what a
+/// translucent zone is; the brief's 0.15 is not reachable without a host change.
+fn zone_instance(target_id: &str, mesh_id: &str, label: &str, selected: bool, hovered: bool) -> Value {
+    let mut record = instance(target_id, mesh_id, label, ENERGY_SCENE_OBJECT_KIND_ZONE, selected, hovered);
+    if let Value::Object(fields) = &mut record {
+        fields.insert("disabled".to_string(), Value::Bool(true));
+    }
+    record
+}
 //#endregion 🔖️Geometry
+
+//#region 🔖️Hull
+/// 📦️ Every corner of every surface that belongs to `zone`, in model order. Empty for a zone with no
+/// member surface (which therefore draws no volume) and for one whose corner count exceeds
+/// [`ENERGY_SCENE_ZONE_HULL_MAXIMUM_POINTS`].
+pub fn zone_hull_points(model: &Model, zone: EntityId) -> Vec<[f64; 3]> {
+    let mut points: Vec<[f64; 3]> = Vec::new();
+    for surface in model.surfaces.iter().filter(|surface| surface.zone_id == zone) {
+        if points.len() + surface.vertices_m.len() > ENERGY_SCENE_ZONE_HULL_MAXIMUM_POINTS {
+            return Vec::new();
+        }
+        points.extend_from_slice(&surface.vertices_m);
+    }
+    points
+}
+
+/// 📦️ The convex hull of a point cloud as outward-wound triangles — the drawable volume a `Zone`
+/// itself does not carry (it has a scalar `volume_m3` and no shape at all).
+///
+/// 🧮️ Why a hull and not `geometry::zone_volume_from_surfaces`' pyramid decomposition: that function
+/// answers a SCALAR (it sums signed face-pyramid volumes about an interior reference point) and never
+/// produces a surface — there is nothing in it to render. The hull is the cheapest honest shape whose
+/// boundary encloses exactly the same corners the volume integral is taken over; for the rectangular
+/// zones every authored example uses, the hull IS the zone box, so the drawn volume and the scalar
+/// agree exactly.
+///
+/// Standard incremental construction: seed a non-degenerate tetrahedron, then for every remaining
+/// point delete the faces it can see, walk the horizon of that hole and cone it back to the point.
+/// Total: a cloud that is empty, too small, collinear or COPLANAR (a zone with only a floor, say)
+/// encloses no volume and answers `None` rather than emitting a zero-thickness shell.
+pub fn convex_hull_triangles(points: &[[f64; 3]]) -> Option<Vec<[[f64; 3]; 3]>> {
+    if points.len() < 4 || points.len() > ENERGY_SCENE_ZONE_HULL_MAXIMUM_POINTS {
+        return None;
+    }
+    let mut minimum = [f64::INFINITY; 3];
+    let mut maximum = [f64::NEG_INFINITY; 3];
+    for point in points {
+        if !point.iter().all(|axis| axis.is_finite()) {
+            return None;
+        }
+        for axis in 0..3 {
+            minimum[axis] = minimum[axis].min(point[axis]);
+            maximum[axis] = maximum[axis].max(point[axis]);
+        }
+    }
+    let scale = (0..3).fold(0.0_f64, |longest, axis| longest.max(maximum[axis] - minimum[axis]));
+    if !scale.is_finite() || scale <= 1e-9 {
+        return None;
+    }
+    // 📏️ Every tolerance below is RELATIVE to the cloud's own extent, so a room in millimetres and a
+    // district in kilometres are judged degenerate by the same rule.
+    let epsilon = scale * 1e-9;
+
+    let mut unique: Vec<[f64; 3]> = Vec::new();
+    for point in points {
+        if unique.iter().any(|seen| (0..3).all(|axis| (seen[axis] - point[axis]).abs() <= epsilon)) {
+            continue;
+        }
+        unique.push(*point);
+    }
+    if unique.len() < 4 {
+        return None;
+    }
+
+    let origin = unique[0];
+    let (first, first_distance2) = farthest_point(&unique, |point| dot(sub3(point, origin), sub3(point, origin)));
+    let axis_length = first_distance2.sqrt();
+    if axis_length <= epsilon {
+        return None;
+    }
+    let axis = sub3(unique[first], origin);
+    let (second, line_area2) = farthest_point(&unique, |point| {
+        let moment = cross3(axis, sub3(point, origin));
+        dot(moment, moment)
+    });
+    if line_area2.sqrt() / axis_length <= epsilon {
+        return None;
+    }
+    let plane_normal = normalized(cross3(axis, sub3(unique[second], origin)))?;
+    let (third, height) = farthest_point(&unique, |point| dot(plane_normal, sub3(point, origin)).abs());
+    if height <= epsilon {
+        return None;
+    }
+
+    let seed = [0_usize, first, second, third];
+    let centre = [
+        seed.iter().map(|index| unique[*index][0]).sum::<f64>() / 4.0,
+        seed.iter().map(|index| unique[*index][1]).sum::<f64>() / 4.0,
+        seed.iter().map(|index| unique[*index][2]).sum::<f64>() / 4.0,
+    ];
+    let mut faces: Vec<[usize; 3]> = [[seed[0], seed[1], seed[2]], [seed[0], seed[1], seed[3]], [seed[0], seed[2], seed[3]], [seed[1], seed[2], seed[3]]].into_iter().map(|face| outward(face, &unique, centre)).collect();
+
+    for index in 0..unique.len() {
+        if seed.contains(&index) {
+            continue;
+        }
+        let point = unique[index];
+        let visible: Vec<usize> = faces.iter().enumerate().filter(|(_, face)| face_sees(&unique, **face, point) > epsilon).map(|(position, _)| position).collect();
+        if visible.is_empty() {
+            continue;
+        }
+        // 🕳️ The horizon: every directed edge of the removed cap that is NOT cancelled by its reverse
+        // (an edge shared by two visible faces). What survives is exactly the rim of the hole.
+        let mut horizon: Vec<(usize, usize)> = Vec::new();
+        for position in &visible {
+            let face = faces[*position];
+            for edge in [(face[0], face[1]), (face[1], face[2]), (face[2], face[0])] {
+                match horizon.iter().position(|other| *other == (edge.1, edge.0)) {
+                    Some(twin) => {
+                        horizon.remove(twin);
+                    }
+                    None => horizon.push(edge),
+                }
+            }
+        }
+        // `visible` is ascending, so removing from the back keeps the earlier indices valid.
+        for position in visible.iter().rev() {
+            faces.remove(*position);
+        }
+        // 🧭️ Coning a horizon edge to the new point preserves the winding the removed face had, so
+        // every new face is outward without a second orientation pass.
+        for (from, to) in horizon {
+            faces.push([from, to, index]);
+        }
+    }
+
+    if faces.len() < 4 {
+        return None;
+    }
+    Some(faces.into_iter().map(|face| [unique[face[0]], unique[face[1]], unique[face[2]]]).collect())
+}
+
+/// 📏️ The index of the point scoring highest under `score`, and that score. `points` is never empty
+/// at any call site (the hull has already refused a cloud smaller than four).
+fn farthest_point(points: &[[f64; 3]], score: impl Fn([f64; 3]) -> f64) -> (usize, f64) {
+    let mut best = (0_usize, f64::NEG_INFINITY);
+    for (index, point) in points.iter().enumerate() {
+        let value = score(*point);
+        if value > best.1 {
+            best = (index, value);
+        }
+    }
+    best
+}
+
+/// 🧭️ Re-winds `face` so its normal points AWAY from `inside`.
+fn outward(face: [usize; 3], points: &[[f64; 3]], inside: [f64; 3]) -> [usize; 3] {
+    let normal = cross3(sub3(points[face[1]], points[face[0]]), sub3(points[face[2]], points[face[0]]));
+    if dot(normal, sub3(inside, points[face[0]])) > 0.0 {
+        [face[0], face[2], face[1]]
+    } else {
+        face
+    }
+}
+
+/// 👁️ Signed distance of `point` above `face`'s plane — positive when the face can see it. A
+/// degenerate face sees nothing.
+fn face_sees(points: &[[f64; 3]], face: [usize; 3], point: [f64; 3]) -> f64 {
+    let normal = cross3(sub3(points[face[1]], points[face[0]]), sub3(points[face[2]], points[face[0]]));
+    let length = dot(normal, normal).sqrt();
+    if length <= 0.0 {
+        return f64::NEG_INFINITY;
+    }
+    dot(normal, sub3(point, points[face[0]])) / length
+}
+//#endregion 🔖️Hull
 
 //#region 🔖️Scene
 /// 🎬️ The `(meshes_json, instances_json)` pair for one model: one mesh + one instance per opaque
-/// `Surface`, per `Fenestration` and per `ShadingSurface`. Total and deterministic — a degenerate
-/// entity (fewer than three vertices, a zero-area window) contributes nothing rather than faulting.
+/// `Surface`, per `Fenestration`, per `ShadingSurface` and — translucent and unpickable — per `Zone`
+/// that encloses a volume. Total and deterministic — a degenerate entity (fewer than three vertices,
+/// a zero-area window, a zone with no surfaces or only coplanar ones) contributes nothing rather than
+/// faulting.
 pub fn energy_model_scene_parts(model: &Model, style: &EnergySceneStyle<'_>) -> (String, String) {
     let mut meshes: Vec<Value> = Vec::new();
     let mut instances: Vec<Value> = Vec::new();
@@ -256,6 +475,20 @@ pub fn energy_model_scene_parts(model: &Model, style: &EnergySceneStyle<'_>) -> 
         let Some(mesh) = polygon_mesh(&mesh_id, &shading.vertices_m, color) else { continue };
         meshes.push(mesh);
         instances.push(instance(&target_id, &mesh_id, &shading.name, ENERGY_SCENE_OBJECT_KIND_SHADING, style.is_selected(&target_id), style.is_hovered(&target_id)));
+    }
+
+    // 📦️ Zones LAST: a translucent hull must be published after the opaque envelope it wraps (three
+    // draws transparent materials after opaque ones and sorts them back to front, so the walls are
+    // already in the colour buffer when the hull blends over them), and appending keeps every opaque
+    // family at the index it had before volumes existed.
+    for zone in &model.zones {
+        let Some(triangles) = convex_hull_triangles(&zone_hull_points(model, zone.id)) else { continue };
+        let target_id = energy_scene_target_id(zone.id);
+        let color = style.paint(zone.id, &target_id, ENERGY_SCENE_ZONE_COLOR);
+        let mesh_id = format!("{ENERGY_SCENE_ZONE_MESH_PREFIX}{}", zone.id.0);
+        let Some(mesh) = triangles_mesh(&mesh_id, &triangles, color) else { continue };
+        meshes.push(mesh);
+        instances.push(zone_instance(&target_id, &mesh_id, &zone.name, style.is_selected(&target_id), style.is_hovered(&target_id)));
     }
 
     (Value::Array(meshes).to_string(), Value::Array(instances).to_string())
@@ -295,8 +528,13 @@ pub fn energy_model_fit_revision(model: &Model) -> u32 {
     use std::hash::{Hash, Hasher};
     let mut hasher = std::collections::hash_map::DefaultHasher::new();
     model.name.hash(&mut hasher);
+    for zone in &model.zones {
+        zone.id.0.hash(&mut hasher);
+    }
     for surface in &model.surfaces {
         surface.id.0.hash(&mut hasher);
+        // 📦️ Zone membership is geometry now: it decides which corners a zone's drawn volume hulls.
+        surface.zone_id.0.hash(&mut hasher);
         hash_vertices(&surface.vertices_m, &mut hasher);
     }
     for window in &model.fenestrations {

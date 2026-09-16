@@ -749,20 +749,61 @@ impl OwnedTriangulation {
     }
 }
 
+/// 📏️ Points closer than this fraction of the domain's extent are one vertex: a hole corner that
+/// lands on the interior lattice, or a subdivision point of one loop meeting another's, must never
+/// become two vertices an ulp apart (a sliver the Delaunay kernel cannot recover a constraint through).
+const PREPARED_POINT_MERGE_RATIO: f64 = 1e-9;
+
+/// 🔢️ How many equal segments a constrained edge of `length` is cut into at `spacing`: the smallest
+/// count whose segments fit, read with a relative tolerance so an edge that is an exact multiple of
+/// the spacing (up to floating-point noise) is not split one time too many — two solids sharing an
+/// edge then subdivide it identically.
+pub(crate) fn constrained_segments(length: f64, spacing: f64) -> usize {
+    ((length / spacing) - 1e-9).ceil().max(1.0) as usize
+}
+
+/// 📐️ The `i`-th of `segments` equally spaced points from `a` towards `b` — `a + (b − a)·i/n` with
+/// the integer product taken first, so a multiple of the spacing lands on its exact binary value and
+/// the same edge walked from either end meets on the same coordinates.
+pub(crate) fn subdivision_point(a: [f64; 2], b: [f64; 2], segment: usize, segments: usize) -> [f64; 2] {
+    let n = segments as f64;
+    let i = segment as f64;
+    [a[0] + (b[0] - a[0]) * i / n, a[1] + (b[1] - a[1]) * i / n]
+}
+
 fn prepare_owned_input(domain: &PlanarDomain, opts: &MeshOpts) -> Result<(Vec<[f64; 2]>, Vec<Edge>), MeshError> {
     if domain.outer.len() < 3 || domain.holes.iter().any(|hole| hole.len() < 3) {
         return Err(MeshError::DegenerateDomain);
     }
-    let mut points = Vec::new();
+    let extent = {
+        let min_x = domain.outer.iter().map(|point| point[0]).fold(f64::INFINITY, f64::min);
+        let max_x = domain.outer.iter().map(|point| point[0]).fold(f64::NEG_INFINITY, f64::max);
+        let min_y = domain.outer.iter().map(|point| point[1]).fold(f64::INFINITY, f64::min);
+        let max_y = domain.outer.iter().map(|point| point[1]).fold(f64::NEG_INFINITY, f64::max);
+        (max_x - min_x).max(max_y - min_y).max(f64::MIN_POSITIVE)
+    };
+    let merge_tolerance = extent * PREPARED_POINT_MERGE_RATIO;
+    let mut points: Vec<[f64; 2]> = Vec::new();
     let mut constraints = Vec::new();
-    let mut point_indices = BTreeMap::<(u64, u64), usize>::new();
+    let mut point_cells = BTreeMap::<(i64, i64), Vec<usize>>::new();
+    let cell_of = |point: [f64; 2]| ((point[0] / merge_tolerance).round() as i64, (point[1] / merge_tolerance).round() as i64);
     let mut insert = |point: [f64; 2]| {
-        let key = (point[0].to_bits(), point[1].to_bits());
-        *point_indices.entry(key).or_insert_with(|| {
-            let index = points.len();
-            points.push(point);
-            index
-        })
+        let cell = cell_of(point);
+        for dx in -1..=1 {
+            for dy in -1..=1 {
+                let Some(candidates) = point_cells.get(&(cell.0 + dx, cell.1 + dy)) else { continue };
+                for &index in candidates {
+                    let existing = points[index];
+                    if (existing[0] - point[0]).abs() <= merge_tolerance && (existing[1] - point[1]).abs() <= merge_tolerance {
+                        return index;
+                    }
+                }
+            }
+        }
+        let index = points.len();
+        points.push(point);
+        point_cells.entry(cell).or_default().push(index);
+        index
     };
     for polygon in std::iter::once(&domain.outer).chain(domain.holes.iter()) {
         let mut loop_indices = Vec::new();
@@ -770,10 +811,9 @@ fn prepare_owned_input(domain: &PlanarDomain, opts: &MeshOpts) -> Result<(Vec<[f
             let a = polygon[index];
             let b = polygon[(index + 1) % polygon.len()];
             let length = ((b[0] - a[0]).powi(2) + (b[1] - a[1]).powi(2)).sqrt();
-            let segments = if opts.max_edge > 0.0 { (length / (opts.max_edge / 2f64.sqrt())).ceil().max(1.0) as usize } else { 1 };
+            let segments = if opts.max_edge > 0.0 { constrained_segments(length, opts.max_edge / 2f64.sqrt()) } else { 1 };
             for segment in 0..segments {
-                let t = segment as f64 / segments as f64;
-                loop_indices.push(insert([a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t]));
+                loop_indices.push(insert(subdivision_point(a, b, segment, segments)));
             }
         }
         loop_indices.dedup();
@@ -790,16 +830,14 @@ fn prepare_owned_input(domain: &PlanarDomain, opts: &MeshOpts) -> Result<(Vec<[f
         let max_x = domain.outer.iter().map(|point| point[0]).fold(f64::NEG_INFINITY, f64::max);
         let min_y = domain.outer.iter().map(|point| point[1]).fold(f64::INFINITY, f64::min);
         let max_y = domain.outer.iter().map(|point| point[1]).fold(f64::NEG_INFINITY, f64::max);
-        let columns = ((max_x - min_x) / spacing).ceil() as usize;
-        let rows = ((max_y - min_y) / spacing).ceil() as usize;
+        let columns = constrained_segments(max_x - min_x, spacing);
+        let rows = constrained_segments(max_y - min_y, spacing);
         if columns.saturating_mul(rows) > 1_000_000 {
             return Err(MeshError::TriangulationFailed("refinement grid exceeds one million points".to_string()));
         }
-        let column_step = (max_x - min_x) / columns as f64;
-        let row_step = (max_y - min_y) / rows as f64;
         for row in 1..rows {
             for column in 1..columns {
-                let point = [min_x + column as f64 * column_step, min_y + row as f64 * row_step];
+                let point = [subdivision_point([min_x, min_y], [max_x, min_y], column, columns)[0], subdivision_point([min_x, min_y], [min_x, max_y], row, rows)[1]];
                 if point_in_polygon(point, &domain.outer) && !domain.holes.iter().any(|hole| point_in_polygon(point, hole)) {
                     insert(point);
                 }
@@ -828,7 +866,6 @@ struct MeshInputPreparation {
     grid_column: usize,
     grid_rows: usize,
     grid_columns: usize,
-    grid_step: [f64; 2],
     bounds: [f64; 4],
     boundary_complete: bool,
     pending_point: Option<[f64; 2]>,
@@ -867,7 +904,6 @@ impl MeshInputPreparation {
             grid_column: 1,
             grid_rows: 0,
             grid_columns: 0,
-            grid_step: [0.0; 2],
             bounds: [f64::INFINITY, f64::NEG_INFINITY, f64::INFINITY, f64::NEG_INFINITY],
             boundary_complete: false,
             pending_point: None,
@@ -951,7 +987,10 @@ impl MeshInputPreparation {
 
     fn advance_grid_classification(&mut self, domain: &MeshDomainOwner) {
         if self.grid_candidate.is_none() {
-            self.grid_candidate = Some([self.bounds[0] + self.grid_column as f64 * self.grid_step[0], self.bounds[2] + self.grid_row as f64 * self.grid_step[1]]);
+            self.grid_candidate = Some([
+                subdivision_point([self.bounds[0], self.bounds[2]], [self.bounds[1], self.bounds[2]], self.grid_column, self.grid_columns)[0],
+                subdivision_point([self.bounds[0], self.bounds[2]], [self.bounds[0], self.bounds[3]], self.grid_row, self.grid_rows)[1],
+            ]);
             self.grid_polygon = 0;
             self.grid_edge = 0;
             self.grid_inside = false;
@@ -1007,13 +1046,10 @@ impl MeshInputPreparation {
                 self.boundary_complete = true;
                 if opts.max_edge > 0.0 {
                     let spacing = opts.max_edge / 2f64.sqrt();
-                    self.grid_columns = ((self.bounds[1] - self.bounds[0]) / spacing).ceil() as usize;
-                    self.grid_rows = ((self.bounds[3] - self.bounds[2]) / spacing).ceil() as usize;
+                    self.grid_columns = constrained_segments(self.bounds[1] - self.bounds[0], spacing);
+                    self.grid_rows = constrained_segments(self.bounds[3] - self.bounds[2], spacing);
                     if self.grid_columns.saturating_mul(self.grid_rows) > 1_000_000 {
                         return Err("mesh-preparation-grid-capacity");
-                    }
-                    if self.grid_columns > 0 && self.grid_rows > 0 {
-                        self.grid_step = [(self.bounds[1] - self.bounds[0]) / self.grid_columns as f64, (self.bounds[3] - self.bounds[2]) / self.grid_rows as f64];
                     }
                 }
                 return Ok(false);
@@ -1038,9 +1074,8 @@ impl MeshInputPreparation {
             let a = polygon[self.edge];
             let b = polygon[(self.edge + 1) % polygon.len()];
             let length = ((b[0] - a[0]).powi(2) + (b[1] - a[1]).powi(2)).sqrt();
-            let segments = if opts.max_edge > 0.0 { (length / (opts.max_edge / 2f64.sqrt())).ceil().max(1.0) as usize } else { 1 };
-            let t = self.segment as f64 / segments as f64;
-            self.pending_point = Some([a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t]);
+            let segments = if opts.max_edge > 0.0 { constrained_segments(length, opts.max_edge / 2f64.sqrt()) } else { 1 };
+            self.pending_point = Some(subdivision_point(a, b, self.segment, segments));
             self.pending_boundary = true;
             self.current_segments = segments;
             self.point_lookup_cursor = 0;

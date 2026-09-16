@@ -2,9 +2,27 @@ syntax = "proto3";
 import "🧰️framework/🔨️modules/🖱️ui/🪟️viewport/🧊️3d/🧬️schema/🛰️.proto";
 import "✏️s/🔌️plugins/🏗️fem/⚙️engine/🖥️app-surface/🧬️schema/👁️result-mode/🛰️.proto";
 package semio.app.fem.fem3d.results_window_config;
+enum Fem3dLoopMode {
+  FEM_3D_LOOP_MODE_LOOP = 0;
+  FEM_3D_LOOP_MODE_PING_PONG = 1;
+  FEM_3D_LOOP_MODE_ONCE = 2;
+}
+enum Fem3dWaveform {
+  FEM_3D_WAVEFORM_RAMP = 0;
+  FEM_3D_WAVEFORM_SINE = 1;
+}
+message Fem3dResultsAnimation {
+  double phase = 1;
+  bool playing = 2;
+  double speed = 3;
+  Fem3dLoopMode loop_mode = 4;
+  Fem3dWaveform waveform = 5;
+  bool reverse = 6;
+}
 message Fem3dResultsWindowConfig {
   semio.framework.ui.viewport.Viewport3dOrbit camera = 1;
   optional string result_source_id = 2;
   semio.fem.result_mode.ResultMode result_mode = 3;
   uint32 result_mode_index = 4;
+  Fem3dResultsAnimation animation = 5;
 }

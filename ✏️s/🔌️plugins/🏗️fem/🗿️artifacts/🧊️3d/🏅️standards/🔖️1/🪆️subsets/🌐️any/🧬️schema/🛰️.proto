@@ -55,6 +55,29 @@ message FemSection {
   double j = 6;
 }
 
+message FemSolid {
+  string id = 1;
+  string name = 2;
+  repeated FemPoint2 outline = 3;
+  repeated FemRing2 holes = 4;
+  double base_z = 5;
+  double height = 6;
+  uint32 layers = 7;
+  double mesh_size = 8;
+  string material_id = 9;
+  // 🧭️ The world axis the footprint is extruded along: "x", "y" or "z".
+  string axis = 10;
+}
+
+message FemPoint2 {
+  double u = 1;
+  double v = 2;
+}
+
+message FemRing2 {
+  repeated FemPoint2 points = 1;
+}
+
 message FemSupport {
   string id = 1;
   string node_id = 2;

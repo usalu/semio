@@ -305,6 +305,7 @@ const KINDS: &[&str] = &[
     "change-gas-material-thickness",
     "change-gas-material-gas",
     "rename-gas-material",
+    "change-material-roughness",
 ];
 
 /// 👁️ Kinds whose COMMITTED specification vector cannot exhibit a forward effect. Empty: every kind
@@ -5477,6 +5478,24 @@ const VECTORS: &[Vector] = &[
             after: include_str!("../../🧫️fixtures/🧬️mutations/🔘️rename-gas-material/⛔️refuses/📸️snapshot/➡️after/🔣️.json"),
             diff: include_str!("../../🧫️fixtures/🧬️mutations/🔘️rename-gas-material/⛔️refuses/🔺️diff/🔣️.json"),
             outcome: include_str!("../../🧫️fixtures/🧬️mutations/🔘️rename-gas-material/⛔️refuses/🎯️outcome/🔣️.json"),
+        },
+        Vector {
+            id: "change-material-roughness-applies",
+            kind: "change-material-roughness",
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🗻️change-material-roughness/✅️applies/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🗻️change-material-roughness/✅️applies/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🗻️change-material-roughness/✅️applies/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🧫️fixtures/🧬️mutations/🗻️change-material-roughness/✅️applies/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🗻️change-material-roughness/✅️applies/🎯️outcome/🔣️.json"),
+        },
+        Vector {
+            id: "change-material-roughness-refuses",
+            kind: "change-material-roughness",
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🗻️change-material-roughness/⛔️refuses/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🗻️change-material-roughness/⛔️refuses/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🗻️change-material-roughness/⛔️refuses/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🧫️fixtures/🧬️mutations/🗻️change-material-roughness/⛔️refuses/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🗻️change-material-roughness/⛔️refuses/🎯️outcome/🔣️.json"),
         },
 ];
 

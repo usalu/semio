@@ -33,11 +33,11 @@ Audit of the other diffs:
 |---|---|
 | `diff_zones` | already complete — all five `Zone` scalars (name/volume/multiplier/conditioned/part_of_total_floor_area) |
 | `diff_surfaces` | already complete — all nine `Surface` fields including `class` and `outside_boundary_condition` |
-| `diff_materials` | was missing `name`; **added `rename_material`**. `roughness` has no mutation kind and `probe.materials` still clones, so a roughness edit is still masked — see §6 |
+| `diff_materials` | was missing `name`; **added `rename_material`**. `roughness` has no mutation kind and `probe.materials` still clones, so a roughness edit is still masked — see §7 |
 | `diff_thermostats` | was missing `zone_id`; **added `change_thermostat_zone`** |
 | site | **no `diff_site` needed** — `model_edit` already emits `update_site` inline on `base.site != model.site`, and `SetSite` goes through it |
 
-## 2. New editor commands (`✏️editor/🦀️.rs`, `🎭️modes/✏️edit/🪟️windows/🌳️structure/🦀️.rs`)
+## 2. New editor commands (`✏️editor/🦀️.rs`)
 
 Five new variants on `EnergyModelEditorCommand`, **appended** (never inserted) so no existing
 `OpBinary` ordinal moves:
@@ -58,9 +58,10 @@ interzone without a partner and a partner offered to any other arm).
 Wired into every roster the framework demands set-equality over:
 `ENERGY_MODEL_RETAINED_TOOL_IDS`, `ENERGY_MODEL_DOCUMENT_TOOL_IDS`, `action_id()`,
 `args_bridge::command_from_action`, `reduce()`, `PUBLICATION_CONTRACTS` (all five `Artifact` lane),
-`bounded_first_step_tool_proofs!`'s `tools:` list, and `structure::actions()` — the last one matters:
-`create_energy_model_editor` panics on an unclassified id and `retained_roster_is_exact_and_exhaustive`
-asserts every retained id appears on some window's action list.
+`bounded_first_step_tool_proofs!`'s `tools:` list, and — see §6.1 — the APP-level action list, which
+`build_definition` copies onto every window kind. `create_energy_model_editor` panics on an
+unclassified id and `retained_roster_is_exact_and_exhaustive` asserts every retained id reaches a
+window's action list.
 
 `args_bridge` reads **both** spellings of the payload: the palette's `{property, <entity>}` and the
 inspector's `{field, id}` + host-merged `value`.
@@ -99,7 +100,7 @@ Forms per resolved kind: surface (name text, class select, boundary select + rea
 partner, construction select over the model's constructions, sun/wind toggles, multiplier stepper,
 read-only area/tilt/azimuth from `geometry::surface_area_m2`/`surface_tilt_azimuth`), fenestration
 (all fifteen fields + glazing-construction select with an explicit clearing option), zone (five
-fields), material (7 scalars editable; name + roughness read-only, see §6), glazing material and gas
+fields), material (7 scalars editable; name + roughness read-only, see §7), glazing material and gas
 gap (editable now that lane A's kinds landed; the five fields with no kind stay read-only),
 construction (name + layer list, read-only), thermostat, shading surface (read-only), and the site
 (inside the no-selection summary, since it has no `EntityId` and no other home).
@@ -125,7 +126,64 @@ for zone/surface (`delete-zone`/`delete-surface`).
   changed from `slice(0, 12)` to a filter, since the document ids are no longer a prefix) and
   `🌳️structure/🟦️.ts` (five new action rows + the five property union types).
 
-## 6. Still owed / honest notes
+## 6. Follow-up round (coordinator's browser-probe defects)
+
+### 6.1 The shell refused every inspector command
+
+`input #11 set-fenestration-property refused: dispatch-failed (user window=energy.model.3d)` /
+`window kind energy.model.3d does not own action set-fenestration-property`.
+
+**Root cause, confirmed in the framework:** a panel action is dispatched in the ACTIVE window's
+context, and `AppBuilder::build_definition`
+(`🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs:5324-5348`) copies every APP-level action onto
+every window kind — but skips any id in `explicitly_owned_action_ids`, i.e. any id some window kind
+declares in its own `actions`/`action_refs`. So the moment a verb is listed in `structure::actions()`
+it belongs to the structure window ALONE.
+
+**Fix:** new `crate::editor::model::inspector_action_definitions()` holds the ten verbs the inspector
+can dispatch (`set-surface-property`, `set-fenestration-property`, `set-zone-property`,
+`set-glazing-material-property`, `set-gas-material-property`, `set-material-property`,
+`set-thermostat-setpoints`, `set-site`, `delete-zone`, `delete-surface`), and
+`create_energy_model_editor` declares each with `builder.action_with(...)` — app-level. They were
+REMOVED from `structure::actions()` (which now keeps only `create-surface` and
+`assign-surface-construction`) and from `zones::actions()` (which keeps `create-zone`/`rename-zone`).
+Lane B's `energy.model.3d` window needed no edit at all: it inherits them like every other window.
+
+Three new laws in `✏️editor/🧪️tests/🔬️unit/🦀️.rs` (`🪟️ActionOwnership`):
+`every_inspector_verb_is_owned_by_every_window_kind`,
+`no_window_kind_declares_an_inspector_verb_itself`,
+`every_inspector_verb_stays_a_classified_retained_tool`.
+
+### 6.2 A selected wall's windows collapsed into `…windows.more`
+
+**Root cause:** `paged_panel_section` reserves exactly one row per remaining sibling and hands the
+whole rest to the current one, so under a tight page the FIRST surface consumed the slack and the
+later ones — or, with a small page, that first surface's own windows — were lost behind a `+N` marker
+no tree row can expand. The page itself shrinks whenever the arena is loaded, which is exactly what
+the inspector's own form of bound controls does.
+
+**Fix:** `surfaces_with_windows` replaces that helper at the surface level with a two-phase
+allocation — **breadth first** (one row per surface, document order, so a truncation never hides a
+whole wall behind the windows of the wall before it), then **depth** (the leftover buys windows, the
+MARKED surface's first — marked = selected, hovered, or owning a marked window). Rows are still BUILT
+in document order, so the tree never reshuffles under the reader's cursor; only who survives a
+truncation changes. `zones_section` now takes the interaction snapshot for this.
+
+Laws: `a_marked_surface_keeps_its_windows_under_a_tight_page` (case 620, one window per side, a page
+with room for exactly one: the marked wall keeps its own and the unmarked one gives way; with nothing
+marked, document order decides) and `the_surface_rows_stay_in_document_order_whatever_is_marked`.
+
+### 6.3 Test-harness defect found while fixing the above
+
+The first cut of the panel tests built rows against an explicit `PanelRowBudget` and DROPPED them.
+A built argument map dropped without retirement never returns its `UiValue` arena credit, and since
+all 6 200-odd tests share one process that starved the panels other tests were assembling — it showed
+up as `ui.value.map.entry` refusals in the inspector's glazing form. Every panel test now projects
+AND retires through `project_and_retire_fixture_tree` and asserts over the projected JSON. Any law
+about which rows survive uses an explicit budget, never `panel_page_rows()`, which reads the
+process-wide arena.
+
+## 7. Still owed / honest notes
 
 - `set-material-property` still takes `value: f64`, so a material's **name** and **roughness** are not
   settable from the inspector (roughness has no mutation kind at all; `rename-material` now exists in
@@ -144,19 +202,42 @@ for zone/surface (`delete-zone`/`delete-surface`).
   it is generated by the packaging tool, not by these gates, and was left untouched.
 - No spaces exist in the BESTEST examples, so the zone→space nesting is exercised only by the demand
   table, not by a fixture with real spaces.
+- `create-surface`, `create-zone`, `rename-zone`, `set-run-period` and `set-simulation-settings` are
+  still declared on one window each, so the keybindings that reach them (`mod+shift+n`,
+  `mod+shift+s`) are refused while another window is active. Pre-existing, same root cause as §6.1,
+  out of this lane's scope — worth one follow-up.
+- Only the four gates below were run. No restage, no dev server, no browser probe from this lane.
 
-## 7. Gates
+## 8. Gates — commands and results
+
+All from `/Users/ueli/Documents/semio`.
+
+| # | Command | Result |
+|---|---|---|
+| 1 | `cargo check -p semio-s-artifact-energy-model --lib` | green, 0 errors |
+| 2 | `cargo check -p semio-s-artifact-energy-model --lib --tests` | green, 0 errors |
+| 3 | `cargo test -p semio-s-artifact-energy-model --lib -- panels editor::model::component::tests interaction` | **70 passed, 0 failed**, 6157 filtered out, 4.03 s |
+| 4 | `cargo test -p semio-s-artifact-energy-model --lib` | **6222 passed, 3 failed, 2 ignored**, 28.09 s |
+| 5 | `CARGO_PROFILE_WASM_DEV_DEBUG=false cargo check -p semio-s-plugin-energy --lib --target wasm32-wasip2` | green, 0 errors |
+
+Gate 4's three reds are EXACTLY the pre-existing ones named in this lane's brief, all in the
+simulation engine and untouched by this lane:
 
 ```
-cd /Users/ueli/Documents/semio && cargo check -p semio-s-artifact-energy-model --lib
-cd /Users/ueli/Documents/semio && cargo check -p semio-s-artifact-energy-model --lib --tests
-cd /Users/ueli/Documents/semio && cargo test -p semio-s-artifact-energy-model --lib -- panels editor::model::component::tests interaction
-cd /Users/ueli/Documents/semio && cargo test -p semio-s-artifact-energy-model --lib
-cd /Users/ueli/Documents/semio && cargo check -p semio-s-plugin-energy --lib --target wasm32-wasip2
+sim::tests::p7c1_weather_owner_is_exactly_admitted_never_grows_and_retries_maximum_plus_one
+sim::tests::p7c2_preview_typed_view_is_derived_from_canonical_wire_with_live_facility_total
+sim::tests::p7c2_restored_commit_bytes_match_one_and_four_fuel_chronology
 ```
 
-Results: see §8.
+An earlier run of gate 4 also failed `setCamera` (lane B) and `set-result-field` (lane D) in the
+SHARED editor/simulation-window test files; both were green again by the final run, so those lanes
+landed their fixes in between.
 
-## 8. Test counts and results
+### Tests added by this lane — 33
 
-(filled in below as each gate completed)
+| File | Count | Covers |
+|---|---|---|
+| `📌️panels/🗿️artifact/🧪️tests/🔬️unit/🦀️.rs` | 17 | panel-tab route, all eleven sections, entity-id keying of zones/surfaces/windows and of every catalogue, the single pick action per row, zone→surface→window nesting, shading, read-only schedule/site rows, empty-model placeholders, max-min-fair `section_quotas`, oversized-document continuation rows, dangling-reference dimming, German headings, the marked-ids cap, the demand table, and the two paging laws of §6.2 |
+| `📌️panels/🔍️inspection/🧪️tests/🔬️unit/🦀️.rs` | 13 | panel-tab route, one form law per entity kind, the `input`-inside-`field`-row law with its binding payload, the `!carries_a_tree` law (three tests), the whole-payload thermostat binding, the editable site in the summary, unresolvable-id fallback, multi-selection header, German labels |
+| `✏️editor/🧪️tests/🔬️unit/🦀️.rs` § `🔍️InspectorVerbs` | 13 | the `diff_fenestrations` regression (exactly one `change-fenestration-u-value`), every fenestration/surface/zone/glazing/gas property round-tripping to its own kind, the interzone partner, the refusal triple per command, unchanged-value no-ops, the `{field, id, value}` bridge, and the material-rename / thermostat-zone diff additions |
+| `✏️editor/🧪️tests/🔬️unit/🦀️.rs` § `🪟️ActionOwnership` | 3 | §6.1's three laws |

@@ -1,1 +1,6 @@
-{}
+{
+  "mutation": "changeGlazingMaterialInfraredEmissivity",
+  "id": 1,
+  "newInfraredEmissivityFront": 0.84,
+  "newInfraredEmissivityBack": 0.04
+}

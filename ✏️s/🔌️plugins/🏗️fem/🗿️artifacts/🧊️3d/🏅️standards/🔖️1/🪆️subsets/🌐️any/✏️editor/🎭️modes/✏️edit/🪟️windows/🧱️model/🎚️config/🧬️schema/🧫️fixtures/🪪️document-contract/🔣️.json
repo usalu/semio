@@ -13,6 +13,13 @@
           0
         ],
         "zoom": 1
+      },
+      "gumball": {
+        "moveAxes": true,
+        "movePlanes": true,
+        "rotate": true,
+        "scaleAxes": false,
+        "scaleUniform": false
       }
     }
   ],
@@ -34,6 +41,15 @@
     },
     {
       "kind": "camera-zero"
+    },
+    {
+      "kind": "gumball-null"
+    },
+    {
+      "kind": "gumball-unknown"
+    },
+    {
+      "kind": "gumball-text"
     }
   ],
   "patch": [
@@ -53,6 +69,11 @@
         ],
         "zoom": 1.25
       }
+    },
+    {
+      "op": "replace",
+      "path": "/gumball/rotate",
+      "value": false
     }
   ]
 }

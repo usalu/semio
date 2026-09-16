@@ -22,7 +22,7 @@ pub const SET_RESULT_FIELD_ACTION_ID: &str = "set-result-field";
 //#region 🔖️Definition
 /// ⚙️ The config verb this window owns: it publishes the run settings into the config store, whose
 /// generation change the framework applies to a live run as its `reconfigure: restart` policy.
-fn settings_action() -> ActionDefinition {
+pub fn settings_action() -> ActionDefinition {
     let mut action = ActionDefinition::bounded_catalog(SET_SETTINGS_ACTION_ID, LocalizedLabel::native("Set simulation settings", "Simulationseinstellungen setzen"), ActionKind::View).with_args(vec![
         ActionArgDef::slider("zoneTimestepMinutes", LocalizedLabel::native("Zone timestep (min)", "Zonen-Zeitschritt (min)"), 1.0, 60.0).required(),
         ActionArgDef::slider("systemTimestepMinutes", LocalizedLabel::native("System timestep (min)", "Anlagen-Zeitschritt (min)"), 1.0, 60.0).required(),
@@ -36,7 +36,7 @@ fn settings_action() -> ActionDefinition {
 /// colours by. Shaped exactly like `set-simulation-settings` — an `ActionKind::View` reducing to a
 /// config-store mutation — but it touches no pointer in `ENERGY_SIMULATION_RUN_SETTINGS`, so a
 /// recolour never restarts a live run.
-fn result_field_action() -> ActionDefinition {
+pub fn result_field_action() -> ActionDefinition {
     let options = crate::editor::model::results::ResultField::ALL
         .iter()
         .map(|field| {
@@ -60,7 +60,7 @@ fn result_field_action() -> ActionDefinition {
 /// 📅️ The one DOCUMENT verb this window owns. The run period is model data, so it is an
 /// `ActionKind::Mutation` reduced through the semantic `update-run-period` kind — declared HERE because
 /// this window is where it is rendered and edited.
-fn run_period_action() -> ActionDefinition {
+pub fn run_period_action() -> ActionDefinition {
     let mut action = ActionDefinition::bounded_catalog(crate::editor::model::SET_RUN_PERIOD_ACTION_ID, LocalizedLabel::native("Set run period", "Simulationszeitraum setzen"), ActionKind::Mutation).with_args(vec![
         ActionArgDef::slider("startMonth", LocalizedLabel::native("Start month", "Startmonat"), 1.0, 12.0).required(),
         ActionArgDef::slider("startDay", LocalizedLabel::native("Start day", "Starttag"), 1.0, 31.0).required(),
@@ -79,7 +79,12 @@ pub fn definition() -> WindowKindDefinition {
         surface_kind: SurfaceKind::BlockList,
         icon_id: "activity".into(),
         options: WindowOptions::default(),
-        actions: vec![settings_action(), result_field_action(), run_period_action()],
+        // 🔍️ DELIBERATELY EMPTY. These three verbs are declared APP-level in
+        // `crate::editor::model::window_shared_action_definitions`, because an action listed on a
+        // window kind becomes that window's ALONE (`build_definition`'s `explicitly_owned_action_ids`)
+        // and the inspector's result-field select — and the `mod+shift+*` keybindings — dispatch in
+        // whatever window happens to be active.
+        actions: Vec::new(),
         utilities: Vec::new(),
         interactions: Vec::new(),
         params_schema: Some(<EnergyModelConfig as store::ArtifactDsl>::envelope_id().into()),

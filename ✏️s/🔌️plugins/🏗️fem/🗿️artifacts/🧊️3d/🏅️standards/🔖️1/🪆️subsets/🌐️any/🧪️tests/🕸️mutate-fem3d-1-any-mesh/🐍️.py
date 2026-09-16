@@ -101,7 +101,7 @@ RECORDS = {
     "nodes": {"id", "x", "y", "z"},
     "materials": {"id", "name", "e", "g", "nu", "rho"},
     "sections": {"id", "name", "area", "iy", "iz", "j"},
-    "solids": {"id", "name", "outline", "holes", "baseZ", "height", "layers", "meshSize", "materialId"},
+    "solids": {"id", "name", "outline", "holes", "baseZ", "height", "layers", "meshSize", "materialId", "axis"},
     "supports": {"id", "nodeId", "fixed"},
     "loadCases": {"id", "name", "loads", "selfWeight"},
     "combinations": {"id", "name", "terms"},

@@ -38,7 +38,9 @@ pub struct SetActiveExample {
 pub fn handle(payload: &SetActiveExample, doc: &ArtifactView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
     let next = match payload.example_id.as_str() {
         "" => Some(empty_forms_snapshot()),
-        "building-component" => forms_dsl::parse_playbook_example_dsl(forms_dsl::BUILDING_COMPONENT_EXAMPLE_TEXT).ok(),
+        // 🎬️ `demo` is the id the shell's example picker sends (the `📚️examples/🎬️demo` facet); its asset
+        // IS `BUILDING_COMPONENT_EXAMPLE_TEXT`, so both ids load the same document.
+        "building-component" | crate::examples::demo::ID => forms_dsl::parse_playbook_example_dsl(forms_dsl::BUILDING_COMPONENT_EXAMPLE_TEXT).ok(),
         "default" => Some(default_example_spec()),
         "onboarding" => Some(onboarding_example_spec()),
         _ => None,
@@ -46,6 +48,11 @@ pub fn handle(payload: &SetActiveExample, doc: &ArtifactView<'_, FormsSnapshot>,
     let Some(next) = next else {
         return Ok(Emit::default());
     };
+    // 🪞️ The shell re-sends the active example at boot (and on every session switch); re-loading the
+    // document the app already holds would delete and recreate every step as an undoable history entry.
+    if next == *doc.snapshot {
+        return Ok(Emit::default());
+    }
     // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: no longer clears a config-owned
     // selection here — swapping in a whole new document prunes every stale "fields" selection id
     // automatically via `revalidate_interaction_state_after_document_change`.

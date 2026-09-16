@@ -147,6 +147,7 @@
   ],
   "solids": [
     {
+      "axis": "z",
       "baseZ": 0.0,
       "height": 2.5,
       "holes": [],

@@ -26,6 +26,7 @@
     "height": 0.2,
     "layers": 1,
     "meshSize": 1.5,
-    "materialId": "c50_60"
+    "materialId": "c50_60",
+    "axis": "z"
   }
 }

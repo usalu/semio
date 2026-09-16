@@ -45,8 +45,8 @@ materials [id:TEXT name:TEXT e:NUM g:NUM nu:NUM rho:NUM] {
 sections [id:TEXT name:TEXT area:NUM iy:NUM iz:NUM j:NUM] {
   hea200 "HEA 200" 0.00538 0.0000369 0.0000133 0.0000006
 }
-solids [id:TEXT name:TEXT outline:LIST holes:LIST base-z:NUM height:NUM layers:UINT mesh-size:NUM material-id:TEXT] {
-  sol1 "First Floor Slab" [ 10,0 12,0 12,2 10,2 ] [ ] 0 0.5 1 1 concrete
+solids [id:TEXT name:TEXT outline:LIST holes:LIST base-z:NUM height:NUM layers:UINT mesh-size:NUM material-id:TEXT axis:ENUM] {
+  sol1 "First Floor Slab" [ 10,0 12,0 12,2 10,2 ] [ ] 0 0.5 1 1 concrete z
 }
 supports [id:TEXT node-id:TEXT fixed:LIST] {
   s_00 n00_g [ Tx Ty Tz Rx Ry Rz ]

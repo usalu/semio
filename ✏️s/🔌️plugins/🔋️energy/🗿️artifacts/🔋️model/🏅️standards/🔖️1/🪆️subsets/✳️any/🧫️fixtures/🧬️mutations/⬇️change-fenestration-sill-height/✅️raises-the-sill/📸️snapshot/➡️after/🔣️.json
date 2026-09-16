@@ -73,7 +73,8 @@
         "overhang_offset_m": 0.0,
         "fin_depth_m": 0.0,
         "fin_offset_m": 0.0,
-        "glazing_construction_id": null
+        "glazing_construction_id": null,
+        "vertices_m": []
       }
     ],
     "materials": [

@@ -14,7 +14,7 @@ fn view(state: ToolRunState) -> ToolRunView {
 #[test]
 fn actions_are_localized_and_registered_as_interactive() {
     let definition = definition();
-    assert_eq!(definition.actions.iter().map(|action| action.id.as_str()).collect::<Vec<_>>(), [SET_SETTINGS_ACTION_ID, crate::editor::model::SET_RUN_PERIOD_ACTION_ID]);
+    assert_eq!(definition.actions.iter().map(|action| action.id.as_str()).collect::<Vec<_>>(), [SET_SETTINGS_ACTION_ID, SET_RESULT_FIELD_ACTION_ID, crate::editor::model::SET_RUN_PERIOD_ACTION_ID]);
     assert!(definition.actions.iter().all(|action| action.semantics.execution.interactive_job == InteractiveJobClassification::Migrated));
     assert_eq!(definition.label, LocalizedLabel::native("Energy simulation", "Energiesimulation"));
     for action in &definition.actions {
@@ -61,4 +61,27 @@ fn both_authored_languages_produce_different_text_and_the_framework_chords() {
     for action in [ToolRunAction::Start, ToolRunAction::Pause, ToolRunAction::Step, ToolRunAction::Abort, ToolRunAction::Finalize] {
         assert!(english.contains(action.chord()), "chord of {action:?} is rendered");
     }
+}
+
+#[test]
+fn the_result_field_action_offers_exactly_the_published_fields_and_the_window_renders_the_current_one() {
+    use crate::editor::model::results::ResultField;
+    let definition = definition();
+    let action = definition.actions.iter().find(|action| action.id == SET_RESULT_FIELD_ACTION_ID).expect("the window declares set-result-field");
+    assert_eq!(action.kind, ActionKind::View, "recolouring reads the document, it never mutates it");
+    let arg = action.args.iter().find(|arg| arg.id == "field").expect("the field argument");
+    let options: Vec<&str> = match &arg.schema {
+        semio_framework_plugin::ArgSchema::String { options, .. } => options.iter().map(|option| option.value.as_str()).collect(),
+        other => panic!("the field argument is a single-choice select, found {other:?}"),
+    };
+    assert_eq!(options, ResultField::ALL.iter().map(|field| field.id()).collect::<Vec<_>>(), "every published field is offerable and nothing else is");
+
+    let model = crate::model::Model::default();
+    let mut settings = EnergyModelConfig::default();
+    settings.result_field = ResultField::SolarTransmitted.id().into();
+    let english = text(render(None, &settings, &model, Locale::En));
+    assert!(english.contains("Solar transmitted"), "the window reads back the field it will be recoloured by: {english}");
+    assert!(english.contains(SET_RESULT_FIELD_ACTION_ID), "the settings node names the verb that changes it");
+    let german = text(render(None, &settings, &model, Locale::De));
+    assert!(german.contains("Solare Transmission"), "and in German: {german}");
 }

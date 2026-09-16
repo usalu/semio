@@ -1589,6 +1589,11 @@ type RenameGasMaterial {
   newName: String!
 }
 
+type ChangeMaterialRoughness {
+  id: Int!
+  newRoughness: String!
+}
+
 union EnergyModelMutation =
   RenameModel
   | ChangeModelVersion
@@ -1876,3 +1881,4 @@ union EnergyModelMutation =
   | ChangeGasMaterialThickness
   | ChangeGasMaterialGas
   | RenameGasMaterial
+  | ChangeMaterialRoughness

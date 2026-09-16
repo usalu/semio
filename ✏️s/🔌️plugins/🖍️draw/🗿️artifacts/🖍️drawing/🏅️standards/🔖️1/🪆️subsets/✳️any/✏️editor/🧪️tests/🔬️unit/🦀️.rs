@@ -660,8 +660,7 @@ async fn gesture_preview_is_a_pure_read_never_mutating_gesture_context() {
 }
 
 //#region 🧵️BatchedSamplesAndCancel
-fn session_with(viewport_width: f64, viewport_height: f64, utility: &str) -> (DrawingSession, DrawingSnapshot, NoConfig, semio_framework_plugin::HistoryView) {
-    let _ = (viewport_width, viewport_height);
+fn session_with(utility: &str) -> (DrawingSession, DrawingSnapshot, NoConfig, semio_framework_plugin::HistoryView) {
     (DrawingSession::with_active_utility(utility), default_drawing_document("empty", None), NoConfig::default(), semio_framework_plugin::HistoryView::empty())
 }
 
@@ -671,7 +670,7 @@ fn session_with(viewport_width: f64, viewport_height: f64, utility: &str) -> (Dr
 async fn a_batched_move_drives_the_gesture_to_its_last_sample() {
     let path = [[420.0, 320.0], [480.0, 300.0], [520.0, 380.0], [460.0, 360.0]];
     let run = |batched: bool| {
-        let (mut session, document, config, history) = session_with(800.0, 600.0, "shapeRect");
+        let (mut session, document, config, history) = session_with("shapeRect");
         let view = semio_framework_plugin::ArtifactView::new(&document, &history);
         let cfg = semio_framework_plugin::ConfigView { snapshot: &config, window: None };
         session.step_gesture(canvas_pointer_down::drawing_gesture::Event::PointerDown { utility: "shapeRect".into(), world: [0.0, 0.0], shift: false, ctrl: false, meta: false }, &document, &config);
@@ -690,7 +689,7 @@ async fn a_batched_move_drives_the_gesture_to_its_last_sample() {
     let one_batch = run(true);
     assert_eq!(one_batch.cursor, one_per_event.cursor, "the batch ends on the same cursor as four separate moves");
     assert_eq!(one_batch.start, one_per_event.start);
-    let (session, ..) = session_with(800.0, 600.0, "shapeRect");
+    let (session, ..) = session_with("shapeRect");
     let expected = canvas_pointer_down::canvas_point_to_world(&session.window_config.viewport, 460.0, 360.0, 800.0, 600.0);
     assert_eq!(one_batch.cursor, [expected.0, expected.1], "the cursor is the LAST sample of the batch");
 }
@@ -699,7 +698,7 @@ async fn a_batched_move_drives_the_gesture_to_its_last_sample() {
 #[semio_framework_async_macros::async_test]
 async fn a_cancelled_release_commits_nothing_and_leaves_the_gesture_idle() {
     for utility in ["shapeRect", "selectMarquee"] {
-        let (mut session, document, config, history) = session_with(800.0, 600.0, utility);
+        let (mut session, document, config, history) = session_with(utility);
         let view = semio_framework_plugin::ArtifactView::new(&document, &history);
         let cfg = semio_framework_plugin::ConfigView { snapshot: &config, window: None };
         session.step_gesture(canvas_pointer_down::drawing_gesture::Event::PointerDown { utility: utility.into(), world: [0.0, 0.0], shift: false, ctrl: false, meta: false }, &document, &config);
@@ -712,7 +711,7 @@ async fn a_cancelled_release_commits_nothing_and_leaves_the_gesture_idle() {
         assert!(session.point_query.is_none(), "{utility}: no marquee/pick query is retained");
     }
     // 🎯️ An idle cancel (select-direct) must not fall back to a pick either.
-    let (mut session, document, config, history) = session_with(800.0, 600.0, "selectDirect");
+    let (mut session, document, config, history) = session_with("selectDirect");
     let view = semio_framework_plugin::ArtifactView::new(&document, &history);
     let cfg = semio_framework_plugin::ConfigView { snapshot: &config, window: None };
     let emit = canvas_pointer_up::handle(&canvas_pointer_up::CanvasPointerUp { x: 400.0, y: 300.0, width: 800.0, height: 600.0, shift: false, ctrl: false, meta: false, cancelled: true }, &view, &cfg, &mut session).expect("cancel");

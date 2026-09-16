@@ -179,8 +179,8 @@ fn site_section(model: &Model, locale: Locale) -> UiAssemblyResult<UiFixedList<B
 }
 
 /// 🏘️ Zones and everything they own: each zone row nests its spaces and its surfaces, and each
-/// surface row nests its own windows. Every nested page draws on the budget its own section holds.
-fn zones_section(model: &Model, locale: Locale, budget: &mut PanelRowBudget) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
+/// surface row nests its own windows.
+fn zones_section(model: &Model, interaction: &EnergyModelInteractionSnapshot, locale: Locale, budget: &mut PanelRowBudget) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
     let section_id = format!("{TREE_NAMESPACE}.zones");
     let rows = budget.remaining();
     paged_panel_section(&section_id, &model.zones, rows, budget, |zone, nested| {
@@ -191,23 +191,7 @@ fn zones_section(model: &Model, locale: Locale, budget: &mut PanelRowBudget) -> 
         let space_items = paged_panel_section(&format!("{section_id}.{}.spaces", zone.id.0), &spaces, space_rows, nested, |space, _| {
             entity_row(&energy_target_id(space.id), ENERGY_GRANULARITY_SPACE, &space_label(space), say(locale, "Space", "Raum"), "layout-grid", false)
         })?;
-        let surface_rows = nested.remaining();
-        let surface_items = paged_panel_section(&format!("{section_id}.{}.surfaces", zone.id.0), &surfaces, surface_rows, nested, |surface, window_budget| {
-            let dangling = !model.constructions.iter().any(|entry| entry.id == surface.construction_id);
-            let mut surface_item = entity_row(&energy_target_id(surface.id), ENERGY_GRANULARITY_SURFACE, &surface_label(surface), say(locale, "Surface", "Fläche"), "square", dangling)?;
-            let windows: Vec<&Fenestration> = model.fenestrations.iter().filter(|window| window.surface_id == surface.id).collect();
-            let window_rows = window_budget.remaining();
-            let window_items = paged_panel_section(&format!("{section_id}.{}.windows", surface.id.0), &windows, window_rows, window_budget, |window, _| {
-                entity_row(&energy_target_id(window.id), ENERGY_GRANULARITY_FENESTRATION, &fenestration_label(window), say(locale, "Window", "Fenster"), "app-window", false)
-            })?;
-            for window in window_items {
-                surface_item.children.try_push(window).map_err(|_| capacity_error("energy artifact window row admission failed"))?;
-            }
-            if let Component::TreeItem(props) = &mut surface_item.component {
-                props.default_open = Some(true);
-            }
-            Ok(surface_item)
-        })?;
+        let surface_items = surfaces_with_windows(&section_id, model, &surfaces, interaction, locale, nested)?;
         for row in space_items.into_iter().chain(surface_items) {
             item.children.try_push(row).map_err(|_| capacity_error("energy artifact zone child row admission failed"))?;
         }
@@ -216,6 +200,90 @@ fn zones_section(model: &Model, locale: Locale, budget: &mut PanelRowBudget) -> 
         }
         Ok(item)
     })
+}
+
+/// 🎯️ True when this id is the framework-owned selection's or the pointer hover's.
+fn is_marked(interaction: &EnergyModelInteractionSnapshot, id: &str) -> bool {
+    interaction.selected_ids.iter().any(|marked| marked == id) || interaction.hovered_ids.iter().any(|marked| marked == id)
+}
+
+/// 🟫️ One zone's surfaces with their windows nested inside them — hand-paged instead of
+/// `paged_panel_section`, because that helper reserves exactly ONE row per remaining sibling surface
+/// and hands the rest to the current one. Under a tight page (the arena headroom shrinks while the
+/// inspector holds a form of bound controls) that leaves the FIRST surface too little for its own
+/// windows, and they collapse into a `…windows.more` marker no tree row can expand — a user could
+/// not reach a window while its host wall was selected (first browser probe of this ticket).
+///
+/// 🎯️ So the allowance is handed out in two passes: the surface the domain currently marks — picked
+/// in the 3d viewport, hovered, or owning a marked window — claims its whole demand FIRST, and the
+/// rest follow in document order. Rows are then BUILT in document order, so the tree never reshuffles
+/// under the reader's cursor; only who survives a truncation changes.
+fn surfaces_with_windows(section_id: &str, model: &Model, surfaces: &[&Surface], interaction: &EnergyModelInteractionSnapshot, locale: Locale, budget: &mut PanelRowBudget) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
+    let windows_of = |surface: &Surface| model.fenestrations.iter().filter(|window| window.surface_id == surface.id).collect::<Vec<_>>();
+    let marked = |surface: &Surface| is_marked(interaction, &energy_target_id(surface.id)) || windows_of(surface).iter().any(|window| is_marked(interaction, &energy_target_id(window.id)));
+
+    // 1️⃣ BREADTH first: one row per surface, in document order, so a truncation never hides a whole
+    // wall behind the windows of the wall before it.
+    let mut allowance = vec![0usize; surfaces.len()];
+    let mut left = budget.remaining();
+    for slot in allowance.iter_mut() {
+        if left == 0 {
+            break;
+        }
+        *slot = 1;
+        left -= 1;
+    }
+    // 2️⃣ DEPTH second: what the surface rows left over buys windows — the MARKED surface's first, so
+    // a picked wall always shows its own windows, then the rest in document order.
+    let mut order: Vec<usize> = (0..surfaces.len()).collect();
+    order.sort_by_key(|index| usize::from(!marked(surfaces[*index])));
+    for index in order {
+        if left == 0 {
+            break;
+        }
+        if allowance[index] == 0 {
+            continue;
+        }
+        let give = windows_of(surfaces[index]).len().min(left);
+        allowance[index] += give;
+        left -= give;
+    }
+
+    let mut items = UiFixedList::default();
+    let mut placed = 0;
+    for (index, surface) in surfaces.iter().enumerate() {
+        let share = allowance[index];
+        if share == 0 || !budget.spend() {
+            continue;
+        }
+        let dangling = !model.constructions.iter().any(|entry| entry.id == surface.construction_id);
+        let row = entity_row(&energy_target_id(surface.id), ENERGY_GRANULARITY_SURFACE, &surface_label(surface), say(locale, "Surface", "Fläche"), "square", dangling);
+        let mut row = match row {
+            Ok(row) => row,
+            Err(error) if error.code == "ui.fixed-capacity" => break,
+            Err(error) => return Err(error),
+        };
+        let windows = windows_of(surface);
+        let window_items = paged_panel_section(&format!("{section_id}.{}.windows", surface.id.0), &windows, share - 1, budget, |window, _| {
+            entity_row(&energy_target_id(window.id), ENERGY_GRANULARITY_FENESTRATION, &fenestration_label(window), say(locale, "Window", "Fenster"), "app-window", false)
+        })?;
+        for window in window_items {
+            row.children.try_push(window).map_err(|_| capacity_error("energy artifact window row admission failed"))?;
+        }
+        if let Component::TreeItem(props) = &mut row.component {
+            props.default_open = Some(true);
+        }
+        if items.try_push(row).is_err() {
+            break;
+        }
+        placed += 1;
+    }
+    if placed < surfaces.len() {
+        if let Ok(more) = semio_framework_plugin::panel_continuation_row(&format!("{section_id}.surfaces"), surfaces.len() - placed) {
+            let _ = items.try_push(more);
+        }
+    }
+    Ok(items)
 }
 
 fn shading_section(model: &Model, locale: Locale, budget: &mut PanelRowBudget) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
@@ -410,7 +478,7 @@ pub fn build_artifact_tree(snapshot: &EnergyModelSnapshot, interaction: &EnergyM
     let quotas = section_quotas(section_demands(model), page);
     let budget = &mut PanelRowBudget::new(page);
     let site = site_section(model, locale)?;
-    let zones = with_quota(budget, quotas[1], |share| zones_section(model, locale, share))?;
+    let zones = with_quota(budget, quotas[1], |share| zones_section(model, interaction, locale, share))?;
     let shading = with_quota(budget, quotas[2], |share| shading_section(model, locale, share))?;
     let materials = with_quota(budget, quotas[3], |share| materials_section(model, locale, share))?;
     let glazing = with_quota(budget, quotas[4], |share| glazing_materials_section(model, locale, share))?;

@@ -20,11 +20,10 @@ import { borderNormalClass } from "../../🔨️modules/📏️border-presentati
 import { dropZoneReadyFillClass } from "../../🎯️targets/⚛️react/🟦️";
 import { FlowProvider, useFlow } from "../../🔨️modules/🧭️flow-direction-context/🟦️.tsx";
 import { LevelProvider, getLevelZClass, useSurfaceActive } from "../🌈️Surface/🟦️.tsx";
-import { useLabel } from "../🏷️Label/🟦️.tsx";
 import { useShellScopeOptional } from "../🐚️ShellScope/🟦️.tsx";
 import { type Anchor, PANEL_TREE_UNIT_MIME, PanelGhostRoot, WindowChrome, anchorHorizontal, anchorPositionStyle, beginPanelTreeUnitDrag, chromeHostedOpenPanelPositionStyle, chromeHostedPanelCapRowStyle, endPanelTreeUnitDrag, flowFromAnchor, publishShellChromePanelBox, readActivePanelTreeUnitDrag, safeAreaBoxFromRect, useNativeDragArm, usePanelDockContext, usePanelTreeUnitDragActive, useShellNavbarTrailingEndWidthPx, useUiDriverDragSurface, type UiStatus } from "../../🎯️targets/⚛️react/🟦️";
 import { PanelTabBar, type PanelTabNode, type PanelTabSelectionOptions, type PanelTreeUnit, findPanelTabNode, progressPanelTabSelection, resolvePanelBranchBodyLeaf, usePanelTabSelection } from "../🧭️PanelTabBar/🟦️.tsx";
-import { CloseIcon, Icon } from "../🔣️Icons/🟦️.tsx";
+import { Icon } from "../🔣️Icons/🟦️.tsx";
 import { DragHandle } from "../🧱️DragHandle/🟦️.tsx";
 // #endregion 🔌️Adapters
 
@@ -414,7 +413,6 @@ const Panel: React.FC<PanelProps> = ({
   const dock = usePanelDockContext();
   const panelShellScope = useShellScopeOptional();
   const trailingEndWidthPx = useShellNavbarTrailingEndWidthPx(panelShellScope?.rootRef.current ?? undefined);
-  const collapseLabel = useLabel("ui.common.collapse");
   const panelRootRef = reactHostPort.useRef<HTMLDivElement>(null);
   const [surfaceActive, surfaceActiveProps] = useSurfaceActive(panelRootRef);
   const [hoveredSide, setHoveredSide] = reactHostPort.useState<"left" | "right" | null>(null);
@@ -469,16 +467,6 @@ const Panel: React.FC<PanelProps> = ({
     ...(zIndex !== undefined ? { zIndex } : {}),
   };
   const panelZClass = getLevelZClass("panel");
-  const panelFoldControl =
-    visible && onVisibleChange
-      ? {
-          id: `framework.panel.${anchor}.fold`,
-          slot: "panel-fold",
-          icon: <CloseIcon className="size-small" />,
-          label: collapseLabel,
-          onClick: () => onVisibleChange(false),
-        }
-      : undefined;
   const chromeHostedCapRowStyle = isChromeHosted && visible ? chromeHostedPanelCapRowStyle(anchor, trailingEndWidthPx) : undefined;
 
   // 🎯️ An anchor with no tabs renders nothing at rest. Panel-hosted: it becomes a drop target only while a dock
@@ -539,7 +527,6 @@ const Panel: React.FC<PanelProps> = ({
                 bodyClassName="flex min-h-0 flex-1 flex-col"
                 bodySlot="panel-content"
                 bodyRef={panelContentRef}
-                close={panelFoldControl}
                 titleChips={<PanelTabBar anchor={anchor} activePath={resolvedPath} onActivePathChange={handlePathChange} tabs={tabs} variant="panel" direction={flow.block} maxRows={1} showActiveColor={visible} />}
                 body={
                   <div data-slot="panel-body-stack" className={cn("relative flex min-h-0 min-w-0 w-full flex-1", isBottom ? "flex-col-reverse" : "flex-col")}>

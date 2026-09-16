@@ -12,6 +12,10 @@
  * fieldless enum, so it serializes as its bare variant name. */
 export type FemDof = "Tx" | "Ty" | "Tz" | "Rx" | "Ry" | "Rz";
 
+/** 🧭️ The world axis a solid's footprint is extruded along. Mirrors Rust `FemAxis`
+ * (`🗿️artifacts/🧊️3d/🦀️.rs`). */
+export type FemAxis = "x" | "y" | "z";
+
 /** 📍️ Mirrors Rust `FemNode` (`🗿️artifacts/🧊️3d/🦀️.rs`). */
 export interface FemNode {
   id: string;
@@ -137,6 +141,7 @@ export interface FemSolid {
   layers: number;
   meshSize: number;
   materialId: string;
+  axis: FemAxis;
 }
 
 /** 🌱️ Mirrors Rust `CreateSolid` (`🧊️create-solid/🦀️.rs`). */

@@ -12,8 +12,9 @@
             "host-only"
           ],
           "routes": [
+            "exportFixture",
             "lodScaleJson",
-            "selectSameKind",
+            "openImportFixture",
             "setBrushNodeSize"
           ]
         },
@@ -24,16 +25,17 @@
           ],
           "routes": [
             "addNode",
-            "applyBoardEvents",
-            "deleteSelection",
-            "duplicateSelection",
             "forceLayout",
             "import-media",
+            "importFixture",
             "patchInspectorNodes",
             "redrawHandles",
             "reorganize",
+            "rotateSelection",
+            "scaleSelection",
             "setActiveExample",
-            "setSelectionFlag"
+            "setSelectionFlag",
+            "translateSelection"
           ]
         },
         {
@@ -73,7 +75,7 @@
             "engagementAbort",
             "engagementControlSelect",
             "engagementInput",
-            "engagementSubmit"
+            "setPanelPage"
           ]
         },
         {
@@ -84,6 +86,50 @@
           ],
           "routes": [
             "brushCommitSlot"
+          ]
+        },
+        {
+          "status": "migrated",
+          "lanes": [
+            "interaction"
+          ],
+          "routes": [
+            "selectSameKind"
+          ]
+        },
+        {
+          "status": "migrated",
+          "lanes": [
+            "artifact",
+            "interaction"
+          ],
+          "routes": [
+            "deleteSelection",
+            "duplicateSelection"
+          ]
+        },
+        {
+          "status": "migrated",
+          "lanes": [
+            "artifact",
+            "window-config",
+            "window-transient",
+            "interaction"
+          ],
+          "routes": [
+            "applyBoardEvents"
+          ]
+        },
+        {
+          "status": "migrated",
+          "lanes": [
+            "artifact",
+            "config",
+            "window-transient",
+            "interaction"
+          ],
+          "routes": [
+            "engagementSubmit"
           ]
         }
       ]

@@ -1,3 +1,12 @@
+type Fem3dGumballConfig {
+  moveAxes: Boolean!
+  movePlanes: Boolean!
+  rotate: Boolean!
+  scaleAxes: Boolean!
+  scaleUniform: Boolean!
+}
+
 type Fem3dModelWindowConfig {
   camera: Viewport3dOrbit!
+  gumball: Fem3dGumballConfig!
 }

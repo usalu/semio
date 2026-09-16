@@ -26,6 +26,9 @@ fn fem3d_window_config_model_matches_neutral_fixture_and_codecs() {
             "camera-short" => candidate["camera"]["position"] = serde_json::json!([8, -3]),
             "camera-zero" => candidate["camera"]["zoom"] = serde_json::json!(0),
             "bad-mode" => candidate["resultMode"] = serde_json::json!("harmonic"),
+            "gumball-null" => candidate["gumball"] = serde_json::Value::Null,
+            "gumball-unknown" => candidate["gumball"]["extra"] = serde_json::json!(true),
+            "gumball-text" => candidate["gumball"]["rotate"] = serde_json::json!("yes"),
             _ => panic!("unknown neutral invalid case {kind}"),
         }
         if dsl::json::from_json_str::<Fem3dModelWindowConfig>(&candidate.to_string()).is_ok() {

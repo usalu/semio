@@ -1,1 +1,5 @@
-{}
+{
+  "mutation": "renameGasMaterial",
+  "id": 2,
+  "newName": "ARGON GAP 16MM"
+}

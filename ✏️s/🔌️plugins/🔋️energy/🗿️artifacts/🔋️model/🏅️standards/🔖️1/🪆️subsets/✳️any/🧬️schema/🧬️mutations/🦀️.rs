@@ -306,6 +306,7 @@ pub use super::change_glazing_material_infrared_emissivity::{change_glazing_mate
 pub use super::rename_glazing_material::{rename_glazing_material, RenameGlazingMaterial};
 pub use super::change_gas_material_thickness::{change_gas_material_thickness, ChangeGasMaterialThickness};
 pub use super::change_gas_material_gas::{change_gas_material_gas, ChangeGasMaterialGas};
+pub use super::change_material_roughness::{change_material_roughness, ChangeMaterialRoughness};
 pub use super::rename_gas_material::{rename_gas_material, RenameGasMaterial};
 //#endregion 🔖️Reexports
 
@@ -601,6 +602,7 @@ pub enum EnergyModelMutation {
     ChangeGasMaterialThickness(ChangeGasMaterialThickness),
     ChangeGasMaterialGas(ChangeGasMaterialGas),
     RenameGasMaterial(RenameGasMaterial),
+    ChangeMaterialRoughness(ChangeMaterialRoughness),
 }
 
 /// 🏷️ Direct semantic roster exported for the language-neutral test adapter, in aggregate
@@ -892,6 +894,7 @@ pub const KINDS: &[&str] = &[
     "change-gas-material-thickness",
     "change-gas-material-gas",
     "rename-gas-material",
+    "change-material-roughness",
 ];
 
 /// 🗂️ `(semanticKind, leaf directory name)` for every declared kind — the single place the
@@ -1183,6 +1186,7 @@ pub const DIRECTORIES: &[(&str, &str)] = &[
     ("change-gas-material-thickness", "🟣️change-gas-material-thickness"),
     ("change-gas-material-gas", "🟤️change-gas-material-gas"),
     ("rename-gas-material", "🔘️rename-gas-material"),
+    ("change-material-roughness", "🗻️change-material-roughness"),
 ];
 //#endregion 🔖️Aggregate
 
@@ -1528,6 +1532,7 @@ pub fn wire_probes() -> Vec<EnergyModelMutation> {
         change_gas_material_thickness(crate::model::EntityId(2), 0.016),
         change_gas_material_gas(crate::model::EntityId(2), crate::model::GasKind::Argon),
         rename_gas_material(crate::model::EntityId(2), "ARGON GAP 16MM".to_string()),
+        change_material_roughness(crate::model::EntityId(1), crate::model::SurfaceRoughness::VeryRough),
     ]
 }
 //#endregion 🧵️WireProbes

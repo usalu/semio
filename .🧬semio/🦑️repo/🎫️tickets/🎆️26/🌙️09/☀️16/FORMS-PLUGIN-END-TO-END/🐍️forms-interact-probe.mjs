@@ -12,7 +12,7 @@ import { join } from "node:path";
 
 const url = process.env.SEMIO_PROBE_URL ?? "http://127.0.0.1:6058/?plugin=forms";
 const outDir = join(import.meta.dir, "🗑️generated", process.env.SEMIO_PROBE_OUT ?? "forms-interact");
-const actionId = process.env.SEMIO_PROBE_ACTION ?? "add-step";
+const actionId = process.env.SEMIO_PROBE_ACTION ?? "addStep";
 const actionArgs = JSON.parse(process.env.SEMIO_PROBE_ACTION_ARGS ?? "{}");
 const settleSeconds = Number(process.env.SEMIO_PROBE_SETTLE ?? 12);
 mkdirSync(outDir, { recursive: true });
@@ -56,11 +56,23 @@ let s = null;
 for (let i = 0; i < 180; i++) { await page.waitForTimeout(1000); s = await state(); if (s.ready && s.hosts.length && s.stepCount > 0 && i > 8) break; if (s.error) break; }
 await note("boot", s, 0);
 
-// ── actions pane + one document action ────────────────────────────────────
+// ── block-list "Add Step" button (the builder window's own control) ───────
 let before = null;
 {
   const from = lines.length;
   before = await state();
+  const button = page.locator('button:has-text("Add Step")').first();
+  let clicked = "absent";
+  if (await button.count()) clicked = await button.click({ timeout: 8000 }).then(() => "ok").catch((e) => String(e).slice(0, 120));
+  let after = null;
+  for (let i = 0; i < settleSeconds * 2; i++) { await page.waitForTimeout(500); after = await state(); if (after.stepCount === before.stepCount + 1) break; }
+  await note("block-list-add-step", { clicked, stepsBefore: before.stepCount, ...after }, from);
+  before = after;
+}
+
+// ── actions pane + one document action ────────────────────────────────────
+{
+  const from = lines.length;
   const engagement = before.engagements.find((id) => new RegExp(process.env.SEMIO_PROBE_WINDOW ?? "blueprint", "i").test(id)) ?? before.engagements[0];
   let toggled = "absent";
   if (engagement) {
@@ -87,6 +99,7 @@ let before = null;
   let after = null;
   for (let i = 0; i < settleSeconds * 2; i++) { await page.waitForTimeout(500); after = await state(); if (after.stepCount === before.stepCount + 1) break; }
   await note("action", { engagement, toggled, rowId, clicked, filled, submitted, stepsBefore: before.stepCount, ...after }, from);
+  before = after;
 }
 
 // ── undo through the keybinding ──────────────────────────────────────────
@@ -95,15 +108,28 @@ let before = null;
   await page.mouse.click(400, 500).catch(() => {});
   await page.keyboard.press(process.platform === "darwin" ? "Meta+z" : "Control+z");
   let after = null;
-  for (let i = 0; i < settleSeconds * 2; i++) { await page.waitForTimeout(500); after = await state(); if (after.stepCount === before.stepCount) break; }
-  await note("undo", { stepsBefore: before.stepCount, ...after }, from);
+  for (let i = 0; i < settleSeconds * 2; i++) { await page.waitForTimeout(500); after = await state(); if (after.stepCount === before.stepCount - 1) break; }
+  await note("undo", { stepsBefore: before.stepCount, undone: after.stepCount === before.stepCount - 1, ...after }, from);
+}
+
+// ── Try window: type a value (setTryValue → scheduled setTryValueStep) ───
+{
+  const from = lines.length;
+  const input = page.locator('input[placeholder="Column A"], input[type="text"]').first();
+  let typed = "absent";
+  if (await input.count()) typed = await input.fill("Probe column").then(() => "ok").catch((e) => String(e).slice(0, 120));
+  await page.keyboard.press("Tab");
+  await page.waitForTimeout(4000);
+  const scheduled = lines.slice(from).filter((l) => /setTryValueStep/.test(l)).map((l) => l.slice(0, 200));
+  await note("try-set-value", { typed, scheduled: scheduled.slice(0, 4), scheduledFailed: scheduled.some((l) => /failed/.test(l)) }, from);
 }
 
 // ── Try window: next step ────────────────────────────────────────────────
 {
   const from = lines.length;
   const bodyBefore = await text();
-  const next = page.locator('[id$="nextStep"], [id*="next-step"], button:has-text("Next")').first();
+  // 🎯️ The Try window's own Next button — never the arg-less `action.nextStep` row of an open Actions pane.
+  const next = page.locator('button:has-text("Next"):not([id^="action."])').first();
   let clicked = "absent";
   if (await next.count()) clicked = await next.click({ timeout: 8000, force: true }).then(() => "ok").catch((e) => String(e).slice(0, 120));
   await page.waitForTimeout(3000);

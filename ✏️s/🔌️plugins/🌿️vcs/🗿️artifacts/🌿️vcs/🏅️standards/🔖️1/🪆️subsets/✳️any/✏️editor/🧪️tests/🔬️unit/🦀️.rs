@@ -281,8 +281,8 @@ pub(super) fn every_command() -> Vec<VcsCommand> {
         VcsCommand::Edit(edit_command::Edit { text: "{}".into() }),
         VcsCommand::NoMutation(no_operation::NoMutation {}),
         VcsCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown {}),
-        VcsCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove {}),
-        VcsCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp {}),
+        VcsCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { samples: vec![[1.0, 2.0], [3.0, 4.0]] }),
+        VcsCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { cancelled: false }),
         VcsCommand::CanvasWheel(canvas_wheel::CanvasWheel {}),
     ]
 }
@@ -361,6 +361,32 @@ fn action_bridge_covers_all_vcs_owned_commands_and_rejects_unknown_actions() {
         assert_eq!(VcsPlayApp::command_from_action(id, Some(&args)).expect("declared action bridge").command_id(), id);
     }
     assert!(VcsPlayApp::command_from_action("unknown", None).is_err());
+}
+
+/// 🧵️ LAW (design L4 / §2 D): a legacy `{x, y}` move wire folds into one sample; a batched wire
+/// keeps every `[x, y]` pair in order; `cancelled` defaults to `false`; the bounded extent prices
+/// every sample so a batch is never silently dropped.
+#[test]
+fn canvas_pointer_wire_defaults_samples_and_cancelled() {
+    let f = dsl::DslValue::float;
+    let legacy = dsl::DslValue::Object(vec![("x".into(), f(5.0)), ("y".into(), f(6.0))]);
+    let VcsCommand::CanvasPointerMove(moved) = VcsPlayApp::command_from_action("canvasPointerMove", Some(&legacy)).expect("legacy move") else { panic!("move") };
+    assert_eq!(moved.samples, vec![[5.0, 6.0]], "an absent `samples` is the single (x, y)");
+    assert_eq!(moved.last_sample(), Some([5.0, 6.0]));
+    let VcsCommand::CanvasPointerMove(bare) = VcsPlayApp::command_from_action("canvasPointerMove", None).expect("bare move") else { panic!("move") };
+    assert!(bare.samples.is_empty(), "no coordinates at all is an empty batch");
+    let pair = |x: f64, y: f64| dsl::DslValue::Array(vec![f(x), f(y)]);
+    let batched = dsl::DslValue::Object(vec![("x".into(), f(3.0)), ("y".into(), f(4.0)), ("samples".into(), dsl::DslValue::Array(vec![pair(1.0, 1.5), pair(3.0, 4.0)]))]);
+    let VcsCommand::CanvasPointerMove(moved) = VcsPlayApp::command_from_action("canvasPointerMove", Some(&batched)).expect("batched move") else { panic!("move") };
+    assert_eq!(moved.samples, vec![[1.0, 1.5], [3.0, 4.0]]);
+    let snapshot = VcsPlayApp::initial_snapshot();
+    let interaction = protocol::InteractionState::default();
+    assert_eq!(vcs_bounded_extent(&VcsCommand::CanvasPointerMove(moved), &snapshot, &interaction), Some(VCS_BOUNDED_WORK_ITEMS), "two samples are priced within the bounded raw budget");
+    let VcsCommand::CanvasPointerUp(released) = VcsPlayApp::command_from_action("canvasPointerUp", Some(&legacy)).expect("release") else { panic!("up") };
+    assert!(!released.cancelled, "an absent `cancelled` is a real release");
+    let cancelled = dsl::DslValue::Object(vec![("cancelled".into(), dsl::DslValue::Bool(true))]);
+    let VcsCommand::CanvasPointerUp(released) = VcsPlayApp::command_from_action("canvasPointerUp", Some(&cancelled)).expect("cancel") else { panic!("up") };
+    assert!(released.cancelled);
 }
 
 #[test]

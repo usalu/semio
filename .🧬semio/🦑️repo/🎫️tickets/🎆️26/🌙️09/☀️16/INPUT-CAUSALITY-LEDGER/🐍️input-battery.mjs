@@ -13,7 +13,10 @@ import { join } from "node:path";
 // Lanes (each is its own pass/fail row in the report):
 //   marquee-click   — 120-sample marquee, then a real click on empty canvas at 0/60/120/300/500/800 ms after
 //                     mouseup: the Inspection panel must read "Summary" (cleared) every time, no refusal, and
-//                     the drag must cost ≤ 8 `canvasPointerMove` round trips (before: one per sample).
+//                     at most 2 `canvasPointerMove` sends may settle AFTER mouseup (L4: the lane keeps one send in
+//                     flight and one owed batch, so the backlog after release is ≤ 2 round trips whatever the
+//                     round-trip latency — before, every DOM sample was its own queued round trip and the drain
+//                     took 1–3 s). `drainMs` (mouseup → the release settled) is reported for the record.
 //   utility-toggle  — arm Marquee Select, re-click it 1.5 s later: it must deactivate (before: ignored).
 //   utility-switch  — from idle, Marquee then Lasso 140 ms apart: Lasso active, both hops reached the guest.
 //   refusal-visible — the ledger census must show zero `refused` for the whole battery on this lane, and any
@@ -32,8 +35,10 @@ await page.goto(url, { waitUntil: "domcontentloaded" });
 await page.waitForTimeout(bootSeconds * 1000);
 const report = { url, lanes: {} };
 const sleep = (ms) => page.waitForTimeout(ms);
+const LANES = new Set((process.env.SEMIO_PROBE_LANES ?? "marquee-click,utility-toggle,utility-switch,refusal-visible").split(","));
 const mark = (text) => lines.push(`${Date.now() - t0} probe ${text}`);
 const countSince = (since, pattern) => lines.filter((l) => Number(l.split(" ")[0]) >= since && pattern.test(l)).length;
+const firstSince = (since, pattern) => { const hit = lines.find((l) => Number(l.split(" ")[0]) >= since && pattern.test(l)); return hit ? Number(hit.split(" ")[0]) : null; };
 const inspect = () => page.evaluate(() => { const m = document.body.innerText.match(/Inspection[\s\S]{0,120}/); return m ? m[0].replace(/\s+/g, " ") : null; });
 const census = () => page.evaluate(() => globalThis.__semioInputLedger ?? null);
 const button = (text) => page.evaluate((t) => { const b = [...document.querySelectorAll("button")].find((e) => (e.textContent ?? "").trim() === t); if (!b) return null; const r = b.getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2, pressed: b.getAttribute("aria-pressed") }; }, text);
@@ -56,7 +61,7 @@ const drag = async (rect, from, to, samples) => {
 };
 
 // 🖱️ marquee-click
-try {
+if (LANES.has("marquee-click")) try {
   await armMarquee();
   const rect = await canvasRect();
   const rows = [];
@@ -65,19 +70,22 @@ try {
     const since = Date.now() - t0;
     mark(`marquee-click delay=${delay} drag`);
     await drag(rect, [344, 259], [574, 549], 120);
+    const upAt = Date.now() - t0;
     await sleep(delay);
     mark(`marquee-click delay=${delay} click`);
     await page.mouse.click(rect.x + 600, rect.y + 700);
     await sleep(4000);
     const text = await inspect();
-    rows.push({ delay, cleared: /Summary/.test(text ?? ""), moves: countSince(since, /performInvocation \{.*canvasPointerMove/), refused: countSince(since, / refused: /), inspect: (text ?? "").slice(0, 60) });
+    const upSettled = firstSince(upAt, /performInvocation settled \{.*canvasPointerUp/);
+    const movesAfterUp = upSettled === null ? null : lines.filter((l) => { const t = Number(l.split(" ")[0]); return t >= upAt && t <= upSettled && /performInvocation settled \{.*canvasPointerMove/.test(l); }).length;
+    rows.push({ delay, cleared: /Summary/.test(text ?? ""), moves: countSince(since, /performInvocation \{.*canvasPointerMove/), movesAfterUp, drainMs: upSettled === null ? null : upSettled - upAt, refused: countSince(since, / refused: /), inspect: (text ?? "").slice(0, 60) });
   }
-  const before = rows.every((r) => r.cleared) && rows.every((r) => r.moves <= 8) && rows.every((r) => r.refused === 0);
+  const before = rows.every((r) => r.cleared) && rows.every((r) => r.movesAfterUp !== null && r.movesAfterUp <= 2) && rows.every((r) => r.refused === 0);
   report.lanes["marquee-click"] = { pass: before, rows };
 } catch (error) { report.lanes["marquee-click"] = { pass: false, error: String(error) }; }
 
 // 🧰️ utility-toggle
-try {
+if (LANES.has("utility-toggle")) try {
   await armMarquee();
   const m0 = await button("Marquee Select");
   if (m0.pressed === "true") { await page.mouse.click(m0.x, m0.y); await sleep(9000); }
@@ -91,7 +99,7 @@ try {
 } catch (error) { report.lanes["utility-toggle"] = { pass: false, error: String(error) }; }
 
 // 🧰️ utility-switch
-try {
+if (LANES.has("utility-switch")) try {
   const l0 = await button("Lasso Select"); if (l0?.pressed === "true") { await page.mouse.click(l0.x, l0.y); await sleep(1200); }
   const m = await button("Marquee Select"); if (m?.pressed === "true") { await page.mouse.click(m.x, m.y); await sleep(1200); }
   const since = Date.now() - t0;
@@ -104,9 +112,11 @@ try {
 } catch (error) { report.lanes["utility-switch"] = { pass: false, error: String(error) }; }
 
 // 🚦️ refusal-visible
+if (LANES.has("refusal-visible")) {
 const c = await census();
 const refusedTotal = c ? Object.values(c.refused).reduce((a, b) => a + b, 0) : null;
 report.lanes["refusal-visible"] = { pass: c !== null && refusedTotal === lines.filter((l) => / refused: /.test(l)).length, census: c, refusedLines: lines.filter((l) => / refused: /.test(l)).slice(0, 10) };
+}
 
 report.pass = Object.values(report.lanes).every((lane) => lane.pass);
 writeFileSync(join(outDir, "report.json"), JSON.stringify(report, null, 2));

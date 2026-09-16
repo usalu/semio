@@ -187,7 +187,7 @@ pub(crate) mod context {
     
     /// 🧾️ A standalone `Puzzle2dScene` for the measure/engagement builders that take one directly.
     pub fn scene(fixture: Value, runtime: Puzzle2dPlayRuntime, active_utility: &str) -> Puzzle2dScene {
-        Puzzle2dScene { fixture, runtime, active_utility: active_utility.into() }
+        Puzzle2dScene { fixture, runtime, active_utility: active_utility.into(), interaction: Puzzle2dInteractionSnapshot::default() }
     }
     
     pub fn fixture_of(app: &Puzzle2dApp) -> Value {

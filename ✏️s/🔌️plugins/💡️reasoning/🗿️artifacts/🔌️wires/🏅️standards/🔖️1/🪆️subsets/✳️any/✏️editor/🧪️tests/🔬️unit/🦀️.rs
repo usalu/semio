@@ -139,12 +139,14 @@ async fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
 /// (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) and no longer exist as `WiresCommand`
 /// pinned hex below are updated for the new ordinals; the synchronous `forceLayout`/`reorganize` rows dissolved into the
 /// `reorganize` tool run (ticket 26/09/13/INTERACTIVE-TOOLS-VISIBLE-PROCESS); `SetActiveExample` is unaffected
-/// (ordinal 0, before the deleted rows).
+/// (ordinal 0, before the deleted rows). `CanvasPointerUp` gained the trailing `cancelled` flag
+/// (ticket 26/09/16/INPUT-CAUSALITY-LEDGER §2 D — gesture cancel), so its pinned text/hex carry
+/// the appended bool (`...0001` = one field, `false`); the ordinal is unchanged.
 #[semio_framework_async_macros::async_test]
 async fn commands_keep_their_pre_migration_wire_bytes() {
     let cases: [(WiresCommand, &str, &str); 2] = [
         (WiresCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "metabolism".into() }), "active-example active-example example-id=metabolism", "0100010a6d657461626f6c69736d01000600"),
-        (WiresCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { cancelled: false }), "pointer-up pointer-up cancelled=false", "PINNED_BELOW"),
+        (WiresCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { cancelled: false }), "pointer-up pointer-up cancelled=false", "010600010001"),
     ];
     for (command, text, hex) in cases {
         assert_eq!(protocol::OpText::print_op(&command), text);

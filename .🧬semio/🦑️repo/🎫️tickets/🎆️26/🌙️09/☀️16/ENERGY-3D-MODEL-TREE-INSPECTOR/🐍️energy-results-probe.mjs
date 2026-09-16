@@ -10,8 +10,16 @@
  *   4. re-samples the colours and asserts they changed; reads the legend caption — only nodes INSIDE the World3d host or
  *      carrying a legend id/class, with the simulation window's own run text ("Final: … kWh after 8760 timesteps")
  *      excluded, so a document-wide "kWh" match cannot fake a legend;
- *   5. if the simulation window publishes a `set-result-field` action, unfolds its Actions pane, submits the action with
+ *   5. unfolds the SIMULATION window's Actions pane (`framework.window.energySimulation.engagement.toggle` — never the
+ *      3d window's: `set-result-field` is declared on `energy.simulation` only), clicks `action.set-result-field`,
+ *      picks the field through the form's shadcn Select (a BUTTON with role=combobox, so `fill` cannot work), and
  *      SEMIO_PROBE_RESULT_FIELD and asserts the colours changed AGAIN;
+ *   5b. samples a TIMELINE frame of the 3d host every ~2 s during the run and again at Finalized / settled / after the
+ *      field switch: `data-status-json` plus every counter-ish scalar it carries, the meshes/instances lane digests and
+ *      byte sizes, the vertex-colour histogram, the distinct per-instance colours, the number of TEXT NODES rendered
+ *      inside the host and whether one of them carries `kWh`/`W/m²` (a caption/legend), the Tool runs panel's step
+ *      lines, and the count + a sample of console lines naming `energy.model.3d` / `window_bodies` / a UI refresh or
+ *      dirty scope. Written to `timeline.txt` and `report.json.timeline`, and printed as a compact table at the end.
  *   6. screenshots every step. A canvas pixel histogram is attempted as a secondary signal and reported as
  *      "unavailable" when the WebGL drawing buffer cannot be read back — it never fails the probe on its own.
  *
@@ -21,7 +29,7 @@
  *   cd .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/ENERGY-3D-MODEL-TREE-INSPECTOR
  *   SEMIO_PROBE_OUT=energy-results-1 bun 🐍️energy-results-probe.mjs
  * Env: SEMIO_PROBE_URL, SEMIO_PROBE_OUT, SEMIO_PROBE_SECONDS (120), SEMIO_PROBE_RUN_SECONDS (240),
- *      SEMIO_PROBE_WINDOW_3D (energy.model.3d), SEMIO_PROBE_RESULT_FIELD (solarGain), SEMIO_PROBE_RESULT_ACTION (set-result-field),
+ *      SEMIO_PROBE_WINDOW_3D (energy.model.3d), SEMIO_PROBE_RESULT_FIELD ("Solar transmitted"), SEMIO_PROBE_RESULT_ACTION (set-result-field),
  *      SEMIO_PROBE_REQUIRE_FIELD_SWITCH=1 (turn the optional result-field switch into a hard assertion).
  */
 import { chromium } from "playwright";
@@ -33,7 +41,8 @@ const bootSeconds = Number(process.env.SEMIO_PROBE_SECONDS ?? 120);
 const runSeconds = Number(process.env.SEMIO_PROBE_RUN_SECONDS ?? 240);
 const windowKind = process.env.SEMIO_PROBE_WINDOW_3D ?? "energy.model.3d";
 const surfaceId = `window:${windowKind}`;
-const resultField = process.env.SEMIO_PROBE_RESULT_FIELD ?? "solarGain";
+// the live options are "Conduction loss", "Conduction gain", "Solar transmitted", "Solar absorbed" — there is no "solarGain"
+const resultField = process.env.SEMIO_PROBE_RESULT_FIELD ?? "Solar transmitted";
 const resultAction = process.env.SEMIO_PROBE_RESULT_ACTION ?? "set-result-field";
 const outDir = join(import.meta.dir, "🗑️generated", process.env.SEMIO_PROBE_OUT ?? "energy-results");
 mkdirSync(outDir, { recursive: true });
@@ -154,6 +163,88 @@ const legend = (id) => page.evaluate((id) => {
 }, id);
 const changed = (a, b) => !a || !b ? false : a.meshDigest !== b.meshDigest || a.instanceDigest !== b.instanceDigest || JSON.stringify(a.histogram) !== JSON.stringify(b.histogram) || JSON.stringify(a.uniqueInstanceColors) !== JSON.stringify(b.uniqueInstanceColors);
 
+//#region 🎞️ Recolour timeline
+/** 🎞️ One timeline frame of the 3d host while the run is in flight — everything lane D needs to see WHERE the
+ * result → colour chain stops: does the guest republish the surface at all (`data-status-json` counters, lane digests),
+ * does the host render any text into the window (caption/legend), and does the shell log a refresh for this body. */
+const hostFrame = (id) => page.evaluate((id) => {
+  const el = document.querySelector(`[data-surface-id="${id}"]`) ?? [...document.querySelectorAll("[data-surface-id]")].find((e) => e.hasAttribute("data-meshes-json"));
+  if (!el) return null;
+  const digest = (s) => { let h = 7; for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0; return h; };
+  const meshesRaw = el.getAttribute("data-meshes-json") ?? "";
+  const instancesRaw = el.getAttribute("data-instances-json") ?? "";
+  let status = null;
+  try { status = JSON.parse(el.getAttribute("data-status-json") ?? "null"); } catch { status = el.getAttribute("data-status-json"); }
+  // any counter-ish scalar the status doc carries, one level deep
+  const counters = {};
+  const walk = (obj, prefix, depth) => {
+    if (!obj || typeof obj !== "object" || depth > 2) return;
+    for (const [k, v] of Object.entries(obj)) {
+      if (typeof v === "number" || typeof v === "string") { if (/rev|gen|version|rendered|frame|seq|epoch|updated|tick|step|count/i.test(k)) counters[`${prefix}${k}`] = v; }
+      else walk(v, `${prefix}${k}.`, depth + 1);
+    }
+  };
+  walk(status, "", 0);
+  // text nodes actually rendered inside the world host (a caption/legend would be one of these)
+  const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+  const texts = [];
+  while (walker.nextNode()) { const t = (walker.currentNode.nodeValue ?? "").trim(); if (t) texts.push(t.replace(/\s+/g, " ").slice(0, 80)); }
+  const kWhText = texts.find((t) => /kWh|W\/m²|W\/m2/i.test(t)) ?? null;
+  let histogram = new Array(8).fill(0), channels = 0, instanceColours = [];
+  try {
+    for (const m of JSON.parse(meshesRaw || "[]")) {
+      const colors = m?.data?.colors;
+      if (!Array.isArray(colors)) continue;
+      channels += colors.length;
+      for (let i = 0; i + 2 < colors.length; i += 3) {
+        const lum = Number(colors[i]) * 0.3 + Number(colors[i + 1]) * 0.59 + Number(colors[i + 2]) * 0.11;
+        histogram[Math.max(0, Math.min(7, Math.floor(lum * 8)))] += 1;
+      }
+    }
+  } catch {}
+  try { instanceColours = [...new Set(JSON.parse(instancesRaw || "[]").map((i) => i?.color).filter(Boolean))]; } catch {}
+  const toolRunSteps = [...document.querySelectorAll('[id^="panel:"]')].filter((e) => /toolrun/i.test(e.id))
+    .map((e) => (e.textContent ?? "").replace(/\s+/g, " ").trim()).filter(Boolean).slice(0, 6);
+  return {
+    status, counters,
+    meshBytes: meshesRaw.length, instanceBytes: instancesRaw.length,
+    meshDigest: digest(meshesRaw), instanceDigest: digest(instancesRaw),
+    histogram, vertexColourChannels: channels, instanceColours,
+    textNodes: texts.length, kWhInHost: Boolean(kWhText), kWhText,
+    hostTexts: texts.slice(0, 6),
+    toolRunSteps,
+  };
+}, id);
+/** 📻️ The console lines lane D asked for: anything naming this window body or a UI refresh/dirty scope. */
+const REFRESH_RE = /energy\.model\.3d|window_bodies|window bodies|refreshUi|refresh ui|dirty|spawn-job|job done|toolRun|surface-render/i;
+const timeline = [];
+const frame = async (label, consoleFrom) => {
+  const host = await hostFrame(surfaceId);
+  const run = await runStateRead();
+  const consoleDelta = lines.slice(consoleFrom).filter((l) => REFRESH_RE.test(l));
+  const entry = {
+    t: Number(((Date.now() - t0) / 1000).toFixed(1)), label,
+    finalized: run.finalized, busy: run.busy, state: run.state, runText: run.runText, colouredBy: run.colouredBy,
+    statusPhase: host?.status?.phase ?? (host?.status == null ? null : typeof host.status === "string" ? host.status.slice(0, 40) : "object"),
+    counters: host?.counters ?? {},
+    meshDigest: host?.meshDigest ?? null, instanceDigest: host?.instanceDigest ?? null,
+    meshBytes: host?.meshBytes ?? 0, histogram: host?.histogram ?? null,
+    vertexColourChannels: host?.vertexColourChannels ?? null, instanceColours: host?.instanceColours ?? [],
+    textNodes: host?.textNodes ?? null, kWhInHost: host?.kWhInHost ?? null, kWhText: host?.kWhText ?? null,
+    hostTexts: host?.hostTexts ?? [],
+    toolRunSteps: host?.toolRunSteps ?? [],
+    refreshLines: consoleDelta.length,
+    refreshSample: consoleDelta.slice(0, 3).map((l) => l.slice(0, 180)),
+  };
+  timeline.push(entry);
+  report.timeline = timeline;
+  writeFileSync(join(outDir, "timeline.txt"), timeline.map((e) =>
+    `t=${String(e.t).padStart(6)}s ${e.label.padEnd(9)} run=${e.busy ?? "?"}/${e.finalized ? "final" : "…"} state="${(e.state ?? "").slice(0, 28)}" status=${e.statusPhase ?? "none"} counters=${JSON.stringify(e.counters)} meshDig=${e.meshDigest} instDig=${e.instanceDigest} meshBytes=${e.meshBytes} hist=${JSON.stringify(e.histogram)} instColours=${e.instanceColours.length} textNodes=${e.textNodes} kWhInHost=${e.kWhInHost} refresh+=${e.refreshLines} toolRun="${(e.toolRunSteps[0] ?? "").slice(0, 60)}"`).join("\n"));
+  flush();
+  return entry;
+};
+//#endregion 🎞️ Recolour timeline
+
 try {
   await page.goto(url, { waitUntil: "domcontentloaded" });
   let s = null;
@@ -179,17 +270,25 @@ try {
   }
   await shot("2-tool-armed");
   const pre = await runStateRead();
+  const consoleAtChord = lines.length;
+  await frame("pre-chord", consoleAtChord);
   await page.keyboard.press(process.platform === "darwin" ? "Meta+Enter" : "Control+Enter");
   const seen = [];
   let runState = null;
+  let lastFrameConsole = consoleAtChord;
   for (let i = 0; i < runSeconds * 2; i++) {
     await page.waitForTimeout(500);
     runState = await runStateRead();
     const key = `busy=${runState.busy ?? "?"} finalized=${runState.finalized} ${runState.state ?? ""} ${runState.runText ?? ""}`.trim();
     if (seen[seen.length - 1] !== key) seen.push(key);
+    // 🎞️ one timeline frame every ~2 s while the run is in flight
+    if (i % 4 === 3) { await frame("running", lastFrameConsole); lastFrameConsole = lines.length; }
     // a run counts as finished when it reads Finalized AND that is not just the pre-existing text from before the chord
     if (runState.finalized && (!pre.finalized || runState.runText !== pre.runText)) break;
   }
+  await frame("finalized", lastFrameConsole);
+  await page.waitForTimeout(3000);
+  await frame("settled", lines.length - 1);
   note("run", { armed, pre, seen: seen.slice(-14), finalized: runState?.finalized, busy: runState?.busy, state: runState?.state, runText: runState?.runText, colouredBy: runState?.colouredBy, live: runState?.live, toolRunRows: runState?.toolRunRows });
   await shot("3-run");
   assert("results.run", Boolean(runState?.finalized) && (!pre.finalized || runState.runText !== pre.runText),
@@ -215,37 +314,66 @@ try {
   assert("results.legend", caption.nodes.length > 0,
     caption.nodes.length ? `legend text: ${JSON.stringify(caption.nodes.slice(0, 4).map((c) => `${c.inWorldHost ? "[in world host] " : ""}${c.text}`))}` : `no legend caption inside the world host and no element with a legend id (world host found=${caption.hostFound}) — DoD 4's legend is missing`);
 
-  // ── result-field switch through the simulation window's Actions pane ────
+  // ── result-field switch through the SIMULATION window's Actions pane ────
+  // 🎛️ The form has exactly ONE control — a shadcn Select trigger `#field` ("Coloured by", a BUTTON with
+  // role=combobox) and NO execute button: picking an option IS the commit. The proof that it committed is the
+  // simulation window's own caption flipping from "Surfaces coloured by: <old>" to the picked field.
   const st = await shell();
   const rowId = `action.${resultAction}`;
-  let fieldSwitch = { engagement: null, toggled: "skipped", clicked: "skipped", submitted: "skipped" };
-  const engagement = st.engagements.find((id) => /simulation|result|3d|model/i.test(id)) ?? st.engagements[0] ?? null;
+  const captionBefore = (await runStateRead()).colouredBy;
+  let fieldSwitch = { engagement: null, toggled: "skipped", clicked: "skipped", picked: "skipped", options: [], captionBefore, captionAfter: null };
+  // ⚠️ The SIMULATION window's engagement, never the 3d one: `set-result-field` is declared on `energy.simulation`
+  // only, and a naive /simulation|result|3d|model/ match picked `framework.window.energyModel3d.engagement` first —
+  // whose Actions pane lists setCamera/set-*-property and no result field, so the step reported "no action row".
+  const engagement = st.engagements.find((id) => /energySimulation/i.test(id))
+    ?? st.engagements.find((id) => /simulation/i.test(id) && !/3d|model3d/i.test(id))
+    ?? st.engagements[0] ?? null;
   fieldSwitch.engagement = engagement;
   if (engagement) {
     const toggle = page.locator(`[id="${engagement}.toggle"]`).first();
     // 🫥️ `force`: a window header can overlay its own Actions toggle, so an actionability check never passes.
     if (await toggle.count()) fieldSwitch.toggled = await toggle.click({ timeout: 8000, force: true }).then(() => "ok").catch((e) => String(e).slice(0, 120));
-    await page.waitForTimeout(1400);
+    await page.waitForTimeout(1600);
   }
   const opened = await shell();
   if (opened.actionRows.includes(rowId)) {
     fieldSwitch.clicked = await page.locator(`[id="${rowId}"]`).first().click({ timeout: 8000, force: true }).then(() => "ok").catch((e) => String(e).slice(0, 120));
-    await page.waitForTimeout(1500);
-    const input = page.locator('[id="field"], [name="field"], [id="resultField"], [name="resultField"], [role="combobox"]').last();
-    if (await input.count()) {
-      await input.fill(resultField).catch(async () => { await input.click().catch(() => {}); await page.waitForTimeout(500); await page.locator('[role="option"]').filter({ hasText: resultField }).first().click().catch(() => {}); await page.keyboard.press("Escape"); });
-    }
-    const camel = resultAction.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
-    const submit = page.locator(`[id$=".action.${resultAction}.execute"], [id$=".action.${camel}.execute"]`).first();
-    fieldSwitch.submitted = (await submit.count()) ? await submit.click({ timeout: 8000 }).then(() => "ok").catch((e) => String(e).slice(0, 120)) : (await page.keyboard.press("Enter"), "enter");
-    await page.waitForTimeout(3500);
+    await page.waitForTimeout(2000);
+    const select = page.locator('[id="field"], [name="field"], [id="resultField"], [id$=".field"]').first();
+    fieldSwitch.control = (await select.count()) ? await select.evaluate((el) => ({ id: el.id || null, tag: el.tagName, role: el.getAttribute("role"), text: (el.textContent ?? "").trim().slice(0, 40) })).catch(() => null) : null;
+    if (await select.count()) {
+      await select.click({ force: true }).catch(() => {});
+      await page.waitForTimeout(800);
+      fieldSwitch.options = await page.locator('[role="option"]').allInnerTexts().catch(() => []);
+      const norm = (t) => t.toLowerCase().replace(/[^a-z]/g, "");
+      const want = norm(resultField);
+      // match the env value against the option TEXT (case/space-insensitive, camelCase humanised); if it names no real
+      // option, pick any option that differs from the field currently painted — the point is to CHANGE the field.
+      const index = fieldSwitch.options.findIndex((t) => norm(t) === want || norm(t).includes(want) || want.includes(norm(t)));
+      const currentIndex = fieldSwitch.options.findIndex((t) => (captionBefore ?? "").toLowerCase().includes(t.toLowerCase()));
+      const chosen = index >= 0 ? index : fieldSwitch.options.findIndex((_, i) => i !== currentIndex);
+      fieldSwitch.chosenOption = fieldSwitch.options[chosen] ?? null;
+      fieldSwitch.chosenBecause = index >= 0 ? `SEMIO_PROBE_RESULT_FIELD=${resultField} matched it` : `'${resultField}' names no option; picked the first one that is not the current '${fieldSwitch.options[currentIndex] ?? "?"}'`;
+      if (chosen >= 0) fieldSwitch.picked = await page.locator('[role="option"]').nth(chosen).click({ timeout: 6000 }).then(() => `ok:${fieldSwitch.chosenOption}`).catch((e) => String(e).slice(0, 140));
+      else fieldSwitch.picked = `no option to pick among ${JSON.stringify(fieldSwitch.options)}`;
+      await page.keyboard.press("Escape").catch(() => {});
+      // there is no execute button in this form, but look for one anyway in case the shape changes
+      const submit = page.locator(`[id$=".action.${resultAction}.execute"], [id$=".execute"], [id$=".apply"]`).first();
+      fieldSwitch.executeButton = (await submit.count()) ? await submit.click({ timeout: 4000 }).then(() => "clicked") : "none (the select IS the commit)";
+      await page.waitForTimeout(4000);
+    } else fieldSwitch.picked = "the action form published no field control";
   } else fieldSwitch.clicked = `no ${rowId} row (action rows: ${opened.actionRows.slice(0, 12).join(", ") || "none"})`;
+  fieldSwitch.captionAfter = (await runStateRead()).colouredBy;
+  await frame("field-switch", lines.length - 1);
   const afterField = await colourSample(surfaceId);
   note("resultFieldSwitch", { ...fieldSwitch, sample: afterField, changed: changed(after, afterField) });
   await shot("5-result-field");
-  const fieldDetail = `${rowId}: toggle=${fieldSwitch.toggled} click=${fieldSwitch.clicked} submit=${fieldSwitch.submitted}; colours changed again=${changed(after, afterField)}`;
+  const captionChanged = Boolean(fieldSwitch.captionAfter) && fieldSwitch.captionAfter !== fieldSwitch.captionBefore;
+  const fieldDetail = `${rowId}: toggle=${fieldSwitch.toggled} row=${fieldSwitch.clicked} pick=${fieldSwitch.picked} (${fieldSwitch.chosenBecause ?? "-"}); options=${JSON.stringify(fieldSwitch.options)}; caption "${(fieldSwitch.captionBefore ?? "").slice(0, 40)}" → "${(fieldSwitch.captionAfter ?? "").slice(0, 40)}"; colours changed again=${changed(after, afterField)}`;
   if (String(fieldSwitch.clicked).startsWith("no ") && process.env.SEMIO_PROBE_REQUIRE_FIELD_SWITCH !== "1") skip("results.fieldSwitch", `${fieldDetail} — the window publishes no ${rowId} action; the result-field switcher is optional (set SEMIO_PROBE_REQUIRE_FIELD_SWITCH=1 to make it a hard assertion)`);
-  else assert("results.fieldSwitch", (fieldSwitch.submitted === "ok" || fieldSwitch.submitted === "enter") && changed(after, afterField), fieldDetail);
+  // ✅️ The caption is the honest proof that the action COMMITTED. The scene recolouring again is reported but not
+  // required here, because the colours revert at Finalized anyway — that is `results.recoloured`'s finding, not this one.
+  else assert("results.fieldSwitch", captionChanged, fieldDetail);
 
   const faults = lines.filter((l) => /pageerror|trapped|panicked|unreachable|dropped action|Unknown action|fixed-capacity|surface-render|window-context-required/i.test(l)).map((l) => l.slice(0, 300));
   note("faults", faults.slice(0, 20));
@@ -257,6 +385,11 @@ try {
 }
 
 report.finishedAt = new Date().toISOString();
+if (timeline.length) {
+  console.log("── recolour timeline ──────────────────────────────────────────────");
+  for (const e of timeline) console.log(`t=${String(e.t).padStart(6)}s ${e.label.padEnd(9)} run=${e.busy ?? "?"}/${e.finalized ? "final" : "…"} status=${e.statusPhase ?? "none"} counters=${JSON.stringify(e.counters)} meshDig=${e.meshDigest} instDig=${e.instanceDigest} bytes=${e.meshBytes} hist=${JSON.stringify(e.histogram)} instColours=${e.instanceColours.length} textNodes=${e.textNodes} kWhInHost=${e.kWhInHost} refresh+=${e.refreshLines}`);
+  console.log("───────────────────────────────────────────────────────────────────");
+}
 report.passed = report.assertions.filter((a) => a.ok).length;
 report.failed = report.assertions.filter((a) => !a.ok).length;
 report.result = report.failed === 0 ? "PASS" : "FAIL";

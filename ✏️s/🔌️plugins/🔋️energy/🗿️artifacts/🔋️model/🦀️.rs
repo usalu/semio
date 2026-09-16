@@ -5401,6 +5401,22 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔘️rename-gas-material/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses;
                         }
+                        #[path = "."]
+                        pub mod change_material_roughness {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗻️change-material-roughness/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗻️change-material-roughness/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗻️change-material-roughness/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗻️change-material-roughness/🧪️tests/✅️applies/🦀️.rs"]
+                            mod tests_applies;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗻️change-material-roughness/🧪️tests/⛔️refuses/🦀️.rs"]
+                            mod tests_refuses;
+                        }
                     }
                 }
                 #[path = "."]

@@ -84,6 +84,81 @@ use crate::editor::forms::unit_tests::context::{building_component_contributions
 use crate::forms_steps;
 use semio_framework_plugin::artifact_app_laws::meta;
 
+//#region 🔖️ActionBridge
+/// 🌉️ Every command row the shells reach by action id must decode through `command_from_action`
+/// (camelCase host keys → the payloads' own snake_case `FromValue` names), and its `command_id`
+/// must round-trip — the boundary that was missing entirely before ticket
+/// 26/09/16/FORMS-PLUGIN-END-TO-END (every shell action was refused as "not framework-reserved").
+#[test]
+fn command_from_action_round_trips_every_command_id() {
+    for command in every_command() {
+        let id = command.command_id();
+        let args = dsl::ToValue::to_value(&command);
+        // 🔁️ The `DslOps` wire shape is `{keyword: payload}`; the shell sends the bare payload object.
+        let payload = match &args {
+            dsl::DslValue::Object(entries) if entries.len() == 1 => entries[0].1.clone(),
+            other => other.clone(),
+        };
+        let camel = camel_case_keys(&payload);
+        let bridged = FormsPlayApp::command_from_action(id, Some(&camel)).unwrap_or_else(|error| panic!("action {id} failed to bridge: {}", error.message));
+        assert_eq!(bridged.command_id(), id, "command_id mismatch for action {id}");
+    }
+    assert!(FormsPlayApp::command_from_action("nonsense", None).is_err());
+}
+
+/// 🐫️ The shell's spelling of the payload keys.
+fn camel_case_keys(value: &dsl::DslValue) -> dsl::DslValue {
+    match value {
+        dsl::DslValue::Object(entries) => dsl::DslValue::Object(
+            entries
+                .iter()
+                .map(|(key, value)| {
+                    let mut camel = String::new();
+                    let mut upper = false;
+                    for ch in key.chars() {
+                        if ch == '_' { upper = true; } else if upper { camel.push(ch.to_ascii_uppercase()); upper = false; } else { camel.push(ch); }
+                    }
+                    (camel, value.clone())
+                })
+                .collect(),
+        ),
+        other => other.clone(),
+    }
+}
+
+/// 🧱️ The block-list host's own verbs and the host-merged control `value` reach the same rows.
+#[test]
+fn command_from_action_bridges_block_list_verbs_and_control_values() {
+    let args = |json: serde_json::Value| context::action_args(&json);
+    assert_eq!(
+        FormsPlayApp::command_from_action("setActiveExample", Some(&args(serde_json::json!({ "exampleId": "onboarding" })))).expect("example bridge"),
+        FormsCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "onboarding".into() })
+    );
+    assert_eq!(
+        FormsPlayApp::command_from_action("addBlock", Some(&args(serde_json::json!({ "stepId": "s1", "kind": "number" })))).expect("addBlock bridge"),
+        FormsCommand::AddQuestion(add_question::AddQuestion { kind: "number".into(), step_id: Some("s1".into()) })
+    );
+    assert_eq!(
+        FormsPlayApp::command_from_action("removeBlock", Some(&args(serde_json::json!({ "stepId": "s1", "blockId": "q1" })))).expect("removeBlock bridge"),
+        FormsCommand::RemoveQuestion(remove_question::RemoveQuestion { question_id: "q1".into() })
+    );
+    assert_eq!(
+        FormsPlayApp::command_from_action("moveBlock", Some(&args(serde_json::json!({ "blockId": "q1", "fromStepId": "s1", "toStepId": "s2", "index": 3 })))).expect("moveBlock bridge"),
+        FormsCommand::MoveQuestion(move_question::MoveQuestion { question_id: "q1".into(), to_step_id: "s2".into(), target_id: None, position: "after".into(), index: Some(3) })
+    );
+    let FormsCommand::SetTryValue(try_value) = FormsPlayApp::command_from_action("setTryValue", Some(&args(serde_json::json!({ "key": "name", "windowId": "w", "windowKindId": "forms-try", "value": "Column A" })))).expect("setTryValue bridge") else {
+        panic!("setTryValue must bridge to SetTryValue");
+    };
+    assert_eq!(try_value.key, "name");
+    assert_eq!(try_value.window_kind_id, "forms-try");
+    assert_eq!(try_value.value_json.as_deref(), Some("\"Column A\""));
+    assert!(FormsPlayApp::command_from_action("patchStep", Some(&args(serde_json::json!({ "stepId": "s1" })))).is_err(), "a required field must not be defaulted silently");
+    // 🔢️ Host JSON delivers integers as floats; the exact-integer codecs must still decode them.
+    let float_index = dsl::DslValue::object([("stepId".to_string(), dsl::DslValue::String("s1".into())), ("index".to_string(), dsl::DslValue::Number(dsl::Number::Float(2.0)))]);
+    assert_eq!(FormsPlayApp::command_from_action("moveStep", Some(&float_index)).expect("integral float bridge"), FormsCommand::MoveStep(move_step::MoveStep { step_id: "s1".into(), index: 2 }));
+}
+//#endregion 🔖️ActionBridge
+
 //#region 🔖️CommandSurface
 /// 🏷️ Every declared manifest action id must be reachable as exactly one command row, and every row's
 /// wire keyword must be distinct — the cross-cutting invariant `app_commands!` is there to hold.

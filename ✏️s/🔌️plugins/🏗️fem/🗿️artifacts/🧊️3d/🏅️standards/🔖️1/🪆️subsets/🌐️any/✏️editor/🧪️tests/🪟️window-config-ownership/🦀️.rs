@@ -98,7 +98,7 @@ fn fem3d_window_config_runtime_isolates_same_kind_instances_and_restores_packs()
                     let document_before = app.document_pack().await.map_err(|error| format!("{error:?}"))?;
                     let app_before = app.config_pack().await.map_err(|error| format!("{error:?}"))?;
                     dispatch(&mut app, &model_left, Fem3dCommand::SetCamera(renderer_camera_command()), 1).await?;
-                    dispatch(&mut app, &results_left, Fem3dCommand::SetResultDisplay(set_result_display::SetResultDisplay { source_id: Some("dead".into()), mode: "modal".into(), mode_index: 2 }), 1).await?;
+                    dispatch(&mut app, &results_left, Fem3dCommand::SetResultDisplay(set_result_display::SetResultDisplay { source_id: Some("dead".into()), mode: "modal".into(), mode_index: 2, field: None, value: None, window_id: None }), 1).await?;
                     let document_after = app.document_pack().await.map_err(|error| format!("{error:?}"))?;
                     let app_after = app.config_pack().await.map_err(|error| format!("{error:?}"))?;
                     if document_before.pack != document_after.pack || document_before.spr != document_after.spr {

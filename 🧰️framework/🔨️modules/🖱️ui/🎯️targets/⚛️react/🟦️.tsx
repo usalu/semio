@@ -9699,7 +9699,7 @@ function PaneResizeHandle({
  * Props interface for the Pane component.
  **/
 export interface PaneProps {
-  /** @emoji 🆔️ The pane container's own DOM id — rendered on the overlay root, and the stem every derived chrome id (`<id>.pane.fold`, `<id>.pane.fold-control`) falls back to. */
+  /** @emoji 🆔️ The pane container's own DOM id — rendered on the overlay root, and the stem every derived chrome id (`<id>.pane.fold`) falls back to. */
   readonly id: string;
   readonly anchor: Anchor;
   /** @emoji 🧭️ Fires while dragging the pane's handle, once per anchor crossed — omit to make the pane fixed (drag handle still renders as a pure affordance, matching panel toggles). */
@@ -9714,8 +9714,7 @@ export interface PaneProps {
   readonly minSize?: number;
   readonly maxSize?: number;
   readonly resizable?: boolean;
-  readonly enlarge?: WindowChromeControlAction;
-  /** @emoji ⛶️ Fill the {@link PaneHost} (window options focus/unfocus). */
+  /** @emoji ⛶️ Fill the {@link PaneHost} (programmatic span across the host). */
   readonly expanded?: boolean;
   readonly overlaySlot?: string;
   readonly overlayRef?: React.Ref<HTMLDivElement>;
@@ -9726,7 +9725,6 @@ export interface PaneProps {
   readonly stackClassName?: string;
   readonly stackDataAttrs?: Record<string, string | undefined>;
   readonly toggleId?: string;
-  readonly foldControlId?: string;
   readonly toggleDisabled?: boolean;
   readonly dimWhenOpen?: boolean;
   readonly onResizeActiveChange?: (active: boolean) => void;
@@ -9748,7 +9746,7 @@ const PANE_DEFAULT_MAX_SIZE = 600;
  * corners / side-middle; both edges for top/bottom-middle, matching panel grow), and (given `onAnchorChange`)
  * draggable by its handle to any of the eight anchors via {@link nearestAnchor} — dropped anywhere inside the
  * enclosing {@link PaneHost}, not just on the target slot, since the box is the only drop target there is.
- * Chrome matches panel toggles: semantic {@link icon} + label + trailing {@link DragHandle}. */
+ * Chrome matches panel toggles: semantic {@link icon} + label + trailing {@link DragHandle}; fold/unfold is the title chip only. */
 export const Pane: React.FC<PaneProps> = ({
   id,
   anchor,
@@ -9762,7 +9760,6 @@ export const Pane: React.FC<PaneProps> = ({
   minSize = PANE_DEFAULT_MIN_SIZE,
   maxSize = PANE_DEFAULT_MAX_SIZE,
   resizable: resizableProp,
-  enlarge,
   expanded = false,
   overlaySlot,
   overlayRef,
@@ -9773,7 +9770,6 @@ export const Pane: React.FC<PaneProps> = ({
   stackClassName,
   stackDataAttrs,
   toggleId,
-  foldControlId,
   toggleDisabled,
   dimWhenOpen = false,
   onResizeActiveChange,
@@ -9785,7 +9781,6 @@ export const Pane: React.FC<PaneProps> = ({
 }) => {
   const host = usePaneHostContext();
   const mobile = useUiMobile();
-  const collapseLabel = useLabel("ui.common.collapse");
   const paneRootRef = reactHostPort.useRef<HTMLDivElement>(null);
   const setPaneRootRef = reactHostPort.useCallback(
     (element: HTMLDivElement | null) => {
@@ -9834,16 +9829,6 @@ export const Pane: React.FC<PaneProps> = ({
         maxWidth: !mobile && !effectiveFolded ? `min(100% - (var(--spacing-single) * 2)${inlineEdgeReservePx > 0 ? ` - ${inlineEdgeReservePx}px` : ""}, ${size}px)` : undefined,
         ...chromePanelSafeAreaStyle(anchor, { inlinePx: inlineEdgeReservePx, blockPx: 0 }),
       };
-  const paneFoldControl =
-    !effectiveFolded && onFoldToggle
-      ? {
-          id: foldControlId ?? childElementId(id, "pane", "fold-control"),
-          slot: "pane-fold",
-          icon: <CloseIcon className="size-small" />,
-          label: collapseLabel,
-          onClick: onFoldToggle,
-        }
-      : undefined;
   const resizeSides: readonly ("left" | "right")[] = horizontal === "middle" ? ["left", "right"] : [horizontal === "left" ? "right" : "left"];
   const resizeDeltaFactor = horizontal === "middle" ? 2 : 1;
   const chromeToggleId = toggleId ?? childElementId(id, "pane", "fold");
@@ -9890,8 +9875,6 @@ export const Pane: React.FC<PaneProps> = ({
             bodyClassName={bodyClassName}
             bodySlot={bodySlot}
             bodyStyle={bodyStyle}
-            enlarge={!effectiveFolded ? enlarge : undefined}
-            close={paneFoldControl}
             stackDataAttrs={stackDataAttrs}
             titleChips={
               <WindowPaneChromeToggle

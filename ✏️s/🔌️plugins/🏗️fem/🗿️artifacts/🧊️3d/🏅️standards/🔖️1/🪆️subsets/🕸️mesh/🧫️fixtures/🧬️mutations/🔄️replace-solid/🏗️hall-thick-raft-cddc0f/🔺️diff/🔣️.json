@@ -55,7 +55,8 @@
           "height": 0.45,
           "layers": 2,
           "meshSize": 0.75,
-          "materialId": "c25_30"
+          "materialId": "c25_30",
+          "axis": "z"
         }
       }
     ],

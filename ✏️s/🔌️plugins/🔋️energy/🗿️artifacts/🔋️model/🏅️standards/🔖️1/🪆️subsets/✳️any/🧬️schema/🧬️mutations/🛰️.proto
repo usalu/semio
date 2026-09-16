@@ -1598,6 +1598,11 @@ message RenameGasMaterial {
   string new_name = 2;
 }
 
+message ChangeMaterialRoughness {
+  uint32 id = 1;
+  string new_roughness = 2;
+}
+
 message EnergyModelMutation {
   oneof kind {
     RenameModel rename_model = 1;
@@ -1886,5 +1891,6 @@ message EnergyModelMutation {
     ChangeGasMaterialThickness change_gas_material_thickness = 322;
     ChangeGasMaterialGas change_gas_material_gas = 323;
     RenameGasMaterial rename_gas_material = 324;
+    ChangeMaterialRoughness change_material_roughness = 325;
   }
 }

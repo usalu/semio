@@ -621,7 +621,7 @@ impl Fem3dNumericalChild {
         let layers = solid.layers.max(1);
         let layer = index / footprint;
         let point = *self.solid_points.get(index % footprint).ok_or_else(|| b"fem3d.numerical-solid-point".to_vec())?;
-        Ok([point[0], point[1], solid.base_z + solid.height * layer as f64 / layers as f64])
+        Ok(solid.axis.to_world(point[0], point[1], solid.base_z + solid.height * layer as f64 / layers as f64))
     }
 
     fn solid_tet_indices(&self) -> Result<[usize; 4], Vec<u8>> {
@@ -1552,7 +1552,7 @@ impl Fem3dNumericalChild {
                     let position = |index: usize| -> Result<[f64; 3], Vec<u8>> {
                         let layer = index / meshed.points.len();
                         let point = *meshed.points.get(index % meshed.points.len()).ok_or_else(|| b"fem3d.numerical-self-weight-solid-point".to_vec())?;
-                        Ok([point[0], point[1], solid.base_z + solid.height * layer as f64 / solid.layers as f64])
+                        Ok(solid.axis.to_world(point[0], point[1], solid.base_z + solid.height * layer as f64 / solid.layers as f64))
                     };
                     let p0 = position(indices[0])?;
                     let p1 = position(indices[1])?;
@@ -2522,7 +2522,7 @@ impl Fem3dPageVisualJob {
                 }
                 let divisor = self.point_cursor.max(1) as f64;
                 let kind = if solid.layers == 1 { 1 } else { 2 };
-                self.push_item(1, [Some(&solid.id), Some(if kind == 1 { "tetrahedron" } else { "hexahedron" }), None, None], Fem3dVisualItemPayload { numbers: Self::instance_numbers([self.solid_sum[0] / divisor, self.solid_sum[1] / divisor, solid.base_z + solid.height * 0.5], [1.0, 1.0, solid.height]), number_len: 14, indexes: [kind, 0, 0, 0, 0, 0, 0, 0], index_len: 1, flags: 1 })?;
+                self.push_item(1, [Some(&solid.id), Some(if kind == 1 { "tetrahedron" } else { "hexahedron" }), None, None], Fem3dVisualItemPayload { numbers: Self::instance_numbers(solid.axis.to_world(self.solid_sum[0] / divisor, self.solid_sum[1] / divisor, solid.base_z + solid.height * 0.5), [1.0, 1.0, solid.height]), number_len: 14, indexes: [kind, 0, 0, 0, 0, 0, 0, 0], index_len: 1, flags: 1 })?;
                 self.cursor += 1;
                 self.point_cursor = 0;
                 self.solid_sum = [0.0; 2];

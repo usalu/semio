@@ -277,7 +277,7 @@ export type Fem2dSnapshot = {
 
 export type Fem3dNode = { readonly id: string; readonly x: number; readonly y: number; readonly z: number };
 export type Fem3dElement = { readonly kind: string; readonly id: string; readonly start: string; readonly end: string; readonly materialId: string; readonly sectionId: string; readonly roll: number };
-export type Fem3dSolid = { readonly id: string; readonly name: string; readonly outline: readonly FemVec2[]; readonly holes: readonly FemVec2[]; readonly baseZ: number; readonly height: number; readonly layers: number; readonly meshSize: number; readonly materialId: string };
+export type Fem3dSolid = { readonly id: string; readonly name: string; readonly outline: readonly FemVec2[]; readonly holes: readonly FemVec2[]; readonly baseZ: number; readonly height: number; readonly layers: number; readonly meshSize: number; readonly materialId: string; readonly axis: "x" | "y" | "z" };
 
 /** @emoji 🧊️ The subset of `Fem3dSnapshot` (`🗿️artifacts/🧊️3d/🦀️.rs`) the 3D stories render. */
 export type Fem3dSnapshot = {
@@ -417,6 +417,7 @@ export function parseFem3dDsl(dslText: string): Fem3dSnapshot {
       layers: num(row.layers, 1),
       meshSize: num(row.meshSize, 1),
       materialId: text(row.materialId),
+      axis: (text(row.axis) === "x" || text(row.axis) === "y" ? text(row.axis) : "z") as "x" | "y" | "z",
     })),
     materials: materials(doc.tables.materials),
     sections: sections(doc.tables.sections),

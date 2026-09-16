@@ -1997,6 +1997,9 @@ impl SceneDoc for Board2dScene {
 /// [`Canvas2dSceneLane`], pinned against `🧫️fixtures/🚚️board2d-scene-lanes/🔣️.json` on both sides.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Board2dSceneLane {
+    /// 🧩️ The whole fixture graph — the one payload that outgrows the 32 KiB surface doc (Nakagin's
+    /// 180-node puzzle 2d board is ~100 KiB of JSON), so it always rides as its own paged carrier.
+    Fixture,
     ToolRunTrace,
 }
 
@@ -2004,19 +2007,19 @@ pub enum Board2dSceneLane {
 pub const BOARD2D_SCENE_LANE_KEY_PREFIX: &str = "framework.scene.board2d.";
 
 /// 🚚️ Wire name of each [`Board2dSceneLane`], in `Board2dSceneLane::ALL` order.
-pub const BOARD2D_SCENE_LANE_NAMES: [&str; 1] = ["toolRunTrace"];
+pub const BOARD2D_SCENE_LANE_NAMES: [&str; 2] = ["fixture", "toolRunTrace"];
 
 /// 🚚️ [`Board2dScene`] field each lane carries, spelled as its serialized (camelCase) name.
-pub const BOARD2D_SCENE_LANE_FIELDS: [&str; 1] = ["toolRunTrace"];
+pub const BOARD2D_SCENE_LANE_FIELDS: [&str; 2] = ["fixtureJson", "toolRunTrace"];
 
 /// 🚚️ Reserved carrier key of each lane.
-pub const BOARD2D_SCENE_LANE_BODY_KEYS: [&str; 1] = ["framework.scene.board2d.toolRunTrace"];
+pub const BOARD2D_SCENE_LANE_BODY_KEYS: [&str; 2] = ["framework.scene.board2d.fixture", "framework.scene.board2d.toolRunTrace"];
 
 /// 🚚️ Whether each lane's [`Board2dScene`] field is an `Option<String>`.
-pub const BOARD2D_SCENE_LANE_OPTIONAL: [bool; 1] = [true];
+pub const BOARD2D_SCENE_LANE_OPTIONAL: [bool; 2] = [false, true];
 
 impl Board2dSceneLane {
-    pub const ALL: [Self; 1] = [Self::ToolRunTrace];
+    pub const ALL: [Self; 2] = [Self::Fixture, Self::ToolRunTrace];
 
     /// 🏷️ See [`BOARD2D_SCENE_LANE_NAMES`].
     // 🚫️async: E1 pure table lookup — see R9.
@@ -2058,6 +2061,7 @@ impl Board2dSceneLane {
     // 🚫️async: E6 sync payload construction — see this module's own header.
     pub fn take(self, scene: &mut Board2dScene) -> Option<String> {
         match self {
+            Self::Fixture => Some(std::mem::take(&mut scene.fixture_json)),
             Self::ToolRunTrace => scene.tool_run_trace.take(),
         }
     }
@@ -2066,6 +2070,7 @@ impl Board2dSceneLane {
     // 🚫️async: E6 sync payload construction — see this module's own header.
     pub fn put(self, scene: &mut Board2dScene, payload: String) {
         match self {
+            Self::Fixture => scene.fixture_json = payload,
             Self::ToolRunTrace => scene.tool_run_trace = Some(payload),
         }
     }

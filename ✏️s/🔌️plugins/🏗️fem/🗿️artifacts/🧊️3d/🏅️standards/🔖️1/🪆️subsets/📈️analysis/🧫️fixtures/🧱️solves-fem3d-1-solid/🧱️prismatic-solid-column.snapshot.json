@@ -66,6 +66,7 @@
   "sections": [],
   "solids": [
     {
+      "axis": "z",
       "baseZ": 0.0,
       "height": 4.0,
       "holes": [],

@@ -4,9 +4,38 @@
 mod schema;
 pub use schema::*;
 
+impl Default for Fem3dGumballConfig {
+    /// 🧭️ Every handle a FEM entity can honestly take: moves along axes and planes, a rotation, and
+    /// scaling per axis or uniformly — the options rail turns the ones a gesture does not need off.
+    fn default() -> Self {
+        Self { move_axes: true, move_planes: true, rotate: true, scale_axes: true, scale_uniform: true }
+    }
+}
+
+impl Fem3dGumballConfig {
+    /// 🎚️ Sets, or with `pressed = None` toggles, one named handle flag; an unknown flag is refused.
+    pub fn set_flag(&mut self, flag: &str, pressed: Option<bool>) -> Result<(), semio_framework_plugin::Fault> {
+        let slot = match flag {
+            "move" | "moveAxes" => &mut self.move_axes,
+            "movePlanes" => &mut self.move_planes,
+            "rotate" => &mut self.rotate,
+            "scaleAxes" => &mut self.scale_axes,
+            "scaleUniform" => &mut self.scale_uniform,
+            other => return Err(semio_framework_plugin::Fault::from(format!("fem3d.gumball-flag.unknown: '{other}' is not a gumball handle flag"))),
+        };
+        *slot = pressed.unwrap_or(!*slot);
+        Ok(())
+    }
+
+    /// 🫥️ An all-off gumball would draw nothing to grab.
+    pub fn any(&self) -> bool {
+        self.move_axes || self.move_planes || self.rotate || self.scale_axes || self.scale_uniform
+    }
+}
+
 impl Default for Fem3dModelWindowConfig {
     fn default() -> Self {
-        Self { camera: crate::viewport::INITIAL }
+        Self { camera: crate::viewport::INITIAL, gumball: Fem3dGumballConfig::default() }
     }
 }
 
@@ -137,6 +166,16 @@ impl semio_framework_plugin::WindowConfigOwner for Fem3dModelWindowConfigOwner {
 
 pub fn current<C>(view: &semio_framework_plugin::ConfigView<'_, C>) -> Fem3dModelWindowConfig {
     view.window::<Fem3dModelWindowConfigOwner>().cloned().unwrap_or_default()
+}
+
+/// 🪟️ The captured model-window partition, or `None` when the projection captured another window.
+pub fn captured<C>(view: &semio_framework_plugin::ConfigView<'_, C>) -> Option<Fem3dModelWindowConfig> {
+    view.window::<Fem3dModelWindowConfigOwner>().cloned()
+}
+
+/// 🎚️ The whole-record publication into one exact model-window partition.
+pub fn addressed_to(window_id: &str, config: Fem3dModelWindowConfig) -> semio_framework_plugin::WindowConfigMutation {
+    semio_framework_plugin::WindowConfigMutation::of::<Fem3dModelWindowConfigOwner>(window_id, Fem3dModelWindowConfigMutation::Snapshot { config: Box::new(config) })
 }
 
 pub fn addressed(view: &semio_framework_plugin::ViewModel, config: Fem3dModelWindowConfig) -> Result<semio_framework_plugin::WindowConfigMutation, semio_framework_plugin::Fault> {

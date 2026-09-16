@@ -95,7 +95,7 @@ impl ArtifactViewer for Fem3dViewer {
 
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         match body_key {
-            model::BODY_KEY => crate::live_visual::with_live_visual(doc.render_operation(), model::render),
+            model::BODY_KEY => crate::live_visual::with_live_visual(doc.render_operation(), |visual| model::render(doc.snapshot, visual)),
             _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fem3d viewer unknown-body label admission failed")),
         }
         .map(semio_framework_plugin::built_to_component_tree)

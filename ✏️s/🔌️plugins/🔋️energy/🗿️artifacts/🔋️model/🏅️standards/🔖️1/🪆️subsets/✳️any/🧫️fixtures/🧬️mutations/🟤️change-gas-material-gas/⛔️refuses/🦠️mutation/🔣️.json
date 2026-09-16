@@ -1,1 +1,5 @@
-{}
+{
+  "mutation": "changeGasMaterialGas",
+  "id": 99,
+  "newGas": "Argon"
+}

@@ -26,6 +26,7 @@
     "height": 0.25,
     "layers": 2,
     "meshSize": 0.5,
-    "materialId": "c30"
+    "materialId": "c30",
+    "axis": "z"
   }
 }

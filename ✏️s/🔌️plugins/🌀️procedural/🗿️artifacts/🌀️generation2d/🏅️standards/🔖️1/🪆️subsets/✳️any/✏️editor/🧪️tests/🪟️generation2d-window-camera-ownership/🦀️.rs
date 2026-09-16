@@ -90,8 +90,8 @@ fn generation2d_window_camera_raw_handlers_are_explicit_no_ops() {
     assert!(viewport.artifact_mutations.is_empty() && viewport.config_mutations.is_empty() && viewport.window_config_mutations.is_empty() && viewport.draft_mutations.is_empty() && viewport.effects.is_empty() && viewport.events.is_empty());
     let canvas = [
         canvas_pointer_down::handle(&canvas_pointer_down::CanvasPointerDown {}, &document, &config_view, &mut session).expect("raw Canvas pointer-down handler"),
-        canvas_pointer_move::handle(&canvas_pointer_move::CanvasPointerMove {}, &document, &config_view, &mut session).expect("raw Canvas pointer-move handler"),
-        canvas_pointer_up::handle(&canvas_pointer_up::CanvasPointerUp {}, &document, &config_view, &mut session).expect("raw Canvas pointer-up handler"),
+        canvas_pointer_move::handle(&canvas_pointer_move::CanvasPointerMove { samples: Vec::new() }, &document, &config_view, &mut session).expect("raw Canvas pointer-move handler"),
+        canvas_pointer_up::handle(&canvas_pointer_up::CanvasPointerUp { cancelled: false }, &document, &config_view, &mut session).expect("raw Canvas pointer-up handler"),
         canvas_wheel::handle(&canvas_wheel::CanvasWheel {}, &document, &config_view, &mut session).expect("raw Canvas wheel handler"),
     ];
     assert!(canvas.iter().all(|emit| emit.artifact_mutations.is_empty() && emit.config_mutations.is_empty() && emit.window_config_mutations.is_empty() && emit.draft_mutations.is_empty() && emit.effects.is_empty() && emit.events.is_empty()));
@@ -217,8 +217,8 @@ fn generation2d_window_camera_ownership_runtime_isolates_routes_renders_and_reop
                     for view in [&edit_left, &generate_left] {
                         for command in [
                             Generation2dCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown {}),
-                            Generation2dCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove {}),
-                            Generation2dCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp {}),
+                            Generation2dCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { samples: Vec::new() }),
+                            Generation2dCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { cancelled: false }),
                             Generation2dCommand::CanvasWheel(canvas_wheel::CanvasWheel {}),
                         ] {
                             let receipt = dispatch(&mut app, Some(view), command).await?;

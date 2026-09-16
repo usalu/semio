@@ -20,115 +20,38 @@ fn action(id: &str, en: &str, de: &str, args: Vec<ActionArgDef>) -> ActionDefini
     ActionDefinition::bounded_catalog(id, LocalizedLabel::native(en, de), ActionKind::Mutation).with_args(args)
 }
 
-/// 🌳️ The authored verbs this window owns beside the kit's generic `set-node` — surface, material,
-/// thermostat and site editing, each addressing its target by the model's own `EntityId`.
+/// 🌳️ The authored verbs this window owns beside the kit's generic `set-node`. Deliberately SHORT:
+/// an action declared on a window kind becomes "explicitly owned" and `AppBuilder::build_definition`
+/// then stops copying it onto every OTHER window, so a panel control that dispatches it while some
+/// other window is active is refused with `window kind … does not own action …`. Everything the
+/// inspector panel can dispatch therefore lives app-level in
+/// `crate::editor::model::inspector_action_definitions`, not here — only the two verbs whose
+/// arguments are meaningless outside this window's own tree stay.
+/// 🆕️ `create-surface` — declared here but exported for the APP-level roster, because the
+/// `mod+shift+s` keybinding that reaches it must fire while ANY window is active. Listing it in
+/// [`actions`] would make it this window's alone; `crate::editor::model::window_shared_action_definitions`
+/// is its real home.
+pub fn create_surface_action() -> ActionDefinition {
+    action(
+        "create-surface",
+        "Create surface",
+        "Fläche anlegen",
+        vec![
+            ActionArgDef::text("name", LocalizedLabel::native("Name", "Bezeichnung")).required(),
+            ActionArgDef::number("zone", LocalizedLabel::native("Zone id", "Zonen-Id")).required(),
+            ActionArgDef::number("construction", LocalizedLabel::native("Construction id", "Konstruktions-Id")).required(),
+            ActionArgDef::text("class", LocalizedLabel::native("Surface class", "Flächenklasse")),
+        ],
+    )
+}
+
 pub fn actions() -> Vec<ActionDefinition> {
     vec![
-        action(
-            "create-surface",
-            "Create surface",
-            "Fläche anlegen",
-            vec![
-                ActionArgDef::text("name", LocalizedLabel::native("Name", "Bezeichnung")).required(),
-                ActionArgDef::number("zone", LocalizedLabel::native("Zone id", "Zonen-Id")).required(),
-                ActionArgDef::number("construction", LocalizedLabel::native("Construction id", "Konstruktions-Id")).required(),
-                ActionArgDef::text("class", LocalizedLabel::native("Surface class", "Flächenklasse")),
-            ],
-        ),
-        action("delete-surface", "Delete surface", "Fläche löschen", vec![ActionArgDef::number("surface", LocalizedLabel::native("Surface id", "Flächen-Id")).required()]),
         action(
             "assign-surface-construction",
             "Assign construction",
             "Konstruktion zuweisen",
             vec![ActionArgDef::number("surface", LocalizedLabel::native("Surface id", "Flächen-Id")).required(), ActionArgDef::number("construction", LocalizedLabel::native("Construction id", "Konstruktions-Id")).required()],
-        ),
-        action(
-            "set-material-property",
-            "Set material property",
-            "Materialeigenschaft setzen",
-            vec![
-                ActionArgDef::number("material", LocalizedLabel::native("Material id", "Material-Id")).required(),
-                ActionArgDef::text("property", LocalizedLabel::native("Property", "Eigenschaft")).required(),
-                ActionArgDef::number("value", LocalizedLabel::native("Value", "Wert")).required(),
-            ],
-        ),
-        // 🔍️ The three generic inspector verbs. `value` is TEXT for all three: one verb has to carry
-        // a name, an enum spelling, a flag and a scalar alike, which is exactly the shape a rendered
-        // control's own value arrives in.
-        action(
-            "set-surface-property",
-            "Set surface property",
-            "Flächeneigenschaft setzen",
-            vec![
-                ActionArgDef::number("surface", LocalizedLabel::native("Surface id", "Flächen-Id")).required(),
-                ActionArgDef::text("property", LocalizedLabel::native("Property", "Eigenschaft")).required(),
-                ActionArgDef::text("value", LocalizedLabel::native("Value", "Wert")).required(),
-                ActionArgDef::number("partnerSurface", LocalizedLabel::native("Interzone partner surface", "Nachbarfläche")),
-            ],
-        ),
-        action(
-            "set-fenestration-property",
-            "Set window property",
-            "Fenstereigenschaft setzen",
-            vec![
-                ActionArgDef::number("fenestration", LocalizedLabel::native("Window id", "Fenster-Id")).required(),
-                ActionArgDef::text("property", LocalizedLabel::native("Property", "Eigenschaft")).required(),
-                ActionArgDef::text("value", LocalizedLabel::native("Value", "Wert")).required(),
-            ],
-        ),
-        action(
-            "set-zone-property",
-            "Set zone property",
-            "Zoneneigenschaft setzen",
-            vec![
-                ActionArgDef::number("zone", LocalizedLabel::native("Zone id", "Zonen-Id")).required(),
-                ActionArgDef::text("property", LocalizedLabel::native("Property", "Eigenschaft")).required(),
-                ActionArgDef::text("value", LocalizedLabel::native("Value", "Wert")).required(),
-            ],
-        ),
-        action(
-            "set-glazing-material-property",
-            "Set glazing material property",
-            "Verglasungsmaterial-Eigenschaft setzen",
-            vec![
-                ActionArgDef::number("material", LocalizedLabel::native("Glazing material id", "Verglasungsmaterial-Id")).required(),
-                ActionArgDef::text("property", LocalizedLabel::native("Property", "Eigenschaft")).required(),
-                ActionArgDef::text("value", LocalizedLabel::native("Value", "Wert")).required(),
-            ],
-        ),
-        action(
-            "set-gas-material-property",
-            "Set gas gap property",
-            "Gasfüllungs-Eigenschaft setzen",
-            vec![
-                ActionArgDef::number("material", LocalizedLabel::native("Gas gap id", "Gasfüllungs-Id")).required(),
-                ActionArgDef::text("property", LocalizedLabel::native("Property", "Eigenschaft")).required(),
-                ActionArgDef::text("value", LocalizedLabel::native("Value", "Wert")).required(),
-            ],
-        ),
-        action(
-            "set-thermostat-setpoints",
-            "Set thermostat setpoints",
-            "Thermostat-Sollwerte setzen",
-            vec![
-                ActionArgDef::number("thermostat", LocalizedLabel::native("Thermostat id", "Thermostat-Id")).required(),
-                ActionArgDef::number("heatingSchedule", LocalizedLabel::native("Heating setpoint schedule", "Heiz-Sollwertprofil")).required(),
-                ActionArgDef::number("coolingSchedule", LocalizedLabel::native("Cooling setpoint schedule", "Kühl-Sollwertprofil")).required(),
-                ActionArgDef::number("heatingThrottleRangeK", LocalizedLabel::native("Heating throttle range (K)", "Heiz-Regelbereich (K)")),
-                ActionArgDef::number("coolingThrottleRangeK", LocalizedLabel::native("Cooling throttle range (K)", "Kühl-Regelbereich (K)")),
-            ],
-        ),
-        action(
-            "set-site",
-            "Set site",
-            "Standort setzen",
-            vec![
-                ActionArgDef::slider("latitudeDeg", LocalizedLabel::native("Latitude (°)", "Breitengrad (°)"), -90.0, 90.0).required(),
-                ActionArgDef::slider("longitudeDeg", LocalizedLabel::native("Longitude (°)", "Längengrad (°)"), -180.0, 180.0).required(),
-                ActionArgDef::number("elevationM", LocalizedLabel::native("Elevation (m)", "Höhe (m)")),
-                ActionArgDef::number("timeZoneHours", LocalizedLabel::native("Time zone (h)", "Zeitzone (h)")),
-                ActionArgDef::number("northAxisDeg", LocalizedLabel::native("North axis (°)", "Nordachse (°)")),
-            ],
         ),
     ]
 }

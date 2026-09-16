@@ -1,0 +1,40 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/fem/3d/1/load/mutation/replace-combination/schema.json",
+  "title": "ReplaceCombination",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newCombination"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "newCombination": {
+      "title": "FemCombination",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "terms"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "terms": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "number"
+          }
+        }
+      }
+    }
+  }
+}

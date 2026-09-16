@@ -216,7 +216,7 @@ const clickTab = async (id: string) => {
 };
 
 const selectExample = async (wanted: RegExp) => {
-  const native = page.locator('select[id="playground.navbar.fixture"], select').first();
+  const native = page.locator('select[id="playground.navbar.fixture"]').first();
   if (await countSafe(native)) {
     const labels = await native.locator("option").allTextContents();
     const label = labels.find((l) => wanted.test(l));
@@ -225,7 +225,19 @@ const selectExample = async (wanted: RegExp) => {
       return label;
     }
   }
-  return null;
+  const trigger = page.locator('[id="playground.navbar.fixture"]').first();
+  if (!(await countSafe(trigger))) return null;
+  await trigger.click({ timeout: 3000 }).catch(() => {});
+  await page.waitForTimeout(600);
+  const option = page.locator('[role="option"]').filter({ hasText: wanted }).first();
+  if (!(await countSafe(option))) {
+    await page.keyboard.press("Escape");
+    return null;
+  }
+  const label = (await option.innerText().catch(() => "")).trim();
+  await option.click({ timeout: 3000 }).catch(() => {});
+  await page.waitForTimeout(500);
+  return label || "?";
 };
 //#endregion 🔖️Verdicts
 

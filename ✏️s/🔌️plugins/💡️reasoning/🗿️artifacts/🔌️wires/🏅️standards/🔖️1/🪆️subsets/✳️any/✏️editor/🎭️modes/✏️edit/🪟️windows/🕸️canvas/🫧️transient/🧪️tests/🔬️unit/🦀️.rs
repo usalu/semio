@@ -38,8 +38,8 @@ async fn wires_pointer_move_uses_only_the_captured_canvas_and_publishes_document
             let y = row["y"].as_f64().ok_or("missing y")?;
             let command = match row["command"].as_str().ok_or("missing command")? {
                 "down" => WiresCommand::CanvasPointerDown(CanvasPointerDown { id: Some(vectors["node"].as_str().ok_or("missing node")?.into()), x, y }),
-                "move" => WiresCommand::CanvasPointerMove(CanvasPointerMove { x, y }),
-                "up" => WiresCommand::CanvasPointerUp(CanvasPointerUp {}),
+                "move" => WiresCommand::CanvasPointerMove(CanvasPointerMove { x, y, samples: Vec::new() }),
+                "up" => WiresCommand::CanvasPointerUp(CanvasPointerUp { cancelled: false }),
                 _ => return Err("unknown gesture command".into()),
             };
             let window = view.for_window_instance(row["window"].as_str().ok_or("missing window")?).ok_or("unknown window")?;
@@ -99,7 +99,7 @@ async fn wires_pointer_move_uses_only_the_captured_canvas_and_publishes_document
             return Err("gesture persisted window state in app config".into());
         }
         let left = view.for_window_instance("left").ok_or("left window absent")?;
-        for command in [WiresCommand::CanvasPointerDown(CanvasPointerDown { id: Some("node-1".into()), x: 1.0, y: 1.0 }), WiresCommand::CanvasPointerMove(CanvasPointerMove { x: 5.0, y: 7.0 })] {
+        for command in [WiresCommand::CanvasPointerDown(CanvasPointerDown { id: Some("node-1".into()), x: 1.0, y: 1.0 }), WiresCommand::CanvasPointerMove(CanvasPointerMove { x: 5.0, y: 7.0, samples: Vec::new() })] {
             app.dispatch_typed(command, &ActionMeta { view_state: Some(left.clone()), ..artifact_app_laws::meta("missing-target-drag") }).await.map_err(|error| format!("{error:?}"))?;
             artifact_app_laws::settle_registered_typed_operation(&mut app, 1).await.map_err(|error| format!("{error:?}"))?;
         }
@@ -113,7 +113,7 @@ async fn wires_pointer_move_uses_only_the_captured_canvas_and_publishes_document
         .map_err(|error| format!("{error:?}"))?;
         app.dispatch_typed(WiresCommand::DeleteSelection(DeleteSelection {}), &ActionMeta { view_state: Some(left.clone()), ..artifact_app_laws::meta("missing-target-delete") }).await.map_err(|error| format!("{error:?}"))?;
         artifact_app_laws::settle_registered_typed_operation(&mut app, 1).await.map_err(|error| format!("{error:?}"))?;
-        app.dispatch_typed(WiresCommand::CanvasPointerUp(CanvasPointerUp {}), &ActionMeta { view_state: Some(left.clone()), ..artifact_app_laws::meta("missing-target-release") }).await.map_err(|error| format!("{error:?}"))?;
+        app.dispatch_typed(WiresCommand::CanvasPointerUp(CanvasPointerUp { cancelled: false }), &ActionMeta { view_state: Some(left.clone()), ..artifact_app_laws::meta("missing-target-release") }).await.map_err(|error| format!("{error:?}"))?;
         let missing_release = artifact_app_laws::settle_registered_typed_operation(&mut app, 1).await.map_err(|error| format!("{error:?}"))?;
         if missing_release.lanes.contains(&semio_framework_plugin::app::TypedOperationResultLane::Artifact) {
             return Err("missing drag target published a durable move".into());
@@ -185,7 +185,7 @@ async fn wires_pointer_move_document_replacement_clears_only_successful_reload_p
         artifact_app_laws::settle_registered_typed_operation(&mut app, 1).await.map_err(|error| format!("{error:?}"))?;
         let config_generation = app.window_config_generation(&left).await.map_err(|error| format!("{error:?}"))?.ok_or("window config generation absent")?;
         dispatch_gesture(&mut app, WiresCommand::CanvasPointerDown(CanvasPointerDown { id: Some("node-1".into()), x: 10.0, y: 20.0 }), &left).await?;
-        dispatch_gesture(&mut app, WiresCommand::CanvasPointerMove(CanvasPointerMove { x: 16.0, y: 28.0 }), &left).await?;
+        dispatch_gesture(&mut app, WiresCommand::CanvasPointerMove(CanvasPointerMove { x: 16.0, y: 28.0, samples: Vec::new() }), &left).await?;
         app.load_document_pack(&pack).await.map_err(|error| format!("{error:?}"))?;
         let cleared = app.window_transient_snapshot(&left).map_err(|error| format!("{error:?}"))?.ok_or("cleared transient absent")?;
         if cleared.get::<WiresCanvasTransientOwner>() != Some(&WiresCanvasTransient::default()) {
@@ -196,7 +196,7 @@ async fn wires_pointer_move_document_replacement_clears_only_successful_reload_p
             return Err("document reload changed the concrete canvas camera".into());
         }
         dispatch_gesture(&mut app, WiresCommand::CanvasPointerDown(CanvasPointerDown { id: Some("node-1".into()), x: 4.0, y: 5.0 }), &left).await?;
-        dispatch_gesture(&mut app, WiresCommand::CanvasPointerMove(CanvasPointerMove { x: 7.0, y: 9.0 }), &left).await?;
+        dispatch_gesture(&mut app, WiresCommand::CanvasPointerMove(CanvasPointerMove { x: 7.0, y: 9.0, samples: Vec::new() }), &left).await?;
         let preview = app.window_transient_snapshot(&left).map_err(|error| format!("{error:?}"))?.and_then(|snapshot| snapshot.get::<WiresCanvasTransientOwner>().cloned()).ok_or("active preview absent")?;
         let preview_generation = app.window_transient_generation(&left).map_err(|error| format!("{error:?}"))?.ok_or("preview generation absent")?;
         let mut malformed = pack.clone();
@@ -259,11 +259,11 @@ async fn wires_pointer_move_pending_release_cancels_and_retires_with_small_or_ze
         if !retirement.terminal_is_empty() {
             return Err("cancellation seed envelope did not retire".into());
         }
-        for command in [WiresCommand::CanvasPointerDown(CanvasPointerDown { id: Some("node-1".into()), x: 0.0, y: 0.0 }), WiresCommand::CanvasPointerMove(CanvasPointerMove { x: 11.0, y: 13.0 })] {
+        for command in [WiresCommand::CanvasPointerDown(CanvasPointerDown { id: Some("node-1".into()), x: 0.0, y: 0.0 }), WiresCommand::CanvasPointerMove(CanvasPointerMove { x: 11.0, y: 13.0, samples: Vec::new() })] {
             app.dispatch_typed(command, &ActionMeta { view_state: Some(left.clone()), ..artifact_app_laws::meta("cancel-release") }).await.map_err(|error| format!("{error:?}"))?;
             artifact_app_laws::settle_registered_typed_operation(&mut app, 1).await.map_err(|error| format!("{error:?}"))?;
         }
-        app.dispatch_typed(WiresCommand::CanvasPointerUp(CanvasPointerUp {}), &ActionMeta { view_state: Some(left), ..artifact_app_laws::meta("cancel-release") }).await.map_err(|error| format!("{error:?}"))?;
+        app.dispatch_typed(WiresCommand::CanvasPointerUp(CanvasPointerUp { cancelled: false }), &ActionMeta { view_state: Some(left), ..artifact_app_laws::meta("cancel-release") }).await.map_err(|error| format!("{error:?}"))?;
         if !app.has_pending_typed_operations() {
             return Err("released drag did not enter retained publication".into());
         }
@@ -333,7 +333,7 @@ async fn wires_window_transient_retained_pointer_lifecycle_is_partitioned() {
     let result: Result<(), String> = async {
         let document = app.snapshot().map_err(|error| format!("{error:?}"))?;
         let config = app.config_pack().await.map_err(|error| format!("{error:?}"))?;
-        for command in [WiresCommand::CanvasPointerDown(CanvasPointerDown { id: None, x: 12.0, y: 24.0 }), WiresCommand::CanvasPointerUp(CanvasPointerUp {})] {
+        for command in [WiresCommand::CanvasPointerDown(CanvasPointerDown { id: None, x: 12.0, y: 24.0 }), WiresCommand::CanvasPointerUp(CanvasPointerUp { cancelled: false })] {
             app.dispatch_typed(command, &ActionMeta { view_state: Some(left.clone()), ..artifact_app_laws::meta("canvas") }).await.map_err(|error| format!("{error:?}"))?;
             let deadline = std::time::Instant::now() + std::time::Duration::from_secs(30);
             while app.has_pending_typed_operations() {
@@ -381,3 +381,122 @@ async fn wires_window_transient_retained_pointer_lifecycle_is_partitioned() {
     result.expect("concrete canvas transient ownership");
     eprintln!("[DEBUG] Wires retained pointer lifecycle advanced only its concrete canvas and preserved document/config envelopes");
 }
+
+//#region 🧵️BatchedSamplesAndCancel
+/// 🧵️ LAW (design L4 / §2 D): one batched `canvasPointerMove` lands the drag preview on its LAST
+/// sample exactly where three separate moves did; a `cancelled` release clears the drag WITHOUT
+/// publishing a `move_node` — the node stays at its document position and no Artifact lane fires.
+#[semio_framework_async_macros::async_test]
+async fn wires_batched_move_lands_on_its_last_sample_and_a_cancel_moves_nothing() {
+    use crate::editor::wires::commands::{canvas_pointer_down::CanvasPointerDown, canvas_pointer_move::CanvasPointerMove, canvas_pointer_up::CanvasPointerUp};
+    use crate::editor::wires::{create_wires_app, ReasoningWiresPlayApp, WiresCommand, WIRES_PLAY_WINDOW_CANVAS};
+    use semio_framework_plugin::{artifact_app_laws, ActionMeta, App, EditorApp, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance};
+    fn manifest() -> App {
+        App { definition: create_wires_app(), examples: Vec::new() }
+    }
+    async fn gesture(app: &mut VcsArtifactApp<EditorApp<ReasoningWiresPlayApp>>, command: WiresCommand, window: &ViewModel) -> Result<artifact_app_laws::TypedOperationFixtureReceipt, String> {
+        app.dispatch_typed(command, &ActionMeta { view_state: Some(window.clone()), ..artifact_app_laws::meta("batched-gesture") }).await.map_err(|error| format!("{error:?}"))?;
+        artifact_app_laws::settle_registered_typed_operation(app, 1).await.map_err(|error| format!("{error:?}"))
+    }
+    fn preview(app: &mut VcsArtifactApp<EditorApp<ReasoningWiresPlayApp>>, window: &ViewModel) -> Result<WiresCanvasTransient, String> {
+        app.window_transient_snapshot(window).map_err(|error| format!("{error:?}"))?.and_then(|snapshot| snapshot.get::<WiresCanvasTransientOwner>().cloned()).ok_or_else(|| "window transient absent".into())
+    }
+    let vectors: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🧫️fixtures/🖱️pointer-move.json")).unwrap();
+    let mut app = artifact_app_laws::new_app_with_registry::<EditorApp<ReasoningWiresPlayApp>>(manifest).await;
+    app.bind_instance_id(1).await;
+    let view = ViewModel { window_instances: vec![ViewWindowInstance { id: "left".into(), window_kind_id: WIRES_PLAY_WINDOW_CANVAS.into() }], ..Default::default() };
+    let left = view.for_window_instance("left").unwrap();
+    let result: Result<(), String> = async {
+        let mut seed = crate::empty_wires_snapshot();
+        seed.content = crate::wires_content_child_with_owner(vec![dsl::DslValue::from(&vectors["initialNode"])], Vec::new());
+        let envelope = store::create_document_envelope::<crate::WiresSnapshot, crate::WiresMutation>(crate::MINDMAP_WIRES_SCHEMA, "reasoning-wires", seed, None);
+        let pack = store::print_document_pack(&envelope).await.map_err(|error| format!("{error:?}"))?;
+        app.load_document_pack(&pack).await.map_err(|error| format!("{error:?}"))?;
+        let mut retirement = store::retire_document_envelope(
+            envelope,
+            std::sync::Arc::new(store::retirement::OwnedValueRetirementFactory::<crate::WiresSnapshot>::default()),
+            std::sync::Arc::new(store::retirement::OwnedValueRetirementFactory::<crate::WiresMutation>::default()),
+        );
+        for _ in 0..100_000 {
+            if matches!(retirement.close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(|error| format!("{error:?}"))?, store::SnapshotRetirementStep::Complete) {
+                break;
+            }
+        }
+        if !retirement.terminal_is_empty() {
+            return Err("seed envelope did not retire".into());
+        }
+
+        // 🧵️ Three separate moves ...
+        gesture(&mut app, WiresCommand::CanvasPointerDown(CanvasPointerDown { id: Some("node-1".into()), x: 10.0, y: 20.0 }), &left).await?;
+        for [x, y] in [[12.0, 22.0], [14.0, 26.0], [16.0, 28.0]] {
+            gesture(&mut app, WiresCommand::CanvasPointerMove(CanvasPointerMove { x, y, samples: Vec::new() }), &left).await?;
+        }
+        let one_per_event = preview(&mut app, &left)?;
+        if (one_per_event.drag_last_x, one_per_event.drag_last_y) != (16.0, 28.0) {
+            return Err(format!("separate moves did not land on the last move: {one_per_event:?}"));
+        }
+        // 🚫️ ... then a cancelled release: the drag is cleared, nothing moves, nothing publishes.
+        let receipt = gesture(&mut app, WiresCommand::CanvasPointerUp(CanvasPointerUp { cancelled: true }), &left).await?;
+        if receipt.lanes.contains(&semio_framework_plugin::app::TypedOperationResultLane::Artifact) {
+            return Err("a cancelled release published a durable move".into());
+        }
+        if preview(&mut app, &left)? != WiresCanvasTransient::default() {
+            return Err("a cancelled release left a drag preview behind".into());
+        }
+        let snapshot = app.snapshot().map_err(|error| format!("{error:?}"))?;
+        let node = crate::standards::v1::subsets::any::schema::inferences::find_board_node(&snapshot, "node-1").ok_or("node absent")?;
+        if crate::schema::node_position(&node) != (0.0, 0.0) {
+            return Err(format!("a cancelled release moved the node: {:?}", crate::schema::node_position(&node)));
+        }
+
+        // 🧵️ ... and the same three samples as ONE batch reproduce the separate-move preview exactly.
+        gesture(&mut app, WiresCommand::CanvasPointerDown(CanvasPointerDown { id: Some("node-1".into()), x: 10.0, y: 20.0 }), &left).await?;
+        gesture(&mut app, WiresCommand::CanvasPointerMove(CanvasPointerMove { x: 16.0, y: 28.0, samples: vec![[12.0, 22.0], [14.0, 26.0], [16.0, 28.0]] }), &left).await?;
+        let one_batch = preview(&mut app, &left)?;
+        if one_batch != one_per_event {
+            return Err(format!("one batch of three samples differs from three moves: {one_batch:?} != {one_per_event:?}"));
+        }
+        // 🎯️ The batch's LAST sample wins over the trailing x/y when they disagree.
+        gesture(&mut app, WiresCommand::CanvasPointerMove(CanvasPointerMove { x: 16.0, y: 28.0, samples: vec![[30.0, 40.0], [18.0, 24.0]] }), &left).await?;
+        let last_wins = preview(&mut app, &left)?;
+        if (last_wins.drag_last_x, last_wins.drag_last_y) != (18.0, 24.0) {
+            return Err(format!("the last sample did not win: {last_wins:?}"));
+        }
+        gesture(&mut app, WiresCommand::CanvasPointerUp(CanvasPointerUp { cancelled: true }), &left).await?;
+        if preview(&mut app, &left)? != WiresCanvasTransient::default() {
+            return Err("the second cancel left a drag preview behind".into());
+        }
+        Ok(())
+    }
+    .await;
+    if let Err(error) = &result {
+        eprintln!("[DEBUG] Wires batched gesture runtime failure before close: {error}");
+    }
+    artifact_app_laws::close_registered_fixture_app(&mut app);
+    result.expect("Wires batched move and cancelled release");
+    eprintln!("[DEBUG] Wires batched move: one batch lands on its last sample like separate moves; a cancel clears the drag and moves nothing");
+}
+
+/// 🧵️ LAW: a legacy one-per-event wire (no `samples`, no `cancelled`) decodes as one sample at
+/// `(x, y)` and a real release.
+#[semio_framework_async_macros::async_test]
+async fn wires_pointer_wire_defaults_samples_and_cancelled() {
+    use crate::editor::wires::commands::{canvas_pointer_move::CanvasPointerMove, canvas_pointer_up::CanvasPointerUp};
+    use dsl::FromValue;
+    let f = dsl::DslValue::float;
+    let moved = CanvasPointerMove::from_value(dsl::DslValue::Object(vec![("x".into(), f(5.0)), ("y".into(), f(6.0))])).expect("legacy move decodes");
+    assert!(moved.samples.is_empty());
+    assert_eq!(moved.samples_or_last(), vec![[5.0, 6.0]], "an absent `samples` is the single (x, y)");
+    assert_eq!(moved.last_sample(), [5.0, 6.0]);
+    assert!(moved.is_finite());
+    let pair = |x: f64, y: f64| dsl::DslValue::Array(vec![f(x), f(y)]);
+    let batched = CanvasPointerMove::from_value(dsl::DslValue::Object(vec![("x".into(), f(3.0)), ("y".into(), f(4.0)), ("samples".into(), dsl::DslValue::Array(vec![pair(1.0, 1.5), pair(3.0, 4.0)]))])).expect("batched move decodes");
+    assert_eq!(moved.last_sample(), [5.0, 6.0]);
+    assert_eq!(batched.samples, vec![[1.0, 1.5], [3.0, 4.0]]);
+    assert_eq!(batched.last_sample(), [3.0, 4.0]);
+    let non_finite = CanvasPointerMove { x: 1.0, y: 1.0, samples: vec![[f64::NAN, 0.0]] };
+    assert!(!non_finite.is_finite(), "a NaN sample is refused by the retained extent");
+    let released = CanvasPointerUp::from_value(dsl::DslValue::Object(Vec::new())).expect("legacy release decodes");
+    assert!(!released.cancelled, "an absent `cancelled` is a real release");
+}
+//#endregion 🧵️BatchedSamplesAndCancel

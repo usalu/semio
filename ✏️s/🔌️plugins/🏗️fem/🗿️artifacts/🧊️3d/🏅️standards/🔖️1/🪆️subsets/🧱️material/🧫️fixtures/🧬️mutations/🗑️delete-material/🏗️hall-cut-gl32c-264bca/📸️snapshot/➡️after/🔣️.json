@@ -413,7 +413,8 @@
       "height": 0.35,
       "layers": 1,
       "meshSize": 1.0,
-      "materialId": "c25_30"
+      "materialId": "c25_30",
+      "axis": "z"
     },
     {
       "id": "slab_apron",
@@ -441,7 +442,8 @@
       "height": 0.2,
       "layers": 1,
       "meshSize": 1.5,
-      "materialId": "c25_30"
+      "materialId": "c25_30",
+      "axis": "z"
     }
   ],
   "supports": [

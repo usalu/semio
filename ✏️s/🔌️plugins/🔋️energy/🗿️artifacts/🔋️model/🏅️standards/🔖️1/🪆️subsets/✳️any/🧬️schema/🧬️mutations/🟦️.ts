@@ -2157,6 +2157,13 @@ export interface ChangeGasMaterialGas {
   readonly newGas: "Air" | "Argon" | "Krypton" | "Xenon";
 }
 
+/** 🗻️ `change-material-roughness` payload. */
+export interface ChangeMaterialRoughness {
+  readonly mutation: "changeMaterialRoughness";
+  readonly id: number;
+  readonly newRoughness: "VeryRough" | "Rough" | "MediumRough" | "MediumSmooth" | "Smooth" | "VerySmooth";
+}
+
 /** 🔘️ `rename-gas-material` payload. */
 export interface RenameGasMaterial {
   readonly mutation: "renameGasMaterial";
@@ -2450,4 +2457,5 @@ export type EnergyModelMutation =
   | RenameGlazingMaterial
   | ChangeGasMaterialThickness
   | ChangeGasMaterialGas
-  | RenameGasMaterial;
+  | RenameGasMaterial
+  | ChangeMaterialRoughness;

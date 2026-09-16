@@ -3,6 +3,7 @@
 //! are the framework ToolRun panel and actions (`📋️tool-run-contract.md` §2.4–§2.6), and tested candidates are
 //! `placement2d` trace records.
 
+use crate::editor::puzzle2d::modes::edit::options::brush::puzzle2d_distribution_measures;
 use crate::editor::puzzle2d::precompute::fill::{FillRunCounter, FillRunReason, FillRunStage};
 use crate::editor::puzzle2d::terminology::{puzzle2d_localized, Puzzle2dLabels};
 use crate::editor::puzzle2d::{puzzle2d_action, Puzzle2dScene};
@@ -18,6 +19,9 @@ pub const PUZZLE2D_DEFAULT_FILL_COUNT: u32 = 100;
 pub const PUZZLE2D_FILL_RUN_JOB: &str = "puzzle2d.fill.run";
 /// 🔍️ Job kind of the fill revalidation job (`ToolRunDefinition.revalidateJob`).
 pub const PUZZLE2D_FILL_REVALIDATE_JOB: &str = "puzzle2d.fill.revalidate";
+/// 🎚️ `ToolRunDefinition.settings.config`: the `Puzzle2dConfig` fields a fill run reads — the count it
+/// plans toward and the kind weights its candidate order digests.
+pub const RUN_SETTINGS_CONFIG: [&str; 3] = ["/fillCount", "/nodeKindWeights", "/handleKindWeights"];
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
@@ -40,7 +44,7 @@ pub fn run_definition() -> ToolRunDefinition {
         trace: ToolRunTraceKind::Placement2d,
         run_job: JobKindId::new(PUZZLE2D_FILL_RUN_JOB),
         revalidate_job: Some(JobKindId::new(PUZZLE2D_FILL_REVALIDATE_JOB)),
-        settings: ToolRunSettingsReads { config: vec!["/fillCount".into()], ..ToolRunSettingsReads::default() },
+        settings: ToolRunSettingsReads { config: RUN_SETTINGS_CONFIG.iter().map(|pointer| pointer.to_string()).collect(), ..ToolRunSettingsReads::default() },
         windows: Vec::new(),
     }
 }
@@ -64,8 +68,11 @@ pub fn count_measure(envelope: &Puzzle2dScene, labels: &Puzzle2dLabels) -> Windo
     }
 }
 
-/// 🎚️ The fill tool's measure group, surfaced in the mode-level tool panel while the fill tool is active.
+/// 🎚️ The fill tool's measure group, surfaced in the mode-level tool panel while the fill tool is active:
+/// the count entry and the per-kind distribution trees the run's candidate order reads.
 pub fn measures(envelope: &Puzzle2dScene, labels: &Puzzle2dLabels) -> WindowMeasure {
+    let mut children = vec![count_measure(envelope, labels)];
+    children.extend(puzzle2d_distribution_measures(envelope, labels));
     WindowMeasure::Group {
         id: "puzzle2d-tool-options-fill".into(),
         label: labels.fill.into(),
@@ -79,7 +86,7 @@ pub fn measures(envelope: &Puzzle2dScene, labels: &Puzzle2dLabels) -> WindowMeas
         loading: None,
         waiting: None,
         on_change: None,
-        children: vec![count_measure(envelope, labels)],
+        children,
     }
 }
 //#endregion 🔖️Definition

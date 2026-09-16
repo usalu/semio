@@ -294,7 +294,8 @@
             "meshSize": 1,
             "baseZ": 0,
             "height": 1,
-            "layers": 1
+            "layers": 1,
+            "axis": "z"
           }
         ],
         "analysis": {

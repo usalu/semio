@@ -8,12 +8,16 @@ import { join } from "node:path";
 // engagement preview lane painted in between.
 //
 //   SEMIO_PROBE_RUNS: JSON array of {surface, label, picks:[[fx,fy],…], entries:["3"], out:"place-column"}
-//   (fractions of the pane rect). Defaults to the Building "Place Column" run.
+//   or, when order matters, steps:[{pick:[fx,fy]}, {entry:"2"}, {entry:""}, {option:"Accept"}]; an optional
+//   preSelect:[fx,fy] clicks an object before the session starts (a plain `interactionSelect` pick)
+//   (fractions of the pane rect — keep fx ≥ 0.5: the opened Actions panel with its HUD covers the
+//   pane's left ~40 %, and a pick under it lands on an action row instead of the ground).
+//   Defaults to the Building "Place Column" run.
 const url = process.env.SEMIO_PROBE_URL ?? "http://127.0.0.1:6020/?plugin=cad";
 const bootSeconds = Number(process.env.SEMIO_PROBE_SECONDS ?? 45);
 const outDir = join(import.meta.dir, "🗑️generated", process.env.SEMIO_PROBE_OUT ?? "interaction-run");
 mkdirSync(outDir, { recursive: true });
-const defaultRuns = [{ surface: "window:cad-play-building", label: "Place Column", picks: [[0.45, 0.55], [0.6, 0.62]], entries: [], out: "place-column" }];
+const defaultRuns = [{ surface: "window:cad-play-building", label: "Place Column", picks: [[0.55, 0.55], [0.7, 0.62]], entries: [], out: "place-column" }];
 const runs = process.env.SEMIO_PROBE_RUNS ? JSON.parse(process.env.SEMIO_PROBE_RUNS) : defaultRuns;
 const lines = [];
 const browser = await chromium.launch({ headless: true, args: ["--use-angle=metal"] });
@@ -31,7 +35,8 @@ const host = (surface) => page.evaluate((s) => {
   const parse = (name) => { try { return JSON.parse(el.getAttribute(name) ?? "null"); } catch { return null; } };
   const r = el.getBoundingClientRect();
   const meshes = parse("data-meshes-json") ?? [];
-  return { rect: { x: r.x, y: r.y, w: r.width, h: r.height }, meshes: meshes.length, meshIds: meshes.map((m) => m.id).slice(-3), instances: (parse("data-instances-json") ?? []).length, guest: parse("data-guest-selection-json"), preview: parse("data-engagement-preview-json") };
+  const selection = parse("data-selection-json");
+  return { rect: { x: r.x, y: r.y, w: r.width, h: r.height }, meshes: meshes.length, meshIds: meshes.map((m) => m.id).slice(-3), instances: (parse("data-instances-json") ?? []).length, guest: parse("data-guest-selection-json"), sessionActive: selection?.engagementSessionActive ?? null, preview: parse("data-engagement-preview-json") };
 }, surface);
 // 🪟 The window that owns a surface: its "Action" search input and the HUD text.
 const windowOf = (surface) => page.evaluate((s) => {
@@ -66,6 +71,36 @@ for (const run of runs) {
     // 🔎 Type the label into the window's Action search and confirm the top-ranked possible. The
     // shell PascalCases drafts and treats Space as "activate the top match", so the label goes in
     // without its spaces ("PlaceColumn"), exactly as the inline completion spells it.
+    // 🛑️ Escape in the Action line aborts whatever session the pane still holds (`onAbort` →
+    // `engagementAbort`), so every run starts from the pane's own interaction list.
+    await page.mouse.click(win.input.x + win.input.w / 2, win.input.y + win.input.h / 2);
+    await page.keyboard.press("Escape");
+    await page.waitForTimeout(1200);
+    let movedId = null;
+    if (run.preSelect) {
+      // 🎯 A plain pick (no session) selects the object under the pointer through `interactionSelect`;
+      // several candidate spots are tried until one lands on an object.
+      const pane0 = before.rect;
+      const candidates = Array.isArray(run.preSelect[0]) ? run.preSelect : [run.preSelect];
+      for (const [fx, fy] of candidates) {
+        await page.mouse.click(pane0.x + pane0.w * fx, pane0.y + pane0.h * fy);
+        await page.waitForTimeout(1500);
+        const guest = (await host(run.surface)).guest;
+        if (guest?.selectedIds?.length) { movedId = guest.selectedIds[0]; rnote("preSelect", { at: [fx, fy], selectedIds: guest.selectedIds }); break; }
+      }
+      if (!movedId) rnote("preSelect", { selectedIds: [] });
+    }
+    const meshDigest = async (id) => page.evaluate(([s, target]) => {
+      const el = document.querySelector(`[data-surface-id="${s}"]`);
+      const meshes = JSON.parse(el?.getAttribute("data-meshes-json") ?? "[]");
+      const mesh = meshes.find((m) => m.id === target);
+      const positions = mesh?.data?.positions ?? null;
+      const instance = JSON.parse(el?.getAttribute("data-instances-json") ?? "[]").find((i) => i.id === target);
+      // 🧭 A transform lands as the instance pose (position/rotation/scale) or, for a re-tessellated
+      // solid, in the mesh positions — record both.
+      return { count: positions?.length ?? 0, head: (positions ?? []).slice(0, 6).map((v) => Number(v).toFixed(3)), pose: instance ? { position: instance.position, rotation: instance.rotation, scale: instance.scale } : null };
+    }, [run.surface, id]);
+    const digestBefore = movedId ? await meshDigest(movedId) : null;
     const draft = run.label.replace(/\s+/g, "");
     for (let attempt = 0; attempt < 3; attempt++) {
       // ⌨️ The guest echoes `engagement-input` back into the draft; a slow echo can truncate a fast
@@ -84,51 +119,65 @@ for (const run of runs) {
     win = await windowOf(run.surface);
     rnote("hudAfterStart", { heading: win?.heading, hud: win?.hud, options: win?.options });
     const started = await host(run.surface);
-    rnote("guestAfterStart", started.guest);
+    rnote("guestAfterStart", { guest: started.guest, sessionActive: started.sessionActive });
     await page.screenshot({ path: join(outDir, `${key}-started.png`), type: "png" });
     const pane = before.rect;
     const previews = [];
-    for (const [index, [fx, fy]] of run.picks.entries()) {
-      const x = pane.x + pane.w * fx;
-      const y = pane.y + pane.h * fy;
-      await page.mouse.move(x, y);
-      await page.waitForTimeout(900);
-      const hover = await host(run.surface);
-      previews.push({ beforePick: index, preview: (hover.preview ?? []).map((i) => `${i.kind}${i.role ? ":" + i.role : ""}${i.position ? "@" + i.position.map((v) => Number(v).toFixed(2)).join(",") : ""}`), raw: hover.preview });
-      if (index === run.picks.length - 1) await page.screenshot({ path: join(outDir, `${key}-rubber-band.png`), type: "png" });
-      await page.mouse.click(x, y);
-      await page.waitForTimeout(1800);
-      const after = await windowOf(run.surface);
-      previews.push({ afterPick: index, heading: after?.heading, hud: after?.hud?.slice(0, 160) });
+    const steps = run.steps ?? [...(run.picks ?? []).map((pick) => ({ pick })), ...(run.entries ?? []).map((entry) => ({ entry })), ...(run.options ?? []).map((option) => ({ option }))];
+    let pickIndex = 0;
+    for (const step of steps) {
+      if (step.pick) {
+        const index = pickIndex++;
+        const x = pane.x + pane.w * step.pick[0];
+        const y = pane.y + pane.h * step.pick[1];
+        await page.mouse.move(x, y);
+        await page.waitForTimeout(900);
+        const hover = await host(run.surface);
+        previews.push({ beforePick: index, sessionActive: hover.sessionActive, preview: (hover.preview ?? []).map((i) => `${i.kind}${i.role ? ":" + i.role : ""}${i.position ? "@" + i.position.map((v) => Number(v).toFixed(2)).join(",") : ""}`), raw: hover.preview });
+        if (index === 1) await page.screenshot({ path: join(outDir, `${key}-rubber-band.png`), type: "png" });
+        await page.mouse.click(x, y);
+        await page.waitForTimeout(1800);
+        const after = await windowOf(run.surface);
+        previews.push({ afterPick: index, heading: after?.heading, hud: after?.hud?.slice(0, 160) });
+      } else if (step.entry !== undefined) {
+        win = await windowOf(run.surface);
+        await page.mouse.click(win.input.x + win.input.w / 2, win.input.y + win.input.h / 2);
+        if (step.entry !== "") await page.keyboard.type(String(step.entry), { delay: 40 });
+        await page.waitForTimeout(600);
+        await page.keyboard.press("Enter");
+        await page.waitForTimeout(2500);
+        const after = await windowOf(run.surface);
+        previews.push({ entry: step.entry, heading: after?.heading, hud: after?.hud?.slice(0, 160) });
+      } else if (step.undo) {
+        // ↩️ ⌘Z on the page body: the framework's undo of the last document edit (the commit).
+        await page.mouse.click(pane.x + pane.w * 0.95, pane.y + 4);
+        await page.keyboard.press("Escape");
+        await page.keyboard.press("Meta+Z");
+        await page.waitForTimeout(2500);
+        const h = await host(run.surface);
+        previews.push({ undo: true, meshes: h.meshes, hud: (await windowOf(run.surface))?.hud?.slice(0, 120) });
+      } else if (step.option) {
+        // 🔘 Click a HUD option button by label.
+        const target = await page.evaluate(([s, label]) => {
+          const w = document.querySelector(`[data-surface-id="${s}"]`)?.closest('[data-slot="window-body"]');
+          const b = [...(w?.querySelectorAll('[data-slot="engagement-options"] button') ?? [])].find((x) => (x.textContent ?? "").trim() === label);
+          const rr = b?.getBoundingClientRect();
+          return rr ? { x: rr.x + rr.width / 2, y: rr.y + rr.height / 2 } : null;
+        }, [run.surface, step.option]);
+        if (target) { await page.mouse.click(target.x, target.y); await page.waitForTimeout(2500); }
+        const after = await windowOf(run.surface);
+        previews.push({ option: step.option, found: Boolean(target), hud: after?.hud?.slice(0, 160) });
+      }
     }
-    rnote("previews", previews);
-    for (const entry of run.entries ?? []) {
-      win = await windowOf(run.surface);
-      await page.mouse.click(win.input.x + win.input.w / 2, win.input.y + win.input.h / 2);
-      await page.keyboard.type(String(entry), { delay: 20 });
-      await page.keyboard.press("Enter");
-      await page.waitForTimeout(2500);
-      const after = await windowOf(run.surface);
-      rnote(`entry:${entry}`, { heading: after?.heading, hud: after?.hud?.slice(0, 160) });
-    }
-    for (const option of run.options ?? []) {
-      // 🔘 Click a HUD option button (e.g. "Accept") by label.
-      const target = await page.evaluate(([s, label]) => {
-        const w = document.querySelector(`[data-surface-id="${s}"]`)?.closest('[data-slot="window-body"]');
-        const b = [...(w?.querySelectorAll('[data-slot="engagement-options"] button') ?? [])].find((x) => (x.textContent ?? "").trim() === label);
-        const rr = b?.getBoundingClientRect();
-        return rr ? { x: rr.x + rr.width / 2, y: rr.y + rr.height / 2 } : null;
-      }, [run.surface, option]);
-      rnote(`option:${option}`, target);
-      if (target) { await page.mouse.click(target.x, target.y); await page.waitForTimeout(2500); }
-    }
+    rnote("steps", previews);
     await page.waitForTimeout(1500);
     const after = await host(run.surface);
     win = await windowOf(run.surface);
     rnote("after", { meshes: after.meshes, instances: after.instances, newMeshIds: after.meshIds, guest: after.guest, heading: win?.heading, hud: win?.hud?.slice(0, 200) });
     rnote("history", historyLines());
+    if (movedId) rnote("moved", { id: movedId, before: digestBefore, after: await meshDigest(movedId) });
     await page.screenshot({ path: join(outDir, `${key}-committed.png`), type: "png" });
-    r.ok = after.meshes > before.meshes || (run.expectMeshes === "same" && after.meshes === before.meshes);
+    r.ok = after.meshes > before.meshes || (run.expectMeshes === "same" && after.meshes === before.meshes && (!movedId || JSON.stringify(r.moved.before) !== JSON.stringify(r.moved.after)));
   } catch (error) {
     rnote("error", String(error).slice(0, 500));
     await page.screenshot({ path: join(outDir, `${key}-error.png`), type: "png" }).catch(() => {});

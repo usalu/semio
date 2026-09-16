@@ -40,7 +40,7 @@ fn set_camera_replaces_the_pose_and_inverts_back_to_the_base() {
 fn re_setting_the_same_pose_is_a_declared_no_op() {
     let base = EnergyModelWindowConfig { camera: pose() };
     let mutation = EnergyModelWindowConfigMutation::SetCamera(SetCamera { camera: pose() });
-    assert!(mutation.diff(&base).warnings().iter().any(|warning| warning.code == "mutation.no-op"), "a debounced duplicate must not publish a change");
+    assert!(mutation.diff(&base).messages().iter().any(|message| message.code.0 == "mutation.no-op"), "a debounced duplicate must not publish a change");
     assert!(mutation.inverse(&base).is_empty(), "a no-op has no inverse");
 }
 

@@ -205,6 +205,7 @@ mod decode {
                     layers: number(solid, "layers").max(1.0) as usize,
                     mesh_size: number(solid, "meshSize"),
                     material_id: solid.str("materialId"),
+                    axis: crate::FemAxis::from_key(&solid.str("axis")).expect("solid axis"),
                 })
                 .collect(),
             supports,

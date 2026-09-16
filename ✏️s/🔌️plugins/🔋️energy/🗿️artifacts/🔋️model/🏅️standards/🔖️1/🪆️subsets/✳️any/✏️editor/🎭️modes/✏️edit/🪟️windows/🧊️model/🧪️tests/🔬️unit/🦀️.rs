@@ -39,7 +39,9 @@ async fn definition_declares_a_world3d_window() {
     assert_eq!(def.body_key, BODY_KEY);
     assert_eq!(def.body_key, "energy.model.3d");
     assert_eq!(def.surface_kind, SurfaceKind::World3d);
-    assert!(def.actions.is_empty(), "picking is framework-owned; this window declares no verbs");
+    // 🕹️ Picking is framework-owned, so the ONLY verb this window owns is its camera.
+    assert_eq!(def.actions.len(), 1);
+    assert_eq!(def.actions[0].id, SET_CAMERA_ACTION_ID);
     assert!(
         semio_framework::Terminology::ALL.iter().all(|&terminology| def.label.resolve(terminology, semio_framework::Locale::En) != def.label.resolve(terminology, semio_framework::Locale::De)),
         "the window label is really translated"
@@ -159,4 +161,59 @@ async fn a_window_polygon_lies_on_its_host_surfaces_plane() {
             crate::scene::ENERGY_SCENE_WINDOW_OFFSET_M
         );
     }
+}
+
+/// 🎥️ The react `World3dHost` dispatches `setCamera` itself after every orbit/pan/zoom. A window kind
+/// that does not DECLARE it makes the shell drop the gesture
+/// (`dropped action "setCamera" ... no window kind declares it`), which is what the first restage saw.
+#[semio_framework_async_macros::async_test]
+async fn the_window_declares_the_camera_verb_the_world3d_host_dispatches() {
+    let action = definition().actions.into_iter().find(|action| action.id == SET_CAMERA_ACTION_ID).expect("the window declares setCamera");
+    assert_eq!(action.id, "setCamera", "the id is the host's own wire spelling, not an authored name");
+    assert!(matches!(action.kind, semio_framework_plugin::ActionKind::View), "a camera pose is never document data");
+    assert_eq!(action.semantics.execution.interactive_job, InteractiveJobClassification::Migrated, "Migrated is the only UI-dispatchable classification");
+    let camera = action.args.iter().find(|arg| arg.id == "camera").expect("the camera argument is declared");
+    assert!(camera.required, "the pose is the whole payload");
+    assert!(
+        semio_framework::Terminology::ALL.iter().all(|&terminology| action.label.resolve(terminology, semio_framework::Locale::En) != action.label.resolve(terminology, semio_framework::Locale::De)),
+        "the camera verb is really translated"
+    );
+}
+
+/// 🎥️ A window that has been orbited republishes ITS OWN pose, not the model-derived default — that
+/// is what stops a re-render (a selection, a results tick) from yanking the camera back.
+#[semio_framework_async_macros::async_test]
+async fn a_stored_camera_replaces_the_model_derived_one() {
+    let model = bestest_600();
+    let stored = config::EnergyModelWindowConfig { camera: config::EnergyModelCameraPose { position: [30.0, -25.0, 18.0], target: [4.0, 3.0, 1.35], zoom: 1.0 } };
+    let default_scene = scene_of(&render(&model, &EnergyModelInteractionSnapshot::default(), None, None).expect("plain"));
+    let stored_scene = scene_of(&render_with_camera(&model, &EnergyModelInteractionSnapshot::default(), None, None, Some(&stored)).expect("stored"));
+
+    assert_ne!(default_scene.camera_json, stored_scene.camera_json);
+    assert_eq!(stored_scene.camera_json, stored.camera.scene_camera_json());
+    assert!(stored_scene.camera_json.contains("\"position\":[30.0,-25.0,18.0]"), "{}", stored_scene.camera_json);
+
+    // 🎥️ The geometry, the picking domain and the fit revision are untouched by the camera: a camera
+    // change must never re-arm the one-shot auto-fit (`world3dAutoFitKey` keys on fit revision +
+    // the ATTACHED scene camera, never on the live pose).
+    assert_eq!(default_scene.meshes_json, stored_scene.meshes_json);
+    assert_eq!(default_scene.instances_json, stored_scene.instances_json);
+    assert_eq!(default_scene.fit_json, stored_scene.fit_json);
+    assert_eq!(default_scene.domain_id, stored_scene.domain_id);
+}
+
+/// 🎥️ Rendering the SAME model twice must publish byte-identical `fit_json` and `camera_json` —
+/// `world3dAutoFitKey` keys the one-shot framing on exactly those, so a drifting value would re-frame
+/// the viewport on every publication and fight the user's orbit.
+#[semio_framework_async_macros::async_test]
+async fn a_re_render_of_the_same_model_never_re_arms_the_auto_fit() {
+    let model = bestest_600();
+    let first = scene_of(&render(&model, &EnergyModelInteractionSnapshot::default(), None, None).expect("first"));
+    let picked = scene_of(&render(&model, &EnergyModelInteractionSnapshot { selected_ids: vec![energy_target_id(model.surfaces[0].id)], hovered_ids: Vec::new() }, None, None).expect("picked"));
+    assert_eq!(first.fit_json, picked.fit_json, "a selection must not re-frame the camera");
+    assert_eq!(first.camera_json, picked.camera_json, "a selection must not reattach the camera");
+
+    let other = crate::examples::bestest_610::model();
+    let changed = scene_of(&render(&other, &EnergyModelInteractionSnapshot::default(), None, None).expect("other"));
+    assert_ne!(first.fit_json, changed.fit_json, "new geometry DOES re-frame once");
 }

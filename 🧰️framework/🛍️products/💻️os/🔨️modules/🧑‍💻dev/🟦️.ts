@@ -19,7 +19,10 @@ import { resolveBootQueryAppRole, resolveBootQueryExampleId } from "./🔗️boo
 const renderer = import.meta.env.VITE_SEMIO_RENDERER ?? import.meta.env.SEMIO_RENDERER ?? "react";
 const boot = resolvePlaygroundBoot(PLUGIN_CATALOG, import.meta.env.VITE_SEMIO_PLUGIN || PLAYGROUND_SESSION.variant, PLAYGROUND_SESSION);
 const pluginFilter = boot.variant;
-const appId = import.meta.env.VITE_SEMIO_APP_ID ?? boot.defaultAppId;
+/** @emoji 📌️ Pinned app: the serve passes `VITE_SEMIO_APP_ID` as `""` when the playground row declares no
+ * `app`, and ShellHost treats any defined `appId` as a pin it must find in the primary manifest — so an
+ * empty value must fall through to the playground default, never reach the shell as a pin. */
+const appId = import.meta.env.VITE_SEMIO_APP_ID || boot.defaultAppId;
 
 /** @emoji 👁️✏️ Per-server default surface role (contract §5): `VITE_SEMIO_APP_ROLE` is
  * `"viewer"`|`"editor"`, default `"editor"`. Mirrors `resolveBootAppRole`'s own validation so an

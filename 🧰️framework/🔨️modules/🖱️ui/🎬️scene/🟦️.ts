@@ -564,6 +564,7 @@ export const BOARD2D_SCENE_LANE_KEY_PREFIX = "framework.scene.board2d.";
  * `Board2dSceneLane` / `BOARD2D_SCENE_LANE_*`; both pinned against
  * `🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🚚️board2d-scene-lanes/🔣️.json`. */
 export const BOARD2D_SCENE_LANES: readonly SceneLane<Board2dScene>[] = [
+  { lane: "fixture", field: "fixtureJson", bodyKey: "framework.scene.board2d.fixture", optional: false },
   { lane: "toolRunTrace", field: "toolRunTrace", bodyKey: "framework.scene.board2d.toolRunTrace", optional: true },
 ];
 

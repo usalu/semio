@@ -3837,7 +3837,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(screen.getByText("Root A")).toBeTruthy();
       expect(screen.getByText("Leaf A")).toBeTruthy();
       expect(screen.getByText("Leaf B")).toBeTruthy();
-      expect(container.querySelector('[data-slot="panel-fold"]')).toBeTruthy();
     });
 
     it("chromeHostedOpenPanelPositionStyle pulls top/bottom caps into the shell chrome band and leaves side-middle canvas insets alone", () => {
@@ -6793,7 +6792,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(actions).toBeTruthy();
       const body = container.querySelector('[data-slot="window-engagement-body"]');
       expect(body?.contains(actions)).toBe(true);
-      fireEvent.click(container.querySelector('[data-slot="pane-fold"]')!);
+      fireEvent.click(toggle);
       expect(container.querySelector('[data-testid="adhoc-actions"]')).toBeNull();
     });
 
@@ -6950,12 +6949,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       // Unfold it
       if (unfoldBtn) fireEvent.click(unfoldBtn);
 
-      // Verify unfolded state option labels (Enlarge/Span button & Fold button)
-      const spanBtn = container.querySelector('[id="framework.window.labeledWindow.measures.span"]');
-      expect(spanBtn?.textContent?.trim()).toBe("Focus");
-
-      const foldBtn = container.querySelector('[id="framework.window.labeledWindow.measures.fold"]');
-      expect(foldBtn?.textContent?.trim()).toBe("Window Options");
+      const foldToggle = container.querySelector('[id="framework.window.labeledWindow.measures.fold"]');
+      expect(foldToggle?.textContent?.trim()).toBe("Window Options");
     });
 
     it("Window maximize renders as Unfocus when onMinimize is provided", () => {
@@ -7008,23 +7003,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(bodyDown).toHaveBeenCalledTimes(1);
       fireEvent.pointerDown(body, { clientX: bodyRect.left + 12, clientY: bodyRect.top + 12, bubbles: true });
       expect(bodyDown).toHaveBeenCalledTimes(2);
-    });
-
-    it("Window hides search overlay when measures are fullscreen", () => {
-      const { container } = render(
-        <Window id="measures-engagement-window" active search={{ input: { placeholder: uiDataLabel("Action") } }} measures={<div data-testid="measure-slot">LOD</div>}>
-          <div>Body</div>
-        </Window>,
-      );
-      fireEvent.click(container.querySelector('[id="framework.window.measuresEngagementWindow.search.toggle"]')!);
-      fireEvent.click(container.querySelector('[id="framework.window.measuresEngagementWindow.measures.unfold"]')!);
-      expect(screen.getByPlaceholderText("Action")).toBeTruthy();
-      fireEvent.click(container.querySelector('[id="framework.window.measuresEngagementWindow.measures.span"]')!);
-      expect(container.querySelector('[data-slot="window-measures-overlay"]')?.getAttribute("data-expanded")).toBe("true");
-      expect(container.querySelector('[data-slot="window-search-overlay"]')).toBeNull();
-      expect(screen.queryByPlaceholderText("Action")).toBeNull();
-      fireEvent.click(container.querySelector('[id="framework.window.measuresEngagementWindow.measures.span"]')!);
-      expect(container.querySelector('[data-slot="window-search-overlay"]')).toBeTruthy();
     });
 
     it("Window keeps engagement and search pane toggles visible while inactive, like window options", () => {
@@ -7263,14 +7241,10 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       );
       fireEvent.click(container.querySelector('[id="framework.window.measuresFoldWindow.measures.unfold"]')!);
       const overlay = container.querySelector('[data-slot="window-measures-overlay"]') as HTMLElement;
-      const span = container.querySelector('[id="framework.window.measuresFoldWindow.measures.span"]');
-      const fold = container.querySelector('[id="framework.window.measuresFoldWindow.measures.fold"]');
-      expect(span).toBeTruthy();
-      expect(fold).toBeTruthy();
+      expect(container.querySelector('[id="framework.window.measuresFoldWindow.measures.fold"]')).toBeTruthy();
       expect(container.querySelector('[data-slot="window-measures-body"]')).toBeTruthy();
       fireEvent.click(container.querySelector('[id="framework.window.measuresFoldWindow.measures.fold"]')!);
       expect(container.querySelector('[data-slot="window-measures-body"]')).toBeNull();
-      expect(container.querySelector('[id="framework.window.measuresFoldWindow.measures.span"]')).toBeNull();
       expect(container.querySelector('[data-slot="window-measures-stack"]')?.getAttribute("data-folded")).toBe("true");
       expect(overlay.getAttribute("data-folded")).toBe("true");
       fireEvent.click(container.querySelector('[id="framework.window.measuresFoldWindow.measures.unfold"]')!);
@@ -7278,43 +7252,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(container.querySelector('[data-slot="window-measures-stack"]')?.getAttribute("data-folded")).toBeNull();
       expect(overlay.style.width).toBe(`${windowMeasuresDefaultWidthPx}px`);
       expect(container.querySelector('[data-slot="pane-resize-handle"]')).toBeTruthy();
-    });
-
-    it("Window measures chrome span expands the overlay across the window body", () => {
-      const { container } = render(
-        <Window id="measures-span-window" measures={<div data-testid="measure-slot">LOD</div>}>
-          <div>Body</div>
-        </Window>,
-      );
-      fireEvent.click(container.querySelector('[id="framework.window.measuresSpanWindow.measures.unfold"]')!);
-      const overlay = container.querySelector('[data-slot="window-measures-overlay"]') as HTMLElement;
-      expect(overlay.getAttribute("data-expanded")).toBeNull();
-      expect(container.querySelector('[data-slot="pane-resize-handle"]')).toBeTruthy();
-      fireEvent.click(container.querySelector('[id="framework.window.measuresSpanWindow.measures.span"]')!);
-      expect(overlay.getAttribute("data-expanded")).toBe("true");
-      expect(overlay.style.inset).toBe("0");
-      expect(container.querySelector('[data-slot="pane-resize-handle"]')).toBeNull();
-      fireEvent.click(container.querySelector('[id="framework.window.measuresSpanWindow.measures.span"]')!);
-      expect(overlay.getAttribute("data-expanded")).toBeNull();
-      expect(overlay.style.right).toBe("var(--spacing-single)");
-      expect(container.querySelector('[data-slot="pane-resize-handle"]')).toBeTruthy();
-    });
-
-    it("Window measures chrome fold collapses span and expanded overlay", () => {
-      const { container } = render(
-        <Window id="measures-fold-expanded-window" measures={<div data-testid="measure-slot">LOD</div>}>
-          <div>Body</div>
-        </Window>,
-      );
-      fireEvent.click(container.querySelector('[id="framework.window.measuresFoldExpandedWindow.measures.unfold"]')!);
-      const overlay = container.querySelector('[data-slot="window-measures-overlay"]') as HTMLElement;
-      fireEvent.click(container.querySelector('[id="framework.window.measuresFoldExpandedWindow.measures.span"]')!);
-      expect(overlay.getAttribute("data-expanded")).toBe("true");
-      fireEvent.click(container.querySelector('[id="framework.window.measuresFoldExpandedWindow.measures.fold"]')!);
-      expect(container.querySelector('[id="framework.window.measuresFoldExpandedWindow.measures.span"]')).toBeNull();
-      expect(overlay.getAttribute("data-expanded")).toBeNull();
-      expect(overlay.getAttribute("data-folded")).toBe("true");
-      expect(overlay.className).toContain("w-fit");
     });
 
     it("Window measures rail resizes from the left edge when unfolded", () => {
@@ -7388,7 +7325,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect((container.querySelector('[id="framework.window.utilityBarWindow.utilityBar.unfold"]') as HTMLButtonElement).disabled).toBe(true);
     });
 
-    it("Window utility bar anchors bottom-left and hides when measures span the window", () => {
+    it("Window utility bar anchors bottom-left alongside measures", () => {
       const { container } = render(
         <Window id="utility-bar-measures-window" utilityBar={<button type="button">Utility</button>} measures={<div data-testid="measure-slot">LOD</div>}>
           <div>Body</div>
@@ -7398,8 +7335,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(overlay.style.bottom).toBe("var(--spacing-single)");
       expect(overlay.style.left).toBe("var(--spacing-single)");
       fireEvent.click(container.querySelector('[id="framework.window.utilityBarMeasuresWindow.measures.unfold"]')!);
-      fireEvent.click(container.querySelector('[id="framework.window.utilityBarMeasuresWindow.measures.span"]')!);
-      expect(container.querySelector('[data-slot="utility-bar-overlay"]')).toBeNull();
+      expect(container.querySelector('[data-slot="utility-bar-overlay"]')).toBeTruthy();
     });
 
     it("Window utility bar body caps its height below the top-left Actions chrome and scrolls the overflow, instead of overlapping it (regression guard for a tall active-utility options tree, e.g. puzzle 3D's Füllen tree)", () => {
@@ -10563,40 +10499,32 @@ export async function registerTests2(vitest: Pick<typeof import("vitest"), "desc
         expect(modeDockTabClassName).toContain("hover:not-data-[handle-hovered=true]:text-emphasized");
       });
   
-      it("panel and pane silhouettes stay normal until the surface receives focus and expose fold controls", async () => {
+      it("panel and pane silhouettes stay normal until the surface receives focus", async () => {
         const { fireEvent, render, waitFor } = await import("@testing-library/react");
         const tabs = [singleTreeLeaf({ id: "tab-a", icon: PanelRightIcon, name: "Tab A", tree: { sections: [] } }), singleTreeLeaf({ id: "tab-b", icon: PanelRightIcon, name: "Tab B", tree: { sections: [] } })];
-        const onVisibleChange = vi.fn();
-        const onFoldToggle = vi.fn();
-        const { container: panelContainer } = render(<Panel anchor="top-left" visible onVisibleChange={onVisibleChange} tabs={tabs} activeTabPath={["tab-a"]} />);
+        const { container: panelContainer } = render(<Panel anchor="top-left" visible onVisibleChange={() => undefined} tabs={tabs} activeTabPath={["tab-a"]} />);
         const panelStack = panelContainer.querySelector('[data-slot="panel"] [data-slot="window-chrome-stack"]') as HTMLElement;
         expect(panelStack.querySelector('[data-slot="window-chrome-silhouette-border"]')?.getAttribute("data-kind")).toBe("normal");
-        expect(panelContainer.querySelector('[data-slot="panel-fold"]')).toBeTruthy();
         fireEvent.pointerDown(panelStack.querySelector('[data-slot="panel-tab-button"]')!);
         await waitFor(() => {
           expect(panelStack.getAttribute("data-active")).toBe("true");
           expect(panelStack.querySelector('[data-slot="window-chrome-silhouette-border"]')?.getAttribute("data-kind")).toBe("active");
         });
-        fireEvent.click(panelContainer.querySelector('[data-slot="panel-fold"]')!);
-        expect(onVisibleChange).toHaveBeenCalledWith(false);
-  
+
         const { container: paneContainer } = render(
           <PaneHost>
-            <Pane id="focus-pane" anchor="top-right" icon="box" label={uiDataLabel("Pane")} folded={false} onFoldToggle={onFoldToggle}>
-              <div>Pane body</div>
+            <Pane id="focus-pane" anchor="top-right" icon="box" label={uiDataLabel("Pane")} folded={false} onFoldToggle={() => undefined}>
+              <div data-slot="pane-body">Pane body</div>
             </Pane>
           </PaneHost>,
         );
         const paneStack = paneContainer.querySelector('[data-slot="pane"] [data-slot="window-chrome-stack"]') as HTMLElement;
         expect(paneStack.querySelector('[data-slot="window-chrome-silhouette-border"]')?.getAttribute("data-kind")).toBe("normal");
-        expect(paneContainer.querySelector('[data-slot="pane-fold"]')).toBeTruthy();
         fireEvent.pointerDown(paneStack.querySelector('[data-slot="pane-body"]')!);
         await waitFor(() => {
           expect(paneStack.getAttribute("data-active")).toBe("true");
           expect(paneStack.querySelector('[data-slot="window-chrome-silhouette-border"]')?.getAttribute("data-kind")).toBe("active");
         });
-        fireEvent.click(paneContainer.querySelector('[data-slot="pane-fold"]')!);
-        expect(onFoldToggle).toHaveBeenCalled();
       });
   
       it("activating a surface clears its introduced stamps so the active stroke can win", async () => {

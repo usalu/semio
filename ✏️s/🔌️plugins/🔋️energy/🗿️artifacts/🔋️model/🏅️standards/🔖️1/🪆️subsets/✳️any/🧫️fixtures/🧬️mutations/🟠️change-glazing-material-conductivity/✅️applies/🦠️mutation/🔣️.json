@@ -1,1 +1,5 @@
-{}
+{
+  "mutation": "changeGlazingMaterialConductivity",
+  "id": 1,
+  "newConductivityWMK": 1.06
+}

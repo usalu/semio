@@ -1,6 +1,20 @@
+enum Fem3dLoopMode { loop pingPong once }
+
+enum Fem3dWaveform { ramp sine }
+
+type Fem3dResultsAnimation {
+  phase: Float!
+  playing: Boolean!
+  speed: Float!
+  loopMode: Fem3dLoopMode!
+  waveform: Fem3dWaveform!
+  reverse: Boolean!
+}
+
 type Fem3dResultsWindowConfig {
   camera: Viewport3dOrbit!
   resultSourceId: String
   resultMode: FemResultMode!
   resultModeIndex: Int!
+  animation: Fem3dResultsAnimation!
 }

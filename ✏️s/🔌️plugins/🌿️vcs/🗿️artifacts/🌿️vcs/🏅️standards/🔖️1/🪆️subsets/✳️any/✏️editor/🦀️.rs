@@ -179,7 +179,9 @@ fn vcs_resumable_contract() -> ToolExecutionContract {
 
 fn vcs_bounded_extent(command: &VcsCommand, _snapshot: &VcsSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
     let bytes = match command {
-        VcsCommand::IncrementCounter(_) | VcsCommand::NoMutation(_) | VcsCommand::CanvasPointerDown(_) | VcsCommand::CanvasPointerMove(_) | VcsCommand::CanvasPointerUp(_) | VcsCommand::CanvasWheel(_) => 0,
+        VcsCommand::IncrementCounter(_) | VcsCommand::NoMutation(_) | VcsCommand::CanvasPointerDown(_) | VcsCommand::CanvasPointerUp(_) | VcsCommand::CanvasWheel(_) => 0,
+        // 🧵️ A batched move carries `samples.len()` pairs of f64 (design L4) — priced, never dropped.
+        VcsCommand::CanvasPointerMove(payload) => payload.samples.len().checked_mul(2 * size_of::<f64>())?,
         VcsCommand::PatchSnapshot(payload) => payload.field.len().checked_add(payload.value.len())?,
         VcsCommand::TextEdit(_) | VcsCommand::Edit(_) => return None,
     };
@@ -893,6 +895,24 @@ impl ArtifactEditor for VcsPlayApp {
     fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<Self::Command, Fault> {
         let args = args.cloned().unwrap_or(dsl::DslValue::Null);
         let text_arg = |key: &str| args.get(key).and_then(dsl::DslValue::as_str).unwrap_or_default().to_string();
+        // 🧵️ `samples: [[x, y], …]` (design L4): every well-formed pair in order; a legacy wire
+        // without `samples` folds its `x`/`y` into one sample.
+        let pointer_samples = || {
+            let parsed = args
+                .get("samples")
+                .and_then(dsl::DslValue::as_array)
+                .map(|items| items.iter().filter_map(|item| { let pair = item.as_array()?; Some([pair.first()?.as_f64()?, pair.get(1)?.as_f64()?]) }).collect::<Vec<[f64; 2]>>())
+                .unwrap_or_default();
+            if parsed.is_empty() {
+                match (args.get("x").and_then(dsl::DslValue::as_f64), args.get("y").and_then(dsl::DslValue::as_f64)) {
+                    (Some(x), Some(y)) => vec![[x, y]],
+                    _ => Vec::new(),
+                }
+            } else {
+                parsed
+            }
+        };
+        let pointer_cancelled = || args.get("cancelled").and_then(dsl::DslValue::as_bool).unwrap_or(false);
         match action {
             "incrementCounter" => Ok(VcsCommand::IncrementCounter(increment_counter::IncrementCounter {})),
             "patchSnapshot" => {
@@ -919,8 +939,8 @@ impl ArtifactEditor for VcsPlayApp {
             }
             "noMutation" => Ok(VcsCommand::NoMutation(no_operation::NoMutation {})),
             "canvasPointerDown" => Ok(VcsCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown {})),
-            "canvasPointerMove" => Ok(VcsCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove {})),
-            "canvasPointerUp" => Ok(VcsCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp {})),
+            "canvasPointerMove" => Ok(VcsCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { samples: pointer_samples() })),
+            "canvasPointerUp" => Ok(VcsCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { cancelled: pointer_cancelled() })),
             "canvasWheel" => Ok(VcsCommand::CanvasWheel(canvas_wheel::CanvasWheel {})),
             other => Err(Fault::from(format!("unknown VCS app action '{other}'"))),
         }

@@ -743,8 +743,8 @@ pub(super) fn every_command() -> Vec<Generation2dCommand> {
         Generation2dCommand::Generate(enter_generate::Generate {}),
         Generation2dCommand::SetEvalOutputs(set_eval_outputs::SetEvalOutputs { outputs_json: "{}".into() }),
         Generation2dCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown {}),
-        Generation2dCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove {}),
-        Generation2dCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp {}),
+        Generation2dCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { samples: vec![[1.0, 2.0], [3.0, 4.0]] }),
+        Generation2dCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { cancelled: false }),
         Generation2dCommand::CanvasWheel(canvas_wheel::CanvasWheel {}),
         Generation2dCommand::SelectGeneration(select_generation::SelectGeneration { id: Some("g1".into()) }),
         Generation2dCommand::FlowEvalTick(flow_eval_tick::FlowEvalTick { window_id: "preview-1".into(), window_kind_id: edit_preview::GENERATION2D_PLAY_WINDOW_PREVIEW.into() }),
@@ -781,6 +781,33 @@ fn the_manifest_stitches_every_taxonomy_node() {
 #[semio_framework_async_macros::async_test]
 async fn declared_actions_bridge_to_commands() {
     semio_framework_plugin::artifact_app_laws::assert_declared_actions_bridge_to_commands::<EditorApp<Generation2dPlayApp>>(context::generation2d_manifest_for_tests).await;
+}
+
+/// 🧵️ LAW (design L4 / §2 D): a legacy `{x, y}` `canvasPointerMove` wire folds into one sample, a
+/// batched wire keeps every `[x, y]` pair in order, and `canvasPointerUp` without `cancelled` is a
+/// real release. Generation2d keeps no canvas drag gesture, so both handlers stay no-ops either way.
+#[test]
+fn canvas_pointer_wire_defaults_samples_and_cancelled() {
+    let bridge = |action: &str, args: dsl::DslValue| <Generation2dPlayApp as ArtifactEditor>::command_from_action(action, Some(&args)).expect("declared pointer action bridges");
+    let f = dsl::DslValue::float;
+    let legacy = dsl::DslValue::object([("x".into(), f(5.0)), ("y".into(), f(6.0))]);
+    assert_eq!(bridge("canvasPointerMove", legacy.clone()), Generation2dCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { samples: vec![[5.0, 6.0]] }), "an absent `samples` is the single (x, y)");
+    assert_eq!(bridge("canvasPointerMove", dsl::DslValue::Object(Vec::new())), Generation2dCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { samples: Vec::new() }), "no coordinates at all is an empty batch");
+    let pair = |x: f64, y: f64| dsl::DslValue::Array(vec![f(x), f(y)]);
+    let batched = dsl::DslValue::object([("x".into(), f(3.0)), ("y".into(), f(4.0)), ("samples".into(), dsl::DslValue::Array(vec![pair(1.0, 1.5), pair(3.0, 4.0)]))]);
+    let Generation2dCommand::CanvasPointerMove(moved) = bridge("canvasPointerMove", batched) else { panic!("move") };
+    assert_eq!(moved.samples, vec![[1.0, 1.5], [3.0, 4.0]]);
+    assert_eq!(moved.last_sample(), Some([3.0, 4.0]));
+    assert_eq!(bridge("canvasPointerUp", legacy), Generation2dCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { cancelled: false }), "an absent `cancelled` is a real release");
+    assert_eq!(bridge("canvasPointerUp", dsl::DslValue::object([("cancelled".into(), dsl::DslValue::Bool(true))])), Generation2dCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { cancelled: true }));
+    let document = Generation2dPlayApp::initial_snapshot();
+    let history = semio_framework_plugin::HistoryView::empty();
+    let view = ArtifactView::new(&document, &history);
+    let config = Generation2dConfig::default();
+    let cfg = ConfigView { snapshot: &config, window: None };
+    let mut session = FlowEvalSession::default();
+    let emit = canvas_pointer_up::handle(&canvas_pointer_up::CanvasPointerUp { cancelled: true }, &view, &cfg, &mut session).expect("cancel");
+    assert!(emit.artifact_mutations.is_empty() && emit.effects.is_empty() && emit.config_mutations.is_empty(), "a cancel never selects or commits");
 }
 
 /// 🎥️ LAW: `nodeGraphViewport` declares no args, so the shell stages nothing for it. An absent `viewport`

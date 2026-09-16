@@ -1,9 +1,29 @@
 use super::*;
 use crate::editor::layout::commands::{canvas_drag_leave, canvas_drag_over, canvas_drop, canvas_pointer_move, set_camera};
-use crate::editor::layout::unit_tests::context::{dispatch, layout_app, render, test_screen_point};
-use crate::editor::layout::{LayoutCommand, LAYOUT_PLAY_SURFACE_BLUEPRINT, LAYOUT_PLAY_SURFACE_PREVIEW};
+use crate::editor::layout::unit_tests::context::{dispatch, layout_app, layout_app_with_registry, render, test_screen_point, LayoutApp};
+use crate::editor::layout::{LayoutCommand, LAYOUT_INTERACTION_ELEMENTS, LAYOUT_PLAY_SURFACE_BLUEPRINT, LAYOUT_PLAY_SURFACE_PREVIEW};
 use semio_framework::kernel::Effect;
-use semio_framework_plugin::{CLEAR_SELECTION_ACTION_ID, INTERACTION_HOVER_ACTION_ID, INTERACTION_SELECT_ACTION_ID};
+use semio_framework_plugin::artifact_app_laws;
+use semio_framework_plugin::{PluginApp, INTERACTION_HOVER_ACTION_ID};
+
+/// 🕹️ Ticket 26/09/16/INPUT-CAUSALITY-LEDGER §2 C: the interaction verbs a canvas gesture emits
+/// (`Effect::DispatchAction { action ∈ INTERACTION_ACTION_IDS }`) are folded in-reactor, so the
+/// only witness left is the selection/hover state itself — which needs the manifest registry (the
+/// six verbs are `Migrated` rows there) and a bound live instance, exactly like
+/// `🧪️tests/🔬️window-ownership`. Retire it with [`close_registered`] instead of dropping it.
+async fn registered_layout_app() -> LayoutApp {
+    let mut app = layout_app_with_registry().await;
+    app.bind_instance_id(artifact_app_laws::meta("local").instance_id).await;
+    app
+}
+
+fn close_registered(mut app: LayoutApp) {
+    artifact_app_laws::close_registered_fixture_app(&mut app);
+}
+
+async fn selected_elements(app: &LayoutApp) -> Vec<String> {
+    app.interaction_state().await.selection.get(LAYOUT_INTERACTION_ELEMENTS).map(|selection| selection.ids.clone()).unwrap_or_default()
+}
 
 #[semio_framework_async_macros::async_test]
 async fn set_camera_mutates_config_and_emits_no_operations() {
@@ -24,53 +44,57 @@ async fn set_camera_preview_surface_updates_independently_of_blueprint() {
     assert!(blueprint_json.contains(r#""cameraX":0.0"#), "blueprint surface camera stays independent: {blueprint_json}");
 }
 
-/// 🕹️ Selection is framework-owned now: a hit no longer mutates config synchronously, it asks the
-/// host to redispatch `interactionSelect` (`dispatch_interaction_action` runs that on the SAME
-/// instance next, out of band — the test harness doesn't simulate the round trip, so this only
-/// asserts the requested effect is shaped correctly, not that selection state landed).
+/// 🕹️ Selection is framework-owned: a hit never mutates config, it emits `interactionSelect`
+/// (`Effect::DispatchAction`) — and since ticket 26/09/16/INPUT-CAUSALITY-LEDGER §2 C the reactor
+/// folds that verb INLINE in the same turn, so the effect never leaves the reactor and the
+/// witness is the selection snapshot itself: the hit frame is selected when the pointer-down
+/// result returns. Fails-before: the effect was bounced to the host and selection landed one
+/// guest round trip later.
 #[semio_framework_async_macros::async_test]
-async fn pointer_down_requests_a_select_effect_for_the_hit_frame() {
-    let mut app = layout_app().await;
+async fn pointer_down_selects_the_hit_frame_inline() {
+    let mut app = registered_layout_app().await;
     let (sx, sy) = test_screen_point(0.0, 0.0, 1.0, 800.0, 600.0, 136.0, 435.0);
     let result = dispatch(&mut app, LayoutCommand::CanvasPointerDown(CanvasPointerDown { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), button: 0, extend: false, x: sx, y: sy, width: 800.0, height: 600.0 })).await;
     assert!(result.mutations.is_empty(), "pointer down never mutates the document directly");
-    let effect = result.requested_effects.iter().find(|effect| matches!(effect, Effect::DispatchAction { action, .. } if action == INTERACTION_SELECT_ACTION_ID)).expect("interactionSelect effect");
-    let Effect::DispatchAction { args, .. } = effect else { unreachable!() };
-    let args = args.clone().map(store::pack_rt::dsl_value_to_json).expect("select args");
-    assert_eq!(args["domainId"], "elements");
-    assert_eq!(args["merge"], "replace");
-    assert!(args["targets"].as_str().expect("targets json").contains("frame-image-1"));
+    assert!(!result.requested_effects.iter().any(|effect| matches!(effect, Effect::DispatchAction { .. } | Effect::ReplayShellCommand { .. })), "the interaction verb is folded in-reactor, never handed to the host: {:?}", result.requested_effects);
+    assert_eq!(selected_elements(&app).await, vec!["frame-image-1".to_string()], "a replace pick selects exactly the hit frame inside the carrying turn");
+    close_registered(app);
 }
 
 #[semio_framework_async_macros::async_test]
-async fn pointer_down_extend_click_requests_an_invertive_merge() {
-    let mut app = layout_app().await;
+async fn pointer_down_extend_click_inverts_the_hit_frame_inline() {
+    let mut app = registered_layout_app().await;
     let (sx, sy) = test_screen_point(0.0, 0.0, 1.0, 800.0, 600.0, 136.0, 435.0);
-    let result = dispatch(&mut app, LayoutCommand::CanvasPointerDown(CanvasPointerDown { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), button: 0, extend: true, x: sx, y: sy, width: 800.0, height: 600.0 })).await;
-    let effect = result.requested_effects.iter().find(|effect| matches!(effect, Effect::DispatchAction { action, .. } if action == INTERACTION_SELECT_ACTION_ID)).expect("interactionSelect effect");
-    let Effect::DispatchAction { args, .. } = effect else { unreachable!() };
-    let args = args.clone().map(store::pack_rt::dsl_value_to_json).expect("select args");
-    assert_eq!(args["merge"], "invertive");
+    dispatch(&mut app, LayoutCommand::CanvasPointerDown(CanvasPointerDown { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), button: 0, extend: true, x: sx, y: sy, width: 800.0, height: 600.0 })).await;
+    assert_eq!(selected_elements(&app).await, vec!["frame-image-1".to_string()], "an invertive pick on an unselected frame selects it");
+    dispatch(&mut app, LayoutCommand::CanvasPointerDown(CanvasPointerDown { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), button: 0, extend: true, x: sx, y: sy, width: 800.0, height: 600.0 })).await;
+    assert!(selected_elements(&app).await.is_empty(), "a second invertive pick on the same frame deselects it");
+    close_registered(app);
 }
 
 #[semio_framework_async_macros::async_test]
-async fn pointer_down_on_empty_space_requests_clear_selection() {
-    let mut app = layout_app().await;
+async fn pointer_down_on_empty_space_clears_the_selection_inline() {
+    let mut app = registered_layout_app().await;
+    let (hit_x, hit_y) = test_screen_point(0.0, 0.0, 1.0, 800.0, 600.0, 136.0, 435.0);
+    dispatch(&mut app, LayoutCommand::CanvasPointerDown(CanvasPointerDown { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), button: 0, extend: false, x: hit_x, y: hit_y, width: 800.0, height: 600.0 })).await;
+    assert_eq!(selected_elements(&app).await.len(), 1, "a frame is selected before the background click");
     let (sx, sy) = test_screen_point(0.0, 0.0, 1.0, 800.0, 600.0, 5.0, 5.0);
     let result = dispatch(&mut app, LayoutCommand::CanvasPointerDown(CanvasPointerDown { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), button: 0, extend: false, x: sx, y: sy, width: 800.0, height: 600.0 })).await;
-    assert!(result.requested_effects.iter().any(|effect| matches!(effect, Effect::DispatchAction { action, .. } if action == CLEAR_SELECTION_ACTION_ID)));
+    assert!(!result.requested_effects.iter().any(|effect| matches!(effect, Effect::DispatchAction { .. })), "clearSelection is folded in-reactor: {:?}", result.requested_effects);
+    assert!(selected_elements(&app).await.is_empty(), "a background click clears the selection inside the carrying turn");
+    close_registered(app);
 }
 
 #[semio_framework_async_macros::async_test]
-async fn pointer_move_requests_a_hover_effect_for_the_hit_frame() {
-    let mut app = layout_app().await;
+async fn pointer_move_hovers_the_hit_frame_inline() {
+    let mut app = registered_layout_app().await;
     let (sx, sy) = test_screen_point(0.0, 0.0, 1.0, 800.0, 600.0, 156.0, 220.0);
     let result = dispatch(&mut app, LayoutCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), x: sx, y: sy, width: 800.0, height: 600.0, samples: Vec::new() })).await;
     assert!(result.mutations.is_empty(), "hover never mutates the document directly");
-    let effect = result.requested_effects.iter().find(|effect| matches!(effect, Effect::DispatchAction { action, .. } if action == INTERACTION_HOVER_ACTION_ID)).expect("interactionHover effect");
-    let Effect::DispatchAction { args, .. } = effect else { unreachable!() };
-    let args = args.clone().map(store::pack_rt::dsl_value_to_json).expect("hover args");
-    assert!(args["targets"].as_str().expect("targets json").contains("frame-text-1"));
+    assert!(!result.requested_effects.iter().any(|effect| matches!(effect, Effect::DispatchAction { .. })), "interactionHover is folded in-reactor: {:?}", result.requested_effects);
+    let hovered = app.interaction_state().await.hover.get(LAYOUT_INTERACTION_ELEMENTS).map(|hover| hover.ids.clone()).unwrap_or_default();
+    assert_eq!(hovered, vec!["frame-text-1".to_string()], "the hit frame is hovered inside the carrying turn");
+    close_registered(app);
 }
 
 /// 🧪️ Handler-level fixture: the default document + default window config, as `handle` sees them

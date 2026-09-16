@@ -3,31 +3,91 @@ pub(crate) mod context {
     use semio_framework_plugin::artifact_app_laws::{meta, new_app_with_registry};
     use semio_framework_plugin::{App, EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance};
 
-    pub type Fem3dApp = VcsArtifactApp<EditorApp<Fem3dPlayApp>>;
+    /// 🧪️ The registered, MOUNTED fixture app every editor test drives — bound to
+    /// [`FEM3D_TEST_INSTANCE`] so typed commands reach their retained routes, and retired through the
+    /// framework's exact close loop when it goes out of scope (the store's `Drop` demands the
+    /// terminal-empty witness; a test that already called [`close`] drops a closed shell, a no-op).
+    pub struct Fem3dApp(VcsArtifactApp<EditorApp<Fem3dPlayApp>>);
 
-    /// 🧪️ A bare app instance — no `AppActionRegistry`, so undeclared internal commands dispatch freely.
-    /// `EditorApp<Fem3dPlayApp>` (SDK adapter, contract §2.1) is the real `ArtifactApp` implementor
-    /// `VcsArtifactApp` wraps, exactly the way `PluginBuilder::editor::<Fem3dPlayApp>` builds it.
-    fn view(kind: &str) -> ViewModel {
+    impl std::ops::Deref for Fem3dApp {
+        type Target = VcsArtifactApp<EditorApp<Fem3dPlayApp>>;
+        fn deref(&self) -> &Self::Target {
+            &self.0
+        }
+    }
+
+    impl std::ops::DerefMut for Fem3dApp {
+        fn deref_mut(&mut self) -> &mut Self::Target {
+            &mut self.0
+        }
+    }
+
+    impl Drop for Fem3dApp {
+        fn drop(&mut self) {
+            if !std::thread::panicking() {
+                semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut self.0);
+            }
+        }
+    }
+
+    /// 🪟️ A one-window view model addressing the named window kind.
+    pub fn view(kind: &str) -> ViewModel {
         let id = if kind == crate::editor::fem3d::modes::edit::windows::model::FEM3D_WINDOW_MODEL { "model-left" } else { "results-left" };
         ViewModel { window_id: Some(id.into()), window_instances: vec![ViewWindowInstance { id: id.into(), window_kind_id: kind.into() }], ..Default::default() }
     }
 
-    fn manifest() -> App { App { definition: create_fem3d_app(), examples: Vec::new() } }
+    pub(super) fn manifest() -> App { App { definition: create_fem3d_app(), examples: Vec::new() } }
 
+    /// 🧪️ The instance id every `meta("local")` dispatch is stamped with.
+    pub const FEM3D_TEST_INSTANCE: u32 = 1;
+
+    /// 🧪️ A MOUNTED app: bound to [`FEM3D_TEST_INSTANCE`], so a typed command reaches its retained
+    /// route instead of being refused with `interactive-job.live-instance`, and its publication
+    /// actually settles into the stores. It boots on the bundled demo.
     pub fn fem3d_app() -> Fem3dApp {
-        semio_framework_plugin::resolve_ready(new_app_with_registry::<EditorApp<Fem3dPlayApp>>(manifest))
+        let mut app = semio_framework_plugin::resolve_ready(new_app_with_registry::<EditorApp<Fem3dPlayApp>>(manifest));
+        semio_framework_plugin::resolve_ready(app.bind_instance_id(FEM3D_TEST_INSTANCE));
+        Fem3dApp(app)
+    }
+
+    /// 🧪️ A mounted app on the EMPTY document — the app boots on the bundled demo, so a test that
+    /// counts what it adds itself starts from nothing instead (any example id but the demo's loads
+    /// the empty snapshot).
+    pub async fn fem3d_empty_app() -> Fem3dApp {
+        let mut app = fem3d_app();
+        dispatch(&mut app, Fem3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "empty".into() })).await;
+        assert!(app.snapshot().expect("snapshot").nodes.is_empty(), "the empty example must load an empty document");
+        app
+    }
+
+    /// 🧹️ Retires a mounted app the way the plugin host retires a closing instance.
+    pub fn close(app: &mut Fem3dApp) {
+        semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0);
+    }
+
+    /// 🪟️ The window kind a command is addressed to when the test names none.
+    pub fn window_kind_for(command: &Fem3dCommand) -> &'static str {
+        match command {
+            Fem3dCommand::SetResultDisplay(_) | Fem3dCommand::SetResultAnimation(_) | Fem3dCommand::ResultAnimationTick(_) => crate::editor::fem3d::modes::edit::windows::results::FEM3D_WINDOW_RESULTS,
+            _ => crate::editor::fem3d::modes::edit::windows::model::FEM3D_WINDOW_MODEL,
+        }
     }
 
     pub async fn dispatch(app: &mut Fem3dApp, command: Fem3dCommand) -> InvocationResult {
-        let kind = match &command {
-            Fem3dCommand::SetCamera(_) => crate::editor::fem3d::modes::edit::windows::model::FEM3D_WINDOW_MODEL,
-            Fem3dCommand::SetResultDisplay(_) => crate::editor::fem3d::modes::edit::windows::results::FEM3D_WINDOW_RESULTS,
-            _ => crate::editor::fem3d::modes::edit::windows::model::FEM3D_WINDOW_MODEL,
-        };
+        let kind = window_kind_for(&command);
+        dispatch_in(app, command, view(kind)).await
+    }
+
+    /// 🧪️ Dispatches under an explicit view model (a chosen window, a selection-bearing interaction).
+    pub async fn dispatch_in(app: &mut Fem3dApp, command: Fem3dCommand, view_state: ViewModel) -> InvocationResult {
         let mut action = meta("local");
-        action.view_state = Some(view(kind));
-        let result = app.dispatch_typed(command, &action).await.expect("dispatch");
+        action.view_state = Some(view_state);
+        let mut result = app.dispatch_typed(command, &action).await.expect("dispatch");
+        // 🔁️ A mounted app answers before its retained typed operation has published: drive it home the
+        // way the plugin host's continuation does, and fold the settled receipt's effects into the answer
+        // (either surface may be the one carrying a `LoadDocument` or a playback re-arm).
+        let settled = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, FEM3D_TEST_INSTANCE).await.expect("settle the typed operation");
+        result.requested_effects.extend(settled.effects);
         for effect in &result.requested_effects {
             if let semio_framework_plugin::Effect::LoadDocument { pack, spr } = effect {
                 let files = store::ArtifactPackFiles { pack: pack.clone(), spr: spr.clone(), ops: String::new() };
@@ -40,17 +100,6 @@ pub(crate) mod context {
     pub fn render(app: &mut Fem3dApp, body_key: &str) -> String {
         let kind = if body_key == crate::editor::fem3d::modes::edit::windows::model::FEM3D_BODY_MODEL { crate::editor::fem3d::modes::edit::windows::model::FEM3D_WINDOW_MODEL } else { crate::editor::fem3d::modes::edit::windows::results::FEM3D_WINDOW_RESULTS };
         semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::resolve_ready(app.render(body_key, None, &view(kind))).expect("render")).expect("fixture projection")
-    }
-
-    /// 🧪️ An app reset to the empty document. `Fem3dPlayApp::initial_snapshot` now boots the bundled
-    /// `default` example (so the `World3d` Model window paints real geometry on first paint), which means
-    /// a test reasoning about "the first material" or "no load cases yet" has to say so explicitly —
-    /// `setActiveExample` with any id other than `examples::demo::ID` is exactly that reset, and `dispatch` above
-    /// already applies its `Effect::LoadDocument` the way the real host does.
-    pub async fn fem3d_empty_app() -> Fem3dApp {
-        let mut app = fem3d_app();
-        dispatch(&mut app, Fem3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "empty".into() })).await;
-        app
     }
 }
 
@@ -190,11 +239,11 @@ fn every_command() -> Vec<Fem3dCommand> {
         Fem3dCommand::AddLoadCase(add_load_case::AddLoadCase { name: "Live".into(), self_weight: false }),
         Fem3dCommand::AddCombination(add_combination::AddCombination { name: "ULS".into(), terms: "[[\"dead\",1.35],[\"live\",1.5]]".into() }),
         Fem3dCommand::SetSelfWeight(set_self_weight::SetSelfWeight { case_id: "dead".into(), enabled: true }),
-        Fem3dCommand::SetAnalysisSettings(set_analysis_settings::SetAnalysisSettings { modal_count: Some(5), buckling_count: None, deformation_scale: Some(30.0) }),
+        Fem3dCommand::SetAnalysisSettings(set_analysis_settings::SetAnalysisSettings { modal_count: Some(5), buckling_count: None, deformation_scale: Some(30.0), field: None, value: None, window_id: None }),
         Fem3dCommand::RemoveSelection(remove_selection::RemoveSelection { ids: vec!["n1".into(), "e1".into()] }),
         Fem3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: crate::examples::demo::ID.into() }),
         Fem3dCommand::SetCamera(set_camera::SetCamera { camera: crate::Viewport3dOrbit { position: [8.0, -3.0, 5.0], target: [0.0; 3], zoom: 1.25, up: None } }),
-        Fem3dCommand::SetResultDisplay(set_result_display::SetResultDisplay { source_id: Some("dead".into()), mode: "modal".into(), mode_index: 0 }),
+        Fem3dCommand::SetResultDisplay(set_result_display::SetResultDisplay { source_id: Some("dead".into()), mode: "modal".into(), mode_index: 0, field: None, value: None, window_id: None }),
     ]
 }
 

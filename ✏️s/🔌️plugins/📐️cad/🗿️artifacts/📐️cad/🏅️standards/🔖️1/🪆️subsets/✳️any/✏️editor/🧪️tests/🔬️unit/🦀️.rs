@@ -2006,7 +2006,7 @@ async fn empty_submit_during_a_session_fires_the_state_confirm_and_commits() {
     runtime.engagement_input = "2".into();
     assert!(engagement_submit_mutations(&document, &mut runtime, CadPaneId::Shape).is_empty(), "the typed height is a scalar entry, not a commit");
     assert_eq!(runtime.engagement_session.as_ref().map(|session| session.state.as_str()), Some("first_corner_height"));
-    runtime.engagement_input.clear();
+    assert!(runtime.engagement_input.is_empty(), "a consumed scalar entry clears the published line");
     // 🏁️ `ready` is the spec's `commit.fromStates` entry, so accepting the height commits at once.
     let ops = engagement_submit_mutations(&document, &mut runtime, CadPaneId::Shape);
     assert_eq!(ops.len(), 1, "accepting the height reaches `ready` and commits exactly one box: {ops:?}");
@@ -2018,3 +2018,51 @@ async fn empty_submit_during_a_session_fires_the_state_confirm_and_commits() {
     assert_eq!(runtime.engagement_step, "Idle");
 }
 //#endregion 🔖️EngagementSubmit
+
+//#region 🔖️EngagementCoalescing
+/// 🧵️ One engagement is one history item: every non-committing step (keystroke, start, pointer
+/// move, pick, abort) amends under `CAD_ENGAGEMENT_COALESCE_KEY`; the committing pick is a described
+/// document edit with the objects on the artifact lane and no coalesce key.
+#[semio_framework_async_macros::async_test]
+async fn engagement_steps_coalesce_into_one_history_item_until_the_commit() {
+    use crate::editor::cad::commands::engagement::CAD_ENGAGEMENT_COALESCE_KEY;
+    let app = CadPlayApp::default();
+    let scene = empty_cad_snapshot();
+    let mut config = CadConfig::default();
+    let amended = |emit: &Emit<CadMutation, CadConfigMutation>, what: &str| {
+        assert_eq!(emit.coalesce_key.as_deref(), Some(CAD_ENGAGEMENT_COALESCE_KEY), "{what} amends the running engagement item");
+        assert!(emit.artifact_mutations.is_empty(), "{what} touches no document");
+        assert_eq!(emit.config_mutations.len(), 1, "{what} republishes the session once");
+    };
+    for (index, character) in ["B", "Bo", "Box"].iter().enumerate() {
+        let emit = drive_with_config(&app, &scene, "engagementInput", Some(json!({ "pane": "shape", "value": character })), &config);
+        amended(&emit, &format!("keystroke {index}"));
+        config = config_after(&emit, &config);
+    }
+    let emit = drive_with_config(&app, &scene, "engagementPossibleSelect", Some(json!({ "pane": "shape", "possibleId": "primitive.box" })), &config);
+    amended(&emit, "starting the interaction");
+    config = config_after(&emit, &config);
+    let emit = drive_with_config(&app, &scene, "worldPointerMove", Some(json!({ "position": [0.5, 0.5, 0.0] })), &config);
+    amended(&emit, "a pointer move");
+    config = config_after(&emit, &config);
+    for point in [[0.0, 0.0, 0.0], [2.0, 3.0, 0.0]] {
+        let emit = drive_with_config(&app, &scene, "worldPointerDown", Some(json!({ "pane": "shape", "position": point })), &config);
+        amended(&emit, "a non-committing pick");
+        config = config_after(&emit, &config);
+    }
+    let emit = drive_with_config(&app, &scene, "engagementInput", Some(json!({ "pane": "shape", "value": "2" })), &config);
+    amended(&emit, "the height keystroke");
+    config = config_after(&emit, &config);
+    let emit = drive_with_config(&app, &scene, "engagementSubmit", Some(json!({ "pane": "shape" })), &config);
+    amended(&emit, "applying the typed height");
+    config = config_after(&emit, &config);
+    // ⏎️ The empty line is `confirm`: `ready` is the box's commit state.
+    let emit = drive_with_config(&app, &scene, "engagementSubmit", Some(json!({ "pane": "shape" })), &config);
+    assert_eq!(emit.coalesce_key, None, "the commit is its own described document edit");
+    assert_eq!(emit.artifact_mutations.len(), 1, "one box lands: {:?}", emit.artifact_mutations);
+    assert!(matches!(emit.artifact_mutations[0], CadMutation::CreateObject(_)));
+    let runtime = runtime_after(&emit, &config);
+    assert!(runtime.engagement_session.is_none());
+    assert_eq!(runtime.engagement_step, "Committed 1 object(s)");
+}
+//#endregion 🔖️EngagementCoalescing

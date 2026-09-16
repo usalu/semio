@@ -65,7 +65,9 @@ async fn document_verbs_publish_to_the_artifact_lane_settings_to_the_config_lane
     for contract in <EnergyModelCommandJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS {
         let expected = match contract.tool_id {
             id if ENERGY_MODEL_DOCUMENT_TOOL_IDS.contains(&id) => ArtifactToolPublicationLane::Artifact,
-            simulation::SET_SETTINGS_ACTION_ID => ArtifactToolPublicationLane::Config,
+            simulation::SET_SETTINGS_ACTION_ID | simulation::SET_RESULT_FIELD_ACTION_ID => ArtifactToolPublicationLane::Config,
+            // 🎥️ The 3d window's camera writes ONE window instance's own retained state.
+            model_window::SET_CAMERA_ACTION_ID => ArtifactToolPublicationLane::WindowConfig,
             _ => ArtifactToolPublicationLane::HostOnly,
         };
         assert_eq!(contract.lanes, &[expected], "wrong publication lane for {}", contract.tool_id);
@@ -214,7 +216,7 @@ async fn every_document_verb_round_trips_through_the_granular_vocabulary() {
     let reconstructed = applied(&snapshot, &EnergyModelEditorCommand::AssignSurfaceConstruction { surface: 1, construction: 2 });
     assert_eq!(reconstructed.surfaces[0].construction_id, EntityId(2));
 
-    let insulated = applied(&snapshot, &EnergyModelEditorCommand::SetMaterialProperty { material: 1, property: "conductivityWMK".into(), value: 0.04 });
+    let insulated = applied(&snapshot, &EnergyModelEditorCommand::SetMaterialProperty { material: 1, property: "conductivityWMK".into(), value: "0.04".into() });
     assert!((insulated.materials[0].conductivity_w_m_k - 0.04).abs() < 1e-12);
 
     let retuned = applied(&snapshot, &EnergyModelEditorCommand::SetThermostatSetpoints { thermostat: 1, heating_schedule: 2, cooling_schedule: 1, heating_throttle_range_k: 1.0, cooling_throttle_range_k: 1.5 });
@@ -271,7 +273,7 @@ async fn out_of_range_payloads_are_refused_before_they_reach_the_vocabulary() {
     let history = HistoryView::empty();
     let doc = ArtifactView::new(&snapshot, &history);
     for command in [
-        EnergyModelEditorCommand::SetMaterialProperty { material: 1, property: "conductivityWMK".into(), value: -1.0 },
+        EnergyModelEditorCommand::SetMaterialProperty { material: 1, property: "conductivityWMK".into(), value: "-1.0".into() },
         EnergyModelEditorCommand::SetSite { latitude_deg: 120.0, longitude_deg: 0.0, elevation_m: 0.0, time_zone_hours: 0.0, north_axis_deg: 0.0 },
         EnergyModelEditorCommand::SetRunPeriod { start_month: 13, start_day: 1, end_month: 12, end_day: 31 },
         EnergyModelEditorCommand::CreateZone { name: "Void".into(), volume_m3: 0.0, multiplier: 1, conditioned: true },
@@ -279,7 +281,7 @@ async fn out_of_range_payloads_are_refused_before_they_reach_the_vocabulary() {
         let fault = reduce(&command, &doc).err().expect("an out-of-range payload is refused");
         assert_eq!(fault.code.0.as_str(), "mutation.invalid-payload", "{} failed for the wrong reason", command.action_id());
     }
-    let fault = reduce(&EnergyModelEditorCommand::SetMaterialProperty { material: 9, property: "conductivityWMK".into(), value: 0.04 }, &doc).err().expect("an unknown material is refused");
+    let fault = reduce(&EnergyModelEditorCommand::SetMaterialProperty { material: 9, property: "conductivityWMK".into(), value: "0.04".into() }, &doc).err().expect("an unknown material is refused");
     assert_eq!(fault.code.0.as_str(), "mutation.target-missing");
 }
 
@@ -856,3 +858,110 @@ async fn the_glazing_and_gas_property_verbs_refuse_the_three_bad_payloads() {
     assert!(emitted_kinds(&snapshot, &glazing_property(22, "thicknessM", &model.glazing_materials[0].thickness_m.to_string())).is_empty(), "an unchanged value opens no revision");
 }
 //#endregion 🔍️InspectorVerbs
+
+//#region 🪟️ActionOwnership
+/// 🪟️ THE law the first browser probe broke: a panel action is dispatched in the ACTIVE window's
+/// context, and `VcsArtifactApp` refuses one the active window kind does not own
+/// (`window kind energy.model.3d does not own action set-fenestration-property`). So EVERY verb the
+/// inspection panel can dispatch must be declared app-level — an action listed on one window kind is
+/// "explicitly owned" and `build_definition` then stops copying it onto the others.
+#[semio_framework_async_macros::async_test]
+async fn every_inspector_verb_is_owned_by_every_window_kind() {
+    let def = definition();
+    assert!(def.window_kinds.len() >= 3, "the editor declares its windows");
+    for action in inspector_action_definitions() {
+        for window in &def.window_kinds {
+            assert!(window.actions.iter().any(|declared| declared.id == action.id), "window kind {} does not own inspector action {}", window.id, action.id);
+        }
+    }
+}
+
+/// 🪟️ The other half of the same law: no window kind may declare an inspector verb itself, or it
+/// becomes that window's alone again the moment someone re-adds it to a window's `actions()`.
+#[semio_framework_async_macros::async_test]
+async fn no_window_kind_declares_an_inspector_verb_itself() {
+    let inspector: BTreeSet<String> = inspector_action_definitions().into_iter().map(|action| action.id).collect();
+    for (window, own) in [
+        (structure::WINDOW_KIND_ID, structure::actions()),
+        (zones::WINDOW_KIND_ID, zones::actions()),
+    ] {
+        for action in own {
+            assert!(!inspector.contains(&action.id), "window kind {window} re-declares inspector verb {}, which would un-own it everywhere else", action.id);
+        }
+    }
+}
+
+/// 🧵️ Every inspector verb is still a classified retained tool with a publication contract — moving
+/// its declaration app-level must not drop it out of the dispatch catalogue.
+#[semio_framework_async_macros::async_test]
+async fn every_inspector_verb_stays_a_classified_retained_tool() {
+    let def = definition();
+    for action in inspector_action_definitions() {
+        assert!(ENERGY_MODEL_RETAINED_TOOL_IDS.contains(&action.id.as_str()), "{} left the retained roster", action.id);
+        let declared = def.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|declared| declared.id == action.id).expect("declared on a window");
+        assert_eq!(declared.semantics.execution.interactive_job, InteractiveJobClassification::Migrated, "{} is not Migrated", action.id);
+        assert!(!declared.args.is_empty(), "{} lost its argument declarations", action.id);
+    }
+}
+//#endregion 🪟️ActionOwnership
+
+//#region 🎨️RecolourLaw
+/// 🎨️ THE recolour law (W1-D §10). Everything between the kernel accumulator and a painted surface is
+/// unit-tested in isolation; this is the only law that drives the WHOLE chain through the same route
+/// the shell uses — `toolRunStart` → the framework ledger → `ArtifactView::tool_run()` →
+/// `surface_energy_from_run` → `surface_colors` → the World3d scene's per-vertex colours — and
+/// therefore the only one that can catch the payload being dropped in the middle of it.
+///
+/// It asserts three things: (a) the legend caption reaches the body, (b) at least one surface is
+/// painted a colour the unpainted scene never produces, and (c) the run's declared `windows` really
+/// resolve to this body key, which is what makes a tick's `dirty_scope()` name it.
+#[semio_framework_async_macros::async_test]
+async fn a_finalized_simulation_run_recolours_the_three_d_model_window() {
+    use crate::editor::model::results::{ResultField, SURFACE_ENERGY_BANDS};
+
+    // (c) The refresh half. `ToolRunLedger::dirty_scope()` unions `entry.window_bodies`, which the
+    // driver builds as `definition.windows.iter().filter_map(|id| registry.window_body_key(id))` —
+    // an id no window kind declares is silently FILTERED AWAY, and the body then never redraws on a
+    // tick. So the law is: every id the run declares is a declared window kind, and the body key it
+    // resolves to is the one this app renders.
+    let def = definition();
+    let declared = crate::energy_simulation_session::energy_simulation_run_definition().windows;
+    assert!(!declared.is_empty(), "the run declares no windows, so no tick can ever mark a body dirty");
+    for window_kind_id in &declared {
+        let kind = def.window_kinds.iter().find(|kind| &kind.id == window_kind_id).unwrap_or_else(|| panic!("the run declares window kind {window_kind_id}, which this editor does not register — the driver drops it and the body never redraws on a tick"));
+        assert!(!kind.body_key.is_empty());
+    }
+    let three_d = def.window_kinds.iter().find(|kind| kind.id == model_window::WINDOW_KIND_ID).expect("the 3d window kind");
+    assert_eq!(three_d.body_key, model_window::BODY_KEY);
+    assert!(declared.iter().any(|id| id == model_window::WINDOW_KIND_ID), "the run must declare the 3d model window or its body is never dirtied by a tick");
+
+    // The unpainted baseline: the same document, rendered before any run exists.
+    let mut app = simulation_app().await;
+    let before = render_text(&mut app, model_window::BODY_KEY).await;
+    assert!(!before.contains("kWh"), "there is no run yet, so there is no legend: {}", &before[..before.len().min(400)]);
+
+    start(&mut app).await;
+    pump_state(&mut app, "run finalizes", "finalized").await;
+
+    let after = render_text(&mut app, model_window::BODY_KEY).await;
+    // (a) The legend caption.
+    assert!(after.contains("kWh"), "the finalized run left no legend caption in the 3d body — surface_energy_from_run returned None, or the body never re-rendered. Body: {}", &after[..after.len().min(2000)]);
+    assert!(
+        ResultField::ALL.iter().any(|field| after.contains(field.label())),
+        "the caption does not name a published result field: {}",
+        &after[..after.len().min(2000)]
+    );
+
+    // (b) At least one surface carries a ramp colour. The ramp's hexes are converted to 0..1 floats
+    // by `hex_to_rgb01`, so the scene's colour array carries those components verbatim; the family
+    // palette the unpainted scene uses never produces them.
+    let painted = SURFACE_ENERGY_BANDS.iter().any(|hex| {
+        let [r, g, b] = crate::editor::model::results::hex_to_rgb01(hex);
+        [r, g, b].iter().all(|channel| after.contains(&format!("{channel:.4}")[..6]))
+    });
+    assert!(painted || after != before, "the 3d body is byte-identical before and after the run: nothing was recoloured");
+    assert!(painted, "no surface carries a colour from the results ramp; the overlay reached render as None. Body: {}", &after[..after.len().min(2000)]);
+
+    close(app);
+}
+//#endregion 🎨️RecolourLaw

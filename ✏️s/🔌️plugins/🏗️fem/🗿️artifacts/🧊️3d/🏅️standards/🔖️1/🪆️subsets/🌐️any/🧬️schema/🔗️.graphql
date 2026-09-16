@@ -38,6 +38,14 @@ type FemSolid {
   layers: Int!
   meshSize: Float!
   materialId: String!
+  axis: FemAxis!
+}
+
+"""🧭️ The world axis a solid's footprint is extruded along."""
+enum FemAxis {
+  x
+  y
+  z
 }
 
 type FemMaterial {

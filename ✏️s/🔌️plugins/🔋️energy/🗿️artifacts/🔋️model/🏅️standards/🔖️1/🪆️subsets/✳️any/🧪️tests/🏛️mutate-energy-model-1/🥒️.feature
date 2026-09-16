@@ -616,6 +616,8 @@ Feature: Apply every typed s.energy.model mutation against an independent Python
       | change-gas-material-gas-refuses | 🟤️change-gas-material-gas | ⛔️refuses |
       | rename-gas-material-applies | 🔘️rename-gas-material | ✅️applies |
       | rename-gas-material-refuses | 🔘️rename-gas-material | ⛔️refuses |
+      | change-material-roughness-applies | 🗻️change-material-roughness | ✅️applies |
+      | change-material-roughness-refuses | 🗻️change-material-roughness | ⛔️refuses |
 
   @id-inverse
   @level-exhaustive
@@ -1201,6 +1203,8 @@ Feature: Apply every typed s.energy.model mutation against an independent Python
       | change-gas-material-gas-refuses | 🟤️change-gas-material-gas | ⛔️refuses |
       | rename-gas-material-applies | 🔘️rename-gas-material | ✅️applies |
       | rename-gas-material-refuses | 🔘️rename-gas-material | ⛔️refuses |
+      | change-material-roughness-applies | 🗻️change-material-roughness | ✅️applies |
+      | change-material-roughness-refuses | 🗻️change-material-roughness | ⛔️refuses |
 
   @id-identity-round-trip
   @level-long

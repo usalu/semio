@@ -17,6 +17,7 @@ consumes = ["forms.questionKind"]
 
 [[package.metadata.semio.playground]]
 variant = "forms"
+app = "s.forms.forms@1/*#editor"
 ports = { react = 6058, wgpu = 6158 }
 
 [lib]

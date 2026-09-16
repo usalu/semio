@@ -1,6 +1,14 @@
 syntax = "proto3";
 import "🧰️framework/🔨️modules/🖱️ui/🪟️viewport/🧊️3d/🧬️schema/🛰️.proto";
 package semio.app.fem.fem3d.model_window_config;
+message Fem3dGumballConfig {
+  bool move_axes = 1;
+  bool move_planes = 2;
+  bool rotate = 3;
+  bool scale_axes = 4;
+  bool scale_uniform = 5;
+}
 message Fem3dModelWindowConfig {
   semio.framework.ui.viewport.Viewport3dOrbit camera = 1;
+  Fem3dGumballConfig gumball = 2;
 }

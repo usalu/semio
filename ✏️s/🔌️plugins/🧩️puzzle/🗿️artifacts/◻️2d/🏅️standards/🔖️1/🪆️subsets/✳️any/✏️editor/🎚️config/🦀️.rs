@@ -60,6 +60,9 @@ pub struct Puzzle2dPlayRuntime {
     pub brush_candidates: Vec<dsl::DslValue>,
     #[value(default)]
     pub brush_candidate_source_handle_id: String,
+    /// 📄 Per-section page cursor of the virtualised panels (window transient, `setPanelPage`).
+    #[value(default)]
+    pub panel_pages: BTreeMap<String, u32>,
     #[value(default = "default_fill_count")]
     pub fill_count: u32,
     #[value(default)]
@@ -85,6 +88,7 @@ impl Default for Puzzle2dPlayRuntime {
             brush_candidate_index: 0,
             brush_candidates: Vec::new(),
             brush_candidate_source_handle_id: String::new(),
+            panel_pages: BTreeMap::new(),
             fill_count: default_fill_count(),
             grid_snap_enabled: false,
             grid_factor: default_grid_factor(),

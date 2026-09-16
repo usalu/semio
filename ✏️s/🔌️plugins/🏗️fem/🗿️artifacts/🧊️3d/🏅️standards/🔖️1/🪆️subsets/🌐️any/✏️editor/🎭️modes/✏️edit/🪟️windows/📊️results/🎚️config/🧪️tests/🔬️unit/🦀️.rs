@@ -28,6 +28,10 @@ fn fem3d_window_config_results_matches_neutral_fixture_and_codecs() {
             "camera-short" => candidate["camera"]["position"] = serde_json::json!([8, -3]),
             "camera-zero" => candidate["camera"]["zoom"] = serde_json::json!(0),
             "bad-mode" => candidate["resultMode"] = serde_json::json!("harmonic"),
+            "animation-null" => candidate["animation"] = serde_json::Value::Null,
+            "animation-unknown" => candidate["animation"]["extra"] = serde_json::json!(true),
+            "bad-loop-mode" => candidate["animation"]["loopMode"] = serde_json::json!("bounce"),
+            "bad-waveform" => candidate["animation"]["waveform"] = serde_json::json!("square"),
             _ => panic!("unknown neutral invalid case {kind}"),
         }
         if dsl::json::from_json_str::<Fem3dResultsWindowConfig>(&candidate.to_string()).is_ok() {

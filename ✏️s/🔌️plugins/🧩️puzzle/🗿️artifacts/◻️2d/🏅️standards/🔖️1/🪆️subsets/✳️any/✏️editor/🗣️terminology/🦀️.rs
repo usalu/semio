@@ -31,6 +31,36 @@ semio_framework_plugin::app_labels! {
         node_kind: native_en "Node Kind", native_de "Knotenart", reuse_en "Node Kind", reuse_de "Knotenart";
         x: native_en "X", native_de "X", reuse_en "X", reuse_de "X";
         y: native_en "Y", native_de "Y", reuse_en "Y", reuse_de "Y";
+        node: native_en "Node", native_de "Knoten", reuse_en "Building component", reuse_de "Baukomponente";
+        edge: native_en "Edge", native_de "Kante", reuse_en "Edge", reuse_de "Kante";
+        handle: native_en "Handle", native_de "Anschluss", reuse_en "Connection point", reuse_de "Verbindungspunkt";
+        handle_kind: native_en "Handle Kind", native_de "Anschlussart", reuse_en "Connection Kind", reuse_de "Verbindungsart";
+        edge_kind: native_en "Edge Kind", native_de "Kantenart", reuse_en "Edge Kind", reuse_de "Kantenart";
+        text: native_en "Text", native_de "Text", reuse_en "Text", reuse_de "Text";
+        shape: native_en "Shape", native_de "Form", reuse_en "Shape", reuse_de "Form";
+        radius: native_en "Radius", native_de "Radius", reuse_en "Radius", reuse_de "Radius";
+        width: native_en "Width", native_de "Breite", reuse_en "Width", reuse_de "Breite";
+        height: native_en "Height", native_de "Höhe", reuse_en "Height", reuse_de "Höhe";
+        angle: native_en "Angle", native_de "Winkel", reuse_en "Angle", reuse_de "Winkel";
+        source: native_en "Source", native_de "Quelle", reuse_en "Source", reuse_de "Quelle";
+        target: native_en "Target", native_de "Ziel", reuse_en "Target", reuse_de "Ziel";
+        hidden: native_en "Hidden", native_de "Ausgeblendet", reuse_en "Hidden", reuse_de "Ausgeblendet";
+        locked: native_en "Locked", native_de "Gesperrt", reuse_en "Locked", reuse_de "Gesperrt";
+        selected: native_en "Selected", native_de "Ausgewählt", reuse_en "Selected", reuse_de "Ausgewählt";
+        // settings panel and grid option group
+        settings: native_en "Settings", native_de "Einstellungen", reuse_en "Settings", reuse_de "Einstellungen";
+        grid: native_en "Grid", native_de "Raster", reuse_en "Grid", reuse_de "Raster";
+        grid_snap: native_en "Snap", native_de "Fang", reuse_en "Snap", reuse_de "Fang";
+        grid_factor: native_en "Factor", native_de "Faktor", reuse_en "Factor", reuse_de "Faktor";
+        node_size: native_en "Node Size", native_de "Knotengröße", reuse_en "Component Size", reuse_de "Komponentengröße";
+        distribution: native_en "Distribution", native_de "Verteilung", reuse_en "Distribution", reuse_de "Verteilung";
+        // transform + io verbs
+        translate: native_en "Move", native_de "Verschieben", reuse_en "Move", reuse_de "Verschieben";
+        rotate: native_en "Rotate", native_de "Drehen", reuse_en "Rotate", reuse_de "Drehen";
+        scale: native_en "Scale", native_de "Skalieren", reuse_en "Scale", reuse_de "Skalieren";
+        export: native_en "Export", native_de "Exportieren", reuse_en "Export", reuse_de "Exportieren";
+        import: native_en "Import", native_de "Importieren", reuse_en "Import", reuse_de "Importieren";
+        import_invalid: native_en "The file is not a puzzle 2d fixture", native_de "Die Datei ist kein Puzzle-2d-Fixture", reuse_en "The file is not a puzzle 2d fixture", reuse_de "Die Datei ist kein Puzzle-2d-Fixture";
         // measures
         automatic: native_en "Automatic", native_de "Automatisch", reuse_en "Automatic", reuse_de "Automatisch";
         lod: native_en "LOD", native_de "LOD", reuse_en "LOD", reuse_de "LOD";

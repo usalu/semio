@@ -155,8 +155,6 @@ const Window: React.FC<WindowProps> = ({
   const controlsFocusLabel = useLabel("ui.common.focus");
   const controlsUnfocusLabel = useLabel("ui.common.unfocus");
   const windowOptionsLabel = useLabel("ui.common.windowOptions");
-  const measuresFocusLabel = useLabel("ui.common.focus");
-  const measuresUnfocusLabel = useLabel("ui.common.unfocus");
   const actionLabel = useLabel("ui.common.actions");
   const searchLabel = useLabel(UI_WINDOW_SEARCH.title);
   const utilitiesLabel = useLabel("ui.common.utilities");
@@ -174,7 +172,6 @@ const Window: React.FC<WindowProps> = ({
     onMeasuresFoldedChange?.(folded);
     if (measuresFoldedProp === undefined) setMeasuresFoldedInternal(folded);
   };
-  const [measuresExpanded, setMeasuresExpanded] = reactHostPort.useState(false);
   // 🎛️ Controlled-with-default fold state for the bottom-left Utilities rail (default true).
   const [utilityBarFoldedInternal, setUtilityBarFoldedInternal] = reactHostPort.useState(true);
   const utilityBarFolded = utilityBarFoldedProp ?? utilityBarFoldedInternal;
@@ -207,9 +204,9 @@ const Window: React.FC<WindowProps> = ({
   // under one. It floats, so it yields on whichever axis costs less.
   const quickActionsRef = reactHostPort.useRef<HTMLDivElement | null>(null);
   const quickActionsSafeArea = useChromePanelSafeArea({ hostRef: windowBodyRef, affordanceRef: quickActionsRef, anchor: "top-left", yieldAxis: "either", gapPx: uiSpacingPx(1), enabled: !mobile });
-  const engagementVisible = !measuresExpanded && !!(engagement || actionPane);
+  const engagementVisible = !!(engagement || actionPane);
   const engagementExpanded = engagementVisible && !actionsFolded;
-  const searchVisible = !measuresExpanded && !!search;
+  const searchVisible = !!search;
   // 🗣️ The engagement bar is ONE affordance laid out as two anchored panes — the top-left status/action
   // pane and the top-middle command line — so both follow the same fold state. Giving the command line
   // its own private `searchFolded` meant unfolding "Actions" left the typed input unmounted, i.e. the
@@ -219,11 +216,6 @@ const Window: React.FC<WindowProps> = ({
     setActionsFolded(folded);
     if (!folded && search?.input) queueMicrotask(() => focusActiveSearchInput());
   };
-
-  reactHostPort.useEffect(() => {
-    if (!measuresExpanded) return;
-    setActionsFolded(true);
-  }, [measuresExpanded, onActionsFoldedChange, actionsFoldedProp]);
 
   useShellKeydown(
     shellScope?.rootRef ?? NULL_SHELL_ROOT_REF,
@@ -273,7 +265,7 @@ const Window: React.FC<WindowProps> = ({
       if (overlay) ro.observe(overlay);
     }
     return () => ro.disconnect();
-  }, [active, engagement, search, measures, actionPane, engagementExpanded, searchExpanded, measuresFolded, measuresExpanded]);
+  }, [active, engagement, search, measures, actionPane, engagementExpanded, searchExpanded, measuresFolded]);
 
   if (!isVisible) return null;
 
@@ -334,23 +326,8 @@ const Window: React.FC<WindowProps> = ({
               icon={WINDOW_PANE_MEASURES_ICON}
               label={windowOptionsLabel}
               folded={measuresFolded}
-              expanded={measuresExpanded}
-              onFoldToggle={() => {
-                if (measuresFolded) setMeasuresFolded(false);
-                else {
-                  setMeasuresExpanded(false);
-                  setMeasuresFolded(true);
-                }
-              }}
+              onFoldToggle={() => setMeasuresFolded(!measuresFolded)}
               toggleId={childElementId("framework.window", id, "measures", measuresFolded ? "unfold" : "fold")}
-              foldControlId={childElementId("framework.window", id, "measures", "fold")}
-              enlarge={{
-                id: childElementId("framework.window", id, "measures", "span"),
-                slot: "window-measures-span",
-                icon: measuresExpanded ? <Minimize2Icon className="size-small" /> : <Maximize2Icon className="size-small" />,
-                label: measuresExpanded ? measuresUnfocusLabel : measuresFocusLabel,
-                onClick: () => (measuresExpanded ? setMeasuresExpanded(false) : setMeasuresExpanded(true)),
-              }}
               size={measuresWidthPx}
               onSizeChange={setMeasuresWidthPx}
               minSize={windowMeasuresMinWidthPx}
@@ -419,27 +396,25 @@ const Window: React.FC<WindowProps> = ({
               <Search {...search} active={searchExpanded} />
             </Pane>
           ) : null}
-          {!measuresExpanded ? (
-            <Pane
-              id={childElementId("framework.window", id, "utilityBar")}
-              overlaySlot="utility-bar-overlay"
-              anchor="bottom-left"
-              icon={WINDOW_PANE_UTILITIES_ICON}
-              label={utilitiesLabel}
-              folded={utilityBarFolded}
-              toggleDisabled={!utilityBar}
-              onFoldToggle={() => setUtilityBarFolded(!utilityBarFolded)}
-              toggleId={childElementId("framework.window", id, "utilityBar", utilityBarFolded ? "unfold" : "fold")}
-              stackSlot="utility-bar"
-              bodySlot="utility-bar-body"
-              bodyClassName={utilityBarBodyClass}
-              bodyStyle={utilityBarMaxHeightPx > 0 ? { maxHeight: utilityBarMaxHeightPx } : undefined}
-              stackDataAttrs={{ "data-level": "pane", "data-folded": utilityBarFolded ? "true" : undefined }}
-              dimWhenOpen={Boolean(utilityBar)}
-            >
-              {utilityBar}
-            </Pane>
-          ) : null}
+          <Pane
+            id={childElementId("framework.window", id, "utilityBar")}
+            overlaySlot="utility-bar-overlay"
+            anchor="bottom-left"
+            icon={WINDOW_PANE_UTILITIES_ICON}
+            label={utilitiesLabel}
+            folded={utilityBarFolded}
+            toggleDisabled={!utilityBar}
+            onFoldToggle={() => setUtilityBarFolded(!utilityBarFolded)}
+            toggleId={childElementId("framework.window", id, "utilityBar", utilityBarFolded ? "unfold" : "fold")}
+            stackSlot="utility-bar"
+            bodySlot="utility-bar-body"
+            bodyClassName={utilityBarBodyClass}
+            bodyStyle={utilityBarMaxHeightPx > 0 ? { maxHeight: utilityBarMaxHeightPx } : undefined}
+            stackDataAttrs={{ "data-level": "pane", "data-folded": utilityBarFolded ? "true" : undefined }}
+            dimWhenOpen={Boolean(utilityBar)}
+          >
+            {utilityBar}
+          </Pane>
         </div>
       </GhostRegionShell>
     </SurfaceScope>

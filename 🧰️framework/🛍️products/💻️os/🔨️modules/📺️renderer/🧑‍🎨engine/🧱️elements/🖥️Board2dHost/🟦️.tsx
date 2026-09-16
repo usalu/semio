@@ -948,7 +948,9 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
           } catch {
             /* gpu not ready */
           }
-          dispatch("setSelection", { ids: selectionIds });
+          // 🕹️ The guest owns no `setSelection` verb: a right-click pick travels as the engine's own
+          // `select` board event, which `applyBoardEvents` turns into the framework selection write.
+          dispatch("applyBoardEvents", { eventsJson: JSON.stringify([{ name: "select", payload: { ids: selectionIds, exitHighlightIds: [] } }]) });
         }
         const hits = targets.map((target) => ({ domain: target.domain, id: target.id, label: target.label }));
         const menu = await openSurfaceContextMenu(

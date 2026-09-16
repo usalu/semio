@@ -7,11 +7,43 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "camera"
+        "camera",
+        "gumball"
       ],
       "properties": {
         "camera": {
           "$ref": "https://json.schemas.assets.semio-tech.com/framework/ui/viewport/3d"
+        },
+        "gumball": {
+          "$ref": "#/$defs/Fem3dGumballConfig"
+        }
+      }
+    },
+    "Fem3dGumballConfig": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "moveAxes",
+        "movePlanes",
+        "rotate",
+        "scaleAxes",
+        "scaleUniform"
+      ],
+      "properties": {
+        "moveAxes": {
+          "type": "boolean"
+        },
+        "movePlanes": {
+          "type": "boolean"
+        },
+        "rotate": {
+          "type": "boolean"
+        },
+        "scaleAxes": {
+          "type": "boolean"
+        },
+        "scaleUniform": {
+          "type": "boolean"
         }
       }
     }

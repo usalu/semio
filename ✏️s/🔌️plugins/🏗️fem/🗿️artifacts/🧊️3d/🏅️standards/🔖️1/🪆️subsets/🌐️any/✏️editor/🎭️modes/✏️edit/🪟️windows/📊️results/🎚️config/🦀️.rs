@@ -4,9 +4,83 @@
 mod schema;
 pub use schema::*;
 
+//#region 🔖️Playback
+/// ⏱️ The playback frame delta, in milliseconds. A wasm guest has no monotonic clock it may read
+/// inside a command, so the tick advances the phase by a FIXED delta and the host's
+/// `Effect::DispatchAction { delay_ms }` is what keeps that delta honest (~30 fps).
+pub const ANIMATION_TICK_MS: u64 = 33;
+
+/// ⏱️ [`ANIMATION_TICK_MS`] in seconds — `speed` is stated in cycles per second.
+pub const ANIMATION_TICK_SECONDS: f64 = ANIMATION_TICK_MS as f64 / 1_000.0;
+
+/// 🐢️ Slowest and fastest playback the transport admits, in cycles per second.
+pub const ANIMATION_SPEED_MINIMUM: f64 = 0.05;
+pub const ANIMATION_SPEED_MAXIMUM: f64 = 4.0;
+
+/// ⏭️ One transport step — a twenty-fourth of a cycle, the classic film frame.
+pub const ANIMATION_PHASE_STEP: f64 = 1.0 / 24.0;
+
+impl Default for Fem3dResultsAnimation {
+    /// 🎞️ A still results window sits at phase 1 — the FULL deformed shape, exactly what the window
+    /// drew before playback existed. Phase 0 would open every results window on an undeformed
+    /// structure, so the resting pose is the end of the ramp, not its start.
+    fn default() -> Self {
+        Self { phase: 1.0, playing: false, speed: 0.5, loop_mode: Fem3dLoopMode::Loop, waveform: Fem3dWaveform::Ramp, reverse: false }
+    }
+}
+
+impl Fem3dResultsAnimation {
+    /// 〰️ The signed factor the solved displacement field is scaled by this frame. `Sine` returns
+    /// negative values on purpose: the structure swings through both signs instead of only growing.
+    pub fn amplitude(&self) -> f64 {
+        match self.waveform {
+            Fem3dWaveform::Ramp => self.phase,
+            Fem3dWaveform::Sine => (std::f64::consts::TAU * self.phase).sin(),
+        }
+    }
+
+    /// ⏱️ The state one fixed frame later, with the loop mode applied. `Once` parks at 1 and stops
+    /// itself; `PingPong` bounces off both ends by flipping `reverse` (`speed` never goes negative).
+    pub fn advanced(&self, seconds: f64) -> Self {
+        let mut next = *self;
+        let step = self.speed.clamp(ANIMATION_SPEED_MINIMUM, ANIMATION_SPEED_MAXIMUM) * seconds;
+        match self.loop_mode {
+            Fem3dLoopMode::Loop => next.phase = (self.phase + step).rem_euclid(1.0),
+            Fem3dLoopMode::Once => {
+                let phase = self.phase + step;
+                next.phase = phase.min(1.0);
+                next.playing = phase < 1.0;
+            }
+            Fem3dLoopMode::PingPong => {
+                let phase = if self.reverse { self.phase - step } else { self.phase + step };
+                if phase > 1.0 {
+                    next.phase = (2.0 - phase).clamp(0.0, 1.0);
+                    next.reverse = true;
+                } else if phase < 0.0 {
+                    next.phase = (-phase).clamp(0.0, 1.0);
+                    next.reverse = false;
+                } else {
+                    next.phase = phase;
+                }
+            }
+        }
+        next
+    }
+
+    /// ▶️ Arms playback: a `Once` run that already sits at its end rewinds, so the play button is
+    /// never a control that visibly does nothing.
+    pub fn start(&mut self) {
+        if self.loop_mode == Fem3dLoopMode::Once && self.phase >= 1.0 {
+            self.phase = 0.0;
+        }
+        self.playing = true;
+    }
+}
+//#endregion 🔖️Playback
+
 impl Default for Fem3dResultsWindowConfig {
     fn default() -> Self {
-        Self { camera: crate::viewport::INITIAL, result_source_id: None, result_mode: crate::app_surface::ResultMode::Static, result_mode_index: 0 }
+        Self { camera: crate::viewport::INITIAL, result_source_id: None, result_mode: crate::app_surface::ResultMode::Static, result_mode_index: 0, animation: Fem3dResultsAnimation::default() }
     }
 }
 
@@ -139,13 +213,58 @@ pub fn current<C>(view: &semio_framework_plugin::ConfigView<'_, C>) -> Fem3dResu
     view.window::<Fem3dResultsWindowConfigOwner>().cloned().unwrap_or_default()
 }
 
+/// 🪟️ The captured results-window partition, or `None` when the projection captured another window
+/// (a panel projection binds to the FOCUSED pane) — the read side that lets a panel tell "live state"
+/// from "the defaults of a pane it cannot see".
+pub fn captured<C>(view: &semio_framework_plugin::ConfigView<'_, C>) -> Option<Fem3dResultsWindowConfig> {
+    view.window::<Fem3dResultsWindowConfigOwner>().cloned()
+}
+
+/// 🪟️ The results-window instance a command both READS through [`current`] and writes back.
+///
+/// `requested` is the `windowId` a panel control tagged onto its own arguments (the puzzle3d
+/// Settings-panel rule): a panel projection carries no `window_id` of its own, so without the tag a
+/// split layout would retune whichever pane happened to be focused. An explicit tag therefore wins —
+/// but only over the ROSTER, never over the captured partition: `WindowConfigOwnerRegistry::capture`
+/// binds `ConfigView::window` to `window_id`, or for a panel to `focused_window_id`, and that
+/// snapshot is the state [`current`] hands the caller. Writing a DIFFERENT window than the one just
+/// read would publish one pane's state into another's, so that pair is refused by name instead.
+pub fn addressed_window_id<C>(cfg: &semio_framework_plugin::ConfigView<'_, C>, view: &semio_framework_plugin::ViewModel, requested: Option<&str>) -> Result<String, semio_framework_plugin::Fault> {
+    let kind_id = <Fem3dResultsWindowConfigOwner as semio_framework_plugin::WindowConfigOwner>::WINDOW_KIND_ID;
+    let requested = requested.filter(|id| !id.is_empty());
+    let captured = cfg.window.filter(|snapshot| snapshot.window_kind_id() == kind_id).map(|snapshot| snapshot.window_id().to_string());
+    if let Some(requested) = requested {
+        if view.window_instances.iter().any(|window| window.id == requested && window.window_kind_id == kind_id) {
+            return match captured {
+                Some(captured) if captured != requested => Err(semio_framework_plugin::Fault::from(format!("fem.window.mismatch: control asked for results window '{requested}' but the captured configuration is '{captured}'"))),
+                _ => Ok(requested.to_string()),
+            };
+        }
+        return Err(semio_framework_plugin::Fault::from(format!("fem.window.stale: '{requested}' is not an open FEM 3D results window")));
+    }
+    if let Some(captured) = captured {
+        return Ok(captured);
+    }
+    let id = view.window_id.as_deref().ok_or_else(|| semio_framework_plugin::Fault::from("fem.window.required: command has no addressed window instance"))?;
+    let kind = view.window_instances.iter().find(|window| window.id == id).map(|window| window.window_kind_id.as_str()).ok_or_else(|| semio_framework_plugin::Fault::from("fem.window.stale: addressed window instance is not open"))?;
+    if kind != kind_id {
+        return Err(semio_framework_plugin::Fault::from("fem.window.kind: addressed window has the wrong kind"));
+    }
+    Ok(id.to_string())
+}
+
+/// 🎚️ The whole-record publication into one exact results-window partition.
+pub fn addressed_to(window_id: &str, config: Fem3dResultsWindowConfig) -> semio_framework_plugin::WindowConfigMutation {
+    semio_framework_plugin::WindowConfigMutation::of::<Fem3dResultsWindowConfigOwner>(window_id, Fem3dResultsWindowConfigMutation::Snapshot { config: Box::new(config) })
+}
+
 pub fn addressed(view: &semio_framework_plugin::ViewModel, config: Fem3dResultsWindowConfig) -> Result<semio_framework_plugin::WindowConfigMutation, semio_framework_plugin::Fault> {
     let id = view.window_id.as_deref().ok_or_else(|| semio_framework_plugin::Fault::from("fem.window.required: command has no addressed window instance"))?;
     let kind = view.window_instances.iter().find(|window| window.id == id).map(|window| window.window_kind_id.as_str()).ok_or_else(|| semio_framework_plugin::Fault::from("fem.window.stale: addressed window instance is not open"))?;
     if kind != <Fem3dResultsWindowConfigOwner as semio_framework_plugin::WindowConfigOwner>::WINDOW_KIND_ID {
         return Err(semio_framework_plugin::Fault::from("fem.window.kind: addressed window has the wrong kind"));
     }
-    Ok(semio_framework_plugin::WindowConfigMutation::of::<Fem3dResultsWindowConfigOwner>(id, Fem3dResultsWindowConfigMutation::Snapshot { config: Box::new(config) }))
+    Ok(addressed_to(id, config))
 }
 
 #[cfg(test)]

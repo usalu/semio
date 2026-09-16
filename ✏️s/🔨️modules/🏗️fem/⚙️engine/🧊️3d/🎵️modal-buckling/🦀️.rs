@@ -56,7 +56,7 @@ pub fn fem3d_modal_mode_values(doc: &Fem3dSnapshot, mode_index: usize) -> Result
 
 /// 🌉️ Shared buckling-case resolution for `fem3d_buckling`/`fem3d_buckling_mode_values`, mirroring
 /// `fem2d`'s `buckling_inputs` — translates the named case's loads (incl. `Area` against `solids`).
-fn buckling_case(doc: &Fem3dSnapshot, case_id: &str, solids: &[meshing::MeshedSolid]) -> Result<analyses::LoadCase, Fem3dError> {
+fn buckling_case(doc: &Fem3dSnapshot, case_id: &str, solids: &[meshing::SolidMesh]) -> Result<analyses::LoadCase, Fem3dError> {
     let case = doc.load_cases.iter().find(|c| c.id == case_id).ok_or_else(|| Fem3dError::LoadCaseNotFound(case_id.to_string()))?;
     let (nodal_loads, member_loads) = meshing::translate_loads(&case.loads, solids)?;
     Ok(analyses::LoadCase { id: case.id.clone(), nodal_loads, member_loads, self_weight: case.self_weight })

@@ -978,6 +978,9 @@ pub fn engagement_submit_mutations(document: &CadSnapshot, runtime: &mut CadPlay
         if let Some(session) = runtime.engagement_session.as_mut() {
             if apply_event(session, &event_kind, payload.as_ref()) {
                 runtime.engagement_step = session.state.clone();
+                // 🧹️ The line was consumed: a scalar entry that keeps its state ("2" in the height
+                // prompt) must not linger as the published line, or the shell's next Enter re-submits it.
+                runtime.engagement_input.clear();
                 let session_snapshot = session.clone();
                 return try_commit_session_mutations(document, runtime, pane, &session_snapshot);
             }

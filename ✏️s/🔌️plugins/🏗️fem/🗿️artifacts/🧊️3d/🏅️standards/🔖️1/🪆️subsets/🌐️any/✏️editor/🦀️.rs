@@ -10,13 +10,16 @@
 //! `.window_kind(..)` calls stay inline — fem3d builds neither a `ModeDefinition` nor a
 //! `WindowKindDefinition` object anywhere, see `modes::edit`'s and the window nodes' own doc comments).
 
+use crate::editor::fem3d::commands::gumball::{rotate_selection, scale_selection, set_transform_gumball_flag, translate_selection};
 use crate::editor::fem3d::commands::{
-    add_area_load, add_bar, add_combination, add_frame, add_load_case, add_material, add_member_udl, add_nodal_load, add_node, add_section, add_solid, add_support, remove_selection, set_active_example, set_analysis_settings, set_camera,
-    set_result_display, set_self_weight,
+    add_area_load, add_bar, add_combination, add_frame, add_load_case, add_material, add_member_udl, add_nodal_load, add_node, add_section, add_solid, add_support, focus_entity, patch_combination, patch_element, patch_load, patch_load_case,
+    patch_material, patch_node, patch_section, patch_solid, patch_support, remove_selection, result_animation_tick, set_active_example, set_analysis_settings, set_camera, set_result_animation, set_result_display, set_self_weight,
 };
-use semio_framework_plugin::{NoConfig, NoConfigMutation};
+use crate::editor::fem3d::interaction::{fem3d_interaction_definition, fem3d_transform_armed, Fem3dInteractionSnapshot, FEM3D_INTERACTION_DOMAIN, FEM3D_UTILITY_TRANSFORM};
 use crate::editor::fem3d::modes::edit;
 use crate::editor::fem3d::modes::edit::windows::{model as window_model, results as window_results};
+use crate::editor::fem3d::panels::{artifact as artifact_panel, inspection as inspection_panel, results as results_panel};
+use crate::editor::fem3d::terminology::fem3d_labels;
 use crate::model::{Dof, ElementResult};
 use crate::standards::v1::subsets::any::schema::mutations::text::Fem3dMutation;
 use crate::Fem3dSnapshot;
@@ -24,15 +27,18 @@ use dsl::json::Value;
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::{
-    built_text_node, create_default_layout, ActionArgDef, ActionArgOption, AppDefinition, AppIo, AppOperationContext, AppRenderOperationContext, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry,
-    ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ConfigSpec, ConfigView, Dialect, DraftView, Editor, EditorApp, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType,
-    NoDraft, NoDraftMutation, PluginCloseStep,
+    built_text_node, create_default_layout, ActionArgDef, ActionArgOption, ActionDescriptor, AppDefinition, AppIo, AppOperationContext, AppRenderOperationContext, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest,
+    ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ConfigSpec, ConfigView, Dialect, DraftView, Editor, EditorApp, Emit, Fault, InteractionRef, Label, LocalizedLabel, Media, MediaClass,
+    MediaError, MediaForm, MediaPayload, MediaType, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, PluginAssemblyError, PluginCloseStep, UtilityCategory, UtilityDefinition, ViewModel, WindowMeasure,
 };
 use std::collections::HashMap;
 use store::EngineHandles;
 
 //#region 🔖️Constants
 pub const FEM3D_APP_ID: &str = "fem3d-play";
+/// 🎛️ Stable controller/action-factory tag every panel row and control binds its actions under
+/// (the `ActionFactory` id, distinct from the derived surface app id) — the same string as the app id.
+pub const FEM3D_PLAY_CONTROLLER_ID: &str = FEM3D_APP_ID;
 //#endregion 🔖️Constants
 
 //#region 🔖️Commands
@@ -63,6 +69,22 @@ semio_framework_plugin::app_commands! {
         "setActiveExample" as "active-example" => set_active_example::SetActiveExample,
         "setCamera" as "camera" => set_camera::SetCamera,
         "setResultDisplay" as "result-display" => set_result_display::SetResultDisplay,
+        "patchNode" as "patch-node" => patch_node::PatchNode,
+        "patchElement" as "patch-element" => patch_element::PatchElement,
+        "patchMaterial" as "patch-material" => patch_material::PatchMaterial,
+        "patchSection" as "patch-section" => patch_section::PatchSection,
+        "patchSupport" as "patch-support" => patch_support::PatchSupport,
+        "patchSolid" as "patch-solid" => patch_solid::PatchSolid,
+        "patchLoad" as "patch-load" => patch_load::PatchLoad,
+        "patchLoadCase" as "patch-load-case" => patch_load_case::PatchLoadCase,
+        "patchCombination" as "patch-combination" => patch_combination::PatchCombination,
+        "setResultAnimation" as "result-animation" => set_result_animation::SetResultAnimation,
+        "resultAnimationTick" as "result-animation-tick" => result_animation_tick::ResultAnimationTick,
+        "focusEntity" as "focus-entity" => focus_entity::FocusEntity,
+        "translateSelection" as "translate-selection" => translate_selection::TranslateSelection,
+        "rotateSelection" as "rotate-selection" => rotate_selection::RotateSelection,
+        "scaleSelection" as "scale-selection" => scale_selection::ScaleSelection,
+        "setTransformGumballFlag" as "set-transform-gumball-flag" => set_transform_gumball_flag::SetTransformGumballFlag,
     }
 }
 
@@ -71,7 +93,7 @@ semio_framework_plugin::app_commands! {
 //#endregion 🔖️Commands
 
 //#region 🧵️RetainedCommands
-/// 🧾️ Every fem3d tool id, in `Fem3dCommand` declaration order — a bijection with the enum's 18 rows,
+/// 🧾️ Every fem3d tool id, in `Fem3dCommand` declaration order — a bijection with the enum's rows,
 /// with `FEM3D_RETAINED_PUBLICATION_CONTRACTS`, and with the `.action_interactive_job(…, Migrated)` set
 /// `create_fem3d_app` declares. `AppActionRegistry::tool_job_registration` enforces exactly that set
 /// equality at construction time: a row missing here, or an action left `BatchOnlyPendingRewrite`,
@@ -96,6 +118,22 @@ const FEM3D_RETAINED_TOOL_IDS: &[&str] = &[
     "setActiveExample",
     "setCamera",
     "setResultDisplay",
+    "patchNode",
+    "patchElement",
+    "patchMaterial",
+    "patchSection",
+    "patchSupport",
+    "patchSolid",
+    "patchLoad",
+    "patchLoadCase",
+    "patchCombination",
+    "setResultAnimation",
+    "resultAnimationTick",
+    "focusEntity",
+    "translateSelection",
+    "rotateSelection",
+    "scaleSelection",
+    "setTransformGumballFlag",
 ];
 const FEM3D_RETAINED_PAYLOAD_SCHEMA: &str = "fem.3d.tool-command.v1";
 const FEM3D_RETAINED_RAW_BYTES: usize = 65_536;
@@ -132,6 +170,22 @@ const FEM3D_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] =
     ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[ArtifactToolPublicationLane::HostOnly] },
     ArtifactToolPublicationContract { tool_id: "setCamera", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
     ArtifactToolPublicationContract { tool_id: "setResultDisplay", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
+    ArtifactToolPublicationContract { tool_id: "patchNode", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "patchElement", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "patchMaterial", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "patchSection", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "patchSupport", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "patchSolid", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "patchLoad", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "patchLoadCase", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "patchCombination", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "setResultAnimation", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
+    ArtifactToolPublicationContract { tool_id: "resultAnimationTick", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
+    ArtifactToolPublicationContract { tool_id: "focusEntity", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
+    ArtifactToolPublicationContract { tool_id: "translateSelection", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "rotateSelection", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "scaleSelection", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "setTransformGumballFlag", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
 ];
 
 /// 🧷️ The single source of truth for this app's tool execution contract — `bounded_first_step_tool_proofs!`
@@ -146,8 +200,35 @@ fn fem3d_retained_contract() -> ToolExecutionContract {
 fn fem3d_retained_window_value_bytes(command: &Fem3dCommand) -> usize {
     match command {
         Fem3dCommand::SetCamera(payload) => size_of_val(&payload.camera),
-        Fem3dCommand::SetResultDisplay(payload) => payload.mode.len().saturating_add(payload.source_id.as_ref().map_or(0, String::len)),
+        Fem3dCommand::SetResultDisplay(payload) => payload.mode.len().saturating_add(payload.source_id.as_ref().map_or(0, String::len)).saturating_add(payload.value.as_ref().map_or(0, String::len)),
+        Fem3dCommand::SetResultAnimation(payload) => payload.value.as_ref().map_or(0, String::len).saturating_add(payload.loop_mode.as_ref().map_or(0, String::len)).saturating_add(payload.waveform.as_ref().map_or(0, String::len)),
+        Fem3dCommand::SetTransformGumballFlag(payload) => payload.flag.len(),
         _ => 0,
+    }
+}
+
+/// 🕹️ The live framework-owned `fem3d` selection a transform or delete falls back to when its payload
+/// names no ids of its own — the host's gumball and the delete keybinding both speak for "what is selected".
+fn fem3d_interaction_selection_ids(interaction: &protocol::InteractionState) -> Vec<String> {
+    interaction.selection.get(FEM3D_INTERACTION_DOMAIN).map(|selection| selection.ids.clone()).unwrap_or_default()
+}
+
+/// 🕹️ Routes the window-scoped and selection-scoped rows, and every other row to its own handler —
+/// the ONE dispatch table `handle` and the retained reducer share, so the two paths cannot drift.
+fn fem3d_route(command: &Fem3dCommand, doc: &ArtifactView<'_, Fem3dSnapshot>, cfg: &ConfigView<'_, NoConfig>, selection: impl FnOnce() -> Vec<String>, view: Option<&ViewModel>) -> Result<Emit<Fem3dMutation, NoConfigMutation>, Fault> {
+    let window = |fault: &str| view.ok_or_else(|| Fault::from(format!("fem3d.{fault}.window-context-required")));
+    match command {
+        Fem3dCommand::SetCamera(payload) => set_camera::handle_window(payload, cfg, window("camera")?),
+        Fem3dCommand::SetResultDisplay(payload) => set_result_display::handle_window(payload, cfg, window("results")?),
+        Fem3dCommand::SetResultAnimation(payload) => set_result_animation::handle_window(payload, doc, cfg, window("results")?),
+        Fem3dCommand::ResultAnimationTick(payload) => result_animation_tick::handle_window(payload, doc, cfg, window("results")?),
+        Fem3dCommand::FocusEntity(payload) => focus_entity::handle_window(payload, doc, cfg, window("focus-entity")?),
+        Fem3dCommand::SetTransformGumballFlag(payload) => set_transform_gumball_flag::handle_window(payload, cfg, window("gumball-flag")?),
+        Fem3dCommand::RemoveSelection(payload) if payload.ids.is_empty() => remove_selection::handle(&remove_selection::RemoveSelection { ids: selection() }, doc, cfg),
+        Fem3dCommand::TranslateSelection(payload) if payload.ids.is_empty() => translate_selection::handle(&translate_selection::TranslateSelection { ids: selection(), ..payload.clone() }, doc, cfg),
+        Fem3dCommand::RotateSelection(payload) if payload.ids.is_empty() => rotate_selection::handle(&rotate_selection::RotateSelection { ids: selection(), ..payload.clone() }, doc, cfg),
+        Fem3dCommand::ScaleSelection(payload) if payload.ids.is_empty() => scale_selection::handle(&scale_selection::ScaleSelection { ids: selection(), ..payload.clone() }, doc, cfg),
+        _ => command.dispatch(doc, cfg),
     }
 }
 
@@ -160,7 +241,7 @@ fn fem3d_retained_extent(command: &Fem3dCommand, snapshot: &Fem3dSnapshot, _inte
     (items <= FEM3D_RETAINED_WORK_ITEMS).then_some(1)
 }
 
-/// 🎯️ One reducer for all 18 rows: `Fem3dCommand::dispatch` already routes each row to its own
+/// 🎯️ One reducer for every row: `Fem3dCommand::dispatch` already routes each row to its own
 /// `🎮️commands/*` handler, so the retained job reuses the exact same owned reducers the batch path
 /// used — no second, drifting copy of any command body.
 #[expect(clippy::too_many_arguments, reason = "The retained command reducer implements the framework's eight-argument callback contract.")]
@@ -169,7 +250,7 @@ fn fem3d_retained_reduce(
     snapshot: &Fem3dSnapshot,
     config: &NoConfig,
     history: &semio_framework_plugin::HistoryView,
-    _interaction: &protocol::InteractionState,
+    interaction: &protocol::InteractionState,
     _hover: &semio_framework_plugin::app::InteractionHoverState,
     context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Fem3dPlayApp>>>,
     operation: &AppOperationContext,
@@ -177,11 +258,7 @@ fn fem3d_retained_reduce(
     let doc = ArtifactView::with_operation(snapshot, history, operation.clone());
     let cfg = ConfigView { snapshot: config, window: context.and_then(|context| context.window_config.as_ref()) };
     let view = context.and_then(|context| context.view_state.as_ref());
-    match command {
-        Fem3dCommand::SetCamera(payload) => set_camera::handle_window(payload, &cfg, view.ok_or_else(|| Fault::from("fem3d.camera.window-context-required"))?),
-        Fem3dCommand::SetResultDisplay(payload) => set_result_display::handle_window(payload, &cfg, view.ok_or_else(|| Fault::from("fem3d.results.window-context-required"))?),
-        _ => command.dispatch(&doc, &cfg),
-    }
+    fem3d_route(command, &doc, &cfg, || fem3d_interaction_selection_ids(interaction), view)
 }
 
 struct Fem3dRetainedCommandJobFactory {
@@ -288,7 +365,7 @@ fn fem3d_artifact_edit(forward: Fem3dMutation, inverse: Vec<Fem3dMutation>, desc
     }
 }
 
-/// 📬️ Required by the Artifact publication lane: 15 of the 18 retained tools emit `Fem3dMutation`s, and
+/// 📬️ Required by the Artifact publication lane: every document-editing retained tool emits `Fem3dMutation`s, and
 /// `VcsArtifactApp` rejects any tool whose declared lane has no one-item preparation factory with
 /// `interactive-job.publication-authority-missing`.
 struct Fem3dArtifactPreparationFactory;
@@ -500,198 +577,6 @@ pub fn fem3d_results_out_port() -> semio_framework_plugin::MediaPortSpec {
 }
 //#endregion 🔌️Io
 
-//#region 🎬️SceneRender
-/// 🎬️ App-facing 3D scene-building bridge, moved out of the (now deleted) artifact `⚙️engine`: every fn
-/// here references `crate::app_surface` (an app type) and/or returns scene JSON consumed only by the
-/// model/results windows (`crate::editor::fem3d::modes::edit::windows::{model, results}`), per the
-/// migration recipe's `DocumentHelpers` rule — a helper with 2+ window consumers belongs at the app
-/// level, not duplicated per window.
-use crate::fem3d_engine::mesh_preview;
-
-/// 🧭️ Hamilton quaternion product `a * b`, both `[x,y,z,w]` — applying `b`'s rotation first, then `a`'s.
-fn quat_mul(a: [f64; 4], b: [f64; 4]) -> [f64; 4] {
-    let (ax, ay, az, aw) = (a[0], a[1], a[2], a[3]);
-    let (bx, by, bz, bw) = (b[0], b[1], b[2], b[3]);
-    [aw * bx + ax * bw + ay * bz - az * by, aw * by - ax * bz + ay * bw + az * bx, aw * bz + ax * by - ay * bx + az * bw, aw * bw - ax * bx - ay * by - az * bz]
-}
-
-/// 🧭️ Rotation of `roll` radians about the LOCAL +Z axis — applied before `quat_z_to` reorients +Z to
-/// the member direction, so this spins the box prism about its own long axis (matches `Frame3`'s roll).
-fn quat_roll_z(roll: f64) -> [f64; 4] {
-    let h = roll / 2.0;
-    [0.0, 0.0, h.sin(), h.cos()]
-}
-
-/// 🧭️ Shortest-arc rotation taking local `+Z` (the `"box"` mesh's long axis) onto unit direction `dir`
-/// — the standard "rotate A onto B" quaternion (`axis = cross(from,to)`, `angle = acos(dot(from,to))`),
-/// specialized for `from = (0,0,1)` so `cross` reduces to `(-dir.y, dir.x, 0)`. Handles the antiparallel
-/// case (`dir ≈ (0,0,-1)`) with a fixed 180° flip about the X axis, since `cross` degenerates to zero there.
-fn quat_z_to(dir: [f64; 3]) -> [f64; 4] {
-    let dot = dir[2].clamp(-1.0, 1.0);
-    if dot > 0.999_999 {
-        return [0.0, 0.0, 0.0, 1.0];
-    }
-    if dot < -0.999_999 {
-        return [1.0, 0.0, 0.0, 0.0];
-    }
-    let axis = [-dir[1], dir[0], 0.0];
-    let axis_len = (axis[0] * axis[0] + axis[1] * axis[1]).sqrt();
-    let axis_n = [axis[0] / axis_len, axis[1] / axis_len, 0.0];
-    let half = dot.acos() / 2.0;
-    let s = half.sin();
-    [axis_n[0] * s, axis_n[1] * s, axis_n[2] * s, half.cos()]
-}
-
-/// 🧊️ Node-position resolver shared by every 3D instance/mesh builder: `displacements` (node id -> 6-DOF
-/// values), when present, offsets a node's position by its solved displacement scaled by `deform_scale`.
-fn fem3d_deformed_position(pos: [f64; 3], node_id: &str, displacements: Option<&HashMap<String, [f64; 6]>>, deform_scale: f64) -> [f64; 3] {
-    let mut p = pos;
-    if let Some(map) = displacements {
-        if let Some(d) = map.get(node_id) {
-            p[0] += d[Dof::Tx.index()] * deform_scale;
-            p[1] += d[Dof::Ty.index()] * deform_scale;
-            p[2] += d[Dof::Tz.index()] * deform_scale;
-        }
-    }
-    p
-}
-
-/// 🧊️ Half-extent-ish scale of the small box instance drawn at each node.
-const NODE_SIZE_3D: f64 = 0.05;
-/// 🧊️ Cross-section (x/y) thickness of the oriented box prism drawn for each `Bar`/`Frame` member —
-/// a fixed visual thickness, not the member's actual section dimensions (see `fem3d_structural_instances`).
-const MEMBER_THICKNESS_3D: f64 = 0.05;
-
-fn find_node_3d<'a>(nodes: &'a [crate::FemNode], id: &str) -> Option<&'a crate::FemNode> {
-    nodes.iter().find(|n| n.id == id)
-}
-
-fn fem3d_element_endpoints(element: &crate::FemElement) -> (&str, &str) {
-    match element {
-        crate::FemElement::Bar { start, end, .. } | crate::FemElement::Frame { start, end, .. } => (start.as_str(), end.as_str()),
-    }
-}
-
-/// 🧊️ One small box instance per node, plus one ORIENTED box prism per `Bar`/`Frame` member — position
-/// at the (possibly deformed) midpoint, `scale=[t,t,length]` so the mesh's own long (local Z) axis
-/// stretches along the member, `rotation` a quaternion aligning that axis to the member's direction
-/// (composed with a `Frame`'s own `roll` about its own axis; `Bar`s have no roll).
-fn fem3d_structural_instances(doc: &Fem3dSnapshot, displacements: Option<&HashMap<String, [f64; 6]>>, deform_scale: f64) -> Vec<Value> {
-    let node_pos = |node: &crate::FemNode| fem3d_deformed_position([node.x, node.y, node.z], &node.id, displacements, deform_scale);
-
-    let mut instances: Vec<Value> = Vec::new();
-    for node in &doc.nodes {
-        let p = node_pos(node);
-        instances.push(dsl::json!({
-            "id": format!("node-{}", node.id),
-            "meshId": "box",
-            "position": p,
-            "rotation": [0.0, 0.0, 0.0, 1.0],
-            "scale": [NODE_SIZE_3D, NODE_SIZE_3D, NODE_SIZE_3D],
-            "label": node.id,
-        }));
-    }
-    for element in &doc.elements {
-        let (start, end) = fem3d_element_endpoints(element);
-        let (Some(n1), Some(n2)) = (find_node_3d(&doc.nodes, start), find_node_3d(&doc.nodes, end)) else { continue };
-        let p1 = node_pos(n1);
-        let p2 = node_pos(n2);
-        let d = [p2[0] - p1[0], p2[1] - p1[1], p2[2] - p1[2]];
-        let length = (d[0] * d[0] + d[1] * d[1] + d[2] * d[2]).sqrt().max(1e-9);
-        let dir = [d[0] / length, d[1] / length, d[2] / length];
-        let roll = match element {
-            crate::FemElement::Frame { roll, .. } => *roll,
-            crate::FemElement::Bar { .. } => 0.0,
-        };
-        let rotation = quat_mul(quat_z_to(dir), quat_roll_z(roll));
-        let mid = [(p1[0] + p2[0]) / 2.0, (p1[1] + p2[1]) / 2.0, (p1[2] + p2[2]) / 2.0];
-        let id = crate::element_id(element);
-        instances.push(dsl::json!({
-            "id": format!("el-{id}"),
-            "meshId": "box",
-            "position": mid,
-            "rotation": rotation,
-            "scale": [MEMBER_THICKNESS_3D, MEMBER_THICKNESS_3D, length],
-            "label": id,
-        }));
-    }
-    instances
-}
-
-/// 🧱️ Every `FemSolid`'s boundary surface as a custom `meshes_json` entry (flat per-face normals, one
-/// duplicated vertex triple per triangle) plus its one identity-transform instance — `nodal_stress`,
-/// when present, colors each vertex by `crate::app_surface::von_mises_color` (min/max taken across ALL
-/// solids' averaged values), driving the react renderer's vertex-color contour (see
-/// `PaintTexturedMesh`). `displacements` deforms vertex positions the same way
-/// `fem3d_structural_instances` deforms node/member instances.
-fn fem3d_solid_mesh_entries(doc: &Fem3dSnapshot, displacements: Option<&HashMap<String, [f64; 6]>>, deform_scale: f64, nodal_stress: Option<&HashMap<String, f64>>) -> (Vec<Value>, Vec<Value>) {
-    use crate::app_surface::{hex_to_rgb01, von_mises_color};
-
-    let mut meshes = Vec::new();
-    let mut instances = Vec::new();
-    let Ok(solid_meshes) = mesh_preview::fem3d_mesh_preview(doc) else { return (meshes, instances) };
-    let (min, max) = match nodal_stress {
-        Some(map) if !map.is_empty() => (map.values().cloned().fold(f64::INFINITY, f64::min), map.values().cloned().fold(f64::NEG_INFINITY, f64::max)),
-        _ => (0.0, 1.0),
-    };
-
-    for solid in &solid_meshes {
-        let mut positions: Vec<f64> = Vec::with_capacity(solid.boundary_tris.len() * 9);
-        let mut normals: Vec<f64> = Vec::with_capacity(solid.boundary_tris.len() * 9);
-        let mut colors: Vec<f64> = Vec::with_capacity(solid.boundary_tris.len() * 9);
-        let mut indices: Vec<u32> = Vec::with_capacity(solid.boundary_tris.len() * 3);
-
-        let vertex_pos = |idx: u32| -> [f64; 3] { fem3d_deformed_position(solid.points[idx as usize], &solid.node_ids[idx as usize], displacements, deform_scale) };
-        let vertex_color = |idx: u32| -> (f64, f64, f64) {
-            let Some(stress_map) = nodal_stress else { return (0.78, 0.78, 0.8) };
-            let value = stress_map.get(&solid.node_ids[idx as usize]).copied().unwrap_or(min);
-            hex_to_rgb01(von_mises_color(value, min, max))
-        };
-
-        for &[a, b, c] in &solid.boundary_tris {
-            let (pa, pb, pc) = (vertex_pos(a), vertex_pos(b), vertex_pos(c));
-            let e0 = [pb[0] - pa[0], pb[1] - pa[1], pb[2] - pa[2]];
-            let e1 = [pc[0] - pa[0], pc[1] - pa[1], pc[2] - pa[2]];
-            let raw = [e0[1] * e1[2] - e0[2] * e1[1], e0[2] * e1[0] - e0[0] * e1[2], e0[0] * e1[1] - e0[1] * e1[0]];
-            let raw_len = (raw[0] * raw[0] + raw[1] * raw[1] + raw[2] * raw[2]).sqrt().max(1e-12);
-            let n = [raw[0] / raw_len, raw[1] / raw_len, raw[2] / raw_len];
-            let base = (positions.len() / 3) as u32;
-            for (idx, p) in [(a, pa), (b, pb), (c, pc)] {
-                positions.extend_from_slice(&p);
-                normals.extend_from_slice(&n);
-                let (r, g, bl) = vertex_color(idx);
-                colors.extend_from_slice(&[r, g, bl]);
-            }
-            indices.extend_from_slice(&[base, base + 1, base + 2]);
-        }
-
-        let mesh_id = format!("solid-{}", solid.solid_id);
-        meshes.push(dsl::json!({ "id": mesh_id, "data": { "positions": positions, "normals": normals, "colors": colors, "indices": indices } }));
-        instances.push(dsl::json!({
-            "id": format!("solid-inst-{}", solid.solid_id),
-            "meshId": mesh_id,
-            "position": [0.0, 0.0, 0.0],
-            "rotation": [0.0, 0.0, 0.0, 1.0],
-            "scale": [1.0, 1.0, 1.0],
-            "label": solid.solid_id,
-        }));
-    }
-    (meshes, instances)
-}
-
-/// 🧊️ Builds the FULL `(meshes_json, instances_json)` pair for a 3D scene: the `"box"` primitive mesh
-/// plus every `FemSolid`'s custom surface mesh, and every node/member/solid instance — shared by the
-/// model window and every results view (static/modal/buckling).
-pub fn fem3d_scene_parts(doc: &Fem3dSnapshot, displacements: Option<&HashMap<String, [f64; 6]>>, deform_scale: f64, nodal_stress: Option<&HashMap<String, f64>>) -> (String, String) {
-    let mut meshes = dsl::json::parse(&semio_framework_plugin::world3d_meshes_json_from_kinds(&["box".to_string()])).ok().and_then(|value| value.as_array().cloned()).unwrap_or_default();
-    let mut instances = fem3d_structural_instances(doc, displacements, deform_scale);
-    let (solid_meshes, solid_instances) = fem3d_solid_mesh_entries(doc, displacements, deform_scale, nodal_stress);
-    meshes.extend(solid_meshes);
-    instances.extend(solid_instances);
-    (dsl::json::to_string(&Value::Array(meshes)), dsl::json::to_string(&Value::Array(instances)))
-}
-
-//#endregion 🎬️SceneRender
 
 //#region 🔖️ActionArgHelpers
 /// 🧭️ Parses one staged `dof` tag (`tx`…`rz`, case-insensitive) into the shared six-tag `FemDof`.
@@ -985,7 +870,7 @@ impl ArtifactEditor for Fem3dPlayApp {
                 let layers = value.get("layers").and_then(Value::as_u64).map_or(1, |v| v as usize);
                 let material_id = doc.snapshot.materials.first().map_or_else(|| "unassigned".into(), |material| material.id.clone());
                 let id = crate::app_surface::next_id(doc.snapshot.solids.iter().map(|s| s.id.clone()), "sol");
-                let solid = crate::FemSolid { id, name: "Imported Geometry".into(), outline, holes, base_z, height, layers, mesh_size: 0.5, material_id };
+                let solid = crate::FemSolid { id, name: "Imported Geometry".into(), outline, holes, base_z, height, layers, mesh_size: 0.5, material_id, axis: crate::FemAxis::Z };
                 Ok(Emit::mutations(vec![Fem3dMutation::CreateSolid(crate::standards::v1::subsets::any::schema::mutations::create_solid::CreateSolid { solid })]))
             }
             _ => Err(MediaError::NotImplemented),
@@ -1087,37 +972,109 @@ impl ArtifactEditor for Fem3dPlayApp {
         command: &Fem3dCommand,
         doc: &ArtifactView<'_, Fem3dSnapshot>,
         cfg: &ConfigView<'_, NoConfig>,
-        _interaction: &InteractionView<'_>,
+        interaction: &InteractionView<'_>,
         view_state: Option<&semio_framework_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<Fem3dMutation, NoConfigMutation, Self::DraftMutation>, Fault> {
-        match command {
-            Fem3dCommand::SetCamera(payload) => set_camera::handle_window(payload, cfg, view_state.ok_or_else(|| Fault::from("fem3d.camera.window-context-required"))?),
-            Fem3dCommand::SetResultDisplay(payload) => set_result_display::handle_window(payload, cfg, view_state.ok_or_else(|| Fault::from("fem3d.results.window-context-required"))?),
-            _ => command.dispatch(doc, cfg),
-        }
+        fem3d_route(command, doc, cfg, || interaction.selection(FEM3D_INTERACTION_DOMAIN).ids.clone(), view_state)
     }
 
     fn pending_effects(_owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle, doc: &ArtifactView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, NoConfig>, _view: Option<&semio_framework_plugin::ViewModel>) -> Vec<semio_framework::kernel::Effect> {
         crate::live_visual::reconcile(doc)
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Fem3dSnapshot>, cfg: &ConfigView<'_, NoConfig>, _view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    /// 🕹️ Interaction-less twin of [`Self::render_with_request_context`] — an empty `"fem3d"` domain,
+    /// so nothing paints selected and the inspector shows the document summary.
+    fn render(body_key: &str, doc: &ArtifactView<'_, Fem3dSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+        Self::render_body(body_key, doc, cfg, view_state, Fem3dInteractionSnapshot::default())
+    }
+
+    /// 🕹️ Reads the framework-owned `"fem3d"` selection/hover once per render and threads it through
+    /// every body — the windows paint it, the artifact tree marks it, the inspector edits it.
+    fn render_with_request_context(
+        _owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
+        body_key: &str,
+        doc: &ArtifactView<'_, Fem3dSnapshot>,
+        cfg: &ConfigView<'_, NoConfig>,
+        view_state: &ViewModel,
+        _transient: &semio_framework_plugin::TransientView<'_, semio_framework_plugin::NoTransient>,
+        interaction: &InteractionView<'_>,
+    ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+        Self::render_body(body_key, doc, cfg, view_state, Fem3dInteractionSnapshot::from_interaction(interaction))
+    }
+
+    /// 🎛️ The model window's utility options — the transform gumball's handle flags, read from the
+    /// captured model-window config (defaults when another pane is focused).
+    fn window_measures(_doc: &ArtifactView<'_, Fem3dSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
+        let labels = fem3d_labels(view_state);
+        let gumball = window_model::config::captured(cfg).map(|window| window.gumball).unwrap_or_default();
+        HashMap::from([(window_model::FEM3D_WINDOW_MODEL.into(), crate::editor::fem3d::window_measures::fem3d_window_measures(&gumball, labels))])
+    }
+}
+
+impl Fem3dPlayApp {
+    /// 🖼️ Body-key routing table shared by both render entry points: two World3d windows and the
+    /// three dock panels.
+    fn render_body(body_key: &str, doc: &ArtifactView<'_, Fem3dSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &ViewModel, interaction: Fem3dInteractionSnapshot) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+        let labels = fem3d_labels(view_state);
         match body_key {
             window_model::FEM3D_BODY_MODEL => {
                 let window = window_model::config::current(cfg);
-                crate::live_visual::with_live_visual(doc.render_operation(), |visual| window_model::render_with_progress(doc.snapshot, &window.camera, visual))
+                let transform_armed = fem3d_transform_armed(view_state);
+                crate::live_visual::with_live_visual(doc.render_operation(), |visual| window_model::render_with_progress(doc.snapshot, &window, &interaction, transform_armed, visual))
             }
             window_results::FEM3D_BODY_RESULTS => {
                 let window = window_results::config::current(cfg);
-                window_results::render(doc.snapshot, &window)
+                window_results::render(doc.snapshot, &window, &interaction, doc.render_operation())
             }
-            _ => built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fem3d unknown-body label admission failed")),
+            artifact_panel::BODY_KEY => artifact_panel::render(doc.snapshot, &interaction, labels),
+            inspection_panel::BODY_KEY => inspection_panel::render(doc.snapshot, &interaction, labels),
+            results_panel::BODY_KEY => results_panel::render(doc.snapshot, window_results::config::captured(cfg).as_ref(), &results_window_instance_id(view_state).unwrap_or_default(), labels),
+            _ => built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "fem3d unknown-body label admission failed")),
         }
         .map(semio_framework_plugin::built_to_component_tree)
     }
 }
+
+//#region 🔖️UiHelpers
+/// 🏷️ Admits resolved fem3d text into the semantic UI contract.
+pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::plugin_app_close_prelude::Label> {
+    semio_framework_plugin::plugin_app_close_prelude::Label::try_from(value.as_ref()).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "fem3d UI label admission failed"))
+}
+
+/// 🧾️ Admits a bounded row list — the one `UiFixedList` every section builder consumes.
+pub fn ui_node_list(values: impl IntoIterator<Item = semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode>>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiFixedList<semio_framework_plugin::BuiltNode>> {
+    let mut nodes = semio_framework_plugin::UiFixedList::default();
+    for value in values {
+        nodes.try_push(value?).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "fem3d UI node admission failed"))?;
+    }
+    Ok(nodes)
+}
+
+/// 🎛️ Mints one fem3d-controller action for a panel row or control binding.
+pub fn fem3d_action(action: &str, args: Option<semio_framework_plugin::UiValue>) -> semio_framework_plugin::UiAssemblyResult<(semio_framework_plugin::ActionId, Option<semio_framework_plugin::UiValue>)> {
+    semio_framework_plugin::ActionFactory::new(FEM3D_PLAY_CONTROLLER_ID).action(action, args)
+}
+
+/// 🎛️ Window-measure action binding — same controller scope as [`fem3d_action`], without the UI assembly envelope.
+pub fn fem3d_measure_action(action: &str, args: Option<Value>) -> ActionDescriptor {
+    ActionDescriptor { controller_id: FEM3D_PLAY_CONTROLLER_ID.into(), action: action.into(), args: args.map(|value| dsl::json::to_dsl_value(&value)) }
+}
+
+/// 🪟️ The first results-window instance of the layout — the one the results panel addresses when
+/// the panel itself has no window context.
+pub fn results_window_instance_id(view_state: &ViewModel) -> Option<String> {
+    let is_results = |id: &str| view_state.window_instances.iter().any(|window| window.id == id && window.window_kind_id == window_results::FEM3D_WINDOW_RESULTS);
+    view_state
+        .window_id
+        .as_deref()
+        .filter(|id| is_results(id))
+        .or_else(|| view_state.focused_window_id.as_deref().filter(|id| is_results(id)))
+        .map(str::to_string)
+        .or_else(|| view_state.window_instances.iter().find(|window| window.window_kind_id == window_results::FEM3D_WINDOW_RESULTS).map(|window| window.id.clone()))
+}
+//#endregion 🔖️UiHelpers
 //#endregion 🔖️Fem3dPlayApp
 
 //#region 🔖️ResetDocument

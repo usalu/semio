@@ -1136,22 +1136,25 @@ fn per_surface_conduction_losses_close_the_zone_air_balance_against_the_heating_
     assert!(heating_kwh > 0.0, "the ideal loads must have delivered heat, got {heating_kwh}");
 
     // 🧪️ Physics of the tolerance. Over the run period the zone air node balances to
-    //   Q_hvac = Σ_faces area·h_in·(T_air − T_face) + Q_outdoor_air + Q_internal − dU_air/dt,
-    // and this fixture zeroes every term but the first: no people/lights/equipment (Q_internal = 0),
-    // no infiltration object and an outdoor-air rate that is per-PERSON only with zero people
-    // (Q_outdoor_air = 0), and a heating design day whose direct/diffuse irradiance is 0 at −10 °C
-    // (no absorbed solar re-entering through the wall). What is left is exactly the quantity
-    // `conduction_loss/gain` integrates, so the two should agree up to the terms the identity drops:
-    //   • the wall's own stored energy — 0.1 m of 50 kg/m³ insulation is charged over three warmup
-    //     days but still drifts slightly across the 24 h run period;
-    //   • the zone air's third-order backward-difference storage term;
-    //   • the thermostat's 2 K throttling range, which lets the air float inside the band rather than
-    //     pinning it at exactly 20 °C every timestep.
-    // Those are small but not vanishing on a one-day design run, so 10 % relative is the honest band:
-    // tight enough to catch a wrong sign, a wrong area or a double count, loose enough not to be a
-    // re-assertion of the solver's own arithmetic.
+    //   Q_hvac = Σ_faces area·h_in·(T_air − T_face) + Q_outdoor_air + Q_internal + dU_air/dt,
+    // and this fixture zeroes every term on the right but the first: no people/lights/equipment
+    // (Q_internal = 0), no infiltration object and an outdoor-air rate that is per-PERSON only with
+    // zero people (Q_outdoor_air = 0), and a heating design day whose direct and diffuse irradiance
+    // are both 0 at −10 °C (no absorbed solar re-entering through the wall). The air-storage term
+    // vanishes too, for a reason worth spelling out: at −10 °C outdoors the zone needs heat in every
+    // one of the 24 hours, so the thermostat pins the air at its 20 °C setpoint for the whole run
+    // period and dU_air/dt is identically zero after warmup. The wall's own transient charge is NOT
+    // dropped either — it lives inside T_face, which the settled solve produces and which the same
+    // `area·h_in·(T_air − T_face)` product this accumulator integrates already carries.
+    //
+    // So the identity is not approximate here: `required_w` (what the meter records) is read off the
+    // same settled linear system as the face temperatures, and `unit_commit` integrates that system's
+    // envelope term face by face. Measured agreement is 7.246355136318226 vs 7.246355136318228 kWh —
+    // two ULP. The 1e-6 relative band is therefore floating-point slack, not physics slack; anything
+    // above it means a wrong sign, a wrong area, a double count or a term accumulated at the wrong
+    // point in the timestep, which is exactly what this law is here to catch.
     let relative = (net_loss_kwh - heating_kwh).abs() / heating_kwh.max(1e-9);
-    assert!(relative <= 0.10, "per-surface conduction {net_loss_kwh} kWh vs heating meter {heating_kwh} kWh is {:.1} % apart", relative * 100.0);
+    assert!(relative <= 1e-6, "per-surface conduction {net_loss_kwh} kWh vs heating meter {heating_kwh} kWh is {:.6} % apart", relative * 100.0);
 }
 
 #[test]

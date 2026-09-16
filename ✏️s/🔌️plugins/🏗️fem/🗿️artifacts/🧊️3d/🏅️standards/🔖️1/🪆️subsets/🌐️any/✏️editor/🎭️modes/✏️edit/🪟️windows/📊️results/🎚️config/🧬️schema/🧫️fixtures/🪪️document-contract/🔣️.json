@@ -16,7 +16,15 @@
       },
       "resultSourceId": null,
       "resultMode": "static",
-      "resultModeIndex": 0
+      "resultModeIndex": 0,
+      "animation": {
+        "phase": 1,
+        "playing": false,
+        "speed": 0.5,
+        "loopMode": "loop",
+        "waveform": "ramp",
+        "reverse": false
+      }
     },
     {
       "camera": {
@@ -34,7 +42,15 @@
       },
       "resultSourceId": null,
       "resultMode": "modal",
-      "resultModeIndex": 1
+      "resultModeIndex": 1,
+      "animation": {
+        "phase": 0.25,
+        "playing": true,
+        "speed": 2,
+        "loopMode": "pingPong",
+        "waveform": "sine",
+        "reverse": true
+      }
     },
     {
       "camera": {
@@ -52,7 +68,15 @@
       },
       "resultSourceId": null,
       "resultMode": "buckling",
-      "resultModeIndex": 2
+      "resultModeIndex": 2,
+      "animation": {
+        "phase": 0,
+        "playing": false,
+        "speed": 0.05,
+        "loopMode": "once",
+        "waveform": "sine",
+        "reverse": false
+      }
     }
   ],
   "invalid": [
@@ -76,6 +100,18 @@
     },
     {
       "kind": "camera-zero"
+    },
+    {
+      "kind": "animation-null"
+    },
+    {
+      "kind": "animation-unknown"
+    },
+    {
+      "kind": "bad-loop-mode"
+    },
+    {
+      "kind": "bad-waveform"
     }
   ],
   "patch": [
@@ -95,6 +131,16 @@
         ],
         "zoom": 1.25
       }
+    },
+    {
+      "op": "replace",
+      "path": "/animation/phase",
+      "value": 0.4
+    },
+    {
+      "op": "replace",
+      "path": "/animation/playing",
+      "value": true
     }
   ]
 }

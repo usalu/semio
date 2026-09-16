@@ -6157,6 +6157,50 @@ mod plugin_builder_contract_tests {
         assert!(result.diagnostics.is_empty());
         close_reserved_app(&mut app);
     }
+
+    /// 🔀️ The second emission shape for the same intent — `Effect::DispatchAction { action ∈
+    /// INTERACTION_ACTION_IDS }`, what `📏️layout`'s `layout_select_effect` and `💡️reasoning`'s
+    /// `wires_select_effect` build — folds identically to the `ReplayShellCommand` shape: the
+    /// effect never reaches the host, the selection snapshot moved inside the carrying turn, the
+    /// carrier's scope widens to the verb's declared interaction refresh scope, the leftover
+    /// `InteractionView` rides the carrier's `output`, and the surrounding effects keep their order.
+    /// The placeholder `req` an app literal carries is awaited by nothing, so dropping it is silent.
+    #[semio_framework_async_macros::async_test]
+    async fn guest_emitted_dispatch_action_interaction_select_is_folded_into_the_carrying_turn() {
+        let mut app = interaction_app_under_test().await;
+        let verb = Effect::DispatchAction { req: RequestId(115), action: INTERACTION_SELECT_ACTION_ID.into(), args: Some(interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1")), delay_ms: 0 };
+        let emit = Emit { effects: vec![Effect::Navigate { uri: "semio://home".into() }, verb], ui_scope: UiDirtyScope::None, ..Default::default() };
+        let result = app.test_dispatch_emit("canvasPointerDown", emit, &meta()).await.expect("the carrying command lands");
+        assert_eq!(result.requested_effects, vec![Effect::Navigate { uri: "semio://home".into() }], "the DispatchAction interaction verb never reaches the host; every other effect does, in order");
+        assert!(result.diagnostics.is_empty(), "a well-formed verb applies without diagnostics: {:?}", result.diagnostics);
+        let snapshot = app.test_interaction_selection_snapshot();
+        assert_eq!(snapshot.selection.get("items").map(|selection| selection.ids.clone()), Some(vec!["item-1".to_string()]), "the selection snapshot moved inside the carrying turn");
+        let declared = <TestApp<false> as ArtifactApp>::interaction_scope(InteractionVerb::Select, &["items"]).expect("the fixture declares its select scope");
+        assert_eq!(result.ui_scope, declared, "a `None` carrier scope widens to exactly the verb's declared interaction refresh scope");
+        let view = result.output.get("interactionView").expect("the leftover InteractionView rides the carrier's output");
+        let ids = view.get("selectedIds").and_then(DslValue::as_array).expect("selectedIds");
+        assert!(ids.iter().any(|id| id.as_str() == Some("item-1")), "leftover selected ids {ids:?}");
+        let history = app.test_history().await;
+        assert!(history.commands.iter().any(|entry| entry.action_id == INTERACTION_SELECT_ACTION_ID && entry.kind == ActionKind::Interaction), "the folded verb still records its `Interaction` command-log row");
+        close_reserved_app(&mut app);
+    }
+
+    /// 🔀️ The `DispatchAction` fold is scoped to the six interaction verbs exactly like the
+    /// `ReplayShellCommand` one: a self-dispatch chain (`probeChildContinuation`, a delayed
+    /// staged-work tick) riding the same variant keeps reaching the host untouched, `req` and
+    /// `delay_ms` intact.
+    #[semio_framework_async_macros::async_test]
+    async fn non_interaction_dispatch_actions_still_reach_the_host() {
+        let mut app = interaction_app_under_test().await;
+        let chain = Effect::DispatchAction { req: RequestId(91_002), action: "probeChildContinuation".into(), args: Some(DslValue::from(&json!({ "pass": 2 }))), delay_ms: 16 };
+        let result = app.test_dispatch_emit("stagedPass", Emit { effects: vec![chain.clone()], ui_scope: UiDirtyScope::None, ..Default::default() }, &meta()).await.expect("chain lands");
+        assert_eq!(result.requested_effects, vec![chain]);
+        assert_eq!(result.ui_scope, UiDirtyScope::None, "no verb was folded, so no scope was widened");
+        assert!(result.diagnostics.is_empty());
+        let snapshot = app.test_interaction_selection_snapshot();
+        assert!(snapshot.selection.values().all(|selection| selection.ids.is_empty()), "a non-interaction DispatchAction moves no selection: {:?}", snapshot.selection);
+        close_reserved_app(&mut app);
+    }
     /// 🧪 Ticket 26/09/09/PROCEDURAL-3D-END-TO-END (`📓️selection-dedupe-2026-09-12.md`): the leftover
     /// `selectedIds` publication is a SET of topology ids — `Select` is event-sourced, so it is
     /// idempotent per id whatever the merge, and however many mirror domains (`vortex`) the flatten

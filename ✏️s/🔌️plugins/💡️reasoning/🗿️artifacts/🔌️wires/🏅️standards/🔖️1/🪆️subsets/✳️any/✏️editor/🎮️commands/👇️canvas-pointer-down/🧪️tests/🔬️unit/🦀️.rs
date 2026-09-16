@@ -11,11 +11,11 @@ async fn pointer_drag_translates_node_by_screen_delta() {
     let mut app = new_app().await;
     dispatch(&mut app, WiresCommand::AddNode(add_node::AddNode { kind: "identity".into() })).await;
     dispatch(&mut app, WiresCommand::CanvasPointerDown(CanvasPointerDown { id: Some("node-1".into()), x: 100.0, y: 100.0 })).await;
-    dispatch(&mut app, WiresCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { x: 140.0, y: 130.0 })).await;
+    dispatch(&mut app, WiresCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { x: 140.0, y: 130.0, samples: Vec::new() })).await;
     let node = find_board_node(&app.snapshot().expect("snapshot"), "node-1").expect("node-1").clone();
     assert_eq!(node.get("x").and_then(|value| value.as_f64()), Some(40.0));
     assert_eq!(node.get("y").and_then(|value| value.as_f64()), Some(30.0));
-    dispatch(&mut app, WiresCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp {})).await;
+    dispatch(&mut app, WiresCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { cancelled: false })).await;
     // A coalesced drag collapses to a single undo step restoring the origin.
     app.handle_action("undo", None, &artifact_app_laws::meta("local")).await.expect("undo");
     let node = find_board_node(&app.snapshot().expect("snapshot"), "node-1").expect("node-1").clone();

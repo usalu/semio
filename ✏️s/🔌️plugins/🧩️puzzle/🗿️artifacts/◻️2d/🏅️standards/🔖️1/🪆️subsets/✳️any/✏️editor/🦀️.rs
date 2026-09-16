@@ -11,9 +11,9 @@
 //! typed placement mutations to the framework tool run ledger and finalize publishes them as one edit.
 
 use crate::editor::puzzle2d::commands::{
-    add_node, apply_board_events, cancel_slot, commit_slot, cycle_candidate, delete_selection, duplicate_selection, engagement_abort, engagement_control_select, engagement_input, engagement_submit, focus_selection, force_layout, lod_scale_json,
-    open_slot, patch_inspector, select_same_kind, set_active_example, set_brush_kind_weights, set_brush_node_size, set_camera, set_candidate_index, set_fill_count, set_grid_factor, set_grid_snap_enabled, set_lod_mode_for_pane, set_selection_flag,
-    set_suggestion_offset,
+    add_node, apply_board_events, cancel_slot, commit_slot, cycle_candidate, delete_selection, duplicate_selection, engagement_abort, engagement_control_select, engagement_input, engagement_submit, export_fixture, focus_selection, force_layout, import_fixture,
+    lod_scale_json, open_import_fixture, open_slot, patch_inspector, rotate_selection, scale_selection, select_same_kind, set_active_example, set_brush_kind_weights, set_brush_node_size, set_camera, set_candidate_index, set_fill_count, set_grid_factor,
+    set_grid_snap_enabled, set_lod_mode_for_pane, set_panel_page, set_selection_flag, set_suggestion_offset, translate_selection,
 };
 use crate::editor::puzzle2d::config::{Puzzle2dConfig, Puzzle2dConfigMutation, Puzzle2dPlayRuntime};
 use crate::editor::puzzle2d::engine::board_host::puzzle_board_host;
@@ -23,7 +23,7 @@ use crate::editor::puzzle2d::modes::edit::tools::fill;
 use crate::editor::puzzle2d::precompute::fill as fill_run;
 use crate::editor::puzzle2d::modes::edit::windows::overview::utilities::{brush as brush_utility, select as select_utility};
 use crate::editor::puzzle2d::modes::edit::windows::{detail, overview, selection};
-use crate::editor::puzzle2d::panels::{catalogue, artifact, inspection};
+use crate::editor::puzzle2d::panels::{artifact, catalogue, inspection, settings};
 use crate::editor::puzzle2d::presence::{Puzzle2dPresence, Puzzle2dPresenceMutation};
 use crate::editor::puzzle2d::terminology::puzzle2d_labels;
 pub use crate::editor::puzzle2d::terminology::{puzzle2d_localized, puzzle2d_localized_phrase};
@@ -659,6 +659,67 @@ pub fn patch_inspector_nodes(fixture: &mut Value, ids: &[String], field: &str, v
     }
 }
 
+/// 🔄️ One rigid/similarity transform of a node selection about its centroid.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum Puzzle2dTransform {
+    Translate { dx: f64, dy: f64 },
+    Rotate { radians: f64 },
+    Scale { factor: f64 },
+}
+
+/// 📐️ The centroid of the selected nodes' positions, `None` without a positioned selected node.
+pub fn puzzle2d_selection_centroid(fixture: &Value, ids: &[String]) -> Option<(f64, f64)> {
+    let mut count = 0usize;
+    let (mut sum_x, mut sum_y) = (0.0, 0.0);
+    for node in fixture_nodes(fixture) {
+        if !node.get("id").and_then(Value::as_str).is_some_and(|id| ids.iter().any(|selected| selected == id)) {
+            continue;
+        }
+        let (Some(x), Some(y)) = (node.get("x").and_then(Value::as_f64), node.get("y").and_then(Value::as_f64)) else { continue };
+        sum_x += x;
+        sum_y += y;
+        count += 1;
+    }
+    (count > 0).then(|| (sum_x / count as f64, sum_y / count as f64))
+}
+
+/// 🔄️ Applies `transform` to every selected node: positions move/orbit/spread about the selection
+/// centroid, and a rotation also turns every handle angle with its node so edges keep their geometry.
+/// Locked nodes stay where they are.
+pub fn puzzle2d_transform_selection(fixture: &mut Value, ids: &[String], transform: Puzzle2dTransform) {
+    let Some((cx, cy)) = puzzle2d_selection_centroid(fixture, ids) else { return };
+    let Some(nodes) = fixture.get_mut("nodes").and_then(Value::as_array_mut) else { return };
+    for node in nodes {
+        if !node.get("id").and_then(Value::as_str).is_some_and(|id| ids.iter().any(|selected| selected == id)) || node.get("locked").and_then(Value::as_bool) == Some(true) {
+            continue;
+        }
+        let (Some(x), Some(y)) = (node.get("x").and_then(Value::as_f64), node.get("y").and_then(Value::as_f64)) else { continue };
+        let (next_x, next_y) = match transform {
+            Puzzle2dTransform::Translate { dx, dy } => (x + dx, y + dy),
+            Puzzle2dTransform::Rotate { radians } => {
+                let (sin, cos) = radians.sin_cos();
+                (cx + (x - cx) * cos - (y - cy) * sin, cy + (x - cx) * sin + (y - cy) * cos)
+            }
+            Puzzle2dTransform::Scale { factor } => (cx + (x - cx) * factor, cy + (y - cy) * factor),
+        };
+        if let Some(object) = node.as_object_mut() {
+            object.insert("x".into(), json!(next_x));
+            object.insert("y".into(), json!(next_y));
+        }
+        if let Puzzle2dTransform::Rotate { radians } = transform {
+            if let Some(handles) = node.get_mut("handles").and_then(Value::as_array_mut) {
+                for handle in handles {
+                    if let Some(angle) = handle.get("angle").and_then(Value::as_f64) {
+                        if let Some(object) = handle.as_object_mut() {
+                            object.insert("angle".into(), json!(angle + radians));
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
 /// 🎲️ Re-mints a node id when it collides with an existing one — client-side brush serials restart every session.
 fn unique_node_id(fixture: &Value, candidate: String) -> String {
     if fixture_nodes(fixture).iter().any(|node| node.get("id").and_then(|value| value.as_str()) == Some(candidate.as_str())) {
@@ -1116,7 +1177,7 @@ impl Puzzle2dPlayApp {
             artifact::PUZZLE2D_PLAY_BODY_LAYERS => artifact::render(&envelope, labels)?,
             catalogue::PUZZLE2D_PLAY_BODY_CATALOGUE => catalogue::render(&envelope, labels)?,
             inspection::PUZZLE2D_PLAY_BODY_PROPERTIES => inspection::render(&envelope, labels)?,
-            settings::PUZZLE2D_PLAY_BODY_SETTINGS => settings::render(&envelope, labels)?,
+            settings::PUZZLE2D_PLAY_BODY_SETTINGS => settings::render(&envelope, labels, view_state.window_id.as_deref().unwrap_or_default())?,
             _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "puzzle2d unknown-body label admission failed"))?,
         };
         Ok(semio_framework_plugin::built_to_component_tree(node))
@@ -1156,6 +1217,13 @@ pub(crate) const PUZZLE2D_RETAINED_TOOL_IDS: &[&str] = &[
     "setGridFactor",
     "setGridSnapEnabled",
     "setLodModeForPane",
+    "setPanelPage",
+    "translateSelection",
+    "rotateSelection",
+    "scaleSelection",
+    "exportFixture",
+    "importFixture",
+    "openImportFixture",
     "setSelectionFlag",
     "setSuggestionOffset",
 ];
@@ -1187,8 +1255,14 @@ const PUZZLE2D_GENERIC_TOOL_IDS: &[&str] = &[
     "setGridFactor",
     "setGridSnapEnabled",
     "setLodModeForPane",
+    "setPanelPage",
     "setSelectionFlag",
     "setSuggestionOffset",
+    "translateSelection",
+    "rotateSelection",
+    "scaleSelection",
+    "importFixture",
+    "openImportFixture",
 ];
 
 /// 🫙️ The one verb whose `🎮️commands/*` arm is empty by construction — `lodScaleJson` only reads a
@@ -1196,13 +1270,23 @@ const PUZZLE2D_GENERIC_TOOL_IDS: &[&str] = &[
 /// through `NoopPuzzleCommandWork` under a solo `HostOnly` contract rather than the dispatch pipeline.
 const PUZZLE2D_HOST_ONLY_TOOL_IDS: &[&str] = &["lodScaleJson"];
 
+/// 📏️ Raw wire bytes ONE retained 2d command may carry — one 32 KiB import chunk plus its escaped
+/// envelope, or a whole-board `applyBoardEvents` select over Nakagin's 180 ids; the same figure the 3d
+/// factory admits, so a file this app wrote is always a file this app can read back.
+const PUZZLE2D_COMMAND_RAW_BYTES: usize = 262_144;
+const PUZZLE2D_COMMAND_DECODED_ITEMS: usize = 16_384;
+
 struct Puzzle2dRetainedCommandJobFactory {
     keys: Vec<ToolFactoryKey>,
+    contract: semio_framework::ToolExecutionContract,
 }
 
 impl Puzzle2dRetainedCommandJobFactory {
     fn new(controller_id: &str) -> Self {
-        Self { keys: PUZZLE2D_RETAINED_TOOL_IDS.iter().map(|tool_id| ToolFactoryKey::new(controller_id, *tool_id)).collect() }
+        Self {
+            keys: PUZZLE2D_RETAINED_TOOL_IDS.iter().map(|tool_id| ToolFactoryKey::new(controller_id, *tool_id)).collect(),
+            contract: semio_framework::ToolExecutionContract::resumable(PUZZLE2D_COMMAND_RAW_BYTES, PUZZLE2D_COMMAND_DECODED_ITEMS, 1, crate::retained_command::PUZZLE_COMMAND_OUTPUT_BYTES, crate::retained_command::PUZZLE_COMMAND_STEP_MICROS, 1, 1),
+        }
     }
 }
 
@@ -1223,7 +1307,7 @@ impl ToolJobFactory for Puzzle2dRetainedCommandJobFactory {
     }
 
     fn execution_contract(&self) -> semio_framework::ToolExecutionContract {
-        crate::retained_command::puzzle_command_contract()
+        self.contract
     }
 
     fn create_job(&mut self, operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
@@ -1237,7 +1321,7 @@ impl ToolJobFactory for Puzzle2dRetainedCommandJobFactory {
         input: semio_framework::action_bus::RetainedToolWireInput,
         checkpoint: Option<semio_framework::action_bus::RetainedToolWireInput>,
     ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework::action_bus::RetainedToolWireInput, Option<semio_framework::action_bus::RetainedToolWireInput>)> {
-        if input.declared_bytes() > crate::retained_command::PUZZLE_COMMAND_RAW_BYTES {
+        if input.declared_bytes() > self.contract.max_raw_wire_bytes {
             return Err((ToolJobFactoryError::new("Puzzle 2d retained command rejects an oversized wire owner"), input, checkpoint));
         }
         match checkpoint {
@@ -1268,7 +1352,7 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for Puzzle2dRetainedCom
         ArtifactToolPublicationContract { tool_id: "engagementAbort", lanes: &[ArtifactToolPublicationLane::WindowTransient] },
         ArtifactToolPublicationContract { tool_id: "engagementControlSelect", lanes: &[ArtifactToolPublicationLane::WindowTransient] },
         ArtifactToolPublicationContract { tool_id: "engagementInput", lanes: &[ArtifactToolPublicationLane::WindowTransient] },
-        ArtifactToolPublicationContract { tool_id: "engagementSubmit", lanes: &[ArtifactToolPublicationLane::WindowTransient] },
+        ArtifactToolPublicationContract { tool_id: "engagementSubmit", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config, ArtifactToolPublicationLane::WindowTransient, ArtifactToolPublicationLane::Interaction] },
         ArtifactToolPublicationContract { tool_id: "focusSelection", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
         ArtifactToolPublicationContract { tool_id: "setBrushKindWeights", lanes: &[ArtifactToolPublicationLane::Config] },
         ArtifactToolPublicationContract { tool_id: "setBrushNodeSize", lanes: &[ArtifactToolPublicationLane::HostOnly] },
@@ -1276,10 +1360,17 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for Puzzle2dRetainedCom
         ArtifactToolPublicationContract { tool_id: "setGridFactor", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
         ArtifactToolPublicationContract { tool_id: "setGridSnapEnabled", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
         ArtifactToolPublicationContract { tool_id: "setLodModeForPane", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
+        ArtifactToolPublicationContract { tool_id: "setPanelPage", lanes: &[ArtifactToolPublicationLane::WindowTransient] },
+        ArtifactToolPublicationContract { tool_id: "translateSelection", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "rotateSelection", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "scaleSelection", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "exportFixture", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+        ArtifactToolPublicationContract { tool_id: "importFixture", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "openImportFixture", lanes: &[ArtifactToolPublicationLane::HostOnly] },
         ArtifactToolPublicationContract { tool_id: "setSuggestionOffset", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
         ArtifactToolPublicationContract { tool_id: "applyBoardEvents", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::WindowConfig, ArtifactToolPublicationLane::WindowTransient, ArtifactToolPublicationLane::Interaction] },
         ArtifactToolPublicationContract { tool_id: "brushCommitSlot", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::WindowTransient] },
-        ArtifactToolPublicationContract { tool_id: "deleteSelection", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "deleteSelection", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Interaction] },
         ArtifactToolPublicationContract { tool_id: "patchInspectorNodes", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "setFillCount", lanes: &[ArtifactToolPublicationLane::Config] },
@@ -1720,6 +1811,44 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle2dPlayApp>> for 
     }
 }
 
+/// 📤 `exportFixture` reads the document and publishes a download; it owns no mutation, so it resolves
+/// from the snapshot and picks its lane by payload size: one inline effect under the guest's contiguous
+/// request ceiling, the framework's segmented-download lane above it, a notice above what one segmented
+/// download may carry.
+#[derive(Default)]
+struct Puzzle2dExportWork {
+    consumed: bool,
+}
+
+impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle2dPlayApp>> for Puzzle2dExportWork {
+    fn tool_id(&self) -> &'static str {
+        "exportFixture"
+    }
+
+    fn extent(&self, _command: &Puzzle2dCommand, _snapshot: &Puzzle2dPlaySnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+        Some(1)
+    }
+
+    fn step(
+        &mut self,
+        _command: &Puzzle2dCommand,
+        snapshot: &Puzzle2dPlaySnapshot,
+        _config: &Puzzle2dConfig,
+        _interaction: &protocol::InteractionState,
+        _hover: &semio_framework_plugin::app::InteractionHoverState,
+    ) -> Result<crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle2dPlayApp>>, Fault> {
+        if self.consumed {
+            return Err(Fault::from("puzzle2d-export-work-repeated"));
+        }
+        self.consumed = true;
+        Ok(match export_fixture::puzzle2d_export_publication(&snapshot.0)? {
+            export_fixture::Puzzle2dExportPublication::Inline(effect) => crate::retained_command::PuzzleCommandWorkStep::Complete(Emit { effects: vec![effect], ui_scope: UiDirtyScope::None, ..Default::default() }),
+            export_fixture::Puzzle2dExportPublication::Segmented(download) => crate::retained_command::PuzzleCommandWorkStep::Download(download),
+            export_fixture::Puzzle2dExportPublication::Refused(message) => crate::retained_command::PuzzleCommandWorkStep::Complete(Emit { effects: vec![Effect::Notify { message }], ui_scope: UiDirtyScope::None, ..Default::default() }),
+        })
+    }
+}
+
 /// 🎬️ THE dispatch pipeline — the one implementation both [`ArtifactEditor::handle`]'s batch path and
 /// every retained generic reduce run: rebuild the scene and a fresh board host from
 /// `(command, before, config, selection)`, run the `🎮️commands/*` arm, replay the host's owned
@@ -1777,6 +1906,12 @@ fn puzzle2d_dispatch_emit(
             "engagementAbort" => engagement_abort::engagement_abort(ctx, args),
             "engagementControlSelect" => engagement_control_select::engagement_control_select(ctx, args),
             "setLodModeForPane" => set_lod_mode_for_pane::set_lod_mode_for_pane(ctx, args),
+            "setPanelPage" => set_panel_page::set_panel_page(ctx, args),
+            "translateSelection" => translate_selection::translate_selection(ctx, args),
+            "rotateSelection" => rotate_selection::rotate_selection(ctx, args),
+            "scaleSelection" => scale_selection::scale_selection(ctx, args),
+            "importFixture" => import_fixture::import_fixture(ctx, args),
+            "openImportFixture" => open_import_fixture::open_import_fixture(ctx),
             "lodScaleJson" => lod_scale_json::lod_scale_json(ctx),
             "setGridSnapEnabled" => set_grid_snap_enabled::set_grid_snap_enabled(ctx, args),
             "setGridFactor" => set_grid_factor::set_grid_factor(ctx, args),
@@ -1817,6 +1952,9 @@ fn puzzle2d_dispatch_emit(
 /// selection is 717 entities: this ceiling admits that with headroom while still refusing an
 /// unbounded selection well under the shared `PUZZLE_COMMAND_WORK_ITEMS` (4,096) budget.
 const PUZZLE2D_SELECTION_BATCH_LIMIT: usize = 1_024;
+/// 📥 Work items one whole-document import replacement claims: the largest example's entity count with
+/// headroom, still well under the shared `PUZZLE_COMMAND_WORK_ITEMS` budget.
+const PUZZLE2D_IMPORT_FIXTURE_WORK_ITEMS: usize = 1_024;
 
 /// 🧮️ One work item per entity a selection-acting verb rewrites, one for every other generic verb
 /// (each is a fixed-shape config/host setter whose cost is independent of document size). An
@@ -1827,7 +1965,10 @@ fn puzzle2d_generic_extent(command: &Puzzle2dCommand, _snapshot: &Puzzle2dPlaySn
     if !PUZZLE2D_GENERIC_TOOL_IDS.contains(&action) {
         return None;
     }
-    if !matches!(action, "patchInspectorNodes" | "setSelectionFlag" | "deleteSelection" | "duplicateSelection") {
+    if action == "importFixture" {
+        return Some(PUZZLE2D_IMPORT_FIXTURE_WORK_ITEMS);
+    }
+    if !matches!(action, "patchInspectorNodes" | "setSelectionFlag" | "deleteSelection" | "duplicateSelection" | "translateSelection" | "rotateSelection" | "scaleSelection") {
         return Some(1);
     }
     let selected = interaction.selection.get(PUZZLE2D_INTERACTION_DOMAIN).map_or(0, |selection| selection.ids.len());
@@ -3672,7 +3813,7 @@ impl ArtifactEditor for Puzzle2dPlayApp {
         artifact_schema: "puzzle.2d.fixture",
         factory: "Puzzle2dRetainedCommandJobFactory",
         factory_type: Puzzle2dRetainedCommandJobFactory,
-        contract: semio_framework::ToolExecutionContract::resumable(8_192, 512, 1, 262_144, 7_500, 1, 1),
+        contract: semio_framework::ToolExecutionContract::resumable(262_144, 16_384, 1, 262_144, 7_500, 1, 1),
         tools: [
             "setActiveExample",
             "forceLayout",
@@ -3701,10 +3842,17 @@ impl ArtifactEditor for Puzzle2dPlayApp {
             "setFillCount",
             "setGridFactor",
             "setGridSnapEnabled",
-                        "setLodModeForPane",
+            "setLodModeForPane",
+            "setPanelPage",
             "setSelectionFlag",
             "setSuggestionOffset",
-                    ]
+            "translateSelection",
+            "rotateSelection",
+            "scaleSelection",
+            "exportFixture",
+            "importFixture",
+            "openImportFixture",
+        ]
     }
 
     fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
@@ -3724,6 +3872,7 @@ impl ArtifactEditor for Puzzle2dPlayApp {
             "forceLayout" => Box::new(Puzzle2dForceLayoutWork::default()),
             "reorganize" => Box::new(Puzzle2dForceLayoutWork::new("reorganize")),
             "addNode" => Box::new(crate::retained_command::BoundedFirstStepCommandWork::new("addNode", puzzle2d_retained_reduce, puzzle2d_retained_extent)),
+            "exportFixture" => Box::new(Puzzle2dExportWork::default()),
             "applyBoardEvents" => Box::new(Puzzle2dWindowCommandWork::new("applyBoardEvents", puzzle2d_board_events_extent)),
             generic if PUZZLE2D_GENERIC_TOOL_IDS.contains(&generic) => Box::new(Puzzle2dWindowCommandWork::new(generic, puzzle2d_generic_extent)),
             host_only if PUZZLE2D_HOST_ONLY_TOOL_IDS.contains(&host_only) => Box::new(crate::retained_command::NoopPuzzleCommandWork::new(host_only)),
@@ -3846,7 +3995,7 @@ impl ArtifactEditor for Puzzle2dPlayApp {
         cfg: &ConfigView<'_, Puzzle2dConfig>,
         view_state: &semio_framework_plugin::ViewModel,
         transient: &semio_framework_plugin::TransientView<'_, Self::Transient>,
-        _interaction: &semio_framework_plugin::app::InteractionView<'_>,
+        _interaction: &InteractionView<'_>,
     ) -> HashMap<String, WindowEngagement> {
         let Some(window_id) = view_state.window_id.as_deref() else { return HashMap::new() };
         let window_config = window::config_from_view_or_document(cfg, &doc.snapshot.0);
@@ -3957,6 +4106,7 @@ pub fn create_puzzle2d_app() -> semio_framework_plugin::AppDefinition {
             .panel_tab_def(artifact::definition())
             .panel_tab_def(catalogue::definition())
             .panel_tab_def(inspection::definition())
+            .panel_tab_def(settings::definition())
             // ✏️ Palette-visible content operations.
             .mutation("addNode", LocalizedLabel::native("Add Node", "Knoten hinzufügen"))
             .action_with(ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), ActionKind::Mutation, "panel-left"))
@@ -3969,6 +4119,15 @@ pub fn create_puzzle2d_app() -> semio_framework_plugin::AppDefinition {
             .action_with(ActionDefinition::bounded_catalog("duplicateSelection", LocalizedLabel::native("Duplicate Selection", "Auswahl duplizieren"), ActionKind::Mutation).with_category("create"))
             .mutation("forceLayout", LocalizedLabel::native("Force Layout", "Kraftbasiertes Layout"))
             .action_with(ActionDefinition::bounded_catalog("focusSelection", LocalizedLabel::native("Focus Selection", "Auswahl fokussieren"), ActionKind::Mutation).with_category("view"))
+            // 🔄️ Transform verbs over the live selection — the 2d twins of puzzle3d's gumball commits.
+            .action_with(ActionDefinition::bounded_catalog("translateSelection", puzzle2d_localized(|l| l.translate), ActionKind::Mutation).with_category("transform"))
+            .action_with(ActionDefinition::bounded_catalog("rotateSelection", puzzle2d_localized(|l| l.rotate), ActionKind::Mutation).with_category("transform"))
+            .action_with(ActionDefinition::bounded_catalog("scaleSelection", puzzle2d_localized(|l| l.scale), ActionKind::Mutation).with_category("transform"))
+            .keybinding("mod+d", "duplicateSelection")
+            // 📤📥 Fixture round trip: a JSON download of the document and a file-picker import.
+            .action_with(ActionDefinition::bounded_catalog("exportFixture", puzzle2d_localized(|l| l.export), ActionKind::Shell).with_category("file"))
+            .action_with(ActionDefinition::bounded_catalog("openImportFixture", puzzle2d_localized(|l| l.import), ActionKind::Shell).with_category("file"))
+            .action_with(puzzle2d_internal_action("importFixture", LocalizedLabel::native("Import Fixture", "Fixture importieren"), ActionKind::Mutation))
             // 👁️ Palette-visible ephemeral view/selection commands.
             .action_with(ActionDefinition::bounded_catalog("selectSameKind", LocalizedLabel::native("Select Same Kind", "Gleiche Art auswählen"), ActionKind::View).with_category("selection"))
             // 🔧️ Internal content operations — inspector/panel/board/import-bound, not palette commands.
@@ -3987,6 +4146,7 @@ pub fn create_puzzle2d_app() -> semio_framework_plugin::AppDefinition {
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("engagementAbort", LocalizedLabel::native("Engagement Abort", "Eingabe abbrechen"), ActionKind::View, "hand") })
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("engagementControlSelect", LocalizedLabel::native("Engagement Control Select", "Eingabesteuerung auswählen"), ActionKind::View, "hand") })
             .action_with(puzzle2d_internal_action("setLodModeForPane", LocalizedLabel::native("Set LOD Mode For Pane", "LOD-Modus für Bereich festlegen"), ActionKind::View))
+            .action_with(puzzle2d_internal_action("setPanelPage", LocalizedLabel::native("Set Panel Page", "Panel-Seite festlegen"), ActionKind::View))
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("setGridSnapEnabled", LocalizedLabel::native("Set Grid Snap Enabled", "Rasterfang aktivieren"), ActionKind::View, "grid-3x3") })
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("setGridFactor", LocalizedLabel::native("Set Grid Factor", "Rasterfaktor festlegen"), ActionKind::View, "grid-3x3") })
             .action_with(puzzle2d_internal_action("setBrushKindWeights", LocalizedLabel::native("Set Brush Kind Weights", "Pinsel-Artgewichte festlegen"), ActionKind::View))
@@ -4001,6 +4161,12 @@ pub fn create_puzzle2d_app() -> semio_framework_plugin::AppDefinition {
             .action_args("addNode", vec![
                 ActionArgDef::select("kind", LocalizedLabel::native("Kind", "Art"), vec![ActionArgOption::new("node", LocalizedLabel::native("Node", "Knoten"))]).required().default_value(&"node"),
             ])
+            .action_args("translateSelection", vec![
+                ActionArgDef::number("dx", LocalizedLabel::native("Δx", "Δx")).default_value(&0.0),
+                ActionArgDef::number("dy", LocalizedLabel::native("Δy", "Δy")).default_value(&0.0),
+            ])
+            .action_args("rotateSelection", vec![ActionArgDef::number("angle", puzzle2d_localized(|l| l.angle)).required().default_value(&90.0)])
+            .action_args("scaleSelection", vec![ActionArgDef::number("factor", LocalizedLabel::native("Factor", "Faktor")).required().default_value(&1.5)])
             .action_args("setActiveExample", vec![
                 ActionArgDef::select("exampleId", LocalizedLabel::native("Example", "Beispiel"), vec![
                     ActionArgOption::new(PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID, puzzle2d_localized(|l| l.example_concrete_forest)),
@@ -4035,6 +4201,13 @@ pub fn create_puzzle2d_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("setGridFactor", InteractiveJobClassification::Migrated)
             .action_interactive_job("setGridSnapEnabled", InteractiveJobClassification::Migrated)
             .action_interactive_job("setLodModeForPane", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setPanelPage", InteractiveJobClassification::Migrated)
+            .action_interactive_job("translateSelection", InteractiveJobClassification::Migrated)
+            .action_interactive_job("rotateSelection", InteractiveJobClassification::Migrated)
+            .action_interactive_job("scaleSelection", InteractiveJobClassification::Migrated)
+            .action_interactive_job("exportFixture", InteractiveJobClassification::Migrated)
+            .action_interactive_job("importFixture", InteractiveJobClassification::Migrated)
+            .action_interactive_job("openImportFixture", InteractiveJobClassification::Migrated)
             .action_interactive_job("setSelectionFlag", InteractiveJobClassification::Migrated)
             .action_interactive_job("setSuggestionOffset", InteractiveJobClassification::Migrated)
             // 🧰️ Canvas utilities — one exclusive set, active utility host-owned (never a document

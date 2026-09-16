@@ -1,1 +1,5 @@
-{}
+{
+  "mutation": "changeGlazingMaterialVisibleTransmittance",
+  "id": 1,
+  "newVisibleTransmittance": -0.1
+}

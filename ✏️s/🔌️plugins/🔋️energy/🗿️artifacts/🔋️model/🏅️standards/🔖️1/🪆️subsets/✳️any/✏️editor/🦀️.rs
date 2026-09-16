@@ -69,6 +69,11 @@ pub const SET_FENESTRATION_PROPERTY_ACTION_ID: &str = "set-fenestration-property
 pub const SET_ZONE_PROPERTY_ACTION_ID: &str = "set-zone-property";
 pub const SET_GLAZING_MATERIAL_PROPERTY_ACTION_ID: &str = "set-glazing-material-property";
 pub const SET_GAS_MATERIAL_PROPERTY_ACTION_ID: &str = "set-gas-material-property";
+/// 🧱️ The construction verb: `{construction, property, value}` where `property` is either `name` or
+/// one of the LIST edits `addLayer`/`removeLayer`/`moveLayerUp`/`moveLayerDown`/`replaceLayer`, whose
+/// operand travels in `value` (a material id, or an index, or `<index>:<materialId>`). One verb,
+/// because the inspector's layer controls all carry a single merged `value`.
+pub const SET_CONSTRUCTION_PROPERTY_ACTION_ID: &str = "set-construction-property";
 pub const SET_THERMOSTAT_SETPOINTS_ACTION_ID: &str = "set-thermostat-setpoints";
 pub const SET_SITE_ACTION_ID: &str = "set-site";
 pub const SET_RUN_PERIOD_ACTION_ID: &str = "set-run-period";
@@ -107,6 +112,7 @@ pub const ENERGY_MODEL_RETAINED_TOOL_IDS: &[&str] = &[
     // UI-dispatchable classification, and a `Migrated` verb without an owned reducer is refused
     // with `interactive-job.missing-owned-reducer`.
     model_window::SET_CAMERA_ACTION_ID,
+    SET_CONSTRUCTION_PROPERTY_ACTION_ID,
 ];
 
 /// 📬️ The twelve verbs that publish a semantic mutation into the document store. `setActiveExample`
@@ -130,6 +136,7 @@ pub const ENERGY_MODEL_DOCUMENT_TOOL_IDS: &[&str] = &[
     SET_ZONE_PROPERTY_ACTION_ID,
     SET_GLAZING_MATERIAL_PROPERTY_ACTION_ID,
     SET_GAS_MATERIAL_PROPERTY_ACTION_ID,
+    SET_CONSTRUCTION_PROPERTY_ACTION_ID,
 ];
 //#endregion 🏷️ActionIds
 
@@ -155,8 +162,11 @@ pub enum EnergyModelEditorCommand {
     DeleteSurface { surface: u32 },
     #[dsl(key = "assign-surface-construction")]
     AssignSurfaceConstruction { surface: u32, construction: u32 },
+    /// 🧱️ One material field by name. `value` is TEXT, like every other inspector verb: a material
+    /// carries a NAME and a ROUGHNESS enum beside its seven SI scalars, and one verb has to spell all
+    /// three. Numeric properties parse the text and refuse a non-finite or out-of-range reading.
     #[dsl(key = "set-material-property")]
-    SetMaterialProperty { material: u32, property: String, value: f64 },
+    SetMaterialProperty { material: u32, property: String, value: String },
     #[dsl(key = "set-thermostat-setpoints")]
     SetThermostatSetpoints { thermostat: u32, heating_schedule: u32, cooling_schedule: u32, heating_throttle_range_k: f64, cooling_throttle_range_k: f64 },
     #[dsl(key = "set-site")]
@@ -199,6 +209,10 @@ pub enum EnergyModelEditorCommand {
     /// variant binds scalars only — and because that string IS what `World3dScene::camera_json` wants.
     #[dsl(key = "setCamera")]
     SetCamera { camera: String },
+    /// 🧱️ One construction field by name — its name, or one LIST edit of its layer stack. Appended
+    /// LAST so no existing `OpBinary` ordinal moves.
+    #[dsl(key = "set-construction-property")]
+    SetConstructionProperty { construction: u32, property: String, value: String },
 }
 
 impl EnergyModelEditorCommand {
@@ -226,6 +240,7 @@ impl EnergyModelEditorCommand {
             Self::SetGlazingMaterialProperty { .. } => SET_GLAZING_MATERIAL_PROPERTY_ACTION_ID,
             Self::SetGasMaterialProperty { .. } => SET_GAS_MATERIAL_PROPERTY_ACTION_ID,
             Self::SetCamera { .. } => model_window::SET_CAMERA_ACTION_ID,
+            Self::SetConstructionProperty { .. } => SET_CONSTRUCTION_PROPERTY_ACTION_ID,
         }
     }
 }
@@ -285,7 +300,12 @@ mod args_bridge {
             super::CREATE_SURFACE_ACTION_ID => Command::CreateSurface { name: text_or("name", "Surface"), zone: u32_or("zone", 0), construction: u32_or("construction", 0), class: text_or("class", "exteriorWall") },
             super::DELETE_SURFACE_ACTION_ID => Command::DeleteSurface { surface: u32_or("surface", 0) },
             super::ASSIGN_SURFACE_CONSTRUCTION_ACTION_ID => Command::AssignSurfaceConstruction { surface: u32_or("surface", 0), construction: u32_or("construction", 0) },
-            super::SET_MATERIAL_PROPERTY_ACTION_ID => Command::SetMaterialProperty { material: u32_or("material", 0), property: text_or("property", "conductivity"), value: f64_or("value", 0.0) },
+            super::SET_MATERIAL_PROPERTY_ACTION_ID => {
+                Command::SetMaterialProperty { material: u32_or("material", u32_or("id", 0)), property: text(args, "property").unwrap_or_else(|| text_or("field", "")), value: text_or("value", "") }
+            }
+            super::SET_CONSTRUCTION_PROPERTY_ACTION_ID => {
+                Command::SetConstructionProperty { construction: u32_or("construction", u32_or("id", 0)), property: text(args, "property").unwrap_or_else(|| text_or("field", "")), value: text_or("value", "") }
+            }
             super::SET_THERMOSTAT_SETPOINTS_ACTION_ID => Command::SetThermostatSetpoints {
                 thermostat: u32_or("thermostat", 0),
                 heating_schedule: u32_or("heatingSchedule", 0),
@@ -327,12 +347,11 @@ mod args_bridge {
             // 🎨️ A select control merges its own scalar under `value`, so `field` is read from either
             // spelling — the same `{field, value}` convention the inspector's controls use above.
             super::simulation::SET_RESULT_FIELD_ACTION_ID => Command::SetResultField { field: text(args, "field").unwrap_or_else(|| text_or("value", super::EnergyModelConfig::default().result_field.as_str())) },
-            super::model_window::SET_CAMERA_ACTION_ID => {
-                let Some(camera) = camera_pose_json(args) else {
-                    return Err(Fault::new(FaultOrigin::App, FaultCode::new("app.command.invalid-payload"), "setCamera carries no finite {position,target,zoom} pose"));
-                };
-                Command::SetCamera { camera }
-            }
+            // 🎥️ `command_from_action` must be TOTAL over the roster (`every_declared_action_is_
+            // classified_and_resolves_to_a_command` calls it with no args at all), so an absent or
+            // malformed pose becomes the empty string here and `camera_emit` refuses it there — the
+            // one place that can also tell WHICH window the gesture addressed.
+            super::model_window::SET_CAMERA_ACTION_ID => Command::SetCamera { camera: camera_pose_json(args).unwrap_or_default() },
             _ => return Err(unknown(action)),
         })
     }
@@ -443,13 +462,14 @@ fn model_edit(kind: &'static str, base: &crate::model::Model, model: &crate::mod
             steps.push(mutations::add_output_variable(now.name.clone(), now.key.clone(), now.reporting_frequency));
         }
     }
-    diff_zones(base, model, &mut steps);
-    diff_surfaces(base, model, &mut steps);
+    let projected_zones = diff_zones(base, model, &mut steps);
+    let projected_surfaces = diff_surfaces(base, model, &mut steps);
     let projected_fenestrations = diff_fenestrations(base, model, &mut steps);
-    diff_materials(kind, base, model, &mut steps)?;
+    let projected_materials = diff_materials(kind, base, model, &mut steps)?;
     let projected_glazing = diff_glazing_materials(kind, base, model, &mut steps)?;
     let projected_gases = diff_gas_materials(kind, base, model, &mut steps)?;
-    diff_thermostats(kind, base, model, &mut steps)?;
+    let projected_constructions = diff_constructions(kind, base, model, &mut steps)?;
+    let projected_thermostats = diff_thermostats(kind, base, model, &mut steps)?;
     let mut probe = base.clone();
     probe.name = model.name.clone();
     probe.version = model.version.clone();
@@ -458,18 +478,21 @@ fn model_edit(kind: &'static str, base: &crate::model::Model, model: &crate::mod
     probe.ground_temperature = model.ground_temperature.clone();
     probe.airflow_network = model.airflow_network.clone();
     probe.output_variables = model.output_variables.clone();
-    probe.zones = model.zones.clone();
-    probe.surfaces = model.surfaces.clone();
+    // 🔬️ Projections, never clones: every collection below reports back exactly the fields its diff
+    // emitted a step for, so an undiffed field makes `probe != *model` and faults LOUDLY through
+    // `kind_unavailable` instead of being swallowed as a silent no-op.
+    probe.zones = projected_zones;
+    probe.surfaces = projected_surfaces;
     // 🪟️ NOT `model.fenestrations.clone()`: the projection [`diff_fenestrations`] returns carries
     // exactly the fields it emitted a mutation for, so a Fenestration field no diff step names makes
     // `probe != *model` and faults LOUDLY through `kind_unavailable` instead of vanishing.
     probe.fenestrations = projected_fenestrations;
     probe.adjacency_pairs = model.adjacency_pairs.clone();
-    probe.materials = model.materials.clone();
-    // 🧊️ Projections, not clones — same loudness discipline as the fenestrations above.
+    probe.materials = projected_materials;
     probe.glazing_materials = projected_glazing;
     probe.gas_materials = projected_gases;
-    probe.thermostats = model.thermostats.clone();
+    probe.constructions = projected_constructions;
+    probe.thermostats = projected_thermostats;
     if probe != *model {
         return Err(kind_unavailable(kind, kind));
     }
@@ -478,33 +501,43 @@ fn model_edit(kind: &'static str, base: &crate::model::Model, model: &crate::mod
 
 /// 🏘️ Zones: a create/delete of the whole row plus the five per-field kinds. `create-zone`/
 /// `delete-zone` landed with the 100s group, so an identity change is no longer a refusal.
-fn diff_zones(base: &crate::model::Model, model: &crate::model::Model, steps: &mut Vec<EnergyModelMutation>) {
+fn diff_zones(base: &crate::model::Model, model: &crate::model::Model, steps: &mut Vec<EnergyModelMutation>) -> Vec<Zone> {
     for was in &base.zones {
         if !model.zones.iter().any(|now| now.id == was.id) {
             steps.push(mutations::delete_zone(was.id));
         }
     }
+    let mut projected = Vec::with_capacity(model.zones.len());
     for now in &model.zones {
         let Some(was) = base.zones.iter().find(|was| was.id == now.id) else {
             steps.push(mutations::create_zone(now.id, now.name.clone(), now.volume_m3, now.multiplier, now.conditioned, now.part_of_total_floor_area));
+            projected.push(now.clone());
             continue;
         };
+        let mut carried = was.clone();
         if was.name != now.name {
             steps.push(mutations::rename_zone(now.id, now.name.clone()));
+            carried.name = now.name.clone();
         }
         if was.volume_m3 != now.volume_m3 {
             steps.push(mutations::change_zone_volume(now.id, now.volume_m3));
+            carried.volume_m3 = now.volume_m3;
         }
         if was.multiplier != now.multiplier {
             steps.push(mutations::change_zone_multiplier(now.id, now.multiplier));
+            carried.multiplier = now.multiplier;
         }
         if was.conditioned != now.conditioned {
             steps.push(mutations::change_zone_conditioned(now.id, now.conditioned));
+            carried.conditioned = now.conditioned;
         }
         if was.part_of_total_floor_area != now.part_of_total_floor_area {
             steps.push(mutations::change_zone_floor_area_participation(now.id, now.part_of_total_floor_area));
+            carried.part_of_total_floor_area = now.part_of_total_floor_area;
         }
+        projected.push(carried);
     }
+    projected
 }
 
 /// 🚧️ The interzone partner an `OutsideBoundary` carries — the boundary mutation names the tag
@@ -520,7 +553,7 @@ fn interzone_partner(boundary: OutsideBoundary) -> Option<EntityId> {
 /// 🟫️ Surfaces and the two collections a surface delete cascades into. Order is load-bearing:
 /// every dependent (fenestration, adjacency pair) is disconnected BEFORE its surface disappears,
 /// and every create runs after every delete, so no intermediate document ever dangles a reference.
-fn diff_surfaces(base: &crate::model::Model, model: &crate::model::Model, steps: &mut Vec<EnergyModelMutation>) {
+fn diff_surfaces(base: &crate::model::Model, model: &crate::model::Model, steps: &mut Vec<EnergyModelMutation>) -> Vec<Surface> {
     for was in &base.fenestrations {
         if !model.fenestrations.iter().any(|now| now.id == was.id) {
             steps.push(mutations::delete_fenestration(was.id));
@@ -536,6 +569,7 @@ fn diff_surfaces(base: &crate::model::Model, model: &crate::model::Model, steps:
             steps.push(mutations::delete_surface(was.id));
         }
     }
+    let mut projected = Vec::with_capacity(model.surfaces.len());
     for now in &model.surfaces {
         let Some(was) = base.surfaces.iter().find(|was| was.id == now.id) else {
             steps.push(mutations::create_surface(
@@ -551,36 +585,49 @@ fn diff_surfaces(base: &crate::model::Model, model: &crate::model::Model, steps:
                 now.wind_exposed,
                 now.multiplier,
             ));
+            projected.push(now.clone());
             continue;
         };
+        let mut carried = was.clone();
         if was.name != now.name {
             steps.push(mutations::rename_surface(now.id, now.name.clone()));
+            carried.name = now.name.clone();
         }
         if was.zone_id != now.zone_id {
             steps.push(mutations::change_surface_zone(now.id, now.zone_id));
+            carried.zone_id = now.zone_id;
         }
         if was.class != now.class {
             steps.push(mutations::change_surface_class(now.id, now.class));
+            carried.class = now.class;
         }
         if was.vertices_m != now.vertices_m {
             steps.push(mutations::replace_surface_vertices(now.id, now.vertices_m.clone()));
+            carried.vertices_m = now.vertices_m.clone();
         }
         if was.construction_id != now.construction_id {
             steps.push(mutations::change_surface_construction(now.id, now.construction_id));
+            carried.construction_id = now.construction_id;
         }
         if was.outside_boundary_condition != now.outside_boundary_condition {
             steps.push(mutations::change_surface_boundary_condition(now.id, now.outside_boundary_condition.kind(), interzone_partner(now.outside_boundary_condition)));
+            carried.outside_boundary_condition = now.outside_boundary_condition;
         }
         if was.sun_exposed != now.sun_exposed {
             steps.push(mutations::change_surface_sun_exposed(now.id, now.sun_exposed));
+            carried.sun_exposed = now.sun_exposed;
         }
         if was.wind_exposed != now.wind_exposed {
             steps.push(mutations::change_surface_wind_exposed(now.id, now.wind_exposed));
+            carried.wind_exposed = now.wind_exposed;
         }
         if was.multiplier != now.multiplier {
             steps.push(mutations::change_surface_multiplier(now.id, now.multiplier));
+            carried.multiplier = now.multiplier;
         }
+        projected.push(carried);
     }
+    projected
 }
 
 /// 🪟️ Fenestrations: every scalar of the record, plus the optional glazing-construction binding.
@@ -701,37 +748,52 @@ fn diff_fenestrations(base: &crate::model::Model, model: &crate::model::Model, s
 /// 🧱️ The seven material scalars `set-material-property` addresses. No editor verb creates or
 /// deletes a material, so an identity change is still refused LOUDLY rather than masked by the
 /// probe below.
-fn diff_materials(kind: &'static str, base: &crate::model::Model, model: &crate::model::Model, steps: &mut Vec<EnergyModelMutation>) -> Result<(), Fault> {
+fn diff_materials(kind: &'static str, base: &crate::model::Model, model: &crate::model::Model, steps: &mut Vec<EnergyModelMutation>) -> Result<Vec<Material>, Fault> {
     if base.materials.iter().map(|material| material.id).ne(model.materials.iter().map(|material| material.id)) {
         return Err(kind_unavailable(kind, "create-material / delete-material"));
     }
+    let mut projected = Vec::with_capacity(model.materials.len());
     for (was, now) in base.materials.iter().zip(&model.materials) {
+        let mut carried = was.clone();
         if was.name != now.name {
             steps.push(mutations::rename_material(now.id, now.name.clone()));
+            carried.name = now.name.clone();
+        }
+        if was.roughness != now.roughness {
+            steps.push(mutations::change_material_roughness(now.id, now.roughness));
+            carried.roughness = now.roughness;
         }
         if was.thickness_m != now.thickness_m {
             steps.push(mutations::change_material_thickness(now.id, now.thickness_m));
+            carried.thickness_m = now.thickness_m;
         }
         if was.conductivity_w_m_k != now.conductivity_w_m_k {
             steps.push(mutations::change_material_conductivity(now.id, now.conductivity_w_m_k));
+            carried.conductivity_w_m_k = now.conductivity_w_m_k;
         }
         if was.density_kg_m3 != now.density_kg_m3 {
             steps.push(mutations::change_material_density(now.id, now.density_kg_m3));
+            carried.density_kg_m3 = now.density_kg_m3;
         }
         if was.specific_heat_j_kg_k != now.specific_heat_j_kg_k {
             steps.push(mutations::change_material_specific_heat(now.id, now.specific_heat_j_kg_k));
+            carried.specific_heat_j_kg_k = now.specific_heat_j_kg_k;
         }
         if was.thermal_absorptance != now.thermal_absorptance {
             steps.push(mutations::change_material_thermal_absorptance(now.id, now.thermal_absorptance));
+            carried.thermal_absorptance = now.thermal_absorptance;
         }
         if was.solar_absorptance != now.solar_absorptance {
             steps.push(mutations::change_material_solar_absorptance(now.id, now.solar_absorptance));
+            carried.solar_absorptance = now.solar_absorptance;
         }
         if was.visible_absorptance != now.visible_absorptance {
             steps.push(mutations::change_material_visible_absorptance(now.id, now.visible_absorptance));
+            carried.visible_absorptance = now.visible_absorptance;
         }
+        projected.push(carried);
     }
-    Ok(())
+    Ok(projected)
 }
 
 /// 🧊️ Glazing materials. `change-glazing-material-*` names only five of the record's twelve optical
@@ -800,30 +862,107 @@ fn diff_gas_materials(kind: &'static str, base: &crate::model::Model, model: &cr
     Ok(projected)
 }
 
+/// 🧱️ Constructions: the name and the layer stack. The vocabulary names no whole-stack replace, so
+/// the stack's change is classified into the THREE list kinds it actually declares —
+/// `add-construction-layer` (one insert), `remove-construction-layer` (one delete),
+/// `reorder-construction-layers` (a permutation) — and a one-slot exchange is the remove+insert pair
+/// at the same index. Anything else (two independent edits in one revision, a create/delete of a
+/// construction) is refused LOUDLY rather than masked, exactly like the other catalogues.
+///
+/// 🔬️ Returns the projection of `base` through the steps it emitted, so an unnamed field faults.
+fn diff_constructions(kind: &'static str, base: &crate::model::Model, model: &crate::model::Model, steps: &mut Vec<EnergyModelMutation>) -> Result<Vec<crate::model::Construction>, Fault> {
+    if base.constructions.iter().map(|construction| construction.id).ne(model.constructions.iter().map(|construction| construction.id)) {
+        return Err(kind_unavailable(kind, "create-construction / delete-construction"));
+    }
+    let mut projected = Vec::with_capacity(model.constructions.len());
+    for (was, now) in base.constructions.iter().zip(&model.constructions) {
+        let mut carried = was.clone();
+        if was.name != now.name {
+            steps.push(mutations::rename_construction(now.id, now.name.clone()));
+            carried.name = now.name.clone();
+        }
+        if was.layer_material_ids != now.layer_material_ids {
+            for step in construction_layer_steps(kind, now.id, &was.layer_material_ids, &now.layer_material_ids)? {
+                steps.push(step);
+            }
+            carried.layer_material_ids = now.layer_material_ids.clone();
+        }
+        projected.push(carried);
+    }
+    Ok(projected)
+}
+
+/// 🧱️ The list kinds that carry one layer-stack edit. `was`/`now` differ by construction.
+fn construction_layer_steps(kind: &'static str, id: EntityId, was: &[EntityId], now: &[EntityId]) -> Result<Vec<EnergyModelMutation>, Fault> {
+    // ➕️ One insert: dropping the inserted slot from `now` restores `was`.
+    if now.len() == was.len() + 1 {
+        for index in 0..now.len() {
+            let without: Vec<EntityId> = now.iter().enumerate().filter(|(at, _)| *at != index).map(|(_, id)| *id).collect();
+            if without == was {
+                return Ok(vec![mutations::add_construction_layer(id, index as u32, now[index])]);
+            }
+        }
+    }
+    // ➖️ One delete: dropping the removed slot from `was` reaches `now`.
+    if was.len() == now.len() + 1 {
+        for index in 0..was.len() {
+            let without: Vec<EntityId> = was.iter().enumerate().filter(|(at, _)| *at != index).map(|(_, id)| *id).collect();
+            if without == now {
+                return Ok(vec![mutations::remove_construction_layer(id, index as u32)]);
+            }
+        }
+    }
+    if was.len() == now.len() {
+        let differing: Vec<usize> = (0..was.len()).filter(|index| was[*index] != now[*index]).collect();
+        // 🔁️ One slot exchanged: the vocabulary has no `replace-construction-layer`, so it travels as
+        // the remove/insert pair at that same index — order load-bearing, the delete first.
+        if differing.len() == 1 {
+            let index = differing[0] as u32;
+            return Ok(vec![mutations::remove_construction_layer(id, index), mutations::add_construction_layer(id, index, now[differing[0]])]);
+        }
+        // 🔀️ A permutation of the same multiset: one reorder.
+        let (mut sorted_was, mut sorted_now): (Vec<u32>, Vec<u32>) = (was.iter().map(|id| id.0).collect(), now.iter().map(|id| id.0).collect());
+        sorted_was.sort_unstable();
+        sorted_now.sort_unstable();
+        if sorted_was == sorted_now {
+            return Ok(vec![mutations::reorder_construction_layers(id, now.to_vec())]);
+        }
+    }
+    Err(kind_unavailable(kind, "replace-construction-layers"))
+}
+
 /// 🌡️ The four thermostat fields `set-thermostat-setpoints` addresses. Like materials, no editor
 /// verb adds or removes a thermostat, so an identity change is refused rather than masked.
-fn diff_thermostats(kind: &'static str, base: &crate::model::Model, model: &crate::model::Model, steps: &mut Vec<EnergyModelMutation>) -> Result<(), Fault> {
+fn diff_thermostats(kind: &'static str, base: &crate::model::Model, model: &crate::model::Model, steps: &mut Vec<EnergyModelMutation>) -> Result<Vec<Thermostat>, Fault> {
     if base.thermostats.iter().map(|thermostat| thermostat.id).ne(model.thermostats.iter().map(|thermostat| thermostat.id)) {
         return Err(kind_unavailable(kind, "create-thermostat / delete-thermostat"));
     }
+    let mut projected = Vec::with_capacity(model.thermostats.len());
     for (was, now) in base.thermostats.iter().zip(&model.thermostats) {
+        let mut carried = was.clone();
         if was.zone_id != now.zone_id {
             steps.push(mutations::change_thermostat_zone(now.id, now.zone_id));
+            carried.zone_id = now.zone_id;
         }
         if was.heating_setpoint_schedule_id != now.heating_setpoint_schedule_id {
             steps.push(mutations::change_thermostat_heating_setpoint_schedule(now.id, now.heating_setpoint_schedule_id));
+            carried.heating_setpoint_schedule_id = now.heating_setpoint_schedule_id;
         }
         if was.cooling_setpoint_schedule_id != now.cooling_setpoint_schedule_id {
             steps.push(mutations::change_thermostat_cooling_setpoint_schedule(now.id, now.cooling_setpoint_schedule_id));
+            carried.cooling_setpoint_schedule_id = now.cooling_setpoint_schedule_id;
         }
         if was.heating_throttle_range_k != now.heating_throttle_range_k {
             steps.push(mutations::change_thermostat_heating_throttle_range(now.id, now.heating_throttle_range_k));
+            carried.heating_throttle_range_k = now.heating_throttle_range_k;
         }
         if was.cooling_throttle_range_k != now.cooling_throttle_range_k {
             steps.push(mutations::change_thermostat_cooling_throttle_range(now.id, now.cooling_throttle_range_k));
+            carried.cooling_throttle_range_k = now.cooling_throttle_range_k;
         }
+        projected.push(carried);
     }
-    Ok(())
+    Ok(projected)
 }
 
 /// 📂️ The sanctioned whole-document load: a `kernel::Effect::LoadDocument` carrying a genesis
@@ -989,8 +1128,12 @@ fn reduce(command: &EnergyModelEditorCommand, doc: &ArtifactView<'_, EnergyModel
         }
         EnergyModelEditorCommand::SetMaterialProperty { material, property, value } => {
             let target = model.materials.iter_mut().find(|entry| entry.id.0 == *material).ok_or_else(|| target_missing("material", *material))?;
-            let kind = set_material_property(target, property, *value)?;
+            let kind = set_material_property(target, property, value)?;
             (kind, format!("Set material {material} {property}"))
+        }
+        EnergyModelEditorCommand::SetConstructionProperty { construction, property, value } => {
+            let kind = set_construction_property(&mut model, *construction, property, value)?;
+            (kind, format!("Set construction {construction} {property}"))
         }
         EnergyModelEditorCommand::SetSurfaceProperty { surface, property, value, partner_surface } => {
             let kind = set_surface_property(&mut model, *surface, property, value, *partner_surface)?;
@@ -1102,6 +1245,9 @@ fn camera_emit(command: &EnergyModelEditorCommand, view_state: Option<&semio_fra
     let EnergyModelEditorCommand::SetCamera { camera } = command else { return None };
     Some((|| {
         let view = view_state.ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("energy.model.3d.window-required"), "a camera change requires a concrete 3d model window"))?;
+        if camera.is_empty() {
+            return Err(Fault::new(FaultOrigin::App, FaultCode::new("app.command.invalid-payload"), "setCamera carries no {position,target,zoom} pose"));
+        }
         let value = dsl::json::from_json_str::<dsl::DslValue>(camera).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("app.command.invalid-payload"), format!("the camera pose is not a value: {error}")))?;
         let pose = <model_window::config::EnergyModelCameraPose as dsl::FromValue>::from_value(value).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("app.command.invalid-payload"), format!("the camera pose is malformed: {error}")))?;
         if !pose.is_valid() {
@@ -1434,43 +1580,150 @@ fn set_zone_property(zone: &mut Zone, property: &str, value: &str) -> Result<&'s
 }
 //#endregion 🔍️InspectorProperties
 
-fn set_material_property(material: &mut Material, property: &str, value: f64) -> Result<&'static str, Fault> {
-    let positive = |value: f64| value > 0.0;
-    let fraction = |value: f64| (0.0..=1.0).contains(&value);
-    let invalid = || Fault::new(FaultOrigin::App, FaultCode::new("mutation.invalid-payload"), format!("'{value}' is outside the SI range of material property '{property}'"));
+/// 🧱️ The material record's WHOLE addressable surface: its name, its roughness class and its seven
+/// SI scalars. `value` is text like every other inspector verb, so one control shape carries a name,
+/// an enum spelling and a number alike; the numeric properties parse it and refuse a non-finite or
+/// out-of-range reading rather than writing it.
+fn set_material_property(material: &mut Material, property: &str, value: &str) -> Result<&'static str, Fault> {
+    let positive = |parsed: f64| parsed > 0.0;
+    let fraction = |parsed: f64| (0.0..=1.0).contains(&parsed);
     Ok(match property {
-        "thicknessM" if positive(value) => {
-            material.thickness_m = value;
+        "name" => {
+            material.name = value.to_string();
+            "rename-material"
+        }
+        "roughness" => {
+            material.roughness = surface_roughness_from_id(value.trim()).ok_or_else(|| invalid_value(property, value))?;
+            "change-material-roughness"
+        }
+        "thicknessM" => {
+            material.thickness_m = as_f64(property, value, positive)?;
             "change-material-thickness"
         }
-        "conductivityWMK" if positive(value) => {
-            material.conductivity_w_m_k = value;
+        "conductivityWMK" => {
+            material.conductivity_w_m_k = as_f64(property, value, positive)?;
             "change-material-conductivity"
         }
-        "densityKgM3" if positive(value) => {
-            material.density_kg_m3 = value;
+        "densityKgM3" => {
+            material.density_kg_m3 = as_f64(property, value, positive)?;
             "change-material-density"
         }
-        "specificHeatJKgK" if positive(value) => {
-            material.specific_heat_j_kg_k = value;
+        "specificHeatJKgK" => {
+            material.specific_heat_j_kg_k = as_f64(property, value, positive)?;
             "change-material-specific-heat"
         }
-        "thermalAbsorptance" if fraction(value) => {
-            material.thermal_absorptance = value;
+        "thermalAbsorptance" => {
+            material.thermal_absorptance = as_f64(property, value, fraction)?;
             "change-material-thermal-absorptance"
         }
-        "solarAbsorptance" if fraction(value) => {
-            material.solar_absorptance = value;
+        "solarAbsorptance" => {
+            material.solar_absorptance = as_f64(property, value, fraction)?;
             "change-material-solar-absorptance"
         }
-        "visibleAbsorptance" if fraction(value) => {
-            material.visible_absorptance = value;
+        "visibleAbsorptance" => {
+            material.visible_absorptance = as_f64(property, value, fraction)?;
             "change-material-visible-absorptance"
         }
-        "thicknessM" | "conductivityWMK" | "densityKgM3" | "specificHeatJKgK" | "thermalAbsorptance" | "solarAbsorptance" | "visibleAbsorptance" => return Err(invalid()),
-        _ => return Err(Fault::new(FaultOrigin::App, FaultCode::new("mutation.invalid-payload"), format!("'{property}' is not a material property"))),
+        _ => return Err(unknown_property("material", property)),
     })
 }
+
+/// 🧱️ One construction field by name, or ONE list edit of its layer stack. The layer verbs carry
+/// their operand in `value` because a rendered control merges exactly one scalar there:
+/// `addLayer` = the material id to append, `removeLayer`/`moveLayerUp`/`moveLayerDown` = the layer
+/// index, `replaceLayer:<index>` = the material id that takes that slot (the un-suffixed spelling
+/// takes `<index>:<materialId>`, which is what a palette invocation types).
+///
+/// ⚠️ `add-construction-layer` admits an OPAQUE `Material` only — its own diff refuses a glazing or
+/// gas id with `mutation.target-missing`. So an add/replace naming one is refused HERE, loudly and
+/// early, instead of reducing cleanly and dying at the store.
+fn set_construction_property(model: &mut crate::model::Model, construction: u32, property: &str, value: &str) -> Result<&'static str, Fault> {
+    let opaque: Vec<EntityId> = model.materials.iter().map(|material| material.id).collect();
+    let index = model.constructions.iter().position(|entry| entry.id.0 == construction).ok_or_else(|| target_missing("construction", construction))?;
+    let layer_material = |raw: &str| -> Result<EntityId, Fault> {
+        let id = EntityId(as_u32(property, raw, |_| true)?);
+        if !opaque.contains(&id) {
+            return Err(Fault::new(
+                FaultOrigin::App,
+                FaultCode::new("mutation.invalid-payload"),
+                format!("layer material {} is not an opaque material — 'add-construction-layer' declares no glazing or gas layer", id.0),
+            ));
+        }
+        Ok(id)
+    };
+    let slot = |raw: &str, layers: &[EntityId]| -> Result<usize, Fault> {
+        let at = as_u32(property, raw, |_| true)? as usize;
+        if at >= layers.len() {
+            return Err(invalid_value(property, raw));
+        }
+        Ok(at)
+    };
+    Ok(match property {
+        "name" => {
+            model.constructions[index].name = value.to_string();
+            "rename-construction"
+        }
+        "addLayer" => {
+            let material = layer_material(value.trim())?;
+            model.constructions[index].layer_material_ids.push(material);
+            "add-construction-layer"
+        }
+        "removeLayer" => {
+            let at = slot(value.trim(), &model.constructions[index].layer_material_ids)?;
+            model.constructions[index].layer_material_ids.remove(at);
+            "remove-construction-layer"
+        }
+        "moveLayerUp" | "moveLayerDown" => {
+            let at = slot(value.trim(), &model.constructions[index].layer_material_ids)?;
+            let other = if property == "moveLayerUp" { at.checked_sub(1) } else { at.checked_add(1) };
+            let layers = &mut model.constructions[index].layer_material_ids;
+            let Some(other) = other.filter(|other| *other < layers.len()) else { return Err(invalid_value(property, value)) };
+            layers.swap(at, other);
+            "reorder-construction-layers"
+        }
+        _ if property == "replaceLayer" || property.starts_with("replaceLayer:") => {
+            let (raw_index, raw_material) = match property.strip_prefix("replaceLayer:") {
+                Some(at) => (at, value.trim()),
+                None => value.trim().split_once(':').ok_or_else(|| invalid_value(property, value))?,
+            };
+            let at = slot(raw_index.trim(), &model.constructions[index].layer_material_ids)?;
+            let material = layer_material(raw_material.trim())?;
+            model.constructions[index].layer_material_ids[at] = material;
+            "replace-construction-layer"
+        }
+        _ => return Err(unknown_property("construction", property)),
+    })
+}
+
+/// 🧱️ Wire spelling of a [`crate::model::SurfaceRoughness`] — camelCase, like every other enum this
+/// editor carries over the action bus.
+pub fn surface_roughness_id(roughness: crate::model::SurfaceRoughness) -> &'static str {
+    use crate::model::SurfaceRoughness as Kind;
+    match roughness {
+        Kind::VeryRough => "veryRough",
+        Kind::Rough => "rough",
+        Kind::MediumRough => "mediumRough",
+        Kind::MediumSmooth => "mediumSmooth",
+        Kind::Smooth => "smooth",
+        Kind::VerySmooth => "verySmooth",
+    }
+}
+
+fn surface_roughness_from_id(id: &str) -> Option<crate::model::SurfaceRoughness> {
+    use crate::model::SurfaceRoughness as Kind;
+    Some(match id {
+        "veryRough" => Kind::VeryRough,
+        "rough" => Kind::Rough,
+        "mediumRough" => Kind::MediumRough,
+        "mediumSmooth" => Kind::MediumSmooth,
+        "smooth" => Kind::Smooth,
+        "verySmooth" => Kind::VerySmooth,
+        _ => return None,
+    })
+}
+
+/// 🧱️ Every roughness class, in declaration order — the inspector's roughness select.
+pub const SURFACE_ROUGHNESS_IDS: &[&str] = &["veryRough", "rough", "mediumRough", "mediumSmooth", "smooth", "verySmooth"];
 
 //#endregion 🔖️Reduce
 
@@ -1589,6 +1842,7 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for EnergyModelCommandJ
         ArtifactToolPublicationContract { tool_id: SET_ZONE_PROPERTY_ACTION_ID, lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: SET_GLAZING_MATERIAL_PROPERTY_ACTION_ID, lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: SET_GAS_MATERIAL_PROPERTY_ACTION_ID, lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: SET_CONSTRUCTION_PROPERTY_ACTION_ID, lanes: &[ArtifactToolPublicationLane::Artifact] },
     ];
 }
 //#endregion 🧵️RetainedCommands
@@ -1811,7 +2065,8 @@ impl ArtifactEditor for EnergyModelEditor {
             "set-zone-property",
             "set-glazing-material-property",
             "set-gas-material-property",
-            "setCamera"
+            "setCamera",
+            "set-construction-property"
         ]
     }
 
@@ -2134,6 +2389,119 @@ pub fn outside_boundary_kind_id(kind: crate::model::OutsideBoundaryKind) -> &'st
 pub const OUTSIDE_BOUNDARY_KIND_IDS: &[&str] = &["outdoorAir", "ground", "otherSideTemperature", "adiabatic", "interzone"];
 //#endregion 🔖️UiHelpers
 
+//#region 🔍️InspectorActions
+/// 🎬️ One inspector-dispatchable verb, declared APP-level rather than on a window kind.
+///
+/// ⚠️ This placement is load-bearing, not a style choice. A panel action is dispatched in the
+/// ACTIVE WINDOW's context, and `AppBuilder::build_definition` copies an app-level action onto every
+/// window kind — but SKIPS any id that some window already declares itself
+/// (`explicitly_owned_action_ids`). So the moment one of these verbs is listed in
+/// `structure::actions()` or `zones::actions()`, it belongs to that window ALONE and the shell
+/// refuses it from anywhere else with `window kind energy.model.3d does not own action
+/// set-fenestration-property` — exactly the defect the first browser probe of this ticket hit.
+fn inspector_action(id: &str, en: &str, de: &str, args: Vec<semio_framework_plugin::ActionArgDef>) -> semio_framework_plugin::ActionDefinition {
+    semio_framework_plugin::ActionDefinition::bounded_catalog(id, LocalizedLabel::native(en, de), semio_framework_plugin::ActionKind::Mutation).with_args(args)
+}
+
+/// 🔍️ Every verb the inspection panel can dispatch, in one place. They must be reachable while ANY
+/// window kind is active — the structure tree, the zones table, the simulation window and the 3d
+/// model window alike.
+pub fn inspector_action_definitions() -> Vec<semio_framework_plugin::ActionDefinition> {
+    use semio_framework_plugin::ActionArgDef as Arg;
+    let property = || Arg::text("property", LocalizedLabel::native("Property", "Eigenschaft")).required();
+    let text_value = || Arg::text("value", LocalizedLabel::native("Value", "Wert")).required();
+    vec![
+        inspector_action(
+            SET_SURFACE_PROPERTY_ACTION_ID,
+            "Set surface property",
+            "Flächeneigenschaft setzen",
+            vec![
+                Arg::number("surface", LocalizedLabel::native("Surface id", "Flächen-Id")).required(),
+                property(),
+                text_value(),
+                Arg::number("partnerSurface", LocalizedLabel::native("Interzone partner surface", "Nachbarfläche")),
+            ],
+        ),
+        inspector_action(
+            SET_FENESTRATION_PROPERTY_ACTION_ID,
+            "Set window property",
+            "Fenstereigenschaft setzen",
+            vec![Arg::number("fenestration", LocalizedLabel::native("Window id", "Fenster-Id")).required(), property(), text_value()],
+        ),
+        inspector_action(SET_ZONE_PROPERTY_ACTION_ID, "Set zone property", "Zoneneigenschaft setzen", vec![Arg::number("zone", LocalizedLabel::native("Zone id", "Zonen-Id")).required(), property(), text_value()]),
+        inspector_action(
+            SET_GLAZING_MATERIAL_PROPERTY_ACTION_ID,
+            "Set glazing material property",
+            "Verglasungsmaterial-Eigenschaft setzen",
+            vec![Arg::number("material", LocalizedLabel::native("Glazing material id", "Verglasungsmaterial-Id")).required(), property(), text_value()],
+        ),
+        inspector_action(
+            SET_GAS_MATERIAL_PROPERTY_ACTION_ID,
+            "Set gas gap property",
+            "Gasfüllungs-Eigenschaft setzen",
+            vec![Arg::number("material", LocalizedLabel::native("Gas gap id", "Gasfüllungs-Id")).required(), property(), text_value()],
+        ),
+        inspector_action(
+            SET_MATERIAL_PROPERTY_ACTION_ID,
+            "Set material property",
+            "Materialeigenschaft setzen",
+            vec![Arg::number("material", LocalizedLabel::native("Material id", "Material-Id")).required(), property(), Arg::number("value", LocalizedLabel::native("Value", "Wert")).required()],
+        ),
+        inspector_action(
+            SET_THERMOSTAT_SETPOINTS_ACTION_ID,
+            "Set thermostat setpoints",
+            "Thermostat-Sollwerte setzen",
+            vec![
+                Arg::number("thermostat", LocalizedLabel::native("Thermostat id", "Thermostat-Id")).required(),
+                Arg::number("heatingSchedule", LocalizedLabel::native("Heating setpoint schedule", "Heiz-Sollwertprofil")).required(),
+                Arg::number("coolingSchedule", LocalizedLabel::native("Cooling setpoint schedule", "Kühl-Sollwertprofil")).required(),
+                Arg::number("heatingThrottleRangeK", LocalizedLabel::native("Heating throttle range (K)", "Heiz-Regelbereich (K)")),
+                Arg::number("coolingThrottleRangeK", LocalizedLabel::native("Cooling throttle range (K)", "Kühl-Regelbereich (K)")),
+            ],
+        ),
+        inspector_action(
+            SET_SITE_ACTION_ID,
+            "Set site",
+            "Standort setzen",
+            vec![
+                Arg::slider("latitudeDeg", LocalizedLabel::native("Latitude (°)", "Breitengrad (°)"), -90.0, 90.0).required(),
+                Arg::slider("longitudeDeg", LocalizedLabel::native("Longitude (°)", "Längengrad (°)"), -180.0, 180.0).required(),
+                Arg::number("elevationM", LocalizedLabel::native("Elevation (m)", "Höhe (m)")),
+                Arg::number("timeZoneHours", LocalizedLabel::native("Time zone (h)", "Zeitzone (h)")),
+                Arg::number("northAxisDeg", LocalizedLabel::native("North axis (°)", "Nordachse (°)")),
+            ],
+        ),
+        inspector_action(DELETE_ZONE_ACTION_ID, "Delete zone", "Zone löschen", vec![Arg::number("zone", LocalizedLabel::native("Zone id", "Zonen-Id")).required()]),
+        inspector_action(DELETE_SURFACE_ACTION_ID, "Delete surface", "Fläche löschen", vec![Arg::number("surface", LocalizedLabel::native("Surface id", "Flächen-Id")).required()]),
+        inspector_action(
+            SET_CONSTRUCTION_PROPERTY_ACTION_ID,
+            "Set construction property",
+            "Konstruktionseigenschaft setzen",
+            vec![Arg::number("construction", LocalizedLabel::native("Construction id", "Konstruktions-Id")).required(), property(), text_value()],
+        ),
+    ]
+}
+
+/// 🪟️ The verbs a WINDOW renders but any window may have to dispatch — the simulation window's three
+/// config/document verbs (its settings tree and the inspector's own result-field select both reach
+/// `set-result-field`), plus the two creation verbs the app keybindings `mod+shift+n`/`mod+shift+s`
+/// fire. They are declared app-level for exactly the reason [`inspector_action_definitions`] is: an
+/// action a window kind lists in its own `actions` is copied onto NO other window, so the chord is
+/// refused with `window kind … does not own action …` whenever another window holds focus.
+pub fn window_shared_action_definitions() -> Vec<semio_framework_plugin::ActionDefinition> {
+    vec![simulation::settings_action(), simulation::result_field_action(), simulation::run_period_action(), structure::create_surface_action(), zones::create_zone_action(), zones::rename_zone_action()]
+}
+
+/// 🎬️ Every action this editor declares APP-level, in one roster: `build_definition` copies each of
+/// them onto every window kind, which is what makes a panel control and a keybinding dispatchable
+/// whatever window is active. `setActiveExample` is app-level too, through `.mutation(…)`.
+pub fn app_level_action_definitions() -> Vec<semio_framework_plugin::ActionDefinition> {
+    let mut actions = inspector_action_definitions();
+    actions.extend(window_shared_action_definitions());
+    actions
+}
+//#endregion 🔍️InspectorActions
+
 //#region 🔖️Manifest
 /// 🧱️ The editor's `AppDefinition`. Every id in [`ENERGY_MODEL_RETAINED_TOOL_IDS`] is classified
 /// `Migrated` here — `set-node`/`set-cell` are already stamped by their kits, the other twelve are
@@ -2170,6 +2538,11 @@ pub fn create_energy_model_editor() -> semio_framework_plugin::AppDefinition {
         .keybinding("mod+shift+s", CREATE_SURFACE_ACTION_ID)
         .keybinding("mod+shift+g", SET_SITE_ACTION_ID)
         .default_layout(edit::layout());
+    // 🔍️ App-level, NOT per-window: `build_definition` copies these onto every window kind, which is
+    // what makes an inspector control dispatchable while the 3d window (or any other) is active.
+    for action in app_level_action_definitions() {
+        builder = builder.action_with(action);
+    }
     for tool_id in ENERGY_MODEL_RETAINED_TOOL_IDS {
         builder = builder.action_interactive_job(*tool_id, InteractiveJobClassification::Migrated);
     }

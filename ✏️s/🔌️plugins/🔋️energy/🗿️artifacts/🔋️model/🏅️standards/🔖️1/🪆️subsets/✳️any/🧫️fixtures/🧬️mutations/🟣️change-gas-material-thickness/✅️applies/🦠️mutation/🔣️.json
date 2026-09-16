@@ -1,1 +1,5 @@
-{}
+{
+  "mutation": "changeGasMaterialThickness",
+  "id": 2,
+  "newThicknessM": 0.016
+}

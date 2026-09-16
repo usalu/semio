@@ -1519,6 +1519,24 @@ impl ArtifactEditor for Generation2dPlayApp {
         let str_arg = |keys: &[&str]| -> Option<String> { keys.iter().find_map(|key| args.get(key).and_then(|value| value.as_str()).map(str::to_string)) };
         let f64_arg = |keys: &[&str]| -> Option<f64> { keys.iter().find_map(|key| args.get(key).and_then(|value| value.as_f64())) };
         let u64_arg = |keys: &[&str]| -> Option<u64> { keys.iter().find_map(|key| args.get(key).and_then(|value| value.as_u64().or_else(|| value.as_f64().map(|number| number as u64)))) };
+        // 🧵️ `samples: [[x, y], …]` (design L4): every well-formed pair in order; a legacy wire
+        // without `samples` folds its `x`/`y` into one sample.
+        let pointer_samples = || {
+            let parsed = args
+                .get("samples")
+                .and_then(dsl::DslValue::as_array)
+                .map(|items| items.iter().filter_map(|item| { let pair = item.as_array()?; Some([pair.first()?.as_f64()?, pair.get(1)?.as_f64()?]) }).collect::<Vec<[f64; 2]>>())
+                .unwrap_or_default();
+            if parsed.is_empty() {
+                match (args.get("x").and_then(dsl::DslValue::as_f64), args.get("y").and_then(dsl::DslValue::as_f64)) {
+                    (Some(x), Some(y)) => vec![[x, y]],
+                    _ => Vec::new(),
+                }
+            } else {
+                parsed
+            }
+        };
+        let pointer_cancelled = || args.get("cancelled").and_then(dsl::DslValue::as_bool).unwrap_or(false);
         match action {
             "nodeGraphEdit" => Ok(Generation2dCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit {
                 operations_json: str_arg(&["operationsJson", "operations_json"]).or_else(|| args.get("operations").map(dsl::json::to_json_string)).unwrap_or_else(|| "[]".into()),
@@ -1549,8 +1567,8 @@ impl ArtifactEditor for Generation2dPlayApp {
             "generate" => Ok(Generation2dCommand::Generate(enter_generate::Generate {})),
             "setEvalOutputs" => Ok(Generation2dCommand::SetEvalOutputs(set_eval_outputs::SetEvalOutputs { outputs_json: str_arg(&["outputsJson", "outputs_json", "evalJson"]).unwrap_or_else(|| "{}".into()) })),
             "canvasPointerDown" => Ok(Generation2dCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown {})),
-            "canvasPointerMove" => Ok(Generation2dCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove {})),
-            "canvasPointerUp" => Ok(Generation2dCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp {})),
+            "canvasPointerMove" => Ok(Generation2dCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { samples: pointer_samples() })),
+            "canvasPointerUp" => Ok(Generation2dCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { cancelled: pointer_cancelled() })),
             "canvasWheel" => Ok(Generation2dCommand::CanvasWheel(canvas_wheel::CanvasWheel {})),
             "selectGeneration" => Ok(Generation2dCommand::SelectGeneration(select_generation::SelectGeneration { id: str_arg(&["id"]) })),
             "flowEvalTick" => Ok(Generation2dCommand::FlowEvalTick(flow_eval_tick::FlowEvalTick {

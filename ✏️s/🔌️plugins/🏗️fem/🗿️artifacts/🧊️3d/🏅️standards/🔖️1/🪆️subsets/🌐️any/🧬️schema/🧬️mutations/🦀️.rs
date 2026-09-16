@@ -7,7 +7,7 @@
 
 use crate::standards::v1::subsets::any::schema::diff::Fem3dDiff;
 use crate::Fem3dSnapshot;
-use crate::{element_id, load_id, FemAnalysisSettings, FemElement, FemLoad, FemMaterial, FemNode, FemSection, FemSolid};
+use crate::{element_id, load_id, FemAnalysisSettings, FemCombination, FemElement, FemLoad, FemMaterial, FemNode, FemSection, FemSolid};
 use protocol::Mutation;
 use semio_framework_value_derive::{FromValue, ToValue};
 use store::{ArtifactEnvelope, ArtifactStore};
@@ -55,6 +55,10 @@ pub enum Fem3dMutation {
     CreateCombination(create_combination::CreateCombination),
     DeleteCombination(delete_combination::DeleteCombination),
     UpdateAnalysisSettings(update_analysis_settings::UpdateAnalysisSettings),
+    ReplaceNode(replace_node::ReplaceNode),
+    ReplaceLoad(replace_load::ReplaceLoad),
+    ChangeLoadCaseName(change_load_case_name::ChangeLoadCaseName),
+    ReplaceCombination(replace_combination::ReplaceCombination),
 }
 //#endregion 🔖️Mutations
 
@@ -87,6 +91,10 @@ use super::replace_section;
 use super::replace_solid;
 use super::replace_support;
 use super::update_analysis_settings;
+use super::replace_node;
+use super::replace_load;
+use super::change_load_case_name;
+use super::replace_combination;
 //#endregion 🔖️LeafImports
 
 //#region 🛡️Guards
@@ -288,6 +296,28 @@ pub fn solid_breach(solid: &FemSolid) -> Option<String> {
     None
 }
 
+/// 🏋️ A load must carry finite magnitudes — an infinite or undefined force would poison the whole
+/// right-hand side of every case it enters.
+pub fn load_breach(load: &FemLoad) -> Option<String> {
+    let (id, finite) = match load {
+        FemLoad::Nodal { id, value, .. } => (id, value.is_finite()),
+        FemLoad::MemberUdl { id, wx, wy, wz, .. } => (id, wx.is_finite() && wy.is_finite() && wz.is_finite()),
+        FemLoad::Area { id, pressure, .. } => (id, pressure.is_finite()),
+    };
+    (!finite).then(|| format!("Load \"{id}\" must carry finite magnitudes."))
+}
+
+/// 📦️ Every term of a combination weights a load case this base carries — the SAME resolution
+/// `create-combination` and `replace-combination` run, so the twins accept exactly the same terms.
+pub fn resolve_combination_terms(base: &Fem3dSnapshot, combination: &FemCombination) -> Option<protocol::MutationOutcome<Fem3dDiff>> {
+    combination.terms.keys().find(|case_id| !base.load_cases.iter().any(|case| &case.id == *case_id)).map(|case_id| protocol::MutationOutcome::error("mutation.target-missing", format!("Load case \"{case_id}\" does not exist."), [case_id.clone()]))
+}
+
+/// 📦️ A combination's factors must be finite — an infinite weight cannot be superposed.
+pub fn combination_breach(combination: &FemCombination) -> Option<String> {
+    (!combination.terms.values().all(|factor| factor.is_finite())).then(|| format!("Combination \"{}\" must carry finite factors.", combination.id))
+}
+
 /// ⚙️ Analysis bounds: an eigen solve for fewer than one mode or one buckling factor has nothing to
 /// return, and a non-positive deformation scale collapses or mirrors the results view.
 pub fn analysis_breach(settings: &FemAnalysisSettings) -> Option<String> {
@@ -358,6 +388,10 @@ pub const KINDS: &[&str] = &[
     "create-combination",
     "delete-combination",
     "update-analysis-settings",
+    "replace-node",
+    "replace-load",
+    "change-load-case-name",
+    "replace-combination",
 ];
 //#endregion 🔖️Kinds
 

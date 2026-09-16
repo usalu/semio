@@ -367,6 +367,8 @@ fn board2d_scene_splits_into_the_declared_lanes_and_merges_back() {
     merged.lanes = Vec::new();
     assert_eq!(merged, assembled);
     let idle = Board2dScene::base("{}".into(), "{}".into(), false);
-    assert!(idle.split_lanes().1.is_empty(), "an idle board publishes no trace carrier");
+    let idle_lanes = idle.split_lanes().1;
+    assert_eq!(idle_lanes.len(), 1, "an idle board publishes its fixture carrier and no trace carrier");
+    assert_eq!(idle_lanes[0].key, Board2dSceneLane::Fixture.body_key());
 }
 //#endregion 🚚️Board2dSceneLanes

@@ -44,8 +44,13 @@ fn admit<T, E>(value: Result<T, E>) -> UiAssemblyResult<T> {
     value.map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "forms viewer admission failed"))
 }
 
-fn text(value: &str, emphasize: bool) -> UiAssemblyResult<ui::BuiltNode> {
-    admit(ui::text(admit(ui::Label::try_from(value))?).emphasize(emphasize).try_build())
+/// 🔑️ Explicit key per text row — `try_build` stamps unkeyed nodes `"#0"` and `try_child` re-keys only
+/// EMPTY keys, so a step title next to its description collided (`DuplicateSiblingKey`); see the editor
+/// Try window's `display` (ticket 26/09/16/FORMS-PLUGIN-END-TO-END).
+fn text(key: &str, value: &str, emphasize: bool) -> UiAssemblyResult<ui::BuiltNode> {
+    let mut node: ui::BuiltNode = ui::text(admit(ui::Label::try_from(value))?).emphasize(emphasize).into();
+    node.key = ui::UiText::try_from_str(key).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "forms viewer key admission failed"))?;
+    Ok(node)
 }
 
 fn read_only_field(question: &FormQuestion, value_text: &str) -> UiAssemblyResult<ui::BuiltNode> {
@@ -53,7 +58,7 @@ fn read_only_field(question: &FormQuestion, value_text: &str) -> UiAssemblyResul
     if let Some(description) = &question.description {
         field = field.description(ui::UiText::try_from_str(description).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "forms viewer description admission failed"))?);
     }
-    admit(admit(field.try_child(text(value_text, false)?))?.try_build())
+    admit(admit(field.try_child(text(&format!("forms-view-try.{}.value", question.id), value_text, false)?))?.try_build())
 }
 
 fn render_view_question(question: &FormQuestion) -> UiAssemblyResult<ui::BuiltNode> {
@@ -67,14 +72,14 @@ fn render_view_question(question: &FormQuestion) -> UiAssemblyResult<ui::BuiltNo
 pub fn render(document: &FormsSnapshot) -> UiAssemblyResult<ui::BuiltNode> {
     let steps = forms_steps(document);
     if steps.is_empty() {
-        return text("No steps in this form.", false);
+        return text("forms-view-try.empty", "No steps in this form.", false);
     }
-    let mut column = admit(ui::column().try_child(text(document.title.as_deref().unwrap_or("Form"), true)?))?;
+    let mut column = admit(ui::column().try_child(text("forms-view-try.title", document.title.as_deref().unwrap_or("Form"), true)?))?;
     for step in &steps {
         let mut section = admit(ui::column().try_id(format!("forms-view-try.step.{}", step.id)))?;
-        section = admit(section.try_child(text(&step.title, true)?))?;
+        section = admit(section.try_child(text(&format!("forms-view-try.step.{}.title", step.id), &step.title, true)?))?;
         if let Some(description) = &step.description {
-            section = admit(section.try_child(text(description, false)?))?;
+            section = admit(section.try_child(text(&format!("forms-view-try.step.{}.description", step.id), description, false)?))?;
         }
         for question in &step.blocks {
             section = admit(section.try_child(render_view_question(question)?))?;

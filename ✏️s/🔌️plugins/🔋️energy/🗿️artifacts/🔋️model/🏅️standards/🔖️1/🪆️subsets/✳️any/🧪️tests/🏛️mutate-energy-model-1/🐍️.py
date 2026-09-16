@@ -600,6 +600,8 @@ VECTOR_ROOTS = {
     "change-gas-material-gas-refuses": "shared://🧬️mutations/🟤️change-gas-material-gas/⛔️refuses",
     "rename-gas-material-applies": "shared://🧬️mutations/🔘️rename-gas-material/✅️applies",
     "rename-gas-material-refuses": "shared://🧬️mutations/🔘️rename-gas-material/⛔️refuses",
+    "change-material-roughness-applies": "shared://🧬️mutations/🗻️change-material-roughness/✅️applies",
+    "change-material-roughness-refuses": "shared://🧬️mutations/🗻️change-material-roughness/⛔️refuses",
 }
 
 
@@ -6854,6 +6856,26 @@ def _invert_rename_gas_material(before, payload):
     return [("rename-gas-material", {"id": payload["id"], "newName": item["name"]})]
 
 
+def change_material_roughness(before, payload):
+    """🗻️ `change-material-roughness{id,newRoughness}` — Sets the surface roughness class of one material, addressed by id."""
+    entity_id, value = payload["id"], payload["newRoughness"]
+    item = next((row for row in before["model"]["materials"] if row["id"] == entity_id), None)
+    if item is None:
+        return unchanged(before), rejected("mutation.target-missing", [str(entity_id)])
+    if item["roughness"] == value:
+        return unchanged(before), applied(("warning", "mutation.no-op"))
+    after = copy.deepcopy(before)
+    for row in after["model"]["materials"]:
+        if row["id"] == entity_id:
+            row["roughness"] = value
+    return after, applied()
+
+
+def _invert_change_material_roughness(before, payload):
+    item = next(row for row in before["model"]["materials"] if row["id"] == payload["id"])
+    return [("change-material-roughness", {"id": payload["id"], "newRoughness": item["roughness"]})]
+
+
 VOCABULARY = {
     "rename-model": rename_model,
     "change-model-version": change_model_version,
@@ -7141,6 +7163,7 @@ VOCABULARY = {
     "change-gas-material-thickness": change_gas_material_thickness,
     "change-gas-material-gas": change_gas_material_gas,
     "rename-gas-material": rename_gas_material,
+    "change-material-roughness": change_material_roughness,
 }
 
 #: ↩️ Catalog id -> the undo steps that kind owes, for every kind whose spec row states its own.
@@ -7414,6 +7437,7 @@ EXTRA_INVERT = {
     "change-gas-material-thickness": _invert_change_gas_material_thickness,
     "change-gas-material-gas": _invert_change_gas_material_gas,
     "rename-gas-material": _invert_rename_gas_material,
+    "change-material-roughness": _invert_change_material_roughness,
 }
 # endregion 🔖️Vocabulary
 

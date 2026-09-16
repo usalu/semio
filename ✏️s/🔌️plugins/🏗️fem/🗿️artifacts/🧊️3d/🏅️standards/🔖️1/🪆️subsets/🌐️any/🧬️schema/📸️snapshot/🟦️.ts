@@ -14,6 +14,10 @@ export interface FemNode {
  * (`🗿️artifacts/🧊️3d/🦀️.rs`, re-exported from `fem2d::FemDof`). */
 export type FemDof = "Tx" | "Ty" | "Tz" | "Rx" | "Ry" | "Rz";
 
+/** 🧭️ The world axis a solid's footprint is extruded along. Mirrors Rust `FemAxis`
+ * (`🗿️artifacts/🧊️3d/🦀️.rs`). */
+export type FemAxis = "x" | "y" | "z";
+
 /** 🔩️ A two-node member: an axial `Bar` or a full 6-DOF `Frame` with a local-axis `roll` angle
  * (radians). Mirrors Rust `FemElement` (`🗿️artifacts/🧊️3d/🦀️.rs`), tagged on `kind`. */
 export type FemElement =
@@ -64,6 +68,7 @@ export interface FemSolid {
   layers: number;
   meshSize: number;
   materialId: string;
+  axis: FemAxis;
 }
 
 /** 🏋️ A load — a concentrated nodal force/moment, a member UDL on a bar/frame element, or a normal

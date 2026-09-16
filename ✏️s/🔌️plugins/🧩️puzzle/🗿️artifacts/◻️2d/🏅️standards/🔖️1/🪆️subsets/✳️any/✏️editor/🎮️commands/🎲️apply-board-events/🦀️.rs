@@ -2,7 +2,7 @@
 
 use crate::editor::puzzle2d::modes::edit::windows::{detail, overview, selection};
 use crate::editor::puzzle2d::panels::{artifact, inspection};
-use crate::editor::puzzle2d::{apply_brush_place_payload, delete_selection_from_host_snapshot, patch_inspector_nodes, set_runtime_camera, Puzzle2dActionCtx, Puzzle2dScene};
+use crate::editor::puzzle2d::{apply_brush_place_payload, delete_selection_from_host_snapshot, patch_inspector_nodes, puzzle2d_selection_write, set_runtime_camera, Puzzle2dActionCtx, Puzzle2dScene};
 use semio_framework::kernel::UiDirtyScope;
 use serde_json::{json, Value};
 
@@ -50,6 +50,8 @@ fn puzzle2d_board_events_scope(events: &[Value]) -> UiDirtyScope {
                 window_bodies = true;
                 engagements = true;
             }
+            // 🖱️ Engine-local hover paints itself; the guest keeps no hover state to re-render for.
+            "hover" | "preselectCancel" => {}
             _ => recognized_all = false,
         }
     }
@@ -78,10 +80,8 @@ pub fn apply_board_events_from_json(events_json: &str, envelope: &mut Puzzle2dSc
             "camera" => {
                 set_runtime_camera(&mut envelope.runtime, &payload);
             }
-            // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: "select" board events used
-            // to write `envelope.runtime.selected_ids` directly; selection is framework-owned now and
-            // `handle` has no channel to write it — dropped (see puzzle3d's `select-same-kind` doc
-            // comment for the identical limitation).
+            // 🕹️ Selection is framework-owned: `apply_board_events` turns the engine's `select` rows into
+            // `Emit::interaction_writes` (see [`board_selection_write`]); nothing to fold into the scene here.
             "select" => {}
             "nodeDragEnd" => {
                 if let Some(moves) = payload.get("moves").and_then(|value| value.as_array()) {
@@ -150,10 +150,29 @@ pub fn apply_board_events_from_json(events_json: &str, envelope: &mut Puzzle2dSc
 /// `2d-overview`, …), which are a different id space used to key utilities/engagements/measures.
 pub const PUZZLE2D_WINDOW_BODY_KEYS: [&str; 3] = [overview::BODY_KEY, detail::BODY_KEY, selection::BODY_KEY];
 
+/// 🕹️ The LAST `select` row of a batch is the engine's whole selection set (`ids`, replace semantics),
+/// so it becomes one framework selection write — later rows supersede earlier ones inside a batch.
+fn board_selection_write(events: &[Value], fixture: &Value) -> Option<semio_framework_plugin::InteractionWrite> {
+    let ids: Vec<String> = events
+        .iter()
+        .rev()
+        .find(|event| event.get("name").and_then(Value::as_str) == Some("select"))?
+        .get("payload")
+        .and_then(|payload| payload.get("ids"))
+        .and_then(Value::as_array)
+        .map(|ids| ids.iter().filter_map(Value::as_str).map(str::to_string).collect())
+        .unwrap_or_default();
+    Some(puzzle2d_selection_write(fixture, &ids))
+}
+
 pub fn apply_board_events(ctx: &mut Puzzle2dActionCtx<'_>, args: Option<&Value>) {
     let Some(events_json) = args.and_then(|value| value.get("eventsJson")).and_then(|value| value.as_str()) else {
         return;
     };
-    *ctx.ui_scope = serde_json::from_str::<Vec<Value>>(events_json).map_or(UiDirtyScope::Full, |events| puzzle2d_board_events_scope(&events));
+    let events = serde_json::from_str::<Vec<Value>>(events_json).ok();
+    *ctx.ui_scope = events.as_deref().map_or(UiDirtyScope::Full, puzzle2d_board_events_scope);
     apply_board_events_from_json(events_json, ctx.scene);
+    if let Some(write) = events.as_deref().and_then(|events| board_selection_write(events, &ctx.scene.fixture)) {
+        ctx.interaction_writes.push(write);
+    }
 }

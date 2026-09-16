@@ -59,8 +59,14 @@ fn answer_args(key: &str, view: &semio_framework_plugin::ViewModel) -> UiAssembl
     ui_value_map([("key", ui_value_text(key)?), ("windowId", ui_value_text(window_id)?), ("windowKindId", ui_value_text(window_kind_id)?)])
 }
 
-fn display(value: &str, emphasize: bool) -> UiAssemblyResult<ui::BuiltNode> {
-    ui_admit(ui::text(ui_label(value)?).emphasize(emphasize).try_build())
+/// 🔑️ Every text row carries its own explicit key: `Buildable::try_build` stamps an unkeyed node
+/// `"#0"` and `HasChildren::try_child` only re-keys EMPTY keys, so already-built siblings pushed
+/// through [`stack`] would collide (`DuplicateSiblingKey parent=#0 key=#0`, the fault that kept the
+/// Try window from ever rendering in the react shell — ticket 26/09/16/FORMS-PLUGIN-END-TO-END).
+fn display(key: &str, value: &str, emphasize: bool) -> UiAssemblyResult<ui::BuiltNode> {
+    let mut node: ui::BuiltNode = ui::text(ui_label(value)?).emphasize(emphasize).into();
+    node.key = ui_text_value(key)?;
+    Ok(node)
 }
 
 fn stack(axis: ui::Axis, children: Vec<ui::BuiltNode>) -> UiAssemblyResult<ui::BuiltNode> {
@@ -177,9 +183,9 @@ fn render_try_question(question: &FormQuestion, values: &Object, contributions: 
             stack(ui::Axis::Horizontal, children)?
         }
         "image" => ui_admit(ui_admit(ui::image(ui_text_value(image_question_src(question))?).alt(ui_label(label)?).try_id(format!("forms-try.{key}.image")))?.try_build())?,
-        "note" => return display(question.text.as_deref().unwrap_or(label), false),
+        "note" => return display(&format!("forms-try.{key}.note"), question.text.as_deref().unwrap_or(label), false),
         kind if is_extension_question_kind(kind) => return render_extension_question(question, values, contributions, "try", true),
-        _ => return display(&format!("Unsupported kind: {}", question.kind), false),
+        _ => return display(&format!("forms-try.{key}.unsupported"), &format!("Unsupported kind: {}", question.kind), false),
     };
     try_field(question, error, child)
 }
@@ -208,7 +214,7 @@ pub fn render(
 ) -> UiAssemblyResult<ui::BuiltNode> {
     let steps = crate::forms_steps(spec);
     if steps.is_empty() {
-        return display(labels.no_steps_in_form.as_str(), false);
+        return display("forms-try.empty", labels.no_steps_in_form.as_str(), false);
     }
     let contributions = parse_contributions(app_config);
     let step_index = (window_config.current_step_index as usize).min(steps.len().saturating_sub(1));
@@ -219,9 +225,13 @@ pub fn render(
     let errors = step_errors(step, &validation_values);
     let advance = can_advance(step, &validation_values);
     let errors_by_question: HashMap<&str, &str> = errors.iter().map(|error| (error.block_id.as_str(), error.message.as_str())).collect();
-    let mut children = vec![display(spec.title.as_deref().unwrap_or(labels.form_fallback_title.as_str()), true)?, display(&format!("{} {} / {}", labels.step_progress.as_str(), step_index + 1, steps.len()), false)?, display(&step.title, true)?];
+    let mut children = vec![
+        display("forms-try.title", spec.title.as_deref().unwrap_or(labels.form_fallback_title.as_str()), true)?,
+        display("forms-try.progress", &format!("{} {} / {}", labels.step_progress.as_str(), step_index + 1, steps.len()), false)?,
+        display("forms-try.step-title", &step.title, true)?,
+    ];
     if let Some(description) = &step.description {
-        children.push(display(description, false)?);
+        children.push(display("forms-try.step-description", description, false)?);
     }
     for question in visible {
         children.push(render_try_question(question, &values, &contributions, errors_by_question.get(question.id.as_str()).copied(), labels, view)?);

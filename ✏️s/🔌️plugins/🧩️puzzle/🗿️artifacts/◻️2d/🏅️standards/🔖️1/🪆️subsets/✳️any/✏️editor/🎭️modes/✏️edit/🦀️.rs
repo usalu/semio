@@ -119,12 +119,9 @@ fn puzzle2d_board_scene(document_json: &str, envelope: &Puzzle2dScene, pane: &st
     let (camera_x, camera_y, zoom) = puzzle2d_pane_camera(fixture, &envelope.runtime, pane);
     let camera_json = json!({ "x": camera_x, "y": camera_y, "zoom": zoom }).to_string();
     let glyph_catalogs_json = crate::editor::puzzle2d::board_kind_catalogs_json(fixture).unwrap_or_else(|| "{}".into());
-    // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM known gap: selection/method used
-    // to come from `runtime.selected_ids`/`selection_method`, now dissolved into the framework-owned
-    // `vortex` interaction domain; `render` has no `InteractionView` to read it from (see
-    // `puzzle3d`'s `world_selection_json` doc comment for the identical framework-level gap) — this
-    // payload carries no live ids until that gap closes.
-    let selection_json = "[]".to_string();
+    // 🕹️ The framework-owned `vortex` selection, resolved once per render by
+    // `Puzzle2dPlayApp::render_with_request_context`, echoes back to the board engine here.
+    let selection_json = envelope.interaction.selection_json();
     let brush_weights_json = serde_json::to_string(&json!({
         "nodeWeights": envelope.runtime.node_kind_weights,
         "handleWeights": envelope.runtime.handle_kind_weights,
@@ -152,15 +149,12 @@ fn puzzle2d_board_scene(document_json: &str, envelope: &Puzzle2dScene, pane: &st
     }
 }
 
-/// 🖼️ The board-2d surface node for one pane — bound by each window's own `render()`.
+/// 🖼️ The board-2d surface node for one pane — bound by each window's own `render()`. The fixture rides
+/// as its own paged lane carrier (`Board2dSceneLane::Fixture`), so a 180-node board is bounded by its
+/// carrier pages instead of by the 32 KiB surface doc that refused it outright.
 pub fn render_canvas(document_json: &str, envelope: &Puzzle2dScene, pane: &str) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let scene = puzzle2d_board_scene(document_json, envelope, pane);
-    let props = semio_framework_ui_scene::encode(semio_framework_ui_contract::SurfaceKind::Board2d, &scene).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.scene.encode", "Board2d scene admission failed"))?;
-    semio_framework_ui_contract::surface(props)
-        .try_id(format!("{PUZZLE2D_PLAY_SURFACE_ID}.{pane}"))
-        .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.scene.id", "Board2d surface id admission failed"))?
-        .try_build()
-        .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.scene.build", "Board2d surface admission failed"))
+    semio_framework_plugin::scene_surface(&format!("{PUZZLE2D_PLAY_SURFACE_ID}.{pane}"), semio_framework_ui_contract::SurfaceKind::Board2d, &scene)
 }
 //#endregion 🔖️Canvas
 
@@ -175,7 +169,7 @@ pub fn puzzle2d_engagement(envelope: &Puzzle2dScene, host: &BoardHost, pane: &st
     let input_value = envelope.runtime.engagement_input_by_pane.get(pane).cloned().unwrap_or_default();
     let placeholder = match envelope.active_utility.as_str() {
         "brush" => "Brush",
-        _ => "select, brush, clear",
+        _ => "select, brush, fill <n>, clear, move <dx> <dy>, rotate <deg>, scale <f>",
     };
     WindowEngagement {
         session_active: Some(envelope.active_utility != "select"),

@@ -175,10 +175,89 @@ pub struct FemCombination {
 /// the reason the removed doc comment here used to explain) — re-exported from there now instead.
 pub use semio_s_artifact_fem_2d::FemAnalysisSettings;
 
-/// 🧱️ A meshed continuum solid — a polygon footprint (with optional holes) extruded upward from
-/// `base_z` by `height` across `layers` equal-height layers, filled with `Tet4` elements at solve time
-/// (see `crate::fem3d_engine::meshing::resolve_geometry`) — mirrors `fem_2d::FemRegion`,
-/// extended into 3D via `crate::model::mesh`'s extrusion + tet-splitting.
+/// 🧭️ The world axis a `FemSolid`'s footprint is extruded along. The footprint plane is the one
+/// perpendicular to it and its `(u, v)` coordinates are the two remaining world axes in world order —
+/// `X`: `(y, z)`, `Y`: `(x, z)`, `Z`: `(x, y)` — so a wall drawn in elevation (`Y`, footprint `(x, z)`
+/// with window holes, extruded through its thickness) and a gable roof (`Y`, a chevron section
+/// extruded along the ridge) are the same record a floor slab is (`Z`, footprint `(x, y)` extruded
+/// upward). `base_z` is the offset along this axis, `height` the extrusion length.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, dsl::DslScalar)]
+pub enum FemAxis {
+    #[dsl(key = "x")]
+    X,
+    #[dsl(key = "y")]
+    Y,
+    #[default]
+    #[dsl(key = "z")]
+    Z,
+}
+
+/// 🌉️ Hand-written like `FemDof`'s: a plain unit-only string enum whose wire shape is the bare key.
+impl dsl::ToValue for FemAxis {
+    fn to_value(&self) -> dsl::DslValue {
+        dsl::DslValue::String(self.key().to_string())
+    }
+}
+impl dsl::FromValue for FemAxis {
+    fn from_value(value: dsl::DslValue) -> Result<Self, dsl::ValueError> {
+        match value {
+            dsl::DslValue::String(text) => FemAxis::from_key(&text).ok_or_else(|| dsl::ValueError::new(format!("unknown FemAxis variant `{text}`"))),
+            other => Err(dsl::ValueError::new(format!("expected a string, found {other:?}"))),
+        }
+    }
+}
+
+impl FemAxis {
+    pub const ALL: [FemAxis; 3] = [FemAxis::X, FemAxis::Y, FemAxis::Z];
+
+    /// 🔤️ The wire key (`x`/`y`/`z`).
+    pub fn key(self) -> &'static str {
+        match self {
+            FemAxis::X => "x",
+            FemAxis::Y => "y",
+            FemAxis::Z => "z",
+        }
+    }
+
+    /// 🔤️ Parses the wire key, case-insensitively.
+    pub fn from_key(text: &str) -> Option<Self> {
+        match text.trim().to_ascii_lowercase().as_str() {
+            "x" => Some(FemAxis::X),
+            "y" => Some(FemAxis::Y),
+            "z" => Some(FemAxis::Z),
+            _ => None,
+        }
+    }
+
+    /// 🌐️ Lifts a footprint point `(u, v)` at extrusion offset `w` into world `(x, y, z)`.
+    pub fn to_world(self, u: f64, v: f64, w: f64) -> [f64; 3] {
+        match self {
+            FemAxis::X => [w, u, v],
+            FemAxis::Y => [u, w, v],
+            FemAxis::Z => [u, v, w],
+        }
+    }
+
+    /// 🌐️ Projects a world point onto the footprint plane: `(u, v)` and the extrusion offset `w`.
+    pub fn from_world(self, point: [f64; 3]) -> ([f64; 2], f64) {
+        match self {
+            FemAxis::X => ([point[1], point[2]], point[0]),
+            FemAxis::Y => ([point[0], point[2]], point[1]),
+            FemAxis::Z => ([point[0], point[1]], point[2]),
+        }
+    }
+
+    /// 🧭️ The unit extrusion direction in world space.
+    pub fn direction(self) -> [f64; 3] {
+        self.to_world(0.0, 0.0, 1.0)
+    }
+}
+
+/// 🧱️ A meshed continuum solid — a polygon footprint (with optional holes) extruded along `axis` from
+/// offset `base_z` by `height` across `layers` equal-height layers, filled with `Tet4` elements at
+/// solve time (see `crate::fem3d_engine::meshing::resolve_geometry`) — mirrors `fem_2d::FemRegion`,
+/// extended into 3D via `crate::model::mesh`'s extrusion + tet-splitting. Footprint coordinates are
+/// the world axes `FemAxis` names for the extrusion axis.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 #[value(rename_all = "camelCase")]
 #[dsl(keyword = "solid")]
@@ -192,6 +271,7 @@ pub struct FemSolid {
     pub layers: usize,
     pub mesh_size: f64,
     pub material_id: String,
+    pub axis: FemAxis,
 }
 
 pub use semio_framework_os_kernel::Viewport3dOrbit;
@@ -964,6 +1044,46 @@ pub mod standards {
                             mod tests_removes_the_serviceability_combination_and_keeps_both_cases;
                         }
                         #[path = "."]
+                        pub mod replace_node {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🔁️replace-node/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🔁️replace-node/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🔁️replace-node/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod replace_load {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🔁️replace-load/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🔁️replace-load/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🔁️replace-load/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod change_load_case_name {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🏷️change-load-case-name/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🏷️change-load-case-name/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🏷️change-load-case-name/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod replace_combination {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🔁️replace-combination/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🔁️replace-combination/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🔁️replace-combination/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                        }
+                        #[path = "."]
                         pub mod update_analysis_settings {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/📈️analysis/🧬️schema/🧬️mutations/🎛️update-analysis-settings/🦀️.rs"]
                             mod component;
@@ -987,6 +1107,9 @@ pub mod standards {
                         }
                     }
                 }
+                #[cfg(feature = "component-app-assembly")]
+                #[path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/🎬️scene/🦀️.rs"]
+                pub mod scene;
                 #[path = "."]
                 pub mod io {
                     #[path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/🚪️io/🦀️.rs"]
@@ -1182,6 +1305,31 @@ pub mod editor {
         #[path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🌉️wasm/🦀️.rs"]
         pub mod wasm;
 
+        #[path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🗣️terminology/🦀️.rs"]
+        pub mod terminology;
+
+        #[path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🕹️interaction/🦀️.rs"]
+        pub mod interaction;
+
+        #[path = "."]
+        pub mod panels {
+            #[path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/📌️panels/🗿️artifact/🦀️.rs"]
+            pub mod artifact;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/📌️panels/🔍️inspection/🦀️.rs"]
+            pub mod inspection;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/📌️panels/📊️results/🦀️.rs"]
+            pub mod results;
+        }
+
+        #[path = "."]
+        pub mod options {
+            #[path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🛠️options/🔄️transform/🦀️.rs"]
+            pub mod transform;
+        }
+
+        #[path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🛠️window-measures/🦀️.rs"]
+        pub mod window_measures;
+
         #[path = "."]
         pub mod commands {
             #[path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎮️commands/🏋️add-area-load/🦀️.rs"]
@@ -1220,6 +1368,32 @@ pub mod editor {
             pub mod set_result_display;
             #[path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎮️commands/⚖️set-self-weight/🦀️.rs"]
             pub mod set_self_weight;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎮️commands/🩹️patch-node/🦀️.rs"]
+            pub mod patch_node;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎮️commands/🩹️patch-element/🦀️.rs"]
+            pub mod patch_element;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎮️commands/🩹️patch-material/🦀️.rs"]
+            pub mod patch_material;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎮️commands/🩹️patch-section/🦀️.rs"]
+            pub mod patch_section;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎮️commands/🩹️patch-support/🦀️.rs"]
+            pub mod patch_support;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎮️commands/🩹️patch-solid/🦀️.rs"]
+            pub mod patch_solid;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎮️commands/🩹️patch-load/🦀️.rs"]
+            pub mod patch_load;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎮️commands/🩹️patch-load-case/🦀️.rs"]
+            pub mod patch_load_case;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎮️commands/🩹️patch-combination/🦀️.rs"]
+            pub mod patch_combination;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎮️commands/⏯️set-result-animation/🦀️.rs"]
+            pub mod set_result_animation;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎮️commands/⏱️result-animation-tick/🦀️.rs"]
+            pub mod result_animation_tick;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎮️commands/🎯️focus-entity/🦀️.rs"]
+            pub mod focus_entity;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎮️commands/🧭️gumball/🦀️.rs"]
+            pub mod gumball;
         }
 
         #[path = "."]

@@ -320,7 +320,8 @@
       "height": 0.5,
       "layers": 1,
       "meshSize": 1.0,
-      "materialId": "concrete"
+      "materialId": "concrete",
+      "axis": "z"
     },
     {
       "id": "sol_spare",
@@ -348,7 +349,8 @@
       "height": 0.25,
       "layers": 2,
       "meshSize": 0.5,
-      "materialId": "concrete"
+      "materialId": "concrete",
+      "axis": "z"
     }
   ],
   "supports": [

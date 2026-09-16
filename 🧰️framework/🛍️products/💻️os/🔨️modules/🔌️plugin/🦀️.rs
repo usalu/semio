@@ -13039,7 +13039,7 @@ pub mod app {
     /// under the 64 KiB contiguous guest-allocation ceiling with room for one more extension. An app
     /// that declares the app-wide default instead refuses the real pack with
     /// `typed command raw JSON exceeds its registered retained-page admission`.
-    pub const CONTRIBUTIONS_COMMAND_RAW_WIRE_BYTES: usize = 49_152;
+    pub const CONTRIBUTIONS_COMMAND_RAW_WIRE_BYTES: usize = 8_192;
 
     /// 🧬️ Declares an exact bounded-first-step proof catalog in the owning plugin source.
     #[macro_export]
@@ -20014,7 +20014,16 @@ pub mod app {
                         .checked_out_outcome()
                         .map(|outcome| match outcome {
                             semio_framework_job::StepOutcome::Complete(_) => 1,
-                            semio_framework_job::StepOutcome::Cancelled | semio_framework_job::StepOutcome::Fault(_) => 2,
+                            semio_framework_job::StepOutcome::Cancelled => {
+                                eprintln!("[DEBUG] recursive replacement diagnostic: store initializer outcome is Cancelled");
+                                2
+                            }
+                            semio_framework_job::StepOutcome::Fault(fault) => {
+                                let mut reader = fault.detail.reader();
+                                let text = reader.read_page(1, 4096).map(|page| String::from_utf8_lossy(page).into_owned()).unwrap_or_default();
+                                eprintln!("[DEBUG] recursive replacement diagnostic: store initializer outcome is Fault {text}");
+                                2
+                            }
                             _ => 0,
                         })
                         .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.initializer-outcome-missing"), "store initializer checkout lost its exact outcome"))?;
@@ -21039,16 +21048,36 @@ pub mod app {
     /// attached to the carrying command's `InvocationResult.diagnostics`, never raised as its fault.
     pub(crate) const INLINE_INTERACTION_VERB_DIAGNOSTIC_CODE: &str = "interaction.inline-verb-not-applied";
 
-    /// 🔀️ Whether this effect is a guest asking the host to replay one of the six framework
-    /// interaction verbs (`INTERACTION_ACTION_IDS`) — the exact shape `interaction_select_effect` /
-    /// `interaction_hover_effect` build in every app. Every other `ReplayShellCommand` (an undo/redo
-    /// inverse replay, an `os.*` shell relay) is NOT one and keeps reaching the host untouched.
+    /// 🔀️ Whether this effect is a guest asking the host to (re)dispatch one of the six framework
+    /// interaction verbs (`INTERACTION_ACTION_IDS`), in EITHER of the two shapes apps emit for that
+    /// one intent: `Effect::ReplayShellCommand { action_id ∈ … }` (what `interaction_select_effect`
+    /// / `interaction_hover_effect` build in most apps) and `Effect::DispatchAction { action ∈ … }`
+    /// (what `📏️layout`'s `layout_select_effect`/`layout_hover_effect`/`layout_clear_selection_effect`
+    /// and `💡️reasoning`'s `wires_select_effect` build). Every other `ReplayShellCommand` (an
+    /// undo/redo inverse replay, an `os.*` shell relay) and every other `DispatchAction` (a
+    /// self-dispatch chain, a `probeChildContinuation`, a traced `canvasPointerDown` redispatch) is
+    /// NOT one and keeps reaching the host untouched.
+    ///
+    /// ⏱️ A `DispatchAction` interaction verb with a positive `delay_ms` still folds inline: the delay
+    /// was only ever a host-scheduling artefact (a later `onAction` tick) for a state write that is
+    /// synchronous in the reactor — deferring a pick behind pointer input issued meanwhile is exactly
+    /// the ordering hazard §2 C removes, so no delay is honoured for these six verbs.
+    ///
+    /// 🔮️ The `req: RequestId` such an effect carries is never a parked `RequestFuture`: a registry-
+    /// minted `DispatchAction` (`Host::dispatch_action` → `RequestRegistry::request`) queues on the
+    /// registry's own outbound lane and never enters `Emit.effects`, so every one peeled here is an
+    /// app struct literal with a placeholder id nothing awaits — dropping it completes nothing late.
     fn is_inline_interaction_verb(effect: &Effect) -> bool {
-        matches!(effect, Effect::ReplayShellCommand { action_id, .. } if INTERACTION_ACTION_IDS.contains(&action_id.as_str()))
+        match effect {
+            Effect::ReplayShellCommand { action_id, .. } => INTERACTION_ACTION_IDS.contains(&action_id.as_str()),
+            Effect::DispatchAction { action, .. } => INTERACTION_ACTION_IDS.contains(&action.as_str()),
+            _ => false,
+        }
     }
 
-    /// 🔀️ Peels every guest-emitted interaction verb out of an emit's effect list, in emission
-    /// order, leaving every other effect in place — the host never sees a peeled verb; the reactor
+    /// 🔀️ Peels every guest-emitted interaction verb out of an emit's effect list — both shapes
+    /// [`is_inline_interaction_verb`] admits, in one pass so emission order is kept ACROSS the two
+    /// shapes — leaving every other effect in place. The host never sees a peeled verb; the reactor
     /// applies it inline instead ([`VcsArtifactApp::fold_inline_interaction_verbs`]).
     fn take_inline_interaction_verbs(effects: &mut Vec<Effect>) -> Vec<(String, Option<DslValue>)> {
         if !effects.iter().any(is_inline_interaction_verb) {
@@ -21059,8 +21088,10 @@ pub mod app {
             if !is_inline_interaction_verb(effect) {
                 return true;
             }
-            if let Effect::ReplayShellCommand { action_id, args } = effect {
-                folded.push((std::mem::take(action_id), args.take()));
+            match effect {
+                Effect::ReplayShellCommand { action_id, args } => folded.push((std::mem::take(action_id), args.take())),
+                Effect::DispatchAction { action, args, .. } => folded.push((std::mem::take(action), args.take())),
+                _ => unreachable!("is_inline_interaction_verb admits exactly the two arms above"),
             }
             false
         });
@@ -24062,7 +24093,9 @@ pub mod app {
 
         /// 🔀️ Ticket 26/09/16/INPUT-CAUSALITY-LEDGER §2 C — the reactor-side fold of a guest emit's
         /// interaction verbs: every `Effect::ReplayShellCommand { action_id ∈ INTERACTION_ACTION_IDS }`
-        /// is peeled BEFORE the effects are handed out ([`take_inline_interaction_verbs`]), the emit
+        /// and every `Effect::DispatchAction { action ∈ INTERACTION_ACTION_IDS }` (the same intent in
+        /// `📏️layout`/`💡️reasoning`'s emission shape, any `delay_ms`) is peeled BEFORE the effects
+        /// are handed out ([`take_inline_interaction_verbs`]), the emit
         /// lands exactly as before ([`Self::dispatch_emit_inner`]), and then — after this command's
         /// own store lanes and `interaction_writes` landed, so a just-created id is already in
         /// topology — each peeled verb is applied inline ([`Self::fold_inline_interaction_verbs`]).
@@ -25082,7 +25115,8 @@ pub mod app {
 
         /// 🔀️ Ticket 26/09/16/INPUT-CAUSALITY-LEDGER §2 C — applies every interaction verb a guest
         /// `Emit` asked the host to replay (`Effect::ReplayShellCommand { action_id ∈
-        /// INTERACTION_ACTION_IDS }`, peeled by [`take_inline_interaction_verbs`]) INLINE, in this
+        /// INTERACTION_ACTION_IDS }` or `Effect::DispatchAction { action ∈ INTERACTION_ACTION_IDS }`,
+        /// peeled by [`take_inline_interaction_verbs`]) INLINE, in this
         /// same turn, on this same instance, in emission order. Until now the host received that
         /// effect, re-entered `onAction` with it, and the verb landed one guest round trip later —
         /// queued BEHIND any pointer input the user issued meanwhile (design §0 "ordering hazard").
@@ -26334,7 +26368,8 @@ pub mod app {
 
         /// 🔀️ Whether this operation's next publication unit is the inline fold of its emit's
         /// guest-emitted interaction verbs (`Effect::ReplayShellCommand { action_id ∈
-        /// INTERACTION_ACTION_IDS }`): every durable store lane is drained (a pick may only name ids
+        /// INTERACTION_ACTION_IDS }` or `Effect::DispatchAction { action ∈ INTERACTION_ACTION_IDS }`,
+        /// see [`is_inline_interaction_verb`]): every durable store lane is drained (a pick may only name ids
         /// the document already holds), the `InteractionWrite` lane went first (it precedes the verb
         /// in the emit's own order, exactly as it did when the verb still took a host round trip),
         /// and at least one such verb is still in the effect list. Sync and allocation-free like its
@@ -26878,7 +26913,13 @@ pub mod app {
                             HistoryLane::Document,
                             self.config_one_item_factory.as_ref(),
                         ) {
-                            Ok(publication) => {
+                            Ok(mut publication) => {
+                                // 🧵️ `Emit::amend_config` on a retained route: the key folds this config
+                                // snapshot into the last uncommitted edit under the same key, exactly as
+                                // the artifact lane above and the non-retained `config:{key}` path do.
+                                // Dropping it here appended one ledger item per pointer move / keystroke
+                                // and saturated the 64-item config ledger within a few interactions.
+                                publication.set_coalesce_key(emit.coalesce_key.clone());
                                 mounted.pending_artifact_publication = Some(PendingArtifactStorePublication::Config(publication));
                                 return Ok(());
                             }

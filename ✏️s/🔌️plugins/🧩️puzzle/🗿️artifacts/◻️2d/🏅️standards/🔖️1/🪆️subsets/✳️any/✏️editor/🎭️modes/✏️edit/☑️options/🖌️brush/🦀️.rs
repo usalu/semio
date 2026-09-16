@@ -43,24 +43,12 @@ fn puzzle2d_kind_weight_measures(prefix: &str, ids: &[String], weights: &BTreeMa
 //#endregion 🔖️Weights
 
 //#region 🔖️Measure
-/// 🖌️ Utility Options group for the brush utility.
-pub fn measure(envelope: &Puzzle2dScene, labels: &Puzzle2dLabels) -> WindowMeasure {
+/// ⚖️ The per-kind node and handle weight trees the brush AND the fill tool share — one distribution,
+/// two entry points (`Puzzle2dConfig::{node_kind_weights, handle_kind_weights}`).
+pub fn puzzle2d_distribution_measures(envelope: &Puzzle2dScene, labels: &Puzzle2dLabels) -> Vec<WindowMeasure> {
     let node_ids = puzzle2d_kind_ids(&envelope.fixture, "nodes");
     let handle_ids = puzzle2d_kind_ids(&envelope.fixture, "handles");
-    let mut children = vec![
-        WindowMeasure::Slider {
-            id: format!("{PUZZLE2D_PLAY_CONTROLLER_ID}-suggestion-offset"),
-            label: Some(format!("{} ({})", labels.suggestion.as_str(), labels.offset.as_str())),
-            value: envelope.runtime.suggestion_offset,
-            min: PUZZLE2D_SUGGESTION_OFFSET_MIN,
-            max: PUZZLE2D_SUGGESTION_OFFSET_MAX,
-            step: Some(PUZZLE2D_SUGGESTION_OFFSET_STEP),
-            ready: None,
-            loading: None,
-            waiting: None,
-            disabled: None,
-            on_change: puzzle2d_action("setSuggestionOffset", None),
-        },
+    vec![
         WindowMeasure::Group {
             id: format!("{PUZZLE2D_PLAY_CONTROLLER_ID}-suggestion-distribution-nodes"),
             label: format!("{} ({:.0}%)", labels.node_weights.as_str(), puzzle2d_kind_weight_sum(&envelope.runtime.node_kind_weights, &node_ids) * 100.0),
@@ -91,7 +79,25 @@ pub fn measure(envelope: &Puzzle2dScene, labels: &Puzzle2dLabels) -> WindowMeasu
             on_change: None,
             children: puzzle2d_kind_weight_measures("handle-kind", &handle_ids, &envelope.runtime.handle_kind_weights, "handles"),
         },
-    ];
+    ]
+}
+
+/// 🖌️ Utility Options group for the brush utility.
+pub fn measure(envelope: &Puzzle2dScene, labels: &Puzzle2dLabels) -> WindowMeasure {
+    let mut children = vec![WindowMeasure::Slider {
+        id: format!("{PUZZLE2D_PLAY_CONTROLLER_ID}-suggestion-offset"),
+        label: Some(format!("{} ({})", labels.suggestion.as_str(), labels.offset.as_str())),
+        value: envelope.runtime.suggestion_offset,
+        min: PUZZLE2D_SUGGESTION_OFFSET_MIN,
+        max: PUZZLE2D_SUGGESTION_OFFSET_MAX,
+        step: Some(PUZZLE2D_SUGGESTION_OFFSET_STEP),
+        ready: None,
+        loading: None,
+        waiting: None,
+        disabled: None,
+        on_change: puzzle2d_action("setSuggestionOffset", None),
+    }];
+    children.extend(puzzle2d_distribution_measures(envelope, labels));
     if !envelope.runtime.brush_candidates.is_empty() {
         let items: Vec<MeasureSelectItem> = envelope
             .runtime

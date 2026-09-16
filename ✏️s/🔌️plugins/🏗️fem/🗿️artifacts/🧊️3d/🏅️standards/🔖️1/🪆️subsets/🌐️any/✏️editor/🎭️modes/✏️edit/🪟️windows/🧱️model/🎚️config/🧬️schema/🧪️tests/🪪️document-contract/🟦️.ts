@@ -21,6 +21,9 @@ export function testFem3dModelWindowConfigContract(): void {
     if (row.kind === "camera-short") candidate.camera.position = [8, -3];
     if (row.kind === "camera-zero") candidate.camera.zoom = 0;
     if (row.kind === "bad-mode") candidate.resultMode = "harmonic";
+    if (row.kind === "gumball-null") candidate.gumball = null;
+    if (row.kind === "gumball-unknown") candidate.gumball.extra = true;
+    if (row.kind === "gumball-text") candidate.gumball.rotate = "yes";
     assert(!validate(candidate), row.kind);
     assert.throws(() => parseFem3dModelWindowConfig(candidate), row.kind);
   }

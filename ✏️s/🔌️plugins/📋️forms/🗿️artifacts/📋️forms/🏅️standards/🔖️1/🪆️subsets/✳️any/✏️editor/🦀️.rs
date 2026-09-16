@@ -233,12 +233,15 @@ fn extension_render_payload(question: &FormQuestion, params: &Value, surface: &s
 /// by the try wizard and the inspection panel's kind-specific editor fields.
 pub fn render_extension_question(question: &FormQuestion, values: &Object, contributions: &[ProgramContributionEntry], surface: &str, interactive: bool) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     use semio_framework_ui_contract::{self as ui, Buildable, HasBase, HasChildren};
+    // 🔑️ Keyed per question: the caller pushes this node as one sibling among the question rows, and an
+    // unkeyed `try_build` would stamp it `"#0"` (DuplicateSiblingKey with any other unkeyed sibling).
+    let key = format!("{}.extension", question.id);
     let Some((plugin_id, route)) = find_question_kind_contribution(contributions, &question.kind) else {
-        return ui_admit(ui::text(ui_label(format!("Extension unavailable: {}", question.kind))?).try_build());
+        return ui_admit(ui_admit(ui::text(ui_label(format!("Extension unavailable: {}", question.kind))?).try_id(&key))?.try_build());
     };
     let params = extension_params_value(question, values);
     let payload = extension_render_payload(question, &params, surface, interactive);
-    let mut column = ui::column();
+    let mut column = ui_admit(ui::column().try_id(&key))?;
     for body_key in [&route.params_body_key, &route.preview_body_key] {
         let props = ui_value_map([("bodyKey", ui_value_text(body_key)?), ("paramsJson", ui_value_text(&payload)?)])?;
         let slot = ui_admit(ui::extension(ui_text_value(format!("{plugin_id}/{}", route.app_id))?).props(props).try_id(format!("{}.{}", question.id, body_key)))?;
@@ -287,6 +290,146 @@ pub fn catalogue_kinds(contributions: &[ProgramContributionEntry], labels: &Form
     kinds
 }
 //#endregion 🔖️Contributions
+
+//#region 🔖️ActionBridge
+/// 🌉️ `{action, args}` → `FormsCommand`. Keys arrive camelCase from the shells (`exampleId`,
+/// `windowKindId`), the block-list host emits its own generic verbs (`addBlock`/`removeBlock`/
+/// `moveBlock` over `blockId`/`toStepId`), and a `Trigger::Change` control's live value is merged
+/// under `value` by `merge_ui_values` — the `*_json` string fields the payloads carry are printed from
+/// that value here when no explicit `valueJson`/`valuesJson` text was sent.
+mod args_bridge {
+    use super::*;
+    use semio_framework_plugin::{FaultCode, FaultOrigin};
+
+    fn snake(key: &str) -> String {
+        let mut out = String::with_capacity(key.len() + 4);
+        for ch in key.chars() {
+            if ch.is_ascii_uppercase() {
+                out.push('_');
+                out.push(ch.to_ascii_lowercase());
+            } else {
+                out.push(ch);
+            }
+        }
+        out
+    }
+
+    fn camel(key: &str) -> String {
+        let mut out = String::with_capacity(key.len());
+        let mut upper = false;
+        for ch in key.chars() {
+            if ch == '_' {
+                upper = true;
+            } else if upper {
+                out.push(ch.to_ascii_uppercase());
+                upper = false;
+            } else {
+                out.push(ch);
+            }
+        }
+        out
+    }
+
+    fn put(entries: &mut Vec<(String, dsl::DslValue)>, key: &str, value: dsl::DslValue) {
+        entries.retain(|(existing, _)| existing != key);
+        entries.push((key.to_string(), value));
+    }
+
+    /// 🔢️ The host's JSON round trip turns every integer into `Number::Float` (`generation: 1` arrives
+    /// as `Float(1.0)`), and the `u64`/`i64` codecs decode EXACT integers only — restore the integer
+    /// variant for whole, finite floats so the payloads' counters (`generation`, `index`, `input_index`,
+    /// `vector_index`, …) decode; `f64` fields accept any `Number` variant, so nothing else changes.
+    fn integral(value: dsl::DslValue) -> dsl::DslValue {
+        match value {
+            dsl::DslValue::Number(dsl::Number::Float(float)) if float.is_finite() && float.fract() == 0.0 && float.abs() < 9.007_199_254_740_992e15 => {
+                if float >= 0.0 { dsl::DslValue::Number(dsl::Number::UInt(float as u64)) } else { dsl::DslValue::Number(dsl::Number::Int(float as i64)) }
+            }
+            dsl::DslValue::Array(items) => dsl::DslValue::Array(items.into_iter().map(integral).collect()),
+            dsl::DslValue::Object(entries) => dsl::DslValue::Object(entries.into_iter().map(|(key, value)| (key, integral(value))).collect()),
+            other => other,
+        }
+    }
+
+    /// 🔁️ Emits every key of `args` under BOTH spellings (the Try-window payloads decode camelCase
+    /// wire names, the document payloads snake_case; `FromValue` ignores keys it does not know),
+    /// applies `aliases` (snake_case source → destination), and prints `json` sources (a snake_case
+    /// key holding any JSON value) into their string destination when that field is absent.
+    fn fold(args: Option<&dsl::DslValue>, aliases: &[(&str, &str)], json: &[(&str, &str)]) -> dsl::DslValue {
+        let mut entries: Vec<(String, dsl::DslValue)> = Vec::new();
+        if let Some(dsl::DslValue::Object(object)) = args {
+            for (key, value) in object {
+                let mut key = snake(key);
+                if let Some((_, to)) = aliases.iter().find(|(from, _)| *from == key) {
+                    key = (*to).to_string();
+                }
+                let value = integral(value.clone());
+                put(&mut entries, &camel(&key), value.clone());
+                put(&mut entries, &key, value);
+            }
+        }
+        for (from, into) in json {
+            if entries.iter().any(|(key, _)| key == into) {
+                continue;
+            }
+            if let Some((_, value)) = entries.iter().find(|(key, _)| key == from).cloned() {
+                let text = dsl::DslValue::String(dsl::json::to_json_string(&value));
+                put(&mut entries, &camel(into), text.clone());
+                put(&mut entries, into, text);
+            }
+        }
+        dsl::DslValue::Object(entries)
+    }
+
+    fn decode<T: dsl::FromValue>(action: &str, value: dsl::DslValue) -> Result<T, Fault> {
+        T::from_value(value).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("app.command.invalid-args"), format!("forms action '{action}' arguments do not decode: {error}")))
+    }
+
+    pub fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<FormsCommand, Fault> {
+        const VALUE_JSON: &[(&str, &str)] = &[("value", "value_json")];
+        let plain = || fold(args, &[], &[]);
+        Ok(match action {
+            "setTryValue" => FormsCommand::SetTryValue(decode(action, fold(args, &[], VALUE_JSON))?),
+            set_try_value::SET_TRY_VALUE_STEP_ACTION_ID => FormsCommand::SetTryValueStep(decode(action, fold(args, &[], VALUE_JSON))?),
+            "setTryValues" => FormsCommand::SetTryValues(decode(action, fold(args, &[], &[("values", "values_json"), ("value", "values_json")]))?),
+            "resetTry" => FormsCommand::ResetTry(decode(action, plain())?),
+            "previousStep" => FormsCommand::PreviousStep(decode(action, plain())?),
+            "nextStep" => FormsCommand::NextStep(decode(action, plain())?),
+            "submit" => FormsCommand::Submit(decode(action, plain())?),
+            "setContributions" => FormsCommand::SetContributions(decode(action, plain())?),
+            "addStep" => FormsCommand::AddStep(decode(action, plain())?),
+            "patchStep" => FormsCommand::PatchStep(decode(action, plain())?),
+            "removeStep" => FormsCommand::RemoveStep(decode(action, plain())?),
+            "moveStep" => FormsCommand::MoveStep(decode(action, plain())?),
+            "updateForm" => FormsCommand::UpdateForm(decode(action, plain())?),
+            "addQuestion" | "addBlock" => FormsCommand::AddQuestion(decode(action, plain())?),
+            "removeQuestion" | "removeBlock" => FormsCommand::RemoveQuestion(decode(action, fold(args, &[("block_id", "question_id")], &[]))?),
+            "patchQuestions" => FormsCommand::PatchQuestions(decode(action, fold(args, &[], VALUE_JSON))?),
+            "patchQuestionOptions" => FormsCommand::PatchQuestionOptions(decode(action, fold(args, &[], VALUE_JSON))?),
+            "addQuestionOption" => FormsCommand::AddQuestionOption(decode(action, plain())?),
+            "removeQuestionOption" => FormsCommand::RemoveQuestionOption(decode(action, plain())?),
+            "patchVectorField" => FormsCommand::PatchVectorField(decode(action, fold(args, &[], VALUE_JSON))?),
+            "addVectorField" => FormsCommand::AddVectorField(decode(action, plain())?),
+            "removeVectorField" => FormsCommand::RemoveVectorField(decode(action, plain())?),
+            "moveQuestion" | "moveBlock" => {
+                // 🧱️ The block-list host sends `{blockId, fromStepId, toStepId, index}`; `position` is
+                // only consulted when `index` is absent, so it defaults to "after".
+                let mut folded = fold(args, &[("block_id", "question_id")], &[]);
+                if let dsl::DslValue::Object(entries) = &mut folded {
+                    if !entries.iter().any(|(key, _)| key == "position") {
+                        entries.push(("position".into(), dsl::DslValue::String("after".into())));
+                    }
+                }
+                FormsCommand::MoveQuestion(decode(action, folded)?)
+            }
+            "dropQuestionKind" => FormsCommand::DropQuestionKind(decode(action, fold(args, &[("block_id", "target_id"), ("position", "drop_position")], &[]))?),
+            "setSpecJson" => FormsCommand::SetSpecJson(decode(action, fold(args, &[], &[("document", "json"), ("value", "json")]))?),
+            "setActiveExample" => FormsCommand::SetActiveExample(decode(action, fold(args, &[("id", "example_id"), ("value", "example_id")], &[]))?),
+            "exportFixture" => FormsCommand::ExportFixture(decode(action, plain())?),
+            _ => return Err(Fault::new(FaultOrigin::App, FaultCode::new("app.command.unsupported"), format!("the forms editor has no command for action '{action}'"))),
+        })
+    }
+}
+//#endregion 🔖️ActionBridge
 
 //#region 🔖️Commands
 semio_framework_plugin::app_commands! {
@@ -984,6 +1127,15 @@ impl ArtifactEditor for FormsPlayApp {
     /// declaration (host-pushed, not user-facing actions).
     fn command_id(command: &FormsCommand) -> &'static str {
         command.command_id()
+    }
+
+    /// 🎯️ Host-action bridge into the closed `FormsCommand` enum (ticket
+    /// 26/09/16/FORMS-PLUGIN-END-TO-END). The React/wgpu shells still speak `{action, args}` with
+    /// camelCase argument keys; every `🎮️commands/*` payload derives `FromValue` over its own
+    /// snake_case field names, so this boundary folds the keys and decodes — the default trait impl
+    /// refuses every app action outright, which left `setActiveExample`/`addStep`/… dead in the shell.
+    fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<Self::Command, Fault> {
+        args_bridge::command_from_action(action, args)
     }
 
     fn handle(

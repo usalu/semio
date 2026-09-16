@@ -13,6 +13,7 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
+        "axis",
         "baseZ",
         "height",
         "holes",
@@ -54,6 +55,14 @@
               "maxItems": 2
             }
           }
+        },
+        "axis": {
+          "type": "string",
+          "enum": [
+            "x",
+            "y",
+            "z"
+          ]
         },
         "baseZ": {
           "type": "number"
