@@ -383,10 +383,36 @@ impl ArtifactOwnedToolJobFactory for SourcingCurationBoundedCommandJobFactory {
 //#endregion 🧵️RetainedCommands
 
 //#region 📬️ConfigStorePreparation
-const SOURCING_CURATION_CONFIG_STORE_MAXIMUM_BYTES: usize = 768;
+/// 📏️ The typed-in filter state's own retained byte envelope — query, module ids, typology path and
+/// sort column, plus the struct and its string owners. Contributions are NOT filter text and are
+/// priced against [`SOURCING_CURATION_CONFIG_CONTRIBUTIONS_BYTES`] instead.
+const SOURCING_CURATION_CONFIG_FILTER_STORE_BYTES: usize = 768;
+/// 🧩️ The dedicated retained contributions lane. A `sourcing.module` pack is a host-pushed capability
+/// blob, never something a person types, so it is priced here rather than against the 96-byte filter
+/// envelope that used to refuse every real pack.
+///
+/// 📏️ The ceiling is MEASURED, not chosen: the host retires a retained config one
+/// `ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES` (4 KiB) page per close turn, and a config carrying more than
+/// ~3 KiB of contributions text never reaches its terminal-empty shell once a body has rendered
+/// against it — 2 909 bytes closes, 3 302 bytes livelocks (see
+/// `📓️fix-2026-09-16-sourcing-contributions-envelope.md` §3). 2 KiB keeps a full page of margin under
+/// that cliff. `schema::installable_contributions` is what keeps the app inside it: the app retains
+/// the modules it can act on, never the host's whole pack.
+pub(crate) const SOURCING_CURATION_CONFIG_CONTRIBUTIONS_BYTES: usize = 2_048;
+const SOURCING_CURATION_CONFIG_STORE_MAXIMUM_BYTES: usize = SOURCING_CURATION_CONFIG_FILTER_STORE_BYTES + SOURCING_CURATION_CONFIG_CONTRIBUTIONS_BYTES;
 const SOURCING_CURATION_CONFIG_STORE_MAXIMUM_ITEMS: usize = 256;
-const SOURCING_CURATION_CONFIG_TEXT_BYTES: usize = 96;
+/// 📏️ The encoded-text envelope every retained FILTER edit is priced against — read by the window
+/// nodes' tests to pin what a typed filter can and cannot carry.
+pub(crate) const SOURCING_CURATION_CONFIG_TEXT_BYTES: usize = 96;
 const SOURCING_CURATION_CONFIG_METADATA_BYTES: usize = 64;
+/// 🎟️ What one config `advance`/`close_step` turn costs, and the ONLY figure the grant is ever
+/// compared against. The host drives this lane with a fixed `ArtifactStoreOneItemGrant
+/// { maximum_items: 1, maximum_bytes: TYPED_OPERATION_RESULT_PAGE_BYTES }` (4 KiB), so a gate that
+/// scaled with `SOURCING_CURATION_CONFIG_STORE_MAXIMUM_BYTES` would go `Blocked` forever the moment
+/// the contributions lane grew past one page — stalling every filter edit instead of failing it.
+/// The config's own size is a VALIDATION (`sourcing_curation_config_bytes`), never the gate. Same
+/// shape as `SOURCING_CURATION_DOCUMENT_GRANT_BYTES` below.
+const SOURCING_CURATION_CONFIG_GRANT_BYTES: usize = 4_096;
 
 struct SourcingCurationConfigPreparationFactory;
 
@@ -409,20 +435,34 @@ fn sourcing_curation_config_bytes(config: &SourcingCurationConfig) -> Result<usi
     let bytes = config.filters.query.len()
         .saturating_add(config.filters.module_ids.iter().map(String::len).sum::<usize>())
         .saturating_add(config.filters.typology_path.iter().map(String::len).sum::<usize>())
-        .saturating_add(config.filters.sort.as_ref().map_or(0, |sort| sort.column_id.len()))
-
-        .saturating_add(config.contributions_json.len());
+        .saturating_add(config.filters.sort.as_ref().map_or(0, |sort| sort.column_id.len()));
     if bytes > SOURCING_CURATION_CONFIG_TEXT_BYTES { return Err("Sourcing Config base exceeds its encoded text envelope".into()); }
-    let bytes = bytes.saturating_add(size_of::<SourcingCurationConfig>())
+    if config.contributions_json.len() > SOURCING_CURATION_CONFIG_CONTRIBUTIONS_BYTES { return Err("Sourcing Config base exceeds its retained contributions envelope".into()); }
+    let bytes = bytes.saturating_add(config.contributions_json.len())
+        .saturating_add(size_of::<SourcingCurationConfig>())
         .saturating_add(items.saturating_mul(size_of::<String>()));
     if bytes > SOURCING_CURATION_CONFIG_STORE_MAXIMUM_BYTES { return Err("Sourcing Config base exceeds its retained byte envelope".into()); }
     Ok(bytes)
 }
 
-fn sourcing_curation_config_mutation_footprint(mutation: &SourcingCurationConfigMutation) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+/// 🧺️ The shared tail every admitted config footprint pays — the mutation owner plus one `String`
+/// owner per work item, checked against the one-item preparation envelope.
+fn sourcing_curation_config_footprint(work_items: usize, retained_bytes: usize) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+    let retained_bytes = retained_bytes.saturating_add(size_of::<SourcingCurationConfigMutation>()).saturating_add(work_items.saturating_mul(size_of::<String>()));
+    if work_items > SOURCING_CURATION_CONFIG_STORE_MAXIMUM_ITEMS || retained_bytes > SOURCING_CURATION_CONFIG_STORE_MAXIMUM_BYTES {
+        return Err("Sourcing Config mutation exceeds its fixed one-item preparation envelope".into());
+    }
+    Ok(store::ArtifactStoreOneItemFootprint { work_items, retained_bytes })
+}
+
+pub(crate) fn sourcing_curation_config_mutation_footprint(mutation: &SourcingCurationConfigMutation) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+    if let SourcingCurationConfigMutation::SetContributions { json } = mutation {
+        if json.len() > SOURCING_CURATION_CONFIG_CONTRIBUTIONS_BYTES { return Err("Sourcing Config contributions exceed their retained contributions envelope".into()); }
+        return sourcing_curation_config_footprint(1, json.len());
+    }
     let (work_items, retained_bytes) = match mutation {
-        SourcingCurationConfigMutation::Snapshot { .. } => return Err("Sourcing Config preparation rejects a non-retained mutation".into()),
-        SourcingCurationConfigMutation::SetFilterQuery { value } | SourcingCurationConfigMutation::SetContributions { json: value } => (1, value.len()),
+        SourcingCurationConfigMutation::Snapshot { .. } | SourcingCurationConfigMutation::SetContributions { .. } => return Err("Sourcing Config preparation rejects a non-retained mutation".into()),
+        SourcingCurationConfigMutation::SetFilterQuery { value } => (1, value.len()),
         SourcingCurationConfigMutation::SetFilterModules { module_ids } => {
             if module_ids.len() > SOURCING_CURATION_CONFIG_STORE_MAXIMUM_ITEMS { return Err("Sourcing Config module filter exceeds its retained item envelope".into()); }
             (module_ids.len().max(1), module_ids.iter().map(String::len).sum())
@@ -435,11 +475,7 @@ fn sourcing_curation_config_mutation_footprint(mutation: &SourcingCurationConfig
         SourcingCurationConfigMutation::SetFilterMinAvailability { .. } => (1, 0),
     };
     if retained_bytes > SOURCING_CURATION_CONFIG_TEXT_BYTES { return Err("Sourcing Config mutation exceeds its encoded text envelope".into()); }
-    let retained_bytes = retained_bytes.saturating_add(size_of::<SourcingCurationConfigMutation>()).saturating_add(work_items.saturating_mul(size_of::<String>()));
-    if work_items > SOURCING_CURATION_CONFIG_STORE_MAXIMUM_ITEMS || retained_bytes > SOURCING_CURATION_CONFIG_STORE_MAXIMUM_BYTES {
-        return Err("Sourcing Config mutation exceeds its fixed one-item preparation envelope".into());
-    }
-    Ok(store::ArtifactStoreOneItemFootprint { work_items, retained_bytes })
+    sourcing_curation_config_footprint(work_items, retained_bytes)
 }
 
 fn prepare_sourcing_curation_config(base: &SourcingCurationConfig, mutation: SourcingCurationConfigMutation) -> Result<(SourcingCurationConfig, Vec<SourcingCurationConfigMutation>, SourcingCurationConfigMutation), String> {
@@ -498,7 +534,7 @@ impl store::ArtifactStoreOneItemPreparationFactory<SourcingCurationConfig, Sourc
             return Err("Sourcing Config preparation rejected its lane or description envelope".into());
         }
         sourcing_curation_config_mutation_footprint(mutation)?;
-        Ok(store::ArtifactStoreOneItemFootprint { work_items: 2, retained_bytes: SOURCING_CURATION_CONFIG_STORE_MAXIMUM_BYTES * 4 + 1_024 })
+        Ok(store::ArtifactStoreOneItemFootprint { work_items: 2, retained_bytes: SOURCING_CURATION_CONFIG_GRANT_BYTES })
     }
 
     fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<SourcingCurationConfig, SourcingCurationConfigMutation>) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<SourcingCurationConfig, SourcingCurationConfigMutation>>, store::ArtifactStoreOneItemPreparationRequest<SourcingCurationConfig, SourcingCurationConfigMutation>> {
@@ -524,7 +560,7 @@ impl store::ArtifactStoreOneItemPreparation<SourcingCurationConfig, SourcingCura
         if self.candidate.is_none() {
             let base = self.base.as_ref().ok_or_else(|| "Sourcing Config preparation lost its exact base root".to_string())?.get();
             sourcing_curation_config_bytes(base)?;
-            let bytes = SOURCING_CURATION_CONFIG_STORE_MAXIMUM_BYTES * 4 + 1_024;
+            let bytes = SOURCING_CURATION_CONFIG_GRANT_BYTES;
             if grant.maximum_bytes < bytes { return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked); }
             let mutation = self.mutation.take().ok_or_else(|| "Sourcing Config preparation lost its mutation owner".to_string())?;
             self.candidate = Some(prepare_sourcing_curation_config(base, mutation)?);
@@ -1011,7 +1047,7 @@ impl ArtifactEditor for SourcingCurationApp {
 
     fn host_configuration_mutation(action: &str, args: Option<&protocol::DslValue>) -> Result<Option<Self::ConfigMutation>, Fault> {
         Ok((action == "setContributions").then(|| SourcingCurationConfigMutation::SetContributions {
-            json: args.and_then(|value| value.get("json")).and_then(protocol::DslValue::as_str).unwrap_or("[]").to_string(),
+            json: crate::schema::installable_contributions(args.and_then(|value| value.get("json")).and_then(protocol::DslValue::as_str).unwrap_or("[]"), SOURCING_CURATION_CONFIG_CONTRIBUTIONS_BYTES),
         }))
     }
 

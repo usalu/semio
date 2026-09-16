@@ -11,6 +11,11 @@ use crate::Process3dSnapshot;
 /// 🗄️ The timber-beam-joinery example fixture, handcrafted in this artifact's DSL (`store::ArtifactDsl`).
 pub const PROCESS_3D_TIMBER_EXAMPLE_TEXT: &str = include_str!("../../../🖼️assets/🎬️demo/🗣️.dsl.semio");
 
+/// 🌲️ The concrete forest example fixture — the real hexagonal-cut concrete forest piece
+/// (`crate::REFERENCE_SOLID_CONCRETE_FOREST_LEFT`) with every concrete-catalog machine applied once;
+/// regenerated from `concrete_forest_scene()` by `regenerate_example_fixtures`, never hand-transcribed.
+pub const PROCESS_3D_CONCRETE_FOREST_EXAMPLE_TEXT: &str = include_str!("../../../🖼️assets/🌲️concrete-forest/🗣️.dsl.semio");
+
 /// 🗄️ The drilled-plate example fixture — regenerated (ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM
 /// wave 4's fixture-regeneration technique: real `process_working_scene_to_snapshot` + `print_dsl()`
 /// output, never hand-transcribed) for the hand-rolled hex/bracket text codec's current shape.

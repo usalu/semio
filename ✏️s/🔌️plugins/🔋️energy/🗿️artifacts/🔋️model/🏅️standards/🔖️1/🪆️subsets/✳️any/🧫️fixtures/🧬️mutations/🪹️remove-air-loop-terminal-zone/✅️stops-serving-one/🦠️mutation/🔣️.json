@@ -1,1 +1,5 @@
-{}
+{
+  "mutation": "removeAirLoopTerminalZone",
+  "id": 17,
+  "zoneId": 1
+}

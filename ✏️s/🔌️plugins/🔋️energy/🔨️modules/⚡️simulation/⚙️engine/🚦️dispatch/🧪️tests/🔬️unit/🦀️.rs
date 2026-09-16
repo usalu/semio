@@ -21,11 +21,17 @@ fn uniform_splits_proportionally_to_capacity() {
     assert!((results[0].part_load_ratio - plr).abs() < 1e-9);
 }
 
+/// 🚦️ The bounded builder reserves one row per unit up front, so a unit with no capacity still
+/// gets its row — idle (zero load, zero part-load ratio, zero runtime), never a dropped unit.
 #[test]
-fn uniform_with_no_capacity_returns_empty() {
+fn uniform_with_no_capacity_emits_idle_rows() {
     let d = Dispatcher::new(DispatchScheme::Uniform, vec![EquipmentPriority { equipment_id: 1, priority: 1, min_runtime_hours: 0.0, capacity_w: 0.0 }]);
     let results = d.dispatch(&DispatchRequest { total_load_w: 1000.0, available_capacity_w: 1000.0, outdoor_temp_c: 20.0 });
-    assert!(results.is_empty());
+    assert_eq!(results.len(), 1);
+    assert_eq!(results[0].equipment_id, 1);
+    assert_eq!(results[0].load_w, 0.0);
+    assert_eq!(results[0].part_load_ratio, 0.0);
+    assert_eq!(results[0].runtime_fraction, 0.0);
 }
 
 #[test]

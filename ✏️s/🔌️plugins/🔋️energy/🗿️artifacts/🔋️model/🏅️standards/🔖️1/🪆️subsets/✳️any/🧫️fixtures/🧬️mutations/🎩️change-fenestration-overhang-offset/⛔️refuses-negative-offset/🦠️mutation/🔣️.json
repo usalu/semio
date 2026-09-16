@@ -1,1 +1,5 @@
-{}
+{
+  "mutation": "changeFenestrationOverhangOffset",
+  "id": 5,
+  "newOverhangOffsetM": -0.5
+}

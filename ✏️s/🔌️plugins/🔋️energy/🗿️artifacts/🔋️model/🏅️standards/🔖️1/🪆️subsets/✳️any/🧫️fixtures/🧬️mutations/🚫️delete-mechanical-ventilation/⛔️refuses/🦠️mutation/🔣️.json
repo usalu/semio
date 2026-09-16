@@ -1,1 +1,4 @@
-{}
+{
+  "mutation": "deleteMechanicalVentilation",
+  "id": 999
+}

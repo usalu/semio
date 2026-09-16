@@ -1,1 +1,5 @@
-{}
+{
+  "mutation": "changeBatteryMaxCharge",
+  "id": 310,
+  "newMaxChargeW": -100.0
+}

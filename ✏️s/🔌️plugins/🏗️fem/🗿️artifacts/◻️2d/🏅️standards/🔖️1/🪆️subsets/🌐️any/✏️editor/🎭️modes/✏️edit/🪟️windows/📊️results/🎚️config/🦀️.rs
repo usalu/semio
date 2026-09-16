@@ -219,22 +219,51 @@ pub fn current<C>(view: &semio_framework_plugin::ConfigView<'_, C>) -> Fem2dResu
     view.window::<Fem2dResultsWindowConfigOwner>().cloned().unwrap_or_default()
 }
 
+/// 🪟️ The captured results-window partition, or `None` when the projection captured another window
+/// (a panel projection binds to the FOCUSED pane) — the read side that lets a panel tell "live state"
+/// from "the defaults of a pane it cannot see".
+pub fn captured<C>(view: &semio_framework_plugin::ConfigView<'_, C>) -> Option<Fem2dResultsWindowConfig> {
+    view.window::<Fem2dResultsWindowConfigOwner>().cloned()
+}
+
 /// 🪟️ The results-window instance a command both READS through [`current`] and writes back.
 ///
-/// The captured partition wins whenever there is one: `WindowConfigOwnerRegistry::capture` binds
-/// `ConfigView::window` to `window_id` — or, for a PANEL projection, which carries no `window_id` at
-/// all, to `focused_window_id` — so the snapshot in hand already names the exact partition this call
-/// speaks for. Writing anywhere else would read one window's state and publish it into another's.
-/// Only when no results-window config was captured (a bare `ViewModel`, as the publication-lane law
-/// builds) does the roster decide, and a roster that names no results window refuses outright rather
-/// than clobbering a partition with defaults.
-pub fn addressed_window_id<C>(cfg: &semio_framework_plugin::ConfigView<'_, C>, view: &semio_framework_plugin::ViewModel) -> Result<String, semio_framework_plugin::Fault> {
-    if let Some(snapshot) = cfg.window.filter(|snapshot| snapshot.window_kind_id() == <Fem2dResultsWindowConfigOwner as semio_framework_plugin::WindowConfigOwner>::WINDOW_KIND_ID) {
-        return Ok(snapshot.window_id().to_string());
+/// `requested` is the `windowId` a panel control tagged onto its own arguments (the puzzle3d
+/// Settings-panel rule): a panel projection carries no `window_id` of its own, so without the tag a
+/// split layout would retune whichever pane happened to be focused. An explicit tag therefore wins —
+/// but only over the ROSTER, never over the captured partition: `WindowConfigOwnerRegistry::capture`
+/// binds `ConfigView::window` to `window_id`, or for a panel to `focused_window_id`, and that
+/// snapshot is the state [`current`] hands the caller. Writing a DIFFERENT window than the one just
+/// read would publish one pane's state into another's, so that pair is refused by name instead.
+///
+/// With no captured results-window config at all (a bare `ViewModel`, as the publication-lane law
+/// builds) the tag, then the roster, decides; a roster that names no results window refuses outright
+/// rather than clobbering a partition with defaults.
+pub fn addressed_window_id<C>(
+    cfg: &semio_framework_plugin::ConfigView<'_, C>,
+    view: &semio_framework_plugin::ViewModel,
+    requested: Option<&str>,
+) -> Result<String, semio_framework_plugin::Fault> {
+    let kind_id = <Fem2dResultsWindowConfigOwner as semio_framework_plugin::WindowConfigOwner>::WINDOW_KIND_ID;
+    let requested = requested.filter(|id| !id.is_empty());
+    let captured = cfg.window.filter(|snapshot| snapshot.window_kind_id() == kind_id).map(|snapshot| snapshot.window_id().to_string());
+    if let Some(requested) = requested {
+        if view.window_instances.iter().any(|window| window.id == requested && window.window_kind_id == kind_id) {
+            return match captured {
+                Some(captured) if captured != requested => {
+                    Err(semio_framework_plugin::Fault::from(format!("fem.window.mismatch: control asked for results window '{requested}' but the captured configuration is '{captured}'")))
+                }
+                _ => Ok(requested.to_string()),
+            };
+        }
+        return Err(semio_framework_plugin::Fault::from(format!("fem.window.stale: '{requested}' is not an open FEM 2D results window")));
+    }
+    if let Some(captured) = captured {
+        return Ok(captured);
     }
     let id = view.window_id.as_deref().ok_or_else(|| semio_framework_plugin::Fault::from("fem.window.required: command has no addressed window instance"))?;
     let kind = view.window_instances.iter().find(|window| window.id == id).map(|window| window.window_kind_id.as_str()).ok_or_else(|| semio_framework_plugin::Fault::from("fem.window.stale: addressed window instance is not open"))?;
-    if kind != <Fem2dResultsWindowConfigOwner as semio_framework_plugin::WindowConfigOwner>::WINDOW_KIND_ID {
+    if kind != kind_id {
         return Err(semio_framework_plugin::Fault::from("fem.window.kind: addressed window has the wrong kind"));
     }
     Ok(id.to_string())

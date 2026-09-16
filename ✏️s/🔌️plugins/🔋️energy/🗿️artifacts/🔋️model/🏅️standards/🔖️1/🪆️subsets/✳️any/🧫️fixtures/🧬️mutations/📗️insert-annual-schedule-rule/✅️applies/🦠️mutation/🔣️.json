@@ -1,1 +1,10 @@
-{}
+{
+  "mutation": "insertAnnualScheduleRule",
+  "id": 30,
+  "index": 1,
+  "startMonth": 7,
+  "startDay": 1,
+  "endMonth": 8,
+  "endDay": 31,
+  "dailyScheduleId": 12
+}

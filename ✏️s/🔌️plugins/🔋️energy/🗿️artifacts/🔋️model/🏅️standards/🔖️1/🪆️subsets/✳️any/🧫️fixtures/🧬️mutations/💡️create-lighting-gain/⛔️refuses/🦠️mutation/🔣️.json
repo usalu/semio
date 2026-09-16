@@ -1,1 +1,11 @@
-{}
+{
+  "mutation": "createLightingGain",
+  "index": 1,
+  "id": 30,
+  "zoneId": 2,
+  "scheduleId": 1,
+  "wattsPerArea": 8.0,
+  "radiantFraction": 0.6,
+  "visibleFraction": 0.2,
+  "returnAirFraction": 0.0
+}

@@ -1,1 +1,10 @@
-{}
+{
+  "mutation": "createMechanicalVentilation",
+  "index": 1,
+  "id": 61,
+  "zoneId": 2,
+  "scheduleId": 1,
+  "designFlowM3S": 0.08,
+  "fanTotalEfficiency": 0.65,
+  "fanDeltaPressurePa": 250.0
+}

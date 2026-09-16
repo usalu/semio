@@ -15,6 +15,18 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 }
 //#endregion 🗃️Apps
 
+//#region 📚️Examples
+/// 📚️ The example documents the react shell's switcher offers (`activePluginManifest.examples`, fed
+/// by `NavbarExampleSelect/🟦️.tsx`), each dispatched back as `setActiveExample` with its own id: the
+/// `📚️examples/🎬️demo` timber-beam joinery the editor boots on, and `📚️examples/🌲️concrete-forest`
+/// — the reused hexagonal-cut concrete forest piece processed by every concrete-catalog machine.
+/// `✏️editor/📚️examples/🎬️demo-session` is a `.cmd.semio` command replay, not a document, and stays
+/// out (the same rule `🖨️raster` and `🌀️procedural` state for theirs).
+fn examples() -> Vec<ExampleSource> {
+    vec![crate::artifacts::process3d::examples::demo::source(), crate::artifacts::process3d::examples::concrete_forest::source()]
+}
+//#endregion 📚️Examples
+
 /// 🔌️ Builds the plugin surface for host registration. `.activation(…)`/`.execution(…)`/
 /// `.requests(…)` (ticket 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME M4, `📓️design-abi.md`
 /// §5/§6) are this crate's proof-of-migration: the host activates one instance whenever a
@@ -28,7 +40,7 @@ pub fn plugin() -> Result<Plugin<ProcessApps>, PluginAssemblyError> {
         .version("0.1.0")
         .package_id("semio:process")
         .artifact(crate::artifacts::process3d::declaration().map_err(PluginAssemblyError::definition)?)
-        .editor::<crate::editor::process3d::Process3dPlayApp>(crate::editor::process3d::create_process3d_app())
+        .editor_with_examples::<crate::editor::process3d::Process3dPlayApp>(crate::editor::process3d::create_process3d_app(), examples())
         .editor_mutation_roster::<crate::editor::process3d::Process3dPlayApp>()
         .viewer::<crate::viewer::process3d::Process3dViewer>(crate::viewer::process3d::create_process3d_viewer())
         .viewer_mutation_roster::<crate::viewer::process3d::Process3dViewer>()

@@ -102,6 +102,8 @@ semio_framework_plugin::app_labels! {
         load_factor: native_en "Load Factor", native_de "Lastfaktor", reuse_en "Load Factor", reuse_de "Lastfaktor";
 
         focus: native_en "Focus", native_de "Fokussieren", reuse_en "Focus", reuse_de "Fokussieren";
+        actions: native_en "Actions", native_de "Aktionen", reuse_en "Actions", reuse_de "Aktionen";
+        focus_results_hint: native_en "Focus the Results window for live playback readouts", native_de "Ergebnisfenster fokussieren, um die Wiedergabe live zu sehen", reuse_en "Focus the Results window for live playback readouts", reuse_de "Ergebnisfenster fokussieren, um die Wiedergabe live zu sehen";
         delete: native_en "Delete", native_de "Löschen", reuse_en "Delete", reuse_de "Löschen";
     }
 }

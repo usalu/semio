@@ -1,1 +1,5 @@
-{}
+{
+  "mutation": "changeAirLoopSupplyNode",
+  "id": 17,
+  "newSupplyNodeId": 0
+}

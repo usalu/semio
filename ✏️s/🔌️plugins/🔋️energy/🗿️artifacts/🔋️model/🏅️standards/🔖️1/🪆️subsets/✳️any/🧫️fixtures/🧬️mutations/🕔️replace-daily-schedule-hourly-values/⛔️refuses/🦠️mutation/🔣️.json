@@ -1,1 +1,18 @@
-{}
+{
+  "mutation": "replaceDailyScheduleHourlyValues",
+  "id": 10,
+  "newHourlyValues": [
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0
+  ]
+}

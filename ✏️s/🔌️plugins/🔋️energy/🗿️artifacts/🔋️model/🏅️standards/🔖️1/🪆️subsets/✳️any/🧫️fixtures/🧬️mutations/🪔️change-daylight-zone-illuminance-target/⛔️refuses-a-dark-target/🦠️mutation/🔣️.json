@@ -1,1 +1,5 @@
-{}
+{
+  "mutation": "changeDaylightZoneIlluminanceTarget",
+  "id": 14,
+  "newIlluminanceTargetLux": 0.0
+}

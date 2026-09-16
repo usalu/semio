@@ -1,1 +1,5 @@
-{}
+{
+  "mutation": "changeSurfaceWindExposed",
+  "id": 3,
+  "newWindExposed": false
+}

@@ -1003,17 +1003,29 @@ mod scene_compute {
         Some((payload.app_id, payload.module_id, payload.computers_json))
     }
 
-    /// 🧩️ Validates host-pushed `CadComputer` contributions for `cad-play` (implementations register in cad-js).
-    pub fn validate_cad_computer_contributions(contributions_json: &str) {
-        for entry in parse_contributions(contributions_json) {
-            let Some((app_id, module_id, computers_json)) = cad_computer_fields(&entry) else {
-                continue;
-            };
-            if app_id != "cad-play" {
-                continue;
-            }
-            let _ = (module_id, computers_json);
-        }
+    /// 🧩️ One accepted `cad.computer` pack: the contributing module and its own computer roster,
+    /// still as the JSON the contributor authored (cad-js owns that vocabulary, not this crate).
+    #[derive(Clone, Debug, PartialEq)]
+    pub struct CadComputerContribution {
+        pub plugin_id: String,
+        pub module_id: String,
+        pub computers_json: String,
+    }
+
+    /// 🧩️ Validates host-pushed `CadComputer` contributions for `cad-play` (implementations register
+    /// in cad-js) and RETURNS the packs that were accepted — an entry on another topic, or addressed
+    /// to another app, is skipped rather than refused, so a mixed host payload still installs cad's
+    /// own share. Returning the accepted packs (instead of `()`) is what makes acceptance observable:
+    /// `CadConfigMutation::SetContributions`'s diff calls this for its side effect, and the laws call
+    /// it for its answer.
+    pub fn validate_cad_computer_contributions(contributions_json: &str) -> Vec<CadComputerContribution> {
+        parse_contributions(contributions_json)
+            .into_iter()
+            .filter_map(|entry| {
+                let (app_id, module_id, computers_json) = cad_computer_fields(&entry)?;
+                (app_id == "cad-play").then(|| CadComputerContribution { plugin_id: entry.plugin_id.clone(), module_id, computers_json })
+            })
+            .collect()
     }
     //#endregion 🧩️Contributions
 }

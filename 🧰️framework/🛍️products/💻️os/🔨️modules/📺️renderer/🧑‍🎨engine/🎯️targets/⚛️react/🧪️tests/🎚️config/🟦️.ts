@@ -60,6 +60,7 @@ const engineTestSuites = [
   engineSuite("🧩️package-integration"),
   engineSuite("🧯️router-plugin-faults"),
   engineSuite("🩺️window-fault"),
+  engineSuite("🫀️plugin-load-progress"),
   engineSuite("🪟️app-mode-layouts"),
   engineSuite("🎟️resident-refresh-budget"),
   elementSuite("🛠️ShellHelpers", "🧩️component"),

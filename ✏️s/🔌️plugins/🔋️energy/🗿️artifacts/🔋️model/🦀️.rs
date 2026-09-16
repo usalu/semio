@@ -514,6 +514,32 @@ pub fn energy_snapshot_with_state(schema: impl Into<String>, model: &Model, refe
 }
 //#endregion 🔖️RetainedArtifactState
 
+//#region 🌱️GenesisChildren
+/// 🌱️ `ArtifactApp::genesis_child_pack` for both composed children. Each is a pure function of
+/// `snapshot.model` (`energy_structure_from_model` / `energy_zones_table_from_model`), so a fresh
+/// boot and every whole-document load (`Effect::LoadDocument` → the host's `loadDocumentArchive`
+/// with `members: []`, which is how `setActiveExample` lands) re-derive them here instead of
+/// shipping them — without this the archive closure is `Incomplete` and every example load faults.
+/// Answers only for the slot/child pairs the snapshot itself declares (same shape as
+/// `genesis_gis_map_child_pack`).
+pub fn energy_genesis_child_pack(snapshot: &EnergyModelSnapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
+    use store::ArtifactPack;
+    if slot == "structure" && child_id == snapshot.structure.child_id {
+        return Some(<semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot as ArtifactPack>::encode_pack(&energy_structure_from_model(&snapshot.model)));
+    }
+    if slot == "zones" && child_id == snapshot.zones.child_id {
+        return Some(<semio_s_artifact_stdio_semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot as ArtifactPack>::encode_pack(&energy_zones_table_from_model(&snapshot.model)));
+    }
+    None
+}
+
+/// 🧬️ The bounded projection of this snapshot's two child handles, as both surfaces hand it to the
+/// framework (`ArtifactEditor::child_restore_projection` / `ArtifactViewer::child_restore_projection`).
+pub fn energy_child_restore_projection(snapshot: &EnergyModelSnapshot) -> Result<store::ChildRestoreProjection<'_>, semio_framework_plugin::Fault> {
+    store::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| semio_framework_plugin::Fault::from(format!("energy model child projection failed: {error}")))
+}
+//#endregion 🌱️GenesisChildren
+
 //#endregion 🔖️Composition
 
 //#region 🆔️EntityIdMinting

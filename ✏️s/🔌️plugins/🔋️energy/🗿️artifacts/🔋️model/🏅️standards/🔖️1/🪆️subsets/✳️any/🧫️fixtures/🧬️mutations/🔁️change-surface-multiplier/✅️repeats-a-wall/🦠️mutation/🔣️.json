@@ -1,1 +1,5 @@
-{}
+{
+  "mutation": "changeSurfaceMultiplier",
+  "id": 3,
+  "newMultiplier": 4
+}

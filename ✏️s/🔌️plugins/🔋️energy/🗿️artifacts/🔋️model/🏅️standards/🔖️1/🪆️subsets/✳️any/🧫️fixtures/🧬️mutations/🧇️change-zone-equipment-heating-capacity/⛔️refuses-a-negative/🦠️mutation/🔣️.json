@@ -1,1 +1,5 @@
-{}
+{
+  "mutation": "changeZoneEquipmentHeatingCapacity",
+  "id": 13,
+  "newHeatingCapacityW": -1.0
+}

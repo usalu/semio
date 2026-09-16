@@ -174,8 +174,8 @@ const FEM2D_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
     ArtifactToolPublicationContract { tool_id: "patchLoad", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: "patchLoadCase", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: "patchCombination", lanes: &[ArtifactToolPublicationLane::Artifact] },
-    ArtifactToolPublicationContract { tool_id: "setResultAnimation", lanes: &[ArtifactToolPublicationLane::WindowConfig, ArtifactToolPublicationLane::HostOnly] },
-    ArtifactToolPublicationContract { tool_id: "resultAnimationTick", lanes: &[ArtifactToolPublicationLane::WindowConfig, ArtifactToolPublicationLane::HostOnly] },
+    ArtifactToolPublicationContract { tool_id: "setResultAnimation", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
+    ArtifactToolPublicationContract { tool_id: "resultAnimationTick", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
     ArtifactToolPublicationContract { tool_id: "focusEntity", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
 ];
 
@@ -219,6 +219,12 @@ fn fem2d_retained_reduce(
     match command {
         Fem2dCommand::SetCamera(payload) => set_camera::handle_window(payload, &cfg, view.ok_or_else(|| Fault::from("fem2d.camera.window-context-required"))?),
         Fem2dCommand::SetResultDisplay(payload) => set_result_display::handle_window(payload, &cfg, view.ok_or_else(|| Fault::from("fem2d.results.window-context-required"))?),
+        Fem2dCommand::SetResultAnimation(payload) => set_result_animation::handle_window(payload, &doc, &cfg, view.ok_or_else(|| Fault::from("fem2d.results.window-context-required"))?),
+        Fem2dCommand::ResultAnimationTick(payload) => result_animation_tick::handle_window(payload, &doc, &cfg, view.ok_or_else(|| Fault::from("fem2d.results.window-context-required"))?),
+        Fem2dCommand::CanvasPointerDown(payload) => canvas_pointer_down::handle_window(payload, &doc, &cfg, view.ok_or_else(|| Fault::from("fem2d.pointer.window-context-required"))?),
+        Fem2dCommand::CanvasPointerMove(payload) => canvas_pointer_move::handle_window(payload, &doc, &cfg, view.ok_or_else(|| Fault::from("fem2d.pointer.window-context-required"))?),
+        Fem2dCommand::CanvasPointerUp(payload) => canvas_pointer_up::handle_window(payload, &doc, &cfg, view.ok_or_else(|| Fault::from("fem2d.pointer.window-context-required"))?),
+        Fem2dCommand::FocusEntity(payload) => focus_entity::handle_window(payload, &doc, &cfg, view.ok_or_else(|| Fault::from("fem2d.camera.window-context-required"))?),
         _ => command.dispatch(&doc, &cfg),
     }
 }
@@ -893,6 +899,7 @@ impl ArtifactEditor for Fem2dPlayApp {
                 deformation_scale: number("deformationScale"),
                 field: text("field"),
                 value: scalar_text("value"),
+                window_id: text("windowId"),
             })),
             "removeSelection" => Ok(Fem2dCommand::RemoveSelection(remove_selection::RemoveSelection { ids: list("ids").unwrap_or_default() })),
             "setActiveExample" => Ok(Fem2dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: text("exampleId").or_else(|| text("id")).unwrap_or_default() })),
@@ -903,6 +910,7 @@ impl ArtifactEditor for Fem2dPlayApp {
                 mode_index: number("modeIndex").map(|value| value.max(0.0) as u32).unwrap_or_default(),
                 field: text("field"),
                 value: scalar_text("value"),
+                window_id: text("windowId"),
             })),
             "canvasPointerDown" => Ok(Fem2dCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown {
                 x: number("x").unwrap_or_default(),
@@ -935,7 +943,7 @@ impl ArtifactEditor for Fem2dPlayApp {
             "patchLoad" => Ok(Fem2dCommand::PatchLoad(patch_load::PatchLoad { id: text("id").unwrap_or_default(), field: text("field").unwrap_or_default(), value: scalar_text("value").unwrap_or_default() })),
             "patchLoadCase" => Ok(Fem2dCommand::PatchLoadCase(patch_load_case::PatchLoadCase { id: text("id").unwrap_or_default(), field: text("field").unwrap_or_default(), value: scalar_text("value").unwrap_or_default() })),
             "patchCombination" => Ok(Fem2dCommand::PatchCombination(patch_combination::PatchCombination { id: text("id").unwrap_or_default(), field: text("field").unwrap_or_default(), value: scalar_text("value").unwrap_or_default() })),
-            "setResultAnimation" => Ok(Fem2dCommand::SetResultAnimation(set_result_animation::SetResultAnimation { phase: number("phase"), playing: flag("playing"), speed: number("speed"), loop_mode: text("loopMode"), waveform: text("waveform"), field: text("field"), value: scalar_text("value") })),
+            "setResultAnimation" => Ok(Fem2dCommand::SetResultAnimation(set_result_animation::SetResultAnimation { phase: number("phase"), playing: flag("playing"), speed: number("speed"), loop_mode: text("loopMode"), waveform: text("waveform"), field: text("field"), value: scalar_text("value"), window_id: text("windowId") })),
             "resultAnimationTick" => Ok(Fem2dCommand::ResultAnimationTick(result_animation_tick::ResultAnimationTick {})),
             "focusEntity" => Ok(Fem2dCommand::FocusEntity(focus_entity::FocusEntity { id: text("id").unwrap_or_default() })),
             other => Err(Fault::from(format!("action '{other}' is not a declared fem2d action — every app action is dispatched through the typed command channel (see `dispatch_typed_command`)"))),
@@ -1016,10 +1024,7 @@ impl Fem2dPlayApp {
             }
             artifact_panel::BODY_KEY => artifact_panel::render(doc.snapshot, &interaction, labels),
             inspection_panel::BODY_KEY => inspection_panel::render(doc.snapshot, &interaction, labels),
-            results_panel::BODY_KEY => {
-                let window = results_window::config::current(cfg);
-                results_panel::render(doc.snapshot, &window, &results_window_instance_id(view_state).unwrap_or_default(), labels)
-            }
+            results_panel::BODY_KEY => results_panel::render(doc.snapshot, results_window::config::captured(cfg).as_ref(), &results_window_instance_id(view_state).unwrap_or_default(), labels),
             _ => built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "fem2d unknown-body label admission failed")),
         }
         .map(semio_framework_plugin::built_to_component_tree)
@@ -1049,10 +1054,12 @@ pub fn fem2d_action(action: &str, args: Option<semio_framework_plugin::UiValue>)
 /// 🪟️ The first results-window instance of the layout — the one the results panel addresses when
 /// the panel itself has no window context.
 pub fn results_window_instance_id(view_state: &ViewModel) -> Option<String> {
+    let is_results = |id: &str| view_state.window_instances.iter().any(|window| window.id == id && window.window_kind_id == results_window::WINDOW_KIND_ID);
     view_state
         .window_id
         .as_deref()
-        .filter(|id| view_state.window_instances.iter().any(|window| &window.id == id && window.window_kind_id == results_window::WINDOW_KIND_ID))
+        .filter(|id| is_results(id))
+        .or_else(|| view_state.focused_window_id.as_deref().filter(|id| is_results(id)))
         .map(str::to_string)
         .or_else(|| view_state.window_instances.iter().find(|window| window.window_kind_id == results_window::WINDOW_KIND_ID).map(|window| window.id.clone()))
 }
@@ -1291,6 +1298,8 @@ pub fn create_fem2d_app() -> semio_framework_plugin::AppDefinition {
             .panel_tab_def(artifact_panel::definition())
             .panel_tab_def(inspection_panel::definition())
             .panel_tab_def(results_panel::definition())
+            .keybinding("mod+z", "undo")
+            .keybinding("mod+shift+z", "redo")
             .keybinding("delete", "removeSelection")
             .keybinding("backspace", "removeSelection")
             .keybinding("space", "setResultAnimation")

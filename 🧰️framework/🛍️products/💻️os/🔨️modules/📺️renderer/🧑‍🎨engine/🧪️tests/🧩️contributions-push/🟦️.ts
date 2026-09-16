@@ -21,6 +21,7 @@ type Scenario = (typeof fixture.scenarios)[number] & {
   readonly retireInstanceId?: number;
   readonly nextInstanceId?: number;
   readonly unresolvedReason?: string;
+  readonly capabilityClosure?: boolean;
 };
 
 type Environment = { readonly generation: string };
@@ -42,7 +43,9 @@ function harness(scenario: Scenario) {
       if (scenario.documentReadResolves === "unresolved") return { status: "unresolved", reason: scenario.unresolvedReason ?? "no-document-pack" };
       return { status: "resolved", kinds: fixture.scopeKinds };
     },
-    buildPack: () => fixture.pack,
+    // 🎛️ An unresolved document hands the unit empty kinds: what `scopeContributionsJson` still
+    // yields there is the CAPABILITY packs, which no operator graph ever scoped.
+    buildPack: (_session, kinds) => (kinds.length === 0 ? (scenario.capabilityClosure ? fixture.capabilityPack : "[]") : fixture.pack),
     install: async (session, json) => {
       pushes.push({ instanceId: session.instanceId, json });
     },
@@ -52,7 +55,7 @@ function harness(scenario: Scenario) {
 
 const sessionKey = (instanceId: number): ContributionsSessionKey => ({ pluginId: fixture.session.pluginId, instanceId });
 const environment: Environment = { generation: "boot" };
-const installedKeyOf = (entry: { readonly instanceId: number; readonly json: string }): string => `${entry.instanceId}::PACK`;
+const installedKeyOf = (entry: { readonly instanceId: number; readonly json: string }): string => `${entry.instanceId}::${entry.json === fixture.capabilityPack ? "CAPABILITY" : "PACK"}`;
 
 describe("contributions push unit", () => {
   for (const scenario of fixture.scenarios as readonly Scenario[]) {
@@ -78,7 +81,7 @@ describe("contributions push unit", () => {
       expect(pushes.length, `setContributions crossings for ${scenario.id}`).toBe(scenario.expected.pushes);
       expect(pushes.map(installedKeyOf)).toEqual(scenario.expected.installedKeys);
       expect(outcomes.map((outcome) => outcome.status)).toEqual(scenario.expected.outcomes);
-      for (const push of pushes) expect(push.json).toBe(fixture.pack);
+      for (const push of pushes) expect(push.json).toBe(scenario.capabilityClosure ? fixture.capabilityPack : fixture.pack);
     });
   }
 

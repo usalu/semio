@@ -252,6 +252,13 @@ pub fn render(
     }
 }
 
+/// 🎵️ The scale one mode-shape frame is drawn at: the unit-normalized shape lifted to
+/// `MODE_SHAPE_AMPLITUDE_RATIO` of the model's own extent, then read through the playback waveform.
+/// The SAME factor the static view applies to its solved displacements, so both views animate alike.
+pub fn mode_shape_scale(doc: &Fem2dSnapshot, amplitude: f64) -> f64 {
+    fem2d_model_extent(doc) * MODE_SHAPE_AMPLITUDE_RATIO * amplitude
+}
+
 /// ⏯️ The transport read-out a running window carries in its own corner — silent while stopped, so a
 /// still results window looks exactly as it always did.
 fn playback_caption_layer(animation: &config::Fem2dResultsAnimation) -> Option<Value> {
@@ -410,11 +417,10 @@ fn render_modal(
     animation: &config::Fem2dResultsAnimation,
     key: Option<ResultsCacheKey>,
 ) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    let amplitude = animation.amplitude();
-    let extent = fem2d_model_extent(doc) * MODE_SHAPE_AMPLITUDE_RATIO;
+    let scale = mode_shape_scale(doc, animation.amplitude());
     let mode = with_mode_values(doc, key, ModeKey::Modal(mode_index), |(freq_hz, disp_map)| {
         let mut layers = fem2d_structure_layers_with(doc, "#334155", "#334155", "#334155", interaction);
-        layers.extend(fem2d_deformed_shape_layers(doc, disp_map, extent * amplitude));
+        layers.extend(fem2d_deformed_shape_layers(doc, disp_map, scale));
         layers.push(dsl::json!({
             "id": "modal-caption",
             "transform": [1.0, 0.0, 0.0, 1.0, 10.0, 20.0],
@@ -447,11 +453,10 @@ fn render_buckling(
     let Some(case_id) = source_id.map(str::to_string).or_else(|| doc.load_cases.first().map(|c| c.id.clone())) else {
         return placeholder(Label::data("No load case defined"));
     };
-    let amplitude = animation.amplitude();
-    let extent = fem2d_model_extent(doc) * MODE_SHAPE_AMPLITUDE_RATIO;
+    let scale = mode_shape_scale(doc, animation.amplitude());
     let mode = with_mode_values(doc, key, ModeKey::Buckling(case_id, mode_index), |(factor, disp_map)| {
         let mut layers = fem2d_structure_layers_with(doc, "#334155", "#334155", "#334155", interaction);
-        layers.extend(fem2d_deformed_shape_layers(doc, disp_map, extent * amplitude));
+        layers.extend(fem2d_deformed_shape_layers(doc, disp_map, scale));
         layers.push(dsl::json!({
             "id": "buckling-caption",
             "transform": [1.0, 0.0, 0.0, 1.0, 10.0, 20.0],

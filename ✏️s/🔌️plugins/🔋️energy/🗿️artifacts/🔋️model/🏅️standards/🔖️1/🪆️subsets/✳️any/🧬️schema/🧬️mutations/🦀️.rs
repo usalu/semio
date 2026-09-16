@@ -1159,7 +1159,8 @@ pub fn energy_model_mutation_report_json(base_json: &str, mutation_json: &str, a
     let inverse = <EnergyModelMutation as protocol::Mutation<EnergyModelSnapshot>>::inverse(&mutation, &base);
     let mut undone = applied.clone();
     let mut inverse_messages = Vec::new();
-    for step in &inverse {
+    // ↩️ Reversed, as the store replays an inverse (`ArtifactStore::replay_mutations`).
+    for step in inverse.iter().rev() {
         let outcome = <EnergyModelMutation as protocol::Mutation<EnergyModelSnapshot>>::diff(step, &undone).apply_to(&mut undone);
         inverse_messages.extend(outcome.messages().iter().cloned());
     }

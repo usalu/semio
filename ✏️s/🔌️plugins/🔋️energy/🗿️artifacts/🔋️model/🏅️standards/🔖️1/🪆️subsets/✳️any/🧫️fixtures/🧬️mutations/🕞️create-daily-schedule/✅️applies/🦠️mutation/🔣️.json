@@ -1,1 +1,34 @@
-{}
+{
+  "mutation": "createDailySchedule",
+  "index": 3,
+  "id": 13,
+  "hourlyValues": [
+    21.0,
+    21.0,
+    21.0,
+    21.0,
+    21.0,
+    21.0,
+    21.0,
+    21.0,
+    21.0,
+    21.0,
+    21.0,
+    21.0,
+    21.0,
+    21.0,
+    21.0,
+    21.0,
+    21.0,
+    21.0,
+    21.0,
+    21.0,
+    21.0,
+    21.0,
+    21.0,
+    21.0
+  ],
+  "interpolation": "Continuous",
+  "limitsMin": null,
+  "limitsMax": null
+}

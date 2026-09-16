@@ -1807,6 +1807,1320 @@
                 }
               },
               {
+                "id": "canvasPointerDown",
+                "label": {
+                  "native": {
+                    "en": "Canvas Pointer Down",
+                    "de": "Leinwand-Zeiger gedrückt"
+                  },
+                  "reuse": {
+                    "en": "Canvas Pointer Down",
+                    "de": "Leinwand-Zeiger gedrückt"
+                  }
+                },
+                "kind": "view",
+                "iconId": "circle",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "canvasPointerMove",
+                "label": {
+                  "native": {
+                    "en": "Canvas Pointer Move",
+                    "de": "Leinwand-Zeiger bewegen"
+                  },
+                  "reuse": {
+                    "en": "Canvas Pointer Move",
+                    "de": "Leinwand-Zeiger bewegen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "mouse-pointer",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "canvasPointerUp",
+                "label": {
+                  "native": {
+                    "en": "Canvas Pointer Up",
+                    "de": "Leinwand-Zeiger losgelassen"
+                  },
+                  "reuse": {
+                    "en": "Canvas Pointer Up",
+                    "de": "Leinwand-Zeiger losgelassen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "mouse-pointer",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "patchNode",
+                "label": {
+                  "native": {
+                    "en": "Patch Node",
+                    "de": "Knoten ändern"
+                  },
+                  "reuse": {
+                    "en": "Patch Node",
+                    "de": "Knoten ändern"
+                  }
+                },
+                "kind": "mutation",
+                "iconId": "pencil",
+                "args": [
+                  {
+                    "id": "id",
+                    "label": {
+                      "native": {
+                        "en": "Entity",
+                        "de": "Element"
+                      },
+                      "reuse": {
+                        "en": "Entity",
+                        "de": "Element"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "field",
+                    "label": {
+                      "native": {
+                        "en": "Field",
+                        "de": "Feld"
+                      },
+                      "reuse": {
+                        "en": "Field",
+                        "de": "Feld"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "value",
+                    "label": {
+                      "native": {
+                        "en": "Value",
+                        "de": "Wert"
+                      },
+                      "reuse": {
+                        "en": "Value",
+                        "de": "Wert"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  }
+                ],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "writes": [
+                      "artifact:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": true
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.write"
+                    ],
+                    "approval": "whenDestructive"
+                  },
+                  "execution": {
+                    "preview": "diff",
+                    "undo": {
+                      "kind": "inverse"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": true,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "patchElement",
+                "label": {
+                  "native": {
+                    "en": "Patch Element",
+                    "de": "Element ändern"
+                  },
+                  "reuse": {
+                    "en": "Patch Element",
+                    "de": "Element ändern"
+                  }
+                },
+                "kind": "mutation",
+                "iconId": "pencil",
+                "args": [
+                  {
+                    "id": "id",
+                    "label": {
+                      "native": {
+                        "en": "Entity",
+                        "de": "Element"
+                      },
+                      "reuse": {
+                        "en": "Entity",
+                        "de": "Element"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "field",
+                    "label": {
+                      "native": {
+                        "en": "Field",
+                        "de": "Feld"
+                      },
+                      "reuse": {
+                        "en": "Field",
+                        "de": "Feld"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "value",
+                    "label": {
+                      "native": {
+                        "en": "Value",
+                        "de": "Wert"
+                      },
+                      "reuse": {
+                        "en": "Value",
+                        "de": "Wert"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  }
+                ],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "writes": [
+                      "artifact:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": true
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.write"
+                    ],
+                    "approval": "whenDestructive"
+                  },
+                  "execution": {
+                    "preview": "diff",
+                    "undo": {
+                      "kind": "inverse"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": true,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "patchMaterial",
+                "label": {
+                  "native": {
+                    "en": "Patch Material",
+                    "de": "Material ändern"
+                  },
+                  "reuse": {
+                    "en": "Patch Material",
+                    "de": "Material ändern"
+                  }
+                },
+                "kind": "mutation",
+                "iconId": "pencil",
+                "args": [
+                  {
+                    "id": "id",
+                    "label": {
+                      "native": {
+                        "en": "Entity",
+                        "de": "Element"
+                      },
+                      "reuse": {
+                        "en": "Entity",
+                        "de": "Element"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "field",
+                    "label": {
+                      "native": {
+                        "en": "Field",
+                        "de": "Feld"
+                      },
+                      "reuse": {
+                        "en": "Field",
+                        "de": "Feld"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "value",
+                    "label": {
+                      "native": {
+                        "en": "Value",
+                        "de": "Wert"
+                      },
+                      "reuse": {
+                        "en": "Value",
+                        "de": "Wert"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  }
+                ],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "writes": [
+                      "artifact:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": true
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.write"
+                    ],
+                    "approval": "whenDestructive"
+                  },
+                  "execution": {
+                    "preview": "diff",
+                    "undo": {
+                      "kind": "inverse"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": true,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "patchSection",
+                "label": {
+                  "native": {
+                    "en": "Patch Section",
+                    "de": "Querschnitt ändern"
+                  },
+                  "reuse": {
+                    "en": "Patch Section",
+                    "de": "Querschnitt ändern"
+                  }
+                },
+                "kind": "mutation",
+                "iconId": "pencil",
+                "args": [
+                  {
+                    "id": "id",
+                    "label": {
+                      "native": {
+                        "en": "Entity",
+                        "de": "Element"
+                      },
+                      "reuse": {
+                        "en": "Entity",
+                        "de": "Element"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "field",
+                    "label": {
+                      "native": {
+                        "en": "Field",
+                        "de": "Feld"
+                      },
+                      "reuse": {
+                        "en": "Field",
+                        "de": "Feld"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "value",
+                    "label": {
+                      "native": {
+                        "en": "Value",
+                        "de": "Wert"
+                      },
+                      "reuse": {
+                        "en": "Value",
+                        "de": "Wert"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  }
+                ],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "writes": [
+                      "artifact:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": true
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.write"
+                    ],
+                    "approval": "whenDestructive"
+                  },
+                  "execution": {
+                    "preview": "diff",
+                    "undo": {
+                      "kind": "inverse"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": true,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "patchSupport",
+                "label": {
+                  "native": {
+                    "en": "Patch Support",
+                    "de": "Lager ändern"
+                  },
+                  "reuse": {
+                    "en": "Patch Support",
+                    "de": "Lager ändern"
+                  }
+                },
+                "kind": "mutation",
+                "iconId": "pencil",
+                "args": [
+                  {
+                    "id": "id",
+                    "label": {
+                      "native": {
+                        "en": "Entity",
+                        "de": "Element"
+                      },
+                      "reuse": {
+                        "en": "Entity",
+                        "de": "Element"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "field",
+                    "label": {
+                      "native": {
+                        "en": "Field",
+                        "de": "Feld"
+                      },
+                      "reuse": {
+                        "en": "Field",
+                        "de": "Feld"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "value",
+                    "label": {
+                      "native": {
+                        "en": "Value",
+                        "de": "Wert"
+                      },
+                      "reuse": {
+                        "en": "Value",
+                        "de": "Wert"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  }
+                ],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "writes": [
+                      "artifact:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": true
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.write"
+                    ],
+                    "approval": "whenDestructive"
+                  },
+                  "execution": {
+                    "preview": "diff",
+                    "undo": {
+                      "kind": "inverse"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": true,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "patchRegion",
+                "label": {
+                  "native": {
+                    "en": "Patch Region",
+                    "de": "Bereich ändern"
+                  },
+                  "reuse": {
+                    "en": "Patch Region",
+                    "de": "Bereich ändern"
+                  }
+                },
+                "kind": "mutation",
+                "iconId": "pencil",
+                "args": [
+                  {
+                    "id": "id",
+                    "label": {
+                      "native": {
+                        "en": "Entity",
+                        "de": "Element"
+                      },
+                      "reuse": {
+                        "en": "Entity",
+                        "de": "Element"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "field",
+                    "label": {
+                      "native": {
+                        "en": "Field",
+                        "de": "Feld"
+                      },
+                      "reuse": {
+                        "en": "Field",
+                        "de": "Feld"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "value",
+                    "label": {
+                      "native": {
+                        "en": "Value",
+                        "de": "Wert"
+                      },
+                      "reuse": {
+                        "en": "Value",
+                        "de": "Wert"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  }
+                ],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "writes": [
+                      "artifact:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": true
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.write"
+                    ],
+                    "approval": "whenDestructive"
+                  },
+                  "execution": {
+                    "preview": "diff",
+                    "undo": {
+                      "kind": "inverse"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": true,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "patchLoad",
+                "label": {
+                  "native": {
+                    "en": "Patch Load",
+                    "de": "Last ändern"
+                  },
+                  "reuse": {
+                    "en": "Patch Load",
+                    "de": "Last ändern"
+                  }
+                },
+                "kind": "mutation",
+                "iconId": "pencil",
+                "args": [
+                  {
+                    "id": "id",
+                    "label": {
+                      "native": {
+                        "en": "Entity",
+                        "de": "Element"
+                      },
+                      "reuse": {
+                        "en": "Entity",
+                        "de": "Element"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "field",
+                    "label": {
+                      "native": {
+                        "en": "Field",
+                        "de": "Feld"
+                      },
+                      "reuse": {
+                        "en": "Field",
+                        "de": "Feld"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "value",
+                    "label": {
+                      "native": {
+                        "en": "Value",
+                        "de": "Wert"
+                      },
+                      "reuse": {
+                        "en": "Value",
+                        "de": "Wert"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  }
+                ],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "writes": [
+                      "artifact:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": true
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.write"
+                    ],
+                    "approval": "whenDestructive"
+                  },
+                  "execution": {
+                    "preview": "diff",
+                    "undo": {
+                      "kind": "inverse"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": true,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "patchLoadCase",
+                "label": {
+                  "native": {
+                    "en": "Patch Load Case",
+                    "de": "Lastfall ändern"
+                  },
+                  "reuse": {
+                    "en": "Patch Load Case",
+                    "de": "Lastfall ändern"
+                  }
+                },
+                "kind": "mutation",
+                "iconId": "pencil",
+                "args": [
+                  {
+                    "id": "id",
+                    "label": {
+                      "native": {
+                        "en": "Entity",
+                        "de": "Element"
+                      },
+                      "reuse": {
+                        "en": "Entity",
+                        "de": "Element"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "field",
+                    "label": {
+                      "native": {
+                        "en": "Field",
+                        "de": "Feld"
+                      },
+                      "reuse": {
+                        "en": "Field",
+                        "de": "Feld"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "value",
+                    "label": {
+                      "native": {
+                        "en": "Value",
+                        "de": "Wert"
+                      },
+                      "reuse": {
+                        "en": "Value",
+                        "de": "Wert"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  }
+                ],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "writes": [
+                      "artifact:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": true
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.write"
+                    ],
+                    "approval": "whenDestructive"
+                  },
+                  "execution": {
+                    "preview": "diff",
+                    "undo": {
+                      "kind": "inverse"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": true,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "patchCombination",
+                "label": {
+                  "native": {
+                    "en": "Patch Combination",
+                    "de": "Kombination ändern"
+                  },
+                  "reuse": {
+                    "en": "Patch Combination",
+                    "de": "Kombination ändern"
+                  }
+                },
+                "kind": "mutation",
+                "iconId": "pencil",
+                "args": [
+                  {
+                    "id": "id",
+                    "label": {
+                      "native": {
+                        "en": "Entity",
+                        "de": "Element"
+                      },
+                      "reuse": {
+                        "en": "Entity",
+                        "de": "Element"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "field",
+                    "label": {
+                      "native": {
+                        "en": "Field",
+                        "de": "Feld"
+                      },
+                      "reuse": {
+                        "en": "Field",
+                        "de": "Feld"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "value",
+                    "label": {
+                      "native": {
+                        "en": "Value",
+                        "de": "Wert"
+                      },
+                      "reuse": {
+                        "en": "Value",
+                        "de": "Wert"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  }
+                ],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "writes": [
+                      "artifact:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": true
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.write"
+                    ],
+                    "approval": "whenDestructive"
+                  },
+                  "execution": {
+                    "preview": "diff",
+                    "undo": {
+                      "kind": "inverse"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": true,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "setResultAnimation",
+                "label": {
+                  "native": {
+                    "en": "Set Result Animation",
+                    "de": "Ergebnisanimation festlegen"
+                  },
+                  "reuse": {
+                    "en": "Set Result Animation",
+                    "de": "Ergebnisanimation festlegen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "play",
+                "args": [
+                  {
+                    "id": "phase",
+                    "label": {
+                      "native": {
+                        "en": "Phase",
+                        "de": "Phase"
+                      },
+                      "reuse": {
+                        "en": "Phase",
+                        "de": "Phase"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "min": 0.0,
+                      "max": 1.0,
+                      "integer": false
+                    },
+                    "presentation": {
+                      "kind": "slider"
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "playing",
+                    "label": {
+                      "native": {
+                        "en": "Playing",
+                        "de": "Läuft"
+                      },
+                      "reuse": {
+                        "en": "Playing",
+                        "de": "Läuft"
+                      }
+                    },
+                    "schema": {
+                      "kind": "boolean"
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "speed",
+                    "label": {
+                      "native": {
+                        "en": "Speed",
+                        "de": "Geschwindigkeit"
+                      },
+                      "reuse": {
+                        "en": "Speed",
+                        "de": "Geschwindigkeit"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "loopMode",
+                    "label": {
+                      "native": {
+                        "en": "Loop",
+                        "de": "Schleife"
+                      },
+                      "reuse": {
+                        "en": "Loop",
+                        "de": "Schleife"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "options": [
+                        {
+                          "value": "loop",
+                          "label": {
+                            "native": {
+                              "en": "Loop",
+                              "de": "Schleife"
+                            },
+                            "reuse": {
+                              "en": "Loop",
+                              "de": "Schleife"
+                            }
+                          }
+                        },
+                        {
+                          "value": "pingPong",
+                          "label": {
+                            "native": {
+                              "en": "Ping-Pong",
+                              "de": "Ping-Pong"
+                            },
+                            "reuse": {
+                              "en": "Ping-Pong",
+                              "de": "Ping-Pong"
+                            }
+                          }
+                        },
+                        {
+                          "value": "once",
+                          "label": {
+                            "native": {
+                              "en": "Once",
+                              "de": "Einmal"
+                            },
+                            "reuse": {
+                              "en": "Once",
+                              "de": "Einmal"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "waveform",
+                    "label": {
+                      "native": {
+                        "en": "Waveform",
+                        "de": "Wellenform"
+                      },
+                      "reuse": {
+                        "en": "Waveform",
+                        "de": "Wellenform"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "options": [
+                        {
+                          "value": "ramp",
+                          "label": {
+                            "native": {
+                              "en": "Ramp",
+                              "de": "Rampe"
+                            },
+                            "reuse": {
+                              "en": "Ramp",
+                              "de": "Rampe"
+                            }
+                          }
+                        },
+                        {
+                          "value": "sine",
+                          "label": {
+                            "native": {
+                              "en": "Sine",
+                              "de": "Sinus"
+                            },
+                            "reuse": {
+                              "en": "Sine",
+                              "de": "Sinus"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "required": false
+                  }
+                ],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "resultAnimationTick",
+                "label": {
+                  "native": {
+                    "en": "Result Animation Tick",
+                    "de": "Ergebnisanimation Takt"
+                  },
+                  "reuse": {
+                    "en": "Result Animation Tick",
+                    "de": "Ergebnisanimation Takt"
+                  }
+                },
+                "kind": "view",
+                "iconId": "circle",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "focusEntity",
+                "label": {
+                  "native": {
+                    "en": "Focus Entity",
+                    "de": "Element fokussieren"
+                  },
+                  "reuse": {
+                    "en": "Focus Entity",
+                    "de": "Element fokussieren"
+                  }
+                },
+                "kind": "view",
+                "iconId": "focus",
+                "args": [
+                  {
+                    "id": "id",
+                    "label": {
+                      "native": {
+                        "en": "Entity",
+                        "de": "Element"
+                      },
+                      "reuse": {
+                        "en": "Entity",
+                        "de": "Element"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  }
+                ],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
                 "id": "undo",
                 "label": {
                   "native": {
@@ -2611,10 +3925,611 @@
                     "interactiveJob": "migrated"
                   }
                 }
+              },
+              {
+                "id": "interactionSelect",
+                "label": {
+                  "native": {
+                    "en": "Select",
+                    "de": "Auswählen"
+                  },
+                  "reuse": {
+                    "en": "Select",
+                    "de": "Auswählen"
+                  }
+                },
+                "kind": "interaction",
+                "iconId": "mouse-pointer",
+                "args": [
+                  {
+                    "id": "domainId",
+                    "label": {
+                      "native": {
+                        "en": "Domain",
+                        "de": "Domäne"
+                      },
+                      "reuse": {
+                        "en": "Domain",
+                        "de": "Domäne"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "targets",
+                    "label": {
+                      "native": {
+                        "en": "Targets",
+                        "de": "Ziele"
+                      },
+                      "reuse": {
+                        "en": "Targets",
+                        "de": "Ziele"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "merge",
+                    "label": {
+                      "native": {
+                        "en": "Merge",
+                        "de": "Zusammenführen"
+                      },
+                      "reuse": {
+                        "en": "Merge",
+                        "de": "Zusammenführen"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "options": [
+                        {
+                          "value": "replace",
+                          "label": {
+                            "native": {
+                              "en": "Replace",
+                              "de": "Ersetzen"
+                            },
+                            "reuse": {
+                              "en": "Replace",
+                              "de": "Ersetzen"
+                            }
+                          }
+                        },
+                        {
+                          "value": "additive",
+                          "label": {
+                            "native": {
+                              "en": "Additive",
+                              "de": "Additiv"
+                            },
+                            "reuse": {
+                              "en": "Additive",
+                              "de": "Additiv"
+                            }
+                          }
+                        },
+                        {
+                          "value": "subtractive",
+                          "label": {
+                            "native": {
+                              "en": "Subtractive",
+                              "de": "Subtraktiv"
+                            },
+                            "reuse": {
+                              "en": "Subtractive",
+                              "de": "Subtraktiv"
+                            }
+                          }
+                        },
+                        {
+                          "value": "invertive",
+                          "label": {
+                            "native": {
+                              "en": "Invertive",
+                              "de": "Invertierend"
+                            },
+                            "reuse": {
+                              "en": "Invertive",
+                              "de": "Invertierend"
+                            }
+                          }
+                        },
+                        {
+                          "value": "range",
+                          "label": {
+                            "native": {
+                              "en": "Range",
+                              "de": "Bereich"
+                            },
+                            "reuse": {
+                              "en": "Range",
+                              "de": "Bereich"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "method",
+                    "label": {
+                      "native": {
+                        "en": "Method",
+                        "de": "Methode"
+                      },
+                      "reuse": {
+                        "en": "Method",
+                        "de": "Methode"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "options": [
+                        {
+                          "value": "pick",
+                          "label": {
+                            "native": {
+                              "en": "Pick",
+                              "de": "Auswahl"
+                            },
+                            "reuse": {
+                              "en": "Pick",
+                              "de": "Auswahl"
+                            }
+                          }
+                        },
+                        {
+                          "value": "rectangle",
+                          "label": {
+                            "native": {
+                              "en": "Rectangle",
+                              "de": "Rechteck"
+                            },
+                            "reuse": {
+                              "en": "Rectangle",
+                              "de": "Rechteck"
+                            }
+                          }
+                        },
+                        {
+                          "value": "lasso",
+                          "label": {
+                            "native": {
+                              "en": "Lasso",
+                              "de": "Lasso"
+                            },
+                            "reuse": {
+                              "en": "Lasso",
+                              "de": "Lasso"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "required": true
+                  }
+                ],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "interactionHover",
+                "label": {
+                  "native": {
+                    "en": "Hover",
+                    "de": "Hover"
+                  },
+                  "reuse": {
+                    "en": "Hover",
+                    "de": "Hover"
+                  }
+                },
+                "kind": "interaction",
+                "iconId": "eye",
+                "args": [
+                  {
+                    "id": "domainId",
+                    "label": {
+                      "native": {
+                        "en": "Domain",
+                        "de": "Domäne"
+                      },
+                      "reuse": {
+                        "en": "Domain",
+                        "de": "Domäne"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "channel",
+                    "label": {
+                      "native": {
+                        "en": "Channel",
+                        "de": "Kanal"
+                      },
+                      "reuse": {
+                        "en": "Channel",
+                        "de": "Kanal"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "targets",
+                    "label": {
+                      "native": {
+                        "en": "Targets",
+                        "de": "Ziele"
+                      },
+                      "reuse": {
+                        "en": "Targets",
+                        "de": "Ziele"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  }
+                ],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "clearSelection",
+                "label": {
+                  "native": {
+                    "en": "Clear Selection",
+                    "de": "Auswahl aufheben"
+                  },
+                  "reuse": {
+                    "en": "Clear Selection",
+                    "de": "Auswahl aufheben"
+                  }
+                },
+                "kind": "interaction",
+                "iconId": "mouse-pointer-2",
+                "args": [],
+                "keys": "escape",
+                "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "selectAll",
+                "label": {
+                  "native": {
+                    "en": "Select All",
+                    "de": "Alles auswählen"
+                  },
+                  "reuse": {
+                    "en": "Select All",
+                    "de": "Alles auswählen"
+                  }
+                },
+                "kind": "interaction",
+                "iconId": "maximize-2",
+                "args": [],
+                "keys": "mod+a",
+                "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "setSelectionMode",
+                "label": {
+                  "native": {
+                    "en": "Set Selection Mode",
+                    "de": "Auswahlmodus festlegen"
+                  },
+                  "reuse": {
+                    "en": "Set Selection Mode",
+                    "de": "Auswahlmodus festlegen"
+                  }
+                },
+                "kind": "interaction",
+                "iconId": "sliders-horizontal",
+                "args": [
+                  {
+                    "id": "domainId",
+                    "label": {
+                      "native": {
+                        "en": "Domain",
+                        "de": "Domäne"
+                      },
+                      "reuse": {
+                        "en": "Domain",
+                        "de": "Domäne"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "mode",
+                    "label": {
+                      "native": {
+                        "en": "Mode",
+                        "de": "Modus"
+                      },
+                      "reuse": {
+                        "en": "Mode",
+                        "de": "Modus"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "options": [
+                        {
+                          "value": "single",
+                          "label": {
+                            "native": {
+                              "en": "Single",
+                              "de": "Einzeln"
+                            },
+                            "reuse": {
+                              "en": "Single",
+                              "de": "Einzeln"
+                            }
+                          }
+                        },
+                        {
+                          "value": "multiple",
+                          "label": {
+                            "native": {
+                              "en": "Multiple",
+                              "de": "Mehrfach"
+                            },
+                            "reuse": {
+                              "en": "Multiple",
+                              "de": "Mehrfach"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "required": true
+                  }
+                ],
+                "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "setInteractionGranularity",
+                "label": {
+                  "native": {
+                    "en": "Set Granularity",
+                    "de": "Granularität festlegen"
+                  },
+                  "reuse": {
+                    "en": "Set Granularity",
+                    "de": "Granularität festlegen"
+                  }
+                },
+                "kind": "interaction",
+                "iconId": "layers",
+                "args": [
+                  {
+                    "id": "domainId",
+                    "label": {
+                      "native": {
+                        "en": "Domain",
+                        "de": "Domäne"
+                      },
+                      "reuse": {
+                        "en": "Domain",
+                        "de": "Domäne"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "granularityId",
+                    "label": {
+                      "native": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      },
+                      "reuse": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  }
+                ],
+                "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
               }
             ],
             "utilities": [],
-            "interactions": [],
+            "interactions": [
+              "fem2d"
+            ],
             "capabilities": []
           },
           {
@@ -4372,6 +6287,1320 @@
                 }
               },
               {
+                "id": "canvasPointerDown",
+                "label": {
+                  "native": {
+                    "en": "Canvas Pointer Down",
+                    "de": "Leinwand-Zeiger gedrückt"
+                  },
+                  "reuse": {
+                    "en": "Canvas Pointer Down",
+                    "de": "Leinwand-Zeiger gedrückt"
+                  }
+                },
+                "kind": "view",
+                "iconId": "circle",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "canvasPointerMove",
+                "label": {
+                  "native": {
+                    "en": "Canvas Pointer Move",
+                    "de": "Leinwand-Zeiger bewegen"
+                  },
+                  "reuse": {
+                    "en": "Canvas Pointer Move",
+                    "de": "Leinwand-Zeiger bewegen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "mouse-pointer",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "canvasPointerUp",
+                "label": {
+                  "native": {
+                    "en": "Canvas Pointer Up",
+                    "de": "Leinwand-Zeiger losgelassen"
+                  },
+                  "reuse": {
+                    "en": "Canvas Pointer Up",
+                    "de": "Leinwand-Zeiger losgelassen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "mouse-pointer",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "patchNode",
+                "label": {
+                  "native": {
+                    "en": "Patch Node",
+                    "de": "Knoten ändern"
+                  },
+                  "reuse": {
+                    "en": "Patch Node",
+                    "de": "Knoten ändern"
+                  }
+                },
+                "kind": "mutation",
+                "iconId": "pencil",
+                "args": [
+                  {
+                    "id": "id",
+                    "label": {
+                      "native": {
+                        "en": "Entity",
+                        "de": "Element"
+                      },
+                      "reuse": {
+                        "en": "Entity",
+                        "de": "Element"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "field",
+                    "label": {
+                      "native": {
+                        "en": "Field",
+                        "de": "Feld"
+                      },
+                      "reuse": {
+                        "en": "Field",
+                        "de": "Feld"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "value",
+                    "label": {
+                      "native": {
+                        "en": "Value",
+                        "de": "Wert"
+                      },
+                      "reuse": {
+                        "en": "Value",
+                        "de": "Wert"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  }
+                ],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "writes": [
+                      "artifact:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": true
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.write"
+                    ],
+                    "approval": "whenDestructive"
+                  },
+                  "execution": {
+                    "preview": "diff",
+                    "undo": {
+                      "kind": "inverse"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": true,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "patchElement",
+                "label": {
+                  "native": {
+                    "en": "Patch Element",
+                    "de": "Element ändern"
+                  },
+                  "reuse": {
+                    "en": "Patch Element",
+                    "de": "Element ändern"
+                  }
+                },
+                "kind": "mutation",
+                "iconId": "pencil",
+                "args": [
+                  {
+                    "id": "id",
+                    "label": {
+                      "native": {
+                        "en": "Entity",
+                        "de": "Element"
+                      },
+                      "reuse": {
+                        "en": "Entity",
+                        "de": "Element"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "field",
+                    "label": {
+                      "native": {
+                        "en": "Field",
+                        "de": "Feld"
+                      },
+                      "reuse": {
+                        "en": "Field",
+                        "de": "Feld"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "value",
+                    "label": {
+                      "native": {
+                        "en": "Value",
+                        "de": "Wert"
+                      },
+                      "reuse": {
+                        "en": "Value",
+                        "de": "Wert"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  }
+                ],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "writes": [
+                      "artifact:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": true
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.write"
+                    ],
+                    "approval": "whenDestructive"
+                  },
+                  "execution": {
+                    "preview": "diff",
+                    "undo": {
+                      "kind": "inverse"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": true,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "patchMaterial",
+                "label": {
+                  "native": {
+                    "en": "Patch Material",
+                    "de": "Material ändern"
+                  },
+                  "reuse": {
+                    "en": "Patch Material",
+                    "de": "Material ändern"
+                  }
+                },
+                "kind": "mutation",
+                "iconId": "pencil",
+                "args": [
+                  {
+                    "id": "id",
+                    "label": {
+                      "native": {
+                        "en": "Entity",
+                        "de": "Element"
+                      },
+                      "reuse": {
+                        "en": "Entity",
+                        "de": "Element"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "field",
+                    "label": {
+                      "native": {
+                        "en": "Field",
+                        "de": "Feld"
+                      },
+                      "reuse": {
+                        "en": "Field",
+                        "de": "Feld"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "value",
+                    "label": {
+                      "native": {
+                        "en": "Value",
+                        "de": "Wert"
+                      },
+                      "reuse": {
+                        "en": "Value",
+                        "de": "Wert"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  }
+                ],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "writes": [
+                      "artifact:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": true
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.write"
+                    ],
+                    "approval": "whenDestructive"
+                  },
+                  "execution": {
+                    "preview": "diff",
+                    "undo": {
+                      "kind": "inverse"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": true,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "patchSection",
+                "label": {
+                  "native": {
+                    "en": "Patch Section",
+                    "de": "Querschnitt ändern"
+                  },
+                  "reuse": {
+                    "en": "Patch Section",
+                    "de": "Querschnitt ändern"
+                  }
+                },
+                "kind": "mutation",
+                "iconId": "pencil",
+                "args": [
+                  {
+                    "id": "id",
+                    "label": {
+                      "native": {
+                        "en": "Entity",
+                        "de": "Element"
+                      },
+                      "reuse": {
+                        "en": "Entity",
+                        "de": "Element"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "field",
+                    "label": {
+                      "native": {
+                        "en": "Field",
+                        "de": "Feld"
+                      },
+                      "reuse": {
+                        "en": "Field",
+                        "de": "Feld"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "value",
+                    "label": {
+                      "native": {
+                        "en": "Value",
+                        "de": "Wert"
+                      },
+                      "reuse": {
+                        "en": "Value",
+                        "de": "Wert"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  }
+                ],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "writes": [
+                      "artifact:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": true
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.write"
+                    ],
+                    "approval": "whenDestructive"
+                  },
+                  "execution": {
+                    "preview": "diff",
+                    "undo": {
+                      "kind": "inverse"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": true,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "patchSupport",
+                "label": {
+                  "native": {
+                    "en": "Patch Support",
+                    "de": "Lager ändern"
+                  },
+                  "reuse": {
+                    "en": "Patch Support",
+                    "de": "Lager ändern"
+                  }
+                },
+                "kind": "mutation",
+                "iconId": "pencil",
+                "args": [
+                  {
+                    "id": "id",
+                    "label": {
+                      "native": {
+                        "en": "Entity",
+                        "de": "Element"
+                      },
+                      "reuse": {
+                        "en": "Entity",
+                        "de": "Element"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "field",
+                    "label": {
+                      "native": {
+                        "en": "Field",
+                        "de": "Feld"
+                      },
+                      "reuse": {
+                        "en": "Field",
+                        "de": "Feld"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "value",
+                    "label": {
+                      "native": {
+                        "en": "Value",
+                        "de": "Wert"
+                      },
+                      "reuse": {
+                        "en": "Value",
+                        "de": "Wert"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  }
+                ],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "writes": [
+                      "artifact:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": true
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.write"
+                    ],
+                    "approval": "whenDestructive"
+                  },
+                  "execution": {
+                    "preview": "diff",
+                    "undo": {
+                      "kind": "inverse"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": true,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "patchRegion",
+                "label": {
+                  "native": {
+                    "en": "Patch Region",
+                    "de": "Bereich ändern"
+                  },
+                  "reuse": {
+                    "en": "Patch Region",
+                    "de": "Bereich ändern"
+                  }
+                },
+                "kind": "mutation",
+                "iconId": "pencil",
+                "args": [
+                  {
+                    "id": "id",
+                    "label": {
+                      "native": {
+                        "en": "Entity",
+                        "de": "Element"
+                      },
+                      "reuse": {
+                        "en": "Entity",
+                        "de": "Element"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "field",
+                    "label": {
+                      "native": {
+                        "en": "Field",
+                        "de": "Feld"
+                      },
+                      "reuse": {
+                        "en": "Field",
+                        "de": "Feld"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "value",
+                    "label": {
+                      "native": {
+                        "en": "Value",
+                        "de": "Wert"
+                      },
+                      "reuse": {
+                        "en": "Value",
+                        "de": "Wert"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  }
+                ],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "writes": [
+                      "artifact:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": true
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.write"
+                    ],
+                    "approval": "whenDestructive"
+                  },
+                  "execution": {
+                    "preview": "diff",
+                    "undo": {
+                      "kind": "inverse"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": true,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "patchLoad",
+                "label": {
+                  "native": {
+                    "en": "Patch Load",
+                    "de": "Last ändern"
+                  },
+                  "reuse": {
+                    "en": "Patch Load",
+                    "de": "Last ändern"
+                  }
+                },
+                "kind": "mutation",
+                "iconId": "pencil",
+                "args": [
+                  {
+                    "id": "id",
+                    "label": {
+                      "native": {
+                        "en": "Entity",
+                        "de": "Element"
+                      },
+                      "reuse": {
+                        "en": "Entity",
+                        "de": "Element"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "field",
+                    "label": {
+                      "native": {
+                        "en": "Field",
+                        "de": "Feld"
+                      },
+                      "reuse": {
+                        "en": "Field",
+                        "de": "Feld"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "value",
+                    "label": {
+                      "native": {
+                        "en": "Value",
+                        "de": "Wert"
+                      },
+                      "reuse": {
+                        "en": "Value",
+                        "de": "Wert"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  }
+                ],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "writes": [
+                      "artifact:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": true
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.write"
+                    ],
+                    "approval": "whenDestructive"
+                  },
+                  "execution": {
+                    "preview": "diff",
+                    "undo": {
+                      "kind": "inverse"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": true,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "patchLoadCase",
+                "label": {
+                  "native": {
+                    "en": "Patch Load Case",
+                    "de": "Lastfall ändern"
+                  },
+                  "reuse": {
+                    "en": "Patch Load Case",
+                    "de": "Lastfall ändern"
+                  }
+                },
+                "kind": "mutation",
+                "iconId": "pencil",
+                "args": [
+                  {
+                    "id": "id",
+                    "label": {
+                      "native": {
+                        "en": "Entity",
+                        "de": "Element"
+                      },
+                      "reuse": {
+                        "en": "Entity",
+                        "de": "Element"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "field",
+                    "label": {
+                      "native": {
+                        "en": "Field",
+                        "de": "Feld"
+                      },
+                      "reuse": {
+                        "en": "Field",
+                        "de": "Feld"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "value",
+                    "label": {
+                      "native": {
+                        "en": "Value",
+                        "de": "Wert"
+                      },
+                      "reuse": {
+                        "en": "Value",
+                        "de": "Wert"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  }
+                ],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "writes": [
+                      "artifact:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": true
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.write"
+                    ],
+                    "approval": "whenDestructive"
+                  },
+                  "execution": {
+                    "preview": "diff",
+                    "undo": {
+                      "kind": "inverse"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": true,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "patchCombination",
+                "label": {
+                  "native": {
+                    "en": "Patch Combination",
+                    "de": "Kombination ändern"
+                  },
+                  "reuse": {
+                    "en": "Patch Combination",
+                    "de": "Kombination ändern"
+                  }
+                },
+                "kind": "mutation",
+                "iconId": "pencil",
+                "args": [
+                  {
+                    "id": "id",
+                    "label": {
+                      "native": {
+                        "en": "Entity",
+                        "de": "Element"
+                      },
+                      "reuse": {
+                        "en": "Entity",
+                        "de": "Element"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "field",
+                    "label": {
+                      "native": {
+                        "en": "Field",
+                        "de": "Feld"
+                      },
+                      "reuse": {
+                        "en": "Field",
+                        "de": "Feld"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "value",
+                    "label": {
+                      "native": {
+                        "en": "Value",
+                        "de": "Wert"
+                      },
+                      "reuse": {
+                        "en": "Value",
+                        "de": "Wert"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  }
+                ],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "writes": [
+                      "artifact:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": true
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.write"
+                    ],
+                    "approval": "whenDestructive"
+                  },
+                  "execution": {
+                    "preview": "diff",
+                    "undo": {
+                      "kind": "inverse"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": true,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "setResultAnimation",
+                "label": {
+                  "native": {
+                    "en": "Set Result Animation",
+                    "de": "Ergebnisanimation festlegen"
+                  },
+                  "reuse": {
+                    "en": "Set Result Animation",
+                    "de": "Ergebnisanimation festlegen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "play",
+                "args": [
+                  {
+                    "id": "phase",
+                    "label": {
+                      "native": {
+                        "en": "Phase",
+                        "de": "Phase"
+                      },
+                      "reuse": {
+                        "en": "Phase",
+                        "de": "Phase"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "min": 0.0,
+                      "max": 1.0,
+                      "integer": false
+                    },
+                    "presentation": {
+                      "kind": "slider"
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "playing",
+                    "label": {
+                      "native": {
+                        "en": "Playing",
+                        "de": "Läuft"
+                      },
+                      "reuse": {
+                        "en": "Playing",
+                        "de": "Läuft"
+                      }
+                    },
+                    "schema": {
+                      "kind": "boolean"
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "speed",
+                    "label": {
+                      "native": {
+                        "en": "Speed",
+                        "de": "Geschwindigkeit"
+                      },
+                      "reuse": {
+                        "en": "Speed",
+                        "de": "Geschwindigkeit"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "loopMode",
+                    "label": {
+                      "native": {
+                        "en": "Loop",
+                        "de": "Schleife"
+                      },
+                      "reuse": {
+                        "en": "Loop",
+                        "de": "Schleife"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "options": [
+                        {
+                          "value": "loop",
+                          "label": {
+                            "native": {
+                              "en": "Loop",
+                              "de": "Schleife"
+                            },
+                            "reuse": {
+                              "en": "Loop",
+                              "de": "Schleife"
+                            }
+                          }
+                        },
+                        {
+                          "value": "pingPong",
+                          "label": {
+                            "native": {
+                              "en": "Ping-Pong",
+                              "de": "Ping-Pong"
+                            },
+                            "reuse": {
+                              "en": "Ping-Pong",
+                              "de": "Ping-Pong"
+                            }
+                          }
+                        },
+                        {
+                          "value": "once",
+                          "label": {
+                            "native": {
+                              "en": "Once",
+                              "de": "Einmal"
+                            },
+                            "reuse": {
+                              "en": "Once",
+                              "de": "Einmal"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "waveform",
+                    "label": {
+                      "native": {
+                        "en": "Waveform",
+                        "de": "Wellenform"
+                      },
+                      "reuse": {
+                        "en": "Waveform",
+                        "de": "Wellenform"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "options": [
+                        {
+                          "value": "ramp",
+                          "label": {
+                            "native": {
+                              "en": "Ramp",
+                              "de": "Rampe"
+                            },
+                            "reuse": {
+                              "en": "Ramp",
+                              "de": "Rampe"
+                            }
+                          }
+                        },
+                        {
+                          "value": "sine",
+                          "label": {
+                            "native": {
+                              "en": "Sine",
+                              "de": "Sinus"
+                            },
+                            "reuse": {
+                              "en": "Sine",
+                              "de": "Sinus"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "required": false
+                  }
+                ],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "resultAnimationTick",
+                "label": {
+                  "native": {
+                    "en": "Result Animation Tick",
+                    "de": "Ergebnisanimation Takt"
+                  },
+                  "reuse": {
+                    "en": "Result Animation Tick",
+                    "de": "Ergebnisanimation Takt"
+                  }
+                },
+                "kind": "view",
+                "iconId": "circle",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "focusEntity",
+                "label": {
+                  "native": {
+                    "en": "Focus Entity",
+                    "de": "Element fokussieren"
+                  },
+                  "reuse": {
+                    "en": "Focus Entity",
+                    "de": "Element fokussieren"
+                  }
+                },
+                "kind": "view",
+                "iconId": "focus",
+                "args": [
+                  {
+                    "id": "id",
+                    "label": {
+                      "native": {
+                        "en": "Entity",
+                        "de": "Element"
+                      },
+                      "reuse": {
+                        "en": "Entity",
+                        "de": "Element"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  }
+                ],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
                 "id": "undo",
                 "label": {
                   "native": {
@@ -5176,14 +8405,672 @@
                     "interactiveJob": "migrated"
                   }
                 }
+              },
+              {
+                "id": "interactionSelect",
+                "label": {
+                  "native": {
+                    "en": "Select",
+                    "de": "Auswählen"
+                  },
+                  "reuse": {
+                    "en": "Select",
+                    "de": "Auswählen"
+                  }
+                },
+                "kind": "interaction",
+                "iconId": "mouse-pointer",
+                "args": [
+                  {
+                    "id": "domainId",
+                    "label": {
+                      "native": {
+                        "en": "Domain",
+                        "de": "Domäne"
+                      },
+                      "reuse": {
+                        "en": "Domain",
+                        "de": "Domäne"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "targets",
+                    "label": {
+                      "native": {
+                        "en": "Targets",
+                        "de": "Ziele"
+                      },
+                      "reuse": {
+                        "en": "Targets",
+                        "de": "Ziele"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "merge",
+                    "label": {
+                      "native": {
+                        "en": "Merge",
+                        "de": "Zusammenführen"
+                      },
+                      "reuse": {
+                        "en": "Merge",
+                        "de": "Zusammenführen"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "options": [
+                        {
+                          "value": "replace",
+                          "label": {
+                            "native": {
+                              "en": "Replace",
+                              "de": "Ersetzen"
+                            },
+                            "reuse": {
+                              "en": "Replace",
+                              "de": "Ersetzen"
+                            }
+                          }
+                        },
+                        {
+                          "value": "additive",
+                          "label": {
+                            "native": {
+                              "en": "Additive",
+                              "de": "Additiv"
+                            },
+                            "reuse": {
+                              "en": "Additive",
+                              "de": "Additiv"
+                            }
+                          }
+                        },
+                        {
+                          "value": "subtractive",
+                          "label": {
+                            "native": {
+                              "en": "Subtractive",
+                              "de": "Subtraktiv"
+                            },
+                            "reuse": {
+                              "en": "Subtractive",
+                              "de": "Subtraktiv"
+                            }
+                          }
+                        },
+                        {
+                          "value": "invertive",
+                          "label": {
+                            "native": {
+                              "en": "Invertive",
+                              "de": "Invertierend"
+                            },
+                            "reuse": {
+                              "en": "Invertive",
+                              "de": "Invertierend"
+                            }
+                          }
+                        },
+                        {
+                          "value": "range",
+                          "label": {
+                            "native": {
+                              "en": "Range",
+                              "de": "Bereich"
+                            },
+                            "reuse": {
+                              "en": "Range",
+                              "de": "Bereich"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "method",
+                    "label": {
+                      "native": {
+                        "en": "Method",
+                        "de": "Methode"
+                      },
+                      "reuse": {
+                        "en": "Method",
+                        "de": "Methode"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "options": [
+                        {
+                          "value": "pick",
+                          "label": {
+                            "native": {
+                              "en": "Pick",
+                              "de": "Auswahl"
+                            },
+                            "reuse": {
+                              "en": "Pick",
+                              "de": "Auswahl"
+                            }
+                          }
+                        },
+                        {
+                          "value": "rectangle",
+                          "label": {
+                            "native": {
+                              "en": "Rectangle",
+                              "de": "Rechteck"
+                            },
+                            "reuse": {
+                              "en": "Rectangle",
+                              "de": "Rechteck"
+                            }
+                          }
+                        },
+                        {
+                          "value": "lasso",
+                          "label": {
+                            "native": {
+                              "en": "Lasso",
+                              "de": "Lasso"
+                            },
+                            "reuse": {
+                              "en": "Lasso",
+                              "de": "Lasso"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "required": true
+                  }
+                ],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "interactionHover",
+                "label": {
+                  "native": {
+                    "en": "Hover",
+                    "de": "Hover"
+                  },
+                  "reuse": {
+                    "en": "Hover",
+                    "de": "Hover"
+                  }
+                },
+                "kind": "interaction",
+                "iconId": "eye",
+                "args": [
+                  {
+                    "id": "domainId",
+                    "label": {
+                      "native": {
+                        "en": "Domain",
+                        "de": "Domäne"
+                      },
+                      "reuse": {
+                        "en": "Domain",
+                        "de": "Domäne"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "channel",
+                    "label": {
+                      "native": {
+                        "en": "Channel",
+                        "de": "Kanal"
+                      },
+                      "reuse": {
+                        "en": "Channel",
+                        "de": "Kanal"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "targets",
+                    "label": {
+                      "native": {
+                        "en": "Targets",
+                        "de": "Ziele"
+                      },
+                      "reuse": {
+                        "en": "Targets",
+                        "de": "Ziele"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  }
+                ],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "clearSelection",
+                "label": {
+                  "native": {
+                    "en": "Clear Selection",
+                    "de": "Auswahl aufheben"
+                  },
+                  "reuse": {
+                    "en": "Clear Selection",
+                    "de": "Auswahl aufheben"
+                  }
+                },
+                "kind": "interaction",
+                "iconId": "mouse-pointer-2",
+                "args": [],
+                "keys": "escape",
+                "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "selectAll",
+                "label": {
+                  "native": {
+                    "en": "Select All",
+                    "de": "Alles auswählen"
+                  },
+                  "reuse": {
+                    "en": "Select All",
+                    "de": "Alles auswählen"
+                  }
+                },
+                "kind": "interaction",
+                "iconId": "maximize-2",
+                "args": [],
+                "keys": "mod+a",
+                "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "setSelectionMode",
+                "label": {
+                  "native": {
+                    "en": "Set Selection Mode",
+                    "de": "Auswahlmodus festlegen"
+                  },
+                  "reuse": {
+                    "en": "Set Selection Mode",
+                    "de": "Auswahlmodus festlegen"
+                  }
+                },
+                "kind": "interaction",
+                "iconId": "sliders-horizontal",
+                "args": [
+                  {
+                    "id": "domainId",
+                    "label": {
+                      "native": {
+                        "en": "Domain",
+                        "de": "Domäne"
+                      },
+                      "reuse": {
+                        "en": "Domain",
+                        "de": "Domäne"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "mode",
+                    "label": {
+                      "native": {
+                        "en": "Mode",
+                        "de": "Modus"
+                      },
+                      "reuse": {
+                        "en": "Mode",
+                        "de": "Modus"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "options": [
+                        {
+                          "value": "single",
+                          "label": {
+                            "native": {
+                              "en": "Single",
+                              "de": "Einzeln"
+                            },
+                            "reuse": {
+                              "en": "Single",
+                              "de": "Einzeln"
+                            }
+                          }
+                        },
+                        {
+                          "value": "multiple",
+                          "label": {
+                            "native": {
+                              "en": "Multiple",
+                              "de": "Mehrfach"
+                            },
+                            "reuse": {
+                              "en": "Multiple",
+                              "de": "Mehrfach"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "required": true
+                  }
+                ],
+                "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "setInteractionGranularity",
+                "label": {
+                  "native": {
+                    "en": "Set Granularity",
+                    "de": "Granularität festlegen"
+                  },
+                  "reuse": {
+                    "en": "Set Granularity",
+                    "de": "Granularität festlegen"
+                  }
+                },
+                "kind": "interaction",
+                "iconId": "layers",
+                "args": [
+                  {
+                    "id": "domainId",
+                    "label": {
+                      "native": {
+                        "en": "Domain",
+                        "de": "Domäne"
+                      },
+                      "reuse": {
+                        "en": "Domain",
+                        "de": "Domäne"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "granularityId",
+                    "label": {
+                      "native": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      },
+                      "reuse": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  }
+                ],
+                "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
               }
             ],
             "utilities": [],
-            "interactions": [],
+            "interactions": [
+              "fem2d"
+            ],
             "capabilities": []
           }
         ],
         "panelTabs": [
+          {
+            "kind": {
+              "kind": "app",
+              "id": "framework.panel.artifact"
+            },
+            "label": {
+              "native": {
+                "en": "Artifact",
+                "de": "Artefakt"
+              },
+              "reuse": {
+                "en": "Artifact",
+                "de": "Artefakt"
+              }
+            },
+            "group": "workbench",
+            "bodyKey": "fem2d.play.artifact",
+            "children": []
+          },
+          {
+            "kind": {
+              "kind": "app",
+              "id": "framework.panel.inspection"
+            },
+            "label": {
+              "native": {
+                "en": "Inspection",
+                "de": "Inspektion"
+              },
+              "reuse": {
+                "en": "Inspection",
+                "de": "Inspektion"
+              }
+            },
+            "group": "details",
+            "bodyKey": "fem2d.play.inspection",
+            "children": []
+          },
+          {
+            "kind": {
+              "kind": "app",
+              "id": "fem2d.panel.results"
+            },
+            "label": {
+              "native": {
+                "en": "Results",
+                "de": "Ergebnisse"
+              },
+              "reuse": {
+                "en": "Results",
+                "de": "Ergebnisse"
+              }
+            },
+            "group": "display",
+            "bodyKey": "fem2d.play.results-panel",
+            "children": []
+          },
           {
             "kind": {
               "kind": "app",
@@ -5205,6 +9092,27 @@
           }
         ],
         "keybindings": [
+          {
+            "keys": "delete",
+            "action": {
+              "controllerId": "s.fem.fem2d@1/*#editor",
+              "action": "removeSelection"
+            }
+          },
+          {
+            "keys": "backspace",
+            "action": {
+              "controllerId": "s.fem.fem2d@1/*#editor",
+              "action": "removeSelection"
+            }
+          },
+          {
+            "keys": "space",
+            "action": {
+              "controllerId": "s.fem.fem2d@1/*#editor",
+              "action": "setResultAnimation"
+            }
+          },
           {
             "keys": "mod+z",
             "action": {
@@ -5239,12 +9147,197 @@
               "controllerId": "s.fem.fem2d@1/*#editor",
               "action": "paste"
             }
+          },
+          {
+            "keys": "escape",
+            "action": {
+              "controllerId": "s.fem.fem2d@1/*#editor",
+              "action": "clearSelection"
+            }
+          },
+          {
+            "keys": "mod+a",
+            "action": {
+              "controllerId": "s.fem.fem2d@1/*#editor",
+              "action": "selectAll"
+            }
           }
         ],
         "utilities": [],
         "tools": [],
         "commands": [],
-        "interactions": [],
+        "interactions": [
+          {
+            "id": "fem2d",
+            "label": {
+              "native": {
+                "en": "Structure",
+                "de": "Tragwerk"
+              },
+              "reuse": {
+                "en": "Structure",
+                "de": "Tragwerk"
+              }
+            },
+            "granularities": [
+              {
+                "id": "node",
+                "label": {
+                  "native": {
+                    "en": "Node",
+                    "de": "Knoten"
+                  },
+                  "reuse": {
+                    "en": "Node",
+                    "de": "Knoten"
+                  }
+                },
+                "iconId": "circle-dot"
+              },
+              {
+                "id": "element",
+                "label": {
+                  "native": {
+                    "en": "Element",
+                    "de": "Element"
+                  },
+                  "reuse": {
+                    "en": "Element",
+                    "de": "Element"
+                  }
+                },
+                "iconId": "minus"
+              },
+              {
+                "id": "region",
+                "label": {
+                  "native": {
+                    "en": "Region",
+                    "de": "Bereich"
+                  },
+                  "reuse": {
+                    "en": "Region",
+                    "de": "Bereich"
+                  }
+                },
+                "iconId": "square"
+              },
+              {
+                "id": "support",
+                "label": {
+                  "native": {
+                    "en": "Support",
+                    "de": "Lager"
+                  },
+                  "reuse": {
+                    "en": "Support",
+                    "de": "Lager"
+                  }
+                },
+                "iconId": "circle"
+              },
+              {
+                "id": "load",
+                "label": {
+                  "native": {
+                    "en": "Load",
+                    "de": "Last"
+                  },
+                  "reuse": {
+                    "en": "Load",
+                    "de": "Last"
+                  }
+                },
+                "iconId": "arrow-down"
+              },
+              {
+                "id": "material",
+                "label": {
+                  "native": {
+                    "en": "Material",
+                    "de": "Material"
+                  },
+                  "reuse": {
+                    "en": "Material",
+                    "de": "Material"
+                  }
+                },
+                "iconId": "layers"
+              },
+              {
+                "id": "section",
+                "label": {
+                  "native": {
+                    "en": "Section",
+                    "de": "Querschnitt"
+                  },
+                  "reuse": {
+                    "en": "Section",
+                    "de": "Querschnitt"
+                  }
+                },
+                "iconId": "circle"
+              },
+              {
+                "id": "loadCase",
+                "label": {
+                  "native": {
+                    "en": "Load Case",
+                    "de": "Lastfall"
+                  },
+                  "reuse": {
+                    "en": "Load Case",
+                    "de": "Lastfall"
+                  }
+                },
+                "iconId": "list"
+              },
+              {
+                "id": "combination",
+                "label": {
+                  "native": {
+                    "en": "Combination",
+                    "de": "Kombination"
+                  },
+                  "reuse": {
+                    "en": "Combination",
+                    "de": "Kombination"
+                  }
+                },
+                "iconId": "link"
+              }
+            ],
+            "hierarchy": {
+              "kind": "flat"
+            },
+            "hover": {
+              "enabled": true,
+              "transitive": false,
+              "channels": [
+                "pointer"
+              ],
+              "broadcast": true
+            },
+            "selection": {
+              "modes": [
+                "multiple",
+                "single"
+              ],
+              "methods": [
+                "pick",
+                "rectangle"
+              ],
+              "merges": [
+                "replace",
+                "additive",
+                "subtractive",
+                "invertive"
+              ],
+              "transitive": false,
+              "broadcast": true
+            }
+          }
+        ],
         "namedLayouts": [],
         "defaultLayout": {
           "root": {
@@ -12098,6 +16191,63 @@
       {
         "kind": {
           "kind": "app",
+          "id": "framework.panel.artifact"
+        },
+        "label": {
+          "native": {
+            "en": "Artifact",
+            "de": "Artefakt"
+          },
+          "reuse": {
+            "en": "Artifact",
+            "de": "Artefakt"
+          }
+        },
+        "group": "workbench",
+        "bodyKey": "fem2d.play.artifact",
+        "children": []
+      },
+      {
+        "kind": {
+          "kind": "app",
+          "id": "framework.panel.inspection"
+        },
+        "label": {
+          "native": {
+            "en": "Inspection",
+            "de": "Inspektion"
+          },
+          "reuse": {
+            "en": "Inspection",
+            "de": "Inspektion"
+          }
+        },
+        "group": "details",
+        "bodyKey": "fem2d.play.inspection",
+        "children": []
+      },
+      {
+        "kind": {
+          "kind": "app",
+          "id": "fem2d.panel.results"
+        },
+        "label": {
+          "native": {
+            "en": "Results",
+            "de": "Ergebnisse"
+          },
+          "reuse": {
+            "en": "Results",
+            "de": "Ergebnisse"
+          }
+        },
+        "group": "display",
+        "bodyKey": "fem2d.play.results-panel",
+        "children": []
+      },
+      {
+        "kind": {
+          "kind": "app",
           "id": "framework.panel.history"
         },
         "label": {
@@ -12174,8 +16324,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "615b29fc6ac9be311f3a97bbcfff98d76e67aaf4541e05a8dafe2b8bfbdfaa1f",
-    "coreWasmSha256": "d5d8732e421f2d26a702bad7c01b1923536a31ab82354406d0cceebb5dd8b3bd",
-    "descriptorSha256": "93cddbf5ca6ca71944c5c82dba72a443d01d69210bdc35c21983401e94faf099"
+    "wasmSha256": "c3bd7669971523f010b5cf547d0f785aea0f06e247c807ea0c2c463e52047009",
+    "coreWasmSha256": "e6d55c3804aa0b4a6e0f41815ac34df75668bcbfe5658d8b04dd0d180c0942c1",
+    "descriptorSha256": "0bd6150d24a9a06c6fc9ffd7137850b5a51a7075df73ab6d549eacee5a6d555f"
   }
 }

@@ -609,7 +609,7 @@ pub fn scale_objects_mutations(document: &CadSnapshot, ids: &[String], factors: 
 /// 🆕️ `addObject`'s / `duplicateObject`'s op: one `create-object` appended to `pane`.
 pub fn create_object_mutations(document: &CadSnapshot, pane: CadPaneId, object: crate::standards::v1::subsets::any::io::geometry_import::CadObject) -> Vec<CadMutation> {
     let index = cad_pane_objects(document, pane).len() as u32;
-    vec![CadMutation::CreateObject(crate::mutations::create_object::CreateObject { pane, index, object: crate::mutations::cad_object_spec_of(&object) })]
+    vec![CadMutation::CreateObject(crate::mutations::create_object::CreateObject { pane, index, object: crate::mutations::cad_object_spec_of(&object), primitives: crate::mutations::cad_object_primitives_of(&object) })]
 }
 
 /// ❌️ `deleteObject`'s op — an id no pane owns produces nothing rather than a fabricated target.
@@ -845,7 +845,7 @@ pub fn patch_objects_mutations(document: &CadSnapshot, object_ids: &[String], fi
                     continue;
                 }
                 mutations.push(CadMutation::DeleteObject(crate::mutations::delete_object::DeleteObject { pane, object_id: object.id.clone() }));
-                mutations.push(CadMutation::CreateObject(crate::mutations::create_object::CreateObject { pane, index: index as u32, object: crate::mutations::cad_object_spec_of(&next) }));
+                mutations.push(CadMutation::CreateObject(crate::mutations::create_object::CreateObject { pane, index: index as u32, object: crate::mutations::cad_object_spec_of(&next), primitives: crate::mutations::cad_object_primitives_of(&next) }));
             }
         }
     }
@@ -2023,11 +2023,20 @@ impl ArtifactEditor for CadPlayApp {
             "addNode",
             "renameNode",
             "patchCadPlayReference",
-                    "setCamera",
+            "addObject",
+            "patchObject",
+            "patchSelection",
+            "deleteObject",
+            "duplicateObject",
+            "translateSelection",
+            "rotateSelection",
+            "scaleSelection",
+            "setCamera",
             "setProjection",
             "setProjectionParam",
             "setDislocateOption",
             "setNodeSelection",
+            "setPanelPage",
             "setReferenceSelection",
             "referenceHover",
             "engagementInput",

@@ -1,1 +1,5 @@
-{}
+{
+  "mutation": "changeShwSystemSetpoint",
+  "id": 400,
+  "newSetpointC": 250.0
+}

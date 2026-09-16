@@ -1,1 +1,4 @@
-{}
+{
+  "mutation": "deleteTimeSeriesSchedule",
+  "id": 40
+}

@@ -33,7 +33,10 @@ fn block_on_fem_window_ownership<F: std::future::Future>(mut future: std::pin::P
 fn fem2d_window_config_runtime_isolates_same_kind_instances_and_restores_packs() {
     std::thread::Builder::new()
         .name("fem2d-window-ownership-law".into())
-        .stack_size(2 * 1024 * 1024)
+        // 🧵️ 128 MiB, the same depth `RUST_MIN_STACK` gives every other fem2d law: the window
+        // ownership walk drives a full mount → dispatch → settle → close → reopen chain, and the
+        // 2 MiB it used to ask for overflows and aborts the whole test binary with SIGABRT.
+        .stack_size(128 * 1024 * 1024)
         .spawn(|| {
             block_on_fem_window_ownership(Box::pin(async {
                 use crate::editor::fem2d::commands::{set_active_example, set_camera, set_result_display};
@@ -75,7 +78,7 @@ fn fem2d_window_config_runtime_isolates_same_kind_instances_and_restores_packs()
                     let document_before = app.document_pack().await.map_err(|error| format!("{error:?}"))?;
                     let app_before = app.config_pack().await.map_err(|error| format!("{error:?}"))?;
                     dispatch(&mut app, &model_left, Fem2dCommand::SetCamera(set_camera::SetCamera { x: 7.0, y: -3.0, zoom: 2.5 }), 1).await?;
-                    dispatch(&mut app, &results_left, Fem2dCommand::SetResultDisplay(set_result_display::SetResultDisplay { source_id: Some("dead".into()), mode: "modal".into(), mode_index: 2, field: None, value: None }), 1).await?;
+                    dispatch(&mut app, &results_left, Fem2dCommand::SetResultDisplay(set_result_display::SetResultDisplay { source_id: Some("dead".into()), mode: "modal".into(), mode_index: 2, field: None, value: None, window_id: None }), 1).await?;
                     let document_after = app.document_pack().await.map_err(|error| format!("{error:?}"))?;
                     let app_after = app.config_pack().await.map_err(|error| format!("{error:?}"))?;
                     if document_before.pack != document_after.pack || document_before.spr != document_after.spr {

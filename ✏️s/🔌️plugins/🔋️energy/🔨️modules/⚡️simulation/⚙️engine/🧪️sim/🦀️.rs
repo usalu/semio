@@ -3434,13 +3434,14 @@ impl EnergyJobAuthority {
                     }
                 }
                 self.timestep_work.as_mut().expect("warmup timestep work exists").step(&self.model, &self.config, pre, self.state.as_mut().expect("state initialized before warmup"));
-                if context.should_yield() {
-                    return StepOutcome::Yield;
-                }
-                self.rng_state = self.rng_state.rotate_left(17).wrapping_mul(0x94d0_49bb_1331_11eb);
+                // 🧵️ Completion is acknowledged BEFORE the fuel check and the rng rotates ONCE per
+                // completed timestep: `step` already charged this call's unit at entry, so a one-unit
+                // grant is always exhausted here — checking `should_yield` first starved the job in
+                // this stage forever, and rotating per call made the chronology depend on the grant.
                 if !self.timestep_work.as_ref().is_some_and(TimestepWork::is_complete) {
                     return StepOutcome::Yield;
                 }
+                self.rng_state = self.rng_state.rotate_left(17).wrapping_mul(0x94d0_49bb_1331_11eb);
                 self.timestep_work = None;
                 self.warmup_convergence =
                     Some(WarmupConvergenceWork { stage: WarmupConvergenceStage::TemperatureCheck, cursor: 0, temperature_converged: true, load_converged: true, evaluate: self.warmup_hour > 24 && self.warmup_hour.is_multiple_of(24) });
@@ -3595,13 +3596,11 @@ impl EnergyJobAuthority {
                     }
                 }
                 self.timestep_work.as_mut().expect("run timestep work exists").step(&self.model, &self.config, pre, self.state.as_mut().expect("state initialized before run"));
-                if context.should_yield() {
-                    return StepOutcome::Yield;
-                }
-                self.rng_state = self.rng_state.rotate_left(17).wrapping_mul(0x94d0_49bb_1331_11eb);
+                // 🧵️ Same order as the warmup stage: acknowledge completion first, rotate once per timestep.
                 if !self.timestep_work.as_ref().is_some_and(TimestepWork::is_complete) {
                     return StepOutcome::Yield;
                 }
+                self.rng_state = self.rng_state.rotate_left(17).wrapping_mul(0x94d0_49bb_1331_11eb);
                 self.timestep_work = None;
                 self.aggregate_zone_cursor = 0;
                 self.set_stage(context, EnergyJobStage::AggregateZone);

@@ -1,1 +1,5 @@
-{}
+{
+  "mutation": "changeSolarThermalSystemAzimuth",
+  "id": 410,
+  "newAzimuthDeg": 200.0
+}

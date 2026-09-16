@@ -1,1 +1,5 @@
-{}
+{
+  "mutation": "changeMaterialSolarAbsorptance",
+  "id": 1,
+  "newSolarAbsorptance": -0.1
+}

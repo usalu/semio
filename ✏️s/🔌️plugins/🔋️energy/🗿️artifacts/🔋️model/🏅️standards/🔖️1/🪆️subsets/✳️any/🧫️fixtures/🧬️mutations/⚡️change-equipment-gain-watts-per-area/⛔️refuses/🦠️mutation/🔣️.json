@@ -1,1 +1,5 @@
-{}
+{
+  "mutation": "changeEquipmentGainWattsPerArea",
+  "id": 40,
+  "newWattsPerArea": -3.0
+}

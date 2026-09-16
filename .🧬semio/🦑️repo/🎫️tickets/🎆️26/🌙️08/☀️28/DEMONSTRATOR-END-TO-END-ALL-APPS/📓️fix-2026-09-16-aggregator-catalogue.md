@@ -153,13 +153,35 @@ cargo test -p semio-s-artifact-puzzle-3d --features component-app-assembly --lib
 compiled and the lib target runs only 286 schema tests — a bare `cargo test -p
 semio-s-artifact-puzzle-3d --lib` reports green while never touching the catalogue at all.
 
+plus the deployed target:
+
+```
+… cargo check -p semio-s-artifact-puzzle-3d --features component-app-assembly --target wasm32-wasip2
+```
+
+clean (no diagnostics). Type-check proof for the editor tree is the native run itself: it compiled AND
+executed 739 tests, 730 of them passing, so expansion cannot have aborted.
+
 Outputs under `🗑️generated/`: `aggregator-catalogue-baseline.txt` (feature-less, 286),
 `aggregator-catalogue-after-1.txt` (full suite), `aggregator-catalogue-targeted.txt`,
 `aggregator-catalogue-after-2.txt` (final full suite).
 
 ## 5. Counts
 
-TBD
+| run | tests | passed | failed |
+| --- | --- | --- | --- |
+| before (`--features component-app-assembly --lib`) | 734 | 722 | 12 |
+| after | **739** | **730** | **9** |
+| targeted (`-- catalogue catalogued concrete_forest add_object_kind kinds_tree`) | 19 | 19 | 0 |
+
++5 tests, all green. The failure count DROPPED by 3 — `penetration_of_flush_thousand_triangle_parts_stays_interactive`,
+`a_nakagin_lane_that_did_not_change_does_not_republish_on_a_partial_refresh` and
+`an_id_only_announcement_this_guest_cannot_serve_asks_for_the_bytes` passed on the second run; they are
+load-dependent, not fixed here. The 9 remaining failures are the same pre-existing set (§7); none is in
+the catalogue seam.
+
+For reference, the feature-LESS baseline (`--lib` with no features) is 286 tests, 285 passed, 1 failed
+(`wire_format_guard`) — it compiles no editor code at all.
 
 ## 6. What remains for the coordinator's browser pass on :6029
 
@@ -181,14 +203,16 @@ Present in the same suite before and after; none touch the catalogue:
 
 * `standards::…::wire_format_guard::engine_command_rows_keep_their_pre_migration_wire_bytes` — also
   fails on the feature-less baseline (`aggregator-catalogue-baseline.txt`), i.e. before any edit here.
-* `…::two_instances_converge_disjoint_object_edits_via_backbone`,
-  `…::window_options_are_local_to_the_window_instance_not_shared_across_split_panes`,
-  `…::the_settings_panel_is_addressed_at_the_focused_pane_not_the_base_window_kind`,
-  `…::every_context_menu_row_dispatches_a_declared_action`,
+* `…::two_instances_converge_disjoint_object_edits_via_backbone` — `module.vcs` "remote snapshot merge
+  is fail-closed until the app-owned streaming envelope decoder … terminal-authorized".
+* `…::window_options_are_local_to_the_window_instance_not_shared_across_split_panes` —
+  `window-config.typed-state` "retained exact window config Pack load was rejected".
+* `…::the_settings_panel_is_addressed_at_the_focused_pane_not_the_base_window_kind` — panel now
+  addresses `puzzle3d-main-top` where the law expects the `puzzle3d-main` roster fallback (peer's
+  focused-pane threading).
+* `…::every_context_menu_row_dispatches_a_declared_action`,
   `…::outliner_hide_reaches_the_world_instance_lane_and_flips_the_row_control`,
-  `…::a_nakagin_lane_that_did_not_change_does_not_republish_on_a_partial_refresh`,
-  `…::an_id_only_announcement_this_guest_cannot_serve_asks_for_the_bytes`,
-  `…::one_mutation_publishes_in_a_bounded_size_independent_number_of_host_turns` — peer churn
-  (`InteractionView` threading / vcs fail-closed merge).
-* `brush_suggestions_run_step_…`, `fill_run_job_step_…`, `penetration_of_flush_thousand_triangle_parts_…`
-  — wall-clock interaction ceilings, failing under the loaded machine (37 ms vs 2 ms etc.).
+  `…::one_mutation_publishes_in_a_bounded_size_independent_number_of_host_turns` — same peer churn
+  (`InteractionView` threading).
+* `brush_suggestions_run_step_…`, `fill_run_job_step_…` — wall-clock interaction ceilings (37 ms and
+  14 ms against 2 ms), failing under the loaded machine.

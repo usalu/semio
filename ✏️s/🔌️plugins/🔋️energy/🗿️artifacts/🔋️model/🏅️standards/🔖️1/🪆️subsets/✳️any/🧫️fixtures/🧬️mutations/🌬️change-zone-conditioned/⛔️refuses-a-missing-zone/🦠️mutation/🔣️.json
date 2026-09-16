@@ -1,1 +1,5 @@
-{}
+{
+  "mutation": "changeZoneConditioned",
+  "id": 9,
+  "newConditioned": false
+}

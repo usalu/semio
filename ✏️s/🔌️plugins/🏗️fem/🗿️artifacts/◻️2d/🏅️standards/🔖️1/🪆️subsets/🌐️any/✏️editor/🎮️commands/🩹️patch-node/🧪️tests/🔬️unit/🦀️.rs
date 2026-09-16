@@ -27,6 +27,14 @@ async fn patch_node_moves_an_ordinate_on_the_demo_2d() {
 }
 
 #[semio_framework_async_macros::async_test]
+async fn patch_node_emits_one_whole_record_replace_2d() {
+    let emitted = emit(&demo(), PatchNode { id: "ridge".into(), field: "y".into(), value: "8.2".into() }).expect("handle");
+    let [Fem2dMutation::ReplaceNode(replace)] = emitted.artifact_mutations.as_slice() else { panic!("one replace-node") };
+    assert_eq!(replace.id, "ridge");
+    assert_eq!((replace.new_node.id.as_str(), replace.new_node.x, replace.new_node.y), ("ridge", 4.0, 8.2));
+}
+
+#[semio_framework_async_macros::async_test]
 async fn patch_node_rejects_an_unknown_field_an_unparsable_value_and_a_missing_node_2d() {
     let demo = demo();
     assert!(emit(&demo, PatchNode { id: "n2".into(), field: "z".into(), value: "1".into() }).is_err());

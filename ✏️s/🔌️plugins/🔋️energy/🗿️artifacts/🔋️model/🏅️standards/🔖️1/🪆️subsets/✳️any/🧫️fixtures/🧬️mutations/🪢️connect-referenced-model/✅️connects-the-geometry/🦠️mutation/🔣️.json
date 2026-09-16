@@ -1,1 +1,4 @@
-{}
+{
+  "mutation": "connectReferencedModel",
+  "targetUri": "doc-2!s.stdio.semio@v1/model"
+}

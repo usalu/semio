@@ -9,7 +9,7 @@
 //! Object types written: `Version`, `SimulationControl`, `Building`, `Site:Location`,
 //! `Site:GroundTemperature:BuildingSurface`, `GlobalGeometryRules`, `Timestep`, `RunPeriod`,
 //! `ScheduleTypeLimits`, `Schedule:Constant`, `Schedule:Compact`, `Material`, `Material:NoMass`,
-//! `WindowMaterial:SimpleGlazingSystem`, `Construction`, `Zone`, `BuildingSurface:Detailed`,
+//! `WindowMaterial:Glazing`, `WindowMaterial:Gas`, `WindowMaterial:SimpleGlazingSystem`, `Construction`, `Zone`, `BuildingSurface:Detailed`,
 //! `FenestrationSurface:Detailed`, `Shading:Overhang:Projection`, `Shading:Fin:Projection`,
 //! `ZoneInfiltration:DesignFlowRate`, `People`, `Lights`, `ElectricEquipment`,
 //! `ThermostatSetpoint:DualSetpoint`, `ZoneControl:Thermostat`, `ZoneHVAC:IdealLoadsAirSystem`,
@@ -38,7 +38,7 @@
 //! @see https://energyplus.readthedocs.io/en/latest/schema.html
 //! @see ../../../../../../../../../../../../.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️06/ENERGY-PLUGIN-END-TO-END/📓️w6-epjson-io.md
 use crate::air_exchange::InfiltrationMethod;
-use crate::model::{EntityId, Fenestration, Material, Model, OutsideBoundary, ScheduleId, Surface, SurfaceClass};
+use crate::model::{EntityId, Fenestration, GasKind, Material, Model, OutsideBoundary, ScheduleId, Surface, SurfaceClass};
 use crate::EnergyModelSnapshot;
 use pack::json::{Object, Value};
 
@@ -273,7 +273,17 @@ pub fn encode_model_with_diagnostics(model: &Model) -> (Value, Vec<EpJsonDiagnos
     let mut diagnostics = Vec::new();
     let mut document = Object::new();
     let zone_name_of = |id: EntityId| model.zones.iter().find(|zone| zone.id == id).map(|zone| entity_name("Zone", zone.id, &zone.name));
-    let material_name_of = |id: EntityId| model.materials.iter().find(|material| material.id == id).map(|material| entity_name("Material", material.id, &material.name));
+    // 🧱️🪟️🌫️ A construction layer names one of THREE material families — opaque `materials`,
+    // glazing panes `glazing_materials`, gas gaps `gas_materials` (one shared `EntityId` space).
+    let material_name_of = |id: EntityId| {
+        model
+            .materials
+            .iter()
+            .find(|material| material.id == id)
+            .map(|material| entity_name("Material", material.id, &material.name))
+            .or_else(|| model.glazing_materials.iter().find(|pane| pane.id == id).map(|pane| entity_name("Glazing", pane.id, &pane.name)))
+            .or_else(|| model.gas_materials.iter().find(|gap| gap.id == id).map(|gap| entity_name("Gas", gap.id, &gap.name)))
+    };
     let construction_name_of = |id: EntityId| model.constructions.iter().find(|construction| construction.id == id).map(|construction| entity_name("Construction", construction.id, &construction.name));
 
     document.insert("Version", Value::Object(Object::from_iter([entry("Version 1", [field("version_identifier", EPJSON_VERSION)])])));
@@ -424,6 +434,48 @@ fn encode_materials(model: &Model, document: &mut Object) {
     }
     if !massless.is_empty() {
         document.insert("Material:NoMass", Value::Object(Object::from_iter(massless)));
+    }
+    // 🪟️ Spectral-average glazing panes → `WindowMaterial:Glazing`; gas gaps → `WindowMaterial:Gas`
+    // (the layered twins of the per-fenestration `WindowMaterial:SimpleGlazingSystem` below).
+    let panes: Vec<(String, Value)> = model
+        .glazing_materials
+        .iter()
+        .map(|pane| {
+            entry(
+                entity_name("Glazing", pane.id, &pane.name),
+                [
+                    field("optical_data_type", "SpectralAverage"),
+                    field("thickness", pane.thickness_m),
+                    field("solar_transmittance_at_normal_incidence", pane.solar_transmittance),
+                    field("front_side_solar_reflectance_at_normal_incidence", pane.solar_reflectance_front),
+                    field("back_side_solar_reflectance_at_normal_incidence", pane.solar_reflectance_back),
+                    field("visible_transmittance_at_normal_incidence", pane.visible_transmittance),
+                    field("front_side_visible_reflectance_at_normal_incidence", pane.visible_reflectance_front),
+                    field("back_side_visible_reflectance_at_normal_incidence", pane.visible_reflectance_back),
+                    field("infrared_transmittance_at_normal_incidence", pane.infrared_transmittance),
+                    field("front_side_infrared_hemispherical_emissivity", pane.infrared_emissivity_front),
+                    field("back_side_infrared_hemispherical_emissivity", pane.infrared_emissivity_back),
+                    field("conductivity", pane.conductivity_w_m_k),
+                ],
+            )
+        })
+        .collect();
+    if !panes.is_empty() {
+        document.insert("WindowMaterial:Glazing", Value::Object(Object::from_iter(panes)));
+    }
+    let gaps: Vec<(String, Value)> = model.gas_materials.iter().map(|gap| entry(entity_name("Gas", gap.id, &gap.name), [field("gas_type", gas_kind_name(gap.gas)), field("thickness", gap.thickness_m)])).collect();
+    if !gaps.is_empty() {
+        document.insert("WindowMaterial:Gas", Value::Object(Object::from_iter(gaps)));
+    }
+}
+
+/// 🌫️ EnergyPlus's `WindowMaterial:Gas` `gas_type` spelling of one [`GasKind`].
+pub fn gas_kind_name(gas: GasKind) -> &'static str {
+    match gas {
+        GasKind::Air => "Air",
+        GasKind::Argon => "Argon",
+        GasKind::Krypton => "Krypton",
+        GasKind::Xenon => "Xenon",
     }
 }
 

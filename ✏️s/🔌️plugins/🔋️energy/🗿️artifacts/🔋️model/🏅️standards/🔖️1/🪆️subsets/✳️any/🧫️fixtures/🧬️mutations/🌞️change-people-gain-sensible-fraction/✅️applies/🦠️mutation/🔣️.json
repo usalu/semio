@@ -1,1 +1,5 @@
-{}
+{
+  "mutation": "changePeopleGainSensibleFraction",
+  "id": 20,
+  "newSensibleFraction": 0.7
+}

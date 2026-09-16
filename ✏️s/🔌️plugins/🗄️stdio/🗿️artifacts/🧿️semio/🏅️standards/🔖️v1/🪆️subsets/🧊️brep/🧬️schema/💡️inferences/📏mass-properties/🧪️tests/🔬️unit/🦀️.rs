@@ -234,3 +234,18 @@ async fn distance_solid_solid_overlap_returns_zero_via_real_classifier() {
     let d = distance_solid_solid(&body, a, b).unwrap();
     assert_eq!(d, 0.0, "overlapping boxes must report zero distance");
 }
+
+/// 📏 A coarse chord tolerance can never collapse a curved boundary below a polygon: an 8 mm bore's
+/// lateral face measured at a 10 mm chord tolerance (the sliver probe's regime) still reports its
+/// real area to within the inscribed-octagon bound, instead of the zero a two-point "circle" gave.
+#[semio_framework_async_macros::async_test]
+async fn coarse_chord_tolerance_keeps_small_circular_faces_measurable() {
+    use crate::standards::v1::subsets::brep::schema::diff::primitives::make_cylinder;
+    use crate::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
+    let mut body = Body::new();
+    let mut rec = OpRecorder::new();
+    let bore = make_cylinder(&mut body, 0.008, 0.16, &mut rec).unwrap();
+    let exact = 2.0 * PI * 0.008 * 0.16 + 2.0 * PI * 0.008 * 0.008;
+    let coarse = solid_surface_area(&body, bore, 1e-2).unwrap();
+    assert!(coarse > 0.9 * exact && coarse <= exact * 1.001, "coarse area {coarse} within the inscribed-octagon bound of {exact}");
+}

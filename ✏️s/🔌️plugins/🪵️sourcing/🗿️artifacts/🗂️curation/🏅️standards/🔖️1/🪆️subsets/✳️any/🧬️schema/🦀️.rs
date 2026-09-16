@@ -679,13 +679,17 @@ pub(crate) fn sourcing_json_envelope_is_bounded(input: &str) -> bool {
     !in_string && !escaped && depth == 0
 }
 
+/// 🗂️ The one open-contribution topic this app consumes — the `sourcing-module-*` extension crates
+/// publish exactly this string (`✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/*/🦀️.rs`).
+pub const SOURCING_MODULE_TOPIC: &str = "sourcing.module";
+
 fn contributed_sourcing_modules(contributions_json: &str) -> Vec<ContributedSourcingModule> {
     if !sourcing_json_envelope_is_bounded(contributions_json) {
         return Vec::new();
     }
     let mut modules = Vec::new();
     for entry in parse_contributions(contributions_json) {
-        let Some(payload) = entry.topic_contribution.as_ref().filter(|topic| topic.topic == "sourcing.module").and_then(|topic| topic.decode::<SourcingModuleTopicPayload>().ok()) else {
+        let Some(payload) = entry.topic_contribution.as_ref().filter(|topic| topic.topic == SOURCING_MODULE_TOPIC).and_then(|topic| topic.decode::<SourcingModuleTopicPayload>().ok()) else {
             continue;
         };
         let (app_id, module_id, label, typology_json, kinds_json) = (payload.app_id, payload.module_id, payload.label, payload.typology_json, payload.kinds_json);
@@ -709,11 +713,69 @@ fn contributed_sourcing_modules(contributions_json: &str) -> Vec<ContributedSour
     modules
 }
 
-/// 🧩️ Every sourcing module known to this crate, in stable order.
+/// 🔢️ The most modules this app ever installs at once — three authored plus five contributed. Every
+/// module costs the pool's filter bar one toggle plus one `select` item per typology node, and that
+/// chrome is a retained surface the host retires one 4 KiB page at a time: an unbounded module roster
+/// is an unbounded surface. A host pack past this cap installs its first modules and stops.
+pub const SOURCING_MAXIMUM_MODULES: usize = 8;
+
+/// 🧩️ Every sourcing module known to this crate, in stable order: the three authored ones first, then
+/// each contributed module whose id no module already serves — a `sourcing-module-beams` extension
+/// re-contributing the authored `beams` module installs nothing, it does not duplicate it.
 pub fn sourcing_modules(contributions_json: &str) -> Vec<SourcingModules> {
     let mut modules: Vec<SourcingModules> = vec![beams::BeamsModule.into(), windows::WindowsModule.into(), slabs::SlabsModule.into()];
-    modules.extend(contributed_sourcing_modules(contributions_json).into_iter().map(SourcingModules::from));
+    for module in contributed_sourcing_modules(contributions_json) {
+        if modules.len() >= SOURCING_MAXIMUM_MODULES {
+            break;
+        }
+        if modules.iter().any(|installed| installed.module_id() == module.module_id) {
+            continue;
+        }
+        modules.push(SourcingModules::from(module));
+    }
     modules
+}
+
+/// ✂️ The INSTALLABLE share of one host `ProgramContributionEntry[]` pack, re-encoded — the only thing
+/// `setContributions` ever retains. A host pack is cut from the whole loaded closure and is unbounded;
+/// the app's retained config lane is a fixed envelope, so the app keeps exactly what it can act on:
+/// `sourcing.module` entries addressed to this app whose module id no installed module already serves,
+/// in host order, while the re-encoded roster still fits `maximum_bytes`. Everything else is dropped
+/// rather than retained — a duplicate module installs nothing anyway (see [`sourcing_modules`]), and
+/// the three shipped `sourcing-module-{beams,slabs,windows}` extensions re-contribute exactly the
+/// three modules this crate already authors, so the demonstrator's pack distills to `[]`.
+pub fn installable_contributions(contributions_json: &str, maximum_bytes: usize) -> String {
+    let empty = "[]".to_string();
+    if !sourcing_json_envelope_is_bounded(contributions_json) {
+        return empty;
+    }
+    let mut installed: Vec<String> = sourcing_modules("[]").iter().map(|module| module.module_id().to_string()).collect();
+    let mut kept: Vec<semio_framework::ProgramContributionEntry> = Vec::new();
+    for entry in parse_contributions(contributions_json) {
+        if installed.len() >= SOURCING_MAXIMUM_MODULES {
+            break;
+        }
+        let Some(module_id) = entry
+            .topic_contribution
+            .as_ref()
+            .filter(|topic| topic.topic == SOURCING_MODULE_TOPIC)
+            .and_then(|topic| topic.decode::<SourcingModuleTopicPayload>().ok())
+            .filter(|payload| payload.app_id == SOURCING_CURATION_APP_ID)
+            .map(|payload| payload.module_id)
+        else {
+            continue;
+        };
+        if installed.iter().any(|id| id == &module_id) {
+            continue;
+        }
+        kept.push(entry);
+        if dsl::json::to_json_string(&kept).len() > maximum_bytes {
+            kept.pop();
+            continue;
+        }
+        installed.push(module_id);
+    }
+    if kept.is_empty() { empty } else { dsl::json::to_json_string(&kept) }
 }
 
 /// 🔎️ Looks up a single module by id.

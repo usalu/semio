@@ -139,6 +139,73 @@ Demonstrator:
 - `✏️s/🔌️plugins/🎪️demonstrator/🪪️manifest/🎪️demonstrator/🧪️tests/🔬️unit/🦀️.rs:120-146` — new test
   `every_bundled_surface_declares_its_derived_child_dialects`, asserting the law for all ten surfaces.
 
-## 4. Commands and outcomes
+## 4. Test
 
-(filled in below)
+`✏️s/🔌️plugins/🎪️demonstrator/🪪️manifest/🎪️demonstrator/🧪️tests/🔬️unit/🦀️.rs` —
+`every_bundled_surface_declares_its_derived_child_dialects` runs the new law over all ten bundled
+surfaces. The law (`artifact_app_laws::assert_{editor,viewer}_genesis_children_declared`) replays
+`seed_genesis_children`'s own lookup — initial snapshot → `ChildRestoreProjection` → `genesis_child_pack`
+→ `genesis_member_schema::<Members>` — and RETURNS the number of derived children it resolved, which the
+test pins per surface (sourcing editor 1, sourcing viewer 1, gis2d editor 2, the other seven 0). Without
+that count the assertion would pass vacuously for an app that stopped composing; the first run of the
+pinned version in fact failed with `left: 2, right: 1` on gis2d, i.e. the counts are real.
+
+Failure evidence (the "before" state), two independent runs:
+
+1. `type Members = store::NoMembers;` put back on `SourcingCurationApp` →
+   `semio-s-artifact-sourcing-curation` no longer compiles:
+   `🪆️subsets/✳️any/🦀️.rs:33: error[E0277]: the trait bound 'A: From<VcsArtifactApp<EditorApp<SourcingCurationApp>>>' is not satisfied`
+   (log: `🗑️generated/roster-hosts-check-2.txt` sibling run, captured in chat).
+2. The demonstrator fleet variant put back to its pre-fix spelling
+   `SourcingEditor(VcsArtifactApp<EditorApp<SourcingCurationApp>>)` →
+   `🪪️manifest/🎪️demonstrator/🦀️.rs:71: error[E0277]: the trait bound 'DemonstratorApps: From<VcsArtifactApp<EditorApp<...>, ...>>' is not satisfied`
+   (log: `🗑️generated/roster-demo-test-prefix-shape.txt`).
+
+Both reverts were undone immediately. This is stronger than a red test: after the fix the bug's exact
+shape cannot be written down any more — the compiler rejects a bundle that registers a composed app over
+a roster the app does not declare. The runtime law remains as the belt-and-braces check for an app that
+gains a derived child whose dialect its own roster never declared.
+
+Note on the earlier ManuallyDrop: the first version of the law dropped the probe snapshot and tripped
+`ordered-map root must be explicitly retired before drop` (`🌱️value/🗂️ordered/🦀️.rs:81`). Retiring one
+needs the owner factories a live `ArtifactStore` installs, so the test-only law hands the probe to
+`ManuallyDrop` — documented on the function.
+
+## 5. Commands and outcomes
+
+All logs under `…/DEMONSTRATOR-END-TO-END-ALL-APPS/🗑️generated/`.
+
+| command | outcome |
+| --- | --- |
+| `cargo check -p semio-framework-plugin --lib` | `Finished` (roster-fw-check-1/2.txt) |
+| `cargo check -p semio-s-plugin-sourcing -p …-gis -p …-flow -p …-sequence --lib` | `Finished` in 6m51s (roster-hosts-check-2.txt) |
+| `cargo test -p semio-s-plugin-demonstrator --lib every_bundled_surface_…` | **ok**, 1 passed (roster-demo-test-final2.txt) |
+| `cargo test -p semio-s-plugin-demonstrator --lib` | 8 passed, 2 failed — both pre-existing and unrelated (roster-demo-test-final3.txt) |
+| `bun nx run @semio-tech/demonstrator-plugin:materialize-dev` | success, 10m34s, component + descriptor staged (roster-materialize-dev-1.txt) |
+| `bun nx run @semio-tech/mit-bestand-demonstrator:activate-dev` | success, 22m55s, "Activated Demonstrator dev: 28 completed components" (roster-activate-dev-1.txt) |
+
+The wasm side is covered by `materialize-dev` itself: it runs `component-dev`, i.e. the real
+`wasm32-wasip2 / wasm-dev` build of `semio-s-plugin-demonstrator` and of all six bundled host crates, so a
+separate `cargo check --target wasm32-wasip2` would only have duplicated that work (the laws are
+`#[cfg(test)]`-gated and never reach the component).
+
+Two unrelated failures in the demonstrator suite, both in procedural's territory and untouched by this
+work — worth a separate look:
+
+- `contribution_consumers_declare_the_hidden_app_command`: `s.procedural.generation3d@1/*#editor` now also
+  declares `setContributions`, so the pinned consumer list is short by one.
+- `aggregate_runtime_renders_every_demonstrator_window`: rendering `procedural.play.main` with `"{}"`
+  faults `missing field 'locale' at line 1 column 2` — a render-argument decode change, not a roster one.
+  It aborts on the first app, so it never reaches the sourcing/gis surfaces this fix is about.
+
+Housekeeping: the shared build dir was full (`No space left on device` during the host-crate check, 1.0 GB
+free, `debug/incremental` alone at 102 GB). I pruned
+`.🧬semio/🦑️repo/⚡️cache/cargo/build/debug/incremental` only — incremental state is a cache, so no
+fingerprints were invalidated — which freed 48 GB. See memory note "Incremental Cache Regrows Under Fleet".
+
+Deployment: `:6029` is still listening (`bun`, pid 17227) and was never started or stopped by this work;
+`activate-dev` re-staged the receipt for it to pick up. `curl -o /dev/null -w '%{http_code}'
+http://localhost:6029/` returned `000` after more than two minutes — the port accepts the connection but
+the server never answers, which matches the known "release serve wedges after host edit bursts" note
+(memory: `project-release-serve-wedges-after-host-edit-bursts`). It was NOT restarted here; recycling it
+and the browser check of the aussuchen/bearbeiten/verfolgen panes are left to whoever owns that server.

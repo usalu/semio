@@ -1,1 +1,5 @@
-{}
+{
+  "mutation": "changeEquipmentGainRadiantFraction",
+  "id": 40,
+  "newRadiantFraction": 0.4
+}

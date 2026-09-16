@@ -1,1 +1,5 @@
-{}
+{
+  "mutation": "changeTimeSeriesScheduleTimestep",
+  "id": 40,
+  "newTimestepSeconds": 900
+}

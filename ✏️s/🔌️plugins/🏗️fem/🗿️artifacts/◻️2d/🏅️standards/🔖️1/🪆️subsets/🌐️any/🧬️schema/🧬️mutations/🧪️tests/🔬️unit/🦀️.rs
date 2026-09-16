@@ -547,6 +547,35 @@ async fn replace_combination_dangling_term_is_error() {
     assert_eq!(through_replace.2, vec!["ghost".to_string()]);
 }
 
+/// 🪞️ A combination superposes OTHER cases and combinations, never itself. Under `replace-` the
+/// cited id IS in `base.combinations` — it is the target — so a plain reference resolution accepts
+/// the cycle; the guard has to exclude the combination's own identity, exactly as
+/// `combination_referrers` does. The payload is inadmissible on every base, so it is Fatal
+/// `mutation.invariant`, not Error `mutation.target-missing`.
+#[semio_framework_async_macros::async_test]
+async fn replace_combination_self_reference_is_refused() {
+    let mut base = simply_supported_beam_doc();
+    base.combinations.push(FemCombination { id: "uls".into(), name: "ULS".into(), terms: vec![FemCombinationTerm { case_id: "dead".into(), factor: 1.35 }] });
+    let cyclic = FemCombination { id: "uls".into(), name: "ULS".into(), terms: vec![FemCombinationTerm { case_id: "dead".into(), factor: 1.35 }, FemCombinationTerm { case_id: "uls".into(), factor: 1.0 }] };
+    let (code, level, target) = refusal(&base, &Fem2dMutation::ReplaceCombination(replace_combination::ReplaceCombination { id: "uls".into(), new_combination: cyclic }));
+    assert_eq!(code, "mutation.invariant", "a combination weighting itself is a payload cycle, not a missing target");
+    assert_eq!(level, protocol::Severity::Fatal);
+    assert_eq!(target, vec!["uls".to_string()]);
+}
+
+/// 🪞️ The create twin says the same thing for the same reason. It used to refuse the cycle only by
+/// accident — as an id its own base did not carry yet — which is a different code, a different
+/// level and a diagnostic that invites the caller to create the missing case.
+#[semio_framework_async_macros::async_test]
+async fn create_combination_self_reference_is_refused() {
+    let base = simply_supported_beam_doc();
+    let cyclic = FemCombination { id: "sls".into(), name: "SLS".into(), terms: vec![FemCombinationTerm { case_id: "sls".into(), factor: 1.0 }] };
+    let (code, level, target) = refusal(&base, &Fem2dMutation::CreateCombination(create_combination::CreateCombination { combination: cyclic }));
+    assert_eq!(code, "mutation.invariant", "a brand-new combination may not weight itself either");
+    assert_eq!(level, protocol::Severity::Fatal);
+    assert_eq!(target, vec!["sls".to_string()]);
+}
+
 /// 🏋️ A non-finite magnitude is inadmissible on every base, exactly like a non-finite coordinate.
 #[semio_framework_async_macros::async_test]
 async fn replace_load_non_finite_magnitude_is_fatal() {

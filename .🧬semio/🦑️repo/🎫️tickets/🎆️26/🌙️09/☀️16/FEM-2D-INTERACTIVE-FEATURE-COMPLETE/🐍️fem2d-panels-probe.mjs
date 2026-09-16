@@ -81,15 +81,17 @@ try {
   await shot("3-inspector");
   note("resultsTab", await openTab("Results"));
   note("resultsRows", (await rows(resultsNs)).slice(0, 40));
-  const before = await sceneOf("window:fem2d-results");
+  const phaseText = async () => (await rows(resultsNs)).filter((r) => /phase/i.test(r.id)).map((r) => `${r.id}=${r.text}`).join(" | ");
+  const sliders = () => page.evaluate(() => [...document.querySelectorAll('[role="slider"], input[type="range"]')].map((el) => ({ id: el.id, now: el.getAttribute("aria-valuenow") ?? el.value, path: el.getAttribute("data-ui-path") })).slice(0, 12));
+  const before = { phase: await phaseText(), sliders: await sliders() };
   const play = page.getByRole("button", { name: /^(Play|Abspielen)$/ }).first();
   note("playButton", await play.count());
   if (await play.count()) { await play.click(); }
   await page.waitForTimeout(1500);
-  const mid = await sceneOf("window:fem2d-results");
+  const mid = { phase: await phaseText(), sliders: await sliders() };
   await page.waitForTimeout(1500);
-  const after = await sceneOf("window:fem2d-results");
-  note("animation", { before: before.hash, mid: mid.hash, after: after.hash, changed: before.hash !== mid.hash || mid.hash !== after.hash });
+  const after = { phase: await phaseText(), sliders: await sliders() };
+  note("animation", { before, mid, after, changed: JSON.stringify(before.sliders) !== JSON.stringify(mid.sliders) || JSON.stringify(mid.sliders) !== JSON.stringify(after.sliders) });
   const pause = page.getByRole("button", { name: /^(Pause|Pausieren)$/ }).first();
   if (await pause.count()) await pause.click();
   await shot("4-results");

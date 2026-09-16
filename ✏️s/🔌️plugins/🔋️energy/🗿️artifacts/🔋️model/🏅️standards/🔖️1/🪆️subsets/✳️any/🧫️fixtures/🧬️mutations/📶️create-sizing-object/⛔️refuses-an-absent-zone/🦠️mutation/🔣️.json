@@ -1,1 +1,7 @@
-{}
+{
+  "mutation": "createSizingObject",
+  "id": 15,
+  "zoneId": 99,
+  "sizingType": "Heating",
+  "designDayType": "Heating"
+}

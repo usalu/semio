@@ -1,1 +1,9 @@
-{}
+{
+  "mutation": "createThermostat",
+  "id": 10,
+  "zoneId": 99,
+  "heatingSetpointScheduleId": 1,
+  "coolingSetpointScheduleId": 2,
+  "heatingThrottleRangeK": 1.0,
+  "coolingThrottleRangeK": 1.0
+}

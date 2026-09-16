@@ -1,1 +1,5 @@
-{}
+{
+  "mutation": "renameSurface",
+  "id": 3,
+  "newName": "WALL NORTH"
+}

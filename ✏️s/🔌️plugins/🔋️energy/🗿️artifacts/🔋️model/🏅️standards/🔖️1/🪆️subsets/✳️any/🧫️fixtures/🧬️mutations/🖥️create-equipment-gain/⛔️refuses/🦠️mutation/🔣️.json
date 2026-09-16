@@ -1,1 +1,10 @@
-{}
+{
+  "mutation": "createEquipmentGain",
+  "index": 1,
+  "id": 40,
+  "zoneId": 2,
+  "scheduleId": 1,
+  "wattsPerArea": 2.5,
+  "radiantFraction": 0.5,
+  "latentFraction": 0.0
+}

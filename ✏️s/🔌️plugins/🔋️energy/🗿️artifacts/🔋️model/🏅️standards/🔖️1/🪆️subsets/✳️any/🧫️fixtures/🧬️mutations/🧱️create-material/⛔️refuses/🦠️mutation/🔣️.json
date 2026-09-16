@@ -1,1 +1,14 @@
-{}
+{
+  "mutation": "createMaterial",
+  "index": 2,
+  "id": 1,
+  "name": "CONCRETE SLAB",
+  "roughness": "MediumRough",
+  "thicknessM": 0.08,
+  "conductivityWMK": 1.13,
+  "densityKgM3": 1400.0,
+  "specificHeatJKgK": 1000.0,
+  "thermalAbsorptance": 0.9,
+  "solarAbsorptance": 0.6,
+  "visibleAbsorptance": 0.6
+}

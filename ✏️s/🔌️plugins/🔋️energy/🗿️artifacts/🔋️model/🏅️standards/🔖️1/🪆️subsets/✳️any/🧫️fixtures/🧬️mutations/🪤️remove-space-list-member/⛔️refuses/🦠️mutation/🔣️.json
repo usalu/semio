@@ -1,1 +1,5 @@
-{}
+{
+  "mutation": "removeSpaceListMember",
+  "id": 211,
+  "spaceId": 200
+}

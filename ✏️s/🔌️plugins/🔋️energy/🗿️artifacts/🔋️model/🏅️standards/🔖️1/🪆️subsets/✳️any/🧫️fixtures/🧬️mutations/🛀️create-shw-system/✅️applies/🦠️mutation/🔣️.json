@@ -1,1 +1,9 @@
-{}
+{
+  "mutation": "createShwSystem",
+  "index": 1,
+  "id": 401,
+  "heaterCapacityW": 6000.0,
+  "storageVolumeM3": 0.2,
+  "setpointC": 60.0,
+  "scheduleId": 2
+}

@@ -1,1 +1,4 @@
-{}
+{
+  "mutation": "bindWeatherFile",
+  "targetUri": "hannover!s.stdio.semio@v1/epw"
+}

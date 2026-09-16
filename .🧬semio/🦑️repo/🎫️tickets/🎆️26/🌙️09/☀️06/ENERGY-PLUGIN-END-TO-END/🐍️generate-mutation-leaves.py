@@ -3932,6 +3932,10 @@ kind(
     for pair in base.model.adjacency_pairs.iter().filter(|item| item.surface_a_id == payload.id || item.surface_b_id == payload.id) {
         steps.push(super::connect_surfaces(pair.surface_a_id, pair.surface_b_id));
     }
+    // ↩️ The store replays an inverse in REVERSE order (`ArtifactStore::replay_mutations`'s
+    // `back.reverse()`, pinned by `protocol_laws::assert_mutation_inverse_law`), so the parent step
+    // must be LAST in this list — reversed, it is re-created before its dependants.
+    steps.reverse();
     steps''',
     outcome_classes=["applied", "info", "error"],
     python='''    """🪚️ `delete-surface{id}` — the one cascading delete in this vocabulary: fenestrations and
@@ -7660,6 +7664,10 @@ kind(
     for (position, holiday) in existing.holiday_dates.iter().enumerate() {
         steps.push(super::add_annual_schedule_holiday(existing.id, position as u32, holiday.0, holiday.1, holiday.2));
     }
+    // ↩️ The store replays an inverse in REVERSE order (`ArtifactStore::replay_mutations`'s
+    // `back.reverse()`, pinned by `protocol_laws::assert_mutation_inverse_law`), so the parent step
+    // must be LAST in this list — reversed, it is re-created before its dependants.
+    steps.reverse();
     steps''',
     outcome_classes=["applied", "error"],
     probe="delete_annual_schedule(crate::model::ScheduleId(30))",

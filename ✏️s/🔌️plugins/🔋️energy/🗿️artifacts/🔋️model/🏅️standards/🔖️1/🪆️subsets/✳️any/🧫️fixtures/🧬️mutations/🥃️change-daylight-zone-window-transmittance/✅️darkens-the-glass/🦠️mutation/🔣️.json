@@ -1,1 +1,5 @@
-{}
+{
+  "mutation": "changeDaylightZoneWindowTransmittance",
+  "id": 14,
+  "newWindowTransmittance": 0.5
+}

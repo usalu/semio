@@ -558,7 +558,22 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
             break;
         }
     }
-    let close_cleanup_work = crate::plugin_runtime::plugin_step_close_cleanup(runtime)?;
+    // 🚪️ A close-cleanup verdict names ONE already-retired lifetime, so it may not kill the turn that
+    // every OTHER instance in this actor shares.
+    //
+    // 🐛️ It did: `?` here turned instance 5's `plugin.internal.zero-progress` into a shard worker fault
+    // for the whole turn, the host trapped the actor, and instance 6 — a sibling pane mid-boot in the
+    // same shard — went to Plugin Recovery with it (six-pane demonstrator boot, ticket 26/08/28). The
+    // instance whose cleanup faulted is already gone and has already left quarantine; what is left is a
+    // diagnostic, not a live window's crash.
+    let close_cleanup_work = match crate::plugin_runtime::plugin_step_close_cleanup(runtime) {
+        Ok(work) => work,
+        Err(fault) if crate::plugin_runtime::runtime_cleanup_fault_is_instance_scoped(fault.code.0.as_str()) => {
+            trace_guest_line(&format!("[DEBUG] close cleanup fault contained to its own retired lifetime: {} {}", fault.code.0.as_str(), fault.message));
+            true
+        }
+        Err(fault) => return Err(fault),
+    };
     let _ = crate::plugin_runtime::plugin_step_live_cleanup(runtime)?;
     PATCHES.with(|patches| redirty_acknowledged_deferred_surfaces(patches, &mut dirty))?;
     for event in events {

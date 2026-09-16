@@ -1,1 +1,6 @@
-{}
+{
+  "mutation": "addElectricalLoadCenterBattery",
+  "id": 320,
+  "index": 0,
+  "batteryId": 999
+}

@@ -1103,7 +1103,11 @@ fn coedge_sample_count(body: &Body, co: &crate::standards::v1::subsets::brep::sc
 /// 📏 Exact segment count for a circular arc of `radius` spanning `arc_range` radians so the chord
 /// deviates from the arc by at most `deflection`: `n = ceil(arc_range / (2·acos(1 − deflection/radius)))`
 /// — same closed form as tessellation's `segments_for_chord_deviation`, minus its angular-tol term
-/// (see [`loop_uv_polygon`]'s doc for why that term doesn't apply here).
+/// (see [`loop_uv_polygon`]'s doc for why that term doesn't apply here). The angular step is capped
+/// at `π/4` regardless of `deflection`: a boundary polygon is only a polygon with at least three
+/// chords around a full turn, and a caller whose tolerance is coarse relative to the radius (the
+/// sliver probe on an 8 mm bore) otherwise collapsed a whole circle to two points and measured a
+/// real face as zero area.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn segments_for_chord_deviation(radius: f64, arc_range: f64, deflection: f64) -> usize {
     if radius <= 0.0 || arc_range <= 0.0 {
@@ -1111,7 +1115,7 @@ fn segments_for_chord_deviation(radius: f64, arc_range: f64, deflection: f64) ->
     }
     let d = deflection.max(1e-12).min(radius * 1.999);
     let ratio = (1.0 - d / radius).clamp(-1.0, 1.0);
-    let theta = 2.0 * ratio.acos();
+    let theta = (2.0 * ratio.acos()).min(std::f64::consts::FRAC_PI_4);
     if theta <= 1e-9 {
         return ((arc_range / 1e-9).ceil() as usize).clamp(1, 200_000);
     }

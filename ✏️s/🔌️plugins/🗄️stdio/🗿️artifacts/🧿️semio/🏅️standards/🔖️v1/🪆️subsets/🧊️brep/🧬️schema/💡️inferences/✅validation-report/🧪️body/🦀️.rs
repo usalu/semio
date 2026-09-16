@@ -13,11 +13,12 @@
 use crate::standards::v1::subsets::brep::schema::engine::Aabb;
 use crate::standards::v1::subsets::brep::schema::inferences::bounding_volume::face_aabb;
 use crate::standards::v1::subsets::brep::schema::inferences::mass_properties;
-use crate::standards::v1::subsets::brep::schema::snapshot::arena::{ArenaId, EdgeId, FaceId};
+use crate::standards::v1::subsets::brep::schema::snapshot::arena::{ArenaId, EdgeId, FaceId, VertexId};
 use crate::standards::v1::subsets::brep::schema::snapshot::curve::curve_ops;
 use crate::standards::v1::subsets::brep::schema::snapshot::error::ValidationIssue;
 use crate::standards::v1::subsets::brep::schema::snapshot::surface::Surface;
 use crate::standards::v1::subsets::brep::schema::snapshot::topology::Body;
+use crate::standards::v1::subsets::brep::schema::snapshot::vector::Pnt3;
 
 // #region 🔖️Topology
 
@@ -274,8 +275,11 @@ fn check_face_loop_winding(body: &Body, issues: &mut Vec<ValidationIssue>) {
 /// ⚖️ The shell-volume probe tolerance [`BodyValidationJob`]'s orientation phase integrates at.
 const ORIENTATION_PROBE_TOL: f64 = 1e-3;
 
-/// ⚖️ The chord tolerance the sliver-face probe measures area at.
-const SLIVER_PROBE_TOL: f64 = 1e-3;
+/// ⚖️ The chord tolerance the sliver-face probe measures area at — deliberately coarse: the verdict
+/// is `area < tol²` (`1e-14 m²`), so a chordal polygon a few percent short of the true area answers
+/// it exactly as well, while the `1e-3` it used to be drove the adaptive quadrature to depth 6 on
+/// every cylindrical face (seconds per bore on a debug build, the whole validator's cost).
+const SLIVER_PROBE_TOL: f64 = 1e-2;
 
 /// 🩺️ ONE edge's degeneracy verdict — the atomic unit of the former `check_degenerate_geometry`'s
 /// first loop. A point edge (a pole closing a periodic patch) is legitimate topology and is never
@@ -315,30 +319,43 @@ fn faces_share_edge(body: &Body, a: FaceId, b: FaceId) -> bool {
     body.face_coedges(b).into_iter().filter_map(|c| body.coedges.get(c).map(|co| co.edge)).any(|e| edges_a.contains(&e))
 }
 
+/// 🩺️ The positions of the vertices two faces share TOPOLOGICALLY (the same `VertexId` on both
+/// boundaries) — legitimate contact the self-intersection probe must not read as a collision: any
+/// vertex of valence four or more (a notch corner, a hexagonal column meeting a beam) joins faces
+/// that touch there without sharing an edge.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn shared_vertex_positions(body: &Body, a: FaceId, b: FaceId) -> Vec<Pnt3> {
+    let vertices_of = |face: FaceId| -> std::collections::HashSet<VertexId> { body.face_coedges(face).into_iter().filter_map(|c| body.coedges.get(c).and_then(|co| body.edges.get(co.edge))).flat_map(|edge| [edge.v0, edge.v1]).collect() };
+    let vertices_a = vertices_of(a);
+    vertices_of(b).into_iter().filter(|vertex| vertices_a.contains(vertex)).filter_map(|vertex| body.vertices.get(vertex).map(|v| v.position)).collect()
+}
+
 /// 🩺️ Self-intersection PROBE (not a certified global check): for every pair of non-adjacent
 /// faces on the same solid whose AABBs overlap, samples each face's boundary/interior points
 /// (`mass_properties::face_sample_points`) and flags a Warning when the closest pair comes within
 /// tolerance — cheap enough to run always, catches the common case (audit §6.12: "general
-/// self-intersection is not fully checked").
+/// self-intersection is not fully checked"). Samples sitting on a vertex both faces share are
+/// exempt: that contact is the shared topology itself, not an intersection.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn check_self_intersection_probe(body: &Body, issues: &mut Vec<ValidationIssue>) {
     const PROBE_TOL: f64 = 1e-6;
     for (solid_id, _) in body.solids.iter() {
         let faces = body.solid_faces(solid_id);
+        let aabbs: Vec<Option<Aabb>> = faces.iter().map(|&face| face_aabb(body, face).ok()).collect();
+        let samples: Vec<Option<Vec<Pnt3>>> = faces.iter().map(|&face| mass_properties::face_sample_points(body, face).ok()).collect();
         for i in 0..faces.len() {
             for j in (i + 1)..faces.len() {
                 let (fa, fb) = (faces[i], faces[j]);
-                if faces_share_edge(body, fa, fb) {
+                let (Some(aabb_a), Some(aabb_b)) = (&aabbs[i], &aabbs[j]) else { continue };
+                if !aabb_overlaps(aabb_a, aabb_b) || faces_share_edge(body, fa, fb) {
                     continue;
                 }
-                let (Ok(aabb_a), Ok(aabb_b)) = (face_aabb(body, fa), face_aabb(body, fb)) else { continue };
-                if !aabb_overlaps(&aabb_a, &aabb_b) {
-                    continue;
-                }
-                let (Ok(pa), Ok(pb)) = (mass_properties::face_sample_points(body, fa), mass_properties::face_sample_points(body, fb)) else { continue };
+                let (Some(pa), Some(pb)) = (&samples[i], &samples[j]) else { continue };
+                let shared = shared_vertex_positions(body, fa, fb);
+                let on_shared_vertex = |point: &Pnt3| shared.iter().any(|vertex| vertex.distance(*point) < PROBE_TOL);
                 let mut best = f64::INFINITY;
-                for p in &pa {
-                    for q in &pb {
+                for p in pa.iter().filter(|p| !on_shared_vertex(p)) {
+                    for q in pb.iter().filter(|q| !on_shared_vertex(q)) {
                         best = best.min(p.distance(*q));
                     }
                 }

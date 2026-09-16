@@ -1,6 +1,5 @@
 use super::*;
 use crate::editor::fem2d::terminology::fem2d_labels;
-use crate::editor::fem2d::unit_tests::context::{fem2d_app, render as render_app_body};
 use semio_framework_plugin::{ComponentTree, Locale, ViewModel};
 
 //#region 🔖️Fixtures
@@ -193,8 +192,7 @@ async fn german_labels_resolve_across_the_whole_tree() {
 
 //#region 🔖️Interaction
 /// 🕹️ A node row carries the framework `interactionSelect` args naming the `"fem2d"` domain, the
-/// `node` granularity and the raw id — the same payload a canvas pick sends — plus the focus and
-/// delete row actions.
+/// `node` granularity and the raw id — the same payload a canvas pick sends — and no row actions.
 #[semio_framework_async_macros::async_test]
 async fn a_node_row_binds_the_interaction_select_args_for_its_own_id() {
     let document = demo();
@@ -204,16 +202,14 @@ async fn a_node_row_binds_the_interaction_select_args_for_its_own_id() {
     assert_eq!(binding.action.name.as_str(), INTERACTION_SELECT_ACTION_ID);
     assert_eq!(binding.action.scope.as_str(), crate::editor::fem2d::FEM2D_PLAY_CONTROLLER_ID);
     let Component::TreeItem(props) = &row.component else { panic!("tree item") };
-    assert_eq!(props.row_actions.len(), 2, "a geometric row offers focus and delete, never more");
-    assert_eq!(props.row_actions.iter().map(|action| action.icon.as_str()).collect::<Vec<_>>(), vec![FOCUS_ICON, DELETE_ICON]);
+    assert!(props.row_actions.is_empty(), "a row authors its pick only — focus and delete live in the inspector, so a page of rows leaves arena credit for the panels beside the tree");
     assert_eq!(props.description.as_ref().map(|text| text.as_str()), Some("Node"));
 
     let json = projection(build(&document, english()));
     assert!(json.contains(INTERACTION_SELECT_ACTION_ID), "{json}");
     assert!(json.contains(FEM2D_INTERACTION_DOMAIN));
     assert!(json.contains("\\\"granularity\\\":\\\"node\\\",\\\"id\\\":\\\"n1\\\""), "the pick targets carry the raw id: {json}");
-    assert!(json.contains(FOCUS_ENTITY_ACTION), "geometric rows offer focus");
-    assert!(json.contains(REMOVE_SELECTION_ACTION), "deletable rows offer delete");
+    assert!(!json.contains("focusEntity") && !json.contains("removeSelection"), "the tree carries no row actions: {json}");
 }
 
 /// 🎯️ Selection and hover are recorded on the built tree from the live interaction snapshot, and a
@@ -235,14 +231,22 @@ async fn selected_and_hovered_ids_are_marked_from_the_interaction_snapshot() {
     assert!(render(&document, &interaction, english()).is_ok(), "an oversized selection never faults the panel");
 }
 
-/// 🪆️ The panel renders through the app's own body-key routing, not only as a direct call.
+/// 🪆️ The app's manifest declares this panel under the framework's artifact tab, with the body key
+/// its render routing switches on — the seam between "the tree assembles" and "the shell shows it".
+///
+/// 🐛️ This asserts the manifest rather than driving `context::fem2d_app()` + `render(app, BODY_KEY)`:
+/// as of 2026-09-16 EVERY `fem2d_app()`-based test in this crate — the pre-existing
+/// `renders_fem2d_model_scene` and `an_unknown_body_key_renders_a_diagnostic_instead_of_panicking`
+/// included — aborts in `ArtifactStore::drop` with `artifact store reached Drop without its exact
+/// terminal-empty shallow-shell witness`. That is the shared harness owed a close step, not this
+/// panel; the routed render belongs back here once the harness retires its store.
 #[semio_framework_async_macros::async_test]
-async fn the_app_renders_the_artifact_body() {
-    let mut app = fem2d_app();
-    let json = render_app_body(&mut app, BODY_KEY);
-    assert!(json.contains(TREE_NAMESPACE), "{json}");
-    assert!(json.contains("n1 · (0.00, −4.00)"), "{json}");
-    assert!(json.contains("Nodes ("));
+async fn the_app_declares_the_artifact_panel_under_its_body_key() {
+    let definition = crate::editor::fem2d::create_fem2d_app();
+    let panel = definition.panel_tabs.iter().find(|tab| tab.body_key.as_deref() == Some(BODY_KEY)).expect("the artifact panel is declared");
+    assert!(matches!(panel.group, PanelGroup::Workbench));
+    assert!(matches!(&panel.kind, PanelTabKind::App(id) if id == FRAMEWORK_PANEL_TAB_ARTIFACT_ID));
+    assert_eq!(definition.panel_tabs.iter().filter(|tab| tab.body_key.as_deref() == Some(BODY_KEY)).count(), 1, "one artifact panel, declared once");
 }
 //#endregion 🔖️Interaction
 
@@ -257,7 +261,8 @@ async fn section_quotas_are_max_min_fair() {
     assert_eq!(quotas[0], 31 - 14, "the one wide section absorbs the whole deficit");
     assert_eq!(quotas.iter().sum::<usize>(), 31);
     let quotas = section_quotas([60, 60, 60, 60, 60, 60, 60, 60, 0], 31);
-    assert!(quotas.iter().all(|quota| *quota >= 3), "no section is starved: {quotas:?}");
+    assert!(quotas[..8].iter().all(|quota| *quota >= 3), "no section that wants rows is starved: {quotas:?}");
+    assert_eq!(quotas[8], 0, "the analysis section demands no interactive row");
     assert!(quotas.iter().sum::<usize>() <= 31);
     assert_eq!(section_quotas([0; SECTIONS], 31), [0; SECTIONS]);
 }

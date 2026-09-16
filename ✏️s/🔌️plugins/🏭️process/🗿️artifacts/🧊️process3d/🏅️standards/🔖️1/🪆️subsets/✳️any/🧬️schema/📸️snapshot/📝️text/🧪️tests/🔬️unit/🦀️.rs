@@ -175,7 +175,104 @@ fn drilled_plate_scene() -> ProcessWorkingScene {
     }
 }
 
-/// 🌉️ Regenerates both shipped example fixtures via the REAL `process_working_scene_to_snapshot`
+/// 🧱️ The workshop the shipped `concrete-forest` example carries: the generic catalog plus every
+/// `ConcreteCatalog` machine, so each of its seven steps names a capability that really exists.
+fn concrete_workshop() -> Workshop {
+    let mut machines = crate::generic_machines();
+    machines.extend(<crate::schema::ConcreteCatalog as crate::MachineCatalog>::machines(&crate::schema::ConcreteCatalog));
+    Workshop { machines }
+}
+
+/// 🌲️ Every concrete machine applied once to the real hexagonal-cut concrete forest piece
+/// (`REFERENCE_SOLID_CONCRETE_FOREST_LEFT`, posed so its 10.8 m × 4.68 m footprint is centred on
+/// the origin and it stands on `z = 0`): the wall saw scores the slab full-depth across its
+/// width (`x = 5.4`, 0.32 m from the top — the beam underneath keeps both halves joined), the
+/// diamond saw relieves that beam from below on the same line, the wire saw severs the right
+/// column at `z = 1.2`, the core drill takes a 0.2 m core sample out of the slab, the rotary
+/// hammer drills a Ø20 anchor hole, the anchor setter sets an M16 anchor into it (seated 10 mm
+/// into the hole floor — a chemical anchor before grouting — and standing 30 mm proud), and the
+/// surface grinder takes 5 mm off a pad-sized patch of the slab top. Every tool sits inside the
+/// piece's own coordinates (slab `z ∈ [2.735, 3.0]`, beams `[2.285, 2.735]`, columns at
+/// `(2.7, 2.338)`/`(8.1, 2.338)`), shifted by the stock pose into world space. Each geometry was
+/// probed against the kernel first (ticket `26/09/16/PROCESS-CONCRETE-FOREST-EXAMPLE`): a through
+/// core and a coincident-wall anchor still fail the boolean on this piece, which is why the core
+/// is blind and the hole is 2 mm wider than the anchor.
+fn concrete_forest_scene() -> ProcessWorkingScene {
+    let offset = [-5.0, -2.0, 0.0];
+    let at = |x: f64, y: f64, z: f64| Pose { position: [x + offset[0], y + offset[1], z + offset[2]], ..Pose::default() };
+    let step = |id: &str, label: &str, machine_id: &str, capability_id: &str, measure: ProcessMeasure| ProcessStep { id: id.into(), label: label.into(), enabled: true, origin: Some(StepOrigin { machine_id: machine_id.into(), capability_id: capability_id.into() }), measure };
+    ProcessWorkingScene {
+        stock: Stock { id: crate::REFERENCE_SOLID_CONCRETE_FOREST_LEFT.into(), label: "Hexagonal Cut Concrete Forest Left".into(), solid: WorkingSolid::Reference { reference_id: crate::REFERENCE_SOLID_CONCRETE_FOREST_LEFT.into() }, pose: Pose { position: offset, ..Pose::default() } },
+        steps: vec![
+            step("wall-saw-cut", "Wall Saw Slab Cut", "wallSaw", "wallCut", ProcessMeasure::Cut { tool: WorkingSolid::Box { width: 0.0045, depth: 6.0, height: 0.32 }, pose: at(5.4, 2.3385, 2.84) }),
+            step("beam-relief-cut", "Diamond Saw Beam Relief", "diamondSaw", "crosscut", ProcessMeasure::Cut { tool: WorkingSolid::Box { width: 0.004, depth: 0.5, height: 0.125 }, pose: at(5.4, 2.338, 2.3475) }),
+            step("column-wire-cut", "Wire Saw Column Cut", "wireSaw", "wireCut", ProcessMeasure::Cut { tool: WorkingSolid::Box { width: 1.0, depth: 1.0, height: 0.011 }, pose: at(8.1, 2.338, 1.2) }),
+            step("core-sample", "Core Sample", "coreDrill", "core", ProcessMeasure::Drill { radius: 0.051, depth: 0.4, pose: at(6.0, 3.6, 3.0) }),
+            step("anchor-hole", "Anchor Hole", "rotaryHammer", "anchorHole", ProcessMeasure::Drill { radius: 0.010, depth: 0.16, pose: at(4.5, 1.2, 2.93) }),
+            step("anchor-set", "Set Anchor", "anchorSetter", "anchor", ProcessMeasure::Attach { component: WorkingSolid::Cylinder { radius: 0.008, height: 0.19 }, pose: at(4.5, 1.2, 2.935) }),
+            step("surface-grind", "Grind Surface Patch", "surfaceGrinder", "grind", ProcessMeasure::Cut { tool: WorkingSolid::Cylinder { radius: 0.125, height: 0.01 }, pose: at(3.5, 3.5, 3.0) }),
+        ],
+    }
+}
+
+/// 🌲️ The shipped concrete forest fixture is exactly `concrete_forest_scene()` on
+/// `concrete_workshop()` — regenerate it (below) whenever either changes.
+#[semio_framework_async_macros::async_test]
+async fn concrete_forest_example_fixture_is_the_authored_scene() {
+    let document = parse_dsl(PROCESS_3D_CONCRETE_FOREST_EXAMPLE_TEXT).expect("parse concrete forest example");
+    let authored = process_working_scene_to_snapshot(&concrete_forest_scene(), concrete_workshop(), None);
+    assert_eq!(document, authored);
+    store::os_store::test_support::assert_dsl_round_trip(&document);
+}
+
+/// 🧱️ Every machine of the concrete catalog is the origin of exactly one step, and every step's
+/// origin resolves to a real capability of the example's own workshop.
+#[semio_framework_async_macros::async_test]
+async fn concrete_forest_example_applies_every_concrete_machine() {
+    let document = parse_dsl(PROCESS_3D_CONCRETE_FOREST_EXAMPLE_TEXT).expect("parse concrete forest example");
+    let concrete: Vec<String> = <crate::schema::ConcreteCatalog as crate::MachineCatalog>::machines(&crate::schema::ConcreteCatalog).into_iter().map(|machine| machine.id).collect();
+    let mut origins: Vec<String> = document.step_payloads.iter().filter_map(|step| step.origin.as_ref()).map(|origin| origin.machine_id.clone()).collect();
+    origins.sort();
+    let mut concrete_sorted = concrete.clone();
+    concrete_sorted.sort();
+    assert_eq!(origins, concrete_sorted, "exactly one step per concrete machine");
+    for step in &document.step_payloads {
+        let origin = step.origin.as_ref().expect("every step has an origin");
+        let (_, capability) = crate::schema::inferences::find_capability(&document.workshop, &origin.machine_id, &origin.capability_id).expect("origin names a workshop capability");
+        let expected = match capability.recipe.measure_kind() {
+            crate::MeasureKind::Cut => "cut",
+            crate::MeasureKind::Drill => "drill",
+            crate::MeasureKind::Attach => "attach",
+        };
+        assert_eq!(step.measure.kind_slug(), expected, "step {} measure matches its capability's recipe kind", step.id);
+    }
+}
+
+/// 🧊️ The kernel replays the whole concrete forest timeline on the real STEP piece: the stock
+/// alone measures the piece's true volume (14.0998 m³, the GLB export's own signed volume), and
+/// every cut step removes material while the anchor adds it — so no step is a silent no-op.
+#[semio_framework_async_macros::async_test]
+async fn concrete_forest_example_replays_every_step_on_the_kernel() {
+    use crate::schema::inferences::{replay_process, ProcessKernelReplay};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::engine::BrepKernel;
+    let scene = crate::process_working_scene_from_snapshot(&parse_dsl(PROCESS_3D_CONCRETE_FOREST_EXAMPLE_TEXT).expect("parse concrete forest example"));
+    let mut session = ProcessKernelReplay::new();
+    let stock = replay_process(&mut session, &scene, Some(0)).expect("stock replays");
+    let stock_volume = session.kernel().volume(&stock).expect("stock volume");
+    assert!((stock_volume - 14.0998).abs() < 1e-3, "stock volume {stock_volume}");
+    let mut previous = stock_volume;
+    for resolved in 1..=scene.steps.len() {
+        let handle = replay_process(&mut session, &scene, Some(resolved)).unwrap_or_else(|| panic!("step {} replays", scene.steps[resolved - 1].id));
+        let volume = session.kernel().volume(&handle).expect("step volume");
+        match scene.steps[resolved - 1].measure {
+            ProcessMeasure::Attach { .. } => assert!(volume > previous + 1e-9, "step {} adds material ({previous} → {volume})", scene.steps[resolved - 1].id),
+            _ => assert!(volume < previous - 1e-9, "step {} removes material ({previous} → {volume})", scene.steps[resolved - 1].id),
+        }
+        previous = volume;
+    }
+}
+
+/// 🌉️ Regenerates every shipped example fixture via the REAL `process_working_scene_to_snapshot`
 /// + `print_dsl()` (never hand-transcribed hex), writing their text to the ticket's
 /// `🗑️generated` folder for manual copy into the asset file / `PROCESS_3D_PLATE_EXAMPLE_TEXT`.
 /// `#[ignore]`d: a one-shot authoring tool, not part of the regular test run.
@@ -184,8 +281,11 @@ fn drilled_plate_scene() -> ProcessWorkingScene {
 async fn regenerate_example_fixtures() {
     let timber = process_working_scene_to_snapshot(&timber_beam_joinery_scene(), timber_workshop(), None);
     let plate = process_working_scene_to_snapshot(&drilled_plate_scene(), Workshop::default(), Some(2));
-    let out_dir = std::path::Path::new("/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️01/PROCESS-END-TO-END/🗑️generated");
+    let concrete_forest = process_working_scene_to_snapshot(&concrete_forest_scene(), concrete_workshop(), None);
+    let out_dir = std::path::Path::new("/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/PROCESS-CONCRETE-FOREST-EXAMPLE/🗑️generated");
     std::fs::write(out_dir.join("timber.dsl.semio"), print_dsl(&timber)).expect("write timber fixture");
     std::fs::write(out_dir.join("plate.dsl.semio"), print_dsl(&plate)).expect("write plate fixture");
+    std::fs::write(out_dir.join("concrete-forest.dsl.semio"), print_dsl(&concrete_forest)).expect("write concrete forest fixture");
 }
 //#endregion 🔖️FixtureRegeneration
+

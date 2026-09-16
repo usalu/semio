@@ -1,1 +1,5 @@
-{}
+{
+  "mutation": "changeMaterialSpecificHeat",
+  "id": 1,
+  "newSpecificHeatJKgK": 1000.0
+}

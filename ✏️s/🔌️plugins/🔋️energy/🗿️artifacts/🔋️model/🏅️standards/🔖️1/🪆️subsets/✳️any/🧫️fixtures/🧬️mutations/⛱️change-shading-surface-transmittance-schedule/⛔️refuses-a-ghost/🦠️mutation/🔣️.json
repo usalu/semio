@@ -1,1 +1,5 @@
-{}
+{
+  "mutation": "changeShadingSurfaceTransmittanceSchedule",
+  "id": 11,
+  "newTransmittanceScheduleId": 9
+}

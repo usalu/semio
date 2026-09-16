@@ -1,1 +1,7 @@
-{}
+{
+  "mutation": "createOutdoorAirSystem",
+  "id": 19,
+  "airLoopId": 17,
+  "minOaFlowM3S": 0.2,
+  "economizerEnabled": false
+}

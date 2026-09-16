@@ -1,1 +1,5 @@
-{}
+{
+  "mutation": "changeBatteryCapacity",
+  "id": 310,
+  "newCapacityKwh": 20.0
+}

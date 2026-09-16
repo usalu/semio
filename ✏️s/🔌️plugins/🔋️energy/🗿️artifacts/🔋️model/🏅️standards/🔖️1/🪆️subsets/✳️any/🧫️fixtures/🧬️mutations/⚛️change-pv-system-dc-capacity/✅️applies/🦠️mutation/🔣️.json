@@ -1,1 +1,5 @@
-{}
+{
+  "mutation": "changePvSystemDcCapacity",
+  "id": 300,
+  "newDcCapacityW": 7000.0
+}

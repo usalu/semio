@@ -1,1 +1,5 @@
-{}
+{
+  "mutation": "changeAirLoopDesignSupplyAirFlow",
+  "id": 17,
+  "newDesignSupplyAirFlowM3S": 0.0
+}

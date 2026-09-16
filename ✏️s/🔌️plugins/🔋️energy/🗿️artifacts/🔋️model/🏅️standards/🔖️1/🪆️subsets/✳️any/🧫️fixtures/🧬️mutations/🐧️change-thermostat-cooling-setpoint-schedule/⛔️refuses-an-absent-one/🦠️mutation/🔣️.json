@@ -1,1 +1,5 @@
-{}
+{
+  "mutation": "changeThermostatCoolingSetpointSchedule",
+  "id": 10,
+  "newCoolingSetpointScheduleId": 99
+}

@@ -1,1 +1,4 @@
-{}
+{
+  "mutation": "deleteDaylightZone",
+  "id": 14
+}

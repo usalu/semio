@@ -1,1 +1,5 @@
-{}
+{
+  "mutation": "changeSolarThermalSystemCollectorArea",
+  "id": 410,
+  "newCollectorAreaM2": 0.0
+}

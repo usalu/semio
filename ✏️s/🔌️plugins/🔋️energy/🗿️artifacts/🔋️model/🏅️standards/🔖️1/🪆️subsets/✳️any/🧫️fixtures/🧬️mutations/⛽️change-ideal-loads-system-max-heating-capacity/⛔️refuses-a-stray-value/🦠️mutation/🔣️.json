@@ -1,1 +1,6 @@
-{}
+{
+  "mutation": "changeIdealLoadsSystemMaxHeatingCapacity",
+  "id": 12,
+  "newCapacityPresent": false,
+  "newMaxHeatingCapacityW": 4000.0
+}

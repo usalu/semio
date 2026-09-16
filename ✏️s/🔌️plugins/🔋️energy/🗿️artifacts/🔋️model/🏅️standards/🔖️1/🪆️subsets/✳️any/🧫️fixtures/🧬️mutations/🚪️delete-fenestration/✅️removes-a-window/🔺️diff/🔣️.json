@@ -1,1 +1,187 @@
-{}
+{
+  "artifact": null,
+  "schema": null,
+  "model": {
+    "name": "BESTEST 600",
+    "version": "",
+    "site": {
+      "latitude_deg": 0.0,
+      "longitude_deg": 0.0,
+      "elevation_m": 0.0,
+      "time_zone_hours": 0.0,
+      "north_axis_deg": 0.0
+    },
+    "zones": [
+      {
+        "id": 1,
+        "name": "ZONE ONE",
+        "volume_m3": 129.6,
+        "multiplier": 1,
+        "conditioned": true,
+        "part_of_total_floor_area": true
+      }
+    ],
+    "spaces": [],
+    "surfaces": [
+      {
+        "id": 3,
+        "name": "WALL SOUTH",
+        "zone_id": 1,
+        "class": "ExteriorWall",
+        "vertices_m": [
+          [
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            8.0,
+            0.0,
+            0.0
+          ],
+          [
+            8.0,
+            0.0,
+            2.7
+          ],
+          [
+            0.0,
+            0.0,
+            2.7
+          ]
+        ],
+        "construction_id": 2,
+        "outside_boundary_condition": "OutdoorAir",
+        "sun_exposed": true,
+        "wind_exposed": true,
+        "multiplier": 1
+      }
+    ],
+    "fenestrations": [],
+    "materials": [
+      {
+        "id": 4,
+        "name": "PLASTERBOARD",
+        "roughness": "MediumRough",
+        "thickness_m": 0.012,
+        "conductivity_w_m_k": 0.16,
+        "density_kg_m3": 950.0,
+        "specific_heat_j_kg_k": 840.0,
+        "thermal_absorptance": 0.9,
+        "solar_absorptance": 0.6,
+        "visible_absorptance": 0.6
+      }
+    ],
+    "glazing_materials": [],
+    "gas_materials": [],
+    "constructions": [
+      {
+        "id": 2,
+        "name": "LIGHTWEIGHT WALL",
+        "layer_material_ids": [
+          4
+        ]
+      }
+    ],
+    "people": [],
+    "lighting": [],
+    "equipment": [],
+    "thermostats": [],
+    "humidistats": [],
+    "setpoint_managers": [],
+    "ideal_loads": [],
+    "zone_equipment": [],
+    "air_loops": [],
+    "plant_loops": [],
+    "outdoor_air_systems": [],
+    "infiltrations": [],
+    "mechanical_ventilations": [],
+    "shading_surfaces": [],
+    "space_lists": [],
+    "thermal_enclosures": [],
+    "adjacency_pairs": [],
+    "airflow_network": null,
+    "electrical_load_centers": [],
+    "pv_systems": [],
+    "battery_storage": [],
+    "shw_systems": [],
+    "solar_thermal_systems": [],
+    "refrigeration_systems": [],
+    "water_systems": [],
+    "faults": [],
+    "output_variables": [],
+    "sizing_objects": [],
+    "daylight_zones": [],
+    "room_air_models": [],
+    "ground_temperature": {
+      "building_surface_c": [
+        18.0,
+        18.0,
+        18.0,
+        18.0,
+        18.0,
+        18.0,
+        18.0,
+        18.0,
+        18.0,
+        18.0,
+        18.0,
+        18.0
+      ],
+      "shallow_c": [
+        18.0,
+        18.0,
+        18.0,
+        18.0,
+        18.0,
+        18.0,
+        18.0,
+        18.0,
+        18.0,
+        18.0,
+        18.0,
+        18.0
+      ],
+      "deep_c": 18.0
+    },
+    "run_period": {
+      "start_month": 1,
+      "start_day": 1,
+      "end_month": 12,
+      "end_day": 31,
+      "year": 2026
+    },
+    "schedules": {
+      "constants": [],
+      "daily": [],
+      "weekly": [],
+      "annual": [],
+      "time_series": []
+    }
+  },
+  "structure": {
+    "childId": "energy-value",
+    "target": {
+      "artifactId": "energy-value",
+      "dialect": {
+        "artifactKind": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "value"
+      }
+    }
+  },
+  "zones": {
+    "childId": "energy-table",
+    "target": {
+      "artifactId": "energy-table",
+      "dialect": {
+        "artifactKind": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "table"
+      }
+    }
+  },
+  "referencedModel": null,
+  "weatherLink": null,
+  "resultsJson": null
+}

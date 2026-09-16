@@ -1,1 +1,5 @@
-{}
+{
+  "mutation": "changePlantLoopReturnTemperature",
+  "id": 18,
+  "newReturnTemperatureC": -500.0
+}

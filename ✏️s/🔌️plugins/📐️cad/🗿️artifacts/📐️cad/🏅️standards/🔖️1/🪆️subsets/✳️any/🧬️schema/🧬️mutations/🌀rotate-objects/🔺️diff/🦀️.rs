@@ -1,6 +1,7 @@
 //! 🔺️ Sparse diff builder for `RotateObjects` — re-materializes the pane's composed model child.
 use super::RotateObjects;
 use crate::diff::CadDiff;
+use crate::mutations::rotate_objects::inverse::CAD_IDENTITY_ORIENTATION;
 use crate::CadSnapshot;
 
 //#region 🔖️Diff
@@ -15,8 +16,10 @@ pub fn diff(payload: &RotateObjects, base: &CadSnapshot) -> protocol::MutationOu
     let mut rotated = 0usize;
     for placement in &payload.placements {
         if let Some(object) = objects.iter_mut().find(|object| object.id == placement.object_id) {
-            if object.orientation != Some(placement.new_orientation) {
-                object.orientation = Some(placement.new_orientation);
+            if object.orientation.unwrap_or(CAD_IDENTITY_ORIENTATION) != placement.new_orientation {
+                // 🧭️ Absence IS the identity quaternion, so an orientation that lands back on it is
+                // written as `None` — that keeps the working scene an exact round trip under undo.
+                object.orientation = (placement.new_orientation != CAD_IDENTITY_ORIENTATION).then_some(placement.new_orientation);
                 rotated += 1;
             }
         }

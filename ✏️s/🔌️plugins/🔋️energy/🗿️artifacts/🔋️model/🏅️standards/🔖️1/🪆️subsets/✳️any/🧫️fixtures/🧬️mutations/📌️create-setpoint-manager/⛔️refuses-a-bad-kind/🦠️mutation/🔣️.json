@@ -1,1 +1,12 @@
-{}
+{
+  "mutation": "createSetpointManager",
+  "id": 16,
+  "name": "SUPPLY SPM",
+  "kind": "Sunny",
+  "lowOutdoorC": 0.0,
+  "highOutdoorC": 0.0,
+  "lowSetpointC": 0.0,
+  "highSetpointC": 0.0,
+  "schedulePresent": false,
+  "scheduleId": 0
+}

@@ -1,1 +1,5 @@
-{}
+{
+  "mutation": "changeZoneEquipmentPriority",
+  "id": 13,
+  "newPriority": 0
+}

@@ -1,1 +1,5 @@
-{}
+{
+  "mutation": "changeFenestrationHeight",
+  "id": 5,
+  "newHeightM": 0.0
+}

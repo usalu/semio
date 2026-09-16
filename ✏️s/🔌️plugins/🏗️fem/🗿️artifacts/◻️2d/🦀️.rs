@@ -1172,6 +1172,9 @@ pub mod standards {
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🔁️replace-combination/🧪️tests/👻️dangling-case-65b8a8/🦀️.rs"]
                             mod tests_refuses_a_uls_term_weighting_a_case_the_steel_frame_never_had;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🔁️replace-combination/🧪️tests/👻️self-term-0f54d1/🦀️.rs"]
+                            mod tests_refuses_a_uls_term_that_weights_the_combination_itself;
                         }
                     }
                 }

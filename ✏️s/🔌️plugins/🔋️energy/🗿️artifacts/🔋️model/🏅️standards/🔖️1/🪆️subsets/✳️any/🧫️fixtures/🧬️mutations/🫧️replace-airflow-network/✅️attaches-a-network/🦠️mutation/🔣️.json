@@ -1,1 +1,14 @@
-{}
+{
+  "mutation": "replaceAirflowNetwork",
+  "present": true,
+  "zoneIds": [
+    1
+  ],
+  "nodeIds": [
+    1
+  ],
+  "outdoorNodeId": 0,
+  "linkIds": [
+    7
+  ]
+}

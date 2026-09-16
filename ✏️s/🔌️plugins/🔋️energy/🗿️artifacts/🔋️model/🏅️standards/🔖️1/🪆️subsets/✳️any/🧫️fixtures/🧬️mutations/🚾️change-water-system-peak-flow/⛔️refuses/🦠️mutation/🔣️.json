@@ -1,1 +1,5 @@
-{}
+{
+  "mutation": "changeWaterSystemPeakFlow",
+  "id": 430,
+  "newPeakFlowLS": 0.0
+}

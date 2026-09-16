@@ -1,1 +1,4 @@
-{}
+{
+  "mutation": "changeModelVersion",
+  "newVersion": "2"
+}

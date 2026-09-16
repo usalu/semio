@@ -1,1 +1,12 @@
-{}
+{
+  "mutation": "createAirLoop",
+  "id": 17,
+  "name": "MAIN AIR LOOP",
+  "supplyNodeId": 1,
+  "returnNodeId": 2,
+  "designSupplyAirFlowM3S": 1.2,
+  "terminalZoneIds": [
+    2,
+    1
+  ]
+}

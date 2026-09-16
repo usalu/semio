@@ -1,1 +1,5 @@
-{}
+{
+  "mutation": "connectSurfaces",
+  "surfaceAId": 3,
+  "surfaceBId": 6
+}

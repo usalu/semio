@@ -1,1 +1,5 @@
-{}
+{
+  "mutation": "changeConstantScheduleValue",
+  "id": 1,
+  "newValue": 0.25
+}

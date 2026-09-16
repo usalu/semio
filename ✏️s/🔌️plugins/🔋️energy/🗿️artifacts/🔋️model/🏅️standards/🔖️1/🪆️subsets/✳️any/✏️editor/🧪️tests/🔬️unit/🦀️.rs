@@ -290,9 +290,9 @@ pub(crate) fn energy_model_manifest_for_tests() -> semio_framework_plugin::App {
 /// registry-LESS `artifact_app_laws::new_app` cannot be used here: it builds an app with no
 /// `AppActionRegistry`, so `migrated_tool_ids()` is empty and `validate_tool_job_rows` fails
 /// closed with `interactive-job.catalog-authority` the moment any proof is declared.
-async fn dispatchable_app() -> semio_framework_plugin::VcsArtifactApp<EditorApp<EnergyModelEditor>> {
+async fn dispatchable_app() -> EnergyEditorApp {
     use semio_framework_plugin::PluginApp as _;
-    let mut app = semio_framework_plugin::artifact_app_laws::new_app_with_registry::<EditorApp<EnergyModelEditor>>(energy_model_manifest_for_tests).await;
+    let mut app = semio_framework_plugin::artifact_app_laws::new_app_with_registry_and_members::<EditorApp<EnergyModelEditor>, semio_s_artifact_stdio_semio::SemioMembers>(energy_model_manifest_for_tests).await;
     app.bind_instance_id(semio_framework_plugin::artifact_app_laws::meta("local").instance_id).await;
     app
 }
@@ -348,7 +348,9 @@ fn run_fixture() -> serde_json::Value {
     serde_json::from_str(RUN_FIXTURE).expect("run fixture parses")
 }
 
-type EnergyEditorApp = semio_framework_plugin::VcsArtifactApp<EditorApp<EnergyModelEditor>>;
+/// 🧩️ The editor over its real `SemioMembers` roster — `genesis_child_pack` mints the two composed
+/// children at construction, and a `NoMembers` app would refuse their `s.stdio.semio` dialects.
+type EnergyEditorApp = semio_framework_plugin::VcsArtifactApp<EditorApp<EnergyModelEditor>, semio_s_artifact_stdio_semio::SemioMembers>;
 
 /// 🧫️ A registry-backed editor over the fixture scenario: the ANSI/ASHRAE 140 case with the fixture run
 /// period, and the fixture settings published through `set-simulation-settings`.

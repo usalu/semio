@@ -1,1 +1,6 @@
-{}
+{
+  "mutation": "addThermalEnclosureZone",
+  "id": 220,
+  "index": 1,
+  "zoneId": 2
+}

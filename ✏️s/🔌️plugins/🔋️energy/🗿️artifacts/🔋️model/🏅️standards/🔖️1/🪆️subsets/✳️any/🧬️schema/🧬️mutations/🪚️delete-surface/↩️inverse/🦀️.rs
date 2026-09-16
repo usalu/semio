@@ -49,6 +49,10 @@ pub fn inverse(payload: &super::DeleteSurface, base: &EnergyModelSnapshot) -> Ve
     for pair in base.model.adjacency_pairs.iter().filter(|item| item.surface_a_id == payload.id || item.surface_b_id == payload.id) {
         steps.push(vocabulary::connect_surfaces(pair.surface_a_id, pair.surface_b_id));
     }
+    // ↩️ The store replays an inverse in REVERSE order (`ArtifactStore::replay_mutations`'s
+    // `back.reverse()`, pinned by `protocol_laws::assert_mutation_inverse_law`), so the parent step
+    // must be LAST in this list — reversed, it is re-created before its dependants.
+    steps.reverse();
     steps
 }
 //#endregion 🔖️Inverse

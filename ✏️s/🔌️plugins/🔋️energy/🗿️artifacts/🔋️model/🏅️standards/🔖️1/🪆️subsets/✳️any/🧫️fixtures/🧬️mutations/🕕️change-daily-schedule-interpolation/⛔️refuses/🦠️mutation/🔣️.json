@@ -1,1 +1,5 @@
-{}
+{
+  "mutation": "changeDailyScheduleInterpolation",
+  "id": 99,
+  "newInterpolation": "Discrete"
+}

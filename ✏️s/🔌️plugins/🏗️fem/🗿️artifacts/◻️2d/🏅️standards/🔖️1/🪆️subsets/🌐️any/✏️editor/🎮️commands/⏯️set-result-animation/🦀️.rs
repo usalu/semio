@@ -15,6 +15,11 @@ use semio_framework_value_derive::{FromValue, ToValue};
 
 type Fem2dSnapshot = crate::Fem2dSnapshot;
 
+/// 🪢️ Every playback publication amends the previous one instead of appending: a window-config
+/// store keeps a FIXED applied-edit capacity ("batched publication requires preinstalled fixed
+/// applied and revision capacity"), which a 30 fps clock exhausted in minutes on the React lane.
+pub const PLAYBACK_COALESCE_KEY: &str = "fem2d.results.playback";
+
 //#region 🔖️Clock
 /// ⏱️ The action the playback clock re-dispatches onto itself.
 pub const TICK_ACTION: &str = "resultAnimationTick";
@@ -49,6 +54,10 @@ pub struct SetResultAnimation {
     pub waveform: Option<String>,
     pub field: Option<String>,
     pub value: Option<String>,
+    /// 🪟️ The results window this gesture speaks for, as the panel control tagged it. A panel
+    /// projection carries no `window_id` of its own, so the tag is the ONLY thing that keeps a split
+    /// layout from retuning the pane the user is not looking at.
+    pub window_id: Option<String>,
 }
 
 /// 🔢️ One control's scalar, as the bridge stringified it.
@@ -124,17 +133,19 @@ pub fn handle(_payload: &SetResultAnimation, _doc: &ArtifactView<'_, Fem2dSnapsh
     Err(Fault::from("fem2d.result-animation.window-context-required"))
 }
 
+/// ⏯️ Merges the gesture into the addressed window's playback state.
+///
+/// 🕰️ ONE clock per window: only the TRANSITION into `playing` arms a hop. Moving the phase slider
+/// mid-playback, or pressing play twice, must never leave two chains ticking the same window — each
+/// would advance the phase by its own frame, so the structure would run at double speed and never
+/// slow down again.
 pub fn handle_window(payload: &SetResultAnimation, _doc: &ArtifactView<'_, Fem2dSnapshot>, cfg: &ConfigView<'_, NoConfig>, view: &semio_framework_plugin::ViewModel) -> Result<Emit<Fem2dMutation, NoConfigMutation>, Fault> {
-    let window_id = results::config::addressed_window_id(cfg, view)?;
+    let window_id = results::config::addressed_window_id(cfg, view, payload.window_id.as_deref())?;
     let current = results::config::current(cfg);
     let mut next = current.clone();
     merge(payload, &mut next.animation)?;
-    // 🕰️ ONE clock per window: only the transition into `playing` arms a hop. Moving the phase
-    // slider mid-playback, or pressing play twice, must never leave two chains ticking the same
-    // window — each would advance the phase by its own frame and the structure would run double
-    // speed and never slow down again.
     let effects = if next.animation.playing && !current.animation.playing { vec![rearm_effect(&window_id)] } else { Vec::new() };
-    Ok(Emit { window_config_mutations: vec![results::config::addressed_to(&window_id, next)], effects, ..Default::default() })
+    Ok(Emit { window_config_mutations: vec![results::config::addressed_to(&window_id, next)], effects, coalesce_key: Some(PLAYBACK_COALESCE_KEY.to_owned()), ui_scope: semio_framework::kernel::UiDirtyScope::Partial { window_bodies: vec![results::BODY_KEY.to_owned()], panel_bodies: vec![crate::editor::fem2d::panels::results::BODY_KEY.to_owned()], utilities: false, tools: false, engagements: false, measures: false, labels: false }, ..Default::default() })
 }
 //#endregion 🔖️SetResultAnimation
 

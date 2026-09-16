@@ -27,6 +27,14 @@ async fn patch_section_edits_the_area_on_the_demo_2d() {
 }
 
 #[semio_framework_async_macros::async_test]
+async fn patch_section_emits_one_whole_record_replace_2d() {
+    let emitted = emit(&demo(), PatchSection { id: "post140".into(), field: "iy".into(), value: "0.00005".into() }).expect("handle");
+    let [Fem2dMutation::ReplaceSection(replace)] = emitted.artifact_mutations.as_slice() else { panic!("one replace-section") };
+    assert_eq!(replace.id, "post140");
+    assert_eq!((replace.new_section.id.as_str(), replace.new_section.area, replace.new_section.iy), ("post140", 0.0196, 0.00005));
+}
+
+#[semio_framework_async_macros::async_test]
 async fn patch_section_rejects_an_unknown_field_an_unparsable_value_and_a_missing_section_2d() {
     let demo = demo();
     assert!(emit(&demo, PatchSection { id: "rafter".into(), field: "iz".into(), value: "1".into() }).is_err());

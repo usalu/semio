@@ -1,1 +1,9 @@
-{}
+{
+  "mutation": "createZoneEquipment",
+  "id": 13,
+  "zoneId": 1,
+  "equipmentType": "Baseboard",
+  "priority": 1,
+  "heatingCapacityW": 2000.0,
+  "coolingCapacityW": 0.0
+}

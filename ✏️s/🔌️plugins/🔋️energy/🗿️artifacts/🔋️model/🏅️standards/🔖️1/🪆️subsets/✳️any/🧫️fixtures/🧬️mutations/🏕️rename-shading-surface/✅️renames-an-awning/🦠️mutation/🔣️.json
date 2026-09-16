@@ -1,1 +1,5 @@
-{}
+{
+  "mutation": "renameShadingSurface",
+  "id": 11,
+  "newName": "AWNING"
+}

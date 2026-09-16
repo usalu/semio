@@ -1,1 +1,6 @@
-{}
+{
+  "mutation": "reorderAnnualScheduleRules",
+  "id": 30,
+  "from": 5,
+  "to": 0
+}

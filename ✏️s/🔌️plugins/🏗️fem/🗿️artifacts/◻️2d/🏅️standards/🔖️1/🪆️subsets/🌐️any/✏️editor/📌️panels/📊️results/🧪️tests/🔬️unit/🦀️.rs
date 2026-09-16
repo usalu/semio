@@ -8,7 +8,7 @@ fn labels() -> &'static Fem2dLabels {
 
 fn panel_json(window: &Fem2dResultsWindowConfig) -> String {
     let doc = crate::standards::v1::subsets::any::schema::default_fem2d_snapshot();
-    let node = render(&doc, window, "results-left", labels()).expect("results panel admission");
+    let node = render(&doc, Some(window), "results-left", labels()).expect("results panel admission");
     semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("fixture projection")
 }
 
@@ -58,4 +58,38 @@ async fn results_panel_source_select_offers_cases_and_combinations() {
     for combination in &doc.combinations {
         assert!(json.contains(combination.id.as_str()), "missing combination {}: {json}", combination.id);
     }
+}
+
+/// 🪟️ LAW: the tag every control carries is the SAME id `addressed_window_id` resolves it to — a
+/// panel that tags one pane while the command writes another is the split-layout bug this closes.
+#[semio_framework_async_macros::async_test]
+async fn results_panel_tag_resolves_to_the_partition_the_command_writes() {
+    let config = semio_framework_plugin::NoConfig::default();
+    let cfg = semio_framework_plugin::ConfigView { snapshot: &config, window: None };
+    let split = semio_framework_plugin::ViewModel {
+        window_instances: vec![
+            semio_framework_plugin::ViewWindowInstance { id: "results-left".into(), window_kind_id: crate::editor::fem2d::modes::edit::windows::results::WINDOW_KIND_ID.into() },
+            semio_framework_plugin::ViewWindowInstance { id: "results-right".into(), window_kind_id: crate::editor::fem2d::modes::edit::windows::results::WINDOW_KIND_ID.into() },
+        ],
+        focused_window_id: Some("results-left".into()),
+        ..Default::default()
+    };
+    let tag = crate::editor::fem2d::results_window_instance_id(&split).expect("a panel projection resolves a results window");
+    assert_eq!(tag, "results-left", "the panel tags the focused results pane");
+    let resolved = crate::editor::fem2d::modes::edit::windows::results::config::addressed_window_id(&cfg, &split, Some(&tag)).expect("the tag addresses an open results window");
+    assert_eq!(resolved, tag);
+    let json = panel_json(&Fem2dResultsWindowConfig::default());
+    assert!(json.contains("results-left"), "every control carries the tag: {json}");
+}
+
+/// 🪟️ LAW: a panel projection that captured another pane still renders a working transport — a bare
+/// play/pause toggle naming only the window — and says which pane to focus for live readouts.
+#[semio_framework_async_macros::async_test]
+async fn results_panel_without_a_captured_window_offers_a_toggle_and_a_focus_hint() {
+    let doc = crate::standards::v1::subsets::any::schema::default_fem2d_snapshot();
+    let node = render(&doc, None, "results-left", labels()).expect("results panel admission");
+    let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("fixture projection");
+    assert!(json.contains(labels().focus_results_hint.as_str()), "{json}");
+    assert!(json.contains(&format!("{} / {}", labels().play.as_str(), labels().pause.as_str())), "{json}");
+    assert!(json.contains("fem2d-play-results.transport.play"), "{json}");
 }

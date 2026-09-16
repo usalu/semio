@@ -256,7 +256,7 @@ semio_framework_plugin::derive_artifact_facets!(
 //#endregion 🧬️DerivedArtifactFacets
 
 //#region 🔖️ExampleFixtures
-pub use crate::document_dsl::{PROCESS_3D_PLATE_EXAMPLE_TEXT as PLATE_EXAMPLE_DSL, PROCESS_3D_TIMBER_EXAMPLE_TEXT as TIMBER_EXAMPLE_DSL};
+pub use crate::document_dsl::{PROCESS_3D_CONCRETE_FOREST_EXAMPLE_TEXT as CONCRETE_FOREST_EXAMPLE_DSL, PROCESS_3D_PLATE_EXAMPLE_TEXT as PLATE_EXAMPLE_DSL, PROCESS_3D_TIMBER_EXAMPLE_TEXT as TIMBER_EXAMPLE_DSL};
 
 pub fn default_document() -> crate::Process3dSnapshot {
     crate::Process3dSnapshot::parse_dsl(TIMBER_EXAMPLE_DSL).unwrap_or_default()
@@ -264,6 +264,12 @@ pub fn default_document() -> crate::Process3dSnapshot {
 
 pub fn plate_document() -> crate::Process3dSnapshot {
     crate::Process3dSnapshot::parse_dsl(PLATE_EXAMPLE_DSL).unwrap_or_else(|_| default_document())
+}
+
+/// 🌲️ The concrete forest example: the reused hexagonal-cut concrete forest piece processed by every
+/// machine of the concrete catalog.
+pub fn concrete_forest_document() -> crate::Process3dSnapshot {
+    crate::Process3dSnapshot::parse_dsl(CONCRETE_FOREST_EXAMPLE_DSL).unwrap_or_else(|_| default_document())
 }
 //#endregion 🔖️ExampleFixtures
 

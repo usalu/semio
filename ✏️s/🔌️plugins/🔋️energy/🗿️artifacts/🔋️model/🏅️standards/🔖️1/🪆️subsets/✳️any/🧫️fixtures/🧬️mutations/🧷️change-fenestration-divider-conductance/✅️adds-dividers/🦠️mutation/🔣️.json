@@ -1,1 +1,5 @@
-{}
+{
+  "mutation": "changeFenestrationDividerConductance",
+  "id": 5,
+  "newDividerConductanceWK": 0.4
+}

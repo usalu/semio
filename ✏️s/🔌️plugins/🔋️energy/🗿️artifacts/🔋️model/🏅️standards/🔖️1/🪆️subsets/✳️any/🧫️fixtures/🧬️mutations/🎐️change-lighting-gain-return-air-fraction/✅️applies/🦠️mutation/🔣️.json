@@ -1,1 +1,5 @@
-{}
+{
+  "mutation": "changeLightingGainReturnAirFraction",
+  "id": 30,
+  "newReturnAirFraction": 0.1
+}

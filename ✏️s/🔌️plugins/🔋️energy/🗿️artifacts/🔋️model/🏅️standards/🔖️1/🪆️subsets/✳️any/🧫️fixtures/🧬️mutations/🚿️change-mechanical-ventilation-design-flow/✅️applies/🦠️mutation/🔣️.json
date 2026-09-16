@@ -1,1 +1,5 @@
-{}
+{
+  "mutation": "changeMechanicalVentilationDesignFlow",
+  "id": 60,
+  "newDesignFlowM3S": 0.12
+}

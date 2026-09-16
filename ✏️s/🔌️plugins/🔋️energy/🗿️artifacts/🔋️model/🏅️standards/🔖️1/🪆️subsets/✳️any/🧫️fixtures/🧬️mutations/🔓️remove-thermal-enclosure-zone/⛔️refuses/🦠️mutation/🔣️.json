@@ -1,1 +1,5 @@
-{}
+{
+  "mutation": "removeThermalEnclosureZone",
+  "id": 221,
+  "zoneId": 1
+}

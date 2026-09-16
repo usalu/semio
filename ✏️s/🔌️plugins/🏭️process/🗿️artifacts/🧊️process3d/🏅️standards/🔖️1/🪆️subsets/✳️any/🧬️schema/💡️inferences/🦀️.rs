@@ -178,6 +178,7 @@ fn solid_for_spec(kernel: &mut Brep, spec: &WorkingSolid, pose: &Pose) -> Option
             kernel.kind(&handle).ok()?;
             handle
         }
+        WorkingSolid::Reference { reference_id } => crate::reference_solid(reference_id)?.import(kernel)?,
         // 🖼️ A GLB-imported reference mesh has no real B-Rep topology in the kernel, so it cannot
         // serve as a CSG operand (stock or tool); the stock-level fallback handles display instead.
         WorkingSolid::ImportedMesh { .. } => return None,
@@ -200,7 +201,7 @@ pub fn primitive_centre_offset(spec: &WorkingSolid) -> Option<[f64; 3]> {
     match spec {
         WorkingSolid::Box { width, depth, height } => Some([-width / 2.0, -depth / 2.0, -height / 2.0]),
         WorkingSolid::Cylinder { height, .. } => Some([0.0, 0.0, -height / 2.0]),
-        WorkingSolid::Sphere { .. } | WorkingSolid::ImportedSolid { .. } | WorkingSolid::ImportedMesh { .. } => None,
+        WorkingSolid::Sphere { .. } | WorkingSolid::ImportedSolid { .. } | WorkingSolid::ImportedMesh { .. } | WorkingSolid::Reference { .. } => None,
     }
 }
 
@@ -387,6 +388,7 @@ pub fn stock_extent(solid: &WorkingSolid) -> [f64; 3] {
         WorkingSolid::Box { width, depth, height } => [*width, *depth, *height],
         WorkingSolid::Cylinder { radius, height } => [*radius * 2.0, *radius * 2.0, *height],
         WorkingSolid::Sphere { radius } => [*radius * 2.0, *radius * 2.0, *radius * 2.0],
+        WorkingSolid::Reference { reference_id } => crate::reference_solid(reference_id).map_or([1.0, 1.0, 1.0], |reference| reference.extent),
         WorkingSolid::ImportedMesh { .. } | WorkingSolid::ImportedSolid { .. } => [1.0, 1.0, 1.0],
     }
 }

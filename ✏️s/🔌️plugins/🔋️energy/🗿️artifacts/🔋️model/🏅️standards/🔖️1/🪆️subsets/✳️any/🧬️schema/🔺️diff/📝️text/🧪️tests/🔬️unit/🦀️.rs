@@ -24,5 +24,8 @@ async fn diff_from_model_regenerates_structure_and_zones_together() {
     let diff = diff_from_model(model);
     let applied = diff.apply(&base).expect("valid mutation diff");
     assert_eq!(applied.model.name, "Demo");
-    assert_eq!(applied.structure.child_id, applied.zones.child_id, "structure/zones must share one scene id");
+    let (structure, zones) = crate::energy_children_from_model(&applied.model);
+    assert_eq!((applied.structure.child_id.as_str(), applied.zones.child_id.as_str()), (structure.child_id.as_str(), zones.child_id.as_str()), "structure/zones must be regenerated from the same model");
+    assert_ne!(applied.structure.child_id, applied.zones.child_id, "two composed children never share a child id (the store's child projection rejects a duplicate)");
+    assert_eq!(applied.structure.child_id, applied.structure.target.artifact_id, "a child id IS its target's artifact id");
 }

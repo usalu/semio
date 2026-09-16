@@ -1,1 +1,5 @@
-{}
+{
+  "mutation": "changeLightingGainZone",
+  "id": 30,
+  "newZoneId": 2
+}

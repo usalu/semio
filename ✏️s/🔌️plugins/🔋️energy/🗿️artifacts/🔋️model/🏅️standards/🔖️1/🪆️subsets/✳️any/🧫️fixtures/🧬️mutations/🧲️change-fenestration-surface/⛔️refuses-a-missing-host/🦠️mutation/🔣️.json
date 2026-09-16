@@ -1,1 +1,5 @@
-{}
+{
+  "mutation": "changeFenestrationSurface",
+  "id": 5,
+  "newSurfaceId": 9
+}

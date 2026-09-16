@@ -46,6 +46,7 @@ semio_framework_plugin::app_labels! {
         icon_field: native_en "Icon", native_de "Icon", reuse_en "Icon", reuse_de "Icon";
         stock_kind_imported_mesh: native_en "Imported Mesh", native_de "Importiertes Netz", reuse_en "Imported Mesh", reuse_de "Importiertes Netz";
         stock_kind_imported_solid: native_en "Imported Solid", native_de "Importierter Körper", reuse_en "Imported Solid", reuse_de "Importierter Körper";
+        stock_kind_reference: native_en "Reference Solid", native_de "Referenzkörper", reuse_en "Reference Solid", reuse_de "Referenzkörper";
     }
 }
 //#endregion 🔖️Labels

@@ -20,8 +20,8 @@
 use crate::air_exchange::InfiltrationMethod;
 use crate::io::export::serializers::artifacts::epjson::v25_2::any::{glazing_construction_name, surface_normal, EpJsonDiagnostic, CONTRACT_OUTPUT_VARIABLES, DUAL_SETPOINT_CONTROL_SCHEDULE};
 use crate::model::{
-    Construction, EntityId, EquipmentGain, Fenestration, GroundTemperatureConfig, IdealLoadsSystem, Infiltration, LightingGain, Material, Model, OutputReportFrequency, OutputVariableSpec, OutsideBoundary, PeopleGain, ScheduleId, Site, Space,
-    Surface, SurfaceClass, Thermostat, Zone,
+    Construction, EntityId, EquipmentGain, Fenestration, GasKind, GasMaterial, GlazingMaterial, GroundTemperatureConfig, IdealLoadsSystem, Infiltration, LightingGain, Material, Model, OutputReportFrequency, OutputVariableSpec, OutsideBoundary,
+    PeopleGain, ScheduleId, Site, Space, Surface, SurfaceClass, Thermostat, Zone,
 };
 use crate::schedule::{ConstantSchedule, DailySchedule, ScheduleInterpolation};
 use crate::EnergyModelSnapshot;
@@ -54,6 +54,8 @@ pub const KNOWN_OBJECT_TYPES: &[&str] = &[
     "Schedule:Compact",
     "Material",
     "Material:NoMass",
+    "WindowMaterial:Glazing",
+    "WindowMaterial:Gas",
     "WindowMaterial:SimpleGlazingSystem",
     "Construction",
     "Zone",
@@ -313,6 +315,38 @@ fn decode_materials(root: &Object, model: &mut Model) -> Vec<String> {
         next += 1;
         push(model, &mut names, material);
     }
+    // 🪟️🌫️ Layered glazing: panes and gas gaps share the one material id space, so `names` keeps
+    // ONE position list across all three families and a construction layer resolves by position.
+    for (name, fields) in objects(root, "WindowMaterial:Glazing") {
+        model.glazing_materials.push(GlazingMaterial {
+            id: EntityId(next),
+            name: name.to_string(),
+            thickness_m: number_or(fields, "thickness", 0.003),
+            conductivity_w_m_k: number_or(fields, "conductivity", 0.9),
+            solar_transmittance: number_or(fields, "solar_transmittance_at_normal_incidence", 0.0),
+            solar_reflectance_front: number_or(fields, "front_side_solar_reflectance_at_normal_incidence", 0.0),
+            solar_reflectance_back: number_or(fields, "back_side_solar_reflectance_at_normal_incidence", 0.0),
+            visible_transmittance: number_or(fields, "visible_transmittance_at_normal_incidence", 0.0),
+            visible_reflectance_front: number_or(fields, "front_side_visible_reflectance_at_normal_incidence", 0.0),
+            visible_reflectance_back: number_or(fields, "back_side_visible_reflectance_at_normal_incidence", 0.0),
+            infrared_transmittance: number_or(fields, "infrared_transmittance_at_normal_incidence", 0.0),
+            infrared_emissivity_front: number_or(fields, "front_side_infrared_hemispherical_emissivity", 0.84),
+            infrared_emissivity_back: number_or(fields, "back_side_infrared_hemispherical_emissivity", 0.84),
+        });
+        names.push(name.to_string());
+        next += 1;
+    }
+    for (name, fields) in objects(root, "WindowMaterial:Gas") {
+        let gas = match text(fields, "gas_type") {
+            Some("Argon") => GasKind::Argon,
+            Some("Krypton") => GasKind::Krypton,
+            Some("Xenon") => GasKind::Xenon,
+            _ => GasKind::Air,
+        };
+        model.gas_materials.push(GasMaterial { id: EntityId(next), name: name.to_string(), thickness_m: number_or(fields, "thickness", 0.012), gas });
+        names.push(name.to_string());
+        next += 1;
+    }
     names
 }
 
@@ -338,7 +372,7 @@ fn decode_constructions(root: &Object, model: &mut Model, material_names: &[Stri
             match material_names.iter().position(|material| material == layer) {
                 Some(position) => ids.push(EntityId(MATERIAL_BASE + position as u32)),
                 None => {
-                    diagnostics.push(EpJsonDiagnostic::new("epjson.construction.unknown-layer", name, format!("layer {index} names {layer:?}, which this document does not define as a Material, Material:NoMass or WindowMaterial:SimpleGlazingSystem")));
+                    diagnostics.push(EpJsonDiagnostic::new("epjson.construction.unknown-layer", name, format!("layer {index} names {layer:?}, which this document does not define as a Material, Material:NoMass, WindowMaterial:Glazing, WindowMaterial:Gas or WindowMaterial:SimpleGlazingSystem")));
                 }
             }
         }
@@ -499,6 +533,21 @@ fn schedule_reference(fields: &Object, key: &str, subject: &str, diagnostics: &m
     }
 }
 
+/// 🔁️ The export leaf names a gain `"{zone} {marker} {id}"` (no semio gain carries a name of its
+/// own). Reading that id back keeps the codec's OWN output round-tripping byte-identically; a
+/// foreign document whose names do not follow the scheme gets a fresh `GAIN_BASE`-sequenced id.
+fn codec_gain_id(name: &str, marker: &str, next: &mut u32) -> EntityId {
+    let own = name.rsplit_once(' ').filter(|(head, _)| head.ends_with(&format!(" {marker}")) || *head == marker).and_then(|(_, id)| id.parse::<u32>().ok());
+    match own {
+        Some(id) => EntityId(id),
+        None => {
+            let id = *next;
+            *next += 1;
+            EntityId(id)
+        }
+    }
+}
+
 fn decode_gains(root: &Object, model: &mut Model, zone_names: &[String], diagnostics: &mut Vec<EpJsonDiagnostic>) {
     let mut next = GAIN_BASE;
     for (name, fields) in objects(root, "ZoneInfiltration:DesignFlowRate") {
@@ -516,7 +565,7 @@ fn decode_gains(root: &Object, model: &mut Model, zone_names: &[String], diagnos
             }
         };
         model.infiltrations.push(Infiltration {
-            id: EntityId(next),
+            id: codec_gain_id(name, "Infiltration", &mut next),
             zone_id,
             schedule_id: schedule_reference(fields, "schedule_name", name, diagnostics),
             method,
@@ -530,12 +579,12 @@ fn decode_gains(root: &Object, model: &mut Model, zone_names: &[String], diagnos
             velocity_term_coefficient: number_or(fields, "velocity_term_coefficient", 0.0),
             velocity_squared_term_coefficient: number_or(fields, "velocity_squared_term_coefficient", 0.0),
         });
-        next += 1;
+        
     }
     for (name, fields) in objects(root, "People") {
         let Some(zone_id) = zone_id_of(zone_names, text(fields, "zone_or_zonelist_or_space_or_spacelist_name")) else { continue };
         model.people.push(PeopleGain {
-            id: EntityId(next),
+            id: codec_gain_id(name, "People", &mut next),
             zone_id,
             schedule_id: schedule_reference(fields, "number_of_people_schedule_name", name, diagnostics),
             activity_schedule_id: schedule_reference(fields, "activity_level_schedule_name", name, diagnostics),
@@ -544,12 +593,12 @@ fn decode_gains(root: &Object, model: &mut Model, zone_names: &[String], diagnos
             latent_fraction: 0.0,
             radiant_fraction: number_or(fields, "fraction_radiant", 0.3),
         });
-        next += 1;
+        
     }
     for (name, fields) in objects(root, "Lights") {
         let Some(zone_id) = zone_id_of(zone_names, text(fields, "zone_or_zonelist_or_space_or_spacelist_name")) else { continue };
         model.lighting.push(LightingGain {
-            id: EntityId(next),
+            id: codec_gain_id(name, "Lights", &mut next),
             zone_id,
             schedule_id: schedule_reference(fields, "schedule_name", name, diagnostics),
             watts_per_area: number_or(fields, "watts_per_floor_area", 0.0),
@@ -557,19 +606,19 @@ fn decode_gains(root: &Object, model: &mut Model, zone_names: &[String], diagnos
             visible_fraction: number_or(fields, "fraction_visible", 0.0),
             return_air_fraction: number_or(fields, "return_air_fraction", 0.0),
         });
-        next += 1;
+        
     }
     for (name, fields) in objects(root, "ElectricEquipment") {
         let Some(zone_id) = zone_id_of(zone_names, text(fields, "zone_or_zonelist_or_space_or_spacelist_name")) else { continue };
         model.equipment.push(EquipmentGain {
-            id: EntityId(next),
+            id: codec_gain_id(name, "Equipment", &mut next),
             zone_id,
             schedule_id: schedule_reference(fields, "schedule_name", name, diagnostics),
             watts_per_area: number_or(fields, "watts_per_floor_area", 0.0),
             radiant_fraction: number_or(fields, "fraction_radiant", 0.0),
             latent_fraction: number_or(fields, "fraction_latent", 0.0),
         });
-        next += 1;
+        
     }
 }
 

@@ -1,1 +1,17 @@
-{}
+{
+  "mutation": "createInfiltration",
+  "index": 1,
+  "id": 51,
+  "zoneId": 2,
+  "scheduleId": 1,
+  "method": "ScheduledAch",
+  "designFlowAch": 0.5,
+  "flowPerExteriorAreaM3SM2": 0.0,
+  "effectiveLeakageAreaM2": 0.0,
+  "dischargeCoefficient": 1.0,
+  "stackHeightM": 2.7,
+  "constantTermCoefficient": 1.0,
+  "temperatureTermCoefficient": 0.0,
+  "velocityTermCoefficient": 0.0,
+  "velocitySquaredTermCoefficient": 0.0
+}

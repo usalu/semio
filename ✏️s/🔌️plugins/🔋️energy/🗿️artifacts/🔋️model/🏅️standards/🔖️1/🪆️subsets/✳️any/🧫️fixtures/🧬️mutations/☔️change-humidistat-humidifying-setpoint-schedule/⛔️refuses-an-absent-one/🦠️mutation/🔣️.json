@@ -1,1 +1,5 @@
-{}
+{
+  "mutation": "changeHumidistatHumidifyingSetpointSchedule",
+  "id": 11,
+  "newHumidifyingSetpointScheduleId": 99
+}

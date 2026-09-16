@@ -1,1 +1,5 @@
-{}
+{
+  "mutation": "changeHumidistatZone",
+  "id": 11,
+  "newZoneId": 2
+}

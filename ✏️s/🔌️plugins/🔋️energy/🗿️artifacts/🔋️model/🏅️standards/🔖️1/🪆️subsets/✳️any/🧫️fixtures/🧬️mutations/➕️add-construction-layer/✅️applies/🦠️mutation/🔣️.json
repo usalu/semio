@@ -1,1 +1,6 @@
-{}
+{
+  "mutation": "addConstructionLayer",
+  "id": 10,
+  "index": 2,
+  "materialId": 1
+}

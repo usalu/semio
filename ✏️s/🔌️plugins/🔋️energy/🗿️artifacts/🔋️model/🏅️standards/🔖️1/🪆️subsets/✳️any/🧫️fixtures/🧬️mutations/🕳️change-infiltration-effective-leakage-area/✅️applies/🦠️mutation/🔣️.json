@@ -1,1 +1,5 @@
-{}
+{
+  "mutation": "changeInfiltrationEffectiveLeakageArea",
+  "id": 50,
+  "newEffectiveLeakageAreaM2": 0.05
+}

@@ -1,1 +1,9 @@
-{}
+{
+  "mutation": "createFault",
+  "index": 1,
+  "id": 441,
+  "targetEquipmentId": 501,
+  "faultType": "SensorBias",
+  "severity": 0.5,
+  "startScheduleId": 2
+}

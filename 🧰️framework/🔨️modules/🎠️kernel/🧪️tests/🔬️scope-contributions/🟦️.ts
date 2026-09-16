@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { exampleArtifactSources, resolveDocumentOperatorKinds, reachableKindsFromUnknown, scopeContributionsJson } from "../../🟦️.ts";
+import { contributionIsCapabilityPack, exampleArtifactSources, resolveDocumentOperatorKinds, reachableKindsFromUnknown, scopeContributionsJson } from "../../🟦️.ts";
 import type { PluginManifest } from "../../../🛂️manifest/🟦️.ts";
 
 describe("exampleArtifactSources", () => {
@@ -43,6 +43,25 @@ describe("scopeContributionsJson", () => {
   it("drops every foreign contribution when the graph names no operator kind", () => {
     const scoped = JSON.parse(scopeContributionsJson(loaded, "procedural", [])) as { pluginId: string }[];
     expect(scoped.map((entry) => entry.pluginId)).toEqual(["procedural"]);
+  });
+  const capabilities = [
+    { pluginId: "process-extension-wood", manifest: manifest("process.machines", { appId: "s.process.process3d@1/*#editor", moduleId: "wood", catalogJson: JSON.stringify({ machines: [{ id: "cnc-router", label: "CNC router" }] }) }) },
+    { pluginId: "cad-extension-aec-building", manifest: manifest("cad.computer", { appId: "s.cad.cad@1/*#editor", moduleId: "aec-building", computersJson: JSON.stringify([{ id: "floor-area" }]) }) },
+    { pluginId: "sourcing-module-beams", manifest: manifest("sourcing.module", { appId: "sourcing-curation", moduleId: "beams", typology: ["structure", "beams"] }) },
+  ];
+  it("passes every capability pack — a topic that names no operator kind is never scoped by a graph", () => {
+    for (const entry of capabilities) expect(contributionIsCapabilityPack(entry.manifest.topicContributions![0])).toBe(true);
+    for (const entry of loaded) expect(contributionIsCapabilityPack(entry.manifest.topicContributions![0])).toBe(false);
+    // 🕸️ The sourcing/cad/process receivers resolve NO operator graph at all: their packs must still cross.
+    const scoped = JSON.parse(scopeContributionsJson([...capabilities, loaded[2]!], "sourcing-curation", [])) as { pluginId: string }[];
+    expect(scoped.map((entry) => entry.pluginId)).toEqual(["process-extension-wood", "cad-extension-aec-building", "sourcing-module-beams"]);
+  });
+  it("still cuts an unreachable operator pack when capability packs pass alongside it", () => {
+    const kinds = reachableKindsFromUnknown([{ widgets: [{ neuronKind: "brep.solid.extrude" }] }]);
+    const scoped = JSON.parse(scopeContributionsJson([...loaded, ...capabilities], "procedural", kinds)) as { pluginId: string }[];
+    expect(scoped.map((entry) => entry.pluginId).sort()).toEqual(["cad-extension-aec-building", "flow-extension-brep", "procedural", "process-extension-wood", "sourcing-module-beams"]);
+    expect(JSON.stringify(scoped).includes("bim.wall")).toBe(false);
+    expect(JSON.stringify(scoped).includes("math.vector")).toBe(false);
   });
   it("reaches operators nested in a flow-extension manifestJson string", () => {
     const brep = {

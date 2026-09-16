@@ -1,1 +1,5 @@
-{}
+{
+  "mutation": "changeMaterialConductivity",
+  "id": 1,
+  "newConductivityWMK": 0.25
+}

@@ -195,7 +195,7 @@ import {
 } from "../🐚️Shell/🟦️.tsx";
 import { builtNodeToSnapshot, UiDocumentStore } from "../📃️UiDocumentStore/🟦️.tsx";
 import { segmentedDownloadSinkFactory, type SegmentedDownloadSinkFactory } from "../📤️SegmentedDownload/🟦️.ts";
-import { loadPluginModule, pluginLoadProgressAt, type PluginWasmHandle, SHARD_LIVENESS_POLICY } from "../🔌️PluginRuntime/🟦️.tsx";
+import { loadPluginModule, pluginLoadProgressAt, pluginLoadRemainingMs, PLUGIN_LOAD_IDLE_TIMEOUT_MS, type PluginWasmHandle } from "../🔌️PluginRuntime/🟦️.tsx";
 import {
     InterpretedUiNode,
     wireLabel,
@@ -1706,24 +1706,7 @@ function windowEngagementControlToSpec(control: WindowEngagementControl | undefi
   return { ...numeric, kind: "stepper" };
 }
 
-/** 🫀️ Both numbers come from the ONE schema-owned liveness policy (`https://json.schemas.assets.semio-tech.com/framework/actor/shard-client/schema.json#/$defs/ShardClient`,
- * re-exported through `🔌️PluginRuntime`) — never a literal here. `pluginLoadIdleTimeoutMs` is an IDLE
- * budget, not a total one: the deadline is pushed forward every time this plugin's own load reports
- * progress, so a multi-MB wasm component fetching, compiling and instantiating for two minutes on a
- * loaded machine survives while a plugin whose module 404s or whose worker died still fails within one
- * idle window. `pluginLoadCeilingMs` bounds the whole attempt regardless of progress, so a plugin that
- * reports progress forever can never wedge the boot. */
-const PLUGIN_LOAD_IDLE_TIMEOUT_MS = SHARD_LIVENESS_POLICY.pluginLoadIdleTimeoutMs;
-const PLUGIN_LOAD_CEILING_MS = SHARD_LIVENESS_POLICY.pluginLoadCeilingMs;
-
-/** ⏱️ Pure deadline rule, split out so it can be tested without a clock or a `Worker`: given when the
- * attempt started, when this plugin last reported progress and what time it is now, say how much
- * longer to wait (`0` means give up now). */
-export function pluginLoadRemainingMs(startedAtMs: number, lastProgressAtMs: number | undefined, nowMs: number, idleTimeoutMs: number = PLUGIN_LOAD_IDLE_TIMEOUT_MS, ceilingMs: number = PLUGIN_LOAD_CEILING_MS): number {
-  const idleRemaining = Math.max(lastProgressAtMs ?? startedAtMs, startedAtMs) + idleTimeoutMs - nowMs;
-  const ceilingRemaining = startedAtMs + ceilingMs - nowMs;
-  return Math.max(0, Math.min(idleRemaining, ceilingRemaining));
-}
+export { pluginLoadRemainingMs };
 
 /** @emoji 🔌️ Result of {@link installPlugin} — the boot effect must not infer success from
  * `loadedPluginsRef`, which only updates after the next React commit. */

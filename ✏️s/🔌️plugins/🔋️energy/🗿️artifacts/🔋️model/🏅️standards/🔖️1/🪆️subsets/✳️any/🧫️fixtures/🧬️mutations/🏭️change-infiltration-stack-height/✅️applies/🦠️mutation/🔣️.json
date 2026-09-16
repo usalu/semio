@@ -1,1 +1,5 @@
-{}
+{
+  "mutation": "changeInfiltrationStackHeight",
+  "id": 50,
+  "newStackHeightM": 3.0
+}

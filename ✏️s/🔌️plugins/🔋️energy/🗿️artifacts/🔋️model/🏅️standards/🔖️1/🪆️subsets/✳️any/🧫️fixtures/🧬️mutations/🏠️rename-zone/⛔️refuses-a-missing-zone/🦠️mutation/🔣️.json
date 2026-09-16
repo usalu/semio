@@ -1,1 +1,5 @@
-{}
+{
+  "mutation": "renameZone",
+  "id": 9,
+  "newName": "ZONE 9"
+}

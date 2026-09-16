@@ -137,7 +137,7 @@ async fn available_modules_tracks_contributed_modules() {
             "sourcing.module",
             semio_framework::DslValue::object([
                 ("appId".to_string(), semio_framework::DslValue::String(SOURCING_CURATION_APP_ID.to_string())),
-                ("moduleId".to_string(), semio_framework::DslValue::String(beams.module_id().to_string())),
+                ("moduleId".to_string(), semio_framework::DslValue::String("reuse".to_string())),
                 ("label".to_string(), semio_framework::DslValue::String(beams.label().to_string())),
                 ("iconId".to_string(), semio_framework::DslValue::String("beam".to_string())),
                 ("typologyJson".to_string(), semio_framework::DslValue::String(semio_framework_os_kernel::json::to_json_string(&beams.typology()))),
@@ -149,6 +149,9 @@ async fn available_modules_tracks_contributed_modules() {
     let modules = available_modules(&contributions_json);
     assert_eq!(modules.len(), 4);
     assert_eq!(modules[0].module_id, "beams");
+    assert_eq!(modules[3].module_id, "reuse");
+    let duplicate = contributions_json.replace("\"reuse\"", &format!("\"{}\"", beams.module_id()));
+    assert_eq!(available_modules(&duplicate).len(), 3, "a module id an authored module already serves installs nothing");
 }
 
 #[semio_framework_async_macros::async_test]

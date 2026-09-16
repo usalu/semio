@@ -1,1 +1,5 @@
-{}
+{
+  "mutation": "renameConstruction",
+  "id": 10,
+  "newName": "LTWALL INSULATED"
+}

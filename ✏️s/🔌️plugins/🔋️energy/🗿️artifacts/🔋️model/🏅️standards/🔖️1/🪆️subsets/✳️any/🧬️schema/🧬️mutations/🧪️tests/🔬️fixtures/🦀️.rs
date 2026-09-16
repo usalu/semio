@@ -185,11 +185,14 @@ pub fn assert_forward(case: &Case) {
 
 /// ↩️ Applying the committed mutation and then its OWN computed inverse restores the committed
 /// before-snapshot; an inverse step that is itself refused fails here rather than passing quietly.
+/// The steps are replayed in REVERSE order — exactly as `ArtifactStore::replay_mutations`
+/// (`back.reverse()`) and the framework's `assert_mutation_inverse_law` do — so a multi-step inverse
+/// that only works forwards (parent re-created first) is caught here, not in the shell's undo.
 pub fn assert_inverse(case: &Case) {
     let base = decode(case, "before-snapshot", case.before);
     let mutation: EnergyModelMutation = pack::json::from_json_str(case.mutation).expect("committed mutation payload decodes");
     let mut snapshot = MutationDiff::apply(built(case).diff(), &base).expect("committed mutation applies");
-    for step in <EnergyModelMutation as Mutation<EnergyModelSnapshot>>::inverse(&mutation, &base) {
+    for step in <EnergyModelMutation as Mutation<EnergyModelSnapshot>>::inverse(&mutation, &base).into_iter().rev() {
         let outcome = <EnergyModelMutation as Mutation<EnergyModelSnapshot>>::diff(&step, &snapshot);
         assert!(!outcome.worst_level().is_some_and(|level| level >= protocol::Severity::Error), "{}/{}: an inverse step was itself refused", case.kind, case.directory);
         snapshot = MutationDiff::apply(outcome.diff(), &snapshot).expect("the inverse step applies");
@@ -250,11 +253,25 @@ pub async fn assert_semantics(case: &Case) {
     let _ = base;
 }
 
-/// ⚖️ The framework's own inverse and diff-absorb laws, run in role against this vector.
+/// 🎯️ Whether the committed outcome declares this vector a refusal (`{"status":"rejected",…}`).
+fn committed_is_rejected(case: &Case) -> bool {
+    matches!(committed(case, "outcome", case.outcome).get("status"), Some(pack::json::Value::String(status)) if status == "rejected")
+}
+
+/// ⚖️ The framework's own inverse and diff-absorb laws, run in role against this vector. A vector
+/// the committed outcome declares REJECTED is exempt from the inverse law by construction — the
+/// framework law panics on any Error/Fatal forward outcome, and a refusal IS that outcome; what a
+/// refusal owes instead (the exact fault code + path, an empty delta, before == after) is pinned
+/// by `assert_outcome`/`assert_diff`/`assert_forward`. The absorb law still holds for it.
 pub async fn assert_laws(case: &Case) {
     let base = decode(case, "before-snapshot", case.before);
     let mutation: EnergyModelMutation = pack::json::from_json_str(case.mutation).expect("committed mutation payload decodes");
-    protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
+    if committed_is_rejected(case) {
+        assert!(built(case).worst_level().is_some_and(|level| level >= protocol::Severity::Error), "{}/{}: the committed outcome is a refusal but the implementation applied the mutation", case.kind, case.directory);
+        assert_eq!(decode(case, "after-snapshot", case.after), base, "{}/{}: a refused vector must leave the document untouched", case.kind, case.directory);
+    } else {
+        protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
+    }
     let first = built(case).diff().clone();
     let second = built(case).diff().clone();
     protocol::os_spr::protocol_laws::assert_mutation_diff_absorb_law(&base, first, second).await;

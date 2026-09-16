@@ -1,1 +1,5 @@
-{}
+{
+  "mutation": "changePvSystemTilt",
+  "id": 300,
+  "newTiltDeg": 120.0
+}

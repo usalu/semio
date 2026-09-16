@@ -60,6 +60,10 @@ fn push_working_solid_fields(fields: &mut semio_framework_plugin::UiFixedList<Bu
             push_field(fields, format!("{prefix}.kind"), labels.kind_field.as_str(), labels.stock_kind_imported_solid.as_str())?;
             push_field(fields, format!("{prefix}.handle"), labels.label_field.as_str(), solid_handle)
         }
+        WorkingSolid::Reference { reference_id } => {
+            push_field(fields, format!("{prefix}.kind"), labels.kind_field.as_str(), labels.stock_kind_reference.as_str())?;
+            push_field(fields, format!("{prefix}.reference"), labels.label_field.as_str(), crate::reference_solid(reference_id).map_or(reference_id.as_str(), |reference| reference.label))
+        }
     }
 }
 

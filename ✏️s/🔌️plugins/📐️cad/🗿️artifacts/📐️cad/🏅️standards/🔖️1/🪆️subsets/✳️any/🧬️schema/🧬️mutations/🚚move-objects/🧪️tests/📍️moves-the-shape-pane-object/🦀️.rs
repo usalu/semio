@@ -66,8 +66,8 @@ async fn inverse_restores_the_pre_move_pose() {
 async fn unmaterialized_and_unchanged_poses_are_no_ops() {
     let base = base();
     let unchanged = CadMutation::MoveObjects(MoveObjects { pane: CadPaneId::Shape, placements: vec![CadObjectOrigin { object_id: "object-a".into(), new_origin: [0.0, 0.0, 0.0] }] });
-    assert!(unchanged.diff(&base).messages().iter().any(|message| message.code == "mutation.no-op"), "re-declaring the current origin must be a no-op");
+    assert!(unchanged.diff(&base).messages().iter().any(|message| message.code.0 == "mutation.no-op"), "re-declaring the current origin must be a no-op");
     let elsewhere = CadMutation::MoveObjects(MoveObjects { pane: CadPaneId::Energy, placements: vec![CadObjectOrigin { object_id: "object-a".into(), new_origin: [1.0, 1.0, 1.0] }] });
-    assert!(elsewhere.diff(&base).messages().iter().any(|message| message.code == "mutation.no-op"), "a pane with no materialized child must be a no-op");
+    assert!(elsewhere.diff(&base).messages().iter().any(|message| message.code.0 == "mutation.no-op"), "a pane with no materialized child must be a no-op");
     assert!(elsewhere.inverse(&base).is_empty(), "a no-op move has no inverse step");
 }

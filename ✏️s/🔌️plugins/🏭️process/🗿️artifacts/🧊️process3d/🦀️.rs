@@ -20,6 +20,9 @@ extern crate semio_framework_os_kernel as store;
 #[cfg(test)]
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🧩️example/🦀️.rs"]
 mod art_process3d_demo_tests;
+#[cfg(test)]
+#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌲️concrete-forest/🧪️tests/🧩️example/🦀️.rs"]
+mod art_process3d_concrete_forest_tests;
 
 use protocol::{Identified, Patchable};
 use semio_framework_dispatch_macros::dyn_enum;
@@ -445,6 +448,13 @@ pub enum WorkingSolid {
     ImportedSolid {
         solid_handle: String,
     },
+    /// 🏛️ A reference solid this artifact ships as exact STEP B-Rep (`reference_solid`), addressed by
+    /// its stable id and rebuilt into real kernel topology at every replay — the durable, cross-session
+    /// counterpart of `ImportedSolid` for the `♻️mit-bestand` reuse inventory (the hexagonal-cut
+    /// concrete forest pieces).
+    Reference {
+        reference_id: String,
+    },
 }
 
 impl Default for WorkingSolid {
@@ -594,9 +604,55 @@ pub fn brep_snapshot_for_working_solid(solid: &WorkingSolid) -> SemioBrepSnapsho
         WorkingSolid::Box { width, depth, height } => brep_snapshot_for_box(*width, *depth, *height),
         WorkingSolid::Cylinder { radius, height } => brep_snapshot_for_cylinder(*radius, *height),
         WorkingSolid::Sphere { radius } => brep_snapshot_for_sphere(*radius),
+        WorkingSolid::Reference { reference_id } => reference_solid(reference_id).and_then(|reference| reference.brep_snapshot()).unwrap_or_else(empty_brep_snapshot),
         WorkingSolid::ImportedMesh { .. } | WorkingSolid::ImportedSolid { .. } => empty_brep_snapshot(),
     }
 }
+
+//#region 🔖️ReferenceSolids
+/// 🏛️ One shipped reference solid: its exact STEP text (`🖼️assets/<slug>/📐️.stp`) plus the authored
+/// axis-aligned extent the capability rules read without a kernel (`stock_extent`) — pinned against
+/// the kernel's own bounding box by `reference_solid_extents_match_the_kernel`.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct ReferenceSolid {
+    pub id: &'static str,
+    pub label: &'static str,
+    pub step: &'static str,
+    pub extent: [f64; 3],
+}
+
+impl ReferenceSolid {
+    /// 🧊️ The reference rebuilt in a fresh kernel session — one real solid handle, or `None` when
+    /// the shipped STEP does not read (a build-time asset defect, never a user-facing state).
+    pub fn import(&self, kernel: &mut semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::engine::Brep) -> Option<semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::engine::GeometryHandle> {
+        kernel.import_step_sync(self.step).ok()?.into_iter().next()
+    }
+
+    /// 🌉️ The reference's real, lossless B-Rep content — the composed `stock_solid` child this
+    /// stock mints.
+    pub fn brep_snapshot(&self) -> Option<SemioBrepSnapshot> {
+        let mut kernel = semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::engine::Brep::new();
+        self.import(&mut kernel)?;
+        Some(kernel.tessellation_body().to_snapshot())
+    }
+}
+
+/// 🌲️ The left hexagonal-cut concrete forest piece (`♻️mit-bestand/🖼️asset/🏚️abbau-aufbau`): a
+/// 8.1 m × 4.68 m parallelogram slab on a triangular beam grid over two hexagonal columns, 3 m tall.
+pub const REFERENCE_SOLID_CONCRETE_FOREST_LEFT: &str = "hexagonal-cut-concrete-forest-left";
+
+/// 🏛️ Every reference solid this artifact ships, by stable id.
+pub const REFERENCE_SOLIDS: &[ReferenceSolid] = &[ReferenceSolid {
+    id: REFERENCE_SOLID_CONCRETE_FOREST_LEFT,
+    label: "Hexagonal Cut Concrete Forest Left",
+    step: include_str!("🏅️standards/🔖️1/🪆️subsets/✳️any/🖼️assets/🌲️concrete-forest/📐️.stp"),
+    extent: [10.800_010_282_482_4, 4.676_537_180_435_97, 3.0],
+}];
+
+pub fn reference_solid(reference_id: &str) -> Option<&'static ReferenceSolid> {
+    REFERENCE_SOLIDS.iter().find(|reference| reference.id == reference_id)
+}
+//#endregion 🔖️ReferenceSolids
 
 fn empty_brep_snapshot() -> SemioBrepSnapshot {
     SemioBrepSnapshot { schema: STDIO_SEMIOBREP_DOCUMENT_SCHEMA.into(), vertices: Vec::new(), edges: Vec::new(), loops: Vec::new(), faces: Vec::new(), shells: Vec::new(), solids: Vec::new(), coedges: Vec::new(), next_label: 0 }
@@ -709,9 +765,23 @@ pub fn working_solid_from_brep_snapshot(_brep: &SemioBrepSnapshot) -> WorkingSol
 /// `store::ArtifactChild::new`/`ArtifactDialect` shape). Two callers with byte-identical content
 /// mint the same handle.
 pub fn brep_child_handle(slug: &str, content: &SemioBrepSnapshot) -> store::ArtifactChild<SemioBrepSnapshot> {
+    brep_child_handle_for_text(slug, &serde_json::to_string(&semio_framework_os_kernel::ToValue::to_value(content)).unwrap_or_default())
+}
+
+/// 🪪️ The `s.stdio.semio.brep` child handle of a `WorkingSolid`: analytic solids are addressed by
+/// their minted snapshot, a `Reference` by the shipped STEP text it is — the same content-addressing,
+/// without materialising a 57-face snapshot's JSON inside the guest on every step mutation.
+pub fn working_solid_child_handle(slug: &str, solid: &WorkingSolid) -> store::ArtifactChild<SemioBrepSnapshot> {
+    match solid {
+        WorkingSolid::Reference { reference_id } => brep_child_handle_for_text(slug, reference_solid(reference_id).map_or(reference_id.as_str(), |reference| reference.step)),
+        _ => brep_child_handle(slug, &brep_snapshot_for_working_solid(solid)),
+    }
+}
+
+fn brep_child_handle_for_text(slug: &str, content: &str) -> store::ArtifactChild<SemioBrepSnapshot> {
     use std::hash::{Hash, Hasher};
     let mut hasher = std::collections::hash_map::DefaultHasher::new();
-    serde_json::to_string(&semio_framework_os_kernel::ToValue::to_value(content)).unwrap_or_default().hash(&mut hasher);
+    content.hash(&mut hasher);
     let content_hash = hasher.finish();
     let child_id = format!("{slug}-brep-{content_hash:016x}");
     let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "brep".into() };
@@ -840,14 +910,12 @@ pub fn process_working_scene_to_snapshot(scene: &ProcessWorkingScene, workshop: 
             ProcessMeasure::Drill { .. } => None,
         };
         if let Some(solid) = solid {
-            let content = brep_snapshot_for_working_solid(solid);
-            let handle = brep_child_handle(&format!("tool-{}", step.id), &content);
+            let handle = working_solid_child_handle(&format!("tool-{}", step.id), solid);
             tool_child_ids.insert(step.id.clone(), handle.child_id.clone());
             tool_solids.push(handle);
         }
     }
-    let stock_content = brep_snapshot_for_working_solid(&scene.stock.solid);
-    let stock_solid = brep_child_handle("stock", &stock_content);
+    let stock_solid = working_solid_child_handle("stock", &scene.stock.solid);
     let flow_content = flow_snapshot_for_steps(&scene.steps, &tool_child_ids);
     let steps = flow_child_handle(&flow_content);
     Process3dSnapshot {
@@ -1600,6 +1668,12 @@ pub mod examples {
     #[path = "."]
     pub mod demo {
         #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️.rs"]
+        mod component;
+        pub use component::*;
+    }
+    #[path = "."]
+    pub mod concrete_forest {
+        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌲️concrete-forest/🦀️.rs"]
         mod component;
         pub use component::*;
     }

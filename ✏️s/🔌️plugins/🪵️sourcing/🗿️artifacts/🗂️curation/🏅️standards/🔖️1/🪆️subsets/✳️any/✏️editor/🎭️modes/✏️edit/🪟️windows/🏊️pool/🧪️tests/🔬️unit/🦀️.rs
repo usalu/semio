@@ -1,7 +1,7 @@
 
 use super::*;
 use crate::editor::sourcing::SourcingCurationCommand;
-use crate::editor::sourcing::commands::{curation_add, set_filter_query, sort_table, stock_from_catalogue};
+use crate::editor::sourcing::commands::{curation_add, set_contributions, set_filter_query, sort_table, stock_from_catalogue};
 use crate::editor::sourcing::modes::edit::windows::curated::SOURCING_CURATION_BODY_CURATED;
 use crate::editor::sourcing::unit_tests::context::{dispatch, new_app, row_ids, settle, table_of};
 use crate::{Filters, SortDirection, TableSort};
@@ -28,6 +28,30 @@ fn fake_contribution() -> String {
 }
 
 const CONTRIBUTED_KIND_ID: &str = "reuse-salvaged-oak";
+
+/// 🧩️ The three `sourcing-module-{beams,slabs,windows}` packs exactly as the extension crates emit
+/// them: `✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/*/🦀️.rs` builds this payload from the schema's own
+/// module, so this is the real host pack the demonstrator closure pushes, not a toy.
+fn demonstrator_contributions() -> String {
+    let entries: Vec<semio_framework::ProgramContributionEntry> = crate::schema::available_modules("[]")
+        .into_iter()
+        .map(|module| semio_framework::ProgramContributionEntry {
+            plugin_id: format!("sourcing-module-{}", module.module_id),
+            topic_contribution: Some(semio_framework::TopicContribution::new(
+                "sourcing.module",
+                semio_framework::DslValue::object([
+                    ("appId".to_string(), semio_framework::DslValue::String("sourcing-curation".to_string())),
+                    ("moduleId".to_string(), semio_framework::DslValue::String(module.module_id.clone())),
+                    ("label".to_string(), semio_framework::DslValue::String(module.label.clone())),
+                    ("iconId".to_string(), semio_framework::DslValue::String("beam".to_string())),
+                    ("typologyJson".to_string(), semio_framework::DslValue::String(semio_framework_os_kernel::json::to_json_string(&module.typology))),
+                    ("kindsJson".to_string(), semio_framework::DslValue::String(semio_framework_os_kernel::json::to_json_string(&module.kinds))),
+                ]),
+            )),
+        })
+        .collect();
+    dsl::json::to_json_string(&entries)
+}
 
 #[semio_framework_async_macros::async_test]
 async fn pool_render_respects_query_filter() {
@@ -199,24 +223,57 @@ async fn a_contributed_module_reaches_the_filter_bar_and_then_the_pool_rows() {
     assert!(before.iter().all(|id| rows.contains(id)), "restocking merges, it never drops the authored stock");
 }
 
-/// 🚨️ GATE: `setContributions` is UNREACHABLE at runtime today. Its retained-config footprint is
-/// priced as `json.len()` against `SOURCING_CURATION_CONFIG_TEXT_BYTES` (96) — a budget the bare
-/// `ProgramContributionEntry` envelope for a single `sourcing.module` topic already blows before any
-/// payload, so no contribution can ever install a module through the live store, and the Pool can
-/// never gain contributed rows in the running app. This test pins the ceiling so the day someone
-/// raises the envelope, it fails and gets deleted rather than quietly staying wrong.
+/// ⚖️ LAW: the REAL demonstrator pack — all three `sourcing-module-{beams,slabs,windows}` topic
+/// contributions in one `ProgramContributionEntry[]` — crosses the LIVE `setContributions` lane and
+/// installs exactly the modules it can act on. It is far past the 96-byte filter-text envelope that
+/// used to price (and silently refuse) it. Because those three extensions re-contribute the three
+/// modules this crate already authors, the installable share is empty: the app keeps the roster it
+/// can act on, never the host's whole pack, and the module list stays at three rather than six.
 #[semio_framework_async_macros::async_test]
-async fn set_contributions_is_refused_by_its_retained_config_envelope() {
-    let json = fake_contribution();
-    assert!(json.len() > crate::editor::sourcing::SOURCING_CURATION_CONFIG_TEXT_BYTES, "a real contribution is {} bytes against a {}-byte envelope", json.len(), crate::editor::sourcing::SOURCING_CURATION_CONFIG_TEXT_BYTES);
-    assert!(crate::editor::sourcing::sourcing_curation_config_mutation_footprint(&crate::editor::sourcing::config::SourcingCurationConfigMutation::SetContributions { json }).is_err(), "the retained config preparation must refuse an oversized contribution rather than truncate it");
-    let empty = crate::editor::sourcing::config::SourcingCurationConfigMutation::SetContributions { json: "[]".into() };
-    assert!(crate::editor::sourcing::sourcing_curation_config_mutation_footprint(&empty).is_ok(), "clearing contributions stays within the envelope");
+async fn the_real_sourcing_module_pack_installs_through_the_live_contributions_lane() {
+    let json = demonstrator_contributions();
+    assert!(json.len() > crate::editor::sourcing::component::SOURCING_CURATION_CONFIG_TEXT_BYTES, "the real pack is {} bytes — past the {}-byte filter-text envelope", json.len(), crate::editor::sourcing::component::SOURCING_CURATION_CONFIG_TEXT_BYTES);
+    let installable = crate::schema::installable_contributions(&json, crate::editor::sourcing::component::SOURCING_CURATION_CONFIG_CONTRIBUTIONS_BYTES);
+    assert_eq!(installable, "[]", "the three shipped extensions re-contribute authored modules, so nothing new is installable");
+    let installed: Vec<String> = crate::schema::available_modules(&json).into_iter().map(|module| module.module_id).collect();
+    assert_eq!(installed, vec!["beams".to_string(), "windows".to_string(), "slabs".to_string()], "a re-contributed module never duplicates the authored one");
+    let mutation = crate::editor::sourcing::config::SourcingCurationConfigMutation::SetContributions { json: installable };
+    assert!(crate::editor::sourcing::component::sourcing_curation_config_mutation_footprint(&mutation).is_ok(), "the retained config preparation must admit the installable roster");
+    let mut app = new_app().await;
+    dispatch(&mut app, SourcingCurationCommand::SetContributions(set_contributions::SetContributions { json })).await;
+    assert_eq!(row_ids(&mut app, SOURCING_CURATION_BODY_POOL).await.len(), 10, "the pool still renders every authored kind after the real pack crosses");
+}
+
+/// ⚖️ LAW: a module the app does NOT already author installs through the LIVE `setContributions`
+/// dispatch and its kinds reach the Pool. The restock handler reads `cfg.snapshot.contributions_json`
+/// off the retained config store, so a contributed kind in the published catalogue is proof that the
+/// store really kept the pushed roster — the whole path the demonstrator depends on.
+#[semio_framework_async_macros::async_test]
+async fn dispatching_set_contributions_installs_the_module_into_the_live_catalogue() {
+    let installable = crate::schema::installable_contributions(&fake_contribution(), crate::editor::sourcing::component::SOURCING_CURATION_CONFIG_CONTRIBUTIONS_BYTES);
+    assert!(installable.contains("\"reuse\""), "a module id no authored module serves is installable: {installable}");
+    assert!(installable.len() <= crate::editor::sourcing::component::SOURCING_CURATION_CONFIG_CONTRIBUTIONS_BYTES, "the installable roster fits its retained lane");
+    let mut app = new_app().await;
+    let before = row_ids(&mut app, SOURCING_CURATION_BODY_POOL).await;
+    assert!(!before.iter().any(|id| id == CONTRIBUTED_KIND_ID), "the contributed kind is absent before the push");
+    dispatch(&mut app, SourcingCurationCommand::SetContributions(set_contributions::SetContributions { json: fake_contribution() })).await;
+    app.dispatch_typed(SourcingCurationCommand::StockFromCatalogue(stock_from_catalogue::StockFromCatalogue {}), &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("restock dispatch");
+    let restocked = settle(&mut app)
+        .await
+        .into_iter()
+        .find_map(|effect| match effect {
+            semio_framework::kernel::Effect::LoadDocument { pack, .. } => Some(<CurationSnapshot as store::ArtifactPack>::decode_pack(&pack).expect("restocked document")),
+            _ => None,
+        })
+        .expect("restocking publishes a document load");
+    let rows: Vec<String> = pool_kinds(&restocked, &SourcingCurationConfig::default()).into_iter().map(|kind| kind.id).collect();
+    assert!(rows.iter().any(|id| id == CONTRIBUTED_KIND_ID), "the live retained config must carry the pushed pack: {rows:?}");
+    assert!(before.iter().all(|id| rows.contains(id)), "installing a module merges, it never drops the authored stock");
 }
 
 /// ⚖️ LAW: dispatching the restock button's command through the live app publishes a document load
-/// carrying the merged catalogue — the built-in modules, since no contribution can be installed (see
-/// `set_contributions_is_refused_by_its_retained_config_envelope`).
+/// carrying the merged catalogue — the built-in modules, since this app starts with an empty
+/// contributions lane.
 #[semio_framework_async_macros::async_test]
 async fn the_restock_button_publishes_a_merged_catalogue_document() {
     let mut app = new_app().await;

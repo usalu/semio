@@ -115,32 +115,36 @@ async fn aggregate_runtime_renders_every_demonstrator_window() {
     }
 }
 
-/// ✏️🌱️ Asserts one bundled editor's own roster declares every dialect it derives a genesis child for.
-fn assert_editor_children_declared<E: ArtifactEditor>(app_id: &str) {
-    semio_framework_plugin::assert_editor_genesis_children_declared::<E>().unwrap_or_else(|fault| panic!("{app_id} derives a genesis child its member roster does not declare: {fault:?}"));
+/// ✏️🌱️ Asserts one bundled editor's own roster declares every dialect it derives a genesis child for,
+/// pinning how many it derives so a surface that stops composing cannot make the assertion vacuous.
+fn assert_editor_children_declared<E: ArtifactEditor>(app_id: &str, derived: usize) {
+    let checked = artifact_app_laws::assert_editor_genesis_children_declared::<E>().unwrap_or_else(|fault| panic!("{app_id} derives a genesis child its member roster does not declare: {fault:?}"));
+    assert_eq!(checked, derived, "{app_id} derives a different number of genesis children than this bundle pins");
 }
 
 /// 👁️🌱️ Viewer twin of `assert_editor_children_declared`.
-fn assert_viewer_children_declared<V: ArtifactViewer>(app_id: &str) {
-    semio_framework_plugin::assert_viewer_genesis_children_declared::<V>().unwrap_or_else(|fault| panic!("{app_id} derives a genesis child its member roster does not declare: {fault:?}"));
+fn assert_viewer_children_declared<V: ArtifactViewer>(app_id: &str, derived: usize) {
+    let checked = artifact_app_laws::assert_viewer_genesis_children_declared::<V>().unwrap_or_else(|fault| panic!("{app_id} derives a genesis child its member roster does not declare: {fault:?}"));
+    assert_eq!(checked, derived, "{app_id} derives a different number of genesis children than this bundle pins");
 }
 
 /// 🧩️ Ticket 26/08/28/DEMONSTRATOR-END-TO-END-ALL-APPS: bundling a foreign app into this component
 /// must not change the roster its derived children are opened through. `VcsArtifactApp<_, M>` faults
 /// at app creation (`seed_genesis_children` → `genesis_member_schema::<M>`) for any dialect `M` does
 /// not declare — aussuchen and verfolgen crashed on `s.stdio.semio@v1/kit` exactly this way while the
-/// bundle registered them over `NoMembers`. Every surface this manifest lists is proven here, so the
-/// next app bundled in cannot regress it without failing natively first.
+/// bundle registered them over `NoMembers`. Every surface this manifest lists is proven here, and the
+/// three that really compose children carry a nonzero count, so the next app bundled in cannot regress
+/// this without failing natively first.
 #[test]
 fn every_bundled_surface_declares_its_derived_child_dialects() {
-    assert_editor_children_declared::<crate::editor::playground::PlaygroundEditor>("s.demonstrator.playground@1/*#editor");
-    assert_viewer_children_declared::<crate::viewer::playground::PlaygroundViewer>("s.demonstrator.playground@1/*#viewer");
-    assert_editor_children_declared::<Generation3dPlayApp>("s.procedural.generation3d@1/*#editor");
-    assert_editor_children_declared::<CadPlayApp>("s.cad.cad@1/*#editor");
-    assert_editor_children_declared::<Puzzle3dPlayApp>("s.puzzle.puzzle3d@1/*#editor");
-    assert_editor_children_declared::<SourcingCurationApp>("s.sourcing.curation@1/*#editor");
-    assert_viewer_children_declared::<SourcingViewer>("s.sourcing.curation@1/*#viewer");
-    assert_editor_children_declared::<Process3dPlayApp>("s.process.process3d@1/*#editor");
-    assert_viewer_children_declared::<Process3dViewer>("s.process.process3d@1/*#viewer");
-    assert_editor_children_declared::<Gis2dPlayApp>("s.gis.gismap@1/*#editor");
+    assert_editor_children_declared::<crate::editor::playground::PlaygroundEditor>("s.demonstrator.playground@1/*#editor", 0);
+    assert_viewer_children_declared::<crate::viewer::playground::PlaygroundViewer>("s.demonstrator.playground@1/*#viewer", 0);
+    assert_editor_children_declared::<Generation3dPlayApp>("s.procedural.generation3d@1/*#editor", 0);
+    assert_editor_children_declared::<CadPlayApp>("s.cad.cad@1/*#editor", 0);
+    assert_editor_children_declared::<Puzzle3dPlayApp>("s.puzzle.puzzle3d@1/*#editor", 0);
+    assert_editor_children_declared::<SourcingCurationApp>("s.sourcing.curation@1/*#editor", 1);
+    assert_viewer_children_declared::<SourcingViewer>("s.sourcing.curation@1/*#viewer", 1);
+    assert_editor_children_declared::<Process3dPlayApp>("s.process.process3d@1/*#editor", 0);
+    assert_viewer_children_declared::<Process3dViewer>("s.process.process3d@1/*#viewer", 0);
+    assert_editor_children_declared::<Gis2dPlayApp>("s.gis.gismap@1/*#editor", 2);
 }

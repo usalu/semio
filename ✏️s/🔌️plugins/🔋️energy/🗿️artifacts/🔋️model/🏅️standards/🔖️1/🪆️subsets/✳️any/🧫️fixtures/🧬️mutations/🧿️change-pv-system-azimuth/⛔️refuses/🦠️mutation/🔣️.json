@@ -1,1 +1,5 @@
-{}
+{
+  "mutation": "changePvSystemAzimuth",
+  "id": 300,
+  "newAzimuthDeg": 400.0
+}

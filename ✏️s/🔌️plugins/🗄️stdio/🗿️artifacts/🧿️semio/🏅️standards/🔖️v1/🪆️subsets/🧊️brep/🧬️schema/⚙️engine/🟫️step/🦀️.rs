@@ -480,6 +480,53 @@ fn parse_entity_id(s: &str) -> Option<u64> {
     s.trim().strip_prefix('#')?.parse().ok()
 }
 
+/// 🧭️ ISO 10303-42 `first_proj_axis(z_axis, ?)`: the default `ref_direction` of a placement that
+/// leaves it unset — `+X` (or `+Y` when the axis is parallel to `X`) projected onto the axis plane.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn first_proj_axis(axis: Vec3) -> Vec3 {
+    let z = axis.normalized().unwrap_or(Vec3::Z);
+    let candidate = if z.cross(Vec3::X).norm() > 1e-9 { Vec3::X } else { Vec3::Y };
+    (candidate - z * candidate.dot(z)).normalized().unwrap_or(Vec3::X)
+}
+
+/// 🧩️ Splits an entity's attribute list into its top-level slots (`'', #1, $, (#2, #3)` → four
+/// slots), so optional (`$`) attributes keep their position instead of collapsing away.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_slots(attrs: &str) -> Vec<&str> {
+    let attrs = attrs.trim_end().strip_suffix(')').unwrap_or(attrs);
+    let mut slots = Vec::new();
+    let mut depth = 0usize;
+    let mut in_string = false;
+    let mut start = 0usize;
+    for (index, byte) in attrs.bytes().enumerate() {
+        match byte {
+            b'\'' => in_string = !in_string,
+            b'(' if !in_string => depth += 1,
+            b')' if !in_string => depth = depth.saturating_sub(1),
+            b',' if !in_string && depth == 0 => {
+                slots.push(attrs[start..index].trim());
+                start = index + 1;
+            }
+            _ => {}
+        }
+    }
+    slots.push(attrs[start..].trim());
+    slots
+}
+
+/// 📏️ Whether a B-spline's whole control polygon is collinear — such a curve is exactly the segment
+/// between its end vertices (a B-spline stays inside its control polygon's convex hull, and a
+/// degenerate hull is that segment), so it is read as the `Line` it is, oriented from the edge's
+/// own start vertex like every `LINE` edge. Real Rhino exports write every straight edge of a
+/// polyhedron as a degree-1 or degree-3 B-spline, and the kernel measures and imprints analytic
+/// lines exactly where a NURBS carrier only approximates.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn straight_control_polygon(controls: &[Pnt3]) -> bool {
+    let (Some(first), Some(last)) = (controls.first(), controls.last()) else { return false };
+    let Some(unit) = (*last - *first).normalized() else { return false };
+    controls.iter().all(|control| (*control - *first).cross(unit).norm() <= Tol::DEFAULT.0)
+}
+
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn parse_refs(attrs: &str) -> Vec<u64> {
     let mut refs = Vec::new();
@@ -808,7 +855,28 @@ impl<'a> StepBuilder<'a> {
         for loop_id in inner_loops {
             self.body.loops.get_mut(loop_id).unwrap().face = face_id;
         }
+        self.attach_pcurves(face_id, surface_id);
         Ok(face_id)
+    }
+
+    /// 🎯️ Gives every coedge of a freshly read face its p-curve (`Surface::project_curve` of the
+    /// edge's own 3D curve over the edge's own `(0, 1)` range, exact for lines and aligned conics on
+    /// planes) — the same contract the kernel's own primitives honour, and the one every boolean's
+    /// imprint/classification samples through; a STEP body without them could be tessellated and
+    /// measured but never cut, fused or classified.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn attach_pcurves(&mut self, face_id: FaceId, surface_id: SurfaceId) {
+        let Some(surface) = self.body.surfaces.get(surface_id).cloned() else { return };
+        for coedge_id in self.body.face_coedges(face_id) {
+            let Some(coedge) = self.body.coedges.get(coedge_id).cloned() else { continue };
+            let Some(edge) = self.body.edges.get(coedge.edge).cloned() else { continue };
+            let Some(curve) = self.body.curves3.get(edge.curve).cloned() else { continue };
+            let pcurve = self.body.curves2.insert(surface.project_curve(&curve, edge.range, self.tol.0));
+            if let Some(coedge) = self.body.coedges.get_mut(coedge_id) {
+                coedge.pcurve = Some(pcurve);
+                coedge.prange = (0.0, 1.0);
+            }
+        }
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -876,10 +944,10 @@ impl<'a> StepBuilder<'a> {
                 let frame = Frame3::from_x_z(center, u_axis, normal).ok_or(StepError::Syntax("invalid ellipse frame".to_string()))?;
                 Curve3::Ellipse { frame, major_radius: floats[0], minor_radius: floats[1] }
             }
-            "B_SPLINE_CURVE_WITH_KNOTS" => self.build_bspline_curve(curve_ref, &attrs)?,
+            "B_SPLINE_CURVE_WITH_KNOTS" => self.build_bspline_curve(curve_ref, &attrs, p0, p1)?,
             _ if entity_type.is_empty() || attrs.contains("B_SPLINE_CURVE_WITH_KNOTS") => {
                 let bspline_attrs = find_composite_bspline_attrs(&attrs, "B_SPLINE_CURVE").ok_or_else(|| StepError::Unsupported(format!("composite curve #{curve_ref}")))?;
-                self.build_bspline_curve(curve_ref, bspline_attrs)?
+                self.build_bspline_curve(curve_ref, bspline_attrs, p0, p1)?
             }
             other => return Err(StepError::Unsupported(other.to_string())),
         };
@@ -887,11 +955,14 @@ impl<'a> StepBuilder<'a> {
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn build_bspline_curve(&self, curve_ref: u64, attrs: &str) -> Result<Curve3, StepError> {
+    fn build_bspline_curve(&self, curve_ref: u64, attrs: &str, p0: Pnt3, p1: Pnt3) -> Result<Curve3, StepError> {
         let (degree, cp_refs, mults, knot_vals) = parse_bspline_curve_attrs(attrs).ok_or_else(|| StepError::Syntax(format!("B_SPLINE_CURVE #{curve_ref} parse failed")))?;
         let mut control_points = Vec::with_capacity(cp_refs.len());
         for &cp_ref in &cp_refs {
             control_points.push(self.build_cartesian_point(cp_ref)?);
+        }
+        if straight_control_polygon(&control_points) {
+            return Ok(Curve3::Line { origin: p0, dir: p1 - p0 });
         }
         let knots = expand_knots(&mults, &knot_vals);
         let n = control_points.len();
@@ -1005,14 +1076,26 @@ impl<'a> StepBuilder<'a> {
         Ok(Vec3::new(coords[0], coords[1], coords[2]))
     }
 
+    /// 🧭️ `AXIS2_PLACEMENT_3D(name, location, axis, ref_direction)` with ISO 10303-42's optional
+    /// slots honoured: an absent (`$`) `axis` is `+Z`, an absent `ref_direction` is the standard's
+    /// `first_proj_axis` derivation (`+X` projected onto the axis plane, `+Y` when the axis is `±X`) —
+    /// real Rhino/ST-Developer exports write `$` for the ref direction of every planar face.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn build_axis2_placement(&self, axis_ref: u64) -> Result<(Pnt3, Vec3, Vec3), StepError> {
         let attrs = self.get_entity(axis_ref)?.attrs.clone();
-        let refs = parse_refs(&attrs);
-        if refs.len() < 3 {
-            return Err(StepError::Syntax(format!("AXIS2_PLACEMENT_3D #{axis_ref} needs 3 references")));
-        }
-        Ok((self.build_cartesian_point(refs[0])?, self.build_direction(refs[1])?, self.build_direction(refs[2])?))
+        let slots = parse_slots(&attrs);
+        let slot_ref = |index: usize| slots.get(index).and_then(|slot| parse_entity_id(slot));
+        let location = slot_ref(1).ok_or_else(|| StepError::Syntax(format!("AXIS2_PLACEMENT_3D #{axis_ref} needs a location reference")))?;
+        let origin = self.build_cartesian_point(location)?;
+        let axis = match slot_ref(2) {
+            Some(direction) => self.build_direction(direction)?,
+            None => Vec3::Z,
+        };
+        let ref_direction = match slot_ref(3) {
+            Some(direction) => self.build_direction(direction)?,
+            None => first_proj_axis(axis),
+        };
+        Ok((origin, axis, ref_direction))
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

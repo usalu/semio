@@ -1,1 +1,5 @@
-{}
+{
+  "mutation": "changeAnnualScheduleDefaultDailySchedule",
+  "id": 30,
+  "newDefaultDailyScheduleId": 99
+}

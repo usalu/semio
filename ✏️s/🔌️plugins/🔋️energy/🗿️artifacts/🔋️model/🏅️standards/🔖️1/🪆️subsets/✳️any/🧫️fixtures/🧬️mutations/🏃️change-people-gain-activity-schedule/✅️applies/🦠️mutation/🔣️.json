@@ -1,1 +1,5 @@
-{}
+{
+  "mutation": "changePeopleGainActivitySchedule",
+  "id": 20,
+  "newActivityScheduleId": 3
+}

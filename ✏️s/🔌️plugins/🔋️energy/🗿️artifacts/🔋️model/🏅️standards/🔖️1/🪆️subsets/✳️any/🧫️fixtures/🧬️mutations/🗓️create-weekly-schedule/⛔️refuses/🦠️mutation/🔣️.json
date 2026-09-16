@@ -1,1 +1,14 @@
-{}
+{
+  "mutation": "createWeeklySchedule",
+  "index": 1,
+  "id": 20,
+  "dailyScheduleIds": [
+    11,
+    11,
+    11,
+    11,
+    11,
+    11,
+    11
+  ]
+}

@@ -1,1 +1,4 @@
-{}
+{
+  "mutation": "bindWeatherFile",
+  "targetUri": "not a uri"
+}

@@ -5,6 +5,7 @@
   "session": { "pluginId": "procedural", "instanceId": 7 },
   "scopeKinds": ["brep.curve.polygon", "brep.solid.extrude", "math.vector"],
   "pack": "[{\"pluginId\":\"flow-extension-brep\"},{\"pluginId\":\"flow-extension-math\"}]",
+  "capabilityPack": "[{\"pluginId\":\"process-extension-wood\"}]",
   "scenarios": [
     {
       "id": "superseded-mid-document-read",
@@ -34,12 +35,22 @@
     },
     {
       "id": "unresolved-scope-pushes-nothing",
-      "note": "A genesis document with no example fallback resolves no operator kinds; the unit reports the reason instead of pushing an unscoped closure.",
+      "note": "A genesis document with no example fallback resolves no operator kinds, and the loaded closure holds only operator-keyed contributions; the unit reports the reason instead of pushing an unscoped closure.",
       "refreshes": 2,
       "supersedeEveryRefresh": true,
       "documentReadResolves": "unresolved",
       "unresolvedReason": "no-document-pack",
       "expected": { "documentReads": 1, "pushes": 0, "installedKeys": [], "outcomes": ["unresolved", "unresolved"] }
+    },
+    {
+      "id": "unresolved-scope-still-pushes-capability-packs",
+      "note": "A curation/machine/computer document resolves no operator graph AT ALL, which is its normal state. An operator graph never scoped a capability pack in the first place, so the unit must still install what the closure holds for that topic instead of skipping the whole push.",
+      "refreshes": 2,
+      "supersedeEveryRefresh": true,
+      "documentReadResolves": "unresolved",
+      "unresolvedReason": "no-operator-graph",
+      "capabilityClosure": true,
+      "expected": { "documentReads": 1, "pushes": 1, "installedKeys": ["7::CAPABILITY"], "outcomes": ["installed", "installed"] }
     }
   ]
 }

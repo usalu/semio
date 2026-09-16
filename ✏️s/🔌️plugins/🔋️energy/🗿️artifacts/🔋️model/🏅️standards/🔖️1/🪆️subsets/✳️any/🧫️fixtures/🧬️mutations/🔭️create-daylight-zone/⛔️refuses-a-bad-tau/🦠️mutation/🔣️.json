@@ -1,1 +1,8 @@
-{}
+{
+  "mutation": "createDaylightZone",
+  "id": 14,
+  "zoneId": 1,
+  "illuminanceTargetLux": 500.0,
+  "glareLimit": 22.0,
+  "windowTransmittance": 1.4
+}

@@ -1,1 +1,26 @@
-{}
+{
+  "artifact": null,
+  "schema": null,
+  "model": null,
+  "structure": null,
+  "zones": null,
+  "referencedModel": null,
+  "weatherLink": {
+    "kind": "attached",
+    "link": {
+      "target": {
+        "artifactId": "hannover",
+        "dialect": {
+          "artifactKind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "epw"
+        }
+      },
+      "pin": {
+        "kind": "head"
+      },
+      "role": "weather"
+    }
+  },
+  "resultsJson": null
+}

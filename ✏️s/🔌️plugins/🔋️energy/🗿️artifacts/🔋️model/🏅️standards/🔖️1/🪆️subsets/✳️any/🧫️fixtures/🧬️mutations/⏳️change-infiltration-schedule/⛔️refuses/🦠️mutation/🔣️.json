@@ -1,1 +1,5 @@
-{}
+{
+  "mutation": "changeInfiltrationSchedule",
+  "id": 50,
+  "newScheduleId": 999
+}

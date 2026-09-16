@@ -1,22 +1,34 @@
 use super::*;
-use crate::editor::fem2d::unit_tests::context::{dispatch, fem2d_app, render as render_body};
-use crate::editor::fem2d::Fem2dCommand;
 
-async fn load_default_example(app: &mut crate::editor::fem2d::unit_tests::context::Fem2dApp) {
-    dispatch(app, Fem2dCommand::SetActiveExample(crate::editor::fem2d::commands::set_active_example::SetActiveExample { example_id: "default".into() })).await;
+/// 📊️ One results scene rendered straight off a document and a window configuration.
+///
+/// No live app: a `VcsArtifactApp` that has opened a document owes the store a terminal close, and
+/// the framework's own fixture close walks a one-item budget the demo-sized store does not fit. A
+/// render law needs neither — `render` is a pure function of the snapshot, the display, the window
+/// configuration and the interaction snapshot.
+fn results_scene(doc: &Fem2dSnapshot, display: &ResultDisplay, window: &config::Fem2dResultsWindowConfig) -> Canvas2dScene {
+    let node = render(doc, display, &Viewport2d::default(), window, &crate::editor::fem2d::interaction::Fem2dInteractionSnapshot::default(), None).expect("fixture surface admission");
+    let semio_framework_ui_contract::Component::Surface(props) = &node.component else { panic!("expected canvas surface") };
+    semio_framework_ui_scene::decode(props).expect("decode canvas scene")
+}
+
+fn demo() -> Fem2dSnapshot {
+    crate::standards::v1::subsets::any::schema::default_fem2d_snapshot()
 }
 
 #[semio_framework_async_macros::async_test]
 async fn renders_fem2d_results_scene() {
-    let mut app = fem2d_app();
-    load_default_example(&mut app).await;
-    assert!(render_body(&mut app, BODY_KEY).contains("canvas-2d"));
+    let node = render(&demo(), &ResultDisplay { source_id: None, mode: DisplayMode::Static }, &Viewport2d::default(), &config::Fem2dResultsWindowConfig::default(), &crate::editor::fem2d::interaction::Fem2dInteractionSnapshot::default(), None).expect("fixture surface admission");
+    let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("fixture projection");
+    assert!(json.contains("canvas-2d"), "{json}");
 }
 
 #[semio_framework_async_macros::async_test]
 async fn results_window_surfaces_solver_error_without_panicking_2d() {
-    let mut app = fem2d_app();
-    let _ = render_body(&mut app, BODY_KEY);
+    let empty = crate::standards::v1::subsets::any::schema::empty_fem2d_snapshot();
+    let node = render(&empty, &ResultDisplay { source_id: None, mode: DisplayMode::Static }, &Viewport2d::default(), &config::Fem2dResultsWindowConfig::default(), &crate::editor::fem2d::interaction::Fem2dInteractionSnapshot::default(), None).expect("a refused analysis still admits a surface");
+    let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("fixture projection");
+    assert!(!json.is_empty(), "a document the solver refuses surfaces its message instead of panicking");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -30,45 +42,29 @@ async fn results_window_buckling_with_no_load_case_shows_placeholder_2d() {
 
 #[semio_framework_async_macros::async_test]
 async fn results_window_renders_contour_for_region() {
-    let mut app = fem2d_app();
-    load_default_example(&mut app).await;
-    let snapshot = app.snapshot().expect("snapshot");
-    let node = render(&snapshot, &ResultDisplay { source_id: Some("dead".into()), mode: DisplayMode::Static }, &Viewport2d::default(), &config::Fem2dResultsWindowConfig::default(), &crate::editor::fem2d::interaction::Fem2dInteractionSnapshot::default(), None).expect("fixture surface admission");
-    let semio_framework_ui_contract::Component::Surface(props) = &node.component else { panic!("expected canvas surface") };
-    let scene: Canvas2dScene = semio_framework_ui_scene::decode(props).expect("decode canvas scene");
+    let scene = results_scene(&demo(), &ResultDisplay { source_id: Some("dead".into()), mode: DisplayMode::Static }, &config::Fem2dResultsWindowConfig::default());
     assert!(scene.layers_json.contains("fill"), "expected filled-path contour layers for the region's Tri3Cst elements: {}", scene.layers_json);
     assert!(scene.layers_json.contains("contour-"), "expected contour-prefixed layer ids: {}", scene.layers_json);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn results_window_renders_reaction_labels_2d() {
-    let mut app = fem2d_app();
-    load_default_example(&mut app).await;
-    let snapshot = app.snapshot().expect("snapshot");
-    let node = render(&snapshot, &ResultDisplay { source_id: Some("dead".into()), mode: DisplayMode::Static }, &Viewport2d::default(), &config::Fem2dResultsWindowConfig::default(), &crate::editor::fem2d::interaction::Fem2dInteractionSnapshot::default(), None).expect("fixture surface admission");
-    let semio_framework_ui_contract::Component::Surface(props) = &node.component else { panic!("expected canvas surface") };
-    let scene: Canvas2dScene = semio_framework_ui_scene::decode(props).expect("decode canvas scene");
+    let scene = results_scene(&demo(), &ResultDisplay { source_id: Some("dead".into()), mode: DisplayMode::Static }, &config::Fem2dResultsWindowConfig::default());
     assert!(scene.layers_json.contains("reaction-"), "expected reaction-prefixed text label layers: {}", scene.layers_json);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn results_window_renders_modal_mode_shape_2d() {
-    let mut app = fem2d_app();
-    load_default_example(&mut app).await;
-    dispatch(&mut app, Fem2dCommand::SetResultDisplay(crate::editor::fem2d::commands::set_result_display::SetResultDisplay { source_id: None, mode: "modal".into(), mode_index: 0, field: None, value: None })).await;
-    let json = render_body(&mut app, BODY_KEY);
-    assert!(json.contains("canvas-2d"), "expected a valid canvas-2d scene, got: {json}");
-    assert!(!json.contains("Modal analysis error"), "unexpected modal error: {json}");
+    let scene = results_scene(&demo(), &ResultDisplay { source_id: None, mode: DisplayMode::Modal(0) }, &config::Fem2dResultsWindowConfig::default());
+    assert!(scene.layers_json.contains("modal-caption"), "expected the mode's frequency caption: {}", scene.layers_json);
+    assert!(!scene.layers_json.contains("Modal analysis error"), "unexpected modal error: {}", scene.layers_json);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn results_window_renders_buckling_mode_shape_2d() {
-    let mut app = fem2d_app();
-    load_default_example(&mut app).await;
-    dispatch(&mut app, Fem2dCommand::SetResultDisplay(crate::editor::fem2d::commands::set_result_display::SetResultDisplay { source_id: Some("dead".into()), mode: "buckling".into(), mode_index: 0, field: None, value: None })).await;
-    let json = render_body(&mut app, BODY_KEY);
-    assert!(json.contains("canvas-2d"), "expected a valid canvas-2d scene, got: {json}");
-    assert!(!json.contains("Buckling analysis error"), "unexpected buckling error: {json}");
+    let scene = results_scene(&demo(), &ResultDisplay { source_id: Some("dead".into()), mode: DisplayMode::Buckling(0) }, &config::Fem2dResultsWindowConfig::default());
+    assert!(scene.layers_json.contains("buckling-caption"), "expected the mode's load-factor caption: {}", scene.layers_json);
+    assert!(!scene.layers_json.contains("Buckling analysis error"), "unexpected buckling error: {}", scene.layers_json);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -133,12 +129,28 @@ async fn results_window_running_scene_carries_a_transport_caption() {
     assert!(running.layers_json.contains("phase 0.42"), "{}", running.layers_json);
 }
 
-/// 🎵️ LAW: the mode-shape views animate their amplitude the same way the static view does.
+/// 🎵️ LAW: the mode-shape views read the SAME waveform amplitude the static view does — half the
+/// phase is half the amplitude, and a sine trough swings the mode the other way.
+///
+/// Asserted on the scale the render feeds `fem2d_deformed_shape_layers`, not on the drawn bytes: the
+/// demo's first eigenmode is a slab mode whose frame nodes barely move, so its polylines are
+/// byte-identical at every amplitude and a pixel comparison would prove nothing either way.
 #[semio_framework_async_macros::async_test]
 async fn results_window_mode_shapes_follow_the_playback_phase() {
-    let half = animated_scene(Fem2dResultsAnimation { phase: 0.5, ..Fem2dResultsAnimation::default() }, DisplayMode::Modal(0));
-    let full = animated_scene(Fem2dResultsAnimation::default(), DisplayMode::Modal(0));
-    assert_ne!(half.layers_json, full.layers_json, "the modal amplitude must ride the phase");
+    let doc = demo();
+    let full = mode_shape_scale(&doc, Fem2dResultsAnimation::default().amplitude());
+    assert!(full > 0.0, "the demo has a non-degenerate extent");
+    assert!((mode_shape_scale(&doc, Fem2dResultsAnimation { phase: 0.5, ..Fem2dResultsAnimation::default() }.amplitude()) - full / 2.0).abs() < 1e-9);
+    let trough = Fem2dResultsAnimation { phase: 0.75, waveform: Fem2dWaveform::Sine, ..Fem2dResultsAnimation::default() };
+    assert!(mode_shape_scale(&doc, trough.amplitude()) < 0.0, "a sine trough swings the mode the other way");
+}
+
+/// ⏯️ LAW: a running mode-shape window carries the same transport read-out the static view does.
+#[semio_framework_async_macros::async_test]
+async fn results_window_mode_shapes_carry_the_transport_caption_while_playing() {
+    let running = animated_scene(Fem2dResultsAnimation { phase: 0.42, playing: true, ..Fem2dResultsAnimation::default() }, DisplayMode::Modal(0));
+    assert!(running.layers_json.contains("playback-caption"), "{}", running.layers_json);
+    assert!(running.layers_json.contains("modal-caption"), "{}", running.layers_json);
 }
 
 /// 🧠️ LAW: one revision is solved ONCE however many frames playback draws over it, and a new

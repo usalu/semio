@@ -1,1 +1,19 @@
-{}
+{
+  "mutation": "createFenestration",
+  "id": 5,
+  "name": "WINDOW SOUTH",
+  "surfaceId": 9,
+  "uValueWM2k": 3.0,
+  "shgc": 0.787,
+  "vlt": 0.86,
+  "areaM2": 6.0,
+  "heightM": 2.0,
+  "sillHeightM": 0.5,
+  "frameConductanceWK": 0.0,
+  "dividerConductanceWK": 0.0,
+  "overhangDepthM": 0.0,
+  "overhangOffsetM": 0.0,
+  "finDepthM": 0.0,
+  "finOffsetM": 0.0,
+  "glazingConstructionId": null
+}

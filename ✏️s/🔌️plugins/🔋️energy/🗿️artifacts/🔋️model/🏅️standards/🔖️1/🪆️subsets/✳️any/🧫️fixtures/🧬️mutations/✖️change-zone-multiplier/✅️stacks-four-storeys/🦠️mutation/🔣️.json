@@ -1,1 +1,5 @@
-{}
+{
+  "mutation": "changeZoneMultiplier",
+  "id": 1,
+  "newMultiplier": 4
+}

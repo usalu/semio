@@ -59,14 +59,19 @@ fn capability_items<'a>(machines: impl IntoIterator<Item = &'a WorkshopMachine>,
 /// `snapshot.stock_payload.solid` — the snapshot's own inline, authoritative record since ticket
 /// `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 4 (`stock_solid` stays a composed-child HANDLE
 /// with no resolvable content). `Box`/`Cylinder`/`Sphere` are analytic: a cylinder's/sphere's
-/// width/depth are their diameter. `ImportedMesh`/`ImportedSolid` carry no persisted analytic
-/// bounding box, so every dimension stays unconstrained (`f64::MAX`) exactly as the whole stock used
-/// to be before this fix — never a guessed extent that could falsely fail a rule.
+/// width/depth are their diameter; a `Reference` reads its shipped, kernel-pinned extent
+/// (`stock_extent`). `ImportedMesh`/`ImportedSolid` carry no persisted analytic bounding box, so
+/// every dimension stays unconstrained (`f64::MAX`) exactly as the whole stock used to be before this
+/// fix — never a guessed extent that could falsely fail a rule.
 fn stock_validation_context(solid: &WorkingSolid) -> ValidationContext {
     match solid {
         WorkingSolid::Box { width, depth, height } => ValidationContext { stock_width: *width, stock_depth: *depth, stock_height: *height },
         WorkingSolid::Cylinder { radius, height } => ValidationContext { stock_width: radius * 2.0, stock_depth: radius * 2.0, stock_height: *height },
         WorkingSolid::Sphere { radius } => ValidationContext { stock_width: radius * 2.0, stock_depth: radius * 2.0, stock_height: radius * 2.0 },
+        WorkingSolid::Reference { .. } => {
+            let [width, depth, height] = crate::schema::inferences::stock_extent(solid);
+            ValidationContext { stock_width: width, stock_depth: depth, stock_height: height }
+        }
         WorkingSolid::ImportedMesh { .. } | WorkingSolid::ImportedSolid { .. } => ValidationContext { stock_width: f64::MAX, stock_depth: f64::MAX, stock_height: f64::MAX },
     }
 }

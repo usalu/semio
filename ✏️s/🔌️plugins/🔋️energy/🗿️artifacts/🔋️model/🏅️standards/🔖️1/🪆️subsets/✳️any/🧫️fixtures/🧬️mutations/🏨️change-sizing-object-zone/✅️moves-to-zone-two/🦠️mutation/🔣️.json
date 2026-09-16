@@ -1,1 +1,5 @@
-{}
+{
+  "mutation": "changeSizingObjectZone",
+  "id": 15,
+  "newZoneId": 2
+}

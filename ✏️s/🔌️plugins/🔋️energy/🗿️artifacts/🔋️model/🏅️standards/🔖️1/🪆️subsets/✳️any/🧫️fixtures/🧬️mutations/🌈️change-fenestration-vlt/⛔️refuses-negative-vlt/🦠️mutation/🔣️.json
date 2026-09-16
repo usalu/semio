@@ -1,1 +1,5 @@
-{}
+{
+  "mutation": "changeFenestrationVlt",
+  "id": 5,
+  "newVlt": -0.1
+}

@@ -1,1 +1,5 @@
-{}
+{
+  "mutation": "changeInfiltrationMethod",
+  "id": 50,
+  "newMethod": "PerExteriorArea"
+}

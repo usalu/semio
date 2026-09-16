@@ -1,1 +1,5 @@
-{}
+{
+  "mutation": "changeIdealLoadsSystemMaxHeatingSupplyAirTemp",
+  "id": 12,
+  "newMaxHeatingSupplyAirTempC": 1000.0
+}

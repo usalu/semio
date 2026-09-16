@@ -1,1 +1,4 @@
-{}
+{
+  "mutation": "deleteConstantSchedule",
+  "id": 2
+}

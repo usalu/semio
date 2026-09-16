@@ -6,11 +6,13 @@ use semio_framework_plugin::plugin_app_close_prelude::*;
 use semio_framework_plugin::{EditorApp, ExecutionMode, Plugin, PluginApp, PluginAssemblyError, VcsArtifactApp, ViewerApp};
 
 //#region 🗃️Apps
-// 🗃️ Closed runtime app fleet for the energy plugin's model surfaces.
+// 🗃️ Closed runtime app fleet for the energy plugin's model surfaces. Both surfaces run over stdio's
+// `SemioMembers` roster because the model's composed `structure`/`zones` children are
+// `s.stdio.semio@v1/{value,table}` members (see `energy_genesis_child_pack`).
 semio_framework_dispatch_macros::dyn_enum_close! {
     pub enum EnergyApps: PluginApp {
-        ModelEditor(VcsArtifactApp<EditorApp<crate::editor::model::EnergyModelEditor>>),
-        ModelViewer(VcsArtifactApp<ViewerApp<crate::viewer::model::EnergyModelViewer>>),
+        ModelEditor(VcsArtifactApp<EditorApp<crate::editor::model::EnergyModelEditor>, semio_s_artifact_stdio_semio::SemioMembers>),
+        ModelViewer(VcsArtifactApp<ViewerApp<crate::viewer::model::EnergyModelViewer>, semio_s_artifact_stdio_semio::SemioMembers>),
     }
 }
 //#endregion 🗃️Apps

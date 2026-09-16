@@ -751,6 +751,7 @@ impl Process3dRetirementStack {
             Process3dRetirementOwner::Solid { value } => match value {
                 WorkingSolid::ImportedMesh { mesh_url } => child = Some(Self::one_string(mesh_url)),
                 WorkingSolid::ImportedSolid { solid_handle } => child = Some(Self::one_string(solid_handle)),
+                WorkingSolid::Reference { reference_id } => child = Some(Self::one_string(reference_id)),
                 WorkingSolid::Box { .. } | WorkingSolid::Cylinder { .. } | WorkingSolid::Sphere { .. } => released_items = 1,
             },
             Process3dRetirementOwner::Child { mut value, phase } => {
@@ -2114,6 +2115,7 @@ fn process3d_copy_solid(source: &WorkingSolid) -> Result<WorkingSolid, &'static 
         WorkingSolid::Sphere { radius } => WorkingSolid::Sphere { radius: *radius },
         WorkingSolid::ImportedMesh { mesh_url } => WorkingSolid::ImportedMesh { mesh_url: process3d_copy_string(mesh_url)? },
         WorkingSolid::ImportedSolid { solid_handle } => WorkingSolid::ImportedSolid { solid_handle: process3d_copy_string(solid_handle)? },
+        WorkingSolid::Reference { reference_id } => WorkingSolid::Reference { reference_id: process3d_copy_string(reference_id)? },
     })
 }
 
@@ -2551,6 +2553,10 @@ fn process3d_observe_solid(digest: &mut store::ArtifactStoreInitializationDigest
         WorkingSolid::ImportedSolid { solid_handle } => {
             digest.observe(b"solid");
             digest.observe(solid_handle.as_bytes());
+        }
+        WorkingSolid::Reference { reference_id } => {
+            digest.observe(b"reference");
+            digest.observe(reference_id.as_bytes());
         }
     }
 }

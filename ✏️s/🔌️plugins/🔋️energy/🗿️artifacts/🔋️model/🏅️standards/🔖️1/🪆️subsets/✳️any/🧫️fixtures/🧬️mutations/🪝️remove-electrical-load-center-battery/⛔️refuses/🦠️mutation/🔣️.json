@@ -1,1 +1,5 @@
-{}
+{
+  "mutation": "removeElectricalLoadCenterBattery",
+  "id": 320,
+  "batteryId": 310
+}

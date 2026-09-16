@@ -368,6 +368,13 @@ fn vector(scenario: &str) -> Vector {
             diff: None,
             outcome: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-combination/👻️dangling-case-65b8a8/🎯️outcome/🔣️.json"),
         },
+        "reject-replace-combination-4" => Vector {
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-combination/👻️self-term-0f54d1/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-combination/👻️self-term-0f54d1/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-combination/👻️self-term-0f54d1/📸️snapshot/➡️after/🔣️.json"),
+            diff: None,
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-combination/👻️self-term-0f54d1/🎯️outcome/🔣️.json"),
+        },
         other => panic!("🏋️mutate-fem2d-1-load: no committed specification vector is registered for scenario {other:?}"),
     }
 }

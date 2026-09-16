@@ -1,1 +1,5 @@
-{}
+{
+  "mutation": "changeHumidistatHumidifyingThrottleRange",
+  "id": 11,
+  "newHumidifyingThrottleRange": 0.0
+}

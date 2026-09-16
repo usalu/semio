@@ -8,7 +8,7 @@
   "activation": {
     "controller": "s.cad.cad@1/*#editor",
     "factory": "CadRetainedCommandJobFactory",
-    "proofRows": 21,
+    "proofRows": 30,
     "injectedTool": "addNode",
     "closeItems": 1,
     "closeBytes": 4096
@@ -25,11 +25,20 @@
     "addNode",
     "renameNode",
     "patchCadPlayReference",
+    "addObject",
+    "patchObject",
+    "patchSelection",
+    "deleteObject",
+    "duplicateObject",
+    "translateSelection",
+    "rotateSelection",
+    "scaleSelection",
     "setCamera",
     "setProjection",
     "setProjectionParam",
     "setDislocateOption",
     "setNodeSelection",
+    "setPanelPage",
     "setReferenceSelection",
     "referenceHover",
     "engagementInput",
@@ -48,42 +57,42 @@
     {
       "id": "addObject",
       "intendedLanes": [
-        "child"
+        "artifact"
       ],
-      "disposition": "batchOnlyPendingRewrite",
-      "blocker": "childPublicationUnavailable"
+      "disposition": "migrated",
+      "blocker": "none"
     },
     {
       "id": "patchObject",
       "intendedLanes": [
-        "child"
+        "artifact"
       ],
-      "disposition": "batchOnlyPendingRewrite",
-      "blocker": "childPublicationUnavailable"
+      "disposition": "migrated",
+      "blocker": "none"
     },
     {
       "id": "patchSelection",
       "intendedLanes": [
-        "child"
+        "artifact"
       ],
-      "disposition": "batchOnlyPendingRewrite",
-      "blocker": "childPublicationUnavailable"
+      "disposition": "migrated",
+      "blocker": "none"
     },
     {
       "id": "deleteObject",
       "intendedLanes": [
-        "child"
+        "artifact"
       ],
-      "disposition": "batchOnlyPendingRewrite",
-      "blocker": "childPublicationUnavailable"
+      "disposition": "migrated",
+      "blocker": "none"
     },
     {
       "id": "duplicateObject",
       "intendedLanes": [
-        "child"
+        "artifact"
       ],
-      "disposition": "batchOnlyPendingRewrite",
-      "blocker": "childPublicationUnavailable"
+      "disposition": "migrated",
+      "blocker": "none"
     },
     {
       "id": "addNode",
@@ -105,26 +114,26 @@
     {
       "id": "translateSelection",
       "intendedLanes": [
-        "child"
+        "artifact"
       ],
-      "disposition": "batchOnlyPendingRewrite",
-      "blocker": "childPublicationUnavailable"
+      "disposition": "migrated",
+      "blocker": "none"
     },
     {
       "id": "rotateSelection",
       "intendedLanes": [
-        "child"
+        "artifact"
       ],
-      "disposition": "batchOnlyPendingRewrite",
-      "blocker": "childPublicationUnavailable"
+      "disposition": "migrated",
+      "blocker": "none"
     },
     {
       "id": "scaleSelection",
       "intendedLanes": [
-        "child"
+        "artifact"
       ],
-      "disposition": "batchOnlyPendingRewrite",
-      "blocker": "childPublicationUnavailable"
+      "disposition": "migrated",
+      "blocker": "none"
     },
     {
       "id": "applyTransformation",
@@ -341,6 +350,14 @@
       "id": "loadRawRequest",
       "intendedLanes": [
         "hostEffect"
+      ],
+      "disposition": "migrated",
+      "blocker": "none"
+    },
+    {
+      "id": "setPanelPage",
+      "intendedLanes": [
+        "config"
       ],
       "disposition": "migrated",
       "blocker": "none"

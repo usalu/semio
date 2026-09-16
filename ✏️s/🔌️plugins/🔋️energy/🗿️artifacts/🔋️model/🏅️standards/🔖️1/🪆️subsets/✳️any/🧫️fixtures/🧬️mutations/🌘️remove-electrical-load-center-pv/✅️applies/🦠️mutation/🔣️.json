@@ -1,1 +1,5 @@
-{}
+{
+  "mutation": "removeElectricalLoadCenterPv",
+  "id": 320,
+  "pvId": 300
+}

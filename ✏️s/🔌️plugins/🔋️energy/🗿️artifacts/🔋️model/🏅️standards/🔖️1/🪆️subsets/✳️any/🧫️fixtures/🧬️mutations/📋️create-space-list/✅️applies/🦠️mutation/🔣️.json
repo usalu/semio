@@ -1,1 +1,9 @@
-{}
+{
+  "mutation": "createSpaceList",
+  "index": 2,
+  "id": 212,
+  "name": "ATRIUM",
+  "spaceIds": [
+    201
+  ]
+}

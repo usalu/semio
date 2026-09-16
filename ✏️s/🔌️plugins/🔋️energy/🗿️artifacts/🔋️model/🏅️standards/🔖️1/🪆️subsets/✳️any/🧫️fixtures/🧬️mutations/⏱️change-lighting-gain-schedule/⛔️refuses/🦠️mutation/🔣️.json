@@ -1,1 +1,5 @@
-{}
+{
+  "mutation": "changeLightingGainSchedule",
+  "id": 30,
+  "newScheduleId": 999
+}

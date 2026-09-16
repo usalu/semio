@@ -1,1 +1,5 @@
-{}
+{
+  "mutation": "changeInfiltrationConstantTermCoefficient",
+  "id": 50,
+  "newConstantTermCoefficient": 0.606
+}

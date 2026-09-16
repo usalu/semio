@@ -1,1 +1,5 @@
-{}
+{
+  "mutation": "changeFenestrationFrameConductance",
+  "id": 5,
+  "newFrameConductanceWK": 1.2
+}

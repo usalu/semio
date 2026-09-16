@@ -1,1 +1,10 @@
-{}
+{
+  "mutation": "createSolarThermalSystem",
+  "index": 1,
+  "id": 411,
+  "collectorAreaM2": 6.0,
+  "efficiency": 0.6,
+  "storageVolumeM3": 0.4,
+  "tiltDeg": 40.0,
+  "azimuthDeg": 190.0
+}

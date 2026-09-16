@@ -1,1 +1,6 @@
-{}
+{
+  "mutation": "changeSurfaceBoundaryCondition",
+  "id": 3,
+  "newBoundary": "Interzone",
+  "newInterzoneSurfaceId": null
+}

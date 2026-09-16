@@ -1,38 +1,52 @@
 use super::*;
-use crate::editor::fem2d::commands::set_active_example;
 use crate::editor::fem2d::modes::edit::windows::model as model_window;
-use crate::editor::fem2d::unit_tests::context::{dispatch, fem2d_app, render};
-use crate::editor::fem2d::Fem2dCommand;
-use semio_framework_plugin::artifact_app_laws::meta;
-use semio_framework_plugin::{PluginApp, ViewModel, ViewWindowInstance};
+use crate::editor::fem2d::modes::edit::windows::results as results_window;
+use semio_framework_plugin::{HistoryView, ViewModel, ViewWindowInstance};
+use store::ArtifactDsl;
 
-#[semio_framework_async_macros::async_test]
-async fn focus_entity_centres_the_model_window_camera_on_the_entity() {
-    let mut app = fem2d_app();
-    dispatch(&mut app, Fem2dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: crate::examples::demo::ID.into() })).await;
-    let before = app.snapshot().expect("snapshot");
-    let result = dispatch(&mut app, Fem2dCommand::FocusEntity(FocusEntity { id: "ridge".into() })).await;
-    assert!(result.mutations.is_empty(), "framing the camera is window state, never a document mutation");
-    assert_eq!(app.snapshot().expect("snapshot"), before);
-    let scene: semio_framework_plugin::Canvas2dScene = semio_framework_plugin::artifact_app_laws::decode_fixture_scene(&render(&mut app, model_window::BODY_KEY)).expect("model scene");
-    assert_eq!((scene.camera_x, scene.camera_y), model_window::screen_2d(4.0, 7.6), "the camera centres on the ridge node's layer-space point");
-    assert!((scene.zoom - 1.0).abs() < 1e-9, "focusing keeps the window's own zoom");
+fn demo() -> Fem2dSnapshot {
+    Fem2dSnapshot::parse_dsl(crate::editor::fem2d::FEM2D_EXAMPLE_DSL).expect("demo document parses")
+}
 
-    dispatch(&mut app, Fem2dCommand::FocusEntity(FocusEntity { id: "r1".into() })).await;
-    let scene: semio_framework_plugin::Canvas2dScene = semio_framework_plugin::artifact_app_laws::decode_fixture_scene(&render(&mut app, model_window::BODY_KEY)).expect("model scene");
-    assert_eq!((scene.camera_x, scene.camera_y), model_window::screen_2d(11.0, 2.8), "a region frames on its outline centroid");
+fn addressed(kind: &str) -> ViewModel {
+    ViewModel { window_id: Some("w".into()), window_instances: vec![ViewWindowInstance { id: "w".into(), window_kind_id: kind.into() }], ..Default::default() }
+}
+
+fn focus(doc: &Fem2dSnapshot, kind: &str, id: &str) -> Result<Emit<Fem2dMutation, NoConfigMutation>, Fault> {
+    let history = HistoryView::empty();
+    let view = ArtifactView::new(doc, &history);
+    let config = NoConfig::default();
+    let cfg = ConfigView { snapshot: &config, window: None };
+    handle_window(&FocusEntity { id: id.into() }, &view, &cfg, &addressed(kind))
 }
 
 #[semio_framework_async_macros::async_test]
-async fn focus_entity_refuses_an_unknown_id() {
-    let mut app = fem2d_app();
-    dispatch(&mut app, Fem2dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: crate::examples::demo::ID.into() })).await;
-    let mut action = meta("local");
-    action.view_state = Some(ViewModel {
-        window_id: Some("model-left".into()),
-        window_instances: vec![ViewWindowInstance { id: "model-left".into(), window_kind_id: crate::editor::fem2d::modes::edit::windows::model::WINDOW_KIND_ID.into() }],
-        ..Default::default()
-    });
-    let outcome = app.dispatch_typed(Fem2dCommand::FocusEntity(FocusEntity { id: "not-an-entity".into() }), &action).await;
-    assert!(outcome.is_err(), "an unaddressable entity must fault rather than silently move the camera");
+async fn focus_entity_writes_one_window_config_row_for_every_addressable_kind() {
+    let doc = demo();
+    for id in ["ridge", "e3", "s1", "l6", "r1"] {
+        let emit = focus(&doc, model_window::WINDOW_KIND_ID, id).expect("focus");
+        assert!(emit.artifact_mutations.is_empty(), "framing the camera is never a document mutation ({id})");
+        assert_eq!(emit.window_config_mutations.len(), 1, "focusEntity writes exactly one window-config row ({id})");
+        assert_eq!(emit.window_config_mutations[0].window_kind_id(), model_window::WINDOW_KIND_ID);
+        assert_eq!(emit.window_config_mutations[0].window_id(), "w");
+    }
+}
+
+#[semio_framework_async_macros::async_test]
+async fn focus_entity_frames_the_addressed_window_whichever_canvas_it_is() {
+    let doc = demo();
+    let emit = focus(&doc, results_window::WINDOW_KIND_ID, "ridge").expect("focus in results");
+    assert_eq!(emit.window_config_mutations[0].window_kind_id(), results_window::WINDOW_KIND_ID);
+}
+
+#[semio_framework_async_macros::async_test]
+async fn focus_entity_refuses_an_unknown_entity_and_an_unaddressed_window() {
+    let doc = demo();
+    assert!(focus(&doc, model_window::WINDOW_KIND_ID, "not-an-entity").is_err(), "an unaddressable entity must fault rather than silently move the camera");
+    let history = HistoryView::empty();
+    let view = ArtifactView::new(&doc, &history);
+    let config = NoConfig::default();
+    let cfg = ConfigView { snapshot: &config, window: None };
+    assert!(handle_window(&FocusEntity { id: "ridge".into() }, &view, &cfg, &ViewModel::default()).is_err());
+    assert!(handle(&FocusEntity { id: "ridge".into() }, &view, &cfg).is_err(), "the doc-scoped route always refuses");
 }

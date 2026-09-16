@@ -1,1 +1,5 @@
-{}
+{
+  "mutation": "changeIdealLoadsSystemOutdoorAirPerArea",
+  "id": 12,
+  "newOutdoorAirPerAreaM3SM2": -1.0
+}

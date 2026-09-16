@@ -1,1 +1,5 @@
-{}
+{
+  "mutation": "changeFenestrationArea",
+  "id": 5,
+  "newAreaM2": 0.0
+}

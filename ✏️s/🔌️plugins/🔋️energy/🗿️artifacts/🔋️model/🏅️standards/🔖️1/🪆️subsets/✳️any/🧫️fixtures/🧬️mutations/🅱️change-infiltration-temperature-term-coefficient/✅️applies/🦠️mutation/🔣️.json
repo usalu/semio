@@ -1,1 +1,5 @@
-{}
+{
+  "mutation": "changeInfiltrationTemperatureTermCoefficient",
+  "id": 50,
+  "newTemperatureTermCoefficient": 0.03636
+}

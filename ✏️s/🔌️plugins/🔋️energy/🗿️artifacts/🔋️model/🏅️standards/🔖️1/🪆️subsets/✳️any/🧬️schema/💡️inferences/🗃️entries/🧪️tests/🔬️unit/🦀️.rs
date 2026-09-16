@@ -1,14 +1,17 @@
 use super::*;
 
-/// 🌱 `crate::model::Model` has exactly 40 top-level fields (name/version/site/zones/spaces/
-/// surfaces/fenestrations/materials/constructions/people/lighting/equipment/thermostats/
-/// humidistats/setpointManagers/idealLoads/zoneEquipment/airLoops/plantLoops/
+/// 🌱 `crate::model::Model` has exactly 44 top-level fields (name/version/site/zones/spaces/
+/// surfaces/fenestrations/materials/glazingMaterials/gasMaterials/constructions/people/lighting/
+/// equipment/thermostats/humidistats/setpointManagers/idealLoads/zoneEquipment/airLoops/plantLoops/
 /// outdoorAirSystems/infiltrations/mechanicalVentilations/shadingSurfaces/spaceLists/
 /// thermalEnclosures/adjacencyPairs/airflowNetwork/electricalLoadCenters/pvSystems/
 /// batteryStorage/shwSystems/solarThermalSystems/refrigerationSystems/waterSystems/faults/
-/// outputVariables/sizingObjects/daylightZones/roomAirModels/groundTemperature) — counted
-/// directly against `🔨️modules/⚡️simulation/⚙️engine/🔋️model/🦀️.rs`'s `struct Model`.
-const MODEL_FIELD_COUNT: u32 = 40;
+/// outputVariables/sizingObjects/daylightZones/roomAirModels/groundTemperature/runPeriod/
+/// schedules) — counted directly against `🔨️modules/⚡️simulation/⚙️engine/🔋️model/🦀️.rs`'s
+/// `struct Model` (`glazingMaterials`/`gasMaterials`/`runPeriod`/`schedules` joined after the
+/// original 40 were counted). An independent hand count on purpose: the inference derives its
+/// number from `to_value()`, so deriving the expectation the same way would prove nothing.
+const MODEL_FIELD_COUNT: u32 = 44;
 
 #[semio_framework_async_macros::async_test]
 async fn default_model_yields_the_full_field_count_and_a_real_byte_size() {

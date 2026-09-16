@@ -1,1 +1,8 @@
-{}
+{
+  "mutation": "updateSite",
+  "latitudeDeg": 39.833,
+  "longitudeDeg": -104.65,
+  "elevationM": 1650.0,
+  "timeZoneHours": -7.0,
+  "northAxisDeg": 0.0
+}

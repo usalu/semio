@@ -1,1 +1,5 @@
-{}
+{
+  "mutation": "changeSpaceFloorArea",
+  "id": 2,
+  "newFloorAreaM2": -1.0
+}

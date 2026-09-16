@@ -21,6 +21,10 @@ pub struct SetAnalysisSettings {
     pub deformation_scale: Option<f64>,
     pub field: Option<String>,
     pub value: Option<String>,
+    /// 🪟️ The results window whose Analysis section authored this gesture. Analysis settings are
+    /// DOCUMENT state, so nothing here is window-scoped — the tag is carried only so the one
+    /// `{field, value}` convention is spelled identically on all three panel commands.
+    pub window_id: Option<String>,
 }
 
 /// 🧮️ Applies ONE named analysis field, leaving the rest of the settings alone.

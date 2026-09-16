@@ -1,1 +1,13 @@
-{}
+{
+  "mutation": "createIdealLoadsSystem",
+  "id": 12,
+  "zoneId": 1,
+  "maxHeatingSupplyAirTempC": 50.0,
+  "minCoolingSupplyAirTempC": 13.0,
+  "maxHeatingCapacityPresent": false,
+  "maxHeatingCapacityW": 0.0,
+  "maxCoolingCapacityPresent": false,
+  "maxCoolingCapacityW": 0.0,
+  "outdoorAirPerPersonM3S": 0.0,
+  "outdoorAirPerAreaM3SM2": 0.0
+}

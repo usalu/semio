@@ -1,1 +1,6 @@
-{}
+{
+  "mutation": "addSpaceListMember",
+  "id": 210,
+  "index": 1,
+  "spaceId": 999
+}

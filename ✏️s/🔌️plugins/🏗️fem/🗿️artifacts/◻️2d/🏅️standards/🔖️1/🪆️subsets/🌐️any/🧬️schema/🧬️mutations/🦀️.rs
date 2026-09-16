@@ -376,9 +376,23 @@ pub mod guards {
 
     /// 🔗️ Every term of a combination resolves to a load case or to ANOTHER combination — the same
     /// resolution whether the combination is brand new (`create-combination`) or replaces an
-    /// existing one (`replace-combination`).
-    pub fn combination_term_references(base: &Fem2dSnapshot, combination: &FemCombination) -> Option<Rejection> {
-        combination.terms.iter().find(|term| !base.load_cases.iter().any(|case| case.id == term.case_id) && !base.combinations.iter().any(|other| other.id == term.case_id)).map(|term| missing(term.case_id.clone(), format!("Load case or combination \"{}\" does not exist.", term.case_id)))
+    /// existing one (`replace-combination`). `id` is the identity the payload is being stored
+    /// under, which `replace-` selects and `create-` carries.
+    ///
+    /// 🪞️ ANOTHER, never itself. A term citing `id` is refused as `mutation.invariant` (Fatal) and
+    /// not as `mutation.target-missing` (Error), because the cycle is a property of the PAYLOAD: no
+    /// base can host a combination that superposes itself, so no later base may absorb it. Reading
+    /// the self-term as a plain reference is exactly the gap this closes — under `replace-` the
+    /// target DOES exist in `base.combinations`, so the resolution below would have accepted it,
+    /// and `create-` only refused it by accident, as an id its own base did not carry yet. It is
+    /// the same self-exclusion `combination_referrers` applies when it asks who blocks a delete.
+    pub fn combination_term_references(base: &Fem2dSnapshot, id: &str, combination: &FemCombination) -> Option<Rejection> {
+        combination.terms.iter().find_map(|term| {
+            if term.case_id == id {
+                return Some(invariant([id.to_string()], format!("Combination \"{id}\" may not weight itself.")));
+            }
+            (!base.load_cases.iter().any(|case| case.id == term.case_id) && !base.combinations.iter().any(|other| other.id == term.case_id)).then(|| missing(term.case_id.clone(), format!("Load case or combination \"{}\" does not exist.", term.case_id)))
+        })
     }
 
     /// ⚖️ A combination weights its cases by real numbers — a non-finite factor turns the superposed

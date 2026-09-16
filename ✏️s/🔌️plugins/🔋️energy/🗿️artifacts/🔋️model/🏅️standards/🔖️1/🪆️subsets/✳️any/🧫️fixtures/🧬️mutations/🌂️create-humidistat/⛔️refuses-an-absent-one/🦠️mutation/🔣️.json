@@ -1,1 +1,9 @@
-{}
+{
+  "mutation": "createHumidistat",
+  "id": 11,
+  "zoneId": 1,
+  "humidifyingSetpointScheduleId": 99,
+  "dehumidifyingSetpointScheduleId": 2,
+  "humidifyingThrottleRange": 5.0,
+  "dehumidifyingThrottleRange": 5.0
+}

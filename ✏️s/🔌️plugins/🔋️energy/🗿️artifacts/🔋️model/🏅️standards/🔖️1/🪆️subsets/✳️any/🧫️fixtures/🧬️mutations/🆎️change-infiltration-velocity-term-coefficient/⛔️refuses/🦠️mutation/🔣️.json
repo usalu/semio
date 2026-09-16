@@ -1,1 +1,5 @@
-{}
+{
+  "mutation": "changeInfiltrationVelocityTermCoefficient",
+  "id": 50,
+  "newVelocityTermCoefficient": -0.2
+}

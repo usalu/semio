@@ -1,1 +1,160 @@
-{}
+{
+  "schema": "energy.model",
+  "model": {
+    "name": "BESTEST 600",
+    "version": "",
+    "site": {
+      "latitude_deg": 0.0,
+      "longitude_deg": 0.0,
+      "elevation_m": 0.0,
+      "time_zone_hours": 0.0,
+      "north_axis_deg": 0.0
+    },
+    "zones": [
+      {
+        "id": 1,
+        "name": "ZONE ONE",
+        "volume_m3": 129.6,
+        "multiplier": 1,
+        "conditioned": true,
+        "part_of_total_floor_area": true
+      },
+      {
+        "id": 2,
+        "name": "ZONE TWO",
+        "volume_m3": 129.6,
+        "multiplier": 1,
+        "conditioned": true,
+        "part_of_total_floor_area": true
+      }
+    ],
+    "spaces": [],
+    "surfaces": [],
+    "fenestrations": [],
+    "materials": [],
+    "glazing_materials": [],
+    "gas_materials": [],
+    "constructions": [],
+    "people": [],
+    "lighting": [],
+    "equipment": [],
+    "thermostats": [],
+    "humidistats": [],
+    "setpoint_managers": [],
+    "ideal_loads": [],
+    "zone_equipment": [],
+    "air_loops": [],
+    "plant_loops": [],
+    "outdoor_air_systems": [],
+    "infiltrations": [],
+    "mechanical_ventilations": [
+      {
+        "id": 60,
+        "zone_id": 1,
+        "schedule_id": 1,
+        "design_flow_m3_s": 0.12,
+        "fan_total_efficiency": 0.7,
+        "fan_delta_pressure_pa": 300.0
+      }
+    ],
+    "shading_surfaces": [],
+    "space_lists": [],
+    "thermal_enclosures": [],
+    "adjacency_pairs": [],
+    "airflow_network": null,
+    "electrical_load_centers": [],
+    "pv_systems": [],
+    "battery_storage": [],
+    "shw_systems": [],
+    "solar_thermal_systems": [],
+    "refrigeration_systems": [],
+    "water_systems": [],
+    "faults": [],
+    "output_variables": [],
+    "sizing_objects": [],
+    "daylight_zones": [],
+    "room_air_models": [],
+    "ground_temperature": {
+      "building_surface_c": [
+        18.0,
+        18.0,
+        18.0,
+        18.0,
+        18.0,
+        18.0,
+        18.0,
+        18.0,
+        18.0,
+        18.0,
+        18.0,
+        18.0
+      ],
+      "shallow_c": [
+        18.0,
+        18.0,
+        18.0,
+        18.0,
+        18.0,
+        18.0,
+        18.0,
+        18.0,
+        18.0,
+        18.0,
+        18.0,
+        18.0
+      ],
+      "deep_c": 18.0
+    },
+    "run_period": {
+      "start_month": 1,
+      "start_day": 1,
+      "end_month": 12,
+      "end_day": 31,
+      "year": 2026
+    },
+    "schedules": {
+      "constants": [
+        {
+          "id": 1,
+          "value": 1.0
+        },
+        {
+          "id": 2,
+          "value": 120.0
+        },
+        {
+          "id": 3,
+          "value": 0.5
+        }
+      ],
+      "daily": [],
+      "weekly": [],
+      "annual": [],
+      "time_series": []
+    }
+  },
+  "structure": {
+    "childId": "energy-value",
+    "target": {
+      "artifactId": "energy-value",
+      "dialect": {
+        "artifactKind": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "value"
+      }
+    }
+  },
+  "zones": {
+    "childId": "energy-table",
+    "target": {
+      "artifactId": "energy-table",
+      "dialect": {
+        "artifactKind": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "table"
+      }
+    }
+  },
+  "referencedModel": null,
+  "weatherLink": null
+}

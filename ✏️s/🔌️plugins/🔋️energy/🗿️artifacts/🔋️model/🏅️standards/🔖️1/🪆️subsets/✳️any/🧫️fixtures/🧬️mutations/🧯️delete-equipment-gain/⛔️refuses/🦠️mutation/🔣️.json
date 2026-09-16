@@ -1,1 +1,4 @@
-{}
+{
+  "mutation": "deleteEquipmentGain",
+  "id": 999
+}

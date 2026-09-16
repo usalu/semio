@@ -1,1 +1,5 @@
-{}
+{
+  "mutation": "changeInfiltrationZone",
+  "id": 50,
+  "newZoneId": 2
+}

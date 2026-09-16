@@ -7,7 +7,7 @@
 //! always appending) so `delete-object`'s inverse restores the removed object at its original slot —
 //! the child id is content-addressed over the ORDERED element list, so order is identity.
 
-use crate::mutations::{CadMutation, CadObjectSpec};
+use crate::mutations::{CadMutation, CadObjectPrimitive, CadObjectSpec};
 use crate::{CadPaneId, CadSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -21,6 +21,8 @@ pub struct CreateObject {
     pub index: u32,
     #[dsl(block)]
     pub object: CadObjectSpec,
+    #[dsl(table)]
+    pub primitives: Vec<CadObjectPrimitive>,
 }
 
 impl MutationKind<CadSnapshot, CadMutation> for CreateObject {

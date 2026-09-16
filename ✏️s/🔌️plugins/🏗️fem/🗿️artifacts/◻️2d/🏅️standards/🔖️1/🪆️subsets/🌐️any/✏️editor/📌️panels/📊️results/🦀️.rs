@@ -41,8 +41,10 @@ fn ui_text(value: impl AsRef<str>) -> UiAssemblyResult<UiText> {
 }
 
 /// 🎛️ The arguments one control dispatches: the field it owns, an authored value when the gesture
-/// carries none of its own (a button), and the window it speaks for. `UiMapBuilder` demands strictly
-/// ascending keys, which `field` < `value` < `windowId` already is.
+/// carries none of its own (a button), and the `windowId` it speaks for — which
+/// `results::config::addressed_window_id` honours over the focused pane, so a split layout cannot
+/// retune the results window the user is not looking at. `UiMapBuilder::push` sorts on admission
+/// (`🎬️action/🦀️.rs`'s `try_insert`), so the order these are pushed in carries no meaning.
 fn control_args(field: &str, value: Option<&str>, window_id: &str) -> UiAssemblyResult<UiValue> {
     let mut builder = UiMapBuilder::try_new().ok_or_else(|| error("ui.value.map"))?;
     builder.push("field".to_owned(), UiValue::Text(ui_text(field)?)).map_err(|_| error("ui.value.map.entry"))?;
@@ -88,6 +90,16 @@ fn number_row(id: &str, label: &str, value: f64, step: f64, action: &str, field:
 
 /// 🔘️ A transport button: it carries BOTH the field and the value, because `Trigger::Activate` has no
 /// scalar of its own for the host to merge.
+/// ⏯️ The play/pause button of a pane whose state the panel cannot read: it names no field, and a
+/// `setResultAnimation` that names nothing toggles play/pause on the window it addresses.
+fn toggle_button(id: &str, label: &str, window_id: &str) -> UiAssemblyResult<BuiltNode> {
+    let mut args = UiMapBuilder::try_new().ok_or_else(|| error("ui.value.map"))?;
+    args.push("windowId".to_owned(), UiValue::Text(ui_text(window_id)?)).map_err(|_| error("ui.value.map.entry"))?;
+    let control = ui::button(ui_label(label)?).icon(ui_text("play")?);
+    let control = bind(control.try_id(id).map_err(|_| error("ui.button.id"))?, Trigger::Activate, PLAYBACK_ACTION, UiValue::Map(args.finish()))?;
+    control.try_build().map_err(|_| error("ui.button"))
+}
+
 fn transport_button(id: &str, label: &str, icon: &str, field: &str, value: &str, window_id: &str) -> UiAssemblyResult<BuiltNode> {
     let control = ui::button(ui_label(label)?).icon(ui_text(icon)?);
     let control = bind(control.try_id(id).map_err(|_| error("ui.button.id"))?, Trigger::Activate, PLAYBACK_ACTION, control_args(field, Some(value), window_id)?)?;
@@ -101,6 +113,11 @@ fn format_number(value: f64) -> String {
     } else {
         format!("{value}")
     }
+}
+
+/// 💡️ One plain text row — the panel's hint when it renders a pane it cannot read.
+fn hint_row(id: &str, text: &str) -> UiAssemblyResult<BuiltNode> {
+    ui::text(ui_label(text)?).try_id(id).map_err(|_| error("ui.text.id"))?.try_build().map_err(|_| error("ui.text"))
 }
 
 fn section(id: &str, label: &str, rows: impl IntoIterator<Item = UiAssemblyResult<BuiltNode>>) -> UiAssemblyResult<BuiltNode> {
@@ -120,7 +137,7 @@ fn section(id: &str, label: &str, rows: impl IntoIterator<Item = UiAssemblyResul
 /// list every `UiFixedList` admits.
 const RESULT_SOURCE_OPTIONS: usize = 24;
 
-/// 📊️ The result sources one document offers: every load case, then every combination.
+/// 👁️ The wire spelling of one result mode — the `select` option value the command parses back.
 fn result_mode_value(mode: crate::app_surface::ResultMode) -> &'static str {
     match mode {
         crate::app_surface::ResultMode::Static => "static",
@@ -129,11 +146,20 @@ fn result_mode_value(mode: crate::app_surface::ResultMode) -> &'static str {
     }
 }
 
+/// 📊️ The result sources one document offers: every load case, then every combination.
 fn result_sources(doc: &Fem2dSnapshot) -> Vec<(String, String)> {
     doc.load_cases.iter().map(|case| (case.id.clone(), case.name.clone())).chain(doc.combinations.iter().map(|combination| (combination.id.clone(), combination.name.clone()))).take(RESULT_SOURCE_OPTIONS).collect()
 }
 
-pub fn render(doc: &Fem2dSnapshot, window: &Fem2dResultsWindowConfig, window_id: &str, labels: &Fem2dLabels) -> UiAssemblyResult<BuiltNode> {
+/// 📊️ Renders the panel for ONE results window. `window` is that window's captured partition, or
+/// `None` when the projection captured a different pane: the controls then show defaults, the play
+/// button is a bare play/pause toggle (its state cannot be read), and a hint row says which pane to
+/// focus for live readouts — a panel projection binds to the focused window, and nothing else can read
+/// another window's configuration.
+pub fn render(doc: &Fem2dSnapshot, window: Option<&Fem2dResultsWindowConfig>, window_id: &str, labels: &Fem2dLabels) -> UiAssemblyResult<BuiltNode> {
+    let live = window.is_some();
+    let defaults = Fem2dResultsWindowConfig::default();
+    let window = window.unwrap_or(&defaults);
     let animation = &window.animation;
     let sources = result_sources(doc);
     let source = window.result_source_id.clone().or_else(|| sources.first().map(|(id, _)| id.clone())).unwrap_or_default();
@@ -157,20 +183,33 @@ pub fn render(doc: &Fem2dSnapshot, window: &Fem2dResultsWindowConfig, window_id:
         .try_id("fem2d-play-results.transport.controls")
         .map_err(|_| error("ui.row.id"))?
         .try_children(ui_node_list([
-            transport_button("fem2d-play-results.transport.back", labels.step.as_str(), "skip-back", "phaseStep", &format!("{}", -ANIMATION_PHASE_STEP), window_id),
-            transport_button(
-                "fem2d-play-results.transport.play",
-                if animation.playing { labels.pause.as_str() } else { labels.play.as_str() },
-                if animation.playing { "pause" } else { "play" },
-                "playing",
-                if animation.playing { "false" } else { "true" },
-                window_id,
-            ),
-            transport_button("fem2d-play-results.transport.forward", labels.step.as_str(), "skip-forward", "phaseStep", &format!("{ANIMATION_PHASE_STEP}"), window_id),
+            transport_button("fem2d-play-results.transport.back", &format!("{} \u{2212}", labels.step.as_str()), "skip-back", "phaseStep", &format!("{}", -ANIMATION_PHASE_STEP), window_id),
+            if live {
+                transport_button(
+                    "fem2d-play-results.transport.play",
+                    if animation.playing { labels.pause.as_str() } else { labels.play.as_str() },
+                    if animation.playing { "pause" } else { "play" },
+                    "playing",
+                    if animation.playing { "false" } else { "true" },
+                    window_id,
+                )
+            } else {
+                toggle_button("fem2d-play-results.transport.play", &format!("{} / {}", labels.play.as_str(), labels.pause.as_str()), window_id)
+            },
+            transport_button("fem2d-play-results.transport.forward", &format!("{} +", labels.step.as_str()), "skip-forward", "phaseStep", &format!("{ANIMATION_PHASE_STEP}"), window_id),
         ])?)
         .map_err(|_| error("ui.row.children"))?
         .try_build()
         .map_err(|_| error("ui.row"))?;
+    let mut playback: Vec<UiAssemblyResult<BuiltNode>> = Vec::new();
+    if !live {
+        playback.push(hint_row("fem2d-play-results.hint", labels.focus_results_hint.as_str()));
+    }
+    playback.push(slider_row("fem2d-play-results.phase", labels.phase.as_str(), animation.phase, 0.0, 1.0, 0.01, PLAYBACK_ACTION, "phase", window_id));
+    playback.push(row("fem2d-play-results.transport", labels.playing.as_str(), transport));
+    playback.push(slider_row("fem2d-play-results.speed", labels.speed.as_str(), animation.speed, ANIMATION_SPEED_MINIMUM, ANIMATION_SPEED_MAXIMUM, 0.05, PLAYBACK_ACTION, "speed", window_id));
+    playback.push(select_row("fem2d-play-results.loop", labels.loop_mode.as_str(), loop_value, &loops, PLAYBACK_ACTION, "loopMode", window_id));
+    playback.push(select_row("fem2d-play-results.waveform", labels.waveform.as_str(), waveform_value, &waveforms, PLAYBACK_ACTION, "waveform", window_id));
     ui::column()
         .try_id("fem2d-play-results")
         .map_err(|_| error("ui.column.id"))?
@@ -184,17 +223,7 @@ pub fn render(doc: &Fem2dSnapshot, window: &Fem2dResultsWindowConfig, window_id:
                     number_row("fem2d-play-results.mode-index", labels.mode_index.as_str(), f64::from(window.result_mode_index), 1.0, DISPLAY_ACTION, "modeIndex", window_id),
                 ],
             ),
-            section(
-                "fem2d-play-results.playback",
-                labels.playback.as_str(),
-                [
-                    slider_row("fem2d-play-results.phase", labels.phase.as_str(), animation.phase, 0.0, 1.0, 0.01, PLAYBACK_ACTION, "phase", window_id),
-                    row("fem2d-play-results.transport", labels.playing.as_str(), transport),
-                    slider_row("fem2d-play-results.speed", labels.speed.as_str(), animation.speed, ANIMATION_SPEED_MINIMUM, ANIMATION_SPEED_MAXIMUM, 0.05, PLAYBACK_ACTION, "speed", window_id),
-                    select_row("fem2d-play-results.loop", labels.loop_mode.as_str(), loop_value, &loops, PLAYBACK_ACTION, "loopMode", window_id),
-                    select_row("fem2d-play-results.waveform", labels.waveform.as_str(), waveform_value, &waveforms, PLAYBACK_ACTION, "waveform", window_id),
-                ],
-            ),
+            section("fem2d-play-results.playback", labels.playback.as_str(), playback),
             section(
                 "fem2d-play-results.analysis",
                 labels.analysis.as_str(),

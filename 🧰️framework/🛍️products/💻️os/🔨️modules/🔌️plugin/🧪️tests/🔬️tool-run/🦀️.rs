@@ -1772,3 +1772,53 @@ fn expected_flag(value: &Value) -> bool {
 }
 
 //#endregion 🎯️RetargetAndSettings
+
+//#region 🧹️RetainedConfigCloseCliff
+/// 🧹️ A retained config larger than one `ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES` page must still reach
+/// terminal-empty AFTER a body has rendered against it.
+///
+/// 🏁️ Measured 2026-09-16 (ticket 26/08/28/DEMONSTRATOR-END-TO-END-ALL-APPS): with a body rendered,
+/// a config over ~one page livelocked `close_step(1, 4_096)` at `Pending { 0, 0 }` for 15 M turns,
+/// while the same config closed with no render. The render backfills the command log, whose LABEL
+/// carries the applied config op text; `close_retained_fields_step` priced that whole log entry
+/// against one turn grant and pushed it back unreleased every turn. The cliff capped EVERY app's
+/// retained config at one page regardless of its declared maximum (cad declares 65 536 B), so the
+/// `sourcing.module` / `cad.computer` / `process.machines` host packs could never be retained.
+#[semio_framework_async_macros::async_test]
+async fn a_retained_config_over_one_envelope_page_closes_after_a_render() {
+    for (bytes, rendered) in [(2_909usize, true), (3_706, true), (4_360, true), (16_384, true), (65_536, true), (3_820, false)] {
+        let mut app = toy_app(1).await;
+        app.config_store
+            .dispatch(ArtifactCommand::Apply { mutations: vec![ChangeTestConfigSelection { selected: Some("c".repeat(bytes)) }.into()], description: None })
+            .await
+            .expect("a retained config past one envelope page applies");
+        if rendered {
+            let _ = render_text(&mut app, "main").await;
+        }
+        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(10);
+        let mut turns = 0u64;
+        let mut productive = 0u64;
+        let mut last = String::new();
+        while std::time::Instant::now() < deadline {
+            if app.close_terminal_is_empty() {
+                break;
+            }
+            turns += 1;
+            match app.close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("close step") {
+                PluginCloseStep::Pending { released_items, released_bytes } => {
+                    assert!(released_items <= 1 && released_bytes <= store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES, "a close page stays inside its exact grant");
+                    if released_items != 0 || released_bytes != 0 {
+                        productive = turns;
+                    }
+                    last = format!("Pending {{ {released_items}, {released_bytes} }}");
+                }
+                PluginCloseStep::Complete => break,
+                step => last = format!("{step:?}"),
+            }
+        }
+        println!("[STATS] retainedConfigClose bytes={bytes} rendered={rendered} turns={turns} lastProductiveTurn={productive} last={last}");
+        assert!(app.close_terminal_is_empty(), "a {bytes} B retained config (rendered={rendered}) must reach terminal-empty; last step {last} after {turns} turns");
+        assert_eq!(productive, turns, "every close turn released something; the pump never spends a turn on zero progress");
+    }
+}
+//#endregion 🧹️RetainedConfigCloseCliff

@@ -1,1 +1,11 @@
-{}
+{
+  "mutation": "createPvSystem",
+  "index": 2,
+  "id": 302,
+  "dcCapacityW": 8000.0,
+  "areaM2": 44.0,
+  "tiltDeg": 25.0,
+  "azimuthDeg": 200.0,
+  "moduleEfficiency": 0.19,
+  "inverterEfficiency": 0.97
+}

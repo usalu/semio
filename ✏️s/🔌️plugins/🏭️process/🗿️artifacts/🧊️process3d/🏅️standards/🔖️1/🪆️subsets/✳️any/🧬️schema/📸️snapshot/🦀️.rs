@@ -286,6 +286,10 @@ fn write_solid(out: &mut Vec<u8>, solid: &WorkingSolid) {
             out.push(4);
             write_str_lp(out, solid_handle);
         }
+        WorkingSolid::Reference { reference_id } => {
+            out.push(5);
+            write_str_lp(out, reference_id);
+        }
     }
 }
 
@@ -296,6 +300,7 @@ fn read_solid(reader: &mut store::ByteReader<'_>) -> Result<WorkingSolid, String
         2 => Ok(WorkingSolid::Sphere { radius: reader.read_f64_le().map_err(|e| e.to_string())? }),
         3 => Ok(WorkingSolid::ImportedMesh { mesh_url: read_str_lp(reader)? }),
         4 => Ok(WorkingSolid::ImportedSolid { solid_handle: read_str_lp(reader)? }),
+        5 => Ok(WorkingSolid::Reference { reference_id: read_str_lp(reader)? }),
         _ => Err("process3d pack solid tag is invalid".into()),
     }
 }
@@ -595,7 +600,7 @@ impl Process3dRetainedSolidCursor {
     pub(crate) fn step(&mut self, reader: &mut store::ByteReader<'_>) -> Result<Option<WorkingSolid>, String> {
         let Some(tag) = self.tag else {
             let tag = reader.read_u8().map_err(|error| error.to_string())?;
-            if tag > 4 {
+            if tag > 5 {
                 return Err("process3d retained solid tag is invalid".into());
             }
             self.tag = Some(tag);
@@ -633,6 +638,7 @@ impl Process3dRetainedSolidCursor {
             2 => WorkingSolid::Sphere { radius: self.values[0] },
             3 => WorkingSolid::ImportedMesh { mesh_url: self.text.take().unwrap_or_default() },
             4 => WorkingSolid::ImportedSolid { solid_handle: self.text.take().unwrap_or_default() },
+            5 => WorkingSolid::Reference { reference_id: self.text.take().unwrap_or_default() },
             _ => unreachable!("validated retained solid tag"),
         }
     }

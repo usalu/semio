@@ -32,6 +32,7 @@ fn terminal_close_state(complete: bool, faulted: bool, blocked: bool) -> std::sy
         instance_id: 7, generation: semio_framework_job::Generation(1),
         cell: std::sync::Mutex::new(std::mem::ManuallyDrop::new(None)), pump: std::sync::Mutex::new(pump),
         status: AtomicU8::new(RuntimeCloseStatus::Queued.repr()), deadline_resume: AtomicU8::new(u8::MAX), deadline_elapsed_us: AtomicU64::new(0), stalled_steps: AtomicU8::new(0),
+        stall_since_us: AtomicU64::new(0), stall_credit_spent_us: AtomicU64::new(0),
         last_callback_elapsed_us: AtomicU64::new(0),
         last_fault: std::sync::Mutex::new([0; 256]), last_fault_origin: AtomicU8::new(0), physical_close_calls: AtomicU64::new(0),
         callback_phase_started_us: AtomicU64::new(0), callback_phase_us: std::array::from_fn(|_| AtomicU64::new(0)),

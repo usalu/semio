@@ -1,1 +1,5 @@
-{}
+{
+  "mutation": "changePeopleGainPeoplePerArea",
+  "id": 20,
+  "newPeoplePerArea": 0.1
+}

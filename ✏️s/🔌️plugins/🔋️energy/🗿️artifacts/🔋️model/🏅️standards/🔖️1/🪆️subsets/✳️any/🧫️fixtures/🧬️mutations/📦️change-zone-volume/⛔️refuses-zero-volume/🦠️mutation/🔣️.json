@@ -1,1 +1,5 @@
-{}
+{
+  "mutation": "changeZoneVolume",
+  "id": 1,
+  "newVolumeM3": 0.0
+}

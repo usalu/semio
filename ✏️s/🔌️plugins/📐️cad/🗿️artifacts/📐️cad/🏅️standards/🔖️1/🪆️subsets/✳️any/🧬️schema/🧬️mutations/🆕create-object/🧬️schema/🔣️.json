@@ -7,7 +7,8 @@
   "required": [
     "index",
     "object",
-    "pane"
+    "pane",
+    "primitives"
   ],
   "properties": {
     "pane": {
@@ -87,6 +88,30 @@
         },
         "solidHandle": {
           "type": "string"
+        }
+      }
+    },
+    "primitives": {
+      "type": "array",
+      "items": {
+        "title": "CadObjectPrimitive",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "kind",
+          "primitiveId",
+          "slot"
+        ],
+        "properties": {
+          "slot": {
+            "type": "string"
+          },
+          "primitiveId": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string"
+          }
         }
       }
     }

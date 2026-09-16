@@ -36,6 +36,10 @@ pub fn inverse(payload: &super::DeleteAnnualSchedule, base: &EnergyModelSnapshot
     for (position, holiday) in existing.holiday_dates.iter().enumerate() {
         steps.push(vocabulary::add_annual_schedule_holiday(existing.id, position as u32, holiday.0, holiday.1, holiday.2));
     }
+    // ↩️ The store replays an inverse in REVERSE order (`ArtifactStore::replay_mutations`'s
+    // `back.reverse()`, pinned by `protocol_laws::assert_mutation_inverse_law`), so the parent step
+    // must be LAST in this list — reversed, it is re-created before its dependants.
+    steps.reverse();
     steps
 }
 //#endregion 🔖️Inverse

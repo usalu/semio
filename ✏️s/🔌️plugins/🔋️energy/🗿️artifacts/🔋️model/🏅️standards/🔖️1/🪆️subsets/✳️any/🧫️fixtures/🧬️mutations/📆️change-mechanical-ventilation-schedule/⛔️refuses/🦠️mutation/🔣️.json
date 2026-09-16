@@ -1,1 +1,5 @@
-{}
+{
+  "mutation": "changeMechanicalVentilationSchedule",
+  "id": 60,
+  "newScheduleId": 999
+}

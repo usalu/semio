@@ -119,3 +119,41 @@ async fn cad_labels_translate_document_tree_panes_in_german() {
     assert!(!json.contains("\"Shape\""));
     assert!(!json.contains("Struktur Klassisch"));
 }
+
+/// 📄️ Paging law: a section longer than its row quota closes with a `+N` continuation that dispatches
+/// `setPanelPage` for the NEXT page, and rendering with that cursor starts the section at the first
+/// row the previous page left out. This is the navigation half of `paged_panel_section` the
+/// 2026-09-16 CAD end-to-end report recorded as missing.
+#[semio_framework_async_macros::async_test]
+async fn set_panel_page_advances_the_structure_section() {
+    let scene = forest_play_scene();
+    let working = forest_working_scene();
+    let section_id = "cad-play-document.structure-classic";
+    let objects = &working.structure_classic_objects;
+    assert!(objects.len() > CAD_SECTION_ROWS, "this law needs a pane past one page, found {}", objects.len());
+
+    let labels = cad_labels(&ViewModel::default());
+    let first = build_document_tree(&view(scene.clone(), CadPlayRuntime::default()), labels).expect("page 0 tree");
+    let first_section = first.children.iter().find(|child| child.key.as_str() == section_id).expect("structure section");
+    let first_rows: Vec<String> = first_section.children.iter().map(|row| row.key.as_str().to_string()).collect();
+    assert!(first_rows.contains(&format!("{section_id}.more")), "page 0 closes with a continuation row: {first_rows:?}");
+    let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree { root: first }).expect("page 0 projection");
+    assert!(json.contains("setPanelPage"), "the continuation row must dispatch setPanelPage: {json}");
+
+    let runtime = CadPlayRuntime { panel_pages: std::collections::BTreeMap::from([(section_id.to_string(), 1)]), ..CadPlayRuntime::default() };
+    let second = build_document_tree(&view(scene, runtime), labels).expect("page 1 tree");
+    let second_section = second.children.iter().find(|child| child.key.as_str() == section_id).expect("structure section");
+    let second_rows: Vec<String> = second_section.children.iter().map(|row| row.key.as_str().to_string()).collect();
+    assert_ne!(first_rows, second_rows, "page 1 must not repeat page 0");
+    assert_eq!(second_rows.first().map(String::as_str), Some(objects[CAD_SECTION_ROWS].id.as_str()), "page 1 starts at the first row page 0 left out");
+}
+
+/// 📄️ A cursor past the section's own last page reads as that last page — a document that shrank
+/// under a stale cursor still renders rows instead of an empty section.
+#[semio_framework_async_macros::async_test]
+async fn a_stale_panel_page_cursor_clamps_to_the_last_page() {
+    let pages = std::collections::BTreeMap::from([("section".to_string(), 99u32)]);
+    assert_eq!(section_page(&pages, "section", 0), 0, "an empty section is always page 0");
+    assert_eq!(section_page(&pages, "section", CAD_SECTION_ROWS + 1), 1, "two pages of entries clamp a runaway cursor to page 1");
+    assert_eq!(section_page(&BTreeMap::new(), "section", 100), 0, "an unpaged section starts at page 0");
+}

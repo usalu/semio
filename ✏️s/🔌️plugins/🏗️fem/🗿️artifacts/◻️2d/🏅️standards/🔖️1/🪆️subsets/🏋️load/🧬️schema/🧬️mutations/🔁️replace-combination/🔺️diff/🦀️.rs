@@ -2,7 +2,8 @@
 //!
 //! Guards, in the order they run: `mutation.target-missing` (Error) on the selected id,
 //! `mutation.id-mismatch` (Fatal) when the replacement renames it, the SAME per-term resolution
-//! `create-combination` runs (`mutation.target-missing`, Error), the finite-factor bound
+//! `create-combination` runs (`mutation.target-missing` on a term this base cannot resolve,
+//! `mutation.invariant` on a term weighting the combination itself), the finite-factor bound
 //! (`mutation.invariant`, Fatal), and finally `mutation.no-op`.
 use super::ReplaceCombination;
 use crate::standards::v1::subsets::any::schema::diff::{Fem2dCombinationsDelta, Fem2dCombinationsPatchEntry, Fem2dDiff};
@@ -17,7 +18,7 @@ pub fn diff(payload: &ReplaceCombination, base: &Fem2dSnapshot) -> protocol::Mut
     if let Some(rejection) = guards::identity_matches("combination", &payload.id, &payload.new_combination.id) {
         return rejection;
     }
-    if let Some(rejection) = guards::combination_term_references(base, &payload.new_combination) {
+    if let Some(rejection) = guards::combination_term_references(base, &payload.id, &payload.new_combination) {
         return rejection;
     }
     if let Some(rejection) = guards::combination_factors(&payload.new_combination) {

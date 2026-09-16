@@ -986,6 +986,16 @@ export interface ShardClientOptions {
    * on a freshly `rebuild()`-ed shard; this class only does the mechanical worker lifecycle. */
   readonly onShardLost?: (shardIndex: number, actorIds: readonly string[]) => void;
   readonly onActorTrap?: (actorId: string, message: string) => void;
+  /** 🫀️ Fired for every beat this client folds into a shard's liveness — a dedicated `heartbeat`
+   * message, a beat carried on a `result`, or the `Atomics` slot the watchdog reads. `phase` is the
+   * worker's own await boundary (`module-fetch`, `module-ready`, `actor-ready`, `progress`).
+   *
+   * The plugin-load deadline (`🛠️ShellHelpers/🟦️.tsx`'s `loadPluginModuleResilient`) subscribes to it:
+   * a shard that is beating THROUGH its `await import()` of a multi-hundred-MB component is the only
+   * proof a concurrently starving load has that the pipeline is moving, and without it every pane
+   * whose small descriptor request queued behind those module fetches died on an idle window it was
+   * never idle in. */
+  readonly onLiveness?: (shardIndex: number, phase: string | null) => void;
   /** 🌉️ terra-shard-effect-bridge: answers `effect-request` frames — `http-fetch`/`blob-read`/
    * `storage-read`/… . Omitted entirely means every effect-request fails FAST with `"no host effect
    * handler installed"` rather than hanging the guest's `.await` forever; see {@link HostEffectHandler}'s
@@ -1044,6 +1054,7 @@ export class ShardClient {
   private readonly createWorker: CreateShardWorker;
   private readonly onShardLost?: ShardClientOptions["onShardLost"];
   private readonly onActorTrap?: ShardClientOptions["onActorTrap"];
+  private readonly onLiveness?: ShardClientOptions["onLiveness"];
   private readonly onHostEffect?: HostEffectHandler;
   private readonly maxOutstandingEffectsPerActor: number;
   /** 🌉️ terra-shard-effect-bridge: `actorId` → (`requestId` → its `AbortController`) — the ledger
@@ -1068,6 +1079,7 @@ export class ShardClient {
     this.heartbeatSabView = options.heartbeatSab ? new Int32Array(options.heartbeatSab) : null;
     this.onShardLost = options.onShardLost;
     this.onActorTrap = options.onActorTrap;
+    this.onLiveness = options.onLiveness;
     this.onHostEffect = options.onHostEffect;
     this.maxOutstandingEffectsPerActor = options.maxOutstandingEffectsPerActor ?? DEFAULT_MAX_OUTSTANDING_EFFECTS_PER_ACTOR;
     const exclusiveCount = Math.max(0, Math.min(options.exclusiveShardCount ?? Math.min(2, options.shardCount - 1), options.shardCount - 1));
@@ -2399,6 +2411,12 @@ export class ShardClient {
     slot.heartbeat.lastLivenessAtMs = atMs;
     slot.heartbeat.missedCount = 0;
     slot.heartbeat.lastMissCountedAtMs = atMs;
+    if (!this.onLiveness) return;
+    try {
+      this.onLiveness(slot.index, slot.heartbeat.lastHeartbeatPhase);
+    } catch (error) {
+      console.error("shard liveness subscriber failed", error);
+    }
   }
 
   private recordHeartbeat(slot: ShardSlot, turnSeq: number, atMs: number, phase: string | null = slot.heartbeat.lastHeartbeatPhase): void {

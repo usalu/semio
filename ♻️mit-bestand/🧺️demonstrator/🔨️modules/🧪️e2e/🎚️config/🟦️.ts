@@ -23,6 +23,19 @@ function withTrailingSlash(url: string): string {
 if (!process.env.PLAYWRIGHT_BASE_URL) throw new Error("Run the Demonstrator test-e2e target through Nx");
 const baseURL = withTrailingSlash(process.env.PLAYWRIGHT_BASE_URL);
 
+/** 🖥️ The demonstrator's six panes are all GPU surfaces, and one of them only boots on a real adapter.
+ *
+ * `--use-angle=swiftshader` is enough for the r3f/WebGL World3d panes (aussuchen's grid paints its beams
+ * under it), but the wasm/wgpu `TiledMapHost` never finishes `attachCanvas` on it: measured 2026-09-16
+ * against the same serve, verfolgen's map requested ZERO tiles under swiftshader and 65 (`/osm/0/0/0.png`,
+ * `/vt/3/0/1.pbf`, …) under ANGLE-Metal, where it paints continents, labels and the marker. So the
+ * default is the machine's real adapter; `DEMONSTRATOR_E2E_GPU=swiftshader` forces the software stack
+ * back for a host that has none, knowing the map pane cannot be graded there. */
+function browserLaunchArgs(): readonly string[] {
+  if (process.env.DEMONSTRATOR_E2E_GPU === "swiftshader") return ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--enable-unsafe-webgpu"];
+  return [process.platform === "darwin" ? "--use-angle=metal" : "--use-angle=gl", "--enable-gpu", "--ignore-gpu-blocklist", "--enable-unsafe-webgpu"];
+}
+
 export default defineConfig({
   testDir: resolve(demonstratorDir, "🧪️tests"),
   testMatch: ["🎭️acceptance/🟦️.ts"],
@@ -43,7 +56,7 @@ export default defineConfig({
       use: {
         ...devices["Desktop Chrome"],
         launchOptions: {
-          args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--enable-unsafe-webgpu"],
+          args: [...browserLaunchArgs()],
         },
       },
     },

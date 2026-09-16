@@ -1,1 +1,7 @@
-{}
+{
+  "status": "rejected",
+  "code": "mutation.invariant",
+  "path": [
+    "20"
+  ]
+}

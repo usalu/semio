@@ -36,7 +36,7 @@ async fn renders_fem2d_model_scene() {
 #[semio_framework_async_macros::async_test]
 async fn mesh_preview_renders_region_edges() {
     let mut app = fem2d_app();
-    crate::editor::fem2d::unit_tests::context::dispatch(&mut app, crate::editor::fem2d::Fem2dCommand::SetActiveExample(crate::editor::fem2d::commands::set_active_example::SetActiveExample { example_id: "default".into() })).await;
+    crate::editor::fem2d::unit_tests::context::dispatch(&mut app, crate::editor::fem2d::Fem2dCommand::SetActiveExample(crate::editor::fem2d::commands::set_active_example::SetActiveExample { example_id: crate::examples::demo::ID.into() })).await;
     let snapshot = app.snapshot().expect("snapshot");
     let node = render(&snapshot, &Viewport2d::default()).expect("fixture surface admission");
     let semio_framework_ui_contract::Component::Surface(props) = &node.component else { panic!("expected canvas surface") };
@@ -179,7 +179,11 @@ fn fem2d_visual_job_stale_cancel_fault_and_device_close_preserve_last_valid() {
     let current = sealed_visual(&doc, &visual);
     let current_snapshot = current.snapshot();
     let mut rejected = Fem2dVisualJob::new(visual_freshness(29));
-    assert!(!rejected.close_step(FEM2D_MOUNTED_VISUAL_PAGE_BYTES).0);
+    let mut closes = 0;
+    while !rejected.close_step(FEM2D_MOUNTED_VISUAL_PAGE_BYTES).0 && closes < 2_048 {
+        closes += 1;
+    }
+    assert!(rejected.terminal_is_empty(), "a never-started visual job closes down to its empty shell");
     assert!(canvas2d_snapshot_with_page(current_snapshot, 0, |_| ()).is_ok());
 }
 

@@ -89,6 +89,9 @@ fn process3d_interaction_definition() -> InteractionDefinition {
 }
 pub const PROCESS3D_EXAMPLE_TIMBER: &str = "timber-beam-joinery";
 pub const PROCESS3D_EXAMPLE_PLATE: &str = "drilled-plate";
+/// 🌲️ Shares its id with `crate::examples::concrete_forest::ID`, the registered example the react
+/// shell's picker dispatches back through `setActiveExample`.
+pub const PROCESS3D_EXAMPLE_CONCRETE_FOREST: &str = "concrete-forest";
 pub use catalogue::PROCESS_3D_PLAY_BODY_CATALOGUE;
 pub use document_panel::PROCESS_3D_PLAY_BODY_ARTIFACT;
 pub use inspection::PROCESS_3D_PLAY_BODY_INSPECTION;
@@ -180,11 +183,14 @@ pub fn iconed_tree_item_with_action(
 /// whole document" gesture (`ArtifactStore::reset`, applied host-side) every wholesale document-swap
 /// command (`🎮️commands/🗿️artifact`, `🎮️commands/🪵️stock`, `🎮️commands/📤️media`, `import_media`'s
 /// `geometry:in`) uses instead of the banned whole-snapshot mutation. The spr is a fresh, edit-free
-/// op-log — a genesis envelope with no history to encode.
+/// op-log (`store::empty_document_spr`, the `🏗️fem` shape) — never a live `ArtifactEnvelope` minted
+/// just to print it: such an envelope owns a bounded retirement authority, and dropping it at the end
+/// of this function trapped the guest (`artifact envelope terminal shell reached Drop before its
+/// app-owned bounded retirement authority detached every nested owner`) the moment the react shell
+/// dispatched its boot `setActiveExample`.
 pub fn reset_process3d_document_effect(document: &Process3dSnapshot) -> Effect {
     let pack = <Process3dSnapshot as ArtifactPack>::encode_pack(document);
-    let envelope = store::create_document_envelope::<Process3dSnapshot, Process3dMutation>(crate::PROCESS_3D_SCHEMA, "process3d", document.clone(), None);
-    let spr = semio_framework_plugin::resolve_ready(store::print_document_spr(&envelope)).expect("process3d document spr encode is infallible for a fresh, edit-free envelope");
+    let spr = semio_framework_plugin::resolve_ready(store::empty_document_spr("process3d", crate::PROCESS_3D_SCHEMA));
     Effect::LoadDocument { pack, spr }
 }
 
@@ -909,6 +915,7 @@ fn process3d_solid_bytes(solid: &WorkingSolid) -> Result<usize, String> {
         WorkingSolid::Box { .. } | WorkingSolid::Cylinder { .. } | WorkingSolid::Sphere { .. } => Ok(0),
         WorkingSolid::ImportedMesh { mesh_url } => process3d_text_bytes(mesh_url),
         WorkingSolid::ImportedSolid { solid_handle } => process3d_text_bytes(solid_handle),
+        WorkingSolid::Reference { reference_id } => process3d_text_bytes(reference_id),
     }
 }
 
@@ -1781,6 +1788,7 @@ pub fn create_process3d_app() -> AppDefinition {
                 ActionArgDef::select("exampleId", LocalizedLabel::native("Example", "Beispiel"), vec![
                     ActionArgOption::new(PROCESS3D_EXAMPLE_TIMBER, LocalizedLabel::native("Timber Beam Joinery", "Holzbalkenverbindung")),
                     ActionArgOption::new(PROCESS3D_EXAMPLE_PLATE, LocalizedLabel::native("Drilled Plate", "Gebohrte Platte")),
+                    ActionArgOption::new(PROCESS3D_EXAMPLE_CONCRETE_FOREST, LocalizedLabel::native("Concrete Forest", "Betonwald")),
                 ]).required().default_value(&PROCESS3D_EXAMPLE_TIMBER),
             ])
             .action_args("exportModel", vec![

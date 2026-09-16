@@ -3,7 +3,32 @@ pub(crate) mod context {
     use semio_framework_plugin::artifact_app_laws::{meta, new_app_with_registry};
     use semio_framework_plugin::{App, EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance};
 
-    pub type Fem2dApp = VcsArtifactApp<EditorApp<Fem2dPlayApp>>;
+    /// 🧪️ The registered, MOUNTED fixture app every editor test drives — bound to
+    /// [`FEM2D_TEST_INSTANCE`] so typed commands reach their retained routes, and retired through the
+    /// framework's exact close loop when it goes out of scope (the store's `Drop` demands the
+    /// terminal-empty witness; a test that already called [`close`] drops a closed shell, a no-op).
+    pub struct Fem2dApp(VcsArtifactApp<EditorApp<Fem2dPlayApp>>);
+
+    impl std::ops::Deref for Fem2dApp {
+        type Target = VcsArtifactApp<EditorApp<Fem2dPlayApp>>;
+        fn deref(&self) -> &Self::Target {
+            &self.0
+        }
+    }
+
+    impl std::ops::DerefMut for Fem2dApp {
+        fn deref_mut(&mut self) -> &mut Self::Target {
+            &mut self.0
+        }
+    }
+
+    impl Drop for Fem2dApp {
+        fn drop(&mut self) {
+            if !std::thread::panicking() {
+                semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut self.0);
+            }
+        }
+    }
 
     /// 🧪️ A bare app instance — no `AppActionRegistry`, so undeclared internal commands dispatch freely.
     fn view(kind: &str) -> ViewModel {
@@ -11,10 +36,42 @@ pub(crate) mod context {
         ViewModel { window_id: Some(id.into()), window_instances: vec![ViewWindowInstance { id: id.into(), window_kind_id: kind.into() }], ..Default::default() }
     }
 
-    fn manifest() -> App { App { definition: create_fem2d_app(), examples: Vec::new() } }
+    pub(super) fn manifest() -> App { App { definition: create_fem2d_app(), examples: Vec::new() } }
 
     pub fn fem2d_app() -> Fem2dApp {
-        semio_framework_plugin::resolve_ready(new_app_with_registry::<EditorApp<Fem2dPlayApp>>(manifest))
+        let mut app = semio_framework_plugin::resolve_ready(new_app_with_registry::<EditorApp<Fem2dPlayApp>>(manifest));
+        semio_framework_plugin::resolve_ready(app.bind_instance_id(FEM2D_TEST_INSTANCE));
+        Fem2dApp(app)
+    }
+
+    /// 🧪️ The instance id every `meta("local")` dispatch is stamped with.
+    pub const FEM2D_TEST_INSTANCE: u32 = 1;
+
+    /// 🧪️ A MOUNTED app: bound to [`FEM2D_TEST_INSTANCE`], so a typed command reaches its retained
+    /// route instead of being refused with `interactive-job.live-instance`, and its publication
+    /// actually settles into the stores.
+    ///
+    /// ⚠️ A bound app owes the store a terminal close — dropping one unclosed trips
+    /// "artifact store reached Drop without its exact terminal-empty shallow-shell witness". Every
+    /// caller must finish with [`close`], which is why this is a SEPARATE constructor: the plain
+    /// [`fem2d_app`] stays droppable, and the dozens of render-only tests keep working unchanged.
+    pub fn fem2d_mounted_app() -> Fem2dApp {
+        fem2d_app()
+    }
+
+    /// 🧪️ A mounted app on the EMPTY document — the app boots on the bundled demo, so a test that
+    /// counts what it adds itself starts from nothing instead (any example id but the demo's loads
+    /// the empty snapshot).
+    pub fn fem2d_empty_app() -> Fem2dApp {
+        let mut app = fem2d_app();
+        semio_framework_plugin::resolve_ready(dispatch(&mut app, Fem2dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "empty".into() })));
+        assert!(app.snapshot().expect("snapshot").nodes.is_empty(), "the empty example must load an empty document");
+        app
+    }
+
+    /// 🧹️ Retires a [`fem2d_mounted_app`] the way the plugin host retires a closing instance.
+    pub fn close(app: &mut Fem2dApp) {
+        semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0);
     }
 
     pub async fn dispatch(app: &mut Fem2dApp, command: Fem2dCommand) -> InvocationResult {
@@ -25,7 +82,12 @@ pub(crate) mod context {
         };
         let mut action = meta("local");
         action.view_state = Some(view(kind));
-        let result = app.dispatch_typed(command, &action).await.expect("dispatch");
+        let mut result = app.dispatch_typed(command, &action).await.expect("dispatch");
+        // 🔁️ A mounted app answers before its retained typed operation has published: drive it home the
+        // way the plugin host's continuation does, and fold the settled receipt's effects into the answer
+        // (either surface may be the one carrying a `LoadDocument` or a playback re-arm).
+        let settled = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, FEM2D_TEST_INSTANCE).await.expect("settle the typed operation");
+        result.requested_effects.extend(settled.effects);
         for effect in &result.requested_effects {
             if let semio_framework_plugin::Effect::LoadDocument { pack, spr } = effect {
                 let files = store::ArtifactPackFiles { pack: pack.clone(), spr: spr.clone(), ops: String::new() };
@@ -63,24 +125,24 @@ pub(super) fn every_command() -> Vec<Fem2dCommand> {
         Fem2dCommand::AddLoadCase(add_load_case::AddLoadCase { name: "Live".into(), self_weight: false }),
         Fem2dCommand::AddCombination(add_combination::AddCombination { name: "ULS".into(), terms: vec![crate::FemCombinationTerm { case_id: "dead".into(), factor: 1.35 }, crate::FemCombinationTerm { case_id: "live".into(), factor: 1.5 }] }),
         Fem2dCommand::SetSelfWeight(set_self_weight::SetSelfWeight { case_id: "dead".into(), enabled: true }),
-        Fem2dCommand::SetAnalysisSettings(set_analysis_settings::SetAnalysisSettings { modal_count: Some(5), buckling_count: None, deformation_scale: Some(30.0), field: None, value: None }),
+        Fem2dCommand::SetAnalysisSettings(set_analysis_settings::SetAnalysisSettings { modal_count: Some(5), buckling_count: None, deformation_scale: Some(30.0), field: None, value: None, window_id: None }),
         Fem2dCommand::RemoveSelection(remove_selection::RemoveSelection { ids: vec!["n1".into(), "e1".into()] }),
         Fem2dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "default".into() }),
         Fem2dCommand::SetCamera(set_camera::SetCamera { x: 1.0, y: 2.0, zoom: 1.5 }),
-        Fem2dCommand::SetResultDisplay(set_result_display::SetResultDisplay { source_id: Some("dead".into()), mode: "modal".into(), mode_index: 0, field: None, value: None }),
+        Fem2dCommand::SetResultDisplay(set_result_display::SetResultDisplay { source_id: Some("dead".into()), mode: "modal".into(), mode_index: 0, field: None, value: None, window_id: None }),
         Fem2dCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown { x: 120.0, y: 80.0, width: 640.0, height: 480.0, button: 0, shift: false, ctrl: false, meta: false, alt: false }),
         Fem2dCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { x: 121.0, y: 81.0, width: 640.0, height: 480.0 }),
         Fem2dCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { x: 121.0, y: 81.0, width: 640.0, height: 480.0, shift: false, ctrl: false, meta: false, alt: false }),
         Fem2dCommand::PatchNode(patch_node::PatchNode { id: "n1".into(), field: "x".into(), value: "1.5".into() }),
-        Fem2dCommand::PatchElement(patch_element::PatchElement { id: "e1".into(), field: "sectionId".into(), value: "ipe300".into() }),
+        Fem2dCommand::PatchElement(patch_element::PatchElement { id: "e3".into(), field: "sectionId".into(), value: "post140".into() }),
         Fem2dCommand::PatchMaterial(patch_material::PatchMaterial { id: "steel".into(), field: "e".into(), value: "200000000000".into() }),
-        Fem2dCommand::PatchSection(patch_section::PatchSection { id: "ipe300".into(), field: "area".into(), value: "0.006".into() }),
+        Fem2dCommand::PatchSection(patch_section::PatchSection { id: "chs76".into(), field: "area".into(), value: "0.006".into() }),
         Fem2dCommand::PatchSupport(patch_support::PatchSupport { id: "s1".into(), field: "rz".into(), value: "true".into() }),
         Fem2dCommand::PatchRegion(patch_region::PatchRegion { id: "r1".into(), field: "thickness".into(), value: "0.25".into() }),
-        Fem2dCommand::PatchLoad(patch_load::PatchLoad { id: "l1".into(), field: "value".into(), value: "-8000".into() }),
+        Fem2dCommand::PatchLoad(patch_load::PatchLoad { id: "l6".into(), field: "value".into(), value: "-8000".into() }),
         Fem2dCommand::PatchLoadCase(patch_load_case::PatchLoadCase { id: "dead".into(), field: "name".into(), value: "Dead".into() }),
         Fem2dCommand::PatchCombination(patch_combination::PatchCombination { id: "uls".into(), field: "term:live".into(), value: "1.5".into() }),
-        Fem2dCommand::SetResultAnimation(set_result_animation::SetResultAnimation { phase: Some(0.25), playing: Some(true), speed: None, loop_mode: Some("pingPong".into()), waveform: None, field: None, value: None }),
+        Fem2dCommand::SetResultAnimation(set_result_animation::SetResultAnimation { phase: Some(0.25), playing: Some(true), speed: None, loop_mode: Some("pingPong".into()), waveform: None, field: None, value: None, window_id: None }),
         Fem2dCommand::ResultAnimationTick(result_animation_tick::ResultAnimationTick {}),
         Fem2dCommand::FocusEntity(focus_entity::FocusEntity { id: "n1".into() }),
     ]
@@ -143,11 +205,11 @@ async fn every_command_keeps_its_pre_migration_bytes() {
             Fem2dCommand::AddCombination(add_combination::AddCombination { name: "ULS".into(), terms: vec![crate::FemCombinationTerm { case_id: "dead".into(), factor: 1.35 }, crate::FemCombinationTerm { case_id: "live".into(), factor: 1.5 }] }),
         ),
         ("010c010464656164020006000102", Fem2dCommand::SetSelfWeight(set_self_weight::SetSelfWeight { case_id: "dead".into(), enabled: true })),
-        ("010d000200040502050000000000003e40", Fem2dCommand::SetAnalysisSettings(set_analysis_settings::SetAnalysisSettings { modal_count: Some(5), buckling_count: None, deformation_scale: Some(30.0), field: None, value: None })),
+        ("010d000200040502050000000000003e40", Fem2dCommand::SetAnalysisSettings(set_analysis_settings::SetAnalysisSettings { modal_count: Some(5), buckling_count: None, deformation_scale: Some(30.0), field: None, value: None, window_id: None })),
         ("010e02026531026e3101000c0206010600", Fem2dCommand::RemoveSelection(remove_selection::RemoveSelection { ids: vec!["n1".into(), "e1".into()] })),
         ("010f010764656661756c7401000600", Fem2dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "default".into() })),
         ("011000030005000000000000f03f010500000000000000400205000000000000f83f", Fem2dCommand::SetCamera(set_camera::SetCamera { x: 1.0, y: 2.0, zoom: 1.5 })),
-        ("0111020464656164056d6f64616c03000600010601020400", Fem2dCommand::SetResultDisplay(set_result_display::SetResultDisplay { source_id: Some("dead".into()), mode: "modal".into(), mode_index: 0, field: None, value: None })),
+        ("0111020464656164056d6f64616c03000600010601020400", Fem2dCommand::SetResultDisplay(set_result_display::SetResultDisplay { source_id: Some("dead".into()), mode: "modal".into(), mode_index: 0, field: None, value: None, window_id: None })),
     ];
     for (expected, command) in rows {
         let bytes = command.encode_op().expect("encode");
@@ -208,7 +270,15 @@ async fn every_route_declares_the_lane_its_handler_emits() {
         assert!(emit.artifact_mutations.is_empty() || lanes.contains(&ArtifactToolPublicationLane::Artifact), "{tool_id} emits document mutations without the Artifact lane");
         assert!(emit.config_mutations.is_empty() || lanes.contains(&ArtifactToolPublicationLane::Config), "{tool_id} emits config mutations without the Config lane");
         assert!(emit.window_config_mutations.is_empty() || lanes.contains(&ArtifactToolPublicationLane::WindowConfig), "{tool_id} emits window config mutations without the WindowConfig lane");
-        assert!(emit.effects.is_empty() || lanes.contains(&ArtifactToolPublicationLane::HostOnly), "{tool_id} emits host effects without the HostOnly lane");
+        // 🛰️ `Emit::effects` is NOT a store lane: the framework gates only the store families
+        // (`🔌️plugin/🦀️.rs`'s completion check), and its own registration gate refuses `HostOnly`
+        // alongside any other lane. `HostOnly` therefore means "publishes into no store at all" —
+        // which is the direction this asserts, so a route that writes a store may still re-arm
+        // itself through a host effect (`setResultAnimation`, `resultAnimationTick`).
+        assert!(
+            !lanes.contains(&ArtifactToolPublicationLane::HostOnly) || (emit.artifact_mutations.is_empty() && emit.config_mutations.is_empty() && emit.window_config_mutations.is_empty()),
+            "{tool_id} declares the host-only lane but publishes into a store"
+        );
     }
 }
 
@@ -319,20 +389,18 @@ async fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
 
 #[semio_framework_async_macros::async_test]
 async fn two_instances_converge_on_disjoint_edits() {
-    let (mut instance_a, mut instance_b) = semio_framework_plugin::resolve_ready(semio_framework_plugin::artifact_app_laws::paired_apps::<EditorApp<Fem2dPlayApp>>("mem://fem2d-convergence"));
-
-    instance_a.dispatch_typed(Fem2dCommand::AddMaterial(add_material::AddMaterial { name: "Steel".into(), e: 2.1e11 }), &semio_framework_plugin::artifact_app_laws::meta("actor-a")).await.expect("a adds a material");
-    instance_b.dispatch_typed(Fem2dCommand::AddNode(add_node::AddNode { x: 5.0, y: 5.0 }), &semio_framework_plugin::artifact_app_laws::meta("actor-b")).await.expect("b adds a node");
-
-    // A neutral history action always dispatches through the store, which pumps inbound operations first.
-    semio_framework_plugin::resolve_ready(instance_a.handle_action("commitCheckpoint", None, &semio_framework_plugin::artifact_app_laws::meta("actor-a"))).expect("pump a");
-    semio_framework_plugin::resolve_ready(instance_b.handle_action("commitCheckpoint", None, &semio_framework_plugin::artifact_app_laws::meta("actor-b"))).expect("pump b");
-
-    let projection_a = instance_a.snapshot().expect("snapshot a");
-    let projection_b = instance_b.snapshot().expect("snapshot b");
-    assert!(projection_a.materials.iter().any(|m| m.name == "Steel"), "A keeps its material");
-    assert!(projection_a.nodes.iter().any(|n| n.x == 5.0), "A absorbs B's node");
-    assert_eq!(projection_a.nodes.len(), projection_b.nodes.len(), "both instances converge to the same node set");
+    // 🧬️ The framework's own convergence law (the same call every sibling editor makes): two instances
+    // on one `MemoryBackbone` apply disjoint edits and pump; both must project the same document.
+    semio_framework_plugin::artifact_app_laws::assert_two_instances_converge::<EditorApp<Fem2dPlayApp>, _>(
+        "mem://fem2d-convergence",
+        Fem2dCommand::AddMaterial(add_material::AddMaterial { name: "Steel".into(), e: 2.1e11 }),
+        Fem2dCommand::AddNode(add_node::AddNode { x: 5.0, y: 5.0 }),
+        |app| {
+            let projection = app.snapshot().expect("snapshot");
+            (projection.materials.iter().any(|material| material.name == "Steel"), projection.nodes.iter().any(|node| node.x == 5.0), projection.nodes.len())
+        },
+    )
+    .await;
 }
 //#endregion 🔖️CrossCutting
 

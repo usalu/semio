@@ -1,1 +1,4 @@
-{}
+{
+  "mutation": "deleteOutdoorAirSystem",
+  "id": 99
+}

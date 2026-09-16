@@ -1,1 +1,5 @@
-{}
+{
+  "mutation": "changePlantLoopSupplyTemperature",
+  "id": 18,
+  "newSupplyTemperatureC": 70.0
+}

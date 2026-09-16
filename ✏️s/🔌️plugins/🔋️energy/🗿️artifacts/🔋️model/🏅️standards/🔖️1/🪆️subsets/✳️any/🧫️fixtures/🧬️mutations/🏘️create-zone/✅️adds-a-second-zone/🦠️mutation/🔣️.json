@@ -1,1 +1,9 @@
-{}
+{
+  "mutation": "createZone",
+  "id": 2,
+  "name": "ZONE TWO",
+  "volumeM3": 129.6,
+  "multiplier": 1,
+  "conditioned": true,
+  "partOfTotalFloorArea": true
+}

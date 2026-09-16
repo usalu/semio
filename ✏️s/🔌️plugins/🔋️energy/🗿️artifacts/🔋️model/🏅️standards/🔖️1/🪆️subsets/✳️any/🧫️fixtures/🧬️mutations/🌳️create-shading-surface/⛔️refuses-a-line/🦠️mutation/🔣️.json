@@ -1,1 +1,18 @@
-{}
+{
+  "mutation": "createShadingSurface",
+  "id": 11,
+  "name": "SITE AWNING",
+  "verticesM": [
+    [
+      0.0,
+      -2.0,
+      3.0
+    ],
+    [
+      8.0,
+      -2.0,
+      3.0
+    ]
+  ],
+  "transmittanceScheduleId": null
+}

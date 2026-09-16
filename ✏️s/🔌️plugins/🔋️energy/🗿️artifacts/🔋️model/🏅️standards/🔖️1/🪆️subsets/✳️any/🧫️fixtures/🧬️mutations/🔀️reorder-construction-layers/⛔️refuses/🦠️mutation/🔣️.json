@@ -1,1 +1,8 @@
-{}
+{
+  "mutation": "reorderConstructionLayers",
+  "id": 10,
+  "newLayerMaterialIds": [
+    2,
+    2
+  ]
+}

@@ -28,6 +28,15 @@ async fn patch_region_edits_the_thickness_on_the_demo_2d() {
 }
 
 #[semio_framework_async_macros::async_test]
+async fn patch_region_emits_one_whole_record_replace_2d() {
+    let emitted = emit(&demo(), PatchRegion { id: "r1".into(), field: "meshSize".into(), value: "0.5".into() }).expect("handle");
+    let [Fem2dMutation::ReplaceRegion(replace)] = emitted.artifact_mutations.as_slice() else { panic!("one replace-region") };
+    assert_eq!(replace.id, "r1");
+    assert_eq!(replace.new_region.mesh_size, 0.5);
+    assert_eq!(replace.new_region.outline.len(), 4, "the polygon is carried through untouched");
+}
+
+#[semio_framework_async_macros::async_test]
 async fn patch_region_rejects_an_unknown_field_an_unparsable_value_and_a_missing_region_2d() {
     let demo = demo();
     assert!(emit(&demo, PatchRegion { id: "r1".into(), field: "outline".into(), value: "[]".into() }).is_err());

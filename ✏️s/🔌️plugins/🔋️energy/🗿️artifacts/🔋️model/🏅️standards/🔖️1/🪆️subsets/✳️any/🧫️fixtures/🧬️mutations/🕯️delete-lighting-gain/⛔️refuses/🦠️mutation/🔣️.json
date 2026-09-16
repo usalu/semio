@@ -1,1 +1,4 @@
-{}
+{
+  "mutation": "deleteLightingGain",
+  "id": 999
+}

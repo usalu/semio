@@ -237,6 +237,7 @@ pub(crate) fn every_command() -> Vec<CadCommand> {
         CadCommand::SaveCurrent(save_current::SaveCurrent { format: Some("step".into()) }),
         CadCommand::SaveCurrent(save_current::SaveCurrent { format: None }),
         CadCommand::LoadRawRequest(load_raw_request::LoadRawRequest {}),
+        CadCommand::SetPanelPage(set_panel_page::SetPanelPage { section: "cad-play-document.shape".into(), page: 1.0 }),
     ]
 }
 
@@ -1075,25 +1076,34 @@ async fn sun_measures_registered_for_all_four_panes_and_default_off() {
 //#endregion 🔖️ViewModel
 //#region 🔖️Operations
 #[semio_framework_async_macros::async_test]
-async fn add_object_action_is_a_documented_no_op() {
-    // ⚠️ `addObject` is a documented no-op pending the child-dispatch seam (see
-    // `commands/🧱️object/component.rs`'s module doc) — this locks in the honest current
-    // behavior (zero artifact mutations) rather than the pre-migration "grows the object list"
-    // claim, which no longer applies now `CadSnapshot` carries no inline objects. Selection is
-    // out of scope here too (framework-owned now, unreachable from `handle()`).
+async fn add_object_action_seeds_an_empty_pane_with_a_composed_model_child() {
+    // 🪆️ 2026-09-16: `addObject` is a real mutation now. `default_document()` holds no model child
+    // at all, so this is the empty-pane arm of the re-materialization seam — the created object
+    // mints the pane's composed `s.stdio.semio.model` child rather than dropping on the floor.
+    // Selection stays out of scope (framework-owned, unreachable from `handle()`).
     let app = CadPlayApp::default();
     let scene = default_document();
+    assert!(scene.shape_model.is_none(), "this arm needs a pane with no composed child yet");
     let emit = drive(&app, &scene, "addObject", Some(json!({ "typology": "building.building.column" })));
-    assert!(emit.artifact_mutations.is_empty(), "addObject is a documented no-op until the child-dispatch seam lands");
+    assert_eq!(emit.artifact_mutations.len(), 1, "addObject emits one bounded parent op");
+    let after = apply_mutations(&scene, &emit.artifact_mutations);
+    assert!(after.shape_model.is_some(), "the first object mints the pane's composed model child");
+    let objects = cad_pane_objects(&after, CadPaneId::Shape);
+    assert_eq!(objects.len(), 1);
+    assert_eq!(objects[0].typology, "building.building.column");
 }
 
 #[semio_framework_async_macros::async_test]
-async fn add_object_through_wrapper_is_a_documented_no_op() {
+async fn add_object_through_wrapper_grows_the_composed_pane() {
+    // ⚠️ Test-harness debt, not app behaviour: `artifact_app_laws::new_app` is registry-less, so
+    // this dispatch fails its tool-proof catalog before reaching the reducer (see the ticket's own
+    // "Registryless testkit::new_app Unusable" note). The assertion below is what it must prove
+    // once that harness gains a registry; the no-op claim it used to make is simply wrong now.
     let mut app = new_app().await;
-    let before = json::to_json_string(&app.snapshot().expect("snapshot"));
+    let before = app.snapshot().expect("snapshot");
     app.dispatch_typed(CadCommand::AddObject(add_object::AddObject { typology: Some("spatial.shape.primitive.box".into()) }), &meta("local")).await.expect("add object dispatch");
-    let after = json::to_json_string(&app.snapshot().expect("snapshot"));
-    assert_eq!(before, after, "addObject is a documented no-op until the child-dispatch seam lands");
+    let after = app.snapshot().expect("snapshot");
+    assert_ne!(json::to_json_string(&before), json::to_json_string(&after), "addObject must re-mint the addressed pane's composed model child");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -1607,19 +1617,20 @@ async fn undo_redo_round_trips_added_node_through_wrapper() {
 
 #[semio_framework_async_macros::async_test]
 async fn coalesced_translate_drag_is_a_single_undo_step() {
-    // ⚠️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 3: `translateSelection`
-    // (and the `addObject` that used to seed the dragged object) are documented no-ops pending
-    // the child-dispatch seam — object placement now lives inside composed
-    // `s.stdio.semio.model` CHILD documents (see `commands/🔄️transform/component.rs`'s own doc
-    // comment). This locks in the honest current behavior — a coalesced multi-tick drag emits
-    // nothing to undo — rather than letting it silently drift.
+    // ⚠️ Test-harness debt, not app behaviour: `artifact_app_laws::new_app` is registry-less, so
+    // every dispatch below fails its tool-proof catalog before reaching the reducer. What the law
+    // asserts is still correct for an id no pane owns: `translateSelection` resolves the addressed
+    // objects out of their pane's materialization and emits nothing when there are none, so three
+    // coalesced ticks against a stranger id leave the document exactly where it started. The
+    // seam's real behaviour is proved against the demo document by
+    // `translate_selection_moves_the_object_and_the_rendered_instance`.
     let mut app = new_app().await;
     let before = json::to_json_string(&app.snapshot().expect("snapshot"));
     for _ in 0..3 {
         app.dispatch_typed(CadCommand::TranslateSelection(translate_selection::TranslateSelection { object_ids: vec!["object-box-1".into()], dx: 1.0, dy: 0.0, dz: 0.0 }), &meta("local")).await.expect("translate tick");
     }
     let after = json::to_json_string(&app.snapshot().expect("snapshot"));
-    assert_eq!(before, after, "translateSelection is a documented no-op until the child-dispatch seam lands");
+    assert_eq!(before, after, "an id no pane materializes has nothing to move");
 }
 //#endregion 🔖️History
 //#region 🔖️Convergence
@@ -1629,12 +1640,10 @@ async fn coalesced_translate_drag_is_a_single_undo_step() {
 /// `setDocument` snapshots.
 #[semio_framework_async_macros::async_test]
 async fn two_instances_converge_disjoint_edits_via_backbone() {
-    // ⚠️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 3: `PatchObject` is a
-    // documented no-op pending the child-dispatch seam (object fields now live inside composed
-    // `s.stdio.semio.model` CHILD documents — see `commands/🧱️object/component.rs`'s module
-    // doc), so it can no longer stand in as the disjoint edit this law needs. `RenameNode` is a
-    // real, unaffected parent-document mutation (node data was never part of the deleted inline
-    // object list) — proves the identical convergence property.
+    // 🪆️ `PatchObject` is real again (2026-09-16), but it re-mints the addressed pane's composed
+    // model child from that child's in-process materialization — which `default_document()` has
+    // none of, and which no backbone frame carries either. `RenameNode` is a parent-document
+    // mutation with no such dependency, so it is what this convergence law rides on.
     let mut base = default_document();
     base.nodes = vec![CadNode { id: "node-a".into(), label: "A".into(), kind: "solid".into() }, CadNode { id: "node-b".into(), label: "B".into(), kind: "solid".into() }];
     let node_a = base.nodes[0].id.clone();
@@ -1698,3 +1707,217 @@ async fn ingest_operations_is_idempotent_for_cad() {
 }
 //#endregion 🔖️Convergence
 
+
+//#region 🪆️ObjectMutationSeam
+/// 🪆️ The pane's live objects, read back through the exact accessor the world scene and the document
+/// tree use — a mutation that does not land here has not re-materialized anything.
+fn shape_objects(document: &CadSnapshot) -> Vec<crate::standards::v1::subsets::any::io::geometry_import::CadObject> {
+    cad_pane_objects(document, CadPaneId::Shape)
+}
+
+/// 🥽️ The `instances` lane one pane's world-3d surface publishes — the rendered transform.
+fn shape_instances_lane(document: &CadSnapshot) -> String {
+    let envelope = view(document.clone(), CadPlayRuntime::default());
+    let node = edit::build_world_scene_for_pane(&envelope, CadPaneId::Shape, "cad.play.scene3d/shape", None, CadDislocateOptions::default()).expect("shape world scene");
+    scene_lane(&node, "instances")
+}
+
+/// ▶️ Law (a): `translateSelection` on the demo document changes the selected object's transform in
+/// the composed child AND the rendered instance transform after re-materialization. This is the
+/// gumball-snaps-back defect the 2026-09-16 CAD end-to-end report left open.
+#[semio_framework_async_macros::async_test]
+async fn translate_selection_moves_the_object_and_the_rendered_instance() {
+    let app = CadPlayApp::default();
+    let scene = forest_play_scene();
+    let before = shape_objects(&scene);
+    let target = before.first().expect("the demo document materializes shape objects").clone();
+    let emit = drive(&app, &scene, "translateSelection", Some(json!({ "objectIds": [target.id.clone()], "dx": 1.5, "dy": -2.25, "dz": 0.5 })));
+    assert!(!emit.artifact_mutations.is_empty(), "translateSelection must emit a real document operation");
+
+    let after = apply_mutations(&scene, &emit.artifact_mutations);
+    let moved = shape_objects(&after).into_iter().find(|object| object.id == target.id).expect("the object survives the move");
+    assert_eq!(moved.origin, [target.origin[0] + 1.5, target.origin[1] - 2.25, target.origin[2] + 0.5], "the composed child carries the new origin");
+    assert_ne!(after.shape_model.as_ref().map(|child| child.child_id.clone()), scene.shape_model.as_ref().map(|child| child.child_id.clone()), "the pane's child handle is re-minted");
+
+    let lane = shape_instances_lane(&after);
+    let position = format!("\"position\":[{},{},{}]", moved.origin[0], moved.origin[1], moved.origin[2]);
+    assert!(lane.contains(&position), "the rendered instance must carry the moved pose: looked for {position} in {lane}");
+}
+
+/// ▶️ Law (b): `addObject` yields a new rendered instance in the addressed pane.
+#[semio_framework_async_macros::async_test]
+async fn add_object_yields_a_new_rendered_instance() {
+    let app = CadPlayApp::default();
+    let scene = forest_play_scene();
+    let before = shape_objects(&scene).len();
+    let emit = drive_in_window(&app, &scene, "addObject", Some(json!({ "typology": "spatial.shape.primitive.box" })), &CadConfig::default(), "cad-window-shape", shape::WINDOW_KIND_ID).expect("addObject handled");
+    assert_eq!(emit.artifact_mutations.len(), 1, "addObject is one bounded parent op");
+
+    let after = apply_mutations(&scene, &emit.artifact_mutations);
+    let objects = shape_objects(&after);
+    assert_eq!(objects.len(), before + 1, "the pane materializes one more object");
+    let created = objects.last().expect("the created object is appended");
+    assert!(shape_instances_lane(&after).contains(created.id.as_str()), "the created object is a rendered instance");
+}
+
+/// ↩️ Law (c): undo restores. Every object gesture's ops are ordinary in-history `CadMutation`s, so
+/// the existing history mechanism inverts them with nothing app-specific — applied newest-first, the
+/// inverses bring the demo document back exactly.
+#[semio_framework_async_macros::async_test]
+async fn object_mutations_invert_back_to_the_demo_document() {
+    let app = CadPlayApp::default();
+    let scene = forest_play_scene();
+    let target = shape_objects(&scene).first().expect("shape objects").id.clone();
+    let gestures = [
+        drive(&app, &scene, "translateSelection", Some(json!({ "objectIds": [target.clone()], "dx": 2.0, "dy": 0.0, "dz": 0.0 }))),
+        drive(&app, &scene, "scaleSelection", Some(json!({ "objectIds": [target.clone()], "sx": 2.0, "sy": 2.0, "sz": 2.0 }))),
+        drive(&app, &scene, "deleteObject", Some(json!({ "objectId": target.clone() }))),
+    ];
+    for emit in gestures {
+        assert!(!emit.artifact_mutations.is_empty(), "every object gesture emits a real operation");
+        let mut forward = scene.clone();
+        let mut inverses: Vec<CadMutation> = Vec::new();
+        for mutation in &emit.artifact_mutations {
+            inverses.extend(protocol::Mutation::inverse(mutation, &forward));
+            forward = protocol::MutationDiff::apply(protocol::Mutation::diff(mutation, &forward).diff(), &forward).expect("gesture applies");
+        }
+        assert_ne!(forward, scene, "the gesture moved the document");
+        inverses.reverse();
+        let restored = apply_mutations(&forward, &inverses);
+        assert_eq!(restored, scene, "undo must restore the demo document");
+        assert_eq!(shape_objects(&restored), shape_objects(&scene), "undo must restore the materialized objects too");
+    }
+}
+//#endregion 🪆️ObjectMutationSeam
+
+//#region 📄️PanelPaging
+/// 📄️ Law (d), config half: `setPanelPage` records the section's cursor on the config lane and never
+/// touches the document. The rendering half is asserted in the artifact panel's own laws.
+#[semio_framework_async_macros::async_test]
+async fn set_panel_page_records_the_section_cursor_on_the_config_lane() {
+    let app = CadPlayApp::default();
+    let scene = forest_play_scene();
+    let emit = drive(&app, &scene, "setPanelPage", Some(json!({ "section": "cad-play-document.structure-classic", "page": 2.0 })));
+    assert!(emit.artifact_mutations.is_empty(), "paging is view state, never a document operation");
+    let runtime = runtime_after(&emit, &CadConfig::default());
+    assert_eq!(runtime.panel_pages.get("cad-play-document.structure-classic").copied(), Some(2), "the cursor lands on the runtime");
+
+    let config = config_after(&emit, &CadConfig::default());
+    let again = drive_with_config(&app, &scene, "setPanelPage", Some(json!({ "section": "cad-play-document.structure-classic", "page": 2.0 })), &config);
+    assert!(again.config_mutations.is_empty(), "re-declaring the current page is a no-op");
+    let empty = drive(&app, &scene, "setPanelPage", Some(json!({ "section": "", "page": 1.0 })));
+    assert!(empty.config_mutations.is_empty(), "a section-less page request is refused, not stored under an empty key");
+}
+//#endregion 📄️PanelPaging
+
+//#region 🧩️Contributions
+/// 🧩️ Law (e): a contributed `cad.computer` pack is accepted by `setContributions` — the payload
+/// survives onto the config lane AND the app's own reader decodes it into a real pack. The four
+/// `cad-extension-*` plugins wired into the demonstrator closure on 2026-09-16 push exactly this shape.
+#[semio_framework_async_macros::async_test]
+async fn a_contributed_cad_computer_pack_is_accepted_by_set_contributions() {
+    let contributions = json::to_json_string(&protocol::DslValue::Array(vec![
+        protocol::DslValue::object([
+            ("pluginId".to_string(), protocol::DslValue::String("cad-extension-aec-building".into())),
+            (
+                "topicContribution".to_string(),
+                protocol::DslValue::object([
+                    ("topic".to_string(), protocol::DslValue::String("cad.computer".into())),
+                    (
+                        "payload".to_string(),
+                        protocol::DslValue::object([
+                            ("appId".to_string(), protocol::DslValue::String("cad-play".into())),
+                            ("moduleId".to_string(), protocol::DslValue::String("aec.building".into())),
+                            ("computersJson".to_string(), protocol::DslValue::String("[{\"id\":\"aec.building.storey-count\"}]".into())),
+                        ]),
+                    ),
+                ]),
+            ),
+        ]),
+        // 🧩️ A second entry on another topic: a mixed host payload must still install cad's own share.
+        protocol::DslValue::object([
+            ("pluginId".to_string(), protocol::DslValue::String("flow".into())),
+            (
+                "topicContribution".to_string(),
+                protocol::DslValue::object([("topic".to_string(), protocol::DslValue::String("flow.extension".into())), ("payload".to_string(), protocol::DslValue::object([]))]),
+            ),
+        ]),
+    ]));
+
+    let accepted = crate::standards::v1::subsets::any::schema::inferences::validate_cad_computer_contributions(&contributions);
+    assert_eq!(accepted.len(), 1, "exactly the cad.computer pack addressed to cad-play is accepted: {accepted:?}");
+    assert_eq!(accepted[0].module_id, "aec.building");
+    assert!(accepted[0].computers_json.contains("aec.building.storey-count"), "the contributor's own computer roster survives verbatim");
+
+    let app = CadPlayApp::default();
+    let scene = forest_play_scene();
+    let emit = drive(&app, &scene, "setContributions", Some(json!({ "json": contributions.clone() })));
+    let config = config_after(&emit, &CadConfig::default());
+    assert_eq!(config.contributions_json, contributions, "setContributions stores the pack on the config lane");
+    assert_eq!(crate::standards::v1::subsets::any::schema::inferences::validate_cad_computer_contributions(&config.contributions_json).len(), 1, "the stored payload is still an accepted pack");
+}
+
+/// 🧩️ The REAL host pack the four `cad-extension-*` plugins push — a Rust mirror of
+/// `shippedCadComputerContributionsJson` (`✏️editor/⚙️engine/🏃️runtime/🟦️.ts:51`), module ids and
+/// `computersJson` rosters verbatim.
+fn shipped_cad_computer_contributions() -> String {
+    let entry = |plugin_id: &str, module_id: &str, computers_json: &str| {
+        protocol::DslValue::object([
+            ("pluginId".to_string(), protocol::DslValue::String(plugin_id.into())),
+            (
+                "topicContribution".to_string(),
+                protocol::DslValue::object([
+                    ("topic".to_string(), protocol::DslValue::String("cad.computer".into())),
+                    (
+                        "payload".to_string(),
+                        protocol::DslValue::object([
+                            ("appId".to_string(), protocol::DslValue::String("cad-play".into())),
+                            ("moduleId".to_string(), protocol::DslValue::String(module_id.into())),
+                            ("computersJson".to_string(), protocol::DslValue::String(computers_json.into())),
+                        ]),
+                    ),
+                ]),
+            ),
+        ])
+    };
+    json::to_json_string(&protocol::DslValue::Array(vec![
+        entry("cad-extension-spatial-shape", "spatial-shape", "{\"modelDefinitionIds\":[\"spatial.shape\"],\"statComputers\":[\"spatial.shape.geometry\"],\"propertyComputers\":[\"spatial.shape.volume\"],\"importProfiles\":[],\"transformationAppliers\":[]}"),
+        entry("cad-extension-aec-building", "aec-building", "{\"modelDefinitionIds\":[\"aec.building\"],\"statComputers\":[],\"propertyComputers\":[],\"importProfiles\":[{\"modelDefinitionId\":\"aec.building\",\"layerTypology\":{},\"fallbackTypology\":\"building.building.slab\"}],\"transformationAppliers\":[]}"),
+        entry("cad-extension-aec-building-energy", "aec-building-energy", "{\"modelDefinitionIds\":[\"aec.building.energy\"],\"statComputers\":[\"energy.demand\"],\"propertyComputers\":[\"energy.heatedvolume\"],\"importProfiles\":[],\"transformationAppliers\":[]}"),
+        entry("cad-extension-aec-building-structure", "aec-building-structure", "{\"modelDefinitionIds\":[\"aec.building.structure\"],\"statComputers\":[\"structure.stability\"],\"propertyComputers\":[],\"importProfiles\":[],\"transformationAppliers\":[\"aec.building.structure/from_building\"]}"),
+    ]))
+}
+
+/// ⚖️ LAW: the REAL four-extension `cad.computer` pack the demonstrator's koordinator pane receives
+/// is ADMITTED by the retained config envelope, lands on the config lane through the production
+/// `setContributions` dispatch, and decodes back into all four computer modules. Unlike sourcing's
+/// 96-byte filter-text envelope, cad already prices `SetContributions` on its own
+/// `CAD_CONFIG_STORE_MAXIMUM_BYTES` lane — this law pins that the real pack fits it, and that the
+/// pack also stays inside the host's one-page (4 KiB) retained-config close budget.
+#[semio_framework_async_macros::async_test]
+async fn the_shipped_cad_computer_pack_is_admitted_by_the_retained_config_envelope() {
+    let contributions = shipped_cad_computer_contributions();
+    assert!(contributions.len() <= CAD_CONFIG_STORE_MAXIMUM_BYTES, "the real pack is {} bytes against a {}-byte config lane", contributions.len(), CAD_CONFIG_STORE_MAXIMUM_BYTES);
+    assert!(contributions.len() < store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES, "a retained config past one 4 KiB envelope page never reaches its terminal-empty shell: {} bytes", contributions.len());
+    let mutation = CadConfigMutation::SetContributions { json: contributions.clone() };
+    assert!(admit_cad_config_mutation(&mutation).is_ok(), "the retained config store must admit the real host pack");
+    assert!(prepare_cad_config(&CadConfig::default(), mutation).is_ok(), "the whole preparation must admit the real host pack");
+    let app = CadPlayApp::default();
+    let scene = forest_play_scene();
+    let emit = drive(&app, &scene, "setContributions", Some(json!({ "json": contributions.clone() })));
+    let config = config_after(&emit, &CadConfig::default());
+    assert_eq!(config.contributions_json, contributions, "the real pack survives verbatim onto the config lane");
+    let accepted = crate::standards::v1::subsets::any::schema::inferences::validate_cad_computer_contributions(&config.contributions_json);
+    assert_eq!(
+        accepted.iter().map(|pack| pack.module_id.clone()).collect::<Vec<_>>(),
+        vec!["spatial-shape".to_string(), "aec-building".to_string(), "aec-building-energy".to_string(), "aec-building-structure".to_string()],
+        "every cad-extension-* module installs, in host order"
+    );
+    assert!(accepted.iter().all(|pack| pack.computers_json.contains("modelDefinitionIds")), "each module's own computer roster survives verbatim");
+    // 🖼️ `render_body` runs `validate_cad_computer_contributions` on every body assembly
+    // (`✏️editor/🦀️.rs:1278`), so a pack that made the panel refuse would surface here.
+    let history = empty_history();
+    let doc = ArtifactView::new(&scene, &history);
+    assert!(render_direct(&app, shape::BODY_KEY, &doc, &config, &ViewModel::default()).is_ok(), "the shape panel still assembles with the whole pack installed");
+}
+//#endregion 🧩️Contributions

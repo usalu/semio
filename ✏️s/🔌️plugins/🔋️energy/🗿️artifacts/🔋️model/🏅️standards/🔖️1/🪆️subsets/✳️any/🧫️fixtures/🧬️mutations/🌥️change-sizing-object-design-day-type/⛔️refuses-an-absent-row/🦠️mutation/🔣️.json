@@ -1,1 +1,5 @@
-{}
+{
+  "mutation": "changeSizingObjectDesignDayType",
+  "id": 99,
+  "newDesignDayType": "Cooling"
+}

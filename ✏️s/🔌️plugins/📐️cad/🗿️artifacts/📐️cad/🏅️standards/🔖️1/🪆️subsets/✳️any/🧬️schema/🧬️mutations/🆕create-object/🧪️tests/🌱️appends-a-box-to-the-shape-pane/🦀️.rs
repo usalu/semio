@@ -3,7 +3,7 @@
 //! ⚠️ Rust-constructed rather than a committed JSON quintet — see `move-objects`'s law for why the
 //! pane child's local materialization cannot appear on the wire.
 
-use crate::mutations::{cad_object_spec_of, create_object::CreateObject, CadMutation};
+use crate::mutations::{cad_object_primitives_of, cad_object_spec_of, create_object::CreateObject, CadMutation};
 use crate::sample_scene_fixture::{materialized_objects, materialized_shape_scene, sample_object};
 use crate::CadPaneId;
 use protocol::{Mutation, MutationDiff};
@@ -13,7 +13,7 @@ fn base() -> crate::CadSnapshot {
 }
 
 fn create_b(index: u32) -> CadMutation {
-    CadMutation::CreateObject(CreateObject { pane: CadPaneId::Shape, index, object: cad_object_spec_of(&sample_object("object-b", [2.0, 0.0, 0.0])) })
+    CadMutation::CreateObject(CreateObject { pane: CadPaneId::Shape, index, object: cad_object_spec_of(&sample_object("object-b", [2.0, 0.0, 0.0])), primitives: cad_object_primitives_of(&sample_object("object-b", [2.0, 0.0, 0.0])) })
 }
 
 /// ▶️ A created object becomes a real rendered instance of the pane — it is in the re-materialized
@@ -33,7 +33,7 @@ async fn creates_a_new_rendered_instance() {
 #[semio_framework_async_macros::async_test]
 async fn first_object_materializes_an_empty_pane() {
     let base = crate::sample_scene_fixture::sample_scene();
-    let create = CadMutation::CreateObject(CreateObject { pane: CadPaneId::Energy, index: 0, object: cad_object_spec_of(&sample_object("object-e", [0.0, 0.0, 0.0])) });
+    let create = CadMutation::CreateObject(CreateObject { pane: CadPaneId::Energy, index: 0, object: cad_object_spec_of(&sample_object("object-e", [0.0, 0.0, 0.0])), primitives: Vec::new() });
     let after = create.diff(&base).diff().apply(&base).expect("create-object applies to an empty pane");
     assert_eq!(materialized_objects(&after, CadPaneId::Energy).len(), 1, "the first object mints the pane's composed child");
 }
@@ -42,7 +42,7 @@ async fn first_object_materializes_an_empty_pane() {
 #[semio_framework_async_macros::async_test]
 async fn duplicate_id_never_applies() {
     let base = base();
-    let duplicate = CadMutation::CreateObject(CreateObject { pane: CadPaneId::Shape, index: 0, object: cad_object_spec_of(&sample_object("object-a", [9.0, 9.0, 9.0])) });
+    let duplicate = CadMutation::CreateObject(CreateObject { pane: CadPaneId::Shape, index: 0, object: cad_object_spec_of(&sample_object("object-a", [9.0, 9.0, 9.0])), primitives: Vec::new() });
     store::os_spr::protocol_laws::assert_fatal_never_applies(&duplicate.diff(&base)).await;
 }
 

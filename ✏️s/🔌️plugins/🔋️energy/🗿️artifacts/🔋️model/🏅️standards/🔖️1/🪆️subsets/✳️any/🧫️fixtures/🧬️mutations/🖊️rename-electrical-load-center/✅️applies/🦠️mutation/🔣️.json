@@ -1,1 +1,5 @@
-{}
+{
+  "mutation": "renameElectricalLoadCenter",
+  "id": 320,
+  "newName": "MAIN DISTRIBUTION"
+}

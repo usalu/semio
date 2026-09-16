@@ -1,1 +1,5 @@
-{}
+{
+  "mutation": "changeMaterialVisibleAbsorptance",
+  "id": 1,
+  "newVisibleAbsorptance": 2.0
+}

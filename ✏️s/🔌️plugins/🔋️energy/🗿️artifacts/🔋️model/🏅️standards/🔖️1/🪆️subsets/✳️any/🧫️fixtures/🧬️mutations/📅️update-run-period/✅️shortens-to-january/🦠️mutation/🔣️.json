@@ -1,1 +1,8 @@
-{}
+{
+  "mutation": "updateRunPeriod",
+  "startMonth": 1,
+  "startDay": 1,
+  "endMonth": 1,
+  "endDay": 31,
+  "year": 2026
+}

@@ -1,1 +1,7 @@
-{}
+{
+  "mutation": "createAnnualSchedule",
+  "index": 1,
+  "id": 31,
+  "defaultDailyScheduleId": 10,
+  "holidayDailyScheduleId": null
+}

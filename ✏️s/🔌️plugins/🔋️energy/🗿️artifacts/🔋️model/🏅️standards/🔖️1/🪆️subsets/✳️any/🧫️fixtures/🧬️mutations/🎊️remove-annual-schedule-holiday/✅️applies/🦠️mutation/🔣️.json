@@ -1,1 +1,7 @@
-{}
+{
+  "mutation": "removeAnnualScheduleHoliday",
+  "id": 30,
+  "year": 2026,
+  "month": 12,
+  "day": 25
+}

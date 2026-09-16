@@ -22,6 +22,10 @@ pub struct SetResultDisplay {
     pub mode_index: u32,
     pub field: Option<String>,
     pub value: Option<String>,
+    /// 🪟️ The results window this gesture speaks for, as the panel control tagged it. A panel
+    /// projection carries no `window_id` of its own, so the tag is the ONLY thing that keeps a split
+    /// layout from retuning the pane the user is not looking at.
+    pub window_id: Option<String>,
 }
 
 /// 👁️ Applies ONE named display field, leaving the rest of the window's state alone.
@@ -43,7 +47,7 @@ pub fn handle(_payload: &SetResultDisplay, _doc: &ArtifactView<'_, Fem2dSnapshot
 }
 
 pub fn handle_window(payload: &SetResultDisplay, cfg: &ConfigView<'_, NoConfig>, view: &semio_framework_plugin::ViewModel) -> Result<Emit<Fem2dMutation, NoConfigMutation>, Fault> {
-    let window_id = results::config::addressed_window_id(cfg, view)?;
+    let window_id = results::config::addressed_window_id(cfg, view, payload.window_id.as_deref())?;
     let mut next = results::config::current(cfg);
     match payload.field.as_deref().filter(|field| !field.is_empty()) {
         Some(field) => apply_field(&mut next, field, payload.value.as_deref().unwrap_or_default())?,
@@ -53,7 +57,7 @@ pub fn handle_window(payload: &SetResultDisplay, cfg: &ConfigView<'_, NoConfig>,
             next.result_mode_index = payload.mode_index;
         }
     }
-    Ok(Emit { window_config_mutations: vec![results::config::addressed_to(&window_id, next)], ..Default::default() })
+    Ok(Emit { window_config_mutations: vec![results::config::addressed_to(&window_id, next)], ui_scope: semio_framework::kernel::UiDirtyScope::Partial { window_bodies: vec![results::BODY_KEY.to_owned()], panel_bodies: vec![crate::editor::fem2d::panels::results::BODY_KEY.to_owned()], utilities: false, tools: false, engagements: false, measures: false, labels: false }, ..Default::default() })
 }
 //#endregion 🔖️SetResultDisplay
 

@@ -1,1 +1,5 @@
-{}
+{
+  "mutation": "changeMaterialThermalAbsorptance",
+  "id": 1,
+  "newThermalAbsorptance": 0.85
+}

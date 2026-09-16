@@ -1,1 +1,12 @@
-{}
+{
+  "mutation": "createPeopleGain",
+  "index": 1,
+  "id": 21,
+  "zoneId": 2,
+  "scheduleId": 1,
+  "activityScheduleId": 2,
+  "peoplePerArea": 0.1,
+  "sensibleFraction": 0.6,
+  "latentFraction": 0.4,
+  "radiantFraction": 0.3
+}

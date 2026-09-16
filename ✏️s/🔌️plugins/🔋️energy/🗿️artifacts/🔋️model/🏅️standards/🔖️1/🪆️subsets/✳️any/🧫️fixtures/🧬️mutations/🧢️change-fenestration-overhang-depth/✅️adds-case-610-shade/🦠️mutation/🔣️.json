@@ -1,1 +1,5 @@
-{}
+{
+  "mutation": "changeFenestrationOverhangDepth",
+  "id": 5,
+  "newOverhangDepthM": 1.0
+}

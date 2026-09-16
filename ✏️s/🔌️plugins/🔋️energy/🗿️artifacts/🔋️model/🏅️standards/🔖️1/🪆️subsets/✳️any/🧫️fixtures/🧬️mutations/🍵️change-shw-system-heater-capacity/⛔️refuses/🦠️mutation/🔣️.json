@@ -1,1 +1,5 @@
-{}
+{
+  "mutation": "changeShwSystemHeaterCapacity",
+  "id": 400,
+  "newHeaterCapacityW": 0.0
+}

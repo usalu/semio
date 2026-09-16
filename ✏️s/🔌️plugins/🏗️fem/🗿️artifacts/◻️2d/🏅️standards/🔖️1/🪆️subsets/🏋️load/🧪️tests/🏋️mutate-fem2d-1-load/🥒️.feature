@@ -173,3 +173,4 @@ Feature: Apply every typed fem2d load mutation twice — once in Rust, once in P
     | replace-combination-1          | 🔁️replace-combination          | ⛔️rejects-a-missing-b32308  |
     | replace-combination-2          | 🔁️replace-combination          | 🪪️denies-rename-a96d3c      |
     | replace-combination-3          | 🔁️replace-combination          | 👻️dangling-case-65b8a8      |
+    | replace-combination-4          | 🔁️replace-combination          | 👻️self-term-0f54d1          |

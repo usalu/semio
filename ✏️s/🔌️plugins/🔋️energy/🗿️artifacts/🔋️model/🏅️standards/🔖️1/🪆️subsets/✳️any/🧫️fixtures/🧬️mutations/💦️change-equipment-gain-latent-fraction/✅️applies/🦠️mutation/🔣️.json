@@ -1,1 +1,5 @@
-{}
+{
+  "mutation": "changeEquipmentGainLatentFraction",
+  "id": 40,
+  "newLatentFraction": 0.2
+}

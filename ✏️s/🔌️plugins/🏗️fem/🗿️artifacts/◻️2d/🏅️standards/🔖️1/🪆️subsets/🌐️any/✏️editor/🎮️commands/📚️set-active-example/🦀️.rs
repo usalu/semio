@@ -32,7 +32,6 @@ pub fn handle(payload: &SetActiveExample, _doc: &ArtifactView<'_, Fem2dSnapshot>
     } else {
         crate::standards::v1::subsets::any::schema::empty_fem2d_snapshot()
     };
-    eprintln!("[DEBUG] fem2d setActiveExample '{}': loading nodes={} elements={} regions={} loadCases={}", payload.example_id, document.nodes.len(), document.elements.len(), document.regions.len(), document.load_cases.len());
     Ok(Emit { effects: vec![crate::editor::fem2d::reset_document_effect(&document)], ..Default::default() })
 }
 

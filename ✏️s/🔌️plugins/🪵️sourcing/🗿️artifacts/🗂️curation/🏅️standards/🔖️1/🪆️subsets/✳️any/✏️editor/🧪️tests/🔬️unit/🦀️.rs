@@ -272,7 +272,25 @@ fn retained_config_preparation_matches_the_json_oracle_and_rejects_maximum_plus_
     assert!(sourcing_curation_config_mutation_footprint(&SourcingCurationConfigMutation::SetFilterQuery { value: "x".repeat(SOURCING_CURATION_CONFIG_TEXT_BYTES + 1) }).is_err());
     assert!(sourcing_curation_config_mutation_footprint(&SourcingCurationConfigMutation::SetFilterModules { module_ids: Vec::new() }).is_ok(), "clearing the module filter is a retained edit");
     assert!(sourcing_curation_config_mutation_footprint(&SourcingCurationConfigMutation::SetFilterModules { module_ids: vec!["m".into(); SOURCING_CURATION_CONFIG_STORE_MAXIMUM_ITEMS + 1] }).is_err());
-    assert_eq!(SOURCING_CURATION_CONFIG_STORE_MAXIMUM_BYTES * 4 + 1_024, 4_096);
+    assert_eq!(SOURCING_CURATION_CONFIG_STORE_MAXIMUM_BYTES, 768 + SOURCING_CURATION_CONFIG_CONTRIBUTIONS_BYTES, "the retained config store is the filter envelope plus its own contributions lane");
+    assert_eq!(SOURCING_CURATION_CONFIG_GRANT_BYTES, 4_096, "one config turn must still fit the host's fixed 4 KiB typed-operation page grant");
+}
+
+/// ⚖️ LAW: the contributions lane is priced on its OWN envelope, not the 96-byte filter-text one —
+/// a `sourcing.module` pack is a host-pushed capability blob, never typed-in filter text. Its
+/// ceiling is exactly the wire envelope `setContributions` is already granted, so nothing can be
+/// retained that could not have crossed the tool boundary.
+#[test]
+fn the_contributions_lane_is_priced_apart_from_the_filter_text_envelope() {
+    assert!(SOURCING_CURATION_CONFIG_CONTRIBUTIONS_BYTES > SOURCING_CURATION_CONFIG_TEXT_BYTES);
+    let inside = SourcingCurationConfigMutation::SetContributions { json: "x".repeat(SOURCING_CURATION_CONFIG_CONTRIBUTIONS_BYTES) };
+    assert!(sourcing_curation_config_mutation_footprint(&inside).is_ok(), "a pack at the lane ceiling is admitted");
+    let over = SourcingCurationConfigMutation::SetContributions { json: "x".repeat(SOURCING_CURATION_CONFIG_CONTRIBUTIONS_BYTES + 1) };
+    assert!(sourcing_curation_config_mutation_footprint(&over).is_err(), "one byte past the lane is refused, never truncated");
+    let base = SourcingCurationConfig { contributions_json: "x".repeat(SOURCING_CURATION_CONFIG_CONTRIBUTIONS_BYTES), ..Default::default() };
+    let (post, inverse, _) = prepare_sourcing_curation_config(&base, SourcingCurationConfigMutation::SetFilterQuery { value: "timber".into() }).expect("a filter edit over a full contributions lane stays bounded");
+    assert_eq!(post.contributions_json.len(), SOURCING_CURATION_CONFIG_CONTRIBUTIONS_BYTES, "a filter edit never disturbs the retained pack");
+    assert!(matches!(&inverse[0], SourcingCurationConfigMutation::SetFilterQuery { .. }));
 }
 //#endregion 🧪️RetainedConfigOracle
 use crate::editor::sourcing::unit_tests::context::{dispatch, new_app, sourcing_manifest_for_tests};
@@ -437,13 +455,41 @@ async fn app_definition_labels_resolve_german() {
     assert_eq!(def.modes.iter().find(|entry| entry.id == edit::SOURCING_CURATION_MODE_CURATION).expect("curation mode").label.resolve(terminology, locale), "Kuratierung");
 }
 
+/// ⚖️ LAW: the host bridge lands on the event-sourced config lane and retains the INSTALLABLE share
+/// of the pushed pack, never the pack itself — a payload carrying no `sourcing.module` entry this app
+/// can act on installs nothing, and a real module survives verbatim.
 #[test]
 fn host_contributions_resolve_to_the_event_sourced_config_lane() {
-    let mutation = <SourcingCurationApp as ArtifactEditor>::host_configuration_mutation("setContributions", Some(&protocol::DslValue::from(&serde_json::json!({ "json": "[{\"id\":\"sourcing\"}]" }))))
+    let foreign = <SourcingCurationApp as ArtifactEditor>::host_configuration_mutation("setContributions", Some(&protocol::DslValue::from(&serde_json::json!({ "json": "[{\"id\":\"sourcing\"}]" }))))
         .expect("host configuration")
         .expect("sourcing contribution mutation");
-    assert_eq!(mutation, SourcingCurationConfigMutation::SetContributions { json: "[{\"id\":\"sourcing\"}]".into() });
+    assert_eq!(foreign, SourcingCurationConfigMutation::SetContributions { json: "[]".into() }, "a pack with nothing this app installs is retained as an empty roster");
+    let pack = crate::schema::installable_contributions(&sourcing_reuse_contribution(), SOURCING_CURATION_CONFIG_CONTRIBUTIONS_BYTES);
+    let installed = <SourcingCurationApp as ArtifactEditor>::host_configuration_mutation("setContributions", Some(&protocol::DslValue::from(&serde_json::json!({ "json": sourcing_reuse_contribution() }))))
+        .expect("host configuration")
+        .expect("sourcing contribution mutation");
+    assert_eq!(installed, SourcingCurationConfigMutation::SetContributions { json: pack });
     assert_eq!(<SourcingCurationApp as ArtifactEditor>::host_configuration_mutation("setFilterQuery", None).expect("non-host action"), None);
+}
+
+/// 🧩️ One host `sourcing.module` contribution for a module this crate does NOT author.
+fn sourcing_reuse_contribution() -> String {
+    let kind = crate::ObjectKind { id: "reuse-salvaged-oak".into(), name: "Salvaged Oak Beam".into(), module_id: "reuse".into(), typology_path: vec!["reuse".into()], availability: 4, geometry: Box::new(crate::GeometryRecipe::Box { width: 0.2, height: 0.2, depth: 3.0 }) };
+    let entry = semio_framework::ProgramContributionEntry {
+        plugin_id: "sourcing-module-reuse".into(),
+        topic_contribution: Some(semio_framework::TopicContribution::new(
+            crate::schema::SOURCING_MODULE_TOPIC,
+            semio_framework::DslValue::object([
+                ("appId".to_string(), semio_framework::DslValue::String("sourcing-curation".to_string())),
+                ("moduleId".to_string(), semio_framework::DslValue::String("reuse".to_string())),
+                ("label".to_string(), semio_framework::DslValue::String("Reuse".to_string())),
+                ("iconId".to_string(), semio_framework::DslValue::String("recycle".to_string())),
+                ("typologyJson".to_string(), semio_framework::DslValue::String(semio_framework_os_kernel::json::to_json_string(&crate::schema::TypologyNode::new("reuse", "Reuse", vec![])))),
+                ("kindsJson".to_string(), semio_framework::DslValue::String(semio_framework_os_kernel::json::to_json_string(&vec![kind]))),
+            ]),
+        )),
+    };
+    dsl::json::to_json_string(&vec![entry])
 }
 
 #[test]

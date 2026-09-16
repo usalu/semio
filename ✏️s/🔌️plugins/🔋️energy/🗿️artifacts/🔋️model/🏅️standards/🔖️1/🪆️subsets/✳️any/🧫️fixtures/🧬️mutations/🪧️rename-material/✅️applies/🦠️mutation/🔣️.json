@@ -1,1 +1,5 @@
-{}
+{
+  "mutation": "renameMaterial",
+  "id": 1,
+  "newName": "TIMBER FLOORING"
+}

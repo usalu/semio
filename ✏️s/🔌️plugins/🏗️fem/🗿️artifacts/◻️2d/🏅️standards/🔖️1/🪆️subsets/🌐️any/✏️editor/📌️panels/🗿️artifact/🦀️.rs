@@ -4,8 +4,9 @@
 //!
 //! 🕹️ The tree is bound to the framework-owned `"fem2d"` interaction domain and every row's key is
 //! the RAW entity id, so a row click, a viewport pick and the inspector address the one selection.
-//! 🪙️ One interactive-row page for the whole tree: each section reserves the rows the sections after
-//! it still need, and a document past the page closes with a `+N` continuation row rather than
+//! 🪙️ One interactive-row page for the WHOLE tree, split max-min fair across the nine sections
+//! (`section_quotas`), so a section that fits keeps all its rows and only the widest ones truncate;
+//! a document past the page closes each truncated section with a `+N` continuation row rather than
 //! failing an argument admission mid-row (see `semio_framework_plugin::paged_panel_section`).
 
 use crate::editor::fem2d::interaction::{
@@ -15,7 +16,7 @@ use crate::editor::fem2d::interaction::{
 use crate::editor::fem2d::terminology::Fem2dLabels;
 use crate::editor::fem2d::{fem2d_action, ui_label, ui_node_list};
 use crate::{element_id, load_id, FemCombination, FemDof, FemElement, FemLoad, FemLoadCase, FemMaterial, FemNode, FemRegion, FemSection, FemSupport, Fem2dSnapshot};
-use semio_framework_plugin::plugin_app_close_prelude::{ActionBinding, BuiltNode, Component, Label as UiLabel, RowAction, RowActionPlacement, Trigger};
+use semio_framework_plugin::plugin_app_close_prelude::{BuiltNode, Component, Label as UiLabel};
 use semio_framework_plugin::{
     paged_panel_section, panel_page_rows, tree_item_desc, tree_item_with_action, ActionId, LabelText, LocalizedLabel, PanelGroup, PanelRowBudget, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiAssemblyResult, UiFixedList,
     UiText, UiValue, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, INTERACTION_SELECT_ACTION_ID,
@@ -31,10 +32,6 @@ pub const SECTIONS: usize = 9;
 /// 🎯️ Ids the builder records as selected/hovered — one `UiFixedList`, so a wider selection marks
 /// its first page rather than refusing the whole render.
 const MARKED_IDS_LIMIT: usize = semio_framework_ui_contract::UI_FIXED_LIST_ITEMS;
-const FOCUS_ENTITY_ACTION: &str = "focusEntity";
-const REMOVE_SELECTION_ACTION: &str = "removeSelection";
-const FOCUS_ICON: &str = "focus";
-const DELETE_ICON: &str = "trash-2";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
@@ -52,15 +49,7 @@ fn ui_value_text(value: impl AsRef<str>) -> UiAssemblyResult<UiValue> {
     UiText::try_from_str(value.as_ref()).map(UiValue::Text).ok_or_else(|| capacity_error("fem2d artifact UI text admission failed"))
 }
 
-fn ui_value_list(values: impl IntoIterator<Item = UiValue>) -> UiAssemblyResult<UiValue> {
-    let mut builder = semio_framework_plugin::UiListBuilder::try_new().ok_or_else(|| capacity_error("fem2d artifact UI list admission failed"))?;
-    for value in values {
-        builder.push(value).map_err(|_| capacity_error("fem2d artifact UI list item admission failed"))?;
-    }
-    Ok(UiValue::List(builder.finish()))
-}
 
-/// 🗺️ One fixed argument map. 🔑️ `UiMapBuilder::push` admits keys in strictly ascending order only,
 /// so every caller lists its entries sorted by key.
 fn ui_value_map(values: impl IntoIterator<Item = (&'static str, UiValue)>) -> UiAssemblyResult<UiValue> {
     let mut builder = semio_framework_plugin::UiMapBuilder::try_new().ok_or_else(|| capacity_error("fem2d artifact UI map admission failed"))?;
@@ -196,15 +185,14 @@ fn pick_action(granularity: &str, id: &str) -> UiAssemblyResult<(ActionId, Optio
     fem2d_action(INTERACTION_SELECT_ACTION_ID, Some(args))
 }
 
-fn row_action(icon: &str, label: &LabelText, action: (ActionId, Option<UiValue>)) -> UiAssemblyResult<RowAction> {
-    let (action, args) = action;
-    Ok(RowAction { icon: icon_text(icon)?, label: Some(ui_label(label.as_str())?), action: ActionBinding { trigger: Trigger::Activate, action, args, capability: None }, placement: RowActionPlacement::Row })
-}
 
-/// 🌳️ One selectable entity row: keyed by the raw entity id, picking through the framework domain,
-/// carrying at most the two row actions the UI contract admits — focus (geometric entities only)
-/// and delete. A clipped label keeps a pathological name from refusing the whole render.
-fn entity_row(id: &str, granularity: &str, label: &str, description: &LabelText, icon: &str, focusable: bool, dimmed: bool, labels: &Fem2dLabels) -> UiAssemblyResult<BuiltNode> {
+/// 🌳️ One selectable entity row: keyed by the raw entity id, picking through the framework domain.
+/// It authors ONE argument map (its pick) and no row actions: focus and delete live in the inspector,
+/// because a page of rows carrying two actions each (two maps and two id lists per row) is exactly
+/// what exhausts the one-page `UiValue` argument arena and starves every panel rendered beside the
+/// tree (the cad incident, and this ticket's first browser probe). A clipped label keeps a
+/// pathological name from refusing the whole render.
+fn entity_row(id: &str, granularity: &str, label: &str, description: &LabelText, icon: &str, dimmed: bool) -> UiAssemblyResult<BuiltNode> {
     let mut item = tree_item_with_action(id, UiLabel(UiText::clipped(label)), None, pick_action(granularity, id)?)?;
     let Component::TreeItem(props) = &mut item.component else {
         return Err(capacity_error("fem2d artifact row is a tree item"));
@@ -213,14 +201,6 @@ fn entity_row(id: &str, granularity: &str, label: &str, description: &LabelText,
     props.description = Some(UiText::clipped(description.as_str()));
     props.dimmed = Some(dimmed);
     props.default_open = Some(false);
-    let mut row_actions = UiFixedList::default();
-    if focusable {
-        let focus = fem2d_action(FOCUS_ENTITY_ACTION, Some(ui_value_map([("id", ui_value_text(id)?)])?))?;
-        row_actions.try_push(row_action(FOCUS_ICON, &labels.focus, focus)?).map_err(|_| capacity_error("fem2d artifact focus row action admission failed"))?;
-    }
-    let remove = fem2d_action(REMOVE_SELECTION_ACTION, Some(ui_value_map([("ids", ui_value_list([ui_value_text(id)?])?)])?))?;
-    row_actions.try_push(row_action(DELETE_ICON, &labels.delete, remove)?).map_err(|_| capacity_error("fem2d artifact delete row action admission failed"))?;
-    props.row_actions = row_actions;
     Ok(item)
 }
 
@@ -259,13 +239,13 @@ fn load_is_dangling(document: &Fem2dSnapshot, load: &FemLoad) -> bool {
 
 fn nodes_section(document: &Fem2dSnapshot, labels: &Fem2dLabels, budget: &mut PanelRowBudget) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
     let rows = budget.remaining();
-    paged_panel_section(&format!("{TREE_NAMESPACE}.nodes"), &document.nodes, rows, budget, |node, _| entity_row(&node.id, FEM2D_GRANULARITY_NODE, &fem2d_node_label(node), &labels.node, "circle-dot", true, false, labels))
+    paged_panel_section(&format!("{TREE_NAMESPACE}.nodes"), &document.nodes, rows, budget, |node, _| entity_row(&node.id, FEM2D_GRANULARITY_NODE, &fem2d_node_label(node), &labels.node, "circle-dot", false))
 }
 
 fn elements_section(document: &Fem2dSnapshot, labels: &Fem2dLabels, budget: &mut PanelRowBudget) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
     let rows = budget.remaining();
     paged_panel_section(&format!("{TREE_NAMESPACE}.elements"), &document.elements, rows, budget, |element, _| {
-        entity_row(element_id(element), FEM2D_GRANULARITY_ELEMENT, &fem2d_element_label(element, labels), &labels.element, "minus", true, element_is_dangling(document, element), labels)
+        entity_row(element_id(element), FEM2D_GRANULARITY_ELEMENT, &fem2d_element_label(element, labels), &labels.element, "minus", element_is_dangling(document, element))
     })
 }
 
@@ -273,14 +253,14 @@ fn regions_section(document: &Fem2dSnapshot, labels: &Fem2dLabels, budget: &mut 
     let rows = budget.remaining();
     paged_panel_section(&format!("{TREE_NAMESPACE}.regions"), &document.regions, rows, budget, |region, _| {
         let dimmed = !document.materials.iter().any(|material| material.id == region.material_id);
-        entity_row(&region.id, FEM2D_GRANULARITY_REGION, &fem2d_region_label(region, labels), &labels.region, "square", true, dimmed, labels)
+        entity_row(&region.id, FEM2D_GRANULARITY_REGION, &fem2d_region_label(region, labels), &labels.region, "square", dimmed)
     })
 }
 
 fn supports_section(document: &Fem2dSnapshot, labels: &Fem2dLabels, budget: &mut PanelRowBudget) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
     let rows = budget.remaining();
     paged_panel_section(&format!("{TREE_NAMESPACE}.supports"), &document.supports, rows, budget, |support, _| {
-        entity_row(&support.id, FEM2D_GRANULARITY_SUPPORT, &fem2d_support_label(support, labels), &labels.support, "anchor", true, !has_node(document, &support.node_id), labels)
+        entity_row(&support.id, FEM2D_GRANULARITY_SUPPORT, &fem2d_support_label(support, labels), &labels.support, "anchor", !has_node(document, &support.node_id))
     })
 }
 
@@ -291,10 +271,10 @@ fn load_cases_section(document: &Fem2dSnapshot, labels: &Fem2dLabels, budget: &m
     let rows = budget.remaining();
     paged_panel_section(&section_id, &document.load_cases, rows, budget, |case, nested| {
         let dimmed = case.loads.is_empty() && !case.self_weight;
-        let mut item = entity_row(&case.id, FEM2D_GRANULARITY_LOAD_CASE, &fem2d_load_case_label(case, labels), &labels.load_case, "list", false, dimmed, labels)?;
+        let mut item = entity_row(&case.id, FEM2D_GRANULARITY_LOAD_CASE, &fem2d_load_case_label(case, labels), &labels.load_case, "list", dimmed)?;
         let load_rows = nested.remaining();
         let loads = paged_panel_section(&format!("{section_id}.{}", case.id), &case.loads, load_rows, nested, |load, _| {
-            entity_row(load_id(load), FEM2D_GRANULARITY_LOAD, &fem2d_load_label(load, labels), &labels.load, "arrow-down", false, load_is_dangling(document, load), labels)
+            entity_row(load_id(load), FEM2D_GRANULARITY_LOAD, &fem2d_load_label(load, labels), &labels.load, "arrow-down", load_is_dangling(document, load))
         })?;
         for load in loads {
             item.children.try_push(load).map_err(|_| capacity_error("fem2d artifact load row admission failed"))?;
@@ -310,7 +290,7 @@ fn combinations_section(document: &Fem2dSnapshot, labels: &Fem2dLabels, budget: 
     let rows = budget.remaining();
     paged_panel_section(&format!("{TREE_NAMESPACE}.combinations"), &document.combinations, rows, budget, |combination, _| {
         let dimmed = combination.terms.iter().any(|term| !document.load_cases.iter().any(|case| case.id == term.case_id));
-        let mut item = entity_row(&combination.id, FEM2D_GRANULARITY_COMBINATION, &fem2d_combination_label(combination), &labels.combination, "link", false, dimmed, labels)?;
+        let mut item = entity_row(&combination.id, FEM2D_GRANULARITY_COMBINATION, &fem2d_combination_label(combination), &labels.combination, "link", dimmed)?;
         for index in 0..combination.terms.len() {
             item.children.try_push(term_row(combination, index, labels)?).map_err(|_| capacity_error("fem2d artifact term row admission failed"))?;
         }
@@ -321,14 +301,14 @@ fn combinations_section(document: &Fem2dSnapshot, labels: &Fem2dLabels, budget: 
 fn materials_section(document: &Fem2dSnapshot, labels: &Fem2dLabels, budget: &mut PanelRowBudget) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
     let rows = budget.remaining();
     paged_panel_section(&format!("{TREE_NAMESPACE}.materials"), &document.materials, rows, budget, |material, _| {
-        entity_row(&material.id, FEM2D_GRANULARITY_MATERIAL, &fem2d_material_label(material), &labels.material, "layers", false, false, labels)
+        entity_row(&material.id, FEM2D_GRANULARITY_MATERIAL, &fem2d_material_label(material), &labels.material, "layers", false)
     })
 }
 
 fn sections_section(document: &Fem2dSnapshot, labels: &Fem2dLabels, budget: &mut PanelRowBudget) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
     let rows = budget.remaining();
     paged_panel_section(&format!("{TREE_NAMESPACE}.sections"), &document.sections, rows, budget, |section, _| {
-        entity_row(&section.id, FEM2D_GRANULARITY_SECTION, &fem2d_section_label(section), &labels.section, "ruler", false, false, labels)
+        entity_row(&section.id, FEM2D_GRANULARITY_SECTION, &fem2d_section_label(section), &labels.section, "ruler", false)
     })
 }
 

@@ -1,1 +1,8 @@
-{}
+{
+  "mutation": "createRefrigerationSystem",
+  "index": 1,
+  "id": 421,
+  "caseCount": 2,
+  "designLoadW": 8000.0,
+  "defrostScheduleId": 2
+}

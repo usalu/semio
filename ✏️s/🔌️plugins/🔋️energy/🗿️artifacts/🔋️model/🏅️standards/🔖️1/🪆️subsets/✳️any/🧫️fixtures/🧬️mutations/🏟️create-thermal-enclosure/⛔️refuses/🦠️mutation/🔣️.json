@@ -1,1 +1,7 @@
-{}
+{
+  "mutation": "createThermalEnclosure",
+  "index": 2,
+  "id": 220,
+  "name": "ROOF BLOCK",
+  "zoneIds": []
+}

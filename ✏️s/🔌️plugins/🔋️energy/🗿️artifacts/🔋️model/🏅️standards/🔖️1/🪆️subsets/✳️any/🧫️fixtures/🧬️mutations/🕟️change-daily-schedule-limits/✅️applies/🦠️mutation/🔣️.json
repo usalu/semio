@@ -1,1 +1,6 @@
-{}
+{
+  "mutation": "changeDailyScheduleLimits",
+  "id": 10,
+  "newLimitsMin": 0.0,
+  "newLimitsMax": 40.0
+}

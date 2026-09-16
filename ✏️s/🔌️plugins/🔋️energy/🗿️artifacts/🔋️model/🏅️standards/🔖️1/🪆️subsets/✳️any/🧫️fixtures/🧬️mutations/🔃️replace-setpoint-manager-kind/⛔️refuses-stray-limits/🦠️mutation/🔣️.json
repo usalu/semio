@@ -1,1 +1,9 @@
-{}
+{
+  "mutation": "replaceSetpointManagerKind",
+  "id": 16,
+  "newKind": "WarmestZone",
+  "newLowOutdoorC": -10.0,
+  "newHighOutdoorC": 20.0,
+  "newLowSetpointC": 16.0,
+  "newHighSetpointC": 12.0
+}

@@ -1,1 +1,5 @@
-{}
+{
+  "mutation": "changeInfiltrationDischargeCoefficient",
+  "id": 50,
+  "newDischargeCoefficient": 0.65
+}

@@ -4607,7 +4607,7 @@ function FrameworkOsShellInner({
           return fromExamples;
         }
         if (fromDocument.status === "resolved") return fromDocument;
-        console.error("[DEBUG] contributions push skipped unresolved document operators", JSON.stringify({ plugin: session.pluginId, app: environment.session.app.id, reason: fromDocument.reason }));
+        console.error("[DEBUG] contributions unresolved document operators — capability packs only", JSON.stringify({ plugin: session.pluginId, app: environment.session.app.id, reason: fromDocument.reason }));
         return fromDocument;
       },
       buildPack: (session, kinds, environment) => {

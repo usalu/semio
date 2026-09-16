@@ -1,0 +1,611 @@
+{
+  "Version": {
+    "Version 1": {
+      "version_identifier": "25.2"
+    }
+  },
+  "SimulationControl": {
+    "SimulationControl 1": {
+      "do_zone_sizing_calculation": "No",
+      "do_system_sizing_calculation": "No",
+      "do_plant_sizing_calculation": "No",
+      "run_simulation_for_sizing_periods": "No",
+      "run_simulation_for_weather_file_run_periods": "Yes"
+    }
+  },
+  "Building": {
+    "BESTEST 600": {
+      "north_axis": 0.0,
+      "terrain": "Country",
+      "solar_distribution": "FullInteriorAndExterior"
+    }
+  },
+  "Site:Location": {
+    "BESTEST 600 Site": {
+      "latitude": 39.83,
+      "longitude": -104.65,
+      "time_zone": -7.0,
+      "elevation": 1650.0
+    }
+  },
+  "GlobalGeometryRules": {
+    "GlobalGeometryRules 1": {
+      "starting_vertex_position": "UpperLeftCorner",
+      "vertex_entry_direction": "Counterclockwise",
+      "coordinate_system": "World"
+    }
+  },
+  "Timestep": {
+    "Timestep 1": {
+      "number_of_timesteps_per_hour": 6
+    }
+  },
+  "RunPeriod": {
+    "Run Period 1": {
+      "begin_month": 1,
+      "begin_day_of_month": 1,
+      "begin_year": 2026,
+      "end_month": 12,
+      "end_day_of_month": 31,
+      "end_year": 2026,
+      "use_weather_file_holidays_and_special_days": "No",
+      "use_weather_file_daylight_saving_period": "No",
+      "apply_weekend_holiday_rule": "No",
+      "use_weather_file_rain_indicators": "Yes",
+      "use_weather_file_snow_indicators": "Yes"
+    }
+  },
+  "ScheduleTypeLimits": {
+    "semio Any Number": {
+      "numeric_type": "Continuous",
+      "unit_type": "Dimensionless"
+    },
+    "semio Control Type": {
+      "lower_limit_value": 0.0,
+      "upper_limit_value": 4.0,
+      "numeric_type": "Discrete",
+      "unit_type": "Control"
+    }
+  },
+  "Schedule:Constant": {
+    "Schedule 1": {
+      "schedule_type_limits_name": "semio Any Number",
+      "hourly_value": 1.0
+    },
+    "Schedule 2": {
+      "schedule_type_limits_name": "semio Any Number",
+      "hourly_value": 20.0
+    },
+    "Schedule 3": {
+      "schedule_type_limits_name": "semio Any Number",
+      "hourly_value": 27.0
+    },
+    "semio Dual Setpoint Control": {
+      "schedule_type_limits_name": "semio Control Type",
+      "hourly_value": 4.0
+    }
+  },
+  "Material": {
+    "Wood Siding": {
+      "roughness": "Rough",
+      "thickness": 0.009,
+      "conductivity": 0.14,
+      "density": 530.0,
+      "specific_heat": 900.0,
+      "thermal_absorptance": 0.9,
+      "solar_absorptance": 0.6,
+      "visible_absorptance": 0.6
+    },
+    "Fiberglass Quilt": {
+      "roughness": "Rough",
+      "thickness": 0.066,
+      "conductivity": 0.04,
+      "density": 12.0,
+      "specific_heat": 840.0,
+      "thermal_absorptance": 0.9,
+      "solar_absorptance": 0.6,
+      "visible_absorptance": 0.6
+    },
+    "Plasterboard": {
+      "roughness": "Rough",
+      "thickness": 0.012,
+      "conductivity": 0.16,
+      "density": 950.0,
+      "specific_heat": 840.0,
+      "thermal_absorptance": 0.9,
+      "solar_absorptance": 0.6,
+      "visible_absorptance": 0.6
+    },
+    "Roof Deck": {
+      "roughness": "Rough",
+      "thickness": 0.019,
+      "conductivity": 0.14,
+      "density": 530.0,
+      "specific_heat": 900.0,
+      "thermal_absorptance": 0.9,
+      "solar_absorptance": 0.6,
+      "visible_absorptance": 0.6
+    },
+    "Roof Fiberglass Quilt": {
+      "roughness": "Rough",
+      "thickness": 0.1118,
+      "conductivity": 0.04,
+      "density": 12.0,
+      "specific_heat": 840.0,
+      "thermal_absorptance": 0.9,
+      "solar_absorptance": 0.6,
+      "visible_absorptance": 0.6
+    },
+    "Roof Plasterboard": {
+      "roughness": "Rough",
+      "thickness": 0.01,
+      "conductivity": 0.16,
+      "density": 950.0,
+      "specific_heat": 840.0,
+      "thermal_absorptance": 0.9,
+      "solar_absorptance": 0.6,
+      "visible_absorptance": 0.6
+    },
+    "Timber Flooring": {
+      "roughness": "Rough",
+      "thickness": 0.025,
+      "conductivity": 0.14,
+      "density": 650.0,
+      "specific_heat": 1200.0,
+      "thermal_absorptance": 0.9,
+      "solar_absorptance": 0.6,
+      "visible_absorptance": 0.6
+    },
+    "Concrete Block": {
+      "roughness": "Rough",
+      "thickness": 0.1,
+      "conductivity": 0.51,
+      "density": 1400.0,
+      "specific_heat": 1000.0,
+      "thermal_absorptance": 0.9,
+      "solar_absorptance": 0.6,
+      "visible_absorptance": 0.6
+    },
+    "Foam Insulation": {
+      "roughness": "Rough",
+      "thickness": 0.0615,
+      "conductivity": 0.04,
+      "density": 10.0,
+      "specific_heat": 1400.0,
+      "thermal_absorptance": 0.9,
+      "solar_absorptance": 0.6,
+      "visible_absorptance": 0.6
+    },
+    "Concrete Slab": {
+      "roughness": "Rough",
+      "thickness": 0.08,
+      "conductivity": 1.13,
+      "density": 1400.0,
+      "specific_heat": 1000.0,
+      "thermal_absorptance": 0.9,
+      "solar_absorptance": 0.6,
+      "visible_absorptance": 0.6
+    }
+  },
+  "Material:NoMass": {
+    "Floor Insulation": {
+      "roughness": "Rough",
+      "thermal_resistance": 25.074999999999996,
+      "thermal_absorptance": 0.9,
+      "solar_absorptance": 0.6,
+      "visible_absorptance": 0.6
+    },
+    "High Mass Floor Insulation": {
+      "roughness": "Rough",
+      "thermal_resistance": 25.174999999999997,
+      "thermal_absorptance": 0.9,
+      "solar_absorptance": 0.6,
+      "visible_absorptance": 0.6
+    }
+  },
+  "WindowMaterial:Glazing": {
+    "Clear Glass 3 mm": {
+      "optical_data_type": "SpectralAverage",
+      "thickness": 0.003048,
+      "solar_transmittance_at_normal_incidence": 0.834,
+      "front_side_solar_reflectance_at_normal_incidence": 0.075,
+      "back_side_solar_reflectance_at_normal_incidence": 0.075,
+      "visible_transmittance_at_normal_incidence": 0.91325,
+      "front_side_visible_reflectance_at_normal_incidence": 0.082,
+      "back_side_visible_reflectance_at_normal_incidence": 0.082,
+      "infrared_transmittance_at_normal_incidence": 0.0,
+      "front_side_infrared_hemispherical_emissivity": 0.84,
+      "back_side_infrared_hemispherical_emissivity": 0.84,
+      "conductivity": 1.0
+    }
+  },
+  "WindowMaterial:Gas": {
+    "Air Gap 12 mm": {
+      "gas_type": "Air",
+      "thickness": 0.012
+    }
+  },
+  "WindowMaterial:SimpleGlazingSystem": {
+    "South Window West Glazing": {
+      "u_factor": 3.0,
+      "solar_heat_gain_coefficient": 0.787,
+      "visible_transmittance": 0.86
+    },
+    "South Window East Glazing": {
+      "u_factor": 3.0,
+      "solar_heat_gain_coefficient": 0.787,
+      "visible_transmittance": 0.86
+    }
+  },
+  "Construction": {
+    "Lightweight Exterior Wall": {
+      "outside_layer": "Wood Siding",
+      "layer_2": "Fiberglass Quilt",
+      "layer_3": "Plasterboard"
+    },
+    "Lightweight Floor": {
+      "outside_layer": "Floor Insulation",
+      "layer_2": "Timber Flooring"
+    },
+    "Roof": {
+      "outside_layer": "Roof Deck",
+      "layer_2": "Roof Fiberglass Quilt",
+      "layer_3": "Roof Plasterboard"
+    },
+    "Double Clear Glazing": {
+      "outside_layer": "Clear Glass 3 mm",
+      "layer_2": "Air Gap 12 mm",
+      "layer_3": "Clear Glass 3 mm"
+    },
+    "South Window West Glazing Construction": {
+      "outside_layer": "South Window West Glazing"
+    },
+    "South Window East Glazing Construction": {
+      "outside_layer": "South Window East Glazing"
+    }
+  },
+  "Zone": {
+    "Zone": {
+      "direction_of_relative_north": 0.0,
+      "x_origin": 0.0,
+      "y_origin": 0.0,
+      "z_origin": 0.0,
+      "multiplier": 1,
+      "volume": 129.60000000000002,
+      "part_of_total_floor_area": "Yes"
+    }
+  },
+  "BuildingSurface:Detailed": {
+    "South Wall": {
+      "surface_type": "Wall",
+      "construction_name": "Lightweight Exterior Wall",
+      "zone_name": "Zone",
+      "outside_boundary_condition": "Outdoors",
+      "sun_exposure": "SunExposed",
+      "wind_exposure": "WindExposed",
+      "vertices": [
+        {
+          "vertex_x_coordinate": 0.0,
+          "vertex_y_coordinate": 0.0,
+          "vertex_z_coordinate": 0.0
+        },
+        {
+          "vertex_x_coordinate": 8.0,
+          "vertex_y_coordinate": 0.0,
+          "vertex_z_coordinate": 0.0
+        },
+        {
+          "vertex_x_coordinate": 8.0,
+          "vertex_y_coordinate": 0.0,
+          "vertex_z_coordinate": 2.7
+        },
+        {
+          "vertex_x_coordinate": 0.0,
+          "vertex_y_coordinate": 0.0,
+          "vertex_z_coordinate": 2.7
+        }
+      ]
+    },
+    "East Wall": {
+      "surface_type": "Wall",
+      "construction_name": "Lightweight Exterior Wall",
+      "zone_name": "Zone",
+      "outside_boundary_condition": "Outdoors",
+      "sun_exposure": "SunExposed",
+      "wind_exposure": "WindExposed",
+      "vertices": [
+        {
+          "vertex_x_coordinate": 8.0,
+          "vertex_y_coordinate": 0.0,
+          "vertex_z_coordinate": 0.0
+        },
+        {
+          "vertex_x_coordinate": 8.0,
+          "vertex_y_coordinate": 6.0,
+          "vertex_z_coordinate": 0.0
+        },
+        {
+          "vertex_x_coordinate": 8.0,
+          "vertex_y_coordinate": 6.0,
+          "vertex_z_coordinate": 2.7
+        },
+        {
+          "vertex_x_coordinate": 8.0,
+          "vertex_y_coordinate": 0.0,
+          "vertex_z_coordinate": 2.7
+        }
+      ]
+    },
+    "North Wall": {
+      "surface_type": "Wall",
+      "construction_name": "Lightweight Exterior Wall",
+      "zone_name": "Zone",
+      "outside_boundary_condition": "Outdoors",
+      "sun_exposure": "SunExposed",
+      "wind_exposure": "WindExposed",
+      "vertices": [
+        {
+          "vertex_x_coordinate": 8.0,
+          "vertex_y_coordinate": 6.0,
+          "vertex_z_coordinate": 0.0
+        },
+        {
+          "vertex_x_coordinate": 0.0,
+          "vertex_y_coordinate": 6.0,
+          "vertex_z_coordinate": 0.0
+        },
+        {
+          "vertex_x_coordinate": 0.0,
+          "vertex_y_coordinate": 6.0,
+          "vertex_z_coordinate": 2.7
+        },
+        {
+          "vertex_x_coordinate": 8.0,
+          "vertex_y_coordinate": 6.0,
+          "vertex_z_coordinate": 2.7
+        }
+      ]
+    },
+    "West Wall": {
+      "surface_type": "Wall",
+      "construction_name": "Lightweight Exterior Wall",
+      "zone_name": "Zone",
+      "outside_boundary_condition": "Outdoors",
+      "sun_exposure": "SunExposed",
+      "wind_exposure": "WindExposed",
+      "vertices": [
+        {
+          "vertex_x_coordinate": 0.0,
+          "vertex_y_coordinate": 6.0,
+          "vertex_z_coordinate": 0.0
+        },
+        {
+          "vertex_x_coordinate": 0.0,
+          "vertex_y_coordinate": 0.0,
+          "vertex_z_coordinate": 0.0
+        },
+        {
+          "vertex_x_coordinate": 0.0,
+          "vertex_y_coordinate": 0.0,
+          "vertex_z_coordinate": 2.7
+        },
+        {
+          "vertex_x_coordinate": 0.0,
+          "vertex_y_coordinate": 6.0,
+          "vertex_z_coordinate": 2.7
+        }
+      ]
+    },
+    "Roof": {
+      "surface_type": "Roof",
+      "construction_name": "Roof",
+      "zone_name": "Zone",
+      "outside_boundary_condition": "Outdoors",
+      "sun_exposure": "SunExposed",
+      "wind_exposure": "WindExposed",
+      "vertices": [
+        {
+          "vertex_x_coordinate": 0.0,
+          "vertex_y_coordinate": 0.0,
+          "vertex_z_coordinate": 2.7
+        },
+        {
+          "vertex_x_coordinate": 8.0,
+          "vertex_y_coordinate": 0.0,
+          "vertex_z_coordinate": 2.7
+        },
+        {
+          "vertex_x_coordinate": 8.0,
+          "vertex_y_coordinate": 6.0,
+          "vertex_z_coordinate": 2.7
+        },
+        {
+          "vertex_x_coordinate": 0.0,
+          "vertex_y_coordinate": 6.0,
+          "vertex_z_coordinate": 2.7
+        }
+      ]
+    },
+    "Floor": {
+      "surface_type": "Floor",
+      "construction_name": "Lightweight Floor",
+      "zone_name": "Zone",
+      "outside_boundary_condition": "Outdoors",
+      "sun_exposure": "NoSun",
+      "wind_exposure": "NoWind",
+      "vertices": [
+        {
+          "vertex_x_coordinate": 0.0,
+          "vertex_y_coordinate": 0.0,
+          "vertex_z_coordinate": 0.0
+        },
+        {
+          "vertex_x_coordinate": 0.0,
+          "vertex_y_coordinate": 6.0,
+          "vertex_z_coordinate": 0.0
+        },
+        {
+          "vertex_x_coordinate": 8.0,
+          "vertex_y_coordinate": 6.0,
+          "vertex_z_coordinate": 0.0
+        },
+        {
+          "vertex_x_coordinate": 8.0,
+          "vertex_y_coordinate": 0.0,
+          "vertex_z_coordinate": 0.0
+        }
+      ]
+    }
+  },
+  "FenestrationSurface:Detailed": {
+    "South Window West": {
+      "surface_type": "Window",
+      "construction_name": "South Window West Glazing Construction",
+      "building_surface_name": "South Wall",
+      "vertex_1_x_coordinate": 0.5,
+      "vertex_1_y_coordinate": 0.0,
+      "vertex_1_z_coordinate": 0.2,
+      "vertex_2_x_coordinate": 3.5,
+      "vertex_2_y_coordinate": 0.0,
+      "vertex_2_z_coordinate": 0.2,
+      "vertex_3_x_coordinate": 3.5,
+      "vertex_3_y_coordinate": 0.0,
+      "vertex_3_z_coordinate": 2.2,
+      "vertex_4_x_coordinate": 0.5,
+      "vertex_4_y_coordinate": 0.0,
+      "vertex_4_z_coordinate": 2.2
+    },
+    "South Window East": {
+      "surface_type": "Window",
+      "construction_name": "South Window East Glazing Construction",
+      "building_surface_name": "South Wall",
+      "vertex_1_x_coordinate": 4.5,
+      "vertex_1_y_coordinate": 0.0,
+      "vertex_1_z_coordinate": 0.2,
+      "vertex_2_x_coordinate": 7.5,
+      "vertex_2_y_coordinate": 0.0,
+      "vertex_2_z_coordinate": 0.2,
+      "vertex_3_x_coordinate": 7.5,
+      "vertex_3_y_coordinate": 0.0,
+      "vertex_3_z_coordinate": 2.2,
+      "vertex_4_x_coordinate": 4.5,
+      "vertex_4_y_coordinate": 0.0,
+      "vertex_4_z_coordinate": 2.2
+    }
+  },
+  "ZoneInfiltration:DesignFlowRate": {
+    "Zone Infiltration 61": {
+      "zone_or_zonelist_or_space_or_spacelist_name": "Zone",
+      "schedule_name": "Schedule 1",
+      "design_flow_rate_calculation_method": "AirChanges/Hour",
+      "air_changes_per_hour": 0.5,
+      "constant_term_coefficient": 0.0,
+      "temperature_term_coefficient": 0.0,
+      "velocity_term_coefficient": 0.0,
+      "velocity_squared_term_coefficient": 0.0
+    }
+  },
+  "ElectricEquipment": {
+    "Zone Equipment 60": {
+      "zone_or_zonelist_or_space_or_spacelist_name": "Zone",
+      "schedule_name": "Schedule 1",
+      "design_level_calculation_method": "Watts/Area",
+      "watts_per_floor_area": 4.166666666666667,
+      "fraction_latent": 0.0,
+      "fraction_radiant": 0.6,
+      "fraction_lost": 0.0
+    }
+  },
+  "ThermostatSetpoint:DualSetpoint": {
+    "Zone Setpoints": {
+      "heating_setpoint_temperature_schedule_name": "Schedule 2",
+      "cooling_setpoint_temperature_schedule_name": "Schedule 3"
+    }
+  },
+  "ZoneControl:Thermostat": {
+    "Zone Thermostat": {
+      "zone_or_zonelist_name": "Zone",
+      "control_type_schedule_name": "semio Dual Setpoint Control",
+      "control_1_object_type": "ThermostatSetpoint:DualSetpoint",
+      "control_1_name": "Zone Setpoints"
+    }
+  },
+  "ZoneHVAC:IdealLoadsAirSystem": {
+    "Zone Ideal Loads Air System": {
+      "zone_supply_air_node_name": "Zone Supply Inlet",
+      "maximum_heating_supply_air_temperature": 50.0,
+      "minimum_cooling_supply_air_temperature": 13.0,
+      "heating_limit": "NoLimit",
+      "cooling_limit": "NoLimit",
+      "dehumidification_control_type": "None"
+    }
+  },
+  "ZoneHVAC:EquipmentList": {
+    "Zone Equipment List": {
+      "load_distribution_scheme": "SequentialLoad",
+      "equipment": [
+        {
+          "zone_equipment_object_type": "ZoneHVAC:IdealLoadsAirSystem",
+          "zone_equipment_name": "Zone Ideal Loads Air System",
+          "zone_equipment_cooling_sequence": 1,
+          "zone_equipment_heating_or_no_load_sequence": 1
+        }
+      ]
+    }
+  },
+  "ZoneHVAC:EquipmentConnections": {
+    "Zone": {
+      "zone_name": "Zone",
+      "zone_conditioning_equipment_list_name": "Zone Equipment List",
+      "zone_air_inlet_node_or_nodelist_name": "Zone Inlet Node List",
+      "zone_air_node_name": "Zone Zone Air Node",
+      "zone_return_air_node_or_nodelist_name": "Zone Return Outlet"
+    }
+  },
+  "NodeList": {
+    "Zone Inlet Node List": {
+      "nodes": [
+        {
+          "node_name": "Zone Supply Inlet"
+        }
+      ]
+    }
+  },
+  "Output:Variable": {
+    "Output:Variable 1": {
+      "key_value": "*",
+      "variable_name": "Zone Mean Air Temperature",
+      "reporting_frequency": "Hourly"
+    },
+    "Output:Variable 2": {
+      "key_value": "*",
+      "variable_name": "Zone Ideal Loads Supply Air Total Heating Energy",
+      "reporting_frequency": "Hourly"
+    },
+    "Output:Variable 3": {
+      "key_value": "*",
+      "variable_name": "Zone Ideal Loads Supply Air Total Cooling Energy",
+      "reporting_frequency": "Hourly"
+    },
+    "Output:Variable 4": {
+      "key_value": "*",
+      "variable_name": "Surface Window Transmitted Solar Radiation Energy",
+      "reporting_frequency": "Hourly"
+    }
+  },
+  "Output:Meter": {
+    "Output:Meter 1": {
+      "key_name": "Heating:DistrictHeatingWater",
+      "reporting_frequency": "Hourly"
+    },
+    "Output:Meter 2": {
+      "key_name": "Cooling:DistrictCooling",
+      "reporting_frequency": "Hourly"
+    }
+  },
+  "Output:SQLite": {
+    "Output:SQLite 1": {
+      "option_type": "SimpleAndTabular"
+    }
+  }
+}

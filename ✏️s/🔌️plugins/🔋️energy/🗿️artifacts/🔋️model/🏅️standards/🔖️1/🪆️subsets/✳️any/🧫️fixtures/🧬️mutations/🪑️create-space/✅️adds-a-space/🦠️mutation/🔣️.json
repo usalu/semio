@@ -1,1 +1,7 @@
-{}
+{
+  "mutation": "createSpace",
+  "id": 2,
+  "name": "SPACE ONE",
+  "zoneId": 1,
+  "floorAreaM2": 48.0
+}

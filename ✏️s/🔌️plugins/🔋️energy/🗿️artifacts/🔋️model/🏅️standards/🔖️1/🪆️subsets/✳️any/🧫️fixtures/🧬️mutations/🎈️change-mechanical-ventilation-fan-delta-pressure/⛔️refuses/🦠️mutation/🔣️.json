@@ -1,1 +1,5 @@
-{}
+{
+  "mutation": "changeMechanicalVentilationFanDeltaPressure",
+  "id": 60,
+  "newFanDeltaPressurePa": -100.0
+}

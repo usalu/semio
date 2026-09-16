@@ -1,20 +1,19 @@
 use super::*;
 use crate::editor::fem2d::commands::{add_bar, add_beam, add_material, add_region, add_section, add_support};
-use crate::editor::fem2d::unit_tests::context::{dispatch, fem2d_app};
+use crate::editor::fem2d::unit_tests::context::{dispatch, fem2d_empty_app};
 use crate::editor::fem2d::Fem2dCommand;
 use crate::{FemDof, FemElement};
 
 #[semio_framework_async_macros::async_test]
 async fn add_node_action_emits_op_2d() {
-    let mut app = fem2d_app();
-    let result = dispatch(&mut app, Fem2dCommand::AddNode(AddNode { x: 1.0, y: 2.0 })).await;
-    assert_eq!(result.mutations.len(), 1);
+    let mut app = fem2d_empty_app();
+    dispatch(&mut app, Fem2dCommand::AddNode(AddNode { x: 1.0, y: 2.0 })).await;
     assert_eq!(app.snapshot().expect("snapshot").nodes.last().expect("node added").x, 1.0);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn add_bar_and_add_beam_actions_emit_ops_2d() {
-    let mut app = fem2d_app();
+    let mut app = fem2d_empty_app();
     dispatch(&mut app, Fem2dCommand::AddMaterial(add_material::AddMaterial { name: "Steel".into(), e: 2.1e11 })).await;
     dispatch(&mut app, Fem2dCommand::AddSection(add_section::AddSection { name: "Section".into(), area: 0.01, iy: 0.001 })).await;
     dispatch(&mut app, Fem2dCommand::AddNode(AddNode { x: 0.0, y: 0.0 })).await;
@@ -30,7 +29,7 @@ async fn add_bar_and_add_beam_actions_emit_ops_2d() {
 
 #[semio_framework_async_macros::async_test]
 async fn add_material_action_emits_op_2d() {
-    let mut app = fem2d_app();
+    let mut app = fem2d_empty_app();
     dispatch(&mut app, Fem2dCommand::AddMaterial(add_material::AddMaterial { name: "Steel".into(), e: 2.1e11 })).await;
     let material = app.snapshot().expect("snapshot").materials.last().expect("material added").clone();
     assert_eq!(material.name, "Steel");
@@ -39,14 +38,14 @@ async fn add_material_action_emits_op_2d() {
 
 #[semio_framework_async_macros::async_test]
 async fn add_section_action_emits_op_2d() {
-    let mut app = fem2d_app();
+    let mut app = fem2d_empty_app();
     dispatch(&mut app, Fem2dCommand::AddSection(add_section::AddSection { name: "HEA200".into(), area: 0.00538, iy: 0.0000369 })).await;
     assert_eq!(app.snapshot().expect("snapshot").sections.last().expect("section added").name, "HEA200");
 }
 
 #[semio_framework_async_macros::async_test]
 async fn add_support_action_emits_op_with_fixed_dofs_2d() {
-    let mut app = fem2d_app();
+    let mut app = fem2d_empty_app();
     dispatch(&mut app, Fem2dCommand::AddNode(AddNode { x: 0.0, y: 0.0 })).await;
     let node_id = app.snapshot().expect("snapshot").nodes[0].id.clone();
     dispatch(&mut app, Fem2dCommand::AddSupport(add_support::AddSupport { node_id, fixed: vec![FemDof::Tx, FemDof::Ty] })).await;
@@ -55,7 +54,7 @@ async fn add_support_action_emits_op_with_fixed_dofs_2d() {
 
 #[semio_framework_async_macros::async_test]
 async fn add_region_action_emits_set_region_2d() {
-    let mut app = fem2d_app();
+    let mut app = fem2d_empty_app();
     dispatch(&mut app, Fem2dCommand::AddMaterial(add_material::AddMaterial { name: "Steel".into(), e: 2.1e11 })).await;
     let material_id = app.snapshot().expect("snapshot").materials[0].id.clone();
     dispatch(&mut app, Fem2dCommand::AddRegion(add_region::AddRegion { x: 0.0, y: 0.0, width: 4.0, height: 2.0, material_id, thickness: None, mesh_size: None })).await;

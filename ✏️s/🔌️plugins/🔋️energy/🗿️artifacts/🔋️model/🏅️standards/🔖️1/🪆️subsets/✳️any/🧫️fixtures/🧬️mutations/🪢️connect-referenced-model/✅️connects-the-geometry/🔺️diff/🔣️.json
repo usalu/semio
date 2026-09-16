@@ -1,1 +1,26 @@
-{}
+{
+  "artifact": null,
+  "schema": null,
+  "model": null,
+  "structure": null,
+  "zones": null,
+  "referencedModel": {
+    "kind": "attached",
+    "link": {
+      "target": {
+        "artifactId": "doc-2",
+        "dialect": {
+          "artifactKind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "model"
+        }
+      },
+      "pin": {
+        "kind": "head"
+      },
+      "role": "model"
+    }
+  },
+  "weatherLink": null,
+  "resultsJson": null
+}

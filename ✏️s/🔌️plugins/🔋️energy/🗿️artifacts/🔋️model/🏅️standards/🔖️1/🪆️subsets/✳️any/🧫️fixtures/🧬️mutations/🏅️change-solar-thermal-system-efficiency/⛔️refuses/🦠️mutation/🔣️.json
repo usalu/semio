@@ -1,1 +1,5 @@
-{}
+{
+  "mutation": "changeSolarThermalSystemEfficiency",
+  "id": 410,
+  "newEfficiency": 1.4
+}

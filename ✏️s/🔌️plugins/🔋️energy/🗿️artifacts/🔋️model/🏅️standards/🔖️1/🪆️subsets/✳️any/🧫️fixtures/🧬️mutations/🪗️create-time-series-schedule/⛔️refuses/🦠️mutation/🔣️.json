@@ -1,1 +1,10 @@
-{}
+{
+  "mutation": "createTimeSeriesSchedule",
+  "index": 1,
+  "id": 40,
+  "values": [
+    1.0,
+    0.9
+  ],
+  "timestepSeconds": 900
+}

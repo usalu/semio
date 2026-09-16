@@ -1,1 +1,5 @@
-{}
+{
+  "mutation": "changeDaylightZoneZone",
+  "id": 14,
+  "newZoneId": 99
+}

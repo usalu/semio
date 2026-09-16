@@ -1,1 +1,11 @@
-{}
+{
+  "mutation": "createElectricalLoadCenter",
+  "index": 2,
+  "id": 322,
+  "name": "ROOF PANEL",
+  "generatorIds": [],
+  "pvIds": [
+    301
+  ],
+  "batteryIds": []
+}

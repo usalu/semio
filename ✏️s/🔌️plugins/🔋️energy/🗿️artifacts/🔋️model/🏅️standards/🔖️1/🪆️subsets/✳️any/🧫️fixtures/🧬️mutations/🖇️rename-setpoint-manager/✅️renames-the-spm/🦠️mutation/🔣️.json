@@ -1,1 +1,5 @@
-{}
+{
+  "mutation": "renameSetpointManager",
+  "id": 16,
+  "newName": "RESET SPM"
+}

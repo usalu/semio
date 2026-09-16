@@ -1,7 +1,7 @@
 //! 📄️ Process 3d play app commands — wholesale document swaps (load example / set document).
 
 use crate::editor::process3d::config::{Process3dConfig, Process3dConfigMutation};
-use crate::schema::{default_document, plate_document};
+use crate::schema::{concrete_forest_document, default_document, plate_document};
 use crate::{op::Process3dMutation, Process3dSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -59,6 +59,7 @@ pub mod set_active_example {
     ) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
         let snapshot = match payload.example_id.as_str() {
             crate::editor::process3d::PROCESS3D_EXAMPLE_PLATE | "plate" => plate_document(),
+            crate::editor::process3d::PROCESS3D_EXAMPLE_CONCRETE_FOREST => concrete_forest_document(),
             "" => Process3dSnapshot::default(),
             _ => default_document(),
         };

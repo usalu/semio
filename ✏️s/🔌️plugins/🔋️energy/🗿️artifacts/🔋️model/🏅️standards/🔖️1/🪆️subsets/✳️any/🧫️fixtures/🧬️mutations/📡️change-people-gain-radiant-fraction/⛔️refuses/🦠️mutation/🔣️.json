@@ -1,1 +1,5 @@
-{}
+{
+  "mutation": "changePeopleGainRadiantFraction",
+  "id": 20,
+  "newRadiantFraction": 1.2
+}

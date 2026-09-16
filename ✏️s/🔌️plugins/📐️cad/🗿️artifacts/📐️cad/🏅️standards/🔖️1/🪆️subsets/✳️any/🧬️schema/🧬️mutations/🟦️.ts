@@ -159,11 +159,19 @@ export interface CadObjectScale {
 /** 🪆️ The pane whose composed `s.stdio.semio.model` child an object mutation re-materializes. */
 export type CadPaneId = "shape" | "building" | "energy" | "structure-classic";
 
+/** 🧱️ One authored primitive slot of an object. */
+export interface CadObjectPrimitive {
+  slot: string;
+  primitiveId: string;
+  kind: string;
+}
+
 /** 🆕️ `create-object` payload — brings one object into a pane's composed model child at `index`. */
 export interface CreateObject {
   pane: CadPaneId;
   index: number;
   object: CadObjectSpec;
+  primitives: CadObjectPrimitive[];
 }
 
 /** ❌️ `delete-object` payload — removes one object from a pane's composed model child. */

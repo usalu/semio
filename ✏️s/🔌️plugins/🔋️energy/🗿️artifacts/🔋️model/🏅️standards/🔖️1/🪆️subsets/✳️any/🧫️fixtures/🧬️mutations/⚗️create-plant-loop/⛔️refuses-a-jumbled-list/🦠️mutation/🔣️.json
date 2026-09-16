@@ -1,1 +1,13 @@
-{}
+{
+  "mutation": "createPlantLoop",
+  "id": 18,
+  "name": "HOT WATER LOOP",
+  "loopType": "Heating",
+  "supplyTemperatureC": 80.0,
+  "returnTemperatureC": 60.0,
+  "designFlowKgS": 2.0,
+  "equipmentIds": [
+    51,
+    50
+  ]
+}

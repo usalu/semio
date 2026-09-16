@@ -1,1 +1,6 @@
-{}
+{
+  "mutation": "addOutputVariable",
+  "name": "Zone Mean Air Temperature",
+  "key": "ZONE ONE",
+  "reportingFrequency": "Daily"
+}

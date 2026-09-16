@@ -114,7 +114,32 @@ export function ephemeralWeakMap<K extends object, V>(key: string): WeakMap<K, V
  * full 5.4 MB `JSON.stringify` per plugin per boot and blew the frame budget on `puzzle` alone. */
 export const PLUGIN_DESCRIPTOR_CODE_UNIT_CAPACITY = 16 * 1024 * 1024;
 
-export async function fetchDescriptorManifest(pluginId: string, moduleUrl: string, signal?: AbortSignal): Promise<PluginManifest> {
+/** 📡️ Reads a descriptor response as text, reporting every arriving chunk as PROGRESS.
+ *
+ * 🐛️ `response.text()` is ONE opaque await: a descriptor that streams for a minute and a descriptor
+ * whose connection is dead look identical from outside it, so the caller's idle deadline had nothing
+ * to push forward and killed a load that was moving the whole time (six-pane demonstrator boot,
+ * ticket 26/08/28 — five shells' small descriptor requests queued behind the shard workers' own
+ * multi-hundred-MB module fetches and each died on a 30 s idle window it was never idle in). A body
+ * with no reader (a test double, a `fetch` polyfill) degrades to the one-shot read, which is exactly
+ * what it was before. */
+async function readDescriptorText(response: Response, onProgress: () => void): Promise<string> {
+  const reader = response.body?.getReader?.();
+  if (!reader) return response.text();
+  const decoder = new TextDecoder();
+  let text = "";
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    onProgress();
+    if (value) text += decoder.decode(value, { stream: true });
+  }
+  return text + decoder.decode();
+}
+
+/** `onProgress` is called on the response headers and on every streamed chunk — see
+ * {@link readDescriptorText} for why this fetch owes its caller a heartbeat at all. */
+export async function fetchDescriptorManifest(pluginId: string, moduleUrl: string, signal?: AbortSignal, onProgress: () => void = () => {}): Promise<PluginManifest> {
   signal?.throwIfAborted();
   const path = moduleUrl.split(/[?#]/u)[0]!;
   const descriptorUrl = path.slice(0, path.lastIndexOf("/") + 1) + "🔣️.json";
@@ -123,10 +148,11 @@ export async function fetchDescriptorManifest(pluginId: string, moduleUrl: strin
     scope: { pluginId }, retryable: true,
   });
   const response = await fetch(descriptorUrl, signal ? { signal } : undefined);
+  onProgress();
   signal?.throwIfAborted();
   if (!response.ok) throw fault("plugin.descriptor-unavailable", `${descriptorUrl} (HTTP ${response.status})`);
   if (response.headers?.get?.("content-type")?.toLowerCase().includes("text/html")) throw fault("plugin.descriptor-invalid", `${descriptorUrl} returned HTML`);
-  const descriptorText = await response.text();
+  const descriptorText = await readDescriptorText(response, onProgress);
   signal?.throwIfAborted();
   if (descriptorText.length > PLUGIN_DESCRIPTOR_CODE_UNIT_CAPACITY) throw fault("plugin.descriptor-oversized", `${descriptorUrl} is ${descriptorText.length} code units against a ${PLUGIN_DESCRIPTOR_CODE_UNIT_CAPACITY} ceiling`);
   let descriptor: unknown;
@@ -287,17 +313,36 @@ export function reachableKindsFromUnknown(values: readonly unknown[]): string[] 
   return [...kinds];
 }
 
-function contributionReachesKinds(topicContribution: unknown, kinds: ReadonlySet<string>): boolean {
-  if (kinds.size === 0) return false;
+/**
+ * 🎛️ A CAPABILITY pack — a contribution that names no operator kind at all.
+ *
+ * ⚖️ Operator reachability is the right cut for an OPERATOR-KEYED topic (`flow.extension`, whose
+ * payloads carry the dotted kinds a document graph instantiates) and structurally impossible for a
+ * capability topic: `process.machines`, `cad.computer` and `sourcing.module` declare ZERO operator
+ * kinds (measured 2026-09-16, ticket 26/08/28/DEMONSTRATOR-END-TO-END-ALL-APPS), so no document
+ * graph can ever reach one and every such pack was cut to `[]` — process's "11 machines" were the
+ * app's own `builtin_installed_catalogs()`, never a host push. What scopes a capability pack is the
+ * consuming app's `consumes` declaration for that topic, which the shell has already applied when it
+ * picked the receiver, so the pack passes.
+ */
+export function contributionIsCapabilityPack(topicContribution: unknown): boolean {
   const contributed = new Set<string>();
   collectOperatorKinds(topicContribution, contributed);
-  for (const kind of kinds) {
-    if (contributed.has(kind)) return true;
+  return contributed.size === 0;
+}
+
+function contributionPassesScope(topicContribution: unknown, kinds: ReadonlySet<string>): boolean {
+  const contributed = new Set<string>();
+  collectOperatorKinds(topicContribution, contributed);
+  if (contributed.size === 0) return true;
+  for (const kind of contributed) {
+    if (kinds.has(kind)) return true;
   }
   return false;
 }
 
-/** ✂️ Host→guest contributions cut by reachability from the document graph, plus the receiver's own. */
+/** ✂️ Host→guest contributions cut by reachability from the document graph, plus the receiver's own.
+ * Only OPERATOR-KEYED contributions are cut — see {@link contributionIsCapabilityPack}. */
 export function scopeContributionsJson(
   loaded: ReadonlyArray<{ readonly pluginId: string; readonly manifest: PluginManifest }>,
   receiverPluginId: string,
@@ -308,7 +353,7 @@ export function scopeContributionsJson(
   for (const entry of loaded) {
     const own = entry.pluginId === receiverPluginId;
     for (const topicContribution of entry.manifest.topicContributions ?? []) {
-      if (own || contributionReachesKinds(topicContribution, kinds)) {
+      if (own || contributionPassesScope(topicContribution, kinds)) {
         entries.push({ pluginId: entry.pluginId, topicContribution });
       }
     }

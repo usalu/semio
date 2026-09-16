@@ -1,1 +1,9 @@
-{}
+{
+  "mutation": "createBattery",
+  "index": 1,
+  "id": 311,
+  "capacityKwh": 27.0,
+  "maxChargeW": 7000.0,
+  "maxDischargeW": 7000.0,
+  "roundTripEfficiency": 0.92
+}

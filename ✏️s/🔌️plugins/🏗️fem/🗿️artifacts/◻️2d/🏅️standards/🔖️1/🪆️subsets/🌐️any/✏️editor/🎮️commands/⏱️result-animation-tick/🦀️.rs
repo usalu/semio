@@ -7,6 +7,7 @@
 //! window or a second chain that raced the first dies out instead of spinning the guest forever.
 
 use crate::editor::fem2d::commands::set_result_animation::rearm_effect;
+use crate::editor::fem2d::commands::set_result_animation::PLAYBACK_COALESCE_KEY;
 use crate::editor::fem2d::modes::edit::windows::results;
 use crate::editor::fem2d::modes::edit::windows::results::config::ANIMATION_TICK_SECONDS;
 use crate::standards::v1::subsets::any::schema::mutations::text::Fem2dMutation;
@@ -29,11 +30,11 @@ pub fn handle_window(_payload: &ResultAnimationTick, _doc: &ArtifactView<'_, Fem
     if !current.animation.playing {
         return Ok(Emit::default());
     }
-    let window_id = results::config::addressed_window_id(cfg, view)?;
+    let window_id = results::config::addressed_window_id(cfg, view, None)?;
     let mut next = current.clone();
     next.animation = current.animation.advanced(ANIMATION_TICK_SECONDS);
     let effects = if next.animation.playing { vec![rearm_effect(&window_id)] } else { Vec::new() };
-    Ok(Emit { window_config_mutations: vec![results::config::addressed_to(&window_id, next)], effects, ..Default::default() })
+    Ok(Emit { window_config_mutations: vec![results::config::addressed_to(&window_id, next)], effects, coalesce_key: Some(PLAYBACK_COALESCE_KEY.to_owned()), ui_scope: semio_framework::kernel::UiDirtyScope::Partial { window_bodies: vec![results::BODY_KEY.to_owned()], panel_bodies: vec![crate::editor::fem2d::panels::results::BODY_KEY.to_owned()], utilities: false, tools: false, engagements: false, measures: false, labels: false }, ..Default::default() })
 }
 //#endregion 🔖️ResultAnimationTick
 

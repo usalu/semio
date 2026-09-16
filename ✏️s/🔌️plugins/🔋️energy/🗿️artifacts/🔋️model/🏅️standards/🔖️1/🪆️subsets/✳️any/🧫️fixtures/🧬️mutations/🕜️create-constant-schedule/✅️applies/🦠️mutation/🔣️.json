@@ -1,1 +1,6 @@
-{}
+{
+  "mutation": "createConstantSchedule",
+  "index": 2,
+  "id": 3,
+  "value": 0.75
+}

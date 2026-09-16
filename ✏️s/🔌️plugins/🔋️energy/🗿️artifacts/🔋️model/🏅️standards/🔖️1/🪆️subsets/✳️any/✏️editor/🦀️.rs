@@ -1070,9 +1070,21 @@ impl ArtifactEditor for EnergyModelEditor {
     type Transient = NoTransient;
     type TransientMutation = NoTransientMutation;
     type Command = EnergyModelEditorCommand;
+    /// 🧩️ `structure`/`zones` are `s.stdio.semio@v1/{value,table}` members, so the roster that
+    /// resolves their genesis dialects is stdio's closed `SemioMembers` (same as gis/sourcing).
+    type Members = semio_s_artifact_stdio_semio::SemioMembers;
 
     const DIALECT: Dialect = MODEL_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = ENERGY_MODEL_DOCUMENT_SCHEMA;
+
+    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, Fault> {
+        crate::energy_child_restore_projection(snapshot)
+    }
+
+    /// 🌱️ Both composed children derive from the model — see `crate::energy_genesis_child_pack`.
+    fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
+        crate::energy_genesis_child_pack(snapshot, slot, child_id)
+    }
 
     semio_framework_plugin::bounded_first_step_tool_proofs! {
         owner: EditorApp<EnergyModelEditor>,
@@ -1146,6 +1158,18 @@ impl ArtifactEditor for EnergyModelEditor {
 
     fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
         Some(semio_framework_plugin::bounded_document_store_owners::<Self::Snapshot, Self::Mutation>())
+    }
+
+    /// 🌱️ The bounded initialization twin of the bounded owners above (same pairing as fem/sourcing).
+    /// Without it `begin_persisted_document_store_replacement` refuses every whole-document load with
+    /// `artifact-store.persisted-initializer-refused` — which is exactly how `setActiveExample`
+    /// (`Effect::LoadDocument` → the host's `loadDocumentArchive`) failed in the react shell.
+    fn build_document_store_initialization_job(
+        envelope: store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
+        operation: semio_framework_job::OperationId,
+        generation: semio_framework_job::Generation,
+    ) -> Result<semio_framework_plugin::ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
+        Ok(semio_framework_plugin::bounded_document_store_initialization_job(envelope, ENERGY_MODEL_DOCUMENT_SCHEMA, operation, generation))
     }
 
     fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {

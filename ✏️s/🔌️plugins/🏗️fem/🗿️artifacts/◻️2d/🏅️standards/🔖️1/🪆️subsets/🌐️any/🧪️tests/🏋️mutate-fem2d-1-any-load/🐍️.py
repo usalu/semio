@@ -64,7 +64,7 @@ the vocabulary has a `replace-` for it at all."""
 KINDS = ("add-load", "change-load-case-name", "change-load-case-self-weight", "create-combination", "create-load-case", "delete-combination", "delete-load-case", "remove-load", "replace-combination", "replace-load")
 """🏷️ This subset's own kinds, in the catalog's declared order."""
 
-REFUSALS = {"add-load": 2, "change-load-case-name": 2, "change-load-case-self-weight": 1, "create-combination": 1, "create-load-case": 1, "delete-combination": 2, "delete-load-case": 2, "remove-load": 1, "replace-combination": 3, "replace-load": 3}
+REFUSALS = {"add-load": 2, "change-load-case-name": 2, "change-load-case-self-weight": 1, "create-combination": 1, "create-load-case": 1, "delete-combination": 2, "delete-load-case": 2, "remove-load": 1, "replace-combination": 4, "replace-load": 3}
 """🚫️ How many refusal-or-no-op vectors each kind declares — the `reject-<kind>-<n>` rows the
 feature's `@id-reject` Outline carries, numbered in the catalog's own order."""
 
@@ -384,7 +384,12 @@ def case_of(document, identifier):
 def check_record(document, noun, record):
     """🛡️ The payload validation a noun's `create-`/`replace-` twins SHARE. Running the same
     function from both is the whole point: the two used to disagree, and a reader could not tell
-    which one was right."""
+    which one was right.
+
+    🪞️ A combination term resolves to a load case or to ANOTHER combination. A term citing the
+    record's own id is a cycle in the PAYLOAD, so it is `mutation.invariant` (Fatal) rather than
+    `mutation.target-missing` (Error): under `replace-` the id is already in `combinations` and
+    would otherwise resolve, and under `create-` it was only refused by accident."""
     if noun == "node":
         check_node(record)
     elif noun == "element":
@@ -403,6 +408,8 @@ def check_record(document, noun, record):
             resolve_load(document, load)
     elif noun == "combination":
         for term in record["terms"]:
+            if term["caseId"] == record["id"]:
+                fatal(INVARIANT, [record["id"]], 'Combination "%s" may not weight itself.' % record["id"])
             known = find(document["loadCases"], term["caseId"]) is not None or find(document["combinations"], term["caseId"]) is not None
             if not known:
                 error(TARGET_MISSING, [term["caseId"]], 'Load case or combination "%s" does not exist.' % term["caseId"])

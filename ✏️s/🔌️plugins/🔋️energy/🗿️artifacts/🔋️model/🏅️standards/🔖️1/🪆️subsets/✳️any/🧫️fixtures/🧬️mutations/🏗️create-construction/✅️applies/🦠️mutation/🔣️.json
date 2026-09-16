@@ -1,1 +1,10 @@
-{}
+{
+  "mutation": "createConstruction",
+  "index": 2,
+  "id": 12,
+  "name": "ROOF",
+  "layerMaterialIds": [
+    2,
+    1
+  ]
+}

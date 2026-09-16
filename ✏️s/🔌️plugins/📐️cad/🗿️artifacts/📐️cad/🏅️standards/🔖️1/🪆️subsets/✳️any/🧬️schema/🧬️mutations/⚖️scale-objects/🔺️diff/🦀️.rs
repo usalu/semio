@@ -1,6 +1,7 @@
 //! 🔺️ Sparse diff builder for `ScaleObjects` — re-materializes the pane's composed model child.
 use super::ScaleObjects;
 use crate::diff::CadDiff;
+use crate::mutations::scale_objects::inverse::CAD_IDENTITY_SCALE;
 use crate::CadSnapshot;
 
 //#region 🔖️Diff
@@ -15,8 +16,9 @@ pub fn diff(payload: &ScaleObjects, base: &CadSnapshot) -> protocol::MutationOut
     let mut scaled = 0usize;
     for placement in &payload.placements {
         if let Some(object) = objects.iter_mut().find(|object| object.id == placement.object_id) {
-            if object.scale != Some(placement.new_scale) {
-                object.scale = Some(placement.new_scale);
+            if object.scale.unwrap_or(CAD_IDENTITY_SCALE) != placement.new_scale {
+                // ⚖️ Absence IS the unit scale — see `rotate-objects`' twin note.
+                object.scale = (placement.new_scale != CAD_IDENTITY_SCALE).then_some(placement.new_scale);
                 scaled += 1;
             }
         }

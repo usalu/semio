@@ -335,7 +335,7 @@ impl Mutation<CadConfig> for CadConfigMutation {
                 }
                 let mut next = base.clone();
                 next.contributions_json = json.clone();
-                crate::standards::v1::subsets::any::schema::inferences::validate_cad_computer_contributions(json);
+                let _ = crate::standards::v1::subsets::any::schema::inferences::validate_cad_computer_contributions(json);
                 protocol::MutationOutcome::new(next)
             }
         }

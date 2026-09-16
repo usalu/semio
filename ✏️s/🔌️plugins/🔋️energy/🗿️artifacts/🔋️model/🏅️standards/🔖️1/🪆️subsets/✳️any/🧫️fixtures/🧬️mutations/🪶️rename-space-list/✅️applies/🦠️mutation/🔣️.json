@@ -1,1 +1,5 @@
-{}
+{
+  "mutation": "renameSpaceList",
+  "id": 210,
+  "newName": "CORE SPACES"
+}

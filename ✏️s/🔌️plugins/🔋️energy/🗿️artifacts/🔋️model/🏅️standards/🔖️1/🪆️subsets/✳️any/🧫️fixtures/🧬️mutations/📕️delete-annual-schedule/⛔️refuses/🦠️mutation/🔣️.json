@@ -1,1 +1,4 @@
-{}
+{
+  "mutation": "deleteAnnualSchedule",
+  "id": 30
+}

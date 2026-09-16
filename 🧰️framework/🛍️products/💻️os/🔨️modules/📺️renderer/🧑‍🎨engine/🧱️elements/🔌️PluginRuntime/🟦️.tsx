@@ -470,6 +470,7 @@ function buildShardClientOptions(createWorker: () => ShardWorkerLike = () => new
   readonly heartbeatTimeoutMs: number;
   readonly onActorTrap: (actorId: string, message: string) => void;
   readonly onShardLost: (shardIndex: number, actorIds: readonly string[]) => void;
+  readonly onLiveness: (shardIndex: number, phase: string | null) => void;
 } {
   console.error("[DEBUG] buildShardClientOptions heartbeatTimeoutMs=120000");
   return {
@@ -485,6 +486,9 @@ function buildShardClientOptions(createWorker: () => ShardWorkerLike = () => new
     heartbeatTimeoutMs: 120_000,
     onActorTrap: (actorId, message) => console.error(`[DEBUG] PluginRuntime: actor ${actorId} trapped: ${message}`),
     onShardLost: handlePluginShardLost,
+    // 🫀️ Every proof a shard is alive is also proof for the loads queued behind its module fetch —
+    // see `notePluginLoadProgressForInFlightV1`.
+    onLiveness: () => void notePluginLoadProgressForInFlightV1(),
   };
 }
 
@@ -503,18 +507,11 @@ export class PluginBootShardLostError extends Error {
   }
 }
 
-/** 🫀️ Per-plugin proof-of-progress clock backing `loadPluginModuleResilient`'s IDLE deadline: a load
- * that is still moving (descriptor fetched, manifest registered, module handed over) must not be
- * killed just because the whole pipeline is slow under load — only one that has stopped moving. */
-const pluginLoadProgress = new Map<string, number>();
-
-export function notePluginLoadProgress(pluginId: string, atMs: number = Date.now()): void {
-  pluginLoadProgress.set(pluginId, atMs);
-}
-
-export function pluginLoadProgressAt(pluginId: string): number | undefined {
-  return pluginLoadProgress.get(pluginId);
-}
+/** 🫀️ The plugin-load liveness clock lives in its own React-free leaf so its accounting is testable
+ * without a `Worker` — see `🫀️load-progress/🟦️.ts`. Re-exported here because every existing caller
+ * (`🛠️ShellHelpers`, the engine test surface) already addresses this module for it. */
+import { beginPluginLoadV1, endPluginLoadV1, notePluginLoadProgress, notePluginLoadProgressForInFlightV1, pluginLoadProgressAt, pluginLoadRemainingMs, pluginLoadsInFlightV1, resetPluginLoadProgressForTestsV1, sharedDescriptorManifestV1, withPluginLoadInFlightV1, PLUGIN_LOAD_CEILING_MS, PLUGIN_LOAD_IDLE_TIMEOUT_MS } from "./🫀️load-progress/🟦️.ts";
+export { beginPluginLoadV1, endPluginLoadV1, notePluginLoadProgress, notePluginLoadProgressForInFlightV1, pluginLoadProgressAt, pluginLoadRemainingMs, pluginLoadsInFlightV1, resetPluginLoadProgressForTestsV1, sharedDescriptorManifestV1, withPluginLoadInFlightV1, PLUGIN_LOAD_CEILING_MS, PLUGIN_LOAD_IDLE_TIMEOUT_MS };
 
 let sharedShardClient: ShardClient | null = null;
 function getShardClient(): ShardClient {
@@ -2227,11 +2224,16 @@ export async function resolveDescriptorBeforeRuntime<TManifest, TRuntime>(loadDe
  * actor entry via `ShardClient.dispose` (not a `LeasePool` release — there is no shared module lease
  * to refcount anymore, one actor belongs to exactly one instance). */
 export async function loadPluginModule(pluginId: string, moduleUrl: string, signal?: AbortSignal): Promise<PluginWasmHandle> {
-  notePluginLoadProgress(pluginId);
-  const { manifest, runtime: registry } = await resolveDescriptorBeforeRuntime(() => fetchDescriptorManifest(pluginId, moduleUrl, signal), getActivationRegistry);
-  notePluginLoadProgress(pluginId);
-  registry.registerManifest({ pluginId, moduleUrl, caps: [] });
-  notePluginLoadProgress(pluginId);
+  const { manifest, runtime: registry } = await withPluginLoadInFlightV1(pluginId, async () => {
+    const resolved = await resolveDescriptorBeforeRuntime(
+      () => sharedDescriptorManifestV1(pluginId, moduleUrl, () => fetchDescriptorManifest(pluginId, moduleUrl, signal, () => notePluginLoadProgressForInFlightV1())),
+      getActivationRegistry,
+    );
+    notePluginLoadProgress(pluginId);
+    resolved.runtime.registerManifest({ pluginId, moduleUrl, caps: [] });
+    notePluginLoadProgress(pluginId);
+    return resolved;
+  });
   const shardClient = getShardClient();
   const actorIdByInstance = new Map<number, string>();
   const closingInstances = new Set<number>();
@@ -4341,7 +4343,7 @@ function pluginRuntimeTestDependenciesV1() {
     get sharedShardClient() { return sharedShardClient; },
     set sharedShardClient(value: typeof sharedShardClient) { sharedShardClient = value; },
   };
-  return { testState, guestIngressGenerationV1, leftoverShellInvocationFrames, settleYieldsToRefreshV1, effectsRequestOperationProgressV1, PLUGIN_OPERATION_REFRESH_SLICE_MS, promoteShellSendMessages, leftoverInspectionRefreshScope, leftoverInspectionPanelHash, windowHostContextBindings, isolatedJobStepsPerSerializedAdmission, isolatedJobUiPollEverySteps, ActivationRegistry, ActorDocumentBindingV1, adaptPluginHandle, assertAddressedInvocation, AppChannelClient, AppChannelRequestSequence, applyRetainedWindowPatches, applyUiPatch, applyUiPatchToRetained, ArtifactMutationRouter, assertShardJspiAvailable, BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES, buildShardClientOptions, coerceTurnResult, coerceWireBytes, commandIngressFaultDisplay, computeDependencyLevels, consumeTypedOperationEffects, createShardCommandIngressPages, createTurnOutcomeBroadcast, currentPluginRuntimeActor, decodeActorUiPatchReceipt, decodeAppFrame, decodeBackboneMessage, decodeConflictsFromWire, decodeFaultFromWire, decodeForeignStep, decodeInvocationResultPacks, decodeLocalInteractionCaptureJson, decodeMergeReportFromWire, decodeMutationEnvelopesPack, decodePackValue, decodePackWire, decodeWirePack, decodeWirePatchOps, DEFAULT_SHARD_BUDGET, drainTypedOperationTurns, DIRECTORY_PROJECTION_RECEIPT_SCHEMA, emptyUiDocumentState, encodeActorUiPatchReceipt, encodeDocumentBackboneControlV1, encodeMutationOrigin, encodePackValue, enqueuePluginTurn, faultDisplayMessage, fetchDescriptorManifest, fnv1aHex, getActivationRegistry, getPluginTurnScheduler, getShardClient, getThunkScheduler, handlePluginShardLost, forgetInstanceForRecovery, onPluginInstancesLost, PLUGIN_ACTOR_INSTANCE_LOST_FAULT, rememberInstanceForRecovery, hasRequiredUiPatches, InstanceDirectory, invocationFromFrames, isPluginInstanceRetiredV1, isShardLostError, loadPluginModule, loadPluginModulesInDependencyOrder, LOCAL_INTERACTION_CAPTURE_MAX_BYTES, localInteractionIdentityEquals, markPluginInstanceRetiredV1, MAX_TRANSACTION_DEPTH, nextGlobalInstanceId, normalizeWireUiNodeRecord, notePluginLoadProgress, orderPluginRegistryEntries, OwnedResidentLedger, packWireNatural, patchAckEvents, pendingCoalescedTurns, pendingCompletionEffects, pendingLifecycleTurns, pendingTurnEffects, performContextMenu, performInvocation, PLUGIN_BOOT_SHARD_LOST_FAULT, PLUGIN_OPERATION_DRAIN_BUDGET, PLUGIN_OPERATION_EFFECT_CAPACITY, PLUGIN_OPERATION_WAKE_MAX_MS, PLUGIN_TURN_MAILBOX_CAPACITY, PLUGIN_UI_CONTINUATION_BATCH_SIZE, PLUGIN_UI_CONTINUATION_LIMIT, PLUGIN_UI_QUIESCENT_CONTINUATIONS, PLUGIN_UI_ZERO_PROGRESS_CONTINUATION_LIMIT, PLUGIN_UI_INTAKE_STEP_CEILING, PLUGIN_UI_INTAKE_YIELD_STRIDE, PLUGIN_UI_CLOSE_STEPS_PER_NODE, PLUGIN_UI_CLOSE_ZERO_PROGRESS_STEPS, retainedUiCloseStepCeilingV1, createRetainedUiCloseLadderV1, retainedUiIntakeStepCeiling, PluginBootShardLostError, pluginLoadProgress, pluginLoadProgressAt, pluginSurfaceRef, poolConcurrency, rejectionCodeFromBytes, releasePendingLifecycleTurn, rendererResidentLedger, resolveDescriptorBeforeRuntime, retainedSurfaceHash, retainedSurfaceId, retainedSurfacesForActor, retainedSurfaceToBuiltNode, retainedSurfaceToSnapshot, retainedUiRefreshResponse, uiRefreshSectionUnchanged, retainedWindowByActor, retainTurnUiPatches, runBounded, sectionValueFromBuiltNode, runPluginLifecycleTurn, SEGMENTED_DOWNLOAD_MARKER_PREFIX, SemioFaultError, SURFACE_RENDER_FAULT, SERIALIZE_PER_ACTOR_MAILBOX_CAPACITY, serializeCommandIngressForActor, serializePerActor, commandIngressLaneForActionV1, commandIngressNeedsReplyStampV1, commandIngressContinuationCeilingV1, commandIngressUnownedV1, PLUGIN_OPERATION_OWED_SLICE_MS, retainedUiRefreshEffects, markPluginInstanceRetiredForPluginV1, pluginInstanceWasRetiredV1, forgetPluginInstanceRetirementV1, setPluginRuntimeActor, settleAcknowledgedPluginTurns, settlePluginTurn, SHARD_LIVENESS_POLICY, SHARD_WORKER_URL, ShardClient, sharedPluginTurnScheduler, sharedThunkScheduler, shellFrameBytes, submitPluginLifecycleTurn, submitPluginTurn, teardownPluginActor, tearingDownPluginActors, TransactionCoordinator, TurnScheduler, TYPED_OPERATION_ACK_MAGIC, TYPED_OPERATION_PAGE_MAGIC, TYPED_OPERATION_PARK_CAPACITY, TYPED_OPERATION_PARK_EVICTION_FAULT, TYPED_OPERATION_PENDING_OUTPUT, TYPED_OPERATION_TERMINAL_OUTPUT, TYPED_OPERATION_TERMINAL_SEEN, TYPED_OPERATION_UNATTRIBUTED_FAULT, typedOperationAcknowledgements, TypedOperationCall, TypedOperationRouter, typedOperationResult, uiRefreshBodyKeys, uiRefreshSectionTargets, uiRefreshSurfaceEvents, wireEffectToFriendly, wireExtensionInvocation, wireNatural, wirePatchSurfaceId, wireTurnStatusTag, withTypedOperationCall, yieldPluginUiContinuation, uiPatchAdmissionRoundsV1 };
+  return { testState, guestIngressGenerationV1, leftoverShellInvocationFrames, settleYieldsToRefreshV1, effectsRequestOperationProgressV1, PLUGIN_OPERATION_REFRESH_SLICE_MS, promoteShellSendMessages, leftoverInspectionRefreshScope, leftoverInspectionPanelHash, windowHostContextBindings, isolatedJobStepsPerSerializedAdmission, isolatedJobUiPollEverySteps, ActivationRegistry, ActorDocumentBindingV1, adaptPluginHandle, assertAddressedInvocation, AppChannelClient, AppChannelRequestSequence, applyRetainedWindowPatches, applyUiPatch, applyUiPatchToRetained, ArtifactMutationRouter, assertShardJspiAvailable, BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES, buildShardClientOptions, coerceTurnResult, coerceWireBytes, commandIngressFaultDisplay, computeDependencyLevels, consumeTypedOperationEffects, createShardCommandIngressPages, createTurnOutcomeBroadcast, currentPluginRuntimeActor, decodeActorUiPatchReceipt, decodeAppFrame, decodeBackboneMessage, decodeConflictsFromWire, decodeFaultFromWire, decodeForeignStep, decodeInvocationResultPacks, decodeLocalInteractionCaptureJson, decodeMergeReportFromWire, decodeMutationEnvelopesPack, decodePackValue, decodePackWire, decodeWirePack, decodeWirePatchOps, DEFAULT_SHARD_BUDGET, drainTypedOperationTurns, DIRECTORY_PROJECTION_RECEIPT_SCHEMA, emptyUiDocumentState, encodeActorUiPatchReceipt, encodeDocumentBackboneControlV1, encodeMutationOrigin, encodePackValue, enqueuePluginTurn, faultDisplayMessage, fetchDescriptorManifest, fnv1aHex, getActivationRegistry, getPluginTurnScheduler, getShardClient, getThunkScheduler, handlePluginShardLost, forgetInstanceForRecovery, onPluginInstancesLost, PLUGIN_ACTOR_INSTANCE_LOST_FAULT, rememberInstanceForRecovery, hasRequiredUiPatches, InstanceDirectory, invocationFromFrames, isPluginInstanceRetiredV1, isShardLostError, loadPluginModule, loadPluginModulesInDependencyOrder, LOCAL_INTERACTION_CAPTURE_MAX_BYTES, localInteractionIdentityEquals, markPluginInstanceRetiredV1, MAX_TRANSACTION_DEPTH, nextGlobalInstanceId, normalizeWireUiNodeRecord, notePluginLoadProgress, orderPluginRegistryEntries, OwnedResidentLedger, packWireNatural, patchAckEvents, pendingCoalescedTurns, pendingCompletionEffects, pendingLifecycleTurns, pendingTurnEffects, performContextMenu, performInvocation, PLUGIN_BOOT_SHARD_LOST_FAULT, PLUGIN_OPERATION_DRAIN_BUDGET, PLUGIN_OPERATION_EFFECT_CAPACITY, PLUGIN_OPERATION_WAKE_MAX_MS, PLUGIN_TURN_MAILBOX_CAPACITY, PLUGIN_UI_CONTINUATION_BATCH_SIZE, PLUGIN_UI_CONTINUATION_LIMIT, PLUGIN_UI_QUIESCENT_CONTINUATIONS, PLUGIN_UI_ZERO_PROGRESS_CONTINUATION_LIMIT, PLUGIN_UI_INTAKE_STEP_CEILING, PLUGIN_UI_INTAKE_YIELD_STRIDE, PLUGIN_UI_CLOSE_STEPS_PER_NODE, PLUGIN_UI_CLOSE_ZERO_PROGRESS_STEPS, retainedUiCloseStepCeilingV1, createRetainedUiCloseLadderV1, retainedUiIntakeStepCeiling, PluginBootShardLostError, pluginLoadProgressAt, pluginLoadRemainingMs, beginPluginLoadV1, endPluginLoadV1, pluginLoadsInFlightV1, withPluginLoadInFlightV1, notePluginLoadProgressForInFlightV1, resetPluginLoadProgressForTestsV1, sharedDescriptorManifestV1, pluginSurfaceRef, poolConcurrency, rejectionCodeFromBytes, releasePendingLifecycleTurn, rendererResidentLedger, resolveDescriptorBeforeRuntime, retainedSurfaceHash, retainedSurfaceId, retainedSurfacesForActor, retainedSurfaceToBuiltNode, retainedSurfaceToSnapshot, retainedUiRefreshResponse, uiRefreshSectionUnchanged, retainedWindowByActor, retainTurnUiPatches, runBounded, sectionValueFromBuiltNode, runPluginLifecycleTurn, SEGMENTED_DOWNLOAD_MARKER_PREFIX, SemioFaultError, SURFACE_RENDER_FAULT, SERIALIZE_PER_ACTOR_MAILBOX_CAPACITY, serializeCommandIngressForActor, serializePerActor, commandIngressLaneForActionV1, commandIngressNeedsReplyStampV1, commandIngressContinuationCeilingV1, commandIngressUnownedV1, PLUGIN_OPERATION_OWED_SLICE_MS, retainedUiRefreshEffects, markPluginInstanceRetiredForPluginV1, pluginInstanceWasRetiredV1, forgetPluginInstanceRetirementV1, setPluginRuntimeActor, settleAcknowledgedPluginTurns, settlePluginTurn, SHARD_LIVENESS_POLICY, SHARD_WORKER_URL, ShardClient, sharedPluginTurnScheduler, sharedThunkScheduler, shellFrameBytes, submitPluginLifecycleTurn, submitPluginTurn, teardownPluginActor, tearingDownPluginActors, TransactionCoordinator, TurnScheduler, TYPED_OPERATION_ACK_MAGIC, TYPED_OPERATION_PAGE_MAGIC, TYPED_OPERATION_PARK_CAPACITY, TYPED_OPERATION_PARK_EVICTION_FAULT, TYPED_OPERATION_PENDING_OUTPUT, TYPED_OPERATION_TERMINAL_OUTPUT, TYPED_OPERATION_TERMINAL_SEEN, TYPED_OPERATION_UNATTRIBUTED_FAULT, typedOperationAcknowledgements, TypedOperationCall, TypedOperationRouter, typedOperationResult, uiRefreshBodyKeys, uiRefreshSectionTargets, uiRefreshSurfaceEvents, wireEffectToFriendly, wireExtensionInvocation, wireNatural, wirePatchSurfaceId, wireTurnStatusTag, withTypedOperationCall, yieldPluginUiContinuation, uiPatchAdmissionRoundsV1 };
 }
 
 export type PluginRuntimeTestDependenciesV1 = ReturnType<typeof pluginRuntimeTestDependenciesV1>;

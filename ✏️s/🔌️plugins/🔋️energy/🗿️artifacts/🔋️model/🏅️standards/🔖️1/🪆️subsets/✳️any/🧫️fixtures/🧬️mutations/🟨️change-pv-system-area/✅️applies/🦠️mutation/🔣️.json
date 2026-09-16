@@ -1,1 +1,5 @@
-{}
+{
+  "mutation": "changePvSystemArea",
+  "id": 300,
+  "newAreaM2": 42.0
+}

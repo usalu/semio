@@ -51,6 +51,7 @@ pub fn every_mutation() -> Vec<CadMutation> {
             pane: CadPaneId::Shape,
             index: 0,
             object: CadObjectSpec { id: "object-fresh".into(), label: "Box 1".into(), typology: "spatial.shape.primitive.box".into(), visible: true, locked: false, origin: [0.0, 0.0, 0.0], orientation: None, scale: None, mesh_url: None, extent: None, solid_handle: None },
+            primitives: Vec::new(),
         }),
         CadMutation::DeleteObject(DeleteObject { pane: CadPaneId::Shape, object_id: "object-1".into() }),
         CadMutation::MoveObjects(MoveObjects { pane: CadPaneId::Shape, placements: vec![CadObjectOrigin { object_id: "object-1".into(), new_origin: [1.0, 2.0, 3.0] }] }),

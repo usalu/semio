@@ -1051,7 +1051,11 @@ impl Model {
             if construction.layer_material_ids.is_empty() {
                 diag.push(Error::severe(format!("construction {} has no layers", construction.name)));
             }
-            if glazing_construction_ids.contains(&construction.id) {
+            // 🪟️ A construction is glazing when a fenestration binds it OR when every layer is a pane
+            // or a gas gap — a layered glazing construction re-imported from epJSON (`WindowMaterial:
+            // Glazing`/`:Gas`) is not yet bound by any fenestration and must not be judged as opaque.
+            let all_glazing_layers = !construction.layer_material_ids.is_empty() && construction.layer_material_ids.iter().all(|id| glazing_ids.contains(id) || gas_ids.contains(id));
+            if glazing_construction_ids.contains(&construction.id) || all_glazing_layers {
                 let alternates = construction.layer_material_ids.iter().enumerate().all(|(index, id)| if index % 2 == 0 { glazing_ids.contains(id) } else { gas_ids.contains(id) });
                 if !alternates || construction.layer_material_ids.len() % 2 == 0 || construction.layer_material_ids.len() > 2 * crate::fenestration::MAX_PANES - 1 {
                     diag.push(Error::severe(format!("glazing construction {} must alternate one to {} glazing panes with gas gaps", construction.name, crate::fenestration::MAX_PANES)));

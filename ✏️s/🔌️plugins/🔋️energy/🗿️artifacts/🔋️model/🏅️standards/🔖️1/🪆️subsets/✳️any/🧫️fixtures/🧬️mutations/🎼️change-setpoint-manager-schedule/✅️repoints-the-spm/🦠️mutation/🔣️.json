@@ -1,1 +1,6 @@
-{}
+{
+  "mutation": "changeSetpointManagerSchedule",
+  "id": 16,
+  "newSchedulePresent": true,
+  "newScheduleId": 2
+}

@@ -1,1 +1,5 @@
-{}
+{
+  "mutation": "changePvSystemInverterEfficiency",
+  "id": 300,
+  "newInverterEfficiency": 1.5
+}

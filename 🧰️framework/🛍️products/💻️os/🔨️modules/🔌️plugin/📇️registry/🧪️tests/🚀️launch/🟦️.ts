@@ -36,6 +36,25 @@ describe("plugin registry generator preview targets", () => {
     const project = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📋️project.json"), "utf8")) as { targets: Record<string, unknown> };
     expect(project.targets["catalog-complete"]).toBeDefined();
   });
+
+  it("registers one react dev launcher for every playground variant", async () => {
+    const repoRoot = getWorkspaceRoot();
+    const { generatePlaygroundRegistry } = await import("../../🎮️playground/🔎️discovery/🟦️.ts");
+    const { generateLaunchJson } = await import("../../🚀️launch/🟦️.ts");
+    const playgrounds = generatePlaygroundRegistry(repoRoot);
+    const launch = Bun.JSONC.parse(generateLaunchJson(repoRoot, playgrounds, [])) as {
+      readonly configurations: readonly { name?: string; command?: string; env?: Readonly<Record<string, string>> }[];
+    };
+    for (const playground of playgrounds) {
+      const matches = launch.configurations.filter((entry) => {
+        if (!String(entry.name ?? "").endsWith("⚛️react")) return false;
+        const env = entry.env;
+        if (env?.SEMIO_PLUGIN === playground.pluginId) return true;
+        return String(entry.command ?? "").includes(`-- ${playground.variant}`);
+      });
+      expect(matches, playground.variant).toHaveLength(1);
+    }
+  });
 });
 
 describe("WASI codegen profile policy", () => {

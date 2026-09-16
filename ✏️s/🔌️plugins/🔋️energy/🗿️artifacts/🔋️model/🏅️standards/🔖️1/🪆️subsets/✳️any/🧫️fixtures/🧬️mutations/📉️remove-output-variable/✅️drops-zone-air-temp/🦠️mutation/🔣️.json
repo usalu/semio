@@ -1,1 +1,5 @@
-{}
+{
+  "mutation": "removeOutputVariable",
+  "name": "Zone Mean Air Temperature",
+  "key": "ZONE ONE"
+}

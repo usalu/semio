@@ -1,1 +1,5 @@
-{}
+{
+  "mutation": "changePlantLoopType",
+  "id": 99,
+  "newLoopType": "Cooling"
+}

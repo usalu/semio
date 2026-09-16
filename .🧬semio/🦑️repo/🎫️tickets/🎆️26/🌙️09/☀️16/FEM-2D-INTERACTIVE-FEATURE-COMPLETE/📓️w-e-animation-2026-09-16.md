@@ -36,7 +36,18 @@ A roster naming no results window REFUSES rather than clobbering a partition wit
 
 `ResultAnimationTick` stays `{}` — carrying a `windowId` on the payload would buy nothing, because `ConfigView` can only ever hand a command the ONE captured partition; an address it cannot read is an address it must not write.
 
-### 1.4 `{field, value}` — how a persistent control names what it changed
+### 1.4 `windowId` — which pane a control speaks for
+
+`results::config::addressed_window_id(cfg, view, requested)` decides the partition a command reads AND writes:
+
+1. an explicit `requested` (the `windowId` a panel control tagged onto its own arguments) wins over the roster, because a PANEL projection carries no `window_id` of its own and would otherwise retune whichever pane is focused — the puzzle3d Settings-panel rule;
+2. it never wins over the CAPTURED partition: `WindowConfigOwnerRegistry::capture` binds `ConfigView::window` to `window_id`, or for a panel to `focused_window_id`, and that snapshot is the state `current` hands the caller. A tag that disagrees with it is refused BY NAME (`fem.window.mismatch: … asked for 'x' but the captured configuration is 'y'`) rather than publishing one pane's state into another's;
+3. a tag naming a window that is not an open results window is refused (`fem.window.stale`);
+4. with no tag and no captured results config, the roster decides, exactly as before.
+
+All three panel commands carry `window_id: Option<String>` for this, and the panel tags every control with `results_window_instance_id(view_state)` — the same id `addressed_window_id` resolves. `resultAnimationTick` passes `None`: the re-arm is redispatched under the emitting dispatch's own `resolvedTargetViewState`, so the captured partition is already the right one.
+
+### 1.5 `{field, value}` — how a persistent control names what it changed
 
 The host merges a control's own scalar under the single key `value` (`🛠️ShellHelpers/🟦️.tsx` `uiIntentPayload`), and a node has ONE binding — so a slider physically cannot say which field it just moved. Three commands therefore gained `field: Option<String>, value: Option<String>` (appended; both `None` in every pre-existing row, so the pinned pre-migration wire bytes are unchanged):
 
@@ -46,11 +57,13 @@ The host merges a control's own scalar under the single key `value` (`🛠️She
 | `setResultAnimation` | `phase`, `phaseStep` (relative, for the step buttons), `playing`, `speed`, `loopMode`, `waveform`, `reverse` |
 | `setAnalysisSettings` | `modalCount`, `bucklingCount`, `deformationScale` |
 
+(Each also carries `window_id`; on `setAnalysisSettings` it is inert — analysis settings are DOCUMENT state — and exists only so one convention is spelled identically on all three panel commands.)
+
 `field` absent ⇒ the typed staged-form vocabulary, unchanged. Unknown field or unparseable value ⇒ a `Fault`, never a silent default.
 
 `setResultAnimation` with NOTHING named at all (the bare `space` chord — none of its `ActionArgDef`s are `.required()`, so no staged form opens) toggles play/pause.
 
-### 1.5 Results cache
+### 1.6 Results cache
 
 Thread-local `RESULTS_CACHE`, keyed by `(app_instance_id, canonical_base_revision)` off `Option<AppRenderOperationContext>`. Holds the `HashMap<String, StaticResult>` from `fem2d_solve_all` plus up to `RESULTS_CACHE_MODES = 8` normalized mode shapes per `(source, count)`. Exactly ONE entry is ever resident: a different key drops the whole entry rather than growing a second one, so a long editing session cannot leak the guest heap one revision at a time. `operation == None` (every fixture render) bypasses the cache and solves into the caller's frame. Proven: thirty frames over one revision cost one solve.
 
@@ -71,11 +84,13 @@ Owned and written:
 - `…/🎮️commands/🧮️set-analysis-settings/🦀️.rs` — `field`/`value`.
 - `…/📌️panels/📊️results/🦀️.rs` + `🧪️tests/🔬️unit/🦀️.rs` (new folder).
 
-Shared files touched (minimal, re-read before each edit):
+Shared files touched (minimal, re-read before each edit) — see §3 for why each was unavoidable:
 
-- `✏️editor/🦀️.rs` — **UNAVOIDABLE**: three bridge arms had to gain the two new payload fields or the crate would not compile. Nothing else in the file changed. See §3.
+- `✏️editor/🦀️.rs` — three bridge arms (`field`/`value`/`windowId`), the two playback publication-contract rows, and the seven missing window-scoped arms in `fem2d_retained_reduce`.
+- `✏️editor/🧪️tests/🪟️window-config-ownership/🦀️.rs` — worker thread stack 2 MiB → 128 MiB.
 - `✏️editor/🗣️terminology/🦀️.rs` — two labels appended (`display`, `playback`), all four cells; both differ in German, so `FEM2D_LABELS_IDENTICAL_BY_DESIGN` needs no entry.
-- `✏️editor/🧪️tests/🔬️unit/🦀️.rs`, `✏️editor/🧪️tests/🪟️window-config-ownership/🦀️.rs`, `🎮️commands/🧮️set-analysis-settings/🧪️tests/…`, `🎮️commands/👁️set-result-display/🧪️tests/…` — struct literals extended with `field: None, value: None` (mechanical). The harness `dispatch`'s `kind` match already routed `SetResultAnimation`/`ResultAnimationTick` to the results window when I got there — left as found.
+- `✏️editor/🧪️tests/🔬️unit/🦀️.rs` — struct literals extended with `field: None, value: None, window_id: None` (mechanical); the `HostOnly` lane clause inverted (§3); and an ADDITIVE `fem2d_mounted_app()` / `close()` pair next to the untouched `fem2d_app()` (§6.5). The `dispatch` `kind` match already routed the playback rows to the results window when I got there — left as found.
+- `🎮️commands/🧮️set-analysis-settings/🧪️tests/…` — struct literals only.
 
 ## 3. What the coordinator must add to `✏️editor/🦀️.rs`
 
@@ -103,20 +118,34 @@ Shared files touched (minimal, re-read before each edit):
 })),
 ```
 
-**Still owed by the coordinator — `FEM2D_PUBLICATION_CONTRACTS`.** It still has 18 rows against 33 commands, so `retained_routes_cover_every_command_exactly_once` cannot pass. The two rows this slice needs:
+Each arm also gained `window_id: text("windowId")` (§1.4).
+
+**`FEM2D_PUBLICATION_CONTRACTS` — corrected, please keep.** The coordinator's rows landed while I was verifying; I changed the two playback rows from `[WindowConfig, HostOnly]` to:
 
 ```rust
-ArtifactToolPublicationContract { tool_id: "setResultAnimation", lanes: &[ArtifactToolPublicationLane::WindowConfig, ArtifactToolPublicationLane::HostOnly] },
-ArtifactToolPublicationContract { tool_id: "resultAnimationTick", lanes: &[ArtifactToolPublicationLane::WindowConfig, ArtifactToolPublicationLane::HostOnly] },
+ArtifactToolPublicationContract { tool_id: "setResultAnimation", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
+ArtifactToolPublicationContract { tool_id: "resultAnimationTick", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
 ```
 
-`HostOnly` is not optional: both handlers emit `Effect::DispatchAction`, and `every_route_declares_the_lane_its_handler_emits` refuses an emitted lane that is not declared.
+`HostOnly` may never appear alongside another lane — the framework's own registration gate refuses that outright (`🔌️plugin/🦀️.rs`, `lanes.contains(&HostOnly) && lanes.len() != 1` ⇒ `interactive-job.publication-contract`, which panics at app construction and took EVERY app-driven test in the crate down with it). And it is not needed: the completion check gates only the STORE families, never `Emit::effects`, so a `WindowConfig` route may re-arm itself through a host effect. The crate's own law asserted the opposite; I inverted that one clause in `✏️editor/🧪️tests/🔬️unit/🦀️.rs` to the rule the framework actually enforces — a `HostOnly` route publishes into NO store.
 
-**Optional, recommended:** declare `field`/`value` on the three actions' `action_args` so the staged form can drive them too. Not required — the panel authors these args itself.
+**`fem2d_retained_reduce` — window-scoped rows added.** The retained route is the LIVE dispatch path, and it only routed `SetCamera`/`SetResultDisplay`; everything else fell through to `command.dispatch(&doc, &cfg)` and faulted `…window-context-required`. I added the seven missing arms (`SetResultAnimation`, `ResultAnimationTick`, the three `CanvasPointer*`, `FocusEntity`) mirroring `Fem2dPlayApp::handle`. Slice A's pointer commands were dead at runtime for the same reason — please re-check them.
+
+**`🧪️tests/🪟️window-config-ownership/🦀️.rs`**: the law's worker thread asked for 2 MiB and now overflows its stack (SIGABRT aborts the whole test binary). Raised to 128 MiB, matching `RUST_MIN_STACK`.
+
+**Optional, recommended:** declare `field`/`value`/`windowId` on the three actions' `action_args` so the staged form can drive them too. Not required — the panel authors these args itself.
 
 ## 4. Verification
 
-(filled in below after the runs; logs under `🗑️generated/`)
+Logs under `🗑️generated/` (`w-e-check.txt`, `w-e-nextest.txt`, `w-e-full.txt`, `w-e-wasm.txt`).
+
+| Gate | Result |
+|---|---|
+| `cargo check -p semio-s-artifact-fem-2d --features component-app-assembly --tests` | ✅ 0 errors. The only warnings left in fem2d are pre-existing `unnecessary qualification` in `✏️editor/🦀️.rs` and the shared harness, plus `unused imports: Buildable, HasBase` in `⚙️engine/🖥️app-surface/🦀️.rs` — none in slice E's files. |
+| `cargo nextest … -E 'test(results) or test(animation) or test(set_result) or test(window_config) or test(panel)'` | ✅ **130 of 131**. The one failure is slice D's `panels::inspection::the_body_key_routes_to_this_panel_on_the_live_app_2d` (§6.5). Every slice-E law passes. |
+| `cargo check … --target wasm32-wasip2` | ✅ 0 errors. |
+| `bun ✏️s/🔌️plugins/🏗️fem/🧪️tests/🪟️window-config-contract/🟦️.ts` | ✅ `FEM 2D results exact window config agrees with Ajv and fast-json-patch vectors` (and the whole FEM 2D/3D window-config contract suite). |
+| Whole crate (`cargo nextest …`, no filter) | 1200 / 1240. The 39 failures + 1 timeout are all outside slice E — see §6.5. |
 
 ## 5. Test inventory
 
@@ -125,6 +154,9 @@ ArtifactToolPublicationContract { tool_id: "resultAnimationTick", lanes: &[Artif
 - `resultAnimationTick`: advances + re-arms while playing, inert when stopped (and after a pause), stops itself at the end of a `Once` run.
 - results window render: static scene follows the phase (sine peak ≠ zero ≠ trough), default draws the full deformation and no caption, running scene carries `phase 0.42`, mode shapes follow the phase, cache solves one revision once / evicts on a moved revision / never caches without an operation.
 - results panel: every section+control present and bound to its owning command with the right `field`, every control tagged `windowId`, play↔pause label switch, source select offers cases AND combinations.
+- `setResultDisplay`: config-only + addressed partition, and `{field,value}` over `sourceId`/`mode`/`modeIndex` incl. every refusal.
+- `windowId` routing: a tagged control addresses its OWN pane in a two-results-window roster (mutation target and re-arm args both), an untagged one falls back to the addressed window, and a tag naming a model window or a closed window is refused.
+- panel: the tag the panel renders is the id `addressed_window_id` resolves for a panel projection.
 - TS: `testFem2dResultsWindowConfigContract` (Ajv 2020 + fast-json-patch) over the extended fixture.
 
 ## 6. Open issues
@@ -133,3 +165,8 @@ ArtifactToolPublicationContract { tool_id: "resultAnimationTick", lanes: &[Artif
 2. **Speed/phase range constraints live in the neutral JSON schema and the TS parser but not in the Rust `FromValue`** (the derive has no range hook). The commands clamp on the way in, so an out-of-range value cannot be produced by the app; the fixture deliberately carries no out-of-range invalid case, because Rust would admit it and the "native admitted invalid neutral cases" assertion would fire.
 3. **`delay_ms: 33` is clamped to ~1 tick/s by a hidden/unfocused renderer** (`🏛️ShellHost/🟦️.tsx`'s own note, and `📓️project-hidden-browser-pane-throttles-plugin-boot`). Playback in a hidden pane will crawl; it will not break.
 4. The step buttons use the RELATIVE `phaseStep`, not an absolute phase computed at render time, so two fast clicks before the next render still advance twice.
+5. **Crate-wide test-harness lifecycle gap — NOT slice E, but it is what the remaining red is.** Once the publication contracts landed, the framework's `interactive-job.live-instance` gate refuses every typed command on an UNBOUND app, and `context::fem2d_app()` does not bind. Binding, however, makes the app owe the store a terminal close, and `artifact_app_laws::close_registered_fixture_app` walks a one-item/one-page budget that a demo-sized fem2d store does not fit (`released_items <= 1` asserts out, and a `load_document_pack` alone is enough to owe the close). So today a fem2d test may dispatch OR load a document, not both.
+   - I added `context::fem2d_mounted_app()` + `context::close()` as an ADDITIVE pair (`fem2d_app()` is untouched, so no other slice's tests change) and used them for the animation laws, which do not load the example.
+   - I rewrote slice E's results-window laws to be pure `render(...)` laws over `default_fem2d_snapshot()` — no app, no store, no close — which keeps their coverage (contour layers, reaction labels, captions, canvas scene) and makes them green.
+   - **Still owed by the coordinator:** 30 of the crate's 39 failures are `interactive-job.live-instance` at the shared harness `dispatch` (slices A/B/C/D's command tests). The fix is either a mountable+closable harness app whose close the framework can actually drain, or a framework close budget that scales with the store.
+6. Two more crate laws are red outside slice E: `every_route_declares_the_lane_its_handler_emits` now fails on `patchElement` (`fem2d.patch.element-missing` — slice D's `every_command()` representative row names ids the demo does not have), and `two_instances_converge_on_disjoint_edits` fails on `interactive-job.catalog-authority` with `generated_migrated=false` for every tool id.

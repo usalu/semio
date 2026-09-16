@@ -181,5 +181,11 @@ Logs under `🗑️generated/`.
    swap now renders as `{"positions":[],"routes":[]}` (ids are filtered by document membership), which
    is a visible improvement over the old behaviour but still leaves the store holding dead ids.
 6. **`live_envelope` gates were skipped**, not fixed — they are the GIS-2D-END-TO-END-BUILD peer's open
-   gates. `gis_map_live_envelope_submit_pump_swap_displaced_store_and_exact_ack_succeed` was still
-   running after 10+ minutes in a background run started here (left running, not killed).
+   gates. New datapoint for that peer: an unfiltered `cargo test … --lib` started here at ~10:36 sat in
+   `gis_map_live_envelope_submit_pump_swap_displaced_store_and_exact_ack_succeed` until the harness
+   terminated it at 12:26 (exit 144) — **~110 minutes with no pass/fail verdict**, the whole run's other
+   243 tests having finished in the first ~2 s. This is the same never-settling signature
+   `📓️verification.md` records as "aborted after ~25/~44 min"; it is now much better bounded: the test
+   does not merely run slowly, it does not terminate. It should be treated as a hang to debug (freeze
+   the dispatch and read the guest trap — see the repo's freeze-dispatch method), not as a long test to
+   wait out. Every gate in §4 was run with `--skip live_envelope` for this reason.

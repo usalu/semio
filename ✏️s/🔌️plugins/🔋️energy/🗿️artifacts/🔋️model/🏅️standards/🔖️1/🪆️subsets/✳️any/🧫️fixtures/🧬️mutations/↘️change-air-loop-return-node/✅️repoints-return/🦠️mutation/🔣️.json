@@ -1,1 +1,5 @@
-{}
+{
+  "mutation": "changeAirLoopReturnNode",
+  "id": 17,
+  "newReturnNodeId": 6
+}

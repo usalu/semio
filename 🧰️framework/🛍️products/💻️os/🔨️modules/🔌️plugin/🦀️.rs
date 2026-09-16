@@ -6523,6 +6523,44 @@ pub mod app {
         use super::{register_framework_reserved_factories, ActionMeta, App, AppActionRegistry, ArtifactApp, ArtifactToolFactoryRegistry, PluginApp, TypedOperationResultLane, VcsArtifactApp};
         use store::{Backbone, BackboneMessage, MemoryBackbone};
 
+        /// 🧪️ Replays `seed_genesis_children`'s roster lookup over a surface's initial document without
+        /// constructing the app, so a bundle proves at test time what `with_registry_on_bus` would only
+        /// discover by panicking inside a live guest. The probe snapshot is never dropped: retiring one
+        /// needs the owner factories a live `ArtifactStore` installs, and this law runs once per surface in
+        /// a test binary, so it hands the value to `ManuallyDrop` rather than trip the retirement assert.
+        fn genesis_children_declared<S, M>(snapshot: S, derives: impl Fn(&S, &str, &str) -> bool) -> Result<usize, super::Fault>
+        where
+            S: semio_framework_schema::ArtifactCompositionFields,
+            M: store::MemberFactory,
+        {
+            let snapshot = std::mem::ManuallyDrop::new(snapshot);
+            let projection = store::ChildRestoreProjection::from_snapshot(&*snapshot).map_err(|error| super::plugin_sdk_fault(format!("initial snapshot child projection failed: {error}")))?;
+            let mut derived = 0;
+            for index in 0..projection.len() {
+                let Some((slot, fields)) = projection.get(index) else { break };
+                if !derives(&snapshot as &S, slot, fields.child_id) {
+                    continue;
+                }
+                let dialect = super::ArtifactDialect { artifact_kind: fields.artifact_kind.to_string(), standard: fields.standard.to_string(), subset: fields.subset.to_string() };
+                super::genesis_member_schema::<M>(&dialect)?;
+                derived += 1;
+            }
+            Ok(derived)
+        }
+
+        /// ✏️🌱️ Proves this editor's OWN roster (`E::Members`) declares every dialect its initial document
+        /// derives a genesis child for, and answers how many it checked — a caller pins that count so a
+        /// surface that stops deriving its children cannot turn the assertion vacuous. Any bundle
+        /// registering `E` instantiates that same roster, so one assertion covers every bundle.
+        pub fn assert_editor_genesis_children_declared<E: super::ArtifactEditor>() -> Result<usize, super::Fault> {
+            genesis_children_declared::<E::Snapshot, E::Members>(E::initial_snapshot(), |snapshot, slot, child_id| E::genesis_child_pack(snapshot, slot, child_id).is_some())
+        }
+
+        /// 👁️🌱️ Viewer twin of `assert_editor_genesis_children_declared`.
+        pub fn assert_viewer_genesis_children_declared<V: super::ArtifactViewer>() -> Result<usize, super::Fault> {
+            genesis_children_declared::<V::Snapshot, V::Members>(V::initial_snapshot(), |snapshot, slot, child_id| V::genesis_child_pack(snapshot, slot, child_id).is_some())
+        }
+
         pub const FIXTURE_TREE_MAX_DEPTH: usize = 64;
         pub const FIXTURE_TREE_MAX_NODES: usize = semio_framework_ui_contract::UI_BUILT_CHILD_RETIRE_SLOTS;
         pub const FIXTURE_TREE_RETIRE_STEPS: usize = FIXTURE_TREE_MAX_NODES * (semio_framework_ui_contract::UI_BUILT_CHILDREN_MAX + 1);
@@ -7219,6 +7257,10 @@ pub mod app {
             const ROLE: super::AppRole = V::ROLE;
             const DIALECT: super::Dialect = V::DIALECT;
             const DOCUMENT_SCHEMA: &'static str = V::DOCUMENT_SCHEMA;
+            /// 🧩️ The viewer's own roster: the fixture forwards `genesis_child_pack`, and a derived
+            /// child's dialect must resolve through the roster that declares it, or construction
+            /// panics at `seed_genesis_children` (energy/gis viewers derive `s.stdio.semio` members).
+            type Members = V::Members;
             type Snapshot = V::Snapshot;
             type Mutation = V::Mutation;
             type Config = V::Config;
@@ -7440,7 +7482,10 @@ pub mod app {
             V::Command: Default,
         {
             use super::{ArtifactView, ConfigView, DraftView, InteractionHoverState, InteractionView, NoDraft, PeerPresenceRoot};
-            let mut app = new_viewer::<BoundedViewerFixture<V>>().await;
+            // 🧩️ Over the viewer's OWN roster (`V::Members`), never `new_viewer`'s `NoMembers`: the
+            // fixture forwards `genesis_child_pack`, so a viewer deriving composed children would
+            // otherwise refuse construction at `seed_genesis_children`.
+            let mut app: VcsArtifactApp<ViewerApp<BoundedViewerFixture<V>>, V::Members> = VcsArtifactApp::new(ViewerApp::<BoundedViewerFixture<V>>::default()).await;
             app.refresh_cache().await.expect("viewer fixture cache");
             let result = {
                 let (_, snapshot, config, history) = app.cache.as_ref().expect("viewer fixture cache populated");
@@ -20850,40 +20895,6 @@ pub mod app {
             .ok_or_else(|| plugin_sdk_fault(format!("derived child dialect '{}' is not declared by this app's member roster", dialect.to_coordinate())))
     }
 
-    /// 🧪️ Replays `seed_genesis_children`'s roster lookup over a surface's initial document without
-    /// constructing the app, so a bundle proves at test time what `with_registry_on_bus` would only
-    /// discover by panicking inside a live guest.
-    fn genesis_children_declared<S, M>(snapshot: &S, derives: impl Fn(&S, &str, &str) -> bool) -> Result<(), Fault>
-    where
-        S: semio_framework_schema::ArtifactCompositionFields,
-        M: MemberFactory,
-    {
-        let projection = store::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| plugin_sdk_fault(format!("initial snapshot child projection failed: {error}")))?;
-        for index in 0..projection.len() {
-            let Some((slot, fields)) = projection.get(index) else { break };
-            if !derives(snapshot, slot, fields.child_id) {
-                continue;
-            }
-            let dialect = ArtifactDialect { artifact_kind: fields.artifact_kind.to_string(), standard: fields.standard.to_string(), subset: fields.subset.to_string() };
-            genesis_member_schema::<M>(&dialect)?;
-        }
-        Ok(())
-    }
-
-    /// ✏️🌱️ Proves this editor's OWN roster (`E::Members`) declares every dialect its initial document
-    /// derives a genesis child for. Any bundle registering `E` instantiates that same roster, so one
-    /// assertion per app covers every plugin that ever bundles it.
-    pub fn assert_editor_genesis_children_declared<E: ArtifactEditor>() -> Result<(), Fault> {
-        let snapshot = E::initial_snapshot();
-        genesis_children_declared::<E::Snapshot, E::Members>(&snapshot, |snapshot, slot, child_id| E::genesis_child_pack(snapshot, slot, child_id).is_some())
-    }
-
-    /// 👁️🌱️ Viewer twin of `assert_editor_genesis_children_declared`.
-    pub fn assert_viewer_genesis_children_declared<V: ArtifactViewer>() -> Result<(), Fault> {
-        let snapshot = V::initial_snapshot();
-        genesis_children_declared::<V::Snapshot, V::Members>(&snapshot, |snapshot, slot, child_id| V::genesis_child_pack(snapshot, slot, child_id).is_some())
-    }
-
     const HISTORY_ACTION_IDS: [&str; 6] = ["undo", "redo", "commitCheckpoint", "createAlternative", "switchAlternative", "checkoutCheckpoint"];
 
     const CLIPBOARD_ACTION_IDS: [&str; 3] = ["copy", "cut", "paste"];
@@ -22707,10 +22718,16 @@ pub mod app {
                     let state = self.store_replacement_jobs.get(handle.operation.0).map(|replacement| replacement.state);
                     match state {
                         Some(ActiveArtifactStoreReplacementState::AwaitingMembers) => {
+                            // 🧵️ Genesis and `begin_members` happen in ONE step: yielding between them let
+                            // `drive_store_replacement_jobs` observe `AwaitingMembers` with no ingress, run
+                            // its own `complete_store_replacement_genesis` and seal the roster — after which
+                            // the members this lane had just minted into `archive.members` could never be
+                            // admitted ("sealed its member roster before the archived members were
+                            // admitted", every energy example load; ticket 26/09/06/ENERGY-PLUGIN-END-TO-END).
+                            // With the ingress registered here, the replacement lane waits instead.
                             if !active.genesis_complete {
                                 self.complete_document_archive_genesis(active, handle)?;
                                 active.genesis_complete = true;
-                                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
                             }
                             let expected = active.archive.as_ref().ok_or_else(|| plugin_sdk_fault("recursive document archive member roster owner is absent"))?.members.len();
                             if self.try_begin_owned_document_members(handle, expected, u64::MAX)? {
@@ -27282,38 +27299,82 @@ pub mod app {
             Ok(PluginCloseStep::Complete)
         }
 
+        /// 🧹️ One grant-sized page of a retained string, `None` once the string is empty.
+        ///
+        /// ⚖️ A retained field is drained IN PLACE, in pages, never priced atomically against one
+        /// turn's grant: a value larger than the grant that is pushed back unreleased is a
+        /// permanent `Pending { 0, 0 }` — the close can never afford it however many turns the host
+        /// spends. Measured 2026-09-16 (ticket 26/08/28/DEMONSTRATOR-END-TO-END-ALL-APPS): a
+        /// `setContributions` config edit whose command-log LABEL carries the pack text (4 391 B)
+        /// livelocked `close_step(1, 4_096)` for 15 M turns, which capped EVERY app's retained
+        /// config at about one `ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES` page regardless of its declared
+        /// maximum. The cut lands on a char boundary at or after the grant's, so a page never
+        /// exceeds the grant; a grant too small for one UTF-8 scalar releases nothing.
+        fn close_retained_string_page(value: &mut String, maximum_bytes: usize) -> Option<PluginCloseStep> {
+            if value.is_empty() {
+                return None;
+            }
+            let mut cut = value.len().saturating_sub(maximum_bytes);
+            while cut < value.len() && !value.is_char_boundary(cut) {
+                cut += 1;
+            }
+            let released_bytes = value.len() - cut;
+            if released_bytes == 0 {
+                return Some(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+            }
+            value.truncate(cut);
+            Some(PluginCloseStep::Pending { released_items: 0, released_bytes })
+        }
+
+        /// 🧹️ One grant-sized page of a retained byte buffer — the `Vec<u8>` twin of
+        /// [`Self::close_retained_string_page`], with the same page-never-refuse law.
+        fn close_retained_bytes_page(value: &mut Vec<u8>, maximum_bytes: usize) -> Option<PluginCloseStep> {
+            if value.is_empty() {
+                return None;
+            }
+            let released_bytes = value.len().min(maximum_bytes);
+            if released_bytes == 0 {
+                return Some(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+            }
+            value.truncate(value.len() - released_bytes);
+            Some(PluginCloseStep::Pending { released_items: 0, released_bytes })
+        }
+
         fn close_retained_fields_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> PluginCloseStep {
             if maximum_items == 0 {
                 return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
             }
             if let Some(entry) = self.command_log.last_mut() {
-                if let Some(value) = entry.config_edit_ids.pop() {
-                    let bytes = value.len();
-                    if bytes > maximum_bytes {
-                        entry.config_edit_ids.push(value);
-                        return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                if let Some(value) = entry.config_edit_ids.last_mut() {
+                    if let Some(step) = Self::close_retained_string_page(value, maximum_bytes) {
+                        return step;
                     }
-                    drop(value);
-                    return PluginCloseStep::Pending { released_items: 1, released_bytes: bytes };
+                    drop(entry.config_edit_ids.pop());
+                    return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
                 }
-                if let Some(value) = entry.child_edit_ids.pop() {
-                    let bytes = value.len();
-                    if bytes > maximum_bytes {
-                        entry.child_edit_ids.push(value);
-                        return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                if let Some(value) = entry.child_edit_ids.last_mut() {
+                    if let Some(step) = Self::close_retained_string_page(value, maximum_bytes) {
+                        return step;
                     }
-                    drop(value);
-                    return PluginCloseStep::Pending { released_items: 1, released_bytes: bytes };
+                    drop(entry.child_edit_ids.pop());
+                    return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
+                }
+                for field in [&mut entry.action_id, &mut entry.label, &mut entry.timestamp] {
+                    if let Some(step) = Self::close_retained_string_page(field, maximum_bytes) {
+                        return step;
+                    }
+                }
+                if let Some(value) = entry.edit_id.as_mut() {
+                    if let Some(step) = Self::close_retained_string_page(value, maximum_bytes) {
+                        return step;
+                    }
+                    drop(entry.edit_id.take());
+                    return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
                 }
             }
             if let Some(entry) = self.command_log.pop() {
-                let bytes = entry.action_id.len().saturating_add(entry.label.len()).saturating_add(entry.timestamp.len()).saturating_add(entry.edit_id.as_ref().map_or(0, String::len));
-                if bytes > maximum_bytes {
-                    self.command_log.push(entry);
-                    return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
-                }
                 drop(entry);
-                return PluginCloseStep::Pending { released_items: 1, released_bytes: bytes };
+                return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
             }
             if let Some(sequence) = self.history_dirty_sequences.iter().next().copied() {
                 self.history_dirty_sequences.remove(&sequence);
@@ -27329,20 +27390,13 @@ pub mod app {
                 store::SnapshotRetirementStep::Complete => {}
             }
             if let Some((domain, hover)) = self.interaction_hover.pop_first() {
-                let bytes = domain.len();
-                if bytes > maximum_bytes {
-                    self.interaction_hover.insert(domain, hover);
-                    return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
-                }
+                let bytes = domain.len().min(maximum_bytes);
                 drop((domain, hover));
                 return PluginCloseStep::Pending { released_items: 1, released_bytes: bytes };
             }
             if let Some(domain) = self.interaction_ui_topology.keys().next() {
-                let bytes = domain.len();
-                if bytes > maximum_bytes {
-                    return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
-                }
                 let domain = domain.clone();
+                let bytes = domain.len().min(maximum_bytes);
                 drop(self.interaction_ui_topology.remove(&domain));
                 return PluginCloseStep::Pending { released_items: 1, released_bytes: bytes };
             }
@@ -27357,14 +27411,12 @@ pub mod app {
                 return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
             }
             if let Some(proposal) = self.pending_transaction_proposal.as_mut() {
-                if let Some(operation) = proposal.local_ops.pop() {
-                    let bytes = operation.len();
-                    if bytes > maximum_bytes {
-                        proposal.local_ops.push(operation);
-                        return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                if let Some(operation) = proposal.local_ops.last_mut() {
+                    if let Some(step) = Self::close_retained_bytes_page(operation, maximum_bytes) {
+                        return step;
                     }
-                    drop(operation);
-                    return PluginCloseStep::Pending { released_items: 1, released_bytes: bytes };
+                    drop(proposal.local_ops.pop());
+                    return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
                 }
                 if let Some(foreign) = proposal.foreign.pop() {
                     drop(foreign);
@@ -27381,13 +27433,12 @@ pub mod app {
             }
             if let Some(wire) = self.last_emit_wire.as_mut() {
                 for bytes in [&mut wire.0, &mut wire.1, &mut wire.2] {
+                    if let Some(step) = Self::close_retained_bytes_page(bytes, maximum_bytes) {
+                        return step;
+                    }
                     if bytes.capacity() != 0 {
-                        let released = bytes.len();
-                        if released > maximum_bytes {
-                            return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
-                        }
                         drop(std::mem::take(bytes));
-                        return PluginCloseStep::Pending { released_items: 1, released_bytes: released };
+                        return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
                     }
                 }
             }
@@ -27429,13 +27480,12 @@ pub mod app {
                 drop(registration);
                 return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
             }
-            if !self.tool_job_controller_id.is_empty() {
-                let bytes = self.tool_job_controller_id.len();
-                if bytes > maximum_bytes {
-                    return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
-                }
+            if let Some(step) = Self::close_retained_string_page(&mut self.tool_job_controller_id, maximum_bytes) {
+                return step;
+            }
+            if self.tool_job_controller_id.capacity() != 0 {
                 drop(std::mem::take(&mut self.tool_job_controller_id));
-                return PluginCloseStep::Pending { released_items: 1, released_bytes: bytes };
+                return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
             }
             PluginCloseStep::Complete
         }
@@ -32945,6 +32995,15 @@ pub mod plugin_runtime {
         )
     }
 
+    /// 🚪️ Whether a wire fault code is one of the cleanup taxonomy's own verdicts — i.e. whether it
+    /// names ONE instance's cleanup ladder rather than the reactor turn that drives every instance of
+    /// this actor. The reactor turn asks before deciding whether a close-cleanup failure may abort it:
+    /// an instance-scoped verdict is contained (its lifetime is already retired and already out of
+    /// quarantine), anything else — a busy runtime authority, a poisoned borrow — still ends the turn.
+    pub fn runtime_cleanup_fault_is_instance_scoped(code: &str) -> bool {
+        RUNTIME_CLEANUP_FAULT_VECTORS.iter().any(|vector| vector.code == code)
+    }
+
     /// ⏱️ Sentinel the two cleanup loops already store when the clock itself failed, so the decoded
     /// message says `unmeasured` instead of printing `u64::MAX` microseconds as if it were a reading.
     const RUNTIME_CLEANUP_UNMEASURED_US: u64 = u64::MAX;
@@ -32960,6 +33019,11 @@ pub mod plugin_runtime {
         deadline_resume: AtomicU8,
         deadline_elapsed_us: AtomicU64,
         stalled_steps: AtomicU8,
+        /// ⏱️ Monotonic instant the current zero-progress run began (`0` = the ladder is moving).
+        stall_since_us: AtomicU64,
+        /// ⏱️ Stall credit actually spent when a `ZeroProgress` verdict was stored, so the emitted
+        /// fault quotes the measured stall instead of the last turn's unrelated cost.
+        stall_credit_spent_us: AtomicU64,
         last_callback_elapsed_us: AtomicU64,
         #[cfg(test)]
         last_fault: std::sync::Mutex<[u8; 256]>,
@@ -33589,6 +33653,18 @@ pub mod plugin_runtime {
     const RUNTIME_CLOSE_BYTES_PER_STEP: usize = 32 * 1_024;
     const RUNTIME_CLOSE_INNER_GRANT_US: u64 = 2_000;
     const RUNTIME_CLOSE_ZERO_PROGRESS_LIMIT: u8 = 8;
+    /// ⏱️ Real time a close ladder must spend making no progress before the structural accountant is
+    /// allowed to call it stalled — the SECOND half of the zero-progress verdict, next to the step
+    /// count above.
+    ///
+    /// 🐛️ The count alone was the whole rule, and a count is not a duration: eight consecutive steps
+    /// that each observe an empty ladder cost microseconds, so a close that had nothing left to retire
+    /// faulted with `plugin.internal.zero-progress` reporting `elapsed 0us` against an `8000us`
+    /// ceiling — a stall credit judged exhausted before any time had passed (six-pane demonstrator
+    /// boot, ticket 26/08/28, `📓️fix-2026-09-16-concurrent-boot-timeout-and-close-fault.md`). A ladder
+    /// that is genuinely wedged still burns this credit within a few reactor turns; one that is merely
+    /// finishing never does.
+    const RUNTIME_CLOSE_STALL_CREDIT_US: u64 = semio_framework_trace::INTERACTIVE_STEP_CEILING_US;
 
     struct RuntimeLiveCleanupPump<PA: PluginApp> {
         session: Option<semio_framework_job::BatchJobSession<RuntimeLiveCleanupJob<PA>>>,
@@ -33609,31 +33685,37 @@ pub mod plugin_runtime {
             self.closing = true;
             if let Some(outcome) = self.outcome.as_mut() {
                 let step = outcome.close_step(maximum_items, maximum_bytes);
-                if outcome.terminal_is_empty() {
+                let retired = outcome.terminal_is_empty();
+                if retired {
                     self.outcome = None;
                 }
                 return match step {
                     semio_framework_job::JobPayloadCloseStep::Pending { released_items, released_bytes } => semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes },
-                    semio_framework_job::JobPayloadCloseStep::Complete => semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 },
+                    semio_framework_job::JobPayloadCloseStep::Complete => semio_framework_job::InteractiveJobCloseStep::Pending { released_items: usize::from(retired), released_bytes: 0 },
                 };
             }
             if let Some(rejected) = self.rejected.as_mut() {
                 let step = rejected.close_step(maximum_items, maximum_bytes);
-                if rejected.terminal_is_empty() {
+                let retired = rejected.terminal_is_empty();
+                if retired {
                     self.rejected = None;
                 }
-                return step;
+                return match step {
+                    semio_framework_job::InteractiveJobCloseStep::Complete if retired => semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 },
+                    step => step,
+                };
             }
             if let Some(session) = self.session.as_mut() {
                 session.begin_close();
                 let step = session.close_step(maximum_items, maximum_bytes);
-                if session.terminal_is_empty() {
+                let retired = session.terminal_is_empty();
+                if retired {
                     self.session = None;
                 }
                 return match step {
                     semio_framework_job::WorkerJobCloseStep::Pending { released_items, released_bytes } => semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes },
                     semio_framework_job::WorkerJobCloseStep::Blocked => semio_framework_job::InteractiveJobCloseStep::Blocked,
-                    semio_framework_job::WorkerJobCloseStep::Complete => semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 },
+                    semio_framework_job::WorkerJobCloseStep::Complete => semio_framework_job::InteractiveJobCloseStep::Pending { released_items: usize::from(retired), released_bytes: 0 },
                 };
             }
             semio_framework_job::InteractiveJobCloseStep::Complete
@@ -34051,25 +34133,46 @@ pub mod plugin_runtime {
         semio_framework_async::process_worker_pool(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, cores))
     }
 
-    fn runtime_close_nonterminal_status(contended: bool, progress: Option<crate::app::PluginCloseStep>, stalled_steps: &AtomicU8) -> RuntimeCloseStatus {
+    /// 🩺️ The structural accountant's verdict on ONE close-ladder step, priced in BOTH currencies it
+    /// claims to spend: consecutive fruitless steps AND the real microseconds they burned.
+    ///
+    /// `progress` is what the ladder READ this step. `None` means the step recorded no reading at all —
+    /// it was cancelled, or it never reached the ladder — which is an absence of evidence, not evidence
+    /// of a stall, so it buys no stall debt; a cancelled or faulted outcome is terminal through
+    /// `RuntimeCleanupFault::PriorOutcome` instead. Only an observed `Pending { 0, 0 }` — the ladder
+    /// answered, and answered that it released nothing — is a stalled step.
+    ///
+    /// The fault needs both: `RUNTIME_CLOSE_ZERO_PROGRESS_LIMIT` consecutive stalled steps, and
+    /// `RUNTIME_CLOSE_STALL_CREDIT_US` of real elapsed time since the ladder last moved. `stall_since_us`
+    /// carries that instant (`0` = not stalling); the returned reading is the credit actually spent, so
+    /// the emitted message quotes a measured stall rather than the unrelated cost of its last turn.
+    fn runtime_close_stall_verdict(contended: bool, progress: Option<crate::app::PluginCloseStep>, stalled_steps: &AtomicU8, stall_since_us: &AtomicU64, now_us: Option<u64>) -> (RuntimeCloseStatus, u64) {
+        let clear = || {
+            stalled_steps.swap(0, Ordering::SeqCst);
+            stall_since_us.store(0, Ordering::SeqCst);
+        };
         if contended {
-            return RuntimeCloseStatus::Ready;
+            return (RuntimeCloseStatus::Ready, 0);
         }
         if matches!(progress, Some(crate::app::PluginCloseStep::Blocked { .. } | crate::app::PluginCloseStep::AwaitingInput { .. })) {
-            stalled_steps.swap(0, Ordering::SeqCst);
-            return RuntimeCloseStatus::ExternalWait;
+            clear();
+            return (RuntimeCloseStatus::ExternalWait, 0);
         }
-        let zero_progress = matches!(progress, Some(crate::app::PluginCloseStep::Pending { released_items: 0, released_bytes: 0 })) || progress.is_none();
-        let stalled = if zero_progress {
-            stalled_steps.fetch_add(1, Ordering::SeqCst).saturating_add(1)
-        } else {
-            stalled_steps.swap(0, Ordering::SeqCst);
-            0
+        if !matches!(progress, Some(crate::app::PluginCloseStep::Pending { released_items: 0, released_bytes: 0 })) {
+            clear();
+            return (RuntimeCloseStatus::Ready, 0);
+        }
+        let stalled = stalled_steps.fetch_update(Ordering::SeqCst, Ordering::SeqCst, |seen| Some(seen.saturating_add(1))).unwrap_or(u8::MAX).saturating_add(1);
+        let Some(now_us) = now_us else { return (RuntimeCloseStatus::Ready, 0) };
+        let since_us = match stall_since_us.compare_exchange(0, now_us.max(1), Ordering::SeqCst, Ordering::SeqCst) {
+            Ok(_) => now_us.max(1),
+            Err(previous) => previous,
         };
-        if stalled >= RUNTIME_CLOSE_ZERO_PROGRESS_LIMIT {
-            RuntimeCloseStatus::Fault(RuntimeCleanupFault::ZeroProgress)
+        let credit_us = now_us.saturating_sub(since_us);
+        if stalled >= RUNTIME_CLOSE_ZERO_PROGRESS_LIMIT && credit_us >= RUNTIME_CLOSE_STALL_CREDIT_US {
+            (RuntimeCloseStatus::Fault(RuntimeCleanupFault::ZeroProgress), credit_us)
         } else {
-            RuntimeCloseStatus::Ready
+            (RuntimeCloseStatus::Ready, credit_us)
         }
     }
 
@@ -34258,8 +34361,10 @@ pub mod plugin_runtime {
         let Some(job) = session.checked_out_job_mut() else { return runtime_close_fault(state, RuntimeCleanupFault::CheckedOutJob) };
         pump.complete = job.progress == Some(crate::app::PluginCloseStep::Complete);
         pump.blocked = matches!(job.progress, Some(crate::app::PluginCloseStep::Blocked { .. }));
-        pump.pending_status = runtime_close_nonterminal_status(job.contended, job.progress, &state.stalled_steps);
+        let (status, credit_us) = runtime_close_stall_verdict(job.contended, job.progress, &state.stalled_steps, &state.stall_since_us, semio_framework_job::default_now_us());
+        pump.pending_status = status;
         if let Some(cause) = pump.pending_status.cause() {
+            state.stall_credit_spent_us.store(credit_us, Ordering::SeqCst);
             runtime_close_fault(state, cause);
         }
         let Some(outcome) = session.take_outcome() else { return runtime_close_fault(state, RuntimeCleanupFault::TakeOutcome) };
@@ -34417,6 +34522,8 @@ pub mod plugin_runtime {
             deadline_resume: AtomicU8::new(u8::MAX),
             deadline_elapsed_us: AtomicU64::new(0),
             stalled_steps: AtomicU8::new(0),
+            stall_since_us: AtomicU64::new(0),
+            stall_credit_spent_us: AtomicU64::new(0),
             last_callback_elapsed_us: AtomicU64::new(0),
             #[cfg(test)]
             last_fault: std::sync::Mutex::new([0; 256]),
@@ -34463,7 +34570,17 @@ pub mod plugin_runtime {
                 drop(removed);
                 Ok(true)
             }
-            RuntimeCloseStatus::Fault(cause) => Err(runtime_cleanup_fault("close", cause, instance_id, state.last_callback_elapsed_us.load(Ordering::SeqCst))),
+            // 🚪️ A faulted close is TERMINAL for this instance: the entry leaves quarantine with the
+            // verdict, so the same dead lifetime cannot re-raise it on every later cursor pass (which,
+            // now that the reactor turn survives a close fault, would be an unbounded fault storm).
+            // `ZeroProgress` quotes the stall credit it actually spent; every other cause quotes the
+            // turn cost it was measured against.
+            RuntimeCloseStatus::Fault(cause) => {
+                let elapsed_us = if cause == RuntimeCleanupFault::ZeroProgress { state.stall_credit_spent_us.load(Ordering::SeqCst) } else { state.last_callback_elapsed_us.load(Ordering::SeqCst) };
+                let removed = runtime.close_quarantine.try_borrow_mut().map_err(|_| plugin_internal_fault("runtime close quarantine is busy"))?.take(instance_id);
+                drop(removed);
+                Err(runtime_cleanup_fault("close", cause, instance_id, elapsed_us))
+            }
             status @ (RuntimeCloseStatus::ExternalWait | RuntimeCloseStatus::DeadlineYield) => {
                 if state.status.compare_exchange(status.repr(), RuntimeCloseStatus::Ready.repr(), Ordering::SeqCst, Ordering::SeqCst).is_err() {
                     return Ok(false);
@@ -38616,8 +38733,6 @@ pub use app::tool_run::{is_tool_run_action_id, ToolRunActionOutcome, ToolRunDriv
 pub use app::ActionFactory;
 pub use app::{
     artifact_inference_service,
-    assert_editor_genesis_children_declared,
-    assert_viewer_genesis_children_declared,
     bounded_config_store_disposer,
     bounded_config_store_one_item_preparation_factory,
     bounded_config_store_owners,

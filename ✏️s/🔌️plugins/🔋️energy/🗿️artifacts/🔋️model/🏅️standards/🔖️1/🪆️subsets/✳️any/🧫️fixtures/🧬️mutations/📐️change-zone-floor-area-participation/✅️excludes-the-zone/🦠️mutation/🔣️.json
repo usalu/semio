@@ -1,1 +1,5 @@
-{}
+{
+  "mutation": "changeZoneFloorAreaParticipation",
+  "id": 1,
+  "newPartOfTotalFloorArea": false
+}

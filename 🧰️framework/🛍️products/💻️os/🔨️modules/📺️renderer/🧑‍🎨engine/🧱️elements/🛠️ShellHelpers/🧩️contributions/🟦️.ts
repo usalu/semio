@@ -73,12 +73,22 @@ export function createContributionsPublisher<E>(ports: ContributionsPublisherPor
     const key = keyOf(session);
     try {
       let kinds = kindsByKey.get(key);
+      // 🎛️ A document that resolves NO operator graph scopes no operator-keyed contribution — but it
+      // never scoped a capability pack either, so the run continues against empty kinds and installs
+      // whatever `buildPack` still yields. The unresolved reason survives as the outcome only when
+      // that capability pack is itself empty. The scope is not cached, so a document that resolves
+      // later still widens the pack.
+      let unresolvedReason: string | undefined;
       if (kinds === undefined) {
         const scope = await ports.resolveScope(session, environment);
         if (epochOf(session.instanceId) !== epoch) return { status: "retired" };
-        if (scope.status === "unresolved") return { status: "unresolved", reason: scope.reason };
-        kinds = scope.kinds;
-        kindsByKey.set(key, kinds);
+        if (scope.status === "unresolved") {
+          unresolvedReason = scope.reason;
+          kinds = [];
+        } else {
+          kinds = scope.kinds;
+          kindsByKey.set(key, kinds);
+        }
       }
       const packKey = `${session.pluginId}::${generation}::${kinds.join(",")}`;
       let json = packByKey.get(packKey);
@@ -86,7 +96,7 @@ export function createContributionsPublisher<E>(ports: ContributionsPublisherPor
         json = ports.buildPack(session, kinds, environment);
         packByKey.set(packKey, json);
       }
-      if (json.length === 0 || json === "[]") return { status: "empty" };
+      if (json.length === 0 || json === "[]") return unresolvedReason === undefined ? { status: "empty" } : { status: "unresolved", reason: unresolvedReason };
       const pushKey = `${session.instanceId}::${json}`;
       if (pushKey === installedKey) return { status: "unchanged" };
       const displaced = installedKey;

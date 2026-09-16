@@ -157,6 +157,22 @@ function renderUserEntries(launcher: DevLauncherEntry, playground: PlaygroundEnt
   }
   return entries;
 }
+
+/** @emoji 🧩️ Supplies registry-owned dev launcher metadata when a variant has no curated seed row. */
+function defaultDevLauncher(playground: PlaygroundEntry, order: number): DevLauncherEntry {
+  const serverReadyAction: ServerReadyTemplate = { pattern: "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):{PORT})", uriFormat: "%s" };
+  const appEnv = playground.app ? { SEMIO_APP: playground.app } : {};
+  return {
+    namePrefix: `🧩️${playground.variant}`,
+    order,
+    command: `bun nx run workspace:dev -- ${playground.variant}`,
+    reactEnv: { S_OS_PORT: "{PORT}", SEMIO_PLUGIN: playground.pluginId, SEMIO_RENDERER: "react", ...appEnv },
+    reactServerReadyAction: serverReadyAction,
+    wgpuOrder: Math.round((order + 0.001) * 1000) / 1000,
+    wgpuEnv: { S_OS_PORT: "{PORT}", SEMIO_PLUGIN: playground.pluginId, SEMIO_RENDERER: "wgpu", ...appEnv },
+    wgpuServerReadyAction: serverReadyAction,
+  };
+}
 //#endregion
 
 //#region 🔖️Generate
@@ -189,6 +205,20 @@ export function generateLaunchJson(repoRoot: string, playgrounds: readonly Playg
     }
   }
   if (out.includes("@generated:")) throw new Error("🚀️launch/🟦️.ts: an @generated placeholder was not resolved (devLaunchers table is missing an entry)");
+  const synthesized: object[] = [];
+  for (const [index, playground] of [...playgrounds].sort((left, right) => left.variant.localeCompare(right.variant)).entries()) {
+    if (devLaunchers[playground.variant]) continue;
+    const launcher = defaultDevLauncher(playground, Math.round((420 + index * 0.01) * 1000) / 1000);
+    const reactName = `🛠️dev${launcher.namePrefix}⚛️react`;
+    const wgpuName = `🛠️dev${launcher.namePrefix}🧊️wgpu🌐️wasm`;
+    if (!out.includes(JSON.stringify(reactName))) synthesized.push(renderEntry(reactName, launcher, "react", playground.ports.react));
+    if (!out.includes(JSON.stringify(wgpuName))) synthesized.push(renderEntry(wgpuName, launcher, "wgpu", playground.ports.wgpu));
+  }
+  if (synthesized.length > 0) {
+    const marker = '\n  ],\n  "compounds":';
+    if (!out.includes(marker)) throw new Error("🚀️launch/🟦️.ts: generated skeleton lacks the configurations/compounds boundary");
+    out = out.replace(marker, `\n    ,\n${synthesized.map((entry) => reindent(JSON.stringify(entry, null, 2), 4)).join(",\n")}\n  ],\n  "compounds":`);
+  }
   try {
     Bun.JSONC.parse(out);
   } catch {

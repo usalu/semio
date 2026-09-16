@@ -1,1 +1,5 @@
-{}
+{
+  "mutation": "changeZoneEquipmentType",
+  "id": 13,
+  "newEquipmentType": "FanCoil"
+}

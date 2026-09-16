@@ -95,11 +95,28 @@ pub struct CadObjectScale {
     pub new_scale: [f64; 3],
 }
 
-/// 🌉️ `CadObjectSpec` → the ephemeral working object, rebuilding the primitive slot list from
-/// `solid_handle`.
-pub(crate) fn cad_object_from_spec(spec: &CadObjectSpec) -> crate::standards::v1::subsets::any::io::geometry_import::CadObject {
+/// 🧱️ One authored primitive slot of an object — carried beside [`CadObjectSpec`] rather than inside
+/// it because a `#[dsl(table)]` field cannot nest inside a `#[dsl(block)]` one. The importer authors
+/// slot ids of its own (`…-solid-313`), which a `solid_handle`-derived list would silently rewrite,
+/// so `delete-object`'s inverse has to carry them verbatim.
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase", default)]
+pub struct CadObjectPrimitive {
+    pub slot: String,
+    pub primitive_id: String,
+    pub kind: String,
+}
+
+/// 🌉️ `CadObjectSpec` plus its authored primitive slots → the ephemeral working object. An empty
+/// `primitives` falls back to the one slot `solid_handle` implies, which is what a hand-authored
+/// `create-object` (the catalogue's "add a box") wants.
+pub(crate) fn cad_object_from_spec(spec: &CadObjectSpec, primitives: &[CadObjectPrimitive]) -> crate::standards::v1::subsets::any::io::geometry_import::CadObject {
     use crate::standards::v1::subsets::any::io::geometry_import::{CadObject, CadPrimitiveSlot};
-    let primitives = spec.solid_handle.clone().map(|primitive_id| vec![CadPrimitiveSlot { slot: "solid".into(), primitive_id, kind: "solid".into() }]).unwrap_or_default();
+    let primitives = if primitives.is_empty() {
+        spec.solid_handle.clone().map(|primitive_id| vec![CadPrimitiveSlot { slot: "solid".into(), primitive_id, kind: "solid".into() }]).unwrap_or_default()
+    } else {
+        primitives.iter().map(|primitive| CadPrimitiveSlot { slot: primitive.slot.clone(), primitive_id: primitive.primitive_id.clone(), kind: primitive.kind.clone() }).collect()
+    };
     CadObject {
         id: spec.id.clone(),
         label: spec.label.clone(),
@@ -114,6 +131,11 @@ pub(crate) fn cad_object_from_spec(spec: &CadObjectSpec) -> crate::standards::v1
         solid_handle: spec.solid_handle.clone(),
         primitives,
     }
+}
+
+/// 🌉️ The authored primitive slots of a working object, in `create-object`'s wire shape.
+pub(crate) fn cad_object_primitives_of(object: &crate::standards::v1::subsets::any::io::geometry_import::CadObject) -> Vec<CadObjectPrimitive> {
+    object.primitives.iter().map(|primitive| CadObjectPrimitive { slot: primitive.slot.clone(), primitive_id: primitive.primitive_id.clone(), kind: primitive.kind.clone() }).collect()
 }
 
 /// 🌉️ The `cad_object_from_spec` inverse — what `delete-object`'s inverse captures.

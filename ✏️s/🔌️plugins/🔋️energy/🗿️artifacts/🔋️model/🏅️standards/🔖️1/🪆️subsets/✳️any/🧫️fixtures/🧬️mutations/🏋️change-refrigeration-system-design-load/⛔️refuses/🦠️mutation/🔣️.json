@@ -1,1 +1,5 @@
-{}
+{
+  "mutation": "changeRefrigerationSystemDesignLoad",
+  "id": 420,
+  "newDesignLoadW": 0.0
+}
