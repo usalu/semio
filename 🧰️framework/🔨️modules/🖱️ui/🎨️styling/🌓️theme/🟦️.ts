@@ -936,12 +936,15 @@ export type IconRenderFormat = "svg" | "png";
 
 export type IconRenderShape = "rectangle" | "ellipse";
 
+export type IconRenderProjection = "perspective" | "orthographic";
+
 export interface IconRenderCamera {
   readonly position: readonly [number, number, number];
   readonly target: readonly [number, number, number];
   readonly zoom: number;
   readonly fov?: number;
   readonly up?: readonly [number, number, number];
+  readonly projection?: IconRenderProjection;
 }
 
 export interface IconRenderLights {
@@ -959,6 +962,8 @@ export interface IconRenderMaterial {
   readonly roughness?: number;
   readonly emissive?: string;
   readonly emissiveIntensity?: number;
+  /** @emoji ✏️ GLB mesh edge outline color for SVG/PNG icon shots (`none`/`transparent` disables outlines). */
+  readonly stroke?: string;
 }
 
 /** @emoji 🎯️ Frames the loaded asset before rendering: the camera keeps its viewing direction and zoom,

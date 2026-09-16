@@ -3,12 +3,12 @@
   "owner": "CadPlayApp",
   "documentSchema": "cad.scene",
   "payloadSchema": "cad.scene.tool-command.v1",
-  "routeCount": 38,
+  "routeCount": 37,
   "excludedFrameworkRoutes": [],
   "activation": {
     "controller": "s.cad.cad@1/*#editor",
     "factory": "CadRetainedCommandJobFactory",
-    "proofRows": 32,
+    "proofRows": 31,
     "injectedTool": "addNode",
     "closeItems": 1,
     "closeBytes": 4096
@@ -40,7 +40,6 @@
     "setProjectionParam",
     "setDislocateOption",
     "setNodeSelection",
-    "setPanelPage",
     "setReferenceSelection",
     "referenceHover",
     "engagementInput",
@@ -352,14 +351,6 @@
       "id": "loadRawRequest",
       "intendedLanes": [
         "hostEffect"
-      ],
-      "disposition": "migrated",
-      "blocker": "none"
-    },
-    {
-      "id": "setPanelPage",
-      "intendedLanes": [
-        "config"
       ],
       "disposition": "migrated",
       "blocker": "none"

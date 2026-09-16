@@ -20,8 +20,8 @@ use semio_framework::ToolExecutionContract;
 use semio_framework_plugin::plugin_app_close_prelude as ui;
 use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase, HasChildren};
 use semio_framework_plugin::{
-    AppIo, ArtifactKindSpec, ArtifactPresentation, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, BuiltNode, ConfigView, Emit, Fault, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload,
-    MediaPortDirection, MediaPortSpec, MediaType, ModeDefinition, NoConfig, NoConfigMutation, OsMediaCapability, PanelGroup, PanelTabDefinition, PanelTabKind, PluginAssemblyError, PortMultiplicity, SurfaceKind, UiAssemblyResult, WindowConfigOwner,
+    tree_item_desc, ui_node_list, AppIo, ArtifactKindSpec, ArtifactPresentation, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, BuiltNode, ConfigView, Emit, Fault, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload,
+    MediaPortDirection, MediaPortSpec, MediaType, ModeDefinition, NoConfig, NoConfigMutation, OsMediaCapability, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, PortMultiplicity, SurfaceKind, UiAssemblyResult, WindowConfigOwner,
     WindowKindDefinition, WindowLayout,
     WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode, WindowOptions,
 };
@@ -132,6 +132,10 @@ fn render_text(value: impl Into<String>) -> UiAssemblyResult<BuiltNode> {
     ui::text(label).try_build().map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "norm UI text build failed"))
 }
 
+fn norm_ui_label(value: impl Into<String>) -> UiAssemblyResult<ui::Label> {
+    ui::Label::try_from(value.into()).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "norm UI label admission failed"))
+}
+
 fn render_text_chunks(value: &str) -> UiAssemblyResult<BuiltNode> {
     if value.len() <= ui::UI_TEXT_MAX_BYTES {
         return render_text(value);
@@ -195,10 +199,19 @@ pub fn render_catalogue(label: &str) -> UiAssemblyResult<BuiltNode> {
 pub fn render_inspection(report: &CheckReport, selected_check_index: Option<u32>) -> UiAssemblyResult<BuiltNode> {
     let checks = &report.checks;
     let index = selected_check_index.map(|value| value as usize).filter(|index| *index < checks.len()).unwrap_or(0);
-    match checks.get(index) {
-        Some(check) => render_text(format!("{check:?}")),
-        None => render_text("No checks"),
-    }
+    let Some(check) = checks.get(index) else {
+        let items = ui_node_list([tree_item_desc("norm-inspection.empty", norm_ui_label("Check")?, Some("No checks".into()))])?;
+        return PanelTreeBuilder::new("norm-inspection")?.section("norm-inspection.summary", Some(norm_ui_label("Inspection")?), true, items)?.build();
+    };
+    let items = ui_node_list([
+        tree_item_desc("norm-inspection.check.clause", norm_ui_label("Clause")?, Some(check.clause.to_string())),
+        tree_item_desc("norm-inspection.check.status", norm_ui_label("Status")?, Some(format!("{:?}", check.status))),
+        tree_item_desc("norm-inspection.check.utilization", norm_ui_label("Utilization")?, Some(format!("{:.2}", check.utilization))),
+        tree_item_desc("norm-inspection.check.message", norm_ui_label("Message")?, Some(check.message.clone())),
+    ])?;
+    PanelTreeBuilder::new("norm-inspection")?
+        .section("norm-inspection.check", Some(norm_ui_label(format!("Check {}", index + 1))?), true, items)?
+        .build()
 }
 
 /// ❓️ The unknown-body-key fallback every norm app's `render` ends with.

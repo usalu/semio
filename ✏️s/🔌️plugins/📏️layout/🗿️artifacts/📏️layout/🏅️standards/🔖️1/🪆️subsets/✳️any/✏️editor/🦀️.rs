@@ -25,7 +25,7 @@ use semio_framework_plugin::app::{ArtifactMediaExportJobRequest, ArtifactOwnedTo
 #[cfg(test)]
 use semio_framework_plugin::App;
 use semio_framework_plugin::{
-    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, ArtifactEditor, ArtifactKindSpec, ArtifactView, ConfigView, DraftView, Editor, EditorApp, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec,
+    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, ArtifactEditor, ArtifactKindSpec, ArtifactView, ConfigView, DraftView, DslValue, Editor, EditorApp, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec,
     InteractionDefinition, InteractionRef, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, MergeMode, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, OsMediaCapability, SelectionMethod, SelectionMode, SelectionSpec,
     WindowEngagement, WindowEngagementInput, WindowEngagementPossible, WindowEngagementStatus, CLEAR_SELECTION_ACTION_ID, INTERACTION_HOVER_ACTION_ID, INTERACTION_SELECT_ACTION_ID,
 };
@@ -88,16 +88,6 @@ pub fn ui_value_map<const N: usize>(mut values: [(&'static str, semio_framework_
         builder.push(key.to_owned(), value).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map entry admission failed"))?;
     }
     Ok(semio_framework_plugin::UiValue::Map(builder.finish()))
-}
-
-/// 🌳️ Admits fallibly assembled UI nodes into fixed child storage.
-pub fn ui_node_list(values: impl IntoIterator<Item = semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode>>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiFixedList<semio_framework_plugin::BuiltNode>> {
-    let mut nodes = semio_framework_plugin::UiFixedList::default();
-    for value in values {
-        let node = value?;
-        nodes.try_push(node).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI node admission failed"))?;
-    }
-    Ok(nodes)
 }
 
 //#region 🔖️Interaction
@@ -188,8 +178,146 @@ use crate::editor::layout::commands::{
 };
 //#endregion 🔖️Commands
 
+//#region 🔖️ActionBridge
+/// 🎯️ Folds the host's `{action, args}` vocabulary (camelCase keys, JSON floats, control `value`s) into
+/// the snake_case `FromValue` payloads of `🎮️commands/*`, one arm per `LayoutCommand` row.
+mod args_bridge {
+    use super::*;
+    use semio_framework_plugin::{FaultCode, FaultOrigin};
+
+    fn snake(key: &str) -> String {
+        let mut out = String::with_capacity(key.len() + 4);
+        for ch in key.chars() {
+            if ch.is_ascii_uppercase() {
+                out.push('_');
+                out.push(ch.to_ascii_lowercase());
+            } else {
+                out.push(ch);
+            }
+        }
+        out
+    }
+
+    fn put(entries: &mut Vec<(String, DslValue)>, key: &str, value: DslValue) {
+        entries.retain(|(existing, _)| existing != key);
+        entries.push((key.to_string(), value));
+    }
+
+    /// 🔢️ The host's JSON round trip turns every integer into `Number::Float`; the `i64`/`u64` codecs
+    /// decode EXACT integers only, so whole finite floats get their integer variant back (`f64` fields
+    /// accept any `Number` variant, so nothing else changes).
+    fn integral(value: DslValue) -> DslValue {
+        match value {
+            DslValue::Number(dsl::Number::Float(float)) if float.is_finite() && float.fract() == 0.0 && float.abs() < 9.007_199_254_740_992e15 => {
+                if float >= 0.0 { DslValue::Number(dsl::Number::UInt(float as u64)) } else { DslValue::Number(dsl::Number::Int(float as i64)) }
+            }
+            DslValue::Array(items) => DslValue::Array(items.into_iter().map(integral).collect()),
+            DslValue::Object(entries) => DslValue::Object(entries.into_iter().map(|(key, value)| (key, integral(value))).collect()),
+            other => other,
+        }
+    }
+
+    /// 📝️ Prints a host control value into the `String` field the patch/engagement verbs carry
+    /// (`"512"`, `"true"`, or the text itself) — the reducers re-parse per field.
+    fn stringify(value: DslValue) -> DslValue {
+        match value {
+            DslValue::String(_) => value,
+            DslValue::Null => DslValue::String(String::new()),
+            other => DslValue::String(dsl::json::to_json_string(&other)),
+        }
+    }
+
+    /// 🔁️ Snake-cases every key of `args`, applies `aliases` (snake_case source → destination, first
+    /// present source wins and never overwrites a present destination) and seeds `defaults` for keys
+    /// still absent.
+    fn fold(args: Option<&DslValue>, aliases: &[(&str, &str)], defaults: &[(&str, DslValue)]) -> DslValue {
+        let mut entries: Vec<(String, DslValue)> = Vec::new();
+        if let Some(DslValue::Object(object)) = args {
+            for (key, value) in object {
+                put(&mut entries, &snake(key), integral(value.clone()));
+            }
+        }
+        for (from, into) in aliases {
+            if entries.iter().any(|(key, _)| key == into) {
+                continue;
+            }
+            if let Some((_, value)) = entries.iter().find(|(key, _)| key == from).cloned() {
+                put(&mut entries, into, value);
+            }
+        }
+        for (key, value) in defaults {
+            if !entries.iter().any(|(existing, _)| existing == key) {
+                entries.push(((*key).to_string(), value.clone()));
+            }
+        }
+        DslValue::Object(entries)
+    }
+
+    /// 📷️ The canvas nests its pose under `camera`; a flat `{x, y, zoom}` payload is admitted as the
+    /// pose itself.
+    fn nest_camera(mut folded: DslValue) -> DslValue {
+        if let DslValue::Object(entries) = &mut folded {
+            if !entries.iter().any(|(key, _)| key == "camera") {
+                let pose = DslValue::Object(entries.iter().filter(|(key, _)| matches!(key.as_str(), "x" | "y" | "zoom")).cloned().collect());
+                entries.push(("camera".into(), pose));
+            }
+        }
+        folded
+    }
+
+    fn with_text_value(mut folded: DslValue) -> DslValue {
+        if let DslValue::Object(entries) = &mut folded {
+            if let Some(slot) = entries.iter_mut().find(|(key, _)| key == "value") {
+                slot.1 = stringify(slot.1.clone());
+            }
+        }
+        folded
+    }
+
+    fn decode<T: dsl::FromValue>(action: &str, value: DslValue) -> Result<T, Fault> {
+        T::from_value(value).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("app.command.invalid-args"), format!("layout action '{action}' arguments do not decode: {error}")))
+    }
+
+    pub fn command_from_action(action: &str, args: Option<&DslValue>) -> Result<LayoutCommand, Fault> {
+        const PAGE: &[(&str, &str)] = &[("id", "page_id"), ("value", "page_id")];
+        const TEXT: &[(&str, &str)] = &[("text", "value"), ("input", "value")];
+        let text = |value: &str| DslValue::String(value.into());
+        let zero = || DslValue::Number(dsl::Number::Float(0.0));
+        let plain = || fold(args, &[], &[]);
+        Ok(match action {
+            "setActivePage" => LayoutCommand::SetActivePage(decode(action, fold(args, PAGE, &[]))?),
+            "focusPreflightIssue" => LayoutCommand::FocusPreflightIssue(decode(action, fold(args, &[("id", "object_id"), ("frame_id", "object_id")], &[]))?),
+            "engagementInput" => LayoutCommand::EngagementInput(decode(action, with_text_value(fold(args, TEXT, &[("value", text(""))])))?),
+            "canvasPointerDown" => LayoutCommand::CanvasPointerDown(decode(action, fold(args, &[("shift_key", "extend")], &[("button", DslValue::Number(dsl::Number::Int(0))), ("extend", DslValue::Bool(false))]))?),
+            "canvasPointerMove" => LayoutCommand::CanvasPointerMove(decode(action, fold(args, &[], &[("samples", DslValue::Array(Vec::new()))]))?),
+            "canvasPointerUp" => LayoutCommand::CanvasPointerUp(decode(action, fold(args, &[], &[("cancelled", DslValue::Bool(false))]))?),
+            "canvasDragOver" => LayoutCommand::CanvasDragOver(decode(action, fold(args, &[("drop_kind", "kind")], &[]))?),
+            "canvasDragLeave" => LayoutCommand::CanvasDragLeave(decode(action, plain())?),
+            "setCamera" => LayoutCommand::SetCamera(decode(action, nest_camera(plain()))?),
+            "addFrame" => LayoutCommand::AddFrame(decode(action, fold(args, &[("value", "kind")], &[("kind", text("rect"))]))?),
+            "addPage" => LayoutCommand::AddPage(decode(action, plain())?),
+            "patchPage" => LayoutCommand::PatchPage(decode(action, with_text_value(fold(args, &[("id", "page_id")], &[("value", text(""))])))?),
+            "patchFrame" => LayoutCommand::PatchFrame(decode(action, with_text_value(fold(args, &[("id", "frame_id")], &[("value", text(""))])))?),
+            "canvasDrop" => LayoutCommand::CanvasDrop(decode(action, fold(args, &[("drop_kind", "kind")], &[("x", zero()), ("y", zero()), ("width", zero()), ("height", zero())]))?),
+            "exportPng" => LayoutCommand::ExportPng(decode(action, fold(args, PAGE, &[]))?),
+            "exportSvg" => LayoutCommand::ExportSvg(decode(action, fold(args, PAGE, &[]))?),
+            "exportPdf" => LayoutCommand::ExportPdf(decode(action, fold(args, PAGE, &[]))?),
+            "exportPackage" => LayoutCommand::ExportPackage(decode(action, plain())?),
+            "engagementSubmit" => LayoutCommand::EngagementSubmit(decode(action, with_text_value(fold(args, TEXT, &[("value", text(""))])))?),
+            _ => return Err(Fault::new(FaultOrigin::App, FaultCode::new("app.command.unsupported"), format!("the layout editor has no command for action '{action}'"))),
+        })
+    }
+}
+//#endregion 🔖️ActionBridge
+
 //#region 🧵️RetainedCommands
-const LAYOUT_RETAINED_TOOL_IDS: &[&str] = &["setActivePage", "focusPreflightIssue", "engagementInput", "canvasPointerUp", "canvasDragOver", "canvasDragLeave", "setCamera", "engagementSubmit", "canvasDrop"];
+/// 🧵️ Every shell-reachable verb is a bounded first-step tool (ticket 26/09/16/LAYOUT-PLUGIN-END-TO-END):
+/// the framework refuses UI dispatch of any command not classified `Migrated`, so the six content verbs
+/// that stayed `BatchOnlyPendingRewrite` (`addFrame`/`addPage`/`patchPage`/`patchFrame` and the pointer
+/// down/move gestures) were dead in the running app. Exports keep their own resumable factory.
+const LAYOUT_RETAINED_TOOL_IDS: &[&str] = &[
+    "setActivePage", "focusPreflightIssue", "engagementInput", "canvasPointerDown", "canvasPointerMove", "canvasPointerUp", "canvasDragOver", "canvasDragLeave", "setCamera", "addFrame", "addPage", "patchPage", "patchFrame", "engagementSubmit", "canvasDrop",
+];
 const LAYOUT_RETAINED_PAYLOAD_SCHEMA: &str = "layout.layout.tool-command.v1";
 const LAYOUT_RETAINED_RAW_BYTES: usize = 8_192;
 const LAYOUT_RETAINED_WORK_ITEMS: usize = 1;
@@ -217,7 +345,8 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Lay
         _interaction: &protocol::InteractionState,
         context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<LayoutPlayApp>>>,
     ) -> Option<usize> {
-        (!self.completed && command.command_id() == self.tool_id && context?.view_state.is_some()).then_some(1)
+        let _ = context;
+        (!self.completed && command.command_id() == self.tool_id).then_some(1)
     }
 
     fn step(
@@ -228,11 +357,14 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Lay
         if self.completed || input.command.command_id() != self.tool_id {
             return Err(Fault::from("layout-window-work-terminal"));
         }
-        let context = input.context.ok_or_else(|| Fault::from("layout-window-context-required"))?;
-        let view = context.view_state.as_ref().ok_or_else(|| Fault::from("layout-window-view-required"))?;
-        let mut config = blueprint::config::from_snapshot(context.window_config.as_ref());
-        let mut transient = blueprint::transient::from_snapshot(context.window_transient.as_ref());
-        let config_view = ConfigView { snapshot: input.config, window: context.window_config.as_ref() };
+        // 🪟️ Window-lane verbs need the addressed Blueprint window; the document-lane verbs
+        // (`addFrame`/`patchPage`/…) and the host-only pointer gestures dispatch without one.
+        let window_config_snapshot = input.context.and_then(|context| context.window_config.as_ref());
+        let window = input.context.and_then(|context| context.view_state.as_ref());
+        let addressed_window = || window.ok_or_else(|| Fault::from("layout-window-view-required"));
+        let mut config = blueprint::config::from_snapshot(window_config_snapshot);
+        let mut transient = blueprint::transient::from_snapshot(input.context.and_then(|context| context.window_transient.as_ref()));
+        let config_view = ConfigView { snapshot: input.config, window: window_config_snapshot };
         let doc = ArtifactView::with_operation(input.snapshot, input.history, input.operation.clone());
         let mut emit = input.command.dispatch(&doc, &config_view)?;
         let mut window_config = None;
@@ -240,23 +372,30 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Lay
         match input.command {
             LayoutCommand::SetActivePage(payload) => {
                 config.active_page_id = payload.page_id.clone();
-                window_config = Some(blueprint::config::addressed(view, config)?);
+                window_config = Some(blueprint::config::addressed(addressed_window()?, config)?);
             }
             LayoutCommand::FocusPreflightIssue(payload) => {
                 if let Some(page_id) = &payload.page_id {
                     config.active_page_id = page_id.clone();
-                    window_config = Some(blueprint::config::addressed(view, config)?);
+                    window_config = Some(blueprint::config::addressed(addressed_window()?, config)?);
                 }
             }
             LayoutCommand::SetCamera(payload) => {
                 config.camera = payload.camera.clone();
-                window_config = Some(blueprint::config::addressed(view, config)?);
+                window_config = Some(blueprint::config::addressed(addressed_window()?, config)?);
             }
             LayoutCommand::EngagementInput(payload) => {
                 transient.engagement_input = payload.value.clone();
-                window_transient = Some(blueprint::transient::addressed(view, transient)?);
+                window_transient = Some(blueprint::transient::addressed(addressed_window()?, transient)?);
+            }
+            LayoutCommand::AddPage(_) => {
+                if let Some(view) = window {
+                    config.active_page_id = format!("page-{}", input.snapshot.pages.len() + 1);
+                    window_config = Some(blueprint::config::addressed(view, config)?);
+                }
             }
             LayoutCommand::CanvasDragOver(payload) => {
+                let view = addressed_window()?;
                 if view.window_instances.iter().any(|window| view.window_id.as_deref() == Some(&window.id) && window.window_kind_id == LAYOUT_PLAY_WINDOW_BLUEPRINT) {
                     let camera = infinite_canvas::camera::Camera { x: config.camera.x, y: config.camera.y, zoom: config.camera.zoom.max(0.0001) };
                     let viewport = infinite_canvas::camera::Viewport { width: payload.width.max(1.0) as u32, height: payload.height.max(1.0) as u32, dpr: 1.0 };
@@ -266,6 +405,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Lay
                 }
             }
             LayoutCommand::CanvasDragLeave(_) | LayoutCommand::CanvasDrop(_) => {
+                let view = addressed_window()?;
                 transient.drop_preview = crate::LayoutDropPreviewState::default();
                 window_transient = Some(blueprint::transient::addressed(view, transient)?);
                 if let LayoutCommand::CanvasDrop(payload) = input.command {
@@ -276,7 +416,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Lay
                     }
                 }
             }
-            LayoutCommand::CanvasPointerUp(_) | LayoutCommand::EngagementSubmit(_) => {}
+            LayoutCommand::AddFrame(_) | LayoutCommand::PatchPage(_) | LayoutCommand::PatchFrame(_) | LayoutCommand::CanvasPointerDown(_) | LayoutCommand::CanvasPointerMove(_) | LayoutCommand::CanvasPointerUp(_) | LayoutCommand::EngagementSubmit(_) => {}
             _ => return Err(Fault::from("layout-window-work-route-rejected")),
         }
         if let Some(mutation) = window_config { emit.window_config_mutations.push(mutation); }
@@ -347,10 +487,16 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for LayoutRetainedComma
         ArtifactToolPublicationContract { tool_id: "setActivePage", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
         ArtifactToolPublicationContract { tool_id: "focusPreflightIssue", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
         ArtifactToolPublicationContract { tool_id: "engagementInput", lanes: &[ArtifactToolPublicationLane::WindowTransient] },
+        ArtifactToolPublicationContract { tool_id: "canvasPointerDown", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+        ArtifactToolPublicationContract { tool_id: "canvasPointerMove", lanes: &[ArtifactToolPublicationLane::HostOnly] },
         ArtifactToolPublicationContract { tool_id: "canvasPointerUp", lanes: &[ArtifactToolPublicationLane::HostOnly] },
         ArtifactToolPublicationContract { tool_id: "canvasDragOver", lanes: &[ArtifactToolPublicationLane::WindowTransient] },
         ArtifactToolPublicationContract { tool_id: "canvasDragLeave", lanes: &[ArtifactToolPublicationLane::WindowTransient] },
         ArtifactToolPublicationContract { tool_id: "setCamera", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
+        ArtifactToolPublicationContract { tool_id: "addFrame", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "addPage", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::WindowConfig] },
+        ArtifactToolPublicationContract { tool_id: "patchPage", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "patchFrame", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "engagementSubmit", lanes: &[ArtifactToolPublicationLane::HostOnly] },
         ArtifactToolPublicationContract { tool_id: "canvasDrop", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::WindowConfig, ArtifactToolPublicationLane::WindowTransient] },
     ];
@@ -366,7 +512,7 @@ impl LayoutRetainedProofs {
         factory: "LayoutRetainedCommandJobFactory",
         factory_type: LayoutRetainedCommandJobFactory,
         contract: ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
-        tools: ["setActivePage", "focusPreflightIssue", "engagementInput", "canvasPointerUp", "canvasDragOver", "canvasDragLeave", "setCamera", "engagementSubmit", "canvasDrop"]
+        tools: ["setActivePage", "focusPreflightIssue", "engagementInput", "canvasPointerDown", "canvasPointerMove", "canvasPointerUp", "canvasDragOver", "canvasDragLeave", "setCamera", "addFrame", "addPage", "patchPage", "patchFrame", "engagementSubmit", "canvasDrop"]
     }
 }
 
@@ -471,6 +617,15 @@ impl ArtifactEditor for LayoutPlayApp {
     /// 🏷️ Supplied wholesale by `app_commands!`'s generated `command_id()`.
     fn command_id(command: &LayoutCommand) -> &'static str {
         command.command_id()
+    }
+
+    /// 🎯️ Host-action bridge into the closed `LayoutCommand` enum (ticket
+    /// 26/09/16/LAYOUT-PLUGIN-END-TO-END). The React/wgpu shells still speak `{action, args}` with
+    /// camelCase argument keys; every `🎮️commands/*` payload derives `FromValue` over its own
+    /// snake_case field names, so this boundary folds the keys and decodes — the default trait impl
+    /// refuses every app action outright, which left every panel/canvas verb dead in the shell.
+    fn command_from_action(action: &str, args: Option<&DslValue>) -> Result<Self::Command, Fault> {
+        args_bridge::command_from_action(action, args)
     }
 
     fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
@@ -644,10 +799,10 @@ impl ArtifactEditor for LayoutPlayApp {
         match body_key {
             LAYOUT_PLAY_BODY_BLUEPRINT => blueprint::render(&mut engine, document, &config, &transient),
             LAYOUT_PLAY_BODY_PREVIEW => preview::render(&mut engine, document, &config, &transient),
-            LAYOUT_PLAY_BODY_ARTIFACT => document_panel::render(document, &config, labels),
-            LAYOUT_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels),
+            LAYOUT_PLAY_BODY_ARTIFACT => document_panel::render(document, &config, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, LAYOUT_PLAY_BODY_ARTIFACT)),
+            LAYOUT_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels, &semio_framework_plugin::TreeWindows::for_body(view_state, LAYOUT_PLAY_BODY_CATALOGUE)),
             LAYOUT_PLAY_BODY_INSPECTION => inspection_panel::render(document, &config, labels),
-            LAYOUT_PLAY_BODY_PREFLIGHT => preflight_panel::render(document, labels),
+            LAYOUT_PLAY_BODY_PREFLIGHT => preflight_panel::render(document, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, LAYOUT_PLAY_BODY_PREFLIGHT)),
             _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "layout error text admission failed")),
         }
         .map(semio_framework_plugin::built_to_component_tree)
@@ -677,10 +832,10 @@ impl ArtifactEditor for LayoutPlayApp {
         match body_key {
             LAYOUT_PLAY_BODY_BLUEPRINT => blueprint::render(&mut engine, document, &config, &transient),
             LAYOUT_PLAY_BODY_PREVIEW => preview::render(&mut engine, document, &config, &transient),
-            LAYOUT_PLAY_BODY_ARTIFACT => document_panel::render(document, &config, labels),
-            LAYOUT_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels),
+            LAYOUT_PLAY_BODY_ARTIFACT => document_panel::render(document, &config, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, LAYOUT_PLAY_BODY_ARTIFACT)),
+            LAYOUT_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels, &semio_framework_plugin::TreeWindows::for_body(view_state, LAYOUT_PLAY_BODY_CATALOGUE)),
             LAYOUT_PLAY_BODY_INSPECTION => inspection_panel::render(document, &config, labels),
-            LAYOUT_PLAY_BODY_PREFLIGHT => preflight_panel::render(document, labels),
+            LAYOUT_PLAY_BODY_PREFLIGHT => preflight_panel::render(document, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, LAYOUT_PLAY_BODY_PREFLIGHT)),
             _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "layout error text admission failed")),
         }.map(semio_framework_plugin::built_to_component_tree)
     }
@@ -780,13 +935,13 @@ pub fn create_layout_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("exportSvg", InteractiveJobClassification::Migrated)
             .action_interactive_job("exportPdf", InteractiveJobClassification::Migrated)
             .action_interactive_job("exportPackage", InteractiveJobClassification::Migrated)
-            .action_interactive_job("addFrame", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("addPage", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("patchPage", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("patchFrame", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("addFrame", InteractiveJobClassification::Migrated)
+            .action_interactive_job("addPage", InteractiveJobClassification::Migrated)
+            .action_interactive_job("patchPage", InteractiveJobClassification::Migrated)
+            .action_interactive_job("patchFrame", InteractiveJobClassification::Migrated)
             .action_interactive_job("canvasDrop", InteractiveJobClassification::Migrated)
-            .action_interactive_job("canvasPointerDown", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("canvasPointerMove", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("canvasPointerDown", InteractiveJobClassification::Migrated)
+            .action_interactive_job("canvasPointerMove", InteractiveJobClassification::Migrated)
             // 📇️ Per-window action scoping — the content-authoring operations only make sense on the
             // interactive Blueprint surface; the read-only Preview surface renders output and never
             // creates or edits frames/pages. Exports, camera, pointer/drag, selection and hover are

@@ -2,7 +2,7 @@
 
 use crate::Block5dSnapshot;
 use crate::editor::block5d::terminology::Block5dLabels;
-use crate::editor::block5d::{block5d_action, ui_label, ui_node_list, ui_value_map, ui_value_text};
+use crate::editor::block5d::{block5d_action, ui_label, ui_value_map, ui_value_text};
 use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase, HasChildren, InputKind, Trigger};
 use semio_framework_plugin::{
     BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiAssemblyResult, UiText, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
@@ -38,7 +38,7 @@ fn ui_value(value: &str) -> UiAssemblyResult<UiText> {
 
 /// 🏷️ Wraps one built control in its labeled field row.
 fn field_row(id: &str, label: &str, control: BuiltNode) -> UiAssemblyResult<BuiltNode> {
-    ui::field(ui_label(label)?)
+    ui::tree_item(ui_label(label)?)
         .try_id(id)
         .map_err(|_| inspector_error("field-id"))?
         .try_children([control])
@@ -70,7 +70,7 @@ fn readonly_field(id: &str, label: &str, value: &str) -> UiAssemblyResult<BuiltN
 }
 
 pub fn render(definition: &Block5dSnapshot, labels: &Block5dLabels) -> UiAssemblyResult<BuiltNode> {
-    let rows = ui_node_list([
+    let rows = semio_framework_plugin::ui_node_list([
         text_field("block5d-play-inspector.name", labels.name.as_str(), &definition.part_kind.name, "name"),
         text_field("block5d-play-inspector.label", labels.label.as_str(), &definition.part_kind.label, "label"),
         readonly_field("block5d-play-inspector.grip-count", labels.grips.as_str(), &definition.grips.len().to_string()),

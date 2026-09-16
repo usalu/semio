@@ -429,7 +429,7 @@
                       "integer": false
                     },
                     "required": false,
-                    "default": 210000000000.0
+                    "default": 210000000000
                   }
                 ],
                 "inPalette": true,
@@ -844,7 +844,7 @@
                       "integer": false
                     },
                     "required": false,
-                    "default": 0.0
+                    "default": 0
                   },
                   {
                     "id": "wy",
@@ -2834,8 +2834,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "max": 1.0,
+                      "min": 0,
+                      "max": 1,
                       "integer": false
                     },
                     "presentation": {
@@ -5300,7 +5300,7 @@
                       "integer": false
                     },
                     "required": false,
-                    "default": 210000000000.0
+                    "default": 210000000000
                   }
                 ],
                 "inPalette": true,
@@ -5715,7 +5715,7 @@
                       "integer": false
                     },
                     "required": false,
-                    "default": 0.0
+                    "default": 0
                   },
                   {
                     "id": "wy",
@@ -7705,8 +7705,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "max": 1.0,
+                      "min": 0,
+                      "max": 1,
                       "integer": false
                     },
                     "presentation": {
@@ -10214,7 +10214,7 @@
             "children": [
               {
                 "kind": "stack",
-                "size": 50.0,
+                "size": 50,
                 "children": [
                   {
                     "kind": "window",
@@ -10225,7 +10225,7 @@
               },
               {
                 "kind": "stack",
-                "size": 50.0,
+                "size": 50,
                 "children": [
                   {
                     "kind": "window",
@@ -12056,7 +12056,7 @@
                       "integer": false
                     },
                     "required": false,
-                    "default": 0.0
+                    "default": 0
                   },
                   {
                     "id": "layers",
@@ -13747,8 +13747,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "max": 1.0,
+                      "min": 0,
+                      "max": 1,
                       "integer": false
                     },
                     "presentation": {
@@ -14164,7 +14164,7 @@
                       "integer": false
                     },
                     "required": false,
-                    "default": 0.0
+                    "default": 0
                   },
                   {
                     "id": "ay",
@@ -14183,7 +14183,7 @@
                       "integer": false
                     },
                     "required": false,
-                    "default": 0.0
+                    "default": 0
                   },
                   {
                     "id": "az",
@@ -14202,7 +14202,7 @@
                       "integer": false
                     },
                     "required": false,
-                    "default": 1.0
+                    "default": 1
                   },
                   {
                     "id": "angle",
@@ -16715,7 +16715,7 @@
                       "integer": false
                     },
                     "required": false,
-                    "default": 0.0
+                    "default": 0
                   },
                   {
                     "id": "layers",
@@ -18406,8 +18406,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "max": 1.0,
+                      "min": 0,
+                      "max": 1,
                       "integer": false
                     },
                     "presentation": {
@@ -18823,7 +18823,7 @@
                       "integer": false
                     },
                     "required": false,
-                    "default": 0.0
+                    "default": 0
                   },
                   {
                     "id": "ay",
@@ -18842,7 +18842,7 @@
                       "integer": false
                     },
                     "required": false,
-                    "default": 0.0
+                    "default": 0
                   },
                   {
                     "id": "az",
@@ -18861,7 +18861,7 @@
                       "integer": false
                     },
                     "required": false,
-                    "default": 1.0
+                    "default": 1
                   },
                   {
                     "id": "angle",
@@ -21023,7 +21023,7 @@
             "children": [
               {
                 "kind": "stack",
-                "size": 50.0,
+                "size": 50,
                 "children": [
                   {
                     "kind": "window",
@@ -21034,7 +21034,7 @@
               },
               {
                 "kind": "stack",
-                "size": 50.0,
+                "size": 50,
                 "children": [
                   {
                     "kind": "window",
@@ -21046,8 +21046,15 @@
             ]
           }
         },
-        "terminologies": [],
-        "terminologyBreadcrumbs": {},
+        "terminologies": [
+          "reuse"
+        ],
+        "terminologyBreadcrumbs": {
+          "reuse": [
+            "Entwerfen mit Bestand",
+            "Statik"
+          ]
+        },
         "tutorials": [],
         "dialogs": [],
         "mediaInputs": [],

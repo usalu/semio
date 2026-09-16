@@ -29,7 +29,7 @@ pub fn definition() -> PanelTabDefinition {
 /// `InteractionView` this wave — dropped rather than shown stale (matches the acceptance-bar
 /// precedent in lowpoly's inspection panel), always falling back to the schema+brush summary.
 pub fn render(document: &RasterDocument, runtime: &RasterConfig, labels: &RasterPlayLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    let rows = crate::editor::raster::ui_node_list([
+    let rows = semio_framework_plugin::ui_node_list([
         tree_item_desc("raster-play-inspector.schema", ui_label(labels.schema_prefix.as_str())?, Some(document.schema.clone())),
         tree_item_desc("raster-play-inspector.brush", ui_label(labels.brush_prefix.as_str())?, Some(format!("{} @ {}", runtime.brush_size, runtime.brush_opacity))),
     ])?;

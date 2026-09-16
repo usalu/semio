@@ -153,6 +153,89 @@ pub(super) fn every_command() -> Vec<LayoutCommand> {
 }
 //#endregion 🔖️CommandSurface
 
+//#region 🔖️ActionBridge
+/// 🌉️ Every command row the shells reach by action id must decode through `command_from_action`
+/// (camelCase host keys → the payloads' own snake_case `FromValue` names), and its `command_id`
+/// must round-trip — the boundary that was missing entirely before ticket
+/// 26/09/16/LAYOUT-PLUGIN-END-TO-END (every shell action was refused as "not framework-reserved").
+#[test]
+fn command_from_action_round_trips_every_command_id() {
+    for command in every_command() {
+        let id = command.command_id();
+        let args = dsl::ToValue::to_value(&command);
+        // 🔁️ The `DslOps` wire shape is `{keyword: payload}`; the shell sends the bare payload object.
+        let payload = match &args {
+            dsl::DslValue::Object(entries) if entries.len() == 1 => entries[0].1.clone(),
+            other => other.clone(),
+        };
+        let camel = camel_case_keys(&payload);
+        let bridged = LayoutPlayApp::command_from_action(id, Some(&camel)).unwrap_or_else(|error| panic!("action {id} failed to bridge: {}", error.message));
+        assert_eq!(bridged.command_id(), id, "command_id mismatch for action {id}");
+        assert_eq!(bridged, command, "payload drifted through the bridge for action {id}");
+    }
+    assert!(LayoutPlayApp::command_from_action("nonsense", None).is_err());
+}
+
+/// 🐫️ The shell's spelling of the payload keys.
+fn camel_case_keys(value: &dsl::DslValue) -> dsl::DslValue {
+    match value {
+        dsl::DslValue::Object(entries) => dsl::DslValue::Object(
+            entries
+                .iter()
+                .map(|(key, value)| {
+                    let mut camel = String::new();
+                    let mut upper = false;
+                    for ch in key.chars() {
+                        if ch == '_' { upper = true; } else if upper { camel.push(ch.to_ascii_uppercase()); upper = false; } else { camel.push(ch); }
+                    }
+                    (camel, value.clone())
+                })
+                .collect(),
+        ),
+        other => other.clone(),
+    }
+}
+
+/// 🧱️ The host's control contracts (JSON floats, numeric `value`s, flat camera poses, palette
+/// defaults) reach the same rows.
+#[test]
+fn command_from_action_bridges_host_control_contracts() {
+    use crate::LayoutCamera;
+    let args = |json: serde_json::Value| dsl::os_pack::json_to_dsl_value(&dsl::os_pack::json::parse(&json.to_string()).expect("fixture JSON"));
+    assert_eq!(
+        LayoutPlayApp::command_from_action("addFrame", Some(&args(serde_json::json!({ "kind": "text", "x": 12, "y": 24.5 })))).expect("addFrame bridge"),
+        LayoutCommand::AddFrame(add_frame::AddFrame { kind: "text".into(), x: Some(12.0), y: Some(24.5) })
+    );
+    assert_eq!(LayoutPlayApp::command_from_action("addFrame", None).expect("addFrame default kind"), LayoutCommand::AddFrame(add_frame::AddFrame { kind: "rect".into(), x: None, y: None }));
+    assert_eq!(LayoutPlayApp::command_from_action("addPage", Some(&args(serde_json::json!({ "windowId": "layout-blueprint" })))).expect("addPage ignores window keys"), LayoutCommand::AddPage(add_page::AddPage {}));
+    assert_eq!(
+        LayoutPlayApp::command_from_action("patchFrame", Some(&args(serde_json::json!({ "frameId": "frame-1", "field": "columns", "value": 2 })))).expect("patchFrame bridge"),
+        LayoutCommand::PatchFrame(patch_frame::PatchFrame { frame_id: "frame-1".into(), page_id: None, field: "columns".into(), value: "2".into() })
+    );
+    assert_eq!(
+        LayoutPlayApp::command_from_action("patchPage", Some(&args(serde_json::json!({ "pageId": "page-1", "field": "width", "value": "300" })))).expect("patchPage bridge"),
+        LayoutCommand::PatchPage(patch_page::PatchPage { page_id: Some("page-1".into()), field: "width".into(), value: "300".into() })
+    );
+    assert_eq!(
+        LayoutPlayApp::command_from_action("setActivePage", Some(&args(serde_json::json!({ "pageId": "page-2" })))).expect("setActivePage bridge"),
+        LayoutCommand::SetActivePage(set_active_page::SetActivePage { page_id: "page-2".into() })
+    );
+    assert_eq!(
+        LayoutPlayApp::command_from_action("setCamera", Some(&args(serde_json::json!({ "surfaceId": "layout.play.blueprint", "x": 1, "y": 2, "zoom": 1.5 })))).expect("flat camera bridge"),
+        LayoutCommand::SetCamera(set_camera::SetCamera { surface_id: Some("layout.play.blueprint".into()), camera: LayoutCamera { x: 1.0, y: 2.0, zoom: 1.5 } })
+    );
+    assert_eq!(
+        LayoutPlayApp::command_from_action("canvasPointerDown", Some(&args(serde_json::json!({ "surfaceId": "layout.play.blueprint", "button": 0, "shiftKey": true, "x": 10, "y": 20, "width": 800, "height": 600 })))).expect("pointer down bridge"),
+        LayoutCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown { surface_id: Some("layout.play.blueprint".into()), button: 0, extend: true, x: 10.0, y: 20.0, width: 800.0, height: 600.0 })
+    );
+    assert_eq!(
+        LayoutPlayApp::command_from_action("engagementSubmit", Some(&args(serde_json::json!({ "value": "export png" })))).expect("engagement bridge"),
+        LayoutCommand::EngagementSubmit(engagement_submit::EngagementSubmit { value: "export png".into() })
+    );
+    assert!(LayoutPlayApp::command_from_action("patchFrame", Some(&args(serde_json::json!({ "field": "fill" })))).is_err(), "a required field must not be defaulted silently");
+}
+//#endregion 🔖️ActionBridge
+
 //#region 🔖️ManifestSanity
 #[semio_framework_async_macros::async_test]
 async fn the_manifest_stitches_every_taxonomy_node() {

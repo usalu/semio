@@ -27,6 +27,32 @@ async fn reset_snapshot_restores_default_snapshot() {
 }
 
 #[semio_framework_async_macros::async_test]
+async fn set_active_example_loads_hexagonal_cut_concrete_forest_left() {
+    use semio_framework_plugin::Effect;
+    let snapshot = crate::empty_shooting_snapshot();
+    let history = semio_framework_plugin::HistoryView::empty();
+    let doc = ArtifactView::new(&snapshot, &history);
+    let cfg_snapshot = ShootingConfig::default();
+    let cfg = ConfigView { snapshot: &cfg_snapshot, window: None };
+    let mut ctx = ShootingDispatchCtx::default();
+    let emit = set_active_example::handle(
+        &set_active_example::SetActiveExample {
+            example_id: set_active_example::SHOOTING_EXAMPLE_HEXAGONAL_CUT_CONCRETE_FOREST_LEFT.into(),
+        },
+        &doc,
+        &cfg,
+        &mut ctx,
+    )
+    .expect("handle");
+    let Effect::LoadDocument { pack, .. } = emit.effects.first().expect("setActiveExample must emit LoadDocument") else {
+        panic!("expected LoadDocument");
+    };
+    let loaded = <ShootingSnapshot as store::ArtifactPack>::decode_pack(pack).expect("decode");
+    let asset = loaded.assets.first().expect("forest asset");
+    assert_eq!(asset.url, "/mesh/🧊️hexagonal-cut-concrete-forest-left.glb");
+}
+
+#[semio_framework_async_macros::async_test]
 async fn load_request_declares_the_import_snapshot_json_import_action() {
     use semio_framework_plugin::Effect;
     let mut app = shooting_app().await;

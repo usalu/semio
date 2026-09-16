@@ -14,7 +14,12 @@ export default defineConfig({
     name: "@semio-tech/mit-bestand-demonstrator",
     environment: "node",
     include: [],
-    includeSource: ["./📜️script.ts", "./🪧️brand.ts"],
+    includeSource: [
+      "./📜️script.ts",
+      "./🪧️brand.ts",
+      "./🔨️modules/🧩️runtime/♻️activation/🟦️.ts",
+      "./🧪️tests/🧪️demonstratorpanebranding/🟦️.ts",
+    ],
     passWithNoTests: false,
   },
 });

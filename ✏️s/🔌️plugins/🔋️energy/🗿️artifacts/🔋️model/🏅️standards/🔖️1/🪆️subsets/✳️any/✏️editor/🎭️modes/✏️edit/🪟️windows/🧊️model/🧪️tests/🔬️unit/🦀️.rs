@@ -84,12 +84,12 @@ async fn the_scene_target_id_is_the_one_the_tree_and_the_inspector_use() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn selection_retints_the_baked_mesh_colours() {
+async fn selection_publishes_the_lane_without_rebaking_mesh_colours() {
     let model = bestest_600();
     let plain = render(&model, &EnergyModelInteractionSnapshot::default(), None, None).expect("plain");
     let selected_id = energy_target_id(model.surfaces[0].id);
     let picked = render(&model, &EnergyModelInteractionSnapshot { selected_ids: vec![selected_id.clone()], hovered_ids: Vec::new() }, None, None).expect("picked");
-    assert_ne!(scene_of(&plain).meshes_json, scene_of(&picked).meshes_json, "a selected surface is tinted in the baked vertex colours");
+    assert_eq!(scene_of(&plain).meshes_json, scene_of(&picked).meshes_json, "interaction paint is host-owned; geometry stays on the class swatch");
     assert!(scene_of(&picked).selection_json.contains(&selected_id), "the selection lane names the picked id");
 }
 

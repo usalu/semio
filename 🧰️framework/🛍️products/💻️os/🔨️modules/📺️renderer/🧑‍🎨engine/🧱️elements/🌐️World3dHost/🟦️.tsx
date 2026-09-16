@@ -866,6 +866,7 @@ type WorldEnvironmentMaterialRecord = {
   readonly roughness?: number;
   readonly emissive?: string;
   readonly emissiveIntensity?: number;
+  readonly stroke?: string;
 };
 
 type WorldEnvironmentRecord = {
@@ -2127,10 +2128,12 @@ function PaintTexturedMesh({
   readonly children?: React.ReactNode;
 } & ComponentProps<"mesh">) {
   const paintMap = textureBase64 ? useLoader(TextureLoader, paintTextureUrl(textureBase64)) : null;
-  // Per-vertex colors (e.g. FEM stress contours) multiply against the material's own `color` in
-  // three.js, so white lets them show through unmodified — `style.meshColor` would otherwise tint them.
+  // Per-vertex colours (energy class swatches, FEM contours) multiply against the material `color` in
+  // three.js — white lets them show through in the neutral/disabled styles only. Selected/hovered paint
+  // must match url-backed meshes (puzzle 3d, cad): solid token fill + emissive, not a guest-side bake.
   const hasVertexColors = geometry.hasAttribute("color");
-  const celebrating = styleKind === "celebrated" && !hasVertexColors;
+  const preserveVertexColors = hasVertexColors && (styleKind === "neutral" || styleKind === "disabled");
+  const celebrating = styleKind === "celebrated" && !preserveVertexColors;
   return (
     <mesh geometry={geometry} {...meshProps}>
       {celebrating ? (
@@ -2138,15 +2141,15 @@ function PaintTexturedMesh({
       ) : (
         <meshStandardMaterial
           key={worldMeshMaterialRevision(styleKind)}
-          color={hasVertexColors ? "#ffffff" : style.meshColor}
-          vertexColors={hasVertexColors}
+          color={preserveVertexColors ? "#ffffff" : style.meshColor}
+          vertexColors={preserveVertexColors}
           map={paintMap ?? undefined}
           side={DoubleSide}
           flatShading={flatShading}
           metalness={0}
           roughness={1}
-          emissive={hasVertexColors ? "#000000" : style.meshColor}
-          emissiveIntensity={hasVertexColors ? 0 : style.emissiveIntensity}
+          emissive={preserveVertexColors ? "#000000" : style.meshColor}
+          emissiveIntensity={preserveVertexColors ? 0 : style.emissiveIntensity}
           transparent={style.opacity < 1}
           opacity={style.opacity}
         />
@@ -3090,7 +3093,7 @@ const WorldInstanceNode = reactHostPort.memo(function WorldInstanceNode({
               emissive={glbEmissive}
               emissiveIntensity={glbEmissiveIntensity}
               opacity={style.opacity}
-              borderColor={palette.neutral.lineColor}
+              borderColor={environmentMaterial?.stroke ?? palette.neutral.lineColor}
               material={environmentMaterial}
               shadowEnabled={environmentShadowEnabled}
               revision={styleKind}
@@ -3142,6 +3145,8 @@ function WorldInstancesLayer({
   projectionSpec,
   onInstancePointerDown,
   onInstancePointerMove,
+  onLocalHoverRelease,
+  onHoverPaint,
   onWorldPick,
   onComponentHover,
   onPaintAt,
@@ -3169,6 +3174,12 @@ function WorldInstancesLayer({
   readonly projectionSpec?: WorldProjectionSpec;
   readonly onInstancePointerDown: (id: string, index: number, event: { shiftKey: boolean; ctrlKey: boolean; metaKey: boolean }) => void;
   readonly onInstancePointerMove: (id: string | null) => void;
+  /** 🎯️ Subscribes a "the pointer left this pane" listener; returns the unsubscribe. The host fires it
+   * from the canvas root's `pointerleave` so the layer withdraws its local hover claim. */
+  readonly onLocalHoverRelease?: (listener: () => void) => () => void;
+  /** 🩺️ What the hover chrome currently paints (raycast claim merged with the guest echo) — the host
+   * mirrors it onto `data-hover-paint-id` so a probe reads the painted hover, not only the echoed one. */
+  readonly onHoverPaint?: (id: string | null) => void;
   readonly onWorldPick: (args: { granularity: string; id: number; merge: string; objectId?: string }) => void;
   readonly onComponentHover: (args: { objectId: string; mode: string; id: number } | null) => void;
   readonly onPaintAt?: (objectId: string, u: number, v: number) => void;
@@ -3279,6 +3290,27 @@ function WorldInstancesLayer({
       previewInstanceIds: mergedInstanceIdsSet,
     });
   }, [instanceChromeStore, mergedInstanceIdsSet, selection.hoveredId, selection.hoveredKindId, selection.ids]);
+  // 🎯️ The raycast result paints BEFORE it is dispatched: the hover chrome follows the pointer at
+  // raycast speed and the guest's echo (`selection.hoveredId`, one round trip later) only confirms it
+  // — see `worldHoverPaintIdV1`. The claim is withdrawn when the pointer leaves the canvas
+  // (`onLocalHoverRelease`), so a hover another surface authors shows once the pointer is elsewhere.
+  const handleLocalInstancePointerMove = useCallback(
+    (id: string | null) => {
+      instanceChromeStore.setLocalHover(id);
+      onInstancePointerMove(id);
+    },
+    [instanceChromeStore, onInstancePointerMove],
+  );
+  reactHostPort.useEffect(() => {
+    if (!onLocalHoverRelease) return undefined;
+    return onLocalHoverRelease(() => instanceChromeStore.setLocalHover(undefined));
+  }, [instanceChromeStore, onLocalHoverRelease]);
+  reactHostPort.useEffect(() => {
+    if (!onHoverPaint) return undefined;
+    const publish = () => onHoverPaint(worldHoverPaintIdV1(instanceChromeStore.localHover(), instanceChromeStore.getSnapshot().hoveredId));
+    publish();
+    return instanceChromeStore.subscribe(publish);
+  }, [instanceChromeStore, onHoverPaint]);
   const pickEnabled = !gumballDragActive && !onPaintAt && !blockPick && !mergedComponentIdsSet && !mergedInstanceIdsSet;
   const transformMode = selection.transformMode;
   const transformGumballMode = isWorldTransformGumballMode(transformMode);
@@ -3576,7 +3608,7 @@ function WorldInstancesLayer({
               paintFromHit={paintFromHit}
               flatShading={instance.smoothShading === false}
               onInstancePointerDown={onInstancePointerDown}
-              onInstancePointerMove={onInstancePointerMove}
+              onInstancePointerMove={handleLocalInstancePointerMove}
               onWorldPick={onWorldPick}
               onComponentHover={onComponentHover}
               mergeMode={mergeMode}
@@ -4973,10 +5005,32 @@ type WorldInstanceChromeSnapshot = {
   readonly previewInstanceIds: ReadonlySet<string> | null;
 };
 
+/** 🎯️ What THIS pane's own raycast has under the pointer: an instance id, `null` for "inside the
+ * pane, over nothing", `undefined` for "the pointer is not in this pane" (no local claim). */
+export type WorldLocalHoverV1 = string | null | undefined;
+
+/** 🎯️ The instance the hover chrome paints. The pane's own raycast LEADS while the pointer is inside
+ * it — that is the value the guest is being told about, one round trip (hundreds of milliseconds
+ * through `interactionHover` → reserved job → publication → refresh → commit) before the guest's
+ * `hoveredId` echoes it back — so the highlight follows the pointer at raycast speed and the echo
+ * only ever confirms it. The guest's lane leads when the pointer is elsewhere: a hover authored by
+ * another surface (an outliner row, a remote presence) has nothing local to yield to.
+ *
+ * 🧭️ Nothing about the guest changes: the same `interactionHover` still reaches it, the same lane
+ * comes back, the same selection semantics apply to a click. Only what is PAINTED between the raycast
+ * and the echo differs, and it differs toward what the guest will answer. */
+export function worldHoverPaintIdV1(local: WorldLocalHoverV1, guest: string | null): string | null {
+  return local === undefined ? guest : local;
+}
+
 interface WorldInstanceChromeStore {
   subscribe: (listener: () => void) => () => void;
   getSnapshot: () => WorldInstanceChromeSnapshot;
   setSnapshot: (next: WorldInstanceChromeSnapshot) => void;
+  /** 🎯️ The pane's raycast result, painted at once and reconciled against the guest echo by
+   * {@link worldHoverPaintIdV1}. */
+  setLocalHover: (local: WorldLocalHoverV1) => void;
+  localHover: () => WorldLocalHoverV1;
   isSelected: (instanceId: string) => boolean;
   isHovered: (instanceId: string) => boolean;
   isHighlighted: (objectKind: string | undefined) => boolean;
@@ -5005,6 +5059,7 @@ function createWorldInstanceChromeStore(): WorldInstanceChromeStore {
     hoveredKindId: null,
     previewInstanceIds: null,
   };
+  let localHover: WorldLocalHoverV1 = undefined;
   const listeners = new Set<() => void>();
   const notify = (): void => {
     for (const listener of listeners) listener();
@@ -5024,11 +5079,21 @@ function createWorldInstanceChromeStore(): WorldInstanceChromeStore {
       snapshot = next;
       notify();
     },
+    setLocalHover(local) {
+      if (local === localHover) return;
+      const paintedBefore = worldHoverPaintIdV1(localHover, snapshot.hoveredId);
+      localHover = local;
+      if (worldHoverPaintIdV1(localHover, snapshot.hoveredId) === paintedBefore) return;
+      notify();
+    },
+    localHover() {
+      return localHover;
+    },
     isSelected(instanceId) {
       return snapshot.selectedIds.has(instanceId);
     },
     isHovered(instanceId) {
-      return snapshot.hoveredId === instanceId;
+      return worldHoverPaintIdV1(localHover, snapshot.hoveredId) === instanceId;
     },
     isHighlighted(objectKind) {
       return objectKind != null && snapshot.hoveredKindId != null && objectKind === snapshot.hoveredKindId;
@@ -6199,6 +6264,26 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
     [activeUtility, dispatchSettled, interactionDomainId, windowInstanceId],
   );
 
+  // 🎯️ Listeners the instances layer registers to withdraw its local hover claim when the pointer
+  // leaves this pane's canvas (`onPointerLeave` on the root below).
+  const localHoverReleaseListeners = useRef(new Set<() => void>());
+  const subscribeLocalHoverRelease = useCallback((listener: () => void) => {
+    localHoverReleaseListeners.current.add(listener);
+    return () => {
+      localHoverReleaseListeners.current.delete(listener);
+    };
+  }, []);
+  const releaseLocalHover = useCallback(() => {
+    for (const listener of localHoverReleaseListeners.current) listener();
+  }, []);
+  // 🩺️ Imperative mirror of the painted hover — no React state, so a hover never re-renders the host.
+  const publishHoverPaint = useCallback((id: string | null) => {
+    const root = hostRef.current;
+    if (!root) return;
+    if (id === null) root.removeAttribute("data-hover-paint-id");
+    else root.setAttribute("data-hover-paint-id", id);
+  }, []);
+
   const handleInstancePointerMove = useCallback(
     (id: string | null) => {
       // 🎯️ What THIS pane's own raycast last resolved, kept locally. `selection.hoveredId` is the
@@ -7146,6 +7231,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
       onPointerCancel={handlePointerUp}
+      onPointerLeave={releaseLocalHover}
       onDragEnter={onCatalogueDragEnter}
       onDragLeave={onCatalogueDragLeave}
       onDragOver={onCatalogueDragOver}
@@ -7276,6 +7362,8 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
                 projectionSpec={worldProjectionSpec}
                 onInstancePointerDown={handleInstancePointerDown}
                 onInstancePointerMove={handleInstancePointerMove}
+                onLocalHoverRelease={subscribeLocalHoverRelease}
+                onHoverPaint={publishHoverPaint}
                 onWorldPick={handleWorldPick}
                 onComponentHover={handleComponentHover}
                 onPaintAt={paintMode ? handlePaintAt : undefined}

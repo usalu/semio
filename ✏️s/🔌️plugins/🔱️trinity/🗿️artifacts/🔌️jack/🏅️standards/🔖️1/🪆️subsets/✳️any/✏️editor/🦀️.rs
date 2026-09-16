@@ -118,16 +118,6 @@ pub fn ui_value_map(values: impl IntoIterator<Item = (&'static str, semio_framew
     Ok(semio_framework_plugin::UiValue::Map(builder.finish()))
 }
 
-/// 🌳️ Admits fallibly assembled UI nodes into fixed child storage.
-pub fn ui_node_list(values: impl IntoIterator<Item = semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode>>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiFixedList<semio_framework_plugin::BuiltNode>> {
-    let mut nodes = semio_framework_plugin::UiFixedList::default();
-    for value in values {
-        let node = value?;
-        nodes.try_push(node).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI node admission failed"))?;
-    }
-    Ok(nodes)
-}
-
 pub(crate) fn graph_from_snapshot_or_default(snapshot: &JackSnapshot) -> crate::Graph {
     crate::Graph::from_snapshot(snapshot.clone()).unwrap_or_else(|_| crate::Graph::from_snapshot(default_fixture()).expect("nakagin graph"))
 }
@@ -768,8 +758,8 @@ impl ArtifactEditor for TrinityJackPlayApp {
                 edit::windows::editor::render(TRINITY_JACK_PLAY_SURFACE_EDITOR, TRINITY_JACK_PLAY_CONTROLLER_ID, snapshot, &query, None)
             }
             TRINITY_JACK_PLAY_BODY_RESULTS => edit::windows::results::render(TRINITY_JACK_PLAY_SURFACE_RESULTS, TRINITY_JACK_PLAY_CONTROLLER_ID, None, None),
-            TRINITY_JACK_PLAY_BODY_ARTIFACT => crate::editor::jack::panels::document::render(snapshot, cfg.snapshot, labels),
-            TRINITY_JACK_PLAY_BODY_CATALOGUE => crate::editor::jack::panels::catalogue::render(labels),
+            TRINITY_JACK_PLAY_BODY_ARTIFACT => crate::editor::jack::panels::document::render(snapshot, cfg.snapshot, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, TRINITY_JACK_PLAY_BODY_ARTIFACT)),
+            TRINITY_JACK_PLAY_BODY_CATALOGUE => crate::editor::jack::panels::catalogue::render(labels, &semio_framework_plugin::TreeWindows::for_body(view_state, TRINITY_JACK_PLAY_BODY_CATALOGUE)),
             TRINITY_JACK_PLAY_BODY_INSPECTION => crate::editor::jack::panels::inspection::render(),
             _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("trinity.body.label", "the fixed Trinity body label exceeds its UI bound")),
         }?;

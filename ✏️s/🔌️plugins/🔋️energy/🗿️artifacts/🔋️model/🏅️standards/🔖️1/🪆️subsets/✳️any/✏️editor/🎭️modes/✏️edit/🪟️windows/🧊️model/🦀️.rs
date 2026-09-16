@@ -1,7 +1,7 @@
 //! 🧊️ Energy model editor — `model` window: the World3d viewport that renders the whole building as
 //! real geometry. Every opaque `crate::model::Surface`, every `Fenestration` and every
 //! `ShadingSurface` is one mesh + one pickable instance, coloured by family (or by a results overlay
-//! when one is supplied) and tinted by the shared interaction domain's selection/hover.
+//! when one is supplied); selection/hover paint is the shared `World3dHost` token palette (same as puzzle 3d).
 //!
 //! 🕹️ Picking is entirely framework-owned: the scene carries
 //! `domain_id = ENERGY_MODEL_INTERACTION_DOMAIN`, so the react `World3dHost` raycasts against its own

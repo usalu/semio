@@ -65,7 +65,7 @@ mod value_round_trip_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn ui_tree_item_node_round_trips() {
-        let value = UiTreeItemNode {
+        let value = UiTreeItemNode { window: None, granularity: None,
             id: "item1".into(),
             label: Label::data("Item"),
             description: Some("desc".into()),
@@ -86,7 +86,7 @@ mod value_round_trip_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn ui_tree_section_and_tree_node_round_trip() {
-        let section = UiTreeSectionNode { id: "sec1".into(), label: Some(Label::data("Section")), default_open: Some(true), presence: UiPresence::default(), items: vec![UiTreeItemNode::base("item1", Label::data("Item"))] };
+        let section = UiTreeSectionNode { window: None, id: "sec1".into(), label: Some(Label::data("Section")), default_open: Some(true), presence: UiPresence::default(), items: vec![UiTreeItemNode::base("item1", Label::data("Item"))] };
         assert_eq!(UiTreeSectionNode::from_value(section.clone().to_value()).expect("valid DslValue decodes"), section);
 
         let tree = UiTreeNode { sections: vec![section], presence: UiPresence::default(), drop_action: Some(act("drop")), menu: None, interaction_domain: Some("domain-1".into()) };

@@ -7,11 +7,12 @@
 //! scalar under the single key `value` — a slider has one binding and no other way to say what moved.
 
 use crate::editor::fem3d::modes::edit::windows::results::config::{Fem3dLoopMode, Fem3dResultsWindowConfig, Fem3dWaveform, ANIMATION_PHASE_STEP, ANIMATION_SPEED_MAXIMUM, ANIMATION_SPEED_MINIMUM};
+use crate::editor::fem3d::modes::edit::windows::results::transient::Fem3dPlaybackClock;
 use crate::editor::fem3d::terminology::Fem3dLabels;
-use crate::editor::fem3d::{fem3d_action, ui_label, ui_node_list};
+use crate::editor::fem3d::{fem3d_action, ui_label};
 use crate::Fem3dSnapshot;
 use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase, HasChildren, InputKind, Trigger};
-use semio_framework_plugin::{BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PluginAssemblyError, UiAssemblyResult, UiMapBuilder, UiText, UiValue};
+use semio_framework_plugin::{ui_node_list, BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PluginAssemblyError, UiAssemblyResult, UiMapBuilder, UiText, UiValue};
 use semio_framework_ui_contract as ui;
 
 //#region 🔖️Constants
@@ -155,11 +156,11 @@ fn result_sources(doc: &Fem3dSnapshot) -> Vec<(String, String)> {
 /// `None` when the projection captured a different pane: the controls then show defaults, the play
 /// button is a bare play/pause toggle (its state cannot be read), and a hint row says which pane to
 /// focus for live readouts — a panel projection binds to the focused window, and nothing else can read
-/// another window's configuration.
-pub fn render(doc: &Fem3dSnapshot, window: Option<&Fem3dResultsWindowConfig>, window_id: &str, labels: &Fem3dLabels) -> UiAssemblyResult<BuiltNode> {
+/// another window's configuration. `clock` is that window's running playback clock, so the phase
+/// slider follows the animation while it plays and rests where it paused.
+pub fn render(doc: &Fem3dSnapshot, window: Option<&Fem3dResultsWindowConfig>, clock: Option<&Fem3dPlaybackClock>, window_id: &str, labels: &Fem3dLabels) -> UiAssemblyResult<BuiltNode> {
     let live = window.is_some();
-    let defaults = Fem3dResultsWindowConfig::default();
-    let window = window.unwrap_or(&defaults);
+    let window = crate::editor::fem3d::modes::edit::windows::results::config::effective(window.unwrap_or(&Fem3dResultsWindowConfig::default()), clock);
     let animation = &window.animation;
     let sources = result_sources(doc);
     let source = window.result_source_id.clone().or_else(|| sources.first().map(|(id, _)| id.clone())).unwrap_or_default();

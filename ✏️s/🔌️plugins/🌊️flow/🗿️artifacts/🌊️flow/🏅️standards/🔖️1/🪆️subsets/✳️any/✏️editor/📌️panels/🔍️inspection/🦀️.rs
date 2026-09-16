@@ -2,7 +2,7 @@
 
 use crate::editor::flow::terminology::FlowPlayLabels;
 use semio_framework_plugin::plugin_app_close_prelude::Label;
-use semio_framework_plugin::{BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiAssemblyResult, UiFixedList, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
+use semio_framework_plugin::{BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, TreeWindows, UiAssemblyResult, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
 
 /// 🏷️ Converts inspector chrome titles into the panel builder's `Label`.
 fn ui_label(value: impl AsRef<str>) -> UiAssemblyResult<Label> {
@@ -33,8 +33,18 @@ pub fn definition() -> PanelTabDefinition {
 /// `FlowPlayApp::handle`) — dropped rather than shown stale, mirroring lowpoly's identical
 /// `render`/status-line note for the exact same gap. Peer/self selection surfaces generically off the
 /// declared domain regardless.
-pub fn render(labels: &FlowPlayLabels) -> UiAssemblyResult<BuiltNode> {
-    PanelTreeBuilder::new("flow-play-inspector")?.section_or_placeholder("flow-play-inspector", Some(ui_label(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL)?), true, UiFixedList::default(), ui_label(labels.no_selection.as_str())?)?.build()
+pub fn render(labels: &FlowPlayLabels, windows: &TreeWindows<'_>) -> UiAssemblyResult<BuiltNode> {
+    PanelTreeBuilder::new("flow-play-inspector")?
+        .window_section_or_placeholder(
+            windows,
+            "flow-play-inspector",
+            Some(ui_label(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL)?),
+            true,
+            &[] as &[&str],
+            |_| unreachable!("the flow inspector has no selection rows while `render` carries no `InteractionView`"),
+            ui_label(labels.no_selection.as_str())?,
+        )?
+        .build()
 }
 //#endregion 🔖️Render
 

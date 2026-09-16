@@ -38,7 +38,7 @@ const SHOOTING_PLAY_CONTROLLER_ID: &str = SHOOTING_PLAY_APP_ID;
 /// only, `HierarchyProvider::Flat`. Shot selection is NOT part of this domain — see
 /// `ShootingConfig::selected_shot_ids`'s doc comment.
 pub const SHOOTING_INTERACTION_DOMAIN: &str = "assets";
-pub use crate::editor::shooting::commands::document::set_active_example::SHOOTING_EXAMPLE_DEFAULT_ID;
+pub use crate::editor::shooting::commands::document::set_active_example::{SHOOTING_EXAMPLE_DEFAULT_ID, SHOOTING_EXAMPLE_HEXAGONAL_CUT_CONCRETE_FOREST_LEFT};
 pub use catalogue_panel::SHOOTING_PLAY_BODY_CATALOGUE;
 pub use document_panel::SHOOTING_PLAY_BODY_ARTIFACT;
 pub use icon_window::SHOOTING_PLAY_BODY_ICON;
@@ -116,16 +116,6 @@ pub fn ui_value_map(values: impl IntoIterator<Item = (&'static str, semio_framew
         builder.push(key.to_owned(), value).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map entry admission failed"))?;
     }
     Ok(semio_framework_plugin::UiValue::Map(builder.finish()))
-}
-
-/// 🌳️ Admits fallibly assembled UI nodes into fixed child storage.
-pub fn ui_node_list(values: impl IntoIterator<Item = semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode>>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiFixedList<semio_framework_plugin::BuiltNode>> {
-    let mut nodes = semio_framework_plugin::UiFixedList::default();
-    for value in values {
-        let node = value?;
-        nodes.try_push(node).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI node admission failed"))?;
-    }
-    Ok(nodes)
 }
 
 /// 🌳️ Layers an `icon_id` onto the SDK's `tree_item_with_action` skeleton — the SDK primitive's third
@@ -863,8 +853,8 @@ impl ArtifactEditor for ShootingPlayApp {
         match body_key {
             SHOOTING_PLAY_BODY_SCENE => scene_window::render(snapshot, cfg.snapshot, view_state.active_utility_id.as_deref().unwrap_or("move")),
             SHOOTING_PLAY_BODY_ICON => icon_window::render(snapshot, cfg.snapshot),
-            SHOOTING_PLAY_BODY_ARTIFACT => document_panel::render(snapshot, labels),
-            SHOOTING_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels),
+            SHOOTING_PLAY_BODY_ARTIFACT => document_panel::render(snapshot, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, SHOOTING_PLAY_BODY_ARTIFACT)),
+            SHOOTING_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels, &semio_framework_plugin::TreeWindows::for_body(view_state, SHOOTING_PLAY_BODY_CATALOGUE)),
             SHOOTING_PLAY_BODY_INSPECTION => inspection_panel::render(snapshot, cfg.snapshot, labels),
             _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| ui_capacity_error()),
         }
@@ -1046,6 +1036,10 @@ pub fn create_shooting_app() -> semio_framework_plugin::AppDefinition {
             .action_args("setActiveExample", vec![
                 ActionArgDef::select("exampleId", LocalizedLabel::native("Example", "Beispiel"), vec![
                     ActionArgOption::new(SHOOTING_EXAMPLE_DEFAULT_ID, LocalizedLabel::native("Default Base Icon", "Standard-Basissymbol")),
+                    ActionArgOption::new(
+                        SHOOTING_EXAMPLE_HEXAGONAL_CUT_CONCRETE_FOREST_LEFT,
+                        LocalizedLabel::native("Hexagonal Cut Concrete Forest Left", "Sechseckig geschnittener Betonwald links"),
+                    ),
                 ]).required(),
             ])
             // 🧰️ Transform gumball — an exclusive utility group scoped to the scene window (active utility is host-owned).

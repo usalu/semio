@@ -5,26 +5,30 @@
 //! picked at (object / vortex / attraction / target volume / reference) and renders THAT entity's real
 //! fields. An empty selection falls back to the document summary.
 //!
+//! 🪟️ The selected-id list is a windowed section of its own ([`IDS_SECTION`]): it stamps the full
+//! selection size and materialises only the host's requested row window, so a wide selection scrolls
+//! instead of ending in a dead `+N` that no cursor ever advanced.
+//!
 //! 🩹️ Every mutating row dispatches `patchInspector` with an explicit `{entity, ids, field, value}` —
 //! the same arg shape `🎮️commands/🩹️patch-inspector/🦀️.rs` accepts — so the panel never relies on that
 //! command's own selection fallback.
 
 use crate::editor::puzzle3d::terminology::Puzzle3dLabels;
-use std::collections::BTreeMap;
 use crate::editor::puzzle3d::{
-    object_scale_json, puzzle3d_vortex_full_id, target_volume_scale_json, ui_label, ui_node_list, Puzzle3dAttraction, Puzzle3dFixture, Puzzle3dInteractionSnapshot, Puzzle3dObject, Puzzle3dReference, Puzzle3dScene, Puzzle3dTargetVolume,
+    object_scale_json, puzzle3d_vortex_full_id, target_volume_scale_json, ui_label, Puzzle3dAttraction, Puzzle3dFixture, Puzzle3dInteractionSnapshot, Puzzle3dObject, Puzzle3dReference, Puzzle3dScene, Puzzle3dTargetVolume,
     Puzzle3dVortex, PUZZLE3D_GRANULARITY_ATTRACTION, PUZZLE3D_GRANULARITY_OBJECT, PUZZLE3D_GRANULARITY_REFERENCE, PUZZLE3D_GRANULARITY_TARGET_VOLUME, PUZZLE3D_GRANULARITY_VORTEX, PUZZLE3D_PLAY_CONTROLLER_ID,
 };
 use semio_framework_plugin::{
-    tree_item_desc, tree_item_with_action, ActionFactory, BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiAssemblyResult, UiFixedList, UiValue, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
-    FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+    tree_item_desc, tree_item_with_action, ui_node_list, ActionFactory, BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, TreeWindows, UiAssemblyResult, UiFixedList, UiValue,
+    FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
 
 //#region 🔖️Constants
 pub const BODY_KEY: &str = "puzzle.3d.play.inspector";
 const ROOT: &str = "puzzle3d-play-inspector";
+/// 🪟️ The windowed section the selected ids are listed in — the node key the host reports its
+/// open/scroll window for.
 pub const IDS_SECTION: &str = "puzzle3d-play-inspector.ids";
-pub const IDS_ROWS: usize = 16;
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
@@ -65,38 +69,18 @@ fn text_value(value: &str) -> UiAssemblyResult<UiValue> {
     semio_framework_plugin::UiText::try_from_str(value).map(UiValue::Text).ok_or_else(|| error("puzzle3d inspector action text admission failed"))
 }
 
+/// 🪙️ The flag row's `ids` argument list. The process-wide argument arena, not a row quota, is the
+/// ceiling here: ids are admitted until the fixed list refuses one, and a shorter list still flips
+/// every id it names. There is no page cursor to reconcile it with any more — the row window the ids
+/// SECTION shows is host-owned and independent of what one action argument can carry.
 fn id_list_value(ids: &[String]) -> UiAssemblyResult<UiValue> {
     let mut builder = semio_framework_plugin::UiListBuilder::try_new().ok_or_else(|| error("puzzle3d inspector action list admission failed"))?;
-    for id in ids.iter().take(IDS_ROWS) {
-        builder.push(text_value(id)?).map_err(|_| error("puzzle3d inspector action list entry admission failed"))?;
+    for id in ids {
+        if builder.push(text_value(id)?).is_err() {
+            break;
+        }
     }
     Ok(UiValue::List(builder.finish()))
-}
-
-fn ids_page<'a>(ids: &'a [String], pages: &BTreeMap<String, u32>) -> &'a [String] {
-    if ids.is_empty() {
-        return ids;
-    }
-    let max_page = (ids.len() - 1) / IDS_ROWS;
-    let page = (pages.get(IDS_SECTION).copied().unwrap_or(0) as usize).min(max_page);
-    &ids[(page * IDS_ROWS).min(ids.len())..]
-}
-
-fn push_ids(fields: &mut UiFixedList<BuiltNode>, ids: &[String], pages: &BTreeMap<String, u32>) -> UiAssemblyResult<()> {
-    let rest = ids_page(ids, pages);
-    let page = if ids.is_empty() { 0 } else { (pages.get(IDS_SECTION).copied().unwrap_or(0) as usize).min((ids.len() - 1) / IDS_ROWS) };
-    for (index, id) in rest.iter().take(IDS_ROWS).enumerate() {
-        read_only(fields, &format!("ids.{index}"), "id", id)?;
-    }
-    if rest.len() > IDS_ROWS {
-        let omitted = rest.len() - IDS_ROWS;
-        let mut builder = semio_framework_plugin::UiMapBuilder::try_new().ok_or_else(|| error("puzzle3d inspector page map admission failed"))?;
-        builder.push("page".to_owned(), UiValue::Number(f64::from(page as u32 + 1))).map_err(|_| error("puzzle3d inspector page map entry admission failed"))?;
-        builder.push("section".to_owned(), text_value(IDS_SECTION)?).map_err(|_| error("puzzle3d inspector page map entry admission failed"))?;
-        let action = ActionFactory::new(PUZZLE3D_PLAY_CONTROLLER_ID).action("setPanelPage", Some(UiValue::Map(builder.finish())))?;
-        push(fields, tree_item_with_action(format!("{ROOT}.ids.more"), ui_label(&format!("+{omitted}"))?, None, action))?;
-    }
-    Ok(())
 }
 
 /// 🩹️ One `patchInspector` toggle row — flips a boolean `field` (`hidden`/`locked`) on every id in
@@ -115,9 +99,8 @@ fn flag_row(fields: &mut UiFixedList<BuiltNode>, id: &str, label: &str, entity: 
 //#endregion 🔖️Rows
 
 //#region 🔖️Sections
-fn object_fields(object: &Puzzle3dObject, ids: &[String], pages: &BTreeMap<String, u32>, labels: &Puzzle3dLabels) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
+fn object_fields(object: &Puzzle3dObject, ids: &[String], labels: &Puzzle3dLabels) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
     let mut fields = UiFixedList::default();
-    push_ids(&mut fields, ids, pages)?;
     read_only(&mut fields, "object.id", labels.id.as_str(), &object.id)?;
     read_only(&mut fields, "object.label", labels.label.as_str(), object.label.as_deref().unwrap_or_default())?;
     read_only(&mut fields, "object.kind", labels.kind.as_str(), object.object_kind.as_deref().unwrap_or_default())?;
@@ -126,8 +109,8 @@ fn object_fields(object: &Puzzle3dObject, ids: &[String], pages: &BTreeMap<Strin
     read_only(&mut fields, "object.scale", labels.scale.as_str(), vec3(object_scale_json(object)))?;
     read_only(&mut fields, "object.mesh-url", labels.mesh_url.as_str(), object.mesh_url.as_deref().unwrap_or_default())?;
     read_only(&mut fields, "object.vortices", labels.vortices.as_str(), object.vortices.len())?;
-    flag_row(&mut fields, "object.hidden", labels.hidden.as_str(), PUZZLE3D_GRANULARITY_OBJECT, ids_page(ids, pages), "hidden", object.hidden)?;
-    flag_row(&mut fields, "object.locked", labels.locked.as_str(), PUZZLE3D_GRANULARITY_OBJECT, ids_page(ids, pages), "locked", object.locked)?;
+    flag_row(&mut fields, "object.hidden", labels.hidden.as_str(), PUZZLE3D_GRANULARITY_OBJECT, ids, "hidden", object.hidden)?;
+    flag_row(&mut fields, "object.locked", labels.locked.as_str(), PUZZLE3D_GRANULARITY_OBJECT, ids, "locked", object.locked)?;
     Ok(fields)
 }
 
@@ -156,29 +139,39 @@ fn attraction_fields(attraction: &Puzzle3dAttraction, labels: &Puzzle3dLabels) -
     Ok(fields)
 }
 
-fn target_volume_fields(volume: &Puzzle3dTargetVolume, ids: &[String], pages: &BTreeMap<String, u32>, labels: &Puzzle3dLabels) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
+fn target_volume_fields(volume: &Puzzle3dTargetVolume, ids: &[String], labels: &Puzzle3dLabels) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
     let mut fields = UiFixedList::default();
-    push_ids(&mut fields, ids, pages)?;
     read_only(&mut fields, "target-volume.id", labels.id.as_str(), &volume.id)?;
     read_only(&mut fields, "target-volume.origin", labels.origin.as_str(), vec3(volume.origin))?;
     read_only(&mut fields, "target-volume.orientation", labels.orientation.as_str(), vec4(volume.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0])))?;
     read_only(&mut fields, "target-volume.scale", labels.scale.as_str(), vec3(target_volume_scale_json(volume)))?;
-    flag_row(&mut fields, "target-volume.hidden", labels.hidden.as_str(), PUZZLE3D_GRANULARITY_TARGET_VOLUME, ids_page(ids, pages), "hidden", volume.hidden)?;
-    flag_row(&mut fields, "target-volume.locked", labels.locked.as_str(), PUZZLE3D_GRANULARITY_TARGET_VOLUME, ids_page(ids, pages), "locked", volume.locked)?;
+    flag_row(&mut fields, "target-volume.hidden", labels.hidden.as_str(), PUZZLE3D_GRANULARITY_TARGET_VOLUME, ids, "hidden", volume.hidden)?;
+    flag_row(&mut fields, "target-volume.locked", labels.locked.as_str(), PUZZLE3D_GRANULARITY_TARGET_VOLUME, ids, "locked", volume.locked)?;
     Ok(fields)
 }
 
-fn reference_fields(reference: &Puzzle3dReference, ids: &[String], pages: &BTreeMap<String, u32>, labels: &Puzzle3dLabels) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
+fn reference_fields(reference: &Puzzle3dReference, ids: &[String], labels: &Puzzle3dLabels) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
     let mut fields = UiFixedList::default();
-    push_ids(&mut fields, ids, pages)?;
     read_only(&mut fields, "reference.id", labels.id.as_str(), &reference.id)?;
     read_only(&mut fields, "reference.source-url", labels.source_url.as_str(), &reference.source.url)?;
     read_only(&mut fields, "reference.media-kind", labels.media_kind.as_str(), reference.source.media_kind.as_deref().unwrap_or_default())?;
     read_only(&mut fields, "reference.origin", labels.origin.as_str(), vec3(reference.origin))?;
     read_only(&mut fields, "reference.width-world", labels.width.as_str(), reference.width_world)?;
-    flag_row(&mut fields, "reference.hidden", labels.hidden.as_str(), PUZZLE3D_GRANULARITY_REFERENCE, ids_page(ids, pages), "hidden", reference.hidden)?;
-    flag_row(&mut fields, "reference.locked", labels.locked.as_str(), PUZZLE3D_GRANULARITY_REFERENCE, ids_page(ids, pages), "locked", reference.locked)?;
+    flag_row(&mut fields, "reference.hidden", labels.hidden.as_str(), PUZZLE3D_GRANULARITY_REFERENCE, ids, "hidden", reference.hidden)?;
+    flag_row(&mut fields, "reference.locked", labels.locked.as_str(), PUZZLE3D_GRANULARITY_REFERENCE, ids, "locked", reference.locked)?;
     Ok(fields)
+}
+
+/// 🪟️ One entity's inspector body: the windowed selected-id section (only when the selection names
+/// ids at all) followed by that entity's own field group.
+fn entity_tree(id: &str, label: &str, ids: &[String], fields: UiAssemblyResult<UiFixedList<BuiltNode>>, windows: &TreeWindows<'_>, labels: &Puzzle3dLabels) -> UiAssemblyResult<BuiltNode> {
+    let fields = fields?;
+    let mut builder = PanelTreeBuilder::new(ROOT)?;
+    if !ids.is_empty() {
+        // 🪟️ Keyed by the RAW id so a scrolled window never reuses a row key.
+        builder = builder.window_section(windows, IDS_SECTION, Some(ui_label(labels.id.as_str())?), true, ids, |id: &String| tree_item_desc(format!("{IDS_SECTION}.{id}"), ui_label(labels.id.as_str())?, Some(id.clone())))?;
+    }
+    builder.section(format!("{ROOT}.{id}"), Some(ui_label(label)?), true, fields)?.build()
 }
 
 /// 🈳️ The document summary — what an empty (or unresolvable) selection shows.
@@ -193,50 +186,60 @@ fn summary(fixture: &Puzzle3dFixture, labels: &Puzzle3dLabels) -> UiAssemblyResu
 
 /// 🔍️ The selected entity's own field group, or `None` when the selection resolves to nothing in this
 /// document (a just-deleted id, or a granularity with no inspectable body such as `kind`).
-fn selected_section(fixture: &Puzzle3dFixture, interaction: &Puzzle3dInteractionSnapshot, pages: &BTreeMap<String, u32>, labels: &Puzzle3dLabels) -> Option<UiAssemblyResult<BuiltNode>> {
-    let section = |label: &str, id: &str, fields: UiAssemblyResult<UiFixedList<BuiltNode>>| -> UiAssemblyResult<BuiltNode> { PanelTreeBuilder::new(ROOT)?.section(format!("{ROOT}.{id}"), Some(ui_label(label)?), true, fields?)?.build() };
+fn selected_section(fixture: &Puzzle3dFixture, interaction: &Puzzle3dInteractionSnapshot, windows: &TreeWindows<'_>, labels: &Puzzle3dLabels) -> Option<UiAssemblyResult<BuiltNode>> {
     match interaction.granularity.as_str() {
         PUZZLE3D_GRANULARITY_OBJECT => {
             let ids = interaction.selected_object_ids();
-            fixture.objects.iter().find(|object| Some(&object.id) == ids.first()).map(|object| section(labels.object.as_str(), "object", object_fields(object, ids, pages, labels)))
+            fixture.objects.iter().find(|object| Some(&object.id) == ids.first()).map(|object| entity_tree("object", labels.object.as_str(), ids, object_fields(object, ids, labels), windows, labels))
         }
         PUZZLE3D_GRANULARITY_VORTEX => interaction.selected_vortex_ids().first().and_then(|full_id| {
             fixture
                 .objects
                 .iter()
                 .find_map(|object| object.vortices.iter().find(|vortex| &puzzle3d_vortex_full_id(&object.id, &vortex.id) == full_id).map(|vortex| (object, vortex)))
-                .map(|(object, vortex)| section(labels.vortex.as_str(), "vortex", vortex_fields(object, vortex, labels)))
+                .map(|(object, vortex)| entity_tree("vortex", labels.vortex.as_str(), &[], vortex_fields(object, vortex, labels), windows, labels))
         }),
         PUZZLE3D_GRANULARITY_ATTRACTION => {
             let id = interaction.selected_attraction_ids().first();
-            id.and_then(|id| fixture.attractions.iter().find(|attraction| &attraction.id == id)).map(|attraction| section(labels.attraction.as_str(), "attraction", attraction_fields(attraction, labels)))
+            id.and_then(|id| fixture.attractions.iter().find(|attraction| &attraction.id == id))
+                .map(|attraction| entity_tree("attraction", labels.attraction.as_str(), &[], attraction_fields(attraction, labels), windows, labels))
         }
         PUZZLE3D_GRANULARITY_TARGET_VOLUME => {
             let ids = interaction.selected_target_volume_ids();
-            fixture.target_volumes.iter().find(|volume| Some(&volume.id) == ids.first()).map(|volume| section(labels.target_volume.as_str(), "target-volume", target_volume_fields(volume, ids, pages, labels)))
+            fixture
+                .target_volumes
+                .iter()
+                .find(|volume| Some(&volume.id) == ids.first())
+                .map(|volume| entity_tree("target-volume", labels.target_volume.as_str(), ids, target_volume_fields(volume, ids, labels), windows, labels))
         }
         PUZZLE3D_GRANULARITY_REFERENCE => {
             let ids = interaction.selected_reference_ids();
-            fixture.references.iter().find(|reference| Some(&reference.id) == ids.first()).map(|reference| section(labels.reference.as_str(), "reference", reference_fields(reference, ids, pages, labels)))
+            fixture
+                .references
+                .iter()
+                .find(|reference| Some(&reference.id) == ids.first())
+                .map(|reference| entity_tree("reference", labels.reference.as_str(), ids, reference_fields(reference, ids, labels), windows, labels))
         }
         _ => None,
     }
     .or_else(|| {
         let ids = &interaction.selected;
-        fixture.objects.iter().find(|object| ids.iter().any(|id| id == &object.id)).map(|object| section(labels.object.as_str(), "object", object_fields(object, ids, pages, labels)))
+        fixture.objects.iter().find(|object| ids.iter().any(|id| id == &object.id)).map(|object| entity_tree("object", labels.object.as_str(), ids, object_fields(object, ids, labels), windows, labels))
     })
     .or_else(|| {
         let ids = &interaction.selected;
-        fixture.objects.iter().find(|object| {
-            object.vortices.iter().any(|vortex| ids.iter().any(|id| id == &vortex.id || id == &puzzle3d_vortex_full_id(&object.id, &vortex.id)))
-        }).map(|object| section(labels.object.as_str(), "object", object_fields(object, std::slice::from_ref(&object.id), pages, labels)))
+        fixture
+            .objects
+            .iter()
+            .find(|object| object.vortices.iter().any(|vortex| ids.iter().any(|id| id == &vortex.id || id == &puzzle3d_vortex_full_id(&object.id, &vortex.id))))
+            .map(|object| entity_tree("object", labels.object.as_str(), std::slice::from_ref(&object.id), object_fields(object, std::slice::from_ref(&object.id), labels), windows, labels))
     })
 }
 //#endregion 🔖️Sections
 
 //#region 🔖️Render
-pub fn render(envelope: &Puzzle3dScene, interaction: &Puzzle3dInteractionSnapshot, term_labels: &Puzzle3dLabels) -> UiAssemblyResult<BuiltNode> {
-    match selected_section(&envelope.fixture, interaction, &envelope.runtime.panel_pages, term_labels) {
+pub fn render(envelope: &Puzzle3dScene, interaction: &Puzzle3dInteractionSnapshot, term_labels: &Puzzle3dLabels, windows: &TreeWindows<'_>) -> UiAssemblyResult<BuiltNode> {
+    match selected_section(&envelope.fixture, interaction, windows, term_labels) {
         Some(section) => section,
         None => summary(&envelope.fixture, term_labels),
     }

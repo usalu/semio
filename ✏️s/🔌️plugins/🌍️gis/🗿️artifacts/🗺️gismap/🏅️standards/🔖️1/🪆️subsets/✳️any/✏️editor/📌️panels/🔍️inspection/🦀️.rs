@@ -2,9 +2,9 @@
 
 use crate::editor::gis2d::modes::edit::windows::map::config::{layer_visible, MapWindowConfig};
 use crate::editor::gis2d::terminology::{gis2d_layer_label, Gis2dPlayLabels};
-use crate::editor::gis2d::{ui_label, ui_node_list, Gis2dInteractionSnapshot, GIS2D_FEATURE_GRANULARITY, GIS_MAP_LAYER_IDS};
+use crate::editor::gis2d::{ui_label, Gis2dInteractionSnapshot, GIS2D_FEATURE_GRANULARITY, GIS_MAP_LAYER_IDS};
 use crate::{GisMapSnapshot, GIS_MAP_SCHEMA};
-use semio_framework_plugin::{tree_item_desc, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
+use semio_framework_plugin::{tree_item_desc, ui_node_list, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
 
 //#region 🔖️Constants
 pub const GIS2D_PLAY_BODY_INSPECTION: &str = "gis2d.play.inspection";

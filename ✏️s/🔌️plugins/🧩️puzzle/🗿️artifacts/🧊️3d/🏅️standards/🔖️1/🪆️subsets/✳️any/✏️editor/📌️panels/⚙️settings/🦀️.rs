@@ -56,7 +56,7 @@ pub fn render(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels, window_id: &str
         .try_id("puzzle3d-play-settings")
         .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.section", "settings section id admission failed"))?
         .default_open(true)
-        .try_children(crate::editor::puzzle3d::ui_node_list([
+        .try_children(semio_framework_plugin::ui_node_list([
             stepper_field("puzzle3d-play-settings.contact-tolerance", labels.contact_tolerance.as_str(), runtime.contact_tolerance, 0.001, "setBrushPlacementContactTolerance", window_id),
             stepper_field("puzzle3d-play-settings.proximity-radius", labels.proximity_radius.as_str(), runtime.proximity_radius, 0.1, "setProximityRadius", window_id),
             stepper_field("puzzle3d-play-settings.chunk-size", labels.chunk_size.as_str(), runtime.chunk_size, 1.0, "setChunkSize", window_id),

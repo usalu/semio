@@ -23,7 +23,7 @@ function withTrailingSlash(url: string): string {
 if (!process.env.PLAYWRIGHT_BASE_URL) throw new Error("Run the Demonstrator test-e2e target through Nx");
 const baseURL = withTrailingSlash(process.env.PLAYWRIGHT_BASE_URL);
 
-/** 🖥️ The demonstrator's six panes are all GPU surfaces, and one of them only boots on a real adapter.
+/** 🖥️ Every one of the demonstrator's eight panes drives a GPU surface, and one of them only boots on a real adapter.
  *
  * `--use-angle=swiftshader` is enough for the r3f/WebGL World3d panes (aussuchen's grid paints its beams
  * under it), but the wasm/wgpu `TiledMapHost` never finishes `attachCanvas` on it: measured 2026-09-16

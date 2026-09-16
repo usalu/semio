@@ -875,10 +875,23 @@ export type PluginViewState = {
    * next trace page it expects of `run` at `generation`. The guest answers the pages after it inside the
    * scene's `toolRunTrace` lane (`📋️tool-run-contract.md` §3.2). */
   readonly toolRunTraceCursorByWindowId?: Readonly<Record<string, ViewToolRunTraceCursor>>;
+  /** 🪟️ Every tree container the host holds state for, flattened over all panel bodies — the ONE
+   * source of truth for which containers are open and which rows are on screen. A guest materialises
+   * exactly the named windows and keeps no expansion state of its own, which is what lets an open
+   * container survive a refresh. */
+  readonly treeWindows?: readonly ViewTreeWindowRequest[];
+  /** 🪟️ Rows the tallest visible panel body fits — the shared first-paint budget a guest spends in
+   * document order over containers the host has not yet seen. */
+  readonly treeViewportRows?: number;
 };
 
 /** 🧭️ View-context form of the tool run `ToolRunTraceCursor` — `run` bounded to exact JavaScript integers. */
 export type ViewToolRunTraceCursor = { readonly run: number; readonly generation: number; readonly page: number };
+
+/** 🪟️ One tree container's host-known state: whether the user opened or closed it (absent = the
+ * author's own default still stands) and the row window on screen, overscan included. The exact twin
+ * of `TreeWindowRequest` (`🛂️manifest/🦀️.rs`). */
+export type ViewTreeWindowRequest = { readonly bodyKey: string; readonly nodeKey: string; readonly open?: boolean; readonly offset: number; readonly rows: number };
 
 export type ResolvedPluginViewState = PluginViewState & { readonly locale: "en" | "de"; readonly terminology: "native" | "reuse" };
 
@@ -965,7 +978,7 @@ export function parseResolvedPluginViewState(value: unknown): ResolvedPluginView
   const row = object(value);
   const short = ["activeModeId", "activeWindowKindId", "activeUtilityId", "activeToolId", "windowId", "focusedWindowId"];
   const long = VIEW_CONTEXT_LONG_STRING_FIELDS;
-  const allowed = new Set([...short, ...long, "locale", "terminology", "sessionIdentity", "activeUtilityByWindowId", "windowInstances", "toolRunTraceCursorByWindowId"]);
+  const allowed = new Set([...short, ...long, "locale", "terminology", "sessionIdentity", "activeUtilityByWindowId", "windowInstances", "toolRunTraceCursorByWindowId", "treeWindows", "treeViewportRows"]);
   if (Object.keys(row).some((key) => !allowed.has(key)) || !["en", "de"].includes(row.locale as string) || !["native", "reuse"].includes(row.terminology as string)) throw new Error("view context: explicit supported preferences required");
   for (const key of short) if (row[key] !== undefined) identifier(row[key]);
   for (const key of long) if (row[key] !== undefined && (typeof row[key] !== "string" || Array.from(row[key]).length > VIEW_CONTEXT_LONG_STRING_CHARS)) throw new Error(`view context: invalid panel data at ${key}`);
@@ -1002,6 +1015,20 @@ export function parseResolvedPluginViewState(value: unknown): ResolvedPluginView
       if (Object.keys(cursor).sort().join(",") !== "generation,page,run" || !bounded(cursor.run, Number.MAX_SAFE_INTEGER) || !bounded(cursor.generation, 0xffff_ffff) || !bounded(cursor.page, 0xffff_ffff)) throw new Error("view context: invalid tool run trace cursor");
     }
   }
+  const boundedInteger = (input: unknown, maximum: number): boolean => Number.isInteger(input) && (input as number) >= 0 && (input as number) <= maximum;
+  if (row.treeWindows !== undefined) {
+    if (!Array.isArray(row.treeWindows) || row.treeWindows.length > 128) throw new Error("view context: tree window capacity exceeded");
+    for (const item of row.treeWindows) {
+      const request = object(item);
+      const keys = Object.keys(request).sort().join(",");
+      if (keys !== "bodyKey,nodeKey,offset,rows" && keys !== "bodyKey,nodeKey,offset,open,rows") throw new Error("view context: invalid tree window fields");
+      identifier(request.bodyKey);
+      identifier(request.nodeKey);
+      if (request.open !== undefined && typeof request.open !== "boolean") throw new Error("view context: invalid tree window open state");
+      if (!boundedInteger(request.offset, 0xffff_ffff) || !boundedInteger(request.rows, 0xffff_ffff)) throw new Error("view context: invalid tree window");
+    }
+  }
+  if (row.treeViewportRows !== undefined && !boundedInteger(row.treeViewportRows, 0xffff_ffff)) throw new Error("view context: invalid tree viewport rows");
   return structuredClone(row) as ResolvedPluginViewState;
 }
 
@@ -1027,12 +1054,22 @@ export function parseResolvedPluginViewState(value: unknown): ResolvedPluginView
  * `🪟️view-context/🧫️fixtures/🔢️integer-carriers/🔣️.json` and its Rust/TypeScript twins. */
 export function viewContextWithIntegerCarriers(view: PluginViewState, mint: (value: unknown) => unknown): Record<string, unknown> {
   const cursors = view.toolRunTraceCursorByWindowId;
-  if (cursors === undefined) return view as unknown as Record<string, unknown>;
-  const carried: Record<string, unknown> = {};
-  for (const [windowId, cursor] of Object.entries(cursors as Readonly<Record<string, Readonly<Record<string, unknown>>>>)) {
-    carried[windowId] = { run: mint(cursor.run), generation: mint(cursor.generation), page: mint(cursor.page) };
+  const windows = view.treeWindows;
+  const viewportRows = view.treeViewportRows;
+  if (cursors === undefined && windows === undefined && viewportRows === undefined) return view as unknown as Record<string, unknown>;
+  const projected: Record<string, unknown> = { ...view };
+  if (cursors !== undefined) {
+    const carried: Record<string, unknown> = {};
+    for (const [windowId, cursor] of Object.entries(cursors as Readonly<Record<string, Readonly<Record<string, unknown>>>>)) {
+      carried[windowId] = { run: mint(cursor.run), generation: mint(cursor.generation), page: mint(cursor.page) };
+    }
+    projected.toolRunTraceCursorByWindowId = carried;
   }
-  return { ...view, toolRunTraceCursorByWindowId: carried };
+  if (windows !== undefined) {
+    projected.treeWindows = windows.map((request) => (request.open === undefined ? { bodyKey: request.bodyKey, nodeKey: request.nodeKey, offset: mint(request.offset), rows: mint(request.rows) } : { bodyKey: request.bodyKey, nodeKey: request.nodeKey, open: request.open, offset: mint(request.offset), rows: mint(request.rows) }));
+  }
+  if (viewportRows !== undefined) projected.treeViewportRows = mint(viewportRows);
+  return projected;
 }
 
 /** 🎯️ Projects host-owned context onto one concrete window, preserving its own utility selection. */

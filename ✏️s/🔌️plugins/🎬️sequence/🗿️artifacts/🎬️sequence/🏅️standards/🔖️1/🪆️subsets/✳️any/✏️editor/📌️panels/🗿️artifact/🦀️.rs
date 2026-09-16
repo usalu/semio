@@ -2,10 +2,13 @@
 
 use crate::editor::sequence::terminology::SequenceLabels;
 use crate::editor::sequence::{control_slots, is_control_kind, SEQUENCE_INTERACTION_STEPS};
-use crate::editor::sequence::{sequence_action, ui_label, ui_node_list, ui_value_map, ui_value_text};
+use crate::editor::sequence::{sequence_action, ui_label, ui_value_map, ui_value_text, SEQUENCE_INTERACTION_GRANULARITY, SEQUENCE_PLAY_APP_ID};
 use crate::{SequenceHostSnapshot, SequenceStep};
 use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase, HasChildren, Trigger};
-use semio_framework_plugin::{tree_item_desc, BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiFixedList, UiText, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
+use semio_framework_plugin::{
+    tree_item_desc, tree_window_item, BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, TreeWindows, UiFixedList, UiText, FRAMEWORK_PANEL_TAB_ARTIFACT_ID,
+    FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL,
+};
 use semio_framework_ui_contract as ui;
 
 //#region 🔖️Constants
@@ -42,11 +45,17 @@ fn slot_label<'a>(slot_name: &'a str, labels: &SequenceLabels) -> &'a str {
 /// selection/hover presence from that domain (`.interaction_domain`) and prunes stale ids through
 /// that same topology, so no per-item click action is declared here anymore (clicks are translated
 /// into `interactionSelect` generically)?.
-fn build_step_tree_item(step: &SequenceStep, host_snapshot: &SequenceHostSnapshot, labels: &SequenceLabels) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+///
+/// 🪟️ Only the control-flow SLOT rows are windowed ([`tree_window_item`]): a slot holds an unbounded
+/// number of child steps at every depth, while a control step's own children are a closed set (its
+/// collapse `toggle` plus the one or two slots [`control_slots`] declares), so the toggle stays a
+/// fixed child control of the step row rather than competing with a window.
+fn build_step_tree_item(step: &SequenceStep, host_snapshot: &SequenceHostSnapshot, labels: &SequenceLabels, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let mut builder = ui::tree_item(ui_label(format!("{} ({})", step.id, step.kind))?)
         .try_id(&step.id)
         .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "sequence step id admission failed"))?
-        .description(UiText::try_from_str(&step.kind).ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "sequence step kind admission failed"))?);
+        .description(UiText::try_from_str(&step.kind).ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "sequence step kind admission failed"))?)
+        .granularity(UiText::try_from_str(SEQUENCE_INTERACTION_GRANULARITY).ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "sequence step granularity admission failed"))?);
     if is_control_kind(&step.kind) {
         let mut children = UiFixedList::<BuiltNode>::default();
         let action_args = ui_value_map([("id", ui_value_text(&step.id)?)])?;
@@ -64,18 +73,15 @@ fn build_step_tree_item(step: &SequenceStep, host_snapshot: &SequenceHostSnapsho
         .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "sequence collapse control admission failed"))?;
         children.try_push(toggle).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "sequence collapse child admission failed"))?;
         for slot_name in control_slots(&step.kind) {
-            let nested = ui_node_list(host_snapshot.steps.iter().filter(|entry| entry.slot.as_ref().is_some_and(|slot| slot.owner == step.id && slot.name == *slot_name)).map(|entry| build_step_tree_item(entry, host_snapshot, labels)))?;
-            let slot = ui::tree_item(ui_label(slot_label(slot_name, labels))?)
-                .try_id(format!("sequence-play-document.slot.{}.{}", step.id, slot_name))
+            let slot_id = format!("sequence-play-document.slot.{}.{}", step.id, slot_name);
+            let nested: Vec<&SequenceStep> = host_snapshot.steps.iter().filter(|entry| entry.slot.as_ref().is_some_and(|slot| slot.owner == step.id && slot.name == *slot_name)).collect();
+            let slot_item = ui::tree_item(ui_label(slot_label(slot_name, labels))?)
+                .try_id(&slot_id)
                 .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "sequence slot id admission failed"))?
                 .description(UiText::try_from_string(format!("{} {}", step.id, labels.slot.as_str())).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "sequence slot description admission failed"))?)
                 .icon(UiText::try_from_str("folder").ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "sequence slot icon admission failed"))?)
-                .default_open(true)
-                .dimmed(step.collapsed)
-                .try_children(nested)
-                .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "sequence nested step admission failed"))?
-                .try_build()
-                .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "sequence slot row admission failed"))?;
+                .dimmed(step.collapsed);
+            let slot = tree_window_item(windows, slot_item, &slot_id, true, &nested, |entry| build_step_tree_item(entry, host_snapshot, labels, windows))?;
             children.try_push(slot).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "sequence slot list admission failed"))?;
         }
         builder = builder.default_open(!step.collapsed).try_children(children).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "sequence control children admission failed"))?;
@@ -85,13 +91,28 @@ fn build_step_tree_item(step: &SequenceStep, host_snapshot: &SequenceHostSnapsho
 //#endregion 🔖️Helpers
 
 //#region 🔖️Render
-pub fn render(host_snapshot: &SequenceHostSnapshot, labels: &SequenceLabels) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    let step_items = ui_node_list(host_snapshot.steps.iter().filter(|step| step.slot.is_none()).map(|step| build_step_tree_item(step, host_snapshot, labels)))?;
-    let edge_items = ui_node_list(host_snapshot.edges.iter().map(|edge| tree_item_desc(format!("sequence-play-document.edge.{}", edge.id), format!("{} → {}", edge.from, edge.to), Some(edge.id.clone()))))?;
+pub fn render(host_snapshot: &SequenceHostSnapshot, labels: &SequenceLabels, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+    let root_steps: Vec<&SequenceStep> = host_snapshot.steps.iter().filter(|step| step.slot.is_none()).collect();
     PanelTreeBuilder::new("sequence-play-document")?
-        .section_or_placeholder("sequence-play-document.steps", Some(ui_label(labels.steps.as_str())?), true, step_items, labels.none.as_str())?
-        .section_or_placeholder("sequence-play-document.edges", Some(ui_label(labels.flow_edges.as_str())?), false, edge_items, labels.none.as_str())?
-        .interaction_domain(SEQUENCE_INTERACTION_STEPS)?
+        .window_section_or_placeholder(
+            windows,
+            "sequence-play-document.steps",
+            Some(ui_label(labels.steps.as_str())?),
+            true,
+            &root_steps,
+            |step| build_step_tree_item(step, host_snapshot, labels, windows),
+            labels.none.as_str(),
+        )?
+        .window_section_or_placeholder(
+            windows,
+            "sequence-play-document.edges",
+            Some(ui_label(labels.flow_edges.as_str())?),
+            false,
+            &host_snapshot.edges,
+            |edge| tree_item_desc(format!("sequence-play-document.edge.{}", edge.id), format!("{} → {}", edge.from, edge.to), Some(edge.id.clone())),
+            labels.none.as_str(),
+        )?
+        .interaction_domain(SEQUENCE_PLAY_APP_ID, SEQUENCE_INTERACTION_STEPS)?
         .build()
 }
 //#endregion 🔖️Render

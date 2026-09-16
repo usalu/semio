@@ -85,14 +85,24 @@ pub fn ui_value_map(values: impl IntoIterator<Item = (&'static str, semio_framew
     Ok(semio_framework_plugin::UiValue::Map(builder.finish()))
 }
 
-/// 🌳️ Admits fallibly assembled UI nodes into fixed child storage.
-pub fn ui_node_list(values: impl IntoIterator<Item = semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode>>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiFixedList<semio_framework_plugin::BuiltNode>> {
-    let mut nodes = semio_framework_plugin::UiFixedList::default();
-    for value in values {
-        let node = value?;
-        nodes.try_push(node).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI node admission failed"))?;
+/// 🌳️ The framework's one node-list admission — the crate-local copy is gone (ticket
+/// 26/09/16/ARTIFACT-TREE-VIRTUALISED-STREAMING §8.3).
+pub use semio_framework_plugin::ui_node_list;
+
+/// 🕹️ A domain pick row: [`semio_framework_plugin::tree_item_desc`] plus the granularity that marks
+/// the row a pick target of the panel tree's `.interaction_domain(..)`, so no per-row
+/// `interactionSelect` argument map is ever built.
+pub fn pick_item<I: AsRef<str>, L: TryInto<semio_framework_plugin::plugin_app_close_prelude::Label>>(
+    id: I,
+    label: L,
+    description: Option<String>,
+    granularity: &str,
+) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    let mut node = semio_framework_plugin::tree_item_desc(id, label, description)?;
+    if let semio_framework_plugin::Component::TreeItem(props) = &mut node.component {
+        props.granularity = Some(semio_framework_plugin::UiText::try_from_str(granularity).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "interaction granularity admission failed"))?);
     }
-    Ok(nodes)
+    Ok(node)
 }
 
 //#endregion 🔖️Constants
@@ -618,8 +628,8 @@ impl ArtifactEditor for DagPlayApp {
         let node = match body_key {
             DAG_PLAY_BODY_MAIN => main::render(document, &camera, labels),
             DAG_PLAY_BODY_COMPILED => compiled::render(document, &camera),
-            DAG_PLAY_BODY_ARTIFACT => document_panel::render(document, labels),
-            DAG_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels),
+            DAG_PLAY_BODY_ARTIFACT => document_panel::render(document, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, DAG_PLAY_BODY_ARTIFACT)),
+            DAG_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels, &semio_framework_plugin::TreeWindows::for_body(view_state, DAG_PLAY_BODY_CATALOGUE)),
             DAG_PLAY_BODY_INSPECTOR => inspection_panel::render(document, &[], labels),
             _ => return semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }?;

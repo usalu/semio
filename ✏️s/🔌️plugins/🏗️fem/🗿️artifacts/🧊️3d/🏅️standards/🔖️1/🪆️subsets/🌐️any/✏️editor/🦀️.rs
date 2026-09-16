@@ -31,6 +31,8 @@ use semio_framework_plugin::{
     ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ConfigSpec, ConfigView, Dialect, DraftView, Editor, EditorApp, Emit, Fault, InteractionRef, Label, LocalizedLabel, Media, MediaClass,
     MediaError, MediaForm, MediaPayload, MediaType, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, PluginAssemblyError, PluginCloseStep, UtilityCategory, UtilityDefinition, ViewModel, WindowMeasure,
 };
+use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep};
+use semio_framework_plugin::EphemeralEmit;
 use std::collections::HashMap;
 use store::EngineHandles;
 
@@ -183,8 +185,8 @@ const FEM3D_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] =
     ArtifactToolPublicationContract { tool_id: "patchLoad", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: "patchLoadCase", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: "patchCombination", lanes: &[ArtifactToolPublicationLane::Artifact] },
-    ArtifactToolPublicationContract { tool_id: "setResultAnimation", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
-    ArtifactToolPublicationContract { tool_id: "resultAnimationTick", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
+    ArtifactToolPublicationContract { tool_id: "setResultAnimation", lanes: &[ArtifactToolPublicationLane::WindowConfig, ArtifactToolPublicationLane::WindowTransient] },
+    ArtifactToolPublicationContract { tool_id: "resultAnimationTick", lanes: &[ArtifactToolPublicationLane::WindowConfig, ArtifactToolPublicationLane::WindowTransient] },
     ArtifactToolPublicationContract { tool_id: "focusEntity", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
     ArtifactToolPublicationContract { tool_id: "translateSelection", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: "rotateSelection", lanes: &[ArtifactToolPublicationLane::Artifact] },
@@ -209,6 +211,7 @@ fn fem3d_retained_window_value_bytes(command: &Fem3dCommand) -> usize {
         Fem3dCommand::SetResultDisplay(payload) => payload.mode.len().saturating_add(payload.source_id.as_ref().map_or(0, String::len)).saturating_add(payload.value.as_ref().map_or(0, String::len)),
         Fem3dCommand::SetResultAnimation(payload) => payload.value.as_ref().map_or(0, String::len).saturating_add(payload.loop_mode.as_ref().map_or(0, String::len)).saturating_add(payload.waveform.as_ref().map_or(0, String::len)),
         Fem3dCommand::SetTransformGumballFlag(payload) => payload.flag.len(),
+        Fem3dCommand::ResultAnimationTick(payload) => payload.window_id.len(),
         _ => 0,
     }
 }
@@ -265,6 +268,67 @@ fn fem3d_retained_reduce(
     let cfg = ConfigView { snapshot: config, window: context.and_then(|context| context.window_config.as_ref()) };
     let view = context.and_then(|context| context.view_state.as_ref());
     fem3d_route(command, &doc, &cfg, || fem3d_interaction_selection_ids(interaction), view)
+}
+
+/// 🧵️ The one retained work every fem3d row runs: the shared reducer for every command, and for the
+/// two playback commands the results window's TRANSIENT lane on top — the running clock the
+/// runtime captured from the command's own `window_id` (`retained_window_transient_target`) is
+/// read here and the frame is published as `CompleteWithEphemeral`.
+struct Fem3dCommandWork {
+    tool_id: &'static str,
+    consumed: bool,
+}
+
+impl Fem3dCommandWork {
+    fn new(tool_id: &'static str) -> Self {
+        Self { tool_id, consumed: false }
+    }
+}
+
+/// 🫧️ The clock the runtime captured for a playback command, or a fault when the tick's declared
+/// window authority is missing or belongs to another window.
+fn fem3d_captured_clock(context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Fem3dPlayApp>>>, window_id: &str) -> Result<Option<window_results::transient::Fem3dPlaybackClock>, Fault> {
+    let snapshot = context.and_then(|context| context.window_transient.as_ref()).ok_or_else(|| Fault::from("fem3d.result-animation-tick.window-transient-required"))?;
+    if snapshot.window_id() != window_id || snapshot.window_kind_id() != window_results::transient::WINDOW_KIND_ID {
+        return Err(Fault::from("fem3d.result-animation-tick.window-transient-mismatch"));
+    }
+    Ok(window_results::transient::captured_clock(Some(snapshot), window_id))
+}
+
+impl ArtifactCommandWork<EditorApp<Fem3dPlayApp>> for Fem3dCommandWork {
+    fn tool_id(&self) -> &'static str {
+        self.tool_id
+    }
+
+    fn extent(&self, command: &Fem3dCommand, snapshot: &Fem3dSnapshot, interaction: &protocol::InteractionState, _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Fem3dPlayApp>>>) -> Option<usize> {
+        fem3d_retained_extent(command, snapshot, interaction)
+    }
+
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<Fem3dPlayApp>>) -> Result<ArtifactCommandWorkStep<EditorApp<Fem3dPlayApp>>, Fault> {
+        if self.consumed {
+            return Err(Fault::from("retained-command-bounded-work-repeated"));
+        }
+        self.consumed = true;
+        let ArtifactCommandInputs { command, snapshot, config, history, interaction, hover, context, operation } = *input;
+        let playback = match command {
+            Fem3dCommand::ResultAnimationTick(payload) => {
+                let cfg = ConfigView { snapshot: config, window: context.and_then(|context| context.window_config.as_ref()) };
+                let view = context.and_then(|context| context.view_state.as_ref()).ok_or_else(|| Fault::from("fem3d.result-animation-tick.window-context-required"))?;
+                Some(result_animation_tick::step(payload, &cfg, view, fem3d_captured_clock(context, &payload.window_id)?)?)
+            }
+            Fem3dCommand::SetResultAnimation(payload) => {
+                let cfg = ConfigView { snapshot: config, window: context.and_then(|context| context.window_config.as_ref()) };
+                let view = context.and_then(|context| context.view_state.as_ref()).ok_or_else(|| Fault::from("fem3d.result-animation.window-context-required"))?;
+                let clock = payload.window_id.as_deref().filter(|id| !id.is_empty()).and_then(|id| context.and_then(|context| window_results::transient::captured_clock(context.window_transient.as_ref(), id)));
+                Some(set_result_animation::step(payload, &cfg, view, clock)?)
+            }
+            _ => None,
+        };
+        match playback {
+            Some(step) => Ok(ArtifactCommandWorkStep::CompleteWithEphemeral { emit: step.emit, ephemeral: EphemeralEmit { presence: Vec::new(), transient: Vec::new(), window_transient: step.window_transient } }),
+            None => fem3d_retained_reduce(command, snapshot, config, history, interaction, hover, context, operation).map(ArtifactCommandWorkStep::Complete),
+        }
+    }
 }
 
 struct Fem3dRetainedCommandJobFactory {
@@ -709,6 +773,23 @@ impl ArtifactEditor for Fem3dPlayApp {
         registry.register::<window_results::config::Fem3dResultsWindowConfigOwner>()
     }
 
+    fn register_window_transient_owners(registry: &mut semio_framework_plugin::WindowTransientOwnerRegistry) -> Result<(), Fault> {
+        registry.register::<window_results::transient::Fem3dResultsWindowTransientOwner>()
+    }
+
+    /// 🎯️ The playback chain publishes into ONE results window's transient: the tick names it off its
+    /// PAYLOAD (the shell redispatches a self-armed `DispatchAction` under whichever pane is
+    /// current), and a panel-tagged transport gesture names it the same way so a pause can rest
+    /// where the running clock is. The runtime validates the id against the trusted roster and
+    /// captures that exact window's mutation authority.
+    fn retained_window_transient_target(command: &Fem3dCommand) -> Option<(&str, &'static str)> {
+        match command {
+            Fem3dCommand::ResultAnimationTick(payload) if !payload.window_id.is_empty() => Some((payload.window_id.as_str(), window_results::transient::WINDOW_KIND_ID)),
+            Fem3dCommand::SetResultAnimation(payload) => payload.window_id.as_deref().filter(|id| !id.is_empty()).map(|id| (id, window_results::transient::WINDOW_KIND_ID)),
+            _ => None,
+        }
+    }
+
 
 
     semio_framework_plugin::bounded_first_step_tool_proofs! {
@@ -775,7 +856,7 @@ impl ArtifactEditor for Fem3dPlayApp {
             return Err(Fault::from("fem3d-command-payload-too-large"));
         }
         let tool_id = request.command.command_id();
-        let work = Box::new(semio_framework_plugin::retained_command::BoundedArtifactCommandWork::new(tool_id, fem3d_retained_reduce, fem3d_retained_extent));
+        let work = Box::new(Fem3dCommandWork::new(tool_id));
         let operation_context = AppOperationContext {
             app_instance_id: request.app_instance_id,
             parent_document_id: request.parent_document_id.clone(),
@@ -1043,7 +1124,7 @@ impl ArtifactEditor for Fem3dPlayApp {
                 Ok(Fem3dCommand::PatchCombination(patch_combination::PatchCombination { id, field, value }))
             }
             "setResultAnimation" => Ok(Fem3dCommand::SetResultAnimation(set_result_animation::SetResultAnimation { phase: number("phase"), playing: flag("playing"), speed: number("speed"), loop_mode: text("loopMode"), waveform: text("waveform"), field: text("field"), value: scalar_text("value"), window_id: text("windowId") })),
-            "resultAnimationTick" => Ok(Fem3dCommand::ResultAnimationTick(result_animation_tick::ResultAnimationTick {})),
+            "resultAnimationTick" => Ok(Fem3dCommand::ResultAnimationTick(result_animation_tick::ResultAnimationTick { window_id: text("windowId").unwrap_or_default() })),
             "focusEntity" => Ok(Fem3dCommand::FocusEntity(focus_entity::FocusEntity { id: text("id").unwrap_or_default() })),
             "translateSelection" => Ok(Fem3dCommand::TranslateSelection(translate_selection::TranslateSelection { ids: list("ids").unwrap_or_default(), dx: number("dx").unwrap_or_default(), dy: number("dy").unwrap_or_default(), dz: number("dz").unwrap_or_default() })),
             "rotateSelection" => Ok(Fem3dCommand::RotateSelection(rotate_selection::RotateSelection {
@@ -1080,7 +1161,7 @@ impl ArtifactEditor for Fem3dPlayApp {
     /// 🕹️ Interaction-less twin of [`Self::render_with_request_context`] — an empty `"fem3d"` domain,
     /// so nothing paints selected and the inspector shows the document summary.
     fn render(body_key: &str, doc: &ArtifactView<'_, Fem3dSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
-        Self::render_body(body_key, doc, cfg, view_state, Fem3dInteractionSnapshot::default())
+        Self::render_body(body_key, doc, cfg, view_state, Fem3dInteractionSnapshot::default(), None)
     }
 
     /// 🕹️ Reads the framework-owned `"fem3d"` selection/hover once per render and threads it through
@@ -1091,10 +1172,11 @@ impl ArtifactEditor for Fem3dPlayApp {
         doc: &ArtifactView<'_, Fem3dSnapshot>,
         cfg: &ConfigView<'_, NoConfig>,
         view_state: &ViewModel,
-        _transient: &semio_framework_plugin::TransientView<'_, semio_framework_plugin::NoTransient>,
+        transient: &semio_framework_plugin::TransientView<'_, semio_framework_plugin::NoTransient>,
         interaction: &InteractionView<'_>,
     ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
-        Self::render_body(body_key, doc, cfg, view_state, Fem3dInteractionSnapshot::from_interaction(interaction))
+        let clock = transient.window::<window_results::transient::Fem3dResultsWindowTransientOwner>().and_then(|window| window.clock);
+        Self::render_body(body_key, doc, cfg, view_state, Fem3dInteractionSnapshot::from_interaction(interaction), clock)
     }
 
     /// 🎛️ The model window's utility options — the transform gumball's handle flags, read from the
@@ -1109,7 +1191,7 @@ impl ArtifactEditor for Fem3dPlayApp {
 impl Fem3dPlayApp {
     /// 🖼️ Body-key routing table shared by both render entry points: two World3d windows and the
     /// three dock panels.
-    fn render_body(body_key: &str, doc: &ArtifactView<'_, Fem3dSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &ViewModel, interaction: Fem3dInteractionSnapshot) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render_body(body_key: &str, doc: &ArtifactView<'_, Fem3dSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &ViewModel, interaction: Fem3dInteractionSnapshot, clock: Option<window_results::transient::Fem3dPlaybackClock>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let labels = fem3d_labels(view_state);
         match body_key {
             window_model::FEM3D_BODY_MODEL => {
@@ -1118,12 +1200,12 @@ impl Fem3dPlayApp {
                 crate::live_visual::with_live_visual(doc.render_operation(), |visual| window_model::render_with_progress(doc.snapshot, &window, &interaction, transform_armed, visual))
             }
             window_results::FEM3D_BODY_RESULTS => {
-                let window = window_results::config::current(cfg);
+                let window = window_results::config::effective(&window_results::config::current(cfg), clock.as_ref());
                 window_results::render(doc.snapshot, &window, &interaction, doc.render_operation())
             }
-            artifact_panel::BODY_KEY => artifact_panel::render(doc.snapshot, &interaction, labels),
-            inspection_panel::BODY_KEY => inspection_panel::render(doc.snapshot, &interaction, labels),
-            results_panel::BODY_KEY => results_panel::render(doc.snapshot, window_results::config::captured(cfg).as_ref(), &results_window_instance_id(view_state).unwrap_or_default(), labels),
+            artifact_panel::BODY_KEY => artifact_panel::render(doc.snapshot, &interaction, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, artifact_panel::BODY_KEY)),
+            inspection_panel::BODY_KEY => inspection_panel::render(doc.snapshot, &interaction, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, inspection_panel::BODY_KEY)),
+            results_panel::BODY_KEY => results_panel::render(doc.snapshot, window_results::config::captured(cfg).as_ref(), clock.as_ref(), &results_window_instance_id(view_state).unwrap_or_default(), labels),
             _ => built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "fem3d unknown-body label admission failed")),
         }
         .map(semio_framework_plugin::built_to_component_tree)
@@ -1134,15 +1216,6 @@ impl Fem3dPlayApp {
 /// 🏷️ Admits resolved fem3d text into the semantic UI contract.
 pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::plugin_app_close_prelude::Label> {
     semio_framework_plugin::plugin_app_close_prelude::Label::try_from(value.as_ref()).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "fem3d UI label admission failed"))
-}
-
-/// 🧾️ Admits a bounded row list — the one `UiFixedList` every section builder consumes.
-pub fn ui_node_list(values: impl IntoIterator<Item = semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode>>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiFixedList<semio_framework_plugin::BuiltNode>> {
-    let mut nodes = semio_framework_plugin::UiFixedList::default();
-    for value in values {
-        nodes.try_push(value?).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "fem3d UI node admission failed"))?;
-    }
-    Ok(nodes)
 }
 
 /// 🎛️ Mints one fem3d-controller action for a panel row or control binding.
@@ -1209,6 +1282,8 @@ fn fem3d_patch_action(id: &str, label: LocalizedLabel) -> semio_framework_plugin
 pub fn create_fem3d_app() -> AppDefinition {
     Editor::builder(crate::FEM3D_DIALECT)
             .document(["semio", "fem", "fem3d"])
+            .terminology("reuse")
+            .terminology_document("reuse", ["Entwerfen mit Bestand", "Statik"])
             .artifact_kind(crate::computation_artifact_kind())
             .icon_id("fem-app")
             .mode(edit::MODE_ID, LocalizedLabel::native("Edit", "Bearbeiten"), "pencil")

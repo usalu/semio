@@ -92,14 +92,7 @@ pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyRes
 }
 
 /// 🌳️ Admits fallibly assembled UI nodes into fixed child storage.
-pub fn ui_node_list(values: impl IntoIterator<Item = semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode>>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiFixedList<semio_framework_plugin::BuiltNode>> {
-    let mut nodes = semio_framework_plugin::UiFixedList::default();
-    for value in values {
-        let node = value?;
-        nodes.try_push(node).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI node admission failed"))?;
-    }
-    Ok(nodes)
-}
+pub use semio_framework_plugin::ui_node_list;
 
 //#endregion 🔖️Constants
 
@@ -1117,13 +1110,13 @@ impl ArtifactEditor for RemodelingPlayApp {
             model::windows::model::REMODELING_PLAY_BODY_MAIN => model::windows::model::render(scene, &model::windows::model::config::current(cfg)),
             capture::windows::frames::REMODELING_PLAY_BODY_FRAMES => capture::windows::frames::render(scene, &capture::windows::frames::config::current(cfg)),
             analyze::windows::report::REMODELING_PLAY_BODY_REPORT => analyze::windows::report::render(scene, &analyze::windows::report::config::current(cfg)),
-            media::REMODELING_PLAY_BODY_MEDIA => media::render(scene, labels),
-            document::REMODELING_PLAY_BODY_PIPELINE => document::render(scene, doc.tool_run(), view_state.locale),
-            results::REMODELING_PLAY_BODY_RESULTS => results::render(scene, labels),
-            parameters::REMODELING_PLAY_BODY_PARAMETERS => parameters::render(scene, labels),
-            calibration_panel::REMODELING_PLAY_BODY_CALIBRATION => calibration_panel::render(scene, labels),
-            tracks::REMODELING_PLAY_BODY_TRACKS => tracks::render(scene, labels),
-            quality::REMODELING_PLAY_BODY_QC => quality::render(scene, labels),
+            media::REMODELING_PLAY_BODY_MEDIA => media::render(scene, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, media::REMODELING_PLAY_BODY_MEDIA)),
+            document::REMODELING_PLAY_BODY_PIPELINE => document::render(scene, doc.tool_run(), view_state.locale, &semio_framework_plugin::TreeWindows::for_body(view_state, document::REMODELING_PLAY_BODY_PIPELINE)),
+            results::REMODELING_PLAY_BODY_RESULTS => results::render(scene, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, results::REMODELING_PLAY_BODY_RESULTS)),
+            parameters::REMODELING_PLAY_BODY_PARAMETERS => parameters::render(scene, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, parameters::REMODELING_PLAY_BODY_PARAMETERS)),
+            calibration_panel::REMODELING_PLAY_BODY_CALIBRATION => calibration_panel::render(scene, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, calibration_panel::REMODELING_PLAY_BODY_CALIBRATION)),
+            tracks::REMODELING_PLAY_BODY_TRACKS => tracks::render(scene, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, tracks::REMODELING_PLAY_BODY_TRACKS)),
+            quality::REMODELING_PLAY_BODY_QC => quality::render(scene, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, quality::REMODELING_PLAY_BODY_QC)),
             _ => return semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         };
         built.map(semio_framework_plugin::built_to_component_tree)

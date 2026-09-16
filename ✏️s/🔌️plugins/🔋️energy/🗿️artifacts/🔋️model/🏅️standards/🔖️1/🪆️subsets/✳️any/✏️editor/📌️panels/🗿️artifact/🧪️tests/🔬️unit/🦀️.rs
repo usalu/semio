@@ -1,5 +1,6 @@
 use super::*;
 use crate::ENERGY_MODEL_DOCUMENT_SCHEMA;
+use semio_framework_plugin::{TreeWindowRequest, ViewModel};
 
 fn snapshot_of(model: &Model) -> EnergyModelSnapshot {
     crate::energy_snapshot_with_state(ENERGY_MODEL_DOCUMENT_SCHEMA, model, None)
@@ -20,30 +21,44 @@ fn nothing() -> EnergyModelInteractionSnapshot {
     EnergyModelInteractionSnapshot::default()
 }
 
-fn panel(snapshot: &EnergyModelSnapshot, interaction: &EnergyModelInteractionSnapshot, locale: Locale) -> String {
-    let built = render(snapshot, interaction, locale).expect("energy artifact tree assembly");
+/// 🪟️ One host window request for this body — exactly what a scroll, an expand or a collapse in the
+/// React shell sends the guest on the next refresh.
+fn request(node_key: &str, open: Option<bool>, offset: u32, rows: u32) -> TreeWindowRequest {
+    TreeWindowRequest { body_key: BODY_KEY.to_string(), node_key: node_key.to_string(), open, offset, rows }
+}
+
+/// 🪟️ Opens one container wide enough to show all of it — the "the user expanded this section" state.
+fn opened(node_key: &str) -> TreeWindowRequest {
+    request(node_key, Some(true), 0, 64)
+}
+
+fn hosted(requests: Vec<TreeWindowRequest>) -> ViewModel {
+    ViewModel { tree_windows: requests, ..Default::default() }
+}
+
+/// ♻️ Every built row is projected AND RETIRED: an argument map dropped without retirement never
+/// returns its credit, which would starve the panels assembled by the tests running beside this one.
+fn panel(snapshot: &EnergyModelSnapshot, interaction: &EnergyModelInteractionSnapshot, locale: Locale, view: &ViewModel) -> String {
+    let built = render(snapshot, interaction, locale, &TreeWindows::for_body(view, BODY_KEY)).expect("energy artifact tree assembly");
+    semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree { root: built }).expect("energy artifact tree projection")
+}
+
+/// 🏠️ The first paint: no host state at all, so every container opens at its author default and the
+/// shared first-paint budget decides how much of each is materialised.
+fn unhosted(snapshot: &EnergyModelSnapshot, interaction: &EnergyModelInteractionSnapshot, locale: Locale) -> String {
+    let built = render(snapshot, interaction, locale, &TreeWindows::unhosted()).expect("energy artifact tree assembly");
     semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree { root: built }).expect("energy artifact tree projection")
 }
 
 fn english(snapshot: &EnergyModelSnapshot) -> String {
-    panel(snapshot, &nothing(), Locale::En)
+    unhosted(snapshot, &nothing(), Locale::En)
 }
 
-/// 🪙️ `panel_page_rows()` reads the PROCESS-WIDE `UiValue` argument arena, which every other panel
-/// test in this binary spends from CONCURRENTLY — so any law about which rows survive is asserted
-/// against an EXPLICIT budget, never against whatever the shared arena happens to admit that run.
-///
-/// ♻️ And every built row is projected AND RETIRED: an argument map dropped without retirement never
-/// returns its credit, which would starve the panels assembled by the tests running beside this one.
-fn retire(items: UiFixedList<BuiltNode>) -> serde_json::Value {
-    let root = PanelTreeBuilder::new(TREE_NAMESPACE).expect("namespace").section(format!("{TREE_NAMESPACE}.probe"), None, true, items).expect("probe section").build().expect("probe tree");
-    let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree { root }).expect("probe projection");
-    let probe: serde_json::Value = serde_json::from_str(&json).expect("the projection is JSON");
-    // 🌳️ The built root is the TREE; its one child is the probe section that actually holds the rows.
-    node_at(&probe, &format!("{TREE_NAMESPACE}.probe")).cloned().unwrap_or(probe)
+fn tree_of(json: &str) -> serde_json::Value {
+    serde_json::from_str(json).expect("the artifact projection is JSON")
 }
 
-/// 🔎️ The projected node carrying `key`, anywhere under the probe root.
+/// 🔎️ The projected node carrying `key`, anywhere under the tree root.
 fn node_at<'a>(node: &'a serde_json::Value, key: &str) -> Option<&'a serde_json::Value> {
     if node["key"].as_str() == Some(key) {
         return Some(node);
@@ -55,16 +70,20 @@ fn child_keys(node: &serde_json::Value) -> Vec<String> {
     node["children"].as_array().map(|children| children.iter().filter_map(|child| child["key"].as_str().map(str::to_owned)).collect()).unwrap_or_default()
 }
 
-/// 🏘️ The one zone row of a BESTEST fixture, built against an explicit budget and retired.
-fn zone_tree(snapshot: &EnergyModelSnapshot, interaction: &EnergyModelInteractionSnapshot, rows: usize) -> serde_json::Value {
-    let mut budget = PanelRowBudget::new(rows);
-    let built = zones_section(&snapshot.model, interaction, Locale::En, &mut budget).expect("the zones section assembles");
-    let probe = retire(built);
-    node_at(&probe, "1").cloned().expect("the zone row")
+/// 🪟️ The `{total, offset}` a container stamps — the full extent of its logical child list and where
+/// the materialised slice starts.
+fn window_of(node: &serde_json::Value) -> (usize, usize) {
+    let window = &node["component"]["window"];
+    let total = window["total"].as_u64().unwrap_or_else(|| panic!("a container stamps its window: {node}"));
+    (total as usize, window["offset"].as_u64().unwrap_or(0) as usize)
 }
 
-/// 🧫️ The demo's whole zones demand: one zone, six surfaces, two windows.
-const DEMO_ZONES_DEMAND: usize = 9;
+fn section_key(suffix: &str) -> String {
+    format!("{TREE_NAMESPACE}.{suffix}")
+}
+
+/// 🧫️ The demo's zone row children: no spaces, six surfaces.
+const DEMO_ZONE_CHILDREN: usize = 6;
 
 #[semio_framework_async_macros::async_test]
 async fn the_panel_tab_declares_the_framework_artifact_slot_and_this_body_key() {
@@ -80,48 +99,62 @@ async fn the_panel_tab_declares_the_framework_artifact_slot_and_this_body_key() 
 async fn every_section_is_assembled_over_the_document() {
     let json = english(&demo());
     for section in ["site", "zones", "shading", "materials", "glazing-materials", "gas-materials", "constructions", "loads", "controls", "hvac", "schedules"] {
-        assert!(json.contains(&format!("{TREE_NAMESPACE}.{section}")), "section {section} missing from {json}");
+        assert!(json.contains(&section_key(section)), "section {section} missing from {json}");
     }
 }
 
-/// 🌳️ Every surface and window of the document reaches a row once the zones section has its whole
-/// demand — asserted against an explicit budget, not the shared arena.
+/// 🌳️ Every surface and window of the document reaches a row — the zones section and the zone row are
+/// open by author default, so the first paint already shows the whole hierarchy of this fixture.
 #[semio_framework_async_macros::async_test]
 async fn every_zone_surface_and_window_is_a_row_keyed_by_its_entity_id() {
-    let zone = zone_tree(&demo(), &nothing(), DEMO_ZONES_DEMAND);
-    assert_eq!(child_keys(&zone), vec!["40", "41", "42", "43", "44", "45"], "every surface is a row keyed by its own EntityId");
-    let south_wall = node_at(&zone, "40").expect("the south wall row");
+    let tree = tree_of(&english(&demo()));
+    let zone = node_at(&tree, "1").expect("the zone row");
+    assert_eq!(child_keys(zone), vec!["40", "41", "42", "43", "44", "45"], "every surface is a row keyed by its own EntityId");
+    let south_wall = node_at(zone, "40").expect("the south wall row");
     assert_eq!(child_keys(south_wall), vec!["50", "51"], "both windows are rows nested under their host wall");
 }
 
-/// 🕹️ Every entity row binds exactly ONE action — the framework-reserved `interactionSelect` in this
-/// editor's own domain — and no row carries a second verb (the argument-arena law).
-/// 🧾️ The catalogue sections key their rows by the raw `EntityId` too — asserted through the
-/// section builders with their own budgets, for the same arena reason.
+/// 🧾️ The catalogue sections key their rows by the raw `EntityId` too — read through the windows the
+/// host opens them with, because they are closed by author default.
 #[semio_framework_async_macros::async_test]
 async fn the_catalogue_sections_key_their_rows_by_entity_id() {
     let snapshot = demo();
     let model = &snapshot.model;
-    let keys = |built: UiFixedList<BuiltNode>| child_keys(&retire(built));
-    let mut budget = PanelRowBudget::new(32);
-    assert!(keys(glazing_materials_section(model, &nothing(), Locale::En, &mut budget).expect("glazing")).contains(&"22".to_string()));
-    assert!(keys(gas_materials_section(model, &nothing(), Locale::En, &mut budget).expect("gases")).contains(&"23".to_string()));
-    assert!(keys(controls_section(model, &nothing(), Locale::En, &mut budget).expect("controls")).contains(&"62".to_string()));
-    assert!(keys(hvac_section(model, &nothing(), Locale::En, &mut budget).expect("hvac")).contains(&"63".to_string()));
-    assert_eq!(keys(materials_section(model, &nothing(), Locale::En, &mut budget).expect("materials")).len(), model.materials.len());
-    assert_eq!(keys(constructions_section(model, &nothing(), Locale::En, &mut budget).expect("constructions")).len(), model.constructions.len());
+    let view = hosted(vec![
+        opened(&section_key("materials")),
+        opened(&section_key("glazing-materials")),
+        opened(&section_key("gas-materials")),
+        opened(&section_key("constructions")),
+        opened(&section_key("controls")),
+        opened(&section_key("hvac")),
+    ]);
+    let tree = tree_of(&panel(&snapshot, &nothing(), Locale::En, &view));
+    let keys = |suffix: &str| child_keys(node_at(&tree, &section_key(suffix)).unwrap_or_else(|| panic!("section {suffix} exists: {tree}")));
+    assert!(keys("glazing-materials").contains(&"22".to_string()));
+    assert!(keys("gas-materials").contains(&"23".to_string()));
+    assert!(keys("controls").contains(&"62".to_string()));
+    assert!(keys("hvac").contains(&"63".to_string()));
+    assert_eq!(keys("materials").len(), model.materials.len());
+    assert_eq!(keys("constructions").len(), model.constructions.len());
 }
 
+/// 🕹️ A pick row carries NO argument map: it declares its `granularity`, and the ONE
+/// `interactionSelect` the tree root binds turns a click on the row's raw id into a pick. That is the
+/// whole argument-arena law — a document of any size costs the arena one binding.
 #[semio_framework_async_macros::async_test]
 async fn every_entity_row_picks_into_the_energy_model_domain() {
-    let snapshot = demo();
-    let mut budget = PanelRowBudget::new(DEMO_ZONES_DEMAND);
-    let built = zones_section(&snapshot.model, &nothing(), Locale::En, &mut budget).expect("the zones section assembles");
-    let json = retire(built).to_string();
-    assert!(json.contains("interactionSelect"), "{json}");
-    assert!(json.contains(ENERGY_MODEL_INTERACTION_DOMAIN));
-    assert!(json.contains(ENERGY_GRANULARITY_SURFACE) && json.contains(ENERGY_GRANULARITY_FENESTRATION) && json.contains(ENERGY_GRANULARITY_ZONE));
-    assert!(!json.contains(DELETE_SURFACE_MARKER), "verbs belong to the inspector, never to a tree row: {json}");
+    let tree = tree_of(&english(&demo()));
+    let root_bindings = tree["bindings"].to_string();
+    assert!(root_bindings.contains(INTERACTION_SELECT_ACTION_ID), "the tree itself binds the pick: {root_bindings}");
+    assert_eq!(root_bindings.matches(INTERACTION_SELECT_ACTION_ID).count(), 1, "exactly ONE tree-level pick binding: {root_bindings}");
+    assert!(tree.to_string().contains(ENERGY_MODEL_INTERACTION_DOMAIN));
+
+    for (key, granularity) in [("1", ENERGY_GRANULARITY_ZONE), ("40", ENERGY_GRANULARITY_SURFACE), ("50", ENERGY_GRANULARITY_FENESTRATION)] {
+        let row = node_at(&tree, key).unwrap_or_else(|| panic!("row {key} exists: {tree}"));
+        assert_eq!(row["component"]["granularity"].as_str(), Some(granularity), "row {key} declares the granularity it picks at: {row}");
+        assert!(row["bindings"].as_array().is_none_or(|bindings| bindings.is_empty()), "a pick row authors no binding of its own: {row}");
+    }
+    assert!(!tree.to_string().contains(DELETE_SURFACE_MARKER), "verbs belong to the inspector, never to a tree row");
 }
 
 const DELETE_SURFACE_MARKER: &str = "delete-surface";
@@ -130,21 +163,25 @@ const DELETE_SURFACE_MARKER: &str = "delete-surface";
 /// list, is what makes "which wall is this window in" readable without a second lookup.
 #[semio_framework_async_macros::async_test]
 async fn windows_nest_under_their_surface_and_surfaces_under_their_zone() {
-    let zone = zone_tree(&demo(), &nothing(), DEMO_ZONES_DEMAND);
-    let south_wall = node_at(&zone, "40").expect("the south wall is nested under its zone");
+    let tree = tree_of(&english(&demo()));
+    let zone = node_at(&tree, "1").expect("the zone row");
+    let south_wall = node_at(zone, "40").expect("the south wall is nested under its zone");
     assert_eq!(child_keys(south_wall), vec!["50", "51"], "both south windows are nested under the south wall");
-    let json = english(&demo());
-    assert!(json.contains(&format!("{TREE_NAMESPACE}.zones")), "the zones section reaches the rendered tree: {json}");
+    assert!(node_at(&tree, &section_key("zones")).is_some(), "the zones section reaches the rendered tree: {tree}");
 }
 
 #[semio_framework_async_macros::async_test]
 async fn a_shading_surface_is_listed_when_the_model_has_one() {
-    let snapshot = shaded();
-    let built = shading_section(&snapshot.model, &nothing(), Locale::En, &mut PanelRowBudget::new(4)).expect("the shading section assembles");
-    assert_eq!(child_keys(&retire(built)), vec!["65"], "the south overhang is a row keyed by its own EntityId");
-    let bare = demo();
-    let empty = shading_section(&bare.model, &nothing(), Locale::En, &mut PanelRowBudget::new(4)).expect("empty section");
-    assert!(child_keys(&retire(empty)).is_empty(), "case 600 has no shading surface");
+    let view = hosted(vec![opened(&section_key("shading"))]);
+    let tree = tree_of(&panel(&shaded(), &nothing(), Locale::En, &view));
+    let section = node_at(&tree, &section_key("shading")).expect("the shading section");
+    assert_eq!(child_keys(section), vec!["65"], "the south overhang is a row keyed by its own EntityId");
+    assert_eq!(window_of(section).0, 1, "and the section reports the one shading surface it holds");
+
+    let bare = tree_of(&panel(&demo(), &nothing(), Locale::En, &view));
+    let empty = node_at(&bare, &section_key("shading")).expect("the shading section");
+    assert_eq!(child_keys(empty), vec![section_key("shading.empty")], "case 600 has no shading surface, so the section holds only its placeholder");
+    assert!(empty["component"]["window"].is_null(), "an empty container publishes no window: {empty}");
 }
 
 /// 🗓️ A schedule row is read-only: a `ScheduleId` lives in its own id space, so keying a pick by its
@@ -154,58 +191,34 @@ async fn a_shading_surface_is_listed_when_the_model_has_one() {
 /// `EntityId` either, but it dispatches the framework's CLEARING pick rather than a target.
 #[semio_framework_async_macros::async_test]
 async fn schedule_rows_are_read_only() {
-    let snapshot = demo();
-    let built = render(&snapshot, &nothing(), Locale::En).expect("tree assembles");
-    let section_key = format!("{TREE_NAMESPACE}.schedules");
-    let section = built.children.iter().find(|section| section.key.as_str() == section_key.as_str()).unwrap_or_else(|| panic!("section {section_key} exists"));
-    let read_only: Vec<bool> = section.children.iter().map(|row| row.bindings.is_empty()).collect();
-    let no_verbs: Vec<bool> = section
-        .children
-        .iter()
-        .map(|row| match &row.component {
-            semio_framework_plugin::plugin_app_close_prelude::Component::TreeItem(props) => props.row_actions.is_empty(),
-            _ => true,
-        })
-        .collect();
-    // ♻️ Retire the built tree before asserting: a dropped argument map never returns its arena
-    // credit and would starve the panels the tests running beside this one are assembling.
-    let _ = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree { root: built });
-    assert!(read_only.iter().all(|empty| *empty), "every schedule row must bind nothing");
-    assert!(no_verbs.iter().all(|empty| *empty), "every schedule row must carry no row action");
+    let view = hosted(vec![opened(&section_key("schedules"))]);
+    let tree = tree_of(&panel(&demo(), &nothing(), Locale::En, &view));
+    let section = node_at(&tree, &section_key("schedules")).expect("the schedules section");
+    let rows = section["children"].as_array().cloned().unwrap_or_default();
+    assert_eq!(rows.len(), 5, "the five schedule families are listed: {section}");
+    for row in &rows {
+        assert!(row["bindings"].as_array().is_none_or(|bindings| bindings.is_empty()), "every schedule row must bind nothing: {row}");
+        assert!(row["component"]["granularity"].is_null(), "and must not be a pick target: {row}");
+        assert!(row["component"]["rowActions"].as_array().is_none_or(|actions| actions.is_empty()), "every schedule row must carry no row action: {row}");
+    }
 }
 
-/// 📭️ An empty model still renders: each entity section shows its placeholder instead of refusing.
+/// 📭️ An empty model still renders: an empty section shows its placeholder instead of refusing.
 #[semio_framework_async_macros::async_test]
 async fn an_empty_model_renders_placeholders_rather_than_refusing() {
-    let json = english(&snapshot_of(&Model::default()));
-    assert!(json.contains(&format!("{TREE_NAMESPACE}.zones.empty")), "{json}");
-    assert!(json.contains(&format!("{TREE_NAMESPACE}.materials.empty")));
-    assert!(json.contains("None"), "the placeholder label is rendered");
+    let view = hosted(vec![opened(&section_key("materials"))]);
+    let tree = tree_of(&panel(&snapshot_of(&Model::default()), &nothing(), Locale::En, &view));
+    assert!(node_at(&tree, &section_key("zones.empty")).is_some(), "{tree}");
+    assert!(node_at(&tree, &section_key("materials.empty")).is_some(), "{tree}");
+    assert!(tree.to_string().contains("None"), "the placeholder label is rendered");
 }
 
-/// 🪙️ Max-min fair paging: every section that fits keeps all its rows, only the widest truncate, and
-/// the quotas never exceed the page.
+//#region 🪟️WindowLaws
+/// 🪟️ THE law this panel was rebuilt for: a document an order of magnitude past one viewport stamps
+/// every container's FULL extent and materialises only the slice the host asked for. No section is
+/// truncated, no `+N` row is invented, and the scrollbar the host paints spans the whole catalogue.
 #[semio_framework_async_macros::async_test]
-async fn section_quotas_are_max_min_fair_and_never_exceed_the_page() {
-    let demands = [0, 90, 1, 12, 1, 1, 4, 2, 1, 1, 0];
-    let page = 40;
-    let quotas = section_quotas(demands, page);
-    assert!(quotas.iter().sum::<usize>() <= page, "{quotas:?} overspends the page");
-    for index in 0..SECTIONS {
-        assert!(quotas[index] <= demands[index], "section {index} was given more rows than it wants");
-    }
-    for index in [2usize, 4, 5, 6, 7, 8, 9] {
-        assert_eq!(quotas[index], demands[index], "small section {index} must keep every row");
-    }
-    assert!(quotas[1] < demands[1], "only the widest section truncates");
-    let roomy = section_quotas(demands, 1000);
-    assert_eq!(roomy, demands, "a page that fits everything truncates nothing");
-}
-
-/// ➕️ A document past the page closes each truncated section with a continuation row instead of
-/// failing an argument admission mid-row.
-#[semio_framework_async_macros::async_test]
-async fn an_oversized_document_pages_with_continuation_rows() {
+async fn an_oversized_document_stamps_every_containers_total_and_materialises_only_its_window() {
     let mut model = crate::examples::demo::model();
     let seed = model.materials[0].clone();
     for index in 0..400u32 {
@@ -214,9 +227,91 @@ async fn an_oversized_document_pages_with_continuation_rows() {
         copy.name = format!("Filler {index}");
         model.materials.push(copy);
     }
-    let json = english(&snapshot_of(&model));
-    assert!(json.contains(&format!("{TREE_NAMESPACE}.materials.more")), "a truncated section closes with its continuation row: {json}");
+    let materials = model.materials.len();
+    let snapshot = snapshot_of(&model);
+    let view = hosted(vec![request(&section_key("materials"), Some(true), 0, 10)]);
+    let json = panel(&snapshot, &nothing(), Locale::En, &view);
+    let tree = tree_of(&json);
+
+    let section = node_at(&tree, &section_key("materials")).expect("the materials section");
+    assert_eq!(window_of(section), (materials, 0), "the section reports the WHOLE catalogue, however little of it is built: {section}");
+    let built = child_keys(section);
+    assert_eq!(built.len(), 10, "exactly the ten rows the host asked for: {built:?}");
+    let expected: Vec<String> = model.materials.iter().take(10).map(|material| energy_target_id(material.id)).collect();
+    assert_eq!(built, expected, "keyed by the raw EntityId, in document order");
+
+    let zone = node_at(&tree, "1").expect("the zone row");
+    assert_eq!(window_of(zone).0, DEMO_ZONE_CHILDREN, "the nested zone container stamps its own total too: {zone}");
+
+    assert!(!json.contains(".more"), "no continuation row survives anywhere: {json}");
+    assert!(!json.contains("\"+"), "and no `+N` label either: {json}");
 }
+
+/// 🪟️ A closed container costs one stamped `total` and nothing else — that is what makes a document
+/// with ten thousand entities cheap to paint, and what the host's expand arrow reads.
+#[semio_framework_async_macros::async_test]
+async fn a_closed_container_stamps_its_total_and_materialises_no_child() {
+    let view = hosted(vec![request("1", Some(false), 0, 64)]);
+    let tree = tree_of(&panel(&demo(), &nothing(), Locale::En, &view));
+    let zone = node_at(&tree, "1").expect("the zone row");
+    assert_eq!(window_of(zone).0, DEMO_ZONE_CHILDREN, "a closed zone still reports everything it owns: {zone}");
+    assert!(child_keys(zone).is_empty(), "and materialises none of it: {zone}");
+
+    // 🧾️ A section closed by AUTHOR default behaves identically without any host state at all.
+    let first_paint = tree_of(&english(&demo()));
+    let materials = node_at(&first_paint, &section_key("materials")).expect("the materials section");
+    assert!(child_keys(materials).is_empty(), "a section that opens closed builds nothing: {materials}");
+    assert!(window_of(materials).0 > 0, "but still reports its extent: {materials}");
+}
+
+/// 🪟️ Scrolling a nested group: the host names the surface and the slice, and exactly that slice of
+/// its windows is materialised — keyed by raw `EntityId`, never renumbered by the offset.
+#[semio_framework_async_macros::async_test]
+async fn a_tree_window_request_materialises_exactly_its_slice_of_a_surface_group() {
+    let south_wall = "40";
+    let view = hosted(vec![request(south_wall, Some(true), 1, 1)]);
+    let tree = tree_of(&panel(&demo(), &nothing(), Locale::En, &view));
+    let wall = node_at(&tree, south_wall).expect("the south wall row");
+    assert_eq!(window_of(wall), (2, 1), "the wall reports both its windows and that the slice starts at the second: {wall}");
+    assert_eq!(child_keys(wall), vec!["51"], "exactly entries [1, 2) are built: {wall}");
+
+    let whole = hosted(vec![opened(south_wall)]);
+    let tree = tree_of(&panel(&demo(), &nothing(), Locale::En, &whole));
+    assert_eq!(child_keys(node_at(&tree, south_wall).expect("the south wall row")), vec!["50", "51"], "and a wide window builds both");
+}
+
+/// 🪟️ The nesting a hand-paged workaround used to starve: a zone owning far more surfaces than one
+/// viewport shows keeps EVERY surface reachable, and a surface's own windows are never collapsed into
+/// a marker no row can expand (the defect the first browser probe of this ticket found).
+#[semio_framework_async_macros::async_test]
+async fn a_wide_zone_keeps_every_surface_reachable_and_no_window_is_ever_collapsed() {
+    let mut model = crate::bestest::model("620").expect("ANSI/ASHRAE 140 case 620 is registered");
+    let seed = model.surfaces[0].clone();
+    for index in 0..120u32 {
+        let mut copy = seed.clone();
+        copy.id = crate::model::EntityId(20_000 + index);
+        copy.name = format!("Filler wall {index}");
+        model.surfaces.push(copy);
+    }
+    let surfaces = model.surfaces.len();
+    let snapshot = snapshot_of(&model);
+
+    // 🧭️ The reader scrolls to the tail of the zone: the last surfaces are built, the zone's total is
+    // unchanged, and the east wall reached through its own window still owns its opening.
+    let view = hosted(vec![request("1", Some(true), (surfaces - 4) as u32, 4), opened("41")]);
+    let json = panel(&snapshot, &nothing(), Locale::En, &view);
+    let tree = tree_of(&json);
+    let zone = node_at(&tree, "1").expect("the zone row");
+    assert_eq!(window_of(zone), (surfaces, surfaces - 4), "the zone reports every wall it owns and where the slice starts: {zone}");
+    assert_eq!(child_keys(zone).len(), 4, "and builds exactly the four the host asked for: {zone}");
+
+    let head = hosted(vec![request("1", Some(true), 0, 8), opened("41")]);
+    let tree = tree_of(&panel(&snapshot, &nothing(), Locale::En, &head));
+    let east_wall = node_at(&tree, "41").expect("the east wall row");
+    assert_eq!(child_keys(east_wall), vec!["50"], "its own window is materialised, not collapsed: {east_wall}");
+    assert_eq!(window_of(east_wall).0, 1);
+}
+//#endregion 🪟️WindowLaws
 
 /// 🚨️ A surface whose construction does not resolve is dimmed rather than dropped — the tree is the
 /// place a modeller notices a dangling reference.
@@ -224,15 +319,14 @@ async fn an_oversized_document_pages_with_continuation_rows() {
 async fn a_dangling_construction_reference_dims_its_surface_row() {
     let mut model = crate::examples::demo::model();
     model.surfaces[0].construction_id = crate::model::EntityId(9_999);
-    let snapshot = snapshot_of(&model);
-    let zone = zone_tree(&snapshot, &nothing(), DEMO_ZONES_DEMAND);
-    let row = node_at(&zone, "40").expect("the south wall row");
+    let tree = tree_of(&english(&snapshot_of(&model)));
+    let row = node_at(&tree, "40").expect("the south wall row");
     assert_eq!(row["component"]["dimmed"].as_bool(), Some(true), "a dangling construction reference dims the row: {row}");
 }
 
 #[semio_framework_async_macros::async_test]
 async fn german_resolves_every_section_heading() {
-    let json = panel(&demo(), &nothing(), Locale::De);
+    let json = unhosted(&demo(), &nothing(), Locale::De);
     assert!(json.contains("Zonen"), "{json}");
     assert!(json.contains("Standort"));
     assert!(json.contains("Konstruktionen"));
@@ -243,52 +337,23 @@ async fn german_resolves_every_section_heading() {
 /// 🎯️ The live selection and hover reach the builder (capped at one `UiFixedList` page) — the tree
 /// never stores selection itself.
 #[semio_framework_async_macros::async_test]
-async fn a_wide_selection_marks_only_its_first_page() {
+async fn a_wide_selection_still_assembles_the_whole_tree() {
     let ids: Vec<String> = (0..64).map(|index| index.to_string()).collect();
     assert_eq!(marked_ids(&ids).len(), MARKED_IDS_LIMIT);
     let interaction = EnergyModelInteractionSnapshot { selected_ids: ids, hovered_ids: vec!["40".into()] };
-    let json = panel(&demo(), &interaction, Locale::En);
+    let json = unhosted(&demo(), &interaction, Locale::En);
     assert!(json.contains(&format!("\"{TREE_NAMESPACE}\"")), "the tree still assembles under a wide selection: {json}");
+    assert!(!json.contains(".more"), "and never with a continuation row: {json}");
 }
 
-/// 🧾️ The demands table is what the quota split is computed from, so it has to count the nested rows
-/// the zones section actually materialises.
-#[semio_framework_async_macros::async_test]
-async fn section_demands_count_every_interactive_row_including_the_nested_ones() {
-    let model = crate::examples::demo::model();
-    let demands = section_demands(&model);
-    assert_eq!(demands[0], 1, "the site row binds the clearing pick that opens its own form");
-    assert_eq!(demands[1], model.zones.len() + model.spaces.len() + model.surfaces.len() + model.fenestrations.len());
-    assert_eq!(demands[10], 0, "the schedules section binds no argument map");
-}
-
-/// 🎯️ THE defect the first browser probe found: under a tight page the first surface's own windows
-/// collapsed into a `…windows.more` marker no tree row can expand, so a user could not reach a window
-/// while its host wall was selected. The marked surface now claims its whole demand first.
-#[semio_framework_async_macros::async_test]
-async fn a_marked_surface_keeps_its_windows_under_a_tight_page() {
-    // 🧫️ Case 620 puts one window on the east wall (41) and one on the west wall (43), so a page
-    // with room for exactly ONE window shows which wall the allocation favours.
-    let snapshot = snapshot_of(&crate::bestest::model("620").expect("ANSI/ASHRAE 140 case 620 is registered"));
-    let tight = 1 + 6 + 1;
-    let picked = EnergyModelInteractionSnapshot { selected_ids: vec!["43".into()], hovered_ids: Vec::new() };
-    let zone = zone_tree(&snapshot, &picked, tight);
-    assert_eq!(child_keys(&zone), vec!["40", "41", "42", "43", "44", "45"], "breadth first: every wall keeps its own row");
-    assert_eq!(child_keys(node_at(&zone, "43").expect("the marked west wall")), vec!["51"], "the MARKED wall's window survives the truncation");
-    assert!(!child_keys(node_at(&zone, "41").expect("the east wall")).contains(&"50".to_string()), "the unmarked wall's window is the one that gives way");
-
-    // 🧭️ With nothing marked the depth goes to the first wall that wants it, in document order.
-    let unmarked = zone_tree(&snapshot, &nothing(), tight);
-    assert_eq!(child_keys(node_at(&unmarked, "41").expect("the east wall")), vec!["50"], "document order decides when the domain marks nothing");
-}
-
-/// 🎯️ With nothing marked the page still goes to the surfaces in document order — the marked-first
-/// pass must not reorder the rendered rows, only who survives a truncation.
+/// 🧭️ The rows of a container are always its document order — a marked row is not floated to the top,
+/// because a tree that reshuffles under the reader's cursor is unreadable.
 #[semio_framework_async_macros::async_test]
 async fn the_surface_rows_stay_in_document_order_whatever_is_marked() {
     let picked = EnergyModelInteractionSnapshot { selected_ids: vec!["44".into()], hovered_ids: Vec::new() };
-    let zone = zone_tree(&demo(), &picked, DEMO_ZONES_DEMAND);
-    assert_eq!(child_keys(&zone), vec!["40", "41", "42", "43", "44", "45"], "the marked surface is served first but rendered in place");
+    let tree = tree_of(&unhosted(&demo(), &picked, Locale::En));
+    let zone = node_at(&tree, "1").expect("the zone row");
+    assert_eq!(child_keys(zone), vec!["40", "41", "42", "43", "44", "45"], "the marked surface is rendered in place");
 }
 
 //#region 📍️SiteRowAndMarkers
@@ -298,10 +363,10 @@ async fn the_surface_rows_stay_in_document_order_whatever_is_marked() {
 #[semio_framework_async_macros::async_test]
 async fn the_site_row_opens_the_site_form_by_clearing_the_selection() {
     let json = english(&demo());
-    let tree: serde_json::Value = serde_json::from_str(&json).expect("the artifact projection is JSON");
-    let row = node_at(&tree, &format!("{TREE_NAMESPACE}.site.row")).unwrap_or_else(|| panic!("{json}"));
+    let tree = tree_of(&json);
+    let row = node_at(&tree, &section_key("site.row")).unwrap_or_else(|| panic!("{json}"));
     let bindings = row["bindings"].to_string();
-    assert!(bindings.contains(semio_framework_plugin::INTERACTION_SELECT_ACTION_ID), "the site row picks through the framework domain: {bindings}");
+    assert!(bindings.contains(INTERACTION_SELECT_ACTION_ID), "the site row picks through the framework domain: {bindings}");
     assert!(bindings.contains(ENERGY_MODEL_INTERACTION_DOMAIN), "on the energy domain: {bindings}");
     assert!(bindings.contains("replace"), "replacing the selection: {bindings}");
     assert!(bindings.contains("[]"), "with NO targets, which is how the framework spells 'clear': {bindings}");
@@ -314,36 +379,13 @@ async fn the_site_row_opens_the_site_form_by_clearing_the_selection() {
 #[semio_framework_async_macros::async_test]
 async fn a_marked_row_carries_its_state_in_the_label() {
     let interaction = EnergyModelInteractionSnapshot { selected_ids: vec!["44".into()], hovered_ids: vec!["41".into()] };
-    let zone = zone_tree(&demo(), &interaction, DEMO_ZONES_DEMAND);
-    let selected = node_at(&zone, "44").expect("the selected wall").to_string();
-    let hovered = node_at(&zone, "41").expect("the hovered wall").to_string();
-    let plain = node_at(&zone, "42").expect("an unmarked wall").to_string();
+    let tree = tree_of(&unhosted(&demo(), &interaction, Locale::En));
+    let selected = node_at(&tree, "44").expect("the selected wall").to_string();
+    let hovered = node_at(&tree, "41").expect("the hovered wall").to_string();
+    let plain = node_at(&tree, "42").expect("an unmarked wall").to_string();
     assert!(selected.contains(MarkedAs::Selected.prefix().trim()), "the selected row is marked: {selected}");
     assert!(hovered.contains(MarkedAs::Hovered.prefix().trim()), "the hovered row is marked: {hovered}");
     assert!(!plain.contains(MarkedAs::Selected.prefix().trim()) && !plain.contains(MarkedAs::Hovered.prefix().trim()), "an unmarked row reads exactly as before: {plain}");
     assert_eq!(MarkedAs::Unmarked.prefix(), "", "an unmarked label is untouched");
-}
-
-/// 🎯️ THE review's third finding: the BREADTH pass walked document order, so a wall selected in the
-/// 3d viewport could be the one dropped when a zone owned more surfaces than the page had rows —
-/// the tree simply did not show the selected surface. Both passes now hand out rows marked-first.
-#[semio_framework_async_macros::async_test]
-async fn a_marked_surface_keeps_its_row_when_the_page_cannot_hold_every_wall() {
-    // 🧫️ Case 600: one zone, six surfaces (40..45). A page with room for the zone row plus THREE
-    // surface rows cannot show all six, and 45 is last in document order.
-    // 🧾️ A truncated section closes with its own `+N` continuation row, which is not a surface.
-    let surfaces_of = |interaction: &EnergyModelInteractionSnapshot| -> Vec<String> { child_keys(&zone_tree(&demo(), interaction, 1 + 3)).into_iter().filter(|key| !key.starts_with(TREE_NAMESPACE)).collect() };
-    let picked = EnergyModelInteractionSnapshot { selected_ids: vec!["45".into()], hovered_ids: Vec::new() };
-    let rows = surfaces_of(&picked);
-    assert!(rows.contains(&"45".to_string()), "the surface the domain selects must survive the truncation: {rows:?}");
-    assert!(rows.len() <= 3, "the page is respected: {rows:?}");
-    assert_eq!(rows, { let mut sorted = rows.clone(); sorted.sort(); sorted }, "and the surviving rows are still rendered in document order: {rows:?}");
-
-    // 🧭️ With nothing marked the page goes to the first surfaces in document order, as before.
-    assert_eq!(surfaces_of(&nothing()), vec!["40", "41", "42"], "document order decides when the domain marks nothing");
-
-    // 🎯️ A hovered surface counts as marked too.
-    let hovered = EnergyModelInteractionSnapshot { selected_ids: Vec::new(), hovered_ids: vec!["44".into()] };
-    assert!(surfaces_of(&hovered).contains(&"44".to_string()), "the hovered surface survives the truncation too");
 }
 //#endregion 📍️SiteRowAndMarkers

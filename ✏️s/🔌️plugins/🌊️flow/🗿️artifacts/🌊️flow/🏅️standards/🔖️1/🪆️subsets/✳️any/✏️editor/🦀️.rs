@@ -117,14 +117,24 @@ pub fn ui_value_map(values: impl IntoIterator<Item = (&'static str, semio_framew
     Ok(semio_framework_plugin::UiValue::Map(builder.finish()))
 }
 
-/// 🌳️ Admits fallibly assembled UI nodes into fixed child storage.
-pub fn ui_node_list(values: impl IntoIterator<Item = semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode>>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiFixedList<semio_framework_plugin::BuiltNode>> {
-    let mut nodes = semio_framework_plugin::UiFixedList::default();
-    for value in values {
-        let node = value?;
-        nodes.try_push(node).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI node admission failed"))?;
+/// 🌳️ The framework's one node-list admission — the crate-local copy is gone (ticket
+/// 26/09/16/ARTIFACT-TREE-VIRTUALISED-STREAMING §8.3).
+pub use semio_framework_plugin::ui_node_list;
+
+/// 🕹️ A domain pick row: [`semio_framework_plugin::tree_item_desc`] plus the granularity that marks
+/// the row a pick target of the panel tree's `.interaction_domain(..)`, so no per-row
+/// `interactionSelect` argument map is ever built.
+pub fn pick_item<I: AsRef<str>, L: TryInto<semio_framework_plugin::plugin_app_close_prelude::Label>>(
+    id: I,
+    label: L,
+    description: Option<String>,
+    granularity: &str,
+) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    let mut node = semio_framework_plugin::tree_item_desc(id, label, description)?;
+    if let semio_framework_plugin::Component::TreeItem(props) = &mut node.component {
+        props.granularity = Some(semio_framework_plugin::UiText::try_from_str(granularity).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "interaction granularity admission failed"))?);
     }
-    Ok(nodes)
+    Ok(node)
 }
 
 /// 🙈️ An action that exists for dispatch but never appears in the command palette.
@@ -2413,9 +2423,9 @@ impl ArtifactEditor for FlowPlayApp {
             FLOW_PLAY_BODY_GENERATIONS => generations::render(&transient, view_state.locale, view_state.terminology).map(semio_framework_plugin::built_to_component_tree),
             FLOW_PLAY_BODY_GENERATE_FORM => form::render(snapshot, &config, &transient, labels).map(semio_framework_plugin::built_to_component_tree),
             FLOW_PLAY_BODY_GENERATE_PREVIEW => preview::render(&transient).map(semio_framework_plugin::built_to_component_tree),
-            FLOW_PLAY_BODY_ARTIFACT => document_panel::render(snapshot, labels).map(semio_framework_plugin::built_to_component_tree),
-            FLOW_PLAY_BODY_CATALOGUE => catalogue_panel::render(snapshot, &config, &mut session, labels).map(semio_framework_plugin::built_to_component_tree),
-            FLOW_PLAY_BODY_INSPECTOR => inspection_panel::render(labels).map(semio_framework_plugin::built_to_component_tree),
+            FLOW_PLAY_BODY_ARTIFACT => document_panel::render(snapshot, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, FLOW_PLAY_BODY_ARTIFACT)).map(semio_framework_plugin::built_to_component_tree),
+            FLOW_PLAY_BODY_CATALOGUE => catalogue_panel::render(snapshot, &config, &mut session, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, FLOW_PLAY_BODY_CATALOGUE)).map(semio_framework_plugin::built_to_component_tree),
+            FLOW_PLAY_BODY_INSPECTOR => inspection_panel::render(labels, &semio_framework_plugin::TreeWindows::for_body(view_state, FLOW_PLAY_BODY_INSPECTOR)).map(semio_framework_plugin::built_to_component_tree),
             _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
@@ -2439,9 +2449,11 @@ impl ArtifactEditor for FlowPlayApp {
                     FLOW_PLAY_BODY_GENERATIONS => generations::render(&transient, view_state.locale, view_state.terminology).map(semio_framework_plugin::built_to_component_tree),
                     FLOW_PLAY_BODY_GENERATE_FORM => form::render(doc.snapshot, &config, &transient, flow_play_labels(view_state)).map(semio_framework_plugin::built_to_component_tree),
                     FLOW_PLAY_BODY_GENERATE_PREVIEW => preview::render(&transient).map(semio_framework_plugin::built_to_component_tree),
-                    FLOW_PLAY_BODY_ARTIFACT => document_panel::render(doc.snapshot, flow_play_labels(view_state)).map(semio_framework_plugin::built_to_component_tree),
-                    FLOW_PLAY_BODY_CATALOGUE => catalogue_panel::render(doc.snapshot, &config, session, flow_play_labels(view_state)).map(semio_framework_plugin::built_to_component_tree),
-                    FLOW_PLAY_BODY_INSPECTOR => inspection_panel::render(flow_play_labels(view_state)).map(semio_framework_plugin::built_to_component_tree),
+                    FLOW_PLAY_BODY_ARTIFACT => document_panel::render(doc.snapshot, flow_play_labels(view_state), &semio_framework_plugin::TreeWindows::for_body(view_state, FLOW_PLAY_BODY_ARTIFACT)).map(semio_framework_plugin::built_to_component_tree),
+                    FLOW_PLAY_BODY_CATALOGUE => {
+                        catalogue_panel::render(doc.snapshot, &config, session, flow_play_labels(view_state), &semio_framework_plugin::TreeWindows::for_body(view_state, FLOW_PLAY_BODY_CATALOGUE)).map(semio_framework_plugin::built_to_component_tree)
+                    }
+                    FLOW_PLAY_BODY_INSPECTOR => inspection_panel::render(flow_play_labels(view_state), &semio_framework_plugin::TreeWindows::for_body(view_state, FLOW_PLAY_BODY_INSPECTOR)).map(semio_framework_plugin::built_to_component_tree),
                     _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
                 })
             })

@@ -4,23 +4,26 @@
 //!
 //! 🕹️ The tree is bound to the framework-owned `"fem2d"` interaction domain and every row's key is
 //! the RAW entity id, so a row click, a viewport pick and the inspector address the one selection.
-//! 🪙️ One interactive-row page for the WHOLE tree, split max-min fair across the nine sections
-//! (`section_quotas`), so a section that fits keeps all its rows and only the widest ones truncate;
-//! a document past the page closes each truncated section with a `+N` continuation row rather than
-//! failing an argument admission mid-row (see `semio_framework_plugin::paged_panel_section`).
+//! Picking is declared, not bound: the tree carries ONE `interactionSelect` and each row names the
+//! granularity it picks at, so a wide section costs no argument arena at all.
+//! 🪟️ Every section and every nesting row is a WINDOW over its own list: the host says which slice it
+//! is looking at (`ViewModel::tree_windows`), the guest materialises exactly that slice and stamps the
+//! full `total` beside it. A document past one viewport streams; it never truncates and it never
+//! closes a section with a `+N` row (see `semio_framework_plugin::TreeWindows`).
 
 use crate::editor::fem2d::interaction::{
     Fem2dInteractionSnapshot, FEM2D_GRANULARITY_COMBINATION, FEM2D_GRANULARITY_ELEMENT, FEM2D_GRANULARITY_LOAD, FEM2D_GRANULARITY_LOAD_CASE, FEM2D_GRANULARITY_MATERIAL, FEM2D_GRANULARITY_NODE, FEM2D_GRANULARITY_REGION, FEM2D_GRANULARITY_SECTION,
     FEM2D_GRANULARITY_SUPPORT, FEM2D_INTERACTION_DOMAIN,
 };
 use crate::editor::fem2d::terminology::Fem2dLabels;
-use crate::editor::fem2d::{fem2d_action, ui_label, ui_node_list};
+use crate::editor::fem2d::{ui_label, FEM2D_PLAY_CONTROLLER_ID};
 use crate::{element_id, load_id, FemCombination, FemDof, FemElement, FemLoad, FemLoadCase, FemMaterial, FemNode, FemRegion, FemSection, FemSupport, Fem2dSnapshot};
-use semio_framework_plugin::plugin_app_close_prelude::{BuiltNode, Component, Label as UiLabel};
+use semio_framework_plugin::plugin_app_close_prelude::{Buildable, BuiltNode, HasBase, Label as UiLabel};
 use semio_framework_plugin::{
-    paged_panel_section, panel_page_rows, tree_item_desc, tree_item_with_action, ActionId, LabelText, LocalizedLabel, PanelGroup, PanelRowBudget, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiAssemblyResult, UiFixedList,
-    UiText, UiValue, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, INTERACTION_SELECT_ACTION_ID,
+    tree_item_desc, tree_window_item, LabelText, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, TreeWindows, UiAssemblyResult, UiText, FRAMEWORK_PANEL_TAB_ARTIFACT_ID,
+    FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL,
 };
+use semio_framework_ui_contract as ui;
 
 //#region 🔖️Constants
 pub const BODY_KEY: &str = "fem2d.play.artifact";
@@ -45,22 +48,12 @@ fn capacity_error(what: &'static str) -> PluginAssemblyError {
     PluginAssemblyError::new("ui.fixed-capacity", what)
 }
 
-fn ui_value_text(value: impl AsRef<str>) -> UiAssemblyResult<UiValue> {
-    UiText::try_from_str(value.as_ref()).map(UiValue::Text).ok_or_else(|| capacity_error("fem2d artifact UI text admission failed"))
-}
-
-
-/// so every caller lists its entries sorted by key.
-fn ui_value_map(values: impl IntoIterator<Item = (&'static str, UiValue)>) -> UiAssemblyResult<UiValue> {
-    let mut builder = semio_framework_plugin::UiMapBuilder::try_new().ok_or_else(|| capacity_error("fem2d artifact UI map admission failed"))?;
-    for (key, value) in values {
-        builder.push(key.to_owned(), value).map_err(|_| capacity_error("fem2d artifact UI map entry admission failed"))?;
-    }
-    Ok(UiValue::Map(builder.finish()))
-}
-
 fn icon_text(icon: &str) -> UiAssemblyResult<UiText> {
     UiText::try_from_str(icon).ok_or_else(|| capacity_error("fem2d artifact icon admission failed"))
+}
+
+fn granularity_text(granularity: &str) -> UiAssemblyResult<UiText> {
+    UiText::try_from_str(granularity).ok_or_else(|| capacity_error("fem2d artifact granularity admission failed"))
 }
 //#endregion 🔖️UiValues
 
@@ -176,44 +169,31 @@ pub fn fem2d_analysis_description(document: &Fem2dSnapshot, labels: &Fem2dLabels
 //#endregion 🔖️Formatting
 
 //#region 🔖️Rows
-/// 🕹️ A tree-row pick in the `"fem2d"` domain — the very `interactionSelect` the Canvas2d windows
-/// dispatch for a viewport pick, so a row click and a canvas click land in one selection.
-fn pick_action(granularity: &str, id: &str) -> UiAssemblyResult<(ActionId, Option<UiValue>)> {
-    let target = protocol::InteractionTarget { granularity: granularity.into(), id: id.into() };
-    let targets = protocol::json::to_json_string(&protocol::DslValue::Array(vec![protocol::ToValue::to_value(&target)]));
-    let args = ui_value_map([("domainId", ui_value_text(FEM2D_INTERACTION_DOMAIN)?), ("merge", ui_value_text("replace")?), ("method", ui_value_text("pick")?), ("targets", ui_value_text(targets)?)])?;
-    fem2d_action(INTERACTION_SELECT_ACTION_ID, Some(args))
+/// 🌳️ One selectable entity row, keyed by the raw entity id and declared a pick target of the tree's
+/// own `"fem2d"` domain at `granularity` — the very selection the Canvas2d windows dispatch for a
+/// viewport pick, so a row click and a canvas click land in one selection. It binds NOTHING and
+/// carries no argument map: a page of rows authoring a pick map each is exactly what exhausts the
+/// one-page `UiValue` argument arena and starves every panel rendered beside the tree (the cad
+/// incident, and this ticket's first browser probe), and focus and delete live in the inspector for
+/// the same reason. A clipped label keeps a pathological name from refusing the whole render.
+fn entity_item(id: &str, granularity: &str, label: &str, description: &LabelText, icon: &str, dimmed: bool) -> UiAssemblyResult<ui::TreeItemBuilder> {
+    let item = ui::tree_item(UiLabel(UiText::clipped(label))).try_id(id).map_err(|_| capacity_error("fem2d artifact row id admission failed"))?;
+    Ok(item.icon(icon_text(icon)?).description(UiText::clipped(description.as_str())).dimmed(dimmed).granularity(granularity_text(granularity)?))
 }
 
-
-/// 🌳️ One selectable entity row: keyed by the raw entity id, picking through the framework domain.
-/// It authors ONE argument map (its pick) and no row actions: focus and delete live in the inspector,
-/// because a page of rows carrying two actions each (two maps and two id lists per row) is exactly
-/// what exhausts the one-page `UiValue` argument arena and starves every panel rendered beside the
-/// tree (the cad incident, and this ticket's first browser probe). A clipped label keeps a
-/// pathological name from refusing the whole render.
 fn entity_row(id: &str, granularity: &str, label: &str, description: &LabelText, icon: &str, dimmed: bool) -> UiAssemblyResult<BuiltNode> {
-    let mut item = tree_item_with_action(id, UiLabel(UiText::clipped(label)), None, pick_action(granularity, id)?)?;
-    let Component::TreeItem(props) = &mut item.component else {
-        return Err(capacity_error("fem2d artifact row is a tree item"));
-    };
-    props.icon = Some(icon_text(icon)?);
-    props.description = Some(UiText::clipped(description.as_str()));
-    props.dimmed = Some(dimmed);
-    props.default_open = Some(false);
-    Ok(item)
+    entity_item(id, granularity, label, description, icon, dimmed)?.default_open(false).try_build().map_err(|_| capacity_error("fem2d artifact row admission failed"))
 }
 
 /// 🔗️ One combination term: read-only, composite-keyed — a term is not a domain target, only the
 /// combination that owns it is.
-fn term_row(combination: &FemCombination, index: usize, labels: &Fem2dLabels) -> UiAssemblyResult<BuiltNode> {
-    let term = &combination.terms[index];
+fn term_row(combination: &FemCombination, term: &crate::FemCombinationTerm, labels: &Fem2dLabels) -> UiAssemblyResult<BuiltNode> {
     let id = format!("{TREE_NAMESPACE}.term.{}.{}", combination.id, term.case_id);
     tree_item_desc(id, UiLabel(UiText::clipped(&format!("{} {}", fem2d_scalar(term.factor), term.case_id))), Some(labels.term.as_str().to_string()))
 }
 //#endregion 🔖️Rows
 
-//#region 🔖️Sections
+//#region 🔖️Predicates
 fn section_label(noun: &LabelText, count: usize) -> UiAssemblyResult<UiLabel> {
     ui_label(format!("{} ({count})", noun.as_str()))
 }
@@ -236,175 +216,116 @@ fn load_is_dangling(document: &Fem2dSnapshot, load: &FemLoad) -> bool {
         FemLoad::Area { region_id, .. } => !document.regions.iter().any(|region| &region.id == region_id),
     }
 }
-
-fn nodes_section(document: &Fem2dSnapshot, labels: &Fem2dLabels, budget: &mut PanelRowBudget) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
-    let rows = budget.remaining();
-    paged_panel_section(&format!("{TREE_NAMESPACE}.nodes"), &document.nodes, rows, budget, |node, _| entity_row(&node.id, FEM2D_GRANULARITY_NODE, &fem2d_node_label(node), &labels.node, "circle-dot", false))
-}
-
-fn elements_section(document: &Fem2dSnapshot, labels: &Fem2dLabels, budget: &mut PanelRowBudget) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
-    let rows = budget.remaining();
-    paged_panel_section(&format!("{TREE_NAMESPACE}.elements"), &document.elements, rows, budget, |element, _| {
-        entity_row(element_id(element), FEM2D_GRANULARITY_ELEMENT, &fem2d_element_label(element, labels), &labels.element, "minus", element_is_dangling(document, element))
-    })
-}
-
-fn regions_section(document: &Fem2dSnapshot, labels: &Fem2dLabels, budget: &mut PanelRowBudget) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
-    let rows = budget.remaining();
-    paged_panel_section(&format!("{TREE_NAMESPACE}.regions"), &document.regions, rows, budget, |region, _| {
-        let dimmed = !document.materials.iter().any(|material| material.id == region.material_id);
-        entity_row(&region.id, FEM2D_GRANULARITY_REGION, &fem2d_region_label(region, labels), &labels.region, "square", dimmed)
-    })
-}
-
-fn supports_section(document: &Fem2dSnapshot, labels: &Fem2dLabels, budget: &mut PanelRowBudget) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
-    let rows = budget.remaining();
-    paged_panel_section(&format!("{TREE_NAMESPACE}.supports"), &document.supports, rows, budget, |support, _| {
-        entity_row(&support.id, FEM2D_GRANULARITY_SUPPORT, &fem2d_support_label(support, labels), &labels.support, "anchor", !has_node(document, &support.node_id))
-    })
-}
-
-/// 🌳️ Load cases and their loads: the case row picks at `loadCase` granularity, each nested load row
-/// at `load` granularity, and the nested page draws on the very budget its own section still holds.
-fn load_cases_section(document: &Fem2dSnapshot, labels: &Fem2dLabels, budget: &mut PanelRowBudget) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
-    let section_id = format!("{TREE_NAMESPACE}.load-cases");
-    let rows = budget.remaining();
-    paged_panel_section(&section_id, &document.load_cases, rows, budget, |case, nested| {
-        let dimmed = case.loads.is_empty() && !case.self_weight;
-        let mut item = entity_row(&case.id, FEM2D_GRANULARITY_LOAD_CASE, &fem2d_load_case_label(case, labels), &labels.load_case, "list", dimmed)?;
-        let load_rows = nested.remaining();
-        let loads = paged_panel_section(&format!("{section_id}.{}", case.id), &case.loads, load_rows, nested, |load, _| {
-            entity_row(load_id(load), FEM2D_GRANULARITY_LOAD, &fem2d_load_label(load, labels), &labels.load, "arrow-down", load_is_dangling(document, load))
-        })?;
-        for load in loads {
-            item.children.try_push(load).map_err(|_| capacity_error("fem2d artifact load row admission failed"))?;
-        }
-        if let Component::TreeItem(props) = &mut item.component {
-            props.default_open = Some(true);
-        }
-        Ok(item)
-    })
-}
-
-fn combinations_section(document: &Fem2dSnapshot, labels: &Fem2dLabels, budget: &mut PanelRowBudget) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
-    let rows = budget.remaining();
-    paged_panel_section(&format!("{TREE_NAMESPACE}.combinations"), &document.combinations, rows, budget, |combination, _| {
-        let dimmed = combination.terms.iter().any(|term| !document.load_cases.iter().any(|case| case.id == term.case_id));
-        let mut item = entity_row(&combination.id, FEM2D_GRANULARITY_COMBINATION, &fem2d_combination_label(combination), &labels.combination, "link", dimmed)?;
-        for index in 0..combination.terms.len() {
-            item.children.try_push(term_row(combination, index, labels)?).map_err(|_| capacity_error("fem2d artifact term row admission failed"))?;
-        }
-        Ok(item)
-    })
-}
-
-fn materials_section(document: &Fem2dSnapshot, labels: &Fem2dLabels, budget: &mut PanelRowBudget) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
-    let rows = budget.remaining();
-    paged_panel_section(&format!("{TREE_NAMESPACE}.materials"), &document.materials, rows, budget, |material, _| {
-        entity_row(&material.id, FEM2D_GRANULARITY_MATERIAL, &fem2d_material_label(material), &labels.material, "layers", false)
-    })
-}
-
-fn sections_section(document: &Fem2dSnapshot, labels: &Fem2dLabels, budget: &mut PanelRowBudget) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
-    let rows = budget.remaining();
-    paged_panel_section(&format!("{TREE_NAMESPACE}.sections"), &document.sections, rows, budget, |section, _| {
-        entity_row(&section.id, FEM2D_GRANULARITY_SECTION, &fem2d_section_label(section), &labels.section, "ruler", false)
-    })
-}
-
-/// ⚙️ The analysis settings row — read-only and free: it binds no action, so it costs nothing of the
-/// argument arena the entity rows page against.
-fn analysis_section(document: &Fem2dSnapshot, labels: &Fem2dLabels) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
-    ui_node_list([tree_item_desc(format!("{TREE_NAMESPACE}.analysis.settings"), ui_label(labels.analysis.as_str())?, Some(fem2d_analysis_description(document, labels)))])
-}
-//#endregion 🔖️Sections
+//#endregion 🔖️Predicates
 
 //#region 🔖️Render
 fn marked_ids(ids: &[String]) -> Vec<String> {
     ids.iter().take(MARKED_IDS_LIMIT).cloned().collect()
 }
 
-/// 🧾️ Interactive rows each section wants: its own entities, plus — for load cases — the load rows
-/// nested under them, which draw on the same page.
-pub fn section_demands(document: &Fem2dSnapshot) -> [usize; SECTIONS] {
-    [
-        document.nodes.len(),
-        document.elements.len(),
-        document.regions.len(),
-        document.supports.len(),
-        document.load_cases.len() + document.load_cases.iter().map(|case| case.loads.len()).sum::<usize>(),
-        document.combinations.len(),
-        document.materials.len(),
-        document.sections.len(),
-        0,
-    ]
-}
-
-/// 🪙️ Max-min fair split of one interactive-row page across the sections: the quota is the highest
-/// per-section ceiling the page affords, every section under it gets ALL its rows, and the spare
-/// goes to the widest sections. Reserving "the rows the sections after me still need" verbatim (cad's
-/// four symmetric panes) would let a 12-node document's first section eat two thirds of the page and
-/// leave the load cases one row; this keeps the small sections whole and truncates only the wide
-/// ones, which is also what a reader of an outliner expects.
-pub fn section_quotas(demands: [usize; SECTIONS], page: usize) -> [usize; SECTIONS] {
-    let mut ceiling = 0;
-    while ceiling < page && demands.iter().map(|demand| (*demand).min(ceiling + 1)).sum::<usize>() <= page {
-        ceiling += 1;
-    }
-    let mut quotas = demands.map(|demand| demand.min(ceiling));
-    let mut spare = page.saturating_sub(quotas.iter().sum::<usize>());
-    while spare > 0 {
-        let Some(index) = (0..SECTIONS).filter(|index| quotas[*index] < demands[*index]).max_by_key(|index| demands[*index] - quotas[*index]) else {
-            break;
-        };
-        quotas[index] += 1;
-        spare -= 1;
-    }
-    quotas
-}
-
-/// 🪙️ Runs one section against its quota, reserving the whole rest of the page for its siblings —
-/// and settling whatever it under-spends straight back into the shared budget.
-fn with_quota<R>(budget: &mut PanelRowBudget, quota: usize, build: impl FnOnce(&mut PanelRowBudget) -> R) -> R {
-    let reserved = budget.remaining().saturating_sub(quota);
-    budget.nested(reserved, build)
-}
-
-/// 🌳️ The outliner: nine sections over one interactive-row page, bound to the `"fem2d"` domain and
-/// marked from the live interaction snapshot.
-pub fn build_artifact_tree(document: &Fem2dSnapshot, interaction: &Fem2dInteractionSnapshot, labels: &Fem2dLabels) -> UiAssemblyResult<BuiltNode> {
-    let page = panel_page_rows();
-    let quotas = section_quotas(section_demands(document), page);
-    let budget = &mut PanelRowBudget::new(page);
-    let nodes = with_quota(budget, quotas[0], |share| nodes_section(document, labels, share))?;
-    let elements = with_quota(budget, quotas[1], |share| elements_section(document, labels, share))?;
-    let regions = with_quota(budget, quotas[2], |share| regions_section(document, labels, share))?;
-    let supports = with_quota(budget, quotas[3], |share| supports_section(document, labels, share))?;
-    let load_cases = with_quota(budget, quotas[4], |share| load_cases_section(document, labels, share))?;
-    let combinations = with_quota(budget, quotas[5], |share| combinations_section(document, labels, share))?;
-    let materials = with_quota(budget, quotas[6], |share| materials_section(document, labels, share))?;
-    let sections = with_quota(budget, quotas[7], |share| sections_section(document, labels, share))?;
-    let analysis = analysis_section(document, labels)?;
+/// 🌳️ The outliner: nine windowed sections bound to the `"fem2d"` domain and marked from the live
+/// interaction snapshot. Each section (and each load case / combination row that nests children)
+/// materialises only the slice the host is looking at and stamps its own `total`.
+pub fn build_artifact_tree(document: &Fem2dSnapshot, interaction: &Fem2dInteractionSnapshot, labels: &Fem2dLabels, windows: &TreeWindows<'_>) -> UiAssemblyResult<BuiltNode> {
     let placeholder = ui_label(labels.none.as_str())?;
-
-    let builder = PanelTreeBuilder::new(TREE_NAMESPACE)?
-        .section_or_placeholder(format!("{TREE_NAMESPACE}.nodes"), Some(section_label(&labels.nodes, document.nodes.len())?), true, nodes, placeholder.clone())?
-        .section_or_placeholder(format!("{TREE_NAMESPACE}.elements"), Some(section_label(&labels.elements, document.elements.len())?), true, elements, placeholder.clone())?
-        .section_or_placeholder(format!("{TREE_NAMESPACE}.regions"), Some(section_label(&labels.regions, document.regions.len())?), true, regions, placeholder.clone())?
-        .section_or_placeholder(format!("{TREE_NAMESPACE}.supports"), Some(section_label(&labels.supports, document.supports.len())?), true, supports, placeholder.clone())?
-        .section_or_placeholder(format!("{TREE_NAMESPACE}.load-cases"), Some(section_label(&labels.load_cases, document.load_cases.len())?), true, load_cases, placeholder.clone())?
-        .section_or_placeholder(format!("{TREE_NAMESPACE}.combinations"), Some(section_label(&labels.combinations, document.combinations.len())?), true, combinations, placeholder.clone())?
-        .section_or_placeholder(format!("{TREE_NAMESPACE}.materials"), Some(section_label(&labels.materials, document.materials.len())?), false, materials, placeholder.clone())?
-        .section_or_placeholder(format!("{TREE_NAMESPACE}.sections"), Some(section_label(&labels.sections, document.sections.len())?), false, sections, placeholder)?
-        .section(format!("{TREE_NAMESPACE}.analysis"), Some(ui_label(labels.analysis.as_str())?), false, analysis)?
-        .interaction_domain(FEM2D_INTERACTION_DOMAIN)?
+    let analysis = [fem2d_analysis_description(document, labels)];
+    PanelTreeBuilder::new(TREE_NAMESPACE)?
+        .window_section_or_placeholder(
+            windows,
+            &format!("{TREE_NAMESPACE}.nodes"),
+            Some(section_label(&labels.nodes, document.nodes.len())?),
+            true,
+            &document.nodes,
+            |node| entity_row(&node.id, FEM2D_GRANULARITY_NODE, &fem2d_node_label(node), &labels.node, "circle-dot", false),
+            placeholder.clone(),
+        )?
+        .window_section_or_placeholder(
+            windows,
+            &format!("{TREE_NAMESPACE}.elements"),
+            Some(section_label(&labels.elements, document.elements.len())?),
+            true,
+            &document.elements,
+            |element| entity_row(element_id(element), FEM2D_GRANULARITY_ELEMENT, &fem2d_element_label(element, labels), &labels.element, "minus", element_is_dangling(document, element)),
+            placeholder.clone(),
+        )?
+        .window_section_or_placeholder(
+            windows,
+            &format!("{TREE_NAMESPACE}.regions"),
+            Some(section_label(&labels.regions, document.regions.len())?),
+            true,
+            &document.regions,
+            |region| {
+                let dimmed = !document.materials.iter().any(|material| material.id == region.material_id);
+                entity_row(&region.id, FEM2D_GRANULARITY_REGION, &fem2d_region_label(region, labels), &labels.region, "square", dimmed)
+            },
+            placeholder.clone(),
+        )?
+        .window_section_or_placeholder(
+            windows,
+            &format!("{TREE_NAMESPACE}.supports"),
+            Some(section_label(&labels.supports, document.supports.len())?),
+            true,
+            &document.supports,
+            |support| entity_row(&support.id, FEM2D_GRANULARITY_SUPPORT, &fem2d_support_label(support, labels), &labels.support, "anchor", !has_node(document, &support.node_id)),
+            placeholder.clone(),
+        )?
+        .window_section_or_placeholder(
+            windows,
+            &format!("{TREE_NAMESPACE}.load-cases"),
+            Some(section_label(&labels.load_cases, document.load_cases.len())?),
+            true,
+            &document.load_cases,
+            |case| {
+                let dimmed = case.loads.is_empty() && !case.self_weight;
+                let item = entity_item(&case.id, FEM2D_GRANULARITY_LOAD_CASE, &fem2d_load_case_label(case, labels), &labels.load_case, "list", dimmed)?;
+                tree_window_item(windows, item, &case.id, true, &case.loads, |load| {
+                    entity_row(load_id(load), FEM2D_GRANULARITY_LOAD, &fem2d_load_label(load, labels), &labels.load, "arrow-down", load_is_dangling(document, load))
+                })
+            },
+            placeholder.clone(),
+        )?
+        .window_section_or_placeholder(
+            windows,
+            &format!("{TREE_NAMESPACE}.combinations"),
+            Some(section_label(&labels.combinations, document.combinations.len())?),
+            true,
+            &document.combinations,
+            |combination| {
+                let dimmed = combination.terms.iter().any(|term| !document.load_cases.iter().any(|case| case.id == term.case_id));
+                let item = entity_item(&combination.id, FEM2D_GRANULARITY_COMBINATION, &fem2d_combination_label(combination), &labels.combination, "link", dimmed)?;
+                tree_window_item(windows, item, &combination.id, true, &combination.terms, |term| term_row(combination, term, labels))
+            },
+            placeholder.clone(),
+        )?
+        .window_section_or_placeholder(
+            windows,
+            &format!("{TREE_NAMESPACE}.materials"),
+            Some(section_label(&labels.materials, document.materials.len())?),
+            false,
+            &document.materials,
+            |material| entity_row(&material.id, FEM2D_GRANULARITY_MATERIAL, &fem2d_material_label(material), &labels.material, "layers", false),
+            placeholder.clone(),
+        )?
+        .window_section_or_placeholder(
+            windows,
+            &format!("{TREE_NAMESPACE}.sections"),
+            Some(section_label(&labels.sections, document.sections.len())?),
+            false,
+            &document.sections,
+            |section| entity_row(&section.id, FEM2D_GRANULARITY_SECTION, &fem2d_section_label(section), &labels.section, "ruler", false),
+            placeholder,
+        )?
+        .window_section(windows, &format!("{TREE_NAMESPACE}.analysis"), Some(ui_label(labels.analysis.as_str())?), false, &analysis, |description| {
+            tree_item_desc(format!("{TREE_NAMESPACE}.analysis.settings"), ui_label(labels.analysis.as_str())?, Some(description.clone()))
+        })?
+        .interaction_domain(FEM2D_PLAY_CONTROLLER_ID, FEM2D_INTERACTION_DOMAIN)?
         .selected(marked_ids(&interaction.selected_ids))?
-        .highlighted(marked_ids(&interaction.hovered_ids))?;
-    builder.build()
+        .highlighted(marked_ids(&interaction.hovered_ids))?
+        .build()
 }
 
-pub fn render(doc: &Fem2dSnapshot, interaction: &Fem2dInteractionSnapshot, labels: &Fem2dLabels) -> UiAssemblyResult<BuiltNode> {
-    build_artifact_tree(doc, interaction, labels)
+pub fn render(doc: &Fem2dSnapshot, interaction: &Fem2dInteractionSnapshot, labels: &Fem2dLabels, windows: &TreeWindows<'_>) -> UiAssemblyResult<BuiltNode> {
+    build_artifact_tree(doc, interaction, labels, windows)
 }
 //#endregion 🔖️Render
 

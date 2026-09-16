@@ -2312,10 +2312,12 @@ fn render_body(
                 model_window::config::current(cfg),
             )?
         }
-        artifact_panel::BODY_KEY => artifact_panel::render(doc.snapshot, interaction, view_state.locale)?,
+        // 🪟️ The host's open/scroll state for THIS body, read once per render — every container of
+        // the outliner materialises exactly the slice it names and stamps its own full `total`.
+        artifact_panel::BODY_KEY => artifact_panel::render(doc.snapshot, interaction, view_state.locale, &semio_framework_plugin::TreeWindows::for_body(view_state, artifact_panel::BODY_KEY))?,
         // 🎨️ `cfg` reaches the inspector because its Results section renders the CURRENT colour field
         // and binds `set-result-field` — the one control lane D's selector had nowhere to live.
-        inspection_panel::BODY_KEY => inspection_panel::render(doc.snapshot, interaction, cfg.snapshot, view_state.locale)?,
+        inspection_panel::BODY_KEY => inspection_panel::render(doc.snapshot, interaction, cfg.snapshot, view_state.locale, &semio_framework_plugin::TreeWindows::for_body(view_state, inspection_panel::BODY_KEY))?,
         _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("energy.model.render", "the unknown-body label could not be assembled"))?,
     };
     Ok(semio_framework_plugin::built_to_component_tree(node))
@@ -2384,15 +2386,6 @@ pub const ENERGY_MODEL_EDITOR_CONTROLLER_ID: &str = "s.energy.model@1/*#editor";
 /// 🏷️ Admits resolved energy text into the semantic UI contract.
 pub fn ui_label(value: impl AsRef<str>) -> UiAssemblyResult<semio_framework_plugin::plugin_app_close_prelude::Label> {
     semio_framework_plugin::plugin_app_close_prelude::Label::try_from(value.as_ref()).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "energy UI label admission failed"))
-}
-
-/// 🧾️ Admits a bounded row list — the one `UiFixedList` every section builder consumes.
-pub fn ui_node_list(values: impl IntoIterator<Item = UiAssemblyResult<semio_framework_plugin::BuiltNode>>) -> UiAssemblyResult<semio_framework_plugin::UiFixedList<semio_framework_plugin::BuiltNode>> {
-    let mut nodes = semio_framework_plugin::UiFixedList::default();
-    for value in values {
-        nodes.try_push(value?).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "energy UI node admission failed"))?;
-    }
-    Ok(nodes)
 }
 
 /// 🎛️ Mints one energy-editor action for a panel row or an inspector control binding.
@@ -2559,6 +2552,8 @@ pub fn app_level_action_definitions() -> Vec<semio_framework_plugin::ActionDefin
 pub fn create_energy_model_editor() -> semio_framework_plugin::AppDefinition {
     let mut builder = Editor::builder(MODEL_DIALECT)
         .document(["semio", "energy", "model"])
+        .terminology("reuse")
+        .terminology_document("reuse", ["Entwerfen mit Bestand", "Energie"])
         .icon_id("battery")
         .mode_def(edit::definition())
         .default_mode_id(edit::ENERGY_MODEL_EDIT_MODE_ID)

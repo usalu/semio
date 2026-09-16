@@ -620,11 +620,12 @@ fn tree_item_to_widget(item: &UiTreeItemNode) -> TreeItem<ActionDescriptor> {
         drag_data: item.drag_data.clone().unwrap_or_default(),
         control: item.control.as_ref().map(|control| Box::new(control_to_widget_node(control))),
         children: item.items.as_ref().map(|items| items.iter().map(tree_item_to_widget).collect()).unwrap_or_default(),
+        window: item.window,
     }
 }
 
 fn tree_section_to_widget(section: &UiTreeSectionNode) -> TreeSection<ActionDescriptor> {
-    TreeSection { id: section.id.clone(), label: section.label.clone().map(|l| l.to_string()), default_open: section.default_open.unwrap_or(true), items: section.items.iter().map(tree_item_to_widget).collect() }
+    TreeSection { id: section.id.clone(), label: section.label.clone().map(|l| l.to_string()), default_open: section.default_open.unwrap_or(true), items: section.items.iter().map(tree_item_to_widget).collect(), window: section.window }
 }
 
 /// 📊️ Total (ui_instances incl. overlay, vector_vertices incl. overlay, raster_instances) across
@@ -852,7 +853,7 @@ fn golden_icon_select() {
 
 #[test]
 fn golden_tree() {
-    let item = |id: &str, label: &str| UiTreeItemNode {
+    let item = |id: &str, label: &str| UiTreeItemNode { window: None, granularity: None,
         id: id.into(),
         label: Label::data(label),
         description: None,
@@ -869,7 +870,7 @@ fn golden_tree() {
         menu: None,
     };
     let node = UiNode::Tree(UiTreeNode {
-        sections: vec![UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![item("i1", "Item One"), item("i2", "Item Two")] }],
+        sections: vec![UiTreeSectionNode { window: None, id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![item("i1", "Item One"), item("i2", "Item Two")] }],
         presence: UiPresence::default(),
         drop_action: None,
         menu: None,
@@ -1142,7 +1143,7 @@ fn measure_widget_section_sums_header_and_children_plus_gap() {
 fn measure_widget_tree_skips_dimmed_items_in_height() {
     let mut atlas = FontAtlas::builtin();
     let theme = Theme::default();
-    let item = |id: &str, dimmed: bool| TreeItem {
+    let item = |id: &str, dimmed: bool| TreeItem { window: None,
         id: id.into(),
         label: Label::data(id).to_string(),
         description: None,
@@ -1160,8 +1161,8 @@ fn measure_widget_tree_skips_dimmed_items_in_height() {
         control: None,
         children: vec![],
     };
-    let visible = WidgetNode::<ActionDescriptor>::Tree { sections: vec![TreeSection { id: "sec".into(), label: None, default_open: true, items: vec![item("a", false)] }], selected_ids: vec![], highlighted_ids: vec![], selection_change: None };
-    let dimmed = WidgetNode::<ActionDescriptor>::Tree { sections: vec![TreeSection { id: "sec".into(), label: None, default_open: true, items: vec![item("a", true)] }], selected_ids: vec![], highlighted_ids: vec![], selection_change: None };
+    let visible = WidgetNode::<ActionDescriptor>::Tree { sections: vec![TreeSection { window: None, id: "sec".into(), label: None, default_open: true, items: vec![item("a", false)] }], selected_ids: vec![], highlighted_ids: vec![], selection_change: None };
+    let dimmed = WidgetNode::<ActionDescriptor>::Tree { sections: vec![TreeSection { window: None, id: "sec".into(), label: None, default_open: true, items: vec![item("a", true)] }], selected_ids: vec![], highlighted_ids: vec![], selection_change: None };
     let (_, visible_h) = measure_widget(&mut atlas, &theme, &visible);
     let (_, dimmed_h) = measure_widget(&mut atlas, &theme, &dimmed);
     assert!(dimmed_h < visible_h, "a dimmed tree item must contribute zero height, so the dimmed tree must measure shorter than the visible one");
@@ -1292,7 +1293,7 @@ fn render_widget_section_toggles_collapsed_state_from_default_open() {
 #[test]
 fn render_widget_tree_populates_hover_and_unhover_commands() {
     let mut h = WidgetHarness::new();
-    let item = TreeItem {
+    let item = TreeItem { window: None,
         id: "i1".into(),
         label: Label::data("Item").to_string(),
         description: None,
@@ -1311,7 +1312,7 @@ fn render_widget_tree_populates_hover_and_unhover_commands() {
         children: vec![],
     };
     let node = WidgetNode::<ActionDescriptor>::Tree {
-        sections: vec![TreeSection { id: "s".into(), label: Some(Label::data("Section").to_string()), default_open: true, items: vec![item] }],
+        sections: vec![TreeSection { window: None, id: "s".into(), label: Some(Label::data("Section").to_string()), default_open: true, items: vec![item] }],
         selected_ids: vec![],
         highlighted_ids: vec![],
         selection_change: Some(action()),
@@ -1325,7 +1326,7 @@ fn render_widget_tree_populates_hover_and_unhover_commands() {
 #[test]
 fn render_widget_tree_row_actions_register_hits_without_hover() {
     let mut h = WidgetHarness::new();
-    let item = TreeItem {
+    let item = TreeItem { window: None,
         id: "i1".into(),
         label: Label::data("Item").to_string(),
         description: None,
@@ -1343,7 +1344,7 @@ fn render_widget_tree_row_actions_register_hits_without_hover() {
         control: None,
         children: vec![],
     };
-    let node = WidgetNode::<ActionDescriptor>::Tree { sections: vec![TreeSection { id: "s".into(), label: None, default_open: true, items: vec![item] }], selected_ids: vec![], highlighted_ids: vec![], selection_change: None };
+    let node = WidgetNode::<ActionDescriptor>::Tree { sections: vec![TreeSection { window: None, id: "s".into(), label: None, default_open: true, items: vec![item] }], selected_ids: vec![], highlighted_ids: vec![], selection_change: None };
     render_widget(&node, VIEWPORT, &mut h.ctx());
     let action_hits = h.input.staged_hits().iter().filter(|t| t.control_id.as_deref() == Some("tree.action.i1.0")).count();
     assert_eq!(action_hits, 1, "row-placement actions must register a hit target even when the row is unhovered");
@@ -1352,7 +1353,7 @@ fn render_widget_tree_row_actions_register_hits_without_hover() {
 #[test]
 fn render_widget_tree_menu_placement_skips_row_action_hits() {
     let mut h = WidgetHarness::new();
-    let item = TreeItem {
+    let item = TreeItem { window: None,
         id: "i1".into(),
         label: Label::data("Item").to_string(),
         description: None,
@@ -1370,7 +1371,7 @@ fn render_widget_tree_menu_placement_skips_row_action_hits() {
         control: None,
         children: vec![],
     };
-    let node = WidgetNode::<ActionDescriptor>::Tree { sections: vec![TreeSection { id: "s".into(), label: None, default_open: true, items: vec![item] }], selected_ids: vec![], highlighted_ids: vec![], selection_change: None };
+    let node = WidgetNode::<ActionDescriptor>::Tree { sections: vec![TreeSection { window: None, id: "s".into(), label: None, default_open: true, items: vec![item] }], selected_ids: vec![], highlighted_ids: vec![], selection_change: None };
     render_widget(&node, VIEWPORT, &mut h.ctx());
     let action_hits = h.input.staged_hits().iter().filter(|t| t.control_id.as_deref() == Some("tree.action.i1.0")).count();
     assert_eq!(action_hits, 0, "menu-placement actions must not register row hit targets");
@@ -1379,7 +1380,7 @@ fn render_widget_tree_menu_placement_skips_row_action_hits() {
 #[test]
 fn render_widget_tree_marks_selected_and_highlighted_ids_via_ids_list() {
     let mut h = WidgetHarness::new();
-    let item = TreeItem {
+    let item = TreeItem { window: None,
         id: "i1".into(),
         label: Label::data("Item").to_string(),
         description: None,
@@ -1397,7 +1398,7 @@ fn render_widget_tree_marks_selected_and_highlighted_ids_via_ids_list() {
         control: None,
         children: vec![],
     };
-    let node = WidgetNode::<ActionDescriptor>::Tree { sections: vec![TreeSection { id: "s".into(), label: None, default_open: true, items: vec![item] }], selected_ids: vec!["i1".into()], highlighted_ids: vec![], selection_change: None };
+    let node = WidgetNode::<ActionDescriptor>::Tree { sections: vec![TreeSection { window: None, id: "s".into(), label: None, default_open: true, items: vec![item] }], selected_ids: vec!["i1".into()], highlighted_ids: vec![], selection_change: None };
     render_widget(&node, VIEWPORT, &mut h.ctx());
     let hit = h.input.staged_hits().iter().find(|t| t.control_id.as_deref() == Some("tree.label.i1")).expect("tree item label must register a hit target");
     assert_eq!(hit.event, Some(action()));

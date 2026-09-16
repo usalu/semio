@@ -1,11 +1,14 @@
 //! 📊️ Static, modal and buckling analysis views read their concrete Results window config.
 //! [`config::Fem3dResultsWindowConfig`] owns the camera, the result display selection and the
-//! deformation playback state. The solved fields are cached per document revision, so playback
+//! deformation transport; [`transient::Fem3dResultsWindowTransient`] carries the running playback
+//! clock while the window plays. The solved fields are cached per document revision, so playback
 //! frames and selection repaints never re-run the solver, while every document edit — including
 //! each coalesced transform step of a gumball drag — is a new revision and re-solves.
 
 #[path = "🎚️config/🦀️.rs"]
 pub mod config;
+#[path = "🫧️transient/🦀️.rs"]
+pub mod transient;
 
 use self::config::Fem3dResultsWindowConfig;
 use crate::app_surface::{normalize_mode_shape, DisplayMode, ResultDisplay, MODE_SHAPE_AMPLITUDE_RATIO};

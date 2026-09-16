@@ -38,7 +38,9 @@ mod plugin_builder_contract_tests {
     /// 🎯️ M1 (ticket 26/08/17 `design-unified.md`): this module names every other type
     /// explicitly (no `use super::*;`), so the `🕹️IntentDispatchTests` fixture needs its own
     /// import too, rather than relying on `mod app`'s outer glob.
-    use semio_framework_ui_contract::{ActionId, BuiltNode, SurfaceId, Trigger, UiIntent, UiNodeId, UiRevision, UI_BUILT_CHILDREN_MAX, UI_VALUE_PAGE_ROWS};
+    use crate::app::TREE_WINDOW_DEFAULT_ROWS;
+    use semio_framework::TreeWindowRequest;
+    use semio_framework_ui_contract::{ActionId, BuiltNode, SurfaceId, Trigger, TreeWindow, UiIntent, UiNodeId, UiRevision, UI_BUILT_CHILDREN_MAX, UI_VALUE_PAGE_ROWS};
     use serde::{Deserialize, Serialize};
     use serde_json::json;
     use std::collections::BTreeMap;
@@ -996,7 +998,7 @@ mod plugin_builder_contract_tests {
             if matches!(body_key, "graph" | "properties") {
                 let item = TreeNode::try_new("item-1", Component::TreeItem(TreeItemProps {
                     label: Label(UiText::try_from_str("Item 1").expect("bounded fixture")), description: None, icon: None, default_open: None,
-                    draggable: None, drag_data: None, dimmed: None, row_actions: UiFixedList::default(),
+                    draggable: None, drag_data: None, dimmed: None, window: None, granularity: None, row_actions: UiFixedList::default(),
                 })).expect("bounded fixture");
                 let root = TreeNode::try_new("root", Component::Tree(TreeProps { interaction_domain: Some(UiText::try_from_str("items").expect("bounded fixture")) }))
                     .expect("bounded fixture").try_with_children([item]).unwrap_or_else(|_| panic!("bounded fixture"));
@@ -4633,7 +4635,7 @@ mod plugin_builder_contract_tests {
             ],
             command_filter: HistoryCommandFilter::All,
         };
-        let all_panel = ui_history_panel(&history, "ctrl", false, false, 0).await.expect("bounded history panel");
+        let all_panel = ui_history_panel(&history, "ctrl", false, false, &ViewModel::default()).await.expect("bounded history panel");
         assert_eq!(all_panel.children.len(), 2, "Actions + Commands sections");
         let Component::TreeSection(actions_props) = &all_panel.children[0].component else { panic!("expected a TreeSection") };
         assert_eq!(actions_props.label.as_ref().map(|label| label.0.as_str()), Some("Actions"));
@@ -4648,12 +4650,12 @@ mod plugin_builder_contract_tests {
         assert!(non_revertible_props.row_actions.is_empty(), "the non-revertible entry must not offer inverse");
 
         let only_ops = HistoryView { command_filter: HistoryCommandFilter::OnlyMutations, ..history.clone() };
-        let ops_panel = ui_history_panel(&only_ops, "ctrl", false, false, 0).await.expect("bounded history panel");
+        let ops_panel = ui_history_panel(&only_ops, "ctrl", false, false, &ViewModel::default()).await.expect("bounded history panel");
         assert_eq!(ops_panel.children[1].children.len(), 1);
         assert_eq!(ops_panel.children[1].children[0].key.as_str(), "framework.history.entry.1");
 
         let without_ops = HistoryView { command_filter: HistoryCommandFilter::WithoutMutations, ..history };
-        let no_ops_panel = ui_history_panel(&without_ops, "ctrl", false, false, 0).await.expect("bounded history panel");
+        let no_ops_panel = ui_history_panel(&without_ops, "ctrl", false, false, &ViewModel::default()).await.expect("bounded history panel");
         assert_eq!(no_ops_panel.children[1].children.len(), 1);
         assert_eq!(no_ops_panel.children[1].children[0].key.as_str(), "framework.history.entry.2");
     }
@@ -4683,7 +4685,7 @@ mod plugin_builder_contract_tests {
             }],
             command_filter: HistoryCommandFilter::All,
         };
-        let panel = ui_history_panel(&history, "ctrl", false, false, 0).await.expect("an oversized operation line must not fail admission");
+        let panel = ui_history_panel(&history, "ctrl", false, false, &ViewModel::default()).await.expect("an oversized operation line must not fail admission");
         let Component::TreeItem(props) = &panel.children[1].children[0].component else { panic!("expected a TreeItem") };
         let description = props.description.as_ref().expect("clipped description").as_str();
         assert!(description.starts_with("register-mesh vertices=[1.0 "));
@@ -4713,7 +4715,7 @@ mod plugin_builder_contract_tests {
             inverse: None,
         };
         let history = HistoryView { columns: Vec::new(), can_undo: true, can_redo: false, active_alternative_id: None, current_checkpoint_id: None, commands: vec![entry(1, 1), entry(2, 3)], command_filter: HistoryCommandFilter::All };
-        let panel = ui_history_panel(&history, "ctrl", false, false, 0).await.expect("an oversized command label must not fail admission");
+        let panel = ui_history_panel(&history, "ctrl", false, false, &ViewModel::default()).await.expect("an oversized command label must not fail admission");
         for (index, expected_tail) in [(0, UI_TEXT_CLIP_MARK), (1, UI_TEXT_CLIP_MARK)] {
             let Component::TreeItem(props) = &panel.children[1].children[index].component else { panic!("expected a TreeItem") };
             let label = props.label.0.as_str();
@@ -4723,18 +4725,11 @@ mod plugin_builder_contract_tests {
         }
     }
 
-    /// 🕰️ Wave W-AB: Commands admission is a `UI_BUILT_CHILDREN_MAX`-ary tree over the live filtered
-    /// command-row count. A session log past one page must assemble — hops3 aborted every later
-    /// publish at `history-panel.commands`. Bound is derived from the fixture's row count, not a
-    /// bumped children ceiling. needs #40.
-    /// 🎟️ Wave B9 lane 5: every revertible row materialises a `UiValue::Map` of revert arguments, and
-    /// the process-wide argument arena backs exactly `UI_VALUE_PAGE_ROWS` interactive rows. A session's
-    /// command log grows past that within minutes, so the alias table has to page with the rows: the
-    /// panel must assemble 200 entries without a single refused admission, every row must still be
-    /// reachable, and the inline revert must stay bounded by the page the arena actually backs.
-    #[semio_framework_async_macros::async_test]
-    async fn ui_history_panel_bounds_revert_row_actions_to_the_arena_page() {
-        let entries = 200_u64;
+    fn history_window_fixture() -> Value {
+        serde_json::from_str(include_str!("../../🧫️fixtures/history-panel-command-window/🔣️.json")).unwrap()
+    }
+
+    fn history_window_log(rows: usize) -> HistoryView {
         let entry = |seq: u64| CommandView {
             seq,
             action_id: "translateSelection".into(),
@@ -4750,16 +4745,65 @@ mod plugin_builder_contract_tests {
             count: 1,
             inverse: None,
         };
-        let history = HistoryView {
-            columns: Vec::new(),
-            can_undo: true,
-            can_redo: false,
-            active_alternative_id: None,
-            current_checkpoint_id: None,
-            commands: (1..=entries).map(entry).collect(),
-            command_filter: HistoryCommandFilter::All,
+        HistoryView { columns: Vec::new(), can_undo: true, can_redo: false, active_alternative_id: None, current_checkpoint_id: None, commands: (1..=rows as u64).map(entry).collect(), command_filter: HistoryCommandFilter::All }
+    }
+
+    fn history_commands_window(panel: &BuiltNode) -> Option<TreeWindow> {
+        let Component::TreeSection(props) = &panel.children[1].component else { panic!("expected the Commands TreeSection") };
+        props.window
+    }
+
+    /// 🪟️ ARTIFACT-TREE-VIRTUALISED-STREAMING: the Commands section is a window, not a page. Its rows
+    /// are the live entries themselves (no `UI_BUILT_CHILDREN_MAX`-ary page columns between the section
+    /// and its rows), it publishes the FULL filtered row count as `TreeWindow::total` however few rows
+    /// it materialises, a cold paint draws exactly `TREE_WINDOW_DEFAULT_ROWS`, a host request draws
+    /// exactly its slice keyed by the raw entry id, and no `+N` continuation row exists at any point.
+    #[semio_framework_async_macros::async_test]
+    async fn ui_history_panel_windows_command_rows_over_the_live_count() {
+        let fixture = history_window_fixture();
+        let rows = fixture["commandRowCount"].as_u64().unwrap() as usize;
+        let default_rows = fixture["defaultWindowRows"].as_u64().unwrap() as usize;
+        assert_eq!(default_rows, TREE_WINDOW_DEFAULT_ROWS as usize, "fixture must pin the live first-paint budget");
+        let prefix = fixture["entryKeyPrefix"].as_str().unwrap();
+        let history = history_window_log(rows);
+
+        let cold = ui_history_panel(&history, "ctrl", false, false, &ViewModel::default()).await.expect("a log of any length must assemble");
+        assert_eq!(cold.children[1].children.len(), default_rows, "a cold paint materialises one viewport");
+        assert!(cold.children[1].children.iter().all(|row| row.key.as_str().starts_with(prefix)), "rows are the entries themselves, never page columns");
+        assert_eq!(history_commands_window(&cold), Some(TreeWindow { total: rows as u32, offset: 0 }), "the host sees the whole extent");
+
+        let offset = fixture["requestOffset"].as_u64().unwrap() as u32;
+        let requested = fixture["requestRows"].as_u64().unwrap() as u32;
+        let view = ViewModel {
+            tree_windows: vec![TreeWindowRequest {
+                body_key: fixture["bodyKey"].as_str().unwrap().to_string(),
+                node_key: fixture["nodeKey"].as_str().unwrap().to_string(),
+                open: Some(true),
+                offset,
+                rows: requested,
+            }],
+            ..ViewModel::default()
         };
-        let panel = ui_history_panel(&history, "ctrl", false, false, 0).await.expect("200 revertible entries must assemble without an alias refusal");
+        let scrolled = ui_history_panel(&history, "ctrl", false, false, &view).await.expect("a scrolled window must assemble");
+        assert_eq!(scrolled.children[1].children.len(), requested as usize);
+        assert_eq!(scrolled.children[1].children[0].key.as_str(), format!("{prefix}{}", offset + 1), "the slice starts where the host scrolled to");
+        assert_eq!(history_commands_window(&scrolled), Some(TreeWindow { total: rows as u32, offset }));
+
+        for panel in [&cold, &scrolled] {
+            let json = serde_json::to_string(panel).expect("panel JSON");
+            assert!(!json.contains(".more"), "no continuation row key survives: {json}");
+            assert!(!json.contains("\"+"), "no `+N` label survives: {json}");
+        }
+    }
+
+    /// 🪙️ Every revertible row materialises a `UiValue::Map` of revert arguments, and the process-wide
+    /// argument arena backs exactly `UI_VALUE_PAGE_ROWS` interactive rows. The window is what keeps the
+    /// two reconciled: `UI_BUILT_CHILDREN_MAX == UI_VALUE_PAGE_ROWS`, so a materialised slice can never
+    /// out-spend the arena, and every row the host CAN see keeps its inline revert.
+    #[semio_framework_async_macros::async_test]
+    async fn ui_history_panel_keeps_every_materialised_revert_inside_the_arena_page() {
+        let history = history_window_log(200);
+        let panel = ui_history_panel(&history, "ctrl", false, false, &ViewModel::default()).await.expect("200 revertible entries must assemble without an alias refusal");
         fn census(node: &BuiltNode, rows: &mut usize, actions: &mut usize) {
             if node.key.as_str().starts_with("framework.history.entry.") {
                 *rows += 1;
@@ -4773,61 +4817,9 @@ mod plugin_builder_contract_tests {
         }
         let (mut rows, mut actions) = (0usize, 0usize);
         census(&panel, &mut rows, &mut actions);
-        assert_eq!(rows, entries as usize, "every live command row stays reachable under the paged tree");
-        assert!(actions > 0, "the newest rows must still carry their inline revert");
-        assert!(actions <= UI_VALUE_PAGE_ROWS, "inline reverts must stay inside the arena page the contract declares: {actions} > {UI_VALUE_PAGE_ROWS}");
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn ui_history_panel_pages_command_rows_from_the_live_count() {
-        let fixture: Value = serde_json::from_str(include_str!("../../🧫️fixtures/history-panel-command-pages/🔣️.json")).unwrap();
-        let page_arity = fixture["pageArity"].as_u64().unwrap() as usize;
-        assert_eq!(page_arity, UI_BUILT_CHILDREN_MAX, "fixture page arity must be the live BuiltChildren page, not a bumped stand-in");
-        let overflow = fixture["overflowPastArity"].as_u64().unwrap() as usize;
-        let n = page_arity + overflow;
-        assert_eq!(n, fixture["commandRowCount"].as_u64().unwrap() as usize);
-        let expected_pages = fixture["expectedCommandSectionChildren"].as_u64().unwrap() as usize;
-        assert_eq!(expected_pages, n.div_ceil(page_arity));
-        let prefix = fixture["entryKeyPrefix"].as_str().unwrap();
-        let entry = |seq: u64| CommandView {
-            seq,
-            action_id: "hover".into(),
-            label: format!("Hover {seq}"),
-            kind: ActionKind::Interaction,
-            timestamp: "0".into(),
-            edit_id: None,
-            config_edit_id: None,
-            child_edit_ids: Vec::new(),
-            op_lines: Vec::new(),
-            applied: false,
-            revertible: false,
-            count: 1,
-            inverse: None,
-        };
-        let history = HistoryView {
-            columns: Vec::new(),
-            can_undo: false,
-            can_redo: false,
-            active_alternative_id: None,
-            current_checkpoint_id: None,
-            commands: (1..=n as u64).map(entry).collect(),
-            command_filter: HistoryCommandFilter::All,
-        };
-        let panel = ui_history_panel(&history, "ctrl", false, false, 0).await.expect("command rows past one page must not fail admission at history-panel.commands");
-        assert_eq!(panel.children[1].children.len(), expected_pages, "Commands section children are pages derived from the live row count");
-        fn collect_entry_keys(node: &BuiltNode, prefix: &str, keys: &mut Vec<String>) {
-            if node.key.as_str().starts_with(prefix) {
-                keys.push(node.key.as_str().to_string());
-            }
-            for child in node.children.iter() {
-                collect_entry_keys(child, prefix, keys);
-            }
-        }
-        let mut keys = Vec::new();
-        collect_entry_keys(&panel, prefix, &mut keys);
-        assert_eq!(keys.len(), n, "every live command row must stay reachable under the paged tree: {keys:?}");
-        assert_eq!(panel.children[1].children[0].children.len(), page_arity);
-        assert_eq!(panel.children[1].children[1].children.len(), overflow);
+        assert_eq!(rows, TREE_WINDOW_DEFAULT_ROWS as usize, "a cold paint materialises one viewport of the 200-entry log");
+        assert_eq!(actions, rows, "every materialised row keeps its inline revert");
+        assert!(actions <= UI_VALUE_PAGE_ROWS, "a window can never out-spend the arena page: {actions} > {UI_VALUE_PAGE_ROWS}");
     }
 
     #[semio_framework_async_macros::async_test]
@@ -5898,11 +5890,13 @@ mod plugin_builder_contract_tests {
                 draggable: None,
                 drag_data: None,
                 dimmed: None,
+                window: None,
+                granularity: None,
                 row_actions: UiFixedList::default(),
             }),
         )
         .expect("bounded fixture");
-        let section = TreeNode::try_new("sec", Component::TreeSection(TreeSectionProps { label: None, default_open: None })).expect("bounded fixture").try_with_children([item]).unwrap_or_else(|_| panic!("bounded fixture"));
+        let section = TreeNode::try_new("sec", Component::TreeSection(TreeSectionProps { label: None, default_open: None, window: None })).expect("bounded fixture").try_with_children([item]).unwrap_or_else(|_| panic!("bounded fixture"));
         let root = TreeNode::try_new("root", Component::Tree(TreeProps { interaction_domain: Some(UiText::try_from_str("items").expect("bounded fixture")) }))
             .expect("bounded fixture")
             .try_with_children([section])
@@ -5949,13 +5943,15 @@ mod plugin_builder_contract_tests {
                     draggable: None,
                     drag_data: None,
                     dimmed: None,
+                    window: None,
+                    granularity: None,
                     row_actions: UiFixedList::default(),
                 }),
             )
             .expect("bounded fixture")
         };
         let tree = || {
-            let section = TreeNode::try_new("sec", Component::TreeSection(TreeSectionProps { label: None, default_open: None }))
+            let section = TreeNode::try_new("sec", Component::TreeSection(TreeSectionProps { label: None, default_open: None, window: None }))
                 .expect("bounded fixture")
                 .try_with_children([row("item-1", "Item 1"), row("item-2", "Item 2")])
                 .unwrap_or_else(|_| panic!("bounded fixture"));

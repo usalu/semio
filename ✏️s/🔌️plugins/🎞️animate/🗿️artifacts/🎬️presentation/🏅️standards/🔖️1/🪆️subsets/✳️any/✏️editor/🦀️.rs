@@ -54,6 +54,10 @@ pub fn animate_presentation_action(action: &str, args: Option<semio_framework_pl
     semio_framework_plugin::ActionFactory::new(PRESENTATION_PLAY_APP_ID).action(action, args)
 }
 
+/// 🌳️ The framework's one node-list admission — the panel-local copy is gone (ticket
+/// 26/09/16/ARTIFACT-TREE-VIRTUALISED-STREAMING §8.3).
+pub use semio_framework_plugin::ui_node_list;
+
 /// 🏷️ Admits a semantic presentation label.
 pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_ui_contract::Label> {
     semio_framework_ui_contract::Label::try_from(value.as_ref()).map_err(|_| ui_capacity_error())
@@ -719,7 +723,7 @@ impl ArtifactEditor for AnimatePresentationPlayApp {
         let labels = animate_presentation_labels(view_state);
         (match body_key {
             PRESENTATION_PLAY_BODY_MAIN => tile_editor::render(deck),
-            PRESENTATION_PLAY_BODY_ARTIFACT => artifact::render(deck, labels),
+            PRESENTATION_PLAY_BODY_ARTIFACT => artifact::render(deck, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, PRESENTATION_PLAY_BODY_ARTIFACT)),
             PRESENTATION_PLAY_BODY_CATALOGUE => catalogue::render(deck, labels),
             PRESENTATION_PLAY_BODY_DETAILS => inspection::render(deck, labels),
             _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| ui_capacity_error()),

@@ -2,7 +2,9 @@
 
 use crate::editor::raster::terminology::RasterPlayLabels;
 use crate::editor::raster::ui_label;
-use semio_framework_plugin::{tree_item_desc, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL};
+use semio_framework_plugin::{
+    tree_item_desc, BuiltNode, LabelText, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, TreeWindows, UiAssemblyResult, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+};
 
 //#region 🔖️Constants
 pub const RASTER_PLAY_BODY_CATALOGUE: &str = "raster.play.catalogue";
@@ -21,12 +23,11 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(labels: &RasterPlayLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    let rows = crate::editor::raster::ui_node_list([
-        tree_item_desc("raster-catalogue.pixel", ui_label(labels.catalogue_pixel.as_str())?, None),
-        tree_item_desc("raster-catalogue.group", ui_label(labels.catalogue_group.as_str())?, None),
-        tree_item_desc("raster-catalogue.adjustment", ui_label(labels.catalogue_adjustment.as_str())?, None),
-    ])?;
-    PanelTreeBuilder::new("raster-catalogue")?.section("raster-catalogue.layer-kinds", Some(ui_label(labels.layer_kinds.as_str())?), true, rows)?.build()
+/// 🛍️ The fixed layer-kind roster, windowed like any other section so the host owns its open state and
+/// the panel never truncates. Deliberately bound to NO interaction domain: a catalogue row is an
+/// offer, not a document target.
+pub fn render(labels: &RasterPlayLabels, windows: &TreeWindows<'_>) -> UiAssemblyResult<BuiltNode> {
+    let rows: [(&str, LabelText); 3] = [("raster-catalogue.pixel", labels.catalogue_pixel), ("raster-catalogue.group", labels.catalogue_group), ("raster-catalogue.adjustment", labels.catalogue_adjustment)];
+    PanelTreeBuilder::new("raster-catalogue")?.window_section(windows, "raster-catalogue.layer-kinds", Some(ui_label(labels.layer_kinds.as_str())?), true, &rows, |row| tree_item_desc(row.0, ui_label(row.1.as_str())?, None))?.build()
 }
 //#endregion 🔖️Render

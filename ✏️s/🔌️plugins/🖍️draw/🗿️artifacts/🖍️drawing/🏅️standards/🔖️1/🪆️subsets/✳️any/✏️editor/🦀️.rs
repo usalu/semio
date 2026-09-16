@@ -90,16 +90,6 @@ pub fn ui_value_map(values: impl IntoIterator<Item = (&'static str, semio_framew
     Ok(semio_framework_plugin::UiValue::Map(builder.finish()))
 }
 
-/// 🌳️ Admits fallibly assembled UI nodes into fixed child storage.
-pub fn ui_node_list(values: impl IntoIterator<Item = semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode>>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiFixedList<semio_framework_plugin::BuiltNode>> {
-    let mut nodes = semio_framework_plugin::UiFixedList::default();
-    for value in values {
-        let node = value?;
-        nodes.try_push(node).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI node admission failed"))?;
-    }
-    Ok(nodes)
-}
-
 /// 🛠️ An internal (non-palette) action declaration — the pointer/gesture/inspector-bound vocabulary
 /// that is dispatched by the canvas/panels, never surfaced as a standalone command palette entry.
 fn drawing_internal_action(id: &str, label: impl Into<LocalizedLabel>, kind: ActionKind) -> semio_framework_plugin::ActionDefinition {
@@ -230,6 +220,18 @@ mod args_bridge {
         dsl::DslValue::Object(entries)
     }
 
+    /// 🧩️ Supplies `key = value` when the host sent no such argument (a palette/Actions-pane row
+    /// dispatches its verb arg-less; `create_layer_by_kind` treats any unknown kind as a path).
+    fn default_key(mut folded: dsl::DslValue, key: &str, value: &str) -> dsl::DslValue {
+        if let dsl::DslValue::Object(entries) = &mut folded {
+            if !entries.iter().any(|(existing, _)| existing == key) {
+                put(entries, &camel(key), dsl::DslValue::String(value.into()));
+                put(entries, key, dsl::DslValue::String(value.into()));
+            }
+        }
+        folded
+    }
+
     fn decode<T: dsl::FromValue>(action: &str, value: dsl::DslValue) -> Result<T, Fault> {
         T::from_value(value).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("app.command.invalid-args"), format!("draw action '{action}' arguments do not decode: {error}")))
     }
@@ -243,7 +245,7 @@ mod args_bridge {
             "setActiveExample" => DrawingCommand::SetActiveExample(decode(action, fold(args, &[("id", "example_id"), ("example", "example_id")], &[]))?),
             "setSelectedOpacity" => DrawingCommand::SetSelectedOpacity(decode(action, plain())?),
             "engagementSubmit" => DrawingCommand::EngagementSubmit(decode(action, plain())?),
-            "addLayer" => DrawingCommand::AddLayer(decode(action, plain())?),
+            "addLayer" => DrawingCommand::AddLayer(decode(action, default_key(plain(), "kind", "path"))?),
             "dropLayerKind" => DrawingCommand::DropLayerKind(decode(action, plain())?),
             "moveLayer" => DrawingCommand::MoveLayer(decode(action, plain())?),
             "deleteLayer" => DrawingCommand::DeleteLayer(decode(action, fold(args, &[("id", "layer_id")], &[]))?),
@@ -277,6 +279,7 @@ mod args_bridge {
             assert_eq!(command_from_action("patchLayer", Some(&args)).expect("decodes"), DrawingCommand::PatchLayer(patch_layer::PatchLayer { layer_id: "a".into(), field: "opacity".into(), value: "0.5".into() }));
             let args = dsl::json::to_dsl_value(&dsl::json::parse(r#"{"camera":{"x":1,"y":2,"zoom":1.5}}"#).expect("json"));
             assert!(matches!(command_from_action("setCamera", Some(&args)).expect("decodes"), DrawingCommand::SetCamera(_)));
+            assert_eq!(command_from_action("addLayer", None).expect("arg-less palette row"), DrawingCommand::AddLayer(add_layer::AddLayer { kind: "path".into() }));
             assert!(command_from_action("noSuchAction", None).is_err());
         }
     }
@@ -1356,10 +1359,13 @@ fn render_drawing_body(
 ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
     let labels = semio_framework_plugin::resolve_labels::<DrawingPlayLabels>(view_state);
     let active_utility = view_state.active_utility_id.as_deref().unwrap_or(DRAWING_DEFAULT_UTILITY);
+    // 🪟️ One `TreeWindows` per panel body: the host's open/scroll state for exactly the containers
+    // that body owns, plus the shared first-paint budget the panel spends in document order.
+    let windows = semio_framework_plugin::TreeWindows::for_body(view_state, body_key);
     let root = match body_key {
         DRAWING_PLAY_BODY_COMPOSITE => canvas_window::render(document, config, preview, active_utility),
-        DRAWING_PLAY_BODY_LAYERS => layers_panel::render(document, labels),
-        DRAWING_PLAY_BODY_CATALOGUE => catalogue_panel::render(document, labels),
+        DRAWING_PLAY_BODY_LAYERS => layers_panel::render(document, labels, &windows),
+        DRAWING_PLAY_BODY_CATALOGUE => catalogue_panel::render(document, labels, &windows),
         DRAWING_PLAY_BODY_PROPERTIES => properties_panel::render(document, active_utility),
         _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("drawing.body.label", "the fixed Drawing unknown-body label exceeds its UI bound")),
     }?;

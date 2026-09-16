@@ -96,7 +96,9 @@ async fn render_inspection_falls_back_to_the_first_check_for_an_out_of_range_ind
     let inside = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree { root: render_inspection(&report, Some(0)).expect("node assembly") }).expect("json");
     let outside = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree { root: render_inspection(&report, Some(99)).expect("node assembly") }).expect("json");
     assert_eq!(inside, outside, "an out-of-range index must fall back to the first check");
-    assert!(semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree { root: render_inspection(&CheckReport::default(), None).expect("node assembly") }).expect("json").contains("No checks"));
+    let empty = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree { root: render_inspection(&CheckReport::default(), None).expect("node assembly") }).expect("json");
+    assert!(empty.contains("No checks"));
+    assert!(empty.contains("\"type\":\"tree\""), "norm inspection must be a tree: {empty}");
 }
 
 #[semio_framework_async_macros::async_test]

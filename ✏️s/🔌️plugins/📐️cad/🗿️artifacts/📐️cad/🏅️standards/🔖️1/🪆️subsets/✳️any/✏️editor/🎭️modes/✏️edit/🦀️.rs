@@ -149,6 +149,74 @@ pub(crate) fn world_meshes_json(objects: &[CadObject], geometry: Option<&CadGeom
     protocol::json::to_json_string(&meshes)
 }
 
+//#region 🔖️MeshLaneCache
+/// 🗄️ The pane's mesh lane, remembered per materialized working scene. `world_meshes_json`
+/// re-tessellates every kernel-backed object from the host snapshot on EVERY render — and a hover
+/// renders all four panes (the four scenes share one interaction domain), so one pointer move cost
+/// four full re-tessellations of the Concrete Forest (≈40–80 ms per pane inside the guest) for a
+/// lane whose bytes had not changed. The lane only changes when the pane's objects or its geometry
+/// change, and both live in the child's immutable `Arc<CadWorkingScene>` materialization: a scene is
+/// re-minted on every object edit (`cad_pane_rematerialized_child`), so the `Arc` allocation is the
+/// geometry's identity. The entry holds a `Weak` to that allocation — an `Arc` allocation is not
+/// freed while a `Weak` points at it, so its address cannot be reused by a later scene and a stale
+/// hit is impossible — plus a digest of every object field the tessellation reads.
+struct MeshLaneCacheEntry {
+    pane: CadPaneId,
+    scene: std::sync::Weak<CadWorkingScene>,
+    objects_digest: u64,
+    json: String,
+}
+
+/// 🗄️ Four panes, each with its live scene plus the one it just left (a commit re-mints the scene
+/// and the old one may still be rendered once by a lagging refresh).
+const MESH_LANE_CACHE_CAPACITY: usize = 8;
+
+static MESH_LANE_CACHE: std::sync::Mutex<Vec<MeshLaneCacheEntry>> = std::sync::Mutex::new(Vec::new());
+
+/// 🔏️ Every object field `object_mesh_data` reads (plus visibility, which decides membership).
+fn mesh_lane_objects_digest(objects: &[CadObject]) -> u64 {
+    let mut hasher = std::collections::hash_map::DefaultHasher::new();
+    for object in objects {
+        object.id.hash(&mut hasher);
+        object.visible.hash(&mut hasher);
+        object.typology.hash(&mut hasher);
+        object.mesh_url.hash(&mut hasher);
+        object.solid_handle.hash(&mut hasher);
+        object.extent.map(|extent| extent.map(f64::to_bits)).hash(&mut hasher);
+        for primitive in &object.primitives {
+            primitive.slot.hash(&mut hasher);
+            primitive.primitive_id.hash(&mut hasher);
+            primitive.kind.hash(&mut hasher);
+        }
+    }
+    hasher.finish()
+}
+
+/// 🗄️ `world_meshes_json` behind the per-scene cache. A pane without a materialized scene renders
+/// the fallback roster directly (it is one built-in mesh and never worth an entry).
+pub(crate) fn world_meshes_json_cached(pane: CadPaneId, scene: Option<&std::sync::Arc<CadWorkingScene>>, objects: &[CadObject], geometry: Option<&CadGeometry>) -> String {
+    let Some(scene) = scene else {
+        return world_meshes_json(objects, geometry);
+    };
+    let objects_digest = mesh_lane_objects_digest(objects);
+    let scene_ptr = std::sync::Arc::as_ptr(scene);
+    if let Ok(cache) = MESH_LANE_CACHE.lock() {
+        if let Some(entry) = cache.iter().find(|entry| entry.pane == pane && entry.objects_digest == objects_digest && std::ptr::eq(entry.scene.as_ptr(), scene_ptr)) {
+            return entry.json.clone();
+        }
+    }
+    let json = world_meshes_json(objects, geometry);
+    if let Ok(mut cache) = MESH_LANE_CACHE.lock() {
+        cache.retain(|entry| entry.pane != pane || entry.scene.strong_count() > 0);
+        if cache.len() >= MESH_LANE_CACHE_CAPACITY {
+            cache.remove(0);
+        }
+        cache.push(MeshLaneCacheEntry { pane, scene: std::sync::Arc::downgrade(scene), objects_digest, json: json.clone() });
+    }
+    json
+}
+//#endregion 🔖️MeshLaneCache
+
 /// 🎯️ Document identity for the pane's auto-fit: the host frames the content once per revision and
 /// never takes a user-moved camera back, so this must follow the DOCUMENT (which example is open and
 /// which objects its pane holds), not the object poses a transform edits.
@@ -273,7 +341,7 @@ pub fn build_world_scene_for_pane(envelope: &CadPlayView, pane: CadPaneId, surfa
     let (objects, geometry) = working_scene.as_deref().map_or((empty, None), |scene| cad_pane_working_objects(scene, pane));
     let mut scene = World3dScene::base(
         camera_json(cad_pane_camera_runtime(&envelope.runtime, pane)),
-        world_meshes_json(objects, geometry),
+        world_meshes_json_cached(pane, working_scene.as_ref(), objects, geometry),
         world_instances_json(objects, envelope),
         world_selection_json(envelope, pane, objects, active_utility, options),
     );

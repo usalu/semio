@@ -1,7 +1,6 @@
 //! 🪟️ Exact-instance Puzzle 3D window configuration and transient interaction owners.
 
 use crate::editor::puzzle3d::config::{Puzzle3dCamera, Puzzle3dConfig, Puzzle3dRuntime, Puzzle3dSelectableKinds, Puzzle3dSuggestionMenu};
-use std::collections::BTreeMap;
 use crate::editor::puzzle3d::modes::edit::windows::main;
 use semio_framework_plugin::WorldSunConfig;
 
@@ -37,7 +36,6 @@ pub struct Puzzle3dWindowConfig {
     pub sun: WorldSunConfig,
     #[dsl(block)]
     pub camera: Puzzle3dCamera,
-    pub panel_pages: BTreeMap<String, u32>,
 }
 
 impl Default for Puzzle3dWindowConfig {
@@ -67,7 +65,6 @@ impl Puzzle3dWindowConfig {
             selection_method: runtime.selection_method.clone(),
             sun: runtime.sun.clone(),
             camera: runtime.camera.clone(),
-            panel_pages: runtime.panel_pages.clone(),
         }
     }
 }
@@ -304,7 +301,6 @@ pub fn runtime(shared: &Puzzle3dConfig, window: &Puzzle3dWindowConfig, transient
         selection_method: window.selection_method.clone(),
         sun: window.sun.clone(),
         camera: window.camera.clone(),
-        panel_pages: window.panel_pages.clone(),
         active_example_id: shared.active_example_id.clone(),
         suggestion_menu: transient.suggestion_menu.clone(),
         engagement_input: transient.engagement_input.clone(),

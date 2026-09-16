@@ -27,12 +27,19 @@ export const ENTWERFEN_MIT_BESTAND_BRAND_IDS = [
   "entwerfen-mit-bestand-aggregator",
   "entwerfen-mit-bestand-aussuchen",
   "entwerfen-mit-bestand-bearbeiten",
+  "entwerfen-mit-bestand-energie",
   "entwerfen-mit-bestand-generator",
   "entwerfen-mit-bestand-koordinator",
+  "entwerfen-mit-bestand-statik",
   "entwerfen-mit-bestand-verfolgen",
 ] as const;
 
 export type EntwerfenMitBestandBrandId = (typeof ENTWERFEN_MIT_BESTAND_BRAND_IDS)[number];
+
+/** @emoji 🏷️ Whether a shell brand id is one of the demonstrator's Entwerfen-mit-Bestand panes. */
+export function isEntwerfenMitBestandBrandId(id: string | undefined): id is EntwerfenMitBestandBrandId {
+  return id !== undefined && (ENTWERFEN_MIT_BESTAND_BRAND_IDS as readonly string[]).includes(id);
+}
 
 /** @emoji ✒️ Semio emblem shared across demonstrator brands and the landing page. */
 export const ENTWERFEN_MIT_BESTAND_LOGO_SVG = `<svg viewBox="0 0 350 350" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Entwerfen mit Bestand"><path d="M270.589 28.413a175 175 0 0151.24 241.804A175 175 0 0180.155 322.07 175 175 0 0127.691 80.528a175 175 0 01241.408-53.076" fill="#001117"/><path d="M76.25 271.933l35-35.808V118.75h-35z" fill="#fa9500" stroke="#f7f3e3" stroke-width="2.5" stroke-miterlimit="5"/><g fill="#ff344f" stroke="#f7f3e3" stroke-width="2.5" stroke-miterlimit="5"><path d="M76.25 113.75h155.563l37.66-37.5H76.25zM236.263 273.75l-.013-155.606 37.5-37.62V273.75z"/></g><g fill="#34d1bf" stroke="#f7f3e3" stroke-width="2.5" stroke-miterlimit="5"><path d="M160.467 273.75h70.783v-37.5h-34.169zM160.468 193.75h70.782v-37.5h-34.169z"/></g></svg>`;
@@ -46,7 +53,7 @@ export const ENTWERFEN_MIT_BESTAND_GENERAL_INTRODUCTION: IntroductionDefinition 
     {
       id: "welcome",
       title: "Willkommen bei Entwerfen mit Bestand",
-      body: "Der Demonstrator vereint sechs Werkzeuge des Forschungsprojekts „Entwerfen mit Bestand“ der Leibniz Universität Hannover und der Universität der Künste Berlin.\n\nDas Projekt entwickelt eine offene Plattform, um neue Strukturen aus wiederverwendeten Baukomponenten zu entwerfen — mit vereinfachter Tragwerks- und Lebenszyklusanalyse, KI-Unterstützung entlang funktionaler und struktureller Abhängigkeiten.",
+      body: "Der Demonstrator vereint acht Werkzeuge des Forschungsprojekts „Entwerfen mit Bestand“ der Leibniz Universität Hannover und der Universität der Künste Berlin.\n\nDas Projekt entwickelt eine offene Plattform, um neue Strukturen aus wiederverwendeten Baukomponenten zu entwerfen — mit vereinfachter Tragwerks- und Lebenszyklusanalyse, KI-Unterstützung entlang funktionaler und struktureller Abhängigkeiten.",
       introduce: null,
       show: [],
       placement: "center",
@@ -738,6 +745,122 @@ export const ENTWERFEN_MIT_BESTAND_VERFOLGEN_BRAND: ShellBrand = {
 };
 //#endregion 🏷️EntwerfenMitBestandVerfolgenBrand
 
+/** 🪟️ The Energy editor's main viewport — `s.energy.model@1/*#editor`'s `energy.model.3d` window, the
+ * `world-3d` surface its edit-mode layout leads with at `MODEL_VIEWPORT_SHARE` (0.55); source of truth is
+ * `✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️model/🦀️.rs`'s
+ * `WINDOW_KIND_ID`, NOT the committed `✏️s/🔌️plugins/🔋️energy/🔣️.json`, whose `windowKinds` list is stale:
+ * it omits this window entirely and still spells `framework.window.tree` as `block-list`. The three data
+ * windows beside it are `framework.window.tree` (Struktur), `framework.window.table` (Zonen) and
+ * `energy.simulation` (Energiesimulation). */
+const ENERGY_MODEL_MAIN_WINDOW_ID = "energy.model.3d";
+
+/** 🪟️ The Energy editor's simulation window — `energy.simulation`, the run transport and settings beside
+ * the 3D model (`…/✏️editor/🎭️modes/✏️edit/🪟️windows/⚡️simulation/🦀️.rs`'s `WINDOW_KIND_ID`). */
+const ENERGY_SIMULATION_WINDOW_ID = "energy.simulation";
+
+/** 🪟️ The FEM 3D editor's main window kind — `s.fem.fem3d@1/*#editor`'s `fem3d-model` window (see
+ * `✏️s/🔌️plugins/🏗️fem/🔣️.json`), a `world-3d` surface, so the Statik introduction gates on the same
+ * zoom/pan/orbit gestures as the other 3D brands. */
+const FEM3D_MODEL_WINDOW_ID = "fem3d-model";
+
+//#region 🏷️EntwerfenMitBestandEnergieBrand
+/** 🏷️ Energie (energy): thermal simulation of designs made from reused building components. */
+export const ENTWERFEN_MIT_BESTAND_ENERGIE_BRAND: ShellBrand = {
+  id: "entwerfen-mit-bestand-energie",
+  windowTitle: "Entwerfen mit Bestand · Energie",
+  logoSvg: ENTWERFEN_MIT_BESTAND_LOGO_SVG,
+  locks: { locale: DEMONSTRATOR_LOCALE, terminology: "reuse", themeId: "semio" },
+  defaults: { exampleId: "bestest-600" },
+  ephemeral: true,
+  replayIntroductionOnLoad: true,
+  assetsDir: DEMONSTRATOR_ASSETS_DIR,
+  introduction: {
+    title: "Willkommen bei Energie",
+    steps: [
+      {
+        id: "viewport",
+        title: "Das Energiemodell",
+        body: "Im Energie-Werkzeug simulieren Sie das thermische Verhalten von Entwürfen aus Bestandskomponenten — Zonen, Hüllflächen und Randbedingungen. Zoomen Sie mit dem Mausrad, verschieben Sie mit Mittelklick ziehen und orbitieren Sie mit Alt + Rechtsklick ziehen.",
+        introduce: windowElementId(ENERGY_MODEL_MAIN_WINDOW_ID),
+        show: [],
+        placement: "auto",
+        interactions: [
+          { on: { kind: "zoom", id: ENERGY_MODEL_MAIN_WINDOW_ID }, label: "Zoomen (Mausrad)" },
+          { on: { kind: "pan", id: ENERGY_MODEL_MAIN_WINDOW_ID }, label: "Verschieben (Mittelklick ziehen)" },
+          { on: { kind: "orbit", id: ENERGY_MODEL_MAIN_WINDOW_ID }, label: "Orbitieren (Alt + Rechtsklick ziehen)" },
+        ],
+        ordered: false,
+        logos: [],
+        demonstrations: [
+          { gesture: { kind: "scroll", at: { kind: "windowNormalized", id: windowElementId(ENERGY_MODEL_MAIN_WINDOW_ID), x: 0.5, y: 0.5 }, deltaY: -100 } },
+        ],
+      },
+      {
+        id: "panels",
+        title: "Paneele",
+        body: "Neben dem Modell stehen Struktur, Zonen und die Energiesimulation. Über die Reiter in der Leiste öffnen und schließen Sie zusätzlich Paneele — zum Beispiel Katalog, Dokument oder Inspektion. Klicken Sie mit der linken Maustaste auf den Katalog-Reiter, um das Katalog-Paneel zu öffnen.",
+        introduce: FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
+        show: [windowElementId(ENERGY_SIMULATION_WINDOW_ID)],
+        placement: "auto",
+        interactions: [{ on: { kind: "panel", id: FRAMEWORK_PANEL_TAB_CATALOGUE_ID }, label: "Katalog-Reiter anklicken" }],
+        ordered: false,
+        logos: [],
+        demonstrations: [{ gesture: { kind: "leftClick", at: { kind: "element", id: FRAMEWORK_PANEL_TAB_CATALOGUE_ID } } }],
+      },
+    ],
+  },
+};
+//#endregion 🏷️EntwerfenMitBestandEnergieBrand
+
+//#region 🏷️EntwerfenMitBestandStatikBrand
+/** 🏷️ Statik (fem3d): structural analysis of the Tragwerk assembled from reused building components. */
+export const ENTWERFEN_MIT_BESTAND_STATIK_BRAND: ShellBrand = {
+  id: "entwerfen-mit-bestand-statik",
+  windowTitle: "Entwerfen mit Bestand · Statik",
+  logoSvg: ENTWERFEN_MIT_BESTAND_LOGO_SVG,
+  locks: { locale: DEMONSTRATOR_LOCALE, terminology: "reuse", themeId: "semio" },
+  defaults: { exampleId: "concrete-forest" },
+  ephemeral: true,
+  replayIntroductionOnLoad: true,
+  assetsDir: DEMONSTRATOR_ASSETS_DIR,
+  introduction: {
+    title: "Willkommen bei Statik",
+    steps: [
+      {
+        id: "viewport",
+        title: "Das Tragwerksmodell",
+        body: "In der Statik berechnen Sie das Tragwerk aus wiederverwendeten Baukomponenten — Knoten, Stäbe, Auflager und Lasten. Zoomen Sie mit dem Mausrad, verschieben Sie mit Mittelklick ziehen und orbitieren Sie mit Alt + Rechtsklick ziehen.",
+        introduce: windowElementId(FEM3D_MODEL_WINDOW_ID),
+        show: [],
+        placement: "auto",
+        interactions: [
+          { on: { kind: "zoom", id: FEM3D_MODEL_WINDOW_ID }, label: "Zoomen (Mausrad)" },
+          { on: { kind: "pan", id: FEM3D_MODEL_WINDOW_ID }, label: "Verschieben (Mittelklick ziehen)" },
+          { on: { kind: "orbit", id: FEM3D_MODEL_WINDOW_ID }, label: "Orbitieren (Alt + Rechtsklick ziehen)" },
+        ],
+        ordered: false,
+        logos: [],
+        demonstrations: [
+          { gesture: { kind: "scroll", at: { kind: "windowNormalized", id: windowElementId(FEM3D_MODEL_WINDOW_ID), x: 0.5, y: 0.5 }, deltaY: -100 } },
+        ],
+      },
+      {
+        id: "panels",
+        title: "Paneele",
+        body: "Über die Reiter in der Leiste öffnen und schließen Sie Paneele — zum Beispiel Katalog, Ergebnisse oder Inspektion. Klicken Sie mit der linken Maustaste auf den Katalog-Reiter, um das Katalog-Paneel zu öffnen.",
+        introduce: FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
+        show: [],
+        placement: "auto",
+        interactions: [{ on: { kind: "panel", id: FRAMEWORK_PANEL_TAB_CATALOGUE_ID }, label: "Katalog-Reiter anklicken" }],
+        ordered: false,
+        logos: [],
+        demonstrations: [{ gesture: { kind: "leftClick", at: { kind: "element", id: FRAMEWORK_PANEL_TAB_CATALOGUE_ID } } }],
+      },
+    ],
+  },
+};
+//#endregion 🏷️EntwerfenMitBestandStatikBrand
+
 //#region 🎪️DemonstratorPanes
 /** @emoji ⏱️ Browser timing surface used by the demonstrator's paced pane-boot queue. */
 export type DemonstratorIdleScheduler = {
@@ -760,8 +883,8 @@ export function scheduleDemonstratorIdle(callback: () => void, delayMs: number, 
   };
 }
 
-/** @emoji 🎪️ One live pane in the demonstrator's 3×2 grid — order here IS grid order (row-major: index
- * 0-2 top row, 3-5 bottom row). */
+/** @emoji 🎪️ One live pane in the demonstrator's 4×2 grid — order here IS grid order (row-major: index
+ * 0-3 top row, 4-7 bottom row). */
 export type DemonstratorPaneSpec = {
   readonly id: string;
   readonly variant: string;
@@ -782,9 +905,11 @@ export const DEMONSTRATOR_PANES: readonly DemonstratorPaneSpec[] = [
   { id: "generator", variant: "generator", brand: ENTWERFEN_MIT_BESTAND_GENERATOR_BRAND, label: "Generator", tagline: "Parametrische Abläufe", icon: "workflow" },
   { id: "koordinator", variant: "koordinator", brand: ENTWERFEN_MIT_BESTAND_KOORDINATOR_BRAND, label: "Koordinator", tagline: "Modelle koordinieren", icon: "cad-shape" },
   { id: "aggregator", variant: "aggregator", brand: ENTWERFEN_MIT_BESTAND_AGGREGATOR_BRAND, label: "Aggregator", tagline: "Bestand zusammensetzen", icon: "puzzle" },
+  { id: "energie", variant: "energy", brand: ENTWERFEN_MIT_BESTAND_ENERGIE_BRAND, label: "Energie", tagline: "Energiebilanz simulieren", icon: "sun" },
   { id: "aussuchen", variant: "aussuchen", brand: ENTWERFEN_MIT_BESTAND_AUSSUCHEN_BRAND, label: "Aussuchen", tagline: "Bestand sichten", icon: "library" },
   { id: "bearbeiten", variant: "bearbeiten", brand: ENTWERFEN_MIT_BESTAND_BEARBEITEN_BRAND, label: "Bearbeiten", tagline: "Bauteile anpassen", icon: "hammer" },
   { id: "verfolgen", variant: "verfolgen", brand: ENTWERFEN_MIT_BESTAND_VERFOLGEN_BRAND, label: "Verfolgen", tagline: "Herkunft verfolgen", icon: "gis2d" },
+  { id: "statik", variant: "fem3d", brand: ENTWERFEN_MIT_BESTAND_STATIK_BRAND, label: "Statik", tagline: "Tragwerk berechnen", icon: "fem-app" },
 ];
 //#endregion 🎪️DemonstratorPanes
 

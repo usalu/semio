@@ -45,6 +45,14 @@ const PROCESS_3D_PLAY_CONTROLLER_ID: &str = "process3d-play";
 /// structure to declare a topology for.
 pub const PROCESS3D_INTERACTION_DOMAIN: &str = "geometry";
 
+/// 🎯️ The granularity every stock / step / workshop-machine row picks at — the domain's default and
+/// the one the workpiece canvas reports for an instance hit, so a tree row and a canvas click land on
+/// the same target.
+pub const PROCESS3D_GRANULARITY_OBJECT: &str = "object";
+/// 🎯️ …and the mesh-face granularity only the canvas produces (u32 face ids, stringified at the
+/// `InteractionTarget` boundary). No tree row is a face.
+pub const PROCESS3D_GRANULARITY_FACE: &str = "face";
+
 /// 🕹️ Owned snapshot of `InteractionView::selection(PROCESS3D_INTERACTION_DOMAIN).ids`, read once per
 /// dispatch by `ArtifactEditor::handle` and threaded through `Process3dDispatchCtx` to the one command
 /// handler that needs it (`remove_selected_step`) — mirrors `📐️cad`'s own `CadInteractionSnapshot`.
@@ -79,8 +87,8 @@ fn process3d_interaction_definition() -> InteractionDefinition {
         id: PROCESS3D_INTERACTION_DOMAIN.into(),
         label: LocalizedLabel::native("Geometry", "Geometrie"),
         granularities: vec![
-            GranularityDefinition { id: "object".into(), label: LocalizedLabel::native("Object", "Objekt"), icon_id: "box".into() },
-            GranularityDefinition { id: "face".into(), label: LocalizedLabel::native("Face", "Fläche"), icon_id: "square".into() },
+            GranularityDefinition { id: PROCESS3D_GRANULARITY_OBJECT.into(), label: LocalizedLabel::native("Object", "Objekt"), icon_id: "box".into() },
+            GranularityDefinition { id: PROCESS3D_GRANULARITY_FACE.into(), label: LocalizedLabel::native("Face", "Fläche"), icon_id: "square".into() },
         ],
         hierarchy: HierarchyProvider::Flat,
         hover: HoverSpec::default(),
@@ -135,16 +143,6 @@ pub fn ui_value_map(values: impl IntoIterator<Item = (&'static str, semio_framew
         builder.push(key.to_owned(), value).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map entry admission failed"))?;
     }
     Ok(semio_framework_plugin::UiValue::Map(builder.finish()))
-}
-
-/// 🌳️ Admits fallibly assembled UI nodes into fixed child storage.
-pub fn ui_node_list(values: impl IntoIterator<Item = semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode>>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiFixedList<semio_framework_plugin::BuiltNode>> {
-    let mut nodes = semio_framework_plugin::UiFixedList::default();
-    for value in values {
-        let node = value?;
-        nodes.try_push(node).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI node admission failed"))?;
-    }
-    Ok(nodes)
 }
 
 /// 🏷️ Admits resolved app text into the semantic UI contract.
@@ -1339,12 +1337,15 @@ fn process3d_render_body(body_key: &str, doc: &Process3dSnapshot, config: &Proce
     let labels = process3d_labels(view_state);
     let active_utility = view_state.active_utility_id.as_deref().filter(|utility| !utility.is_empty()).unwrap_or(PROCESS3D_DEFAULT_UTILITY);
     let base_body_key = body_key.split_once(':').map_or(body_key, |(base, _)| base);
+    // 🪟️ One `TreeWindows` per panel body: the host's open/scroll state for exactly the body being
+    // rendered, read straight off `ViewModel.tree_windows` (ticket 26/09/16/ARTIFACT-TREE-VIRTUALISED-STREAMING).
+    let windows = semio_framework_plugin::TreeWindows::for_body(view_state, base_body_key);
     match base_body_key {
         PROCESS_3D_PLAY_BODY_MAIN => workpiece::render(doc, config, active_utility).map(semio_framework_plugin::built_to_component_tree),
-        PROCESS_3D_PLAY_BODY_ARTIFACT => document_panel::render(doc, labels).map(semio_framework_plugin::built_to_component_tree),
-        PROCESS_3D_PLAY_BODY_CATALOGUE => catalogue::render(doc, &config.contributions_json, labels).map(semio_framework_plugin::built_to_component_tree),
-        PROCESS_3D_PLAY_BODY_WORKSHOP => workshop_panel::render(doc, &config.contributions_json, labels).map(semio_framework_plugin::built_to_component_tree),
-        PROCESS_3D_PLAY_BODY_INSPECTION => inspection::render(doc, selected_ids, labels).map(semio_framework_plugin::built_to_component_tree),
+        PROCESS_3D_PLAY_BODY_ARTIFACT => document_panel::render(doc, labels, &windows).map(semio_framework_plugin::built_to_component_tree),
+        PROCESS_3D_PLAY_BODY_CATALOGUE => catalogue::render(doc, &config.contributions_json, labels, &windows).map(semio_framework_plugin::built_to_component_tree),
+        PROCESS_3D_PLAY_BODY_WORKSHOP => workshop_panel::render(doc, &config.contributions_json, labels, &windows).map(semio_framework_plugin::built_to_component_tree),
+        PROCESS_3D_PLAY_BODY_INSPECTION => inspection::render(doc, selected_ids, labels, &windows).map(semio_framework_plugin::built_to_component_tree),
         _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
     }
 }
@@ -1761,6 +1762,8 @@ pub fn create_process3d_app() -> AppDefinition {
                 definition
             })
             .document(["semio", "process", "3d"])
+            .terminology("reuse")
+            .terminology_document("reuse", ["Entwerfen mit Bestand", "Bearbeiten"])
             .artifact_kind(ArtifactKindSpec {
                 id: "3d.process".into(),
                 name: "3D Process".into(),

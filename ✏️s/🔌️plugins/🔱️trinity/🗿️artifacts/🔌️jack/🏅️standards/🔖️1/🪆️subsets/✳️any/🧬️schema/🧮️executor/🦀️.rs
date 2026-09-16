@@ -23,7 +23,7 @@ pub(crate) use execution::QUERY_OUTPUT_MAXIMUM_BYTES;
 
 /// ▶️ Execute a jack query against a graph and emit CQRS operations for mutations.
 pub fn execute(graph: &Graph, query: &Query) -> Result<(QueryResult, Vec<TrinityGraphMutation>), String> {
-    let mut fixture = graph.to_snapshot();
+    let mut snapshot = graph.to_snapshot();
     let mut view = graph.clone();
     let mut bindings: Vec<Binding> = vec![Binding::default()];
     let mut return_items: Option<Vec<ReturnItem>> = None;
@@ -43,7 +43,7 @@ pub fn execute(graph: &Graph, query: &Query) -> Result<(QueryResult, Vec<Trinity
                 let batch = emit_create_operations(&snapshot, pattern)?;
                 operations.extend(batch.iter().cloned());
                 snapshot = apply_trinity_graph_mutations(snapshot, &batch).map_err(|e| e.to_string())?;
-                view = Graph::from_snapshot(fixture.clone()).map_err(|e| e.to_string())?;
+                view = Graph::from_snapshot(snapshot.clone()).map_err(|e| e.to_string())?;
             }
             Clause::Delete(vars) => {
                 for var in vars {
@@ -51,7 +51,7 @@ pub fn execute(graph: &Graph, query: &Query) -> Result<(QueryResult, Vec<Trinity
                         let operation = delete_node(id);
                         operations.push(operation.clone());
                         snapshot = apply_trinity_graph_mutations(snapshot, std::slice::from_ref(&operation)).map_err(|e| e.to_string())?;
-                        view = Graph::from_snapshot(fixture.clone()).map_err(|e| e.to_string())?;
+                        view = Graph::from_snapshot(snapshot.clone()).map_err(|e| e.to_string())?;
                     }
                 }
             }
@@ -62,7 +62,7 @@ pub fn execute(graph: &Graph, query: &Query) -> Result<(QueryResult, Vec<Trinity
                         let operation = emit_set_operation(&snapshot, node_id, &item.prop, item.value.clone())?;
                         operations.push(operation.clone());
                         snapshot = apply_trinity_graph_mutations(snapshot, std::slice::from_ref(&operation)).map_err(|e| e.to_string())?;
-                        view = Graph::from_snapshot(fixture.clone()).map_err(|e| e.to_string())?;
+                        view = Graph::from_snapshot(snapshot.clone()).map_err(|e| e.to_string())?;
                     }
                 }
             }
@@ -72,7 +72,7 @@ pub fn execute(graph: &Graph, query: &Query) -> Result<(QueryResult, Vec<Trinity
                     let batch = emit_create_operations(&snapshot, pattern)?;
                     operations.extend(batch.iter().cloned());
                     snapshot = apply_trinity_graph_mutations(snapshot, &batch).map_err(|e| e.to_string())?;
-                    view = Graph::from_snapshot(fixture.clone()).map_err(|e| e.to_string())?;
+                    view = Graph::from_snapshot(snapshot.clone()).map_err(|e| e.to_string())?;
                 }
             }
         }

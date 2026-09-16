@@ -5,7 +5,7 @@
 //! read-only.
 
 use crate::PlaybookSnapshot;
-use semio_framework_plugin::WindowKindDefinition;
+use semio_framework_plugin::{TreeWindows, WindowKindDefinition};
 // 🚧️ SDK GAP: the seven framework window kits (contract §2.6 — `TreeWindowKit`/`TreeView`/
 // `TreeNodeView`/the `WindowKit` trait) are not yet in `semio_framework_plugin`'s curated crate-root
 // re-export list (only reachable through `app`, unlike `ArtifactEditor`/`ArtifactViewer`/`Editor`/
@@ -35,7 +35,7 @@ pub fn definition() -> WindowKindDefinition {
 /// 🌳️ One root node per step (labeled with the step title, falling back to its id when the title is
 /// empty), one leaf child per block (labeled `"<label> (<kind>)"`) — a faithful, read-only reflection
 /// of the same step/block nesting the editor's block-list builder edits.
-pub fn render(spec: &PlaybookSnapshot) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(spec: &PlaybookSnapshot, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let roots = spec
         .steps()
         .into_iter()
@@ -45,7 +45,7 @@ pub fn render(spec: &PlaybookSnapshot) -> semio_framework_plugin::UiAssemblyResu
             TreeNodeView { id: step.id, label, children }
         })
         .collect();
-    TreeWindowKit::render(&TreeView { roots })
+    TreeWindowKit::render_windowed(&TreeView { roots }, windows)
 }
 //#endregion 🔖️Render
 

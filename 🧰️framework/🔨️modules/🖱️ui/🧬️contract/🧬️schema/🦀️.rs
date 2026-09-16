@@ -813,7 +813,17 @@ export type TreeItemProps = { label: Label, description: string | null, icon: st
  * 👁️ Domain "eye toggle": the row stays visible, dimmed, and clickable (to un-hide). NOT the
  * same axis as the record's `activity`/`disabled` — a dimmed row is still fully interactive.
  */
-dimmed: boolean | null, rowActions: Array<RowAction>, };"####,
+dimmed: boolean | null,
+/**
+ * 🪟️ The materialised slice of this row's logical child list — see [`TreeWindow`].
+ */
+window: TreeWindow | null,
+/**
+ * 🎯️ The interaction granularity this row picks when the tree carries the domain binding: the
+ * row is a pick target of the tree's `interaction_domain`, keyed by its own record key, so it
+ * needs no argument map and no per-row binding of its own.
+ */
+granularity: string | null, rowActions: Array<RowAction>, };"####,
     },
     SchemaMetadata {
         name: "TreeProps",
@@ -837,7 +847,22 @@ interactionDomain: string | null, };"####,
         typescript: r####"/**
  * 🌲️ Props for `Component::TreeSection` — a labeled, collapsible grouping of `TreeItem` children.
  */
-export type TreeSectionProps = { label: Label | null, defaultOpen: boolean | null, };"####,
+export type TreeSectionProps = { label: Label | null, defaultOpen: boolean | null,
+/**
+ * 🪟️ The materialised slice of this section's logical child list — see [`TreeWindow`].
+ */
+window: TreeWindow | null, };"####,
+    },
+    SchemaMetadata {
+        name: "TreeWindow",
+        version: 1,
+        typescript: r####"/**
+ * 🪟️ The materialised slice of a logically `total`-long child list: the record's `children` are the
+ * entries `[offset, offset + children.len())` of that list. `total > 0` with no materialised
+ * children means expandable-but-not-yet-loaded, never "empty"; a renderer pitches the unmaterialised
+ * rows as spacers so the scrollbar spans the whole document instead of the loaded window.
+ */
+export type TreeWindow = { total: number, offset: number, };"####,
     },
     SchemaMetadata {
         name: "Trigger",

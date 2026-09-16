@@ -2,7 +2,7 @@
 
 use crate::editor::generation2d::terminology::Generation2dLabels;
 use crate::editor::generation2d::GENERATION2D_PLAY_APP_ID;
-use semio_framework_plugin::{tree_item_with_action, ActionFactory, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL};
+use semio_framework_plugin::{tree_item_with_action, ActionFactory, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, TreeWindows, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL};
 
 //#region 🔖️Constants
 pub const GENERATION2D_PLAY_BODY_CATALOGUE: &str = "generation2d.play.catalogue";
@@ -21,47 +21,28 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(labels: &Generation2dLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(labels: &Generation2dLabels, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let sources = [("inputSlider", labels.source_slider), ("inputNote", labels.source_note)];
     let components = [("math.add", labels.component_add), ("logic.and", labels.component_and), ("text.concat", labels.component_concat)];
     let sinks = [("outputPreview", labels.sink_preview), ("outputExport", labels.sink_export)];
+    let modes = ["preview", "generate", "wire"];
     PanelTreeBuilder::new("procedural2d-play-catalogue")?
-        .section(
-            "procedural2d-play-catalogue.sources",
-            Some(crate::ui_label(labels.sources.as_str())?),
-            true,
-            crate::ui_node_list(sources.iter().map(|(kind, label)| {
-                let args = crate::ui_value_map([("kind", crate::ui_value_text(kind)?)])?;
-                tree_item_with_action(format!("procedural2d-play-catalogue.source.{kind}"), label.as_str(), None, ActionFactory::new(GENERATION2D_PLAY_APP_ID).action("addWidget", Some(args))?)
-            }))?,
-        )?
-        .section(
-            "procedural2d-play-catalogue.components",
-            Some(crate::ui_label(labels.components.as_str())?),
-            true,
-            crate::ui_node_list(components.iter().map(|(kind, label)| {
-                let args = crate::ui_value_map([("kind", crate::ui_value_text("neuron")?), ("neuronKind", crate::ui_value_text(kind)?)])?;
-                tree_item_with_action(format!("procedural2d-play-catalogue.component.{kind}"), label.as_str(), None, ActionFactory::new(GENERATION2D_PLAY_APP_ID).action("addWidget", Some(args))?)
-            }))?,
-        )?
-        .section(
-            "procedural2d-play-catalogue.sinks",
-            Some(crate::ui_label(labels.sinks.as_str())?),
-            true,
-            crate::ui_node_list(sinks.iter().map(|(kind, label)| {
-                let args = crate::ui_value_map([("kind", crate::ui_value_text(kind)?)])?;
-                tree_item_with_action(format!("procedural2d-play-catalogue.sink.{kind}"), label.as_str(), None, ActionFactory::new(GENERATION2D_PLAY_APP_ID).action("addWidget", Some(args))?)
-            }))?,
-        )?
-        .section(
-            "procedural2d-play-catalogue.modes",
-            Some(crate::ui_label(labels.show_mode_section.as_str())?),
-            false,
-            crate::ui_node_list(["preview", "generate", "wire"].iter().map(|mode| {
-                let args = crate::ui_value_map([("value", crate::ui_value_text(mode)?)])?;
-                tree_item_with_action(format!("procedural2d-play-catalogue.mode.{mode}"), format!("{} {mode}", labels.show_prefix.as_str()), None, ActionFactory::new(GENERATION2D_PLAY_APP_ID).action("setShowMode", Some(args))?)
-            }))?,
-        )?
+        .window_section(windows, "procedural2d-play-catalogue.sources", Some(crate::ui_label(labels.sources.as_str())?), true, &sources, |(kind, label)| {
+            let args = crate::ui_value_map([("kind", crate::ui_value_text(kind)?)])?;
+            tree_item_with_action(format!("procedural2d-play-catalogue.source.{kind}"), label.as_str(), None, ActionFactory::new(GENERATION2D_PLAY_APP_ID).action("addWidget", Some(args))?)
+        })?
+        .window_section(windows, "procedural2d-play-catalogue.components", Some(crate::ui_label(labels.components.as_str())?), true, &components, |(kind, label)| {
+            let args = crate::ui_value_map([("kind", crate::ui_value_text("neuron")?), ("neuronKind", crate::ui_value_text(kind)?)])?;
+            tree_item_with_action(format!("procedural2d-play-catalogue.component.{kind}"), label.as_str(), None, ActionFactory::new(GENERATION2D_PLAY_APP_ID).action("addWidget", Some(args))?)
+        })?
+        .window_section(windows, "procedural2d-play-catalogue.sinks", Some(crate::ui_label(labels.sinks.as_str())?), true, &sinks, |(kind, label)| {
+            let args = crate::ui_value_map([("kind", crate::ui_value_text(kind)?)])?;
+            tree_item_with_action(format!("procedural2d-play-catalogue.sink.{kind}"), label.as_str(), None, ActionFactory::new(GENERATION2D_PLAY_APP_ID).action("addWidget", Some(args))?)
+        })?
+        .window_section(windows, "procedural2d-play-catalogue.modes", Some(crate::ui_label(labels.show_mode_section.as_str())?), false, &modes, |mode| {
+            let args = crate::ui_value_map([("value", crate::ui_value_text(mode)?)])?;
+            tree_item_with_action(format!("procedural2d-play-catalogue.mode.{mode}"), format!("{} {mode}", labels.show_prefix.as_str()), None, ActionFactory::new(GENERATION2D_PLAY_APP_ID).action("setShowMode", Some(args))?)
+        })?
         .build()
 }
 //#endregion 🔖️Render

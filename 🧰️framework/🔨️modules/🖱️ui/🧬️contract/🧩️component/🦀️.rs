@@ -425,6 +425,18 @@ pub struct TreeProps {
     pub interaction_domain: Option<crate::UiText>,
 }
 
+/// 🪟️ The materialised slice of a logically `total`-long child list: the record's `children` are the
+/// entries `[offset, offset + children.len())` of that list. `total > 0` with no materialised
+/// children means expandable-but-not-yet-loaded, never "empty"; a renderer pitches the unmaterialised
+/// rows as spacers so the scrollbar spans the whole document instead of the loaded window.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
+#[serde(rename_all = "camelCase")]
+#[value(crate = "::protocol::value", rename_all = "camelCase")]
+pub struct TreeWindow {
+    pub total: u32,
+    pub offset: u32,
+}
+
 /// 🌲️ Props for `Component::TreeSection` — a labeled, collapsible grouping of `TreeItem` children.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
@@ -436,6 +448,10 @@ pub struct TreeSectionProps {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub default_open: Option<bool>,
+    /// 🪟️ The materialised slice of this section's logical child list — see [`TreeWindow`].
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub window: Option<TreeWindow>,
 }
 
 /// 🌿️ Props for `Component::TreeItem` — a single row. `items`/`control` are gone: nested items and
@@ -464,6 +480,14 @@ pub struct TreeItemProps {
     /// same axis as the record's `activity`/`disabled` — a dimmed row is still fully interactive.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub dimmed: Option<bool>,
+    /// 🪟️ The materialised slice of this row's logical child list — see [`TreeWindow`].
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub window: Option<TreeWindow>,
+    /// 🎯️ The interaction granularity this row picks when the tree carries the domain binding: the
+    /// row is a pick target of the tree's `interaction_domain`, keyed by its own record key, so it
+    /// needs no argument map and no per-row binding of its own.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub granularity: Option<crate::UiText>,
     #[serde(default, skip_serializing_if = "crate::UiFixedList::is_empty")]
     pub row_actions: crate::UiFixedList<RowAction>,
 }
@@ -474,7 +498,7 @@ impl TreeItemProps {
         for action in self.row_actions.iter() {
             row_actions.try_push(action.credited_clone()?).ok()?;
         }
-        Some(Self { label: self.label.clone(), description: self.description.clone(), icon: self.icon.clone(), default_open: self.default_open, draggable: self.draggable, drag_data: self.drag_data.clone(), dimmed: self.dimmed, row_actions })
+        Some(Self { label: self.label.clone(), description: self.description.clone(), icon: self.icon.clone(), default_open: self.default_open, draggable: self.draggable, drag_data: self.drag_data.clone(), dimmed: self.dimmed, window: self.window, granularity: self.granularity.clone(), row_actions })
     }
 }
 

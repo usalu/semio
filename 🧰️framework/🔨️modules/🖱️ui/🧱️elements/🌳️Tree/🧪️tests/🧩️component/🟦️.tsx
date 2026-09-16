@@ -2,7 +2,7 @@
 import { fireEvent, render } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
-import { TreeCheckbox, TreeItem, TreeSection } from "../../🟦️.tsx";
+import { TREE_WINDOW_OVERSCAN_ROWS, TREE_WINDOW_ROWS_MAX, Tree, TreeCheckbox, TreeItem, TreeSection, treeRowHeightPx, treeWindowRequestsForViewport, type TreeDataSection, type TreeWindowContainerMeasure } from "../../🟦️.tsx";
 // #endregion 🔌️Adapters
 
 // #region 🌳️BranchDisclosure
@@ -257,3 +257,143 @@ describe("TreeItem row activation", () => {
   });
 });
 // #endregion 🌲️RowActivation
+
+// #region 🪟️WindowedContainers
+/** 🪟️ A windowed container renders only the slice the host streamed, and stands in for every row it did NOT
+ * render with a spacer of exactly one row pitch each — so the scrollbar spans the whole `total` and the row a
+ * viewport offset lands on is the row the guest will be asked for. See
+ * `🎫️26/09/16/ARTIFACT-TREE-VIRTUALISED-STREAMING/📓️design-virtualised-tree.md` §6.1. */
+describe("Tree windowed containers", () => {
+  const windowedSection = (overrides: Partial<TreeDataSection>): TreeDataSection => ({
+    id: "tree.window.section",
+    label: "Entries",
+    defaultOpen: true,
+    windowKey: "entries",
+    ...overrides,
+  });
+
+  const spacers = (container: HTMLElement) => Array.from(container.querySelectorAll('[data-slot="tree-window-spacer"]')) as HTMLDivElement[];
+
+  it("stands in for the rows outside the streamed slice at exactly one row pitch each", () => {
+    const items = Array.from({ length: 10 }, (_, index) => ({ id: `entry-${20 + index}`, label: `Entry ${20 + index}` }));
+    const { container } = render(<Tree sections={[windowedSection({ window: { total: 100, offset: 20 }, items })]} />);
+
+    const [leading, trailing] = spacers(container);
+    expect(leading.getAttribute("data-tree-window-spacer")).toBe("leading");
+    expect(leading.getAttribute("data-tree-window-rows")).toBe("20");
+    expect(leading.style.height).toBe(`${20 * treeRowHeightPx}px`);
+    expect(trailing.getAttribute("data-tree-window-spacer")).toBe("trailing");
+    expect(trailing.getAttribute("data-tree-window-rows")).toBe("70");
+    expect(trailing.style.height).toBe(`${70 * treeRowHeightPx}px`);
+
+    const content = container.querySelector('[data-slot="tree-section-content"]') as HTMLDivElement;
+    expect(content.getAttribute("data-tree-window-key")).toBe("entries");
+    expect(content.getAttribute("data-tree-window-total")).toBe("100");
+    expect(content.getAttribute("data-tree-window-offset")).toBe("20");
+    expect(content.getAttribute("data-tree-window-length")).toBe("10");
+    expect(container.querySelectorAll('[data-slot="tree-item-row"]')).toHaveLength(10);
+  });
+
+  it("omits a zero-height spacer instead of rendering an empty block", () => {
+    const items = Array.from({ length: 4 }, (_, index) => ({ id: `head-${index}`, label: `Head ${index}` }));
+    const { container } = render(<Tree sections={[windowedSection({ window: { total: 4, offset: 0 }, items })]} />);
+
+    expect(spacers(container)).toHaveLength(0);
+  });
+
+  it("stays expandable and wears the loading ring while an announced window has streamed no rows", () => {
+    const { container } = render(<Tree sections={[windowedSection({ window: { total: 5, offset: 0 }, items: [] })]} />);
+
+    const row = container.querySelector('[data-slot="tree-section-row"]') as HTMLDivElement;
+    expect(row.getAttribute("role")).toBe("button");
+    expect(row.getAttribute("aria-expanded")).toBe("true");
+    expect(row.querySelector(".border-loading")).not.toBeNull();
+
+    const [trailing] = spacers(container);
+    expect(trailing.getAttribute("data-tree-window-rows")).toBe("5");
+    expect(container.querySelectorAll('[data-slot="tree-item-row"]')).toHaveLength(0);
+  });
+
+  it("windows a nested group row the same way it windows a section", () => {
+    const { container } = render(
+      <Tree
+        sections={[
+          windowedSection({
+            window: undefined,
+            windowKey: undefined,
+            items: [{ id: "group", label: "Object", defaultOpen: true, windowKey: "object", window: { total: 40, offset: 8 }, items: [{ id: "vortex-8", label: "Vortex 8" }] }],
+          }),
+        ]}
+      />,
+    );
+
+    const content = container.querySelector('[data-slot="tree-item-content"]') as HTMLDivElement;
+    expect(content.getAttribute("data-tree-window-key")).toBe("object");
+    expect(content.getAttribute("data-tree-window-total")).toBe("40");
+    expect(content.getAttribute("data-tree-window-offset")).toBe("8");
+    expect(content.getAttribute("data-tree-window-length")).toBe("1");
+    expect(spacers(container).map((spacer) => spacer.getAttribute("data-tree-window-rows"))).toEqual(["8", "31"]);
+  });
+});
+// #endregion 🪟️WindowedContainers
+
+// #region 📐️WindowRequests
+/** 📐️ The one pure viewport rule: which rows each on-screen container must materialise next. */
+describe("treeWindowRequestsForViewport", () => {
+  const rowHeight = 20;
+  const measure = (overrides: Partial<TreeWindowContainerMeasure>): TreeWindowContainerMeasure => ({
+    key: "entries",
+    total: 1000,
+    offset: 0,
+    length: 0,
+    top: 0,
+    height: 1000 * rowHeight,
+    ...overrides,
+  });
+
+  it("skips a container that sits entirely above the viewport", () => {
+    const above = measure({ key: "above", top: 0, height: 10 * rowHeight, total: 10 });
+    const inside = measure({ key: "inside", top: 400, height: 10 * rowHeight, total: 10 });
+
+    expect(treeWindowRequestsForViewport([above, inside], 400, 200, rowHeight, 2)).toEqual([{ key: "inside", offset: 0, rows: 10 }]);
+  });
+
+  it("asks from the first visible row less the overscan when only the container's top is cut off", () => {
+    // Container starts 100px (5 rows) above the viewport top; 200px (10 rows) of it are on screen.
+    const requests = treeWindowRequestsForViewport([measure({ top: -100 })], 0, 200, rowHeight, 2);
+
+    expect(requests).toEqual([{ key: "entries", offset: 3, rows: 14 }]);
+  });
+
+  it("centres a long container's window on the visible run", () => {
+    // 50 rows of a 1000-row container are on screen, starting at row 100.
+    const requests = treeWindowRequestsForViewport([measure({ top: 0 })], 100 * rowHeight, 50 * rowHeight, rowHeight, TREE_WINDOW_OVERSCAN_ROWS);
+
+    expect(requests).toEqual([{ key: "entries", offset: 100 - TREE_WINDOW_OVERSCAN_ROWS, rows: 50 + 2 * TREE_WINDOW_OVERSCAN_ROWS }]);
+  });
+
+  it("never asks past the end of a container shorter than the viewport run", () => {
+    const requests = treeWindowRequestsForViewport([measure({ total: 6, height: 6 * rowHeight })], 0, 40 * rowHeight, rowHeight, TREE_WINDOW_OVERSCAN_ROWS);
+
+    expect(requests).toEqual([{ key: "entries", offset: 0, rows: 6 }]);
+  });
+
+  it("clamps one request to the built-children ceiling", () => {
+    // 300 rows of a 500-row container on screen at once — more than one built child list can carry.
+    const requests = treeWindowRequestsForViewport([measure({ total: 500, height: 500 * rowHeight })], 200 * rowHeight, 300 * rowHeight, rowHeight, TREE_WINDOW_OVERSCAN_ROWS);
+
+    expect(requests).toEqual([{ key: "entries", offset: 200 - TREE_WINDOW_OVERSCAN_ROWS, rows: TREE_WINDOW_ROWS_MAX }]);
+  });
+
+  it("keeps the window inside the total when the viewport sits at the very end", () => {
+    const requests = treeWindowRequestsForViewport([measure({ total: 500, height: 500 * rowHeight })], 490 * rowHeight, 20 * rowHeight, rowHeight, TREE_WINDOW_OVERSCAN_ROWS);
+
+    expect(requests).toEqual([{ key: "entries", offset: 500 - 26, rows: 26 }]);
+  });
+
+  it("drops containers with nothing to stream and rejects a degenerate row pitch", () => {
+    expect(treeWindowRequestsForViewport([measure({ total: 0, height: 0 })], 0, 400, rowHeight, 4)).toEqual([]);
+    expect(treeWindowRequestsForViewport([measure({})], 0, 400, 0, 4)).toEqual([]);
+  });
+});
+// #endregion 📐️WindowRequests

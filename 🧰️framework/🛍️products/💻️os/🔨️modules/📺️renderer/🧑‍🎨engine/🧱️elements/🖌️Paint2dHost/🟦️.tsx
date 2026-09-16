@@ -309,6 +309,7 @@ function Paint2dCanvasSurface({
   const onSessionReady = useCallback(
     (session: RasterWasmSession) => {
       sessionRef.current = session;
+      syncSessionCanvasTheme(session);
       syncAll();
     },
     [syncAll],
@@ -645,6 +646,7 @@ function Paint2dWasmCanvas({ sessionFactory, onSessionReady }: { readonly sessio
       .attachCanvas(canvas, initW, initH, dpr)
       .then(() => {
         if (disposed) return;
+        syncSessionCanvasTheme(session);
         const resize = () => {
           const nextRect = container.getBoundingClientRect();
           const nextDpr = globalThis.devicePixelRatio || 1;

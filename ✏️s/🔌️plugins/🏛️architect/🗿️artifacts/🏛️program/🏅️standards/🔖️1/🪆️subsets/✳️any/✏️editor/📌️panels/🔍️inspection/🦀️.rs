@@ -1,9 +1,8 @@
 //! 🔍️ Architect inspection panel — the document-wide register summary.
 
-use crate::editor::architect::{ui_children, ui_label, ui_node};
+use crate::editor::architect::ui_label;
 use crate::ProgramSnapshot;
-use semio_framework_plugin::{LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
-use semio_framework_ui_contract::{column, field, section, text, BuiltNode};
+use semio_framework_plugin::{tree_item_desc, ui_node_list, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiAssemblyResult, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
 
 //#region 🔖️Constants
 pub const ARCHITECT_BODY_INSPECTION: &str = "architect.inspection";
@@ -28,23 +27,16 @@ pub fn definition() -> PanelTabDefinition {
 /// tell which entity is currently selected — it always shows the document-wide register summary
 /// now; the per-selected-entity typed inspector branches (element/stakeholder/adjacency/
 /// requirement/risk/generic, keyed off the deleted `cfg.selected_ids`) are gone with it.
-pub fn render(program: &ProgramSnapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    let values = [
-        ("schema", "Schema", program.schema.clone()),
-        ("elements", "Elements", program.elements.len().to_string()),
-        ("stakeholders", "Stakeholders", program.stakeholders.len().to_string()),
-        ("adjacencies", "Adjacencies", program.adjacencies.len().to_string()),
-        ("requirements", "Requirements", program.requirements.len().to_string()),
-        ("risks", "Risks", program.risks.len().to_string()),
-    ];
-    let mut fields = Vec::with_capacity(values.len());
-    for (key, label, value) in values {
-        let id = format!("architect-inspection.summary.{key}");
-        let value = ui_node(text(ui_label(value)?), &format!("{id}.value"))?;
-        fields.push(ui_node(ui_children(field(ui_label(label)?), [value])?, &id)?);
-    }
-    let summary = ui_node(ui_children(section(ui_label("ProgramSnapshot")?).default_open(true), fields)?, "architect-inspection.summary")?;
-    ui_node(ui_children(column(), [summary])?, "architect-inspection")
+pub fn render(program: &ProgramSnapshot) -> UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    let rows = ui_node_list([
+        tree_item_desc("architect-inspection.summary.schema", ui_label("Schema")?, Some(program.schema.clone())),
+        tree_item_desc("architect-inspection.summary.elements", ui_label("Elements")?, Some(program.elements.len().to_string())),
+        tree_item_desc("architect-inspection.summary.stakeholders", ui_label("Stakeholders")?, Some(program.stakeholders.len().to_string())),
+        tree_item_desc("architect-inspection.summary.adjacencies", ui_label("Adjacencies")?, Some(program.adjacencies.len().to_string())),
+        tree_item_desc("architect-inspection.summary.requirements", ui_label("Requirements")?, Some(program.requirements.len().to_string())),
+        tree_item_desc("architect-inspection.summary.risks", ui_label("Risks")?, Some(program.risks.len().to_string())),
+    ])?;
+    PanelTreeBuilder::new("architect-inspection")?.section("architect-inspection.summary", Some(ui_label("ProgramSnapshot")?), true, rows)?.build()
 }
 //#endregion 🔖️Render
 

@@ -85,6 +85,8 @@ async fn selected_step_id_renders_its_label_and_measure_kind() {
     assert!(rendered.contains("Radius: 0.05"), "expected the drill capability's own radius parameter: {rendered}");
 }
 
+/// 🪟️ A capability section authors itself CLOSED, so it states its parameter count and materialises
+/// nothing until the reader opens it — the machine summary above it is open and carries its fields.
 #[semio_framework_async_macros::async_test]
 async fn selected_machine_id_renders_its_capabilities() {
     let mut app = context::app_with_registry();
@@ -93,6 +95,28 @@ async fn selected_machine_id_renders_its_capabilities() {
     assert!(rendered.contains("process3d-play-inspector.machine"), "expected the machine section: {rendered}");
     assert!(rendered.contains("Generic Saw"), "expected the machine's label: {rendered}");
     assert!(rendered.contains("process3d-play-inspector.capability.cut"), "expected the saw's cut capability section: {rendered}");
-    assert!(rendered.contains("Kerf: 0.05"), "expected the cut capability's own kerf parameter: {rendered}");
+    assert!(!rendered.contains("Kerf: 0.05"), "a closed capability section materialises no parameter rows: {rendered}");
+}
+
+/// ⚖️ LAW (b)/(c): opening the cut capability's window materialises exactly its parameter rows —
+/// the same fields the section stated the extent of while it was closed.
+#[semio_framework_async_macros::async_test]
+async fn opening_a_capability_section_materialises_its_parameters() {
+    use semio_framework_plugin::{TreeWindowRequest, ViewModel};
+    let mut app = context::app_with_registry();
+    select(&mut app, "machine:saw");
+    let view = ViewModel {
+        tree_windows: vec![TreeWindowRequest {
+            body_key: PROCESS_3D_PLAY_BODY_INSPECTION.into(),
+            node_key: "process3d-play-inspector.capability.cut".into(),
+            open: Some(true),
+            offset: 0,
+            rows: 32,
+        }],
+        ..Default::default()
+    };
+    let rendered = context::render_with_view(&mut app, PROCESS_3D_PLAY_BODY_INSPECTION, &view);
+    assert!(rendered.contains("Kerf: 0.05"), "expected the cut capability's own kerf parameter once opened: {rendered}");
+    assert!(!rendered.contains(".more\""), "a windowed inspector has no continuation row: {rendered}");
 }
 //#endregion 🔖️SelectionInspector

@@ -49,7 +49,6 @@
     "setGridSnapEnabled",
     "setGridSpacing",
     "setGridVisible",
-    "setPanelPage",
     "setLodAutomatic",
     "setLodDepthVariable",
     "setLodManual",

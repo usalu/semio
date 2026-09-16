@@ -237,7 +237,6 @@ pub(crate) fn every_command() -> Vec<CadCommand> {
         CadCommand::SaveCurrent(save_current::SaveCurrent { format: Some("step".into()) }),
         CadCommand::SaveCurrent(save_current::SaveCurrent { format: None }),
         CadCommand::LoadRawRequest(load_raw_request::LoadRawRequest {}),
-        CadCommand::SetPanelPage(set_panel_page::SetPanelPage { section: "cad-play-document.shape".into(), page: 1.0 }),
     ]
 }
 
@@ -511,6 +510,44 @@ async fn forest_example_uses_per_object_brep_meshes() {
     }
     assert!(!json.contains("🧊️hexagonal-cut-concrete-forest-left.glb"));
     assert!(scene.building_objects.iter().all(|object| object.solid_handle.is_some()));
+}
+
+/// 🗄️ The mesh lane is remembered per materialized scene: a second render of the same `Arc` answers
+/// the same bytes without tessellating, an object edit (a different digest) re-tessellates, and a
+/// re-minted scene (the same objects under a new `Arc`) is a miss by construction.
+#[semio_framework_async_macros::async_test]
+async fn mesh_lane_is_cached_per_materialized_scene() {
+    let scene = std::sync::Arc::new(forest_working_scene());
+    let objects = &scene.building_objects;
+    let geometry = scene.building_geometry.as_ref();
+    let started = std::time::Instant::now();
+    let first = edit::world_meshes_json_cached(CadPaneId::Building, Some(&scene), objects, geometry);
+    let cold = started.elapsed();
+    let started = std::time::Instant::now();
+    let second = edit::world_meshes_json_cached(CadPaneId::Building, Some(&scene), objects, geometry);
+    let warm = started.elapsed();
+    assert_eq!(first, second);
+    assert_eq!(first, edit::world_meshes_json(objects, geometry), "the cached lane is byte-identical to a fresh tessellation");
+    assert!(warm < cold / 4 || warm.as_millis() < 2, "a warm lane never tessellates (cold {cold:?}, warm {warm:?})");
+    // ✏️ An edit to a tessellation-relevant field misses: a wider object is a different lane.
+    let mut widened = objects.clone();
+    widened[0].extent = Some([9.0, 9.0, 9.0]);
+    widened[0].solid_handle = None;
+    widened[0].primitives.clear();
+    let edited = edit::world_meshes_json_cached(CadPaneId::Building, Some(&scene), &widened, geometry);
+    assert_ne!(edited, first);
+    assert_eq!(edited, edit::world_meshes_json(&widened, geometry));
+    // 🪆️ The same objects under a re-minted scene are a miss (a new `Arc` is a new geometry identity)
+    // and then a hit again on their own allocation.
+    let reminted = std::sync::Arc::new(forest_working_scene());
+    let again = edit::world_meshes_json_cached(CadPaneId::Building, Some(&reminted), &reminted.building_objects, reminted.building_geometry.as_ref());
+    assert_eq!(again, first);
+    let started = std::time::Instant::now();
+    let _ = edit::world_meshes_json_cached(CadPaneId::Building, Some(&reminted), &reminted.building_objects, reminted.building_geometry.as_ref());
+    assert!(started.elapsed() < cold / 4 || started.elapsed().as_millis() < 2);
+    // 🚫️ A pane without a materialized scene renders the fallback roster and is never cached.
+    let fallback = edit::world_meshes_json_cached(CadPaneId::Shape, None, &[], None);
+    assert!(fallback.contains(CAD_FALLBACK_MESH_KIND));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -794,7 +831,7 @@ async fn reference_pick_selects_the_reference_and_clears_the_cad_domain() {
     let mut idle = CadDispatchCtx { interaction: CadInteractionSnapshot::default(), preview_operation: None, view_state: None };
     assert!(command.dispatch(&doc, &cfg, &mut idle).expect("reference pick").interaction_writes.is_empty(), "nothing selected, nothing to subtract");
     let view = view(scene, runtime);
-    let panel = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree { root: inspection::build_properties_panel(&view, cad_labels(&ViewModel::default()), None).expect("panel") }).expect("projection");
+    let panel = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree { root: inspection::build_properties_panel(&view, cad_labels(&ViewModel::default()), None, &semio_framework_plugin::TreeWindows::unhosted()).expect("panel") }).expect("projection");
     assert!(panel.contains("cad-play-inspector.reference.width.grow"), "{panel}");
 }
 
@@ -1790,26 +1827,6 @@ async fn object_mutations_invert_back_to_the_demo_document() {
 }
 //#endregion 🪆️ObjectMutationSeam
 
-//#region 📄️PanelPaging
-/// 📄️ Law (d), config half: `setPanelPage` records the section's cursor on the config lane and never
-/// touches the document. The rendering half is asserted in the artifact panel's own laws.
-#[semio_framework_async_macros::async_test]
-async fn set_panel_page_records_the_section_cursor_on_the_config_lane() {
-    let app = CadPlayApp::default();
-    let scene = forest_play_scene();
-    let emit = drive(&app, &scene, "setPanelPage", Some(json!({ "section": "cad-play-document.structure-classic", "page": 2.0 })));
-    assert!(emit.artifact_mutations.is_empty(), "paging is view state, never a document operation");
-    let runtime = runtime_after(&emit, &CadConfig::default());
-    assert_eq!(runtime.panel_pages.get("cad-play-document.structure-classic").copied(), Some(2), "the cursor lands on the runtime");
-
-    let config = config_after(&emit, &CadConfig::default());
-    let again = drive_with_config(&app, &scene, "setPanelPage", Some(json!({ "section": "cad-play-document.structure-classic", "page": 2.0 })), &config);
-    assert!(again.config_mutations.is_empty(), "re-declaring the current page is a no-op");
-    let empty = drive(&app, &scene, "setPanelPage", Some(json!({ "section": "", "page": 1.0 })));
-    assert!(empty.config_mutations.is_empty(), "a section-less page request is refused, not stored under an empty key");
-}
-//#endregion 📄️PanelPaging
-
 //#region 🧩️Contributions
 /// 🧩️ Law (e): a contributed `cad.computer` pack is accepted by `setContributions` — the payload
 /// survives onto the config lane AND the app's own reader decodes it into a real pack. The four
@@ -2066,3 +2083,28 @@ async fn engagement_steps_coalesce_into_one_history_item_until_the_commit() {
     assert_eq!(runtime.engagement_step, "Committed 1 object(s)");
 }
 //#endregion 🔖️EngagementCoalescing
+
+//#region 🔖️InteractionScope
+/// 🎯️ A hover on the `cad` domain repaints the four world bodies and nothing else — never the
+/// framework's `Full` fallback (every window body, every panel, the rails) on pointer motion; a
+/// selection adds the Inspection and Artifact panels plus the HUD count; a verb on a foreign domain
+/// is handed back to the framework.
+#[semio_framework_async_macros::async_test]
+async fn cad_interaction_scope_keeps_hover_to_the_world_bodies() {
+    use semio_framework::kernel::UiDirtyScope;
+    use semio_framework_plugin::InteractionVerb;
+    let Some(UiDirtyScope::Partial { window_bodies, panel_bodies, utilities, tools, engagements, measures, labels }) = cad_interaction_scope(InteractionVerb::Hover, &[CAD_INTERACTION_DOMAIN]) else {
+        panic!("hover answers a partial scope");
+    };
+    assert_eq!(window_bodies, CAD_WORLD_BODY_KEYS.map(str::to_string).to_vec());
+    assert!(panel_bodies.is_empty() && !utilities && !tools && !engagements && !measures && !labels);
+    let Some(UiDirtyScope::Partial { panel_bodies, engagements, .. }) = cad_interaction_scope(InteractionVerb::Select, &[CAD_INTERACTION_DOMAIN]) else {
+        panic!("select answers a partial scope");
+    };
+    assert_eq!(panel_bodies, vec![inspection::CAD_PLAY_BODY_PROPERTIES.to_string(), document::CAD_PLAY_BODY_ARTIFACT.to_string()]);
+    assert!(engagements);
+    assert_eq!(cad_interaction_scope(InteractionVerb::SetGranularity, &[CAD_INTERACTION_DOMAIN]), Some(UiDirtyScope::None));
+    assert_eq!(cad_interaction_scope(InteractionVerb::Hover, &["vortex"]), None);
+    assert_eq!(cad_interaction_scope(InteractionVerb::Hover, &[]), None);
+}
+//#endregion 🔖️InteractionScope

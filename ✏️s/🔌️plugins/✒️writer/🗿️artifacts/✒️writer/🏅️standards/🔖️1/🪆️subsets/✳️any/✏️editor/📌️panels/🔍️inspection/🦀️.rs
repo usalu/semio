@@ -2,7 +2,7 @@
 
 use crate::editor::writer::terminology::WriterPlayLabels;
 use crate::{writer_text, WriterSnapshot};
-use semio_framework_plugin::{tree_item, BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiAssemblyResult, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
+use semio_framework_plugin::{tree_item, BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, TreeWindows, UiAssemblyResult, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
 use semio_s_artifact_trinity_jack::core::{example_graph, lint};
 
 //#region 🔖️Constants
@@ -22,7 +22,9 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(document: &WriterSnapshot, labels: &WriterPlayLabels) -> UiAssemblyResult<BuiltNode> {
+/// 🪟️ The lint list used to be cut off at eight diagnostics with nothing saying so; it is a windowed
+/// section now, so the section always reports how many diagnostics the document really has.
+pub fn render(document: &WriterSnapshot, labels: &WriterPlayLabels, windows: &TreeWindows<'_>) -> UiAssemblyResult<BuiltNode> {
     let text = writer_text(document);
     let document_items = crate::editor::writer::ui_node_list([
         tree_item("writer-inspector.document.schema", crate::editor::writer::ui_label(format!("Schema: {}", document.schema))?),
@@ -34,10 +36,12 @@ pub fn render(document: &WriterSnapshot, labels: &WriterPlayLabels) -> UiAssembl
     let mut tree = PanelTreeBuilder::new("writer-inspector")?.section("writer-inspector.document", Some(crate::editor::writer::ui_label(labels.artifact.as_str())?), true, document_items)?;
     if document.language_id == "jack" {
         let graph = example_graph();
-        let messages: Vec<String> = lint(&graph, &text).into_iter().map(|diag| diag.message).take(8).collect();
+        let messages: Vec<String> = lint(&graph, &text).into_iter().map(|diag| diag.message).collect();
         if !messages.is_empty() {
-            let diagnostics = crate::editor::writer::ui_node_list(messages.into_iter().enumerate().map(|(index, message)| tree_item(format!("writer-inspector.diagnostics.{index}"), crate::editor::writer::ui_label(message)?)))?;
-            tree = tree.section("writer-inspector.diagnostics", Some(crate::editor::writer::ui_label(labels.diagnostics.as_str())?), true, diagnostics)?;
+            let indexed: Vec<(usize, &String)> = messages.iter().enumerate().collect();
+            tree = tree.window_section(windows, "writer-inspector.diagnostics", Some(crate::editor::writer::ui_label(labels.diagnostics.as_str())?), true, &indexed, |(index, message)| {
+                tree_item(format!("writer-inspector.diagnostics.{index}"), crate::editor::writer::ui_label(message.as_str())?)
+            })?;
         }
     }
     tree.build()

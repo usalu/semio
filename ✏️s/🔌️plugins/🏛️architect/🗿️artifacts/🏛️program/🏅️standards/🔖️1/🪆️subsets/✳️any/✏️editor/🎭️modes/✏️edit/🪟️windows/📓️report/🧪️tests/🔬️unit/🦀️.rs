@@ -20,11 +20,11 @@ async fn architect_window_ownership_report_selected_authored_record_renders_loca
     let selected_report_id = record.header.id.clone();
     program.reports.push(record);
     let cfg = config::ArchitectReportWindowConfig { selected_report_id: Some(selected_report_id) };
-    let json = crate::editor::architect::unit_tests::context::project_render(render(&program, &cfg, &ViewModel::default()));
+    let json = crate::editor::architect::unit_tests::context::project_render(render(&program, &cfg, &ViewModel::default(), &semio_framework_plugin::TreeWindows::unhosted()));
     assert!(json.contains("Overview"));
     assert!(json.contains("architect-report.section"));
     let de = ViewModel { locale: locale_from_str("de"), ..Default::default() };
-    let json = crate::editor::architect::unit_tests::context::project_render(render(&program, &cfg, &de));
+    let json = crate::editor::architect::unit_tests::context::project_render(render(&program, &cfg, &de, &semio_framework_plugin::TreeWindows::unhosted()));
     assert!(json.contains("Art:"));
     assert!(json.contains("Erstellt:"));
     assert!(json.contains("Version:"));
@@ -32,10 +32,10 @@ async fn architect_window_ownership_report_selected_authored_record_renders_loca
 
 #[semio_framework_async_macros::async_test]
 async fn architect_window_ownership_report_empty_selection_renders_a_localized_prompt() {
-    let json = crate::editor::architect::unit_tests::context::project_render(render(&sample_plugin(), &config::ArchitectReportWindowConfig::default(), &ViewModel::default()));
+    let json = crate::editor::architect::unit_tests::context::project_render(render(&sample_plugin(), &config::ArchitectReportWindowConfig::default(), &ViewModel::default(), &semio_framework_plugin::TreeWindows::unhosted()));
     assert!(json.contains("Generate a report in this window"));
     let de = ViewModel { locale: locale_from_str("de"), ..Default::default() };
-    let json = crate::editor::architect::unit_tests::context::project_render(render(&sample_plugin(), &config::ArchitectReportWindowConfig::default(), &de));
+    let json = crate::editor::architect::unit_tests::context::project_render(render(&sample_plugin(), &config::ArchitectReportWindowConfig::default(), &de, &semio_framework_plugin::TreeWindows::unhosted()));
     assert!(json.contains("Erstellen Sie in diesem Fenster einen Bericht"));
 }
 
@@ -43,6 +43,6 @@ async fn architect_window_ownership_report_empty_selection_renders_a_localized_p
 async fn architect_window_ownership_report_deleted_selection_renders_a_localized_missing_state() {
     let cfg = config::ArchitectReportWindowConfig { selected_report_id: Some(crate::EntityId("missing-report".into())) };
     let de = ViewModel { locale: locale_from_str("de"), ..Default::default() };
-    let json = crate::editor::architect::unit_tests::context::project_render(render(&sample_plugin(), &cfg, &de));
+    let json = crate::editor::architect::unit_tests::context::project_render(render(&sample_plugin(), &cfg, &de, &semio_framework_plugin::TreeWindows::unhosted()));
     assert!(json.contains("ist nicht verfügbar"));
 }

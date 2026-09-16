@@ -1706,7 +1706,17 @@ dimmed?: boolean,
  * 🖱️ Row-level context-menu address — most rows share one `menu.id` across a tree with the row
  * id carried in `args` (e.g. `{"id": row.id}`), rather than minting a unique menu id per row.
  */
-menu?: UiMenuRef, };"####,
+menu?: UiMenuRef,
+/**
+ * 🪟️ The materialised slice of this row's logical child list — see `UiTreeWindow`. A row with
+ * `window.total > 0` is expandable even while `items` is empty or absent.
+ */
+window?: UiTreeWindow,
+/**
+ * 🎯️ The interaction granularity this row picks when the owning tree carries the domain binding
+ * (`UiTreeNode.interactionDomain`), keyed by this row's own `id`.
+ */
+granularity?: string, };"####,
         },
         SchemaMetadata {
             name: "UiTreeNode",
@@ -1720,7 +1730,27 @@ menu?: UiMenuRef, };"####,
  */
 interactionDomain?: string, };"####,
         },
-        SchemaMetadata { name: "UiTreeSectionNode", version: 1, typescript: r####"export type UiTreeSectionNode = { id: string, label?: Label, defaultOpen?: boolean, presence?: UiPresence, items: Array<UiTreeItemNode>, };"#### },
+        SchemaMetadata {
+            name: "UiTreeSectionNode",
+            version: 1,
+            typescript: r####"export type UiTreeSectionNode = { id: string, label?: Label, defaultOpen?: boolean, presence?: UiPresence, items: Array<UiTreeItemNode>,
+/**
+ * 🪟️ The materialised slice of this section's logical child list — see `UiTreeWindow`.
+ */
+window?: UiTreeWindow, };"####,
+        },
+        SchemaMetadata {
+            name: "UiTreeWindow",
+            version: 1,
+            typescript: r####"/**
+ * 🪟️ The materialised slice of a logically `total`-long tree child list: the node's `items` are
+ * the entries `[offset, offset + items.length)` of that list. `total > 0` with no materialised
+ * items means expandable-but-not-yet-loaded, never "empty" — a renderer pitches the
+ * unmaterialised rows as empty spacer bands so the scrollbar spans the whole document. The
+ * legacy-node mirror of the UI contract's `TreeWindow`.
+ */
+export type UiTreeWindow = { total: number, offset: number, };"####,
+        },
         SchemaMetadata {
             name: "UndoMode",
             version: 1,

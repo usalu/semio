@@ -94,7 +94,7 @@ class RetainedAuditScript extends BundleScript {
     const expectedAdmitted = [
       "addNode", "renameNode", "patchCadPlayReference", "addObject", "patchObject", "patchSelection", "deleteObject", "duplicateObject", "translateSelection", "rotateSelection", "scaleSelection",
       "engagementSubmit", "worldPointerDown",
-      "setCamera", "setProjection", "setProjectionParam", "setDislocateOption", "setNodeSelection", "setPanelPage", "setReferenceSelection", "referenceHover", "engagementInput", "engagementPossibleSelect", "engagementRepeatLast",
+      "setCamera", "setProjection", "setProjectionParam", "setDislocateOption", "setNodeSelection", "setReferenceSelection", "referenceHover", "engagementInput", "engagementPossibleSelect", "engagementRepeatLast",
       "engagementAbort", "worldPointerMove", "toggleSun", "setSunAzimuth", "setSunElevation", "setSunIntensity", "setContributions", "loadRawRequest",
     ];
     const retainedToolBlock = owner.slice(owner.indexOf("const CAD_RETAINED_TOOL_IDS"), owner.indexOf("const CAD_RETAINED_COMMAND_SCHEMA"));
@@ -103,8 +103,8 @@ class RetainedAuditScript extends BundleScript {
       const occurrences = (needle: string): number => source.split(needle).length - 1;
       const annotationPairs = [...source.matchAll(/\.action_interactive_job\("([^"]+)", (?:semio_framework_plugin::)?InteractiveJobClassification::(Migrated|BatchOnlyPendingRewrite)\)/g)].map((match) => `${match[1]}:${match[2]}`);
       const expectedPairs = fixture.routes.map((route) => `${route.id}:${variant(route.disposition)}`);
-      return fixture.routeCount === 38
-        && new Set(routeIds).size === 38
+      return fixture.routeCount === 37
+        && new Set(routeIds).size === 37
         && JSON.stringify(commandIds) === JSON.stringify(routeIds)
         && JSON.stringify(annotationPairs.sort()) === JSON.stringify(expectedPairs.sort())
         && JSON.stringify(fixture.excludedFrameworkRoutes) === JSON.stringify([])

@@ -12,4 +12,5 @@ async fn renders_the_document_wide_summary() {
     let mut app = note_app().await;
     let json = render_body(&mut app, BODY_PROPERTIES).await;
     assert!(json.contains("Utility:"));
+    assert!(json.contains("\"type\":\"tree\""), "inspection body must be a tree: {json}");
 }

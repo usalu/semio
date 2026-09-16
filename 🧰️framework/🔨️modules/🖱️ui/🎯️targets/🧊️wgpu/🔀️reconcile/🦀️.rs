@@ -30,7 +30,7 @@ use crate::wgpu::component::ui::ui_control_to_node;
 use crate::wgpu::component::ui::{
     SurfaceKind, UiButtonNode, UiComponentSceneNode, UiControlNode, UiDropOverlaySpec, UiFieldNode, UiGroupNode, UiIconSelectNode, UiImageNode, UiInputNode, UiKeyValueEntry, UiKeyValueNode, UiMenuRef, UiNode,
     UiNumberStepperNode, UiPresence, UiProgressNode, UiRingNode, UiSectionNode, UiSelectItem, UiSelectNode, UiSeparatorNode, UiSliderNode, UiStackNode, UiState, UiStatus, UiTextNode, UiToggleNode, UiTreeItemAction, UiTreeItemNode, UiTreeNode,
-    UiTreeSectionNode,
+    UiTreeSectionNode, UiTreeWindow,
 };
 use crate::wgpu::tree::{Node, NodeFlags, NodeKey, UiDocumentPageRejection, UiDocumentTree, UiDocumentTreeFault, UiTree, WidgetSpec};
 use crate::wgpu::IconName;
@@ -473,12 +473,19 @@ fn row_action(action: &ui_contract::RowAction, controller: &str) -> UiTreeItemAc
     }
 }
 
+/// 🪟️ Projects the contract's [`ui_contract::TreeWindow`] onto the legacy wgpu tree node's own
+/// mirror. The two structs are deliberately separate types: the legacy `UiNode` wire shape is rooted
+/// in `dsl`'s `ToValue`/`FromValue`, the contract's in `protocol::value`.
+fn tree_window(window: Option<&ui_contract::TreeWindow>) -> Option<UiTreeWindow> {
+    window.map(|window| UiTreeWindow { total: window.total, offset: window.offset })
+}
+
 /// 🌳️ Assembles one `Component::TreeItem` record and its whole subtree into the inline
 /// `UiTreeItemNode` the retained `Tree` spec carries. A child that projects to a control becomes the
 /// row's `control`; every other child recurses as a nested item.
 fn tree_item(document: &UiDocumentTree, record: &UiNodeRecord, surface: &str, controller: &str, depth: usize) -> UiTreeItemNode {
     let ui_contract::Component::TreeItem(props) = &record.component else {
-        return UiTreeItemNode {
+        return UiTreeItemNode { window: None, granularity: None,
             id: record.key.as_str().to_string(),
             label: Label::data(record.key.as_str()),
             description: None,
@@ -508,6 +515,8 @@ fn tree_item(document: &UiDocumentTree, record: &UiNodeRecord, surface: &str, co
     }
     let actions: Vec<UiTreeItemAction> = props.row_actions.iter().map(|action| row_action(action, controller)).collect();
     UiTreeItemNode {
+        window: tree_window(props.window.as_ref()),
+        granularity: props.granularity.as_ref().map(|value| value.as_str().to_string()),
         id: record.key.as_str().to_string(),
         label: contract_label(&props.label),
         description: props.description.as_ref().map(|value| value.as_str().to_string()),
@@ -782,13 +791,14 @@ pub fn ui_node_from_record(document: &UiDocumentTree, record: &UiNodeRecord, sur
                 .filter_map(|child_id| document.record(*child_id))
                 .map(|child| match &child.component {
                     ui_contract::Component::TreeSection(section) => UiTreeSectionNode {
+                        window: tree_window(section.window.as_ref()),
                         id: child.key.as_str().to_string(),
                         label: optional_contract_label(section.label.as_ref()),
                         default_open: section.default_open,
                         presence: record_presence(child),
                         items: child.children.iter().filter_map(|item_id| document.record(*item_id)).map(|item| tree_item(document, item, surface, controller, 1)).collect(),
                     },
-                    _ => UiTreeSectionNode { id: child.key.as_str().to_string(), label: None, default_open: None, presence: record_presence(child), items: vec![tree_item(document, child, surface, controller, 1)] },
+                    _ => UiTreeSectionNode { window: None, id: child.key.as_str().to_string(), label: None, default_open: None, presence: record_presence(child), items: vec![tree_item(document, child, surface, controller, 1)] },
                 })
                 .collect();
             UiNode::Tree(UiTreeNode { sections, presence, drop_action: record_action(record, ui_contract::Trigger::Drop, controller), menu, interaction_domain: props.interaction_domain.as_ref().map(|value| value.as_str().to_string()) })
@@ -796,7 +806,10 @@ pub fn ui_node_from_record(document: &UiDocumentTree, record: &UiNodeRecord, sur
         // 🌳️ A tree's section and item records mount as the keyed `Stack` ROWS this engine's
         // interactive sync resolves by id — the document-path twin of `children_of`'s `Tree` arm
         // (`tree_section_row`/`tree_item_row`). Their content is painted from the owning `Tree`'s own
-        // inline spec; these rows carry identity, layout and drag/drop state.
+        // inline spec; these rows carry identity, layout and drag/drop state. 🪟️ `TreeSectionProps.
+        // window`/`TreeItemProps.window` are therefore NOT read here: the spacer pitch belongs to the
+        // painted spec (`UiTreeSectionNode.window`/`UiTreeItemNode.window`, stamped in the `Tree` arm
+        // above), not to the identity row, which has no extent of its own.
         ui_contract::Component::TreeSection(_) | ui_contract::Component::TreeItem(_) => UiNode::Stack(UiStackNode {
             direction: "vertical".into(),
             gap: None,

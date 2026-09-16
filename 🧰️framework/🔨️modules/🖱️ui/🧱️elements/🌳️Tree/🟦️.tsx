@@ -209,7 +209,8 @@ export const PropertyValueColumnContext = reactHostPort.createContext(false);
 export const uiSpacingLen = (multiplier: number): string => `calc(${multiplier} * var(--ui-spacing))`;
 export const detailPanelIndentLen = (level: number, multiplier = 1): string => uiSpacingLen(level * STYLING_DOM.treeIndentPerLevelUiSpacing * multiplier);
 export const detailPanelIndentPx = (level: number, multiplier = 1): number => domSizePx("treeIndentPerLevelUiSpacing") * level * multiplier;
-const treeRowHeightPx = domSizePx("treeRowUiSpacing");
+/** @emoji 📏️ The ONE tree row pitch, straight off `dom.treeRowUiSpacing` — every row shell is exactly this tall and every sibling gap is zero, so a virtual window's spacers are `rows × treeRowHeightPx` and nothing else. */
+export const treeRowHeightPx = domSizePx("treeRowUiSpacing");
 export const detailPanelHeaderLineCenterPx = treeRowHeightPx / 2;
 const treeRowShellClassName = "relative h-workbench min-h-workbench max-h-workbench w-full min-w-0 select-none overflow-hidden";
 const treeRowLayoutClassName = "grid min-w-0 h-full w-full";
@@ -402,11 +403,13 @@ interface TreeBranchContentProps {
   topPaddingPx?: number;
   ownerRowKind?: string;
   ownerExpanded?: boolean;
+  /** @emoji 🪟️ Window mirror for a virtualised container — this element's top edge is row 0 of the child list. */
+  windowAttributes?: TreeWindowDomAttributes;
 }
 
 const TreeHoverPathRefreshContext = reactHostPort.createContext<(() => void) | null>(null);
 
-const TreeBranchContent: React.FC<TreeBranchContentProps> = ({ slot, children, className, topPaddingPx = 0, ownerRowKind, ownerExpanded = false }) => {
+const TreeBranchContent: React.FC<TreeBranchContentProps> = ({ slot, children, className, topPaddingPx = 0, ownerRowKind, ownerExpanded = false, windowAttributes }) => {
   const { level, showLines, isTree } = reactHostPort.useContext(TreeContext);
   const refreshTreeHoverPath = reactHostPort.useContext(TreeHoverPathRefreshContext);
   const branchRef = reactHostPort.useRef<HTMLDivElement>(null);
@@ -471,7 +474,15 @@ const TreeBranchContent: React.FC<TreeBranchContentProps> = ({ slot, children, c
   }, [children, isTree]);
 
   return (
-    <div ref={branchRef} data-slot={slot} data-tree-owner-kind={ownerRowKind} data-tree-owner-expanded={ownerExpanded ? "true" : "false"} className={cn("relative flex w-full min-w-0 flex-col", className)} style={treeBranchContentStyle(topPaddingPx)}>
+    <div
+      ref={branchRef}
+      data-slot={slot}
+      data-tree-owner-kind={ownerRowKind}
+      data-tree-owner-expanded={ownerExpanded ? "true" : "false"}
+      {...windowAttributes}
+      className={cn("relative flex w-full min-w-0 flex-col", className)}
+      style={treeBranchContentStyle(topPaddingPx)}
+    >
       {isTree ? <IndentationLines level={level} showLines={showLines} /> : null}
       {children}
     </div>
@@ -694,6 +705,120 @@ export interface TreeDataActivationContext {
   sectionId: string;
 }
 
+// #region 🪟️TreeWindow
+/**
+ * 🪟️ The materialised slice of a logically {@link TreeDataWindow.total}-long child list: the container's
+ * rendered `items` are entries `[offset, offset + items.length)` of that list. `total > 0` with no items is
+ * expandable-but-not-yet-streamed, NOT empty — the rows above and below the slice are stood in for by
+ * `data-slot="tree-window-spacer"` blocks of exactly {@link treeRowHeightPx} pitch each, so the scrollbar
+ * always spans the whole document and a scroll lands on the real row index.
+ * @see 🎫️ 26/09/16 ARTIFACT-TREE-VIRTUALISED-STREAMING · 📓️design-virtualised-tree.md §6.1
+ **/
+export interface TreeDataWindow {
+  readonly total: number;
+  readonly offset: number;
+}
+
+/** @emoji 🪟️ Rows requested beyond each edge of the viewport, so a scroll of up to this many rows paints from what is already materialised. */
+export const TREE_WINDOW_OVERSCAN_ROWS = 8;
+
+/** @emoji 🪟️ Hard ceiling on one window request — the guest's `UI_BUILT_CHILDREN_MAX`/`UI_DOCUMENT_NODES` fan-out of one child list. */
+export const TREE_WINDOW_ROWS_MAX = 128;
+
+/** @emoji 📐️ One windowed container as the DOM measured it: its authored key, its window, and the full virtual extent (`top`/`height` cover spacers, rows and any expanded nested content). */
+export interface TreeWindowContainerMeasure {
+  readonly key: string;
+  readonly total: number;
+  readonly offset: number;
+  readonly length: number;
+  readonly top: number;
+  readonly height: number;
+}
+
+/** @emoji 🪟️ One container's next window: materialise `rows` entries starting at `offset`. */
+export interface TreeWindowRequest {
+  readonly key: string;
+  readonly offset: number;
+  readonly rows: number;
+}
+
+/**
+ * 🪟️ The windows the given viewport wants, for every container that intersects it — the ONE pure rule both the
+ * React observer and its tests read. Off-screen containers are dropped entirely (no request, so a scrolled-away
+ * branch keeps whatever it last materialised instead of churning). `offset` is the first visible row less the
+ * overscan, clamped so the window always ends inside `total`; `rows` is the visible run plus one overscan per
+ * edge, clamped to `[1, min(total, TREE_WINDOW_ROWS_MAX)]`.
+ * @see 🎫️ 26/09/16 ARTIFACT-TREE-VIRTUALISED-STREAMING · 📓️design-virtualised-tree.md §6.1
+ **/
+export function treeWindowRequestsForViewport(
+  containers: readonly TreeWindowContainerMeasure[],
+  viewportTop: number,
+  viewportHeight: number,
+  rowHeightPx: number,
+  overscanRows: number,
+): readonly TreeWindowRequest[] {
+  if (!(rowHeightPx > 0)) return [];
+  const viewportBottom = viewportTop + Math.max(0, viewportHeight);
+  const overscan = Math.max(0, Math.floor(overscanRows));
+  const requests: TreeWindowRequest[] = [];
+  for (const container of containers) {
+    const total = Math.max(0, Math.floor(container.total));
+    if (total === 0) continue;
+    const containerBottom = container.top + Math.max(0, container.height);
+    const overlapPx = Math.min(containerBottom, viewportBottom) - Math.max(container.top, viewportTop);
+    if (overlapPx <= 0) continue;
+    const visibleRows = Math.ceil(overlapPx / rowHeightPx);
+    if (visibleRows <= 0) continue;
+    const firstVisibleRow = Math.floor(Math.max(0, viewportTop - container.top) / rowHeightPx);
+    const maxRows = Math.min(total, TREE_WINDOW_ROWS_MAX);
+    const rows = Math.min(Math.max(visibleRows + 2 * overscan, 1), maxRows);
+    const offset = Math.min(Math.max(0, firstVisibleRow - overscan), total - rows);
+    requests.push({ key: container.key, offset, rows });
+  }
+  return requests;
+}
+
+/** @emoji 🪟️ Spacer row counts for a container that materialised `materialisedCount` rows of {@link TreeDataWindow}. */
+export function treeWindowSpacerRows(childWindow: TreeDataWindow | undefined, materialisedCount: number): { readonly leading: number; readonly trailing: number } {
+  if (!childWindow) return { leading: 0, trailing: 0 };
+  const total = Math.max(0, Math.floor(childWindow.total));
+  const leading = Math.min(Math.max(0, Math.floor(childWindow.offset)), total);
+  return { leading, trailing: Math.max(0, total - leading - materialisedCount) };
+}
+
+/** @emoji 📮️ DOM mirror of a container's window, stamped on its branch content element — the element whose top edge IS row 0 of the child list, so a measurement of it plus these numbers is the whole observer contract. */
+export interface TreeWindowDomAttributes {
+  readonly "data-tree-window-key"?: string;
+  readonly "data-tree-window-total": number;
+  readonly "data-tree-window-offset": number;
+  readonly "data-tree-window-length": number;
+}
+
+/** @emoji 📮️ Builds {@link TreeWindowDomAttributes} for a windowed container; `undefined` for an unwindowed one (no attributes, no spacers). */
+export function treeWindowDomAttributes(childWindow: TreeDataWindow | undefined, materialisedCount: number, windowKey: string | undefined): TreeWindowDomAttributes | undefined {
+  if (!childWindow) return undefined;
+  const total = Math.max(0, Math.floor(childWindow.total));
+  const offset = Math.min(Math.max(0, Math.floor(childWindow.offset)), total);
+  return {
+    ...(windowKey === undefined ? {} : { "data-tree-window-key": windowKey }),
+    "data-tree-window-total": total,
+    "data-tree-window-offset": offset,
+    "data-tree-window-length": materialisedCount,
+  };
+}
+
+/**
+ * 🪟️ The blank extent standing in for `rows` unmaterialised rows at one edge of a window. A plain block inside
+ * the branch content — no {@link TreeAlignedRow}, so it claims no guide gutter and the branch's own indentation
+ * lines paint straight through it — sized at exactly the row pitch so the rows below keep their real index.
+ * Zero rows render nothing at all.
+ **/
+function renderTreeWindowSpacer(rows: number, edge: "leading" | "trailing"): React.ReactElement | null {
+  if (rows <= 0) return null;
+  return <div key={`tree-window-spacer-${edge}`} data-slot="tree-window-spacer" data-tree-window-spacer={edge} data-tree-window-rows={rows} aria-hidden="true" className="w-full min-w-0 shrink-0" style={{ height: `${rows * treeRowHeightPx}px` }} />;
+}
+// #endregion 🪟️TreeWindow
+
 export interface TreeDataItem {
   id: string;
   label: React.ReactNode;
@@ -728,6 +853,10 @@ export interface TreeDataItem {
   isHidden?: boolean;
   /** @emoji 🖱️ Right-click menu for the row (selection-aware actions are built by the host). */
   contextMenu?: ContextMenuItem[];
+  /** @emoji 🪟️ The slice of this group's children {@link TreeDataItem.items} actually carries — see {@link TreeDataWindow}. */
+  window?: TreeDataWindow;
+  /** @emoji 🔑️ The authored node key the host reports back in its window requests (NOT {@link TreeDataItem.id}, which is a DOM id). */
+  windowKey?: string;
 }
 
 export interface TreeDataSection {
@@ -749,6 +878,10 @@ export interface TreeDataSection {
   onDoubleClick?: (event: React.MouseEvent) => void;
   /** @emoji ↕️ When true (or when the host Tree enables {@link TreeRootProps.sortableSections}), this section header shows a drag handle for reordering among sibling sections. */
   draggable?: boolean;
+  /** @emoji 🪟️ The slice of this section's children {@link TreeDataSection.items} actually carries — see {@link TreeDataWindow}. */
+  window?: TreeDataWindow;
+  /** @emoji 🔑️ The authored node key the host reports back in its window requests (NOT {@link TreeDataSection.id}, which is a DOM id). */
+  windowKey?: string;
 }
 
 /** @emoji 🖱️ Pointer-driven external drag when native `draggable` does not start inside scroll panels. */
@@ -1073,6 +1206,8 @@ interface TreeSectionProps {
   isDragHandle?: boolean;
   /** @emoji 🫳️ `"handle"` restricts native drag start to the trailing grip; `"surface"` keeps the whole section header draggable. Defaults to `"handle"` when {@link isDragHandle} or {@link draggable} is set. */
   dragInitiation?: "handle" | "surface";
+  /** @emoji 🪟️ Window mirror stamped on this section's branch content element — build it with {@link treeWindowDomAttributes}. */
+  windowAttributes?: TreeWindowDomAttributes;
 }
 
 /**
@@ -1166,6 +1301,8 @@ interface TreeItemProps {
   dragData?: Record<string, string>;
   /** @emoji 🎯️ Passive drop-zone highlight while a compatible tree drag is in flight. */
   isDropReady?: boolean;
+  /** @emoji 🪟️ Window mirror stamped on this group's branch content element — build it with {@link treeWindowDomAttributes}. */
+  windowAttributes?: TreeWindowDomAttributes;
 }
 
 /**
@@ -1521,6 +1658,7 @@ export const TreeSection: React.FC<TreeSectionProps> = ({
   isDropReady = false,
   isDragHandle = false,
   dragInitiation,
+  windowAttributes,
 }) => {
   const { level, isLastAtLevel, showLines, isTree, indentMultiplier, direction = "down" } = reactHostPort.useContext(TreeContext);
   const { inline } = useFlow();
@@ -1704,7 +1842,7 @@ export const TreeSection: React.FC<TreeSectionProps> = ({
   const sectionContent = (
     <CollapsibleContent className="w-full min-w-0">
       <TreeContext.Provider value={{ level: level + 1, isLastAtLevel: [...isLastAtLevel, isLastSection], showLines, isTree, indentMultiplier, direction }}>
-        <TreeBranchContent slot="tree-section-content" ownerRowKind="section" ownerExpanded={open && hasChildren} topPaddingPx={treeSectionContentPaddingTopPx}>
+        <TreeBranchContent slot="tree-section-content" ownerRowKind="section" ownerExpanded={open && hasChildren} topPaddingPx={treeSectionContentPaddingTopPx} windowAttributes={windowAttributes}>
           {children}
         </TreeBranchContent>
       </TreeContext.Provider>
@@ -2113,6 +2251,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
   transferPointerDown,
   dragData,
   isDropReady = false,
+  windowAttributes,
 }) => {
   const localizedLabel = useIdLabel(id);
   const resolvedLabel = label !== undefined ? label : localizedLabel;
@@ -2314,7 +2453,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
     const propertyContent = isExpandable ? (
       open ? (
         <TreeContext.Provider value={{ level: level + 1, isLastAtLevel: [...isLastAtLevel, isLastItem], showLines, isTree, indentMultiplier, direction }}>
-          <TreeBranchContent slot="tree-property-content" ownerRowKind="group" ownerExpanded={open && hasChildren} className="min-w-0" topPaddingPx={treeItemContentPaddingTopPx}>
+          <TreeBranchContent slot="tree-property-content" ownerRowKind="group" ownerExpanded={open && hasChildren} className="min-w-0" topPaddingPx={treeItemContentPaddingTopPx} windowAttributes={windowAttributes}>
             {children}
           </TreeBranchContent>
         </TreeContext.Provider>
@@ -2448,7 +2587,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
           );
           const defaultContent = open && (
             <TreeContext.Provider value={{ level: level + 1, isLastAtLevel: [...isLastAtLevel, isLastItem], showLines, isTree, indentMultiplier, direction }}>
-              <TreeBranchContent slot="tree-item-content" ownerRowKind="group" ownerExpanded={open && hasChildren} topPaddingPx={treeItemContentPaddingTopPx}>
+              <TreeBranchContent slot="tree-item-content" ownerRowKind="group" ownerExpanded={open && hasChildren} topPaddingPx={treeItemContentPaddingTopPx} windowAttributes={windowAttributes}>
                 {children}
               </TreeBranchContent>
             </TreeContext.Provider>
@@ -2959,17 +3098,23 @@ const TreeDataItemView = reactHostPort.memo(function TreeDataItemView(props: { r
   const clampedBranchIndex = branchCount > 0 ? Math.min(activeBranchIndex, branchCount - 1) : 0;
   const rawChildItems = branchCount > 0 ? (alternatives[clampedBranchIndex] ?? []) : baseChildItems;
   const childItems = direction === "up" ? [...rawChildItems].reverse() : rawChildItems;
-  const isLoading = (loadingById[getTreeItemLoadingId(item.id)] ?? false) || Boolean(item.loading);
+  const childWindow = branchCount > 0 ? undefined : item.window;
+  const windowTotal = Math.max(0, Math.floor(childWindow?.total ?? 0));
+  const spacerRows = treeWindowSpacerRows(childWindow, childItems.length);
   const isWaiting = Boolean(item.waiting);
   const hasDynamicChildren = Boolean(item.getItems);
-  const hasExpandableChildren = childItems.length > 0 || hasDynamicChildren || Boolean(item.emptyState) || branchCount > 0;
+  const hasExpandableChildren = childItems.length > 0 || hasDynamicChildren || Boolean(item.emptyState) || branchCount > 0 || windowTotal > 0;
   const isExpandable = item.collapsibleState === TreeItemCollapsibleState.None ? false : hasExpandableChildren;
   const hasControl = Boolean(item.control);
   const propertyLayout = hasControl;
-  const hasNestedTreeItems = childItems.length > 0 || hasDynamicChildren || Boolean(item.emptyState) || branchCount > 0;
+  const hasNestedTreeItems = childItems.length > 0 || hasDynamicChildren || Boolean(item.emptyState) || branchCount > 0 || windowTotal > 0;
   const defaultOpen = hasControl ? !hasNestedTreeItems || getTreeItemDefaultOpen(item) : getTreeItemDefaultOpen(item);
   const treeOpenState = useTreeOpenState(getTreeItemStateId(item.id), defaultOpen);
   const propertyExpandable = hasControl ? hasNestedTreeItems : isExpandable;
+  // 🌀️ An open window that has announced rows it has not streamed yet wears the same ring an async
+  // `getItems` load does — the host is fetching exactly the same thing, one refresh further away.
+  const isWindowPending = windowTotal > 0 && childItems.length === 0 && treeOpenState.open;
+  const isLoading = (loadingById[getTreeItemLoadingId(item.id)] ?? false) || Boolean(item.loading) || isWindowPending;
 
   reactHostPort.useEffect(() => {
     if (treeOpenState.open && hasDynamicChildren) {
@@ -3021,11 +3166,14 @@ const TreeDataItemView = reactHostPort.memo(function TreeDataItemView(props: { r
       branchCount={branchCount}
       activeBranchIndex={clampedBranchIndex}
       onBranchChange={setActiveBranchIndex}
+      windowAttributes={treeWindowDomAttributes(childWindow, childItems.length, item.windowKey)}
     >
       {hasControl && !hasNestedTreeItems ? item.control : null}
+      {renderTreeWindowSpacer(direction === "up" ? spacerRows.trailing : spacerRows.leading, direction === "up" ? "trailing" : "leading")}
       {childItems.map((childItem, index) => (
         <TreeDataItemView key={childItem.id} item={childItem} section={section} path={[...path, childItem.id]} isLastItem={index === childItems.length - 1} />
       ))}
+      {renderTreeWindowSpacer(direction === "up" ? spacerRows.leading : spacerRows.trailing, direction === "up" ? "leading" : "trailing")}
       {!isLoading && childItems.length === 0 && item.emptyState && (
         <TreeItem>
           <TreeContent>{item.emptyState}</TreeContent>
@@ -3057,10 +3205,15 @@ const TreeDataSectionView = reactHostPort.memo(function TreeDataSectionView(prop
   const treeOpenState = useTreeOpenState(getTreeSectionStateId(section.id), section.defaultOpen ?? false);
   const rawItems = getTreeSectionItems(section, sectionItemsById);
   const items = direction === "up" ? [...rawItems].reverse() : rawItems;
-  const isLoading = (loadingById[getTreeSectionLoadingId(section.id)] ?? false) || Boolean(section.loading);
+  const childWindow = section.window;
+  const windowTotal = Math.max(0, Math.floor(childWindow?.total ?? 0));
+  const spacerRows = treeWindowSpacerRows(childWindow, items.length);
+  // 🌀️ See {@link TreeDataItemView}: an announced-but-unstreamed window is a load in flight.
+  const isWindowPending = windowTotal > 0 && items.length === 0 && treeOpenState.open;
+  const isLoading = (loadingById[getTreeSectionLoadingId(section.id)] ?? false) || Boolean(section.loading) || isWindowPending;
   const isWaiting = Boolean(section.waiting);
   const hasDynamicChildren = Boolean(section.getItems);
-  const isExpandable = items.length > 0 || hasDynamicChildren || Boolean(section.emptyState);
+  const isExpandable = items.length > 0 || hasDynamicChildren || Boolean(section.emptyState) || windowTotal > 0;
   const sectionReorderable = sortableSections || Boolean(section.draggable);
   const sectionDragging = draggedSectionId === section.id;
   const sectionDropReady = Boolean(draggedSectionId && draggedSectionId !== section.id) || (draggedIds.length > 0 && Boolean(dragAndDropController?.handleDrop));
@@ -3105,10 +3258,13 @@ const TreeDataSectionView = reactHostPort.memo(function TreeDataSectionView(prop
       }}
       isLastSection={isLastSection}
       isDropReady={sectionDropReady}
+      windowAttributes={treeWindowDomAttributes(childWindow, items.length, section.windowKey)}
     >
+      {renderTreeWindowSpacer(direction === "up" ? spacerRows.trailing : spacerRows.leading, direction === "up" ? "trailing" : "leading")}
       {items.map((item, index) => (
         <TreeDataItemView key={item.id} item={item} section={section} path={[section.id, item.id]} isLastItem={index === items.length - 1} />
       ))}
+      {renderTreeWindowSpacer(direction === "up" ? spacerRows.leading : spacerRows.trailing, direction === "up" ? "leading" : "trailing")}
       {!isLoading && items.length === 0 && section.emptyState && <HelperRow>{section.emptyState}</HelperRow>}
     </TreeSection>
   );

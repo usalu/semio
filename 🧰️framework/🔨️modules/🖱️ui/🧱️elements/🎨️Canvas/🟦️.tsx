@@ -31,7 +31,7 @@ import { useLabel, resolveTranslationLabel, useUiTranslation } from "../🏷️L
 import { useShellKeydown, useShellScopeOptional, NULL_SHELL_ROOT_REF } from "../🐚️ShellScope/🟦️.tsx";
 import { isSurfaceActiveBackgroundPointer, useSurface, useSurfaceActive, LevelProvider, SurfaceScope } from "../🌈️Surface/🟦️.tsx";
 import { createEvenWindowLayout, focusActiveSearchInput, routeWindowSearchEscape, routeWindowSearchKeydown, routeWindowSearchSpace, setSurfaceActiveRoot, WindowChrome, dropZoneReadyClass, modeDockTabLabelClassName, modeDockActiveTabClass, modeDockActiveTabFillClass, modeDockInactiveTabClass, windowBodyFrameClass, windowCapFrameClass, type WindowLayoutAxisNode, type WindowLayoutNode, type WindowLayoutStackNode, type WindowLayoutWindowNode, type WindowStackCorner, type UiStatus, type PanelGhostValue } from "../../🎯️targets/⚛️react/🟦️";
-import { CloseIcon, Maximize2Icon, Minimize2Icon, ExternalLinkIcon, Icon, type ControlIcon } from "../🔣️Icons/🟦️.tsx";
+import { CloseIcon, Maximize2Icon, Minimize2Icon, Icon, type ControlIcon } from "../🔣️Icons/🟦️.tsx";
 import { DragHandle } from "../🧱️DragHandle/🟦️.tsx";
 import { ChromeControlHint } from "../💡️ChromeControlHint/🟦️.tsx";
 import { useControlKeybinding } from "../../🔨️modules/🕹️control-keybinding-context/🟦️.tsx";
@@ -944,7 +944,6 @@ interface ModeDockContextValue {
   startTabDrag: (windowId: string, stackPath: ModeLayoutPath, tabIndex: number, label: string, event: React.PointerEvent<HTMLElement>) => void;
   clearPendingDrag: (pointerId: number) => void;
   closeWindow: (windowId: string) => void;
-  openWindowInNewWindow?: (windowId: string) => void;
   activateWindow: (windowId: string) => void;
   deactivateActiveWindow: () => void;
   maximizedStackPath: ModeLayoutPath | null;
@@ -980,7 +979,6 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
   const tabRefs = reactHostPort.useRef(new Map<string, HTMLButtonElement>());
   const focusLabel = useLabel("ui.window.focus");
   const unfocusLabel = useLabel("ui.window.unfocus");
-  const newWindowLabel = useLabel("ui.window.newWindow");
   const closeLabel = useLabel("ui.window.close");
 
   const focusTab = (index: number) => {
@@ -1084,21 +1082,6 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
               }}
             >
               {isMaximized ? <Minimize2Icon className="size-small" /> : <Maximize2Icon className="size-small" />}
-            </button>
-          </ChromeControlHint>
-        ) : null}
-        {!mobile && dock?.openWindowInNewWindow ? (
-          <ChromeControlHint id={`framework.modeDock.${controlPath}.tab.${tab.id}.newWindow`} text={newWindowLabel} always>
-            <button
-              type="button"
-              data-slot="mode-dock-tab-new-window"
-              className={modeDockTabActionClass}
-              onClick={(event) => {
-                event.stopPropagation();
-                dock.openWindowInNewWindow?.(tab.id);
-              }}
-            >
-              <ExternalLinkIcon className="size-small" />
             </button>
           </ChromeControlHint>
         ) : null}
@@ -1869,14 +1852,13 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
       startTabDrag: mobile ? noopDrag : startTabDrag,
       clearPendingDrag,
       closeWindow,
-      openWindowInNewWindow: onWindowOpenInNewWindow ? openWindowInNewWindow : undefined,
       activateWindow,
       deactivateActiveWindow,
       maximizedStackPath,
       canMaximize,
       toggleMaximize,
     }),
-    [mobile, noopDrag, previewDragState, tabInsertPreview, draggedInsertTabs, registerStackDropTargets, startTabDrag, clearPendingDrag, closeWindow, openWindowInNewWindow, onWindowOpenInNewWindow, activateWindow, deactivateActiveWindow, maximizedStackPath, canMaximize, toggleMaximize],
+    [mobile, noopDrag, previewDragState, tabInsertPreview, draggedInsertTabs, registerStackDropTargets, startTabDrag, clearPendingDrag, closeWindow, activateWindow, deactivateActiveWindow, maximizedStackPath, canMaximize, toggleMaximize],
   );
 
   const renderContext = reactHostPort.useMemo<ModeRenderContext>(

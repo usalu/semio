@@ -57,13 +57,13 @@ fn law_outline_projection() -> serde_json::Value {
     let fixture = semio_framework_os_flow::FlowHost::parse_host_snapshot_json(&law["fixture"].to_string()).expect("law fixture parses");
     let (nodes, edges) = with_host(&fixture, |host| dag_host_snapshot_to_workflow(&host.dag.host_snapshot));
     let labels = crate::editor::generation3d::terminology::generation3d_labels(&semio_framework_plugin::ViewModel::default());
-    let outline = graph_outline(&nodes, &edges, None, labels).expect("outline builds");
+    let outline = graph_outline(&TreeWindows::unhosted(), &nodes, &edges, None, labels).expect("outline builds");
     fixture.retire_cold();
     let projection = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(outline)).expect("outline projects");
     serde_json::from_str(&projection).expect("outline projection json")
 }
 
-fn law_rows(section: &serde_json::Value) -> Vec<(String, Option<String>, Vec<String>, Vec<String>)> {
+fn law_rows(section: &serde_json::Value) -> Vec<(String, Option<String>, Vec<String>, Vec<String>, Option<String>)> {
     section["children"]
         .as_array()
         .cloned()
@@ -75,6 +75,7 @@ fn law_rows(section: &serde_json::Value) -> Vec<(String, Option<String>, Vec<Str
                 row["component"]["label"].as_str().map(str::to_string),
                 row["children"].as_array().cloned().unwrap_or_default().iter().map(|port| port["key"].as_str().unwrap_or_default().to_string()).collect(),
                 row["bindings"].as_array().cloned().unwrap_or_default().iter().map(|binding| binding["trigger"].as_str().unwrap_or_default().to_string()).collect(),
+                row["component"]["granularity"].as_str().map(str::to_string),
             )
         })
         .collect()
@@ -96,33 +97,38 @@ fn flow_graph_outline_answers_its_language_agnostic_law() {
         assert_eq!(row.1.as_deref(), expected["label"].as_str(), "node row label");
         let expected_ports: Vec<String> = expected["ports"].as_array().expect("law ports").iter().map(|port| port.as_str().unwrap_or_default().to_string()).collect();
         assert_eq!(row.2, expected_ports, "node {} port rows", row.0);
-        assert_eq!(row.3, vec!["activate".to_string(), "hoverPreview".to_string()], "node {} interaction bindings", row.0);
+        assert_eq!(row.3, vec!["hoverPreview".to_string()], "node {} interaction bindings", row.0);
+        assert_eq!(row.4.as_deref(), Some("node"), "node {} pick granularity", row.0);
     }
     let wires: Vec<String> = law_rows(&sections[1]).iter().map(|row| row.0.clone()).collect();
     let expected_wires: Vec<String> = law["expected"]["wires"].as_array().expect("law wires").iter().map(|wire| wire["id"].as_str().unwrap_or_default().to_string()).collect();
     assert_eq!(wires, expected_wires, "wire rows");
 }
 
-/// 🕹️ Both interaction verbs the framework injects for every `.interaction(...)` app, carried by every
-/// node row with the `graph` domain and that row's own id as the pick target — the same domain and the
-/// same target ids the canvas picks into, so hovering or clicking a row and hovering or clicking the
-/// node it mirrors are one and the same selection.
+/// 🕹️ Both interaction verbs the framework injects for every `.interaction(...)` app still reach every
+/// node row — but they reach it from two different places now. Selection is the tree's: ONE
+/// `interactionSelect` binding on the root, which the host completes with the clicked row's own
+/// `granularity` and key, so a row costs no argument arena and a document of any size stays
+/// clickable. Hover stays the row's own: it is channel-addressed, which the domain binding alone
+/// cannot express.
 #[test]
-fn flow_graph_node_rows_bind_both_framework_interaction_verbs() {
+fn flow_graph_rows_pick_through_the_tree_domain_and_hover_on_their_own() {
     let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
     let projection = law_outline_projection();
-    let row = projection["children"][0]["children"][0].clone();
-    let bindings = row["bindings"].as_array().cloned().unwrap_or_default();
-    let select = bindings.iter().find(|binding| binding["trigger"] == "activate").expect("activate binding");
-    let hover = bindings.iter().find(|binding| binding["trigger"] == "hoverPreview").expect("hoverPreview binding");
+    let root = projection["bindings"].as_array().cloned().unwrap_or_default();
+    let select = root.iter().find(|binding| binding["trigger"] == "activate").expect("the tree root's interactionSelect binding");
+    assert_eq!(root.iter().filter(|binding| binding["trigger"] == "activate").count(), 1, "exactly one tree-level interactionSelect: {projection}");
     assert!(select["action"].to_string().contains(semio_framework_plugin::INTERACTION_SELECT_ACTION_ID), "{select}");
+    assert!(select["args"].to_string().contains(GENERATION_3D_INTERACTION_DOMAIN), "{select}");
+    let row = projection["children"][0]["children"][0].clone();
+    assert_eq!(row["component"]["granularity"].as_str(), Some("node"), "{row}");
+    let bindings = row["bindings"].as_array().cloned().unwrap_or_default();
+    assert!(!bindings.iter().any(|binding| binding["trigger"] == "activate"), "a pick row carries no per-row activate binding: {row}");
+    let hover = bindings.iter().find(|binding| binding["trigger"] == "hoverPreview").expect("hoverPreview binding");
     assert!(hover["action"].to_string().contains(semio_framework_plugin::INTERACTION_HOVER_ACTION_ID), "{hover}");
-    let select_args = select["args"].to_string();
-    assert!(select_args.contains(GENERATION_3D_INTERACTION_DOMAIN), "{select_args}");
-    assert!(select_args.contains("\\\"granularity\\\":\\\"node\\\""), "{select_args}");
-    assert!(select_args.contains(row["key"].as_str().unwrap_or_default()), "{select_args}");
     let hover_args = hover["args"].to_string();
     assert!(hover_args.contains(GENERATION_3D_INTERACTION_CHANNEL), "{hover_args}");
+    assert!(hover_args.contains(row["key"].as_str().unwrap_or_default()), "{hover_args}");
 }
 
 /// 🚦 A node row's description is the localized `NodeEvalStatus` the flow session reported for that

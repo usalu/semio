@@ -323,7 +323,7 @@ pub mod app {
         note_shell_command_action_definition, record_tutorial_action_definition, set_active_tool_action_definition, set_active_utility_action_definition, set_history_command_filter_action_definition, start_introduction_action_definition,
         start_tutorial_action_definition, ActionArgDef, ActionDefinition, ActionKind, ActionRef, AppIo, CommandDefinition, CommandGrammar, ConfigSpec, DialogDefinition, ExampleDefinition, Fault, FaultCode, FaultFrom, FaultOrigin, IconName,
         InteractionDefinition, InteractionRef, InteractionVerb, IntroductionDefinition, IntroductionInteractionKind, Keybinding, MediaForm, MediaPortDirection, MediaPortSpec, ModeDefinition, Modes, PanelGroup, PanelTabDefinition, PanelTabKind, PluginManifest,
-        ToolDefinition, ToolRef, ToolRunTraceCursor, TutorialDefinition, UtilityDefinition, UtilityRef, ViewModel, WindowKindDefinition, WindowKinds, CLEAR_SELECTION_ACTION_ID, INTERACTION_HOVER_ACTION_ID, INTERACTION_SELECT_ACTION_ID, NOTE_SHELL_COMMAND_ACTION_ID,
+        ToolDefinition, ToolRef, ToolRunTraceCursor, TreeWindowRequest, TutorialDefinition, UtilityDefinition, UtilityRef, ViewModel, WindowKindDefinition, WindowKinds, CLEAR_SELECTION_ACTION_ID, INTERACTION_HOVER_ACTION_ID, INTERACTION_SELECT_ACTION_ID, NOTE_SHELL_COMMAND_ACTION_ID,
         RECORD_TUTORIAL_ACTION_ID, REVERT_TO_COMMAND_ACTION_ID, SELECT_ALL_ACTION_ID, SET_ACTIVE_TOOL_ACTION_ID, SET_ACTIVE_UTILITY_ACTION_ID, SET_HISTORY_COMMAND_FILTER_ACTION_ID, SET_INTERACTION_GRANULARITY_ACTION_ID, SET_SELECTION_MODE_ACTION_ID,
         START_INTRODUCTION_ACTION_ID, START_TUTORIAL_ACTION_ID, UI_FOOTER_ELEMENT_ID, UI_NAVBAR_ELEMENT_ID,
     };
@@ -649,6 +649,11 @@ pub mod app {
     /// writer's AST, note's blocks, …) that a `UiTree`-bound domain's rendered tree is
     /// single-granularity; a domain needing per-row granularity declares `HierarchyProvider::Topology`
     /// and supplies its own `interaction_topology` instead.
+    ///
+    /// 🪟️ A windowed tree ([`TreeWindows`]) feeds only its MATERIALISED rows here, so the derived
+    /// topology covers the visible slice and not the container's full `TreeWindow::total` — harmless
+    /// today because no app in the fleet declares `HierarchyProvider::UiTree`; a domain that needs the
+    /// complete hierarchy must declare `HierarchyProvider::Topology`.
     async fn ui_tree_domain_topology(sections: &BuiltChildren, granularity: &str) -> UiAssemblyResult<protocol::DomainTopology> {
         struct Frame<'a> {
             children: &'a BuiltChildren,
@@ -5696,7 +5701,7 @@ pub mod app {
 
     /// 🌳️ A non-interactive grouping row that owns nested children — a disclosure header inside a
     /// section. It binds no action and carries no argument map, so unlike an interactive row it costs
-    /// nothing of the process-wide `UiValue` arena (see [`panel_page_rows`]): grouping a paged listing
+    /// nothing of the process-wide `UiValue` arena (see [`TreeWindows`]): grouping a windowed listing
     /// by category is free, only the leaf rows are charged.
     pub fn tree_group<I: AsRef<str>, L: TryInto<Label>>(id: I, label: L, default_open: bool, children: UiFixedList<BuiltNode>) -> UiAssemblyResult<BuiltNode> {
         let builder = ui::tree_item(ui_label(label, "tree-group.label")?);
@@ -5787,13 +5792,14 @@ pub mod app {
         selected_ids: Option<UiFixedList<UiText>>,
         highlighted_ids: Option<UiFixedList<UiText>>,
         interaction_domain: Option<UiText>,
+        interaction_select: Option<(ActionId, Option<UiValue>)>,
         drop_action: Option<ActionId>,
     }
 
     impl PanelTreeBuilder {
         /// 🌳️ `namespace` prefixes every id built via `.item_id()`, e.g. `"flow-play-document"`.
         pub fn new(namespace: impl TryInto<UiText>) -> UiAssemblyResult<Self> {
-            Ok(Self { namespace: ui_text(namespace, "panel-tree.namespace")?, sections: UiFixedList::default(), selected_ids: None, highlighted_ids: None, interaction_domain: None, drop_action: None })
+            Ok(Self { namespace: ui_text(namespace, "panel-tree.namespace")?, sections: UiFixedList::default(), selected_ids: None, highlighted_ids: None, interaction_domain: None, interaction_select: None, drop_action: None })
         }
 
         /// 🌳️ Builds a namespaced item id: `"{namespace}.{kind}.{id}"`.
@@ -5824,6 +5830,32 @@ pub mod app {
             self.section(id, label, default_open, items)
         }
 
+        /// 🪟️ Adds a windowed section — see [`tree_window_section`]. The panel hands the same
+        /// [`TreeWindows`] to every container it builds, so the shared first-paint budget is spent in
+        /// document order.
+        pub fn window_section<T>(mut self, windows: &TreeWindows<'_>, id: &str, label: Option<Label>, default_open: bool, entries: &[T], row: impl FnMut(&T) -> UiAssemblyResult<BuiltNode>) -> UiAssemblyResult<Self> {
+            let node = tree_window_section(windows, id, label.unwrap_or_default(), default_open, entries, row)?;
+            self.sections.try_push(node).map_err(|_| ui_assembly_error("panel-tree.sections"))?;
+            Ok(self)
+        }
+
+        /// 🪟️ [`Self::window_section`] with an empty-state placeholder row — see
+        /// [`tree_window_section_or_placeholder`].
+        pub fn window_section_or_placeholder<T, L: TryInto<Label>>(
+            mut self,
+            windows: &TreeWindows<'_>,
+            id: &str,
+            label: Option<Label>,
+            default_open: bool,
+            entries: &[T],
+            row: impl FnMut(&T) -> UiAssemblyResult<BuiltNode>,
+            placeholder_label: L,
+        ) -> UiAssemblyResult<Self> {
+            let node = tree_window_section_or_placeholder(windows, id, label.unwrap_or_default(), default_open, entries, row, placeholder_label)?;
+            self.sections.try_push(node).map_err(|_| ui_assembly_error("panel-tree.sections"))?;
+            Ok(self)
+        }
+
         pub fn selected<I: IntoIterator<Item = String>>(mut self, ids: I) -> UiAssemblyResult<Self> {
             let mut admitted = UiFixedList::default();
             for id in ids {
@@ -5845,9 +5877,17 @@ pub mod app {
         }
 
         /// 🕹️ Binds the built tree to an app-declared `InteractionDefinition` domain id — the framework
-        /// then owns this domain's selection/hover, replacing the deleted per-app `selection_change` action.
-        pub fn interaction_domain(mut self, id: impl TryInto<UiText>) -> UiAssemblyResult<Self> {
-            self.interaction_domain = Some(ui_text(id, "panel-tree.interaction-domain")?);
+        /// then owns this domain's selection/hover, replacing the deleted per-app `selection_change` action
+        /// — AND stamps the one tree-level `Trigger::Activate` binding
+        /// (`interactionSelect { domainId }`) every pick row in the tree dispatches through. A row marked
+        /// with [`TreeItemBuilder::granularity`] therefore needs no binding and no argument map of its
+        /// own: it costs zero `UiValue` arena, which is what lets a window of 128 rows exist at all.
+        pub fn interaction_domain(mut self, controller_id: &'static str, domain: impl TryInto<UiText>) -> UiAssemblyResult<Self> {
+            let domain = ui_text(domain, "panel-tree.interaction-domain")?;
+            let mut args = UiMapBuilder::try_new().ok_or_else(|| ui_assembly_error("panel-tree.interaction-args"))?;
+            args.push("domainId".to_owned(), UiValue::Text(domain.clone())).map_err(|_| ui_assembly_error("panel-tree.interaction-args"))?;
+            self.interaction_select = Some(ActionFactory::new(controller_id).action(INTERACTION_SELECT_ACTION_ID, Some(UiValue::Map(args.finish())))?);
+            self.interaction_domain = Some(domain);
             Ok(self)
         }
 
@@ -5864,6 +5904,12 @@ pub mod app {
             if let Some(domain) = self.interaction_domain {
                 builder = builder.interaction_domain(domain);
             }
+            if let Some((action, args)) = self.interaction_select {
+                builder = match args {
+                    Some(args) => builder.try_on_with(Trigger::Activate, action, args).map_err(|_| ui_assembly_error("panel-tree.interaction-binding"))?,
+                    None => builder.try_on(Trigger::Activate, action).map_err(|_| ui_assembly_error("panel-tree.interaction-binding"))?,
+                };
+            }
             if let Some(action) = self.drop_action {
                 builder = builder.try_on(Trigger::Drop, action).map_err(|_| ui_assembly_error("panel-tree.drop-binding"))?;
             }
@@ -5871,120 +5917,162 @@ pub mod app {
         }
     }
 
-    //#region 🔖️PanelPaging
-    // 🧾️ Shared virtualised-panel paging — a panel body is NOT a row per entity. A built node admits
-    // `UI_BUILT_CHILDREN_MAX` children and every interactive row costs `UI_VALUE_ROW_COLLECTIONS`/
-    // `UI_VALUE_ROW_ITEMS` of the process-wide `UiValue` argument arena, so a panel over a document (or a
-    // registered operator catalogue) larger than one page materialises ONE bounded page and closes each
-    // truncated section with a continuation row naming the omitted count. `ui_value_headroom`'s own
-    // docstring names this as the sanctioned shape: read the credit, stop with a continuation row, never
-    // fail an admission mid-row.
+    //#region 🔖️PanelWindowing
+    // 🪟️ Shared virtualised-panel windowing — a panel body is NOT a row per entity, and it is not a
+    // page with a `+N` tail either. Every container reports its FULL extent through
+    // `TreeWindow { total, offset }` and materialises only the rows the host asked for, so the host's
+    // scrollbar spans the whole document while the built tree stays inside `UI_BUILT_CHILDREN_MAX`
+    // children and the process-wide `UiValue` argument arena. Open state and scroll offset are
+    // host-owned and arrive per render through `ViewModel::tree_windows`; the guest keeps no cursor.
 
-    /// 🧮️ Interactive rows one render may materialise across every section together: the panel-page
-    /// ceiling the UI contract declares, clamped by what the process-wide argument arena still admits.
-    /// The clamp is what makes a builder total — a document an order of magnitude past the page, or a
-    /// process whose other panels already hold their own pages, yields a shorter page with continuation
-    /// rows instead of a `ui.fixed-capacity` refusal in the middle of one row's argument map.
-    pub fn panel_page_rows() -> usize {
-        UI_VALUE_PAGE_ROWS.min(ui_value_headroom().rows())
+    /// 🪟️ Rows one first paint materialises across a body's containers together, before the host has
+    /// measured its viewport (`ViewModel::tree_viewport_rows`).
+    pub const TREE_WINDOW_DEFAULT_ROWS: u32 = 48;
+
+    /// 🪟️ What one container materialises this render: `len` rows starting at `offset` out of `total`.
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    pub struct TreeSlice {
+        pub open: bool,
+        pub offset: usize,
+        pub len: usize,
+        pub total: usize,
     }
 
-    /// 🧮️ The row allowance one render spends, in the order its sections and their nested rows are assembled.
-    pub struct PanelRowBudget(usize);
+    /// 🪟️ The host's windows for one panel body, read once per render off `ViewModel::tree_windows`.
+    /// Containers the host has never seen share `budget` — the first-paint allowance spent in
+    /// document order, nested containers included — so a cold render draws about one viewport and
+    /// stops, instead of the whole document.
+    pub struct TreeWindows<'a> {
+        requests: Vec<&'a TreeWindowRequest>,
+        budget: std::cell::Cell<u32>,
+    }
 
-    impl PanelRowBudget {
-        /// 🧮️ Opens a budget of `rows` interactive rows.
-        pub fn new(rows: usize) -> Self {
-            Self(rows)
-        }
-
-        /// 🪙️ Claims one row, or refuses when the page is spent.
-        pub fn spend(&mut self) -> bool {
-            match self.0.checked_sub(1) {
-                Some(remaining) => {
-                    self.0 = remaining;
-                    true
-                }
-                None => false,
+    impl<'a> TreeWindows<'a> {
+        /// 🪟️ Every request the host filed for `body_key`, plus its measured viewport budget.
+        pub fn for_body(view: &'a ViewModel, body_key: &str) -> Self {
+            Self {
+                requests: view.tree_windows.iter().filter(|request| request.body_key == body_key).collect(),
+                budget: std::cell::Cell::new(view.tree_viewport_rows.unwrap_or(TREE_WINDOW_DEFAULT_ROWS)),
             }
         }
 
-        /// 🧮️ Rows this budget still admits.
-        pub fn remaining(&self) -> usize {
-            self.0
+        /// 🪟️ No host state at all (tests, a body the host has never rendered): author defaults and
+        /// the default first-paint budget.
+        pub fn unhosted() -> Self {
+            Self { requests: Vec::new(), budget: std::cell::Cell::new(TREE_WINDOW_DEFAULT_ROWS) }
         }
 
-        /// 🧮️ Runs a nested build against an allowance that cannot reach the `reserved` rows its siblings
-        /// still need, then settles what the nesting actually spent. Used at both levels — a section
-        /// reserves the sections after it, a row reserves its section's remaining rows. Without it one
-        /// wide parent consumes the whole page and its own section shows four rows.
-        pub fn nested<R>(&mut self, reserved: usize, build: impl FnOnce(&mut Self) -> R) -> R {
-            let allowance = self.0.saturating_sub(reserved);
-            let mut lent = Self(allowance);
-            let built = build(&mut lent);
-            self.0 -= allowance - lent.0;
-            built
+        fn request(&self, node_key: &str) -> Option<&'a TreeWindowRequest> {
+            self.requests.iter().copied().find(|request| request.node_key == node_key)
         }
-    }
 
-    /// ➕️ The row standing in for what a truncated section left out. Its label is the omitted count
-    /// alone: a digit string carries the same meaning on every locale×terminology axis, so paging stays
-    /// visible in the tree without inventing a label the terminology gate would have to pin.
-    pub fn panel_continuation_row(section_id: &str, omitted: usize) -> UiAssemblyResult<BuiltNode> {
-        let label = Label::try_from(format!("+{omitted}")).map_err(|_| ui_assembly_error("panel-paging.continuation-label"))?;
-        ui::tree_item(label)
-            .try_id(format!("{section_id}.more"))
-            .map_err(|_| ui_assembly_error("panel-paging.continuation-id"))?
-            .icon(UiText::try_from_str("more-horizontal").ok_or_else(|| ui_assembly_error("panel-paging.continuation-icon"))?)
-            .try_build()
-            .map_err(|_| ui_assembly_error("panel-paging.continuation-row"))
-    }
+        /// 🔽️ Whether `node_key` is expanded — a host `open` wins over the author's default.
+        pub fn is_open(&self, node_key: &str, default_open: bool) -> bool {
+            self.request(node_key).and_then(|request| request.open).unwrap_or(default_open)
+        }
 
-    /// 🗂️ One section's page: rows materialised while both `section_rows` and the shared
-    /// [`PanelRowBudget`] last, followed by a continuation row whenever entries were left out. `row`
-    /// spends further budget on its own nested rows through [`PanelRowBudget::nested`], so the slots this
-    /// section's later rows still need are never consumed by an earlier row's children.
-    ///
-    /// 🛟️ A refused admission ends the section instead of the render. [`panel_page_rows`] reads the arena
-    /// once, but the arena is process-global and another panel, plugin or worker may take credit
-    /// mid-build, so the clamp alone cannot make this total — the section stops where the credit stopped
-    /// and says so with its continuation row. Only a non-capacity fault still propagates.
-    pub fn paged_panel_section<T>(
-        section_id: &str,
-        entries: &[T],
-        section_rows: usize,
-        budget: &mut PanelRowBudget,
-        mut row: impl FnMut(&T, &mut PanelRowBudget) -> UiAssemblyResult<BuiltNode>,
-    ) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
-        let mut items = UiFixedList::<BuiltNode>::default();
-        let quota = entries.len().min(section_rows);
-        let mut placed = 0;
-        for entry in entries {
-            if placed == section_rows || !budget.spend() {
-                break;
+        /// 🪟️ The slice `node_key` materialises this render out of `total` logical entries.
+        pub fn slice(&self, node_key: &str, default_open: bool, total: usize) -> TreeSlice {
+            let request = self.request(node_key);
+            if !request.and_then(|request| request.open).unwrap_or(default_open) {
+                return TreeSlice { open: false, offset: 0, len: 0, total };
             }
-            placed += 1;
-            let node = match budget.nested(quota - placed, |nested| row(entry, nested)) {
+            let Some(request) = request else {
+                let len = total.min(UI_BUILT_CHILDREN_MAX).min(self.budget.get() as usize);
+                self.budget.set(self.budget.get() - len as u32);
+                return TreeSlice { open: true, offset: 0, len, total };
+            };
+            let offset = (request.offset as usize).min(total.saturating_sub(1));
+            TreeSlice { open: true, offset, len: (request.rows as usize).min(UI_BUILT_CHILDREN_MAX).min(total - offset), total }
+        }
+
+        /// 🪟️ The contract stamp a slice publishes to the host.
+        pub fn window(slice: &TreeSlice) -> TreeWindow {
+            TreeWindow { total: slice.total as u32, offset: slice.offset as u32 }
+        }
+
+        fn stamp(&self, node_key: &str, slice: &TreeSlice) -> Option<TreeWindow> {
+            (slice.total > 0 || self.request(node_key).is_some()).then(|| Self::window(slice))
+        }
+    }
+
+    /// 🪟️ Pushes a slice's rows straight into a container builder's children. A row refused with
+    /// `ui.fixed-capacity` — the process-global argument arena taken by another panel mid-build, or a
+    /// full `BuiltChildren` — ends the window early with a shorter materialised run; any other error
+    /// propagates.
+    fn tree_window_rows<B: HasChildren, T>(mut builder: B, entries: &[T], slice: &TreeSlice, mut row: impl FnMut(&T) -> UiAssemblyResult<BuiltNode>) -> UiAssemblyResult<B> {
+        for entry in &entries[slice.offset..slice.offset + slice.len] {
+            let node = match row(entry) {
                 Ok(node) => node,
-                Err(error) if error.code == "ui.fixed-capacity" => {
-                    placed -= 1;
-                    break;
-                }
+                Err(error) if error.code == "ui.fixed-capacity" => break,
                 Err(error) => return Err(error),
             };
-            if items.try_push(node).is_err() {
-                placed -= 1;
-                break;
-            }
+            builder = match builder.try_child(node) {
+                Ok(builder) => builder,
+                Err((builder, _)) => return Ok(builder),
+            };
         }
-        if placed < entries.len() {
-            if let Ok(more) = panel_continuation_row(section_id, entries.len() - placed) {
-                let _ = items.try_push(more);
-            }
-        }
-        Ok(items)
+        Ok(builder)
     }
-    //#endregion 🔖️PanelPaging
+
+    /// 🪟️ One windowed section node: only the host's slice is built, `window` carries the full extent,
+    /// never a `+N` continuation row.
+    pub fn tree_window_section<T>(windows: &TreeWindows<'_>, id: &str, label: Label, default_open: bool, entries: &[T], row: impl FnMut(&T) -> UiAssemblyResult<BuiltNode>) -> UiAssemblyResult<BuiltNode> {
+        let slice = windows.slice(id, default_open, entries.len());
+        let builder = tree_section(label).default_open(default_open).try_id(id).map_err(|_| ui_assembly_error("tree-window.section-id"))?;
+        let builder = tree_window_rows(builder, entries, &slice, row)?;
+        let builder = match windows.stamp(id, &slice) {
+            Some(window) => builder.window(window),
+            None => builder,
+        };
+        builder.try_build().map_err(|_| ui_assembly_error("tree-window.section-build"))
+    }
+
+    /// 🪟️ [`tree_window_section`], substituting one "(none)"-style placeholder row when `entries` is
+    /// empty — an empty container has no window to publish.
+    pub fn tree_window_section_or_placeholder<T, L: TryInto<Label>>(
+        windows: &TreeWindows<'_>,
+        id: &str,
+        label: Label,
+        default_open: bool,
+        entries: &[T],
+        row: impl FnMut(&T) -> UiAssemblyResult<BuiltNode>,
+        placeholder_label: L,
+    ) -> UiAssemblyResult<BuiltNode> {
+        if !entries.is_empty() {
+            return tree_window_section(windows, id, label, default_open, entries, row);
+        }
+        let empty_id = UiText::try_format(format_args!("{id}.empty")).ok_or_else(|| ui_assembly_error("tree-window.placeholder-id"))?;
+        let builder = tree_section(label).default_open(default_open).try_id(id).map_err(|_| ui_assembly_error("tree-window.section-id"))?;
+        builder
+            .try_child(tree_item(empty_id, placeholder_label)?)
+            .map_err(|_| ui_assembly_error("tree-window.placeholder"))?
+            .try_build()
+            .map_err(|_| ui_assembly_error("tree-window.section-build"))
+    }
+
+    /// 🪟️ A windowed group row (object › vortices, load case › loads) — `item` already carries its id,
+    /// label and icon, `id` is the node key the host addresses it by.
+    pub fn tree_window_item<T>(windows: &TreeWindows<'_>, item: TreeItemBuilder, id: &str, default_open: bool, entries: &[T], row: impl FnMut(&T) -> UiAssemblyResult<BuiltNode>) -> UiAssemblyResult<BuiltNode> {
+        let slice = windows.slice(id, default_open, entries.len());
+        let builder = tree_window_rows(item.default_open(default_open), entries, &slice, row)?;
+        let builder = match windows.stamp(id, &slice) {
+            Some(window) => builder.window(window),
+            None => builder,
+        };
+        builder.try_build().map_err(|_| ui_assembly_error("tree-window.item-build"))
+    }
+
+    /// 🌳️ Admits fallibly assembled UI nodes into fixed child storage — the fleet's one copy, replacing
+    /// the per-app duplicates.
+    pub fn ui_node_list(values: impl IntoIterator<Item = UiAssemblyResult<BuiltNode>>) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
+        let mut nodes = UiFixedList::default();
+        for value in values {
+            nodes.try_push(value?).map_err(|_| ui_assembly_error("ui-node-list.admission"))?;
+        }
+        Ok(nodes)
+    }
+    //#endregion 🔖️PanelWindowing
 
     #[cfg(test)]
     include!("🧪️tests/🔬️app-panel-kit/🦀️.rs");
@@ -10084,7 +10172,8 @@ pub mod app {
     //#endregion 🔖️CommandLog
 
     //#region 🔖️HistoryPanel
-    async fn history_panel_icon_id(kind: ActionKind) -> IconName {
+    // 🚫️async: a pure total mapping, called inside the Commands window's synchronous row closure.
+    fn history_panel_icon_id(kind: ActionKind) -> IconName {
         match kind {
             ActionKind::Mutation => IconName::Pencil,
             ActionKind::History => IconName::Undo,
@@ -10107,36 +10196,13 @@ pub mod app {
     /// or `entry.revertible` — the filter control and Commands list themselves stay fully live, since
     /// browsing history is not a mutation.
     ///
-    /// Commands children are a `UI_BUILT_CHILDREN_MAX`-ary tree over the live filtered command-row
-    /// count. One `BuiltChildren` page cannot grow with the session log; paging from that count is
-    /// the admission bound (a bumped ceiling aborted publishes at `history-panel.commands`).
-    ///
-    /// 🎟️ Wave B9: rendered command rows are also capped at [`HISTORY_COMMAND_ROWS`] (the inspector
-    /// `IDS_ROWS` page) so a long battery cannot exhaust `UiText`/`UiValue` alias credits. Older rows
-    /// stay in the log and remain reachable through undo and `revertToCommand`.
-    pub const HISTORY_COMMAND_ROWS: usize = 16;
-
-    fn page_history_command_nodes(nodes: Vec<BuiltNode>) -> UiAssemblyResult<Vec<BuiltNode>> {
-        let mut level = nodes;
-        let mut generation = 0usize;
-        while level.len() > UI_BUILT_CHILDREN_MAX {
-            let mut source = level.into_iter();
-            let mut next = Vec::new();
-            loop {
-                let page: Vec<BuiltNode> = source.by_ref().take(UI_BUILT_CHILDREN_MAX).collect();
-                if page.is_empty() {
-                    break;
-                }
-                let id = format!("framework.history.commands.page.{generation}.{}", next.len());
-                next.push(column().try_id(id).map_err(|_| ui_assembly_error("history-panel.command-page-id"))?.try_children(page).map_err(|_| ui_assembly_error("history-panel.commands"))?.try_build().map_err(|_| ui_assembly_error("history-panel.command-page-build"))?);
-            }
-            level = next;
-            generation += 1;
-        }
-        Ok(level)
-    }
-
-    pub async fn ui_history_panel(history: &HistoryView, controller_id: &str, is_de: bool, read_only: bool, command_page: u32) -> UiAssemblyResult<BuiltNode> {
+    /// 🪟️ The Commands section is a windowed container ([`tree_window_section`]) keyed
+    /// `framework.history.commands` under body [`FRAMEWORK_HISTORY_BODY_KEY`]: it stamps the full live
+    /// filtered row count as its `TreeWindow::total` and materialises only the slice the host asked
+    /// for through `ViewModel::tree_windows` (one viewport on a cold paint). A session log of any
+    /// length therefore assembles, the scrollbar spans it all, and there is no `+N` row and no guest
+    /// page cursor.
+    pub async fn ui_history_panel(history: &HistoryView, controller_id: &str, is_de: bool, read_only: bool, view: &ViewModel) -> UiAssemblyResult<BuiltNode> {
         let action_item = |id: &str, icon_id: IconName, label_en: &str, label_de: &str, action: &str, enabled: bool| -> UiAssemblyResult<BuiltNode> {
             let label = if is_de { label_de } else { label_en };
             let action = ActionId::try_v1(controller_id, action).ok_or_else(|| ui_assembly_error("history-panel.action-id"))?;
@@ -10172,70 +10238,32 @@ pub mod app {
             HistoryCommandFilter::WithoutMutations => entry.edit_id.is_none(),
             HistoryCommandFilter::OnlyMutations => entry.edit_id.is_some(),
         }).collect();
-        let max_page = if command_rows.is_empty() { 0 } else { (command_rows.len() - 1) / HISTORY_COMMAND_ROWS };
-        let page = (command_page as usize).min(max_page);
-        let start = page * HISTORY_COMMAND_ROWS;
-        let visible = if start >= command_rows.len() { &command_rows[..] } else { &command_rows[start..command_rows.len().min(start + HISTORY_COMMAND_ROWS)] };
-        let omitted = command_rows.len().saturating_sub(start + visible.len());
-        let mut revert_budget = PanelRowBudget::new(HISTORY_COMMAND_ROWS.min(panel_page_rows()));
-        let mut command_nodes = Vec::with_capacity(visible.len() + usize::from(omitted > 0));
-        for entry in visible {
-            // 🔢️ A folded row (`count > 1`) shows "Label xN" instead of the bare label.
-            let label =
-                if entry.count > 1 { UiText::clipped(&format!("{} x{}", entry.label, entry.count)) } else { UiText::clipped(&entry.label) };
-            let label = Label(label);
+        let windows = TreeWindows::for_body(view, FRAMEWORK_HISTORY_BODY_KEY);
+        let revert_action = ActionId::try_v1(controller_id, REVERT_TO_COMMAND_ACTION_ID).ok_or_else(|| ui_assembly_error("history-panel.row-action-id"))?;
+        let commands_section = tree_window_section(&windows, "framework.history.commands", ui_label(if is_de { "Befehle" } else { "Commands" }, "history-panel.commands-label")?, true, &command_rows, |entry| {
+            let label = if entry.count > 1 { UiText::clipped(&format!("{} x{}", entry.label, entry.count)) } else { UiText::clipped(&entry.label) };
             let id = UiText::try_format(format_args!("framework.history.entry.{}", entry.seq)).ok_or_else(|| ui_assembly_error("history-panel.command-id"))?;
-            let mut builder = ui::tree_item(label).icon(ui_text(history_panel_icon_id(entry.kind).await.as_str(), "history-panel.command-icon")?);
+            let mut builder = ui::tree_item(Label(label)).icon(ui_text(history_panel_icon_id(entry.kind).as_str(), "history-panel.command-icon")?);
             builder = builder.try_id(&id).map_err(|_| ui_assembly_error("history-panel.command-id"))?;
             if !entry.op_lines.is_empty() {
-                builder = builder.description(UiText::clipped(&entry.op_lines.join(" · ")));
+                builder = builder.description(UiText::clipped(&entry.op_lines.join(" \u{b7} ")));
             }
             if entry.edit_id.is_some() && !entry.applied {
                 builder = builder.dimmed(true);
             }
-            if entry.revertible && !read_only && revert_budget.spend() {
+            if entry.revertible && !read_only {
                 let mut args = UiMapBuilder::try_new().ok_or_else(|| ui_assembly_error("history-panel.row-action-args"))?;
                 args.push("entrySeq".to_owned(), UiValue::Number(entry.seq as f64)).map_err(|_| ui_assembly_error("history-panel.row-action-args"))?;
                 let row_action = RowAction {
                     icon: ui_text(IconName::RotateCcw.as_str(), "history-panel.row-action-icon")?,
-                    label: Some(ui_label(if is_de { "Zurück bis hier" } else { "Backwards" }, "history-panel.row-action-label")?),
-                    action: ActionBinding {
-                        trigger: Trigger::Activate,
-                        action: ActionId::try_v1(controller_id, REVERT_TO_COMMAND_ACTION_ID).ok_or_else(|| ui_assembly_error("history-panel.row-action-id"))?,
-                        args: Some(UiValue::Map(args.finish())),
-                        capability: None,
-                    },
+                    label: Some(ui_label(if is_de { "Zur\u{fc}ck bis hier" } else { "Backwards" }, "history-panel.row-action-label")?),
+                    action: ActionBinding { trigger: Trigger::Activate, action: revert_action.clone(), args: Some(UiValue::Map(args.finish())), capability: None },
                     placement: RowActionPlacement::Menu,
                 };
                 builder = builder.try_row_action(row_action).map_err(|_| ui_assembly_error("history-panel.row-actions"))?;
             }
-            command_nodes.push(builder.try_build().map_err(|_| ui_assembly_error("history-panel.command-build"))?);
-        }
-        if omitted > 0 {
-            let mut args = UiMapBuilder::try_new().ok_or_else(|| ui_assembly_error("history-panel.more-args"))?;
-            args.push("page".to_owned(), UiValue::Number(f64::from((page as u32) + 1))).map_err(|_| ui_assembly_error("history-panel.more-args"))?;
-            args.push("value".to_owned(), UiValue::Text(ui_text(filter_value, "history-panel.more-filter")?)).map_err(|_| ui_assembly_error("history-panel.more-args"))?;
-            let more_action = RowAction {
-                icon: ui_text(IconName::ArrowDown.as_str(), "history-panel.more-icon")?,
-                label: Some(ui_label(if is_de { "Weiter" } else { "More" }, "history-panel.more-label")?),
-                action: ActionBinding {
-                    trigger: Trigger::Activate,
-                    action: ActionId::try_v1(controller_id, SET_HISTORY_COMMAND_FILTER_ACTION_ID).ok_or_else(|| ui_assembly_error("history-panel.more-action"))?,
-                    args: Some(UiValue::Map(args.finish())),
-                    capability: None,
-                },
-                placement: RowActionPlacement::Menu,
-            };
-            let more_label = UiText::clipped(&format!("+{omitted}"));
-            let mut more = ui::tree_item(Label(more_label)).icon(ui_text(IconName::ArrowDown.as_str(), "history-panel.more-icon")?);
-            more = more.try_id("framework.history.commands.more").map_err(|_| ui_assembly_error("history-panel.more-id"))?;
-            more = more.try_row_action(more_action).map_err(|_| ui_assembly_error("history-panel.more-row"))?;
-            command_nodes.push(more.try_build().map_err(|_| ui_assembly_error("history-panel.more-build"))?);
-        }
-        let mut command_items = BuiltChildren::default();
-        for command in page_history_command_nodes(command_nodes)? {
-            command_items.try_push(command).map_err(|_| ui_assembly_error("history-panel.commands"))?;
-        }
+            builder.try_build().map_err(|_| ui_assembly_error("history-panel.command-build"))
+        })?;
 
         let mut action_items = BuiltChildren::default();
         for item in [
@@ -10250,9 +10278,6 @@ pub mod app {
         let actions_builder = tree_section(ui_label(if is_de { "Aktionen" } else { "Actions" }, "history-panel.actions-label")?).default_open(true);
         let actions_builder = actions_builder.try_id("framework.history.actions").map_err(|_| ui_assembly_error("history-panel.actions-id"))?;
         let actions_section = actions_builder.try_children(action_items).map_err(|_| ui_assembly_error("history-panel.actions"))?.try_build().map_err(|_| ui_assembly_error("history-panel.actions-build"))?;
-        let commands_builder = tree_section(ui_label(if is_de { "Befehle" } else { "Commands" }, "history-panel.commands-label")?).default_open(true);
-        let commands_builder = commands_builder.try_id("framework.history.commands").map_err(|_| ui_assembly_error("history-panel.commands-id"))?;
-        let commands_section = commands_builder.try_children(command_items).map_err(|_| ui_assembly_error("history-panel.commands"))?.try_build().map_err(|_| ui_assembly_error("history-panel.commands-build"))?;
         let mut sections = BuiltChildren::default();
         sections.try_push(actions_section).map_err(|_| ui_assembly_error("history-panel.sections"))?;
         sections.try_push(commands_section).map_err(|_| ui_assembly_error("history-panel.sections"))?;
@@ -20490,6 +20515,7 @@ pub mod app {
         }
 
         fn request_fault(&mut self, fault: &Fault) {
+            eprintln!("[DBGARCH] request_fault op={} {fault:?}", self.operation);
             if self.terminal_target.is_none() {
                 self.fault = dsl::encode_fault_bytes(fault);
                 self.terminal_target = Some(ActiveDocumentArchiveLoadState::Fault);
@@ -20804,8 +20830,6 @@ pub mod app {
         /// 🐚️ Redo stack for those shell rows (chrome order: last undone is first redone after VCS redo empties).
         shell_redo: Vec<ShellHistoryReplay>,
         history_filter: HistoryCommandFilter,
-        /// 🎟️ Wave B9: which page of [`HISTORY_COMMAND_ROWS`] the history panel currently shows.
-        history_page: u32,
         /// 🧩️ UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM (C1): every owned child's LIVE store, keyed by
         /// `(slot, child_id)` — mirrors how `store`/`config_store`/`draft_store` above each hold one
         /// lane's live `ArtifactStore`, generalized to N children instead of one fixed lane. Each
@@ -21827,7 +21851,6 @@ pub mod app {
                 shell_undone: HashSet::new(),
                 shell_redo: Vec::new(),
                 history_filter: HistoryCommandFilter::default(),
-                history_page: 0,
                 children: ChildMemberRegistry::new(),
                 child_content_root: std::mem::ManuallyDrop::new(ChildContentView::EMPTY),
                 child_content_generation: 0,
@@ -25225,6 +25248,9 @@ pub mod app {
         /// selection/hover is `ui_contract::PresenceUpdate` now, never written back onto the tree
         /// itself (`TreeNode`/`Component::TreeItem` carry no presence field — the render-plane
         /// derivation lives entirely in this outbox, never in a document mutation).
+        ///
+        /// 🪟️ A windowed tree hands `ui_tree_domain_topology` only the rows this render
+        /// materialised, never the container's full `TreeWindow::total` — see that function's own note.
         pub(crate) async fn stamp_and_cache_interaction_ui(&mut self, tree: &ComponentTree, state: &protocol::InteractionState, body_key: &str) -> UiAssemblyResult<()> {
             // 🕹️ Materialized owned BEFORE the mutable walk — same "clone owned before the field-wise
             // destructure" reasoning `dispatch_typed_command_inner` already uses: `pending_presence` is
@@ -26013,24 +26039,11 @@ pub mod app {
             }
             if action == SET_HISTORY_COMMAND_FILTER_ACTION_ID {
                 let filter = args.and_then(|value| value.get("value")).and_then(DslValue::as_str).unwrap_or("all");
-                let page = args.and_then(|value| value.get("page")).and_then(DslValue::as_f64).map(|value| value as u32);
-                if page.is_none() {
-                    self.history_filter = match filter {
-                        "withoutMutations" => HistoryCommandFilter::WithoutMutations,
-                        "onlyMutations" => HistoryCommandFilter::OnlyMutations,
-                        _ => HistoryCommandFilter::All,
-                    };
-                    self.history_page = 0;
-                } else {
-                    self.history_page = page.unwrap_or(0);
-                    if args.and_then(|value| value.get("value")).and_then(DslValue::as_str).is_some() {
-                        self.history_filter = match filter {
-                            "withoutMutations" => HistoryCommandFilter::WithoutMutations,
-                            "onlyMutations" => HistoryCommandFilter::OnlyMutations,
-                            _ => HistoryCommandFilter::All,
-                        };
-                    }
-                }
+                self.history_filter = match filter {
+                    "withoutMutations" => HistoryCommandFilter::WithoutMutations,
+                    "onlyMutations" => HistoryCommandFilter::OnlyMutations,
+                    _ => HistoryCommandFilter::All,
+                };
                 self.log_generation += 1;
                 self.history_dirty_sequences.extend(self.command_log.iter().map(|entry| entry.seq));
                 return Ok(Self::empty_result(
@@ -29770,10 +29783,15 @@ pub mod app {
                     break;
                 }
             }
-            self.document_archive_loads
+            let status = self.document_archive_loads
                 .get(operation)
                 .map(ActiveDocumentArchiveLoad::status)
-                .ok_or_else(|| plugin_sdk_fault("recursive document archive authority changed before status publication"))
+                .ok_or_else(|| plugin_sdk_fault("recursive document archive authority changed before status publication"));
+            if let Ok(status) = &status {
+                let phase = self.document_archive_loads.get(operation).map(|active| format!("{:?}/{:?}/{:?}", active.phase, active.state, active.terminal_target));
+                eprintln!("[DBGARCH] poll op={} state={:?} {}/{} fault={} phase={phase:?}", status.operation, status.state, status.completed, status.total, String::from_utf8_lossy(&status.fault));
+            }
+            status
         }
 
         fn cancel_document_archive_load(&mut self, operation: u64) -> Result<(), Fault> {
@@ -29952,7 +29970,7 @@ pub mod app {
                 let Some((_, _, _, history)) = self.cache.as_ref() else {
                     return Err(plugin_sdk_fault("render cache unavailable after refresh"));
                 };
-                let root = ui_history_panel(history, &self.registry.controller_id, view_state.locale == Locale::De, A::ROLE == AppRole::Viewer, self.history_page).await.map_err(|error| plugin_sdk_fault(error.to_string()))?;
+                let root = ui_history_panel(history, &self.registry.controller_id, view_state.locale == Locale::De, A::ROLE == AppRole::Viewer, view_state).await.map_err(|error| plugin_sdk_fault(error.to_string()))?;
                 return Ok(built_to_component_tree(root));
             }
             if body_key == FRAMEWORK_TOOL_RUN_BODY_KEY {
@@ -30923,35 +30941,28 @@ pub mod app {
         }
 
         fn render(view: &TreeView) -> UiAssemblyResult<BuiltNode> {
-            struct Frame<'a> {
-                node: Option<&'a TreeNodeView>,
-                children: &'a [TreeNodeView],
-                next: usize,
-                built: UiFixedList<BuiltNode>,
-            }
-            let mut stack: UiFixedList<Frame<'_>, { semio_framework_ui_runtime::COMPONENT_TREE_PRODUCER_DEPTH }> = UiFixedList::default();
-            stack.try_push(Frame { node: None, children: &view.roots, next: 0, built: UiFixedList::default() }).map_err(|_| ui_assembly_error("tree-window.depth"))?;
-            let roots = loop {
-                let mut frame = stack.pop().ok_or_else(|| ui_assembly_error("tree-window.frames"))?;
-                if let Some(child) = frame.children.get(frame.next) {
-                    frame.next = frame.next.checked_add(1).ok_or_else(|| ui_assembly_error("tree-window.cursor"))?;
-                    stack.try_push(frame).map_err(|_| ui_assembly_error("tree-window.depth"))?;
-                    stack.try_push(Frame { node: Some(child), children: &child.children, next: 0, built: UiFixedList::default() }).map_err(|_| ui_assembly_error("tree-window.depth"))?;
-                    continue;
-                }
-                let Some(node) = frame.node else { break frame.built };
-                let has_children = !frame.built.is_empty();
-                let builder = ui::tree_item(ui_label(node.label.clone(), "tree-window.item-label")?).default_open(has_children);
-                let builder = builder.try_id(&node.id).map_err(|_| ui_assembly_error("tree-window.item-id"))?;
-                let builder = builder.try_children(frame.built).map_err(|_| ui_assembly_error("tree-window.item-children"))?;
-                let item = builder.try_build().map_err(|_| ui_assembly_error("tree-window.item-build"))?;
-                let parent = stack.last_mut().ok_or_else(|| ui_assembly_error("tree-window.parent"))?;
-                parent.built.try_push(item).map_err(|_| ui_assembly_error("tree-window.siblings"))?;
-            };
+            Self::render_windowed(view, &TreeWindows::unhosted())
+        }
+    }
+
+    impl TreeWindowKit {
+        /// 🪟️ One node of a `TreeView`, windowed at EVERY level: a node's children are materialised only
+        /// while the host holds it open, and only for the rows its window names. An archive, JSON array or
+        /// XML element with hundreds of siblings anywhere in its structure renders its viewport instead of
+        /// refusing the whole editor with `ui.fixed-capacity` — the fan-out a document format reaches is
+        /// ordinary, not an edge case.
+        fn windowed_node(windows: &TreeWindows<'_>, node: &TreeNodeView, depth: usize) -> UiAssemblyResult<BuiltNode> {
+            let depth = depth.checked_sub(1).ok_or_else(|| ui_assembly_error("tree-window.depth"))?;
+            let builder = ui::tree_item(ui_label(node.label.clone(), "tree-window.item-label")?);
+            let builder = builder.try_id(&node.id).map_err(|_| ui_assembly_error("tree-window.item-id"))?;
+            tree_window_item(windows, builder, &node.id, !node.children.is_empty(), &node.children, |child| Self::windowed_node(windows, child, depth))
+        }
+
+        /// 🪟️ The `TreeView` a host reads, against that body's known open/scroll state. `WindowKit::render`
+        /// is this with [`TreeWindows::unhosted`] — author defaults and one viewport of rows.
+        pub fn render_windowed(view: &TreeView, windows: &TreeWindows<'_>) -> UiAssemblyResult<BuiltNode> {
             let root_id = UiText::try_format(format_args!("{}-root", Self::KIND_ID)).ok_or_else(|| ui_assembly_error("tree-window.section-id"))?;
-            let section_builder = tree_section(Label::default()).default_open(true);
-            let section_builder = section_builder.try_id(&root_id).map_err(|_| ui_assembly_error("tree-window.section-id"))?;
-            let section = section_builder.try_children(roots).map_err(|_| ui_assembly_error("tree-window.roots"))?.try_build().map_err(|_| ui_assembly_error("tree-window.section-build"))?;
+            let section = tree_window_section(windows, root_id.as_str(), Label::default(), true, &view.roots, |node| Self::windowed_node(windows, node, semio_framework_ui_runtime::COMPONENT_TREE_PRODUCER_DEPTH))?;
             let tree_builder = tree().try_id(Self::KIND_ID).map_err(|_| ui_assembly_error("tree-window.id"))?;
             tree_builder.try_child(section).map_err(|_| ui_assembly_error("tree-window.section"))?.try_build().map_err(|_| ui_assembly_error("tree-window.build"))
         }
@@ -39430,7 +39441,6 @@ pub use app::{
     NoTransientMutation,
     NodeGraphDeleteDispatch,
     OsMediaCapability,
-    PanelRowBudget,
     PanelTabSpec,
     PanelTreeBuilder,
     Plugin,
@@ -39482,7 +39492,7 @@ pub use app::{
     MAINTENANCE_STAGES,
 };
 pub use app::{locale_from_str, resolve_labels, resolve_labels_for_locale, selection_ids, tree_group, tree_item, tree_item_desc, tree_item_with_action, tree_item_with_action_draggable, LabelAxes};
-pub use app::{paged_panel_section, panel_continuation_row, panel_page_rows};
+pub use app::{tree_window_item, tree_window_section, tree_window_section_or_placeholder, ui_node_list, TreeSlice, TreeWindows, TREE_WINDOW_DEFAULT_ROWS};
 pub use engagement::{engagement_token_matches, strip_engagement_prefix};
 // 🧬️ A2 (design-abi.md §4): `host_port`'s re-export is deleted along with the module (see the
 // "Replace, never wrap" note above `pub mod engagement`). `host::now_ms` replaces `host_now_ms` —

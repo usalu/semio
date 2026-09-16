@@ -1,10 +1,10 @@
 //! 📄️ DAG play app panel — the node/edge outline tree.
 
 use crate::editor::dag::terminology::DagPlayLabels;
-use crate::editor::dag::DAG_PLAY_INTERACTION_DOMAIN;
+use crate::editor::dag::{pick_item, DAG_PLAY_APP_ID, DAG_PLAY_INTERACTION_DOMAIN};
 use crate::DagSnapshot;
 use semio_framework_artifact_infinite_dag::dag_node_kind_tag;
-use semio_framework_plugin::{tree_item_desc, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
+use semio_framework_plugin::{LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, TreeWindows, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
 
 //#region 🔖️Constants
 pub const DAG_PLAY_BODY_ARTIFACT: &str = "dag.play.artifact";
@@ -28,26 +28,31 @@ pub fn definition() -> PanelTabDefinition {
 /// tree's selection/hover presence from that domain (`.interaction_domain`) and prunes stale ids
 /// through that same topology, so no per-item click action is declared here anymore (clicks are
 /// translated into `interactionSelect` generically)?.
-pub fn render(document: &DagSnapshot, labels: &DagPlayLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+///
+/// 🪟️ Both sections are windowed — the crate is literally the "infinite DAG", so neither node nor
+/// edge count is bounded; the host's `TreeWindows` decide the slice and every section stamps `total`.
+pub fn render(document: &DagSnapshot, labels: &DagPlayLabels, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let scene = crate::dag_working_scene(document);
-    let node_items = crate::editor::dag::ui_node_list(scene.nodes.iter().map(|node| tree_item_desc(node.id.clone(), if node.name.is_empty() { node.id.clone() } else { node.name.clone() }, Some(dag_node_kind_tag(&node.kind).into()))))?;
-    let edge_items = crate::editor::dag::ui_node_list(scene.edges.iter().map(|edge| tree_item_desc(edge.id.clone(), format!("{} → {}", edge.source, edge.target), Some(edge.id.clone()))))?;
     PanelTreeBuilder::new("dag-play-document")?
-        .section_or_placeholder(
+        .window_section_or_placeholder(
+            windows,
             "dag-play-document.nodes",
             Some(semio_framework_plugin::plugin_app_close_prelude::Label::try_from(labels.nodes.as_str()).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "outline heading admission failed"))?),
             true,
-            node_items,
+            &scene.nodes,
+            |node| pick_item(node.id.clone(), if node.name.is_empty() { node.id.clone() } else { node.name.clone() }, Some(dag_node_kind_tag(&node.kind).into()), "node"),
             labels.empty.as_str(),
         )?
-        .section_or_placeholder(
+        .window_section_or_placeholder(
+            windows,
             "dag-play-document.edges",
             Some(semio_framework_plugin::plugin_app_close_prelude::Label::try_from(labels.edges.as_str()).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "outline heading admission failed"))?),
             false,
-            edge_items,
+            &scene.edges,
+            |edge| pick_item(edge.id.clone(), format!("{} → {}", edge.source, edge.target), Some(edge.id.clone()), "edge"),
             labels.empty.as_str(),
         )?
-        .interaction_domain(DAG_PLAY_INTERACTION_DOMAIN)?
+        .interaction_domain(DAG_PLAY_APP_ID, DAG_PLAY_INTERACTION_DOMAIN)?
         .build()
 }
 //#endregion 🔖️Render

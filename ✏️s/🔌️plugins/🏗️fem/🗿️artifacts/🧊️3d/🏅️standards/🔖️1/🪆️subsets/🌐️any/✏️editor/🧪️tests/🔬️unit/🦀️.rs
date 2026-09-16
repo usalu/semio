@@ -254,7 +254,7 @@ fn every_command() -> Vec<Fem3dCommand> {
         Fem3dCommand::PatchLoadCase(patch_load_case::PatchLoadCase { id: "live".into(), field: "name".into(), value: "Imposed".into() }),
         Fem3dCommand::PatchCombination(patch_combination::PatchCombination { id: "uls".into(), field: "term:live".into(), value: "1.5".into() }),
         Fem3dCommand::SetResultAnimation(set_result_animation::SetResultAnimation { phase: Some(0.5), playing: Some(true), speed: None, loop_mode: Some("pingPong".into()), waveform: None, field: None, value: None, window_id: Some("results-left".into()) }),
-        Fem3dCommand::ResultAnimationTick(result_animation_tick::ResultAnimationTick {}),
+        Fem3dCommand::ResultAnimationTick(result_animation_tick::ResultAnimationTick { window_id: "results-left".into() }),
         Fem3dCommand::FocusEntity(focus_entity::FocusEntity { id: "n1".into() }),
         Fem3dCommand::TranslateSelection(translate_selection::TranslateSelection { ids: vec!["n1".into()], dx: 0.5, dy: 0.0, dz: -0.25 }),
         Fem3dCommand::RotateSelection(rotate_selection::RotateSelection { ids: Vec::new(), ax: 0.0, ay: 0.0, az: 1.0, angle: 0.1 }),

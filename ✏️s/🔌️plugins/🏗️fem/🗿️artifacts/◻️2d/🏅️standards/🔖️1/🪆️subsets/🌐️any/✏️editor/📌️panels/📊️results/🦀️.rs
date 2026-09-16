@@ -8,10 +8,10 @@
 
 use crate::editor::fem2d::modes::edit::windows::results::config::{Fem2dLoopMode, Fem2dResultsWindowConfig, Fem2dWaveform, ANIMATION_PHASE_STEP, ANIMATION_SPEED_MAXIMUM, ANIMATION_SPEED_MINIMUM};
 use crate::editor::fem2d::terminology::Fem2dLabels;
-use crate::editor::fem2d::{fem2d_action, ui_label, ui_node_list};
+use crate::editor::fem2d::{fem2d_action, ui_label};
 use crate::Fem2dSnapshot;
 use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase, HasChildren, InputKind, Trigger};
-use semio_framework_plugin::{BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PluginAssemblyError, UiAssemblyResult, UiMapBuilder, UiText, UiValue};
+use semio_framework_plugin::{ui_node_list, BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PluginAssemblyError, UiAssemblyResult, UiMapBuilder, UiText, UiValue};
 use semio_framework_ui_contract as ui;
 
 //#region 🔖️Constants

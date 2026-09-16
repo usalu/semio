@@ -179,6 +179,56 @@ export const ControlTreeStory: Story = {
   render: () => <ControlTreeDemo />,
 };
 
+// #region 🪟️WindowedSection
+// A container whose children are STREAMED: the guest materialised rows [40, 52) of a 400-entry list and
+// declared the rest, so the tree stands in for rows 0-39 and 52-399 with `tree-window-spacer` blocks of one
+// row pitch each. The scrollbar spans all 400 rows, `Pending` shows the same ring an unstreamed window wears,
+// and the host's viewport observer reads `data-tree-window-key`/`-total`/`-offset`/`-length` off each open
+// container's content element. See `🎫️26/09/16/ARTIFACT-TREE-VIRTUALISED-STREAMING/📓️design-virtualised-tree.md` §6.1.
+
+const windowedSections = [
+  {
+    id: "tree.story.window.entries",
+    label: "Entries",
+    icon: <Folder size={14} />,
+    defaultOpen: true,
+    windowKey: "entries",
+    window: { total: 400, offset: 40 },
+    items: Array.from({ length: 12 }, (_, index) => ({
+      id: `tree.story.window.entries.${40 + index}`,
+      label: `Entry ${40 + index}`,
+      icon: <File size={12} />,
+    })),
+  },
+  {
+    id: "tree.story.window.pending",
+    label: "Pending",
+    icon: <Folder size={14} />,
+    defaultOpen: true,
+    windowKey: "pending",
+    window: { total: 24, offset: 0 },
+    items: [],
+  },
+];
+
+export const WindowedSection: Story = {
+  args: { sections: windowedSections },
+  render: (args) => (
+    <div className="ui-surface border w-[320px] h-[420px] overflow-auto" data-level="panel">
+      <Tree {...args} />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const spacers = Array.from(canvasElement.querySelectorAll('[data-slot="tree-window-spacer"]')) as HTMLElement[];
+    const rows = spacers.map((spacer) => spacer.getAttribute("data-tree-window-rows"));
+    if (rows.join() !== ["40", "348", "24"].join()) throw new Error(`Windowed tree fixture spaced ${rows.join()} rows instead of 40,348,24.`);
+
+    const content = canvasElement.querySelector('[data-tree-window-key="entries"]');
+    if (content?.getAttribute("data-tree-window-length") !== "12") throw new Error("Windowed tree fixture did not publish its materialised slice length.");
+  },
+};
+// #endregion 🪟️WindowedSection
+
 // #region ⏳️Alternatives
 
 const alternativesSections = [

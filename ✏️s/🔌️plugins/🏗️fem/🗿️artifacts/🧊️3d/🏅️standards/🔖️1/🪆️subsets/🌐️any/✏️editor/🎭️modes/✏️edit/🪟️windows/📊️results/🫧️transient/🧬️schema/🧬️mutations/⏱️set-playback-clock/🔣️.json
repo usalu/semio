@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🫧️transient/🧬️schema/🧬️mutations/⏱️set-playback-clock",
+  "semanticKind": "set-playback-clock",
+  "displayName": "Set Playback Clock",
+  "emoji": "⏱️",
+  "aggregateVariant": "SetPlaybackClock",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "set-playback-clock",
+  "binaryTag": 1,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
+  "outcomeClasses": ["applied"],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": ["rust", "text", "binary", "json-schema"]
+}

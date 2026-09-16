@@ -468,6 +468,78 @@ register("catalogue-add", "mutate", async () => {
   verdict("18-catalogue", "click-adds-node", present > 0 && r.ok, { before, after: r.value?.nodes, waitedMs: r.waitedMs });
 });
 
+register("select-same-kind", "read", async () => {
+  if (((await overviewVitals())?.nodes ?? 0) < 2) {
+    await selectExample(/nakagin/i);
+    await waitUntil(overviewVitals, (v) => (v?.nodes ?? -1) === 180, 90000);
+  }
+  const positions = JSON.parse(await evalSafe(() => document.querySelector('[data-surface-id="window:2d-overview"]')?.getAttribute("data-board-positions-json") ?? "{}", "{}")) as Record<string, [number, number]>;
+  const first = Object.keys(positions)[0];
+  const at = first ? await nodeScreen(first) : null;
+  if (!at) {
+    verdict("6-selection", "select-same-kind", false, { reason: "no node position" });
+    return;
+  }
+  await page.mouse.click(at.x, at.y);
+  await waitUntil(overviewVitals, (v) => (v?.selection ?? "[]").includes(first), 10000);
+  await page.mouse.click(at.x, at.y, { button: "right" });
+  await settle(1.5);
+  const submenu = page.locator('[role="menuitem"], [role="menu"] *').filter({ hasText: /^Selection$/ }).first();
+  if (await countSafe(submenu)) {
+    await submenu.hover().catch(() => {});
+    await settle(0.8);
+  }
+  const row = page.locator('[role="menuitem"]').filter({ hasText: /same kind/i }).first();
+  const present = await countSafe(row);
+  if (present) await row.click({ timeout: 3000 }).catch(() => {});
+  const r = await waitUntil(overviewVitals, (v) => (JSON.parse(v?.selection || "[]") as unknown[]).length > 1, 15000);
+  verdict("6-selection", "select-same-kind", present > 0 && r.ok, { first, selected: (JSON.parse(r.value?.selection || "[]") as unknown[]).length, waitedMs: r.waitedMs });
+  await page.keyboard.press("Escape");
+});
+
+register("engagement-move", "mutate", async () => {
+  const positions = JSON.parse(await evalSafe(() => document.querySelector('[data-surface-id="window:2d-overview"]')?.getAttribute("data-board-positions-json") ?? "{}", "{}")) as Record<string, [number, number]>;
+  const first = Object.keys(positions)[0];
+  const at = first ? await nodeScreen(first) : null;
+  if (!at) {
+    verdict("8-transform", "engagement-move", false, { reason: "no node position" });
+    return;
+  }
+  await page.mouse.click(at.x, at.y);
+  await waitUntil(overviewVitals, (v) => (v?.selection ?? "[]").includes(first), 10000);
+  const toggle = page.locator('[id="framework.window.2dOverview.engagement.toggle"]').first();
+  if (await countSafe(toggle)) await toggle.click({ timeout: 3000 }).catch(() => {});
+  await settle(1);
+  const input = page.locator('input[id*="puzzle2d-engagement"], [id*="engagement"] input').first();
+  const present = await countSafe(input);
+  if (present) {
+    await input.fill("move 50 25").catch(() => {});
+    await input.press("Enter").catch(() => {});
+  }
+  const before = positions[first];
+  const r = await waitUntil(
+    async () => JSON.parse(await evalSafe(() => document.querySelector('[data-surface-id="window:2d-overview"]')?.getAttribute("data-board-positions-json") ?? "{}", "{}")) as Record<string, [number, number]>,
+    (p) => Boolean(p[first]) && Math.abs(p[first][0] - before[0] - 50) < 0.5 && Math.abs(p[first][1] - before[1] - 25) < 0.5,
+    20000,
+  );
+  verdict("8-transform", "engagement-move", present > 0 && r.ok, { first, before, after: r.value[first], waitedMs: r.waitedMs });
+  if (await countSafe(toggle)) await toggle.click({ timeout: 3000 }).catch(() => {});
+});
+
+register("export", "read", async () => {
+  const [download] = await Promise.all([
+    page.waitForEvent("download", { timeout: 20000 }).catch(() => null),
+    (async () => {
+      await clickTab("framework.category.command");
+      await settle(1);
+      const row = page.locator('[id="action.exportFixture"], button').filter({ hasText: /^export$/i }).first();
+      if (await countSafe(row)) await row.click({ timeout: 3000 }).catch(() => {});
+    })(),
+  ]);
+  const name = download ? download.suggestedFilename() : null;
+  verdict("24-export", "export-downloads-json", Boolean(download) && /\.json$/.test(name ?? ""), { name });
+});
+
 register("guest-alive", "read", async () => {
   const s = await snapshot();
   verdict("0-vitals", "guest-alive", !s.recovery.some((x) => x && x !== "?") && guestDeathFaults.length === 0, { recovery: s.recovery, guestDeath: guestDeathFaults.slice(0, 3) });

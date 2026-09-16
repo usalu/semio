@@ -10,6 +10,7 @@ import { semioExtensionStoreVitePlugin } from "../../../../🧰️framework/🛍
 import { browserArtifactVitePlugin } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/📦️distribution/⚡️vite/🟦️.ts";
 import { demonstratorRuntimeAssetSources } from "../../🔨️modules/🧩️runtime/📦️assets/🟦️.ts";
 import { demonstratorActivationComponents, readDemonstratorActivation } from "../../🔨️modules/🧩️runtime/♻️activation/🟦️.ts";
+import { demonstratorUnionReceiptVitePlugin } from "../../🔨️modules/🧩️runtime/♻️activation/🌐️vite/🟦️.ts";
 import { DEMONSTRATOR_ASSETS_DIR, DEMONSTRATOR_HOST, DEMONSTRATOR_RUNTIME_TARGETS, demonstratorRuntimeModuleLayout } from "../../🔨️modules/🧩️runtime/🟦️.ts";
 import { repoCacheDirectory } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
 
@@ -27,7 +28,7 @@ const FRAMEWORK_ENGINE_OPTIMIZE_DEPS_EXCLUDE = [
 const repoRoot = path.resolve(playDir, "../..");
 
 //#region 🔖️DemonstratorUnionAssets
-/** @emoji 🎪️ Registry rows for exactly this demonstrator's six panes — the union this page needs to
+/** @emoji 🎪️ Registry rows for exactly this demonstrator's eight panes — the union this page needs to
  * actually mount, not every playground variant in the monorepo (mirrors `os/dev`'s own `resolvedPlaygroundAssets`,
  * scoped down from its "studio serves everything" fallback since a demonstrator pane list is fixed). */
 const resolvedPlaygroundAssets = DEMONSTRATOR_RUNTIME_TARGETS.flatMap((target) => target.assets);
@@ -85,6 +86,7 @@ export default defineConfig(({ command }) => {
     playgroundFlowWasmDevStubPlugin(repoRoot),
     semioBackboneVitePlugin(),
     semioBlobVitePlugin(),
+    development && demonstratorUnionReceiptVitePlugin({ workspace: repoRoot }),
     development && semioActivationVitePlugin({ receiptDirectory: development.receiptDirectory, moduleRoot: pluginModulesDir, installRoot: installedExtensionsDir, components: demonstratorActivationComponents(repoRoot) }),
     command === "serve" && semioExtensionStoreVitePlugin({ installRoot: installedExtensionsDir, repoRoot }),
     ...semioAssetsVitePlugin(repoRoot),

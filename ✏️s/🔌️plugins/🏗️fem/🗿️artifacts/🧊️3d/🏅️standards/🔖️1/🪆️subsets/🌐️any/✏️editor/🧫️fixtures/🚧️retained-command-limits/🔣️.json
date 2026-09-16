@@ -234,7 +234,8 @@
       "id": "setResultAnimation",
       "disposition": "Migrated",
       "lanes": [
-        "WindowConfig"
+        "WindowConfig",
+        "WindowTransient"
       ],
       "blocker": ""
     },
@@ -242,7 +243,8 @@
       "id": "resultAnimationTick",
       "disposition": "Migrated",
       "lanes": [
-        "WindowConfig"
+        "WindowConfig",
+        "WindowTransient"
       ],
       "blocker": ""
     },

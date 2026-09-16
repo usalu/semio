@@ -686,6 +686,7 @@ import {
   type ShellState,
   type ShellAction,
   shellReducer,
+  shellStateUnchanged,
   selectUiDevice,
   selectOpenConflicts,
   selectQuarantinedConflicts,
@@ -693,7 +694,7 @@ import {
   type ActionPaneState,
   type ExtraWindowInstance,
 } from "../../🧱️elements/🐚️Shell/🟦️.tsx";
-export { actionStageKey, type CommandPanelState, type ShellState, type ShellAction, shellReducer, selectUiDevice, selectOpenConflicts, selectQuarantinedConflicts, initialShellState };
+export { actionStageKey, type CommandPanelState, type ShellState, type ShellAction, shellReducer, shellStateUnchanged, selectUiDevice, selectOpenConflicts, selectQuarantinedConflicts, initialShellState };
 //#endregion 🧮️ShellStore
 
 //#region ShellHelpers

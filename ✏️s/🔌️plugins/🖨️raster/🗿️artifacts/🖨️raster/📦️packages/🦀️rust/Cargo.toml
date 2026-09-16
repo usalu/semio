@@ -31,6 +31,9 @@ semio-framework = { path = "../../../../../../../🧰️framework/📦️package
 semio-framework-plugin = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", features = ["component-guest"], package = "semio-framework-plugin" }
 semio-framework-dispatch-macros = { path = "../../../../../../../🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust", package = "semio-framework-dispatch-macros" }
 semio-framework-schema = { path = "../../../../../../../🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust", package = "semio-framework-schema" }
+# 🌳️ The layer tree builds `TreeItemBuilder` group rows for `tree_window_item`, whose only constructor
+# is the UI contract's own `tree_item` (the plugin SDK's same-named helper returns a finished node).
+semio-framework-ui-contract = { path = "../../../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
 # 🧵️ The generated `🧬️mutations/💾️binary` decoders yield through `semio_framework_job::StepOutcome`,
 # so the job crate has to be linked here the same way `🌍️gis` links it.
 semio-framework-job = { workspace = true }

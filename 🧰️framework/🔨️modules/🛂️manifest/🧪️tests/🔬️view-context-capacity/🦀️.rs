@@ -4,7 +4,8 @@
 
 use super::{
     MAX_SURFACE_BODY_KEY_BYTES, MAX_SURFACE_VIEW_CONTEXT_BYTES, VIEW_CONTEXT_IDENTIFIER_CHARS, VIEW_CONTEXT_IDENTIFIER_FIELDS, VIEW_CONTEXT_LONG_STRING_CHARS, VIEW_CONTEXT_LONG_STRING_FIELDS,
-    VIEW_CONTEXT_SESSION_IDENTITY_FIELDS, VIEW_CONTEXT_TRACE_CURSOR_ENTRIES, VIEW_CONTEXT_TRACE_CURSOR_FIELDS, VIEW_CONTEXT_UTILITY_ENTRIES, VIEW_CONTEXT_WINDOW_INSTANCES,
+    VIEW_CONTEXT_SESSION_IDENTITY_FIELDS, VIEW_CONTEXT_TRACE_CURSOR_ENTRIES, VIEW_CONTEXT_TRACE_CURSOR_FIELDS, VIEW_CONTEXT_TREE_WINDOWS, VIEW_CONTEXT_TREE_WINDOW_FIELDS, VIEW_CONTEXT_UTILITY_ENTRIES,
+    VIEW_CONTEXT_WINDOW_INSTANCES,
 };
 
 fn schema() -> serde_json::Value {
@@ -20,6 +21,8 @@ async fn capacities_match_the_neutral_schema() {
     assert_eq!(properties["activeUtilityByWindowId"]["maxProperties"].as_u64().unwrap() as usize, VIEW_CONTEXT_UTILITY_ENTRIES);
     assert_eq!(properties["windowInstances"]["maxItems"].as_u64().unwrap() as usize, VIEW_CONTEXT_WINDOW_INSTANCES);
     assert_eq!(properties["toolRunTraceCursorByWindowId"]["maxProperties"].as_u64().unwrap() as usize, VIEW_CONTEXT_TRACE_CURSOR_ENTRIES);
+    assert_eq!(properties["treeWindows"]["maxItems"].as_u64().unwrap() as usize, VIEW_CONTEXT_TREE_WINDOWS);
+    assert_eq!(schema["$defs"]["TreeWindowRequest"]["properties"].as_object().unwrap().len(), VIEW_CONTEXT_TREE_WINDOW_FIELDS);
     assert_eq!(schema["$defs"]["ToolRunTraceCursor"]["required"].as_array().unwrap().len(), VIEW_CONTEXT_TRACE_CURSOR_FIELDS);
     assert_eq!(schema["$defs"]["SessionIdentity"]["properties"].as_object().unwrap().len(), VIEW_CONTEXT_SESSION_IDENTITY_FIELDS);
 
@@ -36,7 +39,8 @@ async fn the_admission_bound_covers_every_schema_valid_context() {
         + VIEW_CONTEXT_LONG_STRING_FIELDS * VIEW_CONTEXT_LONG_STRING_CHARS
         + VIEW_CONTEXT_UTILITY_ENTRIES * 2 * VIEW_CONTEXT_IDENTIFIER_CHARS
         + VIEW_CONTEXT_WINDOW_INSTANCES * 2 * VIEW_CONTEXT_IDENTIFIER_CHARS
-        + VIEW_CONTEXT_TRACE_CURSOR_ENTRIES * VIEW_CONTEXT_IDENTIFIER_CHARS;
+        + VIEW_CONTEXT_TRACE_CURSOR_ENTRIES * VIEW_CONTEXT_IDENTIFIER_CHARS
+        + VIEW_CONTEXT_TREE_WINDOWS * 2 * VIEW_CONTEXT_IDENTIFIER_CHARS;
     assert!(MAX_SURFACE_VIEW_CONTEXT_BYTES >= content_chars * 4, "the bound must admit the schema's own characters at worst-case UTF-8 width");
     assert!(MAX_SURFACE_BODY_KEY_BYTES >= VIEW_CONTEXT_IDENTIFIER_CHARS * 4, "a body key is Identifier-shaped");
     assert!(MAX_SURFACE_VIEW_CONTEXT_BYTES > 262_144, "the borrowed public-action body cap rejected schema-valid contexts");
@@ -48,7 +52,7 @@ async fn the_admission_bound_covers_every_schema_valid_context() {
 /// escapes payload bytes), so passing here proves the pack-encoded context passes too.
 #[semio_framework_async_macros::async_test]
 async fn a_capacity_filled_context_fits_the_bound() {
-    use crate::{Locale, Terminology, ViewModel, ViewSessionIdentity, ViewWindowInstance};
+    use crate::{Locale, Terminology, TreeWindowRequest, ViewModel, ViewSessionIdentity, ViewWindowInstance};
     let identifier = || "i".repeat(VIEW_CONTEXT_IDENTIFIER_CHARS);
     let long = || "l".repeat(VIEW_CONTEXT_LONG_STRING_CHARS);
     let view = ViewModel {
@@ -65,6 +69,8 @@ async fn a_capacity_filled_context_fits_the_bound() {
         focused_window_id: Some(identifier()),
         window_instances: (0..VIEW_CONTEXT_WINDOW_INSTANCES).map(|index| ViewWindowInstance { id: format!("{index}{}", identifier()), window_kind_id: identifier() }).collect(),
         tool_run_trace_cursor_by_window_id: (0..VIEW_CONTEXT_TRACE_CURSOR_ENTRIES).map(|index| (format!("{index}{}", identifier()), semio_framework_tool_run::ToolRunTraceCursor { run: (1 << 53) - 1, generation: u32::MAX, page: u32::MAX })).collect(),
+        tree_windows: (0..VIEW_CONTEXT_TREE_WINDOWS).map(|index| TreeWindowRequest { body_key: format!("{index}{}", identifier()), node_key: identifier(), open: Some(true), offset: u32::MAX, rows: u32::MAX }).collect(),
+        tree_viewport_rows: Some(u32::MAX),
     };
     let encoded = serde_json::to_vec(&view).unwrap();
     println!("[STATS] capacity-filled view context encoded={} bound={}", encoded.len(), MAX_SURFACE_VIEW_CONTEXT_BYTES);

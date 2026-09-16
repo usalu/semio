@@ -37,6 +37,8 @@ pub mod set_active_example {
 
     pub const SHOOTING_EXAMPLE_DEFAULT_ID: &str = "base-icon";
 
+    pub const SHOOTING_EXAMPLE_HEXAGONAL_CUT_CONCRETE_FOREST_LEFT: &str = "hexagonal-cut-concrete-forest-left";
+
     #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "active-example")]
     pub struct SetActiveExample {
@@ -46,8 +48,11 @@ pub mod set_active_example {
     pub fn handle(payload: &SetActiveExample, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         let next = if payload.example_id.is_empty() {
             Some(crate::empty_shooting_snapshot())
-        } else if payload.example_id == SHOOTING_EXAMPLE_DEFAULT_ID || payload.example_id == "base" {
+        } else if payload.example_id == SHOOTING_EXAMPLE_DEFAULT_ID || payload.example_id == "base" || payload.example_id == "demo" {
             Some(crate::standards::v1::subsets::any::schema::default_snapshot())
+        } else if payload.example_id == SHOOTING_EXAMPLE_HEXAGONAL_CUT_CONCRETE_FOREST_LEFT || payload.example_id == "forest-left" {
+            crate::standards::v1::subsets::any::schema::snapshot::text::parse_dsl(crate::examples::hexagonal_cut_concrete_forest_left::PRIMARY_TEXT)
+                .ok()
         } else {
             None
         };

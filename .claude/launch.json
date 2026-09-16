@@ -326,6 +326,16 @@
       "name": "shooting-react-attach",
       "url": "http://localhost:6019",
       "port": 6019
+    },
+    {
+      "name": "remodel-react-attach",
+      "url": "http://localhost:6063",
+      "port": 6063
+    },
+    {
+      "name": "layout-react-attach",
+      "url": "http://localhost:6079",
+      "port": 6079
     }
   ]
 }

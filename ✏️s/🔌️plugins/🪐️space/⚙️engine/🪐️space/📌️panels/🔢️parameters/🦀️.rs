@@ -17,7 +17,7 @@ use crate::engine::space::engine::parameter_entity_id;
 use crate::engine::space::terminology::SStudioLabels;
 use crate::engine::space::{ui_value_map, ui_value_text, S_PLAY_PARAMETERS_TAB_ID};
 use semio_framework_os::{WorkflowParameter, WorkflowSnapshot};
-use semio_framework_plugin::{ActionId, Buildable, HasBase, HasChildren, IconName, PanelGroup, PanelTabDefinition, PanelTabKind, PluginAssemblyError, UiAssemblyResult, UiFixedList, UiText, UiValue, FRAMEWORK_PANEL_TAB_PARAMETERS_LABEL};
+use semio_framework_plugin::{ActionId, Buildable, HasBase, HasChildren, IconName, PanelGroup, PanelTabDefinition, PanelTabKind, PluginAssemblyError, TreeWindows, UiAssemblyResult, UiFixedList, UiText, UiValue, FRAMEWORK_PANEL_TAB_PARAMETERS_LABEL};
 use semio_framework_ui_contract::{InputKind, Label, Trigger};
 
 //#region 🔖️Manifest
@@ -175,7 +175,22 @@ fn parameter_id(parameter: &WorkflowParameter) -> String {
     crate::engine::space::engine::resolve_future(parameter_entity_id(parameter)).to_string()
 }
 
-pub fn render(projection: &WorkflowSnapshot, labels: &SStudioLabels) -> UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+/// 🪟️ The node key the host addresses this panel's one open-ended container by.
+pub const S_PLAY_PARAMETERS_LIST_KEY: &str = "s-play-parameters.list";
+
+/// 🪟️ Virtualised through [`TreeWindows::slice`] rather than `window_section`: this body is NOT a tree
+/// — it is a `column` of `Component::Container(Section)` nodes, one per workflow parameter, each
+/// holding editable `field` rows that the host's `TreeView` cannot render (a tree row never recurses
+/// into a non-`treeItem` child, `🧰️framework/🔨️modules/🖥️platform/🟦️.ts`'s own note). So only the
+/// slice `[offset, offset + len)` of `projection.parameters` is BUILT — replacing the old unbounded
+/// loop that hard-failed with `"parameters section admission failed"` past the 32nd child — and a
+/// refused admission shortens the run instead of faulting the render. ⚠️ Gap, deliberate and
+/// documented: `TreeWindow` has no carrier on `ContainerProps` (only `TreeSectionProps`/
+/// `TreeItemProps` gained one), so the full `slice.total` extent cannot be stamped for the host, and
+/// this body therefore files no window requests and stays at its first-paint slice. Windowing it for
+/// real needs either a `window` field on `ContainerProps` or a host renderer for inline row controls.
+pub fn render(projection: &WorkflowSnapshot, labels: &SStudioLabels, windows: &TreeWindows<'_>) -> UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    let slice = windows.slice(S_PLAY_PARAMETERS_LIST_KEY, true, projection.parameters.len());
     let mut sections = UiFixedList::<semio_framework_plugin::BuiltNode>::default();
 
     let add_action = crate::engine::space::s_play_action("addParameter", Some(ui_value_map([("type", ui_value_text("numeric")?)])?))?;
@@ -199,7 +214,7 @@ pub fn render(projection: &WorkflowSnapshot, labels: &SStudioLabels) -> UiAssemb
         .map_err(|_| PluginAssemblyError::new("ui.parameters.header-section", "header section admission failed"))?;
     sections.try_push(header).map_err(|_| PluginAssemblyError::new("ui.parameters.sections", "parameters section admission failed"))?;
 
-    for parameter in &projection.parameters {
+    for parameter in &projection.parameters[slice.offset..slice.offset + slice.len] {
         let id = parameter_id(parameter);
         let name = match parameter {
             WorkflowParameter::Numeric { name, .. } | WorkflowParameter::Categorical { name, .. } | WorkflowParameter::Toggle { name, .. } | WorkflowParameter::Text { name, .. } => name.clone(),
@@ -254,7 +269,9 @@ pub fn render(projection: &WorkflowSnapshot, labels: &SStudioLabels) -> UiAssemb
             .map_err(|_| PluginAssemblyError::new("ui.parameters.parameter-section-children", "parameter section child admission failed"))?
             .try_build()
             .map_err(|_| PluginAssemblyError::new("ui.parameters.parameter-section", "parameter section admission failed"))?;
-        sections.try_push(section).map_err(|_| PluginAssemblyError::new("ui.parameters.sections", "parameters section admission failed"))?;
+        if sections.try_push(section).is_err() {
+            break;
+        }
     }
 
     semio_framework_ui_contract::column()

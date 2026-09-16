@@ -4,7 +4,7 @@ use crate::editor::cad::unit_tests::context::*;
 use crate::editor::cad::{forest_working_scene, CadPlayRuntime};
 use crate::standards::v1::subsets::any::schema::inferences::CAD_EXAMPLE_FOREST_LEFT;
 use crate::standards::v1::subsets::any::schema::inferences::{default_document, forest_play_scene, CAD_MODEL_DEFINITION_ENERGY};
-use semio_framework_plugin::{Locale, Terminology, ViewModel};
+use semio_framework_plugin::{Locale, Terminology, TreeWindows, ViewModel};
 
 fn projected(panel: BuiltNode) -> String {
     semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree { root: panel }).expect("CAD panel projection")
@@ -12,7 +12,7 @@ fn projected(panel: BuiltNode) -> String {
 
 fn forest_object_panel(view_state: &ViewModel, ids: &[&str]) -> String {
     let view = view_with_interaction(forest_play_scene(), CadPlayRuntime::default(), selecting(ids));
-    projected(build_properties_panel(&view, cad_labels(view_state), None).expect("CAD properties panel assembly"))
+    projected(build_properties_panel(&view, cad_labels(view_state), None, &TreeWindows::unhosted()).expect("CAD properties panel assembly"))
 }
 
 #[semio_framework_async_macros::async_test]
@@ -20,10 +20,10 @@ async fn summary_counts_every_pane_object_without_a_selection() {
     let scene = forest_play_scene();
     let expected: usize = CadPaneId::all().into_iter().map(|pane| edit::cad_pane_working_scene(&scene, pane).map_or(0, |working| edit::cad_pane_working_objects(&working, pane).0.len())).sum();
     assert!(expected > 20, "the forest document lists objects in every pane");
-    let json = projected(build_properties_panel(&view(scene, CadPlayRuntime::default()), cad_labels(&ViewModel::default()), Some("dislocate")).expect("summary"));
+    let json = projected(build_properties_panel(&view(scene, CadPlayRuntime::default()), cad_labels(&ViewModel::default()), Some("dislocate"), &TreeWindows::unhosted()).expect("summary"));
     assert!(json.contains(&format!("Objects: {expected}")), "{json}");
     assert!(json.contains("Utility: dislocate"));
-    let empty = projected(build_properties_panel(&view(default_document(), CadPlayRuntime::default()), cad_labels(&ViewModel::default()), None).expect("summary"));
+    let empty = projected(build_properties_panel(&view(default_document(), CadPlayRuntime::default()), cad_labels(&ViewModel::default()), None, &TreeWindows::unhosted()).expect("summary"));
     assert!(empty.contains("Objects: 0"));
 }
 
@@ -63,7 +63,7 @@ async fn selected_reference_renders_fields_and_bounded_patch_rows() {
     let reference = scene.references_by_model_definition_id.get(CAD_MODEL_DEFINITION_ENERGY).and_then(|references| references.first()).expect("energy reference").clone();
     let runtime = CadPlayRuntime { selected_reference_model_definition_id: Some(CAD_MODEL_DEFINITION_ENERGY.into()), selected_reference_id: Some(reference.id.clone()), ..CadPlayRuntime::default() };
     assert_eq!(scene.id, CAD_EXAMPLE_FOREST_LEFT);
-    let json = projected(build_properties_panel(&view(scene, runtime), cad_labels(&ViewModel::default()), None).expect("reference section"));
+    let json = projected(build_properties_panel(&view(scene, runtime), cad_labels(&ViewModel::default()), None, &TreeWindows::unhosted()).expect("reference section"));
     assert!(json.contains(&reference.source_url), "{json}");
     assert!(json.contains("cad-play-inspector.reference.width.grow"));
     assert!(json.contains("cad-play-inspector.reference.origin.x.plus"));
@@ -76,7 +76,7 @@ async fn selected_node_renders_read_only_rows() {
     let scene = forest_play_scene();
     let node = scene.nodes.first().expect("forest node").clone();
     let runtime = CadPlayRuntime { selected_node_ids: vec![node.id.clone()], ..CadPlayRuntime::default() };
-    let json = projected(build_properties_panel(&view(scene, runtime), cad_labels(&ViewModel::default()), None).expect("node section"));
+    let json = projected(build_properties_panel(&view(scene, runtime), cad_labels(&ViewModel::default()), None, &TreeWindows::unhosted()).expect("node section"));
     assert!(json.contains(&node.label), "{json}");
     assert!(json.contains("cad-play-inspector.node.id"));
 }

@@ -82,6 +82,7 @@ export interface ShootingMaterial {
   roughness: number;
   emissive: string;
   emissiveIntensity: number;
+  stroke: string;
 }
 
 export interface ShootingSceneLighting {

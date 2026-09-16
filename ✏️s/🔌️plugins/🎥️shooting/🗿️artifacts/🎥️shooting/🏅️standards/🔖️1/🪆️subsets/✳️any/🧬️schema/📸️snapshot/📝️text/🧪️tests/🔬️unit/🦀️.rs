@@ -16,7 +16,7 @@ fn representative_snapshot() -> ShootingSnapshot {
             sun: ShootingSun { enabled: true, azimuth: 12.5, elevation: 33.0, intensity: 3.0, color: "#ff00ff".into() },
             ambient: ShootingAmbient { intensity: 0.9, color: "#00ffff".into() },
             shadow: ShootingShadow { enabled: false, opacity: 0.5, softness: 0.2 },
-            material: ShootingMaterial { color: "#abcdef".into(), metalness: 0.3, roughness: 0.7, emissive: "#123456".into(), emissive_intensity: 0.1 },
+            material: ShootingMaterial { color: "#abcdef".into(), metalness: 0.3, roughness: 0.7, emissive: "#123456".into(), emissive_intensity: 0.1, stroke: "#000000".into() },
         },
         shots: vec![
             ShootingShot { id: "s1".into(), label: "Overview".into(), width: 256, height: 256, format: "svg".into(), shape: "rectangle".into(), background: Some("#ffffff".into()), camera_id: Some("cam1".into()) },

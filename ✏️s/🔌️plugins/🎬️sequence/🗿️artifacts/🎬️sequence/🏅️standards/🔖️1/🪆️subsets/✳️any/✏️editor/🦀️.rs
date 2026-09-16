@@ -56,6 +56,10 @@ pub use script::SEQUENCE_PLAY_BODY_SCRIPT;
 /// panel tree's row ids both use, so a selection made through either surface resolves identically.
 pub const SEQUENCE_INTERACTION_STEPS: &str = "steps";
 
+/// 🕹️ The only granularity the "steps" domain declares — stamped on every pick row of the document
+/// tree so the host synthesizes `interactionSelect` without a per-row argument map.
+pub const SEQUENCE_INTERACTION_GRANULARITY: &str = "step";
+
 /// 🎯️ An `ActionDescriptor` addressed at this app — the single factory every taxonomy node's chrome
 /// (`📌️panels/*`) builds its `on_change`/item actions with.
 pub fn sequence_action(action: &str, args: Option<semio_framework_plugin::UiValue>) -> semio_framework_plugin::UiAssemblyResult<(semio_framework_plugin::ActionId, Option<semio_framework_plugin::UiValue>)> {
@@ -101,14 +105,7 @@ pub fn ui_value_map(values: impl IntoIterator<Item = (&'static str, semio_framew
 }
 
 /// 🌳️ Admits fallibly assembled UI nodes into fixed child storage.
-pub fn ui_node_list(values: impl IntoIterator<Item = semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode>>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiFixedList<semio_framework_plugin::BuiltNode>> {
-    let mut nodes = semio_framework_plugin::UiFixedList::default();
-    for value in values {
-        let node = value?;
-        nodes.try_push(node).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI node admission failed"))?;
-    }
-    Ok(nodes)
-}
+pub use semio_framework_plugin::ui_node_list;
 
 //#endregion 🔖️Constants
 
@@ -3239,8 +3236,8 @@ impl ArtifactEditor for SequencePlayApp {
             SEQUENCE_PLAY_BODY_MAIN => main::render(&live, &config),
             SEQUENCE_PLAY_BODY_SCRIPT => script::render(&live, &transient),
             SEQUENCE_PLAY_BODY_COMPILED => compiled::render(&live),
-            SEQUENCE_PLAY_BODY_ARTIFACT => document_panel::render(&live, labels),
-            SEQUENCE_PLAY_BODY_CATALOGUE => catalogue_panel::render(&live, labels),
+            SEQUENCE_PLAY_BODY_ARTIFACT => document_panel::render(&live, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, SEQUENCE_PLAY_BODY_ARTIFACT)),
+            SEQUENCE_PLAY_BODY_CATALOGUE => catalogue_panel::render(&live, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, SEQUENCE_PLAY_BODY_CATALOGUE)),
             // 🕹️ `render` carries no `InteractionView` (same gap as `context_menu` below — see ticket
             // 26/08/14's w3b-summary.md), so this always takes the "nothing selected" branch rather
             // than reading a stale/wrong selection.
@@ -3272,8 +3269,8 @@ impl ArtifactEditor for SequencePlayApp {
             SEQUENCE_PLAY_BODY_MAIN => main::render(&live, &config),
             SEQUENCE_PLAY_BODY_SCRIPT => script::render(&live, &transient),
             SEQUENCE_PLAY_BODY_COMPILED => compiled::render(&live),
-            SEQUENCE_PLAY_BODY_ARTIFACT => document_panel::render(&live, labels),
-            SEQUENCE_PLAY_BODY_CATALOGUE => catalogue_panel::render(&live, labels),
+            SEQUENCE_PLAY_BODY_ARTIFACT => document_panel::render(&live, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, SEQUENCE_PLAY_BODY_ARTIFACT)),
+            SEQUENCE_PLAY_BODY_CATALOGUE => catalogue_panel::render(&live, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, SEQUENCE_PLAY_BODY_CATALOGUE)),
             SEQUENCE_PLAY_BODY_INSPECTOR => inspection_panel::render(&live, &[], labels),
             _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "sequence diagnostic admission failed")),
         }.map(semio_framework_plugin::built_to_component_tree)
@@ -3400,7 +3397,7 @@ pub fn create_sequence_app() -> AppDefinition {
             .interaction(InteractionDefinition {
                 id: SEQUENCE_INTERACTION_STEPS.into(),
                 label: LocalizedLabel::native("Steps", "Schritte"),
-                granularities: vec![GranularityDefinition { id: "step".into(), label: LocalizedLabel::native("Step", "Schritt"), icon_id: "box".into() }],
+                granularities: vec![GranularityDefinition { id: SEQUENCE_INTERACTION_GRANULARITY.into(), label: LocalizedLabel::native("Step", "Schritt"), icon_id: "box".into() }],
                 hierarchy: HierarchyProvider::Topology,
                 hover: HoverSpec::default(),
                 selection: SelectionSpec {

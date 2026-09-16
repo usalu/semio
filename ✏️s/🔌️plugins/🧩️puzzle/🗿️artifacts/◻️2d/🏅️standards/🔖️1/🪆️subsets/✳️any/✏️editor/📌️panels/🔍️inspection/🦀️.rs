@@ -7,18 +7,19 @@
 //! selection — the same arg shape the context menu sends.
 
 use crate::editor::puzzle2d::terminology::Puzzle2dLabels;
-use crate::editor::puzzle2d::{fixture_edges, fixture_nodes, puzzle_extension_id, ui_label, ui_node_list, Puzzle2dInteractionSnapshot, Puzzle2dScene, PUZZLE2D_FIXTURE_SCHEMA, PUZZLE2D_PLAY_CONTROLLER_ID};
+use crate::editor::puzzle2d::{fixture_edges, fixture_nodes, puzzle_extension_id, ui_label, Puzzle2dInteractionSnapshot, Puzzle2dScene, PUZZLE2D_FIXTURE_SCHEMA, PUZZLE2D_PLAY_CONTROLLER_ID};
 use semio_framework_plugin::{
-    tree_item_desc, tree_item_with_action, ActionFactory, BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiAssemblyResult, UiFixedList, UiMapBuilder, UiText, UiValue,
-    FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+    tree_item_desc, tree_item_with_action, ui_node_list, ActionFactory, BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, TreeWindows, UiAssemblyResult, UiFixedList, UiMapBuilder, UiText,
+    UiValue, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
 use serde_json::Value;
 
 //#region 🔖️Constants
 pub const PUZZLE2D_PLAY_BODY_PROPERTIES: &str = "puzzle2d.play.properties";
 const ROOT: &str = "puzzle2d-play-inspector";
-/// 🧾️ Selected ids listed before the entity's own fields — bounded so a whole-board selection still fits one page.
-const IDS_ROWS: usize = 8;
+/// 🧾️ The windowed section listing the live selection's ids, ahead of the entity's own fields — a
+/// whole-board selection publishes its full `total` and materialises only the host's slice.
+const IDS_SECTION: &str = "puzzle2d-play-inspector.ids";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
@@ -76,25 +77,19 @@ fn flag_row(fields: &mut UiFixedList<BuiltNode>, id: &str, label: &str, flag_nam
     push(fields, tree_item_with_action(format!("{ROOT}.{id}"), ui_label(label)?, Some(pressed.to_string()), action))
 }
 
-fn push_ids(fields: &mut UiFixedList<BuiltNode>, ids: &[String], labels: &Puzzle2dLabels) -> UiAssemblyResult<()> {
+/// 🪟️ The selection's id list as its own windowed section — keyed by raw id, never truncated: the
+/// section stamps `total` over the whole selection and the host streams the rest as it scrolls.
+fn ids_section(builder: PanelTreeBuilder, windows: &TreeWindows<'_>, ids: &[String], labels: &Puzzle2dLabels) -> UiAssemblyResult<PanelTreeBuilder> {
     if ids.len() <= 1 {
-        return Ok(());
+        return Ok(builder);
     }
-    read_only(fields, "selected", labels.selected.as_str(), ids.len())?;
-    for (index, id) in ids.iter().take(IDS_ROWS).enumerate() {
-        read_only(fields, &format!("ids.{index}"), labels.id.as_str(), id)?;
-    }
-    if ids.len() > IDS_ROWS {
-        read_only(fields, "ids.more", labels.id.as_str(), format!("+{}", ids.len() - IDS_ROWS))?;
-    }
-    Ok(())
+    builder.window_section(windows, IDS_SECTION, Some(ui_label(labels.selected.as_str())?), true, ids, |id| tree_item_desc(id, ui_label(labels.id.as_str())?, Some(id.clone())))
 }
 //#endregion 🔖️Rows
 
 //#region 🔖️Sections
-fn node_fields(node: &Value, ids: &[String], labels: &Puzzle2dLabels) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
+fn node_fields(node: &Value, labels: &Puzzle2dLabels) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
     let mut fields = UiFixedList::default();
-    push_ids(&mut fields, ids, labels)?;
     read_only(&mut fields, "node.id", labels.id.as_str(), text(node, "id"))?;
     read_only(&mut fields, "node.text", labels.text.as_str(), text(node, "text"))?;
     read_only(&mut fields, "node.kind", labels.node_kind.as_str(), text(node, "nodeKind"))?;
@@ -113,9 +108,8 @@ fn node_fields(node: &Value, ids: &[String], labels: &Puzzle2dLabels) -> UiAssem
     Ok(fields)
 }
 
-fn edge_fields(edge: &Value, ids: &[String], labels: &Puzzle2dLabels) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
+fn edge_fields(edge: &Value, labels: &Puzzle2dLabels) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
     let mut fields = UiFixedList::default();
-    push_ids(&mut fields, ids, labels)?;
     read_only(&mut fields, "edge.id", labels.id.as_str(), text(edge, "id"))?;
     read_only(&mut fields, "edge.kind", labels.edge_kind.as_str(), text(edge, "edgeKind"))?;
     read_only(&mut fields, "edge.source", labels.source.as_str(), text(edge, "source"))?;
@@ -147,16 +141,18 @@ fn summary(envelope: &Puzzle2dScene, labels: &Puzzle2dLabels) -> UiAssemblyResul
 }
 
 /// 🔍️ The first selected entity's field group: a node, an edge, or a handle nested under a node.
-fn selected_section(fixture: &Value, interaction: &Puzzle2dInteractionSnapshot, labels: &Puzzle2dLabels) -> Option<UiAssemblyResult<BuiltNode>> {
-    let section = |label: &str, id: &str, fields: UiAssemblyResult<UiFixedList<BuiltNode>>| -> UiAssemblyResult<BuiltNode> { PanelTreeBuilder::new(ROOT)?.section(format!("{ROOT}.{id}"), Some(ui_label(label)?), true, fields?)?.build() };
+fn selected_section(fixture: &Value, interaction: &Puzzle2dInteractionSnapshot, labels: &Puzzle2dLabels, windows: &TreeWindows<'_>) -> Option<UiAssemblyResult<BuiltNode>> {
     let ids = interaction.selected_ids();
+    let section = |label: &str, id: &str, fields: UiAssemblyResult<UiFixedList<BuiltNode>>| -> UiAssemblyResult<BuiltNode> {
+        ids_section(PanelTreeBuilder::new(ROOT)?, windows, ids, labels)?.section(format!("{ROOT}.{id}"), Some(ui_label(label)?), true, fields?)?.build()
+    };
     let first = ids.first()?;
     let nodes = fixture_nodes(fixture);
     if let Some(node) = nodes.iter().find(|node| node.get("id").and_then(Value::as_str) == Some(first)) {
-        return Some(section(labels.node.as_str(), "node", node_fields(node, ids, labels)));
+        return Some(section(labels.node.as_str(), "node", node_fields(node, labels)));
     }
     if let Some(edge) = fixture_edges(fixture).iter().find(|edge| edge.get("id").and_then(Value::as_str) == Some(first)) {
-        return Some(section(labels.edge.as_str(), "edge", edge_fields(edge, ids, labels)));
+        return Some(section(labels.edge.as_str(), "edge", edge_fields(edge, labels)));
     }
     nodes
         .iter()
@@ -166,10 +162,16 @@ fn selected_section(fixture: &Value, interaction: &Puzzle2dInteractionSnapshot, 
 //#endregion 🔖️Sections
 
 //#region 🔖️Render
-pub fn render(envelope: &Puzzle2dScene, labels: &Puzzle2dLabels) -> UiAssemblyResult<BuiltNode> {
-    match selected_section(&envelope.fixture, &envelope.interaction, labels) {
+pub fn render(envelope: &Puzzle2dScene, labels: &Puzzle2dLabels, windows: &TreeWindows<'_>) -> UiAssemblyResult<BuiltNode> {
+    match selected_section(&envelope.fixture, &envelope.interaction, labels, windows) {
         Some(section) => section,
         None => summary(envelope, labels),
     }
 }
 //#endregion 🔖️Render
+
+//#region 🧪️Tests
+#[cfg(test)]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
+//#endregion 🧪️Tests

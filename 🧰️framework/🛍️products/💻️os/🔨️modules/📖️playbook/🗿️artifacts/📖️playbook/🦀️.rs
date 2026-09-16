@@ -616,7 +616,7 @@ pub mod generation_forms {
                         placement: Some(UiTreeActionPlacement::Menu),
                     },
                 );
-                UiTreeItemNode {
+                UiTreeItemNode { window: None, granularity: None,
                     id: format!("{surface_prefix}.generation.{}", generation.id),
                     label: Label::data(generation.name.clone()),
                     description: Some(format!("{} values", generation.values.len())),
@@ -634,12 +634,12 @@ pub mod generation_forms {
                 }
             })
             .collect();
-        let mut sections = vec![UiTreeSectionNode {
+        let mut sections = vec![UiTreeSectionNode { window: None,
             id: format!("{surface_prefix}.generations"),
             label: Some(generation_tree_label("generations", locale, terminology)),
             default_open: Some(true),
             items: if items.is_empty() {
-                vec![UiTreeItemNode {
+                vec![UiTreeItemNode { window: None, granularity: None,
                     id: format!("{surface_prefix}.generations.empty"),
                     label: generation_tree_label("empty", locale, terminology),
                     description: None,
@@ -660,11 +660,11 @@ pub mod generation_forms {
             },
             presence: UiPresence::default(),
         }];
-        sections.push(UiTreeSectionNode {
+        sections.push(UiTreeSectionNode { window: None,
             id: format!("{surface_prefix}.actions"),
             label: Some(generation_tree_label("actions", locale, terminology)),
             default_open: Some(true),
-            items: vec![UiTreeItemNode {
+            items: vec![UiTreeItemNode { window: None, granularity: None,
                 id: format!("{surface_prefix}.add-generation"),
                 label: generation_tree_label("add", locale, terminology),
                 description: None,

@@ -1,9 +1,14 @@
 //! 📚️ Architect catalogue panel — the action shortcuts and the register index.
+//!
+//! 🪟️ Both sections are **virtualised**. The 66-entry `REGISTER_IDS` roster is ONE `registers` section
+//! spanning the whole index — the `.chunks(UI_FIXED_LIST_ITEMS)`-into-"Registers 1–32"/"33–64"/"65–66"
+//! idiom is deleted — and the shortcut roster is windowed the same way, so neither depends on the
+//! fixed-children cap.
 
 use crate::editor::architect::catalog::REGISTER_IDS;
 use crate::editor::architect::ui_label;
 use crate::editor::architect::{architect_action, ui_value_map, ui_value_text};
-use semio_framework_plugin::{tree_item_with_action, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiFixedList, UiValue, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL};
+use semio_framework_plugin::{tree_item_with_action, BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, TreeWindows, UiAssemblyResult, UiValue, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL};
 
 //#region 🔖️Constants
 pub const ARCHITECT_BODY_CATALOGUE: &str = "architect.catalogue";
@@ -23,37 +28,59 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render() -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    let specs = [
-        ("architect-catalogue.add-item", "Add Register Item", "addRegisterItem", Some(ui_value_map([("registerId", ui_value_text("elements")?), ("template", UiValue::Null)])?)),
-        ("architect-catalogue.validate", "Run Validation", "runValidation", None),
-        ("architect-catalogue.analysis", "Run Analysis", "runAnalysis", Some(ui_value_map([("analysisKind", ui_value_text("gap")?)])?)),
-        ("architect-catalogue.report", "Run Report", "runReport", Some(ui_value_map([("reportKind", ui_value_text("executiveSummary")?)])?)),
-        ("architect-catalogue.export", "Export ProgramSnapshot", "exportProgram", None),
-        ("architect-catalogue.import", "Import ProgramSnapshot", "importProgramRequest", None),
-        ("architect-catalogue.export-csv", "Export Registers CSV", "exportRegistersCsv", None),
-        ("architect-catalogue.import-csv", "Import Registers CSV", "importRegistersCsv", Some(ui_value_map([("csv", ui_value_text("")?), ("strategy", ui_value_text("upsert")?)])?)),
-        ("architect-catalogue.apply-template", "Apply Template", "applyTemplate", Some(ui_value_map([("templateId", ui_value_text("")?)])?)),
-        ("architect-catalogue.search", "Search ProgramSnapshot", "search", Some(ui_value_map([("query", ui_value_text("")?)])?)),
-    ];
-    let mut actions = UiFixedList::default();
-    for (id, label, action, args) in specs {
-        let item = tree_item_with_action(id, ui_label(label)?, None, architect_action(action, args)?)?;
-        actions.try_push(item).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "architect catalogue action admission failed"))?;
-    }
-    let mut tree = PanelTreeBuilder::new("architect-catalogue")?.section("architect-catalogue.actions", Some(ui_label(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL)?), true, actions)?;
-    for (page, registers) in REGISTER_IDS.chunks(semio_framework_ui_contract::UI_FIXED_LIST_ITEMS).enumerate() {
-        let mut items = UiFixedList::default();
-        for register in registers {
-            let args = ui_value_map([("registerId", ui_value_text(register)?)])?;
-            let item = tree_item_with_action(format!("architect-catalogue.register.{register}"), ui_label(*register)?, None, architect_action("selectRegister", Some(args))?)?;
-            items.try_push(item).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "architect catalogue register admission failed"))?;
+/// 📚️ One shortcut's argument value, kept literal so the whole roster is a `const` slice a window can
+/// index — the `UiValue`s themselves are arena-credited and built per materialised row only.
+enum ShortcutArg {
+    Text(&'static str),
+    Null,
+}
+
+/// 📚️ One catalogue shortcut: the app action a click dispatches, with its own argument map — a
+/// catalogue row is never a pick target, so it keeps its binding.
+struct Shortcut {
+    id: &'static str,
+    label: &'static str,
+    action: &'static str,
+    args: &'static [(&'static str, ShortcutArg)],
+}
+
+const SHORTCUTS: &[Shortcut] = &[
+    Shortcut { id: "architect-catalogue.add-item", label: "Add Register Item", action: "addRegisterItem", args: &[("registerId", ShortcutArg::Text("elements")), ("template", ShortcutArg::Null)] },
+    Shortcut { id: "architect-catalogue.validate", label: "Run Validation", action: "runValidation", args: &[] },
+    Shortcut { id: "architect-catalogue.analysis", label: "Run Analysis", action: "runAnalysis", args: &[("analysisKind", ShortcutArg::Text("gap"))] },
+    Shortcut { id: "architect-catalogue.report", label: "Run Report", action: "runReport", args: &[("reportKind", ShortcutArg::Text("executiveSummary"))] },
+    Shortcut { id: "architect-catalogue.export", label: "Export ProgramSnapshot", action: "exportProgram", args: &[] },
+    Shortcut { id: "architect-catalogue.import", label: "Import ProgramSnapshot", action: "importProgramRequest", args: &[] },
+    Shortcut { id: "architect-catalogue.export-csv", label: "Export Registers CSV", action: "exportRegistersCsv", args: &[] },
+    Shortcut { id: "architect-catalogue.import-csv", label: "Import Registers CSV", action: "importRegistersCsv", args: &[("csv", ShortcutArg::Text("")), ("strategy", ShortcutArg::Text("upsert"))] },
+    Shortcut { id: "architect-catalogue.apply-template", label: "Apply Template", action: "applyTemplate", args: &[("templateId", ShortcutArg::Text(""))] },
+    Shortcut { id: "architect-catalogue.search", label: "Search ProgramSnapshot", action: "search", args: &[("query", ShortcutArg::Text(""))] },
+];
+
+fn shortcut_row(shortcut: &Shortcut) -> UiAssemblyResult<BuiltNode> {
+    let args = if shortcut.args.is_empty() {
+        None
+    } else {
+        let mut entries = Vec::with_capacity(shortcut.args.len());
+        for (key, value) in shortcut.args {
+            entries.push((*key, match value {
+                ShortcutArg::Text(text) => ui_value_text(text)?,
+                ShortcutArg::Null => UiValue::Null,
+            }));
         }
-        let start = page * semio_framework_ui_contract::UI_FIXED_LIST_ITEMS + 1;
-        let end = start + registers.len() - 1;
-        tree = tree.section(format!("architect-catalogue.registers.{page}"), Some(ui_label(format!("Registers {start}–{end}"))?), true, items)?;
-    }
-    tree.build()
+        Some(ui_value_map(entries)?)
+    };
+    tree_item_with_action(shortcut.id, ui_label(shortcut.label)?, None, architect_action(shortcut.action, args)?)
+}
+
+pub fn render(windows: &TreeWindows<'_>) -> UiAssemblyResult<BuiltNode> {
+    PanelTreeBuilder::new("architect-catalogue")?
+        .window_section(windows, "architect-catalogue.actions", Some(ui_label(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL)?), true, SHORTCUTS, shortcut_row)?
+        .window_section(windows, "architect-catalogue.registers", Some(ui_label("Registers")?), true, REGISTER_IDS, |register| {
+            let args = ui_value_map([("registerId", ui_value_text(register)?)])?;
+            tree_item_with_action(format!("architect-catalogue.register.{register}"), ui_label(*register)?, None, architect_action("selectRegister", Some(args))?)
+        })?
+        .build()
 }
 //#endregion 🔖️Render
 

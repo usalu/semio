@@ -2,7 +2,7 @@
 
 use crate::editor::architect::ui_label;
 use crate::ProgramSnapshot;
-use semio_framework_plugin::{tree_item_desc, LocalizedLabel, PanelTreeBuilder, PluginAssemblyError, SurfaceKind, UiFixedList, ViewModel, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::{tree_item_desc, ui_node_list, LocalizedLabel, PanelTreeBuilder, SurfaceKind, TreeWindows, ViewModel, WindowKindDefinition, WindowOptions};
 
 #[path = "🎚️config/🦀️.rs"]
 pub mod config;
@@ -42,7 +42,7 @@ fn localized(view: &ViewModel, en: impl AsRef<str>, de: impl AsRef<str>) -> semi
     ui_label(label.resolve(view.terminology, view.locale))
 }
 
-pub(crate) fn render(program: &ProgramSnapshot, cfg: &config::ArchitectReportWindowConfig, view: &ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub(crate) fn render(program: &ProgramSnapshot, cfg: &config::ArchitectReportWindowConfig, view: &ViewModel, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let Some(selected_report_id) = cfg.selected_report_id.as_ref() else {
         return crate::editor::architect::ui_node(semio_framework_ui_contract::text(localized(view, "Generate a report in this window.", "Erstellen Sie in diesem Fenster einen Bericht.")?), "architect-report.empty");
     };
@@ -56,22 +56,18 @@ pub(crate) fn render(program: &ProgramSnapshot, cfg: &config::ArchitectReportWin
             "architect-report.missing",
         );
     };
-    let mut tree = PanelTreeBuilder::new("architect-report")?;
-    let mut meta = UiFixedList::default();
     let generated_en = report.generated_at.as_deref().unwrap_or("unknown");
     let generated_de = report.generated_at.as_deref().unwrap_or("unbekannt");
-    for item in [
-        tree_item_desc("architect-report.kind", localized(view, format!("Type: {:?}", report.kind), format!("Art: {:?}", report.kind))?, None)?,
-        tree_item_desc("architect-report.generated", localized(view, format!("Created: {generated_en}"), format!("Erstellt: {generated_de}"))?, None)?,
-        tree_item_desc("architect-report.version", localized(view, format!("Version: {}", report.version), format!("Version: {}", report.version))?, None)?,
-    ] {
-        meta.try_push(item).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "architect report metadata admission failed"))?;
-    }
-    tree = tree.section("architect-report.meta", Some(ui_label(report.title.clone())?), true, meta)?;
-    for (index, section) in report.sections.iter().enumerate() {
-        tree = tree.section(format!("architect-report.section.{index}"), Some(ui_label(section)?), true, UiFixedList::default())?;
-    }
-    tree.build()
+    let meta = ui_node_list([
+        tree_item_desc("architect-report.kind", localized(view, format!("Type: {:?}", report.kind), format!("Art: {:?}", report.kind))?, None),
+        tree_item_desc("architect-report.generated", localized(view, format!("Created: {generated_en}"), format!("Erstellt: {generated_de}"))?, None),
+        tree_item_desc("architect-report.version", localized(view, format!("Version: {}", report.version), format!("Version: {}", report.version))?, None),
+    ])?;
+    let sections: Vec<_> = report.sections.iter().enumerate().collect();
+    PanelTreeBuilder::new("architect-report")?
+        .section("architect-report.meta", Some(ui_label(report.title.clone())?), true, meta)?
+        .window_section(windows, "architect-report.sections", Some(ui_label("Sections")?), true, &sections, |(index, section)| tree_item_desc(format!("architect-report.section.{index}"), ui_label(section)?, None))?
+        .build()
 }
 //#endregion 🔖️Render
 

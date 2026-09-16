@@ -4,6 +4,9 @@
   "status": "open",
   "description": "Get the 🖨️raster plugin (✏️s/🔌️plugins/🖨️raster) working end to end: the crate builds natively and for wasm32-wasip2, its tests and oracle fixtures pass, the descriptor is regenerated, and `bun run dev:raster` boots with every window rendering non-empty content, examples loading and switchable, and editor actions dispatching at runtime.",
   "goal": "🎯️r2602🎯️runningsketchpad🎯️runningsketchpadapps",
-  "sessions": ["⚪feae8329-6c36-42e3-88bd-6e53d7e1043a"],
-  "note": "Ticket bookkeeping done manually on disk: repo MCP timed out at session start (2026-09-05)."
+  "sessions": [
+    "⚪feae8329-6c36-42e3-88bd-6e53d7e1043a",
+    "⚪5255b245-8bb3-43e0-b401-962dcc3fea3c"
+  ],
+  "note": "Ticket bookkeeping done manually on disk: repo MCP timed out at session start (2026-09-05). 2026-09-16: react boot + interaction proven end to end (session ⚪5255b245, 📓️status.md); open items: adjustment params vs map-codec law, composed-child asset materialization, native test debt, wgpu boot."
 }

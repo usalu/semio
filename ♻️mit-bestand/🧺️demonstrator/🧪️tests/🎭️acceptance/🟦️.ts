@@ -1,6 +1,6 @@
 // #region 🧲️Header
 // 💻️ ♻️mit-bestand/🧺️demonstrator/🧪️demonstrator.acceptance.spec.ts
-// Specs: End-to-end acceptance coverage for the "Entwerfen mit Bestand" demonstrator's six live panes.
+// Specs: End-to-end acceptance coverage for the "Entwerfen mit Bestand" demonstrator's eight live panes.
 // Summary: For every `DEMONSTRATOR_PANES` entry, deep-links straight to `/#<paneId>` (the fast path that
 // boots exactly that one pane immediately instead of waiting through the 1.5s/35s sequential-boot queue —
 // see `🟦️.tsx`'s `paneIdFromLocationHash`/`useSequentialPaneBoot`), waits for that pane's own
@@ -9,7 +9,9 @@
 // asserts each window actually carries rendered content (not an empty surface, not the "wird vorbereitet"
 // `CanvasSkeleton`) by reading the same production `data-*-json`/`data-row-id` attributes each surface host
 // already stamps on itself (`World3dHost`'s `data-meshes-json`/`data-instances-json`, `NodeGraph`'s
-// `data-host-snapshot-json`, `Table`'s `data-row-id` rows) — no test-only instrumentation was added for
+// `data-host-snapshot-json`, `Table`'s `data-row-id` rows, and — for the two energy windows whose body is
+// a plain framework `Tree` rather than a surface host — the `role="treeitem"` rows `🌳️Tree/🟦️.tsx` emits)
+// — no test-only instrumentation was added for
 // this. `TiledMapHost` is the one surface with no such attribute, so it is graded from a composited
 // element screenshot instead (see `tiledMapHasVisibleContent` for why a canvas readback cannot work).
 // Known-defect windows are asserted exactly like every other window rather than being weakened or
@@ -150,10 +152,12 @@ async function dismissIntroductionIfPresent(page: Page, paneId: string): Promise
 //#endregion 🚦️ShellReadiness
 
 //#region 🪟️SurfaceContent
-type WindowSurfaceKind = "world3d" | "nodeGraph" | "table" | "tiledMap" | "placeholder";
+type WindowSurfaceKind = "world3d" | "nodeGraph" | "table" | "tree" | "tiledMap" | "placeholder";
 
 /** @emoji 🪟️ One window this pane is expected to open by default (per-app fixture/window research,
- * `.🧬semio/…/DEMONSTRATOR-END-TO-END-ALL-APPS/📓️app-*.md`). `instanceIds` covers a window kind opened as
+ * `.🧬semio/…/DEMONSTRATOR-END-TO-END-ALL-APPS/📓️app-*.md`; the energie/statik entries were read off the
+ * two standalone lanes instead, see `📓️fix-2026-09-17-energie-statik-acceptance-cases.md`).
+ * `instanceIds` covers a window kind opened as
  * several simultaneous instances (aggregator's split top/perspective puzzle3d-main views) — each instance
  * carries its OWN `id` plus a shared `data-element-alias` back to the kind id (`ShellHost/🟦️.tsx`
  * lines ~6687-6717). `expectContent` is false only for windows that are documented, distinct, *non-empty-
@@ -210,6 +214,35 @@ const PANE_CASES: readonly PaneCase[] = [
     windows: [{ kindId: "puzzle3d-main", instanceIds: ["puzzle3d-main-top", "puzzle3d-main-perspective"], surface: "world3d", expectContent: true }],
   },
   {
+    paneId: "energie",
+    windows: [
+      {
+        kindId: "energy.model.3d",
+        surface: "world3d",
+        expectContent: true,
+        note: "`s.energy.model@1/*#editor`'s Model viewport — `✏️editor/🎭️modes/✏️edit/🦀️.rs`'s `layout()` gives it `MODEL_VIEWPORT_SHARE` (0.55) of the edit-mode row, with Structure/Zones/Energy simulation stacked in the remaining column. Measured 2026-09-17 on the live demonstrator serve: `/#energie` reached `ready` in 11.5 s and all four windows carried content by 15.3 s, with no page or console errors; this window read 9 meshes / 9 instances. The brand's `defaults.exampleId` is `bestest-600`, whose `artifactJson` is byte-identical to the plugin's `demo` example, so the standalone energy lane (:6106) grades the same document.",
+      },
+      {
+        kindId: "framework.window.tree",
+        surface: "tree",
+        expectContent: true,
+        note: "Structure. The energy editor reuses the framework's generic `TreeWindowKit` kind id verbatim, so the window element is `framework.window.frameworkWindowTree` (`elementIdSegment` folds the dots) — the pane-scoped selector keeps that generic id from colliding with any other shell on the page. The body is a plain framework `Tree`, NOT a surface host, so there is no `.semio-*-host` to grade; measured on :6106 it carries 46 `role=\"treeitem\"` rows headed `BESTEST 600 (vashrae-140-5.2)`. NOTE: the committed `✏️s/🔌️plugins/🔋️energy/🔣️.json` still declares this kind as `surfaceKind: \"block-list\"` and omits `energy.model.3d` entirely — that descriptor is stale relative to the editor source and the served build; the live DOM is what this expectation is written from.",
+      },
+      {
+        kindId: "framework.window.table",
+        surface: "table",
+        expectContent: true,
+        note: "Zones — the generic `TableWindowKit` kind id, so the element is `framework.window.frameworkWindowTable`. BESTEST 600 is a single-zone model, so exactly one `[data-row-id]` row (`id/name/volumeM3/multiplier/conditioned/partOfTotalFloorArea` → `1 / Zone / 129.6 / 1 / true / true`) is the correct, fully-loaded content — the assertion floor of one row is deliberately not raised.",
+      },
+      {
+        kindId: "energy.simulation",
+        surface: "tree",
+        expectContent: true,
+        note: "Energy simulation. Also a framework `Tree` body (run transport, live region, editable run settings, keybinding list) rather than a surface host: 15 `role=\"treeitem\"` rows on a fresh document, headed `Kein Energiesimulationslauf` under this brand's locked German locale. This grades that the simulation window's projection rendered at all — it deliberately does NOT require a completed run, which is a user-started tool run (`toolRun*` on `energySimulation`), not part of boot.",
+      },
+    ],
+  },
+  {
     paneId: "aussuchen",
     windows: [
       { kindId: "sourcing-pool", surface: "table", expectContent: true },
@@ -231,6 +264,23 @@ const PANE_CASES: readonly PaneCase[] = [
   },
   { paneId: "bearbeiten", windows: [{ kindId: "process-workpiece", surface: "world3d", expectContent: true }] },
   { paneId: "verfolgen", windows: [{ kindId: "gis2d-main", surface: "tiledMap", expectContent: true }] },
+  {
+    paneId: "statik",
+    windows: [
+      {
+        kindId: "fem3d-model",
+        surface: "world3d",
+        expectContent: true,
+        note: "`s.fem.fem3d@1/*#editor` opens exactly two windows, Model and Results, split 50/50 by its default layout (`🪟️windows/🧱️model` + `📊️results`, both `SurfaceKind::World3d`). Measured 2026-09-17 on the live demonstrator serve: `/#statik` reached `ready` in 4.6 s and both windows carried 3 meshes / 47 instances at 6.0 s, with no page or console errors. On the standalone fem3d lane (:6087) the `demo` example reads the same 3/47 while `concrete-forest` — the id this pane's brand sets as `defaults.exampleId` — reads 2 meshes / 234 instances, so the served pane looks like it is still booting `demo`; that is a brand/default question for the coordinator, not a reason to weaken this assertion, which only requires a non-empty scene and passes on either example.",
+      },
+      {
+        kindId: "fem3d-results",
+        surface: "world3d",
+        expectContent: true,
+        note: "Results draws the same solid set as Model until a solve lands and then recolours it, so it is non-empty from the first frame and is graded exactly like Model (identical counts measured in both windows, plus a `Case: dead` caption). The expensive path here is the SOLVE, not the boot: `📓️fem3d-interactive-2026-09-16.md` clocks the House example at ~11 s in wasm. Neither this assertion nor the Model one waits on a solve, and the whole pane was measured ready+filled in 6 s on the live serve, so `SURFACE_CONTENT_TIMEOUT_MS`/`TEST_TIMEOUT_MS` need no per-pane relaxation the way verfolgen's slow tile paint does.",
+      },
+    ],
+  },
 ];
 
 /** @emoji 📖️ Parses a `data-*-json` attribute into its array length, treating a missing/unparsable
@@ -318,6 +368,19 @@ async function tableRowCount(container: Locator, requireContent = false): Promis
   if (requireContent) await host.first().waitFor({ state: "visible", timeout: SURFACE_CONTENT_TIMEOUT_MS }).catch(() => {});
   if ((await host.count()) === 0) return { hasScene: false, rows: 0 };
   const rows = await settleContentCount(() => host.locator("[data-row-id]").count(), requireContent);
+  return { hasScene: true, rows };
+}
+
+/** @emoji 🌳️ Two of energy's four windows (Structure, Energy simulation) have a plain framework `Tree`
+ * for a body rather than a surface host — `TreeWindowKit` builds a `TreeView`, and `🌳️Tree/🟦️.tsx`
+ * renders one `role="treeitem"` + `data-slot="tree-item-row"` element per row (lines ~1936/2013/2088).
+ * There is no `.semio-…-host`/`.semio-…-empty` pair to look for, so "did this window resolve" is
+ * answered by its `role="tree"` body attaching and "does it carry content" by the row count — both
+ * production attributes the framework already emits, in the same spirit as `data-row-id` for tables. */
+async function treeRowCount(container: Locator, requireContent = false): Promise<{ readonly hasScene: boolean; readonly rows: number }> {
+  const body = container.locator('[role="tree"]');
+  await expect(body.first()).toBeVisible({ timeout: SHELL_READY_TIMEOUT_MS });
+  const rows = await settleContentCount(() => container.locator('[role="treeitem"]').count(), requireContent);
   return { hasScene: true, rows };
 }
 
@@ -462,6 +525,10 @@ for (const paneCase of PANE_CASES) {
           const { hasScene, rows } = await tableRowCount(container, win.expectContent);
           expect(hasScene, `${label}: table surface never resolved past its empty placeholder`).toBe(true);
           if (win.expectContent) expect(rows, `${label}: expected at least one [data-row-id] row`).toBeGreaterThan(0);
+        } else if (win.surface === "tree") {
+          const { hasScene, rows } = await treeRowCount(container, win.expectContent);
+          expect(hasScene, `${label}: tree body never attached`).toBe(true);
+          if (win.expectContent) expect(rows, `${label}: expected at least one role="treeitem" row`).toBeGreaterThan(0);
         } else if (win.surface === "placeholder") {
           await expect(container, `${label}: expected its documented text placeholder`).toHaveText(win.placeholderPattern!, { timeout: SHELL_READY_TIMEOUT_MS });
         } else {

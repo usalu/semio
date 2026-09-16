@@ -11,7 +11,9 @@ async fn renders_icon_render_scene_with_real_request() {
     assert_eq!(request["format"], json!("svg"));
     assert_eq!(request["shape"], json!("rectangle"));
     assert!(request.get("background").is_none(), "transparent default fixture background is omitted");
+    assert_eq!(request["material"]["stroke"], json!("#000000"));
     assert_eq!(request["lights"]["sunAzimuth"], json!(45.0));
+    assert_eq!(request["camera"]["projection"], json!("perspective"));
     assert!(scene.footer.as_deref().unwrap().contains("256×256"));
 }
 

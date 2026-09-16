@@ -16,7 +16,7 @@ use crate::editor::puzzle3d::commands::{
     accept_suggestion, add_brush_object, add_object_kind, add_target_volume, apply_sun, close_vortex_suggestions, create_attraction, cycle_candidate, delete_attraction, delete_selection, delete_target_volume, duplicate_selection, engagement_abort, export_fixture,
     engagement_control_select, engagement_input, engagement_repeat_last, engagement_submit, focus_selection, hover_suggestion, import_fixture, open_import_fixture, open_vortex_suggestions, patch_inspector, register_brush_mesh, relocate_target_volume, rotate_selection,
     scale_selection, select_same_kind, set_active_example, set_automatic, set_brush_placement_contact_tolerance, set_camera, set_chunk_size, set_depth_variable, set_fill_count, set_kind_weight, set_manual, set_projection,
-    set_proximity_radius, set_selectable_kind, set_selection_flag, set_snap_enabled, set_spacing, set_target_volume_flag, set_transform_gumball_flag, set_panel_page, set_visible, set_vortex_direction, set_vortex_show, set_voxel_dims, target_brush_suggestions,
+    set_proximity_radius, set_selectable_kind, set_selection_flag, set_snap_enabled, set_spacing, set_target_volume_flag, set_transform_gumball_flag, set_visible, set_vortex_direction, set_vortex_show, set_voxel_dims, target_brush_suggestions,
     translate_selection, world_relocate,
 };
 use crate::editor::puzzle3d::config::{Puzzle3dConfig, Puzzle3dConfigMutation, Puzzle3dRuntime};
@@ -2615,7 +2615,6 @@ puzzle3d_command_variants! {
     SetLodAutomatic = "setLodAutomatic",
     SetLodDepthVariable = "setLodDepthVariable",
     SetGridVisible = "setGridVisible",
-    SetPanelPage = "setPanelPage",
     SetLodManual = "setLodManual",
     SetGridSnapEnabled = "setGridSnapEnabled",
     SetGridSpacing = "setGridSpacing",
@@ -2685,7 +2684,6 @@ impl protocol::OpBinary for Puzzle3dCommand {
         "setLodAutomatic",
         "setLodDepthVariable",
         "setGridVisible",
-        "setPanelPage",
         "setLodManual",
         "setGridSnapEnabled",
         "setGridSpacing",
@@ -2880,15 +2878,6 @@ impl<'a> Puzzle3dActionCtx<'a> {
 pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_ui_contract::Label> {
     semio_framework_ui_contract::Label::try_from(value.as_ref().to_string()).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "puzzle3d label admission failed"))
 }
-
-/// 🌳️ Admits fallibly assembled puzzle nodes into fixed child storage.
-pub fn ui_node_list(values: impl IntoIterator<Item = semio_framework_plugin::UiAssemblyResult<BuiltNode>>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiFixedList<BuiltNode>> {
-    let mut nodes = semio_framework_plugin::UiFixedList::default();
-    for value in values {
-        nodes.try_push(value?).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "puzzle3d node admission failed"))?;
-    }
-    Ok(nodes)
-}
 //#endregion 🔖️ActionContext
 
 //#region 🔖️ContextMenu
@@ -3079,16 +3068,14 @@ const PUZZLE3D_SESSION_PROBES: usize = 4;
 /// pre-session baseline, never a correctness change.
 const PUZZLE3D_SESSION_PROCESS_BYTES: usize = 96 * 1024 * 1024;
 
-/// 🧠 Everything one document instance keeps between two dispatches — the outliner tree included,
-/// now that `BuiltNode::credited_clone` gives a memoized tree an owned read. It is boxed (like the
-/// whole state), so the fixed slot row itself never carries the multi-kilobyte payload inline.
+/// 🧠 Everything one document instance keeps between two dispatches. It is boxed (like the whole
+/// state), so the fixed slot row itself never carries the multi-kilobyte payload inline.
 #[derive(Default)]
 struct Puzzle3dSessionState {
     /// 🚚️ Wave B44: the per-object instance residency, so the record text an unchanged object already
     /// has survives a dispatch and a worker hop exactly as the whole-set blob used to.
     instances: Option<Box<main::Puzzle3dInstanceResidency>>,
     meshes: Option<(u64, String)>,
-    artifact_tree: Option<(Puzzle3dArtifactTreeKey, Box<BuiltNode>)>,
     collision: Option<Puzzle3dCollisionSession>,
 }
 
@@ -3098,32 +3085,7 @@ impl Puzzle3dSessionState {
             .as_ref()
             .map_or(0, |residency| residency.bytes())
             .saturating_add(self.meshes.as_ref().map_or(0, |(_, meshes)| meshes.len()))
-            .saturating_add(self.artifact_tree.as_ref().map_or(0, |_| size_of::<BuiltNode>()))
             .saturating_add(self.collision.as_ref().map_or(0, Puzzle3dCollisionSession::bytes))
-    }
-}
-
-/// 🔑️ What the outliner memo is keyed on: the fixture's geometry fingerprint AND the identity of the
-/// resolved label set, because the same fixture renders different row text per locale×terminology.
-#[derive(Clone, Copy, PartialEq, Eq)]
-struct Puzzle3dArtifactTreeKey {
-    fingerprint: u64,
-    label_set: usize,
-    pages: u64,
-}
-
-impl Puzzle3dArtifactTreeKey {
-    fn of(fixture: &Puzzle3dFixture, labels: &Puzzle3dLabels, pages: &BTreeMap<String, u32>) -> Self {
-        let mut pages_digest = 0u64;
-        let mut keys: Vec<&String> = pages.keys().collect();
-        keys.sort();
-        for key in keys {
-            for byte in key.as_bytes() {
-                pages_digest = pages_digest.wrapping_mul(16777619) ^ u64::from(*byte);
-            }
-            pages_digest = pages_digest.wrapping_mul(16777619) ^ u64::from(pages[key]);
-        }
-        Self { fingerprint: main::fixture_geometry_fingerprint(fixture), label_set: std::ptr::from_ref(labels).addr(), pages: pages_digest }
     }
 }
 
@@ -3241,7 +3203,6 @@ fn puzzle3d_session_check_out(app_instance_id: u32, artifact_id: Option<&str>, a
     let (lease, state) = puzzle3d_session_registry().try_lock().ok()?.check_out(app_instance_id, artifact_id)?;
     *app.instance_residency.lock().expect("instance residency") = state.instances;
     *app.mesh_cache.lock().expect("mesh cache") = state.meshes;
-    *app.artifact_tree_cache.lock().expect("artifact cache") = state.artifact_tree;
     {
         let mut session = app.precompute.borrow_mut();
         if let Some(collision) = state.collision {
@@ -3258,7 +3219,6 @@ fn puzzle3d_session_check_in(lease: Puzzle3dSessionLease, app: &Puzzle3dPlayApp)
     let state = Puzzle3dSessionState {
         instances: app.instance_residency.lock().expect("instance residency").take(),
         meshes: app.mesh_cache.lock().expect("mesh cache").take(),
-        artifact_tree: app.artifact_tree_cache.lock().expect("artifact cache").take(),
         collision,
     };
     if let Ok(mut registry) = puzzle3d_session_registry().try_lock() {
@@ -3306,9 +3266,6 @@ thread_local! {
     /// counter instead of inferring cache behaviour from timings. Thread-local so one test's measurement
     /// cannot be perturbed by another test running concurrently in the same process.
     pub(crate) static PUZZLE3D_GEOMETRY_SERIALIZATIONS: std::cell::Cell<u32> = const { std::cell::Cell::new(0) };
-    /// 🔬️ How many times `artifact_tree_cached` genuinely rebuilt the outliner tree on THIS thread —
-    /// the counter the memo's laws read instead of inferring cache behaviour from timings.
-    pub(crate) static PUZZLE3D_ARTIFACT_TREE_BUILDS: std::cell::Cell<u32> = const { std::cell::Cell::new(0) };
     /// 🔬️ How many times `ArtifactApp::interaction_topology` decoded the document and rebuilt the whole
     /// object/vortex/attraction forest on THIS thread. One pick used to pay it TWICE — once in the
     /// framework's own `interactionSelect` arm and once in the revalidation behind it — which on the
@@ -3356,10 +3313,6 @@ pub struct Puzzle3dPlayApp {
     /// the source of the changed/removed id delta the world lane rides with.
     pub(crate) instance_residency: Mutex<Option<Box<main::Puzzle3dInstanceResidency>>>,
     mesh_cache: Mutex<Option<(u64, String)>>,
-    /// 🌳️ Boxed on purpose: `BuiltNode` is ~36 KiB by value, and this app object is built on the stack on
-    /// every dispatch and every render — inline it dominated `size_of::<Puzzle3dPlayApp>()` and was the
-    /// difference between a comfortable and an overflowing worker stack.
-    artifact_tree_cache: Mutex<Option<(Puzzle3dArtifactTreeKey, Box<BuiltNode>)>>,
 }
 
 impl Default for Puzzle3dPlayApp {
@@ -3368,7 +3321,6 @@ impl Default for Puzzle3dPlayApp {
             precompute: std::cell::RefCell::new(Box::new(Puzzle3dPrecomputeSession::new())),
             instance_residency: Mutex::new(None),
             mesh_cache: Mutex::new(None),
-            artifact_tree_cache: Mutex::new(None),
         }
     }
 }
@@ -3390,7 +3342,6 @@ impl Puzzle3dPlayApp {
         let mesh_miss = meshes.as_ref().is_none_or(|(cached, _)| *cached != fingerprint);
         if mesh_miss {
             *meshes = Some((fingerprint, main::world_meshes_json(fixture)));
-            *self.artifact_tree_cache.lock().expect("artifact cache") = None;
         }
         #[cfg(test)]
         if republished || mesh_miss {
@@ -3398,30 +3349,6 @@ impl Puzzle3dPlayApp {
         }
         let (_, meshes) = meshes.as_ref().expect("mesh cache populated");
         (residency.instances_json().to_string(), meshes.clone(), residency.delta_json().map(str::to_string))
-    }
-
-    #[cfg(test)]
-    /// 🌳️ The outliner body for one fixture, memoized on [`Puzzle3dArtifactTreeKey`] and carried by the
-    /// session slot, so a second dispatch against an unchanged document and label set pays one
-    /// `BuiltNode::credited_clone` instead of a full tree rebuild. A refused alias credit (the retirement
-    /// pool or the value arena is saturated) is never fatal: the memo is simply dropped and the caller
-    /// gets the freshly built tree — the pre-memo baseline.
-    pub(crate) fn artifact_tree_cached(&self, fixture: &Puzzle3dFixture, labels: &Puzzle3dLabels) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-        self.artifact_tree_cached_from(fixture, labels, &BTreeMap::new())
-    }
-
-    pub(crate) fn artifact_tree_cached_from(&self, fixture: &Puzzle3dFixture, labels: &Puzzle3dLabels, pages: &BTreeMap<String, u32>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-        let key = Puzzle3dArtifactTreeKey::of(fixture, labels, pages);
-        let mut cache = self.artifact_tree_cache.lock().expect("artifact cache");
-        if let Some(retained) = cache.as_ref().filter(|(cached, _)| *cached == key).and_then(|(_, node)| node.credited_clone()) {
-            return Ok(retained);
-        }
-        #[cfg(test)]
-        PUZZLE3D_ARTIFACT_TREE_BUILDS.with(|counter| counter.set(counter.get().saturating_add(1)));
-        cache.take();
-        let node = artifact::render_from(fixture, labels, pages)?;
-        *cache = node.credited_clone().map(|retained| (key, Box::new(retained)));
-        Ok(node)
     }
 
     /// 🧾️ Rebuilds the transient render bundle for one `(document, config, window)` triple, with the
@@ -3741,7 +3668,6 @@ fn dispatch_puzzle3d_action(ctx: &mut Puzzle3dActionCtx<'_>, action: &str, args:
         "setLodDepthVariable" => set_depth_variable::set_depth_variable(ctx, args),
         "setLodManual" => set_manual::set_manual(ctx, args),
         "setGridVisible" => set_visible::set_visible(ctx, args),
-        "setPanelPage" => set_panel_page::set_panel_page(ctx, args),
         "setGridSnapEnabled" => set_snap_enabled::set_snap_enabled(ctx, args),
         "setGridSpacing" => set_spacing::set_spacing(ctx, args),
         "setProximityRadius" => set_proximity_radius::set_proximity_radius(ctx, args),
@@ -3861,7 +3787,6 @@ pub(crate) const PUZZLE3D_RETAINED_TOOL_IDS: &[&str] = &[
     "setGridSnapEnabled",
     "setGridSpacing",
     "setGridVisible",
-    "setPanelPage",
     "setLodAutomatic",
     "setLodDepthVariable",
     "setLodManual",
@@ -7287,7 +7212,6 @@ impl ArtifactOwnedToolJobFactory for Puzzle3dRetainedCommandJobFactory {
         ArtifactToolPublicationContract { tool_id: "setGridSnapEnabled", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
         ArtifactToolPublicationContract { tool_id: "setGridSpacing", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
         ArtifactToolPublicationContract { tool_id: "setGridVisible", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
-        ArtifactToolPublicationContract { tool_id: "setPanelPage", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
         ArtifactToolPublicationContract { tool_id: "setLodAutomatic", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
         ArtifactToolPublicationContract { tool_id: "setLodDepthVariable", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
         ArtifactToolPublicationContract { tool_id: "setLodManual", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
@@ -7693,7 +7617,7 @@ impl Puzzle3dRetainedCommandProofs {
             "openAddObjectDialog", "worldPointerDown", "transformBegin", "transformEnd", "setActiveExample", "setFillCount",
             "addTargetVolume",
             "acceptSuggestion", "addBrushObject", "addObjectKind", "createAttraction", "deleteAttraction", "deleteSelection", "deleteTargetVolume", "duplicateSelection", "exportFixture", "importFixture", "openImportFixture", "patchInspector", "rotateSelection", "scaleSelection", "setSelectionFlag", "setTargetVolumeFlag", "translateSelection", "worldRelocate", "relocateTargetVolume",
-            "closeVortexSuggestions", "cycleBrushCandidate", "cycleBrushCandidateBack", "engagementAbort", "engagementControlSelect", "engagementInput", "engagementRepeatLast", "engagementSubmit", "focusSelection", "hoverSuggestion", "openVortexSuggestions", "registerBrushMesh", "selectSameKindSelection", "setBrushPlacementContactTolerance", "setCamera", "setChunkSize", "setGridSnapEnabled", "setGridSpacing", "setGridVisible", "setPanelPage", "setLodAutomatic", "setLodDepthVariable", "setLodManual", "setObjectKindWeight", "setProjection", "setProjectionParam", "setProximityRadius", "setSelectableKind", "setSunAzimuth", "setSunElevation", "setSunIntensity", "setTransformGumballFlag", "setVortexDirection", "setVortexKindWeight", "setVortexShow", "setVoxelDims", "targetBrushSuggestions", "toggleSun",
+            "closeVortexSuggestions", "cycleBrushCandidate", "cycleBrushCandidateBack", "engagementAbort", "engagementControlSelect", "engagementInput", "engagementRepeatLast", "engagementSubmit", "focusSelection", "hoverSuggestion", "openVortexSuggestions", "registerBrushMesh", "selectSameKindSelection", "setBrushPlacementContactTolerance", "setCamera", "setChunkSize", "setGridSnapEnabled", "setGridSpacing", "setGridVisible", "setLodAutomatic", "setLodDepthVariable", "setLodManual", "setObjectKindWeight", "setProjection", "setProjectionParam", "setProximityRadius", "setSelectableKind", "setSunAzimuth", "setSunElevation", "setSunIntensity", "setTransformGumballFlag", "setVortexDirection", "setVortexKindWeight", "setVortexShow", "setVoxelDims", "targetBrushSuggestions", "toggleSun",
         ]
     }
 }
@@ -7996,7 +7920,6 @@ impl ArtifactEditor for Puzzle3dPlayApp {
             | "setLodDepthVariable"
             | "setLodManual"
             | "setGridVisible"
-            | "setPanelPage"
             | "setGridSnapEnabled"
             | "setGridSpacing"
             | "setSelectableKind"
@@ -8356,9 +8279,12 @@ impl Puzzle3dPlayApp {
                     let suggestions = menu_target.and_then(|target| owner?.with_mut::<Puzzle3dInstanceOperationOwner, _>(|owner| Ok(owner.brush_suggestions.found(target).cloned())).ok().flatten());
                     main::render(&envelope, &precompute, instances_json, meshes_json, instances_delta_json, interaction, suggestions.as_ref())
                 }
-                artifact::BODY_KEY => app.artifact_tree_cached_from(&envelope.fixture, labels, &envelope.runtime.panel_pages),
-                catalogue::BODY_KEY => catalogue::render(&envelope, labels),
-                inspection::BODY_KEY => inspection::render(&envelope, interaction, labels),
+                // 🪟️ One `TreeWindows` read per body: the host's open/scroll state for exactly the body
+                // being rendered, so every container stamps its full `total` and materialises only the
+                // rows on screen (📓️design-virtualised-tree.md §5, §8).
+                artifact::BODY_KEY => artifact::render(&envelope.fixture, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, artifact::BODY_KEY)),
+                catalogue::BODY_KEY => catalogue::render(&envelope, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, catalogue::BODY_KEY)),
+                inspection::BODY_KEY => inspection::render(&envelope, interaction, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, inspection::BODY_KEY)),
                 settings_panel::BODY_KEY => settings_panel::render(&envelope, labels, wid),
                 _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "puzzle3d unknown-body label admission failed")),
             }
@@ -8572,7 +8498,6 @@ pub fn create_puzzle3d_app() -> semio_framework_plugin::AppDefinition {
             .view_action("setLodAutomatic", LocalizedLabel::native("Set Lod Automatic", "Detailstufe automatisch"))
             .view_action("setLodDepthVariable", LocalizedLabel::native("Set Lod Depth Variable", "Detailstufen-Tiefe festlegen"))
             .view_action("setGridVisible", LocalizedLabel::native("Set Grid Visible", "Raster anzeigen"))
-            .view_action("setPanelPage", LocalizedLabel::native("Set Panel Page", "Panel-Seite festlegen"))
             .view_action("setLodManual", LocalizedLabel::native("Set Lod Manual", "Detailstufe manuell"))
             .action_with(ActionDefinition::new("setGridSnapEnabled", LocalizedLabel::native("Set Grid Snap Enabled", "Rasterfang aktivieren"), ActionKind::View, "grid-3x3"))
             .view_action("setGridSpacing", LocalizedLabel::native("Set Grid Spacing", "Rasterabstand festlegen"))
@@ -8732,7 +8657,6 @@ pub fn create_puzzle3d_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("setGridSnapEnabled", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("setGridSpacing", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("setGridVisible", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setPanelPage", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("setLodAutomatic", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("setLodDepthVariable", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("setLodManual", semio_framework_plugin::InteractiveJobClassification::Migrated)

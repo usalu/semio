@@ -86,9 +86,55 @@
       "additionalProperties": {
         "$ref": "#/$defs/ToolRunTraceCursor"
       }
+    },
+    "treeWindows": {
+      "description": "Every tree container the host holds open/window state for, flattened over all panel bodies — the one source of truth a guest materialises its tree rows from.",
+      "type": "array",
+      "maxItems": 128,
+      "items": {
+        "$ref": "#/$defs/TreeWindowRequest"
+      }
+    },
+    "treeViewportRows": {
+      "description": "Rows the tallest visible panel body fits — the shared first-paint budget a guest spends over containers the host has not yet seen.",
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 4294967295
     }
   },
   "$defs": {
+    "TreeWindowRequest": {
+      "description": "One tree container's host-known state: whether the user opened or closed it (absent = the author's own default still stands) and the row window on screen, overscan included.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "bodyKey",
+        "nodeKey",
+        "offset",
+        "rows"
+      ],
+      "properties": {
+        "bodyKey": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "nodeKey": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "open": {
+          "type": "boolean"
+        },
+        "offset": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "rows": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        }
+      }
+    },
     "SessionIdentity": {
       "type": "object",
       "additionalProperties": false,

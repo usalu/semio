@@ -1158,8 +1158,8 @@ impl Fem2dPlayApp {
                     active_utility,
                 )
             }
-            artifact_panel::BODY_KEY => artifact_panel::render(doc.snapshot, &interaction, labels),
-            inspection_panel::BODY_KEY => inspection_panel::render(doc.snapshot, &interaction, labels),
+            artifact_panel::BODY_KEY => artifact_panel::render(doc.snapshot, &interaction, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, artifact_panel::BODY_KEY)),
+            inspection_panel::BODY_KEY => inspection_panel::render(doc.snapshot, &interaction, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, inspection_panel::BODY_KEY)),
             results_panel::BODY_KEY => results_panel::render(doc.snapshot, results_window::config::captured(cfg).as_ref(), &results_window_instance_id(view_state).unwrap_or_default(), labels),
             _ => built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "fem2d unknown-body label admission failed")),
         }
@@ -1177,15 +1177,6 @@ const FEM2D_CANVAS_UTILITIES: &[&str] = &["selectDirect", "selectMarquee", "sele
 /// 🏷️ Admits resolved fem2d text into the semantic UI contract.
 pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::plugin_app_close_prelude::Label> {
     semio_framework_plugin::plugin_app_close_prelude::Label::try_from(value.as_ref()).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "fem2d UI label admission failed"))
-}
-
-/// 🧾️ Admits a bounded row list — the one `UiFixedList` every section builder consumes.
-pub fn ui_node_list(values: impl IntoIterator<Item = semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode>>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiFixedList<semio_framework_plugin::BuiltNode>> {
-    let mut nodes = semio_framework_plugin::UiFixedList::default();
-    for value in values {
-        nodes.try_push(value?).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "fem2d UI node admission failed"))?;
-    }
-    Ok(nodes)
 }
 
 /// 🎛️ Mints one fem2d-controller action for a panel row or control binding.

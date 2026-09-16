@@ -193,7 +193,14 @@ pub(crate) mod context {
     /// fixture transport rather than serialized directly — a bare `serde_json::to_string(&tree.root)`
     /// now fails with `BuiltChildren requires retained page transport`.
     pub fn render(app: &mut Process3dRawApp, body_key: &str) -> String {
-        let tree = semio_framework_plugin::resolve_ready(app.render(body_key, None, &ViewModel::default())).expect("render");
+        render_with_view(app, body_key, &ViewModel::default())
+    }
+
+    /// 🪟️ Renders one body against a host view state — the seam every tree-window law drives, since
+    /// `ViewModel.tree_windows` is the ONLY way a caller states which containers are open and which
+    /// rows the viewport holds.
+    pub fn render_with_view(app: &mut Process3dRawApp, body_key: &str, view_state: &ViewModel) -> String {
+        let tree = semio_framework_plugin::resolve_ready(app.render(body_key, None, view_state)).expect("render");
         semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(tree).expect("render projection")
     }
     

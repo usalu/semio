@@ -1,10 +1,9 @@
 //! 🔍️ Animate presentation app panel — the inspector: field editors for the selected tile(s).
 
 use crate::editor::animate::terminology::AnimatePresentationLabels;
-use crate::editor::animate::{ui_children, ui_label, ui_node};
+use crate::editor::animate::{ui_label, ui_node_list};
 use crate::{PresentationSnapshot, PRESENTATION_DOCUMENT_SCHEMA};
-use semio_framework_plugin::{LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
-use semio_framework_ui_contract::{column, field, section, text, BuiltNode};
+use semio_framework_plugin::{tree_item_desc, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
 
 //#region 🔖️Constants
 pub const PRESENTATION_PLAY_BODY_DETAILS: &str = "animate.presentation.play.details";
@@ -30,14 +29,15 @@ pub fn definition() -> PanelTabDefinition {
 /// `handle`/`copy_fragment`/`cut_operations` are). Documented reduced-fidelity gap, same shape as
 /// `🖍️draw`'s `properties` panel (`🎛️apps/🖍️draw/📌️panels/🔍️properties/🦀️.rs`): falls through
 /// to a schema/tile-count summary until a resolved-selection render path exists.
-pub fn render(deck: &PresentationSnapshot, labels: &AnimatePresentationLabels) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(deck: &PresentationSnapshot, labels: &AnimatePresentationLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let (_, tiles) = crate::presentation_working_scene(deck);
-    let schema = ui_node(text(ui_label(PRESENTATION_DOCUMENT_SCHEMA)?), "animate-presentation-play-inspector.schema.value")?;
-    let tile_count = ui_node(text(ui_label(tiles.len().to_string())?), "animate-presentation-play-inspector.tiles.value")?;
-    let schema = ui_node(ui_children(field(ui_label(labels.details_schema_field.as_str())?), [schema])?, "animate-presentation-play-inspector.schema")?;
-    let tile_count = ui_node(ui_children(field(ui_label(labels.details_tiles_field.as_str())?), [tile_count])?, "animate-presentation-play-inspector.tiles")?;
-    let summary = ui_node(ui_children(section(ui_label(labels.details_title.as_str())?).default_open(true), [schema, tile_count])?, "animate-presentation-play-inspector.empty")?;
-    ui_node(ui_children(column(), [summary])?, "animate-presentation-play-inspector")
+    let items = ui_node_list([
+        tree_item_desc("animate-presentation-play-inspector.schema", ui_label(labels.details_schema_field.as_str())?, Some(PRESENTATION_DOCUMENT_SCHEMA.into())),
+        tree_item_desc("animate-presentation-play-inspector.tiles", ui_label(labels.details_tiles_field.as_str())?, Some(tiles.len().to_string())),
+    ])?;
+    PanelTreeBuilder::new("animate-presentation-play-inspector")?
+        .section("animate-presentation-play-inspector.summary", Some(ui_label(labels.details_title.as_str())?), true, items)?
+        .build()
 }
 //#endregion 🔖️Render
 

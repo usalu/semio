@@ -25,7 +25,7 @@ describe("⏯️ framework ToolRun panel", () => {
   it("renders a running run's group with its progressbar and dispatches its buttons with the run's identity", async () => {
     const dispatched: any[] = [];
     const body = hostNode(panelFixture);
-    const config = uiNodeToTreePanelConfig(body, (action) => dispatched.push(action));
+    const config = uiNodeToTreePanelConfig(body, (action) => dispatched.push(action), "framework.panel.toolRun");
     render(createElement(Fragment, null, config.emptyState));
     expect(document.querySelector('[aria-label="Toy fill"]')?.getAttribute("data-ui-node-key")).toBe("framework.toolRun.1");
     expect(screen.getByRole("progressbar")).toBeTruthy();

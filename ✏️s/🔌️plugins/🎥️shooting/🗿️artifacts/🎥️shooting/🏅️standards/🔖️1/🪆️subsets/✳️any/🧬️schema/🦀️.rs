@@ -153,11 +153,19 @@ fn shooting_scene_to_semio_drawing(snapshot: &ShootingSnapshot) -> (SemioDrawing
     let asset = active_asset(snapshot);
     let (width, height) = shot.map_or((256, 256), |entry| (entry.width, entry.height));
     let shape = shot.map_or("rectangle", |entry| entry.shape.as_str());
-    let background_hex = if snapshot.scene.background.is_empty() { "#0f172a" } else { snapshot.scene.background.as_str() };
-    let background_rgba = shooting_hex_color_to_rgba(background_hex).unwrap_or(SemioRgba { r: 0.058_824, g: 0.090_196, b: 0.164_706, a: 1.0 });
+    let shot_background = shot.and_then(|entry| entry.background.clone()).unwrap_or_else(|| snapshot.scene.background.clone());
     let label = asset.map_or("Untitled", |entry| entry.name.as_str());
 
-    let mut children = vec![DrawNode::Path { segments: shooting_shape_path_segments(shape, width as f64, height as f64), style: Some("background".into()) }];
+    let mut children = Vec::new();
+    let mut styles = vec![DrawStyle { name: "label".into(), fill: Some(SemioRgba { r: 1.0, g: 1.0, b: 1.0, a: 1.0 }), stroke: None, stroke_width: None, opacity: None }];
+    let canvas_background = if is_transparent_shooting_background(&shot_background) {
+        None
+    } else {
+        let background_rgba = shooting_hex_color_to_rgba(&shot_background).unwrap_or(SemioRgba { r: 1.0, g: 1.0, b: 1.0, a: 1.0 });
+        children.push(DrawNode::Path { segments: shooting_shape_path_segments(shape, width as f64, height as f64), style: Some("background".into()) });
+        styles.insert(0, DrawStyle { name: "background".into(), fill: Some(background_rgba), stroke: None, stroke_width: None, opacity: None });
+        Some(background_rgba)
+    };
     if let Some(bytes) = crate::shooting_emblem_bytes(snapshot).filter(|bytes| !bytes.is_empty()) {
         children.push(DrawNode::Image { at: SemioPoint2 { x: 0.0, y: 0.0 }, width: width as f64, height: height as f64, mime: "image/png".into(), bytes });
     }
@@ -165,11 +173,8 @@ fn shooting_scene_to_semio_drawing(snapshot: &ShootingSnapshot) -> (SemioDrawing
 
     let drawing = SemioDrawingSnapshot {
         schema: STDIO_SEMIODRAWING_DOCUMENT_SCHEMA.into(),
-        canvas: DrawCanvas { width: width as f64, height: height as f64, background: Some(background_rgba) },
-        styles: vec![
-            DrawStyle { name: "background".into(), fill: Some(background_rgba), stroke: None, stroke_width: None, opacity: None },
-            DrawStyle { name: "label".into(), fill: Some(SemioRgba { r: 1.0, g: 1.0, b: 1.0, a: 1.0 }), stroke: None, stroke_width: None, opacity: None },
-        ],
+        canvas: DrawCanvas { width: width as f64, height: height as f64, background: canvas_background },
+        styles,
         layers: vec![DrawLayer { id: "scene".into(), name: "scene".into(), visible: true, root: DrawNode::Group { transform: SemioTransform::identity(), children } }],
     };
     (drawing, width, height)
@@ -281,6 +286,7 @@ pub fn shooting_icon_render_request_json(snapshot: &ShootingSnapshot, shot: &Sho
         "target": vec3(camera.target),
         "zoom": camera.zoom,
         "fov": camera.fov,
+        "projection": camera.projection.clone().unwrap_or_else(|| "perspective".into()),
     });
     if let (Some(object), Some(up)) = (camera_value.as_object_mut(), camera.up) {
         object.insert("up", vec3(up));
@@ -308,6 +314,7 @@ pub fn shooting_icon_render_request_json(snapshot: &ShootingSnapshot, shot: &Sho
             "roughness": scene.material.roughness,
             "emissive": scene.material.emissive.as_str(),
             "emissiveIntensity": scene.material.emissive_intensity,
+            "stroke": scene.material.stroke.as_str(),
         },
     });
     if let Some(object) = value.as_object_mut() {

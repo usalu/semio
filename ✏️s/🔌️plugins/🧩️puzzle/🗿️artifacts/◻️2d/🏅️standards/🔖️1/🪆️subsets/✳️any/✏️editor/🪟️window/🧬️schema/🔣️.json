@@ -24,8 +24,7 @@
         "engagementInput": {"type": "string", "x-semio-state": "window-transient"},
         "brushCandidateIndex": {"type": "integer", "minimum": 0, "x-semio-state": "window-transient"},
         "brushCandidates": {"type": "array", "items": {}, "x-semio-state": "window-transient"},
-        "brushCandidateSourceHandleId": {"type": "string", "x-semio-state": "window-transient"},
-        "panelPages": {"type": "object", "additionalProperties": {"type": "integer", "minimum": 0}, "x-semio-state": "window-transient"}
+        "brushCandidateSourceHandleId": {"type": "string", "x-semio-state": "window-transient"}
       }
     }
   },

@@ -3,7 +3,7 @@
 
 use crate::Block3dSnapshot;
 use crate::editor::block3d::terminology::Block3dLabels;
-use crate::editor::block3d::{block3d_action, ui_label, ui_node_list, ui_value_map, ui_value_text};
+use crate::editor::block3d::{block3d_action, ui_label, ui_value_map, ui_value_text};
 use semio_framework_plugin::{
     Buildable, BuiltNode, HasBase, HasChildren, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, Trigger, UiAssemblyResult, UiText, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
     FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
@@ -37,7 +37,7 @@ fn ui_value(value: &str) -> UiAssemblyResult<UiText> {
 
 /// 🏷️ Wraps one built control in its labeled field row.
 fn field_row(id: &str, label: &str, control: BuiltNode) -> UiAssemblyResult<BuiltNode> {
-    ui::field(ui_label(label)?)
+    ui::tree_item(ui_label(label)?)
         .try_id(id)
         .map_err(|_| inspector_error("field-id"))?
         .try_children([control])
@@ -85,7 +85,7 @@ fn representation_field(definition: &Block3dSnapshot, active_representation_id: 
 }
 
 pub fn render(definition: &Block3dSnapshot, active_representation_id: Option<&str>, labels: &Block3dLabels) -> UiAssemblyResult<BuiltNode> {
-    let rows = ui_node_list([
+    let rows = semio_framework_plugin::ui_node_list([
         text_field("block3d-play-inspector.name", labels.name.as_str(), &definition.object_kind.name, "name"),
         text_field("block3d-play-inspector.label", labels.label.as_str(), &definition.object_kind.label, "label"),
         representation_field(definition, active_representation_id, labels.representation.as_str()),

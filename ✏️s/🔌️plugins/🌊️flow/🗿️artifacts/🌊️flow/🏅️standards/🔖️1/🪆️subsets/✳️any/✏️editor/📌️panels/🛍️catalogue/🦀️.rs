@@ -4,12 +4,13 @@ use crate::editor::flow::commands::run_extension_action::FLOW_AUTOMATIONS;
 use crate::editor::flow::modes::edit::windows::main::config::FlowMainWindowConfig;
 use crate::editor::flow::host_from_snapshot;
 use crate::editor::flow::terminology::{flow_extension_action_title_label, flow_extension_label, FlowPlayLabels};
-use crate::editor::flow::{flow_action, ui_node_list, ui_value_bool, ui_value_map, ui_value_text};
+use crate::editor::flow::{flow_action, ui_value_bool, ui_value_map, ui_value_text};
 use crate::FlowSnapshot;
 use flow::FlowEvalSession;
 use semio_framework_plugin::plugin_app_close_prelude::Label;
 use semio_framework_plugin::{
-    tree_item_with_action, tree_item_with_action_draggable, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+    tree_item_with_action, tree_item_with_action_draggable, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, TreeWindows, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
+    FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
 };
 use serde_json::Value;
 
@@ -54,7 +55,7 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(snapshot: &FlowSnapshot, config: &FlowMainWindowConfig, session: &FlowEvalSession, labels: &FlowPlayLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(snapshot: &FlowSnapshot, config: &FlowMainWindowConfig, session: &FlowEvalSession, labels: &FlowPlayLabels, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let host = host_from_snapshot(snapshot, config, session);
     let raw = host.catalogue_json().map_err(|error| PluginAssemblyError::new("ui.catalogue", error.to_string()))?;
     let catalogue: Value = serde_json::from_str(&raw).map_err(|error| PluginAssemblyError::new("ui.catalogue", error.to_string()))?;
@@ -67,7 +68,7 @@ pub fn render(snapshot: &FlowSnapshot, config: &FlowMainWindowConfig, session: &
         let id = section.get("id").and_then(Value::as_str).ok_or_else(|| PluginAssemblyError::new("ui.catalogue", "flow catalogue section id is required"))?;
         let title = section.get("title").and_then(Value::as_str).unwrap_or(id);
         let entries = section.get("items").and_then(Value::as_array).ok_or_else(|| PluginAssemblyError::new("ui.catalogue", "flow catalogue section items are required"))?;
-        let items = ui_node_list(entries.iter().map(|entry| {
+        builder = builder.window_section(windows, &format!("flow-play-catalogue.{id}"), Some(ui_label(title)?), true, entries, |entry| {
             let kind = entry.get("kind").and_then(Value::as_str).ok_or_else(|| PluginAssemblyError::new("ui.catalogue", "flow catalogue item kind is required"))?;
             let label = entry.get("name").or_else(|| entry.get("abbreviation")).and_then(Value::as_str).unwrap_or(kind);
             let neuron_kind = (kind == "neuron").then(|| entry.get("neuronKind").and_then(Value::as_str)).flatten();
@@ -77,27 +78,25 @@ pub fn render(snapshot: &FlowSnapshot, config: &FlowMainWindowConfig, session: &
                 None => ui_value_map([("kind", ui_value_text(kind)?)])?,
             };
             tree_item_with_action_draggable(format!("flow-play-catalogue.{id}.{kind}.{label}"), label, Some(kind.to_string()), flow_action("addWidget", Some(action_args))?, &flow_widget_drag_json(&descriptor))
-        }))?;
-        builder = builder.section(format!("flow-play-catalogue.{id}"), Some(ui_label(title)?), true, items)?;
+        })?;
     }
-    append_extension_sections(builder, config, labels)?.build()
+    append_extension_sections(builder, config, labels, windows)?.build()
 }
 
 /// 🧩️ Installed/enabled extension palette plus actions surfaced by active extensions.
-fn append_extension_sections(mut builder: PanelTreeBuilder, config: &FlowMainWindowConfig, labels: &FlowPlayLabels) -> semio_framework_plugin::UiAssemblyResult<PanelTreeBuilder> {
+fn append_extension_sections(mut builder: PanelTreeBuilder, config: &FlowMainWindowConfig, labels: &FlowPlayLabels, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<PanelTreeBuilder> {
     let extension_enabled = config.automation_enabled();
-    let installed = ui_node_list(FLOW_AUTOMATIONS.iter().map(|(id, name, _, _, _)| {
+    let enabled_actions: Vec<&(&str, &str, &str, &str, &str)> = FLOW_AUTOMATIONS.iter().filter(|(id, ..)| extension_enabled.get(*id).copied().unwrap_or(false)).collect();
+    builder = builder.window_section(windows, "flow-play-extensions.installed", Some(ui_label(labels.extensions.as_str())?), false, FLOW_AUTOMATIONS, |(id, name, _, _, _)| {
         let enabled = extension_enabled.get(*id).copied().unwrap_or(false);
         let args = ui_value_map([("enabled", ui_value_bool(!enabled)), ("id", ui_value_text(id)?)])?;
         tree_item_with_action(format!("flow-play-extensions.{id}"), flow_extension_label(id, name, labels).into_string(), Some(if enabled { "enabled".into() } else { "disabled".into() }), flow_action("toggleExtension", Some(args))?)
-    }))?;
-    let actions = ui_node_list(FLOW_AUTOMATIONS.iter().filter(|(id, ..)| extension_enabled.get(*id).copied().unwrap_or(false)).map(|(_, _, action_id, title, _)| {
-        let args = ui_value_map([("actionId", ui_value_text(action_id)?)])?;
-        tree_item_with_action(format!("flow-play-extensions.action.{action_id}"), flow_extension_action_title_label(action_id, title, labels).into_string(), Some((*action_id).into()), flow_action("runExtensionAction", Some(args))?)
-    }))?;
-    builder = builder.section("flow-play-extensions.installed", Some(ui_label(labels.extensions.as_str())?), false, installed)?;
-    if !actions.is_empty() {
-        builder = builder.section("flow-play-extensions.actions", Some(ui_label(labels.extension_actions.as_str())?), false, actions)?;
+    })?;
+    if !enabled_actions.is_empty() {
+        builder = builder.window_section(windows, "flow-play-extensions.actions", Some(ui_label(labels.extension_actions.as_str())?), false, &enabled_actions, |(_, _, action_id, title, _)| {
+            let args = ui_value_map([("actionId", ui_value_text(action_id)?)])?;
+            tree_item_with_action(format!("flow-play-extensions.action.{action_id}"), flow_extension_action_title_label(action_id, title, labels).into_string(), Some((*action_id).into()), flow_action("runExtensionAction", Some(args))?)
+        })?;
     }
     Ok(builder)
 }

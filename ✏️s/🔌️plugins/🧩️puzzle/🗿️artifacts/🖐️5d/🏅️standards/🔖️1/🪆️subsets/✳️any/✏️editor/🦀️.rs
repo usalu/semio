@@ -3727,15 +3727,6 @@ fn puzzle5d_interaction_part_and_fastener_ids(interaction: &InteractionView<'_>)
 pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_ui_contract::Label> {
     semio_framework_ui_contract::Label::try_from(value.as_ref().to_string()).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "puzzle5d label admission failed"))
 }
-
-/// 🌳️ Admits fallibly assembled puzzle nodes into fixed child storage.
-pub fn ui_node_list(values: impl IntoIterator<Item = semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode>>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiFixedList<semio_framework_plugin::BuiltNode>> {
-    let mut nodes = semio_framework_plugin::UiFixedList::default();
-    for value in values {
-        nodes.try_push(value?).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "puzzle5d node admission failed"))?;
-    }
-    Ok(nodes)
-}
 //#endregion 🔖️ActionContext
 
 //#region 🔖️PlayApp
@@ -7913,11 +7904,14 @@ impl ArtifactEditor for Puzzle5dPlayApp {
         let active_utility = puzzle5d_scene_active_utility(Some(view_state), Some(window_for_body));
         let envelope = scene_from_projection(&projection, runtime, &active_utility);
         let labels = puzzle5d_labels(view_state).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.localization.unsupported", "puzzle5d has no authored label set for the host's locale/terminology axes"))?;
+        // 🪟️ One `TreeWindows` per render, read off the host's `ViewModel::tree_windows` for exactly
+        // the body being rendered — every panel container below shares its first-paint row budget.
+        let windows = semio_framework_plugin::TreeWindows::for_body(view_state, body_key);
         let node = match body_key {
             board2d::BODY_KEY => board2d::render(&envelope),
             world3d::BODY_KEY => world3d::render(&envelope, doc.tool_run(), &crate::editor::puzzle5d::precompute::puzzle5d_mesh_lane(doc.snapshot, &envelope.document)),
-            artifact_panel::BODY_KEY => artifact_panel::render(&envelope, labels),
-            catalogue::BODY_KEY => catalogue::render(&envelope, labels),
+            artifact_panel::BODY_KEY => artifact_panel::render(&envelope, labels, &windows),
+            catalogue::BODY_KEY => catalogue::render(&envelope, labels, &windows),
             inspection::BODY_KEY => inspection::render(&envelope, labels),
             _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "puzzle5d unknown-body label admission failed")),
         }?;
@@ -7940,11 +7934,14 @@ impl ArtifactEditor for Puzzle5dPlayApp {
         let active_utility = puzzle5d_scene_active_utility(Some(view_state), Some(window_id));
         let envelope = scene_from_projection(&projection, runtime, &active_utility);
         let labels = puzzle5d_labels(view_state).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.localization.unsupported", "puzzle5d has no authored label set for the host's locale/terminology axes"))?;
+        // 🪟️ One `TreeWindows` per render, read off the host's `ViewModel::tree_windows` for exactly
+        // the body being rendered — every panel container below shares its first-paint row budget.
+        let windows = semio_framework_plugin::TreeWindows::for_body(view_state, body_key);
         let node = match body_key {
             board2d::BODY_KEY => board2d::render(&envelope),
             world3d::BODY_KEY => world3d::render(&envelope, doc.tool_run(), &crate::editor::puzzle5d::precompute::puzzle5d_mesh_lane(doc.snapshot, &envelope.document)),
-            artifact_panel::BODY_KEY => artifact_panel::render(&envelope, labels),
-            catalogue::BODY_KEY => catalogue::render(&envelope, labels),
+            artifact_panel::BODY_KEY => artifact_panel::render(&envelope, labels, &windows),
+            catalogue::BODY_KEY => catalogue::render(&envelope, labels, &windows),
             inspection::BODY_KEY => inspection::render(&envelope, labels),
             _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "puzzle5d unknown-body label admission failed")),
         }?;

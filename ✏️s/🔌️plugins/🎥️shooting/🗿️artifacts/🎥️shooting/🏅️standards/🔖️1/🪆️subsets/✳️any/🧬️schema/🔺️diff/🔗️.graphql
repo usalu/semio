@@ -146,6 +146,7 @@ type ShootingMaterial {
   roughness: Float!
   emissive: String!
   emissiveIntensity: Float!
+  stroke: String!
 }
 
 type ShootingSceneLighting {

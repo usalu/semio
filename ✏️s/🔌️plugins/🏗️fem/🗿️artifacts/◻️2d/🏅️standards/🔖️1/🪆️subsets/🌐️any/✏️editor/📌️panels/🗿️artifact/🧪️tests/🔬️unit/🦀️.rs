@@ -1,6 +1,8 @@
 use super::*;
 use crate::editor::fem2d::terminology::fem2d_labels;
-use semio_framework_plugin::{ComponentTree, Locale, ViewModel};
+use semio_framework_plugin::plugin_app_close_prelude::Component;
+use semio_framework_plugin::{ComponentTree, Locale, TreeWindowRequest, ViewModel, INTERACTION_SELECT_ACTION_ID};
+use semio_framework_ui_contract::{TreeWindow, UI_BUILT_CHILDREN_MAX};
 
 //#region 🔖️Fixtures
 fn demo() -> Fem2dSnapshot {
@@ -15,8 +17,18 @@ fn german() -> &'static Fem2dLabels {
     fem2d_labels(&ViewModel { locale: Locale::De, ..Default::default() })
 }
 
+/// 🪟️ A host viewport tall enough to hold the demo whole — the label, nesting and keying laws read
+/// the tree itself, so they ask for every row rather than one screenful.
+fn wide_view() -> ViewModel {
+    ViewModel { tree_viewport_rows: Some(512), ..Default::default() }
+}
+
+fn build_for(document: &Fem2dSnapshot, labels: &Fem2dLabels, view: &ViewModel) -> BuiltNode {
+    render(document, &Fem2dInteractionSnapshot::default(), labels, &TreeWindows::for_body(view, BODY_KEY)).expect("fem2d artifact tree assembly")
+}
+
 fn build(document: &Fem2dSnapshot, labels: &Fem2dLabels) -> BuiltNode {
-    render(document, &Fem2dInteractionSnapshot::default(), labels).expect("fem2d artifact tree assembly")
+    build_for(document, labels, &wide_view())
 }
 
 fn projection(node: BuiltNode) -> String {
@@ -43,26 +55,57 @@ fn row_keys(parent: &BuiltNode) -> Vec<&str> {
     parent.children.iter().map(|row| row.key.as_str()).collect()
 }
 
-/// ➕️ The count a truncated section's `+N` continuation row names, or zero when nothing was omitted.
-fn omitted(parent: &BuiltNode, suffix: &str) -> usize {
-    let key = format!("{TREE_NAMESPACE}.{suffix}.more");
-    parent.children.iter().find(|row| row.key.as_str() == key).map_or(0, |row| match &row.component {
-        Component::TreeItem(props) => props.label.0.as_str().trim_start_matches('+').parse().expect("continuation count"),
-        _ => panic!("continuation row is a tree item"),
-    })
+/// 🪟️ The window a container stamps — the full logical extent plus the offset of the slice it built.
+/// An empty list the host has never asked about stamps nothing, which is the same statement as an
+/// extent of zero.
+fn window_or_empty(node: &BuiltNode) -> Option<TreeWindow> {
+    match &node.component {
+        Component::TreeSection(props) => props.window,
+        Component::TreeItem(props) => props.window,
+        _ => panic!("a windowed container is a tree section or a nesting tree item"),
+    }
 }
 
-fn placed(parent: &BuiltNode, suffix: &str) -> usize {
-    let continuation = format!("{TREE_NAMESPACE}.{suffix}.more");
-    parent.children.iter().filter(|row| row.key.as_str() != continuation).count()
+fn window_of(node: &BuiltNode) -> TreeWindow {
+    window_or_empty(node).expect("a non-empty container stamps its window")
+}
+
+fn extent_of(node: &BuiltNode) -> usize {
+    window_or_empty(node).map_or(0, |window| window.total as usize)
+}
+
+/// 🪟️ One host window request for a container of this body.
+fn request(node_key: &str, open: Option<bool>, offset: u32, rows: u32) -> TreeWindowRequest {
+    TreeWindowRequest { body_key: BODY_KEY.into(), node_key: node_key.into(), open, offset, rows }
+}
+
+fn viewing(requests: Vec<TreeWindowRequest>) -> ViewModel {
+    ViewModel { tree_windows: requests, ..Default::default() }
+}
+
+/// 🧱️ A document an order of magnitude past one viewport: 60 nodes and a 40-load wind case.
+fn oversized() -> Fem2dSnapshot {
+    let mut document = demo();
+    document.nodes = (0..60).map(|index| FemNode { id: format!("g{index}"), x: index as f64, y: 0.0 }).collect();
+    document.load_cases.push(FemLoadCase {
+        id: "wind".into(),
+        name: "Wind".into(),
+        loads: (0..40).map(|index| FemLoad::Nodal { id: format!("wl{index}"), node_id: "g0".into(), dof: FemDof::Tx, value: 1000.0 }).collect(),
+        self_weight: false,
+    });
+    document
 }
 
 const SECTION_SUFFIXES: [&str; SECTIONS] = ["nodes", "elements", "regions", "supports", "load-cases", "combinations", "materials", "sections", "analysis"];
+
+fn section_totals(document: &Fem2dSnapshot) -> [usize; SECTIONS] {
+    [document.nodes.len(), document.elements.len(), document.regions.len(), document.supports.len(), document.load_cases.len(), document.combinations.len(), document.materials.len(), document.sections.len(), 1]
+}
 //#endregion 🔖️Fixtures
 
 //#region 🔖️Structure
 /// 🌳️ The demo document reaches every section, each header names the document's own count, and each
-/// section accounts for every entity it owns — placed rows plus what its `+N` row says it left out.
+/// section stamps that same count as the extent of the list it is a window onto.
 #[semio_framework_async_macros::async_test]
 async fn demo_document_lists_every_section_with_its_own_count() {
     let document = demo();
@@ -82,7 +125,8 @@ async fn demo_document_lists_every_section_with_its_own_count() {
     for (suffix, noun, count) in expected {
         let node = section_node(&tree, suffix);
         assert!(json.contains(&format!("{noun} ({count})")), "section {suffix} header names its own count: {json}");
-        assert_eq!(placed(node, suffix) + omitted(node, suffix), count, "section {suffix} accounts for every entity");
+        assert_eq!(extent_of(node), count, "section {suffix} stamps the extent of its own list");
+        assert_eq!(node.children.len(), count.max(1), "a viewport this tall materialises section {suffix} whole");
     }
     assert!(json.contains("Modal Count 3 · Buckling Count 3 · Deformation Scale 300"), "the analysis row carries the three settings");
     assert_eq!(document.nodes.len(), 12, "the bundled demo is the portal frame");
@@ -116,11 +160,13 @@ async fn load_case_rows_nest_their_loads_and_combination_rows_nest_their_terms()
     let cases = section_node(&tree, "load-cases");
     let dead = cases.children.iter().find(|row| row.key.as_str() == "dead").expect("dead case row");
     assert_eq!(row_keys(dead), vec!["l5"]);
+    assert_eq!(window_of(dead).total, 1, "a case row stamps the extent of its own loads");
     let live = cases.children.iter().find(|row| row.key.as_str() == "live").expect("live case row");
     assert_eq!(row_keys(live), vec!["l6", "l7"]);
     let uls = section_node(&tree, "combinations").children.iter().find(|row| row.key.as_str() == "uls").expect("uls row");
     assert_eq!(row_keys(uls), vec![format!("{TREE_NAMESPACE}.term.uls.dead").as_str(), format!("{TREE_NAMESPACE}.term.uls.live").as_str()]);
     assert_eq!(row_labels(uls), vec!["1.35 dead".to_string(), "1.5 live".to_string()]);
+    assert_eq!(window_of(uls).total, 2, "a combination row stamps the extent of its own terms");
     let json = projection(build(&document, english()));
     assert!(json.contains(FEM2D_GRANULARITY_LOAD_CASE), "{json}");
     assert!(json.contains(FEM2D_GRANULARITY_LOAD));
@@ -191,24 +237,27 @@ async fn german_labels_resolve_across_the_whole_tree() {
 //#endregion 🔖️Labels
 
 //#region 🔖️Interaction
-/// 🕹️ A node row carries the framework `interactionSelect` args naming the `"fem2d"` domain, the
-/// `node` granularity and the raw id — the same payload a canvas pick sends — and no row actions.
+/// 🕹️ A node row DECLARES its pick — `granularity` plus its own raw key — and binds nothing: the
+/// whole tree carries exactly one `interactionSelect`, so a wide section costs no argument arena and
+/// no row actions compete with the panels rendered beside it.
 #[semio_framework_async_macros::async_test]
-async fn a_node_row_binds_the_interaction_select_args_for_its_own_id() {
+async fn rows_declare_their_granularity_while_the_tree_binds_the_one_interaction_select() {
     let document = demo();
     let tree = build(&document, english());
     let row = section_node(&tree, "nodes").children.iter().find(|row| row.key.as_str() == "n1").expect("n1 row");
-    let binding = row.bindings.iter().next().expect("n1 row binds an action");
-    assert_eq!(binding.action.name.as_str(), INTERACTION_SELECT_ACTION_ID);
-    assert_eq!(binding.action.scope.as_str(), crate::editor::fem2d::FEM2D_PLAY_CONTROLLER_ID);
+    assert!(row.bindings.iter().next().is_none(), "a pick row binds no action of its own");
     let Component::TreeItem(props) = &row.component else { panic!("tree item") };
-    assert!(props.row_actions.is_empty(), "a row authors its pick only — focus and delete live in the inspector, so a page of rows leaves arena credit for the panels beside the tree");
+    assert_eq!(props.granularity.as_ref().map(|text| text.as_str()), Some(FEM2D_GRANULARITY_NODE));
+    assert!(props.row_actions.is_empty(), "a row authors its pick only — focus and delete live in the inspector");
     assert_eq!(props.description.as_ref().map(|text| text.as_str()), Some("Node"));
 
+    let binding = tree.bindings.iter().next().expect("the tree binds the domain select");
+    assert_eq!(binding.action.name.as_str(), INTERACTION_SELECT_ACTION_ID);
+    assert_eq!(binding.action.scope.as_str(), crate::editor::fem2d::FEM2D_PLAY_CONTROLLER_ID);
+    assert_eq!(tree.bindings.iter().count(), 1, "exactly one tree-level select, never one per row");
+
     let json = projection(build(&document, english()));
-    assert!(json.contains(INTERACTION_SELECT_ACTION_ID), "{json}");
-    assert!(json.contains(FEM2D_INTERACTION_DOMAIN));
-    assert!(json.contains("\\\"granularity\\\":\\\"node\\\",\\\"id\\\":\\\"n1\\\""), "the pick targets carry the raw id: {json}");
+    assert_eq!(json.matches(INTERACTION_SELECT_ACTION_ID).count(), 1, "the select is authored once for the whole tree: {json}");
     assert!(!json.contains("focusEntity") && !json.contains("removeSelection"), "the tree carries no row actions: {json}");
 }
 
@@ -217,18 +266,16 @@ async fn a_node_row_binds_the_interaction_select_args_for_its_own_id() {
 #[semio_framework_async_macros::async_test]
 async fn selected_and_hovered_ids_are_marked_from_the_interaction_snapshot() {
     let document = demo();
+    let view = wide_view();
+    let windows = TreeWindows::for_body(&view, BODY_KEY);
     let interaction = Fem2dInteractionSnapshot { selected_ids: vec!["n1".into(), "e3".into()], hovered_ids: vec!["s1".into()] };
-    let tree = render(&document, &interaction, english()).expect("marked tree");
+    let tree = render(&document, &interaction, english(), &windows).expect("marked tree");
     let Component::Tree(props) = &tree.component else { panic!("panel tree") };
     assert_eq!(props.interaction_domain.as_ref().map(|domain| domain.as_str()), Some(FEM2D_INTERACTION_DOMAIN));
-    assert!(row_keys(section_node(&tree, "nodes")).contains(&"n1"));
-    assert!(row_keys(section_node(&tree, "elements")).contains(&"e3"));
-    assert!(row_keys(section_node(&tree, "supports")).contains(&"s1"));
-
     let wide: Vec<String> = (0..80).map(|index| format!("n{index}")).collect();
     assert_eq!(marked_ids(&wide).len(), MARKED_IDS_LIMIT, "a wider selection marks its first page rather than refusing the render");
     let interaction = Fem2dInteractionSnapshot { selected_ids: wide, hovered_ids: Vec::new() };
-    assert!(render(&document, &interaction, english()).is_ok(), "an oversized selection never faults the panel");
+    assert!(render(&document, &interaction, english(), &windows).is_ok(), "an oversized selection never faults the panel");
 }
 
 /// 🪆️ The app's manifest declares this panel under the framework's artifact tab, with the body key
@@ -250,60 +297,75 @@ async fn the_app_declares_the_artifact_panel_under_its_body_key() {
 }
 //#endregion 🔖️Interaction
 
-//#region 🔖️Paging
-/// 🪙️ The quota split is max-min fair: a section that fits under the page's ceiling keeps ALL its
-/// rows and only the widest sections truncate.
+//#region 🔖️Windows
+/// 🪟️ A document an order of magnitude past one viewport streams instead of truncating: every
+/// container stamps the FULL extent of its own list, materialises no more than the slice it was
+/// given, and the body never invents a `+N` row to stand in for the remainder.
 #[semio_framework_async_macros::async_test]
-async fn section_quotas_are_max_min_fair() {
-    assert_eq!(section_quotas([1, 1, 1, 1, 1, 1, 1, 1, 0], 31), [1, 1, 1, 1, 1, 1, 1, 1, 0], "a document inside the page keeps every row");
-    let quotas = section_quotas([60, 2, 2, 2, 2, 2, 2, 2, 0], 31);
-    assert_eq!(quotas[1..8], [2, 2, 2, 2, 2, 2, 2], "the small sections stay whole");
-    assert_eq!(quotas[0], 31 - 14, "the one wide section absorbs the whole deficit");
-    assert_eq!(quotas.iter().sum::<usize>(), 31);
-    let quotas = section_quotas([60, 60, 60, 60, 60, 60, 60, 60, 0], 31);
-    assert!(quotas[..8].iter().all(|quota| *quota >= 3), "no section that wants rows is starved: {quotas:?}");
-    assert_eq!(quotas[8], 0, "the analysis section demands no interactive row");
-    assert!(quotas.iter().sum::<usize>() <= 31);
-    assert_eq!(section_quotas([0; SECTIONS], 31), [0; SECTIONS]);
-}
-
-/// 🪙️ A document an order of magnitude past one argument-arena page closes each truncated section
-/// with a `+N` row that accounts for every entity it left out — never an admission fault, never past
-/// the built-children ceiling, and never past one UI document's node budget.
-#[semio_framework_async_macros::async_test]
-async fn an_oversized_document_pages_with_continuation_rows_instead_of_faulting() {
-    let mut document = demo();
-    document.nodes = (0..60).map(|index| FemNode { id: format!("g{index}"), x: index as f64, y: 0.0 }).collect();
-    document.load_cases.push(FemLoadCase {
-        id: "wind".into(),
-        name: "Wind".into(),
-        loads: (0..40).map(|index| FemLoad::Nodal { id: format!("wl{index}"), node_id: "g0".into(), dof: FemDof::Tx, value: 1000.0 }).collect(),
-        self_weight: false,
-    });
-    let tree = render(&document, &Fem2dInteractionSnapshot::default(), english()).expect("an oversized document still assembles");
-    let nodes = section_node(&tree, "nodes");
-    assert!(omitted(nodes, "nodes") > 0, "60 nodes do not fit one page");
-    assert_eq!(placed(nodes, "nodes") + omitted(nodes, "nodes"), 60, "the continuation row accounts for every omitted node");
-    let wind = section_node(&tree, "load-cases").children.iter().find(|row| row.key.as_str() == "wind").expect("wind case row");
-    assert_eq!(placed(wind, "load-cases.wind") + omitted(wind, "load-cases.wind"), 40, "a case past the page pages its own loads");
-    for suffix in SECTION_SUFFIXES {
+async fn an_oversized_document_stamps_every_extent_and_materialises_one_viewport() {
+    let document = oversized();
+    let tree = render(&document, &Fem2dInteractionSnapshot::default(), english(), &TreeWindows::unhosted()).expect("an oversized document still assembles");
+    let totals = section_totals(&document);
+    for (suffix, total) in SECTION_SUFFIXES.into_iter().zip(totals) {
         let node = section_node(&tree, suffix);
-        assert!(node.children.len() <= semio_framework_ui_contract::UI_FIXED_LIST_ITEMS, "section {suffix} stays inside the fixed list");
-        assert!(!node.children.is_empty(), "section {suffix} is never empty");
+        assert_eq!(extent_of(node), total, "section {suffix} stamps the full extent of its list");
+        assert!(node.children.len() <= total.max(1), "section {suffix} materialises no more than it has");
+        assert!(node.children.len() <= UI_BUILT_CHILDREN_MAX, "section {suffix} stays inside one built page");
+    }
+    let nodes = section_node(&tree, "nodes");
+    assert_eq!(window_of(nodes).total, 60, "60 nodes are announced whole");
+    assert!(nodes.children.len() < 60, "a first paint materialises one viewport, not the whole list");
+    let wind = section_node(&tree, "load-cases").children.iter().find(|row| row.key.as_str() == "wind");
+    if let Some(wind) = wind {
+        assert_eq!(window_of(wind).total, 40, "a case row announces every load it owns");
     }
     let total = 1 + tree.children.iter().map(|section| 1 + section.children.iter().map(|row| 1 + row.children.len()).sum::<usize>()).sum::<usize>();
-    assert!(total < semio_framework_ui_contract::UI_DOCUMENT_NODES, "the whole tree stays inside one UI document: {total}");
-    let _ = projection(tree);
+    assert!(total < semio_framework_ui_contract::UI_DOCUMENT_NODES, "one first paint stays inside one UI document: {total}");
+    let json = projection(tree);
+    assert!(!json.contains(".more"), "a windowed container never mints a continuation key: {json}");
+    assert!(!json.contains("\"+"), "a windowed container never mints a `+N` label: {json}");
+}
+
+/// 🪟️ A container the user closed is announced, not built: the extent is stamped so the host can
+/// size the disclosure, and not one child row is materialised.
+#[semio_framework_async_macros::async_test]
+async fn a_closed_container_stamps_its_extent_and_builds_no_child() {
+    let document = oversized();
+    let view = viewing(vec![request(&format!("{TREE_NAMESPACE}.nodes"), Some(false), 0, 48), request("wind", Some(false), 0, 48)]);
+    let tree = render(&document, &Fem2dInteractionSnapshot::default(), english(), &TreeWindows::for_body(&view, BODY_KEY)).expect("a closed container still assembles");
+    let nodes = section_node(&tree, "nodes");
+    assert_eq!(window_of(nodes).total, 60, "a closed section still announces its extent");
+    assert!(nodes.children.is_empty(), "a closed section builds no row");
+    let wind = section_node(&tree, "load-cases").children.iter().find(|row| row.key.as_str() == "wind").expect("wind case row");
+    assert_eq!(window_of(wind).total, 40);
+    assert!(wind.children.is_empty(), "a closed case row builds no load");
+}
+
+/// 🪟️ Scrolling is a request, not a page: the host names `{offset, rows}` and the guest materialises
+/// exactly that half-open range, still keyed by the raw entity id.
+#[semio_framework_async_macros::async_test]
+async fn a_window_request_materialises_exactly_its_own_range() {
+    let document = oversized();
+    let view = viewing(vec![request(&format!("{TREE_NAMESPACE}.nodes"), None, 20, 8), request("wind", None, 5, 4)]);
+    let tree = render(&document, &Fem2dInteractionSnapshot::default(), english(), &TreeWindows::for_body(&view, BODY_KEY)).expect("a windowed document assembles");
+    let nodes = section_node(&tree, "nodes");
+    assert_eq!(window_of(nodes), TreeWindow { total: 60, offset: 20 });
+    assert_eq!(row_keys(nodes), (20..28).map(|index| format!("g{index}")).collect::<Vec<_>>(), "exactly entries [20, 28) keyed by the raw node id");
+    let wind = section_node(&tree, "load-cases").children.iter().find(|row| row.key.as_str() == "wind").expect("wind case row");
+    assert_eq!(window_of(wind), TreeWindow { total: 40, offset: 5 });
+    assert_eq!(row_keys(wind), (5..9).map(|index| format!("wl{index}")).collect::<Vec<_>>(), "a nested window is the same law one level down");
 }
 
 /// 🌱️ An empty document is a readable tree of "(none)" placeholders, not a refusal.
 #[semio_framework_async_macros::async_test]
 async fn an_empty_document_renders_placeholders() {
-    let tree = render(&Fem2dSnapshot::default(), &Fem2dInteractionSnapshot::default(), english()).expect("empty document tree");
+    let document = Fem2dSnapshot::default();
+    let tree = build(&document, english());
     for suffix in ["nodes", "elements", "regions", "supports", "load-cases", "combinations", "materials", "sections"] {
         assert_eq!(row_labels(section_node(&tree, suffix)), vec!["(none)".to_string()], "section {suffix}");
+        assert_eq!(extent_of(section_node(&tree, suffix)), 0, "an empty section announces an empty list");
     }
     let json = projection(tree);
     assert!(json.contains("Nodes (0)"), "{json}");
 }
-//#endregion 🔖️Paging
+//#endregion 🔖️Windows

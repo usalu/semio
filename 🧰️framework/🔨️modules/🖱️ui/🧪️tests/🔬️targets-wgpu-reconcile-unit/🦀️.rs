@@ -117,7 +117,7 @@ fn select(id: &str, value: &str, items: Vec<(&str, &str)>) -> UiNode {
 }
 
 fn tree_item(id: &str, label: &str) -> UiTreeItemNode {
-    UiTreeItemNode {
+    UiTreeItemNode { window: None, granularity: None,
         id: id.into(),
         label: Label::data(label),
         description: None,
@@ -183,8 +183,8 @@ fn select_removing_an_item_removes_its_row_and_clears_has_popup_once_empty() {
 #[test]
 fn tree_expands_sections_and_nested_items_into_keyed_stack_rows() {
     let mut tree = UiTree::new();
-    let nested = UiTreeItemNode { items: Some(vec![tree_item("child", "Child")]), menu: None, ..tree_item("parent", "Parent") };
-    let ui = tree_ui(vec![UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![nested] }], Some(vec!["parent".into()]));
+    let nested = UiTreeItemNode { window: None, granularity: None, items: Some(vec![tree_item("child", "Child")]), menu: None, ..tree_item("parent", "Parent") };
+    let ui = tree_ui(vec![UiTreeSectionNode { window: None, id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![nested] }], Some(vec!["parent".into()]));
     tree.apply_tree(&ui);
     let root = tree.root.unwrap();
 
@@ -209,12 +209,12 @@ fn tree_expands_sections_and_nested_items_into_keyed_stack_rows() {
 #[test]
 fn tree_item_control_and_trailing_actions_become_retained_children_too() {
     let mut tree = UiTree::new();
-    let item = UiTreeItemNode {
+    let item = UiTreeItemNode { window: None, granularity: None,
         control: Some(UiControlNode::Toggle(UiToggleNode { id: "tog".into(), icon_id: IconName::CircleDot, text: None, on_change: action(), presence: UiPresence::selected(true), menu: None })),
         actions: Some(vec![UiTreeItemAction { icon_id: IconName::Trash2, label: Some(Label::data("Delete")), action: action(), placement: Some(UiTreeActionPlacement::Menu) }]),
         ..tree_item("leaf", "Leaf")
     };
-    let ui = tree_ui(vec![UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![item] }], None);
+    let ui = tree_ui(vec![UiTreeSectionNode { window: None, id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![item] }], None);
     tree.apply_tree(&ui);
     let root = tree.root.unwrap();
     let section = tree.children(root).next().unwrap();
@@ -236,7 +236,7 @@ fn reapplying_an_identical_select_or_tree_sets_zero_dirty_flags() {
     assert!(!any_dirty(&tree, root), "re-applying an identical Select must not dirty its synthesized rows");
 
     let mut tree = UiTree::new();
-    let tree_ui_value = tree_ui(vec![UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![tree_item("a", "A")] }], None);
+    let tree_ui_value = tree_ui(vec![UiTreeSectionNode { window: None, id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![tree_item("a", "A")] }], None);
     tree.apply_tree(&tree_ui_value);
     let root = tree.root.unwrap();
     clear_dirty(&mut tree, root);

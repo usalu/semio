@@ -165,9 +165,6 @@ pub struct Puzzle2dWindowTransient {
     pub brush_candidate_index: usize,
     pub brush_candidates: Vec<dsl::DslValue>,
     pub brush_candidate_source_handle_id: String,
-    /// 📄 Per-section page cursor of the virtualised panels (`setPanelPage`), keyed by section id.
-    #[value(default)]
-    pub panel_pages: BTreeMap<String, u32>,
 }
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
@@ -215,7 +212,7 @@ impl protocol::MutationDiff<Puzzle2dWindowTransient> for Puzzle2dWindowTransient
     }
 }
 
-store::artifact_retire_struct!(Puzzle2dWindowTransient { engagement_input, brush_candidate_index, brush_candidates, brush_candidate_source_handle_id, panel_pages });
+store::artifact_retire_struct!(Puzzle2dWindowTransient { engagement_input, brush_candidate_index, brush_candidates, brush_candidate_source_handle_id });
 
 impl store::retirement::RetireOwned for Puzzle2dWindowTransientMutation {
     fn retirement(self) -> Box<dyn store::retirement::RetirementCursor> {
@@ -235,9 +232,6 @@ fn puzzle2d_window_transient_retained_bytes(transient: &Puzzle2dWindowTransient)
     charge(&mut bytes, std::mem::size_of::<Puzzle2dWindowTransient>())?;
     charge(&mut bytes, transient.engagement_input.capacity())?;
     charge(&mut bytes, transient.brush_candidate_source_handle_id.capacity())?;
-    for (section, _) in &transient.panel_pages {
-        charge(&mut bytes, section.capacity().checked_add(std::mem::size_of::<(String, u32)>())?)?;
-    }
     charge(&mut bytes, transient.brush_candidates.capacity().checked_mul(std::mem::size_of::<dsl::DslValue>())?)?;
     let mut pending = Vec::new();
     pending.try_reserve(transient.brush_candidates.len()).ok()?;
@@ -441,7 +435,6 @@ pub fn runtime(config: &crate::editor::puzzle2d::config::Puzzle2dConfig, window:
         brush_candidate_index: transient.brush_candidate_index,
         brush_candidates: transient.brush_candidates.clone(),
         brush_candidate_source_handle_id: transient.brush_candidate_source_handle_id.clone(),
-        panel_pages: transient.panel_pages.clone(),
         fill_count: config.fill_count,
         grid_snap_enabled: window.grid_snap_enabled,
         grid_factor: window.grid_factor,
@@ -469,7 +462,6 @@ pub fn split(runtime: &crate::editor::puzzle2d::config::Puzzle2dPlayRuntime, win
             brush_candidate_index: runtime.brush_candidate_index,
             brush_candidates: runtime.brush_candidates.clone(),
             brush_candidate_source_handle_id: runtime.brush_candidate_source_handle_id.clone(),
-            panel_pages: runtime.panel_pages.clone(),
         },
     )
 }

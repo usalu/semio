@@ -26,7 +26,7 @@ pub fn definition() -> PanelTabDefinition {
 /// selected-widget-details view degrades to its "no selection" default until a future wave threads
 /// interaction into render. Flagged as a discovered framework gap, not worked around here.
 pub fn render(document: &Generation2dSnapshot, config: &Generation2dConfig, labels: &Generation2dLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    let items = crate::ui_node_list([
+    let items = semio_framework_plugin::ui_node_list([
         tree_item("procedural2d-play-inspector.schema", format!("{} flow.host_snapshot", labels.schema_prefix.as_str())),
         tree_item("procedural2d-play-inspector.widgets", format!("{} {}", labels.widgets_prefix.as_str(), document.host_snapshot.widgets.len())),
         tree_item("procedural2d-play-inspector.show-mode", format!("{} {}", labels.show_mode_prefix.as_str(), config.show_mode)),

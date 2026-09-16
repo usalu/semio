@@ -1,0 +1,16 @@
+{
+  "cases": [
+    {
+      "before": { "clock": null },
+      "after": { "clock": { "phase": 0.25, "reverse": false } }
+    },
+    {
+      "before": { "clock": { "phase": 0.75, "reverse": true } },
+      "after": { "clock": { "phase": 0.5, "reverse": false } }
+    },
+    {
+      "before": { "clock": { "phase": 1.0, "reverse": false } },
+      "after": { "clock": null }
+    }
+  ]
+}

@@ -120,6 +120,7 @@ const fn maximum_depth(depths: &[usize]) -> usize {
 typed_scalar!(
     bool,
     u16,
+    u32,
     u64,
     f64,
     UiNodeId,

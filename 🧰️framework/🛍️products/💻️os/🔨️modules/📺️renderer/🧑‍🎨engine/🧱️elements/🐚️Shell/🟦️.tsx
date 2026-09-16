@@ -667,6 +667,16 @@ type Updatable<T> = T | ((prev: T) => T);
 
 const resolveUpdatable = <T,>(next: Updatable<T>, prev: T): T => (typeof next === "function" ? (next as (prev: T) => T)(prev) : next);
 
+/** 🪞️ Writes one field of a slice, keeping the slice's IDENTITY when the value did not change. Every
+ * slice reducer used to spread a fresh object on every action, so `shellReducer` returned a new
+ * `ShellState` for every dispatch — even the eight identity-preserving dispatches one guest refresh
+ * fans out (`mergeRecordPreservingIdentity` kept the entries, the spread threw the bail-out away) —
+ * and `useReducer` re-rendered the whole shell tree on every hover echo, measured at ~20 ms of chrome
+ * reconcile per pointer move. A same-value write is now a no-op React bails out of. */
+function withField<S extends object, K extends keyof S>(state: S, key: K, value: S[K]): S {
+  return Object.is(state[key], value) ? state : { ...state, [key]: value };
+}
+
 export type ShellAction =
   | { readonly type: "UPSERT_LOADED_PLUGIN"; readonly value: LoadedProgramState }
   | { readonly type: "REMOVE_LOADED_PLUGIN"; readonly pluginId: string }
@@ -766,7 +776,7 @@ function pluginRuntimeReducer(state: PluginRuntimeState, action: ShellAction): P
     case "SET_PLUGIN_SUPERVISOR":
       return { ...state, pluginSupervisorById: { ...state.pluginSupervisorById, [action.pluginId]: action.value } };
     case "SET_SESSION":
-      return { ...state, session: resolveUpdatable(action.value, state.session) };
+      return withField(state, "session", resolveUpdatable(action.value, state.session));
     case "SET_ERROR":
       return { ...state, error: resolveUpdatable(action.value, state.error), sessionFault: action.fault ?? null };
     case "SET_INSTANCE_FAULT":
@@ -779,19 +789,19 @@ function pluginRuntimeReducer(state: PluginRuntimeState, action: ShellAction): P
 function windowUiReducer(state: WindowUiState, action: ShellAction): WindowUiState {
   switch (action.type) {
     case "SET_WINDOW_UI_BY_WINDOW_ID":
-      return { ...state, windowUiByWindowId: resolveUpdatable(action.value, state.windowUiByWindowId) };
+      return withField(state, "windowUiByWindowId", resolveUpdatable(action.value, state.windowUiByWindowId));
     case "SET_WINDOW_ENGAGEMENTS_BY_WINDOW_ID":
-      return { ...state, windowEngagementsByWindowId: resolveUpdatable(action.value, state.windowEngagementsByWindowId) };
+      return withField(state, "windowEngagementsByWindowId", resolveUpdatable(action.value, state.windowEngagementsByWindowId));
     case "SET_WINDOW_MEASURES_BY_WINDOW_ID":
-      return { ...state, windowMeasuresByWindowId: resolveUpdatable(action.value, state.windowMeasuresByWindowId) };
+      return withField(state, "windowMeasuresByWindowId", resolveUpdatable(action.value, state.windowMeasuresByWindowId));
     case "SET_TOOL_MEASURES_BY_TOOL_ID":
-      return { ...state, toolMeasuresByToolId: resolveUpdatable(action.value, state.toolMeasuresByToolId) };
+      return withField(state, "toolMeasuresByToolId", resolveUpdatable(action.value, state.toolMeasuresByToolId));
     case "SET_PANEL_UI_BY_KEY":
-      return { ...state, panelUiByKey: resolveUpdatable(action.value, state.panelUiByKey) };
+      return withField(state, "panelUiByKey", resolveUpdatable(action.value, state.panelUiByKey));
     case "SET_APP_LABELS_OVERLAY":
-      return { ...state, appLabelsOverlay: resolveUpdatable(action.value, state.appLabelsOverlay) };
+      return withField(state, "appLabelsOverlay", resolveUpdatable(action.value, state.appLabelsOverlay));
     case "SET_APP_CATALOGUE":
-      return { ...state, appCatalogue: resolveUpdatable(action.value, state.appCatalogue) };
+      return withField(state, "appCatalogue", resolveUpdatable(action.value, state.appCatalogue));
     default:
       return state;
   }
@@ -802,9 +812,9 @@ function spawnedWindowReducer(state: SpawnedWindowState, action: ShellAction): S
     case "SET_SPAWNED_WINDOW_UI":
       return { ...state, spawnedWindowUi: resolveUpdatable(action.value, state.spawnedWindowUi), spawnedWindowFault: action.fault ?? null };
     case "SET_SPAWNED_WINDOW_ENGAGEMENTS":
-      return { ...state, spawnedWindowEngagements: resolveUpdatable(action.value, state.spawnedWindowEngagements) };
+      return withField(state, "spawnedWindowEngagements", resolveUpdatable(action.value, state.spawnedWindowEngagements));
     case "SET_SPAWNED_WINDOW_MEASURES":
-      return { ...state, spawnedWindowMeasures: resolveUpdatable(action.value, state.spawnedWindowMeasures) };
+      return withField(state, "spawnedWindowMeasures", resolveUpdatable(action.value, state.spawnedWindowMeasures));
     default:
       return state;
   }
@@ -853,7 +863,7 @@ function commandPanelReducer(state: CommandPanelState, action: ShellAction): Com
   switch (action.type) {
     case "SET_COMMAND_EXPANDED": {
       if (state.expandedCommandId === action.value) return state;
-      return { ...state, expandedCommandId: action.value };
+      return withField(state, "expandedCommandId", action.value);
     }
     case "STAGE_COMMAND_ARG": {
       const current = state.stagedArgsByCommandId[action.commandId] ?? {};
@@ -880,9 +890,9 @@ function shellLayoutReducer(state: ShellLayoutState, action: ShellAction): Shell
     case "SET_PANEL_PATH":
       return { ...state, panels: { ...state.panels, [action.anchor]: { ...state.panels[action.anchor], path: resolveUpdatable(action.value, state.panels[action.anchor].path) } } };
     case "SET_DOCK_OVERRIDE":
-      return { ...state, dockOverride: action.value };
+      return withField(state, "dockOverride", action.value);
     case "SET_PANEL_PATH_MEMORY":
-      return { ...state, panelPathMemory: resolveUpdatable(action.value, state.panelPathMemory) };
+      return withField(state, "panelPathMemory", resolveUpdatable(action.value, state.panelPathMemory));
     case "SET_TREE_OPEN_STATE":
       return { ...state, treeOpenStates: { ...state.treeOpenStates, [action.id]: action.open } };
     case "HYDRATE_DOCK_UI": {
@@ -905,17 +915,17 @@ function shellLayoutReducer(state: ShellLayoutState, action: ShellAction): Shell
       return { ...state, dockOverride: null, panels, panelPathMemory: {}, treeOpenStates: {} };
     }
     case "SET_ACTIVE_WINDOW_ID":
-      return { ...state, activeWindowId: resolveUpdatable(action.value, state.activeWindowId) };
+      return withField(state, "activeWindowId", resolveUpdatable(action.value, state.activeWindowId));
     case "SET_SHELL_LAYOUT":
-      return { ...state, shellLayout: resolveUpdatable(action.value, state.shellLayout) };
+      return withField(state, "shellLayout", resolveUpdatable(action.value, state.shellLayout));
     case "SET_ACTIVE_EXAMPLE_ID":
-      return { ...state, activeExampleId: resolveUpdatable(action.value, state.activeExampleId) };
+      return withField(state, "activeExampleId", resolveUpdatable(action.value, state.activeExampleId));
     case "SET_MOBILE_PANEL_PATH":
-      return { ...state, mobilePanelPath: resolveUpdatable(action.value, state.mobilePanelPath) };
+      return withField(state, "mobilePanelPath", resolveUpdatable(action.value, state.mobilePanelPath));
     case "SET_MOBILE_PANEL_VISIBLE":
-      return { ...state, mobilePanelVisible: resolveUpdatable(action.value, state.mobilePanelVisible) };
+      return withField(state, "mobilePanelVisible", resolveUpdatable(action.value, state.mobilePanelVisible));
     case "SET_EXTRA_WINDOW_INSTANCES":
-      return { ...state, extraWindowInstances: resolveUpdatable(action.value, state.extraWindowInstances) };
+      return withField(state, "extraWindowInstances", resolveUpdatable(action.value, state.extraWindowInstances));
     case "SET_WINDOW_TITLE": {
       const windowTitlesById = { ...state.windowTitlesById, [action.windowId]: action.title };
       const extraWindowInstances = state.extraWindowInstances.map((entry) => (entry.id === action.windowId ? { ...entry, title: action.title } : entry));
@@ -943,9 +953,9 @@ function shellLayoutReducer(state: ShellLayoutState, action: ShellAction): Shell
 function overlayReducer(state: OverlayState, action: ShellAction): OverlayState {
   switch (action.type) {
     case "SET_SEARCH_OPEN":
-      return { ...state, searchOpen: resolveUpdatable(action.value, state.searchOpen) };
+      return withField(state, "searchOpen", resolveUpdatable(action.value, state.searchOpen));
     case "SET_FIND_OPEN":
-      return { ...state, findOpen: resolveUpdatable(action.value, state.findOpen) };
+      return withField(state, "findOpen", resolveUpdatable(action.value, state.findOpen));
     case "AUTO_START_INTRODUCTION":
       if (state.introductionAutoStartedKeys.includes(action.key)) return state;
       return {
@@ -967,13 +977,13 @@ function overlayReducer(state: OverlayState, action: ShellAction): OverlayState 
     case "SET_TUTORIAL":
       return action.value != null && state.introductionStepIndex != null ? { ...state, introductionStepIndex: null, introductionCompletedInteractions: [] } : state;
     case "SET_DIALOG":
-      return { ...state, dialog: action.value };
+      return withField(state, "dialog", action.value);
     case "CLOSE_DIALOG":
       return state.dialog?.openingId === action.openingId ? { ...state, dialog: null } : state;
     case "SET_TRANSIENT_NOTICE":
-      return { ...state, transientNotice: action.value };
+      return withField(state, "transientNotice", action.value);
     case "SET_OPEN_WITH_FOCUS_ROLE":
-      return { ...state, openWithFocusRole: action.value };
+      return withField(state, "openWithFocusRole", action.value);
     case "APPLY_TUTORIAL_UI_SNAPSHOT":
       return { ...state, dialog: action.snapshot.dialog, searchOpen: action.snapshot.commandPanelOpen };
     default:
@@ -984,27 +994,27 @@ function overlayReducer(state: OverlayState, action: ShellAction): OverlayState 
 function uiPrefsReducer(state: UiPrefsState, action: ShellAction): UiPrefsState {
   switch (action.type) {
     case "SET_UI_APPEARANCE":
-      return { ...state, uiAppearance: resolveUpdatable(action.value, state.uiAppearance) };
+      return withField(state, "uiAppearance", resolveUpdatable(action.value, state.uiAppearance));
     case "SET_UI_LAYOUT":
-      return { ...state, uiLayout: resolveUpdatable(action.value, state.uiLayout) };
+      return withField(state, "uiLayout", resolveUpdatable(action.value, state.uiLayout));
     case "SET_UI_DRIVER_ID":
-      return { ...state, uiDriverId: resolveUpdatable(action.value, state.uiDriverId) };
+      return withField(state, "uiDriverId", resolveUpdatable(action.value, state.uiDriverId));
     case "SET_UI_CUSTOM_DRIVERS":
-      return { ...state, uiCustomDrivers: resolveUpdatable(action.value, state.uiCustomDrivers) };
+      return withField(state, "uiCustomDrivers", resolveUpdatable(action.value, state.uiCustomDrivers));
     case "SET_UI_DRIVER_DRAFT":
-      return { ...state, uiDriverDraft: resolveUpdatable(action.value, state.uiDriverDraft) };
+      return withField(state, "uiDriverDraft", resolveUpdatable(action.value, state.uiDriverDraft));
     case "SET_UI_LOCALE":
-      return { ...state, uiLocale: resolveUpdatable(action.value, state.uiLocale) };
+      return withField(state, "uiLocale", resolveUpdatable(action.value, state.uiLocale));
     case "SET_UI_TERMINOLOGY":
-      return { ...state, uiTerminology: resolveUpdatable(action.value, state.uiTerminology) };
+      return withField(state, "uiTerminology", resolveUpdatable(action.value, state.uiTerminology));
     case "SET_UI_THEME_ID":
-      return { ...state, uiThemeId: resolveUpdatable(action.value, state.uiThemeId) };
+      return withField(state, "uiThemeId", resolveUpdatable(action.value, state.uiThemeId));
     case "SET_UI_CUSTOM_THEMES":
-      return { ...state, uiCustomThemes: resolveUpdatable(action.value, state.uiCustomThemes) };
+      return withField(state, "uiCustomThemes", resolveUpdatable(action.value, state.uiCustomThemes));
     case "SET_UI_THEME_DRAFT":
-      return { ...state, uiThemeDraft: resolveUpdatable(action.value, state.uiThemeDraft) };
+      return withField(state, "uiThemeDraft", resolveUpdatable(action.value, state.uiThemeDraft));
     case "SET_UI_KEYBINDING_OVERRIDES":
-      return { ...state, uiKeybindingOverrides: resolveUpdatable(action.value, state.uiKeybindingOverrides) };
+      return withField(state, "uiKeybindingOverrides", resolveUpdatable(action.value, state.uiKeybindingOverrides));
     default:
       return state;
   }
@@ -1013,11 +1023,11 @@ function uiPrefsReducer(state: UiPrefsState, action: ShellAction): UiPrefsState 
 function syncReducer(state: SyncState, action: ShellAction): SyncState {
   switch (action.type) {
     case "SET_SYNC_BACKBONE_URI":
-      return { ...state, syncBackboneUri: resolveUpdatable(action.value, state.syncBackboneUri) };
+      return withField(state, "syncBackboneUri", resolveUpdatable(action.value, state.syncBackboneUri));
     case "SET_SYNC_CARD_KIND":
-      return { ...state, syncCardKind: resolveUpdatable(action.value, state.syncCardKind) };
+      return withField(state, "syncCardKind", resolveUpdatable(action.value, state.syncCardKind));
     case "SET_SYNC_DRAFT_PATH":
-      return { ...state, syncDraftPath: resolveUpdatable(action.value, state.syncDraftPath) };
+      return withField(state, "syncDraftPath", resolveUpdatable(action.value, state.syncDraftPath));
     case "SET_SYNC_STATUS_FOR_DOCUMENT":
       return { ...state, syncStatusByDocumentId: { ...state.syncStatusByDocumentId, [action.documentId]: action.status } };
     default:
@@ -1073,15 +1083,15 @@ function tutorialReducer(state: TutorialState, action: ShellAction): TutorialSta
       return { ...state, playing: nextPlaying, deviated: nextPlaying ? false : state.deviated };
     }
     case "SET_TUTORIAL_RATE":
-      return { ...state, rate: action.value };
+      return withField(state, "rate", action.value);
     case "SET_TUTORIAL_MUTED":
-      return { ...state, muted: resolveUpdatable(action.value, state.muted) };
+      return withField(state, "muted", resolveUpdatable(action.value, state.muted));
     case "SET_TUTORIAL_CAPTIONS":
-      return { ...state, captionsOn: resolveUpdatable(action.value, state.captionsOn) };
+      return withField(state, "captionsOn", resolveUpdatable(action.value, state.captionsOn));
     case "SET_TUTORIAL_RECORDING":
-      return { ...state, recording: action.value };
+      return withField(state, "recording", action.value);
     case "SET_TUTORIAL_DEVIATED":
-      return { ...state, deviated: action.value };
+      return withField(state, "deviated", action.value);
     // 🎓️ Only literal (non-updater) values can be checked here without this slice's own prior value —
     // every real call site dispatches a literal step index or `null` (never a functional updater), so
     // this conservatively no-ops on the (currently unused) updater form rather than guessing.
@@ -1105,7 +1115,7 @@ function interactionReducer(state: InteractionState, action: ShellAction): Inter
 
 /** 🧵️ Root reducer for `FrameworkOsShell` — fans every action out to its owning slice reducer; slices that ignore an action's type return their input unchanged, so unrelated slices keep referential identity. */
 export function shellReducer(state: ShellState, action: ShellAction): ShellState {
-  return {
+  const next: ShellState = {
     pluginRuntime: pluginRuntimeReducer(state.pluginRuntime, action),
     windowUi: windowUiReducer(state.windowUi, action),
     spawnedWindow: spawnedWindowReducer(state.spawnedWindow, action),
@@ -1120,6 +1130,14 @@ export function shellReducer(state: ShellState, action: ShellAction): ShellState
     inference: inferenceReducer(state.inference, action),
     merge: mergeReducer(state.merge, action),
   };
+  // 🪞️ An action no slice answered with a new value is a no-op: return the SAME state so
+  // `useReducer` bails out instead of reconciling the whole shell (see `withField`).
+  return shellStateUnchanged(state, next) ? state : next;
+}
+
+/** 🪞️ True when every slice kept its identity. */
+export function shellStateUnchanged(previous: ShellState, next: ShellState): boolean {
+  return (Object.keys(next) as (keyof ShellState)[]).every((key) => Object.is(previous[key], next[key]));
 }
 
 //#region selectors

@@ -7,6 +7,7 @@ async fn the_inspector_always_summarises_the_document() {
     let json = render_body(&mut app, LAYOUT_PLAY_BODY_INSPECTION).await;
     assert!(json.contains(LAYOUT_DOCUMENT_SCHEMA));
     assert!(json.contains("page-1"));
+    assert!(json.contains("\"type\":\"tree\""), "inspection body must be a tree: {json}");
 }
 
 #[semio_framework_async_macros::async_test]

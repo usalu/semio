@@ -2353,6 +2353,38 @@ pub mod ui {
         }
     }
 
+    /// 🪟️ The materialised slice of a logically `total`-long tree child list: the node's `items` are
+    /// the entries `[offset, offset + items.len())` of that list. `total > 0` with no materialised
+    /// items means expandable-but-not-yet-loaded, never "empty" — a renderer pitches the
+    /// unmaterialised rows as empty spacer bands so the scrollbar spans the whole document. The
+    /// legacy-node mirror of `ui_contract::TreeWindow`; the two are bridged in
+    /// `🎯️targets/🧊️wgpu/🔀️reconcile/🦀️.rs`.
+    ///
+    /// ⚠️ GAP (ticket 26/09/16/ARTIFACT-TREE-VIRTUALISED-STREAMING packet P5): the wgpu target
+    /// RENDERS a window but never REQUESTS one. React's host owns scroll/open state and reports it
+    /// back through `ViewModel.tree_windows`; the wgpu shell has no equivalent observer, so a wgpu
+    /// tree only ever shows the first-paint window its guest chose. There is deliberately no `+N`
+    /// continuation-row fallback.
+    #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
+    #[serde(rename_all = "camelCase")]
+    #[value(rename_all = "camelCase")]
+    pub struct UiTreeWindow {
+        pub total: u32,
+        pub offset: u32,
+    }
+
+    impl UiTreeWindow {
+        /// 🪟️ Rows of empty pitch a renderer paints BEFORE the materialised children.
+        pub fn leading_rows(&self) -> u32 {
+            self.offset.min(self.total)
+        }
+
+        /// 🪟️ Rows of empty pitch a renderer paints AFTER `materialised` children.
+        pub fn trailing_rows(&self, materialised: usize) -> u32 {
+            self.total.saturating_sub(self.leading_rows()).saturating_sub(u32::try_from(materialised).unwrap_or(u32::MAX))
+        }
+    }
+
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
     #[serde(rename_all = "camelCase")]
     #[value(rename_all = "camelCase")]
@@ -2399,6 +2431,18 @@ pub mod ui {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[value(default, skip_serializing_if = "Option::is_none")]
         pub menu: Option<UiMenuRef>,
+        /// 🪟️ The materialised slice of this row's logical child list — see [`UiTreeWindow`]. A row
+        /// with `window.total > 0` is expandable even while `items` is empty or absent.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
+        pub window: Option<UiTreeWindow>,
+        /// 🎯️ The interaction granularity this row picks when the owning tree carries the domain
+        /// binding (`UiTreeNode::interaction_domain`), keyed by this row's own `id`. Carried here so a
+        /// later wgpu pick path can synthesise the same domain intent React's interpreter already
+        /// does; nothing in the wgpu target reads it yet.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
+        pub granularity: Option<String>,
     }
 
     impl UiTreeItemNode {
@@ -2419,6 +2463,8 @@ pub mod ui {
                 control: None,
                 dimmed: None,
                 menu: None,
+                window: None,
+                granularity: None,
             }
         }
     }
@@ -2438,6 +2484,10 @@ pub mod ui {
         #[value(default, skip_serializing_if = "UiPresence::is_default")]
         pub presence: UiPresence,
         pub items: Vec<UiTreeItemNode>,
+        /// 🪟️ The materialised slice of this section's logical child list — see [`UiTreeWindow`].
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
+        pub window: Option<UiTreeWindow>,
     }
 
     #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
@@ -2660,17 +2710,17 @@ pub mod ui {
             for (index, child) in section.children.iter().enumerate() {
                 items.push(ui_declarative_child_to_tree_item(child, format!("{}.{}", section.id, index)));
             }
-            tree_sections.push(UiTreeSectionNode { id: section.id.clone(), label: section.label.clone(), default_open: Some(section.default_open.unwrap_or(true)), presence: section.presence.clone(), items });
+            tree_sections.push(UiTreeSectionNode { window: None, id: section.id.clone(), label: section.label.clone(), default_open: Some(section.default_open.unwrap_or(true)), presence: section.presence.clone(), items });
         }
         UiNode::Tree(if tree_sections.is_empty() {
             UiTreeNode {
                 menu: None,
-                sections: vec![UiTreeSectionNode {
+                sections: vec![UiTreeSectionNode { window: None,
                     id: "empty".into(),
                     label: None,
                     default_open: None,
                     presence: UiPresence::default(),
-                    items: vec![UiTreeItemNode {
+                    items: vec![UiTreeItemNode { window: None, granularity: None,
                         id: "empty".into(),
                         label: Label::data("—"),
                         description: None,
@@ -2698,7 +2748,7 @@ pub mod ui {
 
     fn ui_declarative_child_to_tree_item(node: &UiNode, fallback_id: String) -> UiTreeItemNode {
         match node {
-            UiNode::Text(text) => UiTreeItemNode {
+            UiNode::Text(text) => UiTreeItemNode { window: None, granularity: None,
                 menu: None,
                 id: format!("{}.text", fallback_id),
                 label: text.value.clone(),
@@ -2716,7 +2766,7 @@ pub mod ui {
             },
             UiNode::Field(field) => {
                 let description = if let UiNode::Input(input) = field.child.as_ref() { input.placeholder.clone().map(Label::into_string).or_else(|| if input.value.is_empty() { None } else { Some(input.value.clone()) }) } else { None };
-                UiTreeItemNode {
+                UiTreeItemNode { window: None, granularity: None,
                     menu: None,
                     id: field.id.clone(),
                     label: field.label.clone(),
@@ -2733,7 +2783,7 @@ pub mod ui {
                     dimmed: None,
                 }
             }
-            UiNode::Button(button) => UiTreeItemNode {
+            UiNode::Button(button) => UiTreeItemNode { window: None, granularity: None,
                 menu: None,
                 id: button.id.clone().unwrap_or(fallback_id),
                 label: button.label.clone(),
@@ -2757,7 +2807,7 @@ pub mod ui {
                 for (index, child) in group.children.iter().enumerate() {
                     items.push(ui_declarative_child_to_tree_item(child, format!("{}.{}", group.id, index)));
                 }
-                UiTreeItemNode {
+                UiTreeItemNode { window: None, granularity: None,
                     menu: None,
                     id: group.id.clone(),
                     label: group.label.clone(),
@@ -2779,7 +2829,7 @@ pub mod ui {
             UiNode::NumberStepper(stepper) => tree_control_item(stepper.id.clone(), UiControlNode::NumberStepper(stepper.clone())),
             UiNode::Ring(ring) => tree_control_item(ring.id.clone(), UiControlNode::Ring(ring.clone())),
             UiNode::IconSelect(icon_select) => tree_control_item(icon_select.id.clone(), UiControlNode::IconSelect(icon_select.clone())),
-            UiNode::Separator(_) => UiTreeItemNode {
+            UiNode::Separator(_) => UiTreeItemNode { window: None, granularity: None,
                 menu: None,
                 id: format!("{}.sep", fallback_id),
                 label: Label::data("—"),
@@ -2795,7 +2845,7 @@ pub mod ui {
                 control: None,
                 dimmed: None,
             },
-            other => UiTreeItemNode {
+            other => UiTreeItemNode { window: None, granularity: None,
                 menu: None,
                 id: fallback_id,
                 label: Label::data(format!("{other:?}")),
@@ -2815,7 +2865,7 @@ pub mod ui {
     }
 
     fn tree_control_item(id: String, control: UiControlNode) -> UiTreeItemNode {
-        UiTreeItemNode {
+        UiTreeItemNode { window: None, granularity: None,
             menu: None,
             id,
             label: Label::data(String::new()),

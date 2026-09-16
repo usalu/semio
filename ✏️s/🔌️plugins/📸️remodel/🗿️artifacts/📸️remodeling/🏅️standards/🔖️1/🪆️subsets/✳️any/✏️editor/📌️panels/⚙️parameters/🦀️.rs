@@ -3,7 +3,7 @@
 
 use crate::editor::remodeling::terminology::RemodelingLabels;
 use crate::RemodelingSnapshot;
-use semio_framework_plugin::{tree_item, BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiAssemblyResult};
+use semio_framework_plugin::{tree_item, BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, TreeWindows, UiAssemblyResult};
 
 //#region 🔖️Constants
 pub const REMODELING_PANEL_PARAMETERS_ID: &str = "remodeling.parameters";
@@ -23,10 +23,12 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(scene: &RemodelingSnapshot, labels: &RemodelingLabels) -> UiAssemblyResult<BuiltNode> {
+/// 🪟️ One windowed section — the eight groups are a closed set today, but the section still reports
+/// its own `total` so the host paints one uniform scrollbar across every remodeling panel.
+pub fn render(scene: &RemodelingSnapshot, labels: &RemodelingLabels, windows: &TreeWindows<'_>) -> UiAssemblyResult<BuiltNode> {
     let p = &scene.params;
-    let rows = crate::editor::remodeling::ui_node_list([
-        tree_item(
+    let rows: Vec<(&str, String)> = vec![
+        (
             "remodeling-parameters.ingest",
             format!(
                 "{}: {} {}, {} {}, {} {}px, min sharpness {:.2}",
@@ -40,24 +42,26 @@ pub fn render(scene: &RemodelingSnapshot, labels: &RemodelingLabels) -> UiAssemb
                 p.ingest.min_sharpness
             ),
         ),
-        tree_item("remodeling-parameters.feature", format!("{}: {:?}, {} {}, {} {}", labels.params_feature.as_str(), p.feature.detector, labels.target_short.as_str(), p.feature.target_count, labels.octaves_short.as_str(), p.feature.octaves)),
-        tree_item(
+        ("remodeling-parameters.feature", format!("{}: {:?}, {} {}, {} {}", labels.params_feature.as_str(), p.feature.detector, labels.target_short.as_str(), p.feature.target_count, labels.octaves_short.as_str(), p.feature.octaves)),
+        (
             "remodeling-parameters.matching",
             format!("{}: {:?}, {} {:.2}, {} {}", labels.params_matching.as_str(), p.matching.matcher, labels.ratio_short.as_str(), p.matching.ratio_test, labels.window_short.as_str(), p.matching.sequential_window),
         ),
-        tree_item(
+        (
             "remodeling-parameters.sfm",
             format!("{}: {} {}, {} {}, {} {}", labels.params_sfm.as_str(), labels.ransac_short.as_str(), p.sfm.ransac_iterations, labels.min_track_short.as_str(), p.sfm.min_track_length, labels.ba_short.as_str(), p.sfm.ba_max_iterations),
         ),
-        tree_item("remodeling-parameters.dense", format!("{}: {:?}, {} {}px", labels.params_dense.as_str(), p.dense.resolution, labels.window_short.as_str(), p.dense.window_radius_px)),
-        tree_item(
+        ("remodeling-parameters.dense", format!("{}: {:?}, {} {}px", labels.params_dense.as_str(), p.dense.resolution, labels.window_short.as_str(), p.dense.window_radius_px)),
+        (
             "remodeling-parameters.mesh",
             format!("{}: {} {:.1}mm, {} {}, watertight {}", labels.params_mesh.as_str(), labels.voxel_short.as_str(), p.mesh.tsdf_voxel_size_mm, labels.target_short.as_str(), p.mesh.decimate_target_triangles, p.mesh.guarantee_watertight),
         ),
-        tree_item("remodeling-parameters.motion", format!("{}: {}", labels.params_motion.as_str(), if p.motion.enabled { labels.enabled.as_str() } else { labels.disabled.as_str() })),
-        tree_item("remodeling-parameters.geo", format!("{}: {}", labels.params_geo.as_str(), if p.geo.enabled { labels.enabled.as_str() } else { labels.disabled.as_str() })),
-    ])?;
-    PanelTreeBuilder::new("remodeling-parameters")?.section("remodeling-parameters.groups", Some(crate::editor::remodeling::ui_label(labels.panel_parameters.as_str())?), true, rows)?.build()
+        ("remodeling-parameters.motion", format!("{}: {}", labels.params_motion.as_str(), if p.motion.enabled { labels.enabled.as_str() } else { labels.disabled.as_str() })),
+        ("remodeling-parameters.geo", format!("{}: {}", labels.params_geo.as_str(), if p.geo.enabled { labels.enabled.as_str() } else { labels.disabled.as_str() })),
+    ];
+    PanelTreeBuilder::new("remodeling-parameters")?
+        .window_section(windows, "remodeling-parameters.groups", Some(crate::editor::remodeling::ui_label(labels.panel_parameters.as_str())?), true, &rows, |(id, text)| tree_item(*id, text.as_str()))?
+        .build()
 }
 //#endregion 🔖️Render
 

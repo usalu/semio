@@ -16,6 +16,8 @@
         "@semio-tech/framework-os-dev:prepare-aggregator-react-dev",
         "@semio-tech/framework-os-dev:prepare-aussuchen-react-dev",
         "@semio-tech/framework-os-dev:prepare-bearbeiten-react-dev",
+        "@semio-tech/framework-os-dev:prepare-energy-react-dev",
+        "@semio-tech/framework-os-dev:prepare-fem3d-react-dev",
         "@semio-tech/framework-os-dev:prepare-generation3d-react-dev",
         "@semio-tech/framework-os-dev:prepare-generator-react-dev",
         "@semio-tech/framework-os-dev:prepare-koordinator-react-dev",
@@ -38,6 +40,8 @@
         "@semio-tech/framework-os-dev:prepare-aggregator-react-release",
         "@semio-tech/framework-os-dev:prepare-aussuchen-react-release",
         "@semio-tech/framework-os-dev:prepare-bearbeiten-react-release",
+        "@semio-tech/framework-os-dev:prepare-energy-react-release",
+        "@semio-tech/framework-os-dev:prepare-fem3d-react-release",
         "@semio-tech/framework-os-dev:prepare-generation3d-react-release",
         "@semio-tech/framework-os-dev:prepare-generator-react-release",
         "@semio-tech/framework-os-dev:prepare-koordinator-react-release",
@@ -105,13 +109,26 @@
       ],
       "dependsOn": [
         "prepare-dev",
-        "@semio-tech/framework-os-dev:activate-generator-react-dev"
+        "@semio-tech/mit-bestand-demonstrator:activate-lanes-dev"
       ],
       "options": {
         "cwd": "♻️mit-bestand/🧺️demonstrator",
         "command": "bun ./🔨️modules/🧩️runtime/📜️script.ts activate",
         "forwardAllArgs": false
       }
+    },
+    "activate-lanes-dev": {
+      "executor": "nx:noop",
+      "cache": true,
+      "outputs": [],
+      "inputs": [
+        { "dependentTasksOutputFiles": "**/*", "transitive": true }
+      ],
+      "dependsOn": [
+        "@semio-tech/framework-os-dev:activate-energy-react-dev",
+        "@semio-tech/framework-os-dev:activate-fem3d-react-dev",
+        "@semio-tech/framework-os-dev:activate-generator-react-dev"
+      ]
     },
     "serve": {
       "executor": "nx:run-commands",

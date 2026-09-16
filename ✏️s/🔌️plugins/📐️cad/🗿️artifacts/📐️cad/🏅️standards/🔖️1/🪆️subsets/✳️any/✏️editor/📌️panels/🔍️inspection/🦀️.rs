@@ -8,8 +8,8 @@ use crate::standards::v1::subsets::any::io::geometry_import::CadObject;
 use crate::standards::v1::subsets::any::schema::inferences::object_scale_json;
 use crate::{CadNode, CadPaneId};
 use semio_framework_plugin::{
-    tree_item, tree_item_desc, tree_item_with_action, BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiAssemblyResult, UiFixedList, UiValue, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
-    FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+    tree_item, tree_item_desc, tree_item_with_action, ui_node_list, BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, TreeWindows, UiAssemblyResult, UiFixedList, UiValue,
+    FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
 
 //#region 🔖️Constants
@@ -38,7 +38,13 @@ fn push(fields: &mut UiFixedList<BuiltNode>, node: UiAssemblyResult<BuiltNode>) 
 
 /// 🧾️ One read-only `label` / `value` row.
 fn read_only(fields: &mut UiFixedList<BuiltNode>, id: &str, label: &str, value: impl std::fmt::Display) -> UiAssemblyResult<()> {
-    push(fields, tree_item_desc(format!("{ROOT}.{id}"), ui_label(label)?, Some(value.to_string())))
+    push(fields, read_only_row(id, label, value))
+}
+
+/// 🧾️ The bare `label` / `value` row node, for the windowed sections that collect their entries
+/// first and materialise only the slice the host asked for.
+fn read_only_row(id: &str, label: &str, value: impl std::fmt::Display) -> UiAssemblyResult<BuiltNode> {
+    tree_item_desc(format!("{ROOT}.{id}"), ui_label(label)?, Some(value.to_string()))
 }
 
 fn vec3(value: [f64; 3]) -> String {
@@ -68,25 +74,24 @@ pub(crate) fn selected_objects(envelope: &CadPlayView) -> Vec<(CadPaneId, CadObj
 /// 🔍️ The selected object's field group (the first selected object carries the fields, the ids row
 /// lists every selected id), or `None` when the `"cad"` selection resolves to no object in this
 /// document.
-fn selected_object_section(envelope: &CadPlayView, labels: &CadLabels) -> Option<UiAssemblyResult<BuiltNode>> {
+fn selected_object_section(envelope: &CadPlayView, labels: &CadLabels, windows: &TreeWindows<'_>) -> Option<UiAssemblyResult<BuiltNode>> {
     let selected = selected_objects(envelope);
     let (pane, object) = selected.first()?;
     let build = || -> UiAssemblyResult<BuiltNode> {
-        let mut fields = UiFixedList::default();
-        for (index, (_, selected)) in selected.iter().enumerate() {
-            read_only(&mut fields, &format!("ids.{index}"), labels.id.as_str(), &selected.id)?;
-        }
-        read_only(&mut fields, "object.label", labels.label.as_str(), &object.label)?;
-        read_only(&mut fields, "object.typology", labels.typology.as_str(), typology_label(&object.typology, labels))?;
-        read_only(&mut fields, "object.pane", labels.slot.as_str(), cad_pane_suffix(*pane))?;
-        read_only(&mut fields, "object.origin", labels.position.as_str(), vec3(object.origin))?;
-        read_only(&mut fields, "object.orientation", labels.rotation.as_str(), vec4(object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0])))?;
-        read_only(&mut fields, "object.scale", labels.scale.as_str(), vec3(object_scale_json(object)))?;
-        read_only(&mut fields, "object.primitives", labels.primitive.as_str(), object.primitives.iter().map(|primitive| format!("{} ({})", primitive.slot, primitive.kind)).collect::<Vec<_>>().join(", "))?;
-        read_only(&mut fields, "object.hidden", labels.hidden.as_str(), !object.visible)?;
-        read_only(&mut fields, "object.locked", labels.locked.as_str(), object.locked)?;
+        // 🪟️ The ids block grows with the selection, so the whole group is one windowed list of
+        // `(row id, label, value)` entries rather than a fixed-capacity node list.
+        let mut rows: Vec<(String, String, String)> = selected.iter().enumerate().map(|(index, (_, selected))| (format!("ids.{index}"), labels.id.as_str().to_string(), selected.id.clone())).collect();
+        rows.push(("object.label".into(), labels.label.as_str().into(), object.label.clone()));
+        rows.push(("object.typology".into(), labels.typology.as_str().into(), typology_label(&object.typology, labels).to_string()));
+        rows.push(("object.pane".into(), labels.slot.as_str().into(), cad_pane_suffix(*pane).into()));
+        rows.push(("object.origin".into(), labels.position.as_str().into(), vec3(object.origin)));
+        rows.push(("object.orientation".into(), labels.rotation.as_str().into(), vec4(object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]))));
+        rows.push(("object.scale".into(), labels.scale.as_str().into(), vec3(object_scale_json(object))));
+        rows.push(("object.primitives".into(), labels.primitive.as_str().into(), object.primitives.iter().map(|primitive| format!("{} ({})", primitive.slot, primitive.kind)).collect::<Vec<_>>().join(", ")));
+        rows.push(("object.hidden".into(), labels.hidden.as_str().into(), (!object.visible).to_string()));
+        rows.push(("object.locked".into(), labels.locked.as_str().into(), object.locked.to_string()));
         let title = if selected.len() == 1 { labels.object.as_str().to_string() } else { format!("{} {}", selected.len(), labels.objects.as_str()) };
-        PanelTreeBuilder::new(ROOT)?.section(format!("{ROOT}.object"), Some(ui_label(&title)?), true, fields)?.build()
+        PanelTreeBuilder::new(ROOT)?.window_section(windows, &format!("{ROOT}.object"), Some(ui_label(&title)?), true, &rows, |(id, label, value)| read_only_row(id, label, value))?.build()
     };
     Some(build())
 }
@@ -150,12 +155,12 @@ fn selected_node_section(envelope: &CadPlayView, labels: &CadLabels) -> Option<U
     Some(build())
 }
 
-pub fn build_properties_panel(envelope: &CadPlayView, labels: &CadLabels, active_utility: Option<&str>) -> UiAssemblyResult<BuiltNode> {
-    if let Some(section) = selected_object_section(envelope, labels).or_else(|| selected_reference_section(envelope, labels)).or_else(|| selected_node_section(envelope, labels)) {
+pub fn build_properties_panel(envelope: &CadPlayView, labels: &CadLabels, active_utility: Option<&str>, windows: &TreeWindows<'_>) -> UiAssemblyResult<BuiltNode> {
+    if let Some(section) = selected_object_section(envelope, labels, windows).or_else(|| selected_reference_section(envelope, labels)).or_else(|| selected_node_section(envelope, labels)) {
         return section;
     }
     let objects = CadPaneId::all().into_iter().filter_map(|pane| edit::cad_pane_working_scene(&envelope.document, pane).map(|scene| edit::cad_pane_working_objects(&scene, pane).0.len())).sum::<usize>();
-    let rows = crate::editor::cad::ui_node_list([
+    let rows = ui_node_list([
         tree_item("cad-play-inspector.schema", ui_label(format!("{}: {}", labels.schema.as_str(), envelope.document.schema))?),
         tree_item("cad-play-inspector.utility", ui_label(format!("{}: {}", labels.utility.as_str(), active_utility.unwrap_or(labels.none_placeholder.as_str())))?),
         tree_item("cad-play-inspector.objects", ui_label(format!("{}: {objects}", labels.objects.as_str()))?),

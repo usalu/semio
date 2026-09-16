@@ -654,7 +654,7 @@ fn a_bare_stack_without_activate_or_drop_action_stays_a_hit_test_pass_through() 
 #[test]
 fn hovering_a_tree_row_no_longer_fires_a_per_item_action() {
     let item = UiTreeItemNode::base("row1", Label::data("Row One"));
-    let section = UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![item] };
+    let section = UiTreeSectionNode { window: None, id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![item] };
 
     let mut tree = UiTree::new();
     let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
@@ -675,7 +675,7 @@ fn pressing_a_draggable_tree_row_then_moving_past_threshold_promotes_it_to_a_dra
     item.draggable = Some(true);
     let payload = DragPayload::from([("application/x-semio-tree-section-reorder".to_string(), "{}".to_string())]);
     item.drag_data = Some(payload.clone());
-    let section = UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![item] };
+    let section = UiTreeSectionNode { window: None, id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![item] };
 
     let mut tree = UiTree::new();
     let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));

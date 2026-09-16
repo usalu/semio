@@ -197,7 +197,7 @@ export async function testDemonstratorRuntime(workspace: string): Promise<void> 
   for (const variant of fixture.invalidVariants) assert.throws(() => runtime.demonstratorPaneRuntimeVariant(variant), /variant/);
   const moduleCatalog = JSON.parse(readFileSync(join(workspace, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🗺️catalog.json"), "utf8"));
   const names = (ids: string[]) => ids.map(id => moduleCatalog.modules.find((row: any) => row.pluginId === id).directoryName);
-  const layout = runtime.demonstratorRuntimeModuleLayout(["demonstrator", "procedural"]);
+  const layout = runtime.demonstratorRuntimeModuleLayout([...new Set<string>(runtime.DEMONSTRATOR_RUNTIME_TARGETS.map((row: any) => row.pluginId))]);
   assert.deepEqual(layout.pluginModuleDirNames, [...fixture.supportDirectories, ...names(fixture.pluginIds)]);
   assert.deepEqual(layout.extensionModuleDirNames, names(fixture.extensionIds));
   const pipeline = JSON.parse(readFileSync(join(directory, "🧫️pipeline.json"), "utf8"));

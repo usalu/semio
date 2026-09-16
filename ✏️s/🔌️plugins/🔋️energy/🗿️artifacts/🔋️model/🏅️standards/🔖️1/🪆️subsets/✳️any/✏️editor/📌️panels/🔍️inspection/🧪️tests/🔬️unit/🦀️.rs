@@ -20,7 +20,7 @@ fn panel(snapshot: &EnergyModelSnapshot, ids: &[&str], locale: Locale) -> String
 }
 
 fn panel_with(snapshot: &EnergyModelSnapshot, ids: &[&str], config: &EnergyModelConfig, locale: Locale) -> String {
-    let built = render(snapshot, &selecting(ids), config, locale).expect("energy inspector assembly");
+    let built = render(snapshot, &selecting(ids), config, locale, &TreeWindows::unhosted()).expect("energy inspector assembly");
     semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree { root: built }).expect("energy inspector projection")
 }
 
@@ -42,9 +42,7 @@ fn component_at(json: &str, key: &str) -> String {
     node["component"]["type"].as_str().expect("every projected component names its type").to_owned()
 }
 
-/// 🌲️ The layout trap: the React `Interpreter` maps a `Component::Tree` onto `TreeDataItem`s and
-/// DROPS every non-tree-item child, so a form control nested in one reaches the host and is never
-/// drawn. This panel renders none — ever.
+/// 🌲️ Every inspector body is a `Component::Tree` of sections and `treeItem` rows.
 fn carries_a_tree(json: &str) -> bool {
     json.contains("\"tree\"") || json.contains("\"treeSection\"") || json.contains("\"treeItem\"")
 }
@@ -56,8 +54,7 @@ async fn the_panel_tab_declares_the_framework_inspection_slot_and_this_body_key(
     assert_eq!(tab.group, PanelGroup::Details);
 }
 
-/// 🟫️ A selected surface offers every editable field of the record plus its derived geometry, and
-/// never a tree node.
+/// 🟫️ A selected surface offers every editable field of the record plus its derived geometry.
 #[semio_framework_async_macros::async_test]
 async fn a_selected_surface_renders_its_whole_editable_record() {
     let json = english(&["40"]);
@@ -68,10 +65,10 @@ async fn a_selected_surface_renders_its_whole_editable_record() {
     assert_eq!(component_at(&json, "energy-model-inspection.surface.sun-exposed.toggle"), "toggle");
     assert_eq!(component_at(&json, "energy-model-inspection.surface.wind-exposed.toggle"), "toggle");
     assert_eq!(component_at(&json, "energy-model-inspection.surface.multiplier.input"), "input");
-    assert_eq!(component_at(&json, "energy-model-inspection.surface.area.value"), "text", "a derived quantity is reported, never offered as a control");
+    assert_eq!(component_at(&json, "energy-model-inspection.surface.area"), "treeItem", "a derived quantity is reported, never offered as a control");
     assert!(json.contains(SET_SURFACE_PROPERTY_ACTION_ID), "every control dispatches the surface property verb");
     assert!(json.contains("exteriorWall"), "the class select offers this editor's own class vocabulary");
-    assert!(!carries_a_tree(&json), "{json}");
+    assert!(carries_a_tree(&json), "{json}");
 }
 
 /// 🪟️ A selected window offers all fifteen scalars plus its glazing construction — the fields the
@@ -87,13 +84,12 @@ async fn a_selected_window_renders_every_fenestration_field() {
     assert_eq!(component_at(&json, "energy-model-inspection.fenestration.glazing.select"), "select");
     assert!(json.contains(SET_FENESTRATION_PROPERTY_ACTION_ID));
     assert!(json.contains("\"uValueWM2K\""), "the binding names the field it patches");
-    assert!(!carries_a_tree(&json), "{json}");
+    assert!(carries_a_tree(&json), "{json}");
 }
 
-/// 🧾️ The law the tree layout broke: a field row must reach the host as the CONTROL component the
-/// renderer knows how to draw, inside its labelled field row, bound to its own command.
+/// 🧾️ Editable fields are `treeItem` rows whose inline control stays bound to its command.
 #[semio_framework_async_macros::async_test]
-async fn a_window_u_value_row_is_a_bound_number_input_inside_a_field_row() {
+async fn a_window_u_value_row_is_a_bound_number_input_inside_a_tree_row() {
     let json = english(&["50"]);
     let tree: serde_json::Value = serde_json::from_str(&json).expect("the inspector projection is JSON");
     let control = node_at(&tree, "energy-model-inspection.fenestration.u-value.input").unwrap_or_else(|| panic!("{json}"));
@@ -105,7 +101,7 @@ async fn a_window_u_value_row_is_a_bound_number_input_inside_a_field_row() {
     assert!(bindings.contains("\"50\""), "the binding addresses the selected window: {bindings}");
     assert!(!bindings.contains("\"value\""), "the control's own value is merged by the host, never authored here: {bindings}");
     let row = node_at(&tree, "energy-model-inspection.fenestration.u-value").unwrap_or_else(|| panic!("{json}"));
-    assert_eq!(row["component"]["type"].as_str(), Some("container"), "the input sits inside its labelled field row: {row}");
+    assert_eq!(row["component"]["type"].as_str(), Some("treeItem"), "the input sits inside its labelled tree row: {row}");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -117,7 +113,7 @@ async fn a_selected_zone_renders_its_five_fields_and_a_delete_verb() {
     assert_eq!(component_at(&json, "energy-model-inspection.zone.conditioned.toggle"), "toggle");
     assert_eq!(component_at(&json, "energy-model-inspection.zone.floor-area.toggle"), "toggle");
     assert!(json.contains(SET_ZONE_PROPERTY_ACTION_ID));
-    assert_eq!(component_at(&json, "energy-model-inspection.actions.delete"), "button", "a zone can be deleted from the inspector");
+    assert_eq!(component_at(&json, "energy-model-inspection.actions.delete"), "treeItem", "a zone can be deleted from the inspector");
     assert!(json.contains(crate::editor::model::DELETE_ZONE_ACTION_ID));
 }
 
@@ -144,8 +140,8 @@ async fn glazing_and_gas_materials_expose_exactly_the_fields_a_mutation_kind_nam
     assert_eq!(component_at(&glazing, "energy-model-inspection.glazing.solar-transmittance.slider"), "slider");
     assert_eq!(component_at(&glazing, "energy-model-inspection.glazing.emissivity-front.slider"), "slider");
     assert!(glazing.contains(SET_GLAZING_MATERIAL_PROPERTY_ACTION_ID));
-    assert_eq!(component_at(&glazing, "energy-model-inspection.glazing.solar-reflectance.value"), "text", "a field with no mutation kind is reported, never offered");
-    assert!(!carries_a_tree(&glazing), "{glazing}");
+    assert_eq!(component_at(&glazing, "energy-model-inspection.glazing.solar-reflectance"), "treeItem", "a field with no mutation kind is reported, never offered");
+    assert!(carries_a_tree(&glazing), "{glazing}");
     let gas = english(&["23"]);
     assert_eq!(component_at(&gas, "energy-model-inspection.gas.kind.select"), "select", "{gas}");
     assert_eq!(component_at(&gas, "energy-model-inspection.gas.thickness.input"), "input");
@@ -161,13 +157,13 @@ async fn a_selected_construction_edits_its_layer_stack_and_reports_its_u_value()
     let json = english(&["30"]);
     assert_eq!(component_at(&json, "energy-model-inspection.construction.name.input"), "input", "{json}");
     assert_eq!(component_at(&json, "energy-model-inspection.construction.layer.0.select"), "select", "a layer is re-pointed, not just reported: {json}");
-    assert_eq!(component_at(&json, "energy-model-inspection.construction.layer.0.remove.button"), "button");
+    assert_eq!(component_at(&json, "energy-model-inspection.construction.layer.0.remove.button"), "treeItem");
     assert_eq!(component_at(&json, "energy-model-inspection.construction.add-layer.select"), "select");
     assert!(json.contains(SET_CONSTRUCTION_PROPERTY_ACTION_ID), "every layer control dispatches the construction verb");
     assert!(json.contains("replaceLayer:0"), "the layer select names the slot it replaces: {json}");
     assert!(json.contains("removeLayer"), "the remove button carries its own index: {json}");
     assert!(json.contains("Wood Siding") || json.contains("Plasterboard"), "a layer reads as its material's name: {json}");
-    assert!(!carries_a_tree(&json), "{json}");
+    assert!(carries_a_tree(&json), "{json}");
 
     // 🔥️ The U-value row reports exactly what the engine computes for that stack.
     let model = crate::examples::demo::model();
@@ -269,7 +265,7 @@ async fn nothing_selected_renders_the_document_summary_and_the_editable_site() {
     assert_eq!(component_at(&json, "energy-model-inspection.site.latitude.input"), "input", "the site is editable from the summary");
     assert!(json.contains(SET_SITE_ACTION_ID));
     assert!(!json.contains(SET_SURFACE_PROPERTY_ACTION_ID));
-    assert!(!carries_a_tree(&json), "{json}");
+    assert!(carries_a_tree(&json), "{json}");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -312,7 +308,7 @@ async fn every_body_carries_the_result_field_selector() {
         for field in crate::editor::model::results::ResultField::ALL {
             assert!(json.contains(field.id()), "selection {ids:?}: the select offers {}", field.id());
         }
-        assert!(!carries_a_tree(&json), "{json}");
+        assert!(carries_a_tree(&json), "{json}");
     }
 }
 

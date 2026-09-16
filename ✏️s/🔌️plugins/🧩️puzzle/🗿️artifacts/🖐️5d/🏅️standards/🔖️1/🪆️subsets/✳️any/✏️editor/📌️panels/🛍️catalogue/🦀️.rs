@@ -1,16 +1,25 @@
 //! 🛍️ Puzzle 5d play app panel — the kind catalogue: the part/grip/fastener/rope kind rows, with the
-//! part rows draggable onto the board (and clickable to place through `addPartKind`).
+//! part rows draggable onto the board (and clickable to place through `addPartKind`) — a catalogue
+//! row owns its own binding, so it stays an ordinary interactive row.
+//!
+//! 🪟️ All four sections are windowed: each publishes its full `total` and materialises only the
+//! host's slice (see `📌️panels/🗿️artifact` for the windowing law).
 
 use crate::editor::puzzle5d::terminology::Puzzle5dLabels;
 use crate::editor::puzzle5d::{ui_label, Puzzle5dScene, PUZZLE5D_PLAY_CONTROLLER_ID};
 use semio_framework_plugin::{
-    tree_item_desc, tree_item_with_action_draggable, ActionFactory, BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiFixedList, UiMapBuilder, UiText, UiValue,
+    tree_item_desc, tree_item_with_action_draggable, ActionFactory, BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, TreeWindows, UiMapBuilder, UiText, UiValue,
     FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
 };
 use serde_json::{json, Value};
 
 //#region 🔖️Constants
 pub const BODY_KEY: &str = "puzzle.5d.play.kinds";
+pub const ROOT: &str = "puzzle5d-play-kinds";
+pub const PARTS_SECTION: &str = "puzzle5d-play-kinds.parts";
+pub const GRIPS_SECTION: &str = "puzzle5d-play-kinds.grips";
+pub const FASTENERS_SECTION: &str = "puzzle5d-play-kinds.fasteners";
+pub const ROPES_SECTION: &str = "puzzle5d-play-kinds.ropes";
 /// 🖱️ MIME key `DeclarativeTreePanel` (framework/renderer/react/ui-interpreter.tsx)? reads to auto-wire catalogue drag sources.
 const PUZZLE5D_CATALOGUE_DRAG_MIME: &str = "application/x-semio-catalogue-item";
 //#endregion 🔖️Constants
@@ -58,30 +67,33 @@ fn add_part_args(kind_id: &str) -> semio_framework_plugin::UiAssemblyResult<UiVa
     Ok(UiValue::Map(args.finish()))
 }
 
-fn kind_catalog_items(section_id: &str, entries: &[Value], add_action: Option<&str>) -> semio_framework_plugin::UiAssemblyResult<UiFixedList<BuiltNode>> {
+/// 🛍️ One catalogue row. `index` keeps the key unique even when a catalog repeats a kind id.
+fn kind_catalog_item(section_id: &str, entry: &(usize, &Value), add_action: Option<&str>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+    let (index, entry) = (entry.0, entry.1);
     let actions = ActionFactory::new(PUZZLE5D_PLAY_CONTROLLER_ID);
-    let mut items = UiFixedList::<BuiltNode>::default();
-    for (index, entry) in entries.iter().enumerate() {
-        let kind_id = entry.get("id").and_then(Value::as_str).ok_or_else(|| PluginAssemblyError::new("ui.catalogue", "puzzle5d catalogue kind id is required"))?;
-        let item = match add_action {
-            Some(action) => {
-                let drag_data = puzzle5d_catalog_item_drag_data(kind_id, entry);
-                // 🌉️ `tree_item_with_action_draggable` (framework-owned, out of this ticket's
-                // scope) is typed against `dsl::os_pack::json::Value`; bridges this panel's own
-                // `serde_json::Value` drag payload through `DslValue` at this one call.
-                let drag_data = dsl::os_pack::json::from_dsl_value(&dsl::DslValue::from(&drag_data));
-                tree_item_with_action_draggable(format!("{section_id}.{index}.{kind_id}"), ui_label(catalog_kind_label(entry))?, Some(kind_id.into()), actions.action(action, Some(add_part_args(kind_id)?))?, &drag_data)?
-            }
-            None => tree_item_desc(format!("{section_id}.{index}.{kind_id}"), ui_label(catalog_kind_label(entry))?, Some(kind_id.into()))?,
-        };
-        items.try_push(item).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "puzzle5d catalogue item admission failed"))?;
+    let kind_id = entry.get("id").and_then(Value::as_str).ok_or_else(|| PluginAssemblyError::new("ui.catalogue", "puzzle5d catalogue kind id is required"))?;
+    match add_action {
+        Some(action) => {
+            let drag_data = puzzle5d_catalog_item_drag_data(kind_id, entry);
+            // 🌉️ `tree_item_with_action_draggable` (framework-owned, out of this ticket's
+            // scope) is typed against `dsl::os_pack::json::Value`; bridges this panel's own
+            // `serde_json::Value` drag payload through `DslValue` at this one call.
+            let drag_data = dsl::os_pack::json::from_dsl_value(&dsl::DslValue::from(&drag_data));
+            tree_item_with_action_draggable(format!("{section_id}.{index}.{kind_id}"), ui_label(catalog_kind_label(entry))?, Some(kind_id.into()), actions.action(action, Some(add_part_args(kind_id)?))?, &drag_data)
+        }
+        None => tree_item_desc(format!("{section_id}.{index}.{kind_id}"), ui_label(catalog_kind_label(entry))?, Some(kind_id.into())),
     }
-    Ok(items)
 }
+
+/// 🛍️ The windowed entries of one catalogue section, each carrying its ordinal.
+fn indexed(entries: &[Value]) -> Vec<(usize, &Value)> {
+    entries.iter().enumerate().collect()
+}
+
 //#endregion 🔖️Rows
 
 //#region 🔖️Render
-pub fn render(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let catalogs = envelope.document.kind_catalogs.clone().unwrap_or(json!({}));
     let slice = |key: &str| catalogs.get(key).and_then(|value| value.as_array()).cloned().unwrap_or_default();
     let mut part_entries = slice("parts");
@@ -94,11 +106,12 @@ pub fn render(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels) -> semio_framew
     let grips = slice("grips");
     let fasteners = slice("fasteners");
     let ropes = slice("ropes");
-    PanelTreeBuilder::new("puzzle5d-play-kinds")?
-        .section_or_placeholder("puzzle5d-play-kinds.parts", Some(ui_label(labels.parts.as_str())?), !part_entries.is_empty(), kind_catalog_items("puzzle5d-play-kinds.parts", &part_entries, Some("addPartKind"))?, ui_label(labels.none.as_str())?)?
-        .section_or_placeholder("puzzle5d-play-kinds.grips", Some(ui_label(labels.grips.as_str())?), !grips.is_empty(), kind_catalog_items("puzzle5d-play-kinds.grips", &grips, None)?, ui_label(labels.none.as_str())?)?
-        .section_or_placeholder("puzzle5d-play-kinds.fasteners", Some(ui_label(labels.fasteners.as_str())?), !fasteners.is_empty(), kind_catalog_items("puzzle5d-play-kinds.fasteners", &fasteners, None)?, ui_label(labels.none.as_str())?)?
-        .section_or_placeholder("puzzle5d-play-kinds.ropes", Some(ui_label(labels.ropes.as_str())?), !ropes.is_empty(), kind_catalog_items("puzzle5d-play-kinds.ropes", &ropes, None)?, ui_label(labels.none.as_str())?)?
+    let (parts, grips, fasteners, ropes) = (indexed(&part_entries), indexed(&grips), indexed(&fasteners), indexed(&ropes));
+    PanelTreeBuilder::new(ROOT)?
+        .window_section_or_placeholder(windows, PARTS_SECTION, Some(ui_label(labels.parts.as_str())?), !parts.is_empty(), &parts, |entry| kind_catalog_item(PARTS_SECTION, entry, Some("addPartKind")), ui_label(labels.none.as_str())?)?
+        .window_section_or_placeholder(windows, GRIPS_SECTION, Some(ui_label(labels.grips.as_str())?), !grips.is_empty(), &grips, |entry| kind_catalog_item(GRIPS_SECTION, entry, None), ui_label(labels.none.as_str())?)?
+        .window_section_or_placeholder(windows, FASTENERS_SECTION, Some(ui_label(labels.fasteners.as_str())?), !fasteners.is_empty(), &fasteners, |entry| kind_catalog_item(FASTENERS_SECTION, entry, None), ui_label(labels.none.as_str())?)?
+        .window_section_or_placeholder(windows, ROPES_SECTION, Some(ui_label(labels.ropes.as_str())?), !ropes.is_empty(), &ropes, |entry| kind_catalog_item(ROPES_SECTION, entry, None), ui_label(labels.none.as_str())?)?
         .build()
 }
 //#endregion 🔖️Render

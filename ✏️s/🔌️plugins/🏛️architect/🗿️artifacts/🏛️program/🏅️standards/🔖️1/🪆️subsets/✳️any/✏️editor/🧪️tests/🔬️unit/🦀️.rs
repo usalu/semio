@@ -279,7 +279,7 @@ async fn formatted_report_renders_section_headings() {
     let selected_report_id = payload.report_record.header.id.clone();
     program.reports.push(payload.report_record.clone());
     let config = report_window::config::ArchitectReportWindowConfig { selected_report_id: Some(selected_report_id) };
-    let json = context::project_render(report_window::render(&program, &config, &semio_framework_plugin::ViewModel::default()));
+    let json = context::project_render(report_window::render(&program, &config, &semio_framework_plugin::ViewModel::default(), &semio_framework_plugin::TreeWindows::unhosted()));
     assert!(json.contains("Overview"));
     assert!(json.contains("architect-report.section"));
 }

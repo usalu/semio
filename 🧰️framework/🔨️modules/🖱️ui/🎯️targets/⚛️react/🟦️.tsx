@@ -254,6 +254,39 @@ import { SVGRenderer } from "three/examples/jsm/renderers/SVGRenderer.js";
 
 const GLB_MESH_FRAME_ROTATION_X = Math.PI / 2;
 const ICON_RENDER_GLB_CACHE = ephemeralMap<string, Promise<THREE.Group>>("framework.modules.ui.packages.typescript.targets.react.index.tsx.ICON_RENDER_GLB_CACHE");
+const ICON_RENDER_MESH_OUTLINE_USER_DATA_KEY = "semio.iconRender.meshOutline";
+const ICON_RENDER_EDGE_GEOMETRY_CACHE = new WeakMap<THREE.BufferGeometry, THREE.EdgesGeometry>();
+
+/** @emoji 🌫️ Empty/`transparent` lets the host surface show through — mirrors world-3d environment JSON. */
+export function isTransparentIconBackground(background?: string): boolean {
+  return !background || background === "transparent";
+}
+
+function iconRenderStrokeEnabled(stroke?: string): boolean {
+  if (!stroke) return true;
+  const normalized = stroke.trim().toLowerCase();
+  return normalized !== "transparent" && normalized !== "none";
+}
+
+function applyIconMeshEdgeBorders(root: THREE.Object3D, borderColor: string): void {
+  const targets: THREE.Mesh[] = [];
+  root.traverse((object) => {
+    if (!(object instanceof THREE.Mesh)) return;
+    if (!object.geometry || object.children.some((child) => child.userData[ICON_RENDER_MESH_OUTLINE_USER_DATA_KEY])) return;
+    targets.push(object);
+  });
+  for (const object of targets) {
+    let edges = ICON_RENDER_EDGE_GEOMETRY_CACHE.get(object.geometry);
+    if (!edges) {
+      edges = new THREE.EdgesGeometry(object.geometry);
+      ICON_RENDER_EDGE_GEOMETRY_CACHE.set(object.geometry, edges);
+    }
+    const outline = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: new THREE.Color(borderColor) }));
+    outline.userData[ICON_RENDER_MESH_OUTLINE_USER_DATA_KEY] = true;
+    outline.scale.setScalar(1.001);
+    object.add(outline);
+  }
+}
 
 /** @emoji ☀️ Sun position on a sphere from azimuth/elevation degrees, see https://en.wikipedia.org/wiki/Horizontal_coordinate_system. */
 export function sunPositionFromAzimuthElevation(azimuthDeg: number, elevationDeg: number, distance = 120): [number, number, number] {
@@ -286,27 +319,34 @@ async function loadGlbGroup(url: string): Promise<THREE.Group> {
 }
 
 function applyIconMaterial(group: THREE.Object3D, material?: IconRenderRequest["material"]): void {
-  if (!material) return;
-  group.traverse((obj) => {
-    if (!(obj instanceof THREE.Mesh)) return;
-    const mat = new THREE.MeshStandardMaterial({
-      color: material.color ?? "#9aa0ab",
-      metalness: material.metalness ?? 0,
-      roughness: material.roughness ?? 1,
+  if (material) {
+    group.traverse((obj) => {
+      if (!(obj instanceof THREE.Mesh)) return;
+      const mat = new THREE.MeshStandardMaterial({
+        color: material.color ?? "#9aa0ab",
+        metalness: material.metalness ?? 0,
+        roughness: material.roughness ?? 1,
+      });
+      if (material.emissive) {
+        mat.emissive.set(material.emissive);
+        mat.emissiveIntensity = material.emissiveIntensity ?? 1;
+      }
+      obj.material = mat;
+      obj.castShadow = true;
+      obj.receiveShadow = true;
     });
-    if (material.emissive) {
-      mat.emissive.set(material.emissive);
-      mat.emissiveIntensity = material.emissiveIntensity ?? 1;
-    }
-    obj.material = mat;
-    obj.castShadow = true;
-    obj.receiveShadow = true;
-  });
+  }
+  const stroke = material?.stroke ?? "#000000";
+  if (iconRenderStrokeEnabled(stroke)) {
+    applyIconMeshEdgeBorders(group, stroke);
+  }
 }
 
 function buildIconScene(request: IconRenderRequest, model: THREE.Group): THREE.Scene {
   const scene = new THREE.Scene();
-  if (request.background) scene.background = new THREE.Color(request.background);
+  if (!isTransparentIconBackground(request.background)) {
+    scene.background = new THREE.Color(request.background);
+  }
   scene.add(model.clone(true));
   applyIconMaterial(scene, request.material);
   const ambient = new THREE.AmbientLight(request.lights.ambientColor, request.lights.ambientIntensity);
@@ -321,6 +361,27 @@ function buildIconScene(request: IconRenderRequest, model: THREE.Group): THREE.S
   return scene;
 }
 
+/** @emoji 📷️ Whether an icon shot uses parallel projection — mirrors world-3d `camera.projection`. */
+export function iconRenderCameraIsOrthographic(camera: IconRenderCamera): boolean {
+  return camera.projection === "orthographic";
+}
+
+/** @emoji 📷️ Orthographic zoom for a drei/R3F pixel frustum (`left = -width/2`, …) — twin of `worldProjectionOrthoZoom`. */
+export function iconRenderOrthoZoomForRadius(radius: number, width: number, height: number, padding = 1.25): number {
+  const padded = Math.max(radius * Math.max(padding, 1), 0.5);
+  const zoomX = width * 0.5 / padded;
+  const zoomY = height * 0.5 / padded;
+  return Math.max(Math.min(zoomX, zoomY), 1e-3);
+}
+
+/** @emoji 📷️ Perspective eye distance so a bounding sphere fits the shot frustum — twin of `world3dFrameDistanceForRadius`. */
+export function iconRenderPerspectiveDistanceForRadius(radius: number, fovDeg: number, aspect: number, padding = 1.25): number {
+  const vertical = Math.min(Math.max(((fovDeg * Math.PI) / 180) * 0.5, 0.02), 1.5);
+  const horizontal = Math.min(Math.max(Math.atan(Math.tan(vertical) * Math.max(aspect, 0.05)), 0.02), 1.5);
+  const half = Math.min(vertical, horizontal);
+  return Math.max((Math.max(radius, 1e-4) / Math.sin(half)) * Math.max(padding, 1), 0.5);
+}
+
 /** @emoji 🎯️ `request.camera`, or — with `request.fit` enabled — the same viewing direction re-targeted at
  * the model's bounding-sphere centre and backed off so the sphere fills the frame (`padding` ≥ 1). */
 export function iconRenderCameraPose(request: IconRenderRequest, model: THREE.Object3D): IconRenderCamera {
@@ -328,21 +389,38 @@ export function iconRenderCameraPose(request: IconRenderRequest, model: THREE.Ob
   if (!request.fit?.enabled) return camera;
   const sphere = new THREE.Box3().setFromObject(model).getBoundingSphere(new THREE.Sphere());
   if (!Number.isFinite(sphere.radius) || sphere.radius <= 0) return camera;
-  const fovDeg = camera.fov ?? 50;
-  const aspect = request.width / request.height;
-  const vertical = Math.min(Math.max(((fovDeg * Math.PI) / 180) * 0.5, 0.02), 1.5);
-  const horizontal = Math.min(Math.max(Math.atan(Math.tan(vertical) * Math.max(aspect, 0.05)), 0.02), 1.5);
-  const distance = (sphere.radius / Math.sin(Math.min(vertical, horizontal))) * Math.max(request.fit.padding ?? 1.25, 1);
+  const padding = request.fit.padding ?? 1.25;
   const direction = new THREE.Vector3(camera.position[0] - camera.target[0], camera.position[1] - camera.target[1], camera.position[2] - camera.target[2]);
   if (direction.lengthSq() < 1e-12) direction.set(1, -1, 0.85);
-  direction.normalize().multiplyScalar(distance);
+  const length = direction.length();
+  direction.normalize();
   const target: [number, number, number] = [sphere.center.x, sphere.center.y, sphere.center.z];
-  return { ...camera, position: [target[0] + direction.x, target[1] + direction.y, target[2] + direction.z], target };
+  if (iconRenderCameraIsOrthographic(camera)) {
+    const distance = length > 1e-6 ? length : Math.max(sphere.radius * 4, 2);
+    return {
+      ...camera,
+      position: [target[0] + direction.x * distance, target[1] + direction.y * distance, target[2] + direction.z * distance],
+      target,
+      zoom: iconRenderOrthoZoomForRadius(sphere.radius, request.width, request.height, padding),
+    };
+  }
+  const distance = iconRenderPerspectiveDistanceForRadius(sphere.radius, camera.fov ?? 50, request.width / request.height, padding);
+  return { ...camera, position: [target[0] + direction.x * distance, target[1] + direction.y * distance, target[2] + direction.z * distance], target, zoom: camera.zoom };
 }
 
-function buildIconCamera(request: IconRenderRequest, pose: IconRenderCamera = request.camera): THREE.PerspectiveCamera {
-  const camera = new THREE.PerspectiveCamera(pose.fov ?? 50, request.width / request.height, 0.1, 10_000);
+/** @emoji 📷️ Builds the three.js camera for an icon shot — perspective or orthographic to match the scene lane. */
+export function buildIconCamera(request: IconRenderRequest, pose: IconRenderCamera = request.camera): THREE.Camera {
   const up = pose.up ?? [0, 0, 1];
+  if (iconRenderCameraIsOrthographic(pose)) {
+    const camera = new THREE.OrthographicCamera(request.width / -2, request.width / 2, request.height / 2, request.height / -2, 0.1, 10_000);
+    camera.up.set(up[0], up[1], up[2]);
+    camera.position.set(pose.position[0], pose.position[1], pose.position[2]);
+    camera.lookAt(pose.target[0], pose.target[1], pose.target[2]);
+    camera.zoom = pose.zoom;
+    camera.updateProjectionMatrix();
+    return camera;
+  }
+  const camera = new THREE.PerspectiveCamera(pose.fov ?? 50, request.width / request.height, 0.1, 10_000);
   camera.up.set(up[0], up[1], up[2]);
   camera.position.set(pose.position[0], pose.position[1], pose.position[2]);
   camera.lookAt(pose.target[0], pose.target[1], pose.target[2]);
@@ -351,17 +429,27 @@ function buildIconCamera(request: IconRenderRequest, pose: IconRenderCamera = re
   return camera;
 }
 
-async function renderIconSvg(scene: THREE.Scene, camera: THREE.PerspectiveCamera, width: number, height: number): Promise<IconRenderResult> {
+/** @emoji 🧼️ Strips three.js SVGRenderer's default opaque clear color when the shot background is transparent. */
+export function finalizeIconSvgMarkup(svgMarkup: string, options: { readonly background?: string }): string {
+  if (!isTransparentIconBackground(options.background)) return svgMarkup;
+  return svgMarkup.replace(/\sstyle="background-color:[^"]*"/gi, "");
+}
+
+async function renderIconSvg(scene: THREE.Scene, camera: THREE.Camera, width: number, height: number, background?: string): Promise<IconRenderResult> {
   const renderer = new SVGRenderer();
+  if (isTransparentIconBackground(background)) {
+    renderer.autoClear = false;
+  }
   renderer.setSize(width, height);
   renderer.render(scene, camera);
   const svgElement = renderer.domElement;
-  const svgMarkup = new XMLSerializer().serializeToString(svgElement);
+  let svgMarkup = new XMLSerializer().serializeToString(svgElement);
+  svgMarkup = finalizeIconSvgMarkup(svgMarkup, { background });
   const dataUrl = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgMarkup)}`;
   return { dataUrl, svgMarkup };
 }
 
-async function renderIconPng(scene: THREE.Scene, camera: THREE.PerspectiveCamera, width: number, height: number, shadowEnabled: boolean): Promise<IconRenderResult> {
+async function renderIconPng(scene: THREE.Scene, camera: THREE.Camera, width: number, height: number, shadowEnabled: boolean): Promise<IconRenderResult> {
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
   renderer.setSize(width, height);
   renderer.shadowMap.enabled = shadowEnabled;
@@ -433,7 +521,7 @@ export let iconRenderPort: IconRenderPort = {
     const model = await loadGlbGroup(request.assetUrl);
     const scene = buildIconScene(request, model);
     const camera = buildIconCamera(request, iconRenderCameraPose(request, model));
-    const result = request.format === "svg" ? await renderIconSvg(scene, camera, request.width, request.height) : await renderIconPng(scene, camera, request.width, request.height, request.shadowEnabled === true);
+    const result = request.format === "svg" ? await renderIconSvg(scene, camera, request.width, request.height, request.background) : await renderIconPng(scene, camera, request.width, request.height, request.shadowEnabled === true);
     return applyIconRenderShape(result, request.shape, request.width, request.height);
   },
 };
@@ -9443,9 +9531,15 @@ import {
   treeRowChromeContentFillClasses,
   treeRowChromeShellClasses,
   treeRowDragPayloadAttributes,
+  treeRowHeightPx,
+  treeWindowDomAttributes,
+  treeWindowRequestsForViewport,
+  treeWindowSpacerRows,
   uiSpacingLen,
   useTreeReorder,
   useTreeState,
+  TREE_WINDOW_OVERSCAN_ROWS,
+  TREE_WINDOW_ROWS_MAX,
   type CatalogueItem,
   type CatalogueProps,
   type ControlDef,
@@ -9469,6 +9563,10 @@ import {
   type TreeReorderMove,
   type TreeSectionAction,
   type TreeSelectionMode,
+  type TreeDataWindow,
+  type TreeWindowContainerMeasure,
+  type TreeWindowDomAttributes,
+  type TreeWindowRequest,
   type UseTreeReorderResult,
   type WindowMeasureTreeGroupProps,
   type WindowMeasureTreeLeafProps,
@@ -9537,9 +9635,15 @@ export {
   treeRowChromeContentFillClasses,
   treeRowChromeShellClasses,
   treeRowDragPayloadAttributes,
+  treeRowHeightPx,
+  treeWindowDomAttributes,
+  treeWindowRequestsForViewport,
+  treeWindowSpacerRows,
   uiSpacingLen,
   useTreeReorder,
   useTreeState,
+  TREE_WINDOW_OVERSCAN_ROWS,
+  TREE_WINDOW_ROWS_MAX,
 };
 export type {
   CatalogueItem,
@@ -9565,6 +9669,10 @@ export type {
   TreeReorderMove,
   TreeSectionAction,
   TreeSelectionMode,
+  TreeDataWindow,
+  TreeWindowContainerMeasure,
+  TreeWindowDomAttributes,
+  TreeWindowRequest,
   UseTreeReorderResult,
   WindowMeasureTreeGroupProps,
   WindowMeasureTreeLeafProps,
@@ -11259,6 +11367,45 @@ export {
 // #endregion ⚙️Canvas
 
 if (import.meta.vitest) {
+  const { describe, expect, it } = import.meta.vitest;
+  describe("finalizeIconSvgMarkup", () => {
+    it("removes three.js SVGRenderer white clear color when the shot background is transparent", () => {
+      const input = '<svg xmlns="http://www.w3.org/2000/svg" style="background-color: rgb(255, 255, 255);"><path d="M0 0"/></svg>';
+      expect(finalizeIconSvgMarkup(input, { background: undefined })).not.toMatch(/background-color/i);
+      expect(finalizeIconSvgMarkup(input, { background: "#101014" })).toMatch(/background-color/i);
+    });
+  });
+  describe("iconRenderCameraPose", () => {
+    it("builds an orthographic camera for orthographic shots", () => {
+      const request = {
+        assetUrl: "mesh://x",
+        width: 256,
+        height: 256,
+        format: "svg" as const,
+        lights: { ambientIntensity: 1, ambientColor: "#fff", sunAzimuth: 0, sunElevation: 45, sunIntensity: 1, sunColor: "#fff" },
+        camera: { position: [10, -10, 8], target: [0, 0, 0], zoom: 42, projection: "orthographic" as const },
+      };
+      const camera = buildIconCamera(request);
+      expect((camera as THREE.OrthographicCamera).isOrthographicCamera).toBe(true);
+      expect((camera as THREE.OrthographicCamera).zoom).toBe(42);
+    });
+    it("recomputes orthographic zoom when fit is enabled", () => {
+      const mesh = new THREE.Mesh(new THREE.BoxGeometry(4, 4, 4));
+      const request = {
+        assetUrl: "mesh://x",
+        width: 256,
+        height: 256,
+        format: "svg" as const,
+        fit: { enabled: true, padding: 1.25 },
+        lights: { ambientIntensity: 1, ambientColor: "#fff", sunAzimuth: 0, sunElevation: 45, sunIntensity: 1, sunColor: "#fff" },
+        camera: { position: [10, -10, 8], target: [0, 0, 0], zoom: 200, projection: "orthographic" as const },
+      };
+      const pose = iconRenderCameraPose(request, mesh);
+      expect(pose.projection).toBe("orthographic");
+      expect(pose.zoom).toBeLessThan(50);
+      expect(pose.zoom).toBeGreaterThan(1);
+    });
+  });
   const { registerTests1 } = await import("../../🧪️tests/🧪️owned-locale-detector-retirement/🟦️.tsx");
   await registerTests1(import.meta.vitest, { App, Button, CELEBRATE_STAMP_DURATION_MS, COMPACT_UI_DRIVER, COMPOSE_WINDOW_TEMPLATE_MIME, Canvas, CanvasPickMenu, ContextMenu, ContextMenuController, DEFAULT_GUMBALL_CONFIG, DEFAULT_UI_DRIVER, Engagement, FlowProvider, Footer, GLASS_OVERLAY_BOX_CLASS, GUMBALL_DEFAULT_SHIFT_ROTATION_SNAP, GUMBALL_DEFAULT_SHIFT_SCALE_SNAP, GUMBALL_PLANE_OFFSET, GUMBALL_PLANE_SIZE, GUMBALL_PREVIEW_DISK_RADIUS, GUMBALL_PREVIEW_MIN_EXTENT, GUMBALL_PREVIEW_RING_RADIUS, GUMBALL_RING_RADIUS, ICONS, INTRODUCTION_DEMO_IDLE_THRESHOLD_MS, INTRODUCTION_INFO_BOX_GAP_PX, Icon, Input, LEVELS, Label, Layout, LevelProvider, MODE_CANVAS_INSET_CLASS, Mode, Navbar, NotFound, OrthographicCamera, Pane, PaneHost, Panel, PanelChromeTabBar, PanelDockProvider, PanelTabBar, PerspectiveCamera, Popover, PopoverContent, PopoverTrigger, React, RouteLink, Scrollable, Search, ShellScopeProvider, SortableTreeItems, Surface, THREE, TREE_SECTION_REORDER_MIME, TextSelectionContextMenuHost, Toggle, Tree, TreeContext, TreeItem, UIIntroduction, UI_CHROME_LOCALE_STORAGE_KEY, UI_ELEMENT_REGISTRY, Ui, UiDriverProvider, UiMobileProvider, WINDOW_SILHOUETTE_BORDER_KINDS, WINDOW_SILHOUETTE_GEOMETRY_SCHEMA, WINDOW_SILHOUETTE_PATH_INSET, Window, WindowChrome, WindowMeasureTreeGroup, WindowMeasureTreeLeaf, WindowMeasuresTree, applyAxisGroupLayoutDelta, applyModeDrop, applyModeJoinCornerResize, applySearchSpaceAction, assertUniqueIconConceptAssignments, beginWindowTemplateDrag, beginWindowTemplatePointerDrag, borderNormalClass, buildTextSelectionContextMenuItems, cancelWindowTemplatePointerDrag, celebrateAllElements, celebrateElement, celebrateElements, childElementId, chromeHostedOpenPanelPositionStyle, chromeStatusBorderClass, clampIntroductionInfoBoxPosition, clampSliderValuesToReady, classifyIconSelectorMode, cn, computeModeDropZone, computeModeSplitPreviewInBody, computeTabDockDropZone, computeTabInsertPreview, createDOMEventBinding, createDiagramForceSimulation, createEvenWindowLayout, createMemoryStoragePort, createShellScope, createWindowSilhouetteGeometry, decodeIcon, defaultDiagramForceConfig, detectShellLocale, elementIdSegment, elementIdSelector, encodeIcon, endWindowTemplateDrag, engagementActionTokenEquals, filterSearchPossibles, flowFromAnchor, formatNumber, glassClass, gumballApplyHandleVisualMaterial, gumballAxisRotateAngle, gumballAxisScaleFactor, gumballConfigVisible, gumballEffectiveSnapValue, gumballHandleAllowedByPlane, gumballHandleEnabled, gumballHandleKindToTransformMode, gumballHandleRaycast, gumballHandleVisualState, gumballKindFromRaycastObject, gumballPlaneScaleCorner, gumballPlaneScaleFactors, gumballPointerConsumesCanvasEventRef, gumballPreviewWorldExtent, gumballProjectRayOntoAxis, gumballRayAxisParameter, gumballRayFromNdc, gumballRayPlanePoint, gumballRaycastOwnedAtClientPoint, gumballResolveDragSnaps, gumballResolveHandleVisual, gumballScaleAxisOffset, gumballScalePlaneAxisIndices, gumballSnapScalar, iconShotFrameClass, iconShotFrameStyle, iconSvgMarkup, initUiLocaleSync, insertWindowAsTabAtCorner, insertWindowAtDropZone, installElementsSurfaceBrowserDefaultSuppression, introductionDemoArcPoint, introductionDemoResolveVisual, introductionPointRelativeToHost, introductionRectRelativeToHost, isContextMenuPointerTarget, isElementId, isPointerEventOnDomTextSelection, isSearchSuggestionActionTarget, isUiTypingTarget, isWindowChromeIntroducedTarget, measureWindowSilhouetteMetrics, mergeTreeSectionOrder, modeCollectWindowIds, modeDockChromeGridPlacement, modeDockOutLayout, modeDockTabLabelClassName, modeDockTabsWithInsertPreview, modeJoinCornerSpecsForCrossSeparator, modeJoinCornerSpecsForSeparator, modePerpendicularJoinSeparators, modeStackTabsByCorner, navigateOwnedRoute, ndcToViewportPoint, nearestAnchor, normalizeEngagementActionText, normalizeWindowSilhouetteChips, normalizeWindowSilhouetteMetrics, parseOwnedRouteTarget, parseUiTheme, polylinePointAt, progressPanelTabSelection, publishShellNavbarTrailingEndWidthPx, rankFuzzyItems, reactHostPort, readActiveWindowTemplateDragSession, readDomTextSelection, readResizableJoinCornerSpec, readScrollerContentOverflows, reconcileWindows, referenceMediaKindFromUrl, registerIntroductionSurfaceResolver, removeWindowFromLayout, renderToStaticMarkup, resolveCatalogIconSvg, resolveGumballConfig, resolveGumballVisualPalette, resolveIntroductionPlacement, resolveIntroductionPoint, resolveJoinCornerPeerCrossAxes, resolveModeSplitSideInBody, resolveSliderDraftClear, resolveTranslationLabel, resolveWindowSilhouetteBorderKind, routeWindowSearchEscape, routeWindowSearchSpace, sampleBezierSegments, searchActiveInlineCompletion, searchControlledLineV1, searchInlineCompletion, semioTheme, setActiveUiTheme, shellFloorFillClass, shellFloorPaints, shellNavbarTrailingEndWidthByRoot, shortcodeCatalogKey, shortcodeEmoji, shouldActivateSearchPossibleOnConfirm, shouldRouteKeysToWindowSearch, singleTreeLeaf, sliderValuesMatch, splitIntroductionBodyParagraphs, splitWithWindow, sunPositionFromAzimuthElevation, surfaceClass, uiDataLabel, uiI18n, uiSpacingPx, useFirstDraggableElementAlias, useFlow, useIntroductionPointerIdle, useLevel, usePaneSlot, useSurface, windowChromeTitleChipClass, windowMeasuresDefaultWidthPx, windowMeasuresMinWidthPx, publishShellChromePanelBox, chromePanelSafeArea, chromePanelSafeAreaStyle, safeAreaBoxFromRect, useChromePanelSafeArea, windowSilhouetteBorderPaint, windowSilhouetteContains, windowSilhouetteOutline, windowSilhouetteOutlineViolations, windowSilhouettePath, windowTemplatePaletteTreeDragController, windowTemplatePointerDragRef }, { directory: import.meta.dir, url: import.meta.url });
 }

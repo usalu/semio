@@ -9,8 +9,9 @@
 
 use crate::editor::fem3d::modes::edit::windows::results;
 use crate::editor::fem3d::modes::edit::windows::results::config::{Fem3dLoopMode, Fem3dResultsAnimation, Fem3dWaveform, ANIMATION_SPEED_MAXIMUM, ANIMATION_SPEED_MINIMUM, ANIMATION_TICK_MS};
+use crate::editor::fem3d::modes::edit::windows::results::transient::Fem3dPlaybackClock;
 use crate::standards::v1::subsets::any::schema::mutations::text::Fem3dMutation;
-use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault, NoConfig, NoConfigMutation};
+use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault, NoConfig, NoConfigMutation, WindowTransientMutation};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 type Fem3dSnapshot = crate::Fem3dSnapshot;
@@ -46,6 +47,15 @@ pub fn rearm_effect(window_id: &str) -> Effect {
 /// reads its transport.
 pub fn playback_dirty_scope() -> semio_framework::kernel::UiDirtyScope {
     semio_framework::kernel::UiDirtyScope::Partial { window_bodies: vec![results::FEM3D_BODY_RESULTS.to_owned()], panel_bodies: vec![crate::editor::fem3d::panels::results::BODY_KEY.to_owned()], utilities: false, tools: false, engagements: false, measures: false, labels: false }
+}
+
+/// 🫧️ What one playback command publishes: the config lane (transport settings, resting phase) and
+/// the results window's transient lane (the running clock) — the retained route folds both into
+/// one `CompleteWithEphemeral` step.
+#[derive(Default)]
+pub struct Fem3dPlaybackStep {
+    pub emit: Emit<Fem3dMutation, NoConfigMutation>,
+    pub window_transient: Vec<WindowTransientMutation>,
 }
 //#endregion 🔖️Clock
 
@@ -145,12 +155,29 @@ pub fn handle(_payload: &SetResultAnimation, _doc: &ArtifactView<'_, Fem3dSnapsh
 /// would advance the phase by its own frame, so the structure would run at double speed and never
 /// slow down again.
 pub fn handle_window(payload: &SetResultAnimation, _doc: &ArtifactView<'_, Fem3dSnapshot>, cfg: &ConfigView<'_, NoConfig>, view: &semio_framework_plugin::ViewModel) -> Result<Emit<Fem3dMutation, NoConfigMutation>, Fault> {
+    step(payload, cfg, view, None).map(|step| step.emit)
+}
+
+/// ⏯️ The retained route: the gesture lands on the transport with the window's RUNNING clock folded
+/// in first — a pause rests exactly where the animation was, a seek or a retune mid-playback
+/// starts the next frame from the phase the user sees — and a clock that existed is cleared so the
+/// chain restarts from the published config instead of a stale frame. `clock` is `None` both when
+/// the gesture carried no window tag (the keyboard chord; the next tick parks the clock itself) and
+/// when the window is not playing.
+pub fn step(payload: &SetResultAnimation, cfg: &ConfigView<'_, NoConfig>, view: &semio_framework_plugin::ViewModel, clock: Option<Fem3dPlaybackClock>) -> Result<Fem3dPlaybackStep, Fault> {
     let window_id = results::config::addressed_window_id(cfg, view, payload.window_id.as_deref())?;
     let current = results::config::current(cfg);
     let mut next = current.clone();
+    if let Some(clock) = clock {
+        next.animation = clock.parked_into(&next.animation);
+    }
     merge(payload, &mut next.animation)?;
     let effects = if next.animation.playing && !current.animation.playing { vec![rearm_effect(&window_id)] } else { Vec::new() };
-    Ok(Emit { window_config_mutations: vec![results::config::addressed_to(&window_id, next)], effects, coalesce_key: Some(PLAYBACK_COALESCE_KEY.to_owned()), ui_scope: playback_dirty_scope(), ..Default::default() })
+    let window_transient = clock.map(|_| results::transient::addressed_to(&window_id, None)).into_iter().collect();
+    Ok(Fem3dPlaybackStep {
+        emit: Emit { window_config_mutations: vec![results::config::addressed_to(&window_id, next)], effects, coalesce_key: Some(PLAYBACK_COALESCE_KEY.to_owned()), ui_scope: playback_dirty_scope(), ..Default::default() },
+        window_transient,
+    })
 }
 //#endregion 🔖️SetResultAnimation
 

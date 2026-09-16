@@ -31,7 +31,7 @@ pub fn render(host_snapshot: &FlowHostSnapshot, selected_node_ids: &[String], la
                 "procedural-play-inspector.empty",
                 Some(crate::ui_label(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL)?),
                 true,
-                crate::ui_node_list([
+                semio_framework_plugin::ui_node_list([
                     tree_item("procedural-play-inspector.schema", format!("{} {}", labels.schema_prefix.as_str(), host_snapshot.schema)),
                     tree_item("procedural-play-inspector.widgets", format!("{} {}", labels.widgets_prefix.as_str(), host_snapshot.widgets.len())),
                 ])?,
@@ -40,7 +40,7 @@ pub fn render(host_snapshot: &FlowHostSnapshot, selected_node_ids: &[String], la
     };
     let Some(widget) = host_snapshot.widgets.iter().find(|entry| widget_id(entry) == selected_id) else {
         return PanelTreeBuilder::new("procedural-play-inspector")?
-            .section("procedural-play-inspector.empty", Some(crate::ui_label(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL)?), true, crate::ui_node_list([tree_item("procedural-play-inspector.none", labels.no_selection.as_str())])?)?
+            .section("procedural-play-inspector.empty", Some(crate::ui_label(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL)?), true, semio_framework_plugin::ui_node_list([tree_item("procedural-play-inspector.none", labels.no_selection.as_str())])?)?
             .build();
     };
     let mut fields = semio_framework_plugin::UiFixedList::default();

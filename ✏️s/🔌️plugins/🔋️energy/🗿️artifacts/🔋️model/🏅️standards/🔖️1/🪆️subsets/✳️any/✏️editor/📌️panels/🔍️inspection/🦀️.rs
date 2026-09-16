@@ -3,11 +3,10 @@
 //! glazing/gas material, a construction, a thermostat), or the document + site summary when nothing
 //! is selected.
 //!
-//! ⚠️ The body is a `ui::column` of `ui::section`s whose rows are `field(label) > control` — the
-//! shape the React `Interpreter` renders as a labelled form row. A `Component::Tree` is NOT that
-//! shape: its renderer maps sections to `TreeDataItem`s and DROPS every non-tree child, so a control
-//! nested in a tree section reaches the host and is never drawn (fem2d's verified defect, ticket
-//! 26/09/16 `📓️w-d-inspector`). `carries_a_tree` pins this down in the tests.
+//! The body is a `Component::Tree` built through [`PanelTreeBuilder`]: each section holds
+//! `treeItem` rows, and every editable control is the **child** of its row (`collectTreeItemControls`
+//! in the React interpreter). Read-only facts use [`tree_item_desc`]; verbs and layer removes use
+//! [`tree_item_with_action`].
 //!
 //! 🎛️ Every control binds `Trigger::Change` to one `set-*-property` command with the argument map
 //! `{field, id}`; the host merges the control's own value under `value`, so one flat
@@ -31,8 +30,8 @@ use crate::model::{Construction, Fenestration, GasMaterial, GlazingMaterial, Mat
 use crate::EnergyModelSnapshot;
 use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase, HasChildren, InputKind};
 use semio_framework_plugin::{
-    ActionId, BuiltNode, Locale, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PluginAssemblyError, Trigger, UiAssemblyResult, UiFixedList, UiMapBuilder, UiText, UiValue, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
-    FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+    tree_item, tree_item_desc, tree_item_with_action, ActionId, BuiltNode, Locale, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, TreeWindows, Trigger, UiAssemblyResult,
+    UiFixedList, UiMapBuilder, UiText, UiValue, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
 use semio_framework_ui_contract as ui;
 
@@ -42,8 +41,6 @@ const ROOT: &str = "energy-model-inspection";
 /// 🔽️ Options one reference select offers before it stops listing — a model with more constructions
 /// than this is re-pointed from the tree, and `UiFixedList` admits 32 at most.
 const SELECT_ITEMS_MAX: usize = 24;
-/// 🧾️ Rows one nested listing (a construction's layers, a multi-selection header) materialises.
-const LIST_ROWS_MAX: usize = 8;
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
@@ -95,38 +92,15 @@ fn push(rows: &mut UiFixedList<BuiltNode>, node: UiAssemblyResult<BuiltNode>) ->
 //#endregion 🔖️Admission
 
 //#region 🔖️Layout
-/// 🗂️ One collapsible group of form rows — `ui::section`, never a tree section.
-fn section(id: &str, label: &str, rows: UiFixedList<BuiltNode>) -> UiAssemblyResult<BuiltNode> {
-    let builder = ui_id(ui::section(ui_label(label)?), id)?.default_open(true);
-    ui_build(builder.try_children(rows).map_err(|_| ui_error("ui.section.children"))?)
-}
-
-/// 📋️ The panel body: its sections stacked vertically.
-fn column(sections: UiFixedList<BuiltNode>) -> UiAssemblyResult<BuiltNode> {
-    let builder = ui_id(ui::column(), ROOT)?;
-    ui_build(builder.try_children(sections).map_err(|_| ui_error("ui.column.children"))?)
-}
-
-/// 🧾️ One `field(label) > control` form row — the shape the React `Interpreter` renders as a
-/// labelled control rather than as a tree leaf.
+/// 🧾️ One labelled tree row whose inline control the interpreter mounts in `TreeDataItem.control`.
 fn control_row(row_id: &str, label: &str, control: BuiltNode) -> UiAssemblyResult<BuiltNode> {
-    let row = ui_id(ui::field(ui_label(label)?), row_id)?;
+    let row = ui_id(ui::tree_item(ui_label(label)?), row_id)?;
     ui_build(row.try_child(control).map_err(|_| ui_error("ui.node.child"))?)
 }
 
-fn text_node(id: &str, value: impl AsRef<str>) -> UiAssemblyResult<BuiltNode> {
-    ui_build(ui_id(ui::text(ui_label(value)?), id)?)
-}
-
-/// 🔘️ One `Trigger::Activate` button — the verbs (delete), never a `Change`-bound control.
+/// 🔘️ One activatable tree row — delete verbs and construction layer removes.
 fn action_button(id: &str, label: &str, action: (ActionId, Option<UiValue>)) -> UiAssemblyResult<BuiltNode> {
-    let (action, args) = action;
-    let control = ui_id(ui::button(ui_label(label)?), id)?;
-    let control = match args {
-        Some(args) => control.try_on_with(Trigger::Activate, action, args).map_err(|_| ui_error("ui.control.binding"))?,
-        None => control.try_on(Trigger::Activate, action).map_err(|_| ui_error("ui.control.binding"))?,
-    };
-    ui_build(control)
+    tree_item_with_action(id, ui_label(label)?, None, action)
 }
 //#endregion 🔖️Layout
 
@@ -151,8 +125,7 @@ fn bind<B: HasBase>(builder: B, action: &str, field_name: &str, id: &str) -> UiA
 }
 
 fn read_only_row(suffix: &str, label: &str, value: impl std::fmt::Display) -> UiAssemblyResult<BuiltNode> {
-    let row_id = format!("{ROOT}.{suffix}");
-    control_row(&row_id, label, text_node(&format!("{row_id}.value"), value.to_string())?)
+    tree_item_desc(format!("{ROOT}.{suffix}"), ui_label(label)?, Some(value.to_string()))
 }
 
 fn number_row(suffix: &str, label: &str, value: f64, step: f64, action: &str, field_name: &str, id: &str) -> UiAssemblyResult<BuiltNode> {
@@ -406,13 +379,9 @@ fn gas_material_rows(material: &GasMaterial, locale: Locale) -> UiAssemblyResult
     Ok(rows)
 }
 
-/// 🧱️ A construction: its name, its EDITABLE layer stack and the U-value that stack implies.
-///
-/// 🎛️ Each layer is a `select` over the three catalogues bound to `replaceLayer:<index>` plus a
-/// `remove` button; one trailing `select` appends. That is TWO argument maps per layer — the arena
-/// budget this panel shares with the tree (`📓️UiValue Map Ascending Keys & One-Page Arena`) is why the
-/// move-up/move-down verbs of `set-construction-property` are reachable from the palette but not
-/// rendered as two more buttons on every row.
+/// 🧱️ A construction: its name, the `select` that APPENDS a layer and the U-value the stack implies.
+/// The stack itself is the windowed [`construction_layers_section`] beside this one, because a stack
+/// is a list of unbounded length and this section is a fixed form.
 fn construction_rows(model: &Model, construction: &Construction, locale: Locale) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
     let id = energy_target_id(construction.id);
     let action = SET_CONSTRUCTION_PROPERTY_ACTION_ID;
@@ -420,22 +389,54 @@ fn construction_rows(model: &Model, construction: &Construction, locale: Locale)
     let mut rows = UiFixedList::default();
     push(&mut rows, read_only_row("construction.id", say(locale, "Id", "Id"), &id))?;
     push(&mut rows, text_row("construction.name", say(locale, "Name", "Bezeichnung"), &construction.name, action, "name", &id))?;
-    for (index, layer) in construction.layer_material_ids.iter().take(LIST_ROWS_MAX).enumerate() {
-        let label = format!("{} {}", say(locale, "Layer", "Schicht"), index + 1);
-        push(
-            &mut rows,
-            select_row(&format!("construction.layer.{index}"), &label, &energy_target_id(*layer), options.clone(), action, &format!("replaceLayer:{index}"), &id),
-        )?;
-        push(&mut rows, layer_button(&format!("construction.layer.{index}.remove"), say(locale, "Remove layer", "Schicht entfernen"), &id, "removeLayer", index))?;
-    }
-    if construction.layer_material_ids.len() > LIST_ROWS_MAX {
-        push(&mut rows, read_only_row("construction.layers.more", say(locale, "More layers", "Weitere Schichten"), construction.layer_material_ids.len() - LIST_ROWS_MAX))?;
-    }
     if !options.is_empty() {
         push(&mut rows, select_row("construction.add-layer", say(locale, "Add layer", "Schicht hinzufügen"), "", options, action, "addLayer", &id))?;
     }
     push(&mut rows, read_only_row("construction.u-value", say(locale, "U-value (W/m²K)", "U-Wert (W/m²K)"), construction_u_value_text(model, construction, locale)))?;
     Ok(rows)
+}
+
+/// 🧱️ One row of a construction's layer stack: the layer's own catalogue `select`, or its remove
+/// verb. Two rows per layer over ONE flat list, so the section stamps the stack's whole extent and
+/// the host streams the slice it shows — a 40-layer construction is scrollable, not a "+N" count.
+enum LayerRow {
+    Pick { index: usize, material: String },
+    Remove { index: usize },
+}
+
+fn layer_rows(construction: &Construction) -> Vec<LayerRow> {
+    construction.layer_material_ids.iter().enumerate().flat_map(|(index, layer)| [LayerRow::Pick { index, material: energy_target_id(*layer) }, LayerRow::Remove { index }]).collect()
+}
+
+/// 🧱️ The EDITABLE layer stack as its own windowed section. Each layer costs TWO argument maps (the
+/// `replaceLayer:<index>` select and the `removeLayer` button) — the arena budget this panel shares
+/// with the tree (`📓️UiValue Map Ascending Keys & One-Page Arena`) is why the move-up/move-down verbs
+/// of `set-construction-property` stay reachable from the palette rather than as two more buttons.
+fn construction_layers_section(builder: PanelTreeBuilder, windows: &TreeWindows<'_>, model: &Model, construction: &Construction, locale: Locale) -> UiAssemblyResult<PanelTreeBuilder> {
+    let id = energy_target_id(construction.id);
+    let options = layer_options(model, locale);
+    let rows = layer_rows(construction);
+    let label = ui_label(format!("{} ({})", say(locale, "Layers", "Schichten"), construction.layer_material_ids.len()))?;
+    builder.window_section_or_placeholder(
+        windows,
+        &format!("{ROOT}.construction.layers"),
+        Some(label),
+        true,
+        &rows,
+        |row| match row {
+            LayerRow::Pick { index, material } => select_row(
+                &format!("construction.layer.{index}"),
+                &format!("{} {}", say(locale, "Layer", "Schicht"), index + 1),
+                material,
+                options.clone(),
+                SET_CONSTRUCTION_PROPERTY_ACTION_ID,
+                &format!("replaceLayer:{index}"),
+                &id,
+            ),
+            LayerRow::Remove { index } => layer_button(&format!("construction.layer.{index}.remove"), say(locale, "Remove layer", "Schicht entfernen"), &id, "removeLayer", *index),
+        },
+        ui_label(say(locale, "None", "Keine"))?,
+    )
 }
 
 /// 🔘️ One layer verb that carries its own operand: an `Activate` button merges NO value, so the index
@@ -446,7 +447,7 @@ fn layer_button(row_id_suffix: &str, label: &str, id: &str, property: &str, inde
     args.push("construction".into(), ui_value_text(id)?).map_err(|_| ui_error("ui.value.map.entry"))?;
     args.push("property".into(), ui_value_text(property)?).map_err(|_| ui_error("ui.value.map.entry"))?;
     args.push("value".into(), ui_value_text(index.to_string())?).map_err(|_| ui_error("ui.value.map.entry"))?;
-    control_row(&row_id, label, action_button(&format!("{row_id}.button"), label, energy_model_action(SET_CONSTRUCTION_PROPERTY_ACTION_ID, Some(UiValue::Map(args.finish())))?)?)
+    action_button(&format!("{row_id}.button"), label, energy_model_action(SET_CONSTRUCTION_PROPERTY_ACTION_ID, Some(UiValue::Map(args.finish())))?)
 }
 
 /// 🔥️ Σ R of the stack plus the two standard films, inverted — the engine's OWN
@@ -620,8 +621,8 @@ fn results_rows(config: &EnergyModelConfig, locale: Locale) -> UiAssemblyResult<
 
 /// 🎨️ The Results section every body carries — the document summary AND every entity form's footer,
 /// so the colour field is one click away whatever is selected.
-fn push_results_section(sections: &mut UiFixedList<BuiltNode>, config: &EnergyModelConfig, locale: Locale) -> UiAssemblyResult<()> {
-    push(sections, section(&format!("{ROOT}.results"), say(locale, "Results", "Ergebnisse"), results_rows(config, locale)?))
+fn results_section(builder: PanelTreeBuilder, config: &EnergyModelConfig, locale: Locale) -> UiAssemblyResult<BuiltNode> {
+    builder.section(format!("{ROOT}.results"), Some(ui_label(say(locale, "Results", "Ergebnisse"))?), true, results_rows(config, locale)?)?.build()
 }
 
 //#region 🔖️Render
@@ -642,11 +643,10 @@ fn summary(model: &Model, config: &EnergyModelConfig, locale: Locale) -> UiAssem
     ] {
         push(&mut counts, read_only_row(suffix, label, count))?;
     }
-    let mut sections = UiFixedList::default();
-    push(&mut sections, section(&format!("{ROOT}.summary"), say(locale, "Document", "Dokument"), counts))?;
-    push(&mut sections, section(&format!("{ROOT}.site"), say(locale, "Site", "Standort"), site_rows(model, locale)?))?;
-    push_results_section(&mut sections, config, locale)?;
-    column(sections)
+    let builder = PanelTreeBuilder::new(ROOT)?
+        .section(format!("{ROOT}.summary"), Some(ui_label(say(locale, "Document", "Dokument"))?), true, counts)?
+        .section(format!("{ROOT}.site"), Some(ui_label(say(locale, "Site", "Standort"))?), true, site_rows(model, locale)?)?;
+    results_section(builder, config, locale)
 }
 
 /// 🎯️ The selected entity's verbs — one grouped row, never one per form row, so a page of controls
@@ -664,75 +664,67 @@ fn action_rows(id: &str, kind: &str, locale: Locale) -> UiAssemblyResult<Option<
     Ok(Some(rows))
 }
 
-/// 🔢️ One text row per selected id — the form below belongs to the FIRST resolvable one, which is
-/// the id every viewport pick leaves at the head of the selection.
-fn selection_rows(interaction: &EnergyModelInteractionSnapshot) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
-    let mut rows = UiFixedList::default();
-    for (index, id) in interaction.selected_ids.iter().take(LIST_ROWS_MAX).enumerate() {
-        push(&mut rows, text_node(&format!("{ROOT}.selection.{index}"), id))?;
-    }
-    Ok(rows)
-}
-
 /// 🔍️ The panel body: the first resolvable selected entity's editable fields, or the document +
 /// site summary. Every group title is the entity's own noun, so the panel reads as "Window" /
 /// "Construction" rather than as a generic "Properties".
-pub fn render(snapshot: &EnergyModelSnapshot, interaction: &EnergyModelInteractionSnapshot, config: &EnergyModelConfig, locale: Locale) -> UiAssemblyResult<BuiltNode> {
+pub fn render(snapshot: &EnergyModelSnapshot, interaction: &EnergyModelInteractionSnapshot, config: &EnergyModelConfig, locale: Locale, windows: &TreeWindows<'_>) -> UiAssemblyResult<BuiltNode> {
     let model = &snapshot.model;
     let Some((id, kind)) = interaction.selected_ids.iter().find_map(|id| energy_entity_kind(snapshot, id).map(|kind| (id.as_str(), kind))) else {
         return summary(model, config, locale);
     };
     let Ok(raw) = id.parse::<u32>() else { return summary(model, config, locale) };
     let entity = crate::model::EntityId(raw);
-    let mut sections = UiFixedList::default();
+    let mut builder = PanelTreeBuilder::new(ROOT)?;
+    // 🔢️ One text row per selected id, windowed — the form below belongs to the FIRST resolvable one,
+    // which is the id every viewport pick leaves at the head of the selection.
     if interaction.selected_ids.len() > 1 {
         let title = format!("{} {}", interaction.selected_ids.len(), say(locale, "selected", "ausgewählt"));
-        push(&mut sections, section(&format!("{ROOT}.selection"), &title, selection_rows(interaction)?))?;
+        builder = builder.window_section(windows, &format!("{ROOT}.selection"), Some(ui_label(&title)?), true, &interaction.selected_ids, |selected| tree_item(format!("{ROOT}.selection.{selected}"), selected.clone()))?;
     }
-    match kind {
+    builder = match kind {
         ENERGY_GRANULARITY_SURFACE => {
             let surface = model.surfaces.iter().find(|entry| entry.id == entity).ok_or_else(|| ui_error("ui.document"))?;
-            push(&mut sections, section(&format!("{ROOT}.surface"), say(locale, "Surface", "Fläche"), surface_rows(model, surface, locale)?))?;
+            builder.section(format!("{ROOT}.surface"), Some(ui_label(say(locale, "Surface", "Fläche"))?), true, surface_rows(model, surface, locale)?)?
         }
         ENERGY_GRANULARITY_FENESTRATION => {
             let window = model.fenestrations.iter().find(|entry| entry.id == entity).ok_or_else(|| ui_error("ui.document"))?;
-            push(&mut sections, section(&format!("{ROOT}.fenestration"), say(locale, "Window", "Fenster"), fenestration_rows(model, window, locale)?))?;
+            builder.section(format!("{ROOT}.fenestration"), Some(ui_label(say(locale, "Window", "Fenster"))?), true, fenestration_rows(model, window, locale)?)?
         }
         ENERGY_GRANULARITY_ZONE => {
             let zone = model.zones.iter().find(|entry| entry.id == entity).ok_or_else(|| ui_error("ui.document"))?;
-            push(&mut sections, section(&format!("{ROOT}.zone"), say(locale, "Zone", "Zone"), zone_rows(zone, locale)?))?;
+            builder.section(format!("{ROOT}.zone"), Some(ui_label(say(locale, "Zone", "Zone"))?), true, zone_rows(zone, locale)?)?
         }
         ENERGY_GRANULARITY_MATERIAL => {
             let material = model.materials.iter().find(|entry| entry.id == entity).ok_or_else(|| ui_error("ui.document"))?;
-            push(&mut sections, section(&format!("{ROOT}.material"), say(locale, "Material", "Material"), material_rows(material, locale)?))?;
+            builder.section(format!("{ROOT}.material"), Some(ui_label(say(locale, "Material", "Material"))?), true, material_rows(material, locale)?)?
         }
         ENERGY_GRANULARITY_GLAZING_MATERIAL => {
             let material = model.glazing_materials.iter().find(|entry| entry.id == entity).ok_or_else(|| ui_error("ui.document"))?;
-            push(&mut sections, section(&format!("{ROOT}.glazing"), say(locale, "Glazing material", "Verglasungsmaterial"), glazing_material_rows(material, locale)?))?;
+            builder.section(format!("{ROOT}.glazing"), Some(ui_label(say(locale, "Glazing material", "Verglasungsmaterial"))?), true, glazing_material_rows(material, locale)?)?
         }
         ENERGY_GRANULARITY_GAS_MATERIAL => {
             let material = model.gas_materials.iter().find(|entry| entry.id == entity).ok_or_else(|| ui_error("ui.document"))?;
-            push(&mut sections, section(&format!("{ROOT}.gas"), say(locale, "Gas gap", "Gasfüllung"), gas_material_rows(material, locale)?))?;
+            builder.section(format!("{ROOT}.gas"), Some(ui_label(say(locale, "Gas gap", "Gasfüllung"))?), true, gas_material_rows(material, locale)?)?
         }
         ENERGY_GRANULARITY_CONSTRUCTION => {
             let construction = model.constructions.iter().find(|entry| entry.id == entity).ok_or_else(|| ui_error("ui.document"))?;
-            push(&mut sections, section(&format!("{ROOT}.construction"), say(locale, "Construction", "Konstruktion"), construction_rows(model, construction, locale)?))?;
+            let builder = builder.section(format!("{ROOT}.construction"), Some(ui_label(say(locale, "Construction", "Konstruktion"))?), true, construction_rows(model, construction, locale)?)?;
+            construction_layers_section(builder, windows, model, construction, locale)?
         }
         ENERGY_GRANULARITY_THERMOSTAT => {
             let thermostat = model.thermostats.iter().find(|entry| entry.id == entity).ok_or_else(|| ui_error("ui.document"))?;
-            push(&mut sections, section(&format!("{ROOT}.thermostat"), say(locale, "Thermostat", "Thermostat"), thermostat_rows(model, thermostat, locale)?))?;
+            builder.section(format!("{ROOT}.thermostat"), Some(ui_label(say(locale, "Thermostat", "Thermostat"))?), true, thermostat_rows(model, thermostat, locale)?)?
         }
         ENERGY_GRANULARITY_SHADING => {
             let shading = model.shading_surfaces.iter().find(|entry| entry.id == entity).ok_or_else(|| ui_error("ui.document"))?;
-            push(&mut sections, section(&format!("{ROOT}.shading"), say(locale, "Shading surface", "Verschattungsfläche"), shading_rows(shading, locale)?))?;
+            builder.section(format!("{ROOT}.shading"), Some(ui_label(say(locale, "Shading surface", "Verschattungsfläche"))?), true, shading_rows(shading, locale)?)?
         }
         _ => return summary(model, config, locale),
-    }
+    };
     if let Some(rows) = action_rows(id, kind, locale)? {
-        push(&mut sections, section(&format!("{ROOT}.actions"), say(locale, "Actions", "Aktionen"), rows))?;
+        builder = builder.section(format!("{ROOT}.actions"), Some(ui_label(say(locale, "Actions", "Aktionen"))?), true, rows)?;
     }
-    push_results_section(&mut sections, config, locale)?;
-    column(sections)
+    results_section(builder, config, locale)
 }
 //#endregion 🔖️Render
 

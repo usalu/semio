@@ -99,6 +99,10 @@ fn note_utility(id: &str, label: LocalizedLabel, icon: &str, group: &str, catego
 /// (selecting/hovering a group covers its descendants).
 pub const NOTE_INTERACTION_BLOCKS: &str = "blocks";
 
+/// 🕹️ The only granularity the "blocks" domain declares — stamped on every pick row of the document
+/// tree so the host can synthesize `interactionSelect` without a per-row argument map.
+pub const NOTE_INTERACTION_GRANULARITY: &str = "block";
+
 /// 🕹️ Per-dispatch scratch: the "blocks" domain's current selection, resolved once by
 /// `ArtifactEditor::handle` from `InteractionView` and threaded to every leaf command handler —
 /// `app_commands!`'s generated `dispatch` has no way to thread `InteractionView` itself (mirrors
@@ -341,7 +345,7 @@ impl ArtifactEditor for NotePlayApp {
         match body_key {
             NOTE_PLAY_BODY_COMPOSITE => composite::render(document, &window.camera, active_utility),
             NOTE_PLAY_BODY_NAVIGATOR => navigator::render(document, &crate::NoteCamera::default(), active_utility),
-            NOTE_PLAY_BODY_ARTIFACT => document_panel::render(document, labels),
+            NOTE_PLAY_BODY_ARTIFACT => document_panel::render(document, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, NOTE_PLAY_BODY_ARTIFACT)),
             NOTE_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels),
             NOTE_PLAY_BODY_PROPERTIES => inspection_panel::render(document, active_utility, labels),
             _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "note diagnostic text admission failed")),
@@ -554,7 +558,7 @@ pub fn create_note_app() -> AppDefinition {
             .interaction(InteractionDefinition {
                 id: NOTE_INTERACTION_BLOCKS.into(),
                 label: LocalizedLabel::native("Blocks", "Blöcke"),
-                granularities: vec![GranularityDefinition { id: "block".into(), label: LocalizedLabel::native("Block", "Block"), icon_id: "square".into() }],
+                granularities: vec![GranularityDefinition { id: NOTE_INTERACTION_GRANULARITY.into(), label: LocalizedLabel::native("Block", "Block"), icon_id: "square".into() }],
                 hierarchy: HierarchyProvider::Topology,
                 hover: HoverSpec { transitive: true, ..HoverSpec::default() },
                 selection: SelectionSpec {

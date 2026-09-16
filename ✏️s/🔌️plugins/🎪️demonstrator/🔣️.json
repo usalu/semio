@@ -3169,8 +3169,15 @@
           }
         ],
         "role": "editor",
-        "terminologies": [],
-        "terminologyBreadcrumbs": {},
+        "terminologies": [
+          "reuse"
+        ],
+        "terminologyBreadcrumbs": {
+          "reuse": [
+            "Entwerfen mit Bestand",
+            "Generator"
+          ]
+        },
         "tools": [],
         "tutorials": [],
         "utilities": [
@@ -18107,7 +18114,7 @@
         "terminologyBreadcrumbs": {
           "reuse": [
             "Entwerfen mit Bestand",
-            "cad"
+            "Koordinator"
           ]
         },
         "tools": [],
@@ -37164,8 +37171,15 @@
           }
         ],
         "role": "editor",
-        "terminologies": [],
-        "terminologyBreadcrumbs": {},
+        "terminologies": [
+          "reuse"
+        ],
+        "terminologyBreadcrumbs": {
+          "reuse": [
+            "Entwerfen mit Bestand",
+            "Aussuchen"
+          ]
+        },
         "tools": [],
         "tutorials": [],
         "utilities": [],
@@ -46837,8 +46851,15 @@
           }
         ],
         "role": "editor",
-        "terminologies": [],
-        "terminologyBreadcrumbs": {},
+        "terminologies": [
+          "reuse"
+        ],
+        "terminologyBreadcrumbs": {
+          "reuse": [
+            "Entwerfen mit Bestand",
+            "Bearbeiten"
+          ]
+        },
         "tools": [],
         "tutorials": [],
         "utilities": [
@@ -51352,8 +51373,15 @@
           }
         ],
         "role": "editor",
-        "terminologies": [],
-        "terminologyBreadcrumbs": {},
+        "terminologies": [
+          "reuse"
+        ],
+        "terminologyBreadcrumbs": {
+          "reuse": [
+            "Entwerfen mit Bestand",
+            "Verfolgen"
+          ]
+        },
         "tools": [],
         "tutorials": [],
         "utilities": [],

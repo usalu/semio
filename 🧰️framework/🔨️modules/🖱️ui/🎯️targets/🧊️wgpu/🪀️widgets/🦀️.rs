@@ -7,6 +7,7 @@ use crate::wgpu::input::{HitKind, HitTarget, InputState};
 use crate::wgpu::layout::{gap_for_token, layout_horizontal, layout_vertical, padding_for_token};
 use crate::wgpu::text::FontAtlas;
 use crate::wgpu::theme::{Rgba, Theme};
+use crate::wgpu::component::ui::UiTreeWindow;
 use crate::wgpu::IconName;
 use crate::wgpu::UiTreeActionPlacement;
 use std::collections::HashMap;
@@ -146,6 +147,11 @@ pub struct TreeItem<E> {
     pub drag_data: HashMap<String, String>,
     pub control: Option<Box<WidgetNode<E>>>,
     pub children: Vec<TreeItem<E>>,
+    /// 🪟️ The materialised slice of this row's logical child list — see
+    /// [`crate::wgpu::component::ui::UiTreeWindow`]. `children` are the entries
+    /// `[offset, offset + children.len())`; the painter pitches the rest as empty bands. A row with
+    /// `window.total > 0` is expandable (shows the fold chevron) even with zero children.
+    pub window: Option<UiTreeWindow>,
 }
 
 #[derive(Clone, Debug)]
@@ -154,6 +160,9 @@ pub struct TreeSection<E> {
     pub label: Option<String>,
     pub default_open: bool,
     pub items: Vec<TreeItem<E>>,
+    /// 🪟️ The materialised slice of this section's logical item list — see
+    /// [`crate::wgpu::component::ui::UiTreeWindow`].
+    pub window: Option<UiTreeWindow>,
 }
 
 #[derive(Clone, Debug)]

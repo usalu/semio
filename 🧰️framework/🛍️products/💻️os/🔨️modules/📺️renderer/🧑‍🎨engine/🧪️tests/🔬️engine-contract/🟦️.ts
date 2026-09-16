@@ -1722,13 +1722,16 @@ import {
   ENTWERFEN_MIT_BESTAND_AGGREGATOR_BRAND,
   ENTWERFEN_MIT_BESTAND_AUSSUCHEN_BRAND,
   ENTWERFEN_MIT_BESTAND_BEARBEITEN_BRAND,
+  ENTWERFEN_MIT_BESTAND_ENERGIE_BRAND,
   ENTWERFEN_MIT_BESTAND_GENERATOR_BRAND,
   ENTWERFEN_MIT_BESTAND_KOORDINATOR_BRAND,
+  ENTWERFEN_MIT_BESTAND_STATIK_BRAND,
   ENTWERFEN_MIT_BESTAND_VERFOLGEN_BRAND,
 } from "../../../../🧑‍💻dev/🏷️brand/🟦️.ts";
-import { ENTWERFEN_MIT_BESTAND_BRAND_IDS, ENTWERFEN_MIT_BESTAND_GENERAL_INTRODUCTION } from "../../../../../../../../♻️mit-bestand/🧺️demonstrator/🪧️brand.ts";
+import { ENTWERFEN_MIT_BESTAND_BRAND_IDS, ENTWERFEN_MIT_BESTAND_GENERAL_INTRODUCTION, isEntwerfenMitBestandBrandId } from "../../../../../../../../♻️mit-bestand/🧺️demonstrator/🪧️brand.ts";
 import { Footer, navbarFillItem, progressPanelTabSelection, resolvePanelBranchBodyLeaf, resolveTranslationLabel, SelectionMarquee, uiDataLabel, formatKeybindingShortcut, buildKeysByActionId, type PanelTabNode, type TreeDataSection } from "@semio-tech/ui-react";
 import { renderUiControl } from "../../🧱️elements/🗣️Interpreter/🟦️.tsx";
+import { worldHoverPaintIdV1 } from "../../🧱️elements/🌐️World3dHost/🟦️.tsx";
 import { WorldOrbitProjectionSwitchPane, world3dProjectionPaneElementId, resolveClickInstanceIdFromProjected, world3dInstancePickUsesInteractionDomain, world3dMarqueePointerCaptureArmed, world3dProjectedAabbContainsClick, world3dFrameCameraFromBounds, world3dFrameDistanceForRadius, world3dBoundsRadius, world3dAutoFitOwed, world3dAutoFitKey, world3dFrameCameraFromInstances, world3dSuggestionsGestureArmed, world3dRetainLocalVortexHover, leftoverHoveredVortexFullIdV1, leftoverOverlayCarryingSelectionV1, leftoverSelectIdsMustNameHoverPickV1, leftoverOverlayCarryingUtilityV1, leftoverOverlayArmedBrushUtilityV1, leftoverTreeItemSelectedV1, leftoverWorldOverlayAppliesV1, mergeWorldInteractionWithLeftoverV1, mergeWorldSelectionWithLeftoverV1, gumballPreviewWorldPoint, world3dSuggestionsGestureConsumesContextMenu, world3dSuggestionsRightDownRoutesOnWindowCapture, worldVortexHitProxy, worldInstanceMeshRaycast, applyWorldInstanceMeshRaycast } from "../../🧱️elements/🌐️World3dHost/🟦️.tsx";
 import { leftoverInspectionPanelHash, leftoverInspectionRefreshScope, uiRefreshSectionUnchanged } from "../../🧱️elements/🔌️PluginRuntime/🟦️.tsx";
 
@@ -1981,6 +1984,7 @@ import {
   type ResolvedActionDefinition,
   type ResolvedToolDefinition,
   shellReducer,
+  shellStateUnchanged,
   sortUtilityNodes,
   spawnedWindowChromeForKind,
   UtilityTree,
@@ -2671,6 +2675,24 @@ describe("shell store reducer", () => {
     expect(next.overlays.findOpen).toBe(false);
     expect(next.pluginRuntime).toBe(state.pluginRuntime);
     expect(next.uiPrefs).toBe(state.uiPrefs);
+  });
+
+  it("keeps the shell state's identity when a dispatch changes nothing, so a same-value refresh fan-out never re-renders the shell", () => {
+    // 🪞️ One guest refresh fans out eight dispatches whose values are identity-preserved upstream
+    // (`mergeRecordPreservingIdentity`); the reducer used to spread a fresh state anyway, and every
+    // hover echo reconciled the whole shell tree.
+    const state = baseState();
+    expect(shellReducer(state, { type: "SET_SEARCH_OPEN", value: state.overlays.searchOpen })).toBe(state);
+    expect(shellReducer(state, { type: "SET_WINDOW_ENGAGEMENTS_BY_WINDOW_ID", value: (current) => current })).toBe(state);
+    expect(shellReducer(state, { type: "SET_PANEL_UI_BY_KEY", value: (current) => current })).toBe(state);
+    expect(shellReducer(state, { type: "SET_APP_LABELS_OVERLAY", value: (current) => current })).toBe(state);
+    // ✏️ A real change still produces a new state and a new slice — and only that slice.
+    const opened = shellReducer(state, { type: "SET_SEARCH_OPEN", value: !state.overlays.searchOpen });
+    expect(opened).not.toBe(state);
+    expect(opened.overlays).not.toBe(state.overlays);
+    expect(opened.windowUi).toBe(state.windowUi);
+    expect(shellStateUnchanged(state, opened)).toBe(false);
+    expect(shellStateUnchanged(state, state)).toBe(true);
   });
 
   it("starts, advances, and dismisses an introduction via SET_INTRODUCTION_STEP without touching unrelated slices", () => {
@@ -5407,6 +5429,20 @@ describe("framework renderer hosts", () => {
     expect(world3dInstancePickUsesInteractionDomain({ id: "seed-left-001", interactionId: "port@0" })).toBe(true);
   });
 
+  it("paints the pane's own raycast hover before the guest echoes it, and the guest's when the pointer is elsewhere", () => {
+    // 🎯️ Inside the pane the raycast leads: over an object it paints at once, over nothing it clears at
+    // once — both before the `interactionHover` round trip settles and regardless of what the guest's
+    // lane still says.
+    expect(worldHoverPaintIdV1("bim-1", null)).toBe("bim-1");
+    expect(worldHoverPaintIdV1("bim-1", "bim-1")).toBe("bim-1");
+    expect(worldHoverPaintIdV1("bim-2", "bim-1")).toBe("bim-2");
+    expect(worldHoverPaintIdV1(null, "bim-1")).toBeNull();
+    // 🧭️ With no local claim (the pointer left the pane) the guest's hover — an outliner row, a remote
+    // presence — is what the pane paints.
+    expect(worldHoverPaintIdV1(undefined, "bim-1")).toBe("bim-1");
+    expect(worldHoverPaintIdV1(undefined, null)).toBeNull();
+  });
+
   it("arms the suggestions gesture from a host vortex hover without a guest InteractionView", () => {
     expect(world3dSuggestionsGestureArmed(true, "table@in")).toBe(true);
     expect(world3dSuggestionsGestureArmed(true, null)).toBe(false);
@@ -6327,6 +6363,69 @@ describe("framework renderer hosts", () => {
     expect(markup.match(/<circle /g)?.length).toBe(3);
     expect(markup).toContain("branch b");
     expect(markup).toContain("feature-b");
+  });
+
+  it("syncs raster canvas theme when the wasm session attaches", async () => {
+    const setCanvasThemeJson = vi.fn();
+    const session: flowSessionLoader.RasterWasmSession = {
+      gpuReady: () => true,
+      attachCanvas: async () => {},
+      setSize: () => {},
+      renderFrame: () => {},
+      setCamera: () => {},
+      wheelScreen: () => {},
+      pointerDownScreen: () => {},
+      pointerMoveScreen: () => {},
+      pointerUpScreen: () => {},
+      syncDocumentJson: () => {},
+      uploadLayerImage: () => {},
+      uploadRasterImageKey: () => {},
+      setActiveUtility: () => {},
+      setBrushSize: () => {},
+      setBrushOpacity: () => {},
+      syncInteraction: () => {},
+      setCanvasThemeJson,
+      cameraJson: () => '{"x":0,"y":0,"zoom":1}',
+      setViewMode: () => {},
+      pickTargetsAtScreenJson: () => "[]",
+      marqueeHitsJson: () => "[]",
+      navigatorFitCameraJson: () => '{"x":0,"y":0,"zoom":1}',
+      navigatorViewportOverlayJson: () => '{"x":0,"y":0,"width":1,"height":1}',
+      free: vi.fn(),
+    };
+    const factory = vi.spyOn(flowSessionLoader, "createRasterSession").mockResolvedValue(session);
+    const originalObserver = globalThis.ResizeObserver;
+    vi.stubGlobal("ResizeObserver", class { observe() {} unobserve() {} disconnect() {} });
+    const view = render(
+      createElement(Paint2dHost, {
+        node: {
+          type: "componentScene",
+          surfaceId: "raster.play.viewport",
+          controllerId: "raster-play",
+          componentKind: "paint-2d",
+          paint2d: {
+            documentSyncJson: '{"schema":"raster.document","id":"raster","layers":[]}',
+            assetsJson: "{}",
+            cameraJson: '{"x":0,"y":0,"zoom":1}',
+            selectionJson: "[]",
+            activeUtility: "selectMarquee",
+            brushSize: 24,
+            brushOpacity: 1,
+            viewMode: "composite",
+          },
+        },
+        onAction: noopAction,
+      }),
+    );
+    try {
+      await waitFor(() => expect(setCanvasThemeJson).toHaveBeenCalled());
+      expect(setCanvasThemeJson.mock.calls.length).toBeGreaterThanOrEqual(2);
+    } finally {
+      view.unmount();
+      factory.mockRestore();
+      vi.stubGlobal("ResizeObserver", originalObserver);
+    }
+    expect(session.free).toHaveBeenCalledOnce();
   });
 
   it("synchronizes raster selection and hover through the current native interaction API", async () => {
@@ -7346,7 +7445,7 @@ describe("s workflow flow routing", () => {
   });
 
   it("hosts semantic panel bodies full-width via tree emptyState, not a property-layout control wrapper", () => {
-    const config = uiNodeToTreePanelConfig(pendingPanelUiNode(), noopAction);
+    const config = uiNodeToTreePanelConfig(pendingPanelUiNode(), noopAction, "framework.panel.inspection");
     expect(config.sections).toEqual([]);
     expect(config.emptyState).toBeTruthy();
     expect(config.className).toContain("w-full");
@@ -7360,7 +7459,7 @@ describe("s workflow flow routing", () => {
   // and no children — and `<Tree sections={[]}/>` drew literally nothing for it. Loading, empty and
   // dropped were one and the same blank rectangle.
   it("renders a panel body that has not arrived yet as a loading surface, never as a silently empty panel", () => {
-    const rendered = render(panelTreePanelHost(uiNodeToTreePanelConfig(pendingPanelUiNode(), noopAction)));
+    const rendered = render(panelTreePanelHost(uiNodeToTreePanelConfig(pendingPanelUiNode(), noopAction, "framework.panel.inspection")));
     expect(rendered.container.querySelector("[data-ui-status=\"loading\"]")).toBeTruthy();
     expect(rendered.container.querySelector("[aria-busy=\"true\"]")).toBeTruthy();
   });
@@ -7372,7 +7471,7 @@ describe("s workflow flow routing", () => {
   // reaching this state at all means something upstream lost the body.
   it("renders an idle tree body with no sections as an explicit empty state, distinct from loading", () => {
     const idleEmpty = { ...pendingPanelUiNode(), activity: "idle" as const };
-    const empty = render(panelTreePanelHost(uiNodeToTreePanelConfig(idleEmpty, noopAction)));
+    const empty = render(panelTreePanelHost(uiNodeToTreePanelConfig(idleEmpty, noopAction, "framework.panel.inspection")));
     expect(empty.container.querySelector("[data-ui-status=\"loading\"]")).toBeNull();
     expect(empty.container.textContent?.replace(/\u2026/g, "").trim()).not.toBe("");
     expect(empty.container.textContent).toContain(resolveTranslationLabel(uiI18n.t("ui.common.noData")));
@@ -7414,6 +7513,7 @@ describe("s workflow flow routing", () => {
         ],
       }),
       noopAction,
+      "framework.panel.catalogue",
     );
     const rendered = render(panelTreePanelHost(config));
     expect(rendered.getByText("Draw")).toBeTruthy();
@@ -7447,6 +7547,7 @@ describe("s workflow flow routing", () => {
         ],
       }),
       (action) => dispatched.push(action),
+      "framework.panel.catalogue",
     );
     const rendered = render(panelTreePanelHost(config));
     const row = rendered.container.querySelector("#panel\\:puzzle3d-play-kinds\\/Hexagonal\\ Cut\\ Concrete\\ Forest\\ Left");
@@ -7534,7 +7635,7 @@ describe("s workflow flow routing", () => {
     const expected = { controllerId: "puzzle3d-play", action: "setSelectionFlag", args: flagArgs };
     for (const presence of [undefined, { "seed-left-001": { selected: true }, "object-1": { selected: true } }]) {
       const dispatched: ActionDescriptor[] = [];
-      const config = uiNodeToTreePanelConfig(documentNode, (action) => dispatched.push(action));
+      const config = uiNodeToTreePanelConfig(documentNode, (action) => dispatched.push(action), "framework.panel.document");
       const host = panelTreePanelHost(config);
       const rendered = render(presence ? createElement(UiPresenceOverlayContext.Provider, { value: { byKey: new Map(Object.entries(presence)) as ReadonlyMap<string, UiPresenceOverlayEntry> } }, host) : host);
       const hide = Array.from(rendered.container.querySelectorAll('[data-slot="action"]')).find((candidate) => (candidate.textContent ?? "").includes("Hide"));
@@ -9302,21 +9403,28 @@ describe("shell option locks (SEMIO_LOCKED_*)", () => {
     expect(localStorage.getItem("ui.introduction.seen.entwerfen-mit-bestand-aggregator:puzzle3d-play")).toBeNull();
   });
 
-  it("registers all six Entwerfen mit Bestand demonstrator shell brands", () => {
+  it("registers all eight Entwerfen mit Bestand demonstrator shell brands", () => {
     expect(ENTWERFEN_MIT_BESTAND_BRAND_IDS).toEqual([
       "entwerfen-mit-bestand-aggregator",
       "entwerfen-mit-bestand-aussuchen",
       "entwerfen-mit-bestand-bearbeiten",
+      "entwerfen-mit-bestand-energie",
       "entwerfen-mit-bestand-generator",
       "entwerfen-mit-bestand-koordinator",
+      "entwerfen-mit-bestand-statik",
       "entwerfen-mit-bestand-verfolgen",
     ]);
     expect(ENTWERFEN_MIT_BESTAND_AGGREGATOR_BRAND.id).toBe("entwerfen-mit-bestand-aggregator");
     expect(ENTWERFEN_MIT_BESTAND_AUSSUCHEN_BRAND.id).toBe("entwerfen-mit-bestand-aussuchen");
     expect(ENTWERFEN_MIT_BESTAND_BEARBEITEN_BRAND.id).toBe("entwerfen-mit-bestand-bearbeiten");
+    expect(ENTWERFEN_MIT_BESTAND_ENERGIE_BRAND.id).toBe("entwerfen-mit-bestand-energie");
     expect(ENTWERFEN_MIT_BESTAND_GENERATOR_BRAND.id).toBe("entwerfen-mit-bestand-generator");
     expect(ENTWERFEN_MIT_BESTAND_KOORDINATOR_BRAND.id).toBe("entwerfen-mit-bestand-koordinator");
+    expect(ENTWERFEN_MIT_BESTAND_STATIK_BRAND.id).toBe("entwerfen-mit-bestand-statik");
     expect(ENTWERFEN_MIT_BESTAND_VERFOLGEN_BRAND.id).toBe("entwerfen-mit-bestand-verfolgen");
+    expect(isEntwerfenMitBestandBrandId(ENTWERFEN_MIT_BESTAND_ENERGIE_BRAND.id)).toBe(true);
+    expect(isEntwerfenMitBestandBrandId("semio-os")).toBe(false);
+    expect(ENTWERFEN_MIT_BESTAND_ENERGIE_BRAND.windowTitle).toBe("Entwerfen mit Bestand · Energie");
     expect(ENTWERFEN_MIT_BESTAND_GENERAL_INTRODUCTION.steps.map((step) => step.id)).toEqual(["welcome", "prototype", "funding"]);
   });
 

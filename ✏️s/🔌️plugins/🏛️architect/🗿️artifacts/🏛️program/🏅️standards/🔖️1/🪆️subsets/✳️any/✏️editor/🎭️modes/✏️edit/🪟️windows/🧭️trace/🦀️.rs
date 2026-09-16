@@ -1,9 +1,13 @@
 //! 🧭️ Architect trace window — the document-wide audit trail.
+//!
+//! 🪟️ The trail is **virtualised**: the `.take(12)` truncation is gone, the section reports the full
+//! event count and materialises only the row window the host asked for, so a long-lived document's
+//! audit feed is scrollable to its end instead of stopping at the twelfth event.
 
 use crate::editor::architect::ui_label;
 use crate::standards::v1::subsets::any::schema::inferences::audit_trail;
 use crate::ProgramSnapshot;
-use semio_framework_plugin::{tree_item_desc, LocalizedLabel, PanelTreeBuilder, PluginAssemblyError, SurfaceKind, UiFixedList, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::{tree_item_desc, LocalizedLabel, PanelTreeBuilder, SurfaceKind, TreeWindows, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants
 pub const ARCHITECT_WINDOW_TRACE: &str = "architect-trace";
@@ -41,18 +45,20 @@ pub fn definition() -> WindowKindDefinition {
 /// longer scope trace chain/impact to a selected entity — both sections needed a root id and are
 /// gone with it; the audit trail degrades to the document-wide feed (`audit_trail(program, None)`)
 /// instead of one scoped to a selection.
-pub fn render(program: &ProgramSnapshot) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(program: &ProgramSnapshot, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let trail = audit_trail(program, None);
-    let mut items = UiFixedList::default();
-    for (index, event) in trail.events.iter().take(12).enumerate() {
-        let item = tree_item_desc(format!("architect-trace.audit.{index}"), ui_label(format!("{:?} @ {} — {}", event.action, event.timestamp, event.header.name))?, None)?;
-        items.try_push(item).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "architect trace event admission failed"))?;
-    }
-    if items.is_empty() {
-        let item = tree_item_desc("architect-trace.audit.empty", ui_label("(no events)")?, None)?;
-        items.try_push(item).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "architect trace empty row admission failed"))?;
-    }
-    PanelTreeBuilder::new("architect-trace")?.section("architect-trace.audit", Some(ui_label(format!("Audit Trail ({})", trail.events.len()))?), true, items)?.build()
+    let events: Vec<_> = trail.events.iter().enumerate().collect();
+    PanelTreeBuilder::new("architect-trace")?
+        .window_section_or_placeholder(
+            windows,
+            "architect-trace.audit",
+            Some(ui_label(format!("Audit Trail ({})", trail.events.len()))?),
+            true,
+            &events,
+            |(index, event)| tree_item_desc(format!("architect-trace.audit.{index}"), ui_label(format!("{:?} @ {} — {}", event.action, event.timestamp, event.header.name))?, None),
+            ui_label("(no events)")?,
+        )?
+        .build()
 }
 //#endregion 🔖️Render
 

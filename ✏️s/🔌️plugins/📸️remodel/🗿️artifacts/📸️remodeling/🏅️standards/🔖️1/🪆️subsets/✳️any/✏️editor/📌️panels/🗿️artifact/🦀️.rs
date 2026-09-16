@@ -5,7 +5,7 @@
 
 use crate::editor::remodeling::modes::model::tools::reconstruction;
 use crate::RemodelingSnapshot;
-use semio_framework_plugin::{tree_item, BuiltNode, Locale, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, ToolRunView, UiAssemblyResult, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, FRAMEWORK_TOOL_RUN_BODY_KEY};
+use semio_framework_plugin::{tree_item, BuiltNode, Locale, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, ToolRunView, TreeWindows, UiAssemblyResult, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, FRAMEWORK_TOOL_RUN_BODY_KEY};
 use semio_framework_tool_run::{ToolRunAction, ToolRunState};
 
 //#region 🔖️Constants
@@ -64,19 +64,20 @@ fn result_text(state: ToolRunState, locale: Locale) -> &'static str {
 
 //#region 🔖️Render
 /// 🚦️ The run state, what it means for the document, the stored result and the driving chords.
-pub fn render(scene: &RemodelingSnapshot, run: Option<&ToolRunView>, locale: Locale) -> UiAssemblyResult<BuiltNode> {
+pub fn render(scene: &RemodelingSnapshot, run: Option<&ToolRunView>, locale: Locale, windows: &TreeWindows<'_>) -> UiAssemblyResult<BuiltNode> {
     let run = run.filter(|run| run.tool_id == reconstruction::TOOL_ID);
     let state_label = run.map_or_else(|| say(locale, "No reconstruction run", "Kein Rekonstruktionslauf").to_string(), |run| format!("{} · {} {} · {} {}", run.state.label().text(locale), say(locale, "run", "Lauf"), run.identity.id.run, say(locale, "generation", "Generation"), run.identity.generation));
     let result_label = run.map_or_else(
         || format!("{}: {}", say(locale, "Stored cameras", "Gespeicherte Kameras"), scene.results.trajectory.as_ref().map_or(0, |trajectory| trajectory.poses.len())),
         |run| result_text(run.state, locale).to_string(),
     );
-    let mut rows = vec![tree_item("remodeling-pipeline.run", state_label), tree_item("remodeling-pipeline.result", result_label)];
+    let mut rows: Vec<(String, String)> = vec![("remodeling-pipeline.run".to_string(), state_label), ("remodeling-pipeline.result".to_string(), result_label)];
     for action in [ToolRunAction::Start, ToolRunAction::Pause, ToolRunAction::Step, ToolRunAction::Abort, ToolRunAction::Finalize] {
-        rows.push(tree_item(format!("remodeling-pipeline.keys.{}", action.id()), format!("{} — {}", action.chord(), action.label().text(locale))));
+        rows.push((format!("remodeling-pipeline.keys.{}", action.id()), format!("{} — {}", action.chord(), action.label().text(locale))));
     }
-    let rows = crate::editor::remodeling::ui_node_list(rows)?;
-    PanelTreeBuilder::new("remodeling-pipeline")?.section("remodeling-pipeline.reconstruction", Some(crate::editor::remodeling::ui_label(say(locale, "Reconstruction", "Rekonstruktion"))?), true, rows)?.build()
+    PanelTreeBuilder::new("remodeling-pipeline")?
+        .window_section(windows, "remodeling-pipeline.reconstruction", Some(crate::editor::remodeling::ui_label(say(locale, "Reconstruction", "Rekonstruktion"))?), true, &rows, |(id, text)| tree_item(id.as_str(), text.as_str()))?
+        .build()
 }
 //#endregion 🔖️Render
 

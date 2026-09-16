@@ -10480,7 +10480,7 @@ export async function registerTests2(vitest: Pick<typeof import("vitest"), "desc
         expect(css).toMatch(/:is\(\[data-slot="panel"\],\s*\[data-slot="pane"\]\):hover\s*\[data-slot="chrome-frame"\]/);
         expect(css).not.toMatch(/:is\(\[data-slot="panel"\],\s*\[data-slot="pane"\]\):focus-within\s*\[data-slot="chrome-frame"\]/);
         expect(css).toContain('[data-hover-scope]:hover [data-slot="drag-handle"]');
-        expect(css).toContain('[data-hover-scope]:hover :is([data-slot="mode-dock-tab-focus"], [data-slot="mode-dock-tab-new-window"], [data-slot="mode-dock-tab-close"])');
+        expect(css).toContain('[data-hover-scope]:hover :is([data-slot="mode-dock-tab-focus"], [data-slot="mode-dock-tab-close"])');
         expect(css).toMatch(/\[data-hover-scope\]:hover\s*\[data-slot="drag-handle"\]\s*,\s*\n\[data-hover-scope\]:hover\s*:is\(\[data-slot="mode-dock-tab-focus"\]/);
         expect(css).toContain("/* #region 🫨️IconAnimChromeAccessory");
         expect(css).toMatch(

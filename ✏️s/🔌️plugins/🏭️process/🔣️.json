@@ -785,8 +785,15 @@
           }
         ],
         "role": "editor",
-        "terminologies": [],
-        "terminologyBreadcrumbs": {},
+        "terminologies": [
+          "reuse"
+        ],
+        "terminologyBreadcrumbs": {
+          "reuse": [
+            "Entwerfen mit Bestand",
+            "Bearbeiten"
+          ]
+        },
         "tools": [],
         "tutorials": [],
         "utilities": [

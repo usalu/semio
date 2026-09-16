@@ -10,10 +10,11 @@
 
 use crate::editor::process3d::terminology::{process3d_measure_label, Process3dLabels};
 use crate::{Capability, Pose, Process3dSnapshot, ProcessMeasure, ProcessStep, Stock, WorkingSolid, WorkshopMachine};
-use semio_framework_plugin::{tree_item, BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiAssemblyResult, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
+use semio_framework_plugin::{tree_item, BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, TreeWindows, UiAssemblyResult, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
 
 //#region 🔖️Constants
 pub const PROCESS_3D_PLAY_BODY_INSPECTION: &str = "process.play.inspection";
+pub const PROCESS_3D_PLAY_INSPECTOR_SECTION: &str = "process3d-play-inspector.section";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
@@ -29,119 +30,133 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Fields
-/// 🧾️ One read-only `"{label}: {value}"` row, admitted into a field list under `id`.
-fn push_field(fields: &mut semio_framework_plugin::UiFixedList<BuiltNode>, id: impl AsRef<str>, label: &str, value: impl std::fmt::Display) -> UiAssemblyResult<()> {
-    fields.try_push(tree_item(id, format!("{label}: {value}"))?).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.inspection.fields", "fixed inspector field admission failed"))
+/// 🧾️ One read-only `"{label}: {value}"` row, recorded as the `(id, text)` ENTRY its section's
+/// window slices — the fields are data until the window decides how many of them to materialise.
+fn push_field(fields: &mut Vec<(String, String)>, id: impl AsRef<str>, label: &str, value: impl std::fmt::Display) {
+    fields.push((id.as_ref().to_string(), format!("{label}: {value}")));
+}
+
+fn field_row(entry: &(String, String)) -> UiAssemblyResult<BuiltNode> {
+    tree_item(&entry.0, entry.1.as_str())
 }
 
 /// 🧱️ A `WorkingSolid`'s kind plus its own variant-specific dimensions.
-fn push_working_solid_fields(fields: &mut semio_framework_plugin::UiFixedList<BuiltNode>, prefix: &str, solid: &WorkingSolid, labels: &Process3dLabels) -> UiAssemblyResult<()> {
+fn push_working_solid_fields(fields: &mut Vec<(String, String)>, prefix: &str, solid: &WorkingSolid, labels: &Process3dLabels) {
     match solid {
         WorkingSolid::Box { width, depth, height } => {
-            push_field(fields, format!("{prefix}.kind"), labels.kind_field.as_str(), labels.stock_kind_box.as_str())?;
-            push_field(fields, format!("{prefix}.width"), labels.field_width.as_str(), width)?;
-            push_field(fields, format!("{prefix}.depth"), labels.field_depth.as_str(), depth)?;
-            push_field(fields, format!("{prefix}.height"), labels.field_height.as_str(), height)
+            push_field(fields, format!("{prefix}.kind"), labels.kind_field.as_str(), labels.stock_kind_box.as_str());
+            push_field(fields, format!("{prefix}.width"), labels.field_width.as_str(), width);
+            push_field(fields, format!("{prefix}.depth"), labels.field_depth.as_str(), depth);
+            push_field(fields, format!("{prefix}.height"), labels.field_height.as_str(), height);
         }
         WorkingSolid::Cylinder { radius, height } => {
-            push_field(fields, format!("{prefix}.kind"), labels.kind_field.as_str(), labels.stock_kind_cylinder.as_str())?;
-            push_field(fields, format!("{prefix}.radius"), labels.field_radius.as_str(), radius)?;
-            push_field(fields, format!("{prefix}.height"), labels.field_height.as_str(), height)
+            push_field(fields, format!("{prefix}.kind"), labels.kind_field.as_str(), labels.stock_kind_cylinder.as_str());
+            push_field(fields, format!("{prefix}.radius"), labels.field_radius.as_str(), radius);
+            push_field(fields, format!("{prefix}.height"), labels.field_height.as_str(), height);
         }
         WorkingSolid::Sphere { radius } => {
-            push_field(fields, format!("{prefix}.kind"), labels.kind_field.as_str(), labels.stock_kind_sphere.as_str())?;
-            push_field(fields, format!("{prefix}.radius"), labels.field_radius.as_str(), radius)
+            push_field(fields, format!("{prefix}.kind"), labels.kind_field.as_str(), labels.stock_kind_sphere.as_str());
+            push_field(fields, format!("{prefix}.radius"), labels.field_radius.as_str(), radius);
         }
         WorkingSolid::ImportedMesh { mesh_url } => {
-            push_field(fields, format!("{prefix}.kind"), labels.kind_field.as_str(), labels.stock_kind_imported_mesh.as_str())?;
-            push_field(fields, format!("{prefix}.url"), labels.label_field.as_str(), mesh_url)
+            push_field(fields, format!("{prefix}.kind"), labels.kind_field.as_str(), labels.stock_kind_imported_mesh.as_str());
+            push_field(fields, format!("{prefix}.url"), labels.label_field.as_str(), mesh_url);
         }
         WorkingSolid::ImportedSolid { solid_handle } => {
-            push_field(fields, format!("{prefix}.kind"), labels.kind_field.as_str(), labels.stock_kind_imported_solid.as_str())?;
-            push_field(fields, format!("{prefix}.handle"), labels.label_field.as_str(), solid_handle)
+            push_field(fields, format!("{prefix}.kind"), labels.kind_field.as_str(), labels.stock_kind_imported_solid.as_str());
+            push_field(fields, format!("{prefix}.handle"), labels.label_field.as_str(), solid_handle);
         }
         WorkingSolid::Reference { reference_id } => {
-            push_field(fields, format!("{prefix}.kind"), labels.kind_field.as_str(), labels.stock_kind_reference.as_str())?;
-            push_field(fields, format!("{prefix}.reference"), labels.label_field.as_str(), crate::reference_solid(reference_id).map_or(reference_id.as_str(), |reference| reference.label))
+            push_field(fields, format!("{prefix}.kind"), labels.kind_field.as_str(), labels.stock_kind_reference.as_str());
+            push_field(fields, format!("{prefix}.reference"), labels.label_field.as_str(), crate::reference_solid(reference_id).map_or(reference_id.as_str(), |reference| reference.label));
         }
     }
 }
 
 /// 🧭️ A `Pose`'s position, axis and angle.
-fn push_pose_fields(fields: &mut semio_framework_plugin::UiFixedList<BuiltNode>, prefix: &str, pose: &Pose, labels: &Process3dLabels) -> UiAssemblyResult<()> {
-    push_field(fields, format!("{prefix}.x"), labels.field_pos_x.as_str(), pose.position[0])?;
-    push_field(fields, format!("{prefix}.y"), labels.field_pos_y.as_str(), pose.position[1])?;
-    push_field(fields, format!("{prefix}.z"), labels.field_pos_z.as_str(), pose.position[2])?;
-    push_field(fields, format!("{prefix}.axis"), labels.axis_field.as_str(), format!("[{}, {}, {}]", pose.axis[0], pose.axis[1], pose.axis[2]))?;
-    push_field(fields, format!("{prefix}.angle"), labels.field_angle.as_str(), pose.angle)
+fn push_pose_fields(fields: &mut Vec<(String, String)>, prefix: &str, pose: &Pose, labels: &Process3dLabels) {
+    push_field(fields, format!("{prefix}.x"), labels.field_pos_x.as_str(), pose.position[0]);
+    push_field(fields, format!("{prefix}.y"), labels.field_pos_y.as_str(), pose.position[1]);
+    push_field(fields, format!("{prefix}.z"), labels.field_pos_z.as_str(), pose.position[2]);
+    push_field(fields, format!("{prefix}.axis"), labels.axis_field.as_str(), format!("[{}, {}, {}]", pose.axis[0], pose.axis[1], pose.axis[2]));
+    push_field(fields, format!("{prefix}.angle"), labels.field_angle.as_str(), pose.angle);
 }
 //#endregion 🔖️Fields
 
 //#region 🔖️Sections
-fn empty_state(labels: &Process3dLabels) -> UiAssemblyResult<BuiltNode> {
-    let items = crate::editor::process3d::ui_node_list([tree_item("process3d-play-inspector.empty", crate::editor::process3d::ui_label(labels.no_selection.as_str())?)])?;
-    PanelTreeBuilder::new("process3d-play-inspector")?.section("process3d-play-inspector.section", Some(crate::editor::process3d::ui_label(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL)?), true, items)?.build()
+fn empty_state(labels: &Process3dLabels, windows: &TreeWindows<'_>) -> UiAssemblyResult<BuiltNode> {
+    let fields = vec![("process3d-play-inspector.empty".to_string(), labels.no_selection.as_str().to_string())];
+    PanelTreeBuilder::new("process3d-play-inspector")?
+        .window_section(windows, PROCESS_3D_PLAY_INSPECTOR_SECTION, Some(crate::editor::process3d::ui_label(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL)?), true, &fields, field_row)?
+        .build()
 }
 
 /// 🪵️ Id, label, `WorkingSolid` dimensions and `Pose` of the selected stock.
-fn render_stock(stock: &Stock, labels: &Process3dLabels) -> UiAssemblyResult<BuiltNode> {
-    let mut fields = semio_framework_plugin::UiFixedList::default();
-    push_field(&mut fields, "process3d-play-inspector.stock.id", labels.id_field.as_str(), &stock.id)?;
-    push_field(&mut fields, "process3d-play-inspector.stock.label", labels.label_field.as_str(), &stock.label)?;
-    push_working_solid_fields(&mut fields, "process3d-play-inspector.stock.solid", &stock.solid, labels)?;
-    push_pose_fields(&mut fields, "process3d-play-inspector.stock.pose", &stock.pose, labels)?;
-    PanelTreeBuilder::new("process3d-play-inspector")?.section("process3d-play-inspector.stock", Some(crate::editor::process3d::ui_label(labels.stock.as_str())?), true, fields)?.build()
+fn render_stock(stock: &Stock, labels: &Process3dLabels, windows: &TreeWindows<'_>) -> UiAssemblyResult<BuiltNode> {
+    let mut fields = Vec::new();
+    push_field(&mut fields, "process3d-play-inspector.stock.id", labels.id_field.as_str(), &stock.id);
+    push_field(&mut fields, "process3d-play-inspector.stock.label", labels.label_field.as_str(), &stock.label);
+    push_working_solid_fields(&mut fields, "process3d-play-inspector.stock.solid", &stock.solid, labels);
+    push_pose_fields(&mut fields, "process3d-play-inspector.stock.pose", &stock.pose, labels);
+    PanelTreeBuilder::new("process3d-play-inspector")?
+        .window_section(windows, "process3d-play-inspector.stock", Some(crate::editor::process3d::ui_label(labels.stock.as_str())?), true, &fields, field_row)?
+        .build()
 }
 
 /// 🎞️ Label, enabled flag, `StepOrigin` (machine + capability) and `ProcessMeasure` of the selected step.
-fn render_step(step: &ProcessStep, labels: &Process3dLabels) -> UiAssemblyResult<BuiltNode> {
-    let mut fields = semio_framework_plugin::UiFixedList::default();
-    push_field(&mut fields, "process3d-play-inspector.step.id", labels.id_field.as_str(), &step.id)?;
-    push_field(&mut fields, "process3d-play-inspector.step.label", labels.label_field.as_str(), &step.label)?;
-    push_field(&mut fields, "process3d-play-inspector.step.enabled", labels.enabled.as_str(), step.enabled)?;
+fn render_step(step: &ProcessStep, labels: &Process3dLabels, windows: &TreeWindows<'_>) -> UiAssemblyResult<BuiltNode> {
+    let mut fields = Vec::new();
+    push_field(&mut fields, "process3d-play-inspector.step.id", labels.id_field.as_str(), &step.id);
+    push_field(&mut fields, "process3d-play-inspector.step.label", labels.label_field.as_str(), &step.label);
+    push_field(&mut fields, "process3d-play-inspector.step.enabled", labels.enabled.as_str(), step.enabled);
     if let Some(origin) = &step.origin {
-        push_field(&mut fields, "process3d-play-inspector.step.machine", labels.machine_field.as_str(), &origin.machine_id)?;
-        push_field(&mut fields, "process3d-play-inspector.step.capability", labels.capability_field.as_str(), &origin.capability_id)?;
+        push_field(&mut fields, "process3d-play-inspector.step.machine", labels.machine_field.as_str(), &origin.machine_id);
+        push_field(&mut fields, "process3d-play-inspector.step.capability", labels.capability_field.as_str(), &origin.capability_id);
     }
-    push_field(&mut fields, "process3d-play-inspector.step.kind", labels.kind_field.as_str(), process3d_measure_label(&step.measure, labels).as_str())?;
+    push_field(&mut fields, "process3d-play-inspector.step.kind", labels.kind_field.as_str(), process3d_measure_label(&step.measure, labels).as_str());
     match &step.measure {
         ProcessMeasure::Cut { tool, pose } => {
-            push_working_solid_fields(&mut fields, "process3d-play-inspector.step.tool", tool, labels)?;
-            push_pose_fields(&mut fields, "process3d-play-inspector.step.pose", pose, labels)?;
+            push_working_solid_fields(&mut fields, "process3d-play-inspector.step.tool", tool, labels);
+            push_pose_fields(&mut fields, "process3d-play-inspector.step.pose", pose, labels);
         }
         ProcessMeasure::Drill { radius, depth, pose } => {
-            push_field(&mut fields, "process3d-play-inspector.step.radius", labels.field_radius.as_str(), radius)?;
-            push_field(&mut fields, "process3d-play-inspector.step.depth", labels.field_depth.as_str(), depth)?;
-            push_pose_fields(&mut fields, "process3d-play-inspector.step.pose", pose, labels)?;
+            push_field(&mut fields, "process3d-play-inspector.step.radius", labels.field_radius.as_str(), radius);
+            push_field(&mut fields, "process3d-play-inspector.step.depth", labels.field_depth.as_str(), depth);
+            push_pose_fields(&mut fields, "process3d-play-inspector.step.pose", pose, labels);
         }
         ProcessMeasure::Attach { component, pose } => {
-            push_working_solid_fields(&mut fields, "process3d-play-inspector.step.component", component, labels)?;
-            push_pose_fields(&mut fields, "process3d-play-inspector.step.pose", pose, labels)?;
+            push_working_solid_fields(&mut fields, "process3d-play-inspector.step.component", component, labels);
+            push_pose_fields(&mut fields, "process3d-play-inspector.step.pose", pose, labels);
         }
     }
-    PanelTreeBuilder::new("process3d-play-inspector")?.section("process3d-play-inspector.step", Some(crate::editor::process3d::ui_label(labels.step_control.as_str())?), true, fields)?.build()
+    PanelTreeBuilder::new("process3d-play-inspector")?
+        .window_section(windows, "process3d-play-inspector.step", Some(crate::editor::process3d::ui_label(labels.step_control.as_str())?), true, &fields, field_row)?
+        .build()
 }
 
 /// 🛠️ Label, icon and every capability (with its parameters) of the selected workshop machine, one
 /// subsection per capability, mirroring `🛠️workshop`'s own per-catalog section idiom.
-fn render_machine(machine: &WorkshopMachine, labels: &Process3dLabels) -> UiAssemblyResult<BuiltNode> {
-    let mut summary = semio_framework_plugin::UiFixedList::default();
-    push_field(&mut summary, "process3d-play-inspector.machine.id", labels.id_field.as_str(), &machine.id)?;
-    push_field(&mut summary, "process3d-play-inspector.machine.label", labels.label_field.as_str(), &machine.label)?;
-    push_field(&mut summary, "process3d-play-inspector.machine.icon", labels.icon_field.as_str(), &machine.icon_id)?;
-    let mut builder = PanelTreeBuilder::new("process3d-play-inspector")?.section("process3d-play-inspector.machine", Some(crate::editor::process3d::ui_label(labels.machine_field.as_str())?), true, summary)?;
+fn render_machine(machine: &WorkshopMachine, labels: &Process3dLabels, windows: &TreeWindows<'_>) -> UiAssemblyResult<BuiltNode> {
+    let mut summary = Vec::new();
+    push_field(&mut summary, "process3d-play-inspector.machine.id", labels.id_field.as_str(), &machine.id);
+    push_field(&mut summary, "process3d-play-inspector.machine.label", labels.label_field.as_str(), &machine.label);
+    push_field(&mut summary, "process3d-play-inspector.machine.icon", labels.icon_field.as_str(), &machine.icon_id);
+    let mut builder = PanelTreeBuilder::new("process3d-play-inspector")?
+        .window_section(windows, "process3d-play-inspector.machine", Some(crate::editor::process3d::ui_label(labels.machine_field.as_str())?), true, &summary, field_row)?;
     for capability in &machine.capabilities {
-        builder = builder.section(format!("process3d-play-inspector.capability.{}", capability.id), Some(crate::editor::process3d::ui_label(&capability.label)?), false, capability_parameter_fields(capability)?)?;
+        let section_id = format!("process3d-play-inspector.capability.{}", capability.id);
+        let fields = capability_parameter_fields(capability);
+        builder = builder.window_section(windows, &section_id, Some(crate::editor::process3d::ui_label(&capability.label)?), false, &fields, field_row)?;
     }
     builder.build()
 }
 
-fn capability_parameter_fields(capability: &Capability) -> UiAssemblyResult<semio_framework_plugin::UiFixedList<BuiltNode>> {
-    let mut fields = semio_framework_plugin::UiFixedList::default();
+fn capability_parameter_fields(capability: &Capability) -> Vec<(String, String)> {
+    let mut fields = Vec::new();
     for parameter in &capability.parameters {
-        push_field(&mut fields, format!("process3d-play-inspector.capability.{}.{}", capability.id, parameter.id), parameter.label.as_str(), parameter.value)?;
+        push_field(&mut fields, format!("process3d-play-inspector.capability.{}.{}", capability.id, parameter.id), parameter.label.as_str(), parameter.value);
     }
-    Ok(fields)
+    fields
 }
 //#endregion 🔖️Sections
 
@@ -149,22 +164,22 @@ fn capability_parameter_fields(capability: &Capability) -> UiAssemblyResult<semi
 /// 🔍️ Resolves `selected_ids.first()` against `snapshot` (stock, then a workshop machine's
 /// `"machine:{id}"`, then a step) and renders that selection's real fields; an empty or
 /// unresolvable selection renders the empty state.
-pub fn render(snapshot: &Process3dSnapshot, selected_ids: &[String], labels: &Process3dLabels) -> UiAssemblyResult<BuiltNode> {
+pub fn render(snapshot: &Process3dSnapshot, selected_ids: &[String], labels: &Process3dLabels, windows: &TreeWindows<'_>) -> UiAssemblyResult<BuiltNode> {
     let Some(selected_id) = selected_ids.first() else {
-        return empty_state(labels);
+        return empty_state(labels, windows);
     };
     if selected_id == &snapshot.stock_id {
-        return render_stock(&snapshot.stock_payload, labels);
+        return render_stock(&snapshot.stock_payload, labels, windows);
     }
     if let Some(machine_id) = selected_id.strip_prefix("machine:") {
         if let Some(machine) = snapshot.workshop.machines.iter().find(|machine| machine.id == machine_id) {
-            return render_machine(machine, labels);
+            return render_machine(machine, labels, windows);
         }
     }
     if let Some(step) = snapshot.step_payloads.iter().find(|step| &step.id == selected_id) {
-        return render_step(step, labels);
+        return render_step(step, labels, windows);
     }
-    empty_state(labels)
+    empty_state(labels, windows)
 }
 //#endregion 🔖️Render
 

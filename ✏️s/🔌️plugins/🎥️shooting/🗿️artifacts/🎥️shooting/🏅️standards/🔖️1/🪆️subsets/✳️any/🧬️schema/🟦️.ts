@@ -81,6 +81,7 @@ export interface ShootingMaterial {
   roughness: number;
   emissive: string;
   emissiveIntensity: number;
+  stroke: string;
 }
 
 export interface ShootingSceneLighting {
@@ -236,6 +237,7 @@ export function parseShootingMaterial(value: unknown, at = "$"): ShootingMateria
     roughness: shootingShootingArtifactGuardNumber(row["roughness"], `${at}.roughness`),
     emissive: shootingShootingArtifactGuardString(row["emissive"], `${at}.emissive`),
     emissiveIntensity: shootingShootingArtifactGuardNumber(row["emissiveIntensity"], `${at}.emissiveIntensity`),
+    stroke: row["stroke"] === undefined ? "#000000" : shootingShootingArtifactGuardString(row["stroke"], `${at}.stroke`),
   };
 }
 

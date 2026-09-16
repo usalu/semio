@@ -2,7 +2,7 @@
 
 use crate::editor::remodeling::terminology::RemodelingLabels;
 use crate::RemodelingSnapshot;
-use semio_framework_plugin::{tree_item, BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiAssemblyResult};
+use semio_framework_plugin::{tree_item, BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, TreeWindows, UiAssemblyResult};
 
 //#region 🔖️Constants
 pub const REMODELING_PANEL_RESULTS_ID: &str = "remodeling.results";
@@ -16,7 +16,7 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(scene: &RemodelingSnapshot, labels: &RemodelingLabels) -> UiAssemblyResult<BuiltNode> {
+pub fn render(scene: &RemodelingSnapshot, labels: &RemodelingLabels, windows: &TreeWindows<'_>) -> UiAssemblyResult<BuiltNode> {
     let results = &scene.results;
     // 🧩️ The composed handle resolves only fixed constants or committed bounded reconstruction
     // content; unavailable content reports 0/0 rather than fabricating a count.
@@ -30,14 +30,16 @@ pub fn render(scene: &RemodelingSnapshot, labels: &RemodelingLabels) -> UiAssemb
     let trajectory_label =
         results.trajectory.as_ref().map_or_else(|| format!("{}: {}", labels.trajectory.as_str(), labels.results_none.as_str()), |trajectory| format!("{}: {} {}", labels.trajectory.as_str(), trajectory.poses.len(), labels.poses.as_str()));
     let geo_label = results.geo.as_ref().map_or_else(|| format!("{}: {}", labels.geo_products.as_str(), labels.results_none.as_str()), |_| format!("{}: {}", labels.geo_products.as_str(), labels.available.as_str()));
-    let rows = crate::editor::remodeling::ui_node_list([
-        tree_item("remodeling-results.mesh", mesh_label),
-        tree_item("remodeling-results.sparse", sparse_label),
-        tree_item("remodeling-results.dense", dense_label),
-        tree_item("remodeling-results.trajectory", trajectory_label),
-        tree_item("remodeling-results.geo", geo_label),
-    ])?;
-    PanelTreeBuilder::new("remodeling-results")?.section("remodeling-results.products", Some(crate::editor::remodeling::ui_label(labels.panel_results.as_str())?), true, rows)?.build()
+    let rows: Vec<(&str, String)> = vec![
+        ("remodeling-results.mesh", mesh_label),
+        ("remodeling-results.sparse", sparse_label),
+        ("remodeling-results.dense", dense_label),
+        ("remodeling-results.trajectory", trajectory_label),
+        ("remodeling-results.geo", geo_label),
+    ];
+    PanelTreeBuilder::new("remodeling-results")?
+        .window_section(windows, "remodeling-results.products", Some(crate::editor::remodeling::ui_label(labels.panel_results.as_str())?), true, &rows, |(id, text)| tree_item(*id, text.as_str()))?
+        .build()
 }
 //#endregion 🔖️Render
 

@@ -165,27 +165,19 @@ pub fn ui_value_map(values: impl IntoIterator<Item = (&'static str, semio_framew
     Ok(semio_framework_plugin::UiValue::Map(builder.finish()))
 }
 
-/// 🌳️ Admits fallibly assembled UI nodes into fixed child storage.
-pub fn ui_node_list(values: impl IntoIterator<Item = semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode>>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiFixedList<semio_framework_plugin::BuiltNode>> {
-    let mut nodes = semio_framework_plugin::UiFixedList::default();
-    for value in values {
-        let node = value?;
-        nodes.try_push(node).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI node admission failed"))?;
-    }
-    Ok(nodes)
-}
-
 /// 🌳️ A layer tree item — `tree_item_with_action`/`tree_item` plus the icon that identifies each map
 /// layer, since the SDK's `PanelKit` family has no icon-carrying constructor. Shared by the document
-/// panel (`action: None` — the tree is `interaction_domain`-bound now, so the framework's renderer
-/// translates clicks into injected `interactionSelect`) and the catalogue panel (`action: Some(..)` —
-/// a real, non-selection click that toggles layer visibility).
+/// panel (`action: None`, `granularity: Some(GIS2D_LAYER_GRANULARITY)` — the tree is
+/// `interaction_domain`-bound, so the row declares its pick and the tree's single `interactionSelect`
+/// carries it) and the catalogue panel (`action: Some(..)`, `granularity: None` — a real,
+/// non-selection click that toggles layer visibility in an unbound tree).
 pub fn gis2d_layer_tree_item(
     id: impl AsRef<str>,
     label: semio_framework_plugin::plugin_app_close_prelude::Label,
     description: Option<String>,
     icon_id: &str,
     action: Option<(semio_framework_plugin::ActionId, Option<semio_framework_plugin::UiValue>)>,
+    granularity: Option<&str>,
 ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let mut node = match action {
         Some(action) => tree_item_with_action(id, label, description.clone(), action)?,
@@ -199,6 +191,10 @@ pub fn gis2d_layer_tree_item(
             };
         }
         props.icon = Some(semio_framework_plugin::UiText::try_from_str(icon_id).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "gis layer icon admission failed"))?);
+        props.granularity = match granularity {
+            Some(value) => Some(semio_framework_plugin::UiText::try_from_str(value).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "gis layer granularity admission failed"))?),
+            None => None,
+        };
     }
     Ok(node)
 }
@@ -760,8 +756,8 @@ impl Gis2dPlayApp {
         let labels = gis2d_labels(view_state);
         match body_key {
             map::GIS2D_PLAY_BODY_COMPOSITE => map::render(doc.snapshot, config, interaction).map(semio_framework_plugin::built_to_component_tree),
-            document_panel::GIS2D_PLAY_BODY_ARTIFACT => document_panel::render(config, labels).map(semio_framework_plugin::built_to_component_tree),
-            catalogue_panel::GIS2D_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels).map(semio_framework_plugin::built_to_component_tree),
+            document_panel::GIS2D_PLAY_BODY_ARTIFACT => document_panel::render(config, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, document_panel::GIS2D_PLAY_BODY_ARTIFACT)).map(semio_framework_plugin::built_to_component_tree),
+            catalogue_panel::GIS2D_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels, &semio_framework_plugin::TreeWindows::for_body(view_state, catalogue_panel::GIS2D_PLAY_BODY_CATALOGUE)).map(semio_framework_plugin::built_to_component_tree),
             inspection_panel::GIS2D_PLAY_BODY_INSPECTION => inspection_panel::render(doc.snapshot, config, interaction, labels).map(semio_framework_plugin::built_to_component_tree),
             _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
@@ -1105,6 +1101,8 @@ impl ArtifactEditor for Gis2dPlayApp {
 //#region 🔖️Manifest
 pub fn create_gis2d_app() -> semio_framework_plugin::AppDefinition {
     Editor::builder(crate::GISMAP_DIALECT).document(["semio", "gis", "2d"])
+            .terminology("reuse")
+            .terminology_document("reuse", ["Entwerfen mit Bestand", "Verfolgen"])
             .artifact_kind(artifact_kind())
             // 🔌️ Typed workflow ports (WORKFLOWS-END-TO-END-TYPED-PORTS Wave 2 port recipe) — same
             // constructor fns `gis2d_io()` embeds, so `AppIo.all_ports()` and these declarations can

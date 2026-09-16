@@ -61,3 +61,28 @@ async fn transparent_background_predicate_covers_empty_and_literal_transparent()
     assert!(is_transparent_shooting_background("transparent"));
     assert!(!is_transparent_shooting_background("#000000"));
 }
+
+#[semio_framework_async_macros::async_test]
+async fn transparent_scene_svg_omits_filled_shot_background_path() {
+    let snapshot = default_snapshot();
+    let (svg, _width, _height) = shooting_scene_svg(&snapshot).expect("transparent default scene svg");
+    assert!(!svg.contains("#0f172a"), "transparent scene must not fall back to the old opaque slate backdrop: {svg}");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn icon_render_request_forwards_camera_projection() {
+    let snapshot = default_snapshot();
+    let shot = active_shot(&snapshot).expect("default fixture shot");
+    let asset = active_asset(&snapshot).expect("default fixture asset");
+    let camera = crate::ShootingCamera {
+        position: [12.0, -12.0, 9.0],
+        target: [0.0, 0.0, 0.0],
+        zoom: 18.0,
+        fov: 50.0,
+        up: None,
+        projection: Some("orthographic".into()),
+    };
+    let request: dsl::os_pack::json::Value = dsl::os_pack::json::parse(&shooting_icon_render_request_json(&snapshot, shot, asset, &camera, false)).expect("icon render request json");
+    assert_eq!(request["camera"]["projection"], dsl::os_pack::json::Value::from("orthographic"));
+    assert_eq!(request["camera"]["zoom"], dsl::os_pack::json::Value::from(18.0));
+}

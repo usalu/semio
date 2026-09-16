@@ -1,5 +1,5 @@
 // #region 🧲️Header
-/** @emoji 🎪️ Entwerfen mit Bestand demonstrator landing — general introduction, six live app panes, glass name overlay. */
+/** @emoji 🎪️ Entwerfen mit Bestand demonstrator landing — general introduction, eight live app panes, glass name overlay. */
 // #endregion 🧲️Header
 
 import { createUiErrorBoundary, mountUiRoot, useUiCallback as useCallback, useUiEffect as useEffect, useUiMemo as useMemo, useUiRef as useRef, useUiState as useState, type UiNode } from "@semio-tech/ui-react/runtime";
@@ -46,7 +46,7 @@ const DEMONSTRATOR_TOUCH_LIST_MEDIA_QUERY = `${UI_MOBILE_MEDIA_QUERY} and (hover
 
 //#region 🎪️DemonstratorGridGeometry
 /** @emoji 🔢️ Columns and rows of the demonstrator preview grid; the strip spans `columns * 100vw` by `rows * 100vh`. */
-const DEMONSTRATOR_GRID_COLUMNS = 3;
+const DEMONSTRATOR_GRID_COLUMNS = 4;
 const DEMONSTRATOR_GRID_ROWS = 2;
 
 function paneColumn(paneIndex: number): number {
@@ -167,8 +167,8 @@ const DEMONSTRATOR_MOBILE_OVERVIEW_VEIL_OPACITY = 1;
 /** @emoji ⏱️ Keeps each background shell's 30-second plugin-load budget isolated from the next boot. */
 const DEMONSTRATOR_PANE_BOOT_INTERVAL_MS = 35_000;
 
-/** @emoji 🐢️ Boots panes one at a time (hash-target pane first, if any) instead of all six simultaneously —
- * six live WASM plugin boots at once would make the very first paint of the page janky. `promote` lets a
+/** @emoji 🐢️ Boots panes one at a time (hash-target pane first, if any) instead of all eight simultaneously —
+ * eight live WASM plugin boots at once would make the very first paint of the page janky. `promote` lets a
  * hover/focus jump a not-yet-booted pane to the front, since the user is about to look at it right now. */
 function useSequentialPaneBoot(
   initialFocusId: string | null,

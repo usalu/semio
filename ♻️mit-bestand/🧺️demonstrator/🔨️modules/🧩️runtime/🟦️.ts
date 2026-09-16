@@ -16,6 +16,11 @@ export function demonstratorPaneRuntimeVariant(variant: string): string {
 }
 
 /** 🪪️ Resolves a runtime variant to its generated component identity. */
+export function demonstratorRuntimePluginId(variant: string): string {
+  return runtimePluginId(variant);
+}
+
+/** 🪪️ Resolves a runtime variant to its generated component identity. */
 function runtimePluginId(variant: string): string {
   const target = PLAYGROUND_BUILD_TARGETS.find(row => row.variant === variant);
   if (!target) throw new Error(`Unknown demonstrator runtime variant: ${variant}`);

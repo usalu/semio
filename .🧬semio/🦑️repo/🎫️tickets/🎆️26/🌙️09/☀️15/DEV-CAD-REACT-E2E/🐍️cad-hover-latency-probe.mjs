@@ -18,6 +18,9 @@ const t0 = Date.now();
 page.on("console", (msg) => lines.push(`${Date.now() - t0} ${msg.type()} ${msg.text().slice(0, 600)}`));
 await page.goto(url, { waitUntil: "domcontentloaded" });
 await page.waitForTimeout(bootSeconds * 1000);
+// 🎯 Two readings per sample: what the pane PAINTS (`data-hover-paint-id`, the raycast claim merged
+// with the guest echo) and what the guest ECHOED (`data-guest-selection-json.hoveredId`).
+const painted = () => page.evaluate((s) => document.querySelector(`[data-surface-id="${s}"]`)?.getAttribute("data-hover-paint-id") ?? null, surface);
 const hovered = () => page.evaluate((s) => { try { return JSON.parse(document.querySelector(`[data-surface-id="${s}"]`)?.getAttribute("data-guest-selection-json") ?? "null")?.hoveredId ?? null; } catch { return null; } }, surface);
 const rect = await page.evaluate((s) => { const r = document.querySelector(`[data-surface-id="${s}"]`).getBoundingClientRect(); return { x: r.x, y: r.y, w: r.width, h: r.height }; }, surface);
 // 🎯 Find a spot that hovers an object and one that hovers nothing.
@@ -33,13 +36,18 @@ const samples = [];
 const measure = async (label, fx, fy, expectNull) => {
   const start = Date.now();
   await page.mouse.move(rect.x + rect.w * fx, rect.y + rect.h * fy);
+  let paint = await painted();
+  let paintMs = null;
   let value = await hovered();
   while ((expectNull ? value !== null : value === null) && Date.now() - start < 6000) {
-    await page.waitForTimeout(10);
+    if (paintMs === null && (expectNull ? paint === null : paint !== null)) paintMs = Date.now() - start;
+    await page.waitForTimeout(5);
     value = await hovered();
+    if (paintMs === null) paint = await painted();
   }
+  if (paintMs === null) paintMs = (expectNull ? paint === null : paint !== null) ? Date.now() - start : null;
   const ms = Date.now() - start;
-  samples.push({ label, ms, value, timedOut: ms >= 6000 });
+  samples.push({ label, paintMs, echoMs: ms, value, timedOut: ms >= 6000 });
   await page.waitForTimeout(400);
 };
 if (onSpot) {

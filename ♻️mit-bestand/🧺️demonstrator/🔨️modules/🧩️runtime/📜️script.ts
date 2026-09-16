@@ -34,8 +34,8 @@ class PreparationScript extends BundleScript {
 class ActivationScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     if (args.length) throw new Error("Demonstrator activation accepts no arguments");
-    const { receipt } = readDemonstratorActivation(this.repoRoot);
-    console.log(`Activated Demonstrator dev: ${receipt.plugins.length} completed components`);
+    const { receipt, laneReceiptDirectories } = readDemonstratorActivation(this.repoRoot);
+    console.log(`Activated Demonstrator dev: ${receipt.plugins.length} completed components from ${laneReceiptDirectories.length} lanes`);
   }
 }
 

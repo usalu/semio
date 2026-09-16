@@ -38,14 +38,6 @@ pub(crate) fn ui_value_map(values: impl IntoIterator<Item = (&'static str, UiVal
     Ok(UiValue::Map(builder.finish()))
 }
 
-pub(crate) fn ui_node_list(values: impl IntoIterator<Item = UiAssemblyResult<BuiltNode>>) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
-    let mut nodes = UiFixedList::default();
-    for value in values {
-        nodes.try_push(value?).map_err(|_| ui_assembly_error("ui.node-list.item"))?;
-    }
-    Ok(nodes)
-}
-
 /// 🖼️ Encodes one typed scene into the renderer-neutral semantic surface contract.
 pub(crate) fn scene_surface<T: semio_framework_ui::wgpu::SceneDoc>(id: impl Into<String>, kind: SurfaceKind, scene: &T) -> UiAssemblyResult<BuiltNode> {
     let id = id.into();
@@ -172,7 +164,7 @@ pub(crate) fn generation_tree(controller_id: &'static str, surface_prefix: &str,
     }
     PanelTreeBuilder::new(surface_prefix)?
         .section_or_placeholder(format!("{surface_prefix}.generations"), Some(ui_label(label("generations"))?), true, items, label("empty"))?
-        .section(format!("{surface_prefix}.actions"), Some(ui_label(label("actions"))?), true, ui_node_list([tree_item_with_action(format!("{surface_prefix}.add-generation"), label("add"), None, factory.action("addGeneration", None)?)])?)?
+        .section(format!("{surface_prefix}.actions"), Some(ui_label(label("actions"))?), true, semio_framework_plugin::ui_node_list([tree_item_with_action(format!("{surface_prefix}.add-generation"), label("add"), None, factory.action("addGeneration", None)?)])?)?
         .build()
 }
 

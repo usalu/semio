@@ -7,13 +7,11 @@
 //! every polygon wound counter-clockwise seen from OUTSIDE, so the Newell normal points away from
 //! the zone interior. Units are meters throughout.
 //!
-//! 🎨️ Colour is baked PER VERTEX into `meshes_json`. The react host
-//! (`🌐️World3dHost/🟦️.tsx`'s `PaintTexturedMesh`) renders a data mesh with `side: DoubleSide` and,
-//! when the geometry carries a `color` attribute, forces the material colour to white and the
-//! emissive to black so the baked colours show through UNMODIFIED — which also means the host's own
-//! selected/hovered paint no longer tints such a mesh. Selection and hover tint therefore have to be
-//! baked here too; the per-instance `selected`/`hovered` flags are still published so the host's
-//! outline/chrome stays correct.
+//! 🎨️ Class swatches and results overlays are baked PER VERTEX into `meshes_json`. The react host
+//! (`🌐️World3dHost/🟦️.tsx`'s `PaintTexturedMesh`) keeps those colours in the neutral/disabled styles
+//! only; selected/hovered/highlighted paint is the same token palette puzzle 3d uses. The
+//! `selection_json` lane plus per-instance `selected`/`hovered` flags drive that chrome — do not bake
+//! interaction tints here.
 //!
 //! 🚫️ There is no NUMERIC alpha lane for a data mesh — `transparent` follows the style kind's own
 //! opacity, never the payload — so a window renders as a solid light blue rather than a translucent
@@ -33,17 +31,6 @@ pub const ENERGY_SCENE_WINDOW_OFFSET_M: f64 = 0.005;
 
 /// 🎥️ `world3d_fit_json` padding — the same 1.25 cad/puzzle3d use.
 pub const ENERGY_SCENE_FIT_PADDING: f64 = 1.25;
-
-/// 🎨️ Highlight a selected entity is mixed towards — the framework's own `primary` blue.
-pub const ENERGY_SCENE_SELECTED_COLOR: [f64; 3] = [0.231, 0.510, 0.965];
-/// 🎨️ How far towards [`ENERGY_SCENE_SELECTED_COLOR`] a selected entity is mixed.
-pub const ENERGY_SCENE_SELECTED_MIX: f64 = 0.65;
-/// 🎨️ How far towards white a hovered entity is lightened. Hover has to be legible on its OWN — the
-/// react host's `MESH_STYLE_PAINT.hovered` fill never reaches a vertex-coloured mesh (`PaintTexturedMesh`
-/// forces the material to white and the emissive to black when the geometry carries `color`), so this
-/// bake is the entire hover feedback. It moves every channel strictly UP, where selection moves
-/// towards the primary blue — two directions, never confusable.
-pub const ENERGY_SCENE_HOVERED_MIX: f64 = 0.35;
 
 /// 🎨️ Per-`SurfaceClass` base swatch — a warm light grey envelope, darker roofs, mid floors, with
 /// the unlit/opaque classes greyed down so the exterior envelope reads first.
@@ -114,24 +101,10 @@ impl EnergySceneStyle<'_> {
         self.hovered_ids.iter().any(|entry| entry == id)
     }
 
-    /// 🎨️ Base colour after the results overlay, then the selection/hover tint. The overlay is keyed
-    /// by the raw entity id so lane D never has to know this module's colour table.
-    fn paint(&self, entity: EntityId, target_id: &str, base: [f64; 3]) -> [f64; 3] {
-        let mut color = self.overlay.and_then(|map| map.get(&entity.0).copied()).unwrap_or(base);
-        if self.is_selected(target_id) {
-            color = mix(color, ENERGY_SCENE_SELECTED_COLOR, ENERGY_SCENE_SELECTED_MIX);
-        } else if self.is_hovered(target_id) {
-            color = mix(color, [1.0, 1.0, 1.0], ENERGY_SCENE_HOVERED_MIX);
-        }
-        color
+    /// 🎨️ Base colour after the optional results overlay. Interaction paint is host-owned.
+    fn paint(&self, entity: EntityId, _target_id: &str, base: [f64; 3]) -> [f64; 3] {
+        self.overlay.and_then(|map| map.get(&entity.0).copied()).unwrap_or(base)
     }
-}
-
-/// 🎨️ Linear blend, clamped into the unit cube so a hand-authored overlay colour can never emit a
-/// non-renderable component.
-fn mix(from: [f64; 3], to: [f64; 3], t: f64) -> [f64; 3] {
-    let t = t.clamp(0.0, 1.0);
-    [(from[0] + (to[0] - from[0]) * t).clamp(0.0, 1.0), (from[1] + (to[1] - from[1]) * t).clamp(0.0, 1.0), (from[2] + (to[2] - from[2]) * t).clamp(0.0, 1.0)]
 }
 
 /// 🎨️ The fixed swatch of one surface class.

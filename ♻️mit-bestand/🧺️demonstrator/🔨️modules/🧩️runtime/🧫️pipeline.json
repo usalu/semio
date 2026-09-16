@@ -8,6 +8,8 @@
     "aggregator",
     "aussuchen",
     "bearbeiten",
+    "energy",
+    "fem3d",
     "generation3d",
     "generator",
     "koordinator",
@@ -33,7 +35,7 @@
     "profile": "release"
   },
   "development": {
-    "activationTarget": "@semio-tech/framework-os-dev:activate-generator-react-dev",
+    "activationTarget": "@semio-tech/mit-bestand-demonstrator:activate-lanes-dev",
     "watchTarget": "@semio-tech/mit-bestand-demonstrator:activate-dev",
     "port": 6029
   },

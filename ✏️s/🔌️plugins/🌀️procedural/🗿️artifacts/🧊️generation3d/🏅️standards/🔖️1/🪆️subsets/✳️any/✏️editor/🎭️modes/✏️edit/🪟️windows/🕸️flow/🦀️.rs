@@ -5,13 +5,17 @@ use crate::editor::generation3d::terminology::Generation3dLabels;
 use crate::editor::generation3d::PreviewInteractionMarks;
 use crate::editor::generation3d::GENERATION_3D_INTERACTION_CHANNEL;
 use crate::editor::generation3d::GENERATION_3D_INTERACTION_DOMAIN;
+use crate::editor::generation3d::GENERATION_3D_INTERACTION_GRANULARITY;
 use crate::editor::generation3d::GENERATION_3D_PLAY_APP_ID;
 use crate::standards::v1::subsets::any::schema::{dag_host_snapshot_to_workflow, with_host};
 use crate::Generation3dSnapshot;
 use semio_framework_os_flow::{flow_backed_node_graph_extras, FlowEvalSession};
 use semio_framework_os_kernel::Viewport2d;
 use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase, HasChildren, HasStackLayout, Trigger, UiAssemblyResult};
-use semio_framework_plugin::{tree_item, tree_item_desc, ActionFactory, BuiltNode, LocalizedLabel, NodeGraphHover, NodeGraphScene, PanelTreeBuilder, PluginAssemblyError, SurfaceKind, WindowKindDefinition, WindowMeasure, WindowOptions};
+use semio_framework_plugin::{
+    tree_item, tree_item_desc, tree_window_item, ActionFactory, BuiltNode, LocalizedLabel, NodeGraphHover, NodeGraphScene, PanelTreeBuilder, PluginAssemblyError, SurfaceKind, TreeWindows, WindowKindDefinition, WindowMeasure,
+    WindowOptions,
+};
 use semio_framework_ui::wgpu::{NodeGraphEdgeRecord, NodeGraphFindItem, NodeGraphNodeRecord, NodeGraphOperatorChannelRecord, NodeGraphOperatorRecord, NodeGraphPortRecord};
 
 //#region 🔖️Constants
@@ -19,8 +23,13 @@ pub const GENERATION_3D_PLAY_WINDOW_MAIN: &str = "procedural-main";
 pub const GENERATION_3D_PLAY_BODY_MAIN: &str = "procedural.play.main";
 const GENERATION_3D_PLAY_SURFACE_MAIN: &str = "procedural.play";
 const GENERATION_3D_PLAY_OUTLINE_MAIN: &str = "procedural-play-graph";
-const GENERATION_3D_PLAY_OUTLINE_NODES: &str = "procedural-play-graph.nodes";
-const GENERATION_3D_PLAY_OUTLINE_WIRES: &str = "procedural-play-graph.wires";
+pub const GENERATION_3D_PLAY_OUTLINE_NODES: &str = "procedural-play-graph.nodes";
+pub const GENERATION_3D_PLAY_OUTLINE_WIRES: &str = "procedural-play-graph.wires";
+/// 🎯️ The `graph` domain granularity a node row picks into — the same one the canvas reports for a
+/// widget hit, so a row click and a canvas click are one selection.
+const GENERATION_3D_GRAPH_GRANULARITY_NODE: &str = "node";
+/// 🎯️ …and the one a wire row picks into: a synapse is an `edge` target.
+const GENERATION_3D_GRAPH_GRANULARITY_EDGE: &str = "edge";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
@@ -118,52 +127,64 @@ fn node_ports<'a>(node: &'a NodeGraphNodeRecord, labels: &Generation3dLabels) ->
     ports
 }
 
+/// 🔌️ One port row — a `handle`-granularity pick target of the tree's own interaction domain, so it
+/// carries no binding of its own: the framework synthesises the pick from the tree-level
+/// `interactionSelect` and this row's granularity plus its raw id.
 fn port_row(port: &NodeGraphPortRecord, directions: String) -> UiAssemblyResult<BuiltNode> {
     let name = port.label.as_deref().filter(|label| !label.is_empty()).unwrap_or(port.id.as_str());
-    tree_item_desc(&port.id, name, Some(directions))
+    let mut node = tree_item_desc(&port.id, name, Some(directions))?;
+    if let semio_framework_plugin::Component::TreeItem(props) = &mut node.component {
+        props.granularity = Some(crate::ui_text(GENERATION_3D_INTERACTION_GRANULARITY)?);
+    }
+    Ok(node)
 }
 
-/// 🧩️ One node row: the widget's own id verbatim (the `node` granularity target), its ports nested as
-/// `handle` rows, and both interaction verbs bound so a pointer over the row and a click on it reach the
-/// very same domain the canvas picks into.
-fn node_row(node: &NodeGraphNodeRecord, status: Option<&'static str>, labels: &Generation3dLabels, factory: &ActionFactory) -> UiAssemblyResult<BuiltNode> {
-    let ports = crate::ui_node_list(node_ports(node, labels).into_iter().map(|(port, directions)| port_row(port, directions)))?;
-    let targets = graph_targets_json("node", &node.id);
-    let (select, select_args) = factory.action(
-        semio_framework_plugin::INTERACTION_SELECT_ACTION_ID,
-        Some(crate::ui_value_map([("domainId", crate::ui_value_text(GENERATION_3D_INTERACTION_DOMAIN)?), ("merge", crate::ui_value_text("replace")?), ("method", crate::ui_value_text("pick")?), ("targets", crate::ui_value_text(&targets)?)])?),
-    )?;
+/// 🧩️ One node row: the widget's own id verbatim (the `node` granularity target) and its ports as a
+/// nested window, collapsed until the reader opens it. The row declares its granularity instead of
+/// carrying a per-row `interactionSelect` argument map — the tree's own domain binding is the one
+/// `Activate` the whole outline pays for. `HoverPreview` stays a real binding: hover is channel- and
+/// target-addressed, which the domain binding alone cannot express.
+fn node_row(windows: &TreeWindows<'_>, node: &NodeGraphNodeRecord, status: Option<&'static str>, labels: &Generation3dLabels, factory: &ActionFactory) -> UiAssemblyResult<BuiltNode> {
+    let ports = node_ports(node, labels);
+    let targets = graph_targets_json(GENERATION_3D_GRAPH_GRANULARITY_NODE, &node.id);
     let (hover, hover_args) = factory.action(
         semio_framework_plugin::INTERACTION_HOVER_ACTION_ID,
         Some(crate::ui_value_map([("channel", crate::ui_value_text(GENERATION_3D_INTERACTION_CHANNEL)?), ("domainId", crate::ui_value_text(GENERATION_3D_INTERACTION_DOMAIN)?), ("targets", crate::ui_value_text(&targets)?)])?),
     )?;
-    let builder = semio_framework_ui_contract::tree_item(crate::ui_label(node.label.as_deref().unwrap_or(node.id.as_str()))?).default_open(true);
-    let mut builder = builder.try_id(&node.id).map_err(|_| outline_error("node-row.id"))?;
+    let builder = semio_framework_ui_contract::tree_item(crate::ui_label(node.label.as_deref().unwrap_or(node.id.as_str()))?);
+    let mut builder = builder.try_id(&node.id).map_err(|_| outline_error("node-row.id"))?.granularity(crate::ui_text(GENERATION_3D_GRAPH_GRANULARITY_NODE)?);
     if let Some(status) = status {
         builder = builder.description(crate::ui_text(status)?);
     }
-    builder = builder.try_on_with(Trigger::Activate, select, select_args.ok_or_else(|| outline_error("node-row.select-args"))?).map_err(|_| outline_error("node-row.select"))?;
     builder = builder.try_on_with(Trigger::HoverPreview, hover, hover_args.ok_or_else(|| outline_error("node-row.hover-args"))?).map_err(|_| outline_error("node-row.hover"))?;
-    builder.try_children(ports).map_err(|_| outline_error("node-row.ports"))?.try_build().map_err(|_| outline_error("node-row.build"))
+    tree_window_item(windows, builder, &node.id, true, &ports, |(port, directions)| port_row(port, directions.clone()))
 }
 
 /// 🔗️ One wire row, keyed by the synapse id the `edge` granularity carries, labelled with both
 /// endpoints so the graph's topology reads off the outline without the canvas.
 fn wire_row(edge: &NodeGraphEdgeRecord) -> UiAssemblyResult<BuiltNode> {
-    tree_item(&edge.id, format!("{}@{} → {}@{}", edge.source_node_id, edge.source_port_id, edge.target_node_id, edge.target_port_id))
+    let mut node = tree_item(&edge.id, format!("{}@{} → {}@{}", edge.source_node_id, edge.source_port_id, edge.target_node_id, edge.target_port_id))?;
+    if let semio_framework_plugin::Component::TreeItem(props) = &mut node.component {
+        props.granularity = Some(crate::ui_text(GENERATION_3D_GRAPH_GRANULARITY_EDGE)?);
+    }
+    Ok(node)
 }
 
 /// 🕸️ The flow graph as semantic UI for the Artifact panel: every node with its ports and every wire.
 /// The Flow window paints the same records on the GPU; this tree is what keyboard and screen-reader
 /// users traverse under the framework's `graph` interaction domain.
-pub(crate) fn graph_outline(nodes: &[NodeGraphNodeRecord], edges: &[NodeGraphEdgeRecord], status_json: Option<&String>, labels: &Generation3dLabels) -> UiAssemblyResult<BuiltNode> {
+///
+/// 🪟️ Both sections and every node's port list are WINDOWED: each states its full `total` and
+/// materialises only the rows the host's viewport asked for, so a graph with hundreds of widgets
+/// scrolls instead of refusing at the 33rd row (ticket 26/09/16/ARTIFACT-TREE-VIRTUALISED-STREAMING).
+pub(crate) fn graph_outline(windows: &TreeWindows<'_>, nodes: &[NodeGraphNodeRecord], edges: &[NodeGraphEdgeRecord], status_json: Option<&String>, labels: &Generation3dLabels) -> UiAssemblyResult<BuiltNode> {
     let factory = ActionFactory::new(GENERATION_3D_PLAY_APP_ID);
-    let node_rows = crate::ui_node_list(nodes.iter().map(|node| node_row(node, node_status_label(status_json, &node.id, labels), labels, &factory)))?;
-    let wire_rows = crate::ui_node_list(edges.iter().map(wire_row))?;
     PanelTreeBuilder::new(GENERATION_3D_PLAY_OUTLINE_MAIN)?
-        .section_or_placeholder(GENERATION_3D_PLAY_OUTLINE_NODES, Some(crate::ui_label(labels.graph_nodes.as_str())?), true, node_rows, labels.graph_empty.as_str())?
-        .section_or_placeholder(GENERATION_3D_PLAY_OUTLINE_WIRES, Some(crate::ui_label(labels.graph_wires.as_str())?), true, wire_rows, labels.graph_unwired.as_str())?
-        .interaction_domain(GENERATION_3D_INTERACTION_DOMAIN)?
+        .window_section_or_placeholder(windows, GENERATION_3D_PLAY_OUTLINE_NODES, Some(crate::ui_label(labels.graph_nodes.as_str())?), true, nodes, |node| {
+            node_row(windows, node, node_status_label(status_json, &node.id, labels), labels, &factory)
+        }, crate::ui_label(labels.graph_empty.as_str())?)?
+        .window_section_or_placeholder(windows, GENERATION_3D_PLAY_OUTLINE_WIRES, Some(crate::ui_label(labels.graph_wires.as_str())?), true, edges, wire_row, crate::ui_label(labels.graph_unwired.as_str())?)?
+        .interaction_domain(GENERATION_3D_PLAY_APP_ID, GENERATION_3D_INTERACTION_DOMAIN)?
         .build()
 }
 

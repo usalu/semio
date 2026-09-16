@@ -26,6 +26,14 @@
     {
       "variant": "verfolgen",
       "runtimeVariant": "verfolgen"
+    },
+    {
+      "variant": "energy",
+      "runtimeVariant": "energy"
+    },
+    {
+      "variant": "fem3d",
+      "runtimeVariant": "fem3d"
     }
   ]
 }

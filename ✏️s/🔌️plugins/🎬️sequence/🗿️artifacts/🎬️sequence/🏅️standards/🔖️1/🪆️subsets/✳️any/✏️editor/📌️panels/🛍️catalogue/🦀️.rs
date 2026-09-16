@@ -5,7 +5,7 @@ use crate::editor::sequence::terminology::SequenceLabels;
 use crate::editor::sequence::{control_slots, is_control_kind};
 use crate::editor::sequence::{sequence_action, ui_label};
 use crate::SequenceHostSnapshot;
-use semio_framework_plugin::{tree_item_with_action, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL};
+use semio_framework_plugin::{tree_item_with_action, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, TreeWindows, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL};
 
 //#region 🔖️Constants
 pub const SEQUENCE_PLAY_BODY_CATALOGUE: &str = "sequence.play.catalogue";
@@ -24,7 +24,10 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(host_snapshot: &SequenceHostSnapshot, labels: &SequenceLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+/// 🪟️ The five built-in step kinds are fixed chrome and keep their own plain section; the per-slot
+/// "add to" shortcuts scale with the document's control-flow steps, so they are windowed instead of
+/// competing with that chrome for one node's slots.
+pub fn render(host_snapshot: &SequenceHostSnapshot, labels: &SequenceLabels, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let actions = [("state.set", labels.action_set_state), ("log.print", labels.action_log_print), ("control.if", labels.action_if), ("control.while", labels.action_while), ("math.add", labels.action_add)];
     let mut items = semio_framework_plugin::UiFixedList::default();
     for (kind, label) in actions {
@@ -32,20 +35,20 @@ pub fn render(host_snapshot: &SequenceHostSnapshot, labels: &SequenceLabels) -> 
         let item = tree_item_with_action(format!("sequence-play-catalogue.action.{kind}"), label.as_str(), Some(kind.into()), sequence_action("addStep", Some(args))?)?;
         items.try_push(item).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.catalogue.items", "fixed catalogue admission failed"))?;
     }
-    for owner in host_snapshot.steps.iter().filter(|step| is_control_kind(&step.kind)) {
-        for slot_name in control_slots(&owner.kind) {
-            let args =
-                crate::editor::sequence::ui_value_map([("kind", crate::editor::sequence::ui_value_text("log.print")?), ("owner", crate::editor::sequence::ui_value_text(&owner.id)?), ("slotName", crate::editor::sequence::ui_value_text(slot_name)?)])?;
-            let item = tree_item_with_action(
-                format!("sequence-play-catalogue.slot.{}.{}", owner.id, slot_name),
-                format!("{} {} → {slot_name}", labels.add_to.as_str(), owner.id),
-                Some(format!("{slot_name} @ {}", owner.id)),
+    let slots: Vec<(&str, &'static str)> = host_snapshot.steps.iter().filter(|step| is_control_kind(&step.kind)).flat_map(|owner| control_slots(&owner.kind).iter().map(move |slot_name| (owner.id.as_str(), *slot_name))).collect();
+    PanelTreeBuilder::new("sequence-play-catalogue")?
+        .section("sequence-play-catalogue.actions", Some(ui_label(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL)?), true, items)?
+        .window_section(windows, "sequence-play-catalogue.slots", Some(ui_label(labels.add_to.as_str())?), true, &slots, |(owner_id, slot_name)| {
+            let args = crate::editor::sequence::ui_value_map([("kind", crate::editor::sequence::ui_value_text("log.print")?), ("owner", crate::editor::sequence::ui_value_text(owner_id)?), ("slotName", crate::editor::sequence::ui_value_text(slot_name)?)])?;
+            tree_item_with_action(
+                format!("sequence-play-catalogue.slot.{owner_id}.{slot_name}"),
+                format!("{} {owner_id} → {slot_name}", labels.add_to.as_str()),
+                Some(format!("{slot_name} @ {owner_id}")),
                 sequence_action("addStepToSlot", Some(args))?,
-            )?;
-            items.try_push(item).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.catalogue.items", "fixed catalogue admission failed"))?;
-        }
-    }
-    PanelTreeBuilder::new("sequence-play-catalogue")?.section("sequence-play-catalogue.actions", Some(ui_label(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL)?), true, items)?.selected([])?.build()
+            )
+        })?
+        .selected([])?
+        .build()
 }
 //#endregion 🔖️Render
 

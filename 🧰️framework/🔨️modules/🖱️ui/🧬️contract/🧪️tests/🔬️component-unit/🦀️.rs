@@ -59,7 +59,7 @@ fn every_component_variant_round_trips() {
     component_round_trips(Component::Progress(ProgressProps { completed: 12.0, total: Some(100.0), value_text: label("12 of 100") }));
     component_round_trips(Component::Progress(ProgressProps { completed: 3.0, total: None, value_text: label("Preparing") }));
     component_round_trips(Component::Tree(TreeProps { interaction_domain: Some(ui_text("selection")) }));
-    component_round_trips(Component::TreeSection(TreeSectionProps { label: Some(label("Section")), default_open: Some(true) }));
+    component_round_trips(Component::TreeSection(TreeSectionProps { label: Some(label("Section")), default_open: Some(true), window: Some(TreeWindow { total: 512, offset: 128 }) }));
     component_round_trips(Component::TreeItem(TreeItemProps {
         label: label("Item"),
         description: None,
@@ -68,6 +68,8 @@ fn every_component_variant_round_trips() {
         draggable: Some(true),
         drag_data: None,
         dimmed: Some(false),
+        window: Some(TreeWindow { total: 4096, offset: 0 }),
+        granularity: Some(ui_text("piece")),
         row_actions: crate::UiFixedList::default(),
     }));
     component_round_trips(Component::Image(ImageProps { src: ui_text("atlas://x"), alt: Some(label("alt")) }));

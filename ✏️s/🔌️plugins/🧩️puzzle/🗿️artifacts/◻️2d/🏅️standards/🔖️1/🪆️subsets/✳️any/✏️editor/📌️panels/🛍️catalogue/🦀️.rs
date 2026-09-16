@@ -1,20 +1,25 @@
 //! 🛍️ Puzzle 2d play app panel — the kind catalogue: node/handle/edge kind rows read from the
 //! fixture's `meta.kindCatalogs` (falling back to the kinds actually present in the document). Node
-//! rows are drag sources for the canvas; every row also adds a node on click. Each section is one
-//! bounded page at its `setPanelPage` cursor (see `📌️panels/🗿️artifact` for the paging law).
+//! rows are drag sources for the canvas; every row also adds a node on click — a catalogue row owns
+//! its own `addNode` binding, so it stays an ordinary interactive row.
+//!
+//! 🪟️ All three sections are windowed: each publishes its full `total` and materialises only the
+//! host's slice (see `📌️panels/🗿️artifact` for the windowing law).
 
-use crate::editor::puzzle2d::panels::artifact::paged_section;
 use crate::editor::puzzle2d::terminology::Puzzle2dLabels;
 use crate::editor::puzzle2d::{inferred_kind_entries, kind_catalog_entries, ui_label, Puzzle2dScene, PUZZLE2D_PLAY_CONTROLLER_ID};
 use semio_framework_plugin::{
-    tree_item_with_action, tree_item_with_action_draggable, ActionFactory, BuiltNode, LocalizedLabel, PanelGroup, PanelRowBudget, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiMapBuilder, UiText, UiValue,
+    tree_item_with_action, tree_item_with_action_draggable, ActionFactory, BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, TreeWindows, UiMapBuilder, UiText, UiValue,
     FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
 };
-use std::collections::BTreeMap;
 use serde_json::{json, Value};
 
 //#region 🔖️Constants
 pub const PUZZLE2D_PLAY_BODY_CATALOGUE: &str = "puzzle2d.play.catalogue";
+pub const ROOT: &str = "puzzle2d-play-kinds";
+pub const NODES_SECTION: &str = "puzzle2d-play-kinds.nodes";
+pub const HANDLES_SECTION: &str = "puzzle2d-play-kinds.handles";
+pub const EDGES_SECTION: &str = "puzzle2d-play-kinds.edges";
 
 /// 🖱️ MIME key `DeclarativeTreePanel` (framework/renderer/react/ui-interpreter.tsx)? reads to auto-wire catalogue drag sources.
 const PUZZLE2D_CATALOGUE_DRAG_MIME: &str = "application/x-semio-catalogue-item";
@@ -82,25 +87,24 @@ fn kind_catalog_item(section_id: &str, slice: &str, entry: &Value) -> semio_fram
     }
 }
 
-const SECTIONS: usize = 3;
-
-pub fn render(envelope: &Puzzle2dScene, labels: &Puzzle2dLabels) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(envelope: &Puzzle2dScene, labels: &Puzzle2dLabels, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let fixture = &envelope.fixture;
-    let pages: &BTreeMap<String, u32> = &envelope.runtime.panel_pages;
     let inferred_nodes = inferred_kind_entries(fixture, "nodes");
     let inferred_handles = inferred_kind_entries(fixture, "handles");
     let inferred_edges = inferred_kind_entries(fixture, "edges");
     let node_entries = kind_catalog_entries(fixture, "nodes").unwrap_or(inferred_nodes.as_slice());
     let handle_entries = kind_catalog_entries(fixture, "handles").unwrap_or(inferred_handles.as_slice());
     let edge_entries = kind_catalog_entries(fixture, "edges").unwrap_or(inferred_edges.as_slice());
-    let budget = &mut PanelRowBudget::new(semio_framework_plugin::panel_page_rows());
-    let nodes = budget.nested(SECTIONS - 1, |share| paged_section("puzzle2d-play-kinds.nodes", node_entries, pages, share, |entry| kind_catalog_item("puzzle2d-play-kinds.nodes", "nodes", entry)))?;
-    let handles = budget.nested(SECTIONS - 2, |share| paged_section("puzzle2d-play-kinds.handles", handle_entries, pages, share, |entry| kind_catalog_item("puzzle2d-play-kinds.handles", "handles", entry)))?;
-    let edges = budget.nested(SECTIONS - 3, |share| paged_section("puzzle2d-play-kinds.edges", edge_entries, pages, share, |entry| kind_catalog_item("puzzle2d-play-kinds.edges", "edges", entry)))?;
-    PanelTreeBuilder::new("puzzle2d-play-kinds")?
-        .section_or_placeholder("puzzle2d-play-kinds.nodes", Some(ui_label(labels.nodes.as_str())?), true, nodes, ui_label(labels.none.as_str())?)?
-        .section_or_placeholder("puzzle2d-play-kinds.handles", Some(ui_label(labels.handles.as_str())?), false, handles, ui_label(labels.none.as_str())?)?
-        .section_or_placeholder("puzzle2d-play-kinds.edges", Some(ui_label(labels.edges.as_str())?), false, edges, ui_label(labels.none.as_str())?)?
+    PanelTreeBuilder::new(ROOT)?
+        .window_section_or_placeholder(windows, NODES_SECTION, Some(ui_label(labels.nodes.as_str())?), true, node_entries, |entry| kind_catalog_item(NODES_SECTION, "nodes", entry), ui_label(labels.none.as_str())?)?
+        .window_section_or_placeholder(windows, HANDLES_SECTION, Some(ui_label(labels.handles.as_str())?), false, handle_entries, |entry| kind_catalog_item(HANDLES_SECTION, "handles", entry), ui_label(labels.none.as_str())?)?
+        .window_section_or_placeholder(windows, EDGES_SECTION, Some(ui_label(labels.edges.as_str())?), false, edge_entries, |entry| kind_catalog_item(EDGES_SECTION, "edges", entry), ui_label(labels.none.as_str())?)?
         .build()
 }
 //#endregion 🔖️Render
+
+//#region 🧪️Tests
+#[cfg(test)]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
+//#endregion 🧪️Tests

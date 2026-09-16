@@ -11,7 +11,6 @@ use crate::editor::cad::commands::engagement::{engagement_abort, engagement_inpu
 use crate::editor::cad::commands::io::{import_cad_file, load_raw_request, save_current, save_in_play, save_selected};
 use crate::editor::cad::commands::model_definition::set_active_example;
 use crate::editor::cad::commands::node::{add_node, rename_node, set_node_selection};
-use crate::editor::cad::commands::panel::set_panel_page;
 use crate::editor::cad::commands::object::{add_object, delete_object, duplicate_object, patch_object, patch_selection};
 use crate::editor::cad::commands::reference::{patch_cad_play_reference, reference_hover, set_reference_selection};
 use crate::editor::cad::commands::sun::{set_sun_azimuth, set_sun_elevation, set_sun_intensity, toggle_sun};
@@ -37,7 +36,8 @@ use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactReta
 use semio_framework_plugin::{
     tree_item as framework_tree_item, tree_item_with_action, world3d_camera_projection_json, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppActionRegistry, AppOperationContext, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest,
     ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, CommandDefinition, ConfigView, ContextMenuItemSpec, ContextMenuRequest, DraftView, EditorApp, Emit, Fault, Label, LocalizedLabel, Media,
-    MediaClass, MediaError, MediaForm, MediaPayload, MediaType, Menu, NoDraft, NoDraftMutation, PluginAssemblyError, UiText, UiValue, UtilityCategory, UtilityDefinition, ViewModel, WindowEngagement, WindowMeasure, WorldSunConfig,
+    MediaClass, MediaError, MediaForm, MediaPayload, MediaType, Menu, NoDraft, NoDraftMutation, PluginAssemblyError, TreeWindows, UiText, UiValue, UtilityCategory, UtilityDefinition, ViewModel, WindowEngagement, WindowMeasure,
+    WorldSunConfig,
 };
 use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::engine::{Brep, GeometryHandle};
 // 🚧️ SDK GAP: `ArtifactEditor`/`Editor`/`Dialect` (ticket 26/08/16 contract §2.1/§2.4)? are not yet
@@ -190,9 +190,6 @@ pub struct CadPlayRuntime {
     pub camera_structure_classic: CadCamera,
     #[value(default)]
     pub dislocate_options_by_window_id: HashMap<String, CadDislocateOptions>,
-    /// 📄️ Per-section `setPanelPage` cursor, decoded from `CadConfig::panel_pages_json`.
-    #[value(default)]
-    pub panel_pages: std::collections::BTreeMap<String, u32>,
 }
 
 impl Default for CadPlayRuntime {
@@ -216,7 +213,6 @@ impl Default for CadPlayRuntime {
             camera_energy: CadCamera::default(),
             camera_structure_classic: CadCamera::default(),
             dislocate_options_by_window_id: HashMap::new(),
-            panel_pages: std::collections::BTreeMap::new(),
         }
     }
 }
@@ -242,17 +238,6 @@ fn json_string_to<T: protocol::FromValue>(json: &str) -> Option<T> {
     json::from_json_str::<T>(json).ok()
 }
 
-/// 📄️ Decodes `CadConfig::panel_pages_json` — a malformed or absent cursor map is simply no paging,
-/// never a dispatch failure: a panel section that cannot read its cursor renders page 0.
-pub fn parse_panel_pages(json: &str) -> std::collections::BTreeMap<String, u32> {
-    json::from_json_str::<std::collections::BTreeMap<String, u32>>(json).unwrap_or_default()
-}
-
-/// 📄️ The `parse_panel_pages` inverse.
-pub fn print_panel_pages(pages: &std::collections::BTreeMap<String, u32>) -> String {
-    json::to_json_string(pages)
-}
-
 /// 🔀️ Unpacks artifact-wide `CadConfig` into the ergonomic runtime scratch record. Exact
 /// window-owned camera, sun, and Dislocate state is overlaid by `runtime_of`.
 pub fn cad_runtime_from_config(cfg: &CadConfig) -> CadPlayRuntime {
@@ -275,7 +260,6 @@ pub fn cad_runtime_from_config(cfg: &CadConfig) -> CadPlayRuntime {
         camera_energy: CadCamera::default(),
         camera_structure_classic: CadCamera::default(),
         dislocate_options_by_window_id: HashMap::new(),
-        panel_pages: parse_panel_pages(&cfg.panel_pages_json),
     }
 }
 
@@ -297,7 +281,6 @@ fn cad_config_from_runtime(runtime: &CadPlayRuntime, base: &CadConfig) -> CadCon
         engagement_preview_operation_json: base.engagement_preview_operation_json.clone(),
         engagement_preview_generation: base.engagement_preview_generation,
         last_finalized_interaction_id: runtime.last_finalized_interaction_id.clone(),
-        panel_pages_json: print_panel_pages(&runtime.panel_pages),
     }
 }
 
@@ -353,11 +336,6 @@ pub fn ui_value_bool(value: bool) -> UiValue {
     UiValue::Bool(value)
 }
 
-/// 🔢️ Admits one CAD numeric action value — the shape `setPanelPage`'s `page` argument rides on.
-pub fn ui_value_number(value: f64) -> UiValue {
-    UiValue::Number(value)
-}
-
 /// 📚️ Admits one fixed CAD UI list value.
 pub fn ui_value_list(values: impl IntoIterator<Item = UiValue>) -> semio_framework_plugin::UiAssemblyResult<UiValue> {
     let mut builder = semio_framework_plugin::UiListBuilder::try_new().ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "cad UI list admission failed"))?;
@@ -376,15 +354,6 @@ pub fn ui_value_map(values: impl IntoIterator<Item = (&'static str, UiValue)>) -
         builder.push(key.to_owned(), value).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "cad UI map entry admission failed"))?;
     }
     Ok(UiValue::Map(builder.finish()))
-}
-
-/// 🌳️ Admits fallibly assembled CAD nodes into fixed storage.
-pub fn ui_node_list(values: impl IntoIterator<Item = semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode>>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiFixedList<semio_framework_plugin::BuiltNode>> {
-    let mut nodes = semio_framework_plugin::UiFixedList::default();
-    for value in values {
-        nodes.try_push(value?).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "cad UI node admission failed"))?;
-    }
-    Ok(nodes)
 }
 
 /// 🏷️ Admits resolved CAD text into the semantic UI contract.
@@ -1196,10 +1165,6 @@ semio_framework_plugin::app_commands! {
         "saveInPlay" as "save-in-play" => save_in_play::SaveInPlay,
         "saveCurrent" as "save-current" => save_current::SaveCurrent,
         "loadRawRequest" as "load-raw-request" => load_raw_request::LoadRawRequest,
-
-        // 📄️ Appended LAST on purpose: a row's position in this block IS its binary variant ordinal,
-        // so a new verb goes at the end rather than beside its thematic neighbours.
-        "setPanelPage" as "set-panel-page" => set_panel_page::SetPanelPage,
     }
 }
 
@@ -1227,7 +1192,6 @@ fn cad_command_from_action(action: &str, args: Option<&protocol::DslValue>) -> R
         "setActiveExample" => CadCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: str_field("exampleId").unwrap_or_default() }),
         "setDislocateOption" => CadCommand::SetDislocateOption(set_dislocate_option::SetDislocateOption { pane: str_field("pane"), option: str_field("option").unwrap_or_default(), pressed: bool_field("pressed") }),
         "setNodeSelection" => CadCommand::SetNodeSelection(set_node_selection::SetNodeSelection { node_ids: str_vec_field("nodeIds") }),
-        "setPanelPage" => CadCommand::SetPanelPage(set_panel_page::SetPanelPage { section: str_field("section").unwrap_or_default(), page: f64_field("page").unwrap_or(0.0) }),
         "setCamera" => CadCommand::SetCamera(set_camera::SetCamera { pane: str_field("surfaceId"), camera: args.and_then(|value| value.get("camera")).and_then(|value| protocol::FromValue::from_value(value.clone()).ok()).unwrap_or_default() }),
         "setProjection" => CadCommand::SetProjection(set_projection::SetProjection {
             pane: str_field("surfaceId"),
@@ -1342,9 +1306,13 @@ impl CadPlayApp {
             building::BODY_KEY => building::render(&view, active_utility, options).map(semio_framework_plugin::built_to_component_tree),
             energy::BODY_KEY => energy::render(&view, active_utility, options).map(semio_framework_plugin::built_to_component_tree),
             structure_classic::BODY_KEY => structure_classic::render(&view, active_utility, options).map(semio_framework_plugin::built_to_component_tree),
-            document::CAD_PLAY_BODY_ARTIFACT => document::build_document_tree(&view, labels).map(semio_framework_plugin::built_to_component_tree),
-            catalogue::CAD_PLAY_BODY_CATALOGUE => catalogue::build_catalogue_tree(labels).map(semio_framework_plugin::built_to_component_tree),
-            inspection::CAD_PLAY_BODY_PROPERTIES => inspection::build_properties_panel(&view, labels, active_utility).map(semio_framework_plugin::built_to_component_tree),
+            // 🪟️ One `TreeWindows` per rendered body, read from the host's `ViewModel.tree_windows`:
+            // it decides which containers are open and which row slice each one materialises.
+            document::CAD_PLAY_BODY_ARTIFACT => document::build_document_tree(&view, labels, &TreeWindows::for_body(view_state, document::CAD_PLAY_BODY_ARTIFACT)).map(semio_framework_plugin::built_to_component_tree),
+            catalogue::CAD_PLAY_BODY_CATALOGUE => catalogue::build_catalogue_tree(labels, &TreeWindows::for_body(view_state, catalogue::CAD_PLAY_BODY_CATALOGUE)).map(semio_framework_plugin::built_to_component_tree),
+            inspection::CAD_PLAY_BODY_PROPERTIES => {
+                inspection::build_properties_panel(&view, labels, active_utility, &TreeWindows::for_body(view_state, inspection::CAD_PLAY_BODY_PROPERTIES)).map(semio_framework_plugin::built_to_component_tree)
+            }
             _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
@@ -1375,7 +1343,6 @@ const CAD_RETAINED_CONFIG_TOOL_IDS: &[&str] = &[
     "setProjectionParam",
     "setDislocateOption",
     "setNodeSelection",
-    "setPanelPage",
     "setReferenceSelection",
     "referenceHover",
     "engagementInput",
@@ -1407,7 +1374,6 @@ const CAD_RETAINED_TOOL_IDS: &[&str] = &[
     "setProjectionParam",
     "setDislocateOption",
     "setNodeSelection",
-    "setPanelPage",
     "setReferenceSelection",
     "referenceHover",
     "engagementInput",
@@ -1451,7 +1417,6 @@ const CAD_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &
     ArtifactToolPublicationContract { tool_id: "setProjectionParam", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
     ArtifactToolPublicationContract { tool_id: "setDislocateOption", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
     ArtifactToolPublicationContract { tool_id: "setNodeSelection", lanes: &[ArtifactToolPublicationLane::Config] },
-    ArtifactToolPublicationContract { tool_id: "setPanelPage", lanes: &[ArtifactToolPublicationLane::Config] },
     ArtifactToolPublicationContract { tool_id: "setReferenceSelection", lanes: &[ArtifactToolPublicationLane::Config, ArtifactToolPublicationLane::Interaction] },
     ArtifactToolPublicationContract { tool_id: "referenceHover", lanes: &[ArtifactToolPublicationLane::Config] },
     ArtifactToolPublicationContract { tool_id: "engagementInput", lanes: &[ArtifactToolPublicationLane::Config] },
@@ -1616,7 +1581,6 @@ fn cad_config_retained_bytes(config: &CadConfig) -> usize {
         .saturating_add(config.engagement_input.len())
         .saturating_add(config.engagement_step.len())
         .saturating_add(config.contributions_json.len())
-        .saturating_add(config.panel_pages_json.len())
 }
 
 /// 🧺️ `work_items` counts staged edit ROWS (forward + inverse), never mutations: every
@@ -2015,6 +1979,35 @@ impl semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<semio_f
 }
 //#endregion 🧹️EmptyLaneRetirement
 
+/// 🎯️ The four world bodies the `cad` interaction domain paints into.
+pub(crate) const CAD_WORLD_BODY_KEYS: [&str; 4] = [shape::BODY_KEY, building::BODY_KEY, energy::BODY_KEY, structure_classic::BODY_KEY];
+
+/// 🎯️ `CadPlayApp::interaction_scope`'s pure body — see the method's doc. `None` hands a verb that
+/// touched a domain this app does not declare (or none) back to the framework's own answer.
+pub(crate) fn cad_interaction_scope(verb: semio_framework_plugin::InteractionVerb, domains: &[&str]) -> Option<semio_framework::kernel::UiDirtyScope> {
+    use semio_framework::kernel::UiDirtyScope;
+    use semio_framework_plugin::InteractionVerb;
+    if domains.is_empty() || domains.iter().any(|domain| *domain != CAD_INTERACTION_DOMAIN) {
+        return None;
+    }
+    let windows: Vec<String> = CAD_WORLD_BODY_KEYS.iter().map(|key| (*key).to_string()).collect();
+    Some(match verb {
+        InteractionVerb::Hover => UiDirtyScope::Partial { window_bodies: windows, panel_bodies: Vec::new(), utilities: false, tools: false, engagements: false, measures: false, labels: false },
+        // 🎯️ A selection change: the world bodies, the two panels that render the selection, and the
+        // engagement HUD's `N selected` count.
+        InteractionVerb::Select | InteractionVerb::ClearSelection | InteractionVerb::SelectAll => UiDirtyScope::Partial {
+            window_bodies: windows,
+            panel_bodies: vec![inspection::CAD_PLAY_BODY_PROPERTIES.to_string(), document::CAD_PLAY_BODY_ARTIFACT.to_string()],
+            utilities: false,
+            tools: false,
+            engagements: true,
+            measures: false,
+            labels: false,
+        },
+        InteractionVerb::SetSelectionMode | InteractionVerb::SetGranularity => UiDirtyScope::None,
+    })
+}
+
 impl ArtifactEditor for CadPlayApp {
     type Snapshot = CadSnapshot;
     type Mutation = CadMutation;
@@ -2069,6 +2062,16 @@ impl ArtifactEditor for CadPlayApp {
         Some(Box::new(crate::editor::cad::presence::retirement::CadPresenceStoreDisposer::new()))
     }
 
+    /// 🎯️ The framework interaction verbs on the `cad` domain, answered out of this app's own body
+    /// table instead of the framework's fallback (every window kind that declares the domain — the
+    /// same four bodies — but `Full` for a verb the fallback cannot place). A hover repaints the four
+    /// world bodies alone (the four panes share the domain, and only their selection lanes read the
+    /// hover); a selection change adds the two panels that render the selection (Inspection and the
+    /// Artifact tree); a mode/granularity switch touches nothing this app renders differently.
+    fn interaction_scope(verb: semio_framework_plugin::InteractionVerb, domains: &[&str]) -> Option<semio_framework::kernel::UiDirtyScope> {
+        cad_interaction_scope(verb, domains)
+    }
+
     fn register_window_config_owners(registry: &mut semio_framework_plugin::WindowConfigOwnerRegistry) -> Result<(), Fault> {
         registry.register::<shape::config::CadShapeWindowConfigOwner>()?;
         registry.register::<building::config::CadBuildingWindowConfigOwner>()?;
@@ -2114,7 +2117,6 @@ impl ArtifactEditor for CadPlayApp {
             "setProjectionParam",
             "setDislocateOption",
             "setNodeSelection",
-            "setPanelPage",
             "setReferenceSelection",
             "referenceHover",
             "engagementInput",
@@ -2397,7 +2399,7 @@ pub fn create_cad_app() -> semio_framework_plugin::AppDefinition {
             .artifact_kind(artifact_kind())
             .icon_id("box")
             .terminology("reuse")
-            .terminology_document("reuse", ["Entwerfen mit Bestand", "cad"])
+            .terminology_document("reuse", ["Entwerfen mit Bestand", "Koordinator"])
             .mode_def(edit::definition())
             .default_mode_id(edit::CAD_PLAY_MODE_EDIT)
             .window_kind_def(shape::definition())
@@ -2424,7 +2426,6 @@ pub fn create_cad_app() -> semio_framework_plugin::AppDefinition {
             .action_with(ActionDefinition::new("setProjectionParam", LocalizedLabel::native("Set Projection Parameter", "Projektionsparameter festlegen"), ActionKind::View, "scan"))
             .action_with(ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), ActionKind::Mutation, "panel-left"))
             .action_with(ActionDefinition::bounded_catalog("setNodeSelection", LocalizedLabel::native("Set Node Selection", "Knotenauswahl festlegen"), ActionKind::View).in_palette(false))
-            .action_with(ActionDefinition::bounded_catalog("setPanelPage", LocalizedLabel::native("Set Panel Page", "Panel-Seite festlegen"), ActionKind::View).in_palette(false))
             .action_with(ActionDefinition::bounded_catalog("setReferenceSelection", LocalizedLabel::native("Set Reference Selection", "Referenzauswahl festlegen"), ActionKind::View).in_palette(false))
             .action_with(ActionDefinition::bounded_catalog("referenceHover", LocalizedLabel::native("Reference Hover", "Überfahren (Referenz)"), ActionKind::View).in_palette(false))
             .action_with(ActionDefinition::new("engagementInput", LocalizedLabel::native("Engagement Input", "Eingabe"), ActionKind::View, "hand").in_palette(false))
@@ -2497,7 +2498,6 @@ pub fn create_cad_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("setProjectionParam", InteractiveJobClassification::Migrated)
             .action_interactive_job("setDislocateOption", InteractiveJobClassification::Migrated)
             .action_interactive_job("setNodeSelection", InteractiveJobClassification::Migrated)
-            .action_interactive_job("setPanelPage", InteractiveJobClassification::Migrated)
             .action_interactive_job("setReferenceSelection", InteractiveJobClassification::Migrated)
             .action_interactive_job("referenceHover", InteractiveJobClassification::Migrated)
             .action_interactive_job("engagementInput", InteractiveJobClassification::Migrated)

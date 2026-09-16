@@ -3,7 +3,7 @@
 use crate::Block2dSnapshot;
 use crate::editor::block2d::terminology::Block2dLabels;
 use crate::editor::block2d::{block2d_action, ui_label, ui_text, ui_value_map, ui_value_text};
-use semio_framework_plugin::plugin_app_close_prelude::{field, input, Buildable, HasBase, HasChildren, InputKind, Trigger};
+use semio_framework_plugin::plugin_app_close_prelude::{input, Buildable, HasBase, HasChildren, InputKind, Trigger};
 use semio_framework_plugin::{tree_item, BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiAssemblyResult, UiFixedList, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
 
 //#region 🔖️Constants
@@ -39,7 +39,7 @@ fn text_field(id: &str, label: &str, value: &str, document_field: &str) -> UiAss
     .map_err(|_| admission("block2d inspector control binding admission failed"))?
     .try_build()
     .map_err(|_| admission("block2d inspector control admission failed"))?;
-    field(ui_label(label)?)
+    semio_framework_ui_contract::tree_item(ui_label(label)?)
         .try_id(id)
         .map_err(|_| admission("block2d inspector field id admission failed"))?
         .try_child(control)

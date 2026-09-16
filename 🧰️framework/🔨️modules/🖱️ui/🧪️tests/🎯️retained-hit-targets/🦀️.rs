@@ -66,7 +66,7 @@ fn action_of(value: &Value) -> Option<ActionDescriptor> {
 }
 
 fn tree_item(value: &Value) -> UiTreeItemNode {
-    UiTreeItemNode {
+    UiTreeItemNode { window: None, granularity: None,
         id: value["id"].as_str().expect("item id").to_string(),
         label: Label::data(value["label"].as_str().unwrap_or_default()),
         description: None,
@@ -94,7 +94,7 @@ fn ui_node(value: &Value) -> UiNode {
                 .as_array()
                 .expect("sections")
                 .iter()
-                .map(|section| UiTreeSectionNode {
+                .map(|section| UiTreeSectionNode { window: None,
                     id: section["id"].as_str().expect("section id").to_string(),
                     label: section["label"].as_str().map(Label::data),
                     default_open: section["defaultOpen"].as_bool(),

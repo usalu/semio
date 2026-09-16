@@ -16,6 +16,7 @@ role = "plugin"
 
 [[package.metadata.semio.playground]]
 variant = "remodel"
+app = "s.remodel.remodeling@1/*#editor"
 ports = { react = 6063, wgpu = 6163 }
 
 [lib]

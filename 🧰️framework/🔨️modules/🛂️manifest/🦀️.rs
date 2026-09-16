@@ -4572,6 +4572,35 @@ pub struct ViewModel {
     #[serde(default, skip_serializing_if = "std::collections::HashMap::is_empty")]
     #[value(default, skip_serializing_if = "std::collections::HashMap::is_empty")]
     pub tool_run_trace_cursor_by_window_id: std::collections::HashMap<String, semio_framework_tool_run::ToolRunTraceCursor>,
+    /// 🪟️ Every tree container the host holds state for, flattened over all panel bodies — the ONE
+    /// source of truth for which containers are open and which rows are on screen. A guest reads them
+    /// per body and materialises exactly the named windows; it keeps no expansion state of its own,
+    /// which is what lets an open container survive a refresh.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
+    pub tree_windows: Vec<TreeWindowRequest>,
+    /// 🪟️ Rows the tallest visible panel body fits, the shared first-paint budget a guest spends in
+    /// document order over containers the host has not yet seen. Absent means "the host has not
+    /// measured a viewport yet" — the guest falls back to its own default, never to unbounded.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub tree_viewport_rows: Option<u32>,
+}
+
+/// 🪟️ One tree container's host-known state: whether the user opened or closed it (`None` = the
+/// author's own default still stands) and the row window on screen, overscan included. `body_key`
+/// names the panel body the container lives in, `node_key` the authored container key within it.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
+pub struct TreeWindowRequest {
+    pub body_key: String,
+    pub node_key: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub open: Option<bool>,
+    pub offset: u32,
+    pub rows: u32,
 }
 
 /// 🪟️ One live window instance, as seen by a plugin: `id` is the instance id (equal to `window_kind_id`
@@ -4652,9 +4681,18 @@ pub const VIEW_CONTEXT_UTILITY_ENTRIES: usize = 64;
 pub const VIEW_CONTEXT_WINDOW_INSTANCES: usize = 64;
 /// 📏️ `toolRunTraceCursorByWindowId` capacity (schema `maxProperties`).
 pub const VIEW_CONTEXT_TRACE_CURSOR_ENTRIES: usize = 64;
+/// 📏️ `treeWindows` capacity (schema `maxItems`) — one document's worth of containers
+/// (`ui_contract::UI_DOCUMENT_NODES`), the widest tree a single refresh can be about.
+pub const VIEW_CONTEXT_TREE_WINDOWS: usize = 128;
+/// 🔢️ Numeric fields of one `TreeWindowRequest`: `offset` and `rows`. `open` is a boolean and
+/// `bodyKey`/`nodeKey` are `Identifier`-shaped.
+pub const VIEW_CONTEXT_TREE_WINDOW_NUMERIC_FIELDS: usize = 2;
+/// 🔤️ Fields one `TreeWindowRequest` encodes: `bodyKey`, `nodeKey`, `open`, `offset`, `rows`.
+pub const VIEW_CONTEXT_TREE_WINDOW_FIELDS: usize = 5;
 /// 🔢️ Numeric fields of one `ToolRunTraceCursor`: `run`, `generation`, `page`.
 pub const VIEW_CONTEXT_TRACE_CURSOR_FIELDS: usize = 3;
-/// 📐️ Widest decimal a cursor field reaches in text form: `run` up to 2^53-1.
+/// 📐️ Widest decimal a numeric field reaches in text form: `run` up to 2^53-1, and every `u32`
+/// field (`generation`, `page`, `offset`, `rows`, `treeViewportRows`) comfortably inside it.
 const VIEW_CONTEXT_TRACE_CURSOR_DIGITS: usize = 16;
 /// 🔢️ `Identifier`-typed scalar fields: `activeModeId`, `activeWindowKindId`, `activeUtilityId`,
 /// `activeToolId`, `windowId`, `focusedWindowId`.
@@ -4670,8 +4708,8 @@ const VIEW_CONTEXT_BYTES_PER_CHAR: usize = 4;
 /// 📐️ Per-encoded-value framing allowance (tag, length prefix, key) of the pack wire the shell
 /// encodes a view context with.
 const VIEW_CONTEXT_FRAMING_BYTES_PER_VALUE: usize = 64;
-/// 🔢️ Encoded values a maximal view context carries: every scalar field, the two enums, both
-/// collections and each of their entries' fields.
+/// 🔢️ Encoded values a maximal view context carries: every scalar field, the two enums, every
+/// collection and each of their entries' fields.
 const VIEW_CONTEXT_ENCODED_VALUES: usize = VIEW_CONTEXT_IDENTIFIER_FIELDS
     + VIEW_CONTEXT_SESSION_IDENTITY_FIELDS
     + VIEW_CONTEXT_LONG_STRING_FIELDS
@@ -4681,7 +4719,10 @@ const VIEW_CONTEXT_ENCODED_VALUES: usize = VIEW_CONTEXT_IDENTIFIER_FIELDS
     + 1
     + VIEW_CONTEXT_WINDOW_INSTANCES * 2
     + 1
-    + VIEW_CONTEXT_TRACE_CURSOR_ENTRIES * (1 + VIEW_CONTEXT_TRACE_CURSOR_FIELDS);
+    + VIEW_CONTEXT_TRACE_CURSOR_ENTRIES * (1 + VIEW_CONTEXT_TRACE_CURSOR_FIELDS)
+    + 1
+    + VIEW_CONTEXT_TREE_WINDOWS * (1 + VIEW_CONTEXT_TREE_WINDOW_FIELDS)
+    + 1;
 
 /// 📏️ Largest wire-encoded surface view context the contract can produce — the admission bound
 /// `plugin_mount_surface` holds `Event::SurfaceVisible`'s `view_state` to.
@@ -4697,7 +4738,9 @@ pub const MAX_SURFACE_VIEW_CONTEXT_BYTES: usize = (VIEW_CONTEXT_IDENTIFIER_FIELD
     + VIEW_CONTEXT_LONG_STRING_FIELDS * VIEW_CONTEXT_LONG_STRING_CHARS
     + VIEW_CONTEXT_UTILITY_ENTRIES * 2 * VIEW_CONTEXT_IDENTIFIER_CHARS
     + VIEW_CONTEXT_WINDOW_INSTANCES * 2 * VIEW_CONTEXT_IDENTIFIER_CHARS
-    + VIEW_CONTEXT_TRACE_CURSOR_ENTRIES * (VIEW_CONTEXT_IDENTIFIER_CHARS + VIEW_CONTEXT_TRACE_CURSOR_FIELDS * VIEW_CONTEXT_TRACE_CURSOR_DIGITS))
+    + VIEW_CONTEXT_TRACE_CURSOR_ENTRIES * (VIEW_CONTEXT_IDENTIFIER_CHARS + VIEW_CONTEXT_TRACE_CURSOR_FIELDS * VIEW_CONTEXT_TRACE_CURSOR_DIGITS)
+    + VIEW_CONTEXT_TREE_WINDOWS * (2 * VIEW_CONTEXT_IDENTIFIER_CHARS + VIEW_CONTEXT_TREE_WINDOW_NUMERIC_FIELDS * VIEW_CONTEXT_TRACE_CURSOR_DIGITS + VIEW_CONTEXT_TRACE_CURSOR_DIGITS)
+    + VIEW_CONTEXT_TRACE_CURSOR_DIGITS)
     * VIEW_CONTEXT_BYTES_PER_CHAR
     + VIEW_CONTEXT_ENCODED_VALUES * VIEW_CONTEXT_FRAMING_BYTES_PER_VALUE;
 

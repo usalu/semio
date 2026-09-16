@@ -151,20 +151,19 @@ fn a_window_polygon_lies_on_its_host_plane_offset_by_the_lift() {
 }
 
 #[test]
-fn selection_and_hover_retint_and_an_overlay_replaces_the_class_swatch() {
+fn selection_and_hover_publish_instance_flags_and_an_overlay_replaces_the_class_swatch() {
     let model = Model { surfaces: vec![quad(5, SurfaceClass::ExteriorWall)], ..Model::default() };
     let plain = EnergySceneStyle::default();
     let (base_json, _) = energy_model_scene_parts(&model, &plain);
 
     let selected_ids = vec!["5".to_string()];
     let (selected_json, selected_instances) = energy_model_scene_parts(&model, &EnergySceneStyle { selected_ids: &selected_ids, ..EnergySceneStyle::default() });
-    assert_ne!(base_json, selected_json, "a selected surface must be tinted");
+    assert_eq!(base_json, selected_json, "selection paint is host-owned");
     assert_eq!(parsed(&selected_instances)[0]["selected"].as_bool(), Some(true));
 
     let hovered_ids = vec!["5".to_string()];
     let (hovered_json, hovered_instances) = energy_model_scene_parts(&model, &EnergySceneStyle { hovered_ids: &hovered_ids, ..EnergySceneStyle::default() });
-    assert_ne!(base_json, hovered_json, "a hovered surface must be lightened");
-    assert_ne!(selected_json, hovered_json, "hover and selection are different paints");
+    assert_eq!(base_json, hovered_json, "hover paint is host-owned");
     assert_eq!(parsed(&hovered_instances)[0]["hovered"].as_bool(), Some(true));
 
     let overlay = HashMap::from([(5_u32, [1.0, 0.0, 0.0])]);
@@ -326,12 +325,12 @@ fn the_hull_refuses_degenerate_clouds_and_survives_interior_and_duplicate_points
 }
 
 #[test]
-fn a_selected_or_hovered_zone_volume_tints_the_way_every_other_family_does() {
+fn a_selected_zone_volume_still_publishes_the_selected_flag() {
     let model = Model { zones: vec![zone(1, "Living")], surfaces: box_zone_surfaces(1, 40, [4.0, 3.0, 2.5]), ..Model::default() };
     let (plain, _) = energy_model_scene_parts(&model, &EnergySceneStyle::default());
     let picked = vec!["1".to_string()];
     let (selected, selected_instances) = energy_model_scene_parts(&model, &EnergySceneStyle { selected_ids: &picked, ..EnergySceneStyle::default() });
-    assert_ne!(plain, selected, "a zone picked in the tree must read as picked in the viewport");
+    assert_eq!(plain, selected, "zone hull vertex colours stay on the violet swatch; disabled style keeps them visible");
     let rows = parsed(&selected_instances);
     assert_eq!(rows.as_array().expect("instances").last().expect("the zone")["selected"].as_bool(), Some(true));
 }
@@ -383,29 +382,17 @@ fn an_authored_polygon_wins_over_the_area_height_sill_rectangle() {
 }
 //#endregion 🧱️AuthoredPolygons
 
-//#region 🧱️HoverTint
+//#region 🧱️InteractionFlags
 #[test]
-fn hover_lightens_every_channel_and_selection_never_does() {
-    // 🎨️ Both tints are baked here because a vertex-coloured mesh ignores the host's own
-    // selected/hovered paint entirely; this law is what keeps the two readable apart.
-    let base = ENERGY_SCENE_EXTERIOR_WALL_COLOR;
-    let hovered = mix(base, [1.0, 1.0, 1.0], ENERGY_SCENE_HOVERED_MIX);
-    let selected = mix(base, ENERGY_SCENE_SELECTED_COLOR, ENERGY_SCENE_SELECTED_MIX);
-    for axis in 0..3 {
-        assert!(hovered[axis] > base[axis], "hover must LIGHTEN channel {axis}: {base:?} -> {hovered:?}");
-    }
-    assert!(selected[0] < base[0] && selected[2] > base[2], "selection must move towards the primary blue, not towards white: {selected:?}");
-    assert_ne!(hovered, selected, "a hovered entity must never read as a selected one");
-
-    // 🖱️ …and the same two paints really reach the payload, per family.
+fn hover_and_selection_publish_per_instance_flags_for_every_family() {
     let model = Model { zones: vec![zone(1, "Living")], surfaces: box_zone_surfaces(1, 40, [4.0, 3.0, 2.5]), fenestrations: vec![authored_window(50, 42, vec![[1.0, 0.0, 0.5], [3.0, 0.0, 0.5], [3.0, 0.0, 1.6], [1.0, 0.0, 1.6]])], ..Model::default() };
     for target in ["40", "50", "1"] {
         let ids = vec![target.to_string()];
         let (plain, _) = energy_model_scene_parts(&model, &EnergySceneStyle::default());
         let (hovered_json, instances) = energy_model_scene_parts(&model, &EnergySceneStyle { hovered_ids: &ids, ..EnergySceneStyle::default() });
         let (selected_json, _) = energy_model_scene_parts(&model, &EnergySceneStyle { selected_ids: &ids, ..EnergySceneStyle::default() });
-        assert_ne!(plain, hovered_json, "hovering {target} must repaint it");
-        assert_ne!(hovered_json, selected_json, "hover and selection must differ for {target}");
+        assert_eq!(plain, hovered_json, "hover paint is host-owned for {target}");
+        assert_eq!(plain, selected_json, "selection paint is host-owned for {target}");
         let rows = parsed(&instances);
         let row = rows.as_array().expect("instances").iter().find(|row| row["id"].as_str() == Some(target)).expect("the hovered instance");
         assert_eq!(row["hovered"].as_bool(), Some(true), "the per-instance hover flag keeps the host chrome right: {row}");
@@ -413,14 +400,14 @@ fn hover_lightens_every_channel_and_selection_never_does() {
 }
 
 #[test]
-fn a_selected_and_hovered_entity_reads_as_selected() {
+fn a_selected_and_hovered_entity_still_carries_both_flags() {
     let model = Model { surfaces: vec![quad(5, SurfaceClass::ExteriorWall)], ..Model::default() };
     let ids = vec!["5".to_string()];
-    let (selected, _) = energy_model_scene_parts(&model, &EnergySceneStyle { selected_ids: &ids, ..EnergySceneStyle::default() });
+    let (plain, _) = energy_model_scene_parts(&model, &EnergySceneStyle::default());
     let (both, instances) = energy_model_scene_parts(&model, &EnergySceneStyle { selected_ids: &ids, hovered_ids: &ids, ..EnergySceneStyle::default() });
-    assert_eq!(parsed(&both)[0]["data"]["colors"], parsed(&selected)[0]["data"]["colors"], "selection wins over hover so a picked entity never flickers under the cursor");
+    assert_eq!(parsed(&both)[0]["data"]["colors"], parsed(&plain)[0]["data"]["colors"], "vertex colours stay on the class swatch");
     let rows = parsed(&instances);
     let row = &rows.as_array().expect("instances")[0];
     assert_eq!((row["selected"].as_bool(), row["hovered"].as_bool()), (Some(true), Some(true)), "both flags are still published for the host's chrome: {row}");
 }
-//#endregion 🧱️HoverTint
+//#endregion 🧱️InteractionFlags

@@ -1,7 +1,7 @@
 //! 🛍️ Shooting play app panel — the create catalogue: shot presets and the GLB asset preset.
 
 use crate::editor::shooting::terminology::ShootingLabels;
-use semio_framework_plugin::{Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL};
+use semio_framework_plugin::{LabelText, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, TreeWindows, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL};
 
 //#region 🔖️Constants
 pub const SHOOTING_PLAY_BODY_CATALOGUE: &str = "shooting.play.catalogue";
@@ -20,25 +20,36 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-fn catalog_shot_item(id: &str, label: impl TryInto<Label>, format: &str, shape: &str) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    let args = crate::editor::shooting::ui_value_map([("format", crate::editor::shooting::ui_value_text(format)?), ("shape", crate::editor::shooting::ui_value_text(shape)?)])?;
-    crate::editor::shooting::tree_item_with_icon(format!("shooting-play-catalogue.{id}"), label, "camera", crate::editor::shooting::shooting_action("addShot", Some(args)))
+/// 🛍️ One catalogue preset row: the shot format/shape pair a click adds to the document.
+struct ShotPreset {
+    id: &'static str,
+    label: LabelText,
+    format: &'static str,
+    shape: &'static str,
 }
 
-pub fn render(labels: &ShootingLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    let shot_items = crate::editor::shooting::ui_node_list([
-        catalog_shot_item("svg-rect", labels.svg_rectangle, "svg", "rectangle"),
-        catalog_shot_item("png-rect", labels.png_rectangle, "png", "rectangle"),
-        catalog_shot_item("svg-ellipse", labels.svg_ellipse, "svg", "ellipse"),
-        catalog_shot_item("png-ellipse", labels.png_ellipse, "png", "ellipse"),
-    ])?;
-    let asset_args = crate::editor::shooting::ui_value_map([("format", crate::editor::shooting::ui_value_text("glb")?)])?;
-    let asset_items = crate::editor::shooting::ui_node_list([crate::editor::shooting::tree_item_with_icon("shooting-play-catalogue.asset.glb", labels.glb_asset, "box", crate::editor::shooting::shooting_action("addAsset", Some(asset_args)))])?;
+fn catalog_shot_item(preset: &ShotPreset) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    let args = crate::editor::shooting::ui_value_map([("format", crate::editor::shooting::ui_value_text(preset.format)?), ("shape", crate::editor::shooting::ui_value_text(preset.shape)?)])?;
+    crate::editor::shooting::tree_item_with_icon(format!("shooting-play-catalogue.{}", preset.id), preset.label, "camera", crate::editor::shooting::shooting_action("addShot", Some(args)))
+}
+
+pub fn render(labels: &ShootingLabels, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    let presets = [
+        ShotPreset { id: "svg-rect", label: labels.svg_rectangle, format: "svg", shape: "rectangle" },
+        ShotPreset { id: "png-rect", label: labels.png_rectangle, format: "png", shape: "rectangle" },
+        ShotPreset { id: "svg-ellipse", label: labels.svg_ellipse, format: "svg", shape: "ellipse" },
+        ShotPreset { id: "png-ellipse", label: labels.png_ellipse, format: "png", shape: "ellipse" },
+    ];
+    let assets = [labels.glb_asset];
     PanelTreeBuilder::new("shooting-play-catalogue")?
-        .section("shooting-play-catalogue.shots", Some(crate::editor::shooting::ui_label(labels.add_shot.as_str())?), true, shot_items)?
-        .section("shooting-play-catalogue.assets", Some(crate::editor::shooting::ui_label(labels.add_asset.as_str())?), true, asset_items)?
+        .window_section(windows, "shooting-play-catalogue.shots", Some(crate::editor::shooting::ui_label(labels.add_shot.as_str())?), true, &presets, catalog_shot_item)?
+        .window_section(windows, "shooting-play-catalogue.assets", Some(crate::editor::shooting::ui_label(labels.add_asset.as_str())?), true, &assets, |label| {
+            let args = crate::editor::shooting::ui_value_map([("format", crate::editor::shooting::ui_value_text("glb")?)])?;
+            crate::editor::shooting::tree_item_with_icon("shooting-play-catalogue.asset.glb", *label, "box", crate::editor::shooting::shooting_action("addAsset", Some(args)))
+        })?
         .build()
 }
+
 //#endregion 🔖️Render
 
 //#region 🧪️Tests

@@ -3,7 +3,7 @@ use crate::editor::fem3d::commands::set_active_example::SetActiveExample;
 use crate::editor::fem3d::terminology::fem3d_labels;
 use crate::editor::fem3d::unit_tests::context::{dispatch, fem3d_app, render as render_body};
 use crate::editor::fem3d::Fem3dCommand;
-use semio_framework_plugin::{ComponentTree, Locale, Terminology, ViewModel};
+use semio_framework_plugin::{ComponentTree, Locale, Terminology, TreeWindows, ViewModel};
 
 fn demo() -> Fem3dSnapshot {
     crate::standards::v1::subsets::any::schema::snapshot::text::fem3d_boot_snapshot()
@@ -14,7 +14,7 @@ fn selecting(ids: &[&str]) -> Fem3dInteractionSnapshot {
 }
 
 fn panel(doc: &Fem3dSnapshot, ids: &[&str], view_state: &ViewModel) -> String {
-    let built = render(doc, &selecting(ids), fem3d_labels(view_state)).expect("fem3d inspector assembly");
+    let built = render(doc, &selecting(ids), fem3d_labels(view_state), &TreeWindows::unhosted()).expect("fem3d inspector assembly");
     semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(ComponentTree { root: built }).expect("fem3d inspector projection")
 }
 
@@ -37,8 +37,7 @@ fn component_at(json: &str, key: &str) -> String {
     node["component"]["type"].as_str().expect("every projected component names its type").to_owned()
 }
 
-/// 🌲️ A tree node anywhere in the body — the React `Interpreter` drops every non-tree-item child of
-/// a tree, so a form control nested in one is never drawn; this panel renders none.
+/// 🌲️ Every inspector body is a `Component::Tree` of sections and `treeItem` rows.
 fn carries_a_tree(json: &str) -> bool {
     json.contains("\"tree\"") || json.contains("\"treeSection\"") || json.contains("\"treeItem\"")
 }
@@ -53,7 +52,23 @@ async fn a_selected_node_renders_bound_ordinate_inputs_3d() {
     assert!(json.contains("patchNode"), "the ordinate inputs dispatch the node patch command");
     assert!(json.contains("\"n20_l1\""), "the argument map addresses the selected node");
     assert!(!json.contains("fem3d-play-inspection.summary.nodes"), "a live selection replaces the summary");
-    assert!(!carries_a_tree(&json), "{json}");
+    assert_eq!(component_at(&json, "fem3d-play-inspection.node"), "treeSection", "a group is a tree section");
+    assert!(carries_a_tree(&json), "{json}");
+}
+
+/// 🧾️ Editable fields are `treeItem` rows whose inline control stays bound to its patch command.
+#[semio_framework_async_macros::async_test]
+async fn a_node_section_carries_a_number_input_bound_to_patch_node_3d() {
+    let json = english(&demo(), &["n20_l1"]);
+    let tree: serde_json::Value = serde_json::from_str(&json).expect("the inspector projection is JSON");
+    let control = node_at(&tree, "fem3d-play-inspection.node.x.input").unwrap_or_else(|| panic!("{json}"));
+    assert_eq!(control["component"]["type"].as_str(), Some("input"), "the X row is an input, not a tree item: {control}");
+    assert_eq!(control["component"]["kind"].as_str(), Some("number"), "{control}");
+    let bindings = control["bindings"].to_string();
+    assert!(bindings.contains("patchNode"), "{bindings}");
+    assert!(bindings.contains("\"x\""), "the binding names the field it patches: {bindings}");
+    let row = node_at(&tree, "fem3d-play-inspection.node.x").unwrap_or_else(|| panic!("{json}"));
+    assert_eq!(row["component"]["type"].as_str(), Some("treeItem"), "the input sits inside its labelled tree row: {row}");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -91,7 +106,7 @@ async fn a_selected_solid_edits_its_extrusion_and_shows_its_polygon_read_only_3d
     assert_eq!(component_at(&json, "fem3d-play-inspection.solid.axis.select"), "select", "{json}");
     assert_eq!(component_at(&json, "fem3d-play-inspection.solid.height.input"), "input");
     assert_eq!(component_at(&json, "fem3d-play-inspection.solid.mesh-size.input"), "input");
-    assert_eq!(component_at(&json, "fem3d-play-inspection.solid.outline.value"), "text", "a read-only value is display text, not a control");
+    assert_eq!(component_at(&json, "fem3d-play-inspection.solid.outline"), "treeItem", "a read-only value is a tree row with a description");
     assert!(json.contains("patchSolid"));
 }
 
@@ -114,9 +129,9 @@ async fn a_selected_load_case_lists_its_loads_as_picks_3d() {
     assert_eq!(component_at(&json, "fem3d-play-inspection.load-case.self-weight.toggle"), "toggle");
     assert!(json.contains("patchLoadCase"));
     assert!(json.contains("interactionSelect"), "a load row hands the load to the framework-owned selection");
-    assert_eq!(component_at(&json, "l2"), "button", "a pick row is an activatable button, not a tree item");
-    assert_eq!(component_at(&json, "l3"), "button");
-    assert!(!carries_a_tree(&json), "{json}");
+    assert_eq!(component_at(&json, "l2"), "treeItem", "a pick row is an activatable tree item");
+    assert_eq!(component_at(&json, "l3"), "treeItem");
+    assert!(carries_a_tree(&json), "{json}");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -142,17 +157,16 @@ async fn a_multi_selection_headers_the_count_and_inspects_the_first_3d() {
     assert!(json.contains("fem3d-play-inspection.node.x.input"), "the fields belong to the first selected id");
 }
 
-/// 🎯️ The selected entity's verbs stay one group of activatable buttons: focus for a kind with
-/// viewport geometry, delete for every kind.
+/// 🎯️ Focus and delete are activatable tree rows in the Actions section.
 #[semio_framework_async_macros::async_test]
-async fn the_actions_group_binds_focus_and_delete_as_buttons_3d() {
+async fn the_actions_group_binds_focus_and_delete_as_tree_items_3d() {
     let json = english(&demo(), &["sol1"]);
-    assert_eq!(component_at(&json, "fem3d-play-inspection.actions.focus"), "button", "{json}");
-    assert_eq!(component_at(&json, "fem3d-play-inspection.actions.delete"), "button");
+    assert_eq!(component_at(&json, "fem3d-play-inspection.actions.focus"), "treeItem", "{json}");
+    assert_eq!(component_at(&json, "fem3d-play-inspection.actions.delete"), "treeItem");
     assert!(json.contains("focusEntity") && json.contains("removeSelection"), "{json}");
     let material = english(&demo(), &["steel"]);
     assert!(!material.contains("fem3d-play-inspection.actions.focus"), "a material has no viewport geometry to focus: {material}");
-    assert_eq!(component_at(&material, "fem3d-play-inspection.actions.delete"), "button");
+    assert_eq!(component_at(&material, "fem3d-play-inspection.actions.delete"), "treeItem");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -164,7 +178,7 @@ async fn nothing_selected_renders_the_document_summary_3d() {
     assert!(json.contains(crate::FEM_3D_SCHEMA));
     assert!(json.contains("fem3d-play-inspection.summary.deformation-scale"), "the analysis settings are reported, not edited, here");
     assert!(!json.contains("patchNode"));
-    assert!(!carries_a_tree(&json), "{json}");
+    assert!(carries_a_tree(&json), "the empty-selection summary is still a tree panel: {json}");
     assert!(english(&doc, &["deleted-yesterday"]).contains("fem3d-play-inspection.summary.nodes"), "an unowned id falls back to the summary");
 }
 

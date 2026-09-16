@@ -2209,8 +2209,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -2232,8 +2232,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -2298,8 +2298,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -2321,8 +2321,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -2387,8 +2387,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -2410,8 +2410,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -2476,8 +2476,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -2499,8 +2499,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -2565,8 +2565,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -2588,8 +2588,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -2654,8 +2654,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -4923,8 +4923,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -4946,8 +4946,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -5012,8 +5012,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -5035,8 +5035,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -5101,8 +5101,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -5124,8 +5124,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -5190,8 +5190,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -5213,8 +5213,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -5279,8 +5279,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -5302,8 +5302,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -5368,8 +5368,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -7636,8 +7636,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -7659,8 +7659,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -7725,8 +7725,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -7748,8 +7748,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -7814,8 +7814,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -7837,8 +7837,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -7903,8 +7903,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -7926,8 +7926,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -7992,8 +7992,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -8015,8 +8015,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -8081,8 +8081,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -10212,8 +10212,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -10235,8 +10235,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -10301,8 +10301,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -10324,8 +10324,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -10390,8 +10390,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -10413,8 +10413,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -10479,8 +10479,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -10502,8 +10502,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -10568,8 +10568,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -10591,8 +10591,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -10657,8 +10657,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -12924,8 +12924,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -12947,8 +12947,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -13013,8 +13013,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -13036,8 +13036,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -13102,8 +13102,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -13125,8 +13125,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -13191,8 +13191,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -13214,8 +13214,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -13280,8 +13280,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -13303,8 +13303,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -13369,8 +13369,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -14097,7 +14097,7 @@
                 "children": [
                   {
                     "kind": "stack",
-                    "size": 22.0,
+                    "size": 22,
                     "children": [
                       {
                         "kind": "window",
@@ -14108,7 +14108,7 @@
                   },
                   {
                     "kind": "stack",
-                    "size": 43.0,
+                    "size": 43,
                     "children": [
                       {
                         "kind": "window",
@@ -14119,7 +14119,7 @@
                   },
                   {
                     "kind": "stack",
-                    "size": 35.0,
+                    "size": 35,
                     "children": [
                       {
                         "kind": "window",
@@ -14140,7 +14140,7 @@
             "children": [
               {
                 "kind": "stack",
-                "size": 55.0,
+                "size": 55,
                 "children": [
                   {
                     "kind": "window",
@@ -14151,7 +14151,7 @@
               },
               {
                 "kind": "stack",
-                "size": 45.0,
+                "size": 45,
                 "children": [
                   {
                     "kind": "window",
@@ -18130,8 +18130,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -18153,8 +18153,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -18219,8 +18219,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -18242,8 +18242,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -18308,8 +18308,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -18331,8 +18331,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -18397,8 +18397,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -18420,8 +18420,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -18486,8 +18486,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -18509,8 +18509,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -18575,8 +18575,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -21497,8 +21497,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -21520,8 +21520,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -21586,8 +21586,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -21609,8 +21609,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -21675,8 +21675,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -21698,8 +21698,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -21764,8 +21764,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -21787,8 +21787,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -21853,8 +21853,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -21876,8 +21876,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -21942,8 +21942,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -24643,8 +24643,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -24666,8 +24666,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -24732,8 +24732,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -24755,8 +24755,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -24821,8 +24821,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -24844,8 +24844,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -24910,8 +24910,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -24933,8 +24933,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -24999,8 +24999,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -25022,8 +25022,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -25088,8 +25088,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -27648,8 +27648,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -27671,8 +27671,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -27737,8 +27737,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -27760,8 +27760,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -27826,8 +27826,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -27849,8 +27849,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -27915,8 +27915,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -27938,8 +27938,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -28004,8 +28004,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -28027,8 +28027,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -28093,8 +28093,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -31013,8 +31013,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -31036,8 +31036,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -31102,8 +31102,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -31125,8 +31125,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -31191,8 +31191,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -31214,8 +31214,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -31280,8 +31280,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -31303,8 +31303,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -31369,8 +31369,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -31392,8 +31392,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -31458,8 +31458,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -32543,7 +32543,7 @@
                 "children": [
                   {
                     "kind": "stack",
-                    "size": 22.0,
+                    "size": 22,
                     "children": [
                       {
                         "kind": "window",
@@ -32554,7 +32554,7 @@
                   },
                   {
                     "kind": "stack",
-                    "size": 43.0,
+                    "size": 43,
                     "children": [
                       {
                         "kind": "window",
@@ -32565,7 +32565,7 @@
                   },
                   {
                     "kind": "stack",
-                    "size": 35.0,
+                    "size": 35,
                     "children": [
                       {
                         "kind": "window",
@@ -32586,7 +32586,7 @@
             "children": [
               {
                 "kind": "stack",
-                "size": 68.0,
+                "size": 68,
                 "children": [
                   {
                     "kind": "window",
@@ -32597,7 +32597,7 @@
               },
               {
                 "kind": "stack",
-                "size": 32.0,
+                "size": 32,
                 "children": [
                   {
                     "kind": "window",
@@ -32609,8 +32609,15 @@
             ]
           }
         },
-        "terminologies": [],
-        "terminologyBreadcrumbs": {},
+        "terminologies": [
+          "reuse"
+        ],
+        "terminologyBreadcrumbs": {
+          "reuse": [
+            "Entwerfen mit Bestand",
+            "Generator"
+          ]
+        },
         "tutorials": [],
         "dialogs": [],
         "mediaInputs": [],
@@ -34986,8 +34993,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -35009,8 +35016,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -35075,8 +35082,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -35098,8 +35105,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -35164,8 +35171,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -35187,8 +35194,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -35253,8 +35260,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -35276,8 +35283,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -35342,8 +35349,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -35365,8 +35372,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -35431,8 +35438,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {

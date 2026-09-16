@@ -12,6 +12,5 @@ type Puzzle2dWindowTransient {
   brushCandidateIndex: Int!
   brushCandidates: [JsonValue!]!
   brushCandidateSourceHandleId: String!
-  panelPages: JsonValue!
 }
 scalar JsonValue

@@ -81,14 +81,7 @@ pub fn ui_fixed_label(label: semio_framework_plugin::LabelText) -> semio_framewo
 }
 
 /// 🌳️ Admits fallibly assembled UI nodes into fixed child storage.
-pub fn ui_node_list(values: impl IntoIterator<Item = semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode>>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiFixedList<semio_framework_plugin::BuiltNode>> {
-    let mut nodes = semio_framework_plugin::UiFixedList::default();
-    for value in values {
-        let node = value?;
-        nodes.try_push(node).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI node admission failed"))?;
-    }
-    Ok(nodes)
-}
+pub use semio_framework_plugin::ui_node_list;
 
 //#endregion 🔖️Constants
 
@@ -963,7 +956,7 @@ impl ArtifactEditor for VcsPlayApp {
         match body_key {
             VCS_PLAY_BODY_EDITOR => editor::render(doc.snapshot, labels).map(semio_framework_plugin::built_to_component_tree),
             VCS_PLAY_BODY_HISTORY => history::render(doc.history).map(semio_framework_plugin::built_to_component_tree),
-            VCS_PLAY_BODY_ARTIFACT => document_panel::render(doc.history, labels).map(semio_framework_plugin::built_to_component_tree),
+            VCS_PLAY_BODY_ARTIFACT => document_panel::render(doc.history, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, VCS_PLAY_BODY_ARTIFACT)).map(semio_framework_plugin::built_to_component_tree),
             VCS_PLAY_BODY_INSPECTION => inspection_panel::render(doc.snapshot, labels).map(semio_framework_plugin::built_to_component_tree),
             _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }

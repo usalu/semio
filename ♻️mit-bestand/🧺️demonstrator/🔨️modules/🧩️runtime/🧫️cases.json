@@ -1,11 +1,15 @@
 {
   "primary": "generator",
   "additionalBuildVariants": [
-    "generation3d"
+    "generation3d",
+    "energy",
+    "fem3d"
   ],
   "pluginIds": [
     "cad",
     "demonstrator",
+    "energy",
+    "fem",
     "flow",
     "gis",
     "procedural",
@@ -14,6 +18,10 @@
     "sourcing"
   ],
   "extensionIds": [
+    "cad-extension-aec-building",
+    "cad-extension-aec-building-energy",
+    "cad-extension-aec-building-structure",
+    "cad-extension-spatial-shape",
     "flow-extension-bim",
     "flow-extension-brep",
     "flow-extension-dictionary",
@@ -26,7 +34,10 @@
     "process-extension-concrete",
     "process-extension-metal",
     "process-extension-robotic",
-    "process-extension-wood"
+    "process-extension-wood",
+    "sourcing-module-beams",
+    "sourcing-module-slabs",
+    "sourcing-module-windows"
   ],
   "invalidVariants": [
     "",

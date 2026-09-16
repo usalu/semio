@@ -65,6 +65,7 @@ const engineTestSuites = [
   engineSuite("🪟️app-mode-layouts"),
   engineSuite("🎟️resident-refresh-budget"),
   elementSuite("🛠️ShellHelpers", "🧩️component"),
+  elementSuite("🛠️ShellHelpers", "🪟️tree-windows", "tsx"),
   elementSuite("🛠️ShellHelpers/⏯️tool-run-panel", "🧩️component", "tsx"),
   elementSuite("🕸️NodeGraph", "🖱️scroll-gesture"),
   elementSuite("🕸️NodeGraph", "🫱️interaction-publication"),

@@ -173,9 +173,6 @@ use super::*;
     /// exercised on a value where no field holds its default.
     #[test]
     fn window_config_pack_round_trips_every_persisted_option() {
-        let mut panel_pages = BTreeMap::new();
-        panel_pages.insert("objects".to_string(), 3u32);
-        panel_pages.insert("references".to_string(), 1u32);
         let original = Puzzle3dWindowConfig {
             lod_automatic: false,
             lod_depth_variable: true,
@@ -194,7 +191,6 @@ use super::*;
             selection_method: "lasso".into(),
             sun: WorldSunConfig { enabled: true, azimuth: 12.5, elevation: 33.0, intensity: 0.5, color: "#102030".into() },
             camera: Puzzle3dCamera { position: [1.0, 2.0, 3.0], target: [4.0, 5.0, 6.0], zoom: 2.5, up: Some([0.0, 0.0, 1.0]), projection: Default::default() },
-            panel_pages,
         };
         assert_ne!(original, Puzzle3dWindowConfig::default(), "the fixture must differ from the default in every field it asserts");
         let bytes = store::ArtifactPack::encode_pack(&original);

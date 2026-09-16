@@ -13,7 +13,7 @@
 use crate::editor::puzzle2d::commands::{
     add_node, apply_board_events, cancel_slot, commit_slot, cycle_candidate, delete_selection, duplicate_selection, engagement_abort, engagement_control_select, engagement_input, engagement_submit, export_fixture, focus_selection, force_layout, import_fixture,
     lod_scale_json, open_import_fixture, open_slot, patch_inspector, rotate_selection, scale_selection, select_same_kind, set_active_example, set_brush_kind_weights, set_brush_node_size, set_camera, set_candidate_index, set_fill_count, set_grid_factor,
-    set_grid_snap_enabled, set_lod_mode_for_pane, set_panel_page, set_selection_flag, set_suggestion_offset, translate_selection,
+    set_grid_snap_enabled, set_lod_mode_for_pane, set_selection_flag, set_suggestion_offset, translate_selection,
 };
 use crate::editor::puzzle2d::config::{Puzzle2dConfig, Puzzle2dConfigMutation, Puzzle2dPlayRuntime};
 use crate::editor::puzzle2d::engine::board_host::puzzle_board_host;
@@ -364,13 +364,7 @@ fn document_board_kind_catalogs_json(catalogs: &Value) -> Option<String> {
 pub fn inferred_kind_entries(fixture: &Value, field: &str) -> Vec<Value> {
     let mut ids = BTreeSet::new();
     match field {
-        "nodes" => {
-            for node in fixture_nodes(fixture) {
-                if let Some(kind) = node.get("nodeKind").and_then(|value| value.as_str()) {
-                    ids.insert(kind.to_string());
-                }
-            }
-        }
+        "nodes" => return inferred_node_kind_rows(fixture),
         "handles" => {
             for node in fixture_nodes(fixture) {
                 if let Some(handles) = node.get("handles").and_then(|value| value.as_array()) {
@@ -392,6 +386,49 @@ pub fn inferred_kind_entries(fixture: &Value, field: &str) -> Vec<Value> {
         _ => {}
     }
     ids.into_iter().map(|id| json!({ "id": id, "name": id })).collect()
+}
+
+/// 🧬️ The node kind rows a catalog-less document IMPLIES: one row per distinct `nodeKind`, shaped like
+/// the first node carrying it — shape, size (as the engine's `scale` of its 96-unit kind footprint),
+/// icon and that node's handles as templates. A document that came from no manifest (Concrete Forest,
+/// or any board a user drew) has exactly the kinds it shows, so the catalogue panel offers them and
+/// the fill can place them; a document whose meta carries `kindCatalogs` never reaches this.
+pub fn inferred_node_kind_rows(fixture: &Value) -> Vec<Value> {
+    let mut rows: Vec<Value> = Vec::new();
+    for node in fixture_nodes(fixture) {
+        let Some(kind) = node.get("nodeKind").and_then(Value::as_str).filter(|kind| !kind.is_empty()) else { continue };
+        if rows.iter().any(|row| row.get("id").and_then(Value::as_str) == Some(kind)) {
+            continue;
+        }
+        let rectangle = node.get("shape").and_then(Value::as_str) == Some("rectangle");
+        let size = if rectangle {
+            node.get("width").and_then(Value::as_f64).unwrap_or(48.0).max(node.get("height").and_then(Value::as_f64).unwrap_or(48.0))
+        } else {
+            node.get("radius").and_then(Value::as_f64).unwrap_or(24.0) * 2.0
+        };
+        let handles: Vec<Value> = node
+            .get("handles")
+            .and_then(Value::as_array)
+            .map(|handles| {
+                handles
+                    .iter()
+                    .map(|handle| {
+                        let mut template = json!({ "handleKind": handle.get("handleKind").and_then(Value::as_str).unwrap_or("port"), "angle": handle.get("angle").and_then(Value::as_f64).unwrap_or(0.0) });
+                        if let Some(radius) = handle.get("radius").and_then(Value::as_f64) {
+                            template["radius"] = json!(radius);
+                        }
+                        template
+                    })
+                    .collect()
+            })
+            .unwrap_or_default();
+        let mut row = json!({ "id": kind, "name": kind, "shape": if rectangle { "rectangle" } else { "circle" }, "scale": size / 96.0, "radius": size * 0.5, "width": size, "height": size, "handles": handles });
+        if let Some(icon) = node.get("iconKind").and_then(Value::as_str) {
+            row["iconKind"] = json!(icon);
+        }
+        rows.push(row);
+    }
+    rows
 }
 
 pub fn puzzle2d_kind_ids(fixture: &Value, field: &str) -> Vec<String> {
@@ -1064,15 +1101,6 @@ impl<'a> Puzzle2dActionCtx<'a> {
 pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_ui_contract::Label> {
     semio_framework_ui_contract::Label::try_from(value.as_ref().to_string()).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "puzzle2d label admission failed"))
 }
-
-/// 🌳️ Admits fallibly assembled puzzle nodes into fixed child storage.
-pub fn ui_node_list(values: impl IntoIterator<Item = semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode>>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiFixedList<semio_framework_plugin::BuiltNode>> {
-    let mut nodes = semio_framework_plugin::UiFixedList::default();
-    for value in values {
-        nodes.try_push(value?).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "puzzle2d node admission failed"))?;
-    }
-    Ok(nodes)
-}
 //#endregion 🔖️ActionContext
 
 //#region 🔖️ContextMenu
@@ -1180,13 +1208,16 @@ impl Puzzle2dPlayApp {
         let document_json = doc.snapshot.0.to_string();
         let envelope = Self::scene_with(doc.snapshot.0.clone(), window::runtime(cfg.snapshot, &window_config, window_transient, Some(window_kind)), puzzle2d_active_utility(Some(view_state)), interaction);
         let labels = puzzle2d_labels(view_state);
+        // 🪟️ One `TreeWindows` per render, read off the host's `ViewModel::tree_windows` for exactly
+        // the body being rendered — every panel container below shares its first-paint row budget.
+        let windows = semio_framework_plugin::TreeWindows::for_body(view_state, body_key);
         let node = match body_key {
             overview::BODY_KEY => overview::render(&document_json, &envelope)?,
             detail::BODY_KEY => detail::render(&document_json, &envelope)?,
             selection::BODY_KEY => selection::render(&document_json, &envelope)?,
-            artifact::PUZZLE2D_PLAY_BODY_LAYERS => artifact::render(&envelope, labels)?,
-            catalogue::PUZZLE2D_PLAY_BODY_CATALOGUE => catalogue::render(&envelope, labels)?,
-            inspection::PUZZLE2D_PLAY_BODY_PROPERTIES => inspection::render(&envelope, labels)?,
+            artifact::PUZZLE2D_PLAY_BODY_LAYERS => artifact::render(&envelope, labels, &windows)?,
+            catalogue::PUZZLE2D_PLAY_BODY_CATALOGUE => catalogue::render(&envelope, labels, &windows)?,
+            inspection::PUZZLE2D_PLAY_BODY_PROPERTIES => inspection::render(&envelope, labels, &windows)?,
             settings::PUZZLE2D_PLAY_BODY_SETTINGS => settings::render(&envelope, labels, view_state.window_id.as_deref().unwrap_or_default())?,
             _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "puzzle2d unknown-body label admission failed"))?,
         };
@@ -1227,7 +1258,6 @@ pub(crate) const PUZZLE2D_RETAINED_TOOL_IDS: &[&str] = &[
     "setGridFactor",
     "setGridSnapEnabled",
     "setLodModeForPane",
-    "setPanelPage",
     "translateSelection",
     "rotateSelection",
     "scaleSelection",
@@ -1265,7 +1295,6 @@ const PUZZLE2D_GENERIC_TOOL_IDS: &[&str] = &[
     "setGridFactor",
     "setGridSnapEnabled",
     "setLodModeForPane",
-    "setPanelPage",
     "setSelectionFlag",
     "setSuggestionOffset",
     "translateSelection",
@@ -1370,7 +1399,6 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for Puzzle2dRetainedCom
         ArtifactToolPublicationContract { tool_id: "setGridFactor", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
         ArtifactToolPublicationContract { tool_id: "setGridSnapEnabled", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
         ArtifactToolPublicationContract { tool_id: "setLodModeForPane", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
-        ArtifactToolPublicationContract { tool_id: "setPanelPage", lanes: &[ArtifactToolPublicationLane::WindowTransient] },
         ArtifactToolPublicationContract { tool_id: "translateSelection", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "rotateSelection", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "scaleSelection", lanes: &[ArtifactToolPublicationLane::Artifact] },
@@ -1929,7 +1957,6 @@ fn puzzle2d_dispatch_emit(
             "engagementAbort" => engagement_abort::engagement_abort(ctx, args),
             "engagementControlSelect" => engagement_control_select::engagement_control_select(ctx, args),
             "setLodModeForPane" => set_lod_mode_for_pane::set_lod_mode_for_pane(ctx, args),
-            "setPanelPage" => set_panel_page::set_panel_page(ctx, args),
             "translateSelection" => translate_selection::translate_selection(ctx, args),
             "rotateSelection" => rotate_selection::rotate_selection(ctx, args),
             "scaleSelection" => scale_selection::scale_selection(ctx, args),
@@ -3866,7 +3893,6 @@ impl ArtifactEditor for Puzzle2dPlayApp {
             "setGridFactor",
             "setGridSnapEnabled",
             "setLodModeForPane",
-            "setPanelPage",
             "setSelectionFlag",
             "setSuggestionOffset",
             "translateSelection",
@@ -4169,7 +4195,6 @@ pub fn create_puzzle2d_app() -> semio_framework_plugin::AppDefinition {
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("engagementAbort", LocalizedLabel::native("Engagement Abort", "Eingabe abbrechen"), ActionKind::View, "hand") })
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("engagementControlSelect", LocalizedLabel::native("Engagement Control Select", "Eingabesteuerung auswählen"), ActionKind::View, "hand") })
             .action_with(puzzle2d_internal_action("setLodModeForPane", LocalizedLabel::native("Set LOD Mode For Pane", "LOD-Modus für Bereich festlegen"), ActionKind::View))
-            .action_with(puzzle2d_internal_action("setPanelPage", LocalizedLabel::native("Set Panel Page", "Panel-Seite festlegen"), ActionKind::View))
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("setGridSnapEnabled", LocalizedLabel::native("Set Grid Snap Enabled", "Rasterfang aktivieren"), ActionKind::View, "grid-3x3") })
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("setGridFactor", LocalizedLabel::native("Set Grid Factor", "Rasterfaktor festlegen"), ActionKind::View, "grid-3x3") })
             .action_with(puzzle2d_internal_action("setBrushKindWeights", LocalizedLabel::native("Set Brush Kind Weights", "Pinsel-Artgewichte festlegen"), ActionKind::View))
@@ -4224,7 +4249,6 @@ pub fn create_puzzle2d_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("setGridFactor", InteractiveJobClassification::Migrated)
             .action_interactive_job("setGridSnapEnabled", InteractiveJobClassification::Migrated)
             .action_interactive_job("setLodModeForPane", InteractiveJobClassification::Migrated)
-            .action_interactive_job("setPanelPage", InteractiveJobClassification::Migrated)
             .action_interactive_job("translateSelection", InteractiveJobClassification::Migrated)
             .action_interactive_job("rotateSelection", InteractiveJobClassification::Migrated)
             .action_interactive_job("scaleSelection", InteractiveJobClassification::Migrated)

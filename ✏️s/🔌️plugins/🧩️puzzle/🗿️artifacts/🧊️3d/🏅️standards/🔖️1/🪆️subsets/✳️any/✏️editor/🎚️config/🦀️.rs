@@ -5,7 +5,7 @@
 //! checkpoints remain in the retained operation that owns their frozen input.
 
 use semio_framework_plugin::{WorldProjectionConfig, WorldSunConfig};
-use std::collections::{BTreeMap, HashMap};
+use std::collections::HashMap;
 
 //#region 🔖️Defaults
 fn one_f64() -> f64 {
@@ -220,8 +220,6 @@ pub struct Puzzle3dRuntime {
     /// below) so a freshly-loaded document still engages its one window.
     #[value(default = "default_window_ids")]
     pub window_ids: Vec<String>,
-    #[value(default)]
-    pub panel_pages: BTreeMap<String, u32>,
     /// 🏷️ Projected from [`Puzzle3dConfig::active_example_id`] — see its doc.
     #[value(default = "default_active_example_id")]
     pub active_example_id: String,
@@ -258,7 +256,6 @@ impl Default for Puzzle3dRuntime {
             camera: Puzzle3dCamera::default(),
             active_tool_id: None,
             window_ids: default_window_ids(),
-            panel_pages: BTreeMap::new(),
             active_example_id: default_active_example_id(),
         }
     }

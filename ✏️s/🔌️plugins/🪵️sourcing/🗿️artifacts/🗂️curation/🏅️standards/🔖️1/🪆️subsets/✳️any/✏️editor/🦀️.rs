@@ -148,18 +148,6 @@ pub fn ui_value_map(values: impl IntoIterator<Item = (&'static str, semio_framew
     Ok(semio_framework_plugin::UiValue::Map(builder.finish()))
 }
 
-/// 🌳️ Admits fallibly assembled UI nodes into fixed child storage.
-pub fn ui_node_list(values: impl IntoIterator<Item = semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode>>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiFixedList<semio_framework_plugin::BuiltNode>> {
-    let mut nodes = semio_framework_plugin::UiFixedList::default();
-    for value in values {
-        let node = value?;
-        nodes
-            .try_push(node)
-            .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI node admission failed"))?;
-    }
-    Ok(nodes)
-}
-
 //#endregion 🔖️Constants
 
 //#region 🔖️Commands
@@ -1160,6 +1148,8 @@ pub fn create_sourcing_curation_app() -> AppDefinition {
             })
             .action_interactive_job("setContributions", InteractiveJobClassification::Migrated)
             .document(["semio", "sourcing", "curation"])
+            .terminology("reuse")
+            .terminology_document("reuse", ["Entwerfen mit Bestand", "Aussuchen"])
             .artifact_kind(crate::artifact_kind())
             .artifact_kind(ArtifactKindSpec {
                 id: "catalogue.kinds".into(),

@@ -126,7 +126,7 @@ fn shooting_environment_json(snapshot: &ShootingSnapshot) -> String {
         "ambient": { "intensity": scene.ambient.intensity, "color": scene.ambient.color.as_str() },
         "sun": { "enabled": scene.sun.enabled, "azimuth": scene.sun.azimuth, "elevation": scene.sun.elevation, "intensity": scene.sun.intensity, "color": scene.sun.color.as_str() },
         "shadow": { "enabled": scene.shadow.enabled, "opacity": scene.shadow.opacity, "softness": scene.shadow.softness },
-        "material": { "color": scene.material.color.as_str(), "metalness": scene.material.metalness, "roughness": scene.material.roughness, "emissive": scene.material.emissive.as_str(), "emissiveIntensity": scene.material.emissive_intensity },
+        "material": { "color": scene.material.color.as_str(), "metalness": scene.material.metalness, "roughness": scene.material.roughness, "emissive": scene.material.emissive.as_str(), "emissiveIntensity": scene.material.emissive_intensity, "stroke": scene.material.stroke.as_str() },
     });
     if let Some(object) = value.as_object_mut() {
         if !is_transparent_shooting_background(&scene.background) {

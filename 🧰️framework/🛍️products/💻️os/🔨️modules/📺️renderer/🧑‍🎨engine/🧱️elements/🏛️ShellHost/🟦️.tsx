@@ -501,6 +501,10 @@ import {
   panelAnchorForGroup,
   panelJsonFromState,
   panelTabDefinitionToNode,
+  createTreeWindowSchedulerV1,
+  type PanelTreeConfigCacheV1,
+  type TreeWindowHostV1,
+  type TreeWindowSchedulerV1,
   parsePanelState,
   parseShellRoute,
   pluginAvailabilityRouteV1,
@@ -587,7 +591,7 @@ import { toolRunPanelReveal } from "../🛠️ShellHelpers/⏯️tool-run-panel/
 import { createContributionsPublisher, type ContributionsOperatorScope, type ContributionsPublishOutcome, type ContributionsSessionKey } from "../🛠️ShellHelpers/🧩️contributions/🟦️.ts";
 
 import { aProjectOfLuhUdkFooterItem, fundedByZukunftBauFooterItem } from "../../../../../../../../♻️mit-bestand/🧺️demonstrator/⚛️footer.tsx";
-import { ENTWERFEN_MIT_BESTAND_BRAND_IDS } from "../../../../../../../../♻️mit-bestand/🧺️demonstrator/🪧️brand.ts";
+import { ENTWERFEN_MIT_BESTAND_BRAND_IDS, isEntwerfenMitBestandBrandId } from "../../../../../../../../♻️mit-bestand/🧺️demonstrator/🪧️brand.ts";
 import {
   createFrameworkChatPanelTab,
   createFrameworkDisplayPanelTabs,
@@ -653,14 +657,16 @@ function withLocalizedWindowKindLabels(windowKinds: readonly { readonly id: stri
   return windowKinds as readonly { readonly id: string; readonly label: LocalizedLabel | string }[];
 }
 
-/** 🌳️ `flattenPanelTabLeaves`'s own twin for `PanelTabNode` trees — that shared helper's generic
- * constraint rejects `PanelTabNode` as a TS "weak type" (its `PanelTabLeaf` variant carries no
- * `children` key at all, see `flattenPanelTabLeaves`'s own doc comment), so this walks the union via
- * `panelTabChildren`'s own kind-aware accessor instead of a structural `.children` read. */
-function flattenPanelTabNodeLeaves(tabs: readonly PanelTabNode[]): readonly PanelTabNode[] {
+/** 🌳️ Every node of a `PanelTabNode` tree, branches included — the walk an id lookup needs: a plugin
+ * that owns `framework.panel.artifact` as a BRANCH (remodel's Reconstruction/Run children) was invisible
+ * to the leaves-only flatten this replaces, and the shell then mounted its own Artifact tab beside the
+ * plugin's under the same React key. `flattenPanelTabLeaves`'s generic constraint rejects `PanelTabNode`
+ * as a TS "weak type" (its `PanelTabLeaf` variant carries no `children` key at all, see that helper's own
+ * doc comment), so this walks the union via `panelTabChildren`'s own kind-aware accessor. */
+function flattenPanelTabNodes(tabs: readonly PanelTabNode[]): readonly PanelTabNode[] {
   return tabs.flatMap((tab) => {
     const children = panelTabChildren(tab);
-    return children && children.length > 0 ? flattenPanelTabNodeLeaves(children) : [tab];
+    return children && children.length > 0 ? [tab, ...flattenPanelTabNodes(children)] : [tab];
   });
 }
 
@@ -2304,6 +2310,48 @@ function FrameworkOsShellInner({
   const openSpaceIdRef = useRef<string | null>(null);
   const openInstanceIdRef = useRef<string | null>(null);
   const sessionRef = useRef<ActiveSession | null>(null);
+  //#region 🪟️TreeWindows
+  /** 🪟️ Host-owned tree expansion + on-screen row windows for every panel body, and the scheduler that
+   * turns a change into exactly one partial refresh of that body. This is the ONLY store of guest-tree
+   * expansion: `<Tree>`'s own per-mount `TreeStateProvider` state dies with every body refresh and the
+   * guest keeps none, which is why an opened container used to snap shut on the next unrelated refresh
+   * (📓️audit-host-tree-pipeline.md §2). Keyed by AUTHORED node key, so it survives a store re-mint. */
+  const treeWindowSchedulerRef = useRef<TreeWindowSchedulerV1 | null>(null);
+  /** 🔁️ `refreshUi` is declared far below (it closes over the whole refresh lane); the scheduler's own
+   * refresh closure is created here, on the first render, so it reaches it through this ref. */
+  const refreshUiRef = useRef<((nextSession: ActiveSession, scopeArg?: UiDirtyScope) => Promise<unknown>) | null>(null);
+  /** 🌲️ Per-tab `TreePanelConfig` reuse — see {@link PanelTreeConfigCacheV1}. Reset with the scheduler. */
+  const panelTreeConfigCacheRef = useRef<PanelTreeConfigCacheV1>(new Map());
+  /** 🪟️ Bumped by an OPEN toggle so the panel-tab memos re-run for it. A window report needs no bump:
+   * it changes the guest body, which arrives as a new `panelUiByKey` entry the memos already watch. */
+  const [treeWindowGeneration, setTreeWindowGeneration] = useState(0);
+  if (!treeWindowSchedulerRef.current) {
+    treeWindowSchedulerRef.current = createTreeWindowSchedulerV1({
+      refresh: (bodyKey) => {
+        const live = sessionRef.current;
+        const refresh = refreshUiRef.current;
+        if (!live || !refresh) {
+          treeWindowSchedulerRef.current?.settled(bodyKey);
+          return;
+        }
+        void refresh(live, { kind: "partial", panelBodies: [bodyKey] })
+          .catch((error) => console.error("[os-shell] tree window refresh failed", error))
+          .finally(() => treeWindowSchedulerRef.current?.settled(bodyKey));
+      },
+    });
+  }
+  const treeWindowHost = useMemo<TreeWindowHostV1>(
+    () => ({
+      openStatesFor: (bodyKey) => treeWindowSchedulerRef.current!.openStatesFor(bodyKey),
+      setOpen: (bodyKey, nodeKey, open) => {
+        treeWindowSchedulerRef.current!.setOpen(bodyKey, nodeKey, open);
+        setTreeWindowGeneration((generation) => generation + 1);
+      },
+      reportWindows: (bodyKey, requests, viewportRows) => treeWindowSchedulerRef.current!.reportWindows(bodyKey, requests, viewportRows),
+    }),
+    [],
+  );
+  //#endregion 🪟️TreeWindows
   /** 🩹️ ticket 26/08/17/FINISH-HUB-SPACES-COLLABORATION-END-TO-END lane 5-A — diagnostic + defensive
    * reentrancy guard for `applyShellUri`. Observed live (`🧪️5-a-collab-e2e-run1.txt`/`run3.txt`):
    * `[DEBUG] shell uri apply failed Error: Maximum call stack size exceeded`, immediately followed by a
@@ -4837,6 +4885,11 @@ function FrameworkOsShellInner({
       if (isSessionSwitch) {
         uiRefreshCacheRef.current = new Map();
         scope = { kind: "full" };
+        // 🪟️ Tree windows name authored keys of the app that is going away; carrying them into the next
+        // app asks a guest for containers it has never heard of, and the cached `TreePanelConfig`s hold
+        // stores minted against the previous session's bodies.
+        treeWindowSchedulerRef.current?.reset();
+        panelTreeConfigCacheRef.current = new Map();
       }
       const cache = uiRefreshCacheRef.current;
       // 🪟️ On a session switch, seed the default layout's extra instances BEFORE fetching (not after), so
@@ -4880,6 +4933,10 @@ function FrameworkOsShellInner({
         // sections are re-projected per instance by the guest and ignore it; an app-level panel body
         // has no `windowId` at all and this is the only thing that lets one address a live pane.
         focusedWindowId: activeWindowIdRef.current ?? undefined,
+        // 🪟️ Every body's open containers and on-screen rows, flattened — the same fields
+        // `baseDispatchViewState` carries, so a render triggered by a refresh and a render triggered by
+        // an action see exactly one set of windows and never disagree about what is materialised.
+        ...treeWindowSchedulerRef.current!.viewStateFields(),
       });
       const panelTabLeaves = flattenPanelTabLeaves(nextSession.app.panelTabs);
       // 🐢️ One batched, hash-conditional round trip replaces the old ~12 sequential
@@ -5107,6 +5164,7 @@ function FrameworkOsShellInner({
       uiRefreshLaneRef.current!.request({ session: nextSession, scope: scopeArg, extraInstances: extraInstancesOverride, replaceBodies, hostInputs }),
     [],
   );
+  refreshUiRef.current = refreshUi;
   //#endregion 🤝️UiRefreshCoalescing
   refreshDirectoryHomeRef.current = async (nextSession) => refreshUi(nextSession);
 
@@ -6751,6 +6809,10 @@ function FrameworkOsShellInner({
           windowInstances: sessionWindowInstances(targetSession.app, extraWindowInstancesRef.current).map((instance) => ({ id: instance.id, windowKindId: instance.windowKindId })),
           activeUtilityByWindowId: buildActiveUtilityByWindowId(activeUtilityByWindowIdRef.current),
           focusedWindowId: activeWindowIdRef.current ?? undefined,
+          // 🪟️ See the identical spread in `runUiRefreshPass` — an action's own render must materialise
+          // the same tree windows the last refresh did, or a pick dispatched on a streamed row lands on
+          // a body the guest rebuilt at a different offset.
+          ...treeWindowSchedulerRef.current!.viewStateFields(),
         };
         const dispatchViewState = hostArmedViewContext(baseDispatchViewState, activeToolIdRef.current, dispatchWindowId);
         if (!dispatchViewState) {
@@ -8724,9 +8786,9 @@ function FrameworkOsShellInner({
 
   const workbenchLeftTabs = useMemo((): PanelTabNode[] => {
     if (!session) return [];
-    const pluginLeftTabs = session.app.panelTabs.filter((tab) => panelAnchorForGroup(tab.group) === "top-left").map((tab, order) => panelTabDefinitionToNode(tab, tab.group, panelUiByKey, onAction, order, appLabelsOverlay, uiTerminology, uiLocale));
+    const pluginLeftTabs = session.app.panelTabs.filter((tab) => panelAnchorForGroup(tab.group) === "top-left").map((tab, order) => panelTabDefinitionToNode(tab, tab.group, panelUiByKey, onAction, order, appLabelsOverlay, uiTerminology, uiLocale, treeWindowHost, panelTreeConfigCacheRef.current));
     if (hostMode && session.app.id === hostAppId && pluginLeftTabs.length > 0) return pluginLeftTabs;
-    const hasPluginArtifactTab = flattenPanelTabNodeLeaves(pluginLeftTabs).some((tab) => tab.id === FRAMEWORK_PANEL_TAB_ARTIFACT_ID);
+    const hasPluginArtifactTab = flattenPanelTabNodes(pluginLeftTabs).some((tab) => tab.id === FRAMEWORK_PANEL_TAB_ARTIFACT_ID);
     if (hasPluginArtifactTab) return pluginLeftTabs;
     // 👁️✏️ "Open with…" — contract freeze §5's Document-panel surface: one section per role,
     // `AppRouter` entries owner-first, each row opens that surface for the SAME artifact; the
@@ -8772,12 +8834,12 @@ function FrameworkOsShellInner({
       }),
     });
     return [artifactTab, ...pluginLeftTabs];
-  }, [appLabelsOverlay, onAction, panel?.spawnedApps.length, panelUiByKey, session, hostMode, uiLocale, uiTerminology, hostAppId, openWithEntries, openWithFocusRole, openArtifactWithAppRef, dispatchSetDefaultApp, dispatchClearDefaultApp]);
+  }, [appLabelsOverlay, onAction, panel?.spawnedApps.length, panelUiByKey, session, hostMode, uiLocale, uiTerminology, hostAppId, openWithEntries, openWithFocusRole, openArtifactWithAppRef, dispatchSetDefaultApp, dispatchClearDefaultApp, treeWindowHost, treeWindowGeneration]);
 
   const detailsRightTabs = useMemo((): PanelTabNode[] => {
     if (!session) return [];
-    return session.app.panelTabs.filter((tab) => panelAnchorForGroup(tab.group) === "top-right").map((tab, order) => panelTabDefinitionToNode(tab, tab.group, panelUiByKey, onAction, order, appLabelsOverlay, uiTerminology, uiLocale));
-  }, [appLabelsOverlay, onAction, panelUiByKey, session, uiTerminology, uiLocale]);
+    return session.app.panelTabs.filter((tab) => panelAnchorForGroup(tab.group) === "top-right").map((tab, order) => panelTabDefinitionToNode(tab, tab.group, panelUiByKey, onAction, order, appLabelsOverlay, uiTerminology, uiLocale, treeWindowHost, panelTreeConfigCacheRef.current));
+  }, [appLabelsOverlay, onAction, panelUiByKey, session, uiTerminology, uiLocale, treeWindowHost, treeWindowGeneration]);
 
   /**
    * 🧭️ The two bottom anchors' app-declared tabs — `PanelGroup::Display` → `bottom-left`,
@@ -8798,9 +8860,9 @@ function FrameworkOsShellInner({
       session
         ? session.app.panelTabs
             .filter((tab) => panelAnchorForGroup(tab.group) === anchor && !shellRendersPanelTabItself(panelTabKindId(tab.kind)))
-            .map((tab, order) => panelTabDefinitionToNode(tab, tab.group, panelUiByKey, onAction, order, appLabelsOverlay, uiTerminology, uiLocale))
+            .map((tab, order) => panelTabDefinitionToNode(tab, tab.group, panelUiByKey, onAction, order, appLabelsOverlay, uiTerminology, uiLocale, treeWindowHost, panelTreeConfigCacheRef.current))
         : [],
-    [appLabelsOverlay, onAction, panelUiByKey, session, uiTerminology, uiLocale],
+    [appLabelsOverlay, onAction, panelUiByKey, session, uiTerminology, uiLocale, treeWindowHost, treeWindowGeneration],
   );
   const displayBottomLeftTabs = useMemo(() => appTabsForBottomAnchor("bottom-left"), [appTabsForBottomAnchor]);
   const settingsBottomRightTabs = useMemo(() => appTabsForBottomAnchor("bottom-right"), [appTabsForBottomAnchor]);
@@ -10096,7 +10158,7 @@ function FrameworkOsShellInner({
       <div key="logoAndTitle" className="flex min-w-0 shrink-0 items-center gap-single">
         {brand?.logoSvg ? <ShellBrandLogo svg={brand.logoSvg} className="size-workbench shrink-0" /> : <SemioLogo className="size-workbench shrink-0" />}
         <span data-slot="app-name" className={cn("px-single", shellChromeTitleClassName)}>
-          {appBreadcrumb(resolveAppBreadcrumb(session.app, uiTerminology))}
+          {isEntwerfenMitBestandBrandId(brand?.id) ? brand!.windowTitle : appBreadcrumb(resolveAppBreadcrumb(session.app, uiTerminology))}
         </span>
         {/* 👁️✏️ Window title chip / read-only badge (contract freeze §5) — role read off the resolved
          * `session.app.role`, never parsed out of `session.app.id`. */}

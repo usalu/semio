@@ -23,6 +23,7 @@ use crate::wgpu::widgets::{
     draw_icon, draw_text, measure_text_width, render_widget, tree_draw_chevron, tree_draw_guides, tree_gutter_width, tree_icon_id, tree_row_collapsed, TreeItem, TreeSection, WidgetContext, TREE_ICON_SIZE, TREE_INDENT_PER_LEVEL, TREE_ROW_HEIGHT,
     TREE_SECTION_GAP, TREE_TOGGLE_WIDTH,
 };
+use crate::wgpu::component::ui::UiTreeWindow;
 use crate::wgpu::UiTreeActionPlacement;
 use std::collections::HashMap;
 
@@ -81,6 +82,30 @@ pub(crate) fn measure_tree_sections<E>(sections: &[TreeSection<E>]) -> f32 {
     measure_tree_sections_state(sections, &collapsed)
 }
 
+/// 🪟️ The `(leading, trailing)` spacer pitch one windowed container paints around its materialised
+/// children: `offset` unmaterialised rows before them and `total − offset − materialised` after, each
+/// priced at exactly one [`TREE_ROW_HEIGHT`]. An unwindowed container (`None`) pitches nothing, so
+/// every non-virtualised tree keeps its existing extent to the float. There is deliberately no `+N`
+/// continuation row — the spacer IS the representation of the unloaded rows, which is what makes the
+/// scrollbar span the whole document rather than the loaded window.
+///
+/// ⚠️ GAP (ticket 26/09/16/ARTIFACT-TREE-VIRTUALISED-STREAMING packet P5): the wgpu target paints a
+/// window but never requests one. React's `🗣️Interpreter` mounts a viewport observer that reports
+/// `TreeWindowRequest`s back through `ViewModel.tree_windows`; the wgpu shell has no equivalent, so a
+/// wgpu tree shows only whatever first-paint window its guest chose and scrolling into a spacer band
+/// reveals empty pitch, not streamed rows. Closing that needs a wgpu-side scroll/open observer
+/// feeding the same `ViewModel` field — out of scope for this packet.
+fn tree_window_pitch(window: Option<&UiTreeWindow>, materialised: usize) -> (f32, f32) {
+    window.map_or((0.0, 0.0), |window| (window.leading_rows() as f32 * TREE_ROW_HEIGHT, window.trailing_rows(materialised) as f32 * TREE_ROW_HEIGHT))
+}
+
+/// 🪟️ Whether a row folds open: either it already carries materialised children, or its window
+/// declares rows this render did not materialise. `total > 0` with zero children is
+/// expandable-but-not-yet-loaded, never "leaf".
+fn tree_item_expandable<E>(item: &TreeItem<E>) -> bool {
+    !item.children.is_empty() || item.window.is_some_and(|window| window.total > 0)
+}
+
 pub(crate) fn measure_tree_sections_state<E>(sections: &[TreeSection<E>], collapsed: &HashMap<String, bool>) -> f32 {
     let mut height = 0.0;
     for section in sections {
@@ -88,9 +113,12 @@ pub(crate) fn measure_tree_sections_state<E>(sections: &[TreeSection<E>], collap
         let section_key = format!("section.{}", section.id);
         let section_collapsed = collapsed.get(&section_key).copied().unwrap_or(!section.default_open);
         if !section_collapsed {
+            let (leading, trailing) = tree_window_pitch(section.window.as_ref(), section.items.len());
+            height += leading;
             for item in &section.items {
                 height += measure_tree_item_height(item, collapsed);
             }
+            height += trailing;
             height += TREE_SECTION_GAP;
         }
     }
@@ -105,9 +133,12 @@ pub(crate) fn measure_tree_item_height<E>(item: &TreeItem<E>, collapsed: &HashMa
     let key = format!("tree.{}", item.id);
     let item_collapsed = collapsed.get(&key).copied().unwrap_or(!item.default_open);
     if !item_collapsed {
+        let (leading, trailing) = tree_window_pitch(item.window.as_ref(), item.children.len());
+        height += leading;
         for child in &item.children {
             height += measure_tree_item_height(child, collapsed);
         }
+        height += trailing;
     }
     height
 }
@@ -123,9 +154,12 @@ pub(crate) fn render_tree<E: Clone>(sections: &[TreeSection<E>], selected_ids: &
         render_tree_section_header(section, bounds, y, section_collapsed, ctx);
         y += TREE_ROW_HEIGHT;
         if !section_collapsed {
+            let (leading, trailing) = tree_window_pitch(section.window.as_ref(), section.items.len());
+            y += leading;
             for item in &section.items {
                 y += render_tree_item(item, Rect::new(bounds.x, y, bounds.w, TREE_ROW_HEIGHT), ctx, 0, selected_ids, highlighted_ids, &[]);
             }
+            y += trailing;
             y += TREE_SECTION_GAP;
         }
     }
@@ -158,7 +192,7 @@ pub(crate) fn render_tree_item<E: Clone>(item: &TreeItem<E>, bounds: Rect, ctx: 
         ctx.collapsed_sections.insert(key.clone(), !item.default_open);
     }
     let collapsed = tree_row_collapsed(ctx.collapsed_sections, &key, item.default_open);
-    let expandable = !item.children.is_empty();
+    let expandable = tree_item_expandable(item);
     let gutter_w = tree_gutter_width(depth);
     let row = Rect::new(bounds.x, bounds.y, bounds.w, TREE_ROW_HEIGHT);
     let gutter = Rect::new(row.x, row.y, gutter_w, row.h);
@@ -246,12 +280,15 @@ pub(crate) fn render_tree_item<E: Clone>(item: &TreeItem<E>, bounds: Rect, ctx: 
     });
     let mut height = TREE_ROW_HEIGHT;
     if !collapsed {
+        let (leading, trailing) = tree_window_pitch(item.window.as_ref(), item.children.len());
+        height += leading;
         for (index, child) in item.children.iter().enumerate() {
             let mut child_is_last = is_last_at_level.to_vec();
             child_is_last.push(index + 1 == item.children.len());
             let child_bounds = Rect::new(bounds.x, bounds.y + height, bounds.w, TREE_ROW_HEIGHT);
             height += render_tree_item(child, child_bounds, ctx, depth + 1, selected_ids, highlighted_ids, &child_is_last);
         }
+        height += trailing;
     }
     height
 }

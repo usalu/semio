@@ -6,10 +6,11 @@
 use crate::editor::space_index::config::SpaceIndexConfig;
 use crate::editor::space_index::space_index_action;
 use semio_framework_plugin::plugin_app_close_prelude::Label;
-use semio_framework_plugin::{tree_item, tree_item_with_action, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder};
+use semio_framework_plugin::{tree_item_with_action, ui_node_list, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, TreeWindows};
 
 pub const SPACE_INDEX_BODY_MEMBERS: &str = "s.space.members";
 pub const SPACE_INDEX_PANEL_MEMBERS: &str = "s-space-members";
+pub const SPACE_INDEX_ACTIONS_SECTION: &str = "s-space-members.actions";
 
 //#region 🔖️Definition
 pub fn definition() -> PanelTabDefinition {
@@ -52,13 +53,13 @@ fn member_row(config: &SpaceIndexConfig, member: &crate::editor::space_index::co
 /// precedent) — a real facet, not a one-line fix, deferred rather than half-built at this effort
 /// level. Every tree-content string below is English-only until that lands; every STATIC manifest
 /// string (panel tab, dialogs, action labels) is already en+de.
-pub fn render(config: &SpaceIndexConfig) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(config: &SpaceIndexConfig, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let visibility_action = if config.visibility == "public" {
         action_button("s-space-visibility", "Make Private", "lock", "setVisibility", crate::editor::space_index::ui_value_map([("visibility", crate::editor::space_index::ui_value_text("private")?)])?)
     } else {
         action_button("s-space-visibility", "Make Public", "globe", "setVisibility", crate::editor::space_index::ui_value_map([("visibility", crate::editor::space_index::ui_value_text("public")?)])?)
     };
-    let action_items = crate::editor::space_index::ui_node_list([
+    let action_items = ui_node_list([
         action_button("s-space-invite", "Invite Member", "user-plus", "requestInviteMember", semio_framework_plugin::UiValue::Map(Default::default())),
         action_button(
             "s-space-share",
@@ -69,21 +70,12 @@ pub fn render(config: &SpaceIndexConfig) -> semio_framework_plugin::UiAssemblyRe
         ),
         visibility_action,
     ])?;
-    let member_items = if config.members.is_empty() {
-        let mut empty = tree_item("s-space-members-empty", "No members yet")?;
-        if let semio_framework_plugin::Component::TreeItem(props) = &mut empty.component {
-            props.icon = Some(semio_framework_plugin::UiText::try_from_str("users").ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.member.icon", "fixed member-row icon admission failed"))?);
-        }
-        crate::editor::space_index::ui_node_list([Ok(empty)])?
-    } else {
-        crate::editor::space_index::ui_node_list(config.members.iter().map(|member| member_row(config, member)))?
-    };
-    let mut items = semio_framework_plugin::UiFixedList::default();
-    for item in action_items.into_iter().chain(member_items) {
-        items.try_push(item).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.member.items", "fixed member panel admission failed"))?;
-    }
+    let actions_label = Label::try_from("Actions").map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.member.actions-label", "fixed member actions label admission failed"))?;
     let section_label = Label::try_from("Members").map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.member.section-label", "fixed member section label admission failed"))?;
-    PanelTreeBuilder::new(SPACE_INDEX_PANEL_MEMBERS)?.section(SPACE_INDEX_PANEL_MEMBERS, Some(section_label), true, items)?.build()
+    PanelTreeBuilder::new(SPACE_INDEX_PANEL_MEMBERS)?
+        .section(SPACE_INDEX_ACTIONS_SECTION, Some(actions_label), true, action_items)?
+        .window_section_or_placeholder(windows, SPACE_INDEX_PANEL_MEMBERS, Some(section_label), true, &config.members, |member| member_row(config, member), "No members yet")?
+        .build()
 }
 //#endregion 🔖️Render
 

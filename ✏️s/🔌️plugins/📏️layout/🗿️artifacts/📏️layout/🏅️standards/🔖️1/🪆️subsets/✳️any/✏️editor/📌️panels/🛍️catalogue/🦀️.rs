@@ -1,15 +1,27 @@
 //! 🛍️ Layout play app panel — the catalogue: draggable page/frame-kind creation items.
+//!
+//! 🪟️ The roster is a windowed section like every other container: it stamps its FULL extent and
+//! materialises only the host's slice (`ViewModel::tree_windows`), never a `+N` row — the same law
+//! whether the roster stays a compile-time array or becomes document-derived.
+//!
+//! 🕹️ Deliberately UNBOUND to an interaction domain: a catalogue row is not a pick, it is its own
+//! `addPage`/`addFrame` command, so the rows keep their action, their drag payload and their
+//! catalogue-namespaced keys, and stamp no `granularity`.
 
 use crate::editor::layout::terminology::{catalogue_kind_label, LayoutLabels};
 use crate::editor::layout::{layout_action, ui_value_map, ui_value_text};
 use semio_framework_plugin::{
-    tree_item_with_action, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiFixedList, UiFixedMap, UiText, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+    tree_item_with_action, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, TreeWindows, UiFixedMap, UiText, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
+    FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
 };
 
 //#region 🔖️Constants
 pub(crate) const LAYOUT_PLAY_BODY_CATALOGUE: &str = "layout.play.catalogue";
+pub(crate) const LAYOUT_CATALOGUE_ROOT: &str = "layout-catalogue";
+pub(crate) const LAYOUT_CATALOGUE_KINDS_SECTION: &str = "layout-catalogue.kinds";
 
-const LAYOUT_CATALOGUE_KINDS: &[(&str, &str)] = &[("rect", "square"), ("text", "type"), ("image", "image")];
+/// 🛍️ The full creation roster this catalogue windows over — the page item plus every frame kind.
+const LAYOUT_CATALOGUE_ROSTER: &[(&str, &str)] = &[("page", "file"), ("rect", "square"), ("text", "type"), ("image", "image")];
 const LAYOUT_CATALOGUE_DRAG_MIME: &str = "application/x-semio-catalogue-item";
 const LAYOUT_CATALOGUE_KIND_MIME_PREFIX: &str = "application/x-semio-catalogue-kind.";
 //#endregion 🔖️Constants
@@ -49,15 +61,13 @@ fn catalogue_tree_item(kind: &str, label: impl Into<Label>, icon: &str) -> semio
     Ok(item)
 }
 
-pub(crate) fn render(labels: &LayoutLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    let mut items = UiFixedList::default();
-    let page = catalogue_tree_item("page", labels.catalogue_page, "file")?;
-    items.try_push(page).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "layout catalogue page admission failed"))?;
-    for (kind, icon) in LAYOUT_CATALOGUE_KINDS {
-        let item = catalogue_tree_item(kind, catalogue_kind_label(kind, labels), icon)?;
-        items.try_push(item).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "layout catalogue frame admission failed"))?;
-    }
-    PanelTreeBuilder::new("layout-catalogue")?.section("layout-catalogue.kinds", Some(crate::editor::layout::ui_label(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL)?), true, items)?.build()
+pub(crate) fn render(labels: &LayoutLabels, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    PanelTreeBuilder::new(LAYOUT_CATALOGUE_ROOT)?
+        .window_section(windows, LAYOUT_CATALOGUE_KINDS_SECTION, Some(crate::editor::layout::ui_label(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL)?), true, LAYOUT_CATALOGUE_ROSTER, |(kind, icon)| {
+            let label = if *kind == "page" { labels.catalogue_page.into() } else { catalogue_kind_label(kind, labels) };
+            catalogue_tree_item(kind, label, icon)
+        })?
+        .build()
 }
 //#endregion 🔖️Render
 

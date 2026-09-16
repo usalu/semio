@@ -3,7 +3,7 @@
 
 use crate::Block2dSnapshot;
 use crate::editor::block2d::terminology::Block2dLabels;
-use crate::editor::block2d::{ui_label, ui_node_list};
+use crate::editor::block2d::ui_label;
 use semio_framework_plugin::plugin_app_close_prelude::{column, text, Buildable, HasChildren};
 use semio_framework_plugin::{BuiltNode, LocalizedLabel, PluginAssemblyError, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions};
 
@@ -40,7 +40,7 @@ fn line(value: String) -> UiAssemblyResult<BuiltNode> {
 }
 
 pub fn render(definition: &Block2dSnapshot, labels: &Block2dLabels) -> UiAssemblyResult<BuiltNode> {
-    let lines = ui_node_list([
+    let lines = semio_framework_plugin::ui_node_list([
         line(format!("{}: {}", labels.summary.as_str(), if definition.node_kind.label.is_empty() { "—" } else { &definition.node_kind.label })),
         line(format!("{} {}, {} {}", definition.handle_kinds.len(), labels.handle_kinds.as_str(), definition.handles.len(), labels.handles.as_str())),
     ])?;

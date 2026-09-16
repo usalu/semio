@@ -13,7 +13,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { createContext, memo, Profiler, useCallback, useContext, useMemo, useRef, useState, useSyncExternalStore, type ComponentType, type CSSProperties, type ReactElement, type ReactNode, type KeyboardEvent as ReactKeyboardEvent } from "react";
+import { createContext, memo, Profiler, useCallback, useContext, useEffect, useMemo, useRef, useState, useSyncExternalStore, type ComponentType, type CSSProperties, type ReactElement, type ReactNode, type KeyboardEvent as ReactKeyboardEvent, type MouseEvent as ReactMouseEvent, type RefObject } from "react";
 import { packedTextLeaf } from "../🔌️PluginRuntime/🧳️packed-text/🟦️.ts";
 import { leftoverTreeItemSelectedV1, leftoverWorldSelectionOverlayV1, subscribeLeftoverWorldSelectionV1 } from "../🌐️World3dHost/🟦️.tsx";
 import {
@@ -32,6 +32,7 @@ import {
   SelectValue,
   Slider,
   Stepper,
+  TREE_WINDOW_OVERSCAN_ROWS,
   Textarea,
   Toggle,
   Tree,
@@ -43,12 +44,15 @@ import {
   cn,
   elementSkeleton,
   loadingBorderElementClass,
+  interactionMergeFromModifiers,
   renderControlIcon,
+  treeWindowRequestsForViewport,
   useLabel,
   waitingBorderElementClass,
   type ContextMenuItem,
   type ElementSkeletonKind,
   type IconName,
+  type TreeDataActivationContext,
   type TreeDataItem,
   type TreeDataSection,
   type TreeDragAndDropController,
@@ -56,8 +60,9 @@ import {
   type UiLabel,
   type UiTranslationKey,
 } from "@semio-tech/ui-react";
-import { uiSpacingRem } from "@semio-tech/ui-styling";
+import { domSizePx, uiSpacingRem } from "@semio-tech/ui-styling";
 import {
+  type ActionBinding,
   type ActionDescriptor,
   type AppCatalogue,
   type ComponentKind,
@@ -104,6 +109,7 @@ import {
   type ScrollLayout,
   type Sizing,
   type SpaceToken,
+  type MergeMode,
   type StackLayout,
   type StyleSpec,
   type PatchRejection,
@@ -1442,16 +1448,224 @@ function renderTreeItemControls(store: UiDocumentStore, controls: readonly UiNod
   return controls.map((child, index) => <UiNodeView key={keys[index]} store={store} id={child.id} context={context} />);
 }
 
-function treeItemToTreeData(store: UiDocumentStore, state: UiDocumentState, node: TreeWalkNode, context: UiInterpreterContext, overlay: UiPresenceOverlayValue, leftoverIds?: readonly string[]): TreeDataItem {
+//#region 🪟️TreeWindows
+/** 🪟️ One container's on-screen row window, keyed by the AUTHORED node key the guest stamped on
+ * `data-tree-window-key` — never a DOM id. The host's map has to survive a body refresh and a store
+ * re-mint, and `UiNodeRecord.id` is renumbered by every `builtNodeToSnapshot` (see {@link uiNodeDomId}). */
+export type TreeWindowReportV1 = { readonly nodeKey: string; readonly offset: number; readonly rows: number };
+
+/** 🪟️ The per-panel-body channel a guest tree reports expansion and scroll through, provided by
+ * `ShellHost` around each `InterpretedUiNode` (`uiNodeToTreePanelConfig`). Absent (the default `null`)
+ * means "nobody is listening": the tree keeps `<Tree>`'s own uncontrolled per-mount open state and
+ * measures nothing, which is exactly what a story, a fixture or a wgpu-side mount wants.
+ *
+ * `openStates` is keyed by authored node key, the same identity `setOpen` reports back and
+ * `ViewModel::tree_windows` carries to the guest; `TreeView` translates to and from `<Tree>`'s DOM ids
+ * ({@link uiNodeDomId}) at the boundary, so no host map ever holds a volatile id. */
+export type TreeWindowContextValue = {
+  readonly bodyKey: string;
+  readonly openStates: Readonly<Record<string, boolean>>;
+  readonly setOpen: (nodeKey: string, open: boolean) => void;
+  readonly reportWindows: (requests: readonly TreeWindowReportV1[], viewportRows: number) => void;
+};
+
+export const TreeWindowContext = createContext<TreeWindowContextValue | null>(null);
+
+/** 🪟️ The nearest {@link TreeWindowContext}, or `null` outside a host-provided panel body. */
+export function useTreeWindowContext(): TreeWindowContextValue | null {
+  return useContext(TreeWindowContext);
+}
+
+/** 🪟️ The ONE tree row pitch, read off the same `treeRowUiSpacing` design token the `🌳️Tree` element's
+ * own `treeRowHeightPx` and the wgpu target's `TREE_ROW_HEIGHT` are computed from — a windowed tree is
+ * a fixed-row-height virtualiser and all three renderers must agree on the pitch or the spacers and the
+ * requested rows drift apart. Never zero, so the row arithmetic can never divide by it. */
+export function treeWindowRowHeightPx(): number {
+  const height = domSizePx("treeRowUiSpacing");
+  return Number.isFinite(height) && height > 0 ? height : 1;
+}
+
+/** 🪟️ The bounded scroll container a guest tree actually scrolls inside — the ancestor `🖼️Panel`'s
+ * `📜️Scrollable` viewport, not the guest `<Tree>`'s own root div, whose `overflow-auto` never engages
+ * because the chain above it is a natural-height stack (📓️audit-host-tree-pipeline.md §3). Falls back
+ * to the nearest scrollable ancestor so a tree mounted outside a `Panel` still streams. */
+export function treeWindowScrollViewport(root: HTMLElement): HTMLElement | null {
+  const slot = root.closest('[data-slot="scroll-area-viewport"]');
+  if (slot instanceof HTMLElement) return slot;
+  const view = root.ownerDocument?.defaultView ?? null;
+  for (let candidate = root.parentElement; candidate; candidate = candidate.parentElement) {
+    const overflowY = view?.getComputedStyle(candidate).overflowY;
+    if (overflowY === "auto" || overflowY === "scroll") return candidate;
+  }
+  return null;
+}
+
+/** 🪟️ Every windowed container under `root`, measured in the viewport's own scroll-content space, in
+ * the shape `treeWindowRequestsForViewport` consumes. A container with `total <= 0` is not windowed and
+ * is skipped — reporting it would ask the guest for rows that do not exist. */
+export function treeWindowContainersUnder(root: HTMLElement, viewport: HTMLElement): readonly { readonly key: string; readonly total: number; readonly offset: number; readonly length: number; readonly top: number; readonly height: number }[] {
+  const viewportRect = viewport.getBoundingClientRect();
+  const scrollTop = viewport.scrollTop;
+  const measured: { key: string; total: number; offset: number; length: number; top: number; height: number }[] = [];
+  for (const element of Array.from(root.querySelectorAll("[data-tree-window-key]"))) {
+    if (!(element instanceof HTMLElement)) continue;
+    const key = element.getAttribute("data-tree-window-key");
+    if (!key) continue;
+    const total = treeWindowAttributeNumber(element, "data-tree-window-total");
+    if (total <= 0) continue;
+    const rect = element.getBoundingClientRect();
+    measured.push({ key, total, offset: treeWindowAttributeNumber(element, "data-tree-window-offset"), length: treeWindowAttributeNumber(element, "data-tree-window-length"), top: rect.top - viewportRect.top + scrollTop, height: rect.height });
+  }
+  return measured;
+}
+
+function treeWindowAttributeNumber(element: HTMLElement, attribute: string): number {
+  const parsed = Number(element.getAttribute(attribute) ?? "0");
+  return Number.isFinite(parsed) && parsed > 0 ? Math.floor(parsed) : 0;
+}
+
+/** 🪟️ The one line a report is compared on — the host is refreshed only when the ANSWER changed, not
+ * every time a scroll frame recomputed the same answer (a panel scrolled one pixel inside a row still
+ * wants exactly the rows it already has). */
+export function treeWindowReportSignatureV1(requests: readonly TreeWindowReportV1[], viewportRows: number): string {
+  return `${viewportRows}|${requests.map((request) => `${request.nodeKey}:${request.offset}:${request.rows}`).join(",")}`;
+}
+
+/** 🪟️ Measures the windowed containers under `rootRef` against their scroll viewport and reports the
+ * rows the guest should materialise, coalesced to one measurement per animation frame and re-run on
+ * every `scroll`, on a viewport resize, and on every store revision (a refresh changes what is there to
+ * measure). The diff against the last report is what keeps a scroll gesture from firing one partial
+ * refresh per frame. */
+function useTreeWindowObserver(rootRef: RefObject<HTMLDivElement | null>, windows: TreeWindowContextValue | null, revision: unknown): void {
+  const windowsRef = useRef<TreeWindowContextValue | null>(windows);
+  windowsRef.current = windows;
+  const lastReportRef = useRef<string>("");
+  const frameRef = useRef<number | null>(null);
+  const bodyKey = windows?.bodyKey ?? null;
+  useEffect(() => {
+    const root = rootRef.current;
+    if (!root || !windowsRef.current) return;
+    const viewport = treeWindowScrollViewport(root);
+    if (!viewport) return;
+    const view = root.ownerDocument?.defaultView;
+    if (!view) return;
+    const measure = () => {
+      frameRef.current = null;
+      const channel = windowsRef.current;
+      const live = rootRef.current;
+      if (!channel || !live || !live.isConnected) return;
+      const rowHeight = treeWindowRowHeightPx();
+      const viewportHeight = viewport.getBoundingClientRect().height;
+      const requests = treeWindowRequestsForViewport(treeWindowContainersUnder(live, viewport), viewport.scrollTop, viewportHeight, rowHeight, TREE_WINDOW_OVERSCAN_ROWS).map((request) => ({ nodeKey: request.key, offset: request.offset, rows: request.rows }));
+      const viewportRows = Math.max(1, Math.ceil(viewportHeight / rowHeight));
+      const signature = treeWindowReportSignatureV1(requests, viewportRows);
+      if (signature === lastReportRef.current) return;
+      lastReportRef.current = signature;
+      channel.reportWindows(requests, viewportRows);
+    };
+    const schedule = () => {
+      if (frameRef.current !== null) return;
+      frameRef.current = typeof view.requestAnimationFrame === "function" ? view.requestAnimationFrame(measure) : (view.setTimeout(measure, 0) as unknown as number);
+    };
+    schedule();
+    viewport.addEventListener("scroll", schedule, { passive: true });
+    const observer = typeof view.ResizeObserver === "function" ? new view.ResizeObserver(schedule) : null;
+    observer?.observe(viewport);
+    return () => {
+      viewport.removeEventListener("scroll", schedule);
+      observer?.disconnect();
+      if (frameRef.current === null) return;
+      if (typeof view.cancelAnimationFrame === "function") view.cancelAnimationFrame(frameRef.current);
+      else view.clearTimeout(frameRef.current);
+      frameRef.current = null;
+    };
+  }, [rootRef, revision, bodyKey]);
+}
+
+/** 🕹️ What one conversion pass of a guest tree collects and carries down the recursion — every field is
+ * filled WHILE walking, so a row's own click closure can read the whole tree's pick table (a range pick
+ * resolves ids the walk had not reached yet when that row was converted). */
+export type TreeWalkContextV1 = {
+  /** 🪟️ Host-owned expansion, keyed by authored node key. */
+  readonly openStates?: Readonly<Record<string, boolean>>;
+  /** 🪟️ Filled while walking: the same expansion re-keyed onto `<Tree>`'s DOM ids. */
+  readonly domOpenStates?: Record<string, boolean>;
+  /** 🪟️ Filled while walking: DOM id → authored key, so an `onOpenStateChange` maps back. */
+  readonly keysByDomId?: Map<string, string>;
+  /** 🕹️ The tree root's own `activate` binding — the SDK's tree-level `interactionSelect`, bound once by
+   * `PanelTreeBuilder::interaction_domain`, which is what makes a bare `granularity` row a pick target
+   * that costs zero argument arena. */
+  readonly pick?: { readonly record: UiNodeRecord; readonly binding: ActionBinding };
+  /** 🕹️ Filled while walking: DOM id → the interaction target that row stands for. */
+  readonly pickTargets?: Map<string, { readonly key: string; readonly granularity: string }>;
+};
+
+/** 🕹️ The interaction targets one pick dispatches. A plain pick is the clicked row alone; a `range`
+ * pick is the `<Tree>`'s resolved selection (already including the clicked row — `handleSelectItem`
+ * hands `onClick` the NEXT selection, not the previous one) mapped through the walk's table, with the
+ * clicked row appended as the floor so a selection the table cannot resolve still picks something.
+ * Deduplicated on `(granularity, id)`, exactly as `world3dSelectionActionArgs` deduplicates ids. */
+export function treePickTargetsV1(walk: TreeWalkContextV1, key: string, granularity: string, merge: MergeMode, selectedIds: readonly string[]): readonly { readonly granularity: string; readonly id: string }[] {
+  if (merge !== "range") return [{ granularity, id: key }];
+  const seen = new Set<string>();
+  const targets: { readonly granularity: string; readonly id: string }[] = [];
+  const push = (granularityId: string, id: string) => {
+    const dedupe = `${granularityId} ${id}`;
+    if (seen.has(dedupe)) return;
+    seen.add(dedupe);
+    targets.push({ granularity: granularityId, id });
+  };
+  for (const domId of selectedIds) {
+    const entry = walk.pickTargets?.get(domId);
+    if (entry) push(entry.granularity, entry.key);
+  }
+  push(granularity, key);
+  return targets;
+}
+
+/** 🕹️ The `UiValue` map a tree pick puts on the wire — the SAME shape `world3dSelectionActionArgs`
+ * builds (`targets` a JSON string of `{granularity, id}` records, `method: "pick"`, `merge` a raw
+ * `MergeMode` word the framework's `parse_merge_mode` accepts verbatim), minus `domainId`: the tree's
+ * own `Activate` binding already carries `{domainId}` in its authored args, and `uiIntentPayload`
+ * merges this map OVER them. `"range"` has no ordered topology on the wire, so a range gesture is
+ * resolved host-side into the full id set and sent as a `"replace"`. */
+export function treePickIntentInputV1(merge: MergeMode, targets: readonly { readonly granularity: string; readonly id: string }[]): UiValue {
+  return { merge: merge === "range" ? "replace" : merge, method: "pick", targets: JSON.stringify(targets.map((target) => ({ granularity: target.granularity, id: target.id }))) } as unknown as UiValue;
+}
+
+function dispatchTreePick(context: UiInterpreterContext, walk: TreeWalkContextV1, key: string, granularity: string, event: ReactMouseEvent, activation: TreeDataActivationContext): void {
+  const pick = walk.pick;
+  if (!pick) return;
+  const merge = interactionMergeFromModifiers(event);
+  void context.onIntent(context.store.buildIntent(pick.record, pick.binding, treePickIntentInputV1(merge, treePickTargetsV1(walk, key, granularity, merge, activation.selectedIds))));
+}
+
+/** 🪟️ Records one converted row's identity in the walk's translation tables. */
+function registerTreeWalkRow(walk: TreeWalkContextV1 | undefined, key: string, domId: string): void {
+  if (!walk || !key) return;
+  walk.keysByDomId?.set(domId, key);
+  const open = walk.openStates?.[key];
+  if (open !== undefined && walk.domOpenStates) walk.domOpenStates[domId] = open;
+}
+//#endregion 🪟️TreeWindows
+
+export function treeItemToTreeData(store: UiDocumentStore, state: UiDocumentState, node: TreeWalkNode, context: UiInterpreterContext, overlay: UiPresenceOverlayValue, leftoverIds?: readonly string[], walk?: TreeWalkContextV1): TreeDataItem {
   const { record, props } = node;
+  const domId = uiNodeDomId(state.surface, record.key, record.id);
+  registerTreeWalkRow(walk, record.key, domId);
   const presence = overlay.byKey.get(record.key) ?? {};
   const activateBinding = (record.bindings ?? []).find((b) => b.trigger === "activate");
   const hoverBinding = (record.bindings ?? []).find((b) => b.trigger === "hoverPreview");
   const childItems = collectTreeItems(state, record.children ?? []);
   const controlRecords = collectTreeItemControls(state, record.children ?? []);
   const activatableControl = activateBinding ? undefined : controlRecords.find((child) => !child.disabled && (child.bindings ?? []).some((b) => b.trigger === "activate"));
+  const granularity = typeof props.granularity === "string" && props.granularity.length > 0 ? props.granularity : undefined;
+  if (granularity && walk?.pick) walk.pickTargets?.set(domId, { key: record.key, granularity });
+  const pickClick = !activateBinding && granularity && walk?.pick ? (event: ReactMouseEvent, activation: TreeDataActivationContext) => dispatchTreePick(context, walk, record.key, granularity, event, activation) : undefined;
   return {
-    id: uiNodeDomId(state.surface, record.key, record.id),
+    id: domId,
+    window: props.window ?? undefined,
+    windowKey: record.key || undefined,
     label: props.label,
     description: props.description,
     icon: props.icon ? resolveControlIconNode(props.icon, 12) : undefined,
@@ -1464,8 +1678,8 @@ function treeItemToTreeData(store: UiDocumentStore, state: UiDocumentState, node
     draggable: props.draggable ?? undefined,
     dragData: props.dragData ? (Object.fromEntries(Object.entries(props.dragData).filter((entry): entry is [string, string] => entry[1] !== undefined)) as Record<string, string>) : undefined,
     control: controlRecords.length > 0 && controlRecords.length !== (activatableControl ? 1 : 0) ? <>{renderTreeItemControls(store, controlRecords.filter((child) => child !== activatableControl), context)}</> : undefined,
-    items: childItems.length > 0 ? childItems.map((child) => treeItemToTreeData(store, state, child, context, overlay, leftoverIds)) : undefined,
-    onClick: activateBinding ? () => dispatchTrigger(context, record, "activate") : activatableControl ? () => dispatchTrigger(context, activatableControl, "activate") : undefined,
+    items: childItems.length > 0 ? childItems.map((child) => treeItemToTreeData(store, state, child, context, overlay, leftoverIds, walk)) : undefined,
+    onClick: activateBinding ? () => dispatchTrigger(context, record, "activate") : (pickClick ?? (activatableControl ? () => dispatchTrigger(context, activatableControl, "activate") : undefined)),
     onPointerEnter: hoverBinding ? () => dispatchTrigger(context, record, "hoverPreview") : undefined,
     actions: (props.rowActions ?? []).length > 0 ? (props.rowActions ?? []).map((action) => ({ kind: "button" as const, icon: resolveControlIconNode(action.icon, 12), title: action.label ? wireLabel(action.label) : undefined, placement: action.placement ?? "row", onClick: () => context.onIntent(context.store.buildIntent(record, action.action)) })) : undefined,
   };
@@ -1476,23 +1690,41 @@ function TreeView({ store, record, context }: { readonly store: UiDocumentStore;
   const overlay = useUiPresenceOverlay();
   const leftover = useSyncExternalStore(subscribeLeftoverWorldSelectionV1, leftoverWorldSelectionOverlayV1, leftoverWorldSelectionOverlayV1);
   const leftoverIds = leftover?.ids;
-  const sections = useMemo((): TreeDataSection[] => {
+  const windows = useTreeWindowContext();
+  const rootRef = useRef<HTMLDivElement | null>(null);
+  const walked = useMemo((): { readonly sections: TreeDataSection[]; readonly walk: TreeWalkContextV1 } => {
     void revision;
     const state = store.getState();
+    const rootActivate = (record.bindings ?? []).find((b) => b.trigger === "activate");
+    const walk: TreeWalkContextV1 = {
+      openStates: windows?.openStates,
+      domOpenStates: {},
+      keysByDomId: new Map<string, string>(),
+      pick: rootActivate ? { record, binding: rootActivate } : undefined,
+      pickTargets: new Map<string, { readonly key: string; readonly granularity: string }>(),
+    };
     const sectionRecords = (record.children ?? []).map((id) => state.nodes.get(id)).filter((r): r is UiNodeRecord => !!r && r.component.type === "treeSection");
-    return sectionRecords.map((sectionRecord) => {
+    const sections = sectionRecords.map((sectionRecord) => {
       const sectionProps = sectionRecord.component as Extract<Component, { type: "treeSection" }>;
       const items = collectTreeItems(state, sectionRecord.children ?? []);
+      const domId = uiNodeDomId(state.surface, sectionRecord.key, sectionRecord.id);
+      registerTreeWalkRow(walk, sectionRecord.key, domId);
       return {
-        id: uiNodeDomId(state.surface, sectionRecord.key, sectionRecord.id),
+        id: domId,
+        window: sectionProps.window ?? undefined,
+        windowKey: sectionRecord.key || undefined,
         label: sectionProps.label ?? "",
         defaultOpen: sectionProps.defaultOpen ?? undefined,
         loading: sectionRecord.activity === "loading",
         waiting: sectionRecord.activity === "waiting",
-        items: items.map((item) => treeItemToTreeData(store, state, item, context, overlay, leftoverIds)),
+        items: items.map((item) => treeItemToTreeData(store, state, item, context, overlay, leftoverIds, walk)),
       };
     });
-  }, [store, record, revision, context, overlay, leftoverIds]);
+    return { sections, walk };
+  }, [store, record, revision, context, overlay, leftoverIds, windows]);
+  const sections = walked.sections;
+  const handleOpenStateChange = useCallback((domId: string, open: boolean) => windows?.setOpen(walked.walk.keysByDomId?.get(domId) ?? domId, open), [windows, walked]);
+  useTreeWindowObserver(rootRef, windows, revision);
   const dragController: TreeDragAndDropController | undefined = useMemo(() => {
     const dropBinding = (record.bindings ?? []).find((b) => b.trigger === "drop");
     const catalogueMime = treeSectionsCatalogueDragMime(sections);
@@ -1503,15 +1735,21 @@ function TreeView({ store, record, context }: { readonly store: UiDocumentStore;
       ...(dropBinding ? { handleDrop: () => dispatchTrigger(context, record, "drop") } : {}),
     };
   }, [record, context, sections]);
+  // 🪟️ `display: contents` — the wrapper exists ONLY to give the window observer a DOM handle on the
+  // tree it must measure (`<Tree>` exposes no ref). It generates no box, so the `Panel`/`Scrollable`
+  // layout chain above and the `Tree` root's own classes below are byte-for-byte what they were.
   return (
-    <Tree
-      className="min-h-0 min-w-0 flex-1 overflow-auto"
-      sections={sections.length > 0 ? sections : [treeStatusSection(store, record)]}
-      selectionMode="single"
-      showLines
-      dragAndDropController={dragController}
-      sortableSections={sections.length > 1}
-    />
+    <div ref={rootRef} className="contents">
+      <Tree
+        className="min-h-0 min-w-0 flex-1 overflow-auto"
+        sections={sections.length > 0 ? sections : [treeStatusSection(store, record)]}
+        selectionMode="single"
+        showLines
+        dragAndDropController={dragController}
+        sortableSections={sections.length > 1}
+        {...(windows ? { openStates: walked.walk.domOpenStates, onOpenStateChange: handleOpenStateChange } : {})}
+      />
+    </div>
   );
 }
 
@@ -1808,6 +2046,8 @@ if (import.meta.vitest) {
   await registerTests1(import.meta.vitest, { DEFAULT_UI_DOCUMENT_LIMITS, Profiler, UiDocumentStore, UiNodeView, accessibilityAriaProps }, { directory: import.meta.dir, url: import.meta.url });
   const { registerTests1: registerContainerNodeIdTests } = await import("./🧪️tests/🪪️container-node-ids/🟦️.tsx");
   await registerContainerNodeIdTests(import.meta.vitest, { UiDocumentStore, UiNodeView, uiChildReactKeys, uiSiblingReactKeys }, { url: import.meta.url });
+  const { registerTests1: registerTreeWindowTests } = await import("./🧪️tests/🪟️tree-windows/🟦️.tsx");
+  await registerTreeWindowTests(import.meta.vitest, { UiDocumentStore, UiNodeView, treeItemToTreeData, treePickIntentInputV1, treePickTargetsV1 }, { url: import.meta.url });
   const { registerTests1: registerProgressTests } = await import("./🧪️tests/📶️progress/🟦️.tsx");
   await registerProgressTests(import.meta.vitest, { UiDocumentStore, UiNodeView }, { url: import.meta.url });
   const { registerTests1: registerSurfaceSceneLaneTests } = await import("./🧪️tests/🚚️surface-scene-lanes/🟦️.tsx");

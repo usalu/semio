@@ -1,0 +1,28 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/fem/3d/results-window/transient/schema.json",
+  "title": "Fem3dResultsWindowTransient",
+  "description": "The running playback clock of one FEM 3D results window — present only while the window plays; the transport settings and the resting phase live in the window config.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "clock": {
+      "anyOf": [
+        { "$ref": "#/$defs/Fem3dPlaybackClock" },
+        { "type": "null" }
+      ],
+      "x-semio-state": "ephemeral-local-window"
+    }
+  },
+  "$defs": {
+    "Fem3dPlaybackClock": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["phase", "reverse"],
+      "properties": {
+        "phase": { "type": "number", "minimum": 0, "maximum": 1 },
+        "reverse": { "type": "boolean" }
+      }
+    }
+  }
+}

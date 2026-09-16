@@ -1,0 +1,9 @@
+{
+  "defaultWindowRows": 48,
+  "commandRowCount": 200,
+  "requestOffset": 120,
+  "requestRows": 24,
+  "bodyKey": "framework.body.history",
+  "nodeKey": "framework.history.commands",
+  "entryKeyPrefix": "framework.history.entry."
+}

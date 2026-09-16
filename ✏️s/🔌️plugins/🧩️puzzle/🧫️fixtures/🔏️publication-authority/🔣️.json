@@ -74,8 +74,7 @@
             "brushSetCandidateIndex",
             "engagementAbort",
             "engagementControlSelect",
-            "engagementInput",
-            "setPanelPage"
+            "engagementInput"
           ]
         },
         {
@@ -262,7 +261,6 @@
             "setLodAutomatic",
             "setLodDepthVariable",
             "setLodManual",
-            "setPanelPage",
             "setProjection",
             "setProjectionParam",
             "setProximityRadius",

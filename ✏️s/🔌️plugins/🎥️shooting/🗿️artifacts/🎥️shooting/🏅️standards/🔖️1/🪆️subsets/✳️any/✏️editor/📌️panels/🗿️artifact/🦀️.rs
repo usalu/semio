@@ -3,7 +3,7 @@
 use crate::editor::shooting::terminology::ShootingLabels;
 use crate::editor::shooting::SHOOTING_INTERACTION_DOMAIN;
 use crate::ShootingSnapshot;
-use semio_framework_plugin::{Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
+use semio_framework_plugin::{Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, TreeWindows, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
 
 //#region 🔖️Constants
 pub const SHOOTING_PLAY_BODY_ARTIFACT: &str = "shooting.play.artifact";
@@ -38,24 +38,19 @@ fn asset_select_action(asset_id: &str) -> semio_framework_plugin::UiAssemblyResu
     crate::editor::shooting::shooting_action("interactionSelect", Some(args))
 }
 
-pub fn render(snapshot: &ShootingSnapshot, labels: &ShootingLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    let mut shot_items = semio_framework_plugin::UiFixedList::default();
-    for shot in &snapshot.shots {
-        let ids = crate::editor::shooting::ui_value_list([crate::editor::shooting::ui_value_text(&shot.id)?])?;
-        let args = crate::editor::shooting::ui_value_map([("shotIds", ids)])?;
-        let item = crate::editor::shooting::tree_item_with_icon(format!("shooting-shot:{}", shot.id), Label::data(shot.label.clone()), "camera", crate::editor::shooting::shooting_action("setShotSelection", Some(args)))?;
-        shot_items.try_push(item).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.document.shots", "fixed shot list admission failed"))?;
-    }
-    let mut asset_items = semio_framework_plugin::UiFixedList::default();
-    for asset in &snapshot.assets {
-        let item = crate::editor::shooting::tree_item_with_icon(format!("shooting-asset:{}", asset.id), Label::data(asset.name.clone()), "box", asset_select_action(&asset.id))?;
-        asset_items.try_push(item).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.document.assets", "fixed asset list admission failed"))?;
-    }
+pub fn render(snapshot: &ShootingSnapshot, labels: &ShootingLabels, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     PanelTreeBuilder::new("shooting-play-document")?
-        .section("shooting-play-document.shots", Some(crate::editor::shooting::ui_label(labels.shots.as_str())?), true, shot_items)?
-        .section("shooting-play-document.assets", Some(crate::editor::shooting::ui_label(labels.assets.as_str())?), true, asset_items)?
+        .window_section(windows, "shooting-play-document.shots", Some(crate::editor::shooting::ui_label(labels.shots.as_str())?), true, &snapshot.shots, |shot| {
+            let ids = crate::editor::shooting::ui_value_list([crate::editor::shooting::ui_value_text(&shot.id)?])?;
+            let args = crate::editor::shooting::ui_value_map([("shotIds", ids)])?;
+            crate::editor::shooting::tree_item_with_icon(format!("shooting-shot:{}", shot.id), Label::data(shot.label.clone()), "camera", crate::editor::shooting::shooting_action("setShotSelection", Some(args)))
+        })?
+        .window_section(windows, "shooting-play-document.assets", Some(crate::editor::shooting::ui_label(labels.assets.as_str())?), true, &snapshot.assets, |asset| {
+            crate::editor::shooting::tree_item_with_icon(format!("shooting-asset:{}", asset.id), Label::data(asset.name.clone()), "box", asset_select_action(&asset.id))
+        })?
         .build()
 }
+
 //#endregion 🔖️Render
 
 //#region 🧪️Tests

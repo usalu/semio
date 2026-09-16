@@ -362,11 +362,12 @@ pub struct ShootingMaterial {
     pub roughness: f64,
     pub emissive: String,
     pub emissive_intensity: f64,
+    pub stroke: String,
 }
 
 impl Default for ShootingMaterial {
     fn default() -> Self {
-        Self { color: "#9aa0ab".into(), metalness: 0.0, roughness: 1.0, emissive: "#000000".into(), emissive_intensity: 0.0 }
+        Self { color: "#9aa0ab".into(), metalness: 0.0, roughness: 1.0, emissive: "#000000".into(), emissive_intensity: 0.0, stroke: "#000000".into() }
     }
 }
 
@@ -1522,6 +1523,15 @@ pub mod examples {
         pub use component::*;
         #[cfg(test)]
         #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🧩️example/🦀️.rs"]
+        mod tests;
+    }
+    #[path = "."]
+    pub mod hexagonal_cut_concrete_forest_left {
+        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌲️hexagonal-cut-concrete-forest-left/🦀️.rs"]
+        mod component;
+        pub use component::*;
+        #[cfg(test)]
+        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌲️hexagonal-cut-concrete-forest-left/🧪️tests/🧩️example/🦀️.rs"]
         mod tests;
     }
 }

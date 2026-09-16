@@ -50,6 +50,10 @@ pub use script::IMPERATIVE_PLAY_BODY_SCRIPT;
 /// covers the steps nested in its bodies).
 pub const IMPERATIVE_INTERACTION_STEPS: &str = "steps";
 
+/// 🕹️ The only granularity the "steps" domain declares — stamped on every pick row of the document
+/// tree so the host synthesizes `interactionSelect` without a per-row argument map.
+pub const IMPERATIVE_INTERACTION_GRANULARITY: &str = "step";
+
 /// 🌳️ `steps` domain topology from the document's own `Step::bodies` nesting — row-id-prefixed ids
 /// (matching the document panel tree's own item ids, see `document_panel::step_row_id`'s doc comment),
 /// so `validate_state` prunes deleted steps and range/transitive selection walk the real control-flow
@@ -188,8 +192,8 @@ impl ArtifactEditor for ImperativePlayApp {
         (match body_key {
             IMPERATIVE_PLAY_BODY_MAIN => main::render(document, &config.run_output_json, labels),
             IMPERATIVE_PLAY_BODY_SCRIPT => script::render(document),
-            IMPERATIVE_PLAY_BODY_ARTIFACT => document_panel::render(document, labels),
-            IMPERATIVE_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels),
+            IMPERATIVE_PLAY_BODY_ARTIFACT => document_panel::render(document, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, IMPERATIVE_PLAY_BODY_ARTIFACT)),
+            IMPERATIVE_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels, &semio_framework_plugin::TreeWindows::for_body(view_state, IMPERATIVE_PLAY_BODY_CATALOGUE)),
             IMPERATIVE_PLAY_BODY_INSPECTOR => inspection_panel::render(document, labels),
             _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("imperative.ui.capacity", "diagnostic admission failed")),
         })
@@ -263,7 +267,7 @@ pub fn create_imperative_app() -> semio_framework_plugin::AppDefinition {
             .interaction(InteractionDefinition {
                 id: IMPERATIVE_INTERACTION_STEPS.into(),
                 label: LocalizedLabel::native("Steps", "Schritte"),
-                granularities: vec![GranularityDefinition { id: "step".into(), label: LocalizedLabel::native("Step", "Schritt"), icon_id: "square".into() }],
+                granularities: vec![GranularityDefinition { id: IMPERATIVE_INTERACTION_GRANULARITY.into(), label: LocalizedLabel::native("Step", "Schritt"), icon_id: "square".into() }],
                 hierarchy: HierarchyProvider::Topology,
                 hover: HoverSpec { transitive: true, ..HoverSpec::default() },
                 selection: SelectionSpec {

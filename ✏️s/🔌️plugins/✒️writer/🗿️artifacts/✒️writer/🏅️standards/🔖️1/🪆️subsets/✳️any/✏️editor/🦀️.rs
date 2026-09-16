@@ -94,14 +94,12 @@ pub fn ui_value_map(values: impl IntoIterator<Item = (&'static str, semio_framew
 }
 
 /// 🌳️ Admits fallibly assembled UI nodes into fixed child storage.
-pub fn ui_node_list(values: impl IntoIterator<Item = semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode>>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiFixedList<semio_framework_plugin::BuiltNode>> {
-    let mut nodes = semio_framework_plugin::UiFixedList::default();
-    for value in values {
-        let node = value?;
-        nodes.try_push(node).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI node admission failed"))?;
-    }
-    Ok(nodes)
-}
+pub use semio_framework_plugin::ui_node_list;
+
+/// 🕹️ The `ast` interaction domain this app declares, and its only granularity — the document tree
+/// binds the domain once and stamps this granularity on every AST row.
+pub const WRITER_INTERACTION_AST: &str = "ast";
+pub const WRITER_INTERACTION_GRANULARITY: &str = "node";
 
 /// 🙈️ An internal document operation kept out of the command palette — editor events (text edits,
 /// camera, rename, engagement submit) and dev-only whole-document setters dispatched from chrome.
@@ -1218,9 +1216,9 @@ impl ArtifactEditor for WriterPlayApp {
         let window_transient = WriterMainWindowTransient::default();
         let node = match body_key {
             WRITER_PLAY_BODY_MAIN => main::render(document, &window_config, &window_transient),
-            WRITER_PLAY_BODY_ARTIFACT => document_panel::render(document, labels),
+            WRITER_PLAY_BODY_ARTIFACT => document_panel::render(document, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, WRITER_PLAY_BODY_ARTIFACT)),
             WRITER_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels),
-            WRITER_PLAY_BODY_INSPECTION => inspection_panel::render(document, labels),
+            WRITER_PLAY_BODY_INSPECTION => inspection_panel::render(document, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, WRITER_PLAY_BODY_INSPECTION)),
             _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "writer unknown-body text admission failed")),
         }?;
         Ok(semio_framework_plugin::built_to_component_tree(node))
@@ -1390,14 +1388,14 @@ pub fn create_writer_app() -> semio_framework_plugin::AppDefinition {
             // transitivity produces the covering behavior the old `jack_ast_node_for_selection`
             // covering-node search used to compute by hand.
             .interaction(InteractionDefinition {
-                id: "ast".into(),
+                id: WRITER_INTERACTION_AST.into(),
                 label: LocalizedLabel::native("AST", "AST"),
-                granularities: vec![GranularityDefinition { id: "node".into(), label: LocalizedLabel::native("Node", "Knoten"), icon_id: "circle".into() }],
+                granularities: vec![GranularityDefinition { id: WRITER_INTERACTION_GRANULARITY.into(), label: LocalizedLabel::native("Node", "Knoten"), icon_id: "circle".into() }],
                 hierarchy: HierarchyProvider::Topology,
                 hover: HoverSpec { transitive: true, ..HoverSpec::default() },
                 selection: SelectionSpec { modes: vec![SelectionMode::Single, SelectionMode::Multiple], methods: vec![SelectionMethod::Pick], merges: vec![MergeMode::Replace], transitive: true, broadcast: true },
             })
-            .window_kind_interactions(WRITER_PLAY_WINDOW_KIND, vec![InteractionRef::new("ast")])
+            .window_kind_interactions(WRITER_PLAY_WINDOW_KIND, vec![InteractionRef::new(WRITER_INTERACTION_AST)])
             // 🎯️ Typed channel surface (mirrors `shooting_ui::create_shooting_app`'s identical wiring) —
             // `writer_io()` is the single source of truth for both the trait's `io()` override and this
             // manifest declaration.

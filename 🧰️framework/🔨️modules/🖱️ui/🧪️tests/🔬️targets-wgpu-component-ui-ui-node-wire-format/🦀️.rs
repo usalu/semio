@@ -70,7 +70,7 @@ mod ui_node_wire_format_tests {
                 UiNode::Section(UiSectionNode { menu: None, id: "sec1".into(), label: Some(Label::data("Section")), default_open: Some(true), presence: UiPresence::default(), children: vec![] }),
                 UiNode::Tree(UiTreeNode {
                     menu: None,
-                    sections: vec![UiTreeSectionNode {
+                    sections: vec![UiTreeSectionNode { window: None,
                         id: "treesec1".into(),
                         label: Some(Label::data("Items")),
                         default_open: Some(true),

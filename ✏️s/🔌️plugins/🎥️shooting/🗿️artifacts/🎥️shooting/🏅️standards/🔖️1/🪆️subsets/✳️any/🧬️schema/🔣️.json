@@ -329,6 +329,9 @@
           "type": "number",
           "format": "double"
         }
+        ,"stroke": {
+          "type": "string"
+        }
       }
     },
     "ShootingSceneLighting": {

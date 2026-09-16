@@ -57,7 +57,7 @@ fn item(value: &Value) -> UiTreeItemNode {
 }
 
 fn section(value: &Value) -> UiTreeSectionNode {
-    UiTreeSectionNode {
+    UiTreeSectionNode { window: None,
         id: value["id"].as_str().expect("section id").to_string(),
         label: value["label"].as_str().map(Label::data),
         default_open: Some(true),

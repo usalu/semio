@@ -4,8 +4,8 @@
 use crate::engine::space::terminology::SStudioLabels;
 use crate::engine::space::S_PLAY_CATALOGUE_BODY_KEY;
 use semio_framework_os::{os_app_primary_output_kind, os_app_registration, workflow_palette};
-use semio_framework_plugin::plugin_app_close_prelude::{Buildable, BuiltNode, HasBase, HasChildren};
-use semio_framework_plugin::{Locale, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, Terminology, UiFixedList, UiFixedMap, UiText};
+use semio_framework_plugin::plugin_app_close_prelude::{BuiltNode, HasBase};
+use semio_framework_plugin::{tree_window_item, Locale, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, Terminology, TreeWindows, UiFixedMap, UiText};
 use semio_framework_ui_contract as ui;
 use std::collections::BTreeMap;
 
@@ -39,23 +39,30 @@ struct CatalogueAppEntry {
     yields: String,
 }
 
-/// 🌳️ Builds a catalogue tree item on top of the SDK's `tree_item_desc` skeleton — only the per-app
-/// drag-data/icon/children extensions are this app's own concern.
-fn app_catalogue_item(id_path: &str, label: &str, node: AppCatalogueNode) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    let mut children = UiFixedList::<BuiltNode>::default();
-    for (segment, child) in node.children {
-        let child_path = format!("{id_path}.{segment}");
-        let child = app_catalogue_item(&child_path, &segment, child)?;
-        children.try_push(child).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "space catalogue child admission failed"))?;
-    }
-    let app = node.app;
+/// 🌳️ One top-level catalogue branch — the first breadcrumb segment, or (for an app whose
+/// `registration.breadcrumb` is empty) that app's own id with its registry label.
+struct CatalogueRoot {
+    segment: String,
+    label: String,
+    node: AppCatalogueNode,
+}
+
+/// 🌳️ Builds a catalogue tree item on top of the SDK's windowed group row — only the per-app
+/// drag-data/icon extensions are this app's own concern.
+///
+/// 🪟️ Every level is a `tree_window_item` keyed by its own authored id, and every BRANCH is authored
+/// CLOSED (`default_open: false`): this tree enumerates the whole installed-app registry, not one
+/// document, so eagerly expanding each branch (the pre-virtualisation `default_open(!children
+/// .is_empty())`) materialised the entire registry at every depth on every render. Closed now means a
+/// branch stamps its full `total` and materialises its children only once the HOST opens it — lazy
+/// expansion, host-owned, surviving refreshes.
+fn app_catalogue_item(windows: &TreeWindows<'_>, id_path: &str, label: &str, node: &AppCatalogueNode) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+    let node_key = format!("s-play-catalogue.document.{id_path}");
+    let children: Vec<(&String, &AppCatalogueNode)> = node.children.iter().collect();
     let mut item = ui::tree_item(ui::Label::try_from(label).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "space catalogue row label admission failed"))?)
-        .try_id(format!("s-play-catalogue.document.{id_path}"))
-        .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "space catalogue row id admission failed"))?
-        .default_open(!children.is_empty())
-        .try_children(children)
-        .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "space catalogue children admission failed"))?;
-    if let Some(app) = &app {
+        .try_id(node_key.clone())
+        .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "space catalogue row id admission failed"))?;
+    if let Some(app) = &node.app {
         item = item.icon(UiText::try_from_str(&app.app_id).ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "space catalogue icon admission failed"))?);
         if !app.yields.is_empty() {
             item = item.description(UiText::try_from_str(&app.yields).ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "space catalogue description admission failed"))?);
@@ -67,13 +74,13 @@ fn app_catalogue_item(id_path: &str, label: &str, node: AppCatalogueNode) -> sem
         drag_data.try_push(key, value).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "space catalogue drag map admission failed"))?;
         item = item.draggable(true).drag_data(drag_data);
     }
-    item.try_build().map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "space catalogue row admission failed"))
+    tree_window_item(windows, item, &node_key, false, &children, |(segment, child)| app_catalogue_item(windows, &format!("{id_path}.{segment}"), segment.as_str(), child))
 }
 
 /// 🎨️ Builds the app catalogue tree straight from the production registry — `workflow_palette()`
 /// (every registered `(plugin_id, app_id)`) joined with `os_app_registration` for the document
 /// breadcrumb/primary output kind. Always live, never stale.
-pub async fn build_catalogue_tree(labels: &SStudioLabels, locale: Locale) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+pub async fn build_catalogue_tree(labels: &SStudioLabels, locale: Locale, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let mut document = AppCatalogueNode::default();
     for entry in workflow_palette() {
         if entry.app_id == crate::engine::space::S_PLAY_APP_ID {
@@ -92,24 +99,24 @@ pub async fn build_catalogue_tree(labels: &SStudioLabels, locale: Locale) -> sem
         let label = entry.label.resolve(Terminology::Native, locale).to_string();
         node.app = Some(CatalogueAppEntry { plugin_id: entry.plugin_id, app_id: entry.app_id, label, yields });
     }
-    let mut items = UiFixedList::<BuiltNode>::default();
-    for (segment, node) in document.children {
-        let item = app_catalogue_item(&segment, &segment, node)?;
-        items.try_push(item).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "space catalogue root admission failed"))?;
-    }
+    let mut roots: Vec<CatalogueRoot> = document.children.into_iter().map(|(segment, node)| CatalogueRoot { label: segment.clone(), segment, node }).collect();
     // 🪹️ An app with an empty `breadcrumb` (`registration.breadcrumb == []`) has nowhere to
     // descend to in the loop above, so its `.app` lands on the ROOT `document` node itself rather than
     // inside `.children` — without this, it's silently dropped from the catalogue entirely. Surface it
     // as its own top-level leaf, keyed by `app_id` (there's no document segment to key off) with its
     // own registry label as the display text.
     if let Some(app) = document.app {
-        let id = app.app_id.clone();
-        let label = app.label.clone();
-        let item = app_catalogue_item(&id, &label, AppCatalogueNode { children: BTreeMap::new(), app: Some(app) })?;
-        items.try_push(item).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "space catalogue ungrouped app admission failed"))?;
+        roots.push(CatalogueRoot { segment: app.app_id.clone(), label: app.label.clone(), node: AppCatalogueNode { children: BTreeMap::new(), app: Some(app) } });
     }
     PanelTreeBuilder::new(crate::engine::space::S_PLAY_CATALOGUE_TAB_ID)?
-        .section(crate::engine::space::S_PLAY_CATALOGUE_TAB_ID, Some(ui::Label::try_from(labels.apps_section.as_str()).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "space catalogue section label admission failed"))?), true, items)?
+        .window_section(
+            windows,
+            crate::engine::space::S_PLAY_CATALOGUE_TAB_ID,
+            Some(ui::Label::try_from(labels.apps_section.as_str()).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "space catalogue section label admission failed"))?),
+            true,
+            &roots,
+            |root| app_catalogue_item(windows, &root.segment, &root.label, &root.node),
+        )?
         .build()
 }
 //#endregion 🔖️Render

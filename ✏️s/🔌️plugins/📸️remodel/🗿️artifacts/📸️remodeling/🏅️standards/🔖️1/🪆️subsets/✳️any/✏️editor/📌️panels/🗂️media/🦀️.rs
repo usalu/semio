@@ -5,7 +5,7 @@ use crate::editor::remodeling::commands::import_frames::REMODELING_MEDIA_ACCEPT;
 use crate::editor::remodeling::remodeling_action;
 use crate::editor::remodeling::terminology::RemodelingLabels;
 use crate::{MediaKind, RemodelingSnapshot};
-use semio_framework_plugin::{tree_item, tree_item_desc, BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiAssemblyResult};
+use semio_framework_plugin::{tree_item, tree_item_desc, BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, TreeWindows, UiAssemblyResult};
 
 //#region 🔖️Constants
 pub const REMODELING_PANEL_MEDIA_ID: &str = "remodeling.media";
@@ -19,26 +19,30 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(scene: &RemodelingSnapshot, labels: &RemodelingLabels) -> UiAssemblyResult<BuiltNode> {
-    let mut rows: Vec<UiAssemblyResult<BuiltNode>> = vec![
+/// 🪟️ A multi-camera import brings in more streams than one node admits, so the stream list is its
+/// own windowed section beside the fixed drop zone and counts line.
+pub fn render(scene: &RemodelingSnapshot, labels: &RemodelingLabels, windows: &TreeWindows<'_>) -> UiAssemblyResult<BuiltNode> {
+    let chrome = crate::editor::remodeling::ui_node_list([
         tree_item_desc("remodeling-media-drop", labels.panel_media.as_str(), Some(format!("{} ({REMODELING_MEDIA_ACCEPT})", labels.no_streams.as_str()))),
         tree_item("remodeling-media.summary", format!("{}: {} - {}: {}", labels.streams.as_str(), scene.streams.len(), labels.assets.as_str(), scene.assets.len())),
-    ];
-    for stream in &scene.streams {
-        let kind_label = match stream.kind {
-            MediaKind::Video => labels.stream_kind_video,
-            MediaKind::ImageSequence => labels.stream_kind_image_sequence,
-        };
-        let description = stream.source.as_ref().map(|source| format!("{:?} {}x{} {:.0}ms", source.codec, source.width, source.height, source.duration_ms));
-        rows.push(tree_item_desc(
-            format!("remodeling-media.stream.{}", stream.id),
-            format!("{} ({}, {} {}, {}: {:.1}ms)", stream.name, kind_label.as_str(), stream.frames.len(), labels.frames.as_str(), labels.sync_offset.as_str(), stream.sync_offset_ms),
-            description,
-        ));
-    }
-    let rows = crate::editor::remodeling::ui_node_list(rows)?;
+    ])?;
     let (drop_action, _) = remodeling_action("importFramePayload", None)?;
-    PanelTreeBuilder::new("remodeling-media")?.section("remodeling-media.streams", Some(crate::editor::remodeling::ui_label(labels.streams.as_str())?), true, rows)?.drop_action(drop_action).build()
+    PanelTreeBuilder::new("remodeling-media")?
+        .section("remodeling-media.streams", Some(crate::editor::remodeling::ui_label(labels.streams.as_str())?), true, chrome)?
+        .window_section(windows, "remodeling-media.imported", Some(crate::editor::remodeling::ui_label(labels.streams.as_str())?), true, &scene.streams, |stream| {
+            let kind_label = match stream.kind {
+                MediaKind::Video => labels.stream_kind_video,
+                MediaKind::ImageSequence => labels.stream_kind_image_sequence,
+            };
+            let description = stream.source.as_ref().map(|source| format!("{:?} {}x{} {:.0}ms", source.codec, source.width, source.height, source.duration_ms));
+            tree_item_desc(
+                format!("remodeling-media.stream.{}", stream.id),
+                format!("{} ({}, {} {}, {}: {:.1}ms)", stream.name, kind_label.as_str(), stream.frames.len(), labels.frames.as_str(), labels.sync_offset.as_str(), stream.sync_offset_ms),
+                description,
+            )
+        })?
+        .drop_action(drop_action)
+        .build()
 }
 //#endregion 🔖️Render
 

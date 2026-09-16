@@ -112,12 +112,6 @@ pub struct CadConfig {
     /// 🧩️ Host-pushed `ProgramContributionEntry[]` JSON for `cad.computer` hot-swap installs.
     #[value(default = "default_contributions_json")]
     pub contributions_json: String,
-    /// 📄️ `setPanelPage` cursors, one per virtualised panel section id — an opaque JSON object
-    /// (`{"<sectionId>": <page>}`) for the same reason `engagement_session_json` is a string: a map
-    /// keyed by an arbitrary section id has no `dsl` shape, and `CadConfig` is a `dsl::DslArtifact`.
-    /// `CadPlayRuntime::panel_pages` is the decoded form every reader actually uses.
-    #[value(default = "default_panel_pages_json")]
-    pub panel_pages_json: String,
 }
 
 //#region 🔖️ArtifactCodec
@@ -168,11 +162,6 @@ fn default_contributions_json() -> String {
     "[]".into()
 }
 
-/// 📄️ No section has been paged yet.
-fn default_panel_pages_json() -> String {
-    "{}".into()
-}
-
 impl Default for CadConfig {
     fn default() -> Self {
         Self {
@@ -189,7 +178,6 @@ impl Default for CadConfig {
             engagement_preview_generation: 0,
             last_finalized_interaction_id: None,
             contributions_json: default_contributions_json(),
-            panel_pages_json: default_panel_pages_json(),
         }
     }
 }

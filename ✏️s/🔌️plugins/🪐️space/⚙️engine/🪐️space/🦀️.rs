@@ -102,16 +102,6 @@ pub fn ui_value_map(values: impl IntoIterator<Item = (&'static str, semio_framew
     Ok(semio_framework_plugin::UiValue::Map(builder.finish()))
 }
 
-/// 🌳️ Admits fallibly assembled UI nodes into fixed child storage.
-pub fn ui_node_list(values: impl IntoIterator<Item = semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode>>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiFixedList<semio_framework_plugin::BuiltNode>> {
-    let mut nodes = semio_framework_plugin::UiFixedList::default();
-    for value in values {
-        let node = value?;
-        nodes.try_push(node).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI node admission failed"))?;
-    }
-    Ok(nodes)
-}
-
 /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: builds a framework `interactionSelect`
 /// action targeting one `(granularity, id)` pair in the `graph` domain — replaces the deleted
 /// `selectInstance`/`nodeGraphSelect`/`setMediaNodeSelection`/`setAppInstanceSelection` action builders
@@ -998,16 +988,18 @@ impl ArtifactApp for SpaceApp {
             }
             crate::engine::space::modes::main::windows::media_vfs::S_PLAY_BODY_MEDIA_VFS => crate::engine::space::modes::main::windows::media_vfs::render(projection, view_state).await.map(semio_framework_plugin::built_to_component_tree),
             crate::engine::space::modes::main::windows::compiled_dag::S_PLAY_BODY_COMPILED_DAG => crate::engine::space::modes::main::windows::compiled_dag::render(projection).await.map(semio_framework_plugin::built_to_component_tree),
-            S_PLAY_CATALOGUE_BODY_KEY => crate::engine::space::panels::catalogue::build_catalogue_tree(labels, view_state.locale).await.map(semio_framework_plugin::built_to_component_tree),
+            S_PLAY_CATALOGUE_BODY_KEY => crate::engine::space::panels::catalogue::build_catalogue_tree(labels, view_state.locale, &semio_framework_plugin::TreeWindows::for_body(view_state, S_PLAY_CATALOGUE_BODY_KEY))
+                .await
+                .map(semio_framework_plugin::built_to_component_tree),
             // 🧬️ `parameters`/`inspection` are now ported to the contract `BuiltNode` DSL (SEMANTIC-
             // UI-CONTRACT-AND-RENDERER-FAMILY, 26/08/20) — both `render` fns are U1-sync (the contract
             // builder's own sync-only ruling), so no `.await` here, only the `map` bridge into `ComponentTree`.
-            S_PLAY_PARAMETERS_BODY_KEY => crate::engine::space::panels::parameters::render(projection, labels).map(semio_framework_plugin::built_to_component_tree),
+            S_PLAY_PARAMETERS_BODY_KEY => crate::engine::space::panels::parameters::render(projection, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, S_PLAY_PARAMETERS_BODY_KEY)).map(semio_framework_plugin::built_to_component_tree),
             // 🕹️ `render` carries no `InteractionView` (ArtifactApp's breaking pass only added it to
             // `handle`/`copy_fragment`/`cut_operations` — see ticket 26/08/14's w3b-summary.md) — the
             // inspector degrades to its "no selection" default until a future wave threads interaction
             // into render. Flagged as a discovered framework gap, not worked around here.
-            S_PLAY_INSPECTOR_BODY_KEY => crate::engine::space::panels::inspection::render(projection, &[], labels).map(semio_framework_plugin::built_to_component_tree),
+            S_PLAY_INSPECTOR_BODY_KEY => crate::engine::space::panels::inspection::render(projection, &[], labels, &semio_framework_plugin::TreeWindows::for_body(view_state, S_PLAY_INSPECTOR_BODY_KEY)).map(semio_framework_plugin::built_to_component_tree),
             _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }

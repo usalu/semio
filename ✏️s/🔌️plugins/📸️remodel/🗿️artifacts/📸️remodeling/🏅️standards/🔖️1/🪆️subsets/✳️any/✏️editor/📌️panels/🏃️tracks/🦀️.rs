@@ -4,7 +4,7 @@
 
 use crate::editor::remodeling::terminology::RemodelingLabels;
 use crate::RemodelingSnapshot;
-use semio_framework_plugin::{tree_item, BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiAssemblyResult};
+use semio_framework_plugin::{tree_item, BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, TreeWindows, UiAssemblyResult};
 
 //#region 🔖️Constants
 pub const REMODELING_PANEL_TRACKS_ID: &str = "remodeling.tracks";
@@ -18,19 +18,19 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(scene: &RemodelingSnapshot, labels: &RemodelingLabels) -> UiAssemblyResult<BuiltNode> {
-    let mut rows: Vec<UiAssemblyResult<BuiltNode>> = Vec::new();
-    if scene.results.tracks.is_empty() {
-        rows.push(tree_item("remodeling-tracks.none", labels.tracks_none.as_str()));
-        rows.push(tree_item("remodeling-tracks.gap", labels.motion_not_implemented.as_str()));
+/// 🪟️ The status lines are a closed set, the track list is not — two sections, the second windowed.
+pub fn render(scene: &RemodelingSnapshot, labels: &RemodelingLabels, windows: &TreeWindows<'_>) -> UiAssemblyResult<BuiltNode> {
+    let status = if scene.results.tracks.is_empty() {
+        crate::editor::remodeling::ui_node_list([tree_item("remodeling-tracks.none", labels.tracks_none.as_str()), tree_item("remodeling-tracks.gap", labels.motion_not_implemented.as_str())])?
     } else {
-        rows.push(tree_item("remodeling-tracks.count", format!("{}: {}", labels.tracks.as_str(), scene.results.tracks.len())));
-        for track in &scene.results.tracks {
-            rows.push(tree_item(format!("remodeling-tracks.track.{}", track.id), format!("{} ({:?}): {} frames, {:.2} m/s", track.id, track.class, track.length, track.mean_speed_m_s)));
-        }
-    }
-    let rows = crate::editor::remodeling::ui_node_list(rows)?;
-    PanelTreeBuilder::new("remodeling-tracks")?.section("remodeling-tracks.motion", Some(crate::editor::remodeling::ui_label(labels.panel_tracks.as_str())?), true, rows)?.build()
+        crate::editor::remodeling::ui_node_list([tree_item("remodeling-tracks.count", format!("{}: {}", labels.tracks.as_str(), scene.results.tracks.len()))])?
+    };
+    PanelTreeBuilder::new("remodeling-tracks")?
+        .section("remodeling-tracks.motion", Some(crate::editor::remodeling::ui_label(labels.panel_tracks.as_str())?), true, status)?
+        .window_section(windows, "remodeling-tracks.tracks", Some(crate::editor::remodeling::ui_label(labels.tracks.as_str())?), true, &scene.results.tracks, |track| {
+            tree_item(format!("remodeling-tracks.track.{}", track.id), format!("{} ({:?}): {} frames, {:.2} m/s", track.id, track.class, track.length, track.mean_speed_m_s))
+        })?
+        .build()
 }
 //#endregion 🔖️Render
 

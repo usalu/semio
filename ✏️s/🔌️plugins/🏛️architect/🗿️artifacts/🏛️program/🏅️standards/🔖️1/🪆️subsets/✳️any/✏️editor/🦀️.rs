@@ -103,16 +103,6 @@ pub fn ui_value_map(values: impl IntoIterator<Item = (&'static str, semio_framew
     Ok(semio_framework_plugin::UiValue::Map(builder.finish()))
 }
 
-/// 🌳️ Admits fallibly assembled UI nodes into fixed child storage.
-pub fn ui_node_list(values: impl IntoIterator<Item = semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode>>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiFixedList<semio_framework_plugin::BuiltNode>> {
-    let mut nodes = semio_framework_plugin::UiFixedList::default();
-    for value in values {
-        let node = value?;
-        nodes.try_push(node).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI node admission failed"))?;
-    }
-    Ok(nodes)
-}
-
 //#endregion 🔖️Constants
 
 //#region 🔖️Interaction
@@ -1359,13 +1349,13 @@ impl ArtifactEditor for ArchitectPlayApp {
     fn render(body_key: &str, doc: &ArtifactView<'_, ProgramSnapshot>, cfg: &ConfigView<'_, ArchitectConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let program = doc.snapshot;
         match body_key {
-            adjacency_window::ARCHITECT_BODY_ADJACENCY => adjacency_window::render(program, &adjacency_window::config::current(cfg)),
+            adjacency_window::ARCHITECT_BODY_ADJACENCY => adjacency_window::render(program, &adjacency_window::config::current(cfg), &semio_framework_plugin::TreeWindows::for_body(view_state, adjacency_window::ARCHITECT_BODY_ADJACENCY)),
             graph_window::ARCHITECT_BODY_GRAPH => graph_window::render(program, &graph_window::config::current(cfg)),
             register_window::ARCHITECT_BODY_REGISTER => register_window::render(program, &register_window::config::current(cfg)),
-            report_window::ARCHITECT_BODY_REPORT => report_window::render(program, &report_window::config::current(cfg), view_state),
-            trace_window::ARCHITECT_BODY_TRACE => trace_window::render(program),
-            document_panel::ARCHITECT_BODY_ARTIFACT => document_panel::render(program),
-            catalogue_panel::ARCHITECT_BODY_CATALOGUE => catalogue_panel::render(),
+            report_window::ARCHITECT_BODY_REPORT => report_window::render(program, &report_window::config::current(cfg), view_state, &semio_framework_plugin::TreeWindows::for_body(view_state, report_window::ARCHITECT_BODY_REPORT)),
+            trace_window::ARCHITECT_BODY_TRACE => trace_window::render(program, &semio_framework_plugin::TreeWindows::for_body(view_state, trace_window::ARCHITECT_BODY_TRACE)),
+            document_panel::ARCHITECT_BODY_ARTIFACT => document_panel::render(program, &semio_framework_plugin::TreeWindows::for_body(view_state, document_panel::ARCHITECT_BODY_ARTIFACT)),
+            catalogue_panel::ARCHITECT_BODY_CATALOGUE => catalogue_panel::render(&semio_framework_plugin::TreeWindows::for_body(view_state, catalogue_panel::ARCHITECT_BODY_CATALOGUE)),
             inspection_panel::ARCHITECT_BODY_INSPECTION => inspection_panel::render(program),
             _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| ui_capacity_error()),
         }

@@ -226,7 +226,7 @@ fn painting_a_waiting_stack_emits_a_waiting_border_instance() {
 
 fn loading_tree() -> UiNode {
     UiNode::Tree(UiTreeNode {
-        sections: vec![UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![UiTreeItemNode::base("i1", Label::data("Item"))] }],
+        sections: vec![UiTreeSectionNode { window: None, id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![UiTreeItemNode::base("i1", Label::data("Item"))] }],
         presence: UiPresence::status(UiStatus::Loading),
         drop_action: None,
         menu: None,
@@ -236,7 +236,7 @@ fn loading_tree() -> UiNode {
 
 fn waiting_tree() -> UiNode {
     UiNode::Tree(UiTreeNode {
-        sections: vec![UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![UiTreeItemNode::base("i1", Label::data("Item"))] }],
+        sections: vec![UiTreeSectionNode { window: None, id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![UiTreeItemNode::base("i1", Label::data("Item"))] }],
         presence: UiPresence::status(UiStatus::Waiting),
         drop_action: None,
         menu: None,
@@ -352,7 +352,7 @@ fn tree_with_item_description() -> UiNode {
     item.description = Some("desc".into());
     item.actions = Some(vec![UiTreeItemAction { icon_id: IconName::Sparkles, label: None, action: action(), placement: None }]);
     UiNode::Tree(UiTreeNode {
-        sections: vec![UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![item] }],
+        sections: vec![UiTreeSectionNode { window: None, id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![item] }],
         presence: UiPresence::default(),
         drop_action: None,
         menu: None,
@@ -362,7 +362,7 @@ fn tree_with_item_description() -> UiNode {
 
 fn tree_with_bare_item() -> UiNode {
     UiNode::Tree(UiTreeNode {
-        sections: vec![UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![UiTreeItemNode::base("i1", Label::data("Item One"))] }],
+        sections: vec![UiTreeSectionNode { window: None, id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![UiTreeItemNode::base("i1", Label::data("Item One"))] }],
         presence: UiPresence::default(),
         drop_action: None,
         menu: None,
@@ -501,7 +501,7 @@ fn tree_with_draggable_item() -> UiNode {
     let mut item = UiTreeItemNode::base("i1", Label::data("Item One"));
     item.draggable = Some(true);
     UiNode::Tree(UiTreeNode {
-        sections: vec![UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![item] }],
+        sections: vec![UiTreeSectionNode { window: None, id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![item] }],
         presence: UiPresence::default(),
         drop_action: None,
         menu: None,
@@ -789,7 +789,7 @@ fn retained_tree_sync_abandonment_releases_one_record_or_depth_owner_per_grant()
     nested.default_open = Some(true);
     nested.items = Some(vec![UiTreeItemNode::base("leaf", Label::data("Leaf"))]);
     let authored = UiNode::Tree(UiTreeNode {
-        sections: vec![UiTreeSectionNode { id: "section".into(), label: Some(Label::data("Section")), default_open: Some(true), presence: UiPresence::default(), items: vec![nested] }],
+        sections: vec![UiTreeSectionNode { window: None, id: "section".into(), label: Some(Label::data("Section")), default_open: Some(true), presence: UiPresence::default(), items: vec![nested] }],
         presence: UiPresence::default(),
         drop_action: None,
         menu: None,

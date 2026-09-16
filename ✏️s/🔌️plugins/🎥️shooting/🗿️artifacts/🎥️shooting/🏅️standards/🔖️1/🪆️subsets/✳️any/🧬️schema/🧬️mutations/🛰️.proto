@@ -81,6 +81,7 @@ message ShootingMaterial {
   double roughness = 3;
   string emissive = 4;
   double emissive_intensity = 5;
+  string stroke = 6;
 }
 
 message ShootingSceneLighting {

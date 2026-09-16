@@ -63,9 +63,28 @@ impl DrawingOwnedRetirement {
         store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }
     }
 
+    /// 🧵️ Releases one owned string within the grant. A string larger than one grant is released
+    /// in pages from its tail (`truncate` + `shrink_to_fit`, so the allocation really shrinks) —
+    /// `DrawingImageAsset.data` is a base64 PNG of tens of KiB while every hydration/retirement
+    /// cursor grants at most `OWNED_SCHEMA_DECODE_PAGE_BYTES` (4 KiB) per step; refusing it outright
+    /// pinned the cursor in `Pending { 0, 0 }` forever, so the demo example's `LoadDocument` never
+    /// settled (ticket 26/09/05/DRAW-PLUGIN-END-TO-END, 2026-09-16).
     fn release_string(value: &mut String, phase: &mut u8, next: u8, maximum_items: usize, maximum_bytes: usize) -> store::SnapshotRetirementStep {
-        if maximum_items == 0 || value.len() > maximum_bytes {
+        if maximum_items == 0 || maximum_bytes == 0 {
             return store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 };
+        }
+        if value.len() > maximum_bytes {
+            let mut cut = value.len() - maximum_bytes;
+            while cut < value.len() && !value.is_char_boundary(cut) {
+                cut += 1;
+            }
+            let released_bytes = value.len() - cut;
+            if released_bytes == 0 {
+                return store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 };
+            }
+            value.truncate(cut);
+            value.shrink_to_fit();
+            return store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes };
         }
         let value = std::mem::take(value);
         let released_bytes = value.len();

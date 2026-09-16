@@ -40,23 +40,25 @@ pub const UI_VALUE_ROW_COLLECTIONS: usize = 1 + 2 * UI_VALUE_ROW_ACTIONS;
 /// 📄️ Arena pages one interactive row owns: every argument map's entries, plus the single id each row
 /// action's nested list carries.
 pub const UI_VALUE_ROW_ITEMS: usize = (1 + UI_VALUE_ROW_ACTIONS) * UI_VALUE_ARGUMENT_ENTRIES + UI_VALUE_ROW_ACTIONS;
-/// 🧾️ Interactive rows one virtualised panel page materialises: [`crate::UI_BUILT_CHILDREN_MAX`] children
-/// per node is the built-children contract and the last of them carries the continuation row, so a page is
-/// exactly one node's worth of interactive rows — which is also the order of magnitude a panel viewport
-/// shows at once. Every section of a panel body, and every row nested under a row, draws on this same
-/// page, so a four-section outliner shows a proportionally shorter slice of each.
+/// 🧾️ Interactive rows one virtualised panel page materialises: exactly [`crate::UI_BUILT_CHILDREN_MAX`],
+/// one full built-children page, so the arena prices one whole viewport window of canonical rows and a
+/// window a builder is willing to materialise is a window the arena is willing to bind. There is no
+/// continuation row to reserve a slot for — a list longer than the window is windowed with
+/// [`crate::TreeWindow`], not truncated. Every section of a panel body, and every row nested under a row,
+/// draws on this same page, so a four-section outliner shares one window between them.
 ///
-/// Why one node's worth and not one per section, measured rather than assumed: this arena's whole backing
-/// is charged against the resident authority's aggregate ceiling (see [`UI_VALUE_LIVE_PAGES`]), and at
-/// [`UI_VALUE_ROW_ITEMS`] pages of roughly a kilobyte each, a four-section page would claim ~1.8 MiB of
-/// payload the live surfaces need — enough to regress `semio-framework-ui-runtime`'s resident-credit laws.
-/// This page holds them exactly at their baseline.
-pub const UI_VALUE_PAGE_ROWS: usize = crate::UI_BUILT_CHILDREN_MAX - 1;
+/// Measured, not assumed: this arena's whole backing is charged against the resident authority's
+/// aggregate ceiling (see [`UI_VALUE_LIVE_PAGES`]), and at [`UI_VALUE_ROW_ITEMS`] pages of roughly a
+/// kilobyte each this page claims on the order of 1.9 MiB — affordable against an aggregate priced as
+/// `crate::UI_RESIDENT_SLOTS * crate::UI_RESIDENT_DOCUMENT_BYTES`, and bounded in practice because
+/// [`ui_value_headroom`] shortens a window rather than faulting it.
+pub const UI_VALUE_PAGE_ROWS: usize = crate::UI_BUILT_CHILDREN_MAX;
 /// 🪟️ Panel pages the arena admits at once — **one**, and deliberately so. This arena's whole backing is
-/// charged against the resident authority's aggregate ceiling
-/// (`crate::UI_RESIDENT_AGGREGATE_BYTES`, whose authored law is exactly four resident surfaces and whose
-/// fixture declares `staticCountsAgainstAggregate`), so every page of headroom reserved here is payload
-/// the live surfaces cannot have. A second panel assembling beside the first therefore does not get a page
+/// charged against the resident authority's aggregate ceiling (`crate::UI_RESIDENT_AGGREGATE_BYTES`,
+/// priced as `crate::UI_RESIDENT_SLOTS * crate::UI_RESIDENT_DOCUMENT_BYTES` — the real per-document cost
+/// across the whole slot ledger, not a multiple of the per-surface ceiling — and whose fixture declares
+/// `staticCountsAgainstAggregate`), so every page of headroom reserved here is payload the live surfaces
+/// cannot have. A second panel assembling beside the first therefore does not get a page
 /// of its own: it reads [`ui_value_headroom`] and pages against what is left, which is what makes a
 /// virtualised author total rather than fatal. A memoized page costs nothing on top —
 /// `credited_clone` aliases the very collections the build already admitted, so a retained tree and its

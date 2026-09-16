@@ -2,11 +2,10 @@
 //! framework-owned `"fem2d"` selection resolves to (a node, element, material, section, support,
 //! region, load, load case or combination), or the document summary when nothing is selected.
 //!
-//! The body is a `ui::column` of `ui::section`s whose rows are `field(label) > control` — the shape
-//! the React `Interpreter` renders as a labelled form row. A `Component::Tree` is NOT that shape:
-//! its renderer maps sections to `TreeDataItem`s and drops every non-tree child, so a control nested
-//! in a tree section reaches the host and is never drawn. The results panel and puzzle3d's Settings
-//! panel have always laid out this way; this panel now does too.
+//! The body is a `Component::Tree` built through [`PanelTreeBuilder`]: each section holds
+//! `treeItem` rows, and every editable control is the **child** of its row (`collectTreeItemControls`
+//! in the React interpreter). Read-only facts use [`tree_item_desc`]; verbs and load picks use
+//! [`tree_item_with_action`].
 //!
 //! Every control binds `Trigger::Change` to one `patch*` command with the argument map
 //! `{field, id}`; the host merges the control's own value under `value`, so one flat
@@ -15,6 +14,11 @@
 //! the analysis settings are edited from the results panel, which owns the `windowId`-tagged
 //! `setAnalysisSettings` binding this panel has no window context for. Verbs (focus, delete, a pick
 //! row inside a load case) are `ui::button`s bound with `Trigger::Activate`.
+//!
+//! 🪟️ The two listings that are as long as the document lets them be — a case's loads and a
+//! combination's terms, plus the ids of a wide selection — are WINDOWED sections: the host names the
+//! slice it is looking at and the section stamps the full extent beside it, so neither listing needs
+//! a row cap nor a `+N` row standing in for the rest.
 
 use crate::editor::fem2d::commands::patch_combination::{ADD_TERM_FIELD, TERM_FIELD_PREFIX};
 use crate::editor::fem2d::interaction::{
@@ -27,8 +31,8 @@ use crate::Fem2dSnapshot;
 use crate::{element_id, load_id, FemCombination, FemCombinationTerm, FemDof, FemElement, FemLoad, FemLoadCase, FemMaterial, FemNode, FemRegion, FemSection, FemSupport};
 use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase, HasChildren, InputKind};
 use semio_framework_plugin::{
-    panel_page_rows, ActionId, BuiltNode, LocalizedLabel, PanelGroup, PanelRowBudget, PanelTabDefinition, PanelTabKind, PluginAssemblyError, Trigger, UiAssemblyResult, UiFixedList, UiMapBuilder, UiText, UiValue,
-    FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, INTERACTION_SELECT_ACTION_ID,
+    tree_item, tree_item_desc, tree_item_with_action, ActionId, BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, Trigger, TreeWindows, UiAssemblyResult,
+    UiFixedList, UiMapBuilder, UiText, UiValue, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, INTERACTION_SELECT_ACTION_ID,
 };
 use semio_framework_ui_contract as ui;
 
@@ -38,8 +42,6 @@ const ROOT: &str = "fem2d-play-inspection";
 /// 🔽️ Options one reference select offers before it stops listing — a document with more nodes than
 /// this is re-pointed in the viewport, not from a dropdown, and `UiFixedList` admits 32 at most.
 const SELECT_ITEMS_MAX: usize = 24;
-/// 🧾️ Rows one nested listing (a case's loads, a combination's terms) materialises per render.
-const LIST_ROWS_MAX: usize = 8;
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
@@ -75,67 +77,17 @@ fn push(rows: &mut UiFixedList<BuiltNode>, node: UiAssemblyResult<BuiltNode>) ->
 //#endregion 🔖️Admission
 
 //#region 🔖️Layout
-/// 🗂️ One collapsible group of form rows — `ui::section`, never a tree section.
-fn section(id: &str, label: &str, rows: UiFixedList<BuiltNode>) -> UiAssemblyResult<BuiltNode> {
-    let builder = ui_id(ui::section(ui_label(label)?), id)?.default_open(true);
-    ui_build(builder.try_children(rows).map_err(|_| ui_error("ui.section.children"))?)
-}
-
-/// 📋️ The panel body: its sections stacked vertically.
-fn column(sections: UiFixedList<BuiltNode>) -> UiAssemblyResult<BuiltNode> {
-    let builder = ui_id(ui::column(), ROOT)?;
-    ui_build(builder.try_children(sections).map_err(|_| ui_error("ui.column.children"))?)
-}
-
-/// 🧾️ One `field(label) > control` form row — the shape the React `Interpreter` renders as a
-/// labelled control rather than as a tree leaf.
+/// 🧾️ One labelled tree row whose inline control the interpreter mounts in `TreeDataItem.control`.
 fn control_row(row_id: &str, label: &str, control: BuiltNode) -> UiAssemblyResult<BuiltNode> {
-    let row = ui_id(ui::field(ui_label(label)?), row_id)?;
+    let row = ui_id(ui::tree_item(ui_label(label)?), row_id)?;
     ui_build(row.try_child(control).map_err(|_| ui_error("ui.node.child"))?)
 }
 
-/// 📝️ One plain text node — a read-only value, or a truncated listing's continuation row.
-fn text_node(id: &str, value: impl AsRef<str>) -> UiAssemblyResult<BuiltNode> {
-    ui_build(ui_id(ui::text(ui_label(value)?), id)?)
-}
-
-/// 🔘️ One `Trigger::Activate` button — the verbs (focus, delete) and the pick rows of a nested
-/// listing, which a tree item used to carry.
+/// 🔘️ One activatable tree row — focus, delete, and load-case pick rows.
 fn action_button(id: &str, label: &str, action: (ActionId, Option<UiValue>)) -> UiAssemblyResult<BuiltNode> {
-    let (action, args) = action;
-    let control = ui_id(ui::button(ui_label(label)?), id)?;
-    let control = match args {
-        Some(args) => control.try_on_with(Trigger::Activate, action, args).map_err(|_| ui_error("ui.control.binding"))?,
-        None => control.try_on(Trigger::Activate, action).map_err(|_| ui_error("ui.control.binding"))?,
-    };
-    ui_build(control)
+    tree_item_with_action(id, ui_label(label)?, None, action)
 }
 
-/// 🧾️ One nested listing's page: rows while both `LIST_ROWS_MAX` and the shared [`PanelRowBudget`]
-/// last, closed by a text row naming what was left out. The framework's `paged_panel_section` is not
-/// usable here — its continuation row is a tree item, which this panel no longer renders.
-fn paged_rows<T>(section_id: &str, entries: &[T], budget: &mut PanelRowBudget, mut row: impl FnMut(&T) -> UiAssemblyResult<BuiltNode>) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
-    let mut rows = UiFixedList::default();
-    let mut placed = 0;
-    for entry in entries {
-        if placed == LIST_ROWS_MAX || !budget.spend() {
-            break;
-        }
-        let node = match row(entry) {
-            Ok(node) => node,
-            Err(error) if error.code == "ui.fixed-capacity" => break,
-            Err(error) => return Err(error),
-        };
-        if rows.try_push(node).is_err() {
-            break;
-        }
-        placed += 1;
-    }
-    if placed < entries.len() {
-        push(&mut rows, text_node(&format!("{section_id}.more"), format!("+{}", entries.len() - placed)))?;
-    }
-    Ok(rows)
-}
 //#endregion 🔖️Layout
 
 //#region 🔖️Controls
@@ -158,8 +110,7 @@ fn bind<B: HasBase>(builder: B, action: &str, field_name: &str, id: &str) -> UiA
 }
 
 fn read_only_row(suffix: &str, label: &str, value: impl std::fmt::Display) -> UiAssemblyResult<BuiltNode> {
-    let row_id = format!("{ROOT}.{suffix}");
-    control_row(&row_id, label, text_node(&format!("{row_id}.value"), value.to_string())?)
+    tree_item_desc(format!("{ROOT}.{suffix}"), ui_label(label)?, Some(value.to_string()))
 }
 
 fn number_row(suffix: &str, label: &str, value: f64, step: f64, action: &str, field_name: &str, id: &str) -> UiAssemblyResult<BuiltNode> {
@@ -354,10 +305,16 @@ fn select_action(id: &str) -> UiAssemblyResult<(ActionId, Option<UiValue>)> {
     fem2d_action(INTERACTION_SELECT_ACTION_ID, Some(UiValue::Map(args.finish())))
 }
 
-fn combination_rows(combination: &FemCombination, labels: &Fem2dLabels) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
+/// ⚖️ The combination's own fields, and the term verb beside them: the `Terms` section is a WINDOW
+/// over the terms alone, so a control that is not a term cannot live inside it without claiming a
+/// slot in that window's extent.
+fn combination_rows(doc: &Fem2dSnapshot, combination: &FemCombination, labels: &Fem2dLabels) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
     let mut rows = UiFixedList::default();
     push(&mut rows, read_only_row("combination.id", labels.id.as_str(), &combination.id))?;
     push(&mut rows, text_row("combination.name", labels.name.as_str(), &combination.name, "patchCombination", "name", &combination.id))?;
+    if let Some(row) = add_term_row(doc, combination, labels)? {
+        rows.try_push(row).map_err(|_| ui_error("ui.fixed-capacity"))?;
+    }
     Ok(rows)
 }
 
@@ -402,10 +359,10 @@ fn summary(doc: &Fem2dSnapshot, labels: &Fem2dLabels) -> UiAssemblyResult<BuiltN
     push(&mut analysis, read_only_row("summary.modal-count", labels.modal_count.as_str(), doc.analysis.modal_count))?;
     push(&mut analysis, read_only_row("summary.buckling-count", labels.buckling_count.as_str(), doc.analysis.buckling_count))?;
     push(&mut analysis, read_only_row("summary.deformation-scale", labels.deformation_scale.as_str(), doc.analysis.deformation_scale))?;
-    let mut sections = UiFixedList::default();
-    push(&mut sections, section(&format!("{ROOT}.summary"), labels.summary.as_str(), counts))?;
-    push(&mut sections, section(&format!("{ROOT}.analysis"), labels.analysis.as_str(), analysis))?;
-    column(sections)
+    PanelTreeBuilder::new(ROOT)?
+        .section(format!("{ROOT}.summary"), Some(ui_label(labels.summary.as_str())?), true, counts)?
+        .section(format!("{ROOT}.analysis"), Some(ui_label(labels.analysis.as_str())?), true, analysis)?
+        .build()
 }
 
 /// 🎯️ The selected entity's verbs — focus (entities with viewport geometry) and delete — as
@@ -426,77 +383,69 @@ fn action_rows(id: &str, kind: &str, labels: &Fem2dLabels) -> UiAssemblyResult<U
     Ok(rows)
 }
 
-/// 🔢️ One text row per selected id — the fields below belong to the FIRST of them, which is the one
-/// every viewport pick leaves at the head of the selection.
-fn selection_rows(interaction: &Fem2dInteractionSnapshot) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
-    let mut rows = UiFixedList::default();
-    for (index, id) in interaction.selected_ids.iter().take(LIST_ROWS_MAX).enumerate() {
-        push(&mut rows, text_node(&format!("{ROOT}.selection.{index}"), id))?;
-    }
-    Ok(rows)
+/// 🔢️ One text row per selected id, keyed by the id itself so a window over a wide selection names
+/// the same row at any offset — the fields below belong to the FIRST of them, which is the one every
+/// viewport pick leaves at the head of the selection.
+fn selection_row(id: &str) -> UiAssemblyResult<BuiltNode> {
+    tree_item(format!("{ROOT}.selection.{id}"), ui_label(id)?)
 }
 
 /// 🔍️ The panel body: the first resolvable selected entity's editable fields, or the document
 /// summary. Every group title is the entity's own noun, so the panel reads as "Node" / "Load Case"
 /// rather than as a generic "Properties".
-pub fn render(doc: &Fem2dSnapshot, interaction: &Fem2dInteractionSnapshot, labels: &Fem2dLabels) -> UiAssemblyResult<BuiltNode> {
+pub fn render(doc: &Fem2dSnapshot, interaction: &Fem2dInteractionSnapshot, labels: &Fem2dLabels, windows: &TreeWindows<'_>) -> UiAssemblyResult<BuiltNode> {
     let Some((id, kind)) = interaction.selected_ids.iter().find_map(|id| fem2d_entity_kind(doc, id).map(|kind| (id.as_str(), kind))) else {
         return summary(doc, labels);
     };
-    let mut sections = UiFixedList::default();
+    let mut builder = PanelTreeBuilder::new(ROOT)?;
     if interaction.selected_ids.len() > 1 {
         let title = format!("{} {}", interaction.selected_ids.len(), labels.selected.as_str());
-        push(&mut sections, section(&format!("{ROOT}.selection"), &title, selection_rows(interaction)?))?;
+        builder = builder.window_section(windows, &format!("{ROOT}.selection"), Some(ui_label(&title)?), true, &interaction.selected_ids, |id| selection_row(id))?;
     }
-    let mut budget = PanelRowBudget::new(panel_page_rows());
-    match kind {
+    builder = match kind {
         FEM2D_GRANULARITY_NODE => {
             let node = doc.nodes.iter().find(|node| node.id == id).ok_or_else(|| ui_error("ui.document"))?;
-            push(&mut sections, section(&format!("{ROOT}.node"), labels.node.as_str(), node_rows(node, labels)?))?;
+            builder.section(format!("{ROOT}.node"), Some(ui_label(labels.node.as_str())?), true, node_rows(node, labels)?)?
         }
         FEM2D_GRANULARITY_ELEMENT => {
             let element = doc.elements.iter().find(|element| element_id(element) == id).ok_or_else(|| ui_error("ui.document"))?;
-            push(&mut sections, section(&format!("{ROOT}.element"), labels.element.as_str(), element_rows(doc, element, labels)?))?;
+            builder.section(format!("{ROOT}.element"), Some(ui_label(labels.element.as_str())?), true, element_rows(doc, element, labels)?)?
         }
         FEM2D_GRANULARITY_MATERIAL => {
             let material = doc.materials.iter().find(|material| material.id == id).ok_or_else(|| ui_error("ui.document"))?;
-            push(&mut sections, section(&format!("{ROOT}.material"), labels.material.as_str(), material_rows(material, labels)?))?;
+            builder.section(format!("{ROOT}.material"), Some(ui_label(labels.material.as_str())?), true, material_rows(material, labels)?)?
         }
         FEM2D_GRANULARITY_SECTION => {
             let section_record = doc.sections.iter().find(|section| section.id == id).ok_or_else(|| ui_error("ui.document"))?;
-            push(&mut sections, section(&format!("{ROOT}.section"), labels.section.as_str(), section_rows(section_record, labels)?))?;
+            builder.section(format!("{ROOT}.section"), Some(ui_label(labels.section.as_str())?), true, section_rows(section_record, labels)?)?
         }
         FEM2D_GRANULARITY_SUPPORT => {
             let support = doc.supports.iter().find(|support| support.id == id).ok_or_else(|| ui_error("ui.document"))?;
-            push(&mut sections, section(&format!("{ROOT}.support"), labels.support.as_str(), support_rows(doc, support, labels)?))?;
+            builder.section(format!("{ROOT}.support"), Some(ui_label(labels.support.as_str())?), true, support_rows(doc, support, labels)?)?
         }
         FEM2D_GRANULARITY_REGION => {
             let region = doc.regions.iter().find(|region| region.id == id).ok_or_else(|| ui_error("ui.document"))?;
-            push(&mut sections, section(&format!("{ROOT}.region"), labels.region.as_str(), region_rows(doc, region, labels)?))?;
+            builder.section(format!("{ROOT}.region"), Some(ui_label(labels.region.as_str())?), true, region_rows(doc, region, labels)?)?
         }
         FEM2D_GRANULARITY_LOAD => {
             let load = doc.load_cases.iter().flat_map(|case| case.loads.iter()).find(|load| load_id(load) == id).ok_or_else(|| ui_error("ui.document"))?;
-            push(&mut sections, section(&format!("{ROOT}.load"), labels.load.as_str(), load_rows(doc, load, labels)?))?;
+            builder.section(format!("{ROOT}.load"), Some(ui_label(labels.load.as_str())?), true, load_rows(doc, load, labels)?)?
         }
         FEM2D_GRANULARITY_LOAD_CASE => {
             let case = doc.load_cases.iter().find(|case| case.id == id).ok_or_else(|| ui_error("ui.document"))?;
-            let loads = paged_rows(&format!("{ROOT}.load-case.loads"), &case.loads, &mut budget, |load| load_pick_row(load, labels))?;
-            push(&mut sections, section(&format!("{ROOT}.load-case"), labels.load_case.as_str(), load_case_rows(case, labels)?))?;
-            push(&mut sections, section(&format!("{ROOT}.load-case.loads"), labels.loads.as_str(), loads))?;
+            builder
+                .section(format!("{ROOT}.load-case"), Some(ui_label(labels.load_case.as_str())?), true, load_case_rows(case, labels)?)?
+                .window_section(windows, &format!("{ROOT}.load-case.loads"), Some(ui_label(labels.loads.as_str())?), true, &case.loads, |load| load_pick_row(load, labels))?
         }
         FEM2D_GRANULARITY_COMBINATION => {
             let combination = doc.combinations.iter().find(|combination| combination.id == id).ok_or_else(|| ui_error("ui.document"))?;
-            let mut terms = paged_rows(&format!("{ROOT}.combination.terms"), &combination.terms, &mut budget, |term| term_row(doc, combination, term))?;
-            if let Some(row) = add_term_row(doc, combination, labels)? {
-                terms.try_push(row).map_err(|_| ui_error("ui.fixed-capacity"))?;
-            }
-            push(&mut sections, section(&format!("{ROOT}.combination"), labels.combination.as_str(), combination_rows(combination, labels)?))?;
-            push(&mut sections, section(&format!("{ROOT}.combination.terms"), labels.terms.as_str(), terms))?;
+            builder
+                .section(format!("{ROOT}.combination"), Some(ui_label(labels.combination.as_str())?), true, combination_rows(doc, combination, labels)?)?
+                .window_section(windows, &format!("{ROOT}.combination.terms"), Some(ui_label(labels.terms.as_str())?), true, &combination.terms, |term| term_row(doc, combination, term))?
         }
         _ => return summary(doc, labels),
-    }
-    push(&mut sections, section(&format!("{ROOT}.actions"), labels.actions.as_str(), action_rows(id, kind, labels)?))?;
-    column(sections)
+    };
+    builder.section(format!("{ROOT}.actions"), Some(ui_label(labels.actions.as_str())?), true, action_rows(id, kind, labels)?)?.build()
 }
 //#endregion 🔖️Render
 

@@ -122,19 +122,6 @@ pub fn ui_value_map(values: impl IntoIterator<Item = (&'static str, semio_framew
     Ok(semio_framework_plugin::UiValue::Map(builder.finish()))
 }
 
-/// 🌳️ Admits fallibly assembled UI nodes into fixed child storage.
-pub fn ui_node_list(values: impl IntoIterator<Item = semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode>>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiFixedList<semio_framework_plugin::BuiltNode>> {
-    let mut nodes = semio_framework_plugin::UiFixedList::default();
-    for value in values {
-        let node = value?;
-        nodes
-            .try_push(node)
-            .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI node admission failed"))?;
-    }
-    Ok(nodes)
-}
-
-
 fn block3d_render_window_id(view_state: &semio_framework_plugin::ViewModel) -> &str {
     view_state.window_id.as_deref().filter(|window_id| !window_id.is_empty()).unwrap_or(BLOCK3D_DEFAULT_WINDOW_ID)
 }
@@ -988,7 +975,7 @@ impl ArtifactEditor for Block3dPlayApp {
                 view_state.active_utility_id.as_deref().unwrap_or(BLOCK3D_UTILITY_SELECT),
                 None,
             )?,
-            document_panel::BLOCK3D_BODY_ARTIFACT => document_panel::render(doc.snapshot, labels)?,
+            document_panel::BLOCK3D_BODY_ARTIFACT => document_panel::render(doc.snapshot, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, document_panel::BLOCK3D_BODY_ARTIFACT))?,
             inspection_panel::BLOCK3D_BODY_INSPECTOR => inspection_panel::render(doc.snapshot, active_representation_id, labels)?,
             _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "block3d unknown-body label admission failed"))?,
         };

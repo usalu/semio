@@ -3,16 +3,23 @@
 //! `🎮️commands/🐚️export::export_package`'s zip manifest) but stays here rather than moving to the
 //! artifact engine: it takes `&LayoutLabels`, an app-owned terminology type, and artifacts must never
 //! depend on apps.
+//!
+//! 🪟️ The issue list is unbounded — it grows with every page × every frame — so it is a windowed
+//! section: it stamps its FULL extent through `TreeWindow { total, offset }` and materialises only
+//! the host's slice (`ViewModel::tree_windows`). No truncation, no `+N` row. Each issue row keeps its
+//! own `focusPreflightIssue` action; this tree binds no interaction domain.
 
 use crate::editor::layout::terminology::{preflight_msg, LayoutLabels};
 use crate::editor::layout::{layout_action, ui_value_map, ui_value_text};
 use crate::{Frame, LayoutSnapshot};
-use semio_framework_plugin::{tree_item_desc, tree_item_with_action, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiFixedList, UiText, UiValue};
+use semio_framework_plugin::{tree_item_desc, tree_item_with_action, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, TreeWindows, UiText, UiValue};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Constants
 pub const LAYOUT_PLAY_BODY_PREFLIGHT: &str = "layout.play.preflight";
 pub const LAYOUT_PLAY_PREFLIGHT_TAB_ID: &str = "layout.panel.preflight";
+pub const LAYOUT_PREFLIGHT_ROOT: &str = "layout-preflight";
+pub const LAYOUT_PREFLIGHT_ISSUES: &str = "layout-preflight.issues";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
@@ -202,45 +209,41 @@ fn layout_tree_item(
     Ok(item)
 }
 
-pub fn render(doc: &LayoutSnapshot, labels: &LayoutLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+fn issue_row(issue: &PreflightIssue) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    let issue_value = ui_value_map([
+        ("severity", ui_value_text(&issue.severity)?),
+        ("code", ui_value_text(&issue.code)?),
+        ("message", ui_value_text(&issue.message)?),
+        (
+            "objectId",
+            match &issue.object_id {
+                Some(value) => ui_value_text(value)?,
+                None => UiValue::Null,
+            },
+        ),
+        (
+            "pageId",
+            match &issue.page_id {
+                Some(value) => ui_value_text(value)?,
+                None => UiValue::Null,
+            },
+        ),
+    ])?;
+    let args = ui_value_map([("issue", issue_value)])?;
+    layout_tree_item(
+        format!("layout-preflight.{}.{}", issue.code, issue.object_id.clone().unwrap_or_else(|| issue.message.clone())),
+        Label::data(issue.message.clone()),
+        Some(format!("{} · {}", issue.severity, issue.code)),
+        Some(if issue.severity == "error" { "alert-circle" } else { "alert-triangle" }.into()),
+        Some(layout_action("focusPreflightIssue", Some(args))?),
+    )
+}
+
+pub fn render(doc: &LayoutSnapshot, labels: &LayoutLabels, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let issues = run_layout_preflight(doc, labels);
-    let mut items = UiFixedList::default();
-    if issues.is_empty() {
-        let item = layout_tree_item("layout-preflight.empty", labels.no_issues, None, Some("check-circle".into()), None)?;
-        items.try_push(item).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "layout preflight empty row admission failed"))?;
-    } else {
-        for issue in &issues {
-            let issue_value = ui_value_map([
-                ("severity", ui_value_text(&issue.severity)?),
-                ("code", ui_value_text(&issue.code)?),
-                ("message", ui_value_text(&issue.message)?),
-                (
-                    "objectId",
-                    match &issue.object_id {
-                        Some(value) => ui_value_text(value)?,
-                        None => UiValue::Null,
-                    },
-                ),
-                (
-                    "pageId",
-                    match &issue.page_id {
-                        Some(value) => ui_value_text(value)?,
-                        None => UiValue::Null,
-                    },
-                ),
-            ])?;
-            let args = ui_value_map([("issue", issue_value)])?;
-            let item = layout_tree_item(
-                format!("layout-preflight.{}.{}", issue.code, issue.object_id.clone().unwrap_or_else(|| issue.message.clone())),
-                Label::data(issue.message.clone()),
-                Some(format!("{} · {}", issue.severity, issue.code)),
-                Some(if issue.severity == "error" { "alert-circle" } else { "alert-triangle" }.into()),
-                Some(layout_action("focusPreflightIssue", Some(args))?),
-            )?;
-            items.try_push(item).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "layout preflight issue admission failed"))?;
-        }
-    }
-    PanelTreeBuilder::new("layout-preflight")?.section("layout-preflight.issues", Some(crate::editor::layout::ui_label(labels.preflight.as_str())?), true, items)?.build()
+    PanelTreeBuilder::new(LAYOUT_PREFLIGHT_ROOT)?
+        .window_section_or_placeholder(windows, LAYOUT_PREFLIGHT_ISSUES, Some(crate::editor::layout::ui_label(labels.preflight.as_str())?), true, &issues, issue_row, crate::editor::layout::ui_label(labels.no_issues.as_str())?)?
+        .build()
 }
 //#endregion 🔖️Render
 

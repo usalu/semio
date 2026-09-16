@@ -1,13 +1,19 @@
-//! 📄️ Architect document panel — program meta, per-register counts and the element list.
+//! 📄️ Architect document panel — program meta, the register roster and the element list.
+//!
+//! 🪟️ The register roster and the element list are **virtualised**, not chunked. One `registers`
+//! section spans the whole roster and one `elements` section spans the whole document; each reports its
+//! full `total` and materialises only the row window the host asked for (`TreeWindows::for_body`,
+//! threaded in from `ArchitectPlayApp::render`). The `.chunks(UI_FIXED_LIST_ITEMS)`-into-
+//! "Registers 1–32"/"33–64"/"65–66"-sections idiom this panel used to carry is gone with it, and so is
+//! the hard `ui.fixed-capacity` fault a program with more than 32 elements used to hit.
 
 use crate::editor::architect::ui_label;
 use crate::editor::architect::ARCHITECT_INTERACTION_PROGRAM;
-use crate::editor::architect::{architect_action, ui_value_map, ui_value_text};
+use crate::editor::architect::{architect_action, ui_node, ui_text, ui_value_map, ui_value_text, ARCHITECT_APP_ID, ARCHITECT_INTERACTION_GRANULARITY_ENTITY};
 use crate::standards::v1::subsets::any::schema::inferences::status_summary;
+use crate::standards::v1::subsets::any::schema::registers::ProgramElement;
 use crate::ProgramSnapshot;
-use semio_framework_plugin::{
-    tree_item_desc, tree_item_with_action, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiFixedList, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL,
-};
+use semio_framework_plugin::{tree_item_desc, tree_item_with_action, ui_node_list, BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, TreeWindows, UiAssemblyResult, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
 
 //#region 🔖️Constants
 pub const ARCHITECT_BODY_ARTIFACT: &str = "architect.document";
@@ -28,41 +34,34 @@ pub fn definition() -> PanelTabDefinition {
 
 //#region 🔖️Render
 /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: element rows are the "program"
-/// interaction domain's sole real pick surface — bare items (no `.action`) whose id IS the
-/// `InteractionTarget` id (`EntityId`s are already globally unique, unlike note's nested block ids,
-/// so no row-id prefix/mapping is needed); clicks translate into the framework's injected
-/// `interactionSelect` generically. Register rows keep their own `selectRegister` action (switching
-/// the active register is unrelated to entity selection) and sit in the SAME tree, unaffected —
-/// mirrors note's document panel (`action_rows` + bare `block_items` coexisting under one
-/// `.interaction_domain(...)?`).
-pub fn render(program: &ProgramSnapshot) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+/// interaction domain's sole real pick surface — keyed by the RAW `EntityId` (already globally unique,
+/// unlike note's nested block ids, so no row-id prefix/mapping is needed) and carrying nothing but
+/// their granularity. The activation a click needs is the ONE tree-level `interactionSelect` binding
+/// `PanelTreeBuilder::interaction_domain` stamps, so a pick row costs zero `UiValue` arena — which is
+/// what lets a whole window of them exist. Register rows keep their own `selectRegister` action
+/// (switching the active register is unrelated to entity selection) and sit in the SAME tree.
+fn element_row(element: &ProgramElement) -> UiAssemblyResult<BuiltNode> {
+    let id = element.header.id.to_string();
+    let row = semio_framework_ui_contract::tree_item(ui_label(format!("{} ({:?})", element.header.name, element.kind))?).description(ui_text(&id)?).granularity(ui_text(ARCHITECT_INTERACTION_GRANULARITY_ENTITY)?);
+    ui_node(row, &id)
+}
+
+pub fn render(program: &ProgramSnapshot, windows: &TreeWindows<'_>) -> UiAssemblyResult<BuiltNode> {
     let summary = status_summary(program);
-    let mut element_items = UiFixedList::default();
-    for element in &program.elements {
-        let item = tree_item_desc(element.header.id.to_string(), ui_label(format!("{} ({:?})", element.header.name, element.kind))?, Some(element.header.id.to_string()))?;
-        element_items.try_push(item).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "architect element row admission failed"))?;
-    }
-    let mut meta = UiFixedList::default();
-    for item in [
-        tree_item_desc("architect-document.meta.title", ui_label(format!("Title: {}", program.meta.title))?, None)?,
-        tree_item_desc("architect-document.meta.project", ui_label(format!("Project: {} ({})", program.project.client_name, program.project.code))?, None)?,
-        tree_item_desc("architect-document.meta.entities", ui_label(format!("Entities tracked: {}", summary.total_entities))?, None)?,
-    ] {
-        meta.try_push(item).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "architect metadata row admission failed"))?;
-    }
-    let mut tree = PanelTreeBuilder::new("architect-document")?.section("architect-document.meta", Some(ui_label("ProgramSnapshot")?), true, meta)?;
-    for (page, registers) in summary.by_register.chunks(semio_framework_ui_contract::UI_FIXED_LIST_ITEMS).enumerate() {
-        let mut items = UiFixedList::default();
-        for row in registers {
+    let meta = ui_node_list([
+        tree_item_desc("architect-document.meta.title", ui_label(format!("Title: {}", program.meta.title))?, None),
+        tree_item_desc("architect-document.meta.project", ui_label(format!("Project: {} ({})", program.project.client_name, program.project.code))?, None),
+        tree_item_desc("architect-document.meta.entities", ui_label(format!("Entities tracked: {}", summary.total_entities))?, None),
+    ])?;
+    PanelTreeBuilder::new("architect-document")?
+        .section("architect-document.meta", Some(ui_label("ProgramSnapshot")?), true, meta)?
+        .window_section(windows, "architect-document.registers", Some(ui_label("Registers")?), true, &summary.by_register, |row| {
             let args = ui_value_map([("registerId", ui_value_text(&row.register)?)])?;
-            let item = tree_item_with_action(format!("architect-document.register.{}", row.register), ui_label(format!("{} ({})", row.register, row.count))?, None, architect_action("selectRegister", Some(args))?)?;
-            items.try_push(item).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "architect register row admission failed"))?;
-        }
-        let start = page * semio_framework_ui_contract::UI_FIXED_LIST_ITEMS + 1;
-        let end = start + registers.len() - 1;
-        tree = tree.section(format!("architect-document.registers.{page}"), Some(ui_label(format!("Registers {start}–{end}"))?), true, items)?;
-    }
-    tree.section_or_placeholder("architect-document.elements", Some(ui_label("Elements")?), true, element_items, ui_label("(none)")?)?.interaction_domain(ARCHITECT_INTERACTION_PROGRAM)?.build()
+            tree_item_with_action(format!("architect-document.register.{}", row.register), ui_label(format!("{} ({})", row.register, row.count))?, None, architect_action("selectRegister", Some(args))?)
+        })?
+        .window_section_or_placeholder(windows, "architect-document.elements", Some(ui_label("Elements")?), true, &program.elements, element_row, ui_label("(none)")?)?
+        .interaction_domain(ARCHITECT_APP_ID, ARCHITECT_INTERACTION_PROGRAM)?
+        .build()
 }
 //#endregion 🔖️Render
 

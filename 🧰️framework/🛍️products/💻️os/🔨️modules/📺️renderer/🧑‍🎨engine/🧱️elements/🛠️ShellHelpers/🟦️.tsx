@@ -140,6 +140,7 @@ import {
     type TreeDataSection,
     type TreePanelConfig,
     UI_RIBBON_PARENT_CATEGORIES,
+    type ViewTreeWindowRequest,
     UI_TERMINOLOGY_NATIVE,
     type UiChromeLayout,
     type UiChromeTerminologyId,
@@ -199,7 +200,10 @@ import { segmentedDownloadSinkFactory, type SegmentedDownloadSinkFactory } from 
 import { loadPluginModule, pluginLoadProgressAt, pluginLoadRemainingMs, PLUGIN_LOAD_IDLE_TIMEOUT_MS, type PluginWasmHandle } from "../🔌️PluginRuntime/🟦️.tsx";
 import {
     InterpretedUiNode,
+    TreeWindowContext,
     wireLabel,
+    type TreeWindowContextValue,
+    type TreeWindowReportV1,
 } from "../🗣️Interpreter/🟦️.tsx";
 import { WindowMeasureNumber, WindowMeasureSelect, WindowMeasureToggle } from "./🎚️measure-controls/🟦️.tsx";
 // #endregion 🔌️Adapters
@@ -1867,13 +1871,17 @@ export function categoryTabIcon(tabs: readonly PanelTabNode[], fallback: IconNam
  * to render. `PanelTabDefinition` (required `children: T[]`, no leaf variant) satisfies this
  * constraint directly; `PanelTabNode` (`PanelTabLeaf | PanelTabBranch`, `PanelTabLeaf` carrying no
  * `children` key at all) is a TS "weak type" mismatch against a constraint of only-optional
- * properties — callers with that shape use `flattenPanelTabNodeLeaves` (`ShellHost`'s own, built on
+ * properties — callers with that shape use `flattenPanelTabNodes` (`ShellHost`'s own, built on
  * `panelTabChildren`'s union-aware accessor) instead of fighting the weak-type check here. */
 export function flattenPanelTabLeaves<T extends { readonly children?: readonly T[] }>(tabs: readonly T[]): T[] {
   return tabs.flatMap((tab) => (tab.children && tab.children.length > 0 ? flattenPanelTabLeaves(tab.children) : [tab]));
 }
 
-/** @emoji 🌳️ Converts one plugin-declared {@link AppPanelTabDefinition} (recursively) into a {@link PanelTabNode}. */
+/** @emoji 🌳️ Converts one plugin-declared {@link AppPanelTabDefinition} (recursively) into a {@link PanelTabNode}.
+ *
+ * 🪟️ `treeWindows`/`cache` are the windowed-tree plumbing: the tab's own `bodyKey` is what the guest
+ * and `UiDirtyScope.panelBodies` name, and `cache` keeps a tab whose body did not change on exactly the
+ * `TreePanelConfig` (and therefore the `UiDocumentStore` and the mounted `<Tree>`) it already had. */
 export function panelTabDefinitionToNode(
   tab: AppPanelTabDefinition,
   group: string,
@@ -1883,6 +1891,8 @@ export function panelTabDefinitionToNode(
   appLabelsOverlay: PluginAppLabelsOverlay,
   terminology: string = UI_TERMINOLOGY_NATIVE,
   locale: string = SHELL_LOCALES[0],
+  treeWindows: TreeWindowHostV1 | null = null,
+  cache?: PanelTreeConfigCacheV1,
 ): PanelTabNode {
   const tabId = panelTabKindId(tab.kind);
   const label = resolvePanelTabLabel(appLabelsOverlay, tabId, resolveManifestLabel(tab.label, terminology, locale));
@@ -1893,7 +1903,7 @@ export function panelTabDefinitionToNode(
       icon: panelTabIcon(tabId, group),
       name: label,
       order,
-      children: tab.children.map((child, childOrder) => panelTabDefinitionToNode(child, group, panelUiByKey, onAction, childOrder, appLabelsOverlay, terminology, locale)),
+      children: tab.children.map((child, childOrder) => panelTabDefinitionToNode(child, group, panelUiByKey, onAction, childOrder, appLabelsOverlay, terminology, locale, treeWindows, cache)),
     };
   }
   return singleTreeLeaf({
@@ -1901,7 +1911,7 @@ export function panelTabDefinitionToNode(
     icon: panelTabIcon(tabId, group),
     name: label,
     order,
-    tree: staticTreePanelDefinition(uiNodeToTreePanelConfig(panelUiByKey[tabId] ?? pendingPanelUiNode(), onAction)),
+    tree: staticTreePanelDefinition(cachedTreePanelConfigV1(cache, tabId, panelUiByKey[tabId] ?? pendingPanelUiNodeV1(), tab.bodyKey ?? tabId, onAction, treeWindows)),
   });
 }
 
@@ -2047,10 +2057,207 @@ export function uiIntentToActionDescriptor(intent: UiIntent): ActionDescriptor {
   };
 }
 
-/** @emoji 🌲️ Hosts an authored semantic {@link BuiltNode} in the shell's panel-tree leaf without reviving the removed recursive `UiNode` compatibility model. */
-export function uiNodeToTreePanelConfig(node: BuiltNode, onAction: (action: ActionDescriptor) => void): TreePanelConfig {
+//#region 🪟️TreeWindows
+/** 🪟️ Trailing debounce on a scroll's window reports. A scroll gesture re-measures once per animation
+ * frame; one partial refresh per frame would be one wasm crossing per frame. 40 ms is under the ~60 ms
+ * a reader notices as lag and above the frame period, so a continuous drag sends at most ~25 requests
+ * per second and a flick sends exactly one — the settle. An OPEN toggle is not debounced at all: it is
+ * a discrete gesture whose whole feedback is the rows appearing. */
+export const TREE_WINDOW_REPORT_DEBOUNCE_MS = 40;
+
+/** 🪟️ Rows a container the host has just opened asks for before the observer has measured it —
+ * mirrors the SDK's own `TREE_WINDOW_DEFAULT_ROWS` (`🔌️plugin/🦀️.rs`, region `🔖️PanelPaging`). Only
+ * ever the fallback: `treeViewportRows`, once any body has reported one, is the better number and wins. */
+export const TREE_WINDOW_DEFAULT_ROWS = 48;
+
+/** 🪟️ One panel body's host-owned tree state. Keyed by AUTHORED node key throughout, so it survives a
+ * body refresh, a `UiDocumentStore` re-mint and the DFS renumbering both of those cause. */
+type TreeWindowBodyState = { readonly open: Map<string, boolean>; readonly windows: Map<string, { readonly offset: number; readonly rows: number }> };
+
+export type TreeWindowSchedulerOptionsV1 = {
+  /** 🔁️ Fires ONE `refreshUi(session, { kind: "partial", panelBodies: [bodyKey] })`. The caller owns
+   * the promise and must call {@link TreeWindowSchedulerV1.settled} when it resolves. */
+  readonly refresh: (bodyKey: string) => void;
+  readonly debounceMs?: number;
+  readonly setTimer?: (run: () => void, ms: number) => unknown;
+  readonly clearTimer?: (handle: unknown) => void;
+};
+
+export type TreeWindowSchedulerV1 = {
+  readonly setOpen: (bodyKey: string, nodeKey: string, open: boolean) => void;
+  readonly reportWindows: (bodyKey: string, requests: readonly { readonly nodeKey: string; readonly offset: number; readonly rows: number }[], viewportRows: number) => void;
+  readonly openStatesFor: (bodyKey: string) => Readonly<Record<string, boolean>>;
+  readonly viewStateFields: () => { readonly treeWindows?: readonly ViewTreeWindowRequest[]; readonly treeViewportRows?: number };
+  readonly settled: (bodyKey: string) => void;
+  readonly reset: () => void;
+};
+
+/**
+ * 🪟️ The ONE place host-owned tree expansion and scroll windows are held and turned into refreshes.
+ *
+ * Pure of React and of the shell: state in plain maps, time injected. The three rules the panel bodies
+ * depend on, all testable without a DOM:
+ * - an OPEN toggle schedules immediately (a chevron must not wait on a debounce),
+ * - window reports coalesce on a {@link TREE_WINDOW_REPORT_DEBOUNCE_MS} trailing edge,
+ * - at most ONE partial refresh per body is in flight; a body whose state moved while its refresh was
+ *   crossing the wasm boundary is re-sent — with the LATEST state, not the superseded one — the moment
+ *   {@link TreeWindowSchedulerV1.settled} reports that crossing done.
+ *
+ * A report that changes nothing schedules nothing: the observer re-measures on every store revision, and
+ * a refresh that re-asks for exactly the rows the guest already rendered is an infinite refresh loop.
+ */
+export function createTreeWindowSchedulerV1(options: TreeWindowSchedulerOptionsV1): TreeWindowSchedulerV1 {
+  const debounceMs = options.debounceMs ?? TREE_WINDOW_REPORT_DEBOUNCE_MS;
+  const setTimer = options.setTimer ?? ((run: () => void, ms: number) => setTimeout(run, ms) as unknown);
+  const clearTimer = options.clearTimer ?? ((handle: unknown) => clearTimeout(handle as ReturnType<typeof setTimeout>));
+  const bodies = new Map<string, TreeWindowBodyState>();
+  const pending = new Set<string>();
+  const inFlight = new Set<string>();
+  let viewportRows: number | undefined;
+  let timer: unknown = null;
+
+  const bodyState = (bodyKey: string): TreeWindowBodyState => {
+    const existing = bodies.get(bodyKey);
+    if (existing) return existing;
+    const created: TreeWindowBodyState = { open: new Map(), windows: new Map() };
+    bodies.set(bodyKey, created);
+    return created;
+  };
+  const cancelTimer = () => {
+    if (timer === null) return;
+    clearTimer(timer);
+    timer = null;
+  };
+  const flush = () => {
+    cancelTimer();
+    for (const bodyKey of [...pending]) {
+      if (inFlight.has(bodyKey)) continue;
+      pending.delete(bodyKey);
+      inFlight.add(bodyKey);
+      options.refresh(bodyKey);
+    }
+  };
+  const arm = () => {
+    if (timer !== null) return;
+    timer = setTimer(() => {
+      timer = null;
+      flush();
+    }, debounceMs);
+  };
+
+  return {
+    setOpen: (bodyKey, nodeKey, open) => {
+      const state = bodyState(bodyKey);
+      if (state.open.get(nodeKey) === open) return;
+      state.open.set(nodeKey, open);
+      pending.add(bodyKey);
+      flush();
+    },
+    reportWindows: (bodyKey, requests, rows) => {
+      const state = bodyState(bodyKey);
+      const next = new Map(requests.map((request) => [request.nodeKey, { offset: Math.max(0, Math.floor(request.offset)), rows: Math.max(0, Math.floor(request.rows)) }] as const));
+      const sameWindows = next.size === state.windows.size && [...next].every(([nodeKey, window]) => state.windows.get(nodeKey)?.offset === window.offset && state.windows.get(nodeKey)?.rows === window.rows);
+      const sameRows = viewportRows === Math.max(viewportRows ?? 0, rows);
+      if (sameWindows && sameRows) return;
+      state.windows.clear();
+      for (const [nodeKey, window] of next) state.windows.set(nodeKey, window);
+      viewportRows = Math.max(viewportRows ?? 0, rows) || undefined;
+      pending.add(bodyKey);
+      arm();
+    },
+    openStatesFor: (bodyKey) => Object.fromEntries(bodies.get(bodyKey)?.open ?? []),
+    viewStateFields: () => {
+      const flattened: ViewTreeWindowRequest[] = [];
+      for (const bodyKey of [...bodies.keys()].sort()) {
+        const state = bodies.get(bodyKey)!;
+        const nodeKeys = [...new Set([...state.open.keys(), ...state.windows.keys()])].sort();
+        for (const nodeKey of nodeKeys) {
+          const open = state.open.get(nodeKey);
+          const window = state.windows.get(nodeKey);
+          // 🪟️ A container the user just opened has no measurement yet: ask for one viewport's worth,
+          // which the observer's first real report then narrows. `rows: 0` would materialise nothing at
+          // all and the row the chevron promised would never appear.
+          const rows = window?.rows ?? (open === false ? 0 : (viewportRows ?? TREE_WINDOW_DEFAULT_ROWS));
+          flattened.push({ bodyKey, nodeKey, ...(open === undefined ? {} : { open }), offset: window?.offset ?? 0, rows });
+        }
+      }
+      return { ...(flattened.length > 0 ? { treeWindows: flattened } : {}), ...(viewportRows === undefined ? {} : { treeViewportRows: viewportRows }) };
+    },
+    settled: (bodyKey) => {
+      inFlight.delete(bodyKey);
+      if (pending.has(bodyKey)) flush();
+    },
+    reset: () => {
+      cancelTimer();
+      bodies.clear();
+      pending.clear();
+      inFlight.clear();
+      viewportRows = undefined;
+    },
+  };
+}
+
+/** 🪟️ What `ShellHost` hands the panel builders — one stable object per shell, so the per-tab memo
+ * cache below keys on identity rather than on a closure rebuilt every render. */
+export type TreeWindowHostV1 = {
+  readonly openStatesFor: (bodyKey: string) => Readonly<Record<string, boolean>>;
+  readonly setOpen: (bodyKey: string, nodeKey: string, open: boolean) => void;
+  readonly reportWindows: (bodyKey: string, requests: readonly TreeWindowReportV1[], viewportRows: number) => void;
+};
+
+/** 🪟️ The one line a body's open map is compared on for memo invalidation. */
+function treeWindowOpenSignatureV1(openStates: Readonly<Record<string, boolean>>): string {
+  return Object.keys(openStates)
+    .sort()
+    .map((key) => `${key}:${openStates[key] ? 1 : 0}`)
+    .join(",");
+}
+
+/** 🌲️ One panel tab's already-built {@link TreePanelConfig}, reused by reference until THAT tab's own
+ * inputs move.
+ *
+ * `uiNodeToTreePanelConfig` mints a fresh `UiDocumentStore` and re-snapshots the whole body on every
+ * call, and the `panelUiByKey` `useMemo`s in `ShellHost` list the whole record as a dependency — so one
+ * body refreshing re-parsed and remounted EVERY open tab's tree (📓️audit-host-tree-pipeline.md §8).
+ * With a windowed tree that is not merely wasteful: a remount throws away the `<Tree>` instance the
+ * scroll observer is attached to, on every scroll of a sibling panel. */
+export type PanelTreeConfigCacheV1 = Map<string, { readonly node: BuiltNode; readonly onAction: unknown; readonly bodyKey: string; readonly treeWindows: TreeWindowHostV1 | null; readonly openSignature: string; readonly config: TreePanelConfig }>;
+
+function cachedTreePanelConfigV1(cache: PanelTreeConfigCacheV1 | undefined, tabId: string, node: BuiltNode, bodyKey: string, onAction: (action: ActionDescriptor) => void, treeWindows: TreeWindowHostV1 | null): TreePanelConfig {
+  const openSignature = treeWindows ? treeWindowOpenSignatureV1(treeWindows.openStatesFor(bodyKey)) : "";
+  const entry = cache?.get(tabId);
+  if (entry && entry.node === node && entry.onAction === onAction && entry.bodyKey === bodyKey && entry.treeWindows === treeWindows && entry.openSignature === openSignature) return entry.config;
+  const config = uiNodeToTreePanelConfig(node, onAction, bodyKey, treeWindows);
+  cache?.set(tabId, { node, onAction, bodyKey, treeWindows, openSignature, config });
+  return config;
+}
+
+/** 🦴 The ONE pending body — `pendingPanelUiNode()` mints a fresh object per call, which would miss
+ * {@link cachedTreePanelConfigV1} forever for every tab whose body has not arrived yet. */
+let pendingPanelUiNodeSingleton: BuiltNode | null = null;
+function pendingPanelUiNodeV1(): BuiltNode {
+  pendingPanelUiNodeSingleton ??= pendingPanelUiNode();
+  return pendingPanelUiNodeSingleton;
+}
+//#endregion 🪟️TreeWindows
+
+/** @emoji 🌲️ Hosts an authored semantic {@link BuiltNode} in the shell's panel-tree leaf without reviving the removed recursive `UiNode` compatibility model.
+ *
+ * 🪟️ `bodyKey` is the GUEST's panel body key (`AppPanelTabDefinition.bodyKey`, what `UiDirtyScope`'s
+ * `panelBodies` and `ViewModel::tree_windows.body_key` both name) — not the tab id the host caches
+ * bodies under. `treeWindows`, when present, is scoped to that body and provided to the interpreted
+ * subtree, which is what turns the guest tree's expansion and scroll into host state. */
+export function uiNodeToTreePanelConfig(node: BuiltNode, onAction: (action: ActionDescriptor) => void, bodyKey: string, treeWindows?: TreeWindowHostV1 | null): TreePanelConfig {
   const store = new UiDocumentStore(`panel:${node.key}`);
   store.loadSnapshot(builtNodeToSnapshot(`panel:${node.key}`, node));
+  const treeWindowContext: TreeWindowContextValue | null = treeWindows
+    ? {
+        bodyKey,
+        openStates: treeWindows.openStatesFor(bodyKey),
+        setOpen: (nodeKey, open) => treeWindows.setOpen(bodyKey, nodeKey, open),
+        reportWindows: (requests, viewportRows) => treeWindows.reportWindows(bodyKey, requests, viewportRows),
+      }
+    : null;
   // 🧭️ Never park the interpreted body on an empty-label `TreeDataItem.control` — property-layout rows
   // split every row into a wide label column plus a fixed value column, which parked the lone default
   // `file-text` icon in the left column and squeezed the whole inspector/document/catalogue tree into
@@ -2062,7 +2269,9 @@ export function uiNodeToTreePanelConfig(node: BuiltNode, onAction: (action: Acti
     emptyState: (
       <ShellFaultBoundary boundaryId={`panel-${node.key}`} fallbackLabel={shellLabel("ui.common.renderError")}>
         <div className="min-h-0 min-w-0 w-full flex-1">
-          <InterpretedUiNode store={store} onAction={onAction} onIntent={(intent) => onAction(uiIntentToActionDescriptor(intent))} />
+          <TreeWindowContext.Provider value={treeWindowContext}>
+            <InterpretedUiNode store={store} onAction={onAction} onIntent={(intent) => onAction(uiIntentToActionDescriptor(intent))} />
+          </TreeWindowContext.Provider>
         </div>
       </ShellFaultBoundary>
     ),
@@ -4651,7 +4860,6 @@ export const WINDOW_CONFIG_RAIL_ACTION_IDS: ReadonlySet<string> = new Set([
   "setLodAutomatic",
   "setLodDepthVariable",
   "setLodManual",
-  "setPanelPage",
   "setProjection",
   "setProjectionParam",
   "setProximityRadius",

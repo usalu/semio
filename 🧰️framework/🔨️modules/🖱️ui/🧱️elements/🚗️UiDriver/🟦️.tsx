@@ -236,9 +236,6 @@ export function resolveControlLabelId(id: string): string {
   if (id.includes(".modeDock.") && id.endsWith(".focus")) {
     return resolve("ui.window.focus");
   }
-  if (id.includes(".modeDock.") && id.endsWith(".newWindow")) {
-    return resolve("ui.window.newWindow");
-  }
   return resolve(id);
 }
 

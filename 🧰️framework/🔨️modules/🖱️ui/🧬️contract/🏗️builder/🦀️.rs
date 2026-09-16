@@ -43,12 +43,16 @@ fn credited_bindings(bindings: &crate::UiNodeBindings) -> Option<crate::UiNodeBi
     Some(aliased)
 }
 
-/// 🧱️ The contract-local shape a builder terminates into — everything a [`crate::UiNodeRecord`]
-/// carries except `id` (minted by the runtime at reconciliation, never by an author) and with
-/// `children` nested inline rather than addressed by [`crate::UiNodeId`], since a freshly authored
-/// tree has no ids yet to address by. Every field below serializes away at its default, mirroring the
-/// wire-cost guarantee this whole builder family exists to make automatic.
-pub const UI_BUILT_CHILDREN_MAX: usize = 32;
+/// 🪟️ How wide ONE built node fans out: exactly the host [`crate::UiNodeChildren`] capacity
+/// ([`crate::UI_DOCUMENT_NODES`]), so a built page and the document child list it reconciles into are
+/// the same size and no authored window can be materialised here only to be refused downstream. It is
+/// a page width, not a document ceiling — a longer logical list is windowed with
+/// [`crate::TreeWindow`], never truncated with a continuation row.
+pub const UI_BUILT_CHILDREN_MAX: usize = crate::UI_DOCUMENT_NODES;
+/// ♻️ How many built-child pages may be in flight at once — live plus handed back for retirement —
+/// independent of [`UI_BUILT_CHILDREN_MAX`], which sizes each page rather than the backlog. Widening
+/// the page does not widen the backlog: [`close_built_node_page_one`] still retires exactly one child
+/// per call, so a wider page costs more calls, never a bigger frame.
 pub const UI_BUILT_CHILD_RETIRE_SLOTS: usize = 384;
 
 type BuiltChildBacking = Box<[Option<Box<BuiltNode>>]>;
@@ -384,6 +388,11 @@ impl<'de> Deserialize<'de> for BuiltChildren {
     }
 }
 
+/// 🧱️ The contract-local shape a builder terminates into — everything a [`crate::UiNodeRecord`]
+/// carries except `id` (minted by the runtime at reconciliation, never by an author) and with
+/// `children` nested inline rather than addressed by [`crate::UiNodeId`], since a freshly authored
+/// tree has no ids yet to address by. Every field below serializes away at its default, mirroring the
+/// wire-cost guarantee this whole builder family exists to make automatic.
 // 🌱️ No `ToValue`/`FromValue` here (ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-
 // ARTIFACTS): `component: crate::Component` (and `bindings`/`menu`) embed `UiValue`, the deliberate
 // DslValue-free exception — see its docstring in `🎬️action.rs`.
@@ -1401,12 +1410,13 @@ pub struct TreeSectionBuilder {
     base: NodeBase,
     label: crate::Label,
     default_open: Option<bool>,
+    window: Option<crate::TreeWindow>,
 }
 
 /// 🌲️ A tree section reading `label`, ready for [`tree_item`] children.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
 pub fn tree_section(label: crate::Label) -> TreeSectionBuilder {
-    TreeSectionBuilder { base: NodeBase::stack(crate::Axis::Vertical), label, default_open: None }
+    TreeSectionBuilder { base: NodeBase::stack(crate::Axis::Vertical), label, default_open: None, window: None }
 }
 
 impl TreeSectionBuilder {
@@ -1414,6 +1424,14 @@ impl TreeSectionBuilder {
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn default_open(mut self, default_open: bool) -> Self {
         self.default_open = Some(default_open);
+        self
+    }
+
+    /// 🪟️ Declares which slice of a longer logical child list the built children actually are — see
+    /// [`crate::TreeWindow`].
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    pub fn window(mut self, window: crate::TreeWindow) -> Self {
+        self.window = Some(window);
         self
     }
 }
@@ -1430,7 +1448,7 @@ impl HasStackLayout for TreeSectionBuilder {}
 impl From<TreeSectionBuilder> for BuiltNode {
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn from(builder: TreeSectionBuilder) -> Self {
-        assemble(builder.base, crate::Component::TreeSection(crate::TreeSectionProps { label: Some(builder.label), default_open: builder.default_open }))
+        assemble(builder.base, crate::Component::TreeSection(crate::TreeSectionProps { label: Some(builder.label), default_open: builder.default_open, window: builder.window }))
     }
 }
 
@@ -1445,6 +1463,8 @@ pub struct TreeItemBuilder {
     draggable: Option<bool>,
     drag_data: Option<crate::UiFixedMap<crate::UiText>>,
     dimmed: Option<bool>,
+    window: Option<crate::TreeWindow>,
+    granularity: Option<crate::UiText>,
     row_actions: crate::UiFixedList<crate::RowAction>,
 }
 
@@ -1454,7 +1474,7 @@ pub struct TreeItemBuilder {
 pub fn tree_item(label: crate::Label) -> TreeItemBuilder {
     let mut base = NodeBase::stack(crate::Axis::Vertical);
     base.accessibility.label = Some(label.clone());
-    TreeItemBuilder { base, label, description: None, icon: None, default_open: None, draggable: None, drag_data: None, dimmed: None, row_actions: crate::UiFixedList::default() }
+    TreeItemBuilder { base, label, description: None, icon: None, default_open: None, draggable: None, drag_data: None, dimmed: None, window: None, granularity: None, row_actions: crate::UiFixedList::default() }
 }
 
 impl TreeItemBuilder {
@@ -1501,6 +1521,22 @@ impl TreeItemBuilder {
         self
     }
 
+    /// 🪟️ Declares which slice of a longer logical child list the built children actually are — see
+    /// [`crate::TreeWindow`].
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    pub fn window(mut self, window: crate::TreeWindow) -> Self {
+        self.window = Some(window);
+        self
+    }
+
+    /// 🎯️ Makes the row a pick target of the tree's `interaction_domain` at this granularity, keyed
+    /// by the row's own record key — no per-row binding and no argument map.
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    pub fn granularity(mut self, granularity: crate::UiText) -> Self {
+        self.granularity = Some(granularity);
+        self
+    }
+
     /// 🎬️ Appends one row action.
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     #[expect(clippy::result_large_err, reason = "A full row-action list returns its builder and original action owner for caller-directed retirement.")]
@@ -1534,6 +1570,8 @@ impl From<TreeItemBuilder> for BuiltNode {
                 draggable: builder.draggable,
                 drag_data: builder.drag_data,
                 dimmed: builder.dimmed,
+                window: builder.window,
+                granularity: builder.granularity,
                 row_actions: builder.row_actions,
             }),
         )

@@ -13,5 +13,4 @@ export interface Puzzle2dWindowTransient {
   brushCandidateIndex: number;
   brushCandidates: unknown[];
   brushCandidateSourceHandleId: string;
-  panelPages: Record<string, number>;
 }

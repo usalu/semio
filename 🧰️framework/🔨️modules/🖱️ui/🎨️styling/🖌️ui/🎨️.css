@@ -1753,7 +1753,6 @@
   :is(
     [data-slot="drag-handle"],
     [data-slot="mode-dock-tab-focus"],
-    [data-slot="mode-dock-tab-new-window"],
     [data-slot="mode-dock-tab-close"],
     [data-slot="action"],
     [data-slot="toggle-group-item-action"]
@@ -6410,7 +6409,6 @@
   :is(
     [data-slot="drag-handle"],
     [data-slot="mode-dock-tab-focus"],
-    [data-slot="mode-dock-tab-new-window"],
     [data-slot="mode-dock-tab-close"],
     [data-slot="action"],
     [data-slot="toggle-group-item-action"]
@@ -7217,15 +7215,15 @@
  * not light up parent grips while hovering a child row.
  */
 [data-hover-scope]:hover [data-slot="drag-handle"],
-[data-hover-scope]:hover :is([data-slot="mode-dock-tab-focus"], [data-slot="mode-dock-tab-new-window"], [data-slot="mode-dock-tab-close"]) {
+[data-hover-scope]:hover :is([data-slot="mode-dock-tab-focus"], [data-slot="mode-dock-tab-close"]) {
   color: var(--border-emphasized-color);
 }
 
-[data-slot="mode-dock-tab"] :is([data-slot="mode-dock-tab-focus"], [data-slot="mode-dock-tab-new-window"], [data-slot="mode-dock-tab-close"]) {
+[data-slot="mode-dock-tab"] :is([data-slot="mode-dock-tab-focus"], [data-slot="mode-dock-tab-close"]) {
   color: var(--muted-foreground);
 }
 
-[data-slot="mode-dock-tab"][data-active="true"] :is([data-slot="mode-dock-tab-focus"], [data-slot="mode-dock-tab-new-window"], [data-slot="mode-dock-tab-close"]) {
+[data-slot="mode-dock-tab"][data-active="true"] :is([data-slot="mode-dock-tab-focus"], [data-slot="mode-dock-tab-close"]) {
   color: var(--border-emphasized-color);
 }
 

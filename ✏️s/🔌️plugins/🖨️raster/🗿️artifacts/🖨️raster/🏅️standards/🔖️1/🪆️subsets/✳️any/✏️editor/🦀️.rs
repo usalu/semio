@@ -31,6 +31,11 @@ pub const RASTER_PLAY_CONTROLLER_ID: &str = "raster-play";
 /// command (which needs to decode a `target_row_id` back into a layer/group id). App-wide tree-encoding
 /// concern, not artifact data, so it lives here rather than in any single panel.
 pub const RASTER_TREE_PREFIX: &str = "raster-play-layers";
+/// 🕹️ The single FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM interaction domain this app declares
+/// (granularity `layer`, `HierarchyProvider::Flat`, method Pick) — the layer tree binds it and the
+/// composite window references it.
+pub const RASTER_INTERACTION_DOMAIN: &str = "layers";
+pub const RASTER_INTERACTION_GRANULARITY: &str = "layer";
 //#endregion 🔖️Constants
 
 //#region 🔖️Document
@@ -158,16 +163,6 @@ pub fn ui_value_map(values: impl IntoIterator<Item = (&'static str, semio_framew
         builder.push(key.to_owned(), value).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map entry admission failed"))?;
     }
     Ok(semio_framework_plugin::UiValue::Map(builder.finish()))
-}
-
-/// 🌳️ Admits fallibly assembled UI nodes into fixed child storage.
-pub fn ui_node_list(values: impl IntoIterator<Item = semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode>>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiFixedList<semio_framework_plugin::BuiltNode>> {
-    let mut nodes = semio_framework_plugin::UiFixedList::default();
-    for value in values {
-        let node = value?;
-        nodes.try_push(node).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI node admission failed"))?;
-    }
-    Ok(nodes)
 }
 
 //#endregion 🔖️Document
@@ -1032,12 +1027,15 @@ impl ArtifactEditor for RasterPlayApp {
         let config = cfg.snapshot;
         let active_utility = view_state.active_utility_id.as_deref().unwrap_or("selectMarquee");
         let labels = raster_play_labels(view_state);
+        // 🪟️ One `TreeWindows` per panel body: the host's open/scroll state for exactly the containers
+        // that body owns, plus the shared first-paint budget the panel spends in document order.
+        let windows = semio_framework_plugin::TreeWindows::for_body(view_state, body_key);
         let node = match body_key {
             composite::RASTER_PLAY_BODY_COMPOSITE => composite::render(document, config, active_utility)?,
             navigator::RASTER_PLAY_BODY_NAVIGATOR => navigator::render(document, config, active_utility)?,
-            crate::editor::raster::panels::document::RASTER_PLAY_BODY_LAYERS => crate::editor::raster::panels::document::render(document, config, labels)?,
-            crate::editor::raster::panels::masks::RASTER_PLAY_BODY_MASKS => crate::editor::raster::panels::masks::render(document, config, labels)?,
-            crate::editor::raster::panels::catalogue::RASTER_PLAY_BODY_CATALOGUE => crate::editor::raster::panels::catalogue::render(labels)?,
+            crate::editor::raster::panels::document::RASTER_PLAY_BODY_LAYERS => crate::editor::raster::panels::document::render(document, config, labels, &windows)?,
+            crate::editor::raster::panels::masks::RASTER_PLAY_BODY_MASKS => crate::editor::raster::panels::masks::render(document, config, labels, &windows)?,
+            crate::editor::raster::panels::catalogue::RASTER_PLAY_BODY_CATALOGUE => crate::editor::raster::panels::catalogue::render(labels, &windows)?,
             crate::editor::raster::panels::inspection::RASTER_PLAY_BODY_PROPERTIES => crate::editor::raster::panels::inspection::render(document, config, labels)?,
             _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "raster unknown-body label admission failed"))?,
         };
@@ -1186,9 +1184,9 @@ pub fn create_raster_app() -> AppDefinition {
             // setSelectionMode/setInteractionGranularity, replacing the deleted bespoke
             // setSelection/setHover/selectAll actions below.
             .interaction(InteractionDefinition {
-                id: "layers".into(),
+                id: RASTER_INTERACTION_DOMAIN.into(),
                 label: LocalizedLabel::native("Layers", "Ebenen"),
-                granularities: vec![GranularityDefinition { id: "layer".into(), label: LocalizedLabel::native("Layer", "Ebene"), icon_id: "image".into() }],
+                granularities: vec![GranularityDefinition { id: RASTER_INTERACTION_GRANULARITY.into(), label: LocalizedLabel::native("Layer", "Ebene"), icon_id: "image".into() }],
                 hierarchy: HierarchyProvider::Flat,
                 hover: HoverSpec::default(),
                 selection: SelectionSpec {
@@ -1199,7 +1197,7 @@ pub fn create_raster_app() -> AppDefinition {
                     broadcast: true,
                 },
             })
-            .window_kind_interactions(composite::RASTER_PLAY_WINDOW_COMPOSITE, vec![InteractionRef::new("layers")])
+            .window_kind_interactions(composite::RASTER_PLAY_WINDOW_COMPOSITE, vec![InteractionRef::new(RASTER_INTERACTION_DOMAIN)])
             // 👁️ Ephemeral view state — live brush controls, navigator viewport, camera.
             .action_with(raster_internal_action("setBrushSize", LocalizedLabel::native("Set Brush Size", "Pinselgröße festlegen"), ActionKind::View))
             .action_with(raster_internal_action("setBrushOpacity", LocalizedLabel::native("Set Brush Opacity", "Pinseldeckkraft festlegen"), ActionKind::View))

@@ -1974,8 +1974,8 @@ fn generation2d_render_body(
             let window_config = generate_preview::config::current(cfg);
             generate_preview::render(&window_config, None, labels)
         }
-        document_panel::GENERATION2D_PLAY_BODY_ARTIFACT => document_panel::render(document, config, labels),
-        catalogue_panel::GENERATION2D_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels),
+        document_panel::GENERATION2D_PLAY_BODY_ARTIFACT => document_panel::render(document, config, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, document_panel::GENERATION2D_PLAY_BODY_ARTIFACT)),
+        catalogue_panel::GENERATION2D_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels, &semio_framework_plugin::TreeWindows::for_body(view_state, catalogue_panel::GENERATION2D_PLAY_BODY_CATALOGUE)),
         inspection_panel::GENERATION2D_PLAY_BODY_INSPECTION => inspection_panel::render(document, config, labels),
         _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.unknown-body", "fixed UI unknown-body admission failed")),
     };
