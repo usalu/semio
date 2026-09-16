@@ -11,8 +11,10 @@
 // already stamps on itself (`World3dHost`'s `data-meshes-json`/`data-instances-json`, `NodeGraph`'s
 // `data-fixture-json`, `Table`'s `data-row-id` rows) — no test-only instrumentation was added for this.
 // Known-defect windows are asserted exactly like every other window rather than being weakened or
-// skipped, so a real defect fails loudly. Generator's edit-mode preview is still expected to fail (it
-// never gets a synced flow-eval session — `📓️app-generator.md` §3). Koordinator's four CAD windows were
+// skipped, so a real defect fails loudly. Generator's edit-mode preview used to be expected to fail (it
+// never got a synced flow-eval session — `📓️app-generator.md` §3); the guest half of that is fixed and
+// proven natively (`📓️fix-2026-09-16-generator-eval-session.md`), so it now grades the served path only.
+// Koordinator's four CAD windows were
 // the same story until commit f394df99d4 wired `cad_pane_working_scene` through
 // `ArtifactChild::local_owner`; that fix is committed but NOT yet compile-verified, so these four
 // assertions are its first real proof — see `📓️app-koordinator.md`. Every test also fails on any page error or non-404 console error, following
@@ -152,7 +154,7 @@ const PANE_CASES: readonly PaneCase[] = [
         kindId: "procedural-preview",
         surface: "world3d",
         expectContent: true,
-        note: "KNOWN GAP (📓️app-generator.md §3): edit-mode render() reads an always-fresh, never-ticked FlowEvalSession, so eval_json is always empty and the preview mesh/instance JSON stays empty.",
+        note: "Was a KNOWN GAP (📓️app-generator.md §3): edit-mode render() built a fresh, never-ticked FlowEvalSession per call. The session is retained per app instance now and the evaluation is the progress/cancel-capable `previewEval` tool run; the guest half is proven natively by `the_demonstrator_boot_example_renders_a_non_empty_preview_scene` (generation3d edit preview window unit tests, 📓️fix-2026-09-16-generator-eval-session.md). This assertion therefore grades the SERVED path only.",
       },
     ],
   },
@@ -288,6 +290,40 @@ test("DEMONSTRATOR_PANES matches the pane ids this suite covers (drift guard)", 
 });
 //#endregion 🧪️PaneConsistency
 
+//#region 🃏️OverviewCards
+/** @emoji 🃏️ Landing overview cards use window silhouettes (icon title chips, no drag handles). */
+test("demonstrator overview: pane cards use window-silhouette chrome without drag handles", async ({ page }) => {
+  test.setTimeout(TEST_TIMEOUT_MS);
+  const pageErrors: Error[] = [];
+  const consoleErrors: string[] = [];
+  page.on("pageerror", (error) => pageErrors.push(error));
+  page.on("console", (message) => {
+    if (message.type() === "error") consoleErrors.push(message.text());
+  });
+
+  await page.goto("/", { waitUntil: "domcontentloaded" });
+
+  const skipIntroduction = page.locator('[id="ui.introduction.skip"]');
+  if (await skipIntroduction.first().isVisible({ timeout: 5_000 }).catch(() => false)) {
+    await skipIntroduction.first().click({ timeout: 5_000 });
+  }
+
+  const cards = page.locator("[data-demonstrator-pane-card]");
+  await expect(cards).toHaveCount(brandPaneIds().length, { timeout: SHELL_READY_TIMEOUT_MS });
+
+  for (const paneId of brandPaneIds()) {
+    const card = page.locator(`[data-demonstrator-pane-card][data-pane-id="${paneId}"]`);
+    await expect(card).toBeVisible();
+    await expect(card.locator("[data-window-silhouette]")).toHaveCount(1);
+    await expect(card.locator('[data-slot="demonstrator-pane-card-title-chip"] svg')).toHaveCount(1);
+    await expect(card.locator('[data-slot*="drag"], [data-drag-handle]')).toHaveCount(0);
+  }
+
+  expect(pageErrors.map((error) => error.message), "unexpected page errors on overview").toEqual([]);
+  expect(significantConsoleErrors(consoleErrors), "unexpected console errors on overview").toEqual([]);
+});
+//#endregion 🃏️OverviewCards
+
 for (const paneCase of PANE_CASES) {
   test(`demonstrator pane "${paneCase.paneId}": boots via hash deep-link and renders its declared window(s)`, async ({ page }) => {
     test.setTimeout(TEST_TIMEOUT_MS);
@@ -343,3 +379,25 @@ for (const paneCase of PANE_CASES) {
     expect(significantConsoleErrors(consoleErrors), `pane "${paneCase.paneId}": unexpected console errors`).toEqual([]);
   });
 }
+
+test("landing Förderhinweis renders non-empty funding logos", async ({ page }) => {
+  test.setTimeout(60_000);
+  await page.goto("/", { waitUntil: "networkidle" });
+  const next = page.locator('[data-slot="introduction-info-box"] button').filter({ hasText: /Weiter/i });
+  for (let step = 0; step < 2; step += 1) {
+    await next.click({ timeout: 15_000 });
+    await page.waitForTimeout(400);
+  }
+  await expect(page.locator('[data-slot="introduction-info-box-title"]')).toHaveText("Förderhinweis");
+  const visibleLogoSizes = await page.locator('[data-slot="introduction-info-box"] img').evaluateAll((imgs) =>
+    imgs
+      .filter((img) => getComputedStyle(img).display !== "none")
+      .map((img) => ({ width: img.clientWidth, height: img.clientHeight, naturalWidth: (img as HTMLImageElement).naturalWidth })),
+  );
+  expect(visibleLogoSizes.length).toBeGreaterThanOrEqual(3);
+  for (const logo of visibleLogoSizes) {
+    expect(logo.width, "introduction funding logo should layout with width").toBeGreaterThan(0);
+    expect(logo.height, "introduction funding logo should layout with height").toBeGreaterThan(0);
+    expect(logo.naturalWidth, "introduction funding logo should decode as an image").toBeGreaterThan(0);
+  }
+});

@@ -189,8 +189,12 @@ pub(crate) mod context {
         semio_framework_plugin::resolve_ready(app.handle_action(action, args, &meta("local"))).expect("action dispatch")
     }
     
+    /// 🧩️ A `BuiltNode` carries retained page children, so the rendered tree is projected through the
+    /// fixture transport rather than serialized directly — a bare `serde_json::to_string(&tree.root)`
+    /// now fails with `BuiltChildren requires retained page transport`.
     pub fn render(app: &mut Process3dRawApp, body_key: &str) -> String {
-        serde_json::to_string(&semio_framework_plugin::resolve_ready(app.render(body_key, None, &ViewModel::default())).expect("render").root).expect("render json")
+        let tree = semio_framework_plugin::resolve_ready(app.render(body_key, None, &ViewModel::default())).expect("render");
+        semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(tree).expect("render projection")
     }
     
     pub fn main_window_measures(app: &mut Process3dRawApp) -> Vec<WindowMeasure> {
@@ -774,6 +778,20 @@ async fn world_context_menu_exposes_process_commands() {
     let ids: Vec<&str> = menu.iter().map(|item| item.id.as_str()).collect();
     assert!(ids.contains(&"addStep"), "right-click menu must expose the primary Process command: {ids:?}");
     assert!(ids.contains(&"undo") && ids.contains(&"redo"), "right-click menu must expose history commands: {ids:?}");
+}
+
+/// 🕹️ The interaction-view threading law for this app's menu: `removeSelectedStep` is a verb ON the
+/// `"geometry"` selection, so it exists exactly when that framework-owned domain is non-empty. Both
+/// arms go through the same `process3d_context_menu_items` funnel the two trait entry points share.
+#[semio_framework_async_macros::async_test]
+async fn the_context_menu_gates_the_destructive_row_on_the_geometry_selection() {
+    let registry = AppActionRegistry::from_definition(&create_process3d_app());
+    let ids = |selected: &[String]| -> Vec<String> { process3d_context_menu_items(&registry, selected).into_iter().map(|item| item.id).collect() };
+    let empty = ids(&[]);
+    assert!(!empty.iter().any(|id| id == "removeSelectedStep"), "an empty geometry selection must not offer the destructive row: {empty:?}");
+    assert!(empty.iter().any(|id| id == "addStep"), "the selection-free rows must survive an empty selection: {empty:?}");
+    let selected = ids(&["step-1".to_string()]);
+    assert!(selected.iter().any(|id| id == "removeSelectedStep"), "a non-empty geometry selection must offer the destructive row: {selected:?}");
 }
 //#endregion 🔖️CommandSurface
 

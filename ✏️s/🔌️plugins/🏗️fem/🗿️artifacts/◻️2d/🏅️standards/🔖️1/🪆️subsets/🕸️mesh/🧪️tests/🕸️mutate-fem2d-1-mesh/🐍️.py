@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """🏗️ An INDEPENDENT second implementation of the `s.fem.fem2d` structural model and this
-subset's typed mutations (`create-element`, `create-node`, `create-region`, `create-section`, `delete-element`, `delete-node`, `delete-region`, `delete-section`, `replace-element`, `replace-region`, `replace-section`), in Python, serving as this case's differential oracle.
+subset's typed mutations (`create-element`, `create-node`, `create-region`, `create-section`, `delete-element`, `delete-node`, `delete-region`, `delete-section`, `replace-element`, `replace-node`, `replace-region`, `replace-section`), in Python, serving as this case's differential oracle.
 Relocated out of the artifact-level `mutate-fem2d-1` case in ticket
 `26/09/02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION`, and
 extended to the vocabulary's REFUSALS in ticket `26/09/06/FEM-PLUGIN-END-TO-END`.
@@ -56,15 +56,15 @@ COLLECTIONS = {
     "section": ("sections", "section", "newSection"),
     "support": ("supports", "support", "newSupport"),
     "load-case": ("loadCases", "loadCase", None),
-    "combination": ("combinations", "combination", None),
+    "combination": ("combinations", "combination", "newCombination"),
 }
 """🗂️ Per noun: its collection, the argument `create-` carries, and the one `replace-` carries when
 the vocabulary has a `replace-` for it at all."""
 
-KINDS = ("create-element", "create-node", "create-region", "create-section", "delete-element", "delete-node", "delete-region", "delete-section", "replace-element", "replace-region", "replace-section")
+KINDS = ("create-element", "create-node", "create-region", "create-section", "delete-element", "delete-node", "delete-region", "delete-section", "replace-element", "replace-node", "replace-region", "replace-section")
 """🏷️ This subset's own kinds, in the catalog's declared order."""
 
-REFUSALS = {"create-element": 1, "create-node": 1, "create-region": 3, "create-section": 2, "delete-element": 2, "delete-node": 1, "delete-region": 2, "delete-section": 2, "replace-element": 3, "replace-region": 4, "replace-section": 3}
+REFUSALS = {"create-element": 1, "create-node": 1, "create-region": 3, "create-section": 2, "delete-element": 2, "delete-node": 1, "delete-region": 2, "delete-section": 2, "replace-element": 3, "replace-node": 2, "replace-region": 4, "replace-section": 3}
 """🚫️ How many refusal-or-no-op vectors each kind declares — the `reject-<kind>-<n>` rows the
 feature's `@id-reject` Outline carries, numbered in the catalog's own order."""
 
@@ -209,6 +209,22 @@ def check_section(record):
         fatal(INVARIANT, [identifier], 'Section "%s" needs a positive area.' % identifier)
     if record["iy"] <= 0.0:
         fatal(INVARIANT, [identifier], 'Section "%s" needs a positive second moment of area.' % identifier)
+
+
+def check_load(load):
+    """🏋️ A load's magnitudes are plain numbers in the snapshot schema, so a NaN or an infinity is
+    not one — a non-finite force, line load or pressure poisons every right-hand side it enters."""
+    magnitudes = [load["value"]] if load["kind"] == "nodal" else [load["wx"], load["wy"]] if load["kind"] == "memberUdl" else [load["pressure"]]
+    if not finite(*magnitudes):
+        fatal(INVARIANT, [load["id"]], 'Load "%s" carries a non-finite magnitude.' % load["id"])
+
+
+def check_combination(record):
+    """⚖️ A combination weights its cases by real numbers — a non-finite factor turns the superposed
+    load vector into NaN long before anything downstream can say which edit caused it."""
+    for term in record["terms"]:
+        if not finite(term["factor"]):
+            fatal(INVARIANT, [record["id"]], 'Combination "%s" carries a non-finite factor.' % record["id"])
 
 
 def ring_area(ring):
@@ -390,6 +406,7 @@ def check_record(document, noun, record):
             known = find(document["loadCases"], term["caseId"]) is not None or find(document["combinations"], term["caseId"]) is not None
             if not known:
                 error(TARGET_MISSING, [term["caseId"]], 'Load case or combination "%s" does not exist.' % term["caseId"])
+        check_combination(record)
 
 
 def apply_mutation(document, mutation):
@@ -401,7 +418,7 @@ def apply_mutation(document, mutation):
         if mutation["settings"] == result["analysis"]:
             warn(NO_OP, "Analysis settings are unchanged.")
         result["analysis"] = copy.deepcopy(mutation["settings"])
-    elif kind in ("add-load", "remove-load", "change-load-case-self-weight"):
+    elif kind in ("add-load", "remove-load", "replace-load", "change-load-case-self-weight", "change-load-case-name"):
         case = case_of(result, mutation["caseId"])
         if kind == "add-load":
             load = copy.deepcopy(mutation["load"])
@@ -414,6 +431,22 @@ def apply_mutation(document, mutation):
             if at is None:
                 error(TARGET_MISSING, [mutation["loadId"]], 'Load "%s" does not exist in case "%s".' % (mutation["loadId"], case["id"]))
             case["loads"].pop(at)
+        elif kind == "replace-load":
+            at = find(case["loads"], mutation["loadId"])
+            if at is None:
+                error(TARGET_MISSING, [mutation["loadId"]], 'Load "%s" does not exist in case "%s".' % (mutation["loadId"], case["id"]))
+            load = copy.deepcopy(mutation["newLoad"])
+            if load["id"] != mutation["loadId"]:
+                fatal(ID_MISMATCH, [mutation["loadId"], load["id"]], 'A replace-load may not rename "%s" to "%s".' % (mutation["loadId"], load["id"]))
+            resolve_load(result, load)
+            check_load(load)
+            if case["loads"][at] == load:
+                warn(NO_OP, 'Load "%s" in case "%s" is already equal to the replacement value.' % (mutation["loadId"], case["id"]))
+            case["loads"][at] = load
+        elif kind == "change-load-case-name":
+            if case["name"] == mutation["newName"]:
+                warn(NO_OP, 'Load case "%s" is already named "%s".' % (case["id"], mutation["newName"]))
+            case["name"] = mutation["newName"]
         else:
             if case["selfWeight"] == mutation["newSelfWeight"]:
                 warn(NO_OP, 'Load case "%s" self-weight is already set.' % case["id"])
@@ -467,8 +500,16 @@ def inverse_mutation(document, mutation):
         if at is None:
             raise AssertionError("inverse of %s: case %r carries no load %r" % (kind, case["id"], mutation["loadId"]))
         return {"mutation": TAGS["add-load"], "caseId": mutation["caseId"], "load": copy.deepcopy(case["loads"][at])}
+    if kind == "replace-load":
+        case = case_of(document, mutation["caseId"])
+        at = find(case["loads"], mutation["loadId"])
+        if at is None:
+            raise AssertionError("inverse of %s: case %r carries no load %r" % (kind, case["id"], mutation["loadId"]))
+        return {"mutation": TAGS[kind], "caseId": mutation["caseId"], "loadId": mutation["loadId"], "newLoad": copy.deepcopy(case["loads"][at])}
     if kind == "change-load-case-self-weight":
         return {"mutation": TAGS[kind], "caseId": mutation["caseId"], "newSelfWeight": case_of(document, mutation["caseId"])["selfWeight"]}
+    if kind == "change-load-case-name":
+        return {"mutation": TAGS[kind], "caseId": mutation["caseId"], "newName": case_of(document, mutation["caseId"])["name"]}
     noun = noun_of(kind)
     collection, create_argument, replace_argument = COLLECTIONS[noun]
     if kind.startswith("create-"):
@@ -525,7 +566,7 @@ def touches_one(scenario, kind, before, after):
     member it meant to write."""
     if kind == "update-analysis-settings":
         written = "analysis"
-    elif kind in ("add-load", "remove-load", "change-load-case-self-weight"):
+    elif kind in ("add-load", "remove-load", "replace-load", "change-load-case-self-weight", "change-load-case-name"):
         written = "loadCases"
     else:
         written = COLLECTIONS[noun_of(kind)][0]

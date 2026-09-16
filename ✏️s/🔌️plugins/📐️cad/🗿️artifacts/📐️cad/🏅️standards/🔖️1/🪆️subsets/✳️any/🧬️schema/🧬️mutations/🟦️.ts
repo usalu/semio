@@ -123,6 +123,73 @@ export interface ReplaceReferences {
   references: CadReference[];
 }
 
+/** 🧱️ Public wire twin of the ephemeral working object `create-object` carries. */
+export interface CadObjectSpec {
+  id: string;
+  label: string;
+  typology: string;
+  visible: boolean;
+  locked: boolean;
+  origin: [number, number, number];
+  orientation: [number, number, number, number] | null;
+  scale: [number, number, number] | null;
+  meshUrl: string | null;
+  extent: [number, number, number] | null;
+  solidHandle: string | null;
+}
+
+/** 🧱️ One object's exact next origin — absolute, so the inverse restores it bit-for-bit. */
+export interface CadObjectOrigin {
+  objectId: string;
+  newOrigin: [number, number, number];
+}
+
+/** 🧱️ One object's exact next orientation quaternion. */
+export interface CadObjectOrientation {
+  objectId: string;
+  newOrientation: [number, number, number, number];
+}
+
+/** 🧱️ One object's exact next per-axis scale. */
+export interface CadObjectScale {
+  objectId: string;
+  newScale: [number, number, number];
+}
+
+/** 🪆️ The pane whose composed `s.stdio.semio.model` child an object mutation re-materializes. */
+export type CadPaneId = "shape" | "building" | "energy" | "structure-classic";
+
+/** 🆕️ `create-object` payload — brings one object into a pane's composed model child at `index`. */
+export interface CreateObject {
+  pane: CadPaneId;
+  index: number;
+  object: CadObjectSpec;
+}
+
+/** ❌️ `delete-object` payload — removes one object from a pane's composed model child. */
+export interface DeleteObject {
+  pane: CadPaneId;
+  objectId: string;
+}
+
+/** 🚚️ `move-objects` payload — absolute next origins for the touched objects of one pane. */
+export interface MoveObjects {
+  pane: CadPaneId;
+  placements: CadObjectOrigin[];
+}
+
+/** 🌀️ `rotate-objects` payload — absolute next orientations for the touched objects of one pane. */
+export interface RotateObjects {
+  pane: CadPaneId;
+  placements: CadObjectOrientation[];
+}
+
+/** ⚖️ `scale-objects` payload — absolute next scales for the touched objects of one pane. */
+export interface ScaleObjects {
+  pane: CadPaneId;
+  placements: CadObjectScale[];
+}
+
 export type CadMutation =
   | ({ mutation: "createShapeModel" } & CreateShapeModel)
   | ({ mutation: "deleteShapeModel" } & DeleteShapeModel)
@@ -142,4 +209,9 @@ export type CadMutation =
   | ({ mutation: "changeReferenceWidth" } & ChangeReferenceWidth)
   | ({ mutation: "moveReference" } & MoveReference)
   | ({ mutation: "replaceReferenceMedia" } & ReplaceReferenceMedia)
-  | ({ mutation: "replaceReferences" } & ReplaceReferences);
+  | ({ mutation: "replaceReferences" } & ReplaceReferences)
+  | ({ mutation: "createObject" } & CreateObject)
+  | ({ mutation: "deleteObject" } & DeleteObject)
+  | ({ mutation: "moveObjects" } & MoveObjects)
+  | ({ mutation: "rotateObjects" } & RotateObjects)
+  | ({ mutation: "scaleObjects" } & ScaleObjects);

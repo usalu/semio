@@ -6,7 +6,7 @@ use crate::editor::sourcing::config::SourcingCurationConfig;
 use crate::editor::sourcing::terminology::SourcingLabels;
 use crate::editor::sourcing::{sourcing_action, sourcing_table, sourcing_table_action, sourcing_table_row, ui_value_bool, ui_value_map, ui_value_text};
 use semio_framework_plugin::plugin_app_close_prelude::{self as ui, InputKind, Label};
-use semio_framework_plugin::{Buildable, BuiltNode, HasBase, HasChildren, LocalizedLabel, PluginAssemblyError, SurfaceKind, TableCell, Trigger, UiAssemblyResult, UiFixedList, UiText, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::{Buildable, BuiltNode, HasBase, HasChildren, LocalizedLabel, PluginAssemblyError, SurfaceKind, TableCell, Trigger, UiAssemblyResult, UiFixedList, UiText, UiTreeActionPlacement, UiTreeItemAction, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants
 pub const SOURCING_CURATION_WINDOW_POOL: &str = "sourcing-pool";
@@ -37,26 +37,36 @@ pub fn definition() -> WindowKindDefinition {
 //#region 🔖️Render
 const SOURCING_CURATION_SURFACE_POOL: &str = "sourcing.pool.table";
 
+/// ↕️ The pool's own sortable columns. A `TableSort` naming a column this table does not have (the
+/// curated table's `count`) leaves the pool in document order instead of silently falling back to name.
+pub const SOURCING_CURATION_POOL_SORT_COLUMNS: [&str; 3] = ["name", "module", "availability"];
+
 fn pool_kinds(document: &CurationSnapshot, cfg: &SourcingCurationConfig) -> Vec<ObjectKind> {
     let mut filtered = filtered_stock(document, &cfg.filters);
-    if let Some(sort) = &cfg.filters.sort {
-        filtered.sort_by(|a, b| {
-            let ordering = match sort.column_id.as_str() {
-                "availability" => a.availability.cmp(&b.availability),
-                "module" => a.module_id.cmp(&b.module_id),
-                _ => a.name.cmp(&b.name),
-            };
-            if sort.direction == SortDirection::Desc {
-                ordering.reverse()
-            } else {
-                ordering
-            }
-        });
-    }
+    let Some(sort) = cfg.filters.sort.as_ref().filter(|sort| SOURCING_CURATION_POOL_SORT_COLUMNS.contains(&sort.column_id.as_str())) else { return filtered };
+    filtered.sort_by(|a, b| {
+        let ordering = match sort.column_id.as_str() {
+            "availability" => a.availability.cmp(&b.availability),
+            "module" => a.module_id.cmp(&b.module_id),
+            _ => a.name.cmp(&b.name),
+        };
+        if sort.direction == SortDirection::Desc { ordering.reverse() } else { ordering }
+    });
     filtered
 }
 
-fn pool_row(document: &CurationSnapshot, kind: &ObjectKind) -> protocol::DslValue {
+/// 🧺️ The pool row's ≤2 curate actions: always "curate one more" (`curationAdd`), plus "uncurate"
+/// (`curationRemove`) once the kind is in the curated set. Both are the same commands the curated
+/// window and the drop targets dispatch — this window adds no state of its own.
+fn pool_row_actions(document: &CurationSnapshot, kind: &ObjectKind, labels: &SourcingLabels) -> Vec<UiTreeItemAction> {
+    let mut actions = vec![UiTreeItemAction { icon_id: "plus".into(), label: Some(labels.curate.into()), action: sourcing_table_action("curationAdd", Some(&kind.id)), placement: Some(UiTreeActionPlacement::Row) }];
+    if curated_count(document, &kind.id) > 0 {
+        actions.push(UiTreeItemAction { icon_id: "minus".into(), label: Some(labels.remove.into()), action: sourcing_table_action("curationRemove", Some(&kind.id)), placement: Some(UiTreeActionPlacement::Row) });
+    }
+    actions
+}
+
+fn pool_row(document: &CurationSnapshot, kind: &ObjectKind, labels: &SourcingLabels) -> protocol::DslValue {
     sourcing_table_row(
         &kind.id,
         vec![
@@ -65,6 +75,7 @@ fn pool_row(document: &CurationSnapshot, kind: &ObjectKind) -> protocol::DslValu
             ("typology", TableCell::Text { value: kind.typology_path.join(" / ") }),
             ("availability", TableCell::Number { value: kind.availability as f64 }),
             ("curated", TableCell::Stepper { value: curated_count(document, &kind.id) as f64, min: 0.0, max: kind.availability as f64, step: 1.0, action: sourcing_table_action("curationSetCount", Some(&kind.id)) }),
+            ("actions", TableCell::Buttons { buttons: pool_row_actions(document, kind, labels) }),
         ],
     )
 }
@@ -112,6 +123,9 @@ fn filter_bar(cfg: &SourcingCurationConfig, labels: &SourcingLabels) -> UiAssemb
     let (availability_action, _) = sourcing_action("setFilterMinAvailability", None)?;
     let availability = ui::input(InputKind::Number).value(ui_text(filters.min_availability.to_string())?);
     children.try_push(availability.try_id("sourcing-filter-min-availability").map_err(|_| filter_error("availability-id"))?.try_on(Trigger::Change, availability_action).map_err(|_| filter_error("availability-binding"))?.try_build().map_err(|_| filter_error("availability-build"))?).map_err(|_| filter_error("children"))?;
+    let (restock_action, _) = sourcing_action("stockFromCatalogue", None)?;
+    let restock = ui::button(ui_label(labels.restock.as_str())?).icon(ui_text("refresh-cw")?);
+    children.try_push(restock.try_id("sourcing-pool-restock").map_err(|_| filter_error("restock-id"))?.try_on(Trigger::Activate, restock_action).map_err(|_| filter_error("restock-binding"))?.try_build().map_err(|_| filter_error("restock-build"))?).map_err(|_| filter_error("children"))?;
     ui::row().try_id("sourcing-pool-filters").map_err(|_| filter_error("row-id"))?.try_children(children).map_err(|_| filter_error("row-children"))?.try_build().map_err(|_| filter_error("row-build"))
 }
 
@@ -122,8 +136,9 @@ pub fn render(document: &CurationSnapshot, cfg: &SourcingCurationConfig, labels:
         ("typology", labels.col_typology.as_str(), false),
         ("availability", labels.col_availability.as_str(), true),
         ("curated", labels.col_curated.as_str(), false),
+        ("actions", labels.col_actions.as_str(), false),
     ];
-    let rows = pool_kinds(document, cfg).iter().map(|kind| pool_row(document, kind)).collect();
+    let rows = pool_kinds(document, cfg).iter().map(|kind| pool_row(document, kind, labels)).collect();
     let table = sourcing_table(SOURCING_CURATION_SURFACE_POOL, &columns, rows, "dropOnPool", cfg.filters.sort.as_ref())?;
     let mut children = UiFixedList::<BuiltNode>::default();
     children.try_push(filter_bar(cfg, labels)?).map_err(|_| filter_error("children"))?;

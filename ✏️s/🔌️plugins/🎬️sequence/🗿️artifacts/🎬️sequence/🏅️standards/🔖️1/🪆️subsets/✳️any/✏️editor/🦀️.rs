@@ -3010,6 +3010,8 @@ impl SequenceConfigProofs {
 //#endregion 🧾️ProofCatalogs
 
 impl ArtifactEditor for SequencePlayApp {
+    /// 🧩️ Composes `s.stdio.semio@v1/*` children, so every bundle of this surface opens them through the same roster.
+    type Members = semio_s_artifact_stdio_semio::SemioMembers;
     type Snapshot = SequenceSnapshot;
     type Mutation = SequenceMutation;
     type Config = NoConfig;

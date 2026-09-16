@@ -1079,6 +1079,100 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/📈️analysis/🧬️schema/🧬️mutations/🎛️update-analysis-settings/🧪️tests/🚫️denies-zero-modes-babc1d/🦀️.rs"]
                             mod tests_refuses_an_analysis_configured_to_extract_zero_modal_modes;
                         }
+                        #[path = "."]
+                        pub mod replace_node {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🔁️replace-node/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🔁️replace-node/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🔁️replace-node/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🔁️replace-node/🧪️tests/🕹️raises-the-ridge-e53b00/🦀️.rs"]
+                            mod tests_raises_the_ridge_node_of_the_timber_portal_frame_by_600_millimetres;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🔁️replace-node/🧪️tests/📍️widens-the-canopy-553d69/🦀️.rs"]
+                            mod tests_widens_the_canopy_tip_of_the_steel_frame_by_half_a_metre;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🔁️replace-node/🧪️tests/⛔️rejects-a-missing-334de5/🦀️.rs"]
+                            mod tests_rejects_replacing_a_node_the_steel_frame_never_had;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🔁️replace-node/🧪️tests/🪪️denies-rename-e69720/🦀️.rs"]
+                            mod tests_refuses_to_relabel_a_steel_frame_node_through_a_replace_node;
+                        }
+                        #[path = "."]
+                        pub mod replace_load {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🔁️replace-load/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🔁️replace-load/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🔁️replace-load/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🔁️replace-load/🧪️tests/🏋️retunes-the-live-f6fd49/🦀️.rs"]
+                            mod tests_retunes_the_live_point_load_on_the_timber_portal_frame;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🔁️replace-load/🧪️tests/💨️strengthens-the-wind-21b88a/🦀️.rs"]
+                            mod tests_strengthens_the_wind_point_load_on_the_braced_steel_frame;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🔁️replace-load/🧪️tests/⛔️rejects-a-missing-7a1e1f/🦀️.rs"]
+                            mod tests_rejects_replacing_a_load_the_wind_case_never_carried;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🔁️replace-load/🧪️tests/🪪️denies-rename-732de0/🦀️.rs"]
+                            mod tests_refuses_to_relabel_a_wind_load_through_a_replace_load;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🔁️replace-load/🧪️tests/👻️dangling-node-b95678/🦀️.rs"]
+                            mod tests_refuses_to_move_a_wind_load_onto_a_node_the_steel_frame_never_had;
+                        }
+                        #[path = "."]
+                        pub mod change_load_case_name {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🏷️change-load-case-name/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🏷️change-load-case-name/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🏷️change-load-case-name/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🏷️change-load-case-name/🧪️tests/🏷️renames-the-live-7dce39/🦀️.rs"]
+                            mod tests_renames_the_live_case_of_the_timber_portal_frame_to_imposed_load;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🏷️change-load-case-name/🧪️tests/✏️renames-the-wind-61757b/🦀️.rs"]
+                            mod tests_renames_the_wind_case_of_the_braced_steel_frame_to_its_code_clause;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🏷️change-load-case-name/🧪️tests/⛔️rejects-a-missing-fc0343/🦀️.rs"]
+                            mod tests_rejects_renaming_a_load_case_the_steel_frame_never_had;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🏷️change-load-case-name/🧪️tests/🔁️keeps-the-name-4fa89f/🦀️.rs"]
+                            mod tests_keeps_the_dead_case_of_the_steel_frame_named_exactly_as_it_is;
+                        }
+                        #[path = "."]
+                        pub mod replace_combination {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🔁️replace-combination/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🔁️replace-combination/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🔁️replace-combination/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🔁️replace-combination/🧪️tests/⚖️reweights-the-uls-8b17b7/🦀️.rs"]
+                            mod tests_adds_a_snow_term_to_the_uls_combination_of_the_timber_portal_frame;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🔁️replace-combination/🧪️tests/🔗️adds-a-wind-term-6525d5/🦀️.rs"]
+                            mod tests_adds_a_wind_term_to_the_uls_combination_of_the_braced_steel_frame;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🔁️replace-combination/🧪️tests/⛔️rejects-a-missing-b32308/🦀️.rs"]
+                            mod tests_rejects_replacing_a_combination_the_steel_frame_never_had;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🔁️replace-combination/🧪️tests/🪪️denies-rename-a96d3c/🦀️.rs"]
+                            mod tests_refuses_to_relabel_a_combination_through_a_replace_combination;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🔁️replace-combination/🧪️tests/👻️dangling-case-65b8a8/🦀️.rs"]
+                            mod tests_refuses_a_uls_term_weighting_a_case_the_steel_frame_never_had;
+                        }
                     }
                 }
                 #[path = "."]
@@ -1318,6 +1412,51 @@ pub mod editor {
             pub mod set_result_display;
             #[path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎮️commands/⚖️set-self-weight/🦀️.rs"]
             pub mod set_self_weight;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎮️commands/🖱️canvas-pointer-down/🦀️.rs"]
+            pub mod canvas_pointer_down;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎮️commands/🖱️canvas-pointer-move/🦀️.rs"]
+            pub mod canvas_pointer_move;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎮️commands/🖱️canvas-pointer-up/🦀️.rs"]
+            pub mod canvas_pointer_up;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎮️commands/🎯️focus-entity/🦀️.rs"]
+            pub mod focus_entity;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎮️commands/🩹️patch-combination/🦀️.rs"]
+            pub mod patch_combination;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎮️commands/🩹️patch-element/🦀️.rs"]
+            pub mod patch_element;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎮️commands/🩹️patch-load/🦀️.rs"]
+            pub mod patch_load;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎮️commands/🩹️patch-load-case/🦀️.rs"]
+            pub mod patch_load_case;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎮️commands/🩹️patch-material/🦀️.rs"]
+            pub mod patch_material;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎮️commands/🩹️patch-node/🦀️.rs"]
+            pub mod patch_node;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎮️commands/🩹️patch-region/🦀️.rs"]
+            pub mod patch_region;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎮️commands/🩹️patch-section/🦀️.rs"]
+            pub mod patch_section;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎮️commands/🩹️patch-support/🦀️.rs"]
+            pub mod patch_support;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎮️commands/⏱️result-animation-tick/🦀️.rs"]
+            pub mod result_animation_tick;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎮️commands/⏯️set-result-animation/🦀️.rs"]
+            pub mod set_result_animation;
+        }
+
+        #[path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🗣️terminology/🦀️.rs"]
+        pub mod terminology;
+        #[path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🕹️interaction/🦀️.rs"]
+        pub mod interaction;
+
+        #[path = "."]
+        pub mod panels {
+            #[path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/📌️panels/🗿️artifact/🦀️.rs"]
+            pub mod artifact;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/📌️panels/🔍️inspection/🦀️.rs"]
+            pub mod inspection;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/📌️panels/📊️results/🦀️.rs"]
+            pub mod results;
         }
 
         #[path = "."]

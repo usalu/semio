@@ -219,6 +219,31 @@ export interface DeleteCombination {
 export interface UpdateAnalysisSettings {
   settings: FemAnalysisSettings;
 }
+
+/** 🔁📍️ Whole-value swap of an existing node's payload — the one gesture that moves a node. */
+export interface ReplaceNode {
+  id: string;
+  newNode: FemNode;
+}
+
+/** 🔁🏋️ Whole-value swap of one load inside an existing load case's `loads` member collection. */
+export interface ReplaceLoad {
+  caseId: string;
+  loadId: string;
+  newLoad: FemLoad;
+}
+
+/** 🏷️ Sets an existing load case's human-readable name; its `id` is untouched. */
+export interface ChangeLoadCaseName {
+  caseId: string;
+  newName: string;
+}
+
+/** 🔁🔗️ Whole-value swap of an existing load combination's payload. */
+export interface ReplaceCombination {
+  id: string;
+  newCombination: FemCombination;
+}
 //#endregion 🔖️Mutations
 
 export type Fem2dMutation =
@@ -246,4 +271,8 @@ export type Fem2dMutation =
   | ({ mutation: "changeLoadCaseSelfWeight" } & ChangeLoadCaseSelfWeight)
   | ({ mutation: "createCombination" } & CreateCombination)
   | ({ mutation: "deleteCombination" } & DeleteCombination)
-  | ({ mutation: "updateAnalysisSettings" } & UpdateAnalysisSettings);
+  | ({ mutation: "updateAnalysisSettings" } & UpdateAnalysisSettings)
+  | ({ mutation: "replaceNode" } & ReplaceNode)
+  | ({ mutation: "replaceLoad" } & ReplaceLoad)
+  | ({ mutation: "changeLoadCaseName" } & ChangeLoadCaseName)
+  | ({ mutation: "replaceCombination" } & ReplaceCombination);

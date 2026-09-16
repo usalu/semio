@@ -155,6 +155,9 @@ fn write_file(path: std::path::PathBuf, text: &str) {
 
 /// 🏗️ Materializes the five committed JSON files from the typed scenario. Off unless
 /// `SEMIO_ENERGY_WRITE_FIXTURES=1`, so an ordinary test run never touches the source tree.
+/// The root is the SAME `🧫️fixtures/🧬️mutations/<kind>/<case>` tree every leaf test
+/// `include_str!`s from (`../../../../../🧫️fixtures/…` relative to the leaf) — the writer once
+/// pointed at `🧬️schema/🧬️mutations/…`, which left every committed quintet a `{}` stub.
 pub fn write_when_requested(case: &Case) {
     if std::env::var("SEMIO_ENERGY_WRITE_FIXTURES").ok().as_deref() != Some("1") {
         return;
@@ -162,7 +165,7 @@ pub fn write_when_requested(case: &Case) {
     let (before, mutation) = (case.scenario)();
     let outcome = <EnergyModelMutation as Mutation<EnergyModelSnapshot>>::diff(&mutation, &before);
     let after = MutationDiff::apply(outcome.diff(), &before).expect("the scenario's forward diff applies");
-    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations").join(case.directory);
+    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🧬️mutations").join(case.directory);
     let json = |value: pack::json::Value| pack::json::to_string_pretty(&value);
     write_file(root.join("📸️snapshot/⬅️before/🔣️.json"), &json(pack::json::from_dsl_value(&before.to_value())));
     write_file(root.join("📸️snapshot/➡️after/🔣️.json"), &json(pack::json::from_dsl_value(&after.to_value())));

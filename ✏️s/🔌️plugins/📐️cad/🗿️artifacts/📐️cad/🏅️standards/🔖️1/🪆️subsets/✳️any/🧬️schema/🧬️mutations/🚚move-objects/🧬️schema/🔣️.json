@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/cad/cad/mutation/move-objects/schema.json",
+  "title": "MoveObjects",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "pane",
+    "placements"
+  ],
+  "properties": {
+    "pane": {
+      "enum": [
+        "shape",
+        "building",
+        "energy",
+        "structure-classic"
+      ]
+    },
+    "placements": {
+      "type": "array",
+      "items": {
+        "title": "CadObjectOrigin",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "objectId",
+          "newOrigin"
+        ],
+        "properties": {
+          "objectId": {
+            "type": "string"
+          },
+          "newOrigin": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            },
+            "minItems": 3,
+            "maxItems": 3
+          }
+        }
+      }
+    }
+  }
+}

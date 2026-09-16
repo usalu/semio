@@ -956,6 +956,12 @@ pub fn puzzle3d_next_object_label(objects: &[Puzzle3dObject], fixture: &Puzzle3d
 }
 
 /// 🧊️ Seeds real vortices for a freshly placed object from its kind catalog's `vortices` templates, so it is immediately brushable instead of connector-less.
+///
+/// 🐛️ A catalog TEMPLATE names its seat `point` (`Puzzle3dCatalogVortexTemplate`), a placed vortex
+/// names it `position` (`Puzzle3dVortex`) — reading only `position` here silently stacked every
+/// seeded vortex of every catalogued kind at the object origin, so a freshly added object offered one
+/// degenerate seat instead of its real rim. `position` is kept as the fallback for the
+/// already-placed-shaped rows `kit:in` imports carry.
 pub fn puzzle3d_vortices_from_kind_template(catalog_entry: &dsl::DslValue) -> Vec<Puzzle3dVortex> {
     catalog_entry
         .get("vortices")
@@ -965,7 +971,7 @@ pub fn puzzle3d_vortices_from_kind_template(catalog_entry: &dsl::DslValue) -> Ve
                 .iter()
                 .enumerate()
                 .map(|(index, template)| {
-                    let position = template.get("position").and_then(|value| dsl::FromValue::from_value(value.clone()).ok()).unwrap_or([0.0, 0.0, 0.0]);
+                    let position = template.get("point").or_else(|| template.get("position")).and_then(|value| dsl::FromValue::from_value(value.clone()).ok()).unwrap_or([0.0, 0.0, 0.0]);
                     let direction = template.get("direction").and_then(|value| dsl::FromValue::from_value(value.clone()).ok());
                     let radius = template.get("radius").and_then(|value| value.as_f64());
                     Puzzle3dVortex { id: format!("v{index}"), vortex_kind: template.get("vortexKind").and_then(|value| value.as_str()).map(str::to_string), position, direction, radius, hidden: false, locked: false }
@@ -8258,6 +8264,7 @@ impl ArtifactEditor for Puzzle3dPlayApp {
         cfg: &ConfigView<'_, Puzzle3dConfig>,
         view_state: &semio_framework_plugin::ViewModel,
         transient: &semio_framework_plugin::TransientView<'_, Self::Transient>,
+        _interaction: &InteractionView<'_>,
     ) -> HashMap<String, WindowEngagement> {
         let Some(window_id) = view_state.window_id.as_deref() else { return HashMap::new() };
         let runtime = window_ownership::runtime(cfg.snapshot, &window_ownership::config_from_view(cfg), &window_ownership::transient_from_view(transient), Some(view_state));

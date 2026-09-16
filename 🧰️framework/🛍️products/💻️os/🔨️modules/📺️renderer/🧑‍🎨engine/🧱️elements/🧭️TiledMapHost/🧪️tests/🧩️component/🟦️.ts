@@ -9,7 +9,7 @@
 // #region 🔌️Adapters
 import { afterEach, describe, expect, it, vi } from "vitest";
 import ts from "typescript";
-import { createByteLru, createBoundedSet, createLeadingTrailingDebounce, MapRenderer } from "../../🟦️.tsx";
+import { createByteLru, createBoundedSet, createLeadingTrailingDebounce, mapFeatureHoverActionArgs, mapFeatureSelectionActionArgs, MapRenderer, resolveMapInteractionSync } from "../../🟦️.tsx";
 import type { MapWasmSession } from "../../../🪪️WasmSessionLoader/🟦️.tsx";
 import repaintFixture from "./🧫️repaint.json";
 import rendererSource from "../../🟦️.tsx?raw";
@@ -92,6 +92,40 @@ describe("MapRenderer idle appearance updates", () => {
     }
   });
 });
+
+//#region 🔖️InteractionDispatch
+describe("feature interaction dispatch args", () => {
+  it("addresses interactionSelect at the features domain's feature granularity", () => {
+    expect(mapFeatureSelectionActionArgs(["pos-1", "route-2"], "replace", "pick")).toEqual({
+      domainId: "features",
+      targets: JSON.stringify([
+        { granularity: "feature", id: "pos-1" },
+        { granularity: "feature", id: "route-2" },
+      ]),
+      merge: "replace",
+      method: "pick",
+    });
+  });
+
+  it("de-duplicates ids and carries the marquee method through, mirroring world3dSelectionActionArgs", () => {
+    const args = mapFeatureSelectionActionArgs(["pos-1", "pos-1"], "additive", "lasso");
+    expect(JSON.parse(args.targets)).toEqual([{ granularity: "feature", id: "pos-1" }]);
+    expect(args.merge).toBe("additive");
+    expect(args.method).toBe("lasso");
+  });
+
+  it("publishes interactionHover on the pointer channel, and an empty targets list clears it", () => {
+    expect(mapFeatureHoverActionArgs("route-2")).toEqual({ domainId: "features", channel: "pointer", targets: JSON.stringify([{ granularity: "feature", id: "route-2" }]) });
+    expect(mapFeatureHoverActionArgs(null)).toEqual({ domainId: "features", channel: "pointer", targets: "[]" });
+  });
+
+  it("syncs the guest's published selection back into the wasm session under the right granularity", () => {
+    expect(resolveMapInteractionSync('{"positions":["pos-1"],"routes":[]}', "null")).toEqual({ granularity: "position", selectedIdsJson: '["pos-1"]' });
+    expect(resolveMapInteractionSync('{"positions":[],"routes":["route-2"]}', '{"kind":"route","id":"route-2"}')).toEqual({ granularity: "route", selectedIdsJson: '["route-2"]', hoveredId: "route-2" });
+    expect(resolveMapInteractionSync('{"positions":[],"routes":[]}', '{"kind":"position","id":"pos-1"}')).toEqual({ granularity: "position", selectedIdsJson: "[]", hoveredId: "pos-1" });
+  });
+});
+//#endregion 🔖️InteractionDispatch
 
 //#region 🔖️ByteLru
 describe("createByteLru", () => {

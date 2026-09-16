@@ -10,6 +10,14 @@ use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRe
 use semio_framework_plugin::plugin_app_close_prelude::*;
 use semio_framework_plugin::{ExecutionMode, HostMediaHandlerDeclaration, Plugin, PluginApp};
 
+//#region ✏️Editor
+/// ✏️ Surface re-export so bundling crates (🎪️demonstrator) can name `gis::editor::gis2d::…`
+/// exactly as they name `cad::editor::cad::…` — same shape as 📐️cad/🏭️process/🪵️sourcing.
+pub mod editor {
+    pub use semio_s_artifact_gis_gismap::editor::*;
+}
+//#endregion ✏️Editor
+
 //#region 🗃️Apps
 semio_framework_dispatch_macros::dyn_enum_close! {
     /// 🗃️ Closed runtime app fleet for both GIS artifact surfaces.
@@ -42,9 +50,9 @@ pub fn plugin() -> Result<Plugin<GisApps>, PluginAssemblyError> {
             "gis2d",
             semio_s_artifact_gis_gismap::schema::gis2d_document_json_to_svg,
         )?)
-        .editor_with_members::<semio_s_artifact_gis_gismap::editor::gis2d::Gis2dPlayApp, semio_s_artifact_stdio_semio::SemioMembers>(semio_s_artifact_gis_gismap::editor::gis2d::create_gis2d_app())
+        .editor::<semio_s_artifact_gis_gismap::editor::gis2d::Gis2dPlayApp>(semio_s_artifact_gis_gismap::editor::gis2d::create_gis2d_app())
         .editor_mutation_roster::<semio_s_artifact_gis_gismap::editor::gis2d::Gis2dPlayApp>()
-        .viewer_with_members::<semio_s_artifact_gis_gismap::viewer::gismap::GisMapViewer, semio_s_artifact_stdio_semio::SemioMembers>(semio_s_artifact_gis_gismap::viewer::gismap::create_gismap_viewer())
+        .viewer::<semio_s_artifact_gis_gismap::viewer::gismap::GisMapViewer>(semio_s_artifact_gis_gismap::viewer::gismap::create_gismap_viewer())
         .viewer_mutation_roster::<semio_s_artifact_gis_gismap::viewer::gismap::GisMapViewer>()
         .editor::<semio_s_artifact_gis_gisterrain::editor::gis3d::Gis3dPlayApp>(semio_s_artifact_gis_gisterrain::editor::gis3d::create_gis3d_app())
         .editor_mutation_roster::<semio_s_artifact_gis_gisterrain::editor::gis3d::Gis3dPlayApp>()

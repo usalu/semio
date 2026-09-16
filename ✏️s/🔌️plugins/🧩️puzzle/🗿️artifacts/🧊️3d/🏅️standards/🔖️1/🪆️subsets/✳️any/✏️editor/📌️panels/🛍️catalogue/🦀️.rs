@@ -62,7 +62,7 @@ fn object_kind_vortex_items(entry: &dsl::DslValue, budget: &mut RowBudget) -> se
     let mut index = 0;
     paged_section(&format!("puzzle3d-kind-vortex.{kind_id}"), templates, budget, |template, _| {
         let vortex_kind = template.get("vortexKind").and_then(dsl::DslValue::as_str).unwrap_or("vortex");
-        let position_value = template.get("position").cloned().unwrap_or_else(|| dsl::ToValue::to_value(&[0.0, 0.0, 0.0]));
+        let position_value = template.get("point").or_else(|| template.get("position")).cloned().unwrap_or_else(|| dsl::ToValue::to_value(&[0.0, 0.0, 0.0]));
         let position = json::from_dsl_value(&position_value).to_string();
         let node = ui::tree_item(ui_label(vortex_kind)?)
             .try_id(format!("puzzle3d-kind-vortex.{index}.{vortex_kind}"))

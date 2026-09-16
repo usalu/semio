@@ -487,7 +487,8 @@ for (const hook of ["build_document_store_owners", "build_config_store_owners", 
 }
 assert(viewerOwnerSource.includes("crate::retirement::store_owners()"));
 const flowPluginSource = await Bun.file(new URL("../../../../../../../../../🦀️.rs", import.meta.url)).text();
-assert(flowPluginSource.includes(".viewer_with_members::<crate::viewer::flow::FlowViewer, semio_s_artifact_stdio_semio::SemioMembers>"));
+assert(flowPluginSource.includes(".viewer::<crate::viewer::flow::FlowViewer>"));
+assert(viewerOwnerSource.includes("type Members = semio_s_artifact_stdio_semio::SemioMembers;"), "the viewer itself must declare the roster its composed children open through");
 console.log("[DEBUG] Flow viewer five-lane contract rejects write authority; native VCS lifecycle remains separate");
 //#endregion 👁️ViewerOwnerAuthority
 //#region 🏭️PublicSurfaceOwners
@@ -500,8 +501,10 @@ assert(validateSurfaceOwners(surfaceOwners), JSON.stringify(validateSurfaceOwner
 assert.deepEqual(JSON.parse(stableStringify(surfaceOwners)), surfaceOwners);
 assert(flowPluginSource.includes(`.package_id("${surfaceOwners.package}")`));
 assert.equal(surfaceOwners.members, viewerOwners.members);
-assert(flowPluginSource.includes(".editor_with_members::<crate::editor::flow::FlowPlayApp, semio_s_artifact_stdio_semio::SemioMembers>"));
-assert(flowPluginSource.includes(".viewer_with_members::<crate::viewer::flow::FlowViewer, semio_s_artifact_stdio_semio::SemioMembers>"));
+assert(flowPluginSource.includes(".editor::<crate::editor::flow::FlowPlayApp>"));
+assert(flowPluginSource.includes(".viewer::<crate::viewer::flow::FlowViewer>"));
+const flowEditorSource = await Bun.file(new URL("../../🦀️.rs", import.meta.url)).text();
+assert(flowEditorSource.includes("type Members = semio_s_artifact_stdio_semio::SemioMembers;"), "the editor itself must declare the roster every bundle registers it over");
 for (const changed of [
   { ...surfaceOwners, roles: ["viewer"] }, { ...surfaceOwners, byteGrants: [0, 64, 4096] },
   { ...surfaceOwners, members: "s.stdio.semio@v1/base" }, { ...surfaceOwners, expected: { ...surfaceOwners.expected, terminalEmpty: false } },

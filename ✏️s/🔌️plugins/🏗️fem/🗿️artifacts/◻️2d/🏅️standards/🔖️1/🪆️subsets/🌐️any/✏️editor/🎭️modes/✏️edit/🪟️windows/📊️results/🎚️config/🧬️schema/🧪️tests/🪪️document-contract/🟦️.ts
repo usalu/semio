@@ -23,6 +23,10 @@ export function testFem2dResultsWindowConfigContract(): void {
     if (row.kind === "camera-null") candidate.camera = null;
     if (row.kind === "camera-unknown") candidate.camera.extra = true;
     if (row.kind === "bad-mode") candidate.resultMode = "harmonic";
+    if (row.kind === "animation-null") candidate.animation = null;
+    if (row.kind === "animation-unknown") candidate.animation.extra = true;
+    if (row.kind === "bad-loop-mode") candidate.animation.loopMode = "bounce";
+    if (row.kind === "bad-waveform") candidate.animation.waveform = "square";
     assert(!validate(candidate), row.kind);
     assert.throws(() => parseFem2dResultsWindowConfig(candidate), row.kind);
   }

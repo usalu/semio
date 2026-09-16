@@ -10,7 +10,7 @@ use crate::Fem3dSnapshot;
 use crate::Viewport3dOrbit;
 use semio_framework_plugin::BuiltNode;
 use semio_framework_plugin::Label;
-use semio_framework_ui_contract::{Buildable, HasChildren};
+use semio_framework_ui_contract::{Buildable, HasChildren, HasStackLayout};
 
 /// 🪟️ The manifest's Results window kind id.
 pub const FEM3D_WINDOW_RESULTS: &str = "fem3d-results";
@@ -64,7 +64,16 @@ fn placeholder(label: Label) -> semio_framework_plugin::UiAssemblyResult<BuiltNo
 /// 🏷️ Places a data caption above the fixture's world scene.
 fn with_caption(scene: BuiltNode, caption: String) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let caption = placeholder(Label::data(caption))?;
-    let builder = semio_framework_ui_contract::column().try_children([caption, scene]).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "FEM caption children admission failed"))?;
+    let scene_stack = semio_framework_ui_contract::column()
+        .grow(true)
+        .try_child(scene)
+        .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "FEM caption scene child admission failed"))?
+        .try_build()
+        .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "FEM caption scene stack admission failed"))?;
+    let builder = semio_framework_ui_contract::column()
+        .grow(true)
+        .try_children([caption, scene_stack])
+        .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "FEM caption children admission failed"))?;
     builder.try_build().map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "FEM caption node admission failed"))
 }
 

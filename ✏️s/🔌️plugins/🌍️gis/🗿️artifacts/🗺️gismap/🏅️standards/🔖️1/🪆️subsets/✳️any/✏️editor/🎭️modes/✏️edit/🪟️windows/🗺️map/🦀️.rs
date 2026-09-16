@@ -2,7 +2,7 @@
 
 use crate::editor::gis2d::modes::edit::windows::map::config::MapWindowConfig;
 use crate::editor::gis2d::terminology::Gis2dPlayLabels;
-use crate::editor::gis2d::GIS_MAP_LAYER_IDS;
+use crate::editor::gis2d::{Gis2dInteractionSnapshot, GIS_MAP_LAYER_IDS};
 use crate::schema::gis_map_descriptor_json;
 use crate::GisMapSnapshot;
 use semio_framework_plugin::plugin_app_close_prelude::SurfaceKind as ContractSurfaceKind;
@@ -77,18 +77,20 @@ fn apply_gis_map_tile_base_url(scene: &mut TiledMapScene) {
     scene.vector_tile_url_template = format!("{base}/vt/{{z}}/{{x}}/{{y}}.pbf");
 }
 
-pub fn render(document: &GisMapSnapshot, cfg: &MapWindowConfig) -> UiAssemblyResult<BuiltNode> {
+/// 🕹️ `interaction` is the live `"features"` domain, resolved by
+/// `ArtifactEditor::render_with_request_context` and projected onto the scene's `selection_json`/
+/// `hover_json` — the lane `TiledMapHost` feeds straight into the wasm session's `syncInteraction`
+/// (highlight) and its hover popup. A `TiledMapHost` feature pick therefore round-trips:
+/// `interactionSelect` → framework interaction store → this render → highlighted feature.
+pub fn render(document: &GisMapSnapshot, cfg: &MapWindowConfig, interaction: &Gis2dInteractionSnapshot) -> UiAssemblyResult<BuiltNode> {
     let mut scene = TiledMapScene::base(gis_map_descriptor_json(document), cfg.camera_json.clone());
     scene.render_mode = cfg.render_mode.clone();
     scene.vector_style = cfg.vector_style.clone();
     scene.lod_mode = cfg.lod_mode.clone();
     scene.layer_visibility_json = layer_visibility_json(cfg);
     scene.layer_stroke_scale_json = layer_stroke_scale_json(cfg);
-    // 🕹️ Feature selection/hover/method/mode now live in the framework-owned "features" interaction
-    // domain (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM). `ArtifactEditor::render`
-    // carries no `InteractionView` (a known SDK gap — see `w3c-summary.md`'s flagged `⚙️EngineCanvas`/
-    // `MapHost::sync_interaction` follow-up), so `TiledMapScene::base`'s own empty-selection defaults
-    // are left as-is here rather than sourced from this deleted config state.
+    scene.selection_json = interaction.feature_selection_json(document);
+    scene.hover_json = interaction.feature_hover_json(document);
     apply_gis_map_tile_base_url(&mut scene);
     scene_surface(GIS2D_PLAY_SURFACE, ContractSurfaceKind::TiledMap, &scene)
 }

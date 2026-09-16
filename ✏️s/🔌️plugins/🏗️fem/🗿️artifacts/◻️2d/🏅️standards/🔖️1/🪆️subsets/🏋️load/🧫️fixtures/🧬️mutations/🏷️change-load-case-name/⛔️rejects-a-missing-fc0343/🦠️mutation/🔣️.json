@@ -1,0 +1,5 @@
+{
+  "mutation": "changeLoadCaseName",
+  "caseId": "seismic",
+  "newName": "Seismic"
+}

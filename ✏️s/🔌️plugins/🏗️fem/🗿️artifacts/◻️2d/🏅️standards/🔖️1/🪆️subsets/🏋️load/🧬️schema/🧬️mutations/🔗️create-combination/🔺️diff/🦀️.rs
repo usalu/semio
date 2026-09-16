@@ -1,6 +1,11 @@
 //! 🔺️ Sparse diff builder for `CreateCombination`.
+//!
+//! Guards, in the order they run: `mutation.duplicate-id` (Fatal), then the SAME per-term
+//! resolution `replace-combination` runs (`mutation.target-missing`, Error) and the same
+//! finite-factor bound (`mutation.invariant`, Fatal).
 use super::CreateCombination;
 use crate::standards::v1::subsets::any::schema::diff::{Fem2dCombinationsDelta, Fem2dDiff};
+use crate::standards::v1::subsets::any::schema::mutations::guards;
 use crate::Fem2dSnapshot;
 
 //#region 🔖️Diff
@@ -8,11 +13,11 @@ pub fn diff(payload: &CreateCombination, base: &Fem2dSnapshot) -> protocol::Muta
     if base.combinations.iter().any(|combination| combination.id == payload.combination.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A combination with id \"{}\" already exists.", payload.combination.id), [payload.combination.id.clone()]);
     }
-    for term in &payload.combination.terms {
-        let referenced_exists = base.load_cases.iter().any(|case| case.id == term.case_id) || base.combinations.iter().any(|combination| combination.id == term.case_id);
-        if !referenced_exists {
-            return protocol::MutationOutcome::error("mutation.target-missing", format!("Load case or combination \"{}\" does not exist.", term.case_id), [term.case_id.clone()]);
-        }
+    if let Some(rejection) = guards::combination_term_references(base, &payload.combination) {
+        return rejection;
+    }
+    if let Some(rejection) = guards::combination_factors(&payload.combination) {
+        return rejection;
     }
     protocol::MutationOutcome::new(Fem2dDiff { combinations: Some(Fem2dCombinationsDelta { added: vec![payload.combination.clone()], ..Default::default() }), ..Default::default() })
 }

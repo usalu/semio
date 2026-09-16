@@ -835,6 +835,22 @@ async fn engagement_input_and_possible_engagements_present() {
     assert!(shape.possible_engagements.as_ref().is_some_and(|rows| !rows.is_empty()));
 }
 
+/// 🕹️ The interaction-view threading law for window chrome: the HUD's `cad-status` row counts the
+/// live `"cad"` domain selection `window_engagements_with_request_context` threads in, so it can never
+/// disagree with what the world scene paints. Before this was threaded the row read `0` forever.
+#[semio_framework_async_macros::async_test]
+async fn the_engagement_hud_counts_the_threaded_cad_selection() {
+    let labels = cad_labels(&ViewModel::default());
+    let count_of = |interaction: CadInteractionSnapshot| -> String {
+        let view = context::view_with_interaction(forest_play_scene(), CadPlayRuntime::default(), interaction);
+        let engagement = shape::engagement(&view, labels);
+        engagement.status.expect("cad status rows").into_iter().find(|row| row.id == "cad-status").expect("cad-status row").text
+    };
+    assert!(count_of(CadInteractionSnapshot::default()).starts_with('0'), "an empty cad domain must report zero selected");
+    let selected = CadInteractionSnapshot { granularity: "object".into(), ids: vec!["1".into(), "2".into()], anchor_id: None, hovered_ids: Vec::new() };
+    assert!(count_of(selected).starts_with('2'), "the HUD must count the threaded cad selection");
+}
+
 #[semio_framework_async_macros::async_test]
 async fn window_engagements_registered_for_all_four_panes() {
     let mut app = new_app().await;

@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/s/fem/fem2d/mutations.json",
   "title": "Fem2dMutation",
-  "description": "The closed semantic mutation vocabulary of the fem2d document: exactly twenty-five variants, discriminated by the internally tagged `mutation` member. Each variant is the same payload shape the kind's own `<kind>/🧬️schema/🔣️.json` declares.",
+  "description": "The closed semantic mutation vocabulary of the fem2d document: exactly twenty-nine variants, discriminated by the internally tagged `mutation` member. Each variant is the same payload shape the kind's own `<kind>/🧬️schema/🔣️.json` declares.",
   "oneOf": [
     {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/fem/2d/1/mesh/mutation/create-node/schema.json"
@@ -78,6 +78,18 @@
     },
     {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/fem/2d/1/analysis/mutation/update-analysis-settings/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/fem/2d/1/mesh/mutation/replace-node/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/fem/2d/1/load/mutation/replace-load/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/fem/2d/1/load/mutation/change-load-case-name/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/fem/2d/1/load/mutation/replace-combination/schema.json"
     }
   ]
 }

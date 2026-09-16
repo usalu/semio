@@ -3,6 +3,7 @@ use crate::editor::generation3d::commands::set_active_example;
 use crate::editor::generation3d::unit_tests::context::{self, app_with_registry, drain_flow_eval_ticks, render as render_body};
 use crate::editor::generation3d::Generation3dCommand;
 use crate::standards::v1::subsets::any::schema::PROCEDURAL_EXAMPLE_BOX_FILLET;
+use semio_framework_plugin::PluginApp;
 
 /// 🚚️ The ASSEMBLED world-3d scene a render host reads back out of the projected preview body.
 /// Since the paged-scene wave (26/09/02 P) `meshesJson`/`instancesJson`/`cameraJson` do NOT ride
@@ -49,4 +50,56 @@ async fn switching_active_example_changes_preview_meshes() {
     assert_ne!(after.meshes_json, "[]", "box-fillet-preview must tessellate into non-empty preview meshes");
     assert_ne!(after.instances_json, "[]", "box-fillet-preview must produce non-empty preview instances");
     assert_ne!(after.meshes_json, before_meshes, "switching active example must change the tessellated preview meshes");
+}
+
+/// ⚖️ LAW: the DEMONSTRATOR's own boot path — the generator pane's `ShellHost` dispatches
+/// `setActiveExample` with the brand's default example (`🪧️brand.ts`
+/// `ENTWERFEN_MIT_BESTAND_GENERATOR_BRAND.defaults.exampleId`) under the FLOW window, exactly as
+/// `ShellHost/🟦️.tsx`'s boot effect does, and the `previewEval` run that gesture starts must leave
+/// the PREVIEW window's rendered world-3d scene carrying real geometry.
+///
+/// 🐛️ `📓️app-generator.md` §3 recorded this as a structural gap — `render()` building a fresh,
+/// never-ticked `FlowEvalSession` per call — and the demonstrator acceptance suite still carries that
+/// note. The session is retained per app instance now and the evaluation is a progress/cancel-capable
+/// `previewEval` run, so this law is what states the boot contract in the surface's own terms: one
+/// gesture, one run driven to completion, meshes and instances on the window it addressed. It reads
+/// the rendered SCENE rather than the session, because an evaluation nobody paints is the very defect.
+#[semio_framework_async_macros::async_test]
+async fn the_demonstrator_boot_example_renders_a_non_empty_preview_scene() {
+    let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
+    let mut app = app_with_registry().await;
+    let (flow_view, preview_view) = context::shell_views(crate::editor::generation3d::modes::edit::windows::flow::GENERATION_3D_PLAY_WINDOW_MAIN, GENERATION_3D_PLAY_WINDOW_PREVIEW);
+    let action_meta = semio_framework_plugin::ActionMeta { view_state: Some(flow_view.clone()), ..semio_framework_plugin::artifact_app_laws::meta("local") };
+    app.handle_action("setActiveExample", Some(&serde_json::json!({ "exampleId": crate::standards::v1::subsets::any::schema::PROCEDURAL_EXAMPLE_HEX_COLUMN }).into()), &action_meta)
+        .await
+        .expect("the generator pane's boot dispatches setActiveExample under the flow window");
+    let receipt = context::settle(&mut app).await;
+    assert!(!receipt.lanes.contains(&semio_framework_plugin::app::TypedOperationResultLane::Fault), "the boot example switch published a fault lane");
+    let run = context::drive_preview_run(&mut app, &flow_view, &receipt.effects).await;
+    eprintln!("[DEBUG] demonstrator boot run: hops={} windows={:?} answered={} state={:?}", run.hops, run.hop_windows, run.answered, run.state);
+    assert!(run.hop_windows.iter().any(|window| window == GENERATION_3D_PLAY_WINDOW_PREVIEW), "the boot run never evaluated the preview window, got {:?}", run.hop_windows);
+    let scene = preview_scene(&context::render_with_view(&mut app, GENERATION_3D_PLAY_BODY_PREVIEW, &preview_view).await);
+    assert_ne!(scene.meshes_json, "[]", "the demonstrator's boot example must paint non-empty preview meshes");
+    assert_ne!(scene.instances_json, "[]", "the demonstrator's boot example must paint non-empty preview instances");
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
+}
+
+/// ⚖️ LAW: the render is a pure READ of the retained evaluation — it never evaluates anything of its
+/// own. Before the run has taken a hop the preview paints nothing, and two renders after it are
+/// byte-identical, which is what makes the evaluation cancellable at all: a surface that re-evaluated
+/// per render would rebuild the geometry a user just aborted (`📓️app-generator.md` §7 fix 1).
+#[semio_framework_async_macros::async_test]
+async fn the_preview_render_reads_the_retained_evaluation_instead_of_recomputing_it() {
+    let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
+    let mut app = app_with_registry().await;
+    let (flow_view, preview_view) = context::shell_views(crate::editor::generation3d::modes::edit::windows::flow::GENERATION_3D_PLAY_WINDOW_MAIN, GENERATION_3D_PLAY_WINDOW_PREVIEW);
+    let unevaluated = preview_scene(&context::render_with_view(&mut app, GENERATION_3D_PLAY_BODY_PREVIEW, &preview_view).await);
+    assert_eq!(unevaluated.meshes_json, "[]", "a render before the run's first hop must paint nothing, not evaluate the graph itself");
+    context::drive_preview_run(&mut app, &flow_view, &[]).await;
+    let first = preview_scene(&context::render_with_view(&mut app, GENERATION_3D_PLAY_BODY_PREVIEW, &preview_view).await);
+    let second = preview_scene(&context::render_with_view(&mut app, GENERATION_3D_PLAY_BODY_PREVIEW, &preview_view).await);
+    assert_ne!(first.meshes_json, "[]", "the driven run must leave the preview carrying meshes");
+    assert_eq!(first.meshes_json, second.meshes_json, "two renders of one retained evaluation must publish the same meshes");
+    assert_eq!(first.instances_json, second.instances_json, "two renders of one retained evaluation must publish the same instances");
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
 }

@@ -194,7 +194,7 @@ fn gis_map_window_ownership_runtime_isolates_renders_and_reopens_two_map_windows
                 if !app.snapshot().map_err(|error| format!("{error:?}"))?.positions.is_empty() { return Err("GIS Map empty example did not clear the document".into()); }
                 dispatch(&mut app, Gis2dCommand::SetCamera(set_camera::SetCamera { camera_json: r#"{"x":999,"y":999,"zoom":9}"#.into() }), &left).await?;
                 let camera_before_example = render(&mut app, &left).await?.camera_json;
-                if dispatch(&mut app, Gis2dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "reuse-map".into() }), &left).await? != 1 {
+                if dispatch(&mut app, Gis2dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: crate::editor::gis2d::commands::example::DEFAULT_EXAMPLE_ID.into() }), &left).await? != 1 {
                     return Err("GIS Map example did not publish its fitted camera to the exact window".into());
                 }
                 if app.snapshot().map_err(|error| format!("{error:?}"))?.positions.is_empty() { return Err("GIS Map reuse example did not restore document positions".into()); }

@@ -5,9 +5,10 @@
 // #region 🔌️Adapters
 import { ephemeralBox, ephemeralMap } from "@semio-tech/framework";
 import { createServer, type Server } from "node:http";
-import { cpSync, createReadStream, existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { cpSync, createReadStream, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
-import { dirname, isAbsolute, relative, resolve } from "node:path";
+import { dirname, isAbsolute, join, relative, resolve } from "node:path";
+import { tmpdir } from "node:os";
 import { fileURLToPath } from "node:url";
 import {
   defineOwnedBuildConfig,
@@ -1454,8 +1455,13 @@ function createStaticDirMiddleware(repoRoot: string, spec: Extract<PlaygroundAss
     const rel = decodedPath.slice(route.length);
     const filePath = resolve(fixtureRoot, rel);
     const relToRoot = relative(fixtureRoot, filePath);
-    if (relToRoot.startsWith("..") || isAbsolute(relToRoot) || !existsSync(filePath) || !statSync(filePath).isFile()) {
+    if (relToRoot.startsWith("..") || isAbsolute(relToRoot)) {
       next();
+      return;
+    }
+    if (!existsSync(filePath) || !statSync(filePath).isFile()) {
+      res.statusCode = 404;
+      res.end();
       return;
     }
     const contentType = contentTypeForStaticDirAsset(filePath);
@@ -1503,6 +1509,7 @@ export function staticDirVitePlugin(repoRoot: string, spec: Extract<PlaygroundAs
         }
         const dest = resolve(outDir, destName);
         mkdirSync(outDir, { recursive: true });
+        if (existsSync(dest)) rmSync(dest, { recursive: true, force: true });
         cpSync(fixtureRoot, dest, { recursive: true });
       },
     },
@@ -1606,6 +1613,6 @@ export function createPlaygroundPlayViteConfig(options: PlaygroundPlayViteOption
 
 if (import.meta.vitest) {
   const { registerTests1 } = await import("../../🧪️tests/🧪️playgroundflowwasmdevstubplugin/🟦️.ts");
-  await registerTests1(import.meta.vitest, { GIS_MAP_DEFAULT_PREFETCH_BOUNDS, PLAYGROUND_PLAY_BOOT_APPEARANCE_SCRIPT, PLAYGROUND_PLAY_BOOT_INLINE_STYLE, PLAYGROUND_PLAY_BOOT_REVEAL_SCRIPT, PLAYGROUND_PLAY_BOOT_THEME_SCRIPT, PLAYGROUND_WASM_STUB_PREFIX, SEMIO_ASSET_ROOT, SEMIO_FAVICON_HEAD_HTML, contentTypeForStaticDirAsset, createServer, createWorkspaceViteResolveConfig, existsSync, fileURLToPath, findWorkspacePackages, isPlaygroundOptimizedDepUrl, playgroundOptimizedDepUrlPrefix, listMapTilesForBounds, mapTileCacheRoots, meshAssetTransportUrl, meshCollectionVitePlugin, mkdirSync, playgroundAssetVitePlugins, playgroundFlowWasmDevStubPlugin, playgroundPlayBootHtmlPlugin, playgroundSceneHostResolveAliases, playgroundWasmStubKey, prefetchMapTiles, resolve, resolveGisMapTileServeMode, resolveMeshAsset, resolveSemioAssetRoot, rewriteSpaFallbackToEmojiEntry, semioFaviconSources, semioFaviconSvgMarkup, semioFaviconVitePlugin, semioHostHtmlString, semioHostHtmlVitePlugin, startAssetServer, statusSurfaceHtml, tileProxyVitePlugin, writeFileSync }, { directory: import.meta.dir, url: import.meta.url });
+  await registerTests1(import.meta.vitest, { GIS_MAP_DEFAULT_PREFETCH_BOUNDS, PLAYGROUND_PLAY_BOOT_APPEARANCE_SCRIPT, PLAYGROUND_PLAY_BOOT_INLINE_STYLE, PLAYGROUND_PLAY_BOOT_REVEAL_SCRIPT, PLAYGROUND_PLAY_BOOT_THEME_SCRIPT, PLAYGROUND_WASM_STUB_PREFIX, SEMIO_ASSET_ROOT, SEMIO_FAVICON_HEAD_HTML, contentTypeForStaticDirAsset, createServer, createWorkspaceViteResolveConfig, existsSync, fileURLToPath, findWorkspacePackages, isPlaygroundOptimizedDepUrl, playgroundOptimizedDepUrlPrefix, join, listMapTilesForBounds, mapTileCacheRoots, meshAssetTransportUrl, meshCollectionVitePlugin, mkdirSync, mkdtempSync, playgroundAssetVitePlugins, playgroundFlowWasmDevStubPlugin, playgroundPlayBootHtmlPlugin, playgroundSceneHostResolveAliases, playgroundWasmStubKey, prefetchMapTiles, resolve, resolveGisMapTileServeMode, resolveMeshAsset, resolveSemioAssetRoot, rewriteSpaFallbackToEmojiEntry, rmSync, semioFaviconSources, semioFaviconSvgMarkup, semioFaviconVitePlugin, semioHostHtmlString, semioHostHtmlVitePlugin, startAssetServer, staticDirVitePlugin, statusSurfaceHtml, tileProxyVitePlugin, tmpdir, writeFileSync }, { directory: import.meta.dir, url: import.meta.url });
 }
 //#endregion 🔖️ViteElementsAssets

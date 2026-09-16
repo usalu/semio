@@ -183,22 +183,6 @@
       "port": 6012
     },
     {
-      "name": "mit-bestand-demonstrator-fast",
-      "runtimeExecutable": "env",
-      "runtimeArgs": [
-        "SKIP_PLUGIN_BUILD=1",
-        "SEMIO_BUILD_BUDGET_MS=5400000",
-        "SEMIO_CMD_BUDGET_MS=5400000",
-        "RUSTFLAGS=-Awarnings",
-        "CARGO_TERM_QUIET=true",
-        "bun",
-        "nx",
-        "run",
-        "@semio-tech/mit-bestand-demonstrator:dev"
-      ],
-      "port": 6029
-    },
-    {
       "name": "storybook-static",
       "runtimeExecutable": "bun",
       "runtimeArgs": [
@@ -223,21 +207,6 @@
         "os"
       ],
       "port": 6011
-    },
-    {
-      "name": "mit-bestand-demonstrator-noengine",
-      "runtimeExecutable": "env",
-      "runtimeArgs": [
-        "SKIP_PLUGIN_BUILD=1",
-        "SKIP_ENGINE_BUILD=1",
-        "RUSTFLAGS=-Awarnings",
-        "CARGO_TERM_QUIET=true",
-        "bun",
-        "nx",
-        "run",
-        "@semio-tech/mit-bestand-demonstrator:dev"
-      ],
-      "port": 6029
     },
     {
       "name": "puzzle3d-react-attach",
@@ -315,6 +284,25 @@
       "name": "fem3d-react-attach",
       "url": "http://localhost:6087",
       "port": 6087
+    },
+    {
+      "name": "energy-react",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": [
+        "nx",
+        "run",
+        "@semio-tech/framework-os-dev:serve-energy-react-dev"
+      ],
+      "port": 6106,
+      "env": {
+        "SEMIO_RENDERER": "react",
+        "S_OS_PORT": "6106"
+      }
+    },
+    {
+      "name": "energy-react-attach",
+      "url": "http://localhost:6106",
+      "port": 6106
     }
   ]
 }

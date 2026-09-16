@@ -259,6 +259,15 @@ use world::{world_face_drag_end, world_pointer_down};
 #[derive(Default)]
 pub struct Process3dPlayApp;
 
+/// 🖱️ The one context-menu implementation both `ArtifactEditor` entry points share — the destructive
+/// `removeSelectedStep` row exists only for a non-empty `"geometry"` selection, so a right-click on
+/// empty space never offers a verb that would silently no-op in `remove_selected_step::handle`.
+fn process3d_context_menu_items(registry: &AppActionRegistry, selected_ids: &[String]) -> Vec<ContextMenuItemSpec> {
+    let menu = Menu::of(registry).action("addStep");
+    let menu = if selected_ids.is_empty() { menu } else { menu.destructive("removeSelectedStep") };
+    menu.separator().action("undo").action("redo").build()
+}
+
 //#region 🧵️RetainedCommands
 /// 🧵️ Every UI-reachable command that reduces in one bounded first step. A command left off this list
 /// (and off `PROCESS3D_RESUMABLE_TOOL_IDS`) is unreachable at runtime, not merely untested:
@@ -1656,13 +1665,24 @@ impl ArtifactEditor for Process3dPlayApp {
         HashMap::from([(workpiece::PROCESS_3D_PLAY_WINDOW_MAIN.into(), workpiece::window_measures(cfg.snapshot, process3d_labels(view_state).is_de()))])
     }
 
-    /// 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): `context_menu` is no longer
-    /// selection-gated — `ArtifactEditor::context_menu` has no `InteractionView` parameter, so it can no
-    /// longer tell whether anything is selected (mirrors `📐️cad`'s own precedent) — always shows
-    /// `removeSelectedStep`; it is itself a no-op via `remove_selected_step::handle` when nothing in
-    /// the `"geometry"` domain is selected.
+    /// 🖱️ Interaction-less twin of [`Self::context_menu_with_request_context`] — an empty
+    /// `"geometry"` domain, so the destructive row is withheld.
     fn context_menu(_request: &ContextMenuRequest, _doc: &ArtifactView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>, _view_state: &semio_framework_plugin::ViewModel, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
-        Menu::of(registry).action("addStep").destructive("removeSelectedStep").separator().action("undo").action("redo").build()
+        process3d_context_menu_items(registry, &[])
+    }
+
+    /// 🕹️ `removeSelectedStep` appears only for a real `"geometry"` selection — the authoritative
+    /// framework-owned one, since `ContextMenuRequest.surface.selection` only carries what the clicked
+    /// surface itself painted (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
+    fn context_menu_with_request_context(
+        _request: &ContextMenuRequest,
+        _doc: &ArtifactView<'_, Process3dSnapshot>,
+        _cfg: &ConfigView<'_, Process3dConfig>,
+        _view_state: &semio_framework_plugin::ViewModel,
+        interaction: &semio_framework_plugin::app::InteractionView<'_>,
+        registry: &AppActionRegistry,
+    ) -> Vec<ContextMenuItemSpec> {
+        process3d_context_menu_items(registry, &interaction.selection(PROCESS3D_INTERACTION_DOMAIN).ids)
     }
 }
 //#endregion 🔖️Process3dPlayApp

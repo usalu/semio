@@ -1,0 +1,41 @@
+{
+  "artifact": null,
+  "nodes": null,
+  "elements": null,
+  "regions": null,
+  "materials": null,
+  "sections": null,
+  "supports": null,
+  "loadCases": {
+    "added": [],
+    "removed": [],
+    "patched": [
+      {
+        "id": "wind",
+        "item": {
+          "id": "wind",
+          "name": "Wind",
+          "loads": [
+            {
+              "kind": "nodal",
+              "id": "lw1",
+              "nodeId": "n5",
+              "dof": "Tx",
+              "value": 16000.0
+            },
+            {
+              "kind": "area",
+              "id": "lw2",
+              "regionId": "wall1",
+              "pressure": 640.0
+            }
+          ],
+          "selfWeight": false
+        }
+      }
+    ],
+    "reordered": null
+  },
+  "combinations": null,
+  "analysis": null
+}

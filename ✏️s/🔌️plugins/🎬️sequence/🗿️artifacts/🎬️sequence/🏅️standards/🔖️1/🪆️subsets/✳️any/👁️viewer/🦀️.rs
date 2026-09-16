@@ -37,6 +37,8 @@ impl protocol::OpBinary for SequenceViewCommand {
 pub struct SequenceViewer;
 
 impl ArtifactViewer for SequenceViewer {
+    /// 🧩️ Composes `s.stdio.semio@v1/*` children, so every bundle of this surface opens them through the same roster.
+    type Members = semio_s_artifact_stdio_semio::SemioMembers;
     type Snapshot = SequenceSnapshot;
     type Mutation = crate::mutations::SequenceMutation;
     type Config = NoConfig;

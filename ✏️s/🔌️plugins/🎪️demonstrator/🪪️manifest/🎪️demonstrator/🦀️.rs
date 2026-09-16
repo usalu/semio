@@ -26,18 +26,20 @@ const PLUGIN_VERSION: &str = "0.1.0";
 
 //#region 🔌️Plugin
 semio_framework_dispatch_macros::dyn_enum_close! {
-    /// 🗃️ Closed runtime app fleet for the demonstrator's owned and bundled surfaces.
+    /// 🗃️ Closed runtime app fleet for the demonstrator's owned and bundled surfaces — every variant
+    /// spelled through `EditorSurfaceApp`/`ViewerSurfaceApp`, so each bundled app brings its OWN member
+    /// roster (`ArtifactEditor::Members`) instead of this bundle guessing one.
     pub enum DemonstratorApps: PluginApp {
-        PlaygroundEditor(VcsArtifactApp<EditorApp<crate::editor::playground::PlaygroundEditor>>),
-        PlaygroundViewer(VcsArtifactApp<ViewerApp<crate::viewer::playground::PlaygroundViewer>>),
-        Generation3dEditor(VcsArtifactApp<EditorApp<Generation3dPlayApp>>),
-        CadEditor(VcsArtifactApp<EditorApp<CadPlayApp>>),
-        Puzzle3dEditor(VcsArtifactApp<EditorApp<Puzzle3dPlayApp>>),
-        SourcingEditor(VcsArtifactApp<EditorApp<SourcingCurationApp>>),
-        SourcingViewer(VcsArtifactApp<ViewerApp<SourcingViewer>>),
-        ProcessEditor(VcsArtifactApp<EditorApp<Process3dPlayApp>>),
-        ProcessViewer(VcsArtifactApp<ViewerApp<Process3dViewer>>),
-        GisEditor(VcsArtifactApp<EditorApp<Gis2dPlayApp>>),
+        PlaygroundEditor(EditorSurfaceApp<crate::editor::playground::PlaygroundEditor>),
+        PlaygroundViewer(ViewerSurfaceApp<crate::viewer::playground::PlaygroundViewer>),
+        Generation3dEditor(EditorSurfaceApp<Generation3dPlayApp>),
+        CadEditor(EditorSurfaceApp<CadPlayApp>),
+        Puzzle3dEditor(EditorSurfaceApp<Puzzle3dPlayApp>),
+        SourcingEditor(EditorSurfaceApp<SourcingCurationApp>),
+        SourcingViewer(ViewerSurfaceApp<SourcingViewer>),
+        ProcessEditor(EditorSurfaceApp<Process3dPlayApp>),
+        ProcessViewer(ViewerSurfaceApp<Process3dViewer>),
+        GisEditor(EditorSurfaceApp<Gis2dPlayApp>),
     }
 }
 

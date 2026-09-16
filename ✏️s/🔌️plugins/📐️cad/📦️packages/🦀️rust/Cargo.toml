@@ -13,6 +13,7 @@ package = "semio:cad"
 
 [package.metadata.semio]
 role = "plugin"
+consumes = ["cad.computer"]
 
 # 📖️ Opts this plugin into the generated Storybook scope registry (`.storybook/📖️stories/🧭️coordination/🟦️.ts`'s
 # `GENERATED_SCOPES`, read via `readSemioMarkerSubTable`) instead of a hand-maintained entry — see

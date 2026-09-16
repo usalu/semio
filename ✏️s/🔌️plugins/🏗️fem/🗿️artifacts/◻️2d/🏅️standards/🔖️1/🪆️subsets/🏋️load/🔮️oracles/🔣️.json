@@ -153,6 +153,83 @@
               "directoryName": "✂️strips-the-roof-udl-0c1b3c"
             }
           ]
+        },
+        {
+          "mutationId": "replace-load",
+          "sourceMutationDirectoryName": "🔁️replace-load",
+          "mutationDirectoryName": "🔁️replace-load",
+          "scenarios": [
+            {
+              "id": "retunes-the-live-f6fd49",
+              "directoryName": "🏋️retunes-the-live-f6fd49"
+            },
+            {
+              "id": "strengthens-the-wind-21b88a",
+              "directoryName": "💨️strengthens-the-wind-21b88a"
+            },
+            {
+              "id": "rejects-a-missing-7a1e1f",
+              "directoryName": "⛔️rejects-a-missing-7a1e1f"
+            },
+            {
+              "id": "denies-rename-732de0",
+              "directoryName": "🪪️denies-rename-732de0"
+            },
+            {
+              "id": "dangling-node-b95678",
+              "directoryName": "👻️dangling-node-b95678"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-load-case-name",
+          "sourceMutationDirectoryName": "🏷️change-load-case-name",
+          "mutationDirectoryName": "🏷️change-load-case-name",
+          "scenarios": [
+            {
+              "id": "renames-the-live-7dce39",
+              "directoryName": "🏷️renames-the-live-7dce39"
+            },
+            {
+              "id": "renames-the-wind-61757b",
+              "directoryName": "✏️renames-the-wind-61757b"
+            },
+            {
+              "id": "rejects-a-missing-fc0343",
+              "directoryName": "⛔️rejects-a-missing-fc0343"
+            },
+            {
+              "id": "keeps-the-name-4fa89f",
+              "directoryName": "🔁️keeps-the-name-4fa89f"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-combination",
+          "sourceMutationDirectoryName": "🔁️replace-combination",
+          "mutationDirectoryName": "🔁️replace-combination",
+          "scenarios": [
+            {
+              "id": "reweights-the-uls-8b17b7",
+              "directoryName": "⚖️reweights-the-uls-8b17b7"
+            },
+            {
+              "id": "adds-a-wind-term-6525d5",
+              "directoryName": "🔗️adds-a-wind-term-6525d5"
+            },
+            {
+              "id": "rejects-a-missing-b32308",
+              "directoryName": "⛔️rejects-a-missing-b32308"
+            },
+            {
+              "id": "denies-rename-a96d3c",
+              "directoryName": "🪪️denies-rename-a96d3c"
+            },
+            {
+              "id": "dangling-case-65b8a8",
+              "directoryName": "👻️dangling-case-65b8a8"
+            }
+          ]
         }
       ],
       "kinds": [
@@ -162,7 +239,10 @@
         "remove-load",
         "change-load-case-self-weight",
         "create-combination",
-        "delete-combination"
+        "delete-combination",
+        "replace-load",
+        "change-load-case-name",
+        "replace-combination"
       ]
     }
   ]

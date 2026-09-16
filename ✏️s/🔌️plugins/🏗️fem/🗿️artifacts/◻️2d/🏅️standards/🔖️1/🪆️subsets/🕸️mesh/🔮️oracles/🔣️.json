@@ -269,6 +269,29 @@
               "directoryName": "⚗️denies-zero-iy-404e31"
             }
           ]
+        },
+        {
+          "mutationId": "replace-node",
+          "sourceMutationDirectoryName": "🔁️replace-node",
+          "mutationDirectoryName": "🔁️replace-node",
+          "scenarios": [
+            {
+              "id": "raises-the-ridge-e53b00",
+              "directoryName": "🕹️raises-the-ridge-e53b00"
+            },
+            {
+              "id": "widens-the-canopy-553d69",
+              "directoryName": "📍️widens-the-canopy-553d69"
+            },
+            {
+              "id": "rejects-a-missing-334de5",
+              "directoryName": "⛔️rejects-a-missing-334de5"
+            },
+            {
+              "id": "denies-rename-e69720",
+              "directoryName": "🪪️denies-rename-e69720"
+            }
+          ]
         }
       ],
       "kinds": [
@@ -282,7 +305,8 @@
         "replace-section",
         "create-region",
         "delete-region",
-        "replace-region"
+        "replace-region",
+        "replace-node"
       ]
     }
   ]

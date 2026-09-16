@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/cad/cad/mutation/scale-objects/schema.json",
+  "title": "ScaleObjects",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "pane",
+    "placements"
+  ],
+  "properties": {
+    "pane": {
+      "enum": [
+        "shape",
+        "building",
+        "energy",
+        "structure-classic"
+      ]
+    },
+    "placements": {
+      "type": "array",
+      "items": {
+        "title": "CadObjectScale",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "objectId",
+          "newScale"
+        ],
+        "properties": {
+          "objectId": {
+            "type": "string"
+          },
+          "newScale": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            },
+            "minItems": 3,
+            "maxItems": 3
+          }
+        }
+      }
+    }
+  }
+}

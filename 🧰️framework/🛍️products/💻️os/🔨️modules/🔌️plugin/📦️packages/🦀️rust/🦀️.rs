@@ -1,4 +1,7 @@
 #![cfg_attr(any(feature = "component-guest", feature = "component-extension-guest"), feature(linkage))]
+// 🧩️ `ArtifactEditor::Members`/`ArtifactViewer::Members` default to `store::NoMembers` so a surface
+// author states a roster only when the app composes children — every other impl stays untouched.
+#![feature(associated_type_defaults)]
 // 🚫️ R3/R7 (see 📓️terra-dyn-enum-macro-report.md): `#[dyn_enum]`-annotated traits with `async fn`
 // methods (PluginApp) trip rustc's "auto trait bounds cannot be specified" lint on every method.
 // Answered structurally — Send comes from the concrete per-plugin enum at each call site, never

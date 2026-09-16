@@ -36,5 +36,23 @@ async fn render_lists_name_version_and_every_collection_count() {
     let root = &tree.children[0].children[0];
     assert!(root.children.iter().any(|item| item.key.as_str() == "name"));
     assert!(root.children.iter().any(|item| item.key.as_str() == "version"));
-    assert!(root.children.iter().any(|item| item.key.as_str() == "zones"));
+    let geometry = root.children.iter().find(|item| item.key.as_str() == "geometry").expect("the geometry group is a root child");
+    assert!(geometry.children.iter().any(|item| item.key.as_str() == "zones"));
+}
+
+#[semio_framework_async_macros::async_test]
+async fn every_node_stays_under_the_tree_kit_sibling_ceiling() {
+    let model = crate::model::Model::default();
+    let groups = crate::energy_structure_overview(&model);
+    let root_children = 3 + groups.len();
+    assert!(root_children <= crate::STRUCTURE_TREE_SIBLING_CEILING, "root has {root_children} children");
+    for group in &groups {
+        assert!(group.counts.len() <= crate::STRUCTURE_TREE_SIBLING_CEILING, "group {} has {} leaves", group.id, group.counts.len());
+    }
+    let mut ids: Vec<&str> = groups.iter().flat_map(|group| group.counts.iter().map(|(id, _)| *id)).collect();
+    let total = ids.len();
+    ids.sort_unstable();
+    ids.dedup();
+    assert_eq!(ids.len(), total, "a collection is listed twice");
+    assert_eq!(total, 35, "every collection on the model is listed exactly once");
 }

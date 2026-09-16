@@ -1,0 +1,41 @@
+{
+  "artifact": null,
+  "nodes": null,
+  "elements": null,
+  "regions": null,
+  "materials": null,
+  "sections": null,
+  "supports": null,
+  "loadCases": {
+    "added": [],
+    "removed": [],
+    "patched": [
+      {
+        "id": "live",
+        "item": {
+          "id": "live",
+          "name": "Live Load",
+          "loads": [
+            {
+              "kind": "nodal",
+              "id": "l6",
+              "nodeId": "p8_l1",
+              "dof": "Ty",
+              "value": -18000.0
+            },
+            {
+              "kind": "area",
+              "id": "l7",
+              "regionId": "r1",
+              "pressure": 1500.0
+            }
+          ],
+          "selfWeight": false
+        }
+      }
+    ],
+    "reordered": null
+  },
+  "combinations": null,
+  "analysis": null
+}

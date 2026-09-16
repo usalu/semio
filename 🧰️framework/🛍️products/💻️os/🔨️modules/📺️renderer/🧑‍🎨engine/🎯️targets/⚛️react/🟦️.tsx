@@ -1027,8 +1027,10 @@ import {
   readCanvas2dSurfaceColors,
   CAMERA_SYNC_DEBOUNCE_MS,
   Canvas2dHost,
+  canvasLayerDisplayLabel,
+  type CanvasLayerLabelInput,
 } from "../../🧱️elements/📐️Canvas2dHost/🟦️.tsx";
-export { CANVAS_CAMERA_ZOOM_MIN, CANVAS_CAMERA_ZOOM_MAX, type CanvasCamera, clampCanvasZoom, worldToScreenLogical, screenToWorldLogical, wheelCameraAtScreen, readCanvas2dSurfaceColors, CAMERA_SYNC_DEBOUNCE_MS, Canvas2dHost };
+export { CANVAS_CAMERA_ZOOM_MIN, CANVAS_CAMERA_ZOOM_MAX, type CanvasCamera, clampCanvasZoom, worldToScreenLogical, screenToWorldLogical, wheelCameraAtScreen, readCanvas2dSurfaceColors, CAMERA_SYNC_DEBOUNCE_MS, Canvas2dHost, canvasLayerDisplayLabel, type CanvasLayerLabelInput };
 //#endregion 🔖️Canvas2dHost
 
 //#region 🔖️World3dHost

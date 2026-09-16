@@ -265,8 +265,11 @@ function layerBounds(layer: CanvasLayerRecord): { readonly x: number; readonly y
   return { x, y, width, height };
 }
 
-function layerLabel(layer: CanvasLayerRecord): string {
-  return layer.name ?? layer.base?.name ?? layer.kind ?? layer.id ?? "layer";
+export type CanvasLayerLabelInput = Pick<CanvasLayerRecord, "id" | "kind" | "name" | "base">;
+
+/** 🏷️ Overlay text for bounds layers — only explicit `name` fields; geometry `kind` is not a label. */
+export function canvasLayerDisplayLabel(layer: CanvasLayerLabelInput): string {
+  return layer.name ?? layer.base?.name ?? "";
 }
 
 function drawRoundedRect(ctx: CanvasRenderingContext2D, x: number, y: number, width: number, height: number, radius: number): void {
@@ -514,7 +517,7 @@ class JsonLayersCanvasSession implements GraphWasmSession {
         continue;
       }
       const bounds = layerBounds(layer);
-      const label = layerLabel(layer);
+      const label = canvasLayerDisplayLabel(layer);
       const hue = (index * 47) % 360;
       if (layer.kind === "line" || layer.x0 != null) {
         const x0 = layer.x0 ?? layer.x ?? 0;

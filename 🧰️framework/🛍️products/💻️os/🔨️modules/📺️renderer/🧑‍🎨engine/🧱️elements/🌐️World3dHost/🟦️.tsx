@@ -742,17 +742,10 @@ export function world3dProjectionContentFrameMounted(fitProjectionContent: boole
   return (fitProjectionContent || projectionFramePending) && !cameraNavigating;
 }
 
-/** 🎯️ Whether the host may paint the manual frame-visible-instances overlay.
- *
- * ⚖️ Producers that publish a fit lane **with** `boundsMin`/`boundsMax` still need the button after the
- * user orbits away — {@link WorldAutoFit} stands down once the camera is user-owned
- * (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️boot-camera-framing-2026-09-15.md`). Producers whose fit
- * lane is revision-only and rely on the scene graph (puzzle 3d) already get continuous {@link WorldAutoFit}
- * reframing without a host chrome duplicate (ticket 26/09/14/PUZZLE-3D-HIDE-FIT-LANE-FRAME-OVERLAY). */
-export function world3dFrameVisibleOverlayOffered(fit: Pick<WorldFitRecord, "enabled" | "boundsMin" | "boundsMax"> | null): boolean {
-  if (!fit?.enabled) return true;
-  const hasPublishedBounds = fit.boundsMin != null && fit.boundsMax != null;
-  return hasPublishedBounds;
+/** 🎯️ Whether the host may paint the manual frame-visible-instances overlay — always off; framing is
+ * {@link WorldAutoFit}, the fit lane, and view commands such as zoom-to-selection. */
+export function world3dFrameVisibleOverlayOffered(_fit: Pick<WorldFitRecord, "enabled" | "boundsMin" | "boundsMax"> | null): boolean {
+  return false;
 }
 
 /** 📷️ Builds the `setCamera` dispatch payload from a viewport camera pose — deliberately omits `projection`
@@ -6412,7 +6405,6 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
   const fitProjectionContent = world3dFitProjectionContent(viewportOwned, cameraNavigating, hasProjectionSeed, lockProjectionContentFrame);
   const autoFitKey = world3dAutoFitKey(fit?.revision ?? 0, sceneCameraAttachJson, autoFitBounds);
   const projectionContentFrameMounted = world3dProjectionContentFrameMounted(fitProjectionContent, projectionFramePending, cameraNavigating);
-  const frameVisibleOverlayOffered = world3dFrameVisibleOverlayOffered(fit);
   const autoFitUserMoved = userMovedFitRevision === (fit?.revision ?? 0);
   const worldOrbitConstraints = useMemo(() => worldProjectionOrbitConstraints(cameraState.projectionSpec), [cameraState.projectionSpec]);
 
@@ -7089,18 +7081,6 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
               className="pointer-events-none absolute z-40 flex flex-col items-end gap-single"
               style={chromePanelSafeAreaStyle("top-right", overlayRailSafeArea, { block: windowChromeClearedTopOffset })}
             >
-              {frameVisibleOverlayOffered ? (
-                <button
-                  id={`world3d-frame-instances-${windowInstanceId ?? node.surfaceId}`}
-                  type="button"
-                  data-slot="world-frame-instances"
-                  className={cn("pointer-events-auto rounded px-single py-half text-xs shadow-sm", glassClass)}
-                  data-level="pane"
-                  onClick={handleFrameVisibleInstances}
-                >
-                  {shellLabel("ui.host.frameVisible")}
-                </button>
-              ) : null}
               <WorldComputeStatusPane status={computeStatus} glassClass={glassClass} locale={shellScope?.i18n.language} onCancel={() => dispatch(computeStatus.cancelAction, computeStatus.cancelArgs)} />
             </div>
           </>

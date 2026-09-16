@@ -812,6 +812,8 @@ impl semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<semio_f
 //#endregion 🧹️EmptyLaneRetirement
 
 impl ArtifactEditor for SourcingCurationApp {
+    /// 🧩️ Composes `s.stdio.semio@v1/*` children, so every bundle of this surface opens them through the same roster.
+    type Members = semio_s_artifact_stdio_semio::SemioMembers;
     type Snapshot = CurationSnapshot;
     type Mutation = SourcingMutation;
     type Config = SourcingCurationConfig;
@@ -1030,7 +1032,7 @@ impl ArtifactEditor for SourcingCurationApp {
         let labels = sourcing_curation_labels(view_state);
         match body_key {
             pool::SOURCING_CURATION_BODY_POOL => pool::render(snapshot, config, labels).map(semio_framework_plugin::built_to_component_tree),
-            curated::SOURCING_CURATION_BODY_CURATED => curated::render(snapshot, labels).map(semio_framework_plugin::built_to_component_tree),
+            curated::SOURCING_CURATION_BODY_CURATED => curated::render(snapshot, config, labels).map(semio_framework_plugin::built_to_component_tree),
             preview::SOURCING_CURATION_BODY_PREVIEW => preview::render(snapshot, &[], labels).map(semio_framework_plugin::built_to_component_tree),
             grid::SOURCING_CURATION_BODY_GRID => grid::render(snapshot, config).map(semio_framework_plugin::built_to_component_tree),
             _ => semio_framework_plugin::built_text_to_component_tree(Label::data("")),

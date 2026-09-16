@@ -324,7 +324,7 @@ async fn gis_map_live_envelope_cancel_closes_retained_pages_without_publication(
 /// coverage assertion.
 fn every_command() -> Vec<Gis2dCommand> {
     vec![
-        Gis2dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "reuse-map".into() }),
+        Gis2dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: example::DEFAULT_EXAMPLE_ID.into() }),
         Gis2dCommand::PatchPositions(patch_positions::PatchPositions { positions_json: r#"[{"id":"p1","lon":1.0,"lat":2.0}]"#.into() }),
         Gis2dCommand::PatchRoutes(patch_routes::PatchRoutes { route_ids: vec!["r1".into(), "r2".into()], field: "label".into(), value: "Home".into() }),
         Gis2dCommand::PatchRoute(patch_route::PatchRoute { route_id: "r1".into(), field: "label".into(), value: "Home".into() }),

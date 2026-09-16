@@ -27,6 +27,7 @@ import { createBrowserStoragePort, resolvePlaygroundBoot } from "@semio-tech/fra
 import { PLUGIN_CATALOG } from "@semio-tech/plugin-registry/catalog";
 import { FrameworkOsShell, resolveShellLocks, resolveShellDefaults } from "@semio-tech/framework-renderer-react";
 import { PUZZLE_BOARD_SESSION_FACTORIES } from "@semio-tech/puzzle-js";
+import { DemonstratorCard } from "./⚛️demonstrator-card.tsx";
 import { aProjectOfLuhUdkFooterItem, fundedByZukunftBauFooterItem } from "./⚛️footer.tsx";
 import { DEMONSTRATOR_LOCALE, DEMONSTRATOR_PANES, ENTWERFEN_MIT_BESTAND_GENERAL_INTRODUCTION, ENTWERFEN_MIT_BESTAND_LOGO_SVG, demonstratorPaneBootVariants, scheduleDemonstratorIdle, type DemonstratorPaneSpec } from "./🪧️brand.ts";
 import "./🎨️globals.css";
@@ -438,56 +439,6 @@ function DemonstratorPane({
   );
 }
 //#endregion 🎪️DemonstratorPane
-
-//#region 🎪️DemonstratorCard
-/** @emoji 🃏️ Shared glass card for desktop grid cells and mobile list sections. */
-function DemonstratorCard({
-  pane,
-  active,
-  onClick,
-  onMouseEnter,
-  onMouseLeave,
-  className,
-}: {
-  readonly pane: DemonstratorPaneSpec;
-  readonly active?: boolean;
-  readonly onClick: () => void;
-  readonly onMouseEnter?: () => void;
-  readonly onMouseLeave?: () => void;
-  readonly className?: string;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      onMouseEnter={onMouseEnter}
-      onMouseLeave={onMouseLeave}
-      className={cn(
-        "pointer-events-auto group flex min-h-[8.5rem] w-full max-w-[15rem] flex-col items-center justify-center gap-single",
-        "rounded-xl border border-border-normal px-double py-triple text-center",
-        "ui-glass shadow-md outline-none",
-        "transition-[transform,box-shadow,border-color,background-color] duration-200",
-        "hover:-translate-y-0.5 hover:border-border-emphasized hover:shadow-xl",
-        "focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-        active && "-translate-y-0.5 border-border-emphasized shadow-xl",
-        className,
-      )}
-    >
-      <span className="flex size-workbench shrink-0 items-center justify-center rounded-md border border-border-normal/80 bg-background/50">
-        <Icon icon={pane.icon} size="large" className="text-muted-foreground group-hover:text-foreground" title={pane.label} />
-      </span>
-      <span className="flex flex-col gap-half">
-        <span className="text-2xl font-semibold tracking-tight text-foreground">{pane.label}</span>
-        <span className="text-sm text-muted-foreground">{pane.tagline}</span>
-      </span>
-      <span className="inline-flex items-center gap-single text-sm font-medium text-muted-foreground transition-colors group-hover:text-foreground">
-        Demonstrator öffnen
-        <Icon icon="chevron-right" size="small" className="transition-transform group-hover:translate-x-0.5" />
-      </span>
-    </button>
-  );
-}
-//#endregion 🎪️DemonstratorCard
 
 //#region 🎪️DemonstratorLanding
 function DemonstratorLanding() {

@@ -30,6 +30,10 @@ fn fixture_directory(kind: &str) -> Option<&'static str> {
         "create-combination" => Some("🏋️load/🧫️fixtures/🔗️create-combination"),
         "delete-combination" => Some("🏋️load/🧫️fixtures/✂️delete-combination"),
         "update-analysis-settings" => Some("📈️analysis/🧫️fixtures/🎛️update-analysis-settings"),
+        "replace-node" => Some("🕸️mesh/🧫️fixtures/🔁️replace-node"),
+        "replace-load" => Some("🏋️load/🧫️fixtures/🔁️replace-load"),
+        "change-load-case-name" => Some("🏋️load/🧫️fixtures/🏷️change-load-case-name"),
+        "replace-combination" => Some("🏋️load/🧫️fixtures/🔁️replace-combination"),
         _ => None,
     }
 }

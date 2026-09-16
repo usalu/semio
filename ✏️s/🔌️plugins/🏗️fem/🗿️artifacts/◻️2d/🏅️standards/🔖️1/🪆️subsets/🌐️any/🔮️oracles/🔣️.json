@@ -16,7 +16,7 @@
       ],
       "license": "AGPL-3.0-only",
       "testOnly": true,
-      "rationale": "A second implementation of the `s.fem.fem2d` model and all twenty-five typed mutations, in Python, at `../../../../../🧪️tests/mutate-fem2d-1/🐍️component.py`. Written from `../🧬️schema/📸️snapshot/🔣️.json` (the nine members and the analysis settings record), `../🧬️schema/🧬️mutations/📝️text/📖️.grammar.semio` (the twenty-five verbs) and the twenty-five committed `(before, mutation, after, outcome)` specification vectors — which is also where the RECORD shapes and the cascade rules are actually written down. It imports nothing from this repository and transliterates none of its Rust. A third-party library was declined, not merely absent: `code_aster`, `OpenSees`, `anastruct` and `PyNite` compute displacements and forces FROM a model, while every one of the twenty-five kinds edits the model document itself — `replace-section` swaps a profile record, `add-load` appends to a case's load list, `change-load-case-self-weight` flips a boolean — and none of them reads `.dsl.semio`. DEFECT FOUND WHILE WRITING IT, reported rather than worked around: `../🧬️schema/🧬️mutations/🔣️.json` is a verbatim copy of the SNAPSHOT schema with the title changed, and in the snapshot schema every one of `FemNode`, `FemElement`, `FemRegion`, `FemMaterial`, `FemSection`, `FemSupport`, `FemLoadCase` and `FemCombination` is an EMPTY object with no properties at all. `package` is deliberately empty: the implementation needs no distribution, so this entry contributes nothing to `🔒️dependencies.json`.\n\nUNDER PROTOCOL V2 this registration is classified `cross-semio-implementation` — a required SUPPLEMENTAL oracle that does not discharge `fem2d-1-mutate`'s external-oracle requirement for its 25-kind mutation vocabulary; a qualifying third-party reference (`third-party-library` / `third-party-cli` / `standards-reference-tool`) is still owed.",
+      "rationale": "A second implementation of the `s.fem.fem2d` model and all twenty-nine typed mutations, in Python, at `../../../../../🧪️tests/mutate-fem2d-1/🐍️component.py`. Written from `../🧬️schema/📸️snapshot/🔣️.json` (the nine members and the analysis settings record), `../🧬️schema/🧬️mutations/📝️text/📖️.grammar.semio` (the twenty-nine verbs) and the twenty-nine committed `(before, mutation, after, outcome)` specification vectors — which is also where the RECORD shapes and the cascade rules are actually written down. It imports nothing from this repository and transliterates none of its Rust. A third-party library was declined, not merely absent: `code_aster`, `OpenSees`, `anastruct` and `PyNite` compute displacements and forces FROM a model, while every one of the twenty-nine kinds edits the model document itself — `replace-section` swaps a profile record, `add-load` appends to a case's load list, `change-load-case-self-weight` flips a boolean — and none of them reads `.dsl.semio`. DEFECT FOUND WHILE WRITING IT, reported rather than worked around: `../🧬️schema/🧬️mutations/🔣️.json` is a verbatim copy of the SNAPSHOT schema with the title changed, and in the snapshot schema every one of `FemNode`, `FemElement`, `FemRegion`, `FemMaterial`, `FemSection`, `FemSupport`, `FemLoadCase` and `FemCombination` is an EMPTY object with no properties at all. `package` is deliberately empty: the implementation needs no distribution, so this entry contributes nothing to `🔒️dependencies.json`.\n\nUNDER PROTOCOL V2 this registration is classified `cross-semio-implementation` — a required SUPPLEMENTAL oracle that does not discharge `fem2d-1-mutate`'s external-oracle requirement for its 29-kind mutation vocabulary; a qualifying third-party reference (`third-party-library` / `third-party-cli` / `standards-reference-tool`) is still owed.",
       "kind": "cross-semio-implementation",
       "engine": {
         "family": "none",
@@ -219,7 +219,8 @@
         "replace-section",
         "create-region",
         "delete-region",
-        "replace-region"
+        "replace-region",
+        "replace-node"
       ],
       "vectors": []
     },
@@ -259,7 +260,10 @@
         "remove-load",
         "change-load-case-self-weight",
         "create-combination",
-        "delete-combination"
+        "delete-combination",
+        "replace-load",
+        "change-load-case-name",
+        "replace-combination"
       ],
       "vectors": []
     },
@@ -1164,6 +1168,150 @@
             "operation": "update-analysis-settings",
             "bridgeVersion": 1,
             "variant": "UpdateAnalysisSettings"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "fem2d-1-mutate-carrier",
+              "qualifyingKind": "third-party-library",
+              "oracle": "serde-json-fem2d-carrier-reader"
+            },
+            {
+              "capability": "fem2d-1-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "anastruct-fem2d-solver"
+            }
+          ],
+          "invariants": {
+            "local": [
+              "not-encoded-by-any-exported-carrier"
+            ],
+            "enclosing": [
+              "document-remains-well-formed"
+            ]
+          }
+        },
+        {
+          "id": "replace-node",
+          "subset": "mesh",
+          "capability": "fem2d-1-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🔁️replace-node/🦀️.rs#ReplaceNode",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "replace-node",
+            "bridgeVersion": 1,
+            "variant": "ReplaceNode"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "fem2d-1-mutate-carrier",
+              "qualifyingKind": "third-party-library",
+              "oracle": "serde-json-fem2d-carrier-reader"
+            },
+            {
+              "capability": "fem2d-1-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "anastruct-fem2d-solver"
+            }
+          ],
+          "invariants": {
+            "local": [
+              "not-encoded-by-any-exported-carrier"
+            ],
+            "enclosing": [
+              "document-remains-well-formed"
+            ]
+          }
+        },
+        {
+          "id": "replace-load",
+          "subset": "load",
+          "capability": "fem2d-1-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🔁️replace-load/🦀️.rs#ReplaceLoad",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "replace-load",
+            "bridgeVersion": 1,
+            "variant": "ReplaceLoad"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "fem2d-1-mutate-carrier",
+              "qualifyingKind": "third-party-library",
+              "oracle": "serde-json-fem2d-carrier-reader"
+            },
+            {
+              "capability": "fem2d-1-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "anastruct-fem2d-solver"
+            }
+          ],
+          "invariants": {
+            "local": [
+              "not-encoded-by-any-exported-carrier"
+            ],
+            "enclosing": [
+              "document-remains-well-formed"
+            ]
+          }
+        },
+        {
+          "id": "change-load-case-name",
+          "subset": "load",
+          "capability": "fem2d-1-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🏷️change-load-case-name/🦀️.rs#ChangeLoadCaseName",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-load-case-name",
+            "bridgeVersion": 1,
+            "variant": "ChangeLoadCaseName"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "fem2d-1-mutate-carrier",
+              "qualifyingKind": "third-party-library",
+              "oracle": "serde-json-fem2d-carrier-reader"
+            },
+            {
+              "capability": "fem2d-1-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "anastruct-fem2d-solver"
+            }
+          ],
+          "invariants": {
+            "local": [
+              "not-encoded-by-any-exported-carrier"
+            ],
+            "enclosing": [
+              "document-remains-well-formed"
+            ]
+          }
+        },
+        {
+          "id": "replace-combination",
+          "subset": "load",
+          "capability": "fem2d-1-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🔁️replace-combination/🦀️.rs#ReplaceCombination",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "replace-combination",
+            "bridgeVersion": 1,
+            "variant": "ReplaceCombination"
           },
           "oracleRequirements": [
             {
@@ -3070,6 +3218,202 @@
       "reproducible": true,
       "family": "mechanical",
       "notes": "A deterministic fem2d model carrying at least two of every collection, with the update-analysis-settings mutation applied as an edit to the JSON CARRIER and read back through serde_json — never through this repository's own mutation engine. Observability (after projection != before projection) is checked before a pair is written, and a pair that does not move is refused rather than committed.",
+      "comparisonPipeline": "fem2d-1-carrier-compare-v1"
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "carrier-replace-node",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.fem.2d",
+        "standard": "1",
+        "subset": "mesh"
+      },
+      "mutation": "replace-node",
+      "outcome": "applied",
+      "units": {
+        "length": "metre",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-json",
+          "path": "../../🕸️mesh/🧫️fixtures/🔁️replace-node/⏮️before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:d34eaa2d4b6a2152663740d43f109927b0a36c36d3684c130878fff5b2abb05c",
+          "bytes": 2824
+        },
+        {
+          "role": "expected-after-json",
+          "path": "../../🕸️mesh/🧫️fixtures/🔁️replace-node/⏭️after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:be6dd6aaf6b3f76f2c872868bbe77a738c9b40d53f162aa6153020e95bea8e1c",
+          "bytes": 2824
+        }
+      ],
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "generator": {
+        "oracle": "serde-json-fem2d-carrier-reader",
+        "packageVersion": "1",
+        "engineFamily": "serde-json",
+        "engineVersion": "1",
+        "command": "bun ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts carrier",
+        "platform": "darwin"
+      },
+      "comparisonProfile": "semantic-fem2d-carrier-v1",
+      "reproducible": true,
+      "family": "mechanical",
+      "notes": "A deterministic fem2d model carrying at least two of every collection, with the replace-node mutation applied as an edit to the JSON CARRIER and read back through serde_json — never through this repository's own mutation engine. Observability (after projection != before projection) is checked before a pair is written, and a pair that does not move is refused rather than committed.",
+      "comparisonPipeline": "fem2d-1-carrier-compare-v1"
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "carrier-replace-load",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.fem.2d",
+        "standard": "1",
+        "subset": "load"
+      },
+      "mutation": "replace-load",
+      "outcome": "applied",
+      "units": {
+        "length": "metre",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-json",
+          "path": "../../🏋️load/🧫️fixtures/🔁️replace-load/⏮️before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:d34eaa2d4b6a2152663740d43f109927b0a36c36d3684c130878fff5b2abb05c",
+          "bytes": 2824
+        },
+        {
+          "role": "expected-after-json",
+          "path": "../../🏋️load/🧫️fixtures/🔁️replace-load/⏭️after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:3d6f96c5738c9b66d596a5cc40b574fed30e59097e42040a54263721ca5f7a1c",
+          "bytes": 2824
+        }
+      ],
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "generator": {
+        "oracle": "serde-json-fem2d-carrier-reader",
+        "packageVersion": "1",
+        "engineFamily": "serde-json",
+        "engineVersion": "1",
+        "command": "bun ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts carrier",
+        "platform": "darwin"
+      },
+      "comparisonProfile": "semantic-fem2d-carrier-v1",
+      "reproducible": true,
+      "family": "mechanical",
+      "notes": "A deterministic fem2d model carrying at least two of every collection, with the replace-load mutation applied as an edit to the JSON CARRIER and read back through serde_json — never through this repository's own mutation engine. Observability (after projection != before projection) is checked before a pair is written, and a pair that does not move is refused rather than committed.",
+      "comparisonPipeline": "fem2d-1-carrier-compare-v1"
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "carrier-change-load-case-name",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.fem.2d",
+        "standard": "1",
+        "subset": "load"
+      },
+      "mutation": "change-load-case-name",
+      "outcome": "applied",
+      "units": {
+        "length": "metre",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-json",
+          "path": "../../🏋️load/🧫️fixtures/🏷️change-load-case-name/⏮️before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:d34eaa2d4b6a2152663740d43f109927b0a36c36d3684c130878fff5b2abb05c",
+          "bytes": 2824
+        },
+        {
+          "role": "expected-after-json",
+          "path": "../../🏋️load/🧫️fixtures/🏷️change-load-case-name/⏭️after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:6d27de9ff0b1128113cf37014e25c10eafd496101929f2b7fe7d74fe0f5da71f",
+          "bytes": 2829
+        }
+      ],
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "generator": {
+        "oracle": "serde-json-fem2d-carrier-reader",
+        "packageVersion": "1",
+        "engineFamily": "serde-json",
+        "engineVersion": "1",
+        "command": "bun ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts carrier",
+        "platform": "darwin"
+      },
+      "comparisonProfile": "semantic-fem2d-carrier-v1",
+      "reproducible": true,
+      "family": "mechanical",
+      "notes": "A deterministic fem2d model carrying at least two of every collection, with the change-load-case-name mutation applied as an edit to the JSON CARRIER and read back through serde_json — never through this repository's own mutation engine. Observability (after projection != before projection) is checked before a pair is written, and a pair that does not move is refused rather than committed.",
+      "comparisonPipeline": "fem2d-1-carrier-compare-v1"
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "carrier-replace-combination",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.fem.2d",
+        "standard": "1",
+        "subset": "load"
+      },
+      "mutation": "replace-combination",
+      "outcome": "applied",
+      "units": {
+        "length": "metre",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-json",
+          "path": "../../🏋️load/🧫️fixtures/🔁️replace-combination/⏮️before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:d34eaa2d4b6a2152663740d43f109927b0a36c36d3684c130878fff5b2abb05c",
+          "bytes": 2824
+        },
+        {
+          "role": "expected-after-json",
+          "path": "../../🏋️load/🧫️fixtures/🔁️replace-combination/⏭️after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:621a222749b72c496714d6c4c867261808eb2d5d803395a455216ab14f7493fd",
+          "bytes": 2829
+        }
+      ],
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "generator": {
+        "oracle": "serde-json-fem2d-carrier-reader",
+        "packageVersion": "1",
+        "engineFamily": "serde-json",
+        "engineVersion": "1",
+        "command": "bun ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts carrier",
+        "platform": "darwin"
+      },
+      "comparisonProfile": "semantic-fem2d-carrier-v1",
+      "reproducible": true,
+      "family": "mechanical",
+      "notes": "A deterministic fem2d model carrying at least two of every collection, with the replace-combination mutation applied as an edit to the JSON CARRIER and read back through serde_json — never through this repository's own mutation engine. Observability (after projection != before projection) is checked before a pair is written, and a pair that does not move is refused rather than committed.",
       "comparisonPipeline": "fem2d-1-carrier-compare-v1"
     }
   ],

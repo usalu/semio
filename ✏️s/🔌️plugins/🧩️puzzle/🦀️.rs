@@ -8,6 +8,14 @@ use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRe
 use semio_framework_plugin::plugin_app_close_prelude::*;
 use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp};
 
+//#region ✏️Editor
+/// ✏️ Surface re-export so bundling crates (🎪️demonstrator) can name `puzzle::editor::puzzle3d::…`
+/// exactly as they name `cad::editor::cad::…` — same shape as 📐️cad/🏭️process/🪵️sourcing.
+pub mod editor {
+    pub use semio_s_artifact_puzzle_3d::editor::*;
+}
+//#endregion ✏️Editor
+
 //#region 🗃️Apps
 semio_framework_dispatch_macros::dyn_enum_close! {
     /// 🗃️ Closed runtime app fleet for the Puzzle 2D, 3D, and 5D surfaces.

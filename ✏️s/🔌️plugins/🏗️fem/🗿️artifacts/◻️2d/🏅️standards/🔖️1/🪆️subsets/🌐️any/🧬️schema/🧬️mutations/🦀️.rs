@@ -53,6 +53,10 @@ pub enum Fem2dMutation {
     CreateCombination(create_combination::CreateCombination),
     DeleteCombination(delete_combination::DeleteCombination),
     UpdateAnalysisSettings(update_analysis_settings::UpdateAnalysisSettings),
+    ReplaceNode(replace_node::ReplaceNode),
+    ReplaceLoad(replace_load::ReplaceLoad),
+    ChangeLoadCaseName(change_load_case_name::ChangeLoadCaseName),
+    ReplaceCombination(replace_combination::ReplaceCombination),
 }
 //#endregion 🔖️Mutations
 
@@ -61,6 +65,7 @@ pub enum Fem2dMutation {
 /// siblings back in `🦀️.rs`, not inside this file) — required for the dispatch enum's bare
 /// `create_node::CreateNode`-style variant field paths above to resolve.
 use super::add_load;
+use super::change_load_case_name;
 use super::change_load_case_self_weight;
 use super::create_combination;
 use super::create_element;
@@ -79,8 +84,11 @@ use super::delete_region;
 use super::delete_section;
 use super::delete_support;
 use super::remove_load;
+use super::replace_combination;
 use super::replace_element;
+use super::replace_load;
 use super::replace_material;
+use super::replace_node;
 use super::replace_region;
 use super::replace_section;
 use super::replace_support;
@@ -123,7 +131,7 @@ pub fn inverse_fem2d_mutation(snapshot: &Fem2dSnapshot, mutation: &Fem2dMutation
 /// @see 📓️w13-fem2d-semantics.md — the per-kind rule table these guards implement.
 pub mod guards {
     use crate::standards::v1::subsets::any::schema::diff::Fem2dDiff;
-    use crate::{element_id, load_id, Fem2dSnapshot, FemAnalysisSettings, FemElement, FemLoad, FemMaterial, FemNode, FemRegion, FemSection};
+    use crate::{element_id, load_id, Fem2dSnapshot, FemAnalysisSettings, FemCombination, FemElement, FemLoad, FemMaterial, FemNode, FemRegion, FemSection};
 
     type Rejection = protocol::MutationOutcome<Fem2dDiff>;
 
@@ -366,6 +374,30 @@ pub mod guards {
         base.combinations.iter().filter(|combination| combination.terms.iter().any(|term| term.case_id == target)).map(|combination| combination.id.clone()).collect()
     }
 
+    /// 🔗️ Every term of a combination resolves to a load case or to ANOTHER combination — the same
+    /// resolution whether the combination is brand new (`create-combination`) or replaces an
+    /// existing one (`replace-combination`).
+    pub fn combination_term_references(base: &Fem2dSnapshot, combination: &FemCombination) -> Option<Rejection> {
+        combination.terms.iter().find(|term| !base.load_cases.iter().any(|case| case.id == term.case_id) && !base.combinations.iter().any(|other| other.id == term.case_id)).map(|term| missing(term.case_id.clone(), format!("Load case or combination \"{}\" does not exist.", term.case_id)))
+    }
+
+    /// ⚖️ A combination weights its cases by real numbers — a non-finite factor turns the superposed
+    /// load vector into NaN long before anything downstream can say which edit caused it.
+    pub fn combination_factors(combination: &FemCombination) -> Option<Rejection> {
+        combination.terms.iter().find(|term| !term.factor.is_finite()).map(|term| invariant([combination.id.clone()], format!("Combination \"{}\" carries a non-finite factor on case \"{}\".", combination.id, term.case_id)))
+    }
+
+    /// 🏋️ A load's magnitudes are real numbers — a non-finite force, line load or pressure poisons
+    /// every right-hand side it enters, exactly as a non-finite coordinate poisons the stiffness.
+    pub fn load_magnitudes(load: &FemLoad) -> Option<Rejection> {
+        let (finite, magnitude) = match load {
+            FemLoad::Nodal { value, .. } => (value.is_finite(), *value),
+            FemLoad::MemberUdl { wx, wy, .. } => (wx.is_finite() && wy.is_finite(), *wx),
+            FemLoad::Area { pressure, .. } => (pressure.is_finite(), *pressure),
+        };
+        (!finite).then(|| invariant([load_id(load).to_string()], format!("Load \"{}\" carries a non-finite magnitude ({magnitude}).", load_id(load))))
+    }
+
     /// 🔎️ Every OTHER combination nesting this one (a self-term cannot block its own deletion).
     pub fn combination_referrers(base: &Fem2dSnapshot, target: &str) -> Vec<String> {
         base.combinations.iter().filter(|combination| combination.id != target && combination.terms.iter().any(|term| term.case_id == target)).map(|combination| combination.id.clone()).collect()
@@ -414,6 +446,10 @@ pub const KINDS: &[&str] = &[
     "create-combination",
     "delete-combination",
     "update-analysis-settings",
+    "replace-node",
+    "replace-load",
+    "change-load-case-name",
+    "replace-combination",
 ];
 //#endregion 🔖️Kinds
 

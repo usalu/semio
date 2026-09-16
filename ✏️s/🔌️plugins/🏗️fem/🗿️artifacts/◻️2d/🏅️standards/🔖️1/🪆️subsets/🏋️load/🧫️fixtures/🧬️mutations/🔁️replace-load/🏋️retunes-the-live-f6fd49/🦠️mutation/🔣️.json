@@ -1,0 +1,12 @@
+{
+  "mutation": "replaceLoad",
+  "caseId": "live",
+  "loadId": "l6",
+  "newLoad": {
+    "kind": "nodal",
+    "id": "l6",
+    "nodeId": "p8_l1",
+    "dof": "Ty",
+    "value": -18000.0
+  }
+}

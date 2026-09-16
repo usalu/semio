@@ -6,7 +6,7 @@ Feature: Apply every typed fem2d load mutation twice — once in Rust, once in P
 
   This case is a CROSS-LANGUAGE DIFFERENTIAL, relocated out of the artifact-level `mutate-fem2d-1`
   case in ticket `26/09/02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION`
-  so this subset's own kinds (`create-load-case`, `delete-load-case`, `add-load`, `remove-load`, `change-load-case-self-weight`, `create-combination`, `delete-combination`) have a subset-owned test. The reference is
+  so this subset's own kinds (`create-load-case`, `delete-load-case`, `add-load`, `remove-load`, `change-load-case-self-weight`, `create-combination`, `delete-combination`, `replace-load`, `change-load-case-name`, `replace-combination`) have a subset-owned test. The reference is
   `🐍️.py` in this directory: a second implementation of the `s.fem.fem2d` structural model and
   this subset's typed mutations, written in Python from
   `../../../🌐️any/🧬️schema/📸️snapshot/🔣️.json` (the nine members, `additionalProperties: false`),
@@ -72,6 +72,9 @@ Feature: Apply every typed fem2d load mutation twice — once in Rust, once in P
     | change-load-case-self-weight | {"mutation":"changeLoadCaseSelfWeight","caseId":"live","newSelfWeight":true}                                                                                             |
     | create-combination           | {"mutation":"createCombination","combination":{"id":"sls","name":"SLS characteristic","terms":[{"caseId":"dead","factor":1.0},{"caseId":"live","factor":1.0}]}}          |
     | delete-combination           | {"mutation":"deleteCombination","id":"uls_spare"}                                                                                                                        |
+    | replace-load                 | {"mutation":"replaceLoad","caseId":"live","loadId":"l6","newLoad":{"kind":"nodal","id":"l6","nodeId":"p8_l1","dof":"Ty","value":-18000.0}}                               |
+    | change-load-case-name        | {"mutation":"changeLoadCaseName","caseId":"live","newName":"Imposed Load"}                                                                                               |
+    | replace-combination          | {"mutation":"replaceCombination","id":"uls","newCombination":{"id":"uls","name":"ULS 6.10b","terms":[{"caseId":"dead","factor":1.35},{"caseId":"live","factor":1.5},{"caseId":"snow","factor":0.75}]}} |
 
   @id-inverse
   @level-exhaustive
@@ -92,6 +95,9 @@ Feature: Apply every typed fem2d load mutation twice — once in Rust, once in P
     | change-load-case-self-weight | {"mutation":"changeLoadCaseSelfWeight","caseId":"live","newSelfWeight":true}                                                                                             |
     | create-combination           | {"mutation":"createCombination","combination":{"id":"sls","name":"SLS characteristic","terms":[{"caseId":"dead","factor":1.0},{"caseId":"live","factor":1.0}]}}          |
     | delete-combination           | {"mutation":"deleteCombination","id":"uls_spare"}                                                                                                                        |
+    | replace-load                 | {"mutation":"replaceLoad","caseId":"live","loadId":"l6","newLoad":{"kind":"nodal","id":"l6","nodeId":"p8_l1","dof":"Ty","value":-18000.0}}                               |
+    | change-load-case-name        | {"mutation":"changeLoadCaseName","caseId":"live","newName":"Imposed Load"}                                                                                               |
+    | replace-combination          | {"mutation":"replaceCombination","id":"uls","newCombination":{"id":"uls","name":"ULS 6.10b","terms":[{"caseId":"dead","factor":1.35},{"caseId":"live","factor":1.5},{"caseId":"snow","factor":0.75}]}} |
 
   @id-spec-vector
   @level-exhaustive
@@ -111,6 +117,9 @@ Feature: Apply every typed fem2d load mutation twice — once in Rust, once in P
     | change-load-case-self-weight | ⚖️change-load-case-self-weight | ⚖️switches-self-abbff2                  |
     | create-combination           | 🔗️create-combination           | 🔗️appends-an-uls-0c18bb                 |
     | delete-combination           | ✂️delete-combination           | ✂️removes-the-uls-438c0c                |
+    | replace-load                 | 🔁️replace-load                 | 🏋️retunes-the-live-f6fd49               |
+    | change-load-case-name        | 🏷️change-load-case-name        | 🏷️renames-the-live-7dce39               |
+    | replace-combination          | 🔁️replace-combination          | ⚖️reweights-the-uls-8b17b7              |
 
   @id-frame-vector
   @level-exhaustive
@@ -130,6 +139,9 @@ Feature: Apply every typed fem2d load mutation twice — once in Rust, once in P
     | delete-combination           | ✂️delete-combination           | 🗑️drops-the-spare-60fda7     |
     | delete-load-case             | 🗑️delete-load-case             | 🗑️drops-the-spare-49435f     |
     | remove-load                  | ➖️remove-load                  | ✂️strips-the-roof-udl-0c1b3c |
+    | replace-load                 | 🔁️replace-load                 | 💨️strengthens-the-wind-21b88a |
+    | change-load-case-name        | 🏷️change-load-case-name        | ✏️renames-the-wind-61757b    |
+    | replace-combination          | 🔁️replace-combination          | 🔗️adds-a-wind-term-6525d5    |
 
   @id-reject
   @level-exhaustive
@@ -153,3 +165,11 @@ Feature: Apply every typed fem2d load mutation twice — once in Rust, once in P
     | delete-load-case-1             | 🗑️delete-load-case             | ⛔️rejects-a-missing-79ed15  |
     | delete-load-case-2             | 🗑️delete-load-case             | 🔗️blocks-in-use-7cdc5f      |
     | remove-load-1                  | ➖️remove-load                  | ⛔️rejects-a-missing-1a8a80  |
+    | replace-load-1                 | 🔁️replace-load                 | ⛔️rejects-a-missing-7a1e1f  |
+    | replace-load-2                 | 🔁️replace-load                 | 🪪️denies-rename-732de0      |
+    | replace-load-3                 | 🔁️replace-load                 | 👻️dangling-node-b95678      |
+    | change-load-case-name-1        | 🏷️change-load-case-name        | ⛔️rejects-a-missing-fc0343  |
+    | change-load-case-name-2        | 🏷️change-load-case-name        | 🔁️keeps-the-name-4fa89f     |
+    | replace-combination-1          | 🔁️replace-combination          | ⛔️rejects-a-missing-b32308  |
+    | replace-combination-2          | 🔁️replace-combination          | 🪪️denies-rename-a96d3c      |
+    | replace-combination-3          | 🔁️replace-combination          | 👻️dangling-case-65b8a8      |

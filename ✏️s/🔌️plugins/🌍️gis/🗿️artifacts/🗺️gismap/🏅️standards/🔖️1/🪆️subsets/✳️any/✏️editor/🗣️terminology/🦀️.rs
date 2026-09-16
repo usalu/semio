@@ -35,6 +35,10 @@ semio_framework_plugin::app_labels! {
         map_layer: native_en "Map Layer", native_de "Kartenebene", reuse_en "Map Layer", reuse_de "Kartenebene";
         schema: native_en "Schema", native_de "Schema", reuse_en "Schema", reuse_de "Schema";
         layers_visible: native_en "Layers visible", native_de "Sichtbare Ebenen", reuse_en "Layers visible", reuse_de "Sichtbare Ebenen";
+        selected: native_en "Selected", native_de "Ausgewählt", reuse_en "Selected", reuse_de "Ausgewählt";
+        visible: native_en "Visible", native_de "Sichtbar", reuse_en "Visible", reuse_de "Sichtbar";
+        feature: native_en "Feature", native_de "Objekt", reuse_en "Feature", reuse_de "Objekt";
+        feature_kind: native_en "Kind", native_de "Art", reuse_en "Kind", reuse_de "Art";
     }
 }
 

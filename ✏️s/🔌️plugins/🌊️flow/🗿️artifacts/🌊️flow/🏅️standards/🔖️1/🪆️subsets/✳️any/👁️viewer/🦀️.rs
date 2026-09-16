@@ -37,6 +37,8 @@ impl protocol::OpBinary for FlowViewCommand {
 pub struct FlowViewer;
 
 impl ArtifactViewer for FlowViewer {
+    /// 🧩️ Composes `s.stdio.semio@v1/*` children, so every bundle of this surface opens them through the same roster.
+    type Members = semio_s_artifact_stdio_semio::SemioMembers;
     /// 🛍️ Publishes the whole registered flow operator catalogue once per app instance on the reserved
     /// `framework.section.catalogue` retained surface — never on the node-graph scene, whose fixed
     /// `UI_FIXED_BYTES` admission it exceeds threefold with the real `brep`/`math` sets installed

@@ -30,11 +30,11 @@ mod artifacts { pub use semio_s_artifact_sourcing_curation as curation; }
 //#endregion 🗿️Artifacts
 
 //#region ✏️Editor
-mod editor { pub use semio_s_artifact_sourcing_curation::editor::*; }
+pub mod editor { pub use semio_s_artifact_sourcing_curation::editor::*; }
 //#endregion ✏️Editor
 
 //#region 👁️Viewer
-mod viewer { pub use semio_s_artifact_sourcing_curation::viewer::*; }
+pub mod viewer { pub use semio_s_artifact_sourcing_curation::viewer::*; }
 //#endregion 👁️Viewer
 
 //#region 🔖️Plugin

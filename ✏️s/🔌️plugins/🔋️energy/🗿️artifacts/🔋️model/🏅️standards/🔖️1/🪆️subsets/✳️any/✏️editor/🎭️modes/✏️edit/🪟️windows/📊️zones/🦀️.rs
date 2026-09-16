@@ -26,7 +26,7 @@ pub fn actions() -> Vec<ActionDefinition> {
             "Create zone",
             "Zone anlegen",
             vec![
-                ActionArgDef::text("name", LocalizedLabel::native("Name", "Name")).required(),
+                ActionArgDef::text("name", LocalizedLabel::native("Name", "Bezeichnung")).required(),
                 ActionArgDef::number("volumeM3", LocalizedLabel::native("Volume (m³)", "Volumen (m³)")).required(),
                 ActionArgDef::number("multiplier", LocalizedLabel::native("Multiplier", "Multiplikator")),
                 ActionArgDef::toggle("conditioned", LocalizedLabel::native("Conditioned", "Konditioniert")),

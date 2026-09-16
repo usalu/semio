@@ -7,6 +7,15 @@ use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRe
 use semio_framework_plugin::plugin_app_close_prelude::*;
 use semio_framework_plugin::{ExecutionMode, FlowExtensionDeclaration, FlowExtensionExecutableIdentity, FlowExtensionManifest, HostMediaHandlerDeclaration, Plugin, PluginApp};
 
+//#region ✏️Editor
+/// ✏️ Surface re-export so bundling crates (🎪️demonstrator) can name
+/// `procedural::editor::generation3d::…` exactly as they name `cad::editor::cad::…` — same shape as
+/// 📐️cad/🏭️process/🪵️sourcing.
+pub mod editor {
+    pub use semio_s_artifact_procedural_generation3d::editor::*;
+}
+//#endregion ✏️Editor
+
 //#region 🧮️GuestHeapWitness
 /// 🧮️ Weighs every allocation this GUEST makes, so a per-turn retention trace has real numbers to
 /// attribute inside a `wasm32-wasip2` component.

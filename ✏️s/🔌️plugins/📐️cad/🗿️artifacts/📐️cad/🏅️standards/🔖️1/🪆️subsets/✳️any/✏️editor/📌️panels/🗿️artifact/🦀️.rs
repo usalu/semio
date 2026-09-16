@@ -3,13 +3,14 @@
 
 use crate::editor::cad::modes::edit;
 use crate::editor::cad::terminology::{typology_label, CadLabels};
-use crate::editor::cad::{cad_action, cad_tree_item, cad_tree_item_static, ui_label, ui_node_list, ui_value_bool, ui_value_list, ui_value_map, ui_value_text, CadPlayRuntime, CadPlayView, CAD_INTERACTION_DOMAIN};
+use crate::editor::cad::{cad_action, cad_tree_item, cad_tree_item_static, ui_label, ui_node_list, ui_value_bool, ui_value_list, ui_value_map, ui_value_number, ui_value_text, CadPlayRuntime, CadPlayView, CAD_INTERACTION_DOMAIN};
 use crate::standards::v1::subsets::any::io::geometry_import::CadObject;
 use crate::standards::v1::subsets::any::schema::inferences::{CAD_MODEL_DEFINITION_BUILDING, CAD_MODEL_DEFINITION_ENERGY, CAD_MODEL_DEFINITION_SHAPE, CAD_MODEL_DEFINITION_STRUCTURE_CLASSIC};
 use crate::{CadPaneId, CadReference, CadSnapshot};
+use std::collections::BTreeMap;
 use semio_framework_plugin::plugin_app_close_prelude::{ActionBinding, BuiltNode, Label as UiLabel, RowAction, RowActionPlacement, Trigger};
 use semio_framework_plugin::{
-    paged_panel_section, panel_page_rows, LabelText, LocalizedLabel, PanelGroup, PanelRowBudget, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiFixedList, UiText, UiValue, FRAMEWORK_PANEL_TAB_ARTIFACT_ID,
+    panel_continuation_row, panel_page_rows, LabelText, LocalizedLabel, PanelGroup, PanelRowBudget, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiFixedList, UiText, UiValue, FRAMEWORK_PANEL_TAB_ARTIFACT_ID,
     FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, INTERACTION_SELECT_ACTION_ID,
 };
 
@@ -135,19 +136,107 @@ pub fn document_tree_highlighted_ids(document: &CadSnapshot, runtime: &CadPlayRu
 /// 🧾️ Sections this tree assembles, in order — four pane object sections, their references, the nodes.
 const SECTIONS: usize = 9;
 
+/// 📄️ Rows one section shows before it closes with a continuation — the tree holds nine sections on
+/// one shared argument-arena page, so a section that spent the whole page would leave its siblings
+/// with none.
+pub const CAD_SECTION_ROWS: usize = 6;
+
+/// 📄️ The page a section is parked on, clamped to the last page its own entry count actually has —
+/// a stale cursor (the document shrank under it) reads as the last real page, never an empty section.
+pub fn section_page(pages: &BTreeMap<String, u32>, section_id: &str, entries: usize) -> usize {
+    if entries == 0 {
+        return 0;
+    }
+    let last = (entries - 1) / CAD_SECTION_ROWS;
+    (pages.get(section_id).copied().unwrap_or(0) as usize).min(last)
+}
+
+/// ➕️ The continuation row closing a truncated section. When a next page exists it carries a
+/// `setPanelPage` argument map and is therefore clickable; when the argument arena has no credit left
+/// for that map it degrades to the SDK's plain `+N` row rather than vanishing — a section showing
+/// neither its rows nor the `+N` that explains why reads as an empty document.
+pub fn continuation_row(section_id: &str, omitted: usize, next_page: Option<u32>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+    let Some(page) = next_page else {
+        return panel_continuation_row(section_id, omitted);
+    };
+    let args = ui_value_map([("page", ui_value_number(f64::from(page))), ("section", ui_value_text(section_id)?)]);
+    let built = args.and_then(|args| cad_action("setPanelPage", Some(args))).and_then(|action| cad_tree_item(format!("{section_id}.more"), format!("+{omitted}"), Some("ellipsis"), action));
+    match built {
+        Ok(item) => Ok(item),
+        Err(_) => panel_continuation_row(section_id, omitted),
+    }
+}
+
+/// 🗂️ `semio_framework_plugin::paged_panel_section` with a cursor: the section starts at its
+/// `setPanelPage` page instead of always at entry zero, and its continuation row advances that page.
+/// Everything else (the shared [`PanelRowBudget`], the capacity-refusal fallback) is the SDK's.
+pub fn paged_section_from<T>(
+    section_id: &str,
+    entries: &[T],
+    pages: &BTreeMap<String, u32>,
+    budget: &mut PanelRowBudget,
+    mut row: impl FnMut(&T, &mut PanelRowBudget) -> semio_framework_plugin::UiAssemblyResult<BuiltNode>,
+) -> semio_framework_plugin::UiAssemblyResult<UiFixedList<BuiltNode>> {
+    let page = section_page(pages, section_id, entries.len());
+    let offset = page.saturating_mul(CAD_SECTION_ROWS).min(entries.len());
+    let slice = &entries[offset..];
+    let mut items = UiFixedList::<BuiltNode>::default();
+    let quota = slice.len().min(CAD_SECTION_ROWS);
+    let truncated = slice.len() > CAD_SECTION_ROWS;
+    let mut placed = 0;
+    for entry in slice {
+        if placed == CAD_SECTION_ROWS || (truncated && budget.remaining() <= 1) || !budget.spend() {
+            break;
+        }
+        placed += 1;
+        match budget.nested(quota - placed, |nested| row(entry, nested)) {
+            Ok(node) => {
+                if items.try_push(node).is_err() {
+                    placed -= 1;
+                    break;
+                }
+            }
+            Err(error) if error.code == "ui.fixed-capacity" => {
+                placed -= 1;
+                break;
+            }
+            Err(error) => return Err(error),
+        }
+    }
+    if placed < slice.len() && budget.spend() {
+        if let Ok(more) = continuation_row(section_id, slice.len() - placed, Some(page as u32 + 1)) {
+            let _ = items.try_push(more);
+        }
+    }
+    Ok(items)
+}
+
 /// 🌳️ One pane's object section: namespaced by `id_suffix`, always expanded, paged against `budget`
-/// (`semio_framework_plugin::paged_panel_section`) so a document past one argument-arena page closes
-/// with a `+N` continuation row instead of failing an admission mid-row.
-pub(crate) fn document_pane_section(label: LabelText, id_suffix: &str, objects: &[CadObject], labels: &CadLabels, budget: &mut PanelRowBudget) -> semio_framework_plugin::UiAssemblyResult<(String, Option<UiLabel>, bool, UiFixedList<BuiltNode>)> {
+/// from its own `setPanelPage` cursor so a document past one page closes with a clickable `+N`
+/// continuation row instead of failing an admission mid-row.
+pub(crate) fn document_pane_section(
+    label: LabelText,
+    id_suffix: &str,
+    objects: &[CadObject],
+    labels: &CadLabels,
+    pages: &BTreeMap<String, u32>,
+    budget: &mut PanelRowBudget,
+) -> semio_framework_plugin::UiAssemblyResult<(String, Option<UiLabel>, bool, UiFixedList<BuiltNode>)> {
     let section_id = format!("cad-play-document.{id_suffix}");
-    let items = paged_panel_section(&section_id, objects, panel_page_rows(), budget, |object, _| object_tree_item(id_suffix, object, labels))?;
+    let items = paged_section_from(&section_id, objects, pages, budget, |object, _| object_tree_item(id_suffix, object, labels))?;
     Ok((section_id, Some(ui_label(label.as_str())?), true, items))
 }
 
 /// 🌳️ One pane's references section: collapsed by default, "(none)"-placeholder when empty.
-pub fn artifact_references_section(document: &CadSnapshot, model_definition_id: &str, labels: &CadLabels, budget: &mut PanelRowBudget) -> semio_framework_plugin::UiAssemblyResult<(String, Option<UiLabel>, bool, UiFixedList<BuiltNode>)> {
+pub fn artifact_references_section(
+    document: &CadSnapshot,
+    model_definition_id: &str,
+    labels: &CadLabels,
+    pages: &BTreeMap<String, u32>,
+    budget: &mut PanelRowBudget,
+) -> semio_framework_plugin::UiAssemblyResult<(String, Option<UiLabel>, bool, UiFixedList<BuiltNode>)> {
     let section_id = format!("cad-play-document.references.{model_definition_id}");
-    let items = paged_panel_section(&section_id, references_for(document, model_definition_id), panel_page_rows(), budget, |reference, _| reference_tree_item(model_definition_id, reference, labels))?;
+    let items = paged_section_from(&section_id, references_for(document, model_definition_id), pages, budget, |reference, _| reference_tree_item(model_definition_id, reference, labels))?;
     Ok((section_id, Some(ui_label(labels.references.as_str())?), false, items))
 }
 
@@ -159,16 +248,19 @@ pub fn build_document_tree(envelope: &CadPlayView, labels: &CadLabels) -> semio_
     let objects_of = |wanted: CadPaneId| -> &[CadObject] { scenes.iter().find(|(pane, _)| *pane == wanted).and_then(|(pane, scene)| scene.as_deref().map(|scene| edit::cad_pane_working_objects(scene, *pane).0)).unwrap_or(&[]) };
     // 🪙️ One interactive-row page for the whole tree: every section reserves the rows the sections
     // after it still need, exactly like puzzle 3d's document tree.
+    let pages = &envelope.runtime.panel_pages;
     let budget = &mut PanelRowBudget::new(panel_page_rows());
-    let (shape_id, shape_label, shape_open, shape_items) = budget.nested(SECTIONS - 1, |share| document_pane_section(labels.pane_shape, "shape", objects_of(CadPaneId::Shape), labels, share))?;
-    let (shape_refs_id, shape_refs_label, shape_refs_open, shape_refs_items) = budget.nested(SECTIONS - 2, |share| artifact_references_section(&envelope.document, CAD_MODEL_DEFINITION_SHAPE, labels, share))?;
-    let (building_id, building_label, building_open, building_items) = budget.nested(SECTIONS - 3, |share| document_pane_section(labels.pane_building, "building", objects_of(CadPaneId::Building), labels, share))?;
-    let (building_refs_id, building_refs_label, building_refs_open, building_refs_items) = budget.nested(SECTIONS - 4, |share| artifact_references_section(&envelope.document, CAD_MODEL_DEFINITION_BUILDING, labels, share))?;
-    let (energy_id, energy_label, energy_open, energy_items) = budget.nested(SECTIONS - 5, |share| document_pane_section(labels.pane_energy, "energy", objects_of(CadPaneId::Energy), labels, share))?;
-    let (energy_refs_id, energy_refs_label, energy_refs_open, energy_refs_items) = budget.nested(SECTIONS - 6, |share| artifact_references_section(&envelope.document, CAD_MODEL_DEFINITION_ENERGY, labels, share))?;
-    let (structure_id, structure_label, structure_open, structure_items) = budget.nested(SECTIONS - 7, |share| document_pane_section(labels.pane_structure_classic, "structure-classic", objects_of(CadPaneId::StructureClassic), labels, share))?;
-    let (structure_refs_id, structure_refs_label, structure_refs_open, structure_refs_items) = budget.nested(SECTIONS - 8, |share| artifact_references_section(&envelope.document, CAD_MODEL_DEFINITION_STRUCTURE_CLASSIC, labels, share))?;
-    let node_items = paged_panel_section("cad-play-document.nodes", &envelope.document.nodes, panel_page_rows(), budget, |node, _| {
+    let (shape_id, shape_label, shape_open, shape_items) = budget.nested(SECTIONS - 1, |share| document_pane_section(labels.pane_shape, "shape", objects_of(CadPaneId::Shape), labels, pages, share))?;
+    let (shape_refs_id, shape_refs_label, shape_refs_open, shape_refs_items) = budget.nested(SECTIONS - 2, |share| artifact_references_section(&envelope.document, CAD_MODEL_DEFINITION_SHAPE, labels, pages, share))?;
+    let (building_id, building_label, building_open, building_items) = budget.nested(SECTIONS - 3, |share| document_pane_section(labels.pane_building, "building", objects_of(CadPaneId::Building), labels, pages, share))?;
+    let (building_refs_id, building_refs_label, building_refs_open, building_refs_items) = budget.nested(SECTIONS - 4, |share| artifact_references_section(&envelope.document, CAD_MODEL_DEFINITION_BUILDING, labels, pages, share))?;
+    let (energy_id, energy_label, energy_open, energy_items) = budget.nested(SECTIONS - 5, |share| document_pane_section(labels.pane_energy, "energy", objects_of(CadPaneId::Energy), labels, pages, share))?;
+    let (energy_refs_id, energy_refs_label, energy_refs_open, energy_refs_items) = budget.nested(SECTIONS - 6, |share| artifact_references_section(&envelope.document, CAD_MODEL_DEFINITION_ENERGY, labels, pages, share))?;
+    let (structure_id, structure_label, structure_open, structure_items) =
+        budget.nested(SECTIONS - 7, |share| document_pane_section(labels.pane_structure_classic, "structure-classic", objects_of(CadPaneId::StructureClassic), labels, pages, share))?;
+    let (structure_refs_id, structure_refs_label, structure_refs_open, structure_refs_items) =
+        budget.nested(SECTIONS - 8, |share| artifact_references_section(&envelope.document, CAD_MODEL_DEFINITION_STRUCTURE_CLASSIC, labels, pages, share))?;
+    let node_items = paged_section_from("cad-play-document.nodes", &envelope.document.nodes, pages, budget, |node, _| {
         let node_ids = ui_value_list([ui_value_text(&node.id)?])?;
         let args = ui_value_map([("nodeIds", node_ids)])?;
         cad_tree_item(format!("cad-node:{}", node.id), &node.label, Some("git-branch"), cad_action("setNodeSelection", Some(args))?)

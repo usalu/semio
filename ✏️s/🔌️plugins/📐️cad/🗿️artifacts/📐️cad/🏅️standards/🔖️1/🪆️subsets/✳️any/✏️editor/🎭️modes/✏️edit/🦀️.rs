@@ -293,8 +293,8 @@ fn cad_action(action: &str, args: Option<DslValue>) -> ActionDescriptor {
 }
 
 pub fn cad_window_engagement(envelope: &CadPlayView, pane: CadPaneId, labels: &CadLabels) -> WindowEngagement {
-    // 🕹️ `window_engagements` has no request context (unlike `render_with_request_context`), so the
-    // HUD reports the `"cad"` selection only when the caller threaded one into `envelope`.
+    // 🕹️ `window_engagements_with_request_context` threads the live `"cad"` domain in, so this is the
+    // same selection the world scenes paint — see `CadPlayApp::window_engagements_body`.
     let selected_count = envelope.interaction.ids.len();
     let model_definition_id = pane.model_definition_id();
     let session_active = envelope.runtime.engagement_session.is_some();

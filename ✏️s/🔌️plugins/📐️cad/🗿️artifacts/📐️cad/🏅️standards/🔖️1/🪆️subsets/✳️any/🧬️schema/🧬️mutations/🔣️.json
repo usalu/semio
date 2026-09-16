@@ -25,6 +25,9 @@
       "$ref": "https://json.schemas.assets.semio-tech.com/s/cad/cad/mutation/create-node/schema.json"
     },
     {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/cad/cad/mutation/create-object/schema.json"
+    },
+    {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/cad/cad/mutation/create-shape-model/schema.json"
     },
     {
@@ -43,10 +46,16 @@
       "$ref": "https://json.schemas.assets.semio-tech.com/s/cad/cad/mutation/delete-node/schema.json"
     },
     {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/cad/cad/mutation/delete-object/schema.json"
+    },
+    {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/cad/cad/mutation/delete-shape-model/schema.json"
     },
     {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/cad/cad/mutation/delete-structure-classic-model/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/cad/cad/mutation/move-objects/schema.json"
     },
     {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/cad/cad/mutation/move-reference/schema.json"
@@ -59,6 +68,12 @@
     },
     {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/cad/cad/mutation/replace-references/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/cad/cad/mutation/rotate-objects/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/cad/cad/mutation/scale-objects/schema.json"
     }
   ]
 }

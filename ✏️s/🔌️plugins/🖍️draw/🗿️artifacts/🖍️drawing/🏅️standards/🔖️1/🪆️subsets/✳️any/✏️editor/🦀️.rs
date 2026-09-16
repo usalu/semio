@@ -1480,6 +1480,7 @@ impl ArtifactEditor for DrawingPlayApp {
         cfg: &ConfigView<'_, NoConfig>,
         view_state: &semio_framework_plugin::ViewModel,
         transient: &semio_framework_plugin::TransientView<'_, semio_framework_plugin::NoTransient>,
+        _interaction: &semio_framework_plugin::app::InteractionView<'_>,
     ) -> HashMap<String, WindowEngagement> {
         let mut engagements = Self::window_engagements(doc, cfg, view_state);
         let Some(window_id) = view_state.window_id.as_ref() else { return HashMap::new() };

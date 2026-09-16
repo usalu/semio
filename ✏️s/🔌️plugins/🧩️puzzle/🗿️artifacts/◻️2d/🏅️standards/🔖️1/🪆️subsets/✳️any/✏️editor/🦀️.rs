@@ -3760,6 +3760,7 @@ impl ArtifactEditor for Puzzle2dPlayApp {
         cfg: &ConfigView<'_, Puzzle2dConfig>,
         view_state: &semio_framework_plugin::ViewModel,
         transient: &semio_framework_plugin::TransientView<'_, Self::Transient>,
+        _interaction: &semio_framework_plugin::app::InteractionView<'_>,
     ) -> HashMap<String, WindowEngagement> {
         let Some(window_id) = view_state.window_id.as_deref() else { return HashMap::new() };
         let window_config = window::config_from_view_or_document(cfg, &doc.snapshot.0);

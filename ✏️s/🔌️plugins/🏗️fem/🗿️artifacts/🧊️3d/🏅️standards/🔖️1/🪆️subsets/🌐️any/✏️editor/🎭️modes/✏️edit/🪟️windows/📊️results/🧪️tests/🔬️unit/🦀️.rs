@@ -40,12 +40,26 @@ async fn results_window_renders_buckling_mode_shape_3d() {
 }
 
 #[semio_framework_async_macros::async_test]
+async fn results_caption_column_grows_so_world_scene_fills_window_3d() {
+    let snapshot = <Fem3dSnapshot as store::ArtifactDsl>::parse_dsl(crate::standards::v1::subsets::any::schema::snapshot::text::FEM3D_EXAMPLE_TEXT).expect("default example snapshot");
+    let config = Fem3dResultsWindowConfig::default();
+    let node = render(&snapshot, &config).expect("fixture surface admission");
+    let stack_grows = |layout: &semio_framework_ui_contract::LayoutSpec| {
+        matches!(layout, semio_framework_ui_contract::LayoutSpec::Stack(stack) if stack.grow)
+    };
+    assert!(stack_grows(&node.layout), "outer caption column must grow to fill the window body");
+    let scene_stack = node.children.get(1).expect("caption + growing scene stack");
+    assert!(stack_grows(&scene_stack.layout), "scene stack must grow so the world-3d host fills space below the caption");
+}
+
+#[semio_framework_async_macros::async_test]
 async fn results_scene_includes_solid_vertex_colors_3d() {
     let app = app_with_example().await;
     let snapshot = app.snapshot().expect("snapshot");
     let config = Fem3dResultsWindowConfig { result_source_id: Some("dead".into()), result_mode: crate::app_surface::ResultMode::Static, ..Fem3dResultsWindowConfig::default() };
     let node = render(&snapshot, &config).expect("fixture surface admission");
-    let surface = node.children.iter().find(|child| matches!(&child.component, semio_framework_ui_contract::Component::Surface(_))).expect("world surface child");
+    let scene_stack = node.children.get(1).expect("caption + growing scene stack");
+    let surface = scene_stack.children.iter().find(|child| matches!(&child.component, semio_framework_ui_contract::Component::Surface(_))).expect("world surface child");
     let scene: semio_framework_ui_scene::World3dScene = semio_framework_plugin::artifact_app_laws::built_surface_scene(surface).expect("assemble world scene");
     let json = serde_json::to_string(&node).expect("independent semantic JSON oracle");
     assert!(scene.meshes_json.contains("solid-sol1"), "expected the solid mesh in the results scene: {}", scene.meshes_json);

@@ -36,6 +36,8 @@ impl protocol::OpBinary for GisMapViewCommand {
 pub struct GisMapViewer;
 
 impl ArtifactViewer for GisMapViewer {
+    /// 🧩️ Composes `s.stdio.semio@v1/*` children, so every bundle of this surface opens them through the same roster.
+    type Members = semio_s_artifact_stdio_semio::SemioMembers;
     type Snapshot = GisMapSnapshot;
     type Mutation = crate::op::GisMapMutation;
     type Config = NoConfig;

@@ -5639,12 +5639,12 @@ function IntroductionLogoRow({ logos }: { readonly logos: readonly IntroductionL
             {logo.href ? (
               <a href={logo.href} target="_blank" rel="noopener noreferrer" className="inline-flex items-center transition-opacity hover:opacity-80">
                 <img src={logo.src} alt={logo.alt} onLoad={(event) => onLogoLoad(index, event)} className={cn("w-auto object-contain", logo.darkSrc && "dark:hidden")} style={style} />
-                {logo.darkSrc && <img src={logo.darkSrc} alt={logo.alt} className="hidden w-auto object-contain dark:block" style={style} />}
+                {logo.darkSrc && <img src={logo.darkSrc} alt={logo.alt} onLoad={(event) => onLogoLoad(index, event)} className="hidden w-auto object-contain dark:block" style={style} />}
               </a>
             ) : (
               <>
                 <img src={logo.src} alt={logo.alt} onLoad={(event) => onLogoLoad(index, event)} className={cn("w-auto object-contain", logo.darkSrc && "dark:hidden")} style={style} />
-                {logo.darkSrc && <img src={logo.darkSrc} alt={logo.alt} className="hidden w-auto object-contain dark:block" style={style} />}
+                {logo.darkSrc && <img src={logo.darkSrc} alt={logo.alt} onLoad={(event) => onLogoLoad(index, event)} className="hidden w-auto object-contain dark:block" style={style} />}
               </>
             )}
           </span>

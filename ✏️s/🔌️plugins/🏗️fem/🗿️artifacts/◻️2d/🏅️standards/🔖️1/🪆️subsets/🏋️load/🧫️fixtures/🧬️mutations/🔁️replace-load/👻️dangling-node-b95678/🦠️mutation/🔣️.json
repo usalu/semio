@@ -1,0 +1,12 @@
+{
+  "mutation": "replaceLoad",
+  "caseId": "wind",
+  "loadId": "lw1",
+  "newLoad": {
+    "kind": "nodal",
+    "id": "lw1",
+    "nodeId": "n9",
+    "dof": "Tx",
+    "value": 12500.0
+  }
+}

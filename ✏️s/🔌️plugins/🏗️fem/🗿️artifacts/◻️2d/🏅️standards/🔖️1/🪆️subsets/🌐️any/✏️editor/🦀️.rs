@@ -9,9 +9,13 @@
 
 use crate::app_surface::ResultDisplay;
 use crate::editor::fem2d::commands::{
-    add_area_load, add_bar, add_beam, add_combination, add_load_case, add_material, add_member_udl, add_nodal_load, add_node, add_region, add_section, add_support, remove_selection, set_active_example, set_analysis_settings, set_camera,
-    set_result_display, set_self_weight,
+    add_area_load, add_bar, add_beam, add_combination, add_load_case, add_material, add_member_udl, add_nodal_load, add_node, add_region, add_section, add_support, canvas_pointer_down, canvas_pointer_move, canvas_pointer_up, focus_entity, patch_combination,
+    patch_element, patch_load, patch_load_case, patch_material, patch_node, patch_region, patch_section, patch_support, remove_selection, result_animation_tick, set_active_example, set_analysis_settings, set_camera, set_result_animation, set_result_display,
+    set_self_weight,
 };
+use crate::editor::fem2d::interaction::{fem2d_interaction_definition, Fem2dInteractionSnapshot, FEM2D_INTERACTION_DOMAIN};
+use crate::editor::fem2d::panels::{artifact as artifact_panel, inspection as inspection_panel, results as results_panel};
+use crate::editor::fem2d::terminology::fem2d_labels;
 use semio_framework_plugin::{NoConfig, NoConfigMutation};
 use crate::editor::fem2d::modes::edit;
 use crate::editor::fem2d::modes::edit::windows::model as model_window;
@@ -24,13 +28,17 @@ use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolF
 use semio_framework_plugin::app::{Dialect, InteractionView};
 use semio_framework_plugin::{
     built_text_node, create_default_layout, ActionArgDef, ActionArgOption, AppIo, AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract,
-    ArtifactToolPublicationLane, ArtifactView, ConfigSpec, ConfigView, DraftView, Editor, EditorApp, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, NoDraft, NoDraftMutation, PluginCloseStep,
+    ArtifactToolPublicationLane, ArtifactView, ConfigSpec, ConfigView, DraftView, Editor, EditorApp, Emit, Fault, InteractionRef, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, NoDraft, NoDraftMutation,
+    PluginAssemblyError, PluginCloseStep, ViewModel,
 };
 use std::collections::HashMap;
 use store::EngineHandles;
 
 //#region 🔖️Constants
 pub const FEM2D_APP_ID: &str = "fem2d-play";
+/// 🎛️ Stable controller/action-factory tag every panel row and control binds its actions under
+/// (the `ActionFactory` id, distinct from the derived surface app id) — the same string as the app id.
+pub const FEM2D_PLAY_CONTROLLER_ID: &str = FEM2D_APP_ID;
 
 /// 📦️ The `fem2d-play` "default" example — read directly by the `setActiveExample` handler
 /// (`crate::editor::fem2d::commands::set_active_example`) and every test fixture (`EditorBuilder` has
@@ -65,6 +73,21 @@ semio_framework_plugin::app_commands! {
         "setActiveExample" as "active-example" => set_active_example::SetActiveExample,
         "setCamera" as "camera" => set_camera::SetCamera,
         "setResultDisplay" as "result-display" => set_result_display::SetResultDisplay,
+        "canvasPointerDown" as "canvas-pointer-down" => canvas_pointer_down::CanvasPointerDown,
+        "canvasPointerMove" as "canvas-pointer-move" => canvas_pointer_move::CanvasPointerMove,
+        "canvasPointerUp" as "canvas-pointer-up" => canvas_pointer_up::CanvasPointerUp,
+        "patchNode" as "patch-node" => patch_node::PatchNode,
+        "patchElement" as "patch-element" => patch_element::PatchElement,
+        "patchMaterial" as "patch-material" => patch_material::PatchMaterial,
+        "patchSection" as "patch-section" => patch_section::PatchSection,
+        "patchSupport" as "patch-support" => patch_support::PatchSupport,
+        "patchRegion" as "patch-region" => patch_region::PatchRegion,
+        "patchLoad" as "patch-load" => patch_load::PatchLoad,
+        "patchLoadCase" as "patch-load-case" => patch_load_case::PatchLoadCase,
+        "patchCombination" as "patch-combination" => patch_combination::PatchCombination,
+        "setResultAnimation" as "result-animation" => set_result_animation::SetResultAnimation,
+        "resultAnimationTick" as "result-animation-tick" => result_animation_tick::ResultAnimationTick,
+        "focusEntity" as "focus-entity" => focus_entity::FocusEntity,
     }
 }
 
@@ -95,6 +118,21 @@ const FEM2D_RETAINED_TOOL_IDS: &[&str] = &[
     "setActiveExample",
     "setCamera",
     "setResultDisplay",
+    "canvasPointerDown",
+    "canvasPointerMove",
+    "canvasPointerUp",
+    "patchNode",
+    "patchElement",
+    "patchMaterial",
+    "patchSection",
+    "patchSupport",
+    "patchRegion",
+    "patchLoad",
+    "patchLoadCase",
+    "patchCombination",
+    "setResultAnimation",
+    "resultAnimationTick",
+    "focusEntity",
 ];
 const FEM2D_RETAINED_PAYLOAD_SCHEMA: &str = "fem.2d.tool-command.v1";
 const FEM2D_RETAINED_RAW_BYTES: usize = 65_536;
@@ -124,6 +162,21 @@ const FEM2D_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
     ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[ArtifactToolPublicationLane::HostOnly] },
     ArtifactToolPublicationContract { tool_id: "setCamera", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
     ArtifactToolPublicationContract { tool_id: "setResultDisplay", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
+    ArtifactToolPublicationContract { tool_id: "canvasPointerDown", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+    ArtifactToolPublicationContract { tool_id: "canvasPointerMove", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+    ArtifactToolPublicationContract { tool_id: "canvasPointerUp", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+    ArtifactToolPublicationContract { tool_id: "patchNode", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "patchElement", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "patchMaterial", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "patchSection", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "patchSupport", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "patchRegion", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "patchLoad", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "patchLoadCase", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "patchCombination", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "setResultAnimation", lanes: &[ArtifactToolPublicationLane::WindowConfig, ArtifactToolPublicationLane::HostOnly] },
+    ArtifactToolPublicationContract { tool_id: "resultAnimationTick", lanes: &[ArtifactToolPublicationLane::WindowConfig, ArtifactToolPublicationLane::HostOnly] },
+    ArtifactToolPublicationContract { tool_id: "focusEntity", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
 ];
 
 fn fem2d_retained_contract() -> ToolExecutionContract {
@@ -620,6 +673,21 @@ impl ArtifactEditor for Fem2dPlayApp {
             "setActiveExample",
             "setCamera",
             "setResultDisplay",
+            "canvasPointerDown",
+            "canvasPointerMove",
+            "canvasPointerUp",
+            "patchNode",
+            "patchElement",
+            "patchMaterial",
+            "patchSection",
+            "patchSupport",
+            "patchRegion",
+            "patchLoad",
+            "patchLoadCase",
+            "patchCombination",
+            "setResultAnimation",
+            "resultAnimationTick",
+            "focusEntity",
                     ]
     }
 
@@ -774,6 +842,15 @@ impl ArtifactEditor for Fem2dPlayApp {
         let number = |key: &str| args.and_then(|value| value.get(key)).and_then(dsl::DslValue::as_f64);
         let flag = |key: &str| args.and_then(|value| value.get(key)).and_then(dsl::DslValue::as_bool);
         let list = |key: &str| args.and_then(|value| value.get(key)).and_then(dsl::DslValue::as_array).map(|items| items.iter().filter_map(dsl::DslValue::as_str).map(str::to_string).collect::<Vec<_>>());
+        // 🩹️ A control's `Trigger::Change` value arrives typed (number for sliders/number inputs,
+        // bool for toggles, text for selects/inputs); every patch command carries it as text.
+        let scalar_text = |key: &str| {
+            args.and_then(|value| value.get(key)).and_then(|value| match value {
+                dsl::DslValue::String(text) => Some(text.clone()),
+                dsl::DslValue::Bool(flag) => Some(flag.to_string()),
+                other => other.as_f64().map(|number| number.to_string()),
+            })
+        };
         match action {
             "addNode" => Ok(Fem2dCommand::AddNode(add_node::AddNode { x: number("x").unwrap_or_default(), y: number("y").unwrap_or_default() })),
             "addBar" => {
@@ -814,6 +891,8 @@ impl ArtifactEditor for Fem2dPlayApp {
                 modal_count: number("modalCount").map(|value| value.max(0.0) as u32),
                 buckling_count: number("bucklingCount").map(|value| value.max(0.0) as u32),
                 deformation_scale: number("deformationScale"),
+                field: text("field"),
+                value: scalar_text("value"),
             })),
             "removeSelection" => Ok(Fem2dCommand::RemoveSelection(remove_selection::RemoveSelection { ids: list("ids").unwrap_or_default() })),
             "setActiveExample" => Ok(Fem2dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: text("exampleId").or_else(|| text("id")).unwrap_or_default() })),
@@ -822,7 +901,43 @@ impl ArtifactEditor for Fem2dPlayApp {
                 source_id: text("sourceId").filter(|id| !id.is_empty()),
                 mode: text("mode").unwrap_or_else(|| "static".into()),
                 mode_index: number("modeIndex").map(|value| value.max(0.0) as u32).unwrap_or_default(),
+                field: text("field"),
+                value: scalar_text("value"),
             })),
+            "canvasPointerDown" => Ok(Fem2dCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown {
+                x: number("x").unwrap_or_default(),
+                y: number("y").unwrap_or_default(),
+                width: number("width").unwrap_or_default(),
+                height: number("height").unwrap_or_default(),
+                button: number("button").map(|value| value.max(0.0) as u32).unwrap_or_default(),
+                shift: flag("shift").unwrap_or(false),
+                ctrl: flag("ctrl").unwrap_or(false),
+                meta: flag("meta").unwrap_or(false),
+                alt: flag("alt").unwrap_or(false),
+            })),
+            "canvasPointerMove" => Ok(Fem2dCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { x: number("x").unwrap_or_default(), y: number("y").unwrap_or_default(), width: number("width").unwrap_or_default(), height: number("height").unwrap_or_default() })),
+            "canvasPointerUp" => Ok(Fem2dCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp {
+                x: number("x").unwrap_or_default(),
+                y: number("y").unwrap_or_default(),
+                width: number("width").unwrap_or_default(),
+                height: number("height").unwrap_or_default(),
+                shift: flag("shift").unwrap_or(false),
+                ctrl: flag("ctrl").unwrap_or(false),
+                meta: flag("meta").unwrap_or(false),
+                alt: flag("alt").unwrap_or(false),
+            })),
+            "patchNode" => Ok(Fem2dCommand::PatchNode(patch_node::PatchNode { id: text("id").unwrap_or_default(), field: text("field").unwrap_or_default(), value: scalar_text("value").unwrap_or_default() })),
+            "patchElement" => Ok(Fem2dCommand::PatchElement(patch_element::PatchElement { id: text("id").unwrap_or_default(), field: text("field").unwrap_or_default(), value: scalar_text("value").unwrap_or_default() })),
+            "patchMaterial" => Ok(Fem2dCommand::PatchMaterial(patch_material::PatchMaterial { id: text("id").unwrap_or_default(), field: text("field").unwrap_or_default(), value: scalar_text("value").unwrap_or_default() })),
+            "patchSection" => Ok(Fem2dCommand::PatchSection(patch_section::PatchSection { id: text("id").unwrap_or_default(), field: text("field").unwrap_or_default(), value: scalar_text("value").unwrap_or_default() })),
+            "patchSupport" => Ok(Fem2dCommand::PatchSupport(patch_support::PatchSupport { id: text("id").unwrap_or_default(), field: text("field").unwrap_or_default(), value: scalar_text("value").unwrap_or_default() })),
+            "patchRegion" => Ok(Fem2dCommand::PatchRegion(patch_region::PatchRegion { id: text("id").unwrap_or_default(), field: text("field").unwrap_or_default(), value: scalar_text("value").unwrap_or_default() })),
+            "patchLoad" => Ok(Fem2dCommand::PatchLoad(patch_load::PatchLoad { id: text("id").unwrap_or_default(), field: text("field").unwrap_or_default(), value: scalar_text("value").unwrap_or_default() })),
+            "patchLoadCase" => Ok(Fem2dCommand::PatchLoadCase(patch_load_case::PatchLoadCase { id: text("id").unwrap_or_default(), field: text("field").unwrap_or_default(), value: scalar_text("value").unwrap_or_default() })),
+            "patchCombination" => Ok(Fem2dCommand::PatchCombination(patch_combination::PatchCombination { id: text("id").unwrap_or_default(), field: text("field").unwrap_or_default(), value: scalar_text("value").unwrap_or_default() })),
+            "setResultAnimation" => Ok(Fem2dCommand::SetResultAnimation(set_result_animation::SetResultAnimation { phase: number("phase"), playing: flag("playing"), speed: number("speed"), loop_mode: text("loopMode"), waveform: text("waveform"), field: text("field"), value: scalar_text("value") })),
+            "resultAnimationTick" => Ok(Fem2dCommand::ResultAnimationTick(result_animation_tick::ResultAnimationTick {})),
+            "focusEntity" => Ok(Fem2dCommand::FocusEntity(focus_entity::FocusEntity { id: text("id").unwrap_or_default() })),
             other => Err(Fault::from(format!("action '{other}' is not a declared fem2d action — every app action is dispatched through the typed command channel (see `dispatch_typed_command`)"))),
         }
     }
@@ -831,14 +946,23 @@ impl ArtifactEditor for Fem2dPlayApp {
         command: &Fem2dCommand,
         doc: &ArtifactView<'_, Fem2dSnapshot>,
         cfg: &ConfigView<'_, NoConfig>,
-        _interaction: &InteractionView<'_>,
+        interaction: &InteractionView<'_>,
         view_state: Option<&semio_framework_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<Fem2dMutation, NoConfigMutation, Self::DraftMutation>, Fault> {
         match command {
+            // 🗑️ The delete keybinding dispatches `removeSelection` without ids: the live framework-owned
+            // `"fem2d"` selection is what gets removed.
+            Fem2dCommand::RemoveSelection(payload) if payload.ids.is_empty() => remove_selection::handle(&remove_selection::RemoveSelection { ids: interaction.selection(FEM2D_INTERACTION_DOMAIN).ids.clone() }, doc, cfg),
             Fem2dCommand::SetCamera(payload) => set_camera::handle_window(payload, cfg, view_state.ok_or_else(|| Fault::from("fem2d.camera.window-context-required"))?),
             Fem2dCommand::SetResultDisplay(payload) => set_result_display::handle_window(payload, cfg, view_state.ok_or_else(|| Fault::from("fem2d.results.window-context-required"))?),
+            Fem2dCommand::CanvasPointerDown(payload) => canvas_pointer_down::handle_window(payload, doc, cfg, view_state.ok_or_else(|| Fault::from("fem2d.pointer.window-context-required"))?),
+            Fem2dCommand::CanvasPointerMove(payload) => canvas_pointer_move::handle_window(payload, doc, cfg, view_state.ok_or_else(|| Fault::from("fem2d.pointer.window-context-required"))?),
+            Fem2dCommand::CanvasPointerUp(payload) => canvas_pointer_up::handle_window(payload, doc, cfg, view_state.ok_or_else(|| Fault::from("fem2d.pointer.window-context-required"))?),
+            Fem2dCommand::SetResultAnimation(payload) => set_result_animation::handle_window(payload, doc, cfg, view_state.ok_or_else(|| Fault::from("fem2d.results.window-context-required"))?),
+            Fem2dCommand::ResultAnimationTick(payload) => result_animation_tick::handle_window(payload, doc, cfg, view_state.ok_or_else(|| Fault::from("fem2d.results.window-context-required"))?),
+            Fem2dCommand::FocusEntity(payload) => focus_entity::handle_window(payload, doc, cfg, view_state.ok_or_else(|| Fault::from("fem2d.camera.window-context-required"))?),
             _ => command.dispatch(doc, cfg),
         }
     }
@@ -855,21 +979,84 @@ impl ArtifactEditor for Fem2dPlayApp {
         ConfigSpec::default()
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Fem2dSnapshot>, cfg: &ConfigView<'_, NoConfig>, _view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    /// 🕹️ Interaction-less twin of [`Self::render_with_request_context`] — an empty `"fem2d"` domain,
+    /// so nothing paints selected and the inspector shows the document summary.
+    fn render(body_key: &str, doc: &ArtifactView<'_, Fem2dSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+        Self::render_body(body_key, doc, cfg, view_state, Fem2dInteractionSnapshot::default())
+    }
+
+    /// 🕹️ Reads the framework-owned `"fem2d"` selection/hover once per render and threads it through
+    /// every body — the windows paint it, the artifact tree marks it, the inspector edits it.
+    fn render_with_request_context(
+        _owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
+        body_key: &str,
+        doc: &ArtifactView<'_, Fem2dSnapshot>,
+        cfg: &ConfigView<'_, NoConfig>,
+        view_state: &ViewModel,
+        _transient: &semio_framework_plugin::TransientView<'_, semio_framework_plugin::NoTransient>,
+        interaction: &InteractionView<'_>,
+    ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+        Self::render_body(body_key, doc, cfg, view_state, Fem2dInteractionSnapshot::from_interaction(interaction))
+    }
+}
+
+impl Fem2dPlayApp {
+    /// 🖼️ Body-key routing table shared by both render entry points: two Canvas2d windows and the
+    /// three dock panels.
+    fn render_body(body_key: &str, doc: &ArtifactView<'_, Fem2dSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &ViewModel, interaction: Fem2dInteractionSnapshot) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+        let labels = fem2d_labels(view_state);
         match body_key {
             model_window::BODY_KEY => {
                 let window = model_window::config::current(cfg);
-                crate::editor::fem2d::session::with_live_visual(doc.render_operation(), |visual| model_window::render_with_progress(doc.snapshot, &window.camera, visual))
+                crate::editor::fem2d::session::with_live_visual(doc.render_operation(), |visual| model_window::render_with_progress(doc.snapshot, &window.camera, visual, &interaction))
             }
             results_window::BODY_KEY => {
                 let window = results_window::config::current(cfg);
-                results_window::render(doc.snapshot, &config_result_display(&window), &window.camera)
+                results_window::render(doc.snapshot, &config_result_display(&window), &window.camera, &window, &interaction, doc.render_operation())
             }
-            _ => built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fem2d unknown-body label admission failed")),
+            artifact_panel::BODY_KEY => artifact_panel::render(doc.snapshot, &interaction, labels),
+            inspection_panel::BODY_KEY => inspection_panel::render(doc.snapshot, &interaction, labels),
+            results_panel::BODY_KEY => {
+                let window = results_window::config::current(cfg);
+                results_panel::render(doc.snapshot, &window, &results_window_instance_id(view_state).unwrap_or_default(), labels)
+            }
+            _ => built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "fem2d unknown-body label admission failed")),
         }
         .map(semio_framework_plugin::built_to_component_tree)
     }
 }
+
+//#region 🔖️UiHelpers
+/// 🏷️ Admits resolved fem2d text into the semantic UI contract.
+pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::plugin_app_close_prelude::Label> {
+    semio_framework_plugin::plugin_app_close_prelude::Label::try_from(value.as_ref()).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "fem2d UI label admission failed"))
+}
+
+/// 🧾️ Admits a bounded row list — the one `UiFixedList` every section builder consumes.
+pub fn ui_node_list(values: impl IntoIterator<Item = semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode>>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiFixedList<semio_framework_plugin::BuiltNode>> {
+    let mut nodes = semio_framework_plugin::UiFixedList::default();
+    for value in values {
+        nodes.try_push(value?).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "fem2d UI node admission failed"))?;
+    }
+    Ok(nodes)
+}
+
+/// 🎛️ Mints one fem2d-controller action for a panel row or control binding.
+pub fn fem2d_action(action: &str, args: Option<semio_framework_plugin::UiValue>) -> semio_framework_plugin::UiAssemblyResult<(semio_framework_plugin::ActionId, Option<semio_framework_plugin::UiValue>)> {
+    semio_framework_plugin::ActionFactory::new(FEM2D_PLAY_CONTROLLER_ID).action(action, args)
+}
+
+/// 🪟️ The first results-window instance of the layout — the one the results panel addresses when
+/// the panel itself has no window context.
+pub fn results_window_instance_id(view_state: &ViewModel) -> Option<String> {
+    view_state
+        .window_id
+        .as_deref()
+        .filter(|id| view_state.window_instances.iter().any(|window| &window.id == id && window.window_kind_id == results_window::WINDOW_KIND_ID))
+        .map(str::to_string)
+        .or_else(|| view_state.window_instances.iter().find(|window| window.window_kind_id == results_window::WINDOW_KIND_ID).map(|window| window.id.clone()))
+}
+//#endregion 🔖️UiHelpers
 //#endregion 🔖️Fem2dPlayApp
 
 //#region 🔖️ResetDocument
@@ -888,6 +1075,16 @@ pub fn reset_document_effect(scene: &Fem2dSnapshot) -> semio_framework::kernel::
 //#endregion 🔖️ResetDocument
 
 //#region 🔖️Manifest
+/// 🩹️ One inspector patch action — internal (not in the palette; its arguments are authored by the
+/// inspector row that binds it), a document mutation on one entity.
+fn fem2d_patch_action(id: &str, label: LocalizedLabel) -> semio_framework_plugin::ActionDefinition {
+    semio_framework_plugin::ActionDefinition {
+        in_palette: false,
+        args: vec![ActionArgDef::text("id", LocalizedLabel::native("Entity", "Element")).required(), ActionArgDef::text("field", LocalizedLabel::native("Field", "Feld")).required(), ActionArgDef::text("value", LocalizedLabel::native("Value", "Wert")).required()],
+        ..semio_framework_plugin::ActionDefinition::new(id, label, semio_framework_plugin::ActionKind::Mutation, "pencil")
+    }
+}
+
 /// 📚️ `AppBuilder` carries no `.example(...)`: an example is declared ONCE as a definition leaf
 /// (`📚️examples/🎬️demo`'s `ExampleSource`) and reaches `PluginManifest.examples` through the subset
 /// root's `SubsetDeclaration.examples` — see `🪆️subsets/🌐️any/🦀️.rs`. The shell's navbar switcher
@@ -1022,6 +1219,37 @@ pub fn create_fem2d_app() -> semio_framework_plugin::AppDefinition {
             ])
             .view_action("setResultDisplay", LocalizedLabel::native("Set Result Display", "Ergebnisanzeige festlegen"))
             .action_args("setResultDisplay", crate::app_surface::result_display_action_args())
+            // 🖱️ Viewport gesture vocabulary — the Canvas2d host emits these; picks become framework
+            // `interactionSelect`/`interactionHover` requests, never a document mutation.
+            .action_with(semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::new("canvasPointerDown", LocalizedLabel::native("Canvas Pointer Down", "Leinwand-Zeiger gedrückt"), semio_framework_plugin::ActionKind::View, "mouse-pointer-click") })
+            .action_with(semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::new("canvasPointerMove", LocalizedLabel::native("Canvas Pointer Move", "Leinwand-Zeiger bewegen"), semio_framework_plugin::ActionKind::View, "mouse-pointer") })
+            .action_with(semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::new("canvasPointerUp", LocalizedLabel::native("Canvas Pointer Up", "Leinwand-Zeiger losgelassen"), semio_framework_plugin::ActionKind::View, "mouse-pointer") })
+            // 🩹️ Inspector field edits — one bounded edit per dispatch on one entity.
+            .action_with(fem2d_patch_action("patchNode", LocalizedLabel::native("Patch Node", "Knoten ändern")))
+            .action_with(fem2d_patch_action("patchElement", LocalizedLabel::native("Patch Element", "Element ändern")))
+            .action_with(fem2d_patch_action("patchMaterial", LocalizedLabel::native("Patch Material", "Material ändern")))
+            .action_with(fem2d_patch_action("patchSection", LocalizedLabel::native("Patch Section", "Querschnitt ändern")))
+            .action_with(fem2d_patch_action("patchSupport", LocalizedLabel::native("Patch Support", "Lager ändern")))
+            .action_with(fem2d_patch_action("patchRegion", LocalizedLabel::native("Patch Region", "Bereich ändern")))
+            .action_with(fem2d_patch_action("patchLoad", LocalizedLabel::native("Patch Load", "Last ändern")))
+            .action_with(fem2d_patch_action("patchLoadCase", LocalizedLabel::native("Patch Load Case", "Lastfall ändern")))
+            .action_with(fem2d_patch_action("patchCombination", LocalizedLabel::native("Patch Combination", "Kombination ändern")))
+            // ⏯️ Deformation playback — results-window view state, self re-armed through `DispatchAction`.
+            .action_with(semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::new("setResultAnimation", LocalizedLabel::native("Set Result Animation", "Ergebnisanimation festlegen"), semio_framework_plugin::ActionKind::View, "play") })
+            .action_args("setResultAnimation", vec![
+                ActionArgDef::slider("phase", LocalizedLabel::native("Phase", "Phase"), 0.0, 1.0),
+                ActionArgDef::toggle("playing", LocalizedLabel::native("Playing", "Läuft")),
+                ActionArgDef::number("speed", LocalizedLabel::native("Speed", "Geschwindigkeit")),
+                ActionArgDef::select("loopMode", LocalizedLabel::native("Loop", "Schleife"), vec![
+                    ActionArgOption::new("loop", LocalizedLabel::native("Loop", "Schleife")),
+                    ActionArgOption::new("pingPong", LocalizedLabel::native("Ping-Pong", "Ping-Pong")),
+                    ActionArgOption::new("once", LocalizedLabel::native("Once", "Einmal")),
+                ]),
+                ActionArgDef::select("waveform", LocalizedLabel::native("Waveform", "Wellenform"), vec![ActionArgOption::new("ramp", LocalizedLabel::native("Ramp", "Rampe")), ActionArgOption::new("sine", LocalizedLabel::native("Sine", "Sinus"))]),
+            ])
+            .action_with(semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::new("resultAnimationTick", LocalizedLabel::native("Result Animation Tick", "Ergebnisanimation Takt"), semio_framework_plugin::ActionKind::View, "timer") })
+            .action_with(semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::new("focusEntity", LocalizedLabel::native("Focus Entity", "Element fokussieren"), semio_framework_plugin::ActionKind::View, "focus") })
+            .action_args("focusEntity", vec![ActionArgDef::text("id", LocalizedLabel::native("Entity", "Element")).required()])
             .action_interactive_job("addNode", InteractiveJobClassification::Migrated)
             .action_interactive_job("addBar", InteractiveJobClassification::Migrated)
             .action_interactive_job("addBeam", InteractiveJobClassification::Migrated)
@@ -1040,6 +1268,32 @@ pub fn create_fem2d_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("setActiveExample", InteractiveJobClassification::Migrated)
             .action_interactive_job("setCamera", InteractiveJobClassification::Migrated)
             .action_interactive_job("setResultDisplay", InteractiveJobClassification::Migrated)
+            .action_interactive_job("canvasPointerDown", InteractiveJobClassification::Migrated)
+            .action_interactive_job("canvasPointerMove", InteractiveJobClassification::Migrated)
+            .action_interactive_job("canvasPointerUp", InteractiveJobClassification::Migrated)
+            .action_interactive_job("patchNode", InteractiveJobClassification::Migrated)
+            .action_interactive_job("patchElement", InteractiveJobClassification::Migrated)
+            .action_interactive_job("patchMaterial", InteractiveJobClassification::Migrated)
+            .action_interactive_job("patchSection", InteractiveJobClassification::Migrated)
+            .action_interactive_job("patchSupport", InteractiveJobClassification::Migrated)
+            .action_interactive_job("patchRegion", InteractiveJobClassification::Migrated)
+            .action_interactive_job("patchLoad", InteractiveJobClassification::Migrated)
+            .action_interactive_job("patchLoadCase", InteractiveJobClassification::Migrated)
+            .action_interactive_job("patchCombination", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setResultAnimation", InteractiveJobClassification::Migrated)
+            .action_interactive_job("resultAnimationTick", InteractiveJobClassification::Migrated)
+            .action_interactive_job("focusEntity", InteractiveJobClassification::Migrated)
+            // 🕹️ Framework-owned hover/selection: one domain over every document entity kind, bound to
+            // both Canvas2d windows; interactionSelect/interactionHover/clearSelection/selectAll auto-inject.
+            .interaction(fem2d_interaction_definition())
+            .window_kind_interactions(model_window::WINDOW_KIND_ID, vec![InteractionRef::new(FEM2D_INTERACTION_DOMAIN)])
+            .window_kind_interactions(results_window::WINDOW_KIND_ID, vec![InteractionRef::new(FEM2D_INTERACTION_DOMAIN)])
+            .panel_tab_def(artifact_panel::definition())
+            .panel_tab_def(inspection_panel::definition())
+            .panel_tab_def(results_panel::definition())
+            .keybinding("delete", "removeSelection")
+            .keybinding("backspace", "removeSelection")
+            .keybinding("space", "setResultAnimation")
             // 🎯️ Typed channel surface — `config_spec()`/`fem2d_io()` are this same information's single
             // source of truth, reused here rather than duplicated.
             .config(Fem2dPlayApp::config_spec())

@@ -23,7 +23,7 @@ use semio_repo_test_host::{parse_json, Adapter, Json};
 /// imported, because the oracle-only build must not link the subject crate. The contract's
 /// mutation-coverage gate keeps this list honest against the catalog, and that file's own
 /// `kinds_match_the_enum_and_the_catalog` keeps it honest against both the enum and the manifest.
-const KINDS: &[&str] = &["create-load-case", "delete-load-case", "add-load", "remove-load", "change-load-case-self-weight", "create-combination", "delete-combination"];
+const KINDS: &[&str] = &["create-load-case", "delete-load-case", "add-load", "remove-load", "change-load-case-self-weight", "create-combination", "delete-combination", "replace-load", "change-load-case-name", "replace-combination"];
 
 /// 👁️ Kinds whose COMMITTED specification vector cannot exhibit a forward effect, so
 /// [`law::mutation_is_observable`] must not demand one of them.
@@ -102,6 +102,27 @@ fn vector(kind: &str) -> Vector {
             after: include_str!("../../../🏋️load/🧫️fixtures/🧬️mutations/✂️delete-combination/✂️removes-the-uls-438c0c/📸️snapshot/➡️after/🔣️.json"),
             diff: include_str!("../../../🏋️load/🧫️fixtures/🧬️mutations/✂️delete-combination/✂️removes-the-uls-438c0c/🔺️diff/🔣️.json"),
             outcome: include_str!("../../../🏋️load/🧫️fixtures/🧬️mutations/✂️delete-combination/✂️removes-the-uls-438c0c/🎯️outcome/🔣️.json"),
+        },
+        "replace-load" => Vector {
+            before: include_str!("../../../🏋️load/🧫️fixtures/🧬️mutations/🔁️replace-load/🏋️retunes-the-live-f6fd49/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../../🏋️load/🧫️fixtures/🧬️mutations/🔁️replace-load/🏋️retunes-the-live-f6fd49/🦠️mutation/🔣️.json"),
+            after: include_str!("../../../🏋️load/🧫️fixtures/🧬️mutations/🔁️replace-load/🏋️retunes-the-live-f6fd49/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../../🏋️load/🧫️fixtures/🧬️mutations/🔁️replace-load/🏋️retunes-the-live-f6fd49/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../../🏋️load/🧫️fixtures/🧬️mutations/🔁️replace-load/🏋️retunes-the-live-f6fd49/🎯️outcome/🔣️.json"),
+        },
+        "change-load-case-name" => Vector {
+            before: include_str!("../../../🏋️load/🧫️fixtures/🧬️mutations/🏷️change-load-case-name/🏷️renames-the-live-7dce39/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../../🏋️load/🧫️fixtures/🧬️mutations/🏷️change-load-case-name/🏷️renames-the-live-7dce39/🦠️mutation/🔣️.json"),
+            after: include_str!("../../../🏋️load/🧫️fixtures/🧬️mutations/🏷️change-load-case-name/🏷️renames-the-live-7dce39/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../../🏋️load/🧫️fixtures/🧬️mutations/🏷️change-load-case-name/🏷️renames-the-live-7dce39/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../../🏋️load/🧫️fixtures/🧬️mutations/🏷️change-load-case-name/🏷️renames-the-live-7dce39/🎯️outcome/🔣️.json"),
+        },
+        "replace-combination" => Vector {
+            before: include_str!("../../../🏋️load/🧫️fixtures/🧬️mutations/🔁️replace-combination/⚖️reweights-the-uls-8b17b7/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../../🏋️load/🧫️fixtures/🧬️mutations/🔁️replace-combination/⚖️reweights-the-uls-8b17b7/🦠️mutation/🔣️.json"),
+            after: include_str!("../../../🏋️load/🧫️fixtures/🧬️mutations/🔁️replace-combination/⚖️reweights-the-uls-8b17b7/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../../🏋️load/🧫️fixtures/🧬️mutations/🔁️replace-combination/⚖️reweights-the-uls-8b17b7/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../../🏋️load/🧫️fixtures/🧬️mutations/🔁️replace-combination/⚖️reweights-the-uls-8b17b7/🎯️outcome/🔣️.json"),
         },
         other => panic!("mutate-fem2d-1-load: no committed specification vector is registered for kind {other:?}"),
     }
@@ -220,7 +241,7 @@ mod subject {
     fn touches_one(scenario: &str, kind: &str, before: &Json, after: &Json) -> Result<(), String> {
         let written = match kind {
             "update-analysis-settings" => "analysis",
-            "add-load" | "remove-load" | "change-load-case-self-weight" | "create-load-case" | "delete-load-case" => "loadCases",
+            "add-load" | "remove-load" | "replace-load" | "change-load-case-self-weight" | "change-load-case-name" | "create-load-case" | "delete-load-case" => "loadCases",
             _ => match kind.split_once('-').map(|(_, noun)| noun).unwrap_or_default() {
                 "node" => "nodes",
                 "element" => "elements",

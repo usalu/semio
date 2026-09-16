@@ -8,7 +8,7 @@ Feature: Apply every typed fem2d mesh mutation twice — once in Rust, once in P
 
   This case is a CROSS-LANGUAGE DIFFERENTIAL, relocated out of the artifact-level `mutate-fem2d-1`
   case in ticket `26/09/02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION`
-  so this subset's own kinds (`create-node`, `delete-node`, `create-element`, `delete-element`, `replace-element`, `create-section`, `delete-section`, `replace-section`, `create-region`, `delete-region`, `replace-region`) have a subset-owned test. The reference is
+  so this subset's own kinds (`create-node`, `delete-node`, `create-element`, `delete-element`, `replace-element`, `create-section`, `delete-section`, `replace-section`, `create-region`, `delete-region`, `replace-region`, `replace-node`) have a subset-owned test. The reference is
   `🐍️.py` in this directory: a second implementation of the `s.fem.fem2d` structural model and
   this subset's typed mutations, written in Python from
   `../../../🌐️any/🧬️schema/📸️snapshot/🔣️.json` (the nine members, `additionalProperties: false`),
@@ -70,6 +70,7 @@ Feature: Apply every typed fem2d mesh mutation twice — once in Rust, once in P
     | create-region   | {"mutation":"createRegion","region":{"id":"roof_slab","name":"Roof Slab","outline":[[0.0,5.6],[8.0,5.6],[8.0,5.7],[0.0,5.7]],"holes":[],"thickness":0.14,"materialId":"concrete","meshSize":0.5}}                                                                                          |
     | delete-region   | {"mutation":"deleteRegion","id":"slab_spare"}                                                                                                                                                                                                                                              |
     | replace-region  | {"mutation":"replaceRegion","id":"r1","newRegion":{"id":"r1","name":"First Floor Slab with stair opening","outline":[[10.0,2.75],[12.0,2.75],[12.0,2.85],[10.0,2.85]],"holes":[[[10.6,2.78],[11.4,2.78],[11.4,2.82],[10.6,2.82]]],"thickness":0.2,"materialId":"concrete","meshSize":1.0}} |
+    | replace-node    | {"mutation":"replaceNode","id":"ridge","newNode":{"id":"ridge","x":4.0,"y":8.2}}                                                                                                                                                                                                           |
 
   @id-inverse
   @level-exhaustive
@@ -94,3 +95,4 @@ Feature: Apply every typed fem2d mesh mutation twice — once in Rust, once in P
     | create-region   | {"mutation":"createRegion","region":{"id":"roof_slab","name":"Roof Slab","outline":[[0.0,5.6],[8.0,5.6],[8.0,5.7],[0.0,5.7]],"holes":[],"thickness":0.14,"materialId":"concrete","meshSize":0.5}}                                                                                          |
     | delete-region   | {"mutation":"deleteRegion","id":"slab_spare"}                                                                                                                                                                                                                                              |
     | replace-region  | {"mutation":"replaceRegion","id":"r1","newRegion":{"id":"r1","name":"First Floor Slab with stair opening","outline":[[10.0,2.75],[12.0,2.75],[12.0,2.85],[10.0,2.85]],"holes":[[[10.6,2.78],[11.4,2.78],[11.4,2.82],[10.6,2.82]]],"thickness":0.2,"materialId":"concrete","meshSize":1.0}} |
+    | replace-node    | {"mutation":"replaceNode","id":"ridge","newNode":{"id":"ridge","x":4.0,"y":8.2}}                                                                                                                                                                                                           |

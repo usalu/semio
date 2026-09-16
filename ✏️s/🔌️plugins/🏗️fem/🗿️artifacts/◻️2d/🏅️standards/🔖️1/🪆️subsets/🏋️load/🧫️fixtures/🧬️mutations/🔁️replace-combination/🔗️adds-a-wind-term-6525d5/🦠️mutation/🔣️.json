@@ -1,0 +1,22 @@
+{
+  "mutation": "replaceCombination",
+  "id": "uls1",
+  "newCombination": {
+    "id": "uls1",
+    "name": "ULS 6.10b",
+    "terms": [
+      {
+        "caseId": "dead",
+        "factor": 1.35
+      },
+      {
+        "caseId": "live",
+        "factor": 1.5
+      },
+      {
+        "caseId": "wind",
+        "factor": 0.9
+      }
+    ]
+  }
+}

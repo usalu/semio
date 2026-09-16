@@ -41,6 +41,8 @@ impl protocol::OpBinary for SourcingViewCommand {
 pub struct SourcingViewer;
 
 impl ArtifactViewer for SourcingViewer {
+    /// 🧩️ Composes `s.stdio.semio@v1/*` children, so every bundle of this surface opens them through the same roster.
+    type Members = semio_s_artifact_stdio_semio::SemioMembers;
     /// 📜️ Snapshot/decode-only Mutation are the SAME artifact-level types the sibling editor uses
     /// (contract §2.2) — they already live outside both surfaces, under `crate`.
     type Snapshot = CurationSnapshot;

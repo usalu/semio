@@ -7967,6 +7967,7 @@ impl ArtifactEditor for Puzzle5dPlayApp {
         cfg: &ConfigView<'_, Puzzle5dConfig>,
         view_state: &semio_framework_plugin::ViewModel,
         transient: &semio_framework_plugin::TransientView<'_, Self::Transient>,
+        _interaction: &semio_framework_plugin::app::InteractionView<'_>,
     ) -> HashMap<String, WindowEngagement> {
         let Some(window_id) = view_state.window_id.as_deref() else { return HashMap::new() };
         let Some(labels) = puzzle5d_labels(view_state) else { return HashMap::new() };

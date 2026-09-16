@@ -20,6 +20,9 @@ semio_framework_plugin::app_labels! {
         col_availability: native_en "Availability", native_de "Verfügbarkeit", reuse_en "Availability", reuse_de "Verfügbarkeit";
         col_curated: native_en "Curated", native_de "Kuratiert", reuse_en "Curated", reuse_de "Kuratiert";
         col_count: native_en "Count", native_de "Anzahl", reuse_en "Count", reuse_de "Anzahl";
+        col_actions: native_en "Actions", native_de "Aktionen", reuse_en "Actions", reuse_de "Aktionen";
+        curate: native_en "Curate", native_de "Kuratieren", reuse_en "Curate", reuse_de "Kuratieren";
+        restock: native_en "Restock From Catalogue", native_de "Bestand aus Katalog", reuse_en "Restock From Catalogue", reuse_de "Bestand aus Katalog";
         remove: native_en "Remove", native_de "Entfernen", reuse_en "Remove", reuse_de "Entfernen";
         no_selection: native_en "No selection", native_de "Keine Auswahl", reuse_en "No selection", reuse_de "Keine Auswahl";
     }

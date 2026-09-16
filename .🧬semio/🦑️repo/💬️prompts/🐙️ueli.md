@@ -584,6 +584,14 @@ TODO: Start new project `elements` that offers domain-agnostic primitives (such 
 
 ---
 
+
+The subsets of artifacts are independant implementations. they have their own viewer, editor, etc
+A subset must be meaningful
+violations e.g.
+✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🏋️load because it doesnt make sense to have an editor just for a load.
+
+---
+
 The repo must have a domain-driven folder taxonomy and files are just anonymous implementation leafes (e.g. `🦀️.rs`) or fixed names when needed (e.g. `Cargo.toml`, etc)
 violations e.g.
 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧫️fixtures/⏯️tool-run/🪧️panel-running.json

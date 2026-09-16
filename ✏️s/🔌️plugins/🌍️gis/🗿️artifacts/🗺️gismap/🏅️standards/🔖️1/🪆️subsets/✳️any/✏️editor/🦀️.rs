@@ -17,7 +17,7 @@ use crate::editor::gis2d::panels::{artifact as document_panel, catalogue as cata
 use crate::editor::gis2d::terminology::gis2d_labels;
 use crate::op::GisMapMutation;
 use crate::schema::{gis_map_document_from_descriptor_json, positions_operations, regions_operations, routes_operations};
-use crate::{artifact_kind, GisMapSnapshot, GIS_MAP_SCHEMA};
+use crate::{artifact_kind, GisMapSnapshot, MapFeature, GIS_MAP_SCHEMA};
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
@@ -33,6 +33,72 @@ use store::EngineHandles;
 
 //#region 🔖️Constants
 pub const GIS2D_PLAY_APP_ID: &str = "gis2d-play";
+
+/// 🕹️ The framework-owned interaction domain this app declares (ticket
+/// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) — the document tree picks layers in it and
+/// `TiledMapHost` picks map features in it.
+pub const GIS2D_INTERACTION_DOMAIN: &str = "features";
+
+/// 🪜️ The map granularity of [`GIS2D_INTERACTION_DOMAIN`] — a position or route id.
+pub const GIS2D_FEATURE_GRANULARITY: &str = "feature";
+
+/// 🪜️ The document-tree granularity of [`GIS2D_INTERACTION_DOMAIN`] — a [`GIS_MAP_LAYER_IDS`] id.
+pub const GIS2D_LAYER_GRANULARITY: &str = "layer";
+
+/// 🕹️ Owned snapshot of the framework's `"features"` domain — `InteractionView::selection` plus the
+/// `"pointer"` hover — read once per render by `ArtifactApp::render_with_request_context` and threaded
+/// into the map scene (selected/hovered feature paint) and the inspection panel (the selected layer's
+/// or feature's own fields). Decouples both from `semio_framework_plugin::app::InteractionView`, whose
+/// fields are `pub(crate)` to that crate, so this crate's tests construct this plain struct instead
+/// (mirrors `📐️cad`'s `CadInteractionSnapshot`).
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct Gis2dInteractionSnapshot {
+    pub granularity: String,
+    pub ids: Vec<String>,
+    pub hovered_ids: Vec<String>,
+}
+
+impl Gis2dInteractionSnapshot {
+    /// 🐁️ The hover channel `TiledMapHost` publishes feature hover on.
+    pub const POINTER_CHANNEL: &'static str = "pointer";
+
+    pub fn from_interaction(interaction: &InteractionView<'_>) -> Self {
+        let selection = interaction.selection(GIS2D_INTERACTION_DOMAIN);
+        Self {
+            granularity: selection.granularity.clone(),
+            ids: selection.ids.clone(),
+            hovered_ids: interaction.hover(GIS2D_INTERACTION_DOMAIN, Self::POINTER_CHANNEL).ids.clone(),
+        }
+    }
+
+    /// 🗂️ The selected layer id, `None` unless the live granularity is `"layer"` — the inspector's
+    /// per-layer detail branch.
+    pub fn selected_layer(&self) -> Option<&str> {
+        (self.granularity == GIS2D_LAYER_GRANULARITY).then(|| self.ids.first().map(String::as_str)).flatten()
+    }
+
+    /// 🗺️ Splits the selected feature ids into the `{positions, routes}` shape `TiledMapHost`'s
+    /// `parseFeatureSelection` reads, by membership in the document itself — an id the document does
+    /// not carry belongs to neither bag and is dropped.
+    pub fn feature_selection_json(&self, document: &GisMapSnapshot) -> String {
+        let bag = |features: &[MapFeature]| -> Vec<&str> { self.ids.iter().map(String::as_str).filter(|id| features.iter().any(|feature| feature.id == *id)).collect() };
+        serde_json::json!({ "positions": bag(&document.positions), "routes": bag(&document.routes) }).to_string()
+    }
+
+    /// 🐁️ The `{kind, id}` hover shape `TiledMapHost`'s `parseMapHoveredFeature` reads, `"null"` when
+    /// nothing in this domain is hovered or the hovered id is not a document feature.
+    pub fn feature_hover_json(&self, document: &GisMapSnapshot) -> String {
+        let Some(id) = self.hovered_ids.first() else { return "null".to_string() };
+        let kind = if document.routes.iter().any(|route| &route.id == id) {
+            "route"
+        } else if document.positions.iter().any(|position| &position.id == id) {
+            "position"
+        } else {
+            return "null".to_string();
+        };
+        serde_json::json!({ "kind": kind, "id": id }).to_string()
+    }
+}
 
 /// 🗂️ The app-wide map layer stack: `(id, native English name, icon id)?`. Every chrome node (document
 /// and catalogue trees, the layers/weights window options, the inspector summary) enumerates it.
@@ -650,9 +716,9 @@ where
 /// `"feature"` granularity — the generic replacement for the deleted bespoke `setFeatureSelection`
 /// action (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
 fn select_feature_action_args(feature_id: &str) -> dsl::DslValue {
-    let targets = dsl::os_pack::json!([{ "granularity": "feature", "id": feature_id }]).to_string();
+    let targets = dsl::os_pack::json!([{ "granularity": GIS2D_FEATURE_GRANULARITY, "id": feature_id }]).to_string();
     dsl::DslValue::object([
-        ("domainId".to_string(), dsl::DslValue::String("features".to_string())),
+        ("domainId".to_string(), dsl::DslValue::String(GIS2D_INTERACTION_DOMAIN.to_string())),
         ("targets".to_string(), dsl::DslValue::String(targets)),
         ("merge".to_string(), dsl::DslValue::String("replace".to_string())),
         ("method".to_string(), dsl::DslValue::String("pick".to_string())),
@@ -664,11 +730,9 @@ fn select_feature_action_args(feature_id: &str) -> dsl::DslValue {
 /// `VcsArtifactApp::context_menu` funnel) sorts the declared `.group(...)` rows into
 /// `RIBBON_PARENT_CATEGORIES` taxonomy order and inserts the pre-destructive separator itself.
 ///
-/// 🕳️ `selected_ids` is always empty for now: `ArtifactEditor::context_menu` carries no
-/// `InteractionView` (the SDK's B1 breaking pass threaded it only into `handle`/`copy_fragment`/
-/// `cut_operations` — see `w3c-summary.md`'s own flagged gap on `open_context_menu`'s `selection`
-/// field), so the "already selected" branch can never fire and `clearSelection` always renders
-/// disabled until a future wave wires interaction state through here too.
+/// 🕹️ `selected_ids` is the live `"features"` domain selection when this is reached through
+/// `context_menu_with_request_context`, and empty through the interaction-less `context_menu` twin —
+/// it is what decides whether `clearSelection` renders enabled.
 async fn gis2d_context_menu_items(registry: &semio_framework_plugin::AppActionRegistry, surface: Option<&semio_framework_plugin::ContextMenuSurfaceTarget>, selected_ids: &[String]) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
     let hits = surface.map_or(&[][..], |s| s.hits.as_slice());
     let feature = hits.iter().find(|h| h.domain == "feature" || h.domain == "position" || h.domain == "route");
@@ -689,7 +753,24 @@ async fn gis2d_context_menu_items(registry: &semio_framework_plugin::AppActionRe
     items
 }
 
+impl Gis2dPlayApp {
+    /// 🖼️ The one render implementation both trait entry points share.
+    fn render_body(body_key: &str, doc: &ArtifactView<'_, GisMapSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel, interaction: &Gis2dInteractionSnapshot) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+        let config = &map_config::current(cfg);
+        let labels = gis2d_labels(view_state);
+        match body_key {
+            map::GIS2D_PLAY_BODY_COMPOSITE => map::render(doc.snapshot, config, interaction).map(semio_framework_plugin::built_to_component_tree),
+            document_panel::GIS2D_PLAY_BODY_ARTIFACT => document_panel::render(config, labels).map(semio_framework_plugin::built_to_component_tree),
+            catalogue_panel::GIS2D_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels).map(semio_framework_plugin::built_to_component_tree),
+            inspection_panel::GIS2D_PLAY_BODY_INSPECTION => inspection_panel::render(doc.snapshot, config, interaction, labels).map(semio_framework_plugin::built_to_component_tree),
+            _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
+        }
+    }
+}
+
 impl ArtifactEditor for Gis2dPlayApp {
+    /// 🧩️ Composes `s.stdio.semio@v1/*` children, so every bundle of this surface opens them through the same roster.
+    type Members = semio_s_artifact_stdio_semio::SemioMembers;
     type Snapshot = GisMapSnapshot;
     type Mutation = GisMapMutation;
     type Config = NoConfig;
@@ -965,16 +1046,25 @@ impl ArtifactEditor for Gis2dPlayApp {
         Ok(emit)
     }
 
+    /// 🕹️ Interaction-less twin of [`Self::render_with_request_context`] (exports, tests, the
+    /// framework's own default body): one render implementation against an empty domain.
     fn render(body_key: &str, doc: &ArtifactView<'_, GisMapSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
-        let config = &map_config::current(cfg);
-        let labels = gis2d_labels(view_state);
-        match body_key {
-            map::GIS2D_PLAY_BODY_COMPOSITE => map::render(doc.snapshot, config).map(semio_framework_plugin::built_to_component_tree),
-            document_panel::GIS2D_PLAY_BODY_ARTIFACT => document_panel::render(config, labels).map(semio_framework_plugin::built_to_component_tree),
-            catalogue_panel::GIS2D_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels).map(semio_framework_plugin::built_to_component_tree),
-            inspection_panel::GIS2D_PLAY_BODY_INSPECTION => inspection_panel::render(config, labels).map(semio_framework_plugin::built_to_component_tree),
-            _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
-        }
+        Self::render_body(body_key, doc, cfg, view_state, &Gis2dInteractionSnapshot::default())
+    }
+
+    /// 🕹️ Resolves the live [`GIS2D_INTERACTION_DOMAIN`] (selection + `"pointer"` hover) once per
+    /// render and threads it into the map window, so a `TiledMapHost` feature pick round-trips back
+    /// as a highlighted feature and a hover popup instead of dying in the framework's store.
+    fn render_with_request_context(
+        _owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
+        body_key: &str,
+        doc: &ArtifactView<'_, GisMapSnapshot>,
+        cfg: &ConfigView<'_, NoConfig>,
+        view_state: &semio_framework_plugin::ViewModel,
+        _transient: &semio_framework_plugin::TransientView<'_, Self::Transient>,
+        interaction: &InteractionView<'_>,
+    ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+        Self::render_body(body_key, doc, cfg, view_state, &Gis2dInteractionSnapshot::from_interaction(interaction))
     }
 
     fn window_measures(_doc: &ArtifactView<'_, GisMapSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
@@ -982,6 +1072,8 @@ impl ArtifactEditor for Gis2dPlayApp {
         HashMap::from([(map::GIS2D_PLAY_WINDOW_MAIN.into(), map::window_measures(config, gis2d_labels(view_state)))])
     }
 
+    /// 🖱️ Interaction-less twin of [`Self::context_menu_with_request_context`] — an empty `"features"`
+    /// domain, so `clearSelection` renders disabled.
     fn context_menu(
         request: &semio_framework_plugin::ContextMenuRequest,
         _doc: &ArtifactView<'_, GisMapSnapshot>,
@@ -990,6 +1082,22 @@ impl ArtifactEditor for Gis2dPlayApp {
         registry: &semio_framework_plugin::AppActionRegistry,
     ) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
         semio_framework_plugin::resolve_ready(async { gis2d_context_menu_items(registry, request.surface.as_ref(), &[]).await })
+    }
+
+    /// 🕹️ `clearSelection` is gated on the AUTHORITATIVE framework-owned `"features"` selection, not on
+    /// `ContextMenuRequest.surface.selection` — a layer picked in the document tree never reaches the
+    /// map surface's own painted ids, so the surface field alone would leave the row permanently
+    /// disabled (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
+    fn context_menu_with_request_context(
+        request: &semio_framework_plugin::ContextMenuRequest,
+        _doc: &ArtifactView<'_, GisMapSnapshot>,
+        _cfg: &ConfigView<'_, NoConfig>,
+        _view_state: &semio_framework_plugin::ViewModel,
+        interaction: &InteractionView<'_>,
+        registry: &semio_framework_plugin::AppActionRegistry,
+    ) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
+        let selected = Gis2dInteractionSnapshot::from_interaction(interaction).ids;
+        semio_framework_plugin::resolve_ready(async { gis2d_context_menu_items(registry, request.surface.as_ref(), &selected).await })
     }
 }
 //#endregion 🔖️Gis2dPlayApp
@@ -1077,9 +1185,7 @@ pub fn create_gis2d_app() -> semio_framework_plugin::AppDefinition {
             // 📝️ Argument schemas for the discrete-choice actions so the command palette can stage them
             // and the registry validates the vocabulary. The arg id matches the key each handler reads.
             .action_args("setActiveExample", vec![
-                ActionArgDef::select("exampleId", LocalizedLabel::native("Example", "Beispiel"), vec![
-                    ActionArgOption::new("reuse-map", LocalizedLabel::native("Reuse Map", "Karte wiederverwenden")),
-                ]).default_value(&"reuse-map"),
+                ActionArgDef::select("exampleId", LocalizedLabel::native("Example", "Beispiel"), example::example_arg_options()).default_value(&example::DEFAULT_EXAMPLE_ID),
             ])
             .action_args("setRenderMode", vec![
                 ActionArgDef::select("value", LocalizedLabel::native("Render Mode", "Darstellungsmodus"), vec![
@@ -1102,9 +1208,9 @@ pub fn create_gis2d_app() -> semio_framework_plugin::AppDefinition {
             .keybinding("mod+shift+z", "redo")
             .io(gis2d_io())
             // 🚧️ SDK GAP (contract §2.4): `EditorBuilder::build_definition` has no `.example(...)`/
-            // `.workflow(...)` — the old `"reuse-map"` app-level example registration and the no-op
-            // `.workflow("gis2d", …)` call are dropped here (not silently: reported in the migration
-            // notes). The subset's own `📚️examples/🎬️demo` facet is the modern replacement surface.
+            // `.workflow(...)`. The subset's own `📚️examples/*` facets are the replacement surface —
+            // `example::example_catalogue()` reads them, and the `setActiveExample` arg options above
+            // are projected from it, so the palette and `set_active_example` can never drift apart.
             .interactive_jobs(InteractiveJobClassification::Migrated)
             .build_definition()
 }

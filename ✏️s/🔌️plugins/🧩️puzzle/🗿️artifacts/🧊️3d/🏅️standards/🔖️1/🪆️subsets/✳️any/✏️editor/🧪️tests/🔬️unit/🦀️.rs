@@ -4455,6 +4455,77 @@ async fn add_object_kind_materializes_the_declared_kind_default() {
     assert!(catalog.iter().any(|row| row.get("id").and_then(Value::as_str) == Some("Object")), "the created object references a catalogued kind, never a dangling one: {catalog:?}");
 }
 
+/// 🌲️ The catalogue's own gesture on the DEFAULT document: pressing (or dropping) a `concrete-forest`
+/// kind row must place an instance that carries that kind's `representations[].url` as its own
+/// `meshUrl`. Every other `addObjectKind` law fires `"Object"`, a kind no shipped catalog declares, so
+/// none of them ever read a representation — which is how the `meshUrl`-only read in
+/// `🎮️commands/🌱️add-object-kind` survived: a placed object with no mesh identity renders nothing and
+/// its fill/brush candidates read `mesh-unavailable`.
+#[semio_framework_async_macros::async_test]
+async fn adding_a_catalogued_concrete_forest_kind_places_an_object_carrying_its_mesh_url() {
+    let fixture = crate::editor::puzzle3d::default_fixture();
+    let entry = crate::editor::puzzle3d::puzzle3d_catalog_entries(&fixture, "objects").first().cloned().expect("the default document catalogues object kinds");
+    let kind_id = entry.get("id").and_then(dsl::DslValue::as_str).expect("catalogued kind id").to_string();
+    let expected = entry
+        .get("representations")
+        .and_then(dsl::DslValue::as_array)
+        .into_iter()
+        .flatten()
+        .filter_map(|representation| representation.get("url").and_then(dsl::DslValue::as_str))
+        .find(|url| !url.is_empty())
+        .expect("the catalogued kind names a representation url")
+        .to_string();
+    let mut app = app().await;
+    let before = object_count(&app);
+    dispatch(&mut app, "addObjectKind", Some(&json!({ "objectKind": kind_id.clone(), "origin": [4.0, 5.0, 0.0] })), None).await.expect("addObjectKind");
+    assert_eq!(object_count(&app), before + 1, "a catalogued kind places exactly one instance");
+    let projection = projection_of(&app);
+    let object = projection.get("objects").and_then(Value::as_array).and_then(|objects| objects.last()).expect("the placed object").clone();
+    assert_eq!(object.get("objectKind").and_then(Value::as_str), Some(kind_id.as_str()), "the placed instance references the catalogued kind");
+    assert_eq!(object.get("meshUrl").and_then(Value::as_str), Some(expected.as_str()), "the placed instance must carry its kind's representation url as its mesh identity");
+    eprintln!("[DEBUG] catalogue add kind={kind_id} meshUrl={expected}");
+}
+
+/// 🌱️ A catalog TEMPLATE seats its vortex at `point`; a PLACED vortex carries `position`. The
+/// non-migrated `addObjectKind` route seeded from `position` alone, so every seat of every catalogued
+/// kind collapsed onto the object origin and the object it placed had a degenerate rim no brush could
+/// use. Pins the real seats of a real shipped kind.
+#[test]
+fn catalogued_kind_templates_seed_vortices_at_their_catalog_points() {
+    let fixture = crate::editor::puzzle3d::default_fixture();
+    let entry = crate::editor::puzzle3d::puzzle3d_catalog_entries(&fixture, "objects").first().cloned().expect("the default document catalogues object kinds");
+    let seats = crate::editor::puzzle3d::puzzle3d_vortices_from_kind_template(&entry);
+    let templates = entry.get("vortices").and_then(dsl::DslValue::as_array).expect("the catalogued kind declares vortex templates");
+    assert_eq!(seats.len(), templates.len(), "one seeded vortex per declared template");
+    assert!(seats.iter().any(|seat| seat.position != [0.0, 0.0, 0.0]), "a catalogued kind's seats must not all collapse onto the object origin: {seats:?}");
+    for (seat, template) in seats.iter().zip(templates) {
+        let point: [f64; 3] = template.get("point").and_then(|value| dsl::FromValue::from_value(value.clone()).ok()).expect("every template declares its point");
+        assert_eq!(seat.position, point, "seeded vortex {} must sit on its template point", seat.id);
+    }
+    eprintln!("[DEBUG] catalogued kind seats={} first={:?}", seats.len(), seats.first().map(|seat| seat.position));
+}
+
+/// 🛍️ Both doors onto the default document carry the same catalogue: the INITIAL snapshot the app
+/// boots with, and `setActiveExample("concrete-forest")` — which replaces the catalogs through their
+/// own `replace_kind_catalogs` mutation and could therefore drop them independently of the fixture.
+#[semio_framework_async_macros::async_test]
+async fn the_initial_snapshot_and_set_active_example_both_carry_the_concrete_forest_catalogue() {
+    let declared: Vec<String> = crate::editor::puzzle3d::puzzle3d_catalog_entries(&crate::editor::puzzle3d::default_fixture(), "objects")
+        .iter()
+        .filter_map(|entry| entry.get("id").and_then(dsl::DslValue::as_str).map(str::to_string))
+        .collect();
+    assert!(!declared.is_empty(), "the concrete-forest fixture catalogues object kinds");
+    let catalogued = |app: &Puzzle3dApp| -> Vec<String> {
+        projection_of(app).pointer("/meta/kindCatalogs/objects").and_then(Value::as_array).map(|rows| rows.iter().filter_map(|row| row.get("id").and_then(Value::as_str).map(str::to_string)).collect()).unwrap_or_default()
+    };
+    let mut app = app().await;
+    assert_eq!(catalogued(&app), declared, "the app boots on the concrete-forest catalogue");
+    dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": "" })), None).await.expect("empty");
+    dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": PUZZLE3D_EXAMPLE_CONCRETE_FOREST })), None).await.expect("concrete-forest");
+    assert_eq!(catalogued(&app), declared, "switching back to concrete-forest restores its catalogue");
+    eprintln!("[DEBUG] concrete-forest catalogued kinds={declared:?}");
+}
+
 /// 🧊️ Wave B11 (checklist §10, `📓️2026-09-11-wave-B1-battery-extension.md` §5 defect 12): the Volume
 /// Brush armed and its W/D/H sliders moved, but Alt+click added nothing. This is the guest half of that
 /// gesture — an `addTargetVolume` carrying the host's grid-snapped ground origin must land ONE volume

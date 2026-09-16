@@ -148,6 +148,41 @@ async fn analysis_settings_update_round_trips() {
 }
 
 #[semio_framework_async_macros::async_test]
+async fn node_replace_round_trips_and_keeps_every_referrer() {
+    let base = simply_supported_beam_doc();
+    let moved = FemNode { id: "n2".into(), x: 6.5, y: 0.25 };
+    let after = round_trip(&base, &Fem2dMutation::ReplaceNode(replace_node::ReplaceNode { id: "n2".into(), new_node: moved.clone() }));
+    assert_eq!(after.nodes[1], moved, "a replace patches the record in place and never re-orders the collection");
+    assert_eq!(after.elements, base.elements, "the beam still names n2: moving a node re-points nothing");
+    assert_eq!(after.supports, base.supports, "the roller still names n2 too");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn load_replace_round_trips() {
+    let base = simply_supported_beam_doc();
+    let retuned = FemLoad::MemberUdl { id: "l1".into(), element_id: "e1".into(), wx: 0.0, wy: -14000.0 };
+    let after = round_trip(&base, &Fem2dMutation::ReplaceLoad(replace_load::ReplaceLoad { case_id: "dead".into(), load_id: "l1".into(), new_load: Box::new(retuned.clone()) }));
+    assert_eq!(after.load_cases[0].loads, vec![retuned], "the case keeps exactly one load, swapped in place");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn change_load_case_name_round_trips() {
+    let base = simply_supported_beam_doc();
+    let after = round_trip(&base, &Fem2dMutation::ChangeLoadCaseName(change_load_case_name::ChangeLoadCaseName { case_id: "dead".into(), new_name: "Permanent".into() }));
+    assert_eq!(after.load_cases[0].name, "Permanent");
+    assert_eq!(after.load_cases[0].id, "dead", "a rename never touches the identity combination terms resolve through");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn combination_replace_round_trips() {
+    let mut base = simply_supported_beam_doc();
+    base.combinations.push(FemCombination { id: "uls".into(), name: "ULS".into(), terms: vec![FemCombinationTerm { case_id: "dead".into(), factor: 1.35 }] });
+    let reweighted = FemCombination { id: "uls".into(), name: "ULS 6.10b".into(), terms: vec![FemCombinationTerm { case_id: "dead".into(), factor: 1.2 }] };
+    let after = round_trip(&base, &Fem2dMutation::ReplaceCombination(replace_combination::ReplaceCombination { id: "uls".into(), new_combination: reweighted.clone() }));
+    assert_eq!(after.combinations, vec![reweighted]);
+}
+
+#[semio_framework_async_macros::async_test]
 async fn missing_target_inverse_and_diff_are_no_ops() {
     let base = Fem2dSnapshot::default();
     assert!(Fem2dMutation::DeleteNode(delete_node::DeleteNode { id: "ghost".into() }).inverse(&base).is_empty());
@@ -216,6 +251,17 @@ async fn fem2d_op_text_round_trips_every_variant() {
     semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem2dMutation::UpdateAnalysisSettings(update_analysis_settings::UpdateAnalysisSettings {
         settings: FemAnalysisSettings { modal_count: 5, buckling_count: 2, deformation_scale: 10.0 },
     }));
+    semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem2dMutation::ReplaceNode(replace_node::ReplaceNode { id: "n1".into(), new_node: FemNode { id: "n1".into(), x: 1.5, y: 2.5 } }));
+    semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem2dMutation::ReplaceLoad(replace_load::ReplaceLoad {
+        case_id: "dead".into(),
+        load_id: "l1".into(),
+        new_load: Box::new(FemLoad::Nodal { id: "l1".into(), node_id: "n1".into(), dof: FemDof::Ty, value: -2000.0 }),
+    }));
+    semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem2dMutation::ChangeLoadCaseName(change_load_case_name::ChangeLoadCaseName { case_id: "dead".into(), new_name: "Permanent".into() }));
+    semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem2dMutation::ReplaceCombination(replace_combination::ReplaceCombination {
+        id: "uls".into(),
+        new_combination: FemCombination { id: "uls".into(), name: "ULS 6.10b".into(), terms: vec![FemCombinationTerm { case_id: "dead".into(), factor: 1.35 }, FemCombinationTerm { case_id: "live".into(), factor: 1.5 }] },
+    }));
 }
 // #endregion 🔖️OpText
 
@@ -256,7 +302,7 @@ async fn mutation_law_add_load_inverse_and_diff_absorb() {
 async fn every_mutation_registers_a_semantic_descriptor() {
     register_fem2d_mutation_descriptors(::semio_framework_os_kernel::StateClass::Artifact).expect("mutation descriptor registration");
     let kinds = <Fem2dMutation as SemanticMutation<Fem2dSnapshot>>::kinds();
-    assert_eq!(kinds.len(), 25, "every semantic mutation kind must be registered exactly once");
+    assert_eq!(kinds.len(), 29, "every semantic mutation kind must be registered exactly once");
     for descriptor in kinds {
         assert!(protocol::is_approved_verb(descriptor.verb), "verb '{}' must be in APPROVED_VERBS", descriptor.verb);
     }
@@ -314,6 +360,38 @@ async fn remove_load_missing_target_is_error() {
 async fn change_load_case_self_weight_missing_target_is_error() {
     let base = simply_supported_beam_doc();
     protocol::os_spr::protocol_laws::assert_missing_target_is_error(&base, &Fem2dMutation::ChangeLoadCaseSelfWeight(change_load_case_self_weight::ChangeLoadCaseSelfWeight { case_id: "ghost".into(), new_self_weight: true })).await;
+}
+
+#[semio_framework_async_macros::async_test]
+async fn replace_node_missing_target_is_error() {
+    let base = simply_supported_beam_doc();
+    protocol::os_spr::protocol_laws::assert_missing_target_is_error(&base, &Fem2dMutation::ReplaceNode(replace_node::ReplaceNode { id: "ghost".into(), new_node: FemNode { id: "ghost".into(), x: 0.0, y: 0.0 } })).await;
+}
+
+#[semio_framework_async_macros::async_test]
+async fn replace_load_missing_target_is_error() {
+    let base = simply_supported_beam_doc();
+    protocol::os_spr::protocol_laws::assert_missing_target_is_error(
+        &base,
+        &Fem2dMutation::ReplaceLoad(replace_load::ReplaceLoad { case_id: "dead".into(), load_id: "ghost".into(), new_load: Box::new(FemLoad::MemberUdl { id: "ghost".into(), element_id: "e1".into(), wx: 0.0, wy: -1.0 }) }),
+    )
+    .await;
+}
+
+#[semio_framework_async_macros::async_test]
+async fn change_load_case_name_missing_target_is_error() {
+    let base = simply_supported_beam_doc();
+    protocol::os_spr::protocol_laws::assert_missing_target_is_error(&base, &Fem2dMutation::ChangeLoadCaseName(change_load_case_name::ChangeLoadCaseName { case_id: "ghost".into(), new_name: "Ghost".into() })).await;
+}
+
+#[semio_framework_async_macros::async_test]
+async fn replace_combination_missing_target_is_error() {
+    let base = simply_supported_beam_doc();
+    protocol::os_spr::protocol_laws::assert_missing_target_is_error(
+        &base,
+        &Fem2dMutation::ReplaceCombination(replace_combination::ReplaceCombination { id: "ghost".into(), new_combination: FemCombination { id: "ghost".into(), name: "Ghost".into(), terms: vec![FemCombinationTerm { case_id: "dead".into(), factor: 1.0 }] } }),
+    )
+    .await;
 }
 //#endregion 🔖️OutcomeLaws
 
@@ -433,5 +511,72 @@ async fn replace_element_dangling_section_is_error() {
     assert_eq!(code, "mutation.target-missing");
     assert_eq!(level, protocol::Severity::Error);
     assert_eq!(target, vec!["ghost".to_string()]);
+}
+
+/// 🪪️ The rename law reaches the three new in-place verbs too — a node, a load and a combination.
+#[semio_framework_async_macros::async_test]
+async fn replace_node_rename_is_id_mismatch() {
+    let base = simply_supported_beam_doc();
+    let (code, level, target) = refusal(&base, &Fem2dMutation::ReplaceNode(replace_node::ReplaceNode { id: "n2".into(), new_node: FemNode { id: "n2_b".into(), x: 6.0, y: 0.0 } }));
+    assert_eq!(code, "mutation.id-mismatch");
+    assert_eq!(level, protocol::Severity::Fatal);
+    assert_eq!(target, vec!["n2".to_string(), "n2_b".to_string()]);
+}
+
+#[semio_framework_async_macros::async_test]
+async fn replace_load_rename_is_id_mismatch() {
+    let base = simply_supported_beam_doc();
+    let renamed = FemLoad::MemberUdl { id: "l1_b".into(), element_id: "e1".into(), wx: 0.0, wy: -10000.0 };
+    let (code, level, target) = refusal(&base, &Fem2dMutation::ReplaceLoad(replace_load::ReplaceLoad { case_id: "dead".into(), load_id: "l1".into(), new_load: Box::new(renamed) }));
+    assert_eq!(code, "mutation.id-mismatch");
+    assert_eq!(level, protocol::Severity::Fatal);
+    assert_eq!(target, vec!["l1".to_string(), "l1_b".to_string()]);
+}
+
+/// 🔗️ `replace-combination` re-resolves every term, exactly as `create-combination` does.
+#[semio_framework_async_macros::async_test]
+async fn replace_combination_dangling_term_is_error() {
+    let mut base = simply_supported_beam_doc();
+    base.combinations.push(FemCombination { id: "uls".into(), name: "ULS".into(), terms: vec![FemCombinationTerm { case_id: "dead".into(), factor: 1.35 }] });
+    let dangling = FemCombination { id: "uls".into(), name: "ULS".into(), terms: vec![FemCombinationTerm { case_id: "ghost".into(), factor: 1.5 }] };
+    let through_replace = refusal(&base, &Fem2dMutation::ReplaceCombination(replace_combination::ReplaceCombination { id: "uls".into(), new_combination: dangling.clone() }));
+    let fresh = FemCombination { id: "sls".into(), name: "SLS".into(), terms: dangling.terms.clone() };
+    let through_create = refusal(&base, &Fem2dMutation::CreateCombination(create_combination::CreateCombination { combination: fresh }));
+    assert_eq!(through_replace, through_create, "the same dangling term must be refused identically through both verbs");
+    assert_eq!(through_replace.0, "mutation.target-missing");
+    assert_eq!(through_replace.2, vec!["ghost".to_string()]);
+}
+
+/// 🏋️ A non-finite magnitude is inadmissible on every base, exactly like a non-finite coordinate.
+#[semio_framework_async_macros::async_test]
+async fn replace_load_non_finite_magnitude_is_fatal() {
+    let base = simply_supported_beam_doc();
+    let poisoned = FemLoad::MemberUdl { id: "l1".into(), element_id: "e1".into(), wx: 0.0, wy: f64::NAN };
+    let (code, level, target) = refusal(&base, &Fem2dMutation::ReplaceLoad(replace_load::ReplaceLoad { case_id: "dead".into(), load_id: "l1".into(), new_load: Box::new(poisoned) }));
+    assert_eq!(code, "mutation.invariant");
+    assert_eq!(level, protocol::Severity::Fatal);
+    assert_eq!(target, vec!["l1".to_string()]);
+}
+
+/// ⚖️ And so is a non-finite combination factor.
+#[semio_framework_async_macros::async_test]
+async fn replace_combination_non_finite_factor_is_fatal() {
+    let mut base = simply_supported_beam_doc();
+    base.combinations.push(FemCombination { id: "uls".into(), name: "ULS".into(), terms: vec![FemCombinationTerm { case_id: "dead".into(), factor: 1.35 }] });
+    let poisoned = FemCombination { id: "uls".into(), name: "ULS".into(), terms: vec![FemCombinationTerm { case_id: "dead".into(), factor: f64::INFINITY }] };
+    let (code, level, target) = refusal(&base, &Fem2dMutation::ReplaceCombination(replace_combination::ReplaceCombination { id: "uls".into(), new_combination: poisoned }));
+    assert_eq!(code, "mutation.invariant");
+    assert_eq!(level, protocol::Severity::Fatal);
+    assert_eq!(target, vec!["uls".to_string()]);
+}
+
+/// 🏷️ A rename to the name the case already carries is a Warning-level no-op, never a rejection.
+#[semio_framework_async_macros::async_test]
+async fn change_load_case_name_unchanged_is_a_warned_no_op() {
+    let base = simply_supported_beam_doc();
+    let outcome = Fem2dMutation::ChangeLoadCaseName(change_load_case_name::ChangeLoadCaseName { case_id: "dead".into(), new_name: "dead".into() }).diff(&base);
+    assert_eq!(outcome.diff(), &Fem2dDiff::default());
+    assert_eq!(outcome.worst_level(), Some(protocol::Severity::Warning));
+    assert_eq!(outcome.messages()[0].code.0, "mutation.no-op");
 }
 //#endregion 🛡️GuardLaws

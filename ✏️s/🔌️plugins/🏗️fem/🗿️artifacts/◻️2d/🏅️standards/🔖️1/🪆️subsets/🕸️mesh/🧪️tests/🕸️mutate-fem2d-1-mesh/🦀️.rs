@@ -22,7 +22,7 @@ use semio_repo_test_host::{parse_json, Adapter, Json};
 /// imported, because the oracle-only build must not link the subject crate. The contract's
 /// mutation-coverage gate keeps this list honest against the catalog, and that file's own
 /// `kinds_match_the_enum_and_the_catalog` keeps it honest against both the enum and the manifest.
-const KINDS: &[&str] = &["create-node", "delete-node", "create-element", "delete-element", "replace-element", "create-section", "delete-section", "replace-section", "create-region", "delete-region", "replace-region"];
+const KINDS: &[&str] = &["create-node", "delete-node", "create-element", "delete-element", "replace-element", "create-section", "delete-section", "replace-section", "create-region", "delete-region", "replace-region", "replace-node"];
 
 /// 👁️ Kinds whose COMMITTED specification vector cannot exhibit a forward effect, so
 /// [`law::mutation_is_observable`] must not demand one of them.
@@ -65,6 +65,8 @@ const COMMITTED: &[(&str, &str)] = &[
     ("frame-vector-replace-region", "replace-region"),
     ("spec-vector-replace-section", "replace-section"),
     ("frame-vector-replace-section", "replace-section"),
+    ("spec-vector-replace-node", "replace-node"),
+    ("frame-vector-replace-node", "replace-node"),
 ];
 
 /// 📇️ Every REFUSAL or no-op vector this subset owns, numbered in the catalog's own order.
@@ -93,6 +95,8 @@ const REFUSED: &[(&str, &str)] = &[
     ("reject-replace-section-1", "replace-section"),
     ("reject-replace-section-2", "replace-section"),
     ("reject-replace-section-3", "replace-section"),
+    ("reject-replace-node-1", "replace-node"),
+    ("reject-replace-node-2", "replace-node"),
 ];
 //#endregion 🔖️Scenarios
 
@@ -432,6 +436,34 @@ fn vector(scenario: &str) -> Vector {
             diff: None,
             outcome: include_str!("../../🧫️fixtures/🧬️mutations/📏️replace-section/⚗️denies-zero-iy-404e31/🎯️outcome/🔣️.json"),
         },
+        "spec-vector-replace-node" => Vector {
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-node/🕹️raises-the-ridge-e53b00/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-node/🕹️raises-the-ridge-e53b00/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-node/🕹️raises-the-ridge-e53b00/📸️snapshot/➡️after/🔣️.json"),
+            diff: Some(include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-node/🕹️raises-the-ridge-e53b00/🔺️diff/🔣️.json")),
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-node/🕹️raises-the-ridge-e53b00/🎯️outcome/🔣️.json"),
+        },
+        "frame-vector-replace-node" => Vector {
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-node/📍️widens-the-canopy-553d69/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-node/📍️widens-the-canopy-553d69/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-node/📍️widens-the-canopy-553d69/📸️snapshot/➡️after/🔣️.json"),
+            diff: Some(include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-node/📍️widens-the-canopy-553d69/🔺️diff/🔣️.json")),
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-node/📍️widens-the-canopy-553d69/🎯️outcome/🔣️.json"),
+        },
+        "reject-replace-node-1" => Vector {
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-node/⛔️rejects-a-missing-334de5/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-node/⛔️rejects-a-missing-334de5/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-node/⛔️rejects-a-missing-334de5/📸️snapshot/➡️after/🔣️.json"),
+            diff: None,
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-node/⛔️rejects-a-missing-334de5/🎯️outcome/🔣️.json"),
+        },
+        "reject-replace-node-2" => Vector {
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-node/🪪️denies-rename-e69720/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-node/🪪️denies-rename-e69720/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-node/🪪️denies-rename-e69720/📸️snapshot/➡️after/🔣️.json"),
+            diff: None,
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-node/🪪️denies-rename-e69720/🎯️outcome/🔣️.json"),
+        },
         other => panic!("🕸️mutate-fem2d-1-mesh: no committed specification vector is registered for scenario {other:?}"),
     }
 }
@@ -549,7 +581,7 @@ mod subject {
     fn touches_one(scenario: &str, kind: &str, before: &Json, after: &Json) -> Result<(), String> {
         let written = match kind {
             "update-analysis-settings" => "analysis",
-            "add-load" | "remove-load" | "change-load-case-self-weight" | "create-load-case" | "delete-load-case" => "loadCases",
+            "add-load" | "remove-load" | "replace-load" | "change-load-case-self-weight" | "change-load-case-name" | "create-load-case" | "delete-load-case" => "loadCases",
             _ => match kind.split_once('-').map(|(_, noun)| noun).unwrap_or_default() {
                 "node" => "nodes",
                 "element" => "elements",

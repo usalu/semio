@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🏷️change-load-case-name",
+  "semanticKind": "change-load-case-name",
+  "displayName": "Change Load Case Name",
+  "emoji": "🏷",
+  "aggregateVariant": "ChangeLoadCaseName",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "change-load-case-name",
+  "binaryTag": null,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "warning",
+    "error"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

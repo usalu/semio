@@ -24,13 +24,13 @@ mod artifacts {
 //#endregion 🗿️Artifacts
 
 //#region ✏️Editor
-mod editor {
+pub mod editor {
     pub use semio_s_artifact_cad_cad::editor::*;
 }
 //#endregion ✏️Editor
 
 //#region 👁️Viewer
-mod viewer {
+pub mod viewer {
     pub use semio_s_artifact_cad_cad::viewer::*;
 }
 //#endregion 👁️Viewer

@@ -1,0 +1,94 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/cad/cad/mutation/create-object/schema.json",
+  "title": "CreateObject",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "index",
+    "object",
+    "pane"
+  ],
+  "properties": {
+    "pane": {
+      "enum": [
+        "shape",
+        "building",
+        "energy",
+        "structure-classic"
+      ]
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "object": {
+      "title": "CadObjectSpec",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "label",
+        "locked",
+        "origin",
+        "typology",
+        "visible"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "typology": {
+          "type": "string"
+        },
+        "visible": {
+          "type": "boolean"
+        },
+        "locked": {
+          "type": "boolean"
+        },
+        "origin": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "orientation": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 4,
+          "maxItems": 4
+        },
+        "scale": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "meshUrl": {
+          "type": "string"
+        },
+        "extent": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "solidHandle": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

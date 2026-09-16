@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/cad/cad/mutation/delete-object/schema.json",
+  "title": "DeleteObject",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "objectId",
+    "pane"
+  ],
+  "properties": {
+    "pane": {
+      "enum": [
+        "shape",
+        "building",
+        "energy",
+        "structure-classic"
+      ]
+    },
+    "objectId": {
+      "type": "string"
+    }
+  }
+}

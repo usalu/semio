@@ -97,6 +97,31 @@ pub(crate) mod context {
     pub async fn render(app: &mut SourcingApp, body_key: &str) -> String {
         serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).await.expect("render").root).expect("render json")
     }
+
+    /// 📊️ The table scene a rendered pool/curated body carries — found anywhere in the tree, since the
+    /// pool nests its surface under a filter row while the curated body is the surface itself.
+    pub fn table_scene_of(node: &semio_framework_plugin::BuiltNode) -> Option<semio_framework_plugin::TableScene> {
+        if let semio_framework_plugin::Component::Surface(props) = &node.component {
+            if let Ok(scene) = semio_framework_ui_scene::decode::<semio_framework_plugin::TableScene>(props) {
+                return Some(scene);
+            }
+        }
+        node.children.iter().find_map(table_scene_of)
+    }
+
+    /// 📊️ Renders `body_key` through the live app and decodes its table scene's column ids and row records.
+    pub async fn table_of(app: &mut SourcingApp, body_key: &str) -> (Vec<String>, Vec<serde_json::Value>) {
+        let rendered = app.render(body_key, None, &ViewModel::default()).await.expect("render");
+        let scene = table_scene_of(&rendered.root).expect("a table scene in the rendered body");
+        let columns: Vec<serde_json::Value> = serde_json::from_str(&scene.columns_json).expect("columns json");
+        let rows: Vec<serde_json::Value> = serde_json::from_str(&scene.rows_json).expect("rows json");
+        (columns.iter().map(|column| column["id"].as_str().unwrap_or_default().to_string()).collect(), rows)
+    }
+
+    /// 🪪️ The `id` of every row a table body currently shows, in display order.
+    pub async fn row_ids(app: &mut SourcingApp, body_key: &str) -> Vec<String> {
+        table_of(app, body_key).await.1.iter().map(|row| row["id"].as_str().unwrap_or_default().to_string()).collect()
+    }
 }
 
 

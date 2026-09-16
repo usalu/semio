@@ -1,0 +1,39 @@
+{
+  "artifact": null,
+  "nodes": null,
+  "elements": null,
+  "regions": null,
+  "materials": null,
+  "sections": null,
+  "supports": null,
+  "loadCases": null,
+  "combinations": {
+    "added": [],
+    "removed": [],
+    "patched": [
+      {
+        "id": "uls1",
+        "item": {
+          "id": "uls1",
+          "name": "ULS 6.10b",
+          "terms": [
+            {
+              "caseId": "dead",
+              "factor": 1.35
+            },
+            {
+              "caseId": "live",
+              "factor": 1.5
+            },
+            {
+              "caseId": "wind",
+              "factor": 0.9
+            }
+          ]
+        }
+      }
+    ],
+    "reordered": null
+  },
+  "analysis": null
+}

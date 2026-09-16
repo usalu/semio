@@ -22,7 +22,7 @@ use semio_repo_test_host::{parse_json, Adapter, Json};
 /// imported, because the oracle-only build must not link the subject crate. The contract's
 /// mutation-coverage gate keeps this list honest against the catalog, and that file's own
 /// `kinds_match_the_enum_and_the_catalog` keeps it honest against both the enum and the manifest.
-const KINDS: &[&str] = &["create-load-case", "delete-load-case", "add-load", "remove-load", "change-load-case-self-weight", "create-combination", "delete-combination"];
+const KINDS: &[&str] = &["create-load-case", "delete-load-case", "add-load", "remove-load", "change-load-case-self-weight", "create-combination", "delete-combination", "replace-load", "change-load-case-name", "replace-combination"];
 
 /// 👁️ Kinds whose COMMITTED specification vector cannot exhibit a forward effect, so
 /// [`law::mutation_is_observable`] must not demand one of them.
@@ -57,6 +57,12 @@ const COMMITTED: &[(&str, &str)] = &[
     ("frame-vector-delete-load-case", "delete-load-case"),
     ("spec-vector-remove-load", "remove-load"),
     ("frame-vector-remove-load", "remove-load"),
+    ("spec-vector-replace-load", "replace-load"),
+    ("frame-vector-replace-load", "replace-load"),
+    ("spec-vector-change-load-case-name", "change-load-case-name"),
+    ("frame-vector-change-load-case-name", "change-load-case-name"),
+    ("spec-vector-replace-combination", "replace-combination"),
+    ("frame-vector-replace-combination", "replace-combination"),
 ];
 
 /// 📇️ Every REFUSAL or no-op vector this subset owns, numbered in the catalog's own order.
@@ -71,6 +77,14 @@ const REFUSED: &[(&str, &str)] = &[
     ("reject-delete-load-case-1", "delete-load-case"),
     ("reject-delete-load-case-2", "delete-load-case"),
     ("reject-remove-load-1", "remove-load"),
+    ("reject-replace-load-1", "replace-load"),
+    ("reject-replace-load-2", "replace-load"),
+    ("reject-replace-load-3", "replace-load"),
+    ("reject-change-load-case-name-1", "change-load-case-name"),
+    ("reject-change-load-case-name-2", "change-load-case-name"),
+    ("reject-replace-combination-1", "replace-combination"),
+    ("reject-replace-combination-2", "replace-combination"),
+    ("reject-replace-combination-3", "replace-combination"),
 ];
 //#endregion 🔖️Scenarios
 
@@ -256,6 +270,104 @@ fn vector(scenario: &str) -> Vector {
             diff: None,
             outcome: include_str!("../../🧫️fixtures/🧬️mutations/➖️remove-load/⛔️rejects-a-missing-1a8a80/🎯️outcome/🔣️.json"),
         },
+        "spec-vector-replace-load" => Vector {
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-load/🏋️retunes-the-live-f6fd49/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-load/🏋️retunes-the-live-f6fd49/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-load/🏋️retunes-the-live-f6fd49/📸️snapshot/➡️after/🔣️.json"),
+            diff: Some(include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-load/🏋️retunes-the-live-f6fd49/🔺️diff/🔣️.json")),
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-load/🏋️retunes-the-live-f6fd49/🎯️outcome/🔣️.json"),
+        },
+        "frame-vector-replace-load" => Vector {
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-load/💨️strengthens-the-wind-21b88a/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-load/💨️strengthens-the-wind-21b88a/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-load/💨️strengthens-the-wind-21b88a/📸️snapshot/➡️after/🔣️.json"),
+            diff: Some(include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-load/💨️strengthens-the-wind-21b88a/🔺️diff/🔣️.json")),
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-load/💨️strengthens-the-wind-21b88a/🎯️outcome/🔣️.json"),
+        },
+        "reject-replace-load-1" => Vector {
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-load/⛔️rejects-a-missing-7a1e1f/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-load/⛔️rejects-a-missing-7a1e1f/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-load/⛔️rejects-a-missing-7a1e1f/📸️snapshot/➡️after/🔣️.json"),
+            diff: None,
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-load/⛔️rejects-a-missing-7a1e1f/🎯️outcome/🔣️.json"),
+        },
+        "reject-replace-load-2" => Vector {
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-load/🪪️denies-rename-732de0/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-load/🪪️denies-rename-732de0/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-load/🪪️denies-rename-732de0/📸️snapshot/➡️after/🔣️.json"),
+            diff: None,
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-load/🪪️denies-rename-732de0/🎯️outcome/🔣️.json"),
+        },
+        "reject-replace-load-3" => Vector {
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-load/👻️dangling-node-b95678/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-load/👻️dangling-node-b95678/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-load/👻️dangling-node-b95678/📸️snapshot/➡️after/🔣️.json"),
+            diff: None,
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-load/👻️dangling-node-b95678/🎯️outcome/🔣️.json"),
+        },
+        "spec-vector-change-load-case-name" => Vector {
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🏷️change-load-case-name/🏷️renames-the-live-7dce39/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🏷️change-load-case-name/🏷️renames-the-live-7dce39/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🏷️change-load-case-name/🏷️renames-the-live-7dce39/📸️snapshot/➡️after/🔣️.json"),
+            diff: Some(include_str!("../../🧫️fixtures/🧬️mutations/🏷️change-load-case-name/🏷️renames-the-live-7dce39/🔺️diff/🔣️.json")),
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🏷️change-load-case-name/🏷️renames-the-live-7dce39/🎯️outcome/🔣️.json"),
+        },
+        "frame-vector-change-load-case-name" => Vector {
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🏷️change-load-case-name/✏️renames-the-wind-61757b/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🏷️change-load-case-name/✏️renames-the-wind-61757b/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🏷️change-load-case-name/✏️renames-the-wind-61757b/📸️snapshot/➡️after/🔣️.json"),
+            diff: Some(include_str!("../../🧫️fixtures/🧬️mutations/🏷️change-load-case-name/✏️renames-the-wind-61757b/🔺️diff/🔣️.json")),
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🏷️change-load-case-name/✏️renames-the-wind-61757b/🎯️outcome/🔣️.json"),
+        },
+        "reject-change-load-case-name-1" => Vector {
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🏷️change-load-case-name/⛔️rejects-a-missing-fc0343/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🏷️change-load-case-name/⛔️rejects-a-missing-fc0343/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🏷️change-load-case-name/⛔️rejects-a-missing-fc0343/📸️snapshot/➡️after/🔣️.json"),
+            diff: None,
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🏷️change-load-case-name/⛔️rejects-a-missing-fc0343/🎯️outcome/🔣️.json"),
+        },
+        "reject-change-load-case-name-2" => Vector {
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🏷️change-load-case-name/🔁️keeps-the-name-4fa89f/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🏷️change-load-case-name/🔁️keeps-the-name-4fa89f/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🏷️change-load-case-name/🔁️keeps-the-name-4fa89f/📸️snapshot/➡️after/🔣️.json"),
+            diff: None,
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🏷️change-load-case-name/🔁️keeps-the-name-4fa89f/🎯️outcome/🔣️.json"),
+        },
+        "spec-vector-replace-combination" => Vector {
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-combination/⚖️reweights-the-uls-8b17b7/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-combination/⚖️reweights-the-uls-8b17b7/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-combination/⚖️reweights-the-uls-8b17b7/📸️snapshot/➡️after/🔣️.json"),
+            diff: Some(include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-combination/⚖️reweights-the-uls-8b17b7/🔺️diff/🔣️.json")),
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-combination/⚖️reweights-the-uls-8b17b7/🎯️outcome/🔣️.json"),
+        },
+        "frame-vector-replace-combination" => Vector {
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-combination/🔗️adds-a-wind-term-6525d5/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-combination/🔗️adds-a-wind-term-6525d5/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-combination/🔗️adds-a-wind-term-6525d5/📸️snapshot/➡️after/🔣️.json"),
+            diff: Some(include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-combination/🔗️adds-a-wind-term-6525d5/🔺️diff/🔣️.json")),
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-combination/🔗️adds-a-wind-term-6525d5/🎯️outcome/🔣️.json"),
+        },
+        "reject-replace-combination-1" => Vector {
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-combination/⛔️rejects-a-missing-b32308/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-combination/⛔️rejects-a-missing-b32308/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-combination/⛔️rejects-a-missing-b32308/📸️snapshot/➡️after/🔣️.json"),
+            diff: None,
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-combination/⛔️rejects-a-missing-b32308/🎯️outcome/🔣️.json"),
+        },
+        "reject-replace-combination-2" => Vector {
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-combination/🪪️denies-rename-a96d3c/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-combination/🪪️denies-rename-a96d3c/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-combination/🪪️denies-rename-a96d3c/📸️snapshot/➡️after/🔣️.json"),
+            diff: None,
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-combination/🪪️denies-rename-a96d3c/🎯️outcome/🔣️.json"),
+        },
+        "reject-replace-combination-3" => Vector {
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-combination/👻️dangling-case-65b8a8/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-combination/👻️dangling-case-65b8a8/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-combination/👻️dangling-case-65b8a8/📸️snapshot/➡️after/🔣️.json"),
+            diff: None,
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-combination/👻️dangling-case-65b8a8/🎯️outcome/🔣️.json"),
+        },
         other => panic!("🏋️mutate-fem2d-1-load: no committed specification vector is registered for scenario {other:?}"),
     }
 }
@@ -373,7 +485,7 @@ mod subject {
     fn touches_one(scenario: &str, kind: &str, before: &Json, after: &Json) -> Result<(), String> {
         let written = match kind {
             "update-analysis-settings" => "analysis",
-            "add-load" | "remove-load" | "change-load-case-self-weight" | "create-load-case" | "delete-load-case" => "loadCases",
+            "add-load" | "remove-load" | "replace-load" | "change-load-case-self-weight" | "change-load-case-name" | "create-load-case" | "delete-load-case" => "loadCases",
             _ => match kind.split_once('-').map(|(_, noun)| noun).unwrap_or_default() {
                 "node" => "nodes",
                 "element" => "elements",

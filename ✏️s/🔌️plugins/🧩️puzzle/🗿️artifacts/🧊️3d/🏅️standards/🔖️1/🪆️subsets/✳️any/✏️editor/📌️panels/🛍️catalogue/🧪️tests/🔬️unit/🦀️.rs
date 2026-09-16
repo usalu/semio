@@ -116,3 +116,74 @@ fn the_catalogue_opens_its_object_kinds_and_folds_the_template_catalogs() {
     assert!(objects.children.iter().any(|row| !row.key.as_str().ends_with(".more")), "an opened objects section must carry at least one kind row");
     eprintln!("[DEBUG] catalogue default-open objects={:?} rows={}", open_state("puzzle3d-play-kinds.objects"), objects.children.len());
 }
+
+/// 🌲️ The DEFAULT document's catalogue, which every law above misses: they all read
+/// `nakagin_fixture()`, while the aggregator boots on `concrete-forest` (`initial_snapshot` /
+/// `create_puzzle3d_app`), so an empty objects catalog THERE is the one a user actually sees. Pins
+/// that the shipped fixture declares object kinds and that each one names a `/mesh/` representation
+/// url which resolves through the SAME index the world mesh lane publishes — never a `meshUrl` key,
+/// which these compose-shaped rows do not carry.
+#[test]
+fn the_default_concrete_forest_catalogue_declares_kinds_with_resolvable_mesh_urls() {
+    let fixture = crate::editor::puzzle3d::default_fixture();
+    let entries = crate::editor::puzzle3d::puzzle3d_catalog_entries(&fixture, "objects");
+    assert!(!entries.is_empty(), "the default document's catalogue must declare object kinds, else the Catalogue panel opens empty");
+    let index = crate::editor::puzzle3d::Puzzle3dKindMeshIndex::of(&fixture.meta);
+    let lane = crate::editor::puzzle3d::collect_mesh_urls(&fixture);
+    for entry in entries {
+        let kind_id = entry.get("id").and_then(dsl::DslValue::as_str).expect("every catalogue row names a kind").to_string();
+        let url = entry
+            .get("representations")
+            .and_then(dsl::DslValue::as_array)
+            .into_iter()
+            .flatten()
+            .filter_map(|representation| representation.get("url").and_then(dsl::DslValue::as_str))
+            .find(|url| !url.is_empty())
+            .unwrap_or_else(|| panic!("catalogue row {kind_id} declares no representations[].url"))
+            .to_string();
+        assert!(url.starts_with("/mesh/"), "catalogue row {kind_id} must name a served mesh route, observed {url}");
+        let probe = crate::editor::puzzle3d::Puzzle3dObject {
+            id: format!("probe-{kind_id}"),
+            label: None,
+            object_kind: Some(kind_id.clone()),
+            origin: [0.0, 0.0, 0.0],
+            orientation: None,
+            scale: None,
+            mesh_url: None,
+            vortices: Vec::new(),
+            hidden: false,
+            locked: false,
+        };
+        assert_eq!(index.resolve(&probe), Some(url.as_str()), "an instance of {kind_id} must resolve its kind's representation url");
+        assert!(lane.iter().any(|published| published == &url), "{kind_id}'s mesh {url} must reach the world mesh lane, else its candidates read mesh-unavailable");
+        eprintln!("[DEBUG] concrete-forest catalogue kind={kind_id} url={url}");
+    }
+}
+
+/// 🛍️ The default document's catalogue as the panel RENDERS it: one row per catalogued kind, every
+/// row draggable with its own kind id and a non-empty `meshUrl` in the drag payload (the key
+/// `World3dHost`'s catalogue-drop preview parses), and no row declaring more than the two row actions
+/// a paged panel row admits.
+#[test]
+fn the_default_concrete_forest_catalogue_renders_a_draggable_row_for_every_kind() {
+    let _page = super::super::artifact::PANEL_PAGE_GUARD.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+    let fixture = crate::editor::puzzle3d::default_fixture();
+    let declared = crate::editor::puzzle3d::puzzle3d_catalog_entries(&fixture, "objects").len();
+    let envelope = Puzzle3dScene { fixture, runtime: Puzzle3dRuntime::default(), active_utility: PUZZLE3D_DEFAULT_UTILITY.into() };
+    let labels = puzzle3d_labels(&semio_framework_plugin::ViewModel::default()).expect("admitted host axis");
+    let node = render(&envelope, labels).expect("catalogue tree");
+    let objects = node.children.iter().find(|section| section.key.as_str() == "puzzle3d-play-kinds.objects").expect("objects section");
+    let rows: Vec<_> = objects.children.iter().filter(|row| !row.key.as_str().ends_with(".more")).collect();
+    assert_eq!(rows.len(), declared, "every catalogued kind of the default document must get its own row");
+    for row in rows {
+        let semio_framework_ui_contract::Component::TreeItem(props) = &row.component else { panic!("catalogue row {} is not a tree item", row.key.as_str()) };
+        assert_eq!(props.draggable, Some(true), "catalogue row {} must be draggable into the viewport", row.key.as_str());
+        assert!(row.bindings.len() <= 2, "catalogue row {} declares {} row actions, over the two a paged panel row admits", row.key.as_str(), row.bindings.len());
+        let drag_data = props.drag_data.as_ref().unwrap_or_else(|| panic!("catalogue row {} carries no drag data", row.key.as_str()));
+        let encoded = drag_data.iter().find(|(mime, _)| mime.as_str() == PUZZLE3D_CATALOGUE_DRAG_MIME).map(|(_, value)| value.as_str()).expect("catalogue mime");
+        let payload: Value = json::parse(encoded).expect("drag payload json");
+        assert_eq!(payload.get("objectKind").and_then(Value::as_str), Some(row.key.as_str()), "the drag payload must name the kind its row renders");
+        assert!(payload.get("meshUrl").and_then(Value::as_str).filter(|url| !url.is_empty()).is_some(), "catalogue row {} carries no meshUrl for the drop preview", row.key.as_str());
+        eprintln!("[DEBUG] concrete-forest catalogue row={} payload={encoded}", row.key.as_str());
+    }
+}

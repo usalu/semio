@@ -30,13 +30,13 @@ mod artifacts {
 //#endregion 🗿️Artifacts
 
 //#region ✏️Editor
-mod editor {
+pub mod editor {
     pub use semio_s_artifact_process_process3d::editor::*;
 }
 //#endregion ✏️Editor
 
 //#region 👁️Viewer
-mod viewer {
+pub mod viewer {
     pub use semio_s_artifact_process_process3d::viewer::*;
 }
 //#endregion 👁️Viewer

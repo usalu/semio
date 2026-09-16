@@ -2206,6 +2206,24 @@ where
         Box::new(ArtifactStoreEnvelopeRetirement::new(envelope, Arc::clone(&self.initial_snapshot_retirement), Arc::clone(&self.mutation_retirement)))
     }
 
+    /// 🧹️ [`Self::retire_envelope`] for a catalog that was minted only to retire this one envelope and
+    /// was NEVER installed on a store: the two value factories carry on inside the returned retirement,
+    /// and the fresh store disposer is closed as uninstalled first, so dropping the catalog afterwards
+    /// does not trip [`ArtifactStoreCursorDisposer`]'s fail-closed `Drop` (which otherwise aborts the
+    /// whole guest and hides the fault the caller was about to report — ticket
+    /// 26/09/06/ENERGY-PLUGIN-END-TO-END, 2026-09-16).
+    pub fn retire_envelope_uninstalled(mut self, envelope: ArtifactEnvelope<P, Mutation>) -> Result<Box<dyn ErasedSnapshotRetirement>, String>
+    where
+        P: Send + 'static,
+        Mutation: Send + 'static,
+    {
+        match self.store_disposer.close_uninstalled_step(1)? {
+            SnapshotRetirementStep::Complete if self.store_disposer.uninstalled_terminal_is_empty() => Ok(self.retire_envelope(envelope)),
+            SnapshotRetirementStep::Complete => Err("uninstalled document store disposer reported false terminal".into()),
+            _ => Err("uninstalled document store disposer did not close in one step".into()),
+        }
+    }
+
     pub(crate) fn retire_decoded_edit(&self, edit: Edit<Mutation>) -> Box<dyn ErasedSnapshotRetirement>
     where
         Mutation: Send + 'static,

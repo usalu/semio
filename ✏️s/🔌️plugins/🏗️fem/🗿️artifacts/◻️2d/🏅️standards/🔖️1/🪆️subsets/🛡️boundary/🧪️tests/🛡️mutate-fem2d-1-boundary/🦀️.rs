@@ -269,7 +269,7 @@ mod subject {
     fn touches_one(scenario: &str, kind: &str, before: &Json, after: &Json) -> Result<(), String> {
         let written = match kind {
             "update-analysis-settings" => "analysis",
-            "add-load" | "remove-load" | "change-load-case-self-weight" | "create-load-case" | "delete-load-case" => "loadCases",
+            "add-load" | "remove-load" | "replace-load" | "change-load-case-self-weight" | "change-load-case-name" | "create-load-case" | "delete-load-case" => "loadCases",
             _ => match kind.split_once('-').map(|(_, noun)| noun).unwrap_or_default() {
                 "node" => "nodes",
                 "element" => "elements",

@@ -9,7 +9,7 @@ import { semioBackboneVitePlugin, semioBlobVitePlugin, semioActivationVitePlugin
 import { semioExtensionStoreVitePlugin } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store/📥️installation/🟦️.ts";
 import { browserArtifactVitePlugin } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/📦️distribution/⚡️vite/🟦️.ts";
 import { demonstratorRuntimeAssetSources } from "../../🔨️modules/🧩️runtime/📦️assets/🟦️.ts";
-import { readDemonstratorActivation } from "../../🔨️modules/🧩️runtime/♻️activation/🟦️.ts";
+import { demonstratorActivationComponents, readDemonstratorActivation } from "../../🔨️modules/🧩️runtime/♻️activation/🟦️.ts";
 import { DEMONSTRATOR_ASSETS_DIR, DEMONSTRATOR_HOST, DEMONSTRATOR_RUNTIME_TARGETS, demonstratorRuntimeModuleLayout } from "../../🔨️modules/🧩️runtime/🟦️.ts";
 import { repoCacheDirectory } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
 
@@ -85,7 +85,7 @@ export default defineConfig(({ command }) => {
     playgroundFlowWasmDevStubPlugin(repoRoot),
     semioBackboneVitePlugin(),
     semioBlobVitePlugin(),
-    development && semioActivationVitePlugin({ receiptDirectory: development.receiptDirectory }),
+    development && semioActivationVitePlugin({ receiptDirectory: development.receiptDirectory, moduleRoot: pluginModulesDir, installRoot: installedExtensionsDir, components: demonstratorActivationComponents(repoRoot) }),
     command === "serve" && semioExtensionStoreVitePlugin({ installRoot: installedExtensionsDir, repoRoot }),
     ...semioAssetsVitePlugin(repoRoot),
     ...(command === "build" ? [browserArtifactVitePlugin(demonstratorRuntimeAssetSources(repoRoot, "release"))] : [

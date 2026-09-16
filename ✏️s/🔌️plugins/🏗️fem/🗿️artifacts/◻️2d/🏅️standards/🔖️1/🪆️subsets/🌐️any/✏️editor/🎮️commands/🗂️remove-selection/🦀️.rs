@@ -13,13 +13,21 @@ pub struct RemoveSelection {
     pub ids: Vec<String>,
 }
 
+/// 🗂️ Deletes the payload's ids. An empty list is a deliberate no-op: the keybinding path dispatches
+/// `removeSelection` with no args and the CURRENT selection is framework-owned state only
+/// `ArtifactEditor::handle` sees, so the editor resolves it there and calls [`remove_ids`] directly.
+pub fn handle(payload: &RemoveSelection, doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<Fem2dMutation, NoConfigMutation>, Fault> {
+    remove_ids(doc, &payload.ids)
+}
+
 /// 🗂️ Each id is looked up against every collection in a fixed precedence (nodes, elements,
 /// materials, sections, supports, load cases, regions, combinations) and removed from the first
-/// one it matches — mirrors the pre-migration `handle_action`'s exact search order.
-pub fn handle(payload: &RemoveSelection, doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<Fem2dMutation, NoConfigMutation>, Fault> {
+/// one it matches — mirrors the pre-migration `handle_action`'s exact search order. Public so the
+/// editor can route a delete keybinding's live interaction selection straight into it.
+pub fn remove_ids(doc: &ArtifactView<'_, Fem2dSnapshot>, ids: &[String]) -> Result<Emit<Fem2dMutation, NoConfigMutation>, Fault> {
     let snapshot = doc.snapshot;
     let mut operations = Vec::new();
-    for id in &payload.ids {
+    for id in ids {
         if snapshot.nodes.iter().any(|n| &n.id == id) {
             operations.push(Fem2dMutation::DeleteNode(delete_node::DeleteNode { id: id.clone() }));
         } else if snapshot.elements.iter().any(|e| element_id(e) == id) {
@@ -43,6 +51,25 @@ pub fn handle(payload: &RemoveSelection, doc: &ArtifactView<'_, Fem2dSnapshot>, 
     } else {
         Ok(Emit::mutations(operations))
     }
+}
+
+/// 🗂️ The subset of `ids` this command can actually delete — a framework selection may still carry a
+/// stale id (a peer deleted it) or one this app owns no delete mutation for (a load, whose removal is
+/// `remove-load` on its case), so the editor filters before it dispatches.
+pub fn resolve_selection_ids(doc: &Fem2dSnapshot, ids: &[String]) -> Vec<String> {
+    ids.iter()
+        .filter(|id| {
+            doc.nodes.iter().any(|n| &&n.id == id)
+                || doc.elements.iter().any(|e| &element_id(e) == id)
+                || doc.materials.iter().any(|m| &&m.id == id)
+                || doc.sections.iter().any(|s| &&s.id == id)
+                || doc.supports.iter().any(|s| &&s.id == id)
+                || doc.load_cases.iter().any(|l| &&l.id == id)
+                || doc.regions.iter().any(|r| &&r.id == id)
+                || doc.combinations.iter().any(|c| &&c.id == id)
+        })
+        .cloned()
+        .collect()
 }
 
 #[cfg(test)]

@@ -397,19 +397,10 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
     /// and routes regardless of what `V::Mutation` is. See `viewer_mutation_roster` for the separate
     /// opt-in `contributor.list-artifact-mutations` capability (ticket 26/08/16/ARTIFACT-VIEWERS-
     /// AND-EDITORS-PER-SUBSET report `📓️w2-sdk2-report.md`).
-    pub fn viewer<V: crate::app::ArtifactViewer>(self, def: crate::app::AppDefinition) -> Self
-    where
-        PA: From<crate::app::VcsArtifactApp<crate::app::ViewerApp<V>>>,
-    {
-        self.viewer_with_members::<V, store::NoMembers>(def)
-    }
-
-    /// 🧸️ A read-only surface retains its exact typed child fleet without acquiring document write authority.
-    pub fn viewer_with_members<V, M>(mut self, mut def: crate::app::AppDefinition) -> Self
+    pub fn viewer<V>(mut self, mut def: crate::app::AppDefinition) -> Self
     where
         V: crate::app::ArtifactViewer,
-        M: store::SpaceMember + store::MemberFactory + Send + 'static,
-        PA: From<crate::app::VcsArtifactApp<crate::app::ViewerApp<V>, M>>,
+        PA: From<crate::app::VcsArtifactApp<crate::app::ViewerApp<V>, V::Members>>,
     {
         use semio_framework::kernel::{ArtifactKind, Rights, Scope};
         // 🚫️async: E4 fn-pointer slot
@@ -417,13 +408,12 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
             V::app_schema()
         }
         // 🚫️async: E4 fn-pointer slot — see `document_app`'s `factory` doc.
-        fn factory<V, M, PA>(def: &crate::app::AppDefinition) -> PA
+        fn factory<V, PA>(def: &crate::app::AppDefinition) -> PA
         where
             V: crate::app::ArtifactViewer,
-            M: store::SpaceMember + store::MemberFactory + Send + 'static,
-            PA: PluginApp + From<crate::app::VcsArtifactApp<crate::app::ViewerApp<V>, M>>,
+            PA: PluginApp + From<crate::app::VcsArtifactApp<crate::app::ViewerApp<V>, V::Members>>,
         {
-            PA::from(resolve_ready(crate::app::VcsArtifactApp::<crate::app::ViewerApp<V>, M>::with_registry(crate::app::ViewerApp::<V>::default(), crate::app::AppActionRegistry::from_definition(def))))
+            PA::from(resolve_ready(crate::app::VcsArtifactApp::<crate::app::ViewerApp<V>, V::Members>::with_registry(crate::app::ViewerApp::<V>::default(), crate::app::AppActionRegistry::from_definition(def))))
         }
         // 🎯️ C8.2 — schema-first: `io.artifact_schema` names the schema this surface opens without
         // relying on the `artifact_kinds[0].schema` convention. Stamped only when the app left it
@@ -432,7 +422,7 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
             def.io.artifact_schema = V::DOCUMENT_SCHEMA.to_string();
         }
         let app = App { definition: def.clone(), examples: Vec::new() };
-        self.app_defs.push((app, (def, factory::<V, M, PA>)));
+        self.app_defs.push((app, (def, factory::<V, PA>)));
         self.app_schema_descriptors.push(app_schema::<V>);
         // 🔒️ Contract §2.3 clause 4 — a viewer's document store attaches Read only, never Write.
         self.capability(CapabilityRequirement { artifact: ArtifactKind::Document, rights: Rights::Read, scope: Scope::App })
@@ -466,7 +456,7 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
     /// registers `📚️examples/🎬️<slug>/🦀️.rs` fixtures onto the manifest.
     pub fn editor<E: crate::app::ArtifactEditor>(self, def: crate::app::AppDefinition) -> Self
     where
-        PA: From<crate::app::VcsArtifactApp<crate::app::EditorApp<E>>>,
+        PA: From<crate::app::VcsArtifactApp<crate::app::EditorApp<E>, E::Members>>,
     {
         self.editor_app::<E>(def, Vec::new())
     }
@@ -482,14 +472,14 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
     /// (`SubsetDeclaration.examples` does the same, ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
     pub fn editor_with_examples<E: crate::app::ArtifactEditor>(self, def: crate::app::AppDefinition, examples: Vec<crate::app::ExampleSource>) -> Self
     where
-        PA: From<crate::app::VcsArtifactApp<crate::app::EditorApp<E>>>,
+        PA: From<crate::app::VcsArtifactApp<crate::app::EditorApp<E>, E::Members>>,
     {
         self.editor_app::<E>(def, examples)
     }
 
     fn editor_app<E: crate::app::ArtifactEditor>(mut self, mut def: crate::app::AppDefinition, examples: Vec<crate::app::ExampleSource>) -> Self
     where
-        PA: From<crate::app::VcsArtifactApp<crate::app::EditorApp<E>>>,
+        PA: From<crate::app::VcsArtifactApp<crate::app::EditorApp<E>, E::Members>>,
     {
         use semio_framework::kernel::{ArtifactKind, Rights, Scope};
         // 🚫️async: E4 fn-pointer slot
@@ -497,8 +487,8 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
             E::app_schema()
         }
         // 🚫️async: E4 fn-pointer slot — see `document_app`'s `factory` doc.
-        fn factory<E: crate::app::ArtifactEditor, PA: PluginApp + From<crate::app::VcsArtifactApp<crate::app::EditorApp<E>>>>(def: &crate::app::AppDefinition) -> PA {
-            PA::from(resolve_ready(crate::app::VcsArtifactApp::with_registry(crate::app::EditorApp::<E>::default(), crate::app::AppActionRegistry::from_definition(def))))
+        fn factory<E: crate::app::ArtifactEditor, PA: PluginApp + From<crate::app::VcsArtifactApp<crate::app::EditorApp<E>, E::Members>>>(def: &crate::app::AppDefinition) -> PA {
+            PA::from(resolve_ready(crate::app::VcsArtifactApp::<crate::app::EditorApp<E>, E::Members>::with_registry(crate::app::EditorApp::<E>::default(), crate::app::AppActionRegistry::from_definition(def))))
         }
         // 🎯️ C8.2 — schema-first: `io.artifact_schema` names the schema this surface opens without
         // relying on the `artifact_kinds[0].schema` convention. Stamped only when the app left it
@@ -510,36 +500,6 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
         self.app_defs.push((app, (def, factory::<E, PA>)));
         self.app_schema_descriptors.push(app_schema::<E>);
         // 🔒️ Contract §2.3 clause 4 — an editor's document store attaches both Read and Write.
-        self.capability(CapabilityRequirement { artifact: ArtifactKind::Document, rights: Rights::Read, scope: Scope::App }).capability(CapabilityRequirement { artifact: ArtifactKind::Document, rights: Rights::Write, scope: Scope::App })
-    }
-
-    /// 🧩️ Declares an editor whose document owns typed composed children. The member fleet is
-    /// part of the concrete plugin-app variant, so production factories retain child resolution
-    /// instead of erasing it to `NoMembers` at the app-bus boundary.
-    pub fn editor_with_members<E, M>(mut self, mut def: crate::app::AppDefinition) -> Self
-    where
-        E: crate::app::ArtifactEditor,
-        M: store::SpaceMember + store::MemberFactory + Send + 'static,
-        PA: From<crate::app::VcsArtifactApp<crate::app::EditorApp<E>, M>>,
-    {
-        use semio_framework::kernel::{ArtifactKind, Rights, Scope};
-        fn app_schema<E: crate::app::ArtifactEditor>() -> Option<::semio_framework_schema::AppSchemaDescriptor> {
-            E::app_schema()
-        }
-        fn factory<E, M, PA>(def: &crate::app::AppDefinition) -> PA
-        where
-            E: crate::app::ArtifactEditor,
-            M: store::SpaceMember + store::MemberFactory + Send + 'static,
-            PA: PluginApp + From<crate::app::VcsArtifactApp<crate::app::EditorApp<E>, M>>,
-        {
-            PA::from(resolve_ready(crate::app::VcsArtifactApp::<crate::app::EditorApp<E>, M>::with_registry(crate::app::EditorApp::<E>::default(), crate::app::AppActionRegistry::from_definition(def))))
-        }
-        if def.io.artifact_schema.is_empty() {
-            def.io.artifact_schema = E::DOCUMENT_SCHEMA.to_string();
-        }
-        let app = App { definition: def.clone(), examples: Vec::new() };
-        self.app_defs.push((app, (def, factory::<E, M, PA>)));
-        self.app_schema_descriptors.push(app_schema::<E>);
         self.capability(CapabilityRequirement { artifact: ArtifactKind::Document, rights: Rights::Read, scope: Scope::App }).capability(CapabilityRequirement { artifact: ArtifactKind::Document, rights: Rights::Write, scope: Scope::App })
     }
 

@@ -1,0 +1,9 @@
+{
+  "mutation": "replaceNode",
+  "id": "n7",
+  "newNode": {
+    "id": "n7",
+    "x": 8.5,
+    "y": 7.0
+  }
+}

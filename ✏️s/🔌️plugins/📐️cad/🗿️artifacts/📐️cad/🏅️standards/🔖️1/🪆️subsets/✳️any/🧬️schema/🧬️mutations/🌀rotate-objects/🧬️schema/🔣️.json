@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/cad/cad/mutation/rotate-objects/schema.json",
+  "title": "RotateObjects",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "pane",
+    "placements"
+  ],
+  "properties": {
+    "pane": {
+      "enum": [
+        "shape",
+        "building",
+        "energy",
+        "structure-classic"
+      ]
+    },
+    "placements": {
+      "type": "array",
+      "items": {
+        "title": "CadObjectOrientation",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "objectId",
+          "newOrientation"
+        ],
+        "properties": {
+          "objectId": {
+            "type": "string"
+          },
+          "newOrientation": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            },
+            "minItems": 4,
+            "maxItems": 4
+          }
+        }
+      }
+    }
+  }
+}

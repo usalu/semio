@@ -1735,6 +1735,7 @@ import { leftoverInspectionPanelHash, leftoverInspectionRefreshScope, uiRefreshS
 import { aProjectOfLuhUdkFooterItem, fundedByZukunftBauFooterItem, LUH_LOGO_URL, LUH_URL, UDK_LOGO_URL, UDK_URL, ZUKUNFT_BAU_PROJECT_URL } from "../../../../../../../../♻️mit-bestand/🧺️demonstrator/⚛️footer.tsx";
 import {
   Canvas2dHost,
+  canvasLayerDisplayLabel,
   worldToScreenLogical,
   readCanvas2dSurfaceColors,
   Board2dHost,
@@ -5539,6 +5540,12 @@ describe("framework renderer hosts", () => {
     expect(puzzle2dWorldToScreen("not json", containerSize, { x: 0, y: 0 })).toBeNull();
   });
 
+  it("does not use geometry kind as a canvas layer overlay label", () => {
+    expect(canvasLayerDisplayLabel({ kind: "circle", id: "node-n1" })).toBe("");
+    expect(canvasLayerDisplayLabel({ kind: "circle", id: "node-n1", name: "N1" })).toBe("N1");
+    expect(canvasLayerDisplayLabel({ kind: "circle", id: "node-n1", base: { name: "Base" } })).toBe("Base");
+  });
+
   it("maps a world-centered node inside the viewport with canonical camera math", () => {
     const camera = { x: 120, y: 80, zoom: 2 };
     const viewportWidth = 800;
@@ -5666,9 +5673,9 @@ describe("framework renderer hosts", () => {
     expect(worldSceneContentBoundsKey(withProvisional)).toBe(worldSceneContentBoundsKey(committed));
   });
 
-  it("world3dFrameVisibleOverlayOffered keeps the manual reframe when the fit lane carries published bounds, and hides it for scene-graph-only fit lanes", () => {
-    expect(world3dFrameVisibleOverlayOffered(null)).toBe(true);
-    expect(world3dFrameVisibleOverlayOffered({ enabled: false })).toBe(true);
+  it("world3dFrameVisibleOverlayOffered never paints the retired frame-visible overlay", () => {
+    expect(world3dFrameVisibleOverlayOffered(null)).toBe(false);
+    expect(world3dFrameVisibleOverlayOffered({ enabled: false })).toBe(false);
     expect(world3dFrameVisibleOverlayOffered({ enabled: true })).toBe(false);
     expect(
       world3dFrameVisibleOverlayOffered({
@@ -5676,7 +5683,7 @@ describe("framework renderer hosts", () => {
         boundsMin: [0, 0, 0],
         boundsMax: [1, 1, 1],
       }),
-    ).toBe(true);
+    ).toBe(false);
   });
 
   it("world3dFrameDistanceForRadius stands the eye off far enough that the whole bounding sphere projects inside the frustum", () => {
@@ -9297,6 +9304,12 @@ describe("shell option locks (SEMIO_LOCKED_*)", () => {
       expect(logo.src).toMatch(/♻️mit-bestand\/🧺️demonstrator\/🖼️asset\/🪧️logos\//);
       expect(logo.darkSrc).toMatch(/♻️mit-bestand\/🧺️demonstrator\/🖼️asset\/🪧️logos\//);
       expect(logo.alt).toBeTruthy();
+      let root = import.meta.dirname;
+      for (const url of [logo.src, logo.darkSrc!]) {
+        const relative = url.replace(/^\//, "");
+        for (let hop = 0; hop < 12 && !existsSync(`${root}/${relative}`); hop += 1) root = `${root}/..`;
+        expect(existsSync(`${root}/${relative}`)).toBe(true);
+      }
     }
     const zukunftBauLogo = funding.logos!.find((logo) => logo.href === ZUKUNFT_BAU_PROJECT_URL);
     expect(zukunftBauLogo).toBeDefined();

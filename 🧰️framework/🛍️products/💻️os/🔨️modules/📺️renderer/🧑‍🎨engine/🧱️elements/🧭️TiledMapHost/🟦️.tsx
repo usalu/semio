@@ -59,6 +59,13 @@ type MapPositionMeta = {
 type VisibleTileRow = { z: number; x: number; y: number; key: string };
 
 const DEFAULT_CAMERA_JSON = '{"x":0,"y":0,"zoom":1}';
+/** 🕹️ The framework-owned interaction domain every tiled-map app declares, its map granularity and
+ * the hover channel — the wire coordinates `interactionSelect`/`interactionHover` are addressed
+ * with, matched on the guest side by `GIS2D_INTERACTION_DOMAIN`/`GIS2D_FEATURE_GRANULARITY`/
+ * `Gis2dInteractionSnapshot::POINTER_CHANNEL`. */
+const MAP_INTERACTION_DOMAIN = "features";
+const MAP_FEATURE_GRANULARITY = "feature";
+const MAP_HOVER_CHANNEL = "pointer";
 const MAP_MARQUEE_THRESHOLD_PX = 6;
 const MAX_CONCURRENT_TILE_FETCHES = 12;
 const TILE_REFRESH_DEBOUNCE_MS = 120;
@@ -175,6 +182,22 @@ function parseFeatureSelection(raw: string): { positions: string[]; routes: stri
   } catch {
     return { positions: [], routes: [] };
   }
+}
+
+/** 🕹️ `interactionSelect` args for a map feature pick/marquee against the framework-owned
+ * `"features"` domain's `"feature"` granularity — the tiled-map twin of `World3dHost`'s
+ * `world3dSelectionActionArgs`, and the exact wire shape the GIS app's own
+ * `select_feature_action_args` builds for its context menu. */
+export function mapFeatureSelectionActionArgs(ids: readonly string[], merge: MergeMode, method: "pick" | SelectionMarqueeMethod) {
+  const targets = [...new Set(ids)].map((id) => ({ granularity: MAP_FEATURE_GRANULARITY, id }));
+  return { domainId: MAP_INTERACTION_DOMAIN, targets: JSON.stringify(targets), merge, method };
+}
+
+/** 🐁️ `interactionHover` args on the `"pointer"` channel — the tiled-map twin of `World3dHost`'s
+ * `world3dHoverActionArgs`; a null id publishes an empty `targets`, which clears the guest hover. */
+export function mapFeatureHoverActionArgs(id: string | null | undefined) {
+  const targets = id ? [{ granularity: MAP_FEATURE_GRANULARITY, id }] : [];
+  return { domainId: MAP_INTERACTION_DOMAIN, channel: MAP_HOVER_CHANNEL, targets: JSON.stringify(targets) };
 }
 
 export function resolveMapInteractionSync(selectionJson: string, hoverJson: string): { granularity: "position" | "route"; selectedIdsJson: string; hoveredId?: string } {
@@ -1048,8 +1071,7 @@ export function TiledMapHost({ node, onAction, requestContextMenu }: ComponentSc
         dispatch("clearSelection");
         return;
       }
-      const targets = [...hits.positions, ...hits.routes].map((id) => ({ granularity: "feature", id }));
-      dispatch("interactionSelect", { domainId: "features", targets: JSON.stringify(targets), merge: mode, method });
+      dispatch("interactionSelect", mapFeatureSelectionActionArgs([...hits.positions, ...hits.routes], mode, method));
     },
     [dispatch],
   );
@@ -1095,7 +1117,7 @@ export function TiledMapHost({ node, onAction, requestContextMenu }: ComponentSc
         const nextHover = hit ? { kind: hit.kind, id: hit.id } : null;
         const currentHover = parseMapHoveredFeature(scene.hoverJson);
         if ((currentHover?.id ?? null) !== (nextHover?.id ?? null) || (currentHover?.kind ?? null) !== (nextHover?.kind ?? null)) {
-          dispatch("interactionHover", { domainId: "features", channel: "pointer", targets: JSON.stringify(nextHover ? [{ granularity: "feature", id: nextHover.id }] : []) });
+          dispatch("interactionHover", mapFeatureHoverActionArgs(nextHover?.id));
         }
         return;
       }

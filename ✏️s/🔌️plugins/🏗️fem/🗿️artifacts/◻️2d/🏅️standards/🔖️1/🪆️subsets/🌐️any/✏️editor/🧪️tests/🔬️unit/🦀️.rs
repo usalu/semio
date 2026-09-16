@@ -20,7 +20,7 @@ pub(crate) mod context {
     pub async fn dispatch(app: &mut Fem2dApp, command: Fem2dCommand) -> InvocationResult {
         let kind = match &command {
             Fem2dCommand::SetCamera(_) => crate::editor::fem2d::modes::edit::windows::model::WINDOW_KIND_ID,
-            Fem2dCommand::SetResultDisplay(_) => crate::editor::fem2d::modes::edit::windows::results::WINDOW_KIND_ID,
+            Fem2dCommand::SetResultDisplay(_) | Fem2dCommand::SetResultAnimation(_) | Fem2dCommand::ResultAnimationTick(_) => crate::editor::fem2d::modes::edit::windows::results::WINDOW_KIND_ID,
             _ => crate::editor::fem2d::modes::edit::windows::model::WINDOW_KIND_ID,
         };
         let mut action = meta("local");
@@ -63,11 +63,26 @@ pub(super) fn every_command() -> Vec<Fem2dCommand> {
         Fem2dCommand::AddLoadCase(add_load_case::AddLoadCase { name: "Live".into(), self_weight: false }),
         Fem2dCommand::AddCombination(add_combination::AddCombination { name: "ULS".into(), terms: vec![crate::FemCombinationTerm { case_id: "dead".into(), factor: 1.35 }, crate::FemCombinationTerm { case_id: "live".into(), factor: 1.5 }] }),
         Fem2dCommand::SetSelfWeight(set_self_weight::SetSelfWeight { case_id: "dead".into(), enabled: true }),
-        Fem2dCommand::SetAnalysisSettings(set_analysis_settings::SetAnalysisSettings { modal_count: Some(5), buckling_count: None, deformation_scale: Some(30.0) }),
+        Fem2dCommand::SetAnalysisSettings(set_analysis_settings::SetAnalysisSettings { modal_count: Some(5), buckling_count: None, deformation_scale: Some(30.0), field: None, value: None }),
         Fem2dCommand::RemoveSelection(remove_selection::RemoveSelection { ids: vec!["n1".into(), "e1".into()] }),
         Fem2dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "default".into() }),
         Fem2dCommand::SetCamera(set_camera::SetCamera { x: 1.0, y: 2.0, zoom: 1.5 }),
-        Fem2dCommand::SetResultDisplay(set_result_display::SetResultDisplay { source_id: Some("dead".into()), mode: "modal".into(), mode_index: 0 }),
+        Fem2dCommand::SetResultDisplay(set_result_display::SetResultDisplay { source_id: Some("dead".into()), mode: "modal".into(), mode_index: 0, field: None, value: None }),
+        Fem2dCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown { x: 120.0, y: 80.0, width: 640.0, height: 480.0, button: 0, shift: false, ctrl: false, meta: false, alt: false }),
+        Fem2dCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { x: 121.0, y: 81.0, width: 640.0, height: 480.0 }),
+        Fem2dCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { x: 121.0, y: 81.0, width: 640.0, height: 480.0, shift: false, ctrl: false, meta: false, alt: false }),
+        Fem2dCommand::PatchNode(patch_node::PatchNode { id: "n1".into(), field: "x".into(), value: "1.5".into() }),
+        Fem2dCommand::PatchElement(patch_element::PatchElement { id: "e1".into(), field: "sectionId".into(), value: "ipe300".into() }),
+        Fem2dCommand::PatchMaterial(patch_material::PatchMaterial { id: "steel".into(), field: "e".into(), value: "200000000000".into() }),
+        Fem2dCommand::PatchSection(patch_section::PatchSection { id: "ipe300".into(), field: "area".into(), value: "0.006".into() }),
+        Fem2dCommand::PatchSupport(patch_support::PatchSupport { id: "s1".into(), field: "rz".into(), value: "true".into() }),
+        Fem2dCommand::PatchRegion(patch_region::PatchRegion { id: "r1".into(), field: "thickness".into(), value: "0.25".into() }),
+        Fem2dCommand::PatchLoad(patch_load::PatchLoad { id: "l1".into(), field: "value".into(), value: "-8000".into() }),
+        Fem2dCommand::PatchLoadCase(patch_load_case::PatchLoadCase { id: "dead".into(), field: "name".into(), value: "Dead".into() }),
+        Fem2dCommand::PatchCombination(patch_combination::PatchCombination { id: "uls".into(), field: "term:live".into(), value: "1.5".into() }),
+        Fem2dCommand::SetResultAnimation(set_result_animation::SetResultAnimation { phase: Some(0.25), playing: Some(true), speed: None, loop_mode: Some("pingPong".into()), waveform: None, field: None, value: None }),
+        Fem2dCommand::ResultAnimationTick(result_animation_tick::ResultAnimationTick {}),
+        Fem2dCommand::FocusEntity(focus_entity::FocusEntity { id: "n1".into() }),
     ]
 }
 
@@ -82,7 +97,7 @@ async fn command_ids_are_unique_and_match_the_declared_manifest_actions() {
     sorted.sort_unstable();
     sorted.dedup();
     assert_eq!(sorted.len(), ids.len(), "duplicate command ids in {ids:?}");
-    assert_eq!(ids.len(), 19, "every Fem2dCommand row must be covered by every_command()");
+    assert_eq!(ids.len(), 33, "every Fem2dCommand row must be covered by every_command()");
     // calls.
     let definition = create_fem2d_app();
     for id in ids {
@@ -128,11 +143,11 @@ async fn every_command_keeps_its_pre_migration_bytes() {
             Fem2dCommand::AddCombination(add_combination::AddCombination { name: "ULS".into(), terms: vec![crate::FemCombinationTerm { case_id: "dead".into(), factor: 1.35 }, crate::FemCombinationTerm { case_id: "live".into(), factor: 1.5 }] }),
         ),
         ("010c010464656164020006000102", Fem2dCommand::SetSelfWeight(set_self_weight::SetSelfWeight { case_id: "dead".into(), enabled: true })),
-        ("010d000200040502050000000000003e40", Fem2dCommand::SetAnalysisSettings(set_analysis_settings::SetAnalysisSettings { modal_count: Some(5), buckling_count: None, deformation_scale: Some(30.0) })),
+        ("010d000200040502050000000000003e40", Fem2dCommand::SetAnalysisSettings(set_analysis_settings::SetAnalysisSettings { modal_count: Some(5), buckling_count: None, deformation_scale: Some(30.0), field: None, value: None })),
         ("010e02026531026e3101000c0206010600", Fem2dCommand::RemoveSelection(remove_selection::RemoveSelection { ids: vec!["n1".into(), "e1".into()] })),
         ("010f010764656661756c7401000600", Fem2dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "default".into() })),
         ("011000030005000000000000f03f010500000000000000400205000000000000f83f", Fem2dCommand::SetCamera(set_camera::SetCamera { x: 1.0, y: 2.0, zoom: 1.5 })),
-        ("0111020464656164056d6f64616c03000600010601020400", Fem2dCommand::SetResultDisplay(set_result_display::SetResultDisplay { source_id: Some("dead".into()), mode: "modal".into(), mode_index: 0 })),
+        ("0111020464656164056d6f64616c03000600010601020400", Fem2dCommand::SetResultDisplay(set_result_display::SetResultDisplay { source_id: Some("dead".into()), mode: "modal".into(), mode_index: 0, field: None, value: None })),
     ];
     for (expected, command) in rows {
         let bytes = command.encode_op().expect("encode");
@@ -180,6 +195,12 @@ async fn every_route_declares_the_lane_its_handler_emits() {
         let emit = match &command {
             Fem2dCommand::SetCamera(payload) => set_camera::handle_window(payload, &cfg, &view("model-law", model_window::WINDOW_KIND_ID)),
             Fem2dCommand::SetResultDisplay(payload) => set_result_display::handle_window(payload, &cfg, &view("results-law", results_window::WINDOW_KIND_ID)),
+            Fem2dCommand::CanvasPointerDown(payload) => canvas_pointer_down::handle_window(payload, &doc, &cfg, &view("model-law", model_window::WINDOW_KIND_ID)),
+            Fem2dCommand::CanvasPointerMove(payload) => canvas_pointer_move::handle_window(payload, &doc, &cfg, &view("model-law", model_window::WINDOW_KIND_ID)),
+            Fem2dCommand::CanvasPointerUp(payload) => canvas_pointer_up::handle_window(payload, &doc, &cfg, &view("model-law", model_window::WINDOW_KIND_ID)),
+            Fem2dCommand::FocusEntity(payload) => focus_entity::handle_window(payload, &doc, &cfg, &view("model-law", model_window::WINDOW_KIND_ID)),
+            Fem2dCommand::SetResultAnimation(payload) => set_result_animation::handle_window(payload, &doc, &cfg, &view("results-law", results_window::WINDOW_KIND_ID)),
+            Fem2dCommand::ResultAnimationTick(payload) => result_animation_tick::handle_window(payload, &doc, &cfg, &view("results-law", results_window::WINDOW_KIND_ID)),
             _ => command.dispatch(&doc, &cfg),
         }
         .unwrap_or_else(|error| panic!("{tool_id} dispatches: {error:?}"));

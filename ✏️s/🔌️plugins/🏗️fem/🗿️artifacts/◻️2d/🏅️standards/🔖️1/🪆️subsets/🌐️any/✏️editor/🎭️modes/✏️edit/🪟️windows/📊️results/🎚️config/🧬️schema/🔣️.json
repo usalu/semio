@@ -3,13 +3,64 @@
   "$id": "https://json.schemas.assets.semio-tech.com/app/fem/2d/results-window-config/schema.json",
   "$ref": "#/$defs/Fem2dResultsWindowConfig",
   "$defs": {
+    "Fem2dLoopMode": {
+      "type": "string",
+      "enum": [
+        "loop",
+        "pingPong",
+        "once"
+      ]
+    },
+    "Fem2dWaveform": {
+      "type": "string",
+      "enum": [
+        "ramp",
+        "sine"
+      ]
+    },
+    "Fem2dResultsAnimation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "phase",
+        "playing",
+        "speed",
+        "loopMode",
+        "waveform",
+        "reverse"
+      ],
+      "properties": {
+        "phase": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "playing": {
+          "type": "boolean"
+        },
+        "speed": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "loopMode": {
+          "$ref": "#/$defs/Fem2dLoopMode"
+        },
+        "waveform": {
+          "$ref": "#/$defs/Fem2dWaveform"
+        },
+        "reverse": {
+          "type": "boolean"
+        }
+      }
+    },
     "Fem2dResultsWindowConfig": {
       "type": "object",
       "additionalProperties": false,
       "required": [
         "camera",
         "resultMode",
-        "resultModeIndex"
+        "resultModeIndex",
+        "animation"
       ],
       "properties": {
         "camera": {
@@ -27,6 +78,9 @@
         "resultModeIndex": {
           "type": "integer",
           "minimum": 0
+        },
+        "animation": {
+          "$ref": "#/$defs/Fem2dResultsAnimation"
         }
       }
     }

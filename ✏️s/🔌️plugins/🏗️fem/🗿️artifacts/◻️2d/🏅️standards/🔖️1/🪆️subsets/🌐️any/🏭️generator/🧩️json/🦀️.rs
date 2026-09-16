@@ -4,13 +4,13 @@
 //! Why this exists: the two mesh oracles already registered for this subset (`three-fem2d-mesh-reader`,
 //! `manifold-fem2d-mesh-measure`) read the STL/OBJ export, so they witness GEOMETRY. A material's
 //! Young's modulus, a support's restrained DOFs, a load case's self-weight flag and the analysis
-//! settings do not move a single triangle — which is why 22 of this subset's 25 kinds were recorded
+//! settings do not move a single triangle — which is why 26 of this subset's 29 kinds were recorded
 //! `-uncarried` against those two.
 //!
 //! But this subset's JSON export is not a stub. Unlike its csv/md/txt leaves, which wrap the DSL text
 //! in a single blob, `🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔣️json` emits
 //! `dsl::ToValue::to_value(snapshot)` — the real structured tree, every `Fem2dSnapshot` field. So all
-//! nine arrays are carrier-level facts and a JSON reader witnesses every one of the 22.
+//! nine arrays are carrier-level facts and a JSON reader witnesses every one of the 26.
 //!
 //! This is the same shape as the accepted `quick-xml`/svg and `burntsushi-csv`/mathematical readers:
 //! the judge is a third-party implementation of the CARRIER, and nothing here predicts its answer.
@@ -41,6 +41,10 @@ pub const KINDS: &[&str] = &[
     "create-combination",
     "delete-combination",
     "update-analysis-settings",
+    "replace-node",
+    "replace-load",
+    "change-load-case-name",
+    "replace-combination",
 ];
 
 /// 🌱️ A deterministic seed carrying at least TWO of every collection, because `delete-*` and
@@ -164,6 +168,23 @@ pub fn apply(kind: &str, doc: &Value) -> Result<Value, String> {
         }
         "update-analysis-settings" => {
             doc.as_object_mut().ok_or("document is not an object")?.insert("analysis".to_string(), json!({"modalCount": 12, "bucklingCount": 8, "deformationScale": 250.0}));
+        }
+        "replace-node" => {
+            let nodes = array(&mut doc, "nodes");
+            nodes[0] = json!({"id": "n1", "x": 0.5, "y": 0.0});
+        }
+        "replace-load" => {
+            let cases = array(&mut doc, "loadCases");
+            let loads = cases[0].get_mut("loads").and_then(Value::as_array_mut).ok_or("lc1 has no loads array")?;
+            loads[0] = json!({"kind": "nodal", "id": "l1", "nodeId": "n3", "dof": "Ty", "value": -15000.0});
+        }
+        "change-load-case-name" => {
+            let cases = array(&mut doc, "loadCases");
+            cases[0].as_object_mut().ok_or("lc1 is not an object")?.insert("name".to_string(), Value::String("permanent".to_string()));
+        }
+        "replace-combination" => {
+            let combinations = array(&mut doc, "combinations");
+            combinations[0] = json!({"id": "c1", "name": "ULS 6.10b", "terms": [{"caseId": "lc1", "factor": 1.2}, {"caseId": "lc2", "factor": 1.5}]});
         }
         other => return Err(format!("unknown kind {other}")),
     }

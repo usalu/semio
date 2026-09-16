@@ -7358,8 +7358,9 @@ pub mod app {
                 cfg: &super::ConfigView<'_, Self::Config>,
                 view_state: &super::ViewModel,
                 transient: &super::TransientView<'_, Self::Transient>,
+                interaction: &super::InteractionView<'_>,
             ) -> std::collections::HashMap<String, super::WindowEngagement> {
-                V::window_engagements_with_request_context(doc, cfg, view_state, transient)
+                V::window_engagements_with_request_context(doc, cfg, view_state, transient, interaction)
             }
 
             fn window_measures(doc: &super::ArtifactView<'_, Self::Snapshot>, cfg: &super::ConfigView<'_, Self::Config>, view_state: &super::ViewModel) -> std::collections::HashMap<String, Vec<super::WindowMeasure>> {
@@ -11570,8 +11571,14 @@ pub mod app {
             HashMap::new()
         }
         /// 🫧️ Projects window chrome from the exact transient root captured for the addressed window.
-        async fn window_engagements_with_request_context(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view_state: &ViewModel, transient: &TransientView<'_, Self::Transient>) -> HashMap<String, WindowEngagement> {
-            let _ = transient;
+        ///
+        /// 🕹️ `interaction` is the SAME framework-owned hover/selection `render_with_request_context`,
+        /// `window_measures_with_request_context` and `context_menu_with_request_context` already carry —
+        /// window chrome is the fourth and last per-request projection, so an engagement HUD reports what
+        /// the user actually picked (cad's "N selected") instead of a permanently empty local snapshot.
+        /// Default discards it and falls through to `window_engagements`, exactly like every other twin.
+        async fn window_engagements_with_request_context(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view_state: &ViewModel, transient: &TransientView<'_, Self::Transient>, interaction: &InteractionView<'_>) -> HashMap<String, WindowEngagement> {
+            let _ = (transient, interaction);
             Self::window_engagements(doc, cfg, view_state).await
         }
         /// 🪟️ See `window_engagements` — same per-window-instance keying.
@@ -14492,7 +14499,7 @@ pub mod app {
             }
             if self.envelope_retirement.is_none() {
                 if let Some(envelope) = self.envelope.take() {
-                    *self.envelope_retirement = Some(bounded_document_store_owners::<P, M>().retire_envelope(envelope));
+                    *self.envelope_retirement = Some(bounded_document_store_owners::<P, M>().retire_envelope_uninstalled(envelope)?);
                     return Ok(false);
                 }
             }
@@ -20843,6 +20850,40 @@ pub mod app {
             .ok_or_else(|| plugin_sdk_fault(format!("derived child dialect '{}' is not declared by this app's member roster", dialect.to_coordinate())))
     }
 
+    /// 🧪️ Replays `seed_genesis_children`'s roster lookup over a surface's initial document without
+    /// constructing the app, so a bundle proves at test time what `with_registry_on_bus` would only
+    /// discover by panicking inside a live guest.
+    fn genesis_children_declared<S, M>(snapshot: &S, derives: impl Fn(&S, &str, &str) -> bool) -> Result<(), Fault>
+    where
+        S: semio_framework_schema::ArtifactCompositionFields,
+        M: MemberFactory,
+    {
+        let projection = store::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| plugin_sdk_fault(format!("initial snapshot child projection failed: {error}")))?;
+        for index in 0..projection.len() {
+            let Some((slot, fields)) = projection.get(index) else { break };
+            if !derives(snapshot, slot, fields.child_id) {
+                continue;
+            }
+            let dialect = ArtifactDialect { artifact_kind: fields.artifact_kind.to_string(), standard: fields.standard.to_string(), subset: fields.subset.to_string() };
+            genesis_member_schema::<M>(&dialect)?;
+        }
+        Ok(())
+    }
+
+    /// ✏️🌱️ Proves this editor's OWN roster (`E::Members`) declares every dialect its initial document
+    /// derives a genesis child for. Any bundle registering `E` instantiates that same roster, so one
+    /// assertion per app covers every plugin that ever bundles it.
+    pub fn assert_editor_genesis_children_declared<E: ArtifactEditor>() -> Result<(), Fault> {
+        let snapshot = E::initial_snapshot();
+        genesis_children_declared::<E::Snapshot, E::Members>(&snapshot, |snapshot, slot, child_id| E::genesis_child_pack(snapshot, slot, child_id).is_some())
+    }
+
+    /// 👁️🌱️ Viewer twin of `assert_editor_genesis_children_declared`.
+    pub fn assert_viewer_genesis_children_declared<V: ArtifactViewer>() -> Result<(), Fault> {
+        let snapshot = V::initial_snapshot();
+        genesis_children_declared::<V::Snapshot, V::Members>(&snapshot, |snapshot, slot, child_id| V::genesis_child_pack(snapshot, slot, child_id).is_some())
+    }
+
     const HISTORY_ACTION_IDS: [&str; 6] = ["undo", "redo", "commitCheckpoint", "createAlternative", "switchAlternative", "checkoutCheckpoint"];
 
     const CLIPBOARD_ACTION_IDS: [&str; 3] = ["copy", "cut", "paste"];
@@ -22639,8 +22680,11 @@ pub mod app {
                     let hydration = active.hydration.take().ok_or_else(|| plugin_sdk_fault("ready recursive document parent hydration owner changed before handoff"))?;
                     if !store::ErasedSnapshotRetirement::terminal_is_empty(&hydration) {
                         active.hydration = Some(hydration);
+                        // 🧹️ `retire_envelope_uninstalled`, never `retire_envelope` on a temporary catalog: the
+                        // fresh catalog's cursor disposer would otherwise reach `Drop` un-driven and abort the
+                        // guest, hiding this fault (ticket 26/09/06/ENERGY-PLUGIN-END-TO-END).
                         let owners = A::build_document_store_owners().expect("document archive hydration admitted this app's document owner catalog");
-                        active.retained = Some(owners.retire_envelope(envelope));
+                        active.retained = Some(owners.retire_envelope_uninstalled(envelope).map_err(plugin_sdk_fault)?);
                         return Err(plugin_sdk_fault("ready recursive document parent hydration retained nonterminal ownership"));
                     }
                     drop(hydration);
@@ -22652,7 +22696,7 @@ pub mod app {
                         }
                         Err((fault, envelope)) => {
                             let owners = A::build_document_store_owners().expect("document archive hydration admitted this app's document owner catalog");
-                            active.retained = Some(owners.retire_envelope(envelope));
+                            active.retained = Some(owners.retire_envelope_uninstalled(envelope).map_err(plugin_sdk_fault)?);
                             return Err(fault);
                         }
                     }
@@ -29495,6 +29539,13 @@ pub mod app {
             if self.refresh_cache().await.is_err() {
                 return HashMap::new();
             }
+            // 🕹️ Same materialize-before-destructure shape the `render`/`window_measures`/`context_menu`
+            // paths use: `interaction_hover`/`peer_presence` are read-only here, so an owned snapshot
+            // avoids aliasing the `&mut self` field-wise destructure below.
+            let interaction_state = self.interaction_state().await;
+            let interaction_hover = self.interaction_hover.clone();
+            let interaction_peers = std::sync::Arc::clone(&self.peer_presence);
+            let interaction = InteractionView { state: &interaction_state, hover: &interaction_hover, peers: interaction_peers.as_ref() };
             let render_operation = self.live_render_operation();
             let VcsArtifactApp { window_config_store, window_transient_store, cache, child_content_root, transient_store, tool_runs, .. } = self;
             let (_, snapshot, config, history) = cache.as_ref().expect("cache refreshed above");
@@ -29513,7 +29564,7 @@ pub mod app {
                 let cfg = ConfigView { snapshot: config.as_ref(), window: window_config.as_ref().map(|authority| &authority.snapshot) };
                 let transient_root = transient_store.current_root();
                 let transient = TransientView { snapshot: transient_root.as_ref(), window: window_transient.as_ref().map(|authority| &authority.snapshot) };
-                let mut projected = A::window_engagements_with_request_context(&doc, &cfg, &window_view_state, &transient).await;
+                let mut projected = A::window_engagements_with_request_context(&doc, &cfg, &window_view_state, &transient, &interaction).await;
                 if let Some(engagement) = projected.remove(&window.id).or_else(|| projected.remove(&window.window_kind_id)) {
                     engagements.insert(window.id.clone(), engagement);
                 }
@@ -30614,9 +30665,21 @@ pub mod app {
     /// members (contract §2.1) plus `ROLE`/`DIALECT`; `APP_ID` is intentionally absent, the runtime id
     /// being derived from `DIALECT`+`ROLE` via `surface_app_id` (contract §7.4) instead of hand-written.
     /// `EditorApp<E>` below is the sole `ArtifactApp` implementor for any `E: ArtifactEditor`.
+    /// ✏️🧩️ The concrete runtime app an editor surface instantiates — the roster read off `E` itself, so
+    /// a fleet variant spelled this way can never register `E` over a roster it does not compose with.
+    pub type EditorSurfaceApp<E> = VcsArtifactApp<EditorApp<E>, <E as ArtifactEditor>::Members>;
+
+    /// 👁️🧩️ Viewer twin of [`EditorSurfaceApp`].
+    pub type ViewerSurfaceApp<V> = VcsArtifactApp<ViewerApp<V>, <V as ArtifactViewer>::Members>;
+
     pub trait ArtifactEditor: Default + Send + 'static {
         /// 🎭️ Always `Editor` in practice — defaulted so implementors never restate it.
         const ROLE: AppRole = AppRole::Editor;
+        /// 🧩️ The closed member roster every surface of this editor runs over — the ONE place a bundle
+        /// reads it from, so `genesis_member_schema::<Self::Members>` resolves every dialect
+        /// `genesis_child_pack` derives no matter which plugin registers the surface. `NoMembers` (the
+        /// default) is right for an editor that composes no children; an editor that does state its own.
+        type Members: store::SpaceMember + store::MemberFactory + Send + 'static = store::NoMembers;
         const DIALECT: Dialect;
         /// 🧬️ Supplies the editor's bounded projection of real parent child fields.
         fn child_restore_projection(_snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, Fault> {
@@ -30925,8 +30988,8 @@ pub mod app {
         fn window_engagements(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &ViewModel) -> HashMap<String, WindowEngagement> {
             HashMap::new()
         }
-        fn window_engagements_with_request_context(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view_state: &ViewModel, transient: &TransientView<'_, Self::Transient>) -> HashMap<String, WindowEngagement> {
-            let _ = transient;
+        fn window_engagements_with_request_context(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view_state: &ViewModel, transient: &TransientView<'_, Self::Transient>, interaction: &InteractionView<'_>) -> HashMap<String, WindowEngagement> {
+            let _ = (transient, interaction);
             Self::window_engagements(doc, cfg, view_state)
         }
         fn window_measures(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
@@ -31062,6 +31125,9 @@ pub mod app {
     /// edits an `ArtifactEditor` made) but `handle` returns `ViewEmit`, which cannot structurally
     /// carry an artifact or draft mutation. `ViewerApp<V>` below is the sole `ArtifactApp` implementor.
     pub trait ArtifactViewer: Default + Send + 'static {
+        /// 🧩️ Read-only twin of `ArtifactEditor::Members` — the roster this viewer's composed children
+        /// are opened through, carried by the app rather than by whoever registers it.
+        type Members: store::SpaceMember + store::MemberFactory + Send + 'static = store::NoMembers;
         /// 🛂️ Viewers explicitly declare every nontrivial store owner; absent authority fails closed.
         fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
             None
@@ -31275,8 +31341,8 @@ pub mod app {
         fn window_engagements(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &ViewModel) -> HashMap<String, WindowEngagement> {
             HashMap::new()
         }
-        fn window_engagements_with_request_context(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view_state: &ViewModel, transient: &TransientView<'_, Self::Transient>) -> HashMap<String, WindowEngagement> {
-            let _ = transient;
+        fn window_engagements_with_request_context(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view_state: &ViewModel, transient: &TransientView<'_, Self::Transient>, interaction: &InteractionView<'_>) -> HashMap<String, WindowEngagement> {
+            let _ = (transient, interaction);
             Self::window_engagements(doc, cfg, view_state)
         }
         fn window_measures(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
@@ -31638,8 +31704,8 @@ pub mod app {
         async fn window_engagements(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view_state: &ViewModel) -> HashMap<String, WindowEngagement> {
             E::window_engagements(doc, cfg, view_state)
         }
-        async fn window_engagements_with_request_context(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view_state: &ViewModel, transient: &TransientView<'_, Self::Transient>) -> HashMap<String, WindowEngagement> {
-            E::window_engagements_with_request_context(doc, cfg, view_state, transient)
+        async fn window_engagements_with_request_context(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view_state: &ViewModel, transient: &TransientView<'_, Self::Transient>, interaction: &InteractionView<'_>) -> HashMap<String, WindowEngagement> {
+            E::window_engagements_with_request_context(doc, cfg, view_state, transient, interaction)
         }
         async fn window_measures(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view_state: &ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
             E::window_measures(doc, cfg, view_state)
@@ -31901,8 +31967,8 @@ pub mod app {
         async fn window_engagements(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view_state: &ViewModel) -> HashMap<String, WindowEngagement> {
             V::window_engagements(doc, cfg, view_state)
         }
-        async fn window_engagements_with_request_context(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view_state: &ViewModel, transient: &TransientView<'_, Self::Transient>) -> HashMap<String, WindowEngagement> {
-            V::window_engagements_with_request_context(doc, cfg, view_state, transient)
+        async fn window_engagements_with_request_context(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view_state: &ViewModel, transient: &TransientView<'_, Self::Transient>, interaction: &InteractionView<'_>) -> HashMap<String, WindowEngagement> {
+            V::window_engagements_with_request_context(doc, cfg, view_state, transient, interaction)
         }
         async fn window_measures(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view_state: &ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
             V::window_measures(doc, cfg, view_state)
@@ -32239,11 +32305,13 @@ pub mod app {
         /// ✏️ Builds an editor `SurfaceDeclaration` from `E` — `def` is `Editor::builder(E::DIALECT)
         /// ...build_definition()`, same as `PluginBuilder::editor::<E>`. `rights: Rights::Write`
         /// signals the commit walk to attach BOTH Read and Write document capabilities (baseline Read
-        /// always, plus Write when `rights == Rights::Write`) — see `capaasync bility_rows_for`.
-        pub fn editor_surface<E: ArtifactEditor, PA: PluginApp + From<VcsArtifactApp<EditorApp<E>>>>(def: AppDefinition) -> SurfaceDeclaration<PA> {
+        /// always, plus Write when `rights == Rights::Write`) — see `capaasync bility_rows_for`. The
+        /// concrete app retains `E::Members`, so a composed editor keeps its typed child fleet in every
+        /// bundle that declares this subset.
+        pub fn editor_surface<E: ArtifactEditor, PA: PluginApp + From<VcsArtifactApp<EditorApp<E>, E::Members>>>(def: AppDefinition) -> SurfaceDeclaration<PA> {
             // 🚫️async: E4 fn-pointer slot
-            fn factory<E: ArtifactEditor, PA: PluginApp + From<VcsArtifactApp<EditorApp<E>>>>(def: &AppDefinition) -> PA {
-                PA::from(resolve_ready(VcsArtifactApp::with_registry_on_bus(EditorApp::<E>::default(), AppActionRegistry::from_definition(def), semio_framework::ActionBus::production())))
+            fn factory<E: ArtifactEditor, PA: PluginApp + From<VcsArtifactApp<EditorApp<E>, E::Members>>>(def: &AppDefinition) -> PA {
+                PA::from(resolve_ready(VcsArtifactApp::<EditorApp<E>, E::Members>::with_registry_on_bus(EditorApp::<E>::default(), AppActionRegistry::from_definition(def), semio_framework::ActionBus::production())))
             }
             // 🚫️async: E4 fn-pointer slot — `E::app_schema()` is a genuine (pure, non-suspending)
             // AFIT trait method; resolved synchronously via `resolve_ready` to fit the bare slot.
@@ -32253,37 +32321,12 @@ pub mod app {
             SurfaceDeclaration { definition: def, factory: factory::<E, PA>, app_schema: app_schema::<E>, mutation_roster: None, rights: Rights::Write }
         }
 
-        /// 🧩️ Builds an editor declaration whose concrete app retains its typed composed-member fleet.
-        pub fn editor_surface_with_members<E, M, PA>(def: AppDefinition) -> SurfaceDeclaration<PA>
-        where
-            E: ArtifactEditor,
-            M: store::SpaceMember + store::MemberFactory + Send + 'static,
-            PA: PluginApp + From<VcsArtifactApp<EditorApp<E>, M>>,
-        {
-            fn factory<E, M, PA>(def: &AppDefinition) -> PA
-            where
-                E: ArtifactEditor,
-                M: store::SpaceMember + store::MemberFactory + Send + 'static,
-                PA: PluginApp + From<VcsArtifactApp<EditorApp<E>, M>>,
-            {
-                PA::from(resolve_ready(VcsArtifactApp::<EditorApp<E>, M>::with_registry_on_bus(
-                    EditorApp::<E>::default(),
-                    AppActionRegistry::from_definition(def),
-                    semio_framework::ActionBus::production(),
-                )))
-            }
-            fn app_schema<E: ArtifactEditor>() -> Option<::semio_framework_schema::AppSchemaDescriptor> {
-                E::app_schema()
-            }
-            SurfaceDeclaration { definition: def, factory: factory::<E, M, PA>, app_schema: app_schema::<E>, mutation_roster: None, rights: Rights::Write }
-        }
-
         /// 👁️ Viewer twin of `editor_surface` — `rights: Rights::Read` (baseline Read only, contract
         /// §2.3 clause 4: a viewer's document store attaches Read onasync ly, never Write).
-        pub fn viewer_surface<V: ArtifactViewer, PA: PluginApp + From<VcsArtifactApp<ViewerApp<V>>>>(def: AppDefinition) -> SurfaceDeclaration<PA> {
+        pub fn viewer_surface<V: ArtifactViewer, PA: PluginApp + From<VcsArtifactApp<ViewerApp<V>, V::Members>>>(def: AppDefinition) -> SurfaceDeclaration<PA> {
             // 🚫️async: E4 fn-pointer slot
-            fn factory<V: ArtifactViewer, PA: PluginApp + From<VcsArtifactApp<ViewerApp<V>>>>(def: &AppDefinition) -> PA {
-                PA::from(resolve_ready(VcsArtifactApp::with_registry_on_bus(ViewerApp::<V>::default(), AppActionRegistry::from_definition(def), semio_framework::ActionBus::production())))
+            fn factory<V: ArtifactViewer, PA: PluginApp + From<VcsArtifactApp<ViewerApp<V>, V::Members>>>(def: &AppDefinition) -> PA {
+                PA::from(resolve_ready(VcsArtifactApp::<ViewerApp<V>, V::Members>::with_registry_on_bus(ViewerApp::<V>::default(), AppActionRegistry::from_definition(def), semio_framework::ActionBus::production())))
             }
             // 🚫️async: E4 fn-pointer slot — see `editor_surface`'s `app_schema` doc.
             fn app_schema<V: ArtifactViewer>() -> Option<::semio_framework_schema::AppSchemaDescriptor> {
@@ -32292,30 +32335,6 @@ pub mod app {
             SurfaceDeclaration { definition: def, factory: factory::<V, PA>, app_schema: app_schema::<V>, mutation_roster: None, rights: Rights::Read }
         }
 
-        /// 🧸️ Builds a viewer declaration whose concrete app retains read-only typed composed members.
-        pub fn viewer_surface_with_members<V, M, PA>(def: AppDefinition) -> SurfaceDeclaration<PA>
-        where
-            V: ArtifactViewer,
-            M: store::SpaceMember + store::MemberFactory + Send + 'static,
-            PA: PluginApp + From<VcsArtifactApp<ViewerApp<V>, M>>,
-        {
-            fn factory<V, M, PA>(def: &AppDefinition) -> PA
-            where
-                V: ArtifactViewer,
-                M: store::SpaceMember + store::MemberFactory + Send + 'static,
-                PA: PluginApp + From<VcsArtifactApp<ViewerApp<V>, M>>,
-            {
-                PA::from(resolve_ready(VcsArtifactApp::<ViewerApp<V>, M>::with_registry_on_bus(
-                    ViewerApp::<V>::default(),
-                    AppActionRegistry::from_definition(def),
-                    semio_framework::ActionBus::production(),
-                )))
-            }
-            fn app_schema<V: ArtifactViewer>() -> Option<::semio_framework_schema::AppSchemaDescriptor> {
-                V::app_schema()
-            }
-            SurfaceDeclaration { definition: def, factory: factory::<V, M, PA>, app_schema: app_schema::<V>, mutation_roster: None, rights: Rights::Read }
-        }
         //#endregion 🔖️SurfaceDeclaration
 
         //#region 🔖️SubsetDeclaration
@@ -38597,6 +38616,8 @@ pub use app::tool_run::{is_tool_run_action_id, ToolRunActionOutcome, ToolRunDriv
 pub use app::ActionFactory;
 pub use app::{
     artifact_inference_service,
+    assert_editor_genesis_children_declared,
+    assert_viewer_genesis_children_declared,
     bounded_config_store_disposer,
     bounded_config_store_one_item_preparation_factory,
     bounded_config_store_owners,

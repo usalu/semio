@@ -1,7 +1,7 @@
 type TestSource = { readonly directory: string; readonly url: string };
 
 export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, source: TestSource): Promise<void> {
-  const { GIS_MAP_DEFAULT_PREFETCH_BOUNDS, PLAYGROUND_PLAY_BOOT_APPEARANCE_SCRIPT, PLAYGROUND_PLAY_BOOT_INLINE_STYLE, PLAYGROUND_PLAY_BOOT_REVEAL_SCRIPT, PLAYGROUND_PLAY_BOOT_THEME_SCRIPT, PLAYGROUND_WASM_STUB_PREFIX, SEMIO_ASSET_ROOT, SEMIO_FAVICON_HEAD_HTML, contentTypeForStaticDirAsset, createServer, createWorkspaceViteResolveConfig, existsSync, fileURLToPath, findWorkspacePackages, isPlaygroundOptimizedDepUrl, playgroundOptimizedDepUrlPrefix, listMapTilesForBounds, mapTileCacheRoots, meshAssetTransportUrl, meshCollectionVitePlugin, mkdirSync, playgroundAssetVitePlugins, playgroundFlowWasmDevStubPlugin, playgroundPlayBootHtmlPlugin, playgroundSceneHostResolveAliases, playgroundWasmStubKey, prefetchMapTiles, resolve, resolveGisMapTileServeMode, resolveMeshAsset, resolveSemioAssetRoot, rewriteSpaFallbackToEmojiEntry, semioFaviconSources, semioFaviconSvgMarkup, semioFaviconVitePlugin, semioHostHtmlString, semioHostHtmlVitePlugin, startAssetServer, statusSurfaceHtml, tileProxyVitePlugin, writeFileSync } = dependencies;
+  const { GIS_MAP_DEFAULT_PREFETCH_BOUNDS, PLAYGROUND_PLAY_BOOT_APPEARANCE_SCRIPT, PLAYGROUND_PLAY_BOOT_INLINE_STYLE, PLAYGROUND_PLAY_BOOT_REVEAL_SCRIPT, PLAYGROUND_PLAY_BOOT_THEME_SCRIPT, PLAYGROUND_WASM_STUB_PREFIX, SEMIO_ASSET_ROOT, SEMIO_FAVICON_HEAD_HTML, contentTypeForStaticDirAsset, createServer, createWorkspaceViteResolveConfig, existsSync, fileURLToPath, findWorkspacePackages, isPlaygroundOptimizedDepUrl, playgroundOptimizedDepUrlPrefix, listMapTilesForBounds, mapTileCacheRoots, meshAssetTransportUrl, meshCollectionVitePlugin, mkdirSync, mkdtempSync, playgroundAssetVitePlugins, playgroundFlowWasmDevStubPlugin, playgroundPlayBootHtmlPlugin, playgroundSceneHostResolveAliases, playgroundWasmStubKey, prefetchMapTiles, resolve, resolveGisMapTileServeMode, resolveMeshAsset, resolveSemioAssetRoot, rewriteSpaFallbackToEmojiEntry, rmSync, semioFaviconSources, semioFaviconSvgMarkup, semioFaviconVitePlugin, semioHostHtmlString, semioHostHtmlVitePlugin, startAssetServer, staticDirVitePlugin, statusSurfaceHtml, tileProxyVitePlugin, tmpdir, writeFileSync, join } = dependencies;
   type PlaygroundAssetSpec = any;
 
   const { describe, expect, it } = vitest;
@@ -92,6 +92,28 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(contentTypeForStaticDirAsset("/🔌️plugin-modules/⛏️sourcing/sourcing_plugin.js")).toBe("text/javascript");
       expect(contentTypeForStaticDirAsset("/🔌️plugin-modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/cli.js")).toBe("text/javascript");
       expect(contentTypeForStaticDirAsset("/🔌️plugin-modules/🧩️puzzle/🕸️puzzle_plugin.wasm")).toBe("application/wasm");
+    });
+  });
+
+  describe("staticDirVitePlugin", () => {
+    it("answers 404 for missing files under the static route instead of SPA fallback", async () => {
+      const sandbox = mkdtempSync(join(tmpdir(), "semio-static-dir-404-"));
+      try {
+        const inputDir = join(sandbox, "📥️input");
+        mkdirSync(inputDir, { recursive: true });
+        writeFileSync(join(inputDir, "present.png"), Buffer.from([0x89, 0x50, 0x4e, 0x47]));
+        let middleware: ((req: import("node:http").IncomingMessage, res: import("node:http").ServerResponse, next: () => void) => void) | undefined;
+        const plugin = staticDirVitePlugin(sandbox, { kind: "static-dir", route: "/fixture", root: "📥️input" })[0]!;
+        plugin.configureServer?.({ middlewares: { use: (fn: typeof middleware) => { middleware = fn; } } } as never);
+        expect(middleware).toBeDefined();
+        const missingStatus = await new Promise<number>((resolvePromise) => {
+          const response = { statusCode: 200, end() { resolvePromise(this.statusCode); } };
+          middleware!({ url: "/fixture/missing.png" } as import("node:http").IncomingMessage, response as import("node:http").ServerResponse, () => resolvePromise(200));
+        });
+        expect(missingStatus).toBe(404);
+      } finally {
+        rmSync(sandbox, { recursive: true, force: true });
+      }
     });
   });
 

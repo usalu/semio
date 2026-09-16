@@ -5,7 +5,7 @@
 //! read-only variant, not the editable one).
 
 use crate::EnergyModelSnapshot;
-use semio_framework_plugin::app::{TreeNodeView, TreeView, TreeWindowKit, WindowKit};
+use semio_framework_plugin::app::{TreeWindowKit, WindowKit};
 use semio_framework_plugin::{BuiltNode, LocalizedLabel, UiAssemblyResult, WindowKindDefinition};
 
 //#region 🔖️Constants
@@ -21,58 +21,11 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-/// 👁️ Pure `EnergyModelSnapshot -> UiNode` read: `name`/`version` plus one leaf per collection on
-/// `crate::model::Model`, each labeled with its live element count — a real overview, no mutation.
+/// 👁️ Pure `EnergyModelSnapshot -> UiNode` read: the same grouped tree the editor draws, from
+/// `crate::energy_structure_tree` (artifact root, never the editor surface) — grouped so no node
+/// exceeds the kit's 32-sibling ceiling.
 pub fn render(document: &EnergyModelSnapshot) -> UiAssemblyResult<BuiltNode> {
-    let model = crate::energy_model(document);
-    fn leaf(id: &str, label: String) -> TreeNodeView {
-        TreeNodeView { id: id.into(), label, children: Vec::new() }
-    }
-    let mut children = vec![
-        leaf("name", format!("Name: {}", model.name)),
-        leaf("version", format!("Version: {}", model.version)),
-        leaf("site", format!("Site: lat {:.2}°, lon {:.2}°, elev {:.1} m", model.site.latitude_deg, model.site.longitude_deg, model.site.elevation_m)),
-    ];
-    let counts: &[(&str, usize)] = &[
-        ("zones", model.zones.len()),
-        ("spaces", model.spaces.len()),
-        ("surfaces", model.surfaces.len()),
-        ("fenestrations", model.fenestrations.len()),
-        ("materials", model.materials.len()),
-        ("constructions", model.constructions.len()),
-        ("people", model.people.len()),
-        ("lighting", model.lighting.len()),
-        ("equipment", model.equipment.len()),
-        ("thermostats", model.thermostats.len()),
-        ("humidistats", model.humidistats.len()),
-        ("setpointManagers", model.setpoint_managers.len()),
-        ("idealLoads", model.ideal_loads.len()),
-        ("zoneEquipment", model.zone_equipment.len()),
-        ("airLoops", model.air_loops.len()),
-        ("plantLoops", model.plant_loops.len()),
-        ("outdoorAirSystems", model.outdoor_air_systems.len()),
-        ("infiltrations", model.infiltrations.len()),
-        ("mechanicalVentilations", model.mechanical_ventilations.len()),
-        ("shadingSurfaces", model.shading_surfaces.len()),
-        ("spaceLists", model.space_lists.len()),
-        ("thermalEnclosures", model.thermal_enclosures.len()),
-        ("adjacencyPairs", model.adjacency_pairs.len()),
-        ("electricalLoadCenters", model.electrical_load_centers.len()),
-        ("pvSystems", model.pv_systems.len()),
-        ("batteryStorage", model.battery_storage.len()),
-        ("shwSystems", model.shw_systems.len()),
-        ("solarThermalSystems", model.solar_thermal_systems.len()),
-        ("refrigerationSystems", model.refrigeration_systems.len()),
-        ("waterSystems", model.water_systems.len()),
-        ("faults", model.faults.len()),
-        ("outputVariables", model.output_variables.len()),
-        ("sizingObjects", model.sizing_objects.len()),
-        ("daylightZones", model.daylight_zones.len()),
-        ("roomAirModels", model.room_air_models.len()),
-    ];
-    children.extend(counts.iter().map(|(name, count)| leaf(name, format!("{name}: {count}"))));
-    let root = TreeNodeView { id: "model".into(), label: format!("{} (v{})", model.name, model.version), children };
-    TreeWindowKit::render(&TreeView { roots: vec![root] })
+    TreeWindowKit::render(&crate::energy_structure_tree(&crate::energy_model(document)))
 }
 //#endregion 🔖️Render
 

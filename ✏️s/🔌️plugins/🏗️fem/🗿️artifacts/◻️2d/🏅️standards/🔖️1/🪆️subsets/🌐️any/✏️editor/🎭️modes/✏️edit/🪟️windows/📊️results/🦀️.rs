@@ -8,7 +8,7 @@ pub mod config;
 type StressContourTriangle = ([(f64, f64); 3], [f64; 3]);
 
 use crate::app_surface::{hex_to_rgb01, normalize_mode_shape, DisplayMode, ResultDisplay, MODE_SHAPE_AMPLITUDE_RATIO, VON_MISES_BANDS};
-use crate::editor::fem2d::modes::edit::windows::model::{fem2d_deformed_shape_layers, fem2d_element_endpoints, fem2d_model_extent, fem2d_region_mesh_triangles, fem2d_structure_layers, find_node_2d, screen_2d, MOMENT_SCALE_2D};
+use crate::editor::fem2d::modes::edit::windows::model::{fem2d_deformed_shape_layers, fem2d_element_endpoints, fem2d_model_extent, fem2d_region_mesh_triangles, fem2d_structure_layers_with, find_node_2d, screen_2d, MOMENT_SCALE_2D};
 use crate::model::ElementResult;
 use crate::{element_id, Fem2dSnapshot, Viewport2d};
 use dsl::json::Value;
@@ -117,14 +117,151 @@ fn von_mises_legend_layers(min: f64, max: f64) -> Vec<Value> {
 }
 //#endregion 🔖️StressContourHelpers
 
+//#region 🔖️ResultsCache
+/// 🧠️ The solved fields of ONE document revision, held across the ~30 renders a second that
+/// playback drives. Playback moves the PHASE, never the model, so re-solving per frame would burn a
+/// full FEM assembly+factorisation on a scalar that already had every answer it needed.
+///
+/// Keyed by `(app_instance_id, canonical_base_revision)` off the render operation: a different key
+/// is a different document (or a different app instance), and the whole entry is then DROPPED rather
+/// than grown — exactly one revision is ever resident, so a long editing session cannot leak the
+/// guest's heap one revision at a time. A render with no operation (every fixture render) bypasses
+/// the cache completely and solves into the caller's own frame.
+struct Fem2dResultsCache {
+    key: ResultsCacheKey,
+    statics: Option<HashMap<String, crate::model::StaticResult>>,
+    modes: Vec<(ModeKey, ModeValues)>,
+}
+
+/// 🪪️ The app instance and the canonical revision its document stands at.
+type ResultsCacheKey = (u32, [u8; 32]);
+
+/// 🎵️ One normalized mode shape: its eigenvalue (frequency in Hz, or buckling factor) and values.
+type ModeValues = (f64, HashMap<String, [f64; 6]>);
+
+#[derive(Clone, PartialEq, Eq)]
+pub enum ModeKey {
+    Modal(usize),
+    Buckling(String, usize),
+}
+
+/// 🧠️ How many distinct mode shapes ride along with one cached revision before the oldest is evicted.
+const RESULTS_CACHE_MODES: usize = 8;
+
+thread_local! {
+    static RESULTS_CACHE: std::cell::RefCell<Option<Fem2dResultsCache>> = const { std::cell::RefCell::new(None) };
+    /// 🧪️ How many solver runs the cache actually let through, so a law can prove a frame was cheap.
+    static RESULTS_SOLVES: std::cell::Cell<u32> = const { std::cell::Cell::new(0) };
+}
+
+/// 🪪️ The cache key of one render, or `None` for a render outside any admitted operation.
+pub fn results_cache_key(operation: Option<semio_framework_plugin::AppRenderOperationContext>) -> Option<ResultsCacheKey> {
+    operation.map(|operation| (operation.app_instance_id, operation.canonical_base_revision))
+}
+
+/// 🧪️ Solver runs since [`reset_results_cache`].
+pub fn results_solve_count() -> u32 {
+    RESULTS_SOLVES.with(std::cell::Cell::get)
+}
+
+/// 🧪️ Drops the resident revision and the solve counter — the starting state of every cache law.
+pub fn reset_results_cache() {
+    RESULTS_CACHE.with(|cache| *cache.borrow_mut() = None);
+    RESULTS_SOLVES.with(|count| count.set(0));
+}
+
+fn note_solve() {
+    RESULTS_SOLVES.with(|count| count.set(count.get().saturating_add(1)));
+}
+
+fn entry_for(cache: &mut Option<Fem2dResultsCache>, key: ResultsCacheKey) -> &mut Fem2dResultsCache {
+    if cache.as_ref().map(|entry| entry.key) != Some(key) {
+        *cache = Some(Fem2dResultsCache { key, statics: None, modes: Vec::new() });
+    }
+    cache.as_mut().expect("the cache entry was just admitted for this key")
+}
+
+fn solve_statics(doc: &Fem2dSnapshot) -> Result<HashMap<String, crate::model::StaticResult>, String> {
+    note_solve();
+    crate::fem2d_engine::fem2d_solve_all(doc).map_err(|error| error.to_string())
+}
+
+fn solve_mode(doc: &Fem2dSnapshot, key: &ModeKey) -> Result<ModeValues, String> {
+    note_solve();
+    let values = match key {
+        ModeKey::Modal(index) => crate::fem2d_engine::modal_buckling::fem2d_modal_mode_values(doc, *index),
+        ModeKey::Buckling(case_id, index) => crate::fem2d_engine::modal_buckling::fem2d_buckling_mode_values(doc, case_id, *index),
+    };
+    let (eigenvalue, mut shape) = values.map_err(|error| error.to_string())?;
+    normalize_mode_shape(&mut shape);
+    Ok((eigenvalue, shape))
+}
+
+/// 🧠️ Runs `read` over the document's solved static fields, solving at most once per revision.
+pub fn with_static_results<T>(doc: &Fem2dSnapshot, key: Option<ResultsCacheKey>, read: impl FnOnce(&HashMap<String, crate::model::StaticResult>) -> T) -> Result<T, String> {
+    let Some(key) = key else {
+        return Ok(read(&solve_statics(doc)?));
+    };
+    RESULTS_CACHE.with(|cache| {
+        let mut cache = cache.borrow_mut();
+        let entry = entry_for(&mut cache, key);
+        if entry.statics.is_none() {
+            entry.statics = Some(solve_statics(doc)?);
+        }
+        Ok(read(entry.statics.as_ref().expect("the static results were just admitted")))
+    })
+}
+
+/// 🧠️ Runs `read` over one normalized mode shape, solving at most once per (revision, mode).
+pub fn with_mode_values<T>(doc: &Fem2dSnapshot, key: Option<ResultsCacheKey>, mode: ModeKey, read: impl FnOnce(&ModeValues) -> T) -> Result<T, String> {
+    let Some(key) = key else {
+        return Ok(read(&solve_mode(doc, &mode)?));
+    };
+    RESULTS_CACHE.with(|cache| {
+        let mut cache = cache.borrow_mut();
+        let entry = entry_for(&mut cache, key);
+        if !entry.modes.iter().any(|(candidate, _)| candidate == &mode) {
+            let values = solve_mode(doc, &mode)?;
+            if entry.modes.len() >= RESULTS_CACHE_MODES {
+                entry.modes.remove(0);
+            }
+            entry.modes.push((mode.clone(), values));
+        }
+        let (_, values) = entry.modes.iter().find(|(candidate, _)| candidate == &mode).expect("the mode values were just admitted");
+        Ok(read(values))
+    })
+}
+//#endregion 🔖️ResultsCache
+
 //#region 🔖️Render
 /// 📊️ Results window dispatcher — picks the static/modal/buckling render based on `display`.
-pub fn render(doc: &Fem2dSnapshot, display: &ResultDisplay, camera: &Viewport2d) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(
+    doc: &Fem2dSnapshot,
+    display: &ResultDisplay,
+    camera: &Viewport2d,
+    window: &config::Fem2dResultsWindowConfig,
+    interaction: &crate::editor::fem2d::interaction::Fem2dInteractionSnapshot,
+    operation: Option<semio_framework_plugin::AppRenderOperationContext>,
+) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+    let animation = &window.animation;
+    let key = results_cache_key(operation);
     match display.mode {
-        DisplayMode::Static => render_static(doc, display.source_id.as_deref(), camera),
-        DisplayMode::Modal(mode_index) => render_modal(doc, mode_index, camera),
-        DisplayMode::Buckling(mode_index) => render_buckling(doc, display.source_id.as_deref(), mode_index, camera),
+        DisplayMode::Static => render_static(doc, display.source_id.as_deref(), camera, interaction, animation, key),
+        DisplayMode::Modal(mode_index) => render_modal(doc, mode_index, camera, interaction, animation, key),
+        DisplayMode::Buckling(mode_index) => render_buckling(doc, display.source_id.as_deref(), mode_index, camera, interaction, animation, key),
     }
+}
+
+/// ⏯️ The transport read-out a running window carries in its own corner — silent while stopped, so a
+/// still results window looks exactly as it always did.
+fn playback_caption_layer(animation: &config::Fem2dResultsAnimation) -> Option<Value> {
+    animation.playing.then(|| {
+        dsl::json!({
+            "id": "playback-caption",
+            "transform": [1.0, 0.0, 0.0, 1.0, 10.0, 36.0],
+            "text": { "content": format!("phase {:.2} · \u{25b6} {} Hz", animation.phase, animation.speed), "size": 11.0 },
+        })
+    })
 }
 
 fn placeholder(label: Label) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
@@ -136,25 +273,52 @@ fn placeholder(label: Label) -> semio_framework_plugin::UiAssemblyResult<BuiltNo
 /// nodal-averaged, marching-triangle-banded von-Mises stress contour with a color-swatch legend.
 /// `source_id` selects a `fem2d_solve_all` case/combination id, falling back to the first load case
 /// when `None`/unknown (preserves v0's default behavior).
-fn render_static(doc: &Fem2dSnapshot, source_id: Option<&str>, camera: &Viewport2d) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    let results = match crate::fem2d_engine::fem2d_solve_all(doc) {
-        Ok(results) => results,
-        Err(e) => return placeholder(Label::data(format!("Analysis error: {e}"))),
+fn render_static(
+    doc: &Fem2dSnapshot,
+    source_id: Option<&str>,
+    camera: &Viewport2d,
+    interaction: &crate::editor::fem2d::interaction::Fem2dInteractionSnapshot,
+    animation: &config::Fem2dResultsAnimation,
+    key: Option<ResultsCacheKey>,
+) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+    let amplitude = animation.amplitude();
+    let scene = with_static_results(doc, key, |results| {
+        let case_id = source_id.filter(|id| results.contains_key(*id)).map(str::to_string).or_else(|| doc.load_cases.first().map(|c| c.id.clone()));
+        let Some(case_id) = case_id else {
+            return Err("No load case defined".to_string());
+        };
+        let Some(result) = results.get(&case_id) else {
+            return Err(format!("Result not found: {case_id}"));
+        };
+        Ok(static_layers(doc, &case_id, result, interaction, animation, amplitude))
+    });
+    let layers = match scene {
+        Ok(Ok(layers)) => layers,
+        Ok(Err(message)) => return placeholder(Label::data(message)),
+        Err(error) => return placeholder(Label::data(format!("Analysis error: {error}"))),
     };
-    let case_id = source_id.filter(|id| results.contains_key(*id)).map(str::to_string).or_else(|| doc.load_cases.first().map(|c| c.id.clone()));
-    let Some(case_id) = case_id else {
-        return placeholder(Label::data("No load case defined"));
-    };
-    let Some(result) = results.get(&case_id) else {
-        return placeholder(Label::data(format!("Result not found: {case_id}")));
-    };
+    let layers_json = dsl::json::to_string(&Value::Array(layers));
+    crate::app_surface::canvas_2d_surface(BODY_KEY, &Canvas2dScene { camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json, snapshot: None, tool_run_trace: None, lanes: Vec::new() })
+}
 
-    let mut layers = fem2d_structure_layers(doc, "#334155", "#334155", "#334155");
+/// 📊️ Every layer one static frame paints. `amplitude` is the waveform read of the playback phase:
+/// the deformed shape, the reaction magnitudes and the moment diagram all ride the SAME factor, so a
+/// frame is one consistent instant of the structure's motion rather than a mix of poses.
+fn static_layers(
+    doc: &Fem2dSnapshot,
+    case_id: &str,
+    result: &crate::model::StaticResult,
+    interaction: &crate::editor::fem2d::interaction::Fem2dInteractionSnapshot,
+    animation: &config::Fem2dResultsAnimation,
+    amplitude: f64,
+) -> Vec<Value> {
+    let mut layers = fem2d_structure_layers_with(doc, "#334155", "#334155", "#334155", interaction);
     let mut disp_map: HashMap<String, [f64; 6]> = HashMap::new();
     for d in &result.displacements {
         disp_map.insert(d.node_id.clone(), d.values);
     }
-    layers.extend(fem2d_deformed_shape_layers(doc, &disp_map, doc.analysis.deformation_scale));
+    layers.extend(fem2d_deformed_shape_layers(doc, &disp_map, doc.analysis.deformation_scale * amplitude));
+    layers.extend(playback_caption_layer(animation));
 
     //#region 🔖️ReactionLabels
     for reaction in &result.reactions {
@@ -163,7 +327,7 @@ fn render_static(doc: &Fem2dSnapshot, source_id: Option<&str>, camera: &Viewport
         layers.push(dsl::json!({
             "id": format!("reaction-{}-{:?}", reaction.node_id, reaction.dof),
             "transform": [1.0, 0.0, 0.0, 1.0, sx + 8.0, sy + 14.0],
-            "text": { "content": format!("{:?}: {:.0} N", reaction.dof, reaction.value), "size": 10.0 },
+            "text": { "content": format!("{:?}: {:.0} N", reaction.dof, reaction.value * amplitude), "size": 10.0 },
         }));
     }
     //#endregion 🔖️ReactionLabels
@@ -185,7 +349,7 @@ fn render_static(doc: &Fem2dSnapshot, source_id: Option<&str>, camera: &Viewport
                     let t = s.x / model_length;
                     let bx = x0 + dx * t;
                     let by = y0 + dy * t;
-                    [bx + px * s.m * MOMENT_SCALE_2D, by + py * s.m * MOMENT_SCALE_2D]
+                    [bx + px * s.m * MOMENT_SCALE_2D * amplitude, by + py * s.m * MOMENT_SCALE_2D * amplitude]
                 })
                 .collect();
             layers.push(dsl::json!({
@@ -198,7 +362,7 @@ fn render_static(doc: &Fem2dSnapshot, source_id: Option<&str>, camera: &Viewport
     }
 
     //#region 🔖️StressContour
-    let nodal_von_mises = crate::fem2d_engine::mesh_preview::fem2d_nodal_von_mises(doc, &case_id).unwrap_or_default();
+    let nodal_von_mises = crate::fem2d_engine::mesh_preview::fem2d_nodal_von_mises(doc, case_id).unwrap_or_default();
     let mesh_triangles = fem2d_region_mesh_triangles(doc);
     let mut valued_triangles: Vec<StressContourTriangle> = Vec::new();
     for (_, tri_points, node_ids) in &mesh_triangles {
@@ -232,26 +396,37 @@ fn render_static(doc: &Fem2dSnapshot, source_id: Option<&str>, camera: &Viewport
     }
     //#endregion 🔖️StressContour
 
-    let layers_json = dsl::json::to_string(&Value::Array(layers));
-    crate::app_surface::canvas_2d_surface(BODY_KEY, &Canvas2dScene { camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json, snapshot: None, tool_run_trace: None, lanes: Vec::new() })
+    layers
 }
 
 /// 📊️ Modal mode-shape overlay: undeformed structure faintly plus the selected mode's deformed-shape
 /// polyline (normalized to unit peak, then scaled to `MODE_SHAPE_AMPLITUDE_RATIO` of the model's own
 /// extent — see `normalize_mode_shape`) and a frequency caption.
-fn render_modal(doc: &Fem2dSnapshot, mode_index: usize, camera: &Viewport2d) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    let (freq_hz, mut disp_map) = match crate::fem2d_engine::modal_buckling::fem2d_modal_mode_values(doc, mode_index) {
-        Ok(values) => values,
-        Err(e) => return placeholder(Label::data(format!("Modal analysis error: {e}"))),
+fn render_modal(
+    doc: &Fem2dSnapshot,
+    mode_index: usize,
+    camera: &Viewport2d,
+    interaction: &crate::editor::fem2d::interaction::Fem2dInteractionSnapshot,
+    animation: &config::Fem2dResultsAnimation,
+    key: Option<ResultsCacheKey>,
+) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+    let amplitude = animation.amplitude();
+    let extent = fem2d_model_extent(doc) * MODE_SHAPE_AMPLITUDE_RATIO;
+    let mode = with_mode_values(doc, key, ModeKey::Modal(mode_index), |(freq_hz, disp_map)| {
+        let mut layers = fem2d_structure_layers_with(doc, "#334155", "#334155", "#334155", interaction);
+        layers.extend(fem2d_deformed_shape_layers(doc, disp_map, extent * amplitude));
+        layers.push(dsl::json!({
+            "id": "modal-caption",
+            "transform": [1.0, 0.0, 0.0, 1.0, 10.0, 20.0],
+            "text": { "content": format!("Mode {}: {freq_hz:.3} Hz", mode_index + 1), "size": 12.0 },
+        }));
+        layers.extend(playback_caption_layer(animation));
+        layers
+    });
+    let layers = match mode {
+        Ok(layers) => layers,
+        Err(error) => return placeholder(Label::data(format!("Modal analysis error: {error}"))),
     };
-    normalize_mode_shape(&mut disp_map);
-    let mut layers = fem2d_structure_layers(doc, "#334155", "#334155", "#334155");
-    layers.extend(fem2d_deformed_shape_layers(doc, &disp_map, fem2d_model_extent(doc) * MODE_SHAPE_AMPLITUDE_RATIO));
-    layers.push(dsl::json!({
-        "id": "modal-caption",
-        "transform": [1.0, 0.0, 0.0, 1.0, 10.0, 20.0],
-        "text": { "content": format!("Mode {}: {freq_hz:.3} Hz", mode_index + 1), "size": 12.0 },
-    }));
     let layers_json = dsl::json::to_string(&Value::Array(layers));
     crate::app_surface::canvas_2d_surface(BODY_KEY, &Canvas2dScene { camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json, snapshot: None, tool_run_trace: None, lanes: Vec::new() })
 }
@@ -260,22 +435,35 @@ fn render_modal(doc: &Fem2dSnapshot, mode_index: usize, camera: &Viewport2d) -> 
 /// polyline (normalized to unit peak, then scaled to `MODE_SHAPE_AMPLITUDE_RATIO` of the model's own
 /// extent — see `normalize_mode_shape`) and a load-factor caption. `source_id` selects the reference
 /// load case, falling back to the first load case when `None`.
-fn render_buckling(doc: &Fem2dSnapshot, source_id: Option<&str>, mode_index: usize, camera: &Viewport2d) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+fn render_buckling(
+    doc: &Fem2dSnapshot,
+    source_id: Option<&str>,
+    mode_index: usize,
+    camera: &Viewport2d,
+    interaction: &crate::editor::fem2d::interaction::Fem2dInteractionSnapshot,
+    animation: &config::Fem2dResultsAnimation,
+    key: Option<ResultsCacheKey>,
+) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let Some(case_id) = source_id.map(str::to_string).or_else(|| doc.load_cases.first().map(|c| c.id.clone())) else {
         return placeholder(Label::data("No load case defined"));
     };
-    let (factor, mut disp_map) = match crate::fem2d_engine::modal_buckling::fem2d_buckling_mode_values(doc, &case_id, mode_index) {
-        Ok(values) => values,
-        Err(e) => return placeholder(Label::data(format!("Buckling analysis error: {e}"))),
+    let amplitude = animation.amplitude();
+    let extent = fem2d_model_extent(doc) * MODE_SHAPE_AMPLITUDE_RATIO;
+    let mode = with_mode_values(doc, key, ModeKey::Buckling(case_id, mode_index), |(factor, disp_map)| {
+        let mut layers = fem2d_structure_layers_with(doc, "#334155", "#334155", "#334155", interaction);
+        layers.extend(fem2d_deformed_shape_layers(doc, disp_map, extent * amplitude));
+        layers.push(dsl::json!({
+            "id": "buckling-caption",
+            "transform": [1.0, 0.0, 0.0, 1.0, 10.0, 20.0],
+            "text": { "content": format!("Buckling mode {}: factor {factor:.3}", mode_index + 1), "size": 12.0 },
+        }));
+        layers.extend(playback_caption_layer(animation));
+        layers
+    });
+    let layers = match mode {
+        Ok(layers) => layers,
+        Err(error) => return placeholder(Label::data(format!("Buckling analysis error: {error}"))),
     };
-    normalize_mode_shape(&mut disp_map);
-    let mut layers = fem2d_structure_layers(doc, "#334155", "#334155", "#334155");
-    layers.extend(fem2d_deformed_shape_layers(doc, &disp_map, fem2d_model_extent(doc) * MODE_SHAPE_AMPLITUDE_RATIO));
-    layers.push(dsl::json!({
-        "id": "buckling-caption",
-        "transform": [1.0, 0.0, 0.0, 1.0, 10.0, 20.0],
-        "text": { "content": format!("Buckling mode {}: factor {factor:.3}", mode_index + 1), "size": 12.0 },
-    }));
     let layers_json = dsl::json::to_string(&Value::Array(layers));
     crate::app_surface::canvas_2d_surface(BODY_KEY, &Canvas2dScene { camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json, snapshot: None, tool_run_trace: None, lanes: Vec::new() })
 }

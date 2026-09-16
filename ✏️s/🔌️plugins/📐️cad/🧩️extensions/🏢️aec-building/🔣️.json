@@ -1,23 +1,119 @@
 {
-  "descriptorVersion": 1,
-  "role": "plugin",
-  "manifest": {
-    "pluginId": "empty",
-    "label": "Empty",
-    "version": "0.0.0",
-    "apps": [],
-    "examples": [],
-    "capabilities": [],
-    "topicContributions": [],
-    "commands": [],
-    "artifactKinds": []
+  "contributions": {
+    "artifactContributions": [
+      {
+        "artifactKind": "s.cad.cad",
+        "inferences": [
+          {
+            "algorithmVersion": 1,
+            "artifactKind": "s.cad.cad",
+            "artifactSchema": "s.cad.cad",
+            "artifactSchemaVersion": 1,
+            "contributor": "cad-extension-aec-building",
+            "inferenceSchema": "s.cad-extension-aec-building.building-structure-summary",
+            "inferenceSchemaVersion": 1,
+            "owner": "cad-extension-aec-building",
+            "policyVersion": 1
+          }
+        ],
+        "mutations": [
+          {
+            "algorithmVersion": 1,
+            "mutationId": "cad.scene#cad-extension-aec-building:create-building-storey",
+            "schemaVersion": 1,
+            "semantics": {
+              "entity": "building-storey",
+              "kind": "create-building-storey",
+              "record": "CreatedBuildingStorey",
+              "verb": "create"
+            }
+          }
+        ]
+      }
+    ],
+    "topicContributions": [
+      {
+        "payload": {
+          "appId": "cad-play",
+          "computersJson": "{\"modelDefinitionIds\":[\"aec.building\"],\"importProfiles\":[{\"modelDefinitionId\":\"aec.building\",\"layerTypology\":{\"beam\":\"building.building.beam\",\"beams\":\"building.building.beam\",\"ceiling\":\"building.building.ceiling\",\"ceilings\":\"building.building.ceiling\",\"column\":\"building.building.column\",\"columns\":\"building.building.column\",\"door\":\"building.building.door\",\"doors\":\"building.building.door\",\"foundation\":\"building.building.foundation\",\"foundations\":\"building.building.foundation\",\"railing\":\"building.building.railing\",\"railings\":\"building.building.railing\",\"roof\":\"building.building.roof\",\"roofs\":\"building.building.roof\",\"slab\":\"building.building.slab\",\"slabs\":\"building.building.slab\",\"stair\":\"building.building.stair\",\"stairs\":\"building.building.stair\",\"wall\":\"building.building.wall\",\"walls\":\"building.building.wall\",\"window\":\"building.building.window\",\"windows\":\"building.building.window\"},\"fallbackTypology\":\"building.building.slab\"}]}",
+          "iconId": "building",
+          "label": "AEC Building",
+          "moduleId": "aec-building"
+        },
+        "topic": "cad.computer"
+      }
+    ]
   },
-  "execution": "isolated",
-  "quotas": {},
-  "contributions": {},
+  "descriptorVersion": 1,
+  "execution": "declarative",
+  "executionProtocol": {
+    "appChannelVersion": 17
+  },
   "hashes": {
-    "wasmSha256": "af59b52fd8c7f60d5eb1195406a65d4eaf2de59b471fe54ddddd9dd1ec7d70c0",
-    "coreWasmSha256": "af59b52fd8c7f60d5eb1195406a65d4eaf2de59b471fe54ddddd9dd1ec7d70c0",
-    "descriptorSha256": "4f06e341b211c507f489e3929838512d79015d79a3b8fd97f3c4ef1f3a2ee43e"
-  }
+    "coreWasmSha256": "0df9719249dfb5d440dc8f5eeb8ac5f5708211e8cd4d63f394dc755ea3f8bfa4",
+    "descriptorSha256": "1f19d4c67ac72540af629bd4cf96a355ffba85b801b1b29b2f6e27bcfe170ba9",
+    "wasmSha256": "414d09c761dd375f4d20e86bb41a06fc2a67029b598e1dd8a859b96b49748f23"
+  },
+  "manifest": {
+    "apps": [],
+    "artifactKinds": [],
+    "capabilities": [],
+    "commands": [],
+    "contributions": [
+      {
+        "artifactKind": "s.cad.cad",
+        "inferences": [
+          {
+            "algorithmVersion": 1,
+            "artifactKind": "s.cad.cad",
+            "artifactSchema": "s.cad.cad",
+            "artifactSchemaVersion": 1,
+            "contributor": "cad-extension-aec-building",
+            "inferenceSchema": "s.cad-extension-aec-building.building-structure-summary",
+            "inferenceSchemaVersion": 1,
+            "owner": "cad-extension-aec-building",
+            "policyVersion": 1
+          }
+        ],
+        "mutations": [
+          {
+            "algorithmVersion": 1,
+            "mutationId": "cad.scene#cad-extension-aec-building:create-building-storey",
+            "schemaVersion": 1,
+            "semantics": {
+              "entity": "building-storey",
+              "kind": "create-building-storey",
+              "record": "CreatedBuildingStorey",
+              "verb": "create"
+            }
+          }
+        ]
+      }
+    ],
+    "dependencies": [
+      {
+        "pluginId": "cad",
+        "version": "^0.1.0"
+      }
+    ],
+    "examples": [],
+    "label": "CAD AEC Building",
+    "pluginId": "cad-extension-aec-building",
+    "topicContributions": [
+      {
+        "payload": {
+          "appId": "cad-play",
+          "computersJson": "{\"modelDefinitionIds\":[\"aec.building\"],\"importProfiles\":[{\"modelDefinitionId\":\"aec.building\",\"layerTypology\":{\"beam\":\"building.building.beam\",\"beams\":\"building.building.beam\",\"ceiling\":\"building.building.ceiling\",\"ceilings\":\"building.building.ceiling\",\"column\":\"building.building.column\",\"columns\":\"building.building.column\",\"door\":\"building.building.door\",\"doors\":\"building.building.door\",\"foundation\":\"building.building.foundation\",\"foundations\":\"building.building.foundation\",\"railing\":\"building.building.railing\",\"railings\":\"building.building.railing\",\"roof\":\"building.building.roof\",\"roofs\":\"building.building.roof\",\"slab\":\"building.building.slab\",\"slabs\":\"building.building.slab\",\"stair\":\"building.building.stair\",\"stairs\":\"building.building.stair\",\"wall\":\"building.building.wall\",\"walls\":\"building.building.wall\",\"window\":\"building.building.window\",\"windows\":\"building.building.window\"},\"fallbackTypology\":\"building.building.slab\"}]}",
+          "iconId": "building",
+          "label": "AEC Building",
+          "moduleId": "aec-building"
+        },
+        "topic": "cad.computer"
+      }
+    ],
+    "version": "0.1.0"
+  },
+  "packageId": "",
+  "quotas": {},
+  "role": "extension"
 }

@@ -8,7 +8,7 @@ Feature: Apply every typed fem2d load mutation twice — once in Rust, once in P
 
   This case is a CROSS-LANGUAGE DIFFERENTIAL, relocated out of the artifact-level `mutate-fem2d-1`
   case in ticket `26/09/02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION`
-  so this subset's own kinds (`create-load-case`, `delete-load-case`, `add-load`, `remove-load`, `change-load-case-self-weight`, `create-combination`, `delete-combination`) have a subset-owned test. The reference is
+  so this subset's own kinds (`create-load-case`, `delete-load-case`, `add-load`, `remove-load`, `change-load-case-self-weight`, `create-combination`, `delete-combination`, `replace-load`, `change-load-case-name`, `replace-combination`) have a subset-owned test. The reference is
   `🐍️.py` in this directory: a second implementation of the `s.fem.fem2d` structural model and
   this subset's typed mutations, written in Python from
   `../../../🌐️any/🧬️schema/📸️snapshot/🔣️.json` (the nine members, `additionalProperties: false`),
@@ -66,6 +66,9 @@ Feature: Apply every typed fem2d load mutation twice — once in Rust, once in P
     | change-load-case-self-weight | {"mutation":"changeLoadCaseSelfWeight","caseId":"live","newSelfWeight":true}                                                                                             |
     | create-combination           | {"mutation":"createCombination","combination":{"id":"sls","name":"SLS characteristic","terms":[{"caseId":"dead","factor":1.0},{"caseId":"live","factor":1.0}]}}          |
     | delete-combination           | {"mutation":"deleteCombination","id":"uls_spare"}                                                                                                                        |
+    | replace-load                 | {"mutation":"replaceLoad","caseId":"live","loadId":"l6","newLoad":{"kind":"nodal","id":"l6","nodeId":"p8_l1","dof":"Ty","value":-18000.0}}                               |
+    | change-load-case-name        | {"mutation":"changeLoadCaseName","caseId":"live","newName":"Imposed Load"}                                                                                               |
+    | replace-combination          | {"mutation":"replaceCombination","id":"uls","newCombination":{"id":"uls","name":"ULS 6.10b","terms":[{"caseId":"dead","factor":1.35},{"caseId":"live","factor":1.5},{"caseId":"snow","factor":0.75}]}} |
 
   @id-inverse
   @level-exhaustive
@@ -86,3 +89,6 @@ Feature: Apply every typed fem2d load mutation twice — once in Rust, once in P
     | change-load-case-self-weight | {"mutation":"changeLoadCaseSelfWeight","caseId":"live","newSelfWeight":true}                                                                                             |
     | create-combination           | {"mutation":"createCombination","combination":{"id":"sls","name":"SLS characteristic","terms":[{"caseId":"dead","factor":1.0},{"caseId":"live","factor":1.0}]}}          |
     | delete-combination           | {"mutation":"deleteCombination","id":"uls_spare"}                                                                                                                        |
+    | replace-load                 | {"mutation":"replaceLoad","caseId":"live","loadId":"l6","newLoad":{"kind":"nodal","id":"l6","nodeId":"p8_l1","dof":"Ty","value":-18000.0}}                               |
+    | change-load-case-name        | {"mutation":"changeLoadCaseName","caseId":"live","newName":"Imposed Load"}                                                                                               |
+    | replace-combination          | {"mutation":"replaceCombination","id":"uls","newCombination":{"id":"uls","name":"ULS 6.10b","terms":[{"caseId":"dead","factor":1.35},{"caseId":"live","factor":1.5},{"caseId":"snow","factor":0.75}]}} |

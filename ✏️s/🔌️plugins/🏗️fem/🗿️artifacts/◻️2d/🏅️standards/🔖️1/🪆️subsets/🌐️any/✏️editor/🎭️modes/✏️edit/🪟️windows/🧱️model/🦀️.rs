@@ -1071,6 +1071,88 @@ pub(crate) fn fem2d_structure_layers(doc: &Fem2dSnapshot, node_color: &str, line
     layers
 }
 
+//#region 🕹️SelectionHighlight
+/// 🎨️ Emphasis colour for the framework-owned `"fem2d"` selection.
+pub(crate) const SELECTION_COLOR_2D: &str = "#facc15";
+/// 🎨️ Lighter emphasis colour for pointer hover.
+pub(crate) const HOVER_COLOR_2D: &str = "#fde68a";
+const SELECTION_STROKE_WIDTH_2D: f64 = 4.0;
+const HOVER_STROKE_WIDTH_2D: f64 = 2.5;
+
+/// 🎯️ A bounds-shaped emphasis ring around a point glyph — `selected` drives the Canvas2d host's own
+/// selected-bounds treatment (`📐️Canvas2dHost/🟦️.tsx`'s `drawBoundsLayer`).
+fn emphasis_ring_layer(id: &str, center: (f64, f64), radius: f64, color: &str, selected: bool) -> dsl::json::Value {
+    dsl::json!({ "kind": "circle", "id": id, "x": center.0 - radius, "y": center.1 - radius, "width": radius * 2.0, "height": radius * 2.0, "color": color, "selected": selected })
+}
+
+/// 🎯️ A stroked emphasis path over a member axis, a region outline or a load arrow — a `segments`
+/// layer because only that shape honours an explicit `stroke.width`.
+fn emphasis_path_layer(id: &str, points: &[(f64, f64)], close: bool, color: &str, width: f64) -> dsl::json::Value {
+    let (r, g, b) = crate::app_surface::hex_to_rgb01(color);
+    let mut segments = Vec::with_capacity(points.len() + 1);
+    for (index, &(x, y)) in points.iter().enumerate() {
+        segments.push(if index == 0 { dsl::json!({ "kind": "move", "to": [x, y] }) } else { dsl::json!({ "kind": "line", "to": [x, y] }) });
+    }
+    if close {
+        segments.push(dsl::json!({ "kind": "close" }));
+    }
+    dsl::json!({ "id": id, "transform": [1.0, 0.0, 0.0, 1.0, 0.0, 0.0], "segments": segments, "stroke": { "color": [r, g, b, 1.0], "width": width } })
+}
+
+fn emphasis_layers_for(doc: &Fem2dSnapshot, ids: &[String], prefix: &str, color: &str, width: f64, selected: bool) -> Vec<dsl::json::Value> {
+    let mut layers = Vec::new();
+    for id in ids {
+        if let Some(node) = find_node_2d(&doc.nodes, id) {
+            layers.push(emphasis_ring_layer(&format!("{prefix}-node-{id}"), screen_2d(node.x, node.y), width + 5.0, color, selected));
+            continue;
+        }
+        if let Some(element) = doc.elements.iter().find(|element| element_id(element) == id) {
+            let (start, end) = fem2d_element_endpoints(element);
+            if let (Some(a), Some(b)) = (find_node_2d(&doc.nodes, start), find_node_2d(&doc.nodes, end)) {
+                layers.push(emphasis_path_layer(&format!("{prefix}-el-{id}"), &[screen_2d(a.x, a.y), screen_2d(b.x, b.y)], false, color, width));
+            }
+            continue;
+        }
+        if let Some(support) = doc.supports.iter().find(|support| support.id == *id) {
+            if let Some(node) = find_node_2d(&doc.nodes, &support.node_id) {
+                layers.push(emphasis_ring_layer(&format!("{prefix}-support-{id}"), screen_2d(node.x, node.y), width + 7.0, color, selected));
+            }
+            continue;
+        }
+        if let Some(region) = doc.regions.iter().find(|region| region.id == *id) {
+            let points: Vec<(f64, f64)> = region.outline.iter().map(|point| screen_2d(point[0], point[1])).collect();
+            if points.len() >= 3 {
+                layers.push(emphasis_path_layer(&format!("{prefix}-region-{id}"), &points, true, color, width));
+            }
+            continue;
+        }
+        if let Some((_, load)) = crate::editor::fem2d::interaction::fem2d_load_owner(doc, id) {
+            if let Some((from, to)) = crate::editor::fem2d::interaction::fem2d_load_glyph(doc, load) {
+                layers.push(emphasis_path_layer(&format!("{prefix}-load-{id}"), &[from, to], false, color, width));
+            }
+        }
+    }
+    layers
+}
+
+/// 🕹️ The selected/hovered emphasis overlay for one interaction snapshot — hovered first, selected on
+/// top, every layer id stable (`sel-node-n1`, `hov-el-e3`, …) so a host can diff frames.
+pub(crate) fn fem2d_highlight_layers(doc: &Fem2dSnapshot, interaction: &crate::editor::fem2d::interaction::Fem2dInteractionSnapshot) -> Vec<dsl::json::Value> {
+    let mut layers = emphasis_layers_for(doc, &interaction.hovered_ids, "hov", HOVER_COLOR_2D, HOVER_STROKE_WIDTH_2D, false);
+    layers.extend(emphasis_layers_for(doc, &interaction.selected_ids, "sel", SELECTION_COLOR_2D, SELECTION_STROKE_WIDTH_2D, true));
+    layers
+}
+
+/// 🖼️ [`fem2d_structure_layers`] plus the interaction emphasis overlay — the entry point both windows
+/// render through; the bare twin stays for the viewer app and the story fixtures, which have no
+/// interaction state at all.
+pub(crate) fn fem2d_structure_layers_with(doc: &Fem2dSnapshot, node_color: &str, line_color: &str, support_color: &str, interaction: &crate::editor::fem2d::interaction::Fem2dInteractionSnapshot) -> Vec<dsl::json::Value> {
+    let mut layers = fem2d_structure_layers(doc, node_color, line_color, support_color);
+    layers.extend(fem2d_highlight_layers(doc, interaction));
+    layers
+}
+//#endregion 🕹️SelectionHighlight
+
 /// 🗺️ Every meshed region's triangles as `(element_id, [screen_p0, screen_p1, screen_p2])` — the
 /// element id matches `fem2d_solve`/`fem2d_solve_all`'s `Tri3Cst` ids (`"{region_id}_t{tri_index}"`),
 /// so callers can correlate a solved `ElementResult::Plane` back to on-screen triangle geometry. A
@@ -1155,8 +1237,8 @@ pub fn render(doc: &Fem2dSnapshot, camera: &Viewport2d) -> semio_framework_plugi
 /// snapshot, no meshing or solving) plus the optional replaceable worker-job visual lease: the mesh and
 /// field pages ride the lease for a host that pages them, while every host that only draws
 /// `layers_json` (the React canvas today) still shows the model as it is edited.
-pub fn render_with_progress(doc: &Fem2dSnapshot, camera: &Viewport2d, progress: Option<&Fem2dMountedVisualLease>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    let layers_json = dsl::json::to_string(&dsl::json::Value::Array(fem2d_structure_layers(doc, "#38bdf8", "#94a3b8", "#f97316")));
+pub fn render_with_progress(doc: &Fem2dSnapshot, camera: &Viewport2d, progress: Option<&Fem2dMountedVisualLease>, interaction: &crate::editor::fem2d::interaction::Fem2dInteractionSnapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+    let layers_json = dsl::json::to_string(&dsl::json::Value::Array(fem2d_structure_layers_with(doc, "#38bdf8", "#94a3b8", "#f97316", interaction)));
     crate::app_surface::canvas_2d_surface(BODY_KEY, &Canvas2dScene { camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json, snapshot: progress.map(Fem2dMountedVisualLease::snapshot), tool_run_trace: None, lanes: Vec::new() })
 }
 //#endregion 🔖️Render

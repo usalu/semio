@@ -45,6 +45,95 @@ pub struct CadReferencePatch {
 }
 //#endregion 🔖️InternalPatches
 
+//#region 🔖️ObjectRecords
+/// 🧱️ Public wire twin of the crate-private, EPHEMERAL `io::geometry_import::CadObject` — the shape
+/// `create-object` carries so an object edit is expressible as one bounded parent op while the object
+/// data itself keeps living inside the composed `s.stdio.semio.model` child (the op names the child's
+/// next CONTENT, never a child diff; the child handle it re-mints is content-addressed over exactly
+/// this data — see `crate::cad_pane_rematerialized_child`). `primitives` is absent on purpose: it is
+/// derived from `solid_handle`, the same way `cad_object_from_model_element` derives it on the READ
+/// side, so the record stays one flat row of scalars.
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase", default)]
+pub struct CadObjectSpec {
+    pub id: String,
+    pub label: String,
+    pub typology: String,
+    pub visible: bool,
+    pub locked: bool,
+    pub origin: [f64; 3],
+    pub orientation: Option<[f64; 4]>,
+    pub scale: Option<[f64; 3]>,
+    pub mesh_url: Option<String>,
+    pub extent: Option<[f64; 3]>,
+    pub solid_handle: Option<String>,
+}
+
+/// 🧱️ One object's exact next origin — `move-objects` carries one row per touched object, ABSOLUTE
+/// rather than a delta so the inverse restores the recorded pose bit-for-bit instead of relying on
+/// `x + d - d` round-tripping through f64.
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase", default)]
+pub struct CadObjectOrigin {
+    pub object_id: String,
+    pub new_origin: [f64; 3],
+}
+
+/// 🧱️ One object's exact next orientation quaternion — see [`CadObjectOrigin`] on why it is absolute.
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase", default)]
+pub struct CadObjectOrientation {
+    pub object_id: String,
+    pub new_orientation: [f64; 4],
+}
+
+/// 🧱️ One object's exact next per-axis scale — see [`CadObjectOrigin`] on why it is absolute.
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase", default)]
+pub struct CadObjectScale {
+    pub object_id: String,
+    pub new_scale: [f64; 3],
+}
+
+/// 🌉️ `CadObjectSpec` → the ephemeral working object, rebuilding the primitive slot list from
+/// `solid_handle`.
+pub(crate) fn cad_object_from_spec(spec: &CadObjectSpec) -> crate::standards::v1::subsets::any::io::geometry_import::CadObject {
+    use crate::standards::v1::subsets::any::io::geometry_import::{CadObject, CadPrimitiveSlot};
+    let primitives = spec.solid_handle.clone().map(|primitive_id| vec![CadPrimitiveSlot { slot: "solid".into(), primitive_id, kind: "solid".into() }]).unwrap_or_default();
+    CadObject {
+        id: spec.id.clone(),
+        label: spec.label.clone(),
+        typology: spec.typology.clone(),
+        visible: spec.visible,
+        locked: spec.locked,
+        origin: spec.origin,
+        orientation: spec.orientation,
+        scale: spec.scale,
+        mesh_url: spec.mesh_url.clone(),
+        extent: spec.extent,
+        solid_handle: spec.solid_handle.clone(),
+        primitives,
+    }
+}
+
+/// 🌉️ The `cad_object_from_spec` inverse — what `delete-object`'s inverse captures.
+pub(crate) fn cad_object_spec_of(object: &crate::standards::v1::subsets::any::io::geometry_import::CadObject) -> CadObjectSpec {
+    CadObjectSpec {
+        id: object.id.clone(),
+        label: object.label.clone(),
+        typology: object.typology.clone(),
+        visible: object.visible,
+        locked: object.locked,
+        origin: object.origin,
+        orientation: object.orientation,
+        scale: object.scale,
+        mesh_url: object.mesh_url.clone(),
+        extent: object.extent,
+        solid_handle: object.solid_handle.clone(),
+    }
+}
+//#endregion 🔖️ObjectRecords
+
 //#region 🔖️Mutations
 /// 🧬️ Closed semantic mutation vocabulary for the cad document, derived per
 /// `📓️derivation-rules.md` from `CadSnapshot`'s shape. `SetSnapshot`/`SetPaneObjects`-as-whole-doc-
@@ -74,6 +163,11 @@ pub enum CadMutation {
     MoveReference(move_reference::MoveReference),
     ReplaceReferenceMedia(replace_reference_media::ReplaceReferenceMedia),
     ReplaceReferences(replace_references::ReplaceReferences),
+    CreateObject(create_object::CreateObject),
+    DeleteObject(delete_object::DeleteObject),
+    MoveObjects(move_objects::MoveObjects),
+    RotateObjects(rotate_objects::RotateObjects),
+    ScaleObjects(scale_objects::ScaleObjects),
 }
 
 /// 🏷️ The kebab-case spelling of every [`CadMutation`] variant, in declaration order — the exact
@@ -100,6 +194,11 @@ pub const KINDS: &[&str] = &[
     "move-reference",
     "replace-reference-media",
     "replace-references",
+    "create-object",
+    "delete-object",
+    "move-objects",
+    "rotate-objects",
+    "scale-objects",
 ];
 //#endregion 🔖️Mutations
 
@@ -111,7 +210,12 @@ use super::create_building_model;
 use super::create_drawing;
 use super::create_energy_model;
 use super::create_node;
+use super::create_object;
 use super::create_shape_model;
+use super::delete_object;
+use super::move_objects;
+use super::rotate_objects;
+use super::scale_objects;
 use super::create_structure_classic_model;
 use super::delete_building_model;
 use super::delete_drawing;

@@ -14,5 +14,6 @@ async fn render_lists_name_version_and_every_collection_count() {
     assert_eq!(tree.key.as_str(), WINDOW_KIND_ID);
     let root = &tree.children[0].children[0];
     assert!(root.children.iter().any(|item| item.key.as_str() == "name"));
-    assert!(root.children.iter().any(|item| item.key.as_str() == "zones"));
+    let geometry = root.children.iter().find(|item| item.key.as_str() == "geometry").expect("the geometry group is a root child");
+    assert!(geometry.children.iter().any(|item| item.key.as_str() == "zones"));
 }

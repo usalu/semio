@@ -165,6 +165,62 @@ fn cad_model_child_pane_slug(pane: CadPaneId) -> &'static str {
         CadPaneId::StructureClassic => "structure-classic",
     }
 }
+
+/// 🪆️ The pane's in-process materialization: the `CadWorkingScene` the composed child handle carries
+/// as its `ArtifactChild::local_owner`. Every reader (world scene, document tree, object mutation
+/// diff) goes through this one accessor; an unresolved handle (wire-decoded, owner dropped) reads
+/// `None` rather than a fabricated scene.
+pub fn cad_pane_local_scene(document: &CadSnapshot, pane: CadPaneId) -> Option<std::sync::Arc<CadWorkingScene>> {
+    cad_pane_model(document, pane)?.local_owner::<CadWorkingScene>()
+}
+
+/// 🧱️ One pane's slice of a working scene.
+pub(crate) fn cad_scene_pane_objects(scene: &CadWorkingScene, pane: CadPaneId) -> &[standards::v1::subsets::any::io::geometry_import::CadObject] {
+    match pane {
+        CadPaneId::Shape => &scene.objects,
+        CadPaneId::Building => &scene.building_objects,
+        CadPaneId::Energy => &scene.energy_objects,
+        CadPaneId::StructureClassic => &scene.structure_classic_objects,
+    }
+}
+
+/// 🧱️ `scene` with `pane`'s slice replaced — the other three panes keep their own handles (and thus
+/// their own owners), so only the edited pane's child is ever re-minted.
+pub(crate) fn cad_scene_with_pane_objects(scene: &CadWorkingScene, pane: CadPaneId, objects: Vec<standards::v1::subsets::any::io::geometry_import::CadObject>) -> CadWorkingScene {
+    let mut next = scene.clone();
+    match pane {
+        CadPaneId::Shape => next.objects = objects,
+        CadPaneId::Building => next.building_objects = objects,
+        CadPaneId::Energy => next.energy_objects = objects,
+        CadPaneId::StructureClassic => next.structure_classic_objects = objects,
+    }
+    next
+}
+
+/// 🪆️ THE RE-MATERIALIZATION SEAM. An object edit on `pane` produces a new object list; this mints
+/// the pane's content-addressed `s.stdio.semio.model` child handle from it (`semio_model_snapshot_from_objects`
+/// — the same WRITE bridge `forest_play_document` uses) and attaches the updated `CadWorkingScene` as
+/// the handle's local owner, so the very next render of that pane tessellates the edited geometry.
+/// A pane edited down to nothing mints no child — `None` is the vacate-the-slot signal, exactly what
+/// `delete-<pane>-model` expresses.
+pub(crate) fn cad_pane_rematerialized_child(scene: &CadWorkingScene, pane: CadPaneId, objects: Vec<standards::v1::subsets::any::io::geometry_import::CadObject>) -> Option<CadModelChild> {
+    if objects.is_empty() {
+        return None;
+    }
+    let next = std::sync::Arc::new(cad_scene_with_pane_objects(scene, pane, objects));
+    let content_json = protocol::json::to_json_string(&standards::v1::subsets::any::io::geometry_import::semio_model_snapshot_from_objects(cad_scene_pane_objects(&next, pane)));
+    Some(cad_model_child_handle(pane, &content_json).with_local_owner(next))
+}
+
+/// 🪆️ Writes a re-materialized child handle into `pane`'s slot of a `CadDiff`-shaped option bag.
+pub(crate) fn cad_pane_child_diff_slot(diff: &mut CadDiff, pane: CadPaneId, child: Option<CadModelChild>) {
+    match pane {
+        CadPaneId::Shape => diff.shape_model = Some(child),
+        CadPaneId::Building => diff.building_model = Some(child),
+        CadPaneId::Energy => diff.energy_model = Some(child),
+        CadPaneId::StructureClassic => diff.structure_classic_model = Some(child),
+    }
+}
 //#endregion 🔖️WorkingScene
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
@@ -695,6 +751,65 @@ pub mod standards {
                             mod tests_swaps_the_shape_reference_list;
                         }
                         #[path = "."]
+                        pub mod create_object {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🆕create-object/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🆕create-object/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🆕create-object/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🆕create-object/🧪️tests/🌱️appends-a-box-to-the-shape-pane/🦀️.rs"]
+                            mod tests_appends_a_box_to_the_shape_pane;
+                        }
+                        #[path = "."]
+                        pub mod delete_object {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/❌delete-object/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/❌delete-object/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/❌delete-object/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/❌delete-object/🧪️tests/🚫️removes-the-shape-pane-object/🦀️.rs"]
+                            mod tests_removes_the_shape_pane_object;
+                        }
+                        #[path = "."]
+                        pub mod move_objects {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚move-objects/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚move-objects/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚move-objects/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚move-objects/🧪️tests/📍️moves-the-shape-pane-object/🦀️.rs"]
+                            mod tests_moves_the_shape_pane_object;
+                        }
+                        #[path = "."]
+                        pub mod rotate_objects {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌀rotate-objects/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌀rotate-objects/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌀rotate-objects/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod scale_objects {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚖️scale-objects/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚖️scale-objects/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚖️scale-objects/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                        }
+                        #[path = "."]
                         pub mod create_shape_model {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱create-shape-model/🦀️.rs"]
                             mod component;
@@ -1137,6 +1252,8 @@ pub mod editor {
             pub mod node;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧱️object/🦀️.rs"]
             pub mod object;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📄️panel/🦀️.rs"]
+            pub mod panel;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖼️reference/🦀️.rs"]
             pub mod reference;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🌞️sun/🦀️.rs"]

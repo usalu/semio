@@ -341,6 +341,107 @@ pub fn energy_zones_content(snapshot: &EnergyModelSnapshot) -> semio_s_artifact_
 }
 //#endregion 🔖️Converters
 
+//#region 🗂️StructureOverview
+/// 🗂️ The framework tree kit's sibling ceiling: `TreeWindowKit::render` collects each node's
+/// children into a `UiFixedList<BuiltNode>` (`UI_FIXED_LIST_ITEMS` = 32) and the 33rd sibling
+/// faults the whole assembly with `tree-window.siblings`, so the window renders EMPTY at runtime.
+/// `Model` carries 35 collections — [`energy_structure_overview`] folds them into groups that stay
+/// under this ceiling, and both the editor's and the viewer's `structure` windows read that one
+/// grouping (the viewer may never import from the editor surface).
+pub const STRUCTURE_TREE_SIBLING_CEILING: usize = 32;
+
+/// 🗂️ One overview group of the structure tree: node id, English label, and the collections it
+/// folds as `(node id, live element count)`.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct StructureOverviewGroup {
+    pub id: &'static str,
+    pub label: &'static str,
+    pub counts: Vec<(&'static str, usize)>,
+}
+
+/// 🗂️ Every collection on [`Model`] exactly once, folded into seven domain groups, each with its
+/// live element counts — the read overview both `structure` windows draw beneath `name`/`version`.
+pub fn energy_structure_overview(model: &Model) -> Vec<StructureOverviewGroup> {
+    vec![
+        StructureOverviewGroup {
+            id: "geometry",
+            label: "Geometry",
+            counts: vec![
+                ("zones", model.zones.len()),
+                ("spaces", model.spaces.len()),
+                ("surfaces", model.surfaces.len()),
+                ("fenestrations", model.fenestrations.len()),
+                ("shadingSurfaces", model.shading_surfaces.len()),
+                ("spaceLists", model.space_lists.len()),
+                ("thermalEnclosures", model.thermal_enclosures.len()),
+                ("adjacencyPairs", model.adjacency_pairs.len()),
+            ],
+        },
+        StructureOverviewGroup { id: "envelope", label: "Envelope", counts: vec![("materials", model.materials.len()), ("constructions", model.constructions.len())] },
+        StructureOverviewGroup {
+            id: "loads",
+            label: "Internal loads & air exchange",
+            counts: vec![
+                ("people", model.people.len()),
+                ("lighting", model.lighting.len()),
+                ("equipment", model.equipment.len()),
+                ("infiltrations", model.infiltrations.len()),
+                ("mechanicalVentilations", model.mechanical_ventilations.len()),
+            ],
+        },
+        StructureOverviewGroup { id: "controls", label: "Controls", counts: vec![("thermostats", model.thermostats.len()), ("humidistats", model.humidistats.len()), ("setpointManagers", model.setpoint_managers.len())] },
+        StructureOverviewGroup {
+            id: "hvac",
+            label: "HVAC",
+            counts: vec![
+                ("idealLoads", model.ideal_loads.len()),
+                ("zoneEquipment", model.zone_equipment.len()),
+                ("airLoops", model.air_loops.len()),
+                ("plantLoops", model.plant_loops.len()),
+                ("outdoorAirSystems", model.outdoor_air_systems.len()),
+            ],
+        },
+        StructureOverviewGroup {
+            id: "systems",
+            label: "Electrical, water & refrigeration",
+            counts: vec![
+                ("electricalLoadCenters", model.electrical_load_centers.len()),
+                ("pvSystems", model.pv_systems.len()),
+                ("batteryStorage", model.battery_storage.len()),
+                ("shwSystems", model.shw_systems.len()),
+                ("solarThermalSystems", model.solar_thermal_systems.len()),
+                ("refrigerationSystems", model.refrigeration_systems.len()),
+                ("waterSystems", model.water_systems.len()),
+            ],
+        },
+        StructureOverviewGroup {
+            id: "analysis",
+            label: "Analysis & output",
+            counts: vec![("faults", model.faults.len()), ("outputVariables", model.output_variables.len()), ("sizingObjects", model.sizing_objects.len()), ("daylightZones", model.daylight_zones.len()), ("roomAirModels", model.room_air_models.len())],
+        },
+    ]
+}
+
+/// 🌳️ The shared `structure` tree both surfaces render: `name`/`version` (the editor's two
+/// `set-node` targets), the site line, then one node per overview group labeled with its total.
+pub fn energy_structure_tree(model: &Model) -> semio_framework_plugin::app::TreeView {
+    use semio_framework_plugin::app::{TreeNodeView, TreeView};
+    fn leaf(id: &str, label: String) -> TreeNodeView {
+        TreeNodeView { id: id.into(), label, children: Vec::new() }
+    }
+    let mut children = vec![
+        leaf("name", format!("Name: {}", model.name)),
+        leaf("version", format!("Version: {}", model.version)),
+        leaf("site", format!("Site: lat {:.2}°, lon {:.2}°, elev {:.1} m", model.site.latitude_deg, model.site.longitude_deg, model.site.elevation_m)),
+    ];
+    children.extend(energy_structure_overview(model).into_iter().map(|group| {
+        let total: usize = group.counts.iter().map(|(_, count)| count).sum();
+        TreeNodeView { id: group.id.into(), label: format!("{}: {total}", group.label), children: group.counts.iter().map(|(name, count)| leaf(name, format!("{name}: {count}"))).collect() }
+    }));
+    TreeView { roots: vec![TreeNodeView { id: "model".into(), label: format!("{} (v{})", model.name, model.version), children }] }
+}
+//#endregion 🗂️StructureOverview
+
 //#region 🔖️RetainedArtifactState
 /// 🧵️ Exact immutable store owner used by mounted Energy capture. It exposes only a borrowed Model,
 /// revalidates the store generation immediately before every read, and returns the precise snapshot
@@ -383,11 +484,19 @@ impl EnergyModelReadLease {
 /// 🧷️ Mints stable composed-child handles. The authoritative numerical model is owned directly by
 /// the event-sourced snapshot and therefore travels through the store's generation-qualified
 /// `SnapshotRead` lease; no process-local cache participates in reads or admission.
+///
+/// 🪪️ Each handle's `child_id` IS its target's `artifact_id` (`energy-value` / `energy-table`), and
+/// the two differ: the store's `ChildRestoreProjection` (the first thing `ArtifactApp` runs on its
+/// initial snapshot) refuses a handle whose `child_id != artifact_id` with `InvalidReference` and a
+/// second handle carrying an already-seen `child_id` with `DuplicateChild` — one shared
+/// `"energy-model"` id for both slots faulted every guest at `genesis_child_pack` (ticket
+/// 26/09/06/ENERGY-PLUGIN-END-TO-END, 2026-09-16), before a single window could render. Same shape
+/// as `forms_children_from_steps`.
 pub fn energy_children_from_model(_model: &Model) -> (EnergyStructureChild, EnergyZonesChild) {
-    let scene_id = "energy-model".to_string();
     let dialect_for = |subset: &str| store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: subset.into() };
     let target_for = |subset: &str| store::os_io::ArtifactRef { artifact_id: format!("energy-{subset}"), dialect: dialect_for(subset) };
-    (store::ArtifactChild::new(scene_id.clone(), target_for("value")), store::ArtifactChild::new(scene_id, target_for("table")))
+    let (structure, zones) = (target_for("value"), target_for("table"));
+    (store::ArtifactChild::new(structure.artifact_id.clone(), structure), store::ArtifactChild::new(zones.artifact_id.clone(), zones))
 }
 
 /// 🔎️ Compatibility value accessor for artifact editing and inference. Mounted simulation never

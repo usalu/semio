@@ -20,7 +20,7 @@ async fn flow_viewer_member_factory_and_full_store_close_match_neutral_contract(
         .label("Flow Viewer Lifecycle")
         .version("0.1.0")
         .package_id("semio:flow-viewer-lifecycle")
-        .viewer_with_members::<FlowViewer, semio_s_artifact_stdio_semio::SemioMembers>(definition)
+        .viewer::<FlowViewer>(definition)
         .try_build()
         .unwrap();
     let document_rights = plugin

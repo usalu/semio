@@ -11,6 +11,7 @@ use crate::editor::cad::commands::engagement::{engagement_abort, engagement_inpu
 use crate::editor::cad::commands::io::{import_cad_file, load_raw_request, save_current, save_in_play, save_selected};
 use crate::editor::cad::commands::model_definition::set_active_example;
 use crate::editor::cad::commands::node::{add_node, rename_node, set_node_selection};
+use crate::editor::cad::commands::panel::set_panel_page;
 use crate::editor::cad::commands::object::{add_object, delete_object, duplicate_object, patch_object, patch_selection};
 use crate::editor::cad::commands::reference::{patch_cad_play_reference, reference_hover, set_reference_selection};
 use crate::editor::cad::commands::sun::{set_sun_azimuth, set_sun_elevation, set_sun_intensity, toggle_sun};
@@ -189,6 +190,9 @@ pub struct CadPlayRuntime {
     pub camera_structure_classic: CadCamera,
     #[value(default)]
     pub dislocate_options_by_window_id: HashMap<String, CadDislocateOptions>,
+    /// 📄️ Per-section `setPanelPage` cursor, decoded from `CadConfig::panel_pages_json`.
+    #[value(default)]
+    pub panel_pages: std::collections::BTreeMap<String, u32>,
 }
 
 impl Default for CadPlayRuntime {
@@ -212,6 +216,7 @@ impl Default for CadPlayRuntime {
             camera_energy: CadCamera::default(),
             camera_structure_classic: CadCamera::default(),
             dislocate_options_by_window_id: HashMap::new(),
+            panel_pages: std::collections::BTreeMap::new(),
         }
     }
 }
@@ -237,6 +242,17 @@ fn json_string_to<T: protocol::FromValue>(json: &str) -> Option<T> {
     json::from_json_str::<T>(json).ok()
 }
 
+/// 📄️ Decodes `CadConfig::panel_pages_json` — a malformed or absent cursor map is simply no paging,
+/// never a dispatch failure: a panel section that cannot read its cursor renders page 0.
+pub fn parse_panel_pages(json: &str) -> std::collections::BTreeMap<String, u32> {
+    json::from_json_str::<std::collections::BTreeMap<String, u32>>(json).unwrap_or_default()
+}
+
+/// 📄️ The `parse_panel_pages` inverse.
+pub fn print_panel_pages(pages: &std::collections::BTreeMap<String, u32>) -> String {
+    json::to_json_string(pages)
+}
+
 /// 🔀️ Unpacks artifact-wide `CadConfig` into the ergonomic runtime scratch record. Exact
 /// window-owned camera, sun, and Dislocate state is overlaid by `runtime_of`.
 pub fn cad_runtime_from_config(cfg: &CadConfig) -> CadPlayRuntime {
@@ -259,6 +275,7 @@ pub fn cad_runtime_from_config(cfg: &CadConfig) -> CadPlayRuntime {
         camera_energy: CadCamera::default(),
         camera_structure_classic: CadCamera::default(),
         dislocate_options_by_window_id: HashMap::new(),
+        panel_pages: parse_panel_pages(&cfg.panel_pages_json),
     }
 }
 
@@ -280,6 +297,7 @@ fn cad_config_from_runtime(runtime: &CadPlayRuntime, base: &CadConfig) -> CadCon
         engagement_preview_operation_json: base.engagement_preview_operation_json.clone(),
         engagement_preview_generation: base.engagement_preview_generation,
         last_finalized_interaction_id: runtime.last_finalized_interaction_id.clone(),
+        panel_pages_json: print_panel_pages(&runtime.panel_pages),
     }
 }
 
@@ -333,6 +351,11 @@ pub fn ui_value_text(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemb
 /// 🔘️ Admits one CAD boolean action value.
 pub fn ui_value_bool(value: bool) -> UiValue {
     UiValue::Bool(value)
+}
+
+/// 🔢️ Admits one CAD numeric action value — the shape `setPanelPage`'s `page` argument rides on.
+pub fn ui_value_number(value: f64) -> UiValue {
+    UiValue::Number(value)
 }
 
 /// 📚️ Admits one fixed CAD UI list value.
@@ -496,14 +519,130 @@ pub fn preview_transition_snapshot_of(runtime: &CadPlayRuntime, base: &CadConfig
 //#endregion 🔖️Runtime
 
 //#region 🔖️Helpers
-/// ⚠️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 3: this used to dispatch a
-/// `ReplacePaneObjects` whole-pane-replace mutation (banned vocabulary shape, and gone: pane object
-/// data now lives inside composed `s.stdio.semio.model` CHILD documents, each its own document —
-/// see `🔖️Composition` in `🏪️store/🦀️.rs`). Re-deriving building/energy/structure
-/// typologies from shape geometry and writing the result into a pane needs a child-dispatch seam
-/// on `CadDispatchCtx`/`Emit<CadMutation, _>` that does not exist yet (`🔌️plugin/🦀️.rs`
-/// framework-kernel surface, W1-owned, out of a plugin fan-out agent's write scope). Documented
-/// no-op until that seam exists, not silently dropped.
+/// 🪆️ THE RE-MATERIALIZATION SEAM, app side. An object gesture reads the addressed pane's live
+/// working objects out of its composed `s.stdio.semio.model` child's local materialization, decides
+/// the next object list, and emits ONE parent op per touched pane; that op's diff re-mints the pane's
+/// content-addressed child handle with the updated `CadWorkingScene` attached, so the very next
+/// render of that pane tessellates the edit and the gumball no longer snaps back. Undo/redo needs
+/// nothing new: the ops are ordinary in-history `CadMutation`s with real inverses.
+pub(crate) fn cad_pane_objects(document: &CadSnapshot, pane: CadPaneId) -> Vec<crate::standards::v1::subsets::any::io::geometry_import::CadObject> {
+    crate::cad_pane_local_scene(document, pane).map(|scene| crate::cad_scene_pane_objects(&scene, pane).to_vec()).unwrap_or_default()
+}
+
+/// 🔎️ The pane whose materialized working scene holds `object_id` — object ids are unique across the
+/// document (they are the `"cad"` domain's own target ids), so the first pane that owns one wins.
+pub fn cad_pane_of_object(document: &CadSnapshot, object_id: &str) -> Option<CadPaneId> {
+    CadPaneId::all().into_iter().find(|pane| cad_pane_objects(document, *pane).iter().any(|object| object.id == object_id))
+}
+
+/// 🔎️ `ids` grouped by the pane that owns them — one parent op per pane, never one per object.
+pub(crate) fn cad_objects_by_pane(document: &CadSnapshot, ids: &[String]) -> Vec<(CadPaneId, Vec<crate::standards::v1::subsets::any::io::geometry_import::CadObject>)> {
+    CadPaneId::all()
+        .into_iter()
+        .filter_map(|pane| {
+            let owned: Vec<_> = cad_pane_objects(document, pane).into_iter().filter(|object| ids.iter().any(|id| id == &object.id)).collect();
+            (!owned.is_empty()).then_some((pane, owned))
+        })
+        .collect()
+}
+
+/// 🚚️ `translateSelection`'s ops: one `move-objects` per touched pane, carrying each object's
+/// ABSOLUTE next origin (the op is absolute so its inverse restores the recorded pose exactly).
+pub fn translate_objects_mutations(document: &CadSnapshot, ids: &[String], delta: [f64; 3]) -> Vec<CadMutation> {
+    cad_objects_by_pane(document, ids)
+        .into_iter()
+        .map(|(pane, objects)| {
+            let placements = objects
+                .into_iter()
+                .map(|object| crate::mutations::CadObjectOrigin { object_id: object.id, new_origin: [object.origin[0] + delta[0], object.origin[1] + delta[1], object.origin[2] + delta[2]] })
+                .collect();
+            CadMutation::MoveObjects(crate::mutations::move_objects::MoveObjects { pane, placements })
+        })
+        .collect()
+}
+
+/// 🌀️ Hamilton product — composes the gumball's incremental axis-angle delta onto each object's own
+/// orientation, so a rotation about a world axis accumulates instead of replacing the pose.
+fn quaternion_product(left: [f64; 4], right: [f64; 4]) -> [f64; 4] {
+    let [lx, ly, lz, lw] = left;
+    let [rx, ry, rz, rw] = right;
+    [lw * rx + lx * rw + ly * rz - lz * ry, lw * ry - lx * rz + ly * rw + lz * rx, lw * rz + lx * ry - ly * rx + lz * rw, lw * rw - lx * rx - ly * ry - lz * rz]
+}
+
+/// 🌀️ `rotateSelection`'s ops — see [`translate_objects_mutations`].
+pub fn rotate_objects_mutations(document: &CadSnapshot, ids: &[String], axis: [f64; 3], angle: f64) -> Vec<CadMutation> {
+    let length = (axis[0] * axis[0] + axis[1] * axis[1] + axis[2] * axis[2]).sqrt();
+    if !length.is_finite() || length == 0.0 || !angle.is_finite() {
+        return Vec::new();
+    }
+    let (sin, cos) = ((angle * 0.5).sin(), (angle * 0.5).cos());
+    let delta = [axis[0] / length * sin, axis[1] / length * sin, axis[2] / length * sin, cos];
+    cad_objects_by_pane(document, ids)
+        .into_iter()
+        .map(|(pane, objects)| {
+            let placements = objects
+                .into_iter()
+                .map(|object| crate::mutations::CadObjectOrientation { new_orientation: quaternion_product(delta, object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0])), object_id: object.id })
+                .collect();
+            CadMutation::RotateObjects(crate::mutations::rotate_objects::RotateObjects { pane, placements })
+        })
+        .collect()
+}
+
+/// ⚖️ `scaleSelection`'s ops — see [`translate_objects_mutations`].
+pub fn scale_objects_mutations(document: &CadSnapshot, ids: &[String], factors: [f64; 3]) -> Vec<CadMutation> {
+    cad_objects_by_pane(document, ids)
+        .into_iter()
+        .map(|(pane, objects)| {
+            let placements = objects
+                .into_iter()
+                .map(|object| {
+                    let base = object.scale.unwrap_or([1.0, 1.0, 1.0]);
+                    crate::mutations::CadObjectScale { new_scale: [base[0] * factors[0], base[1] * factors[1], base[2] * factors[2]], object_id: object.id }
+                })
+                .collect();
+            CadMutation::ScaleObjects(crate::mutations::scale_objects::ScaleObjects { pane, placements })
+        })
+        .collect()
+}
+
+/// 🆕️ `addObject`'s / `duplicateObject`'s op: one `create-object` appended to `pane`.
+pub fn create_object_mutations(document: &CadSnapshot, pane: CadPaneId, object: crate::standards::v1::subsets::any::io::geometry_import::CadObject) -> Vec<CadMutation> {
+    let index = cad_pane_objects(document, pane).len() as u32;
+    vec![CadMutation::CreateObject(crate::mutations::create_object::CreateObject { pane, index, object: crate::mutations::cad_object_spec_of(&object) })]
+}
+
+/// ❌️ `deleteObject`'s op — an id no pane owns produces nothing rather than a fabricated target.
+pub fn delete_object_mutations(document: &CadSnapshot, object_id: &str) -> Vec<CadMutation> {
+    cad_pane_of_object(document, object_id).map_or_else(Vec::new, |pane| vec![CadMutation::DeleteObject(crate::mutations::delete_object::DeleteObject { pane, object_id: object_id.to_string() })])
+}
+
+/// 📄️ `duplicateObject`'s ops: the source object re-created under a fresh id, offset so the copy is
+/// visibly its own instance.
+pub fn duplicate_object_mutations(document: &CadSnapshot, object_id: &str) -> Vec<CadMutation> {
+    let Some(pane) = cad_pane_of_object(document, object_id) else {
+        return Vec::new();
+    };
+    let Some(source) = cad_pane_objects(document, pane).into_iter().find(|object| object.id == object_id) else {
+        return Vec::new();
+    };
+    let mut copy = source.clone();
+    copy.id = next_cad_id("object");
+    copy.label = format!("{} copy", source.label);
+    copy.origin = [source.origin[0] + CAD_DUPLICATE_OFFSET, source.origin[1], source.origin[2]];
+    create_object_mutations(document, pane, copy)
+}
+
+/// 📄️ World-space offset a duplicate is placed at so it never hides inside its source.
+pub const CAD_DUPLICATE_OFFSET: f64 = 1.0;
+
+/// 🔁️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 3 retired `ReplacePaneObjects`, and
+/// the per-pane re-materialization seam that replaces it landed on 2026-09-16 (see
+/// [`translate_objects_mutations`]). Re-deriving building/energy/structure typologies from shape
+/// geometry is expressible on it as a `create-object` run against the target pane, but the derivation
+/// RULES (which typology each source solid becomes, how openings and storeys map) are not written
+/// anywhere yet — that is a modelling decision, not a missing seam. Still a documented no-op, for a
+/// different reason than before.
 pub fn apply_transformation_mutations(_document: &CadSnapshot, _qid: &str) -> Vec<CadMutation> {
     Vec::new()
 }
@@ -638,22 +777,79 @@ pub fn quat_normalize(q: [f64; 4]) -> [f64; 4] {
     [q[0] / len, q[1] / len, q[2] / len, q[3] / len]
 }
 
-/// @emoji 🎯️ Builds the semantic mutation(s) that apply `field`'s edit across `object_ids`:
-/// whole-value fields (label/typology/hidden/locked) build one `rename-object`/`change-object-*`
-/// per object; `origin.<axis>`/`scale.<axis>`/`orientation.<axis>` read each object's own current
-/// component so `value` (absolute) or `delta` (relative) applies per-object, preserving each
-/// object's other axes and any offset across a multi-select — `move-object`/`scale-object`/
-/// `rotate-object`, one per touched object.
-/// ⚠️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 3: `move-object`/`scale-object`/
-/// `rotate-object` are retired — object placement lives inside composed `s.stdio.semio.model`
-/// CHILD documents now (own document, own mutation history; see `🔖️Composition` in
-/// `🏪️store/🦀️.rs`). Dispatching a mutation against a CHILD document from this
-/// parent-document command handler needs a child-dispatch seam on `CadDispatchCtx`/
-/// `Emit<CadMutation, _>` that does not exist yet (`🔌️plugin/🦀️.rs` framework-kernel
-/// surface, W1-owned, out of a plugin fan-out agent's write scope). Documented no-op until that
-/// seam exists, not silently dropped.
-pub fn patch_objects_mutations(_document: &CadSnapshot, _object_ids: &[String], _field: &str, _value: Option<&protocol::DslValue>, _delta: Option<&protocol::DslValue>) -> Vec<CadMutation> {
-    Vec::new()
+/// @emoji 🎯️ Builds the semantic mutation(s) that apply `field`'s edit across `object_ids`.
+///
+/// 🪆️ Pose fields (`origin.<axis>`, `scale.<axis>`, `orientation.<axis>`) read each object's own
+/// current component, so `value` (absolute) or `delta` (relative) applies per object and preserves
+/// the other axes across a multi-select; they become one `move-objects`/`scale-objects`/
+/// `rotate-objects` per touched pane. Whole-value fields (`label`, `typology`, `visible`/`hidden`,
+/// `locked`) have no narrow verb of their own — the object is RE-DECLARED at its exact slot as a
+/// `delete-object` + `create-object` pair, which lands as one gesture (one `Emit`, one undo step)
+/// and inverts correctly because each half carries its own inverse.
+pub fn patch_objects_mutations(document: &CadSnapshot, object_ids: &[String], field: &str, value: Option<&protocol::DslValue>, delta: Option<&protocol::DslValue>) -> Vec<CadMutation> {
+    let mut mutations = Vec::new();
+    for (pane, objects) in cad_objects_by_pane(document, object_ids) {
+        if field.starts_with("origin.") {
+            let Some(axis) = axis3_index(field, "origin") else { continue };
+            let placements: Vec<crate::mutations::CadObjectOrigin> = objects
+                .iter()
+                .filter_map(|object| {
+                    let mut origin = object.origin;
+                    origin[axis] = resolve_number_edit(origin[axis], value, delta)?;
+                    Some(crate::mutations::CadObjectOrigin { object_id: object.id.clone(), new_origin: origin })
+                })
+                .collect();
+            if !placements.is_empty() {
+                mutations.push(CadMutation::MoveObjects(crate::mutations::move_objects::MoveObjects { pane, placements }));
+            }
+        } else if field.starts_with("scale.") {
+            let Some(axis) = axis3_index(field, "scale") else { continue };
+            let placements: Vec<crate::mutations::CadObjectScale> = objects
+                .iter()
+                .filter_map(|object| {
+                    let mut scale = object.scale.unwrap_or([1.0, 1.0, 1.0]);
+                    scale[axis] = resolve_number_edit(scale[axis], value, delta)?;
+                    Some(crate::mutations::CadObjectScale { new_scale: scale, object_id: object.id.clone() })
+                })
+                .collect();
+            if !placements.is_empty() {
+                mutations.push(CadMutation::ScaleObjects(crate::mutations::scale_objects::ScaleObjects { pane, placements }));
+            }
+        } else if field.starts_with("orientation.") {
+            let Some(axis) = axis4_index(field, "orientation") else { continue };
+            let placements: Vec<crate::mutations::CadObjectOrientation> = objects
+                .iter()
+                .filter_map(|object| {
+                    let mut orientation = object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]);
+                    orientation[axis] = resolve_number_edit(orientation[axis], value, delta)?;
+                    Some(crate::mutations::CadObjectOrientation { new_orientation: quat_normalize(orientation), object_id: object.id.clone() })
+                })
+                .collect();
+            if !placements.is_empty() {
+                mutations.push(CadMutation::RotateObjects(crate::mutations::rotate_objects::RotateObjects { pane, placements }));
+            }
+        } else {
+            let live = cad_pane_objects(document, pane);
+            for object in &objects {
+                let Some(index) = live.iter().position(|candidate| candidate.id == object.id) else { continue };
+                let mut next = object.clone();
+                match field {
+                    "label" => next.label = value.and_then(protocol::DslValue::as_str).map(str::to_string).unwrap_or(next.label),
+                    "typology" => next.typology = value.and_then(protocol::DslValue::as_str).map(str::to_string).unwrap_or(next.typology),
+                    "visible" => next.visible = value.and_then(protocol::DslValue::as_bool).unwrap_or(next.visible),
+                    "hidden" => next.visible = value.and_then(protocol::DslValue::as_bool).map_or(next.visible, |hidden| !hidden),
+                    "locked" => next.locked = value.and_then(protocol::DslValue::as_bool).unwrap_or(next.locked),
+                    _ => continue,
+                }
+                if next == *object {
+                    continue;
+                }
+                mutations.push(CadMutation::DeleteObject(crate::mutations::delete_object::DeleteObject { pane, object_id: object.id.clone() }));
+                mutations.push(CadMutation::CreateObject(crate::mutations::create_object::CreateObject { pane, index: index as u32, object: crate::mutations::cad_object_spec_of(&next) }));
+            }
+        }
+    }
+    mutations
 }
 
 pub(crate) fn make_object_for_typology(typology: &str, label_count: usize, pane: CadPaneId) -> crate::standards::v1::subsets::any::io::geometry_import::CadObject {
@@ -950,6 +1146,10 @@ semio_framework_plugin::app_commands! {
         "saveInPlay" as "save-in-play" => save_in_play::SaveInPlay,
         "saveCurrent" as "save-current" => save_current::SaveCurrent,
         "loadRawRequest" as "load-raw-request" => load_raw_request::LoadRawRequest,
+
+        // 📄️ Appended LAST on purpose: a row's position in this block IS its binary variant ordinal,
+        // so a new verb goes at the end rather than beside its thematic neighbours.
+        "setPanelPage" as "set-panel-page" => set_panel_page::SetPanelPage,
     }
 }
 
@@ -977,6 +1177,7 @@ fn cad_command_from_action(action: &str, args: Option<&protocol::DslValue>) -> R
         "setActiveExample" => CadCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: str_field("exampleId").unwrap_or_default() }),
         "setDislocateOption" => CadCommand::SetDislocateOption(set_dislocate_option::SetDislocateOption { pane: str_field("pane"), option: str_field("option").unwrap_or_default(), pressed: bool_field("pressed") }),
         "setNodeSelection" => CadCommand::SetNodeSelection(set_node_selection::SetNodeSelection { node_ids: str_vec_field("nodeIds") }),
+        "setPanelPage" => CadCommand::SetPanelPage(set_panel_page::SetPanelPage { section: str_field("section").unwrap_or_default(), page: f64_field("page").unwrap_or(0.0) }),
         "setCamera" => CadCommand::SetCamera(set_camera::SetCamera { pane: str_field("surfaceId"), camera: args.and_then(|value| value.get("camera")).and_then(|value| protocol::FromValue::from_value(value.clone()).ok()).unwrap_or_default() }),
         "setProjection" => CadCommand::SetProjection(set_projection::SetProjection {
             pane: str_field("surfaceId"),
@@ -1059,6 +1260,19 @@ fn cad_command_from_action(action: &str, args: Option<&protocol::DslValue>) -> R
 pub struct CadPlayApp;
 
 impl CadPlayApp {
+    /// 🪟️ The one window-chrome implementation both trait entry points share — `interaction` is the
+    /// live `"cad"` domain for the request-context twin and empty for the interaction-less one.
+    fn window_engagements_body(doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, view_state: &ViewModel, interaction: CadInteractionSnapshot) -> HashMap<String, WindowEngagement> {
+        let view = CadPlayView { document: doc.snapshot.clone(), runtime: runtime_of(cfg), interaction };
+        let labels = cad_labels(view_state);
+        HashMap::from([
+            (shape::WINDOW_KIND_ID.to_string(), shape::engagement(&view, labels)),
+            (building::WINDOW_KIND_ID.to_string(), building::engagement(&view, labels)),
+            (energy::WINDOW_KIND_ID.to_string(), energy::engagement(&view, labels)),
+            (structure_classic::WINDOW_KIND_ID.to_string(), structure_classic::engagement(&view, labels)),
+        ])
+    }
+
     /// 🖼️ The one render implementation both trait entry points share.
     fn render_body(body_key: &str, doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, view_state: &ViewModel, interaction: CadInteractionSnapshot) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         crate::standards::v1::subsets::any::schema::inferences::validate_cad_computer_contributions(&cfg.snapshot.contributions_json);
@@ -1101,13 +1315,14 @@ impl CadPlayApp {
 }
 
 //#region 🧵️RetainedCommands
-const CAD_RETAINED_ARTIFACT_TOOL_IDS: &[&str] = &["addNode", "renameNode", "patchCadPlayReference"];
+const CAD_RETAINED_ARTIFACT_TOOL_IDS: &[&str] = &["addNode", "renameNode", "patchCadPlayReference", "addObject", "patchObject", "patchSelection", "deleteObject", "duplicateObject", "translateSelection", "rotateSelection", "scaleSelection"];
 const CAD_RETAINED_CONFIG_TOOL_IDS: &[&str] = &[
     "setCamera",
     "setProjection",
     "setProjectionParam",
     "setDislocateOption",
     "setNodeSelection",
+    "setPanelPage",
     "setReferenceSelection",
     "referenceHover",
     "engagementInput",
@@ -1125,11 +1340,20 @@ const CAD_RETAINED_TOOL_IDS: &[&str] = &[
     "addNode",
     "renameNode",
     "patchCadPlayReference",
+    "addObject",
+    "patchObject",
+    "patchSelection",
+    "deleteObject",
+    "duplicateObject",
+    "translateSelection",
+    "rotateSelection",
+    "scaleSelection",
     "setCamera",
     "setProjection",
     "setProjectionParam",
     "setDislocateOption",
     "setNodeSelection",
+    "setPanelPage",
     "setReferenceSelection",
     "referenceHover",
     "engagementInput",
@@ -1154,11 +1378,22 @@ const CAD_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &
     ArtifactToolPublicationContract { tool_id: "addNode", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
     ArtifactToolPublicationContract { tool_id: "renameNode", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: "patchCadPlayReference", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    // 🪆️ Every object gesture publishes on the Artifact lane alone: its ops re-mint the addressed
+    // pane's composed model child handle on the parent document, which is ordinary in-history state.
+    ArtifactToolPublicationContract { tool_id: "addObject", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "patchObject", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "patchSelection", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "deleteObject", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "duplicateObject", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "translateSelection", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "rotateSelection", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "scaleSelection", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: "setCamera", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
     ArtifactToolPublicationContract { tool_id: "setProjection", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
     ArtifactToolPublicationContract { tool_id: "setProjectionParam", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
     ArtifactToolPublicationContract { tool_id: "setDislocateOption", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
     ArtifactToolPublicationContract { tool_id: "setNodeSelection", lanes: &[ArtifactToolPublicationLane::Config] },
+    ArtifactToolPublicationContract { tool_id: "setPanelPage", lanes: &[ArtifactToolPublicationLane::Config] },
     ArtifactToolPublicationContract { tool_id: "setReferenceSelection", lanes: &[ArtifactToolPublicationLane::Config, ArtifactToolPublicationLane::Interaction] },
     ArtifactToolPublicationContract { tool_id: "referenceHover", lanes: &[ArtifactToolPublicationLane::Config] },
     ArtifactToolPublicationContract { tool_id: "engagementInput", lanes: &[ArtifactToolPublicationLane::Config] },
@@ -1305,6 +1540,7 @@ fn cad_config_retained_bytes(config: &CadConfig) -> usize {
         .saturating_add(config.engagement_input.len())
         .saturating_add(config.engagement_step.len())
         .saturating_add(config.contributions_json.len())
+        .saturating_add(config.panel_pages_json.len())
 }
 
 /// 🧺️ `work_items` counts staged edit ROWS (forward + inverse), never mutations: every
@@ -1977,15 +2213,23 @@ impl ArtifactEditor for CadPlayApp {
         Self::render_body(body_key, doc, cfg, view_state, CadInteractionSnapshot::from_interaction(interaction))
     }
 
+    /// 🕹️ Interaction-less twin of [`Self::window_engagements_with_request_context`] — the HUD's
+    /// selected count reads `0` here, which is correct for an empty `"cad"` domain.
     fn window_engagements(doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, view_state: &ViewModel) -> HashMap<String, WindowEngagement> {
-        let view = CadPlayView { document: doc.snapshot.clone(), runtime: runtime_of(cfg), interaction: CadInteractionSnapshot::default() };
-        let labels = cad_labels(view_state);
-        HashMap::from([
-            (shape::WINDOW_KIND_ID.to_string(), shape::engagement(&view, labels)),
-            (building::WINDOW_KIND_ID.to_string(), building::engagement(&view, labels)),
-            (energy::WINDOW_KIND_ID.to_string(), energy::engagement(&view, labels)),
-            (structure_classic::WINDOW_KIND_ID.to_string(), structure_classic::engagement(&view, labels)),
-        ])
+        Self::window_engagements_body(doc, cfg, view_state, CadInteractionSnapshot::default())
+    }
+
+    /// 🕹️ The engagement HUD's `"N selected"` status reads the live framework-owned `"cad"` selection —
+    /// the same one [`Self::render_with_request_context`] paints the world scenes from, so the HUD and
+    /// the viewport can never disagree about what is picked.
+    fn window_engagements_with_request_context(
+        doc: &ArtifactView<'_, CadSnapshot>,
+        cfg: &ConfigView<'_, CadConfig>,
+        view_state: &ViewModel,
+        _transient: &semio_framework_plugin::TransientView<'_, semio_framework_plugin::NoTransient>,
+        interaction: &semio_framework_plugin::app::InteractionView<'_>,
+    ) -> HashMap<String, WindowEngagement> {
+        Self::window_engagements_body(doc, cfg, view_state, CadInteractionSnapshot::from_interaction(interaction))
     }
 
     /// 🪟️ Resolves measures for the exact addressed world-window instance.
@@ -2004,12 +2248,11 @@ impl ArtifactEditor for CadPlayApp {
         HashMap::from([(window_id.to_string(), measures)])
     }
 
-    /// 🖱️ Transform/duplicate/delete section for the World3d context menu. ⚠️ FIRST-CLASS-HOVER-
-    /// AND-SELECTION-MECHANISM (26/08/14): `ArtifactApp::context_menu` has no `InteractionView`
-    /// parameter, so this can no longer gate on "is anything selected" the way it used to
-    /// (`cfg.snapshot.selected_object_ids`, now framework-owned and unreachable here) — always shows
-    /// the section; a bare right-click with nothing selected is a documented reduced-fidelity gap
-    /// (each action already no-ops on an empty selection at dispatch time)?.
+    /// 🖱️ Transform/duplicate/delete section for the World3d context menu. Deliberately NOT gated on
+    /// "is anything selected": every row already no-ops on an empty `"cad"` selection at dispatch
+    /// time, and the section is what makes the menu discoverable before the first pick. The
+    /// `InteractionView` is available here now (via `context_menu_with_request_context`), so gating is
+    /// a UX decision this app can revisit — it is no longer an SDK limitation.
     fn context_menu(_request: &ContextMenuRequest, _doc: &ArtifactView<'_, CadSnapshot>, _cfg: &ConfigView<'_, CadConfig>, _view_state: &ViewModel, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
         Menu::of(registry).action("translateSelection").action("rotateSelection").action("scaleSelection").action("duplicateObject").destructive("deleteObject").build()
     }
@@ -2094,6 +2337,7 @@ pub fn create_cad_app() -> semio_framework_plugin::AppDefinition {
             .action_with(ActionDefinition::new("setProjectionParam", LocalizedLabel::native("Set Projection Parameter", "Projektionsparameter festlegen"), ActionKind::View, "scan"))
             .action_with(ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), ActionKind::Mutation, "panel-left"))
             .action_with(ActionDefinition::bounded_catalog("setNodeSelection", LocalizedLabel::native("Set Node Selection", "Knotenauswahl festlegen"), ActionKind::View).in_palette(false))
+            .action_with(ActionDefinition::bounded_catalog("setPanelPage", LocalizedLabel::native("Set Panel Page", "Panel-Seite festlegen"), ActionKind::View).in_palette(false))
             .action_with(ActionDefinition::bounded_catalog("setReferenceSelection", LocalizedLabel::native("Set Reference Selection", "Referenzauswahl festlegen"), ActionKind::View).in_palette(false))
             .action_with(ActionDefinition::bounded_catalog("referenceHover", LocalizedLabel::native("Reference Hover", "Überfahren (Referenz)"), ActionKind::View).in_palette(false))
             .action_with(ActionDefinition::new("engagementInput", LocalizedLabel::native("Engagement Input", "Eingabe"), ActionKind::View, "hand").in_palette(false))
@@ -2145,16 +2389,16 @@ pub fn create_cad_app() -> semio_framework_plugin::AppDefinition {
             // shooting's format defaults — every `CadConfig` field is session view-state, not a setting).
             .config(CadPlayApp::config_spec())
             .io(cad_io())
-            .action_interactive_job("addObject", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("patchObject", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("patchSelection", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("deleteObject", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("duplicateObject", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("addObject", InteractiveJobClassification::Migrated)
+            .action_interactive_job("patchObject", InteractiveJobClassification::Migrated)
+            .action_interactive_job("patchSelection", InteractiveJobClassification::Migrated)
+            .action_interactive_job("deleteObject", InteractiveJobClassification::Migrated)
+            .action_interactive_job("duplicateObject", InteractiveJobClassification::Migrated)
             .action_interactive_job("addNode", InteractiveJobClassification::Migrated)
             .action_interactive_job("renameNode", InteractiveJobClassification::Migrated)
-            .action_interactive_job("translateSelection", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("rotateSelection", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("scaleSelection", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("translateSelection", InteractiveJobClassification::Migrated)
+            .action_interactive_job("rotateSelection", InteractiveJobClassification::Migrated)
+            .action_interactive_job("scaleSelection", InteractiveJobClassification::Migrated)
             .action_interactive_job("applyTransformation", InteractiveJobClassification::BatchOnlyPendingRewrite)
             .action_interactive_job("importCadFile", InteractiveJobClassification::BatchOnlyPendingRewrite)
             .action_interactive_job("patchCadPlayReference", InteractiveJobClassification::Migrated)
@@ -2166,6 +2410,7 @@ pub fn create_cad_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("setProjectionParam", InteractiveJobClassification::Migrated)
             .action_interactive_job("setDislocateOption", InteractiveJobClassification::Migrated)
             .action_interactive_job("setNodeSelection", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setPanelPage", InteractiveJobClassification::Migrated)
             .action_interactive_job("setReferenceSelection", InteractiveJobClassification::Migrated)
             .action_interactive_job("referenceHover", InteractiveJobClassification::Migrated)
             .action_interactive_job("engagementInput", InteractiveJobClassification::Migrated)

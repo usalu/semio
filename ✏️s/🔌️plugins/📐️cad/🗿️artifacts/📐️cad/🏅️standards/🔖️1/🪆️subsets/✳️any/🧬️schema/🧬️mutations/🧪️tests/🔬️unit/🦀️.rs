@@ -3,9 +3,12 @@ use crate::mutations::{
 change_reference_hidden::ChangeReferenceHidden, change_reference_locked::ChangeReferenceLocked, change_reference_width::ChangeReferenceWidth,
     create_building_model::CreateBuildingModel, create_drawing::CreateDrawing, create_energy_model::CreateEnergyModel, create_node::CreateNode, create_shape_model::CreateShapeModel, create_structure_classic_model::CreateStructureClassicModel,
     delete_building_model::DeleteBuildingModel, delete_drawing::DeleteDrawing, delete_energy_model::DeleteEnergyModel, delete_node::DeleteNode, delete_shape_model::DeleteShapeModel, delete_structure_classic_model::DeleteStructureClassicModel,
-    move_reference::MoveReference, rename_node::RenameNode, replace_reference_media::ReplaceReferenceMedia, replace_references::ReplaceReferences,
+    create_object::CreateObject, delete_object::DeleteObject, move_objects::MoveObjects, move_reference::MoveReference, rename_node::RenameNode, replace_reference_media::ReplaceReferenceMedia,
+    replace_references::ReplaceReferences, rotate_objects::RotateObjects, scale_objects::ScaleObjects,
 };
+use crate::mutations::{CadObjectOrientation, CadObjectOrigin, CadObjectScale, CadObjectSpec};
 use crate::sample_scene_fixture::{sample_model_child, sample_reference, sample_scene};
+use crate::CadPaneId;
 use protocol::Mutation;
 
 /// ⚖️ One value per `CadMutation` variant — the closed set every wire law below iterates.
@@ -39,6 +42,20 @@ pub fn every_mutation() -> Vec<CadMutation> {
             new_opacity: Some(0.5),
         }),
         CadMutation::ReplaceReferences(ReplaceReferences { model_definition_id: "spatial.shape".into(), references: vec![sample_reference()] }),
+        // 🪆️ The five object-lifecycle kinds read the addressed pane child's in-process
+        // materialization, which `sample_scene`'s handles deliberately do not carry — against THIS
+        // base every one of them is a `mutation.no-op`, which is exactly what the wire/inverse laws
+        // below need from them. Their real apply/inverse behaviour against a materialized pane is
+        // asserted by the laws beside each leaf (`🧬️mutations/<kind>/🧪️tests/`).
+        CadMutation::CreateObject(CreateObject {
+            pane: CadPaneId::Shape,
+            index: 0,
+            object: CadObjectSpec { id: "object-fresh".into(), label: "Box 1".into(), typology: "spatial.shape.primitive.box".into(), visible: true, locked: false, origin: [0.0, 0.0, 0.0], orientation: None, scale: None, mesh_url: None, extent: None, solid_handle: None },
+        }),
+        CadMutation::DeleteObject(DeleteObject { pane: CadPaneId::Shape, object_id: "object-1".into() }),
+        CadMutation::MoveObjects(MoveObjects { pane: CadPaneId::Shape, placements: vec![CadObjectOrigin { object_id: "object-1".into(), new_origin: [1.0, 2.0, 3.0] }] }),
+        CadMutation::RotateObjects(RotateObjects { pane: CadPaneId::Shape, placements: vec![CadObjectOrientation { object_id: "object-1".into(), new_orientation: [0.0, 0.0, 0.0, 1.0] }] }),
+        CadMutation::ScaleObjects(ScaleObjects { pane: CadPaneId::Shape, placements: vec![CadObjectScale { object_id: "object-1".into(), new_scale: [2.0, 2.0, 2.0] }] }),
     ]
 }
 

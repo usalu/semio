@@ -13,6 +13,7 @@ package = "semio:sourcing"
 
 [package.metadata.semio]
 role = "plugin"
+consumes = ["sourcing.module"]
 
 [[package.metadata.semio.playground]]
 variant = "sourcing"

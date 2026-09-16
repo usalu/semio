@@ -1,0 +1,14 @@
+{
+  "mutation": "replaceCombination",
+  "id": "uls9",
+  "newCombination": {
+    "id": "uls9",
+    "name": "ULS spare",
+    "terms": [
+      {
+        "caseId": "dead",
+        "factor": 1.35
+      }
+    ]
+  }
+}
