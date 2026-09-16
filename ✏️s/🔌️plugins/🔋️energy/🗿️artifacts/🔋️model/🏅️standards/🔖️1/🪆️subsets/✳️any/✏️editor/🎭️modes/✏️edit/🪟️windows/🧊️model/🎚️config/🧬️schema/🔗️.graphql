@@ -1,0 +1,9 @@
+type EnergyModelCameraPose {
+  position: [Float!]!
+  target: [Float!]!
+  zoom: Float!
+}
+
+type EnergyModelWindowConfig {
+  camera: EnergyModelCameraPose! @state(class: CONFIG)
+}

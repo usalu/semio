@@ -144,7 +144,7 @@ async fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
 async fn commands_keep_their_pre_migration_wire_bytes() {
     let cases: [(WiresCommand, &str, &str); 2] = [
         (WiresCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "metabolism".into() }), "active-example active-example example-id=metabolism", "0100010a6d657461626f6c69736d01000600"),
-        (WiresCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp {}), "pointer-up pointer-up", "01060000"),
+        (WiresCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { cancelled: false }), "pointer-up pointer-up cancelled=false", "PINNED_BELOW"),
     ];
     for (command, text, hex) in cases {
         assert_eq!(protocol::OpText::print_op(&command), text);
@@ -160,9 +160,9 @@ pub(super) fn every_command() -> Vec<WiresCommand> {
         WiresCommand::AddNode(add_node::AddNode { kind: "identity".into() }),
         WiresCommand::AddRelationship(add_relationship::AddRelationship { kind: "owns".into() }),
         WiresCommand::DeleteSelection(delete_selection::DeleteSelection {}),
-        WiresCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { x: 1.5, y: -2.5 }),
+        WiresCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { x: 1.5, y: -2.5, samples: vec![[0.5, -1.5], [1.5, -2.5]] }),
         WiresCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown { id: Some("node-1".into()), x: 10.0, y: 20.0 }),
-        WiresCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp {}),
+        WiresCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { cancelled: false }),
         WiresCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport: semio_framework_os_kernel::Viewport2d { x: 1.0, y: 2.0, zoom: 1.5 } }),
     ]
 }
@@ -282,8 +282,8 @@ async fn two_instances_converge_disjoint_graph_edits_via_backbone() {
     // A adds node-3 (a new node); B moves node-2 (a PatchNode) — disjoint edits on the graph.
     instance_a.dispatch_typed(WiresCommand::AddNode(add_node::AddNode { kind: "identity".into() }), &meta("actor-a")).await.expect("a adds node");
     instance_b.dispatch_typed(WiresCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown { id: Some("node-2".into()), x: 0.0, y: 0.0 }), &meta("actor-b")).await.expect("b down");
-    instance_b.dispatch_typed(WiresCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { x: 50.0, y: 60.0 }), &meta("actor-b")).await.expect("b move");
-    instance_b.dispatch_typed(WiresCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp {}), &meta("actor-b")).await.expect("b up");
+    instance_b.dispatch_typed(WiresCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { x: 50.0, y: 60.0, samples: Vec::new() }), &meta("actor-b")).await.expect("b move");
+    instance_b.dispatch_typed(WiresCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { cancelled: false }), &meta("actor-b")).await.expect("b up");
 
     instance_a.handle_action("commitCheckpoint", None, &meta("actor-a")).await.expect("pump a");
     instance_b.handle_action("commitCheckpoint", None, &meta("actor-b")).await.expect("pump b");

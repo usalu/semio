@@ -1596,7 +1596,8 @@ class DocumentBrowserActorReservation {
   private coldApplied: VerifiedColdArtifactPair | null = null;
   private coldTransfer: Promise<void> | null = null;
   private socket: WebSocket | null = null;
-  private pendingUiPatch: { readonly offer: BrowserActorUiPatchOfferV1; readonly resolve: (result: BrowserActorUiPatchResultV1) => void; readonly reject: (error: Error) => void; readonly timer: ReturnType<typeof setTimeout> } | null = null;
+  /** 🩹️ The one patch offer awaiting the main thread; `settled` mirrors its outcome so a queued action can wait on it without owning it. */
+  private pendingUiPatch: { readonly offer: BrowserActorUiPatchOfferV1; readonly resolve: (result: BrowserActorUiPatchResultV1) => void; readonly reject: (error: Error) => void; readonly timer: ReturnType<typeof setTimeout>; readonly settled: Promise<void> } | null = null;
   private renderedUiPatch = false;
   private renderedUiRevision = 0;
   private acknowledgedUiRevision = 0;
@@ -1613,7 +1614,6 @@ class DocumentBrowserActorReservation {
   private localEffectTail: Promise<void> = Promise.resolve();
   private localEffectFailure: Error | null = null;
   private lastActionSequence = 0;
-  private pendingActionSequence: number | null = null;
   private retirement: Promise<"retired" | "unconfirmed"> | null = null;
   private closed = false;
 
@@ -1900,15 +1900,43 @@ class DocumentBrowserActorReservation {
     if (!(await binding.port.receive(this.currentDocumentSource(), parsed.message))) throw new Error("actor-document-port.stale");
   }
 
+  /** ⏳️ Resolves once no patch offer awaits the main thread and no host view refresh is outstanding — poll-free, by
+   * wrapping the promises those two already own. It MUST run outside the turn lane: `refreshHostView` settles by
+   * running its own turn on that lane, so a turn that awaited `viewRefresh` from inside would wait on the turn
+   * queued behind itself. A patch deadline rejects through here (the action falls to `action-refused`). */
+  private async awaitUiQuiescence(): Promise<void> {
+    while (this.pendingUiPatch !== null || this.viewRefresh !== null) {
+      if (this.pendingUiPatch !== null) await this.pendingUiPatch.settled;
+      else await this.viewRefresh;
+    }
+  }
+
+  /** 🎯️ Applies one authenticated action in issue order: the turn lane is the FIFO (L5 — an early input queues, it is
+   * never refused as `action-busy`), a patch still being acknowledged is awaited rather than refused, and the
+   * action is accepted against the revision the main thread had painted when the user clicked. */
   async dispatchAction(raw: BrowserActorActionRequestV1): Promise<BrowserActorActionResultV1> {
     const request = parseBrowserActorActionRequestV1(raw);
-    if (this.pendingActionSequence !== null) return browserActorActionDisposition(request, "rejected", 0, [], "action-busy");
-    this.pendingActionSequence = request.actionSequence;
+    // 🖼️ Worker messages from one client are ordered: every `browser-actor-ui-patch-result` the main thread applied
+    // BEFORE issuing this action has already advanced `renderedUiRevision`, and none it sent afterwards has — so the
+    // revision rendered at arrival is exactly the one the main thread had painted when the user clicked.
+    const paintedUiRevision = this.renderedUiRevision;
     let invoked = false;
     try {
+      await this.awaitUiQuiescence();
       return await this.enqueueTurn(async () => {
+        // 🩹️ Offers are acknowledged inside the turn that made them, so this is null at a turn boundary today; it is
+        // awaited (never refused) so the contract holds if an offer ever outlives its turn.
+        if (this.pendingUiPatch !== null) await this.pendingUiPatch.settled;
         const fields = this.lease.fields();
         this.assertDocumentOwnerCurrent();
+        // 🪞️ Three revisions are painted states: `renderedUiRevision` (the last patch the main thread acknowledged),
+        // `acknowledgedUiRevision` (the same patch once the guest has been told; it trails `renderedUiRevision` only
+        // inside the reconciling turn), and `paintedUiRevision` (the state on screen when the click was issued, one
+        // patch behind when the click raced an offer — the guest tolerates that lag, `DEFAULT_REVISION_TOLERANCE`).
+        const painted =
+          request.surfaceRevision === this.renderedUiRevision ||
+          request.surfaceRevision === this.acknowledgedUiRevision ||
+          (paintedUiRevision >= 1 && request.surfaceRevision === paintedUiRevision);
         if (
           request.scope.spaceId !== fields.scope.spaceId ||
           request.scope.documentId !== fields.scope.documentId ||
@@ -1916,7 +1944,7 @@ class DocumentBrowserActorReservation {
           request.appChannelVersion !== BROWSER_ACTOR_ACTION_APP_CHANNEL_VERSION ||
           request.activationGeneration !== this.generation.toString() ||
           request.instanceId !== 0 ||
-          request.surfaceRevision !== this.renderedUiRevision ||
+          !painted ||
           request.actionSequence <= this.lastActionSequence ||
           this.documentBinding === null ||
           !this.documentBackboneReady ||
@@ -1924,9 +1952,7 @@ class DocumentBrowserActorReservation {
           this.state.artifactRebootstrapRequired ||
           this.state.requiredTailFrontier !== null ||
           this.coldApplied === null ||
-          this.coldTransfer !== null ||
-          this.pendingUiPatch !== null ||
-          this.viewRefresh !== null
+          this.coldTransfer !== null
         ) throw new Error("action-owner-mismatch");
         const child = this.child;
         if (child === null) throw new Error("action-child-unavailable");
@@ -1965,8 +1991,6 @@ class DocumentBrowserActorReservation {
       if (invoked && !explicitRefusal) this.close();
       const reason = error instanceof Error && /^(action-owner-mismatch|action-child-unavailable|action-guest-refused)$/u.test(error.message) ? error.message : invoked ? "action-state-unconfirmed" : "action-refused";
       return browserActorActionDisposition(request, "rejected", 0, [], reason);
-    } finally {
-      if (this.pendingActionSequence === request.actionSequence) this.pendingActionSequence = null;
     }
   }
   private readonly timer: ReturnType<typeof setTimeout>;
@@ -2197,19 +2221,27 @@ class DocumentBrowserActorReservation {
 
   private awaitUiPatchResult(offer: BrowserActorUiPatchOfferV1): Promise<BrowserActorUiPatchResultV1> {
     if (this.pendingUiPatch !== null) return Promise.reject(new Error("document browser actor: patch result already pending"));
-    return new Promise((resolve, reject) => {
-      const timer = setTimeout(
-        () => {
-          if (this.pendingUiPatch?.offer !== offer) return;
-          this.pendingUiPatch = null;
-          reject(new Error("document browser actor: patch result deadline"));
-          this.close();
-        },
-        Math.min(15_000, BROWSER_ACTOR_CHILD_LIMITS.invokeMs),
-      );
-      this.pendingUiPatch = { offer, resolve, reject, timer };
-      post({ ...offer, clientInstanceId: this.state.openClientInstanceId });
+    let resolve!: (result: BrowserActorUiPatchResultV1) => void, reject!: (error: Error) => void;
+    const result = new Promise<BrowserActorUiPatchResultV1>((resolvePatch, rejectPatch) => {
+      resolve = resolvePatch;
+      reject = rejectPatch;
     });
+    const timer = setTimeout(
+      () => {
+        if (this.pendingUiPatch?.offer !== offer) return;
+        this.pendingUiPatch = null;
+        reject(new Error("document browser actor: patch result deadline"));
+        this.close();
+      },
+      Math.min(15_000, BROWSER_ACTOR_CHILD_LIMITS.invokeMs),
+    );
+    // ⏳️ `settled` lets `awaitUiQuiescence` wait for this offer; its own no-op catch keeps an unobserved deadline
+    // from surfacing as an unhandled rejection while awaiters still see the rejection.
+    const settled = result.then(() => undefined);
+    settled.catch(() => {});
+    this.pendingUiPatch = { offer, resolve, reject, timer, settled };
+    post({ ...offer, clientInstanceId: this.state.openClientInstanceId });
+    return result;
   }
 
   settleUiPatch(result: BrowserActorUiPatchResultV1): void {

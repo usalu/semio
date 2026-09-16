@@ -29,7 +29,7 @@ fn actions_are_localized_and_registered_as_interactive() {
 #[test]
 fn an_idle_window_still_renders_the_editable_run_settings_and_the_framework_start_chord() {
     let model = crate::model::Model::default();
-    let text = text(render(None, EnergyModelConfig::default(), &model, Locale::En));
+    let text = text(render(None, &EnergyModelConfig::default(), &model, Locale::En));
     assert!(text.contains("energy-settings"), "the settings block must render without a run");
     assert!(text.contains("energy-setting-run-period"));
     assert!(text.contains("energy-simulation-start-hint"));
@@ -41,20 +41,20 @@ fn the_window_reads_the_run_state_from_the_framework_ledger_view() {
     let model = crate::model::Model::default();
     for state in ToolRunState::ALL {
         for locale in [Locale::En, Locale::De] {
-            let text = text(render(Some(&view(state)), EnergyModelConfig::default(), &model, locale));
+            let text = text(render(Some(&view(state)), &EnergyModelConfig::default(), &model, locale));
             assert!(text.contains(state.label().text(locale)), "state {state:?} renders its framework label in {locale:?}");
             assert!(text.contains(&format!("busy={}", !state.is_terminal())));
         }
     }
     let foreign = ToolRunView { tool_id: "otherTool".into(), ..view(ToolRunState::Running) };
-    assert!(text(render(Some(&foreign), EnergyModelConfig::default(), &model, Locale::En)).contains("No energy simulation run"));
+    assert!(text(render(Some(&foreign), &EnergyModelConfig::default(), &model, Locale::En)).contains("No energy simulation run"));
 }
 
 #[test]
 fn both_authored_languages_produce_different_text_and_the_framework_chords() {
     let model = crate::model::Model::default();
-    let english = text(render(None, EnergyModelConfig::default(), &model, Locale::En));
-    let german = text(render(None, EnergyModelConfig::default(), &model, Locale::De));
+    let english = text(render(None, &EnergyModelConfig::default(), &model, Locale::En));
+    let german = text(render(None, &EnergyModelConfig::default(), &model, Locale::De));
     assert_ne!(english, german);
     assert!(german.contains("Laufeinstellungen"));
     assert!(english.contains("Run settings"));

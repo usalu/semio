@@ -51,6 +51,20 @@ type Puzzle2dFixtureDropPayload = {
 //#endregion Types
 
 //#region Parsing
+/** @emoji 🩺️ The document vitals this host publishes as `data-board-*` attributes on its container — node/edge counts
+ * and every node's world position — so a headless probe (and the shell's own tests) can read what the guest last
+ * painted without a guest round trip, the board twin of `World3dHost`'s `data-instances-json`. */
+function board2dVitals(fixtureJson: string): { readonly nodes: number; readonly edges: number; readonly positionsJson: string } {
+  try {
+    const fixture = JSON.parse(fixtureJson) as { nodes?: { id?: string; x?: number; y?: number }[]; edges?: unknown[] };
+    const positions: Record<string, [number, number]> = {};
+    for (const node of fixture.nodes ?? []) if (typeof node.id === "string" && typeof node.x === "number" && typeof node.y === "number") positions[node.id] = [node.x, node.y];
+    return { nodes: fixture.nodes?.length ?? 0, edges: fixture.edges?.length ?? 0, positionsJson: JSON.stringify(positions) };
+  } catch {
+    return { nodes: -1, edges: -1, positionsJson: "{}" };
+  }
+}
+
 function parseBoardCamera(json: string): BoardCamera | null {
   try {
     const parsed = JSON.parse(json) as Partial<BoardCamera>;
@@ -1017,6 +1031,7 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
   //#endregion FixtureDropHandlers
 
   const toolRunTraceCamera = useMemo(() => parseBoardCamera(scene?.cameraJson ?? "") ?? { x: 0, y: 0, zoom: 1 }, [scene?.cameraJson]);
+  const boardVitals = useMemo(() => board2dVitals(scene?.fixtureJson ?? ""), [scene?.fixtureJson]);
   const toolRunTracePathForShape = useMemo(() => board2dToolRunTracePathForShape(board2dToolRunTraceShapes(scene?.glyphCatalogsJson ?? "")), [scene?.glyphCatalogsJson]);
   const onToolRunTraceCursor = useToolRunTraceCursorEcho(windowInstanceId);
 
@@ -1028,6 +1043,13 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
       ref={containerRef}
       className="semio-board-2d-host absolute inset-0 box-border min-h-0 min-w-0 overflow-hidden select-none"
       data-surface-id={node.surfaceId}
+      data-board-nodes={boardVitals.nodes}
+      data-board-edges={boardVitals.edges}
+      data-board-positions-json={boardVitals.positionsJson}
+      data-board-selection-json={scene.selectionJson}
+      data-board-camera-json={scene.cameraJson}
+      data-board-hovered-id={scene.hoveredId ?? ""}
+      data-board-active-utility={scene.activeUtility ?? ""}
       style={{ touchAction: "none" }}
       onContextMenu={onContextMenu}
       onDragOver={onDragOver}

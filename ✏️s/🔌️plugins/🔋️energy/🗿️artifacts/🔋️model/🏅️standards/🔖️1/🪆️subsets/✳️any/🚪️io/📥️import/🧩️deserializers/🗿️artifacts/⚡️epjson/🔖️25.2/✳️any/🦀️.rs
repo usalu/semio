@@ -142,13 +142,19 @@ fn vertices_of(fields: &Object) -> Vec<[f64; 3]> {
     }
 }
 
+/// 🔶️ Every `vertex_<n>_…` corner the aperture states, in order, stopping at the first gap.
+///
+/// `FenestrationSurface:Detailed` itself names four, but a document this codec wrote for an
+/// aperture carrying its own polygon states as many as that polygon has — and since ticket
+/// 26/09/16/ENERGY-3D-MODEL-TREE-INSPECTOR a semio [`Fenestration`] has somewhere to keep them,
+/// so they are read rather than truncated.
 fn aperture_corners(fields: &Object) -> Vec<[f64; 3]> {
-    (1..=4)
-        .filter_map(|index| {
-            let x = number(fields, &format!("vertex_{index}_x_coordinate"))?;
-            Some([x, number_or(fields, &format!("vertex_{index}_y_coordinate"), 0.0), number_or(fields, &format!("vertex_{index}_z_coordinate"), 0.0)])
-        })
-        .collect()
+    let mut corners = Vec::new();
+    for index in 1.. {
+        let Some(x) = number(fields, &format!("vertex_{index}_x_coordinate")) else { break };
+        corners.push([x, number_or(fields, &format!("vertex_{index}_y_coordinate"), 0.0), number_or(fields, &format!("vertex_{index}_z_coordinate"), 0.0)]);
+    }
+    corners
 }
 
 fn distance(a: [f64; 3], b: [f64; 3]) -> f64 {
@@ -470,30 +476,37 @@ fn decode_apertures(root: &Object, model: &mut Model, glazing: &[(String, f64, f
             continue;
         };
         let corners = aperture_corners(fields);
-        if corners.len() < 4 {
-            diagnostics.push(EpJsonDiagnostic::new("epjson.fenestration.not-rectangular", name, "only four-vertex rectangular apertures decode into a semio Fenestration"));
+        if corners.len() < 3 {
+            diagnostics.push(EpJsonDiagnostic::new("epjson.fenestration.degenerate", name, "an aperture needs at least three corners to decode into a semio Fenestration"));
             continue;
         }
-        let width = distance(corners[0], corners[1]);
-        let height = distance(corners[1], corners[2]);
-        let sill = match surface_normal(&host.vertices_m) {
+        let rectangular = corners.len() == 4;
+        // 🔶️ `sill` is measured along the host's own "up"; `span` is the aperture's extent along
+        // that same axis, which for a rectangle is `distance(corners[1], corners[2])` and for an
+        // arbitrary ring is the only height that means anything.
+        let (sill, span) = match surface_normal(&host.vertices_m) {
             Some(normal) => {
                 let up = [0.0f64, 0.0, 1.0];
                 let horizontal = [up[1] * normal[2] - up[2] * normal[1], up[2] * normal[0] - up[0] * normal[2], up[0] * normal[1] - up[1] * normal[0]];
                 let length = (horizontal[0] * horizontal[0] + horizontal[1] * horizontal[1] + horizontal[2] * horizontal[2]).sqrt();
                 if length <= 1e-12 {
-                    0.0
+                    (0.0, 0.0)
                 } else {
                     let unit = [horizontal[0] / length, horizontal[1] / length, horizontal[2] / length];
                     let vertical = [normal[1] * unit[2] - normal[2] * unit[1], normal[2] * unit[0] - normal[0] * unit[2], normal[0] * unit[1] - normal[1] * unit[0]];
                     let origin = host.vertices_m.first().copied().unwrap_or([0.0; 3]);
                     let project = |point: [f64; 3]| (point[0] - origin[0]) * vertical[0] + (point[1] - origin[1]) * vertical[1] + (point[2] - origin[2]) * vertical[2];
                     let base = host.vertices_m.iter().map(|vertex| project(*vertex)).fold(f64::INFINITY, f64::min);
-                    project(corners[0]) - base
+                    let lowest = corners.iter().map(|corner| project(*corner)).fold(f64::INFINITY, f64::min);
+                    let highest = corners.iter().map(|corner| project(*corner)).fold(f64::NEG_INFINITY, f64::max);
+                    (project(corners[0]) - base, highest - lowest)
                 }
             }
-            None => 0.0,
+            None => (0.0, 0.0),
         };
+        let width = distance(corners[0], corners[1]);
+        let height = if rectangular { distance(corners[1], corners[2]) } else { span };
+        let area = if rectangular { width * height } else { crate::geometry::surface_area_m2(&corners) };
         let overhang = overhangs.iter().find(|(_, shade)| text(shade, "window_or_door_name") == Some(name));
         let fin = fins.iter().find(|(_, shade)| text(shade, "window_or_door_name") == Some(name));
         model.fenestrations.push(Fenestration {
@@ -503,7 +516,7 @@ fn decode_apertures(root: &Object, model: &mut Model, glazing: &[(String, f64, f
             u_value_w_m2k: *u_value,
             shgc: *shgc,
             vlt: *vlt,
-            area_m2: width * height,
+            area_m2: area,
             height_m: height,
             sill_height_m: sill,
             frame_conductance_w_k: 0.0,
@@ -513,6 +526,10 @@ fn decode_apertures(root: &Object, model: &mut Model, glazing: &[(String, f64, f
             fin_depth_m: fin.map_or(0.0, |(_, shade)| number_or(shade, "left_depth_as_fraction_of_window_door_width", 0.0) * height),
             fin_offset_m: fin.map_or(0.0, |(_, shade)| number_or(shade, "left_extension_from_window_door", 0.0)),
             glazing_construction_id: None,
+            // 🔶️ The real corners, kept rather than thrown away: they ARE the aperture, and
+            // re-exporting them is what makes this codec's own output round-trip byte-identically
+            // whatever shape the document states.
+            vertices_m: corners,
         });
         let _ = glazing_construction_name(name);
     }

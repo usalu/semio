@@ -72,10 +72,11 @@ import {
   type ActivationReason,
   createTurnOutcomeBroadcast,
   fetchDescriptorManifest,
+  type PluginDispatchHintV1,
   type PluginWasmHandle as KernelPluginWasmHandle,
   type TurnOutcome,
 } from "../../../../../../../🔨️modules/🎠️kernel/🟦️.ts";
-export { fetchDescriptorManifest };
+export { fetchDescriptorManifest, type PluginDispatchHintV1 };
 import {
   assertShardJspiAvailable,
   createShardCommandIngressPages,
@@ -148,9 +149,13 @@ export type PluginWasmHandle = {
   readonly destroyApp: (instanceId: number) => Promise<void>;
   /** 🧵 Drains one operation-owned export chunk; `undefined` is the sealed end marker. */
   readonly takeSegmentedDownloadChunk: (instanceId: number, operationId: bigint) => Promise<Uint8Array | undefined>;
-  readonly handleAction: (instanceId: number, actionJson: string, viewState: ViewModel) => Promise<InvocationResponse>;
-  /** 🎛️ Dispatches a scoped command (os/plugin/app/mode) — optional since not every program declares commands. */
-  readonly handleCommand?: (instanceId: number, commandJson: string, viewState: ViewModel) => Promise<InvocationResponse>;
+  /** 🎯️ Dispatches one action. `dispatch` ({@link PluginDispatchHintV1}, kernel) is the input ledger's
+   * causal `order` for this one call — forwarded down to the actor's command-ingress queue so a guest
+   * follow-up of input N runs before the already-queued input N+1 (law L2); absent ⇒ arrival order. */
+  readonly handleAction: (instanceId: number, actionJson: string, viewState: ViewModel, dispatch?: PluginDispatchHintV1) => Promise<InvocationResponse>;
+  /** 🎛️ Dispatches a scoped command (os/plugin/app/mode) — optional since not every program declares commands.
+   * `dispatch` as on {@link handleAction}. */
+  readonly handleCommand?: (instanceId: number, commandJson: string, viewState: ViewModel, dispatch?: PluginDispatchHintV1) => Promise<InvocationResponse>;
   readonly refreshUi: (instanceId: number, request: PluginUiRefreshRequest) => Promise<PluginUiRefreshResponse>;
   readonly contextMenu: (instanceId: number, request: PluginContextMenuRequest, viewState: ViewModel) => Promise<readonly ContextMenuItemSpec[]>;
   /** 🧾️ Complete projection used to seed or resynchronize host-owned history state. */
@@ -1193,18 +1198,37 @@ function getThunkScheduler(): TurnScheduler<ThunkTurnPayload, undefined> {
  * this file's pre-existing contract), while independent `actorId`s run fully concurrently. Backed by
  * {@link getThunkScheduler} — bounded, so a caller that floods one `actorId` gets a rejected promise
  * once {@link SERIALIZE_PER_ACTOR_MAILBOX_CAPACITY} is exceeded rather than growing memory forever. */
-export function serializePerActor<T>(actorId: string, run: () => Promise<T>, lane: "Interactive" | "UserVisible" | "Background" | "Maintenance" = "Interactive"): Promise<T> {
+export function serializePerActor<T>(actorId: string, run: () => Promise<T>, lane: "Interactive" | "UserVisible" | "Background" | "Maintenance" = "Interactive", order?: number): Promise<T> {
   return new Promise<T>((resolve, reject) => {
-    const backpressure = getThunkScheduler().enqueue(actorId, { lane, payload: { run, resolve: resolve as (value: unknown) => void, reject } });
+    const backpressure = getThunkScheduler().enqueue(actorId, { lane, order, payload: { run, resolve: resolve as (value: unknown) => void, reject } });
     if (backpressure.kind === "rejected") reject(new Error(`[DEBUG] serializePerActor: actor ${actorId}'s queue is full (>${SERIALIZE_PER_ACTOR_MAILBOX_CAPACITY} pending turns) — rejected rather than growing unbounded`));
   });
 }
 
 /** 📥️ Holds the actor's complete paged command-ingress sequence as one serialized unit. Every
  * direct poll operation uses the same key so redraw/completion turns cannot consume the command's
- * retained pending/terminal status and response effects before its channel caller observes them. */
-export function serializeCommandIngressForActor<T>(actorId: string, run: () => Promise<T>, lane: "Interactive" | "UserVisible" | "Background" | "Maintenance" = "Interactive"): Promise<T> {
-  return serializePerActor(`command-ingress:${actorId}`, run, lane);
+ * retained pending/terminal status and response effects before its channel caller observes them.
+ *
+ * ## `order` (INPUT-CAUSALITY-LEDGER §2 B, law L2)
+ * `order` is the input ledger's causal key for ONE dispatched input — `causalOrderKeyV1(provenance)`
+ * = `causedBy ?? inputSeq` (`🏛️ShellHost/🎯️input-ledger/🟦️.ts`): a root input carries its own
+ * `inputSeq`, a guest follow-up caused by input N (interaction verb, `dispatchAction` re-arm,
+ * extension completion the shell re-dispatches) carries N. It reaches the thunk scheduler verbatim as
+ * `MailboxEnvelope.order`, whose `## causal order` rule (`🎭️actor/📬️mailbox/🟦️.ts`) decides the
+ * position within the lane at enqueue time: an ordered call is inserted immediately BEFORE the
+ * earliest-queued call of the same lane with a strictly larger `order` (else appended); equal `order`
+ * keeps arrival order. So a follow-up of input N lands before the already-queued input N+1 — L2
+ * without the host knowing what the follow-up does.
+ *
+ * Mixing rule (the mailbox's "ordered-only" choice): calls WITHOUT `order` are appended at the tail
+ * and never reorder among themselves, and an ordered call never overtakes an unordered call that is
+ * queued ahead of every larger-ordered one. Only the command path (`runQueuedTurn` ← `enqueue` ←
+ * `AppChannelClient.command` ← `handleAction`/`handleCommand`) passes `order`; every maintenance
+ * caller — refresh-ui, typed-operation drains, job completion, extension completion, document-port
+ * settle — passes none, so those may legitimately wait behind an input's follow-up but keep their
+ * relative order. Absent everywhere ⇒ plain FIFO, byte-for-byte the pre-`order` behaviour. */
+export function serializeCommandIngressForActor<T>(actorId: string, run: () => Promise<T>, lane: "Interactive" | "UserVisible" | "Background" | "Maintenance" = "Interactive", order?: number): Promise<T> {
+  return serializePerActor(`command-ingress:${actorId}`, run, lane, order);
 }
 
 /** 🎚 Catalog mesh registration is Background so reserved/user verbs stay Interactive and are not starved. */
@@ -2876,14 +2900,16 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
    * resolving a caller's promise directly (a caller's own promise now lives one layer up, in
    * `AppChannelClient.sendCommand`, correlated against this broadcast). A turn-submission failure
    * (NOT an `AppFrame::Error` — that is still an ordinary decoded frame) becomes an `error`-shaped
-   * outcome rather than an uncaught rejection, since nothing here awaits this function's own promise. */
-  const runQueuedTurn = async (instanceId: number, events: readonly Uint8Array[]): Promise<void> => {
+   * outcome rather than an uncaught rejection, since nothing here awaits this function's own promise.
+   * `dispatch?.order` (the ledger's causal key, see {@link serializeCommandIngressForActor}) is the
+   * only thing that steers WHERE in the actor's ingress queue this turn lands. */
+  const runQueuedTurn = async (instanceId: number, events: readonly Uint8Array[], dispatch?: PluginDispatchHintV1): Promise<void> => {
     try {
       const actorId = requireActorId(instanceId);
       const activation = shardClient.captureActorActivation(actorId);
       const documentPort = documentBindings.get(instanceId)?.port;
       const inspected = inspectEncodedAppCommand(events);
-      console.warn("[DEBUG] command ingress lane", JSON.stringify({ instanceId, actionId: inspected.actionId, seq: inspected.seq, lane: inspected.lane }));
+      console.warn("[DEBUG] command ingress lane", JSON.stringify({ instanceId, actionId: inspected.actionId, seq: inspected.seq, lane: inspected.lane, order: dispatch?.order ?? null }));
       const result = await withTypedOperationCall(actorId, `command#${instanceId}`, (call) => serializeCommandIngressForActor(actorId, async (): Promise<WireTurnResult> => {
         activation.assertActive();
         const results: WireTurnResult[] = [];
@@ -2949,7 +2975,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
         const settled = await settleAcknowledgedPluginTurns(actorId, results, acknowledgements, (turn) => acceptUiPatches(instanceId, turn), activation, call);
         await commitReservedToolSpawnsWhileSerialized(instanceId, actorId, settled.effects);
         return settled;
-      }, inspected.lane));
+      }, inspected.lane, dispatch?.order));
       requireActorId(instanceId);
       activation.assertActive();
       const outFrames: Uint8Array[] = [];
@@ -3115,9 +3141,9 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
       return retiring;
     },
     takeSegmentedDownloadChunk: (instanceId, operationId) => shardClient.takeSegmentedDownloadChunk(requireActorId(instanceId), instanceId, operationId),
-    enqueue: (instanceId, events) => {
+    enqueue: (instanceId, events, dispatch) => {
       requireActorId(instanceId);
-      void runQueuedTurn(instanceId, events);
+      void runQueuedTurn(instanceId, events, dispatch);
     },
     outcomes: turnOutcomes.stream,
     dispose: () => {
@@ -3522,7 +3548,7 @@ function noteGuestIngressV1(instanceId: number): void {
   guestIngressGenerationByInstance.set(instanceId, guestIngressGenerationV1(instanceId) + 1);
 }
 
-async function performInvocation(client: AppChannelClient, instanceId: number, invocation: unknown, invocationKind: "action" | "command", viewState: unknown): Promise<InvocationResponse> {
+async function performInvocation(client: AppChannelClient, instanceId: number, invocation: unknown, invocationKind: "action" | "command", viewState: unknown, dispatch?: PluginDispatchHintV1): Promise<InvocationResponse> {
   assertAddressedInvocation(invocation, invocationKind, instanceId);
   const invocationRecord = invocation as { readonly address?: { readonly actionId?: unknown; readonly commandId?: unknown }; readonly arguments?: Record<string, unknown> } | null;
   const address = invocationRecord?.address;
@@ -3545,7 +3571,7 @@ async function performInvocation(client: AppChannelClient, instanceId: number, i
   let frames: readonly AppFrameValue[];
   try {
     const wire = hopTrace.time("encode", hopDetail, () => ({ command: encodePackValue(invocation), view: admitCrossingViewContext(`${invocationKind} ${String(actionId)}`, viewState) }));
-    frames = await hopTrace.timeAsync("channel", hopDetail, () => client.command(wire.command, wire.view));
+    frames = await hopTrace.timeAsync("channel", hopDetail, () => client.command(wire.command, wire.view, dispatch));
     const leftover = pendingTurnEffects.get(instanceId) ?? [];
     pendingTurnEffects.delete(instanceId);
     response = hopTrace.time("decode", { ...hopDetail, frames: frames.length }, () => invocationFromFrames(frames, leftover, invocationKind));
@@ -3722,8 +3748,8 @@ export async function adaptPluginHandle(pluginId: string, lease: { readonly hand
     // node-graph surface dispatched one more action at it, and the typed retirement arrived as
     // `[DEBUG] shell fault surface-node-graph` instead of the drop the ledger had already earned
     // (`🗑️generated/host-refresh/served-journey/console.txt`, +147.5 s). A refusal is a rejection.
-    handleAction: async (instanceId, actionJson, viewState) => performInvocation(requireChannel(instanceId), instanceId, JSON.parse(actionJson), "action", viewState),
-    handleCommand: async (instanceId, commandJson, viewState) => performInvocation(requireChannel(instanceId), instanceId, JSON.parse(commandJson), "command", viewState),
+    handleAction: async (instanceId, actionJson, viewState, dispatch) => performInvocation(requireChannel(instanceId), instanceId, JSON.parse(actionJson), "action", viewState, dispatch),
+    handleCommand: async (instanceId, commandJson, viewState, dispatch) => performInvocation(requireChannel(instanceId), instanceId, JSON.parse(commandJson), "command", viewState, dispatch),
     // 🚧️ H1-react — window-body refresh needs the ActivationRegistry/ShardClient `Event::SurfaceVisible`
     // path this bare adapter has no access to (only the raw `enqueue`/`outcomes` `handle`, no actorId);
     // `loadPluginModule` overrides this field with the real implementation right after calling this

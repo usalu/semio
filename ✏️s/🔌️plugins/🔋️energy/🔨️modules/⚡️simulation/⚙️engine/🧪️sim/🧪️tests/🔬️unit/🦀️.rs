@@ -1092,3 +1092,98 @@ fn p7c1_language_agnostic_law_fixture_matches_reference_parser() {
     assert_eq!(reference["schema"].as_str(), Some(schema));
     assert_eq!(reference["step"]["fuel"].as_u64(), Some(1));
 }
+
+//#region 🧱️PerSurfaceEnergy
+/// 🧱️ `test_model_single_zone` with the one thermostat the fixture lacks, so the ideal loads actually
+/// deliver heat and the zone heating meter is non-zero.
+fn thermostatted_single_zone() -> (crate::model::Model, SimulationConfig) {
+    use crate::model::{EntityId, ScheduleId, Thermostat};
+    use crate::schedule::{ConstantSchedule, ScheduleSet};
+    let mut model = test_model_single_zone();
+    model.thermostats.push(Thermostat {
+        id: EntityId(50),
+        zone_id: EntityId(1),
+        heating_setpoint_schedule_id: ScheduleId(1),
+        cooling_setpoint_schedule_id: ScheduleId(2),
+        heating_throttle_range_k: 2.0,
+        cooling_throttle_range_k: 2.0,
+    });
+    let config = SimulationConfig {
+        warmup_days: 3,
+        run_period_end_month: 1,
+        run_period_end_day: 1,
+        environment: SimulationEnvironment::HeatingDesignDay,
+        schedules: ScheduleSet { constants: vec![ConstantSchedule { id: ScheduleId(1), value: 20.0 }, ConstantSchedule { id: ScheduleId(2), value: 27.0 }], ..ScheduleSet::default() },
+        ..Default::default()
+    };
+    (model, config)
+}
+
+#[test]
+fn per_surface_conduction_losses_close_the_zone_air_balance_against_the_heating_meter() {
+    let (model, config) = thermostatted_single_zone();
+    let results = Engine::run(model, config).expect("heating design day runs");
+
+    assert_eq!(results.per_surface.len(), 1, "one opaque surface, no fenestrations");
+    let wall = results.per_surface[0];
+    assert_eq!(wall.id, crate::model::EntityId(30), "the row is keyed by the surface's own EntityId");
+    assert!(wall.conduction_loss_kwh > 0.0, "a 20 °C zone behind a −10 °C design day must lose heat through its one wall, got {wall:?}");
+
+    let net_loss_kwh: f64 = results.per_surface.iter().map(|row| row.conduction_loss_kwh - row.conduction_gain_kwh).sum();
+    let heating = results.meters.meters.get_index(0).expect("the zone's heating meter is the first admitted slot");
+    assert_eq!(heating.end_use, crate::meters::EndUse::Heating);
+    let heating_kwh = heating.energy_kwh();
+    assert!(heating_kwh > 0.0, "the ideal loads must have delivered heat, got {heating_kwh}");
+
+    // 🧪️ Physics of the tolerance. Over the run period the zone air node balances to
+    //   Q_hvac = Σ_faces area·h_in·(T_air − T_face) + Q_outdoor_air + Q_internal − dU_air/dt,
+    // and this fixture zeroes every term but the first: no people/lights/equipment (Q_internal = 0),
+    // no infiltration object and an outdoor-air rate that is per-PERSON only with zero people
+    // (Q_outdoor_air = 0), and a heating design day whose direct/diffuse irradiance is 0 at −10 °C
+    // (no absorbed solar re-entering through the wall). What is left is exactly the quantity
+    // `conduction_loss/gain` integrates, so the two should agree up to the terms the identity drops:
+    //   • the wall's own stored energy — 0.1 m of 50 kg/m³ insulation is charged over three warmup
+    //     days but still drifts slightly across the 24 h run period;
+    //   • the zone air's third-order backward-difference storage term;
+    //   • the thermostat's 2 K throttling range, which lets the air float inside the band rather than
+    //     pinning it at exactly 20 °C every timestep.
+    // Those are small but not vanishing on a one-day design run, so 10 % relative is the honest band:
+    // tight enough to catch a wrong sign, a wrong area or a double count, loose enough not to be a
+    // re-assertion of the solver's own arithmetic.
+    let relative = (net_loss_kwh - heating_kwh).abs() / heating_kwh.max(1e-9);
+    assert!(relative <= 0.10, "per-surface conduction {net_loss_kwh} kWh vs heating meter {heating_kwh} kWh is {:.1} % apart", relative * 100.0);
+}
+
+#[test]
+fn a_window_row_carries_transmitted_solar_on_a_sunny_design_day() {
+    let model = crate::bestest::model("600").expect("BESTEST case 600 is a bundled fixture");
+    let windows: Vec<_> = model.fenestrations.iter().map(|fenestration| fenestration.id).collect();
+    assert!(!windows.is_empty(), "case 600 is the glazed case");
+    let config = SimulationConfig { warmup_days: 1, run_period_end_month: 1, run_period_end_day: 1, environment: SimulationEnvironment::CoolingDesignDay, ..Default::default() };
+    let config = SimulationConfig { schedules: crate::bestest::simulation_config(&model, None, 1).schedules, ..config };
+    let results = Engine::run(model, config).expect("cooling design day runs");
+
+    let window_rows: Vec<_> = results.per_surface.iter().filter(|row| windows.contains(&row.id)).collect();
+    assert_eq!(window_rows.len(), windows.len(), "every fenestration gets its own row");
+    let transmitted: f64 = window_rows.iter().map(|row| row.solar_transmitted_kwh).sum();
+    let absorbed: f64 = window_rows.iter().map(|row| row.solar_absorbed_kwh).sum();
+    assert!(transmitted > 0.0, "a south window under an 800 W/m² beam must transmit solar, got {transmitted} kWh");
+    assert!(absorbed > 0.0, "and its panes must absorb some of it, got {absorbed} kWh");
+    assert!(results.per_surface.iter().any(|row| !windows.contains(&row.id) && row.solar_absorbed_kwh > 0.0), "the sun-exposed opaque surfaces absorb solar on their outside face too");
+}
+
+#[test]
+fn warmup_never_contributes_to_the_per_surface_totals() {
+    let (model, short) = thermostatted_single_zone();
+    let long = SimulationConfig { warmup_days: short.warmup_days + 4, ..short.clone() };
+    let with_short_warmup = Engine::run(model.clone(), short).expect("short warmup runs");
+    let with_long_warmup = Engine::run(model, long).expect("long warmup runs");
+    let total = |results: &crate::results::Results| results.per_surface.iter().map(|row| row.conduction_loss_kwh).sum::<f64>();
+    let (a, b) = (total(&with_short_warmup), total(&with_long_warmup));
+    assert!(a > 0.0 && b > 0.0);
+    // Four extra warmup days are four extra days of −10 °C wall conduction. If warmup were being
+    // integrated the longer run would report roughly twice the loss; converged warmup leaves the same
+    // run period, so the two totals differ only by how settled the wall was when the run started.
+    assert!((a - b).abs() / a.max(1e-9) < 0.05, "warmup days leak into the run-period totals: {a} vs {b}");
+}
+//#endregion 🧱️PerSurfaceEnergy

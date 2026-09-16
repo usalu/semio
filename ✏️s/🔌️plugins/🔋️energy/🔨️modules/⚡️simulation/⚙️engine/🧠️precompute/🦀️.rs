@@ -533,7 +533,12 @@ impl PrecomputeBuilder {
         let Some(host) = self.output.surfaces.get(&fenestration.surface_id) else { return };
         let siblings: Vec<&crate::model::Fenestration> = model.fenestrations.iter().filter(|other| other.surface_id == fenestration.surface_id).collect();
         let position = siblings.iter().position(|other| other.id == fenestration.id).unwrap_or(0);
-        let polygon = place_window(&host.polygon, host.normal, siblings.len(), position, fenestration.area_m2, fenestration.height_m, fenestration.sill_height_m);
+        // 🔶️ `host.polygon` is already turned into world coordinates by the site's north axis, so
+        // an aperture's OWN polygon — stated in the same model frame as its host's vertices — has
+        // to make the same turn before the two can share a plane.
+        let north = model.site.north_axis_deg;
+        let own: Vec<[f64; 3]> = fenestration.vertices_m.iter().map(|vertex| rotate(*vertex, north)).collect();
+        let polygon = place_aperture(&host.polygon, &own, fenestration.area_m2, fenestration.height_m, fenestration.sill_height_m, position, siblings.len());
         let glazing = fenestration.glazing_construction_id.and_then(|id| self.output.construction_indices.get(&id).and_then(|index| model.constructions.get(*index))).and_then(|construction| {
             let panes: Vec<Pane> = construction
                 .layer_material_ids
@@ -799,6 +804,51 @@ pub fn place_window(host: &[[f64; 3]], normal: [f64; 3], count: usize, position:
     let (u0, u1) = (centre - 0.5 * width, centre + 0.5 * width);
     let (v0, v1) = (v_min + sill_m, v_min + sill_m + height);
     vec![point(u0, v0), point(u1, v0), point(u1, v1), point(u0, v1)]
+}
+
+/// 🔶️ THE aperture polygon — the single source of truth every placement of a window goes through
+/// (the engine's [`Precompute::step_window`] and the epJSON exporter's `aperture_rectangle` both
+/// call it, so the two can never drift again).
+///
+/// `own_vertices` is [`crate::model::Fenestration::vertices_m`] expressed in the SAME frame as
+/// `host`: non-empty and the polygon IS the aperture, returned verbatim; empty and the rectangle is
+/// derived from `area_m2`/`height_m`/`sill_m` in bay `index` of `count` exactly as before.
+/// Callers that own scalar fallbacks (the exporter's `APERTURE_ASPECT`/`APERTURE_SILL_M`) resolve
+/// them before calling, so this function never invents a dimension.
+pub fn place_aperture(host: &[[f64; 3]], own_vertices: &[[f64; 3]], area_m2: f64, height_m: f64, sill_m: f64, index: usize, count: usize) -> Vec<[f64; 3]> {
+    if !own_vertices.is_empty() {
+        return own_vertices.to_vec();
+    }
+    place_window(host, polygon_normal(host), count, index, area_m2, height_m, sill_m)
+}
+
+/// 🔶️ The aperture polygon of `window` on its host `surface`, in model coordinates, placed in bay
+/// `index` of `count` when the window carries no polygon of its own. See [`place_aperture`].
+pub fn fenestration_polygon_in_bay(surface: &crate::model::Surface, window: &crate::model::Fenestration, index: usize, count: usize) -> Vec<[f64; 3]> {
+    place_aperture(&surface.vertices_m, &window.vertices_m, window.area_m2, window.height_m, window.sill_height_m, index, count)
+}
+
+/// 🔶️ The aperture polygon of `window` on its host `surface`, in model coordinates, treating the
+/// window as the sole occupant of its host.
+///
+/// This is the form a viewer reaches for when it already knows a surface hosts one window; a host
+/// with several windows splits into bays, so render those through
+/// [`model_fenestration_polygon`] (which finds the siblings for you) or
+/// [`fenestration_polygon_in_bay`].
+pub fn fenestration_polygon(surface: &crate::model::Surface, window: &crate::model::Fenestration) -> Vec<[f64; 3]> {
+    fenestration_polygon_in_bay(surface, window, 0, 1)
+}
+
+/// 🔶️ The aperture polygon of `window` inside `model` — finds the host surface and the window's
+/// bay among its siblings the same way the engine does, so a viewer draws exactly what the
+/// simulation shades. Answers an empty polygon when the host surface is missing.
+pub fn model_fenestration_polygon(model: &Model, window: &crate::model::Fenestration) -> Vec<[f64; 3]> {
+    let Some(host) = model.surfaces.iter().find(|surface| surface.id == window.surface_id) else {
+        return Vec::new();
+    };
+    let siblings: Vec<&crate::model::Fenestration> = model.fenestrations.iter().filter(|other| other.surface_id == window.surface_id).collect();
+    let index = siblings.iter().position(|other| other.id == window.id).unwrap_or(0);
+    fenestration_polygon_in_bay(host, window, index, siblings.len().max(1))
 }
 
 /// 🔲️ Approximate view factors and gray-body exchange factors of an enclosure.

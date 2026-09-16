@@ -1070,8 +1070,9 @@ export type ComponentSceneHostProps = {
    * previous tick if this promise means "settled": with a `void` contract the loop's own in-flight flag
    * cleared immediately and 120 ms ticks queued into the serialized guest until the per-actor turn queue
    * overflowed (measured 2026-09-09: 252 polling ticks in 35 s, 38 rejected with `queue is full`).
-   * A host with nothing to await may still return `void`. */
-  readonly onAction: (action: ActionDescriptor) => void | Promise<void>;
+   * A host with nothing to await may still return `void`. The React shell resolves it with the input
+   * ledger's typed outcome (`applied | refused | superseded`), which is why the value is `unknown`. */
+  readonly onAction: (action: ActionDescriptor) => void | Promise<unknown>;
   readonly requestContextMenu?: (request: PluginContextMenuRequest) => Promise<readonly ContextMenuItemSpec[]>;
 };
 //#endregion ComponentSceneProtocol

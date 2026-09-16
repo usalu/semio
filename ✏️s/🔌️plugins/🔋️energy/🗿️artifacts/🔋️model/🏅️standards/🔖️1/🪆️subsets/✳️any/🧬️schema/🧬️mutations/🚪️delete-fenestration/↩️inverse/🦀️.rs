@@ -13,7 +13,16 @@ pub fn inverse(payload: &super::DeleteFenestration, base: &EnergyModelSnapshot) 
     if false {
         return Vec::new();
     }
-    vec![vocabulary::create_fenestration(
+    // 🔶️ The store replays an inverse in REVERSE order (`ArtifactStore::replay_mutations`), so a
+    // window that carried its own polygon lists the polygon step FIRST and the re-creation LAST —
+    // reversed, the aperture exists again before its shape is put back. `create-fenestration` does
+    // not carry `vertices_m` itself, which keeps its payload (and every committed vector over it)
+    // exactly as landed.
+    let mut steps = Vec::new();
+    if !existing.vertices_m.is_empty() {
+        steps.push(vocabulary::replace_fenestration_vertices(existing.id, existing.vertices_m.clone()));
+    }
+    steps.push(vocabulary::create_fenestration(
         existing.id,
         existing.name.clone(),
         existing.surface_id,
@@ -30,6 +39,7 @@ pub fn inverse(payload: &super::DeleteFenestration, base: &EnergyModelSnapshot) 
         existing.fin_depth_m,
         existing.fin_offset_m,
         existing.glazing_construction_id,
-    )]
+    ));
+    steps
 }
 //#endregion 🔖️Inverse

@@ -31,6 +31,11 @@ export const ENERGY_MODEL_STRUCTURE_ACTIONS = [
   { id: "delete-surface", label: { en: "Delete surface", de: "Fläche löschen" } },
   { id: "assign-surface-construction", label: { en: "Assign construction", de: "Konstruktion zuweisen" } },
   { id: "set-material-property", label: { en: "Set material property", de: "Materialeigenschaft setzen" } },
+  { id: "set-surface-property", label: { en: "Set surface property", de: "Flächeneigenschaft setzen" } },
+  { id: "set-fenestration-property", label: { en: "Set window property", de: "Fenstereigenschaft setzen" } },
+  { id: "set-zone-property", label: { en: "Set zone property", de: "Zoneneigenschaft setzen" } },
+  { id: "set-glazing-material-property", label: { en: "Set glazing material property", de: "Verglasungsmaterial-Eigenschaft setzen" } },
+  { id: "set-gas-material-property", label: { en: "Set gas gap property", de: "Gasfüllungs-Eigenschaft setzen" } },
   { id: "set-thermostat-setpoints", label: { en: "Set thermostat setpoints", de: "Thermostat-Sollwerte setzen" } },
   { id: "set-site", label: { en: "Set site", de: "Standort setzen" } },
 ] as const;
@@ -44,6 +49,34 @@ export type EnergyModelMaterialProperty =
   | "thermalAbsorptance"
   | "solarAbsorptance"
   | "visibleAbsorptance";
+
+/** 🔍️ The properties the three generic inspector verbs address. `value` is TEXT for all of them:
+ * one verb has to carry a name, an enum spelling, a flag and a scalar alike. */
+export type EnergyModelSurfaceProperty = "name" | "class" | "boundary" | "construction" | "sunExposed" | "windExposed" | "multiplier";
+
+export type EnergyModelFenestrationProperty =
+  | "name"
+  | "uValueWM2K"
+  | "shgc"
+  | "vlt"
+  | "areaM2"
+  | "heightM"
+  | "sillHeightM"
+  | "frameConductanceWK"
+  | "dividerConductanceWK"
+  | "overhangDepthM"
+  | "overhangOffsetM"
+  | "finDepthM"
+  | "finOffsetM"
+  | "glazingConstruction";
+
+export type EnergyModelZoneProperty = "name" | "volumeM3" | "multiplier" | "conditioned" | "partOfTotalFloorArea";
+
+/** 🧊️ Only the fields `change-glazing-material-*`/`rename-glazing-material` name are addressable —
+ * the four reflectances and the infrared transmittance still have no mutation kind. */
+export type EnergyModelGlazingMaterialProperty = "name" | "thicknessM" | "conductivityWMK" | "solarTransmittance" | "visibleTransmittance" | "infraredEmissivityFront" | "infraredEmissivityBack";
+
+export type EnergyModelGasMaterialProperty = "name" | "thicknessM" | "gas";
 
 export const ENERGY_MODEL_STRUCTURE_WINDOW_KIND_ID = "framework.window.tree" as const;
 export const ENERGY_MODEL_STRUCTURE_BODY_KEY = "framework.window.tree" as const;

@@ -385,6 +385,11 @@ impl OutsideBoundary {
 /// +8.1 % of annual cooling on ANSI/ASHRAE 140 cases 600/900 against the standard's own two-pane
 /// stack — so the slot exists to carry the real stack once a caller has one.
 ///
+/// 🔶️ How far a [`Fenestration::vertices_m`] corner may sit off its host surface's plane [m]
+/// before [`Model::validate`] calls the aperture misplaced. One millimetre — the same order as the
+/// coordinates an epJSON document round-trips through.
+pub const FENESTRATION_PLANE_TOLERANCE_M: f64 = 1e-3;
+
 /// See ANSI/ASHRAE 140 §5.2 cases 610/630/910/930, whose overhang and fins are exactly this shape.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct Fenestration {
@@ -404,6 +409,18 @@ pub struct Fenestration {
     pub fin_depth_m: f64,
     pub fin_offset_m: f64,
     pub glazing_construction_id: Option<EntityId>,
+    /// 🔶️ The aperture's own polygon, in the host [`Surface`]'s plane, world metres, wound the
+    /// same way the host is (counter-clockwise seen from outside).
+    ///
+    /// EMPTY — the zero value, which every document written before ticket
+    /// 26/09/16/ENERGY-3D-MODEL-TREE-INSPECTOR carries — means "derive the rectangle from
+    /// `area_m2`/`height_m`/`sill_height_m` on the host surface exactly as before"
+    /// ([`crate::precompute::fenestration_polygon`]). NON-EMPTY means the polygon IS the
+    /// aperture: an arbitrary planar ring of three or more vertices, and the three scalars become
+    /// display/physics-only (the U-value and SHGC heat balance never needs a shape).
+    #[serde(default)]
+    #[value(default)]
+    pub vertices_m: Vec<[f64; 3]>,
 }
 // #endregion 🔖️Surface
 
@@ -1186,6 +1203,17 @@ impl Model {
             }
             if !(0.0..=1.0).contains(&fen.shgc) {
                 diag.push(Error::severe(format!("fenestration {} has an SHGC outside 0..1", fen.name)));
+            }
+            // 🔶️ An aperture that carries its own polygon must be a real planar ring in its host's
+            // plane — otherwise the solar code would shade against a shape the envelope does not have.
+            if !fen.vertices_m.is_empty() {
+                if fen.vertices_m.len() < 3 {
+                    diag.push(Error::severe(format!("fenestration {} has fewer than 3 vertices", fen.name)));
+                } else if let Some(host) = self.surfaces.iter().find(|surface| surface.id == fen.surface_id) {
+                    if !crate::geometry::polygon_lies_on_plane(&fen.vertices_m, &host.vertices_m, FENESTRATION_PLANE_TOLERANCE_M) {
+                        diag.push(Error::severe(format!("fenestration {} has a polygon outside its host surface's plane", fen.name)));
+                    }
+                }
             }
         }
 

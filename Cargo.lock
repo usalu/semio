@@ -6724,6 +6724,7 @@ dependencies = [
  "semio-framework-plugin",
  "semio-framework-schema",
  "semio-framework-tool-run",
+ "semio-framework-ui-contract",
  "semio-framework-value-derive",
  "semio-s-artifact-stdio-csv",
  "semio-s-artifact-stdio-epw",

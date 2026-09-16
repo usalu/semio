@@ -57,12 +57,16 @@ pub const PUZZLE2D_PLAY_EXAMPLE_NAKAGIN_ID: &str = crate::examples::puzzle2d::na
 /// `🎮️commands/🎲️apply-board-events`'s `PUZZLE2D_WINDOW_BODY_KEYS`): these key utilities, engagements and measures.
 pub const PUZZLE2D_PANES: [&str; 3] = [overview::WINDOW_KIND_ID, detail::WINDOW_KIND_ID, selection::WINDOW_KIND_ID];
 pub const PUZZLE2D_LOD_MODE_AUTOMATIC: &str = "automatic";
+/// 🖱️ The one hover channel the `vortex` domain declares.
+pub const PUZZLE2D_HOVER_CHANNEL: &str = "pointer";
 /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the one interaction domain this app
 /// declares — the deleted `Puzzle2dConfig::selected_ids` flat bag (nodes and their nested handles
 /// alike) collapses into one framework-owned domain, one flat granularity (no real parent/child
 /// structure was ever modeled for it).
 pub const PUZZLE2D_INTERACTION_DOMAIN: &str = "vortex";
 pub const PUZZLE2D_GRANULARITY_NODE: &str = "node";
+pub const PUZZLE2D_GRANULARITY_EDGE: &str = "edge";
+pub const PUZZLE2D_GRANULARITY_HANDLE: &str = "handle";
 
 const BOARD_DEFAULT_WIDTH: u32 = 1024;
 const BOARD_DEFAULT_HEIGHT: u32 = 768;
@@ -87,6 +91,78 @@ pub struct Puzzle2dScene {
     pub runtime: Puzzle2dPlayRuntime,
     /// 🧰️ The host-owned active utility for this render/mutation.
     pub active_utility: String,
+    /// 🕹️ The framework-owned `vortex` selection this render/mutation reads — the board engine's own
+    /// selection echoes back through it, so the panes, the inspector and the context menu all agree.
+    pub interaction: Puzzle2dInteractionSnapshot,
+}
+
+/// 🕹️ One render's read of the live `vortex` domain: the selected ids (any granularity) and the
+/// `"pointer"` hover — the 2d twin of `Puzzle3dInteractionSnapshot`.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct Puzzle2dInteractionSnapshot {
+    pub granularity: String,
+    pub selected: Vec<String>,
+    pub hovered: Vec<String>,
+}
+
+impl Puzzle2dInteractionSnapshot {
+    pub fn from_interaction(interaction: &InteractionView<'_>) -> Self {
+        let selection = interaction.selection(PUZZLE2D_INTERACTION_DOMAIN);
+        let hover = interaction.hover(PUZZLE2D_INTERACTION_DOMAIN, PUZZLE2D_HOVER_CHANNEL);
+        let leftover_ids = interaction.leftover_selected_ids();
+        let selected = if selection.ids.is_empty() { leftover_ids } else { selection.ids.clone() };
+        let granularity = if !selection.granularity.is_empty() { selection.granularity.clone() } else if !selected.is_empty() { PUZZLE2D_GRANULARITY_NODE.to_string() } else { String::new() };
+        Self { granularity, selected, hovered: hover.ids.clone() }
+    }
+
+    /// 🕹️ The retained-reducer twin over the raw `InteractionState`/hover map a retained job is handed.
+    pub fn from_state(state: &protocol::InteractionState, hover: &semio_framework_plugin::app::InteractionHoverState) -> Self {
+        let selection = state.selection.get(PUZZLE2D_INTERACTION_DOMAIN);
+        let hovered = hover.get(PUZZLE2D_INTERACTION_DOMAIN).filter(|hover| hover.channel == PUZZLE2D_HOVER_CHANNEL).map(|hover| hover.ids.clone()).unwrap_or_default();
+        let leftover_ids: Vec<String> = state.selection.values().flat_map(|selection| selection.ids.iter().cloned()).collect();
+        let selected = selection.filter(|selection| !selection.ids.is_empty()).map(|selection| selection.ids.clone()).unwrap_or(leftover_ids);
+        let granularity = selection.map(|selection| selection.granularity.clone()).filter(|granularity| !granularity.is_empty()).unwrap_or_else(|| if selected.is_empty() { String::new() } else { PUZZLE2D_GRANULARITY_NODE.to_string() });
+        Self { granularity, selected, hovered }
+    }
+
+    pub fn selected_ids(&self) -> &[String] {
+        &self.selected
+    }
+
+    pub fn selection_json(&self) -> String {
+        serde_json::to_string(&self.selected).unwrap_or_else(|_| "[]".into())
+    }
+}
+
+/// 🕹️ Classifies board ids into `(granularity, id)` targets by document membership — a node id, an
+/// edge id, or a `node:handle` id nested under a node — so one engine `select` event becomes one
+/// framework selection write whatever it picked. Ids the document does not carry are kept as nodes:
+/// the framework prunes them on the next document change, and dropping them here would silently
+/// unselect a just-created entity the engine already painted.
+pub fn puzzle2d_selection_targets(fixture: &Value, ids: &[String]) -> Vec<InteractionTarget> {
+    let nodes = fixture_nodes(fixture);
+    let node_ids: HashSet<&str> = nodes.iter().filter_map(|node| node.get("id").and_then(Value::as_str)).collect();
+    let edge_ids: HashSet<&str> = fixture_edges(fixture).iter().filter_map(|edge| edge.get("id").and_then(Value::as_str)).collect();
+    let handle_ids: HashSet<&str> = nodes.iter().filter_map(|node| node.get("handles").and_then(Value::as_array)).flatten().filter_map(|handle| handle.get("id").and_then(Value::as_str)).collect();
+    ids.iter()
+        .map(|id| {
+            let granularity = if node_ids.contains(id.as_str()) {
+                PUZZLE2D_GRANULARITY_NODE
+            } else if edge_ids.contains(id.as_str()) {
+                PUZZLE2D_GRANULARITY_EDGE
+            } else if handle_ids.contains(id.as_str()) {
+                PUZZLE2D_GRANULARITY_HANDLE
+            } else {
+                PUZZLE2D_GRANULARITY_NODE
+            };
+            InteractionTarget { granularity: granularity.into(), id: id.clone() }
+        })
+        .collect()
+}
+
+/// 🕹️ The one selection write every 2d reducer expresses "select exactly these" through.
+pub fn puzzle2d_selection_write(fixture: &Value, ids: &[String]) -> semio_framework_plugin::InteractionWrite {
+    semio_framework_plugin::InteractionWrite { domain: PUZZLE2D_INTERACTION_DOMAIN.into(), targets: puzzle2d_selection_targets(fixture, ids), merge: MergeMode::Replace }
 }
 
 pub fn default_empty_fixture() -> Value {
@@ -117,9 +193,13 @@ fn puzzle2d_interaction_definition() -> InteractionDefinition {
     InteractionDefinition {
         id: PUZZLE2D_INTERACTION_DOMAIN.into(),
         label: LocalizedLabel::native("Vortex", "Vortex"),
-        granularities: vec![GranularityDefinition { id: PUZZLE2D_GRANULARITY_NODE.into(), label: LocalizedLabel::native("Node", "Knoten"), icon_id: "circle-dot".into() }],
+        granularities: vec![
+            GranularityDefinition { id: PUZZLE2D_GRANULARITY_NODE.into(), label: LocalizedLabel::native("Node", "Knoten"), icon_id: "circle-dot".into() },
+            GranularityDefinition { id: PUZZLE2D_GRANULARITY_EDGE.into(), label: LocalizedLabel::native("Edge", "Kante"), icon_id: "link".into() },
+            GranularityDefinition { id: PUZZLE2D_GRANULARITY_HANDLE.into(), label: LocalizedLabel::native("Handle", "Anschluss"), icon_id: "target".into() },
+        ],
         hierarchy: HierarchyProvider::Flat,
-        hover: HoverSpec { enabled: true, transitive: false, channels: vec!["pointer".into()], broadcast: true },
+        hover: HoverSpec { enabled: true, transitive: false, channels: vec![PUZZLE2D_HOVER_CHANNEL.into()], broadcast: true },
         selection: SelectionSpec {
             modes: vec![SelectionMode::Multiple, SelectionMode::Single],
             methods: vec![SelectionMethod::Pick, SelectionMethod::Rectangle],
@@ -896,6 +976,8 @@ pub struct Puzzle2dActionCtx<'a> {
     pub selection: &'a protocol::DomainSelection,
     pub effects: &'a mut Vec<Effect>,
     pub artifact_mutations: &'a mut Vec<Puzzle2dMutation>,
+    /// 🕹️ App-initiated selection writes riding alongside this action (`Emit::interaction_writes`).
+    pub interaction_writes: &'a mut Vec<semio_framework_plugin::InteractionWrite>,
     pub ui_scope: &'a mut UiDirtyScope,
     /// 🪪️ Exact public command authority retained by framework continuations.
     pub operation: Option<semio_framework_plugin::AppOperationContext>,
@@ -1005,7 +1087,39 @@ pub struct Puzzle2dPlayApp;
 
 impl Puzzle2dPlayApp {
     fn scene_for(fixture: Value, runtime: Puzzle2dPlayRuntime, active_utility: &str) -> Puzzle2dScene {
-        Puzzle2dScene { fixture, runtime, active_utility: active_utility.into() }
+        Puzzle2dScene { fixture, runtime, active_utility: active_utility.into(), interaction: Puzzle2dInteractionSnapshot::default() }
+    }
+
+    fn scene_with(fixture: Value, runtime: Puzzle2dPlayRuntime, active_utility: &str, interaction: Puzzle2dInteractionSnapshot) -> Puzzle2dScene {
+        Puzzle2dScene { fixture, runtime, active_utility: active_utility.into(), interaction }
+    }
+
+    /// 🖼️ ONE render body for both `render` entry points: the window transient and the live selection
+    /// are what the request-context path adds; the bare path passes their defaults.
+    fn render_body(
+        body_key: &str,
+        doc: &ArtifactView<'_, Puzzle2dPlaySnapshot>,
+        cfg: &ConfigView<'_, Puzzle2dConfig>,
+        view_state: &semio_framework_plugin::ViewModel,
+        window_transient: &Puzzle2dWindowTransient,
+        interaction: Puzzle2dInteractionSnapshot,
+    ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+        let window_config = window::config_from_view_or_document(cfg, &doc.snapshot.0);
+        let window_kind = window::kind_for_view(view_state).unwrap_or(overview::WINDOW_KIND_ID);
+        let document_json = doc.snapshot.0.to_string();
+        let envelope = Self::scene_with(doc.snapshot.0.clone(), window::runtime(cfg.snapshot, &window_config, window_transient, Some(window_kind)), puzzle2d_active_utility(Some(view_state)), interaction);
+        let labels = puzzle2d_labels(view_state);
+        let node = match body_key {
+            overview::BODY_KEY => overview::render(&document_json, &envelope)?,
+            detail::BODY_KEY => detail::render(&document_json, &envelope)?,
+            selection::BODY_KEY => selection::render(&document_json, &envelope)?,
+            artifact::PUZZLE2D_PLAY_BODY_LAYERS => artifact::render(&envelope, labels)?,
+            catalogue::PUZZLE2D_PLAY_BODY_CATALOGUE => catalogue::render(&envelope, labels)?,
+            inspection::PUZZLE2D_PLAY_BODY_PROPERTIES => inspection::render(&envelope, labels)?,
+            settings::PUZZLE2D_PLAY_BODY_SETTINGS => settings::render(&envelope, labels)?,
+            _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "puzzle2d unknown-body label admission failed"))?,
+        };
+        Ok(semio_framework_plugin::built_to_component_tree(node))
     }
 }
 
@@ -1065,6 +1179,7 @@ const PUZZLE2D_GENERIC_TOOL_IDS: &[&str] = &[
     "engagementSubmit",
     "focusSelection",
     "patchInspectorNodes",
+    "selectSameKind",
     "setBrushKindWeights",
     "setBrushNodeSize",
     "setCamera",
@@ -1076,11 +1191,10 @@ const PUZZLE2D_GENERIC_TOOL_IDS: &[&str] = &[
     "setSuggestionOffset",
 ];
 
-/// 🫙️ The two verbs whose `🎮️commands/*` arm is empty by construction — `selectSameKind` has no
-/// channel to write framework-owned selection back, and `lodScaleJson` only reads a pure engine LOD
-/// table and declares [`UiDirtyScope::None`]. Both publish nothing, so both complete through
-/// `NoopPuzzleCommandWork` under a solo `HostOnly` contract rather than the dispatch pipeline.
-const PUZZLE2D_HOST_ONLY_TOOL_IDS: &[&str] = &["lodScaleJson", "selectSameKind"];
+/// 🫙️ The one verb whose `🎮️commands/*` arm is empty by construction — `lodScaleJson` only reads a
+/// pure engine LOD table and declares [`UiDirtyScope::None`]. It publishes nothing, so it completes
+/// through `NoopPuzzleCommandWork` under a solo `HostOnly` contract rather than the dispatch pipeline.
+const PUZZLE2D_HOST_ONLY_TOOL_IDS: &[&str] = &["lodScaleJson"];
 
 struct Puzzle2dRetainedCommandJobFactory {
     keys: Vec<ToolFactoryKey>,
@@ -1163,16 +1277,16 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for Puzzle2dRetainedCom
         ArtifactToolPublicationContract { tool_id: "setGridSnapEnabled", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
         ArtifactToolPublicationContract { tool_id: "setLodModeForPane", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
         ArtifactToolPublicationContract { tool_id: "setSuggestionOffset", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
-        ArtifactToolPublicationContract { tool_id: "applyBoardEvents", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "applyBoardEvents", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::WindowConfig, ArtifactToolPublicationLane::WindowTransient, ArtifactToolPublicationLane::Interaction] },
         ArtifactToolPublicationContract { tool_id: "brushCommitSlot", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::WindowTransient] },
         ArtifactToolPublicationContract { tool_id: "deleteSelection", lanes: &[ArtifactToolPublicationLane::Artifact] },
-        ArtifactToolPublicationContract { tool_id: "duplicateSelection", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "patchInspectorNodes", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "setFillCount", lanes: &[ArtifactToolPublicationLane::Config] },
         ArtifactToolPublicationContract { tool_id: "setSelectionFlag", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "lodScaleJson", lanes: &[ArtifactToolPublicationLane::HostOnly] },
-        ArtifactToolPublicationContract { tool_id: "selectSameKind", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+        ArtifactToolPublicationContract { tool_id: "selectSameKind", lanes: &[ArtifactToolPublicationLane::Interaction] },
+        ArtifactToolPublicationContract { tool_id: "duplicateSelection", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Interaction] },
     ];
 }
 
@@ -1627,7 +1741,8 @@ fn puzzle2d_dispatch_emit(
     let (action, args, window_id) = (command.action_id(), command.args(), command.window_id());
     let active_utility = active_utility.to_string();
     let runtime = window::runtime(config, window_config, window_transient, Some(window_kind));
-    let mut scene = Puzzle2dPlayApp::scene_for(before.clone(), runtime, &active_utility);
+    let interaction = Puzzle2dInteractionSnapshot { granularity: selection.granularity.clone(), selected: selection.ids.clone(), hovered: Vec::new() };
+    let mut scene = Puzzle2dPlayApp::scene_with(before.clone(), runtime, &active_utility, interaction);
     // 🐚️ ArtifactApp::handle is pure (no &self) — rebuild a fresh BoardHost from the document
     // each call. The previous last_synced_fixture cache lived on &self and cannot return.
     let host = RefCell::new(BoardHost::default());
@@ -1641,11 +1756,12 @@ fn puzzle2d_dispatch_emit(
     }
     let mut effects: Vec<Effect> = Vec::new();
     let mut artifact_mutations = Vec::new();
+    let mut interaction_writes = Vec::new();
     // 🐢️ Default to Full (safe: every unrecognized/rare action re-renders everything); the
     // narrow-tier arms below override it to the smallest scope that actually covers what they touch.
     let mut ui_scope = UiDirtyScope::Full;
     {
-        let ctx = &mut Puzzle2dActionCtx { host: &host, scene: &mut scene, window_id, window_kind, active_utility, selection, effects: &mut effects, artifact_mutations: &mut artifact_mutations, ui_scope: &mut ui_scope, operation };
+        let ctx = &mut Puzzle2dActionCtx { host: &host, scene: &mut scene, window_id, window_kind, active_utility, selection, effects: &mut effects, artifact_mutations: &mut artifact_mutations, interaction_writes: &mut interaction_writes, ui_scope: &mut ui_scope, operation };
         match action {
             "selectSameKind" => select_same_kind::select_same_kind(ctx),
             "deleteSelection" => delete_selection::delete_selection(ctx),
@@ -1693,7 +1809,7 @@ fn puzzle2d_dispatch_emit(
     let window_transient = if &next_window_transient != window_transient { vec![window::addressed_transient(view_state.ok_or_else(|| Fault::from("puzzle2d-window-context-required"))?, next_window_transient)?] } else { Vec::new() };
     // 🎥️ No action coalesces anymore: `setCamera` used to be the sole `coalesce_key` writer, but it
     // is now a View-kind action that never touches the document.
-    Ok((Emit { artifact_mutations: operations, config_mutations, window_config_mutations, coalesce_key: None, effects, ui_scope, ..Default::default() }, EphemeralEmit { window_transient, ..Default::default() }))
+    Ok((Emit { artifact_mutations: operations, config_mutations, window_config_mutations, coalesce_key: None, effects, ui_scope, interaction_writes, ..Default::default() }, EphemeralEmit { window_transient, ..Default::default() }))
 }
 
 /// 🗂️ Upper bound on the entities one selection-acting retained step may touch. Nakagin — this
@@ -3701,22 +3817,7 @@ impl ArtifactEditor for Puzzle2dPlayApp {
     }
 
     fn render(body_key: &str, doc: &ArtifactView<'_, Puzzle2dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle2dConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
-        let config = cfg.snapshot;
-        let document_json = doc.snapshot.0.to_string();
-        let window_config = window::config_from_view_or_document(cfg, &doc.snapshot.0);
-        let window_kind = window::kind_for_view(view_state).unwrap_or(overview::WINDOW_KIND_ID);
-        let envelope = Self::scene_for(doc.snapshot.0.clone(), window::runtime(config, &window_config, &Puzzle2dWindowTransient::default(), Some(window_kind)), puzzle2d_active_utility(Some(view_state)));
-        let labels = puzzle2d_labels(view_state);
-        let node = match body_key {
-            overview::BODY_KEY => overview::render(&document_json, &envelope)?,
-            detail::BODY_KEY => detail::render(&document_json, &envelope)?,
-            selection::BODY_KEY => selection::render(&document_json, &envelope)?,
-            artifact::PUZZLE2D_PLAY_BODY_LAYERS => artifact::render(&envelope, labels)?,
-            catalogue::PUZZLE2D_PLAY_BODY_CATALOGUE => catalogue::render(&envelope.fixture, labels)?,
-            inspection::PUZZLE2D_PLAY_BODY_PROPERTIES => inspection::render(&envelope, labels)?,
-            _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "puzzle2d unknown-body label admission failed"))?,
-        };
-        Ok(semio_framework_plugin::built_to_component_tree(node))
+        Self::render_body(body_key, doc, cfg, view_state, &Puzzle2dWindowTransient::default(), Puzzle2dInteractionSnapshot::default())
     }
 
     fn render_with_request_context(
@@ -3726,24 +3827,9 @@ impl ArtifactEditor for Puzzle2dPlayApp {
         cfg: &ConfigView<'_, Puzzle2dConfig>,
         view_state: &semio_framework_plugin::ViewModel,
         transient: &semio_framework_plugin::TransientView<'_, Self::Transient>,
-        _interaction: &InteractionView<'_>,
+        interaction: &InteractionView<'_>,
     ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
-        let window_config = window::config_from_view_or_document(cfg, &doc.snapshot.0);
-        let window_transient = window::transient_from_view(transient);
-        let window_kind = window::kind_for_view(view_state).unwrap_or(overview::WINDOW_KIND_ID);
-        let document_json = doc.snapshot.0.to_string();
-        let envelope = Self::scene_for(doc.snapshot.0.clone(), window::runtime(cfg.snapshot, &window_config, &window_transient, Some(window_kind)), puzzle2d_active_utility(Some(view_state)));
-        let labels = puzzle2d_labels(view_state);
-        let node = match body_key {
-            overview::BODY_KEY => overview::render(&document_json, &envelope)?,
-            detail::BODY_KEY => detail::render(&document_json, &envelope)?,
-            selection::BODY_KEY => selection::render(&document_json, &envelope)?,
-            artifact::PUZZLE2D_PLAY_BODY_LAYERS => artifact::render(&envelope, labels)?,
-            catalogue::PUZZLE2D_PLAY_BODY_CATALOGUE => catalogue::render(&envelope.fixture, labels)?,
-            inspection::PUZZLE2D_PLAY_BODY_PROPERTIES => inspection::render(&envelope, labels)?,
-            _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "puzzle2d unknown-body label admission failed"))?,
-        };
-        Ok(semio_framework_plugin::built_to_component_tree(node))
+        Self::render_body(body_key, doc, cfg, view_state, &window::transient_from_view(transient), Puzzle2dInteractionSnapshot::from_interaction(interaction))
     }
 
     fn window_engagements(doc: &ArtifactView<'_, Puzzle2dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle2dConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, WindowEngagement> {
@@ -3799,8 +3885,38 @@ impl ArtifactEditor for Puzzle2dPlayApp {
         view_state: &semio_framework_plugin::ViewModel,
         registry: &semio_framework_plugin::AppActionRegistry,
     ) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
+        Self::context_menu_body(request, doc, view_state, &Puzzle2dInteractionSnapshot::default(), registry)
+    }
+
+    /// 🕹️ The context menu reads the AUTHORITATIVE framework-owned selection when the surface names
+    /// none of its own — a right-click on an outliner row or an empty board still targets what the
+    /// user selected; the surface's own hits/selection win when present, so a right-click on an
+    /// unselected node still targets that node.
+    fn context_menu_with_request_context(
+        request: &semio_framework_plugin::ContextMenuRequest,
+        doc: &ArtifactView<'_, Puzzle2dPlaySnapshot>,
+        _cfg: &ConfigView<'_, Puzzle2dConfig>,
+        view_state: &semio_framework_plugin::ViewModel,
+        interaction: &InteractionView<'_>,
+        registry: &semio_framework_plugin::AppActionRegistry,
+    ) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
+        Self::context_menu_body(request, doc, view_state, &Puzzle2dInteractionSnapshot::from_interaction(interaction), registry)
+    }
+}
+
+impl Puzzle2dPlayApp {
+    fn context_menu_body(
+        request: &semio_framework_plugin::ContextMenuRequest,
+        doc: &ArtifactView<'_, Puzzle2dPlaySnapshot>,
+        view_state: &semio_framework_plugin::ViewModel,
+        interaction: &Puzzle2dInteractionSnapshot,
+        registry: &semio_framework_plugin::AppActionRegistry,
+    ) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
         let is_de = view_state.locale == semio_framework_plugin::Locale::De;
-        let selected: Vec<String> = request.surface.as_ref().map(|surface| surface.selection.iter().flat_map(|g| g.ids.iter().cloned()).collect()).unwrap_or_default();
+        let mut selected: Vec<String> = request.surface.as_ref().map(|surface| surface.selection.iter().flat_map(|g| g.ids.iter().cloned()).collect()).unwrap_or_default();
+        if selected.is_empty() {
+            selected = interaction.selected.clone();
+        }
         semio_framework::io::resolve_ready(puzzle2d_context_menu_items(registry, &doc.snapshot.0, &selected, is_de))
     }
 }
@@ -3820,7 +3936,7 @@ fn puzzle2d_internal_action(id: &str, label: impl Into<LocalizedLabel>, kind: Ac
 /// facet, the likely intended replacement mechanism.
 pub fn create_puzzle2d_app() -> semio_framework_plugin::AppDefinition {
     let mut host = puzzle_board_host();
-    let envelope = Puzzle2dScene { fixture: default_empty_fixture(), runtime: Puzzle2dPlayRuntime::default(), active_utility: select_utility::UTILITY_ID.into() };
+    let envelope = Puzzle2dScene { fixture: default_empty_fixture(), runtime: Puzzle2dPlayRuntime::default(), active_utility: select_utility::UTILITY_ID.into(), interaction: Puzzle2dInteractionSnapshot::default() };
     sync_host_from_envelope(&mut host, &envelope);
     let labels = puzzle2d_labels(&semio_framework_plugin::ViewModel::default());
     Editor::builder(Puzzle2dPlayApp::DIALECT)

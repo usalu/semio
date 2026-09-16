@@ -1538,6 +1538,57 @@ type ChangeTimeSeriesScheduleTimestep {
   newTimestepSeconds: Int!
 }
 
+type ReplaceFenestrationVertices {
+  id: Int!
+  newVerticesM: [[Float!]!]!
+}
+
+type ChangeGlazingMaterialThickness {
+  id: Int!
+  newThicknessM: Float!
+}
+
+type ChangeGlazingMaterialConductivity {
+  id: Int!
+  newConductivityWMK: Float!
+}
+
+type ChangeGlazingMaterialSolarTransmittance {
+  id: Int!
+  newSolarTransmittance: Float!
+}
+
+type ChangeGlazingMaterialVisibleTransmittance {
+  id: Int!
+  newVisibleTransmittance: Float!
+}
+
+type ChangeGlazingMaterialInfraredEmissivity {
+  id: Int!
+  newInfraredEmissivityFront: Float!
+  newInfraredEmissivityBack: Float!
+}
+
+type RenameGlazingMaterial {
+  id: Int!
+  newName: String!
+}
+
+type ChangeGasMaterialThickness {
+  id: Int!
+  newThicknessM: Float!
+}
+
+type ChangeGasMaterialGas {
+  id: Int!
+  newGas: String!
+}
+
+type RenameGasMaterial {
+  id: Int!
+  newName: String!
+}
+
 union EnergyModelMutation =
   RenameModel
   | ChangeModelVersion
@@ -1815,3 +1866,13 @@ union EnergyModelMutation =
   | DeleteTimeSeriesSchedule
   | ReplaceTimeSeriesScheduleValues
   | ChangeTimeSeriesScheduleTimestep
+  | ReplaceFenestrationVertices
+  | ChangeGlazingMaterialThickness
+  | ChangeGlazingMaterialConductivity
+  | ChangeGlazingMaterialSolarTransmittance
+  | ChangeGlazingMaterialVisibleTransmittance
+  | ChangeGlazingMaterialInfraredEmissivity
+  | RenameGlazingMaterial
+  | ChangeGasMaterialThickness
+  | ChangeGasMaterialGas
+  | RenameGasMaterial

@@ -171,6 +171,8 @@ who both re-run it after adding only their own entries produce the same file, no
 | 233 | `change-fenestration-overhang-offset` | 🎩️ | LANDED (G1) |
 | 234 | `change-fenestration-fin-depth` | 🐬️ | LANDED (G1) |
 | 235 | `change-fenestration-fin-offset` | 🐋️ | LANDED (G1) |
+| | **Arbitrary aperture polygons (added by 26/09/16/ENERGY-3D-MODEL-TREE-INSPECTOR W1-A)** | | |
+| 236 | `replace-fenestration-vertices` | 🔶️ | LANDED (W1-A) |
 
 ### Constructions & materials — `300`–`399` (§4.4)
 
@@ -194,6 +196,16 @@ who both re-run it after adding only their own entries produce the same file, no
 | 313 | `add-construction-layer` | ➕️ | LANDED (G2) |
 | 314 | `remove-construction-layer` | ➖️ | LANDED (G2) |
 | 315 | `reorder-construction-layers` | 🔀️ | LANDED (G2) |
+| | **Glazing & gas materials (added by 26/09/16/ENERGY-3D-MODEL-TREE-INSPECTOR W1-A)** | | |
+| 316 | `change-glazing-material-thickness` | 🔷️ | LANDED (W1-A) |
+| 317 | `change-glazing-material-conductivity` | 🟠️ | LANDED (W1-A) |
+| 318 | `change-glazing-material-solar-transmittance` | 🟡️ | LANDED (W1-A) |
+| 319 | `change-glazing-material-visible-transmittance` | 🥽️ | LANDED (W1-A) |
+| 320 | `change-glazing-material-infrared-emissivity` | 🩻️ | LANDED (W1-A) |
+| 321 | `rename-glazing-material` | 🟢️ | LANDED (W1-A) |
+| 322 | `change-gas-material-thickness` | 🟣️ | LANDED (W1-A) |
+| 323 | `change-gas-material-gas` | 🟤️ | LANDED (W1-A) |
+| 324 | `rename-gas-material` | 🔘️ | LANDED (W1-A) |
 
 ### Internal gains — `400`–`499` (§4.5)
 

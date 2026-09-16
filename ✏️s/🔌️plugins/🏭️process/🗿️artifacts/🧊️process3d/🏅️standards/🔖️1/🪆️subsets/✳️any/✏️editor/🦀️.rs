@@ -314,7 +314,36 @@ const PROCESS3D_RETAINED_PAYLOAD_SCHEMA: &str = "process.3d.tool-command.v1";
 const PROCESS3D_RETAINED_RAW_BYTES: usize = 8_192;
 const PROCESS3D_RETAINED_WORK_ITEMS: usize = 64;
 const PROCESS3D_SCAN_BYTES: usize = 256;
-const PROCESS3D_CONFIG_STORE_MAXIMUM_BYTES: usize = 16_384;
+/// 📏️ Everything the retained config holds APART from the contributions pack — engagement text and
+/// the sun colour. Unchanged; the contributions lane is priced separately below.
+const PROCESS3D_CONFIG_FILTER_STORE_BYTES: usize = 16_384;
+/// 📏️ The retained `contributions_json` lane, sized from the REAL pack: the four shipped
+/// `process-extension-*` bundles are 19 823 bytes of `process.machines` entries once the host has
+/// scoped them by this receiver's `consumes` row (measured 2026-09-16, ticket
+/// 26/08/28/DEMONSTRATOR-END-TO-END-ALL-APPS). `installable_contributions` distils the host pack to
+/// exactly those entries before anything is retained, so the app never stores the whole closure.
+pub(crate) const PROCESS3D_CONFIG_CONTRIBUTIONS_BYTES: usize = 24_576;
+const PROCESS3D_CONFIG_STORE_MAXIMUM_BYTES: usize = PROCESS3D_CONFIG_FILTER_STORE_BYTES + PROCESS3D_CONFIG_CONTRIBUTIONS_BYTES;
+
+/// 📏️ The raw-wire ceiling one retained tool id is admitted against. `setContributions` is the ONE
+/// retained command whose wire is a host pack, not a gesture — it carries the whole capability
+/// closure the receiver's registry `consumes` row names — so it is priced on
+/// [`semio_framework_plugin::CONTRIBUTIONS_COMMAND_RAW_WIRE_BYTES`], never on the gesture envelope.
+fn process3d_retained_raw_bytes(tool_id: &str) -> usize {
+    if tool_id == "setContributions" {
+        semio_framework_plugin::CONTRIBUTIONS_COMMAND_RAW_WIRE_BYTES
+    } else {
+        PROCESS3D_RETAINED_RAW_BYTES
+    }
+}
+
+/// 🧮️ Work units one retained tool id may declare. The resumable pump scans `PROCESS3D_SCAN_BYTES`
+/// per unit, so a tool's unit cap and its wire cap are one bound: a `setContributions` pack of
+/// [`semio_framework_plugin::CONTRIBUTIONS_COMMAND_RAW_WIRE_BYTES`] is that many scans, and pricing
+/// it on the gesture cap refused the real pack before it ever reached the config lane.
+fn process3d_retained_work_items(tool_id: &str) -> usize {
+    process3d_retained_raw_bytes(tool_id).div_ceil(PROCESS3D_SCAN_BYTES).max(PROCESS3D_RETAINED_WORK_ITEMS)
+}
 
 /// 🛤️ Which retained work shape a tool id reduces through — the two are exhaustive over this app's
 /// whole action surface, so an id that answers `None` here is genuinely not a command of this app.
@@ -335,8 +364,14 @@ fn process3d_bounded_contract() -> ToolExecutionContract {
     ToolExecutionContract::bounded_first_step(PROCESS3D_RETAINED_RAW_BYTES, PROCESS3D_RETAINED_WORK_ITEMS, 1, 16_384, 7_500)
 }
 
+/// 🧾️ The ONE execution contract every RESUMABLE process3d tool is admitted under. Its wire ceiling
+/// is [`semio_framework_plugin::CONTRIBUTIONS_COMMAND_RAW_WIRE_BYTES`] because one of those tools —
+/// `setContributions` — carries a host pack, not a gesture, and a factory declares one contract for
+/// every tool it serves, which the proof catalogue must join exactly. Widening the ADMISSION does
+/// not widen what a sun or engagement gesture may send: [`process3d_retained_raw_bytes`] is what
+/// `process3d_resumable_extent` and the payload both bound, per tool id.
 fn process3d_resumable_contract() -> ToolExecutionContract {
-    ToolExecutionContract::resumable(PROCESS3D_RETAINED_RAW_BYTES, 64, 1, 16_384, 7_500, 1, 1)
+    ToolExecutionContract::resumable(semio_framework_plugin::CONTRIBUTIONS_COMMAND_RAW_WIRE_BYTES, 64, 1, 16_384, 7_500, 1, 1)
 }
 
 fn process3d_string_units(value: &str) -> usize {
@@ -351,7 +386,7 @@ fn process3d_resumable_extent(command: &Process3dCommand, _snapshot: &Process3dS
         _ => return None,
     };
     let extent = process3d_string_units(value);
-    (extent <= PROCESS3D_RETAINED_WORK_ITEMS && value.len() <= PROCESS3D_RETAINED_RAW_BYTES).then_some(extent)
+    (extent <= process3d_retained_work_items(command.command_id()) && value.len() <= process3d_retained_raw_bytes(command.command_id())).then_some(extent)
 }
 
 #[expect(clippy::too_many_arguments, reason = "Implements the framework ArtifactCommandReducer callback signature.")]
@@ -552,7 +587,7 @@ impl ToolJobFactory for Process3dBoundedCommandJobFactory {
         input: semio_framework::action_bus::RetainedToolWireInput,
         checkpoint: Option<semio_framework::action_bus::RetainedToolWireInput>,
     ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework::action_bus::RetainedToolWireInput, Option<semio_framework::action_bus::RetainedToolWireInput>)> {
-        if input.declared_bytes() > PROCESS3D_RETAINED_RAW_BYTES || checkpoint.is_some() {
+        if input.declared_bytes() > payload.maximum_raw_bytes || checkpoint.is_some() {
             return Err((ToolJobFactoryError::new("Process3d bounded command rejects oversized wire or unsupported checkpoint owner"), input, checkpoint));
         }
         Ok(ArtifactRetainedCommandJob::from_wire(payload, input))
@@ -642,7 +677,7 @@ impl ToolJobFactory for Process3dResumableCommandJobFactory {
         input: semio_framework::action_bus::RetainedToolWireInput,
         checkpoint: Option<semio_framework::action_bus::RetainedToolWireInput>,
     ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework::action_bus::RetainedToolWireInput, Option<semio_framework::action_bus::RetainedToolWireInput>)> {
-        if input.declared_bytes() > PROCESS3D_RETAINED_RAW_BYTES || checkpoint.as_ref().is_some_and(|checkpoint| checkpoint.declared_bytes() > semio_framework_plugin::retained_command::ARTIFACT_COMMAND_CHECKPOINT_MAXIMUM_BYTES) {
+        if input.declared_bytes() > payload.maximum_raw_bytes || checkpoint.as_ref().is_some_and(|checkpoint| checkpoint.declared_bytes() > semio_framework_plugin::retained_command::ARTIFACT_COMMAND_CHECKPOINT_MAXIMUM_BYTES) {
             return Err((ToolJobFactoryError::new("Process3d resumable command rejects oversized wire or checkpoint owner"), input, checkpoint));
         }
         Ok(match checkpoint {
@@ -696,7 +731,11 @@ fn process3d_config_mutation_retained_bytes(mutation: &Process3dConfigMutation) 
 
 fn admit_process3d_config_mutation(mutation: &Process3dConfigMutation) -> Result<store::ArtifactStoreOneItemFootprint, String> {
     let retained_bytes = process3d_config_mutation_retained_bytes(mutation);
-    if retained_bytes > PROCESS3D_RETAINED_RAW_BYTES {
+    let envelope = match mutation {
+        Process3dConfigMutation::SetContributions { .. } => PROCESS3D_CONFIG_CONTRIBUTIONS_BYTES,
+        _ => PROCESS3D_RETAINED_RAW_BYTES,
+    };
+    if retained_bytes > envelope {
         return Err("Process3d config mutation exceeds its fixed retained preparation envelope".into());
     }
     Ok(store::ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes })
@@ -1282,12 +1321,12 @@ impl Process3dResumableProofs {
         factory: "Process3dResumableCommandJobFactory",
         factory_type: Process3dResumableCommandJobFactory,
         tools: {
-            "engagementInput" => ToolExecutionContract::resumable(8_192, 64, 1, 16_384, 7_500, 1, 1),
-            "toggleSun" => ToolExecutionContract::resumable(8_192, 64, 1, 16_384, 7_500, 1, 1),
-            "setSunAzimuth" => ToolExecutionContract::resumable(8_192, 64, 1, 16_384, 7_500, 1, 1),
-            "setSunElevation" => ToolExecutionContract::resumable(8_192, 64, 1, 16_384, 7_500, 1, 1),
-            "setSunIntensity" => ToolExecutionContract::resumable(8_192, 64, 1, 16_384, 7_500, 1, 1),
-            "setContributions" => ToolExecutionContract::resumable(8_192, 64, 1, 16_384, 7_500, 1, 1),
+            "engagementInput" => process3d_resumable_contract(),
+            "toggleSun" => process3d_resumable_contract(),
+            "setSunAzimuth" => process3d_resumable_contract(),
+            "setSunElevation" => process3d_resumable_contract(),
+            "setSunIntensity" => process3d_resumable_contract(),
+            "setContributions" => process3d_resumable_contract(),
         }
     }
 }
@@ -1311,6 +1350,10 @@ fn process3d_render_body(body_key: &str, doc: &Process3dSnapshot, config: &Proce
 }
 
 impl ArtifactEditor for Process3dPlayApp {
+    /// 🧩️ The roster the three composed `s.stdio.semio` members (`stockSolid`/`steps`/`toolSolids`)
+    /// open through — a `NoMembers` editor cannot materialise the children `genesis_child_pack`
+    /// derives, and every whole-document load then fails its archive closure as `Incomplete`.
+    type Members = semio_s_artifact_stdio_semio::SemioMembers;
     type Snapshot = Process3dSnapshot;
     type Mutation = Process3dMutation;
     type Config = Process3dConfig;
@@ -1381,8 +1424,8 @@ impl ArtifactEditor for Process3dPlayApp {
                 completion: request.completion,
             },
             Process3dCommand::command_id,
-            PROCESS3D_RETAINED_RAW_BYTES,
-            PROCESS3D_RETAINED_WORK_ITEMS,
+            process3d_retained_raw_bytes(tool_id),
+            process3d_retained_work_items(tool_id),
             work,
         )?;
         Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
@@ -1409,8 +1452,13 @@ impl ArtifactEditor for Process3dPlayApp {
         Ok(crate::spr::process3d_document_store_initialization_job(envelope, operation, generation))
     }
 
+    /// 🔐️ The exact publication gate the host consults once, right before its non-rejecting commit
+    /// — so a lease the app admitted for itself (`process3d_admit_app_publication_authority`, every
+    /// host-begun `Effect::LoadDocument`) is consumed here; a host-admitted lease stays the host's.
     fn validate_document_store_publication(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, live_generation: semio_framework_job::Generation) -> Result<(), Fault> {
-        crate::spr::process3d_validate_atomic_publication_authority(operation, generation, live_generation).map_err(|code| Fault::new(FaultOrigin::App, FaultCode::new(code), "Process3d atomic publication authority is absent or stale"))
+        crate::spr::process3d_validate_atomic_publication_authority(operation, generation, live_generation).map_err(|code| Fault::new(FaultOrigin::App, FaultCode::new(code), "Process3d atomic publication authority is absent or stale"))?;
+        crate::spr::process3d_release_app_publication_authority(operation);
+        Ok(())
     }
 
     fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
@@ -1451,6 +1499,10 @@ impl ArtifactEditor for Process3dPlayApp {
 
     fn app_schema() -> Option<::framework_schema::AppSchemaDescriptor> {
         Some(crate::editor::process3d::config::schema::app_schema_descriptor())
+    }
+
+    fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
+        crate::genesis_process3d_child_pack(snapshot, slot, child_id)
     }
 
     fn initial_snapshot() -> Process3dSnapshot {
@@ -1616,7 +1668,9 @@ impl ArtifactEditor for Process3dPlayApp {
     }
 
     fn host_configuration_mutation(action: &str, args: Option<&DslValue>) -> Result<Option<Self::ConfigMutation>, Fault> {
-        Ok((action == "setContributions").then(|| Process3dConfigMutation::SetContributions { json: args.and_then(|value| value.get("json")).and_then(DslValue::as_str).unwrap_or("[]").to_string() }))
+        Ok((action == "setContributions").then(|| Process3dConfigMutation::SetContributions {
+            json: installable_contributions(args.and_then(|value| value.get("json")).and_then(DslValue::as_str).unwrap_or("[]"), PROCESS3D_CONFIG_CONTRIBUTIONS_BYTES),
+        }))
     }
 
     /// 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): reads the framework-owned
@@ -1944,7 +1998,12 @@ struct ProcessMachinesTopicPayload {
 const PROCESS_CONTRIBUTION_MAX_BYTES: usize = 256 * 1024;
 const PROCESS_CONTRIBUTION_MAX_DEPTH: usize = 32;
 const PROCESS_CONTRIBUTION_MAX_ITEMS: usize = 4 * 1024;
-const PROCESS_CONTRIBUTION_MAX_STRING_BYTES: usize = 4 * 1024;
+/// 📏️ Longest JSON string one contribution payload may carry. The REAL `machinesJson` of the four
+/// shipped `process-extension-*` bundles is 3 311 / 4 010 / 4 011 / 4 705 bytes (measured 2026-09-16,
+/// ticket 26/08/28/DEMONSTRATOR-END-TO-END-ALL-APPS), so the old 4 KiB bound silently refused the
+/// wood catalog — `contributed_machine_catalogs` returned nothing and the workshop showed built-ins
+/// only, whatever the host pushed.
+const PROCESS_CONTRIBUTION_MAX_STRING_BYTES: usize = 16 * 1024;
 
 fn process_json_envelope_is_bounded(input: &str) -> bool {
     if input.len() > PROCESS_CONTRIBUTION_MAX_BYTES {
@@ -2019,6 +2078,37 @@ fn process_json_envelope_is_bounded(input: &str) -> bool {
 // `🧰️framework/🔨️modules/🛂️manifest/🦀️.rs` (out of this packet's path_scope); bridged via
 // `semio_framework::io::resolve_ready` (see `imperative_extension_sdk`'s identical bridge and this
 // packet's lease-request for the SDK owner to revert `decode` to sync directly).
+/// 🧩️ Distils a host pack down to what THIS app can install: the `process.machines` entries
+/// addressed to it, in host order, while the re-encoded roster still fits `maximum_bytes`.
+///
+/// ⚖️ The app retains the roster it can act on, never the host's whole pack. A pack is cut from the
+/// receiver's whole `consumes` closure — for the demonstrator that is `cad.computer` and
+/// `sourcing.module` as well — and a retained config lane is a fixed envelope; distilling at the
+/// app boundary is what makes the two compatible (the `sourcing.module` lane's own precedent).
+pub(crate) fn installable_contributions(contributions_json: &str, maximum_bytes: usize) -> String {
+    let empty = "[]".to_string();
+    if !process_json_envelope_is_bounded(contributions_json) {
+        return empty;
+    }
+    let mut kept: Vec<semio_framework::ProgramContributionEntry> = Vec::new();
+    for entry in semio_framework::parse_contributions(contributions_json) {
+        let addressed = entry
+            .topic_contribution
+            .as_ref()
+            .filter(|topic| topic.topic == "process.machines")
+            .and_then(|topic| topic.decode::<ProcessMachinesTopicPayload>().ok())
+            .is_some_and(|payload| payload.app_id == PROCESS_3D_PLAY_APP_ID);
+        if !addressed {
+            continue;
+        }
+        kept.push(entry);
+        if semio_framework_os_kernel::json::to_json_string(&kept).len() > maximum_bytes {
+            kept.pop();
+        }
+    }
+    if kept.is_empty() { empty } else { semio_framework_os_kernel::json::to_json_string(&kept) }
+}
+
 fn contributed_machine_catalogs(contributions_json: &str) -> Vec<ContributedMachineCatalog> {
     if !process_json_envelope_is_bounded(contributions_json) {
         return Vec::new();

@@ -13027,6 +13027,20 @@ pub mod app {
         assert!(TypedCommandFullOperationJobFactory::<A>::from_proof(generic_proofs.pop().expect("generic proof")).is_some());
     }
 
+    /// 📏️ Largest `setContributions` raw JSON wire ONE app must admit — the host hands a receiver the
+    /// whole capability closure that receiver's registry `consumes` row names, in one crossing, and
+    /// the guest re-encodes it as `["setContributions",{"json":…}]` before
+    /// `admit_command_json_with_proof` prices it against the addressed tool's `max_raw_wire_bytes`.
+    ///
+    /// 📐️ Measured 2026-09-16 over the built dev manifests (ticket
+    /// 26/08/28/DEMONSTRATOR-END-TO-END-ALL-APPS): the demonstrator consumes `cad.computer` (4
+    /// extensions), `process.machines` (4) and `sourcing.module` (3) — 29 909 bytes of pack JSON,
+    /// 38 081 bytes once escaped into the command wire. This is that, rounded to 48 KiB so it stays
+    /// under the 64 KiB contiguous guest-allocation ceiling with room for one more extension. An app
+    /// that declares the app-wide default instead refuses the real pack with
+    /// `typed command raw JSON exceeds its registered retained-page admission`.
+    pub const CONTRIBUTIONS_COMMAND_RAW_WIRE_BYTES: usize = 49_152;
+
     /// 🧬️ Declares an exact bounded-first-step proof catalog in the owning plugin source.
     #[macro_export]
     macro_rules! bounded_first_step_tool_proofs {
@@ -19448,7 +19462,6 @@ pub mod app {
         }
 
         fn request_cancel(&self) {
-            #[cfg(test)]
             eprintln!("[DEBUG] recursive replacement diagnostic: cancellation requested for operation {} generation {} in state {:?}", self.operation.0, self.generation.0, self.state);
             self.cancel.cancel_now();
             self.cancel_signal.store(true, std::sync::atomic::Ordering::Release);
@@ -19483,6 +19496,7 @@ pub mod app {
             }
             let registry = self.member_ingress.as_mut().ok_or_else(|| plugin_sdk_fault("owned document member ingress registry has not been initialized"))?;
             if let Err(fault) = registry.seal() {
+                eprintln!("[DEBUG] recursive replacement faulted at plugin line {}", line!());
                 self.faulted = true;
                 self.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
                 return Err(fault);
@@ -19497,6 +19511,7 @@ pub mod app {
             }
             if self.active_member_open.is_some() {
                 if self.active_member_ingress.as_ref().is_none_or(|ingress| !ingress.has_identity()) {
+                    eprintln!("[DEBUG] recursive replacement faulted at plugin line {}", line!());
                     self.faulted = true;
                     self.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
                     return Err(plugin_sdk_fault("active member open lost its exact retained ingress identity"));
@@ -19516,12 +19531,12 @@ pub mod app {
                 return match step {
                     store::MemberOpenStep::Pending(_) => Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }),
                     store::MemberOpenStep::Rejected(diagnostic) => {
-                        #[cfg(test)]
                         eprintln!(
                             "[DEBUG] recursive replacement diagnostic: member open rejected {diagnostic:?} at ordinal {} cancel={}",
                             self.next_member_ordinal,
                             self.cancel.is_cancelled_now(),
                         );
+                        eprintln!("[DEBUG] recursive replacement faulted at plugin line {}", line!());
                         self.faulted = true;
                         self.state = ActiveArtifactStoreReplacementState::ClosingRejectedMember;
                         Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
@@ -19529,6 +19544,7 @@ pub mod app {
                     store::MemberOpenStep::Ready(member) => {
                         if !store::MemberOpenOperation::terminal_is_empty(self.active_member_open.as_ref().expect("ready member open remains retained")) {
                             *self.retiring_child = self.active_member_ingress.as_mut().and_then(OwnedDocumentMemberIngress::take_identity).map(|(_, reference, owner)| ChildMemberRetirement::new(ChildMemberEntry { reference, owner, member }));
+                            eprintln!("[DEBUG] recursive replacement faulted at plugin line {}", line!());
                             self.faulted = true;
                             self.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
                             return Err(plugin_sdk_fault("ready member open retained nonterminal ownership"));
@@ -19536,15 +19552,16 @@ pub mod app {
                         drop(self.active_member_open.take());
                         let (ordinal, reference, owner) = self.active_member_ingress.as_mut().and_then(OwnedDocumentMemberIngress::take_identity).expect("active member identity was verified before its exact open step");
                         if ordinal != self.next_member_ordinal || member.artifact_ref().as_ref() != Some(&reference) || member.owner_ref().as_ref() != Some(&owner) {
-                            #[cfg(test)]
                             eprintln!("[DEBUG] recursive replacement diagnostic: opened member identity differed at ordinal {ordinal}, expected {}", self.next_member_ordinal);
                             *self.retiring_child = Some(ChildMemberRetirement::new(ChildMemberEntry { reference, owner, member }));
+                            eprintln!("[DEBUG] recursive replacement faulted at plugin line {}", line!());
                             self.faulted = true;
                             self.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
                             return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
                         }
                         let Some(candidate) = self.candidate_children.as_mut() else {
                             *self.retiring_child = Some(ChildMemberRetirement::new(ChildMemberEntry { reference, owner, member }));
+                            eprintln!("[DEBUG] recursive replacement faulted at plugin line {}", line!());
                             self.faulted = true;
                             self.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
                             return Err(plugin_sdk_fault("member candidate registry was lost before exact admission"));
@@ -19553,6 +19570,7 @@ pub mod app {
                             Ok(admission) => admission,
                             Err(fault) => {
                                 *self.retiring_child = Some(ChildMemberRetirement::new(ChildMemberEntry { reference, owner, member }));
+                                eprintln!("[DEBUG] recursive replacement faulted at plugin line {}", line!());
                                 self.faulted = true;
                                 self.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
                                 return Err(fault);
@@ -19562,6 +19580,7 @@ pub mod app {
                             let cancelled = candidate.cancel_admission(&admission);
                             debug_assert!(cancelled, "candidate admission remains exclusive until insertion");
                             *self.retiring_child = Some(ChildMemberRetirement::new(ChildMemberEntry { reference, owner, member }));
+                            eprintln!("[DEBUG] recursive replacement faulted at plugin line {}", line!());
                             self.faulted = true;
                             self.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
                             return Err(plugin_sdk_fault("owned document candidate generation exhausted"));
@@ -19579,12 +19598,14 @@ pub mod app {
                 };
             }
             let Some(registry) = self.member_ingress.as_mut() else {
+                eprintln!("[DEBUG] recursive replacement faulted at plugin line {}", line!());
                 self.faulted = true;
                 self.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
                 return Err(plugin_sdk_fault("opening member set lost its exact ingress registry"));
             };
             if self.next_member_ordinal == registry.expected {
                 if !registry.sealed || !registry.terminal_is_empty() {
+                    eprintln!("[DEBUG] recursive replacement faulted at plugin line {}", line!());
                     self.faulted = true;
                     self.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
                     return Err(plugin_sdk_fault("opened member set did not consume every sealed ordinal"));
@@ -19596,12 +19617,14 @@ pub mod app {
                 return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
             }
             let Some(ingress) = registry.take(self.next_member_ordinal) else {
+                eprintln!("[DEBUG] recursive replacement faulted at plugin line {}", line!());
                 self.faulted = true;
                 self.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
                 return Err(plugin_sdk_fault("sealed member set lost an exact ordinal before open"));
             };
             *self.active_member_ingress = Some(ingress);
             if self.active_member_ingress.as_ref().is_none_or(|ingress| !ingress.has_request()) {
+                eprintln!("[DEBUG] recursive replacement faulted at plugin line {}", line!());
                 self.faulted = true;
                 self.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
                 return Err(plugin_sdk_fault("member ingress lost its exact retained open request"));
@@ -19613,9 +19636,9 @@ pub mod app {
                     Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
                 }
                 Err(rejected) => {
-                    #[cfg(test)]
                     eprintln!("[DEBUG] recursive replacement diagnostic: member factory refused one admitted request");
                     self.active_member_ingress.as_mut().expect("rejected member ingress remains retained").return_request(rejected.request);
+                    eprintln!("[DEBUG] recursive replacement faulted at plugin line {}", line!());
                     self.faulted = true;
                     self.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
                     Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
@@ -19634,17 +19657,20 @@ pub mod app {
                 return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
             }
             let Some(candidate) = self.retained_store.as_ref() else {
+                eprintln!("[DEBUG] recursive replacement faulted at plugin line {}", line!());
                 self.faulted = true;
                 self.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
                 return Err(plugin_sdk_fault("closure validation lost its retained parent candidate"));
             };
             let Some(dialect) = candidate.envelope().dialect.clone() else {
+                eprintln!("[DEBUG] recursive replacement faulted at plugin line {}", line!());
                 self.faulted = true;
                 self.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
                 return Err(plugin_sdk_fault("closure validation requires the candidate parent's exact dialect"));
             };
             let root_reference = ArtifactRef { artifact_id: candidate.envelope().id.clone(), dialect };
             let Some(children) = self.candidate_children.as_ref() else {
+                eprintln!("[DEBUG] recursive replacement faulted at plugin line {}", line!());
                 self.faulted = true;
                 self.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
                 return Err(plugin_sdk_fault("closure validation lost its retained member registry"));
@@ -19660,6 +19686,7 @@ pub mod app {
                 &mut sequence,
             );
             let Some(closure) = self.closure.as_mut() else {
+                eprintln!("[DEBUG] recursive replacement faulted at plugin line {}", line!());
                 self.faulted = true;
                 self.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
                 return Err(plugin_sdk_fault("closure validation lost its fixed cursor"));
@@ -19674,17 +19701,17 @@ pub mod app {
                     Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
                 }
                 store::OwnedDocumentClosureStep::Complete { members } => {
-                    #[cfg(test)]
                     eprintln!("[DEBUG] recursive replacement diagnostic: closure completed with {members} members while registry owns {}", children.len());
                     self.closure = None;
+                    eprintln!("[DEBUG] recursive replacement faulted at plugin line {}", line!());
                     self.faulted = true;
                     self.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
                     Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
                 }
                 store::OwnedDocumentClosureStep::Rejected(diagnostic) => {
-                    #[cfg(test)]
                     eprintln!("[DEBUG] recursive replacement diagnostic: closure rejected {diagnostic:?}");
                     self.closure = None;
+                    eprintln!("[DEBUG] recursive replacement faulted at plugin line {}", line!());
                     self.faulted = true;
                     self.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
                     Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
@@ -19697,11 +19724,13 @@ pub mod app {
                 return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
             }
             let Some(children) = self.candidate_children.as_ref() else {
+                eprintln!("[DEBUG] recursive replacement faulted at plugin line {}", line!());
                 self.faulted = true;
                 self.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
                 return Err(plugin_sdk_fault("candidate view preparation lost its exact member registry"));
             };
             if self.candidate_source_generation != children.len() as u64 {
+                eprintln!("[DEBUG] recursive replacement faulted at plugin line {}", line!());
                 self.faulted = true;
                 self.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
                 return Err(plugin_sdk_fault("candidate member generation changed after closure validation"));
@@ -19710,6 +19739,7 @@ pub mod app {
                 let composition = match CompositionCoordinator::try_for_owned_closure(children.len()) {
                     Ok(composition) => composition,
                     Err(error) => {
+                        eprintln!("[DEBUG] recursive replacement faulted at plugin line {}", line!());
                         self.faulted = true;
                         self.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
                         return Err(plugin_sdk_fault(error));
@@ -19723,16 +19753,19 @@ pub mod app {
                 return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
             }
             let Some(entry) = children.entry_by_ordinal(self.view_member_ordinal) else {
+                eprintln!("[DEBUG] recursive replacement faulted at plugin line {}", line!());
                 self.faulted = true;
                 self.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
                 return Err(plugin_sdk_fault("candidate view preparation lost its exact member ordinal"));
             };
             if entry.member.artifact_ref().as_ref() != Some(&entry.reference) || entry.member.owner_ref().as_ref() != Some(&entry.owner) {
+                eprintln!("[DEBUG] recursive replacement faulted at plugin line {}", line!());
                 self.faulted = true;
                 self.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
                 return Err(plugin_sdk_fault("candidate member identity changed after closure validation"));
             }
             let Some(content) = self.candidate_content.as_ref() else {
+                eprintln!("[DEBUG] recursive replacement faulted at plugin line {}", line!());
                 self.faulted = true;
                 self.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
                 return Err(plugin_sdk_fault("candidate view preparation lost its immutable content root"));
@@ -19740,17 +19773,20 @@ pub mod app {
             let index = match content.admit_member(&entry.owner.slot, &entry.reference.artifact_id) {
                 Ok(index) => index,
                 Err(fault) => {
+                    eprintln!("[DEBUG] recursive replacement faulted at plugin line {}", line!());
                     self.faulted = true;
                     self.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
                     return Err(fault);
                 }
             };
             let Some(composition) = self.candidate_composition.as_mut() else {
+                eprintln!("[DEBUG] recursive replacement faulted at plugin line {}", line!());
                 self.faulted = true;
                 self.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
                 return Err(plugin_sdk_fault("candidate view preparation lost its coordinator"));
             };
             if let Err(error) = composition.insert_validated_owned(&entry.owner.parent.artifact_id, &entry.owner.slot, &entry.reference.artifact_id) {
+                eprintln!("[DEBUG] recursive replacement faulted at plugin line {}", line!());
                 self.faulted = true;
                 self.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
                 return Err(plugin_sdk_fault(error));
@@ -19759,6 +19795,7 @@ pub mod app {
             let snapshot = match entry.member.snapshot_read_erased_now() {
                 Ok(snapshot) => snapshot,
                 Err(error) => {
+                    eprintln!("[DEBUG] recursive replacement faulted at plugin line {}", line!());
                     self.faulted = true;
                     self.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
                     return Err(plugin_sdk_fault(error));
@@ -19922,7 +19959,9 @@ pub mod app {
                     semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes } => Ok(PluginCloseStep::Pending { released_items, released_bytes }),
                     semio_framework_job::InteractiveJobCloseStep::Blocked => Ok(PluginCloseStep::Blocked { reason: "store initializer admission rejection is temporarily blocked" }),
                     semio_framework_job::InteractiveJobCloseStep::Complete if rejected.terminal_is_empty() => {
+                        eprintln!("[DEBUG] recursive replacement diagnostic: store initializer admission was rejected");
                         drop(self.session_rejected.take());
+                        eprintln!("[DEBUG] recursive replacement faulted at plugin line {}", line!());
                         self.faulted = true;
                         self.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
                         Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
@@ -19987,10 +20026,12 @@ pub mod app {
                         *self.retained_store = Some(candidate);
                         self.terminal_target = Some(ActiveArtifactStoreReplacementState::AwaitingMembers);
                     } else if terminal_kind == 2 {
+                        eprintln!("[DEBUG] recursive replacement diagnostic: store initializer reached a cancelled/fault outcome");
                         let released = session.checked_out_job_mut().is_some_and(ArtifactStoreInitializationJob::release_terminal_failure);
                         if !released {
                             return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.initializer-failure-retirement"), "failed store initializer did not reach terminal-empty authority"));
                         }
+                        eprintln!("[DEBUG] recursive replacement faulted at plugin line {}", line!());
                         self.faulted = true;
                         self.terminal_target = Some(ActiveArtifactStoreReplacementState::RetiringRejectedMembers);
                     }
@@ -20972,6 +21013,58 @@ pub mod app {
     pub(crate) enum InteractionRevalidateOrigin {
         Pick,
         DocumentChange,
+    }
+
+    /// 🕹️ What one applied interaction verb hands back to whichever dispatch carried it
+    /// ([`VcsArtifactApp::apply_interaction_verb`]): the app-declared refresh scope for the verb and
+    /// the domains it touched, and the leftover `InteractionView` publication the host peels from
+    /// `Invocation.output.interactionView` (`interactionViewFromLeftoverOutput`, `🏛️ShellHost`).
+    struct AppliedInteractionVerb {
+        scope: UiDirtyScope,
+        leftover: DslValue,
+    }
+
+    /// 🔀️ The outcome of folding a guest emit's interaction verbs inline
+    /// ([`VcsArtifactApp::fold_inline_interaction_verbs`]): the carrying emit's `ui_scope` widened by
+    /// every applied verb's scope, the LAST applied verb's leftover view (the host publishes one
+    /// leftover per invocation, and a later verb's snapshot already includes the earlier ones), and
+    /// one diagnostic per verb that faulted instead of applying.
+    struct InlineInteractionFold {
+        scope: UiDirtyScope,
+        leftover: Option<DslValue>,
+        diagnostics: Vec<dsl::Diagnostic>,
+    }
+
+    /// 🩹 Diagnostic code of a guest-emitted interaction verb the reactor could not apply inline —
+    /// attached to the carrying command's `InvocationResult.diagnostics`, never raised as its fault.
+    pub(crate) const INLINE_INTERACTION_VERB_DIAGNOSTIC_CODE: &str = "interaction.inline-verb-not-applied";
+
+    /// 🔀️ Whether this effect is a guest asking the host to replay one of the six framework
+    /// interaction verbs (`INTERACTION_ACTION_IDS`) — the exact shape `interaction_select_effect` /
+    /// `interaction_hover_effect` build in every app. Every other `ReplayShellCommand` (an undo/redo
+    /// inverse replay, an `os.*` shell relay) is NOT one and keeps reaching the host untouched.
+    fn is_inline_interaction_verb(effect: &Effect) -> bool {
+        matches!(effect, Effect::ReplayShellCommand { action_id, .. } if INTERACTION_ACTION_IDS.contains(&action_id.as_str()))
+    }
+
+    /// 🔀️ Peels every guest-emitted interaction verb out of an emit's effect list, in emission
+    /// order, leaving every other effect in place — the host never sees a peeled verb; the reactor
+    /// applies it inline instead ([`VcsArtifactApp::fold_inline_interaction_verbs`]).
+    fn take_inline_interaction_verbs(effects: &mut Vec<Effect>) -> Vec<(String, Option<DslValue>)> {
+        if !effects.iter().any(is_inline_interaction_verb) {
+            return Vec::new();
+        }
+        let mut folded = Vec::new();
+        effects.retain_mut(|effect| {
+            if !is_inline_interaction_verb(effect) {
+                return true;
+            }
+            if let Effect::ReplayShellCommand { action_id, args } = effect {
+                folded.push((std::mem::take(action_id), args.take()));
+            }
+            false
+        });
+        folded
     }
 
     /// 🕳️ Whether a `;`-joined [`interaction_selection_witness`] names at least one id — an empty
@@ -22224,6 +22317,10 @@ pub mod app {
         }
 
         pub fn poll_artifact_store_replacement(&self, handle: ArtifactEnvelopeDecodeOperationHandle) -> ArtifactEnvelopeDecodeOperationPoll {
+            match self.store_replacement_jobs.get(handle.operation.0) {
+                None => eprintln!("[DEBUG] replacement poll: no job for operation {}", handle.operation.0),
+                Some(active) => eprintln!("[DEBUG] replacement poll: state {:?} committed {} faulted {} op {} gen {} (handle op {} gen {})", active.state, active.committed, active.faulted, active.operation.0, active.generation.0, handle.operation.0, handle.generation.0),
+            }
             self.store_replacement_jobs.get(handle.operation.0).filter(|active| active.operation == handle.operation && active.generation == handle.generation).map_or(ArtifactEnvelopeDecodeOperationPoll::Fault, |active| match active.state {
                 ActiveArtifactStoreReplacementState::Initializing
                 | ActiveArtifactStoreReplacementState::AwaitingMembers
@@ -22295,6 +22392,7 @@ pub mod app {
                 && self.store_replacement_jobs.get(operation_id).is_some_and(|active| active.cancel.is_cancelled_now())
             {
                 let active = self.store_replacement_jobs.get_mut(operation_id).ok_or_else(|| plugin_sdk_fault("cancelled owned document replacement changed before retained member retirement"))?;
+                eprintln!("[DEBUG] recursive replacement faulted at plugin line {}", line!());
                 active.faulted = true;
                 active.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
                 return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
@@ -22365,7 +22463,6 @@ pub mod app {
                     || !replacement_content_retirements.allocation_admitted
                     || next_content_generation.is_none()
                 {
-                    #[cfg(test)]
                     eprintln!(
                         "[DEBUG] recursive replacement diagnostic: publication guard rejected closing={closing} cancelled={} parent-generation={} live-generation={} child-generation={} base-child-generation={} complete={complete_candidate} retirement-admitted={} next-generation={}",
                         active.cancel.is_cancelled_now(),
@@ -22377,14 +22474,15 @@ pub mod app {
                         next_content_generation.is_some(),
                     );
                     *active.retained_disposer = Some(disposer);
+                    eprintln!("[DEBUG] recursive replacement faulted at plugin line {}", line!());
                     active.faulted = true;
                     active.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
                     return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
                 }
-                if A::validate_document_store_publication(active.operation, active.generation, live_generation).is_err() {
-                    #[cfg(test)]
-                    eprintln!("[DEBUG] recursive replacement diagnostic: app publication authority rejected the exact candidate");
+                if let Err(fault) = A::validate_document_store_publication(active.operation, active.generation, live_generation) {
+                    eprintln!("[DEBUG] recursive replacement diagnostic: app publication authority rejected the exact candidate: {fault:?}");
                     *active.retained_disposer = Some(disposer);
+                    eprintln!("[DEBUG] recursive replacement faulted at plugin line {}", line!());
                     active.faulted = true;
                     active.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
                     return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
@@ -23453,6 +23551,22 @@ pub mod app {
             self.build_history_view(None).await
         }
 
+        /// @emoji 🧪️ Lands one app `Emit` through the production `dispatch_emit` seam under a named
+        /// verb — the harness for laws about what the reactor does with an emit's effect list before
+        /// the host sees it (ticket 26/09/16/INPUT-CAUSALITY-LEDGER: the inline interaction fold),
+        /// which no registry-less typed command can reach and no reserved route carries.
+        #[cfg(test)]
+        pub(crate) async fn test_dispatch_emit(&mut self, verb: &str, emit: Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
+            self.dispatch_emit(verb, emit, meta).await
+        }
+
+        /// @emoji 🧪️ The persisted-plus-leftover selection half the panels and every app read —
+        /// what a folded interaction verb must have moved.
+        #[cfg(test)]
+        pub(crate) fn test_interaction_selection_snapshot(&self) -> protocol::InteractionState {
+            self.interaction_selection_snapshot()
+        }
+
         /// @emoji 📸️ Materializes and returns the current snapshot — the typed counterpart to
         /// `render`'s `UiNode` output, for callers (host code, downstream plugin crates' own tests) that
         /// need direct structural access to document state instead of a rendered node.
@@ -23946,7 +24060,35 @@ pub mod app {
             Ok(())
         }
 
+        /// 🔀️ Ticket 26/09/16/INPUT-CAUSALITY-LEDGER §2 C — the reactor-side fold of a guest emit's
+        /// interaction verbs: every `Effect::ReplayShellCommand { action_id ∈ INTERACTION_ACTION_IDS }`
+        /// is peeled BEFORE the effects are handed out ([`take_inline_interaction_verbs`]), the emit
+        /// lands exactly as before ([`Self::dispatch_emit_inner`]), and then — after this command's
+        /// own store lanes and `interaction_writes` landed, so a just-created id is already in
+        /// topology — each peeled verb is applied inline ([`Self::fold_inline_interaction_verbs`]).
+        /// The result leaves with the verbs' scopes merged into its `ui_scope`, the last verb's
+        /// leftover `InteractionView` as its `output` when the carrier produced none (the SAME
+        /// `Invocation.output.interactionView` lane a host-dispatched verb publishes on, so the
+        /// world overlay still lands), and one diagnostic per verb that could not be applied.
+        /// A failed carrier applies no verb: its pick did not happen. The typed-operation ladder,
+        /// which never enters here, has its own twin ([`Self::publish_mounted_typed_inline_interaction_unit`]).
         async fn dispatch_emit(&mut self, verb: &str, mut emit: Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
+            let folded = take_inline_interaction_verbs(&mut emit.effects);
+            let mut result = self.dispatch_emit_inner(verb, emit, meta).await?;
+            if folded.is_empty() {
+                return Ok(result);
+            }
+            let scope = std::mem::replace(&mut result.ui_scope, UiDirtyScope::None);
+            let fold = self.fold_inline_interaction_verbs(verb, folded, meta, scope).await;
+            result.ui_scope = fold.scope;
+            if let (DslValue::Null, Some(leftover)) = (&result.output, fold.leftover) {
+                result.output = leftover;
+            }
+            result.diagnostics.extend(fold.diagnostics);
+            Ok(result)
+        }
+
+        async fn dispatch_emit_inner(&mut self, verb: &str, mut emit: Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
             Self::mint_extension_invocations(meta.instance_id, &mut emit)?;
             let Emit {
                 artifact_mutations,
@@ -24760,8 +24902,33 @@ pub mod app {
         /// and only then to `UiDirtyScope::Full`, for an app that declares neither. `touched` is the single domain the
         /// verb names, or every declared domain for the two whole-app verbs
         /// (`clearSelection`/`selectAll`) — the exact set the arms above wrote.
+        ///
+        /// 🔀️ Ticket 26/09/16/INPUT-CAUSALITY-LEDGER §2 C: the state transition itself lives in
+        /// [`Self::apply_interaction_verb`], shared with the in-reactor fold of a GUEST-emitted verb
+        /// ([`Self::fold_inline_interaction_verbs`]); this wrapper is the HOST-dispatched half, which
+        /// alone owns a reserved-commit permit and shapes the result as its own `InvocationResult`.
         async fn dispatch_interaction_action(&mut self, action: &str, args: Option<&DslValue>, meta: &ActionMeta, permit: &FrameworkReservedCommitPermit) -> Result<InvocationResult, Fault> {
             self.validate_framework_reserved_commit(action, permit).await?;
+            let applied = self.apply_interaction_verb(action, args, meta, Some(permit)).await?;
+            let mut result = Self::empty_result(action, meta, Vec::new(), Vec::new(), applied.scope).await;
+            result.output = applied.leftover;
+            Ok(result)
+        }
+
+        /// 🕹️ ONE interaction verb applied to this instance's session interaction state — the body
+        /// `dispatch_interaction_action` (host-dispatched, `permit: Some`) and the guest-emitted fold
+        /// (`fold_inline_interaction_verbs`, `permit: None`) share, so the six match arms exist once.
+        ///
+        /// 🔏️ The reserved-commit permit is a HOST-dispatch concern: it is the cancellation lease and
+        /// revision witness of the reserved `FrameworkInteraction*Job` that admitted the host's
+        /// verb, and `validate_framework_reserved_commit` refuses a commit against a document
+        /// revision that moved while that job was queued. An inline verb has no such job: it runs
+        /// inside an ALREADY-ADMITTED app command on the same instance, in the same turn, after that
+        /// command's own store lanes landed, and it touches only the session interaction snapshot
+        /// (`interaction_store` / `interaction_hover` / the leftover overlay — never the document, so
+        /// there is no revision to go stale against). Skipping the permit there is therefore sound
+        /// and the two `if let Some(permit)` checks below are exactly the host path's own two.
+        async fn apply_interaction_verb(&mut self, action: &str, args: Option<&DslValue>, meta: &ActionMeta, permit: Option<&FrameworkReservedCommitPermit>) -> Result<AppliedInteractionVerb, Fault> {
             self.refresh_cache().await?;
             let mut state = self.interaction_selection_snapshot();
             let verb = InteractionVerb::of_action(action).ok_or_else(|| plugin_sdk_fault(format!("{action} is not one of the six framework interaction verbs")))?;
@@ -24898,17 +25065,51 @@ pub mod app {
             let selection_cleared = !retire_leftover_domains.is_empty();
             let leftover = Self::leftover_interaction_view_from(&state, &self.interaction_hover, meta.view_state.as_ref().and_then(|view| view.window_id.as_deref()), selection_cleared);
             self.interaction_leftover_selection = Some(state.clone());
-            self.validate_framework_reserved_commit(action, permit).await?;
+            if let Some(permit) = permit {
+                self.validate_framework_reserved_commit(action, permit).await?;
+            }
             self.revalidate_and_persist_interaction_state(state, meta, InteractionRevalidateOrigin::Pick).await?;
-            if permit.lease.is_cancelled().await {
-                return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.cancelled"), format!("framework route '{action}' was cancelled before interaction publication")));
+            if let Some(permit) = permit {
+                if permit.lease.is_cancelled().await {
+                    return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.cancelled"), format!("framework route '{action}' was cancelled before interaction publication")));
+                }
             }
             self.record_command(action, ActionKind::Interaction, None, None, None, None).await;
             let declared: Vec<&str> = touched.iter().map(String::as_str).collect();
             let scope = A::interaction_scope(verb, &declared).or_else(|| self.registry.interaction_declared_refresh_scope(verb, &declared)).unwrap_or(UiDirtyScope::Full);
-            let mut result = Self::empty_result(action, meta, Vec::new(), Vec::new(), scope).await;
-            result.output = leftover;
-            Ok(result)
+            Ok(AppliedInteractionVerb { scope, leftover })
+        }
+
+        /// 🔀️ Ticket 26/09/16/INPUT-CAUSALITY-LEDGER §2 C — applies every interaction verb a guest
+        /// `Emit` asked the host to replay (`Effect::ReplayShellCommand { action_id ∈
+        /// INTERACTION_ACTION_IDS }`, peeled by [`take_inline_interaction_verbs`]) INLINE, in this
+        /// same turn, on this same instance, in emission order. Until now the host received that
+        /// effect, re-entered `onAction` with it, and the verb landed one guest round trip later —
+        /// queued BEHIND any pointer input the user issued meanwhile (design §0 "ordering hazard").
+        ///
+        /// 🧮️ The scope merge is `UiDirtyScope::merged_with` (widest wins: `Full` absorbs, `None`
+        /// yields, two `Partial`s union) over the carrying emit's own scope and every applied verb's
+        /// app-declared interaction refresh scope, so the one refresh the host runs for the carrying
+        /// command already covers the surfaces the pick dirtied.
+        ///
+        /// 🩹 A verb that faults (undeclared domain, malformed targets, unknown merge …) must NOT fail
+        /// the app command that carried it — its mutations already landed and the pick already
+        /// happened — so the fault becomes a `dsl::Diagnostic` the caller attaches to its result and
+        /// the remaining verbs still apply. Infallible by construction for that reason.
+        async fn fold_inline_interaction_verbs(&mut self, carrier: &str, folded: Vec<(String, Option<DslValue>)>, meta: &ActionMeta, scope: UiDirtyScope) -> InlineInteractionFold {
+            let mut fold = InlineInteractionFold { scope, leftover: None, diagnostics: Vec::new() };
+            for (action, args) in folded {
+                match self.apply_interaction_verb(&action, args.as_ref(), meta, None).await {
+                    Ok(applied) => {
+                        fold.scope = fold.scope.merged_with(applied.scope);
+                        fold.leftover = Some(applied.leftover);
+                    }
+                    Err(fault) => {
+                        fold.diagnostics.push(dsl::Diagnostic::error(INLINE_INTERACTION_VERB_DIAGNOSTIC_CODE, dsl::TextSpan::default(), format!("{carrier}: inline {action} was not applied ({}: {})", fault.code.0, fault.message)));
+                    }
+                }
+            }
+            fold
         }
 
         /// 🕹️ Reserved leftover publication the host already peels (`leftoverShellInvocationFrames` →
@@ -26060,6 +26261,9 @@ pub mod app {
                 } else if Self::mounted_typed_interaction_writes_are_next(mounted) {
                     record_typed_operation_unit(TypedOperationUnitKind::Store);
                     self.publish_mounted_typed_interaction_unit(mounted).await?;
+                } else if Self::mounted_typed_inline_interaction_verbs_are_next(mounted) {
+                    record_typed_operation_unit(TypedOperationUnitKind::Store);
+                    self.publish_mounted_typed_inline_interaction_unit(mounted).await?;
                 } else {
                     self.publish_mounted_typed_operation_unit(mounted)?;
                     if self.store.backbone_ref().is_some() {
@@ -26126,6 +26330,64 @@ pub mod app {
             let token = mounted.next_token();
             let page = TypedOperationResultPage::try_serialize(token, TypedOperationResultLane::Interaction, &("accepted", writes.len()))?;
             mounted.queue_page(page)
+        }
+
+        /// 🔀️ Whether this operation's next publication unit is the inline fold of its emit's
+        /// guest-emitted interaction verbs (`Effect::ReplayShellCommand { action_id ∈
+        /// INTERACTION_ACTION_IDS }`): every durable store lane is drained (a pick may only name ids
+        /// the document already holds), the `InteractionWrite` lane went first (it precedes the verb
+        /// in the emit's own order, exactly as it did when the verb still took a host round trip),
+        /// and at least one such verb is still in the effect list. Sync and allocation-free like its
+        /// `mounted_typed_interaction_writes_are_next` twin.
+        // 🚫️async: E1 pure field census over an already-mounted publication owner — see R9.
+        fn mounted_typed_inline_interaction_verbs_are_next(mounted: &MountedTypedCommandFullOperation<A>) -> bool {
+            let Some(ArtifactToolCompletionValue::Emit(Ok(emit), ephemeral)) = mounted.publication.as_ref() else {
+                return false;
+            };
+            emit.effects.iter().any(is_inline_interaction_verb)
+                && emit.interaction_writes.is_empty()
+                && mounted.pending_artifact_publication.is_none()
+                && emit.artifact_mutations.is_empty()
+                && emit.config_mutations.is_empty()
+                && emit.window_config_mutations.is_empty()
+                && emit.draft_mutations.is_empty()
+                && emit.child_emits.is_empty()
+                && ephemeral.presence.is_empty()
+                && ephemeral.transient.is_empty()
+                && ephemeral.window_transient.is_empty()
+        }
+
+        /// 🔀️ Ticket 26/09/16/INPUT-CAUSALITY-LEDGER §2 C — the typed-operation twin of
+        /// `dispatch_emit`'s inline interaction fold, for the ladder every app command
+        /// (`dispatch_typed_command_inner`) and retained tool publishes through and that never enters
+        /// `dispatch_emit`. Peels every interaction verb out of the retained emit's effect list as ONE
+        /// unit (the same one-transition-per-domain reasoning as the `InteractionWrite` unit above),
+        /// applies each through `apply_interaction_verb`, and widens the emit's `ui_scope` with the
+        /// verbs' app-declared refresh scopes so the `Ui` page and the completion witness — published
+        /// later in this same ladder — already carry them. No result page is queued: the host has
+        /// nothing to acknowledge, because the verb it used to be asked to replay never leaves the
+        /// reactor, and the ladder simply continues with the remaining effects next pump.
+        ///
+        /// 🩹 A verb that could not be applied is reported on the runtime's `[DEBUG]` diagnostics line
+        /// and dropped — the typed ladder has no `InvocationResult.diagnostics` lane (its only fault
+        /// lane is terminal), and failing the carrying command for a pick that already happened is
+        /// exactly what `fold_inline_interaction_verbs` exists to prevent.
+        async fn publish_mounted_typed_inline_interaction_unit(&mut self, mounted: &mut MountedTypedCommandFullOperation<A>) -> Result<(), Fault> {
+            let Some(ArtifactToolCompletionValue::Emit(Ok(emit), _)) = mounted.publication.as_mut() else {
+                return Err(plugin_sdk_fault("typed-operation inline interaction publication lost its emit owner"));
+            };
+            let folded = take_inline_interaction_verbs(&mut emit.effects);
+            let scope = emit.ui_scope.clone();
+            let meta = mounted.meta.clone();
+            let fold = self.fold_inline_interaction_verbs(&mounted.verb, folded, &meta, scope).await;
+            let Some(ArtifactToolCompletionValue::Emit(Ok(emit), _)) = mounted.publication.as_mut() else {
+                return Err(plugin_sdk_fault("typed-operation inline interaction publication lost its emit owner after the fold"));
+            };
+            emit.ui_scope = fold.scope;
+            for diagnostic in fold.diagnostics {
+                crate::plugin_runtime::debug_runtime_line(format_args!("[DEBUG] {} {}", diagnostic.code.0, diagnostic.message));
+            }
+            Ok(())
         }
 
         async fn advance_latest_wins_command_one(&mut self) -> Result<(), Fault> {
@@ -38745,6 +39007,7 @@ pub use app::{
     bounded_window_config_preparation_factory,
     bounded_window_config_store_disposer,
     bounded_window_config_store_owners,
+    CONTRIBUTIONS_COMMAND_RAW_WIRE_BYTES,
     built_text_node,
     built_text_to_component_tree,
     built_to_component_tree,

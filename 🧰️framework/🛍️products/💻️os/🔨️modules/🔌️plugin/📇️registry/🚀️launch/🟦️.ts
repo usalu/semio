@@ -16,6 +16,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import type { PlaygroundEntry } from "../🎮️playground/🔎️discovery/🟦️.ts";
+import { normalizeDevLaunchConfigurationNames, playgroundLaunchNamePrefix } from "./🏷️name-prefix/🟦️.ts";
 
 const SEED_REL_PATH = ".vscode/🧩️launch.seed.jsonc";
 /** @emoji 📄️ Repo-relative path of the generated output, shared with `📜️script.ts`'s freshness gate. */
@@ -159,11 +160,11 @@ function renderUserEntries(launcher: DevLauncherEntry, playground: PlaygroundEnt
 }
 
 /** @emoji 🧩️ Supplies registry-owned dev launcher metadata when a variant has no curated seed row. */
-function defaultDevLauncher(playground: PlaygroundEntry, order: number): DevLauncherEntry {
+function defaultDevLauncher(playground: PlaygroundEntry, order: number, repoRoot: string, playgrounds: readonly PlaygroundEntry[]): DevLauncherEntry {
   const serverReadyAction: ServerReadyTemplate = { pattern: "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):{PORT})", uriFormat: "%s" };
   const appEnv = playground.app ? { SEMIO_APP: playground.app } : {};
   return {
-    namePrefix: `🧩️${playground.variant}`,
+    namePrefix: playgroundLaunchNamePrefix(playground, repoRoot, playgrounds),
     order,
     command: `bun nx run workspace:dev -- ${playground.variant}`,
     reactEnv: { S_OS_PORT: "{PORT}", SEMIO_PLUGIN: playground.pluginId, SEMIO_RENDERER: "react", ...appEnv },
@@ -185,14 +186,15 @@ export function generateLaunchJson(repoRoot: string, playgrounds: readonly Playg
   for (const [variant, launcher] of Object.entries(devLaunchers)) {
     const playground = byVariant.get(variant);
     if (!playground) throw new Error(`🚀️launch/🟦️.ts: devLaunchers["${variant}"] has no matching playground registry entry (renamed or removed plugin — update the seed)`);
+    const namePrefix = playgroundLaunchNamePrefix(playground, repoRoot, playgrounds);
     const reactPlaceholder = JSON.stringify(`@generated:${variant}:react`);
     if (!out.includes(reactPlaceholder)) throw new Error(`🚀️launch/🟦️.ts: seed is missing placeholder ${reactPlaceholder}`);
-    const reactName = `🛠️dev${launcher.namePrefix}⚛️react`;
+    const reactName = `🛠️dev${namePrefix}⚛️react`;
     out = out.replace(reactPlaceholder, reindent(JSON.stringify(renderEntry(reactName, launcher, "react", playground.ports.react), null, 2), 4));
     if (launcher.wgpuOrder !== undefined) {
       const wgpuPlaceholder = JSON.stringify(`@generated:${variant}:wgpu`);
       if (!out.includes(wgpuPlaceholder)) throw new Error(`🚀️launch/🟦️.ts: seed is missing placeholder ${wgpuPlaceholder}`);
-      const wgpuName = `🛠️dev${launcher.namePrefix}🧊️wgpu🌐️wasm`;
+      const wgpuName = `🛠️dev${namePrefix}🧊️wgpu🌐️wasm`;
       out = out.replace(wgpuPlaceholder, reindent(JSON.stringify(renderEntry(wgpuName, launcher, "wgpu", playground.ports.wgpu), null, 2), 4));
     }
     if (launcher.users) {
@@ -205,10 +207,11 @@ export function generateLaunchJson(repoRoot: string, playgrounds: readonly Playg
     }
   }
   if (out.includes("@generated:")) throw new Error("🚀️launch/🟦️.ts: an @generated placeholder was not resolved (devLaunchers table is missing an entry)");
+  out = refreshDevLaunchNames(out, playgrounds, repoRoot);
   const synthesized: object[] = [];
   for (const [index, playground] of [...playgrounds].sort((left, right) => left.variant.localeCompare(right.variant)).entries()) {
     if (devLaunchers[playground.variant]) continue;
-    const launcher = defaultDevLauncher(playground, Math.round((420 + index * 0.01) * 1000) / 1000);
+    const launcher = defaultDevLauncher(playground, Math.round((420 + index * 0.01) * 1000) / 1000, repoRoot, playgrounds);
     const reactName = `🛠️dev${launcher.namePrefix}⚛️react`;
     const wgpuName = `🛠️dev${launcher.namePrefix}🧊️wgpu🌐️wasm`;
     if (!out.includes(JSON.stringify(reactName))) synthesized.push(renderEntry(reactName, launcher, "react", playground.ports.react));
@@ -219,6 +222,7 @@ export function generateLaunchJson(repoRoot: string, playgrounds: readonly Playg
     if (!out.includes(marker)) throw new Error("🚀️launch/🟦️.ts: generated skeleton lacks the configurations/compounds boundary");
     out = out.replace(marker, `\n    ,\n${synthesized.map((entry) => reindent(JSON.stringify(entry, null, 2), 4)).join(",\n")}\n  ],\n  "compounds":`);
   }
+  out = refreshDevLaunchNames(out, playgrounds, repoRoot);
   try {
     Bun.JSONC.parse(out);
   } catch {
@@ -227,3 +231,19 @@ export function generateLaunchJson(repoRoot: string, playgrounds: readonly Playg
   return out;
 }
 //#endregion
+
+function refreshDevLaunchNames(out: string, playgrounds: readonly PlaygroundEntry[], repoRoot: string): string {
+  const parsed = Bun.JSONC.parse(out) as { readonly configurations: readonly { readonly name?: string }[] };
+  const normalized = normalizeDevLaunchConfigurationNames([...parsed.configurations], playgrounds, repoRoot);
+  for (let index = 0; index < parsed.configurations.length; index++) {
+    const previous = parsed.configurations[index]?.name;
+    const next = (normalized[index] as { readonly name?: string }).name;
+    if (!previous || !next || previous === next) continue;
+    const needle = `"name": ${JSON.stringify(previous)}`;
+    const replacement = `"name": ${JSON.stringify(next)}`;
+    const at = out.indexOf(needle);
+    if (at === -1) throw new Error(`🚀️launch/🟦️.ts: could not locate launch name ${JSON.stringify(previous)} for emoji refresh`);
+    out = out.slice(0, at) + replacement + out.slice(at + needle.length);
+  }
+  return out;
+}

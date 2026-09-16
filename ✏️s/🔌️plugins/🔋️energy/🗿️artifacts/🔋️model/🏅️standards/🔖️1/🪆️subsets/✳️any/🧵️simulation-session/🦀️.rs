@@ -19,6 +19,15 @@ pub const ENERGY_SIMULATION_RUN_JOB_KIND: &str = "energy.simulation.run";
 pub const ENERGY_SIMULATION_RUN_SCHEMA: &str = "energy.simulation.run.v1";
 /// 🎚️ The editor config fields a run reads; a publication changing one of them reconfigures a live run.
 pub const ENERGY_SIMULATION_RUN_SETTINGS: [&str; 3] = ["/zoneTimestepMinutes", "/systemTimestepMinutes", "/warmupDays"];
+
+/// 🪟️ Window kind ids whose bodies every tick of this run marks dirty (`ToolRunDefinition::windows`
+/// → `ToolRunLedger::dirty_scope`). Spelled as literals here rather than imported from
+/// `crate::editor::model::modes::edit::windows::*`: this module is the artifact-root run contract and
+/// the editor mounts THROUGH it (the simulation window reads `ENERGY_SIMULATION_RUN_SCHEMA`), so an
+/// import the other way would make the layering circular for a pair of string constants. The two
+/// laws in this file's test module assert both literals still equal the windows' own constants.
+pub const ENERGY_MODEL_3D_WINDOW_KIND_ID: &str = "energy.model.3d";
+pub const ENERGY_SIMULATION_WINDOW_KIND_ID: &str = "energy.simulation";
 const MAXIMUM_CAPTURE_ITEMS: usize = 4_194_304;
 const MAXIMUM_CAPTURE_BYTES: usize = 512 * 1_024 * 1_024;
 const CAPTURE_LAST_LANE: u8 = 47;
@@ -193,9 +202,55 @@ pub fn energy_simulation_run_definition() -> ToolRunDefinition {
         run_job: JobKindId::new(ENERGY_SIMULATION_RUN_JOB_KIND),
         revalidate_job: None,
         settings: ToolRunSettingsReads { config: ENERGY_SIMULATION_RUN_SETTINGS.iter().map(|pointer| pointer.to_string()).collect(), window_config: Default::default() },
-        windows: Vec::new(),
+        windows: vec![ENERGY_MODEL_3D_WINDOW_KIND_ID.into(), ENERGY_SIMULATION_WINDOW_KIND_ID.into()],
     }
 }
+//#endregion 🔖️Contract
+
+//#region 🧱️SurfacePayload
+/// 🧱️ The per-surface energy map a tick carries in `ToolRunTick::payload`, read back by a window
+/// through `ToolRunView::payload`. This is the ONLY channel per-surface physics reaches a window on:
+/// the framework tool-run driver closes the settled `Complete` candidate's payload pages unread, so
+/// the numerical `Results` never leaves the job.
+///
+/// Wire format, little-endian throughout:
+/// `"ESF1"` (4 B) · row count `u32` (4 B) · then one 20-byte row per surface —
+/// `id: u32`, `conduction_loss_kwh: f32`, `conduction_gain_kwh: f32`, `solar_transmitted_kwh: f32`,
+/// `solar_absorbed_kwh: f32`. `f32` halves the byte cost and is far finer than the colour ramp's 8
+/// bands. Hand-rolled rather than `pack::encode_json_value`, which builds a whole `.spk` container
+/// for what is a fixed-width array here.
+pub const ENERGY_SURFACE_PAYLOAD_MAGIC: [u8; 4] = *b"ESF1";
+pub const ENERGY_SURFACE_PAYLOAD_HEADER_BYTES: usize = 8;
+pub const ENERGY_SURFACE_PAYLOAD_ROW_BYTES: usize = 20;
+/// 🧱️ Hard ceiling on published rows. 8 192 rows = 163 848 B, which leaves ~96 KiB of the
+/// `TOOL_RUN_TICK_BYTES_MAX` (262 144 B) tick budget for the progress record and the step ring. A
+/// model with more surfaces than this publishes its first 8 192 rows rather than failing the tick.
+pub const ENERGY_SURFACE_PAYLOAD_MAXIMUM_ROWS: usize = 8_192;
+
+/// 🧱️ Byte length of a payload carrying `rows` rows.
+pub const fn energy_surface_payload_bytes(rows: usize) -> usize {
+    ENERGY_SURFACE_PAYLOAD_HEADER_BYTES + rows * ENERGY_SURFACE_PAYLOAD_ROW_BYTES
+}
+
+/// 🧱️ Encodes the live per-surface table into the tick payload's wire format.
+pub fn encode_surface_energy_payload(rows: impl Iterator<Item = crate::results::SurfaceEnergySummary>) -> Vec<u8> {
+    let mut bytes = Vec::new();
+    let mut count: u32 = 0;
+    bytes.extend_from_slice(&ENERGY_SURFACE_PAYLOAD_MAGIC);
+    bytes.extend_from_slice(&0u32.to_le_bytes());
+    for row in rows.take(ENERGY_SURFACE_PAYLOAD_MAXIMUM_ROWS) {
+        bytes.extend_from_slice(&row.id.0.to_le_bytes());
+        for value in [row.conduction_loss_kwh, row.conduction_gain_kwh, row.solar_transmitted_kwh, row.solar_absorbed_kwh] {
+            bytes.extend_from_slice(&(value as f32).to_le_bytes());
+        }
+        count += 1;
+    }
+    bytes[4..8].copy_from_slice(&count.to_le_bytes());
+    bytes
+}
+//#endregion 🧱️SurfacePayload
+
+//#region 🔖️ContractHelpers
 
 /// ⚙️ Folds the captured model's persisted run period and schedule tables into the settings template.
 pub fn simulation_config_for(template: &SimulationConfig, model: &Model) -> SimulationConfig {
@@ -208,7 +263,7 @@ pub fn simulation_config_for(template: &SimulationConfig, model: &Model) -> Simu
         ..template.clone()
     }
 }
-//#endregion 🔖️Contract
+//#endregion 🔖️ContractHelpers
 
 //#region 🧮️RetainedInput
 #[derive(Clone, Copy)]
@@ -548,10 +603,14 @@ impl ModelCapture {
                     fin_depth_m: item.fin_depth_m,
                     fin_offset_m: item.fin_offset_m,
                     glazing_construction_id: item.glazing_construction_id,
+                    vertices_m: Vec::new(),
                 },
                 {
                     match self.substage {
                         0 => text!(&mut target_item.name, &source_item.name),
+                        // 🔶️ The aperture's own polygon is variable-length, so it copies in its own
+                        // step exactly as a surface's does (lane 5, substage 1).
+                        1 => items!(&mut target_item.vertices_m, &source_item.vertices_m),
                         _ => finish_record!(),
                     }
                 }
@@ -948,11 +1007,13 @@ struct EnergyRunCursor {
     run_timesteps: u64,
     tiers_published: u64,
     facility_electricity_kwh: f64,
+    /// 🧱️ Set whenever a quality tier was published, so the next tick carries a fresh per-surface map.
+    surface_payload_due: bool,
 }
 
 impl EnergyRunCursor {
     fn new() -> Self {
-        Self { stage: EnergyJobStage::Validate, tier: EnergyQualityTier::SteadyStateEstimate, timestep: 0, total_timesteps: 0, warmup_hours: 0, warmup_timesteps: 0, run_timesteps: 0, tiers_published: 0, facility_electricity_kwh: 0.0 }
+        Self { stage: EnergyJobStage::Validate, tier: EnergyQualityTier::SteadyStateEstimate, timestep: 0, total_timesteps: 0, warmup_hours: 0, warmup_timesteps: 0, run_timesteps: 0, tiers_published: 0, facility_electricity_kwh: 0.0, surface_payload_due: false }
     }
 
     fn completed(&self) -> u64 {
@@ -968,6 +1029,7 @@ impl EnergyRunCursor {
         let args = [ToolRunStepArg::Float(kwh), ToolRunStepArg::Unsigned(self.run_timesteps), ToolRunStepArg::Unsigned(u64::from(self.total_timesteps))];
         let _ = writer.step(ToolRunStepKind::Success, EnergySimulationRunStage::of(self.stage).index(), EnergySimulationRunReason::of_tier(self.tier).code(), None, &args);
         self.tiers_published += 1;
+        self.surface_payload_due = true;
     }
 
     /// 🔭️ Folds one numerical cursor; `true` when exactly one warmup or run timestep was computed.
@@ -1207,6 +1269,17 @@ impl InteractiveJob for EnergySimulationRunJob {
             return StepOutcome::Yield;
         }
         let state = if matches!(settled, Some(StepOutcome::Complete(_))) { ToolRunState::Complete } else { ToolRunState::Running };
+        // 🧱️ On a tier boundary and at completion, republish the per-surface map so the 3d model
+        // window can recolour. The numerical job still owns its `SimulationModel` here — it is only
+        // released by the job's own bounded `close_step` retirement.
+        let complete = matches!(settled, Some(StepOutcome::Complete(_)));
+        if std::mem::take(&mut self.cursor.surface_payload_due) || complete {
+            if let Some(table) = self.numerical.as_ref().and_then(|job| job.per_surface_energy()) {
+                if !table.is_empty() {
+                    self.writer.payload(encode_surface_energy_payload(table.summaries()));
+                }
+            }
+        }
         self.writer.progress(self.cursor.progress(self.identity, state, self.stage()));
         let payload = self.writer.finish().and_then(|tick| tick.encode().ok()).and_then(|bytes| cx.payload_from_bytes(JobPayloadStream::Preview, &bytes).map_err(|rejected| drop(rejected.into_source())).ok());
         match payload {

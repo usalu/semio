@@ -92,15 +92,16 @@ class RetainedAuditScript extends BundleScript {
     const commandIds = [...commandBlock.matchAll(/^\s*"([^"]+)"\s+as\s+/gm)].map((match) => match[1]!);
     const routeIds = fixture.routes.map((route) => route.id);
     const expectedAdmitted = [
-      "addNode", "renameNode", "patchCadPlayReference",
-      "setCamera", "setProjection", "setProjectionParam", "setDislocateOption", "setNodeSelection", "setReferenceSelection", "referenceHover", "engagementInput", "engagementPossibleSelect", "engagementRepeatLast",
+      "addNode", "renameNode", "patchCadPlayReference", "addObject", "patchObject", "patchSelection", "deleteObject", "duplicateObject", "translateSelection", "rotateSelection", "scaleSelection",
+      "engagementSubmit", "worldPointerDown",
+      "setCamera", "setProjection", "setProjectionParam", "setDislocateOption", "setNodeSelection", "setPanelPage", "setReferenceSelection", "referenceHover", "engagementInput", "engagementPossibleSelect", "engagementRepeatLast",
       "engagementAbort", "worldPointerMove", "toggleSun", "setSunAzimuth", "setSunElevation", "setSunIntensity", "setContributions", "loadRawRequest",
     ];
     const retainedToolBlock = owner.slice(owner.indexOf("const CAD_RETAINED_TOOL_IDS"), owner.indexOf("const CAD_RETAINED_COMMAND_SCHEMA"));
     const retainedToolIds = [...retainedToolBlock.matchAll(/"([^"]+)"/g)].map((match) => match[1]!);
     const semanticValid = (source: string): boolean => {
       const occurrences = (needle: string): number => source.split(needle).length - 1;
-      const annotationPairs = [...source.matchAll(/\.action_interactive_job\("([^"]+)", semio_framework_plugin::InteractiveJobClassification::(Migrated|BatchOnlyPendingRewrite)\)/g)].map((match) => `${match[1]}:${match[2]}`);
+      const annotationPairs = [...source.matchAll(/\.action_interactive_job\("([^"]+)", (?:semio_framework_plugin::)?InteractiveJobClassification::(Migrated|BatchOnlyPendingRewrite)\)/g)].map((match) => `${match[1]}:${match[2]}`);
       const expectedPairs = fixture.routes.map((route) => `${route.id}:${variant(route.disposition)}`);
       return fixture.routeCount === 38
         && new Set(routeIds).size === 38
@@ -129,7 +130,7 @@ class RetainedAuditScript extends BundleScript {
 
     const hostileSources = [
       owner.replace('factory: "CadRetainedCommandJobFactory"', 'factory: "BoundedFirstStepCommandJobFactory"'),
-      owner.replace('.action_interactive_job("saveCurrent", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)', '.action_interactive_job("saveCurrent", semio_framework_plugin::InteractiveJobClassification::Migrated)'),
+      owner.replace('.action_interactive_job("saveCurrent", InteractiveJobClassification::BatchOnlyPendingRewrite)', '.action_interactive_job("saveCurrent", InteractiveJobClassification::Migrated)'),
       owner.replace("fn build_config_store_one_item_preparation_factory()", "fn removed_config_store_one_item_preparation_factory()"),
       owner.replace('tool_id: "loadRawRequest", lanes: &[ArtifactToolPublicationLane::HostOnly]', 'tool_id: "loadRawRequest", lanes: &[ArtifactToolPublicationLane::Config]'),
       owner.replace('bounded_first_step(8_192, 64, 1, 16_384, 7_500)', 'bounded_first_step(8_192, 64, 1, 32_768, 7_500)'),

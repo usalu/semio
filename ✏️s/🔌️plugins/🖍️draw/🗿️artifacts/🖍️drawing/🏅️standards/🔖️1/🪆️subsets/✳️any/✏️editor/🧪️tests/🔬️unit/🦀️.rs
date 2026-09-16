@@ -311,7 +311,7 @@ async fn host_utility_change_clears_scratch_and_emits_no_history_entry() {
     let tree = app.render(DRAWING_PLAY_BODY_COMPOSITE, None, pen_view).await.expect("render after utility change");
     artifact_laws::project_and_retire_fixture_tree(tree).expect("retire render tree");
     assert_eq!(app.snapshot().unwrap(), before, "utility switching does not mutate the document");
-    let up = app.dispatch_typed(DrawingCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { x: 40.0, y: 40.0, width: 800.0, height: 600.0, shift: false, ctrl: false, meta: false }), &pen_meta).await.expect("up");
+    let up = app.dispatch_typed(DrawingCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { x: 40.0, y: 40.0, width: 800.0, height: 600.0, shift: false, ctrl: false, meta: false, cancelled: false }), &pen_meta).await.expect("up");
     assert!(up.mutations.is_empty(), "the in-progress shape draft was cleared on utility switch");
 }
 
@@ -356,8 +356,8 @@ async fn shape_rect_drag_commits_one_layer_and_requests_utility_reset() {
     )
     .await
     .expect("down");
-    app.dispatch_typed(DrawingCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { x: 600.0, y: 500.0, width: 1000.0, height: 800.0 }), &utility_meta).await.expect("move");
-    let result = app.dispatch_typed(DrawingCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { x: 600.0, y: 500.0, width: 1000.0, height: 800.0, shift: false, ctrl: false, meta: false }), &utility_meta).await.expect("up");
+    app.dispatch_typed(DrawingCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { x: 600.0, y: 500.0, width: 1000.0, height: 800.0, samples: Vec::new() }), &utility_meta).await.expect("move");
+    let result = app.dispatch_typed(DrawingCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { x: 600.0, y: 500.0, width: 1000.0, height: 800.0, shift: false, ctrl: false, meta: false, cancelled: false }), &utility_meta).await.expect("up");
     assert_eq!(result.mutations.len(), 1, "a shape drag commits as one edit adding exactly the layer");
     let projection = app.snapshot().unwrap();
     assert!(projection.layers.iter().any(|layer| matches!(layer, DrawingLayerNode::Shape(shape) if shape.shape_kind == "rect")));
@@ -487,8 +487,8 @@ async fn marquee_select_covers_contained_layer_only() {
     )
     .await
     .expect("down");
-    app.dispatch_typed(DrawingCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { x: 460.0, y: 360.0, width: 800.0, height: 600.0 }), &utility_meta).await.expect("move");
-    let result = app.dispatch_typed(DrawingCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { x: 460.0, y: 360.0, width: 800.0, height: 600.0, shift: false, ctrl: false, meta: false }), &utility_meta).await.expect("up");
+    app.dispatch_typed(DrawingCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { x: 460.0, y: 360.0, width: 800.0, height: 600.0, samples: Vec::new() }), &utility_meta).await.expect("move");
+    let result = app.dispatch_typed(DrawingCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { x: 460.0, y: 360.0, width: 800.0, height: 600.0, shift: false, ctrl: false, meta: false, cancelled: false }), &utility_meta).await.expect("up");
     // 🕹️ Selection is framework-owned now (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM):
     // the marquee hit-test requests `interactionSelect` for exactly the contained rect via a
     // `Effect::ReplayShellCommand`, instead of writing a `NoConfigMutation::SetSelection`.
@@ -560,7 +560,7 @@ async fn canvas_pointer_up_direct_pick_requests_interaction_select() {
     app.dispatch_typed(DrawingCommand::SetCamera(set_camera::SetCamera { camera: store::Viewport2d { x: 0.0, y: 0.0, zoom: 1.0 } }), &artifact_laws::meta("local")).await.expect("camera");
     // 🎯️ Default `shape:rect` geometry is world (0,0)-(128,96); screen (110,110) on a 200x200
     // viewport with the identity camera above maps to world (10,10) — inside the rect.
-    let result = app.dispatch_typed(DrawingCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { x: 110.0, y: 110.0, width: 200.0, height: 200.0, shift: false, ctrl: false, meta: false }), &artifact_laws::meta("local")).await.expect("pick");
+    let result = app.dispatch_typed(DrawingCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { x: 110.0, y: 110.0, width: 200.0, height: 200.0, shift: false, ctrl: false, meta: false, cancelled: false }), &artifact_laws::meta("local")).await.expect("pick");
     assert!(result.mutations.is_empty(), "a direct pick is not a document operation");
     assert_eq!(result.requested_effects, vec![canvas_pointer_down::interaction_select_effect(&[rect_id], "replace")]);
 }
@@ -658,6 +658,89 @@ async fn gesture_preview_is_a_pure_read_never_mutating_gesture_context() {
     let _ = session.preview();
     assert_eq!(session.gesture.context, context_before, "preview must never mutate the live gesture scratch it reads");
 }
+
+//#region 🧵️BatchedSamplesAndCancel
+fn session_with(viewport_width: f64, viewport_height: f64, utility: &str) -> (DrawingSession, DrawingSnapshot, NoConfig, semio_framework_plugin::HistoryView) {
+    let _ = (viewport_width, viewport_height);
+    (DrawingSession::with_active_utility(utility), default_drawing_document("empty", None), NoConfig::default(), semio_framework_plugin::HistoryView::empty())
+}
+
+/// 🧵️ LAW (design L4 / §2 D): a batch of four samples leaves the shape drag exactly where four
+/// separate moves left it — the cursor follows the LAST sample, not an intermediate one.
+#[semio_framework_async_macros::async_test]
+async fn a_batched_move_drives_the_gesture_to_its_last_sample() {
+    let path = [[420.0, 320.0], [480.0, 300.0], [520.0, 380.0], [460.0, 360.0]];
+    let run = |batched: bool| {
+        let (mut session, document, config, history) = session_with(800.0, 600.0, "shapeRect");
+        let view = semio_framework_plugin::ArtifactView::new(&document, &history);
+        let cfg = semio_framework_plugin::ConfigView { snapshot: &config, window: None };
+        session.step_gesture(canvas_pointer_down::drawing_gesture::Event::PointerDown { utility: "shapeRect".into(), world: [0.0, 0.0], shift: false, ctrl: false, meta: false }, &document, &config);
+        if batched {
+            let [x, y] = path[3];
+            let emit = canvas_pointer_move::handle(&canvas_pointer_move::CanvasPointerMove { x, y, width: 800.0, height: 600.0, samples: path.to_vec() }, &view, &cfg, &mut session).expect("batched move");
+            assert!(emit.artifact_mutations.is_empty() && emit.effects.is_empty(), "a mid-drag batch emits no operation");
+        } else {
+            for [x, y] in path {
+                canvas_pointer_move::handle(&canvas_pointer_move::CanvasPointerMove { x, y, width: 800.0, height: 600.0, samples: Vec::new() }, &view, &cfg, &mut session).expect("move");
+            }
+        }
+        session.gesture.context.clone()
+    };
+    let one_per_event = run(false);
+    let one_batch = run(true);
+    assert_eq!(one_batch.cursor, one_per_event.cursor, "the batch ends on the same cursor as four separate moves");
+    assert_eq!(one_batch.start, one_per_event.start);
+    let (session, ..) = session_with(800.0, 600.0, "shapeRect");
+    let expected = canvas_pointer_down::canvas_point_to_world(&session.window_config.viewport, 460.0, 360.0, 800.0, 600.0);
+    assert_eq!(one_batch.cursor, [expected.0, expected.1], "the cursor is the LAST sample of the batch");
+}
+
+/// 🚫️ LAW (design §2 D): a cancelled release drops a live drag and commits/selects nothing.
+#[semio_framework_async_macros::async_test]
+async fn a_cancelled_release_commits_nothing_and_leaves_the_gesture_idle() {
+    for utility in ["shapeRect", "selectMarquee"] {
+        let (mut session, document, config, history) = session_with(800.0, 600.0, utility);
+        let view = semio_framework_plugin::ArtifactView::new(&document, &history);
+        let cfg = semio_framework_plugin::ConfigView { snapshot: &config, window: None };
+        session.step_gesture(canvas_pointer_down::drawing_gesture::Event::PointerDown { utility: utility.into(), world: [0.0, 0.0], shift: false, ctrl: false, meta: false }, &document, &config);
+        canvas_pointer_move::handle(&canvas_pointer_move::CanvasPointerMove { x: 600.0, y: 500.0, width: 800.0, height: 600.0, samples: Vec::new() }, &view, &cfg, &mut session).expect("move");
+        assert!(!session.gesture.matches("idle"), "{utility}: the drag is live before the cancel");
+        let emit = canvas_pointer_up::handle(&canvas_pointer_up::CanvasPointerUp { x: 600.0, y: 500.0, width: 800.0, height: 600.0, shift: false, ctrl: false, meta: false, cancelled: true }, &view, &cfg, &mut session).expect("cancel");
+        assert!(emit.artifact_mutations.is_empty(), "{utility}: a cancel never commits");
+        assert!(emit.effects.is_empty(), "{utility}: a cancel never selects or resets the utility");
+        assert!(session.gesture.matches("idle"), "{utility}: no gesture survives a cancel");
+        assert!(session.point_query.is_none(), "{utility}: no marquee/pick query is retained");
+    }
+    // 🎯️ An idle cancel (select-direct) must not fall back to a pick either.
+    let (mut session, document, config, history) = session_with(800.0, 600.0, "selectDirect");
+    let view = semio_framework_plugin::ArtifactView::new(&document, &history);
+    let cfg = semio_framework_plugin::ConfigView { snapshot: &config, window: None };
+    let emit = canvas_pointer_up::handle(&canvas_pointer_up::CanvasPointerUp { x: 400.0, y: 300.0, width: 800.0, height: 600.0, shift: false, ctrl: false, meta: false, cancelled: true }, &view, &cfg, &mut session).expect("cancel");
+    assert!(emit.effects.is_empty() && emit.artifact_mutations.is_empty());
+    assert!(session.gesture.matches("idle"));
+}
+
+/// 🧵️ LAW: a legacy one-per-event wire (no `samples`, no `cancelled`) decodes as one sample at
+/// `(x, y)` and a real release.
+#[semio_framework_async_macros::async_test]
+async fn canvas_pointer_wire_defaults_samples_and_cancelled() {
+    use dsl::FromValue;
+    let f = dsl::DslValue::float;
+    let legacy = dsl::DslValue::Object(vec![("x".into(), f(5.0)), ("y".into(), f(6.0)), ("width".into(), f(800.0)), ("height".into(), f(600.0))]);
+    let moved = canvas_pointer_move::CanvasPointerMove::from_value(legacy.clone()).expect("legacy move decodes");
+    assert!(moved.samples.is_empty());
+    assert_eq!(moved.samples_or_last(), vec![[5.0, 6.0]], "an absent `samples` is the single (x, y)");
+    assert_eq!(moved.last_sample(), [5.0, 6.0]);
+    let pair = |x: f64, y: f64| dsl::DslValue::Array(vec![f(x), f(y)]);
+    let batched = dsl::DslValue::Object(vec![("x".into(), f(3.0)), ("y".into(), f(4.0)), ("width".into(), f(800.0)), ("height".into(), f(600.0)), ("samples".into(), dsl::DslValue::Array(vec![pair(1.0, 1.5), pair(2.0, 2.5), pair(3.0, 4.0)]))]);
+    let moved = canvas_pointer_move::CanvasPointerMove::from_value(batched).expect("batched move decodes");
+    assert_eq!(moved.samples, vec![[1.0, 1.5], [2.0, 2.5], [3.0, 4.0]]);
+    assert_eq!(moved.last_sample(), [3.0, 4.0]);
+    let legacy_up = dsl::DslValue::Object(vec![("x".into(), f(5.0)), ("y".into(), f(6.0)), ("width".into(), f(800.0)), ("height".into(), f(600.0)), ("shift".into(), dsl::DslValue::Bool(false)), ("ctrl".into(), dsl::DslValue::Bool(false)), ("meta".into(), dsl::DslValue::Bool(false))]);
+    let released = canvas_pointer_up::CanvasPointerUp::from_value(legacy_up).expect("legacy release decodes");
+    assert!(!released.cancelled, "an absent `cancelled` is a real release");
+}
+//#endregion 🧵️BatchedSamplesAndCancel
 //#endregion 🔖️GesturePreview
 
 //#region 🔖️WireGuards
@@ -697,8 +780,8 @@ fn every_command() -> Vec<DrawingCommand> {
             checkpoint_pending_work: None,
             ..Default::default()
         }),
-        DrawingCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { x: 1.0, y: 2.0, width: 800.0, height: 600.0 }),
-        DrawingCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { x: 1.0, y: 2.0, width: 800.0, height: 600.0, shift: false, ctrl: true, meta: false }),
+        DrawingCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { x: 1.0, y: 2.0, width: 800.0, height: 600.0, samples: vec![[0.5, 1.5], [1.0, 2.0]] }),
+        DrawingCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { x: 1.0, y: 2.0, width: 800.0, height: 600.0, shift: false, ctrl: true, meta: false, cancelled: false }),
         DrawingCommand::CanvasDoubleClick(canvas_double_click::CanvasDoubleClick {}),
         DrawingCommand::CanvasCommitDraft(canvas_commit_draft::CanvasCommitDraft {}),
         DrawingCommand::CanvasEscape(canvas_escape::CanvasEscape {}),

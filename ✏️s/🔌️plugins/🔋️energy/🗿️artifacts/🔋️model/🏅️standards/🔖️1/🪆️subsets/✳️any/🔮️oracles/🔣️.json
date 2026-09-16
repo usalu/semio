@@ -4302,6 +4302,156 @@
               "directoryName": "⛔️refuses"
             }
           ]
+        },
+        {
+          "mutationId": "replace-fenestration-vertices",
+          "sourceMutationDirectoryName": "🔶️replace-fenestration-vertices",
+          "mutationDirectoryName": "🔶️replace-fenestration-vertices",
+          "scenarios": [
+            {
+              "id": "replace-fenestration-vertices-shapes-a-gable",
+              "directoryName": "✅️shapes-a-gable"
+            },
+            {
+              "id": "replace-fenestration-vertices-refuses-a-line",
+              "directoryName": "⛔️refuses-a-line"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-glazing-material-thickness",
+          "sourceMutationDirectoryName": "🔷️change-glazing-material-thickness",
+          "mutationDirectoryName": "🔷️change-glazing-material-thickness",
+          "scenarios": [
+            {
+              "id": "change-glazing-material-thickness-applies",
+              "directoryName": "✅️applies"
+            },
+            {
+              "id": "change-glazing-material-thickness-refuses",
+              "directoryName": "⛔️refuses"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-glazing-material-conductivity",
+          "sourceMutationDirectoryName": "🟠️change-glazing-material-conductivity",
+          "mutationDirectoryName": "🟠️change-glazing-material-conductivity",
+          "scenarios": [
+            {
+              "id": "change-glazing-material-conductivity-applies",
+              "directoryName": "✅️applies"
+            },
+            {
+              "id": "change-glazing-material-conductivity-refuses",
+              "directoryName": "⛔️refuses"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-glazing-material-solar-transmittance",
+          "sourceMutationDirectoryName": "🟡️change-glazing-material-solar-transmittance",
+          "mutationDirectoryName": "🟡️change-glazing-material-solar-transmittance",
+          "scenarios": [
+            {
+              "id": "change-glazing-material-solar-transmittance-applies",
+              "directoryName": "✅️applies"
+            },
+            {
+              "id": "change-glazing-material-solar-transmittance-refuses",
+              "directoryName": "⛔️refuses"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-glazing-material-visible-transmittance",
+          "sourceMutationDirectoryName": "🥽️change-glazing-material-visible-transmittance",
+          "mutationDirectoryName": "🥽️change-glazing-material-visible-transmittance",
+          "scenarios": [
+            {
+              "id": "change-glazing-material-visible-transmittance-applies",
+              "directoryName": "✅️applies"
+            },
+            {
+              "id": "change-glazing-material-visible-transmittance-refuses",
+              "directoryName": "⛔️refuses"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-glazing-material-infrared-emissivity",
+          "sourceMutationDirectoryName": "🩻️change-glazing-material-infrared-emissivity",
+          "mutationDirectoryName": "🩻️change-glazing-material-infrared-emissivity",
+          "scenarios": [
+            {
+              "id": "change-glazing-material-infrared-emissivity-applies",
+              "directoryName": "✅️applies"
+            },
+            {
+              "id": "change-glazing-material-infrared-emissivity-refuses",
+              "directoryName": "⛔️refuses"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-glazing-material",
+          "sourceMutationDirectoryName": "🟢️rename-glazing-material",
+          "mutationDirectoryName": "🟢️rename-glazing-material",
+          "scenarios": [
+            {
+              "id": "rename-glazing-material-applies",
+              "directoryName": "✅️applies"
+            },
+            {
+              "id": "rename-glazing-material-refuses",
+              "directoryName": "⛔️refuses"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-gas-material-thickness",
+          "sourceMutationDirectoryName": "🟣️change-gas-material-thickness",
+          "mutationDirectoryName": "🟣️change-gas-material-thickness",
+          "scenarios": [
+            {
+              "id": "change-gas-material-thickness-applies",
+              "directoryName": "✅️applies"
+            },
+            {
+              "id": "change-gas-material-thickness-refuses",
+              "directoryName": "⛔️refuses"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-gas-material-gas",
+          "sourceMutationDirectoryName": "🟤️change-gas-material-gas",
+          "mutationDirectoryName": "🟤️change-gas-material-gas",
+          "scenarios": [
+            {
+              "id": "change-gas-material-gas-applies",
+              "directoryName": "✅️applies"
+            },
+            {
+              "id": "change-gas-material-gas-refuses",
+              "directoryName": "⛔️refuses"
+            }
+          ]
+        },
+        {
+          "mutationId": "rename-gas-material",
+          "sourceMutationDirectoryName": "🔘️rename-gas-material",
+          "mutationDirectoryName": "🔘️rename-gas-material",
+          "scenarios": [
+            {
+              "id": "rename-gas-material-applies",
+              "directoryName": "✅️applies"
+            },
+            {
+              "id": "rename-gas-material-refuses",
+              "directoryName": "⛔️refuses"
+            }
+          ]
         }
       ],
       "kinds": [
@@ -4580,7 +4730,17 @@
         "create-time-series-schedule",
         "delete-time-series-schedule",
         "replace-time-series-schedule-values",
-        "change-time-series-schedule-timestep"
+        "change-time-series-schedule-timestep",
+        "replace-fenestration-vertices",
+        "change-glazing-material-thickness",
+        "change-glazing-material-conductivity",
+        "change-glazing-material-solar-transmittance",
+        "change-glazing-material-visible-transmittance",
+        "change-glazing-material-infrared-emissivity",
+        "rename-glazing-material",
+        "change-gas-material-thickness",
+        "change-gas-material-gas",
+        "rename-gas-material"
       ]
     }
   ],
@@ -10105,6 +10265,206 @@
             "operation": "change-time-series-schedule-timestep",
             "bridgeVersion": 1,
             "variant": "ChangeTimeSeriesScheduleTimestep"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "energy-model-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "replace-fenestration-vertices",
+          "capability": "energy-model-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "replace-fenestration-vertices",
+            "bridgeVersion": 1,
+            "variant": "ReplaceFenestrationVertices"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "energy-model-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-glazing-material-thickness",
+          "capability": "energy-model-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-glazing-material-thickness",
+            "bridgeVersion": 1,
+            "variant": "ChangeGlazingMaterialThickness"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "energy-model-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-glazing-material-conductivity",
+          "capability": "energy-model-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-glazing-material-conductivity",
+            "bridgeVersion": 1,
+            "variant": "ChangeGlazingMaterialConductivity"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "energy-model-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-glazing-material-solar-transmittance",
+          "capability": "energy-model-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-glazing-material-solar-transmittance",
+            "bridgeVersion": 1,
+            "variant": "ChangeGlazingMaterialSolarTransmittance"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "energy-model-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-glazing-material-visible-transmittance",
+          "capability": "energy-model-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-glazing-material-visible-transmittance",
+            "bridgeVersion": 1,
+            "variant": "ChangeGlazingMaterialVisibleTransmittance"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "energy-model-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-glazing-material-infrared-emissivity",
+          "capability": "energy-model-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-glazing-material-infrared-emissivity",
+            "bridgeVersion": 1,
+            "variant": "ChangeGlazingMaterialInfraredEmissivity"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "energy-model-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "rename-glazing-material",
+          "capability": "energy-model-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "rename-glazing-material",
+            "bridgeVersion": 1,
+            "variant": "RenameGlazingMaterial"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "energy-model-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-gas-material-thickness",
+          "capability": "energy-model-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-gas-material-thickness",
+            "bridgeVersion": 1,
+            "variant": "ChangeGasMaterialThickness"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "energy-model-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-gas-material-gas",
+          "capability": "energy-model-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-gas-material-gas",
+            "bridgeVersion": 1,
+            "variant": "ChangeGasMaterialGas"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "energy-model-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "rename-gas-material",
+          "capability": "energy-model-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "rename-gas-material",
+            "bridgeVersion": 1,
+            "variant": "RenameGasMaterial"
           },
           "oracleRequirements": [
             {

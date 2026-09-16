@@ -646,8 +646,11 @@ mod scene_compute {
         }
         let [ex, ey, ez] = extent.unwrap_or(CAD_DEFAULT_TYPOLOGY_EXTENT);
         let (width, depth, height) = (ex.max(0.05), ey.max(0.05), ez.max(0.05));
-        let is_cylindrical = typology_mesh_kind(typology) == "cylinder";
-        let handle = if is_cylindrical { kernel.cylinder_prim(width.max(depth) * 0.5, height) } else { kernel.box_prim(width, depth, height) };
+        let handle = match typology_mesh_kind(typology) {
+            "cylinder" => kernel.cylinder_prim(width.max(depth) * 0.5, height),
+            "sphere" => kernel.sphere_prim(width.max(depth).max(height) * 0.5),
+            _ => kernel.box_prim(width, depth, height),
+        };
         let Ok(handle) = handle else {
             return mesh_from_kind(typology_mesh_kind(typology));
         };
@@ -770,9 +773,13 @@ mod scene_compute {
             .collect()
     }
 
+    /// 🧊️ The kernel primitive a typology's persisted `extent` rebuilds: cylinders and spheres are
+    /// CENTRED on the object origin in x/y (the kernel's `cylinder_prim`/`sphere_prim` axis), boxes
+    /// grow from the origin corner (`box_prim`).
     pub fn typology_mesh_kind(typology: &str) -> &'static str {
         match typology {
-            "building.building.column" | "structure.structure.reinforcedconcretecolumn" | "aec.building.column" => "cylinder",
+            "building.building.column" | "structure.structure.reinforcedconcretecolumn" | "aec.building.column" | "spatial.shape.solid.cylinder" => "cylinder",
+            "spatial.shape.solid.sphere" => "sphere",
             _ => "box",
         }
     }

@@ -105,6 +105,11 @@ semio_framework_plugin::app_labels! {
         actions: native_en "Actions", native_de "Aktionen", reuse_en "Actions", reuse_de "Aktionen";
         focus_results_hint: native_en "Focus the Results window for live playback readouts", native_de "Ergebnisfenster fokussieren, um die Wiedergabe live zu sehen", reuse_en "Focus the Results window for live playback readouts", reuse_de "Ergebnisfenster fokussieren, um die Wiedergabe live zu sehen";
         delete: native_en "Delete", native_de "Löschen", reuse_en "Delete", reuse_de "Löschen";
+
+        move_flag: native_en "Move", native_de "Verschieben", reuse_en "Move", reuse_de "Verschieben";
+        rotate_flag: native_en "Rotate", native_de "Drehen", reuse_en "Rotate", reuse_de "Drehen";
+        scale_axes_flag: native_en "Scale Axes", native_de "Achsen skalieren", reuse_en "Scale Axes", reuse_de "Achsen skalieren";
+        scale_uniform_flag: native_en "Uniform Scale", native_de "Uniform skalieren", reuse_en "Uniform Scale", reuse_de "Uniform skalieren";
     }
 }
 

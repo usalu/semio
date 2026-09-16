@@ -7,6 +7,10 @@ use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToVa
 mod change_simulation_settings;
 pub use change_simulation_settings::ChangeSimulationSettings;
 
+#[path = "🎨️change-result-field/🦀️.rs"]
+mod change_result_field;
+pub use change_result_field::ChangeResultField;
+
 /// 🧬️ `EnergyModelEditor::ConfigMutation`.
 #[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, dsl::DslOps, dsl::Mutations)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
@@ -15,6 +19,7 @@ pub use change_simulation_settings::ChangeSimulationSettings;
 #[mutations(snapshot = EnergyModelConfig, diff = EnergyModelConfig, schema = "energy.model.config")]
 pub enum EnergyModelConfigMutation {
     ChangeSimulationSettings(ChangeSimulationSettings),
+    ChangeResultField(ChangeResultField),
 }
 
 impl protocol::OpText for EnergyModelConfigMutation {

@@ -8,7 +8,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { useEffect, useMemo, useState, type ReactElement, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactElement, type ReactNode } from "react";
 import {
   ButtonGroup,
   ButtonGroupItem,
@@ -175,6 +175,13 @@ export function findPressedUtilityLeafId(nodes: readonly UtilityNode[]): string 
 }
 
 /** @emoji 🧰️ First `setActiveUtility` descriptor in a utility tree — used to deactivate when a collection that owns the pressed leaf is collapsed. */
+/** 🔢️ The register generation the tree's own `setActiveUtility` descriptors were stamped with (`expectedGeneration`), so the method picker presses against the same register the chips rendered. */
+function expectedGenerationOf(template: ActionDescriptor | undefined): number | undefined {
+  const args = template?.args;
+  const raw = typeof args === "object" && args !== null ? (args as { readonly expectedGeneration?: unknown }).expectedGeneration : undefined;
+  return typeof raw === "number" && Number.isSafeInteger(raw) && raw >= 0 ? raw : undefined;
+}
+
 function findSetActiveUtilityDescriptor(nodes: readonly UtilityNode[]): ActionDescriptor | undefined {
   for (const node of nodes) {
     if (node.kind === "collection") {
@@ -203,6 +210,12 @@ export function findUtilityGroupPath(nodes: readonly UtilityNode[], targetId: st
 
 function UtilityRibbonItems({ items, onAction }: { readonly items: readonly UtilityLeaf[]; readonly onAction: (action: ActionDescriptor) => void }): ReactElement {
   const sorted = useMemo(() => [...items].sort((left, right) => (left.order ?? 0) - (right.order ?? 0)), [items]);
+  // 🎯️ The toggle the user's press landed on (set by the item's own `onClick`, consumed by the group's
+  // `onValueChange`). A toggle group's `onValueChange` hands back the WHOLE next value set, and the old
+  // `flushToggles` diffed every entry's `pressed` against it — so a controlled resync that differed for
+  // several entries dispatched several actions the user never asked for. Only the pressed entry's diff is
+  // dispatched now; a value change with no recorded press is a resync and dispatches nothing.
+  const pressedToggleRef = useRef<string | null>(null);
   const nodes = useMemo(() => {
     const rendered: ReactElement[] = [];
     let buttonRun: Extract<UtilityLeaf, { kind: "button" }>[] = [];
@@ -246,18 +259,25 @@ function UtilityRibbonItems({ items, onAction }: { readonly items: readonly Util
             kind="multiple"
             value={run.filter((entry) => entry.pressed).map((entry) => entry.id)}
             onValueChange={(values) => {
-              for (const entry of run) {
-                const action = resolveLeafAction(entry);
-                if (!action) continue;
-                const pressed = values.includes(entry.id);
-                if ((entry.pressed ?? false) !== pressed) onAction(action);
-              }
+              const pressedId = pressedToggleRef.current;
+              pressedToggleRef.current = null;
+              if (pressedId === null) return;
+              const entry = run.find((candidate) => candidate.id === pressedId);
+              const action = entry ? resolveLeafAction(entry) : null;
+              if (!entry || !action) return;
+              // 🔢️ `action.args` pass through UNCHANGED: the shell stamps `expectedGeneration` (and
+              // `windowId`) into every `setActiveUtility` descriptor it renders, and the CAS on the
+              // shell's versioned register is what replaces the old wall-clock echo-off.
+              if ((entry.pressed ?? false) !== values.includes(entry.id)) onAction(action);
             }}
             items={run.map((entry) => ({
               value: entry.id,
               id: entry.id,
               icon: <Icon icon={entry.iconId as IconName} size="small" />,
               text: entry.text ?? entry.label,
+              onClick: () => {
+                pressedToggleRef.current = entry.id;
+              },
             }))}
           />
         </RibbonItem>,
@@ -316,6 +336,29 @@ export function UtilityTree({ utilities, onAction, id = "ui.utilities", directio
 
   if (!hasInteractiveUtilityNodes(utilities) && !utilityOptions) return null;
 
+  /** 🎯️ Collapses the picker at `depth` on an EXPLICIT press of its pressed chip `collectionId`. When the
+   * pressed utility leaf lives under THAT chip the guest's utility is deactivated too — one
+   * `setActiveUtility { utilityId: "" }` built from the tree's own descriptor template, whose `args` are
+   * spread through so the `windowId` and the `expectedGeneration` the shell stamped into it travel with
+   * the deactivation (the shell's versioned-register CAS refuses a stale one instead of the old 8 s
+   * echo-off swallowing it). Collapsing a sibling chip the pressed leaf does not live under only folds
+   * the ribbon. */
+  const collapsePicker = (depth: number, collectionId: string): void => {
+    const pressedId = findPressedUtilityLeafId(utilities);
+    const pressedPath = pressedId ? findUtilityGroupPath(utilities, pressedId) : null;
+    if (pressedPath && pressedPath.length > depth && pressedPath[depth] === collectionId) {
+      const template = findSetActiveUtilityDescriptor(utilities);
+      if (template) onAction({ ...template, args: { ...(template.args as object | undefined), utilityId: "" } });
+    }
+    setActivePath(activePath.slice(0, depth));
+  };
+
+  // 🎛️ Deactivation only ever comes from an explicit press on the PRESSED chip, never from the group's
+  // `onValueChange("")`. The single `ToggleGroup` emits `""` from `activate()` whenever the value it holds
+  // equals the item pressed — the same shape a controlled-value resync takes — so that channel is ignored
+  // entirely; the pressed chip's own `onClick` performs the collapse and `preventDefault()`s so the
+  // wrapper's `activate()` never runs for it (`ToggleGroupItem` skips `activate` on a default-prevented
+  // click). An unpressed chip's press still arrives as `onValueChange(<id>)` and only drills the path.
   const renderSegment = (segment: UtilityRibbonSegment): ReactNode =>
     segment.kind === "picker" ? (
       <RibbonItem>
@@ -323,16 +366,7 @@ export function UtilityTree({ utilities, onAction, id = "ui.utilities", directio
           kind="single"
           value={activePath[segment.depth] ?? ""}
           onValueChange={(value) => {
-            if (!value) {
-              const pressedId = findPressedUtilityLeafId(utilities);
-              const pressedPath = pressedId ? findUtilityGroupPath(utilities, pressedId) : null;
-              if (pressedPath && pressedPath.length > segment.depth) {
-                const template = findSetActiveUtilityDescriptor(utilities);
-                if (template) onAction({ ...template, args: { ...(template.args as object | undefined), utilityId: "" } });
-              }
-              setActivePath(activePath.slice(0, segment.depth));
-              return;
-            }
+            if (!value) return;
             setActivePath(reconcileUtilityPath(utilities, [...activePath.slice(0, segment.depth), value]));
           }}
           items={segment.collections.map((entry) => ({
@@ -340,6 +374,11 @@ export function UtilityTree({ utilities, onAction, id = "ui.utilities", directio
             id: `${id}.group.${entry.id}`,
             icon: <Icon icon={entry.iconId as IconName} size="small" />,
             text: entry.text ?? entry.label,
+            onClick: (event) => {
+              if (entry.id !== activePath[segment.depth]) return;
+              event.preventDefault();
+              collapsePicker(segment.depth, entry.id);
+            },
           }))}
         />
       </RibbonItem>
@@ -391,9 +430,9 @@ export function UtilityTree({ utilities, onAction, id = "ui.utilities", directio
     rows.push({
       key: "row-selection-options",
       content: (
-        <RibbonZone>
-          <RibbonItem>
-            <SelectionUtilityOptions activeUtilityId={activeSelectionUtility.id} windowId={windowId} onAction={onAction} />
+        <RibbonZone variableHeight className="items-start">
+          <RibbonItem className="h-auto items-start">
+            <SelectionUtilityOptions activeUtilityId={activeSelectionUtility.id} windowId={windowId} onAction={onAction} generation={expectedGenerationOf(findSetActiveUtilityDescriptor(utilities))} />
           </RibbonItem>
         </RibbonZone>
       ),

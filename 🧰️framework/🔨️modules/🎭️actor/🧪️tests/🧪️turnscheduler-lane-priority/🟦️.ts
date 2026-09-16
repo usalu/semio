@@ -87,6 +87,59 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     });
   });
 
+  describe("TurnScheduler causal order pass-through (INPUT-CAUSALITY-LEDGER §2 B)", () => {
+    it("dispatches one actor's ordered turns by `order`, ties and unordered turns by arrival", async () => {
+      const { scheduler, order, settle } = harness();
+      scheduler.enqueue("a", { lane: "Interactive", order: 10, payload: "input-10" });
+      scheduler.enqueue("a", { lane: "Interactive", order: 11, payload: "input-11" });
+      scheduler.enqueue("a", { lane: "Interactive", payload: "maintenance" });
+      scheduler.enqueue("a", { lane: "Interactive", order: 11, payload: "input-11-tie" });
+      scheduler.enqueue("a", { lane: "Interactive", order: 10, payload: "followup-of-10" });
+      expect(scheduler.pendingCount("a")).toBe(5);
+      for (let i = 0; i < 5; i++) {
+        await flush();
+        settle("a");
+      }
+      await flush();
+      expect(order.map((entry) => entry.payload)).toEqual(["input-10", "followup-of-10", "input-11", "maintenance", "input-11-tie"]);
+    });
+
+    it("lanes still outrank `order`, across actors and within one", async () => {
+      const { scheduler, order, settle } = harness();
+      scheduler.enqueue("bg", { lane: "Background", order: 0, payload: "bg-0" });
+      scheduler.enqueue("hi", { lane: "Interactive", order: 50, payload: "hi-50" });
+      scheduler.enqueue("hi", { lane: "Background", order: 1, payload: "hi-bg-1" });
+      scheduler.enqueue("hi", { lane: "Interactive", order: 40, payload: "hi-40" });
+      await flush();
+      // cross-actor pick is lane-first: "hi" (Interactive pending) before "bg"; both start concurrently
+      expect(order.map((entry) => entry.payload)).toEqual(["hi-40", "bg-0"]);
+      settle("hi");
+      await flush();
+      expect(order.map((entry) => entry.payload)).toEqual(["hi-40", "bg-0", "hi-50"]);
+      settle("hi");
+      await flush();
+      expect(order.map((entry) => entry.payload)).toEqual(["hi-40", "bg-0", "hi-50", "hi-bg-1"]);
+      settle("hi");
+      settle("bg");
+      await flush();
+    });
+
+    it("cancelQueued drops ordered turns exactly like unordered ones and reports the mailbox order", async () => {
+      const { scheduler, order, settle } = harness();
+      scheduler.enqueue("c", { lane: "Interactive", payload: "c-1" });
+      await flush(); // c-1 in flight
+      scheduler.enqueue("c", { lane: "Interactive", order: 9, payload: "c-9" });
+      scheduler.enqueue("c", { lane: "Interactive", order: 2, payload: "c-2" });
+      const cancelled: string[] = [];
+      expect(scheduler.cancelQueued("c", (payload) => cancelled.push(payload))).toBe(2);
+      expect(cancelled).toEqual(["c-2", "c-9"]);
+      expect(scheduler.pendingCount("c")).toBe(0);
+      settle("c");
+      await flush();
+      expect(order.map((entry) => entry.payload)).toEqual(["c-1"]);
+    });
+  });
+
   describe("TurnScheduler backpressure at the cap", () => {
     it("rejected surfaces synchronously at the cap instead of the queue growing past it", () => {
       const { scheduler } = harness(2);

@@ -175,7 +175,7 @@ fn wires_retained_extent(command: &WiresCommand, _snapshot: &WiresSnapshot, _int
     match command {
         WiresCommand::CanvasPointerUp(_) => Some(WIRES_RETAINED_WORK_ITEMS),
         WiresCommand::CanvasPointerDown(payload) if payload.id.as_ref().is_none_or(|id| id.len() <= 1_024) && payload.x.is_finite() && payload.y.is_finite() => Some(WIRES_RETAINED_WORK_ITEMS),
-        WiresCommand::CanvasPointerMove(payload) if payload.x.is_finite() && payload.y.is_finite() => Some(1),
+        WiresCommand::CanvasPointerMove(payload) if payload.is_finite() => Some(1),
         WiresCommand::NodeGraphViewport(payload) if payload.viewport.validate().is_ok() => Some(1),
         _ => None,
     }
@@ -285,12 +285,18 @@ impl ArtifactCommandWork<EditorApp<ReasoningWiresPlayApp>> for WiresWindowDragWo
                     return Err(Fault::from("wires-drag-camera-invalid"));
                 }
                 self.consumed = true;
-                let gesture = Self::drag_mutation(window, Some(id.clone()), transient.drag_start_x, transient.drag_start_y, payload.x, payload.y, transient.drag_zoom);
+                // 🧵️ A batched move lands on its LAST sample (design L4): the drag delta is start→last.
+                let [last_x, last_y] = payload.last_sample();
+                let gesture = Self::drag_mutation(window, Some(id.clone()), transient.drag_start_x, transient.drag_start_y, last_x, last_y, transient.drag_zoom);
                 Ok(ArtifactCommandWorkStep::CompleteWithEphemeral { emit: Emit::default(), ephemeral: semio_framework_plugin::EphemeralEmit { presence: Vec::new(), transient: Vec::new(), window_transient: vec![gesture] } })
             }
-            WiresCommand::CanvasPointerUp(_) => {
+            WiresCommand::CanvasPointerUp(payload) => {
                 let window = input.context.and_then(|context| context.window_transient.as_ref()).ok_or_else(|| Fault::from("wires-drag-requires-window"))?;
                 let transient = window.get::<window_transient::WiresCanvasTransientOwner>().ok_or_else(|| Fault::from("wires-drag-window-kind"))?;
+                // 🚫️ A cancelled release (design §2 D) only clears the drag: no `move_node`, no selection.
+                if payload.cancelled {
+                    return Ok(self.complete_clear(window));
+                }
                 let Some(id) = transient.drag_node_id.as_ref() else {
                     return Ok(self.complete_clear(window));
                 };

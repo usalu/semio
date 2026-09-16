@@ -2,15 +2,43 @@
   {
     "kind": "change-simulation-settings",
     "mutation": { "mutation": "changeSimulationSettings", "payload": { "zoneTimestepMinutes": 15, "systemTimestepMinutes": 5, "warmupDays": 1 } },
-    "base": { "zoneTimestepMinutes": 60, "systemTimestepMinutes": 60, "warmupDays": 7 },
-    "after": { "zoneTimestepMinutes": 15, "systemTimestepMinutes": 5, "warmupDays": 1 },
+    "base": { "zoneTimestepMinutes": 60, "systemTimestepMinutes": 60, "warmupDays": 7, "resultField": "conductionLoss" },
+    "after": { "zoneTimestepMinutes": 15, "systemTimestepMinutes": 5, "warmupDays": 1, "resultField": "conductionLoss" },
+    "valid": true
+  },
+  {
+    "kind": "change-simulation-settings",
+    "mutation": { "mutation": "changeSimulationSettings", "payload": { "zoneTimestepMinutes": 15, "systemTimestepMinutes": 5, "warmupDays": 1 } },
+    "base": { "zoneTimestepMinutes": 60, "systemTimestepMinutes": 60, "warmupDays": 7, "resultField": "solarTransmitted" },
+    "after": { "zoneTimestepMinutes": 15, "systemTimestepMinutes": 5, "warmupDays": 1, "resultField": "solarTransmitted" },
     "valid": true
   },
   {
     "kind": "change-simulation-settings",
     "mutation": { "mutation": "changeSimulationSettings", "payload": { "zoneTimestepMinutes": 0, "systemTimestepMinutes": 60, "warmupDays": 366 } },
-    "base": { "zoneTimestepMinutes": 15, "systemTimestepMinutes": 5, "warmupDays": 1 },
-    "after": { "zoneTimestepMinutes": 0, "systemTimestepMinutes": 60, "warmupDays": 366 },
+    "base": { "zoneTimestepMinutes": 15, "systemTimestepMinutes": 5, "warmupDays": 1, "resultField": "conductionLoss" },
+    "after": { "zoneTimestepMinutes": 0, "systemTimestepMinutes": 60, "warmupDays": 366, "resultField": "conductionLoss" },
+    "valid": false
+  },
+  {
+    "kind": "change-result-field",
+    "mutation": { "mutation": "changeResultField", "payload": { "field": "solarTransmitted" } },
+    "base": { "zoneTimestepMinutes": 15, "systemTimestepMinutes": 5, "warmupDays": 1, "resultField": "conductionLoss" },
+    "after": { "zoneTimestepMinutes": 15, "systemTimestepMinutes": 5, "warmupDays": 1, "resultField": "solarTransmitted" },
+    "valid": true
+  },
+  {
+    "kind": "change-result-field",
+    "mutation": { "mutation": "changeResultField", "payload": { "field": "solarAbsorbed" } },
+    "base": { "zoneTimestepMinutes": 60, "systemTimestepMinutes": 60, "warmupDays": 7, "resultField": "conductionGain" },
+    "after": { "zoneTimestepMinutes": 60, "systemTimestepMinutes": 60, "warmupDays": 7, "resultField": "solarAbsorbed" },
+    "valid": true
+  },
+  {
+    "kind": "change-result-field",
+    "mutation": { "mutation": "changeResultField", "payload": { "field": "notAField" } },
+    "base": { "zoneTimestepMinutes": 60, "systemTimestepMinutes": 60, "warmupDays": 7, "resultField": "conductionLoss" },
+    "after": { "zoneTimestepMinutes": 60, "systemTimestepMinutes": 60, "warmupDays": 7, "resultField": "notAField" },
     "valid": false
   }
 ]

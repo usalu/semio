@@ -1,9 +1,9 @@
-//! 🎮️ CAD interaction statechart — a generic interpreter over `spatial.interaction` JSON assets
-//! (`cad/asset/modelDefinition/*/interaction/*.json`, mirroring `cad/schema/json/🔣️inter🔣️action.json`),
-//! plus a small commit-action runner mapping each spec's `commit.operation.action` onto real
-//! `kernel_3d_brep` calls. Four "building.building.*" ids have no JSON asset (aec.building has
-//! no interaction directory) and keep a bespoke hand-written statechart (`legacy_*` functions)
-//! identical to the pre-engine behavior.
+//! 🎮️ CAD interaction statechart — a generic interpreter over every `spatial.interaction` JSON asset
+//! under `📚️examples/🖼️assets/🏗️modelDefinitions/*/🕹️interactions/` (60 assets across eight model
+//! definitions, all embedded at build time), plus the commit-action runner mapping each spec's
+//! `commit.operation.action` onto the document (`CommitOutcome`). There is no hand-written
+//! statechart any more: the four `aec.building` placements that used to be bespoke are the
+//! `placeWall`/`placeBeam`/`placeColumn`/`placeSlab` assets like every other interaction.
 
 use crate::standards::v1::subsets::any::io::geometry_import::{CadObject, CadPrimitiveSlot};
 use crate::{evaluate_expr, CadPaneId, DisplayItemSpec, Effect, ExprEnv, ExprPathRoot, ExprPathSegment, ExprPathTarget, InteractionSpec};
@@ -26,8 +26,14 @@ use std::sync::OnceLock;
 pub struct CadEngagementContext(pub HashMap<String, DslValue>);
 
 impl protocol::ToValue for CadEngagementContext {
+    /// 🔤️ Keys are emitted SORTED: `engagement_session_json` is compared byte-for-byte against its
+    /// persisted twin by `snapshot_of` (the checkpoint-transition guard), and a `HashMap`'s
+    /// iteration order differs between two encodes of the same context — which rejected every
+    /// `engagementInput` keystroke once a session held two or more context fields.
     fn to_value(&self) -> DslValue {
-        DslValue::object(self.0.iter().map(|(k, v)| (k.clone(), v.clone())))
+        let mut entries: Vec<(&String, &DslValue)> = self.0.iter().collect();
+        entries.sort_by(|a, b| a.0.cmp(b.0));
+        DslValue::object(entries.into_iter().map(|(k, v)| (k.clone(), v.clone())))
     }
 }
 
@@ -83,8 +89,8 @@ pub struct InteractionCatalogEntry {
 //#endregion 🔖️Types
 
 //#region 🔖️Registry
-/// `(modelDefinitionId, raw JSON)` for every `interaction/*.json` asset embedded at build time.
-/// `aec.building` has no interaction assets of its own — see `LEGACY_BUILDING_INTERACTION_IDS`.
+/// `(modelDefinitionId, raw JSON)` for every `🕹️interactions/*.json` asset embedded at build time —
+/// pinned against the on-disk tree by `every_interaction_asset_on_disk_parses_as_interaction_spec`.
 const RAW_INTERACTION_ASSETS: &[(&str, &str)] = &[
     ("spatial.shape", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/🌙️arc.json")),
     ("spatial.shape", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/🟨️area.json")),
@@ -123,6 +129,17 @@ const RAW_INTERACTION_ASSETS: &[(&str, &str)] = &[
     ("spatial.shape", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/🌀️sweep1.json")),
     ("spatial.shape", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/🌪️sweep2.json")),
     ("spatial.shape", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/✏️trim.json")),
+    ("aec.building", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏢️aec.building/🕹️interactions/🪵️placeBeam.json")),
+    ("aec.building", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏢️aec.building/🕹️interactions/⬆️placeCeiling.json")),
+    ("aec.building", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏢️aec.building/🕹️interactions/🏛️placeColumn.json")),
+    ("aec.building", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏢️aec.building/🕹️interactions/🚪️placeDoor.json")),
+    ("aec.building", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏢️aec.building/🕹️interactions/🪨️placeFoundation.json")),
+    ("aec.building", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏢️aec.building/🕹️interactions/🚧️placeRailing.json")),
+    ("aec.building", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏢️aec.building/🕹️interactions/🏠️placeRoof.json")),
+    ("aec.building", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏢️aec.building/🕹️interactions/🧱️placeSlab.json")),
+    ("aec.building", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏢️aec.building/🕹️interactions/🪜️placeStair.json")),
+    ("aec.building", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏢️aec.building/🕹️interactions/🛡️placeWall.json")),
+    ("aec.building", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏢️aec.building/🕹️interactions/🪟️placeWindow.json")),
     ("aec.building.energy", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🕹️interactions/🧱️constructBasePlate.json")),
     ("aec.building.energy", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🕹️interactions/🚧️constructExternalWall.json")),
     ("aec.building.energy", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🕹️interactions/🚢️constructHull.json")),
@@ -158,49 +175,34 @@ const RAW_INTERACTION_ASSETS: &[(&str, &str)] = &[
     ),
 ];
 
-const LEGACY_BUILDING_INTERACTION_IDS: &[&str] = &["building.building.constructWall", "building.building.constructBeam", "building.building.constructColumn", "building.building.constructSlab"];
-
-fn is_legacy_building_id(id: &str) -> bool {
-    LEGACY_BUILDING_INTERACTION_IDS.contains(&id)
-}
-
 fn parse_interaction_spec(raw: &str) -> Option<InteractionSpec> {
     protocol::json::from_json_str(raw).ok()
 }
 
-fn parsed_specs() -> Vec<(&'static str, InteractionSpec)> {
-    RAW_INTERACTION_ASSETS.iter().filter_map(|(model_def, raw)| parse_interaction_spec(raw).map(|spec| (*model_def, spec))).collect()
+/// 📚️ Every asset parsed ONCE per process — the specs are large (the box alone is 63 KiB of
+/// JSON) and every pointer move used to re-parse all of them.
+fn parsed_specs() -> &'static [(&'static str, InteractionSpec)] {
+    static SPECS: OnceLock<Vec<(&'static str, InteractionSpec)>> = OnceLock::new();
+    SPECS.get_or_init(|| RAW_INTERACTION_ASSETS.iter().filter_map(|(model_def, raw)| parse_interaction_spec(raw).map(|spec| (*model_def, spec))).collect())
 }
 
-fn spec_by_id(id: &str) -> Option<InteractionSpec> {
-    parsed_specs().into_iter().find(|(_, spec)| spec.id == id).map(|(_, spec)| spec)
+fn spec_by_id(id: &str) -> Option<&'static InteractionSpec> {
+    parsed_specs().iter().find(|(_, spec)| spec.id == id).map(|(_, spec)| spec)
 }
 
 fn catalog() -> &'static [InteractionCatalogEntry] {
     static CATALOG: OnceLock<Vec<InteractionCatalogEntry>> = OnceLock::new();
     CATALOG.get_or_init(|| {
-        let mut entries = vec![
-            InteractionCatalogEntry { id: "building.building.constructWall".to_string(), label: "Wall".to_string(), key: "w".to_string(), model_definition_id: "aec.building".to_string(), produces_typology: "building.building.wall".to_string() },
-            InteractionCatalogEntry { id: "building.building.constructBeam".to_string(), label: "Beam".to_string(), key: "m".to_string(), model_definition_id: "aec.building".to_string(), produces_typology: "building.building.beam".to_string() },
-            InteractionCatalogEntry {
-                id: "building.building.constructColumn".to_string(),
-                label: "Column".to_string(),
-                key: "c".to_string(),
-                model_definition_id: "aec.building".to_string(),
-                produces_typology: "building.building.column".to_string(),
-            },
-            InteractionCatalogEntry { id: "building.building.constructSlab".to_string(), label: "Slab".to_string(), key: "l".to_string(), model_definition_id: "aec.building".to_string(), produces_typology: "building.building.slab".to_string() },
-        ];
-        for (model_def, spec) in parsed_specs() {
-            entries.push(InteractionCatalogEntry {
+        parsed_specs()
+            .iter()
+            .map(|(model_def, spec)| InteractionCatalogEntry {
                 id: spec.id.clone(),
                 label: spec.label.clone().unwrap_or_else(|| spec.id.clone()),
                 key: spec.key.clone().unwrap_or_default(),
                 model_definition_id: (*model_def).to_string(),
                 produces_typology: spec.produces.typology.clone().unwrap_or_default(),
-            });
-        }
-        entries
+            })
+            .collect()
     })
 }
 //#endregion 🔖️Registry
@@ -233,22 +235,12 @@ fn parse_vec3(value: &DslValue) -> Option<[f64; 3]> {
     Some([array[0].as_f64()?, array[1].as_f64()?, array[2].as_f64()?])
 }
 
-fn context_point(session: &CadEngagementScratch, field: &str) -> Option<[f64; 3]> {
-    session.context.0.get(field).and_then(parse_vec3)
-}
-
 pub fn start_session(interaction_id: &str, pane: CadPaneId) -> Option<CadEngagementScratch> {
-    if is_legacy_building_id(interaction_id) {
-        return Some(CadEngagementScratch { interaction_id: interaction_id.to_string(), state: "idle".to_string(), context: CadEngagementContext(HashMap::new()), pane, last_response: None });
-    }
     let spec = spec_by_id(interaction_id)?;
-    Some(CadEngagementScratch { interaction_id: spec.id.clone(), state: spec.machine.initial, context: CadEngagementContext(HashMap::new()), pane, last_response: None })
+    Some(CadEngagementScratch { interaction_id: spec.id.clone(), state: spec.machine.initial.clone(), context: CadEngagementContext(HashMap::new()), pane, last_response: None })
 }
 
 pub fn keyed_transitions(session: &CadEngagementScratch) -> Vec<KeyedTransition> {
-    if is_legacy_building_id(&session.interaction_id) {
-        return legacy_keyed_transitions(session);
-    }
     let Some(spec) = spec_by_id(&session.interaction_id) else {
         return Vec::new();
     };
@@ -267,13 +259,16 @@ pub fn keyed_transitions(session: &CadEngagementScratch) -> Vec<KeyedTransition>
 }
 
 pub fn can_commit(session: &CadEngagementScratch) -> bool {
-    if is_legacy_building_id(&session.interaction_id) {
-        return session.state == "ready";
-    }
     let Some(spec) = spec_by_id(&session.interaction_id) else {
         return false;
     };
-    if !spec.commit.from_states.iter().any(|state| state == &session.state) {
+    // 🏁️ `commit.fromStates` names the commit-ready state; 20 assets declare `ready` while their
+    // machine ends in a `final` `committed` state instead. A machine that has reached a final state
+    // has nothing left to transition to, so a from-state the machine never defines resolves to it.
+    let named_from_state = spec.commit.from_states.iter().any(|state| state == &session.state);
+    let dangling_from_states = spec.commit.from_states.iter().all(|state| spec.state(state).is_none());
+    let at_final = spec.state(&session.state).is_some_and(|state| state.r#final || state.on.is_empty());
+    if !named_from_state && !(dangling_from_states && at_final) {
         return false;
     }
     match &spec.commit.when {
@@ -325,22 +320,73 @@ fn normalize_event_payload(event_kind: &str, payload: Option<&DslValue>) -> Opti
 /// follow-up; they no-operation here rather than error.
 fn run_named_action_effect(context: &mut HashMap<String, DslValue>, payload: Option<&DslValue>, action: &str, params: &HashMap<String, DslValue>) {
     match action {
+        // 📍️ Keyed: `context[field][key] = point` (a map of named points). Unkeyed (polyline /
+        // control-point / interpolate curves): `context[field]` is the ORDERED point list and the
+        // point is appended — the specs seed that field with `[]`, so a map is never fabricated.
         "command.addPoint" => {
             let field = params.get("field").and_then(|value| value.as_str()).unwrap_or("points").to_string();
             let key = params.get("key").and_then(|value| value.as_str()).map(str::to_string);
             let point = params.get("point").cloned().unwrap_or(DslValue::Null);
-            let entry = context.entry(field).or_insert_with(|| DslValue::object(Vec::new()));
-            if entry.as_object().is_none() {
-                *entry = DslValue::object(Vec::new());
-            }
-            if let Some(key) = key {
-                if let DslValue::Object(object) = entry {
-                    if let Some(existing) = object.iter_mut().find(|(k, _)| *k == key) {
-                        existing.1 = point;
-                    } else {
-                        object.push((key, point));
+            match key {
+                Some(key) => {
+                    let entry = context.entry(field).or_insert_with(|| DslValue::object(Vec::new()));
+                    if entry.as_object().is_none() {
+                        *entry = DslValue::object(Vec::new());
+                    }
+                    if let DslValue::Object(object) = entry {
+                        if let Some(existing) = object.iter_mut().find(|(k, _)| *k == key) {
+                            existing.1 = point;
+                        } else {
+                            object.push((key, point));
+                        }
                     }
                 }
+                None => {
+                    let entry = context.entry(field).or_insert_with(|| DslValue::Array(Vec::new()));
+                    if !matches!(entry, DslValue::Array(_)) {
+                        *entry = DslValue::Array(Vec::new());
+                    }
+                    if let DslValue::Array(points) = entry {
+                        points.push(point);
+                    }
+                }
+            }
+        }
+        // 🎯️ `context[field] = targets` — the framework `"cad"` selection the engagement commands
+        // inject as a `selection.changed` event (see `inject_selection`).
+        "command.addSelection" | "command.setSelection" => {
+            let field = params.get("field").and_then(|value| value.as_str()).unwrap_or("targets").to_string();
+            let targets = params.get("targets").cloned().unwrap_or_else(|| DslValue::Array(Vec::new()));
+            context.insert(field, targets);
+        }
+        // 🧭️ Rubber-band cursor for a constrained move: `vertical` keeps the pick's x/y and reads the
+        // height off the pointer, `normal`/`free` follow the ground pick as-is.
+        "command.constrainMoveCursor" => {
+            let Some(point) = params.get("point").and_then(parse_vec3).or_else(|| payload.and_then(|value| value.get("point")).and_then(parse_vec3)) else { return };
+            let mode = context.get("moveMode").and_then(|value| value.as_str()).unwrap_or("free").to_string();
+            let from = context.get("points").and_then(|points| points.get("from")).and_then(parse_vec3);
+            let cursor = match (mode.as_str(), from) {
+                ("vertical", Some(from)) => [from[0], from[1], point[2]],
+                _ => point,
+            };
+            context.insert("cursor".into(), vec3_json(cursor));
+        }
+        // 📦️ The session has no object geometry in hand; the pick that preceded `confirm` is the
+        // anchor a bbox centre would have approximated, so the origin falls back to the world origin.
+        "command.selectionBboxCenter" => {
+            let field = params.get("field").and_then(|value| value.as_str()).unwrap_or("from").to_string();
+            let point = context.get("cursor").and_then(parse_vec3).unwrap_or([0.0, 0.0, 0.0]);
+            let entry = context.entry("points".into()).or_insert_with(|| DslValue::object(Vec::new()));
+            if let DslValue::Object(object) = entry {
+                object.retain(|(k, _)| *k != field);
+                object.push((field, vec3_json(point)));
+            }
+        }
+        "command.undoPick" => {
+            let field = params.get("field").and_then(|value| value.as_str()).unwrap_or("points").to_string();
+            let clear: Vec<String> = params.get("clearKeys").and_then(|value| value.as_array()).map(|keys| keys.iter().filter_map(|key| key.as_str().map(str::to_string)).collect()).unwrap_or_default();
+            if let Some(DslValue::Object(object)) = context.get_mut(&field) {
+                object.retain(|(k, _)| !clear.iter().any(|key| key == k));
             }
         }
         "box.aabbFromDiagonalCorners" => {
@@ -438,82 +484,65 @@ fn apply_event_generic(session: &mut CadEngagementScratch, event_kind: &str, raw
     true
 }
 
-fn legacy_keyed_transitions(session: &CadEngagementScratch) -> Vec<KeyedTransition> {
-    if session.state == "idle" {
-        return vec![KeyedTransition { key: "s".into(), label: "Start".into(), event_kind: "start".into() }];
-    }
-    Vec::new()
-}
-
-fn legacy_apply_event(session: &mut CadEngagementScratch, event_kind: &str, payload: Option<&DslValue>) -> bool {
-    let is_column = session.interaction_id == "building.building.constructColumn";
-    let changed = match (session.state.as_str(), event_kind) {
-        ("idle", "start") => {
-            session.state = if is_column { "column_base" } else { "footprint_first" }.into();
-            true
-        }
-        ("footprint_first", "pointer.down") => {
-            if let Some(point) = payload.and_then(parse_vec3) {
-                session.context.insert("cornerA".into(), vec3_json(point));
-                session.state = "footprint_second".into();
-                true
-            } else {
-                false
-            }
-        }
-        ("footprint_second", "pointer.down") => {
-            if let Some(point) = payload.and_then(parse_vec3) {
-                session.context.insert("cornerB".into(), vec3_json(point));
-                session.state = "slab_height".into();
-                true
-            } else {
-                false
-            }
-        }
-        ("slab_height", "set.height") => {
-            if let Some(height) = payload.and_then(|value| value.as_f64()) {
-                session.context.insert("height".into(), DslValue::float(height));
-                session.state = "ready".into();
-                true
-            } else {
-                false
-            }
-        }
-        ("column_base", "pointer.down") => {
-            if let Some(point) = payload.and_then(parse_vec3) {
-                session.context.insert("base".into(), vec3_json(point));
-                session.state = "column_height".into();
-                true
-            } else {
-                false
-            }
-        }
-        ("column_height", "set.height") => {
-            if let Some(height) = payload.and_then(|value| value.as_f64()) {
-                session.context.insert("height".into(), DslValue::float(height));
-                session.state = "ready".into();
-                true
-            } else {
-                false
-            }
-        }
-        _ => false,
-    };
-    if changed {
-        session.last_response = Some("OK".into());
-    }
-    changed
-}
-
 pub fn apply_event(session: &mut CadEngagementScratch, event_kind: &str, payload: Option<&DslValue>) -> bool {
-    if is_legacy_building_id(&session.interaction_id) {
-        return legacy_apply_event(session, event_kind, payload);
-    }
     apply_event_generic(session, event_kind, payload, 0)
 }
 
 /// States where a numeric-only line commits the pending height (premigration `tryCommitNumericEntry`).
 const NUMERIC_ENTRY_STATES: &[&str] = &["first_corner_height", "two_points_height", "slab_height", "column_height", "radius", "curve_height"];
+
+/// 🔢️ The `set.*` event a bare number means in `session`'s current state — the spec's own
+/// `interaction.scalarEntry` row for the state first, then the state's declared `set.*` handler
+/// (`set.radius` in a `radius` state, `set.angle`, `set.factor`, …), then the legacy height states.
+pub fn numeric_entry_event(session: &CadEngagementScratch) -> Option<String> {
+    if let Some(spec) = spec_by_id(&session.interaction_id) {
+        if let Some(entry) = spec.interaction.scalar_entry.iter().find(|entry| entry.state == session.state) {
+            return Some(entry.event.clone());
+        }
+        if let Some(state) = spec.state(&session.state) {
+            if let Some(handler) = state.on.iter().find(|handler| handler.event.starts_with("set.")) {
+                return Some(handler.event.clone());
+            }
+        }
+    }
+    NUMERIC_ENTRY_STATES.contains(&session.state.as_str()).then(|| "set.height".to_string())
+}
+
+/// 🎯️ True when the current state listens for `selection.changed` — the engagement commands then
+/// feed it the live `"cad"` domain selection before their own event.
+pub fn accepts_selection(session: &CadEngagementScratch) -> bool {
+    spec_by_id(&session.interaction_id).and_then(|spec| spec.state(&session.state).map(|state| state.on.iter().any(|handler| handler.event == "selection.changed"))).unwrap_or(false)
+}
+
+/// 🎯️ Feeds the framework selection into the session as one `selection.changed` event (targets =
+/// the domain's object ids), only where the current state declares that handler.
+pub fn inject_selection(session: &mut CadEngagementScratch, ids: &[String]) -> bool {
+    if ids.is_empty() || !accepts_selection(session) {
+        return false;
+    }
+    // 🎯️ Each target is `{ id, kind }` — the shape the specs' entity guards read (`curves[0].id`).
+    let targets = DslValue::Array(ids.iter().map(|id| DslValue::object([("id".to_string(), DslValue::String(id.clone())), ("kind".to_string(), DslValue::String("object".into()))])).collect());
+    apply_event(session, "selection.changed", Some(&DslValue::object([("targets".to_string(), targets)])))
+}
+
+/// 🪧️ The prompt the current state shows: its `selection.prompt`, else the display `label` item in
+/// the `prompt` role, else the state name spelled out.
+pub fn state_prompt(session: &CadEngagementScratch) -> String {
+    if let Some(spec) = spec_by_id(&session.interaction_id) {
+        if let Some(prompt) = spec.state(&session.state).and_then(|state| state.selection.as_ref()).and_then(|selection| selection.prompt.clone()) {
+            return prompt;
+        }
+        if let Some(text) = spec.display.states.iter().find(|state| state.state == session.state).and_then(|state| {
+            state.items.iter().find_map(|item| match item {
+                DisplayItemSpec::Label { role, text, .. } if role.as_deref() == Some("prompt") => Some(text.clone()),
+                _ => None,
+            })
+        }) {
+            return text;
+        }
+    }
+    session.state.replace('_', " ")
+}
 
 fn strip_prefix_ignore_case<'a>(text: &'a str, prefix: &str) -> Option<&'a str> {
     if text.len() < prefix.len() {
@@ -553,6 +582,17 @@ pub fn parse_repl_line(line: &str, current_state: Option<&str>) -> Option<(Strin
             return Some(("set.distance".into(), Some(DslValue::float(distance))));
         }
     }
+    // `SetRadius2.5` / `SetAngle45` / `SetFactor2` — every `set.<field>` scalar event the specs
+    // declare, PascalCased by the shell exactly like `SetHeight`.
+    if let Some(rest) = strip_prefix_ignore_case(trimmed, "Set") {
+        let digits = rest.find(|character: char| character.is_ascii_digit() || character == '-' || character == '.').unwrap_or(rest.len());
+        let (field, number) = rest.split_at(digits);
+        if !field.is_empty() && field.chars().all(|character| character.is_ascii_alphabetic()) {
+            if let Ok(value) = number.parse::<f64>() {
+                return Some((format!("set.{}", field.to_ascii_lowercase()), Some(DslValue::float(value))));
+            }
+        }
+    }
     // Bare numeric entry commits height while a numeric-entry state is active.
     if current_state.is_some_and(|state| NUMERIC_ENTRY_STATES.contains(&state)) {
         if let Ok(height) = trimmed.parse::<f64>() {
@@ -560,6 +600,17 @@ pub fn parse_repl_line(line: &str, current_state: Option<&str>) -> Option<(Strin
         }
     }
     Some((trimmed.into(), None))
+}
+
+/// 🔢️ `parse_repl_line` with the session's own numeric-entry event: a bare number in a state whose
+/// spec declares a `set.*` handler becomes that event (`radius` → `set.radius`).
+pub fn parse_repl_line_for(line: &str, session: Option<&CadEngagementScratch>) -> Option<(String, Option<DslValue>)> {
+    if let (Some(session), Ok(value)) = (session, line.trim().parse::<f64>()) {
+        if let Some(event) = numeric_entry_event(session) {
+            return Some((event, Some(DslValue::float(value))));
+        }
+    }
+    parse_repl_line(line, session.map(|session| session.state.as_str()))
 }
 //#endregion 🔖️Statechart
 
@@ -645,219 +696,333 @@ fn commit_from_2_points_and_height(kernel: &mut Brep, params: &HashMap<String, D
     })
 }
 
-/// `command.finish` dispatches by the commit's `resultKind` param, reading whatever context fields
-/// that interaction's machine populated (`points.<key>`, `radius`, ...). Only `sphere` is
-/// implemented so far; other result kinds (cylinder/circle/plane/curve/boolean/...) are a
-/// documented follow-up — this returns `None` for them, matching the pre-engine fallback behavior
-/// for any not-yet-implemented interaction.
-fn commit_command_finish(kernel: &mut Brep, params: &HashMap<String, DslValue>, context: &HashMap<String, DslValue>, label_count: usize, next_id: impl Fn(&str) -> String) -> Option<CadObject> {
-    let result_kind = params.get("resultKind").and_then(|value| value.as_str())?;
-    match result_kind {
-        "sphere" => {
-            let points = context.get("points")?;
-            let center = points.get("center").and_then(parse_vec3)?;
-            let radius = if let Some(radius) = context.get("radius").and_then(|value| value.as_f64()) {
-                radius
-            } else {
-                let radius_point = points.get("radiusPoint").and_then(parse_vec3)?;
-                ((radius_point[0] - center[0]).powi(2) + (radius_point[1] - center[1]).powi(2) + (radius_point[2] - center[2]).powi(2)).sqrt()
-            }
-            .max(0.05);
-            let solid = kernel.sphere_prim(radius).ok()?;
-            Some(CadObject {
-                id: next_id("object"),
-                label: format!("Sphere {}", label_count + 1),
-                typology: "spatial.shape.solid.sphere".into(),
-                visible: true,
-                locked: false,
-                origin: center,
-                orientation: Some([0.0, 0.0, 0.0, 1.0]),
-                scale: None,
-                mesh_url: None,
-                extent: Some([radius * 2.0, radius * 2.0, radius * 2.0]),
-                solid_handle: Some(solid.0.clone()),
-                primitives: vec![CadPrimitiveSlot { slot: "solid".into(), primitive_id: solid.0, kind: "solid".into() }],
-            })
-        }
-        _ => None,
-    }
-}
-
-fn legacy_commit_object(kernel: &mut Brep, session: &CadEngagementScratch, label_count: usize, next_id: impl Fn(&str) -> String) -> Option<CadObject> {
-    let entry = interaction_by_id(&session.interaction_id)?;
-    if session.interaction_id == "building.building.constructColumn" {
-        let base = context_point(session, "base")?;
-        let height = session.context.0.get("height").and_then(|value| value.as_f64()).unwrap_or(3.0);
-        let radius = 0.25;
-        let solid = kernel.cylinder_prim(radius, height.max(0.05)).ok()?;
-        return Some(CadObject {
-            id: next_id("object"),
-            label: format!("{} {}", entry.label, label_count + 1),
-            typology: entry.produces_typology.clone(),
-            visible: true,
-            locked: false,
-            origin: base,
-            orientation: Some([0.0, 0.0, 0.0, 1.0]),
-            scale: None,
-            mesh_url: None,
-            extent: Some([radius * 2.0, radius * 2.0, height.max(0.05)]),
-            solid_handle: Some(solid.0.clone()),
-            primitives: vec![CadPrimitiveSlot { slot: "solid".into(), primitive_id: solid.0, kind: "solid".into() }],
-        });
-    }
-    let corner_a = context_point(session, "cornerA")?;
-    let corner_b = context_point(session, "cornerB")?;
-    let id = session.interaction_id.as_str();
-    let default_height = if id.contains("Slab") {
-        0.25
-    } else if id.contains("Beam") {
-        0.4
-    } else {
-        3.0
+/// 🧱️ One solid object sized by `extent` at `origin` — the persisted shape every committed solid takes
+/// (`CadObjectSpec` carries typology + placement + extent; `typology_brep_mesh` rebuilds the kernel
+/// primitive from those at render time, so the ephemeral handle minted here only seeds the first
+/// tessellation).
+fn solid_object(kernel: &mut Brep, typology: &str, label: String, origin: [f64; 3], extent: [f64; 3], orientation: [f64; 4], next_id: impl Fn(&str) -> String) -> Option<CadObject> {
+    let extent = [extent[0].max(0.02), extent[1].max(0.02), extent[2].max(0.02)];
+    let solid = match crate::standards::v1::subsets::any::schema::inferences::typology_mesh_kind(typology) {
+        "cylinder" => kernel.cylinder_prim(extent[0].max(extent[1]) * 0.5, extent[2]).ok()?,
+        "sphere" => kernel.sphere_prim(extent[0].max(extent[1]).max(extent[2]) * 0.5).ok()?,
+        _ => kernel.box_prim(extent[0], extent[1], extent[2]).ok()?,
     };
-    let height = session.context.0.get("height").and_then(|value| value.as_f64()).unwrap_or(default_height);
-    let span = ((corner_b[0] - corner_a[0]).powi(2) + (corner_b[1] - corner_a[1]).powi(2)).sqrt().max(0.5);
-    let width = (corner_b[0] - corner_a[0]).abs().max(0.5);
-    let depth = (corner_b[1] - corner_a[1]).abs().max(0.5);
-    let (solid_width, solid_depth, solid_height) = if id.contains("Beam") {
-        (span, 0.3, 0.3)
-    } else if id.contains("Wall") {
-        (span, 0.2, height.max(0.05))
-    } else {
-        (width, depth, height.max(0.05))
-    };
-    let solid = kernel.box_prim(solid_width, solid_depth, solid_height).ok()?;
     Some(CadObject {
         id: next_id("object"),
-        label: format!("{} {}", entry.label, label_count + 1),
-        typology: entry.produces_typology.clone(),
+        label,
+        typology: typology.into(),
         visible: true,
         locked: false,
-        origin: corner_a,
-        orientation: Some([0.0, 0.0, 0.0, 1.0]),
+        origin,
+        orientation: Some(orientation),
         scale: None,
         mesh_url: None,
-        extent: Some([solid_width, solid_depth, solid_height]),
+        extent: Some(extent),
         solid_handle: Some(solid.0.clone()),
         primitives: vec![CadPrimitiveSlot { slot: "solid".into(), primitive_id: solid.0, kind: "solid".into() }],
     })
 }
 
-pub(crate) fn commit_object(kernel: &mut Brep, session: &CadEngagementScratch, label_count: usize, next_id: impl Fn(&str) -> String) -> Option<CadObject> {
-    if is_legacy_building_id(&session.interaction_id) {
-        return legacy_commit_object(kernel, session, label_count, next_id);
+/// 🧭️ Unit quaternion (x, y, z, w) rotating +X onto `direction` — yaw about Z then pitch about the
+/// rotated Y, which is how a bar-shaped solid (beam, railing, line thickness) follows a segment.
+pub fn quaternion_from_x_to(direction: [f64; 3]) -> [f64; 4] {
+    let length = (direction[0] * direction[0] + direction[1] * direction[1] + direction[2] * direction[2]).sqrt();
+    if length <= f64::EPSILON {
+        return [0.0, 0.0, 0.0, 1.0];
     }
+    let yaw = direction[1].atan2(direction[0]);
+    let pitch = -(direction[2] / length).asin();
+    let (sy, cy) = (yaw * 0.5).sin_cos();
+    let (sp, cp) = (pitch * 0.5).sin_cos();
+    // q = q_yaw(Z) * q_pitch(Y)
+    [-sy * sp, cy * sp, sy * cp, cy * cp]
+}
+
+/// 📏️ A bar of `thickness × thickness` cross-section from `p0` to `p1` — the persisted shape of a
+/// line-like result (a `curve.line`, a placed beam/railing, one polyline segment).
+fn bar_object(kernel: &mut Brep, typology: &str, label: String, p0: [f64; 3], p1: [f64; 3], thickness: [f64; 2], next_id: impl Fn(&str) -> String) -> Option<CadObject> {
+    let direction = [p1[0] - p0[0], p1[1] - p0[1], p1[2] - p0[2]];
+    let length = (direction[0] * direction[0] + direction[1] * direction[1] + direction[2] * direction[2]).sqrt();
+    if length <= 1e-6 {
+        return None;
+    }
+    solid_object(kernel, typology, label, p0, [length, thickness[0], thickness[1]], quaternion_from_x_to(direction), next_id)
+}
+
+fn context_points_list(context: &HashMap<String, DslValue>) -> Vec<[f64; 3]> {
+    context.get("points").and_then(|value| value.as_array()).map(|points| points.iter().filter_map(parse_vec3).collect()).unwrap_or_default()
+}
+
+fn context_named_point(context: &HashMap<String, DslValue>, key: &str) -> Option<[f64; 3]> {
+    context.get("points").and_then(|points| points.get(key)).and_then(parse_vec3)
+}
+
+fn distance(a: [f64; 3], b: [f64; 3]) -> f64 {
+    ((a[0] - b[0]).powi(2) + (a[1] - b[1]).powi(2) + (a[2] - b[2]).powi(2)).sqrt()
+}
+
+/// 📈️ One bar per consecutive point pair (closed polylines add the closing segment) — a polyline is
+/// persisted as N segment solids sharing one label prefix, the shape `CadObjectSpec` can carry today.
+fn polyline_objects(kernel: &mut Brep, typology: &str, label: &str, points: &[[f64; 3]], closed: bool, label_count: usize, next_id: &impl Fn(&str) -> String) -> Vec<CadObject> {
+    let mut objects = Vec::new();
+    let mut pairs: Vec<([f64; 3], [f64; 3])> = points.windows(2).map(|pair| (pair[0], pair[1])).collect();
+    if closed && points.len() > 2 {
+        pairs.push((points[points.len() - 1], points[0]));
+    }
+    for (index, (p0, p1)) in pairs.into_iter().enumerate() {
+        if let Some(object) = bar_object(kernel, typology, format!("{label} {}.{}", label_count + 1, index + 1), p0, p1, [0.02, 0.02], next_id) {
+            objects.push(object);
+        }
+    }
+    objects
+}
+
+/// 🎯️ What a committed session asks the document to do.
+#[derive(Clone, Debug, PartialEq)]
+pub(crate) enum CommitOutcome {
+    /// 🧱️ New objects for the session's pane.
+    Objects(Vec<CadObject>),
+    /// 🚚️ Move the selected `targets` by `delta`.
+    Move { targets: Vec<String>, delta: [f64; 3] },
+    /// 📋️ Duplicate the selected `targets`, the copies offset by `delta`.
+    Copy { targets: Vec<String>, delta: [f64; 3] },
+    /// 🌀️ Rotate the selected `targets` about `axis` by `angle` (radians).
+    Rotate { targets: Vec<String>, axis: [f64; 3], angle: f64 },
+    /// ⚖️ Scale the selected `targets` by `factors`.
+    Scale { targets: Vec<String>, factors: [f64; 3] },
+    /// 🚧️ A commit action the persisted object model cannot represent yet (booleans, fillets, lofts,
+    /// sweeps, edits on existing topology) — the session still closes, and the HUD says why.
+    Unsupported(String),
+}
+
+/// 🎯️ The selected object ids a `command.addSelection` stored under `targets` — `{ id, kind }`
+/// records from `inject_selection`, or bare id strings from a hand-authored payload.
+fn context_targets(context: &HashMap<String, DslValue>) -> Vec<String> {
+    context
+        .get("targets")
+        .and_then(|value| value.as_array())
+        .map(|targets| targets.iter().filter_map(|target| target.as_str().map(str::to_string).or_else(|| target.get("id").and_then(|id| id.as_str()).map(str::to_string))).collect())
+        .unwrap_or_default()
+}
+
+/// `command.finish` dispatches by the commit's `resultKind` param, reading whatever context fields
+/// that interaction's machine populated (`points.<key>`, `radius`, `height`, `angle`, …).
+fn commit_command_finish(kernel: &mut Brep, params: &HashMap<String, DslValue>, context: &HashMap<String, DslValue>, label_count: usize, next_id: impl Fn(&str) -> String) -> Option<CommitOutcome> {
+    let result_kind = params.get("resultKind").and_then(|value| value.as_str())?;
+    let radius_of = |center: [f64; 3]| context.get("radius").and_then(|value| value.as_f64()).or_else(|| context_named_point(context, "radiusPoint").map(|point| distance(point, center))).unwrap_or(1.0).max(0.02);
+    match result_kind {
+        "sphere" => {
+            let center = context_named_point(context, "center")?;
+            let radius = radius_of(center);
+            let object = solid_object(kernel, "spatial.shape.solid.sphere", format!("Sphere {}", label_count + 1), center, [radius * 2.0; 3], [0.0, 0.0, 0.0, 1.0], next_id)?;
+            Some(CommitOutcome::Objects(vec![object]))
+        }
+        "cylinder" => {
+            let base = context_named_point(context, "base")?;
+            let radius = radius_of(base);
+            let height = context.get("height").and_then(|value| value.as_f64()).or_else(|| context_named_point(context, "end").map(|end| (end[2] - base[2]).abs().max(distance(end, base)))).unwrap_or(1.0).max(0.02);
+            let object = solid_object(kernel, "spatial.shape.solid.cylinder", format!("Cylinder {}", label_count + 1), base, [radius * 2.0, radius * 2.0, height], [0.0, 0.0, 0.0, 1.0], next_id)?;
+            Some(CommitOutcome::Objects(vec![object]))
+        }
+        "plane" => {
+            let a = context_named_point(context, "cornerA")?;
+            let b = context_named_point(context, "cornerB")?;
+            let origin = [a[0].min(b[0]), a[1].min(b[1]), a[2].min(b[2])];
+            let object = solid_object(kernel, "spatial.shape.surface.plane", format!("Plane {}", label_count + 1), origin, [(b[0] - a[0]).abs(), (b[1] - a[1]).abs(), 0.02], [0.0, 0.0, 0.0, 1.0], next_id)?;
+            Some(CommitOutcome::Objects(vec![object]))
+        }
+        "circle" | "arc" => {
+            let center = context_named_point(context, "center")?;
+            let radius = if result_kind == "arc" { context_named_point(context, "start").map(|start| distance(start, center)).unwrap_or(1.0).max(0.02) } else { radius_of(center) };
+            // ⭕️ A circle/arc is persisted as its closed polygonal polyline (32 segments, arcs the swept
+            // share) — thin bars are the only curve shape `CadObjectSpec` carries today.
+            let sweep = if result_kind == "arc" {
+                let start = context_named_point(context, "start")?;
+                let start_angle = (start[1] - center[1]).atan2(start[0] - center[0]);
+                let end_angle = context.get("angle").and_then(|value| value.as_f64()).map(|degrees| start_angle + degrees.to_radians()).or_else(|| context_named_point(context, "end").map(|end| (end[1] - center[1]).atan2(end[0] - center[0])))?;
+                let mut sweep = end_angle - start_angle;
+                if sweep <= 0.0 {
+                    sweep += std::f64::consts::TAU;
+                }
+                (start_angle, sweep)
+            } else {
+                (0.0, std::f64::consts::TAU)
+            };
+            let segments = ((sweep.1 / std::f64::consts::TAU) * 32.0).ceil().max(2.0) as usize;
+            let points: Vec<[f64; 3]> = (0..=segments).map(|index| {
+                let angle = sweep.0 + sweep.1 * (index as f64 / segments as f64);
+                [center[0] + radius * angle.cos(), center[1] + radius * angle.sin(), center[2]]
+            }).collect();
+            let (typology, label) = if result_kind == "arc" { ("spatial.shape.curve.arc", "Arc") } else { ("spatial.shape.curve.circle", "Circle") };
+            let objects = polyline_objects(kernel, typology, label, &points, false, label_count, &next_id);
+            (!objects.is_empty()).then_some(CommitOutcome::Objects(objects))
+        }
+        "curve" | "interpolateCurve" => {
+            let points = context_points_list(context);
+            let (typology, label) = if result_kind == "curve" { ("spatial.shape.curve.control-point-curve", "Curve") } else { ("spatial.shape.curve.interpolate-curve", "Interpolated curve") };
+            let objects = polyline_objects(kernel, typology, label, &points, false, label_count, &next_id);
+            (!objects.is_empty()).then_some(CommitOutcome::Objects(objects))
+        }
+        "mirror" => {
+            // 🪞️ Mirror across the vertical plane through the two picked points: a copy whose origin is
+            // reflected; the mirrored solid keeps its own extent (the persisted model has no handedness).
+            let targets = context_targets(context);
+            let a = context_named_point(context, "mirrorStart")?;
+            let b = context_named_point(context, "mirrorEnd")?;
+            let normal = [-(b[1] - a[1]), b[0] - a[0], 0.0];
+            let length = (normal[0] * normal[0] + normal[1] * normal[1]).sqrt();
+            if length <= 1e-9 || targets.is_empty() {
+                return Some(CommitOutcome::Unsupported(format!("command.finish/{result_kind}")));
+            }
+            let unit = [normal[0] / length, normal[1] / length, 0.0];
+            // The reflection of the selection's anchor is expressed as one copy offset — the persisted
+            // origin moves twice its signed distance to the plane along the normal.
+            let anchor = context.get("cursor").and_then(parse_vec3).unwrap_or(a);
+            let signed = (anchor[0] - a[0]) * unit[0] + (anchor[1] - a[1]) * unit[1];
+            Some(CommitOutcome::Copy { targets, delta: [-2.0 * signed * unit[0], -2.0 * signed * unit[1], 0.0] })
+        }
+        other => Some(CommitOutcome::Unsupported(format!("command.finish/{other}"))),
+    }
+}
+
+/// 🎯️ Runs the spec's `commit.operation` against the session context — every commit family the
+/// model-definition assets declare: `primitive.createBoxFromCorners`, the `*From2PointsAndHeight`/
+/// `*FromSurface` constructions, `curve.line`/`curve.polyline`, `command.finish` result kinds, and
+/// the `transform.*` verbs on the injected selection.
+pub(crate) fn commit_session(kernel: &mut Brep, session: &CadEngagementScratch, label_count: usize, next_id: impl Fn(&str) -> String) -> Option<CommitOutcome> {
     let spec = spec_by_id(&session.interaction_id)?;
     let env = ExprEnv { context: &session.context.0, event: None };
     let empty_vars = HashMap::new();
     let params: HashMap<String, DslValue> = spec.commit.operation.params.iter().map(|(key, value)| (key.clone(), evaluate_expr(value, &env, &empty_vars))).collect();
     let action = spec.commit.operation.action.as_str();
     let label = spec.label.clone().unwrap_or_else(|| spec.id.clone());
+    let typology = spec.produces.typology.clone().unwrap_or_else(|| format!("spatial.shape.{}", spec.id));
+    let context = &session.context.0;
     if action == "primitive.createBoxFromCorners" {
-        return commit_primitive_box(kernel, &params, label_count, next_id);
+        return commit_primitive_box(kernel, &params, label_count, next_id).map(|object| CommitOutcome::Objects(vec![object]));
     }
     if action.ends_with("From2PointsAndHeight") || action.ends_with("FromSurface") {
-        return commit_from_2_points_and_height(kernel, &params, &label, label_count, next_id);
+        return commit_from_2_points_and_height(kernel, &params, &label, label_count, next_id).map(|object| CommitOutcome::Objects(vec![object]));
     }
     if action == "command.finish" {
-        return commit_command_finish(kernel, &params, &session.context, label_count, next_id);
+        return commit_command_finish(kernel, &params, context, label_count, next_id);
     }
-    None
+    if action == "curve.line" {
+        let p0 = params.get("p0").and_then(parse_vec3).or_else(|| context_named_point(context, "start"))?;
+        let p1 = params.get("p1").and_then(parse_vec3).or_else(|| context_named_point(context, "end"))?;
+        let lower = typology.to_lowercase();
+        let thickness = if lower.contains("beam") { [0.3, 0.3] } else if lower.contains("railing") { [0.05, 1.0] } else { [0.02, 0.02] };
+        return bar_object(kernel, &typology, format!("{label} {}", label_count + 1), p0, p1, thickness, next_id).map(|object| CommitOutcome::Objects(vec![object]));
+    }
+    if action == "curve.polyline" {
+        let points = context_points_list(context);
+        let closed = context.get("closed").and_then(|value| value.as_bool()).unwrap_or(false);
+        let objects = polyline_objects(kernel, &typology, &label, &points, closed, label_count, &next_id);
+        return (!objects.is_empty()).then_some(CommitOutcome::Objects(objects));
+    }
+    if action == "transform.move" || action == "transform.copy" {
+        let targets = context_targets(context);
+        let from = context_named_point(context, "from")?;
+        let to = context_named_point(context, "to")?;
+        let delta = [to[0] - from[0], to[1] - from[1], to[2] - from[2]];
+        return Some(if action == "transform.copy" { CommitOutcome::Copy { targets, delta } } else { CommitOutcome::Move { targets, delta } });
+    }
+    if action == "transform.rotate" {
+        let targets = context_targets(context);
+        let center = context_named_point(context, "center")?;
+        let angle = context.get("angle").and_then(|value| value.as_f64()).map(f64::to_radians).or_else(|| {
+            let a = context_named_point(context, "referenceA")?;
+            let b = context_named_point(context, "referenceB")?;
+            Some((b[1] - center[1]).atan2(b[0] - center[0]) - (a[1] - center[1]).atan2(a[0] - center[0]))
+        })?;
+        return Some(CommitOutcome::Rotate { targets, axis: [0.0, 0.0, 1.0], angle });
+    }
+    if action == "transform.scale3d" || action == "transform.scale1d" {
+        let targets = context_targets(context);
+        let factor = context.get("factor").and_then(|value| value.as_f64()).or_else(|| {
+            let origin = context_named_point(context, "origin")?;
+            let a = context_named_point(context, "axisPoint").or_else(|| context_named_point(context, "referenceA"))?;
+            let b = context_named_point(context, "referenceB")?;
+            let base = distance(a, origin);
+            (base > 1e-9).then(|| distance(b, origin) / base)
+        })?;
+        let factors = if action == "transform.scale1d" { [factor, 1.0, 1.0] } else { [factor; 3] };
+        return Some(CommitOutcome::Scale { targets, factors });
+    }
+    Some(CommitOutcome::Unsupported(action.to_string()))
+}
+
+/// 🧱️ The first object a committed session produces — the shape the single-object tests read.
+#[cfg(test)]
+pub(crate) fn commit_object(kernel: &mut Brep, session: &CadEngagementScratch, label_count: usize, next_id: impl Fn(&str) -> String) -> Option<CadObject> {
+    match commit_session(kernel, session, label_count, next_id)? {
+        CommitOutcome::Objects(objects) => objects.into_iter().next(),
+        _ => None,
+    }
 }
 //#endregion 🔖️CommitRunner
 
 //#region 🔖️Preview
-fn preview_two_point_footprint(session: &CadEngagementScratch, include_segment: bool) -> Vec<DslValue> {
-    let mut items = Vec::new();
-    if let Some(corner_a) = context_point(session, "cornerA") {
-        items.push(DslValue::object([("kind".to_string(), DslValue::String("point".into())), ("role".to_string(), DslValue::String("cornerA".into())), ("position".to_string(), vec3_json(corner_a))]));
-    }
-    if include_segment {
-        if let (Some(corner_a), Some(corner_b)) = (context_point(session, "cornerA"), context_point(session, "cornerB")) {
-            items.push(DslValue::object([("kind".to_string(), DslValue::String("segment".into())), ("role".to_string(), DslValue::String("footprint".into())), ("from".to_string(), vec3_json(corner_a)), ("to".to_string(), vec3_json(corner_b))]));
-        }
-    }
-    items
-}
-
-fn legacy_preview_display_items(session: &CadEngagementScratch) -> Vec<DslValue> {
-    if session.interaction_id == "building.building.constructColumn" {
-        return match session.state.as_str() {
-            "column_height" | "ready" => {
-                let mut items = Vec::new();
-                if let Some(base) = context_point(session, "base") {
-                    items.push(DslValue::object([("kind".to_string(), DslValue::String("point".into())), ("role".to_string(), DslValue::String("base".into())), ("position".to_string(), vec3_json(base))]));
-                }
-                items
-            }
-            _ => Vec::new(),
-        };
-    }
-    match session.state.as_str() {
-        "footprint_first" => preview_two_point_footprint(session, false),
-        "footprint_second" | "slab_height" | "ready" => preview_two_point_footprint(session, true),
-        _ => Vec::new(),
-    }
-}
-
 fn opt_string_value(value: &Option<String>) -> DslValue {
     value.clone().map_or(DslValue::Null, DslValue::String)
 }
 
 fn display_item_to_json(item: &DisplayItemSpec, env: &ExprEnv<'_>, vars: &HashMap<String, DslValue>) -> Option<DslValue> {
     match item {
-        DisplayItemSpec::Point { role, position, .. } => {
+        DisplayItemSpec::Point { id, role, position, .. } => {
             let position = evaluate_expr(position, env, vars);
             if position.is_null() {
                 return None;
             }
-            Some(DslValue::object([("kind".to_string(), DslValue::String("point".into())), ("role".to_string(), opt_string_value(role)), ("position".to_string(), position)]))
+            Some(DslValue::object([("id".to_string(), DslValue::String(id.clone())), ("kind".to_string(), DslValue::String("point".into())), ("role".to_string(), opt_string_value(role)), ("position".to_string(), position)]))
         }
-        DisplayItemSpec::Label { role, text, position, .. } => {
+        DisplayItemSpec::Label { id, role, text, position, .. } => {
             let position = evaluate_expr(position, env, vars);
-            Some(DslValue::object([("kind".to_string(), DslValue::String("label".into())), ("role".to_string(), opt_string_value(role)), ("text".to_string(), DslValue::String(text.clone())), ("position".to_string(), position)]))
+            Some(DslValue::object([("id".to_string(), DslValue::String(id.clone())), ("kind".to_string(), DslValue::String("label".into())), ("role".to_string(), opt_string_value(role)), ("text".to_string(), DslValue::String(text.clone())), ("position".to_string(), position)]))
         }
-        DisplayItemSpec::Segment { role, from, to, .. } => {
+        DisplayItemSpec::Segment { id, role, from, to, .. } => {
             let from = evaluate_expr(from, env, vars);
             let to = evaluate_expr(to, env, vars);
             if from.is_null() || to.is_null() {
                 return None;
             }
-            Some(DslValue::object([("kind".to_string(), DslValue::String("segment".into())), ("role".to_string(), opt_string_value(role)), ("from".to_string(), from), ("to".to_string(), to)]))
+            Some(DslValue::object([("id".to_string(), DslValue::String(id.clone())), ("kind".to_string(), DslValue::String("segment".into())), ("role".to_string(), opt_string_value(role)), ("from".to_string(), from), ("to".to_string(), to)]))
         }
-        DisplayItemSpec::LinearHandle { role, axis, origin, .. } => {
+        DisplayItemSpec::LinearHandle { id, role, axis, origin, .. } => {
             let origin = evaluate_expr(origin, env, vars);
             if origin.is_null() {
                 return None;
             }
-            Some(DslValue::object([("kind".to_string(), DslValue::String("linear-handle".into())), ("role".to_string(), opt_string_value(role)), ("axis".to_string(), vec3_json(*axis)), ("origin".to_string(), origin)]))
+            Some(DslValue::object([("id".to_string(), DslValue::String(id.clone())), ("kind".to_string(), DslValue::String("linear-handle".into())), ("role".to_string(), opt_string_value(role)), ("axis".to_string(), vec3_json(*axis)), ("origin".to_string(), origin)]))
         }
-        DisplayItemSpec::BoxPreview { role, corner_a, corner_b, height, .. } => {
+        DisplayItemSpec::BoxPreview { id, role, corner_a, corner_b, height, .. } => {
             let corner_a = evaluate_expr(corner_a, env, vars);
             let corner_b = evaluate_expr(corner_b, env, vars);
             if corner_a.is_null() || corner_b.is_null() {
                 return None;
             }
             let height = evaluate_expr(height, env, vars);
-            Some(DslValue::object([("kind".to_string(), DslValue::String("box-preview".into())), ("role".to_string(), opt_string_value(role)), ("cornerA".to_string(), corner_a), ("cornerB".to_string(), corner_b), ("height".to_string(), height)]))
+            Some(DslValue::object([("id".to_string(), DslValue::String(id.clone())), ("kind".to_string(), DslValue::String("box-preview".into())), ("role".to_string(), opt_string_value(role)), ("cornerA".to_string(), corner_a), ("cornerB".to_string(), corner_b), ("height".to_string(), height)]))
         }
-        DisplayItemSpec::EntityHighlight { role, geometry_entity_kind, entity_id, .. } => {
+        DisplayItemSpec::EntityHighlight { id, role, geometry_entity_kind, entity_id, .. } => {
             let entity_id = evaluate_expr(entity_id, env, vars);
             if entity_id.is_null() {
                 return None;
             }
             Some(DslValue::object([
+                ("id".to_string(), DslValue::String(id.clone())),
                 ("kind".to_string(), DslValue::String("entity-highlight".into())),
                 ("role".to_string(), opt_string_value(role)),
                 ("geometryEntityKind".to_string(), DslValue::String(geometry_entity_kind.clone())),
                 ("entityId".to_string(), entity_id),
             ]))
         }
-        DisplayItemSpec::Curve { role, .. } => Some(DslValue::object([("kind".to_string(), DslValue::String("curve".into())), ("role".to_string(), opt_string_value(role))])),
-        DisplayItemSpec::Mesh { role, .. } => Some(DslValue::object([("kind".to_string(), DslValue::String("mesh".into())), ("role".to_string(), opt_string_value(role))])),
-        DisplayItemSpec::Preview { role, preview_kind, params, .. } => {
+        DisplayItemSpec::Curve { id, role, .. } => Some(DslValue::object([("id".to_string(), DslValue::String(id.clone())), ("kind".to_string(), DslValue::String("curve".into())), ("role".to_string(), opt_string_value(role))])),
+        DisplayItemSpec::Mesh { id, role, .. } => Some(DslValue::object([("id".to_string(), DslValue::String(id.clone())), ("kind".to_string(), DslValue::String("mesh".into())), ("role".to_string(), opt_string_value(role))])),
+        DisplayItemSpec::Preview { id, role, preview_kind, params, .. } => {
             let evaluated_params: Vec<(String, DslValue)> = params.iter().map(|(key, value)| (key.clone(), evaluate_expr(value, env, vars))).collect();
             Some(DslValue::object([
+                ("id".to_string(), DslValue::String(id.clone())),
                 ("kind".to_string(), DslValue::String("preview".into())),
                 ("role".to_string(), opt_string_value(role)),
                 ("previewKind".to_string(), opt_string_value(preview_kind)),
@@ -868,9 +1033,6 @@ fn display_item_to_json(item: &DisplayItemSpec, env: &ExprEnv<'_>, vars: &HashMa
 }
 
 pub fn preview_display_items(session: &CadEngagementScratch) -> Vec<DslValue> {
-    if is_legacy_building_id(&session.interaction_id) {
-        return legacy_preview_display_items(session);
-    }
     let Some(spec) = spec_by_id(&session.interaction_id) else {
         return Vec::new();
     };

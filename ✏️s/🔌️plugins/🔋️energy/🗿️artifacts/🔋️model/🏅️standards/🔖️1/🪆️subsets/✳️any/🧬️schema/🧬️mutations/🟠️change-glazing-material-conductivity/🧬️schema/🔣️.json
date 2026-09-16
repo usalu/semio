@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-glazing-material-conductivity/schema.json",
+  "title": "ChangeGlazingMaterialConductivity",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newConductivityWMK"
+  ],
+  "properties": {
+    "id": {
+      "type": "integer"
+    },
+    "newConductivityWMK": {
+      "type": "number"
+    }
+  }
+}

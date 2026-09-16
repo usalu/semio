@@ -223,6 +223,9 @@ struct Process3dPublicationLease {
     maximum_controls: usize,
     closing: bool,
     terminal: bool,
+    /// 🔐️ Admitted by the app's own initializer for a host-begun replacement (production), as
+    /// opposed to a lease a test host admitted and releases itself.
+    app_admitted: bool,
 }
 
 impl semio_framework_job::FixedOperationOwner for Process3dPublicationLease {
@@ -333,9 +336,47 @@ pub fn process3d_admit_publication_authority(
     leases
         .admit(
             process3d_publication_key(operation, generation),
-            Process3dPublicationLease { operation: operation.0, generation: generation.0, base_revision, parent_revision, live_revision, maximum_items, maximum_output_pages, maximum_controls, closing: false, terminal: false },
+            Process3dPublicationLease { operation: operation.0, generation: generation.0, base_revision, parent_revision, live_revision, maximum_items, maximum_output_pages, maximum_controls, closing: false, terminal: false, app_admitted: false },
         )
         .map_err(|_| "process3d-publication.saturated")
+}
+
+/// 🔐️ The lease the app grants ITSELF for a replacement the host began (`Effect::LoadDocument` →
+/// `build_document_store_initialization_job`): base, parent and live revision are all the generation
+/// the host started the replacement on — the only publication that commit can accept — with the
+/// domain's own credits. A test host that admitted its own lease first keeps it (`Err` when one is
+/// present). Released again by `process3d_release_app_publication_authority` once the publication
+/// validated or the initializer retired, so the four-slot table never fills with finished loads.
+pub fn process3d_admit_app_publication_authority(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation) -> Result<(), &'static str> {
+    let mut leases = process3d_publication_leases().try_lock().map_err(|_| "process3d-publication.contended")?;
+    if leases.get_operation(operation).is_some() {
+        return Err("process3d-publication.operation-duplicate");
+    }
+    leases
+        .admit(
+            process3d_publication_key(operation, generation),
+            Process3dPublicationLease {
+                operation: operation.0,
+                generation: generation.0,
+                base_revision: generation.0,
+                parent_revision: generation.0,
+                live_revision: generation.0,
+                maximum_items: PROCESS3D_MAXIMUM_DOMAIN_ITEMS,
+                maximum_output_pages: PROCESS3D_MOUNTED_OUTPUT_CHANNELS,
+                maximum_controls: PROCESS3D_MOUNTED_CONTROL_CREDITS,
+                closing: false,
+                terminal: false,
+                app_admitted: true,
+            },
+        )
+        .map_err(|_| "process3d-publication.saturated")
+}
+
+/// 🔐️ Releases the app-admitted lease of `operation` (a host-admitted one is the host's to release).
+pub fn process3d_release_app_publication_authority(operation: semio_framework_job::OperationId) -> bool {
+    let Ok(mut leases) = process3d_publication_leases().try_lock() else { return false };
+    let Some((key, lease)) = leases.get_operation(operation).map(|(key, lease)| (key, *lease)) else { return false };
+    lease.app_admitted && leases.take(key).is_some()
 }
 
 pub fn process3d_refresh_publication_authority(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, live_revision: u64) -> Result<(), &'static str> {
@@ -2696,6 +2737,9 @@ struct Process3dStoreInitializationAuthority {
 
 impl Process3dStoreInitializationAuthority {
     fn new(envelope: store::ArtifactEnvelope<Process3dSnapshot, Process3dMutation>, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation) -> Self {
+        if process3d_validate_publication_authority(operation, generation).is_err() {
+            let _ = process3d_admit_app_publication_authority(operation, generation);
+        }
         let (base_revision, parent_revision) = process3d_validate_publication_authority(operation, generation).unwrap_or((u64::MAX, u64::MAX));
         Self {
             operation,
@@ -2735,6 +2779,7 @@ impl Process3dStoreInitializationAuthority {
     }
 
     fn fail(&mut self, code: &'static [u8]) {
+        eprintln!("[DEBUG] process3d store initializer failed: {} phase {:?}", String::from_utf8_lossy(code), self.phase);
         self.fault = Some(process3d_fault_detail(code));
         self.phase = Process3dStoreInitializationPhase::RetireFault;
     }
@@ -3118,6 +3163,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<Process3dSnaps
             Process3dStoreInitializationPhase::RetireCancelled | Process3dStoreInitializationPhase::RetireFault => match self.pump_terminal_retirement(PROCESS3D_OWNER_BYTES) {
                 Ok(false) => return semio_framework_job::StepOutcome::Yield,
                 Ok(true) => {
+                    process3d_release_app_publication_authority(self.operation);
                     *self.initial_digest = None;
                     *self.edit_digest = None;
                     self.terminal_handoff = true;
@@ -3179,6 +3225,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<Process3dSnaps
         match self.pump_terminal_retirement(maximum_bytes.min(PROCESS3D_OWNER_BYTES)) {
             Ok(false) => Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }),
             Ok(true) => {
+                process3d_release_app_publication_authority(self.operation);
                 *self.initial_digest = None;
                 *self.edit_digest = None;
                 self.terminal_handoff = true;

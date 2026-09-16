@@ -195,8 +195,20 @@ fn surface_basis(normal: Vec3) -> (Vec3, Vec3) {
     (horizontal, cross(normal, horizontal))
 }
 
-/// 🪟️ Declared convention #2 — the rectangle of window `index` of `count` on `host`.
-pub fn aperture_rectangle(host: &Surface, window: &Fenestration, index: usize, count: usize) -> Option<[Vec3; 4]> {
+/// 🪟️ Declared convention #2 — the polygon of window `index` of `count` on `host`: the aperture's
+/// own [`Fenestration::vertices_m`] when it carries them, otherwise the rectangle derived from
+/// `area_m2`/`height_m`/`sill_height_m`.
+///
+/// The placement itself is NOT written here: it is [`crate::precompute::place_aperture`], the one
+/// function the engine's own window placement also goes through, so a document this codec writes
+/// describes the geometry the simulation actually shades. What stays here is this codec's own
+/// declared convention #2 — the `APERTURE_ASPECT`/`APERTURE_SILL_M` fallbacks for an aperture that
+/// states no height or sill, which the engine deliberately does not have — and the degeneracy
+/// check that turns an unplaceable aperture into a diagnostic instead of a bad rectangle.
+pub fn aperture_rectangle(host: &Surface, window: &Fenestration, index: usize, count: usize) -> Option<Vec<Vec3>> {
+    if !window.vertices_m.is_empty() {
+        return (window.vertices_m.len() >= 3).then(|| window.vertices_m.clone());
+    }
     let normal = surface_normal(&host.vertices_m)?;
     let (u, v) = surface_basis(normal);
     let origin = *host.vertices_m.first()?;
@@ -211,14 +223,8 @@ pub fn aperture_rectangle(host: &Surface, window: &Fenestration, index: usize, c
         return None;
     }
     let height = if window.height_m > 0.0 { window.height_m } else { (window.area_m2 / APERTURE_ASPECT).sqrt() };
-    let width = window.area_m2 / height;
     let sill = if window.sill_height_m > 0.0 { window.sill_height_m } else { APERTURE_SILL_M };
-    let bay = (u_max - u_min) / count.max(1) as f64;
-    let centre = u_min + bay * (index as f64 + 0.5);
-    let (u0, u1) = (centre - width / 2.0, centre + width / 2.0);
-    let (v0, v1) = (v_min + sill, v_min + sill + height);
-    let at = |a: f64, b: f64| [origin[0] + u[0] * a + v[0] * b, origin[1] + u[1] * a + v[1] * b, origin[2] + u[2] * a + v[2] * b];
-    Some([at(u0, v0), at(u1, v0), at(u1, v1), at(u0, v1)])
+    Some(crate::precompute::place_aperture(&host.vertices_m, &[], window.area_m2, height, sill, index, count))
 }
 //#endregion 🔖️Geometry
 
@@ -599,6 +605,17 @@ fn encode_surfaces(model: &Model, document: &mut Object, zone_name_of: &dyn Fn(E
                 continue;
             };
             let mut fields = vec![field("surface_type", "Window"), field("construction_name", glazing_construction_name(&name)), field("building_surface_name", entity_name("Surface", surface.id, &surface.name))];
+            // 🔶️ `FenestrationSurface:Detailed` itself tops out at four corners, so an aperture
+            // whose own polygon has more is written whole and reported — the document stays a
+            // faithful picture of the semio model, and the reader is told EnergyPlus will not take it.
+            if rectangle.len() != 4 {
+                fields.push(field("number_of_vertices", rectangle.len() as f64));
+                diagnostics.push(EpJsonDiagnostic::new(
+                    "epjson.fenestration.non-rectangular",
+                    name.clone(),
+                    format!("the aperture carries its own {}-vertex polygon; FenestrationSurface:Detailed accepts four corners, so EnergyPlus will refuse this object", rectangle.len()),
+                ));
+            }
             for (corner, vertex) in rectangle.iter().enumerate() {
                 fields.push(field(&format!("vertex_{}_x_coordinate", corner + 1), vertex[0]));
                 fields.push(field(&format!("vertex_{}_y_coordinate", corner + 1), vertex[1]));

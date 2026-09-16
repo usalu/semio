@@ -1,11 +1,11 @@
 use super::*;
 use crate::editor::fem2d::commands::{canvas_pointer_move, canvas_pointer_up};
-use crate::editor::fem2d::interaction::{fem2d_layer_to_canvas, FEM2D_INTERACTION_DOMAIN, FEM2D_POINTER_CHANNEL};
+use crate::editor::fem2d::interaction::{canvas_gesture, fem2d_layer_to_canvas, FEM2D_INTERACTION_DOMAIN, FEM2D_POINTER_CHANNEL};
 use crate::editor::fem2d::modes::edit::windows::model as model_window;
 use crate::editor::fem2d::modes::edit::windows::results as results_window;
 use crate::Viewport2d;
 use model_window::{find_node_2d, screen_2d};
-use semio_framework_plugin::kernel::Effect;
+use semio_framework::kernel::{Effect, UiDirtyScope};
 use semio_framework_plugin::{HistoryView, ViewModel, ViewWindowInstance};
 use store::ArtifactDsl;
 
@@ -17,7 +17,12 @@ fn demo() -> Fem2dSnapshot {
 }
 
 fn addressed(kind: &str) -> ViewModel {
-    ViewModel { window_id: Some("w".into()), window_instances: vec![ViewWindowInstance { id: "w".into(), window_kind_id: kind.into() }], ..Default::default() }
+    ViewModel {
+        window_id: Some("w".into()),
+        window_instances: vec![ViewWindowInstance { id: "w".into(), window_kind_id: kind.into() }],
+        active_utility_id: Some(canvas_gesture::FEM2D_UTILITY_SELECT_DIRECT.into()),
+        ..Default::default()
+    }
 }
 
 fn node_pixel(doc: &Fem2dSnapshot, id: &str) -> (f64, f64) {
@@ -101,25 +106,25 @@ async fn an_unaddressed_pointer_event_faults() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn canvas_pointer_move_requests_hover_and_pointer_up_is_a_no_op() {
+async fn canvas_pointer_move_requests_hover_and_pointer_up_refreshes_the_window() {
     let doc = demo();
     let history = HistoryView::empty();
     let view = ArtifactView::new(&doc, &history);
     let config = NoConfig::default();
     let cfg = ConfigView { snapshot: &config, window: None };
     let (x, y) = node_pixel(&doc, "n2");
-    let emit = canvas_pointer_move::handle_window(&canvas_pointer_move::CanvasPointerMove { x, y, width: CANVAS_WIDTH, height: CANVAS_HEIGHT }, &view, &cfg, &addressed(model_window::WINDOW_KIND_ID)).expect("hover");
+    let emit = canvas_pointer_move::handle_window(&canvas_pointer_move::CanvasPointerMove { x, y, width: CANVAS_WIDTH, height: CANVAS_HEIGHT, samples: Vec::new() }, &view, &cfg, &addressed(model_window::WINDOW_KIND_ID)).expect("hover");
     let (action_id, args) = replay(&emit);
     assert_eq!(action_id, semio_framework::INTERACTION_HOVER_ACTION_ID);
     assert_eq!(args.get("channel").and_then(dsl::DslValue::as_str), Some(FEM2D_POINTER_CHANNEL));
     assert!(args.get("targets").and_then(dsl::DslValue::as_str).is_some_and(|raw| raw.contains("\"id\":\"n2\"")));
 
     let released = canvas_pointer_up::handle_window(
-        &canvas_pointer_up::CanvasPointerUp { x, y, width: CANVAS_WIDTH, height: CANVAS_HEIGHT, shift: false, ctrl: false, meta: false, alt: false },
+        &canvas_pointer_up::CanvasPointerUp { x, y, width: CANVAS_WIDTH, height: CANVAS_HEIGHT, shift: false, ctrl: false, meta: false, alt: false, cancelled: false },
         &view,
         &cfg,
         &addressed(model_window::WINDOW_KIND_ID),
     )
     .expect("release");
-    assert!(released.effects.is_empty() && released.artifact_mutations.is_empty(), "a release commits nothing");
+    assert!(matches!(released.ui_scope, UiDirtyScope::Partial { .. }), "a release clears any in-flight marquee overlay");
 }

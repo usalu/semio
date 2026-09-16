@@ -1,2 +1,8 @@
 @import "../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎨️.css";
 @source ".";
+
+/* 🃏️ Pane picker stacks are silhouette hosts — same transparent stack rule as introduction/context menu. */
+[data-slot="demonstrator-pane-card-stack"] {
+  background: transparent !important;
+  background-color: transparent !important;
+}

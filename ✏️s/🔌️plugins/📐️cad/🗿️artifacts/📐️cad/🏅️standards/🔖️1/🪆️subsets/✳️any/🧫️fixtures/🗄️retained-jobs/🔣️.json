@@ -8,7 +8,7 @@
   "activation": {
     "controller": "s.cad.cad@1/*#editor",
     "factory": "CadRetainedCommandJobFactory",
-    "proofRows": 30,
+    "proofRows": 32,
     "injectedTool": "addNode",
     "closeItems": 1,
     "closeBytes": 4096
@@ -33,6 +33,8 @@
     "translateSelection",
     "rotateSelection",
     "scaleSelection",
+    "engagementSubmit",
+    "worldPointerDown",
     "setCamera",
     "setProjection",
     "setProjectionParam",
@@ -166,8 +168,8 @@
         "artifact",
         "config"
       ],
-      "disposition": "batchOnlyPendingRewrite",
-      "blocker": "artifactPreparationFactoryMissing"
+      "disposition": "migrated",
+      "blocker": "none"
     },
     {
       "id": "setActiveExample",
@@ -183,8 +185,8 @@
         "artifact",
         "config"
       ],
-      "disposition": "batchOnlyPendingRewrite",
-      "blocker": "artifactPreparationFactoryMissing"
+      "disposition": "migrated",
+      "blocker": "none"
     },
     {
       "id": "setCamera",

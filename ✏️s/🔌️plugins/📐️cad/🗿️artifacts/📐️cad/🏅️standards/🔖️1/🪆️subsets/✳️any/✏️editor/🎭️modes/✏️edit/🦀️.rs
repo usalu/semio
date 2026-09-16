@@ -3,7 +3,7 @@
 //! four windows share. Each window binds these to its own pane; nothing here is pane-specific.
 
 use crate::editor::cad::config::CadDislocateOptions;
-use crate::editor::cad::engine::interaction::{keyed_transitions, list_interactions_for_model_definition};
+use crate::editor::cad::engine::interaction::{keyed_transitions, list_interactions_for_model_definition, preview_display_items, state_prompt};
 use crate::editor::cad::modes::edit::windows::{building, energy, shape, structure_classic};
 use crate::editor::cad::terminology::CadLabels;
 use crate::editor::cad::{cad_pane_camera_runtime, cad_pane_suffix, camera_json, CadPlayView, CAD_DISLOCATE_UTILITY_ID, CAD_FALLBACK_MESH_KIND, CAD_INTERACTION_DOMAIN, CAD_PLAY_APP_ID};
@@ -202,7 +202,9 @@ pub(crate) fn world_selection_json(view: &CadPlayView, pane: CadPaneId, objects:
             );
         }
         dsl_object_upsert(entries, "gumballActive", DslValue::Bool(active));
-        dsl_object_upsert(entries, "engagementSessionActive", DslValue::Bool(runtime.engagement_session.is_some()));
+        // 🤝️ Only the pane that owns the live session takes world-pointer events (`World3dHost` turns
+        // `engagementSessionActive` into `worldPointerDown`/`worldPointerMove` dispatches).
+        dsl_object_upsert(entries, "engagementSessionActive", DslValue::Bool(runtime.engagement_session.as_ref().is_some_and(|session| session.pane == pane)));
         dsl_object_upsert(entries, "showEdges", DslValue::Bool(true));
         // 🖼️ Every pane's reference overlay reuses the same reference id (one `ref-concrete-forest` per
         // model definition), so the app-owned reference selection is stamped only on the pane whose
@@ -276,6 +278,9 @@ pub fn build_world_scene_for_pane(envelope: &CadPlayView, pane: CadPaneId, surfa
         world_selection_json(envelope, pane, objects, active_utility, options),
     );
     scene.references_json = world_references_json(&envelope.document, pane);
+    // 🤝️ The live construction preview (rubber-band points/segments/box/height handle) of the
+    // session this pane owns — the statechart's own `display` items for its current state.
+    scene.engagement_preview_json = envelope.runtime.engagement_session.as_ref().filter(|session| session.pane == pane).map(|session| protocol::json::to_json_string(&DslValue::Array(preview_display_items(session))));
     scene.environment_json = Some(world3d_environment_json(&envelope.runtime.sun));
     scene.fit_json = Some(world3d_fit_json(world_fit_revision(&envelope.document, pane, objects), CAD_FIT_PADDING, None));
     // 🕹️ Bound to the framework-owned `"cad"` domain so `World3dHost` dispatches `interactionSelect`/
@@ -297,8 +302,11 @@ pub fn cad_window_engagement(envelope: &CadPlayView, pane: CadPaneId, labels: &C
     // same selection the world scenes paint — see `CadPlayApp::window_engagements_body`.
     let selected_count = envelope.interaction.ids.len();
     let model_definition_id = pane.model_definition_id();
-    let session_active = envelope.runtime.engagement_session.is_some();
-    let possible_engagements: Vec<WindowEngagementPossible> = if let Some(session) = envelope.runtime.engagement_session.as_ref() {
+    // 🤝️ One session at a time, owned by one pane: its HUD shows the keyed transitions; every other
+    // pane keeps offering its own model definition's interactions.
+    let pane_session = envelope.runtime.engagement_session.as_ref().filter(|session| session.pane == pane);
+    let session_active = pane_session.is_some();
+    let possible_engagements: Vec<WindowEngagementPossible> = if let Some(session) = pane_session {
         keyed_transitions(session)
             .into_iter()
             .map(|transition| WindowEngagementPossible {
@@ -319,7 +327,7 @@ pub fn cad_window_engagement(envelope: &CadPlayView, pane: CadPaneId, labels: &C
             })
             .collect()
     };
-    let step_text = envelope.runtime.engagement_session.as_ref().map_or_else(|| envelope.runtime.engagement_step.clone(), |session| session.state.clone());
+    let step_text = pane_session.map_or_else(|| envelope.runtime.engagement_step.clone(), state_prompt);
     WindowEngagement {
         session_active: Some(session_active),
         // 🧰️ The move/rotate/scale transform switcher now lives in the framework utility bar (derived

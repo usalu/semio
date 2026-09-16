@@ -177,6 +177,7 @@ import {
 } from "../🌐️World3dHost/🟦️.tsx";
 import { groupUtilityNodesByCategory, UTILITY_CATEGORIES, UtilityTree } from "../🎛️UtilityTree/🟦️.tsx";
 import type { ShellDialogV1 } from "../🏛️ShellHost/🗨️dialog-origin/🟦️.ts";
+import { causalOrderKeyV1, type InputProvenanceV1 } from "../🏛️ShellHost/🎯️input-ledger/🟦️.ts";
 import {
     type ActionPaneState,
     actionStageKey,
@@ -760,21 +761,29 @@ function effectDispatchScope(baseSession: ActiveSession): HostEffectDispatchScop
  * projection faulted in the guest with the anonymous `missing field \`locale\`` — and a
  * `scheduleDispatchAction` one is `void`-dispatched, so the fault surfaced only as an unhandled
  * `SemioFaultError` (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, the deferred `flowEvalTick` re-arm).
- * Host owners pass `resolvedTargetViewState`, the single admission that stamps both preferences. */
+ * Host owners pass `resolvedTargetViewState`, the single admission that stamps both preferences.
+ *
+ * 🔗️ `provenance` is the ledger provenance of the input whose guest answer armed this follow-up
+ * (`🎯️input-ledger` L2): its `causedBy` becomes the actor queue's causal `order` key, so a `dispatchAction`
+ * re-arm dequeues BEFORE any input the user issued after its cause. Absent (`null` cause) the follow-up
+ * is a root in its own right and carries no order. */
 export function makeEffectDispatchOne(
   pluginEntry: LoadedProgramState,
   baseSession: ActiveSession,
   applyEffects: (effects: readonly Effect[], baseSession: ActiveSession, uiScope?: UiDirtyScope) => Promise<void>,
   isCurrent: () => boolean,
   resolveViewState: (session: ActiveSession) => ViewModel,
+  provenance?: Pick<InputProvenanceV1, "causedBy" | "windowId">,
 ): EffectDispatchOne {
+  // 🔗️ A follow-up inherits its cause's key: `causalOrderKeyV1` over `{ inputSeq: cause, causedBy: cause }` IS the cause.
+  const dispatch = provenance !== undefined && provenance.causedBy !== null ? { order: causalOrderKeyV1({ inputSeq: provenance.causedBy, causedBy: provenance.causedBy }) } : undefined;
   return async (action, args) => {
     if (!isCurrent()) return;
     const viewState = resolveViewState(baseSession);
     const isAppCommand = (baseSession.app.commands ?? []).some((command) => command.id === action);
     const response = isAppCommand && pluginEntry.handle.handleCommand
-      ? await pluginEntry.handle.handleCommand(baseSession.instanceId, encodeEffectCommandInvocation(baseSession, action, args), viewState)
-      : await pluginEntry.handle.handleAction(baseSession.instanceId, encodeEffectActionInvocation(baseSession, action, args), viewState);
+      ? await pluginEntry.handle.handleCommand(baseSession.instanceId, encodeEffectCommandInvocation(baseSession, action, args), viewState, dispatch)
+      : await pluginEntry.handle.handleAction(baseSession.instanceId, encodeEffectActionInvocation(baseSession, action, args), viewState, dispatch);
     if (isCurrent()) await applyEffects(response.requestedEffects ?? [], { ...baseSession, viewState }, resolveUiDirtyScope(response.uiScope));
   };
 }
@@ -1941,12 +1950,13 @@ function utilityDefinitionToSpec(utility: UtilityDefinition, appLabelsOverlay: P
   };
 }
 
-/** 🧰️ Stamps the owning `windowId` onto every `setActiveUtility` descriptor in a derived utility tree so the shell's `onAction` interceptor targets the right window regardless of which window is globally active. */
-function tagSetActiveUtilityWindow(nodes: readonly UtilityNode[], windowId: string): UtilityNode[] {
+/** 🧰️ Stamps the owning `windowId` onto every `setActiveUtility` descriptor in a derived utility tree so the shell's `onAction` interceptor targets the right window regardless of which window is globally active.
+ * 🔢️ `generation` — the window's utility register generation this tree RENDERED — is stamped as `expectedGeneration` beside it, so the interceptor's compare-and-set refuses a press made against a register that has since moved (`🎯️input-ledger` L3) instead of a wall-clock echo-off window. */
+function tagSetActiveUtilityWindow(nodes: readonly UtilityNode[], windowId: string, generation?: number): UtilityNode[] {
   return nodes.map((node) => {
-    if (node.kind === "collection") return { ...node, children: tagSetActiveUtilityWindow(node.children, windowId) };
+    if (node.kind === "collection") return { ...node, children: tagSetActiveUtilityWindow(node.children, windowId, generation) };
     if (node.kind === "toggle" && "onChange" in node && node.onChange.action === SET_ACTIVE_UTILITY_ACTION_ID) {
-      return { ...node, onChange: { ...node.onChange, args: { ...(node.onChange.args as object | undefined), windowId } } };
+      return { ...node, onChange: { ...node.onChange, args: { ...(node.onChange.args as object | undefined), windowId, ...(generation === undefined ? {} : { expectedGeneration: generation }) } } };
     }
     return node;
   });
@@ -1965,6 +1975,7 @@ export function resolveUtilityNodes(
   appLabelsOverlay: PluginAppLabelsOverlay = EMPTY_APP_LABELS_OVERLAY,
   terminology: string = UI_TERMINOLOGY_NATIVE,
   locale: string = SHELL_LOCALES[0],
+  generation?: number,
 ): UtilityNode[] {
   const utilities = resolveUtilities(app, windowKind);
   if (utilities.length === 0) return [];
@@ -1975,6 +1986,7 @@ export function resolveUtilityNodes(
       activeUtilityId ?? undefined,
     ),
     windowId,
+    generation,
   );
 }
 //#endregion 🧰️UtilityRegistry
@@ -3186,7 +3198,7 @@ export async function drainPuzzle3dBrushMeshQueue(
     readonly alias: (url: string, digest: string) => void;
     readonly confirm: (url: string, digest: string) => void;
   },
-  dispatch: (args: Record<string, unknown>) => Promise<void>,
+  dispatch: (args: Record<string, unknown>) => Promise<unknown>,
   live: () => boolean,
 ): Promise<void> {
   while (live()) {
@@ -3387,7 +3399,8 @@ export function renderWindowMeasuresTree(measures: readonly WindowMeasure[], onA
   return windowMeasuresOverlay(measures, onAction, direction);
 }
 
-export function SelectionUtilityOptions({ activeUtilityId, windowId, onAction }: { readonly activeUtilityId: string | undefined; readonly windowId: string; readonly onAction: (action: ActionDescriptor) => void }) {
+/** 🔢️ `generation` is the window's utility register generation this picker rendered — stamped as `expectedGeneration` on its `setActiveUtility` press (`🎯️input-ledger` L3); absent, the press is an unconditional write (a legacy call site). */
+export function SelectionUtilityOptions({ activeUtilityId, windowId, onAction, generation }: { readonly activeUtilityId: string | undefined; readonly windowId: string; readonly onAction: (action: ActionDescriptor) => void; readonly generation?: number }) {
   const methodLabel = useLabel("ui.selection.method");
   const modeLabel = useLabel("ui.selection.mode");
   const rectangleLabel = useLabel("ui.selection.rectangle");
@@ -3413,7 +3426,7 @@ export function SelectionUtilityOptions({ activeUtilityId, windowId, onAction }:
     onAction({
       controllerId: "window",
       action: SET_ACTIVE_UTILITY_ACTION_ID,
-      args: { windowId, utilityId: method === "lasso" ? "selectLasso" : "selectMarquee" },
+      args: { windowId, utilityId: method === "lasso" ? "selectLasso" : "selectMarquee", ...(generation === undefined ? {} : { expectedGeneration: generation }) },
     });
   };
 

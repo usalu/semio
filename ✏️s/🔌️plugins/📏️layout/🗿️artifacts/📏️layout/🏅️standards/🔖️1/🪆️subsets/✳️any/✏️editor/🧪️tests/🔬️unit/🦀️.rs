@@ -116,7 +116,7 @@ async fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
 async fn optional_field_rows_round_trip_text_and_binary_either_way() {
     use crate::LayoutCamera;
     let cases: [(LayoutCommand, &str); 3] = [
-        (LayoutCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { surface_id: None, x: 1.0, y: 2.0, width: 800.0, height: 600.0 }), "canvas-pointer-move x=1 y=2 width=800 height=600"),
+        (LayoutCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { surface_id: None, x: 1.0, y: 2.0, width: 800.0, height: 600.0, samples: Vec::new() }), "canvas-pointer-move x=1 y=2 width=800 height=600 samples=[ ]"),
         (LayoutCommand::AddFrame(add_frame::AddFrame { kind: "rect".into(), x: Some(1.0), y: None }), "add-frame kind=rect x=1"),
         (LayoutCommand::SetCamera(set_camera::SetCamera { surface_id: None, camera: LayoutCamera { x: 1.0, y: 2.0, zoom: 1.5 } }), "camera camera { x=1 y=2 zoom=1.5 }"),
     ];
@@ -134,8 +134,8 @@ pub(super) fn every_command() -> Vec<LayoutCommand> {
         LayoutCommand::FocusPreflightIssue(focus_preflight_issue::FocusPreflightIssue { object_id: Some("frame-1".into()), page_id: Some("page-1".into()) }),
         LayoutCommand::EngagementInput(engagement_input::EngagementInput { value: "export png".into() }),
         LayoutCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown { surface_id: Some("layout.play.blueprint".into()), button: 0, extend: false, x: 1.0, y: 2.0, width: 800.0, height: 600.0 }),
-        LayoutCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { surface_id: None, x: 1.0, y: 2.0, width: 800.0, height: 600.0 }),
-        LayoutCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp {}),
+        LayoutCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { surface_id: None, x: 1.0, y: 2.0, width: 800.0, height: 600.0, samples: vec![[0.5, 1.5], [1.0, 2.0]] }),
+        LayoutCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { cancelled: false }),
         LayoutCommand::CanvasDragOver(canvas_drag_over::CanvasDragOver { surface_id: Some("layout.play.blueprint".into()), kind: "rect".into(), x: 1.0, y: 2.0, width: 800.0, height: 600.0 }),
         LayoutCommand::CanvasDragLeave(canvas_drag_leave::CanvasDragLeave {}),
         LayoutCommand::SetCamera(set_camera::SetCamera { surface_id: None, camera: LayoutCamera { x: 1.0, y: 2.0, zoom: 1.5 } }),
@@ -232,7 +232,7 @@ async fn registry_backed_pointer_move_is_view_only() {
     // an operation, which the registry kind-discipline check enforces.
     let mut app = layout_app_with_registry().await;
     let (sx, sy) = test_screen_point(0.0, 0.0, 1.0, 800.0, 600.0, 156.0, 220.0);
-    let result = dispatch(&mut app, LayoutCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), x: sx, y: sy, width: 800.0, height: 600.0 })).await;
+    let result = dispatch(&mut app, LayoutCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), x: sx, y: sy, width: 800.0, height: 600.0, samples: Vec::new() })).await;
     assert!(result.mutations.is_empty(), "View action must not emit document operations");
 }
 //#endregion 🔖️CrossCutting

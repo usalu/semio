@@ -53,6 +53,30 @@ pub fn material(id: u32, name: &str) -> crate::model::Material {
     }
 }
 
+/// 🪟️ One uncoated 3 mm clear pane, the outer sheet of ANSI/ASHRAE 140 §5.2's double glazing.
+pub fn glazing_material(id: u32, name: &str) -> crate::model::GlazingMaterial {
+    crate::model::GlazingMaterial {
+        id: crate::model::EntityId(id),
+        name: name.to_string(),
+        thickness_m: 0.003,
+        conductivity_w_m_k: 1.06,
+        solar_transmittance: 0.837,
+        solar_reflectance_front: 0.075,
+        solar_reflectance_back: 0.075,
+        visible_transmittance: 0.898,
+        visible_reflectance_front: 0.081,
+        visible_reflectance_back: 0.081,
+        infrared_transmittance: 0.0,
+        infrared_emissivity_front: 0.84,
+        infrared_emissivity_back: 0.84,
+    }
+}
+
+/// 🌫️ One 13 mm air gap between two panes.
+pub fn gas_material(id: u32, name: &str) -> crate::model::GasMaterial {
+    crate::model::GasMaterial { id: crate::model::EntityId(id), name: name.to_string(), thickness_m: 0.013, gas: crate::model::GasKind::Air }
+}
+
 /// 🧱️ One single-layer construction over `material_id`.
 pub fn construction(id: u32, name: &str, material_id: u32) -> crate::model::Construction {
     crate::model::Construction { id: crate::model::EntityId(id), name: name.to_string(), layer_material_ids: vec![crate::model::EntityId(material_id)] }
@@ -93,6 +117,7 @@ pub fn window(id: u32, name: &str, surface_id: u32) -> crate::model::Fenestratio
         fin_depth_m: 0.0,
         fin_offset_m: 0.0,
         glazing_construction_id: None,
+        vertices_m: Vec::new(),
     }
 }
 

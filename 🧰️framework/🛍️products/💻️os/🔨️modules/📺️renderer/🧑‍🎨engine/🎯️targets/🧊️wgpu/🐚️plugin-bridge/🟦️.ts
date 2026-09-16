@@ -35,7 +35,9 @@
  *   `ShardClient.turn`. wgpu's own call pattern has no redraw-burst pressure (one winit-driven caller,
  *   not a pointer-move loop), so `submitTurn` below is a plain per-actor promise chain instead — enough
  *   to satisfy the shard worker's "never two turns in flight for one actor" rule without importing
- *   `TurnScheduler` for a guarantee this target doesn't need yet.
+ *   `TurnScheduler` for a guarantee this target doesn't need yet. The CALL-level twin
+ *   (`serializeWgpuActorCall`) is a small bounded per-actor pending list that honours the same causal
+ *   `order` key as the mailbox (INPUT-CAUSALITY-LEDGER §2 F), still without lanes or coalescing.
  * - `PluginWasmHandle.enqueue`/`.outcomes` (fire-and-forget + multicast reply stream) is
  *   `AppChannelClient`'s ONLY accepted handle shape as of channel v12/H1-react — its constructor takes
  *   `AppChannelHandle = Pick<PluginWasmHandle, "enqueue" | "outcomes">`, not the older synchronous
@@ -71,6 +73,7 @@ import {
   GUEST_HOST_ANSWER_CEILING_BYTES,
   guestAnswerPages,
   type InvocationResponse,
+  type PluginDispatchHintV1,
   type PluginManifest,
   type PluginWasmHandle as KernelPluginWasmHandle,
   SemioFaultError,
@@ -82,6 +85,7 @@ import { createShardCommandIngressPages, settleFailedInstanceOpen, ShardClient, 
 import { createPooledActorRuntime, DEFAULT_SHARD_BUDGET, type PooledActorRuntime } from "../../../../../../../../🔨️modules/🎭️actor/🧵️shard-runtime/🟦️.ts"
 import { SHARD_WORKER_URL } from "../../../../../../../../🔨️modules/🎭️actor/🧵️shard-runtime/🟦️.ts";
 import type { OwnedUiPatchAcknowledgementEntry, ShardInstanceLifecycleLease, ShardWorkerLike } from "../../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
+import { PLUGIN_CATALOG } from "../../../../../🔌️plugin/📇️registry/🟦️.ts";
 import { WORKER_STEP_BUDGET_MS, turnDiagnosticsEnabled } from "../⏱️turn-budget/🟦️.ts";
 import { rendererResidentLedger } from "../../../💾️resident/🟦️.ts";
 import { DEFAULT_UI_DOCUMENT_LIMITS } from "../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🛡️limits/🟦️.ts";
@@ -244,6 +248,55 @@ function submitTurn(actorId: string, events: readonly ShardEventEnvelope[], comm
   return submitActorWork(actorId, () => getShardClient().turn(actorId, events, DEFAULT_SHARD_BUDGET, commandPage)).then(coerceTurnResult);
 }
 
+//#region 🔖️OrderedActorCallQueue
+/** 🧮️ Pending (not yet started) calls one actor may hold before {@link serializeWgpuActorCall} refuses —
+ * the twin of `PluginRuntime`'s `SERIALIZE_PER_ACTOR_MAILBOX_CAPACITY` (256): generous, finite, and an
+ * honest typed rejection instead of the unbounded promise chain that stood here before. */
+export const WGPU_ACTOR_CALL_QUEUE_CAPACITY = 256;
+
+/** 🚫️ The typed refusal {@link serializeWgpuActorCall} rejects with once an actor already holds
+ * {@link WGPU_ACTOR_CALL_QUEUE_CAPACITY} pending calls — the wgpu spelling of the runtime's
+ * `serializePerActor: actor …'s queue is full`. In-flight work is unaffected; only the new call is refused. */
+export class WgpuActorCallQueueFullError extends Error {
+  override readonly name = "WgpuActorCallQueueFullError";
+  readonly code = "wgpu-actor-call.queue-full" as const;
+  constructor(readonly actorId: string, readonly capacity: number) {
+    super(`serializeWgpuActorCall: actor ${actorId}'s queue is full (>${capacity} pending calls) — rejected rather than growing unbounded`);
+  }
+}
+
+type WgpuActorCallEntry = Readonly<{ order: number | undefined; start: () => void }>;
+type WgpuActorCallQueue = { running: boolean; readonly pending: WgpuActorCallEntry[] };
+const actorCallQueues = new Map<string, WgpuActorCallQueue>();
+
+/** 🔗️ The mailbox's `## causal order` insertion rule (`🎭️actor/📬️mailbox/🟦️.ts`), applied to the
+ * PENDING list only: an ordered entry goes immediately before the earliest pending entry with a
+ * strictly larger `order` (equal `order` and unordered neighbours are not passed), else at the tail;
+ * an unordered entry always goes at the tail. */
+function insertWgpuActorCall(pending: WgpuActorCallEntry[], entry: WgpuActorCallEntry): void {
+  if (entry.order !== undefined) {
+    for (let index = 0; index < pending.length; index += 1) {
+      const queued = pending[index]!.order;
+      if (queued !== undefined && queued > entry.order) {
+        pending.splice(index, 0, entry);
+        return;
+      }
+    }
+  }
+  pending.push(entry);
+}
+
+function pumpWgpuActorCalls(actorId: string, queue: WgpuActorCallQueue): void {
+  if (queue.running) return;
+  const next = queue.pending.shift();
+  if (next === undefined) {
+    if (actorCallQueues.get(actorId) === queue) actorCallQueues.delete(actorId);
+    return;
+  }
+  queue.running = true;
+  next.start();
+}
+
 /** 🚦 Per-actor serialization at CALL granularity — the wgpu twin of `PluginRuntime`'s
  * `serializeCommandIngressForActor`.
  *
@@ -253,14 +306,48 @@ function submitTurn(actorId: string, events: readonly ShardEventEnvelope[], comm
  * `dispatchAction` the guest armed for the host is reported as `effects=0` and the chain stops
  * (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). A whole host call is therefore one unit here, and the
  * drain waits behind it. Callers must never nest: the command path reaches the actor through
- * `enqueue`, which is fire-and-forget. */
-const actorCallChains = new Map<string, Promise<unknown>>();
-function serializeWgpuActorCall<T>(actorId: string, work: () => Promise<T>): Promise<T> {
-  const previousSettled = (actorCallChains.get(actorId) ?? Promise.resolve()).catch(() => undefined);
-  const next = previousSettled.then(work);
-  actorCallChains.set(actorId, next);
-  return next;
+ * `enqueue`, which is fire-and-forget.
+ *
+ * ## `order` (INPUT-CAUSALITY-LEDGER §2 B/F, law L2 — transport parity with the React target)
+ * `order` is the input ledger's causal key for ONE dispatched input (`causalOrderKeyV1(provenance)` =
+ * `causedBy ?? inputSeq`, `🏛️ShellHost/🎯️input-ledger/🟦️.ts`; threaded from
+ * {@link WgpuPluginHandle.handleAction}/`handleCommand` via `PluginDispatchHintV1.order`). This queue
+ * keeps one small ordered PENDING list per actor and applies exactly the mailbox's `## causal order`
+ * rule at enqueue time ({@link insertWgpuActorCall}): a call WITH `order` is inserted immediately before
+ * the earliest pending call of the same actor carrying a strictly larger `order` (else appended), so a
+ * guest follow-up of input N runs before the already-queued input N+1; equal `order` keeps arrival
+ * order. Calls WITHOUT `order` (render, refresh, drains, job/extension completions — maintenance)
+ * are appended and never reorder among themselves, and an ordered call never overtakes an unordered
+ * call queued ahead of every larger-ordered one. IN-FLIGHT WORK IS NEVER REORDERED: the running call
+ * has already left the pending list, and nothing preempts it. Absent everywhere ⇒ plain FIFO, the
+ * exact behaviour of the promise chain this replaced. Bounded: past
+ * {@link WGPU_ACTOR_CALL_QUEUE_CAPACITY} pending calls the returned promise rejects with
+ * {@link WgpuActorCallQueueFullError} and nothing is queued. */
+export function serializeWgpuActorCall<T>(actorId: string, work: () => Promise<T>, order?: number): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    let queue = actorCallQueues.get(actorId);
+    if (queue === undefined) {
+      queue = { running: false, pending: [] };
+      actorCallQueues.set(actorId, queue);
+    }
+    if (queue.pending.length >= WGPU_ACTOR_CALL_QUEUE_CAPACITY) {
+      reject(new WgpuActorCallQueueFullError(actorId, WGPU_ACTOR_CALL_QUEUE_CAPACITY));
+      return;
+    }
+    const owner = queue;
+    const start = (): void => {
+      // 🧵️ `work` starts on a microtask, exactly as the retired `previousSettled.then(work)` chain did,
+      // and a fault never wedges the queue: settle first, then pump the next pending call.
+      void Promise.resolve().then(work).then(resolve, reject).finally(() => {
+        owner.running = false;
+        pumpWgpuActorCalls(actorId, owner);
+      });
+    };
+    insertWgpuActorCall(queue.pending, { order, start });
+    pumpWgpuActorCalls(actorId, queue);
+  });
 }
+//#endregion 🔖️OrderedActorCallQueue
 //#endregion 🔖️TurnSubmit
 
 //#region 🔖️OwnedUiRoute
@@ -637,12 +724,25 @@ export async function primeContributionManifest(pluginId: string, moduleUrl: str
   contributionManifests.set(pluginId, manifest);
 }
 
+/** @emoji 🎛️ The receiver's `consumes` row from this product's generated registry — what scopes a
+ * capability pack (a contribution no operator graph can reach). An id the catalog does not list
+ * consumes nothing, which forwards no foreign capability pack. */
+function wgpuConsumedTopics(receiverPluginId: string): readonly string[] {
+  const row = [...PLUGIN_CATALOG.plugins, ...PLUGIN_CATALOG.extensions].find((entry) => entry.pluginId === receiverPluginId);
+  return row?.consumes ?? [];
+}
+
 /** @emoji 📦️ One pack-sized contributions payload — receiver plus flow-graph-reachable operators only. */
-export function wgpuBuildScopedContributionsPack(receiverPluginId: string, reachabilityValues: readonly unknown[], loadedManifests?: ReadonlyArray<{ readonly pluginId: string; readonly manifest: PluginManifest }>): { readonly json: string; readonly bytes: Uint8Array; readonly pluginIds: readonly string[]; readonly chars: number; readonly crossings: 1 } | null {
+export function wgpuBuildScopedContributionsPack(
+  receiverPluginId: string,
+  reachabilityValues: readonly unknown[],
+  loadedManifests?: ReadonlyArray<{ readonly pluginId: string; readonly manifest: PluginManifest }>,
+  consumedTopics: readonly string[] = wgpuConsumedTopics(receiverPluginId),
+): { readonly json: string; readonly bytes: Uint8Array; readonly pluginIds: readonly string[]; readonly chars: number; readonly crossings: 1 } | null {
   const loaded = loadedManifests ?? [...contributionManifests.entries()].map(([pluginId, manifest]) => ({ pluginId, manifest }));
   if (!loaded.length) return null;
   const reachableKinds = reachableKindsFromUnknown(reachabilityValues);
-  const json = scopeContributionsJson(loaded, receiverPluginId, reachableKinds);
+  const json = scopeContributionsJson(loaded, receiverPluginId, reachableKinds, consumedTopics);
   if (!json || json === "[]") return null;
   const bytes = new TextEncoder().encode(json);
   const pluginIds = [...new Set((JSON.parse(json) as { readonly pluginId?: string }[]).map((entry) => entry.pluginId).filter((id): id is string => typeof id === "string"))];
@@ -993,8 +1093,8 @@ export function wgpuInvocationFromFrames(frames: readonly AppFrameValue[], lefto
   return { output, mutations, inverseGroup, diagnostics, requestedEffects, events: [], uiScope, historyPatch };
 }
 
-async function performInvocation(client: AppChannelClient, instanceId: number, invocation: unknown, viewState: unknown): Promise<InvocationResponse> {
-  const frames = await client.command(encodePackValue(invocation), viewState);
+async function performInvocation(client: AppChannelClient, instanceId: number, invocation: unknown, viewState: unknown, dispatch?: PluginDispatchHintV1): Promise<InvocationResponse> {
+  const frames = await client.command(encodePackValue(invocation), viewState, dispatch);
   const leftover = pendingTurnEffects.get(instanceId) ?? [];
   pendingTurnEffects.delete(instanceId);
   return wgpuInvocationFromFrames(frames, leftover);
@@ -1018,8 +1118,10 @@ export interface WgpuPluginHandle {
   readonly manifest: PluginManifest;
   readonly createApp: (appId: string) => Promise<number>;
   readonly destroyApp: (instanceId: number) => Promise<void>;
-  readonly handleAction: (instanceId: number, invocation: unknown, viewState: unknown) => Promise<InvocationResponse>;
-  readonly handleCommand: (instanceId: number, invocation: unknown, viewState: unknown) => Promise<InvocationResponse>;
+  /** 🎯️ `dispatch` (`PluginDispatchHintV1`, kernel) is the input ledger's causal `order` for this one
+   * call, threaded into {@link serializeWgpuActorCall} — see its `## order` section; absent ⇒ arrival order. */
+  readonly handleAction: (instanceId: number, invocation: unknown, viewState: unknown, dispatch?: PluginDispatchHintV1) => Promise<InvocationResponse>;
+  readonly handleCommand: (instanceId: number, invocation: unknown, viewState: unknown, dispatch?: PluginDispatchHintV1) => Promise<InvocationResponse>;
   readonly render: (instanceId: number, surfaceId: string, bodyKey: string, viewState: unknown) => Promise<unknown>;
   readonly renderDocument: (instanceId: number, surfaceId: string, bodyKey: string, viewState: unknown) => Promise<string>;
   readonly contextMenu: (instanceId: number, request: unknown) => Promise<unknown>;
@@ -1136,10 +1238,10 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
    * `exchange(instanceId, frames) -> Promise<frames>` RPC shape this file was first ported against). A
    * turn-submission failure becomes an `error`-shaped outcome rather than an uncaught rejection, since
    * nothing here awaits this function's own promise. Mirrors `PluginRuntime`'s own `runQueuedTurn`. */
-  const runQueuedTurn = async (instanceId: number, events: readonly Uint8Array[]): Promise<void> => {
+  const runQueuedTurn = async (instanceId: number, events: readonly Uint8Array[], dispatch?: PluginDispatchHintV1): Promise<void> => {
     try {
       const actorId = requireActorId(instanceId);
-      await serializeWgpuActorCall(actorId, () => runQueuedTurnSerialized(instanceId, actorId, events));
+      await serializeWgpuActorCall(actorId, () => runQueuedTurnSerialized(instanceId, actorId, events), dispatch?.order);
     } catch (error) {
       turnOutcomes.push({ instanceId, error });
     }
@@ -1336,8 +1438,8 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
   };
 
   const channelHandle: Pick<KernelPluginWasmHandle, "enqueue" | "outcomes"> = {
-    enqueue: (instanceId, events) => {
-      void runQueuedTurn(instanceId, events);
+    enqueue: (instanceId, events, dispatch) => {
+      void runQueuedTurn(instanceId, events, dispatch);
     },
     outcomes: turnOutcomes.stream,
   };
@@ -1624,8 +1726,8 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
       void retirement.then(forget, forget);
       return retirement;
     },
-    handleAction: (instanceId, invocation, viewState) => performInvocation(requireChannel(instanceId), instanceId, invocation, viewState),
-    handleCommand: (instanceId, invocation, viewState) => performInvocation(requireChannel(instanceId), instanceId, invocation, viewState),
+    handleAction: (instanceId, invocation, viewState, dispatch) => performInvocation(requireChannel(instanceId), instanceId, invocation, viewState, dispatch),
+    handleCommand: (instanceId, invocation, viewState, dispatch) => performInvocation(requireChannel(instanceId), instanceId, invocation, viewState, dispatch),
     render: (instanceId, surfaceId, bodyKey, viewState) => renderSurface(instanceId, surfaceId, bodyKey, viewState).then((result) => result.node),
     renderDocument: (instanceId, surfaceId, bodyKey, viewState) => renderSurface(instanceId, surfaceId, bodyKey, viewState).then((result) => JSON.stringify({ document: result.document, effects: jsonEffects(result.effects) })),
     captureExtensionCompletion,
@@ -1663,8 +1765,10 @@ export interface WgpuJsBridge {
   readonly manifest: () => string;
   readonly createApp: (appId: string) => Promise<number>;
   readonly destroyApp: (instanceId: number) => Promise<void>;
-  readonly handleAction: (instanceId: number, invocationPack: string, contextJson: string) => Promise<string>;
-  readonly handleCommand: (instanceId: number, invocationPack: string, contextJson: string) => Promise<string>;
+  /** 🎯️ `order` is the flat (wasm-bindgen-friendly) spelling of `PluginDispatchHintV1.order` — the
+   * input ledger's causal key for this one call; omitted ⇒ arrival order. */
+  readonly handleAction: (instanceId: number, invocationPack: string, contextJson: string, order?: number) => Promise<string>;
+  readonly handleCommand: (instanceId: number, invocationPack: string, contextJson: string, order?: number) => Promise<string>;
   readonly render: (instanceId: number, surfaceId: string, bodyKey: string, viewStatePack: string) => Promise<string>;
   readonly renderDocument: (instanceId: number, surfaceId: string, bodyKey: string, viewStatePack: string) => Promise<string>;
   readonly contextMenu: (instanceId: number, requestJson: string) => Promise<string>;
@@ -1700,13 +1804,19 @@ function viewStateFromContextJson(contextJson: string): unknown {
   }
 }
 
+/** 🔗️ Lifts the JS bridge's flat `order` argument into a `PluginDispatchHintV1`; a missing or
+ * non-finite value (wasm-bindgen hands `undefined` for an omitted optional) means "no hint". */
+function bridgeDispatchHint(order: number | undefined): PluginDispatchHintV1 | undefined {
+  return typeof order === "number" && Number.isFinite(order) ? { order } : undefined;
+}
+
 export function pluginHandleForBridge(handle: WgpuPluginHandle): WgpuJsBridge {
   return {
     manifest: () => JSON.stringify(handle.manifest),
     createApp: (appId) => handle.createApp(appId),
     destroyApp: (instanceId) => handle.destroyApp(instanceId),
-    handleAction: (instanceId, invocationPack, contextJson) => handle.handleAction(instanceId, packValueFromBase64(invocationPack), viewStateFromContextJson(contextJson)).then(invocationResponseJson),
-    handleCommand: (instanceId, invocationPack, contextJson) => handle.handleCommand(instanceId, packValueFromBase64(invocationPack), viewStateFromContextJson(contextJson)).then(invocationResponseJson),
+    handleAction: (instanceId, invocationPack, contextJson, order) => handle.handleAction(instanceId, packValueFromBase64(invocationPack), viewStateFromContextJson(contextJson), bridgeDispatchHint(order)).then(invocationResponseJson),
+    handleCommand: (instanceId, invocationPack, contextJson, order) => handle.handleCommand(instanceId, packValueFromBase64(invocationPack), viewStateFromContextJson(contextJson), bridgeDispatchHint(order)).then(invocationResponseJson),
     render: (instanceId, surfaceId, bodyKey, viewStatePack) => handle.render(instanceId, surfaceId, bodyKey, packValueFromBase64(viewStatePack)).then((node) => JSON.stringify(node)),
     renderDocument: (instanceId, surfaceId, bodyKey, viewStatePack) => handle.renderDocument(instanceId, surfaceId, bodyKey, packValueFromBase64(viewStatePack)),
     contextMenu: (instanceId, requestJson) => handle.contextMenu(instanceId, JSON.parse(requestJson)).then((items) => JSON.stringify(items)),

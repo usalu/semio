@@ -87,6 +87,11 @@ export interface GraphWasmSession {
   pointerDown?(x: number, y: number, button: number, extend: boolean, modifiers?: CanvasInputModifiers): void;
   pointerMove?(x: number, y: number): void;
   pointerUp?(x: number, y: number, modifiers?: CanvasInputModifiers): void;
+  /** 🚫️ The pointer left the canvas, the browser took the pointer (`pointercancel`) or capture was lost
+   * mid-gesture. This is a CANCEL, never a release: {@link GraphWasmCanvas} used to map `pointerleave` to
+   * `pointerUp`, which forged a `canvasPointerUp` for a gesture the user never ended (and a second one
+   * after every real release outside the canvas). A session without a gesture treats it as a no-op. */
+  pointerCancel?(): void;
   doubleClick?(x: number, y: number): void;
   wheel?(x: number, y: number, deltaY: number): void;
 }
@@ -130,6 +135,7 @@ export function GraphWasmCanvas({ className, sessionFactory, onSessionReady, ena
       alt: ev.altKey,
     });
     const onPointerDown = (ev: PointerEvent) => {
+      if (enablePointer) canvas.setPointerCapture(ev.pointerId);
       const rect = canvas.getBoundingClientRect();
       session.pointerDown?.(ev.clientX - rect.left, ev.clientY - rect.top, ev.button, ev.shiftKey, modifiersOf(ev));
       renderFrame();
@@ -140,8 +146,18 @@ export function GraphWasmCanvas({ className, sessionFactory, onSessionReady, ena
       renderFrame();
     };
     const onPointerUp = (ev: PointerEvent) => {
+      if (canvas.hasPointerCapture(ev.pointerId)) canvas.releasePointerCapture(ev.pointerId);
       const rect = canvas.getBoundingClientRect();
       session.pointerUp?.(ev.clientX - rect.left, ev.clientY - rect.top, modifiersOf(ev));
+      renderFrame();
+    };
+    // 🚫️ `pointerleave` / `pointercancel` / `lostpointercapture` are gesture CANCELS. While the canvas holds
+    // capture, `pointerleave` and `lostpointercapture` only fire after `pointerup` has already closed the
+    // gesture, so the session sees them as no-ops; only a capture lost mid-gesture (or a pointer the
+    // browser reclaims for scrolling) reaches the session as a cancel.
+    const onPointerCancel = (ev: PointerEvent) => {
+      if (ev.type !== "lostpointercapture" && canvas.hasPointerCapture(ev.pointerId)) canvas.releasePointerCapture(ev.pointerId);
+      session.pointerCancel?.();
       renderFrame();
     };
     const onDoubleClick = (ev: MouseEvent) => {
@@ -187,7 +203,9 @@ export function GraphWasmCanvas({ className, sessionFactory, onSessionReady, ena
           canvas.addEventListener("pointerdown", onPointerDown);
           canvas.addEventListener("pointermove", onPointerMove);
           canvas.addEventListener("pointerup", onPointerUp);
-          canvas.addEventListener("pointerleave", onPointerUp);
+          canvas.addEventListener("pointerleave", onPointerCancel);
+          canvas.addEventListener("pointercancel", onPointerCancel);
+          canvas.addEventListener("lostpointercapture", onPointerCancel);
           canvas.addEventListener("dblclick", onDoubleClick);
           canvas.addEventListener("wheel", onWheel, { passive: false });
         }
@@ -233,7 +251,9 @@ export function GraphWasmCanvas({ className, sessionFactory, onSessionReady, ena
         canvas.removeEventListener("pointerdown", onPointerDown);
         canvas.removeEventListener("pointermove", onPointerMove);
         canvas.removeEventListener("pointerup", onPointerUp);
-        canvas.removeEventListener("pointerleave", onPointerUp);
+        canvas.removeEventListener("pointerleave", onPointerCancel);
+        canvas.removeEventListener("pointercancel", onPointerCancel);
+        canvas.removeEventListener("lostpointercapture", onPointerCancel);
         canvas.removeEventListener("dblclick", onDoubleClick);
         canvas.removeEventListener("wheel", onWheel);
       }

@@ -26,13 +26,17 @@
 //! abort and finalize it, and [`EnergyModelEditor::build_tool_run_job`] supplies its run job.
 
 use crate::editor::model::modes::edit;
-use crate::editor::model::config::{ChangeSimulationSettings, EnergyModelConfig, EnergyModelConfigMutation};
+use crate::editor::model::config::{ChangeResultField, ChangeSimulationSettings, EnergyModelConfig, EnergyModelConfigMutation};
 use crate::editor::model::modes::edit::tools;
-use crate::editor::model::modes::edit::windows::{simulation, structure, zones};
+use crate::editor::model::interaction::{EnergyModelInteractionSnapshot, ENERGY_MODEL_INTERACTION_DOMAIN};
+use crate::editor::model::panels::artifact as artifact_panel;
+use crate::editor::model::panels::inspection as inspection_panel;
+use crate::editor::model::modes::edit::windows::{model as model_window, simulation, structure, zones};
 use crate::energy_simulation_session::EnergySimulationRunJob;
 use crate::model::{EntityId, Material, OutsideBoundary, ScheduleId, Site, Surface, SurfaceClass, Thermostat, Zone};
 use crate::mutations;
 use crate::{EnergyModelMutation, EnergyModelSnapshot, ENERGY_MODEL_DOCUMENT_SCHEMA, MODEL_DIALECT};
+use semio_framework::kernel::UiDirtyScope;
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::{
     AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ComponentTree, ConfigView, Dialect, DraftView, Editor, EditorApp, Emit,
@@ -57,6 +61,14 @@ pub const CREATE_SURFACE_ACTION_ID: &str = "create-surface";
 pub const DELETE_SURFACE_ACTION_ID: &str = "delete-surface";
 pub const ASSIGN_SURFACE_CONSTRUCTION_ACTION_ID: &str = "assign-surface-construction";
 pub const SET_MATERIAL_PROPERTY_ACTION_ID: &str = "set-material-property";
+/// 🔍️ The three generic inspector verbs, one per addressable entity family: `{<entity>, property,
+/// value}` with `value` carried as TEXT, because one verb has to cover a name, an enum spelling, a
+/// flag and a scalar alike — the shape a rendered control's own value arrives in.
+pub const SET_SURFACE_PROPERTY_ACTION_ID: &str = "set-surface-property";
+pub const SET_FENESTRATION_PROPERTY_ACTION_ID: &str = "set-fenestration-property";
+pub const SET_ZONE_PROPERTY_ACTION_ID: &str = "set-zone-property";
+pub const SET_GLAZING_MATERIAL_PROPERTY_ACTION_ID: &str = "set-glazing-material-property";
+pub const SET_GAS_MATERIAL_PROPERTY_ACTION_ID: &str = "set-gas-material-property";
 pub const SET_THERMOSTAT_SETPOINTS_ACTION_ID: &str = "set-thermostat-setpoints";
 pub const SET_SITE_ACTION_ID: &str = "set-site";
 pub const SET_RUN_PERIOD_ACTION_ID: &str = "set-run-period";
@@ -84,6 +96,17 @@ pub const ENERGY_MODEL_RETAINED_TOOL_IDS: &[&str] = &[
     SET_RUN_PERIOD_ACTION_ID,
     SET_ACTIVE_EXAMPLE_ACTION_ID,
     simulation::SET_SETTINGS_ACTION_ID,
+    simulation::SET_RESULT_FIELD_ACTION_ID,
+    SET_SURFACE_PROPERTY_ACTION_ID,
+    SET_FENESTRATION_PROPERTY_ACTION_ID,
+    SET_ZONE_PROPERTY_ACTION_ID,
+    SET_GLAZING_MATERIAL_PROPERTY_ACTION_ID,
+    SET_GAS_MATERIAL_PROPERTY_ACTION_ID,
+    // 🎥️ Declared last, matching the command enum's own declaration order: the 3d window's
+    // orbit pose. Retained like every other verb of this editor — `Migrated` is the only
+    // UI-dispatchable classification, and a `Migrated` verb without an owned reducer is refused
+    // with `interactive-job.missing-owned-reducer`.
+    model_window::SET_CAMERA_ACTION_ID,
 ];
 
 /// 📬️ The twelve verbs that publish a semantic mutation into the document store. `setActiveExample`
@@ -102,6 +125,11 @@ pub const ENERGY_MODEL_DOCUMENT_TOOL_IDS: &[&str] = &[
     SET_THERMOSTAT_SETPOINTS_ACTION_ID,
     SET_SITE_ACTION_ID,
     SET_RUN_PERIOD_ACTION_ID,
+    SET_SURFACE_PROPERTY_ACTION_ID,
+    SET_FENESTRATION_PROPERTY_ACTION_ID,
+    SET_ZONE_PROPERTY_ACTION_ID,
+    SET_GLAZING_MATERIAL_PROPERTY_ACTION_ID,
+    SET_GAS_MATERIAL_PROPERTY_ACTION_ID,
 ];
 //#endregion 🏷️ActionIds
 
@@ -139,6 +167,38 @@ pub enum EnergyModelEditorCommand {
     SetActiveExample { example_id: String },
     #[dsl(key = "set-simulation-settings")]
     SetSimulationSettings { zone_timestep_minutes: u32, system_timestep_minutes: u32, warmup_days: u32 },
+    /// 🎨️ Which published per-surface field the 3d model window colours by — a config-store verb, like
+    /// `set-simulation-settings`, but one the simulation run does not read, so it never restarts a run.
+    #[dsl(key = "set-result-field")]
+    SetResultField { field: String },
+    /// 🟫️ One surface field by name. `partner_surface` is the `Interzone` boundary's other half and
+    /// is `0` (= none) for every other property and boundary kind — the union's two payload halves
+    /// travel as two flat fields for the same reason `change-surface-boundary-condition` splits
+    /// them: `dsl::DslScalar` binds unit variants only.
+    #[dsl(key = "set-surface-property")]
+    SetSurfaceProperty { surface: u32, property: String, value: String, partner_surface: u32 },
+    /// 🪟️ One fenestration field by name — every scalar of the record plus its optional glazing
+    /// construction (an empty `value` clears the binding).
+    #[dsl(key = "set-fenestration-property")]
+    SetFenestrationProperty { fenestration: u32, property: String, value: String },
+    /// 🏘️ One zone field by name — the id-addressed twin of the `zones` table's positional
+    /// `set-cell`, which the inspector cannot use because it addresses a ROW, not an entity.
+    #[dsl(key = "set-zone-property")]
+    SetZoneProperty { zone: u32, property: String, value: String },
+    /// 🧊️ One glazing-material field by name. Only the five optical/thermal scalars this artifact's
+    /// vocabulary names (`change-glazing-material-*`) plus the record's own name are addressable —
+    /// the reflectance and infrared-transmittance fields still have no mutation kind and are refused
+    /// rather than silently written.
+    #[dsl(key = "set-glazing-material-property")]
+    SetGlazingMaterialProperty { material: u32, property: String, value: String },
+    /// 💨️ One gas-gap field by name: its thickness, its fill gas, or its name.
+    #[dsl(key = "set-gas-material-property")]
+    SetGasMaterialProperty { material: u32, property: String, value: String },
+    /// 🎥️ The 3d window's orbit pose, as the canonical `{position,target,zoom,up?}` JSON the react
+    /// `World3dHost` sends after every gesture. Carried as one text field because a `dsl::DslOps`
+    /// variant binds scalars only — and because that string IS what `World3dScene::camera_json` wants.
+    #[dsl(key = "setCamera")]
+    SetCamera { camera: String },
 }
 
 impl EnergyModelEditorCommand {
@@ -159,6 +219,13 @@ impl EnergyModelEditorCommand {
             Self::SetRunPeriod { .. } => SET_RUN_PERIOD_ACTION_ID,
             Self::SetActiveExample { .. } => SET_ACTIVE_EXAMPLE_ACTION_ID,
             Self::SetSimulationSettings { .. } => simulation::SET_SETTINGS_ACTION_ID,
+            Self::SetResultField { .. } => simulation::SET_RESULT_FIELD_ACTION_ID,
+            Self::SetSurfaceProperty { .. } => SET_SURFACE_PROPERTY_ACTION_ID,
+            Self::SetFenestrationProperty { .. } => SET_FENESTRATION_PROPERTY_ACTION_ID,
+            Self::SetZoneProperty { .. } => SET_ZONE_PROPERTY_ACTION_ID,
+            Self::SetGlazingMaterialProperty { .. } => SET_GLAZING_MATERIAL_PROPERTY_ACTION_ID,
+            Self::SetGasMaterialProperty { .. } => SET_GAS_MATERIAL_PROPERTY_ACTION_ID,
+            Self::SetCamera { .. } => model_window::SET_CAMERA_ACTION_ID,
         }
     }
 }
@@ -187,6 +254,17 @@ mod args_bridge {
     fn flag(args: Option<&dsl::DslValue>, key: &str) -> Option<bool> {
         let value = field(args, key)?;
         value.as_bool().or_else(|| value.as_str()?.parse().ok())
+    }
+
+    /// 🎥️ The `{position,target,zoom,up?}` object the react `World3dHost` sends under `camera`,
+    /// validated as a real pose and canonicalized back to the exact JSON string
+    /// `World3dScene::camera_json` consumes. A malformed or non-finite pose answers `None`, which the
+    /// bridge turns into an explicit refusal rather than a silently ignored gesture.
+    fn camera_pose_json(args: Option<&dsl::DslValue>) -> Option<String> {
+        let value = field(args, "camera")?;
+        let pose = <store::Viewport3dOrbit as dsl::FromValue>::from_value(value.clone()).ok()?;
+        pose.validate().ok()?;
+        Some(dsl::json::to_json_string(&dsl::ToValue::to_value(&pose)))
     }
 
     fn unknown(action: &str) -> Fault {
@@ -224,9 +302,36 @@ mod args_bridge {
             },
             super::SET_RUN_PERIOD_ACTION_ID => Command::SetRunPeriod { start_month: u32_or("startMonth", 1), start_day: u32_or("startDay", 1), end_month: u32_or("endMonth", 12), end_day: u32_or("endDay", 31) },
             super::SET_ACTIVE_EXAMPLE_ACTION_ID => Command::SetActiveExample { example_id: text_or("exampleId", "") },
+            // 🔍️ The inspector's controls author only `{field, id}` — the host merges the control's
+            // own current value under `value`, so `field` is read back as `property` here.
+            super::SET_SURFACE_PROPERTY_ACTION_ID => Command::SetSurfaceProperty {
+                surface: u32_or("surface", u32_or("id", 0)),
+                property: text(args, "property").unwrap_or_else(|| text_or("field", "")),
+                value: text_or("value", ""),
+                partner_surface: u32_or("partnerSurface", 0),
+            },
+            super::SET_FENESTRATION_PROPERTY_ACTION_ID => {
+                Command::SetFenestrationProperty { fenestration: u32_or("fenestration", u32_or("id", 0)), property: text(args, "property").unwrap_or_else(|| text_or("field", "")), value: text_or("value", "") }
+            }
+            super::SET_ZONE_PROPERTY_ACTION_ID => Command::SetZoneProperty { zone: u32_or("zone", u32_or("id", 0)), property: text(args, "property").unwrap_or_else(|| text_or("field", "")), value: text_or("value", "") },
+            super::SET_GLAZING_MATERIAL_PROPERTY_ACTION_ID => {
+                Command::SetGlazingMaterialProperty { material: u32_or("material", u32_or("id", 0)), property: text(args, "property").unwrap_or_else(|| text_or("field", "")), value: text_or("value", "") }
+            }
+            super::SET_GAS_MATERIAL_PROPERTY_ACTION_ID => {
+                Command::SetGasMaterialProperty { material: u32_or("material", u32_or("id", 0)), property: text(args, "property").unwrap_or_else(|| text_or("field", "")), value: text_or("value", "") }
+            }
             super::simulation::SET_SETTINGS_ACTION_ID => {
                 let defaults = super::EnergyModelConfig::default();
                 Command::SetSimulationSettings { zone_timestep_minutes: u32_or("zoneTimestepMinutes", defaults.zone_timestep_minutes), system_timestep_minutes: u32_or("systemTimestepMinutes", defaults.system_timestep_minutes), warmup_days: u32_or("warmupDays", defaults.warmup_days) }
+            }
+            // 🎨️ A select control merges its own scalar under `value`, so `field` is read from either
+            // spelling — the same `{field, value}` convention the inspector's controls use above.
+            super::simulation::SET_RESULT_FIELD_ACTION_ID => Command::SetResultField { field: text(args, "field").unwrap_or_else(|| text_or("value", super::EnergyModelConfig::default().result_field.as_str())) },
+            super::model_window::SET_CAMERA_ACTION_ID => {
+                let Some(camera) = camera_pose_json(args) else {
+                    return Err(Fault::new(FaultOrigin::App, FaultCode::new("app.command.invalid-payload"), "setCamera carries no finite {position,target,zoom} pose"));
+                };
+                Command::SetCamera { camera }
             }
             _ => return Err(unknown(action)),
         })
@@ -340,7 +445,10 @@ fn model_edit(kind: &'static str, base: &crate::model::Model, model: &crate::mod
     }
     diff_zones(base, model, &mut steps);
     diff_surfaces(base, model, &mut steps);
+    let projected_fenestrations = diff_fenestrations(base, model, &mut steps);
     diff_materials(kind, base, model, &mut steps)?;
+    let projected_glazing = diff_glazing_materials(kind, base, model, &mut steps)?;
+    let projected_gases = diff_gas_materials(kind, base, model, &mut steps)?;
     diff_thermostats(kind, base, model, &mut steps)?;
     let mut probe = base.clone();
     probe.name = model.name.clone();
@@ -352,9 +460,15 @@ fn model_edit(kind: &'static str, base: &crate::model::Model, model: &crate::mod
     probe.output_variables = model.output_variables.clone();
     probe.zones = model.zones.clone();
     probe.surfaces = model.surfaces.clone();
-    probe.fenestrations = model.fenestrations.clone();
+    // 🪟️ NOT `model.fenestrations.clone()`: the projection [`diff_fenestrations`] returns carries
+    // exactly the fields it emitted a mutation for, so a Fenestration field no diff step names makes
+    // `probe != *model` and faults LOUDLY through `kind_unavailable` instead of vanishing.
+    probe.fenestrations = projected_fenestrations;
     probe.adjacency_pairs = model.adjacency_pairs.clone();
     probe.materials = model.materials.clone();
+    // 🧊️ Projections, not clones — same loudness discipline as the fenestrations above.
+    probe.glazing_materials = projected_glazing;
+    probe.gas_materials = projected_gases;
     probe.thermostats = model.thermostats.clone();
     if probe != *model {
         return Err(kind_unavailable(kind, kind));
@@ -469,6 +583,121 @@ fn diff_surfaces(base: &crate::model::Model, model: &crate::model::Model, steps:
     }
 }
 
+/// 🪟️ Fenestrations: every scalar of the record, plus the optional glazing-construction binding.
+/// Deletion is already cascaded by [`diff_surfaces`] (a window is disconnected before its host
+/// surface disappears), so this function only creates and diffs.
+///
+/// 🔬️ It returns the PROJECTION of `base`'s fenestrations through exactly the steps it emitted —
+/// `model_edit`'s probe uses that instead of `model.fenestrations.clone()`, so a field this function
+/// forgets to name is caught by the probe comparison and refused loudly rather than silently
+/// dropped. That masking is the bug this ticket's exploration found: before this step a window
+/// u-value edit reduced cleanly and emitted NO mutation at all.
+fn diff_fenestrations(base: &crate::model::Model, model: &crate::model::Model, steps: &mut Vec<EnergyModelMutation>) -> Vec<crate::model::Fenestration> {
+    let mut projected = Vec::with_capacity(model.fenestrations.len());
+    for now in &model.fenestrations {
+        let Some(was) = base.fenestrations.iter().find(|was| was.id == now.id) else {
+            steps.push(mutations::create_fenestration(
+                now.id,
+                now.name.clone(),
+                now.surface_id,
+                now.u_value_w_m2k,
+                now.shgc,
+                now.vlt,
+                now.area_m2,
+                now.height_m,
+                now.sill_height_m,
+                now.frame_conductance_w_k,
+                now.divider_conductance_w_k,
+                now.overhang_depth_m,
+                now.overhang_offset_m,
+                now.fin_depth_m,
+                now.fin_offset_m,
+                now.glazing_construction_id,
+            ));
+            // 🔶️ `create-fenestration` carries no polygon — a created window starts rectangular and
+            // its real corners, when it has any, follow as their own `replace-fenestration-vertices`.
+            let mut created = now.clone();
+            created.vertices_m = Vec::new();
+            if !now.vertices_m.is_empty() {
+                steps.push(mutations::replace_fenestration_vertices(now.id, now.vertices_m.clone()));
+                created.vertices_m = now.vertices_m.clone();
+            }
+            projected.push(created);
+            continue;
+        };
+        let mut carried = was.clone();
+        if was.name != now.name {
+            steps.push(mutations::rename_fenestration(now.id, now.name.clone()));
+            carried.name = now.name.clone();
+        }
+        if was.surface_id != now.surface_id {
+            steps.push(mutations::change_fenestration_surface(now.id, now.surface_id));
+            carried.surface_id = now.surface_id;
+        }
+        if was.u_value_w_m2k != now.u_value_w_m2k {
+            steps.push(mutations::change_fenestration_u_value(now.id, now.u_value_w_m2k));
+            carried.u_value_w_m2k = now.u_value_w_m2k;
+        }
+        if was.shgc != now.shgc {
+            steps.push(mutations::change_fenestration_shgc(now.id, now.shgc));
+            carried.shgc = now.shgc;
+        }
+        if was.vlt != now.vlt {
+            steps.push(mutations::change_fenestration_vlt(now.id, now.vlt));
+            carried.vlt = now.vlt;
+        }
+        if was.area_m2 != now.area_m2 {
+            steps.push(mutations::change_fenestration_area(now.id, now.area_m2));
+            carried.area_m2 = now.area_m2;
+        }
+        if was.height_m != now.height_m {
+            steps.push(mutations::change_fenestration_height(now.id, now.height_m));
+            carried.height_m = now.height_m;
+        }
+        if was.sill_height_m != now.sill_height_m {
+            steps.push(mutations::change_fenestration_sill_height(now.id, now.sill_height_m));
+            carried.sill_height_m = now.sill_height_m;
+        }
+        if was.frame_conductance_w_k != now.frame_conductance_w_k {
+            steps.push(mutations::change_fenestration_frame_conductance(now.id, now.frame_conductance_w_k));
+            carried.frame_conductance_w_k = now.frame_conductance_w_k;
+        }
+        if was.divider_conductance_w_k != now.divider_conductance_w_k {
+            steps.push(mutations::change_fenestration_divider_conductance(now.id, now.divider_conductance_w_k));
+            carried.divider_conductance_w_k = now.divider_conductance_w_k;
+        }
+        if was.overhang_depth_m != now.overhang_depth_m {
+            steps.push(mutations::change_fenestration_overhang_depth(now.id, now.overhang_depth_m));
+            carried.overhang_depth_m = now.overhang_depth_m;
+        }
+        if was.overhang_offset_m != now.overhang_offset_m {
+            steps.push(mutations::change_fenestration_overhang_offset(now.id, now.overhang_offset_m));
+            carried.overhang_offset_m = now.overhang_offset_m;
+        }
+        if was.fin_depth_m != now.fin_depth_m {
+            steps.push(mutations::change_fenestration_fin_depth(now.id, now.fin_depth_m));
+            carried.fin_depth_m = now.fin_depth_m;
+        }
+        if was.fin_offset_m != now.fin_offset_m {
+            steps.push(mutations::change_fenestration_fin_offset(now.id, now.fin_offset_m));
+            carried.fin_offset_m = now.fin_offset_m;
+        }
+        if was.vertices_m != now.vertices_m {
+            steps.push(mutations::replace_fenestration_vertices(now.id, now.vertices_m.clone()));
+            carried.vertices_m = now.vertices_m.clone();
+        }
+        if was.glazing_construction_id != now.glazing_construction_id {
+            steps.push(match now.glazing_construction_id {
+                Some(construction) => mutations::bind_fenestration_glazing_construction(now.id, construction),
+                None => mutations::clear_fenestration_glazing_construction(now.id),
+            });
+            carried.glazing_construction_id = now.glazing_construction_id;
+        }
+        projected.push(carried);
+    }
+    projected
+}
+
 /// 🧱️ The seven material scalars `set-material-property` addresses. No editor verb creates or
 /// deletes a material, so an identity change is still refused LOUDLY rather than masked by the
 /// probe below.
@@ -477,6 +706,9 @@ fn diff_materials(kind: &'static str, base: &crate::model::Model, model: &crate:
         return Err(kind_unavailable(kind, "create-material / delete-material"));
     }
     for (was, now) in base.materials.iter().zip(&model.materials) {
+        if was.name != now.name {
+            steps.push(mutations::rename_material(now.id, now.name.clone()));
+        }
         if was.thickness_m != now.thickness_m {
             steps.push(mutations::change_material_thickness(now.id, now.thickness_m));
         }
@@ -502,6 +734,72 @@ fn diff_materials(kind: &'static str, base: &crate::model::Model, model: &crate:
     Ok(())
 }
 
+/// 🧊️ Glazing materials. `change-glazing-material-*` names only five of the record's twelve optical
+/// scalars, so — like [`diff_fenestrations`] — this returns the PROJECTION of `base` through the
+/// steps it emitted and `model_edit`'s probe compares against that: a reflectance edit nobody has a
+/// mutation for is refused LOUDLY instead of vanishing.
+fn diff_glazing_materials(kind: &'static str, base: &crate::model::Model, model: &crate::model::Model, steps: &mut Vec<EnergyModelMutation>) -> Result<Vec<crate::model::GlazingMaterial>, Fault> {
+    if base.glazing_materials.iter().map(|material| material.id).ne(model.glazing_materials.iter().map(|material| material.id)) {
+        return Err(kind_unavailable(kind, "create-glazing-material / delete-glazing-material"));
+    }
+    let mut projected = Vec::with_capacity(model.glazing_materials.len());
+    for (was, now) in base.glazing_materials.iter().zip(&model.glazing_materials) {
+        let mut carried = was.clone();
+        if was.name != now.name {
+            steps.push(mutations::rename_glazing_material(now.id, now.name.clone()));
+            carried.name = now.name.clone();
+        }
+        if was.thickness_m != now.thickness_m {
+            steps.push(mutations::change_glazing_material_thickness(now.id, now.thickness_m));
+            carried.thickness_m = now.thickness_m;
+        }
+        if was.conductivity_w_m_k != now.conductivity_w_m_k {
+            steps.push(mutations::change_glazing_material_conductivity(now.id, now.conductivity_w_m_k));
+            carried.conductivity_w_m_k = now.conductivity_w_m_k;
+        }
+        if was.solar_transmittance != now.solar_transmittance {
+            steps.push(mutations::change_glazing_material_solar_transmittance(now.id, now.solar_transmittance));
+            carried.solar_transmittance = now.solar_transmittance;
+        }
+        if was.visible_transmittance != now.visible_transmittance {
+            steps.push(mutations::change_glazing_material_visible_transmittance(now.id, now.visible_transmittance));
+            carried.visible_transmittance = now.visible_transmittance;
+        }
+        if was.infrared_emissivity_front != now.infrared_emissivity_front || was.infrared_emissivity_back != now.infrared_emissivity_back {
+            steps.push(mutations::change_glazing_material_infrared_emissivity(now.id, now.infrared_emissivity_front, now.infrared_emissivity_back));
+            carried.infrared_emissivity_front = now.infrared_emissivity_front;
+            carried.infrared_emissivity_back = now.infrared_emissivity_back;
+        }
+        projected.push(carried);
+    }
+    Ok(projected)
+}
+
+/// 💨️ Gas gaps: thickness, fill gas and name — the record's whole addressable surface.
+fn diff_gas_materials(kind: &'static str, base: &crate::model::Model, model: &crate::model::Model, steps: &mut Vec<EnergyModelMutation>) -> Result<Vec<crate::model::GasMaterial>, Fault> {
+    if base.gas_materials.iter().map(|material| material.id).ne(model.gas_materials.iter().map(|material| material.id)) {
+        return Err(kind_unavailable(kind, "create-gas-material / delete-gas-material"));
+    }
+    let mut projected = Vec::with_capacity(model.gas_materials.len());
+    for (was, now) in base.gas_materials.iter().zip(&model.gas_materials) {
+        let mut carried = was.clone();
+        if was.name != now.name {
+            steps.push(mutations::rename_gas_material(now.id, now.name.clone()));
+            carried.name = now.name.clone();
+        }
+        if was.thickness_m != now.thickness_m {
+            steps.push(mutations::change_gas_material_thickness(now.id, now.thickness_m));
+            carried.thickness_m = now.thickness_m;
+        }
+        if was.gas != now.gas {
+            steps.push(mutations::change_gas_material_gas(now.id, now.gas));
+            carried.gas = now.gas;
+        }
+        projected.push(carried);
+    }
+    Ok(projected)
+}
+
 /// 🌡️ The four thermostat fields `set-thermostat-setpoints` addresses. Like materials, no editor
 /// verb adds or removes a thermostat, so an identity change is refused rather than masked.
 fn diff_thermostats(kind: &'static str, base: &crate::model::Model, model: &crate::model::Model, steps: &mut Vec<EnergyModelMutation>) -> Result<(), Fault> {
@@ -509,6 +807,9 @@ fn diff_thermostats(kind: &'static str, base: &crate::model::Model, model: &crat
         return Err(kind_unavailable(kind, "create-thermostat / delete-thermostat"));
     }
     for (was, now) in base.thermostats.iter().zip(&model.thermostats) {
+        if was.zone_id != now.zone_id {
+            steps.push(mutations::change_thermostat_zone(now.id, now.zone_id));
+        }
         if was.heating_setpoint_schedule_id != now.heating_setpoint_schedule_id {
             steps.push(mutations::change_thermostat_heating_setpoint_schedule(now.id, now.heating_setpoint_schedule_id));
         }
@@ -691,6 +992,29 @@ fn reduce(command: &EnergyModelEditorCommand, doc: &ArtifactView<'_, EnergyModel
             let kind = set_material_property(target, property, *value)?;
             (kind, format!("Set material {material} {property}"))
         }
+        EnergyModelEditorCommand::SetSurfaceProperty { surface, property, value, partner_surface } => {
+            let kind = set_surface_property(&mut model, *surface, property, value, *partner_surface)?;
+            (kind, format!("Set surface {surface} {property}"))
+        }
+        EnergyModelEditorCommand::SetFenestrationProperty { fenestration, property, value } => {
+            let kind = set_fenestration_property(&mut model, *fenestration, property, value)?;
+            (kind, format!("Set window {fenestration} {property}"))
+        }
+        EnergyModelEditorCommand::SetGlazingMaterialProperty { material, property, value } => {
+            let target = model.glazing_materials.iter_mut().find(|entry| entry.id.0 == *material).ok_or_else(|| target_missing("glazing material", *material))?;
+            let kind = set_glazing_material_property(target, property, value)?;
+            (kind, format!("Set glazing material {material} {property}"))
+        }
+        EnergyModelEditorCommand::SetGasMaterialProperty { material, property, value } => {
+            let target = model.gas_materials.iter_mut().find(|entry| entry.id.0 == *material).ok_or_else(|| target_missing("gas material", *material))?;
+            let kind = set_gas_material_property(target, property, value)?;
+            (kind, format!("Set gas material {material} {property}"))
+        }
+        EnergyModelEditorCommand::SetZoneProperty { zone, property, value } => {
+            let target = model.zones.iter_mut().find(|entry| entry.id.0 == *zone).ok_or_else(|| target_missing("zone", *zone))?;
+            let kind = set_zone_property(target, property, value)?;
+            (kind, format!("Set zone {zone} {property}"))
+        }
         EnergyModelEditorCommand::SetThermostatSetpoints { thermostat, heating_schedule, cooling_schedule, heating_throttle_range_k, cooling_throttle_range_k } => {
             let schedules = &model.schedules;
             if !schedule_exists(schedules, *heating_schedule) {
@@ -735,8 +1059,63 @@ fn reduce(command: &EnergyModelEditorCommand, doc: &ArtifactView<'_, EnergyModel
             }
             return Ok(Emit { config_mutations: vec![EnergyModelConfigMutation::ChangeSimulationSettings(settings)], description: Some("Set simulation settings".into()), ..Default::default() });
         }
+        EnergyModelEditorCommand::SetResultField { field } => {
+            let Some(selected) = crate::editor::model::results::ResultField::from_id(field) else {
+                return Err(Fault::new(FaultOrigin::App, FaultCode::new("mutation.invalid-payload"), format!("'{field}' is not a published per-surface result field")));
+            };
+            // 🎨️ Only the 3d model window's body re-renders: the map, the ramp and the legend are all
+            // derived inside its own `render`, and nothing else in the editor reads `resultField`.
+            return Ok(Emit {
+                config_mutations: vec![EnergyModelConfigMutation::ChangeResultField(ChangeResultField { field: selected.id().to_string() })],
+                description: Some(format!("Colour surfaces by {}", selected.id())),
+                ui_scope: UiDirtyScope::Partial {
+                    window_bodies: vec![crate::energy_simulation_session::ENERGY_MODEL_3D_WINDOW_KIND_ID.to_string(), simulation::BODY_KEY.to_string()],
+                    panel_bodies: Vec::new(),
+                    utilities: false,
+                    tools: false,
+                    engagements: false,
+                    measures: false,
+                    labels: false,
+                },
+                ..Default::default()
+            });
+        }
+        // 🎥️ A camera is addressed at ONE window instance, and `reduce` sees no `ViewModel` — both
+        // dispatch routes intercept `SetCamera` through `camera_emit` before they ever get here, so
+        // reaching this arm means the gesture arrived without its window context.
+        EnergyModelEditorCommand::SetCamera { .. } => {
+            return Err(Fault::new(FaultOrigin::App, FaultCode::new("energy.model.3d.window-required"), "a camera change requires a concrete 3d model window"));
+        }
     };
     model_edit(kind, &crate::energy_model(doc.snapshot), &model, description)
+}
+
+/// 🎥️ The window-addressed half of the command set: `setCamera` writes the addressed
+/// `energy.model.3d` window's own retained pose, never the document and never the app config. Both
+/// dispatch routes (`ArtifactEditor::handle` and the retained `energy_model_reduce`) call this FIRST
+/// and only fall through to [`reduce`] when it answers `None`, so the two can never diverge.
+///
+/// 🐢️ `UiDirtyScope::Partial` with nothing listed: the pane that sent the pose already holds it, and
+/// republishing the 3d body on every debounced orbit tick would be pure churn. A window that opens
+/// later reads the stored pose on its own first render.
+fn camera_emit(command: &EnergyModelEditorCommand, view_state: Option<&semio_framework_plugin::ViewModel>) -> Option<Result<Emit<EnergyModelMutation, EnergyModelConfigMutation, NoDraftMutation>, Fault>> {
+    let EnergyModelEditorCommand::SetCamera { camera } = command else { return None };
+    Some((|| {
+        let view = view_state.ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("energy.model.3d.window-required"), "a camera change requires a concrete 3d model window"))?;
+        let value = dsl::json::from_json_str::<dsl::DslValue>(camera).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("app.command.invalid-payload"), format!("the camera pose is not a value: {error}")))?;
+        let pose = <model_window::config::EnergyModelCameraPose as dsl::FromValue>::from_value(value).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("app.command.invalid-payload"), format!("the camera pose is malformed: {error}")))?;
+        if !pose.is_valid() {
+            return Err(Fault::new(FaultOrigin::App, FaultCode::new("app.command.invalid-payload"), "the camera pose is not finite, or its zoom is not positive"));
+        }
+        let mutation = model_window::config::EnergyModelWindowConfigMutation::SetCamera(model_window::config::SetCamera { camera: pose });
+        Ok(Emit {
+            window_config_mutations: vec![model_window::config::addressed(view, mutation)?],
+            description: Some("Set camera".into()),
+            coalesce_key: Some(format!("energy.model.3d.camera:{}", view.window_id.as_deref().unwrap_or_default())),
+            ui_scope: UiDirtyScope::Partial { window_bodies: Vec::new(), panel_bodies: Vec::new(), utilities: false, tools: false, engagements: false, measures: false, labels: false },
+            ..Default::default()
+        })
+    })())
 }
 
 /// 🗓️ A thermostat setpoint reference must resolve inside the model's own `ScheduleSet` — the five
@@ -749,6 +1128,311 @@ fn schedule_exists(schedules: &crate::schedule::ScheduleSet, id: u32) -> bool {
         || schedules.annual.iter().any(|schedule| schedule.id == id)
         || schedules.time_series.iter().any(|schedule| schedule.id == id)
 }
+
+//#region 🔍️InspectorProperties
+/// ⛔️ `'{property}'` is not a field of `{entity}`.
+fn unknown_property(entity: &str, property: &str) -> Fault {
+    Fault::new(FaultOrigin::App, FaultCode::new("mutation.invalid-payload"), format!("'{property}' is not a {entity} property"))
+}
+
+/// ⛔️ `'{value}'` cannot be read as `{property}`, or lies outside its SI range.
+fn invalid_value(property: &str, value: &str) -> Fault {
+    Fault::new(FaultOrigin::App, FaultCode::new("mutation.invalid-payload"), format!("'{value}' is outside the admissible range of property '{property}'"))
+}
+
+fn as_f64(property: &str, value: &str, admits: impl Fn(f64) -> bool) -> Result<f64, Fault> {
+    let parsed: f64 = value.trim().parse().map_err(|_| invalid_value(property, value))?;
+    if !parsed.is_finite() || !admits(parsed) {
+        return Err(invalid_value(property, value));
+    }
+    Ok(parsed)
+}
+
+fn as_u32(property: &str, value: &str, admits: impl Fn(u32) -> bool) -> Result<u32, Fault> {
+    let parsed: u32 = value.trim().parse().map_err(|_| invalid_value(property, value))?;
+    if !admits(parsed) {
+        return Err(invalid_value(property, value));
+    }
+    Ok(parsed)
+}
+
+fn as_bool(property: &str, value: &str) -> Result<bool, Fault> {
+    match value.trim() {
+        "true" | "1" | "on" | "yes" => Ok(true),
+        "false" | "0" | "off" | "no" | "" => Ok(false),
+        _ => Err(invalid_value(property, value)),
+    }
+}
+
+/// 🚧️ The wire spelling of an [`OutsideBoundaryKind`] — camelCase, the same vocabulary
+/// [`surface_class_from_id`] uses for [`SurfaceClass`].
+fn outside_boundary_kind_from_id(id: &str) -> Option<crate::model::OutsideBoundaryKind> {
+    use crate::model::OutsideBoundaryKind as Kind;
+    Some(match id {
+        "outdoorAir" => Kind::OutdoorAir,
+        "ground" => Kind::Ground,
+        "otherSideTemperature" => Kind::OtherSideTemperature,
+        "adiabatic" => Kind::Adiabatic,
+        "interzone" => Kind::Interzone,
+        _ => return None,
+    })
+}
+
+/// 🟫️ Every `Surface` field the inspector addresses. `construction`/`boundary` validate their
+/// references against the live model FIRST, so a dangling id is a refusal and never a document that
+/// points at nothing.
+fn set_surface_property(model: &mut crate::model::Model, surface: u32, property: &str, value: &str, partner_surface: u32) -> Result<&'static str, Fault> {
+    let boundary = match property {
+        "boundary" => {
+            let kind = outside_boundary_kind_from_id(value.trim()).ok_or_else(|| invalid_value(property, value))?;
+            let partner = (partner_surface != 0).then_some(EntityId(partner_surface));
+            if let Some(partner) = partner {
+                if !model.surfaces.iter().any(|entry| entry.id == partner) {
+                    return Err(target_missing("surface", partner_surface));
+                }
+            }
+            Some(OutsideBoundary::from_parts(kind, partner).ok_or_else(|| invalid_value(property, value))?)
+        }
+        _ => None,
+    };
+    let construction = match property {
+        "construction" => {
+            let id = EntityId(as_u32(property, value, |_| true)?);
+            if !model.constructions.iter().any(|entry| entry.id == id) {
+                return Err(target_missing("construction", id.0));
+            }
+            Some(id)
+        }
+        _ => None,
+    };
+    let target = model.surfaces.iter_mut().find(|entry| entry.id.0 == surface).ok_or_else(|| target_missing("surface", surface))?;
+    Ok(match property {
+        "name" => {
+            target.name = value.to_string();
+            "rename-surface"
+        }
+        "class" => {
+            target.class = surface_class_from_id(value.trim()).ok_or_else(|| invalid_value(property, value))?;
+            "change-surface-class"
+        }
+        "boundary" => {
+            target.outside_boundary_condition = boundary.expect("the boundary arm parsed its payload above");
+            "change-surface-boundary-condition"
+        }
+        "construction" => {
+            target.construction_id = construction.expect("the construction arm parsed its payload above");
+            "change-surface-construction"
+        }
+        "sunExposed" => {
+            target.sun_exposed = as_bool(property, value)?;
+            "change-surface-sun-exposed"
+        }
+        "windExposed" => {
+            target.wind_exposed = as_bool(property, value)?;
+            "change-surface-wind-exposed"
+        }
+        "multiplier" => {
+            target.multiplier = as_u32(property, value, |parsed| parsed >= 1)?;
+            "change-surface-multiplier"
+        }
+        _ => return Err(unknown_property("surface", property)),
+    })
+}
+
+/// 🪟️ Every `Fenestration` field the inspector addresses — the fifteen scalars plus the optional
+/// glazing construction, whose EMPTY value clears the binding rather than naming a construction.
+fn set_fenestration_property(model: &mut crate::model::Model, fenestration: u32, property: &str, value: &str) -> Result<&'static str, Fault> {
+    let glazing = match property {
+        "glazingConstruction" => {
+            let trimmed = value.trim();
+            if trimmed.is_empty() || trimmed == "none" {
+                Some(None)
+            } else {
+                let id = EntityId(as_u32(property, value, |_| true)?);
+                if !model.constructions.iter().any(|entry| entry.id == id) {
+                    return Err(target_missing("construction", id.0));
+                }
+                Some(Some(id))
+            }
+        }
+        _ => None,
+    };
+    let target = model.fenestrations.iter_mut().find(|entry| entry.id.0 == fenestration).ok_or_else(|| target_missing("fenestration", fenestration))?;
+    let positive = |parsed: f64| parsed > 0.0;
+    let non_negative = |parsed: f64| parsed >= 0.0;
+    let fraction = |parsed: f64| (0.0..=1.0).contains(&parsed);
+    Ok(match property {
+        "name" => {
+            target.name = value.to_string();
+            "rename-fenestration"
+        }
+        "uValueWM2K" => {
+            target.u_value_w_m2k = as_f64(property, value, positive)?;
+            "change-fenestration-u-value"
+        }
+        "shgc" => {
+            target.shgc = as_f64(property, value, fraction)?;
+            "change-fenestration-shgc"
+        }
+        "vlt" => {
+            target.vlt = as_f64(property, value, fraction)?;
+            "change-fenestration-vlt"
+        }
+        "areaM2" => {
+            target.area_m2 = as_f64(property, value, positive)?;
+            "change-fenestration-area"
+        }
+        "heightM" => {
+            target.height_m = as_f64(property, value, positive)?;
+            "change-fenestration-height"
+        }
+        "sillHeightM" => {
+            target.sill_height_m = as_f64(property, value, non_negative)?;
+            "change-fenestration-sill-height"
+        }
+        "frameConductanceWK" => {
+            target.frame_conductance_w_k = as_f64(property, value, non_negative)?;
+            "change-fenestration-frame-conductance"
+        }
+        "dividerConductanceWK" => {
+            target.divider_conductance_w_k = as_f64(property, value, non_negative)?;
+            "change-fenestration-divider-conductance"
+        }
+        "overhangDepthM" => {
+            target.overhang_depth_m = as_f64(property, value, non_negative)?;
+            "change-fenestration-overhang-depth"
+        }
+        "overhangOffsetM" => {
+            target.overhang_offset_m = as_f64(property, value, non_negative)?;
+            "change-fenestration-overhang-offset"
+        }
+        "finDepthM" => {
+            target.fin_depth_m = as_f64(property, value, non_negative)?;
+            "change-fenestration-fin-depth"
+        }
+        "finOffsetM" => {
+            target.fin_offset_m = as_f64(property, value, non_negative)?;
+            "change-fenestration-fin-offset"
+        }
+        "glazingConstruction" => {
+            target.glazing_construction_id = glazing.expect("the glazing arm parsed its payload above");
+            "bind-fenestration-glazing-construction"
+        }
+        _ => return Err(unknown_property("fenestration", property)),
+    })
+}
+
+/// 🧊️ The glazing-material fields this artifact's vocabulary can actually name. The seven other
+/// optical scalars (`solar_reflectance_*`, `visible_reflectance_*`, `infrared_transmittance`) have no
+/// mutation kind, so they are refused here rather than written and then faulted by the probe.
+fn set_glazing_material_property(material: &mut crate::model::GlazingMaterial, property: &str, value: &str) -> Result<&'static str, Fault> {
+    let positive = |parsed: f64| parsed > 0.0;
+    let fraction = |parsed: f64| (0.0..=1.0).contains(&parsed);
+    Ok(match property {
+        "name" => {
+            material.name = value.to_string();
+            "rename-glazing-material"
+        }
+        "thicknessM" => {
+            material.thickness_m = as_f64(property, value, positive)?;
+            "change-glazing-material-thickness"
+        }
+        "conductivityWMK" => {
+            material.conductivity_w_m_k = as_f64(property, value, positive)?;
+            "change-glazing-material-conductivity"
+        }
+        "solarTransmittance" => {
+            material.solar_transmittance = as_f64(property, value, fraction)?;
+            "change-glazing-material-solar-transmittance"
+        }
+        "visibleTransmittance" => {
+            material.visible_transmittance = as_f64(property, value, fraction)?;
+            "change-glazing-material-visible-transmittance"
+        }
+        "infraredEmissivityFront" => {
+            material.infrared_emissivity_front = as_f64(property, value, fraction)?;
+            "change-glazing-material-infrared-emissivity"
+        }
+        "infraredEmissivityBack" => {
+            material.infrared_emissivity_back = as_f64(property, value, fraction)?;
+            "change-glazing-material-infrared-emissivity"
+        }
+        _ => return Err(unknown_property("glazing material", property)),
+    })
+}
+
+/// 💨️ The gas-gap fields: thickness, fill gas and name.
+fn set_gas_material_property(material: &mut crate::model::GasMaterial, property: &str, value: &str) -> Result<&'static str, Fault> {
+    Ok(match property {
+        "name" => {
+            material.name = value.to_string();
+            "rename-gas-material"
+        }
+        "thicknessM" => {
+            material.thickness_m = as_f64(property, value, |parsed| parsed > 0.0)?;
+            "change-gas-material-thickness"
+        }
+        "gas" => {
+            material.gas = gas_kind_from_id(value.trim()).ok_or_else(|| invalid_value(property, value))?;
+            "change-gas-material-gas"
+        }
+        _ => return Err(unknown_property("gas material", property)),
+    })
+}
+
+/// 💨️ Wire spelling of a [`crate::model::GasKind`] — camelCase, like every other enum this editor
+/// carries over the action bus.
+pub fn gas_kind_id(gas: crate::model::GasKind) -> &'static str {
+    use crate::model::GasKind as Kind;
+    match gas {
+        Kind::Air => "air",
+        Kind::Argon => "argon",
+        Kind::Krypton => "krypton",
+        Kind::Xenon => "xenon",
+    }
+}
+
+fn gas_kind_from_id(id: &str) -> Option<crate::model::GasKind> {
+    use crate::model::GasKind as Kind;
+    Some(match id {
+        "air" => Kind::Air,
+        "argon" => Kind::Argon,
+        "krypton" => Kind::Krypton,
+        "xenon" => Kind::Xenon,
+        _ => return None,
+    })
+}
+
+/// 💨️ Every fill gas, in declaration order — the inspector's gas select.
+pub const GAS_KIND_IDS: &[&str] = &["air", "argon", "krypton", "xenon"];
+
+/// 🏘️ Every `Zone` field, addressed by the zone's own `EntityId` rather than by its table row.
+fn set_zone_property(zone: &mut Zone, property: &str, value: &str) -> Result<&'static str, Fault> {
+    Ok(match property {
+        "name" => {
+            zone.name = value.to_string();
+            "rename-zone"
+        }
+        "volumeM3" => {
+            zone.volume_m3 = as_f64(property, value, |parsed| parsed > 0.0)?;
+            "change-zone-volume"
+        }
+        "multiplier" => {
+            zone.multiplier = as_u32(property, value, |parsed| parsed >= 1)?;
+            "change-zone-multiplier"
+        }
+        "conditioned" => {
+            zone.conditioned = as_bool(property, value)?;
+            "change-zone-conditioned"
+        }
+        "partOfTotalFloorArea" => {
+            zone.part_of_total_floor_area = as_bool(property, value)?;
+            "change-zone-floor-area-participation"
+        }
+        _ => return Err(unknown_property("zone", property)),
+    })
+}
+//#endregion 🔍️InspectorProperties
 
 fn set_material_property(material: &mut Material, property: &str, value: f64) -> Result<&'static str, Fault> {
     let positive = |value: f64| value > 0.0;
@@ -823,6 +1507,9 @@ fn energy_model_reduce(
     _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<EnergyModelEditor>>>,
     operation: &AppOperationContext,
 ) -> Result<Emit<EnergyModelMutation, EnergyModelConfigMutation, NoDraftMutation>, Fault> {
+    if let Some(camera) = camera_emit(command, _context.and_then(|context| context.view_state.as_ref())) {
+        return camera;
+    }
     reduce(command, &ArtifactView::with_operation(snapshot, history, operation.clone()))
 }
 
@@ -893,6 +1580,15 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for EnergyModelCommandJ
         ArtifactToolPublicationContract { tool_id: SET_RUN_PERIOD_ACTION_ID, lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: SET_ACTIVE_EXAMPLE_ACTION_ID, lanes: &[ArtifactToolPublicationLane::HostOnly] },
         ArtifactToolPublicationContract { tool_id: simulation::SET_SETTINGS_ACTION_ID, lanes: &[ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: simulation::SET_RESULT_FIELD_ACTION_ID, lanes: &[ArtifactToolPublicationLane::Config] },
+        // 🎥️ The camera writes ONE window instance's own retained state — never the document, never
+        // the app config.
+        ArtifactToolPublicationContract { tool_id: model_window::SET_CAMERA_ACTION_ID, lanes: &[ArtifactToolPublicationLane::WindowConfig] },
+        ArtifactToolPublicationContract { tool_id: SET_SURFACE_PROPERTY_ACTION_ID, lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: SET_FENESTRATION_PROPERTY_ACTION_ID, lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: SET_ZONE_PROPERTY_ACTION_ID, lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: SET_GLAZING_MATERIAL_PROPERTY_ACTION_ID, lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: SET_GAS_MATERIAL_PROPERTY_ACTION_ID, lanes: &[ArtifactToolPublicationLane::Artifact] },
     ];
 }
 //#endregion 🧵️RetainedCommands
@@ -1108,8 +1804,21 @@ impl ArtifactEditor for EnergyModelEditor {
             "set-site",
             "set-run-period",
             "setActiveExample",
-            "set-simulation-settings"
+            "set-simulation-settings",
+            "set-result-field",
+            "set-surface-property",
+            "set-fenestration-property",
+            "set-zone-property",
+            "set-glazing-material-property",
+            "set-gas-material-property",
+            "setCamera"
         ]
+    }
+
+    /// 🎥️ The 3d window's own retained orbit pose — one bounded window-config store, keyed by window
+    /// INSTANCE, so two open 3d panes never share a camera.
+    fn register_window_config_owners(registry: &mut semio_framework_plugin::WindowConfigOwnerRegistry) -> Result<(), Fault> {
+        registry.register::<model_window::config::EnergyModelWindowConfigOwner>()
     }
 
     fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
@@ -1252,18 +1961,63 @@ impl ArtifactEditor for EnergyModelEditor {
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
+        if let Some(camera) = camera_emit(command, _view_state) {
+            return camera;
+        }
         reduce(command, doc)
     }
 
+    /// 🎨️ The plain render path: no request context, so no live interaction domain to read. The 3d
+    /// model window still renders — it simply paints nothing as selected or hovered.
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view_state: &semio_framework_plugin::ViewModel) -> UiAssemblyResult<ComponentTree> {
-        let node = match body_key {
-            structure::BODY_KEY => structure::render(doc.snapshot)?,
-            zones::BODY_KEY => zones::render(doc.snapshot)?,
-            simulation::BODY_KEY => simulation::render(doc.tool_run(), *cfg.snapshot, &doc.snapshot.model, view_state.locale),
-            _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("energy.model.render", "the unknown-body label could not be assembled"))?,
-        };
-        Ok(semio_framework_plugin::built_to_component_tree(node))
+        render_body(body_key, doc, cfg, view_state, &EnergyModelInteractionSnapshot::default())
     }
+
+    /// 🕹️ The request-context render: resolves the framework-owned `energyModel` domain ONCE and
+    /// threads its selection/hover into the whole body, so the 3d window's paint and (later) the
+    /// inspector read one authority instead of either surface keeping selection of its own.
+    fn render_with_request_context(
+        _owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
+        body_key: &str,
+        doc: &ArtifactView<'_, Self::Snapshot>,
+        cfg: &ConfigView<'_, Self::Config>,
+        view_state: &semio_framework_plugin::ViewModel,
+        _transient: &semio_framework_plugin::TransientView<'_, Self::Transient>,
+        interaction: &semio_framework_plugin::app::InteractionView<'_>,
+    ) -> UiAssemblyResult<ComponentTree> {
+        render_body(body_key, doc, cfg, view_state, &EnergyModelInteractionSnapshot::from_interaction(interaction))
+    }
+}
+
+/// 🎨️ The one body dispatch both render entry points share, so the plain and the request-context
+/// routes can never diverge.
+fn render_body(
+    body_key: &str,
+    doc: &ArtifactView<'_, EnergyModelSnapshot>,
+    cfg: &ConfigView<'_, EnergyModelConfig>,
+    view_state: &semio_framework_plugin::ViewModel,
+    interaction: &EnergyModelInteractionSnapshot,
+) -> UiAssemblyResult<ComponentTree> {
+    let node = match body_key {
+        structure::BODY_KEY => structure::render(doc.snapshot)?,
+        zones::BODY_KEY => zones::render(doc.snapshot)?,
+        simulation::BODY_KEY => simulation::render(doc.tool_run(), cfg.snapshot, &doc.snapshot.model, view_state.locale),
+        model_window::BODY_KEY => {
+            // 🎨️ Results mode: while a finished (or ticking) energy simulation run carries a per-surface
+            // payload, its chosen field paints the surfaces and the legend rides as the caption.
+            let energy = crate::editor::model::results::surface_energy_from_run(doc.tool_run());
+            let field = crate::editor::model::results::result_field(cfg.snapshot);
+            let painted = energy.as_ref().map(|map| crate::editor::model::results::surface_colors(map, field));
+            let caption = painted.as_ref().map(|(_, min, max)| crate::editor::model::results::legend_caption(field, *min, *max));
+            // 🎥️ `config::current` is the addressed window's retained orbit pose, `None` until it has
+            // been moved — an unmoved window keeps the model-derived camera and `fit_json`'s framing.
+            model_window::render_with_camera(&crate::energy_model(doc.snapshot), interaction, painted.as_ref().map(|(colors, _, _)| colors), caption.as_deref(), model_window::config::current(cfg))?
+        }
+        artifact_panel::BODY_KEY => artifact_panel::render(doc.snapshot, interaction, view_state.locale)?,
+        inspection_panel::BODY_KEY => inspection_panel::render(doc.snapshot, interaction, view_state.locale)?,
+        _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("energy.model.render", "the unknown-body label could not be assembled"))?,
+    };
+    Ok(semio_framework_plugin::built_to_component_tree(node))
 }
 //#endregion 🔖️Editor
 
@@ -1320,6 +2074,66 @@ fn example_options() -> Vec<semio_framework_plugin::ActionArgOption> {
 }
 //#endregion 📚️Examples
 
+//#region 🔖️UiHelpers
+/// 🎛️ The controller id every panel row and inspector control mints its action under — the canonical
+/// surface id of this editor (`semio_framework::surface_app_id(MODEL_DIALECT, AppRole::Editor)`),
+/// the same spelling `bounded_first_step_tool_proofs!` declares above.
+pub const ENERGY_MODEL_EDITOR_CONTROLLER_ID: &str = "s.energy.model@1/*#editor";
+
+/// 🏷️ Admits resolved energy text into the semantic UI contract.
+pub fn ui_label(value: impl AsRef<str>) -> UiAssemblyResult<semio_framework_plugin::plugin_app_close_prelude::Label> {
+    semio_framework_plugin::plugin_app_close_prelude::Label::try_from(value.as_ref()).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "energy UI label admission failed"))
+}
+
+/// 🧾️ Admits a bounded row list — the one `UiFixedList` every section builder consumes.
+pub fn ui_node_list(values: impl IntoIterator<Item = UiAssemblyResult<semio_framework_plugin::BuiltNode>>) -> UiAssemblyResult<semio_framework_plugin::UiFixedList<semio_framework_plugin::BuiltNode>> {
+    let mut nodes = semio_framework_plugin::UiFixedList::default();
+    for value in values {
+        nodes.try_push(value?).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "energy UI node admission failed"))?;
+    }
+    Ok(nodes)
+}
+
+/// 🎛️ Mints one energy-editor action for a panel row or an inspector control binding.
+pub fn energy_model_action(action: &str, args: Option<semio_framework_plugin::UiValue>) -> UiAssemblyResult<(semio_framework_plugin::ActionId, Option<semio_framework_plugin::UiValue>)> {
+    semio_framework_plugin::ActionFactory::new(ENERGY_MODEL_EDITOR_CONTROLLER_ID).action(action, args)
+}
+
+/// 🟫️ Wire spelling of a [`SurfaceClass`] — the inverse of [`surface_class_from_id`], so the
+/// inspector's class select offers exactly the vocabulary `create-surface`/`set-surface-property`
+/// accept.
+pub fn surface_class_id(class: SurfaceClass) -> &'static str {
+    match class {
+        SurfaceClass::ExteriorWall => "exteriorWall",
+        SurfaceClass::InteriorWall => "interiorWall",
+        SurfaceClass::Roof => "roof",
+        SurfaceClass::Ceiling => "ceiling",
+        SurfaceClass::Floor => "floor",
+        SurfaceClass::Interzone => "interzone",
+        SurfaceClass::Adiabatic => "adiabatic",
+        SurfaceClass::Ground => "ground",
+    }
+}
+
+/// 🟫️ Every surface class, in declaration order — the inspector's class select.
+pub const SURFACE_CLASS_IDS: &[&str] = &["exteriorWall", "interiorWall", "roof", "ceiling", "floor", "interzone", "adiabatic", "ground"];
+
+/// 🚧️ Wire spelling of an [`crate::model::OutsideBoundaryKind`].
+pub fn outside_boundary_kind_id(kind: crate::model::OutsideBoundaryKind) -> &'static str {
+    use crate::model::OutsideBoundaryKind as Kind;
+    match kind {
+        Kind::OutdoorAir => "outdoorAir",
+        Kind::Ground => "ground",
+        Kind::OtherSideTemperature => "otherSideTemperature",
+        Kind::Adiabatic => "adiabatic",
+        Kind::Interzone => "interzone",
+    }
+}
+
+/// 🚧️ Every boundary kind, in declaration order — the inspector's boundary select.
+pub const OUTSIDE_BOUNDARY_KIND_IDS: &[&str] = &["outdoorAir", "ground", "otherSideTemperature", "adiabatic", "interzone"];
+//#endregion 🔖️UiHelpers
+
 //#region 🔖️Manifest
 /// 🧱️ The editor's `AppDefinition`. Every id in [`ENERGY_MODEL_RETAINED_TOOL_IDS`] is classified
 /// `Migrated` here — `set-node`/`set-cell` are already stamped by their kits, the other twelve are
@@ -1337,6 +2151,18 @@ pub fn create_energy_model_editor() -> semio_framework_plugin::AppDefinition {
         .window_kind_def(structure::definition())
         .window_kind_def(zones::definition())
         .window_kind_def(simulation::definition())
+        .window_kind_def(model_window::definition())
+        // 🕹️ The one framework-owned selection/hover domain the tree panel, the inspector and the 3d
+        // model window share (`✏️editor/🕹️interaction/🦀️.rs`).
+        .interaction(crate::editor::model::interaction::energy_model_interaction_definition())
+        // 🧊️ Binding the 3d window to that domain is what lets the react `World3dHost` dispatch the
+        // framework-reserved `interactionSelect`/`interactionHover` on its own pick — no plugin
+        // pointer command exists, and none is needed.
+        .window_kind_interactions(model_window::WINDOW_KIND_ID, vec![semio_framework_plugin::InteractionRef::new(ENERGY_MODEL_INTERACTION_DOMAIN)])
+        // 📌️ The two dock panels: the artifact tree marks and picks into that same domain, the
+        // inspector edits whatever it resolves to.
+        .panel_tab_def(artifact_panel::definition())
+        .panel_tab_def(inspection_panel::definition())
         .tool(tools::simulation::definition())
         .mutation(SET_ACTIVE_EXAMPLE_ACTION_ID, LocalizedLabel::native("Load example", "Beispiel laden"))
         .action_args(SET_ACTIVE_EXAMPLE_ACTION_ID, vec![semio_framework_plugin::ActionArgDef::select("exampleId", LocalizedLabel::native("Example", "Beispiel"), example_options()).required()])

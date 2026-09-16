@@ -13,6 +13,7 @@ use crate::editor::fem2d::commands::{
     patch_element, patch_load, patch_load_case, patch_material, patch_node, patch_region, patch_section, patch_support, remove_selection, result_animation_tick, set_active_example, set_analysis_settings, set_camera, set_result_animation, set_result_display,
     set_self_weight,
 };
+use crate::editor::fem2d::commands::gumball::{rotate_selection, scale_selection, set_transform_gumball_flag, translate_selection};
 use crate::editor::fem2d::interaction::{fem2d_interaction_definition, Fem2dInteractionSnapshot, FEM2D_INTERACTION_DOMAIN};
 use crate::editor::fem2d::panels::{artifact as artifact_panel, inspection as inspection_panel, results as results_panel};
 use crate::editor::fem2d::terminology::fem2d_labels;
@@ -27,9 +28,9 @@ use dsl::json::Value;
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
 use semio_framework_plugin::app::{Dialect, InteractionView};
 use semio_framework_plugin::{
-    built_text_node, create_default_layout, ActionArgDef, ActionArgOption, AppIo, AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract,
+    built_text_node, create_default_layout, ActionArgDef, ActionArgOption, ActionDescriptor, AppIo, AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract,
     ArtifactToolPublicationLane, ArtifactView, ConfigSpec, ConfigView, DraftView, Editor, EditorApp, Emit, Fault, InteractionRef, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, NoDraft, NoDraftMutation,
-    PluginAssemblyError, PluginCloseStep, ViewModel,
+    PluginAssemblyError, PluginCloseStep, UtilityCategory, UtilityDefinition, ViewModel, WindowMeasure,
 };
 use std::collections::HashMap;
 use store::EngineHandles;
@@ -88,6 +89,10 @@ semio_framework_plugin::app_commands! {
         "setResultAnimation" as "result-animation" => set_result_animation::SetResultAnimation,
         "resultAnimationTick" as "result-animation-tick" => result_animation_tick::ResultAnimationTick,
         "focusEntity" as "focus-entity" => focus_entity::FocusEntity,
+        "translateSelection" as "translate-selection" => translate_selection::TranslateSelection,
+        "rotateSelection" as "rotate-selection" => rotate_selection::RotateSelection,
+        "scaleSelection" as "scale-selection" => scale_selection::ScaleSelection,
+        "setTransformGumballFlag" as "set-transform-gumball-flag" => set_transform_gumball_flag::SetTransformGumballFlag,
     }
 }
 
@@ -133,6 +138,10 @@ const FEM2D_RETAINED_TOOL_IDS: &[&str] = &[
     "setResultAnimation",
     "resultAnimationTick",
     "focusEntity",
+    "translateSelection",
+    "rotateSelection",
+    "scaleSelection",
+    "setTransformGumballFlag",
 ];
 const FEM2D_RETAINED_PAYLOAD_SCHEMA: &str = "fem.2d.tool-command.v1";
 const FEM2D_RETAINED_RAW_BYTES: usize = 65_536;
@@ -177,6 +186,10 @@ const FEM2D_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
     ArtifactToolPublicationContract { tool_id: "setResultAnimation", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
     ArtifactToolPublicationContract { tool_id: "resultAnimationTick", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
     ArtifactToolPublicationContract { tool_id: "focusEntity", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
+    ArtifactToolPublicationContract { tool_id: "translateSelection", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "rotateSelection", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "scaleSelection", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "setTransformGumballFlag", lanes: &[ArtifactToolPublicationLane::HostOnly] },
 ];
 
 fn fem2d_retained_contract() -> ToolExecutionContract {
@@ -192,6 +205,10 @@ fn fem2d_document_items(snapshot: &Fem2dSnapshot) -> Option<usize> {
         .try_fold(1usize, |total, count| total.checked_add(count))
 }
 
+fn fem2d_interaction_selection_ids(interaction: &protocol::InteractionState) -> Vec<String> {
+    interaction.selection.get(FEM2D_INTERACTION_DOMAIN).map(|selection| selection.ids.clone()).unwrap_or_default()
+}
+
 fn fem2d_retained_extent(command: &Fem2dCommand, snapshot: &Fem2dSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
     if !FEM2D_RETAINED_TOOL_IDS.contains(&command.command_id()) {
         return None;
@@ -205,7 +222,7 @@ fn fem2d_retained_reduce(
     snapshot: &Fem2dSnapshot,
     config: &NoConfig,
     history: &semio_framework_plugin::HistoryView,
-    _interaction: &protocol::InteractionState,
+    interaction: &protocol::InteractionState,
     _hover: &semio_framework_plugin::app::InteractionHoverState,
     context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Fem2dPlayApp>>>,
     operation: &AppOperationContext,
@@ -225,6 +242,31 @@ fn fem2d_retained_reduce(
         Fem2dCommand::CanvasPointerMove(payload) => canvas_pointer_move::handle_window(payload, &doc, &cfg, view.ok_or_else(|| Fault::from("fem2d.pointer.window-context-required"))?),
         Fem2dCommand::CanvasPointerUp(payload) => canvas_pointer_up::handle_window(payload, &doc, &cfg, view.ok_or_else(|| Fault::from("fem2d.pointer.window-context-required"))?),
         Fem2dCommand::FocusEntity(payload) => focus_entity::handle_window(payload, &doc, &cfg, view.ok_or_else(|| Fault::from("fem2d.camera.window-context-required"))?),
+        Fem2dCommand::TranslateSelection(payload) => {
+            let payload = if payload.ids.is_empty() {
+                translate_selection::TranslateSelection { ids: fem2d_interaction_selection_ids(interaction), dx: payload.dx, dy: payload.dy, dz: payload.dz }
+            } else {
+                payload.clone()
+            };
+            translate_selection::handle(&payload, &doc, &cfg)
+        }
+        Fem2dCommand::RotateSelection(payload) => {
+            let payload = if payload.ids.is_empty() {
+                rotate_selection::RotateSelection { ids: fem2d_interaction_selection_ids(interaction), ax: payload.ax, ay: payload.ay, az: payload.az, angle: payload.angle }
+            } else {
+                payload.clone()
+            };
+            rotate_selection::handle(&payload, &doc, &cfg)
+        }
+        Fem2dCommand::ScaleSelection(payload) => {
+            let payload = if payload.ids.is_empty() {
+                scale_selection::ScaleSelection { ids: fem2d_interaction_selection_ids(interaction), sx: payload.sx, sy: payload.sy, sz: payload.sz }
+            } else {
+                payload.clone()
+            };
+            scale_selection::handle(&payload, &doc, &cfg)
+        }
+        Fem2dCommand::SetTransformGumballFlag(payload) => set_transform_gumball_flag::handle_window(payload, view.ok_or_else(|| Fault::from("fem2d.gumball-flag.window-context-required"))?),
         _ => command.dispatch(&doc, &cfg),
     }
 }
@@ -694,7 +736,11 @@ impl ArtifactEditor for Fem2dPlayApp {
             "setResultAnimation",
             "resultAnimationTick",
             "focusEntity",
-                    ]
+            "translateSelection",
+            "rotateSelection",
+            "scaleSelection",
+            "setTransformGumballFlag",
+        ]
     }
 
     fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
@@ -848,6 +894,21 @@ impl ArtifactEditor for Fem2dPlayApp {
         let number = |key: &str| args.and_then(|value| value.get(key)).and_then(dsl::DslValue::as_f64);
         let flag = |key: &str| args.and_then(|value| value.get(key)).and_then(dsl::DslValue::as_bool);
         let list = |key: &str| args.and_then(|value| value.get(key)).and_then(dsl::DslValue::as_array).map(|items| items.iter().filter_map(dsl::DslValue::as_str).map(str::to_string).collect::<Vec<_>>());
+        // 🧵️ `samples: [[x, y], …]` — every well-formed 2-number pair in order; malformed entries are skipped.
+        let point_list = |key: &str| {
+            args.and_then(|value| value.get(key))
+                .and_then(dsl::DslValue::as_array)
+                .map(|items| {
+                    items
+                        .iter()
+                        .filter_map(|item| {
+                            let pair = item.as_array()?;
+                            Some([pair.first()?.as_f64()?, pair.get(1)?.as_f64()?])
+                        })
+                        .collect::<Vec<[f64; 2]>>()
+                })
+                .unwrap_or_default()
+        };
         // 🩹️ A control's `Trigger::Change` value arrives typed (number for sliders/number inputs,
         // bool for toggles, text for selects/inputs); every patch command carries it as text.
         let scalar_text = |key: &str| {
@@ -923,7 +984,15 @@ impl ArtifactEditor for Fem2dPlayApp {
                 meta: flag("meta").unwrap_or(false),
                 alt: flag("alt").unwrap_or(false),
             })),
-            "canvasPointerMove" => Ok(Fem2dCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { x: number("x").unwrap_or_default(), y: number("y").unwrap_or_default(), width: number("width").unwrap_or_default(), height: number("height").unwrap_or_default() })),
+            "canvasPointerMove" => {
+                let x = number("x").unwrap_or_default();
+                let y = number("y").unwrap_or_default();
+                let mut samples = point_list("samples");
+                if samples.is_empty() {
+                    samples.push([x, y]);
+                }
+                Ok(Fem2dCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { x, y, width: number("width").unwrap_or_default(), height: number("height").unwrap_or_default(), samples }))
+            }
             "canvasPointerUp" => Ok(Fem2dCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp {
                 x: number("x").unwrap_or_default(),
                 y: number("y").unwrap_or_default(),
@@ -933,6 +1002,7 @@ impl ArtifactEditor for Fem2dPlayApp {
                 ctrl: flag("ctrl").unwrap_or(false),
                 meta: flag("meta").unwrap_or(false),
                 alt: flag("alt").unwrap_or(false),
+                cancelled: flag("cancelled").unwrap_or(false),
             })),
             "patchNode" => Ok(Fem2dCommand::PatchNode(patch_node::PatchNode { id: text("id").unwrap_or_default(), field: text("field").unwrap_or_default(), value: scalar_text("value").unwrap_or_default() })),
             "patchElement" => Ok(Fem2dCommand::PatchElement(patch_element::PatchElement { id: text("id").unwrap_or_default(), field: text("field").unwrap_or_default(), value: scalar_text("value").unwrap_or_default() })),
@@ -946,6 +1016,26 @@ impl ArtifactEditor for Fem2dPlayApp {
             "setResultAnimation" => Ok(Fem2dCommand::SetResultAnimation(set_result_animation::SetResultAnimation { phase: number("phase"), playing: flag("playing"), speed: number("speed"), loop_mode: text("loopMode"), waveform: text("waveform"), field: text("field"), value: scalar_text("value"), window_id: text("windowId") })),
             "resultAnimationTick" => Ok(Fem2dCommand::ResultAnimationTick(result_animation_tick::ResultAnimationTick {})),
             "focusEntity" => Ok(Fem2dCommand::FocusEntity(focus_entity::FocusEntity { id: text("id").unwrap_or_default() })),
+            "translateSelection" => Ok(Fem2dCommand::TranslateSelection(translate_selection::TranslateSelection {
+                ids: list("ids").unwrap_or_default(),
+                dx: number("dx").unwrap_or_default(),
+                dy: number("dy").unwrap_or_default(),
+                dz: number("dz").unwrap_or_default(),
+            })),
+            "rotateSelection" => Ok(Fem2dCommand::RotateSelection(rotate_selection::RotateSelection {
+                ids: list("ids").unwrap_or_default(),
+                ax: number("ax").unwrap_or_default(),
+                ay: number("ay").unwrap_or_default(),
+                az: number("az").unwrap_or(1.0),
+                angle: number("angle").unwrap_or_default(),
+            })),
+            "scaleSelection" => Ok(Fem2dCommand::ScaleSelection(scale_selection::ScaleSelection {
+                ids: list("ids").unwrap_or_default(),
+                sx: number("sx").unwrap_or(1.0),
+                sy: number("sy").unwrap_or(1.0),
+                sz: number("sz").unwrap_or(1.0),
+            })),
+            "setTransformGumballFlag" => Ok(Fem2dCommand::SetTransformGumballFlag(set_transform_gumball_flag::SetTransformGumballFlag { flag: text("flag").unwrap_or_default(), pressed: flag("pressed") })),
             other => Err(Fault::from(format!("action '{other}' is not a declared fem2d action — every app action is dispatched through the typed command channel (see `dispatch_typed_command`)"))),
         }
     }
@@ -963,6 +1053,31 @@ impl ArtifactEditor for Fem2dPlayApp {
             // 🗑️ The delete keybinding dispatches `removeSelection` without ids: the live framework-owned
             // `"fem2d"` selection is what gets removed.
             Fem2dCommand::RemoveSelection(payload) if payload.ids.is_empty() => remove_selection::handle(&remove_selection::RemoveSelection { ids: interaction.selection(FEM2D_INTERACTION_DOMAIN).ids.clone() }, doc, cfg),
+            Fem2dCommand::TranslateSelection(payload) => {
+                let payload = if payload.ids.is_empty() {
+                    translate_selection::TranslateSelection { ids: interaction.selection(FEM2D_INTERACTION_DOMAIN).ids.clone(), dx: payload.dx, dy: payload.dy, dz: payload.dz }
+                } else {
+                    payload.clone()
+                };
+                translate_selection::handle(&payload, doc, cfg)
+            }
+            Fem2dCommand::RotateSelection(payload) => {
+                let payload = if payload.ids.is_empty() {
+                    rotate_selection::RotateSelection { ids: interaction.selection(FEM2D_INTERACTION_DOMAIN).ids.clone(), ax: payload.ax, ay: payload.ay, az: payload.az, angle: payload.angle }
+                } else {
+                    payload.clone()
+                };
+                rotate_selection::handle(&payload, doc, cfg)
+            }
+            Fem2dCommand::ScaleSelection(payload) => {
+                let payload = if payload.ids.is_empty() {
+                    scale_selection::ScaleSelection { ids: interaction.selection(FEM2D_INTERACTION_DOMAIN).ids.clone(), sx: payload.sx, sy: payload.sy, sz: payload.sz }
+                } else {
+                    payload.clone()
+                };
+                scale_selection::handle(&payload, doc, cfg)
+            }
+            Fem2dCommand::SetTransformGumballFlag(payload) => set_transform_gumball_flag::handle_window(payload, view_state.ok_or_else(|| Fault::from("fem2d.gumball-flag.window-context-required"))?),
             Fem2dCommand::SetCamera(payload) => set_camera::handle_window(payload, cfg, view_state.ok_or_else(|| Fault::from("fem2d.camera.window-context-required"))?),
             Fem2dCommand::SetResultDisplay(payload) => set_result_display::handle_window(payload, cfg, view_state.ok_or_else(|| Fault::from("fem2d.results.window-context-required"))?),
             Fem2dCommand::CanvasPointerDown(payload) => canvas_pointer_down::handle_window(payload, doc, cfg, view_state.ok_or_else(|| Fault::from("fem2d.pointer.window-context-required"))?),
@@ -1006,6 +1121,12 @@ impl ArtifactEditor for Fem2dPlayApp {
     ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         Self::render_body(body_key, doc, cfg, view_state, Fem2dInteractionSnapshot::from_interaction(interaction))
     }
+
+    fn window_measures(_doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, NoConfig>, view_state: &ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
+        let labels = fem2d_labels(view_state);
+        let measures = crate::editor::fem2d::window_measures::fem2d_window_measures(view_state, labels);
+        HashMap::from([(model_window::WINDOW_KIND_ID.into(), measures.clone()), (results_window::WINDOW_KIND_ID.into(), measures)])
+    }
 }
 
 impl Fem2dPlayApp {
@@ -1016,11 +1137,26 @@ impl Fem2dPlayApp {
         match body_key {
             model_window::BODY_KEY => {
                 let window = model_window::config::current(cfg);
-                crate::editor::fem2d::session::with_live_visual(doc.render_operation(), |visual| model_window::render_with_progress(doc.snapshot, &window.camera, visual, &interaction))
+                let window_id = crate::editor::fem2d::interaction::canvas_gesture::fem2d_gesture_window_id_for_render(view_state, model_window::BODY_KEY);
+                let active_utility = crate::editor::fem2d::interaction::canvas_gesture::fem2d_active_utility(view_state);
+                crate::editor::fem2d::session::with_live_visual(doc.render_operation(), |visual| {
+                    model_window::render_with_progress(doc.snapshot, &window.camera, visual, &interaction, window_id.as_deref(), active_utility)
+                })
             }
             results_window::BODY_KEY => {
                 let window = results_window::config::current(cfg);
-                results_window::render(doc.snapshot, &config_result_display(&window), &window.camera, &window, &interaction, doc.render_operation())
+                let window_id = crate::editor::fem2d::interaction::canvas_gesture::fem2d_gesture_window_id_for_render(view_state, results_window::BODY_KEY);
+                let active_utility = crate::editor::fem2d::interaction::canvas_gesture::fem2d_active_utility(view_state);
+                results_window::render(
+                    doc.snapshot,
+                    &config_result_display(&window),
+                    &window.camera,
+                    &window,
+                    &interaction,
+                    doc.render_operation(),
+                    window_id.as_deref(),
+                    active_utility,
+                )
             }
             artifact_panel::BODY_KEY => artifact_panel::render(doc.snapshot, &interaction, labels),
             inspection_panel::BODY_KEY => inspection_panel::render(doc.snapshot, &interaction, labels),
@@ -1032,6 +1168,12 @@ impl Fem2dPlayApp {
 }
 
 //#region 🔖️UiHelpers
+fn fem2d_utility(id: &str, label: LocalizedLabel, icon: &str, category: UtilityCategory) -> UtilityDefinition {
+    UtilityDefinition { group: Some("Select".into()), category: Some(category), ..UtilityDefinition::new(id, label, icon) }
+}
+
+const FEM2D_CANVAS_UTILITIES: &[&str] = &["selectDirect", "selectMarquee", "selectLasso", "transformMove", "transform"];
+
 /// 🏷️ Admits resolved fem2d text into the semantic UI contract.
 pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::plugin_app_close_prelude::Label> {
     semio_framework_plugin::plugin_app_close_prelude::Label::try_from(value.as_ref()).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "fem2d UI label admission failed"))
@@ -1049,6 +1191,11 @@ pub fn ui_node_list(values: impl IntoIterator<Item = semio_framework_plugin::UiA
 /// 🎛️ Mints one fem2d-controller action for a panel row or control binding.
 pub fn fem2d_action(action: &str, args: Option<semio_framework_plugin::UiValue>) -> semio_framework_plugin::UiAssemblyResult<(semio_framework_plugin::ActionId, Option<semio_framework_plugin::UiValue>)> {
     semio_framework_plugin::ActionFactory::new(FEM2D_PLAY_CONTROLLER_ID).action(action, args)
+}
+
+/// 🎛️ Window-measure action binding — same controller scope as [`fem2d_action`], without the UI assembly envelope.
+pub fn fem2d_measure_action(action: &str, args: Option<Value>) -> ActionDescriptor {
+    ActionDescriptor { controller_id: FEM2D_PLAY_CONTROLLER_ID.into(), action: action.into(), args: args.map(|value| dsl::json::to_dsl_value(&value)) }
 }
 
 /// 🪟️ The first results-window instance of the layout — the one the results panel addresses when
@@ -1290,6 +1437,39 @@ pub fn create_fem2d_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("setResultAnimation", InteractiveJobClassification::Migrated)
             .action_interactive_job("resultAnimationTick", InteractiveJobClassification::Migrated)
             .action_interactive_job("focusEntity", InteractiveJobClassification::Migrated)
+            .action_interactive_job("translateSelection", InteractiveJobClassification::Migrated)
+            .action_interactive_job("rotateSelection", InteractiveJobClassification::Migrated)
+            .action_interactive_job("scaleSelection", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setTransformGumballFlag", InteractiveJobClassification::Migrated)
+            // 🧰️ Canvas selection utilities — rectangle/lasso marquee and direct pick, shared with draw/note.
+            .utility(fem2d_utility("selectDirect", LocalizedLabel::native("Direct Select", "Direktauswahl"), "mouse-pointer-2", UtilityCategory::Selection))
+            .utility(fem2d_utility("selectMarquee", LocalizedLabel::native("Marquee Select", "Rahmenauswahl"), "square-dashed", UtilityCategory::Selection))
+            .utility(fem2d_utility("selectLasso", LocalizedLabel::native("Lasso Select", "Lasso-Auswahl"), "lasso", UtilityCategory::Selection))
+            .utility(fem2d_utility("transformMove", LocalizedLabel::native("Pan", "Schwenken"), "move", UtilityCategory::Utilities))
+            .utility(UtilityDefinition { group: Some("Transform".into()), category: Some(UtilityCategory::Utilities), ..UtilityDefinition::new("transform", LocalizedLabel::native("Transform", "Transformieren"), "move-3d") })
+            .mutation("translateSelection", LocalizedLabel::native("Translate Selection", "Auswahl verschieben"))
+            .action_args("translateSelection", vec![
+                ActionArgDef::number("dx", LocalizedLabel::native("Dx", "Dx")).required(),
+                ActionArgDef::number("dy", LocalizedLabel::native("Dy", "Dy")).required(),
+            ])
+            .mutation("rotateSelection", LocalizedLabel::native("Rotate Selection", "Auswahl drehen"))
+            .action_args("rotateSelection", vec![ActionArgDef::number("angle", LocalizedLabel::native("Angle", "Winkel")).required()])
+            .mutation("scaleSelection", LocalizedLabel::native("Scale Selection", "Auswahl skalieren"))
+            .action_args("scaleSelection", vec![
+                ActionArgDef::number("sx", LocalizedLabel::native("Sx", "Sx")).required(),
+                ActionArgDef::number("sy", LocalizedLabel::native("Sy", "Sy")).required(),
+            ])
+            .action_with(semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::new("setTransformGumballFlag", LocalizedLabel::native("Set Transform Gumball Flag", "Transform-Griff festlegen"), semio_framework_plugin::ActionKind::View, "settings-2") })
+            .action_args("setTransformGumballFlag", vec![
+                ActionArgDef::text("flag", LocalizedLabel::native("Flag", "Flagge")).required(),
+                ActionArgDef::toggle("pressed", LocalizedLabel::native("Pressed", "Gedrückt")),
+            ])
+            .action_interactive_job("translateSelection", InteractiveJobClassification::Migrated)
+            .action_interactive_job("rotateSelection", InteractiveJobClassification::Migrated)
+            .action_interactive_job("scaleSelection", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setTransformGumballFlag", InteractiveJobClassification::Migrated)
+            .window_kind_utilities(model_window::WINDOW_KIND_ID, FEM2D_CANVAS_UTILITIES.iter().map(|id| (*id).into()).collect())
+            .window_kind_utilities(results_window::WINDOW_KIND_ID, FEM2D_CANVAS_UTILITIES.iter().map(|id| (*id).into()).collect())
             // 🕹️ Framework-owned hover/selection: one domain over every document entity kind, bound to
             // both Canvas2d windows; interactionSelect/interactionHover/clearSelection/selectAll auto-inject.
             .interaction(fem2d_interaction_definition())

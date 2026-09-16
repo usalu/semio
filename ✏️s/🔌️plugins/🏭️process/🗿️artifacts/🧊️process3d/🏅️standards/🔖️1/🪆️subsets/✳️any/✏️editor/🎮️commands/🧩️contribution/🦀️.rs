@@ -21,7 +21,8 @@ pub mod set_contributions {
         _cfg: &ConfigView<'_, Process3dConfig>,
         _ctx: &mut crate::editor::process3d::Process3dDispatchCtx,
     ) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
-        Ok(Emit::config(vec![Process3dConfigMutation::SetContributions { json: payload.json.clone() }]))
+        let installable = crate::editor::process3d::installable_contributions(&payload.json, crate::editor::process3d::PROCESS3D_CONFIG_CONTRIBUTIONS_BYTES);
+        Ok(Emit::config(vec![Process3dConfigMutation::SetContributions { json: installable }]))
     }
 }
 //#endregion 🔖️SetContributions

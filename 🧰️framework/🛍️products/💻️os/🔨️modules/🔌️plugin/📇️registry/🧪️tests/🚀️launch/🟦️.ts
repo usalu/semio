@@ -37,6 +37,23 @@ describe("plugin registry generator preview targets", () => {
     expect(project.targets["catalog-complete"]).toBeDefined();
   });
 
+  it("uses taxonomy folder emojis in every generated dev launcher name", async () => {
+    const repoRoot = getWorkspaceRoot();
+    const { generatePlaygroundRegistry } = await import("../../🎮️playground/🔎️discovery/🟦️.ts");
+    const { generateLaunchJson } = await import("../../🚀️launch/🟦️.ts");
+    const { playgroundLaunchNamePrefix } = await import("../../🚀️launch/🏷️name-prefix/🟦️.ts");
+    const playgrounds = generatePlaygroundRegistry(repoRoot);
+    const launch = Bun.JSONC.parse(generateLaunchJson(repoRoot, playgrounds, [])) as {
+      readonly configurations: readonly { name?: string }[];
+    };
+    for (const playground of playgrounds) {
+      const prefix = playgroundLaunchNamePrefix(playground, repoRoot, playgrounds);
+      expect(prefix, playground.variant).not.toBe(`🧩️${playground.variant}`);
+      const reactName = `🛠️dev${prefix}⚛️react`;
+      expect(launch.configurations.some((entry) => entry.name === reactName), playground.variant).toBe(true);
+    }
+  });
+
   it("registers one react dev launcher for every playground variant", async () => {
     const repoRoot = getWorkspaceRoot();
     const { generatePlaygroundRegistry } = await import("../../🎮️playground/🔎️discovery/🟦️.ts");

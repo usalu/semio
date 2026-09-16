@@ -7,7 +7,8 @@
   "required": [
     "zoneTimestepMinutes",
     "systemTimestepMinutes",
-    "warmupDays"
+    "warmupDays",
+    "resultField"
   ],
   "properties": {
     "zoneTimestepMinutes": {
@@ -29,6 +30,17 @@
       "minimum": 0,
       "maximum": 365,
       "default": 7,
+      "x-semio-state": "config"
+    },
+    "resultField": {
+      "type": "string",
+      "enum": [
+        "conductionLoss",
+        "conductionGain",
+        "solarTransmitted",
+        "solarAbsorbed"
+      ],
+      "default": "conductionLoss",
       "x-semio-state": "config"
     }
   }

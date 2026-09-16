@@ -35,6 +35,8 @@ impl protocol::OpBinary for Process3dViewCommand {
 pub struct Process3dViewer;
 
 impl ArtifactViewer for Process3dViewer {
+    /// 🧩️ The same member roster the editor declares — see `Process3dPlayApp`'s `Members`.
+    type Members = semio_s_artifact_stdio_semio::SemioMembers;
     type Snapshot = Process3dSnapshot;
     type Mutation = Process3dMutation;
     type Config = NoConfig;
@@ -47,6 +49,10 @@ impl ArtifactViewer for Process3dViewer {
 
     const DIALECT: Dialect = PROCESS3D_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = PROCESS_3D_SCHEMA;
+
+    fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
+        crate::genesis_process3d_child_pack(snapshot, slot, child_id)
+    }
 
     fn initial_snapshot() -> Process3dSnapshot {
         crate::schema::default_document()

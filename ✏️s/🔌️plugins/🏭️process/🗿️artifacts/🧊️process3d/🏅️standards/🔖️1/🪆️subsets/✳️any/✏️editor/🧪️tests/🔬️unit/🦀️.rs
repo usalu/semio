@@ -1,13 +1,13 @@
 pub(crate) mod context {
     use super::super::*;
-    use semio_framework_plugin::artifact_app_laws::{meta, new_app_with_registry};
+    use semio_framework_plugin::artifact_app_laws::{meta, new_app_with_registry_and_members};
     use semio_framework_plugin::{ActionMeta, EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
     
     /// ✏️ `Process3dPlayApp` implements the AUTHORING trait `ArtifactEditor`, not the runtime
     /// `ArtifactApp` — `EditorApp<Process3dPlayApp>` (SDK adapter, contract §2.1) is the real
     /// `ArtifactApp` implementor `VcsArtifactApp` wraps, exactly the way
     /// `PluginBuilder::editor::<Process3dPlayApp>` builds it.
-    pub type Process3dRawApp = VcsArtifactApp<EditorApp<Process3dPlayApp>>;
+    pub type Process3dRawApp = VcsArtifactApp<EditorApp<Process3dPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>;
     
     /// 🧪️ A fixture app that retires its stores on the way out. A registry-backed `VcsArtifactApp`
     /// asserts on `Drop` that its artifact store reached the terminal-empty shallow shell
@@ -161,14 +161,14 @@ pub(crate) mod context {
     /// that generation, so a test that swaps a production envelope must start from here; seeding first
     /// bumps the generation and the decode comes back `Fault` instead of `Ready`.
     pub fn unseeded_app_with_registry() -> Process3dApp {
-        let mut app = semio_framework_plugin::resolve_ready(new_app_with_registry::<EditorApp<Process3dPlayApp>>(process3d_app_manifest_for_tests));
+        let mut app = semio_framework_plugin::resolve_ready(new_app_with_registry_and_members::<EditorApp<Process3dPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(process3d_app_manifest_for_tests));
         semio_framework_plugin::resolve_ready(PluginApp::bind_instance_id(&mut app, meta("local").instance_id));
         Process3dApp(app)
     }
     
     /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline.
     pub fn app_with_registry() -> Process3dApp {
-        let mut app = semio_framework_plugin::resolve_ready(new_app_with_registry::<EditorApp<Process3dPlayApp>>(process3d_app_manifest_for_tests));
+        let mut app = semio_framework_plugin::resolve_ready(new_app_with_registry_and_members::<EditorApp<Process3dPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(process3d_app_manifest_for_tests));
         semio_framework_plugin::resolve_ready(PluginApp::bind_instance_id(&mut app, meta("local").instance_id));
         seed_domain_catalog_contributions(&mut app);
         Process3dApp(app)
@@ -495,9 +495,13 @@ fn retained_resumable_extent_accepts_exact_byte_maximum_and_rejects_max_plus_one
     let config = Process3dConfig::default();
     let interaction = protocol::InteractionState::default();
     let snapshot = retained_snapshot(0);
-    let exact = Process3dCommand::SetContributions(set_contributions::SetContributions { json: "x".repeat(PROCESS3D_RETAINED_RAW_BYTES) });
-    let rejected = Process3dCommand::SetContributions(set_contributions::SetContributions { json: "x".repeat(PROCESS3D_RETAINED_RAW_BYTES + 1) });
-    assert_eq!(process3d_resumable_extent(&exact, &snapshot, &config, &interaction), Some(PROCESS3D_RETAINED_RAW_BYTES.div_ceil(PROCESS3D_SCAN_BYTES)));
+    // 🧩️ `setContributions` carries a host pack, not a gesture, so its wire lane is
+    // `CONTRIBUTIONS_COMMAND_RAW_WIRE_BYTES` — the gesture envelope prices every OTHER command.
+    let ceiling = semio_framework_plugin::CONTRIBUTIONS_COMMAND_RAW_WIRE_BYTES;
+    let exact = Process3dCommand::SetContributions(set_contributions::SetContributions { json: "x".repeat(ceiling) });
+    let rejected = Process3dCommand::SetContributions(set_contributions::SetContributions { json: "x".repeat(ceiling + 1) });
+    assert_eq!(process3d_resumable_extent(&exact, &snapshot, &config, &interaction), Some(ceiling.div_ceil(PROCESS3D_SCAN_BYTES)));
+    assert_eq!(process3d_resumable_extent(&Process3dCommand::EngagementInput(engagement_input::EngagementInput { value: "x".repeat(PROCESS3D_RETAINED_RAW_BYTES + 1) }), &snapshot, &config, &interaction), None, "a GESTURE past its own envelope is still refused");
     assert_eq!(process3d_resumable_extent(&rejected, &snapshot, &config, &interaction), None);
 }
 
@@ -1114,3 +1118,76 @@ async fn process_contribution_envelope_accepts_exact_limits_and_rejects_plus_one
     assert!(!process_json_envelope_is_bounded(&items_plus_one));
 }
 //#endregion 🔖️BehaviorTests
+
+//#region 🧩️RealContributionsPackAdmission
+/// 🧩️ The four shipped `process-extension-*` packs, exactly as those crates emit them
+/// (`✏️s/🔌️plugins/🏭️process/🧩️extensions/*/🦀️.rs` builds this payload from the same `MachineCatalog`
+/// this crate compiles in), plus the foreign `cad.computer` / `sourcing.module` entries the
+/// DEMONSTRATOR's `consumes` row puts in the same pack. This is the real host closure, not a toy.
+fn demonstrator_contributions_pack() -> String {
+    let mut entries: Vec<semio_framework::ProgramContributionEntry> = Vec::new();
+    for catalog in builtin_installed_catalogs().into_iter().filter(|catalog| catalog.catalog_id() != "geometry") {
+        entries.push(semio_framework::ProgramContributionEntry {
+            plugin_id: format!("process-extension-{}", catalog.catalog_id()),
+            topic_contribution: Some(semio_framework::TopicContribution::new(
+                "process.machines",
+                semio_framework::DslValue::object([
+                    ("appId".to_string(), semio_framework::DslValue::String(PROCESS_3D_PLAY_APP_ID.to_string())),
+                    ("moduleId".to_string(), semio_framework::DslValue::String(catalog.catalog_id().to_string())),
+                    ("label".to_string(), semio_framework::DslValue::String(catalog.label().to_string())),
+                    ("iconId".to_string(), semio_framework::DslValue::String(catalog.icon_id().to_string())),
+                    ("machinesJson".to_string(), semio_framework::DslValue::String(semio_framework_os_kernel::json::to_json_string(&catalog.machines()))),
+                ]),
+            )),
+        });
+    }
+    for (plugin, topic, app) in [
+        ("cad-extension-aec-building", "cad.computer", "s.cad.cad@1/*#editor"),
+        ("cad-extension-spatial-shape", "cad.computer", "s.cad.cad@1/*#editor"),
+        ("sourcing-module-beams", "sourcing.module", "sourcing-curation"),
+    ] {
+        entries.push(semio_framework::ProgramContributionEntry {
+            plugin_id: plugin.to_string(),
+            topic_contribution: Some(semio_framework::TopicContribution::new(
+                topic,
+                semio_framework::DslValue::object([
+                    ("appId".to_string(), semio_framework::DslValue::String(app.to_string())),
+                    ("moduleId".to_string(), semio_framework::DslValue::String(plugin.to_string())),
+                ]),
+            )),
+        });
+    }
+    semio_framework_os_kernel::json::to_json_string(&entries)
+}
+
+/// ⚖️ The REAL demonstrator pack crosses this app's registered `setContributions` admission, distils
+/// to the four `process.machines` entries addressed to this app, and is retained inside the
+/// contributions lane — every hop the live push actually takes.
+///
+/// 🏁️ Before the per-tool contract this app priced `setContributions` on its 8 KiB GESTURE envelope,
+/// and the live push died with `typed command raw JSON exceeds its registered retained-page
+/// admission` the moment the host stopped cutting capability packs to `[]` (2026-09-16, ticket
+/// 26/08/28/DEMONSTRATOR-END-TO-END-ALL-APPS).
+#[test]
+fn the_real_demonstrator_pack_is_admitted_distilled_and_retained() {
+    let pack = demonstrator_contributions_pack();
+    let wire = semio_framework_os_kernel::json::to_json_string(&("setContributions", semio_framework::DslValue::object([("json".to_string(), semio_framework::DslValue::String(pack.clone()))])));
+    println!("[STATS] process3d demonstrator pack packChars={} wireChars={}", pack.len(), wire.len());
+    assert!(wire.len() <= semio_framework_plugin::CONTRIBUTIONS_COMMAND_RAW_WIRE_BYTES, "the real pack's command wire ({} B) must fit the registered admission", wire.len());
+    assert!(pack.len() > PROCESS3D_RETAINED_RAW_BYTES, "the real pack is past the gesture envelope — that is the whole point of its own lane");
+
+    let distilled = installable_contributions(&pack, PROCESS3D_CONFIG_CONTRIBUTIONS_BYTES);
+    let kept = semio_framework::parse_contributions(&distilled);
+    assert_eq!(kept.len(), 4, "only the process.machines entries addressed to this app are retained");
+    assert!(kept.iter().all(|entry| entry.topic_contribution.as_ref().is_some_and(|topic| topic.topic == "process.machines")));
+    assert!(distilled.len() <= PROCESS3D_CONFIG_CONTRIBUTIONS_BYTES);
+
+    let mutation = Process3dConfigMutation::SetContributions { json: distilled.clone() };
+    assert!(admit_process3d_config_mutation(&mutation).is_ok(), "the distilled roster fits the retained contributions lane");
+    let (post, _, _) = prepare_process3d_config(&Process3dConfig::default(), mutation).expect("the retained config admits the real roster");
+    assert_eq!(post.contributions_json, distilled);
+
+    let catalogs = installed_catalogs(&distilled);
+    assert_eq!(catalogs.len(), builtin_installed_catalogs().len() + 4, "every contributed catalog installs alongside the built-ins");
+}
+//#endregion 🧩️RealContributionsPackAdmission

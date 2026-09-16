@@ -843,7 +843,7 @@ async fn engagement_input_and_possible_engagements_present() {
 async fn the_engagement_hud_counts_the_threaded_cad_selection() {
     let labels = cad_labels(&ViewModel::default());
     let count_of = |interaction: CadInteractionSnapshot| -> String {
-        let view = context::view_with_interaction(forest_play_scene(), CadPlayRuntime::default(), interaction);
+        let view = view_with_interaction(forest_play_scene(), CadPlayRuntime::default(), interaction);
         let engagement = shape::engagement(&view, labels);
         engagement.status.expect("cad status rows").into_iter().find(|row| row.id == "cad-status").expect("cad-status row").text
     };
@@ -1893,12 +1893,17 @@ fn shipped_cad_computer_contributions() -> String {
 /// `setContributions` dispatch, and decodes back into all four computer modules. Unlike sourcing's
 /// 96-byte filter-text envelope, cad already prices `SetContributions` on its own
 /// `CAD_CONFIG_STORE_MAXIMUM_BYTES` lane — this law pins that the real pack fits it, and that the
-/// pack also stays inside the host's one-page (4 KiB) retained-config close budget.
+/// `CAD_CONFIG_STORE_MAXIMUM_BYTES` lane — this law pins that the real pack fits it.
+///
+/// 🏁️ The one-page (4 KiB) close budget this law used to pin as well was the framework's retained-
+/// config close livelock, fixed 2026-09-16 in `close_retained_fields_step`
+/// (`📓️fix-2026-09-16-kernel-capability-contributions-and-close-cliff.md` §2); a 65 536-byte retained
+/// config now reaches terminal-empty, so the declared lane is what bounds this pack and nothing else.
 #[semio_framework_async_macros::async_test]
 async fn the_shipped_cad_computer_pack_is_admitted_by_the_retained_config_envelope() {
     let contributions = shipped_cad_computer_contributions();
     assert!(contributions.len() <= CAD_CONFIG_STORE_MAXIMUM_BYTES, "the real pack is {} bytes against a {}-byte config lane", contributions.len(), CAD_CONFIG_STORE_MAXIMUM_BYTES);
-    assert!(contributions.len() < store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES, "a retained config past one 4 KiB envelope page never reaches its terminal-empty shell: {} bytes", contributions.len());
+
     let mutation = CadConfigMutation::SetContributions { json: contributions.clone() };
     assert!(admit_cad_config_mutation(&mutation).is_ok(), "the retained config store must admit the real host pack");
     assert!(prepare_cad_config(&CadConfig::default(), mutation).is_ok(), "the whole preparation must admit the real host pack");
@@ -1920,4 +1925,96 @@ async fn the_shipped_cad_computer_pack_is_admitted_by_the_retained_config_envelo
     let doc = ArtifactView::new(&scene, &history);
     assert!(render_direct(&app, shape::BODY_KEY, &doc, &config, &ViewModel::default()).is_ok(), "the shape panel still assembles with the whole pack installed");
 }
+
+/// 🧩️ The pack the DEMONSTRATOR's koordinator pane actually receives: the demonstrator consumes
+/// `cad.computer`, `process.machines` and `sourcing.module`, so the host hands this app all three
+/// topics in ONE crossing and the guest ignores what is not addressed to it.
+fn demonstrator_contributions_pack() -> String {
+    let mut entries: Vec<protocol::DslValue> = serde_json::from_str::<Vec<serde_json::Value>>(&shipped_cad_computer_contributions())
+        .expect("the shipped cad pack parses")
+        .into_iter()
+        .map(|value| protocol::json::from_json_str::<protocol::DslValue>(&value.to_string()).expect("entry"))
+        .collect();
+    for (plugin_id, topic, app_id, bulk) in [
+        ("process-extension-wood", "process.machines", "process3d-play", 4_705usize),
+        ("process-extension-metal", "process.machines", "process3d-play", 4_011),
+        ("process-extension-robotic", "process.machines", "process3d-play", 4_010),
+        ("process-extension-concrete", "process.machines", "process3d-play", 3_311),
+        ("sourcing-module-beams", "sourcing.module", "sourcing-curation", 780),
+        ("sourcing-module-windows", "sourcing.module", "sourcing-curation", 669),
+        ("sourcing-module-slabs", "sourcing.module", "sourcing-curation", 589),
+    ] {
+        entries.push(protocol::DslValue::object([
+            ("pluginId".to_string(), protocol::DslValue::String(plugin_id.into())),
+            (
+                "topicContribution".to_string(),
+                protocol::DslValue::object([
+                    ("topic".to_string(), protocol::DslValue::String(topic.into())),
+                    (
+                        "payload".to_string(),
+                        protocol::DslValue::object([
+                            ("appId".to_string(), protocol::DslValue::String(app_id.into())),
+                            ("moduleId".to_string(), protocol::DslValue::String(plugin_id.into())),
+                            // 📐️ The REAL bulk string of that extension, measured off the built dev manifests 2026-09-16.
+                            ("bulkJson".to_string(), protocol::DslValue::String("m".repeat(bulk))),
+                        ]),
+                    ),
+                ]),
+            ),
+        ]));
+    }
+    json::to_json_string(&protocol::DslValue::Array(entries))
+}
+
+/// ⚖️ LAW: the REAL demonstrator pack crosses this app's registered `setContributions` admission and
+/// is retained whole.
+///
+/// 🏁️ Before the per-app admission, cad priced `setContributions` on the 8 KiB gesture envelope every
+/// retained tool shares, and the live push died with `typed command raw JSON exceeds its registered
+/// retained-page admission` the moment the host stopped cutting capability packs to `[]`
+/// (2026-09-16, ticket 26/08/28/DEMONSTRATOR-END-TO-END-ALL-APPS).
+#[semio_framework_async_macros::async_test]
+async fn the_real_demonstrator_pack_is_admitted_by_the_registered_contributions_wire() {
+    let pack = demonstrator_contributions_pack();
+    let wire = json::to_json_string(&("setContributions", protocol::DslValue::object([("json".to_string(), protocol::DslValue::String(pack.clone()))])));
+    println!("[STATS] cad demonstrator pack packChars={} wireChars={}", pack.len(), wire.len());
+    assert!(pack.len() > CAD_RETAINED_RAW_BYTES, "the real pack is past the gesture envelope — that is why the app declares its own contributions wire");
+    assert!(wire.len() <= semio_framework_plugin::CONTRIBUTIONS_COMMAND_RAW_WIRE_BYTES, "the real pack's command wire ({} B) must fit the registered admission", wire.len());
+    assert!(pack.len() <= CAD_CONFIG_STORE_MAXIMUM_BYTES, "the real pack ({} B) must fit the retained config lane", pack.len());
+    let mutation = CadConfigMutation::SetContributions { json: pack.clone() };
+    assert!(admit_cad_config_mutation(&mutation).is_ok());
+    assert!(prepare_cad_config(&CadConfig::default(), mutation).is_ok());
+    let accepted = crate::standards::v1::subsets::any::schema::inferences::validate_cad_computer_contributions(&pack);
+    assert_eq!(accepted.len(), 4, "only the four cad.computer modules install; the foreign topics are ignored, never refused");
+}
 //#endregion 🧩️Contributions
+
+//#region 🔖️EngagementSubmit
+/// ⏎️ The shell's Enter/Space on an empty action line during a session is the state's `confirm`:
+/// box's `first_corner_height` accepts the typed height, which reaches the `ready` commit state.
+#[semio_framework_async_macros::async_test]
+async fn empty_submit_during_a_session_fires_the_state_confirm_and_commits() {
+    let document = empty_cad_snapshot();
+    let mut runtime = CadPlayRuntime::default();
+    assert!(start_interaction_session(&mut runtime, CadPaneId::Shape, "primitive.box"));
+    {
+        let session = runtime.engagement_session.as_mut().expect("session");
+        assert!(apply_event(session, "pointer.down", Some(&protocol::DslValue::Array(vec![protocol::DslValue::float(0.0), protocol::DslValue::float(0.0), protocol::DslValue::float(0.0)]))));
+        assert!(apply_event(session, "pointer.down", Some(&protocol::DslValue::Array(vec![protocol::DslValue::float(2.0), protocol::DslValue::float(3.0), protocol::DslValue::float(0.0)]))));
+        assert_eq!(session.state, "first_corner_height");
+    }
+    runtime.engagement_input = "2".into();
+    assert!(engagement_submit_mutations(&document, &mut runtime, CadPaneId::Shape).is_empty(), "the typed height is a scalar entry, not a commit");
+    assert_eq!(runtime.engagement_session.as_ref().map(|session| session.state.as_str()), Some("first_corner_height"));
+    runtime.engagement_input.clear();
+    // 🏁️ `ready` is the spec's `commit.fromStates` entry, so accepting the height commits at once.
+    let ops = engagement_submit_mutations(&document, &mut runtime, CadPaneId::Shape);
+    assert_eq!(ops.len(), 1, "accepting the height reaches `ready` and commits exactly one box: {ops:?}");
+    assert!(matches!(ops[0], CadMutation::CreateObject(_)));
+    assert!(runtime.engagement_session.is_none(), "the committed session is closed");
+    assert_eq!(runtime.engagement_step, "Committed 1 object(s)");
+    // 🛑️ Without a session the empty line stays the idle no-op.
+    assert!(engagement_submit_mutations(&document, &mut runtime, CadPaneId::Shape).is_empty());
+    assert_eq!(runtime.engagement_step, "Idle");
+}
+//#endregion 🔖️EngagementSubmit

@@ -1,0 +1,5 @@
+union EnergyModelWindowConfigMutation = SetEnergyModelCamera
+
+type SetEnergyModelCamera {
+  camera: EnergyModelCameraPose!
+}

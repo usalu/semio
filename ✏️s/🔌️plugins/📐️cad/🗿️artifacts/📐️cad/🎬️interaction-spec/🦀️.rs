@@ -336,7 +336,8 @@ pub struct SelectionSpec {
 #[value(rename_all = "camelCase")]
 pub struct StateDefSpec {
     pub name: String,
-    #[value(default)]
+    /// 🏁️ `"final": true` on the wire — the raw identifier alone would look for a `r#final` key.
+    #[value(default, rename = "final")]
     pub r#final: bool,
     #[value(default)]
     pub selection: Option<SelectionSpec>,

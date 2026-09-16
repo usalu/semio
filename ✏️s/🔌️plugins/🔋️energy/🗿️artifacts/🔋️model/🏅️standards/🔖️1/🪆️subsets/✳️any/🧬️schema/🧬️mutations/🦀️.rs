@@ -297,6 +297,16 @@ pub use super::unbind_weather_file::{unbind_weather_file, UnbindWeatherFile};
 pub use super::update_ground_temperature::{update_ground_temperature, UpdateGroundTemperature};
 pub use super::update_run_period::{update_run_period, UpdateRunPeriod};
 pub use super::update_site::{update_site, UpdateSite};
+pub use super::replace_fenestration_vertices::{replace_fenestration_vertices, ReplaceFenestrationVertices};
+pub use super::change_glazing_material_thickness::{change_glazing_material_thickness, ChangeGlazingMaterialThickness};
+pub use super::change_glazing_material_conductivity::{change_glazing_material_conductivity, ChangeGlazingMaterialConductivity};
+pub use super::change_glazing_material_solar_transmittance::{change_glazing_material_solar_transmittance, ChangeGlazingMaterialSolarTransmittance};
+pub use super::change_glazing_material_visible_transmittance::{change_glazing_material_visible_transmittance, ChangeGlazingMaterialVisibleTransmittance};
+pub use super::change_glazing_material_infrared_emissivity::{change_glazing_material_infrared_emissivity, ChangeGlazingMaterialInfraredEmissivity};
+pub use super::rename_glazing_material::{rename_glazing_material, RenameGlazingMaterial};
+pub use super::change_gas_material_thickness::{change_gas_material_thickness, ChangeGasMaterialThickness};
+pub use super::change_gas_material_gas::{change_gas_material_gas, ChangeGasMaterialGas};
+pub use super::rename_gas_material::{rename_gas_material, RenameGasMaterial};
 //#endregion 🔖️Reexports
 
 //#region 🔖️Aggregate
@@ -581,6 +591,16 @@ pub enum EnergyModelMutation {
     DeleteTimeSeriesSchedule(DeleteTimeSeriesSchedule),
     ReplaceTimeSeriesScheduleValues(ReplaceTimeSeriesScheduleValues),
     ChangeTimeSeriesScheduleTimestep(ChangeTimeSeriesScheduleTimestep),
+    ReplaceFenestrationVertices(ReplaceFenestrationVertices),
+    ChangeGlazingMaterialThickness(ChangeGlazingMaterialThickness),
+    ChangeGlazingMaterialConductivity(ChangeGlazingMaterialConductivity),
+    ChangeGlazingMaterialSolarTransmittance(ChangeGlazingMaterialSolarTransmittance),
+    ChangeGlazingMaterialVisibleTransmittance(ChangeGlazingMaterialVisibleTransmittance),
+    ChangeGlazingMaterialInfraredEmissivity(ChangeGlazingMaterialInfraredEmissivity),
+    RenameGlazingMaterial(RenameGlazingMaterial),
+    ChangeGasMaterialThickness(ChangeGasMaterialThickness),
+    ChangeGasMaterialGas(ChangeGasMaterialGas),
+    RenameGasMaterial(RenameGasMaterial),
 }
 
 /// 🏷️ Direct semantic roster exported for the language-neutral test adapter, in aggregate
@@ -862,6 +882,16 @@ pub const KINDS: &[&str] = &[
     "delete-time-series-schedule",
     "replace-time-series-schedule-values",
     "change-time-series-schedule-timestep",
+    "replace-fenestration-vertices",
+    "change-glazing-material-thickness",
+    "change-glazing-material-conductivity",
+    "change-glazing-material-solar-transmittance",
+    "change-glazing-material-visible-transmittance",
+    "change-glazing-material-infrared-emissivity",
+    "rename-glazing-material",
+    "change-gas-material-thickness",
+    "change-gas-material-gas",
+    "rename-gas-material",
 ];
 
 /// 🗂️ `(semanticKind, leaf directory name)` for every declared kind — the single place the
@@ -1143,6 +1173,16 @@ pub const DIRECTORIES: &[(&str, &str)] = &[
     ("delete-time-series-schedule", "🎞️delete-time-series-schedule"),
     ("replace-time-series-schedule-values", "🕘️replace-time-series-schedule-values"),
     ("change-time-series-schedule-timestep", "🕙️change-time-series-schedule-timestep"),
+    ("replace-fenestration-vertices", "🔶️replace-fenestration-vertices"),
+    ("change-glazing-material-thickness", "🔷️change-glazing-material-thickness"),
+    ("change-glazing-material-conductivity", "🟠️change-glazing-material-conductivity"),
+    ("change-glazing-material-solar-transmittance", "🟡️change-glazing-material-solar-transmittance"),
+    ("change-glazing-material-visible-transmittance", "🥽️change-glazing-material-visible-transmittance"),
+    ("change-glazing-material-infrared-emissivity", "🩻️change-glazing-material-infrared-emissivity"),
+    ("rename-glazing-material", "🟢️rename-glazing-material"),
+    ("change-gas-material-thickness", "🟣️change-gas-material-thickness"),
+    ("change-gas-material-gas", "🟤️change-gas-material-gas"),
+    ("rename-gas-material", "🔘️rename-gas-material"),
 ];
 //#endregion 🔖️Aggregate
 
@@ -1478,6 +1518,16 @@ pub fn wire_probes() -> Vec<EnergyModelMutation> {
         delete_time_series_schedule(crate::model::ScheduleId(40)),
         replace_time_series_schedule_values(crate::model::ScheduleId(40), vec![1.0, 0.8, 0.6, 0.4]),
         change_time_series_schedule_timestep(crate::model::ScheduleId(40), 900),
+        replace_fenestration_vertices(crate::model::EntityId(4), vec![[1.0, 0.0, 0.5], [4.0, 0.0, 0.5], [4.0, 0.0, 2.0], [2.5, 0.0, 2.5], [1.0, 0.0, 2.0]]),
+        change_glazing_material_thickness(crate::model::EntityId(1), 0.004),
+        change_glazing_material_conductivity(crate::model::EntityId(1), 1.06),
+        change_glazing_material_solar_transmittance(crate::model::EntityId(1), 0.61),
+        change_glazing_material_visible_transmittance(crate::model::EntityId(1), 0.74),
+        change_glazing_material_infrared_emissivity(crate::model::EntityId(1), 0.84, 0.04),
+        rename_glazing_material(crate::model::EntityId(1), "LOW-E 3MM".to_string()),
+        change_gas_material_thickness(crate::model::EntityId(2), 0.016),
+        change_gas_material_gas(crate::model::EntityId(2), crate::model::GasKind::Argon),
+        rename_gas_material(crate::model::EntityId(2), "ARGON GAP 16MM".to_string()),
     ]
 }
 //#endregion 🧵️WireProbes

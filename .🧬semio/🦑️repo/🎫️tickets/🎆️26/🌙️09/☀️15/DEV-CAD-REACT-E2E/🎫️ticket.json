@@ -1,7 +1,7 @@
 {
   "title": "Dev Cad React End To End",
   "emoji": "📐️",
-  "status": "closed",
+  "status": "open",
   "description": "Get the cad plugin working end to end: `@semio-tech/cad-plugin:component-dev` wasm build, unit tests, `activate-cad-react-dev` → `serve-cad-react-dev` on port 6020 (launch entry 🛠️dev📐️cad⚛️react), and browser evidence that the cad editor boots, renders the Concrete Forest reference and mutates without console faults. Bookkeeping is manual on disk because the repo MCP failed to connect (connection closed) at session start.",
   "summary": "CAD React dev app (port 6020) works end to end: wasm build → activate → serve → boot with real BREP tessellation of the Concrete Forest in all four panes plus the reference PNG, framework `cad` domain picks from viewport and Artifact tree, interaction-aware render (inspector object/reference/node sections, gumball), reference mutations landing in the store with undo. Fixed the placeholder-kind regression, the renamed reference asset URL, the missing domain/fit/references/environment lanes, pane-scoped selection lanes, the one-page argument-arena overflow (paged document tree, sorted UiMap keys), the `work_items: 1` fold-contract fail-close on every gesture, the reference-pick domain clear (Interaction lane), and fixture drift (float literals, child ids, retained-jobs proofRows/injectedTool, document-contract diff nulls, demo DSL, interaction asset root). Native: 297/21 (harness debt itemised) + plugin crate 5/5. Open: object mutations remain documented no-ops until the composed-child re-materialisation seam lands; tree paging has no setPanelPage navigation.",
   "goal": "🎯r2603",
@@ -36,6 +36,5 @@
     ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️15/DEV-CAD-REACT-E2E/🐍️cad-utility-probe.mjs",
     ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️15/DEV-CAD-REACT-E2E/📜️serve-cad-react.sh",
     ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️15/DEV-CAD-REACT-E2E/📜️activate-cad-react.sh"
-  ],
-  "closedAt": "2026-09-16"
+  ]
 }

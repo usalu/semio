@@ -614,6 +614,15 @@ class SurfaceSwitchCheckScript extends BundleScript {
   }
 }
 
+/** 🎯️ Executes the Input Causality Ledger laws over the pure `ShellHost/input-ledger` module. */
+class InputLedgerCheckScript extends BundleScript {
+  run(segments: string[]): void {
+    if (segments.length !== 0) throw new Error("input-ledger-check accepts no arguments");
+    process.env.SEMIO_TEST_LEVEL = "long";
+    runVitest(this.root, ["../../../../🧪️tests/🎯️input-ledger/🟦️.ts", "--silent=false", "--reporter=verbose"], "../../🧪️tests/🎚️config/🟦️.ts");
+  }
+}
+
 /** ⌨️ Executes the window-scope laws over the language-neutral dock-seed/chord-owner fixture. */
 class WindowScopeCheckScript extends BundleScript {
   run(segments: string[]): void {
@@ -896,6 +905,7 @@ const router = new ScriptRouter(fileURLToPath(new URL(".", import.meta.url)))
   .register("scoped-presence-check", ScopedPresenceCheckScript)
   .register("world3d-interaction-check", World3dInteractionCheckScript)
   .register("surface-switch-check", SurfaceSwitchCheckScript)
+  .register("input-ledger-check", InputLedgerCheckScript)
   .register("window-scope-check", WindowScopeCheckScript)
   .register("surface-retention-check", SurfaceRetentionCheckScript)
   .register("document-opening-scope-check", DocumentOpeningScopeCheckScript)

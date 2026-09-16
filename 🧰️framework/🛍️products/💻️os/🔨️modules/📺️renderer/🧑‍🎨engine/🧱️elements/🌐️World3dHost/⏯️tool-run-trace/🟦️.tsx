@@ -13,7 +13,9 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import type { ViewToolRunTraceCursor } from "@semio-tech/framework";
 import { BoxGeometry, BufferGeometry, Color, DoubleSide, DynamicDrawUsage, EdgesGeometry, InstancedBufferAttribute, InstancedMesh, LineBasicMaterial, LineDashedMaterial, LineSegments, MeshStandardMaterial } from "three";
-import { useFrame } from "@react-three/fiber";
+import { sceneHostPort } from "@semio-tech/ui-react";
+
+const { useFrame } = sceneHostPort.fiber;
 import { resolveColorHex, semanticVar, STYLING_METRICS, tokenVar } from "@semio-tech/ui-styling";
 import { base64UrlDecode } from "../../../../../../../../🔨️modules/🚪️io/🔤️base64/🟦️.ts";
 import { decodeToolRunTraceDelta, type ToolRunTraceCursor, type ToolRunTraceDelta, type ToolRunTraceSubject, type ToolRunVerdict, TOOL_RUN_VERDICTS } from "../../../../../../../../🔨️modules/⏯️tool-run/🟦️.ts";

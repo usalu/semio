@@ -1,4 +1,9 @@
 //! 🖱️ 🖱️ Layout play app commands command — `canvas-pointer-move`.
+//!
+//! 🎯️ Batched (design L4 / §2 D): the host folds every DOM `pointermove` of one turn into ONE
+//! command whose `samples` carry every canvas-pixel position oldest-first; `x`/`y` stay the LAST
+//! sample. Layout has no drag gesture on this surface — a move is a hover hit-test only — so the
+//! batch collapses to its last sample (intermediate hovers are moot once a newer one exists).
 
 use crate::editor::layout::canvas::active_page;
 use crate::editor::layout::modes::edit::windows::blueprint::config::{current, LayoutWindowConfig};
@@ -65,6 +70,27 @@ pub struct CanvasPointerMove {
     pub y: f64,
     pub width: f64,
     pub height: f64,
+    /// 🧵️ Every pointer sample of this batch as canvas pixels, oldest first. Empty on a legacy
+    /// (unbatched) wire — [`CanvasPointerMove::last_sample`] then yields `[x, y]`.
+    #[value(default)]
+    pub samples: Vec<[f64; 2]>,
+}
+
+impl CanvasPointerMove {
+    /// 🧵️ The batch as canvas samples, oldest first — never empty: an absent/empty `samples`
+    /// degrades to the single `[x, y]`.
+    pub fn samples_or_last(&self) -> Vec<[f64; 2]> {
+        if self.samples.is_empty() {
+            vec![[self.x, self.y]]
+        } else {
+            self.samples.clone()
+        }
+    }
+
+    /// 🧵️ The newest sample of the batch (`[x, y]` on a legacy wire).
+    pub fn last_sample(&self) -> [f64; 2] {
+        self.samples.last().copied().unwrap_or([self.x, self.y])
+    }
 }
 
 pub fn handle(payload: &CanvasPointerMove, doc: &ArtifactView<'_, LayoutSnapshot>, cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<LayoutMutation, NoConfigMutation>, Fault> {
@@ -72,6 +98,7 @@ pub fn handle(payload: &CanvasPointerMove, doc: &ArtifactView<'_, LayoutSnapshot
     if !blueprint {
         return Ok(Emit::default());
     }
-    let hit = hit_test_at(doc.snapshot, &current(cfg), payload.x, payload.y, payload.width, payload.height);
+    let [x, y] = payload.last_sample();
+    let hit = hit_test_at(doc.snapshot, &current(cfg), x, y, payload.width, payload.height);
     Ok(Emit::effect(crate::editor::layout::layout_hover_effect(hit.as_deref())))
 }

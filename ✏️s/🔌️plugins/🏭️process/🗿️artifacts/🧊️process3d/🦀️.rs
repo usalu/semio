@@ -790,6 +790,44 @@ fn brep_child_handle_for_text(slug: &str, content: &str) -> store::ArtifactChild
 }
 //#endregion 🔖️BrepConverters
 
+//#region 🌱️GenesisChildren
+/// 🌱️ `ArtifactApp::genesis_child_pack` for the three composed members every process3d document
+/// declares — `stockSolid` (the stock's B-Rep), `steps` (the timeline flow) and each `toolSolids`
+/// entry (a cut tool / attached component's B-Rep) — all pure functions of the inline
+/// `stock_payload`/`step_payloads` records, so a fresh boot and a whole-document load
+/// (`Effect::LoadDocument`, whose archive the react shell sends member-less) materialise exactly the
+/// children `process_working_scene_to_snapshot` minted handles for. Mirrors `🌍️gis`'s
+/// `genesis_gis_map_child_pack`; without it the archive closure reports `Incomplete` and every example
+/// switch fails.
+pub fn genesis_process3d_child_pack(snapshot: &Process3dSnapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
+    use store::ArtifactPack;
+    match slot {
+        "stockSolid" if child_id == snapshot.stock_solid.child_id => Some(<SemioBrepSnapshot as ArtifactPack>::encode_pack(&brep_snapshot_for_working_solid(&snapshot.stock_payload.solid))),
+        "steps" if child_id == snapshot.steps.child_id => {
+            let tool_child_ids = snapshot.step_payloads.iter().zip(step_tool_solids(&snapshot.step_payloads)).filter_map(|(step, solid)| solid.map(|solid| (step.id.clone(), working_solid_child_handle(&format!("tool-{}", step.id), solid).child_id))).collect();
+            Some(<SemioFlowSnapshot as ArtifactPack>::encode_pack(&flow_snapshot_for_steps(&snapshot.step_payloads, &tool_child_ids)))
+        }
+        "toolSolids" => snapshot
+            .step_payloads
+            .iter()
+            .zip(step_tool_solids(&snapshot.step_payloads))
+            .filter_map(|(step, solid)| solid.map(|solid| (step, solid)))
+            .find(|(step, solid)| working_solid_child_handle(&format!("tool-{}", step.id), solid).child_id == child_id)
+            .map(|(_, solid)| <SemioBrepSnapshot as ArtifactPack>::encode_pack(&brep_snapshot_for_working_solid(solid))),
+        _ => None,
+    }
+}
+
+/// 🪚️ The tool/component solid each step carries — `None` for a `Drill`, which mints no child.
+fn step_tool_solids(steps: &[ProcessStep]) -> impl Iterator<Item = Option<&WorkingSolid>> {
+    steps.iter().map(|step| match &step.measure {
+        ProcessMeasure::Cut { tool, .. } => Some(tool),
+        ProcessMeasure::Attach { component, .. } => Some(component),
+        ProcessMeasure::Drill { .. } => None,
+    })
+}
+//#endregion 🌱️GenesisChildren
+
 //#region 🔖️FlowConverters
 /// 🌉️ WRITE direction, real: one `FlowNode` per `ProcessStep`, laid out left-to-right in timeline
 /// order. `enabled`/`origin`/measure-specific scalars round-trip exactly via string params;

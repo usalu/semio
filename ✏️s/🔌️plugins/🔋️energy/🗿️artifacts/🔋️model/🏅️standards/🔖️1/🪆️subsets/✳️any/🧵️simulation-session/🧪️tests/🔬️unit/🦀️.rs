@@ -353,3 +353,70 @@ fn partial_capture_closes_one_nested_character_or_item_per_grant() {
     }
 }
 //#endregion 🧮️Capture
+
+//#region 🧱️SurfacePayload
+#[test]
+fn the_run_refreshes_exactly_the_three_d_model_and_simulation_window_bodies() {
+    let schema: serde_json::Value = serde_json::from_str(RUN_SCHEMA).unwrap();
+    let declared: Vec<String> = schema["x-semio-toolRun"]["windows"].as_array().expect("the schema declares the refreshed windows").iter().map(|id| id.as_str().unwrap().to_string()).collect();
+    assert_eq!(energy_simulation_run_definition().windows, declared, "the run definition mirrors its own source of record");
+    assert_eq!(declared, vec![ENERGY_MODEL_3D_WINDOW_KIND_ID.to_string(), ENERGY_SIMULATION_WINDOW_KIND_ID.to_string()]);
+    // 🪟️ The two literals are spelled here rather than imported (see their doc comment); this is the
+    // gate that keeps them equal to the windows' own constants.
+    assert_eq!(ENERGY_SIMULATION_WINDOW_KIND_ID, crate::editor::model::modes::edit::windows::simulation::WINDOW_KIND_ID);
+    assert_eq!(ENERGY_SIMULATION_WINDOW_KIND_ID, crate::editor::model::modes::edit::windows::simulation::BODY_KEY, "the simulation window's body key IS its kind id");
+}
+
+#[test]
+fn a_tier_boundary_and_the_completing_tick_carry_the_per_surface_map() {
+    let (snapshot, template) = scenario();
+    let surfaces = snapshot.model.surfaces.len() + snapshot.model.fenestrations.len();
+    let mut job = EnergySimulationRunJob::new(identity(), snapshot, template);
+    let run = drive(&mut job, semio_framework_job::INTERACTIVE_LANE_FUEL);
+    let StepOutcome::Complete(mut candidate) = run.settled else { panic!("the streamed run completes") };
+    close_payload(&mut candidate.state);
+    close_payload(&mut candidate.output);
+
+    let carrying: Vec<&ToolRunTick> = run.ticks.iter().filter(|tick| tick.payload.is_some()).collect();
+    assert!(!carrying.is_empty(), "no tick ever carried a per-surface payload");
+    let tiers = run.ticks.iter().flat_map(|tick| tick.steps.iter()).filter(|step| matches!(EnergySimulationRunReason::from_code(step.reason), Some(EnergySimulationRunReason::DesignDay | EnergySimulationRunReason::CoarseTimestep | EnergySimulationRunReason::SteadyStateEstimate | EnergySimulationRunReason::Final))).count();
+    assert!(carrying.len() <= tiers + 1, "a payload republishes only on a tier boundary or at completion");
+
+    let bytes = carrying.last().expect("the last carrying tick").payload.as_ref().expect("payload");
+    assert_eq!(&bytes[0..4], &ENERGY_SURFACE_PAYLOAD_MAGIC, "the wire carries its own magic");
+    let count = u32::from_le_bytes(bytes[4..8].try_into().unwrap()) as usize;
+    assert_eq!(count, surfaces, "one row per opaque surface and per fenestration");
+    assert_eq!(bytes.len(), energy_surface_payload_bytes(count));
+
+    // 🔮️ The published map is the same table `Results::per_surface` projects.
+    let results = job.numerical.as_mut().expect("numerical owner").take_results().expect("streamed results");
+    let decoded = crate::editor::model::results::decode_run_payload(bytes).expect("the editor decodes what the run encoded");
+    assert_eq!(decoded.len(), results.per_surface.len());
+    for row in &results.per_surface {
+        let published = decoded.get(row.id.0).expect("every result row is published");
+        assert!((published.conduction_loss_kwh - row.conduction_loss_kwh).abs() <= row.conduction_loss_kwh.abs() * 1e-5 + 1e-5, "row {:?}", row.id);
+        assert!((published.solar_transmitted_kwh - row.solar_transmitted_kwh).abs() <= row.solar_transmitted_kwh.abs() * 1e-5 + 1e-5, "row {:?}", row.id);
+    }
+    close(&mut job);
+}
+
+#[test]
+fn a_tick_carrying_two_thousand_surfaces_stays_far_inside_the_tick_byte_ceiling() {
+    let rows: Vec<crate::results::SurfaceEnergySummary> = (0..2_000u32)
+        .map(|id| crate::results::SurfaceEnergySummary { id: crate::model::EntityId(id), conduction_loss_kwh: f64::from(id), conduction_gain_kwh: 0.5, solar_transmitted_kwh: 1.5, solar_absorbed_kwh: 2.5 })
+        .collect();
+    let payload = encode_surface_energy_payload(rows.iter().copied());
+    assert_eq!(payload.len(), energy_surface_payload_bytes(2_000));
+
+    let mut writer = ToolRunTickWriter::new(identity());
+    for index in 0..8u64 {
+        let _ = writer.step(ToolRunStepKind::Success, EnergySimulationRunStage::Run.index(), EnergySimulationRunReason::CoarseTimestep.code(), None, &[ToolRunStepArg::Float(1.0), ToolRunStepArg::Unsigned(index), ToolRunStepArg::Unsigned(2_000)]);
+    }
+    writer.payload(payload);
+    writer.progress(EnergyRunCursor::new().progress(identity(), ToolRunState::Running, EnergySimulationRunStage::Run));
+    let encoded = writer.finish().expect("a pending tick").encode().expect("2 000 surfaces encode inside the tick ceiling");
+    assert!(encoded.len() * 2 < semio_framework_tool_run::TOOL_RUN_TICK_BYTES_MAX, "2 000 surfaces plus progress and a full step ring is {} of {} tick bytes", encoded.len(), semio_framework_tool_run::TOOL_RUN_TICK_BYTES_MAX);
+    let decoded = ToolRunTick::decode(&encoded).expect("the tick round-trips");
+    assert_eq!(crate::editor::model::results::decode_run_payload(decoded.payload.as_ref().expect("payload survives the tick codec")).expect("decodes").len(), 2_000);
+}
+//#endregion 🧱️SurfacePayload

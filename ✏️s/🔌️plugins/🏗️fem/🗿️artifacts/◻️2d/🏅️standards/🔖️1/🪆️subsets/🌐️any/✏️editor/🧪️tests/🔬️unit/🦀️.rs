@@ -131,8 +131,8 @@ pub(super) fn every_command() -> Vec<Fem2dCommand> {
         Fem2dCommand::SetCamera(set_camera::SetCamera { x: 1.0, y: 2.0, zoom: 1.5 }),
         Fem2dCommand::SetResultDisplay(set_result_display::SetResultDisplay { source_id: Some("dead".into()), mode: "modal".into(), mode_index: 0, field: None, value: None, window_id: None }),
         Fem2dCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown { x: 120.0, y: 80.0, width: 640.0, height: 480.0, button: 0, shift: false, ctrl: false, meta: false, alt: false }),
-        Fem2dCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { x: 121.0, y: 81.0, width: 640.0, height: 480.0 }),
-        Fem2dCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { x: 121.0, y: 81.0, width: 640.0, height: 480.0, shift: false, ctrl: false, meta: false, alt: false }),
+        Fem2dCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { x: 121.0, y: 81.0, width: 640.0, height: 480.0, samples: vec![[120.5, 80.5], [121.0, 81.0]] }),
+        Fem2dCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { x: 121.0, y: 81.0, width: 640.0, height: 480.0, shift: false, ctrl: false, meta: false, alt: false, cancelled: false }),
         Fem2dCommand::PatchNode(patch_node::PatchNode { id: "n1".into(), field: "x".into(), value: "1.5".into() }),
         Fem2dCommand::PatchElement(patch_element::PatchElement { id: "e3".into(), field: "sectionId".into(), value: "post140".into() }),
         Fem2dCommand::PatchMaterial(patch_material::PatchMaterial { id: "steel".into(), field: "e".into(), value: "200000000000".into() }),
@@ -145,6 +145,10 @@ pub(super) fn every_command() -> Vec<Fem2dCommand> {
         Fem2dCommand::SetResultAnimation(set_result_animation::SetResultAnimation { phase: Some(0.25), playing: Some(true), speed: None, loop_mode: Some("pingPong".into()), waveform: None, field: None, value: None, window_id: None }),
         Fem2dCommand::ResultAnimationTick(result_animation_tick::ResultAnimationTick {}),
         Fem2dCommand::FocusEntity(focus_entity::FocusEntity { id: "n1".into() }),
+        Fem2dCommand::TranslateSelection(crate::editor::fem2d::commands::gumball::translate_selection::TranslateSelection { ids: vec!["n1".into()], dx: 0.1, dy: 0.0, dz: 0.0 }),
+        Fem2dCommand::RotateSelection(crate::editor::fem2d::commands::gumball::rotate_selection::RotateSelection { ids: vec!["n1".into()], ax: 0.0, ay: 0.0, az: 1.0, angle: 0.1 }),
+        Fem2dCommand::ScaleSelection(crate::editor::fem2d::commands::gumball::scale_selection::ScaleSelection { ids: vec!["n1".into()], sx: 1.01, sy: 1.01, sz: 1.0 }),
+        Fem2dCommand::SetTransformGumballFlag(crate::editor::fem2d::commands::gumball::set_transform_gumball_flag::SetTransformGumballFlag { flag: "move".into(), pressed: None }),
     ]
 }
 
@@ -159,7 +163,7 @@ async fn command_ids_are_unique_and_match_the_declared_manifest_actions() {
     sorted.sort_unstable();
     sorted.dedup();
     assert_eq!(sorted.len(), ids.len(), "duplicate command ids in {ids:?}");
-    assert_eq!(ids.len(), 33, "every Fem2dCommand row must be covered by every_command()");
+    assert_eq!(ids.len(), 37, "every Fem2dCommand row must be covered by every_command()");
     // calls.
     let definition = create_fem2d_app();
     for id in ids {
@@ -296,6 +300,40 @@ async fn command_from_action_resolves_every_declared_action() {
     let node = <Fem2dPlayApp as ArtifactEditor>::command_from_action("addNode", Some(&args)).expect("addNode resolves");
     assert_eq!(node, Fem2dCommand::AddNode(add_node::AddNode { x: 1.0, y: 2.0 }));
 }
+
+/// 🧵️ LAW (design L4 / §2 D): a legacy one-per-event `canvasPointerMove` wire (no `samples`) is
+/// exactly one sample at `(x, y)`; a batched wire keeps every `[x, y]` pair oldest-first; a
+/// `canvasPointerUp` without `cancelled` is a real release.
+#[semio_framework_async_macros::async_test]
+async fn canvas_pointer_wire_defaults_samples_and_cancelled() {
+    let f = dsl::DslValue::float;
+    let legacy = dsl::DslValue::Object(vec![("x".into(), f(5.0)), ("y".into(), f(6.0)), ("width".into(), f(640.0)), ("height".into(), f(480.0))]);
+    let Fem2dCommand::CanvasPointerMove(moved) = <Fem2dPlayApp as ArtifactEditor>::command_from_action("canvasPointerMove", Some(&legacy)).expect("legacy move") else { panic!("move") };
+    assert_eq!(moved.samples, vec![[5.0, 6.0]], "an absent `samples` is the single (x, y)");
+    assert_eq!(moved.samples_or_last(), vec![(5.0, 6.0)]);
+
+    let empty = dsl::DslValue::Object(vec![("x".into(), f(5.0)), ("y".into(), f(6.0)), ("samples".into(), dsl::DslValue::Array(Vec::new()))]);
+    let Fem2dCommand::CanvasPointerMove(moved) = <Fem2dPlayApp as ArtifactEditor>::command_from_action("canvasPointerMove", Some(&empty)).expect("empty move") else { panic!("move") };
+    assert_eq!(moved.samples, vec![[5.0, 6.0]], "an empty `samples` is the single (x, y)");
+
+    let pair = |x: f64, y: f64| dsl::DslValue::Array(vec![f(x), f(y)]);
+    let batched = dsl::DslValue::Object(vec![
+        ("x".into(), f(3.0)),
+        ("y".into(), f(4.0)),
+        ("width".into(), f(640.0)),
+        ("height".into(), f(480.0)),
+        ("samples".into(), dsl::DslValue::Array(vec![pair(1.0, 1.5), pair(2.0, 2.5), dsl::DslValue::String("junk".into()), pair(3.0, 4.0)])),
+    ]);
+    let Fem2dCommand::CanvasPointerMove(moved) = <Fem2dPlayApp as ArtifactEditor>::command_from_action("canvasPointerMove", Some(&batched)).expect("batched move") else { panic!("move") };
+    assert_eq!(moved.samples, vec![[1.0, 1.5], [2.0, 2.5], [3.0, 4.0]], "every well-formed pair, in order; malformed entries are skipped");
+    assert_eq!((moved.x, moved.y), (3.0, 4.0), "x/y stay the last sample");
+
+    let Fem2dCommand::CanvasPointerUp(released) = <Fem2dPlayApp as ArtifactEditor>::command_from_action("canvasPointerUp", Some(&legacy)).expect("release") else { panic!("up") };
+    assert!(!released.cancelled, "an absent `cancelled` is a real release");
+    let cancelled = dsl::DslValue::Object(vec![("x".into(), f(5.0)), ("y".into(), f(6.0)), ("cancelled".into(), dsl::DslValue::Bool(true))]);
+    let Fem2dCommand::CanvasPointerUp(released) = <Fem2dPlayApp as ArtifactEditor>::command_from_action("canvasPointerUp", Some(&cancelled)).expect("cancel") else { panic!("up") };
+    assert!(released.cancelled);
+}
 //#endregion 🔖️RetainedRoutes
 
 //#region 🔖️ManifestSanity
@@ -307,6 +345,24 @@ async fn the_manifest_stitches_every_taxonomy_node() {
     }
     assert!(json.contains(edit::MODE_ID), "mode {} missing from the manifest", edit::MODE_ID);
     assert!(json.contains("computation.fem2d"), "artifact kind missing from the manifest");
+    assert!(json.contains("\"transform\""), "transform utility missing from the manifest");
+}
+
+#[test]
+fn window_measures_include_transform_utility_options() {
+    use semio_framework_plugin::{ArtifactView, ConfigView, HistoryView, NoConfig, ViewModel, WindowMeasure};
+    let doc = crate::Fem2dSnapshot::parse_dsl(crate::editor::fem2d::FEM2D_EXAMPLE_DSL).expect("demo");
+    let history = HistoryView::empty();
+    let view = ArtifactView::new(&doc, &history);
+    let cfg = ConfigView { snapshot: &NoConfig::default(), window: None };
+    let view_state = ViewModel { active_utility_id: Some("transform".into()), ..Default::default() };
+    let measures = Fem2dPlayApp::window_measures(&view, &cfg, &view_state);
+    let model_measures = measures.get(model_window::WINDOW_KIND_ID).expect("model measures");
+    let group = model_measures.iter().find_map(|measure| match measure {
+        WindowMeasure::Group { id, active_utility_id, .. } if id == &format!("{}-utility-options-transform", crate::editor::fem2d::FEM2D_PLAY_CONTROLLER_ID) => Some(active_utility_id.clone()),
+        _ => None,
+    });
+    assert_eq!(group, Some(Some("transform".into())));
 }
 
 #[semio_framework_async_macros::async_test]

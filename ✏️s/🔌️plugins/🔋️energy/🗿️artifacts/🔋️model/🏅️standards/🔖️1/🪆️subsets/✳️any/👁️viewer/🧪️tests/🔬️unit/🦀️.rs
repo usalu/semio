@@ -13,11 +13,12 @@ async fn viewer_dialect_matches_the_artifact_coordinate() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn viewer_declares_all_three_windows() {
+async fn viewer_declares_every_window() {
     let def = create_energy_model_viewer();
-    for id in [structure::WINDOW_KIND_ID, zones::WINDOW_KIND_ID, simulation::WINDOW_KIND_ID] {
+    for id in [structure::WINDOW_KIND_ID, zones::WINDOW_KIND_ID, simulation::WINDOW_KIND_ID, model_window::WINDOW_KIND_ID] {
         assert!(def.window_kinds.iter().any(|window| window.id == id), "missing window kind {id}");
     }
+    assert!(def.interactions.is_empty(), "a read-only viewer declares no interaction domain");
 }
 
 /// 👁️ A viewer declares no document-mutating verb — its two kit windows use the READ-ONLY

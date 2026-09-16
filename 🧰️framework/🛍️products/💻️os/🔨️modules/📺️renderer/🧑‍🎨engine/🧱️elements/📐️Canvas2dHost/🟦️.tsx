@@ -15,6 +15,8 @@ import { WindowInstanceIdContext } from "../🌐️World3dHost/🟦️.tsx";
 import { useMapContextMenuSpecs } from "../🏛️ShellHost/🟦️.tsx";
 // 🐢️ Direct element-to-element import — `🟦️Interpreter` and `Canvas2dHost` landed in the same batch.
 import { useShellContextMenuFallback, openSurfaceContextMenu, type SurfaceContextMenuResult } from "../🗣️Interpreter/🟦️.tsx";
+import { Canvas2dGumballOverlay, parseCanvas2dGumballMeta } from "./🟦️GumballOverlay.tsx";
+import { createGestureSampleLaneV1, type GestureSampleLaneV1 } from "../🏛️ShellHost/🎯️input-ledger/🟦️.ts";
 // #endregion 🔌️Adapters
 
 //#region 🔖️Canvas2dHost
@@ -385,7 +387,71 @@ function drawInfiniteCanvasGrid(ctx: CanvasRenderingContext2D, camera: CanvasCam
   ctx.restore();
 }
 
-class JsonLayersCanvasSession implements GraphWasmSession {
+//#region CanvasPointerGestureLane
+/** 🖱️ One pointer sample in canvas (logical CSS-pixel) space. */
+export type CanvasPointerSample = readonly [number, number];
+
+/** ⌨️ What a discrete gesture phase (`begin`/`end`) carries besides its sample: the button that pressed,
+ * the modifiers held, and the viewport the sample is measured in — every field the pre-lane
+ * `canvasPointerDown`/`canvasPointerUp` commands already carried. */
+export type CanvasPointerExtra = {
+  readonly button?: number;
+  readonly shift: boolean;
+  readonly ctrl: boolean;
+  readonly meta: boolean;
+  readonly alt: boolean;
+  readonly width: number;
+  readonly height: number;
+};
+
+/** 📤️ The host's action dispatcher as the lane needs it: RETURNS `onAction`'s promise, because the lane's
+ * "at most one send in flight" gate is exactly that promise — a `void` dispatcher clears the gate on the
+ * next microtask and gates nothing (the World3dHost wave-B33 lesson, same shape as `dispatchSettled`). */
+export type CanvasPointerDispatch = (action: string, args?: Record<string, unknown>) => void | Promise<unknown>;
+
+export type CanvasPointerGestureLane = GestureSampleLaneV1<CanvasPointerSample, CanvasPointerExtra>;
+
+/** 🖱️ The `Canvas2dHost` gesture lane (design §2 D): every DOM pointer event used to be ONE guest round
+ * trip (`canvasPointerDown` / `canvasPointerMove` / `canvasPointerUp`), so a one-second marquee at 60 Hz
+ * queued ~60 commands and drained for 1–3 s after mouseup. Through `createGestureSampleLaneV1` the same
+ * three commands are still the only wire (additive fields only), but:
+ *   - every `pointermove` offered while a send is out is APPENDED to one owed `canvasPointerMove` whose
+ *     `samples` (`[x, y][]`, oldest first) carry the whole batch and whose `x`/`y` stay the LAST sample,
+ *     so a guest that ignores `samples` keeps today's semantics with fewer calls;
+ *   - `begin` / `end` are discrete and ordered behind every owed sample — an `end` never overtakes a move;
+ *   - a cancel (pointer left the canvas, capture lost) is `canvasPointerUp { cancelled: true }`, never a
+ *     forged release.
+ * `width`/`height` are read at SEND time (`size()`), as the pre-lane commands read `logicalWidth/Height`. */
+export function createCanvasPointerGestureLane(dispatch: CanvasPointerDispatch, size: () => { readonly width: number; readonly height: number }): CanvasPointerGestureLane {
+  return createGestureSampleLaneV1<CanvasPointerSample, CanvasPointerExtra>({
+    send(item) {
+      switch (item.phase) {
+        case "begin": {
+          const { sample, extra } = item;
+          return dispatch("canvasPointerDown", { x: sample[0], y: sample[1], button: extra.button, shift: extra.shift, ctrl: extra.ctrl, meta: extra.meta, alt: extra.alt, width: extra.width, height: extra.height });
+        }
+        case "live": {
+          const last = item.samples[item.samples.length - 1];
+          if (last === undefined) return undefined;
+          const viewport = size();
+          return dispatch("canvasPointerMove", { x: last[0], y: last[1], width: viewport.width, height: viewport.height, samples: item.samples.map(([x, y]) => [x, y]) });
+        }
+        case "end": {
+          const { sample, extra } = item;
+          return dispatch("canvasPointerUp", { x: sample[0], y: sample[1], shift: extra.shift, ctrl: extra.ctrl, meta: extra.meta, alt: extra.alt, width: extra.width, height: extra.height, cancelled: false });
+        }
+        case "cancel": {
+          const viewport = size();
+          return dispatch("canvasPointerUp", { x: item.sample?.[0] ?? 0, y: item.sample?.[1] ?? 0, shift: false, ctrl: false, meta: false, alt: false, width: viewport.width, height: viewport.height, cancelled: true });
+        }
+      }
+    },
+    onFault: (error) => console.warn(`canvas2d gesture lane: ${error instanceof Error ? error.message : String(error)}`),
+  });
+}
+//#endregion CanvasPointerGestureLane
+
+export class JsonLayersCanvasSession implements GraphWasmSession {
   private canvas: HTMLCanvasElement | null = null;
   private ctx: CanvasRenderingContext2D | null = null;
   private logicalWidth = 1;
@@ -396,22 +462,41 @@ class JsonLayersCanvasSession implements GraphWasmSession {
   private panStart = { x: 0, y: 0 };
   private panCameraStart = { x: 0, y: 0 };
   private activeUtility = "selectDirect";
+  /** 🖱️ Per session (= per mounted host and per `dispatch` identity, since `sessionFactory` is memoised
+   * on it): the gesture lane every non-pan pointer event goes through. */
+  private readonly lane: CanvasPointerGestureLane | null;
+  private gestureCounter = 0;
+  private lastSample: CanvasPointerSample | null = null;
 
-  private readonly layersJson: string;
+  private readLayersJson: () => string;
   private camera: CanvasCamera;
   private readonly onCameraChange: (camera: CanvasCamera) => void;
-  private readonly onPointer?: (action: string, args?: Record<string, unknown>) => void;
+  private readonly onPointer?: CanvasPointerDispatch;
 
   constructor(
-    layersJson: string,
+    readLayersJson: () => string,
     camera: CanvasCamera,
     onCameraChange: (camera: CanvasCamera) => void,
-    onPointer?: (action: string, args?: Record<string, unknown>) => void,
+    onPointer?: CanvasPointerDispatch,
   ) {
-    this.layersJson = layersJson;
+    this.readLayersJson = readLayersJson;
     this.camera = camera;
     this.onCameraChange = onCameraChange;
     this.onPointer = onPointer;
+    this.lane = onPointer ? createCanvasPointerGestureLane(onPointer, () => ({ width: this.logicalWidth, height: this.logicalHeight })) : null;
+  }
+
+  /** 🖱️ The lane's own census, for laws and probes. */
+  gestureLane(): CanvasPointerGestureLane | null {
+    return this.lane;
+  }
+
+  syncLayersJson(): void {
+    void this.preloadImages().then(() => this.renderFrame());
+  }
+
+  private layersJson(): string {
+    return this.readLayersJson();
   }
 
   async attachCanvas(canvas: HTMLCanvasElement, logicalW: number, logicalH: number, dpr: number): Promise<unknown> {
@@ -437,7 +522,7 @@ class JsonLayersCanvasSession implements GraphWasmSession {
 
   private parseLayers(): CanvasLayerRecord[] {
     try {
-      return JSON.parse(this.layersJson) as CanvasLayerRecord[];
+      return JSON.parse(this.layersJson()) as CanvasLayerRecord[];
     } catch {
       return [];
     }
@@ -552,15 +637,18 @@ class JsonLayersCanvasSession implements GraphWasmSession {
   }
 
   pointerDown(x: number, y: number, button: number, _extend: boolean, modifiers?: CanvasInputModifiers): void {
+    if (this.activeUtility === "transform") {
+      return;
+    }
     if (button === 1 || this.activeUtility === "transformMove") {
       this.panning = true;
       this.panStart = { x, y };
       this.panCameraStart = { x: this.camera.x, y: this.camera.y };
       return;
     }
-    this.onPointer?.("canvasPointerDown", {
-      x,
-      y,
+    this.lastSample = [x, y];
+    this.gestureCounter += 1;
+    this.lane?.begin(this.gestureCounter, [x, y], {
       button,
       shift: modifiers?.shift ?? false,
       ctrl: modifiers?.ctrl ?? false,
@@ -584,12 +672,10 @@ class JsonLayersCanvasSession implements GraphWasmSession {
       this.renderFrame();
       return;
     }
-    this.onPointer?.("canvasPointerMove", {
-      x,
-      y,
-      width: this.logicalWidth,
-      height: this.logicalHeight,
-    });
+    // 🖱️ Hover moves outside a gesture batch through the same lane (the guest's hover hit-test only
+    // needs the last sample either way); `begin` is reserved for the presses above.
+    this.lastSample = [x, y];
+    this.lane?.offer([x, y]);
   }
 
   pointerUp(x: number, y: number, modifiers?: CanvasInputModifiers): void {
@@ -597,16 +683,34 @@ class JsonLayersCanvasSession implements GraphWasmSession {
       this.panning = false;
       return;
     }
-    this.onPointer?.("canvasPointerUp", {
-      x,
-      y,
+    this.lastSample = [x, y];
+    const extra: CanvasPointerExtra = {
       shift: modifiers?.shift ?? false,
       ctrl: modifiers?.ctrl ?? false,
       meta: modifiers?.meta ?? false,
       alt: modifiers?.alt ?? false,
       width: this.logicalWidth,
       height: this.logicalHeight,
-    });
+    };
+    if (this.lane?.activeGesture() != null) {
+      this.lane.end([x, y], extra);
+      return;
+    }
+    // 🐢️ A release with no open gesture (the `transform` utility swallows its press above; a press that
+    // started outside the canvas) still reaches the guest as it did before the lane — the lane's `end` is
+    // a no-op outside a gesture and this must not silently drop what the pre-lane host sent.
+    void this.onPointer?.("canvasPointerUp", { x, y, ...extra, cancelled: false });
+  }
+
+  /** 🚫️ Pointer left the canvas / capture lost / browser reclaimed the pointer: ends a pan locally and
+   * turns an open gesture into `canvasPointerUp { cancelled: true }`. Outside a gesture this is a no-op —
+   * the pre-lane `pointerleave → pointerUp` mapping forged a release here. */
+  pointerCancel(): void {
+    if (this.panning) {
+      this.panning = false;
+      return;
+    }
+    this.lane?.cancel(this.lastSample);
   }
 
   doubleClick(x: number, y: number): void {
@@ -641,15 +745,25 @@ export function Canvas2dHost({ node, onAction, requestContextMenu }: ComponentSc
   const cameraSyncTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const dragOverStateRef = useRef<{ x: number; y: number; time: number } | null>(null);
   const [contextMenu, setContextMenu] = useState<(SurfaceContextMenuResult & { readonly x: number; readonly y: number }) | null>(null);
+  const [viewportSize, setViewportSize] = useState({ width: 0, height: 0 });
+  const activeUtility = useMemo(() => {
+    try {
+      const layers = JSON.parse(scene?.layersJson ?? "[]") as readonly { readonly role?: string; readonly utility?: string }[];
+      return layers.find((layer) => layer.role === "meta")?.utility;
+    } catch {
+      return undefined;
+    }
+  }, [scene?.layersJson]);
   const contextMenuTitleLabel = useLabel(contextMenu?.titleKey ?? "ui.surfaceContextMenu.canvas");
+  // 🏁️ RETURNS `onAction`'s promise: the gesture lane's single-flight gate is that promise (a `void`
+  // dispatcher would clear it on the next microtask and coalesce nothing — World3dHost wave B33).
   const dispatch = useCallback(
-    (action: string, args?: Record<string, unknown>) => {
+    (action: string, args?: Record<string, unknown>): void | Promise<unknown> =>
       onAction({
         controllerId: node.controllerId,
         action,
         args: { surfaceId: node.surfaceId, ...args },
-      });
-    },
+      }),
     [node.controllerId, node.surfaceId, onAction],
   );
   const mapContextMenu = useMapContextMenuSpecs(dispatch);
@@ -657,7 +771,7 @@ export function Canvas2dHost({ node, onAction, requestContextMenu }: ComponentSc
   const sessionFactory = useMemo(() => {
     return () => {
       const session = new JsonLayersCanvasSession(
-        scene?.layersJson ?? "[]",
+        () => layersJsonRef.current ?? "[]",
         cameraRef.current,
         (next) => {
           cameraRef.current = next;
@@ -665,20 +779,18 @@ export function Canvas2dHost({ node, onAction, requestContextMenu }: ComponentSc
           if (cameraSyncTimeoutRef.current) clearTimeout(cameraSyncTimeoutRef.current);
           cameraSyncTimeoutRef.current = setTimeout(() => dispatch("setCamera", { camera: next }), CAMERA_SYNC_DEBOUNCE_MS);
         },
-        (action, args) => {
-          if (action === "canvasPointerDown" && args?.button === 0) {
-            dispatch("paintStrokeBegin");
-          }
-          if (action === "canvasPointerUp") {
-            dispatch("paintStrokeEnd");
-          }
-          dispatch(action, args);
-        },
+        // 🖱️ The session builds its gesture lane over this dispatcher, so the lane is per mounted host and
+        // is rebuilt with the session whenever `dispatch`'s identity (node ids / `onAction`) changes.
+        (action, args) => dispatch(action, args),
       );
       sessionRef.current = session;
       return session;
     };
-  }, [dispatch, scene?.layersJson]);
+  }, [dispatch]);
+
+  useEffect(() => {
+    sessionRef.current?.syncLayersJson();
+  }, [scene?.layersJson]);
 
   const layersJsonRef = useRef(scene?.layersJson);
   layersJsonRef.current = scene?.layersJson;
@@ -815,12 +927,24 @@ export function Canvas2dHost({ node, onAction, requestContextMenu }: ComponentSc
   );
   //#endregion ContextMenu
 
+  useEffect(() => {
+    const element = containerRef.current;
+    if (!element) return;
+    const observer = new ResizeObserver((entries) => {
+      const entry = entries[0];
+      if (!entry) return;
+      setViewportSize({ width: entry.contentRect.width, height: entry.contentRect.height });
+    });
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, []);
+
   if (!scene) return <div className="semio-canvas-2d-empty">{emptySceneLabel}</div>;
 
   return (
     <div
       ref={containerRef}
-      className="semio-canvas-2d-host h-full min-h-[24rem] w-full ui-surface"
+      className="semio-canvas-2d-host relative h-full min-h-[24rem] w-full ui-surface"
       data-level="base"
       data-controller-id={node.controllerId}
       data-surface-id={node.surfaceId}
@@ -830,6 +954,14 @@ export function Canvas2dHost({ node, onAction, requestContextMenu }: ComponentSc
       onContextMenu={onContextMenu}
     >
       <GraphWasmCanvas className="h-full w-full" sessionFactory={sessionFactory} />
+      <Canvas2dGumballOverlay
+        layersJson={scene.layersJson}
+        activeUtility={activeUtility}
+        camera={cameraRef.current}
+        viewportWidth={viewportSize.width}
+        viewportHeight={viewportSize.height}
+        onDispatch={(action, args) => dispatch(action, args)}
+      />
       <ContextMenuController
         title={contextMenuTitleLabel}
         open={contextMenu != null}

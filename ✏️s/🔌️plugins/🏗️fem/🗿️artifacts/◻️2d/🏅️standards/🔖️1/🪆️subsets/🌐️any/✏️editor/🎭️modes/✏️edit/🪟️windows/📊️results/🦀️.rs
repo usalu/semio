@@ -242,13 +242,15 @@ pub fn render(
     window: &config::Fem2dResultsWindowConfig,
     interaction: &crate::editor::fem2d::interaction::Fem2dInteractionSnapshot,
     operation: Option<semio_framework_plugin::AppRenderOperationContext>,
+    window_instance_id: Option<&str>,
+    active_utility: &str,
 ) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let animation = &window.animation;
     let key = results_cache_key(operation);
     match display.mode {
-        DisplayMode::Static => render_static(doc, display.source_id.as_deref(), camera, interaction, animation, key),
-        DisplayMode::Modal(mode_index) => render_modal(doc, mode_index, camera, interaction, animation, key),
-        DisplayMode::Buckling(mode_index) => render_buckling(doc, display.source_id.as_deref(), mode_index, camera, interaction, animation, key),
+        DisplayMode::Static => render_static(doc, display.source_id.as_deref(), camera, interaction, animation, key, window_instance_id, active_utility),
+        DisplayMode::Modal(mode_index) => render_modal(doc, mode_index, camera, interaction, animation, key, window_instance_id, active_utility),
+        DisplayMode::Buckling(mode_index) => render_buckling(doc, display.source_id.as_deref(), mode_index, camera, interaction, animation, key, window_instance_id, active_utility),
     }
 }
 
@@ -275,11 +277,59 @@ fn placeholder(label: Label) -> semio_framework_plugin::UiAssemblyResult<BuiltNo
     built_text_node(label).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fem2d results placeholder admission failed"))
 }
 
+const REACTION_LABEL_SIZE: f64 = 10.0;
+const REACTION_LABEL_LINE: f64 = 13.0;
+const REACTION_LABEL_PAD: f64 = 2.0;
+
+/// 📐️ Screen-space bounds of one reaction read-out, used to keep labels from stacking on top of each other.
+struct ReactionLabelBounds {
+    left: f64,
+    top: f64,
+    right: f64,
+    bottom: f64,
+}
+
+fn reaction_label_bounds(x: f64, y: f64, content: &str) -> ReactionLabelBounds {
+    let width = content.len() as f64 * REACTION_LABEL_SIZE * 0.55;
+    let height = REACTION_LABEL_SIZE * 1.25;
+    ReactionLabelBounds { left: x - REACTION_LABEL_PAD, top: y - REACTION_LABEL_PAD, right: x + width + REACTION_LABEL_PAD, bottom: y + height + REACTION_LABEL_PAD }
+}
+
+fn reaction_label_boxes_overlap(a: &ReactionLabelBounds, b: &ReactionLabelBounds) -> bool {
+    a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top
+}
+
+/// 📍️ Picks a screen position for one reaction label: stack DOFs at the same node, then nudge until no
+/// earlier label's bounding box intersects this one.
+fn place_reaction_label(anchor_x: f64, anchor_y: f64, stack_index: usize, content: &str, placed: &mut Vec<ReactionLabelBounds>) -> (f64, f64) {
+    let base_x = anchor_x + 8.0;
+    let base_y = anchor_y + 14.0 + stack_index as f64 * REACTION_LABEL_LINE;
+    for attempt in 0..48 {
+        let row = attempt / 3;
+        let col = attempt % 3;
+        let x = base_x + (col as f64 - 1.0) * 12.0;
+        let y = base_y + row as f64 * REACTION_LABEL_LINE;
+        let bounds = reaction_label_bounds(x, y, content);
+        if !placed.iter().any(|existing| reaction_label_boxes_overlap(&bounds, existing)) {
+            placed.push(bounds);
+            return (x, y);
+        }
+    }
+    let bounds = reaction_label_bounds(base_x, base_y, content);
+    placed.push(bounds);
+    (base_x, base_y)
+}
+
 /// 📊️ Static results: undeformed structure faintly, plus a deformed-shape polyline, text labels at
 /// every support reaction, (for beams) a moment-diagram polyline, and (for meshed regions) a
 /// nodal-averaged, marching-triangle-banded von-Mises stress contour with a color-swatch legend.
 /// `source_id` selects a `fem2d_solve_all` case/combination id, falling back to the first load case
 /// when `None`/unknown (preserves v0's default behavior).
+fn finish_results_layers(doc: &Fem2dSnapshot, interaction: &crate::editor::fem2d::interaction::Fem2dInteractionSnapshot, camera: &Viewport2d, layers: Vec<Value>, window_instance_id: Option<&str>, active_utility: &str) -> String {
+    let gumball_meta = crate::editor::fem2d::interaction::gumball::fem2d_gumball_meta_layer(doc, &interaction.selected_ids, camera, active_utility, window_instance_id);
+    crate::editor::fem2d::interaction::canvas_gesture::fem2d_finish_canvas_layers_json(layers, window_instance_id, active_utility, gumball_meta)
+}
+
 fn render_static(
     doc: &Fem2dSnapshot,
     source_id: Option<&str>,
@@ -287,6 +337,8 @@ fn render_static(
     interaction: &crate::editor::fem2d::interaction::Fem2dInteractionSnapshot,
     animation: &config::Fem2dResultsAnimation,
     key: Option<ResultsCacheKey>,
+    window_instance_id: Option<&str>,
+    active_utility: &str,
 ) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let amplitude = animation.amplitude();
     let scene = with_static_results(doc, key, |results| {
@@ -304,7 +356,7 @@ fn render_static(
         Ok(Err(message)) => return placeholder(Label::data(message)),
         Err(error) => return placeholder(Label::data(format!("Analysis error: {error}"))),
     };
-    let layers_json = dsl::json::to_string(&Value::Array(layers));
+    let layers_json = finish_results_layers(doc, interaction, camera, layers, window_instance_id, active_utility);
     crate::app_surface::canvas_2d_surface(BODY_KEY, &Canvas2dScene { camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json, snapshot: None, tool_run_trace: None, lanes: Vec::new() })
 }
 
@@ -328,13 +380,28 @@ fn static_layers(
     layers.extend(playback_caption_layer(animation));
 
     //#region 🔖️ReactionLabels
+    let mut reaction_entries: Vec<(&crate::model::NodeReaction, f64, f64)> = Vec::new();
     for reaction in &result.reactions {
         let Some(node) = find_node_2d(&doc.nodes, &reaction.node_id) else { continue };
         let (sx, sy) = screen_2d(node.x, node.y);
+        reaction_entries.push((reaction, sx, sy));
+    }
+    reaction_entries.sort_by(|(left, ..), (right, ..)| left.node_id.cmp(&right.node_id).then(left.dof.index().cmp(&right.dof.index())));
+    let mut stack_by_node: HashMap<String, usize> = HashMap::new();
+    let mut placed_reaction_labels: Vec<ReactionLabelBounds> = Vec::new();
+    for (reaction, sx, sy) in reaction_entries {
+        let stack_index = {
+            let entry = stack_by_node.entry(reaction.node_id.clone()).or_insert(0);
+            let index = *entry;
+            *entry += 1;
+            index
+        };
+        let content = format!("{:?}: {:.0} N", reaction.dof, reaction.value * amplitude);
+        let (label_x, label_y) = place_reaction_label(sx, sy, stack_index, &content, &mut placed_reaction_labels);
         layers.push(dsl::json!({
             "id": format!("reaction-{}-{:?}", reaction.node_id, reaction.dof),
-            "transform": [1.0, 0.0, 0.0, 1.0, sx + 8.0, sy + 14.0],
-            "text": { "content": format!("{:?}: {:.0} N", reaction.dof, reaction.value * amplitude), "size": 10.0 },
+            "transform": [1.0, 0.0, 0.0, 1.0, label_x, label_y],
+            "text": { "content": content, "size": REACTION_LABEL_SIZE },
         }));
     }
     //#endregion 🔖️ReactionLabels
@@ -416,6 +483,8 @@ fn render_modal(
     interaction: &crate::editor::fem2d::interaction::Fem2dInteractionSnapshot,
     animation: &config::Fem2dResultsAnimation,
     key: Option<ResultsCacheKey>,
+    window_instance_id: Option<&str>,
+    active_utility: &str,
 ) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let scale = mode_shape_scale(doc, animation.amplitude());
     let mode = with_mode_values(doc, key, ModeKey::Modal(mode_index), |(freq_hz, disp_map)| {
@@ -433,7 +502,7 @@ fn render_modal(
         Ok(layers) => layers,
         Err(error) => return placeholder(Label::data(format!("Modal analysis error: {error}"))),
     };
-    let layers_json = dsl::json::to_string(&Value::Array(layers));
+    let layers_json = finish_results_layers(doc, interaction, camera, layers, window_instance_id, active_utility);
     crate::app_surface::canvas_2d_surface(BODY_KEY, &Canvas2dScene { camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json, snapshot: None, tool_run_trace: None, lanes: Vec::new() })
 }
 
@@ -449,6 +518,8 @@ fn render_buckling(
     interaction: &crate::editor::fem2d::interaction::Fem2dInteractionSnapshot,
     animation: &config::Fem2dResultsAnimation,
     key: Option<ResultsCacheKey>,
+    window_instance_id: Option<&str>,
+    active_utility: &str,
 ) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let Some(case_id) = source_id.map(str::to_string).or_else(|| doc.load_cases.first().map(|c| c.id.clone())) else {
         return placeholder(Label::data("No load case defined"));
@@ -469,7 +540,7 @@ fn render_buckling(
         Ok(layers) => layers,
         Err(error) => return placeholder(Label::data(format!("Buckling analysis error: {error}"))),
     };
-    let layers_json = dsl::json::to_string(&Value::Array(layers));
+    let layers_json = finish_results_layers(doc, interaction, camera, layers, window_instance_id, active_utility);
     crate::app_surface::canvas_2d_surface(BODY_KEY, &Canvas2dScene { camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json, snapshot: None, tool_run_trace: None, lanes: Vec::new() })
 }
 //#endregion 🔖️Render

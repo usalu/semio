@@ -195,6 +195,7 @@ import { DOCUMENT_BACKBONE_RETENTION_LIMITS, type LocalInteractionState, type Mu
 import { scopedPresencePeersV1 } from "./👥️presence-scope/🟦️.ts";
 import { MODE_STEP_CONTROL_IDS, SURFACE_ROLE_CONTROL_IDS, SURFACE_ROLE_ORDER, createSealedInstanceLedgerV1, createSessionAppSwitchGateV1, createSessionWorkLedgerV1, quiesceSessionWorkV1, resolveBootPrimaryAppV1, roleSwitchTargetV1, sealedInstanceDropTextV1, sealedInstanceDropV1, stepModeIdV1, surfaceRoleAppsV1, surfaceSwitchBusyTextV1 } from "./🔀️surface-switch/🟦️.ts";
 import { KEYBINDING_UNOWNED_CODE, dockSeedActiveWindowIdV1, keybindingUnownedTextV1, modeLayoutStacksV1, reservedShellChordsV1, resolveKeybindingTargetWindowV1, type WindowScopeInstanceV1, type WindowScopeKindV1, type WindowScopeLayoutNodeV1 } from "./⌨️window-scope/🟦️.ts";
+import { causalOrderKeyV1, createInputLedgerV1, createRefusalNoticeThrottleV1, createVersionedRegisterV1, expectedGenerationFromArgsV1, inputAppliedV1, inputRefusalNoticeTextV1, inputRefusalNotifiesV1, inputRefusalTextV1, inputRefusedV1, resolveUtilityActivationV1, type InputOutcomeV1, type InputRefusalReasonV1, type ShellInputActionV1, type VersionedRegisterCellV1 } from "./🎯️input-ledger/🟦️.ts";
 
 
 function scopeRuntimeKey(message: { readonly documentId: string; readonly scope?: DocumentScope }): string | null {
@@ -534,7 +535,6 @@ import {
   pasteArgsFragment,
   resolveManifestLabel,
   resolvePanelTabLabel,
-  resolveUtilityActivation,
   undeclaredActionDiagnostic,
   historyPatchShouldApplyV1,
   historyRefreshNeededV1,
@@ -611,7 +611,7 @@ import {
 } from "../📌️ChromePanels/🟦️.tsx";
 import { guestIngressGenerationV1, isPluginInstanceRetiredV1, onPluginInstancesLost, PluginBootShardLostError, leftoverInspectionRefreshScope, leftoverInspectionPanelHash, type PluginWasmHandle, type PluginExtensionCompletion, serializePerActor, setPluginRuntimeActor } from "../🔌️PluginRuntime/🟦️.tsx";
 import { documentBackboneEffectV1, type ActorDocumentMessagePortV1 } from "../../../../🔌️plugin/📡️backbone/🔗️binding/🟦️.ts";
-import { BrowserActorActionMailboxV1 } from "../../../../🔌️plugin/🌐️browser-bundle/🎯️action-handoff/📮️requests/🟦️.ts";
+import { BrowserActorActionMailboxV1, browserActorActionRefusalReasonV1 } from "../../../../🔌️plugin/🌐️browser-bundle/🎯️action-handoff/📮️requests/🟦️.ts";
 import { BROWSER_ACTOR_ACTION_APP_CHANNEL_VERSION } from "../../../../🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🟦️.ts";
 import { publishBrowserActorHostEffectsV1 } from "../../../../🔌️plugin/🌐️browser-bundle/🎯️action-handoff/📤️publication/🟦️.ts";
 import { InferencePortOpeningMailboxV1 } from "../../../../💡️inference/🚪️opening/🟦️.ts";
@@ -2658,12 +2658,16 @@ function FrameworkOsShellInner({
     shellDialogOriginV1(target, [...openDocumentSessionsRef.current].map(([runtimeKey, entry]) => ({ runtimeKey, ...entry }))), []);
   const isCurrentDialogOrigin = useCallback((origin: ShellDialogOriginV1 | null): boolean =>
     shellDialogOriginIsCurrentV1(origin, captureDialogOrigin(shellStateRef.current.pluginRuntime.session)), [captureDialogOrigin]);
-  const captureEffectOwner = useCallback((source: ActiveSession, presentation: ShellDialogOriginV1 | null) => ({
+  /** 🔗️ `inputSeq` is the ledger entry (`🎯️input-ledger`) whose guest answer this owner's effect pass
+   * applies — `onAction` passes its own entry, every other owner (a refresh, a tutorial, a route) is a
+   * root (`null`) — so a guest follow-up (`replayShellCommand`, `dispatchAction`) can carry `causedBy`. */
+  const captureEffectOwner = useCallback((source: ActiveSession, presentation: ShellDialogOriginV1 | null, inputSeq: number | null = null) => ({
     presentation,
     source: captureDialogOrigin(source),
     session: source,
     plugin: loadedPluginsRef.current.find((entry) => entry.handle.pluginId === source.pluginId)?.handle ?? null,
     creationCatalog: captureSpaceArtifactCreationCatalogAuthorityV1(spaceArtifactCreationCatalogRef.current, spaceArtifactCreationCatalogUiRef.current, presentation),
+    inputSeq,
   }), [captureDialogOrigin]);
   const isCurrentEffectOwner = useCallback((owner: ReturnType<typeof captureEffectOwner>): boolean => {
     const primary = shellStateRef.current.pluginRuntime.session;
@@ -4154,10 +4158,46 @@ function FrameworkOsShellInner({
   // 🧰️ Refs so `refreshUi`/`onAction`/`applyHostEffects` can read the current host-owned active utility and
   // active window without re-creating those callbacks on every utility switch.
   const activeUtilityByWindowIdRef = useRef(activeUtilityByWindowId);
-  const lastUtilityArmAtRef = useRef(0);
   activeUtilityByWindowIdRef.current = activeUtilityByWindowId;
   const activeToolIdRef = useRef(activeToolId);
   activeToolIdRef.current = activeToolId;
+  //#region 🎯️InputLedger
+  /** 🎯️ The Input Causality Ledger (ticket 26/09/16/INPUT-CAUSALITY-LEDGER): `onAction` is its one funnel —
+   * every input becomes an entry and reaches `applied | refused(reason) | superseded`, never a silent
+   * `return`. `refusalNoticeThrottleRef` folds a burst of one refusal reason into one notice (§G). */
+  const inputLedgerRef = useRef(createInputLedgerV1());
+  const refusalNoticeThrottleRef = useRef(createRefusalNoticeThrottleV1());
+  /** 🔢️ L3 versioned registers — the host-owned interaction state a widget renders AND stamps back
+   * (`expectedGeneration`) so a stale press is refused by compare-and-set, never by a wall clock. The
+   * store slices (`activeUtilityByWindowId`, `activeToolId`) stay the RENDERED value; these cells carry
+   * the generation. One cell per window instance, minted lazily off the current value. */
+  const utilityGenerationByWindowRef = useRef(new Map<string, VersionedRegisterCellV1<string | null>>());
+  const toolRegisterRef = useRef(createVersionedRegisterV1<string | null>(activeToolId ?? null));
+  /** 🔢️ Bumped after every APPLIED register write — a write that leaves the VALUE unchanged (the picker's
+   * `utilityId: ""` resync while nothing is armed) moves the generation without moving the store, and the
+   * widgets that stamp `expectedGeneration` must still re-render to read the new one. */
+  const [registerRevision, bumpRegisterRevision] = useReducer((revision: number) => revision + 1, 0);
+  const utilityRegisterCell = useCallback((windowId: string): VersionedRegisterCellV1<string | null> => {
+    const cells = utilityGenerationByWindowRef.current;
+    let cell = cells.get(windowId);
+    if (cell === undefined) {
+      cell = createVersionedRegisterV1<string | null>(activeUtilityByWindowIdRef.current[windowId] ?? null);
+      cells.set(windowId, cell);
+    }
+    return cell;
+  }, []);
+  /** 🔢️ The generation a utility bar / method picker renders for `windowId` (read at render time; the
+   * `registerRevision` dependency is what re-runs the readers after a write). */
+  const utilityGenerationFor = useCallback((windowId: string): number => utilityRegisterCell(windowId).read().generation, [utilityRegisterCell]);
+  /** ⏺️ Dev/studio-only probe surface (mirrors `__semioCrossingCensus` in `🔌️PluginRuntime`). */
+  useEffect(() => {
+    if (!tutorialRecorderAvailable) return;
+    Object.defineProperty(globalThis, "__semioInputLedger", { configurable: true, get: () => inputLedgerRef.current.census(), set: () => {} });
+    return () => {
+      delete (globalThis as { __semioInputLedger?: unknown }).__semioInputLedger;
+    };
+  }, [tutorialRecorderAvailable]);
+  //#endregion 🎯️InputLedger
   /** 🧰️ Dispatch + sync the ref immediately — `refreshUi` reads the ref before the next render, so a
    * bare `dispatch(SET_ACTIVE_UTILITY)` alone leaves the map stale and the gumball never appears. */
   // 🧰️ The ONE place one window's arm changes — the utility-bar action AND a program's own
@@ -4165,7 +4205,14 @@ function FrameworkOsShellInner({
   // leftover overlay is published from here too, so an arm the guest raised itself is not masked by
   // the pane's stale `select` overlay until some later refresh
   // (ticket 26/09/02/PUZZLE-3D-END-TO-END wave B39).
-  const setActiveUtilityForWindow = useCallback((windowId: string, utilityId: string | null) => {
+  // 🔢️ It is a compare-and-set over the window's register cell: `expectedGeneration === null` is the
+  // shell-authoritative unconditional write (a guest `setActiveUtility` effect, a tool activation
+  // clearing every pane); a widget press passes the generation it rendered and is REFUSED when the
+  // register moved under it — the `🎯️input-ledger` L3 replacement for the deleted 8 s echo-off window.
+  const writeUtilityRegister = useCallback((windowId: string, utilityId: string | null, expectedGeneration: number | null) => {
+    const write = utilityRegisterCell(windowId).write(utilityId, expectedGeneration);
+    if (write.kind === "refused") return write;
+    bumpRegisterRevision();
     activeUtilityByWindowIdRef.current = { ...activeUtilityByWindowIdRef.current, [windowId]: utilityId };
     dispatch({ type: "SET_ACTIVE_UTILITY", windowId, utilityId });
     const prior = leftoverWorldWindowOverlayV1(windowId);
@@ -4181,18 +4228,36 @@ function FrameworkOsShellInner({
       },
       { kind: "window", windowId },
     );
-  }, []);
-  /** 🧰️ Clear every window's utility in the ref + store at once (tool/utility mutual exclusion). */
+    return write;
+  }, [utilityRegisterCell]);
+  /** 🧰️ Clear every window's utility in the ref + store at once (tool/utility mutual exclusion) — a
+   * shell-authoritative write, so every cleared window's register advances unconditionally. */
   const clearAllWindowUtilities = useCallback(() => {
     const next: Record<string, string | null> = { ...activeUtilityByWindowIdRef.current };
+    let cleared = false;
     for (const windowId of Object.keys(next)) {
       if (next[windowId]) {
         next[windowId] = null;
+        utilityRegisterCell(windowId).write(null, null);
+        cleared = true;
         dispatch({ type: "SET_ACTIVE_UTILITY", windowId, utilityId: null });
       }
     }
     activeUtilityByWindowIdRef.current = next;
+    if (cleared) bumpRegisterRevision();
+  }, [utilityRegisterCell]);
+  /** 🛠️ The tool register's compare-and-set twin of {@link writeUtilityRegister}: the ref `refreshUi`
+   * reads and the store slice move together, and only when the write is admitted. */
+  const writeToolRegister = useCallback((toolId: string | null, expectedGeneration: number | null) => {
+    const write = toolRegisterRef.current.write(toolId, expectedGeneration);
+    if (write.kind === "refused") return write;
+    bumpRegisterRevision();
+    activeToolIdRef.current = toolId;
+    dispatch({ type: "SET_ACTIVE_TOOL", toolId });
+    return write;
   }, []);
+  /** 🛠️ The tool generation a shell-owned tool control stamps onto its `setActiveTool` press. */
+  const toolGeneration = useCallback((): number => toolRegisterRef.current.read().generation, []);
   const toolMeasuresByToolIdRef = useRef(toolMeasuresByToolId);
   toolMeasuresByToolIdRef.current = toolMeasuresByToolId;
   const activeWindowIdRef = useRef(activeWindowId);
@@ -4573,6 +4638,8 @@ function FrameworkOsShellInner({
     readonly hostMode: boolean;
     readonly session: ActiveSession;
     readonly targetViewState: ViewModel;
+    /** 🎛️ The receiver's `consumes` row — the ONLY thing that scopes a capability pack. */
+    readonly consumedTopics: readonly string[];
     readonly dispatchDeferredEffects: (pluginId: string, instanceId: number, effects: readonly Effect[]) => void;
   };
   /**
@@ -4612,9 +4679,9 @@ function FrameworkOsShellInner({
       },
       buildPack: (session, kinds, environment) => {
         const loadedForScope = environment.loadedPlugins.filter((entry) => !environment.disabledExtensionIds.has(entry.handle.pluginId)).map((entry) => ({ pluginId: entry.handle.pluginId, manifest: { ...entry.manifest, workflows: [] } }));
-        const scopedContributionsJson = scopeContributionsJson(loadedForScope, session.pluginId, kinds);
-        if (scopedContributionsJson === "[]") console.error("[DEBUG] contributions push refused empty pack", JSON.stringify({ plugin: session.pluginId, app: environment.session.app.id, chars: 2, kinds }));
-        else console.error("[DEBUG] contributions scoped pack", JSON.stringify({ chars: scopedContributionsJson.length, hasManifestJson: scopedContributionsJson.includes("manifestJson"), hasPolygon: scopedContributionsJson.includes("brep.curve.polygon"), kinds }));
+        const scopedContributionsJson = scopeContributionsJson(loadedForScope, session.pluginId, kinds, environment.consumedTopics);
+        if (scopedContributionsJson === "[]") console.error("[DEBUG] contributions push refused empty pack", JSON.stringify({ plugin: session.pluginId, app: environment.session.app.id, chars: 2, kinds, consumes: environment.consumedTopics }));
+        else console.error("[DEBUG] contributions scoped pack", JSON.stringify({ chars: scopedContributionsJson.length, hasManifestJson: scopedContributionsJson.includes("manifestJson"), hasPolygon: scopedContributionsJson.includes("brep.curve.polygon"), kinds, consumes: environment.consumedTopics }));
         return scopedContributionsJson;
       },
       install: async (session, json, kinds, environment) => {
@@ -4688,6 +4755,7 @@ function FrameworkOsShellInner({
         hostMode,
         session: nextSession,
         targetViewState: resolvedTargetViewState(nextSession),
+        consumedTopics: registry.find((entry) => entry.pluginId === nextSession.pluginId)?.consumes ?? [],
         // 🔁️ The install's own re-arm (`flowEvalTick` per attached preview) is dispatched on a fresh
         // microtask against the LIVE session, never inside the guest crossing that produced it.
         dispatchDeferredEffects: (deferredPluginId, deferredInstanceId, deferredEffects) =>
@@ -4708,7 +4776,7 @@ function FrameworkOsShellInner({
     // 🐢️ `applyHostEffects` is declared later in this component and is referenced in the body only,
     // never in this array — the same temporal-dead-zone avoidance `refreshUi` below documents.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [captureDialogOrigin, captureEffectOwner, hostMode, readDocumentOperatorScope, resolvedTargetViewState],
+    [captureDialogOrigin, captureEffectOwner, hostMode, readDocumentOperatorScope, registry, resolvedTargetViewState],
   );
   /** 🔚 A session switch abandons whatever contributions unit is still resolving for the instance
    * that is going away: its closure must never be installed into an instance nobody is looking at,
@@ -5449,12 +5517,11 @@ function FrameworkOsShellInner({
           // 🧰️ A program programmatically switched utility: mirror it into the host-owned store slice AND
           // the ref `refreshUi` reads (bare `dispatch` alone leaves the map stale until the next render —
           // which is after this same pass's refresh, so brush/suggestion ghosts and gumballs never appear).
+          // 🔢️ Shell-authoritative (`expectedGeneration: null`): the guest's own switch advances the
+          // window's register so the next widget press renders against the generation it produced.
           const { windowId, utilityId } = effect.setActiveUtility;
-          setActiveUtilityForWindow(windowId, utilityId || null);
-          if (utilityId && activeToolIdRef.current) {
-            activeToolIdRef.current = null;
-            dispatch({ type: "SET_ACTIVE_TOOL", toolId: null });
-          }
+          writeUtilityRegister(windowId, utilityId || null, null);
+          if (utilityId && activeToolIdRef.current) writeToolRegister(null, null);
           if (windowId === activeWindowIdRef.current) nextViewState = { ...nextViewState, activeUtilityId: utilityId || undefined, activeToolId: utilityId ? undefined : nextViewState.activeToolId };
           continue;
         }
@@ -5464,8 +5531,7 @@ function FrameworkOsShellInner({
           // exclusion — a tool and a window utility never both claim the pointer), and fold it into the
           // view state fed to the follow-up refresh.
           const { toolId } = effect.setActiveTool;
-          activeToolIdRef.current = toolId || null;
-          dispatch({ type: "SET_ACTIVE_TOOL", toolId: toolId || null });
+          writeToolRegister(toolId || null, null);
           if (toolId) clearAllWindowUtilities();
           nextViewState = { ...nextViewState, activeToolId: toolId || undefined, activeUtilityId: toolId ? undefined : nextViewState.activeUtilityId };
           continue;
@@ -5547,7 +5613,7 @@ function FrameworkOsShellInner({
               // 📤️ Single-file (multiple absent/false): identical to the pre-multi-select shape, one
               // `handleAction` call with `{payload, name}`. Multi-file: one sequential call per selected
               // file, each extending args with `{index, total}` so the plugin can stage/merge imports.
-              await dispatchOpenedFiles(opened, resolvedImport, Boolean(multiple), makeEffectDispatchOne(pluginEntry, baseSession, (effects, target, scope) => applyHostEffects(effects, target, scope, effectOwner), () => isCurrentEffectOwner(effectOwner), resolvedTargetViewState));
+              await dispatchOpenedFiles(opened, resolvedImport, Boolean(multiple), makeEffectDispatchOne(pluginEntry, baseSession, (effects, target, scope) => applyHostEffects(effects, target, scope, effectOwner), () => isCurrentEffectOwner(effectOwner), resolvedTargetViewState, { causedBy: effectOwner.inputSeq, windowId: baseSession.viewState.windowId ?? null }));
             }
           }
           continue;
@@ -5575,7 +5641,7 @@ function FrameworkOsShellInner({
             console.error(`[os-shell] dispatchAction "${dispatchActionId}" dropped: no loaded program for "${baseSession.pluginId}" (loaded: ${loadedPluginsRef.current.map((entry) => entry.handle.pluginId).join(", ") || "none"})`);
             continue;
           }
-          scheduleDispatchAction(dispatchActionId, dispatchArgs as Record<string, unknown> | undefined, delayMs, makeEffectDispatchOne(pluginEntry, baseSession, (effects, target, scope) => applyHostEffects(effects, target, scope, effectOwner), () => isCurrentEffectOwner(effectOwner), resolvedTargetViewState));
+          scheduleDispatchAction(dispatchActionId, dispatchArgs as Record<string, unknown> | undefined, delayMs, makeEffectDispatchOne(pluginEntry, baseSession, (effects, target, scope) => applyHostEffects(effects, target, scope, effectOwner), () => isCurrentEffectOwner(effectOwner), resolvedTargetViewState, { causedBy: effectOwner.inputSeq, windowId: baseSession.viewState.windowId ?? null }));
           continue;
         }
         if ("requestInferenceProposal" in effect) {
@@ -5674,7 +5740,15 @@ function FrameworkOsShellInner({
               dispatch({ type: "SET_ACTIVE_EXAMPLE_ID", value: exampleId });
             }
             console.warn("[DEBUG] replayShellCommand dispatch", JSON.stringify({ actionId }));
-            onActionRef.current({ controllerId: baseSession.app.controllerId, action: actionId, args: argsRecord });
+            // 🔗️ A guest follow-up: `causedBy` is the input whose answer armed it, so the ledger sorts it
+            // BEFORE any later input (L2) and a lost CAS race is logged, never toasted (§G). `inputSeq`
+            // is re-minted by `issue`.
+            onActionRef.current({
+              controllerId: baseSession.app.controllerId,
+              action: actionId,
+              args: argsRecord,
+              provenance: { origin: "guest", causedBy: effectOwner.inputSeq, windowId: typeof argsRecord?.windowId === "string" ? argsRecord.windowId : baseSession.viewState.windowId ?? null },
+            });
           }
           continue;
         }
@@ -5699,7 +5773,7 @@ function FrameworkOsShellInner({
               },
               accept,
               payload,
-              makeEffectDispatchOne(pluginEntry, baseSession, (effects, target, scope) => applyHostEffects(effects, target, scope, effectOwner), () => isCurrentEffectOwner(effectOwner), resolvedTargetViewState),
+              makeEffectDispatchOne(pluginEntry, baseSession, (effects, target, scope) => applyHostEffects(effects, target, scope, effectOwner), () => isCurrentEffectOwner(effectOwner), resolvedTargetViewState, { causedBy: effectOwner.inputSeq, windowId: baseSession.viewState.windowId ?? null }),
             );
           }
           continue;
@@ -5830,7 +5904,7 @@ function FrameworkOsShellInner({
         if (runtimeDiagnosticsEnabled()) console.warn("[DEBUG] applyHostEffects skipped refresh: session not current", JSON.stringify({ spawned: isSpawnedPluginSession, scope: refreshScope }));
       }
     },
-    [captureDialogOrigin, captureEffectOwner, dropForSealedInstance, isCurrentEffectOwner, loadDocumentPair, makeOwnedDialog, clearAllWindowUtilities, ensureSpawnedPlugin, loadedPlugins, navigateHistory, refreshSpawnedUi, refreshUi, requestInferenceProposal, resolvedTargetViewState, session, setActiveUtilityForWindow, spacePrograms, hostMode],
+    [captureDialogOrigin, captureEffectOwner, dropForSealedInstance, isCurrentEffectOwner, loadDocumentPair, makeOwnedDialog, clearAllWindowUtilities, ensureSpawnedPlugin, loadedPlugins, navigateHistory, refreshSpawnedUi, refreshUi, requestInferenceProposal, resolvedTargetViewState, session, writeUtilityRegister, writeToolRegister, spacePrograms, hostMode],
   );
   // 🔁️ What the ui-refresh lane applies for a pass that asked for effects of its own, outside that pass.
   applyHostEffectsRef.current = applyHostEffects;
@@ -6277,483 +6351,540 @@ function FrameworkOsShellInner({
     [loadedPlugins, session, updateSpacePanel, hostApp],
   );
 
+  /** 🎯️ The shell's ONE input funnel. Every call mints a `🎯️input-ledger` entry first and settles it with a
+   * typed outcome — `applied` for every branch that ran (shell-intercepted or guest-dispatched and settled),
+   * `refused(reason)` for every gate that used to be a silent `return`. A refusal prints one plain
+   * `console.warn` line and, for a user-origin input whose reason the notice table admits, one throttled
+   * notice (§G). `propagateFailure` keeps rethrowing AFTER the ledger is settled (the tutorial director). */
   const onAction = useCallback(
-    (requested: ActionDescriptor, submittedOrigin?: ShellDialogOriginV1, propagateFailure = false) => {
-      const action = pasteActionWithRetainedFragment(requested, clipboardFragmentRef.current);
-      if (action.controllerId === "recovery") {
-        const args = typeof action.args === "object" && action.args != null ? (action.args as { pluginId?: string }) : {};
-        const pluginId = args.pluginId ?? primaryPluginId;
-        if (!pluginId) return;
-        if (action.action === "recovery.restartApp") {
-          dispatch({ type: "SET_PLUGIN_SUPERVISOR", pluginId, value: "restarting" });
-          void reloadPlugin(pluginId);
-          return;
-        }
-        if (action.action === "recovery.disablePlugin") {
-          dispatch({ type: "SET_PLUGIN_SUPERVISOR", pluginId, value: "quarantined" });
-          if (pluginId !== primaryPluginId) void uninstallPlugin(pluginId);
-          return;
-        }
-        if (action.action === "recovery.showDiagnostics") {
-          console.log("[DEBUG] recovery diagnostics", { pluginId, supervisor: pluginSupervisorById[pluginId] });
-          return;
-        }
-      }
-
-      if (!session) return;
-      // 🛑️ A cancel gesture retires the requesting instance's IN-FLIGHT extension work before the
-      // gesture itself is forwarded, and never instead of it: the guest still owns its own
-      // bookkeeping (its pending table, its progress ledger, its arming latch) and the extension
-      // actor still has to be told through its own capability. This hop is only the third one —
-      // the host-side door, which nothing inside the per-actor request queue can reach. The action
-      // id is not known to this shell: a mounted surface DECLARES it off its own status contract
-      // (`declareSurfaceCancelAction`), so the shell stays domain-neutral
-      // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-      if (isDeclaredSurfaceCancelAction(action.action)) {
-        const aborted = abortExtensionRequestsForActor(`${session.pluginId}:${session.instanceId}`, `cancelled by ${action.action}`);
-        console.warn("[DEBUG] extension requests aborted by surface cancel", JSON.stringify({ action: action.action, pluginId: session.pluginId, instanceId: session.instanceId, aborted }));
-      }
-      const actionOrigin = submittedOrigin ?? captureDialogOrigin(session);
-      if (!isCurrentDialogOrigin(actionOrigin)) return;
-      const primaryActionOwner = captureEffectOwner(session, actionOrigin);
-
-      // 🎓️ First-run walkthrough (mirrors setActiveUtility below): fully shell-intercepted, resets
-      // playback to the first step, never forwarded to the program.
-      if (action.action === START_INTRODUCTION_ACTION_ID) {
-        dispatch({ type: "SET_INTRODUCTION_STEP", value: 0 });
-        return;
-      }
-
-      // 🎥️ Fully shell-intercepted, mirroring `START_INTRODUCTION_ACTION_ID` above: sandboxes the
-      // document and starts tutorial playback from t=0 (real work happens in `startTutorialRef`, wired up
-      // by the TutorialOrchestration block further down this component).
-      if (action.action === START_TUTORIAL_ACTION_ID) {
-        const args = typeof action.args === "object" && action.args != null ? (action.args as { tutorialId?: unknown }) : {};
-        if (typeof args.tutorialId === "string") startTutorialRef.current(args.tutorialId);
-        return;
-      }
-      if (action.action === RECORD_TUTORIAL_ACTION_ID) {
-        toggleTutorialRecordingRef.current();
-        return;
-      }
-
-      // 🎥️ Deviation detection: any action NOT stamped by the tutorial director/seek/converge path while
-      // a tutorial is actively playing means the user diverged from the recording — auto-pause and flag
-      // `deviated` so pressing Play again converges instead of resuming blindly mid-drift.
-      if (tutorialPlayingRef.current && !tutorialDrivenRef.current.active) {
-        dispatch({ type: "SET_TUTORIAL_PLAYING", value: false });
-        dispatch({ type: "SET_TUTORIAL_DEVIATED", value: true });
-      }
-
-      // ⏺️ Recorder tap: annotational-only capture (see `TutorialTracks.events` doc comment) — never
-      // re-dispatched on playback. Skips navigation/introduction/tutorial-control actions (noise, or
-      // meaningless to replay) and anything the director itself just dispatched.
-      if (tutorialRecordingRef.current && !tutorialDrivenRef.current.active) {
-        if (!TUTORIAL_RECORDING_EXCLUDED_ACTION_IDS.has(action.action)) {
-          tutorialRecorderRef.current?.recordEvent({ kind: "action", action: action.action, args: action.args as Record<string, unknown> | undefined });
-        }
-      }
-
-      // 🧭️ Camera-navigation gesture report from a 3D window's `WorldOrbitGated` (shell-only, never
-      // forwarded to the program) — completes any pan/zoom/orbit interaction of the active step that
-      // targets the window the gesture happened on. Celebrates only `windowId`'s own pane (via
-      // `windowElementId`, its unique per-instance element id) — never the whole window-kind alias
-      // selector, which would celebrate every other open pane of that same kind too (e.g. a split view).
-      if (action.action === NOTE_WORLD_NAVIGATION_ACTION_ID) {
-        const args = typeof action.args === "object" && action.args != null ? (action.args as { windowId?: unknown; gestures?: unknown }) : {};
-        const windowId = typeof args.windowId === "string" ? args.windowId : "";
-        const gestures = Array.isArray(args.gestures) ? (args.gestures as readonly string[]) : [];
-        if (windowId) {
-          const windowKindId = sessionWindowInstances(session.app, extraWindowInstancesRef.current).find((instance) => instance.id === windowId)?.windowKindId ?? windowId;
-          for (const gesture of gestures) {
-            completeIntroductionInteraction(
-              (interaction) => interaction.on.kind === gesture && introductionTargetsWindow(windowId, windowKindId, interaction.on.id),
-              windowElementId(windowId),
-            );
+    async (requested: ShellInputActionV1, submittedOrigin?: ShellDialogOriginV1, propagateFailure = false): Promise<InputOutcomeV1> => {
+      const requestedWindowId = typeof requested.args === "object" && requested.args !== null && typeof (requested.args as { windowId?: unknown }).windowId === "string" ? (requested.args as { windowId: string }).windowId : null;
+      const ledger = inputLedgerRef.current;
+      const entry = ledger.issue(requested, { windowId: requestedWindowId ?? activeWindowIdRef.current ?? null, origin: requested.provenance?.origin ?? "user" });
+      const refuse = (reason: InputRefusalReasonV1, detail?: string, alreadyNotified = false): InputOutcomeV1 => {
+        const outcome = inputRefusedV1(entry.provenance.inputSeq, reason, detail);
+        if (ledger.settle(outcome) && outcome.kind === "refused") {
+          console.warn(inputRefusalTextV1(entry.action, outcome, entry.provenance));
+          if (!alreadyNotified && inputRefusalNotifiesV1(outcome, entry.provenance) && refusalNoticeThrottleRef.current.admit(reason, performance.now())) {
+            showTransientNoticeRef.current(inputRefusalNoticeTextV1(reason, uiLocaleRef.current), "info");
           }
         }
-        return;
-      }
+        return outcome;
+      };
+      const applied = (): InputOutcomeV1 => {
+        const outcome = inputAppliedV1(entry.provenance.inputSeq);
+        ledger.settle(outcome);
+        return outcome;
+      };
+      /** 🚦️ The one place a thrown dispatch error becomes a reason — shared by the direct-actor route and
+       * the `handleAction` route so both speak the ledger's vocabulary. */
+      const refusalReasonForError = (error: unknown): { readonly reason: InputRefusalReasonV1; readonly detail?: string } => {
+        if (isViewerReadOnlyFault(error)) return { reason: "viewer-read-only" };
+        if (isMutationRejectedFault(error)) return { reason: "mutation-rejected" };
+        const text = String(error instanceof Error ? error.message : error);
+        if (/queue is full|queue full|another action pending|action-busy/u.test(text)) return { reason: "queue-full", detail: text };
+        if (/action-owner-mismatch|owner retired|ambiguous document owner/u.test(text)) return { reason: "owner-mismatch", detail: text };
+        return { reason: "dispatch-failed", detail: text };
+      };
+      try {
+        const action = pasteActionWithRetainedFragment(requested, clipboardFragmentRef.current);
+        if (action.controllerId === "recovery") {
+          const args = typeof action.args === "object" && action.args != null ? (action.args as { pluginId?: string }) : {};
+          const pluginId = args.pluginId ?? primaryPluginId;
+          if (!pluginId) return refuse("dispatch-failed", "recovery: no plugin id");
+          if (action.action === "recovery.restartApp") {
+            dispatch({ type: "SET_PLUGIN_SUPERVISOR", pluginId, value: "restarting" });
+            void reloadPlugin(pluginId);
+            return applied();
+          }
+          if (action.action === "recovery.disablePlugin") {
+            dispatch({ type: "SET_PLUGIN_SUPERVISOR", pluginId, value: "quarantined" });
+            if (pluginId !== primaryPluginId) void uninstallPlugin(pluginId);
+            return applied();
+          }
+          if (action.action === "recovery.showDiagnostics") {
+            console.log("[DEBUG] recovery diagnostics", { pluginId, supervisor: pluginSupervisorById[pluginId] });
+            return applied();
+          }
+        }
 
-      // 🧰️ Utility activation (P5): host-owned session state, never a document operation. Re-clicking the active
-      // utility (or an empty utilityId) deactivates. We resolve the target window from the descriptor's tagged
-      // `windowId` (see `tagSetActiveUtilityWindow`), falling back to the active window, update the store,
-      // then forward the resolved utility to the plugin so it can clear/prepare scratch.
-      if (action.action === SET_ACTIVE_UTILITY_ACTION_ID) {
-        const args = typeof action.args === "object" && action.args != null ? (action.args as { utilityId?: unknown; windowId?: unknown }) : {};
-        const windowId = typeof args.windowId === "string" && args.windowId ? args.windowId : (activeWindowIdRef.current ?? "");
-        if (!windowId) return;
-        const requested = typeof args.utilityId === "string" ? args.utilityId : "";
-        const next = resolveUtilityActivation(activeUtilityByWindowIdRef.current[windowId], requested);
-        if (!next && performance.now() - lastUtilityArmAtRef.current < 8000) {
-          console.warn(`[DEBUG] setActiveUtility hop ignored echo-off window=${windowId} requested=${requested}`);
-          return;
+        if (!session) return refuse("no-session");
+        // 🛑️ A cancel gesture retires the requesting instance's IN-FLIGHT extension work before the
+        // gesture itself is forwarded, and never instead of it: the guest still owns its own
+        // bookkeeping (its pending table, its progress ledger, its arming latch) and the extension
+        // actor still has to be told through its own capability. This hop is only the third one —
+        // the host-side door, which nothing inside the per-actor request queue can reach. The action
+        // id is not known to this shell: a mounted surface DECLARES it off its own status contract
+        // (`declareSurfaceCancelAction`), so the shell stays domain-neutral
+        // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+        if (isDeclaredSurfaceCancelAction(action.action)) {
+          const aborted = abortExtensionRequestsForActor(`${session.pluginId}:${session.instanceId}`, `cancelled by ${action.action}`);
+          console.warn("[DEBUG] extension requests aborted by surface cancel", JSON.stringify({ action: action.action, pluginId: session.pluginId, instanceId: session.instanceId, aborted }));
         }
-        if (next) lastUtilityArmAtRef.current = performance.now();
-        setActiveUtilityForWindow(windowId, next);
-        // 🛠️ A tool and a window utility are mutually exclusive interaction owners — activating a real
-        // utility clears any active mode-level tool.
-        if (next && activeToolIdRef.current) {
-          activeToolIdRef.current = null;
-          dispatch({ type: "SET_ACTIVE_TOOL", toolId: null });
+        const actionOrigin = submittedOrigin ?? captureDialogOrigin(session);
+        if (!isCurrentDialogOrigin(actionOrigin)) return refuse("owner-mismatch", "dialog origin is not current");
+        const primaryActionOwner = captureEffectOwner(session, actionOrigin, entry.provenance.inputSeq);
+
+        // 🎓️ First-run walkthrough (mirrors setActiveUtility below): fully shell-intercepted, resets
+        // playback to the first step, never forwarded to the program.
+        if (action.action === START_INTRODUCTION_ACTION_ID) {
+          dispatch({ type: "SET_INTRODUCTION_STEP", value: 0 });
+          return applied();
         }
-        if (next) completeIntroductionInteraction((interaction) => interaction.on.kind === "utility" && interaction.on.id === next);
-        const pluginEntry = loadedPlugins.find((entry) => entry.handle.pluginId === session.pluginId);
-        const program = pluginEntry?.handle;
-        if (program) {
-          const viewState = windowViewContext(
+
+        // 🎥️ Fully shell-intercepted, mirroring `START_INTRODUCTION_ACTION_ID` above: sandboxes the
+        // document and starts tutorial playback from t=0 (real work happens in `startTutorialRef`, wired up
+        // by the TutorialOrchestration block further down this component).
+        if (action.action === START_TUTORIAL_ACTION_ID) {
+          const args = typeof action.args === "object" && action.args != null ? (action.args as { tutorialId?: unknown }) : {};
+          if (typeof args.tutorialId === "string") startTutorialRef.current(args.tutorialId);
+          return applied();
+        }
+        if (action.action === RECORD_TUTORIAL_ACTION_ID) {
+          toggleTutorialRecordingRef.current();
+          return applied();
+        }
+
+        // 🎥️ Deviation detection: any action NOT stamped by the tutorial director/seek/converge path while
+        // a tutorial is actively playing means the user diverged from the recording — auto-pause and flag
+        // `deviated` so pressing Play again converges instead of resuming blindly mid-drift.
+        if (tutorialPlayingRef.current && !tutorialDrivenRef.current.active) {
+          dispatch({ type: "SET_TUTORIAL_PLAYING", value: false });
+          dispatch({ type: "SET_TUTORIAL_DEVIATED", value: true });
+        }
+
+        // ⏺️ Recorder tap: annotational-only capture (see `TutorialTracks.events` doc comment) — never
+        // re-dispatched on playback. Skips navigation/introduction/tutorial-control actions (noise, or
+        // meaningless to replay) and anything the director itself just dispatched.
+        if (tutorialRecordingRef.current && !tutorialDrivenRef.current.active) {
+          if (!TUTORIAL_RECORDING_EXCLUDED_ACTION_IDS.has(action.action)) {
+            tutorialRecorderRef.current?.recordEvent({ kind: "action", action: action.action, args: action.args as Record<string, unknown> | undefined });
+          }
+        }
+
+        // 🧭️ Camera-navigation gesture report from a 3D window's `WorldOrbitGated` (shell-only, never
+        // forwarded to the program) — completes any pan/zoom/orbit interaction of the active step that
+        // targets the window the gesture happened on. Celebrates only `windowId`'s own pane (via
+        // `windowElementId`, its unique per-instance element id) — never the whole window-kind alias
+        // selector, which would celebrate every other open pane of that same kind too (e.g. a split view).
+        if (action.action === NOTE_WORLD_NAVIGATION_ACTION_ID) {
+          const args = typeof action.args === "object" && action.args != null ? (action.args as { windowId?: unknown; gestures?: unknown }) : {};
+          const windowId = typeof args.windowId === "string" ? args.windowId : "";
+          const gestures = Array.isArray(args.gestures) ? (args.gestures as readonly string[]) : [];
+          if (windowId) {
+            const windowKindId = sessionWindowInstances(session.app, extraWindowInstancesRef.current).find((instance) => instance.id === windowId)?.windowKindId ?? windowId;
+            for (const gesture of gestures) {
+              completeIntroductionInteraction(
+                (interaction) => interaction.on.kind === gesture && introductionTargetsWindow(windowId, windowKindId, interaction.on.id),
+                windowElementId(windowId),
+              );
+            }
+          }
+          return applied();
+        }
+
+        // 🧰️ Utility activation (P5): host-owned session state, never a document operation. Re-clicking the active
+        // utility (or an empty utilityId) deactivates. We resolve the target window from the descriptor's tagged
+        // `windowId` (see `tagSetActiveUtilityWindow`), falling back to the active window, compare-and-set the
+        // window's register (`expectedGeneration` is the generation the pressing widget rendered — a press
+        // against a register that moved since is refused `stale-generation`, the L3 replacement for the
+        // deleted 8 s `lastUtilityArmAtRef` echo-off window), then forward the resolved utility to the plugin
+        // so it can clear/prepare scratch.
+        if (action.action === SET_ACTIVE_UTILITY_ACTION_ID) {
+          const args = typeof action.args === "object" && action.args != null ? (action.args as { utilityId?: unknown; windowId?: unknown }) : {};
+          const windowId = typeof args.windowId === "string" && args.windowId ? args.windowId : (activeWindowIdRef.current ?? "");
+          if (!windowId) return refuse("view-state-unresolved", "no target window");
+          const requestedUtility = typeof args.utilityId === "string" ? args.utilityId : "";
+          const next = resolveUtilityActivationV1(activeUtilityByWindowIdRef.current[windowId], requestedUtility);
+          const expected = expectedGenerationFromArgsV1(action.args);
+          const write = writeUtilityRegister(windowId, next, expected);
+          if (write.kind === "refused") return refuse("stale-generation", `window=${windowId} expected=${write.expected} current=${write.register.generation}`);
+          // 🛠️ A tool and a window utility are mutually exclusive interaction owners — activating a real
+          // utility clears any active mode-level tool.
+          if (next && activeToolIdRef.current) writeToolRegister(null, null);
+          if (next) completeIntroductionInteraction((interaction) => interaction.on.kind === "utility" && interaction.on.id === next);
+          const pluginEntry = loadedPlugins.find((entry) => entry.handle.pluginId === session.pluginId);
+          const program = pluginEntry?.handle;
+          if (program) {
+            const viewState = windowViewContext(
+              {
+                ...session.viewState,
+                locale: uiLocaleRef.current,
+                terminology: uiTerminologyRef.current,
+                activeToolId: next ? undefined : activeToolIdRef.current ?? undefined,
+                activeUtilityByWindowId: buildActiveUtilityByWindowId(activeUtilityByWindowIdRef.current),
+                windowInstances: sessionWindowInstances(session.app, extraWindowInstancesRef.current).map((instance) => ({ id: instance.id, windowKindId: instance.windowKindId })),
+              },
+              windowId,
+            );
+            if (!viewState) return refuse("view-state-unresolved", `window=${windowId}`);
+            const forwarded: ActionDescriptor = { controllerId: action.controllerId, action: action.action, args: { utilityId: next } };
+            console.warn(`[DEBUG] setActiveUtility hop window=${windowId} next=${next ?? ""} generation=${write.register.generation}`);
+            await program
+              .handleAction(session.instanceId, encodeWindowActionInvocation({ ...session, viewState }, forwarded, extraWindowInstancesRef.current, windowId), viewState, { order: causalOrderKeyV1(entry.provenance) })
+              .then((response) => {
+                applyHistoryPatch(response.historyPatch);
+                applyLeftoverInteractionView(response.output, windowId);
+                if (!isCurrentEffectOwner(primaryActionOwner)) return;
+                return applyHostEffects(response.requestedEffects ?? [], { ...session, viewState }, resolveUiDirtyScope(response.uiScope), primaryActionOwner);
+              })
+              .catch((utilityError) => console.error("[DEBUG] setActiveUtility failed", utilityError));
+          }
+          return applied();
+        }
+
+        // 🛠️ Tool activation: host-owned session state (mode-scoped, windowless), never a document operation.
+        // Re-clicking the active tool (or an empty toolId) deactivates. Mutually exclusive with every
+        // window's active utility — activating a tool clears them all, mirroring `SET_ACTIVE_UTILITY_ACTION_ID`.
+        // 🔢️ Same compare-and-set over the one tool register.
+        if (action.action === SET_ACTIVE_TOOL_ACTION_ID) {
+          const args = typeof action.args === "object" && action.args != null ? (action.args as { toolId?: unknown }) : {};
+          const requestedTool = typeof args.toolId === "string" ? args.toolId : "";
+          const next = resolveUtilityActivationV1(activeToolIdRef.current, requestedTool);
+          const expected = expectedGenerationFromArgsV1(action.args);
+          const write = writeToolRegister(next, expected);
+          if (write.kind === "refused") return refuse("stale-generation", `tool expected=${write.expected} current=${write.register.generation}`);
+          if (next) clearAllWindowUtilities();
+          const priorToolLeftover = leftoverWorldSelectionOverlayV1();
+          // 🛠️ A mode-level tool is the one leftover authority that legitimately speaks for EVERY pane —
+          // it just cleared every window's utility above, so the per-pane overlays go with it.
+          publishLeftoverWorldSelectionV1(
             {
+              ids: priorToolLeftover?.ids ?? [],
+              hoveredId: priorToolLeftover?.hoveredId ?? null,
+              hoveredDomain: priorToolLeftover?.hoveredDomain,
+              gumballActive: priorToolLeftover?.gumballActive ?? false,
+              gumballAnchorId: priorToolLeftover?.gumballAnchorId ?? null,
+              activeUtility: next === "fill" ? "fill" : "select",
+              activeToolId: next,
+            },
+            { kind: "allWindows" },
+          );
+          if (next) completeIntroductionInteraction((interaction) => interaction.on.kind === "tool" && interaction.on.id === next);
+          const pluginEntry = loadedPlugins.find((entry) => entry.handle.pluginId === session.pluginId);
+          const program = pluginEntry?.handle;
+          if (program) {
+            const toolWindowId = activeWindowIdRef.current ?? undefined;
+            const baseToolViewState: ViewModel = {
               ...session.viewState,
               locale: uiLocaleRef.current,
               terminology: uiTerminologyRef.current,
-              activeToolId: next ? undefined : activeToolIdRef.current ?? undefined,
-              activeUtilityByWindowId: buildActiveUtilityByWindowId(activeUtilityByWindowIdRef.current),
+              activeToolId: next ?? undefined,
+              activeUtilityId: next ? undefined : session.viewState.activeUtilityId,
               windowInstances: sessionWindowInstances(session.app, extraWindowInstancesRef.current).map((instance) => ({ id: instance.id, windowKindId: instance.windowKindId })),
-            },
-            windowId,
-          );
-          if (!viewState) return;
-          const forwarded: ActionDescriptor = { controllerId: action.controllerId, action: action.action, args: { utilityId: next } };
-          console.warn(`[DEBUG] setActiveUtility hop window=${windowId} next=${next ?? ""}`);
-          void program
-            .handleAction(session.instanceId, encodeWindowActionInvocation({ ...session, viewState }, forwarded, extraWindowInstancesRef.current, windowId), viewState)
-            .then((response) => {
-              applyHistoryPatch(response.historyPatch);
-            applyLeftoverInteractionView(response.output, windowId);
-              if (!isCurrentEffectOwner(primaryActionOwner)) return;
-              return applyHostEffects(response.requestedEffects ?? [], { ...session, viewState }, resolveUiDirtyScope(response.uiScope), primaryActionOwner);
-            })
-            .catch((utilityError) => console.error("[DEBUG] setActiveUtility failed", utilityError));
+              activeUtilityByWindowId: buildActiveUtilityByWindowId(activeUtilityByWindowIdRef.current),
+            };
+            const viewState = toolWindowId ? windowViewContext(baseToolViewState, toolWindowId) : panelViewContext(baseToolViewState);
+            if (!viewState) return refuse("view-state-unresolved", `tool window=${toolWindowId ?? ""}`);
+            const forwarded: ActionDescriptor = { controllerId: action.controllerId, action: action.action, args: { toolId: next } };
+            await program
+              .handleAction(session.instanceId, encodeWindowActionInvocation({ ...session, viewState }, forwarded, extraWindowInstancesRef.current, toolWindowId), viewState, { order: causalOrderKeyV1(entry.provenance) })
+              .then((response) => {
+                applyHistoryPatch(response.historyPatch);
+                applyLeftoverInteractionView(response.output);
+                if (!isCurrentEffectOwner(primaryActionOwner)) return;
+                return applyHostEffects(response.requestedEffects ?? [], { ...session, viewState }, { kind: "full" }, primaryActionOwner);
+              })
+              .catch((toolError) => console.error("[DEBUG] setActiveTool failed", toolError));
+          }
+          return applied();
         }
-        return;
-      }
 
-      // 🛠️ Tool activation: host-owned session state (mode-scoped, windowless), never a document operation.
-      // Re-clicking the active tool (or an empty toolId) deactivates. Mutually exclusive with every
-      // window's active utility — activating a tool clears them all, mirroring `SET_ACTIVE_UTILITY_ACTION_ID`.
-      if (action.action === SET_ACTIVE_TOOL_ACTION_ID) {
-        const args = typeof action.args === "object" && action.args != null ? (action.args as { toolId?: unknown }) : {};
-        const requested = typeof args.toolId === "string" ? args.toolId : "";
-        const next = resolveUtilityActivation(activeToolIdRef.current, requested);
-        activeToolIdRef.current = next;
-        dispatch({ type: "SET_ACTIVE_TOOL", toolId: next });
-        if (next) clearAllWindowUtilities();
-        const priorToolLeftover = leftoverWorldSelectionOverlayV1();
-        // 🛠️ A mode-level tool is the one leftover authority that legitimately speaks for EVERY pane —
-        // it just cleared every window's utility above, so the per-pane overlays go with it.
-        publishLeftoverWorldSelectionV1(
-          {
-            ids: priorToolLeftover?.ids ?? [],
-            hoveredId: priorToolLeftover?.hoveredId ?? null,
-            hoveredDomain: priorToolLeftover?.hoveredDomain,
-            gumballActive: priorToolLeftover?.gumballActive ?? false,
-            gumballAnchorId: priorToolLeftover?.gumballAnchorId ?? null,
-            activeUtility: next === "fill" ? "fill" : "select",
-            activeToolId: next,
-          },
-          { kind: "allWindows" },
-        );
-        if (next) completeIntroductionInteraction((interaction) => interaction.on.kind === "tool" && interaction.on.id === next);
-        const pluginEntry = loadedPlugins.find((entry) => entry.handle.pluginId === session.pluginId);
-        const program = pluginEntry?.handle;
-        if (program) {
-          const toolWindowId = activeWindowIdRef.current ?? undefined;
-          const baseToolViewState: ViewModel = {
-            ...session.viewState,
-            locale: uiLocaleRef.current,
-            terminology: uiTerminologyRef.current,
-            activeToolId: next ?? undefined,
-            activeUtilityId: next ? undefined : session.viewState.activeUtilityId,
-            windowInstances: sessionWindowInstances(session.app, extraWindowInstancesRef.current).map((instance) => ({ id: instance.id, windowKindId: instance.windowKindId })),
-            activeUtilityByWindowId: buildActiveUtilityByWindowId(activeUtilityByWindowIdRef.current),
-          };
-          const viewState = toolWindowId ? windowViewContext(baseToolViewState, toolWindowId) : panelViewContext(baseToolViewState);
-          if (!viewState) return;
-          const forwarded: ActionDescriptor = { controllerId: action.controllerId, action: action.action, args: { toolId: next } };
-          void program
-            .handleAction(session.instanceId, encodeWindowActionInvocation({ ...session, viewState }, forwarded, extraWindowInstancesRef.current, toolWindowId), viewState)
-            .then((response) => {
-              applyHistoryPatch(response.historyPatch);
-            applyLeftoverInteractionView(response.output);
-              if (!isCurrentEffectOwner(primaryActionOwner)) return;
-              return applyHostEffects(response.requestedEffects ?? [], { ...session, viewState }, { kind: "full" }, primaryActionOwner);
-            })
-        }
-        return;
-      }
+        completeIntroductionInteraction((interaction) => interaction.on.kind === "action" && interaction.on.id === action.action);
 
-      completeIntroductionInteraction((interaction) => interaction.on.kind === "action" && interaction.on.id === action.action);
+        if (action.controllerId === FRAMEWORK_SYNC_CONTROLLER_ID) {
+          if (action.action === "selectFile") {
+            dispatch({ type: "SET_SYNC_CARD_KIND", value: "file" });
+            dispatch({ type: "SET_SYNC_DRAFT_PATH", value: syncBackboneUri?.startsWith("file://") ? syncBackboneUri.slice("file://".length) : "" });
+            return applied();
+          }
+          if (action.action === "selectFolder") {
+            dispatch({ type: "SET_SYNC_CARD_KIND", value: "folder" });
+            dispatch({ type: "SET_SYNC_DRAFT_PATH", value: syncBackboneUri?.startsWith("folder://") ? syncBackboneUri.slice("folder://".length) : "" });
+            return applied();
+          }
+          if (action.action === "selectRemote") {
+            dispatch({ type: "SET_SYNC_CARD_KIND", value: "remote" });
+            const remote = syncBackboneUri?.startsWith("remote://") ? syncBackboneUri.slice("remote://".length) : "";
+            dispatch({ type: "SET_SYNC_DRAFT_PATH", value: remote });
+            return applied();
+          }
+          if (action.action === "attach") {
+            const path = typeof action.args === "object" && action.args != null && "path" in action.args ? String((action.args as { path?: string }).path ?? "") : syncDraftPath;
+            if (!path.trim()) return refuse("dispatch-failed", "sync attach: empty path");
+            const uri =
+              action.args && typeof action.args === "object" && "kind" in action.args
+                ? String((action.args as { kind?: string }).kind) === "remote"
+                  ? (() => {
+                      const [hostPort, ...rest] = path.split("/");
+                      const [spaceId, documentId] = rest.length >= 2 ? [rest[0], rest.slice(1).join("/")] : ["default", rest[0] || syncDocumentId(session, panel, hostMode)];
+                      return buildRemoteBackboneUri(hostPort ?? "127.0.0.1:8787", spaceId, documentId);
+                    })()
+                  : String((action.args as { kind?: string }).kind) === "folder"
+                    ? buildFolderBackboneUri(path)
+                    : buildFileBackboneUri(path)
+                : buildFileBackboneUri(path);
+            void attachSyncBackbone(uri);
+            return applied();
+          }
+          if (action.action === "detach") {
+            void detachSyncBackbone();
+            return applied();
+          }
+          return refuse("undeclared-action", `sync card: ${action.action}`);
+        }
 
-      if (action.controllerId === FRAMEWORK_SYNC_CONTROLLER_ID) {
-        if (action.action === "selectFile") {
-          dispatch({ type: "SET_SYNC_CARD_KIND", value: "file" });
-          dispatch({ type: "SET_SYNC_DRAFT_PATH", value: syncBackboneUri?.startsWith("file://") ? syncBackboneUri.slice("file://".length) : "" });
-          return;
+        if (hostMode && action.controllerId === landingControllerId && action.action === "importSpace") {
+          importSpaceInputRef.current?.click();
+          return applied();
         }
-        if (action.action === "selectFolder") {
-          dispatch({ type: "SET_SYNC_CARD_KIND", value: "folder" });
-          dispatch({ type: "SET_SYNC_DRAFT_PATH", value: syncBackboneUri?.startsWith("folder://") ? syncBackboneUri.slice("folder://".length) : "" });
-          return;
-        }
-        if (action.action === "selectRemote") {
-          dispatch({ type: "SET_SYNC_CARD_KIND", value: "remote" });
-          const remote = syncBackboneUri?.startsWith("remote://") ? syncBackboneUri.slice("remote://".length) : "";
-          dispatch({ type: "SET_SYNC_DRAFT_PATH", value: remote });
-          return;
-        }
-        if (action.action === "attach") {
-          const path = typeof action.args === "object" && action.args != null && "path" in action.args ? String((action.args as { path?: string }).path ?? "") : syncDraftPath;
-          if (!path.trim()) return;
-          const uri =
-            action.args && typeof action.args === "object" && "kind" in action.args
-              ? String((action.args as { kind?: string }).kind) === "remote"
-                ? (() => {
-                    const [hostPort, ...rest] = path.split("/");
-                    const [spaceId, documentId] = rest.length >= 2 ? [rest[0], rest.slice(1).join("/")] : ["default", rest[0] || syncDocumentId(session, panel, hostMode)];
-                    return buildRemoteBackboneUri(hostPort ?? "127.0.0.1:8787", spaceId, documentId);
-                  })()
-                : String((action.args as { kind?: string }).kind) === "folder"
-                  ? buildFolderBackboneUri(path)
-                  : buildFileBackboneUri(path)
-              : buildFileBackboneUri(path);
-          void attachSyncBackbone(uri);
-          return;
-        }
-        if (action.action === "detach") {
-          void detachSyncBackbone();
-          return;
-        }
-        return;
-      }
 
-      if (hostMode && action.controllerId === landingControllerId && action.action === "importSpace") {
-        importSpaceInputRef.current?.click();
-        return;
-      }
-
-      if (hostMode && action.action === "spawnApp" && action.controllerId !== hostControllerId) {
-        const pluginId = typeof action.args === "object" && action.args != null && "pluginId" in action.args ? String((action.args as { pluginId?: string }).pluginId ?? "") : "";
-        const program = spacePrograms.find((entry) => entry.pluginId === pluginId);
-        if (program) void spawnProgram(program);
-        return;
-      }
-
-      if (hostMode && action.action === "setActivePanelTab" && (action.controllerId === hostControllerId || action.controllerId === session.app.controllerId)) {
-        const tabId = typeof action.args === "object" && action.args != null && typeof (action.args as { tabId?: unknown }).tabId === "string" ? (action.args as { tabId: string }).tabId : "";
-        const targetApp = action.controllerId === session.app.controllerId ? session.app : hostApp;
-        if (!targetApp || tabId.length === 0 || Array.from(tabId).length > 256 || /[\u0000-\u001f\u007f]/u.test(tabId)) return;
-        const leaf = flattenPanelTabLeaves(targetApp.panelTabs).find((tab) => panelTabKindId(tab.kind) === tabId);
-        const path = panelDefinitionPath(targetApp.panelTabs, tabId);
-        if (!leaf || !path) return;
-        const currentPanel = parsePanelState(session.viewState) ?? buildSpacePanelState([], requiredHostPanelLeafId(hostApp));
-        updateSpacePanel(buildSpacePanelState(currentPanel.spawnedApps, tabId, currentPanel.activeSpawnedId));
-        if (mobile) {
-          dispatch({ type: "SET_MOBILE_PANEL_PATH", value: path });
-          dispatch({ type: "SET_MOBILE_PANEL_VISIBLE", value: true });
-        } else {
-          const anchor = panelAnchorForGroup(leaf.group);
-          dispatch({ type: "SET_PANEL_PATH", anchor, value: path });
-          dispatch({ type: "SET_PANEL_VISIBLE", anchor, value: true });
+        if (hostMode && action.action === "spawnApp" && action.controllerId !== hostControllerId) {
+          const pluginId = typeof action.args === "object" && action.args != null && "pluginId" in action.args ? String((action.args as { pluginId?: string }).pluginId ?? "") : "";
+          const program = spacePrograms.find((entry) => entry.pluginId === pluginId);
+          if (!program) return refuse("undeclared-action", `spawnApp: no program "${pluginId}"`);
+          void spawnProgram(program);
+          return applied();
         }
-        return;
-      }
 
-      let targetSession =
-        hostMode && action.controllerId !== session.app.controllerId
-          ? (() => {
-              const spawned = panel?.spawnedApps.find((entry) => {
-                const app = loadedPlugins.find((p) => p.handle.pluginId === entry.pluginId)?.manifest.apps.find((a) => a.id === entry.appId);
-                return app?.controllerId === action.controllerId;
-              });
-              if (!spawned) return session;
-              const app = loadedPlugins.find((p) => p.handle.pluginId === spawned.pluginId)?.manifest.apps.find((a) => a.id === spawned.appId);
-              if (!app) return session;
-              return { pluginId: spawned.pluginId, instanceId: spawned.instanceId, app, viewState: session.viewState };
-            })()
-          : session;
-      if (action.action === "undo") {
-        const mounted = Object.entries(inferenceHistoryByRuntimeKeyRef.current).filter(([runtimeKey, history]) => {
-          const document = openDocumentSessionsRef.current.get(runtimeKey);
-          return document?.session.pluginId === targetSession.pluginId && document.session.instanceId === targetSession.instanceId && document.clientInstanceId === history.clientInstanceId && history.sessionInstanceId === targetSession.instanceId;
-        });
-        const remote = mounted.length === 1 ? mounted[0] : undefined;
-        const route = shellHistoryUndoRouteV1(remote?.[1] === undefined ? null : { ...remote[1].status, order: remote[1].order }, { canUndo: historyProjection.canUndo, order: localHistoryOrderRef.current });
-        console.warn("[DEBUG] undo route", JSON.stringify({ route, canUndo: historyProjection.canUndo, localOrder: localHistoryOrderRef.current, mounted: mounted.length }));
-        if (route === "blocked") return;
-        if (route === "remote") {
-          const history = remote![1];
-          if (!directorySessionAuthorityIsCurrentV1(history.authority, verifiedSessionAuthorityRef.current)) return;
-          ensureBackboneWorker().postMessage({ wire: encodeBackboneWorkerRequest({ kind: "inference-history-undo", historyEpoch: history.historyEpoch, clientInstanceId: history.clientInstanceId, scope: history.scope }) });
-          return;
+        if (hostMode && action.action === "setActivePanelTab" && (action.controllerId === hostControllerId || action.controllerId === session.app.controllerId)) {
+          const tabId = typeof action.args === "object" && action.args != null && typeof (action.args as { tabId?: unknown }).tabId === "string" ? (action.args as { tabId: string }).tabId : "";
+          const targetApp = action.controllerId === session.app.controllerId ? session.app : hostApp;
+          if (!targetApp || tabId.length === 0 || Array.from(tabId).length > 256 || /[ -]/u.test(tabId)) return refuse("dispatch-failed", "setActivePanelTab: invalid tab id");
+          const leaf = flattenPanelTabLeaves(targetApp.panelTabs).find((tab) => panelTabKindId(tab.kind) === tabId);
+          const path = panelDefinitionPath(targetApp.panelTabs, tabId);
+          if (!leaf || !path) return refuse("undeclared-action", `setActivePanelTab: unknown tab "${tabId}"`);
+          const currentPanel = parsePanelState(session.viewState) ?? buildSpacePanelState([], requiredHostPanelLeafId(hostApp));
+          updateSpacePanel(buildSpacePanelState(currentPanel.spawnedApps, tabId, currentPanel.activeSpawnedId));
+          if (mobile) {
+            dispatch({ type: "SET_MOBILE_PANEL_PATH", value: path });
+            dispatch({ type: "SET_MOBILE_PANEL_VISIBLE", value: true });
+          } else {
+            const anchor = panelAnchorForGroup(leaf.group);
+            dispatch({ type: "SET_PANEL_PATH", anchor, value: path });
+            dispatch({ type: "SET_PANEL_VISIBLE", anchor, value: true });
+          }
+          return applied();
         }
-      }
-      // ⏪️ Reserved history verbs act on the DOCUMENT owner, not the app-chrome session the navbar/
-      // keybinding dispatch carries — the retained browser actor is keyed to the open document session,
-      // so without this remap `directBrowserActorForSession` misses and the dispatch dies on the retired
-      // `plugin.handleAction` path (ticket 26/09/02/PUZZLE-3D-END-TO-END).
-      if (action.action === "undo" || action.action === "redo") {
-        const directNow = (() => { try { return directBrowserActorForSession(targetSession) !== null ? "yes" : "null"; } catch (error) { return `throw:${String(error)}`; } })();
-        const owners = [...openDocumentSessionsRef.current.values()].map((entry) => ({ pluginId: entry.session.pluginId, instanceId: entry.session.instanceId }));
-        console.warn("[DEBUG] undo remap state", JSON.stringify({ directNow, sameAsSession: targetSession === session, targetPluginId: targetSession.pluginId, targetInstanceId: targetSession.instanceId, sessionInstanceId: session?.instanceId, owners }));
-        if (directNow === "null") {
-          const documentOwners = [...openDocumentSessionsRef.current.values()].filter((entry) => entry.session.pluginId === targetSession.pluginId);
-          if (documentOwners.length === 1) {
-            targetSession = documentOwners[0]!.session;
-            console.warn("[DEBUG] undo remapped to document session", JSON.stringify({ instanceId: targetSession.instanceId }));
+
+        let targetSession =
+          hostMode && action.controllerId !== session.app.controllerId
+            ? (() => {
+                const spawned = panel?.spawnedApps.find((entry) => {
+                  const app = loadedPlugins.find((p) => p.handle.pluginId === entry.pluginId)?.manifest.apps.find((a) => a.id === entry.appId);
+                  return app?.controllerId === action.controllerId;
+                });
+                if (!spawned) return session;
+                const app = loadedPlugins.find((p) => p.handle.pluginId === spawned.pluginId)?.manifest.apps.find((a) => a.id === spawned.appId);
+                if (!app) return session;
+                return { pluginId: spawned.pluginId, instanceId: spawned.instanceId, app, viewState: session.viewState };
+              })()
+            : session;
+        if (action.action === "undo") {
+          const mounted = Object.entries(inferenceHistoryByRuntimeKeyRef.current).filter(([runtimeKey, history]) => {
+            const document = openDocumentSessionsRef.current.get(runtimeKey);
+            return document?.session.pluginId === targetSession.pluginId && document.session.instanceId === targetSession.instanceId && document.clientInstanceId === history.clientInstanceId && history.sessionInstanceId === targetSession.instanceId;
+          });
+          const remote = mounted.length === 1 ? mounted[0] : undefined;
+          const route = shellHistoryUndoRouteV1(remote?.[1] === undefined ? null : { ...remote[1].status, order: remote[1].order }, { canUndo: historyProjection.canUndo, order: localHistoryOrderRef.current });
+          console.warn("[DEBUG] undo route", JSON.stringify({ route, canUndo: historyProjection.canUndo, localOrder: localHistoryOrderRef.current, mounted: mounted.length }));
+          if (route === "blocked") return refuse("dispatch-failed", "undo route blocked: nothing to undo");
+          if (route === "remote") {
+            const history = remote![1];
+            if (!directorySessionAuthorityIsCurrentV1(history.authority, verifiedSessionAuthorityRef.current)) return refuse("owner-mismatch", "undo: directory session authority is not current");
+            ensureBackboneWorker().postMessage({ wire: encodeBackboneWorkerRequest({ kind: "inference-history-undo", historyEpoch: history.historyEpoch, clientInstanceId: history.clientInstanceId, scope: history.scope }) });
+            return applied();
           }
         }
-      }
-      const plugin = loadedPlugins.find((entry) => entry.handle.pluginId === targetSession.pluginId)?.handle;
-      if (!plugin) return;
-      // 🪦️ A control that outlived its session (a long-lived canvas host's own callback, a queued
-      // pointer gesture) still addresses the instance a switch sealed. Dropping here is what turns the
-      // twenty `no actor for instance N` stacks the 6018 journey logged after one role chord into one
-      // typed line per late dispatch.
-      if (dropForSealedInstance(targetSession, "action", action.action)) return;
-      const actionOwner = captureEffectOwner(targetSession, actionOrigin);
-      if (!isCurrentEffectOwner(actionOwner)) {
-        if (action.action === "undo" || action.action === "redo") console.warn("[DEBUG] history route blocked effect-owner", JSON.stringify({ action: action.action }));
-        return;
-      }
+        // ⏪️ Reserved history verbs act on the DOCUMENT owner, not the app-chrome session the navbar/
+        // keybinding dispatch carries — the retained browser actor is keyed to the open document session,
+        // so without this remap `directBrowserActorForSession` misses and the dispatch dies on the retired
+        // `plugin.handleAction` path (ticket 26/09/02/PUZZLE-3D-END-TO-END).
+        if (action.action === "undo" || action.action === "redo") {
+          const directNow = (() => { try { return directBrowserActorForSession(targetSession) !== null ? "yes" : "null"; } catch (error) { return `throw:${String(error)}`; } })();
+          const owners = [...openDocumentSessionsRef.current.values()].map((entry) => ({ pluginId: entry.session.pluginId, instanceId: entry.session.instanceId }));
+          console.warn("[DEBUG] undo remap state", JSON.stringify({ directNow, sameAsSession: targetSession === session, targetPluginId: targetSession.pluginId, targetInstanceId: targetSession.instanceId, sessionInstanceId: session?.instanceId, owners }));
+          if (directNow === "null") {
+            const documentOwners = [...openDocumentSessionsRef.current.values()].filter((entry) => entry.session.pluginId === targetSession.pluginId);
+            if (documentOwners.length === 1) {
+              targetSession = documentOwners[0]!.session;
+              console.warn("[DEBUG] undo remapped to document session", JSON.stringify({ instanceId: targetSession.instanceId }));
+            }
+          }
+        }
+        const plugin = loadedPlugins.find((entry) => entry.handle.pluginId === targetSession.pluginId)?.handle;
+        if (!plugin) return refuse("dispatch-failed", `no loaded program for "${targetSession.pluginId}"`);
+        // 🪦️ A control that outlived its session (a long-lived canvas host's own callback, a queued
+        // pointer gesture) still addresses the instance a switch sealed. Dropping here is what turns the
+        // twenty `no actor for instance N` stacks the 6018 journey logged after one role chord into one
+        // typed line per late dispatch.
+        if (dropForSealedInstance(targetSession, "action", action.action)) return refuse("instance-sealed", `${targetSession.pluginId}#${targetSession.instanceId}`);
+        const actionOwner = captureEffectOwner(targetSession, actionOrigin, entry.provenance.inputSeq);
+        if (!isCurrentEffectOwner(actionOwner)) {
+          if (action.action === "undo" || action.action === "redo") console.warn("[DEBUG] history route blocked effect-owner", JSON.stringify({ action: action.action }));
+          return refuse("owner-mismatch", "effect owner is not current");
+        }
 
-      // 🚫️ The old `setDocument` → `patchAppSource` mirror (spawned-instance content write-back on the
-      // os document) is deleted — app content no longer embeds on the os document at all
-      // (`OsAppInstance.document` is now just an `OsDocumentRef` handle). A spawned instance's content
-      // sync now goes through its own `openDocument`-opened `DocumentHost` channel, same as any other
-      // document; there is no host-side JS mirroring step anymore.
-      // 🪟️ `windowId` is read back off the tagged `action.args` (see `windowMeasuresChrome`/`tagSetActiveUtilityWindow`),
-      // falling back to the active window — stamped into the dispatched view state so the plugin can key any
-      // per-window option mutation off `view_state.windowId` instead of ever guessing at the active window.
-      const actionWindowId = typeof action.args === "object" && action.args != null && typeof (action.args as { windowId?: unknown }).windowId === "string" ? (action.args as { windowId: string }).windowId : undefined;
-      const dispatchWindowId = actionWindowId ?? activeWindowIdRef.current ?? undefined;
-      // 🧹️ `clearSelection` retires the host's own leftover overlay on the SAME turn it is dispatched.
-      // The guest's half of the clear is exact — measured on 6018, the clearing turn's
-      // `turn-result.presence` carries the cleared mark for the row that lost the selection — but the
-      // leftover overlay is a HOST lane that `treeItemToTreeData` ORs into `isSelected`
-      // (`leftoverTreeItemSelectedV1`), and it is only ever rewritten by a leftover `interactionView` a
-      // later gesture publishes. So the row the guest had just retired kept `aria-selected="true"` until
-      // the next pick, which is exactly the one-keystroke-wide window
-      // `📓️window-gaps-followup-2026-09-14.md` G1 measured.
-      if (action.action === CLEAR_SELECTION_ACTION_ID) applyLeftoverInteractionView({ interactionView: { selectedIds: [], selectionCleared: true } }, dispatchWindowId);
-      const baseDispatchViewState: ViewModel = {
-        ...targetSession.viewState,
-        locale: uiLocale,
-        terminology: uiTerminology,
-        windowInstances: sessionWindowInstances(targetSession.app, extraWindowInstancesRef.current).map((instance) => ({ id: instance.id, windowKindId: instance.windowKindId })),
-        activeUtilityByWindowId: buildActiveUtilityByWindowId(activeUtilityByWindowIdRef.current),
-        focusedWindowId: activeWindowIdRef.current ?? undefined,
-      };
-      const dispatchViewState = hostArmedViewContext(baseDispatchViewState, activeToolIdRef.current, dispatchWindowId);
-      if (!dispatchViewState) {
-        if (action.action === "undo" || action.action === "redo") console.warn("[DEBUG] history route blocked view-state", JSON.stringify({ action: action.action, windowId: dispatchWindowId ?? null }));
-        return;
-      }
-      // 🚨️ Undeclared-action drop — ALWAYS visible, never `[DEBUG]`/diagnostics-gated: this is the one
-      // place a fully wired binding dies without a fault reaching anyone, so it names the app, the action
-      // and the dispatching window kind (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-      const undeclared = undeclaredActionDiagnostic(targetSession.app.id, action.action, targetSession.app.windowKinds, (baseDispatchViewState.windowInstances ?? []).find((instance) => instance.id === dispatchWindowId)?.windowKindId ?? null);
-      if (undeclared) {
-        if (action.action === "undo" || action.action === "redo") console.warn("[DEBUG] history route blocked undeclared", JSON.stringify({ action: action.action }));
-        console.error(undeclared.message, undeclared);
-        return;
-      }
-      // 👁️✏️ Client-side half of the read-only guarantee (contract freeze §2.3/§5) — the SDK-side
-      // `VcsArtifactApp` guard is the source of truth (a `ArtifactViewer`-declared session can never
-      // even construct a `Mutation`-kind action), this just avoids a pointless round trip and shows the
-      // same notice a `"viewer.read-only"` fault reply gets in the `.catch` below. `showTransientNotice`/
-      // `isViewerReadOnlyFault` are deliberately NOT in this callback's dep list below — both are stable
-      // across renders (refs + `dispatch` only), and are declared later in this component, so adding
-      // them would read a not-yet-initialized `const` on the render that first creates this callback.
-      if (targetSession.app.role === "viewer" && targetSession.app.windowKinds.some((kind) => (kind.actions ?? []).some((entry) => entry.id === action.action && entry.kind === "mutation"))) {
-        showTransientNotice(viewerReadOnlyNoticeText(uiLocale), "info", SURFACE_FAULT_CODES.ViewerReadOnly);
-        return;
-      }
+        // 🚫️ The old `setDocument` → `patchAppSource` mirror (spawned-instance content write-back on the
+        // os document) is deleted — app content no longer embeds on the os document at all
+        // (`OsAppInstance.document` is now just an `OsDocumentRef` handle). A spawned instance's content
+        // sync now goes through its own `openDocument`-opened `DocumentHost` channel, same as any other
+        // document; there is no host-side JS mirroring step anymore.
+        // 🪟️ `windowId` is read back off the tagged `action.args` (see `windowMeasuresChrome`/`tagSetActiveUtilityWindow`),
+        // falling back to the active window — stamped into the dispatched view state so the plugin can key any
+        // per-window option mutation off `view_state.windowId` instead of ever guessing at the active window.
+        const actionWindowId = typeof action.args === "object" && action.args != null && typeof (action.args as { windowId?: unknown }).windowId === "string" ? (action.args as { windowId: string }).windowId : undefined;
+        const dispatchWindowId = actionWindowId ?? activeWindowIdRef.current ?? undefined;
+        // 🧹️ `clearSelection` retires the host's own leftover overlay on the SAME turn it is dispatched.
+        // The guest's half of the clear is exact — measured on 6018, the clearing turn's
+        // `turn-result.presence` carries the cleared mark for the row that lost the selection — but the
+        // leftover overlay is a HOST lane that `treeItemToTreeData` ORs into `isSelected`
+        // (`leftoverTreeItemSelectedV1`), and it is only ever rewritten by a leftover `interactionView` a
+        // later gesture publishes. So the row the guest had just retired kept `aria-selected="true"` until
+        // the next pick, which is exactly the one-keystroke-wide window
+        // `📓️window-gaps-followup-2026-09-14.md` G1 measured.
+        if (action.action === CLEAR_SELECTION_ACTION_ID) applyLeftoverInteractionView({ interactionView: { selectedIds: [], selectionCleared: true } }, dispatchWindowId);
+        const baseDispatchViewState: ViewModel = {
+          ...targetSession.viewState,
+          locale: uiLocale,
+          terminology: uiTerminology,
+          windowInstances: sessionWindowInstances(targetSession.app, extraWindowInstancesRef.current).map((instance) => ({ id: instance.id, windowKindId: instance.windowKindId })),
+          activeUtilityByWindowId: buildActiveUtilityByWindowId(activeUtilityByWindowIdRef.current),
+          focusedWindowId: activeWindowIdRef.current ?? undefined,
+        };
+        const dispatchViewState = hostArmedViewContext(baseDispatchViewState, activeToolIdRef.current, dispatchWindowId);
+        if (!dispatchViewState) {
+          if (action.action === "undo" || action.action === "redo") console.warn("[DEBUG] history route blocked view-state", JSON.stringify({ action: action.action, windowId: dispatchWindowId ?? null }));
+          return refuse("view-state-unresolved", `window=${dispatchWindowId ?? ""}`);
+        }
+        // 🚨️ Undeclared-action drop — ALWAYS visible, never `[DEBUG]`/diagnostics-gated: this is the one
+        // place a fully wired binding dies without a fault reaching anyone, so it names the app, the action
+        // and the dispatching window kind (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+        const undeclared = undeclaredActionDiagnostic(targetSession.app.id, action.action, targetSession.app.windowKinds, (baseDispatchViewState.windowInstances ?? []).find((instance) => instance.id === dispatchWindowId)?.windowKindId ?? null);
+        if (undeclared) {
+          if (action.action === "undo" || action.action === "redo") console.warn("[DEBUG] history route blocked undeclared", JSON.stringify({ action: action.action }));
+          console.error(undeclared.message, undeclared);
+          return refuse("undeclared-action", undeclared.message);
+        }
+        // 👁️✏️ Client-side half of the read-only guarantee (contract freeze §2.3/§5) — the SDK-side
+        // `VcsArtifactApp` guard is the source of truth (a `ArtifactViewer`-declared session can never
+        // even construct a `Mutation`-kind action), this just avoids a pointless round trip and shows the
+        // same notice a `"viewer.read-only"` fault reply gets in the `.catch` below. `showTransientNotice`/
+        // `isViewerReadOnlyFault` are deliberately NOT in this callback's dep list below — both are stable
+        // across renders (refs + `dispatch` only), and are declared later in this component, so adding
+        // them would read a not-yet-initialized `const` on the render that first creates this callback.
+        if (targetSession.app.role === "viewer" && targetSession.app.windowKinds.some((kind) => (kind.actions ?? []).some((entry) => entry.id === action.action && entry.kind === "mutation"))) {
+          showTransientNotice(viewerReadOnlyNoticeText(uiLocale), "info", SURFACE_FAULT_CODES.ViewerReadOnly);
+          return refuse("viewer-read-only", undefined, true);
+        }
 
-      // 🎨️ EVERY route that loads an example records which one, not only `NavbarExampleSelect`'s own
-      // `onValueChange`. `navbarExampleIdFromHistoryUpserts` restores this id when a `Set Active Example`
-      // row comes back live, i.e. on REDO — and a row can be redone that this shell never dispatched
-      // through the picker (a palette entry, a context-menu row, a replayed shell command, the boot
-      // load). Wave B26 measured `navbar example from history {"navbarExample":"concrete-forest",
-      // "remembered":""}` on :6013: undo relabelled the picker (a popped row needs no memory, it falls
-      // back to the boot example) while redo silently could not, because nothing outside the picker had
-      // ever written the id down.
-      lastDispatchedExampleIdRef.current = rememberedExampleIdFromDispatchV1(action, lastDispatchedExampleIdRef.current);
+        // 🎨️ EVERY route that loads an example records which one, not only `NavbarExampleSelect`'s own
+        // `onValueChange`. `navbarExampleIdFromHistoryUpserts` restores this id when a `Set Active Example`
+        // row comes back live, i.e. on REDO — and a row can be redone that this shell never dispatched
+        // through the picker (a palette entry, a context-menu row, a replayed shell command, the boot
+        // load). Wave B26 measured `navbar example from history {"navbarExample":"concrete-forest",
+        // "remembered":""}` on :6013: undo relabelled the picker (a popped row needs no memory, it falls
+        // back to the boot example) while redo silently could not, because nothing outside the picker had
+        // ever written the id down.
+        lastDispatchedExampleIdRef.current = rememberedExampleIdFromDispatchV1(action, lastDispatchedExampleIdRef.current);
 
-      if (action.action === "openImportFixture") {
-        console.warn("[DEBUG] import-picker hop host-arm openImportFixture");
-        void requestFileOpen("application/json,.json", "text", false)
-          .then(async (opened) => {
-            console.warn(`[DEBUG] import-picker opened=${opened.length} name=${opened[0]?.name ?? "none"} bytes=${opened[0]?.contents.length ?? 0}`);
-            if (!opened[0]) return;
-            onAction({ controllerId: action.controllerId, action: "importFixture", args: { payload: opened[0].contents, name: opened[0].name } });
-          })
-          .catch((error) => console.error("[DEBUG] import-picker host-arm failed", error));
-        return;
-      }
-      let directBrowserActor: ReturnType<typeof directBrowserActorForSession>;
-      try {
-        directBrowserActor = directBrowserActorForSession(targetSession);
-      } catch (error) {
-        if (propagateFailure) throw error;
-        console.error("[DEBUG] authenticated browser actor action owner failed", error);
-        return;
-      }
-      if (directBrowserActor !== null) {
-        if (action.action === "undo" || action.action === "redo") console.warn("[DEBUG] history route action=" + action.action);
-        return dispatchDirectBrowserActorCommand(
-          directBrowserActor,
-          windowActionInvocation({ ...targetSession, viewState: dispatchViewState }, action, extraWindowInstancesRef.current, dispatchWindowId),
-          dispatchViewState,
-        ).catch((actionError) => {
-          if (propagateFailure) throw actionError;
-          console.error("[DEBUG] authenticated browser actor action failed", action.action, action.args, actionError);
-          showTransientNotice(shellLabel("ui.common.renderError"), "error");
-        });
-      }
-      if (action.action === "undo" || action.action === "redo") console.warn("[DEBUG] history route fallback handleAction", JSON.stringify({ action: action.action }));
-      // ⏳️ The whole round trip — admitting turn, host-effect pass and the `OperationCompleted` frame
-      // `awaitOperationSettle` waits for — is what a switch has to outlive, so the ledger entry spans
-      // the entire chain, not just `handleAction`'s own promise.
-      const releaseActionWork = sessionWorkRef.current.begin(targetSession.pluginId, targetSession.instanceId, "typed-operation");
-      return plugin
-        .handleAction(targetSession.instanceId, encodeWindowActionInvocation({ ...targetSession, viewState: dispatchViewState }, action, extraWindowInstancesRef.current, dispatchWindowId), dispatchViewState)
-        .then(async (response) => {
+        if (action.action === "openImportFixture") {
+          console.warn("[DEBUG] import-picker hop host-arm openImportFixture");
+          void requestFileOpen("application/json,.json", "text", false)
+            .then(async (opened) => {
+              console.warn(`[DEBUG] import-picker opened=${opened.length} name=${opened[0]?.name ?? "none"} bytes=${opened[0]?.contents.length ?? 0}`);
+              if (!opened[0]) return;
+              onAction({ controllerId: action.controllerId, action: "importFixture", args: { payload: opened[0].contents, name: opened[0].name }, provenance: { ...entry.provenance, origin: "user", causedBy: entry.provenance.inputSeq } });
+            })
+            .catch((error) => console.error("[DEBUG] import-picker host-arm failed", error));
+          return applied();
+        }
+        let directBrowserActor: ReturnType<typeof directBrowserActorForSession>;
+        try {
+          directBrowserActor = directBrowserActorForSession(targetSession);
+        } catch (error) {
+          const outcome = refuse("owner-mismatch", `browser actor owner: ${String(error instanceof Error ? error.message : error)}`);
+          if (propagateFailure) throw error;
+          return outcome;
+        }
+        if (directBrowserActor !== null) {
+          if (action.action === "undo" || action.action === "redo") console.warn("[DEBUG] history route action=" + action.action);
+          // 📮️ The hub-mounted browser-actor route: a rejection (`another action pending`, `action-busy`,
+          // `action-owner-mismatch`, a closed mailbox) is a typed ledger refusal now, not a `[DEBUG]` error
+          // plus a "render error" toast (design §0 row 2). The mailbox names its own reasons
+          // (`browserActorActionRefusalReasonV1`); a fault it does not know falls back to the shared mapper.
+          try {
+            await dispatchDirectBrowserActorCommand(
+              directBrowserActor,
+              windowActionInvocation({ ...targetSession, viewState: dispatchViewState }, action, extraWindowInstancesRef.current, dispatchWindowId),
+              dispatchViewState,
+            );
+          } catch (actionError) {
+            const mailboxReason = browserActorActionRefusalReasonV1(actionError);
+            const { reason, detail } = mailboxReason === null ? refusalReasonForError(actionError) : { reason: mailboxReason, detail: String(actionError instanceof Error ? actionError.message : actionError) };
+            if (reason === "mutation-rejected") showMutationRejectedNotice((actionError as SemioFaultError).fault);
+            const outcome = refuse(reason, detail, reason === "mutation-rejected");
+            if (propagateFailure) throw actionError;
+            return outcome;
+          }
+          return applied();
+        }
+        if (action.action === "undo" || action.action === "redo") console.warn("[DEBUG] history route fallback handleAction", JSON.stringify({ action: action.action }));
+        // ⏳️ The whole round trip — admitting turn, host-effect pass and the `OperationCompleted` frame
+        // `awaitOperationSettle` waits for — is what a switch has to outlive, so the ledger entry spans
+        // the entire chain, not just `handleAction`'s own promise.
+        const releaseActionWork = sessionWorkRef.current.begin(targetSession.pluginId, targetSession.instanceId, "typed-operation");
+        try {
+          const response = await plugin.handleAction(targetSession.instanceId, encodeWindowActionInvocation({ ...targetSession, viewState: dispatchViewState }, action, extraWindowInstancesRef.current, dispatchWindowId), dispatchViewState, { order: causalOrderKeyV1(entry.provenance) });
           if (action.action === "undo" || action.action === "redo") console.warn("[DEBUG] undo handleAction resolved", JSON.stringify({ uiScope: response.uiScope, effects: (response.requestedEffects ?? []).length, historyUpserts: response.historyPatch?.upserts?.length ?? 0, historyCanUndo: response.historyPatch?.canUndo ?? null }));
           applyHistoryPatch(response.historyPatch);
-            applyLeftoverInteractionView(response.output, dispatchWindowId);
+          applyLeftoverInteractionView(response.output, dispatchWindowId);
           const navbarExample = navbarExampleIdFromHistoryUpserts(response.historyPatch?.upserts, lastDispatchedExampleIdRef.current, resolveBootExampleId("", exampleOptionsRef.current, defaults.exampleId));
           if (navbarExample !== undefined) dispatch({ type: "SET_ACTIVE_EXAMPLE_ID", value: navbarExample });
           const needsHistoryRefresh = historyRefreshNeededV1(action.action, response.historyPatch);
           if (!isCurrentEffectOwner(actionOwner)) {
             if (needsHistoryRefresh) refreshHistorySnapshot(targetSession.instanceId);
-            return;
+            return applied();
           }
           await applyHostEffects(response.requestedEffects ?? [], { ...targetSession, viewState: dispatchViewState }, resolveUiDirtyScope(response.uiScope), actionOwner);
           if (OBSERVED_INTERACTION_ACTION_IDS.has(action.action)) observeLocalInteraction({ plugin, instanceId: targetSession.instanceId });
           // 🏁️ `handleAction` answers on the guest's FIRST reactor turn — a typed command is only ADMITTED
           // there, its work runs on later turns and lands as an `OperationCompleted` frame. Awaiting that
           // frame here is what makes this promise mean "the action finished", which every self-gating
-          // background tick loop depends on (`ComponentSceneHostProps.onAction`).
+          // background tick loop depends on (`ComponentSceneHostProps.onAction`). The ledger's own
+          // `settled(inputSeq)` is the input-level twin (design §H).
           await awaitOperationSettle(response.output);
           if (needsHistoryRefresh) refreshHistorySnapshot(targetSession.instanceId);
-        })
-        .catch((actionError) => {
-          if (propagateFailure) throw actionError;
+          return applied();
+        } catch (actionError) {
+          let outcome: InputOutcomeV1;
           if (isViewerReadOnlyFault(actionError)) {
             showTransientNotice(viewerReadOnlyNoticeText(uiLocale), "info", SURFACE_FAULT_CODES.ViewerReadOnly);
-            return;
-          }
-          if (isMutationRejectedFault(actionError)) {
+            outcome = refuse("viewer-read-only", undefined, true);
+          } else if (isMutationRejectedFault(actionError)) {
             showMutationRejectedNotice((actionError as SemioFaultError).fault);
-            return;
+            outcome = refuse("mutation-rejected", undefined, true);
+          } else if (dropForSealedInstance(targetSession, "action failure", action.action)) {
+            outcome = refuse("instance-sealed", `${targetSession.pluginId}#${targetSession.instanceId}`);
+          } else if (dropForRetiredInstance(targetSession, `action ${action.action}`, actionError)) {
+            outcome = refuse("instance-retired", `${targetSession.pluginId}#${targetSession.instanceId}`);
+          } else {
+            const { reason, detail } = refusalReasonForError(actionError);
+            if (reason === "dispatch-failed") console.error("[DEBUG] action failed", action.action, action.args, actionError);
+            outcome = refuse(reason, detail);
           }
-          if (dropForSealedInstance(targetSession, "action failure", action.action)) return;
-          if (dropForRetiredInstance(targetSession, `action ${action.action}`, actionError)) return;
-          console.error("[DEBUG] action failed", action.action, action.args, actionError);
-        })
-        .finally(() => {
+          if (propagateFailure) throw actionError;
+          return outcome;
+        } finally {
           releaseActionWork();
-        });
+        }
+      } catch (unexpected) {
+        // 🧯️ L1: an input never dangles — a throw anywhere above that no branch mapped still settles the
+        // entry (`settle` is idempotent, so an already-settled entry keeps its first outcome).
+        const outcome = refuse("dispatch-failed", `unexpected: ${String(unexpected instanceof Error ? unexpected.message : unexpected)}`);
+        if (propagateFailure) throw unexpected;
+        return ledger.outcome(entry.provenance.inputSeq) ?? outcome;
+      }
     },
     [
       applyHostEffects,
@@ -6777,7 +6908,8 @@ function FrameworkOsShellInner({
       observeLocalInteraction,
       panel,
       session,
-      setActiveUtilityForWindow,
+      writeUtilityRegister,
+      writeToolRegister,
       spawnProgram,
       hostMode,
       syncBackboneUri,
@@ -6822,8 +6954,9 @@ function FrameworkOsShellInner({
   // trees built from `UiNode`s only need a *callable* action dispatcher, not a fresh one each time —
   // route them through this permanently-stable ref indirection so `interpretUiNode`'s `React.memo`
   // (and any `useMemo` keyed on the dispatcher passed to it) can actually bail.
-  const onActionStable = useCallback((action: Parameters<typeof onAction>[0]) => onActionRef.current(action), []);
-  const onIntentStable = useCallback((intent: Parameters<typeof uiIntentToActionDescriptor>[0]) => onActionStable(uiIntentToActionDescriptor(intent)), [onActionStable]);
+  const onActionStable = useCallback((action: Parameters<typeof onAction>[0]): Promise<InputOutcomeV1> => onActionRef.current(action), []);
+  // 🎯️ `onIntent` consumers (`🗣️Interpreter`) await a `Promise<void>` that means "settled"; the ledger outcome itself is the `onAction` contract.
+  const onIntentStable = useCallback((intent: Parameters<typeof uiIntentToActionDescriptor>[0]): Promise<void> => onActionStable(uiIntentToActionDescriptor(intent)).then(() => undefined), [onActionStable]);
   const onBrowserActorIntent = useCallback((runtimeKey: string, captured: RetainedBrowserActorUiV1, intent: Parameters<typeof uiIntentToActionDescriptor>[0]) => {
     const retained = browserActorUiByRuntimeKeyRef.current.get(runtimeKey);
     const entry = openDocumentSessionsRef.current.get(runtimeKey);
@@ -8511,12 +8644,12 @@ function FrameworkOsShellInner({
         const windowId = activeWindowIdRef.current;
         if (windowId && activeUtilityByWindowIdRef.current[windowId]) {
           event.preventDefault();
-          onAction({ controllerId: session.app.controllerId, action: SET_ACTIVE_UTILITY_ACTION_ID, args: { windowId, utilityId: "" } });
+          void onAction({ controllerId: session.app.controllerId, action: SET_ACTIVE_UTILITY_ACTION_ID, args: { windowId, utilityId: "", expectedGeneration: utilityGenerationFor(windowId) } });
           return;
         }
         if (activeToolIdRef.current) {
           event.preventDefault();
-          onAction({ controllerId: session.app.controllerId, action: SET_ACTIVE_TOOL_ACTION_ID, args: { toolId: "" } });
+          void onAction({ controllerId: session.app.controllerId, action: SET_ACTIVE_TOOL_ACTION_ID, args: { toolId: "", expectedGeneration: toolGeneration() } });
           return;
         }
       }
@@ -8582,7 +8715,7 @@ function FrameworkOsShellInner({
         return;
       }
     },
-    [onAction, session, appLabelsOverlay, showTransientNotice, uiKeybindingOverrides, uiLocale, uiTerminology],
+    [onAction, session, appLabelsOverlay, showTransientNotice, uiKeybindingOverrides, uiLocale, uiTerminology, utilityGenerationFor, toolGeneration],
   );
   useShellKeydown(scope.rootRef, handleAppKeydown, [handleAppKeydown]);
 
@@ -9846,14 +9979,14 @@ function FrameworkOsShellInner({
     toolTabSelectionRef.current = next;
     if (effect.kind === "activate") {
       pendingToolActivateRef.current = effect.toolId;
-      onActionStable({ controllerId: session.app.controllerId, action: SET_ACTIVE_TOOL_ACTION_ID, args: { toolId: effect.toolId ?? "" } });
+      void onActionStable({ controllerId: session.app.controllerId, action: SET_ACTIVE_TOOL_ACTION_ID, args: { toolId: effect.toolId ?? "", expectedGeneration: toolGeneration() } });
       return;
     }
     if (effect.kind === "select") {
       const value = (effect.toolId ? findPanelTabPath(toolCategoryTabs, `tool.${effect.toolId}`) : undefined) ?? branchPath;
       dispatch(mobile ? { type: "SET_MOBILE_PANEL_PATH", value } : { type: "SET_PANEL_PATH", anchor: toolAnchor, value });
     }
-  }, [activeToolId, dock, mobile, mobilePanelPath, mobilePanelTabs, onActionStable, panelActivePaths, session]);
+  }, [activeToolId, dock, mobile, mobilePanelPath, mobilePanelTabs, onActionStable, panelActivePaths, session, toolGeneration]);
   //#endregion 🧭️DockAssembly
 
   const mobilePanel = useMemo(() => {
@@ -9927,7 +10060,7 @@ function FrameworkOsShellInner({
         const inactiveRepress = toolLeafInactiveRepress(previous, path, activeToolId ?? null);
         if (inactiveRepress && session) {
           path = inactiveRepress.path;
-          onAction({ controllerId: session.app.controllerId, action: SET_ACTIVE_TOOL_ACTION_ID, args: { toolId: inactiveRepress.toolId } });
+          void onAction({ controllerId: session.app.controllerId, action: SET_ACTIVE_TOOL_ACTION_ID, args: { toolId: inactiveRepress.toolId, expectedGeneration: toolGeneration() } });
         }
         const pathChanged = previous.join("/") !== path.join("/");
         dispatch({ type: "SET_PANEL_PATH", anchor, value: path });
@@ -9953,7 +10086,7 @@ function FrameworkOsShellInner({
       onPathMemoryChange: (value: Readonly<Record<string, string>>) => dispatch({ type: "SET_PANEL_PATH_MEMORY", value }),
       drillOnOpen: anchor === "bottom-middle" ? (path, memory) => toolCategoryOpenPath(path, memory, toolTabs.map((tab) => tab.id)) : undefined,
     }),
-    [activeToolId, closePeerRightDockAnchors, dock, onAction, panelActivePaths, panelPathMemory, panels, session, hostMode, hostAppId, noteShellCommand, toolTabs],
+    [activeToolId, closePeerRightDockAnchors, dock, onAction, panelActivePaths, panelPathMemory, panels, session, hostMode, hostAppId, noteShellCommand, toolTabs, toolGeneration],
   );
   //#endregion 🎛️PanelTabBarHosting
 
@@ -10124,7 +10257,7 @@ function FrameworkOsShellInner({
         const spawnedApp = loadedPlugins.find((entry) => entry.handle.pluginId === spawned.pluginId)?.manifest.apps.find((candidate) => candidate.id === spawned.appId);
         const windowKind = spawnedApp?.windowKinds[0];
         const chrome = windowKind ? spawnedWindowChromeForKind(windowKind, spawned.id, spawnedWindowEngagements, spawnedWindowMeasures, activeUtilityByWindowId[spawned.id] ?? undefined, onActionStable) : undefined;
-        const spawnedUtilities = spawnedApp && windowKind ? resolveUtilityNodes(spawnedApp, windowKind, activeUtilityByWindowId[spawned.id], spawned.id, appLabelsOverlay, uiTerminology, uiLocale) : [];
+        const spawnedUtilities = spawnedApp && windowKind ? resolveUtilityNodes(spawnedApp, windowKind, activeUtilityByWindowId[spawned.id], spawned.id, appLabelsOverlay, uiTerminology, uiLocale, utilityGenerationFor(spawned.id)) : [];
         return [
           {
             id: spawned.id,
@@ -10154,7 +10287,7 @@ function FrameworkOsShellInner({
     }
     const baseWindows = session.app.windowKinds.map((kind) => {
       const browserActorStore = currentBrowserActorUi?.sessionInstanceId === session.instanceId && currentBrowserActorUi.windowKindId === kind.id ? currentBrowserActorUi.store : undefined;
-      const utilities = resolveUtilityNodes(session.app, kind, activeUtilityByWindowId[kind.id], kind.id, appLabelsOverlay, uiTerminology, uiLocale);
+      const utilities = resolveUtilityNodes(session.app, kind, activeUtilityByWindowId[kind.id], kind.id, appLabelsOverlay, uiTerminology, uiLocale, utilityGenerationFor(kind.id));
       const chrome = windowMeasuresChrome(windowMeasuresByWindowId[kind.id] ?? kind.options.measures, activeUtilityByWindowId[kind.id] ?? undefined, kind.id, onActionStable);
       const resolvedEngagement = resolveWindowEngagement(kind, kind.id, windowEngagementsByWindowId);
       return {
@@ -10194,7 +10327,7 @@ function FrameworkOsShellInner({
     const extraWindows = extraWindowInstances.flatMap((instance) => {
       const kind = session.app.windowKinds.find((entry) => entry.id === instance.windowKindId);
       if (!kind) return [];
-      const utilities = resolveUtilityNodes(session.app, kind, activeUtilityByWindowId[instance.id], instance.id, appLabelsOverlay, uiTerminology, uiLocale);
+      const utilities = resolveUtilityNodes(session.app, kind, activeUtilityByWindowId[instance.id], instance.id, appLabelsOverlay, uiTerminology, uiLocale, utilityGenerationFor(instance.id));
       const chrome = windowMeasuresChrome(windowMeasuresByWindowId[instance.id] ?? kind.options.measures, activeUtilityByWindowId[instance.id] ?? undefined, instance.id, onActionStable);
       const resolvedEngagement = resolveWindowEngagement(kind, instance.id, windowEngagementsByWindowId);
       return [
@@ -10239,6 +10372,10 @@ function FrameworkOsShellInner({
     actionPaneFoldedByWindowId,
     actionPaneStagedArgsByKey,
     activeUtilityByWindowId,
+    // 🔢️ Every `resolveUtilityNodes` call above stamps the window's register generation; the revision is
+    // what re-derives the trees after a write that left the rendered VALUE unchanged.
+    registerRevision,
+    utilityGenerationFor,
     appLabelsOverlay,
     currentBrowserActorUi,
     currentDocumentRuntimeKey,

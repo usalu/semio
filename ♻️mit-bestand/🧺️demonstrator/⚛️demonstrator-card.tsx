@@ -1,18 +1,19 @@
 /** @emoji 🃏️ Window-silhouette overview card for one demonstrator pane — icon title chip, no drag handle. */
 
-import { cn, Icon, WindowChrome, windowBodyFrameClass, windowChromeTitleChipClass } from "@semio-tech/ui-react";
+import { cn, Icon, WindowChrome, windowChromeTitleChipClass } from "@semio-tech/ui-react";
 import type { DemonstratorPaneSpec } from "./🪧️brand.ts";
 
 export function DemonstratorCard({
   pane,
-  active,
+  lifted,
   onClick,
   onMouseEnter,
   onMouseLeave,
   className,
 }: {
   readonly pane: DemonstratorPaneSpec;
-  readonly active?: boolean;
+  /** @emoji 🎈️ Pointer-hover lift only — never maps to window `active` (that paints the primary silhouette stroke). */
+  readonly lifted?: boolean;
   readonly onClick: () => void;
   readonly onMouseEnter?: () => void;
   readonly onMouseLeave?: () => void;
@@ -23,6 +24,7 @@ export function DemonstratorCard({
       type="button"
       data-demonstrator-pane-card=""
       data-pane-id={pane.id}
+      data-hover-scope=""
       onClick={onClick}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
@@ -30,15 +32,15 @@ export function DemonstratorCard({
         "pointer-events-auto group w-full max-w-[15rem] cursor-pointer border-0 bg-transparent p-0 text-left outline-none",
         "transition-transform duration-200",
         "hover:-translate-y-0.5 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-        active && "-translate-y-0.5",
+        lifted && "-translate-y-0.5",
         className,
       )}
     >
       <WindowChrome
         level="dialog"
-        active={active}
+        active={false}
         stackSlot="demonstrator-pane-card-stack"
-        stackClassName="w-full min-w-0"
+        stackClassName="w-full min-w-0 min-h-[8.5rem]"
         titleChips={
           <div data-slot="demonstrator-pane-card-title-chip" className={cn(windowChromeTitleChipClass, "flex min-w-0 items-center gap-single px-single")}>
             <Icon icon={pane.icon} size="small" className="shrink-0 text-muted-foreground transition-colors group-hover:text-foreground" title={pane.label} />
@@ -54,7 +56,7 @@ export function DemonstratorCard({
             </span>
           </div>
         }
-        bodyClassName={cn("p-double shadow-lg", windowBodyFrameClass)}
+        bodyClassName="p-double"
       />
     </button>
   );

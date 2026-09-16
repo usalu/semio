@@ -1,6 +1,9 @@
 type TestSource = { readonly directory: string; readonly url: string };
 
-export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, source: TestSource): Promise<void> {
+export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, registrar: TestSource): Promise<void> {
+  // 📍️ Every fixture below is spelled relative to `💻️os/🟦️.ts` (the worker lived beside it as `🧵️backbone-worker.ts`
+  // until 2026-09-12); the worker now registers from `🔨️modules/🏪️store/👷️worker/🟦️.ts`, so rebase its URL.
+  const source: TestSource = decodeURIComponent(registrar.url).endsWith("/👷️worker/🟦️.ts") ? { directory: registrar.directory, url: new URL("../../../🟦️.ts", registrar.url).href } : registrar;
   const { ARTIFACT_BOOTSTRAP_DIAGNOSTIC_MAX_BYTES, ArtifactBootstrapAssembler, DIRECTORY_COMMAND_TRANSPORT_CAPACITY, DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1, DOCUMENT_EXECUTION_TARGET_STATUS_TEXT_V1, DirectoryClient, DirectoryEventPageBootstrapV1, DocumentExecutionTargetLease, HUB_RECONNECT_MAX_MS, IDENTITY_CONFIG_SCHEMA, PENDING_MUTATIONS_QUEUE_LIMIT, SANITY_POLL_MIN_MS, SSE_RECONNECT_MAX_MS, SUSTAINED_HEALTHY_MS, VerifiedColdArtifactPair, abortArtifactBootstrap, acceptBrowserSessionAuthority, artifactBootstrapFailure, artifactState, artifacts, bindInferenceApprovalUndoToMountedPair, browserActorChildCapacity, browserBrokerFetch, browserBrokerProofDigest, browserDirectoryRequest, browserExecutionTargetAssetRequest, bytesHex, clearLocalBrowserBrokerProof, closeArtifact, closeArtifactRuntime, closeDirectory, connectHubOnce, decodeBackboneWorkerRequest, decodeBackboneWorkerResponse, decodeClientFrame, decodePackPayload, decodePackValue, decodeServerFrame, directoryAdministration, directoryClient, directoryCommandOperations, directoryCommandQueue, directoryCommandSha256, directorySessionEpoch, directoryWorkerEpoch, dispatchBackboneWorkerRequest, documentExecutionOwners, documentExecutionTargetLeaseMintToken, documentExecutionTargetStatusRoleV1, documentOpenPlanAuthority, documentRuntimeKeyForConfig, documentRuntimeKeyV1, driveInferencePort, dropDocumentExecutionTargetLease, dropVerifiedColdArtifactPair, emitEvent, encodeActorUiPatchReceipt, encodeBackboneMessage, encodeBackboneWorkerRequest, encodeBackboneWorkerResponse, encodeDocumentBackboneEnvelopeBatchExact, encodePackValue, encodeServerFrame, executionTargetHex, executionTargetSha256Hex, executionTargetStatusObserver, extractServerCommandsDocumentBackboneBatchExact, flushDirectoryQueue, foldIdentityEvent, fromWireEnvelope, handleHubFrame, handleTsRequest, hexBytes, hubBinding, identityActorConfig, idleGisMapInferencePortStatusV1, inferenceApprovalUndoEpoch, inferenceApprovalUndoOwner, installLocalBrowserBrokerProof, localBrowserBrokerProofExpiresAtMs, localBrowserBrokerQueued, openArtifact, ownedArrayBuffer, parseDocumentBackboneMessage, parseDocumentExecutionTargetLeaseFieldsV1, parseGisMapInferenceApprovalReceiptV1, queueOutbox, readExecutionTargetBody, reissueInferenceApprovalUndoForRebootstrap, relayMutationsToHub, requestDocumentSocketAuthority, reserveDocumentBrowserActorChild, retainInferenceApprovalUndo, revokeDirectoryAdministrationForScope, rollbackEnvelope, sameLeaseFieldsV1, scopedDirectoryStreams, sealDirectoryCommandReceiptV1, sealDirectoryCommandRequestV1, settleDirectoryCommand, socketGrantTestIssue, spaceArtifactCreationCatalogOperations, spaceArtifactCreationOperations, spaceArtifactCreationTestFetch, stampSession, toWireEnvelope, undoInferenceApproval, verifiedColdArtifactPairMintToken, verifyBrowserActorDescribeV1, workerPostTestSink } = dependencies;
   const testSeams = dependencies.testSeams as {
     directoryAdministration: typeof directoryAdministration;
@@ -5275,6 +5278,32 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
           remoteDelivery = reservation!.receiveBackbone(remoteMessage);
         await Promise.resolve();
         expect(backboneIngress).toHaveLength(0);
+        // 🚦️ L5: a second action issued while the first one's patch is still being acknowledged — carrying the
+        // revision the main thread had painted when it clicked (1, the held patch is 1→2) — is QUEUED behind that
+        // acknowledgement and the remote delivery, never answered `action-busy` / `action-owner-mismatch`.
+        const earlyCommandInvocation = {
+            ...actionFixture.commandInvocation,
+            address: { ...actionFixture.commandInvocation.address, owner: { app: { pluginId: fields.package.pluginId, appId: fields.surface.appId } } },
+          },
+          earlyCommandView = { ...actionFixture.commandViewState, activeWindowKindId: windowKindId, windowId: windowKindId },
+          earlyCommandRequest = createBrowserActorAppCommandRequestV1(
+            {
+              scope: { spaceId: binding.spaceId, documentId: artifactId },
+              verifiedSurfaceId: fields.surface.surfaceId,
+              appChannelVersion: actionFixture.request.appChannelVersion,
+              activationGeneration: reservation!.generation.toString(),
+              instanceId: 0,
+              surfaceRevision: 1,
+              actionSequence: 3,
+            },
+            earlyCommandInvocation,
+            earlyCommandView,
+          );
+        handleTsRequest({ ...earlyCommandRequest, clientInstanceId: state.openClientInstanceId });
+        await Promise.resolve();
+        await Promise.resolve();
+        expect(workerResponses.filter((message) => message.kind === "browser-actor-action-result")).toHaveLength(0);
+        expect(commandSequences).toEqual([]);
         const actionPatch = heldActionPatch!;
         const actionApplied = uiStore.applyPatch(actionPatch.patch);
         expect(actionApplied.ok).toBe(true);
@@ -5305,7 +5334,15 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         expect(backboneIngress).toHaveLength(1);
         expect(backboneIngress[0]).toEqual(remoteMessage);
         expect(workerResponses.some((message) => message.kind === "event" && message.event.kind === "documentBackbone")).toBe(false);
-        console.log("[DEBUG] direct-browser-actor-action: skipped-sequence=1 u64-preserved=1 shell-frame=1 host-effect=1 full-turn-serialized=1 remote-echo=0");
+        // ✅ The early command applied AFTER the patch acknowledgement and the remote delivery, against the state the
+        // user saw (surfaceRevision 1 while the worker had rendered 2), with the guest's mutation counted.
+        await vi.waitFor(() => expect(workerResponses.filter((message) => message.kind === "browser-actor-action-result")).toHaveLength(2));
+        const earlyCommandResult = workerResponses.filter((message): message is Extract<BackboneWorkerResponse, { kind: "browser-actor-action-result" }> => message.kind === "browser-actor-action-result").at(-1)!;
+        expect(earlyCommandResult).toMatchObject({ actionSequence: 3, surfaceRevision: 1, outcome: "guest-applied", mutationCount: 1 });
+        expect(decodeBrowserActorHostEffectsV1(earlyCommandResult.hostEffects)).toEqual([actionFixture.publication.projectedEffect]);
+        expect(commandSequences).toEqual([3]);
+        expect(backboneIngress).toHaveLength(1);
+        console.log("[DEBUG] direct-browser-actor-action: skipped-sequence=1 u64-preserved=1 shell-frame=1 host-effect=1 full-turn-serialized=1 remote-echo=0 early-action-queued=1");
 
         const directActionInvocation = {
             ...actionFixture.actionInvocation,
@@ -5325,20 +5362,20 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
               activationGeneration: reservation!.generation.toString(),
               instanceId: 0,
               surfaceRevision: 2,
-              actionSequence: index + 3,
+              actionSequence: index + 4,
             },
             invocation,
             directCommandView,
           );
           handleTsRequest({ ...commandRequest, clientInstanceId: state.openClientInstanceId });
-          await vi.waitFor(() => expect(workerResponses.filter((message) => message.kind === "browser-actor-action-result")).toHaveLength(index + 2));
+          await vi.waitFor(() => expect(workerResponses.filter((message) => message.kind === "browser-actor-action-result")).toHaveLength(index + 3));
           const commandResult = workerResponses.filter((message): message is Extract<BackboneWorkerResponse, { kind: "browser-actor-action-result" }> => message.kind === "browser-actor-action-result").at(-1)!;
-          expect(commandResult).toMatchObject({ actionSequence: index + 3, surfaceRevision: 2, outcome: "guest-applied", mutationCount: index === 0 ? 1 : 0 });
+          expect(commandResult).toMatchObject({ actionSequence: index + 4, surfaceRevision: 2, outcome: "guest-applied", mutationCount: 0 });
           expect(decodeBrowserActorHostEffectsV1(commandResult.hostEffects)).toEqual([actionFixture.publication.projectedEffect]);
         }
-        expect(commandSequences).toEqual([3, 4]);
-        expect(commandInvocations).toEqual([directActionInvocation, directCommandInvocation]);
-        expect(commandViews).toEqual([directCommandView, directCommandView]);
+        expect(commandSequences).toEqual([3, 4, 5]);
+        expect(commandInvocations).toEqual([earlyCommandInvocation, directActionInvocation, directCommandInvocation]);
+        expect(commandViews).toEqual([earlyCommandView, directCommandView, directCommandView]);
         console.log("[DEBUG] direct-browser-actor-command: action-invocation=1 command-invocation=1 canonical-page=1 shell-publication=1 raw-backbone-projection=1 singleton-host-effect=1");
 
         retainInferenceApprovalUndo(operation, approvalReceipt);

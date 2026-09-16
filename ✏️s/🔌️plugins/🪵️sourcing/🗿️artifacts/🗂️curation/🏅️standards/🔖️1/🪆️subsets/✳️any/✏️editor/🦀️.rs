@@ -279,10 +279,27 @@ const SOURCING_CURATION_BOUNDED_TOOL_IDS: &[&str] = &[
 ];
 const SOURCING_CURATION_RETAINED_SCHEMA: &str = "sourcing.curation/v1.tool-command.v1";
 const SOURCING_CURATION_RETAINED_RAW_BYTES: usize = 8_192;
+
+/// 📏️ The raw-wire ceiling one retained tool id is admitted against. `setContributions` is the ONE
+/// retained command whose wire is a host pack, not a gesture — it carries the whole capability
+/// closure the receiver's registry `consumes` row names — so it is priced on
+/// [`semio_framework_plugin::CONTRIBUTIONS_COMMAND_RAW_WIRE_BYTES`], never on the gesture envelope.
+fn sourcing_curation_retained_raw_bytes(tool_id: &str) -> usize {
+    if tool_id == "setContributions" {
+        semio_framework_plugin::CONTRIBUTIONS_COMMAND_RAW_WIRE_BYTES
+    } else {
+        SOURCING_CURATION_RETAINED_RAW_BYTES
+    }
+}
 const SOURCING_CURATION_RETAINED_WORK_ITEMS: usize = 1;
 
+/// 🧾️ The ONE execution contract every retained sourcing tool is admitted under. Its wire ceiling is
+/// the contributions pack, because one of those tools carries a host pack rather than a gesture and a
+/// factory declares one contract for every tool it serves, which the proof catalogue must join
+/// exactly. Widening the ADMISSION does not widen what a gesture may send: the payload reserves, and
+/// the wire factory refuses past, `sourcing_curation_retained_raw_bytes(tool_id)`.
 fn sourcing_curation_bounded_contract() -> ToolExecutionContract {
-    ToolExecutionContract::bounded_first_step(SOURCING_CURATION_RETAINED_RAW_BYTES, 64, 1, 16_384, 7_500)
+    ToolExecutionContract::bounded_first_step(semio_framework_plugin::CONTRIBUTIONS_COMMAND_RAW_WIRE_BYTES, 64, 1, 16_384, 7_500)
 }
 
 fn sourcing_curation_bounded_extent(command: &SourcingCurationCommand, _snapshot: &CurationSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
@@ -347,7 +364,7 @@ impl semio_framework::ToolJobFactory for SourcingCurationBoundedCommandJobFactor
         input: semio_framework::action_bus::RetainedToolWireInput,
         checkpoint: Option<semio_framework::action_bus::RetainedToolWireInput>,
     ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework::action_bus::RetainedToolWireInput, Option<semio_framework::action_bus::RetainedToolWireInput>)> {
-        if input.declared_bytes() > SOURCING_CURATION_RETAINED_RAW_BYTES || checkpoint.is_some() {
+        if input.declared_bytes() > payload.maximum_raw_bytes || checkpoint.is_some() {
             return Err((ToolJobFactoryError::new("Sourcing bounded command rejects oversized wire or checkpoint owner"), input, checkpoint));
         }
         Ok(ArtifactRetainedCommandJob::from_wire(payload, input))
@@ -935,20 +952,20 @@ impl ArtifactEditor for SourcingCurationApp {
         factory: "SourcingCurationBoundedCommandJobFactory",
         factory_type: SourcingCurationBoundedCommandJobFactory,
         tools: {
-            "setActiveExample" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
-            "setDocument" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
-            "stockFromCatalogue" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
-            "curationAdd" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
-            "curationSetCount" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
-            "curationRemove" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
-            "dropOnPool" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
-            "dropOnCurated" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
-            "setFilterQuery" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
-            "setFilterModule" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
-            "setFilterTypology" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
-            "setFilterMinAvailability" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
-            "sortTable" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
-            "setContributions" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "setActiveExample" => sourcing_curation_bounded_contract(),
+            "setDocument" => sourcing_curation_bounded_contract(),
+            "stockFromCatalogue" => sourcing_curation_bounded_contract(),
+            "curationAdd" => sourcing_curation_bounded_contract(),
+            "curationSetCount" => sourcing_curation_bounded_contract(),
+            "curationRemove" => sourcing_curation_bounded_contract(),
+            "dropOnPool" => sourcing_curation_bounded_contract(),
+            "dropOnCurated" => sourcing_curation_bounded_contract(),
+            "setFilterQuery" => sourcing_curation_bounded_contract(),
+            "setFilterModule" => sourcing_curation_bounded_contract(),
+            "setFilterTypology" => sourcing_curation_bounded_contract(),
+            "setFilterMinAvailability" => sourcing_curation_bounded_contract(),
+            "sortTable" => sourcing_curation_bounded_contract(),
+            "setContributions" => sourcing_curation_bounded_contract(),
         }
     }
 
@@ -977,7 +994,7 @@ impl ArtifactEditor for SourcingCurationApp {
         let payload = ArtifactRetainedCommandPayload::try_new(
             semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs { command: *request.command, snapshot: request.snapshot, config: request.config, history: request.history, interaction_state: request.interaction_state, interaction_hover: request.interaction_hover, context: Some(request.context), operation: operation_context, completion: request.completion },
             SourcingCurationCommand::command_id,
-            SOURCING_CURATION_RETAINED_RAW_BYTES,
+            sourcing_curation_retained_raw_bytes(tool_id),
             SOURCING_CURATION_RETAINED_WORK_ITEMS,
             work,
         )?;

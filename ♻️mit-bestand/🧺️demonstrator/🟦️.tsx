@@ -852,12 +852,12 @@ function DemonstratorLanding() {
             style={{ gridTemplateColumns: `repeat(${DEMONSTRATOR_GRID_COLUMNS}, minmax(0, 1fr))`, gridTemplateRows: `repeat(${DEMONSTRATOR_GRID_ROWS}, minmax(0, 1fr))` }}
           >
             {DEMONSTRATOR_PANES.map((pane, paneIndex) => {
-              const active = hoveredPaneId === pane.id;
+              const lifted = hoveredPaneId === pane.id;
               return (
                 <div key={pane.id} className="flex justify-center px-double">
                   <DemonstratorCard
                     pane={pane}
-                    active={active}
+                    lifted={lifted}
                     onClick={() => focusPane(pane.id)}
                     onMouseEnter={() => {
                       hoveredPaneIdRef.current = pane.id;

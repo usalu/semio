@@ -153,6 +153,21 @@ pub fn validate_polygon_planar(vertices_m: &[[f64; 3]], tolerance_m: f64) -> Pla
         PlanarValidation::Ok
     }
 }
+
+/// ✅️ Check every vertex of `polygon_m` sits within `tolerance_m` of the plane `host_m` spans —
+/// the test a fenestration's own polygon owes its host surface. A host with fewer than three
+/// vertices spans no plane, so nothing can be off it and the answer is `true`.
+pub fn polygon_lies_on_plane(polygon_m: &[[f64; 3]], host_m: &[[f64; 3]], tolerance_m: f64) -> bool {
+    if host_m.len() < 3 {
+        return true;
+    }
+    let n = polygon_normal(host_m);
+    if n[0].abs() + n[1].abs() + n[2].abs() < 1e-12 {
+        return true;
+    }
+    let anchor = host_m[0];
+    polygon_m.iter().all(|v| ((v[0] - anchor[0]) * n[0] + (v[1] - anchor[1]) * n[1] + (v[2] - anchor[2]) * n[2]).abs() <= tolerance_m)
+}
 // #endregion 🔖️Validation
 
 // #region 🔖️Transform

@@ -6239,6 +6239,11 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(searchControlledLineV1("", { text: "Brush", base: "" })).toBe("Brush");
       expect(searchControlledLineV1("Fill3", { text: "Brush", base: "" })).toBe("Fill3");
       expect(searchControlledLineV1("Brush", { text: "Brush", base: "Brush" })).toBe("Brush");
+      // 🔁️ A program that echoes each keystroke one round trip behind publishes lines this edit already
+      // sent — an echo of "Pl" while the draft reads "PlaceCol" is not the program authoring the line.
+      expect(searchControlledLineV1("Pl", { text: "PlaceCol", base: "", sent: ["P", "Pl", "Pla", "Plac", "Place", "PlaceC", "PlaceCo", "PlaceCol"] })).toBe("PlaceCol");
+      expect(searchControlledLineV1("Place", { text: "Pla", base: "", sent: ["P", "Pl", "Pla", "Plac", "Place"] })).toBe("Pla");
+      expect(searchControlledLineV1("SetHeight3", { text: "PlaceCol", base: "", sent: ["P", "Pl"] })).toBe("SetHeight3");
 
       const sent: string[] = [];
       const submitted: string[] = [];

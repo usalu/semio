@@ -35,7 +35,6 @@ import {
   Vector3,
 } from "three";
 import type { ThreeEvent } from "@semio-tech/ui-react";
-import { useFrame, useLoader, useThree } from "@react-three/fiber";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { meshAssetTransportUrl } from "../../../../../../../🔨️modules/🖼️assets/🥽️mesh/🟦️.ts";
 import { hopTrace } from "../../../../../../../🔨️modules/⏱️trace/🟦️.ts";
@@ -57,6 +56,7 @@ import {
   ndcToViewportPoint,
   Pane,
   reactHostPort,
+  sceneHostPort,
   registerIntroductionSurfaceResolver,
   registerTutorialCameraDriver,
   SelectionMarquee,
@@ -88,6 +88,8 @@ import {
 } from "@semio-tech/ui-react";
 import { isIconName } from "@semio-tech/assets";
 import { ToolRunProvisionalOutline, ToolRunTraceLayer, TOOL_RUN_PROVISIONAL_PAINT, toolRunTraceDataAttributes, useToolRunProvisional, useToolRunTraceCursorEcho, useToolRunTraceStore, type ToolRunTraceRecordStore } from "./⏯️tool-run-trace/🟦️.tsx";
+
+const { useFrame, useLoader, useThree } = sceneHostPort.fiber;
 import { windowElementId, world3dComputeStatusV1, type ComponentSceneHostProps, type ContextMenuItemSpec, type MergeMode, type PluginContextMenuSurfaceTarget } from "@semio-tech/framework";
 import {
   cadVec3ToThree,
@@ -5785,7 +5787,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
   /** 🥽️ `dispatch`'s awaitable twin for the one lane that needs back pressure — same envelope, but the
    * caller can wait for the page to be IN before it queues the next one. */
   const dispatchBrushMesh = useCallback(
-    (args: Record<string, unknown>) =>
+    (args: Record<string, unknown>): Promise<unknown> =>
       Promise.resolve(
         onAction({
           controllerId: node.controllerId,
@@ -6999,6 +7001,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
       data-meshes-json={scene.meshesJson ?? undefined}
       data-instances-json={scene.instancesJson ?? undefined}
       data-target-volumes-json={scene.targetVolumesJson ?? undefined}
+      data-engagement-preview-json={scene.engagementPreviewJson ?? undefined}
       data-camera-json={world3dCameraDomJson(sceneCamera)}
       data-viewport-camera-json={world3dCameraDomJson(cameraState)}
       data-vortices-json={scene.vorticesJson ?? undefined}

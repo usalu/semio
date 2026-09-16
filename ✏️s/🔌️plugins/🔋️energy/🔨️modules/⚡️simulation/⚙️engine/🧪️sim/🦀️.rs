@@ -2138,6 +2138,14 @@ impl EnergyJobAuthority {
         self.result.take()
     }
 
+    /// 🧱️ The live per-surface energy table WHILE the run is running — the only path to per-surface
+    /// physics before the job settles, since the framework tool-run driver discards the settled
+    /// `Complete` candidate's payload unread. A run job reads this on a tier boundary and encodes it
+    /// into its tick payload (`ToolRunView::payload`). `None` before the state is initialized.
+    pub fn per_surface_energy(&self) -> Option<&crate::results::SurfaceEnergyTable> {
+        self.state.as_ref().map(|state| &state.per_surface)
+    }
+
     fn set_stage(&mut self, context: &mut StepContext<'_>, stage: EnergyJobStage) {
         self.stage = stage;
         context.set_stage(stage.label());
@@ -2918,6 +2926,9 @@ impl EnergyJobAuthority {
                     environmental: self.final_environmental.take().unwrap_or_default(),
                     resilience: self.final_resilience.take().unwrap_or_default(),
                     diagnostics: Default::default(),
+                    // 🧱️ The per-surface accumulator, projected to kWh. `self.state` is still resident
+                    // here — it is only released by `close_step`'s bounded retirement.
+                    per_surface: self.state.as_ref().map(|state| state.per_surface.summaries().collect()).unwrap_or_default(),
                     run_metadata: RunMetadata {
                         model_name: std::mem::take(&mut self.result_build.model_name),
                         model_version: std::mem::take(&mut self.result_build.model_version),
@@ -3333,6 +3344,11 @@ impl EnergyJobAuthority {
                     if self.state.as_mut().expect("state exists while reserving surfaces").surfaces.admit(self.model.surfaces.len()).is_err() {
                         { eprintln!("[DEBUG] begin_fault line 3333 stage {:?}", self.stage); return self.begin_fault(); }
                     }
+                    // 🧱️ The per-surface energy table is admitted once, here, for exactly one row per
+                    // opaque surface and one per fenestration — never grown afterwards.
+                    if self.state.as_mut().expect("state exists while reserving surfaces").per_surface.admit(self.model.surfaces.len(), self.model.fenestrations.len()).is_err() {
+                        return self.begin_fault();
+                    }
                     self.initialize_backing_stage = 3;
                     return StepOutcome::Yield;
                 }
@@ -3346,6 +3362,9 @@ impl EnergyJobAuthority {
                             temperatures_c.resize(nodes, INITIAL_TEMPERATURE_C);
                             if self.state.as_mut().expect("state exists while initializing").surfaces.insert(surface.id, SurfaceState { temperatures_c, inside_convection_w_m2k: 0.0 }).is_err() {
                                 { eprintln!("[DEBUG] begin_fault line 3347 stage {:?}", self.stage); return self.begin_fault(); }
+                            }
+                            if self.state.as_mut().expect("state exists while initializing").per_surface.insert_opaque(surface.id).is_err() {
+                                return self.begin_fault();
                             }
                         }
                         self.initialize_cursor += 1;
@@ -3364,8 +3383,13 @@ impl EnergyJobAuthority {
                 }
                 if self.initialize_backing_stage == 5 {
                     if let Some(fenestration) = self.model.fenestrations.get(self.initialize_cursor) {
-                        if self.pre.as_ref().is_some_and(|pre| pre.windows.contains_key(&fenestration.id)) && self.state.as_mut().expect("state exists while initializing").windows.insert(fenestration.id, WindowState { face_temperatures_c: [INITIAL_TEMPERATURE_C; 2 * crate::fenestration::MAX_PANES], inside_convection_w_m2k: 0.0 }).is_err() {
-                            { eprintln!("[DEBUG] begin_fault line 3367 stage {:?}", self.stage); return self.begin_fault(); }
+                        if self.pre.as_ref().is_some_and(|pre| pre.windows.contains_key(&fenestration.id)) {
+                            if self.state.as_mut().expect("state exists while initializing").windows.insert(fenestration.id, WindowState { face_temperatures_c: [INITIAL_TEMPERATURE_C; 2 * crate::fenestration::MAX_PANES], inside_convection_w_m2k: 0.0 }).is_err() {
+                                { eprintln!("[DEBUG] begin_fault line 3367 stage {:?}", self.stage); return self.begin_fault(); }
+                            }
+                            if self.state.as_mut().expect("state exists while initializing").per_surface.insert_window(fenestration.id).is_err() {
+                                return self.begin_fault();
+                            }
                         }
                         self.initialize_cursor += 1;
                         return StepOutcome::Yield;
@@ -3704,7 +3728,7 @@ impl EnergyJobAuthority {
                         Ok(true) => {}
                         Err(fault) => {
                             self.output_fault = Some(fault);
-                            { eprintln!("[DEBUG] begin_fault line 3707 stage {:?}", self.stage); return self.begin_fault(); }
+                            return self.begin_fault();
                         }
                     }
                 }
@@ -3717,14 +3741,14 @@ impl EnergyJobAuthority {
                     Ok(true) => {}
                     Err(fault) => {
                         self.output_fault = Some(fault);
-                        { eprintln!("[DEBUG] begin_fault line 3720 stage {:?}", self.stage); return self.begin_fault(); }
+                        return self.begin_fault();
                     }
                 }
                 if let Some(writer) = self.output_writer.as_mut() {
                     if writer.staged_page_len().is_some() {
                         if writer.commit_staged_page().is_err() {
                             self.output_fault = Some(OutputFault::BackingRejected);
-                            { eprintln!("[DEBUG] begin_fault line 3727 stage {:?}", self.stage); return self.begin_fault(); }
+                            return self.begin_fault();
                         }
                         return StepOutcome::Yield;
                     }
@@ -3735,7 +3759,7 @@ impl EnergyJobAuthority {
                             if payload.page_count() != reservation.pages || payload.len() != reservation.bytes || self.commit_pages_mounted != reservation.pages || self.commit_items_encoded != reservation.items {
                                 self.output_payload = Some(payload);
                                 self.output_fault = Some(OutputFault::BackingRejected);
-                                { eprintln!("[DEBUG] begin_fault line 3738 stage {:?}", self.stage); return self.begin_fault(); }
+                                return self.begin_fault();
                             }
                             self.output_payload = Some(payload);
                         }
@@ -3955,6 +3979,9 @@ impl EnergyJobAuthority {
                 return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
             }
             if state.windows.pop().is_some() {
+                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+            }
+            if state.per_surface.pop() {
                 return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
             }
             self.state = None;
@@ -4312,6 +4339,10 @@ fn close_results_step(results: &mut Results, close_string_owner: &mut String, ma
     }
     if let Some(released) = close_sizing_step(&mut results.sizing, maximum_bytes) {
         return Some(released);
+    }
+    // 🧱️ Per-surface rows are plain `Copy` scalars — one bounded pop per step, no owned strings.
+    if results.per_surface.pop().is_some() {
+        return Some((1, 0));
     }
     if let Some(error) = results.diagnostics.messages.last_mut() {
         if let Some(context) = error.context.as_mut() {

@@ -129,6 +129,14 @@
       "port": 6029
     },
     {
+      "name": "mit-bestand-demonstrator-supervised",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️28/DEMONSTRATOR-END-TO-END-ALL-APPS/🔁️serve-supervisor.sh"
+      ],
+      "port": 6029
+    },
+    {
       "name": "map-harness",
       "runtimeExecutable": "bun",
       "runtimeArgs": [
@@ -303,6 +311,11 @@
       "name": "energy-react-attach",
       "url": "http://localhost:6106",
       "port": 6106
+    },
+    {
+      "name": "forms-react-attach",
+      "url": "http://localhost:6058",
+      "port": 6058
     }
   ]
 }

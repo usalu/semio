@@ -14,6 +14,7 @@
     "trace": "none",
     "runJob": "energy.simulation.run",
     "settings": { "config": ["/zoneTimestepMinutes", "/systemTimestepMinutes", "/warmupDays"] },
+    "windows": ["energy.model.3d", "energy.simulation"],
     "stages": [
       { "id": "capture", "en": "Capturing the model", "de": "Modell wird erfasst" },
       { "id": "prepare", "en": "Preparing weather, geometry and zones", "de": "Wetter, Geometrie und Zonen werden vorbereitet" },

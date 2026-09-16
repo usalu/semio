@@ -8,7 +8,7 @@
 import * as React from "react";
 import * as THREE from "three";
 import { Clone, GizmoHelper, GizmoViewport, Grid, Line as DreiLine, OrbitControls, OrthographicCamera, Outlines, PerspectiveCamera, Text as DreiText, TransformControls, useGLTF } from "@react-three/drei";
-import { Canvas as ThreeCanvas, createPortal as r3fCreatePortal, useFrame, useStore, useThree } from "@react-three/fiber";
+import { Canvas as ThreeCanvas, createPortal as r3fCreatePortal, useFrame, useLoader, useStore, useThree } from "@react-three/fiber";
 import { ReactFlow, ReactFlowProvider } from "@xyflow/react";
 // #endregion 🔌️Adapters
 
@@ -85,6 +85,7 @@ export interface SceneHostPort {
     readonly canvas: typeof ThreeCanvas;
     readonly createPortal: typeof r3fCreatePortal;
     readonly useFrame: typeof useFrame;
+    readonly useLoader: typeof useLoader;
     readonly useStore: typeof useStore;
     readonly useThree: typeof useThree;
   };
@@ -112,6 +113,7 @@ export let sceneHostPort: SceneHostPort = {
     canvas: ThreeCanvas,
     createPortal: r3fCreatePortal,
     useFrame,
+    useLoader,
     useStore,
     useThree,
   },

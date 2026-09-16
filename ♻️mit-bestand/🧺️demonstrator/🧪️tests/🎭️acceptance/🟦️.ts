@@ -401,6 +401,10 @@ test("demonstrator overview: pane cards use window-silhouette chrome without dra
     const card = page.locator(`[data-demonstrator-pane-card][data-pane-id="${paneId}"]`);
     await expect(card).toBeVisible();
     await expect(card.locator("[data-window-silhouette]")).toHaveCount(1);
+    await expect(card.locator('[data-window-silhouette-border][data-kind="normal"]')).toHaveCount(1);
+    await expect(card.locator('[data-slot="window-chrome-chip-cap"]')).toHaveClass(/ui-glass/);
+    await expect(card.locator('[data-slot="window-chrome-body-surface"]')).toHaveClass(/ui-glass/);
+    await expect(card.locator('[data-slot="window-chrome-body"]')).not.toHaveClass(/ui-surface/);
     await expect(card.locator('[data-slot="demonstrator-pane-card-title-chip"] svg')).toHaveCount(1);
     await expect(card.locator('[data-slot*="drag"], [data-drag-handle]')).toHaveCount(0);
   }

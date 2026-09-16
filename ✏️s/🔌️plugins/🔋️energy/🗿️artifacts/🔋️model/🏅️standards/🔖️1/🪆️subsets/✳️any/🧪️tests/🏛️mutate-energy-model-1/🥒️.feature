@@ -596,6 +596,26 @@ Feature: Apply every typed s.energy.model mutation against an independent Python
       | replace-time-series-schedule-values-refuses | 🕘️replace-time-series-schedule-values | ⛔️refuses |
       | change-time-series-schedule-timestep-applies | 🕙️change-time-series-schedule-timestep | ✅️applies |
       | change-time-series-schedule-timestep-refuses | 🕙️change-time-series-schedule-timestep | ⛔️refuses |
+      | replace-fenestration-vertices-shapes-a-gable | 🔶️replace-fenestration-vertices | ✅️shapes-a-gable |
+      | replace-fenestration-vertices-refuses-a-line | 🔶️replace-fenestration-vertices | ⛔️refuses-a-line |
+      | change-glazing-material-thickness-applies | 🔷️change-glazing-material-thickness | ✅️applies |
+      | change-glazing-material-thickness-refuses | 🔷️change-glazing-material-thickness | ⛔️refuses |
+      | change-glazing-material-conductivity-applies | 🟠️change-glazing-material-conductivity | ✅️applies |
+      | change-glazing-material-conductivity-refuses | 🟠️change-glazing-material-conductivity | ⛔️refuses |
+      | change-glazing-material-solar-transmittance-applies | 🟡️change-glazing-material-solar-transmittance | ✅️applies |
+      | change-glazing-material-solar-transmittance-refuses | 🟡️change-glazing-material-solar-transmittance | ⛔️refuses |
+      | change-glazing-material-visible-transmittance-applies | 🥽️change-glazing-material-visible-transmittance | ✅️applies |
+      | change-glazing-material-visible-transmittance-refuses | 🥽️change-glazing-material-visible-transmittance | ⛔️refuses |
+      | change-glazing-material-infrared-emissivity-applies | 🩻️change-glazing-material-infrared-emissivity | ✅️applies |
+      | change-glazing-material-infrared-emissivity-refuses | 🩻️change-glazing-material-infrared-emissivity | ⛔️refuses |
+      | rename-glazing-material-applies | 🟢️rename-glazing-material | ✅️applies |
+      | rename-glazing-material-refuses | 🟢️rename-glazing-material | ⛔️refuses |
+      | change-gas-material-thickness-applies | 🟣️change-gas-material-thickness | ✅️applies |
+      | change-gas-material-thickness-refuses | 🟣️change-gas-material-thickness | ⛔️refuses |
+      | change-gas-material-gas-applies | 🟤️change-gas-material-gas | ✅️applies |
+      | change-gas-material-gas-refuses | 🟤️change-gas-material-gas | ⛔️refuses |
+      | rename-gas-material-applies | 🔘️rename-gas-material | ✅️applies |
+      | rename-gas-material-refuses | 🔘️rename-gas-material | ⛔️refuses |
 
   @id-inverse
   @level-exhaustive
@@ -1161,6 +1181,26 @@ Feature: Apply every typed s.energy.model mutation against an independent Python
       | replace-time-series-schedule-values-refuses | 🕘️replace-time-series-schedule-values | ⛔️refuses |
       | change-time-series-schedule-timestep-applies | 🕙️change-time-series-schedule-timestep | ✅️applies |
       | change-time-series-schedule-timestep-refuses | 🕙️change-time-series-schedule-timestep | ⛔️refuses |
+      | replace-fenestration-vertices-shapes-a-gable | 🔶️replace-fenestration-vertices | ✅️shapes-a-gable |
+      | replace-fenestration-vertices-refuses-a-line | 🔶️replace-fenestration-vertices | ⛔️refuses-a-line |
+      | change-glazing-material-thickness-applies | 🔷️change-glazing-material-thickness | ✅️applies |
+      | change-glazing-material-thickness-refuses | 🔷️change-glazing-material-thickness | ⛔️refuses |
+      | change-glazing-material-conductivity-applies | 🟠️change-glazing-material-conductivity | ✅️applies |
+      | change-glazing-material-conductivity-refuses | 🟠️change-glazing-material-conductivity | ⛔️refuses |
+      | change-glazing-material-solar-transmittance-applies | 🟡️change-glazing-material-solar-transmittance | ✅️applies |
+      | change-glazing-material-solar-transmittance-refuses | 🟡️change-glazing-material-solar-transmittance | ⛔️refuses |
+      | change-glazing-material-visible-transmittance-applies | 🥽️change-glazing-material-visible-transmittance | ✅️applies |
+      | change-glazing-material-visible-transmittance-refuses | 🥽️change-glazing-material-visible-transmittance | ⛔️refuses |
+      | change-glazing-material-infrared-emissivity-applies | 🩻️change-glazing-material-infrared-emissivity | ✅️applies |
+      | change-glazing-material-infrared-emissivity-refuses | 🩻️change-glazing-material-infrared-emissivity | ⛔️refuses |
+      | rename-glazing-material-applies | 🟢️rename-glazing-material | ✅️applies |
+      | rename-glazing-material-refuses | 🟢️rename-glazing-material | ⛔️refuses |
+      | change-gas-material-thickness-applies | 🟣️change-gas-material-thickness | ✅️applies |
+      | change-gas-material-thickness-refuses | 🟣️change-gas-material-thickness | ⛔️refuses |
+      | change-gas-material-gas-applies | 🟤️change-gas-material-gas | ✅️applies |
+      | change-gas-material-gas-refuses | 🟤️change-gas-material-gas | ⛔️refuses |
+      | rename-gas-material-applies | 🔘️rename-gas-material | ✅️applies |
+      | rename-gas-material-refuses | 🔘️rename-gas-material | ⛔️refuses |
 
   @id-identity-round-trip
   @level-long

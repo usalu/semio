@@ -18,7 +18,7 @@ use crate::editor::cad::commands::sun::{set_sun_azimuth, set_sun_elevation, set_
 use crate::editor::cad::commands::transform::{apply_transformation, rotate_selection, scale_selection, translate_selection};
 use crate::editor::cad::commands::utility::set_dislocate_option;
 use crate::editor::cad::config::{cad_sun_config_to_world, deserialize_cad_preview_generation, CadConfig, CadConfigMutation, CadDislocateOptions, CAD_PREVIEW_GENERATION_MAX};
-use crate::editor::cad::engine::interaction::{self, apply_event, can_commit, commit_object, keyed_transitions, parse_repl_line, resolve_interaction_key, start_session, CadEngagementScratch};
+use crate::editor::cad::engine::interaction::{self, apply_event, can_commit, keyed_transitions, resolve_interaction_key, start_session, CadEngagementScratch};
 use crate::editor::cad::modes::edit;
 use crate::editor::cad::modes::edit::windows::{building, energy, shape, structure_classic};
 use crate::editor::cad::panels::{catalogue, document, inspection};
@@ -886,31 +886,67 @@ pub(crate) fn make_object_for_typology(typology: &str, label_count: usize, pane:
 /// direct-event and keyed-transition REPL paths in `engagement_submit_mutations` (a state reached via
 /// either path can be commit-ready, e.g. box's explicit `confirm` step reachable via a keyed
 /// transition).
-pub fn try_commit_session_mutations(_document: &CadSnapshot, runtime: &mut CadPlayRuntime, _pane: CadPaneId, session: &CadEngagementScratch) -> Vec<CadMutation> {
+pub fn try_commit_session_mutations(document: &CadSnapshot, runtime: &mut CadPlayRuntime, pane: CadPaneId, session: &CadEngagementScratch) -> Vec<CadMutation> {
     if !can_commit(session) {
         return Vec::new();
     }
     let mut kernel = cad_brep_kernel();
-    // ⚠️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 3: `commit_object` still builds
-    // a real ephemeral `CadObject` (kernel handle + placement) from the interactive session — that
-    // part of the pipeline is untouched. What is retired is `create-object`: composing the result
-    // into a pane's `SemioModelSnapshot` CHILD needs a child-dispatch seam on `CadDispatchCtx`/
-    // `Emit<CadMutation, _>` that does not exist yet (`🔌️plugin/🦀️.rs` framework-kernel
-    // surface, W1-owned). Documented no-op — the session still clears (UI doesn't hang), but the
-    // constructed geometry does not yet land in the document.
-    let Some(object) = commit_object(&mut kernel, session, 0, next_cad_id) else {
-        return Vec::new();
-    };
+    let label_count = cad_pane_objects(document, session.pane).len();
+    let outcome = interaction::commit_session(&mut kernel, session, label_count, next_cad_id);
     let interaction_id = session.interaction_id.clone();
-    // 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): auto-selecting the just-committed
-    // object is no longer reachable from this single `handle()` dispatch — selection is
-    // framework-owned now, written only through the injected `interactionSelect` verb.
-    let _ = object.id;
+    let pane = if session.pane == pane { pane } else { session.pane };
     runtime.engagement_input.clear();
-    runtime.last_finalized_interaction_id = Some(interaction_id);
+    runtime.last_finalized_interaction_id = Some(interaction_id.clone());
     runtime.engagement_session = None;
-    runtime.engagement_step = "Idle".into();
-    Vec::new()
+    let (ops, step) = match outcome {
+        // 🧱️ Every constructed object lands in the session's pane through the per-pane
+        // re-materialisation seam (`create_object_mutations` → `create-object`), one op per object so
+        // each is its own history row.
+        Some(interaction::CommitOutcome::Objects(objects)) => {
+            let count = objects.len();
+            let mut ops = Vec::with_capacity(count);
+            let mut snapshot = document.clone();
+            for object in objects {
+                let created = create_object_mutations(&snapshot, pane, object);
+                for op in &created {
+                    let outcome = <CadMutation as protocol::Mutation<CadSnapshot>>::diff(op, &snapshot);
+                    if let Ok(next) = protocol::MutationDiff::apply(outcome.diff(), &snapshot) {
+                        snapshot = next;
+                    }
+                }
+                ops.extend(created);
+            }
+            (ops, format!("Committed {count} object(s)"))
+        }
+        Some(interaction::CommitOutcome::Move { targets, delta }) => (translate_objects_mutations(document, &targets, delta), "Moved".to_string()),
+        Some(interaction::CommitOutcome::Copy { targets, delta }) => {
+            let mut ops = Vec::new();
+            let mut snapshot = document.clone();
+            for target in &targets {
+                let Some(source_pane) = cad_pane_of_object(&snapshot, target) else { continue };
+                let Some(source) = cad_pane_objects(&snapshot, source_pane).into_iter().find(|object| &object.id == target) else { continue };
+                let mut copy = source.clone();
+                copy.id = next_cad_id("object");
+                copy.label = format!("{} copy", source.label);
+                copy.origin = [source.origin[0] + delta[0], source.origin[1] + delta[1], source.origin[2] + delta[2]];
+                let created = create_object_mutations(&snapshot, source_pane, copy);
+                for op in &created {
+                    let outcome = <CadMutation as protocol::Mutation<CadSnapshot>>::diff(op, &snapshot);
+                    if let Ok(next) = protocol::MutationDiff::apply(outcome.diff(), &snapshot) {
+                        snapshot = next;
+                    }
+                }
+                ops.extend(created);
+            }
+            (ops, "Copied".to_string())
+        }
+        Some(interaction::CommitOutcome::Rotate { targets, axis, angle }) => (rotate_objects_mutations(document, &targets, axis, angle), "Rotated".to_string()),
+        Some(interaction::CommitOutcome::Scale { targets, factors }) => (scale_objects_mutations(document, &targets, factors), "Scaled".to_string()),
+        Some(interaction::CommitOutcome::Unsupported(action)) => (Vec::new(), format!("Unsupported: {action}")),
+        None => (Vec::new(), "Nothing to commit".to_string()),
+    };
+    runtime.engagement_step = if ops.is_empty() && step.starts_with("Committed") { "Nothing to commit".into() } else { step };
+    ops
 }
 
 /// @emoji ⌨️ Advances the engagement REPL for the current `engagement_input`, mutating runtime
@@ -918,12 +954,23 @@ pub fn try_commit_session_mutations(_document: &CadSnapshot, runtime: &mut CadPl
 pub fn engagement_submit_mutations(document: &CadSnapshot, runtime: &mut CadPlayRuntime, pane: CadPaneId) -> Vec<CadMutation> {
     let input = runtime.engagement_input.trim().to_string();
     if input.is_empty() {
+        // ⏎️ An empty line during a session is the shell's Enter/Space: it is the state's own
+        // `confirm` when the spec declares one ("Accept height", "Finalize"), else a no-op that keeps
+        // the session.
+        if let Some(session) = runtime.engagement_session.as_mut() {
+            if apply_event(session, "confirm", None) {
+                runtime.engagement_step = session.state.clone();
+                let session_snapshot = session.clone();
+                return try_commit_session_mutations(document, runtime, pane, &session_snapshot);
+            }
+            runtime.engagement_step = session.state.clone();
+            return Vec::new();
+        }
         runtime.engagement_step = "Idle".into();
         return Vec::new();
     }
     let model_definition_id = pane.model_definition_id();
-    let current_state = runtime.engagement_session.as_ref().map(|session| session.state.clone());
-    if let Some((event_kind, payload)) = parse_repl_line(&input, current_state.as_deref()) {
+    if let Some((event_kind, payload)) = interaction::parse_repl_line_for(&input, runtime.engagement_session.as_ref()) {
         // An active session's own events/keyed-transitions always take priority over starting an
         // unrelated interaction by key — otherwise a mid-flow keypress that happens to collide
         // with another interaction's top-level key (e.g. box's "d" for diagonal mode vs. length's
@@ -1315,7 +1362,10 @@ impl CadPlayApp {
 }
 
 //#region 🧵️RetainedCommands
-const CAD_RETAINED_ARTIFACT_TOOL_IDS: &[&str] = &["addNode", "renameNode", "patchCadPlayReference", "addObject", "patchObject", "patchSelection", "deleteObject", "duplicateObject", "translateSelection", "rotateSelection", "scaleSelection"];
+// 🤝️ `engagementSubmit`/`engagementPossibleSelect`/`worldPointerDown` route through the artifact
+// lane: an interaction step that reaches its commit state lands objects (Artifact) besides the
+// session snapshot (Config).
+const CAD_RETAINED_ARTIFACT_TOOL_IDS: &[&str] = &["addNode", "renameNode", "patchCadPlayReference", "addObject", "patchObject", "patchSelection", "deleteObject", "duplicateObject", "translateSelection", "rotateSelection", "scaleSelection", "engagementSubmit", "engagementPossibleSelect", "worldPointerDown"];
 const CAD_RETAINED_CONFIG_TOOL_IDS: &[&str] = &[
     "setCamera",
     "setProjection",
@@ -1326,7 +1376,6 @@ const CAD_RETAINED_CONFIG_TOOL_IDS: &[&str] = &[
     "setReferenceSelection",
     "referenceHover",
     "engagementInput",
-    "engagementPossibleSelect",
     "engagementRepeatLast",
     "engagementAbort",
     "worldPointerMove",
@@ -1348,6 +1397,8 @@ const CAD_RETAINED_TOOL_IDS: &[&str] = &[
     "translateSelection",
     "rotateSelection",
     "scaleSelection",
+    "engagementSubmit",
+    "worldPointerDown",
     "setCamera",
     "setProjection",
     "setProjectionParam",
@@ -1388,6 +1439,10 @@ const CAD_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &
     ArtifactToolPublicationContract { tool_id: "translateSelection", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: "rotateSelection", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: "scaleSelection", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    // 🤝️ Interaction steps: the session snapshot (Config) every step, plus the committed objects
+    // (Artifact) on the step that reaches the spec's commit state.
+    ArtifactToolPublicationContract { tool_id: "engagementSubmit", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
+    ArtifactToolPublicationContract { tool_id: "worldPointerDown", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
     ArtifactToolPublicationContract { tool_id: "setCamera", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
     ArtifactToolPublicationContract { tool_id: "setProjection", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
     ArtifactToolPublicationContract { tool_id: "setProjectionParam", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
@@ -1397,7 +1452,7 @@ const CAD_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &
     ArtifactToolPublicationContract { tool_id: "setReferenceSelection", lanes: &[ArtifactToolPublicationLane::Config, ArtifactToolPublicationLane::Interaction] },
     ArtifactToolPublicationContract { tool_id: "referenceHover", lanes: &[ArtifactToolPublicationLane::Config] },
     ArtifactToolPublicationContract { tool_id: "engagementInput", lanes: &[ArtifactToolPublicationLane::Config] },
-    ArtifactToolPublicationContract { tool_id: "engagementPossibleSelect", lanes: &[ArtifactToolPublicationLane::Config] },
+    ArtifactToolPublicationContract { tool_id: "engagementPossibleSelect", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
     ArtifactToolPublicationContract { tool_id: "engagementRepeatLast", lanes: &[ArtifactToolPublicationLane::Config] },
     ArtifactToolPublicationContract { tool_id: "engagementAbort", lanes: &[ArtifactToolPublicationLane::Config] },
     ArtifactToolPublicationContract { tool_id: "worldPointerMove", lanes: &[ArtifactToolPublicationLane::Config] },
@@ -1409,8 +1464,26 @@ const CAD_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &
     ArtifactToolPublicationContract { tool_id: "loadRawRequest", lanes: &[ArtifactToolPublicationLane::HostOnly] },
 ];
 
+/// 🧾️ The ONE execution contract every retained cad tool is admitted under. Its wire ceiling is
+/// [`semio_framework_plugin::CONTRIBUTIONS_COMMAND_RAW_WIRE_BYTES`] because ONE of those tools —
+/// `setContributions` — carries a host pack, not a gesture, and a factory declares one contract for
+/// every tool it serves (`ArtifactOwnedToolJobFactory::execution_contract`), which the proof
+/// catalogue must join exactly. Widening the ADMISSION does not widen what any gesture may actually
+/// send: [`cad_retained_raw_bytes`] is what the payload reserves and what the wire factory refuses
+/// past, per tool id.
 fn cad_retained_contract() -> ToolExecutionContract {
-    ToolExecutionContract::bounded_first_step(CAD_RETAINED_RAW_BYTES, 64, CAD_RETAINED_WORK_ITEMS as u64, 16_384, 7_500)
+    ToolExecutionContract::bounded_first_step(semio_framework_plugin::CONTRIBUTIONS_COMMAND_RAW_WIRE_BYTES, 64, CAD_RETAINED_WORK_ITEMS as u64, 16_384, 7_500)
+}
+
+/// 📏️ The raw-wire ceiling one retained tool id is admitted against — the twin of its registered
+/// contract, which the wire factory and the payload builder must both honour or an admitted pack
+/// is refused one layer deeper.
+fn cad_retained_raw_bytes(tool_id: &str) -> usize {
+    if tool_id == "setContributions" {
+        semio_framework_plugin::CONTRIBUTIONS_COMMAND_RAW_WIRE_BYTES
+    } else {
+        CAD_RETAINED_RAW_BYTES
+    }
 }
 
 fn cad_retained_extent(command: &CadCommand, _snapshot: &CadSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
@@ -1489,7 +1562,7 @@ impl ToolJobFactory for CadRetainedCommandJobFactory {
         input: semio_framework::action_bus::RetainedToolWireInput,
         checkpoint: Option<semio_framework::action_bus::RetainedToolWireInput>,
     ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework::action_bus::RetainedToolWireInput, Option<semio_framework::action_bus::RetainedToolWireInput>)> {
-        if input.declared_bytes() > CAD_RETAINED_RAW_BYTES || checkpoint.is_some() {
+        if input.declared_bytes() > payload.maximum_raw_bytes || checkpoint.is_some() {
             return Err((ToolJobFactoryError::new("CAD retained command rejects oversized wire or checkpoint owner"), input, checkpoint));
         }
         Ok(ArtifactRetainedCommandJob::from_wire(payload, input))
@@ -2018,7 +2091,7 @@ impl ArtifactEditor for CadPlayApp {
         artifact_schema: "cad.scene",
         factory: "CadRetainedCommandJobFactory",
         factory_type: CadRetainedCommandJobFactory,
-        contract: ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+        contract: cad_retained_contract(),
         tools: [
             "addNode",
             "renameNode",
@@ -2031,6 +2104,8 @@ impl ArtifactEditor for CadPlayApp {
             "translateSelection",
             "rotateSelection",
             "scaleSelection",
+            "engagementSubmit",
+            "worldPointerDown",
             "setCamera",
             "setProjection",
             "setProjectionParam",
@@ -2087,7 +2162,7 @@ impl ArtifactEditor for CadPlayApp {
                 completion: request.completion,
             },
             CadCommand::command_id,
-            CAD_RETAINED_RAW_BYTES,
+            cad_retained_raw_bytes(tool_id),
             CAD_RETAINED_WORK_ITEMS,
             work,
         )?;
@@ -2411,9 +2486,9 @@ pub fn create_cad_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("applyTransformation", InteractiveJobClassification::BatchOnlyPendingRewrite)
             .action_interactive_job("importCadFile", InteractiveJobClassification::BatchOnlyPendingRewrite)
             .action_interactive_job("patchCadPlayReference", InteractiveJobClassification::Migrated)
-            .action_interactive_job("engagementSubmit", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("engagementSubmit", InteractiveJobClassification::Migrated)
             .action_interactive_job("setActiveExample", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("worldPointerDown", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("worldPointerDown", InteractiveJobClassification::Migrated)
             .action_interactive_job("setCamera", InteractiveJobClassification::Migrated)
             .action_interactive_job("setProjection", InteractiveJobClassification::Migrated)
             .action_interactive_job("setProjectionParam", InteractiveJobClassification::Migrated)

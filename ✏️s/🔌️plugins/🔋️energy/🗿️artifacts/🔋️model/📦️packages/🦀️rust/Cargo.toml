@@ -28,6 +28,10 @@ semio-framework = { workspace = true }
 semio-framework-job = { workspace = true }
 semio-framework-plugin = { workspace = true, features = ["component-guest"] }
 semio-framework-tool-run = { workspace = true }
+# 🖱️ The semantic UI contract the editor's panels build their bodies from (`ui::column`/`section`/
+# `field` + the control builders) — `semio-framework-plugin` re-exports the TYPES but a panel needs
+# the builder functions themselves.
+semio-framework-ui-contract = { workspace = true }
 semio-framework-dispatch-macros = { path = "../../../../../../../🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust", package = "semio-framework-dispatch-macros" }
 semio-framework-schema = { path = "../../../../../../../🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust", package = "semio-framework-schema" }
 semio-framework-value-derive = { path = "../../../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }

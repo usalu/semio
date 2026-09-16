@@ -767,7 +767,7 @@
       }
     },
     {
-      "name": "🛠️dev🏚️mitbestand📄️zwischenbericht",
+      "name": "🛠️dev♻️mit-bestand📋️zwischenbericht",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/mit-bestand-bericht:watch",
@@ -779,7 +779,7 @@
     },
     "@generated:aggregator:react",
     {
-      "name": "🛠️dev🏚️mitbestand🎪️demonstrator",
+      "name": "🛠️dev♻️mit-bestand🧺️demonstrator",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/mit-bestand-demonstrator:dev",
@@ -1257,7 +1257,7 @@
       }
     },
     {
-      "name": "🛠️dev📖️storybook🧩️puzzle🩻️2d",
+      "name": "🛠️dev📖️storybook🧩️puzzle◻️2d",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev-storybook-puzzle-2d",
@@ -1333,7 +1333,7 @@
       }
     },
     {
-      "name": "🛠️dev📖️storybook🧩️puzzle🕐️5d",
+      "name": "🛠️dev📖️storybook🧩️puzzle🖐️5d",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev-storybook-puzzle-5d",
@@ -1513,57 +1513,6 @@
       "presentation": {
         "group": "3_dev",
         "order": 385.2
-      }
-    },
-    {
-      "name": "🛠️dev🧩️playbook⚛️react",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun nx run workspace:dev -- playbook",
-      "cwd": "${workspaceFolder}",
-      "env": {
-        "PLAYBOOK_PLAY_PORT": "6078",
-        "SEMIO_RENDERER": "react"
-      },
-      "presentation": {
-        "group": "3_dev",
-        "order": 385.3
-      },
-      "serverReadyAction": {
-        "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6078)",
-        "uriFormat": "%s"
-      }
-    },
-    {
-      "name": "🛠️dev🧩️playbook🧊️wgpu🌐️wasm",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun nx run workspace:dev -- playbook",
-      "cwd": "${workspaceFolder}",
-      "env": {
-        "PLAYBOOK_PLAY_PORT": "6178",
-        "SEMIO_RENDERER": "wgpu"
-      },
-      "presentation": {
-        "group": "3_dev",
-        "order": 385.4
-      },
-      "serverReadyAction": {
-        "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6178)",
-        "uriFormat": "%s"
-      }
-    },
-    {
-      "name": "🛠️dev🧩️playbook🧊️wgpu🖥️native",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun nx run @semio-tech/framework-renderer-wgpu:native -- playbook",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "3_dev",
-        "order": 385.5
       }
     },
     "@generated:raster:react",
@@ -1885,7 +1834,7 @@
       }
     },
     {
-      "name": "🛠️dev♻️mit-bestand zwischenbericht",
+      "name": "🛠️dev♻️mit-bestand📋️zwischenbericht",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/mit-bestand-bericht:watch-zwischenbericht",
@@ -1896,7 +1845,7 @@
       }
     },
     {
-      "name": "🛠️dev♻️mit-bestand forschungsbericht",
+      "name": "🛠️dev♻️mit-bestand📑️forschungsbericht",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/mit-bestand-bericht:watch-forschungsbericht",

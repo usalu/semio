@@ -9,13 +9,15 @@
 import { ephemeralBox } from "@semio-tech/framework";
 import * as React from "react";
 import * as THREE from "three";
-import { ThreeEvent, useFrame, useThree } from "@react-three/fiber";
+import type { ThreeEvent } from "@react-three/fiber";
 import { Edges, GizmoHelper, GizmoViewport, Grid, OrbitControls, useGLTF } from "@react-three/drei";
 // 🧱️core: sceneHostPort imported directly from 🫀️core/Ports, NOT via the barrel — this component calls
 // sceneHostPort.drei.Line at module top level, which requires a non-circular import (see
 // 🧱️elements/🔌️Ports/🟦️.tsx's header comment for why the barrel import caused a real bug).
 import { sceneHostPort } from "../🔌️Ports/🟦️.tsx";
 import { reactHostPort } from "../🔌️Ports/🟦️.tsx";
+
+const { useFrame, useThree } = sceneHostPort.fiber;
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
 import { ActionDropdown } from "../⚡️ActionGroup/🟦️.tsx";
 import { surfaceClass } from "../../🔨️modules/🌈️surface-presentation/🟦️.ts";

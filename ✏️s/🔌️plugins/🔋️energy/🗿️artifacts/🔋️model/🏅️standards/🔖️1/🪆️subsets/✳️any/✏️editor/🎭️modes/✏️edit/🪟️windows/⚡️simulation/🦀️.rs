@@ -7,14 +7,16 @@
 
 use crate::editor::model::config::EnergyModelConfig;
 use crate::editor::model::modes::edit::tools;
+use crate::editor::model::results::ResultField;
 use semio_framework_plugin::app::{TreeNodeView, TreeView, TreeWindowKit, WindowKit};
-use semio_framework_plugin::{ActionArgDef, ActionDefinition, ActionKind, BuiltNode, InteractiveJobClassification, Locale, LocalizedLabel, SurfaceKind, ToolRunView, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::{ActionArgDef, ActionArgOption, ActionDefinition, ActionKind, BuiltNode, InteractiveJobClassification, Locale, LocalizedLabel, SurfaceKind, ToolRunView, WindowKindDefinition, WindowOptions};
 use semio_framework_tool_run::{ToolRunAction, ToolRunState};
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = "energy.simulation";
 pub const BODY_KEY: &str = "energy.simulation";
 pub const SET_SETTINGS_ACTION_ID: &str = "set-simulation-settings";
+pub const SET_RESULT_FIELD_ACTION_ID: &str = "set-result-field";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
@@ -26,6 +28,31 @@ fn settings_action() -> ActionDefinition {
         ActionArgDef::slider("systemTimestepMinutes", LocalizedLabel::native("System timestep (min)", "Anlagen-Zeitschritt (min)"), 1.0, 60.0).required(),
         ActionArgDef::slider("warmupDays", LocalizedLabel::native("Warmup days", "Einschwingtage"), 0.0, 365.0).required(),
     ]);
+    action.semantics.execution.interactive_job = InteractiveJobClassification::Migrated;
+    action
+}
+
+/// 🎨️ The second config verb this window owns: which published per-surface field the 3d model window
+/// colours by. Shaped exactly like `set-simulation-settings` — an `ActionKind::View` reducing to a
+/// config-store mutation — but it touches no pointer in `ENERGY_SIMULATION_RUN_SETTINGS`, so a
+/// recolour never restarts a live run.
+fn result_field_action() -> ActionDefinition {
+    let options = crate::editor::model::results::ResultField::ALL
+        .iter()
+        .map(|field| {
+            ActionArgOption::new(
+                field.id(),
+                match field {
+                    ResultField::ConductionLoss => LocalizedLabel::native("Conduction loss", "Transmissionsverlust"),
+                    ResultField::ConductionGain => LocalizedLabel::native("Conduction gain", "Transmissionsgewinn"),
+                    ResultField::SolarTransmitted => LocalizedLabel::native("Solar transmitted", "Solare Transmission"),
+                    ResultField::SolarAbsorbed => LocalizedLabel::native("Solar absorbed", "Solare Absorption"),
+                },
+            )
+        })
+        .collect();
+    let mut action = ActionDefinition::bounded_catalog(SET_RESULT_FIELD_ACTION_ID, LocalizedLabel::native("Set result field", "Ergebnisfeld setzen"), ActionKind::View)
+        .with_args(vec![ActionArgDef::select("field", LocalizedLabel::native("Coloured by", "Eingefärbt nach"), options).required()]);
     action.semantics.execution.interactive_job = InteractiveJobClassification::Migrated;
     action
 }
@@ -52,7 +79,7 @@ pub fn definition() -> WindowKindDefinition {
         surface_kind: SurfaceKind::BlockList,
         icon_id: "activity".into(),
         options: WindowOptions::default(),
-        actions: vec![settings_action(), run_period_action()],
+        actions: vec![settings_action(), result_field_action(), run_period_action()],
         utilities: Vec::new(),
         interactions: Vec::new(),
         params_schema: Some(<EnergyModelConfig as store::ArtifactDsl>::envelope_id().into()),
@@ -92,18 +119,32 @@ fn leaf(id: impl Into<String>, label: String) -> TreeNodeView {
 
 /// 🎛️ The editable run settings, rendered as addressable leaves so a keyboard user can read the current
 /// values before invoking `set-simulation-settings`/`set-run-period` on them.
-fn settings_nodes(settings: EnergyModelConfig, model: &crate::model::Model, locale: Locale) -> TreeNodeView {
+fn settings_nodes(settings: &EnergyModelConfig, model: &crate::model::Model, locale: Locale) -> TreeNodeView {
     let run_period = &model.run_period;
     TreeNodeView {
         id: "energy-settings".into(),
-        label: format!("{} · {SET_SETTINGS_ACTION_ID} · set-run-period", say(locale, "Run settings (editable)", "Laufeinstellungen (bearbeitbar)")),
+        label: format!("{} · {SET_SETTINGS_ACTION_ID} · {SET_RESULT_FIELD_ACTION_ID} · set-run-period", say(locale, "Run settings (editable)", "Laufeinstellungen (bearbeitbar)")),
         children: vec![
             leaf("energy-setting-zone-timestep", format!("{}: {} min", say(locale, "Zone timestep", "Zonen-Zeitschritt"), settings.zone_timestep_minutes)),
             leaf("energy-setting-system-timestep", format!("{}: {} min", say(locale, "System timestep", "Anlagen-Zeitschritt"), settings.system_timestep_minutes)),
             leaf("energy-setting-warmup-days", format!("{}: {}", say(locale, "Warmup days", "Einschwingtage"), settings.warmup_days)),
             leaf("energy-setting-run-period", format!("{}: {:02}-{:02} → {:02}-{:02}", say(locale, "Run period (month-day)", "Simulationszeitraum (Monat-Tag)"), run_period.start_month, run_period.start_day, run_period.end_month, run_period.end_day)),
             leaf("energy-setting-weather", format!("{}: {}", say(locale, "Weather file", "Wetterdatei"), say(locale, "bound through the model's weather link", "über die Wetterverknüpfung des Modells gebunden"))),
+            leaf(
+                "energy-setting-result-field",
+                format!("{}: {}", say(locale, "Surfaces coloured by", "Flächen eingefärbt nach"), result_field_text(crate::editor::model::results::result_field(settings), locale)),
+            ),
         ],
+    }
+}
+
+/// 🎨️ The localized name of the field the 3d model window currently colours by.
+fn result_field_text(field: ResultField, locale: Locale) -> &'static str {
+    match field {
+        ResultField::ConductionLoss => say(locale, "Conduction loss", "Transmissionsverlust"),
+        ResultField::ConductionGain => say(locale, "Conduction gain", "Transmissionsgewinn"),
+        ResultField::SolarTransmitted => say(locale, "Solar transmitted", "Solare Transmission"),
+        ResultField::SolarAbsorbed => say(locale, "Solar absorbed", "Solare Absorption"),
     }
 }
 
@@ -139,7 +180,7 @@ fn keyboard_node(locale: Locale) -> TreeNodeView {
 
 /// ⚡️ The whole window. With no run the settings are still shown and editable, so a user can configure
 /// the run before starting it.
-pub fn render(run: Option<&ToolRunView>, settings: EnergyModelConfig, model: &crate::model::Model, locale: Locale) -> BuiltNode {
+pub fn render(run: Option<&ToolRunView>, settings: &EnergyModelConfig, model: &crate::model::Model, locale: Locale) -> BuiltNode {
     let roots = vec![run_nodes(run, locale), settings_nodes(settings, model, locale), keyboard_node(locale)];
     TreeWindowKit::render(&TreeView { roots }).unwrap_or_else(|_| semio_framework_plugin::built_text_node(semio_framework_plugin::Label::data("Energy simulation UI unavailable")).expect("static label is valid"))
 }

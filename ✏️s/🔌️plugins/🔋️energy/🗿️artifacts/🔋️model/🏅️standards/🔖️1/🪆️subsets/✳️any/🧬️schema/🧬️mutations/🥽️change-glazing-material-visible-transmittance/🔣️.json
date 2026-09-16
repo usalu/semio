@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🥽️change-glazing-material-visible-transmittance",
+  "semanticKind": "change-glazing-material-visible-transmittance",
+  "displayName": "Change Glazing Material Visible Transmittance",
+  "emoji": "🥽️",
+  "aggregateVariant": "ChangeGlazingMaterialVisibleTransmittance",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "change-glazing-material-visible-transmittance",
+  "binaryTag": null,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "warning",
+    "error"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

@@ -255,6 +255,7 @@ fn window(id: EntityId, name: &str, surface_id: EntityId) -> Fenestration {
         fin_depth_m: 0.0,
         fin_offset_m: 0.0,
         glazing_construction_id: Some(WINDOW_CONSTRUCTION),
+        vertices_m: Vec::new(),
     }
 }
 

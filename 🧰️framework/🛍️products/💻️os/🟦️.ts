@@ -12,7 +12,7 @@
  */
 // #endregion Header
 
-import type { AppRef, AppRole, AppRouter, ArtifactDialect, ArtifactDiff, Conflict, ConflictResolution, DispatchReport, Fault, FetchTimeoutResponse, InverseMutation, KernelMutation, MergePolicy, MergeReport, MutationMessage, OpeningPreferences, PluginViewState, PluginWasmHandle, TurnOutcome, UndoGroup, UndoPolicy, UtilityLeaf } from "@semio-tech/framework";
+import type { AppRef, AppRole, AppRouter, ArtifactDialect, ArtifactDiff, Conflict, ConflictResolution, DispatchReport, Fault, FetchTimeoutResponse, InverseMutation, KernelMutation, MergePolicy, MergeReport, MutationMessage, OpeningPreferences, PluginDispatchHintV1, PluginViewState, PluginWasmHandle, TurnOutcome, UndoGroup, UndoPolicy, UtilityLeaf } from "@semio-tech/framework";
 import { conflictResolutionAsU8, createTurnOutcomeBroadcast, dialectCoordinate, fetchWithTimeout, mergePolicyAsU8, parseDialectCoordinate, parseSurfaceAppId, resolveOpeningApp, retryWithJitteredBackoff, viewContextWithIntegerCarriers } from "@semio-tech/framework";
 /** 📇️ Directory event/command/DTO types (contract-freeze §C1/§C6) — imported once here for
  * {@link BackboneWorkerRequest}/{@link BackboneWorkerResponse}'s `directory-*` variants and this
@@ -3763,15 +3763,18 @@ export class AppChannelClient {
   }
 
   /** 🔀️ Queues one encoded command and resolves with every frame its matching {@link TurnOutcome}
-   * carries — see this class's own header doc for how the reply gets correlated back to this call. */
-  private sendCommand(command: AppCommandValue): Promise<AppFrameValue[]> {
+   * carries — see this class's own header doc for how the reply gets correlated back to this call.
+   * `dispatch` ({@link PluginDispatchHintV1}) is forwarded verbatim to {@link PluginWasmHandle.enqueue};
+   * only {@link command} ever passes one — `configure`/`readDocument`/… are maintenance and stay
+   * unordered (arrival order). */
+  private sendCommand(command: AppCommandValue, dispatch?: PluginDispatchHintV1): Promise<AppFrameValue[]> {
     if (this.disposed || this.retired) return Promise.reject(new Error("app-channel.disposed"));
     return new Promise<AppFrameValue[]>((resolve, reject) => {
       const seq = Object.values(command)[0]!.seq;
       const document = "LoadDocument" in command ? { pack: Uint8Array.from(command.LoadDocument.pack), spr: Uint8Array.from(command.LoadDocument.spr) } : null;
       const waiter = { seq, queryReceipt: false, transaction: appChannelTransactionReply(command), document, resolve, reject };
       this.pending.push(waiter);
-      try { this.handle.enqueue(this.instanceId, [encodeAppCommand(command)]); }
+      try { this.handle.enqueue(this.instanceId, [encodeAppCommand(command)], dispatch); }
       catch (error) {
         const index = this.pending.indexOf(waiter);
         if (index !== -1) this.pending.splice(index, 1);
@@ -3874,11 +3877,13 @@ export class AppChannelClient {
 
   /** 🎛️ Forwards one opaque app-specific command (already encoded by the caller's own command
    * grammar) plus the current view state; may return several frames (`Invocation` + any dirtied
-   * `UiPatch`es) — routing them is the caller's job. */
-  async command(commandBytes: Uint8Array, viewState: unknown): Promise<AppFrameValue[]> {
+   * `UiPatch`es) — routing them is the caller's job. `dispatch` ({@link PluginDispatchHintV1}) carries
+   * the input ledger's causal `order` for this one command; it steers only the command's position in
+   * the actor's queue, never its content. */
+  async command(commandBytes: Uint8Array, viewState: unknown, dispatch?: PluginDispatchHintV1): Promise<AppFrameValue[]> {
     return this.sendCommand({
       Command: { seq: this.nextSeq(), command: Array.from(commandBytes), view_state: Array.from(encodePackValue(viewContextWireValue(viewState))) },
-    });
+    }, dispatch);
   }
 
   async configure(config: unknown): Promise<AppFrameValue[]> {

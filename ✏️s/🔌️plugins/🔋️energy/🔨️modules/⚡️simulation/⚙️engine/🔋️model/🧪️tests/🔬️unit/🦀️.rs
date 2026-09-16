@@ -104,6 +104,7 @@ fn fenestration_unknown_surface_fails() {
         fin_depth_m: 0.0,
         fin_offset_m: 0.0,
         glazing_construction_id: None,
+        vertices_m: Vec::new(),
     });
     assert!(m.validate().is_err());
 }

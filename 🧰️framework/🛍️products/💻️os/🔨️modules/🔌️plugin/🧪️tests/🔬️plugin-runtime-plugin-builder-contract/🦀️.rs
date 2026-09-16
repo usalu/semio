@@ -6062,6 +6062,101 @@ mod plugin_builder_contract_tests {
         assert_eq!(hover.get("id").and_then(DslValue::as_str), Some("item-1"));
         close_reserved_app(&mut app);
     }
+
+    /// 🔀️ The exact effect every app's `interaction_select_effect` builds — a guest asking the host
+    /// to replay one framework interaction verb.
+    fn inline_interaction_select(args: DslValue) -> Effect {
+        Effect::ReplayShellCommand { action_id: INTERACTION_SELECT_ACTION_ID.into(), args: Some(args) }
+    }
+
+    /// 🔀️ Ticket 26/09/16/INPUT-CAUSALITY-LEDGER §2 C — a guest-emitted `interactionSelect` is applied
+    /// in the SAME turn as the app command that carried it: the effect never reaches the host, the
+    /// selection snapshot already moved when the carrier's result leaves, the carrier's `ui_scope` is
+    /// widened by the verb's app-declared interaction refresh scope, and the leftover `InteractionView`
+    /// rides the carrier's own `output` (the lane a host-dispatched verb publishes on). Every other
+    /// effect still reaches the host untouched, in order. Fails-before: the effect was handed to the
+    /// host and the pick landed one guest round trip later, behind any pointer input issued meanwhile.
+    #[semio_framework_async_macros::async_test]
+    async fn guest_emitted_interaction_select_is_folded_into_the_carrying_turn() {
+        let mut app = interaction_app_under_test().await;
+        let emit = Emit {
+            effects: vec![Effect::Navigate { uri: "semio://home".into() }, inline_interaction_select(interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1"))],
+            ui_scope: UiDirtyScope::None,
+            ..Default::default()
+        };
+        let result = app.test_dispatch_emit("canvasPointerUp", emit, &meta()).await.expect("the carrying command lands");
+        assert_eq!(result.requested_effects, vec![Effect::Navigate { uri: "semio://home".into() }], "the interaction verb never reaches the host; every other effect does, in order");
+        assert!(result.diagnostics.is_empty(), "a well-formed verb applies without diagnostics: {:?}", result.diagnostics);
+        let snapshot = app.test_interaction_selection_snapshot();
+        assert_eq!(snapshot.selection.get("items").map(|selection| selection.ids.clone()), Some(vec!["item-1".to_string()]), "the selection snapshot moved inside the carrying turn");
+        let declared = <TestApp<false> as ArtifactApp>::interaction_scope(InteractionVerb::Select, &["items"]).expect("the fixture declares its select scope");
+        assert_eq!(result.ui_scope, declared, "a `None` carrier scope widens to exactly the verb's declared interaction refresh scope");
+        let view = result.output.get("interactionView").expect("the leftover InteractionView rides the carrier's output");
+        let ids = view.get("selectedIds").and_then(DslValue::as_array).expect("selectedIds");
+        assert!(ids.iter().any(|id| id.as_str() == Some("item-1")), "leftover selected ids {ids:?}");
+        let history = app.test_history().await;
+        assert!(history.commands.iter().any(|entry| entry.action_id == INTERACTION_SELECT_ACTION_ID && entry.kind == ActionKind::Interaction), "the folded verb still records its `Interaction` command-log row");
+        close_reserved_app(&mut app);
+    }
+
+    /// 🔀️ A second carrier whose folded `interactionSelect` names no target with `replace` clears the
+    /// selection (the background-click deselect), and its scope is the UNION of the carrier's own
+    /// partial scope and the verb's declared partial scope — widest wins, nothing the app asked to
+    /// refresh is dropped.
+    #[semio_framework_async_macros::async_test]
+    async fn guest_emitted_empty_replace_select_clears_and_unions_the_carrier_scope() {
+        let mut app = interaction_app_under_test().await;
+        let pick = Emit { effects: vec![inline_interaction_select(interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1"))], ui_scope: UiDirtyScope::None, ..Default::default() };
+        app.test_dispatch_emit("canvasPointerUp", pick, &meta()).await.expect("pick lands");
+        assert_eq!(app.test_interaction_selection_snapshot().selection.get("items").map(|selection| selection.ids.len()), Some(1));
+
+        let carrier_scope = UiDirtyScope::Partial { window_bodies: vec!["some.window".into()], panel_bodies: Vec::new(), utilities: true, tools: false, engagements: false, measures: false, labels: false };
+        let clear = Emit { effects: vec![inline_interaction_select(interaction_empty_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" })))], ui_scope: carrier_scope, ..Default::default() };
+        let result = app.test_dispatch_emit("canvasPointerDown", clear, &meta()).await.expect("clear lands");
+        assert!(result.requested_effects.is_empty(), "nothing is left for the host to replay: {:?}", result.requested_effects);
+        assert!(result.diagnostics.is_empty(), "{:?}", result.diagnostics);
+        let snapshot = app.test_interaction_selection_snapshot();
+        assert!(snapshot.selection.get("items").is_none_or(|selection| selection.ids.is_empty()), "an empty-target replace clears the domain inline: {:?}", snapshot.selection);
+        let UiDirtyScope::Partial { window_bodies, panel_bodies, utilities, .. } = &result.ui_scope else { panic!("two partial scopes union into a partial scope, got {:?}", result.ui_scope) };
+        assert!(window_bodies.iter().any(|body| body == "some.window"), "the carrier's own window body survives the merge: {window_bodies:?}");
+        assert!(window_bodies.iter().any(|body| body == TEST_APP_WINDOW_BODY_KEY), "the verb's declared window body joins it: {window_bodies:?}");
+        assert!(panel_bodies.iter().any(|body| body == FRAMEWORK_HISTORY_BODY_KEY), "the verb's declared panel body joins it: {panel_bodies:?}");
+        assert!(*utilities, "the carrier's own section flag survives the merge");
+        close_reserved_app(&mut app);
+    }
+
+    /// 🔀️ A folded verb that cannot be applied (an undeclared domain here) must not fail the app
+    /// command that carried it — the pick already happened — so it lands as one diagnostic on the
+    /// carrier's result under `INLINE_INTERACTION_VERB_DIAGNOSTIC_CODE`, the effect is still
+    /// consumed (the host is never asked to retry a verb the reactor refused), and the selection is
+    /// untouched. A `Full` carrier scope stays `Full`.
+    #[semio_framework_async_macros::async_test]
+    async fn guest_emitted_interaction_select_on_an_undeclared_domain_is_a_diagnostic_not_a_fault() {
+        let mut app = interaction_app_under_test().await;
+        let bad = Emit { effects: vec![inline_interaction_select(interaction_target_args(json!({ "domainId": "ghosts", "merge": "replace", "method": "pick" }), "item-1"))], ui_scope: UiDirtyScope::Full, ..Default::default() };
+        let result = app.test_dispatch_emit("canvasPointerUp", bad, &meta()).await.expect("a refused inline verb never fails its carrier");
+        assert!(result.requested_effects.is_empty(), "the refused verb is consumed, not bounced to the host: {:?}", result.requested_effects);
+        assert_eq!(result.diagnostics.len(), 1, "{:?}", result.diagnostics);
+        assert_eq!(result.diagnostics[0].code.0, crate::app::INLINE_INTERACTION_VERB_DIAGNOSTIC_CODE);
+        assert!(result.diagnostics[0].message.contains("ghosts"), "the diagnostic names the refused domain: {}", result.diagnostics[0].message);
+        assert_eq!(result.ui_scope, UiDirtyScope::Full);
+        let snapshot = app.test_interaction_selection_snapshot();
+        assert!(snapshot.selection.values().all(|selection| selection.ids.is_empty()), "a refused verb moves nothing: {:?}", snapshot.selection);
+        close_reserved_app(&mut app);
+    }
+
+    /// 🔀️ The fold is scoped to the six interaction verbs: an undo/redo inverse replay or an `os.*`
+    /// shell relay riding the same `ReplayShellCommand` variant keeps reaching the host untouched.
+    #[semio_framework_async_macros::async_test]
+    async fn non_interaction_replay_shell_commands_still_reach_the_host() {
+        let mut app = interaction_app_under_test().await;
+        let relay = Effect::ReplayShellCommand { action_id: "os.setThemeId".into(), args: Some(DslValue::from(&json!({ "themeId": "light" }))) };
+        let result = app.test_dispatch_emit("relayTheme", Emit { effects: vec![relay.clone()], ui_scope: UiDirtyScope::None, ..Default::default() }, &meta()).await.expect("relay lands");
+        assert_eq!(result.requested_effects, vec![relay]);
+        assert_eq!(result.ui_scope, UiDirtyScope::None, "no verb was folded, so no scope was widened");
+        assert!(result.diagnostics.is_empty());
+        close_reserved_app(&mut app);
+    }
     /// 🧪 Ticket 26/09/09/PROCEDURAL-3D-END-TO-END (`📓️selection-dedupe-2026-09-12.md`): the leftover
     /// `selectedIds` publication is a SET of topology ids — `Select` is event-sourced, so it is
     /// idempotent per id whatever the merge, and however many mirror domains (`vortex`) the flatten

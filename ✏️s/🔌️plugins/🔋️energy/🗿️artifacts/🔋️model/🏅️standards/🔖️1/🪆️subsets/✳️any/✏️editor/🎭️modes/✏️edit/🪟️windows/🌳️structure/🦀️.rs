@@ -52,6 +52,60 @@ pub fn actions() -> Vec<ActionDefinition> {
                 ActionArgDef::number("value", LocalizedLabel::native("Value", "Wert")).required(),
             ],
         ),
+        // 🔍️ The three generic inspector verbs. `value` is TEXT for all three: one verb has to carry
+        // a name, an enum spelling, a flag and a scalar alike, which is exactly the shape a rendered
+        // control's own value arrives in.
+        action(
+            "set-surface-property",
+            "Set surface property",
+            "Flächeneigenschaft setzen",
+            vec![
+                ActionArgDef::number("surface", LocalizedLabel::native("Surface id", "Flächen-Id")).required(),
+                ActionArgDef::text("property", LocalizedLabel::native("Property", "Eigenschaft")).required(),
+                ActionArgDef::text("value", LocalizedLabel::native("Value", "Wert")).required(),
+                ActionArgDef::number("partnerSurface", LocalizedLabel::native("Interzone partner surface", "Nachbarfläche")),
+            ],
+        ),
+        action(
+            "set-fenestration-property",
+            "Set window property",
+            "Fenstereigenschaft setzen",
+            vec![
+                ActionArgDef::number("fenestration", LocalizedLabel::native("Window id", "Fenster-Id")).required(),
+                ActionArgDef::text("property", LocalizedLabel::native("Property", "Eigenschaft")).required(),
+                ActionArgDef::text("value", LocalizedLabel::native("Value", "Wert")).required(),
+            ],
+        ),
+        action(
+            "set-zone-property",
+            "Set zone property",
+            "Zoneneigenschaft setzen",
+            vec![
+                ActionArgDef::number("zone", LocalizedLabel::native("Zone id", "Zonen-Id")).required(),
+                ActionArgDef::text("property", LocalizedLabel::native("Property", "Eigenschaft")).required(),
+                ActionArgDef::text("value", LocalizedLabel::native("Value", "Wert")).required(),
+            ],
+        ),
+        action(
+            "set-glazing-material-property",
+            "Set glazing material property",
+            "Verglasungsmaterial-Eigenschaft setzen",
+            vec![
+                ActionArgDef::number("material", LocalizedLabel::native("Glazing material id", "Verglasungsmaterial-Id")).required(),
+                ActionArgDef::text("property", LocalizedLabel::native("Property", "Eigenschaft")).required(),
+                ActionArgDef::text("value", LocalizedLabel::native("Value", "Wert")).required(),
+            ],
+        ),
+        action(
+            "set-gas-material-property",
+            "Set gas gap property",
+            "Gasfüllungs-Eigenschaft setzen",
+            vec![
+                ActionArgDef::number("material", LocalizedLabel::native("Gas gap id", "Gasfüllungs-Id")).required(),
+                ActionArgDef::text("property", LocalizedLabel::native("Property", "Eigenschaft")).required(),
+                ActionArgDef::text("value", LocalizedLabel::native("Value", "Wert")).required(),
+            ],
+        ),
         action(
             "set-thermostat-setpoints",
             "Set thermostat setpoints",

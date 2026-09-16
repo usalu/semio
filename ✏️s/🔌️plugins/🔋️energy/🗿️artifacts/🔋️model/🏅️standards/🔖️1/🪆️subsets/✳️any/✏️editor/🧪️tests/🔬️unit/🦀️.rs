@@ -18,11 +18,16 @@ async fn editor_dialect_matches_the_artifact_coordinate() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn editor_declares_all_three_windows() {
+async fn editor_declares_every_window() {
     let def = definition();
-    for id in [structure::WINDOW_KIND_ID, zones::WINDOW_KIND_ID, simulation::WINDOW_KIND_ID] {
+    for id in [structure::WINDOW_KIND_ID, zones::WINDOW_KIND_ID, simulation::WINDOW_KIND_ID, model_window::WINDOW_KIND_ID] {
         assert!(def.window_kinds.iter().any(|window| window.id == id), "missing window kind {id}");
     }
+    // 🧊️ The 3d window is the one bound to the shared selection/hover domain — that binding is what
+    // makes a viewport pick and a tree pick the same framework event.
+    let world = def.window_kinds.iter().find(|window| window.id == model_window::WINDOW_KIND_ID).expect("the 3d model window");
+    assert!(world.interactions.iter().any(|reference| reference.as_str() == ENERGY_MODEL_INTERACTION_DOMAIN), "the 3d window is not bound to the energy interaction domain: {:?}", world.interactions);
+    assert!(def.interactions.iter().any(|domain| domain.id == ENERGY_MODEL_INTERACTION_DOMAIN), "the domain itself is declared exactly once on the app");
 }
 
 /// 🧵️ The framework demands set equality between `TOOL_JOB_IDS`, the `Migrated` action ids, the
@@ -619,3 +624,235 @@ async fn a_command_round_trips_through_its_own_text_and_binary_codec() {
     assert_eq!(EnergyModelEditorCommand::parse_op(&command.print_op()).expect("text round trip"), command);
     assert_eq!(EnergyModelEditorCommand::decode_op(&command.encode_op().expect("encode")).expect("binary round trip"), command);
 }
+
+//#region 🔍️InspectorVerbs
+/// 🧫️ ANSI/ASHRAE 140 case 600 — the smallest REAL document that carries a window, a glazing stack,
+/// a gas gap and a thermostat at once, so the three inspector verbs all have live targets.
+fn inspector_model() -> crate::model::Model {
+    crate::examples::demo::model()
+}
+
+fn emitted_kinds(snapshot: &EnergyModelSnapshot, command: &EnergyModelEditorCommand) -> Vec<String> {
+    use protocol::SemanticMutation as _;
+    let history = HistoryView::empty();
+    let doc = ArtifactView::new(snapshot, &history);
+    reduce(command, &doc).expect("the verb reduces").artifact_mutations.iter().map(|mutation| mutation.semantics().kind.to_string()).collect()
+}
+
+fn refusal(snapshot: &EnergyModelSnapshot, command: &EnergyModelEditorCommand) -> String {
+    let history = HistoryView::empty();
+    let doc = ArtifactView::new(snapshot, &history);
+    reduce(command, &doc).err().expect("the verb refuses").code.0.as_str().to_string()
+}
+
+fn fenestration_property(fenestration: u32, property: &str, value: &str) -> EnergyModelEditorCommand {
+    EnergyModelEditorCommand::SetFenestrationProperty { fenestration, property: property.into(), value: value.into() }
+}
+
+fn surface_property(surface: u32, property: &str, value: &str) -> EnergyModelEditorCommand {
+    EnergyModelEditorCommand::SetSurfaceProperty { surface, property: property.into(), value: value.into(), partner_surface: 0 }
+}
+
+fn zone_property(zone: u32, property: &str, value: &str) -> EnergyModelEditorCommand {
+    EnergyModelEditorCommand::SetZoneProperty { zone, property: property.into(), value: value.into() }
+}
+
+/// 🪟️ THE regression this ticket opened on: before `diff_fenestrations` existed, a window field edit
+/// reduced cleanly and emitted NOTHING — `model_edit`'s probe copied the whole collection verbatim,
+/// so neither a mutation nor a `kind-unavailable` fault ever reached the caller. A u-value edit must
+/// now emit EXACTLY ONE `change-fenestration-u-value` and nothing else.
+#[semio_framework_async_macros::async_test]
+async fn a_window_u_value_edit_emits_exactly_one_granular_mutation() {
+    let snapshot = snapshot_of(&inspector_model());
+    let kinds = emitted_kinds(&snapshot, &fenestration_property(50, "uValueWM2K", "1.4"));
+    assert_eq!(kinds, vec!["change-fenestration-u-value".to_string()], "a single field edit is a single granular step");
+    let applied = applied(&snapshot, &fenestration_property(50, "uValueWM2K", "1.4"));
+    let window = applied.fenestrations.iter().find(|window| window.id == EntityId(50)).expect("the window survives its own edit");
+    assert!((window.u_value_w_m2k - 1.4).abs() < 1e-12, "the edit reaches the document");
+}
+
+/// 🪟️ Every fenestration field the inspector binds round-trips through its own granular kind.
+#[semio_framework_async_macros::async_test]
+async fn every_fenestration_property_round_trips_through_the_granular_vocabulary() {
+    let snapshot = snapshot_of(&inspector_model());
+    let cases: &[(&str, &str, &str)] = &[
+        ("name", "South Left", "rename-fenestration"),
+        ("uValueWM2K", "1.4", "change-fenestration-u-value"),
+        ("shgc", "0.4", "change-fenestration-shgc"),
+        ("vlt", "0.5", "change-fenestration-vlt"),
+        ("areaM2", "5.5", "change-fenestration-area"),
+        ("heightM", "1.7", "change-fenestration-height"),
+        ("sillHeightM", "0.9", "change-fenestration-sill-height"),
+        ("frameConductanceWK", "0.3", "change-fenestration-frame-conductance"),
+        ("dividerConductanceWK", "0.2", "change-fenestration-divider-conductance"),
+        ("overhangDepthM", "1.0", "change-fenestration-overhang-depth"),
+        ("overhangOffsetM", "0.5", "change-fenestration-overhang-offset"),
+        ("finDepthM", "0.8", "change-fenestration-fin-depth"),
+        ("finOffsetM", "0.1", "change-fenestration-fin-offset"),
+        ("glazingConstruction", "", "clear-fenestration-glazing-construction"),
+        ("glazingConstruction", "30", "bind-fenestration-glazing-construction"),
+    ];
+    for (property, value, kind) in cases {
+        let kinds = emitted_kinds(&snapshot, &fenestration_property(50, property, value));
+        assert_eq!(kinds, vec![(*kind).to_string()], "property {property} must emit exactly {kind}");
+    }
+}
+
+/// ⛔️ The refusal triple: an unknown property, an unparsable/out-of-range value, a missing entity.
+#[semio_framework_async_macros::async_test]
+async fn a_fenestration_property_verb_refuses_the_three_bad_payloads() {
+    let snapshot = snapshot_of(&inspector_model());
+    assert_eq!(refusal(&snapshot, &fenestration_property(50, "nonsense", "1.0")), "mutation.invalid-payload");
+    assert_eq!(refusal(&snapshot, &fenestration_property(50, "uValueWM2K", "warm")), "mutation.invalid-payload");
+    assert_eq!(refusal(&snapshot, &fenestration_property(50, "shgc", "1.5")), "mutation.invalid-payload", "a fraction outside 0..=1 is refused");
+    assert_eq!(refusal(&snapshot, &fenestration_property(9_999, "uValueWM2K", "1.0")), "mutation.target-missing");
+    assert_eq!(refusal(&snapshot, &fenestration_property(50, "glazingConstruction", "9999")), "mutation.target-missing", "a dangling glazing construction is refused");
+}
+
+/// 🔁️ Setting a field to the value it already holds opens no revision.
+#[semio_framework_async_macros::async_test]
+async fn an_unchanged_property_value_emits_nothing() {
+    let model = inspector_model();
+    let snapshot = snapshot_of(&model);
+    let current = model.fenestrations.iter().find(|window| window.id == EntityId(50)).expect("window 50").u_value_w_m2k;
+    assert!(emitted_kinds(&snapshot, &fenestration_property(50, "uValueWM2K", &current.to_string())).is_empty());
+    let zone_volume = model.zones[0].volume_m3;
+    assert!(emitted_kinds(&snapshot, &zone_property(1, "volumeM3", &zone_volume.to_string())).is_empty());
+    assert!(emitted_kinds(&snapshot, &surface_property(40, "name", &model.surfaces[0].name.clone())).is_empty());
+}
+
+#[semio_framework_async_macros::async_test]
+async fn every_surface_property_round_trips_through_the_granular_vocabulary() {
+    let snapshot = snapshot_of(&inspector_model());
+    let cases: &[(&str, &str, &str)] = &[
+        ("name", "South Facade", "rename-surface"),
+        ("class", "roof", "change-surface-class"),
+        ("boundary", "adiabatic", "change-surface-boundary-condition"),
+        ("construction", "32", "change-surface-construction"),
+        ("sunExposed", "false", "change-surface-sun-exposed"),
+        ("windExposed", "false", "change-surface-wind-exposed"),
+        ("multiplier", "3", "change-surface-multiplier"),
+    ];
+    for (property, value, kind) in cases {
+        assert_eq!(emitted_kinds(&snapshot, &surface_property(40, property, value)), vec![(*kind).to_string()], "property {property} must emit exactly {kind}");
+    }
+    let adiabatic = applied(&snapshot, &surface_property(40, "boundary", "adiabatic"));
+    assert_eq!(adiabatic.surfaces[0].outside_boundary_condition, OutsideBoundary::Adiabatic);
+}
+
+/// 🚧️ An `Interzone` boundary needs its partner surface, and the partner has to exist — the union's
+/// two payload halves are validated together before anything touches the document.
+#[semio_framework_async_macros::async_test]
+async fn an_interzone_boundary_carries_and_validates_its_partner_surface() {
+    let snapshot = snapshot_of(&inspector_model());
+    let paired = EnergyModelEditorCommand::SetSurfaceProperty { surface: 40, property: "boundary".into(), value: "interzone".into(), partner_surface: 42 };
+    assert_eq!(emitted_kinds(&snapshot, &paired), vec!["change-surface-boundary-condition".to_string()]);
+    assert_eq!(applied(&snapshot, &paired).surfaces[0].outside_boundary_condition, OutsideBoundary::Interzone(EntityId(42)));
+    assert_eq!(refusal(&snapshot, &surface_property(40, "boundary", "interzone")), "mutation.invalid-payload", "an interzone boundary without a partner is refused");
+    let dangling = EnergyModelEditorCommand::SetSurfaceProperty { surface: 40, property: "boundary".into(), value: "interzone".into(), partner_surface: 9_999 };
+    assert_eq!(refusal(&snapshot, &dangling), "mutation.target-missing");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn a_surface_property_verb_refuses_the_three_bad_payloads() {
+    let snapshot = snapshot_of(&inspector_model());
+    assert_eq!(refusal(&snapshot, &surface_property(40, "nonsense", "x")), "mutation.invalid-payload");
+    assert_eq!(refusal(&snapshot, &surface_property(40, "class", "wall")), "mutation.invalid-payload");
+    assert_eq!(refusal(&snapshot, &surface_property(40, "multiplier", "0")), "mutation.invalid-payload");
+    assert_eq!(refusal(&snapshot, &surface_property(9_999, "name", "Ghost")), "mutation.target-missing");
+    assert_eq!(refusal(&snapshot, &surface_property(40, "construction", "9999")), "mutation.target-missing");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn every_zone_property_round_trips_through_the_granular_vocabulary() {
+    let snapshot = snapshot_of(&inspector_model());
+    let cases: &[(&str, &str, &str)] = &[
+        ("name", "Living", "rename-zone"),
+        ("volumeM3", "200", "change-zone-volume"),
+        ("multiplier", "2", "change-zone-multiplier"),
+        ("conditioned", "false", "change-zone-conditioned"),
+        ("partOfTotalFloorArea", "false", "change-zone-floor-area-participation"),
+    ];
+    for (property, value, kind) in cases {
+        assert_eq!(emitted_kinds(&snapshot, &zone_property(1, property, value)), vec![(*kind).to_string()], "property {property} must emit exactly {kind}");
+    }
+}
+
+#[semio_framework_async_macros::async_test]
+async fn a_zone_property_verb_refuses_the_three_bad_payloads() {
+    let snapshot = snapshot_of(&inspector_model());
+    assert_eq!(refusal(&snapshot, &zone_property(1, "nonsense", "x")), "mutation.invalid-payload");
+    assert_eq!(refusal(&snapshot, &zone_property(1, "volumeM3", "-4")), "mutation.invalid-payload");
+    assert_eq!(refusal(&snapshot, &zone_property(9_999, "name", "Ghost")), "mutation.target-missing");
+}
+
+/// 🌉️ The inspector's controls author only `{field, id}` and the host merges `value` — the bridge
+/// has to read that spelling back, not just the palette's `{property, <entity>}` one.
+#[semio_framework_async_macros::async_test]
+async fn the_action_bridge_accepts_the_inspector_field_id_value_payload() {
+    let text = |value: &str| dsl::DslValue::String(value.to_string());
+    let args = dsl::DslValue::Object(vec![("field".to_string(), text("uValueWM2K")), ("id".to_string(), text("50")), ("value".to_string(), text("1.4"))]);
+    let command = <EnergyModelEditor as ArtifactEditor>::command_from_action(SET_FENESTRATION_PROPERTY_ACTION_ID, Some(&args)).expect("the inspector payload resolves");
+    assert_eq!(command, fenestration_property(50, "uValueWM2K", "1.4"));
+}
+
+/// 🧱️ The material and thermostat diffs gained the two fields they were missing — a material rename
+/// and a thermostat re-homing now emit their own kinds instead of being masked by the probe.
+#[semio_framework_async_macros::async_test]
+async fn the_material_and_thermostat_diffs_cover_their_reference_fields() {
+    let base = inspector_model();
+    let mut edited = base.clone();
+    edited.materials[0].name = "Cedar Siding".into();
+    use protocol::SemanticMutation as _;
+    let emit = model_edit("rename-material", &base, &edited, "rename".into()).expect("the rename diffs");
+    assert_eq!(emit.artifact_mutations.iter().map(|mutation| mutation.semantics().kind).collect::<Vec<_>>(), vec!["rename-material"]);
+    let mut rehomed = base.clone();
+    rehomed.zones.push(Zone { id: EntityId(2), name: "Attic".into(), volume_m3: 40.0, multiplier: 1, conditioned: false, part_of_total_floor_area: true });
+    rehomed.thermostats[0].zone_id = EntityId(2);
+    let emit = model_edit("change-thermostat-zone", &base, &rehomed, "rehome".into()).expect("the re-homing diffs");
+    assert!(emit.artifact_mutations.iter().any(|mutation| mutation.semantics().kind == "change-thermostat-zone"), "a thermostat's zone is no longer masked");
+}
+
+fn glazing_property(material: u32, property: &str, value: &str) -> EnergyModelEditorCommand {
+    EnergyModelEditorCommand::SetGlazingMaterialProperty { material, property: property.into(), value: value.into() }
+}
+
+fn gas_property(material: u32, property: &str, value: &str) -> EnergyModelEditorCommand {
+    EnergyModelEditorCommand::SetGasMaterialProperty { material, property: property.into(), value: value.into() }
+}
+
+/// 🧊️ Lane A's glazing/gas mutation kinds landed, so the two catalogues are addressable end to end.
+#[semio_framework_async_macros::async_test]
+async fn every_glazing_and_gas_material_property_round_trips_through_the_granular_vocabulary() {
+    let snapshot = snapshot_of(&inspector_model());
+    let glazing: &[(&str, &str, &str)] = &[
+        ("name", "Low-E Glass", "rename-glazing-material"),
+        ("thicknessM", "0.006", "change-glazing-material-thickness"),
+        ("conductivityWMK", "1.1", "change-glazing-material-conductivity"),
+        ("solarTransmittance", "0.6", "change-glazing-material-solar-transmittance"),
+        ("visibleTransmittance", "0.7", "change-glazing-material-visible-transmittance"),
+        ("infraredEmissivityFront", "0.1", "change-glazing-material-infrared-emissivity"),
+        ("infraredEmissivityBack", "0.2", "change-glazing-material-infrared-emissivity"),
+    ];
+    for (property, value, kind) in glazing {
+        assert_eq!(emitted_kinds(&snapshot, &glazing_property(22, property, value)), vec![(*kind).to_string()], "glazing property {property} must emit exactly {kind}");
+    }
+    let gases: &[(&str, &str, &str)] = &[("name", "Argon Gap".into(), "rename-gas-material"), ("thicknessM", "0.016", "change-gas-material-thickness"), ("gas", "argon", "change-gas-material-gas")];
+    for (property, value, kind) in gases {
+        assert_eq!(emitted_kinds(&snapshot, &gas_property(23, property, value)), vec![(*kind).to_string()], "gas property {property} must emit exactly {kind}");
+    }
+    assert_eq!(applied(&snapshot, &gas_property(23, "gas", "krypton")).gas_materials[0].gas, crate::model::GasKind::Krypton);
+}
+
+#[semio_framework_async_macros::async_test]
+async fn the_glazing_and_gas_property_verbs_refuse_the_three_bad_payloads() {
+    let snapshot = snapshot_of(&inspector_model());
+    assert_eq!(refusal(&snapshot, &glazing_property(22, "solarReflectanceFront", "0.1")), "mutation.invalid-payload", "a field with no mutation kind is refused, never silently written");
+    assert_eq!(refusal(&snapshot, &glazing_property(22, "thicknessM", "clear")), "mutation.invalid-payload");
+    assert_eq!(refusal(&snapshot, &glazing_property(9_999, "thicknessM", "0.006")), "mutation.target-missing");
+    assert_eq!(refusal(&snapshot, &gas_property(23, "gas", "helium")), "mutation.invalid-payload");
+    assert_eq!(refusal(&snapshot, &gas_property(9_999, "thicknessM", "0.016")), "mutation.target-missing");
+    let model = inspector_model();
+    assert!(emitted_kinds(&snapshot, &glazing_property(22, "thicknessM", &model.glazing_materials[0].thickness_m.to_string())).is_empty(), "an unchanged value opens no revision");
+}
+//#endregion 🔍️InspectorVerbs

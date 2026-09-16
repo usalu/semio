@@ -10308,12 +10308,18 @@ export function focusActiveSearchInput(): boolean {
   return true;
 }
 
-/** @emoji ✍️ One local edit of a controlled search line: the text the user typed plus the published value
- * that stood when the edit began. */
+/** @emoji ✍️ One local edit of a controlled search line: the text the user typed, the published value
+ * that stood when the edit began, and every line this edit already dispatched through `onChange` (a
+ * program that echoes the line back republishes exactly those). */
 export interface SearchLineEdit {
   readonly text: string;
   readonly base: string;
+  readonly sent?: readonly string[];
 }
+
+/** @emoji 🧾️ How many dispatched lines one edit remembers for echo detection — a slow program may still be
+ * echoing the first keystrokes of a long verb when the last ones are typed. */
+export const SEARCH_LINE_EDIT_SENT_LIMIT = 64;
 
 /**
  * @emoji ✍️ Which line a controlled window search field shows. The published value is a program's
@@ -10322,11 +10328,15 @@ export interface SearchLineEdit {
  * straight back to the stale `value`, so every submit carried an empty line. The local edit therefore
  * LEADS, and the published value only wins once it moved away from what stood when the edit began — which
  * is exactly the case where the program authored the line itself (a completed submit, an abort, a
- * program-side rewrite) and the user's draft is stale instead.
+ * program-side rewrite) and the user's draft is stale instead. A program that ECHOES each keystroke
+ * (the cad engagement input republishes `engagement-input` per `onChange`, one guest round trip behind)
+ * publishes lines this edit itself sent; those are not authorship, so a published value the edit
+ * already dispatched keeps the typed text — otherwise "PlaceColumn" typed at 40 ms/key collapsed to "Pn".
  */
 export function searchControlledLineV1(published: string, edit: SearchLineEdit | null): string {
   if (!edit) return published;
-  return published === edit.base ? edit.text : published;
+  if (published === edit.base) return edit.text;
+  return edit.sent?.includes(published) ? edit.text : published;
 }
 
 /** @emoji ✅️ True when Space/Enter should pick the active filtered {@link SearchPossible} instead of submitting the raw draft. */
@@ -10618,7 +10628,7 @@ const Search: React.FC<SearchProps> = ({ sessionActive = false, input, possibles
         setUncontrolledDraft(normalized);
         return;
       }
-      setControlledEdit((previous) => ({ text: normalized, base: previous?.base ?? publishedLine }));
+      setControlledEdit((previous) => ({ text: normalized, base: previous?.base ?? publishedLine, sent: [...(previous?.sent ?? []).slice(-(SEARCH_LINE_EDIT_SENT_LIMIT - 1)), normalized] }));
       input?.onChange?.(normalized);
     },
     [input, isControlledInput, publishedLine],

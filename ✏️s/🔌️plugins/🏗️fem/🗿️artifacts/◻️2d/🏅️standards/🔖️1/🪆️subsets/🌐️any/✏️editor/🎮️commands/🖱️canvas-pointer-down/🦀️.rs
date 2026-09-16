@@ -1,6 +1,7 @@
 //! 🖱️ Fem2d play app command — `canvas-pointer-down`: viewport pick — hit-tests the addressed model/results window and requests the framework `interactionSelect`.
 
-use crate::editor::fem2d::interaction::{fem2d_addressed_camera, fem2d_hit_test, interaction_select_effect, selection_merge_mode, Fem2dPick};
+use crate::editor::fem2d::interaction::canvas_gesture;
+use crate::editor::fem2d::interaction::{fem2d_addressed_camera, selection_merge_mode};
 use crate::standards::v1::subsets::any::schema::mutations::text::Fem2dMutation;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -26,18 +27,11 @@ pub fn handle(_payload: &CanvasPointerDown, _doc: &ArtifactView<'_, Fem2dSnapsho
     Err(Fault::from("fem2d.canvas-pointer-down.window-context-required"))
 }
 
-/// 🖱️ A primary-button press is a viewport pick: hit-test the addressed window's projection and ask
-/// the framework to apply the resulting selection. Nothing hit is an explicit empty `"replace"` batch,
-/// so a background click clears. Every other button belongs to the host (middle drag pans).
+/// 🖱️ A primary-button press either starts a marquee/lasso drag or performs a direct pick, depending on the active selection utility.
 pub fn handle_window(payload: &CanvasPointerDown, doc: &ArtifactView<'_, Fem2dSnapshot>, cfg: &ConfigView<'_, NoConfig>, view: &semio_framework_plugin::ViewModel) -> Result<Emit<Fem2dMutation, NoConfigMutation>, Fault> {
-    if payload.button != 0 {
-        return Ok(Emit::default());
-    }
     let camera = fem2d_addressed_camera(cfg, view, "fem2d.canvas-pointer-down")?;
-    let hit = fem2d_hit_test(doc.snapshot, &camera, payload.x, payload.y, payload.width, payload.height);
-    let merge = if hit.is_some() { selection_merge_mode(payload.shift, payload.ctrl, payload.meta) } else { "replace" };
-    let targets: Vec<Fem2dPick> = hit.into_iter().collect();
-    Ok(Emit { effects: vec![interaction_select_effect(&targets, merge)], ..Default::default() })
+    let merge = selection_merge_mode(payload.shift, payload.ctrl, payload.meta);
+    canvas_gesture::pointer_down(doc.snapshot, &camera, view, payload.x, payload.y, payload.width, payload.height, payload.button, merge)
 }
 //#endregion 🔖️CanvasPointerDown
 

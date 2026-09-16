@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-glazing-material-visible-transmittance/schema.json",
+  "title": "ChangeGlazingMaterialVisibleTransmittance",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newVisibleTransmittance"
+  ],
+  "properties": {
+    "id": {
+      "type": "integer"
+    },
+    "newVisibleTransmittance": {
+      "type": "number"
+    }
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/replace-fenestration-vertices/schema.json",
+  "title": "ReplaceFenestrationVertices",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newVerticesM"
+  ],
+  "properties": {
+    "id": {
+      "type": "integer"
+    },
+    "newVerticesM": {
+      "type": "array",
+      "items": {
+        "type": "array",
+        "items": {
+          "type": "number"
+        },
+        "minItems": 3,
+        "maxItems": 3
+      }
+    }
+  }
+}

@@ -5,7 +5,7 @@
 //! Must not import anything from the sibling mutation-capable surface (`policyViewerPurityBreaches`).
 
 use crate::viewer::model::modes::view;
-use crate::viewer::model::modes::view::windows::{simulation, structure, zones};
+use crate::viewer::model::modes::view::windows::{model as model_window, simulation, structure, zones};
 use crate::{EnergyModelMutation, EnergyModelSnapshot, ENERGY_MODEL_DOCUMENT_SCHEMA, MODEL_DIALECT};
 use semio_framework_plugin::{ArtifactView, ArtifactViewer, ComponentTree, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiAssemblyResult, ViewEmit, Viewer};
 
@@ -122,6 +122,7 @@ impl ArtifactViewer for EnergyModelViewer {
             structure::BODY_KEY => structure::render(doc.snapshot)?,
             zones::BODY_KEY => zones::render(doc.snapshot)?,
             simulation::BODY_KEY => simulation::render(&doc.snapshot.model),
+            model_window::BODY_KEY => model_window::render(&doc.snapshot.model)?,
             _ => {
                 semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("energy.model.viewer.render", "the unknown-body label could not be assembled"))?
             }
@@ -141,6 +142,7 @@ pub fn create_energy_model_viewer() -> semio_framework_plugin::AppDefinition {
         .window_kind_def(structure::definition())
         .window_kind_def(zones::definition())
         .window_kind_def(simulation::definition())
+        .window_kind_def(model_window::definition())
         .default_layout(view::layout())
         .build_definition()
 }

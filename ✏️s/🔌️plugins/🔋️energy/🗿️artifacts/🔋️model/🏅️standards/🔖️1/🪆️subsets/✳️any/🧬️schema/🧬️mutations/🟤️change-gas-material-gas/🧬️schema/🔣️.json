@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-gas-material-gas/schema.json",
+  "title": "ChangeGasMaterialGas",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newGas"
+  ],
+  "properties": {
+    "id": {
+      "type": "integer"
+    },
+    "newGas": {
+      "enum": [
+        "Air",
+        "Argon",
+        "Krypton",
+        "Xenon"
+      ]
+    }
+  }
+}

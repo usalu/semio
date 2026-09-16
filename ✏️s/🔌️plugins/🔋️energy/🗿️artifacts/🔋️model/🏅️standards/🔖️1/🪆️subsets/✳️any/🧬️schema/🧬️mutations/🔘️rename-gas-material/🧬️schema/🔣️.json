@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/rename-gas-material/schema.json",
+  "title": "RenameGasMaterial",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newName"
+  ],
+  "properties": {
+    "id": {
+      "type": "integer"
+    },
+    "newName": {
+      "type": "string"
+    }
+  }
+}

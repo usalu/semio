@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-glazing-material-infrared-emissivity/schema.json",
+  "title": "ChangeGlazingMaterialInfraredEmissivity",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newInfraredEmissivityFront",
+    "newInfraredEmissivityBack"
+  ],
+  "properties": {
+    "id": {
+      "type": "integer"
+    },
+    "newInfraredEmissivityFront": {
+      "type": "number"
+    },
+    "newInfraredEmissivityBack": {
+      "type": "number"
+    }
+  }
+}

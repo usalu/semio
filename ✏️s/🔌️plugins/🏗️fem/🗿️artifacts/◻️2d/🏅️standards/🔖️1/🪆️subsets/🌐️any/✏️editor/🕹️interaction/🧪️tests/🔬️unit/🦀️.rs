@@ -111,7 +111,7 @@ fn merge_mode_maps_every_modifier_combination() {
 #[test]
 fn select_and_hover_effects_carry_the_framework_wire_contract() {
     let targets = [(FEM2D_GRANULARITY_NODE, "n1".to_string())];
-    let Effect::ReplayShellCommand { action_id, args } = interaction_select_effect(&targets, "additive") else {
+    let Effect::ReplayShellCommand { action_id, args } = interaction_select_effect(&targets, "additive", "pick") else {
         panic!("interaction_select_effect must request a shell replay");
     };
     assert_eq!(action_id, semio_framework::INTERACTION_SELECT_ACTION_ID);
@@ -130,7 +130,7 @@ fn select_and_hover_effects_carry_the_framework_wire_contract() {
     assert_eq!(args.get("channel").and_then(dsl::DslValue::as_str), Some(FEM2D_POINTER_CHANNEL));
     assert!(args.get("targets").and_then(dsl::DslValue::as_str).is_some_and(|raw| raw.contains("\"id\":\"n1\"")));
     let empty: [(&str, String); 0] = [];
-    let Effect::ReplayShellCommand { args, .. } = interaction_select_effect(&empty, "replace") else { panic!("replay") };
+    let Effect::ReplayShellCommand { args, .. } = interaction_select_effect(&empty, "replace", "pick") else { panic!("replay") };
     assert_eq!(args.expect("args").get("targets").and_then(dsl::DslValue::as_str), Some("[]"), "a background click clears with an explicit empty batch");
     let decoded: Vec<protocol::InteractionTarget> = serde_json::from_str(raw).expect("the framework decodes targets with serde_json");
     assert_eq!(decoded.len(), 1);

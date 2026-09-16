@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-glazing-material-solar-transmittance/schema.json",
+  "title": "ChangeGlazingMaterialSolarTransmittance",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newSolarTransmittance"
+  ],
+  "properties": {
+    "id": {
+      "type": "integer"
+    },
+    "newSolarTransmittance": {
+      "type": "number"
+    }
+  }
+}

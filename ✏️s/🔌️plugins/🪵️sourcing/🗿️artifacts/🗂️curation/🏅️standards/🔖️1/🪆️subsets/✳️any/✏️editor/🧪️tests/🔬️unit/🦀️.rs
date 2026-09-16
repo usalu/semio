@@ -292,6 +292,56 @@ fn the_contributions_lane_is_priced_apart_from_the_filter_text_envelope() {
     assert_eq!(post.contributions_json.len(), SOURCING_CURATION_CONFIG_CONTRIBUTIONS_BYTES, "a filter edit never disturbs the retained pack");
     assert!(matches!(&inverse[0], SourcingCurationConfigMutation::SetFilterQuery { .. }));
 }
+/// 🧩️ The pack the DEMONSTRATOR's aussuchen pane actually receives: the demonstrator consumes
+/// `sourcing.module`, `cad.computer` and `process.machines`, so the host hands this app all three
+/// topics in ONE crossing. Sizes are the REAL per-entry bulk strings of the shipped extensions,
+/// measured off the built dev manifests 2026-09-16 (ticket 26/08/28/DEMONSTRATOR-END-TO-END-ALL-APPS).
+fn demonstrator_contributions_pack() -> String {
+    let entry = |plugin_id: &str, topic: &str, app_id: &str, bulk: usize| semio_framework::ProgramContributionEntry {
+        plugin_id: plugin_id.to_string(),
+        topic_contribution: Some(semio_framework::TopicContribution::new(
+            topic,
+            semio_framework::DslValue::object([
+                ("appId".to_string(), semio_framework::DslValue::String(app_id.to_string())),
+                ("moduleId".to_string(), semio_framework::DslValue::String(plugin_id.to_string())),
+                ("bulkJson".to_string(), semio_framework::DslValue::String("m".repeat(bulk))),
+            ]),
+        )),
+    };
+    let entries = vec![
+        entry("cad-extension-aec-building-structure", "cad.computer", "cad-play", 3_337),
+        entry("cad-extension-aec-building", "cad.computer", "cad-play", 940),
+        entry("cad-extension-aec-building-energy", "cad.computer", "cad-play", 635),
+        entry("cad-extension-spatial-shape", "cad.computer", "cad-play", 176),
+        entry("process-extension-wood", "process.machines", "process3d-play", 4_705),
+        entry("process-extension-metal", "process.machines", "process3d-play", 4_011),
+        entry("process-extension-robotic", "process.machines", "process3d-play", 4_010),
+        entry("process-extension-concrete", "process.machines", "process3d-play", 3_311),
+        entry("sourcing-module-beams", "sourcing.module", "sourcing-curation", 780),
+        entry("sourcing-module-windows", "sourcing.module", "sourcing-curation", 669),
+        entry("sourcing-module-slabs", "sourcing.module", "sourcing-curation", 589),
+    ];
+    semio_framework_os_kernel::json::to_json_string(&entries)
+}
+
+/// ⚖️ LAW: the REAL demonstrator pack crosses this app's registered `setContributions` admission and
+/// distils to a roster the retained contributions lane holds.
+///
+/// 🏁️ Before the per-app admission, sourcing priced `setContributions` on the 8 KiB gesture envelope
+/// every retained tool shares, and the live push died with `typed command raw JSON exceeds its
+/// registered retained-page admission` the moment the host stopped cutting capability packs to `[]`
+/// (2026-09-16, ticket 26/08/28/DEMONSTRATOR-END-TO-END-ALL-APPS).
+#[test]
+fn the_real_demonstrator_pack_is_admitted_by_the_registered_contributions_wire() {
+    let pack = demonstrator_contributions_pack();
+    let wire = semio_framework_os_kernel::json::to_json_string(&("setContributions", semio_framework::DslValue::object([("json".to_string(), semio_framework::DslValue::String(pack.clone()))])));
+    println!("[STATS] sourcing demonstrator pack packChars={} wireChars={}", pack.len(), wire.len());
+    assert!(pack.len() > SOURCING_CURATION_RETAINED_RAW_BYTES, "the real pack is past the gesture envelope");
+    assert!(wire.len() <= semio_framework_plugin::CONTRIBUTIONS_COMMAND_RAW_WIRE_BYTES, "the real pack's command wire ({} B) must fit the registered admission", wire.len());
+    let distilled = crate::schema::installable_contributions(&pack, SOURCING_CURATION_CONFIG_CONTRIBUTIONS_BYTES);
+    assert!(distilled.len() <= SOURCING_CURATION_CONFIG_CONTRIBUTIONS_BYTES, "what is RETAINED is the distilled roster, never the pack");
+    assert!(sourcing_curation_config_mutation_footprint(&SourcingCurationConfigMutation::SetContributions { json: distilled }).is_ok());
+}
 //#endregion 🧪️RetainedConfigOracle
 use crate::editor::sourcing::unit_tests::context::{dispatch, new_app, sourcing_manifest_for_tests};
 use semio_framework_plugin::artifact_app_laws;

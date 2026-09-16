@@ -516,7 +516,6 @@ import {
   TextureLoader,
   Vector3,
 } from "three";
-import { useFrame, useLoader, useThree } from "@react-three/fiber";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import {
   DEFAULT_LOD_GRID_FACTOR,
@@ -874,8 +873,8 @@ export {
 //#endregion FrameworkOsShell
 
 //#region 🔖️plugin-runtime
-import { type PluginOperationCompletion, type PluginWasmHandle, loadPluginModule, adaptPluginHandle, fetchDescriptorManifest, resolveDescriptorBeforeRuntime, applyUiPatchToRetained, decodeWirePatchOps, serializeCommandIngressForActor, serializePerActor } from "../../🧱️elements/🔌️PluginRuntime/🟦️.tsx";
-export { type PluginOperationCompletion, type PluginWasmHandle, loadPluginModule, adaptPluginHandle, fetchDescriptorManifest, resolveDescriptorBeforeRuntime, applyUiPatchToRetained, decodeWirePatchOps, serializeCommandIngressForActor, serializePerActor };
+import { type PluginDispatchHintV1, type PluginOperationCompletion, type PluginWasmHandle, loadPluginModule, adaptPluginHandle, fetchDescriptorManifest, resolveDescriptorBeforeRuntime, applyUiPatchToRetained, decodeWirePatchOps, serializeCommandIngressForActor, serializePerActor } from "../../🧱️elements/🔌️PluginRuntime/🟦️.tsx";
+export { type PluginDispatchHintV1, type PluginOperationCompletion, type PluginWasmHandle, loadPluginModule, adaptPluginHandle, fetchDescriptorManifest, resolveDescriptorBeforeRuntime, applyUiPatchToRetained, decodeWirePatchOps, serializeCommandIngressForActor, serializePerActor };
 export type { PluginRegistryEntry };
 //#endregion 🔖️plugin-runtime
 

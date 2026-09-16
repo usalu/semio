@@ -34,11 +34,15 @@ function laneRank(lane: Lane): number {
  * `Rejected` — muss der UI immer als Beschäftigt-Signal angezeigt werden, niemals als stilles Verwerfen. */
 export type Backpressure = { readonly kind: "accept" } | { readonly kind: "coalesced" } | { readonly kind: "dropped"; readonly lane: Lane } | { readonly kind: "rejected" };
 
-/** @emoji ✉️ One message offered to a {@link BoundedMailbox}: its scheduling lane, payload, and an
- * optional coalescing key that lets a newer envelope replace an older queued one in place. */
+/** @emoji ✉️ One message offered to a {@link BoundedMailbox}: its scheduling lane, payload, an
+ * optional coalescing key that lets a newer envelope replace an older queued one in place, and an
+ * optional causal `order` key (see {@link createBoundedMailbox} `## causal order`). */
 export interface MailboxEnvelope<T> {
   readonly lane: Lane;
   readonly coalesce?: CoalesceKey;
+  /** 🔗️ Causal dequeue key within the lane — the caller's own monotonic space (the input ledger's
+   * `causedBy ?? inputSeq`). Absent ⇒ plain arrival order, exactly as before this field existed. */
+  readonly order?: number;
   readonly payload: T;
 }
 
@@ -63,10 +67,54 @@ export interface BoundedMailbox<T> {
  * incoming lane itself or anything higher-priority): `dropped(lane)`. If there is nothing
  * lower-priority to evict, the envelope is `rejected` outright rather than silently discarded.
  * Otherwise: `accept`.
+ *
+ * ## causal order (`MailboxEnvelope.order`, INPUT-CAUSALITY-LEDGER §2 B, law L2)
+ * Within ONE lane the dequeue position is decided at `enqueue` time by this rule, and by nothing
+ * else — `popNext` stays a plain head pop:
+ * - An envelope WITHOUT `order` is appended at the tail (pure arrival order, byte-for-byte the old
+ *   behaviour: a mailbox that never sees `order` cannot observe this feature).
+ * - An envelope WITH `order` is inserted immediately BEFORE the earliest-queued envelope of the same
+ *   lane that carries a strictly larger `order`; if there is none it is appended at the tail. So the
+ *   ordered envelopes of a lane are kept sorted by `(order, arrival)` — equal `order` keeps arrival
+ *   order — and an ordered envelope overtakes exactly the strictly-larger ordered envelope it lands
+ *   in front of plus everything (ordered or not) that was queued behind that one.
+ * - Unordered envelopes never reorder among themselves, and an ordered envelope never overtakes an
+ *   unordered envelope queued ahead of every larger-ordered one. This is the "ordered-only"
+ *   alternative rather than the mixed key `(order ?? arrivalSeq, arrivalSeq)`: an arrival counter
+ *   is mailbox-internal, so no caller could ever make its own `order` space comparable with it,
+ *   which would have made the mixed rule's position of unordered envelopes arbitrary. The runtime's
+ *   use is covered exactly: inputs and their guest follow-ups all carry the ledger's causal key
+ *   (`causedBy ?? inputSeq`), so a follow-up of input N lands before the already-queued input N+1
+ *   and ahead of any internal maintenance turn queued behind it; unordered envelopes are those
+ *   maintenance turns, which may legitimately wait.
+ * - Coalescing keeps the ORIGINAL envelope's queue position (a hot key must not jump the line, in
+ *   either direction); the replacement takes the newer envelope's `order` when it carries one and
+ *   otherwise retains the original's, so the slot stays addressable by later ordered insertions.
+ *   That is the one place the sorted-by-`order` invariant may be relaxed — position wins.
+ * - `dropped`/`rejected` are untouched: eviction still takes the HEAD of the victim lane (whatever
+ *   the rule put there), and capacity is counted per envelope exactly as before.
+ * - `order` is TypeScript-only for now: the Rust twin's `Envelope` has `seq`/`deadline_ms` but no
+ *   causal key; lifting it there is the design's native follow-up, not this module's concern.
  */
 export function createBoundedMailbox<T>(capacity: number): BoundedMailbox<T> {
   const lanes: MailboxEnvelope<T>[][] = MAILBOX_LANE_ORDER.map(() => []);
   let len = 0;
+
+  /** 🔗️ Applies the `## causal order` rule: tail for unordered, otherwise before the earliest
+   * queued envelope with a strictly larger `order` (ties and unordered neighbours are not passed). */
+  function insertByOrder(lane: MailboxEnvelope<T>[], envelope: MailboxEnvelope<T>): void {
+    const order = envelope.order;
+    if (order !== undefined) {
+      for (let index = 0; index < lane.length; index++) {
+        const queued = lane[index]!.order;
+        if (queued !== undefined && queued > order) {
+          lane.splice(index, 0, envelope);
+          return;
+        }
+      }
+    }
+    lane.push(envelope);
+  }
 
   return {
     enqueue(envelope: MailboxEnvelope<T>): Backpressure {
@@ -75,7 +123,8 @@ export function createBoundedMailbox<T>(capacity: number): BoundedMailbox<T> {
         const lane = lanes[incomingRank]!;
         const existingIndex = lane.findIndex((queued) => queued.coalesce === envelope.coalesce);
         if (existingIndex !== -1) {
-          lane[existingIndex] = envelope;
+          const existing = lane[existingIndex]!;
+          lane[existingIndex] = envelope.order === undefined && existing.order !== undefined ? { ...envelope, order: existing.order } : envelope;
           return { kind: "coalesced" };
         }
       }
@@ -90,11 +139,11 @@ export function createBoundedMailbox<T>(capacity: number): BoundedMailbox<T> {
         if (victimRank === -1) return { kind: "rejected" };
         lanes[victimRank]!.shift();
         len -= 1;
-        lanes[incomingRank]!.push(envelope);
+        insertByOrder(lanes[incomingRank]!, envelope);
         len += 1;
         return { kind: "dropped", lane: MAILBOX_LANE_ORDER[victimRank]! };
       }
-      lanes[incomingRank]!.push(envelope);
+      insertByOrder(lanes[incomingRank]!, envelope);
       len += 1;
       return { kind: "accept" };
     },

@@ -45,6 +45,12 @@ pub fn inverse(payload: &super::DeleteSurface, base: &EnergyModelSnapshot) -> Ve
             window.fin_offset_m,
             window.glazing_construction_id,
         ));
+        // 🔶️ `create-fenestration` does not carry the aperture's own polygon, so a window that had
+        // one gets it back with the step right after its re-creation. This list is reversed below
+        // and the store replays it reversed again, so BUILD order IS execution order here.
+        if !window.vertices_m.is_empty() {
+            steps.push(vocabulary::replace_fenestration_vertices(window.id, window.vertices_m.clone()));
+        }
     }
     for pair in base.model.adjacency_pairs.iter().filter(|item| item.surface_a_id == payload.id || item.surface_b_id == payload.id) {
         steps.push(vocabulary::connect_surfaces(pair.surface_a_id, pair.surface_b_id));

@@ -584,7 +584,6 @@ TODO: Start new project `elements` that offers domain-agnostic primitives (such 
 
 ---
 
-
 The subsets of artifacts are independant implementations. they have their own viewer, editor, etc
 A subset must be meaningful
 violations e.g.

@@ -3695,6 +3695,54 @@ describe("framework plugin runtime", () => {
     expect(order).toEqual(["first-page", "first-terminal", "second-page", "second-terminal"]);
   });
 
+  // 🔗️ INPUT-CAUSALITY-LEDGER §2 B / §6 phase 4, law L2: `serializeCommandIngressForActor`'s `order`
+  // is the ledger's causal key (`causedBy ?? inputSeq`); the mailbox's `## causal order` rule inserts
+  // an ordered call before the earliest queued call with a strictly larger `order`, so a follow-up of
+  // input N (order N) overtakes the already-queued input N+1 while the in-flight call is never touched.
+  it("serializeCommandIngressForActor dequeues queued calls by ascending order — a later call with a smaller order overtakes a larger one behind the held call", async () => {
+    const ran: string[] = [];
+    let releaseHeld!: () => void;
+    let markHeldStarted!: () => void;
+    const heldStarted = new Promise<void>((resolve) => { markHeldStarted = resolve; });
+    const heldGate = new Promise<void>((resolve) => { releaseHeld = resolve; });
+    const held = serializeCommandIngressForActor("actor-causal-order", async () => {
+      ran.push("held");
+      markHeldStarted();
+      await heldGate;
+    });
+    await heldStarted;
+    const callA = serializeCommandIngressForActor("actor-causal-order", async () => { ran.push("A"); }, "Interactive", 5);
+    const callB = serializeCommandIngressForActor("actor-causal-order", async () => { ran.push("B"); }, "Interactive", 7);
+    const callC = serializeCommandIngressForActor("actor-causal-order", async () => { ran.push("C"); }, "Interactive", 6);
+    await Promise.resolve();
+    expect(ran).toEqual(["held"]);
+    releaseHeld();
+    await Promise.all([held, callA, callB, callC]);
+    expect(ran).toEqual(["held", "A", "C", "B"]);
+  });
+
+  it("serializeCommandIngressForActor keeps plain FIFO for calls without order", async () => {
+    const ran: string[] = [];
+    let releaseHeld!: () => void;
+    let markHeldStarted!: () => void;
+    const heldStarted = new Promise<void>((resolve) => { markHeldStarted = resolve; });
+    const heldGate = new Promise<void>((resolve) => { releaseHeld = resolve; });
+    const held = serializeCommandIngressForActor("actor-fifo-order", async () => {
+      ran.push("held");
+      markHeldStarted();
+      await heldGate;
+    });
+    await heldStarted;
+    const first = serializeCommandIngressForActor("actor-fifo-order", async () => { ran.push("first"); });
+    const second = serializeCommandIngressForActor("actor-fifo-order", async () => { ran.push("second"); });
+    const third = serializeCommandIngressForActor("actor-fifo-order", async () => { ran.push("third"); });
+    await Promise.resolve();
+    expect(ran).toEqual(["held"]);
+    releaseHeld();
+    await Promise.all([held, first, second, third]);
+    expect(ran).toEqual(["held", "first", "second", "third"]);
+  });
+
   // 🧬️ H1-react — `AppFrame::Effects`/`Events` no longer exist (channel v12, A4-channel). Effects
   // now travel as real `kernel::Effect` values directly on `TurnResult.effects`
   // (`⚛️reactor/🦀️.rs`'s `poll`), demuxed by `loadPluginModule`'s turn loop into

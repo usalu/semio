@@ -39,13 +39,25 @@ export const ENERGY_MODEL_RETAINED_TOOL_IDS = [
   "set-run-period",
   "setActiveExample",
   "set-simulation-settings",
+  "set-surface-property",
+  "set-fenestration-property",
+  "set-zone-property",
+  "set-glazing-material-property",
+  "set-gas-material-property",
 ] as const;
 
-/** 📬️ The twelve verbs that publish a semantic mutation into the document store. `setActiveExample`
+/** 📬️ The verbs that publish a semantic mutation into the document store. `setActiveExample`
  * is NOT one of them — a whole-document swap has no mutation representative in this artifact's
  * vocabulary, so it emits a `LoadDocument` effect (the host's `ArtifactStore::reset` route, outside
  * undo history) and declares the `HostOnly` publication lane; `set-simulation-settings` publishes to the config lane. */
-export const ENERGY_MODEL_DOCUMENT_TOOL_IDS = ENERGY_MODEL_RETAINED_TOOL_IDS.slice(0, 12);
+export const ENERGY_MODEL_DOCUMENT_TOOL_IDS = ENERGY_MODEL_RETAINED_TOOL_IDS.filter(
+  (id) => id !== "setActiveExample" && id !== "set-simulation-settings",
+);
+
+/** 📌️ The two dock panels the editor contributes: the artifact tree and the inspector. Their body
+ * keys are what `ArtifactEditor::render_with_request_context` routes on. */
+export const ENERGY_MODEL_ARTIFACT_PANEL_BODY_KEY = "energy.model.artifact" as const;
+export const ENERGY_MODEL_INSPECTION_PANEL_BODY_KEY = "energy.model.inspection" as const;
 
 /** 📚️ The bundled examples the plugin root registers through `editor_with_examples`. */
 export const ENERGY_MODEL_EXAMPLE_IDS = [

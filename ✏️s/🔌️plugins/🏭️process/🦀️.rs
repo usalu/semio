@@ -9,8 +9,8 @@ use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp};
 semio_framework_dispatch_macros::dyn_enum_close! {
     /// 🗃️ Closed runtime app fleet for the process editor and viewer surfaces.
     pub enum ProcessApps: PluginApp {
-        Process3dEditor(VcsArtifactApp<EditorApp<crate::editor::process3d::Process3dPlayApp>>),
-        Process3dViewer(VcsArtifactApp<ViewerApp<crate::viewer::process3d::Process3dViewer>>),
+        Process3dEditor(VcsArtifactApp<EditorApp<crate::editor::process3d::Process3dPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>),
+        Process3dViewer(VcsArtifactApp<ViewerApp<crate::viewer::process3d::Process3dViewer>, semio_s_artifact_stdio_semio::SemioMembers>),
     }
 }
 //#endregion 🗃️Apps

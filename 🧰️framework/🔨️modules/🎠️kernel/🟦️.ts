@@ -245,6 +245,17 @@ if (import.meta.vitest) {
 }
 //#endregion 🧪️TurnOutcomeBroadcastTests
 
+/** 🔗️ Optional steering for ONE dispatch into a plugin instance (INPUT-CAUSALITY-LEDGER §2 B, law
+ * L2). `order` is the input ledger's causal key (`causalOrderKeyV1(provenance)` =
+ * `causedBy ?? inputSeq`, `🏛️ShellHost/🎯️input-ledger/🟦️.ts`): a root input carries its own `inputSeq`,
+ * a guest follow-up caused by input N carries N. The runtime hands it verbatim to the per-actor
+ * mailbox as `MailboxEnvelope.order` (`🎭️actor/📬️mailbox/🟦️.ts` `## causal order`), so a follow-up of
+ * input N dequeues before the already-queued input N+1 on the same actor. Absent ⇒ plain arrival
+ * order, byte-for-byte the behaviour before this type existed. Every field is optional and every
+ * consumer must accept `undefined`: the hint never changes WHAT is dispatched, only WHERE in one
+ * actor's queue it lands. */
+export type PluginDispatchHintV1 = Readonly<{ order?: number }>;
+
 export type PluginWasmHandle = {
   readonly manifest: () => Promise<Uint8Array>;
   readonly createApp: (appId: string) => Promise<number>;
@@ -254,8 +265,9 @@ export type PluginWasmHandle = {
   /** 📤️ Fire-and-forget: queues `events` (encoded `AppCommand` frames) for `instanceId`'s next turn
    * and returns immediately. The turn's result arrives later on {@link outcomes}, never as this call's
    * return value — replaces the old handle's synchronous per-call method, whose `Promise<Uint8Array[]>`
-   * return shape wrongly assumed a reply always lands on the turn it was sent on (R2). */
-  readonly enqueue: (instanceId: number, events: readonly Uint8Array[]) => void;
+   * return shape wrongly assumed a reply always lands on the turn it was sent on (R2). `dispatch`
+   * ({@link PluginDispatchHintV1}) is optional and only steers the queue position of this turn. */
+  readonly enqueue: (instanceId: number, events: readonly Uint8Array[], dispatch?: PluginDispatchHintV1) => void;
   /** 📥️ Every live instance's turn outcomes, multicast (see {@link createTurnOutcomeBroadcast}) —
    * a caller filters to the `instanceId`(s) it owns. */
   readonly outcomes: AsyncIterable<TurnOutcome>;
@@ -321,9 +333,7 @@ export function reachableKindsFromUnknown(values: readonly unknown[]): string[] 
  * capability topic: `process.machines`, `cad.computer` and `sourcing.module` declare ZERO operator
  * kinds (measured 2026-09-16, ticket 26/08/28/DEMONSTRATOR-END-TO-END-ALL-APPS), so no document
  * graph can ever reach one and every such pack was cut to `[]` — process's "11 machines" were the
- * app's own `builtin_installed_catalogs()`, never a host push. What scopes a capability pack is the
- * consuming app's `consumes` declaration for that topic, which the shell has already applied when it
- * picked the receiver, so the pack passes.
+ * app's own `builtin_installed_catalogs()`, never a host push.
  */
 export function contributionIsCapabilityPack(topicContribution: unknown): boolean {
   const contributed = new Set<string>();
@@ -331,29 +341,53 @@ export function contributionIsCapabilityPack(topicContribution: unknown): boolea
   return contributed.size === 0;
 }
 
-function contributionPassesScope(topicContribution: unknown, kinds: ReadonlySet<string>): boolean {
+function topicOf(topicContribution: unknown): string | undefined {
+  if (topicContribution == null || typeof topicContribution !== "object") return undefined;
+  const topic = (topicContribution as { readonly topic?: unknown }).topic;
+  return typeof topic === "string" && topic.length > 0 ? topic : undefined;
+}
+
+function contributionPassesScope(topicContribution: unknown, kinds: ReadonlySet<string>, consumed: ReadonlySet<string>): boolean {
   const contributed = new Set<string>();
   collectOperatorKinds(topicContribution, contributed);
-  if (contributed.size === 0) return true;
+  if (contributed.size === 0) {
+    const topic = topicOf(topicContribution);
+    return topic !== undefined && consumed.has(topic);
+  }
   for (const kind of contributed) {
     if (kinds.has(kind)) return true;
   }
   return false;
 }
 
-/** ✂️ Host→guest contributions cut by reachability from the document graph, plus the receiver's own.
- * Only OPERATOR-KEYED contributions are cut — see {@link contributionIsCapabilityPack}. */
+/**
+ * ✂️ Host→guest contributions cut to what the receiver can actually act on, plus its own.
+ *
+ * Two cuts, one per topic kind. An OPERATOR-KEYED contribution is cut by reachability from the open
+ * document's graph. A CAPABILITY pack ({@link contributionIsCapabilityPack}) no graph can ever reach
+ * is cut by `consumedTopics` — the receiver's `consumes` row in the plugin registry, which is the
+ * authority the framework already keeps for exactly this.
+ *
+ * ⚖️ `consumedTopics` is not optional in spirit: an empty set forwards NO foreign capability pack.
+ * Passing every capability pack instead put `gis`'s 196 400-byte `stdio.artifact-catalog.v1` — a
+ * topic no plugin consumes — into all four demonstrator apps and blew their wire admission
+ * (measured 2026-09-16: 226 310-byte pack, `typed command raw JSON exceeds its registered
+ * retained-page admission`). With the registry's own `consumes` the demonstrator pack is the three
+ * topics it declares and nothing else.
+ */
 export function scopeContributionsJson(
   loaded: ReadonlyArray<{ readonly pluginId: string; readonly manifest: PluginManifest }>,
   receiverPluginId: string,
   reachableKinds: readonly string[],
+  consumedTopics: readonly string[] = [],
 ): string {
   const kinds = new Set(reachableKinds);
+  const consumed = new Set(consumedTopics);
   const entries: ProgramContributionEntry[] = [];
   for (const entry of loaded) {
     const own = entry.pluginId === receiverPluginId;
     for (const topicContribution of entry.manifest.topicContributions ?? []) {
-      if (own || contributionPassesScope(topicContribution, kinds)) {
+      if (own || contributionPassesScope(topicContribution, kinds, consumed)) {
         entries.push({ pluginId: entry.pluginId, topicContribution });
       }
     }

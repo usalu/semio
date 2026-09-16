@@ -17,23 +17,30 @@ pub struct ChangeSimulationSettings {
 }
 
 impl ChangeSimulationSettings {
-    fn of(config: EnergyModelConfig) -> Self {
+    fn of(config: &EnergyModelConfig) -> Self {
         Self { zone_timestep_minutes: config.zone_timestep_minutes, system_timestep_minutes: config.system_timestep_minutes, warmup_days: config.warmup_days }
     }
 
-    /// 🎚️ The settings this change installs.
+    /// 🎚️ The settings this change installs, over a default `resultField` — the standalone validity
+    /// probe a command uses before publishing. Applying the change to a real base goes through
+    /// [`Self::config_over`], which keeps that base's own `resultField`.
     pub fn config(&self) -> EnergyModelConfig {
-        EnergyModelConfig { zone_timestep_minutes: self.zone_timestep_minutes, system_timestep_minutes: self.system_timestep_minutes, warmup_days: self.warmup_days }
+        self.config_over(&EnergyModelConfig::default())
+    }
+
+    /// 🎚️ The settings this change installs over `base`, leaving every field it does not own alone.
+    pub fn config_over(&self, base: &EnergyModelConfig) -> EnergyModelConfig {
+        EnergyModelConfig { zone_timestep_minutes: self.zone_timestep_minutes, system_timestep_minutes: self.system_timestep_minutes, warmup_days: self.warmup_days, result_field: base.result_field.clone() }
     }
 }
 
 impl protocol::MutationKind<EnergyModelConfig, EnergyModelConfigMutation> for ChangeSimulationSettings {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "simulation-settings", kind: "change-simulation-settings", record: "ChangedSimulationSettings" };
-    fn diff(&self, _base: &EnergyModelConfig) -> protocol::MutationOutcome<EnergyModelConfig> {
-        protocol::MutationOutcome::new(self.config())
+    fn diff(&self, base: &EnergyModelConfig) -> protocol::MutationOutcome<EnergyModelConfig> {
+        protocol::MutationOutcome::new(self.config_over(base))
     }
     fn inverse(&self, base: &EnergyModelConfig) -> Vec<EnergyModelConfigMutation> {
-        vec![EnergyModelConfigMutation::ChangeSimulationSettings(Self::of(*base))]
+        vec![EnergyModelConfigMutation::ChangeSimulationSettings(Self::of(base))]
     }
     fn label(&self) -> String {
         format!("Change simulation settings to {} / {} min, {} warmup days", self.zone_timestep_minutes, self.system_timestep_minutes, self.warmup_days)

@@ -152,6 +152,27 @@
       "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-fenestration-vlt/schema.json"
     },
     {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-gas-material-gas/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-gas-material-thickness/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-glazing-material-conductivity/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-glazing-material-infrared-emissivity/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-glazing-material-solar-transmittance/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-glazing-material-thickness/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-glazing-material-visible-transmittance/schema.json"
+    },
+    {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-humidistat-dehumidifying-setpoint-schedule/schema.json"
     },
     {
@@ -767,6 +788,12 @@
       "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/rename-fenestration/schema.json"
     },
     {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/rename-gas-material/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/rename-glazing-material/schema.json"
+    },
+    {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/rename-material/schema.json"
     },
     {
@@ -807,6 +834,9 @@
     },
     {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/replace-daily-schedule-hourly-values/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/replace-fenestration-vertices/schema.json"
     },
     {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/replace-setpoint-manager-kind/schema.json"

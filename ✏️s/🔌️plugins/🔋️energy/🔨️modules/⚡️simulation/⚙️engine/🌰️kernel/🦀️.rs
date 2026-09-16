@@ -252,6 +252,9 @@ pub struct SimulationModel {
     pub(crate) surfaces: FixedTable<EntityId, SurfaceState>,
     pub(crate) windows: FixedTable<EntityId, WindowState>,
     pub(crate) solver: SolverWorkspace,
+    /// 🧱️ Per-surface energy integrated over the RUN period only — every accumulate site is gated on
+    /// `warmup_complete`, so the warmup days never contribute.
+    pub(crate) per_surface: crate::results::SurfaceEnergyTable,
     pub(crate) warmup_complete: bool,
     pub(crate) hour: u32,
     pub(crate) delivered_total: DeliveredEnergy,
@@ -266,6 +269,7 @@ impl Default for SimulationModel {
             surfaces: FixedTable::default(),
             windows: FixedTable::default(),
             solver: SolverWorkspace::default(),
+            per_surface: crate::results::SurfaceEnergyTable::default(),
             warmup_complete: false,
             hour: 0,
             delivered_total: DeliveredEnergy::default(),
@@ -1264,10 +1268,24 @@ impl TimestepWork {
         state.solver.reduction[index * 3] = lit;
         let incident = self.sky.incident(window.normal, lit, window.sky_isotropic_ratio, window.sky_horizon_ratio);
         let glazing = &window.glazing;
+        let mut absorbed_w_m2 = 0.0;
         for pane in 0..glazing.panes {
-            state.solver.pane_absorbed_w_m2[index * MAX_PANES + pane] += incident.beam_w_m2 * glazing.beam_front_absorptance(pane, cosine) + incident.diffuse_w_m2() * glazing.diffuse_front_absorptance[pane];
+            let pane_w_m2 = incident.beam_w_m2 * glazing.beam_front_absorptance(pane, cosine) + incident.diffuse_w_m2() * glazing.diffuse_front_absorptance[pane];
+            state.solver.pane_absorbed_w_m2[index * MAX_PANES + pane] += pane_w_m2;
+            absorbed_w_m2 += pane_w_m2;
         }
         let transmitted_w = incident.diffuse_w_m2() * glazing.diffuse_transmittance * window.area_m2;
+        // 🧱️ This window's own shortwave ledger for the timestep: everything that passes through the
+        // glazing into the zone (diffuse here, beam through `beam_transmittance` — the same product
+        // `unit_beam_patch` redistributes onto the back faces) and everything the panes keep.
+        if state.warmup_complete {
+            let beam_transmitted_w = incident.beam_w_m2 * glazing.beam_transmittance(cosine) * window.area_m2;
+            let dt = self.dt_s;
+            if let Some(row) = state.per_surface.window_mut(id) {
+                row.accumulate_solar_transmitted(transmitted_w + beam_transmitted_w, dt);
+                row.accumulate_solar_absorbed(absorbed_w_m2 * window.area_m2, dt);
+            }
+        }
         let n = enclosure.faces.len();
         match &enclosure.radiation {
             EnclosureRadiation::Exchange { view_factors, .. } => {
@@ -1282,12 +1300,26 @@ impl TimestepWork {
                             if surface.area_m2 > 0.0 {
                                 state.solver.inside_absorbed_w_m2[back_index] += part * surface.inside_solar_absorptance / surface.area_m2;
                             }
+                            if state.warmup_complete {
+                                let dt = self.dt_s;
+                                if let Some(row) = state.per_surface.opaque_mut(*back_id) {
+                                    row.accumulate_solar_absorbed(part * surface.inside_solar_absorptance, dt);
+                                }
+                            }
                             work.zone_diffuse_w += part * (1.0 - surface.inside_solar_absorptance);
                         }
                         EnclosureFace::Window(back_id) => {
                             let Some(other) = pre.windows.get(back_id) else { continue };
+                            let mut absorbed = 0.0;
                             for pane in 0..other.glazing.panes {
                                 state.solver.pane_absorbed_w_m2[back_index * MAX_PANES + pane] += part * other.glazing.diffuse_back_absorptance[pane] / other.area_m2;
+                                absorbed += other.glazing.diffuse_back_absorptance[pane];
+                            }
+                            if state.warmup_complete {
+                                let dt = self.dt_s;
+                                if let Some(row) = state.per_surface.window_mut(*back_id) {
+                                    row.accumulate_solar_absorbed(part * absorbed, dt);
+                                }
                             }
                             work.zone_diffuse_w += part * other.glazing.diffuse_back_reflectance;
                         }
@@ -1342,6 +1374,12 @@ impl TimestepWork {
                 if surface.area_m2 > 0.0 {
                     state.solver.inside_absorbed_w_m2[back_index] += absorbed_w * surface.inside_solar_absorptance / surface.area_m2;
                 }
+                if state.warmup_complete {
+                    let dt = self.dt_s;
+                    if let Some(row) = state.per_surface.opaque_mut(id) {
+                        row.accumulate_solar_absorbed(absorbed_w * surface.inside_solar_absorptance, dt);
+                    }
+                }
                 work.zone_diffuse_w += absorbed_w * (1.0 - surface.inside_solar_absorptance);
             }
             EnclosureFace::Window(id) => {
@@ -1356,6 +1394,12 @@ impl TimestepWork {
                     let fraction = other.glazing.beam_back_absorptance(pane, back_cosine);
                     absorbed += fraction;
                     state.solver.pane_absorbed_w_m2[back_index * MAX_PANES + pane] += arriving_w * fraction / other.area_m2;
+                }
+                if state.warmup_complete {
+                    let dt = self.dt_s;
+                    if let Some(row) = state.per_surface.window_mut(id) {
+                        row.accumulate_solar_absorbed(arriving_w * absorbed, dt);
+                    }
                 }
                 work.zone_diffuse_w += arriving_w * (1.0 - absorbed - other.glazing.beam_back_transmittance(back_cosine)).max(0.0);
             }
@@ -1403,6 +1447,14 @@ impl TimestepWork {
                         let wind = if surface.wind_exposed { wind_speed_at_height(weather.wind_speed_m_s, surface.centroid_height_m) } else { 0.0 };
                         let h_convection = if wet { 1000.0 } else { exterior_convection_w_m2k(outside_c, weather.dry_bulb_c, surface.normal[2], wind, is_windward(surface.normal[2], surface.azimuth_deg, weather.wind_direction_deg), surface.roughness_multiplier) };
                         let (h_sky, h_air, h_ground) = exterior_radiation_w_m2k(outside_c, weather.dry_bulb_c, weather.sky_temperature_c, surface.outside_emissivity, surface.normal[2]);
+                        // 🧱️ The outside face's own shortwave gain for this timestep, the same product
+                        // that drives `q_outside` below.
+                        if state.warmup_complete {
+                            let absorbed_w = surface.outside_solar_absorptance * solar_w_m2 * surface.area_m2;
+                            if let Some(row) = state.per_surface.opaque_mut(id) {
+                                row.accumulate_solar_absorbed(absorbed_w, dt);
+                            }
+                        }
                         (h_convection + h_air + h_sky + h_ground, (h_convection + h_air) * exterior_c + h_sky * weather.sky_temperature_c + h_ground * weather.dry_bulb_c + surface.outside_solar_absorptance * solar_w_m2)
                     }
                     OutsideBoundary::Ground => (FIXED_TEMPERATURE_CONDUCTANCE_W_M2K, FIXED_TEMPERATURE_CONDUCTANCE_W_M2K * GroundTemperatureModel::Monthly { temperatures_c: model.ground_temperature.building_surface_c }.temperature_c(self.date.day_of_year())),
@@ -1638,6 +1690,24 @@ impl TimestepWork {
             };
             let offset = index * nodes;
             let inside_h = state.solver.inside_convection_w_m2k[index];
+            // 🧱️ The settled zone-air ⇄ inside-face convective flux for this timestep, which IS the
+            // envelope term of the zone air balance `unit_solve`/`unit_settle` just closed. Positive
+            // when the air is warmer than the face, i.e. heat leaving the zone through it.
+            if state.warmup_complete {
+                let (id, area_m2) = match face {
+                    EnclosureFace::Opaque(id) => (id, pre.surfaces.get(&id).map_or(0.0, |surface| surface.area_m2)),
+                    EnclosureFace::Window(id) => (id, pre.windows.get(&id).map_or(0.0, |window| window.area_m2)),
+                };
+                let flux_w = area_m2 * inside_h * (work.free_temp_c - inside_c);
+                let dt = self.dt_s;
+                let row = match face {
+                    EnclosureFace::Opaque(_) => state.per_surface.opaque_mut(id),
+                    EnclosureFace::Window(_) => state.per_surface.window_mut(id),
+                };
+                if let Some(row) = row {
+                    row.accumulate_conduction(flux_w, dt);
+                }
+            }
             match face {
                 EnclosureFace::Opaque(id) => {
                     let count = pre.surfaces.get(&id).map_or(0, |surface| surface.chain.nodes());

@@ -438,7 +438,7 @@
       }
     },
     {
-      "name": "🛠️dev📐️cad🧩️concrete🌲️forest⚛️react",
+      "name": "🛠️dev📐️cad⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- cad fixture concrete",
@@ -458,7 +458,7 @@
       }
     },
     {
-      "name": "🛠️dev📐️cad🧩️concrete🌲️forest🧊️wgpu🌐️wasm",
+      "name": "🛠️dev📐️cad🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- cad fixture concrete",
@@ -478,7 +478,7 @@
       }
     },
     {
-      "name": "🛠️dev📐️cad🧩️concrete🌲️forest🧊️wgpu🖥️native",
+      "name": "🛠️dev📐️cad🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/framework-renderer-wgpu:native -- cad",
@@ -489,7 +489,7 @@
       }
     },
     {
-      "name": "🛠️dev🌳️dag⚛️react",
+      "name": "🛠️dev🕸️dag⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- dag",
@@ -509,7 +509,7 @@
       }
     },
     {
-      "name": "🛠️dev🌳️dag🧊️wgpu🌐️wasm",
+      "name": "🛠️dev🕸️dag🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- dag",
@@ -529,7 +529,7 @@
       }
     },
     {
-      "name": "🛠️dev🌳️dag🧊️wgpu🖥️native",
+      "name": "🛠️dev🕸️dag🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/framework-renderer-wgpu:native -- dag",
@@ -540,7 +540,7 @@
       }
     },
     {
-      "name": "🛠️dev🧮️mathematical⚛️react",
+      "name": "🛠️dev➗️mathematical➗️equation⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- mathematical",
@@ -560,7 +560,7 @@
       }
     },
     {
-      "name": "🛠️dev🧮️mathematical🧊️wgpu🌐️wasm",
+      "name": "🛠️dev➗️mathematical➗️equation🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- mathematical",
@@ -580,7 +580,7 @@
       }
     },
     {
-      "name": "🛠️dev🧮️mathematical🧊️wgpu🖥️native",
+      "name": "🛠️dev➗️mathematical➗️equation🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/framework-renderer-wgpu:native -- mathematical",
@@ -591,7 +591,7 @@
       }
     },
     {
-      "name": "🛠️dev🏛️architect⚛️react",
+      "name": "🛠️dev🏛️architect🏛️program⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- architect",
@@ -611,7 +611,7 @@
       }
     },
     {
-      "name": "🛠️dev🏛️architect🧊️wgpu🌐️wasm",
+      "name": "🛠️dev🏛️architect🏛️program🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- architect",
@@ -631,7 +631,7 @@
       }
     },
     {
-      "name": "🛠️dev🏛️architect🧊️wgpu🖥️native",
+      "name": "🛠️dev🏛️architect🏛️program🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/framework-renderer-wgpu:native -- architect",
@@ -693,7 +693,7 @@
       }
     },
     {
-      "name": "🛠️dev⚙️imperative⚛️react",
+      "name": "🛠️dev📜️imperative📜️procedure⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- imperative",
@@ -713,7 +713,7 @@
       }
     },
     {
-      "name": "🛠️dev⚙️imperative🧊️wgpu🌐️wasm",
+      "name": "🛠️dev📜️imperative📜️procedure🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- imperative",
@@ -733,7 +733,7 @@
       }
     },
     {
-      "name": "🛠️dev⚙️imperative🧊️wgpu🖥️native",
+      "name": "🛠️dev📜️imperative📜️procedure🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/framework-renderer-wgpu:native -- imperative",
@@ -744,7 +744,7 @@
       }
     },
     {
-      "name": "🛠️dev📜️sequence⚛️react",
+      "name": "🛠️dev🎬️sequence⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- sequence",
@@ -764,7 +764,7 @@
       }
     },
     {
-      "name": "🛠️dev📜️sequence🧊️wgpu🌐️wasm",
+      "name": "🛠️dev🎬️sequence🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- sequence",
@@ -784,7 +784,7 @@
       }
     },
     {
-      "name": "🛠️dev📜️sequence🧊️wgpu🖥️native",
+      "name": "🛠️dev🎬️sequence🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/framework-renderer-wgpu:native -- sequence",
@@ -795,7 +795,7 @@
       }
     },
     {
-      "name": "🛠️dev🔷️lowpoly⚛️react",
+      "name": "🛠️dev💠️lowpoly⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- lowpoly",
@@ -815,7 +815,7 @@
       }
     },
     {
-      "name": "🛠️dev🔷️lowpoly🧊️wgpu🌐️wasm",
+      "name": "🛠️dev💠️lowpoly🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- lowpoly",
@@ -836,7 +836,7 @@
       }
     },
     {
-      "name": "🛠️dev🔷️lowpoly🧊️wgpu🖥️native",
+      "name": "🛠️dev💠️lowpoly🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/framework-renderer-wgpu:native -- lowpoly",
@@ -847,7 +847,7 @@
       }
     },
     {
-      "name": "🛠️dev📄️layout⚛️react",
+      "name": "🛠️dev📏️layout⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- layout",
@@ -867,7 +867,7 @@
       }
     },
     {
-      "name": "🛠️dev📄️layout🧊️wgpu🌐️wasm",
+      "name": "🛠️dev📏️layout🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- layout",
@@ -887,7 +887,7 @@
       }
     },
     {
-      "name": "🛠️dev📄️layout🧊️wgpu🖥️native",
+      "name": "🛠️dev📏️layout🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/framework-renderer-wgpu:native -- layout",
@@ -898,7 +898,7 @@
       }
     },
     {
-      "name": "🛠️dev🌐️gis📍️2d⚛️react",
+      "name": "🛠️dev🌍️gis🗺️gismap⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- gis 2d",
@@ -918,7 +918,7 @@
       }
     },
     {
-      "name": "🛠️dev🌐️gis📍️2d🧊️wgpu🌐️wasm",
+      "name": "🛠️dev🌍️gis🗺️gismap🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- gis 2d",
@@ -938,7 +938,7 @@
       }
     },
     {
-      "name": "🛠️dev🌐️gis📍️2d🧊️wgpu🖥️native",
+      "name": "🛠️dev🌍️gis🗺️gismap🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/framework-renderer-wgpu:native -- gis2d",
@@ -949,7 +949,7 @@
       }
     },
     {
-      "name": "🛠️dev🌐️gis⛰️3d⚛️react",
+      "name": "🛠️dev🌍️gis🏔️gisterrain⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- gis 3d",
@@ -969,7 +969,7 @@
       }
     },
     {
-      "name": "🛠️dev🌐️gis⛰️3d🧊️wgpu🌐️wasm",
+      "name": "🛠️dev🌍️gis🏔️gisterrain🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- gis 3d",
@@ -989,7 +989,7 @@
       }
     },
     {
-      "name": "🛠️dev🌐️gis⛰️3d🧊️wgpu🖥️native",
+      "name": "🛠️dev🌍️gis🏔️gisterrain🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/framework-renderer-wgpu:native -- gis3d",
@@ -1000,7 +1000,7 @@
       }
     },
     {
-      "name": "🛠️dev🎬️animateplay⚛️react",
+      "name": "🛠️dev🎞️animate🎬️presentation⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- animate",
@@ -1020,7 +1020,7 @@
       }
     },
     {
-      "name": "🛠️dev🎬️animateplay🧊️wgpu🌐️wasm",
+      "name": "🛠️dev🎞️animate🎬️presentation🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- animate",
@@ -1040,7 +1040,7 @@
       }
     },
     {
-      "name": "🛠️dev🎬️animateplay🧊️wgpu🖥️native",
+      "name": "🛠️dev🎞️animate🎬️presentation🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/framework-renderer-wgpu:native -- animate",
@@ -1069,7 +1069,7 @@
       }
     },
     {
-      "name": "🛠️dev🔧️procedural🩻️2d⚛️react",
+      "name": "🛠️dev🌀️procedural🌀️generation2d⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- procedural 2d",
@@ -1089,7 +1089,7 @@
       }
     },
     {
-      "name": "🛠️dev🔧️procedural🩻️2d🧊️wgpu🌐️wasm",
+      "name": "🛠️dev🌀️procedural🌀️generation2d🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- procedural 2d",
@@ -1109,7 +1109,7 @@
       }
     },
     {
-      "name": "🛠️dev🔧️procedural🩻️2d🧊️wgpu🖥️native",
+      "name": "🛠️dev🌀️procedural🌀️generation2d🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/framework-renderer-wgpu:native -- generation2d",
@@ -1120,7 +1120,7 @@
       }
     },
     {
-      "name": "🛠️dev🔧️procedural🏙️3d⚛️react",
+      "name": "🛠️dev🌀️procedural🧊️generation3d⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- procedural 3d",
@@ -1140,7 +1140,7 @@
       }
     },
     {
-      "name": "🛠️dev🔧️procedural🏙️3d🧊️wgpu🌐️wasm",
+      "name": "🛠️dev🌀️procedural🧊️generation3d🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- procedural 3d",
@@ -1160,7 +1160,7 @@
       }
     },
     {
-      "name": "🛠️dev🔧️procedural🏙️3d🧊️wgpu🖥️native",
+      "name": "🛠️dev🌀️procedural🧊️generation3d🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/framework-renderer-wgpu:native -- generation3d",
@@ -1171,7 +1171,7 @@
       }
     },
     {
-      "name": "🛠️dev🪚️process🏙️3d⚛️react",
+      "name": "🛠️dev🏭️process🧊️process3d⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- process 3d",
@@ -1191,7 +1191,7 @@
       }
     },
     {
-      "name": "🛠️dev🪚️process🏙️3d🧊️wgpu🌐️wasm",
+      "name": "🛠️dev🏭️process🧊️process3d🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- process 3d",
@@ -1211,7 +1211,7 @@
       }
     },
     {
-      "name": "🛠️dev🪚️process🏙️3d🧊️wgpu🖥️native",
+      "name": "🛠️dev🏭️process🧊️process3d🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/framework-renderer-wgpu:native -- process3d",
@@ -1222,7 +1222,7 @@
       }
     },
     {
-      "name": "🛠️dev🛒️sourcing⚛️react",
+      "name": "🛠️dev🪵️sourcing🗂️curation⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- sourcing",
@@ -1242,7 +1242,7 @@
       }
     },
     {
-      "name": "🛠️dev🛒️sourcing🧊️wgpu🌐️wasm",
+      "name": "🛠️dev🪵️sourcing🗂️curation🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- sourcing",
@@ -1262,7 +1262,7 @@
       }
     },
     {
-      "name": "🛠️dev🛒️sourcing🧊️wgpu🖥️native",
+      "name": "🛠️dev🪵️sourcing🗂️curation🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/framework-renderer-wgpu:native -- sourcing",
@@ -1376,7 +1376,7 @@
       }
     },
     {
-      "name": "🛠️dev🏚️mitbestand📄️zwischenbericht",
+      "name": "🛠️dev♻️mit-bestand📋️zwischenbericht",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/mit-bestand-bericht:watch",
@@ -1387,7 +1387,7 @@
       }
     },
     {
-      "name": "🛠️dev🏚️mitbestand🧱️aggregator⚛️react",
+      "name": "🛠️dev♻️mit-bestand🧩️puzzle🧊️3d⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- aggregator",
@@ -1407,7 +1407,7 @@
       }
     },
     {
-      "name": "🛠️dev🏚️mitbestand🎪️demonstrator",
+      "name": "🛠️dev♻️mit-bestand🧺️demonstrator",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/mit-bestand-demonstrator:dev",
@@ -1449,7 +1449,7 @@
       }
     },
     {
-      "name": "🛠️dev🏚️mitbestand⚙️generator⚛️react",
+      "name": "🛠️dev♻️mit-bestand🌀️procedural🧊️generation3d⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- generator",
@@ -1469,7 +1469,7 @@
       }
     },
     {
-      "name": "🛠️dev🏚️mitbestand🧭️koordinator⚛️react",
+      "name": "🛠️dev♻️mit-bestand📐️cad⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- koordinator",
@@ -1489,7 +1489,7 @@
       }
     },
     {
-      "name": "🛠️dev🏚️mitbestand🪵️aussuchen⚛️react",
+      "name": "🛠️dev♻️mit-bestand🪵️sourcing🗂️curation⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- aussuchen",
@@ -1509,7 +1509,7 @@
       }
     },
     {
-      "name": "🛠️dev🏚️mitbestand🏭️bearbeiten⚛️react",
+      "name": "🛠️dev♻️mit-bestand🏭️process🧊️process3d⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- bearbeiten",
@@ -1529,7 +1529,7 @@
       }
     },
     {
-      "name": "🛠️dev🏚️mitbestand🌍️verfolgen⚛️react",
+      "name": "🛠️dev♻️mit-bestand🌍️gis🗺️gismap⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- verfolgen",
@@ -1549,7 +1549,7 @@
       }
     },
     {
-      "name": "🛠️dev🧩️puzzle🩻️2d⚛️react",
+      "name": "🛠️dev🧩️puzzle◻️2d⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- 2d",
@@ -1569,7 +1569,7 @@
       }
     },
     {
-      "name": "🛠️dev🧩️puzzle🩻️2d🧊️wgpu🌐️wasm",
+      "name": "🛠️dev🧩️puzzle◻️2d🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- 2d",
@@ -1589,7 +1589,7 @@
       }
     },
     {
-      "name": "🛠️dev🧩️puzzle🩻️2d🧊️wgpu🖥️native",
+      "name": "🛠️dev🧩️puzzle◻️2d🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/framework-renderer-wgpu:native -- puzzle2d",
@@ -1600,7 +1600,7 @@
       }
     },
     {
-      "name": "🛠️dev🧩️puzzle🏙️3d⚛️react",
+      "name": "🛠️dev🧩️puzzle🧊️3d⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- 3d",
@@ -1620,7 +1620,7 @@
       }
     },
     {
-      "name": "🛠️dev🧩️puzzle🏙️3d🧊️wgpu🌐️wasm",
+      "name": "🛠️dev🧩️puzzle🧊️3d🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- 3d",
@@ -1640,7 +1640,7 @@
       }
     },
     {
-      "name": "🛠️dev🧩️puzzle🏙️3d🧊️wgpu🖥️native",
+      "name": "🛠️dev🧩️puzzle🧊️3d🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/framework-renderer-wgpu:native -- puzzle3d",
@@ -1691,7 +1691,7 @@
       }
     },
     {
-      "name": "🛠️dev🧩️puzzle🏙️3d🎛️concrete🌲️forest🧊️wgpu🖥️native",
+      "name": "🛠️dev🧩️puzzle🧊️3d🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/framework-renderer-wgpu:native -- puzzle3d",
@@ -1702,7 +1702,7 @@
       }
     },
     {
-      "name": "🛠️dev🧩️puzzle👯️5d⚛️react",
+      "name": "🛠️dev🧩️puzzle🖐️5d⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- 5d",
@@ -1722,7 +1722,7 @@
       }
     },
     {
-      "name": "🛠️dev🧩️puzzle👯️5d🧊️wgpu🌐️wasm",
+      "name": "🛠️dev🧩️puzzle🖐️5d🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- 5d",
@@ -1742,7 +1742,7 @@
       }
     },
     {
-      "name": "🛠️dev🧩️puzzle👯️5d🧊️wgpu🖥️native",
+      "name": "🛠️dev🧩️puzzle🖐️5d🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/framework-renderer-wgpu:native -- puzzle5d",
@@ -1793,7 +1793,7 @@
       }
     },
     {
-      "name": "🛠️dev🧩️puzzle👯️5d🎛️concrete🌲️forest🧊️wgpu🖥️native",
+      "name": "🛠️dev🧩️puzzle🖐️5d🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/framework-renderer-wgpu:native -- puzzle5d",
@@ -1848,7 +1848,7 @@
       }
     },
     {
-      "name": "🛠️dev🧱️block🩻️2d⚛️react",
+      "name": "🛠️dev🧱️block◻️2d⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- block 2d",
@@ -1868,7 +1868,7 @@
       }
     },
     {
-      "name": "🛠️dev🧱️block🩻️2d🧊️wgpu🌐️wasm",
+      "name": "🛠️dev🧱️block◻️2d🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- block 2d",
@@ -1888,7 +1888,7 @@
       }
     },
     {
-      "name": "🛠️dev🧱️block🩻️2d🧊️wgpu🖥️native",
+      "name": "🛠️dev🧱️block◻️2d🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/framework-renderer-wgpu:native -- block2d",
@@ -1899,7 +1899,7 @@
       }
     },
     {
-      "name": "🛠️dev🧱️block🏙️3d⚛️react",
+      "name": "🛠️dev🧱️block🧊️3d⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- block 3d",
@@ -1919,7 +1919,7 @@
       }
     },
     {
-      "name": "🛠️dev🧱️block🏙️3d🧊️wgpu🌐️wasm",
+      "name": "🛠️dev🧱️block🧊️3d🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- block 3d",
@@ -1939,7 +1939,7 @@
       }
     },
     {
-      "name": "🛠️dev🧱️block🏙️3d🧊️wgpu🖥️native",
+      "name": "🛠️dev🧱️block🧊️3d🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/framework-renderer-wgpu:native -- block3d",
@@ -1950,7 +1950,7 @@
       }
     },
     {
-      "name": "🛠️dev🧱️block👯️5d⚛️react",
+      "name": "🛠️dev🧱️block🖐️5d⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- block 5d",
@@ -1970,7 +1970,7 @@
       }
     },
     {
-      "name": "🛠️dev🧱️block👯️5d🧊️wgpu🌐️wasm",
+      "name": "🛠️dev🧱️block🖐️5d🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- block 5d",
@@ -1990,7 +1990,7 @@
       }
     },
     {
-      "name": "🛠️dev🧱️block👯️5d🧊️wgpu🖥️native",
+      "name": "🛠️dev🧱️block🖐️5d🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/framework-renderer-wgpu:native -- block5d",
@@ -2001,7 +2001,7 @@
       }
     },
     {
-      "name": "🛠️dev🧠️reasoning🔗️wires⚛️react",
+      "name": "🛠️dev💡️reasoning🔌️wires⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- wires",
@@ -2021,7 +2021,7 @@
       }
     },
     {
-      "name": "🛠️dev🧠️reasoning🔗️wires🧊️wgpu🌐️wasm",
+      "name": "🛠️dev💡️reasoning🔌️wires🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- wires",
@@ -2041,7 +2041,7 @@
       }
     },
     {
-      "name": "🛠️dev🧠️reasoning🔗️wires🧊️wgpu🖥️native",
+      "name": "🛠️dev💡️reasoning🔌️wires🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/framework-renderer-wgpu:native -- reasoning-wires",
@@ -2163,7 +2163,7 @@
       }
     },
     {
-      "name": "🛠️dev📸️shooting⚛️react",
+      "name": "🛠️dev🎥️shooting⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- shooting",
@@ -2183,7 +2183,7 @@
       }
     },
     {
-      "name": "🛠️dev📸️shooting🧊️wgpu🌐️wasm",
+      "name": "🛠️dev🎥️shooting🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- shooting",
@@ -2203,7 +2203,7 @@
       }
     },
     {
-      "name": "🛠️dev📸️shooting🧊️wgpu🖥️native",
+      "name": "🛠️dev🎥️shooting🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/framework-renderer-wgpu:native -- shooting",
@@ -2214,7 +2214,7 @@
       }
     },
     {
-      "name": "🛠️dev📸️shooting🎛️base⚛️react",
+      "name": "🛠️dev🎥️shooting⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- shooting fixture base-icon",
@@ -2234,7 +2234,7 @@
       }
     },
     {
-      "name": "🛠️dev📸️shooting🎛️base🧊️wgpu🌐️wasm",
+      "name": "🛠️dev🎥️shooting🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- shooting fixture base-icon",
@@ -2254,7 +2254,7 @@
       }
     },
     {
-      "name": "🛠️dev📸️shooting🎛️base🧊️wgpu🖥️native",
+      "name": "🛠️dev🎥️shooting🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/framework-renderer-wgpu:native -- shooting",
@@ -2284,7 +2284,7 @@
       }
     },
     {
-      "name": "🛠️dev📖️storybook🧩️puzzle🩻️2d",
+      "name": "🛠️dev📖️storybook🧩️puzzle◻️2d",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev-storybook-puzzle-2d",
@@ -2360,7 +2360,7 @@
       }
     },
     {
-      "name": "🛠️dev📖️storybook🧩️puzzle🕐️5d",
+      "name": "🛠️dev📖️storybook🧩️puzzle🖐️5d",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev-storybook-puzzle-5d",
@@ -2493,7 +2493,7 @@
       }
     },
     {
-      "name": "🛠️dev🔺️trinity🃏️jack⚛️react",
+      "name": "🛠️dev🔱️trinity🔌️jack⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- trinity jack",
@@ -2513,7 +2513,7 @@
       }
     },
     {
-      "name": "🛠️dev🔺️trinity🃏️jack🧊️wgpu🌐️wasm",
+      "name": "🛠️dev🔱️trinity🔌️jack🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- trinity jack",
@@ -2555,7 +2555,7 @@
       }
     },
     {
-      "name": "🛠️dev🔺️trinity♻️rewriting⚛️react",
+      "name": "🛠️dev🔱️trinity♻️rewriting⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- trinity rewriting",
@@ -2575,7 +2575,7 @@
       }
     },
     {
-      "name": "🛠️dev🔺️trinity♻️rewriting🧊️wgpu🌐️wasm",
+      "name": "🛠️dev🔱️trinity♻️rewriting🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- trinity rewriting",
@@ -2595,7 +2595,7 @@
       }
     },
     {
-      "name": "🛠️dev🔺️trinity♻️rewriting🧊️wgpu🖥️native",
+      "name": "🛠️dev🔱️trinity♻️rewriting🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/framework-renderer-wgpu:native -- trinity-rewriting",
@@ -2657,58 +2657,7 @@
       }
     },
     {
-      "name": "🛠️dev🧩️playbook⚛️react",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun nx run workspace:dev -- playbook",
-      "cwd": "${workspaceFolder}",
-      "env": {
-        "PLAYBOOK_PLAY_PORT": "6078",
-        "SEMIO_RENDERER": "react"
-      },
-      "presentation": {
-        "group": "3_dev",
-        "order": 385.3
-      },
-      "serverReadyAction": {
-        "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6078)",
-        "uriFormat": "%s"
-      }
-    },
-    {
-      "name": "🛠️dev🧩️playbook🧊️wgpu🌐️wasm",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun nx run workspace:dev -- playbook",
-      "cwd": "${workspaceFolder}",
-      "env": {
-        "PLAYBOOK_PLAY_PORT": "6178",
-        "SEMIO_RENDERER": "wgpu"
-      },
-      "presentation": {
-        "group": "3_dev",
-        "order": 385.4
-      },
-      "serverReadyAction": {
-        "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6178)",
-        "uriFormat": "%s"
-      }
-    },
-    {
-      "name": "🛠️dev🧩️playbook🧊️wgpu🖥️native",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun nx run @semio-tech/framework-renderer-wgpu:native -- playbook",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "3_dev",
-        "order": 385.5
-      }
-    },
-    {
-      "name": "🛠️dev🖼️raster⚛️react",
+      "name": "🛠️dev🖨️raster⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- raster",
@@ -2728,7 +2677,7 @@
       }
     },
     {
-      "name": "🛠️dev🖼️raster🧊️wgpu🌐️wasm",
+      "name": "🛠️dev🖨️raster🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- raster",
@@ -2748,7 +2697,7 @@
       }
     },
     {
-      "name": "🛠️dev🖼️raster🧊️wgpu🖥️native",
+      "name": "🛠️dev🖨️raster🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/framework-renderer-wgpu:native -- raster",
@@ -2759,7 +2708,7 @@
       }
     },
     {
-      "name": "🛠️dev🗄️vcs🎛️play⚛️react",
+      "name": "🛠️dev🌿️vcs⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- vcs",
@@ -2779,7 +2728,7 @@
       }
     },
     {
-      "name": "🛠️dev🗄️vcs🎛️play🧊️wgpu🌐️wasm",
+      "name": "🛠️dev🌿️vcs🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- vcs",
@@ -2799,7 +2748,7 @@
       }
     },
     {
-      "name": "🛠️dev🗄️vcs🎛️play🧊️wgpu🖥️native",
+      "name": "🛠️dev🌿️vcs🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/framework-renderer-wgpu:native -- vcs",
@@ -2810,7 +2759,7 @@
       }
     },
     {
-      "name": "🛠️dev🖥️s⚛️react",
+      "name": "🛠️dev🪐️space⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/framework-os-dev:dev",
@@ -2831,7 +2780,7 @@
       }
     },
     {
-      "name": "🛠️dev🖥️s🧊️wgpu🌐️wasm",
+      "name": "🛠️dev🪐️space🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/framework-os-dev:dev",
@@ -2944,7 +2893,7 @@
       }
     },
     {
-      "name": "🛠️dev🖥️s🧊️wgpu🖥️native",
+      "name": "🛠️dev🪐️space🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/framework-renderer-wgpu:native -- s",
@@ -3133,7 +3082,7 @@
       }
     },
     {
-      "name": "🛠️dev✏️draw⚛️react",
+      "name": "🛠️dev🖍️draw🖍️drawing⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/framework-os-dev:dev",
@@ -3154,7 +3103,7 @@
       }
     },
     {
-      "name": "🛠️dev✏️draw🧊️wgpu🌐️wasm",
+      "name": "🛠️dev🖍️draw🖍️drawing🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/framework-os-dev:dev",
@@ -3175,7 +3124,7 @@
       }
     },
     {
-      "name": "🛠️dev✏️draw🧊️wgpu🖥️native",
+      "name": "🛠️dev🖍️draw🖍️drawing🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/framework-renderer-wgpu:native -- draw",
@@ -3186,7 +3135,7 @@
       }
     },
     {
-      "name": "🛠️dev📝️note⚛️react",
+      "name": "🛠️dev🗒️note⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- note",
@@ -3206,7 +3155,7 @@
       }
     },
     {
-      "name": "🛠️dev📝️note🧊️wgpu🌐️wasm",
+      "name": "🛠️dev🗒️note🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- note",
@@ -3226,7 +3175,7 @@
       }
     },
     {
-      "name": "🛠️dev📝️note🧊️wgpu🖥️native",
+      "name": "🛠️dev🗒️note🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/framework-renderer-wgpu:native -- note",
@@ -3237,7 +3186,7 @@
       }
     },
     {
-      "name": "🛠️dev✍️writer⚛️react",
+      "name": "🛠️dev✒️writer⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- writer",
@@ -3257,7 +3206,7 @@
       }
     },
     {
-      "name": "🛠️dev✍️writer🧊️wgpu🌐️wasm",
+      "name": "🛠️dev✒️writer🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- writer",
@@ -3277,7 +3226,7 @@
       }
     },
     {
-      "name": "🛠️dev✍️writer🧊️wgpu🖥️native",
+      "name": "🛠️dev✒️writer🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/framework-renderer-wgpu:native -- writer",
@@ -3288,7 +3237,7 @@
       }
     },
     {
-      "name": "🛠️dev🏺️remodel⚛️react",
+      "name": "🛠️dev📸️remodel📸️remodeling⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- remodel",
@@ -3308,7 +3257,7 @@
       }
     },
     {
-      "name": "🛠️dev🏺️remodel🧊️wgpu🌐️wasm",
+      "name": "🛠️dev📸️remodel📸️remodeling🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- remodel",
@@ -3328,7 +3277,7 @@
       }
     },
     {
-      "name": "🛠️dev🏺️remodel🧊️wgpu🖥️native",
+      "name": "🛠️dev📸️remodel📸️remodeling🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/framework-renderer-wgpu:native -- remodel",
@@ -3350,7 +3299,7 @@
       }
     },
     {
-      "name": "🛠️dev🏗️fem🩻️2d⚛️react",
+      "name": "🛠️dev🏗️fem◻️2d⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- fem 2d",
@@ -3370,7 +3319,7 @@
       }
     },
     {
-      "name": "🛠️dev🏗️fem🩻️2d🧊️wgpu🌐️wasm",
+      "name": "🛠️dev🏗️fem◻️2d🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- fem 2d",
@@ -3390,7 +3339,7 @@
       }
     },
     {
-      "name": "🛠️dev🏗️fem🩻️2d🧊️wgpu🖥️native",
+      "name": "🛠️dev🏗️fem◻️2d🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/framework-renderer-wgpu:native -- fem2d",
@@ -3401,7 +3350,7 @@
       }
     },
     {
-      "name": "🛠️dev🏗️fem🏙️3d⚛️react",
+      "name": "🛠️dev🏗️fem🧊️3d⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- fem 3d",
@@ -3421,7 +3370,7 @@
       }
     },
     {
-      "name": "🛠️dev🏗️fem🏙️3d🧊️wgpu🌐️wasm",
+      "name": "🛠️dev🏗️fem🧊️3d🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- fem 3d",
@@ -3441,7 +3390,7 @@
       }
     },
     {
-      "name": "🛠️dev🏗️fem🏙️3d🧊️wgpu🖥️native",
+      "name": "🛠️dev🏗️fem🧊️3d🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/framework-renderer-wgpu:native -- fem3d",
@@ -3463,7 +3412,7 @@
       }
     },
     {
-      "name": "🛠️dev♻️mit-bestand zwischenbericht",
+      "name": "🛠️dev♻️mit-bestand📋️zwischenbericht",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/mit-bestand-bericht:watch-zwischenbericht",
@@ -3474,7 +3423,7 @@
       }
     },
     {
-      "name": "🛠️dev♻️mit-bestand forschungsbericht",
+      "name": "🛠️dev♻️mit-bestand📑️forschungsbericht",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/mit-bestand-bericht:watch-forschungsbericht",
@@ -3497,7 +3446,7 @@
     }
     ,
 {
-      "name": "🛠️dev🧩️assembly⚛️react",
+      "name": "🛠️dev🌀️procedural🧩️assembly⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- assembly",
@@ -3519,7 +3468,7 @@
       }
     },
 {
-      "name": "🛠️dev🧩️assembly🧊️wgpu🌐️wasm",
+      "name": "🛠️dev🌀️procedural🧩️assembly🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- assembly",
@@ -3541,7 +3490,7 @@
       }
     },
 {
-      "name": "🛠️dev🧩️demonstrator⚛️react",
+      "name": "🛠️dev♻️mit-bestand🧺️demonstrator⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- demonstrator",
@@ -3563,7 +3512,7 @@
       }
     },
 {
-      "name": "🛠️dev🧩️demonstrator🧊️wgpu🌐️wasm",
+      "name": "🛠️dev♻️mit-bestand🧺️demonstrator🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- demonstrator",
@@ -3585,7 +3534,7 @@
       }
     },
 {
-      "name": "🛠️dev🧩️din16798⚛️react",
+      "name": "🛠️dev📕️norm🌬️din16798⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- din16798",
@@ -3607,7 +3556,7 @@
       }
     },
 {
-      "name": "🛠️dev🧩️din16798🧊️wgpu🌐️wasm",
+      "name": "🛠️dev📕️norm🌬️din16798🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- din16798",
@@ -3629,7 +3578,7 @@
       }
     },
 {
-      "name": "🛠️dev🧩️din18599⚛️react",
+      "name": "🛠️dev📕️norm⚡️din18599⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- din18599",
@@ -3651,7 +3600,7 @@
       }
     },
 {
-      "name": "🛠️dev🧩️din18599🧊️wgpu🌐️wasm",
+      "name": "🛠️dev📕️norm⚡️din18599🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- din18599",
@@ -3673,7 +3622,7 @@
       }
     },
 {
-      "name": "🛠️dev🧩️din4108⚛️react",
+      "name": "🛠️dev📕️norm🧱️din4108⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- din4108",
@@ -3695,7 +3644,7 @@
       }
     },
 {
-      "name": "🛠️dev🧩️din4108🧊️wgpu🌐️wasm",
+      "name": "🛠️dev📕️norm🧱️din4108🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- din4108",
@@ -3717,7 +3666,7 @@
       }
     },
 {
-      "name": "🛠️dev🧩️en1990⚛️react",
+      "name": "🛠️dev📕️norm⚖️en1990⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- en1990",
@@ -3739,7 +3688,7 @@
       }
     },
 {
-      "name": "🛠️dev🧩️en1990🧊️wgpu🌐️wasm",
+      "name": "🛠️dev📕️norm⚖️en1990🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- en1990",
@@ -3761,7 +3710,7 @@
       }
     },
 {
-      "name": "🛠️dev🧩️en1991⚛️react",
+      "name": "🛠️dev📕️norm🏋️en1991⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- en1991",
@@ -3783,7 +3732,7 @@
       }
     },
 {
-      "name": "🛠️dev🧩️en1991🧊️wgpu🌐️wasm",
+      "name": "🛠️dev📕️norm🏋️en1991🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- en1991",
@@ -3805,7 +3754,7 @@
       }
     },
 {
-      "name": "🛠️dev🧩️en1992⚛️react",
+      "name": "🛠️dev📕️norm🏛️en1992⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- en1992",
@@ -3827,7 +3776,7 @@
       }
     },
 {
-      "name": "🛠️dev🧩️en1992🧊️wgpu🌐️wasm",
+      "name": "🛠️dev📕️norm🏛️en1992🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- en1992",
@@ -3849,7 +3798,7 @@
       }
     },
 {
-      "name": "🛠️dev🧩️en1993⚛️react",
+      "name": "🛠️dev📕️norm🔩️en1993⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- en1993",
@@ -3871,7 +3820,7 @@
       }
     },
 {
-      "name": "🛠️dev🧩️en1993🧊️wgpu🌐️wasm",
+      "name": "🛠️dev📕️norm🔩️en1993🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- en1993",
@@ -3893,7 +3842,7 @@
       }
     },
 {
-      "name": "🛠️dev🧩️en1994⚛️react",
+      "name": "🛠️dev📕️norm🧩️en1994⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- en1994",
@@ -3915,7 +3864,7 @@
       }
     },
 {
-      "name": "🛠️dev🧩️en1994🧊️wgpu🌐️wasm",
+      "name": "🛠️dev📕️norm🧩️en1994🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- en1994",
@@ -3937,7 +3886,7 @@
       }
     },
 {
-      "name": "🛠️dev🧩️en1995⚛️react",
+      "name": "🛠️dev📕️norm🪵️en1995⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- en1995",
@@ -3959,7 +3908,7 @@
       }
     },
 {
-      "name": "🛠️dev🧩️en1995🧊️wgpu🌐️wasm",
+      "name": "🛠️dev📕️norm🪵️en1995🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- en1995",
@@ -3981,7 +3930,7 @@
       }
     },
 {
-      "name": "🛠️dev🧩️en1996⚛️react",
+      "name": "🛠️dev📕️norm🪨️en1996⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- en1996",
@@ -4003,7 +3952,7 @@
       }
     },
 {
-      "name": "🛠️dev🧩️en1996🧊️wgpu🌐️wasm",
+      "name": "🛠️dev📕️norm🪨️en1996🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- en1996",
@@ -4025,7 +3974,7 @@
       }
     },
 {
-      "name": "🛠️dev🧩️en1997⚛️react",
+      "name": "🛠️dev📕️norm🌍️en1997⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- en1997",
@@ -4047,7 +3996,7 @@
       }
     },
 {
-      "name": "🛠️dev🧩️en1997🧊️wgpu🌐️wasm",
+      "name": "🛠️dev📕️norm🌍️en1997🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- en1997",
@@ -4069,7 +4018,7 @@
       }
     },
 {
-      "name": "🛠️dev🧩️en1998⚛️react",
+      "name": "🛠️dev📕️norm🫨️en1998⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- en1998",
@@ -4091,7 +4040,7 @@
       }
     },
 {
-      "name": "🛠️dev🧩️en1998🧊️wgpu🌐️wasm",
+      "name": "🛠️dev📕️norm🫨️en1998🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- en1998",
@@ -4113,7 +4062,7 @@
       }
     },
 {
-      "name": "🛠️dev🧩️en1999⚛️react",
+      "name": "🛠️dev📕️norm🪶️en1999⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- en1999",
@@ -4135,7 +4084,7 @@
       }
     },
 {
-      "name": "🛠️dev🧩️en1999🧊️wgpu🌐️wasm",
+      "name": "🛠️dev📕️norm🪶️en1999🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- en1999",
@@ -4157,7 +4106,7 @@
       }
     },
 {
-      "name": "🛠️dev🧩️energy⚛️react",
+      "name": "🛠️dev🔋️energy🔋️model⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- energy",
@@ -4179,7 +4128,7 @@
       }
     },
 {
-      "name": "🛠️dev🧩️energy🧊️wgpu🌐️wasm",
+      "name": "🛠️dev🔋️energy🔋️model🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- energy",
@@ -4201,7 +4150,7 @@
       }
     },
 {
-      "name": "🛠️dev🧩️iso16757⚛️react",
+      "name": "🛠️dev📕️norm📇️iso16757⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- iso16757",
@@ -4223,7 +4172,7 @@
       }
     },
 {
-      "name": "🛠️dev🧩️iso16757🧊️wgpu🌐️wasm",
+      "name": "🛠️dev📕️norm📇️iso16757🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- iso16757",
@@ -4245,7 +4194,49 @@
       }
     },
 {
-      "name": "🛠️dev🧩️vdi3805⚛️react",
+      "name": "🛠️dev📖️playbook⚛️react",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:dev -- playbook",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "S_OS_PORT": "6085",
+        "SEMIO_PLUGIN": "playbook",
+        "SEMIO_RENDERER": "react"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 420.43
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6085)",
+        "uriFormat": "%s"
+      }
+    },
+{
+      "name": "🛠️dev📖️playbook🧊️wgpu🌐️wasm",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:dev -- playbook",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "S_OS_PORT": "6185",
+        "SEMIO_PLUGIN": "playbook",
+        "SEMIO_RENDERER": "wgpu"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 420.431
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6185)",
+        "uriFormat": "%s"
+      }
+    },
+{
+      "name": "🛠️dev📕️norm🏭️vdi3805⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- vdi3805",
@@ -4267,7 +4258,7 @@
       }
     },
 {
-      "name": "🛠️dev🧩️vdi3805🧊️wgpu🌐️wasm",
+      "name": "🛠️dev📕️norm🏭️vdi3805🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- vdi3805",

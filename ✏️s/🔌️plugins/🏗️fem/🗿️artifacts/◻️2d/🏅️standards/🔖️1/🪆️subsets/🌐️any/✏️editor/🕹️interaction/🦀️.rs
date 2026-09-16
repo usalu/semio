@@ -47,7 +47,7 @@ pub fn fem2d_interaction_definition() -> InteractionDefinition {
         hover: HoverSpec::default(),
         selection: SelectionSpec {
             modes: vec![SelectionMode::Multiple, SelectionMode::Single],
-            methods: vec![SelectionMethod::Pick, SelectionMethod::Rectangle],
+            methods: vec![SelectionMethod::Pick, SelectionMethod::Rectangle, SelectionMethod::Lasso],
             merges: vec![MergeMode::Replace, MergeMode::Additive, MergeMode::Subtractive, MergeMode::Invertive],
             transitive: false,
             broadcast: true,
@@ -350,17 +350,23 @@ fn request_interaction_action(action_id: &str, args: dsl::DslValue) -> Effect {
 
 /// 🕹️ Asks the shell to redispatch `interactionSelect` for this pick — selection is framework-owned
 /// state, so an app never writes it, it only reports WHICH ids the pointer hit.
-pub fn interaction_select_effect<G: AsRef<str>, I: AsRef<str>>(targets: &[(G, I)], merge: &str) -> Effect {
+pub fn interaction_select_effect<G: AsRef<str>, I: AsRef<str>>(targets: &[(G, I)], merge: &str, method: &str) -> Effect {
     request_interaction_action(
         semio_framework::INTERACTION_SELECT_ACTION_ID,
         dsl::DslValue::object([
             ("domainId".to_string(), dsl::DslValue::String(FEM2D_INTERACTION_DOMAIN.to_string())),
             ("targets".to_string(), dsl::DslValue::String(targets_json(targets))),
             ("merge".to_string(), dsl::DslValue::String(merge.to_string())),
-            ("method".to_string(), dsl::DslValue::String("pick".to_string())),
+            ("method".to_string(), dsl::DslValue::String(method.to_string())),
         ]),
     )
 }
+
+#[path = "🖱️canvas-gesture/🦀️.rs"]
+pub mod canvas_gesture;
+
+#[path = "🧭️gumball/🦀️.rs"]
+pub mod gumball;
 
 /// 🕹️ Asks the shell to redispatch `interactionHover` on the `pointer` channel — the framework dedupes
 /// an unchanged batch, so a pointer-move handler stays stateless.

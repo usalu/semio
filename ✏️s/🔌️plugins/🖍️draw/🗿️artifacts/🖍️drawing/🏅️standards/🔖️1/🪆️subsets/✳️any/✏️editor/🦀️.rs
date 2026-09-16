@@ -311,7 +311,9 @@ impl DrawingInstanceOperationOwner {
         }
         if let DrawingCommand::CanvasPointerMove(payload) = command {
             if session.gesture.matches("idle") {
-                let (world_x, world_y) = canvas_pointer_down::canvas_point_to_world(&session.window_config.viewport, payload.x, payload.y, payload.width, payload.height);
+                // 🧵️ Idle hover hit-tests the LAST sample of a batch only (design L4 / §2 D).
+                let [x, y] = payload.last_sample();
+                let (world_x, world_y) = canvas_pointer_down::canvas_point_to_world(&session.window_config.viewport, x, y, payload.width, payload.height);
                 let tolerance = canvas_pointer_down::DRAWING_PICK_TOLERANCE_PX / session.window_config.viewport.zoom.max(1e-6);
                 session.point_query = Some(canvas_pointer_down::DrawingPointQuery::new(
                     command.command_id(),
@@ -324,6 +326,8 @@ impl DrawingInstanceOperationOwner {
             }
         }
         let retained_emit = match command {
+            // 🚫️ A cancelled release clears a live drag and selects/commits nothing.
+            DrawingCommand::CanvasPointerUp(payload) if payload.cancelled => Some(Some(canvas_pointer_up::cancel_gesture(session, snapshot, config))),
             DrawingCommand::CanvasPointerUp(payload) => {
                 let (world_x, world_y) = canvas_pointer_down::canvas_point_to_world(&session.window_config.viewport, payload.x, payload.y, payload.width, payload.height);
                 Some(session.step_gesture_retained(

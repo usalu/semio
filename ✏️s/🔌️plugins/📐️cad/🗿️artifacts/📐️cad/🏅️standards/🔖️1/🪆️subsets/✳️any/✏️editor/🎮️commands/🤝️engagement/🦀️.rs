@@ -1,7 +1,7 @@
 //! 🤝️ CAD play app commands — the engagement REPL: input, submit, keyed transitions, abort, and the two world-pointer events that drive a live construction interaction.
 
 use crate::editor::cad::config::{CadConfig, CadConfigMutation};
-use crate::editor::cad::engine::interaction::apply_event;
+use crate::editor::cad::engine::interaction::{apply_event, inject_selection};
 use crate::editor::cad::CadDispatchCtx;
 use crate::editor::cad::{cad_pane_id_from_suffix, engagement_submit_mutations, preview_transition_snapshot_of, runtime_of, snapshot_of, start_interaction_session, try_commit_session_mutations};
 use crate::op::CadMutation;
@@ -24,6 +24,9 @@ pub mod engagement_submit {
     pub fn handle(payload: &EngagementSubmit, doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, ctx: &mut CadDispatchCtx) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         let mut runtime = runtime_of(cfg);
         let pane_id = payload.pane.as_deref().map_or(CadPaneId::Shape, cad_pane_id_from_suffix);
+        if let Some(session) = runtime.engagement_session.as_mut() {
+            inject_selection(session, &ctx.interaction.ids);
+        }
         let ops = engagement_submit_mutations(doc.snapshot, &mut runtime, pane_id);
         let mut emit = Emit::mutations(ops);
         emit.config_mutations = vec![preview_transition_snapshot_of(&runtime, cfg.snapshot, ctx)?];
@@ -63,13 +66,28 @@ pub mod engagement_possible_select {
         pub possible_id: String,
     }
 
-    pub fn handle(payload: &EngagementPossibleSelect, _doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, ctx: &mut CadDispatchCtx) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
+    pub fn handle(payload: &EngagementPossibleSelect, doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, ctx: &mut CadDispatchCtx) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         let mut runtime = runtime_of(cfg);
         let pane_id = payload.pane.as_deref().map_or(CadPaneId::Shape, cad_pane_id_from_suffix);
-        let step = runtime.engagement_session.as_mut().and_then(|session| apply_event(session, &payload.possible_id, None).then(|| session.state.clone()));
-        if let Some(step) = step {
+        // 🎯️ A keyed transition (`confirm`, `close`, …) may be guarded on the selection the user made
+        // in the viewport — feed the live `"cad"` ids in first, then apply the transition.
+        let step = runtime.engagement_session.as_mut().and_then(|session| {
+            inject_selection(session, &ctx.interaction.ids);
+            apply_event(session, &payload.possible_id, None).then(|| (session.state.clone(), session.clone()))
+        });
+        if let Some((step, snapshot)) = step {
             runtime.engagement_step = step;
-        } else if !start_interaction_session(&mut runtime, pane_id, &payload.possible_id) {
+            let ops = try_commit_session_mutations(doc.snapshot, &mut runtime, pane_id, &snapshot);
+            let mut emit = Emit::mutations(ops);
+            emit.config_mutations = vec![preview_transition_snapshot_of(&runtime, cfg.snapshot, ctx)?];
+            return Ok(emit);
+        }
+        if start_interaction_session(&mut runtime, pane_id, &payload.possible_id) {
+            if let Some(session) = runtime.engagement_session.as_mut() {
+                inject_selection(session, &ctx.interaction.ids);
+                runtime.engagement_step = session.state.clone();
+            }
+        } else {
             runtime.engagement_input = payload.possible_id.clone();
         }
         Ok(Emit::config(vec![preview_transition_snapshot_of(&runtime, cfg.snapshot, ctx)?]))
@@ -143,7 +161,10 @@ pub mod world_pointer_down {
         // `{"position": ...}` object).
         let point_value =
             (payload.x.is_some() || payload.y.is_some() || payload.z.is_some()).then(|| DslValue::Array(vec![DslValue::float(payload.x.unwrap_or(0.0)), DslValue::float(payload.y.unwrap_or(0.0)), DslValue::float(payload.z.unwrap_or(0.0))]));
-        let commit = runtime.engagement_session.as_mut().and_then(|session| apply_event(session, "pointer.down", point_value.as_ref()).then(|| (session.state.clone(), session.clone())));
+        let commit = runtime.engagement_session.as_mut().and_then(|session| {
+            inject_selection(session, &ctx.interaction.ids);
+            apply_event(session, "pointer.down", point_value.as_ref()).then(|| (session.state.clone(), session.clone()))
+        });
         if let Some((step, snapshot)) = commit {
             runtime.engagement_step = step;
             let ops = try_commit_session_mutations(document, &mut runtime, pane_id, &snapshot);

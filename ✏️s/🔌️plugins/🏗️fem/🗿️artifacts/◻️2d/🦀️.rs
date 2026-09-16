@@ -1445,10 +1445,21 @@ pub mod editor {
             pub mod result_animation_tick;
             #[path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎮️commands/⏯️set-result-animation/🦀️.rs"]
             pub mod set_result_animation;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎮️commands/🧭️gumball/🦀️.rs"]
+            pub mod gumball;
         }
 
         #[path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🗣️terminology/🦀️.rs"]
         pub mod terminology;
+
+        #[path = "."]
+        pub mod options {
+            #[path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🛠️options/🔄️transform/🦀️.rs"]
+            pub mod transform;
+        }
+
+        #[path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🛠️window-measures/🦀️.rs"]
+        pub mod window_measures;
         #[path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🕹️interaction/🦀️.rs"]
         pub mod interaction;
 

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import laws from "../../🧫️fixtures/🔬️wgpu-extension-dispatch/🔣️.json";
 import { GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES, GUEST_HOST_ANSWER_CEILING_BYTES, guestAnswerPages } from "../../../../../../../🔨️modules/⏱️trace/🧮️memory/🟦️.ts";
-import { wgpuBuildScopedContributionsPack, wgpuContributionsIngressSize, wgpuGuestAnswerPages, wgpuHostAnswerCeilingBytes, wgpuSetContributionsCommand, wgpuSlimContributionsView, WGPU_CONTRIBUTIONS_SLIM_VIEW } from "../../🎯️targets/🧊️wgpu/🐚️plugin-bridge/🟦️.ts";
+import { serializeWgpuActorCall, wgpuBuildScopedContributionsPack, wgpuContributionsIngressSize, wgpuGuestAnswerPages, wgpuHostAnswerCeilingBytes, wgpuSetContributionsCommand, wgpuSlimContributionsView, WGPU_ACTOR_CALL_QUEUE_CAPACITY, WGPU_CONTRIBUTIONS_SLIM_VIEW, WgpuActorCallQueueFullError } from "../../🎯️targets/🧊️wgpu/🐚️plugin-bridge/🟦️.ts";
 import { FRAME_WORKER_BOOT_LIVENESS_POLICY, bootPhaseCeilingMs, evaluateBrowserBootLiveness } from "../../🎯️targets/🧊️wgpu/🫀️boot-liveness/🟦️.ts";
 import { SHARD_COMMAND_MAXIMUM_PAGES } from "../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
 import { PUBLIC_INVOCATION_BODY_BYTES, PUBLIC_INVOCATION_STRING_BYTES, publicInvocationStringPages } from "../../../../../../../🔨️modules/🛂️manifest/🟦️.ts";
@@ -115,5 +115,79 @@ describe("wgpu nested shell-boot phases", () => {
     });
     expect(decision.terminate).toBe(false);
     expect(decision.phaseElapsedMs).toBe(119_000);
+  });
+});
+
+// 🔗️ INPUT-CAUSALITY-LEDGER §2 F (transport parity), law L2: the wgpu bridge's call-level serializer
+// honours the same causal `order` key as `PluginRuntime`'s `serializeCommandIngressForActor` — a
+// pending call with a smaller `order` is inserted before pending calls with a strictly larger one,
+// unordered calls stay FIFO, and the in-flight call is never reordered.
+describe("wgpu serializeWgpuActorCall causal order", () => {
+  const hold = (actorId: string, ran: string[]) => {
+    let release!: () => void;
+    let markStarted!: () => void;
+    const started = new Promise<void>((resolve) => { markStarted = resolve; });
+    const gate = new Promise<void>((resolve) => { release = resolve; });
+    const held = serializeWgpuActorCall(actorId, async () => {
+      ran.push("held");
+      markStarted();
+      await gate;
+    });
+    return { held, started, release };
+  };
+
+  it("dequeues pending calls by ascending order — a later call with a smaller order overtakes a larger one behind the held call", async () => {
+    const ran: string[] = [];
+    const { held, started, release } = hold("wgpu-actor-causal-order", ran);
+    await started;
+    const callA = serializeWgpuActorCall("wgpu-actor-causal-order", async () => { ran.push("A"); }, 5);
+    const callB = serializeWgpuActorCall("wgpu-actor-causal-order", async () => { ran.push("B"); }, 7);
+    const callC = serializeWgpuActorCall("wgpu-actor-causal-order", async () => { ran.push("C"); }, 6);
+    await Promise.resolve();
+    expect(ran).toEqual(["held"]);
+    release();
+    await Promise.all([held, callA, callB, callC]);
+    expect(ran).toEqual(["held", "A", "C", "B"]);
+  });
+
+  it("keeps plain FIFO for calls without order and never starts two calls for one actor at once", async () => {
+    const ran: string[] = [];
+    let inFlight = 0;
+    let maxInFlight = 0;
+    const { held, started, release } = hold("wgpu-actor-fifo-order", ran);
+    await started;
+    const one = (name: string) => serializeWgpuActorCall("wgpu-actor-fifo-order", async () => {
+      inFlight += 1;
+      maxInFlight = Math.max(maxInFlight, inFlight);
+      ran.push(name);
+      await new Promise((resolve) => setTimeout(resolve, 1));
+      inFlight -= 1;
+    });
+    const calls = [one("first"), one("second"), one("third")];
+    await Promise.resolve();
+    expect(ran).toEqual(["held"]);
+    release();
+    await Promise.all([held, ...calls]);
+    expect(ran).toEqual(["held", "first", "second", "third"]);
+    expect(maxInFlight).toBe(1);
+  });
+
+  it("keeps queuing after a faulted call and refuses past the pending capacity with a typed error", async () => {
+    const ran: string[] = [];
+    const { held, started, release } = hold("wgpu-actor-bounded", ran);
+    await started;
+    const failing = serializeWgpuActorCall("wgpu-actor-bounded", async () => { ran.push("failing"); throw new Error("call faulted"); }, 1);
+    const pending = Array.from({ length: WGPU_ACTOR_CALL_QUEUE_CAPACITY - 1 }, (_, index) => serializeWgpuActorCall("wgpu-actor-bounded", async () => { ran.push(`p${index}`); }));
+    const overflow = serializeWgpuActorCall("wgpu-actor-bounded", async () => { ran.push("overflow"); });
+    await expect(overflow).rejects.toBeInstanceOf(WgpuActorCallQueueFullError);
+    await expect(overflow).rejects.toMatchObject({ code: "wgpu-actor-call.queue-full", actorId: "wgpu-actor-bounded", capacity: WGPU_ACTOR_CALL_QUEUE_CAPACITY });
+    expect(ran).toEqual(["held"]);
+    release();
+    await held;
+    await expect(failing).rejects.toThrow("call faulted");
+    await Promise.all(pending);
+    expect(ran.slice(0, 3)).toEqual(["held", "failing", "p0"]);
+    expect(ran).toHaveLength(1 + WGPU_ACTOR_CALL_QUEUE_CAPACITY);
+    expect(ran).not.toContain("overflow");
   });
 });

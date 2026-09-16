@@ -1547,6 +1547,57 @@ message ChangeTimeSeriesScheduleTimestep {
   uint32 new_timestep_seconds = 2;
 }
 
+message ReplaceFenestrationVertices {
+  uint32 id = 1;
+  repeated Vertex3 new_vertices_m = 2;
+}
+
+message ChangeGlazingMaterialThickness {
+  uint32 id = 1;
+  double new_thickness_m = 2;
+}
+
+message ChangeGlazingMaterialConductivity {
+  uint32 id = 1;
+  double new_conductivity_w_m_k = 2;
+}
+
+message ChangeGlazingMaterialSolarTransmittance {
+  uint32 id = 1;
+  double new_solar_transmittance = 2;
+}
+
+message ChangeGlazingMaterialVisibleTransmittance {
+  uint32 id = 1;
+  double new_visible_transmittance = 2;
+}
+
+message ChangeGlazingMaterialInfraredEmissivity {
+  uint32 id = 1;
+  double new_infrared_emissivity_front = 2;
+  double new_infrared_emissivity_back = 3;
+}
+
+message RenameGlazingMaterial {
+  uint32 id = 1;
+  string new_name = 2;
+}
+
+message ChangeGasMaterialThickness {
+  uint32 id = 1;
+  double new_thickness_m = 2;
+}
+
+message ChangeGasMaterialGas {
+  uint32 id = 1;
+  string new_gas = 2;
+}
+
+message RenameGasMaterial {
+  uint32 id = 1;
+  string new_name = 2;
+}
+
 message EnergyModelMutation {
   oneof kind {
     RenameModel rename_model = 1;
@@ -1825,5 +1876,15 @@ message EnergyModelMutation {
     DeleteTimeSeriesSchedule delete_time_series_schedule = 921;
     ReplaceTimeSeriesScheduleValues replace_time_series_schedule_values = 922;
     ChangeTimeSeriesScheduleTimestep change_time_series_schedule_timestep = 923;
+    ReplaceFenestrationVertices replace_fenestration_vertices = 236;
+    ChangeGlazingMaterialThickness change_glazing_material_thickness = 316;
+    ChangeGlazingMaterialConductivity change_glazing_material_conductivity = 317;
+    ChangeGlazingMaterialSolarTransmittance change_glazing_material_solar_transmittance = 318;
+    ChangeGlazingMaterialVisibleTransmittance change_glazing_material_visible_transmittance = 319;
+    ChangeGlazingMaterialInfraredEmissivity change_glazing_material_infrared_emissivity = 320;
+    RenameGlazingMaterial rename_glazing_material = 321;
+    ChangeGasMaterialThickness change_gas_material_thickness = 322;
+    ChangeGasMaterialGas change_gas_material_gas = 323;
+    RenameGasMaterial rename_gas_material = 324;
   }
 }

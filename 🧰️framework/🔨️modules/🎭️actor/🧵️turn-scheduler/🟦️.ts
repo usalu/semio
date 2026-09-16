@@ -31,6 +31,11 @@ export type { Backpressure, CoalesceKey, Lane };
 export interface QueuedTurn<TPayload> {
   readonly lane: Lane;
   readonly coalesce?: CoalesceKey;
+  /** 🔗️ Optional causal dequeue key, passed through verbatim to the actor's `BoundedMailbox` — see
+   * `📬️mailbox.ts` `## causal order` for the exact within-lane rule (ordered turns of one lane
+   * dequeue by `order`, ties and unordered turns by arrival; lanes still outrank `order`). The
+   * cross-actor pick is untouched: it only asks which lane each actor has pending, never `order`. */
+  readonly order?: number;
   readonly payload: TPayload;
 }
 
@@ -88,7 +93,7 @@ export class TurnScheduler<TPayload, TBudget = unknown> {
    * `rejected` MUSS der UI immer als Beschäftigt-Signal angezeigt werden, niemals als stilles Verwerfen. */
   enqueue(actorId: string, turn: QueuedTurn<TPayload>): Backpressure {
     const mailbox = this.mailboxFor(actorId);
-    const backpressure = mailbox.enqueue({ lane: turn.lane, coalesce: turn.coalesce, payload: turn.payload });
+    const backpressure = mailbox.enqueue({ lane: turn.lane, coalesce: turn.coalesce, order: turn.order, payload: turn.payload });
     this.applyLaneDelta(actorId, turn.lane, backpressure);
     if (backpressure.kind !== "rejected") this.schedulePump();
     return backpressure;

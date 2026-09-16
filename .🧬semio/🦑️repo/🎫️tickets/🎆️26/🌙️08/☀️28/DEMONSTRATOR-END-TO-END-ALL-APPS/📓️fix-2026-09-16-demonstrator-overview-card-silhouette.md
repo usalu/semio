@@ -13,6 +13,12 @@ Date: 2026-09-16.
 - Body: tagline + “Demonstrator öffnen” affordance inside the silhouette body glass.
 - `data-demonstrator-pane-card` / `data-pane-id` for acceptance coverage.
 
+## Follow-up (hover / glass / outline)
+
+- Hover was wired to `WindowChrome` `active`, which paints the **primary** silhouette stroke — replaced with `lifted` (transform only) and `active={false}` so hover uses the normal → emphasized CSS stroke.
+- Removed `windowBodyFrameClass` (`ui-surface`) and `shadow-lg` from the body plane; glass stays on chip-cap + `window-chrome-body-surface` (`ui-glass`), matching introduction/context menu.
+- `🎨️globals.css`: transparent stack rule for `demonstrator-pane-card-stack`.
+
 ## Verification
 
 - Playwright: `demonstrator overview: pane cards use window-silhouette chrome without drag handles` in `🧪️tests/🎭️acceptance/🟦️.ts`.

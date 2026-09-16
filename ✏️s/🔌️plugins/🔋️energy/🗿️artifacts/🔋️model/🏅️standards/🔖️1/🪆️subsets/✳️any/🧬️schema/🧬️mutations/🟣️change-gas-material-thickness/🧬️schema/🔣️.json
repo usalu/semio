@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/change-gas-material-thickness/schema.json",
+  "title": "ChangeGasMaterialThickness",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newThicknessM"
+  ],
+  "properties": {
+    "id": {
+      "type": "integer"
+    },
+    "newThicknessM": {
+      "type": "number"
+    }
+  }
+}
