@@ -1,0 +1,5 @@
+{
+  "mutation": "changeLoadCaseName",
+  "caseId": "wind",
+  "newName": "Wind Y"
+}

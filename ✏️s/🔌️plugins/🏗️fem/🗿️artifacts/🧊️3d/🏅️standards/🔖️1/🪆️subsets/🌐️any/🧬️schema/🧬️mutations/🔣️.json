@@ -78,6 +78,18 @@
     },
     {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/fem/3d/1/analysis/mutation/update-analysis-settings/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/fem/3d/1/mesh/mutation/replace-node/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/fem/3d/1/load/mutation/replace-load/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/fem/3d/1/load/mutation/change-load-case-name/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/fem/3d/1/load/mutation/replace-combination/schema.json"
     }
   ]
 }

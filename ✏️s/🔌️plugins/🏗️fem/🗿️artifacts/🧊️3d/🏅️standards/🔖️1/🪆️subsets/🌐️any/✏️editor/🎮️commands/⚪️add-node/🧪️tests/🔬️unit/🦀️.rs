@@ -51,7 +51,7 @@ async fn add_solid_action_emits_set_solid_3d() {
     let mut app: Fem3dApp = fem3d_empty_app().await;
     dispatch(&mut app, Fem3dCommand::AddMaterial(add_material::AddMaterial { name: "Concrete".into(), e: 3.0e10, g: 1.25e10 })).await;
     let material_id = app.snapshot().expect("snapshot").materials[0].id.clone();
-    dispatch(&mut app, Fem3dCommand::AddSolid(add_solid::AddSolid { x: 0.0, y: 0.0, width: 2.0, depth: 1.0, height: 0.5, material_id, base_z: None, layers: None, mesh_size: None })).await;
+    dispatch(&mut app, Fem3dCommand::AddSolid(add_solid::AddSolid { x: 0.0, y: 0.0, width: 2.0, depth: 1.0, height: 0.5, material_id, base_z: None, layers: None, mesh_size: None, axis: None })).await;
     let snapshot = app.snapshot().expect("snapshot");
     let solid = snapshot.solids.last().expect("solid added");
     assert_eq!(solid.outline, vec![[0.0, 0.0], [2.0, 0.0], [2.0, 1.0], [0.0, 1.0]]);

@@ -22,7 +22,16 @@ pub async fn decode_op(bytes: &[u8]) -> Result<RasterMutation, protocol::Protoco
 
 //#region 🔖️OwnedEnvelopeCatalog
 const RASTER_OWNED_FIELD_BYTES: usize = store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES;
-const RASTER_MAXIMUM_NESTED_DEPTH: usize = 128;
+/// 🪜 32, not 128: every bounds/clone authority carries TWO `[_; DEPTH]` traversal stacks inline
+/// (`path` + `frames`, 24 bytes per level on 64-bit) and `RasterLayerBoundsAuthority` nests a
+/// `RasterDslValueBoundsAuthority` of the same shape, so at 128 the `RasterSnapshotCloneAuthority`
+/// control struct measured ~6 KiB against the fixed 4 KiB `RASTER_CONTROL_BACKING_BYTES` credit —
+/// `size_of::<RasterSnapshotCloneAuthority>() > RASTER_CONTROL_BACKING_BYTES` refused every candidate
+/// with `raster-store.mutation-clone-control-capacity` (natively since authoring; ticket
+/// 26/09/05/RASTER-PLUGIN-END-TO-END, 2026-09-16); `RasterLayerCloneAuthority` (own stacks + nested
+/// bounds) still overflowed at 64. 32 nested groups is far beyond any document; the deep-nesting tests
+/// derive their depths from this constant.
+const RASTER_MAXIMUM_NESTED_DEPTH: usize = 32;
 const RASTER_RETIREMENT_LAYER_FRAMES: usize = RASTER_MAXIMUM_NESTED_DEPTH;
 const RASTER_RETIREMENT_VALUE_FRAMES: usize = RASTER_MAXIMUM_NESTED_DEPTH * 2;
 const RASTER_RETIREMENT_WRAPPER_FRAMES: usize = 16;
@@ -3367,6 +3376,77 @@ impl Drop for RasterMutationCandidateAuthority {
         assert!(self.terminal_is_empty(), "Raster mutation candidate reached Drop before exact handoff or retirement");
     }
 }
+
+//#region 🔖️OneItemApply
+/// 🧮 The interactive document lane's clone-free apply of ONE mutation over the live base — the
+/// same `RasterMutationCandidateAuthority` the archive-load initializer replays edits with, driven
+/// under a locally minted `StepContext` whose fuel is the store grant. `RasterStorePreparation`
+/// (`✏️editor/🦀️.rs`) used to go through `Mutation::diff` + `RasterDiff::apply`, which `Clone`s the
+/// base and every carried layer and refuses a populated asset map outright — so the moment the demo's
+/// brighten adjustment (populated `params`) reached the store, the batch faulted and the framework's
+/// close path dropped the un-begun `create-layer` into `RasterOwnedMap`'s Drop guard (react boots of
+/// ticket 26/09/05/RASTER-PLUGIN-END-TO-END, 2026-09-16).
+pub struct RasterOneItemApply {
+    candidate: std::mem::ManuallyDrop<Option<RasterMutationCandidateAuthority>>,
+    preview_sequence: u64,
+}
+
+fn raster_frozen_now_us() -> Option<u64> {
+    // ⏱️ The store grant is the only budget: a frozen clock under a `u64::MAX` deadline never yields
+    // on time, so `StepContext::should_yield` reduces to fuel exhaustion.
+    Some(0)
+}
+
+impl RasterOneItemApply {
+    pub fn new() -> Self {
+        Self { candidate: std::mem::ManuallyDrop::new(Some(RasterMutationCandidateAuthority::new())), preview_sequence: 0 }
+    }
+
+    /// ▶️ Spends up to `fuel` units; `Ok(Some(post))` once the candidate has produced the post
+    /// snapshot, `Ok(None)` while more grants are needed.
+    pub fn advance(&mut self, base: &RasterSnapshot, operation: &RasterMutation, operation_id: semio_framework_job::OperationId, generation: semio_framework_job::Generation, fuel: u64) -> Result<Option<RasterSnapshot>, String> {
+        let candidate = self.candidate.as_mut().ok_or_else(|| "raster-store.one-item-apply-candidate-absent".to_string())?;
+        let budget = semio_framework_job::StepBudget::new(fuel.max(1), u64::MAX);
+        let mut cx = semio_framework_job::StepContext::new(operation_id, generation, budget, semio_framework_job::CancelToken::root_now(), raster_frozen_now_us, &mut self.preview_sequence);
+        // 🔁️ Every `Ok(false)` that did not spend fuel is a scheduler-style yield (a blocked pump,
+        // a reservation refused); bound the spin so a stuck candidate surfaces as repeated Progress
+        // grants rather than a hang.
+        let mut spins = fuel.saturating_mul(4).saturating_add(16);
+        loop {
+            match candidate.step(base, operation, &mut cx) {
+                Ok(true) => {
+                    let post = candidate.take();
+                    drop(self.candidate.take());
+                    return Ok(post);
+                }
+                Ok(false) if cx.should_yield() || spins == 0 => return Ok(None),
+                Ok(false) => spins -= 1,
+                Err(code) => return Err(code.to_string()),
+            }
+        }
+    }
+
+    pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
+        let Some(candidate) = self.candidate.as_mut() else { return Ok(store::SnapshotRetirementStep::Complete) };
+        let step = candidate.close_step(maximum_items, maximum_bytes)?;
+        if candidate.terminal_is_empty() {
+            drop(self.candidate.take());
+        }
+        Ok(step)
+    }
+
+    pub fn terminal_is_empty(&self) -> bool {
+        self.candidate.is_none()
+    }
+}
+
+impl Drop for RasterOneItemApply {
+    fn drop(&mut self) {
+        assert!(self.candidate.is_none(), "Raster one-item apply reached Drop before its candidate was closed");
+        unsafe { std::mem::ManuallyDrop::drop(&mut self.candidate) };
+    }
+}
+//#endregion 🔖️OneItemApply
 
 pub fn raster_document_store_owners() -> store::DocumentStoreOwners<RasterSnapshot, RasterMutation> {
     store::DocumentStoreOwners::new(

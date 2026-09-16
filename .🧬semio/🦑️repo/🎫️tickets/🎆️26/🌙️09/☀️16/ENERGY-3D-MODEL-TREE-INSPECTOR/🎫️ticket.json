@@ -1,9 +1,14 @@
 {
   "title": "Energy 3d Model Tree Inspector",
   "emoji": "🔋️",
-  "status": "open",
+  "status": "closed",
   "description": "Make the 🔋️energy model fully 3d: walls, slabs, roofs, arbitrary window polygons and shading surfaces as real geometry in a 3d viewport (input model AND results such as transmission losses painted onto surfaces); every entity (buildings, zones, spaces, surfaces, fenestrations, shading, materials, constructions, loads, controls) listed in the artifact tree panel, selectable (tree ↔ 3d pick) and editable through an inspector (u-values, g-values, geometry, names, …).",
   "goal": "ENERGY",
-  "sessions": ["⚪c7d63d40-9505-4a30-b49f-24c897d0e4a8"],
-  "note": "Ticket bookkeeping manual on disk: repo MCP timed out (2026-09-16). Coordinator: Fable 5.1 in the main chat; execution: Opus 5 agents; exploration/audit: Sonnet 5 agents. Predecessor: 26/09/06/ENERGY-PLUGIN-END-TO-END (boot/examples/actions/tool run proven 2026-09-16)."
+  "sessions": [
+    "⚪c7d63d40-9505-4a30-b49f-24c897d0e4a8"
+  ],
+  "note": "Ticket bookkeeping manual on disk: repo MCP timed out (2026-09-16). Coordinator: Fable 5.1 in the main chat; execution: Opus 5 agents; exploration/audit: Sonnet 5 agents. Predecessor: 26/09/06/ENERGY-PLUGIN-END-TO-END (boot/examples/actions/tool run proven 2026-09-16).",
+  "openedAt": "2026-09-16",
+  "closedAt": "2026-09-16",
+  "summary": "Energy model is 3d end to end on the react lane (6106): a World3d model window on editor and viewer (surfaces, real fenestration polygons via the new optional Fenestration.vertices_m, shading, convex-hull zone volumes, persisted camera), the energyModel interaction domain (tree pick = 3d pick), an artifact tree panel over every entity family, an inspector with editable forms for surfaces/windows/zones/materials/glazing/gas/constructions/thermostats/site plus a results-field selector, 11 new mutation kinds, per-surface conduction/solar results accumulated in the kernel and published through the tool-run tick payload, an 8-stop ramp with legend strip, and a framework fix keeping the payload after Finalized. Probes 7/7 (3d), 12/12 (panels), 7/7 (results); suite 6290/3 (three pre-existing engine wire laws); wasm green."
 }

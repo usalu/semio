@@ -295,7 +295,8 @@ fn an_empty_or_flat_zone_draws_no_volume_at_all() {
     let mut flat = Model { zones: vec![zone(9, "Slab")], surfaces: vec![quad(40, SurfaceClass::Floor)], ..Model::default() };
     flat.surfaces[0].zone_id = EntityId(9);
     let (_, flat_instances) = energy_model_scene_parts(&flat, &EnergySceneStyle::default());
-    let ids: Vec<&str> = parsed(&flat_instances).as_array().expect("instances").iter().filter_map(|row| row["id"].as_str()).collect();
+    let flat_rows = parsed(&flat_instances);
+    let ids: Vec<&str> = flat_rows.as_array().expect("instances").iter().filter_map(|row| row["id"].as_str()).collect();
     assert_eq!(ids, vec!["40"], "the floor renders, the flat zone does not: {flat_instances}");
     assert!(convex_hull_triangles(&zone_hull_points(&flat, EntityId(9))).is_none());
 }
@@ -358,7 +359,8 @@ fn an_authored_five_vertex_window_renders_as_authored() {
     let window_mesh = parsed(&meshes_json).as_array().expect("meshes").iter().find(|mesh| mesh["id"].as_str() == Some("energy-window-50")).expect("the window mesh").clone();
     assert_eq!(window_mesh["data"]["indices"].as_array().expect("indices").len(), 9, "a five-gon fans into three triangles: {window_mesh}");
     assert_eq!(window_mesh["data"]["positions"].as_array().expect("positions").len(), 27, "three corners per triangle, three floats per corner");
-    let ids: Vec<&str> = parsed(&instances_json).as_array().expect("instances").iter().filter_map(|row| row["id"].as_str()).collect();
+    let rows = parsed(&instances_json);
+    let ids: Vec<&str> = rows.as_array().expect("instances").iter().filter_map(|row| row["id"].as_str()).collect();
     assert!(ids.contains(&"50"), "the authored window is one pickable instance: {instances_json}");
 }
 
@@ -380,3 +382,45 @@ fn an_authored_polygon_wins_over_the_area_height_sill_rectangle() {
     assert_eq!(polygon.len(), 5, "adding `vertices_m` replaces that rectangle rather than being ignored");
 }
 //#endregion 🧱️AuthoredPolygons
+
+//#region 🧱️HoverTint
+#[test]
+fn hover_lightens_every_channel_and_selection_never_does() {
+    // 🎨️ Both tints are baked here because a vertex-coloured mesh ignores the host's own
+    // selected/hovered paint entirely; this law is what keeps the two readable apart.
+    let base = ENERGY_SCENE_EXTERIOR_WALL_COLOR;
+    let hovered = mix(base, [1.0, 1.0, 1.0], ENERGY_SCENE_HOVERED_MIX);
+    let selected = mix(base, ENERGY_SCENE_SELECTED_COLOR, ENERGY_SCENE_SELECTED_MIX);
+    for axis in 0..3 {
+        assert!(hovered[axis] > base[axis], "hover must LIGHTEN channel {axis}: {base:?} -> {hovered:?}");
+    }
+    assert!(selected[0] < base[0] && selected[2] > base[2], "selection must move towards the primary blue, not towards white: {selected:?}");
+    assert_ne!(hovered, selected, "a hovered entity must never read as a selected one");
+
+    // 🖱️ …and the same two paints really reach the payload, per family.
+    let model = Model { zones: vec![zone(1, "Living")], surfaces: box_zone_surfaces(1, 40, [4.0, 3.0, 2.5]), fenestrations: vec![authored_window(50, 42, vec![[1.0, 0.0, 0.5], [3.0, 0.0, 0.5], [3.0, 0.0, 1.6], [1.0, 0.0, 1.6]])], ..Model::default() };
+    for target in ["40", "50", "1"] {
+        let ids = vec![target.to_string()];
+        let (plain, _) = energy_model_scene_parts(&model, &EnergySceneStyle::default());
+        let (hovered_json, instances) = energy_model_scene_parts(&model, &EnergySceneStyle { hovered_ids: &ids, ..EnergySceneStyle::default() });
+        let (selected_json, _) = energy_model_scene_parts(&model, &EnergySceneStyle { selected_ids: &ids, ..EnergySceneStyle::default() });
+        assert_ne!(plain, hovered_json, "hovering {target} must repaint it");
+        assert_ne!(hovered_json, selected_json, "hover and selection must differ for {target}");
+        let rows = parsed(&instances);
+        let row = rows.as_array().expect("instances").iter().find(|row| row["id"].as_str() == Some(target)).expect("the hovered instance");
+        assert_eq!(row["hovered"].as_bool(), Some(true), "the per-instance hover flag keeps the host chrome right: {row}");
+    }
+}
+
+#[test]
+fn a_selected_and_hovered_entity_reads_as_selected() {
+    let model = Model { surfaces: vec![quad(5, SurfaceClass::ExteriorWall)], ..Model::default() };
+    let ids = vec!["5".to_string()];
+    let (selected, _) = energy_model_scene_parts(&model, &EnergySceneStyle { selected_ids: &ids, ..EnergySceneStyle::default() });
+    let (both, instances) = energy_model_scene_parts(&model, &EnergySceneStyle { selected_ids: &ids, hovered_ids: &ids, ..EnergySceneStyle::default() });
+    assert_eq!(parsed(&both)[0]["data"]["colors"], parsed(&selected)[0]["data"]["colors"], "selection wins over hover so a picked entity never flickers under the cursor");
+    let rows = parsed(&instances);
+    let row = &rows.as_array().expect("instances")[0];
+    assert_eq!((row["selected"].as_bool(), row["hovered"].as_bool()), (Some(true), Some(true)), "both flags are still published for the host's chrome: {row}");
+}
+//#endregion 🧱️HoverTint

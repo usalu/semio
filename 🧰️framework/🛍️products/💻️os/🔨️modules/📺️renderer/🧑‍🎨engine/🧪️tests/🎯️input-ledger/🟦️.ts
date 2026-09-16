@@ -343,6 +343,13 @@ describe("refusal surfacing", () => {
       }
     }
   });
+  it("never notifies a gesture-origin refusal (a scene host's pointer/camera stream is its own feedback), whatever the reason", () => {
+    const provenance = { windowId: "w", inputSeq: 9, causedBy: null, origin: "gesture" as const };
+    for (const reason of Object.keys(INPUT_REFUSAL_NOTIFIED_V1) as InputRefusalReasonV1[]) {
+      expect(inputRefusalNotifiesV1(inputRefusedV1(9, reason) as Extract<InputOutcomeV1, { kind: "refused" }>, provenance)).toBe(false);
+    }
+    expect(inputRefusalNotifiesV1(inputRefusedV1(9, "dispatch-failed") as Extract<InputOutcomeV1, { kind: "refused" }>, { ...provenance, origin: "user" })).toBe(true);
+  });
 
   it("follows INPUT_REFUSAL_NOTIFIED_V1 for a user-origin refusal", () => {
     for (const reason of REFUSAL_REASONS) {

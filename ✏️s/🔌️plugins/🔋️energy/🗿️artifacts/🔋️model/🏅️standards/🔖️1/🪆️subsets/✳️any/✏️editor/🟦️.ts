@@ -19,6 +19,9 @@ export interface EnergyModelConfig {
   readonly zoneTimestepMinutes: number;
   readonly systemTimestepMinutes: number;
   readonly warmupDays: number;
+  /** 🎨️ Which published per-surface field the 3d model window colours by — deliberately NOT one of
+   * `ENERGY_SIMULATION_RUN_SETTINGS`, so a recolour never restarts a live run. */
+  readonly resultField: "conductionLoss" | "conductionGain" | "solarTransmitted" | "solarAbsorbed";
 }
 
 /** 🧵️ Every retained tool id of this editor, in `ENERGY_MODEL_RETAINED_TOOL_IDS` order. The Rust
@@ -39,11 +42,14 @@ export const ENERGY_MODEL_RETAINED_TOOL_IDS = [
   "set-run-period",
   "setActiveExample",
   "set-simulation-settings",
+  "set-result-field",
   "set-surface-property",
   "set-fenestration-property",
   "set-zone-property",
   "set-glazing-material-property",
   "set-gas-material-property",
+  "setCamera",
+  "set-construction-property",
 ] as const;
 
 /** 📬️ The verbs that publish a semantic mutation into the document store. `setActiveExample`
@@ -51,7 +57,7 @@ export const ENERGY_MODEL_RETAINED_TOOL_IDS = [
  * vocabulary, so it emits a `LoadDocument` effect (the host's `ArtifactStore::reset` route, outside
  * undo history) and declares the `HostOnly` publication lane; `set-simulation-settings` publishes to the config lane. */
 export const ENERGY_MODEL_DOCUMENT_TOOL_IDS = ENERGY_MODEL_RETAINED_TOOL_IDS.filter(
-  (id) => id !== "setActiveExample" && id !== "set-simulation-settings",
+  (id) => id !== "setActiveExample" && id !== "set-simulation-settings" && id !== "set-result-field" && id !== "setCamera",
 );
 
 /** 📌️ The two dock panels the editor contributes: the artifact tree and the inspector. Their body

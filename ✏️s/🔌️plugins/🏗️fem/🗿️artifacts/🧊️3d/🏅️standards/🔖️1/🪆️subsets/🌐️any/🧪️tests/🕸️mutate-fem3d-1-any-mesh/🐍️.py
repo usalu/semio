@@ -51,12 +51,12 @@ COLLECTIONS = {
     "section": ("sections", "section", "newSection"),
     "support": ("supports", "support", "newSupport"),
     "load-case": ("loadCases", "loadCase", None),
-    "combination": ("combinations", "combination", None),
+    "combination": ("combinations", "combination", "newCombination"),
 }
 """🗂️ Per noun: its collection, the argument `create-` carries, and the one `replace-` carries when
 the vocabulary has a `replace-` for it at all."""
 
-KINDS = ("create-node", "delete-node", "create-element", "delete-element", "replace-element", "create-section", "delete-section", "replace-section", "create-solid", "delete-solid", "replace-solid")
+KINDS = ("create-node", "delete-node", "create-element", "delete-element", "replace-element", "create-section", "delete-section", "replace-section", "create-solid", "delete-solid", "replace-solid", "replace-node")
 """🏷️ This subset's own kinds, in the catalog's declared order."""
 
 
@@ -92,6 +92,9 @@ REJECT_VECTORS = (
     "sliver-outline-316a7c",
     "dangling-mat-1ebd78",
     "dangling-start-ab4132",
+    "same-node-32a2a4",
+    "no-such-node-166880",
+    "renames-node-4a2286",
 )
 """🚫️ The committed vectors of this subset that claim the model does NOT move — every refusal this
 vocabulary can raise plus every declared no-op, named by the scenario id the feature's `@id-reject`

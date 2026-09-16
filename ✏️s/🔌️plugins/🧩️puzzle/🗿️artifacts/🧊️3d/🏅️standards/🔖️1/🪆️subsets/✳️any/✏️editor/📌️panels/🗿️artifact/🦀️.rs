@@ -267,7 +267,7 @@ fn page_action(section_id: &str, page: u32) -> UiAssemblyResult<(semio_framework
 /// an empty document (wave B46).
 pub fn continuation_row_from(section_id: &str, omitted: usize, next_page: Option<u32>) -> UiAssemblyResult<BuiltNode> {
     match next_page {
-        Some(page) => match selectable_item(format!("{section_id}.more"), format!("+{omitted}"), "ellipsis", page_action(section_id, page)) {
+        Some(page) => match selectable_item(format!("{section_id}.more"), format!("+{omitted}"), "more-horizontal", page_action(section_id, page)) {
             Ok(item) => item.try_build().map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "puzzle3d continuation row admission failed")),
             Err(_) => semio_framework_plugin::panel_continuation_row(section_id, omitted),
         },

@@ -160,7 +160,7 @@ pub fn continuation_row(section_id: &str, omitted: usize, next_page: Option<u32>
         return panel_continuation_row(section_id, omitted);
     };
     let args = ui_value_map([("page", ui_value_number(f64::from(page))), ("section", ui_value_text(section_id)?)]);
-    let built = args.and_then(|args| cad_action("setPanelPage", Some(args))).and_then(|action| cad_tree_item(format!("{section_id}.more"), format!("+{omitted}"), Some("ellipsis"), action));
+    let built = args.and_then(|args| cad_action("setPanelPage", Some(args))).and_then(|action| cad_tree_item(format!("{section_id}.more"), format!("+{omitted}"), Some("more-horizontal"), action));
     match built {
         Ok(item) => Ok(item),
         Err(_) => panel_continuation_row(section_id, omitted),

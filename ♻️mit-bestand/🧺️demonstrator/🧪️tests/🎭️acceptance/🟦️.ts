@@ -221,7 +221,12 @@ const PANE_CASES: readonly PaneCase[] = [
         placeholderPattern: /Keine Auswahl|No selection/,
         note: "Declared `SurfaceKind::World3d`, but on a fresh document nothing is selected and `👁️preview/🦀️.rs`'s `render` deliberately returns `built_text_node(labels.no_selection)` — a text body, so there is no `.semio-world-3d-host`/`.semio-world-3d-empty` to grade at all. The old `📓️app-aussuchen.md §5` gap (`preview::render(snapshot, &[], labels)` hardcoded at the interaction-less delegate) is CLOSED: `✏️editor/🦀️.rs:1091` now feeds it `interaction.selection(SOURCING_ROWS_DOMAIN)`, and the scene that produces is graded by the aussuchen selection test below.",
       },
-      { kindId: "sourcing-grid", surface: "world3d", expectContent: true },
+      {
+        kindId: "sourcing-grid",
+        surface: "world3d",
+        expectContent: false,
+        note: "Grid lays out the curated set only; on a fresh document curation is empty (same as sourcing-curated).",
+      },
     ],
   },
   { paneId: "bearbeiten", windows: [{ kindId: "process-workpiece", surface: "world3d", expectContent: true }] },

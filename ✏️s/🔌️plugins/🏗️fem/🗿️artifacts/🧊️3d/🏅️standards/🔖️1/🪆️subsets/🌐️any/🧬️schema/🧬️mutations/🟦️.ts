@@ -219,6 +219,31 @@ export interface DeleteCombination {
   id: string;
 }
 
+/** 🔁️ Mirrors Rust `ReplaceNode` (`🔁️replace-node/🦀️.rs`). */
+export interface ReplaceNode {
+  id: string;
+  newNode: FemNode;
+}
+
+/** 🔁️ Mirrors Rust `ReplaceLoad` (`🔁️replace-load/🦀️.rs`). */
+export interface ReplaceLoad {
+  caseId: string;
+  loadId: string;
+  newLoad: FemLoad;
+}
+
+/** 🏷️ Mirrors Rust `ChangeLoadCaseName` (`🏷️change-load-case-name/🦀️.rs`). */
+export interface ChangeLoadCaseName {
+  caseId: string;
+  newName: string;
+}
+
+/** 🔁️ Mirrors Rust `ReplaceCombination` (`🔁️replace-combination/🦀️.rs`). */
+export interface ReplaceCombination {
+  id: string;
+  newCombination: FemCombination;
+}
+
 /** ⚙️ Mirrors Rust `FemAnalysisSettings` (`🗿️artifacts/🧊️3d/🦀️.rs`, re-exported from
  * `fem2d::FemAnalysisSettings`). */
 export interface FemAnalysisSettings {
@@ -258,4 +283,8 @@ export type Fem3dMutation =
   | ({ mutation: "changeLoadCaseSelfWeight" } & ChangeLoadCaseSelfWeight)
   | ({ mutation: "createCombination" } & CreateCombination)
   | ({ mutation: "deleteCombination" } & DeleteCombination)
-  | ({ mutation: "updateAnalysisSettings" } & UpdateAnalysisSettings);
+  | ({ mutation: "updateAnalysisSettings" } & UpdateAnalysisSettings)
+  | ({ mutation: "replaceNode" } & ReplaceNode)
+  | ({ mutation: "replaceLoad" } & ReplaceLoad)
+  | ({ mutation: "changeLoadCaseName" } & ChangeLoadCaseName)
+  | ({ mutation: "replaceCombination" } & ReplaceCombination);

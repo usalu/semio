@@ -574,7 +574,17 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
         }
         Err(fault) => return Err(fault),
     };
-    let _ = crate::plugin_runtime::plugin_step_live_cleanup(runtime)?;
+    // 🌡️ One fair live-maintenance step per turn — and a burst while the stepped instance reports
+    // displaced-owner pressure, bounded by the turn's retirement deadline. A results-window
+    // playback (a coalesced window-config amend per frame, three displaced owners each) outran the
+    // single step's one owner per 26-stage rotation and saturated its 1 024-slot queue after
+    // ~340 frames (ticket 26/09/16/FEM-3D-INTERACTIVE-FEATURE-COMPLETE).
+    for step in 0..crate::plugin_runtime::LIVE_CLEANUP_PRESSURE_STEPS_PER_TURN {
+        let _ = crate::plugin_runtime::plugin_step_live_cleanup(runtime)?;
+        if !crate::plugin_runtime::plugin_live_cleanup_under_pressure(runtime) || (step % PATCH_CLOSE_DEADLINE_STRIDE == 0 && std::time::Instant::now() >= retirement_deadline) {
+            break;
+        }
+    }
     PATCHES.with(|patches| redirty_acknowledged_deferred_surfaces(patches, &mut dirty))?;
     for event in events {
         match event {

@@ -19,11 +19,14 @@ use crate::editor::model::interaction::{
     energy_entity_kind, energy_target_id, EnergyModelInteractionSnapshot, ENERGY_GRANULARITY_CONSTRUCTION, ENERGY_GRANULARITY_FENESTRATION, ENERGY_GRANULARITY_GAS_MATERIAL, ENERGY_GRANULARITY_GLAZING_MATERIAL, ENERGY_GRANULARITY_MATERIAL,
     ENERGY_GRANULARITY_SHADING, ENERGY_GRANULARITY_SURFACE, ENERGY_GRANULARITY_THERMOSTAT, ENERGY_GRANULARITY_ZONE,
 };
+use crate::editor::model::config::EnergyModelConfig;
+use crate::editor::model::results::{result_field, ResultField};
 use crate::editor::model::{
-    energy_model_action, gas_kind_id, outside_boundary_kind_id, surface_class_id, ui_label, DELETE_SURFACE_ACTION_ID, DELETE_ZONE_ACTION_ID, GAS_KIND_IDS, OUTSIDE_BOUNDARY_KIND_IDS, SET_FENESTRATION_PROPERTY_ACTION_ID,
-    SET_GAS_MATERIAL_PROPERTY_ACTION_ID, SET_GLAZING_MATERIAL_PROPERTY_ACTION_ID, SET_MATERIAL_PROPERTY_ACTION_ID, SET_SITE_ACTION_ID, SET_SURFACE_PROPERTY_ACTION_ID, SET_THERMOSTAT_SETPOINTS_ACTION_ID, SET_ZONE_PROPERTY_ACTION_ID,
-    SURFACE_CLASS_IDS,
+    energy_model_action, gas_kind_id, outside_boundary_kind_id, surface_class_id, surface_roughness_id, ui_label, DELETE_SURFACE_ACTION_ID, DELETE_ZONE_ACTION_ID, GAS_KIND_IDS, OUTSIDE_BOUNDARY_KIND_IDS,
+    SET_CONSTRUCTION_PROPERTY_ACTION_ID, SET_FENESTRATION_PROPERTY_ACTION_ID, SET_GAS_MATERIAL_PROPERTY_ACTION_ID, SET_GLAZING_MATERIAL_PROPERTY_ACTION_ID, SET_MATERIAL_PROPERTY_ACTION_ID, SET_SITE_ACTION_ID,
+    SET_SURFACE_PROPERTY_ACTION_ID, SET_THERMOSTAT_SETPOINTS_ACTION_ID, SET_ZONE_PROPERTY_ACTION_ID, SURFACE_CLASS_IDS, SURFACE_ROUGHNESS_IDS,
 };
+use crate::editor::model::modes::edit::windows::simulation::SET_RESULT_FIELD_ACTION_ID;
 use crate::model::{Construction, Fenestration, GasMaterial, GlazingMaterial, Material, Model, ShadingSurface, Surface, Thermostat, Zone};
 use crate::EnergyModelSnapshot;
 use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase, HasChildren, InputKind};
@@ -209,8 +212,35 @@ fn class_options() -> Vec<(String, String)> {
     SURFACE_CLASS_IDS.iter().map(|id| ((*id).to_string(), (*id).to_string())).collect()
 }
 
+/// 🚧️ The boundary kinds a select alone can apply. `interzone` is deliberately ABSENT: it needs a
+/// partner surface, which a one-value control cannot carry, so `OutsideBoundary::from_parts` refused
+/// every pick of it (review finding 2). The partner select below is what makes a surface interzone —
+/// and picking any kind here on a surface that already IS interzone keeps its neighbour, because
+/// `set_surface_property` carries the held partner forward.
 fn boundary_options() -> Vec<(String, String)> {
-    OUTSIDE_BOUNDARY_KIND_IDS.iter().map(|id| ((*id).to_string(), (*id).to_string())).collect()
+    OUTSIDE_BOUNDARY_KIND_IDS.iter().filter(|id| **id != "interzone").map(|id| ((*id).to_string(), (*id).to_string())).collect()
+}
+
+/// 🚧️ The other surfaces of the model — the interzone partner picker's options. A surface is never
+/// offered its own id.
+fn partner_options(model: &Model, surface: &Surface) -> Vec<(String, String)> {
+    model.surfaces.iter().filter(|entry| entry.id != surface.id).map(|entry| (energy_target_id(entry.id), entry.name.clone())).collect()
+}
+
+fn roughness_options() -> Vec<(String, String)> {
+    SURFACE_ROUGHNESS_IDS.iter().map(|id| ((*id).to_string(), (*id).to_string())).collect()
+}
+
+/// 🧱️ Every catalogue entry a construction layer may name, grouped by catalogue in the label so a
+/// reader can tell an opaque material from a pane or a gas gap. Only the OPAQUE ones can be added or
+/// exchanged (`add-construction-layer` admits nothing else), but a glazing or gas layer already in
+/// the stack still has to display its own name, so all three are offered and the editor refuses a
+/// non-opaque pick loudly.
+fn layer_options(model: &Model, locale: Locale) -> Vec<(String, String)> {
+    let mut options: Vec<(String, String)> = model.materials.iter().map(|material| (energy_target_id(material.id), material.name.clone())).collect();
+    options.extend(model.glazing_materials.iter().map(|material| (energy_target_id(material.id), format!("{} · {}", material.name, say(locale, "glazing", "Verglasung")))));
+    options.extend(model.gas_materials.iter().map(|material| (energy_target_id(material.id), format!("{} · {}", material.name, say(locale, "gas", "Gas")))));
+    options
 }
 
 fn schedule_options(model: &Model) -> Vec<(String, String)> {
@@ -257,9 +287,12 @@ fn surface_rows(model: &Model, surface: &Surface, locale: Locale) -> UiAssemblyR
             &id,
         ),
     )?;
-    if let Some(partner) = surface.outside_boundary_condition.interzone_partner() {
-        let name = model.surfaces.iter().find(|entry| entry.id == partner).map_or_else(|| partner.0.to_string(), |entry| entry.name.clone());
-        push(&mut rows, read_only_row("surface.partner", say(locale, "Interzone partner", "Nachbarfläche"), name))?;
+    // 🚧️ EDITABLE, not a report: picking a partner is the only way to make a surface interzone, and
+    // it is the control the boundary select cannot be (review finding 2).
+    let partners = partner_options(model, surface);
+    if !partners.is_empty() {
+        let held = surface.outside_boundary_condition.interzone_partner().map(energy_target_id).unwrap_or_default();
+        push(&mut rows, select_row("surface.partner", say(locale, "Interzone partner", "Nachbarfläche"), &held, partners, SET_SURFACE_PROPERTY_ACTION_ID, "interzonePartner", &id))?;
     }
     push(
         &mut rows,
@@ -320,16 +353,16 @@ fn zone_rows(zone: &Zone, locale: Locale) -> UiAssemblyResult<UiFixedList<BuiltN
     Ok(rows)
 }
 
-/// 🧱️ A material's seven SI scalars. `set-material-property` carries a NUMBER, so the material's
-/// own `name`/`roughness` have no editor verb yet — they are reported read-only rather than offered
-/// as a control that would silently do nothing.
+/// 🧱️ A material's WHOLE addressable record: its name, its roughness class and its seven SI scalars.
+/// `set-material-property` now carries TEXT, and `change-material-roughness` is a real mutation kind,
+/// so nothing here is read-only any more.
 fn material_rows(material: &Material, locale: Locale) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
     let id = energy_target_id(material.id);
     let action = SET_MATERIAL_PROPERTY_ACTION_ID;
     let mut rows = UiFixedList::default();
     push(&mut rows, read_only_row("material.id", say(locale, "Id", "Id"), &id))?;
-    push(&mut rows, read_only_row("material.name", say(locale, "Name", "Bezeichnung"), &material.name))?;
-    push(&mut rows, read_only_row("material.roughness", say(locale, "Roughness", "Rauigkeit"), format!("{:?}", material.roughness)))?;
+    push(&mut rows, text_row("material.name", say(locale, "Name", "Bezeichnung"), &material.name, action, "name", &id))?;
+    push(&mut rows, select_row("material.roughness", say(locale, "Roughness", "Rauigkeit"), surface_roughness_id(material.roughness), roughness_options(), action, "roughness", &id))?;
     push(&mut rows, number_row("material.thickness", say(locale, "Thickness (m)", "Dicke (m)"), material.thickness_m, 0.01, action, "thicknessM", &id))?;
     push(&mut rows, number_row("material.conductivity", say(locale, "Conductivity (W/mK)", "Leitfähigkeit (W/mK)"), material.conductivity_w_m_k, 0.01, action, "conductivityWMK", &id))?;
     push(&mut rows, number_row("material.density", say(locale, "Density (kg/m³)", "Rohdichte (kg/m³)"), material.density_kg_m3, 10.0, action, "densityKgM3", &id))?;
@@ -373,27 +406,67 @@ fn gas_material_rows(material: &GasMaterial, locale: Locale) -> UiAssemblyResult
     Ok(rows)
 }
 
-/// 🧱️ A construction and its layer stack — the layers are reported, not edited: layer membership is
-/// an `add`/`remove`/`reorder` list edit, not a field patch, and this editor declares no verb for it.
+/// 🧱️ A construction: its name, its EDITABLE layer stack and the U-value that stack implies.
+///
+/// 🎛️ Each layer is a `select` over the three catalogues bound to `replaceLayer:<index>` plus a
+/// `remove` button; one trailing `select` appends. That is TWO argument maps per layer — the arena
+/// budget this panel shares with the tree (`📓️UiValue Map Ascending Keys & One-Page Arena`) is why the
+/// move-up/move-down verbs of `set-construction-property` are reachable from the palette but not
+/// rendered as two more buttons on every row.
 fn construction_rows(model: &Model, construction: &Construction, locale: Locale) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
+    let id = energy_target_id(construction.id);
+    let action = SET_CONSTRUCTION_PROPERTY_ACTION_ID;
+    let options = layer_options(model, locale);
     let mut rows = UiFixedList::default();
-    push(&mut rows, read_only_row("construction.id", say(locale, "Id", "Id"), energy_target_id(construction.id)))?;
-    push(&mut rows, read_only_row("construction.name", say(locale, "Name", "Bezeichnung"), &construction.name))?;
+    push(&mut rows, read_only_row("construction.id", say(locale, "Id", "Id"), &id))?;
+    push(&mut rows, text_row("construction.name", say(locale, "Name", "Bezeichnung"), &construction.name, action, "name", &id))?;
     for (index, layer) in construction.layer_material_ids.iter().take(LIST_ROWS_MAX).enumerate() {
-        let name = model
-            .materials
-            .iter()
-            .find(|material| material.id == *layer)
-            .map(|material| material.name.clone())
-            .or_else(|| model.glazing_materials.iter().find(|material| material.id == *layer).map(|material| material.name.clone()))
-            .or_else(|| model.gas_materials.iter().find(|material| material.id == *layer).map(|material| material.name.clone()))
-            .unwrap_or_else(|| format!("? {}", layer.0));
-        push(&mut rows, read_only_row(&format!("construction.layer.{index}"), &format!("{} {}", say(locale, "Layer", "Schicht"), index + 1), name))?;
+        let label = format!("{} {}", say(locale, "Layer", "Schicht"), index + 1);
+        push(
+            &mut rows,
+            select_row(&format!("construction.layer.{index}"), &label, &energy_target_id(*layer), options.clone(), action, &format!("replaceLayer:{index}"), &id),
+        )?;
+        push(&mut rows, layer_button(&format!("construction.layer.{index}.remove"), say(locale, "Remove layer", "Schicht entfernen"), &id, "removeLayer", index))?;
     }
     if construction.layer_material_ids.len() > LIST_ROWS_MAX {
         push(&mut rows, read_only_row("construction.layers.more", say(locale, "More layers", "Weitere Schichten"), construction.layer_material_ids.len() - LIST_ROWS_MAX))?;
     }
+    if !options.is_empty() {
+        push(&mut rows, select_row("construction.add-layer", say(locale, "Add layer", "Schicht hinzufügen"), "", options, action, "addLayer", &id))?;
+    }
+    push(&mut rows, read_only_row("construction.u-value", say(locale, "U-value (W/m²K)", "U-Wert (W/m²K)"), construction_u_value_text(model, construction, locale)))?;
     Ok(rows)
+}
+
+/// 🔘️ One layer verb that carries its own operand: an `Activate` button merges NO value, so the index
+/// travels in the authored map beside the property.
+fn layer_button(row_id_suffix: &str, label: &str, id: &str, property: &str, index: usize) -> UiAssemblyResult<BuiltNode> {
+    let row_id = format!("{ROOT}.{row_id_suffix}");
+    let mut args = UiMapBuilder::try_new().ok_or_else(|| ui_error("ui.value.map"))?;
+    args.push("construction".into(), ui_value_text(id)?).map_err(|_| ui_error("ui.value.map.entry"))?;
+    args.push("property".into(), ui_value_text(property)?).map_err(|_| ui_error("ui.value.map.entry"))?;
+    args.push("value".into(), ui_value_text(index.to_string())?).map_err(|_| ui_error("ui.value.map.entry"))?;
+    control_row(&row_id, label, action_button(&format!("{row_id}.button"), label, energy_model_action(SET_CONSTRUCTION_PROPERTY_ACTION_ID, Some(UiValue::Map(args.finish())))?)?)
+}
+
+/// 🔥️ Σ R of the stack plus the two standard films, inverted — the engine's OWN
+/// `material::construction_u_value`, never a second formula. A stack that names a pane or a gas gap
+/// has no `Material` row for that layer, and this helper takes opaque layers only, so such a
+/// construction reports honestly that its U-value is not derivable here instead of printing a number
+/// computed from the layers it happened to resolve.
+fn construction_u_value_text(model: &Model, construction: &Construction, locale: Locale) -> String {
+    let mut layers: Vec<Material> = Vec::with_capacity(construction.layer_material_ids.len());
+    for layer in &construction.layer_material_ids {
+        let Some(material) = model.materials.iter().find(|material| material.id == *layer) else {
+            return say(locale, "— (non-opaque layer)", "— (nicht-opake Schicht)").to_string();
+        };
+        layers.push(material.clone());
+    }
+    if layers.is_empty() {
+        return say(locale, "—", "—").to_string();
+    }
+    let u = crate::material::construction_u_value(&layers, crate::material::R_FILM_INTERIOR_M2K_W, crate::material::R_FILM_EXTERIOR_M2K_W);
+    format!("{u:.3}")
 }
 
 /// 🌡️ A thermostat's four fields, all carried by ONE `set-thermostat-setpoints` payload — so each
@@ -418,20 +491,25 @@ fn thermostat_rows(model: &Model, thermostat: &Thermostat, locale: Locale) -> Ui
     Ok(rows)
 }
 
-/// 🌡️ The whole `set-thermostat-setpoints` payload MINUS the one key the edited control supplies —
-/// the host merges the control's value under that key, so every other field has to travel with it or
-/// the reducer would read a zero for it.
+/// 🌡️ The WHOLE `set-thermostat-setpoints` payload at its current values, PLUS `field` naming the one
+/// slot this control edits. The host merges the typed scalar under `value`, and the bridge copies it
+/// into the named slot.
+///
+/// ⚠️ The earlier shape DROPPED the edited key and relied on the bridge reading `value` — which that
+/// action's arm never did, so every setpoint edit silently wrote the arm's own default (2.0 K, or
+/// schedule 0). Authoring every key means that even a lost `field` marker degrades to a no-op rather
+/// than to a wrong number. `UiMapBuilder` admits ascending keys only, hence the order below.
 fn thermostat_args(thermostat: &Thermostat, edited: &str) -> UiAssemblyResult<UiValue> {
     let mut args = UiMapBuilder::try_new().ok_or_else(|| ui_error("ui.value.map"))?;
     let entries: Vec<(&str, String)> = vec![
         ("coolingSchedule", thermostat.cooling_setpoint_schedule_id.0.to_string()),
         ("coolingThrottleRangeK", thermostat.cooling_throttle_range_k.to_string()),
+        ("field", edited.to_string()),
         ("heatingSchedule", thermostat.heating_setpoint_schedule_id.0.to_string()),
         ("heatingThrottleRangeK", thermostat.heating_throttle_range_k.to_string()),
         ("thermostat", thermostat.id.0.to_string()),
-        ("value", String::new()),
     ];
-    for (key, value) in entries.into_iter().filter(|(key, _)| *key != edited) {
+    for (key, value) in entries {
         args.push(key.to_owned(), ui_value_text(value)?).map_err(|_| ui_error("ui.value.map.entry"))?;
     }
     Ok(UiValue::Map(args.finish()))
@@ -473,16 +551,20 @@ fn site_rows(model: &Model, locale: Locale) -> UiAssemblyResult<UiFixedList<Buil
     Ok(rows)
 }
 
+/// 📍️ Same shape as [`thermostat_args`]: all five scalars at their current values plus the `field`
+/// marker the bridge uses to route the host-merged `value`. Dropping the edited key instead (the
+/// earlier shape) made every site edit write 0.0.
 fn site_args(site: &crate::model::Site, edited: &str) -> UiAssemblyResult<UiValue> {
     let mut args = UiMapBuilder::try_new().ok_or_else(|| ui_error("ui.value.map"))?;
     let entries: Vec<(&str, String)> = vec![
         ("elevationM", site.elevation_m.to_string()),
+        ("field", edited.to_string()),
         ("latitudeDeg", site.latitude_deg.to_string()),
         ("longitudeDeg", site.longitude_deg.to_string()),
         ("northAxisDeg", site.north_axis_deg.to_string()),
         ("timeZoneHours", site.time_zone_hours.to_string()),
     ];
-    for (key, value) in entries.into_iter().filter(|(key, _)| *key != edited) {
+    for (key, value) in entries {
         args.push(key.to_owned(), ui_value_text(value)?).map_err(|_| ui_error("ui.value.map.entry"))?;
     }
     Ok(UiValue::Map(args.finish()))
@@ -508,11 +590,45 @@ fn shading_rows(shading: &ShadingSurface, locale: Locale) -> UiAssemblyResult<Ui
 }
 //#endregion 🔖️Sections
 
+/// 🎨️ The result-field selector: which published per-surface quantity the 3d window colours by.
+///
+/// 🎛️ It authors NO arguments at all. `set-result-field`'s bridge arm prefers a named `field` over the
+/// host-merged `value`, so authoring `{field: <current>}` would pin the select to the value it already
+/// has and every pick would be a no-op; an empty descriptor lets the host's `{value}` merge be the
+/// only source. The verb is declared APP-level
+/// (`crate::editor::model::window_shared_action_definitions`), so this control dispatches whichever
+/// window is active — the panel is docked beside all four.
+fn results_rows(config: &EnergyModelConfig, locale: Locale) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
+    let current = result_field(config);
+    let row_id = format!("{ROOT}.results.field");
+    let mut control = ui_id(ui::select(ui_text(current.id())?), format!("{row_id}.select"))?;
+    for field in ResultField::ALL {
+        let label = match field {
+            ResultField::ConductionLoss => say(locale, "Conduction loss", "Transmissionsverlust"),
+            ResultField::ConductionGain => say(locale, "Conduction gain", "Transmissionsgewinn"),
+            ResultField::SolarTransmitted => say(locale, "Solar transmitted", "Solare Transmission"),
+            ResultField::SolarAbsorbed => say(locale, "Solar absorbed", "Solare Absorption"),
+        };
+        control = control.try_item(ui_text(field.id())?, ui_label(label)?).map_err(|_| ui_error("ui.select.item"))?;
+    }
+    let (action, _) = energy_model_action(SET_RESULT_FIELD_ACTION_ID, None)?;
+    let control = control.try_on(Trigger::Change, action).map_err(|_| ui_error("ui.control.binding"))?;
+    let mut rows = UiFixedList::default();
+    push(&mut rows, control_row(&row_id, say(locale, "Surfaces coloured by", "Flächen eingefärbt nach"), ui_build(control)?))?;
+    Ok(rows)
+}
+
+/// 🎨️ The Results section every body carries — the document summary AND every entity form's footer,
+/// so the colour field is one click away whatever is selected.
+fn push_results_section(sections: &mut UiFixedList<BuiltNode>, config: &EnergyModelConfig, locale: Locale) -> UiAssemblyResult<()> {
+    push(sections, section(&format!("{ROOT}.results"), say(locale, "Results", "Ergebnisse"), results_rows(config, locale)?))
+}
+
 //#region 🔖️Render
 /// 📋️ What the `"energyModel"` domain shows when it selects nothing: what this document is, how much
 /// of it there is, and the site — which is a singleton with no `EntityId` and therefore has no other
 /// place to be edited from.
-fn summary(model: &Model, locale: Locale) -> UiAssemblyResult<BuiltNode> {
+fn summary(model: &Model, config: &EnergyModelConfig, locale: Locale) -> UiAssemblyResult<BuiltNode> {
     let mut counts = UiFixedList::default();
     push(&mut counts, read_only_row("summary.name", say(locale, "Model", "Modell"), &model.name))?;
     for (suffix, label, count) in [
@@ -529,6 +645,7 @@ fn summary(model: &Model, locale: Locale) -> UiAssemblyResult<BuiltNode> {
     let mut sections = UiFixedList::default();
     push(&mut sections, section(&format!("{ROOT}.summary"), say(locale, "Document", "Dokument"), counts))?;
     push(&mut sections, section(&format!("{ROOT}.site"), say(locale, "Site", "Standort"), site_rows(model, locale)?))?;
+    push_results_section(&mut sections, config, locale)?;
     column(sections)
 }
 
@@ -560,12 +677,12 @@ fn selection_rows(interaction: &EnergyModelInteractionSnapshot) -> UiAssemblyRes
 /// 🔍️ The panel body: the first resolvable selected entity's editable fields, or the document +
 /// site summary. Every group title is the entity's own noun, so the panel reads as "Window" /
 /// "Construction" rather than as a generic "Properties".
-pub fn render(snapshot: &EnergyModelSnapshot, interaction: &EnergyModelInteractionSnapshot, locale: Locale) -> UiAssemblyResult<BuiltNode> {
+pub fn render(snapshot: &EnergyModelSnapshot, interaction: &EnergyModelInteractionSnapshot, config: &EnergyModelConfig, locale: Locale) -> UiAssemblyResult<BuiltNode> {
     let model = &snapshot.model;
     let Some((id, kind)) = interaction.selected_ids.iter().find_map(|id| energy_entity_kind(snapshot, id).map(|kind| (id.as_str(), kind))) else {
-        return summary(model, locale);
+        return summary(model, config, locale);
     };
-    let Ok(raw) = id.parse::<u32>() else { return summary(model, locale) };
+    let Ok(raw) = id.parse::<u32>() else { return summary(model, config, locale) };
     let entity = crate::model::EntityId(raw);
     let mut sections = UiFixedList::default();
     if interaction.selected_ids.len() > 1 {
@@ -609,11 +726,12 @@ pub fn render(snapshot: &EnergyModelSnapshot, interaction: &EnergyModelInteracti
             let shading = model.shading_surfaces.iter().find(|entry| entry.id == entity).ok_or_else(|| ui_error("ui.document"))?;
             push(&mut sections, section(&format!("{ROOT}.shading"), say(locale, "Shading surface", "Verschattungsfläche"), shading_rows(shading, locale)?))?;
         }
-        _ => return summary(model, locale),
+        _ => return summary(model, config, locale),
     }
     if let Some(rows) = action_rows(id, kind, locale)? {
         push(&mut sections, section(&format!("{ROOT}.actions"), say(locale, "Actions", "Aktionen"), rows))?;
     }
+    push_results_section(&mut sections, config, locale)?;
     column(sections)
 }
 //#endregion 🔖️Render

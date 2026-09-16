@@ -8,6 +8,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { type ComponentSceneHostProps } from "@semio-tech/framework";
 import { IconShotFrame, iconRenderPort, useLabel, type IconRenderRequest } from "@semio-tech/ui-react";
+import { meshAssetTransportUrl } from "../../../../../../../🔨️modules/🖼️assets/🥽️mesh/🟦️.ts";
 // #endregion 🔌️Adapters
 
 //#region 🔖️IconRenderHost
@@ -15,10 +16,13 @@ import { IconShotFrame, iconRenderPort, useLabel, type IconRenderRequest } from 
 export function IconRenderHost({ node }: ComponentSceneHostProps) {
   const scene = node.iconRender;
   const requestJson = scene?.requestJson;
+  // 🧊️ Same public-id → transport-path resolution the world-3d host applies: the guest names a mesh by
+  // its catalog url (`/mesh/🧊️base.glb`); the server only serves the nested transport path.
   const request = useMemo<IconRenderRequest | null>(() => {
     if (!requestJson) return null;
     try {
-      return JSON.parse(requestJson) as IconRenderRequest;
+      const parsed = JSON.parse(requestJson) as IconRenderRequest;
+      return { ...parsed, assetUrl: meshAssetTransportUrl(parsed.assetUrl) };
     } catch {
       return null;
     }

@@ -1,0 +1,14 @@
+{
+  "status": "rejected",
+  "code": "mutation.id-mismatch",
+  "path": [
+    "sls",
+    "sls_b"
+  ],
+  "messages": [
+    {
+      "level": "fatal",
+      "code": "mutation.id-mismatch"
+    }
+  ]
+}

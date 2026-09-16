@@ -1,21 +1,42 @@
 pub(crate) mod context {
     use super::super::*;
     use semio_framework_plugin::app::EditorApp;
-    use semio_framework_plugin::artifact_app_laws::{meta, new_app, new_app_with_registry};
-    use semio_framework_plugin::{InvocationResult, PluginApp, VcsArtifactApp, ViewModel, WindowMeasure};
-    
-    pub type ShootingApp = VcsArtifactApp<EditorApp<ShootingPlayApp>>;
-    
-    /// ✏️ `ShootingPlayApp` implements the AUTHORING trait `ArtifactEditor`, not the runtime
-    /// `ArtifactApp` — `EditorApp<ShootingPlayApp>` (SDK adapter, contract §2.1) is the real
-    /// `ArtifactApp` implementor `VcsArtifactApp` wraps, exactly the way
-    /// `PluginBuilder::editor::<ShootingPlayApp>` builds it.
-    ///
-    /// 🧪️ A bare app instance — no `AppActionRegistry`, so undeclared internal commands dispatch freely.
-    pub async fn shooting_app() -> ShootingApp {
-        new_app::<EditorApp<ShootingPlayApp>>().await
+    use semio_framework_plugin::artifact_app_laws::{meta, new_app_with_registry};
+    use semio_framework_plugin::app::TypedOperationResultLane;
+    use semio_framework_plugin::{Effect, InvocationResult, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance, WindowMeasure};
+
+    /// 🧪️ The registered, MOUNTED fixture app every editor test drives — bound to
+    /// [`SHOOTING_TEST_INSTANCE`] so typed commands reach their retained routes, and retired through the
+    /// framework's exact close loop when it goes out of scope (the store's `Drop` demands the
+    /// terminal-empty witness). `ShootingPlayApp` implements the AUTHORING trait `ArtifactEditor`;
+    /// `EditorApp<ShootingPlayApp>` (SDK adapter, contract §2.1) is the real `ArtifactApp` implementor
+    /// `VcsArtifactApp` wraps, exactly the way `PluginBuilder::editor::<ShootingPlayApp>` builds it.
+    pub struct ShootingApp(VcsArtifactApp<EditorApp<ShootingPlayApp>>);
+
+    impl std::ops::Deref for ShootingApp {
+        type Target = VcsArtifactApp<EditorApp<ShootingPlayApp>>;
+        fn deref(&self) -> &Self::Target {
+            &self.0
+        }
     }
-    
+
+    impl std::ops::DerefMut for ShootingApp {
+        fn deref_mut(&mut self) -> &mut Self::Target {
+            &mut self.0
+        }
+    }
+
+    impl Drop for ShootingApp {
+        fn drop(&mut self) {
+            if !std::thread::panicking() {
+                semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut self.0);
+            }
+        }
+    }
+
+    /// 🧪️ The instance id every `meta("local")` dispatch is stamped with.
+    pub const SHOOTING_TEST_INSTANCE: u32 = 1;
+
     /// ✏️ Adapts `create_shooting_app`'s `AppDefinition` (contract §2.4) into the `App { definition,
     /// examples }` shape `new_app_with_registry`/`assert_declared_actions_bridge_to_commands` still
     /// expect — framework test context gap, not modifiable here (`🧰️framework/**` is outside this packet's
@@ -23,16 +44,64 @@ pub(crate) mod context {
     pub fn shooting_app_manifest_for_tests() -> semio_framework_plugin::App {
         semio_framework_plugin::App { definition: create_shooting_app(), examples: Vec::new() }
     }
-    
+
+    /// 🧪️ Registry-backed and bound — the bare `new_app` carries an empty `AppActionRegistry`, and
+    /// `tool_job_registration` admits a `bounded_first_step_tool_proofs!` row only when its id is
+    /// `Migrated` in the LIVE registry, so a bare instance faults at construction with
+    /// `interactive-job.catalog-authority` now that every verb is a bounded tool.
+    pub async fn shooting_app() -> ShootingApp {
+        let mut app = new_app_with_registry::<EditorApp<ShootingPlayApp>>(shooting_app_manifest_for_tests).await;
+        app.bind_instance_id(SHOOTING_TEST_INSTANCE).await;
+        ShootingApp(app)
+    }
+
     /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline.
     pub async fn shooting_app_with_registry() -> ShootingApp {
-        new_app_with_registry::<EditorApp<ShootingPlayApp>>(shooting_app_manifest_for_tests).await
+        shooting_app().await
     }
-    
-    pub async fn dispatch(app: &mut ShootingApp, command: ShootingCommand) -> InvocationResult {
-        app.dispatch_typed(command, &meta("local")).await.expect("dispatch")
+
+    /// 🔁️ A mounted app answers before its retained typed operation has published: drive it home the
+    /// way the plugin host's continuation does, fold the settled receipt's effects into the answer and
+    /// apply any `LoadDocument` the way the host would.
+    pub async fn dispatch(app: &mut ShootingApp, command: ShootingCommand) -> Dispatched {
+        let mut result = app.dispatch_typed(command, &meta("local")).await.expect("dispatch");
+        let settled = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, SHOOTING_TEST_INSTANCE).await.expect("settle the typed operation");
+        result.requested_effects.extend(settled.effects);
+        for effect in &result.requested_effects {
+            if let Effect::LoadDocument { pack, spr } = effect {
+                let files = store::ArtifactPackFiles { pack: pack.clone(), spr: spr.clone(), ops: String::new() };
+                app.load_document_pack(&files).await.expect("test host applies load-document effect");
+            }
+        }
+        Dispatched { result, lanes: settled.lanes }
     }
-    
+
+    /// 🧾️ A settled dispatch: the immediate answer plus the store lanes the retained publication
+    /// actually wrote (a mounted app publishes AFTER answering, so `result.mutations` is always empty).
+    pub struct Dispatched {
+        pub result: InvocationResult,
+        pub lanes: Vec<TypedOperationResultLane>,
+    }
+
+    impl Dispatched {
+        /// 📝️ Whether the settled publication wrote the document lane.
+        pub fn edited_document(&self) -> bool {
+            self.lanes.contains(&TypedOperationResultLane::Artifact)
+        }
+    }
+
+    impl std::ops::Deref for Dispatched {
+        type Target = InvocationResult;
+        fn deref(&self) -> &Self::Target {
+            &self.result
+        }
+    }
+
+    /// ↩️ Runs a framework-reserved history verb (`undo`/`redo`) and settles its publication.
+    pub async fn history_verb(app: &mut ShootingApp, verb: &str) {
+        semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut app.0, verb, SHOOTING_TEST_INSTANCE).await;
+    }
+
     pub async fn render(app: &mut ShootingApp, body_key: &str) -> String {
         semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(app.render(body_key, None, &ViewModel::default()).await.expect("render")).expect("project and retire semantic tree")
     }
@@ -54,17 +123,31 @@ pub(crate) mod context {
         decoded.expect("packed icon scene")
     }
     
+    /// 🪟️ The two default-layout panes — window chrome (`window_engagements`/`window_measures`) is keyed
+    /// by window INSTANCE and only projected for instances the view state carries.
+    pub fn view(locale: semio_framework_plugin::Locale) -> ViewModel {
+        ViewModel {
+            locale,
+            window_id: Some(SHOOTING_PLAY_WINDOW_SCENE.into()),
+            window_instances: vec![
+                ViewWindowInstance { id: SHOOTING_PLAY_WINDOW_SCENE.into(), window_kind_id: SHOOTING_PLAY_WINDOW_SCENE.into() },
+                ViewWindowInstance { id: SHOOTING_PLAY_WINDOW_ICON.into(), window_kind_id: SHOOTING_PLAY_WINDOW_ICON.into() },
+            ],
+            ..Default::default()
+        }
+    }
+
     pub async fn scene_window_measures(app: &mut ShootingApp) -> Vec<WindowMeasure> {
-        app.window_measures(&ViewModel::default()).await.get(SHOOTING_PLAY_WINDOW_SCENE).cloned().expect("scene window measures")
+        app.window_measures(&view(semio_framework_plugin::Locale::En)).await.get(SHOOTING_PLAY_WINDOW_SCENE).cloned().expect("scene window measures")
     }
     
     pub async fn icon_window_measures(app: &mut ShootingApp) -> Vec<WindowMeasure> {
-        app.window_measures(&ViewModel::default()).await.get(SHOOTING_PLAY_WINDOW_ICON).cloned().expect("icon window measures")
+        app.window_measures(&view(semio_framework_plugin::Locale::En)).await.get(SHOOTING_PLAY_WINDOW_ICON).cloned().expect("icon window measures")
     }
 }
 
 use super::*;
-use crate::editor::shooting::unit_tests::context::{dispatch, shooting_app, shooting_app_with_registry, ShootingApp};
+use context::{dispatch, shooting_app, shooting_app_with_registry, ShootingApp};
 use semio_framework_plugin::app::EditorApp;
 use semio_framework_plugin::artifact_app_laws;
 use semio_framework_plugin::{Effect, PluginApp};
@@ -119,13 +202,12 @@ impl ShootingRetainedCatalogOracle for SerdeJsonShootingRetainedCatalogOracle {
 #[semio_framework_async_macros::async_test]
 async fn retained_command_catalog_matches_the_serde_json_oracle() {
     let oracle = SerdeJsonShootingRetainedCatalogOracle.summarize(include_str!("../../🧫️fixtures/🧫️retained-command-limits/🔣️.json"));
-    let mut command_ids = every_command().iter().map(|command| shooting_command_id(command).to_string()).collect::<std::collections::BTreeSet<_>>();
-    command_ids.insert("exportActiveShot".to_string());
+    let mut command_ids = every_command().iter().map(|command| command.command_id().to_string()).collect::<std::collections::BTreeSet<_>>();
     command_ids.insert("setActiveUtility".to_string());
     let bounded_ids = SHOOTING_BOUNDED_TOOL_IDS.iter().map(|id| (*id).to_string()).collect::<std::collections::BTreeSet<_>>();
     let host_only_ids = <ShootingCommandJobFactory as semio_framework_plugin::ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS
         .iter()
-        .filter(|contract| contract.lanes == [semio_framework_plugin::ArtifactToolPublicationLane::HostOnly])
+        .filter(|contract| contract.lanes == [ArtifactToolPublicationLane::HostOnly])
         .map(|contract| contract.tool_id.to_string())
         .collect::<std::collections::BTreeSet<_>>();
     let subject = ShootingRetainedCatalogSummary {
@@ -137,16 +219,17 @@ async fn retained_command_catalog_matches_the_serde_json_oracle() {
         unique: bounded_ids.len() == SHOOTING_BOUNDED_TOOL_IDS.len() && bounded_ids.is_subset(&command_ids),
         route_ids: command_ids.clone(),
         bounded_ids: bounded_ids.clone(),
-        host_only_ids,
+        host_only_ids: host_only_ids.clone(),
     };
-    assert_eq!(oracle, ShootingRetainedCatalogSummary { routes: 38, bounded: 2, resumable: 36, migrated: 2, fail_closed: 36, unique: true, route_ids: command_ids, bounded_ids: bounded_ids.clone(), host_only_ids: bounded_ids });
+    assert_eq!(oracle, ShootingRetainedCatalogSummary { routes: 38, bounded: 37, resumable: 1, migrated: 37, fail_closed: 1, unique: true, route_ids: command_ids, bounded_ids, host_only_ids });
     assert_eq!(subject, oracle);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn retained_publication_oracle_rejects_hostile_tool_and_lane_fixtures() {
     let fixture = include_str!("../../🧫️fixtures/🧫️retained-command-limits/🔣️.json");
-    let expected = SHOOTING_BOUNDED_TOOL_IDS.iter().map(|id| (*id).to_string()).collect::<std::collections::BTreeSet<_>>();
+    let expected = ["importSnapshotJson", "setActiveExample", "resetFixture", "worldPointerDown", "worldPointerMove", "saveDownload", "loadRequest", "importAssetRequest", "exportActiveShot", "exportAllShots"].iter().map(|id| (*id).to_string()).collect::<std::collections::BTreeSet<_>>();
+    assert_eq!(SerdeJsonShootingRetainedCatalogOracle.summarize(fixture).host_only_ids, expected);
     let wrong_lane = fixture.replacen("\"HostOnly\"", "\"Artifact\"", 1);
     let wrong_tool = fixture.replacen("\"loadRequest\"", "\"forgedRequest\"", 1);
     assert_ne!(SerdeJsonShootingRetainedCatalogOracle.summarize(&wrong_lane).host_only_ids, expected);
@@ -160,12 +243,12 @@ async fn retained_publication_oracle_rejects_hostile_tool_and_lane_fixtures() {
 /// hold.
 #[semio_framework_async_macros::async_test]
 async fn command_ids_are_unique_across_every_row() {
-    let ids: Vec<&str> = every_command().iter().map(shooting_command_id).collect();
+    let ids: Vec<&str> = every_command().iter().map(|command| command.command_id()).collect();
     let mut sorted = ids.clone();
     sorted.sort_unstable();
     sorted.dedup();
     assert_eq!(sorted.len(), ids.len(), "duplicate command ids in {ids:?}");
-    assert_eq!(ids.len(), 36, "every ShootingCommand row must be covered by every_command()");
+    assert_eq!(ids.len(), 37, "every ShootingCommand row must be covered by every_command()");
 }
 
 /// ⚖️ LAW: text and binary are two projections of the same command, for every single row.
@@ -214,10 +297,85 @@ pub(super) fn every_command() -> Vec<ShootingCommand> {
         ShootingCommand::SaveDownload(save_download::SaveDownload {}),
         ShootingCommand::LoadRequest(load_request::LoadRequest {}),
         ShootingCommand::ImportAssetRequest(import_asset_request::ImportAssetRequest {}),
-        ShootingCommand::ExportShots(export_shots::ExportShots { all: true }),
+        ShootingCommand::ExportActiveShot(export_active_shot::ExportActiveShot {}),
+        ShootingCommand::ExportAllShots(export_all_shots::ExportAllShots {}),
     ]
 }
 //#endregion 🔖️CommandSurface
+
+//#region 🔖️ActionBridge
+fn action_args(value: &Value) -> DslValue {
+    dsl::os_pack::json_to_dsl_value(&dsl::os_pack::json::parse(&value.to_string()).expect("fixture JSON"))
+}
+
+/// 🐫️ The shell's spelling of the payload keys.
+fn camel_case_keys(value: &DslValue) -> DslValue {
+    match value {
+        DslValue::Object(entries) => DslValue::Object(
+            entries
+                .iter()
+                .map(|(key, value)| {
+                    let mut camel = String::new();
+                    let mut upper = false;
+                    for ch in key.chars() {
+                        if ch == '_' { upper = true; } else if upper { camel.push(ch.to_ascii_uppercase()); upper = false; } else { camel.push(ch); }
+                    }
+                    (camel, value.clone())
+                })
+                .collect(),
+        ),
+        other => other.clone(),
+    }
+}
+
+/// 🌉️ Every command row the shells reach by action id must decode through `command_from_action`
+/// (camelCase host keys → the payloads' own snake_case `FromValue` names), and its `command_id` must
+/// round-trip — the boundary that was missing entirely before ticket 26/09/16/SHOOTING-PLUGIN-END-TO-END
+/// (every shell action was refused as "not framework-reserved").
+#[test]
+fn command_from_action_round_trips_every_command_id() {
+    for command in every_command() {
+        let id = command.command_id();
+        let args = dsl::ToValue::to_value(&command);
+        let payload = match &args {
+            DslValue::Object(entries) if entries.len() == 1 => entries[0].1.clone(),
+            other => other.clone(),
+        };
+        let bridged = ShootingPlayApp::command_from_action(id, Some(&camel_case_keys(&payload))).unwrap_or_else(|error| panic!("action {id} failed to bridge: {}", error.message));
+        assert_eq!(bridged.command_id(), id, "command_id mismatch for action {id}");
+    }
+    assert!(ShootingPlayApp::command_from_action("nonsense", None).is_err());
+}
+
+/// 🎛️ The host control contracts (`value`/`pressed`/gumball `ids`/viewport `camera`) reach the rows.
+#[test]
+fn command_from_action_bridges_host_control_contracts() {
+    let args = |json: Value| action_args(&json);
+    assert_eq!(ShootingPlayApp::command_from_action("setActiveShot", Some(&args(json!({ "value": "s2" })))).expect("select bridge"), ShootingCommand::SetActiveShot(set_active_shot::SetActiveShot { shot_id: Some("s2".into()) }));
+    assert_eq!(ShootingPlayApp::command_from_action("toggleSun", Some(&args(json!({ "pressed": true })))).expect("toggle bridge"), ShootingCommand::ToggleSun(toggle_sun::ToggleSun { value: true }));
+    assert_eq!(ShootingPlayApp::command_from_action("setCenterModel", Some(&args(json!({ "pressed": false })))).expect("toggle bridge"), ShootingCommand::SetCenterModel(set_center_model::SetCenterModel { pressed: Some(false) }));
+    assert_eq!(ShootingPlayApp::command_from_action("setSunAzimuth", Some(&args(json!({ "value": 90 })))).expect("slider bridge"), ShootingCommand::SetSunAzimuth(set_sun_azimuth::SetSunAzimuth { value: 90.0 }));
+    assert_eq!(
+        ShootingPlayApp::command_from_action("patchShots", Some(&args(json!({ "field": "width", "shotIds": ["s1"], "value": 512 })))).expect("inspector bridge"),
+        ShootingCommand::PatchShots(patch_shots::PatchShots { shot_ids: vec!["s1".into()], field: "width".into(), value: "512".into() })
+    );
+    assert_eq!(ShootingPlayApp::command_from_action("addShot", Some(&args(json!({ "format": "svg", "shape": "ellipse" })))).expect("catalogue bridge"), ShootingCommand::AddShot(add_shot::AddShot { format: "svg".into(), shape: "ellipse".into() }));
+    assert_eq!(ShootingPlayApp::command_from_action("addShot", None).expect("defaults bridge"), ShootingCommand::AddShot(add_shot::AddShot { format: "png".into(), shape: "rectangle".into() }));
+    assert_eq!(
+        ShootingPlayApp::command_from_action("translateSelection", Some(&args(json!({ "mode": "object", "ids": ["a1"], "dx": 1, "dy": 0, "dz": -2.5 })))).expect("gumball bridge"),
+        ShootingCommand::TranslateSelection(translate_selection::TranslateSelection { asset_ids: vec!["a1".into()], dx: 1.0, dy: 0.0, dz: -2.5 })
+    );
+    let ShootingCommand::SetCamera(set_camera::SetCamera { camera }) = ShootingPlayApp::command_from_action("setCamera", Some(&args(json!({ "windowId": "w1", "camera": { "position": [1, 2, 3], "target": [0, 0, 0], "zoom": 2 } })))).expect("viewport bridge") else {
+        panic!("setCamera must bridge to SetCamera");
+    };
+    assert_eq!(camera.position, [1.0, 2.0, 3.0]);
+    assert_eq!(camera.zoom, 2.0);
+    assert_eq!(camera.fov, crate::default_fov());
+    assert_eq!(ShootingPlayApp::command_from_action("loadSavedCamera", Some(&args(json!({ "id": "cam1" })))).expect("possible engagement bridge"), ShootingCommand::LoadSavedCamera(load_saved_camera::LoadSavedCamera { id: "cam1".into() }));
+    assert_eq!(ShootingPlayApp::command_from_action("setShotSelection", Some(&args(json!({ "shotIds": ["s1", "s2"] })))).expect("tree bridge"), ShootingCommand::SetShotSelection(set_shot_selection::SetShotSelection { shot_ids: vec!["s1".into(), "s2".into()] }));
+    assert_eq!(ShootingPlayApp::command_from_action("exportAllShots", None).expect("export bridge"), ShootingCommand::ExportAllShots(export_all_shots::ExportAllShots {}));
+}
+//#endregion 🔖️ActionBridge
 
 //#region 🔖️ManifestSanity
 #[semio_framework_async_macros::async_test]
@@ -245,7 +403,7 @@ async fn utility_registry_scopes_transform_gumball_and_actions_are_declared() {
         assert!(definition.window_kinds.iter().flat_map(|window| window.actions.iter()).any(|action| action.id == command), "registry declares {command}");
     }
     let mut app = shooting_app().await;
-    let engagements = app.window_engagements(&semio_framework_plugin::ViewModel::default()).await;
+    let engagements = app.window_engagements(&context::view(semio_framework_plugin::Locale::En)).await;
     assert!(engagements[SHOOTING_PLAY_WINDOW_SCENE].options.is_none(), "the gumball selector moved to the host-derived utility bar");
     assert!(engagements[SHOOTING_PLAY_WINDOW_SCENE].status.as_ref().unwrap()[0].text.contains("assets"));
     assert!(engagements[SHOOTING_PLAY_WINDOW_ICON].status.as_ref().unwrap()[0].text.contains("256×256"));
@@ -279,13 +437,13 @@ async fn assets_interaction_domain_is_declared_and_scoped_to_the_scene_window() 
 #[semio_framework_async_macros::async_test]
 async fn shooting_labels_resolve_native_english_by_default() {
     let mut app = shooting_app().await;
-    let document_json = crate::editor::shooting::unit_tests::context::render(&mut app, SHOOTING_PLAY_BODY_ARTIFACT).await;
+    let document_json = context::render(&mut app, SHOOTING_PLAY_BODY_ARTIFACT).await;
     assert!(document_json.contains("Shots"));
     assert!(document_json.contains("Assets"));
-    let catalogue_json = crate::editor::shooting::unit_tests::context::render(&mut app, SHOOTING_PLAY_BODY_CATALOGUE).await;
+    let catalogue_json = context::render(&mut app, SHOOTING_PLAY_BODY_CATALOGUE).await;
     assert!(catalogue_json.contains("Add Shot"));
     assert!(catalogue_json.contains("SVG Rectangle"));
-    let engagements = app.window_engagements(&semio_framework_plugin::ViewModel::default()).await;
+    let engagements = app.window_engagements(&context::view(semio_framework_plugin::Locale::En)).await;
     assert_eq!(engagements[SHOOTING_PLAY_WINDOW_SCENE].input.as_ref().unwrap().placeholder.as_deref(), Some("Camera label"));
     assert_eq!(engagements[SHOOTING_PLAY_WINDOW_ICON].input.as_ref().unwrap().placeholder.as_deref(), Some("Shot label"));
 }
@@ -293,7 +451,7 @@ async fn shooting_labels_resolve_native_english_by_default() {
 #[semio_framework_async_macros::async_test]
 async fn shooting_labels_resolve_native_german() {
     let mut app = shooting_app().await;
-    let view_state = semio_framework_plugin::ViewModel { locale: semio_framework_plugin::Locale::De, ..Default::default() };
+    let view_state = context::view(semio_framework_plugin::Locale::De);
     let document_json = artifact_app_laws::project_and_retire_fixture_tree(app.render(SHOOTING_PLAY_BODY_ARTIFACT, None, &view_state).await.expect("render document")).expect("retire document tree");
     assert!(document_json.contains("Aufnahmen"));
     assert!(document_json.contains("Objekte"));
@@ -319,12 +477,12 @@ async fn camera_drag_never_creates_a_document_undo_step() {
         dispatch(&mut app, ShootingCommand::SetCamera(set_camera::SetCamera { camera: default_camera(position) })).await;
     }
     async fn camera_position(app: &mut ShootingApp) -> Value {
-        let scene = crate::editor::shooting::unit_tests::context::world_scene(app).await;
+        let scene = context::world_scene(app).await;
         let camera: Value = serde_json::from_str(&scene.camera_json).unwrap();
         camera["position"].clone()
     }
     assert_eq!(camera_position(&mut app).await, json!([3.0, 0.0, 0.0]), "config camera reflects the last drag tick");
-    app.handle_action("undo", None, &artifact_app_laws::meta("local")).await.expect("undo (no-op: nothing on the document store to undo)");
+    context::history_verb(&mut app, "undo").await;
     assert_eq!(camera_position(&mut app).await, json!([3.0, 0.0, 0.0]), "document undo has nothing to revert — the drag never touched the document");
 }
 
@@ -347,16 +505,18 @@ async fn two_instances_converge_disjoint_edits_via_backbone() {
 
 #[semio_framework_async_macros::async_test]
 async fn ingest_operations_is_idempotent_for_shooting() {
-    artifact_app_laws::assert_ingest_idempotent::<EditorApp<ShootingPlayApp>, String>(ShootingCommand::SetActiveShotLabel(set_active_shot_label::SetActiveShotLabel { value: "Hero".into() }), |app| {
-        crate::standards::v1::subsets::any::schema::active_shot(&app.snapshot().expect("snapshot")).unwrap().label.clone()
-    })
+    artifact_app_laws::assert_registered_ingest_idempotent::<EditorApp<ShootingPlayApp>, String, _, _>(
+        || async { context::shooting_app_manifest_for_tests() },
+        ShootingCommand::SetActiveShotLabel(set_active_shot_label::SetActiveShotLabel { value: "Hero".into() }),
+        |app| crate::standards::v1::subsets::any::schema::active_shot(&app.snapshot().expect("snapshot")).unwrap().label.clone(),
+    )
     .await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
     let mut app = shooting_app().await;
-    assert!(crate::editor::shooting::unit_tests::context::render(&mut app, "shooting.play.nope").await.contains("Unknown body"));
+    assert!(context::render(&mut app, "shooting.play.nope").await.contains("Unknown body"));
 }
 //#endregion 🔖️CrossCutting
 

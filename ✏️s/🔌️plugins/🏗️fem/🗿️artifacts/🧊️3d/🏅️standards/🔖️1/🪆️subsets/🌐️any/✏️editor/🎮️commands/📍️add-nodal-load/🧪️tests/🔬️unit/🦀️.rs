@@ -1,5 +1,5 @@
 use super::*;
-use crate::editor::fem3d::commands::{add_combination, add_load_case, add_member_udl, add_node, set_self_weight};
+use crate::editor::fem3d::commands::{add_bar, add_combination, add_load_case, add_material, add_member_udl, add_node, add_section, set_self_weight};
 use crate::editor::fem3d::unit_tests::context::{dispatch, fem3d_empty_app, Fem3dApp};
 use crate::editor::fem3d::Fem3dCommand;
 
@@ -30,7 +30,16 @@ async fn add_nodal_load_with_no_existing_case_creates_one() {
 #[semio_framework_async_macros::async_test]
 async fn add_member_udl_action_emits_op_3d() {
     let mut app = app_with_load_case().await;
-    dispatch(&mut app, Fem3dCommand::AddMemberUdl(add_member_udl::AddMemberUdl { element_id: "e1".into(), wx: 0.0, wy: 0.0, wz: -2000.0, case_id: None })).await;
+    dispatch(&mut app, Fem3dCommand::AddNode(add_node::AddNode { x: 0.0, y: 0.0, z: 0.0 })).await;
+    dispatch(&mut app, Fem3dCommand::AddNode(add_node::AddNode { x: 4.0, y: 0.0, z: 0.0 })).await;
+    dispatch(&mut app, Fem3dCommand::AddMaterial(add_material::AddMaterial { name: "Steel".into(), e: 210e9, g: 81e9 })).await;
+    dispatch(&mut app, Fem3dCommand::AddSection(add_section::AddSection { name: "HEA200".into(), area: 0.005, iy: 3.69e-5, iz: 1.34e-5, j: 2.1e-7 })).await;
+    let snapshot = app.snapshot().expect("snapshot");
+    let (start, end) = (snapshot.nodes[0].id.clone(), snapshot.nodes[1].id.clone());
+    let (material, section) = (snapshot.materials[0].id.clone(), snapshot.sections[0].id.clone());
+    dispatch(&mut app, Fem3dCommand::AddBar(add_bar::AddBar { start, end, material_id: material, section_id: section })).await;
+    let element_id = crate::element_id(&app.snapshot().expect("snapshot").elements[0]).to_string();
+    dispatch(&mut app, Fem3dCommand::AddMemberUdl(add_member_udl::AddMemberUdl { element_id, wx: 0.0, wy: 0.0, wz: -2000.0, case_id: None })).await;
     let snapshot = app.snapshot().expect("snapshot");
     let load_case = &snapshot.load_cases[0];
     assert!(matches!(load_case.loads[0], FemLoad::MemberUdl { .. }));
@@ -41,7 +50,9 @@ async fn add_nodal_load_targets_named_case() {
     let mut app = app_with_load_case().await;
     dispatch(&mut app, Fem3dCommand::AddLoadCase(add_load_case::AddLoadCase { name: "Live".into(), self_weight: false })).await;
     let live_case_id = app.snapshot().expect("snapshot").load_cases[1].id.clone();
-    dispatch(&mut app, Fem3dCommand::AddNodalLoad(AddNodalLoad { node_id: "n2".into(), dof: crate::FemDof::Tz, value: -5000.0, case_id: Some(live_case_id) })).await;
+    dispatch(&mut app, Fem3dCommand::AddNode(add_node::AddNode { x: 1.0, y: 2.0, z: 3.0 })).await;
+    let node_id = app.snapshot().expect("snapshot").nodes[0].id.clone();
+    dispatch(&mut app, Fem3dCommand::AddNodalLoad(AddNodalLoad { node_id, dof: crate::FemDof::Tz, value: -5000.0, case_id: Some(live_case_id) })).await;
     let snapshot = app.snapshot().expect("snapshot");
     assert!(snapshot.load_cases[1].loads.iter().any(|l| matches!(l, FemLoad::Nodal { .. })));
     assert!(snapshot.load_cases[0].loads.is_empty(), "the untargeted case must stay untouched");

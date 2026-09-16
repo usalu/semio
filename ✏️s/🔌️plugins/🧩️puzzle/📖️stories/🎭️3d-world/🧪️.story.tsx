@@ -98,6 +98,10 @@ function storySummarizePuzzle3dConnectionParams(fixture: StoryWorld3dFixture) {
 const STORY_REFERENCE_URL_OVERRIDES: Record<string, string> = {
   "/infinite-fixture/abbau-aufbau-masterarbeit-grundriss.jpg": abbauAufbauReferenceUrl,
   "/infinite-fixture/rathaus-ahlen-grundriss.png": rathausAhlenReferenceUrl,
+  "/infinite-assets/🖼️abbau-aufbau-masterarbeit-grundriss.jpg": abbauAufbauReferenceUrl,
+  "/infinite-assets/🖼️rathaus-ahlen-grundriss.png": rathausAhlenReferenceUrl,
+  "/infinite-assets/🏘️abbau-aufbau-masterarbeit-grundriss/🖼️.jpg": abbauAufbauReferenceUrl,
+  "/infinite-assets/🏛️rathaus-ahlen-grundriss/🖼️.png": rathausAhlenReferenceUrl,
 };
 //#endregion ReferenceAssetOverrides
 

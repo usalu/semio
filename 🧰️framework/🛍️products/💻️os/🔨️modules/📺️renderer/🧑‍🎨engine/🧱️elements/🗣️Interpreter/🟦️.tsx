@@ -493,14 +493,34 @@ function surfacePropsToComponentSceneNode(record: UiNodeRecord, props: SurfacePr
  * verbatim. See {@link PagedSurfaceView}. */
 type SurfaceSceneAssembler = (spine: Record<string, unknown>) => Record<string, unknown>;
 
+/** 🖱️ The `onAction` a scene host receives: the shell's funnel with every dispatch stamped `origin: "gesture"`
+ * (`🎯️input-ledger` `InputOriginV1`) — a canvas/world/map/board host only ever forwards pointer and camera
+ * streams, whose refusals must be logged, never toasted. Memoised per underlying callback so a host's own
+ * `useCallback([onAction])` chains (Canvas2dHost rebuilds its canvas session on `dispatch` identity) stay
+ * stable across renders. A stamp the host already set (a tutorial replay through a host) wins. */
+const gestureOnActionByFunnel = new WeakMap<(action: ActionDescriptor) => void | Promise<unknown>, (action: ActionDescriptor) => void | Promise<unknown>>();
+function gestureOnActionFor(onAction: (action: ActionDescriptor) => void | Promise<unknown>): (action: ActionDescriptor) => void | Promise<unknown> {
+  let wrapped = gestureOnActionByFunnel.get(onAction);
+  if (wrapped === undefined) {
+    wrapped = (action) => {
+      const given = (action as { readonly provenance?: Record<string, unknown> }).provenance;
+      const stamped = { ...action, provenance: { windowId: null, causedBy: null, ...given, origin: given?.origin ?? "gesture" } };
+      return onAction(stamped as ActionDescriptor);
+    };
+    gestureOnActionByFunnel.set(onAction, wrapped);
+  }
+  return wrapped;
+}
+
 function renderComponentSceneHost(
   record: UiNodeRecord,
   props: SurfaceProps,
-  onAction: (action: ActionDescriptor) => void,
+  funnel: (action: ActionDescriptor) => void | Promise<unknown>,
   surface: SurfaceId,
   requestContextMenu?: UiInterpreterContext["requestContextMenu"],
   assemble?: SurfaceSceneAssembler,
 ): ReactNode {
+  const onAction = gestureOnActionFor(funnel);
   const node = surfacePropsToComponentSceneNode(record, props, surface, assemble);
   if (!node) {
     return (

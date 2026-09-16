@@ -1,6 +1,6 @@
 use super::*;
 
-fn renderer_camera_command() -> crate::editor::fem3d::commands::set_camera::SetCamera {
+fn renderer_camera_command() -> set_camera::SetCamera {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🧫️fixtures/🖱️pointer-gestures.json")).unwrap();
     let gesture = fixture["gestures"].as_array().unwrap().iter().find(|row| row["id"] == "orbit-completes-into-one-setcamera").unwrap();
     let payload = serde_json::json!({ "windowId": fixture["scene"]["windowInstanceId"], "camera": gesture["expect"]["camera"] });
@@ -17,7 +17,7 @@ fn fem3d_window_config_camera_uses_the_shared_renderer_pose_contract() {
         serde_json::json!({ "camera": { "position": [8, -3], "target": [0, 0, 0], "zoom": 1.25 } }),
         serde_json::json!({ "camera": { "position": [8, -3, 5], "target": [0, 0, 0], "zoom": 1.25, "projection": "orthographic" } }),
     ] {
-        assert!(dsl::json::from_json_str::<crate::editor::fem3d::commands::set_camera::SetCamera>(&invalid.to_string()).is_err());
+        assert!(dsl::json::from_json_str::<set_camera::SetCamera>(&invalid.to_string()).is_err());
     }
     eprintln!("[DEBUG] FEM native camera command admits the actual nested renderer pose and rejects opaque, flat, short-vector and projection-mixed payloads");
 }
@@ -29,14 +29,14 @@ fn fem3d_window_config_document_admission_rejects_window_and_os_fields() {
     let row = fixture["cases"].as_array().expect("document cases").iter().find(|row| row["dimension"] == "3d").expect("dimension");
     let base = row["document"].to_string();
     let _ = dsl::json::from_json_str::<crate::standards::v1::subsets::any::schema::Fem3dArtifact>(&base).expect("neutral FEM artifact admission");
-    let _ = dsl::json::from_json_str::<crate::Fem3dSnapshot>(&base).expect("neutral FEM snapshot admission");
+    let _ = dsl::json::from_json_str::<Fem3dSnapshot>(&base).expect("neutral FEM snapshot admission");
     for field in row["foreignFields"].as_array().expect("foreign fields") {
         let key = field["key"].as_str().expect("field key");
         let mut candidate = row["document"].clone();
         candidate[key] = field["value"].clone();
         let text = candidate.to_string();
         assert!(dsl::json::from_json_str::<crate::standards::v1::subsets::any::schema::Fem3dArtifact>(&text).is_err(), "artifact admitted {key}");
-        assert!(dsl::json::from_json_str::<crate::Fem3dSnapshot>(&text).is_err(), "snapshot admitted {key}");
+        assert!(dsl::json::from_json_str::<Fem3dSnapshot>(&text).is_err(), "snapshot admitted {key}");
     }
     eprintln!("[DEBUG] FEM 3d artifact and snapshot reject all three foreign owner fields");
 }
@@ -56,7 +56,7 @@ fn block_on_fem_window_ownership<F: std::future::Future>(mut future: std::pin::P
 fn fem3d_window_config_runtime_isolates_same_kind_instances_and_restores_packs() {
     std::thread::Builder::new()
         .name("fem3d-window-ownership-law".into())
-        .stack_size(2 * 1024 * 1024)
+        .stack_size(128 * 1024 * 1024)
         .spawn(|| {
             block_on_fem_window_ownership(Box::pin(async {
                 use crate::editor::fem3d::commands::{set_active_example, set_result_display};

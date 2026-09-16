@@ -1,0 +1,29 @@
+{
+  "artifact": null,
+  "nodes": null,
+  "elements": null,
+  "materials": null,
+  "sections": null,
+  "solids": null,
+  "supports": null,
+  "loadCases": null,
+  "combinations": {
+    "added": [],
+    "removed": [],
+    "patched": [
+      {
+        "id": "sls",
+        "item": {
+          "id": "sls",
+          "name": "SLS characteristic",
+          "terms": {
+            "dead": 1.1,
+            "wind": 0.55
+          }
+        }
+      }
+    ],
+    "reordered": null
+  },
+  "analysis": null
+}

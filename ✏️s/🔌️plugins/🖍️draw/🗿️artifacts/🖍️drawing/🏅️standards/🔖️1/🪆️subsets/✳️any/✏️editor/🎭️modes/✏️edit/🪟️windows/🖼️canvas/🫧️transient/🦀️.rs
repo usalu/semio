@@ -60,12 +60,10 @@ impl store::ArtifactDsl for DrawingCanvasWindowTransient {
     fn envelope_id() -> &'static str { "s.draw.drawing.canvas-window.transient" }
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = store::semio_format::split_text_preamble(text).map_or(text, |(_, body)| body);
-        let json: serde_json::Value = serde_json::from_str(body).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))?;
-        dsl::FromValue::from_value(json.into()).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))
+        dsl::json::from_json_str(body).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))
     }
     fn print_dsl(&self) -> String {
-        let value: serde_json::Value = dsl::ToValue::to_value(self).into();
-        let body = serde_json::to_string_pretty(&value).expect("Drawing Canvas window transient JSON");
+        let body = dsl::json::to_json_string(self);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid Drawing Canvas transient envelope");
         store::semio_format::wrap_text(&envelope, &body)
     }
@@ -73,8 +71,7 @@ impl store::ArtifactDsl for DrawingCanvasWindowTransient {
 
 impl store::ArtifactPack for DrawingCanvasWindowTransient {
     fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        let value: serde_json::Value = dsl::ToValue::to_value(self).into();
-        let body = serde_json::to_vec(&value).map_err(|error| store::PackError::Schema(error.to_string()))?;
+        let body = dsl::json::to_json_string(self).into_bytes();
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|error| store::PackError::Schema(error.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &body))
     }
@@ -83,8 +80,8 @@ impl store::ArtifactPack for DrawingCanvasWindowTransient {
         if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
             return Err(store::PackError::Schema("Drawing Canvas window transient pack envelope mismatch".into()));
         }
-        let json: serde_json::Value = serde_json::from_slice(&body).map_err(|error| store::PackError::Schema(error.to_string()))?;
-        dsl::FromValue::from_value(json.into()).map_err(|error| store::PackError::Schema(error.to_string()))
+        let text = std::str::from_utf8(&body).map_err(|error| store::PackError::Schema(error.to_string()))?;
+        dsl::json::from_json_str(text).map_err(|error| store::PackError::Schema(error.to_string()))
     }
     fn record_spec() -> Option<dsl::RecordSpec> { None }
 }

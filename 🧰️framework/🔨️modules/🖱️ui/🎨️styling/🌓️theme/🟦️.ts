@@ -961,9 +961,18 @@ export interface IconRenderMaterial {
   readonly emissiveIntensity?: number;
 }
 
+/** @emoji 🎯️ Frames the loaded asset before rendering: the camera keeps its viewing direction and zoom,
+ * re-targets the asset's bounding-sphere centre and backs off so the sphere fits the frame with `padding`
+ * (the icon twin of the world-3d fit lane, so an icon shows what a centred scene shows). */
+export interface IconRenderFit {
+  readonly enabled: boolean;
+  readonly padding?: number;
+}
+
 export interface IconRenderRequest {
   readonly assetUrl: string;
   readonly camera: IconRenderCamera;
+  readonly fit?: IconRenderFit;
   readonly lights: IconRenderLights;
   readonly width: number;
   readonly height: number;

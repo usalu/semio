@@ -306,20 +306,37 @@ mod args_bridge {
             super::SET_CONSTRUCTION_PROPERTY_ACTION_ID => {
                 Command::SetConstructionProperty { construction: u32_or("construction", u32_or("id", 0)), property: text(args, "property").unwrap_or_else(|| text_or("field", "")), value: text_or("value", "") }
             }
-            super::SET_THERMOSTAT_SETPOINTS_ACTION_ID => Command::SetThermostatSetpoints {
-                thermostat: u32_or("thermostat", 0),
-                heating_schedule: u32_or("heatingSchedule", 0),
-                cooling_schedule: u32_or("coolingSchedule", 0),
-                heating_throttle_range_k: f64_or("heatingThrottleRangeK", 2.0),
-                cooling_throttle_range_k: f64_or("coolingThrottleRangeK", 2.0),
-            },
-            super::SET_SITE_ACTION_ID => Command::SetSite {
-                latitude_deg: f64_or("latitudeDeg", 0.0),
-                longitude_deg: f64_or("longitudeDeg", 0.0),
-                elevation_m: f64_or("elevationM", 0.0),
-                time_zone_hours: f64_or("timeZoneHours", 0.0),
-                north_axis_deg: f64_or("northAxisDeg", 0.0),
-            },
+            // 🌡️ A WHOLE-RECORD verb reached from a PER-FIELD control: the inspector authors all five
+            // slots at their current values plus `field`, naming the one the host then overwrites
+            // under `value`. Without that indirection the merged `value` would be read by nobody and
+            // the edited slot would silently fall back to the default below (the review's blocker:
+            // every throttle-range edit wrote 2.0 and every site edit wrote 0.0). A palette or
+            // keybinding invocation carries no `field`, so `edited` is `None` and every slot is read
+            // by its own name exactly as before.
+            super::SET_THERMOSTAT_SETPOINTS_ACTION_ID => {
+                let edited = text(args, "field");
+                let merged = |key: &str, fallback: f64| if edited.as_deref() == Some(key) { number(args, "value").unwrap_or(fallback) } else { f64_or(key, fallback) };
+                Command::SetThermostatSetpoints {
+                    thermostat: u32_or("thermostat", u32_or("id", 0)),
+                    heating_schedule: merged("heatingSchedule", 0.0) as u32,
+                    cooling_schedule: merged("coolingSchedule", 0.0) as u32,
+                    heating_throttle_range_k: merged("heatingThrottleRangeK", 2.0),
+                    cooling_throttle_range_k: merged("coolingThrottleRangeK", 2.0),
+                }
+            }
+            // 📍️ Same `{field, value}` indirection as the thermostat above — the site is a singleton
+            // record edited one scalar at a time.
+            super::SET_SITE_ACTION_ID => {
+                let edited = text(args, "field");
+                let merged = |key: &str, fallback: f64| if edited.as_deref() == Some(key) { number(args, "value").unwrap_or(fallback) } else { f64_or(key, fallback) };
+                Command::SetSite {
+                    latitude_deg: merged("latitudeDeg", 0.0),
+                    longitude_deg: merged("longitudeDeg", 0.0),
+                    elevation_m: merged("elevationM", 0.0),
+                    time_zone_hours: merged("timeZoneHours", 0.0),
+                    north_axis_deg: merged("northAxisDeg", 0.0),
+                }
+            }
             super::SET_RUN_PERIOD_ACTION_ID => Command::SetRunPeriod { start_month: u32_or("startMonth", 1), start_day: u32_or("startDay", 1), end_month: u32_or("endMonth", 12), end_day: u32_or("endDay", 31) },
             super::SET_ACTIVE_EXAMPLE_ACTION_ID => Command::SetActiveExample { example_id: text_or("exampleId", "") },
             // 🔍️ The inspector's controls author only `{field, id}` — the host merges the control's
@@ -1331,13 +1348,31 @@ fn set_surface_property(model: &mut crate::model::Model, surface: u32, property:
     let boundary = match property {
         "boundary" => {
             let kind = outside_boundary_kind_from_id(value.trim()).ok_or_else(|| invalid_value(property, value))?;
-            let partner = (partner_surface != 0).then_some(EntityId(partner_surface));
+            // 🚧️ An interzone boundary needs its other half. A control that carries only the kind can
+            // name the partner nowhere, so a partner already on the surface is CARRIED FORWARD rather
+            // than dropped — re-picking `interzone` on a surface that is already interzone keeps its
+            // neighbour instead of refusing.
+            let held = model.surfaces.iter().find(|entry| entry.id.0 == surface).and_then(|entry| interzone_partner(entry.outside_boundary_condition));
+            let partner = (partner_surface != 0).then_some(EntityId(partner_surface)).or(held);
             if let Some(partner) = partner {
                 if !model.surfaces.iter().any(|entry| entry.id == partner) {
-                    return Err(target_missing("surface", partner_surface));
+                    return Err(target_missing("surface", partner.0));
                 }
             }
             Some(OutsideBoundary::from_parts(kind, partner).ok_or_else(|| invalid_value(property, value))?)
+        }
+        // 🚧️ The one control that can MAKE a surface interzone: `value` is the partner surface, and the
+        // boundary becomes `Interzone(partner)` in the same step. `partner_surface` stays the palette's
+        // spelling; the inspector's flat `{field, id, value}` shape has only one slot to carry it in.
+        "interzonePartner" => {
+            let partner = EntityId(as_u32(property, value, |parsed| parsed != 0)?);
+            if partner.0 == surface {
+                return Err(invalid_value(property, value));
+            }
+            if !model.surfaces.iter().any(|entry| entry.id == partner) {
+                return Err(target_missing("surface", partner.0));
+            }
+            Some(OutsideBoundary::Interzone(partner))
         }
         _ => None,
     };
@@ -1361,7 +1396,7 @@ fn set_surface_property(model: &mut crate::model::Model, surface: u32, property:
             target.class = surface_class_from_id(value.trim()).ok_or_else(|| invalid_value(property, value))?;
             "change-surface-class"
         }
-        "boundary" => {
+        "boundary" | "interzonePartner" => {
             target.outside_boundary_condition = boundary.expect("the boundary arm parsed its payload above");
             "change-surface-boundary-condition"
         }
@@ -2266,10 +2301,21 @@ fn render_body(
             let caption = painted.as_ref().map(|(_, min, max)| crate::editor::model::results::legend_caption(field, *min, *max));
             // 🎥️ `config::current` is the addressed window's retained orbit pose, `None` until it has
             // been moved — an unmoved window keeps the model-derived camera and `fit_json`'s framing.
-            model_window::render_with_camera(&crate::energy_model(doc.snapshot), interaction, painted.as_ref().map(|(colors, _, _)| colors), caption.as_deref(), model_window::config::current(cfg))?
+            // 🎨️ The same `(min, max)` the ramp was normalized over also labels the legend strip's two
+            // ends, so the caption line and the swatch strip can never round differently.
+            model_window::render_with_legend(
+                &crate::energy_model(doc.snapshot),
+                interaction,
+                painted.as_ref().map(|(colors, _, _)| colors),
+                caption.as_deref(),
+                painted.as_ref().map(|(_, min, max)| (*min, *max)),
+                model_window::config::current(cfg),
+            )?
         }
         artifact_panel::BODY_KEY => artifact_panel::render(doc.snapshot, interaction, view_state.locale)?,
-        inspection_panel::BODY_KEY => inspection_panel::render(doc.snapshot, interaction, view_state.locale)?,
+        // 🎨️ `cfg` reaches the inspector because its Results section renders the CURRENT colour field
+        // and binds `set-result-field` — the one control lane D's selector had nowhere to live.
+        inspection_panel::BODY_KEY => inspection_panel::render(doc.snapshot, interaction, cfg.snapshot, view_state.locale)?,
         _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("energy.model.render", "the unknown-body label could not be assembled"))?,
     };
     Ok(semio_framework_plugin::built_to_component_tree(node))

@@ -1,0 +1,12 @@
+{
+  "mutation": "replaceLoad",
+  "caseId": "dead",
+  "loadId": "g1",
+  "newLoad": {
+    "kind": "nodal",
+    "id": "g1",
+    "nodeId": "n7",
+    "dof": "Tz",
+    "value": -15.0
+  }
+}

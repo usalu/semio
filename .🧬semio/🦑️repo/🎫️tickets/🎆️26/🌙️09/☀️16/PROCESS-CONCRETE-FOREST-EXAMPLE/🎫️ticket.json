@@ -1,9 +1,9 @@
 {
   "title": "Process Concrete Forest Example",
   "emoji": "🌲️",
-  "status": "open",
+  "status": "closed",
   "description": "Add the hexagonal-cut concrete forest piece (♻️mit-bestand/🏚️abbau-aufbau) as a bundled process3d example whose timeline applies every machine of the concrete catalog (diamond saw, wall saw, wire saw, core drill, rotary hammer, anchor setter, surface grinder) as a real kernel-replayed step. Bookkeeping is manual on disk because the repo MCP failed to connect (connection closed) at session start.",
-  "summary": "",
+  "summary": "process3d ships the concrete forest example: the real hexagonal-cut concrete forest STEP piece as a durable `WorkingSolid::Reference` stock with one kernel-replayed step per concrete machine (wall saw, diamond saw, wire saw, core drill, rotary hammer, anchor setter, surface grinder), registered in the plugin's example picker and verified in the react lane (load commits, seven steps listed, replayed mesh, step toggles re-replay). Fixed the brep STEP reader (optional placement slots, straight B-splines as lines, p-curves), the validator's shared-vertex false positives and sliver-probe cost, and process3d's whole-document load path (envelope Drop trap, SemioMembers + genesis child packs, app-admitted publication lease). Kernel gaps (through-holes on non-rectangular prisms, coincident-wall fuses, translation sensitivity) documented.",
   "goal": "🎯r2603",
   "sessions": [
     "⚪d174105f-e2dc-4928-a34c-5d2f46a4b177"

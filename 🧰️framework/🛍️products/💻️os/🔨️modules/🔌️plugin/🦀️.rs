@@ -5935,7 +5935,7 @@ pub mod app {
         ui::tree_item(label)
             .try_id(format!("{section_id}.more"))
             .map_err(|_| ui_assembly_error("panel-paging.continuation-id"))?
-            .icon(UiText::try_from_str("ellipsis").ok_or_else(|| ui_assembly_error("panel-paging.continuation-icon"))?)
+            .icon(UiText::try_from_str("more-horizontal").ok_or_else(|| ui_assembly_error("panel-paging.continuation-icon"))?)
             .try_build()
             .map_err(|_| ui_assembly_error("panel-paging.continuation-row"))
     }
@@ -11919,6 +11919,12 @@ pub mod app {
         /// 🧹 Releases one bounded nonterminal quarantine unit while the app remains live. This is
         /// scheduled on the shared maintenance worker and must never perform application-visible work.
         fn maintenance_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault>;
+        /// 🌡️ True while a displaced-owner queue of the document or a config-lane store sits at or
+        /// above [`store::ARTIFACT_STORE_DISPLACED_PRESSURE_OCCUPANCY`]. The runtime then spends a
+        /// burst of maintenance steps on this instance in the same turn instead of one — the single
+        /// fair step per turn drains one owner per 26-stage rotation while a live commit cadence
+        /// displaces three or more owners per commit.
+        fn maintenance_under_pressure(&self) -> bool;
         async fn app_id(&self) -> &str;
         async fn artifact_schema(&self) -> &str;
         /// 🧬️ Compiler-derived concrete `ArtifactApp` identity used by fail-closed tool proof admission.
@@ -11979,6 +11985,12 @@ pub mod app {
         fn take_typed_operation_event(&mut self) -> Option<AppEvent>;
         /// 📤️ Drains one UI scope already accepted by the typed-operation host receiver.
         fn take_typed_operation_ui_scope(&mut self) -> Option<UiDirtyScope>;
+        /// 📤️ Drains one UI progress unit — the scope plus the leftover `InteractionView` a folded
+        /// interaction verb owes the host (`TypedOperationUiProgress`). The default answers the scope
+        /// alone, for a `PluginApp` that folds nothing.
+        fn take_typed_operation_ui_progress(&mut self) -> Option<TypedOperationUiProgress> {
+            self.take_typed_operation_ui_scope().map(|ui_scope| TypedOperationUiProgress { ui_scope, leftover: None })
+        }
         /// 🏁️ Drains one terminal typed-operation witness, resolving its command-log delta and
         /// content revision against CURRENT state — the payload of one `AppFrame::OperationCompleted`.
         async fn take_typed_operation_completion(&mut self) -> Result<Option<TypedOperationCompletion>, Fault>;
@@ -13039,7 +13051,7 @@ pub mod app {
     /// under the 64 KiB contiguous guest-allocation ceiling with room for one more extension. An app
     /// that declares the app-wide default instead refuses the real pack with
     /// `typed command raw JSON exceeds its registered retained-page admission`.
-    pub const CONTRIBUTIONS_COMMAND_RAW_WIRE_BYTES: usize = 8_192;
+    pub const CONTRIBUTIONS_COMMAND_RAW_WIRE_BYTES: usize = 49_152;
 
     /// 🧬️ Declares an exact bounded-first-step proof catalog in the owning plugin source.
     #[macro_export]
@@ -13742,6 +13754,32 @@ pub mod app {
         pub revision: u64,
         pub ui_scope: UiDirtyScope,
         pub history_patch: Option<HistoryPatch>,
+    }
+
+    /// 🎞️ One mounted typed operation's `Ui` progress unit as the host receives it: the emit's
+    /// `UiDirtyScope` (widened by every interaction verb folded inline, ticket
+    /// 26/09/16/INPUT-CAUSALITY-LEDGER §2 C) and, when such a verb was folded, the last verb's
+    /// leftover `InteractionView` — published as the `output` of the unsolicited `Invocation`
+    /// frame that carries the scope (`advance_typed_operation_output`), the typed ladder's twin of
+    /// the `Invocation.output.interactionView` lane a host-dispatched verb answers on.
+    #[derive(Clone, Debug, PartialEq)]
+    pub struct TypedOperationUiProgress {
+        pub ui_scope: UiDirtyScope,
+        pub leftover: Option<TypedOperationLeftover>,
+    }
+
+    /// 🕹️ The leftover `InteractionView` envelope (`{ "interactionView": … }`, exactly what
+    /// `leftover_interaction_view_from` builds for a host-dispatched verb) a mounted typed operation's
+    /// inline-folded interaction verb owes the host, tagged with the operation that folded it so
+    /// `plugin_exchange` can merge it into THAT command's own `Invocation` reply (`output` =
+    /// `{ operationId, generation, interactionView }`) when the fold landed inside the admitting
+    /// exchange — the one lane `applyLeftoverInteractionView` (`🏛️ShellHost`) already reads for a
+    /// typed command. It also rides the `Ui` progress frame's `output` for a fold that lands on a
+    /// later turn.
+    #[derive(Clone, Debug, PartialEq)]
+    pub struct TypedOperationLeftover {
+        pub operation: u64,
+        pub view: DslValue,
     }
 
     /// 🏁️ The terminal witness before its command-log delta and revision are resolved — the queue
@@ -19462,6 +19500,7 @@ pub mod app {
         }
 
         fn request_cancel(&self) {
+            #[cfg(test)]
             eprintln!("[DEBUG] recursive replacement diagnostic: cancellation requested for operation {} generation {} in state {:?}", self.operation.0, self.generation.0, self.state);
             self.cancel.cancel_now();
             self.cancel_signal.store(true, std::sync::atomic::Ordering::Release);
@@ -19496,7 +19535,6 @@ pub mod app {
             }
             let registry = self.member_ingress.as_mut().ok_or_else(|| plugin_sdk_fault("owned document member ingress registry has not been initialized"))?;
             if let Err(fault) = registry.seal() {
-                eprintln!("[DEBUG] recursive replacement faulted at plugin line {}", line!());
                 self.faulted = true;
                 self.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
                 return Err(fault);
@@ -19511,7 +19549,6 @@ pub mod app {
             }
             if self.active_member_open.is_some() {
                 if self.active_member_ingress.as_ref().is_none_or(|ingress| !ingress.has_identity()) {
-                    eprintln!("[DEBUG] recursive replacement faulted at plugin line {}", line!());
                     self.faulted = true;
                     self.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
                     return Err(plugin_sdk_fault("active member open lost its exact retained ingress identity"));
@@ -19531,12 +19568,12 @@ pub mod app {
                 return match step {
                     store::MemberOpenStep::Pending(_) => Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }),
                     store::MemberOpenStep::Rejected(diagnostic) => {
+                        #[cfg(test)]
                         eprintln!(
                             "[DEBUG] recursive replacement diagnostic: member open rejected {diagnostic:?} at ordinal {} cancel={}",
                             self.next_member_ordinal,
                             self.cancel.is_cancelled_now(),
                         );
-                        eprintln!("[DEBUG] recursive replacement faulted at plugin line {}", line!());
                         self.faulted = true;
                         self.state = ActiveArtifactStoreReplacementState::ClosingRejectedMember;
                         Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
@@ -19544,7 +19581,6 @@ pub mod app {
                     store::MemberOpenStep::Ready(member) => {
                         if !store::MemberOpenOperation::terminal_is_empty(self.active_member_open.as_ref().expect("ready member open remains retained")) {
                             *self.retiring_child = self.active_member_ingress.as_mut().and_then(OwnedDocumentMemberIngress::take_identity).map(|(_, reference, owner)| ChildMemberRetirement::new(ChildMemberEntry { reference, owner, member }));
-                            eprintln!("[DEBUG] recursive replacement faulted at plugin line {}", line!());
                             self.faulted = true;
                             self.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
                             return Err(plugin_sdk_fault("ready member open retained nonterminal ownership"));
@@ -19552,16 +19588,15 @@ pub mod app {
                         drop(self.active_member_open.take());
                         let (ordinal, reference, owner) = self.active_member_ingress.as_mut().and_then(OwnedDocumentMemberIngress::take_identity).expect("active member identity was verified before its exact open step");
                         if ordinal != self.next_member_ordinal || member.artifact_ref().as_ref() != Some(&reference) || member.owner_ref().as_ref() != Some(&owner) {
+                            #[cfg(test)]
                             eprintln!("[DEBUG] recursive replacement diagnostic: opened member identity differed at ordinal {ordinal}, expected {}", self.next_member_ordinal);
                             *self.retiring_child = Some(ChildMemberRetirement::new(ChildMemberEntry { reference, owner, member }));
-                            eprintln!("[DEBUG] recursive replacement faulted at plugin line {}", line!());
                             self.faulted = true;
                             self.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
                             return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
                         }
                         let Some(candidate) = self.candidate_children.as_mut() else {
                             *self.retiring_child = Some(ChildMemberRetirement::new(ChildMemberEntry { reference, owner, member }));
-                            eprintln!("[DEBUG] recursive replacement faulted at plugin line {}", line!());
                             self.faulted = true;
                             self.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
                             return Err(plugin_sdk_fault("member candidate registry was lost before exact admission"));
@@ -19570,7 +19605,6 @@ pub mod app {
                             Ok(admission) => admission,
                             Err(fault) => {
                                 *self.retiring_child = Some(ChildMemberRetirement::new(ChildMemberEntry { reference, owner, member }));
-                                eprintln!("[DEBUG] recursive replacement faulted at plugin line {}", line!());
                                 self.faulted = true;
                                 self.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
                                 return Err(fault);
@@ -19580,7 +19614,6 @@ pub mod app {
                             let cancelled = candidate.cancel_admission(&admission);
                             debug_assert!(cancelled, "candidate admission remains exclusive until insertion");
                             *self.retiring_child = Some(ChildMemberRetirement::new(ChildMemberEntry { reference, owner, member }));
-                            eprintln!("[DEBUG] recursive replacement faulted at plugin line {}", line!());
                             self.faulted = true;
                             self.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
                             return Err(plugin_sdk_fault("owned document candidate generation exhausted"));
@@ -19598,14 +19631,12 @@ pub mod app {
                 };
             }
             let Some(registry) = self.member_ingress.as_mut() else {
-                eprintln!("[DEBUG] recursive replacement faulted at plugin line {}", line!());
                 self.faulted = true;
                 self.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
                 return Err(plugin_sdk_fault("opening member set lost its exact ingress registry"));
             };
             if self.next_member_ordinal == registry.expected {
                 if !registry.sealed || !registry.terminal_is_empty() {
-                    eprintln!("[DEBUG] recursive replacement faulted at plugin line {}", line!());
                     self.faulted = true;
                     self.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
                     return Err(plugin_sdk_fault("opened member set did not consume every sealed ordinal"));
@@ -19617,14 +19648,12 @@ pub mod app {
                 return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
             }
             let Some(ingress) = registry.take(self.next_member_ordinal) else {
-                eprintln!("[DEBUG] recursive replacement faulted at plugin line {}", line!());
                 self.faulted = true;
                 self.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
                 return Err(plugin_sdk_fault("sealed member set lost an exact ordinal before open"));
             };
             *self.active_member_ingress = Some(ingress);
             if self.active_member_ingress.as_ref().is_none_or(|ingress| !ingress.has_request()) {
-                eprintln!("[DEBUG] recursive replacement faulted at plugin line {}", line!());
                 self.faulted = true;
                 self.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
                 return Err(plugin_sdk_fault("member ingress lost its exact retained open request"));
@@ -19636,9 +19665,9 @@ pub mod app {
                     Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
                 }
                 Err(rejected) => {
+                    #[cfg(test)]
                     eprintln!("[DEBUG] recursive replacement diagnostic: member factory refused one admitted request");
                     self.active_member_ingress.as_mut().expect("rejected member ingress remains retained").return_request(rejected.request);
-                    eprintln!("[DEBUG] recursive replacement faulted at plugin line {}", line!());
                     self.faulted = true;
                     self.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
                     Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
@@ -19657,20 +19686,17 @@ pub mod app {
                 return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
             }
             let Some(candidate) = self.retained_store.as_ref() else {
-                eprintln!("[DEBUG] recursive replacement faulted at plugin line {}", line!());
                 self.faulted = true;
                 self.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
                 return Err(plugin_sdk_fault("closure validation lost its retained parent candidate"));
             };
             let Some(dialect) = candidate.envelope().dialect.clone() else {
-                eprintln!("[DEBUG] recursive replacement faulted at plugin line {}", line!());
                 self.faulted = true;
                 self.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
                 return Err(plugin_sdk_fault("closure validation requires the candidate parent's exact dialect"));
             };
             let root_reference = ArtifactRef { artifact_id: candidate.envelope().id.clone(), dialect };
             let Some(children) = self.candidate_children.as_ref() else {
-                eprintln!("[DEBUG] recursive replacement faulted at plugin line {}", line!());
                 self.faulted = true;
                 self.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
                 return Err(plugin_sdk_fault("closure validation lost its retained member registry"));
@@ -19686,7 +19712,6 @@ pub mod app {
                 &mut sequence,
             );
             let Some(closure) = self.closure.as_mut() else {
-                eprintln!("[DEBUG] recursive replacement faulted at plugin line {}", line!());
                 self.faulted = true;
                 self.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
                 return Err(plugin_sdk_fault("closure validation lost its fixed cursor"));
@@ -19701,17 +19726,17 @@ pub mod app {
                     Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
                 }
                 store::OwnedDocumentClosureStep::Complete { members } => {
+                    #[cfg(test)]
                     eprintln!("[DEBUG] recursive replacement diagnostic: closure completed with {members} members while registry owns {}", children.len());
                     self.closure = None;
-                    eprintln!("[DEBUG] recursive replacement faulted at plugin line {}", line!());
                     self.faulted = true;
                     self.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
                     Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
                 }
                 store::OwnedDocumentClosureStep::Rejected(diagnostic) => {
+                    #[cfg(test)]
                     eprintln!("[DEBUG] recursive replacement diagnostic: closure rejected {diagnostic:?}");
                     self.closure = None;
-                    eprintln!("[DEBUG] recursive replacement faulted at plugin line {}", line!());
                     self.faulted = true;
                     self.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
                     Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
@@ -19724,13 +19749,11 @@ pub mod app {
                 return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
             }
             let Some(children) = self.candidate_children.as_ref() else {
-                eprintln!("[DEBUG] recursive replacement faulted at plugin line {}", line!());
                 self.faulted = true;
                 self.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
                 return Err(plugin_sdk_fault("candidate view preparation lost its exact member registry"));
             };
             if self.candidate_source_generation != children.len() as u64 {
-                eprintln!("[DEBUG] recursive replacement faulted at plugin line {}", line!());
                 self.faulted = true;
                 self.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
                 return Err(plugin_sdk_fault("candidate member generation changed after closure validation"));
@@ -19739,7 +19762,6 @@ pub mod app {
                 let composition = match CompositionCoordinator::try_for_owned_closure(children.len()) {
                     Ok(composition) => composition,
                     Err(error) => {
-                        eprintln!("[DEBUG] recursive replacement faulted at plugin line {}", line!());
                         self.faulted = true;
                         self.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
                         return Err(plugin_sdk_fault(error));
@@ -19753,19 +19775,16 @@ pub mod app {
                 return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
             }
             let Some(entry) = children.entry_by_ordinal(self.view_member_ordinal) else {
-                eprintln!("[DEBUG] recursive replacement faulted at plugin line {}", line!());
                 self.faulted = true;
                 self.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
                 return Err(plugin_sdk_fault("candidate view preparation lost its exact member ordinal"));
             };
             if entry.member.artifact_ref().as_ref() != Some(&entry.reference) || entry.member.owner_ref().as_ref() != Some(&entry.owner) {
-                eprintln!("[DEBUG] recursive replacement faulted at plugin line {}", line!());
                 self.faulted = true;
                 self.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
                 return Err(plugin_sdk_fault("candidate member identity changed after closure validation"));
             }
             let Some(content) = self.candidate_content.as_ref() else {
-                eprintln!("[DEBUG] recursive replacement faulted at plugin line {}", line!());
                 self.faulted = true;
                 self.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
                 return Err(plugin_sdk_fault("candidate view preparation lost its immutable content root"));
@@ -19773,20 +19792,17 @@ pub mod app {
             let index = match content.admit_member(&entry.owner.slot, &entry.reference.artifact_id) {
                 Ok(index) => index,
                 Err(fault) => {
-                    eprintln!("[DEBUG] recursive replacement faulted at plugin line {}", line!());
                     self.faulted = true;
                     self.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
                     return Err(fault);
                 }
             };
             let Some(composition) = self.candidate_composition.as_mut() else {
-                eprintln!("[DEBUG] recursive replacement faulted at plugin line {}", line!());
                 self.faulted = true;
                 self.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
                 return Err(plugin_sdk_fault("candidate view preparation lost its coordinator"));
             };
             if let Err(error) = composition.insert_validated_owned(&entry.owner.parent.artifact_id, &entry.owner.slot, &entry.reference.artifact_id) {
-                eprintln!("[DEBUG] recursive replacement faulted at plugin line {}", line!());
                 self.faulted = true;
                 self.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
                 return Err(plugin_sdk_fault(error));
@@ -19795,7 +19811,6 @@ pub mod app {
             let snapshot = match entry.member.snapshot_read_erased_now() {
                 Ok(snapshot) => snapshot,
                 Err(error) => {
-                    eprintln!("[DEBUG] recursive replacement faulted at plugin line {}", line!());
                     self.faulted = true;
                     self.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
                     return Err(plugin_sdk_fault(error));
@@ -19959,9 +19974,7 @@ pub mod app {
                     semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes } => Ok(PluginCloseStep::Pending { released_items, released_bytes }),
                     semio_framework_job::InteractiveJobCloseStep::Blocked => Ok(PluginCloseStep::Blocked { reason: "store initializer admission rejection is temporarily blocked" }),
                     semio_framework_job::InteractiveJobCloseStep::Complete if rejected.terminal_is_empty() => {
-                        eprintln!("[DEBUG] recursive replacement diagnostic: store initializer admission was rejected");
                         drop(self.session_rejected.take());
-                        eprintln!("[DEBUG] recursive replacement faulted at plugin line {}", line!());
                         self.faulted = true;
                         self.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
                         Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
@@ -20014,16 +20027,7 @@ pub mod app {
                         .checked_out_outcome()
                         .map(|outcome| match outcome {
                             semio_framework_job::StepOutcome::Complete(_) => 1,
-                            semio_framework_job::StepOutcome::Cancelled => {
-                                eprintln!("[DEBUG] recursive replacement diagnostic: store initializer outcome is Cancelled");
-                                2
-                            }
-                            semio_framework_job::StepOutcome::Fault(fault) => {
-                                let mut reader = fault.detail.reader();
-                                let text = reader.read_page(1, 4096).map(|page| String::from_utf8_lossy(page).into_owned()).unwrap_or_default();
-                                eprintln!("[DEBUG] recursive replacement diagnostic: store initializer outcome is Fault {text}");
-                                2
-                            }
+                            semio_framework_job::StepOutcome::Cancelled | semio_framework_job::StepOutcome::Fault(_) => 2,
                             _ => 0,
                         })
                         .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.initializer-outcome-missing"), "store initializer checkout lost its exact outcome"))?;
@@ -20035,12 +20039,10 @@ pub mod app {
                         *self.retained_store = Some(candidate);
                         self.terminal_target = Some(ActiveArtifactStoreReplacementState::AwaitingMembers);
                     } else if terminal_kind == 2 {
-                        eprintln!("[DEBUG] recursive replacement diagnostic: store initializer reached a cancelled/fault outcome");
                         let released = session.checked_out_job_mut().is_some_and(ArtifactStoreInitializationJob::release_terminal_failure);
                         if !released {
                             return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.initializer-failure-retirement"), "failed store initializer did not reach terminal-empty authority"));
                         }
-                        eprintln!("[DEBUG] recursive replacement faulted at plugin line {}", line!());
                         self.faulted = true;
                         self.terminal_target = Some(ActiveArtifactStoreReplacementState::RetiringRejectedMembers);
                     }
@@ -20671,6 +20673,24 @@ pub mod app {
         typed_effect_outbox: ArtifactFixedQueue<Effect>,
         typed_event_outbox: ArtifactFixedQueue<AppEvent>,
         typed_ui_outbox: ArtifactFixedQueue<UiDirtyScope>,
+        /// 🔀️ Ticket 26/09/16/INPUT-CAUSALITY-LEDGER §2 C — per mounted typed operation (keyed by
+        /// its operation id), the guest-emitted interaction verbs (`Effect::ReplayShellCommand`/
+        /// `DispatchAction` with an `INTERACTION_ACTION_IDS` action, see [`is_inline_interaction_verb`])
+        /// peeled out of its emit the INSTANT the ladder takes the completion
+        /// (`publish_mounted_typed_operation_unit`'s install step) — before any effect can be popped
+        /// into `typed_effect_outbox` — and parked until `mounted_typed_inline_interaction_verbs_are_next`
+        /// folds them in-reactor. The host never sees one: a verb that reached the effect outbox on
+        /// the install pump was re-dispatched by the shell as a second `onAction` (18
+        /// `replayShellCommand dispatch interactionSelect` lines per battery on the fem2d lane),
+        /// behind any pointer input issued meanwhile. Bounded by the live operation slots; an entry
+        /// is consumed by the fold or dropped with its operation's exact removal.
+        typed_inline_interaction_verbs: Vec<(u64, Vec<(String, Option<DslValue>)>)>,
+        /// 🔀️ The LAST folded verb's leftover `InteractionView` (`AppliedInteractionVerb::leftover`),
+        /// one slot, latest wins (a later verb's snapshot already includes the earlier ones — the
+        /// same rule `InlineInteractionFold::leftover` follows). It rides the next `Ui` progress
+        /// frame's `output` (`take_typed_operation_ui_progress`) — the typed ladder's twin of the
+        /// `Invocation.output.interactionView` lane a host-dispatched verb answers on.
+        typed_inline_interaction_leftover: Option<TypedOperationLeftover>,
         typed_completion_outbox: ArtifactFixedQueue<TypedOperationCompletionWitness>,
         /// 📨️ The authoritative outcome of the current app command, reset before dispatch and then
         /// filled from the store receipt or policy rejection before the runtime frames it.
@@ -21704,6 +21724,8 @@ pub mod app {
                 typed_effect_outbox: ArtifactFixedQueue::new(TYPED_OPERATION_HOST_OUTBOX_SLOTS),
                 typed_event_outbox: ArtifactFixedQueue::new(TYPED_OPERATION_HOST_OUTBOX_SLOTS),
                 typed_ui_outbox: ArtifactFixedQueue::new(TYPED_OPERATION_HOST_OUTBOX_SLOTS),
+                typed_inline_interaction_verbs: Vec::new(),
+                typed_inline_interaction_leftover: None,
                 typed_completion_outbox: ArtifactFixedQueue::new(TYPED_OPERATION_HOST_OUTBOX_SLOTS),
                 dispatch_report,
                 cache: None,
@@ -22348,10 +22370,6 @@ pub mod app {
         }
 
         pub fn poll_artifact_store_replacement(&self, handle: ArtifactEnvelopeDecodeOperationHandle) -> ArtifactEnvelopeDecodeOperationPoll {
-            match self.store_replacement_jobs.get(handle.operation.0) {
-                None => eprintln!("[DEBUG] replacement poll: no job for operation {}", handle.operation.0),
-                Some(active) => eprintln!("[DEBUG] replacement poll: state {:?} committed {} faulted {} op {} gen {} (handle op {} gen {})", active.state, active.committed, active.faulted, active.operation.0, active.generation.0, handle.operation.0, handle.generation.0),
-            }
             self.store_replacement_jobs.get(handle.operation.0).filter(|active| active.operation == handle.operation && active.generation == handle.generation).map_or(ArtifactEnvelopeDecodeOperationPoll::Fault, |active| match active.state {
                 ActiveArtifactStoreReplacementState::Initializing
                 | ActiveArtifactStoreReplacementState::AwaitingMembers
@@ -22423,7 +22441,6 @@ pub mod app {
                 && self.store_replacement_jobs.get(operation_id).is_some_and(|active| active.cancel.is_cancelled_now())
             {
                 let active = self.store_replacement_jobs.get_mut(operation_id).ok_or_else(|| plugin_sdk_fault("cancelled owned document replacement changed before retained member retirement"))?;
-                eprintln!("[DEBUG] recursive replacement faulted at plugin line {}", line!());
                 active.faulted = true;
                 active.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
                 return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
@@ -22494,6 +22511,7 @@ pub mod app {
                     || !replacement_content_retirements.allocation_admitted
                     || next_content_generation.is_none()
                 {
+                    #[cfg(test)]
                     eprintln!(
                         "[DEBUG] recursive replacement diagnostic: publication guard rejected closing={closing} cancelled={} parent-generation={} live-generation={} child-generation={} base-child-generation={} complete={complete_candidate} retirement-admitted={} next-generation={}",
                         active.cancel.is_cancelled_now(),
@@ -22505,15 +22523,14 @@ pub mod app {
                         next_content_generation.is_some(),
                     );
                     *active.retained_disposer = Some(disposer);
-                    eprintln!("[DEBUG] recursive replacement faulted at plugin line {}", line!());
                     active.faulted = true;
                     active.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
                     return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
                 }
-                if let Err(fault) = A::validate_document_store_publication(active.operation, active.generation, live_generation) {
-                    eprintln!("[DEBUG] recursive replacement diagnostic: app publication authority rejected the exact candidate: {fault:?}");
+                if A::validate_document_store_publication(active.operation, active.generation, live_generation).is_err() {
+                    #[cfg(test)]
+                    eprintln!("[DEBUG] recursive replacement diagnostic: app publication authority rejected the exact candidate");
                     *active.retained_disposer = Some(disposer);
-                    eprintln!("[DEBUG] recursive replacement faulted at plugin line {}", line!());
                     active.faulted = true;
                     active.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
                     return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
@@ -23276,6 +23293,7 @@ pub mod app {
                 .remove(operation_id)
                 .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.typed-operation-retirement-authority"), "terminal typed operation changed before exact removal"))?;
             drop(operation);
+            self.typed_inline_interaction_verbs.retain(|(operation, _)| *operation != operation_id);
             Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
         }
 
@@ -23348,6 +23366,7 @@ pub mod app {
                 let operation =
                     self.tool_operations.remove(operation_id).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.close-typed-operation-authority"), "terminal typed operation changed before exact removal"))?;
                 drop(operation);
+                self.typed_inline_interaction_verbs.retain(|(operation, _)| *operation != operation_id);
                 return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
             }
             Ok(step)
@@ -26253,6 +26272,7 @@ pub mod app {
             let outcome = self.publish_mounted_typed_operation_run(&mut mounted).await;
             if let Err(fault) = outcome {
                 mounted.publication_attempt = mounted.publication_attempt.saturating_add(1);
+                crate::plugin_runtime::debug_runtime_line(format_args!("[DEBUG] typed-operation {} publication attempt {} faulted: {}: {}", mounted.verb, mounted.publication_attempt, fault.code.0, fault.message));
                 if mounted.publication_attempt > TYPED_OPERATION_MAXIMUM_RETRIES {
                     let bounded = ArtifactBoundedToolFault::from_fault(&fault);
                     let page = TypedOperationResultPage::try_new(mounted.next_token(), TypedOperationResultLane::Fault, bounded.as_bytes())?;
@@ -26295,7 +26315,7 @@ pub mod app {
                 } else if Self::mounted_typed_interaction_writes_are_next(mounted) {
                     record_typed_operation_unit(TypedOperationUnitKind::Store);
                     self.publish_mounted_typed_interaction_unit(mounted).await?;
-                } else if Self::mounted_typed_inline_interaction_verbs_are_next(mounted) {
+                } else if self.mounted_typed_inline_interaction_verbs_are_next(mounted) {
                     record_typed_operation_unit(TypedOperationUnitKind::Store);
                     self.publish_mounted_typed_inline_interaction_unit(mounted).await?;
                 } else {
@@ -26375,11 +26395,15 @@ pub mod app {
         /// and at least one such verb is still in the effect list. Sync and allocation-free like its
         /// `mounted_typed_interaction_writes_are_next` twin.
         // 🚫️async: E1 pure field census over an already-mounted publication owner — see R9.
-        fn mounted_typed_inline_interaction_verbs_are_next(mounted: &MountedTypedCommandFullOperation<A>) -> bool {
+        fn mounted_typed_inline_interaction_verbs_are_next(&self, mounted: &MountedTypedCommandFullOperation<A>) -> bool {
             let Some(ArtifactToolCompletionValue::Emit(Ok(emit), ephemeral)) = mounted.publication.as_ref() else {
                 return false;
             };
-            emit.effects.iter().any(is_inline_interaction_verb)
+            // 🅿️ The verbs were parked at install (`typed_inline_interaction_verbs`, keyed by this
+            // operation); the effect-list scan stays as the belt to that brace, for an emit whose
+            // effects were (re)filled after install.
+            let parked = self.typed_inline_interaction_verbs.iter().any(|(operation, verbs)| *operation == mounted.operation.operation.0 && !verbs.is_empty());
+            (parked || emit.effects.iter().any(is_inline_interaction_verb))
                 && emit.interaction_writes.is_empty()
                 && mounted.pending_artifact_publication.is_none()
                 && emit.artifact_mutations.is_empty()
@@ -26411,7 +26435,11 @@ pub mod app {
             let Some(ArtifactToolCompletionValue::Emit(Ok(emit), _)) = mounted.publication.as_mut() else {
                 return Err(plugin_sdk_fault("typed-operation inline interaction publication lost its emit owner"));
             };
-            let folded = take_inline_interaction_verbs(&mut emit.effects);
+            let mut folded: Vec<(String, Option<DslValue>)> = Vec::new();
+            if let Some(index) = self.typed_inline_interaction_verbs.iter().position(|(operation, _)| *operation == mounted.operation.operation.0) {
+                folded = self.typed_inline_interaction_verbs.swap_remove(index).1;
+            }
+            folded.extend(take_inline_interaction_verbs(&mut emit.effects));
             let scope = emit.ui_scope.clone();
             let meta = mounted.meta.clone();
             let fold = self.fold_inline_interaction_verbs(&mounted.verb, folded, &meta, scope).await;
@@ -26419,6 +26447,9 @@ pub mod app {
                 return Err(plugin_sdk_fault("typed-operation inline interaction publication lost its emit owner after the fold"));
             };
             emit.ui_scope = fold.scope;
+            if let Some(view) = fold.leftover {
+                self.typed_inline_interaction_leftover = Some(TypedOperationLeftover { operation: mounted.operation.operation.0, view });
+            }
             for diagnostic in fold.diagnostics {
                 crate::plugin_runtime::debug_runtime_line(format_args!("[DEBUG] {} {}", diagnostic.code.0, diagnostic.message));
             }
@@ -26718,9 +26749,32 @@ pub mod app {
             let _permit = mounted.cancellation_lease.as_ref().and_then(ToolCancellationLease::try_claim_publication).ok_or_else(|| plugin_sdk_fault("typed-operation publication claim is cancelled or occupied"))?;
             if mounted.publication.is_none() {
                 let Some(completion) = mounted.completion.as_ref() else { return Err(plugin_sdk_fault("typed-operation completion owner was retired before publication")) };
-                let Some(publication) = completion.take()? else { return Ok(()) };
+                let Some(mut publication) = completion.take()? else { return Ok(()) };
                 mounted.ui_pending = matches!(publication, ArtifactToolCompletionValue::Emit(Ok(_), _));
+                // 🔀️ Ticket 26/09/16/INPUT-CAUSALITY-LEDGER §2 C — THE point the reactor first owns a
+                // typed command's emit. The interaction verbs are peeled here, before this same call
+                // can reach the effect lane below: an emit with no durable lane (fem2d's
+                // `canvasPointerUp` is `effects: [interactionSelect], ui_scope: partial` and nothing
+                // else) used to fall straight through to `emit.effects.pop()` → `typed_effect_outbox`
+                // on the install pump, while `mounted_typed_inline_interaction_verbs_are_next` had
+                // never seen the emit (it gates on `mounted.publication`, which was still `None`
+                // when this pump's ladder branch was chosen). Per-turn law: no host-visible turn of a
+                // typed operation ever carries one of the six interaction verbs as an effect.
+                if let ArtifactToolCompletionValue::Emit(Ok(emit), _) = &mut publication {
+                    let verbs = take_inline_interaction_verbs(&mut emit.effects);
+                    if !verbs.is_empty() {
+                        self.typed_inline_interaction_verbs.retain(|(operation, _)| *operation != mounted.operation.operation.0);
+                        self.typed_inline_interaction_verbs.push((mounted.operation.operation.0, verbs));
+                    }
+                }
                 mounted.publication = Some(publication);
+                // 🪜️ Hand the pump back to the ladder so its own lane order picks the first unit: the
+                // `InteractionWrite` lane and the inline fold both precede the effect/`Ui`/terminal
+                // pages of this same emit, and the fold must land BEFORE the `Ui` page is minted so
+                // that page already carries the verbs' widened scope and their leftover view.
+                if Self::mounted_typed_interaction_writes_are_next(mounted) || self.mounted_typed_inline_interaction_verbs_are_next(mounted) {
+                    return Ok(());
+                }
             }
             let live_revision = self.store.content_revision_now();
             let live_generation = self.store.generation_now();
@@ -26932,7 +26986,7 @@ pub mod app {
                     } else if let Some(mutation) = emit.window_config_mutations.pop() {
                         let authority = mounted.window_config_authority.as_ref().ok_or_else(|| plugin_sdk_fault("window config emission requires one exact captured ViewModel window authority"))?;
                         {
-                            let publication = self.window_config_store.begin(mounted.operation.operation, mounted.meta.actor.clone(), authority, mutation)?;
+                            let publication = self.window_config_store.begin(mounted.operation.operation, mounted.meta.actor.clone(), authority, mutation, emit.coalesce_key.as_deref())?;
                             mounted.pending_artifact_publication = Some(PendingArtifactStorePublication::WindowConfig(publication));
                             return Ok(());
                         }
@@ -27935,7 +27989,11 @@ pub mod app {
     /// 🕰️ Length of [`PluginApp::maintenance_step`]'s fixed cooperative round robin. Every stage
     /// runs at most one bounded unit per call, so a step-budget law needs exactly this many calls
     /// to observe each stage once.
-    pub const MAINTENANCE_STAGES: u8 = 25;
+    pub const MAINTENANCE_STAGES: u8 = 26;
+    /// 🧹️ The rotation stage that drains the document store's displaced-owner queue.
+    pub const MAINTENANCE_DOCUMENT_DISPLACED_STAGE: u8 = 9;
+    /// 🧹️ The rotation stage that drains the config-lane stores' displaced-owner queues.
+    pub const MAINTENANCE_CONFIG_LANE_DISPLACED_STAGE: u8 = 25;
 
     /// ♻️ Retirement grant of one [`VcsArtifactApp::reclaim_document_snapshot_read_returns`] pump step: a returned
     /// document root is disposed this many items at a time instead of the maintenance rotation's one.
@@ -27946,11 +28004,43 @@ pub mod app {
     pub(crate) const PUBLICATION_SNAPSHOT_READ_RECLAIM_STEPS: usize = 4_096;
 
     /// 🐞️ `[DEBUG]` last maintenance stage entered — temporary, ticket 26/09/02/PUZZLE-3D-END-TO-END.
-    pub(crate) static LAST_MAINTENANCE_STAGE: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+    pub static LAST_MAINTENANCE_STAGE: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 
 
     impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> VcsArtifactApp<A, M> {
         #[inline(never)]
+        /// 🧹️ One displaced-owner step of the document store — the body of stage
+        /// [`MAINTENANCE_DOCUMENT_DISPLACED_STAGE`], also run out of turn under pressure.
+        fn maintenance_document_displaced_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
+            Ok(match self.store.maintenance_retirements_step(maximum_items, maximum_bytes).map_err(plugin_sdk_fault)? {
+                store::SnapshotRetirementStep::Pending { released_items, released_bytes } => PluginCloseStep::Pending { released_items, released_bytes },
+                store::SnapshotRetirementStep::Blocked => PluginCloseStep::Blocked { reason: "artifact store displaced owner remains externally shared" },
+                store::SnapshotRetirementStep::Complete => PluginCloseStep::Pending { released_items: 0, released_bytes: 0 },
+            })
+        }
+
+        /// 🧹️ One displaced-owner step over the config-lane stores — app config, draft, and every
+        /// live window-config partition — the body of stage [`MAINTENANCE_CONFIG_LANE_DISPLACED_STAGE`],
+        /// also run out of turn under pressure. These are `ArtifactStore`s with the same fixed
+        /// 1 024-slot displaced-owner queue the document stage drains, and nothing else ever drained
+        /// THEIRS: a coalesced window-config amend per playback frame displaced ~3 owners a tick and a
+        /// results window died after ~340 frames with `displaced-owner fixed retirement authority is
+        /// saturated`.
+        fn maintenance_config_lane_displaced_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
+            let step = if !self.config_store.maintenance_retirements_terminal_is_empty() {
+                self.config_store.maintenance_retirements_step(maximum_items, maximum_bytes).map_err(plugin_sdk_fault)?
+            } else if !self.draft_store.maintenance_retirements_terminal_is_empty() {
+                self.draft_store.maintenance_retirements_step(maximum_items, maximum_bytes).map_err(plugin_sdk_fault)?
+            } else {
+                self.window_config_store.maintenance_retirements_step(maximum_items, maximum_bytes)?
+            };
+            Ok(match step {
+                store::SnapshotRetirementStep::Pending { released_items, released_bytes } => PluginCloseStep::Pending { released_items, released_bytes },
+                store::SnapshotRetirementStep::Blocked => PluginCloseStep::Blocked { reason: "config-lane store displaced owner remains externally shared" },
+                store::SnapshotRetirementStep::Complete => PluginCloseStep::Pending { released_items: 0, released_bytes: 0 },
+            })
+        }
+
         fn maintenance_early_stage_step(&mut self, stage: u8, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
             match stage {
                 0 => {
@@ -28002,6 +28092,7 @@ pub mod app {
                         let operation =
                             self.tool_operations.remove(operation_id).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-tool-authority"), "terminal typed operation changed before exact removal"))?;
                         drop(operation);
+                        self.typed_inline_interaction_verbs.retain(|(operation, _)| *operation != operation_id);
                         return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
                     }
                     Ok(step)
@@ -28898,12 +28989,26 @@ pub mod app {
                 && self.envelope_completed_record_retirements.is_empty()
                 && self.envelope_completed_records.terminal_is_empty()
                 && self.store.maintenance_retirements_terminal_is_empty()
+                && self.config_store.maintenance_retirements_terminal_is_empty()
+                && self.draft_store.maintenance_retirements_terminal_is_empty()
+                && self.window_config_store.maintenance_retirements_terminal_is_empty()
                 && self.retired_window_transient_stores.is_empty()
                 && self.presence_store.local_read_maintenance_is_idle()
                 && !semio_framework_job::worker_job_retirements_are_parked()
                 && self.live_runtime_instance_id.is_none_or(|instance_id| A::mounted_jobs_terminal_is_empty(instance_id))
             {
                 return self.advance_snapshot_read_returns_one(maximum_bytes);
+            }
+            // 🌡️ Pressure beats fairness: a queue a quarter full is drained out of turn until it is
+            // under the mark again, and the stage cursor does not move — the rotation resumes where
+            // it stood once the burst is over.
+            if self.store.maintenance_retirements_under_pressure() {
+                LAST_MAINTENANCE_STAGE.store(u64::from(MAINTENANCE_DOCUMENT_DISPLACED_STAGE), std::sync::atomic::Ordering::Relaxed);
+                return self.maintenance_document_displaced_step(maximum_items, maximum_bytes);
+            }
+            if self.config_store.maintenance_retirements_under_pressure() || self.draft_store.maintenance_retirements_under_pressure() || self.window_config_store.maintenance_retirements_under_pressure() {
+                LAST_MAINTENANCE_STAGE.store(u64::from(MAINTENANCE_CONFIG_LANE_DISPLACED_STAGE), std::sync::atomic::Ordering::Relaxed);
+                return self.maintenance_config_lane_displaced_step(maximum_items, maximum_bytes);
             }
             let stage = self.maintenance_stage;
             LAST_MAINTENANCE_STAGE.store(stage as u64, std::sync::atomic::Ordering::Relaxed);
@@ -28915,11 +29020,7 @@ pub mod app {
                     let store = &mut self.store;
                     pump.drive(|| store.take_returned_snapshot_read_retirement().map_err(|error| error.into_fault()), maximum_items, maximum_bytes)
                 }
-                9 => match self.store.maintenance_retirements_step(maximum_items, maximum_bytes).map_err(plugin_sdk_fault)? {
-                    store::SnapshotRetirementStep::Pending { released_items, released_bytes } => Ok(PluginCloseStep::Pending { released_items, released_bytes }),
-                    store::SnapshotRetirementStep::Blocked => Ok(PluginCloseStep::Blocked { reason: "artifact store displaced owner remains externally shared" }),
-                    store::SnapshotRetirementStep::Complete => Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }),
-                },
+                MAINTENANCE_DOCUMENT_DISPLACED_STAGE => self.maintenance_document_displaced_step(maximum_items, maximum_bytes),
                 10 => match self.drive_envelope_ingress(maximum_items, maximum_bytes, false)? {
                     PluginCloseStep::Complete => Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }),
                     step => Ok(step),
@@ -28982,8 +29083,16 @@ pub mod app {
                     PluginCloseStep::Complete => Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }),
                     step => Ok(step),
                 },
+                MAINTENANCE_CONFIG_LANE_DISPLACED_STAGE => self.maintenance_config_lane_displaced_step(maximum_items, maximum_bytes),
                 _ => unreachable!("fixed maintenance stage"),
             }
+        }
+
+        fn maintenance_under_pressure(&self) -> bool {
+            self.store.maintenance_retirements_under_pressure()
+                || self.config_store.maintenance_retirements_under_pressure()
+                || self.draft_store.maintenance_retirements_under_pressure()
+                || self.window_config_store.maintenance_retirements_under_pressure()
         }
 
         async fn app_id(&self) -> &str {
@@ -29194,6 +29303,10 @@ pub mod app {
 
         fn take_typed_operation_ui_scope(&mut self) -> Option<UiDirtyScope> {
             self.typed_ui_outbox.pop()
+        }
+        fn take_typed_operation_ui_progress(&mut self) -> Option<TypedOperationUiProgress> {
+            let ui_scope = self.typed_ui_outbox.pop()?;
+            Some(TypedOperationUiProgress { ui_scope, leftover: self.typed_inline_interaction_leftover.take() })
         }
 
         /// 🧾️ ticket 26/09/02/PUZZLE-3D-END-TO-END wave B21: the dirty set is only authoritative AFTER the
@@ -33043,7 +33156,7 @@ pub mod plugin_runtime {
 
     use crate::app::{
         resolve_ready, retained_job_payload, ActionMeta, AppInstance, ArtifactMediaExportHandle, ArtifactMediaExportPoll, EphemeralSnapshot, MediaArtifact, MediaArtifactDescriptor, MediaError, Plugin, PluginApp, PluginAssemblyError, PluginProgram,
-        PresenceRosterAdmission, TransactionProposalDraft, TypedOperationResultPage, TypedOperationResultToken,
+        PresenceRosterAdmission, TransactionProposalDraft, TypedOperationLeftover, TypedOperationResultPage, TypedOperationResultToken,
     };
     use crate::{ArtifactApp, WindowConfigPack};
     use dsl::{from_dsl_value, to_dsl_value, DslValue, FromValue, ToValue};
@@ -33064,7 +33177,7 @@ pub mod plugin_runtime {
     use serde_json::Value;
     use std::cell::{Cell, RefCell};
     use std::collections::HashMap;
-    use std::sync::atomic::{AtomicU32, AtomicU64, AtomicU8, Ordering};
+    use std::sync::atomic::{AtomicBool, AtomicU32, AtomicU64, AtomicU8, Ordering};
     use ui_wgpu::wgpu::{ContextMenuPoint, ContextMenuRequest, ContextMenuResponse, ContextMenuSurfaceTarget, UiMenuRef};
 
     struct RuntimeAppCell<PA: PluginApp> {
@@ -33075,6 +33188,9 @@ pub mod plugin_runtime {
         maintenance_fault_us: AtomicU64,
         maintenance_generation: AtomicU64,
         maintenance_stalled_steps: AtomicU32,
+        /// 🌡️ [`PluginApp::maintenance_under_pressure`] as of the last maintenance step — read by the
+        /// reactor turn to decide whether this instance gets a burst of steps instead of one.
+        maintenance_pressure: AtomicBool,
         #[cfg(target_arch = "wasm32")]
         maintenance_probe_turns: AtomicU64,
         #[cfg(any(test, target_arch = "wasm32"))]
@@ -33093,6 +33209,7 @@ pub mod plugin_runtime {
                 maintenance_fault_us: AtomicU64::new(0),
                 maintenance_generation: AtomicU64::new(0),
                 maintenance_stalled_steps: AtomicU32::new(0),
+                maintenance_pressure: AtomicBool::new(false),
                 #[cfg(target_arch = "wasm32")]
                 maintenance_probe_turns: AtomicU64::new(0),
                 #[cfg(any(test, target_arch = "wasm32"))]
@@ -33530,6 +33647,8 @@ pub mod plugin_runtime {
         close_quarantine: RefCell<RuntimeInstanceRegistry<RuntimeCloseEntry<PA>>>,
         close_cleanup_cursor: Cell<usize>,
         live_cleanup_cursor: Cell<usize>,
+        /// 🌡️ Whether the instance the last [`plugin_step_live_cleanup`] stepped reported maintenance pressure.
+        live_cleanup_pressure: Cell<bool>,
         typed_continuation_cursor: Cell<usize>,
         close_generation: Cell<u64>,
         local_interaction_query_generation: crate::local_interaction::live::LocalInteractionQueryGeneration,
@@ -33554,6 +33673,7 @@ pub mod plugin_runtime {
                 close_quarantine: RefCell::new(RuntimeInstanceRegistry::new()),
                 close_cleanup_cursor: Cell::new(0),
                 live_cleanup_cursor: Cell::new(0),
+                live_cleanup_pressure: Cell::new(false),
                 typed_continuation_cursor: Cell::new(0),
                 close_generation: Cell::new(0),
                 local_interaction_query_generation: Default::default(),
@@ -34081,6 +34201,7 @@ pub mod plugin_runtime {
             let traced = semio_framework_trace::runtime_diagnostics_enabled();
             let maintenance_started_us = traced.then(semio_framework_job::default_now_us).flatten();
             let maintenance = instance.app.maintenance_step(1, RUNTIME_CLOSE_BYTES_PER_STEP);
+            cell.maintenance_pressure.store(instance.app.maintenance_under_pressure(), Ordering::Relaxed);
             if let (Some(started_us), Some(finished_us)) = (maintenance_started_us, maintenance_started_us.and_then(|_| semio_framework_job::default_now_us())) {
                 if finished_us.saturating_sub(started_us) >= 2_000 {
                     eprintln!("[DEBUG] maintenance stage={} elapsed_us={} outcome={:?}", crate::app::LAST_MAINTENANCE_STAGE.load(Ordering::Relaxed), finished_us - started_us, maintenance.as_ref().map(|_| ()).map_err(|fault| fault.message.clone()));
@@ -34937,10 +35058,31 @@ pub mod plugin_runtime {
         now_ms.map(|_| ()).ok_or_else(|| runtime_cleanup_fault("live", RuntimeCleanupFault::CooperativeClock, cell.id, RUNTIME_CLEANUP_UNMEASURED_US))
     }
 
+    /// 🌡️ Whether the instance the last [`plugin_step_live_cleanup`] stepped still reports
+    /// maintenance pressure — the reactor turn keeps stepping while this holds, bounded by
+    /// [`LIVE_CLEANUP_PRESSURE_STEPS_PER_TURN`] and its retirement deadline.
+    pub fn plugin_live_cleanup_under_pressure<PA: PluginApp + 'static>(runtime: &PluginRuntime<PA>) -> bool {
+        runtime.live_cleanup_pressure.get()
+    }
+
+    /// 🌡️ Maintenance steps one reactor turn may spend on pressured instances. A live commit cadence
+    /// displaces three or more owners per commit and at most one commit lands per turn, so this
+    /// burst drains faster than any cadence fills while the fair single step stays the idle cost.
+    pub const LIVE_CLEANUP_PRESSURE_STEPS_PER_TURN: usize = 32;
+
     pub fn plugin_step_live_cleanup<PA: PluginApp + 'static>(runtime: &PluginRuntime<PA>) -> Result<bool, Fault> {
         let cell = runtime.instances.try_borrow().map_err(|_| plugin_internal_fault("runtime instance authority is busy"))?.next_entry_from(runtime.live_cleanup_cursor.get()).map(|(index, _, cell)| (index, cell.clone()));
-        let Some((index, cell)) = cell else { return Ok(false) };
+        let Some((index, cell)) = cell else {
+            runtime.live_cleanup_pressure.set(false);
+            return Ok(false);
+        };
         runtime.live_cleanup_cursor.set((index + 1) % PLUGIN_RUNTIME_INSTANCE_SLOTS);
+        let stepped = plugin_step_live_cleanup_cell(&cell);
+        runtime.live_cleanup_pressure.set(cell.maintenance_pressure.load(Ordering::Relaxed));
+        stepped
+    }
+
+    fn plugin_step_live_cleanup_cell<PA: PluginApp + 'static>(cell: &std::sync::Arc<RuntimeAppCell<PA>>) -> Result<bool, Fault> {
         match RuntimeMaintenanceStatus::from_repr(cell.maintenance_status.load(Ordering::SeqCst)) {
             RuntimeMaintenanceStatus::Fault(cause) => Err(runtime_cleanup_fault("live", cause, cell.id, cell.maintenance_fault_us.load(Ordering::SeqCst))),
             RuntimeMaintenanceStatus::Ready => {
@@ -34953,7 +35095,7 @@ pub mod plugin_runtime {
                 if cell.maintenance_status.compare_exchange(RuntimeMaintenanceStatus::Ready.repr(), RuntimeMaintenanceStatus::Queued.repr(), Ordering::SeqCst, Ordering::SeqCst).is_err() {
                     return Ok(false);
                 }
-                let scheduled_cell = std::sync::Arc::downgrade(&cell);
+                let scheduled_cell = std::sync::Arc::downgrade(cell);
                 let job: semio_framework_async::Job = Box::new(move || {
                     let Some(scheduled_cell) = scheduled_cell.upgrade() else { return };
                     run_runtime_live_cleanup_turn(&scheduled_cell, semio_framework_job::Generation(generation));
@@ -34962,7 +35104,7 @@ pub mod plugin_runtime {
                 match pool.try_submit(semio_framework_async::Lane::Maintenance, job) {
                     Ok(()) => {
                         #[cfg(target_arch = "wasm32")]
-                        pump_runtime_live_cooperative_turn(&cell)?;
+                        pump_runtime_live_cooperative_turn(cell)?;
                         Ok(true)
                     }
                     Err(error) => {
@@ -34974,7 +35116,7 @@ pub mod plugin_runtime {
             }
             RuntimeMaintenanceStatus::Queued | RuntimeMaintenanceStatus::Running => {
                 #[cfg(target_arch = "wasm32")]
-                pump_runtime_live_cooperative_turn(&cell)?;
+                pump_runtime_live_cooperative_turn(cell)?;
                 Ok(true)
             }
         }
@@ -36244,7 +36386,7 @@ pub mod plugin_runtime {
         eprintln!("[DEBUG] typed-operation slots instance={instance} live={live}/{} peak={peak}", crate::app::ARTIFACT_LIVE_OUTPUT_SLOTS);
     }
 
-    fn advance_typed_operation_output<PA: PluginApp>(app: &mut PA, instance: u32) -> Result<PluginExchangeOutput, Fault> {
+    fn advance_typed_operation_output_with_leftover<PA: PluginApp>(app: &mut PA, instance: u32) -> Result<(PluginExchangeOutput, Option<TypedOperationLeftover>), Fault> {
         resolve_ready(app.advance_typed_operation_publication())?;
         trace_typed_operation_slot_occupancy(app, instance);
         let mut output = PluginExchangeOutput::default();
@@ -36266,20 +36408,62 @@ pub mod plugin_runtime {
                 history_patch: completion.history_patch.as_ref().map(encode_wire_serialized).unwrap_or_default(),
             })));
         }
-        if let Some(scope) = app.take_typed_operation_ui_scope() {
+        let mut leftover = None;
+        if let Some(progress) = app.take_typed_operation_ui_progress() {
             output.frames.push(resolve_ready(protocol::encode_app_frame(&protocol::AppFrame::Invocation {
                 in_reply_to: 0,
-                output: Vec::new(),
+                output: progress.leftover.as_ref().map(|leftover| encode_wire_serialized(&leftover.view)).unwrap_or_default(),
                 diagnostics: Vec::new(),
-                ui_scope: encode_wire_serialized(&scope),
+                ui_scope: encode_wire_serialized(&progress.ui_scope),
                 history_patch: Vec::new(),
                 messages: Vec::new(),
                 mutations: Vec::new(),
                 inverse_group: Vec::new(),
             })));
+            leftover = progress.leftover;
         }
         app.publish_local_interaction_query_reply(&mut output.frames, 4);
-        Ok(output)
+        Ok((output, leftover))
+    }
+
+    fn advance_typed_operation_output<PA: PluginApp>(app: &mut PA, instance: u32) -> Result<PluginExchangeOutput, Fault> {
+        advance_typed_operation_output_with_leftover(app, instance).map(|(output, _)| output)
+    }
+
+    /// 🕹️ How many extra typed-operation units `plugin_exchange` drives for the operation a command
+    /// of that exchange started, so the operation's inline interaction fold (and its leftover
+    /// `InteractionView`) lands inside the command's own reply. A pick with no durable lane folds
+    /// within a handful of units (worker step, install, fold); one with a document lane presents a
+    /// result page first and stops this drive on it.
+    const TYPED_OPERATION_REPLY_LEFTOVER_PUMPS: usize = 16;
+
+    /// 🕹️ Ticket 26/09/16/INPUT-CAUSALITY-LEDGER §2 C — merges a typed operation's inline-folded
+    /// leftover `InteractionView` into the `Invocation` reply of the command that STARTED that
+    /// operation, when both are in the same exchange: the reply's `output` is the operation's
+    /// `{ operationId, generation }` witness, and it becomes `{ operationId, generation,
+    /// interactionView }` — exactly the envelope `interactionViewFromLeftoverOutput` (`🛠️ShellHelpers`)
+    /// peels from `response.output` in `applyLeftoverInteractionView`, so the host's leftover
+    /// selection overlay, Inspection tab and `INTERACTION_STATE_OBSERVED` land for a folded verb the
+    /// same way they landed when the verb took a host round trip. A reply that answers a different
+    /// operation, or no typed operation at all, is left untouched.
+    fn merge_typed_operation_leftover_into_reply(frames: &mut [protocol::AppFrame], leftover: &TypedOperationLeftover) -> bool {
+        let operation = leftover.operation.to_string();
+        for frame in frames.iter_mut() {
+            let protocol::AppFrame::Invocation { in_reply_to, output, .. } = frame else { continue };
+            if *in_reply_to == 0 || output.is_empty() {
+                continue;
+            }
+            let Ok(DslValue::Object(mut entries)) = store::pack_rt::decode_wire_value(output) else { continue };
+            if !entries.iter().any(|(key, value)| key == "operationId" && value.as_str() == Some(operation.as_str())) {
+                continue;
+            }
+            let DslValue::Object(envelope) = &leftover.view else { return false };
+            entries.retain(|(key, _)| !envelope.iter().any(|(leftover_key, _)| leftover_key == key));
+            entries.extend(envelope.iter().cloned());
+            *output = store::pack_rt::encode_wire_value(&DslValue::Object(entries));
+            return true;
+        }
+        false
     }
 
     /// 🔁️ What a typed-operation scan found: a runnable instance, or only a busy one.
@@ -36839,6 +37023,10 @@ pub mod plugin_runtime {
         let mut presence_terminal = None;
         let mut presence_terminal_fault = None;
         let mut mutated = false;
+        // 🕹️ The typed operation an `AppCommand::Command` of this exchange STARTED (its reply's
+        // `output.operationId`) — the operation whose inline interaction fold this exchange still
+        // tries to land before the reply is sealed (`TYPED_OPERATION_REPLY_LEFTOVER_PUMPS`).
+        let mut started_typed_operation: Option<u64> = None;
 
         let command = match command {
             Some((envelope_seq, ingress)) => match ingress.advance(COMMAND_INGRESS_MOVES_PER_TURN) {
@@ -37060,6 +37248,7 @@ pub mod plugin_runtime {
                                     push_dispatch_fault(&mut frames, seq, Fault::new(FaultOrigin::Plugin, FaultCode::new("plugin.invocation-result-capacity"), "packed mutations or inverse group exceed command transport authority"), &report).await;
                                 } else {
                                     mutated = true;
+                                    started_typed_operation = result.output.get("operationId").and_then(DslValue::as_str).and_then(|operation| operation.parse::<u64>().ok());
                                     frames.push(protocol::AppFrame::Invocation {
                                         in_reply_to: seq,
                                         output,
@@ -37532,13 +37721,46 @@ pub mod plugin_runtime {
             }
         }
 
-        let typed_output = with_instances_mut(runtime, |list| {
+        let (mut typed_output, mut typed_leftover) = with_instances_mut(runtime, |list| {
             let mut instance = find_instance(list, instance_id)?;
-            advance_typed_operation_output(&mut instance.app, instance_id)
+            advance_typed_operation_output_with_leftover(&mut instance.app, instance_id)
         })
         .await?;
+        // 🕹️ Ticket 26/09/16/INPUT-CAUSALITY-LEDGER §2 C — the operation this command started owes
+        // its inline interaction fold's leftover `InteractionView` to THIS reply (`output` is the only
+        // lane `applyLeftoverInteractionView` reads for a typed command), so the ladder is driven a
+        // few more bounded units here — exactly the units the reactor's own continuation would drive
+        // next — until that fold lands, a result page is presented (the host must ACK it first),
+        // nothing is runnable, or the bound is spent. A fold that lands later still rides the `Ui`
+        // progress frame's `output`.
+        if let Some(operation) = started_typed_operation {
+            let mut pumps = 0;
+            while pumps < TYPED_OPERATION_REPLY_LEFTOVER_PUMPS && typed_leftover.as_ref().is_none_or(|leftover| leftover.operation != operation) && typed_output.typed_operation_results.is_empty() {
+                let (more, leftover) = with_instances_mut(runtime, |list| {
+                    let mut instance = find_instance(list, instance_id)?;
+                    if !instance.app.has_runnable_typed_operations() {
+                        return Ok((None, None));
+                    }
+                    advance_typed_operation_output_with_leftover(&mut instance.app, instance_id).map(|(output, leftover)| (Some(output), leftover))
+                })
+                .await?;
+                let Some(more) = more else { break };
+                typed_output.frames.extend(more.frames);
+                typed_output.effects.extend(more.effects);
+                typed_output.events.extend(more.events);
+                typed_output.typed_operation_results.extend(more.typed_operation_results);
+                if leftover.is_some() {
+                    typed_leftover = leftover;
+                }
+                pumps += 1;
+            }
+        }
         effect_bytes.extend(typed_output.effects);
         event_bytes.extend(typed_output.events);
+        if let Some(leftover) = typed_leftover.as_ref() {
+            let merged = merge_typed_operation_leftover_into_reply(&mut frames, leftover);
+            debug_runtime_line(format_args!("[DEBUG] typed-operation inline leftover operation={} merged-into-reply={merged}", leftover.operation));
+        }
 
         let ephemeral = with_instances_mut(runtime, |list| {
             let instance = find_instance(list, instance_id)?;
@@ -39277,7 +39499,7 @@ pub use semio_framework_ui_contract::{ActionBinding, ActionId, Buildable, Compon
 pub use world3d_host::{
     apply_world3d_projection_action, apply_world3d_sun_action, default_world3d_selection, merge_world_selection_ids, mesh_kind_from_json, world3d_camera_projection_json, world3d_default_camera, world3d_environment_json, world3d_mesh_id_from_url,
     world3d_meshes_json_from_kinds, world3d_meshes_json_from_kinds_and_urls, world3d_meshes_json_from_urls, world3d_projection_action_moves_pose, world3d_projection_measures, world3d_projection_pose, world3d_projection_spec_json,
-    world3d_scene, scene_lane_hash, world3d_selection_json, world3d_sun_measures, SceneLanePayload, SelectionSet, World3dScene, World3dSceneLane, SceneLaneRef, WorldProjectionConfig, WorldSunConfig,
+    world3d_scene, scene_lane_hash, world3d_selection_json, world3d_selection_json_with_granularity, world3d_sun_measures, SceneLanePayload, SelectionSet, World3dScene, World3dSceneLane, SceneLaneRef, WorldProjectionConfig, WorldSunConfig,
     WORLD3D_SCENE_LANE_BODY_KEYS, WORLD3D_SCENE_LANE_FIELDS, WORLD3D_SCENE_LANE_KEY_PREFIX, WORLD3D_SCENE_LANE_NAMES, WORLD3D_SCENE_LANE_OPTIONAL,
 };
 // 🧩️ Declarative component model (UiNode, layouts, utilities) — moved into ui_wgpu; re-exported here so

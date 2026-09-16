@@ -316,6 +316,16 @@
       "name": "forms-react-attach",
       "url": "http://localhost:6058",
       "port": 6058
+    },
+    {
+      "name": "raster-react-attach",
+      "url": "http://localhost:6060",
+      "port": 6060
+    },
+    {
+      "name": "shooting-react-attach",
+      "url": "http://localhost:6019",
+      "port": 6019
     }
   ]
 }

@@ -14,7 +14,6 @@ use crate::editor::fem3d::interaction::{Fem3dInteractionSnapshot, FEM3D_GRANULAR
 use crate::standards::v1::subsets::any::scene::fem3d_scene_parts;
 use crate::Fem3dSnapshot;
 use semio_framework_plugin::BuiltNode;
-use semio_framework_plugin::Label;
 use semio_framework_ui_contract::{Buildable, HasChildren, HasStackLayout};
 use std::collections::HashMap;
 
@@ -195,25 +194,21 @@ pub fn mode_shape_scale(doc: &Fem3dSnapshot, amplitude: f64) -> f64 {
     fem3d_model_extent(doc) * MODE_SHAPE_AMPLITUDE_RATIO * amplitude
 }
 
-/// 📝️ Admits a result label into the fixture's semantic tree.
-fn placeholder(label: Label) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    semio_framework_plugin::built_text_node(label).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "FEM result text admission failed"))
-}
-
-/// 🏷️ Places a data caption above the world scene.
+/// 🏷️ Places a data caption above the world scene — both siblings enter the column as BUILDERS so
+/// the column keys them positionally; a pre-built keyless node already carries `"#0"`, and two of
+/// those under one parent are a `duplicate-key` projection fault.
 fn with_caption(scene: BuiltNode, caption: String) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    let caption = placeholder(Label::data(caption))?;
-    let scene_stack = semio_framework_ui_contract::column()
+    let admission = |detail: &'static str| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", detail);
+    let caption = semio_framework_ui_contract::text(crate::editor::fem3d::ui_label(caption)?);
+    let scene_stack = semio_framework_ui_contract::column().grow(true).try_child(scene).map_err(|_| admission("FEM caption scene child admission failed"))?;
+    semio_framework_ui_contract::column()
         .grow(true)
-        .try_child(scene)
-        .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "FEM caption scene child admission failed"))?
+        .try_child(caption)
+        .map_err(|_| admission("FEM caption text admission failed"))?
+        .try_child(scene_stack)
+        .map_err(|_| admission("FEM caption scene stack admission failed"))?
         .try_build()
-        .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "FEM caption scene stack admission failed"))?;
-    let builder = semio_framework_ui_contract::column()
-        .grow(true)
-        .try_children([caption, scene_stack])
-        .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "FEM caption children admission failed"))?;
-    builder.try_build().map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "FEM caption node admission failed"))
+        .map_err(|_| admission("FEM caption node admission failed"))
 }
 
 /// ⏯️ The transport read-out a running window carries in its caption — silent while stopped.
@@ -260,6 +255,9 @@ pub fn render(doc: &Fem3dSnapshot, cfg: &Fem3dResultsWindowConfig, interaction: 
 /// nodal-averaged von Mises stress. `source_id` selects a `fem3d_solve_all` case/combination id,
 /// falling back to the first load case when `None`/unknown. Caption names the active case.
 fn render_static(doc: &Fem3dSnapshot, cfg: &Fem3dResultsWindowConfig, interaction: &Fem3dInteractionSnapshot, source_id: Option<&str>, key: Option<ResultsCacheKey>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+    if doc.load_cases.is_empty() {
+        return failed(doc, cfg, interaction, "No load case defined".into());
+    }
     let amplitude = cfg.animation.amplitude();
     let frame = with_static_results(doc, key, |(results, stresses)| {
         let case_id = source_id.filter(|id| results.contains_key(*id)).map(str::to_string).or_else(|| doc.load_cases.first().map(|c| c.id.clone()));

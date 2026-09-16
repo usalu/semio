@@ -77,6 +77,36 @@ cut removes and the anchor adds material), plus the example leaf's own laws.
 Laws: `real_export_reads_optional_placement_slots_and_straight_bsplines_as_lines`, `read_faces_carry_pcurves_and_validate_clean`,
 `read_solids_take_booleans`, `coarse_chord_tolerance_keeps_small_circular_faces_measurable`.
 
+### The whole-document load path (browser gate)
+
+Publishing the plugin's examples (`.editor_with_examples`) made the react shell dispatch `setActiveExample` at boot and
+on every picker change — and process3d's `Effect::LoadDocument` path had never worked in production. Three faults,
+fixed in order:
+
+1. **Envelope minted just to print its spr trapped the guest.** `reset_process3d_document_effect` built a live
+   `ArtifactEnvelope` and dropped it (`artifact envelope terminal shell reached Drop before its app-owned bounded
+   retirement authority detached every nested owner` → `unreachable`, the whole actor dead). Now `store::empty_document_spr`,
+   the `🏗️fem` shape.
+2. **Archive closure `Incomplete`.** The editor and viewer declared no member roster and no `genesis_child_pack`, so the
+   member-less archive the shell sends could never close over the three composed children. Now
+   `type Members = SemioMembers` on both surfaces, `VcsArtifactApp<…, SemioMembers>` in the plugin fleet, and
+   `genesis_process3d_child_pack` (`stockSolid`/`steps`/`toolSolids` from the inline records — the concrete forest's
+   stock child is its real 57-face B-Rep). The unit-test context moved to `new_app_with_registry_and_members`.
+3. **Publication authority never admitted.** `process3d_validate_atomic_publication_authority` demanded a lease that
+   only tests ever admitted (`authority-missing`, then `initializer-generation-exhausted` once a stale lease sat in the
+   direct-mapped slot). The initializer now admits an app-owned lease for the host-begun operation
+   (`process3d_admit_app_publication_authority`: base = parent = live = the host's generation, `app_admitted` flag,
+   stale app leases evicted first), consumed by `validate_document_store_publication` and retired on fault/cancel;
+   host-admitted (test) leases keep their explicit lifecycle. `Process3dPublicationLease` grew the flag.
+
+Browser evidence (react lane, port 6222, `serve-16`): the picker offers **Demo** and **Concrete Forest**; choosing
+Concrete Forest commits the replacement (`state Complete committed true faulted false`), the Artifact panel lists the
+stock and the seven steps, and the workpiece mesh is the replayed piece — 448 vertices / 858 indices, extent
+x −5…5.8, y −2…2.68, z 0…3.03 (the anchor stud). Disabling *Wire Saw Column Cut* re-replays to 412 / 798 (the right
+column's kerf disappears) and re-enabling restores 448 / 858; the op log carries `change-step-enabled
+id=column-wire-cut`. Still red and unrelated: `setCamera`/`engagementAbort` on this lane fail the batched fixed-fold
+contract (a config-lane law outside this ticket).
+
 ## Kernel gaps found and left (documented, not worked around silently)
 
 - A **through** bore/box across a non-rectangular planar prism fails the boolean (`orientation-inconsistent` /
@@ -96,5 +126,7 @@ Laws: `real_export_reads_optional_placement_slots_and_straight_bsplines_as_lines
 Native: `cargo test -p semio-s-artifact-process-process3d --lib` — 304 ok / 32 red (all in the e2e ticket's pre-existing
 classes: render-harness serialisation, `🌉️wasm` retirement factory, `brep:out` export kind, dispatch-effect laws) plus
 `vcs_artifact_app_production_maintenance_swap_is_authoritative_and_fail_closed` still running after 15 min of CPU
-(killed; a 200 000-turn maintenance loop). `cargo test -p semio-s-artifact-stdio-semio --lib -- …step …mass_properties
+(killed; a 200 000-turn maintenance loop). After the load-path fixes the affected subset reads 21 ok / 4 red — the same
+four pre-existing laws (`registry_backed_example_action…`, `actual_atomic_publication…`, `authoritative_publication…`,
+`every_store_replacement_phase_unit…`). `cargo test -p semio-s-artifact-stdio-semio --lib -- …step …mass_properties
 …validation_report …boolean …primitives` — 78 ok.

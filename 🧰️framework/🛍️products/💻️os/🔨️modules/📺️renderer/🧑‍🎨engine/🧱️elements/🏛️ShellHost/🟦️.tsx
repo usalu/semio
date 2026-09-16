@@ -621,7 +621,7 @@ import { type WindowFault, type WindowFaultClass, windowFaultFromError } from ".
 import { EXTENSION_TARGETS } from "../../../../🔌️plugin/📇️registry/🤖️generated/🧩️plugins/🟦️.ts";
 import { PLUGIN_CATALOG } from "../../../../🔌️plugin/📇️registry/🟦️.ts";
 import { MODULE_PLUGIN_ROUTE, MODULE_EXTENSION_ROUTE } from "../../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
-import { BootstrapStatusNotice, ExecutionTargetStatusNotice, GisMapInferenceRequestControl, InferencePortPanel, inferencePortStatusRuntimeKeyV1, reduceBootstrapUiState, reduceExecutionTargetUiState, resolveRequiredHostApps, retainInferencePortOwnerAfterCloseV1, shellHistoryUndoRouteV1, type BootstrapUiState, type ExecutionTargetUiState, type InferencePortOwnerV1, type InferencePortUiAction } from "./🪪️host-bootstrap/🟦️.tsx";
+import { BootstrapStatusNotice, ExecutionTargetStatusNotice, InferencePortPanel, inferencePortStatusRuntimeKeyV1, reduceBootstrapUiState, reduceExecutionTargetUiState, resolveRequiredHostApps, retainInferencePortOwnerAfterCloseV1, shellHistoryUndoRouteV1, type BootstrapUiState, type ExecutionTargetUiState, type InferencePortOwnerV1, type InferencePortUiAction } from "./🪪️host-bootstrap/🟦️.tsx";
 import { ArtifactCreationCatalogNotice, ArtifactCreationProgressNotice, reduceArtifactCreationProgressUiV1, type ArtifactCreationProgressOwnerV1, type ArtifactCreationProgressUiStateV1 } from "./🌱️artifact-creation/🟦️.tsx";
 import {
   DirectoryBootstrapStatusNotice,
@@ -10942,11 +10942,6 @@ function FrameworkOsShellInner({
           {/* 💡️ The host-owned ephemeral inference port for exactly one document. It is mounted
            * only while the retained worker operation is live, renders solely from the worker's own
            * bounded status, and writes nothing into the document. */}
-          {inferencePortRuntimeKey === null && inferencePort === undefined && session?.app.dialect.artifactKind === "s.gis.gismap" ? (
-            <div className="pointer-events-auto absolute top-workbench left-1/2 z-50 w-[28rem] -translate-x-1/2 rounded-sm border bg-base px-double py-single text-sm shadow-sm">
-              <GisMapInferenceRequestControl locale={uiLocale === "de" ? "de" : "en"} onRequest={() => { void requestInferenceProposal(session, () => shellStateRef.current.pluginRuntime.session === session).catch((error) => { console.log("[DEBUG] gis-map-inference-request", error); }); }} />
-            </div>
-          ) : null}
           {inferencePortRuntimeKey !== null && inferencePort !== undefined ? (
             <div className="pointer-events-auto absolute top-workbench left-1/2 z-50 w-[28rem] -translate-x-1/2 rounded-sm border bg-base px-double py-single text-sm shadow-sm">
               <InferencePortPanel status={inferencePort} locale={uiLocale === "de" ? "de" : "en"} onAction={(action) => dispatchInferencePortIntent(inferencePortRuntimeKey, action)} />

@@ -172,6 +172,114 @@ pub fn ui_node_list(values: impl IntoIterator<Item = semio_framework_plugin::UiA
 
 //#endregion 🔖️Document
 
+//#region 🔖️ActionBridge
+/// 🎯️ Host-action bridge into the closed `RasterCommand` enum (ticket
+/// 26/09/05/RASTER-PLUGIN-END-TO-END, boot wave). The React/wgpu shells still speak `{action, args}`
+/// with camelCase argument keys, while every `🎮️commands/*` payload derives `FromValue` over its own
+/// snake_case field names — this boundary folds the keys and decodes. The `ArtifactEditor` default
+/// refuses every app action outright (`app.command.unsupported`), which left `addLayer`/`setCamera`/
+/// `setActiveExample`/… dead in the shell exactly as `📋️forms` found on 2026-09-16.
+mod args_bridge {
+    use super::*;
+    use semio_framework_plugin::{FaultCode, FaultOrigin};
+
+    fn snake(key: &str) -> String {
+        let mut out = String::with_capacity(key.len() + 4);
+        for ch in key.chars() {
+            if ch.is_ascii_uppercase() {
+                out.push('_');
+                out.push(ch.to_ascii_lowercase());
+            } else {
+                out.push(ch);
+            }
+        }
+        out
+    }
+
+    fn camel(key: &str) -> String {
+        let mut out = String::with_capacity(key.len());
+        let mut upper = false;
+        for ch in key.chars() {
+            if ch == '_' {
+                upper = true;
+            } else if upper {
+                out.push(ch.to_ascii_uppercase());
+                upper = false;
+            } else {
+                out.push(ch);
+            }
+        }
+        out
+    }
+
+    fn put(entries: &mut Vec<(String, dsl::DslValue)>, key: &str, value: dsl::DslValue) {
+        entries.retain(|(existing, _)| existing != key);
+        entries.push((key.to_string(), value));
+    }
+
+    /// 🔢️ The host's JSON round trip turns every integer into `Number::Float`; the exact-integer
+    /// codecs refuse `Float(1.0)`, so whole finite floats are restored to `UInt`/`Int` (every `f64`
+    /// field accepts any `Number` variant, so nothing else changes).
+    fn integral(value: dsl::DslValue) -> dsl::DslValue {
+        match value {
+            dsl::DslValue::Number(dsl::Number::Float(float)) if float.is_finite() && float.fract() == 0.0 && float.abs() < 9.007_199_254_740_992e15 => {
+                if float >= 0.0 { dsl::DslValue::Number(dsl::Number::UInt(float as u64)) } else { dsl::DslValue::Number(dsl::Number::Int(float as i64)) }
+            }
+            dsl::DslValue::Array(items) => dsl::DslValue::Array(items.into_iter().map(integral).collect()),
+            dsl::DslValue::Object(entries) => dsl::DslValue::Object(entries.into_iter().map(|(key, value)| (key, integral(value))).collect()),
+            other => other,
+        }
+    }
+
+    /// 🔁️ Emits every key of `args` under BOTH spellings (`FromValue` ignores keys it does not know)
+    /// after applying `aliases` (snake_case source → destination).
+    fn fold(args: Option<&dsl::DslValue>, aliases: &[(&str, &str)]) -> dsl::DslValue {
+        let mut entries: Vec<(String, dsl::DslValue)> = Vec::new();
+        if let Some(dsl::DslValue::Object(object)) = args {
+            for (key, value) in object {
+                let mut key = snake(key);
+                if let Some((_, to)) = aliases.iter().find(|(from, _)| *from == key) {
+                    key = (*to).to_string();
+                }
+                let value = integral(value.clone());
+                put(&mut entries, &camel(&key), value.clone());
+                put(&mut entries, &key, value);
+            }
+        }
+        dsl::DslValue::Object(entries)
+    }
+
+    fn decode<T: dsl::FromValue>(action: &str, value: dsl::DslValue) -> Result<T, Fault> {
+        T::from_value(value).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("app.command.invalid-args"), format!("raster action '{action}' arguments do not decode: {error}")))
+    }
+
+    pub fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<RasterCommand, Fault> {
+        // 🧱️ Tree rows and context menus address a layer by its bare `id`; the payloads spell `layer_id`.
+        const LAYER: &[(&str, &str)] = &[("id", "layer_id")];
+        let plain = || fold(args, &[]);
+        let layer = || fold(args, LAYER);
+        Ok(match action {
+            "addLayer" => RasterCommand::AddLayer(decode(action, plain())?),
+            "dropLayerKind" => RasterCommand::DropLayerKind(decode(action, plain())?),
+            "setLayerVisible" => RasterCommand::SetLayerVisible(decode(action, layer())?),
+            "toggleLayerVisible" => RasterCommand::ToggleLayerVisible(decode(action, layer())?),
+            "deleteLayer" => RasterCommand::DeleteLayer(decode(action, layer())?),
+            "duplicateLayer" => RasterCommand::DuplicateLayer(decode(action, layer())?),
+            "patchLayer" => RasterCommand::PatchLayer(decode(action, layer())?),
+            "patchLayers" => RasterCommand::PatchLayers(decode(action, fold(args, &[("ids", "layer_ids")]))?),
+            "moveLayer" => RasterCommand::MoveLayer(decode(action, fold(args, &[("id", "layer_id"), ("target_id", "target_row_id"), ("position", "drop_position")]))?),
+            "setBrushSize" => RasterCommand::SetBrushSize(decode(action, fold(args, &[("size", "value")]))?),
+            "setBrushOpacity" => RasterCommand::SetBrushOpacity(decode(action, fold(args, &[("opacity", "value")]))?),
+            "setCompositeViewport" => RasterCommand::SetCompositeViewport(decode(action, plain())?),
+            "setCamera" => RasterCommand::SetCamera(decode(action, plain())?),
+            "setCameraZoom" => RasterCommand::SetCameraZoom(decode(action, fold(args, &[("value", "zoom")]))?),
+            "setActiveExample" => RasterCommand::SetActiveExample(decode(action, fold(args, &[("id", "example_id"), ("value", "example_id")]))?),
+            _ => return Err(Fault::new(FaultOrigin::App, FaultCode::new("app.command.unsupported"), format!("the raster editor has no command for action '{action}'"))),
+        })
+    }
+}
+//#endregion 🔖️ActionBridge
+
 //#region 🔖️Commands
 semio_framework_plugin::app_commands! {
     /// 🎯️ `RasterPlayApp::Command` — the SOLE dispatch surface for raster's own behavior, assembled from
@@ -362,17 +470,33 @@ struct RasterStorePreparation {
     description: Option<String>,
     authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
     prepared: Option<store::ArtifactStoreOneItemPrepared<RasterSnapshot, RasterMutation>>,
+    /// 🧮 The clone-free stepwise apply (`RasterOneItemApply`), live from the first `advance` until
+    /// the post snapshot is handed over, or closed through its own retirement on cancel/fault.
+    apply: Option<crate::spr::RasterOneItemApply>,
+    /// 🧹️ A cancelled/faulted item's mutation may carry a populated owned map (a `create-layer` of an
+    /// adjustment with params) that must never reach `Drop` — it retires through the mutation
+    /// retirement factory instead.
+    mutation_retirement: Option<Box<dyn store::ErasedSnapshotRetirement>>,
     checkpoint: store::ArtifactStoreOneItemCheckpoint,
     cancelled: bool,
     closing: bool,
 }
+
+/// ⛽️ Candidate fuel units one store grant buys — each unit is one bounded owned-value step (a field
+/// clone, a page shift), so a two-layer document lands within a handful of grants.
+const RASTER_ONE_ITEM_APPLY_FUEL: u64 = 256;
 
 impl store::ArtifactStoreOneItemPreparationFactory<RasterSnapshot, RasterMutation> for RasterStorePreparationFactory {
     fn preflight(&self, _mutation: &RasterMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
         if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
             return Err("Raster Store preparation rejected its lane or description envelope".into());
         }
-        Ok(store::ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes: store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES })
+        // 🧮 `work_items` counts the forward AND its inverse (every raster inverse is exactly one
+        // operation: `create-layer` ↔ `delete-layer` of the whole subtree, `reorder` ↔ `reorder`, …) —
+        // the batch fold sizes its inverse capacity as `Σ work_items − admitted_items`, so declaring
+        // `1` exhausted it on the very first fold ("batched fold exceeded its admitted fixed inverse
+        // capacity") and the two-layer demo never landed (process3d declares the same `2`).
+        Ok(store::ArtifactStoreOneItemFootprint { work_items: 2, retained_bytes: store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES })
     }
 
     fn begin(
@@ -395,6 +519,8 @@ impl store::ArtifactStoreOneItemPreparationFactory<RasterSnapshot, RasterMutatio
             description: request.description,
             authority: Some(request.authority),
             prepared: None,
+            apply: None,
+            mutation_retirement: None,
             checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
             cancelled: false,
             closing: false,
@@ -412,10 +538,21 @@ impl store::ArtifactStoreOneItemPreparation<RasterSnapshot, RasterMutation> for 
             return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint));
         }
         let base = self.base.as_ref().ok_or_else(|| "Raster preparation lost its exact base root".to_string())?;
+        let authority = self.authority.as_ref().ok_or_else(|| "Raster preparation lost its Store authority".to_string())?;
+        // 🧮 Clone-free apply: `Mutation::diff` + `RasterDiff::apply` would `Clone` the base and every
+        // carried layer (a populated `RasterOwnedMap` asserts) and refuse a populated asset map — the
+        // retained candidate authority builds the post snapshot one owned value at a time instead.
+        let post = {
+            let mutation = self.mutation.as_ref().ok_or_else(|| "Raster preparation lost its mutation owner".to_string())?;
+            let apply = self.apply.get_or_insert_with(crate::spr::RasterOneItemApply::new);
+            match apply.advance(base.get(), mutation, authority.operation(), authority.generation(), RASTER_ONE_ITEM_APPLY_FUEL)? {
+                Some(post) => post,
+                None => return Ok(store::ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint)),
+            }
+        };
+        drop(self.apply.take());
         let mutation = self.mutation.take().ok_or_else(|| "Raster preparation lost its mutation owner".to_string())?;
         let inverse = mutation.inverse(base.get());
-        let post = protocol::MutationDiff::apply(mutation.diff(base.get()).diff(), base.get()).map_err(|error| error.to_string())?;
-        let authority = self.authority.as_ref().ok_or_else(|| "Raster preparation lost its Store authority".to_string())?;
         let id = format!("raster-retained-{}", authority.next_sequence_number());
         let edit = protocol::Edit {
             id: id.clone(),
@@ -467,7 +604,31 @@ impl store::ArtifactStoreOneItemPreparation<RasterSnapshot, RasterMutation> for 
         if !self.closing || grant.maximum_items == 0 {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
-        if self.prepared.take().is_some() || self.mutation.take().is_some() || self.description.take().is_some() {
+        if let Some(apply) = self.apply.as_mut() {
+            let step = apply.close_step(grant.maximum_items, grant.maximum_bytes)?;
+            if apply.terminal_is_empty() {
+                self.apply = None;
+            }
+            return Ok(match step {
+                store::SnapshotRetirementStep::Complete => store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 },
+                other => other,
+            });
+        }
+        if let Some(mutation) = self.mutation.take() {
+            self.mutation_retirement = Some(store::ArtifactOwnedValueRetirementFactory::retire_owned(&crate::spr::RasterMutationRetirementFactory, mutation));
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        if let Some(retirement) = self.mutation_retirement.as_mut() {
+            let step = retirement.close_step(grant.maximum_items, grant.maximum_bytes)?;
+            if retirement.terminal_is_empty() {
+                self.mutation_retirement = None;
+            }
+            return Ok(match step {
+                store::SnapshotRetirementStep::Complete => store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 },
+                other => other,
+            });
+        }
+        if self.prepared.take().is_some() || self.description.take().is_some() {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
         if let Some(base) = self.base.take() {
@@ -487,7 +648,7 @@ impl store::ArtifactStoreOneItemPreparation<RasterSnapshot, RasterMutation> for 
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.prepared.is_none()
+        self.closing && self.base.is_none() && self.mutation.is_none() && self.apply.is_none() && self.mutation_retirement.is_none() && self.description.is_none() && self.authority.is_none() && self.prepared.is_none()
     }
 }
 
@@ -513,7 +674,11 @@ impl store::ArtifactStoreOneItemPreparationFactory<RasterConfig, RasterConfigMut
         if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
             return Err("Raster config preparation rejected its lane or description envelope".into());
         }
-        Ok(store::ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes: store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES })
+        // 🧮 Forward + its one inverse (a whole-record config swap), for the same fold-capacity reason
+        // the document lane's `preflight` records — at `1` every `setCompositeViewport`/`setCamera`
+        // was refused "batched item candidate failed its exact fixed fold contract" (react boot
+        // `raster-boot-5`, 2026-09-16).
+        Ok(store::ArtifactStoreOneItemFootprint { work_items: 2, retained_bytes: store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES })
     }
 
     fn begin(
@@ -737,16 +902,65 @@ impl ArtifactEditor for RasterPlayApp {
         Some(Box::new(semio_framework_plugin::ArtifactDocumentStoreDisposer::<Self::Snapshot, Self::Mutation>::new()))
     }
 
+    /// 🧹️ The config and draft lanes' owner catalogs + bounded disposers (forms precedent) — without
+    /// them a closing instance faults `interactive-job.close-owned-disposer-missing … config-store`
+    /// and then "artifact store has no owner-supplied bounded disposer" (found by the mounted boot
+    /// test of ticket 26/09/05/RASTER-PLUGIN-END-TO-END).
+    fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
+        Some(semio_framework_plugin::bounded_config_store_owners::<Self::Config, Self::ConfigMutation>())
+    }
+
+    fn build_draft_store_owners() -> Option<store::DocumentStoreOwners<Self::Draft, Self::DraftMutation>> {
+        Some(semio_framework_plugin::no_draft_store_owners())
+    }
+
+    fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
+        Some(semio_framework_plugin::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
+    }
+
+    fn build_draft_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
+        Some(semio_framework_plugin::no_draft_store_disposer())
+    }
+
+    /// 👥️ Presence/transient lanes: raster's `RasterPresence` is plain inline data (its own
+    /// one-turn retirement in `👥️presence/🦀️.rs`), the transient lane is `NoTransient` — the same
+    /// rows forms/process3d declare.
+    fn build_presence_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
+        Some(crate::editor::raster::presence::raster_presence_store_disposer())
+    }
+
+    fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+        Some(std::sync::Arc::new(crate::editor::raster::presence::RasterPresenceRetirementFactory))
+    }
+
+    fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+        Some(std::sync::Arc::new(crate::editor::raster::presence::RasterPresenceRetirementFactory))
+    }
+
+    fn build_transient_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
+        Some(semio_framework_plugin::no_transient_store_disposer())
+    }
+
+    fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
+        Some(semio_framework_plugin::no_transient_local_root_retirement_factory())
+    }
+
     fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
         Some(crate::editor::raster::config::schema::app_schema_descriptor())
     }
 
-    /// 📄️ Boots on the bundled `📚️examples/🎬️demo` Semio-logo carrier (the same `.dsl.semio` text
-    /// `setActiveExample` loads), so every window renders real content instead of the all-`Default`
-    /// scaffold. `empty_raster_document()` stays the tests' blank slate — mirrors block2d's
-    /// `default_block2d_snapshot`.
+    /// 📄️ Boots on the constant EMPTY shell `empty_raster_snapshot()` (zero layers, zero assets) —
+    /// NOT the `📚️examples/🎬️demo` carrier and not even `empty_raster_document()`'s one Background
+    /// layer: `VcsArtifactApp::with_registry` builds the store through `ArtifactStore::new`, which
+    /// (a) `fold_history`-`Clone`s the initial snapshot with the derive (`RasterOwnedMap::clone`
+    /// panics on a populated map — the demo's adjustment layer carries `brightness`/`contrast`) and
+    /// (b) digests `initial_snapshot.encode_pack()`, and raster's whole-output codecs admit only the
+    /// empty shell (`require_empty_output_shell`). The shell replays `setActiveExample demo` on every
+    /// boot, so the demo still lands, through the bounded `set-active-example` mutations (the same
+    /// document flow block2d/forms use). Found at the first react boots of ticket
+    /// 26/09/05/RASTER-PLUGIN-END-TO-END (2026-09-16).
     fn initial_snapshot() -> RasterSnapshot {
-        crate::standards::v1::subsets::any::schema::default_raster_document()
+        crate::standards::v1::subsets::any::schema::empty_raster_snapshot()
     }
 
     fn io() -> Option<semio_framework_plugin::AppIo> {
@@ -790,6 +1004,11 @@ impl ArtifactEditor for RasterPlayApp {
 
     fn command_id(command: &RasterCommand) -> &'static str {
         command.command_id()
+    }
+
+    /// 🎯️ See `args_bridge` — without this override the trait default refuses every shell action.
+    fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<Self::Command, Fault> {
+        args_bridge::command_from_action(action, args)
     }
 
     fn handle(

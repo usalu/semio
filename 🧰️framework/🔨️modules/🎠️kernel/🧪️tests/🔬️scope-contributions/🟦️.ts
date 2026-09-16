@@ -49,17 +49,27 @@ describe("scopeContributionsJson", () => {
     { pluginId: "cad-extension-aec-building", manifest: manifest("cad.computer", { appId: "s.cad.cad@1/*#editor", moduleId: "aec-building", computersJson: JSON.stringify([{ id: "floor-area" }]) }) },
     { pluginId: "sourcing-module-beams", manifest: manifest("sourcing.module", { appId: "sourcing-curation", moduleId: "beams", typology: ["structure", "beams"] }) },
   ];
-  it("passes every capability pack — a topic that names no operator kind is never scoped by a graph", () => {
+  // 🎛️ The demonstrator's own `consumes` row, verbatim from the generated plugin registry.
+  const demonstratorConsumes = ["forms.questionKind", "flow.extension", "process.machines", "cad.computer", "sourcing.module"];
+  it("passes a capability pack the receiver consumes — no operator graph can ever scope one", () => {
     for (const entry of capabilities) expect(contributionIsCapabilityPack(entry.manifest.topicContributions![0])).toBe(true);
     for (const entry of loaded) expect(contributionIsCapabilityPack(entry.manifest.topicContributions![0])).toBe(false);
-    // 🕸️ The sourcing/cad/process receivers resolve NO operator graph at all: their packs must still cross.
-    const scoped = JSON.parse(scopeContributionsJson([...capabilities, loaded[2]!], "sourcing-curation", [])) as { pluginId: string }[];
+    // 🕸️ The cad/process/sourcing receivers resolve NO operator graph at all; the pack crosses anyway.
+    const scoped = JSON.parse(scopeContributionsJson([...capabilities, loaded[2]!], "demonstrator", [], demonstratorConsumes)) as { pluginId: string }[];
     expect(scoped.map((entry) => entry.pluginId)).toEqual(["process-extension-wood", "cad-extension-aec-building", "sourcing-module-beams"]);
+  });
+  it("cuts a capability pack on a topic the receiver does not consume", () => {
+    // 📐️ `gis` contributes a 196 400-byte `stdio.artifact-catalog.v1` no plugin consumes; forwarding
+    // every capability pack put it in all four demonstrator apps and blew their wire admission.
+    const gis = { pluginId: "gis", manifest: manifest("stdio.artifact-catalog.v1", { catalogJson: "x".repeat(512) }) };
+    const scoped = JSON.parse(scopeContributionsJson([...capabilities, gis], "demonstrator", [], demonstratorConsumes)) as { pluginId: string }[];
+    expect(scoped.map((entry) => entry.pluginId)).not.toContain("gis");
+    expect(JSON.parse(scopeContributionsJson([...capabilities, gis], "sourcing", [], ["sourcing.module"])).map((entry: { pluginId: string }) => entry.pluginId)).toEqual(["sourcing-module-beams"]);
   });
   it("still cuts an unreachable operator pack when capability packs pass alongside it", () => {
     const kinds = reachableKindsFromUnknown([{ widgets: [{ neuronKind: "brep.solid.extrude" }] }]);
-    const scoped = JSON.parse(scopeContributionsJson([...loaded, ...capabilities], "procedural", kinds)) as { pluginId: string }[];
-    expect(scoped.map((entry) => entry.pluginId).sort()).toEqual(["cad-extension-aec-building", "flow-extension-brep", "procedural", "process-extension-wood", "sourcing-module-beams"]);
+    const scoped = JSON.parse(scopeContributionsJson([...loaded, ...capabilities], "demonstrator", kinds, demonstratorConsumes)) as { pluginId: string }[];
+    expect(scoped.map((entry) => entry.pluginId).sort()).toEqual(["cad-extension-aec-building", "flow-extension-brep", "process-extension-wood", "sourcing-module-beams"]);
     expect(JSON.stringify(scoped).includes("bim.wall")).toBe(false);
     expect(JSON.stringify(scoped).includes("math.vector")).toBe(false);
   });

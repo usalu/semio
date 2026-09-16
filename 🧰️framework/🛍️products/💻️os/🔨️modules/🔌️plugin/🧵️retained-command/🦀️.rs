@@ -412,6 +412,7 @@ impl<A: ArtifactApp> ArtifactRetainedCommandJob<A> {
 
     fn fault(&mut self, cx: &mut StepContext<'_>, bytes: &'static [u8]) -> StepOutcome {
         self.phase = ArtifactRetainedCommandPhase::Fault;
+        crate::plugin_runtime::debug_runtime_line(format_args!("[DEBUG] retained command {} faulted: {}", self.work.as_ref().map(|work| work.tool_id()).unwrap_or("<no work>"), String::from_utf8_lossy(bytes)));
         StepOutcome::Fault(JobFault { detail: Self::retained_payload(cx, JobPayloadStream::Fault, bytes) })
     }
 
@@ -424,6 +425,7 @@ impl<A: ArtifactApp> ArtifactRetainedCommandJob<A> {
     /// oversized message narrows rather than replacing the report with nothing.
     fn reducer_fault(&mut self, cx: &mut StepContext<'_>, fault: &Fault) -> StepOutcome {
         self.phase = ArtifactRetainedCommandPhase::Fault;
+        crate::plugin_runtime::debug_runtime_line(format_args!("[DEBUG] retained command {} reducer faulted: {}: {}", self.work.as_ref().map(|work| work.tool_id()).unwrap_or("<no work>"), fault.code.0, fault.message));
         StepOutcome::Fault(JobFault { detail: Self::retained_payload(cx, JobPayloadStream::Fault, reducer_fault_detail(fault).as_bytes()) })
     }
 

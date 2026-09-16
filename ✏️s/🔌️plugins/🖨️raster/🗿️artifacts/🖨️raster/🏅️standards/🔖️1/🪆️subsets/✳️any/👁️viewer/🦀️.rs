@@ -49,11 +49,12 @@ impl ArtifactViewer for RasterViewer {
     const DIALECT: Dialect = RASTER_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = RASTER_DOCUMENT_SCHEMA;
 
-    /// 📄️ Boots on the bundled `📚️examples/🎬️demo` Semio-logo carrier so the composite and navigator
-    /// render real layers instead of a blank canvas — the same artifact-side `default_raster_document`
-    /// the editor boots on (no editor import: this is `crate::schema`).
+    /// 📄️ Boots on the constant empty shell `empty_raster_snapshot()`, like the editor: the store's
+    /// construction derive-`Clone`s and `encode_pack`s the initial snapshot, and raster admits only
+    /// the empty shell to both — see `RasterPlayApp::initial_snapshot`. A viewer instance receives its
+    /// document through the archive/pack load path (raster's own paged clone authority).
     fn initial_snapshot() -> RasterSnapshot {
-        crate::standards::v1::subsets::any::schema::default_raster_document()
+        crate::standards::v1::subsets::any::schema::empty_raster_snapshot()
     }
 
     /// 👁️ Structurally read-only: the sole `RasterViewCommand::Noop` variant never carries a config

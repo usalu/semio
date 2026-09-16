@@ -1,0 +1,13 @@
+{
+  "status": "rejected",
+  "code": "mutation.target-missing",
+  "path": [
+    "seismic"
+  ],
+  "messages": [
+    {
+      "level": "error",
+      "code": "mutation.target-missing"
+    }
+  ]
+}

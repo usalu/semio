@@ -13,7 +13,7 @@
           "id": "canvasPointerDown",
           "lanes": [
             "artifact",
-            "config"
+            "window-transient"
           ]
         },
         {
@@ -44,7 +44,7 @@
           "id": "canvasEscape",
           "lanes": [
             "artifact",
-            "config"
+            "window-transient"
           ]
         },
         {
@@ -138,28 +138,21 @@
           ]
         },
         {
-          "id": "setActiveUtility",
-          "lanes": [
-            "config"
-          ],
-          "frameworkInjected": true
-        },
-        {
           "id": "setCamera",
           "lanes": [
-            "config"
+            "window-config"
           ]
         },
         {
           "id": "setCameraZoom",
           "lanes": [
-            "config"
+            "window-config"
           ]
         },
         {
           "id": "engagementInput",
           "lanes": [
-            "config"
+            "window-transient"
           ]
         }
       ],

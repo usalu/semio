@@ -7,7 +7,7 @@
 ## Result
 - Phase 1 ([cad-react-e2e-2026-09-16.md](./📓️cad-react-e2e-2026-09-16.md)): build → activate → serve → boot → real Concrete Forest geometry + reference image in all four panes → `cad` domain picks (viewport, Artifact tree) → inspection → reference mutations with undo → gumball arming.
 - Phase 2 ([cad-interactions-e2e-2026-09-16.md](./📓️cad-interactions-e2e-2026-09-16.md)): all 60 `🕹️interactions/*.json` assets are the only statechart (legacy building statechart retired, 11 `aec.building` assets embedded and given `display` blocks), `engagementSubmit`/`worldPointerDown`/`engagementPossibleSelect` migrated to the retained artifact route, canonical session JSON, Enter = `confirm`, one history item per engagement (framework config-lane coalesce fix), echo-safe Action line (framework shell fix). Browser battery: Box, Sphere, Cylinder, Line, Circle, Arc, Polyline, ControlPointCurve, InterpCrv, Plane, Move, Rotate, Scale3D, Copy, Mirror, Place Column/Wall/Beam/Slab, Construct External Wall/Roof, Reinforced Concrete Column / One Way Slab all commit with their preview lane painted, ⌘Z removes the committed object, 0 console faults.
-- Native: see the report — 57/60 assets drive to a commit outcome natively; the crate's remaining failures are the phase-1 harness-debt families.
+- Native: `semio-s-artifact-cad-cad --lib` 331 passed / 19 failed (phase-1 harness-debt families + one peer in-flight `setContributions` wire test), `semio-s-plugin-cad` 5/5; 57/60 assets drive to a commit outcome natively.
 
 ## Open
 - Framework-wide 64-edit ledger per store (`ARTIFACT_HISTORY_LEDGER_CAPACITY`, no compaction) bounds a document session to ~30 committed interactions; a coalesced engagement keeps every amended snapshot in one edit.

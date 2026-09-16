@@ -1,0 +1,27 @@
+{
+  "artifact": null,
+  "nodes": {
+    "added": [],
+    "removed": [],
+    "patched": [
+      {
+        "id": "ap_1",
+        "item": {
+          "id": "ap_1",
+          "x": 6.0,
+          "y": 6.0,
+          "z": 6.8
+        }
+      }
+    ],
+    "reordered": null
+  },
+  "elements": null,
+  "materials": null,
+  "sections": null,
+  "solids": null,
+  "supports": null,
+  "loadCases": null,
+  "combinations": null,
+  "analysis": null
+}

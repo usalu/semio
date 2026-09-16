@@ -203,7 +203,7 @@ fn deeply_nested_raster_snapshot(depth: usize) -> RasterSnapshot {
 
 #[test]
 fn raster_snapshot_bounds_and_clone_advance_one_pre_admitted_unit_with_low_nonzero_fuel() {
-    let source = deeply_nested_raster_snapshot(48);
+    let source = deeply_nested_raster_snapshot(RASTER_MAXIMUM_NESTED_DEPTH - 8);
     let operation = semio_framework_job::OperationId(704);
     let generation = semio_framework_job::Generation(36);
     let cancel = semio_framework_job::root_cancel_token();
@@ -322,7 +322,7 @@ fn raster_expired_deadline_advances_no_bounds_clone_or_mutation_owner() {
 
 #[test]
 fn raster_small_mutation_against_deep_snapshot_is_cursorized_and_atomic() {
-    let source = deeply_nested_raster_snapshot(40);
+    let source = deeply_nested_raster_snapshot(RASTER_MAXIMUM_NESTED_DEPTH - 8);
     let mutation = RasterMutation::RenameLayer(rename_layer::mutation::RenameLayer { layer_id: "leaf".into(), new_name: "Renamed leaf".into() });
     let operation = semio_framework_job::OperationId(706);
     let generation = semio_framework_job::Generation(38);
@@ -337,7 +337,7 @@ fn raster_small_mutation_against_deep_snapshot_is_cursorized_and_atomic() {
         }
         turns += 1;
         assert!(turns < 30_000);
-        let source_leaf = RasterLayerLocator::node_at(&source, RasterLayerAddress { length: 41, indices: [0; RASTER_MAXIMUM_NESTED_DEPTH] }).expect("source leaf remains reachable");
+        let source_leaf = RasterLayerLocator::node_at(&source, RasterLayerAddress { length: RASTER_MAXIMUM_NESTED_DEPTH - 7, indices: [0; RASTER_MAXIMUM_NESTED_DEPTH] }).expect("source leaf remains reachable");
         let RasterLayerNode::Pixel { name, .. } = source_leaf else { panic!("source leaf remains a pixel") };
         assert_eq!(name, "Leaf", "the published source remains unchanged while the candidate is pending");
     }
@@ -365,7 +365,7 @@ fn raster_small_mutation_against_deep_snapshot_is_cursorized_and_atomic() {
 fn raster_cancel_after_complete_retires_the_unclaimed_candidate_before_terminal() {
     let operation = semio_framework_job::OperationId(707);
     let generation = semio_framework_job::Generation(39);
-    let envelope = store::create_document_envelope(RASTER_DOCUMENT_SCHEMA, "raster-cancel-complete", deeply_nested_raster_snapshot(24), None);
+    let envelope = store::create_document_envelope(RASTER_DOCUMENT_SCHEMA, "raster-cancel-complete", deeply_nested_raster_snapshot(RASTER_MAXIMUM_NESTED_DEPTH - 8), None);
     let mut authority = RasterStoreInitializationAuthority::new(envelope, operation, generation);
     assert!(matches!(drive_raster_initializer(&mut authority, operation, generation), semio_framework_job::StepOutcome::Complete(_)));
     assert!(authority.candidate.is_some());

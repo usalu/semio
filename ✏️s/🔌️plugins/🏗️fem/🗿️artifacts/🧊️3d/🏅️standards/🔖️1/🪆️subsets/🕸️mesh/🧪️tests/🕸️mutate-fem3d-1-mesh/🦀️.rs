@@ -22,7 +22,7 @@ use semio_repo_test_host::{parse_json, Adapter, Json};
 /// imported, because the oracle-only build must not link the subject crate. The contract's
 /// mutation-coverage gate keeps this list honest against the catalog, and that file's own
 /// `kinds_match_the_enum_and_the_catalog` keeps it honest against both the enum and the manifest.
-const KINDS: &[&str] = &["create-node", "delete-node", "create-element", "delete-element", "replace-element", "create-section", "delete-section", "replace-section", "create-solid", "delete-solid", "replace-solid"];
+const KINDS: &[&str] = &["create-node", "delete-node", "create-element", "delete-element", "replace-element", "create-section", "delete-section", "replace-section", "create-solid", "delete-solid", "replace-solid", "replace-node"];
 
 /// 👁️ Kinds whose COMMITTED specification vector cannot exhibit a forward effect, so
 /// [`law::mutation_is_observable`] must not demand one of them.
@@ -130,6 +130,13 @@ fn vector(kind: &str) -> Vector {
             diff: include_str!("../../🧫️fixtures/🧬️mutations/🔄️replace-solid/📚️thickens-the-slab-and-b51ef0/🔺️diff/🔣️.json"),
             outcome: include_str!("../../🧫️fixtures/🧬️mutations/🔄️replace-solid/📚️thickens-the-slab-and-b51ef0/🎯️outcome/🔣️.json"),
         },
+        "replace-node" => Vector {
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-node/📍️lifts-the-column-head-34351d/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-node/📍️lifts-the-column-head-34351d/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-node/📍️lifts-the-column-head-34351d/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-node/📍️lifts-the-column-head-34351d/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-node/📍️lifts-the-column-head-34351d/🎯️outcome/🔣️.json"),
+        },
         other => panic!("mutate-fem3d-1-mesh: no committed specification vector is registered for kind {other:?}"),
     }
 }
@@ -222,6 +229,13 @@ fn hall_vector_of(kind: &str) -> Vector {
             diff: include_str!("../../🧫️fixtures/🧬️mutations/🧩️create-element/🏗️hall-new-tie-074a69/🔺️diff/🔣️.json"),
             outcome: include_str!("../../🧫️fixtures/🧬️mutations/🧩️create-element/🏗️hall-new-tie-074a69/🎯️outcome/🔣️.json"),
         },
+        "replace-node" => Vector {
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-node/🏗️hall-lifts-ridge-746bae/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-node/🏗️hall-lifts-ridge-746bae/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-node/🏗️hall-lifts-ridge-746bae/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-node/🏗️hall-lifts-ridge-746bae/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-node/🏗️hall-lifts-ridge-746bae/🎯️outcome/🔣️.json"),
+        },
         other => panic!("🕸️mutate-fem3d-1-mesh: no committed hall vector is registered for kind {other:?}"),
     }
 }
@@ -230,7 +244,7 @@ fn hall_vector_of(kind: &str) -> Vector {
 /// refusal, or a declared no-op. Keyed by the scenario id, not by the kind, because a kind can
 /// refuse in several different ways. A rejection bundle carries no `🔺️diff/🔣️.json` at all, so the
 /// `diff` member is the empty object and no handler reads it.
-const REJECT_VECTORS: &[&str] = &["same-element-61adb2", "dangling-sec-70b168", "renames-brace-219be2", "dup-node-id-86f2e1", "purlin-in-use-99eb01", "no-such-section-50d29b", "same-section-d1d013", "negative-iy-d4e0a8", "renames-purlin-dfe160", "dup-section-id-a76686", "zero-area-475a19", "same-solid-8ad12c", "zero-height-2b131a", "dangling-mat-9c89da", "renames-apron-7bfadd", "no-such-node-4027a8", "rafter-under-udl-e0342d", "no-such-element-eb788c", "raft-under-load-e4ea39", "no-such-solid-f08d23", "sliver-outline-316a7c", "dangling-mat-1ebd78", "dangling-start-ab4132"];
+const REJECT_VECTORS: &[&str] = &["same-element-61adb2", "dangling-sec-70b168", "renames-brace-219be2", "dup-node-id-86f2e1", "purlin-in-use-99eb01", "no-such-section-50d29b", "same-section-d1d013", "negative-iy-d4e0a8", "renames-purlin-dfe160", "dup-section-id-a76686", "zero-area-475a19", "same-solid-8ad12c", "zero-height-2b131a", "dangling-mat-9c89da", "renames-apron-7bfadd", "no-such-node-4027a8", "rafter-under-udl-e0342d", "no-such-element-eb788c", "raft-under-load-e4ea39", "no-such-solid-f08d23", "sliver-outline-316a7c", "dangling-mat-1ebd78", "dangling-start-ab4132", "same-node-32a2a4", "no-such-node-166880", "renames-node-4a2286"];
 
 fn reject_vector_of(identifier: &str) -> Vector {
     match identifier {
@@ -394,6 +408,27 @@ fn reject_vector_of(identifier: &str) -> Vector {
             after: include_str!("../../🧫️fixtures/🧬️mutations/🧩️create-element/🚨️dangling-start-ab4132/📸️snapshot/➡️after/🔣️.json"),
             diff: "{}",
             outcome: include_str!("../../🧫️fixtures/🧬️mutations/🧩️create-element/🚨️dangling-start-ab4132/🎯️outcome/🔣️.json"),
+        },
+        "same-node-32a2a4" => Vector {
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-node/⏸️same-node-32a2a4/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-node/⏸️same-node-32a2a4/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-node/⏸️same-node-32a2a4/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-node/⏸️same-node-32a2a4/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-node/⏸️same-node-32a2a4/🎯️outcome/🔣️.json"),
+        },
+        "no-such-node-166880" => Vector {
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-node/🚨️no-such-node-166880/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-node/🚨️no-such-node-166880/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-node/🚨️no-such-node-166880/📸️snapshot/➡️after/🔣️.json"),
+            diff: "{}",
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-node/🚨️no-such-node-166880/🎯️outcome/🔣️.json"),
+        },
+        "renames-node-4a2286" => Vector {
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-node/🪪️renames-node-4a2286/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-node/🪪️renames-node-4a2286/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-node/🪪️renames-node-4a2286/📸️snapshot/➡️after/🔣️.json"),
+            diff: "{}",
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🔁️replace-node/🪪️renames-node-4a2286/🎯️outcome/🔣️.json"),
         },
         other => panic!("🕸️mutate-fem3d-1-mesh: no committed rejection vector is registered for {other:?}"),
     }

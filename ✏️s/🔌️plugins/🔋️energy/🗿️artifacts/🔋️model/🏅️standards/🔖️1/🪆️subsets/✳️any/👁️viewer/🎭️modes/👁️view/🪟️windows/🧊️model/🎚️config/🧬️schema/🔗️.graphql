@@ -1,0 +1,9 @@
+type EnergyModelViewerCameraPose {
+  position: [Float!]!
+  target: [Float!]!
+  zoom: Float!
+}
+
+type EnergyModelViewerWindowConfig {
+  camera: EnergyModelViewerCameraPose! @state(class: CONFIG)
+}

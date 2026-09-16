@@ -905,62 +905,406 @@ async fn every_inspector_verb_stays_a_classified_retained_tool() {
 }
 //#endregion 🪟️ActionOwnership
 
-//#region 🎨️RecolourLaw
-/// 🎨️ THE recolour law (W1-D §10). Everything between the kernel accumulator and a painted surface is
-/// unit-tested in isolation; this is the only law that drives the WHOLE chain through the same route
-/// the shell uses — `toolRunStart` → the framework ledger → `ArtifactView::tool_run()` →
-/// `surface_energy_from_run` → `surface_colors` → the World3d scene's per-vertex colours — and
-/// therefore the only one that can catch the payload being dropped in the middle of it.
-///
-/// It asserts three things: (a) the legend caption reaches the body, (b) at least one surface is
-/// painted a colour the unpainted scene never produces, and (c) the run's declared `windows` really
-/// resolve to this body key, which is what makes a tick's `dirty_scope()` name it.
+
+//#region 🧱️MaterialAndConstructionVerbs
+fn material_property(material: u32, property: &str, value: &str) -> EnergyModelEditorCommand {
+    EnergyModelEditorCommand::SetMaterialProperty { material, property: property.into(), value: value.into() }
+}
+
+fn construction_property(construction: u32, property: &str, value: &str) -> EnergyModelEditorCommand {
+    EnergyModelEditorCommand::SetConstructionProperty { construction, property: property.into(), value: value.into() }
+}
+
+/// 🧱️ `set-material-property` carries TEXT now, so the material's whole record — including the name
+/// and the roughness class `change-material-roughness` just gave a mutation kind — round-trips
+/// through the granular vocabulary instead of being read-only in the inspector.
 #[semio_framework_async_macros::async_test]
-async fn a_finalized_simulation_run_recolours_the_three_d_model_window() {
-    use crate::editor::model::results::{ResultField, SURFACE_ENERGY_BANDS};
-
-    // (c) The refresh half. `ToolRunLedger::dirty_scope()` unions `entry.window_bodies`, which the
-    // driver builds as `definition.windows.iter().filter_map(|id| registry.window_body_key(id))` —
-    // an id no window kind declares is silently FILTERED AWAY, and the body then never redraws on a
-    // tick. So the law is: every id the run declares is a declared window kind, and the body key it
-    // resolves to is the one this app renders.
-    let def = definition();
-    let declared = crate::energy_simulation_session::energy_simulation_run_definition().windows;
-    assert!(!declared.is_empty(), "the run declares no windows, so no tick can ever mark a body dirty");
-    for window_kind_id in &declared {
-        let kind = def.window_kinds.iter().find(|kind| &kind.id == window_kind_id).unwrap_or_else(|| panic!("the run declares window kind {window_kind_id}, which this editor does not register — the driver drops it and the body never redraws on a tick"));
-        assert!(!kind.body_key.is_empty());
+async fn every_material_property_round_trips_through_the_granular_vocabulary() {
+    let snapshot = snapshot_of(&inspector_model());
+    let cases: &[(&str, &str, &str)] = &[
+        ("name", "Heavyweight Concrete", "rename-material"),
+        ("roughness", "verySmooth", "change-material-roughness"),
+        ("thicknessM", "0.15", "change-material-thickness"),
+        ("conductivityWMK", "1.2", "change-material-conductivity"),
+        ("densityKgM3", "2100", "change-material-density"),
+        ("specificHeatJKgK", "950", "change-material-specific-heat"),
+        ("thermalAbsorptance", "0.85", "change-material-thermal-absorptance"),
+        ("solarAbsorptance", "0.55", "change-material-solar-absorptance"),
+        ("visibleAbsorptance", "0.5", "change-material-visible-absorptance"),
+    ];
+    for (property, value, kind) in cases {
+        assert_eq!(emitted_kinds(&snapshot, &material_property(10, property, value)), vec![(*kind).to_string()], "material property {property} must emit exactly {kind}");
     }
-    let three_d = def.window_kinds.iter().find(|kind| kind.id == model_window::WINDOW_KIND_ID).expect("the 3d window kind");
-    assert_eq!(three_d.body_key, model_window::BODY_KEY);
-    assert!(declared.iter().any(|id| id == model_window::WINDOW_KIND_ID), "the run must declare the 3d model window or its body is never dirtied by a tick");
+    assert_eq!(applied(&snapshot, &material_property(10, "roughness", "verySmooth")).materials[0].roughness, crate::model::SurfaceRoughness::VerySmooth);
+    assert_eq!(applied(&snapshot, &material_property(10, "name", "Heavyweight Concrete")).materials[0].name, "Heavyweight Concrete");
+}
 
-    // The unpainted baseline: the same document, rendered before any run exists.
-    let mut app = simulation_app().await;
-    let before = render_text(&mut app, model_window::BODY_KEY).await;
-    assert!(!before.contains("kWh"), "there is no run yet, so there is no legend: {}", &before[..before.len().min(400)]);
+/// 🧱️ The four refusal shapes of the widened material verb.
+#[semio_framework_async_macros::async_test]
+async fn the_material_property_verb_refuses_the_four_bad_payloads() {
+    let snapshot = snapshot_of(&inspector_model());
+    assert_eq!(refusal(&snapshot, &material_property(10, "roughness", "gritty")), "mutation.invalid-payload", "an unknown roughness spelling is refused, never written");
+    assert_eq!(refusal(&snapshot, &material_property(10, "conductivityWMK", "-1")), "mutation.invalid-payload");
+    assert_eq!(refusal(&snapshot, &material_property(10, "reflectance", "0.5")), "mutation.invalid-payload", "a property this record does not have is refused");
+    assert_eq!(refusal(&snapshot, &material_property(9_999, "name", "Ghost")), "mutation.target-missing");
+    let held = inspector_model().materials[0].roughness;
+    assert!(emitted_kinds(&snapshot, &material_property(10, "roughness", crate::editor::model::surface_roughness_id(held))).is_empty(), "an unchanged roughness opens no revision");
+}
 
-    start(&mut app).await;
-    pump_state(&mut app, "run finalizes", "finalized").await;
+/// 🧱️ `set-construction-property`'s five shapes, each landing on the list kind the vocabulary really
+/// declares. `replaceLayer` has no kind of its own, so it travels as the remove/insert pair.
+#[semio_framework_async_macros::async_test]
+async fn every_construction_property_round_trips_through_the_granular_vocabulary() {
+    let snapshot = snapshot_of(&inspector_model());
+    let model = inspector_model();
+    let construction = model.constructions.iter().find(|entry| entry.layer_material_ids.len() >= 2).expect("the demo has a multi-layer construction");
+    let id = construction.id.0;
+    let spare = model.materials.iter().find(|material| !construction.layer_material_ids.contains(&material.id)).expect("the demo has a material this construction does not use");
 
-    let after = render_text(&mut app, model_window::BODY_KEY).await;
-    // (a) The legend caption.
-    assert!(after.contains("kWh"), "the finalized run left no legend caption in the 3d body — surface_energy_from_run returned None, or the body never re-rendered. Body: {}", &after[..after.len().min(2000)]);
-    assert!(
-        ResultField::ALL.iter().any(|field| after.contains(field.label())),
-        "the caption does not name a published result field: {}",
-        &after[..after.len().min(2000)]
+    assert_eq!(emitted_kinds(&snapshot, &construction_property(id, "name", "Insulated Wall")), vec!["rename-construction".to_string()]);
+    assert_eq!(emitted_kinds(&snapshot, &construction_property(id, "addLayer", &spare.id.0.to_string())), vec!["add-construction-layer".to_string()]);
+    assert_eq!(emitted_kinds(&snapshot, &construction_property(id, "removeLayer", "0")), vec!["remove-construction-layer".to_string()]);
+    assert_eq!(emitted_kinds(&snapshot, &construction_property(id, "moveLayerDown", "0")), vec!["reorder-construction-layers".to_string()]);
+    assert_eq!(
+        emitted_kinds(&snapshot, &construction_property(id, "replaceLayer:0", &spare.id.0.to_string())),
+        vec!["remove-construction-layer".to_string(), "add-construction-layer".to_string()],
+        "a one-slot exchange is the remove/insert pair at that index"
     );
 
-    // (b) At least one surface carries a ramp colour. The ramp's hexes are converted to 0..1 floats
-    // by `hex_to_rgb01`, so the scene's colour array carries those components verbatim; the family
-    // palette the unpainted scene uses never produces them.
-    let painted = SURFACE_ENERGY_BANDS.iter().any(|hex| {
-        let [r, g, b] = crate::editor::model::results::hex_to_rgb01(hex);
-        [r, g, b].iter().all(|channel| after.contains(&format!("{channel:.4}")[..6]))
-    });
-    assert!(painted || after != before, "the 3d body is byte-identical before and after the run: nothing was recoloured");
-    assert!(painted, "no surface carries a colour from the results ramp; the overlay reached render as None. Body: {}", &after[..after.len().min(2000)]);
+    let renamed = applied(&snapshot, &construction_property(id, "name", "Insulated Wall"));
+    assert_eq!(renamed.constructions.iter().find(|entry| entry.id.0 == id).expect("the construction survives").name, "Insulated Wall");
+    let appended = applied(&snapshot, &construction_property(id, "addLayer", &spare.id.0.to_string()));
+    assert_eq!(appended.constructions.iter().find(|entry| entry.id.0 == id).expect("the construction survives").layer_material_ids.last(), Some(&spare.id));
+    let swapped = applied(&snapshot, &construction_property(id, "moveLayerDown", "0"));
+    assert_eq!(swapped.constructions.iter().find(|entry| entry.id.0 == id).expect("the construction survives").layer_material_ids[1], construction.layer_material_ids[0]);
+}
+
+/// 🧱️ The construction verb's refusals — including the vocabulary limit that `add-construction-layer`
+/// admits an OPAQUE material only, refused here rather than at the store.
+#[semio_framework_async_macros::async_test]
+async fn the_construction_property_verb_refuses_the_four_bad_payloads() {
+    let snapshot = snapshot_of(&inspector_model());
+    let model = inspector_model();
+    let construction = model.constructions.iter().find(|entry| entry.layer_material_ids.len() >= 2).expect("a multi-layer construction");
+    let id = construction.id.0;
+    let glazing = model.glazing_materials.first().expect("the demo has a glazing material");
+    assert_eq!(refusal(&snapshot, &construction_property(id, "addLayer", &glazing.id.0.to_string())), "mutation.invalid-payload", "a glazing pane has no add-construction-layer");
+    assert_eq!(refusal(&snapshot, &construction_property(id, "removeLayer", "99")), "mutation.invalid-payload", "an index past the end is refused");
+    assert_eq!(refusal(&snapshot, &construction_property(id, "moveLayerUp", "0")), "mutation.invalid-payload", "the first layer has nothing above it");
+    assert_eq!(refusal(&snapshot, &construction_property(id, "thickness", "0.2")), "mutation.invalid-payload", "a property a construction does not have is refused");
+    assert_eq!(refusal(&snapshot, &construction_property(9_999, "name", "Ghost")), "mutation.target-missing");
+}
+
+/// 🔬️ The masking gap this lane closed: `probe.materials` used to CLONE, so a field with no mutation
+/// kind vanished silently. Roughness was the live case — now it emits its own kind, and every one of
+/// the four newly projected collections reports back exactly what it diffed.
+#[semio_framework_async_macros::async_test]
+async fn the_four_projected_collections_emit_a_step_for_every_field_they_carry() {
+    let base = inspector_model();
+    let snapshot = snapshot_of(&base);
+
+    let mut roughened = base.clone();
+    roughened.materials[0].roughness = crate::model::SurfaceRoughness::VerySmooth;
+    assert_eq!(model_edit_kinds(&base, &roughened), vec!["change-material-roughness".to_string()], "a roughness edit is no longer masked by a cloning probe");
+
+    let mut renamed = base.clone();
+    renamed.zones[0].name = "Attic".into();
+    assert_eq!(model_edit_kinds(&base, &renamed), vec!["rename-zone".to_string()]);
+
+    let mut resurfaced = base.clone();
+    resurfaced.surfaces[0].multiplier = 3;
+    assert_eq!(model_edit_kinds(&base, &resurfaced), vec!["change-surface-multiplier".to_string()]);
+
+    let mut rehomed = base.clone();
+    rehomed.thermostats[0].heating_throttle_range_k = 3.5;
+    assert_eq!(model_edit_kinds(&base, &rehomed), vec!["change-thermostat-heating-throttle-range".to_string()]);
+
+    let mut relayered = base.clone();
+    let construction = relayered.constructions.iter_mut().find(|entry| entry.layer_material_ids.len() >= 2).expect("a multi-layer construction");
+    construction.layer_material_ids.swap(0, 1);
+    assert_eq!(model_edit_kinds(&base, &relayered), vec!["reorder-construction-layers".to_string()], "constructions are projected too — the probe never compared them before");
+}
+
+/// 🔬️ Runs the mutation seam directly over a (base, edited) pair and names the steps it emitted.
+fn model_edit_kinds(base: &crate::model::Model, edited: &crate::model::Model) -> Vec<String> {
+    use protocol::SemanticMutation as _;
+    super::model_edit("probe", base, edited, "probe".into()).expect("the seam names every edited field").artifact_mutations.iter().map(|mutation| mutation.semantics().kind.to_string()).collect()
+}
+//#endregion 🧱️MaterialAndConstructionVerbs
+
+//#region 🌉️HostMergeRoundTrip
+/// 🌉️ Exactly what the react host dispatches for a `Trigger::Change` control: the descriptor's own
+/// authored args with the control's value merged in under the literal key `value`
+/// (`🗣️Interpreter/🟦️.tsx` `dispatchDeclarativeControlAction`).
+fn host_merged(authored: &[(&str, &str)], value: &str) -> dsl::DslValue {
+    let mut entries: Vec<(String, dsl::DslValue)> = authored.iter().map(|(key, value)| ((*key).to_string(), dsl::DslValue::String((*value).to_string()))).collect();
+    entries.retain(|(key, _)| key != "value");
+    entries.push(("value".to_string(), dsl::DslValue::String(value.to_string())));
+    dsl::DslValue::Object(entries)
+}
+
+/// 📍️ THE blocker the review found: the site form authors all five scalars plus `field`, the host
+/// merges the typed number under `value`, and the bridge has to route it into the NAMED slot. Before
+/// the `{field, value}` indirection the bridge read `northAxisDeg` by name, found the key missing and
+/// silently wrote 0.0 — so this law round-trips the real wire payload instead of asserting a shape.
+#[semio_framework_async_macros::async_test]
+async fn a_site_control_writes_the_number_the_host_merged_not_the_bridges_default() {
+    let mut model = inspector_model();
+    model.site.north_axis_deg = 15.0;
+    model.site.latitude_deg = 47.5;
+    model.site.longitude_deg = 8.5;
+    model.site.elevation_m = 400.0;
+    model.site.time_zone_hours = 1.0;
+    let snapshot = snapshot_of(&model);
+
+    let authored: Vec<(&str, String)> = vec![
+        ("elevationM", model.site.elevation_m.to_string()),
+        ("field", "northAxisDeg".to_string()),
+        ("latitudeDeg", model.site.latitude_deg.to_string()),
+        ("longitudeDeg", model.site.longitude_deg.to_string()),
+        ("northAxisDeg", model.site.north_axis_deg.to_string()),
+        ("timeZoneHours", model.site.time_zone_hours.to_string()),
+    ];
+    let borrowed: Vec<(&str, &str)> = authored.iter().map(|(key, value)| (*key, value.as_str())).collect();
+    let args = host_merged(&borrowed, "30");
+    let command = <EnergyModelEditor as ArtifactEditor>::command_from_action(SET_SITE_ACTION_ID, Some(&args)).expect("the site payload resolves");
+    assert_eq!(command, EnergyModelEditorCommand::SetSite { latitude_deg: 47.5, longitude_deg: 8.5, elevation_m: 400.0, time_zone_hours: 1.0, north_axis_deg: 30.0 });
+
+    let edited = applied(&snapshot, &command);
+    assert!((edited.site.north_axis_deg - 30.0).abs() < 1e-12, "the site kept the typed north axis, not 0.0: {:?}", edited.site);
+    assert!((edited.site.latitude_deg - 47.5).abs() < 1e-12, "the untouched scalars survive the edit: {:?}", edited.site);
+    assert_eq!(emitted_kinds(&snapshot, &command), vec!["update-site".to_string()]);
+}
+
+/// 🌡️ The same law for the thermostat's five-slot payload — a throttle-range edit used to write the
+/// bridge's hard-coded 2.0 K whatever the user typed.
+#[semio_framework_async_macros::async_test]
+async fn a_thermostat_control_writes_the_number_the_host_merged_not_the_bridges_default() {
+    let model = inspector_model();
+    let thermostat = model.thermostats.first().expect("the demo has a thermostat").clone();
+    let snapshot = snapshot_of(&model);
+    let authored: Vec<(&str, String)> = vec![
+        ("coolingSchedule", thermostat.cooling_setpoint_schedule_id.0.to_string()),
+        ("coolingThrottleRangeK", thermostat.cooling_throttle_range_k.to_string()),
+        ("field", "heatingThrottleRangeK".to_string()),
+        ("heatingSchedule", thermostat.heating_setpoint_schedule_id.0.to_string()),
+        ("heatingThrottleRangeK", thermostat.heating_throttle_range_k.to_string()),
+        ("thermostat", thermostat.id.0.to_string()),
+    ];
+    let borrowed: Vec<(&str, &str)> = authored.iter().map(|(key, value)| (*key, value.as_str())).collect();
+    let command = <EnergyModelEditor as ArtifactEditor>::command_from_action(SET_THERMOSTAT_SETPOINTS_ACTION_ID, Some(&host_merged(&borrowed, "4.5"))).expect("the thermostat payload resolves");
+    assert_eq!(
+        command,
+        EnergyModelEditorCommand::SetThermostatSetpoints {
+            thermostat: thermostat.id.0,
+            heating_schedule: thermostat.heating_setpoint_schedule_id.0,
+            cooling_schedule: thermostat.cooling_setpoint_schedule_id.0,
+            heating_throttle_range_k: 4.5,
+            cooling_throttle_range_k: thermostat.cooling_throttle_range_k,
+        }
+    );
+    let edited = applied(&snapshot, &command);
+    assert!((edited.thermostats[0].heating_throttle_range_k - 4.5).abs() < 1e-12, "the thermostat kept the typed range, not 2.0");
+    assert_eq!(edited.thermostats[0].cooling_setpoint_schedule_id, thermostat.cooling_setpoint_schedule_id, "the untouched schedule survives");
+
+    // 🎛️ A schedule select goes the same way — that one used to write id 0 and fail loudly.
+    let other = model.schedules.constants.iter().map(|schedule| schedule.id).find(|id| *id != thermostat.heating_setpoint_schedule_id).expect("a second constant schedule");
+    let mut swapped = borrowed.clone();
+    swapped[2] = ("field", "heatingSchedule");
+    let command = <EnergyModelEditor as ArtifactEditor>::command_from_action(SET_THERMOSTAT_SETPOINTS_ACTION_ID, Some(&host_merged(&swapped, &other.0.to_string()))).expect("the schedule payload resolves");
+    assert_eq!(applied(&snapshot, &command).thermostats[0].heating_setpoint_schedule_id, other);
+}
+
+/// 🚧️ The other review finding: `interzone` needs a partner, so the inspector picks the PARTNER and
+/// the boundary follows. The round trip is the same host merge as above.
+#[semio_framework_async_macros::async_test]
+async fn picking_an_interzone_partner_makes_the_surface_interzone() {
+    let model = inspector_model();
+    let snapshot = snapshot_of(&model);
+    let (first, second) = (model.surfaces[0].id, model.surfaces[1].id);
+    let args = host_merged(&[("field", "interzonePartner"), ("id", &first.0.to_string())], &second.0.to_string());
+    let command = <EnergyModelEditor as ArtifactEditor>::command_from_action(SET_SURFACE_PROPERTY_ACTION_ID, Some(&args)).expect("the partner payload resolves");
+    assert_eq!(command, EnergyModelEditorCommand::SetSurfaceProperty { surface: first.0, property: "interzonePartner".into(), value: second.0.to_string(), partner_surface: 0 });
+    assert_eq!(emitted_kinds(&snapshot, &command), vec!["change-surface-boundary-condition".to_string()]);
+    assert_eq!(applied(&snapshot, &command).surfaces[0].outside_boundary_condition, OutsideBoundary::Interzone(second));
+
+    assert_eq!(refusal(&snapshot, &surface_property(first.0, "interzonePartner", &first.0.to_string())), "mutation.invalid-payload", "a surface is never its own neighbour");
+    assert_eq!(refusal(&snapshot, &surface_property(first.0, "interzonePartner", "9999")), "mutation.target-missing");
+    assert_eq!(refusal(&snapshot, &surface_property(first.0, "interzonePartner", "0")), "mutation.invalid-payload");
+
+    // 🚧️ And a plain boundary pick on an ALREADY interzone surface keeps its neighbour instead of
+    // refusing for want of a partner it was never given a control for.
+    let interzone = applied(&snapshot, &command);
+    let held = snapshot_of(&interzone);
+    assert_eq!(applied(&held, &surface_property(first.0, "boundary", "interzone")).surfaces[0].outside_boundary_condition, OutsideBoundary::Interzone(second));
+}
+//#endregion 🌉️HostMergeRoundTrip
+
+//#region 🪟️AppLevelOwnership
+/// 🪟️ Generalises `every_inspector_verb_is_owned_by_every_window_kind` to the WHOLE app-level roster:
+/// the simulation window's three config/document verbs and the two creation verbs moved there too, so
+/// the inspector's result-field select and the `mod+shift+*` chords fire whatever window is active.
+#[semio_framework_async_macros::async_test]
+async fn every_app_level_verb_is_owned_by_every_window_kind() {
+    let def = definition();
+    assert!(def.window_kinds.len() >= 4, "the editor declares its four windows");
+    for action in app_level_action_definitions() {
+        for window in &def.window_kinds {
+            assert!(window.actions.iter().any(|declared| declared.id == action.id), "window kind {} does not own app-level action {}", window.id, action.id);
+        }
+    }
+    // 📚️ `setActiveExample` is app-level through `.mutation(…)` rather than the roster above, and the
+    // shell dispatches it from whatever window has focus, so it is held to the same law.
+    for window in &def.window_kinds {
+        assert!(window.actions.iter().any(|declared| declared.id == SET_ACTIVE_EXAMPLE_ACTION_ID), "window kind {} does not own {SET_ACTIVE_EXAMPLE_ACTION_ID}", window.id);
+    }
+}
+
+/// ⌨️ Every chord the editor binds must reach its verb from ANY window — a keybinding is dispatched in
+/// the active window's context exactly like a panel action, so a chord bound to a window-owned verb is
+/// refused the moment another window has focus.
+#[semio_framework_async_macros::async_test]
+async fn every_bound_chord_reaches_a_verb_every_window_kind_owns() {
+    let def = definition();
+    // ⌨️ Only this EDITOR's own verbs: the builder also binds framework-reserved chords (history,
+    // tool run) whose actions live outside every window's action list by construction.
+    let bound: Vec<(&str, &str)> = def
+        .keybindings
+        .iter()
+        .map(|binding| (binding.keys.as_str(), binding.action.action.as_str()))
+        .filter(|(_, action)| ENERGY_MODEL_RETAINED_TOOL_IDS.contains(action))
+        .collect();
+    assert!(bound.len() >= 3, "the editor's own chords are bound: {:?}", def.keybindings.iter().map(|binding| (&binding.keys, &binding.action.action)).collect::<Vec<_>>());
+    for (keys, action) in bound {
+        for window in &def.window_kinds {
+            assert!(window.actions.iter().any(|declared| declared.id == action), "chord {keys} is bound to {action}, which window kind {} does not own", window.id);
+        }
+    }
+}
+
+/// 🪟️ No window kind may re-declare an app-level verb — doing so un-owns it everywhere else.
+#[semio_framework_async_macros::async_test]
+async fn no_window_kind_declares_an_app_level_verb_itself() {
+    let app: BTreeSet<String> = app_level_action_definitions().into_iter().map(|action| action.id).collect();
+    for (window, own) in [(structure::WINDOW_KIND_ID, structure::actions()), (zones::WINDOW_KIND_ID, zones::actions())] {
+        for action in own {
+            assert!(!app.contains(&action.id), "window kind {window} re-declares app-level verb {}, which would un-own it everywhere else", action.id);
+        }
+    }
+    assert!(simulation::definition().actions.is_empty(), "the simulation window's three verbs are app-level now, not its own");
+}
+//#endregion 🪟️AppLevelOwnership
+
+//#region 🎨️RecolourLaw
+/// 🎨️ Every `UiDirtyScope` the app has owed since the last drain, the way the shell reads them
+/// (`PluginApp::take_typed_operation_ui_scope`). Draining matters: the ledger only pushes a new scope
+/// when the outbox is EMPTY (`flush_tool_run_ui_dirty`), so a test that never drains sees exactly one.
+fn drain_ui_scopes(app: &mut EnergyEditorApp, into: &mut Vec<semio_framework::kernel::UiDirtyScope>) {
+    use semio_framework_plugin::PluginApp as _;
+    while let Some(scope) = app.take_typed_operation_ui_scope() {
+        into.push(scope);
+    }
+}
+
+fn scope_covers(scope: &semio_framework::kernel::UiDirtyScope, body_key: &str) -> bool {
+    match scope {
+        semio_framework::kernel::UiDirtyScope::Full => true,
+        semio_framework::kernel::UiDirtyScope::None => false,
+        semio_framework::kernel::UiDirtyScope::Partial { window_bodies, .. } => window_bodies.iter().any(|body| body == body_key),
+    }
+}
+
+/// 🎨️ The ramp stop indices the projected 3d body actually paints, read out of the scene's per-vertex
+/// colour arrays. The mesh lane rounds its channels (the projection prints `0.839,0.812,0.769`), and
+/// the lane is chunked across `dataAttributes` keys, so a stop counts as present when each of its
+/// three channels appears at ANY of the precisions the projection may have written it at — never at
+/// one fixed precision, which would silently miss a painted band and make this law vacuous.
+fn painted_bands(body: &str) -> std::collections::BTreeSet<usize> {
+    fn channel_present(body: &str, channel: f64) -> bool {
+        [format!("{channel:.3}"), format!("{channel:.4}"), format!("{channel:.5}"), format!("{channel}")].iter().any(|text| body.contains(text.as_str()))
+    }
+    crate::editor::model::results::legend_bands().iter().enumerate().filter(|(_, hex)| crate::editor::model::results::hex_to_rgb01(hex).iter().all(|channel| channel_present(body, *channel))).map(|(index, _)| index).collect()
+}
+
+/// 🎨️ THE recolour law (W1-D §10). Every hop between the kernel accumulator and a painted surface is
+/// unit-tested in isolation; this is the only law that drives the WHOLE chain through the route the
+/// shell uses — `toolRunStart` → the framework ledger's tick ingest → `ArtifactView::tool_run()` →
+/// `surface_energy_from_run` → `surface_colors` → the World3d scene's per-vertex colours — and so the
+/// only one that can catch the payload being dropped in the middle of it.
+///
+/// It exists because the browser timeline (`🗑️generated/energy-results-w5/timeline.txt`) recorded
+/// exactly that: the meshes recoloured while the run ticked and snapped back BYTE-IDENTICAL to the
+/// pre-run scene at `Finalized`. The cause was framework-side — the post-finalize
+/// `ToolRunEffect::ReleaseProvisional` path called `discard_provisional()`, which clears
+/// `ToolRunEntry::payload` along with the provisional ops. A read-only run's payload IS its result, so
+/// that path now calls `release_provisional(true)`.
+#[semio_framework_async_macros::async_test]
+async fn a_finalized_simulation_run_recolours_the_three_d_model_window() {
+    use semio_framework_plugin::PluginApp as _;
+    use crate::editor::model::results::ResultField;
+
+    // 🪟️ The refresh half. `ToolRunLedger::dirty_scope()` unions `entry.window_bodies`, which the driver
+    // builds as `definition.windows.iter().filter_map(|id| registry.window_body_key(id))` — an id no
+    // window kind declares is silently FILTERED AWAY and the body then never redraws on a tick.
+    let def = definition();
+    let declared = crate::energy_simulation_session::energy_simulation_run_definition().windows;
+    assert!(!declared.is_empty(), "the run declares no windows, so no tick can mark a body dirty");
+    for window_kind_id in &declared {
+        assert!(def.window_kinds.iter().any(|kind| &kind.id == window_kind_id), "the run declares window kind {window_kind_id}, which this editor never registers — the driver drops it and the body never redraws on a tick");
+    }
+    assert!(declared.iter().any(|id| id == model_window::WINDOW_KIND_ID));
+    assert_eq!(def.window_kinds.iter().find(|kind| kind.id == model_window::WINDOW_KIND_ID).expect("the 3d window kind").body_key, model_window::BODY_KEY);
+
+    let mut app = simulation_app().await;
+    let mut scopes = Vec::new();
+    drain_ui_scopes(&mut app, &mut scopes);
+    scopes.clear();
+
+    let before = render_text(&mut app, model_window::BODY_KEY).await;
+    assert!(!before.contains("kWh"), "there is no run yet, so there is no legend");
+    assert!(painted_bands(&before).len() < 2, "the unpainted scene must not already look like a results overlay");
+
+    start(&mut app).await;
+
+    // 🦶️ Pump to `finalized` the way the shell does: drain the UI outbox every turn, so the ledger can
+    // push the next scope, and watch the 3d body's colours while the run is still live.
+    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(600);
+    let mut painted_while_running = std::collections::BTreeSet::new();
+    let mut live_caption = false;
+    while std::time::Instant::now() < deadline && state_of(&app) != Some("finalized") {
+        // 🏃️ Sample ONLY while the run is still computing. A sample taken after the job settled would be
+        // satisfied by the completing tick's payload and would say nothing about whether the window
+        // recolours DURING the run — which is the half the tick-interval republish exists for.
+        let running = matches!(state_of(&app), Some("starting" | "running"));
+        app.advance_typed_operation_publication().await.expect("driver turn");
+        drain_ui_scopes(&mut app, &mut scopes);
+        if running && scopes.iter().any(|scope| scope_covers(scope, model_window::BODY_KEY)) && painted_while_running.len() < 2 {
+            let live = render_text(&mut app, model_window::BODY_KEY).await;
+            live_caption |= live.contains("kWh");
+            let bands = painted_bands(&live);
+            if bands.len() > painted_while_running.len() {
+                painted_while_running = bands;
+            }
+        }
+    }
+    assert_eq!(state_of(&app), Some("finalized"), "the run never finalized");
+
+    // (c) At least one tick's dirty scope named the 3d body — otherwise the window only ever redraws
+    // by accident, on somebody else's full refresh.
+    assert!(scopes.iter().any(|scope| scope_covers(scope, model_window::BODY_KEY)), "no dirty scope during the run covered {}: {scopes:?}", model_window::BODY_KEY);
+
+    let after = render_text(&mut app, model_window::BODY_KEY).await;
+    // (a) The legend caption survives finalization.
+    assert!(after.contains("kWh"), "the FINALIZED run left no legend caption in the 3d body — `ToolRunView::payload` was cleared on finalize, or the body never re-rendered. Body: {}", &after[..after.len().min(1500)]);
+    assert!(ResultField::ALL.iter().any(|field| after.contains(field.label())), "the caption names no published result field");
+    assert_ne!(after, before, "the finalized body is byte-identical to the pre-run body: nothing was recoloured");
+    assert!(live_caption, "the caption never appeared WHILE the run was live, only after it finalized");
+
+    // (b) Distinct surfaces take distinct bands, during the run and after it. One bucket for every
+    // vertex is what the browser saw and what the rank ramp exists to prevent.
+    let bands = painted_bands(&after);
+    assert!(bands.len() >= 2, "every surface landed on the same ramp band after finalize ({bands:?}) — the colour map is unreadable. Body: {}", &after[..after.len().min(1500)]);
+    assert!(painted_while_running.len() >= 2, "every surface landed on the same ramp band WHILE the run was live ({painted_while_running:?}) — the mid-run payload is the all-zero pre-run map");
 
     close(app);
 }

@@ -1,0 +1,27 @@
+{
+  "artifact": null,
+  "nodes": null,
+  "elements": null,
+  "materials": null,
+  "sections": null,
+  "solids": null,
+  "supports": null,
+  "loadCases": {
+    "added": [],
+    "removed": [],
+    "patched": [
+      {
+        "id": "wind",
+        "item": {
+          "id": "wind",
+          "name": "Wind Y",
+          "loads": [],
+          "selfWeight": false
+        }
+      }
+    ],
+    "reordered": null
+  },
+  "combinations": null,
+  "analysis": null
+}

@@ -23,7 +23,7 @@ use semio_repo_test_host::{parse_json, Adapter, Json};
 /// imported, because the oracle-only build must not link the subject crate. The contract's
 /// mutation-coverage gate keeps this list honest against the catalog, and that file's own
 /// `kinds_match_the_enum_and_the_catalog` keeps it honest against both the enum and the manifest.
-const KINDS: &[&str] = &["create-load-case", "delete-load-case", "add-load", "remove-load", "change-load-case-self-weight", "create-combination", "delete-combination"];
+const KINDS: &[&str] = &["create-load-case", "delete-load-case", "add-load", "remove-load", "change-load-case-self-weight", "create-combination", "delete-combination", "replace-load", "change-load-case-name", "replace-combination"];
 
 /// 👁️ Kinds whose COMMITTED specification vector cannot exhibit a forward effect, so
 /// [`law::mutation_is_observable`] must not demand one of them.
@@ -102,6 +102,27 @@ fn vector(kind: &str) -> Vector {
             after: include_str!("../../../🏋️load/🧫️fixtures/🧬️mutations/✂️delete-combination/✂️removes-the-182f7b/📸️snapshot/➡️after/🔣️.json"),
             diff: include_str!("../../../🏋️load/🧫️fixtures/🧬️mutations/✂️delete-combination/✂️removes-the-182f7b/🔺️diff/🔣️.json"),
             outcome: include_str!("../../../🏋️load/🧫️fixtures/🧬️mutations/✂️delete-combination/✂️removes-the-182f7b/🎯️outcome/🔣️.json"),
+        },
+        "replace-load" => Vector {
+            before: include_str!("../../../🏋️load/🧫️fixtures/🧬️mutations/🔁️replace-load/🔁️retunes-the-rafter-udl-241993/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../../🏋️load/🧫️fixtures/🧬️mutations/🔁️replace-load/🔁️retunes-the-rafter-udl-241993/🦠️mutation/🔣️.json"),
+            after: include_str!("../../../🏋️load/🧫️fixtures/🧬️mutations/🔁️replace-load/🔁️retunes-the-rafter-udl-241993/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../../🏋️load/🧫️fixtures/🧬️mutations/🔁️replace-load/🔁️retunes-the-rafter-udl-241993/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../../🏋️load/🧫️fixtures/🧬️mutations/🔁️replace-load/🔁️retunes-the-rafter-udl-241993/🎯️outcome/🔣️.json"),
+        },
+        "change-load-case-name" => Vector {
+            before: include_str!("../../../🏋️load/🧫️fixtures/🧬️mutations/🏷️change-load-case-name/🏷️renames-the-wind-case-1ac4f5/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../../🏋️load/🧫️fixtures/🧬️mutations/🏷️change-load-case-name/🏷️renames-the-wind-case-1ac4f5/🦠️mutation/🔣️.json"),
+            after: include_str!("../../../🏋️load/🧫️fixtures/🧬️mutations/🏷️change-load-case-name/🏷️renames-the-wind-case-1ac4f5/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../../🏋️load/🧫️fixtures/🧬️mutations/🏷️change-load-case-name/🏷️renames-the-wind-case-1ac4f5/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../../🏋️load/🧫️fixtures/🧬️mutations/🏷️change-load-case-name/🏷️renames-the-wind-case-1ac4f5/🎯️outcome/🔣️.json"),
+        },
+        "replace-combination" => Vector {
+            before: include_str!("../../../🏋️load/🧫️fixtures/🧬️mutations/🔁️replace-combination/🔁️reweights-the-terms-828cb2/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../../🏋️load/🧫️fixtures/🧬️mutations/🔁️replace-combination/🔁️reweights-the-terms-828cb2/🦠️mutation/🔣️.json"),
+            after: include_str!("../../../🏋️load/🧫️fixtures/🧬️mutations/🔁️replace-combination/🔁️reweights-the-terms-828cb2/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../../🏋️load/🧫️fixtures/🧬️mutations/🔁️replace-combination/🔁️reweights-the-terms-828cb2/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../../🏋️load/🧫️fixtures/🧬️mutations/🔁️replace-combination/🔁️reweights-the-terms-828cb2/🎯️outcome/🔣️.json"),
         },
         other => panic!("mutate-fem3d-1-load: no committed specification vector is registered for kind {other:?}"),
     }

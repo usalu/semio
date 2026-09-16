@@ -11,8 +11,29 @@ async fn definition_declares_a_world3d_window() {
     assert_eq!(def.id, WINDOW_KIND_ID);
     assert_eq!(def.body_key, BODY_KEY);
     assert_eq!(def.surface_kind, SurfaceKind::World3d);
-    assert!(def.actions.is_empty(), "a viewer window declares no verbs");
+    // 🎥️ The ONE verb a read-only 3d window owns: the orbit pose the host dispatches on its own.
+    assert_eq!(def.actions.len(), 1, "a viewer window declares its camera and nothing else");
+    assert_eq!(def.actions[0].id, SET_CAMERA_ACTION_ID);
+    assert_eq!(def.actions[0].kind, ActionKind::View, "a camera is never a document mutation");
+    assert_eq!(def.actions[0].semantics.execution.interactive_job, InteractiveJobClassification::Migrated, "Migrated is the only UI-dispatchable classification");
+    assert!(def.actions[0].args.iter().any(|arg| arg.id == "camera"), "an undeclared `camera` arg is filtered out by effective_action_args before the bridge sees it");
     assert!(def.interactions.is_empty(), "a viewer declares no interaction domain");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn a_stored_camera_replaces_the_model_derived_one_and_changes_nothing_else() {
+    let model = crate::examples::bestest_600::model();
+    let bare = scene_of(&render(&model).expect("the default render assembles"));
+    let pose = config::EnergyModelViewerCameraPose { position: [12.0, -9.0, 7.5], target: [4.0, 3.0, 1.35], zoom: 1.0 };
+    let stored = scene_of(&render_with_camera(&model, Some(&config::EnergyModelViewerWindowConfig { camera: pose })).expect("the stored render assembles"));
+
+    assert_ne!(bare.camera_json, stored.camera_json, "a retained pose really replaces the model-derived camera");
+    assert_eq!(stored.camera_json, pose.scene_camera_json());
+    // 🎥️ …and NOTHING else moves, so republishing the host's own echo never re-arms the auto fit.
+    assert_eq!(bare.meshes_json, stored.meshes_json);
+    assert_eq!(bare.instances_json, stored.instances_json);
+    assert_eq!(bare.fit_json, stored.fit_json);
+    assert!(stored.domain_id.is_none(), "retaining a camera does not make a viewer pickable");
 }
 
 #[semio_framework_async_macros::async_test]

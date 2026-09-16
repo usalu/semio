@@ -133,6 +133,36 @@ pub mod set_transform_gumball_flag {
 }
 //#endregion 🔖️SetTransformGumballFlag
 
+//#region 🔖️TransformBrackets
+/// 🧲️ `transformBegin`/`transformEnd` are the host's brackets around one gumball drag. The drag itself
+/// carries no app-side session — every pose lands as an incremental `translateSelection`/
+/// `rotateSelection`/`scaleSelection` above — so both brackets deliberately complete EMPTY; they are
+/// declared so the `World3dHost` may dispatch them without the shell refusing an undeclared action.
+pub mod transform_begin {
+    use super::*;
+
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+    #[dsl(keyword = "transform-begin")]
+    pub struct TransformBegin {}
+
+    pub fn handle(_payload: &TransformBegin, _doc: &ArtifactView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<Fem3dMutation, NoConfigMutation>, Fault> {
+        Ok(Emit { ui_scope: UiDirtyScope::None, ..Default::default() })
+    }
+}
+
+pub mod transform_end {
+    use super::*;
+
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+    #[dsl(keyword = "transform-end")]
+    pub struct TransformEnd {}
+
+    pub fn handle(_payload: &TransformEnd, _doc: &ArtifactView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<Fem3dMutation, NoConfigMutation>, Fault> {
+        Ok(Emit { ui_scope: UiDirtyScope::None, ..Default::default() })
+    }
+}
+//#endregion 🔖️TransformBrackets
+
 //#region 🧪️Tests
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]

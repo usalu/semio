@@ -67,7 +67,7 @@ pub fn engagement(snapshot: &ShootingSnapshot, labels: &ShootingLabels) -> Windo
 //#region 🔖️Render
 pub fn render(snapshot: &ShootingSnapshot, cfg: &ShootingConfig) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let (request_json, footer) = match (crate::standards::v1::subsets::any::schema::active_shot(snapshot), crate::standards::v1::subsets::any::schema::active_asset(snapshot)) {
-        (Some(shot), Some(asset)) => (shooting_icon_render_request_json(snapshot, shot, asset, &cfg.camera), Some(format!("{} · {}×{} · {}", shot.label, shot.width, shot.height, shot.format.to_uppercase()))),
+        (Some(shot), Some(asset)) => (shooting_icon_render_request_json(snapshot, shot, asset, &cfg.camera, cfg.center_model), Some(format!("{} · {}×{} · {}", shot.label, shot.width, shot.height, shot.format.to_uppercase()))),
         _ => ("null".into(), None),
     };
     semio_framework_plugin::scene_surface(SHOOTING_PLAY_SURFACE_ICON, semio_framework_ui_contract::SurfaceKind::IconRender, &IconRenderScene { request_json, footer, frame_json: None })

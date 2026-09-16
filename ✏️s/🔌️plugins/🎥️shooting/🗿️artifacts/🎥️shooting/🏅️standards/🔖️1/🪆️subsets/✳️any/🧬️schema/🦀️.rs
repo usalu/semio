@@ -269,8 +269,10 @@ pub fn shooting_document_json_to_svg(value: &Value) -> Result<(String, u32, u32)
 
 /// 🖼️ Builds the icon-render host request JSON for `shot`/`asset` under `fixture`'s scene lighting —
 /// consumed both by the icon window's `render()` and by the `exportActiveShot`/`exportAllShots` shell
-/// commands (`🎮️commands/🖨️export`), two consumers.
-pub fn shooting_icon_render_request_json(snapshot: &ShootingSnapshot, shot: &ShootingShot, asset: &ShootingAsset, fallback_camera: &ShootingCamera) -> String {
+/// commands (`🎮️commands/🖨️export`), two consumers. `fit` mirrors the scene window's centre-model
+/// lane (`ShootingConfig::center_model`): the host re-targets the shot camera at the asset's bounding
+/// sphere and backs off to frame it, so the icon shows what the centred scene shows.
+pub fn shooting_icon_render_request_json(snapshot: &ShootingSnapshot, shot: &ShootingShot, asset: &ShootingAsset, fallback_camera: &ShootingCamera, fit: bool) -> String {
     let vec3 = |v: [f64; 3]| Value::from(v.iter().map(|c| Value::from(*c)).collect::<Vec<Value>>());
     let camera = crate::shooting_resolve_shot_camera(snapshot, shot, fallback_camera);
     let scene = &snapshot.scene;
@@ -286,6 +288,7 @@ pub fn shooting_icon_render_request_json(snapshot: &ShootingSnapshot, shot: &Sho
     let mut value = json!({
         "assetUrl": asset.url.as_str(),
         "camera": camera_value,
+        "fit": { "enabled": fit, "padding": 1.25 },
         "lights": {
             "ambientIntensity": scene.ambient.intensity,
             "ambientColor": scene.ambient.color.as_str(),

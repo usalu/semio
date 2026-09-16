@@ -149,6 +149,95 @@
               "directoryName": "➖️drops-the-trailing-member-b73b25"
             }
           ]
+        },
+        {
+          "mutationId": "replace-load",
+          "sourceMutationDirectoryName": "🔁️replace-load",
+          "mutationDirectoryName": "🔁️replace-load",
+          "scenarios": [
+            {
+              "id": "same-load-65135e",
+              "directoryName": "⏸️same-load-65135e"
+            },
+            {
+              "id": "hall-retunes-wx-a635fe",
+              "directoryName": "🏗️hall-retunes-wx-a635fe"
+            },
+            {
+              "id": "retunes-the-rafter-udl-241993",
+              "directoryName": "🔁️retunes-the-rafter-udl-241993"
+            },
+            {
+              "id": "dangling-node-092d4a",
+              "directoryName": "🚨️dangling-node-092d4a"
+            },
+            {
+              "id": "no-such-case-21f1b7",
+              "directoryName": "🚨️no-such-case-21f1b7"
+            },
+            {
+              "id": "no-such-load-cc8aee",
+              "directoryName": "🚨️no-such-load-cc8aee"
+            },
+            {
+              "id": "renames-load-a535c9",
+              "directoryName": "🪪️renames-load-a535c9"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-load-case-name",
+          "sourceMutationDirectoryName": "🏷️change-load-case-name",
+          "mutationDirectoryName": "🏷️change-load-case-name",
+          "scenarios": [
+            {
+              "id": "same-name-56ab29",
+              "directoryName": "⏸️same-name-56ab29"
+            },
+            {
+              "id": "hall-renames-crane-9f2be8",
+              "directoryName": "🏗️hall-renames-crane-9f2be8"
+            },
+            {
+              "id": "renames-the-wind-case-1ac4f5",
+              "directoryName": "🏷️renames-the-wind-case-1ac4f5"
+            },
+            {
+              "id": "no-such-case-15cca1",
+              "directoryName": "🚨️no-such-case-15cca1"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-combination",
+          "sourceMutationDirectoryName": "🔁️replace-combination",
+          "mutationDirectoryName": "🔁️replace-combination",
+          "scenarios": [
+            {
+              "id": "same-combination-4f8781",
+              "directoryName": "⏸️same-combination-4f8781"
+            },
+            {
+              "id": "hall-retunes-sls-280f78",
+              "directoryName": "🏗️hall-retunes-sls-280f78"
+            },
+            {
+              "id": "reweights-the-terms-828cb2",
+              "directoryName": "🔁️reweights-the-terms-828cb2"
+            },
+            {
+              "id": "dangling-term-17506c",
+              "directoryName": "🚨️dangling-term-17506c"
+            },
+            {
+              "id": "no-such-combo-0c9c39",
+              "directoryName": "🚨️no-such-combo-0c9c39"
+            },
+            {
+              "id": "renames-combo-e8f4f2",
+              "directoryName": "🪪️renames-combo-e8f4f2"
+            }
+          ]
         }
       ],
       "kinds": [
@@ -158,7 +247,10 @@
         "remove-load",
         "change-load-case-self-weight",
         "create-combination",
-        "delete-combination"
+        "delete-combination",
+        "replace-load",
+        "change-load-case-name",
+        "replace-combination"
       ]
     }
   ]

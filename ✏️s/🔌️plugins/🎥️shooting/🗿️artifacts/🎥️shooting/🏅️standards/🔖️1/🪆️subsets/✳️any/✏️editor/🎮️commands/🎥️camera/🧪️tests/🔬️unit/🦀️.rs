@@ -7,12 +7,12 @@ async fn save_and_load_camera_round_trip() {
     let mut app = shooting_app().await;
     dispatch(&mut app, ShootingCommand::SetCameraDraftLabel(set_camera_draft_label::SetCameraDraftLabel { value: "Hero".into() })).await;
     let result = dispatch(&mut app, ShootingCommand::SaveCamera(save_camera::SaveCamera {})).await;
-    assert_eq!(result.mutations.len(), 1);
+    assert!(result.edited_document(), "saving a camera is a real document edit");
 }
 
 #[semio_framework_async_macros::async_test]
 async fn set_camera_never_touches_the_document() {
     let mut app = shooting_app().await;
     let result = dispatch(&mut app, ShootingCommand::SetCamera(set_camera::SetCamera { camera: ShootingCamera { position: [1.0, 2.0, 3.0], ..ShootingCamera::default() } })).await;
-    assert!(result.mutations.is_empty(), "the free/live camera is config-only");
+    assert!(!result.edited_document(), "the free/live camera is config-only");
 }

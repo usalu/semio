@@ -40,9 +40,14 @@ pub fn addressed_camera(cfg: &ConfigView<'_, NoConfig>, view: &semio_framework_p
 pub fn handle_window(payload: &FocusEntity, doc: &ArtifactView<'_, Fem3dSnapshot>, cfg: &ConfigView<'_, NoConfig>, view: &semio_framework_plugin::ViewModel) -> Result<Emit<Fem3dMutation, NoConfigMutation>, Fault> {
     let camera = addressed_camera(cfg, view)?;
     let target = fem3d_entity_point(doc.snapshot, &payload.id).ok_or_else(|| Fault::from("fem3d.focus-entity.unknown-entity"))?;
+    set_camera::handle_window(&SetCamera { camera: focused_orbit(&camera, target) }, cfg, view)
+}
+
+/// 🎯️ The orbit `camera` becomes when it is re-aimed at `target`: the eye keeps its offset from the
+/// old target, zoom and up are untouched.
+pub fn focused_orbit(camera: &Viewport3dOrbit, target: [f64; 3]) -> Viewport3dOrbit {
     let offset = [camera.position[0] - camera.target[0], camera.position[1] - camera.target[1], camera.position[2] - camera.target[2]];
-    let position = [target[0] + offset[0], target[1] + offset[1], target[2] + offset[2]];
-    set_camera::handle_window(&SetCamera { camera: Viewport3dOrbit { position, target, zoom: camera.zoom, up: camera.up } }, cfg, view)
+    Viewport3dOrbit { position: [target[0] + offset[0], target[1] + offset[1], target[2] + offset[2]], target, zoom: camera.zoom, up: camera.up }
 }
 //#endregion 🔖️FocusEntity
 

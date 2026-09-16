@@ -104,12 +104,12 @@ async fn the_catalogue_sections_key_their_rows_by_entity_id() {
     let model = &snapshot.model;
     let keys = |built: UiFixedList<BuiltNode>| child_keys(&retire(built));
     let mut budget = PanelRowBudget::new(32);
-    assert!(keys(glazing_materials_section(model, Locale::En, &mut budget).expect("glazing")).contains(&"22".to_string()));
-    assert!(keys(gas_materials_section(model, Locale::En, &mut budget).expect("gases")).contains(&"23".to_string()));
-    assert!(keys(controls_section(model, Locale::En, &mut budget).expect("controls")).contains(&"62".to_string()));
-    assert!(keys(hvac_section(model, Locale::En, &mut budget).expect("hvac")).contains(&"63".to_string()));
-    assert_eq!(keys(materials_section(model, Locale::En, &mut budget).expect("materials")).len(), model.materials.len());
-    assert_eq!(keys(constructions_section(model, Locale::En, &mut budget).expect("constructions")).len(), model.constructions.len());
+    assert!(keys(glazing_materials_section(model, &nothing(), Locale::En, &mut budget).expect("glazing")).contains(&"22".to_string()));
+    assert!(keys(gas_materials_section(model, &nothing(), Locale::En, &mut budget).expect("gases")).contains(&"23".to_string()));
+    assert!(keys(controls_section(model, &nothing(), Locale::En, &mut budget).expect("controls")).contains(&"62".to_string()));
+    assert!(keys(hvac_section(model, &nothing(), Locale::En, &mut budget).expect("hvac")).contains(&"63".to_string()));
+    assert_eq!(keys(materials_section(model, &nothing(), Locale::En, &mut budget).expect("materials")).len(), model.materials.len());
+    assert_eq!(keys(constructions_section(model, &nothing(), Locale::En, &mut budget).expect("constructions")).len(), model.constructions.len());
 }
 
 #[semio_framework_async_macros::async_test]
@@ -140,28 +140,38 @@ async fn windows_nest_under_their_surface_and_surfaces_under_their_zone() {
 #[semio_framework_async_macros::async_test]
 async fn a_shading_surface_is_listed_when_the_model_has_one() {
     let snapshot = shaded();
-    let built = shading_section(&snapshot.model, Locale::En, &mut PanelRowBudget::new(4)).expect("the shading section assembles");
+    let built = shading_section(&snapshot.model, &nothing(), Locale::En, &mut PanelRowBudget::new(4)).expect("the shading section assembles");
     assert_eq!(child_keys(&retire(built)), vec!["65"], "the south overhang is a row keyed by its own EntityId");
     let bare = demo();
-    let empty = shading_section(&bare.model, Locale::En, &mut PanelRowBudget::new(4)).expect("empty section");
+    let empty = shading_section(&bare.model, &nothing(), Locale::En, &mut PanelRowBudget::new(4)).expect("empty section");
     assert!(child_keys(&retire(empty)).is_empty(), "case 600 has no shading surface");
 }
 
 /// 🗓️ A schedule row is read-only: a `ScheduleId` lives in its own id space, so keying a pick by its
 /// raw number would hand the inspector an `EntityId` that belongs to something else entirely.
+///
+/// 📍️ The SITE row is the deliberate exception and is asserted separately below — it has no
+/// `EntityId` either, but it dispatches the framework's CLEARING pick rather than a target.
 #[semio_framework_async_macros::async_test]
-async fn schedules_and_the_site_are_read_only_rows() {
+async fn schedule_rows_are_read_only() {
     let snapshot = demo();
     let built = render(&snapshot, &nothing(), Locale::En).expect("tree assembles");
-    for section_key in [format!("{TREE_NAMESPACE}.schedules"), format!("{TREE_NAMESPACE}.site")] {
-        let section = built.children.iter().find(|section| section.key.as_str() == section_key.as_str()).unwrap_or_else(|| panic!("section {section_key} exists"));
-        for row in section.children.iter() {
-            assert!(row.bindings.is_empty(), "read-only row {} must bind nothing", row.key.as_str());
-            if let semio_framework_plugin::plugin_app_close_prelude::Component::TreeItem(props) = &row.component {
-                assert!(props.row_actions.is_empty(), "read-only row {} must carry no row action", row.key.as_str());
-            }
-        }
-    }
+    let section_key = format!("{TREE_NAMESPACE}.schedules");
+    let section = built.children.iter().find(|section| section.key.as_str() == section_key.as_str()).unwrap_or_else(|| panic!("section {section_key} exists"));
+    let read_only: Vec<bool> = section.children.iter().map(|row| row.bindings.is_empty()).collect();
+    let no_verbs: Vec<bool> = section
+        .children
+        .iter()
+        .map(|row| match &row.component {
+            semio_framework_plugin::plugin_app_close_prelude::Component::TreeItem(props) => props.row_actions.is_empty(),
+            _ => true,
+        })
+        .collect();
+    // ♻️ Retire the built tree before asserting: a dropped argument map never returns its arena
+    // credit and would starve the panels the tests running beside this one are assembling.
+    let _ = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree { root: built });
+    assert!(read_only.iter().all(|empty| *empty), "every schedule row must bind nothing");
+    assert!(no_verbs.iter().all(|empty| *empty), "every schedule row must carry no row action");
 }
 
 /// 📭️ An empty model still renders: each entity section shows its placeholder instead of refusing.
@@ -247,7 +257,7 @@ async fn a_wide_selection_marks_only_its_first_page() {
 async fn section_demands_count_every_interactive_row_including_the_nested_ones() {
     let model = crate::examples::demo::model();
     let demands = section_demands(&model);
-    assert_eq!(demands[0], 0, "the site section binds no argument map");
+    assert_eq!(demands[0], 1, "the site row binds the clearing pick that opens its own form");
     assert_eq!(demands[1], model.zones.len() + model.spaces.len() + model.surfaces.len() + model.fenestrations.len());
     assert_eq!(demands[10], 0, "the schedules section binds no argument map");
 }
@@ -280,3 +290,60 @@ async fn the_surface_rows_stay_in_document_order_whatever_is_marked() {
     let zone = zone_tree(&demo(), &picked, DEMO_ZONES_DEMAND);
     assert_eq!(child_keys(&zone), vec!["40", "41", "42", "43", "44", "45"], "the marked surface is served first but rendered in place");
 }
+
+//#region 📍️SiteRowAndMarkers
+/// 📍️ The site has no `EntityId`, so its row cannot be a domain target — but it is where the site
+/// form is reached from. It dispatches the framework's own CLEARING pick (`merge: replace` with an
+/// EMPTY target list), which is exactly the state the inspector renders its site form in.
+#[semio_framework_async_macros::async_test]
+async fn the_site_row_opens_the_site_form_by_clearing_the_selection() {
+    let json = english(&demo());
+    let tree: serde_json::Value = serde_json::from_str(&json).expect("the artifact projection is JSON");
+    let row = node_at(&tree, &format!("{TREE_NAMESPACE}.site.row")).unwrap_or_else(|| panic!("{json}"));
+    let bindings = row["bindings"].to_string();
+    assert!(bindings.contains(semio_framework_plugin::INTERACTION_SELECT_ACTION_ID), "the site row picks through the framework domain: {bindings}");
+    assert!(bindings.contains(ENERGY_MODEL_INTERACTION_DOMAIN), "on the energy domain: {bindings}");
+    assert!(bindings.contains("replace"), "replacing the selection: {bindings}");
+    assert!(bindings.contains("[]"), "with NO targets, which is how the framework spells 'clear': {bindings}");
+    assert!(row.to_string().contains("47.") || row.to_string().contains("°"), "and it still reports the site's own coordinates: {row}");
+}
+
+/// 🎯️ `PanelTreeBuilder::selected`/`::highlighted` are declared but do not paint in this SDK wave, so
+/// the state also rides in the label — otherwise a reader cannot see that a 3d pick and a tree row
+/// are the same selection.
+#[semio_framework_async_macros::async_test]
+async fn a_marked_row_carries_its_state_in_the_label() {
+    let interaction = EnergyModelInteractionSnapshot { selected_ids: vec!["44".into()], hovered_ids: vec!["41".into()] };
+    let zone = zone_tree(&demo(), &interaction, DEMO_ZONES_DEMAND);
+    let selected = node_at(&zone, "44").expect("the selected wall").to_string();
+    let hovered = node_at(&zone, "41").expect("the hovered wall").to_string();
+    let plain = node_at(&zone, "42").expect("an unmarked wall").to_string();
+    assert!(selected.contains(MarkedAs::Selected.prefix().trim()), "the selected row is marked: {selected}");
+    assert!(hovered.contains(MarkedAs::Hovered.prefix().trim()), "the hovered row is marked: {hovered}");
+    assert!(!plain.contains(MarkedAs::Selected.prefix().trim()) && !plain.contains(MarkedAs::Hovered.prefix().trim()), "an unmarked row reads exactly as before: {plain}");
+    assert_eq!(MarkedAs::Unmarked.prefix(), "", "an unmarked label is untouched");
+}
+
+/// 🎯️ THE review's third finding: the BREADTH pass walked document order, so a wall selected in the
+/// 3d viewport could be the one dropped when a zone owned more surfaces than the page had rows —
+/// the tree simply did not show the selected surface. Both passes now hand out rows marked-first.
+#[semio_framework_async_macros::async_test]
+async fn a_marked_surface_keeps_its_row_when_the_page_cannot_hold_every_wall() {
+    // 🧫️ Case 600: one zone, six surfaces (40..45). A page with room for the zone row plus THREE
+    // surface rows cannot show all six, and 45 is last in document order.
+    // 🧾️ A truncated section closes with its own `+N` continuation row, which is not a surface.
+    let surfaces_of = |interaction: &EnergyModelInteractionSnapshot| -> Vec<String> { child_keys(&zone_tree(&demo(), interaction, 1 + 3)).into_iter().filter(|key| !key.starts_with(TREE_NAMESPACE)).collect() };
+    let picked = EnergyModelInteractionSnapshot { selected_ids: vec!["45".into()], hovered_ids: Vec::new() };
+    let rows = surfaces_of(&picked);
+    assert!(rows.contains(&"45".to_string()), "the surface the domain selects must survive the truncation: {rows:?}");
+    assert!(rows.len() <= 3, "the page is respected: {rows:?}");
+    assert_eq!(rows, { let mut sorted = rows.clone(); sorted.sort(); sorted }, "and the surviving rows are still rendered in document order: {rows:?}");
+
+    // 🧭️ With nothing marked the page goes to the first surfaces in document order, as before.
+    assert_eq!(surfaces_of(&nothing()), vec!["40", "41", "42"], "document order decides when the domain marks nothing");
+
+    // 🎯️ A hovered surface counts as marked too.
+    let hovered = EnergyModelInteractionSnapshot { selected_ids: Vec::new(), hovered_ids: vec!["44".into()] };
+    assert!(surfaces_of(&hovered).contains(&"44".to_string()), "the hovered surface survives the truncation too");
+}
+//#endregion 📍️SiteRowAndMarkers

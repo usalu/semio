@@ -54,14 +54,18 @@ type Puzzle2dFixtureDropPayload = {
 /** @emoji 🩺️ The document vitals this host publishes as `data-board-*` attributes on its container — node/edge counts
  * and every node's world position — so a headless probe (and the shell's own tests) can read what the guest last
  * painted without a guest round trip, the board twin of `World3dHost`'s `data-instances-json`. */
-function board2dVitals(fixtureJson: string): { readonly nodes: number; readonly edges: number; readonly positionsJson: string } {
+function board2dVitals(fixtureJson: string): { readonly nodes: number; readonly edges: number; readonly handles: number; readonly positionsJson: string } {
   try {
-    const fixture = JSON.parse(fixtureJson) as { nodes?: { id?: string; x?: number; y?: number }[]; edges?: unknown[] };
+    const fixture = JSON.parse(fixtureJson) as { nodes?: { id?: string; x?: number; y?: number; handles?: unknown[] }[]; edges?: unknown[] };
     const positions: Record<string, [number, number]> = {};
-    for (const node of fixture.nodes ?? []) if (typeof node.id === "string" && typeof node.x === "number" && typeof node.y === "number") positions[node.id] = [node.x, node.y];
-    return { nodes: fixture.nodes?.length ?? 0, edges: fixture.edges?.length ?? 0, positionsJson: JSON.stringify(positions) };
+    let handles = 0;
+    for (const node of fixture.nodes ?? []) {
+      if (typeof node.id === "string" && typeof node.x === "number" && typeof node.y === "number") positions[node.id] = [node.x, node.y];
+      handles += node.handles?.length ?? 0;
+    }
+    return { nodes: fixture.nodes?.length ?? 0, edges: fixture.edges?.length ?? 0, handles, positionsJson: JSON.stringify(positions) };
   } catch {
-    return { nodes: -1, edges: -1, positionsJson: "{}" };
+    return { nodes: -1, edges: -1, handles: -1, positionsJson: "{}" };
   }
 }
 
@@ -261,8 +265,12 @@ function applyToSession(session: Board2dWasmSession | null, action: (session: Bo
 }
 
 /** @emoji 🔁️ Re-parses the fixture and silently re-applies selection/camera, since `parseFixtureJson` resets both to the fixture's own defaults. */
-function applyFixtureToSession(session: Board2dWasmSession, scene: Board2dScene): void {
-  session.parseFixtureJson(scene.fixtureJson);
+function applyFixtureToSession(session: Board2dWasmSession, scene: Board2dScene): boolean {
+  const parsed = session.parseFixtureJson(scene.fixtureJson);
+  if (!parsed) {
+    console.error(`[board-2d] engine refused the fixture (${scene.fixtureJson.length} chars) — nothing is painted until a fixture parses`);
+    (globalThis as { __semioBoard2dRefusedFixture?: string }).__semioBoard2dRefusedFixture = scene.fixtureJson;
+  }
   session.setSelectionOptions?.(scene.selectionMethod, "replace", true, true, true);
   if (session.setSelectionIdsJsonSilent) session.setSelectionIdsJsonSilent(scene.selectionJson);
   else session.setSelectionIdsJson(scene.selectionJson);
@@ -271,6 +279,7 @@ function applyFixtureToSession(session: Board2dWasmSession, scene: Board2dScene)
     if (session.setCameraSilent) session.setCameraSilent(camera.x, camera.y, camera.zoom);
     else session.setCamera(camera.x, camera.y, camera.zoom);
   }
+  return parsed;
 }
 //#endregion Sync
 
@@ -482,7 +491,7 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
       if (!pendingScene) return;
       if (session.defersDescriptorSyncFromJs?.() || cameraInteractionActiveRef.current || puzzle2dPeerOwnsGesture(peerScope, node.controllerId, node.surfaceId)) return;
       pendingFixtureSceneRef.current = null;
-      applyToSession(session, (s) => applyFixtureToSession(s, pendingScene));
+      applyToSession(session, (s) => containerRef.current?.setAttribute("data-board-fixture-parsed", String(applyFixtureToSession(s, pendingScene))));
     },
     [peerScope, node.controllerId, node.surfaceId],
   );
@@ -668,7 +677,7 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
       pendingFixtureSceneRef.current = scene;
       return;
     }
-    applyToSession(session, (s) => applyFixtureToSession(s, scene));
+    applyToSession(session, (s) => containerRef.current?.setAttribute("data-board-fixture-parsed", String(applyFixtureToSession(s, scene))));
     if (!bootSyncedRef.current) {
       bootSyncedRef.current = true;
       try {
@@ -1047,6 +1056,7 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
       data-surface-id={node.surfaceId}
       data-board-nodes={boardVitals.nodes}
       data-board-edges={boardVitals.edges}
+      data-board-handles={boardVitals.handles}
       data-board-positions-json={boardVitals.positionsJson}
       data-board-selection-json={scene.selectionJson}
       data-board-camera-json={scene.cameraJson}

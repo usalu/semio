@@ -445,31 +445,70 @@ async fn canvas_escape_cancels_draft_without_committing() {
     assert_eq!(app.snapshot().unwrap().layers.len(), before);
 }
 
+/// 🔀️ Ticket 26/09/16/INPUT-CAUSALITY-LEDGER §2 C: the `interactionSelect` a gesture emits as
+/// `Effect::ReplayShellCommand` is folded in-reactor by the typed-operation ladder, so these two
+/// selection tests witness the selection snapshot itself instead of the effect. They need what the
+/// plugin host supplies and the bare `drawing_app()` does not: a bound live instance, a `ViewModel`
+/// naming the canvas window (`setCamera` addresses it) with the active utility, and the host's
+/// settle protocol after every dispatch (`settle_registered_typed_operation`) — exactly
+/// `🎚️config/🧪️tests/🔬️window-ownership`'s recipe.
+async fn inline_selection_app() -> (DrawingApp, semio_framework_plugin::ActionMeta) {
+    use semio_framework_plugin::{ViewWindowInstance, WindowConfigOwner};
+    let mut app = drawing_app().await;
+    let view = ViewModel {
+        window_instances: vec![ViewWindowInstance { id: "drawing-canvas".into(), window_kind_id: crate::editor::drawing::modes::edit::windows::canvas::config::DrawingCanvasWindowConfigOwner::WINDOW_KIND_ID.into() }],
+        ..Default::default()
+    };
+    let meta = semio_framework_plugin::ActionMeta { view_state: Some(view.for_window_instance("drawing-canvas").expect("canvas window instance")), ..artifact_laws::meta("local") };
+    app.bind_instance_id(meta.instance_id).await;
+    (app, meta)
+}
+
+/// 🔁️ One dispatch settled the way the plugin host settles it; the receipt's `effects` are exactly
+/// what the host would have been handed.
+async fn settled(app: &mut DrawingApp, command: DrawingCommand, meta: &semio_framework_plugin::ActionMeta) -> (semio_framework_plugin::InvocationResult, artifact_laws::TypedOperationFixtureReceipt) {
+    let command_id = command.command_id();
+    let result = app.dispatch_typed(command, meta).await.unwrap_or_else(|fault| panic!("dispatch {command_id}: {fault:?}"));
+    let receipt = artifact_laws::settle_registered_typed_operation(app, meta.instance_id).await.unwrap_or_else(|fault| panic!("retained publication of {command_id} settles: {fault:?}"));
+    (result, receipt)
+}
+
+fn with_utility(meta: &semio_framework_plugin::ActionMeta, utility: &str) -> semio_framework_plugin::ActionMeta {
+    let mut meta = meta.clone();
+    meta.view_state = Some(ViewModel { active_utility_id: Some(utility.into()), ..meta.view_state.clone().unwrap_or_default() });
+    meta
+}
+
+async fn selected_strokes(app: &DrawingApp) -> Vec<String> {
+    app.interaction_state().await.selection.get(DRAWING_INTERACTION_DOMAIN).map(|selection| selection.ids.clone()).unwrap_or_default()
+}
+
 #[semio_framework_async_macros::async_test]
 async fn marquee_select_covers_contained_layer_only() {
     // 🔖 Built through dispatched commands (`add-layer` + `patch-layer` transform fields), never
     // a whole-document swap — `SetSnapshot` is banned vocabulary now (see
     // `🧬️mutations/🦀️.rs`'s module doc); this exercises the same real semantic
     // `create-layer`/`update-layer-transform` mutations a live editor session would emit.
-    let mut app = drawing_app().await;
-    let utility_meta = meta_with_utility("selectMarquee");
+    let (mut app, meta) = inline_selection_app().await;
+    let utility_meta = with_utility(&meta, "selectMarquee");
     let initial_id = layer_id(&app.snapshot().unwrap().layers[0]).to_string();
-    app.dispatch_typed(DrawingCommand::DeleteLayer(delete_layer::DeleteLayer { layer_id: initial_id }), &artifact_laws::meta("local")).await.expect("clear default layer");
+    settled(&mut app, DrawingCommand::DeleteLayer(delete_layer::DeleteLayer { layer_id: initial_id }), &meta).await;
 
-    app.dispatch_typed(DrawingCommand::AddLayer(add_layer::AddLayer { kind: "shape:rect".into() }), &artifact_laws::meta("local")).await.expect("add rect");
+    settled(&mut app, DrawingCommand::AddLayer(add_layer::AddLayer { kind: "shape:rect".into() }), &meta).await;
     let rect_a_id = layer_id(app.snapshot().unwrap().layers.last().unwrap()).to_string();
     for (field, value) in [("transformX", "10"), ("transformY", "10"), ("transformScaleX", "0.15625"), ("transformScaleY", "0.208333")] {
-        app.dispatch_typed(DrawingCommand::PatchLayer(patch_layer::PatchLayer { layer_id: rect_a_id.clone(), field: field.into(), value: value.into() }), &artifact_laws::meta("local")).await.expect("position rect a");
+        settled(&mut app, DrawingCommand::PatchLayer(patch_layer::PatchLayer { layer_id: rect_a_id.clone(), field: field.into(), value: value.into() }), &meta).await;
     }
 
-    app.dispatch_typed(DrawingCommand::AddLayer(add_layer::AddLayer { kind: "shape:ellipse".into() }), &artifact_laws::meta("local")).await.expect("add ellipse");
+    settled(&mut app, DrawingCommand::AddLayer(add_layer::AddLayer { kind: "shape:ellipse".into() }), &meta).await;
     let ellipse_b_id = layer_id(app.snapshot().unwrap().layers.last().unwrap()).to_string();
     for (field, value) in [("transformX", "200"), ("transformY", "200")] {
-        app.dispatch_typed(DrawingCommand::PatchLayer(patch_layer::PatchLayer { layer_id: ellipse_b_id.clone(), field: field.into(), value: value.into() }), &artifact_laws::meta("local")).await.expect("position ellipse b");
+        settled(&mut app, DrawingCommand::PatchLayer(patch_layer::PatchLayer { layer_id: ellipse_b_id.clone(), field: field.into(), value: value.into() }), &meta).await;
     }
 
-    app.dispatch_typed(DrawingCommand::SetCamera(set_camera::SetCamera { camera: store::Viewport2d { x: 0.0, y: 0.0, zoom: 1.0 } }), &artifact_laws::meta("local")).await.expect("camera");
-    app.dispatch_typed(
+    settled(&mut app, DrawingCommand::SetCamera(set_camera::SetCamera { camera: store::Viewport2d { x: 0.0, y: 0.0, zoom: 1.0 } }), &meta).await;
+    settled(
+        &mut app,
         DrawingCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown {
             x: 400.0,
             y: 300.0,
@@ -485,15 +524,17 @@ async fn marquee_select_covers_contained_layer_only() {
         }),
         &utility_meta,
     )
-    .await
-    .expect("down");
-    app.dispatch_typed(DrawingCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { x: 460.0, y: 360.0, width: 800.0, height: 600.0, samples: Vec::new() }), &utility_meta).await.expect("move");
-    let result = app.dispatch_typed(DrawingCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { x: 460.0, y: 360.0, width: 800.0, height: 600.0, shift: false, ctrl: false, meta: false, cancelled: false }), &utility_meta).await.expect("up");
-    // 🕹️ Selection is framework-owned now (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM):
-    // the marquee hit-test requests `interactionSelect` for exactly the contained rect via a
-    // `Effect::ReplayShellCommand`, instead of writing a `NoConfigMutation::SetSelection`.
+    .await;
+    settled(&mut app, DrawingCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { x: 460.0, y: 360.0, width: 800.0, height: 600.0, samples: Vec::new() }), &utility_meta).await;
+    let (result, receipt) = settled(&mut app, DrawingCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { x: 460.0, y: 360.0, width: 800.0, height: 600.0, shift: false, ctrl: false, meta: false, cancelled: false }), &utility_meta).await;
+    // 🕹️ Selection is framework-owned (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM):
+    // the marquee hit-test emits `interactionSelect` for exactly the contained rect via an
+    // `Effect::ReplayShellCommand` — folded in-reactor (§2 C), so the host never sees it and the
+    // selection already holds the rect when the release settles.
     assert!(result.mutations.is_empty(), "a pure marquee-select gesture is not a document operation");
-    assert_eq!(result.requested_effects, vec![canvas_pointer_down::interaction_select_effect(&[rect_a_id.clone()], "replace")], "only the contained rect is requested, not the outside ellipse");
+    assert!(!receipt.effects.iter().any(|effect| matches!(effect, Effect::ReplayShellCommand { .. })), "interactionSelect is folded in-reactor, never handed to the host: {:?}", receipt.effects);
+    assert_eq!(selected_strokes(&app).await, vec![rect_a_id.clone()], "only the contained rect is selected, not the outside ellipse");
+    artifact_laws::close_registered_fixture_app(&mut app);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -548,21 +589,23 @@ async fn strokes_interaction_domain_is_declared_flat_pick_rectangle_lasso_on_the
 }
 
 #[semio_framework_async_macros::async_test]
-async fn canvas_pointer_up_direct_pick_requests_interaction_select() {
-    let mut app = drawing_app().await;
+async fn canvas_pointer_up_direct_pick_selects_inline() {
+    let (mut app, meta) = inline_selection_app().await;
     // 🔖 The default document's one layer is an empty-segment path (no bounds to hit-test against
     // — see `default_drawing_document`), so a real shape is added first, mirroring
     // `marquee_select_covers_contained_layer_only`'s own setup.
     let initial_id = first_layer_id(&app);
-    app.dispatch_typed(DrawingCommand::DeleteLayer(delete_layer::DeleteLayer { layer_id: initial_id }), &artifact_laws::meta("local")).await.expect("clear default layer");
-    app.dispatch_typed(DrawingCommand::AddLayer(add_layer::AddLayer { kind: "shape:rect".into() }), &artifact_laws::meta("local")).await.expect("add rect");
+    settled(&mut app, DrawingCommand::DeleteLayer(delete_layer::DeleteLayer { layer_id: initial_id }), &meta).await;
+    settled(&mut app, DrawingCommand::AddLayer(add_layer::AddLayer { kind: "shape:rect".into() }), &meta).await;
     let rect_id = last_layer_id(&app);
-    app.dispatch_typed(DrawingCommand::SetCamera(set_camera::SetCamera { camera: store::Viewport2d { x: 0.0, y: 0.0, zoom: 1.0 } }), &artifact_laws::meta("local")).await.expect("camera");
+    settled(&mut app, DrawingCommand::SetCamera(set_camera::SetCamera { camera: store::Viewport2d { x: 0.0, y: 0.0, zoom: 1.0 } }), &meta).await;
     // 🎯️ Default `shape:rect` geometry is world (0,0)-(128,96); screen (110,110) on a 200x200
     // viewport with the identity camera above maps to world (10,10) — inside the rect.
-    let result = app.dispatch_typed(DrawingCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { x: 110.0, y: 110.0, width: 200.0, height: 200.0, shift: false, ctrl: false, meta: false, cancelled: false }), &artifact_laws::meta("local")).await.expect("pick");
+    let (result, receipt) = settled(&mut app, DrawingCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { x: 110.0, y: 110.0, width: 200.0, height: 200.0, shift: false, ctrl: false, meta: false, cancelled: false }), &meta).await;
     assert!(result.mutations.is_empty(), "a direct pick is not a document operation");
-    assert_eq!(result.requested_effects, vec![canvas_pointer_down::interaction_select_effect(&[rect_id], "replace")]);
+    assert!(!receipt.effects.iter().any(|effect| matches!(effect, Effect::ReplayShellCommand { .. })), "interactionSelect is folded in-reactor, never handed to the host: {:?}", receipt.effects);
+    assert_eq!(selected_strokes(&app).await, vec![rect_id], "the picked rect is selected inside the carrying operation");
+    artifact_laws::close_registered_fixture_app(&mut app);
 }
 
 #[semio_framework_async_macros::async_test]

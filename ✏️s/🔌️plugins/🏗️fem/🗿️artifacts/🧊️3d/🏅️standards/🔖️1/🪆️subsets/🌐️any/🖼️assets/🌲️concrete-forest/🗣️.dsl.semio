@@ -1,0 +1,109 @@
+semio fem.fem3d.dsl v1
+elements {
+  frame id=l_col1 start=lc1b end=lc1t material-id=c30 section-id=hex30 roll=0
+  frame id=l_col2 start=lc2b end=lc2t material-id=c30 section-id=hex30 roll=0
+  frame id=l_spine start=lc2t end=lc1t material-id=c30 section-id=beam30x45 roll=0
+  frame id=l_b0 start=lc1t end=lv0 material-id=c30 section-id=beam30x45 roll=0
+  frame id=l_b1 start=lc2t end=lv1 material-id=c30 section-id=beam30x45 roll=0
+  frame id=l_b2 start=lc2t end=lv2 material-id=c30 section-id=beam30x45 roll=0
+  frame id=l_b3 start=lc2t end=lv3 material-id=c30 section-id=beam30x45 roll=0
+  frame id=l_b4 start=lc1t end=lv4 material-id=c30 section-id=beam30x45 roll=0
+  frame id=l_b5 start=lc1t end=lv5 material-id=c30 section-id=beam30x45 roll=0
+  frame id=l_b6 start=lc2t end=lv6 material-id=c30 section-id=beam30x45 roll=0
+  frame id=u_col1 start=lc1t end=uc1t material-id=c30 section-id=hex30 roll=0
+  frame id=u_col2 start=lc2t end=uc2t material-id=c30 section-id=hex30 roll=0
+  frame id=u_spine start=uc2t end=uc1t material-id=c30 section-id=beam30x45 roll=0
+  frame id=u_b0 start=uc1t end=uv0 material-id=c30 section-id=beam30x45 roll=0
+  frame id=u_b1 start=uc2t end=uv1 material-id=c30 section-id=beam30x45 roll=0
+  frame id=u_b2 start=uc2t end=uv2 material-id=c30 section-id=beam30x45 roll=0
+  frame id=u_b3 start=uc2t end=uv3 material-id=c30 section-id=beam30x45 roll=0
+  frame id=u_b4 start=uc1t end=uv4 material-id=c30 section-id=beam30x45 roll=0
+  frame id=u_b5 start=uc1t end=uv5 material-id=c30 section-id=beam30x45 roll=0
+  frame id=u_b6 start=uc2t end=uv6 material-id=c30 section-id=beam30x45 roll=0
+}
+analysis {
+  modal-count=3 buckling-count=3 deformation-scale=300
+}
+nodes [id:TEXT x:NUM y:NUM z:NUM] {
+  lc1b 2.70001 2.338269 0
+  lc2b 8.10001 2.338269 0
+  lc1t 2.70001 2.338269 3
+  lc2t 8.10001 2.338269 3
+  lv0 4.05001 4.676537 3
+  lv1 6.75001 4.676537 3
+  lv2 9.45001 4.676537 3
+  lv3 6.75001 0 3
+  lv4 4.05001 0 3
+  lv5 1.35001 0 3
+  lv6 9.45001 2.338269 3
+  uc1t 2.70001 2.338269 6
+  uc2t 8.10001 2.338269 6
+  uv0 4.05001 4.676537 6
+  uv1 6.75001 4.676537 6
+  uv2 9.45001 4.676537 6
+  uv3 6.75001 0 6
+  uv4 4.05001 0 6
+  uv5 1.35001 0 6
+  uv6 9.45001 2.338269 6
+}
+materials [id:TEXT name:TEXT e:NUM g:NUM nu:NUM rho:NUM] {
+  c30 "C30/37 Concrete" 33000000000 13750000000 0.2 2400
+}
+sections [id:TEXT name:TEXT area:NUM iy:NUM iz:NUM j:NUM] {
+  hex30 "Hexagonal Column R 0.30" 0.233827 0.00438425 0.00438425 0.008523
+  beam30x45 "Beam 0.30 x 0.45" 0.135 0.002278125 0.0010125 0.0023814
+}
+solids [id:TEXT name:TEXT outline:LIST holes:LIST base-z:NUM height:NUM layers:UINT mesh-size:NUM material-id:TEXT axis:ENUM] {
+}
+supports [id:TEXT node-id:TEXT fixed:LIST] {
+  s_c1 lc1b [ Tx Ty Tz Rx Ry Rz ]
+  s_c2 lc2b [ Tx Ty Tz Rx Ry Rz ]
+}
+load-cases [id:TEXT name:TEXT loads:BLOCK self-weight:BOOL] {
+  dead "Dead Load" {
+    member-udl id=d_l_spine element-id=l_spine wx=0 wy=0 wz=-10298
+    member-udl id=d_l_b0 element-id=l_b0 wx=0 wy=0 wz=-10298
+    member-udl id=d_l_b1 element-id=l_b1 wx=0 wy=0 wz=-10298
+    member-udl id=d_l_b2 element-id=l_b2 wx=0 wy=0 wz=-10298
+    member-udl id=d_l_b3 element-id=l_b3 wx=0 wy=0 wz=-10298
+    member-udl id=d_l_b4 element-id=l_b4 wx=0 wy=0 wz=-10298
+    member-udl id=d_l_b5 element-id=l_b5 wx=0 wy=0 wz=-10298
+    member-udl id=d_l_b6 element-id=l_b6 wx=0 wy=0 wz=-10298
+    member-udl id=d_u_spine element-id=u_spine wx=0 wy=0 wz=-10298
+    member-udl id=d_u_b0 element-id=u_b0 wx=0 wy=0 wz=-10298
+    member-udl id=d_u_b1 element-id=u_b1 wx=0 wy=0 wz=-10298
+    member-udl id=d_u_b2 element-id=u_b2 wx=0 wy=0 wz=-10298
+    member-udl id=d_u_b3 element-id=u_b3 wx=0 wy=0 wz=-10298
+    member-udl id=d_u_b4 element-id=u_b4 wx=0 wy=0 wz=-10298
+    member-udl id=d_u_b5 element-id=u_b5 wx=0 wy=0 wz=-10298
+    member-udl id=d_u_b6 element-id=u_b6 wx=0 wy=0 wz=-10298
+  }
+  true
+  live "Live Load" {
+    member-udl id=q_l_spine element-id=l_spine wx=0 wy=0 wz=-4952
+    member-udl id=q_l_b0 element-id=l_b0 wx=0 wy=0 wz=-4952
+    member-udl id=q_l_b1 element-id=l_b1 wx=0 wy=0 wz=-4952
+    member-udl id=q_l_b2 element-id=l_b2 wx=0 wy=0 wz=-4952
+    member-udl id=q_l_b3 element-id=l_b3 wx=0 wy=0 wz=-4952
+    member-udl id=q_l_b4 element-id=l_b4 wx=0 wy=0 wz=-4952
+    member-udl id=q_l_b5 element-id=l_b5 wx=0 wy=0 wz=-4952
+    member-udl id=q_l_b6 element-id=l_b6 wx=0 wy=0 wz=-4952
+    member-udl id=q_u_spine element-id=u_spine wx=0 wy=0 wz=-4952
+    member-udl id=q_u_b0 element-id=u_b0 wx=0 wy=0 wz=-4952
+    member-udl id=q_u_b1 element-id=u_b1 wx=0 wy=0 wz=-4952
+    member-udl id=q_u_b2 element-id=u_b2 wx=0 wy=0 wz=-4952
+    member-udl id=q_u_b3 element-id=u_b3 wx=0 wy=0 wz=-4952
+    member-udl id=q_u_b4 element-id=u_b4 wx=0 wy=0 wz=-4952
+    member-udl id=q_u_b5 element-id=u_b5 wx=0 wy=0 wz=-4952
+    member-udl id=q_u_b6 element-id=u_b6 wx=0 wy=0 wz=-4952
+  }
+  false
+}
+combinations [id:TEXT name:TEXT terms:MAP] {
+  uls ULS {
+    dead=1.35 live=1.5
+  }
+  sls SLS {
+    dead=1 live=1
+  }
+}

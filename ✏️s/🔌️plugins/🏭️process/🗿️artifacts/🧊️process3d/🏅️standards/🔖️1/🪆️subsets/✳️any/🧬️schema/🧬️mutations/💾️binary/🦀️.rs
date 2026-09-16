@@ -2760,12 +2760,9 @@ struct Process3dStoreInitializationAuthority {
 impl Process3dStoreInitializationAuthority {
     fn new(envelope: store::ArtifactEnvelope<Process3dSnapshot, Process3dMutation>, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation) -> Self {
         if process3d_validate_publication_authority(operation, generation).is_err() {
-            let admitted = process3d_admit_app_publication_authority(operation, generation);
-            eprintln!("[DEBUG] process3d store initializer admitted its lease for op {} gen {}: {admitted:?}", operation.0, generation.0);
+            let _ = process3d_admit_app_publication_authority(operation, generation);
         }
-        let authority = process3d_validate_publication_authority(operation, generation);
-        eprintln!("[DEBUG] process3d store initializer authority for op {} gen {}: {authority:?}", operation.0, generation.0);
-        let (base_revision, parent_revision) = authority.unwrap_or((u64::MAX, u64::MAX));
+        let (base_revision, parent_revision) = process3d_validate_publication_authority(operation, generation).unwrap_or((u64::MAX, u64::MAX));
         Self {
             operation,
             generation,
@@ -2804,7 +2801,6 @@ impl Process3dStoreInitializationAuthority {
     }
 
     fn fail(&mut self, code: &'static [u8]) {
-        eprintln!("[DEBUG] process3d store initializer failed: {} phase {:?}", String::from_utf8_lossy(code), self.phase);
         self.fault = Some(process3d_fault_detail(code));
         self.phase = Process3dStoreInitializationPhase::RetireFault;
     }
@@ -2908,7 +2904,6 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<Process3dSnaps
             self.fail(b"process3d-store.initializer-stale-aba");
         }
         if (self.cancel_requested || cx.is_cancelled()) && !matches!(self.phase, Process3dStoreInitializationPhase::RetireCancelled | Process3dStoreInitializationPhase::Cancelled) {
-            eprintln!("[DEBUG] process3d store initializer cancelled: requested {} cx {}", self.cancel_requested, cx.is_cancelled());
             self.phase = Process3dStoreInitializationPhase::RetireCancelled;
         }
         if cx.should_yield() || cx.fuel_remaining() == 0 {
@@ -2921,7 +2916,6 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<Process3dSnaps
             }
             Ok(false) => {}
             Err(error) => {
-                eprintln!("[DEBUG] process3d store initializer fault at line {} phase {:?}", line!(), self.phase);
                 self.fault = Some(error.into_bytes());
                 self.phase = Process3dStoreInitializationPhase::RetireFault;
             }
@@ -2931,7 +2925,6 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<Process3dSnaps
                 let valid = self.envelope.as_ref().is_some_and(|envelope| envelope.schema == crate::PROCESS_3D_SCHEMA && !envelope.id.is_empty() && envelope.id.len() <= PROCESS3D_OWNER_BYTES);
                 self.phase = if valid { Process3dStoreInitializationPhase::ValidateEditPair { left: 0, right: 1 } } else { Process3dStoreInitializationPhase::RetireFault };
                 if !valid {
-                    eprintln!("[DEBUG] process3d store initializer fault at line {} phase {:?}", line!(), self.phase);
                     self.fault = Some(process3d_fault_detail(b"process3d-store.initializer-envelope-invalid"));
                 }
             }
@@ -3030,7 +3023,6 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<Process3dSnaps
                             self.phase = Process3dStoreInitializationPhase::SeedHistory { edit, lane: 1, index: 0 };
                         }
                         Err(error) => {
-                            eprintln!("[DEBUG] process3d store initializer fault at line {} phase {:?}", line!(), self.phase);
                             self.fault = Some(error.into_bytes());
                             self.phase = Process3dStoreInitializationPhase::RetireFault;
                         }
@@ -3041,7 +3033,6 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<Process3dSnaps
                         match runtime.seed_mutation(id) {
                             Ok(()) => self.phase = Process3dStoreInitializationPhase::SeedHistory { edit, lane, index: index + 1 },
                             Err(error) => {
-                                eprintln!("[DEBUG] process3d store initializer fault at line {} phase {:?}", line!(), self.phase);
                                 self.fault = Some(error.into_bytes());
                                 self.phase = Process3dStoreInitializationPhase::RetireFault;
                             }
@@ -3117,7 +3108,6 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<Process3dSnaps
                         self.phase = Process3dStoreInitializationPhase::FindApplied { position: position + 1, scan: 0 };
                     }
                     Err(error) => {
-                        eprintln!("[DEBUG] process3d store initializer fault at line {} phase {:?}", line!(), self.phase);
                         self.fault = Some(error.into_bytes());
                         self.phase = Process3dStoreInitializationPhase::RetireFault;
                     }
@@ -3165,7 +3155,6 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<Process3dSnaps
                 match self.runtime.as_mut().expect("Process3d runtime retained").push_redo(id, digest) {
                     Ok(()) => self.phase = Process3dStoreInitializationPhase::FindRedo { position: position + 1, scan: 0 },
                     Err(error) => {
-                        eprintln!("[DEBUG] process3d store initializer fault at line {} phase {:?}", line!(), self.phase);
                         self.fault = Some(error.into_bytes());
                         self.phase = Process3dStoreInitializationPhase::RetireFault;
                     }

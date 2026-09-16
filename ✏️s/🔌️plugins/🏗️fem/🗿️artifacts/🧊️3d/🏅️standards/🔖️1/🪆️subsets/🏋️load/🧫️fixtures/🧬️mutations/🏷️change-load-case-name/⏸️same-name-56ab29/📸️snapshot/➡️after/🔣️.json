@@ -1,0 +1,28 @@
+{
+  "nodes": [],
+  "elements": [],
+  "materials": [],
+  "sections": [],
+  "solids": [],
+  "supports": [],
+  "loadCases": [
+    {
+      "id": "dead",
+      "name": "Dead",
+      "loads": [],
+      "selfWeight": true
+    },
+    {
+      "id": "wind",
+      "name": "Wind X",
+      "loads": [],
+      "selfWeight": false
+    }
+  ],
+  "combinations": [],
+  "analysis": {
+    "modalCount": 3,
+    "bucklingCount": 3,
+    "deformationScale": 50.0
+  }
+}

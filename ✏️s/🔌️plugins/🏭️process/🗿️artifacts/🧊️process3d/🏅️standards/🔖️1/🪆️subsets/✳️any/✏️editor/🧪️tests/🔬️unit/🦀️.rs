@@ -1124,7 +1124,7 @@ async fn process_contribution_envelope_accepts_exact_limits_and_rejects_plus_one
 /// (`✏️s/🔌️plugins/🏭️process/🧩️extensions/*/🦀️.rs` builds this payload from the same `MachineCatalog`
 /// this crate compiles in), plus the foreign `cad.computer` / `sourcing.module` entries the
 /// DEMONSTRATOR's `consumes` row puts in the same pack. This is the real host closure, not a toy.
-fn demonstrator_contributions_pack() -> String {
+pub(crate) fn demonstrator_contributions_pack() -> String {
     let mut entries: Vec<semio_framework::ProgramContributionEntry> = Vec::new();
     for catalog in builtin_installed_catalogs().into_iter().filter(|catalog| catalog.catalog_id() != "geometry") {
         entries.push(semio_framework::ProgramContributionEntry {
@@ -1188,6 +1188,50 @@ fn the_real_demonstrator_pack_is_admitted_distilled_and_retained() {
     assert_eq!(post.contributions_json, distilled);
 
     let catalogs = installed_catalogs(&distilled);
-    assert_eq!(catalogs.len(), builtin_installed_catalogs().len() + 4, "every contributed catalog installs alongside the built-ins");
+    let ids: Vec<&str> = catalogs.iter().map(|catalog| catalog.catalog_id()).collect();
+    let builtin_ids: Vec<String> = builtin_installed_catalogs().iter().map(|catalog| catalog.catalog_id().to_string()).collect();
+    assert_eq!(ids, builtin_ids, "the four shipped packs re-contribute the built-in ids, so the installed build wins and nothing is appended");
+}
+
+/// ⚖️ A contribution pack repeating the ids this build already compiles in leaves the installed
+/// catalogs untouched — the Werkstatt panel renders five sections, not nine.
+#[test]
+fn a_pack_repeating_the_builtin_ids_installs_exactly_the_builtin_catalogs() {
+    let pack = demonstrator_contributions_pack();
+    let before: Vec<(String, String)> = builtin_installed_catalogs().iter().map(|catalog| (catalog.catalog_id().to_string(), catalog.label().to_string())).collect();
+    let after: Vec<(String, String)> = installed_catalogs(&pack).iter().map(|catalog| (catalog.catalog_id().to_string(), catalog.label().to_string())).collect();
+    assert_eq!(after, before, "a repeated catalog id must not open a second section");
+    for id in ["wood", "metal", "concrete", "robotic"] {
+        assert_eq!(after.iter().filter(|(catalog_id, _)| catalog_id == id).count(), 1, "{id} must name exactly one section");
+    }
+}
+
+/// ⚖️ A genuinely new catalog id still installs — dedupe drops repeats, never the contribution
+/// channel itself — and its machines are reachable through the add-machine lookup.
+#[test]
+fn a_pack_with_a_new_catalog_id_appends_one_section_with_its_machines() {
+    let machine = WorkshopMachine { id: "glassCutter".into(), label: "Glass Cutter".into(), icon_id: "scissors".into(), catalog_id: None, capabilities: Vec::new() };
+    let entry = semio_framework::ProgramContributionEntry {
+        plugin_id: "process-extension-glass".into(),
+        topic_contribution: Some(semio_framework::TopicContribution::new(
+            "process.machines",
+            semio_framework::DslValue::object([
+                ("appId".to_string(), semio_framework::DslValue::String(PROCESS_3D_PLAY_APP_ID.to_string())),
+                ("moduleId".to_string(), semio_framework::DslValue::String("glass".to_string())),
+                ("label".to_string(), semio_framework::DslValue::String("Glass".to_string())),
+                ("iconId".to_string(), semio_framework::DslValue::String("wrench".to_string())),
+                ("machinesJson".to_string(), semio_framework::DslValue::String(semio_framework_os_kernel::json::to_json_string(&vec![machine]))),
+            ]),
+        )),
+    };
+    let mut entries = semio_framework::parse_contributions(&demonstrator_contributions_pack());
+    entries.push(entry);
+    let pack = semio_framework_os_kernel::json::to_json_string(&entries);
+    let catalogs = installed_catalogs(&pack);
+    let ids: Vec<&str> = catalogs.iter().map(|catalog| catalog.catalog_id()).collect();
+    let mut expected: Vec<String> = builtin_installed_catalogs().iter().map(|catalog| catalog.catalog_id().to_string()).collect();
+    expected.push("glass".to_string());
+    assert_eq!(ids, expected, "a new catalog id appends one section after the built-ins, in host order");
+    assert_eq!(catalog_machine(&pack, "glass", "glassCutter").expect("the new catalog's machine").catalog_id.as_deref(), Some("glass"));
 }
 //#endregion 🧩️RealContributionsPackAdmission

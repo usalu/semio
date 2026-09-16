@@ -44,3 +44,14 @@ fn fem3d_nodal_von_mises_returns_finite_values_for_solid() {
         assert!(v.is_finite() && *v >= 0.0, "von mises {v} should be finite and non-negative");
     }
 }
+
+/// 🧊️ LAW: the shipped demo example meshes — every solid of the boot snapshot yields a boundary
+/// surface, so a scene render never silently drops the slab.
+#[test]
+fn fem3d_mesh_preview_meshes_every_demo_solid() {
+    let doc = crate::standards::v1::subsets::any::schema::snapshot::text::fem3d_boot_snapshot();
+    assert!(!doc.solids.is_empty(), "the demo carries a solid");
+    let previews = fem3d_mesh_preview(&doc).expect("the demo example meshes");
+    assert_eq!(previews.iter().map(|mesh| mesh.solid_id.as_str()).collect::<Vec<_>>(), doc.solids.iter().map(|solid| solid.id.as_str()).collect::<Vec<_>>());
+    assert!(previews.iter().all(|mesh| !mesh.boundary_tris.is_empty()));
+}

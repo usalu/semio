@@ -957,7 +957,20 @@ impl<A: ArtifactApp> ToolRunLedger<A> {
         }
     }
 
+    /// 🧹️ Throws the run's provisional work away, payload included: an abort, a fault, a rebase-restart
+    /// or a reconfigure-restart invalidates the run's whole intermediate result, so the windows that
+    /// read `ToolRunView::payload` must stop showing it.
     fn discard_provisional(&mut self) {
+        self.release_provisional(false);
+    }
+
+    /// 🧹️ Releases the provisional ops a COMPLETED finalize has already published, keeping the run's
+    /// `payload`. The payload is not provisional work — it is the run's own result (§2.3: "the latest
+    /// intermediate result of the run … the run's windows read it back through
+    /// `ToolRunView::payload`"), and a `mutating: false` run publishes nothing else at all, so clearing
+    /// it on finalize is what made a finished read-only run's windows revert to their pre-run render the
+    /// instant it reached `Finalized`. It is cleared on a genuine discard and when the entry retires.
+    fn release_provisional(&mut self, keep_payload: bool) {
         let Some(entry) = selected_entry_mut!(self) else { return };
         self.discarded.append(&mut entry.provisional);
         entry.entity_marks.clear();
@@ -965,7 +978,9 @@ impl<A: ArtifactApp> ToolRunLedger<A> {
         entry.refold = None;
         entry.overlay = Arc::clone(&entry.base);
         entry.checkpoint = None;
-        entry.payload = None;
+        if !keep_payload {
+            entry.payload = None;
+        }
     }
 
     /// 🧹️ Advances the owners that outlived their slot by one bounded unit; `None` when nothing is retiring.
@@ -1781,7 +1796,10 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         if self.apply_tool_run_driver_event(ToolRunEvent::PublicationComplete { run, generation }) == Some(ToolRunEffect::ReleaseProvisional) {
             let store_generation = self.store.generation();
             let head = self.store.snapshot_owner();
-            self.tool_runs.discard_provisional();
+            // 🎨️ The finalize SUCCEEDED, so the provisional ops are released — but the run's payload is
+            // its result, not provisional work, and its declared windows keep rendering it once the run
+            // is `Finalized`. See `ToolRunLedger::release_provisional`.
+            self.tool_runs.release_provisional(true);
             let entry = selected_entry_mut!(self.tool_runs).expect("finalized slot");
             entry.base = head;
             entry.overlay = Arc::clone(&entry.base);

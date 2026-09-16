@@ -33,7 +33,7 @@ pub fn engagement_submit(ctx: &mut Puzzle2dActionCtx<'_>, args: Option<&Value>) 
             true
         }
         "clear" => {
-            ctx.interaction_writes.push(crate::editor::puzzle2d::puzzle2d_selection_write(&ctx.scene.fixture, &[]));
+            ctx.interaction_writes.extend(crate::editor::puzzle2d::puzzle2d_clear_selection_write(&ctx.scene.fixture, &selected_ids));
             true
         }
         "move" if numbers.len() >= 2 => {

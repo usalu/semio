@@ -7,7 +7,7 @@ async fn set_active_asset_emits_both_a_document_and_a_fit_revision_config_operat
     let mut app = shooting_app().await;
     let asset_id = app.snapshot().expect("snapshot").assets[0].id.clone();
     let result = dispatch(&mut app, ShootingCommand::SetActiveAsset(set_active_asset::SetActiveAsset { asset_id: Some(asset_id.clone()) })).await;
-    assert_eq!(result.mutations.len(), 1, "activating an asset is a real document edit");
+    assert!(result.edited_document(), "activating an asset is a real document edit");
     assert_eq!(app.snapshot().expect("snapshot").active_asset_id, asset_id);
 }
 

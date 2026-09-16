@@ -32,7 +32,7 @@ pub(crate) mod context {
 
     /// 🪟️ A one-window view model addressing the named window kind.
     pub fn view(kind: &str) -> ViewModel {
-        let id = if kind == crate::editor::fem3d::modes::edit::windows::model::FEM3D_WINDOW_MODEL { "model-left" } else { "results-left" };
+        let id = if kind == edit::windows::model::FEM3D_WINDOW_MODEL { "model-left" } else { "results-left" };
         ViewModel { window_id: Some(id.into()), window_instances: vec![ViewWindowInstance { id: id.into(), window_kind_id: kind.into() }], ..Default::default() }
     }
 
@@ -68,8 +68,8 @@ pub(crate) mod context {
     /// 🪟️ The window kind a command is addressed to when the test names none.
     pub fn window_kind_for(command: &Fem3dCommand) -> &'static str {
         match command {
-            Fem3dCommand::SetResultDisplay(_) | Fem3dCommand::SetResultAnimation(_) | Fem3dCommand::ResultAnimationTick(_) => crate::editor::fem3d::modes::edit::windows::results::FEM3D_WINDOW_RESULTS,
-            _ => crate::editor::fem3d::modes::edit::windows::model::FEM3D_WINDOW_MODEL,
+            Fem3dCommand::SetResultDisplay(_) | Fem3dCommand::SetResultAnimation(_) | Fem3dCommand::ResultAnimationTick(_) => edit::windows::results::FEM3D_WINDOW_RESULTS,
+            _ => edit::windows::model::FEM3D_WINDOW_MODEL,
         }
     }
 
@@ -98,7 +98,7 @@ pub(crate) mod context {
     }
 
     pub fn render(app: &mut Fem3dApp, body_key: &str) -> String {
-        let kind = if body_key == crate::editor::fem3d::modes::edit::windows::model::FEM3D_BODY_MODEL { crate::editor::fem3d::modes::edit::windows::model::FEM3D_WINDOW_MODEL } else { crate::editor::fem3d::modes::edit::windows::results::FEM3D_WINDOW_RESULTS };
+        let kind = if body_key == edit::windows::model::FEM3D_BODY_MODEL { edit::windows::model::FEM3D_WINDOW_MODEL } else { edit::windows::results::FEM3D_WINDOW_RESULTS };
         semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::resolve_ready(app.render(body_key, None, &view(kind))).expect("render")).expect("fixture projection")
     }
 }
@@ -143,7 +143,7 @@ fn fem3d_window_config_retained_command_fixture_matches_exact_routes_and_value_c
 }
 
 
-/// ⚖️ LAW: every one of the 18 declared actions is owned by `Fem3dRetainedCommandJobFactory`, is
+/// ⚖️ LAW: every one of the 36 declared actions is owned by `Fem3dRetainedCommandJobFactory`, is
 /// classified `Migrated` in the manifest, and declares a nonempty publication lane contract.
 /// `AppActionRegistry::tool_job_registration` enforces the same set equality at app construction
 /// (`interactive-job.catalog-incomplete`), and `validate_ui_dispatch_classification` rejects anything
@@ -153,9 +153,9 @@ fn fem3d_window_config_retained_command_fixture_matches_exact_routes_and_value_c
 #[semio_framework_async_macros::async_test]
 async fn retained_route_dispositions_are_exact_and_exhaustive() {
     use semio_framework::ToolExecutionShape;
-    assert_eq!(FEM3D_RETAINED_TOOL_IDS.len(), 18);
-    assert_eq!(<Fem3dPlayApp as ArtifactEditor>::bounded_first_step_tool_proofs().len(), 18);
-    assert_eq!(FEM3D_RETAINED_PUBLICATION_CONTRACTS.len(), 18);
+    assert_eq!(FEM3D_RETAINED_TOOL_IDS.len(), 36);
+    assert_eq!(<Fem3dPlayApp as ArtifactEditor>::bounded_first_step_tool_proofs().len(), 36);
+    assert_eq!(FEM3D_RETAINED_PUBLICATION_CONTRACTS.len(), 36);
     // 🧷️ `validate_tool_job_rows` compares `registration.contract == row.contract` byte for byte, so
     // the proof rows and the registered factory MUST build from the one `fem3d_retained_contract()`.
     assert_eq!(fem3d_retained_contract().shape, ToolExecutionShape::BoundedFirstStep);
@@ -179,14 +179,14 @@ async fn retained_route_dispositions_are_exact_and_exhaustive() {
     }
 }
 
-/// ⚖️ LAW: both lanes a fem3d tool can publish into have a real one-item preparation factory — an
-/// Artifact-lane tool without `build_artifact_store_one_item_preparation_factory` is rejected at
-/// dispatch with `interactive-job.publication-authority-missing`, which is exactly what would have
-/// happened to all 15 document tools without `Fem3dArtifactPreparationFactory`.
+/// ⚖️ LAW: the Artifact lane every document tool publishes into has a real one-item preparation
+/// factory — a tool without `build_artifact_store_one_item_preparation_factory` is rejected at
+/// dispatch with `interactive-job.publication-authority-missing`. fem3d has no `Config` lane
+/// (`NoConfig`), so no config preparation factory is owed.
 #[semio_framework_async_macros::async_test]
-async fn both_declared_publication_lanes_have_a_preparation_factory() {
+async fn the_artifact_publication_lane_has_a_preparation_factory() {
     assert!(<Fem3dPlayApp as ArtifactEditor>::build_artifact_store_one_item_preparation_factory().is_some());
-    assert!(<Fem3dPlayApp as ArtifactEditor>::build_config_store_one_item_preparation_factory().is_some());
+    assert!(!FEM3D_RETAINED_PUBLICATION_CONTRACTS.iter().any(|contract| contract.lanes.contains(&ArtifactToolPublicationLane::Config)), "no fem3d tool publishes into a config lane the app does not own");
 }
 
 /// ⚖️ LAW: every document mutation the 15 Artifact-lane tools can emit fits the Artifact lane's
@@ -235,7 +235,7 @@ fn every_command() -> Vec<Fem3dCommand> {
         Fem3dCommand::AddNodalLoad(add_nodal_load::AddNodalLoad { node_id: "n1".into(), dof: crate::FemDof::Tz, value: -5000.0, case_id: Some("live".into()) }),
         Fem3dCommand::AddMemberUdl(add_member_udl::AddMemberUdl { element_id: "e1".into(), wx: 0.0, wy: 0.0, wz: -500.0, case_id: None }),
         Fem3dCommand::AddAreaLoad(add_area_load::AddAreaLoad { solid_id: "sol1".into(), pressure: 5000.0, case_id: Some("dead".into()) }),
-        Fem3dCommand::AddSolid(add_solid::AddSolid { x: 0.0, y: 0.0, width: 4.0, depth: 2.0, height: 0.5, material_id: "concrete".into(), base_z: Some(0.0), layers: Some(2), mesh_size: None }),
+        Fem3dCommand::AddSolid(add_solid::AddSolid { x: 0.0, y: 0.0, width: 4.0, depth: 2.0, height: 0.5, material_id: "concrete".into(), base_z: Some(0.0), layers: Some(2), mesh_size: None, axis: None }),
         Fem3dCommand::AddLoadCase(add_load_case::AddLoadCase { name: "Live".into(), self_weight: false }),
         Fem3dCommand::AddCombination(add_combination::AddCombination { name: "ULS".into(), terms: "[[\"dead\",1.35],[\"live\",1.5]]".into() }),
         Fem3dCommand::SetSelfWeight(set_self_weight::SetSelfWeight { case_id: "dead".into(), enabled: true }),
@@ -244,6 +244,24 @@ fn every_command() -> Vec<Fem3dCommand> {
         Fem3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: crate::examples::demo::ID.into() }),
         Fem3dCommand::SetCamera(set_camera::SetCamera { camera: crate::Viewport3dOrbit { position: [8.0, -3.0, 5.0], target: [0.0; 3], zoom: 1.25, up: None } }),
         Fem3dCommand::SetResultDisplay(set_result_display::SetResultDisplay { source_id: Some("dead".into()), mode: "modal".into(), mode_index: 0, field: None, value: None, window_id: None }),
+        Fem3dCommand::PatchNode(patch_node::PatchNode { id: "n1".into(), field: "x".into(), value: "1.5".into() }),
+        Fem3dCommand::PatchElement(patch_element::PatchElement { id: "e1".into(), field: "roll".into(), value: "0.1".into() }),
+        Fem3dCommand::PatchMaterial(patch_material::PatchMaterial { id: "steel".into(), field: "nu".into(), value: "0.3".into() }),
+        Fem3dCommand::PatchSection(patch_section::PatchSection { id: "hea200".into(), field: "area".into(), value: "0.006".into() }),
+        Fem3dCommand::PatchSupport(patch_support::PatchSupport { id: "s1".into(), field: "tz".into(), value: "true".into() }),
+        Fem3dCommand::PatchSolid(patch_solid::PatchSolid { id: "sol1".into(), field: "axis".into(), value: "y".into() }),
+        Fem3dCommand::PatchLoad(patch_load::PatchLoad { id: "l1".into(), field: "value".into(), value: "-1000".into() }),
+        Fem3dCommand::PatchLoadCase(patch_load_case::PatchLoadCase { id: "live".into(), field: "name".into(), value: "Imposed".into() }),
+        Fem3dCommand::PatchCombination(patch_combination::PatchCombination { id: "uls".into(), field: "term:live".into(), value: "1.5".into() }),
+        Fem3dCommand::SetResultAnimation(set_result_animation::SetResultAnimation { phase: Some(0.5), playing: Some(true), speed: None, loop_mode: Some("pingPong".into()), waveform: None, field: None, value: None, window_id: Some("results-left".into()) }),
+        Fem3dCommand::ResultAnimationTick(result_animation_tick::ResultAnimationTick {}),
+        Fem3dCommand::FocusEntity(focus_entity::FocusEntity { id: "n1".into() }),
+        Fem3dCommand::TranslateSelection(translate_selection::TranslateSelection { ids: vec!["n1".into()], dx: 0.5, dy: 0.0, dz: -0.25 }),
+        Fem3dCommand::RotateSelection(rotate_selection::RotateSelection { ids: Vec::new(), ax: 0.0, ay: 0.0, az: 1.0, angle: 0.1 }),
+        Fem3dCommand::ScaleSelection(scale_selection::ScaleSelection { ids: vec!["sol1".into()], sx: 2.0, sy: 1.0, sz: 1.0 }),
+        Fem3dCommand::SetTransformGumballFlag(set_transform_gumball_flag::SetTransformGumballFlag { flag: "rotate".into(), pressed: Some(false) }),
+        Fem3dCommand::TransformBegin(transform_begin::TransformBegin {}),
+        Fem3dCommand::TransformEnd(transform_end::TransformEnd {}),
     ]
 }
 
@@ -257,7 +275,7 @@ async fn command_ids_are_unique_and_match_the_declared_manifest_actions() {
     sorted.sort_unstable();
     sorted.dedup();
     assert_eq!(sorted.len(), ids.len(), "duplicate command ids in {ids:?}");
-    assert_eq!(ids.len(), 18, "every Fem3dCommand row must be covered by every_command()");
+    assert_eq!(ids.len(), 36, "every Fem3dCommand row must be covered by every_command()");
 }
 
 /// ⚖️ LAW: text and binary are two projections of the same command, for every single row.
@@ -268,12 +286,15 @@ async fn every_command_round_trips_through_text_and_binary() {
     }
 }
 
-/// 📌️ LAW: the pre-migration command wire format, row for row — the hex list is positionally aligned
-/// to `every_command()`, which carries exactly the values the old `📡️protocol` crate's baseline dump
-/// used (ticket `26/08/05/FEM-PLUGIN-MIGRATION-TO-CRATE-AND-TAXONOMY-CONSOLIDATION`,
-/// `🧪️wire-baseline-before-3d.txt`). Row order is the binary variant ordinal, so a reordering — which
-/// no round-trip law can catch — shows up here as a leading-byte mismatch. `addNodalLoad`'s `None`
-/// case is pinned separately below because `every_command()` only carries its `Some` shape.
+/// 📌️ LAW: the command wire format, row for row — the hex list is positionally aligned to
+/// `every_command()`. Rows 1–18 carry the values the old `📡️protocol` crate's baseline dump used
+/// (ticket `26/08/05/FEM-PLUGIN-MIGRATION-TO-CRATE-AND-TAXONOMY-CONSOLIDATION`,
+/// `🧪️wire-baseline-before-3d.txt`); `setActiveExample` was re-pinned when the example became `demo`
+/// and `setResultDisplay` when its `field`/`value`/`window_id` triple was appended, rows 19–36 were
+/// pinned at their introduction (ticket `26/09/16/FEM-3D-INTERACTIVE-FEATURE-COMPLETE`). Row order
+/// is the binary variant ordinal, so a reordering — which no round-trip law can catch — shows up
+/// here as a leading-byte mismatch. `addNodalLoad`'s `None` case is pinned separately below because
+/// `every_command()` only carries its `Some` shape.
 #[semio_framework_async_macros::async_test]
 async fn every_command_keeps_its_pre_migration_bytes() {
     use protocol::OpBinary;
@@ -293,9 +314,27 @@ async fn every_command_keeps_its_pre_migration_bytes() {
         "010c010464656164020006000102",
         "010d000200040502050000000000003e40",
         "010e02026531026e3101000c0206010600",
-        "010f010764656661756c7401000600",
-        "011001077b2278223a317d01000600",
+        "010f010464656d6f01000600",
+        "01100001000e0d03011503000000000000204000000000000008c000000000000014400215030000000000000000000000000000000000000000000000000305000000000000f43f",
         "0111020464656164056d6f64616c03000600010601020400",
+        "01120303312e35026e31017803000601010602020600",
+        "01130303302e3102653104726f6c6c03000601010602020600",
+        "01140303302e33026e7505737465656c03000602010601020600",
+        "01150305302e30303604617265610668656132303003000602010601020600",
+        "011603027331047472756502747a03000600010602020601",
+        "011703046178697304736f6c31017903000601010600020602",
+        "011803052d31303030026c310576616c756503000601010602020600",
+        "01190307496d706f736564046c697665046e616d6503000601010602020600",
+        "011a0303312e35097465726d3a6c69766503756c7303000602010601020600",
+        "011b020870696e67506f6e670c726573756c74732d6c656674040005000000000000e03f0102030600070601",
+        "011c0000",
+        "011d01026e3101000600",
+        "011e01026e3104000c0106000105000000000000e03f020500000000000000000305000000000000d0bf",
+        "011f0005000c0001050000000000000000020500000000000000000305000000000000f03f04059a9999999999b93f",
+        "01200104736f6c3104000c010600010500000000000000400205000000000000f03f0305000000000000f03f",
+        "01210106726f74617465020006000101",
+        "01220000",
+        "01230000",
     ];
     let commands = every_command();
     assert_eq!(commands.len(), expected.len(), "the baseline hex list must cover every command row");
@@ -307,8 +346,8 @@ async fn every_command_keeps_its_pre_migration_bytes() {
     assert_eq!(nodal_load_without_case.encode_op().expect("encode").iter().map(|byte| format!("{byte:02x}")).collect::<String>(), "010601026e3103000600010a020205000000000088b3c0");
 }
 
-/// ⚖️ LAW: the leading token of every printed op line is the row's `dsl` wire keyword. Three rows
-/// (`setActiveExample`/`setCamera`/`setResultDisplay`) prove the wire keyword is NOT simply the
+/// ⚖️ LAW: the leading token of every printed op line is the row's `dsl` wire keyword. Four rows
+/// (`setActiveExample`/`setCamera`/`setResultDisplay`/`setResultAnimation`) prove the wire keyword is NOT simply the
 /// kebab-cased command id — this is exactly what a missing `#[dsl(keyword = ..)]` on a payload struct
 /// silently breaks (the record prints with no keyword at all and no longer parses).
 #[semio_framework_async_macros::async_test]
@@ -332,8 +371,28 @@ async fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
         "active-example",
         "camera",
         "result-display",
+        "patch-node",
+        "patch-element",
+        "patch-material",
+        "patch-section",
+        "patch-support",
+        "patch-solid",
+        "patch-load",
+        "patch-load-case",
+        "patch-combination",
+        "result-animation",
+        "result-animation-tick",
+        "focus-entity",
+        "translate-selection",
+        "rotate-selection",
+        "scale-selection",
+        "set-transform-gumball-flag",
+        "transform-begin",
+        "transform-end",
     ];
-    for (command, expected) in every_command().into_iter().zip(expected_keys) {
+    let commands = every_command();
+    assert_eq!(commands.len(), expected_keys.len(), "every command row names its wire keyword");
+    for (command, expected) in commands.into_iter().zip(expected_keys) {
         let printed = protocol::OpText::print_op(&command);
         assert_eq!(printed.split(' ').next().unwrap_or_default(), expected, "wire keyword drifted for command {command:?}: {printed:?}");
     }
@@ -480,30 +539,12 @@ async fn fem3d_io_declares_geometry_in_and_results_out_ports() {
 
 //#region 🎬️SceneRender
 #[semio_framework_async_macros::async_test]
-async fn quat_z_to_identity_for_parallel_direction() {
-    assert_eq!(quat_z_to([0.0, 0.0, 1.0]), [0.0, 0.0, 0.0, 1.0]);
-}
-
-#[semio_framework_async_macros::async_test]
-async fn quat_z_to_handles_antiparallel_direction() {
-    assert_eq!(quat_z_to([0.0, 0.0, -1.0]), [1.0, 0.0, 0.0, 0.0]);
-}
-
-#[semio_framework_async_macros::async_test]
 async fn fem3d_camera_scene_encoding_preserves_the_typed_pose() {
     let camera = crate::viewport::INITIAL;
     let decoded = dsl::json::from_json_str::<crate::Viewport3dOrbit>(&crate::viewport::scene_camera_json(&camera)).unwrap();
     assert_eq!(decoded, camera);
     let custom = crate::Viewport3dOrbit { position: [8.0, -3.0, 5.0], target: [0.0; 3], zoom: 1.25, up: None };
     assert_eq!(dsl::json::from_json_str::<crate::Viewport3dOrbit>(&crate::viewport::scene_camera_json(&custom)).unwrap(), custom);
-}
-
-#[semio_framework_async_macros::async_test]
-async fn fem3d_scene_parts_include_solid_mesh_and_oriented_member_instances() {
-    let doc: Fem3dSnapshot = crate::standards::v1::subsets::any::schema::snapshot::text::parse_dsl(crate::standards::v1::subsets::any::schema::snapshot::text::FEM3D_EXAMPLE_TEXT).expect("example fixture parses");
-    let (meshes_json, instances_json) = fem3d_scene_parts(&doc, None, doc.analysis.deformation_scale, None);
-    assert!(meshes_json.contains("solid-sol1"), "expected a solid- mesh id for the example fixture's solid: {meshes_json}");
-    assert!(instances_json.contains("el-e1"), "expected a single oriented box instance per member (no -{{i}} sphere chain): {instances_json}");
 }
 //#endregion 🎬️SceneRender
 use store::ArtifactStoreOneItemPreparationFactory;

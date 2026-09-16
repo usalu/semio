@@ -561,8 +561,26 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "63d17bb5422a852de3a1df54448b3de861b13c8619f3d48d9221cf8b8a32bf02",
-        "🧬️mutations/🦀️.rs": "1687bc4d22bbd41dd6fb58b74fc154afea2f146104ebb3e324d499514a956837"
+        "🔣️.json": "a199947c1c4478d5c4feae491dbbd77358dbb9ec7b67227ce9398abb995b25a0",
+        "🧬️mutations/🦀️.rs": "2a008dde25d1ebef63f348a1d491dd0360c029af76dfef1034d64dce8334a003"
+      }
+    },
+    "app.energy.model.config.mutation.change-result-field": {
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/🎨️change-result-field/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ChangeResultField": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "7556ace30eead67c43dbf71f3019f31650388e4f39d599e0bd0b87e3eeedb0f8"
       }
     },
     "app.energy.model.config.mutation.change-simulation-settings": {
@@ -581,6 +599,42 @@
       "dependsOn": [],
       "hashes": {
         "🔣️.json": "828cc3d73fbed4a33e763ccd8439c5f3a21692dd3f73cfe4af5c3ee0e08fa9ea"
+      }
+    },
+    "app.energy.model.model3d-viewer-window.config.mutation.set-camera": {
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🧊️model/🎚️config/🧬️schema/🧬️mutations/🎥️set-camera/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "SetCamera": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "d30772e7f2d1f03e6703d0172c667befed3c1db3493ec0fb791d76dff0d723d8"
+      }
+    },
+    "app.energy.model.model3d-window.config.mutation.set-camera": {
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️model/🎚️config/🧬️schema/🧬️mutations/🎥️set-camera/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "SetCamera": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "44040878174c23d2ff8957faf1ab85b97fa9c310d8aa063e8e005120c6ef9f25"
       }
     },
     "app.flow.flow.presence": {
@@ -22808,7 +22862,7 @@
         "💡️inferences/🔣️.json": "f3735539ce7fd0e0f69d8d648f49acdc86f2642dc2f6a9549b04876534e65509",
         "💡️inferences/🛰️.proto": "33a51c49e2700964aa5963eac816286c8908e9a4d15a534e27d8e71ae6a23483",
         "💡️inferences/🟦️.ts": "a2d664bbb2cd11ed170ed952c16862ed1da58fc3bde6b98f99d219bac3d8a5c1",
-        "💡️inferences/🦀️.rs": "1670dbefbf12f476d0bcf3525af69e63b71ba39b913b17f283c2bfb0a4a3bdf0",
+        "💡️inferences/🦀️.rs": "c4b28234744b29000028277a164df644c63fdb9558a95390eb2acd4e45e7210d",
         "📸️snapshot/💾️binary/🟦️.ts": "fe7ec1cab1d254a2a113ea269a6254292a7e00ad39b3ade6ceb09336db0c3814",
         "📸️snapshot/💾️binary/🦀️.rs": "8b84c28921ce36a4940ae999c937adf41018796937da52b31e8886a00a12ee6b",
         "📸️snapshot/📝️text/🔗️.graphql": "d3c9f9600b3d60a93c1550e3d1d25ad6ddd95190f32208734d12fe9c96391964",
@@ -22848,8 +22902,8 @@
         "🧬️mutations/🔗️.graphql": "23716fbae9ee7551b4e6d4952b30f9a39c3a24b2b1760220ded4e81a69bfa30e",
         "🧬️mutations/🔣️.json": "d9e5b81277771d6e41427d041ac34debc3606b17da1ab6aebf84c721dcbaa1e6",
         "🧬️mutations/🛰️.proto": "27926ac5a36b44cf8fa19adcb33f2d0d82f0056a20ba8d672e9d7f443b5d5f1f",
-        "🧬️mutations/🟦️.ts": "becd3c28339d7e9b82a7c6ce64c462d7ff97b7cd3593d41a6a17cc7366fcf1ca",
-        "🧬️mutations/🦀️.rs": "7fed07616ec4548c528d11cfc6f8fda561f6f3f123bae5bc63a38ec2f5a34de9"
+        "🧬️mutations/🟦️.ts": "f878695868408fb461ae50c1ed94f1201469bb108030de9db03da59c62417b0e",
+        "🧬️mutations/🦀️.rs": "a9a4d889be15db55bc7d7cbb351a645c181d85fb90873cba63d6650b5f847aa7"
       }
     },
     "s.cad.cad.mutation.change-reference-hidden": {
@@ -22993,7 +23047,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "e725a82e6c1936f1a83c3120be048351e61f823ffbdc7ce0b517de94d1cecb42"
+        "🔣️.json": "e5242750ef47bd37be696a3e40f5a1c0e29f4f2b9635b77fa2ef9bdcccf526ce"
       }
     },
     "s.cad.cad.mutation.create-shape-model": {
@@ -24259,6 +24313,13 @@
         "s.energy.model.mutation.change-fenestration-surface",
         "s.energy.model.mutation.change-fenestration-u-value",
         "s.energy.model.mutation.change-fenestration-vlt",
+        "s.energy.model.mutation.change-gas-material-gas",
+        "s.energy.model.mutation.change-gas-material-thickness",
+        "s.energy.model.mutation.change-glazing-material-conductivity",
+        "s.energy.model.mutation.change-glazing-material-infrared-emissivity",
+        "s.energy.model.mutation.change-glazing-material-solar-transmittance",
+        "s.energy.model.mutation.change-glazing-material-thickness",
+        "s.energy.model.mutation.change-glazing-material-visible-transmittance",
         "s.energy.model.mutation.change-humidistat-dehumidifying-setpoint-schedule",
         "s.energy.model.mutation.change-humidistat-dehumidifying-throttle-range",
         "s.energy.model.mutation.change-humidistat-humidifying-setpoint-schedule",
@@ -24291,6 +24352,7 @@
         "s.energy.model.mutation.change-lighting-gain-zone",
         "s.energy.model.mutation.change-material-conductivity",
         "s.energy.model.mutation.change-material-density",
+        "s.energy.model.mutation.change-material-roughness",
         "s.energy.model.mutation.change-material-solar-absorptance",
         "s.energy.model.mutation.change-material-specific-heat",
         "s.energy.model.mutation.change-material-thermal-absorptance",
@@ -24464,6 +24526,8 @@
         "s.energy.model.mutation.rename-construction",
         "s.energy.model.mutation.rename-electrical-load-center",
         "s.energy.model.mutation.rename-fenestration",
+        "s.energy.model.mutation.rename-gas-material",
+        "s.energy.model.mutation.rename-glazing-material",
         "s.energy.model.mutation.rename-material",
         "s.energy.model.mutation.rename-model",
         "s.energy.model.mutation.rename-plant-loop",
@@ -24478,6 +24542,7 @@
         "s.energy.model.mutation.reorder-construction-layers",
         "s.energy.model.mutation.replace-airflow-network",
         "s.energy.model.mutation.replace-daily-schedule-hourly-values",
+        "s.energy.model.mutation.replace-fenestration-vertices",
         "s.energy.model.mutation.replace-setpoint-manager-kind",
         "s.energy.model.mutation.replace-shading-surface-vertices",
         "s.energy.model.mutation.replace-surface-vertices",
@@ -24536,11 +24601,11 @@
         "🧬️mutations/📝️text/🛰️.proto": "611e9eb8ea1a83954d20dfab3f8d3fa299a7527f8da04ff7b1962d11ab3ed999",
         "🧬️mutations/📝️text/🟦️.ts": "fc86130a9fef173628db7aff8624d13a2298339c5f2327707feaba33704d78e9",
         "🧬️mutations/📝️text/🦀️.rs": "3d520991ba971e603cb080e82d50a6129342f83cabb612a5f04a9602a8c4770f",
-        "🧬️mutations/🔗️.graphql": "560e0c1cf856ce8121a893d18d1bd7da827b755dad6f9936abad26a5eafdf784",
-        "🧬️mutations/🔣️.json": "9e7fd25a6e7e2a0c402acd29d593ca638f7f46dd529505e8d59ba5c6463c01cb",
-        "🧬️mutations/🛰️.proto": "af9117eea5862cc535615dd7f2e29d393b8d2a64499050cfeb177500e5f7732b",
-        "🧬️mutations/🟦️.ts": "bc41171e670ef2bba6857f027bd26882abf6d6f7f885a7ad1ae22c96387e06e3",
-        "🧬️mutations/🦀️.rs": "c18ebaeefea48f073e21369e95f10b1bb00ef7e72db2ee9082e1a5ed814d0765"
+        "🧬️mutations/🔗️.graphql": "0f21884d69ca0d46c05109512319f1310c1d5e8aa0cc598cfa0df0549a2dcb86",
+        "🧬️mutations/🔣️.json": "46b1c6ca3c9230d4428ffd47befe3216218b0266458230546b98f6b1288dccb0",
+        "🧬️mutations/🛰️.proto": "9981b1f76ef7604b855a2ebbd4652f4d0ed638bb228f6baa02a7aba1c23dd5bb",
+        "🧬️mutations/🟦️.ts": "233703bfae362e06fbf32ab23323aaf870d101e98bb934429695815b716076d4",
+        "🧬️mutations/🦀️.rs": "e7b949a122b8b010fadfe329c58ccdc7c434cf9951c330307ba988789bbadcba"
       }
     },
     "s.energy.model.mutation.add-air-loop-terminal-zone": {
@@ -25425,6 +25490,132 @@
         "🔣️.json": "9b3d5a12abe912a7e8d0884ccdddd021974e7f58196301456abf133d1462f62e"
       }
     },
+    "s.energy.model.mutation.change-gas-material-gas": {
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟤️change-gas-material-gas/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ChangeGasMaterialGas": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "f6e77d6418b2a31dd9382fcb008f0718dce4f757263324a25cbf0210ef59f247"
+      }
+    },
+    "s.energy.model.mutation.change-gas-material-thickness": {
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟣️change-gas-material-thickness/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ChangeGasMaterialThickness": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "7dc11fbcd3650097f952ebe8f5322ee846504b4edbacdc254aa77d6bb72cce8b"
+      }
+    },
+    "s.energy.model.mutation.change-glazing-material-conductivity": {
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟠️change-glazing-material-conductivity/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ChangeGlazingMaterialConductivity": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "813b45d44612da4b906917942c977bbf65ccbe8cb34ab43f395758ae3c021608"
+      }
+    },
+    "s.energy.model.mutation.change-glazing-material-infrared-emissivity": {
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🩻️change-glazing-material-infrared-emissivity/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ChangeGlazingMaterialInfraredEmissivity": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "a23fcabe3226ca3161238f5529345d3b19ad7934cc238e439129a0838cce2e1a"
+      }
+    },
+    "s.energy.model.mutation.change-glazing-material-solar-transmittance": {
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟡️change-glazing-material-solar-transmittance/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ChangeGlazingMaterialSolarTransmittance": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "b64f44196fb8f85bf11708f4aa7d2a17b987e02be644dfefb34dbcf806628617"
+      }
+    },
+    "s.energy.model.mutation.change-glazing-material-thickness": {
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔷️change-glazing-material-thickness/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ChangeGlazingMaterialThickness": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "c660a5e3f7ee6958925a33f0e1f40de60380695bc8bec478603e902d8d606ea8"
+      }
+    },
+    "s.energy.model.mutation.change-glazing-material-visible-transmittance": {
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🥽️change-glazing-material-visible-transmittance/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ChangeGlazingMaterialVisibleTransmittance": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "835471309bdf8e2e6d08e04aef88ba0a8b59d9a4d9db7d59a7126a079cb22a90"
+      }
+    },
     "s.energy.model.mutation.change-humidistat-dehumidifying-setpoint-schedule": {
       "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏝️change-humidistat-dehumidifying-setpoint-schedule/🧬️schema",
       "level": "mutation-leaf",
@@ -25999,6 +26190,24 @@
       "dependsOn": [],
       "hashes": {
         "🔣️.json": "5ba27dfd271dc9adf35a8146f8c5ad67827f2b4257320485c1cfb3243a9c6704"
+      }
+    },
+    "s.energy.model.mutation.change-material-roughness": {
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗻️change-material-roughness/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ChangeMaterialRoughness": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "65a79497133dd28abe8e8995b799f5b2f9f7c8c42c547639d59f29fb67b6a8c2"
       }
     },
     "s.energy.model.mutation.change-material-solar-absorptance": {
@@ -29115,6 +29324,42 @@
         "🔣️.json": "6513effdb810775bd06fb526045b78e451743ba1bf3eeb27260e3fd0d2e8ed17"
       }
     },
+    "s.energy.model.mutation.rename-gas-material": {
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔘️rename-gas-material/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "RenameGasMaterial": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "9c844d934644fe8f5ad7db25e23b58b7530e353796c69ab8d04628584963a6bf"
+      }
+    },
+    "s.energy.model.mutation.rename-glazing-material": {
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟢️rename-glazing-material/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "RenameGlazingMaterial": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "83d92820355ec8eaadc317cea19108caaf03a60994159dc292cb6e8080f3f8d5"
+      }
+    },
     "s.energy.model.mutation.rename-material": {
       "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪧️rename-material/🧬️schema",
       "level": "mutation-leaf",
@@ -29365,6 +29610,24 @@
       "dependsOn": [],
       "hashes": {
         "🔣️.json": "0ab947cf97e44824600bb16d901ef78f2ab55109eb6d599a36463f380a2438ea"
+      }
+    },
+    "s.energy.model.mutation.replace-fenestration-vertices": {
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔶️replace-fenestration-vertices/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ReplaceFenestrationVertices": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "fa38d13727db44ae294627023e5600a1a020ece853fbbcf797e777dc7b7b96eb"
       }
     },
     "s.energy.model.mutation.replace-setpoint-manager-kind": {
@@ -30323,6 +30586,24 @@
         "🔣️.json": "4f4dbc284606026507c7f0948da1ffa6a0f96e3867dc17dc55de708c21135a5c"
       }
     },
+    "s.fem.3d.1.load.mutation.change-load-case-name": {
+      "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🏷️change-load-case-name/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ChangeLoadCaseName": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "0fb5a0c2f0d9ae1081a7535d6d1b00c42d339244bdceacba97a6c2655d51eda5"
+      }
+    },
     "s.fem.3d.1.load.mutation.change-load-case-self-weight": {
       "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/⚖️change-load-case-self-weight/🧬️schema",
       "level": "mutation-leaf",
@@ -30429,6 +30710,42 @@
       "dependsOn": [],
       "hashes": {
         "🔣️.json": "3857103b657c8eff975ea28bfde2ddc546464c9951cbca9bdd5d4576c4d53787"
+      }
+    },
+    "s.fem.3d.1.load.mutation.replace-combination": {
+      "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🔁️replace-combination/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ReplaceCombination": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "137ddedd3d84d10a5fe7a1fdcb8c5d1862448dedc67834295240e6595142d64d"
+      }
+    },
+    "s.fem.3d.1.load.mutation.replace-load": {
+      "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🔁️replace-load/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ReplaceLoad": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "2c90bc42d2ba5f9ca1c0d645a1ba5a6387c15cc9b5dfc6f1c36d98e807e50a7d"
       }
     },
     "s.fem.3d.1.material": {
@@ -30584,7 +30901,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "b55da2d49257a01a31f5206a41f55de1c82bad2bf93952a1cacb4ba9ea4c76b2"
+        "🔣️.json": "983163d16f41a4dfd711a6a5b6ca24a8f2b386934444b8e608f397ea8ea71f72"
       }
     },
     "s.fem.3d.1.mesh.mutation.delete-element": {
@@ -30677,6 +30994,24 @@
         "🔣️.json": "cd77977623c9a9037a6316169e6a8364b064786527f2b06431024229937f1921"
       }
     },
+    "s.fem.3d.1.mesh.mutation.replace-node": {
+      "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🔁️replace-node/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ReplaceNode": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "2416f526e152750823a679386d04d66082513151e8ed2b046b4ee947b6d0e867"
+      }
+    },
     "s.fem.3d.1.mesh.mutation.replace-section": {
       "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/📏️replace-section/🧬️schema",
       "level": "mutation-leaf",
@@ -30710,7 +31045,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "f988cf1dfee2adfa725f31273b4189290ce461c0aa6ded750f171b69c655daf4"
+        "🔣️.json": "fffc55feb43b43bd543a21a014ee354b90cfafa07c96bec1beb47d23eb3f7644"
       }
     },
     "s.fem.fem2d": {
@@ -30906,7 +31241,7 @@
         "🧬️mutations/🔣️.json": "1f93af3d0ba4e930b9cdfbb32ae55c67c0d814093e7bd5f5a87bc5d74168853d",
         "🧬️mutations/🛰️.proto": "b439800e8733994ae845234d1188874c12ac7a62e59d8eedc578acb84bf825b3",
         "🧬️mutations/🟦️.ts": "e3ab0570e80b45ba2906df3b3a63274dc254a765b4044a12136d3a4f8af890dc",
-        "🧬️mutations/🦀️.rs": "9f73aabb93339fa3d36114dc2e3b2db4edbcd1527ab14e583e6538d1aaab705b"
+        "🧬️mutations/🦀️.rs": "6db4820e6ca5c09dbcc2592594ba10cf5e7d02ce4a82331a5bbec4b67e1d3162"
       }
     },
     "s.fem.fem3d": {
@@ -31024,12 +31359,15 @@
         "s.fem.3d.1.boundary.mutation.delete-support",
         "s.fem.3d.1.boundary.mutation.replace-support",
         "s.fem.3d.1.load.mutation.add-load",
+        "s.fem.3d.1.load.mutation.change-load-case-name",
         "s.fem.3d.1.load.mutation.change-load-case-self-weight",
         "s.fem.3d.1.load.mutation.create-combination",
         "s.fem.3d.1.load.mutation.create-load-case",
         "s.fem.3d.1.load.mutation.delete-combination",
         "s.fem.3d.1.load.mutation.delete-load-case",
         "s.fem.3d.1.load.mutation.remove-load",
+        "s.fem.3d.1.load.mutation.replace-combination",
+        "s.fem.3d.1.load.mutation.replace-load",
         "s.fem.3d.1.material.mutation.create-material",
         "s.fem.3d.1.material.mutation.delete-material",
         "s.fem.3d.1.material.mutation.replace-material",
@@ -31042,6 +31380,7 @@
         "s.fem.3d.1.mesh.mutation.delete-section",
         "s.fem.3d.1.mesh.mutation.delete-solid",
         "s.fem.3d.1.mesh.mutation.replace-element",
+        "s.fem.3d.1.mesh.mutation.replace-node",
         "s.fem.3d.1.mesh.mutation.replace-section",
         "s.fem.3d.1.mesh.mutation.replace-solid"
       ],
@@ -31068,10 +31407,10 @@
         "📸️snapshot/🔗️.graphql": "c4586bd8fa4ff667b96c90f92773286a2653f401be2d616b21947f13f7112409",
         "📸️snapshot/🔣️.json": "89540ac707725c17342ea7997f2f5105ee575d96093bce7169db0d810a4fd44c",
         "📸️snapshot/🛰️.proto": "9e13a337b77c7dcc792731c58b750912a091b416f36c1041f0b84b99e974f4ee",
-        "📸️snapshot/🟦️.ts": "3aae2007b87e65a937a0ddda9fd9ebc4ba3e2fefa9c0a63400efd5aeb63e8210",
+        "📸️snapshot/🟦️.ts": "970e4af07fe8fe59019696b63fd6e4714acc2559bf3cfe876663b4a5d341e232",
         "📸️snapshot/🦀️.rs": "c9070c5bd42afba665e6e8e892350eaace8fa495cdab0574f8f915847d27bbb8",
-        "🔗️.graphql": "80e6314e400245bfeb502afbf7c0f6af347c6de20c42a69c6926c79ae2e7b5eb",
-        "🔣️.json": "f1313e520f78d26b630d5c8756d377d62d29b41dc4f9c7c37002144eb316df62",
+        "🔗️.graphql": "71f15841b8617144edb3bd679a9af4d09ec525d54cde32402c65f28869b915fa",
+        "🔣️.json": "e21a2c2be6cb37435f6a9f3eff558895f5b2bd525073f7dab62902144c2eeada",
         "🔺️diff/💾️binary/🟦️.ts": "bb4be56865a4556bff2616783f1ff938651daf66acc8517b3b7fd4d859a27112",
         "🔺️diff/💾️binary/🦀️.rs": "5d3619fd64fecaba8c6c8216e80578a9d3b5bf6c6f1bd043d3070045c6f82eb6",
         "🔺️diff/📝️text/🔗️.graphql": "5bb1c9295cbf922ab16362b0aef36a3b049a382f242c08fae4f9fabc78b45756",
@@ -31082,10 +31421,10 @@
         "🔺️diff/🔗️.graphql": "86d0215b82b514f72fbe6319091c5a06da99ebd00ee3b7714eadfd516ec2209e",
         "🔺️diff/🔣️.json": "c6b00db827ae1df6bb3bd14ca35277dab88cc3adc6f2c71f386dc0b308cbefc8",
         "🔺️diff/🛰️.proto": "206d010294f45058b255bb5cd1187844036a8d6c318a32417b2c352376dc54d6",
-        "🔺️diff/🟦️.ts": "662497c32b79a42b0c674ab09c7ccac5a26bf7921d752380056b6ac25e298a35",
+        "🔺️diff/🟦️.ts": "98af725cb744cdcc1ed09176bde93ab6e3064e678c9e7d08b5230b6acbe36603",
         "🔺️diff/🦀️.rs": "70cbe9fa4ce90756afcc35f17968b9efdddb2cd6f954827c13f623aa03b5d683",
-        "🛰️.proto": "c4d284f6b087e6a01260d4ff543722416c4a63b6472c9ac37debd7243388dfc4",
-        "🟦️.ts": "1fb39883da94cdb794a3d06e47858a8fd1507264b957b76a2fdcc8c14a1107fd",
+        "🛰️.proto": "1c1cc9338449a20ba8c0fb46decfae1726f64f199a4274d683629b25db9a7d6c",
+        "🟦️.ts": "24a3a9beb16c61d20a811f33068a7dada84d8c434267448a10dfd726732f86bd",
         "🦀️.rs": "c62614354acc601b2fce537863c256b66ce026babc3b3db5b91ab5c57bc3112b",
         "🧬️mutations/💾️binary/🟦️.ts": "0079bc9aa6c632ef68f7d3c2321ea6635288d628a93e0a0da574af8af9acba63",
         "🧬️mutations/💾️binary/🦀️.rs": "3870b5e23b55d76e09edf7491fe79899b66d9ff65e3cae656b2b1443c1bbb991",
@@ -31095,10 +31434,10 @@
         "🧬️mutations/📝️text/🟦️.ts": "0f8938de59b35fb09f510307f7f5d5860d2f339d90462d21d951d5d0365408e5",
         "🧬️mutations/📝️text/🦀️.rs": "23ba1914eab6b67e55bf175bc431c18c2e9e335d376e96d14d9db632a72c4d2e",
         "🧬️mutations/🔗️.graphql": "bc18a7bb1677d4561a067a3f7d48b76676974a5072f369a0d808f45526b2a481",
-        "🧬️mutations/🔣️.json": "e26e5b05becc07d2ddb1df934b6321a76aa015368576fd644302ccebb5374e8b",
+        "🧬️mutations/🔣️.json": "b6ef14c1d0ad33655e4c247690fb4b8301b62f8003acf1c64070b7588f845cde",
         "🧬️mutations/🛰️.proto": "01c641f4ba36189272de4550434a0ad4001a23e057f1831b93f1d418d52af4a7",
-        "🧬️mutations/🟦️.ts": "bfc14523184d5a26fa210fdf335aaf3868501e41e490041105c8bf0b5346ebd7",
-        "🧬️mutations/🦀️.rs": "0cbd4b6504a8ea31e38370c0418a5b418fef7c1e29bbb78c9416a29721f89b66"
+        "🧬️mutations/🟦️.ts": "69355f2796af105954750ca9192600616d7241ab97a6eac197fb3a1c42ac5e76",
+        "🧬️mutations/🦀️.rs": "9af48b599877e773476f7033108dbb9fe3b6f6c410da1c969555c009b08075ef"
       }
     },
     "s.flow": {
@@ -45178,19 +45517,19 @@
         "💡️inferences/🔣️.json": "843e93cf854d8007d883d89a1c4da407e0e54a977f7a02891ebb9dba63ea971c",
         "💡️inferences/🛰️.proto": "40166a8ff91665b18187bb7a91f3e1f06eb93a65939b912af7e7011d7867a342",
         "💡️inferences/🟦️.ts": "f308c071425e74740d50b06d96737faec1a0c8d257bcfeb42a2bc6770159369a",
-        "💡️inferences/🦀️.rs": "405a2f3ac6c2d7d74fb516d69586e939dcb4cd968aa29b406103092ba3ced9ef",
+        "💡️inferences/🦀️.rs": "d0f93315154c96c93e1baa42ab14e6eab41eb710269497f5cb8320e790ef6441",
         "📸️snapshot/💾️binary/🟦️.ts": "ef65ad336f54fb5e798687ebe5adda84f7d69c4114b99123c92c1efd6f206acf",
         "📸️snapshot/💾️binary/🦀️.rs": "c458c798a42e6a0a2584c7df204ebb2574cf94d40694041fa02685981d862bc9",
         "📸️snapshot/📝️text/🔗️.graphql": "9dc83e5f0e6e5a2de706167b6f2f087490c7794a5238808880a3d31ac7c8fd51",
         "📸️snapshot/📝️text/🔣️.json": "82ede95b8e768b513c32a13ed9225d15b6fd8ad7a1486fc7f3f37763f3b22956",
         "📸️snapshot/📝️text/🛰️.proto": "01344ddd1858c57145f8a05bc7e0e59d2ea5e5e6895734050f3975671255c5e9",
         "📸️snapshot/📝️text/🟦️.ts": "7c63ee9978acaa90fa68557aa9b9584d08d70d700ee791fccbe4b3c8c60dfde7",
-        "📸️snapshot/📝️text/🦀️.rs": "6aebad0541f14ac2f63429332ef5fcd78d17841d7eaacea73ab5f1cbdd50fb80",
+        "📸️snapshot/📝️text/🦀️.rs": "67abbdc46f1e0bac92154843fda3f3093e3c1591789e9f2a268aa65f5b2a6e63",
         "📸️snapshot/🔗️.graphql": "09fcfda7aeaccc55a8356e85660be4e7ba0a712304764662d64cc08ae1eaa80a",
         "📸️snapshot/🔣️.json": "72756e28782df4a3ff02c355fac1b53aae17f5ded1207f7956ba989cad8f4c90",
         "📸️snapshot/🛰️.proto": "a8ef2a8ad55321584a0e3992ed38739ac631a0be6ac58b9834251cd538acc46c",
         "📸️snapshot/🟦️.ts": "d9de5db13088f2bea8607e57fe4c4ec01edd98eafb29d24b50aa3254a987304d",
-        "📸️snapshot/🦀️.rs": "54af5419355c8742a69be850255e3b977663c324e010bdad0b8308fa2443603d",
+        "📸️snapshot/🦀️.rs": "260ae97044d2ace0c9d9c2df9f1ed9aa0afe0569afd7ada344991a98c024c533",
         "🔗️.graphql": "9e59b447cb2d503a11b65e25064d0b4ff6c58b1cc394973ef080ecc6075fdb03",
         "🔣️.json": "7c4dccb75bacacf39257ca5ffaa16ba8870b6c89811ba8cc654a1fc228626b61",
         "🔺️diff/💾️binary/🟦️.ts": "62f24057a16b5162ae1d825acc2a854dbab278d31c9143af3a949c0ecc2a8e3e",
@@ -45207,9 +45546,9 @@
         "🔺️diff/🦀️.rs": "11e339e97028610b84e8453213051bcb12c3f84ea30af019168fb99700f6b291",
         "🛰️.proto": "c5af0d5a049abb6be745f3b61b9ad411a1a51d193dcfeb915c70331318edecc3",
         "🟦️.ts": "1e7970e53b997b0b77883df51bdf089d329a100538f5cbebc512114990078202",
-        "🦀️.rs": "5de8cca76c5323f85020bf359ba81fe34b8a149864ec40ef7a0054bdc547fa9c",
+        "🦀️.rs": "79378d7ba7979c45efaf291dee7e58a0c3fb369883fb0472062b795834b7425e",
         "🧬️mutations/💾️binary/🟦️.ts": "2a18c78c9bb73193dc51998f0b7052bb13328dac803470c60b8c7053bf299960",
-        "🧬️mutations/💾️binary/🦀️.rs": "c7aa1cca7c0e9e38c01581ef02e4f91d8054c2910a8243679f564a5ea35a51b6",
+        "🧬️mutations/💾️binary/🦀️.rs": "ae3389f33b5523e01f15d547faf9f111d081e7e630eaaab11bc4e8e3c29c0746",
         "🧬️mutations/📝️text/🔗️.graphql": "7559c1d9c99dc1a59b9bdadf388c325fa2cbef1977be2533d3232872ccfd304f",
         "🧬️mutations/📝️text/🔣️.json": "7bc4c164388adb091254527a86fa1872be120baaa43335919a644354a31f2778",
         "🧬️mutations/📝️text/🛰️.proto": "10ac3c0b461fc79f9ababee16366449e75a1b7da33c0263219400927b1a86f63",
@@ -50836,7 +51175,7 @@
         "🔺️diff/🦀️.rs": "f9428848cde12b556fa41ba11235864292acb44e42e969d62212089898d619d9",
         "🛰️.proto": "970679c95841d207af2c1d535be1475b4fbc85e78490f2f6a6c7ff3171d98f3d",
         "🟦️.ts": "9ebcdae6e2026d37e8db61cde1f7e6597beeb413e7bab2bf3a6f5249912f6578",
-        "🦀️.rs": "052698ca9045d17e1355f8b744591884c5a44c132cfb6e7bad929ca367cb07af",
+        "🦀️.rs": "e09e8d3a5e3103c2dd4e871d01f4381738ce7aad3b3e5867990b3b4b52e58423",
         "🧬️mutations/💾️binary/🦀️.rs": "5dd02b8dcd6921adb21ee73ec71c2f85d311be0ee2d9e7b0039b70f0d375c135",
         "🧬️mutations/📝️text/🦀️.rs": "b92022009213f063317494ab8f7574dffba5562690550318d370436345893a0c",
         "🧬️mutations/🔗️.graphql": "30b623e753eb96e51e42a331e579f11c3d6e42b11a518ff96161f48d6f5f7938",

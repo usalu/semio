@@ -377,6 +377,51 @@ fn fem3d_production_numerical_child_solid_reaction_modal_and_close_are_cursorize
     assert!(has_modal);
 }
 
+/// 🏠️ LAW (recorded limit, not a target): the mounted numerical child REFUSES the document the
+/// editor boots on — the demo frame with its meshed slab is 48 analysis nodes, whose `(node, dof)`
+/// order alone outgrows the 4 KiB `MOUNTED_OWNER_PAGE_BYTES` owner page — and it refuses at
+/// `PrepareAssembly` with the engine's `Singular` wording, which is what the browser console's
+/// `fem3d session fault: stiffness matrix is singular` line means. The model window then draws the
+/// undeformed scene and the results window solves the very same document through the synchronous
+/// `fem3d_solve_all` path, which has no such page cap. Pinned here so a cap raise flips this law on
+/// purpose instead of the fault being read as a mechanism in the model.
+#[test]
+fn fem3d_production_numerical_child_refuses_the_demo_at_the_mounted_owner_page() {
+    let doc = crate::standards::v1::subsets::any::schema::snapshot::text::fem3d_boot_snapshot();
+    assert!(!doc.solids.is_empty(), "the demo carries a meshed slab");
+    let (analysis_nodes, _) = crate::fem3d_engine::meshing::mesh_solids(&doc).expect("the demo meshes");
+    assert!(analysis_nodes.len() * 6 * size_of::<(String, Dof)>() > 4_096, "the demo's dof order outgrows the mounted owner page — the premise of this law");
+    let operation = semio_framework_job::Operation::new(OperationId(31), RevisionId(7), Generation(3), 5);
+    let mut child = Fem3dNumericalChild::new();
+    let mut backing = Fem3dBackingCredit::new();
+    let mut fields = Fem3dSolverView::new(freshness(3), doc.nodes.len());
+    let cancel = semio_framework_job::root_cancel_token();
+    let mut preview = 0;
+    let mut terminal = false;
+    let mut failure = None;
+    for _ in 0..4_000_000 {
+        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), cancel.clone(), semio_framework_job::default_now_us, &mut preview);
+        match child.step(&doc, &mut fields, &mut backing, freshness(3), operation, &mut context) {
+            Ok(complete) => terminal = complete,
+            Err(fault) => failure = Some((child.stage, String::from_utf8_lossy(&fault).into_owned())),
+        }
+        if terminal || failure.is_some() {
+            break;
+        }
+    }
+    for _ in 0..200_000 {
+        if child.close_step(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES.max(WORLD3D_SNAPSHOT_PAGE_BYTE_CAPACITY)).0 {
+            break;
+        }
+    }
+    assert!(!terminal, "the mounted child does not reach the demo's terminal under the 4 KiB owner page");
+    let (stage, detail) = failure.expect("the mounted child refuses the demo");
+    assert_eq!(stage, Fem3dNumericalStage::PrepareAssembly, "the refusal is the assembly construction's owner-page reservation");
+    assert!(detail.contains("singular"), "the refusal carries the engine's Singular wording: {detail}");
+    let results = crate::fem3d_engine::fem3d_solve_all(&doc).expect("the synchronous path solves the same document");
+    assert!(results.contains_key("dead"), "the results window's path is not capped");
+}
+
 #[test]
 fn fem3d_production_field_correspondence_rejects_sparse_and_zero_aliases() {
     let scalar = Fem3dSolverScalar { displacement: [1.0, -2.0, 3.0], residual: [4.0, -5.0, 6.0], reaction: [7.0, -8.0, 9.0], contour: 3.0, mode_shape: [0.25, -0.5, 0.75], eigen_estimate: 17.0 };

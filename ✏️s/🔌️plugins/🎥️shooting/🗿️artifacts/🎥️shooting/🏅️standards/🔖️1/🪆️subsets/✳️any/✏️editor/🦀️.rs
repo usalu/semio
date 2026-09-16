@@ -22,7 +22,8 @@ use semio_framework::{ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::{
-    tree_item_with_action, ActionArgDef, ActionArgOption, ActionDefinition, ActionKind, AppIo, AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactView, ConfigView, Dialect, DraftView, DslValue,
+    tree_item_with_action, ActionArgDef, ActionArgOption, ActionDefinition, ActionKind, AppIo, AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract,
+    ArtifactToolPublicationLane, ArtifactView, ConfigView, Dialect, DraftView, DslValue,
     Editor, EditorApp, Emit, Fault, FaultCode, FaultOrigin, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractiveJobClassification, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm,
     MediaPayload, MediaType, MergeMode, NoDraft, NoDraftMutation, OsMediaCapability, SelectionMethod, SelectionMode, SelectionSpec, UtilityDefinition, WindowEngagement, WindowMeasure,
 };
@@ -252,9 +253,8 @@ semio_framework_plugin::app_commands! {
         "saveDownload" as "save-download" => save_download::SaveDownload,
         "loadRequest" as "load-request" => load_request::LoadRequest,
         "importAssetRequest" as "import-asset-request" => import_asset_request::ImportAssetRequest,
-        // 🎯️ command_id() is overridden below (payload-dependent: exportActiveShot/exportAllShots) — the
-        // row literal here is never actually consulted, see `ShootingPlayApp::command_id`.
-        "exportActiveShot" as "export-shots" => export_shots::ExportShots,
+        "exportActiveShot" as "export-active-shot" => export_active_shot::ExportActiveShot,
+        "exportAllShots" as "export-all-shots" => export_all_shots::ExportAllShots,
     }
 }
 
@@ -262,13 +262,170 @@ semio_framework_plugin::app_commands! {
 // payload module is imported here under its own flat name.
 use asset::{add_asset, import_asset, import_asset_request, patch_assets, set_active_asset};
 use camera::{load_saved_camera, save_camera, set_camera, set_camera_draft_label, set_shot_camera};
-use export::export_shots;
+use export::{export_active_shot, export_all_shots};
 use document::{import_snapshot_json, load_request, reset_snapshot, save_download, set_active_example};
 use gumball::{rotate_selection, scale_selection, translate_selection};
 use scene::{set_ambient_intensity, set_material_roughness, set_shadow_enabled, set_sun_azimuth, set_sun_elevation, set_sun_intensity, toggle_sun};
 use selection::{set_center_model, set_shot_selection, world_pointer_down, world_pointer_move};
 use shot::{add_shot, patch_shots, set_active_shot, set_active_shot_format, set_active_shot_label, set_active_shot_shape};
 //#endregion 🔖️Commands
+
+//#region 🔖️ActionBridge
+/// 🎯️ Host-action bridge into the closed `ShootingCommand` enum (ticket
+/// 26/09/16/SHOOTING-PLUGIN-END-TO-END). The React/wgpu shells still speak `{action, args}` with
+/// camelCase argument keys and the host's control contracts (`value` for sliders/selects/inputs,
+/// `pressed` for toggles, `{mode, ids, dx…}` for the gumball, `{windowId, camera}` for the viewport);
+/// every `🎮️commands/*` payload derives `FromValue` over its own snake_case field names, so this
+/// boundary folds the keys, applies the per-verb aliases and decodes — the default trait impl refuses
+/// every app action outright, which left every panel/measure/viewport gesture dead in the shell.
+mod args_bridge {
+    use super::*;
+    use semio_framework_plugin::{FaultCode, FaultOrigin};
+
+    fn snake(key: &str) -> String {
+        let mut out = String::with_capacity(key.len() + 4);
+        for ch in key.chars() {
+            if ch.is_ascii_uppercase() {
+                out.push('_');
+                out.push(ch.to_ascii_lowercase());
+            } else {
+                out.push(ch);
+            }
+        }
+        out
+    }
+
+    fn put(entries: &mut Vec<(String, DslValue)>, key: &str, value: DslValue) {
+        entries.retain(|(existing, _)| existing != key);
+        entries.push((key.to_string(), value));
+    }
+
+    /// 🔢️ The host's JSON round trip turns every integer into `Number::Float`; the `u64`/`i64` codecs
+    /// decode EXACT integers only, so whole finite floats get their integer variant back (`f64` fields
+    /// accept any `Number` variant, so nothing else changes).
+    fn integral(value: DslValue) -> DslValue {
+        match value {
+            DslValue::Number(dsl::Number::Float(float)) if float.is_finite() && float.fract() == 0.0 && float.abs() < 9.007_199_254_740_992e15 => {
+                if float >= 0.0 { DslValue::Number(dsl::Number::UInt(float as u64)) } else { DslValue::Number(dsl::Number::Int(float as i64)) }
+            }
+            DslValue::Array(items) => DslValue::Array(items.into_iter().map(integral).collect()),
+            DslValue::Object(entries) => DslValue::Object(entries.into_iter().map(|(key, value)| (key, integral(value))).collect()),
+            other => other,
+        }
+    }
+
+    /// 📝️ Prints a host control value into the `String` field the patch verbs carry (`"512"`, `"true"`,
+    /// or the text itself) — the reducers re-parse per field.
+    fn stringify(value: DslValue) -> DslValue {
+        match value {
+            DslValue::String(_) => value,
+            DslValue::Null => DslValue::String(String::new()),
+            other => DslValue::String(dsl::json::to_json_string(&other)),
+        }
+    }
+
+    /// 🔁️ Snake-cases every key of `args`, applies `aliases` (snake_case source → destination, first
+    /// present source wins and never overwrites a present destination) and seeds `defaults` for keys
+    /// still absent.
+    fn fold(args: Option<&DslValue>, aliases: &[(&str, &str)], defaults: &[(&str, DslValue)]) -> DslValue {
+        let mut entries: Vec<(String, DslValue)> = Vec::new();
+        if let Some(DslValue::Object(object)) = args {
+            for (key, value) in object {
+                put(&mut entries, &snake(key), integral(value.clone()));
+            }
+        }
+        for (from, into) in aliases {
+            if entries.iter().any(|(key, _)| key == into) {
+                continue;
+            }
+            if let Some((_, value)) = entries.iter().find(|(key, _)| key == from).cloned() {
+                put(&mut entries, into, value);
+            }
+        }
+        for (key, value) in defaults {
+            if !entries.iter().any(|(existing, _)| existing == key) {
+                entries.push(((*key).to_string(), value.clone()));
+            }
+        }
+        DslValue::Object(entries)
+    }
+
+    /// 📷️ The viewport nests its pose under `camera` (`worldCameraSetCameraDispatchArgs`); a flat
+    /// `{position, target, …}` payload is admitted as the pose itself.
+    fn nest_camera(mut folded: DslValue) -> DslValue {
+        if let DslValue::Object(entries) = &mut folded {
+            if !entries.iter().any(|(key, _)| key == "camera") {
+                let pose = DslValue::Object(entries.iter().filter(|(key, _)| matches!(key.as_str(), "position" | "target" | "zoom" | "fov" | "up" | "projection")).cloned().collect());
+                entries.push(("camera".into(), pose));
+            }
+        }
+        folded
+    }
+
+    fn with_text_value(mut folded: DslValue) -> DslValue {
+        if let DslValue::Object(entries) = &mut folded {
+            if let Some(slot) = entries.iter_mut().find(|(key, _)| key == "value") {
+                slot.1 = stringify(slot.1.clone());
+            }
+        }
+        folded
+    }
+
+    fn decode<T: dsl::FromValue>(action: &str, value: DslValue) -> Result<T, Fault> {
+        T::from_value(value).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("app.command.invalid-args"), format!("shooting action '{action}' arguments do not decode: {error}")))
+    }
+
+    pub fn command_from_action(action: &str, args: Option<&DslValue>) -> Result<ShootingCommand, Fault> {
+        const IDS: &[(&str, &str)] = &[("ids", "asset_ids"), ("asset_id", "asset_ids")];
+        const SHOT_IDS: &[(&str, &str)] = &[("ids", "shot_ids"), ("shot_id", "shot_ids")];
+        const PRESSED: &[(&str, &str)] = &[("pressed", "value")];
+        let zero = || DslValue::Number(dsl::Number::Float(0.0));
+        let one = || DslValue::Number(dsl::Number::Float(1.0));
+        let text = |value: &str| DslValue::String(value.into());
+        let plain = || fold(args, &[], &[]);
+        Ok(match action {
+            "importSnapshotJson" => ShootingCommand::ImportSnapshotJson(decode(action, fold(args, &[("value", "json"), ("document", "json")], &[]))?),
+            "setActiveExample" => ShootingCommand::SetActiveExample(decode(action, fold(args, &[("id", "example_id"), ("value", "example_id")], &[("example_id", text(SHOOTING_EXAMPLE_DEFAULT_ID))]))?),
+            "setActiveShot" => ShootingCommand::SetActiveShot(decode(action, fold(args, &[("value", "shot_id"), ("id", "shot_id")], &[]))?),
+            "setActiveAsset" => ShootingCommand::SetActiveAsset(decode(action, fold(args, &[("value", "asset_id"), ("id", "asset_id")], &[]))?),
+            "setShotCamera" => ShootingCommand::SetShotCamera(decode(action, nest_camera(fold(args, &[("id", "shot_id")], &[])))?),
+            "saveCamera" => ShootingCommand::SaveCamera(decode(action, plain())?),
+            "setSunAzimuth" => ShootingCommand::SetSunAzimuth(decode(action, plain())?),
+            "setSunElevation" => ShootingCommand::SetSunElevation(decode(action, plain())?),
+            "setSunIntensity" => ShootingCommand::SetSunIntensity(decode(action, plain())?),
+            "setAmbientIntensity" => ShootingCommand::SetAmbientIntensity(decode(action, plain())?),
+            "setMaterialRoughness" => ShootingCommand::SetMaterialRoughness(decode(action, plain())?),
+            "setShadowEnabled" => ShootingCommand::SetShadowEnabled(decode(action, fold(args, PRESSED, &[]))?),
+            "toggleSun" => ShootingCommand::ToggleSun(decode(action, fold(args, PRESSED, &[]))?),
+            "setActiveShotLabel" => ShootingCommand::SetActiveShotLabel(decode(action, with_text_value(plain()))?),
+            "setActiveShotFormat" => ShootingCommand::SetActiveShotFormat(decode(action, with_text_value(plain()))?),
+            "setActiveShotShape" => ShootingCommand::SetActiveShotShape(decode(action, with_text_value(plain()))?),
+            "patchShots" => ShootingCommand::PatchShots(decode(action, with_text_value(fold(args, SHOT_IDS, &[])))?),
+            "patchAssets" => ShootingCommand::PatchAssets(decode(action, with_text_value(fold(args, IDS, &[])))?),
+            "addShot" => ShootingCommand::AddShot(decode(action, fold(args, &[], &[("format", text("png")), ("shape", text("rectangle"))]))?),
+            "addAsset" => ShootingCommand::AddAsset(decode(action, fold(args, &[], &[("format", text("glb"))]))?),
+            "importAsset" => ShootingCommand::ImportAsset(decode(action, fold(args, &[("value", "payload")], &[]))?),
+            "resetFixture" => ShootingCommand::ResetSnapshot(decode(action, plain())?),
+            "translateSelection" => ShootingCommand::TranslateSelection(decode(action, fold(args, IDS, &[("asset_ids", DslValue::Array(Vec::new())), ("dx", zero()), ("dy", zero()), ("dz", zero())]))?),
+            "rotateSelection" => ShootingCommand::RotateSelection(decode(action, fold(args, IDS, &[("asset_ids", DslValue::Array(Vec::new())), ("ax", zero()), ("ay", zero()), ("az", one()), ("angle", zero())]))?),
+            "scaleSelection" => ShootingCommand::ScaleSelection(decode(action, fold(args, IDS, &[("asset_ids", DslValue::Array(Vec::new())), ("sx", one()), ("sy", one()), ("sz", one())]))?),
+            "setCamera" => ShootingCommand::SetCamera(decode(action, nest_camera(plain()))?),
+            "loadSavedCamera" => ShootingCommand::LoadSavedCamera(decode(action, fold(args, &[("value", "id"), ("camera_id", "id")], &[]))?),
+            "setCameraDraftLabel" => ShootingCommand::SetCameraDraftLabel(decode(action, with_text_value(plain()))?),
+            "setCenterModel" => ShootingCommand::SetCenterModel(decode(action, fold(args, &[("value", "pressed")], &[]))?),
+            "setShotSelection" => ShootingCommand::SetShotSelection(decode(action, fold(args, SHOT_IDS, &[("shot_ids", DslValue::Array(Vec::new()))]))?),
+            "worldPointerDown" => ShootingCommand::WorldPointerDown(decode(action, plain())?),
+            "worldPointerMove" => ShootingCommand::WorldPointerMove(decode(action, plain())?),
+            "saveDownload" => ShootingCommand::SaveDownload(decode(action, plain())?),
+            "loadRequest" => ShootingCommand::LoadRequest(decode(action, plain())?),
+            "importAssetRequest" => ShootingCommand::ImportAssetRequest(decode(action, plain())?),
+            "exportActiveShot" => ShootingCommand::ExportActiveShot(decode(action, plain())?),
+            "exportAllShots" => ShootingCommand::ExportAllShots(decode(action, plain())?),
+            _ => return Err(Fault::new(FaultOrigin::App, FaultCode::new("app.command.unsupported"), format!("the shooting editor has no command for action '{action}'"))),
+        })
+    }
+}
+//#endregion 🔖️ActionBridge
 
 //#region 🔖️ShootingPlayApp
 /// 🧪️ B1: unit struct — every former runtime field now lives in `ShootingConfig`, written through
@@ -277,30 +434,58 @@ use shot::{add_shot, patch_shots, set_active_shot, set_active_shot_format, set_a
 pub struct ShootingPlayApp;
 
 //#region 🧵️RetainedCommands
-const SHOOTING_BOUNDED_TOOL_IDS: &[&str] = &["loadRequest", "importAssetRequest"];
+/// 🧵️ Every shell-reachable verb is a bounded first-step tool (ticket 26/09/16/SHOOTING-PLUGIN-END-TO-END):
+/// the framework refuses UI dispatch of any command not classified `Migrated`, so a partial roster left
+/// every panel/measure/viewport gesture dead. Order mirrors the `ShootingCommand` rows.
+const SHOOTING_BOUNDED_TOOL_IDS: &[&str] = &[
+    "importSnapshotJson",
+    "setActiveExample",
+    "setActiveShot",
+    "setActiveAsset",
+    "setShotCamera",
+    "saveCamera",
+    "setSunAzimuth",
+    "setSunElevation",
+    "setSunIntensity",
+    "setAmbientIntensity",
+    "setMaterialRoughness",
+    "setShadowEnabled",
+    "toggleSun",
+    "setActiveShotLabel",
+    "setActiveShotFormat",
+    "setActiveShotShape",
+    "patchShots",
+    "patchAssets",
+    "addShot",
+    "addAsset",
+    "importAsset",
+    "resetFixture",
+    "translateSelection",
+    "rotateSelection",
+    "scaleSelection",
+    "setCamera",
+    "loadSavedCamera",
+    "setCameraDraftLabel",
+    "setCenterModel",
+    "setShotSelection",
+    "worldPointerDown",
+    "worldPointerMove",
+    "saveDownload",
+    "loadRequest",
+    "importAssetRequest",
+    "exportActiveShot",
+    "exportAllShots",
+];
 const SHOOTING_RETAINED_PAYLOAD_SCHEMA: &str = "shooting.shooting.tool-command.v1";
 const SHOOTING_BOUNDED_RAW_BYTES: usize = 65_536;
 const SHOOTING_BOUNDED_WORK_ITEMS: usize = 1;
-
-fn shooting_command_id(command: &ShootingCommand) -> &'static str {
-    match command {
-        ShootingCommand::ExportShots(export_shots::ExportShots { all }) => {
-            if *all {
-                "exportAllShots"
-            } else {
-                "exportActiveShot"
-            }
-        }
-        other => other.command_id(),
-    }
-}
 
 fn shooting_bounded_contract() -> ToolExecutionContract {
     ToolExecutionContract::bounded_first_step(SHOOTING_BOUNDED_RAW_BYTES, 64, SHOOTING_BOUNDED_WORK_ITEMS as u64, 262_144, 7_500)
 }
 
 fn shooting_bounded_extent(command: &ShootingCommand, _snapshot: &ShootingSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
-    SHOOTING_BOUNDED_TOOL_IDS.contains(&shooting_command_id(command)).then_some(SHOOTING_BOUNDED_WORK_ITEMS)
+    SHOOTING_BOUNDED_TOOL_IDS.contains(&command.command_id()).then_some(SHOOTING_BOUNDED_WORK_ITEMS)
 }
 
 #[expect(clippy::too_many_arguments, reason = "Implements the framework ArtifactCommandReducer callback signature.")]
@@ -314,7 +499,7 @@ fn shooting_bounded_reduce(
     _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<ShootingPlayApp>>>,
     operation: &AppOperationContext,
 ) -> Result<Emit<ShootingMutation, ShootingConfigMutation, NoDraftMutation>, Fault> {
-    if !SHOOTING_BOUNDED_TOOL_IDS.contains(&shooting_command_id(command)) {
+    if !SHOOTING_BOUNDED_TOOL_IDS.contains(&command.command_id()) {
         return Err(Fault::new(FaultOrigin::App, FaultCode::new("shooting.retained.route"), "the bounded Shooting reducer rejects resumable routes"));
     }
     let mut ctx = ShootingDispatchCtx::default();
@@ -373,9 +558,44 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for ShootingCommandJobF
     type Owner = EditorApp<ShootingPlayApp>;
     const TOOL_IDS: &'static [&'static str] = SHOOTING_BOUNDED_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = SHOOTING_DOCUMENT_SCHEMA;
-    const PUBLICATION_CONTRACTS: &'static [semio_framework_plugin::ArtifactToolPublicationContract] = &[
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "loadRequest", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "importAssetRequest", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
+    const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[
+        ArtifactToolPublicationContract { tool_id: "importSnapshotJson", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+        ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+        ArtifactToolPublicationContract { tool_id: "setActiveShot", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "setActiveAsset", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "setShotCamera", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "saveCamera", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "setSunAzimuth", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "setSunElevation", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "setSunIntensity", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "setAmbientIntensity", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "setMaterialRoughness", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "setShadowEnabled", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "toggleSun", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "setActiveShotLabel", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "setActiveShotFormat", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "setActiveShotShape", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "patchShots", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "patchAssets", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "addShot", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "addAsset", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "importAsset", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "resetFixture", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+        ArtifactToolPublicationContract { tool_id: "translateSelection", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "rotateSelection", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "scaleSelection", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "setCamera", lanes: &[ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "loadSavedCamera", lanes: &[ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "setCameraDraftLabel", lanes: &[ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "setCenterModel", lanes: &[ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "setShotSelection", lanes: &[ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "worldPointerDown", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+        ArtifactToolPublicationContract { tool_id: "worldPointerMove", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+        ArtifactToolPublicationContract { tool_id: "saveDownload", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+        ArtifactToolPublicationContract { tool_id: "loadRequest", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+        ArtifactToolPublicationContract { tool_id: "importAssetRequest", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+        ArtifactToolPublicationContract { tool_id: "exportActiveShot", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+        ArtifactToolPublicationContract { tool_id: "exportAllShots", lanes: &[ArtifactToolPublicationLane::HostOnly] },
     ];
 }
 //#endregion 🧵️RetainedCommands
@@ -405,8 +625,43 @@ impl ArtifactEditor for ShootingPlayApp {
         factory: "ShootingCommandJobFactory",
         factory_type: ShootingCommandJobFactory,
         tools: {
+            "importSnapshotJson" => ToolExecutionContract::bounded_first_step(65_536, 64, 1, 262_144, 7_500),
+            "setActiveExample" => ToolExecutionContract::bounded_first_step(65_536, 64, 1, 262_144, 7_500),
+            "setActiveShot" => ToolExecutionContract::bounded_first_step(65_536, 64, 1, 262_144, 7_500),
+            "setActiveAsset" => ToolExecutionContract::bounded_first_step(65_536, 64, 1, 262_144, 7_500),
+            "setShotCamera" => ToolExecutionContract::bounded_first_step(65_536, 64, 1, 262_144, 7_500),
+            "saveCamera" => ToolExecutionContract::bounded_first_step(65_536, 64, 1, 262_144, 7_500),
+            "setSunAzimuth" => ToolExecutionContract::bounded_first_step(65_536, 64, 1, 262_144, 7_500),
+            "setSunElevation" => ToolExecutionContract::bounded_first_step(65_536, 64, 1, 262_144, 7_500),
+            "setSunIntensity" => ToolExecutionContract::bounded_first_step(65_536, 64, 1, 262_144, 7_500),
+            "setAmbientIntensity" => ToolExecutionContract::bounded_first_step(65_536, 64, 1, 262_144, 7_500),
+            "setMaterialRoughness" => ToolExecutionContract::bounded_first_step(65_536, 64, 1, 262_144, 7_500),
+            "setShadowEnabled" => ToolExecutionContract::bounded_first_step(65_536, 64, 1, 262_144, 7_500),
+            "toggleSun" => ToolExecutionContract::bounded_first_step(65_536, 64, 1, 262_144, 7_500),
+            "setActiveShotLabel" => ToolExecutionContract::bounded_first_step(65_536, 64, 1, 262_144, 7_500),
+            "setActiveShotFormat" => ToolExecutionContract::bounded_first_step(65_536, 64, 1, 262_144, 7_500),
+            "setActiveShotShape" => ToolExecutionContract::bounded_first_step(65_536, 64, 1, 262_144, 7_500),
+            "patchShots" => ToolExecutionContract::bounded_first_step(65_536, 64, 1, 262_144, 7_500),
+            "patchAssets" => ToolExecutionContract::bounded_first_step(65_536, 64, 1, 262_144, 7_500),
+            "addShot" => ToolExecutionContract::bounded_first_step(65_536, 64, 1, 262_144, 7_500),
+            "addAsset" => ToolExecutionContract::bounded_first_step(65_536, 64, 1, 262_144, 7_500),
+            "importAsset" => ToolExecutionContract::bounded_first_step(65_536, 64, 1, 262_144, 7_500),
+            "resetFixture" => ToolExecutionContract::bounded_first_step(65_536, 64, 1, 262_144, 7_500),
+            "translateSelection" => ToolExecutionContract::bounded_first_step(65_536, 64, 1, 262_144, 7_500),
+            "rotateSelection" => ToolExecutionContract::bounded_first_step(65_536, 64, 1, 262_144, 7_500),
+            "scaleSelection" => ToolExecutionContract::bounded_first_step(65_536, 64, 1, 262_144, 7_500),
+            "setCamera" => ToolExecutionContract::bounded_first_step(65_536, 64, 1, 262_144, 7_500),
+            "loadSavedCamera" => ToolExecutionContract::bounded_first_step(65_536, 64, 1, 262_144, 7_500),
+            "setCameraDraftLabel" => ToolExecutionContract::bounded_first_step(65_536, 64, 1, 262_144, 7_500),
+            "setCenterModel" => ToolExecutionContract::bounded_first_step(65_536, 64, 1, 262_144, 7_500),
+            "setShotSelection" => ToolExecutionContract::bounded_first_step(65_536, 64, 1, 262_144, 7_500),
+            "worldPointerDown" => ToolExecutionContract::bounded_first_step(65_536, 64, 1, 262_144, 7_500),
+            "worldPointerMove" => ToolExecutionContract::bounded_first_step(65_536, 64, 1, 262_144, 7_500),
+            "saveDownload" => ToolExecutionContract::bounded_first_step(65_536, 64, 1, 262_144, 7_500),
             "loadRequest" => ToolExecutionContract::bounded_first_step(65_536, 64, 1, 262_144, 7_500),
             "importAssetRequest" => ToolExecutionContract::bounded_first_step(65_536, 64, 1, 262_144, 7_500),
+            "exportActiveShot" => ToolExecutionContract::bounded_first_step(65_536, 64, 1, 262_144, 7_500),
+            "exportAllShots" => ToolExecutionContract::bounded_first_step(65_536, 64, 1, 262_144, 7_500),
         }
     }
 
@@ -419,13 +674,13 @@ impl ArtifactEditor for ShootingPlayApp {
         if !SHOOTING_BOUNDED_TOOL_IDS.contains(&request.tool_id.as_str()) {
             return Ok(None);
         }
-        if shooting_command_id(&request.command) != request.tool_id {
+        if request.command.command_id() != request.tool_id {
             return Err(Fault::new(FaultOrigin::App, FaultCode::new("shooting.retained.tool-mismatch"), "Shooting command does not match its exact registered tool"));
         }
         if shooting_bounded_extent(&request.command, &request.snapshot, &request.interaction_state).is_none() {
             return Err(Fault::new(FaultOrigin::App, FaultCode::new("shooting.retained.extent"), "Shooting bounded route exceeded its declared work extent"));
         }
-        let tool_id = shooting_command_id(&request.command);
+        let tool_id = request.command.command_id();
         let work = Box::new(BoundedArtifactCommandWork::new(tool_id, shooting_bounded_reduce, shooting_bounded_extent));
         let operation_context = AppOperationContext {
             app_instance_id: request.app_instance_id,
@@ -446,7 +701,7 @@ impl ArtifactEditor for ShootingPlayApp {
                 operation: operation_context,
                 completion: request.completion,
             },
-            shooting_command_id,
+            ShootingCommand::command_id,
             SHOOTING_BOUNDED_RAW_BYTES,
             SHOOTING_BOUNDED_WORK_ITEMS,
             work,
@@ -464,6 +719,59 @@ impl ArtifactEditor for ShootingPlayApp {
 
     fn io() -> Option<AppIo> {
         Some(shooting_io())
+    }
+
+    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
+        Some(semio_framework_plugin::bounded_config_store_one_item_preparation_factory::<Self::Snapshot, Self::Mutation>("shooting-artifact-retained", store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES))
+    }
+
+    fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
+        Some(semio_framework_plugin::bounded_config_store_one_item_preparation_factory::<Self::Config, Self::ConfigMutation>("shooting-config-retained", store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES))
+    }
+
+    fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
+        Some(semio_framework_plugin::bounded_document_store_owners::<Self::Snapshot, Self::Mutation>())
+    }
+
+    fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
+        Some(semio_framework_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
+    }
+
+    fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
+        Some(semio_framework_plugin::bounded_config_store_owners::<Self::Config, Self::ConfigMutation>())
+    }
+
+    fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
+        Some(semio_framework_plugin::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
+    }
+
+    fn build_draft_store_owners() -> Option<store::DocumentStoreOwners<Self::Draft, Self::DraftMutation>> {
+        Some(semio_framework_plugin::no_draft_store_owners())
+    }
+
+    fn build_draft_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
+        Some(semio_framework_plugin::no_draft_store_disposer())
+    }
+
+    fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+        Some(semio_framework_plugin::bounded_transient_root_retirement_factory::<Self::Presence>())
+    }
+
+    fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+        Some(semio_framework_plugin::bounded_transient_root_retirement_factory::<Self::Presence>())
+    }
+
+    /// 👥️ Shooting presence is a shot-id list plus one camera, so the default root is its exact empty terminal.
+    fn build_presence_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
+        Some(Box::new(semio_framework_plugin::PresenceStoreOwnedDisposer::new(std::sync::Arc::new(Self::Presence::default()), |_| true).expect("default shooting presence is the exact empty terminal")))
+    }
+
+    fn build_transient_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
+        Some(semio_framework_plugin::no_transient_store_disposer())
+    }
+
+    fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
+        Some(semio_framework_plugin::no_transient_local_root_retirement_factory())
     }
 
     /// 🎞️ `photos:out` (see `shooting_photo_media`) plus the
@@ -500,13 +808,13 @@ impl ArtifactEditor for ShootingPlayApp {
 
     /// 🏷️ Maps each `ShootingCommand` variant back to the action id it was declared under in
     /// `create_shooting_app` — used by `VcsArtifactApp` for command-log labeling and the registry's
-    /// View/Shell kind-discipline check. Every row delegates to the macro-generated `command_id()`
-    /// EXCEPT `ExportShots`, whose real manifest id is payload-dependent (`exportActiveShot` when
-    /// `all == false`, `exportAllShots` when `all == true`) — `app_commands!`'s generated method is a
-    /// static 1:1 row→literal mapping with no per-payload escape hatch, so this is the one case that
-    /// needs a manual override.
+    /// View/Shell kind-discipline check.
     fn command_id(command: &ShootingCommand) -> &'static str {
-        shooting_command_id(command)
+        command.command_id()
+    }
+
+    fn command_from_action(action: &str, args: Option<&DslValue>) -> Result<Self::Command, Fault> {
+        args_bridge::command_from_action(action, args)
     }
 
     fn handle(
@@ -583,11 +891,11 @@ impl ArtifactEditor for ShootingPlayApp {
 /// all. Every former "replace the whole document" gesture in this package (`import_media`'s
 /// `"artifact:in"` above, `commands::document::{import_snapshot_json,set_active_example,reset_snapshot}`)
 /// builds this effect instead of an `Emit::mutations([...])`. The spr is a fresh, edit-free op-log
-/// for `scene` — a genesis envelope with no history to encode.
+/// for `scene` — `store::empty_document_spr`, never a minted `create_document_envelope` (an envelope
+/// dropped without its bounded retirement authority traps the guest on Drop).
 pub fn reset_document_effect(scene: &ShootingSnapshot) -> semio_framework_plugin::Effect {
     let pack = <ShootingSnapshot as store::ArtifactPack>::encode_pack(scene);
-    let envelope = store::create_document_envelope::<ShootingSnapshot, ShootingMutation>(SHOOTING_DOCUMENT_SCHEMA, "shooting", scene.clone(), None);
-    let spr = semio_framework_plugin::resolve_ready(store::print_document_spr(&envelope)).expect("shooting document spr encode is infallible for a fresh, edit-free envelope");
+    let spr = semio_framework_plugin::resolve_ready(store::empty_document_spr("shooting", SHOOTING_DOCUMENT_SCHEMA));
     semio_framework_plugin::Effect::LoadDocument { pack, spr }
 }
 //#endregion 🔖️ResetDocument
@@ -688,11 +996,45 @@ pub fn create_shooting_app() -> semio_framework_plugin::AppDefinition {
             .shell_action("importAssetRequest", LocalizedLabel::native("Import Asset Request", "Objekt-Importanfrage"))
             .shell_action("exportActiveShot", LocalizedLabel::native("Export Active Shot", "Aktive Aufnahme exportieren"))
             .shell_action("exportAllShots", LocalizedLabel::native("Export All Shots", "Alle Aufnahmen exportieren"))
-            // 🧵️ These two reducers emit exactly one fixed host file-open request. Every document,
-            // config, codec, renderer, selection, and placeholder route remains fail-closed until its
-            // completion lane has an installed bounded preparation owner or a real resumable cursor.
+            // 🧵️ Every verb is a bounded first-step tool with an exact publication contract
+            // (`ShootingCommandJobFactory::PUBLICATION_CONTRACTS`) — UI dispatch refuses anything else.
+            .action_interactive_job("importSnapshotJson", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setActiveExample", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setActiveShot", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setActiveAsset", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setShotCamera", InteractiveJobClassification::Migrated)
+            .action_interactive_job("saveCamera", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setSunAzimuth", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setSunElevation", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setSunIntensity", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setAmbientIntensity", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setMaterialRoughness", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setShadowEnabled", InteractiveJobClassification::Migrated)
+            .action_interactive_job("toggleSun", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setActiveShotLabel", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setActiveShotFormat", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setActiveShotShape", InteractiveJobClassification::Migrated)
+            .action_interactive_job("patchShots", InteractiveJobClassification::Migrated)
+            .action_interactive_job("patchAssets", InteractiveJobClassification::Migrated)
+            .action_interactive_job("addShot", InteractiveJobClassification::Migrated)
+            .action_interactive_job("addAsset", InteractiveJobClassification::Migrated)
+            .action_interactive_job("importAsset", InteractiveJobClassification::Migrated)
+            .action_interactive_job("resetFixture", InteractiveJobClassification::Migrated)
+            .action_interactive_job("translateSelection", InteractiveJobClassification::Migrated)
+            .action_interactive_job("rotateSelection", InteractiveJobClassification::Migrated)
+            .action_interactive_job("scaleSelection", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setCamera", InteractiveJobClassification::Migrated)
+            .action_interactive_job("loadSavedCamera", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setCameraDraftLabel", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setCenterModel", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setShotSelection", InteractiveJobClassification::Migrated)
+            .action_interactive_job("worldPointerDown", InteractiveJobClassification::Migrated)
+            .action_interactive_job("worldPointerMove", InteractiveJobClassification::Migrated)
+            .action_interactive_job("saveDownload", InteractiveJobClassification::Migrated)
             .action_interactive_job("loadRequest", InteractiveJobClassification::Migrated)
             .action_interactive_job("importAssetRequest", InteractiveJobClassification::Migrated)
+            .action_interactive_job("exportActiveShot", InteractiveJobClassification::Migrated)
+            .action_interactive_job("exportAllShots", InteractiveJobClassification::Migrated)
             // 📝️ Staged argument forms for the panel-visible create actions (defaults materialized host-side).
             .action_args("addShot", vec![
                 ActionArgDef::select("format", LocalizedLabel::native("Format", "Format"), vec![ActionArgOption::new("svg", LocalizedLabel::native("SVG", "SVG")), ActionArgOption::new("png", LocalizedLabel::native("PNG", "PNG"))]).default_value(&"png"),

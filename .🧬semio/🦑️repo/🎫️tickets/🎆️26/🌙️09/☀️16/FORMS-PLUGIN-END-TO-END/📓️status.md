@@ -16,3 +16,20 @@
 Boot proven after (1)+(2) (`forms-boot-3`): `data-semio-os-ready=forms`, Blueprint block list (2 steps / 15 questions / 13-kind palette) + Try wizard "Step 1 / 2" with Back/Next, panels Artifact/Catalogue/Inspection.
 
 Native tests `cargo test -p semio-s-artifact-forms-forms --lib`: 153 pass / 41 fail; every failure is pre-existing harness debt (`BuiltChildren requires retained page transport` from the test helper's serde walk, `interactive-job.live-instance` from the registry-less/unbound testkit, store drop witness) — see memory `project-registryless-testkit-new-app-unusable`.
+
+### End-to-end proof (restage #5, 17:21Z; `🗑️generated/forms-interact-3/`)
+`🐍️forms-interact-probe.mjs` — six steps, zero fault lines each:
+1. boot: `data-semio-os-ready=forms`, Blueprint block list + Try wizard "Step 1 / 2"; history `patchCursor 0, upserts 0` (boot `setActiveExample demo` is now a no-op when the document already equals the example — `set-active-example` accepts `demo` and short-circuits on equality).
+2. Blueprint "Add Step" button → `history patch applied … create-step "Step 3"`, canUndo.
+3. Actions pane `action.addStep` row → `create-step "Step 4"`.
+4. `mod+z` → history "Undo" patch, body text 493→486 (Step 4 gone).
+5. Typing into the Try "Component Name" input → `setTryValue` settles, scheduled `setTryValueStep` settles (the `generation: Float(1.0)` refusal is gone after the bridge's integral-float restore).
+6. Try "Next" (window button, not the pane row) → "Step 2 / 2".
+`🐍️forms-args-probe.mjs` additionally proved Catalogue "Number" → `create-block step-id="identity" … kind="number"`.
+
+Additional fixes this round: bridge restores whole finite floats to `UInt`/`Int` (host JSON → exact-u64 codecs); `demo` example id alias; equality short-circuit in `set-active-example`.
+
+### Left as is
+- 41 native test failures in `semio-s-artifact-forms-forms` are pre-existing harness debt (framework `BuiltChildren` serde refusal, unbound live-instance testkit, store drop witness), not runtime faults — every one reproduces the same fault family as before this ticket.
+- `✏️s/🔌️plugins/🗒️note` has the same missing playground `app` (the dev-boot `||` fix alone now lets it boot; not verified here).
+- Serve left running on 6058 (`screen forms-serve`) for the user; launch entry `forms-react-attach`.

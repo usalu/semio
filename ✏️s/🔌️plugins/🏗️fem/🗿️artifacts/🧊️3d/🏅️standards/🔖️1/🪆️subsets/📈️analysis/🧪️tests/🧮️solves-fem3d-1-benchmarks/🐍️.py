@@ -662,10 +662,14 @@ KINDS = (
     "create-combination",
     "delete-combination",
     "update-analysis-settings",
+    "replace-node",
+    "replace-load",
+    "change-load-case-name",
+    "replace-combination",
 )
 """🏷️ Every kind of this artifact's vocabulary except `create-`/`delete-`/`replace-solid`, whose
 subject is geometry and whose oracles are `three-fem3d-mesh-reader` and
-`manifold-fem3d-mesh-measure` — the twenty-two this file's solver can genuinely adjudicate."""
+`manifold-fem3d-mesh-measure` — the twenty-six this file's solver can genuinely adjudicate."""
 
 
 def adapter():

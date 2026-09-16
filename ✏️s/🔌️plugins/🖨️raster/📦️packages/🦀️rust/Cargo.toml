@@ -16,6 +16,7 @@ role = "plugin"
 
 [[package.metadata.semio.playground]]
 variant = "raster"
+app = "s.raster.raster@1/*#editor"
 ports = { react = 6060, wgpu = 6160 }
 engines = ["./🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust"]
 

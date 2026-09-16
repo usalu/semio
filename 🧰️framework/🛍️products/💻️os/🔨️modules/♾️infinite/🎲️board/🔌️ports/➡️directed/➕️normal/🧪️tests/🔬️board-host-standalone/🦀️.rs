@@ -438,7 +438,9 @@
         host.nodes.get_mut("node-a").unwrap().properties.insert("hostile".into(), graph::manifest::PropertyValue::Array((0..=BOARD_POINTER_ITEM_CAPACITY).map(|_| graph::manifest::PropertyValue::Null).collect()));
         host.delete_selection();
         let live = semio_framework_job::root_cancel_token();
-        for _ in 0..1024 {
+        // 🧮️ One audited property node per turn: the hostile array is `BOARD_POINTER_ITEM_CAPACITY + 1`
+        // entries, so the fault lands after that many turns — the budget follows the constant.
+        for _ in 0..BOARD_POINTER_ITEM_CAPACITY * 4 {
             if matches!(with_board_step_context(1, live.clone(), |context| host.step_event_authority(context)), BoardAuthorityStep::Fault) {
                 break;
             }

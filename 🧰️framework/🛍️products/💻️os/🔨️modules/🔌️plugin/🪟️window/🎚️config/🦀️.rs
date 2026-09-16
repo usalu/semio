@@ -361,7 +361,7 @@ struct WindowConfigPartition<O: WindowConfigOwner> {
 trait ErasedWindowConfigStoreOwner: Send {
     fn capture<'a>(&'a mut self, window_id: &'a str) -> Pin<Box<dyn Future<Output = Result<WindowConfigAuthority, Fault>> + 'a>>;
     fn dispatch<'a>(&'a mut self, actor: &'a str, mutation: WindowConfigMutation, description: Option<String>, coalesce_key: Option<String>) -> Pin<Box<dyn Future<Output = Result<(), Fault>> + 'a>>;
-    fn begin(&mut self, operation: semio_framework_job::OperationId, actor: String, authority: &WindowConfigAuthority, mutation: WindowConfigMutation) -> Result<Box<dyn ErasedWindowConfigPublication>, Fault>;
+    fn begin(&mut self, operation: semio_framework_job::OperationId, actor: String, authority: &WindowConfigAuthority, mutation: WindowConfigMutation, coalesce_key: Option<&str>) -> Result<Box<dyn ErasedWindowConfigPublication>, Fault>;
     fn advance(&mut self, publication: &mut dyn ErasedWindowConfigPublication, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemAdvance, Fault>;
     fn refresh(&mut self, authority: &mut WindowConfigAuthority) -> Result<(), Fault>;
     fn packs<'a>(&'a self) -> Pin<Box<dyn Future<Output = Result<Vec<WindowConfigPack>, Fault>> + 'a>>;
@@ -369,6 +369,9 @@ trait ErasedWindowConfigStoreOwner: Send {
     fn commit_retained_load(&mut self, registry_lifetime: u64, load: &mut dyn retained::ErasedWindowConfigPackLoad) -> Result<WindowConfigPackLoadStep, WindowConfigPackLoadDiagnostic>;
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault>;
     fn terminal_is_empty(&self) -> bool;
+    fn maintenance_retirements_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, Fault>;
+    fn maintenance_retirements_terminal_is_empty(&self) -> bool;
+    fn maintenance_retirements_under_pressure(&self) -> bool;
     fn pointer_values(&self, pointers: &[String]) -> Vec<(String, Vec<Option<protocol::DslValue>>)>;
     fn snapshot(&self, window_id: &str) -> Option<WindowConfigSnapshot>;
 }
@@ -425,15 +428,20 @@ impl<O: WindowConfigOwner> ErasedWindowConfigStoreOwner for TypedWindowConfigSto
         })
     }
 
-    fn begin(&mut self, operation: semio_framework_job::OperationId, actor: String, authority: &WindowConfigAuthority, mutation: WindowConfigMutation) -> Result<Box<dyn ErasedWindowConfigPublication>, Fault> {
+    fn begin(&mut self, operation: semio_framework_job::OperationId, actor: String, authority: &WindowConfigAuthority, mutation: WindowConfigMutation, coalesce_key: Option<&str>) -> Result<Box<dyn ErasedWindowConfigPublication>, Fault> {
         let window_id = mutation.window_id;
         let typed = mutation.mutation.downcast::<O::Mutation>().map_err(|_| Fault::new(FaultOrigin::Framework, FaultCode::new("window-config.mutation-type"), "window config mutation did not match its registered window owner"))?;
         let partition = self.partitions.get(&window_id).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("window-config.partition"), "captured window config partition is absent"))?;
         let factory = O::build_one_item_preparation_factory();
-        let publication = partition
+        let mut publication = partition
             .store
             .begin_apply_batch(operation, authority.generation, authority.revision, actor, vec![*typed], None, store::HistoryLane::Document, Some(&factory))
             .map_err(|rejected| Fault::new(FaultOrigin::Framework, FaultCode::new("window-config.admission"), rejected.reason))?;
+        // 🎞️ The same latest-wins key [`dispatch`] spells for the non-retained path: a playback tick or
+        // a gumball flag on a migrated route folds into the last uncommitted edit of ITS window
+        // partition instead of minting a ledger slot per tick — without it a results window animated
+        // for ~two seconds and then every later publication died at the 64-item ledger ceiling.
+        publication.set_coalesce_key(coalesce_key.map(|key| format!("window:{window_id}:{key}")));
         Ok(Box::new(TypedWindowConfigPublication::<O> { window_id, publication }))
     }
 
@@ -512,6 +520,23 @@ impl<O: WindowConfigOwner> ErasedWindowConfigStoreOwner for TypedWindowConfigSto
     fn terminal_is_empty(&self) -> bool {
         self.partitions.is_empty()
     }
+
+    /// 🧹️ Retires the displaced owners a LIVE partition accumulates — every coalesced amend (a
+    /// playback tick, a gumball flag) displaces the previous snapshot, edit id and envelope into the
+    /// partition store's fixed 1 024-slot retirement queue, and only a maintenance pump gives those
+    /// slots back. One partition per step, the first that still owes work.
+    fn maintenance_retirements_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, Fault> {
+        let Some(partition) = self.partitions.values_mut().find(|partition| !partition.store.maintenance_retirements_terminal_is_empty()) else { return Ok(store::SnapshotRetirementStep::Complete) };
+        partition.store.maintenance_retirements_step(maximum_items, maximum_bytes).map_err(|message| Fault::new(FaultOrigin::Framework, FaultCode::new("window-config.maintenance-retirement"), message))
+    }
+
+    fn maintenance_retirements_terminal_is_empty(&self) -> bool {
+        self.partitions.values().all(|partition| partition.store.maintenance_retirements_terminal_is_empty())
+    }
+
+    fn maintenance_retirements_under_pressure(&self) -> bool {
+        self.partitions.values().any(|partition| partition.store.maintenance_retirements_under_pressure())
+    }
 }
 
 /// ⏳️ Turns one registry-driven retained window config load may spend before it faults `window-config.load-bound`.
@@ -584,12 +609,12 @@ impl WindowConfigOwnerRegistry {
             .await
     }
 
-    pub(crate) fn begin(&mut self, operation: semio_framework_job::OperationId, actor: String, authority: &WindowConfigAuthority, mutation: WindowConfigMutation) -> Result<Box<dyn ErasedWindowConfigPublication>, Fault> {
+    pub(crate) fn begin(&mut self, operation: semio_framework_job::OperationId, actor: String, authority: &WindowConfigAuthority, mutation: WindowConfigMutation, coalesce_key: Option<&str>) -> Result<Box<dyn ErasedWindowConfigPublication>, Fault> {
         self.validate_address(authority, &mutation)?;
         self.owners
             .get_mut(authority.window_kind_id.as_str())
             .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("window-config.owner"), "window config emission has no registered concrete window owner"))?
-            .begin(operation, actor, authority, mutation)
+            .begin(operation, actor, authority, mutation, coalesce_key)
     }
 
     pub(crate) fn advance(&mut self, publication: &mut dyn ErasedWindowConfigPublication, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemAdvance, Fault> {
@@ -751,6 +776,22 @@ impl WindowConfigOwnerRegistry {
 
     pub(crate) fn terminal_is_empty(&self) -> bool {
         self.owners.is_empty() && self.retiring.is_empty()
+    }
+
+    /// 🧹️ One maintenance step over the live partitions' displaced-owner queues — the first owner
+    /// that still owes retirements advances; `Complete` means every partition is drained.
+    pub(crate) fn maintenance_retirements_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, Fault> {
+        let Some(owner) = self.owners.values_mut().find(|owner| !owner.maintenance_retirements_terminal_is_empty()) else { return Ok(store::SnapshotRetirementStep::Complete) };
+        owner.maintenance_retirements_step(maximum_items, maximum_bytes)
+    }
+
+    pub(crate) fn maintenance_retirements_terminal_is_empty(&self) -> bool {
+        self.owners.values().all(|owner| owner.maintenance_retirements_terminal_is_empty())
+    }
+
+    /// 🌡️ True while any live partition's displaced-owner queue sits at or above the store's pressure mark.
+    pub(crate) fn maintenance_retirements_under_pressure(&self) -> bool {
+        self.owners.values().any(|owner| owner.maintenance_retirements_under_pressure())
     }
 
     fn validate_address(&self, authority: &WindowConfigAuthority, mutation: &WindowConfigMutation) -> Result<(), Fault> {

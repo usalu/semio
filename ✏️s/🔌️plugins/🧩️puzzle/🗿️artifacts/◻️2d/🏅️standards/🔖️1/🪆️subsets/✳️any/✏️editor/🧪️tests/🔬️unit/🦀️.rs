@@ -714,3 +714,67 @@ async fn context_menu_grouped_disclosure_stays_within_budget_and_keeps_destructi
     assert_eq!(last.destructive, Some(true), "the destructive row must carry destructive: true");
 }
 //#endregion 🔖️Registry
+
+//#region 🔖️EngineParse
+/// 🎲️ Every shipped example must parse in the board engine as the host paints it: a `false` from
+/// `parse_fixture_json` is silent at runtime and leaves the panes empty (Nakagin, 2026-09-16).
+#[semio_framework_async_macros::async_test]
+async fn shipped_examples_parse_in_the_board_engine() {
+    for (name, json) in [("concrete-forest", concrete_forest_example_json()), ("nakagin", nakagin_example_json())] {
+        let fixture: Value = serde_json::from_str(&json).expect("example json");
+        let mut host = BoardHost::default();
+        let parsed = host.parse_fixture_json(&fixture.to_string());
+        if !parsed {
+            let nodes = fixture_nodes(&fixture).to_vec();
+            let edges = fixture_edges(&fixture).to_vec();
+            let probe = |nodes: &[Value], edges: &[Value]| BoardHost::default().parse_fixture_json(&json!({ "schema": "puzzle.2d.fixture", "camera": { "x": 0, "y": 0, "zoom": 1 }, "nodes": nodes, "edges": edges }).to_string());
+            let bad_node = (1..=nodes.len()).find(|count| !probe(&nodes[..*count], &[])).map(|count| nodes[count - 1].clone());
+            let bad_edge = (1..=edges.len()).find(|count| !probe(&nodes, &edges[..*count])).map(|count| edges[count - 1].clone());
+            panic!("{name}: the board engine refused the example fixture; first refused node = {bad_node:?}; first refused edge = {bad_edge:?}");
+        }
+    }
+}
+//#endregion 🔖️EngineParse
+
+/// 🎲️ Deleting a handle that carries an edge must leave a board the engine still paints — a dangling
+/// edge makes `parse_fixture_json` refuse the WHOLE document (three blank panes, 2026-09-16).
+#[semio_framework_async_macros::async_test]
+async fn deleting_an_edged_handle_keeps_the_board_parseable() {
+    let mut app = app_with_registry();
+    load_example(&mut app, PUZZLE2D_PLAY_EXAMPLE_NAKAGIN_ID);
+    let before = fixture_of(&app);
+    let edge = fixture_edges(&before)[0].clone();
+    let handle_id = edge.get("source").and_then(Value::as_str).expect("edge source").to_string();
+    let edge_id = edge.get("id").and_then(Value::as_str).expect("edge id").to_string();
+    select_id(&mut app, PUZZLE2D_GRANULARITY_HANDLE, &handle_id).expect("select handle");
+    dispatch(&mut app, "deleteSelection", None, None).expect("delete");
+    let after = fixture_of(&app);
+    assert!(!fixture_edges(&after).iter().any(|edge| edge.get("id").and_then(Value::as_str) == Some(edge_id.as_str())), "the edge on the deleted handle must go with it");
+    let mut host = BoardHost::default();
+    let parsed = host.parse_fixture_json(&after.to_string());
+    close_app(&mut app);
+    assert!(parsed, "the board engine must still parse the document after a handle delete");
+}
+
+/// 🗑️ Deleting an edged node commits through the store (its inverse is one `create-node` plus one
+/// `connect-handles` per edge — the fold footprint must admit that cascade) and empties the selection.
+#[semio_framework_async_macros::async_test]
+async fn deleting_an_edged_node_commits_and_clears_the_selection() {
+    let mut app = app_with_registry();
+    load_example(&mut app, PUZZLE2D_PLAY_EXAMPLE_NAKAGIN_ID);
+    let before = fixture_of(&app);
+    let edge = fixture_edges(&before)[0].clone();
+    let handle_id = edge.get("source").and_then(Value::as_str).expect("edge source");
+    let node_id = handle_id.split(':').next().expect("handle id carries its node id").to_string();
+    assert!(fixture_nodes(&before).iter().any(|node| node.get("id").and_then(Value::as_str) == Some(node_id.as_str())), "edge source node must exist");
+    select_id(&mut app, PUZZLE2D_GRANULARITY_NODE, &node_id).expect("select node");
+    let result = dispatch(&mut app, "deleteSelection", None, None);
+    let after = fixture_of(&app);
+    let node_gone = !fixture_nodes(&after).iter().any(|node| node.get("id").and_then(Value::as_str) == Some(node_id.as_str()));
+    let edge_gone = !fixture_edges(&after).iter().any(|entry| entry.get("id") == edge.get("id"));
+    let selection = render_body(&mut app, overview::BODY_KEY).contains(&node_id);
+    close_app(&mut app);
+    assert!(result.is_ok(), "deleteSelection must not fault: {:?}", result.err());
+    assert!(node_gone && edge_gone, "the node and the edge hanging off it must be gone (node gone={node_gone}, edge gone={edge_gone})");
+    assert!(!selection, "the deleted node must leave the painted selection");
+}

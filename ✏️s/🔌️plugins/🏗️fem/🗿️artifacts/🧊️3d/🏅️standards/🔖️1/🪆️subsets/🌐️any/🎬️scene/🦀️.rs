@@ -210,8 +210,8 @@ pub fn fem3d_structural_instances(doc: &Fem3dSnapshot, displacements: Option<&Ha
         let length = (d[0] * d[0] + d[1] * d[1] + d[2] * d[2]).sqrt().max(1e-9);
         let dir = [d[0] / length, d[1] / length, d[2] / length];
         let roll = match element {
-            crate::FemElement::Frame { roll, .. } => *roll,
-            crate::FemElement::Bar { .. } => 0.0,
+            FemElement::Frame { roll, .. } => *roll,
+            FemElement::Bar { .. } => 0.0,
         };
         let rotation = quat_mul(quat_z_to(dir), quat_roll_z(roll));
         let mid = [(p1[0] + p2[0]) / 2.0, (p1[1] + p2[1]) / 2.0, (p1[2] + p2[2]) / 2.0];

@@ -1776,6 +1776,9 @@ import {
   WORLD3D_DEFAULT_INTERACTION_GRANULARITY,
   WORLD3D_DEFAULT_MARKER_GRANULARITY,
   world3dMarkerInteractionTarget,
+  world3dInstanceInteractionTarget,
+  world3dInstanceInteractionTargets,
+  world3dSelectionTargetsActionArgs,
   nodeGraphViewportActionArgs,
   parseNodeGraphSessionViewport,
   nodeGraphPickChannel,
@@ -4412,6 +4415,40 @@ describe("framework renderer hosts", () => {
     expect(world3dMarkerInteractionTarget("targetVolume", "volume-1")).toEqual({ granularity: "targetVolume", id: "volume-1" });
     expect(world3dMarkerInteractionTarget("reference", "ref-1")).toEqual({ granularity: "reference", id: "ref-1" });
     expect(world3dMarkerInteractionTarget("vortex", "seed-left-001:v0", { interactionGranularityId: "pin", interactionId: "pin-7" })).toEqual({ granularity: "pin", id: "pin-7" });
+  });
+
+  // 🎯️ An instance pick, hover and marquee resolve each rendered row onto ITS OWN granularity — a fem3d
+  // scene draws nodes, members, solids, supports and load glyphs as one instance lane under one domain,
+  // and a member must select an `element`, never the scene default `node`. Rows without a declared
+  // granularity keep the scene's default; the load glyph redirects onto its load through both fields.
+  it("resolves world3d instance interaction targets per record, falling back to the scene granularity", () => {
+    const instances = [
+      { id: "n1" },
+      { id: "e1", interactionGranularityId: "element" },
+      { id: "l2:head", interactionId: "l2", interactionGranularityId: "load" },
+      { id: "l2:shaft", interactionId: "l2", interactionGranularityId: "load" },
+    ];
+    expect(world3dInstanceInteractionTarget(instances, "n1", "node")).toEqual({ granularity: "node", id: "n1" });
+    expect(world3dInstanceInteractionTarget(instances, "e1", "node")).toEqual({ granularity: "element", id: "e1" });
+    expect(world3dInstanceInteractionTarget(instances, "l2:shaft", "node")).toEqual({ granularity: "load", id: "l2" });
+    expect(world3dInstanceInteractionTarget(instances, "ghost", "node")).toEqual({ granularity: "node", id: "ghost" });
+    expect(world3dInstanceInteractionTargets(instances, ["l2:head", "e1", "l2:shaft", "n1"], "node")).toEqual([
+      { granularity: "load", id: "l2" },
+      { granularity: "element", id: "e1" },
+      { granularity: "node", id: "n1" },
+    ]);
+    expect(world3dSelectionTargetsActionArgs("fem3d", world3dInstanceInteractionTargets(instances, ["e1", "n1"], "node"), "replace", "rectangle")).toEqual({
+      domainId: "fem3d",
+      targets: JSON.stringify([{ granularity: "element", id: "e1" }, { granularity: "node", id: "n1" }]),
+      merge: "replace",
+      method: "rectangle",
+    });
+    expect(world3dSelectionTargetsActionArgs("fem3d", [{ granularity: "node", id: "n1" }], "additive")).toEqual({
+      domainId: "fem3d",
+      targets: JSON.stringify([{ granularity: "node", id: "n1" }]),
+      merge: "additive",
+      method: "pick",
+    });
   });
 
   // 🧿️ The exact wire shapes a vortex-marker click and hover now put on the domain path — the same

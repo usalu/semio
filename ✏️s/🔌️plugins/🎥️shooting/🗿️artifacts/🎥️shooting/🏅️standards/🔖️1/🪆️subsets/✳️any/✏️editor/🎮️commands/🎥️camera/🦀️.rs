@@ -87,8 +87,10 @@ pub mod set_camera_draft_label {
         pub value: String,
     }
 
+    /// ⌨️ Every keystroke folds into one config edit (`Emit::amend_config`): the config ledger holds 64
+    /// applied edits and nothing compacts it, so per-keystroke edits would kill the session in minutes.
     pub fn handle(payload: &SetCameraDraftLabel, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
-        Ok(Emit::config(vec![ShootingConfigMutation::SetCameraDraftLabel(crate::editor::shooting::config::SetCameraDraftLabel { value: payload.value.clone() })]))
+        Ok(Emit::amend_config(vec![ShootingConfigMutation::SetCameraDraftLabel(crate::editor::shooting::config::SetCameraDraftLabel { value: payload.value.clone() })], "camera-draft-label"))
     }
 }
 //#endregion 🔖️SetCameraDraftLabel
@@ -104,8 +106,10 @@ pub mod set_camera {
         pub camera: ShootingCamera,
     }
 
+    /// 🎥️ Every viewport tick folds into one config edit (`Emit::amend_config`) — same 64-edit ledger
+    /// budget as `set_camera_draft_label`; a camera orbit is one gesture, not one edit per pointer move.
     pub fn handle(payload: &SetCamera, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
-        Ok(Emit::config(vec![ShootingConfigMutation::SetCamera(crate::editor::shooting::config::SetCamera { camera: payload.camera.clone() })]))
+        Ok(Emit::amend_config(vec![ShootingConfigMutation::SetCamera(crate::editor::shooting::config::SetCamera { camera: payload.camera.clone() })], "camera"))
     }
 }
 //#endregion 🔖️SetCamera

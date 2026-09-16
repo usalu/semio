@@ -7,8 +7,8 @@ fn project(node: BuiltNode) -> serde_json::Value {
 
 fn view_state(locale: &str) -> semio_framework_plugin::ViewModel {
     let locale = match locale {
-        "en-US" => semio_framework_plugin::Locale::En,
-        "de-DE" => semio_framework_plugin::Locale::De,
+        "en" => semio_framework_plugin::Locale::En,
+        "de" => semio_framework_plugin::Locale::De,
         value => panic!("unexpected fixture locale {value}"),
     };
     semio_framework_plugin::ViewModel { locale, ..Default::default() }

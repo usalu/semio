@@ -373,6 +373,7 @@ const CATALOG_ICON_ALIASES: Partial<Record<string, IconName>> = {
   terminal: "code",
   zap: "sparkles",
   calculator: "hash",
+  ellipsis: "more-horizontal",
 };
 
 function coerceIconSource(source: IconSource): Icon {

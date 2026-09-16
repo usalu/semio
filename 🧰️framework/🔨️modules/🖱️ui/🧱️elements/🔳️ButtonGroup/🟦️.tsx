@@ -13,7 +13,7 @@ import { Slot } from "../../🔨️modules/🏷️class-name-composition/🪆️
 import { styleVariants, type StyleVariantProps } from "../../🔨️modules/🧬️style-variants/🟦️.ts";
 import { borderElementClass } from "../../🔨️modules/📏️border-presentation/🟦️.ts";
 import { ControlHotkeyBadge } from "../../🔨️modules/⌨️control-hotkey-presentation/🟦️.tsx";
-import { chromeControlGroupClass, chromeControlItemClass } from "../../🔨️modules/🎛️chrome-control-presentation/🟦️.ts";
+import { chromeControlGroupClass, chromeControlGroupSiblingDividerClass, chromeControlItemClass } from "../../🔨️modules/🎛️chrome-control-presentation/🟦️.ts";
 import { useLevel, type Level } from "../🌈️Surface/🟦️.tsx";
 import { Label, useControlInlineText, useControlAccessibleLabel, useControlTooltipText } from "../🏷️Label/🟦️.tsx";
 import { type ControlIcon, renderControlIcon } from "../🔣️Icons/🟦️.tsx";
@@ -126,6 +126,7 @@ function ButtonGroupItem({ className, children, id, icon, text, asChild = false,
     "data-level": context.level || level,
     className: cn(
       buttonGroupItemVariants({ variant }),
+      chromeControlGroupSiblingDividerClass,
       inlineText ? "w-auto shrink-0 focus:z-panel focus-visible:z-panel" : "min-w-medium flex-1 shrink-0 focus:z-panel focus-visible:z-panel",
       inlineText && "flex items-center gap-single py-single px-double w-auto aspect-auto",
       className,

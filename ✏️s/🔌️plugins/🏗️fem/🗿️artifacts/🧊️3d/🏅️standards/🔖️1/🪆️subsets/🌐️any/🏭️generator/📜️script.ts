@@ -244,6 +244,10 @@ const CARRIER_FIXTURES = {
   "create-combination": { subset: "load", path: "🏋️load/🧫️fixtures/🔗️create-combination" },
   "delete-combination": { subset: "load", path: "🏋️load/🧫️fixtures/✂️delete-combination" },
   "update-analysis-settings": { subset: "analysis", path: "📈️analysis/🧫️fixtures/🎛️update-analysis-settings" },
+  "replace-node": { subset: "mesh", path: "🕸️mesh/🧫️fixtures/🔁️replace-node" },
+  "replace-load": { subset: "load", path: "🏋️load/🧫️fixtures/🔁️replace-load" },
+  "change-load-case-name": { subset: "load", path: "🏋️load/🧫️fixtures/🏷️change-load-case-name" },
+  "replace-combination": { subset: "load", path: "🏋️load/🧫️fixtures/🔁️replace-combination" },
 } as const;
 //#endregion 🧪️Corpus
 
@@ -434,7 +438,7 @@ async function main(argv: readonly string[]): Promise<number> {
   //
   // The mesh recipes above answer geometry, which is why the two mesh oracles cover the three region
   // kinds and nothing else: a material's Young's modulus, a support's restrained DOFs, a load case's
-  // self-weight flag and the analysis settings do not move a single triangle. Those 22 kinds ride this
+  // self-weight flag and the analysis settings do not move a single triangle. Those 26 kinds ride this
   // subset's JSON carrier instead, which — unlike its csv/md/txt leaves, which wrap the DSL text in a
   // single blob — is the real structured tree. `🦀️json-engine` writes and reads it through `serde_json`
   // and nothing of ours.

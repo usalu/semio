@@ -114,6 +114,20 @@
     }
 
     #[test]
+    fn world_references_json_carries_infinite_asset_urls_the_dev_server_can_serve() {
+        use crate::editor::puzzle3d::default_fixture;
+        let json = world_references_json(&default_fixture());
+        let records: Vec<Value> = serde_json::from_str(&json).expect("referencesJson");
+        let masterarbeit = records.iter().find(|row| row["id"] == "ref-masterarbeit").expect("ref-masterarbeit");
+        assert_eq!(
+            masterarbeit["url"].as_str(),
+            Some("/infinite-assets/🏘️abbau-aufbau-masterarbeit-grundriss/🖼️.jpg"),
+            "masterarbeit reference must use the infinite-assets taxonomy path so WorldReferenceLayer can load the texture"
+        );
+        assert_eq!(masterarbeit["hidden"], json!(false));
+    }
+
+    #[test]
     fn meshes_json_is_published_in_exactly_the_mesh_lane_order_trace_subjects_index() {
         let snapshot = crate::standards::v1::subsets::any::schema::snapshot::text::parse_dsl(crate::standards::v1::subsets::any::schema::snapshot::text::PUZZLE3D_NAKAGIN_EXAMPLE_TEXT).expect("example parses");
         let fixture = crate::editor::puzzle3d::puzzle3d_fixture_from_snapshot(&snapshot);

@@ -1,9 +1,11 @@
 {
   "title": "Forms Plugin End To End",
   "emoji": "📋️",
-  "status": "open",
+  "status": "done",
   "description": "Get the 📋️forms plugin working end to end: native check + tests, guest wasm restage (activate-forms-react-dev), react dev serve on 6058 (?plugin=forms), proven boot (builder + try windows, catalogue/artifact/inspection panels) and at least one persisted document mutation via the shell.",
   "goal": "FORMS",
-  "sessions": ["⚪5ca734d9-71a2-4e66-847a-f3de2d4c4aba"],
+  "sessions": [
+    "⚪5ca734d9-71a2-4e66-847a-f3de2d4c4aba"
+  ],
   "note": "Ticket bookkeeping manual on disk: repo MCP timed out (2026-09-16). Pattern follows 26/09/06/ENERGY-PLUGIN-END-TO-END (activate/serve scripts + console-dump/interact probes)."
 }

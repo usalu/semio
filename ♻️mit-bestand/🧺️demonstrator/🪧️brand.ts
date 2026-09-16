@@ -697,7 +697,7 @@ export const ENTWERFEN_MIT_BESTAND_VERFOLGEN_BRAND: ShellBrand = {
   windowTitle: "Entwerfen mit Bestand · Verfolgen",
   logoSvg: ENTWERFEN_MIT_BESTAND_LOGO_SVG,
   locks: { locale: DEMONSTRATOR_LOCALE, terminology: "reuse", themeId: "semio" },
-  defaults: { exampleId: "reuse-map" },
+  defaults: { exampleId: "demo" },
   ephemeral: true,
   replayIntroductionOnLoad: true,
   assetsDir: DEMONSTRATOR_ASSETS_DIR,

@@ -196,21 +196,6 @@ export type InferencePortUiAction =
  * no job transport, origin, path, receipt, proposal body or user identity appears, and nothing here
  * is persisted into the document. Focus moves to the region when it opens and returns to whatever
  * held it before when it closes. */
-export function GisMapInferenceRequestControl({
-  locale,
-  onRequest,
-}: {
-  readonly locale: "en" | "de";
-  readonly onRequest: () => void;
-}) {
-  const control = GIS_MAP_INFERENCE_PORT_CONTROL_TEXT_V1;
-  return (
-    <section aria-label={control.heading[locale]} data-semio-inference-request="">
-      <button type="button" onClick={onRequest}>{control.request[locale]}</button>
-    </section>
-  );
-}
-
 export function InferencePortPanel({
   status,
   locale,

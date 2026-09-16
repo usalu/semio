@@ -164,3 +164,55 @@ impl protocol::OpBinary for RasterPresenceMutation {
     }
 }
 //#endregion 🔖️PresenceMutation
+
+//#region 🧹️Retirement
+/// 📏️ A `RasterPresence` root owns nothing beyond its inline bytes (two `f64`s and a camera of three
+/// `f64`s), so every root is terminal-empty and one bounded turn returns it.
+pub fn raster_presence_is_terminal_empty(_presence: &RasterPresence) -> bool {
+    true
+}
+
+/// 👥️ Exact local and peer root ownership for raster presence (process3d precedent): without it and
+/// the disposer below, every close of a registry-backed app faulted
+/// `interactive-job.close-owned-disposer-missing … presence-store` (mounted boot test of ticket
+/// 26/09/05/RASTER-PLUGIN-END-TO-END, 2026-09-16).
+pub struct RasterPresenceRetirementFactory;
+
+impl store::SnapshotRetirementFactory<RasterPresence> for RasterPresenceRetirementFactory {
+    fn retire(&self, root: std::sync::Arc<RasterPresence>) -> Box<dyn store::ErasedSnapshotRetirement> {
+        Box::new(RasterPresenceRetirement { root: std::mem::ManuallyDrop::new(Some(root)) })
+    }
+}
+
+struct RasterPresenceRetirement {
+    root: std::mem::ManuallyDrop<Option<std::sync::Arc<RasterPresence>>>,
+}
+
+impl store::ErasedSnapshotRetirement for RasterPresenceRetirement {
+    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
+        if maximum_items == 0 {
+            return Ok(store::SnapshotRetirementStep::Blocked);
+        }
+        if let Some(root) = self.root.take() {
+            drop(root);
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        Ok(store::SnapshotRetirementStep::Complete)
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.root.is_none()
+    }
+}
+
+impl Drop for RasterPresenceRetirement {
+    fn drop(&mut self) {
+        assert!(self.root.is_none(), "raster presence retirement reached Drop before its root was returned");
+        unsafe { std::mem::ManuallyDrop::drop(&mut self.root) };
+    }
+}
+
+pub fn raster_presence_store_disposer() -> Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<RasterPresence, RasterPresenceMutation>>> {
+    Box::new(semio_framework_plugin::PresenceStoreOwnedDisposer::new(std::sync::Arc::new(RasterPresence::default()), raster_presence_is_terminal_empty).expect("the default raster presence root owns no heap"))
+}
+//#endregion 🧹️Retirement

@@ -4,7 +4,7 @@ use crate::editor::fem3d::Fem3dCommand;
 
 async fn app_with_example() -> Fem3dApp {
     let mut app = fem3d_app();
-    dispatch(&mut app, Fem3dCommand::SetActiveExample(crate::editor::fem3d::commands::set_active_example::SetActiveExample { example_id: "default".into() })).await;
+    dispatch(&mut app, Fem3dCommand::SetActiveExample(crate::editor::fem3d::commands::set_active_example::SetActiveExample { example_id: crate::examples::demo::ID.into() })).await;
     app
 }
 
@@ -13,6 +13,7 @@ async fn renders_fem3d_results_scene() {
     let mut app = app_with_example().await;
     let json = render_body(&mut app, FEM3D_BODY_RESULTS);
     assert!(json.contains("world-3d"));
+    assert!(json.contains("\"key\":\"#0\"") && json.contains("\"key\":\"#1\""), "caption and scene stack are keyed positionally: {json}");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -60,10 +61,11 @@ async fn results_cache_solves_one_revision_once_and_evicts_the_previous() {
 #[semio_framework_async_macros::async_test]
 async fn playback_phase_moves_the_deformed_scene() {
     let snapshot = <Fem3dSnapshot as store::ArtifactDsl>::parse_dsl(crate::standards::v1::subsets::any::schema::snapshot::text::FEM3D_EXAMPLE_TEXT).expect("default example snapshot");
-    let interaction = crate::editor::fem3d::interaction::Fem3dInteractionSnapshot::default();
-    let instances = |node: &semio_framework_plugin::BuiltNode| {
+    let interaction = Fem3dInteractionSnapshot::default();
+    let instances = |node: &BuiltNode| {
         let surface = node.children[1].children.iter().find(|child| matches!(&child.component, semio_framework_ui_contract::Component::Surface(_))).expect("world surface child");
-        semio_framework_plugin::artifact_app_laws::built_surface_scene(surface).expect("scene").instances_json
+        let scene: semio_framework_ui_scene::World3dScene = semio_framework_plugin::artifact_app_laws::built_surface_scene(surface).expect("scene");
+        scene.instances_json
     };
     let mut config = Fem3dResultsWindowConfig::default();
     let full = render(&snapshot, &config, &interaction, None).expect("full frame");
@@ -72,8 +74,8 @@ async fn playback_phase_moves_the_deformed_scene() {
     assert_ne!(instances(&full), instances(&rest), "phase 1 and phase 0 draw different poses");
     config.animation.playing = true;
     config.animation.phase = 0.42;
-    let running = render(&snapshot, &config, &interaction, None).expect("running frame");
-    let json = serde_json::to_string(&running).expect("json");
+    let node = render(&snapshot, &config, &interaction, None).expect("running frame");
+    let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("fixture projection");
     assert!(json.contains("phase 0.42"), "a running window carries its transport read-out: {json}");
 }
 
@@ -99,7 +101,7 @@ async fn results_window_renders_buckling_mode_shape_3d() {
 async fn results_caption_column_grows_so_world_scene_fills_window_3d() {
     let snapshot = <Fem3dSnapshot as store::ArtifactDsl>::parse_dsl(crate::standards::v1::subsets::any::schema::snapshot::text::FEM3D_EXAMPLE_TEXT).expect("default example snapshot");
     let config = Fem3dResultsWindowConfig::default();
-    let node = render(&snapshot, &config, &crate::editor::fem3d::interaction::Fem3dInteractionSnapshot::default(), None).expect("fixture surface admission");
+    let node = render(&snapshot, &config, &Fem3dInteractionSnapshot::default(), None).expect("fixture surface admission");
     let stack_grows = |layout: &semio_framework_ui_contract::LayoutSpec| {
         matches!(layout, semio_framework_ui_contract::LayoutSpec::Stack(stack) if stack.grow)
     };
@@ -113,13 +115,13 @@ async fn results_scene_includes_solid_vertex_colors_3d() {
     let app = app_with_example().await;
     let snapshot = app.snapshot().expect("snapshot");
     let config = Fem3dResultsWindowConfig { result_source_id: Some("dead".into()), result_mode: crate::app_surface::ResultMode::Static, ..Fem3dResultsWindowConfig::default() };
-    let node = render(&snapshot, &config, &crate::editor::fem3d::interaction::Fem3dInteractionSnapshot::default(), None).expect("fixture surface admission");
+    let node = render(&snapshot, &config, &Fem3dInteractionSnapshot::default(), None).expect("fixture surface admission");
     let scene_stack = node.children.get(1).expect("caption + growing scene stack");
     let surface = scene_stack.children.iter().find(|child| matches!(&child.component, semio_framework_ui_contract::Component::Surface(_))).expect("world surface child");
     let scene: semio_framework_ui_scene::World3dScene = semio_framework_plugin::artifact_app_laws::built_surface_scene(surface).expect("assemble world scene");
-    let json = serde_json::to_string(&node).expect("independent semantic JSON oracle");
     assert!(scene.meshes_json.contains("solid-sol1"), "expected the solid mesh in the results scene: {}", scene.meshes_json);
     assert!(scene.meshes_json.contains("\"colors\""), "expected a vertex colors array on the solid mesh data: {}", scene.meshes_json);
+    let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("fixture projection");
     assert!(json.contains("Case: dead"), "expected a case-id caption: {json}");
 }
 

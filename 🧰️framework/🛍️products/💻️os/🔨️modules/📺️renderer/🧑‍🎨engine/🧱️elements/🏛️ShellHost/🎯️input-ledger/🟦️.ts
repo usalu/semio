@@ -21,10 +21,14 @@
 // #endregion 🧲️Header
 
 //#region 🪪️Provenance
-/** 🪪️ Who issued an input. `user` is a DOM gesture or widget press; `guest` is a follow-up the guest armed
- * (`replayShellCommand`, `dispatchAction`, `setActiveUtility` effects); `tutorial` and `replay` are the
- * director/recorder lanes; `tick` is a self-gating background loop. */
-export type InputOriginV1 = "user" | "guest" | "tutorial" | "replay" | "tick";
+/** 🪪️ Who issued an input. `user` is a CONTROL press (a button, a menu row, a keybinding, a picker) — the
+ * one origin whose refusals may become a notice; `gesture` is a pointer/camera stream a scene host
+ * (canvas, world, map, board) derived from raw input — the surface is its own feedback, so a refused
+ * gesture is logged, never toasted (a 60 Hz `setCamera` that the guest refuses would otherwise toast once
+ * per throttle window for as long as the user orbits — measured on process3d); `guest` is a follow-up the
+ * guest armed (`replayShellCommand`, `dispatchAction`, `setActiveUtility` effects); `tutorial` and
+ * `replay` are the director/recorder lanes; `tick` is a self-gating background loop. */
+export type InputOriginV1 = "user" | "gesture" | "guest" | "tutorial" | "replay" | "tick";
 
 export type InputProvenanceV1 = Readonly<{
   /** 🪟️ The window instance the input addresses, or `null` for a mode-level / windowless input. */
@@ -133,8 +137,9 @@ export function inputRefusalTextV1(action: string, outcome: Extract<InputOutcome
   return `input #${outcome.inputSeq} ${action} refused: ${outcome.reason} (${provenance.origin}${where}${cause})${detail}`;
 }
 
-/** 🔔️ Should a user-facing notice fire for this refusal? Guest/tick origins never toast; the reason table
- * decides for the rest. */
+/** 🔔️ Should a user-facing notice fire for this refusal? Only a CONTROL-originated input (`user`, or the
+ * tutorial/replay lanes replaying one) may toast, and only for the reasons the table admits; `gesture`,
+ * `guest` and `tick` origins are logged only. */
 export function inputRefusalNotifiesV1(outcome: Extract<InputOutcomeV1, { kind: "refused" }>, provenance: InputProvenanceV1): boolean {
   return (provenance.origin === "user" || provenance.origin === "tutorial" || provenance.origin === "replay") && INPUT_REFUSAL_NOTIFIED_V1[outcome.reason];
 }

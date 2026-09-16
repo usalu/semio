@@ -1,0 +1,16 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/app/energy/model/model3d-viewer-window/config/mutations.json",
+  "title": "EnergyModelViewerWindowConfigMutation",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "camera"],
+      "properties": {
+        "kind": { "const": "set-camera" },
+        "camera": { "$ref": "schema.json#/properties/camera" }
+      }
+    }
+  ]
+}

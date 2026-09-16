@@ -4,7 +4,7 @@ use semio_framework_plugin::{ExampleSource, LocalizedLabel};
 
 pub const ID: &str = "demo";
 pub fn label() -> LocalizedLabel {
-    LocalizedLabel::native("Demo", "Demo")
+    LocalizedLabel::native("Reuse Map", "Karte wiederverwenden")
 }
 pub const ICON: &str = "file";
 pub const PRIMARY_TEXT: &str = include_str!("../../🖼️assets/🎬️demo/🗣️.dsl.semio");

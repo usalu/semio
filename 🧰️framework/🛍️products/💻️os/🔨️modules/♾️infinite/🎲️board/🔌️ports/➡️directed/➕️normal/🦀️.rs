@@ -2441,8 +2441,14 @@ pub mod board_host {
         next: Camera,
     }
 
-    pub const BOARD_POINTER_ITEM_CAPACITY: usize = 256;
-    pub const BOARD_POINTER_BYTE_CAPACITY: usize = 16 * 1024;
+    /// 🧮️ Entities (nodes + handles + edges + wires) one board descriptor, selection or gesture payload
+    /// may carry. Sized for the largest shipped puzzle 2d example: Nakagin Capsule Tower is 180 nodes
+    /// + 358 handles + 179 edges = 717 entities — the old 256 refused it silently (`parse_fixture_json`
+    /// → `false`, three empty panes, 2026-09-16).
+    pub const BOARD_POINTER_ITEM_CAPACITY: usize = 1_024;
+    /// 🧮️ Entity-id bytes the same payloads may carry — Nakagin's UUID ids total ~29 KiB; kept under the
+    /// guest's 64 KiB contiguous-request ceiling since every owner here is one boxed array.
+    pub const BOARD_POINTER_BYTE_CAPACITY: usize = 48 * 1024;
 
     #[derive(Clone, Copy, Debug, PartialEq, Eq)]
     pub enum BoardPointerPhase {

@@ -19,7 +19,7 @@ pub mod config;
 
 use crate::editor::model::interaction::{EnergyModelInteractionSnapshot, ENERGY_GRANULARITY_SURFACE, ENERGY_MODEL_INTERACTION_DOMAIN};
 use crate::scene::{energy_model_scene, EnergySceneStyle};
-use semio_framework_plugin::plugin_app_close_prelude::{column, text, Buildable, HasBase, HasChildren, HasStackLayout, Label as SemanticLabel, SurfaceKind as SemanticSurfaceKind};
+use semio_framework_plugin::plugin_app_close_prelude::{column, image, row, text, Buildable, HasBase, HasChildren, HasStackLayout, Label as SemanticLabel, SurfaceKind as SemanticSurfaceKind, UiText};
 use semio_framework_plugin::{ActionArgDef, ActionDefinition, ActionKind, BuiltNode, InteractiveJobClassification, LocalizedLabel, PluginAssemblyError, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions};
 use std::collections::HashMap;
 
@@ -84,20 +84,87 @@ pub fn definition() -> WindowKindDefinition {
 /// browser the moment a run started colouring, `🗑️generated/energy-results-w1/console.txt`).
 pub const CAPTION_NODE_ID: &str = "energy.model.3d.caption";
 pub const CAPTION_SCENE_NODE_ID: &str = "energy.model.3d.scene";
+/// 🔑️ The legend column that hosts the caption line and — when the render carries result bounds —
+/// the ramp strip. It takes the FIRST root-child slot the bare caption used to take.
+pub const LEGEND_NODE_ID: &str = "energy.model.3d.legend";
+pub const LEGEND_STRIP_NODE_ID: &str = "energy.model.3d.legend.strip";
+pub const LEGEND_MINIMUM_NODE_ID: &str = "energy.model.3d.legend.minimum";
+pub const LEGEND_MAXIMUM_NODE_ID: &str = "energy.model.3d.legend.maximum";
+/// 🔑️ `{prefix}{band index}` — one id per swatch, so eight siblings never collide on `#0`.
+pub const LEGEND_SWATCH_NODE_ID_PREFIX: &str = "energy.model.3d.legend.band.";
 
 fn caption_error(reason: &'static str) -> PluginAssemblyError {
     PluginAssemblyError::new("energy.model.3d.caption", reason)
 }
 
-/// 🏷️ Places a data caption (the results legend) above the world scene — fem3d's
-/// `📊️results/🦀️.rs::with_caption` shape, plus the explicit sibling ids that shape is missing.
-fn with_caption(scene: BuiltNode, caption: &str) -> UiAssemblyResult<BuiltNode> {
+/// 🎨️ One ramp band as a rendered rectangle.
+///
+/// 🧱️ Why an `Image` and not a coloured box: the UI contract's `Component` set is closed (19 variants,
+/// no badge/chip/swatch) and `StyleSpec` is "closed enums over ui_styling tokens, never raw values" —
+/// there is no node-level `background`, and `TextProps::data_attributes` is a payload-packing device
+/// the react `TextView` never renders as DOM attributes. `ImageProps::src` is the ONE lane that
+/// carries a plugin-chosen colour into a rendered rectangle in both targets (react's `ImageView`
+/// passes `src` through verbatim; the wgpu target maps it to `UiImageNode`). An inline SVG data URI
+/// is ~160 bytes, well inside `UI_TEXT_MAX_BYTES` (512), and `<`/`>`/`#` are percent-encoded so the
+/// URI needs no base64 dependency and is valid without relying on lenient parsing.
+pub fn legend_swatch_src(hex: &str) -> String {
+    format!(
+        "data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='18'%20height='12'%3E%3Crect%20width='18'%20height='12'%20fill='%23{}'/%3E%3C/svg%3E",
+        hex.trim_start_matches('#')
+    )
+}
+
+/// 🎨️ The ramp strip: `min` · eight swatches low→high · `max`. The colours come from
+/// `crate::editor::model::results::legend_bands()`, which is the SAME array `band_color` indexes to
+/// paint the meshes, so the strip can never describe a ramp the scene is not using.
+fn legend_strip(minimum: f64, maximum: f64) -> UiAssemblyResult<BuiltNode> {
+    let (low, high) = crate::editor::model::results::legend_bounds_labels(minimum, maximum);
+    let cell = |id: &str, value: String| -> UiAssemblyResult<BuiltNode> {
+        let label = SemanticLabel::try_from(value).map_err(|_| caption_error("a legend bound exceeds its UI label bound"))?;
+        text(label).try_id(id).map_err(|_| caption_error("a legend bound node id was refused"))?.try_build().map_err(|_| caption_error("a legend bound node was refused"))
+    };
+    let mut children = vec![cell(LEGEND_MINIMUM_NODE_ID, low)?];
+    for (index, band) in crate::editor::model::results::legend_bands().into_iter().enumerate() {
+        let source = UiText::try_from_string(legend_swatch_src(band)).map_err(|_| caption_error("a legend swatch source exceeds its UI text bound"))?;
+        children.push(
+            image(source)
+                // 🙈️ Each swatch is decorative: the strip as a whole carries the accessible name, so a
+                // screen reader hears one legend rather than eight unnamed rectangles.
+                .decorative()
+                .try_id(format!("{LEGEND_SWATCH_NODE_ID_PREFIX}{index}"))
+                .map_err(|_| caption_error("a legend swatch node id was refused"))?
+                .try_build()
+                .map_err(|_| caption_error("a legend swatch node was refused"))?,
+        );
+    }
+    children.push(cell(LEGEND_MAXIMUM_NODE_ID, high)?);
+    row()
+        .try_id(LEGEND_STRIP_NODE_ID)
+        .map_err(|_| caption_error("the legend strip node id was refused"))?
+        .try_label("Result scale, low to high")
+        .map_err(|_| caption_error("the legend strip label was refused"))?
+        .try_children(children)
+        .map_err(|_| caption_error("the legend strip children were refused"))?
+        .try_build()
+        .map_err(|_| caption_error("the legend strip was refused"))
+}
+
+/// 🏷️ Places the results legend above the world scene — fem3d's `📊️results/🦀️.rs::with_caption`
+/// shape, plus the explicit sibling ids that shape is missing, plus the ramp strip when the render
+/// knows the bounds the ramp was normalized over. `bounds` is `None` for a caption that names no
+/// numeric scale, and the whole legend is absent when there is no overlay at all.
+fn with_caption(scene: BuiltNode, caption: &str, bounds: Option<(f64, f64)>) -> UiAssemblyResult<BuiltNode> {
     let caption = SemanticLabel::try_from(caption.to_string()).map_err(|_| caption_error("the scene caption exceeds its UI label bound"))?;
     let label = text(caption)
         .try_id(CAPTION_NODE_ID)
         .map_err(|_| caption_error("the caption node id was refused"))?
         .try_build()
         .map_err(|_| caption_error("the caption node was refused"))?;
+    let mut legend = column().try_id(LEGEND_NODE_ID).map_err(|_| caption_error("the legend node id was refused"))?.try_child(label).map_err(|_| caption_error("the caption child was refused"))?;
+    if let Some((minimum, maximum)) = bounds {
+        legend = legend.try_child(legend_strip(minimum, maximum)?).map_err(|_| caption_error("the legend strip child was refused"))?;
+    }
+    let legend = legend.try_build().map_err(|_| caption_error("the legend node was refused"))?;
     let scene_stack = column()
         .grow(true)
         .try_id(CAPTION_SCENE_NODE_ID)
@@ -108,7 +175,7 @@ fn with_caption(scene: BuiltNode, caption: &str) -> UiAssemblyResult<BuiltNode> 
         .map_err(|_| caption_error("the captioned scene stack was refused"))?;
     column()
         .grow(true)
-        .try_children([label, scene_stack])
+        .try_children([legend, scene_stack])
         .map_err(|_| caption_error("the caption children were refused"))?
         .try_build()
         .map_err(|_| caption_error("the caption node was refused"))
@@ -133,6 +200,21 @@ pub fn render_with_camera(
     caption: Option<&str>,
     camera: Option<&config::EnergyModelWindowConfig>,
 ) -> UiAssemblyResult<BuiltNode> {
+    render_with_legend(model, interaction, overlay, caption, None, camera)
+}
+
+/// 🎨️ The same render again, plus the `(min, max)` the results ramp was normalized over. With
+/// `bounds` the caption line grows the 8-swatch ramp strip underneath it; without them (and with a
+/// caption that names no scale) only the caption line is drawn. `bounds` is ignored when there is no
+/// caption at all — no overlay, no legend, exactly the bare viewport the edit layout renders.
+pub fn render_with_legend(
+    model: &crate::model::Model,
+    interaction: &EnergyModelInteractionSnapshot,
+    overlay: Option<&HashMap<u32, [f64; 3]>>,
+    caption: Option<&str>,
+    bounds: Option<(f64, f64)>,
+    camera: Option<&config::EnergyModelWindowConfig>,
+) -> UiAssemblyResult<BuiltNode> {
     let style = EnergySceneStyle { selected_ids: &interaction.selected_ids, hovered_ids: &interaction.hovered_ids, overlay };
     let mut scene = energy_model_scene(model, &style, Some((ENERGY_MODEL_INTERACTION_DOMAIN, ENERGY_GRANULARITY_SURFACE)));
     if let Some(window) = camera {
@@ -140,7 +222,7 @@ pub fn render_with_camera(
     }
     let node = semio_framework_plugin::scene_surface(BODY_KEY, SemanticSurfaceKind::World3d, &scene)?;
     match caption {
-        Some(caption) => with_caption(node, caption),
+        Some(caption) => with_caption(node, caption, bounds),
         None => Ok(node),
     }
 }

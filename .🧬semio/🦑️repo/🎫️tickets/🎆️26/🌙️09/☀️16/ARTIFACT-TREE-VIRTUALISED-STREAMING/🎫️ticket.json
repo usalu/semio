@@ -1,0 +1,12 @@
+{
+  "title": "Artifact Tree Virtualised Streaming",
+  "emoji": "🌳️",
+  "status": "open",
+  "description": "Artifact trees (and every other paged panel tree) must present the complete document with no +N continuation rows: children are loaded lazily when a node is expanded and only as many rows as fit the viewport are materialised, with further rows streamed in from the guest as the user scrolls. One general framework-owned mechanism (contract, SDK, React host, wgpu target) applied to every app.",
+  "goal": "AI-OPTIMIZED-REPO",
+  "sessions": [
+    "⚪f7399588-9bfc-41bd-9df2-fa8aab3cddd0"
+  ],
+  "note": "Ticket bookkeeping manual on disk: repo MCP timed out (2026-09-16). Coordinator: Fable 5.1 in the main chat; execution: Opus 5 agents; exploration/audit: Sonnet 5 agents. Predecessor note: 26/09/16/PUZZLE-3D-ARTIFACT-TREE-PAGING (ellipsis continuation row).",
+  "openedAt": "2026-09-16"
+}

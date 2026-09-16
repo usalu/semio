@@ -1,0 +1,12 @@
+{
+  "mutation": "replaceCombination",
+  "id": "sls_char",
+  "newCombination": {
+    "id": "sls_char",
+    "name": "SLS Frequent",
+    "terms": {
+      "dead": 1.0,
+      "snow": 0.5
+    }
+  }
+}

@@ -16,6 +16,7 @@ role = "plugin"
 
 [[package.metadata.semio.playground]]
 variant = "shooting"
+app = "s.shooting.shooting@1/*#editor"
 ports = { react = 6019, wgpu = 6119 }
 
 [[package.metadata.semio.assets]]

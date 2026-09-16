@@ -1,0 +1,12 @@
+{
+  "mutation": "replaceCombination",
+  "id": "sls",
+  "newCombination": {
+    "id": "sls",
+    "name": "SLS characteristic",
+    "terms": {
+      "dead": 1.1,
+      "wind": 0.55
+    }
+  }
+}

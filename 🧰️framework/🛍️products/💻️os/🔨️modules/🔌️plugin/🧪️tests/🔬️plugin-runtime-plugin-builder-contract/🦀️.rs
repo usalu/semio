@@ -334,6 +334,11 @@ mod plugin_builder_contract_tests {
         /// dispatch and via a task resume produce byte-identical mutations.
         #[dsl(key = "apply-count-from-task")]
         ApplyCountFromTask { value: i32 },
+        /// 🔀️ Ticket 26/09/16/INPUT-CAUSALITY-LEDGER §2 C — the exact emit shape of fem2d's
+        /// `canvasPointerUp` on the typed-operation ladder: NO durable store lane, one guest-emitted
+        /// `interactionSelect` (`Effect::ReplayShellCommand`) and a partial window refresh.
+        #[dsl(key = "pick-item")]
+        PickItem { id: String },
     }
 
     impl ::protocol::OpText for TestCommand {
@@ -904,6 +909,9 @@ mod plugin_builder_contract_tests {
                 TestCommand::ProbeChild { .. } => "probeChild",
                 TestCommand::SpawnCountTask => "spawnCountTask",
                 TestCommand::ApplyCountFromTask { .. } => "applyCountFromTask",
+                // 🔀️ Rides the keyed fixture's ONE generated tool id (`TOOL_JOB_IDS` is fixture-checked):
+                // a pick and a composite edit are two commands of the same typed tool.
+                TestCommand::PickItem { .. } => "compositeEdit",
             }
         }
 
@@ -979,6 +987,7 @@ mod plugin_builder_contract_tests {
                     .await,
                 )),
                 TestCommand::ApplyCountFromTask { value } => Ok(Emit::mutations(vec![TestMutation::SetCount(SetCount { value: *value })])),
+                TestCommand::PickItem { id } => Ok(keyed_pick_emit(id)),
             }
         }
 
@@ -1081,6 +1090,62 @@ mod plugin_builder_contract_tests {
     #[derive(Default)]
     struct KeyedTestApp;
 
+    /// 🪟️ The keyed fixture's one window body — the carrier's own partial refresh scope names it.
+    const KEYED_WINDOW_BODY_KEY: &str = "synthetic.main";
+
+    /// 🔀️ Exactly what `canvas_gesture::pointer_up` (fem2d) returns for a pick: ONE
+    /// `interaction_select_effect` (`Effect::ReplayShellCommand { interactionSelect }`), a partial
+    /// window refresh, and NO store lane — the emit whose verb reached the host on the install pump.
+    fn keyed_pick_emit(id: &str) -> Emit<TestMutation, TestConfigMutation> {
+        Emit {
+            effects: vec![inline_interaction_select(interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), id))],
+            ui_scope: keyed_pick_carrier_scope(),
+            ..Default::default()
+        }
+    }
+
+    fn keyed_pick_carrier_scope() -> UiDirtyScope {
+        UiDirtyScope::Partial { window_bodies: vec![KEYED_WINDOW_BODY_KEY.into()], panel_bodies: Vec::new(), utilities: false, tools: false, engagements: false, measures: false, labels: false }
+    }
+
+    /// 🗝️ `keyed_test_registry` plus the declared `items` interaction domain a `PickItem`'s verb
+    /// names — the registry the typed-ladder fold laws dispatch against. `PickItem` rides the
+    /// fixture's one generated tool (`compositeEdit`, see `command_id`), so no second command is declared.
+    async fn keyed_pick_test_registry() -> AppActionRegistry {
+        let manifest = App::from_builder(
+            App::builder(KeyedTestApp::APP_ID, LocalizedLabel::data("Keyed Fixture"))
+                .await
+                .document(["state"])
+                .mode("edit", LocalizedLabel::data("Edit"), "pencil")
+                .await
+                .window_kind("main", LocalizedLabel::data("Main"), KEYED_WINDOW_BODY_KEY, SurfaceKind::Canvas2d, IconName::AppWindow)
+                .await
+                .app_command("compositeEdit", LocalizedLabel::data("Set Parameter"), "fixture", ActionKind::Mutation)
+                .await
+                .interaction(InteractionDefinition {
+                    id: "items".into(),
+                    label: LocalizedLabel::data("Items"),
+                    granularities: vec![GranularityDefinition { id: "item".into(), label: LocalizedLabel::data("Item"), icon_id: IconName::AppWindow }],
+                    hierarchy: HierarchyProvider::Topology,
+                    hover: HoverSpec::default(),
+                    selection: SelectionSpec {
+                        modes: vec![SelectionMode::Multiple, SelectionMode::Single],
+                        methods: vec![SelectionMethod::Pick],
+                        merges: vec![MergeMode::Replace, MergeMode::Additive, MergeMode::Subtractive, MergeMode::Invertive, MergeMode::Range],
+                        transitive: false,
+                        broadcast: true,
+                    },
+                })
+                .await
+                .window_kind_interactions("main", vec![InteractionRef::new("items")])
+                .await
+                .interactive_jobs(InteractiveJobClassification::Migrated)
+                .await,
+        )
+        .await;
+        AppActionRegistry::from_definition(&manifest.definition)
+    }
+
     struct KeyedTestCommandDisposer;
 
     impl ArtifactOwnedDisposer<TestCommand> for KeyedTestCommandDisposer {
@@ -1088,17 +1153,23 @@ mod plugin_builder_contract_tests {
             if maximum_items == 0 || maximum_bytes < 4 {
                 return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
             }
-            let TestCommand::CompositeEdit { slot, child_id, .. } = command else {
-                return Err(Fault::from("keyed fixture owns only its composite command"));
+            let popped = match command {
+                TestCommand::CompositeEdit { slot, child_id, .. } => slot.pop().or_else(|| child_id.pop()),
+                TestCommand::PickItem { id } => id.pop(),
+                _ => return Err(Fault::from("keyed fixture owns only its composite and pick commands")),
             };
-            if let Some(character) = slot.pop().or_else(|| child_id.pop()) {
+            if let Some(character) = popped {
                 return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: character.len_utf8() });
             }
             Ok(PluginCloseStep::Complete)
         }
 
         fn terminal_is_empty(&self, command: &TestCommand) -> bool {
-            matches!(command, TestCommand::CompositeEdit { slot, child_id, .. } if slot.is_empty() && child_id.is_empty())
+            match command {
+                TestCommand::CompositeEdit { slot, child_id, .. } => slot.is_empty() && child_id.is_empty(),
+                TestCommand::PickItem { id } => id.is_empty(),
+                _ => false,
+            }
         }
     }
 
@@ -1127,11 +1198,14 @@ mod plugin_builder_contract_tests {
                 self.page += 1;
                 return semio_framework_job::StepOutcome::Yield;
             }
-            let TestCommand::CompositeEdit { slot, child_id, child_value } = self.command.as_deref().unwrap() else {
-                panic!("exact keyed fixture command");
+            let emit = match self.command.as_deref().unwrap() {
+                TestCommand::CompositeEdit { slot, child_id, child_value } => {
+                    let child_emits = (!slot.is_empty()).then(|| ChildEmit::of::<TestSnapshot, _>(slot.clone(), child_id.clone(), &[TestMutation::SetCount(SetCount { value: *child_value })])).into_iter().collect();
+                    Emit { artifact_mutations: vec![TestMutation::SetCount(SetCount { value: self.base_count + child_value })], child_emits, description: Some("retained composite edit".into()), ..Default::default() }
+                }
+                TestCommand::PickItem { id } => keyed_pick_emit(id),
+                _ => panic!("exact keyed fixture command"),
             };
-            let child_emits = (!slot.is_empty()).then(|| ChildEmit::of::<TestSnapshot, _>(slot.clone(), child_id.clone(), &[TestMutation::SetCount(SetCount { value: *child_value })])).into_iter().collect();
-            let emit = Emit { artifact_mutations: vec![TestMutation::SetCount(SetCount { value: self.base_count + child_value })], child_emits, description: Some("retained composite edit".into()), ..Default::default() };
             self.completion.as_ref().unwrap().complete(Ok(emit), EphemeralEmit::default()).expect("one exact keyed completion");
             semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate {
                 state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState),
@@ -6200,6 +6274,150 @@ mod plugin_builder_contract_tests {
         let snapshot = app.test_interaction_selection_snapshot();
         assert!(snapshot.selection.values().all(|selection| selection.ids.is_empty()), "a non-interaction DispatchAction moves no selection: {:?}", snapshot.selection);
         close_reserved_app(&mut app);
+    }
+
+    /// 🔀️ Ticket 26/09/16/INPUT-CAUSALITY-LEDGER §2 C — the PER-TURN law of the typed-operation
+    /// ladder, observed the way the browser host observes it (`advance_typed_operation_output`
+    /// drains one effect per turn from `typed_effect_outbox` and hands it to `routeHostEffects`):
+    /// on NO turn of a typed app command does a guest-emitted interaction verb leave the reactor as
+    /// an effect. The emit is fem2d's `canvasPointerUp` shape — no durable store lane, ONE
+    /// `interactionSelect`, a partial window refresh — because that is the shape that leaked:
+    /// `publish_mounted_typed_operation_unit` installed the completion and, in the SAME call, fell
+    /// through to `emit.effects.pop()` → `typed_effect_outbox`, while the fold gate
+    /// (`mounted_typed_inline_interaction_verbs_are_next`) had been consulted BEFORE the install
+    /// and answered false on a still-`None` publication. Measured: 18 `replayShellCommand dispatch
+    /// {"actionId":"interactionSelect"}` host lines per battery on the fem2d React lane.
+    ///
+    /// Laws asserted per turn and at the end: the verb is never an effect of any turn; no `Effect`
+    /// result page is ever published; the selection snapshot moved inside the operation; the `Ui`
+    /// progress scope the host receives is already WIDER than the carrier's own partial scope (the
+    /// fold ran before the `Ui` page was minted); the fold's leftover `InteractionView` rides that
+    /// same progress unit; the operation retires through `Ui` + `Terminal` and one completion.
+    /// Fails-before: the first turn after admission yielded the `ReplayShellCommand`.
+    #[semio_framework_async_macros::async_test]
+    async fn typed_ladder_never_hands_a_guest_interaction_verb_to_the_host_on_any_turn() {
+        let id = 47u32;
+        let mut app = VcsArtifactApp::<KeyedTestApp>::with_registry(KeyedTestApp, keyed_pick_test_registry().await).await;
+        app.bind_instance_id(id).await;
+        let meta = ActionMeta { actor: "fixture".into(), instance_id: id, view_state: None };
+        let outcome: Result<(), String> = async {
+            let admitted = app.dispatch_typed(TestCommand::PickItem { id: "item-1".into() }, &meta).await.map_err(|error| format!("admit the pick: {error:?}"))?;
+            if !admitted.requested_effects.is_empty() || !admitted.mutations.is_empty() {
+                return Err(format!("the admitting result of a typed command carries no effect and no mutation: {:?}", admitted.requested_effects));
+            }
+            let deadline = std::time::Instant::now() + std::time::Duration::from_secs(30);
+            let (mut turns, mut lanes, mut progress_units, mut completions) = (0usize, Vec::new(), Vec::new(), 0usize);
+            while app.has_pending_typed_operations() {
+                if std::time::Instant::now() >= deadline {
+                    return Err(format!("the pick did not retire within 30 s: turns={turns} lanes={lanes:?}"));
+                }
+                app.maintenance_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(|error| format!("maintenance: {error:?}"))?;
+                app.advance_typed_operation_publication().await.map_err(|error| format!("turn {turns}: {error:?}"))?;
+                turns += 1;
+                while let Some(page) = app.take_typed_operation_result_page(id) {
+                    if page.lane == TypedOperationResultLane::Fault {
+                        return Err(format!("turn {turns}: fault page {}", String::from_utf8_lossy(page.bytes())));
+                    }
+                    lanes.push(page.lane);
+                    if !app.acknowledge_typed_operation_result(page.token).map_err(|error| format!("ack: {error:?}"))? {
+                        return Err(format!("turn {turns}: exact result ACK rejected"));
+                    }
+                }
+                // 📡️ EXACTLY the host's per-turn effect drain — every effect this turn hands out.
+                while let Some(effect) = app.take_typed_operation_effect() {
+                    let verb = match &effect {
+                        Effect::ReplayShellCommand { action_id, .. } => crate::app::INTERACTION_ACTION_IDS.contains(&action_id.as_str()),
+                        Effect::DispatchAction { action, .. } => crate::app::INTERACTION_ACTION_IDS.contains(&action.as_str()),
+                        _ => false,
+                    };
+                    if verb {
+                        return Err(format!("turn {turns}: a guest interaction verb left the reactor as a host effect: {effect:?} (lanes so far {lanes:?})"));
+                    }
+                }
+                while app.take_typed_operation_event().is_some() {}
+                while let Some(progress) = app.take_typed_operation_ui_progress() {
+                    progress_units.push(progress);
+                }
+                while app.take_typed_operation_completion().await.map_err(|error| format!("completion: {error:?}"))?.is_some() {
+                    completions += 1;
+                }
+                while let Some(reply) = app.take_local_interaction_query_reply() {
+                    if let protocol::LocalInteractionQueryReply::Page { page } = reply {
+                        let token = protocol::LocalInteractionQueryToken { request_id: page.request_id, query_generation: page.query_generation, identity: page.identity.clone(), ordinal: page.ordinal };
+                        if !app.acknowledge_local_interaction_query(&token) {
+                            return Err("local-interaction ACK rejected".into());
+                        }
+                    }
+                }
+                std::thread::yield_now();
+            }
+            println!("[DEBUG] typed-ladder pick retired after {turns} turns: lanes={lanes:?} completions={completions} progress={}", progress_units.len());
+            if lanes.contains(&TypedOperationResultLane::Effect) {
+                return Err(format!("no Effect result page may be minted for a verb that folds inline: {lanes:?}"));
+            }
+            if !lanes.contains(&TypedOperationResultLane::Ui) || !lanes.contains(&TypedOperationResultLane::Terminal) || completions != 1 {
+                return Err(format!("the operation retires through Ui + Terminal with one completion witness: {lanes:?} / {completions}"));
+            }
+            let selected = app.interaction_state().await.selection.get("items").map(|selection| selection.ids.clone());
+            if selected != Some(vec!["item-1".to_string()]) {
+                return Err(format!("the pick landed inside the operation: {selected:?}"));
+            }
+            let Some(progress) = progress_units.last() else { return Err("the host receives one Ui progress unit".into()) };
+            if progress.ui_scope == keyed_pick_carrier_scope() {
+                return Err(format!("the Ui scope the host receives is widened by the folded verb's declared interaction refresh scope, got the bare carrier scope {:?}", progress.ui_scope));
+            }
+            match &progress.ui_scope {
+                UiDirtyScope::Full => {}
+                UiDirtyScope::Partial { window_bodies, .. } if window_bodies.iter().any(|body| body == KEYED_WINDOW_BODY_KEY) => {}
+                other => return Err(format!("the carrier's own window body survives the merge: {other:?}")),
+            }
+            let Some(leftover) = progress.leftover.as_ref() else { return Err("the folded verb's leftover InteractionView rides the Ui progress unit".into()) };
+            if leftover.operation != admitted.output.get("operationId").and_then(DslValue::as_str).and_then(|id| id.parse::<u64>().ok()).unwrap_or(u64::MAX) {
+                return Err(format!("the leftover is tagged with the operation that folded it: {} vs {:?}", leftover.operation, admitted.output));
+            }
+            let ids = leftover.view.get("interactionView").and_then(|view| view.get("selectedIds")).and_then(DslValue::as_array).ok_or_else(|| format!("leftover shape: {leftover:?}"))?;
+            if !ids.iter().any(|id| id.as_str() == Some("item-1")) {
+                return Err(format!("leftover selected ids {ids:?}"));
+            }
+            let history = app.test_history().await;
+            if !history.commands.iter().any(|entry| entry.action_id == INTERACTION_SELECT_ACTION_ID && entry.kind == ActionKind::Interaction) {
+                return Err("the folded verb still records its `Interaction` command-log row".into());
+            }
+            Ok(())
+        }
+        .await;
+        crate::app::artifact_app_laws::close_registered_fixture_app(&mut app);
+        outcome.expect("typed-ladder per-turn fold law");
+    }
+
+    /// 🕹️ Ticket 26/09/16/INPUT-CAUSALITY-LEDGER §2 C — the leftover a typed operation's folded verb
+    /// owes the host rides the `Invocation` reply of the command that STARTED that operation
+    /// (`merge_typed_operation_leftover_into_reply`, run by `plugin_exchange` after its typed pump):
+    /// the reply's `{ operationId, generation }` witness keeps both keys and gains `interactionView`,
+    /// the envelope `interactionViewFromLeftoverOutput` peels from `response.output`. A reply that
+    /// answers another operation, an unsolicited (`in_reply_to: 0`) frame and a non-`Invocation`
+    /// frame are left byte-identical. Fails-before: the typed ladder dropped `fold.leftover`, so the
+    /// host's leftover overlay / Inspection tab never moved for a folded pick.
+    #[test]
+    fn typed_operation_leftover_merges_into_exactly_the_carrying_reply() {
+        let started = |operation: &str| store::pack_rt::encode_wire_value(&DslValue::Object(vec![("operationId".into(), DslValue::String(operation.into())), ("generation".into(), DslValue::String("7".into()))]));
+        let invocation = |in_reply_to: u64, output: Vec<u8>| protocol::AppFrame::Invocation { in_reply_to, output, diagnostics: Vec::new(), ui_scope: Vec::new(), history_patch: Vec::new(), messages: Vec::new(), mutations: Vec::new(), inverse_group: Vec::new() };
+        let view = DslValue::Object(vec![("interactionView".into(), DslValue::Object(vec![("selectedIds".into(), DslValue::Array(vec![DslValue::String("item-1".into())]))]))]);
+        let leftover = crate::app::TypedOperationLeftover { operation: 42, view };
+        let mut frames = vec![protocol::AppFrame::Done { in_reply_to: 1 }, invocation(2, started("41")), invocation(0, started("42")), invocation(3, started("42"))];
+        let untouched: Vec<Vec<u8>> = frames.iter().take(3).map(|frame| crate::app::resolve_ready(protocol::encode_app_frame(frame))).collect();
+        assert!(super::merge_typed_operation_leftover_into_reply(&mut frames, &leftover), "the reply that started operation 42 receives the leftover");
+        for (index, before) in untouched.iter().enumerate() {
+            assert_eq!(&crate::app::resolve_ready(protocol::encode_app_frame(&frames[index])), before, "frame {index} answers no fold and stays byte-identical");
+        }
+        let protocol::AppFrame::Invocation { in_reply_to: 3, output, .. } = &frames[3] else { panic!("the carrying reply keeps its sequence") };
+        let merged = store::pack_rt::decode_wire_value(output).expect("merged output decodes");
+        assert_eq!(merged.get("operationId").and_then(DslValue::as_str), Some("42"), "the operation witness the host awaits survives: {merged:?}");
+        assert_eq!(merged.get("generation").and_then(DslValue::as_str), Some("7"));
+        let ids = merged.get("interactionView").and_then(|view| view.get("selectedIds")).and_then(DslValue::as_array).expect("interactionView joins the witness");
+        assert_eq!(ids.iter().filter_map(DslValue::as_str).collect::<Vec<_>>(), vec!["item-1"]);
+        let mut none = vec![invocation(4, started("40"))];
+        assert!(!super::merge_typed_operation_leftover_into_reply(&mut none, &leftover), "no reply of this exchange started the folding operation");
     }
     /// 🧪 Ticket 26/09/09/PROCEDURAL-3D-END-TO-END (`📓️selection-dedupe-2026-09-12.md`): the leftover
     /// `selectedIds` publication is a SET of topology ids — `Select` is event-sourced, so it is

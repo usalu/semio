@@ -1,0 +1,5 @@
+union EnergyModelViewerWindowConfigMutation = SetEnergyModelViewerCamera
+
+type SetEnergyModelViewerCamera {
+  camera: EnergyModelViewerCameraPose!
+}

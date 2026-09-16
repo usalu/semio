@@ -466,8 +466,8 @@ async fn every_publication_lane_retires_a_rejected_authority_without_faulting_ea
             }
             "windowConfig" => {
                 let mutation = |value: &str| WindowConfigMutation::of::<RetirementWindowConfigOwner>("publication-retirement-window-left", config_mutation(value));
-                let mut publication = app.window_config_store.begin(operation, "fixture".into(), &window_config_authority, mutation("first")).expect("window config publication admitted");
-                let mut superseding = app.window_config_store.begin(operation, "fixture".into(), &window_config_authority, mutation("superseding")).expect("superseding window config publication admitted");
+                let mut publication = app.window_config_store.begin(operation, "fixture".into(), &window_config_authority, mutation("first"), None).expect("window config publication admitted");
+                let mut superseding = app.window_config_store.begin(operation, "fixture".into(), &window_config_authority, mutation("superseding"), None).expect("superseding window config publication admitted");
                 for _ in 0..4_096 {
                     if matches!(app.window_config_store.advance(superseding.as_mut(), grant).expect("superseding window config advances"), store::ArtifactStoreOneItemAdvance::Published(_)) {
                         assert!(superseding.acknowledge());

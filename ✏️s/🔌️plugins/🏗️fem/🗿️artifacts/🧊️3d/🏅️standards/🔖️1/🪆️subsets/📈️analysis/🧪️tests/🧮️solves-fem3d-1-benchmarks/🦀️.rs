@@ -22,7 +22,7 @@ use semio_repo_test_host::{Adapter, Json};
 //#region 🔖️Kinds
 /// 🏷️ Every kind of this artifact's vocabulary except `create-`/`delete-`/`replace-solid`, whose
 /// subject is geometry and whose oracles are `three-fem3d-mesh-reader` and
-/// `manifold-fem3d-mesh-measure` — the twenty-two a frame solver can genuinely adjudicate.
+/// `manifold-fem3d-mesh-measure` — the twenty-six a frame solver can genuinely adjudicate.
 /// Duplicated, not imported, because the oracle-only build must not link the subject crate.
 const KINDS: &[&str] = &[
     "create-node",
@@ -47,6 +47,10 @@ const KINDS: &[&str] = &[
     "create-combination",
     "delete-combination",
     "update-analysis-settings",
+    "replace-node",
+    "replace-load",
+    "change-load-case-name",
+    "replace-combination",
 ];
 
 /// 🏗️ The real-world models this case solves whole, by the needle its scenarios name them with.

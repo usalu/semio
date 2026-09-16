@@ -38,8 +38,12 @@ pub const ENERGY_SCENE_FIT_PADDING: f64 = 1.25;
 pub const ENERGY_SCENE_SELECTED_COLOR: [f64; 3] = [0.231, 0.510, 0.965];
 /// 🎨️ How far towards [`ENERGY_SCENE_SELECTED_COLOR`] a selected entity is mixed.
 pub const ENERGY_SCENE_SELECTED_MIX: f64 = 0.65;
-/// 🎨️ How far towards white a hovered entity is lightened.
-pub const ENERGY_SCENE_HOVERED_MIX: f64 = 0.25;
+/// 🎨️ How far towards white a hovered entity is lightened. Hover has to be legible on its OWN — the
+/// react host's `MESH_STYLE_PAINT.hovered` fill never reaches a vertex-coloured mesh (`PaintTexturedMesh`
+/// forces the material to white and the emissive to black when the geometry carries `color`), so this
+/// bake is the entire hover feedback. It moves every channel strictly UP, where selection moves
+/// towards the primary blue — two directions, never confusable.
+pub const ENERGY_SCENE_HOVERED_MIX: f64 = 0.35;
 
 /// 🎨️ Per-`SurfaceClass` base swatch — a warm light grey envelope, darker roofs, mid floors, with
 /// the unlit/opaque classes greyed down so the exterior envelope reads first.

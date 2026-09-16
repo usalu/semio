@@ -650,11 +650,32 @@ impl InteractiveJob for FemJobGraph {
 /// `pub`, so not importable here), kept byte-for-byte equivalent in ordering behavior.
 struct DofMap {
     order: Vec<(String, Dof)>,
+    slots: HashMap<String, [Option<usize>; 6]>,
 }
 
 impl DofMap {
+    /// 🔢️ Wraps an ordered `(node, dof)` run with its per-node slot index, so a lookup is one hash
+    /// probe instead of a scan of the whole order — the scan made every assembly and recovery pass
+    /// quadratic in the mesh (`elements × dofs × order`), which is what dominated a two-thousand-node
+    /// continuum model before the factorization even started.
+    fn from_order(order: Vec<(String, Dof)>) -> Self {
+        let mut slots: HashMap<String, [Option<usize>; 6]> = HashMap::new();
+        for (index, (node_id, dof)) in order.iter().enumerate() {
+            slots.entry(node_id.clone()).or_insert([None; 6])[dof.index()] = Some(index);
+        }
+        Self { order, slots }
+    }
+
     fn get(&self, node_id: &str, dof: Dof) -> Option<usize> {
-        self.order.iter().position(|(current, current_dof)| current == node_id && *current_dof == dof)
+        self.slots.get(node_id)?[dof.index()]
+    }
+
+    /// 🔢️ Appends one `(node, dof)` owner at the end of the order and indexes it — the mounted
+    /// construction emits the order one owner per step.
+    fn push(&mut self, owner: (String, Dof)) {
+        let index = self.order.len();
+        self.slots.entry(owner.0.clone()).or_insert([None; 6])[owner.1.index()] = Some(index);
+        self.order.push(owner);
     }
 
     fn len(&self) -> usize {
@@ -663,28 +684,37 @@ impl DofMap {
 }
 
 fn build_dof_map(nodes: &[Node], elements: &[Elements]) -> DofMap {
-    let mut order = Vec::new();
-    for node in nodes {
-        let mut active: Vec<Dof> = Vec::new();
-        for element in elements {
-            if element.node_ids().iter().any(|id| id == &node.id) {
-                for &dof in element.dofs_per_node() {
-                    if !active.contains(&dof) {
-                        active.push(dof);
-                    }
+    let mut active_of: HashMap<String, Vec<Dof>> = HashMap::new();
+    for element in elements {
+        for id in element.node_ids() {
+            let active = active_of.entry(id).or_default();
+            for &dof in element.dofs_per_node() {
+                if !active.contains(&dof) {
+                    active.push(dof);
                 }
             }
         }
+    }
+    let mut order = Vec::new();
+    for node in nodes {
+        let mut active: Vec<Dof> = active_of.get(node.id.as_str()).cloned().unwrap_or_default();
         active.sort_by_key(|d| d.index());
         for dof in active {
             order.push((node.id.clone(), dof));
         }
     }
-    DofMap { order }
+    DofMap::from_order(order)
 }
 
-fn positions_of(nodes: &[Node], node_ids: &[String]) -> Vec<[f64; 3]> {
-    node_ids.iter().map(|id| nodes.iter().find(|n| &n.id == id).map(|n| n.pos).unwrap_or_default()).collect()
+/// 📍️ World positions of `node_ids` through a node-id index — built once per model, never a scan
+/// of the node list per element.
+fn positions_of(node_slot: &HashMap<String, usize>, nodes: &[Node], node_ids: &[String]) -> Vec<[f64; 3]> {
+    node_ids.iter().map(|id| node_slot.get(id).map(|&slot| nodes[slot].pos).unwrap_or_default()).collect()
+}
+
+/// 📍️ The node-id → slot index `positions_of` resolves through.
+fn node_index_of(nodes: &[Node]) -> HashMap<String, usize> {
+    nodes.iter().enumerate().map(|(slot, node)| (node.id.clone(), slot)).collect()
 }
 
 fn element_global_indices(dof_map: &DofMap, node_ids: &[String], dofs: &[Dof]) -> Option<Vec<usize>> {
@@ -961,6 +991,7 @@ struct AssemblyPlan {
     ndof: usize,
     free_new: Vec<usize>,
     compact_of_new: Vec<Option<usize>>,
+    node_slot: HashMap<String, usize>,
 }
 
 /// #️⃣️ Stable identity for rejecting a checkpoint against different FEM inputs.
@@ -1018,7 +1049,7 @@ impl AssemblyPlan {
         for (compact, &new_index) in free_new.iter().enumerate() {
             compact_of_new[new_index] = Some(compact);
         }
-        Ok(Self { dof_map, inv_perm: permutation.inv_perm, ndof, free_new, compact_of_new })
+        Ok(Self { dof_map, inv_perm: permutation.inv_perm, ndof, free_new, compact_of_new, node_slot: node_index_of(&model.nodes) })
     }
 }
 
@@ -1188,7 +1219,7 @@ impl AssemblyJobConstruction {
             partition_triplet_counts: Vec::new(),
             partition_reserve_cursor: 0,
             partition_reserve_lane: 0,
-            plan: AssemblyPlan { dof_map: DofMap { order: Vec::new() }, inv_perm: Vec::new(), ndof: 0, free_new: Vec::new(), compact_of_new: Vec::new() },
+            plan: AssemblyPlan { dof_map: DofMap::from_order(Vec::new()), inv_perm: Vec::new(), ndof: 0, free_new: Vec::new(), compact_of_new: Vec::new(), node_slot: HashMap::new() },
             constrained_old: Vec::new(),
             partitions: Vec::new(),
             merged_full: PagedList::default(),
@@ -1327,7 +1358,7 @@ impl AssemblyJobConstruction {
                 if owner.0.capacity() > MOUNTED_OWNER_PAGE_BYTES {
                     return Err(FemError::Singular);
                 }
-                self.plan.dof_map.order.push(self.pending_dof_owner.take().ok_or(FemError::Singular)?);
+                self.plan.dof_map.push(self.pending_dof_owner.take().ok_or(FemError::Singular)?);
                 self.dof_emit_cursor += 1;
                 self.stage = AssemblyConstructionStage::EmitDofs;
             }
@@ -1489,7 +1520,7 @@ impl AssemblyJobConstruction {
                     let model = self.model.take().ok_or(FemError::EmptyModel)?;
                     let total_elements = model.elements_len();
                     let model_signature = self.operation.operation.0 ^ self.operation.base_revision.0.rotate_left(17) ^ self.operation.generation.0.rotate_left(33);
-                    let plan = std::mem::replace(&mut self.plan, AssemblyPlan { dof_map: DofMap { order: Vec::new() }, inv_perm: Vec::new(), ndof: 0, free_new: Vec::new(), compact_of_new: Vec::new() });
+                    let plan = std::mem::replace(&mut self.plan, AssemblyPlan { dof_map: DofMap::from_order(Vec::new()), inv_perm: Vec::new(), ndof: 0, free_new: Vec::new(), compact_of_new: Vec::new(), node_slot: HashMap::new() });
                     self.job = Some(AssemblyJob {
                         state: AssemblyCheckpoint {
                             stage: AssemblyJobStage::ElementTriplets,
@@ -2161,7 +2192,7 @@ impl<'model> AssemblyJob<'model> {
         let dofs = element.dofs_per_node();
         let indices_old = element_global_indices(&self.plan.dof_map, &node_ids, dofs).ok_or(FemError::Singular)?;
         let indices_new = indices_old.iter().map(|&old| self.plan.inv_perm[old]).collect::<Vec<_>>();
-        let context = ElementContext { positions: positions_of(&dynamic.nodes, &node_ids) };
+        let context = ElementContext { positions: positions_of(&self.plan.node_slot, &dynamic.nodes, &node_ids) };
         let stiffness = element.stiffness_global(&context);
         let side = indices_new.len();
         self.state.pending = Some(PendingElementAssembly { element_index, side, cell_cursor: 0, reclaim_lane: 0, complete: false, indices_new, positions: context.positions, stiffness: stiffness.data });
@@ -2705,7 +2736,7 @@ fn assemble_system(model: &AnalysisModel) -> Result<AssembledSystem, FemError> {
     let unfactored = job.finish().expect("completed assembly owns its matrices");
     let k_full = unfactored.k_full_coo.to_csr();
     let k_factor = ldlt_factor(&unfactored.k_ff_coo.to_csc_sym_upper()).map_err(|_| FemError::Singular)?;
-    let AssemblyPlan { dof_map, inv_perm, ndof, free_new, compact_of_new } = unfactored.plan;
+    let AssemblyPlan { dof_map, inv_perm, ndof, free_new, compact_of_new, node_slot: _ } = unfactored.plan;
     Ok(AssembledSystem { dof_map, inv_perm, ndof, free_new, compact_of_new, k_factor, k_full })
 }
 
@@ -2733,11 +2764,12 @@ fn case_rhs_old(model: &AnalysisModel, dof_map: &DofMap, case: &LoadCase, gravit
     let ndof = dof_map.len();
     let mut f = VecD::zeros(ndof);
 
+    let node_slot = node_index_of(&model.nodes);
     for element in &model.elements {
         let node_ids = element.node_ids();
         let dofs = element.dofs_per_node();
         let Some(indices) = element_global_indices(dof_map, &node_ids, dofs) else { continue };
-        let ctx = ElementContext { positions: positions_of(&model.nodes, &node_ids) };
+        let ctx = ElementContext { positions: positions_of(&node_slot, &model.nodes, &node_ids) };
 
         if let Some((_, udl)) = case.member_loads.iter().find(|(id, _)| id.as_str() == element.id()) {
             if let Some(fe) = element.equivalent_nodal_loads(&ctx, udl) {
@@ -2898,6 +2930,7 @@ pub fn solve_multi_case(model: &AnalysisModel, cases: &[LoadCase], combinations:
 
     let mut results: HashMap<String, StaticResult> = HashMap::new();
     let mut case_results: Vec<StaticResult> = Vec::with_capacity(cases.len());
+    let displacement_slot: HashMap<&str, usize> = model.nodes.iter().enumerate().map(|(slot, node)| (node.id.as_str(), slot)).collect();
 
     for (c, case) in cases.iter().enumerate() {
         let mut u_new = VecD::zeros(ndof);
@@ -2924,17 +2957,18 @@ pub fn solve_multi_case(model: &AnalysisModel, cases: &[LoadCase], combinations:
         let mut displacements: Vec<NodeDisplacement> = model.nodes.iter().map(|n| NodeDisplacement { node_id: n.id.clone(), values: [0.0; 6] }).collect();
         for (old_idx, (node_id, dof)) in dof_map.order.iter().enumerate() {
             let new_idx = system.inv_perm[old_idx];
-            if let Some(entry) = displacements.iter_mut().find(|d| &d.node_id == node_id) {
-                entry.values[dof.index()] = u_new.get(new_idx);
+            if let Some(&slot) = displacement_slot.get(node_id.as_str()) {
+                displacements[slot].values[dof.index()] = u_new.get(new_idx);
             }
         }
 
         let mut elements_out = Vec::with_capacity(model.elements.len());
+        let node_slot = node_index_of(&model.nodes);
         for element in &model.elements {
             let node_ids = element.node_ids();
             let dofs = element.dofs_per_node();
             let Some(indices_old) = element_global_indices(dof_map, &node_ids, dofs) else { continue };
-            let ctx = ElementContext { positions: positions_of(&model.nodes, &node_ids) };
+            let ctx = ElementContext { positions: positions_of(&node_slot, &model.nodes, &node_ids) };
             let u_local = VecD::from_vec(indices_old.iter().map(|&old| u_new.get(system.inv_perm[old])).collect());
             let udl = case.member_loads.iter().find(|(id, _)| id.as_str() == element.id()).map(|(_, udl)| udl);
             elements_out.push((element.id().to_string(), element.recover(&ctx, &u_local, udl)));
@@ -2976,11 +3010,12 @@ pub fn modal(model: &AnalysisModel, count: usize) -> Result<ModalResult, FemErro
     let n_free = system.n_free();
 
     let mut m_coo = Coo::new(n_free);
+    let node_slot = node_index_of(&model.nodes);
     for element in &model.elements {
         let node_ids = element.node_ids();
         let dofs = element.dofs_per_node();
         let Some(indices_old) = element_global_indices(&system.dof_map, &node_ids, dofs) else { continue };
-        let ctx = ElementContext { positions: positions_of(&model.nodes, &node_ids) };
+        let ctx = ElementContext { positions: positions_of(&node_slot, &model.nodes, &node_ids) };
         let Some(me) = element.mass(&ctx) else { continue };
         let indices_new: Vec<usize> = indices_old.iter().map(|&old| system.inv_perm[old]).collect();
         for (local_row, &new_row) in indices_new.iter().enumerate() {
@@ -3038,11 +3073,12 @@ pub fn buckling(model: &AnalysisModel, reference_case: &LoadCase, count: usize) 
 
     let mut neg_kg_coo = Coo::new(n_free);
     let mut diag_estimate = vec![0.0f64; n_free];
+    let node_slot = node_index_of(&model.nodes);
     for element in &model.elements {
         let node_ids = element.node_ids();
         let dofs = element.dofs_per_node();
         let Some(indices_old) = element_global_indices(&system.dof_map, &node_ids, dofs) else { continue };
-        let ctx = ElementContext { positions: positions_of(&model.nodes, &node_ids) };
+        let ctx = ElementContext { positions: positions_of(&node_slot, &model.nodes, &node_ids) };
 
         let mut u_element = VecD::zeros(indices_old.len());
         for (i, &old_idx) in indices_old.iter().enumerate() {

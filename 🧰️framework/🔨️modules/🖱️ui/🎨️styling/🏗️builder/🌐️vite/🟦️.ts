@@ -931,6 +931,25 @@ export function playgroundSceneHostResolveAliases(repoRoot: string): ReadonlyArr
   ];
 }
 
+/** @emoji 🎬️ CommonJS leaves an EXCLUDED R3F package still reaches — fiber → `scheduler`; drei → `stats.js`;
+ * drei → `tunnel-rat` → (nested) `zustand` → `use-sync-external-store/shim{,/with-selector}.js`, and top-level
+ * `zustand/esm/react.mjs` → the same shims. Vite serves an excluded package's files raw and rewrites their bare
+ * imports to a prebundled copy only when that dependency IS in the optimizer — so without these entries a fresh
+ * serve boots black on `The requested module '…/scheduler/index.js' (or …/with-selector.js) does not provide an
+ * export named 'default'` (lanes started before the R3F exclusion landed kept working only because they
+ * predated it — measured on :6086, 2026-09-16). Named per file where the package has no ESM entry at all,
+ * exactly as Vite's own "exclude an ESM dependency, include its CJS descendants" rule asks; every other
+ * package in the two graphs ships an ESM entry (`its-fine`, `suspend-react`, `tunnel-rat`, `zustand`,
+ * `react-use-measure`, `stats-gl`, `three-stdlib`, `maath`, …) and is served raw on purpose. */
+export const PLAYGROUND_SCENE_HOST_CJS_INCLUDE = ["scheduler", "stats.js", "use-sync-external-store/shim/index.js", "use-sync-external-store/shim/with-selector.js"] as const;
+
+/** @emoji 🎬️ `optimizeDeps` preset for configs that use {@link playgroundSceneHostResolveAliases}: never prebundle R3F — a `.vite/deps` fiber copy and the aliased ESM entry are two Canvas stores, and drei's `PerspectiveCamera` then throws outside Canvas — but DO prebundle the CJS shims R3F's excluded graph imports ({@link PLAYGROUND_SCENE_HOST_CJS_INCLUDE}). */
+export function playgroundSceneHostOptimizeDeps(extra?: Pick<NonNullable<OwnedBuildConfig["optimizeDeps"]>, "include" | "exclude">): NonNullable<OwnedBuildConfig["optimizeDeps"]> {
+  const include = ["three", ...PLAYGROUND_SCENE_HOST_CJS_INCLUDE, ...(extra?.include ?? [])].filter((id) => !PLAYGROUND_SCENE_HOST_DEDUPE.includes(id as (typeof PLAYGROUND_SCENE_HOST_DEDUPE)[number]));
+  const exclude = [...PLAYGROUND_SCENE_HOST_DEDUPE, ...(extra?.exclude ?? [])];
+  return { include: [...new Set(include)], exclude: [...new Set(exclude)] };
+}
+
 //#region 🔖️MapTileCache
 /** @emoji 🗺️ Compliant User-Agent for OSM / MapLibre demotiles in map play. */
 export const GIS_MAP_TILE_USER_AGENT = "ComposeGisMapPlay/0.1 (+https://github.com/usalu/semio; dev playground)";
@@ -1613,6 +1632,6 @@ export function createPlaygroundPlayViteConfig(options: PlaygroundPlayViteOption
 
 if (import.meta.vitest) {
   const { registerTests1 } = await import("../../🧪️tests/🧪️playgroundflowwasmdevstubplugin/🟦️.ts");
-  await registerTests1(import.meta.vitest, { GIS_MAP_DEFAULT_PREFETCH_BOUNDS, PLAYGROUND_PLAY_BOOT_APPEARANCE_SCRIPT, PLAYGROUND_PLAY_BOOT_INLINE_STYLE, PLAYGROUND_PLAY_BOOT_REVEAL_SCRIPT, PLAYGROUND_PLAY_BOOT_THEME_SCRIPT, PLAYGROUND_WASM_STUB_PREFIX, SEMIO_ASSET_ROOT, SEMIO_FAVICON_HEAD_HTML, contentTypeForStaticDirAsset, createServer, createWorkspaceViteResolveConfig, existsSync, fileURLToPath, findWorkspacePackages, isPlaygroundOptimizedDepUrl, playgroundOptimizedDepUrlPrefix, join, listMapTilesForBounds, mapTileCacheRoots, meshAssetTransportUrl, meshCollectionVitePlugin, mkdirSync, mkdtempSync, playgroundAssetVitePlugins, playgroundFlowWasmDevStubPlugin, playgroundPlayBootHtmlPlugin, playgroundSceneHostResolveAliases, playgroundWasmStubKey, prefetchMapTiles, resolve, resolveGisMapTileServeMode, resolveMeshAsset, resolveSemioAssetRoot, rewriteSpaFallbackToEmojiEntry, rmSync, semioFaviconSources, semioFaviconSvgMarkup, semioFaviconVitePlugin, semioHostHtmlString, semioHostHtmlVitePlugin, startAssetServer, staticDirVitePlugin, statusSurfaceHtml, tileProxyVitePlugin, tmpdir, writeFileSync }, { directory: import.meta.dir, url: import.meta.url });
+  await registerTests1(import.meta.vitest, { GIS_MAP_DEFAULT_PREFETCH_BOUNDS, PLAYGROUND_PLAY_BOOT_APPEARANCE_SCRIPT, PLAYGROUND_PLAY_BOOT_INLINE_STYLE, PLAYGROUND_PLAY_BOOT_REVEAL_SCRIPT, PLAYGROUND_PLAY_BOOT_THEME_SCRIPT, PLAYGROUND_WASM_STUB_PREFIX, SEMIO_ASSET_ROOT, SEMIO_FAVICON_HEAD_HTML, contentTypeForStaticDirAsset, createServer, createWorkspaceViteResolveConfig, existsSync, fileURLToPath, findWorkspacePackages, isPlaygroundOptimizedDepUrl, playgroundOptimizedDepUrlPrefix, join, listMapTilesForBounds, mapTileCacheRoots, meshAssetTransportUrl, meshCollectionVitePlugin, mkdirSync, mkdtempSync, playgroundAssetVitePlugins, playgroundFlowWasmDevStubPlugin, playgroundPlayBootHtmlPlugin, playgroundSceneHostOptimizeDeps, playgroundSceneHostResolveAliases, playgroundWasmStubKey, prefetchMapTiles, resolve, resolveGisMapTileServeMode, resolveMeshAsset, resolveSemioAssetRoot, rewriteSpaFallbackToEmojiEntry, rmSync, semioFaviconSources, semioFaviconSvgMarkup, semioFaviconVitePlugin, semioHostHtmlString, semioHostHtmlVitePlugin, startAssetServer, staticDirVitePlugin, statusSurfaceHtml, tileProxyVitePlugin, tmpdir, writeFileSync }, { directory: import.meta.dir, url: import.meta.url });
 }
 //#endregion 🔖️ViteElementsAssets

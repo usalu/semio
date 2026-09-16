@@ -48,12 +48,12 @@ COLLECTIONS = {
     "section": ("sections", "section", "newSection"),
     "support": ("supports", "support", "newSupport"),
     "load-case": ("loadCases", "loadCase", None),
-    "combination": ("combinations", "combination", None),
+    "combination": ("combinations", "combination", "newCombination"),
 }
 """🗂️ Per noun: its collection, the argument `create-` carries, and the one `replace-` carries when
 the vocabulary has a `replace-` for it at all."""
 
-KINDS = ("create-load-case", "delete-load-case", "add-load", "remove-load", "change-load-case-self-weight", "create-combination", "delete-combination")
+KINDS = ("create-load-case", "delete-load-case", "add-load", "remove-load", "change-load-case-self-weight", "create-combination", "delete-combination", "replace-load", "change-load-case-name", "replace-combination")
 """🏷️ This subset's own kinds, in the catalog's declared order."""
 
 
@@ -165,6 +165,18 @@ def case_of(document, identifier, kind):
     return document["loadCases"][at]
 
 
+def resolve_load(document, load, kind):
+    """🎯️ A load names exactly one carrier — a node, an element or a solid — and it must be there."""
+    if load["kind"] == "nodal":
+        target, collection = load["nodeId"], "nodes"
+    elif load["kind"] == "memberUdl":
+        target, collection = load["elementId"], "elements"
+    else:
+        target, collection = load["solidId"], "solids"
+    if find(document[collection], target) is None:
+        raise AssertionError("%s: load %r names %r, which is not in %s" % (kind, load["id"], target, collection))
+
+
 def apply_mutation(document, mutation):
     """🧬️ Applies one typed mutation, returning the resulting model."""
     kind = kind_of(mutation)
@@ -185,6 +197,19 @@ def apply_mutation(document, mutation):
         case["loads"].pop(at)
     elif kind == "change-load-case-self-weight":
         case_of(result, mutation["caseId"], kind)["selfWeight"] = mutation["newSelfWeight"]
+    elif kind == "replace-load":
+        case = case_of(result, mutation["caseId"], kind)
+        at = find(case["loads"], mutation["loadId"])
+        if at is None:
+            raise AssertionError("%s: case %r carries no load %r" % (kind, case["id"], mutation["loadId"]))
+        load = copy.deepcopy(mutation["newLoad"])
+        if load["id"] != mutation["loadId"]:
+            raise AssertionError("%s: a replace selects %r and may not rename it to %r" % (kind, mutation["loadId"], load["id"]))
+        if case["loads"][at] != load:
+            resolve_load(result, load, kind)
+        case["loads"][at] = load
+    elif kind == "change-load-case-name":
+        case_of(result, mutation["caseId"], kind)["name"] = mutation["newName"]
     else:
         noun = noun_of(kind)
         collection, create_argument, replace_argument = COLLECTIONS[noun]
@@ -228,6 +253,14 @@ def inverse_mutation(document, mutation):
         return {"mutation": TAGS["add-load"], "caseId": mutation["caseId"], "load": copy.deepcopy(case["loads"][at])}
     if kind == "change-load-case-self-weight":
         return {"mutation": TAGS[kind], "caseId": mutation["caseId"], "newSelfWeight": case_of(document, mutation["caseId"], "inverse of %s" % kind)["selfWeight"]}
+    if kind == "replace-load":
+        case = case_of(document, mutation["caseId"], "inverse of %s" % kind)
+        at = find(case["loads"], mutation["loadId"])
+        if at is None:
+            raise AssertionError("inverse of %s: case %r carries no load %r" % (kind, case["id"], mutation["loadId"]))
+        return {"mutation": TAGS[kind], "caseId": mutation["caseId"], "loadId": mutation["loadId"], "newLoad": copy.deepcopy(case["loads"][at])}
+    if kind == "change-load-case-name":
+        return {"mutation": TAGS[kind], "caseId": mutation["caseId"], "newName": case_of(document, mutation["caseId"], "inverse of %s" % kind)["name"]}
     noun = noun_of(kind)
     collection, create_argument, replace_argument = COLLECTIONS[noun]
     if kind.startswith("create-"):
@@ -259,7 +292,7 @@ def touches_one(scenario, kind, before, after):
     member it meant to write."""
     if kind == "update-analysis-settings":
         written = "analysis"
-    elif kind in ("add-load", "remove-load", "change-load-case-self-weight"):
+    elif kind in ("add-load", "remove-load", "replace-load", "change-load-case-self-weight", "change-load-case-name"):
         written = "loadCases"
     else:
         written = COLLECTIONS[noun_of(kind)][0]

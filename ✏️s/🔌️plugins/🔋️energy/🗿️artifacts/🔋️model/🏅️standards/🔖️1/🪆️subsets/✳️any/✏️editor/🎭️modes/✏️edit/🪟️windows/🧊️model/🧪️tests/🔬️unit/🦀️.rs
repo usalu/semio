@@ -118,7 +118,9 @@ async fn a_captioned_overlay_render_has_unique_sibling_keys_and_still_decodes() 
 
     assert_sibling_keys_unique(&node, "root");
     let keys: Vec<&str> = node.children.iter().map(|child| child.key.as_str()).collect();
-    assert_eq!(keys, vec![CAPTION_NODE_ID, CAPTION_SCENE_NODE_ID], "the caption and the scene stack carry their own distinct ids: {keys:?}");
+    assert_eq!(keys, vec![LEGEND_NODE_ID, CAPTION_SCENE_NODE_ID], "the legend column and the scene stack carry their own distinct ids: {keys:?}");
+    let caption_keys: Vec<&str> = node.children[0].children.iter().map(|child| child.key.as_str()).collect();
+    assert_eq!(caption_keys, vec![CAPTION_NODE_ID], "without result bounds the legend is the caption line and nothing else: {caption_keys:?}");
 
     let scene = scene_of(surface_node(&node));
     assert_eq!(scene.domain_id.as_deref(), Some(ENERGY_MODEL_INTERACTION_DOMAIN), "the captioned scene is still domain-bound");
@@ -217,3 +219,90 @@ async fn a_re_render_of_the_same_model_never_re_arms_the_auto_fit() {
     let changed = scene_of(&render(&other, &EnergyModelInteractionSnapshot::default(), None, None).expect("other"));
     assert_ne!(first.fit_json, changed.fit_json, "new geometry DOES re-frame once");
 }
+
+//#region 🧱️LegendStrip
+/// 🎨️ Depth-first walk collecting every `Component::Image` src under a node.
+fn swatch_sources(node: &BuiltNode) -> Vec<String> {
+    let mut found = Vec::new();
+    if let semio_framework_plugin::Component::Image(props) = &node.component {
+        found.push(props.src.as_str().to_string());
+    }
+    for child in node.children.iter() {
+        found.extend(swatch_sources(child));
+    }
+    found
+}
+
+fn text_values(node: &BuiltNode) -> Vec<String> {
+    let mut found = Vec::new();
+    if let semio_framework_plugin::Component::Text(props) = &node.component {
+        found.push(props.value.to_string());
+    }
+    for child in node.children.iter() {
+        found.extend(text_values(child));
+    }
+    found
+}
+
+#[semio_framework_async_macros::async_test]
+async fn the_results_legend_draws_eight_swatches_from_the_very_ramp_the_meshes_are_painted_with() {
+    let model = bestest_600();
+    let overlay: HashMap<u32, [f64; 3]> = model.surfaces.iter().map(|surface| (surface.id.0, [0.5, 0.5, 0.5])).collect();
+    let node = render_with_legend(&model, &EnergyModelInteractionSnapshot::default(), Some(&overlay), Some("Conduction loss · 0.0 – 412.3 kWh"), Some((0.0, 412.3)), None).expect("the legend render assembles");
+
+    // 🔑️ The whole point of the explicit ids: eight swatches plus two labels are ten siblings.
+    assert_sibling_keys_unique(&node, "root");
+    let legend = &node.children[0];
+    assert_eq!(legend.key.as_str(), LEGEND_NODE_ID);
+    let strip = legend.children.iter().find(|child| child.key.as_str() == LEGEND_STRIP_NODE_ID).expect("the ramp strip rides under the caption line");
+    assert_eq!(strip.children.iter().count(), 10, "min label, eight bands, max label");
+
+    let sources = swatch_sources(strip);
+    let bands = crate::editor::model::results::legend_bands();
+    assert_eq!(sources.len(), 8, "one swatch per ramp band: {sources:?}");
+    for (source, band) in sources.iter().zip(bands.iter()) {
+        // 🎨️ `#` is percent-encoded in a data URI, so the band hex appears as `%23rrggbb`.
+        assert!(source.contains(&format!("%23{}", band.trim_start_matches('#'))), "swatch {source} does not carry band {band}");
+        assert!(source.len() <= 512, "a swatch source must fit UI_TEXT_MAX_BYTES: {} bytes", source.len());
+    }
+    // 🌡️ The strip and the meshes must agree band for band: `band_color` indexes this same array.
+    for (index, band) in bands.iter().enumerate() {
+        let value = index as f64 / (bands.len() - 1) as f64 * 412.3;
+        assert_eq!(crate::editor::model::results::band_color(value, 0.0, 412.3), *band, "band {index} of the strip is not the colour the mesh at that value takes");
+    }
+
+    let labels = text_values(legend);
+    assert!(labels.contains(&"0.0".to_string()), "the strip prints its minimum: {labels:?}");
+    assert!(labels.contains(&"412.3 kWh".to_string()), "the strip prints its maximum: {labels:?}");
+    assert!(labels.iter().any(|label| label.contains("Conduction loss")), "the caption line still names the field: {labels:?}");
+
+    // 🎬️ …and the scene underneath is untouched by any of it.
+    let scene = scene_of(surface_node(&node));
+    assert_eq!(scene.domain_id.as_deref(), Some(ENERGY_MODEL_INTERACTION_DOMAIN));
+    assert!(scene.instances_json.contains(&format!("\"id\":\"{}\"", model.surfaces[0].id.0)));
+}
+
+#[semio_framework_async_macros::async_test]
+async fn without_an_overlay_there_is_no_legend_at_all() {
+    let model = bestest_600();
+    // 🚫️ No caption ⇒ the render is the bare surface, bounds or not.
+    let bare = render_with_legend(&model, &EnergyModelInteractionSnapshot::default(), None, None, Some((0.0, 9.0)), None).expect("the bare render assembles");
+    assert!(matches!(bare.component, semio_framework_plugin::Component::Surface(_)), "an un-overlaid viewport is the surface itself, with no legend column");
+    assert!(swatch_sources(&bare).is_empty(), "no overlay, no swatches");
+
+    // 🏷️ A caption with no bounds is the caption line alone — the old shape, unchanged.
+    let captioned = render(&model, &EnergyModelInteractionSnapshot::default(), None, Some("Conduction loss")).expect("the captioned render assembles");
+    assert!(swatch_sources(&captioned).is_empty(), "a caption without bounds draws no ramp strip");
+    assert_eq!(captioned.children[0].children.iter().count(), 1, "the legend column is just the caption line");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn a_swatch_source_is_a_self_contained_inline_svg() {
+    let source = legend_swatch_src("#1d4ed8");
+    assert!(source.starts_with("data:image/svg+xml,"), "the swatch must need no network fetch: {source}");
+    assert!(source.contains("%3Csvg") && source.contains("%3C/svg%3E"), "the angle brackets are percent-encoded so the URI is valid: {source}");
+    assert!(source.contains("xmlns='http://www.w3.org/2000/svg'"), "an SVG data URI without the namespace does not render: {source}");
+    assert!(source.contains("fill='%231d4ed8'"), "the hex is carried with its `#` encoded: {source}");
+    assert_eq!(legend_swatch_src("1d4ed8"), source, "a bare hex and a `#`-prefixed one are the same swatch");
+}
+//#endregion 🧱️LegendStrip

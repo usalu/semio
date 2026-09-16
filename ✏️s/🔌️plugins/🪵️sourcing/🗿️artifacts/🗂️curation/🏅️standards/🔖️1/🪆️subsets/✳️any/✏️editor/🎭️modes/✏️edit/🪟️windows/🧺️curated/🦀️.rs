@@ -43,7 +43,7 @@ pub const SOURCING_CURATION_CURATED_SORT_COLUMNS: [&str; 3] = ["name", "availabi
 /// 🧺️ The curated rows paired with the stock kind each one resolves to, in the order the table shows
 /// them: document order, or [`SOURCING_CURATION_CURATED_SORT_COLUMNS`] order when the shared sort
 /// names one of this table's columns.
-fn curated_rows(document: &CurationSnapshot, cfg: &SourcingCurationConfig) -> Vec<(CuratedItem, ObjectKind)> {
+pub(crate) fn curated_rows(document: &CurationSnapshot, cfg: &SourcingCurationConfig) -> Vec<(CuratedItem, ObjectKind)> {
     let stock = crate::stock_of(document);
     let mut rows: Vec<(CuratedItem, ObjectKind)> = document.curated.iter().filter_map(|item| stock.iter().find(|kind| kind.id == item.object_id).map(|kind| (item.clone(), kind.clone()))).collect();
     let Some(sort) = cfg.filters.sort.as_ref().filter(|sort| SOURCING_CURATION_CURATED_SORT_COLUMNS.contains(&sort.column_id.as_str())) else { return rows };

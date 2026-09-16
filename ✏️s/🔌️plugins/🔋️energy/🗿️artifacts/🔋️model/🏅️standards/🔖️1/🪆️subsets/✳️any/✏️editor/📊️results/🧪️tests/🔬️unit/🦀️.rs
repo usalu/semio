@@ -80,9 +80,23 @@ fn an_empty_map_colours_nothing_and_a_flat_map_still_colours() {
     assert_eq!((min, max), (0.0, 0.0));
     let flat = decode_run_payload(&encode_surface_energy_payload([summary(1, 5.0, 0.0, 0.0, 0.0), summary(2, 5.0, 0.0, 0.0, 0.0)].into_iter())).expect("decodes");
     let (colors, min, max) = surface_colors(&flat, ResultField::ConductionLoss);
-    assert_eq!(colors.len(), 2);
+    assert_eq!(colors.len(), 2, "a genuinely uniform, non-zero result is still a result");
     assert_eq!((min, max), (5.0, 5.0));
     assert_eq!(colors[&1], colors[&2]);
+}
+
+#[test]
+fn a_field_that_is_zero_everywhere_colours_nothing_rather_than_faking_a_flat_result() {
+    // 🌡️ A cooling design day has no conduction LOSS on any face (heat flows inward all day) and a
+    // heating one has no conduction GAIN — measured with BESTEST 600, whose cooling-design-day loss
+    // column is 0.0000 on all eight faces. Painting every one of them the coldest band would read as a
+    // measured, uniform result; leaving them uncoloured reads as "this field has nothing to show".
+    let empty = decode_run_payload(&encode_surface_energy_payload([summary(1, 0.0, 3.02, 0.0, 38.7), summary(2, 0.0, 6.06, 0.0, 25.1)].into_iter())).expect("decodes");
+    let (colors, min, max) = surface_colors(&empty, ResultField::ConductionLoss);
+    assert!(colors.is_empty(), "an all-zero field must not paint anything");
+    assert_eq!((min, max), (0.0, 0.0), "and the caption still prints the honest range");
+    let (colors, ..) = surface_colors(&empty, ResultField::ConductionGain);
+    assert_eq!(colors.len(), 2, "the field that DOES carry the run's conduction still colours");
 }
 
 #[test]
@@ -117,4 +131,46 @@ fn the_config_selects_the_field_and_an_unknown_string_falls_back_to_the_default(
 fn the_legend_names_the_field_and_its_range() {
     assert_eq!(legend_caption(ResultField::ConductionLoss, 0.0, 412.34), "Conduction loss · 0.0 – 412.3 kWh");
     assert_eq!(legend_caption(ResultField::SolarTransmitted, 1.25, 9.0), "Solar transmitted · 1.2 – 9.0 kWh");
+}
+
+#[test]
+fn one_dominant_face_no_longer_collapses_every_other_face_onto_the_coldest_band() {
+    // 🌡️ The shape a real envelope has: a ground floor that loses several times what any wall loses.
+    // Linear normalisation puts all five walls inside the first 1/14th of the range, i.e. one band.
+    let rows = [summary(1, 8.0, 0.0, 0.0, 0.0), summary(2, 11.0, 0.0, 0.0, 0.0), summary(3, 13.0, 0.0, 0.0, 0.0), summary(4, 15.0, 0.0, 0.0, 0.0), summary(5, 300.0, 0.0, 0.0, 0.0)];
+    let linear: Vec<&str> = rows.iter().map(|row| band_color(row.conduction_loss_kwh, 8.0, 300.0)).collect();
+    assert_eq!(linear.iter().collect::<std::collections::BTreeSet<_>>().len(), 2, "the linear ramp really does collapse this case — the premise of the rank ramp");
+
+    let map = decode_run_payload(&encode_surface_energy_payload(rows.into_iter())).expect("decodes");
+    let (colors, min, max) = surface_colors(&map, ResultField::ConductionLoss);
+    assert_eq!((min, max), (8.0, 300.0), "the caption still reports the true magnitudes");
+    let distinct: std::collections::BTreeSet<[u64; 3]> = colors.values().map(|rgb| rgb.map(f64::to_bits)).collect();
+    assert_eq!(distinct.len(), 5, "five distinct values must take five distinct bands, got {colors:?}");
+    assert_eq!(colors[&1], hex_to_rgb01(SURFACE_ENERGY_BANDS[0]), "the least loss is still the coldest band");
+    assert_eq!(colors[&5], hex_to_rgb01(SURFACE_ENERGY_BANDS[7]), "the greatest loss is still the hottest band");
+}
+
+#[test]
+fn the_rank_ramp_stays_monotonic_and_ties_share_a_band() {
+    let rows = [summary(1, 1.0, 0.0, 0.0, 0.0), summary(2, 2.0, 0.0, 0.0, 0.0), summary(3, 2.0, 0.0, 0.0, 0.0), summary(4, 900.0, 0.0, 0.0, 0.0)];
+    let map = decode_run_payload(&encode_surface_energy_payload(rows.into_iter())).expect("decodes");
+    let (colors, ..) = surface_colors(&map, ResultField::ConductionLoss);
+    assert_eq!(colors[&2], colors[&3], "equal values share a band");
+    assert_ne!(colors[&1], colors[&2]);
+    assert_ne!(colors[&2], colors[&4]);
+    let index = |id: u32| SURFACE_ENERGY_BANDS.iter().position(|hex| hex_to_rgb01(hex) == colors[&id]).expect("every colour is a ramp stop");
+    assert!(index(1) < index(2) && index(2) < index(4), "more loss is always warmer");
+    assert_eq!((index(1), index(4)), (0, 7));
+}
+
+#[test]
+fn more_surfaces_than_bands_still_span_the_whole_ramp_monotonically() {
+    let rows: Vec<_> = (0..40u32).map(|id| summary(id, f64::from(id) * f64::from(id), 0.0, 0.0, 0.0)).collect();
+    let map = decode_run_payload(&encode_surface_energy_payload(rows.into_iter())).expect("decodes");
+    let (colors, min, max) = surface_colors(&map, ResultField::ConductionLoss);
+    assert_eq!((min, max), (0.0, 1521.0));
+    let index = |id: u32| SURFACE_ENERGY_BANDS.iter().position(|hex| hex_to_rgb01(hex) == colors[&id]).expect("every colour is a ramp stop");
+    assert_eq!((index(0), index(39)), (0, 7), "the extremes keep the end stops");
+    assert_eq!((0..40).map(index).collect::<std::collections::BTreeSet<_>>().len(), 8, "40 surfaces use all eight bands");
+    assert!((0..39).all(|id| index(id) <= index(id + 1)), "the ramp never runs backwards");
 }

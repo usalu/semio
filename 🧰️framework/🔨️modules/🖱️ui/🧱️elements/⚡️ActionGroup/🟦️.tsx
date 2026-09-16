@@ -22,7 +22,7 @@ import { interactiveHoverClass, interactiveActiveFillClass } from "../../🔨️
 import { menuListItemClassName } from "../../🔨️modules/📋️menu-item-presentation/🟦️.ts";
 import { formControlFocusBorderClass } from "../../🔨️modules/📝️form-control-presentation/🟦️.ts";
 import { borderNormalClass } from "../../🔨️modules/📏️border-presentation/🟦️.ts";
-import { chromeControlGroupShellClass, chromeControlItemBaseClass } from "../../🔨️modules/🎛️chrome-control-presentation/🟦️.ts";
+import { chromeControlGroupShellClass, chromeControlGroupSiblingDividerClass, chromeControlItemBaseClass } from "../../🔨️modules/🎛️chrome-control-presentation/🟦️.ts";
 import { loadingBorderElementClass, waitingBorderElementClass } from "../../🔨️modules/🌀️status-border-presentation/🟦️.ts";
 import { useLevel, type Level } from "../🌈️Surface/🟦️.tsx";
 import { useControlAccessibleLabel, useControlInlineText, useControlTooltipText } from "../🏷️Label/🟦️.tsx";
@@ -101,7 +101,7 @@ function ActionGroupItem({
       aria-label={ariaLabel}
       title={tooltipText}
       data-level={context.level || level}
-      className={cn(actionGroupItemVariants(), "min-w-0 shrink-0 focus:z-panel focus-visible:z-panel", !id && "flex-1", hasText && "aspect-auto gap-single", className)}
+      className={cn(actionGroupItemVariants(), chromeControlGroupSiblingDividerClass, "min-w-0 shrink-0 focus:z-panel focus-visible:z-panel", !id && "flex-1", hasText && "aspect-auto gap-single", className)}
       {...(props as any)}
     >
       {children}

@@ -11,7 +11,7 @@ import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.t
 import { ControlHotkeyBadge } from "../../🔨️modules/⌨️control-hotkey-presentation/🟦️.tsx";
 import { type UiLabel } from "../🎗️UiLabel/🟦️.tsx";
 import { type ElementProps } from "../../🔨️modules/🆔️element-identity/🟦️.ts";
-import { chromeControlGroupClass, chromeControlItemClass, chromeControlItemOnClass } from "../../🔨️modules/🎛️chrome-control-presentation/🟦️.ts";
+import { chromeControlGroupClass, chromeControlGroupSiblingDividerClass, chromeControlItemClass, chromeControlItemOnClass } from "../../🔨️modules/🎛️chrome-control-presentation/🟦️.ts";
 import { ToggleGroup } from "../🎛️ToggleGroup/🟦️.tsx";
 import { reactHostPort } from "../🔌️Ports/🟦️.tsx";
 import { Action } from "../⚡️ActionGroup/🟦️.tsx";
@@ -184,6 +184,7 @@ function ToggleStandardButton({
       className={cn(
         chromeControlItemClass,
         chromeControlItemOnClass,
+        chromeControlGroupSiblingDividerClass,
         "aspect-square",
         inlineText ? "w-auto shrink-0 focus:z-panel focus-visible:z-panel" : "min-w-0 flex-1 shrink-0 focus:z-panel focus-visible:z-panel",
         inlineText && "flex items-center gap-single py-single px-double aspect-auto",

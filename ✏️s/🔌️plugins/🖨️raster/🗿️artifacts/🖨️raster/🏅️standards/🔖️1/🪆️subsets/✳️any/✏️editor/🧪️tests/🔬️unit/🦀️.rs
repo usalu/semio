@@ -617,3 +617,157 @@ async fn command_ids_are_unique_across_every_row() {
         assert!(seen.insert(command.command_id().to_string()), "duplicate command_id {}", command.command_id());
     }
 }
+
+//#region 🔖️ActionBridge
+/// 🌉️ Every command row the shells reach by action id must decode through `command_from_action`
+/// (camelCase host keys → the payloads' own snake_case `FromValue` names) and its `command_id` must
+/// round-trip — the boundary that was missing before the 2026-09-16 boot wave of ticket
+/// 26/09/05/RASTER-PLUGIN-END-TO-END (every shell action was refused as "not framework-reserved").
+#[test]
+fn command_from_action_round_trips_every_command_id() {
+    for command in every_command() {
+        let id = command.command_id();
+        let args = dsl::ToValue::to_value(&command);
+        // 🔁️ The `DslOps` wire shape is `{keyword: payload}`; the shell sends the bare payload object.
+        let payload = match &args {
+            dsl::DslValue::Object(entries) if entries.len() == 1 => entries[0].1.clone(),
+            other => other.clone(),
+        };
+        let camel = camel_case_keys(&payload);
+        let bridged = <RasterPlayApp as semio_framework_plugin::ArtifactEditor>::command_from_action(id, Some(&camel)).unwrap_or_else(|error| panic!("action {id} failed to bridge: {}", error.message));
+        assert_eq!(bridged.command_id(), id, "command_id mismatch for action {id}");
+        assert_eq!(bridged, command, "payload mismatch for action {id}");
+    }
+    assert!(<RasterPlayApp as semio_framework_plugin::ArtifactEditor>::command_from_action("nonsense", None).is_err());
+}
+
+/// 🐫️ The shell's spelling of the payload keys.
+fn camel_case_keys(value: &dsl::DslValue) -> dsl::DslValue {
+    match value {
+        dsl::DslValue::Object(entries) => dsl::DslValue::Object(
+            entries
+                .iter()
+                .map(|(key, value)| {
+                    let mut camel = String::new();
+                    let mut upper = false;
+                    for ch in key.chars() {
+                        if ch == '_' { upper = true; } else if upper { camel.push(ch.to_ascii_uppercase()); upper = false; } else { camel.push(ch); }
+                    }
+                    (camel, value.clone())
+                })
+                .collect(),
+        ),
+        other => other.clone(),
+    }
+}
+
+/// 🧱️ The tree/host verbs' own spellings (bare `id`, `exampleId`, the Paint2dHost's `{camera:{…}}`)
+/// reach the same rows.
+#[test]
+fn command_from_action_bridges_host_spellings() {
+    let args = |json: &str| dsl::os_pack::json_to_dsl_value(&dsl::os_pack::json::parse(json).expect("fixture JSON"));
+    let bridge = |action: &str, json: &str| <RasterPlayApp as semio_framework_plugin::ArtifactEditor>::command_from_action(action, Some(&args(json))).expect(action);
+    assert_eq!(bridge("setActiveExample", r#"{"exampleId":"demo"}"#), RasterCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "demo".into() }));
+    assert_eq!(bridge("deleteLayer", r#"{"id":"layer-1"}"#), RasterCommand::DeleteLayer(delete_layer::DeleteLayer { layer_id: "layer-1".into() }));
+    assert_eq!(bridge("setCamera", r#"{"camera":{"x":1,"y":2,"zoom":3}}"#), RasterCommand::SetCamera(set_camera::SetCamera { camera: crate::RasterCamera { x: 1.0, y: 2.0, zoom: 3.0 } }));
+    assert_eq!(bridge("setCompositeViewport", r#"{"width":640,"height":480}"#), RasterCommand::SetCompositeViewport(set_composite_viewport::SetCompositeViewport { width: 640.0, height: 480.0 }));
+    assert_eq!(bridge("addLayer", r#"{"kind":"pixel"}"#), RasterCommand::AddLayer(add_layer::AddLayer { kind: "pixel".into() }));
+}
+//#endregion 🔖️ActionBridge
+
+//#region 🔖️MountedBoot
+/// 🧪️ The registered, MOUNTED app the react shell drives — bound to instance `1` so typed commands
+/// reach their retained routes (the registry-less `context::app()` rejects every tool row, see
+/// memory `project-registryless-testkit-new-app-unusable`), settled after each dispatch, and retired
+/// through the framework's exact close loop (the store's `Drop` demands the terminal-empty witness).
+pub(crate) mod mounted {
+    use super::super::*;
+    use semio_framework_plugin::artifact_app_laws::{meta, new_app_with_registry};
+    use semio_framework_plugin::{App, EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance};
+
+    pub const RASTER_TEST_INSTANCE: u32 = 1;
+
+    pub struct MountedRasterApp(VcsArtifactApp<EditorApp<RasterPlayApp>>);
+
+    impl std::ops::Deref for MountedRasterApp {
+        type Target = VcsArtifactApp<EditorApp<RasterPlayApp>>;
+        fn deref(&self) -> &Self::Target {
+            &self.0
+        }
+    }
+
+    impl std::ops::DerefMut for MountedRasterApp {
+        fn deref_mut(&mut self) -> &mut Self::Target {
+            &mut self.0
+        }
+    }
+
+    impl Drop for MountedRasterApp {
+        fn drop(&mut self) {
+            if !std::thread::panicking() {
+                semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut self.0);
+            }
+        }
+    }
+
+    fn manifest() -> App {
+        App { definition: create_raster_app(), examples: Vec::new() }
+    }
+
+    pub fn mounted_app() -> MountedRasterApp {
+        let mut app = semio_framework_plugin::resolve_ready(new_app_with_registry::<EditorApp<RasterPlayApp>>(manifest));
+        semio_framework_plugin::resolve_ready(app.bind_instance_id(RASTER_TEST_INSTANCE));
+        MountedRasterApp(app)
+    }
+
+    pub async fn dispatch(app: &mut MountedRasterApp, command: RasterCommand) -> InvocationResult {
+        let id = "raster-composite";
+        let mut action = meta("local");
+        action.view_state = Some(ViewModel { window_id: Some(id.into()), window_instances: vec![ViewWindowInstance { id: id.into(), window_kind_id: composite::RASTER_PLAY_WINDOW_COMPOSITE.into() }], ..Default::default() });
+        let mut result = app.dispatch_typed(command, &action).await.expect("dispatch");
+        let settled = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, RASTER_TEST_INSTANCE).await.expect("settle the typed operation");
+        result.requested_effects.extend(settled.effects);
+        result
+    }
+}
+
+/// 🚀️ The react shell's boot sequence: the store boots on the empty shell and the shell replays
+/// `setActiveExample demo`, which must plant the Semio-logo carrier (two root layers) through the
+/// retained route without any owned-map clone or un-retired drop (react boots of 2026-09-16).
+#[semio_framework_async_macros::async_test]
+async fn mounted_boot_replays_the_demo_example_through_the_retained_route() {
+    let mut app = mounted::mounted_app();
+    assert!(app.snapshot().expect("snapshot").layers.is_empty(), "the store boots on the empty shell");
+    mounted::dispatch(&mut app, RasterCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: crate::examples::art_raster_demo::ID.into() })).await;
+    let snapshot = app.snapshot().expect("snapshot");
+    assert_eq!(snapshot.layers.len(), 2, "the demo carrier plants a backdrop pixel layer and a brighten adjustment layer");
+    // 🔁️ The boot replay over an already-demo document is a no-op (no second history patch).
+    mounted::dispatch(&mut app, RasterCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: crate::examples::art_raster_demo::ID.into() })).await;
+    assert_eq!(app.snapshot().expect("snapshot").layers.len(), 2);
+}
+//#endregion 🔖️MountedBoot
+
+/// 🎥 The config lane end to end: the Paint2dHost's boot `setCompositeViewport` and a wheel
+/// `setCamera` publish into the config store through the retained route (`raster-boot-5` refused
+/// both with "batched item candidate failed its exact fixed fold contract" while the config
+/// `preflight` under-declared its work items).
+#[semio_framework_async_macros::async_test]
+async fn mounted_config_lane_publishes_viewport_and_camera() {
+    let mut app = mounted::mounted_app();
+    mounted::dispatch(&mut app, RasterCommand::SetCompositeViewport(set_composite_viewport::SetCompositeViewport { width: 1024.0, height: 807.0 })).await;
+    mounted::dispatch(&mut app, RasterCommand::SetCamera(set_camera::SetCamera { camera: crate::RasterCamera { x: 12.0, y: -4.0, zoom: 2.0 } })).await;
+    // 🔡️ The composite scene is a packed record (`"bytes":[…]` arrays in the projected tree) — decode
+    // every byte array lossily and search the flattened text.
+    let json = render(&mut app, composite::RASTER_PLAY_BODY_COMPOSITE).await;
+    let mut text = String::new();
+    let mut rest = json.as_str();
+    while let Some(start) = rest.find("\"bytes\":[") {
+        let body = &rest[start + 9..];
+        let end = body.find(']').unwrap_or(body.len());
+        let bytes: Vec<u8> = body[..end].split(',').filter_map(|token| token.trim().parse::<u8>().ok()).collect();
+        text.push_str(&String::from_utf8_lossy(&bytes));
+        rest = &body[end..];
+    }
+    assert!(text.contains("\"zoom\":2") || text.contains("zoom=2"), "the wheel camera must land in the config store and reach the composite scene: {text}");
+    assert!(text.contains("1024"), "the boot viewport must land in the config store: {text}");
+}

@@ -11,7 +11,6 @@ use crate::editor::fem3d::interaction::gumball::fem3d_selection_json;
 use crate::editor::fem3d::interaction::{Fem3dInteractionSnapshot, FEM3D_GRANULARITY_NODE, FEM3D_INTERACTION_DOMAIN};
 use crate::standards::v1::subsets::any::scene::fem3d_scene_parts;
 use crate::Fem3dSnapshot;
-use crate::Viewport3dOrbit;
 use self::config::Fem3dModelWindowConfig;
 
 /// 🪟️ The manifest's Model window kind id.
@@ -31,7 +30,7 @@ pub fn model_scene(doc: &Fem3dSnapshot, window: &Fem3dModelWindowConfig, interac
 
 /// 🧱️ Renders the undeformed structure with no interaction — the fixture render.
 #[cfg(test)]
-pub fn render(doc: &Fem3dSnapshot, camera: &Viewport3dOrbit) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(doc: &Fem3dSnapshot, camera: &crate::Viewport3dOrbit) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let window = Fem3dModelWindowConfig { camera: *camera, ..Fem3dModelWindowConfig::default() };
     crate::app_surface::world_3d_surface(FEM3D_BODY_MODEL, &model_scene(doc, &window, &Fem3dInteractionSnapshot::default(), false))
 }

@@ -1,6 +1,6 @@
 use super::*;
 use crate::editor::animate::commands::clear_tiles;
-use crate::editor::animate::unit_tests::context::{dispatch, presentation_app};
+use crate::editor::animate::unit_tests::context::{dispatch, presentation_app, presentation_app_with_registry};
 use crate::editor::animate::PresentationCommand;
 
 #[semio_framework_async_macros::async_test]
@@ -34,16 +34,27 @@ async fn set_active_example_demo_emits_a_reset_effect_after_seed() {
     assert!(crate::presentation_working_scene(&loaded).1.is_empty(), "resetting to demo loads the default deck, which has no seeded tiles");
 }
 
-/// 🕹️ Selection is framework-owned now (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-
-/// MECHANISM); `clearTiles` clears the document, and its `interactionSelect` effect asks the
-/// framework to clear the "tiles" domain's selection too (asserted directly on the effect — the
-/// in-process test harness never applies `effects` to itself).
+/// 🕹️ Selection is framework-owned (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM);
+/// `clearTiles` clears the document and emits an empty-target `interactionSelect` so the "tiles"
+/// domain's selection clears too. Since ticket 26/09/16/INPUT-CAUSALITY-LEDGER §2 C the reactor
+/// folds that verb inline in the typed-operation ladder, so the witness is the selection snapshot
+/// once the retained publication settles (registry-backed app, bound instance, host settle
+/// protocol), not the effect — which never reaches the host any more. The select-then-clear
+/// transition itself is `👇️canvas-pointer-down`'s hit/miss law; here the clear lands on an empty
+/// selection and must leave it empty without bouncing anything to the host.
 #[semio_framework_async_macros::async_test]
-async fn clear_tiles_action_empties_tiles_and_requests_a_selection_clear() {
-    use semio_framework_plugin::Effect;
-    let mut app = presentation_app().await;
+async fn clear_tiles_action_empties_tiles_and_clears_the_selection_inline() {
+    use crate::editor::animate::PRESENTATION_INTERACTION_DOMAIN;
+    use semio_framework_plugin::{artifact_app_laws, Effect, PluginApp};
+    let mut app = presentation_app_with_registry().await;
+    let instance_id = artifact_app_laws::meta("local").instance_id;
+    app.bind_instance_id(instance_id).await;
     dispatch(&mut app, PresentationCommand::SeedGrid(SeedGrid { rows: 2, columns: 2 })).await;
-    let result = dispatch(&mut app, PresentationCommand::ClearTiles(clear_tiles::ClearTiles {})).await;
+    artifact_app_laws::settle_registered_typed_operation(&mut app, instance_id).await.expect("seed settles");
+    dispatch(&mut app, PresentationCommand::ClearTiles(clear_tiles::ClearTiles {})).await;
+    let receipt = artifact_app_laws::settle_registered_typed_operation(&mut app, instance_id).await.expect("clear settles");
     assert!(crate::presentation_working_scene(&app.snapshot().expect("projection")).1.is_empty());
-    assert!(matches!(result.requested_effects.as_slice(), [Effect::ReplayShellCommand { action_id, .. }] if action_id == semio_framework::INTERACTION_SELECT_ACTION_ID));
+    assert!(!receipt.effects.iter().any(|effect| matches!(effect, Effect::ReplayShellCommand { .. })), "the clearing interactionSelect is folded in-reactor, never handed to the host: {:?}", receipt.effects);
+    assert!(app.interaction_state().await.selection.get(PRESENTATION_INTERACTION_DOMAIN).is_none_or(|selection| selection.ids.is_empty()), "the tiles selection is empty after the inline clear");
+    artifact_app_laws::close_registered_fixture_app(&mut app);
 }

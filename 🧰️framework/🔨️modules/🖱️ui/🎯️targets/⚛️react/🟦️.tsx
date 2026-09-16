@@ -194,8 +194,8 @@ export { flowHostPort, type FlowHostPort, HostReactFlow, HostReactFlowProvider }
 
 /** @emoji 🔌️ Default R3F host port wired to fiber/drei adapters. */
 export let threeHostPort: ThreeHostPort = {
-  canvas: ThreeCanvas,
-  drei: { OrbitControls, Grid },
+  canvas: sceneHostPort.fiber.canvas,
+  drei: { OrbitControls: sceneHostPort.drei.OrbitControls, Grid: sceneHostPort.drei.Grid },
 };
 
 const defaultReactHostPort = reactHostPort;
@@ -245,10 +245,10 @@ import { registerShellActivityRoot, activeShellRoot, useShellKeydown, useIsActiv
 export { registerShellActivityRoot, activeShellRoot, useShellKeydown, useIsActiveShellRoot, NULL_SHELL_ROOT_REF };
 
 // #region 🔖️IconRenderPort
-export type { IconRenderCamera, IconRenderFormat, IconRenderShape, IconRenderLights, IconRenderMaterial, IconRenderPort, IconRenderRequest, IconRenderResult, ThemeAppearanceName, ThemePaletteGroup, UiTheme } from "@semio-tech/ui-styling";
+export type { IconRenderCamera, IconRenderFit, IconRenderFormat, IconRenderShape, IconRenderLights, IconRenderMaterial, IconRenderPort, IconRenderRequest, IconRenderResult, ThemeAppearanceName, ThemePaletteGroup, UiTheme } from "@semio-tech/ui-styling";
 export { activeUiTheme, applyUiThemeToRoot, builtinUiThemes, clearUiThemeFromRoot, parseUiTheme, resolveThemeAppearancePalettes, semioTheme, serializeUiTheme, setActiveUiTheme, subscribeActiveUiTheme } from "@semio-tech/ui-styling";
 
-import type { IconRenderPort, IconRenderRequest, IconRenderResult, IconRenderShape } from "@semio-tech/ui-styling";
+import type { IconRenderCamera, IconRenderFit, IconRenderPort, IconRenderRequest, IconRenderResult, IconRenderShape } from "@semio-tech/ui-styling";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { SVGRenderer } from "three/examples/jsm/renderers/SVGRenderer.js";
 
@@ -321,13 +321,32 @@ function buildIconScene(request: IconRenderRequest, model: THREE.Group): THREE.S
   return scene;
 }
 
-function buildIconCamera(request: IconRenderRequest): THREE.PerspectiveCamera {
-  const camera = new THREE.PerspectiveCamera(request.camera.fov ?? 50, request.width / request.height, 0.1, 10_000);
-  const up = request.camera.up ?? [0, 0, 1];
+/** @emoji 🎯️ `request.camera`, or — with `request.fit` enabled — the same viewing direction re-targeted at
+ * the model's bounding-sphere centre and backed off so the sphere fills the frame (`padding` ≥ 1). */
+export function iconRenderCameraPose(request: IconRenderRequest, model: THREE.Object3D): IconRenderCamera {
+  const camera = request.camera;
+  if (!request.fit?.enabled) return camera;
+  const sphere = new THREE.Box3().setFromObject(model).getBoundingSphere(new THREE.Sphere());
+  if (!Number.isFinite(sphere.radius) || sphere.radius <= 0) return camera;
+  const fovDeg = camera.fov ?? 50;
+  const aspect = request.width / request.height;
+  const vertical = Math.min(Math.max(((fovDeg * Math.PI) / 180) * 0.5, 0.02), 1.5);
+  const horizontal = Math.min(Math.max(Math.atan(Math.tan(vertical) * Math.max(aspect, 0.05)), 0.02), 1.5);
+  const distance = (sphere.radius / Math.sin(Math.min(vertical, horizontal))) * Math.max(request.fit.padding ?? 1.25, 1);
+  const direction = new THREE.Vector3(camera.position[0] - camera.target[0], camera.position[1] - camera.target[1], camera.position[2] - camera.target[2]);
+  if (direction.lengthSq() < 1e-12) direction.set(1, -1, 0.85);
+  direction.normalize().multiplyScalar(distance);
+  const target: [number, number, number] = [sphere.center.x, sphere.center.y, sphere.center.z];
+  return { ...camera, position: [target[0] + direction.x, target[1] + direction.y, target[2] + direction.z], target };
+}
+
+function buildIconCamera(request: IconRenderRequest, pose: IconRenderCamera = request.camera): THREE.PerspectiveCamera {
+  const camera = new THREE.PerspectiveCamera(pose.fov ?? 50, request.width / request.height, 0.1, 10_000);
+  const up = pose.up ?? [0, 0, 1];
   camera.up.set(up[0], up[1], up[2]);
-  camera.position.set(request.camera.position[0], request.camera.position[1], request.camera.position[2]);
-  camera.lookAt(request.camera.target[0], request.camera.target[1], request.camera.target[2]);
-  camera.zoom = request.camera.zoom;
+  camera.position.set(pose.position[0], pose.position[1], pose.position[2]);
+  camera.lookAt(pose.target[0], pose.target[1], pose.target[2]);
+  camera.zoom = pose.zoom;
   camera.updateProjectionMatrix();
   return camera;
 }
@@ -413,7 +432,7 @@ export let iconRenderPort: IconRenderPort = {
   async render(request: IconRenderRequest): Promise<IconRenderResult> {
     const model = await loadGlbGroup(request.assetUrl);
     const scene = buildIconScene(request, model);
-    const camera = buildIconCamera(request);
+    const camera = buildIconCamera(request, iconRenderCameraPose(request, model));
     const result = request.format === "svg" ? await renderIconSvg(scene, camera, request.width, request.height) : await renderIconPng(scene, camera, request.width, request.height, request.shadowEnabled === true);
     return applyIconRenderShape(result, request.shape, request.width, request.height);
   },

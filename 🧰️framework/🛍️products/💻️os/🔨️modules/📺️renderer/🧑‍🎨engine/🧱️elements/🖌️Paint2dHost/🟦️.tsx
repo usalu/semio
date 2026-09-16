@@ -31,8 +31,13 @@ import { type RasterWasmSession, createRasterSession } from "../🪪️WasmSessi
 import { useMapContextMenuSpecs } from "../🏛️ShellHost/🟦️.tsx";
 // 🐢️ Direct element-to-element imports — `Canvas2dHost`/`🟦️Interpreter` already landed in a prior batch.
 import { type CanvasCamera, worldToScreenLogical, wheelCameraAtScreen } from "../📐️Canvas2dHost/🟦️.tsx";
-import { WindowInstanceIdContext } from "../🌐️World3dHost/🟦️.tsx";
+import { WindowInstanceIdContext, world3dHoverActionArgs, world3dSelectionActionArgs } from "../🌐️World3dHost/🟦️.tsx";
 import { useShellContextMenuFallback, openSurfaceContextMenu, type SurfaceContextMenuResult } from "../🗣️Interpreter/🟦️.tsx";
+
+/** 🕹️ Raster's framework-owned layer interaction domain and its one granularity (`✏️editor/🦀️.rs`
+ * `.interaction(InteractionDefinition { id: "layers", granularities: [layer] })`). */
+const PAINT2D_INTERACTION_DOMAIN = "layers";
+const PAINT2D_LAYER_GRANULARITY = "layer";
 // #endregion 🔌️Adapters
 
 //#region 🔖️Paint2dHost
@@ -359,7 +364,11 @@ function Paint2dCanvasSurface({
       const id = focus.target?.id ?? null;
       session.syncInteraction(scene.selectionJson, id);
       session.renderFrame();
-      dispatch("setHover", { id });
+      // 🕹️ Raster declares no bespoke `setHover` any more: layer hover/selection travel the
+      // framework-injected `interactionHover`/`interactionSelect` verbs of its `"layers"` domain
+      // (`layer` granularity) — the bespoke verbs were refused "undeclared-action" on every pointer
+      // move (ticket 26/09/05/RASTER-PLUGIN-END-TO-END, 2026-09-16).
+      dispatch("interactionHover", world3dHoverActionArgs(PAINT2D_INTERACTION_DOMAIN, PAINT2D_LAYER_GRANULARITY, id));
     },
     onSelectTarget: (target, request) => {
       const mergeMode = marqueeModeFromModifiers(
@@ -370,7 +379,7 @@ function Paint2dCanvasSurface({
         },
         paint2dCanvasSurfaceShellScope?.selection.get(),
       );
-      dispatch("setSelection", { ids: selectionMergeIds(mergeMode, parsePaint2dSelection(scene.selectionJson), [target.id]) });
+      dispatch("interactionSelect", world3dSelectionActionArgs(PAINT2D_INTERACTION_DOMAIN, PAINT2D_LAYER_GRANULARITY, selectionMergeIds(mergeMode, parsePaint2dSelection(scene.selectionJson), [target.id]), mergeMode));
     },
   });
   //#endregion PickInteraction
@@ -404,7 +413,7 @@ function Paint2dCanvasSurface({
       const coverage = marqueeCoverageFromGesture({ method: selectionMethod ?? "rectangle", startX: marquee.start.x, endX: point.x, path: points });
       try {
         const hits = JSON.parse(session.marqueeHitsJson(JSON.stringify({ points, crossing: coverage === "partial" }))) as string[];
-        dispatch("setSelection", { ids: selectionMergeIds(mergeMode, parsePaint2dSelection(scene.selectionJson), hits) });
+        dispatch("interactionSelect", world3dSelectionActionArgs(PAINT2D_INTERACTION_DOMAIN, PAINT2D_LAYER_GRANULARITY, selectionMergeIds(mergeMode, parsePaint2dSelection(scene.selectionJson), hits), mergeMode));
       } catch {
         /* marquee hit test failed */
       }

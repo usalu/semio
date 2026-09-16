@@ -67,6 +67,7 @@ Feature: Apply every typed fem3d mesh mutation twice — once in Rust, once in P
     | create-solid    | {"mutation":"createSolid","solid":{"id":"sol_roof","name":"Roof Slab","outline":[[0.0,0.0],[8.0,0.0],[8.0,10.0],[0.0,10.0]],"holes":[],"baseZ":5.6,"height":0.22,"layers":2,"meshSize":0.75,"materialId":"concrete"}}                               |
     | delete-solid    | {"mutation":"deleteSolid","id":"sol_spare"}                                                                                                                                                                                                         |
     | replace-solid   | {"mutation":"replaceSolid","id":"sol1","newSolid":{"id":"sol1","name":"First Floor Slab thickened","outline":[[10.0,0.0],[12.0,0.0],[12.0,2.0],[10.0,2.0]],"holes":[],"baseZ":0.0,"height":0.75,"layers":2,"meshSize":1.0,"materialId":"concrete"}} |
+    | replace-node    | {"mutation":"replaceNode","id":"n3","newNode":{"id":"n3","x":0.0,"y":0.0,"z":4.0}}                                                                                                                                                                  |
 
   @id-inverse
   @level-exhaustive
@@ -91,6 +92,7 @@ Feature: Apply every typed fem3d mesh mutation twice — once in Rust, once in P
     | create-solid    | {"mutation":"createSolid","solid":{"id":"sol_roof","name":"Roof Slab","outline":[[0.0,0.0],[8.0,0.0],[8.0,10.0],[0.0,10.0]],"holes":[],"baseZ":5.6,"height":0.22,"layers":2,"meshSize":0.75,"materialId":"concrete"}}                               |
     | delete-solid    | {"mutation":"deleteSolid","id":"sol_spare"}                                                                                                                                                                                                         |
     | replace-solid   | {"mutation":"replaceSolid","id":"sol1","newSolid":{"id":"sol1","name":"First Floor Slab thickened","outline":[[10.0,0.0],[12.0,0.0],[12.0,2.0],[10.0,2.0]],"holes":[],"baseZ":0.0,"height":0.75,"layers":2,"meshSize":1.0,"materialId":"concrete"}} |
+    | replace-node    | {"mutation":"replaceNode","id":"n3","newNode":{"id":"n3","x":0.0,"y":0.0,"z":4.0}}                                                                                                                                                                  |
 
   @id-spec-vector
   @level-exhaustive
@@ -114,6 +116,7 @@ Feature: Apply every typed fem3d mesh mutation twice — once in Rust, once in P
     | create-solid    | 🧊️create-solid    | 🏠️appends-an-extruded-roof-slab   |
     | delete-solid    | 🚫️delete-solid    | 🚫️removes-the-roof-slab-f0fb64    |
     | replace-solid   | 🔄️replace-solid   | 📚️thickens-the-slab-and-b51ef0    |
+    | replace-node    | 🔁️replace-node    | 📍️lifts-the-column-head-34351d    |
 
   @id-hall-vector
   @level-exhaustive
@@ -137,6 +140,7 @@ Feature: Apply every typed fem3d mesh mutation twice — once in Rust, once in P
     | delete-solid    | 🚫️delete-solid    | 🏗️hall-cut-apron-6c79d3   |
     | create-solid    | 🧊️create-solid    | 🏗️hall-new-slab-d79da4    |
     | create-element  | 🧩️create-element  | 🏗️hall-new-tie-074a69     |
+    | replace-node    | 🔁️replace-node    | 🏗️hall-lifts-ridge-746bae |
 
   @id-reject
   @level-exhaustive
@@ -172,3 +176,6 @@ Feature: Apply every typed fem3d mesh mutation twice — once in Rust, once in P
     | sliver-outline-316a7c   | 🧊️create-solid    | 📐️sliver-outline-316a7c   |
     | dangling-mat-1ebd78     | 🧊️create-solid    | 🚨️dangling-mat-1ebd78     |
     | dangling-start-ab4132   | 🧩️create-element  | 🚨️dangling-start-ab4132   |
+    | same-node-32a2a4        | 🔁️replace-node    | ⏸️same-node-32a2a4        |
+    | no-such-node-166880     | 🔁️replace-node    | 🚨️no-such-node-166880     |
+    | renames-node-4a2286     | 🔁️replace-node    | 🪪️renames-node-4a2286     |

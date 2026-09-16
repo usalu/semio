@@ -150,6 +150,139 @@ semio_framework_plugin::app_commands! {
 
 //#endregion 🔖️Commands
 
+//#region 🌉️ActionBridge
+/// 🌉️ Host action `{action, args}` → typed `DrawingCommand` (ticket 26/09/05/DRAW-PLUGIN-END-TO-END,
+/// after forms' bridge). The React/wgpu shells send camelCase argument keys and JSON numbers; every
+/// `🎮️commands/*` payload derives `FromValue` over its own snake_case field names, so this boundary
+/// folds each key into both spellings, restores integral floats, prints structured `value`/`json`
+/// arguments into the `String` wire fields that carry JSON text, and decodes. Without it the trait
+/// default refuses every app action (`setActiveExample`, `addLayer`, …) as "not framework-reserved".
+mod args_bridge {
+    use super::*;
+
+    fn snake(key: &str) -> String {
+        let mut out = String::with_capacity(key.len() + 4);
+        for ch in key.chars() {
+            if ch.is_ascii_uppercase() {
+                out.push('_');
+                out.push(ch.to_ascii_lowercase());
+            } else {
+                out.push(ch);
+            }
+        }
+        out
+    }
+
+    fn camel(key: &str) -> String {
+        let mut out = String::with_capacity(key.len());
+        let mut upper = false;
+        for ch in key.chars() {
+            if ch == '_' {
+                upper = true;
+            } else if upper {
+                out.push(ch.to_ascii_uppercase());
+                upper = false;
+            } else {
+                out.push(ch);
+            }
+        }
+        out
+    }
+
+    fn put(entries: &mut Vec<(String, dsl::DslValue)>, key: &str, value: dsl::DslValue) {
+        entries.retain(|(existing, _)| existing != key);
+        entries.push((key.to_string(), value));
+    }
+
+    /// 🔢️ The host's JSON round trip delivers every integer as `Number::Float`; the exact-integer
+    /// codecs refuse that, so whole finite floats go back to their integer variant (`f64` fields
+    /// accept any `Number`, so nothing else changes).
+    fn integral(value: dsl::DslValue) -> dsl::DslValue {
+        match value {
+            dsl::DslValue::Number(dsl::Number::Float(float)) if float.is_finite() && float.fract() == 0.0 && float.abs() < 9.007_199_254_740_992e15 => {
+                if float >= 0.0 { dsl::DslValue::Number(dsl::Number::UInt(float as u64)) } else { dsl::DslValue::Number(dsl::Number::Int(float as i64)) }
+            }
+            dsl::DslValue::Array(items) => dsl::DslValue::Array(items.into_iter().map(integral).collect()),
+            dsl::DslValue::Object(entries) => dsl::DslValue::Object(entries.into_iter().map(|(key, value)| (key, integral(value))).collect()),
+            other => other,
+        }
+    }
+
+    /// 🔁️ Every key under both spellings (`FromValue` ignores keys it does not know), `aliases`
+    /// applied on the snake_case key, and each `json` key printed to JSON text when the host sent a
+    /// structured value for a `String` wire field (`patchLayer.value`, `setFixtureJson.json`).
+    fn fold(args: Option<&dsl::DslValue>, aliases: &[(&str, &str)], json: &[&str]) -> dsl::DslValue {
+        let mut entries: Vec<(String, dsl::DslValue)> = Vec::new();
+        if let Some(dsl::DslValue::Object(object)) = args {
+            for (key, value) in object {
+                let mut key = snake(key);
+                if let Some((_, to)) = aliases.iter().find(|(from, _)| *from == key) {
+                    key = (*to).to_string();
+                }
+                let mut value = integral(value.clone());
+                if json.contains(&key.as_str()) && !matches!(value, dsl::DslValue::String(_)) {
+                    value = dsl::DslValue::String(dsl::json::to_json_string(&value));
+                }
+                put(&mut entries, &camel(&key), value.clone());
+                put(&mut entries, &key, value);
+            }
+        }
+        dsl::DslValue::Object(entries)
+    }
+
+    fn decode<T: dsl::FromValue>(action: &str, value: dsl::DslValue) -> Result<T, Fault> {
+        T::from_value(value).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("app.command.invalid-args"), format!("draw action '{action}' arguments do not decode: {error}")))
+    }
+
+    pub fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<DrawingCommand, Fault> {
+        let plain = || fold(args, &[], &[]);
+        Ok(match action {
+            "setSnapshot" => DrawingCommand::SetSnapshot(decode(action, plain())?),
+            "commitDocument" => DrawingCommand::CommitDocument(decode(action, plain())?),
+            "setFixtureJson" => DrawingCommand::SetFixtureJson(decode(action, fold(args, &[], &["json"]))?),
+            "setActiveExample" => DrawingCommand::SetActiveExample(decode(action, fold(args, &[("id", "example_id"), ("example", "example_id")], &[]))?),
+            "setSelectedOpacity" => DrawingCommand::SetSelectedOpacity(decode(action, plain())?),
+            "engagementSubmit" => DrawingCommand::EngagementSubmit(decode(action, plain())?),
+            "addLayer" => DrawingCommand::AddLayer(decode(action, plain())?),
+            "dropLayerKind" => DrawingCommand::DropLayerKind(decode(action, plain())?),
+            "moveLayer" => DrawingCommand::MoveLayer(decode(action, plain())?),
+            "deleteLayer" => DrawingCommand::DeleteLayer(decode(action, fold(args, &[("id", "layer_id")], &[]))?),
+            "duplicateLayer" => DrawingCommand::DuplicateLayer(decode(action, fold(args, &[("id", "layer_id")], &[]))?),
+            "toggleLayerVisible" => DrawingCommand::ToggleLayerVisible(decode(action, fold(args, &[("id", "layer_id")], &[]))?),
+            "combineBoolean" => DrawingCommand::CombineBoolean(decode(action, fold(args, &[("layer_ids", "ids")], &[]))?),
+            "patchLayer" => DrawingCommand::PatchLayer(decode(action, fold(args, &[("id", "layer_id")], &["value"]))?),
+            "patchLayers" => DrawingCommand::PatchLayers(decode(action, fold(args, &[("ids", "layer_ids")], &["value"]))?),
+            "setCamera" => DrawingCommand::SetCamera(decode(action, plain())?),
+            "setCameraZoom" => DrawingCommand::SetCameraZoom(decode(action, fold(args, &[("zoom", "value")], &[]))?),
+            "engagementInput" => DrawingCommand::EngagementInput(decode(action, plain())?),
+            "canvasPointerDown" => DrawingCommand::CanvasPointerDown(decode(action, plain())?),
+            "canvasPointerMove" => DrawingCommand::CanvasPointerMove(decode(action, plain())?),
+            "canvasPointerUp" => DrawingCommand::CanvasPointerUp(decode(action, plain())?),
+            "canvasDoubleClick" => DrawingCommand::CanvasDoubleClick(decode(action, plain())?),
+            "canvasCommitDraft" => DrawingCommand::CanvasCommitDraft(decode(action, plain())?),
+            "canvasEscape" => DrawingCommand::CanvasEscape(decode(action, plain())?),
+            _ => return Err(Fault::new(FaultOrigin::App, FaultCode::new("app.command.unsupported"), format!("the draw editor has no command for action '{action}'"))),
+        })
+    }
+
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+
+        #[test]
+        fn folds_camel_case_keys_and_json_values() {
+            let args = dsl::json::to_dsl_value(&dsl::json::parse(r#"{"exampleId":"demo"}"#).expect("json"));
+            assert_eq!(command_from_action("setActiveExample", Some(&args)).expect("decodes"), DrawingCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "demo".into() }));
+            let args = dsl::json::to_dsl_value(&dsl::json::parse(r#"{"layerId":"a","field":"opacity","value":0.5}"#).expect("json"));
+            assert_eq!(command_from_action("patchLayer", Some(&args)).expect("decodes"), DrawingCommand::PatchLayer(patch_layer::PatchLayer { layer_id: "a".into(), field: "opacity".into(), value: "0.5".into() }));
+            let args = dsl::json::to_dsl_value(&dsl::json::parse(r#"{"camera":{"x":1,"y":2,"zoom":1.5}}"#).expect("json"));
+            assert!(matches!(command_from_action("setCamera", Some(&args)).expect("decodes"), DrawingCommand::SetCamera(_)));
+            assert!(command_from_action("noSuchAction", None).is_err());
+        }
+    }
+}
+//#endregion 🌉️ActionBridge
+
 //#region 🧵️GestureOperationJobs
 const DRAWING_GESTURE_TOOL_IDS: &[&str] = &["canvasPointerDown", "canvasPointerMove", "canvasPointerUp", "canvasDoubleClick", "canvasCommitDraft", "canvasEscape"];
 const DRAWING_GESTURE_RAW_BYTES: usize = 8_192;
@@ -1417,6 +1550,12 @@ impl ArtifactEditor for DrawingPlayApp {
         command.command_id()
     }
 
+    /// 🌉️ Shell `{action, args}` → `DrawingCommand` (see `args_bridge`); the trait default refuses
+    /// every app action, which left the whole ribbon/palette dead in the React shell.
+    fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<Self::Command, Fault> {
+        args_bridge::command_from_action(action, args)
+    }
+
     fn handle(
         command: &DrawingCommand,
         doc: &ArtifactView<'_, DrawingSnapshot>,
@@ -1499,10 +1638,15 @@ impl ArtifactEditor for DrawingPlayApp {
 
 //#region 🔖️Io
 /// 🌱️ Builds the single canonical non-history document-reset effect for Drawing.
+/// 🔁️ The spr is a fresh, edit-free op-log (`store::empty_document_spr`, the `🏗️fem`/process3d
+/// shape) — never a live `ArtifactEnvelope` minted just to print it: such an envelope owns a bounded
+/// retirement authority, and dropping it at the end of this function trapped the guest (`artifact
+/// envelope terminal shell reached Drop before its app-owned bounded retirement authority detached
+/// every nested owner`) the moment the react shell dispatched its boot `setActiveExample`
+/// (ticket 26/09/05/DRAW-PLUGIN-END-TO-END, 2026-09-16).
 pub(crate) fn drawing_reset_document_effect(scene: &DrawingSnapshot) -> semio_framework_plugin::Effect {
     let pack = <DrawingSnapshot as ArtifactPack>::encode_pack(scene);
-    let envelope = store::create_document_envelope::<DrawingSnapshot, DrawingMutation>(DRAWING_DOCUMENT_SCHEMA, &scene.id, scene.clone(), None);
-    let spr = semio_framework_plugin::resolve_ready(store::print_document_spr(&envelope)).expect("drawing document spr encode is infallible for a fresh, edit-free envelope");
+    let spr = semio_framework_plugin::resolve_ready(store::empty_document_spr(&scene.id, DRAWING_DOCUMENT_SCHEMA));
     semio_framework_plugin::Effect::LoadDocument { pack, spr }
 }
 
@@ -1691,4 +1835,8 @@ pub fn create_drawing_app() -> semio_framework_plugin::AppDefinition {
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 pub(crate) mod unit_tests;
+/// 🚪️ Host document-archive door law for the example load (`setActiveExample` → `LoadDocument`).
+#[cfg(test)]
+#[path = "🧪️tests/🔬️archive-load/🦀️.rs"]
+mod archive_load_tests;
 //#endregion 🧪️UnitTests

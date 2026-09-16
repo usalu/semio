@@ -169,31 +169,88 @@ pub fn surface_energy_from_run(run: Option<&ToolRunView>) -> Option<SurfaceEnerg
 //#endregion 🔓️Decode
 
 //#region 🎨️Colors
-/// 🎨️ Per-surface RGB for one field, plus the `(min, max)` the ramp was normalized over — the same
-/// global-extrema pattern fem3d uses across all solids. An empty map yields an empty colour map and
-/// `(0.0, 0.0)`; a map where every value is identical still colours (the ramp's 1e-9 span floor puts
-/// every face on the lowest band rather than dividing by zero).
+/// 🎨️ Per-surface RGB for one field, plus the true `(min, max)` of the published values.
+///
+/// 🌡️ **Banded by RANK, not by linear position.** An envelope's conduction is dominated by area × U,
+/// so one face (a ground floor, a big glazed south wall) routinely carries several times what every
+/// other face carries. Under fem3d's linear `(value − min) / (max − min)` normalisation that one face
+/// takes the hottest band and *every other face collapses onto the coldest one* — a map that is
+/// technically correct and completely unreadable, and exactly what the browser timeline recorded (all
+/// 48 vertices in a single bucket). Ranking the distinct values instead and spreading them evenly
+/// across the eight stops guarantees the property that matters here: **distinct values get distinct
+/// bands**, and more loss is always warmer than less.
+///
+/// The trade-off is deliberate and belongs in the caption, not the colours: the ramp encodes the
+/// ORDER of the faces, `legend_caption` carries the magnitudes. Values closer together than
+/// `span · 1e-6` are one rank, so float noise never splits a genuine tie. An empty map (or one with no
+/// finite value) colours nothing and reports `(0.0, 0.0)`; a map where every value is equal is one
+/// rank and colours every face the lowest band.
 pub fn surface_colors(map: &SurfaceEnergyMap, field: ResultField) -> (HashMap<u32, [f64; 3]>, f64, f64) {
-    let mut minimum = f64::INFINITY;
-    let mut maximum = f64::NEG_INFINITY;
-    for energy in map.0.values() {
-        let value = energy.field(field);
-        if !value.is_finite() {
-            continue;
-        }
-        minimum = minimum.min(value);
-        maximum = maximum.max(value);
-    }
-    if !minimum.is_finite() || !maximum.is_finite() {
+    let mut values: Vec<f64> = map.0.values().map(|energy| energy.field(field)).filter(|value| value.is_finite()).collect();
+    if values.is_empty() {
         return (HashMap::new(), 0.0, 0.0);
     }
-    let colors = map.0.iter().map(|(id, energy)| (*id, hex_to_rgb01(band_color(energy.field(field), minimum, maximum)))).collect();
+    values.sort_by(|a, b| a.partial_cmp(b).expect("finite values are totally ordered"));
+    let (minimum, maximum) = (values[0], values[values.len() - 1]);
+    // 🌡️ A field that is identically zero everywhere is not a flat result, it is NO result: a cooling
+    // design day has no conduction LOSS at all, and a heating one has no conduction GAIN. Painting
+    // every face the coldest band would read as "measured, and all equal". Colouring nothing leaves the
+    // window on its neutral family palette, which reads correctly — and the caption still prints the
+    // honest `0.0 – 0.0 kWh`.
+    if minimum == 0.0 && maximum == 0.0 {
+        return (HashMap::new(), 0.0, 0.0);
+    }
+    let epsilon = (maximum - minimum).abs() * 1e-6;
+    let mut ranks: Vec<f64> = Vec::with_capacity(values.len());
+    for value in values {
+        if ranks.last().is_none_or(|last: &f64| (value - last).abs() > epsilon) {
+            ranks.push(value);
+        }
+    }
+    let colors = map
+        .0
+        .iter()
+        .map(|(id, energy)| {
+            let value = energy.field(field);
+            let band = if !value.is_finite() { 0 } else { rank_band(&ranks, value) };
+            (*id, hex_to_rgb01(SURFACE_ENERGY_BANDS[band]))
+        })
+        .collect();
     (colors, minimum, maximum)
+}
+
+/// 🎨️ The band a value takes among the `ranks` present, spread evenly over the eight stops: the
+/// smallest distinct value is always stop 0 and the largest always stop 7.
+fn rank_band(ranks: &[f64], value: f64) -> usize {
+    if ranks.len() < 2 {
+        return 0;
+    }
+    // 🔎️ An exact hit is its own rank; anything in between was folded into the rank below it by the
+    // epsilon dedup, so it shares that rank's band rather than being nudged up a stop.
+    let rank = match ranks.binary_search_by(|candidate| candidate.partial_cmp(&value).expect("finite values are totally ordered")) {
+        Ok(rank) => rank,
+        Err(next) => next.saturating_sub(1),
+    };
+    let last = (SURFACE_ENERGY_BANDS.len() - 1) as f64;
+    ((rank as f64 * last / (ranks.len() - 1) as f64).round() as usize).min(SURFACE_ENERGY_BANDS.len() - 1)
 }
 
 /// 🏷️ The legend a 3d window puts under its ramp, e.g. `"Conduction loss · 0.0 – 412.3 kWh"`.
 pub fn legend_caption(field: ResultField, min: f64, max: f64) -> String {
     format!("{} · {min:.1} – {max:.1} kWh", field.label())
+}
+
+/// 🎨️ The ramp as the 3d window's legend strip has to draw it, low band first — THE accessor, so a
+/// rendered swatch and a painted mesh can never disagree about which eight colours the ramp is.
+/// `band_color` indexes exactly this array; the window's own law asserts the two agree band by band.
+pub fn legend_bands() -> [&'static str; 8] {
+    SURFACE_ENERGY_BANDS
+}
+
+/// 🏷️ The two numbers a legend strip prints at its ends, formatted the same way `legend_caption`
+/// formats them so the caption line and the strip never round differently.
+pub fn legend_bounds_labels(min: f64, max: f64) -> (String, String) {
+    (format!("{min:.1}"), format!("{max:.1} kWh"))
 }
 //#endregion 🎨️Colors
 

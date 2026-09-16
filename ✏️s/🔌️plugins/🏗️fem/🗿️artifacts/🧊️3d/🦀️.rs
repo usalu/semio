@@ -1052,6 +1052,21 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🔁️replace-node/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🔁️replace-node/🧪️tests/⏸️same-node-32a2a4/🦀️.rs"]
+                            mod tests_same_node;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🔁️replace-node/🧪️tests/🏗️hall-lifts-ridge-746bae/🦀️.rs"]
+                            mod tests_hall_hall_lifts_ridge;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🔁️replace-node/🧪️tests/📍️lifts-the-column-head-34351d/🦀️.rs"]
+                            mod tests_lifts_the_column_head;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🔁️replace-node/🧪️tests/🚨️no-such-node-166880/🦀️.rs"]
+                            mod tests_no_such_node;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🔁️replace-node/🧪️tests/🪪️renames-node-4a2286/🦀️.rs"]
+                            mod tests_renames_node;
                         }
                         #[path = "."]
                         pub mod replace_load {
@@ -1062,6 +1077,27 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🔁️replace-load/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🔁️replace-load/🧪️tests/⏸️same-load-65135e/🦀️.rs"]
+                            mod tests_same_load;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🔁️replace-load/🧪️tests/🏗️hall-retunes-wx-a635fe/🦀️.rs"]
+                            mod tests_hall_hall_retunes_wx;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🔁️replace-load/🧪️tests/🔁️retunes-the-rafter-udl-241993/🦀️.rs"]
+                            mod tests_retunes_the_rafter_udl;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🔁️replace-load/🧪️tests/🚨️dangling-node-092d4a/🦀️.rs"]
+                            mod tests_dangling_node;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🔁️replace-load/🧪️tests/🚨️no-such-case-21f1b7/🦀️.rs"]
+                            mod tests_no_such_case;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🔁️replace-load/🧪️tests/🚨️no-such-load-cc8aee/🦀️.rs"]
+                            mod tests_no_such_load;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🔁️replace-load/🧪️tests/🪪️renames-load-a535c9/🦀️.rs"]
+                            mod tests_renames_load;
                         }
                         #[path = "."]
                         pub mod change_load_case_name {
@@ -1072,6 +1108,18 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🏷️change-load-case-name/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🏷️change-load-case-name/🧪️tests/⏸️same-name-56ab29/🦀️.rs"]
+                            mod tests_same_name;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🏷️change-load-case-name/🧪️tests/🏗️hall-renames-crane-9f2be8/🦀️.rs"]
+                            mod tests_hall_hall_renames_crane;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🏷️change-load-case-name/🧪️tests/🏷️renames-the-wind-case-1ac4f5/🦀️.rs"]
+                            mod tests_renames_the_wind_case;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🏷️change-load-case-name/🧪️tests/🚨️no-such-case-15cca1/🦀️.rs"]
+                            mod tests_no_such_case;
                         }
                         #[path = "."]
                         pub mod replace_combination {
@@ -1082,6 +1130,24 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🔁️replace-combination/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🔁️replace-combination/🧪️tests/⏸️same-combination-4f8781/🦀️.rs"]
+                            mod tests_same_combination;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🔁️replace-combination/🧪️tests/🏗️hall-retunes-sls-280f78/🦀️.rs"]
+                            mod tests_hall_hall_retunes_sls;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🔁️replace-combination/🧪️tests/🔁️reweights-the-terms-828cb2/🦀️.rs"]
+                            mod tests_reweights_the_terms;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🔁️replace-combination/🧪️tests/🚨️dangling-term-17506c/🦀️.rs"]
+                            mod tests_dangling_term;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🔁️replace-combination/🧪️tests/🚨️no-such-combo-0c9c39/🦀️.rs"]
+                            mod tests_no_such_combo;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🔁️replace-combination/🧪️tests/🪪️renames-combo-e8f4f2/🦀️.rs"]
+                            mod tests_renames_combo;
                         }
                         #[path = "."]
                         pub mod update_analysis_settings {
@@ -1272,6 +1338,24 @@ pub mod examples {
         pub use component::*;
         #[cfg(test)]
         #[path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/📚️examples/🎬️demo/🧪️tests/🧩️example/🦀️.rs"]
+        mod tests;
+    }
+    #[path = "."]
+    pub mod concrete_forest {
+        #[path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/📚️examples/🌲️concrete-forest/🦀️.rs"]
+        mod component;
+        pub use component::*;
+        #[cfg(test)]
+        #[path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/📚️examples/🌲️concrete-forest/🧪️tests/🧩️example/🦀️.rs"]
+        mod tests;
+    }
+    #[path = "."]
+    pub mod house {
+        #[path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/📚️examples/🏠️house/🦀️.rs"]
+        mod component;
+        pub use component::*;
+        #[cfg(test)]
+        #[path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/📚️examples/🏠️house/🧪️tests/🧩️example/🦀️.rs"]
         mod tests;
     }
 }

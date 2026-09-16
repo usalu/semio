@@ -801,7 +801,7 @@ pub fn available_modules(contributions_json: &str) -> Vec<ModuleCatalogue> {
 
 //#region 🔖️GridLayout
 /// 🔢️ Places item `index` of `count` total on a `ceil(sqrt(count))`-column grid, centered at the origin,
-/// with `cell` spacing between slots — used to lay out the "all objects" 3D grid window.
+/// with `cell` spacing between slots — used to lay out the curated 3D grid window.
 pub fn grid_placement(count: usize, index: usize, cell: f64) -> (f64, f64) {
     if count == 0 {
         return (0.0, 0.0);

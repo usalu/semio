@@ -63,6 +63,9 @@ Feature: Apply every typed fem3d load mutation twice — once in Rust, once in P
     | change-load-case-self-weight | {"mutation":"changeLoadCaseSelfWeight","caseId":"live","newSelfWeight":true}                                                                                   |
     | create-combination           | {"mutation":"createCombination","combination":{"id":"acc","name":"Accidental","terms":{"dead":1.0,"live":0.3}}}                                                |
     | delete-combination           | {"mutation":"deleteCombination","id":"sls_spare"}                                                                                                              |
+    | replace-load                 | {"mutation":"replaceLoad","caseId":"live","loadId":"l2","newLoad":{"kind":"nodal","id":"l2","nodeId":"n20_l1","dof":"Tz","value":-7500.0}}                     |
+    | change-load-case-name        | {"mutation":"changeLoadCaseName","caseId":"wind","newName":"Wind +X"}                                                                                          |
+    | replace-combination          | {"mutation":"replaceCombination","id":"uls","newCombination":{"id":"uls","name":"ULS","terms":{"dead":1.35,"live":1.5,"wind":0.9}}}                            |
 
   @id-inverse
   @level-exhaustive
@@ -83,6 +86,9 @@ Feature: Apply every typed fem3d load mutation twice — once in Rust, once in P
     | change-load-case-self-weight | {"mutation":"changeLoadCaseSelfWeight","caseId":"live","newSelfWeight":true}                                                                                   |
     | create-combination           | {"mutation":"createCombination","combination":{"id":"acc","name":"Accidental","terms":{"dead":1.0,"live":0.3}}}                                                |
     | delete-combination           | {"mutation":"deleteCombination","id":"sls_spare"}                                                                                                              |
+    | replace-load                 | {"mutation":"replaceLoad","caseId":"live","loadId":"l2","newLoad":{"kind":"nodal","id":"l2","nodeId":"n20_l1","dof":"Tz","value":-7500.0}}                     |
+    | change-load-case-name        | {"mutation":"changeLoadCaseName","caseId":"wind","newName":"Wind +X"}                                                                                          |
+    | replace-combination          | {"mutation":"replaceCombination","id":"uls","newCombination":{"id":"uls","name":"ULS","terms":{"dead":1.35,"live":1.5,"wind":0.9}}}                            |
 
   @id-spec-vector
   @level-exhaustive
@@ -102,6 +108,9 @@ Feature: Apply every typed fem3d load mutation twice — once in Rust, once in P
     | change-load-case-self-weight | ⚖️change-load-case-self-weight | ⏸️switches-self-7e0cda              |
     | create-combination           | 🔗️create-combination           | 🔗️appends-a-8ede20                  |
     | delete-combination           | ✂️delete-combination           | ✂️removes-the-182f7b                |
+    | replace-load                 | 🔁️replace-load                 | 🔁️retunes-the-rafter-udl-241993     |
+    | change-load-case-name        | 🏷️change-load-case-name        | 🏷️renames-the-wind-case-1ac4f5      |
+    | replace-combination          | 🔁️replace-combination          | 🔁️reweights-the-terms-828cb2        |
 
   @id-hall-vector
   @level-exhaustive
@@ -113,14 +122,17 @@ Feature: Apply every typed fem3d load mutation twice — once in Rust, once in P
     When the committed mutation is applied to the committed before-model
     Then each implementation lands on the committed after-model in role, only the member this verb writes moved, and the two agree
     Examples:
-    | id                           | dir                            | fixture                  |
-    | change-load-case-self-weight | ⚖️change-load-case-self-weight | 🏗️hall-crane-sw-978370   |
-    | delete-combination           | ✂️delete-combination           | 🏗️hall-cut-qp-ebd806     |
-    | add-load                     | ➕️add-load                     | 🏗️hall-adds-udl-e345cb   |
-    | remove-load                  | ➖️remove-load                  | 🏗️hall-cut-wind-6cf528   |
-    | create-load-case             | 📋️create-load-case             | 🏗️hall-snow-drift-068d9b |
-    | create-combination           | 🔗️create-combination           | 🏗️hall-new-acc-4099b2    |
-    | delete-load-case             | 🗑️delete-load-case             | 🏗️hall-cut-crane-52270d  |
+    | id                           | dir                            | fixture                     |
+    | change-load-case-self-weight | ⚖️change-load-case-self-weight | 🏗️hall-crane-sw-978370      |
+    | delete-combination           | ✂️delete-combination           | 🏗️hall-cut-qp-ebd806        |
+    | add-load                     | ➕️add-load                     | 🏗️hall-adds-udl-e345cb      |
+    | remove-load                  | ➖️remove-load                  | 🏗️hall-cut-wind-6cf528      |
+    | create-load-case             | 📋️create-load-case             | 🏗️hall-snow-drift-068d9b    |
+    | create-combination           | 🔗️create-combination           | 🏗️hall-new-acc-4099b2       |
+    | delete-load-case             | 🗑️delete-load-case             | 🏗️hall-cut-crane-52270d     |
+    | replace-load                 | 🔁️replace-load                 | 🏗️hall-retunes-wx-a635fe    |
+    | change-load-case-name        | 🏷️change-load-case-name        | 🏗️hall-renames-crane-9f2be8 |
+    | replace-combination          | 🔁️replace-combination          | 🏗️hall-retunes-sls-280f78   |
 
   @id-reject
   @level-exhaustive
@@ -132,13 +144,24 @@ Feature: Apply every typed fem3d load mutation twice — once in Rust, once in P
     When the committed mutation is applied to the committed before-model
     Then both implementations refuse it, or declare it a no-op, and leave the committed before-model exactly as it was
     Examples:
-    | id                     | dir                            | fixture                  |
-    | sw-no-such-case-bfe5bc | ⚖️change-load-case-self-weight | 🚨️sw-no-such-case-bfe5bc |
-    | no-such-combo-f42cd6   | ✂️delete-combination           | 🚨️no-such-combo-f42cd6   |
-    | dup-load-id-4f4a0a     | ➕️add-load                     | ⏸️dup-load-id-4f4a0a     |
-    | no-such-member-3fe6e9  | ➕️add-load                     | 🚨️no-such-member-3fe6e9  |
-    | no-such-load-5bab2d    | ➖️remove-load                  | 🚨️no-such-load-5bab2d    |
-    | dangling-solid-5e04d9  | 📋️create-load-case             | 🚨️dangling-solid-5e04d9  |
-    | dangling-term-b9d144   | 🔗️create-combination           | 🚨️dangling-term-b9d144   |
-    | dead-in-combos-e73167  | 🗑️delete-load-case             | ⛓️dead-in-combos-e73167  |
-    | no-such-case-ef1fde    | 🗑️delete-load-case             | 🚨️no-such-case-ef1fde    |
+    | id                      | dir                            | fixture                   |
+    | sw-no-such-case-bfe5bc  | ⚖️change-load-case-self-weight | 🚨️sw-no-such-case-bfe5bc  |
+    | no-such-combo-f42cd6    | ✂️delete-combination           | 🚨️no-such-combo-f42cd6    |
+    | dup-load-id-4f4a0a      | ➕️add-load                     | ⏸️dup-load-id-4f4a0a      |
+    | no-such-member-3fe6e9   | ➕️add-load                     | 🚨️no-such-member-3fe6e9   |
+    | no-such-load-5bab2d     | ➖️remove-load                  | 🚨️no-such-load-5bab2d     |
+    | dangling-solid-5e04d9   | 📋️create-load-case             | 🚨️dangling-solid-5e04d9   |
+    | dangling-term-b9d144    | 🔗️create-combination           | 🚨️dangling-term-b9d144    |
+    | dead-in-combos-e73167   | 🗑️delete-load-case             | ⛓️dead-in-combos-e73167   |
+    | no-such-case-ef1fde     | 🗑️delete-load-case             | 🚨️no-such-case-ef1fde     |
+    | same-load-65135e        | 🔁️replace-load                 | ⏸️same-load-65135e        |
+    | dangling-node-092d4a    | 🔁️replace-load                 | 🚨️dangling-node-092d4a    |
+    | no-such-case-21f1b7     | 🔁️replace-load                 | 🚨️no-such-case-21f1b7     |
+    | no-such-load-cc8aee     | 🔁️replace-load                 | 🚨️no-such-load-cc8aee     |
+    | renames-load-a535c9     | 🔁️replace-load                 | 🪪️renames-load-a535c9     |
+    | same-name-56ab29        | 🏷️change-load-case-name        | ⏸️same-name-56ab29        |
+    | no-such-case-15cca1     | 🏷️change-load-case-name        | 🚨️no-such-case-15cca1     |
+    | same-combination-4f8781 | 🔁️replace-combination          | ⏸️same-combination-4f8781 |
+    | dangling-term-17506c    | 🔁️replace-combination          | 🚨️dangling-term-17506c    |
+    | no-such-combo-0c9c39    | 🔁️replace-combination          | 🚨️no-such-combo-0c9c39    |
+    | renames-combo-e8f4f2    | 🔁️replace-combination          | 🪪️renames-combo-e8f4f2    |

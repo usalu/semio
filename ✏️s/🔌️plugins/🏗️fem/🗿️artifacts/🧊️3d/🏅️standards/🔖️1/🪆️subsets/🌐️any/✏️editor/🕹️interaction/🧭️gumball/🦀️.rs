@@ -31,7 +31,7 @@ impl Fem3dTransformTargets {
 
 pub fn fem3d_transform_targets(doc: &Fem3dSnapshot, selection_ids: &[String]) -> Fem3dTransformTargets {
     let mut out = Fem3dTransformTargets::default();
-    let mut member_nodes = |target: &str, out: &mut Fem3dTransformTargets| {
+    let member_nodes = |target: &str, out: &mut Fem3dTransformTargets| {
         if let Some(element) = doc.elements.iter().find(|element| element_id(element) == target) {
             let (start, end) = fem3d_element_endpoints(element);
             out.node_ids.insert(start.to_string());
@@ -233,17 +233,17 @@ pub fn fem3d_selection_json(doc: &Fem3dSnapshot, interaction: &Fem3dInteractionS
     let hovered = interaction.hovered_ids.first().map(String::as_str);
     let mut value: dsl::json::Value = dsl::json::parse(&semio_framework_plugin::world3d_selection_json_with_granularity("rectangle", &interaction.selected_ids, hovered, Some(FEM3D_GRANULARITY_NODE))).unwrap_or_else(|_| dsl::json!({}));
     if let Some(object) = value.as_object_mut() {
-        object.insert("selectionMode".into(), dsl::json!("object"));
-        object.insert("targets".into(), dsl::json!({ "mesh": true, "vertex": false, "edge": false, "face": false }));
+        object.insert("selectionMode", dsl::json!("object"));
+        object.insert("targets", dsl::json!({ "mesh": true, "vertex": false, "edge": false, "face": false }));
         if let Some(id) = interaction.selected_ids.first() {
-            object.insert("activeObjectId".into(), dsl::json!(id));
+            object.insert("activeObjectId", dsl::json!(id));
         }
         let active = fem3d_gumball_active(doc, interaction, transform_armed, config);
-        object.insert("gumballActive".into(), dsl::json!(active));
+        object.insert("gumballActive", dsl::json!(active));
         if transform_armed {
-            object.insert("transformMode".into(), dsl::json!("transform"));
+            object.insert("transformMode", dsl::json!("transform"));
             object.insert(
-                "gumballConfig".into(),
+                "gumballConfig",
                 dsl::json!({
                     "moveAxes": config.move_axes,
                     "movePlanes": config.move_planes,
@@ -253,10 +253,10 @@ pub fn fem3d_selection_json(doc: &Fem3dSnapshot, interaction: &Fem3dInteractionS
                     "scaleUniform": config.scale_uniform,
                 }),
             );
-            object.insert("gumballLiveDispatch".into(), dsl::json!(true));
+            object.insert("gumballLiveDispatch", dsl::json!(true));
             if active {
                 if let Some(pivot) = fem3d_transform_pivot(doc, &fem3d_transform_targets(doc, &interaction.selected_ids)) {
-                    object.insert("gumballTarget".into(), dsl::json!(pivot));
+                    object.insert("gumballTarget", dsl::json!(pivot));
                 }
             }
         }

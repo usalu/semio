@@ -7,6 +7,9 @@
 // #region 🔌️Adapters
 import { cn } from "../🏷️class-name-composition/🟦️.ts";
 import { borderNormalClass } from "../📏️border-presentation/🟦️.ts";
+
+/** @emoji 📏️ Logical-end divider between siblings inside a chrome control group shell. */
+export const chromeControlGroupSiblingDividerClass = `border-e border-solid ${borderNormalClass} last:border-e-0`;
 import { formControlFocusBorderClass } from "../📝️form-control-presentation/🟦️.ts";
 import { hoverExcludingHandleBgFillClass, hoverExcludingHandleTextEmphasizedClass, interactiveHoverClass, interactiveOnClass } from "../🖱️interaction-presentation/🟦️.ts";
 import { glassClass } from "../🌈️surface-presentation/🟦️.ts";

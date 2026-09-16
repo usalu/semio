@@ -1,0 +1,5 @@
+{
+  "mutation": "changeLoadCaseName",
+  "caseId": "crane_spare",
+  "newName": "Crane Runway (reserved)"
+}

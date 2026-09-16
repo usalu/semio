@@ -48,12 +48,12 @@ COLLECTIONS = {
     "section": ("sections", "section", "newSection"),
     "support": ("supports", "support", "newSupport"),
     "load-case": ("loadCases", "loadCase", None),
-    "combination": ("combinations", "combination", None),
+    "combination": ("combinations", "combination", "newCombination"),
 }
 """🗂️ Per noun: its collection, the argument `create-` carries, and the one `replace-` carries when
 the vocabulary has a `replace-` for it at all."""
 
-KINDS = ("create-node", "delete-node", "create-element", "delete-element", "replace-element", "create-section", "delete-section", "replace-section", "create-solid", "delete-solid", "replace-solid")
+KINDS = ("create-node", "delete-node", "create-element", "delete-element", "replace-element", "create-section", "delete-section", "replace-section", "create-solid", "delete-solid", "replace-solid", "replace-node")
 """🏷️ This subset's own kinds, in the catalog's declared order."""
 
 

@@ -16,7 +16,7 @@
       ],
       "license": "AGPL-3.0-only",
       "testOnly": true,
-      "rationale": "A second implementation of the `s.fem.fem3d` model and all twenty-five typed mutations, in Python, at `../../../../../🧪️tests/mutate-fem3d-1/🐍️component.py`. Written from `../🧬️schema/📸️snapshot/🔣️.json`, `../🧬️schema/🧬️mutations/📝️text/📖️.grammar.semio` and the twenty-five committed `(before, mutation, after, outcome)` specification vectors — which is also where the RECORD shapes and the cascade rules are actually written down, including the one only they state: an element is a `frame` carrying a `roll` about its own axis OR a `bar` carrying none. It imports nothing from this repository and transliterates none of its Rust. A third-party library was declined, not merely absent: `code_aster`, `OpenSees`, `anastruct` and `PyNite` compute displacements and forces FROM a model, while every one of the twenty-five kinds edits the model document itself, and none of them reads `.dsl.semio`. DEFECT FOUND WHILE WRITING IT, reported rather than worked around and identical to the `◻️2d` sibling's: `../🧬️schema/🧬️mutations/🔣️.json` is a verbatim copy of the SNAPSHOT schema with the title changed, and in the snapshot schema every record `$def` is an EMPTY object with no properties. `package` is deliberately empty: the implementation needs no distribution, so this entry contributes nothing to `🔒️dependencies.json`.\n\nUNDER PROTOCOL V2 this registration is classified `cross-semio-implementation` — a required SUPPLEMENTAL oracle that does not discharge `fem3d-1-mutate`'s external-oracle requirement for its 25-kind mutation vocabulary; a qualifying third-party reference (`third-party-library` / `third-party-cli` / `standards-reference-tool`) is still owed.",
+      "rationale": "A second implementation of the `s.fem.fem3d` model and all twenty-nine typed mutations, in Python, at `../../../../../🧪️tests/mutate-fem3d-1/🐍️component.py`. Written from `../🧬️schema/📸️snapshot/🔣️.json`, `../🧬️schema/🧬️mutations/📝️text/📖️.grammar.semio` and the committed `(before, mutation, after, outcome)` specification vectors of all twenty-nine kinds — which is also where the RECORD shapes and the cascade rules are actually written down, including the one only they state: an element is a `frame` carrying a `roll` about its own axis OR a `bar` carrying none. It imports nothing from this repository and transliterates none of its Rust. A third-party library was declined, not merely absent: `code_aster`, `OpenSees`, `anastruct` and `PyNite` compute displacements and forces FROM a model, while every one of the twenty-nine kinds edits the model document itself, and none of them reads `.dsl.semio`. DEFECT FOUND WHILE WRITING IT, reported rather than worked around and identical to the `◻️2d` sibling's: `../🧬️schema/🧬️mutations/🔣️.json` is a verbatim copy of the SNAPSHOT schema with the title changed, and in the snapshot schema every record `$def` is an EMPTY object with no properties. `package` is deliberately empty: the implementation needs no distribution, so this entry contributes nothing to `🔒️dependencies.json`.\n\nUNDER PROTOCOL V2 this registration is classified `cross-semio-implementation` — a required SUPPLEMENTAL oracle that does not discharge `fem3d-1-mutate`'s external-oracle requirement for its 29-kind mutation vocabulary; a qualifying third-party reference (`third-party-library` / `third-party-cli` / `standards-reference-tool`) is still owed.",
       "kind": "cross-semio-implementation",
       "engine": {
         "family": "none",
@@ -56,7 +56,7 @@
         "win32-x64"
       ],
       "homepage": "https://threejs.org",
-      "rationale": "🕸️ THE CARRIER READER, REGISTERED AGAINST EXACTLY THREE OF THIS SUBSET'S TWENTY-FIVE KINDS, AND THE SCOPE IS THE WHOLE POINT. STEP 0 first: `../🚪️io/📤️export/🧵️serializers/🗿️artifacts/🧊️obj/🔖️3.0/✳️any/🦀️.rs` and the sibling `🔺️stl/🔖️ascii/✳️any/🦀️.rs` both triangulate every `FemSolid`'s footprint (`crate::fem3d_engine::meshing::build_semio_mesh_snapshot`), extrude it by the solid's OWN height (offset by baseZ), split to tets and take the boundary faces, then hand that to stdio's real, already-oracled `s.stdio.semio@v1/🔺️mesh` bridge and `encode_obj`/`encode_stl_ascii` grammar — neither leaf returns `print_dsl(..).into_bytes()` under a foreign extension, so both are REAL carriers, not stubs. `three` parses them with no knowledge of our snapshot type, so what it recovers from the bytes is an independent reading rather than our own encoder agreeing with itself.\n\nWHAT IT DISCHARGES. `create-solid`, `replace-solid` and `delete-solid` are the only three of this subset's twenty-five kinds that move a vertex a carrier can see: `build_semio_mesh_snapshot` reads only `solid.{outline, holes, height and baseZ}` and consults nothing else on the document. Materials, sections, nodes, `Bar/Frame` elements (no cross-section PROFILE, so no honest 3D solid — see the bridge fn's own doc), supports, load cases, loads, combinations and analysis settings are INVISIBLE in OBJ/STL BY CONSTRUCTION and carry no `oracleRequirement` this entry discharges — see `fem3d-1-mutate-uncarried` and the `noOracleDecisions` entry below.\n\nMEASURED, both ways, with the sibling `manifold-3d` oracle doing the arithmetic (`🔬️probes/📜️script.ts mesh-compare`): the SAME shape exported to OBJ and re-imported through both loaders compares at relativeVolumeError 0.000e+00, relativeAreaError 0.000e+00 and normalizedSymmetricHausdorff 0.000e+00; a genuinely different solid (a hole added, a different footprint, a different scale) separates at relativeVolumeError up to 7.083e-01 and normalizedSymmetricHausdorff up to 1.242. A FINDING FROM BUILDING THIS: relativeVolumeError and genus are translation-invariant, so a defect that moves the whole solid to the wrong place without changing its shape — e.g. a `replace-solid` that silently drops `baseZ` wrong — passes relativeVolumeError at ~1.269e-16 and genusEqual true; only normalizedSymmetricHausdorff catches it, measured at 4.465e-01 for the same-shape-wrong-elevation pair this oracle's own fixture corpus records (`solid-one-hole` vs `solid-one-hole-elevated-low`). The gate therefore asserts on BOTH metrics, never volume alone.",
+      "rationale": "🕸️ THE CARRIER READER, REGISTERED AGAINST EXACTLY THREE OF THIS SUBSET'S TWENTY-NINE KINDS, AND THE SCOPE IS THE WHOLE POINT. STEP 0 first: `../🚪️io/📤️export/🧵️serializers/🗿️artifacts/🧊️obj/🔖️3.0/✳️any/🦀️.rs` and the sibling `🔺️stl/🔖️ascii/✳️any/🦀️.rs` both triangulate every `FemSolid`'s footprint (`crate::fem3d_engine::meshing::build_semio_mesh_snapshot`), extrude it by the solid's OWN height (offset by baseZ), split to tets and take the boundary faces, then hand that to stdio's real, already-oracled `s.stdio.semio@v1/🔺️mesh` bridge and `encode_obj`/`encode_stl_ascii` grammar — neither leaf returns `print_dsl(..).into_bytes()` under a foreign extension, so both are REAL carriers, not stubs. `three` parses them with no knowledge of our snapshot type, so what it recovers from the bytes is an independent reading rather than our own encoder agreeing with itself.\n\nWHAT IT DISCHARGES. `create-solid`, `replace-solid` and `delete-solid` are the only three of this subset's twenty-nine kinds that move a vertex a carrier can see: `build_semio_mesh_snapshot` reads only `solid.{outline, holes, height and baseZ}` and consults nothing else on the document. Materials, sections, nodes, `Bar/Frame` elements (no cross-section PROFILE, so no honest 3D solid — see the bridge fn's own doc), supports, load cases, loads, combinations and analysis settings are INVISIBLE in OBJ/STL BY CONSTRUCTION and carry no `oracleRequirement` this entry discharges — see `fem3d-1-mutate-uncarried` and the `noOracleDecisions` entry below.\n\nMEASURED, both ways, with the sibling `manifold-3d` oracle doing the arithmetic (`🔬️probes/📜️script.ts mesh-compare`): the SAME shape exported to OBJ and re-imported through both loaders compares at relativeVolumeError 0.000e+00, relativeAreaError 0.000e+00 and normalizedSymmetricHausdorff 0.000e+00; a genuinely different solid (a hole added, a different footprint, a different scale) separates at relativeVolumeError up to 7.083e-01 and normalizedSymmetricHausdorff up to 1.242. A FINDING FROM BUILDING THIS: relativeVolumeError and genus are translation-invariant, so a defect that moves the whole solid to the wrong place without changing its shape — e.g. a `replace-solid` that silently drops `baseZ` wrong — passes relativeVolumeError at ~1.269e-16 and genusEqual true; only normalizedSymmetricHausdorff catches it, measured at 4.465e-01 for the same-shape-wrong-elevation pair this oracle's own fixture corpus records (`solid-one-hole` vs `solid-one-hole-elevated-low`). The gate therefore asserts on BOTH metrics, never volume alone.",
       "productionDebt": {
         "reason": "three is already a production-runtime dependency of ✏️s/🔌️plugins/📐️cad, 🧩️puzzle and the os renderer, so this oracle is NOT isolated from production the way manifold-3d is.",
         "consequence": "A bug shared between three's loaders and a production consumer of three would not be caught by this oracle alone. The independence this pilot actually rests on is the measuring half, manifold-3d, which is test-only and a different engine family; three is the parser, manifold is the judge.",
@@ -163,7 +163,7 @@
         "win32-x64"
       ],
       "homepage": "https://pynite.readthedocs.io",
-      "rationale": "🧮 An independent 3D frame and truss finite-element solver, pure Python, MIT. It assembles its own stiffness, applies its own boundary conditions and solves its own system; nothing of this repository's kernel reaches it, and it shares no engine family with `crate::sparse`'s hand-rolled LDLT.\n\nWHAT IT ADJUDICATES, AND WHY THAT DISCHARGES A DEBT THIS FILE CARRIED FOR A LONG TIME. `fem3d-non-geometry-mutation-semantics` recorded, correctly, that a finite-element solver cannot adjudicate document ALGEBRA — a solver reads a model, it does not edit one — and concluded that twenty-two of this vocabulary's twenty-five kinds therefore had no qualifying reference available at all. That survey asked only half the question. A solver adjudicates what the edited document MEANS, and every one of those twenty-two kinds changes what the model means: a section that carries less, a support that has stopped holding, a material that has got softer, a load case that no longer exists. `📈️analysis/🧪️tests/🧮️solves-fem3d-1-benchmarks` therefore mutates through PRODUCTION dispatch, holds the applied model to the committed after-model, and then SOLVES it against this oracle — displacements, reactions, member forces, every load case and every combination — and additionally requires both implementations to report the same MECHANISM: which combinations moved, which are untouched, which appeared and which are gone.\n\nHOW THE TWO COORDINATE SYSTEMS ARE RECONCILED, which is the load-bearing part of trusting it. This artifact is Z-up and PyNite is Y-up, and the two build a member's local axes from different reference directions (this artifact from global +Z, PyNite from global +Y). The reference maps between the frames with the proper rotation `(X, Y, Z)ₚ = (x, z, −y)` — determinant +1, so every cross product either solver takes keeps its handedness — computes this artifact's OWN local triad from its documented rule, and solves for the PyNite roll angle that makes the two coincide. It then checks the result against PyNite's own transformation matrix to `1e-12` per member, so a scenario stops before it compares anything if `Iy` and `Iz` have stopped naming the same axes.\n\nTWO DEFECT-CLASS FINDINGS THE INTEGRATION PRODUCED, reported rather than worked around. (1) PyNite's `add_member` builds a PHYSICAL member that silently subdivides itself at any model node lying on its axis; on the shared `🧊️steel-frame` fixture that turns the spare node `n3` into a mid-height support carrying 8.3 kN this artifact's own model never puts there. The reference narrows the subdivision search to the member's own two ends so the two element sets are the same set. (2) A `bar` is a two-force member with three translational degrees of freedom and no bending stiffness; PyNite's `Spring3D` is exactly that, so a bar maps to `add_spring(ks = EA/L)` and every rotational freedom at a node only bars touch is restrained — mirroring `crate::model::build_dof_map`'s own union-of-incident-elements rule rather than assuming PyNite's default.\n\nWHY IT CAN BE TRUSTED AS THE REFERENCE. Alongside it, on the cases where one exists, sits a CLOSED FORM: `PL³/3EI`, `PL²/2EI`, `TL/GJ`, `5wL⁴/384EI`, `wL/2`, `wL`. The reference asserts every one of them in role before it projects anything, and asserts global equilibrium — reactions cancel the applied resultant to `1e-9` relative — on every case and every combination of every model, including the ones with no closed form. A library can be wrong; a library that agrees with statics on a twenty-seven-node, forty-two-member space frame under three load cases and two combinations is not."
+      "rationale": "🧮 An independent 3D frame and truss finite-element solver, pure Python, MIT. It assembles its own stiffness, applies its own boundary conditions and solves its own system; nothing of this repository's kernel reaches it, and it shares no engine family with `crate::sparse`'s hand-rolled LDLT.\n\nWHAT IT ADJUDICATES, AND WHY THAT DISCHARGES A DEBT THIS FILE CARRIED FOR A LONG TIME. `fem3d-non-geometry-mutation-semantics` recorded, correctly, that a finite-element solver cannot adjudicate document ALGEBRA — a solver reads a model, it does not edit one — and concluded that twenty-six of this vocabulary's twenty-nine kinds therefore had no qualifying reference available at all. That survey asked only half the question. A solver adjudicates what the edited document MEANS, and every one of those twenty-six kinds changes what the model means: a section that carries less, a support that has stopped holding, a material that has got softer, a load case that no longer exists. `📈️analysis/🧪️tests/🧮️solves-fem3d-1-benchmarks` therefore mutates through PRODUCTION dispatch, holds the applied model to the committed after-model, and then SOLVES it against this oracle — displacements, reactions, member forces, every load case and every combination — and additionally requires both implementations to report the same MECHANISM: which combinations moved, which are untouched, which appeared and which are gone.\n\nHOW THE TWO COORDINATE SYSTEMS ARE RECONCILED, which is the load-bearing part of trusting it. This artifact is Z-up and PyNite is Y-up, and the two build a member's local axes from different reference directions (this artifact from global +Z, PyNite from global +Y). The reference maps between the frames with the proper rotation `(X, Y, Z)ₚ = (x, z, −y)` — determinant +1, so every cross product either solver takes keeps its handedness — computes this artifact's OWN local triad from its documented rule, and solves for the PyNite roll angle that makes the two coincide. It then checks the result against PyNite's own transformation matrix to `1e-12` per member, so a scenario stops before it compares anything if `Iy` and `Iz` have stopped naming the same axes.\n\nTWO DEFECT-CLASS FINDINGS THE INTEGRATION PRODUCED, reported rather than worked around. (1) PyNite's `add_member` builds a PHYSICAL member that silently subdivides itself at any model node lying on its axis; on the shared `🧊️steel-frame` fixture that turns the spare node `n3` into a mid-height support carrying 8.3 kN this artifact's own model never puts there. The reference narrows the subdivision search to the member's own two ends so the two element sets are the same set. (2) A `bar` is a two-force member with three translational degrees of freedom and no bending stiffness; PyNite's `Spring3D` is exactly that, so a bar maps to `add_spring(ks = EA/L)` and every rotational freedom at a node only bars touch is restrained — mirroring `crate::model::build_dof_map`'s own union-of-incident-elements rule rather than assuming PyNite's default.\n\nWHY IT CAN BE TRUSTED AS THE REFERENCE. Alongside it, on the cases where one exists, sits a CLOSED FORM: `PL³/3EI`, `PL²/2EI`, `TL/GJ`, `5wL⁴/384EI`, `wL/2`, `wL`. The reference asserts every one of them in role before it projects anything, and asserts global equilibrium — reactions cancel the applied resultant to `1e-9` relative — on every case and every combination of every model, including the ones with no closed form. A library can be wrong; a library that agrees with statics on a twenty-seven-node, forty-two-member space frame under three load cases and two combinations is not."
     },
     {
       "id": "scipy-fem3d-eigen",
@@ -253,7 +253,8 @@
         "replace-section",
         "create-solid",
         "delete-solid",
-        "replace-solid"
+        "replace-solid",
+        "replace-node"
       ],
       "vectors": []
     },
@@ -293,7 +294,10 @@
         "remove-load",
         "change-load-case-self-weight",
         "create-combination",
-        "delete-combination"
+        "delete-combination",
+        "replace-load",
+        "change-load-case-name",
+        "replace-combination"
       ],
       "vectors": []
     },
@@ -1221,6 +1225,150 @@
               "capability": "fem3d-1-mutate",
               "qualifyingKind": "third-party-library",
               "oracle": "scipy-fem3d-eigen"
+            }
+          ],
+          "invariants": {
+            "local": [
+              "not-encoded-by-any-exported-carrier"
+            ],
+            "enclosing": [
+              "document-remains-well-formed"
+            ]
+          }
+        },
+        {
+          "id": "replace-node",
+          "subset": "mesh",
+          "capability": "fem3d-1-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🔁️replace-node/🦀️.rs#ReplaceNode",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "replace-node",
+            "bridgeVersion": 1,
+            "variant": "ReplaceNode"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "fem3d-1-mutate-carrier",
+              "qualifyingKind": "third-party-library",
+              "oracle": "serde-json-fem3d-carrier-reader"
+            },
+            {
+              "capability": "fem3d-1-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "pynite-fem3d-solver"
+            }
+          ],
+          "invariants": {
+            "local": [
+              "not-encoded-by-any-exported-carrier"
+            ],
+            "enclosing": [
+              "document-remains-well-formed"
+            ]
+          }
+        },
+        {
+          "id": "replace-load",
+          "subset": "load",
+          "capability": "fem3d-1-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🔁️replace-load/🦀️.rs#ReplaceLoad",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "replace-load",
+            "bridgeVersion": 1,
+            "variant": "ReplaceLoad"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "fem3d-1-mutate-carrier",
+              "qualifyingKind": "third-party-library",
+              "oracle": "serde-json-fem3d-carrier-reader"
+            },
+            {
+              "capability": "fem3d-1-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "pynite-fem3d-solver"
+            }
+          ],
+          "invariants": {
+            "local": [
+              "not-encoded-by-any-exported-carrier"
+            ],
+            "enclosing": [
+              "document-remains-well-formed"
+            ]
+          }
+        },
+        {
+          "id": "change-load-case-name",
+          "subset": "load",
+          "capability": "fem3d-1-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🏷️change-load-case-name/🦀️.rs#ChangeLoadCaseName",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-load-case-name",
+            "bridgeVersion": 1,
+            "variant": "ChangeLoadCaseName"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "fem3d-1-mutate-carrier",
+              "qualifyingKind": "third-party-library",
+              "oracle": "serde-json-fem3d-carrier-reader"
+            },
+            {
+              "capability": "fem3d-1-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "pynite-fem3d-solver"
+            }
+          ],
+          "invariants": {
+            "local": [
+              "not-encoded-by-any-exported-carrier"
+            ],
+            "enclosing": [
+              "document-remains-well-formed"
+            ]
+          }
+        },
+        {
+          "id": "replace-combination",
+          "subset": "load",
+          "capability": "fem3d-1-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🔁️replace-combination/🦀️.rs#ReplaceCombination",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "replace-combination",
+            "bridgeVersion": 1,
+            "variant": "ReplaceCombination"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "fem3d-1-mutate-carrier",
+              "qualifyingKind": "third-party-library",
+              "oracle": "serde-json-fem3d-carrier-reader"
+            },
+            {
+              "capability": "fem3d-1-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "pynite-fem3d-solver"
             }
           ],
           "invariants": {
@@ -2261,15 +2409,15 @@
           "role": "expected-before-json",
           "path": "../../🕸️mesh/🧫️fixtures/⚪️create-node/⏮️before.json",
           "mediaType": "application/json",
-          "sha256": "sha256:3c177c2ac3e8a0d2f7d6f8a6f4f79340e5b732a87b6159ecd4c74e8bf3438358",
-          "bytes": 3127
+          "sha256": "sha256:0af6044d46ec6c08462f8edf1104180c96c2fe1ef1b278e0b080a97347d1fa90",
+          "bytes": 3146
         },
         {
           "role": "expected-after-json",
           "path": "../../🕸️mesh/🧫️fixtures/⚪️create-node/⏭️after.json",
           "mediaType": "application/json",
-          "sha256": "sha256:840c5e935f18863ed9bf1e5e727d065fe6528738c5a2560ef6a68fd30ded125f",
-          "bytes": 3205
+          "sha256": "sha256:37afc0c5c31a7f531cd03b884899542e67c0852db5be6cada9e276c7d7b7cb88",
+          "bytes": 3224
         }
       ],
       "provenance": {
@@ -2310,15 +2458,15 @@
           "role": "expected-before-json",
           "path": "../../🕸️mesh/🧫️fixtures/🕳️delete-node/⏮️before.json",
           "mediaType": "application/json",
-          "sha256": "sha256:3c177c2ac3e8a0d2f7d6f8a6f4f79340e5b732a87b6159ecd4c74e8bf3438358",
-          "bytes": 3127
+          "sha256": "sha256:0af6044d46ec6c08462f8edf1104180c96c2fe1ef1b278e0b080a97347d1fa90",
+          "bytes": 3146
         },
         {
           "role": "expected-after-json",
           "path": "../../🕸️mesh/🧫️fixtures/🕳️delete-node/⏭️after.json",
           "mediaType": "application/json",
-          "sha256": "sha256:f310ba8c38ac075a4469e831792e8847aac8e75ff981f6b69dff2260dd15fd8b",
-          "bytes": 3049
+          "sha256": "sha256:fe924f6d80cc365e08f9230414d204a8aca5b43ebcccaa723a0a85f3a104f2b8",
+          "bytes": 3068
         }
       ],
       "provenance": {
@@ -2359,15 +2507,15 @@
           "role": "expected-before-json",
           "path": "../../🕸️mesh/🧫️fixtures/🧩️create-element/⏮️before.json",
           "mediaType": "application/json",
-          "sha256": "sha256:3c177c2ac3e8a0d2f7d6f8a6f4f79340e5b732a87b6159ecd4c74e8bf3438358",
-          "bytes": 3127
+          "sha256": "sha256:0af6044d46ec6c08462f8edf1104180c96c2fe1ef1b278e0b080a97347d1fa90",
+          "bytes": 3146
         },
         {
           "role": "expected-after-json",
           "path": "../../🕸️mesh/🧫️fixtures/🧩️create-element/⏭️after.json",
           "mediaType": "application/json",
-          "sha256": "sha256:13cb386358145227ee4da2902d6fd531c6f7941b880513eb42ef33971cbf78b9",
-          "bytes": 3269
+          "sha256": "sha256:99bb28ed1c62c76bd233c26a6e960eb128169a3675b390f12563e2550edce422",
+          "bytes": 3288
         }
       ],
       "provenance": {
@@ -2408,15 +2556,15 @@
           "role": "expected-before-json",
           "path": "../../🕸️mesh/🧫️fixtures/🗑️delete-element/⏮️before.json",
           "mediaType": "application/json",
-          "sha256": "sha256:3c177c2ac3e8a0d2f7d6f8a6f4f79340e5b732a87b6159ecd4c74e8bf3438358",
-          "bytes": 3127
+          "sha256": "sha256:0af6044d46ec6c08462f8edf1104180c96c2fe1ef1b278e0b080a97347d1fa90",
+          "bytes": 3146
         },
         {
           "role": "expected-after-json",
           "path": "../../🕸️mesh/🧫️fixtures/🗑️delete-element/⏭️after.json",
           "mediaType": "application/json",
-          "sha256": "sha256:1b9755dc8df80d95161756111319eec6727a8aaee0096acaf191dd8de9c27e79",
-          "bytes": 2964
+          "sha256": "sha256:3b1a25ee9ffeb4d17a584ebbc94a11f1cf6ef9ce662b99febbaa50e9691bb0d5",
+          "bytes": 2983
         }
       ],
       "provenance": {
@@ -2457,15 +2605,15 @@
           "role": "expected-before-json",
           "path": "../../🕸️mesh/🧫️fixtures/♻️replace-element/⏮️before.json",
           "mediaType": "application/json",
-          "sha256": "sha256:3c177c2ac3e8a0d2f7d6f8a6f4f79340e5b732a87b6159ecd4c74e8bf3438358",
-          "bytes": 3127
+          "sha256": "sha256:0af6044d46ec6c08462f8edf1104180c96c2fe1ef1b278e0b080a97347d1fa90",
+          "bytes": 3146
         },
         {
           "role": "expected-after-json",
           "path": "../../🕸️mesh/🧫️fixtures/♻️replace-element/⏭️after.json",
           "mediaType": "application/json",
-          "sha256": "sha256:b59b4b0afc20f53e52c1093096e1968d91fb3dbfde0bbfb4c4fc579f90afa92e",
-          "bytes": 3106
+          "sha256": "sha256:ff8e32498fb020adfe47d78ec63a9977c20b994e4f604a9685029117e55600ba",
+          "bytes": 3125
         }
       ],
       "provenance": {
@@ -2506,15 +2654,15 @@
           "role": "expected-before-json",
           "path": "../../🧱️material/🧫️fixtures/🌱️create-material/⏮️before.json",
           "mediaType": "application/json",
-          "sha256": "sha256:3c177c2ac3e8a0d2f7d6f8a6f4f79340e5b732a87b6159ecd4c74e8bf3438358",
-          "bytes": 3127
+          "sha256": "sha256:0af6044d46ec6c08462f8edf1104180c96c2fe1ef1b278e0b080a97347d1fa90",
+          "bytes": 3146
         },
         {
           "role": "expected-after-json",
           "path": "../../🧱️material/🧫️fixtures/🌱️create-material/⏭️after.json",
           "mediaType": "application/json",
-          "sha256": "sha256:188d2b9db785c3668106e847db7a614033414f30bbfb4c8c575db766ff504c6b",
-          "bytes": 3267
+          "sha256": "sha256:4f26e62ad0242151d87db7f9aacfd8c4b5ed096ceb81f97738bf2ce24be1bb6a",
+          "bytes": 3286
         }
       ],
       "provenance": {
@@ -2555,15 +2703,15 @@
           "role": "expected-before-json",
           "path": "../../🧱️material/🧫️fixtures/🗑️delete-material/⏮️before.json",
           "mediaType": "application/json",
-          "sha256": "sha256:3c177c2ac3e8a0d2f7d6f8a6f4f79340e5b732a87b6159ecd4c74e8bf3438358",
-          "bytes": 3127
+          "sha256": "sha256:0af6044d46ec6c08462f8edf1104180c96c2fe1ef1b278e0b080a97347d1fa90",
+          "bytes": 3146
         },
         {
           "role": "expected-after-json",
           "path": "../../🧱️material/🧫️fixtures/🗑️delete-material/⏭️after.json",
           "mediaType": "application/json",
-          "sha256": "sha256:95d59d9e445496f7c717f46acb9edcc2bb65d14eb3d6c3feb888262dee664708",
-          "bytes": 2983
+          "sha256": "sha256:e4e577e8216b25b82f1fb1d2d95c71b606c411edb7ce05c1ca1f12754bae1f57",
+          "bytes": 3002
         }
       ],
       "provenance": {
@@ -2604,15 +2752,15 @@
           "role": "expected-before-json",
           "path": "../../🧱️material/🧫️fixtures/🔁️replace-material/⏮️before.json",
           "mediaType": "application/json",
-          "sha256": "sha256:3c177c2ac3e8a0d2f7d6f8a6f4f79340e5b732a87b6159ecd4c74e8bf3438358",
-          "bytes": 3127
+          "sha256": "sha256:0af6044d46ec6c08462f8edf1104180c96c2fe1ef1b278e0b080a97347d1fa90",
+          "bytes": 3146
         },
         {
           "role": "expected-after-json",
           "path": "../../🧱️material/🧫️fixtures/🔁️replace-material/⏭️after.json",
           "mediaType": "application/json",
-          "sha256": "sha256:b34b24fc68352af2901bc955d08a11d23ad688df86110cd89a52e6279d063a46",
-          "bytes": 3127
+          "sha256": "sha256:b4b2f7dac9b2fbcda0de7aae355d0082d127f1916b208429f2acafbeb66e4106",
+          "bytes": 3146
         }
       ],
       "provenance": {
@@ -2653,15 +2801,15 @@
           "role": "expected-before-json",
           "path": "../../🕸️mesh/🧫️fixtures/📐️create-section/⏮️before.json",
           "mediaType": "application/json",
-          "sha256": "sha256:3c177c2ac3e8a0d2f7d6f8a6f4f79340e5b732a87b6159ecd4c74e8bf3438358",
-          "bytes": 3127
+          "sha256": "sha256:0af6044d46ec6c08462f8edf1104180c96c2fe1ef1b278e0b080a97347d1fa90",
+          "bytes": 3146
         },
         {
           "role": "expected-after-json",
           "path": "../../🕸️mesh/🧫️fixtures/📐️create-section/⏭️after.json",
           "mediaType": "application/json",
-          "sha256": "sha256:5b15baa2d3ad41e45287028ae8da280d8c667ba904875af5a19daced99a5bfcd",
-          "bytes": 3269
+          "sha256": "sha256:aadc6a003a72c04d807076f7b7b117e449857d0ac0443de1487937586545cb50",
+          "bytes": 3288
         }
       ],
       "provenance": {
@@ -2702,15 +2850,15 @@
           "role": "expected-before-json",
           "path": "../../🕸️mesh/🧫️fixtures/✂️delete-section/⏮️before.json",
           "mediaType": "application/json",
-          "sha256": "sha256:3c177c2ac3e8a0d2f7d6f8a6f4f79340e5b732a87b6159ecd4c74e8bf3438358",
-          "bytes": 3127
+          "sha256": "sha256:0af6044d46ec6c08462f8edf1104180c96c2fe1ef1b278e0b080a97347d1fa90",
+          "bytes": 3146
         },
         {
           "role": "expected-after-json",
           "path": "../../🕸️mesh/🧫️fixtures/✂️delete-section/⏭️after.json",
           "mediaType": "application/json",
-          "sha256": "sha256:b238229da9190fa152a7f852a3f8605e55c40126df5d6d5aac463e2ef5c7ec69",
-          "bytes": 2986
+          "sha256": "sha256:42e4fa7125d6558d257c36696b069048931cf1bdd7be1da59f1d5388c358fd13",
+          "bytes": 3005
         }
       ],
       "provenance": {
@@ -2751,15 +2899,15 @@
           "role": "expected-before-json",
           "path": "../../🕸️mesh/🧫️fixtures/📏️replace-section/⏮️before.json",
           "mediaType": "application/json",
-          "sha256": "sha256:3c177c2ac3e8a0d2f7d6f8a6f4f79340e5b732a87b6159ecd4c74e8bf3438358",
-          "bytes": 3127
+          "sha256": "sha256:0af6044d46ec6c08462f8edf1104180c96c2fe1ef1b278e0b080a97347d1fa90",
+          "bytes": 3146
         },
         {
           "role": "expected-after-json",
           "path": "../../🕸️mesh/🧫️fixtures/📏️replace-section/⏭️after.json",
           "mediaType": "application/json",
-          "sha256": "sha256:b3f30760113540d24102c289d4ec7a4ab5475615dcb6310521a00fa6835c9aed",
-          "bytes": 3127
+          "sha256": "sha256:d076e09f47311dc38180633086c4503a9121726601b837a604ed87e8bbc2c343",
+          "bytes": 3146
         }
       ],
       "provenance": {
@@ -2800,15 +2948,15 @@
           "role": "expected-before-json",
           "path": "../../🛡️boundary/🧫️fixtures/🛡️create-support/⏮️before.json",
           "mediaType": "application/json",
-          "sha256": "sha256:3c177c2ac3e8a0d2f7d6f8a6f4f79340e5b732a87b6159ecd4c74e8bf3438358",
-          "bytes": 3127
+          "sha256": "sha256:0af6044d46ec6c08462f8edf1104180c96c2fe1ef1b278e0b080a97347d1fa90",
+          "bytes": 3146
         },
         {
           "role": "expected-after-json",
           "path": "../../🛡️boundary/🧫️fixtures/🛡️create-support/⏭️after.json",
           "mediaType": "application/json",
-          "sha256": "sha256:58e58d9218a1dc88d4afdcd5dbaa4c7a19661c291978f47e55f985c0be099603",
-          "bytes": 3234
+          "sha256": "sha256:2060eb76835a1d948e3de6e949233d701938f659c200cb6950d78edc6f838ea8",
+          "bytes": 3253
         }
       ],
       "provenance": {
@@ -2849,15 +2997,15 @@
           "role": "expected-before-json",
           "path": "../../🛡️boundary/🧫️fixtures/🗑️delete-support/⏮️before.json",
           "mediaType": "application/json",
-          "sha256": "sha256:3c177c2ac3e8a0d2f7d6f8a6f4f79340e5b732a87b6159ecd4c74e8bf3438358",
-          "bytes": 3127
+          "sha256": "sha256:0af6044d46ec6c08462f8edf1104180c96c2fe1ef1b278e0b080a97347d1fa90",
+          "bytes": 3146
         },
         {
           "role": "expected-after-json",
           "path": "../../🛡️boundary/🧫️fixtures/🗑️delete-support/⏭️after.json",
           "mediaType": "application/json",
-          "sha256": "sha256:dbdaaa0cbe6d810afea2412717013dddb6cf954b147c5d45360b80c7b84c6071",
-          "bytes": 3034
+          "sha256": "sha256:aa5a48d3378b5a575b71d2fdfe47ee39cec826bf915e7e198835590cc0874ff9",
+          "bytes": 3053
         }
       ],
       "provenance": {
@@ -2898,15 +3046,15 @@
           "role": "expected-before-json",
           "path": "../../🛡️boundary/🧫️fixtures/🔁️replace-support/⏮️before.json",
           "mediaType": "application/json",
-          "sha256": "sha256:3c177c2ac3e8a0d2f7d6f8a6f4f79340e5b732a87b6159ecd4c74e8bf3438358",
-          "bytes": 3127
+          "sha256": "sha256:0af6044d46ec6c08462f8edf1104180c96c2fe1ef1b278e0b080a97347d1fa90",
+          "bytes": 3146
         },
         {
           "role": "expected-after-json",
           "path": "../../🛡️boundary/🧫️fixtures/🔁️replace-support/⏭️after.json",
           "mediaType": "application/json",
-          "sha256": "sha256:a9a3a577b20f0c76feef378f5852e1bb3ced6719ce401a2a85272840d44a67bd",
-          "bytes": 3071
+          "sha256": "sha256:662396fa57e817d712d2ac9b61005d42eea1fff928fb17b5dee28d0b32a023ec",
+          "bytes": 3090
         }
       ],
       "provenance": {
@@ -2947,15 +3095,15 @@
           "role": "expected-before-json",
           "path": "../../🏋️load/🧫️fixtures/📋️create-load-case/⏮️before.json",
           "mediaType": "application/json",
-          "sha256": "sha256:3c177c2ac3e8a0d2f7d6f8a6f4f79340e5b732a87b6159ecd4c74e8bf3438358",
-          "bytes": 3127
+          "sha256": "sha256:0af6044d46ec6c08462f8edf1104180c96c2fe1ef1b278e0b080a97347d1fa90",
+          "bytes": 3146
         },
         {
           "role": "expected-after-json",
           "path": "../../🏋️load/🧫️fixtures/📋️create-load-case/⏭️after.json",
           "mediaType": "application/json",
-          "sha256": "sha256:d08cea6cb87966ea6cdd7e013521038bbc39006968a432d78eb18f647992d3fb",
-          "bytes": 3226
+          "sha256": "sha256:85f8e22040ed86babe2bbe980994213abb80bd61c0607df4f47c6be99e21f1f9",
+          "bytes": 3245
         }
       ],
       "provenance": {
@@ -2996,15 +3144,15 @@
           "role": "expected-before-json",
           "path": "../../🏋️load/🧫️fixtures/🗑️delete-load-case/⏮️before.json",
           "mediaType": "application/json",
-          "sha256": "sha256:3c177c2ac3e8a0d2f7d6f8a6f4f79340e5b732a87b6159ecd4c74e8bf3438358",
-          "bytes": 3127
+          "sha256": "sha256:0af6044d46ec6c08462f8edf1104180c96c2fe1ef1b278e0b080a97347d1fa90",
+          "bytes": 3146
         },
         {
           "role": "expected-after-json",
           "path": "../../🏋️load/🧫️fixtures/🗑️delete-load-case/⏭️after.json",
           "mediaType": "application/json",
-          "sha256": "sha256:aeacd977e4808902bb86be045208ee2d1c8df8db5833d6e4dbc982235fa609de",
-          "bytes": 2894
+          "sha256": "sha256:f827423175442d603863eb2e1b227bbf7bc581cb070b2dbdf92f70e40eb2dfae",
+          "bytes": 2913
         }
       ],
       "provenance": {
@@ -3045,15 +3193,15 @@
           "role": "expected-before-json",
           "path": "../../🏋️load/🧫️fixtures/➕️add-load/⏮️before.json",
           "mediaType": "application/json",
-          "sha256": "sha256:3c177c2ac3e8a0d2f7d6f8a6f4f79340e5b732a87b6159ecd4c74e8bf3438358",
-          "bytes": 3127
+          "sha256": "sha256:0af6044d46ec6c08462f8edf1104180c96c2fe1ef1b278e0b080a97347d1fa90",
+          "bytes": 3146
         },
         {
           "role": "expected-after-json",
           "path": "../../🏋️load/🧫️fixtures/➕️add-load/⏭️after.json",
           "mediaType": "application/json",
-          "sha256": "sha256:745b1c63b3f144dc391b875bf10ff9d2e1a5f6af4425bc2ca9947a679dc69ea2",
-          "bytes": 3272
+          "sha256": "sha256:8e958dcf065a73540bf8f1637b01ff4849349104eecbf249798c6d2f42eda339",
+          "bytes": 3291
         }
       ],
       "provenance": {
@@ -3094,15 +3242,15 @@
           "role": "expected-before-json",
           "path": "../../🏋️load/🧫️fixtures/➖️remove-load/⏮️before.json",
           "mediaType": "application/json",
-          "sha256": "sha256:3c177c2ac3e8a0d2f7d6f8a6f4f79340e5b732a87b6159ecd4c74e8bf3438358",
-          "bytes": 3127
+          "sha256": "sha256:0af6044d46ec6c08462f8edf1104180c96c2fe1ef1b278e0b080a97347d1fa90",
+          "bytes": 3146
         },
         {
           "role": "expected-after-json",
           "path": "../../🏋️load/🧫️fixtures/➖️remove-load/⏭️after.json",
           "mediaType": "application/json",
-          "sha256": "sha256:9b9018da9b99f87e1cef5061dfb3611b6a5b722f0487300312eb74477232db2f",
-          "bytes": 2958
+          "sha256": "sha256:7ae1a6a77e50b9719b4acdd128079bf702a6bf9c91eaef67e78fe02c711cb0d7",
+          "bytes": 2977
         }
       ],
       "provenance": {
@@ -3143,15 +3291,15 @@
           "role": "expected-before-json",
           "path": "../../🏋️load/🧫️fixtures/⚖️change-load-case-self-weight/⏮️before.json",
           "mediaType": "application/json",
-          "sha256": "sha256:3c177c2ac3e8a0d2f7d6f8a6f4f79340e5b732a87b6159ecd4c74e8bf3438358",
-          "bytes": 3127
+          "sha256": "sha256:0af6044d46ec6c08462f8edf1104180c96c2fe1ef1b278e0b080a97347d1fa90",
+          "bytes": 3146
         },
         {
           "role": "expected-after-json",
           "path": "../../🏋️load/🧫️fixtures/⚖️change-load-case-self-weight/⏭️after.json",
           "mediaType": "application/json",
-          "sha256": "sha256:bc39ca7c3d13d3253bb1229e35f968f8531f7695c755c0aa348da31c8fb1fa0f",
-          "bytes": 3128
+          "sha256": "sha256:a0faf254c3fffea6ace7806504a1444e40694622cf65b383d833eafcc3181ade",
+          "bytes": 3147
         }
       ],
       "provenance": {
@@ -3192,15 +3340,15 @@
           "role": "expected-before-json",
           "path": "../../🏋️load/🧫️fixtures/🔗️create-combination/⏮️before.json",
           "mediaType": "application/json",
-          "sha256": "sha256:3c177c2ac3e8a0d2f7d6f8a6f4f79340e5b732a87b6159ecd4c74e8bf3438358",
-          "bytes": 3127
+          "sha256": "sha256:0af6044d46ec6c08462f8edf1104180c96c2fe1ef1b278e0b080a97347d1fa90",
+          "bytes": 3146
         },
         {
           "role": "expected-after-json",
           "path": "../../🏋️load/🧫️fixtures/🔗️create-combination/⏭️after.json",
           "mediaType": "application/json",
-          "sha256": "sha256:db3dc7bf83887de542256b6d132f0b5de817050a6b51222278fe018543d40eb2",
-          "bytes": 3275
+          "sha256": "sha256:03718a3ed1173dc4d3cf2dc321887996fa5fdc8a382745809ccd99bb360bb020",
+          "bytes": 3294
         }
       ],
       "provenance": {
@@ -3241,15 +3389,15 @@
           "role": "expected-before-json",
           "path": "../../🏋️load/🧫️fixtures/✂️delete-combination/⏮️before.json",
           "mediaType": "application/json",
-          "sha256": "sha256:3c177c2ac3e8a0d2f7d6f8a6f4f79340e5b732a87b6159ecd4c74e8bf3438358",
-          "bytes": 3127
+          "sha256": "sha256:0af6044d46ec6c08462f8edf1104180c96c2fe1ef1b278e0b080a97347d1fa90",
+          "bytes": 3146
         },
         {
           "role": "expected-after-json",
           "path": "../../🏋️load/🧫️fixtures/✂️delete-combination/⏭️after.json",
           "mediaType": "application/json",
-          "sha256": "sha256:a3e6bc4af460c1caeac0abb75a9629e9c821944d26edcce345f3d209734e1f87",
-          "bytes": 2907
+          "sha256": "sha256:e37f4ae6c62d72e46f23244277b79dbd865f47c955521b40bde8eff0c77253e9",
+          "bytes": 2926
         }
       ],
       "provenance": {
@@ -3290,15 +3438,15 @@
           "role": "expected-before-json",
           "path": "../../📈️analysis/🧫️fixtures/🎛️update-analysis-settings/⏮️before.json",
           "mediaType": "application/json",
-          "sha256": "sha256:3c177c2ac3e8a0d2f7d6f8a6f4f79340e5b732a87b6159ecd4c74e8bf3438358",
-          "bytes": 3127
+          "sha256": "sha256:0af6044d46ec6c08462f8edf1104180c96c2fe1ef1b278e0b080a97347d1fa90",
+          "bytes": 3146
         },
         {
           "role": "expected-after-json",
           "path": "../../📈️analysis/🧫️fixtures/🎛️update-analysis-settings/⏭️after.json",
           "mediaType": "application/json",
-          "sha256": "sha256:ae5f6c0f9c17a5c2c5c4c7bfb1ea054d51d84b41b9cf20cf10ca410e1b345b73",
-          "bytes": 3128
+          "sha256": "sha256:9f753ee98d57166356c7ac7895937df3ff3558a3a336d17ea91d066b0cf27775",
+          "bytes": 3147
         }
       ],
       "provenance": {
@@ -3453,6 +3601,198 @@
       "reproducible": true,
       "family": "analysis",
       "notes": "top-face shortening of a prismatic column under uniform pressure (exact) and under self weight (0.26 % below the closed form)."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "carrier-replace-node",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.fem.3d",
+        "standard": "1",
+        "subset": "mesh"
+      },
+      "mutation": "replace-node",
+      "outcome": "applied",
+      "units": {
+        "length": "metre",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-json",
+          "path": "../../🕸️mesh/🧫️fixtures/🔁️replace-node/⏮️before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:0af6044d46ec6c08462f8edf1104180c96c2fe1ef1b278e0b080a97347d1fa90",
+          "bytes": 3146
+        },
+        {
+          "role": "expected-after-json",
+          "path": "../../🕸️mesh/🧫️fixtures/🔁️replace-node/⏭️after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:1b4b60305658d31a71741e0ba6c509ee428c2097e2f7a73900bf6a2395290ed1",
+          "bytes": 3146
+        }
+      ],
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "generator": {
+        "oracle": "serde-json-fem3d-carrier-reader",
+        "packageVersion": "1",
+        "engineFamily": "serde-json",
+        "engineVersion": "1",
+        "command": "bun ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts carrier",
+        "platform": "darwin"
+      },
+      "comparisonProfile": "semantic-fem3d-carrier-v1",
+      "reproducible": true,
+      "family": "mechanical",
+      "notes": "A deterministic fem3d model carrying at least two of every collection, with the replace-node mutation applied as an edit to the JSON CARRIER and read back through serde_json — never through this repository's own mutation engine. Observability (after projection != before projection) is checked before a pair is written, and a pair that does not move is refused rather than committed."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "carrier-replace-load",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.fem.3d",
+        "standard": "1",
+        "subset": "load"
+      },
+      "mutation": "replace-load",
+      "outcome": "applied",
+      "units": {
+        "length": "metre",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-json",
+          "path": "../../🏋️load/🧫️fixtures/🔁️replace-load/⏮️before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:0af6044d46ec6c08462f8edf1104180c96c2fe1ef1b278e0b080a97347d1fa90",
+          "bytes": 3146
+        },
+        {
+          "role": "expected-after-json",
+          "path": "../../🏋️load/🧫️fixtures/🔁️replace-load/⏭️after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:297efdf06f31de564d824d497caed4e9097730429ab1763021292614717d29df",
+          "bytes": 3146
+        }
+      ],
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "generator": {
+        "oracle": "serde-json-fem3d-carrier-reader",
+        "packageVersion": "1",
+        "engineFamily": "serde-json",
+        "engineVersion": "1",
+        "command": "bun ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts carrier",
+        "platform": "darwin"
+      },
+      "comparisonProfile": "semantic-fem3d-carrier-v1",
+      "reproducible": true,
+      "family": "mechanical",
+      "notes": "A deterministic fem3d model carrying at least two of every collection, with the replace-load mutation applied as an edit to the JSON CARRIER and read back through serde_json — never through this repository's own mutation engine. Observability (after projection != before projection) is checked before a pair is written, and a pair that does not move is refused rather than committed."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "carrier-change-load-case-name",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.fem.3d",
+        "standard": "1",
+        "subset": "load"
+      },
+      "mutation": "change-load-case-name",
+      "outcome": "applied",
+      "units": {
+        "length": "metre",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-json",
+          "path": "../../🏋️load/🧫️fixtures/🏷️change-load-case-name/⏮️before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:0af6044d46ec6c08462f8edf1104180c96c2fe1ef1b278e0b080a97347d1fa90",
+          "bytes": 3146
+        },
+        {
+          "role": "expected-after-json",
+          "path": "../../🏋️load/🧫️fixtures/🏷️change-load-case-name/⏭️after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:7649362f92cd294e5e9773046ce0f09127b551177de712b6f47e6a2968e3247f",
+          "bytes": 3149
+        }
+      ],
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "generator": {
+        "oracle": "serde-json-fem3d-carrier-reader",
+        "packageVersion": "1",
+        "engineFamily": "serde-json",
+        "engineVersion": "1",
+        "command": "bun ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts carrier",
+        "platform": "darwin"
+      },
+      "comparisonProfile": "semantic-fem3d-carrier-v1",
+      "reproducible": true,
+      "family": "mechanical",
+      "notes": "A deterministic fem3d model carrying at least two of every collection, with the change-load-case-name mutation applied as an edit to the JSON CARRIER and read back through serde_json — never through this repository's own mutation engine. Observability (after projection != before projection) is checked before a pair is written, and a pair that does not move is refused rather than committed."
+    },
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "carrier-replace-combination",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.fem.3d",
+        "standard": "1",
+        "subset": "load"
+      },
+      "mutation": "replace-combination",
+      "outcome": "applied",
+      "units": {
+        "length": "metre",
+        "angle": "radian"
+      },
+      "files": [
+        {
+          "role": "expected-before-json",
+          "path": "../../🏋️load/🧫️fixtures/🔁️replace-combination/⏮️before.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:0af6044d46ec6c08462f8edf1104180c96c2fe1ef1b278e0b080a97347d1fa90",
+          "bytes": 3146
+        },
+        {
+          "role": "expected-after-json",
+          "path": "../../🏋️load/🧫️fixtures/🔁️replace-combination/⏭️after.json",
+          "mediaType": "application/json",
+          "sha256": "sha256:2179e33118e62fd7e8a9f5f878224cf8b565f1e3f0210a13004ed967035de229",
+          "bytes": 3147
+        }
+      ],
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "generator": {
+        "oracle": "serde-json-fem3d-carrier-reader",
+        "packageVersion": "1",
+        "engineFamily": "serde-json",
+        "engineVersion": "1",
+        "command": "bun ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/📜️script.ts carrier",
+        "platform": "darwin"
+      },
+      "comparisonProfile": "semantic-fem3d-carrier-v1",
+      "reproducible": true,
+      "family": "mechanical",
+      "notes": "A deterministic fem3d model carrying at least two of every collection, with the replace-combination mutation applied as an edit to the JSON CARRIER and read back through serde_json — never through this repository's own mutation engine. Observability (after projection != before projection) is checked before a pair is written, and a pair that does not move is refused rather than committed."
     }
   ],
   "probes": [
@@ -3482,18 +3822,18 @@
       ],
       "qualification": {
         "status": "qualified",
-        "evidence": "Validated BOTH ways for all 22 carrier kinds, per-fixture: (before,before) -> equal:true for 22/22; (before,after) -> equal:false for 22/22 — 44/44 directions correct. Observability is also enforced at GENERATION time: the engine refuses to write a pair whose carrier projection does not move, so a no-op cannot be committed as a fixture that would pass forever.",
+        "evidence": "Validated BOTH ways for all 26 carrier kinds, per-fixture: (before,before) -> equal:true for 26/26; (before,after) -> equal:false for 26/26 — 52/52 directions correct (re-measured 2026-09-16 when replace-node, replace-load, change-load-case-name and replace-combination joined the corpus). Observability is also enforced at GENERATION time: the engine refuses to write a pair whose carrier projection does not move, so a no-op cannot be committed as a fixture that would pass forever.",
         "checkedAt": "2026-08-28",
         "criteria": [
           {
             "id": "accepts-a-known-good-pair",
             "met": true,
-            "detail": "22/22 kinds: identical (before,before) compares equal:true"
+            "detail": "26/26 kinds: identical (before,before) compares equal:true"
           },
           {
             "id": "rejects-a-known-bad-pair",
             "met": true,
-            "detail": "22/22 kinds: the kind's own (before,after) compares equal:false"
+            "detail": "26/26 kinds: the kind's own (before,after) compares equal:false"
           },
           {
             "id": "reads-only",
@@ -3544,18 +3884,18 @@
       ],
       "qualification": {
         "status": "qualified",
-        "evidence": "Validated BOTH ways for all 22 carrier kinds, per-fixture: (before,before) -> equal:true for 22/22; (before,after) -> equal:false for 22/22 — 44/44 directions correct. Observability is also enforced at GENERATION time: the engine refuses to write a pair whose carrier projection does not move, so a no-op cannot be committed as a fixture that would pass forever.",
+        "evidence": "Validated BOTH ways for all 26 carrier kinds, per-fixture: (before,before) -> equal:true for 26/26; (before,after) -> equal:false for 26/26 — 52/52 directions correct (re-measured 2026-09-16 when replace-node, replace-load, change-load-case-name and replace-combination joined the corpus). Observability is also enforced at GENERATION time: the engine refuses to write a pair whose carrier projection does not move, so a no-op cannot be committed as a fixture that would pass forever.",
         "checkedAt": "2026-08-28",
         "criteria": [
           {
             "id": "accepts-a-known-good-pair",
             "met": true,
-            "detail": "22/22 kinds: identical (before,before) compares equal:true"
+            "detail": "26/26 kinds: identical (before,before) compares equal:true"
           },
           {
             "id": "rejects-a-known-bad-pair",
             "met": true,
-            "detail": "22/22 kinds: the kind's own (before,after) compares equal:false"
+            "detail": "26/26 kinds: the kind's own (before,after) compares equal:false"
           },
           {
             "id": "reads-only",

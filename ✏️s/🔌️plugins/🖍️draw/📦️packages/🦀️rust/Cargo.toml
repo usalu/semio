@@ -16,6 +16,7 @@ role = "plugin"
 
 [[package.metadata.semio.playground]]
 variant = "draw"
+app = "s.draw.drawing@1/*#editor"
 ports = { react = 6064, wgpu = 6164 }
 
 [lib]

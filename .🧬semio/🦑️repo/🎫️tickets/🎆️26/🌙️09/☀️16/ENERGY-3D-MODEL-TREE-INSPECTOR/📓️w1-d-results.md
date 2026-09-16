@@ -334,3 +334,181 @@ Editor:
    so it is not my accumulator — but somebody should own it, and the `eprintln!("[DEBUG] …")`
    scaffolding all over `🧪️sim/🦀️.rs`'s fault paths (flagged in the explore report's closing note) is
    still there.
+
+---
+
+## 10. Recolour law
+
+Follow-up to the coordinator's browser evidence (`🗑️generated/energy-results-w5/timeline.txt`): the
+scene recoloured while the run ticked (t=22 s, meshes 2833→4777 B, vertex-colour histogram
+`[0,0,0,12,0,12,24,0]` → `[0,0,48,0,0,0,0,0]`) and snapped back **byte-identical** to the pre-run scene
+at `Finalized` (t=32 s). Two defects, both now fixed and both covered by one app-level law.
+
+### 10.1 The law
+
+`✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs`,
+region `//#region 🎨️RecolourLaw`:
+`a_finalized_simulation_run_recolours_the_three_d_model_window`.
+
+It drives the whole chain through the route the shell uses — the registry-backed
+`VcsArtifactApp<EditorApp<EnergyModelEditor>, SemioMembers>` from the existing `simulation_app()`
+harness, `toolRunStart` for `energySimulation`, pump to `finalized`, then
+`app.render(model_window::BODY_KEY, None, &ViewModel::default())` projected to text — and asserts:
+
+- **(a)** the projected 3d body contains `kWh` and names one of the four published fields, *after*
+  finalization, and that the finalized body is not byte-identical to the pre-run body;
+- **(b)** at least two distinct ramp stops are painted into the scene's per-vertex colour arrays,
+  after finalize **and** while the run was still `running`/`starting`;
+- **(c)** at least one `UiDirtyScope` the app owed during the run covered `energy.model.3d`, read the
+  way the shell reads them (`PluginApp::take_typed_operation_ui_scope`, drained every driver turn —
+  the ledger only pushes a new scope when the outbox is empty, so a test that never drains sees one),
+  plus the static half: every id in `ToolRunDefinition::windows` is a window kind this editor
+  registers, because the driver builds `entry.window_bodies` with
+  `definition.windows.iter().filter_map(|id| registry.window_body_key(id))` and **silently filters
+  away** an id nothing declares.
+
+Two helpers were needed and are worth naming: `drain_ui_scopes` (above) and `painted_bands`, which
+reads the ramp stops out of the projected scene. The first version of `painted_bands` matched each
+channel at one fixed precision and was quietly wrong — the mesh lane prints `0.839,0.812,0.769`, i.e.
+three decimals, so `format!("{:.5}")[..5]` misses `0.9216`→`0.922`. It now accepts any of the
+precisions the projection may have written, or the law would have been vacuous.
+
+### 10.2 Defect 1 — the finalize path cleared the payload (framework)
+
+`🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⏯️tool-run/🦀️.rs`. `close_tool_run_publication`, on
+`ToolRunEffect::ReleaseProvisional` (line ~1781), called `discard_provisional()`, whose last line is
+`entry.payload = None`. That method has two kinds of caller and they want opposite things:
+
+- genuine discards — abort, job fault, rebase-restart, reconfigure-restart — where the run's
+  intermediate result is invalidated and the windows must stop showing it;
+- the **post-finalize release**, where the provisional ops have just been published successfully.
+
+`payload` is not provisional work. It is the run's own result (`ToolRunTick::payload`'s own doc: "the
+latest intermediate result of the run … the run's windows read it back through
+`ToolRunView::payload`"), and a `mutating: false` run publishes nothing else at all. Clearing it on
+finalize is what made a finished read-only run's windows revert the instant it reached `Finalized`.
+
+Minimal generic fix: `discard_provisional()` is now `release_provisional(false)`, the finalize path
+calls `release_provisional(true)`, and the split is documented on both. Nothing else changed.
+
+**Blast radius, checked rather than assumed.** `entry.payload` has exactly three touch points in the
+whole framework — the `ToolRunView` builder (line 444), `apply_tick` (547) and `release_provisional`
+(982) — and `ToolRunView::payload` is read in exactly ONE place in every `✏️s/` plugin combined:
+`✏️editor/📊️results/🦀️.rs:167` (`surface_energy_from_run`). So the change is provably inert for every
+other plugin; it can only ever make a payload outlive a finalize that previously erased it.
+`cargo check -p semio-framework-os-kernel --lib --tests` is clean. The os-kernel `--lib` suite aborts
+the whole test binary in `os_spr::protocol_laws::tests::frame_corpus_round_trip_panics_for_a_lossy_codec`
+("thread caused non-unwinding panic"), which is pre-existing, unrelated to `⏯️tool-run`, and prevents
+running that binary to completion; the `🔌️plugin` module has no unit tests in it at all — its laws
+live in the artifact crates' `artifact_app_laws` harnesses, which is where this law lives.
+
+**The law discriminates it.** With the fix reverted (`release_provisional(false)`) the law fails with
+exactly the reported symptom:
+
+```
+a_finalized_simulation_run_recolours_the_three_d_model_window ... FAILED
+the FINALIZED run left no legend caption in the 3d body — `ToolRunView::payload` was cleared on
+finalize, or the body never re-rendered. Body: {…"colors":[0.839,0.812,0.769,…]…}
+```
+
+— the family palette, no ramp stop anywhere. Restored, it passes.
+
+### 10.3 Defect 2 — one ramp bucket
+
+Measured the real numbers first rather than guessing at the mapping. BESTEST 600 under the app's own
+fixture scenario (`🧵️simulation-session/🧫️fixtures/🔣️.json` run period + settings), per surface:
+
+| id | surface | conduction loss kWh | conduction gain kWh | solar transmitted | solar absorbed |
+|---|---|---|---|---|---|
+| 40 | South wall | 0.2439 | 1.2149 | 0 | 28.008 |
+| 41 | East wall | 0.4478 | 2.5469 | 0 | 21.915 |
+| 42 | North wall | 0.6069 | 2.3674 | 0 | 9.097 |
+| 43 | West wall | 0.4478 | 2.5491 | 0 | 21.723 |
+| 44 | Roof | 1.4207 | 3.9919 | 0 | 67.511 |
+| 45 | Floor | 0.5157 | 11.1071 | 0 | 14.273 |
+| 50/51 | South windows | 0.7449 | 0.4347 | 18.924 | 5.489 |
+
+So the data DOES have spread — seven distinct loss values — and linear banding over them would have
+given five distinct bands, not one. The single bucket therefore was **not** the mapping: it was the
+payload. Two things caused it, both fixed:
+
+1. **The only intermediate payload was all zeros.** Tier boundaries were the sole republish trigger,
+   and the first (and for a design-day run the only) one fires at `EnergyJobStage::StartRun` —
+   *before* a single run timestep has been integrated. min == max == 0, so
+   `band_color(0.0, 0.0, 0.0)` put all 48 vertices on stop 0 and froze there for the rest of the run.
+   Exactly the recorded histogram.
+   - `SurfaceEnergyTable::has_energy()` (new, `⚙️engine/🧾️results/🦀️.rs`) now gates publication: the
+     run holds the payload back until something has actually been integrated.
+   - `surface_colors` returns an **empty** colour map when the selected field is identically zero
+     everywhere, so the window keeps its neutral family palette instead of painting a fake uniform
+     result. This is a real case, not a corner: on a cooling design day BESTEST 600's conduction
+     *loss* is `0.0000` on all eight faces (measured), and on a heating one the *gain* column is.
+     The caption still prints the honest `0.0 – 0.0 kWh`.
+   - `ENERGY_SURFACE_PAYLOAD_TICK_INTERVAL = 16` republishes the map every 16 computed timesteps on
+     top of tier boundaries and completion, so a long run recolours continuously rather than holding
+     whatever the last tier carried (~40 KB per refresh at 2 000 surfaces).
+
+2. **The mapping could not survive a dominant face even when the data was good.** An envelope's
+   conduction is dominated by area × U, so one face (a ground floor, a large glazed wall) routinely
+   carries several times what the others do, and fem3d's linear `(v−min)/(max−min)` then collapses
+   every other face onto the coldest band. `surface_colors` now bands by **rank among the distinct
+   values present**, spread evenly over the eight stops — the smallest distinct value always takes
+   stop 0, the largest always stop 7, ties share a band, and values closer than `span·1e-6` are one
+   tie so float noise never splits one. That guarantees the property the coordinator asked for:
+   distinct values get distinct bands. On the table above it yields seven bands where linear yielded
+   five. The trade-off is explicit and lives in the doc comment: **the ramp encodes the order of the
+   faces, the caption encodes the magnitudes.**
+
+New unit laws in `✏️editor/📊️results/🧪️tests/🔬️unit/🦀️.rs`:
+`one_dominant_face_no_longer_collapses_every_other_face_onto_the_coldest_band` (which first asserts
+that the linear ramp really does collapse that case, so the premise cannot rot),
+`the_rank_ramp_stays_monotonic_and_ties_share_a_band`,
+`more_surfaces_than_bands_still_span_the_whole_ramp_monotonically` (40 surfaces → all eight bands,
+never running backwards), and
+`a_field_that_is_zero_everywhere_colours_nothing_rather_than_faking_a_flat_result`.
+
+### 10.4 Files changed in this follow-up
+
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⏯️tool-run/🦀️.rs` — `discard_provisional` /
+  `release_provisional` split; the finalize path keeps the payload.
+- `✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🧾️results/🦀️.rs` — `SurfaceEnergyTable::has_energy`.
+- `…/🧵️simulation-session/🦀️.rs` — `ENERGY_SURFACE_PAYLOAD_TICK_INTERVAL`,
+  `EnergySimulationRunJob::ticks_since_surface_payload`, the `has_energy` publication gate.
+- `…/✏️editor/📊️results/🦀️.rs` — rank banding (`surface_colors`, `rank_band`), the all-zero-field guard.
+- `…/✏️editor/📊️results/🧪️tests/🔬️unit/🦀️.rs` — four new laws, one updated.
+- `…/✏️editor/🧪️tests/🔬️unit/🦀️.rs` — the recolour law and its two helpers.
+- `…/✏️editor/🎭️modes/✏️edit/🪟️windows/⚡️simulation/🧪️tests/🔬️unit/🦀️.rs` — my two action laws now read
+  `window_shared_action_definitions()` instead of the window kind's own `actions`, which lane W2-C
+  emptied while moving the three verbs app-level.
+
+### 10.5 Gates re-run
+
+```
+cargo check -p semio-s-artifact-energy-model --lib --tests        → clean
+cargo check -p semio-framework-os-kernel  --lib --tests           → clean
+cargo check -p semio-s-plugin-energy --lib --target wasm32-wasip2 → Finished, 0 errors
+cargo test  -p semio-s-artifact-energy-model --lib -- results editor::model::config
+            windows::simulation energy_simulation_session recolour → 43 passed; 0 failed
+cargo test  -p semio-s-artifact-energy-model --lib                 → 6290 passed; 3 failed; 2 ignored
+    failures: the same three declared pre-existing reds
+      sim::tests::p7c1_weather_owner_is_exactly_admitted_never_grows_and_retries_maximum_plus_one
+      sim::tests::p7c2_preview_typed_view_is_derived_from_canonical_wire_with_live_facility_total
+      sim::tests::p7c2_restored_commit_bytes_match_one_and_four_fuel_chronology
+```
+
+### 10.6 Honest limits of this law
+
+- It discriminates **defect 1** cleanly (proved by reverting the framework fix: the law fails with the
+  reported symptom). It does **not** discriminate the tick-interval republish on this fixture: with
+  `ENERGY_SURFACE_PAYLOAD_TICK_INTERVAL` disabled the law still passes, because the fixture run is
+  short enough that a tier boundary lands after real data has accumulated and before the job settles.
+  The interval is justified by the browser run (30 s, many timesteps between tiers), not by this law.
+  A law that pinned it would need a fixture with a long tier-free stretch.
+- `painted_bands` reads colours out of the projected body text, not out of a decoded `World3dScene`
+  (the app-level render returns a `ComponentTree` projected to a string, and the mesh lane arrives
+  chunked across `dataAttributes` keys). It can therefore under-count bands if the projection ever
+  changes how it prints floats — it would fail closed, not pass vacuously, but it is a text match.
+- The law asserts "≥ 2 distinct bands", not the exact band per surface. Pinning the exact assignment
+  would re-assert `rank_band`'s arithmetic, which its own unit laws already own.
+- The browser has **not** been re-probed since these fixes — lane E's timeline should be re-run to
+  confirm the scene now stays coloured through `Finalized` and spreads across bands during the run.

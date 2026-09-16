@@ -265,6 +265,33 @@
               "directoryName": "📚️thickens-the-slab-and-b51ef0"
             }
           ]
+        },
+        {
+          "mutationId": "replace-node",
+          "sourceMutationDirectoryName": "🔁️replace-node",
+          "mutationDirectoryName": "🔁️replace-node",
+          "scenarios": [
+            {
+              "id": "same-node-32a2a4",
+              "directoryName": "⏸️same-node-32a2a4"
+            },
+            {
+              "id": "hall-lifts-ridge-746bae",
+              "directoryName": "🏗️hall-lifts-ridge-746bae"
+            },
+            {
+              "id": "lifts-the-column-head-34351d",
+              "directoryName": "📍️lifts-the-column-head-34351d"
+            },
+            {
+              "id": "no-such-node-166880",
+              "directoryName": "🚨️no-such-node-166880"
+            },
+            {
+              "id": "renames-node-4a2286",
+              "directoryName": "🪪️renames-node-4a2286"
+            }
+          ]
         }
       ],
       "kinds": [
@@ -278,7 +305,8 @@
         "replace-section",
         "create-solid",
         "delete-solid",
-        "replace-solid"
+        "replace-solid",
+        "replace-node"
       ]
     }
   ]

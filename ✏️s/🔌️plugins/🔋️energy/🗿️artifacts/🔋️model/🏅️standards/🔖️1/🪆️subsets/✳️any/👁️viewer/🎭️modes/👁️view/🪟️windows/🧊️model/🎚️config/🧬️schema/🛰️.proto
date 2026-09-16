@@ -1,0 +1,12 @@
+syntax = "proto3";
+package semio.app.energy.model.model3d_viewer_window.config;
+
+message EnergyModelViewerCameraPose {
+  repeated double position = 1;
+  repeated double target = 2;
+  double zoom = 3;
+}
+
+message EnergyModelViewerWindowConfig {
+  EnergyModelViewerCameraPose camera = 1;
+}

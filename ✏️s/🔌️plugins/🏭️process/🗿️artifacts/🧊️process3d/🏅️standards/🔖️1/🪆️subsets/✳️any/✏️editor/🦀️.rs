@@ -2144,9 +2144,21 @@ fn builtin_installed_catalogs() -> Vec<MachineCatalogs> {
 /// catalog first (so it renders as the default-open section), then every `process.machines` contribution
 /// parsed from the invoking configuration's runtime-installable extensions under
 /// `🏭️process/🧩️extensions/`.
+///
+/// ⚖️ A `catalog_id` names exactly one catalog here. The four shipped `process-extension-*` packs
+/// contribute the SAME ids this crate already compiles in (`🧩️extensions/🪵️wood/🦀️.rs` sends
+/// `moduleId = catalog.catalog_id() = "wood"`), so a bare concatenation renders Wood/Metal/Concrete/
+/// Robotic twice. The installed build wins and the contribution is dropped; only a genuinely new id
+/// appends, in host order — the same app-boundary law `sourcing`'s `schema::installable_contributions`
+/// applies to `sourcing.module`.
 pub fn installed_catalogs(contributions_json: &str) -> Vec<MachineCatalogs> {
     let mut catalogs = builtin_installed_catalogs();
-    catalogs.extend(contributed_machine_catalogs(contributions_json).into_iter().map(MachineCatalogs::from));
+    for contributed in contributed_machine_catalogs(contributions_json) {
+        if catalogs.iter().any(|catalog| catalog.catalog_id() == contributed.catalog_id) {
+            continue;
+        }
+        catalogs.push(MachineCatalogs::from(contributed));
+    }
     catalogs
 }
 

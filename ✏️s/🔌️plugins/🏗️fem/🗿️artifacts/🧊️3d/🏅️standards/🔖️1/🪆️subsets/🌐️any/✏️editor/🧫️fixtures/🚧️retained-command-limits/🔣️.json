@@ -157,6 +157,150 @@
         "WindowConfig"
       ],
       "blocker": ""
+    },
+    {
+      "id": "patchNode",
+      "disposition": "Migrated",
+      "lanes": [
+        "Artifact"
+      ],
+      "blocker": ""
+    },
+    {
+      "id": "patchElement",
+      "disposition": "Migrated",
+      "lanes": [
+        "Artifact"
+      ],
+      "blocker": ""
+    },
+    {
+      "id": "patchMaterial",
+      "disposition": "Migrated",
+      "lanes": [
+        "Artifact"
+      ],
+      "blocker": ""
+    },
+    {
+      "id": "patchSection",
+      "disposition": "Migrated",
+      "lanes": [
+        "Artifact"
+      ],
+      "blocker": ""
+    },
+    {
+      "id": "patchSupport",
+      "disposition": "Migrated",
+      "lanes": [
+        "Artifact"
+      ],
+      "blocker": ""
+    },
+    {
+      "id": "patchSolid",
+      "disposition": "Migrated",
+      "lanes": [
+        "Artifact"
+      ],
+      "blocker": ""
+    },
+    {
+      "id": "patchLoad",
+      "disposition": "Migrated",
+      "lanes": [
+        "Artifact"
+      ],
+      "blocker": ""
+    },
+    {
+      "id": "patchLoadCase",
+      "disposition": "Migrated",
+      "lanes": [
+        "Artifact"
+      ],
+      "blocker": ""
+    },
+    {
+      "id": "patchCombination",
+      "disposition": "Migrated",
+      "lanes": [
+        "Artifact"
+      ],
+      "blocker": ""
+    },
+    {
+      "id": "setResultAnimation",
+      "disposition": "Migrated",
+      "lanes": [
+        "WindowConfig"
+      ],
+      "blocker": ""
+    },
+    {
+      "id": "resultAnimationTick",
+      "disposition": "Migrated",
+      "lanes": [
+        "WindowConfig"
+      ],
+      "blocker": ""
+    },
+    {
+      "id": "focusEntity",
+      "disposition": "Migrated",
+      "lanes": [
+        "WindowConfig"
+      ],
+      "blocker": ""
+    },
+    {
+      "id": "translateSelection",
+      "disposition": "Migrated",
+      "lanes": [
+        "Artifact"
+      ],
+      "blocker": ""
+    },
+    {
+      "id": "rotateSelection",
+      "disposition": "Migrated",
+      "lanes": [
+        "Artifact"
+      ],
+      "blocker": ""
+    },
+    {
+      "id": "scaleSelection",
+      "disposition": "Migrated",
+      "lanes": [
+        "Artifact"
+      ],
+      "blocker": ""
+    },
+    {
+      "id": "setTransformGumballFlag",
+      "disposition": "Migrated",
+      "lanes": [
+        "WindowConfig"
+      ],
+      "blocker": ""
+    },
+    {
+      "id": "transformBegin",
+      "disposition": "Migrated",
+      "lanes": [
+        "HostOnly"
+      ],
+      "blocker": ""
+    },
+    {
+      "id": "transformEnd",
+      "disposition": "Migrated",
+      "lanes": [
+        "HostOnly"
+      ],
+      "blocker": ""
     }
   ],
   "boundaryCases": [

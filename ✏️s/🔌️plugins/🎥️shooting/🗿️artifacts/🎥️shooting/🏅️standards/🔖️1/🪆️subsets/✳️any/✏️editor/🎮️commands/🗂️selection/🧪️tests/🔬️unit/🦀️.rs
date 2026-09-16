@@ -10,7 +10,7 @@ async fn set_shot_selection_is_config_only_and_selects_the_shot_in_the_inspector
     let mut app = shooting_app().await;
     let shot_id = app.snapshot().expect("snapshot").shots.first().expect("fixture shot").id.clone();
     let result = dispatch(&mut app, ShootingCommand::SetShotSelection(set_shot_selection::SetShotSelection { shot_ids: vec![shot_id] })).await;
-    assert!(result.mutations.is_empty(), "shot selection is config-only");
+    assert!(!result.edited_document(), "shot selection is config-only");
     assert!(render(&mut app, SHOOTING_PLAY_BODY_INSPECTION).await.contains("shooting-play-inspector.shot"), "inspector renders the shot group for the selected shot");
 }
 
@@ -22,5 +22,5 @@ async fn center_model_toggle_bumps_fit_revision_only_on_the_off_to_on_edge() {
     // fit_revision itself is asserted end-to-end (render fitJson) in the scene window's own tests;
     // here we just assert the command round-trips without error under both edges.
     let result = dispatch(&mut app, ShootingCommand::SetCenterModel(set_center_model::SetCenterModel { pressed: None })).await;
-    assert!(result.mutations.is_empty(), "center-model is config-only");
+    assert!(!result.edited_document(), "center-model is config-only");
 }

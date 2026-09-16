@@ -177,6 +177,13 @@ impl SurfaceEnergyTable {
         self.len() == 0
     }
 
+    /// 🔥️ Whether any row has integrated anything yet. Before the run period starts every row is a
+    /// flat zero, which is indistinguishable from a real uniform result once it reaches a colour map —
+    /// so the run job holds the payload back until this is true.
+    pub fn has_energy(&self) -> bool {
+        self.opaque.values().chain(self.windows.values()).any(|energy| energy.conduction_loss_j != 0.0 || energy.conduction_gain_j != 0.0 || energy.solar_transmitted_j != 0.0 || energy.solar_absorbed_j != 0.0)
+    }
+
     /// 📋️ Every row as a kWh summary: opaque surfaces first, then windows.
     pub fn summaries(&self) -> impl Iterator<Item = SurfaceEnergySummary> + '_ {
         self.opaque.iter().chain(self.windows.iter()).map(|(id, energy)| energy.summary(*id))

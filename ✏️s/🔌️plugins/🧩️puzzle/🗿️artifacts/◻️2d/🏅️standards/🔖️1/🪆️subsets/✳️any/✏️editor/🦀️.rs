@@ -165,6 +165,16 @@ pub fn puzzle2d_selection_write(fixture: &Value, ids: &[String]) -> semio_framew
     semio_framework_plugin::InteractionWrite { domain: PUZZLE2D_INTERACTION_DOMAIN.into(), targets: puzzle2d_selection_targets(fixture, ids), merge: MergeMode::Replace }
 }
 
+/// 🕹️ Empties the live selection: a SUBTRACTIVE write of exactly the ids that are selected (a `Replace`
+/// with no targets selects nothing and therefore changes nothing). `fixture` is the document BEFORE the
+/// deletion, so a just-deleted id still classifies to its granularity.
+pub fn puzzle2d_clear_selection_write(fixture: &Value, selected: &[String]) -> Option<semio_framework_plugin::InteractionWrite> {
+    if selected.is_empty() {
+        return None;
+    }
+    Some(semio_framework_plugin::InteractionWrite { domain: PUZZLE2D_INTERACTION_DOMAIN.into(), targets: puzzle2d_selection_targets(fixture, selected), merge: MergeMode::Subtractive })
+}
+
 pub fn default_empty_fixture() -> Value {
     json!({
         "schema": PUZZLE2D_FIXTURE_SCHEMA,
@@ -1575,6 +1585,10 @@ impl store::ArtifactStoreOneItemPreparationFactory<Puzzle2dConfig, Puzzle2dConfi
 /// generically through `protocol::Mutation`/`protocol::MutationDiff` rather than an allowlist,
 /// because one retained completion emits whatever the granular document delta produced (create /
 /// delete node, connect / disconnect handles, manifest, compatibility, catalogs) one per store turn.
+/// 🧾️ Inverse rows one `delete-node` may yield: the re-created node plus one `connect-handles` per edge
+/// on its handles — a node carries at most one edge per handle, and Nakagin's densest node has 12 handles.
+const PUZZLE2D_DELETE_NODE_INVERSE_ROWS: usize = 1 + 64;
+
 struct Puzzle2dArtifactStorePreparationFactory;
 
 struct Puzzle2dArtifactStorePreparation {
@@ -1619,11 +1633,20 @@ fn puzzle2d_artifact_store_edit(forward: Puzzle2dMutation, inverse: Vec<Puzzle2d
 }
 
 impl store::ArtifactStoreOneItemPreparationFactory<Puzzle2dPlaySnapshot, Puzzle2dMutation> for Puzzle2dArtifactStorePreparationFactory {
-    fn preflight(&self, _mutation: &Puzzle2dMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+    /// 🧾️ `work_items` counts staged edit ROWS: the forward row plus every row the inverse yields.
+    /// `delete-node`'s inverse re-creates the node AND re-connects every edge that hung off its handles
+    /// (`🗑️delete-node/↩️inverse`), so a point-invertible `2` fail-closed every node delete with
+    /// `batched item candidate failed its exact fixed fold contract` (2026-09-16); the cascade is
+    /// bounded by the edges one node can carry.
+    fn preflight(&self, mutation: &Puzzle2dMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
         if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
             return Err("Puzzle2d Artifact preparation rejected its lane or description envelope".into());
         }
-        Ok(store::ArtifactStoreOneItemFootprint { work_items: 2, retained_bytes: store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES })
+        let work_items = match mutation {
+            Puzzle2dMutation::DeleteNode(_) => 1 + PUZZLE2D_DELETE_NODE_INVERSE_ROWS,
+            _ => store::ARTIFACT_STORE_ONE_ITEM_INVERTIBLE_WORK_ITEMS,
+        };
+        Ok(store::ArtifactStoreOneItemFootprint { work_items, retained_bytes: store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES })
     }
 
     fn begin(

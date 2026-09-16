@@ -1,24 +1,47 @@
 use super::*;
 use crate::editor::layout::commands::{canvas_drag_leave, canvas_drag_over, canvas_drop, canvas_pointer_move, set_camera};
 use crate::editor::layout::unit_tests::context::{dispatch, layout_app, layout_app_with_registry, render, test_screen_point, LayoutApp};
+use crate::editor::layout::modes::edit::windows::blueprint::config::LayoutBlueprintWindowConfigOwner;
 use crate::editor::layout::{LayoutCommand, LAYOUT_INTERACTION_ELEMENTS, LAYOUT_PLAY_SURFACE_BLUEPRINT, LAYOUT_PLAY_SURFACE_PREVIEW};
 use semio_framework::kernel::Effect;
 use semio_framework_plugin::artifact_app_laws;
-use semio_framework_plugin::{PluginApp, INTERACTION_HOVER_ACTION_ID};
+use semio_framework_plugin::{ActionMeta, PluginApp, ViewModel, ViewWindowInstance, WindowConfigOwner, INTERACTION_HOVER_ACTION_ID};
 
 /// 🕹️ Ticket 26/09/16/INPUT-CAUSALITY-LEDGER §2 C: the interaction verbs a canvas gesture emits
-/// (`Effect::DispatchAction { action ∈ INTERACTION_ACTION_IDS }`) are folded in-reactor, so the
-/// only witness left is the selection/hover state itself — which needs the manifest registry (the
-/// six verbs are `Migrated` rows there) and a bound live instance, exactly like
-/// `🧪️tests/🔬️window-ownership`. Retire it with [`close_registered`] instead of dropping it.
+/// (`Effect::DispatchAction { action ∈ INTERACTION_ACTION_IDS }`) are folded in-reactor by the
+/// typed-operation ladder, so the only witness left is the selection/hover state itself — which
+/// needs everything the plugin host supplies and the bare `dispatch` helper does not: the manifest
+/// registry (the six verbs are `Migrated` rows there), a bound live instance, a `ViewModel` naming
+/// the Blueprint window the gesture addresses (the retained work's `extent` refuses a command
+/// without one), and the host's settle protocol ([`settled_dispatch`]) — exactly
+/// `🧪️tests/🔬️window-ownership`'s recipe. Retire it with [`close_registered`], never drop it.
+///
+/// 🚧️ `canvasPointerDown`/`canvasPointerMove` are still `BatchOnlyPendingRewrite` in the manifest
+/// (no retained factory row), so `dispatch_typed` refuses them with `interactive-job.missing-factory`
+/// before any fold — the same pre-existing gate `registry_backed_pointer_move_is_view_only` hits.
+/// The assertions below are what holds the moment those two rows migrate.
 async fn registered_layout_app() -> LayoutApp {
     let mut app = layout_app_with_registry().await;
-    app.bind_instance_id(artifact_app_laws::meta("local").instance_id).await;
+    app.bind_instance_id(blueprint_meta().instance_id).await;
     app
+}
+
+fn blueprint_meta() -> ActionMeta {
+    let view = ViewModel { window_instances: vec![ViewWindowInstance { id: "layout-blueprint".into(), window_kind_id: LayoutBlueprintWindowConfigOwner::WINDOW_KIND_ID.into() }], ..Default::default() };
+    ActionMeta { view_state: Some(view.for_window_instance("layout-blueprint").expect("blueprint window instance")), ..artifact_app_laws::meta("local") }
 }
 
 fn close_registered(mut app: LayoutApp) {
     artifact_app_laws::close_registered_fixture_app(&mut app);
+}
+
+/// 🔁️ Dispatches one command against the Blueprint window and settles its retained publication the
+/// way the plugin host does; the receipt's `effects` are exactly what the host would have been handed.
+async fn settled_dispatch(app: &mut LayoutApp, command: LayoutCommand) -> artifact_app_laws::TypedOperationFixtureReceipt {
+    let meta = blueprint_meta();
+    let result = app.dispatch_typed(command, &meta).await.expect("dispatch");
+    assert!(result.mutations.is_empty(), "canvas gestures never mutate the document directly");
+    artifact_app_laws::settle_registered_typed_operation(app, meta.instance_id).await.expect("retained publication settles")
 }
 
 async fn selected_elements(app: &LayoutApp) -> Vec<String> {
@@ -54,9 +77,8 @@ async fn set_camera_preview_surface_updates_independently_of_blueprint() {
 async fn pointer_down_selects_the_hit_frame_inline() {
     let mut app = registered_layout_app().await;
     let (sx, sy) = test_screen_point(0.0, 0.0, 1.0, 800.0, 600.0, 136.0, 435.0);
-    let result = dispatch(&mut app, LayoutCommand::CanvasPointerDown(CanvasPointerDown { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), button: 0, extend: false, x: sx, y: sy, width: 800.0, height: 600.0 })).await;
-    assert!(result.mutations.is_empty(), "pointer down never mutates the document directly");
-    assert!(!result.requested_effects.iter().any(|effect| matches!(effect, Effect::DispatchAction { .. } | Effect::ReplayShellCommand { .. })), "the interaction verb is folded in-reactor, never handed to the host: {:?}", result.requested_effects);
+    let receipt = settled_dispatch(&mut app, LayoutCommand::CanvasPointerDown(CanvasPointerDown { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), button: 0, extend: false, x: sx, y: sy, width: 800.0, height: 600.0 })).await;
+    assert!(!receipt.effects.iter().any(|effect| matches!(effect, Effect::DispatchAction { .. } | Effect::ReplayShellCommand { .. })), "the interaction verb is folded in-reactor, never handed to the host: {:?}", receipt.effects);
     assert_eq!(selected_elements(&app).await, vec!["frame-image-1".to_string()], "a replace pick selects exactly the hit frame inside the carrying turn");
     close_registered(app);
 }
@@ -65,9 +87,9 @@ async fn pointer_down_selects_the_hit_frame_inline() {
 async fn pointer_down_extend_click_inverts_the_hit_frame_inline() {
     let mut app = registered_layout_app().await;
     let (sx, sy) = test_screen_point(0.0, 0.0, 1.0, 800.0, 600.0, 136.0, 435.0);
-    dispatch(&mut app, LayoutCommand::CanvasPointerDown(CanvasPointerDown { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), button: 0, extend: true, x: sx, y: sy, width: 800.0, height: 600.0 })).await;
+    settled_dispatch(&mut app, LayoutCommand::CanvasPointerDown(CanvasPointerDown { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), button: 0, extend: true, x: sx, y: sy, width: 800.0, height: 600.0 })).await;
     assert_eq!(selected_elements(&app).await, vec!["frame-image-1".to_string()], "an invertive pick on an unselected frame selects it");
-    dispatch(&mut app, LayoutCommand::CanvasPointerDown(CanvasPointerDown { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), button: 0, extend: true, x: sx, y: sy, width: 800.0, height: 600.0 })).await;
+    settled_dispatch(&mut app, LayoutCommand::CanvasPointerDown(CanvasPointerDown { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), button: 0, extend: true, x: sx, y: sy, width: 800.0, height: 600.0 })).await;
     assert!(selected_elements(&app).await.is_empty(), "a second invertive pick on the same frame deselects it");
     close_registered(app);
 }
@@ -76,11 +98,11 @@ async fn pointer_down_extend_click_inverts_the_hit_frame_inline() {
 async fn pointer_down_on_empty_space_clears_the_selection_inline() {
     let mut app = registered_layout_app().await;
     let (hit_x, hit_y) = test_screen_point(0.0, 0.0, 1.0, 800.0, 600.0, 136.0, 435.0);
-    dispatch(&mut app, LayoutCommand::CanvasPointerDown(CanvasPointerDown { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), button: 0, extend: false, x: hit_x, y: hit_y, width: 800.0, height: 600.0 })).await;
+    settled_dispatch(&mut app, LayoutCommand::CanvasPointerDown(CanvasPointerDown { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), button: 0, extend: false, x: hit_x, y: hit_y, width: 800.0, height: 600.0 })).await;
     assert_eq!(selected_elements(&app).await.len(), 1, "a frame is selected before the background click");
     let (sx, sy) = test_screen_point(0.0, 0.0, 1.0, 800.0, 600.0, 5.0, 5.0);
-    let result = dispatch(&mut app, LayoutCommand::CanvasPointerDown(CanvasPointerDown { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), button: 0, extend: false, x: sx, y: sy, width: 800.0, height: 600.0 })).await;
-    assert!(!result.requested_effects.iter().any(|effect| matches!(effect, Effect::DispatchAction { .. })), "clearSelection is folded in-reactor: {:?}", result.requested_effects);
+    let receipt = settled_dispatch(&mut app, LayoutCommand::CanvasPointerDown(CanvasPointerDown { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), button: 0, extend: false, x: sx, y: sy, width: 800.0, height: 600.0 })).await;
+    assert!(!receipt.effects.iter().any(|effect| matches!(effect, Effect::DispatchAction { .. })), "clearSelection is folded in-reactor: {:?}", receipt.effects);
     assert!(selected_elements(&app).await.is_empty(), "a background click clears the selection inside the carrying turn");
     close_registered(app);
 }
@@ -89,9 +111,8 @@ async fn pointer_down_on_empty_space_clears_the_selection_inline() {
 async fn pointer_move_hovers_the_hit_frame_inline() {
     let mut app = registered_layout_app().await;
     let (sx, sy) = test_screen_point(0.0, 0.0, 1.0, 800.0, 600.0, 156.0, 220.0);
-    let result = dispatch(&mut app, LayoutCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), x: sx, y: sy, width: 800.0, height: 600.0, samples: Vec::new() })).await;
-    assert!(result.mutations.is_empty(), "hover never mutates the document directly");
-    assert!(!result.requested_effects.iter().any(|effect| matches!(effect, Effect::DispatchAction { .. })), "interactionHover is folded in-reactor: {:?}", result.requested_effects);
+    let receipt = settled_dispatch(&mut app, LayoutCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), x: sx, y: sy, width: 800.0, height: 600.0, samples: Vec::new() })).await;
+    assert!(!receipt.effects.iter().any(|effect| matches!(effect, Effect::DispatchAction { .. })), "interactionHover is folded in-reactor: {:?}", receipt.effects);
     let hovered = app.interaction_state().await.hover.get(LAYOUT_INTERACTION_ELEMENTS).map(|hover| hover.ids.clone()).unwrap_or_default();
     assert_eq!(hovered, vec!["frame-text-1".to_string()], "the hit frame is hovered inside the carrying turn");
     close_registered(app);

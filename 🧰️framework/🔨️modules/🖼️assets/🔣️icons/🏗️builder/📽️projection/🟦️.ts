@@ -263,6 +263,7 @@ impl From<&str> for IconName {
             "terminal" => "code",
             "zap" => "sparkles",
             "calculator" => "hash",
+            "ellipsis" => "more-horizontal",
             _ => trimmed,
         };
         if let Some(icon) = Self::from_str(aliased) {

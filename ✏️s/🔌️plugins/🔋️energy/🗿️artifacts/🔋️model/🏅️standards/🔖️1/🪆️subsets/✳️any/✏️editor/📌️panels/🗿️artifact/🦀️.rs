@@ -146,10 +146,59 @@ fn pick_action(granularity: &str, id: &str) -> UiAssemblyResult<(ActionId, Optio
     energy_model_action(INTERACTION_SELECT_ACTION_ID, Some(args))
 }
 
+/// 📍️ The site has no `EntityId`, so it cannot be a domain target. Its row instead dispatches the
+/// framework's own CLEARING pick — `merge: replace` with an EMPTY target list, which the framework
+/// documents as "clears selection while hover remains" — and the inspector's no-selection body is
+/// exactly where the site's editable form lives. So clicking "Site" opens the site form.
+fn clear_selection_action() -> UiAssemblyResult<(ActionId, Option<UiValue>)> {
+    let targets = protocol::json::to_json_string(&protocol::DslValue::Array(Vec::new()));
+    let args = ui_value_map([("domainId", ui_value_text(ENERGY_MODEL_INTERACTION_DOMAIN)?), ("merge", ui_value_text("replace")?), ("method", ui_value_text("pick")?), ("targets", ui_value_text(targets)?)])?;
+    energy_model_action(INTERACTION_SELECT_ACTION_ID, Some(args))
+}
+
 /// 🌳️ One selectable entity row: keyed by the raw `EntityId`, picking through the framework domain.
 /// It authors ONE argument map (its pick) and no row actions — see this module's own doc.
 fn entity_row(id: &str, granularity: &str, label: &str, description: &str, icon: &str, dimmed: bool) -> UiAssemblyResult<BuiltNode> {
-    let mut item = tree_item_with_action(id, UiLabel(UiText::clipped(label)), None, pick_action(granularity, id)?)?;
+    entity_row_marked(id, granularity, label, description, icon, dimmed, MarkedAs::Unmarked)
+}
+
+/// 🎯️ How a row reports the framework-owned selection/hover it belongs to. `PanelTreeBuilder::selected`
+/// / `::highlighted` are DECLARED on the built tree but do not paint in this SDK wave (lane C verified
+/// that), so the state also rides in the row's own label: `●` for selected, `○` for hovered. That is
+/// what makes tree ⇄ 3d agreement visible to a reader today; the prefix goes away the moment the
+/// builder's own marking reaches the renderer.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum MarkedAs {
+    Unmarked,
+    Hovered,
+    Selected,
+}
+
+impl MarkedAs {
+    /// 🎯️ The marker this state prefixes a row label with — the empty string when unmarked, so an
+    /// unmarked tree reads exactly as it did before.
+    pub fn prefix(self) -> &'static str {
+        match self {
+            Self::Unmarked => "",
+            Self::Hovered => "○ ",
+            Self::Selected => "● ",
+        }
+    }
+
+    fn of(interaction: &EnergyModelInteractionSnapshot, id: &str) -> Self {
+        if interaction.selected_ids.iter().any(|marked| marked == id) {
+            Self::Selected
+        } else if interaction.hovered_ids.iter().any(|marked| marked == id) {
+            Self::Hovered
+        } else {
+            Self::Unmarked
+        }
+    }
+}
+
+fn entity_row_marked(id: &str, granularity: &str, label: &str, description: &str, icon: &str, dimmed: bool, marked: MarkedAs) -> UiAssemblyResult<BuiltNode> {
+    let label = format!("{}{label}", marked.prefix());
+    let mut item = tree_item_with_action(id, UiLabel(UiText::clipped(&label)), None, pick_action(granularity, id)?)?;
     let Component::TreeItem(props) = &mut item.component else {
         return Err(capacity_error("energy artifact row is a tree item"));
     };
@@ -175,7 +224,15 @@ fn section_label(noun: &str, count: usize) -> UiAssemblyResult<UiLabel> {
 /// 📍️ The site: one read-only row. The site is a singleton with no `EntityId`, so it is picked from
 /// the inspector's own document summary rather than from a domain target.
 fn site_section(model: &Model, locale: Locale) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
-    ui_node_list([read_row(format!("{TREE_NAMESPACE}.site.row"), say(locale, "Site", "Standort"), &site_description(model))])
+    let row_id = format!("{TREE_NAMESPACE}.site.row");
+    let mut item = tree_item_with_action(&row_id, UiLabel(UiText::clipped(say(locale, "Site", "Standort"))), None, clear_selection_action()?)?;
+    if let Component::TreeItem(props) = &mut item.component {
+        props.icon = Some(icon_text("globe")?);
+        props.description = Some(UiText::clipped(&site_description(model)));
+        props.dimmed = Some(false);
+        props.default_open = Some(false);
+    }
+    ui_node_list([Ok(item)])
 }
 
 /// 🏘️ Zones and everything they own: each zone row nests its spaces and its surfaces, and each
@@ -184,12 +241,14 @@ fn zones_section(model: &Model, interaction: &EnergyModelInteractionSnapshot, lo
     let section_id = format!("{TREE_NAMESPACE}.zones");
     let rows = budget.remaining();
     paged_panel_section(&section_id, &model.zones, rows, budget, |zone, nested| {
-        let mut item = entity_row(&energy_target_id(zone.id), ENERGY_GRANULARITY_ZONE, &zone_label(zone), say(locale, "Zone", "Zone"), "box", !zone.conditioned)?;
+        let zone_id = energy_target_id(zone.id);
+        let mut item = entity_row_marked(&zone_id, ENERGY_GRANULARITY_ZONE, &zone_label(zone), say(locale, "Zone", "Zone"), "box", !zone.conditioned, MarkedAs::of(interaction, &zone_id))?;
         let spaces: Vec<&Space> = model.spaces.iter().filter(|space| space.zone_id == zone.id).collect();
         let surfaces: Vec<&Surface> = model.surfaces.iter().filter(|surface| surface.zone_id == zone.id).collect();
         let space_rows = nested.remaining();
         let space_items = paged_panel_section(&format!("{section_id}.{}.spaces", zone.id.0), &spaces, space_rows, nested, |space, _| {
-            entity_row(&energy_target_id(space.id), ENERGY_GRANULARITY_SPACE, &space_label(space), say(locale, "Space", "Raum"), "layout-grid", false)
+            let space_id = energy_target_id(space.id);
+            entity_row_marked(&space_id, ENERGY_GRANULARITY_SPACE, &space_label(space), say(locale, "Space", "Raum"), "layout-grid", false, MarkedAs::of(interaction, &space_id))
         })?;
         let surface_items = surfaces_with_windows(&section_id, model, &surfaces, interaction, locale, nested)?;
         for row in space_items.into_iter().chain(surface_items) {
@@ -222,21 +281,27 @@ fn surfaces_with_windows(section_id: &str, model: &Model, surfaces: &[&Surface],
     let windows_of = |surface: &Surface| model.fenestrations.iter().filter(|window| window.surface_id == surface.id).collect::<Vec<_>>();
     let marked = |surface: &Surface| is_marked(interaction, &energy_target_id(surface.id)) || windows_of(surface).iter().any(|window| is_marked(interaction, &energy_target_id(window.id)));
 
-    // 1️⃣ BREADTH first: one row per surface, in document order, so a truncation never hides a whole
-    // wall behind the windows of the wall before it.
+    // 🎯️ MARKED FIRST, then document order — the ONE order both passes below hand out rows in. The
+    // breadth pass used to walk plain document order, so a wall selected in the 3d viewport could be
+    // the one dropped when a zone owned more surfaces than the page had rows: the tree simply did not
+    // show the selected surface, defeating "tree pick ⇄ 3d pick" (review finding 3). `sort_by_key` is
+    // stable, so within each group document order survives.
+    let mut order: Vec<usize> = (0..surfaces.len()).collect();
+    order.sort_by_key(|index| usize::from(!marked(surfaces[*index])));
+
+    // 1️⃣ BREADTH first: one row per surface, so a truncation never hides a whole wall behind the
+    // windows of the wall before it.
     let mut allowance = vec![0usize; surfaces.len()];
     let mut left = budget.remaining();
-    for slot in allowance.iter_mut() {
+    for index in &order {
         if left == 0 {
             break;
         }
-        *slot = 1;
+        allowance[*index] = 1;
         left -= 1;
     }
     // 2️⃣ DEPTH second: what the surface rows left over buys windows — the MARKED surface's first, so
     // a picked wall always shows its own windows, then the rest in document order.
-    let mut order: Vec<usize> = (0..surfaces.len()).collect();
-    order.sort_by_key(|index| usize::from(!marked(surfaces[*index])));
     for index in order {
         if left == 0 {
             break;
@@ -257,7 +322,8 @@ fn surfaces_with_windows(section_id: &str, model: &Model, surfaces: &[&Surface],
             continue;
         }
         let dangling = !model.constructions.iter().any(|entry| entry.id == surface.construction_id);
-        let row = entity_row(&energy_target_id(surface.id), ENERGY_GRANULARITY_SURFACE, &surface_label(surface), say(locale, "Surface", "Fläche"), "square", dangling);
+        let surface_id = energy_target_id(surface.id);
+        let row = entity_row_marked(&surface_id, ENERGY_GRANULARITY_SURFACE, &surface_label(surface), say(locale, "Surface", "Fläche"), "square", dangling, MarkedAs::of(interaction, &surface_id));
         let mut row = match row {
             Ok(row) => row,
             Err(error) if error.code == "ui.fixed-capacity" => break,
@@ -265,7 +331,8 @@ fn surfaces_with_windows(section_id: &str, model: &Model, surfaces: &[&Surface],
         };
         let windows = windows_of(surface);
         let window_items = paged_panel_section(&format!("{section_id}.{}.windows", surface.id.0), &windows, share - 1, budget, |window, _| {
-            entity_row(&energy_target_id(window.id), ENERGY_GRANULARITY_FENESTRATION, &fenestration_label(window), say(locale, "Window", "Fenster"), "app-window", false)
+            let window_id = energy_target_id(window.id);
+            entity_row_marked(&window_id, ENERGY_GRANULARITY_FENESTRATION, &fenestration_label(window), say(locale, "Window", "Fenster"), "app-window", false, MarkedAs::of(interaction, &window_id))
         })?;
         for window in window_items {
             row.children.try_push(window).map_err(|_| capacity_error("energy artifact window row admission failed"))?;
@@ -286,48 +353,55 @@ fn surfaces_with_windows(section_id: &str, model: &Model, surfaces: &[&Surface],
     Ok(items)
 }
 
-fn shading_section(model: &Model, locale: Locale, budget: &mut PanelRowBudget) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
+fn shading_section(model: &Model, interaction: &EnergyModelInteractionSnapshot, locale: Locale, budget: &mut PanelRowBudget) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
     let rows = budget.remaining();
     paged_panel_section(&format!("{TREE_NAMESPACE}.shading"), &model.shading_surfaces, rows, budget, |shading, _| {
-        entity_row(&energy_target_id(shading.id), ENERGY_GRANULARITY_SHADING, &shading_label(shading), say(locale, "Shading", "Verschattung"), "umbrella", shading.vertices_m.len() < 3)
+        let id = energy_target_id(shading.id);
+        entity_row_marked(&id, ENERGY_GRANULARITY_SHADING, &shading_label(shading), say(locale, "Shading", "Verschattung"), "umbrella", shading.vertices_m.len() < 3, MarkedAs::of(interaction, &id))
     })
 }
 
-fn materials_section(model: &Model, locale: Locale, budget: &mut PanelRowBudget) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
+fn materials_section(model: &Model, interaction: &EnergyModelInteractionSnapshot, locale: Locale, budget: &mut PanelRowBudget) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
     let rows = budget.remaining();
     paged_panel_section(&format!("{TREE_NAMESPACE}.materials"), &model.materials, rows, budget, |material, _| {
-        entity_row(&energy_target_id(material.id), ENERGY_GRANULARITY_MATERIAL, &material_label(material), say(locale, "Material", "Material"), "layers", false)
+        let id = energy_target_id(material.id);
+        entity_row_marked(&id, ENERGY_GRANULARITY_MATERIAL, &material_label(material), say(locale, "Material", "Material"), "layers", false, MarkedAs::of(interaction, &id))
     })
 }
 
-fn glazing_materials_section(model: &Model, locale: Locale, budget: &mut PanelRowBudget) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
+fn glazing_materials_section(model: &Model, interaction: &EnergyModelInteractionSnapshot, locale: Locale, budget: &mut PanelRowBudget) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
     let rows = budget.remaining();
     paged_panel_section(&format!("{TREE_NAMESPACE}.glazing-materials"), &model.glazing_materials, rows, budget, |material, _| {
-        entity_row(&energy_target_id(material.id), ENERGY_GRANULARITY_GLAZING_MATERIAL, &glazing_material_label(material), say(locale, "Glazing", "Verglasung"), "panel-top", false)
+        let id = energy_target_id(material.id);
+        entity_row_marked(&id, ENERGY_GRANULARITY_GLAZING_MATERIAL, &glazing_material_label(material), say(locale, "Glazing", "Verglasung"), "panel-top", false, MarkedAs::of(interaction, &id))
     })
 }
 
-fn gas_materials_section(model: &Model, locale: Locale, budget: &mut PanelRowBudget) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
+fn gas_materials_section(model: &Model, interaction: &EnergyModelInteractionSnapshot, locale: Locale, budget: &mut PanelRowBudget) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
     let rows = budget.remaining();
     paged_panel_section(&format!("{TREE_NAMESPACE}.gas-materials"), &model.gas_materials, rows, budget, |material, _| {
-        entity_row(&energy_target_id(material.id), ENERGY_GRANULARITY_GAS_MATERIAL, &gas_material_label(material), say(locale, "Gas gap", "Gasfüllung"), "wind", false)
+        let id = energy_target_id(material.id);
+        entity_row_marked(&id, ENERGY_GRANULARITY_GAS_MATERIAL, &gas_material_label(material), say(locale, "Gas gap", "Gasfüllung"), "wind", false, MarkedAs::of(interaction, &id))
     })
 }
 
-fn constructions_section(model: &Model, locale: Locale, budget: &mut PanelRowBudget) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
+fn constructions_section(model: &Model, interaction: &EnergyModelInteractionSnapshot, locale: Locale, budget: &mut PanelRowBudget) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
     let rows = budget.remaining();
     paged_panel_section(&format!("{TREE_NAMESPACE}.constructions"), &model.constructions, rows, budget, |construction, _| {
         let dangling = construction.layer_material_ids.iter().any(|layer| !model.materials.iter().any(|material| material.id == *layer) && !model.glazing_materials.iter().any(|material| material.id == *layer) && !model.gas_materials.iter().any(|material| material.id == *layer));
-        entity_row(&energy_target_id(construction.id), ENERGY_GRANULARITY_CONSTRUCTION, &construction_label(construction), say(locale, "Construction", "Konstruktion"), "bricks", dangling)
+        let id = energy_target_id(construction.id);
+        entity_row_marked(&id, ENERGY_GRANULARITY_CONSTRUCTION, &construction_label(construction), say(locale, "Construction", "Konstruktion"), "bricks", dangling, MarkedAs::of(interaction, &id))
     })
 }
 
 /// ⚡️ Internal loads: the four families that share the `load` granularity, flattened into one
 /// section because each is tiny and their rows compete for the same page.
-fn loads_section(model: &Model, locale: Locale, budget: &mut PanelRowBudget) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
+fn loads_section(model: &Model, interaction: &EnergyModelInteractionSnapshot, locale: Locale, budget: &mut PanelRowBudget) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
     let entries = load_entries(model, locale);
     let rows = budget.remaining();
-    paged_panel_section(&format!("{TREE_NAMESPACE}.loads"), &entries, rows, budget, |(id, label, description, icon), _| entity_row(id, ENERGY_GRANULARITY_LOAD, label, description, icon, false))
+    paged_panel_section(&format!("{TREE_NAMESPACE}.loads"), &entries, rows, budget, |(id, label, description, icon), _| {
+        entity_row_marked(id, ENERGY_GRANULARITY_LOAD, label, description, icon, false, MarkedAs::of(interaction, id))
+    })
 }
 
 fn load_entries(model: &Model, locale: Locale) -> Vec<(String, String, &'static str, &'static str)> {
@@ -350,17 +424,19 @@ fn load_entries(model: &Model, locale: Locale) -> Vec<(String, String, &'static 
 /// 🌡️ Controls: thermostats pick at their own granularity; humidistats are read-only because
 /// `energy_entity_kind` resolves no `humidistat` family, and a row must never hand the inspector a
 /// target it cannot resolve back.
-fn controls_section(model: &Model, locale: Locale, budget: &mut PanelRowBudget) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
+fn controls_section(model: &Model, interaction: &EnergyModelInteractionSnapshot, locale: Locale, budget: &mut PanelRowBudget) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
     let section_id = format!("{TREE_NAMESPACE}.controls");
     let rows = budget.remaining();
     let mut items = paged_panel_section(&section_id, &model.thermostats, rows, budget, |thermostat, _| {
-        entity_row(
-            &energy_target_id(thermostat.id),
+        let id = energy_target_id(thermostat.id);
+        entity_row_marked(
+            &id,
             ENERGY_GRANULARITY_THERMOSTAT,
             &format!("{} {} · ±{} K", say(locale, "Thermostat", "Thermostat"), thermostat.id.0, scalar(thermostat.heating_throttle_range_k)),
             say(locale, "Thermostat", "Thermostat"),
             "thermometer",
             false,
+            MarkedAs::of(interaction, &id),
         )
     })?;
     for humidistat in &model.humidistats {
@@ -374,18 +450,12 @@ fn controls_section(model: &Model, locale: Locale, budget: &mut PanelRowBudget) 
 
 /// 🌬️ HVAC: ideal-loads systems pick at the `hvac` granularity; air and plant loops are read-only
 /// until the shared resolver names them.
-fn hvac_section(model: &Model, locale: Locale, budget: &mut PanelRowBudget) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
+fn hvac_section(model: &Model, interaction: &EnergyModelInteractionSnapshot, locale: Locale, budget: &mut PanelRowBudget) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
     let section_id = format!("{TREE_NAMESPACE}.hvac");
     let rows = budget.remaining();
     let mut items = paged_panel_section(&section_id, &model.ideal_loads, rows, budget, |system, _| {
-        entity_row(
-            &energy_target_id(system.id),
-            ENERGY_GRANULARITY_HVAC,
-            &format!("{} {}", say(locale, "Ideal loads", "Idealanlage"), system.id.0),
-            say(locale, "Ideal loads", "Idealanlage"),
-            "fan",
-            false,
-        )
+        let id = energy_target_id(system.id);
+        entity_row_marked(&id, ENERGY_GRANULARITY_HVAC, &format!("{} {}", say(locale, "Ideal loads", "Idealanlage"), system.id.0), say(locale, "Ideal loads", "Idealanlage"), "fan", false, MarkedAs::of(interaction, &id))
     })?;
     for air_loop in &model.air_loops {
         let row = read_row(format!("{section_id}.air-loop.{}", air_loop.id.0), &air_loop.name, say(locale, "Air loop", "Luftkreis"))?;
@@ -423,11 +493,12 @@ fn marked_ids(ids: &[String]) -> Vec<String> {
     ids.iter().take(MARKED_IDS_LIMIT).cloned().collect()
 }
 
-/// 🧾️ Interactive rows each section wants — the read-only families (site, schedules, humidistats,
-/// air/plant loops) demand nothing, because they bind no argument map.
+/// 🧾️ Interactive rows each section wants — the read-only families (schedules, humidistats, air/plant
+/// loops) demand nothing, because they bind no argument map. The SITE row demands one: it dispatches
+/// the clearing pick that opens its own form in the inspector.
 pub fn section_demands(model: &Model) -> [usize; SECTIONS] {
     [
-        0,
+        1,
         model.zones.len() + model.spaces.len() + model.surfaces.len() + model.fenestrations.len(),
         model.shading_surfaces.len(),
         model.materials.len(),
@@ -479,14 +550,14 @@ pub fn build_artifact_tree(snapshot: &EnergyModelSnapshot, interaction: &EnergyM
     let budget = &mut PanelRowBudget::new(page);
     let site = site_section(model, locale)?;
     let zones = with_quota(budget, quotas[1], |share| zones_section(model, interaction, locale, share))?;
-    let shading = with_quota(budget, quotas[2], |share| shading_section(model, locale, share))?;
-    let materials = with_quota(budget, quotas[3], |share| materials_section(model, locale, share))?;
-    let glazing = with_quota(budget, quotas[4], |share| glazing_materials_section(model, locale, share))?;
-    let gases = with_quota(budget, quotas[5], |share| gas_materials_section(model, locale, share))?;
-    let constructions = with_quota(budget, quotas[6], |share| constructions_section(model, locale, share))?;
-    let loads = with_quota(budget, quotas[7], |share| loads_section(model, locale, share))?;
-    let controls = with_quota(budget, quotas[8], |share| controls_section(model, locale, share))?;
-    let hvac = with_quota(budget, quotas[9], |share| hvac_section(model, locale, share))?;
+    let shading = with_quota(budget, quotas[2], |share| shading_section(model, interaction, locale, share))?;
+    let materials = with_quota(budget, quotas[3], |share| materials_section(model, interaction, locale, share))?;
+    let glazing = with_quota(budget, quotas[4], |share| glazing_materials_section(model, interaction, locale, share))?;
+    let gases = with_quota(budget, quotas[5], |share| gas_materials_section(model, interaction, locale, share))?;
+    let constructions = with_quota(budget, quotas[6], |share| constructions_section(model, interaction, locale, share))?;
+    let loads = with_quota(budget, quotas[7], |share| loads_section(model, interaction, locale, share))?;
+    let controls = with_quota(budget, quotas[8], |share| controls_section(model, interaction, locale, share))?;
+    let hvac = with_quota(budget, quotas[9], |share| hvac_section(model, interaction, locale, share))?;
     let schedules = schedules_section(model, locale)?;
     let placeholder = ui_label(say(locale, "None", "Keine"))?;
 

@@ -1,0 +1,10 @@
+{
+  "mutation": "replaceNode",
+  "id": "n1",
+  "newNode": {
+    "id": "n1",
+    "x": 0.0,
+    "y": 0.0,
+    "z": 0.0
+  }
+}

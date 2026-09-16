@@ -6540,7 +6540,8 @@
 
 [data-slot="button-group"] > [data-slot="button-group-item"]:not(:last-child),
 [data-slot="toggle-group"] > :is([data-slot="toggle-group-item"], [data-slot="toggle-group-item-shell"]):not(:last-child),
-[data-slot="action-group"] > [data-slot="action-group-item"]:not(:last-child) {
+[data-slot="action-group"] > [data-slot="action-group-item"]:not(:last-child),
+[data-slot="app-panel-toggle-group"] > :is([data-slot="toggle-group-item"], [data-slot="toggle-group-item-shell"], [data-slot="button-group-item"]):not(:last-child) {
   box-shadow: inset calc(-1 * var(--stroke-hairline)) 0 0 0 var(--border-normal-color);
 }
 

@@ -23,7 +23,7 @@ use semio_repo_test_host::{parse_json, Adapter, Json};
 /// imported, because the oracle-only build must not link the subject crate. The contract's
 /// mutation-coverage gate keeps this list honest against the catalog, and that file's own
 /// `kinds_match_the_enum_and_the_catalog` keeps it honest against both the enum and the manifest.
-const KINDS: &[&str] = &["create-node", "delete-node", "create-element", "delete-element", "replace-element", "create-section", "delete-section", "replace-section", "create-solid", "delete-solid", "replace-solid"];
+const KINDS: &[&str] = &["create-node", "delete-node", "create-element", "delete-element", "replace-element", "create-section", "delete-section", "replace-section", "create-solid", "delete-solid", "replace-solid", "replace-node"];
 
 /// 👁️ Kinds whose COMMITTED specification vector cannot exhibit a forward effect, so
 /// [`law::mutation_is_observable`] must not demand one of them.
@@ -130,6 +130,13 @@ fn vector(kind: &str) -> Vector {
             after: include_str!("../../../🕸️mesh/🧫️fixtures/🧬️mutations/🔄️replace-solid/📚️thickens-the-slab-and-b51ef0/📸️snapshot/➡️after/🔣️.json"),
             diff: include_str!("../../../🕸️mesh/🧫️fixtures/🧬️mutations/🔄️replace-solid/📚️thickens-the-slab-and-b51ef0/🔺️diff/🔣️.json"),
             outcome: include_str!("../../../🕸️mesh/🧫️fixtures/🧬️mutations/🔄️replace-solid/📚️thickens-the-slab-and-b51ef0/🎯️outcome/🔣️.json"),
+        },
+        "replace-node" => Vector {
+            before: include_str!("../../../🕸️mesh/🧫️fixtures/🧬️mutations/🔁️replace-node/📍️lifts-the-column-head-34351d/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../../🕸️mesh/🧫️fixtures/🧬️mutations/🔁️replace-node/📍️lifts-the-column-head-34351d/🦠️mutation/🔣️.json"),
+            after: include_str!("../../../🕸️mesh/🧫️fixtures/🧬️mutations/🔁️replace-node/📍️lifts-the-column-head-34351d/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../../🕸️mesh/🧫️fixtures/🧬️mutations/🔁️replace-node/📍️lifts-the-column-head-34351d/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../../🕸️mesh/🧫️fixtures/🧬️mutations/🔁️replace-node/📍️lifts-the-column-head-34351d/🎯️outcome/🔣️.json"),
         },
         other => panic!("mutate-fem3d-1-mesh: no committed specification vector is registered for kind {other:?}"),
     }

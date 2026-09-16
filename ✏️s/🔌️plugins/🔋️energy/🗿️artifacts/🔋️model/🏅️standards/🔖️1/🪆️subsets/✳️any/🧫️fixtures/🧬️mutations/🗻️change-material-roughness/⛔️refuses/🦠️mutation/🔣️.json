@@ -1,0 +1,5 @@
+{
+  "mutation": "changeMaterialRoughness",
+  "id": 99,
+  "newRoughness": "Smooth"
+}

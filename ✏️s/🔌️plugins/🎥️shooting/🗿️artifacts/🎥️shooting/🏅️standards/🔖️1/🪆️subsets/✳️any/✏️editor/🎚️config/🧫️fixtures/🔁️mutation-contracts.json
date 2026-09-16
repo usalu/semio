@@ -9,19 +9,18 @@
     "cameraDraftLabel": "",
     "camera": {
       "position": [
-        420,
-        -420,
-        320
+        420.0,
+        -420.0,
+        320.0
       ],
       "target": [
-        0,
-        0,
-        40
+        0.0,
+        0.0,
+        40.0
       ],
-      "zoom": 1,
-      "fov": 50
-    },
-    "activeUtilityId": "move"
+      "zoom": 1.0,
+      "fov": 50.0
+    }
   },
   "cases": [
     {
@@ -38,19 +37,18 @@
             "cameraDraftLabel": "Übersicht",
             "camera": {
               "position": [
-                420,
-                -420,
-                320
+                420.0,
+                -420.0,
+                320.0
               ],
               "target": [
-                0,
-                0,
-                40
+                0.0,
+                0.0,
+                40.0
               ],
-              "zoom": 1,
-              "fov": 50
-            },
-            "activeUtilityId": "move"
+              "zoom": 1.0,
+              "fov": 50.0
+            }
           }
         }
       },
@@ -64,19 +62,18 @@
         "cameraDraftLabel": "Übersicht",
         "camera": {
           "position": [
-            420,
-            -420,
-            320
+            420.0,
+            -420.0,
+            320.0
           ],
           "target": [
-            0,
-            0,
-            40
+            0.0,
+            0.0,
+            40.0
           ],
-          "zoom": 1,
-          "fov": 50
-        },
-        "activeUtilityId": "move"
+          "zoom": 1.0,
+          "fov": 50.0
+        }
       }
     },
     {
@@ -102,19 +99,18 @@
         "cameraDraftLabel": "",
         "camera": {
           "position": [
-            420,
-            -420,
-            320
+            420.0,
+            -420.0,
+            320.0
           ],
           "target": [
-            0,
-            0,
-            40
+            0.0,
+            0.0,
+            40.0
           ],
-          "zoom": 1,
-          "fov": 50
-        },
-        "activeUtilityId": "move"
+          "zoom": 1.0,
+          "fov": 50.0
+        }
       }
     },
     {
@@ -134,19 +130,18 @@
         "cameraDraftLabel": "",
         "camera": {
           "position": [
-            420,
-            -420,
-            320
+            420.0,
+            -420.0,
+            320.0
           ],
           "target": [
-            0,
-            0,
-            40
+            0.0,
+            0.0,
+            40.0
           ],
-          "zoom": 1,
-          "fov": 50
-        },
-        "activeUtilityId": "move"
+          "zoom": 1.0,
+          "fov": 50.0
+        }
       }
     },
     {
@@ -166,19 +161,18 @@
         "cameraDraftLabel": "",
         "camera": {
           "position": [
-            420,
-            -420,
-            320
+            420.0,
+            -420.0,
+            320.0
           ],
           "target": [
-            0,
-            0,
-            40
+            0.0,
+            0.0,
+            40.0
           ],
-          "zoom": 1,
-          "fov": 50
-        },
-        "activeUtilityId": "move"
+          "zoom": 1.0,
+          "fov": 50.0
+        }
       }
     },
     {
@@ -198,19 +192,18 @@
         "cameraDraftLabel": "Übersicht",
         "camera": {
           "position": [
-            420,
-            -420,
-            320
+            420.0,
+            -420.0,
+            320.0
           ],
           "target": [
-            0,
-            0,
-            40
+            0.0,
+            0.0,
+            40.0
           ],
-          "zoom": 1,
-          "fov": 50
-        },
-        "activeUtilityId": "move"
+          "zoom": 1.0,
+          "fov": 50.0
+        }
       }
     },
     {
@@ -219,21 +212,21 @@
         "SetCamera": {
           "camera": {
             "position": [
-              1,
-              2,
-              3
+              1.0,
+              2.0,
+              3.0
             ],
             "target": [
-              0,
-              0,
-              0
+              0.0,
+              0.0,
+              0.0
             ],
-            "zoom": 2,
-            "fov": 35,
+            "zoom": 2.0,
+            "fov": 35.0,
             "up": [
-              0,
-              0,
-              1
+              0.0,
+              0.0,
+              1.0
             ],
             "projection": "orthographic"
           }
@@ -249,57 +242,24 @@
         "cameraDraftLabel": "",
         "camera": {
           "position": [
-            1,
-            2,
-            3
+            1.0,
+            2.0,
+            3.0
           ],
           "target": [
-            0,
-            0,
-            0
+            0.0,
+            0.0,
+            0.0
           ],
-          "zoom": 2,
-          "fov": 35,
+          "zoom": 2.0,
+          "fov": 35.0,
           "up": [
-            0,
-            0,
-            1
+            0.0,
+            0.0,
+            1.0
           ],
           "projection": "orthographic"
-        },
-        "activeUtilityId": "move"
-      }
-    },
-    {
-      "kind": "set-active-utility",
-      "mutation": {
-        "SetActiveUtility": {
-          "utilityId": "rotate"
         }
-      },
-      "expected": {
-        "defaultShotFormat": "png",
-        "defaultShotShape": "rectangle",
-        "defaultAssetFormat": "glb",
-        "selectedShotIds": [],
-        "centerModel": true,
-        "fitRevision": 0,
-        "cameraDraftLabel": "",
-        "camera": {
-          "position": [
-            420,
-            -420,
-            320
-          ],
-          "target": [
-            0,
-            0,
-            40
-          ],
-          "zoom": 1,
-          "fov": 50
-        },
-        "activeUtilityId": "rotate"
       }
     },
     {
@@ -321,19 +281,18 @@
         "cameraDraftLabel": "",
         "camera": {
           "position": [
-            420,
-            -420,
-            320
+            420.0,
+            -420.0,
+            320.0
           ],
           "target": [
-            0,
-            0,
-            40
+            0.0,
+            0.0,
+            40.0
           ],
-          "zoom": 1,
-          "fov": 50
-        },
-        "activeUtilityId": "move"
+          "zoom": 1.0,
+          "fov": 50.0
+        }
       }
     }
   ]

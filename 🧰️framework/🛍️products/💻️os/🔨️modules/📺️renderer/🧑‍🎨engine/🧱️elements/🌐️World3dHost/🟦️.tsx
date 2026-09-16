@@ -194,6 +194,11 @@ export type WorldInstanceRecord = {
    * hover/selection id absent from the topology. Dispatches on a `domainId`-bound world window use
    * this when set, falling back to `id`. */
   readonly interactionId?: string;
+  /** 🎯️ The granularity the instance's interaction target lives under, when it differs from the
+   * scene's `domainGranularityId` — a fem3d scene draws nodes, members, solids, supports and load
+   * glyphs as one instance lane under one domain, and each row names its own granularity so a pick
+   * on a member selects an `element`, never a `node`. Falls back to the scene's default. */
+  readonly interactionGranularityId?: string;
 };
 
 type WorldSelectionTargets = {
@@ -229,6 +234,12 @@ type WorldSelectionRecord = {
   readonly gumballActive?: boolean;
   /** 🎛️ Plugin-authored gumball handle flags (e.g. puzzle3d Move/Rotate). When set, overrides {@link gumballConfigForTransformMode}. */
   readonly gumballConfig?: GumballConfig;
+  /** ⚡️ When true the gumball dispatches `translateSelection`/`rotateSelection`/`scaleSelection`
+   * INCREMENTALLY while the pointer moves (latest pose wins, one round trip in flight at a time) and
+   * the host draws the DOCUMENT's answer instead of a local instance preview — the app owns the pose
+   * mid-drag, so every dependent view (a fem3d results window re-solving under the moved node) tracks
+   * the gesture live. Drag end commits the remaining delta and closes the `transformEnd` bracket. */
+  readonly gumballLiveDispatch?: boolean;
   readonly hoveredComponent?: WorldHoverComponent;
   readonly showEdges?: boolean;
   readonly engagementSessionActive?: boolean;
@@ -3139,6 +3150,7 @@ function WorldInstancesLayer({
   gumballPreviewSourceId,
   sharedGumballPreview,
   onGumballDraggingChanged,
+  gumballLiveDispatch,
   onGumballDragStart,
   onGumballDrag,
   onGumballDragEnd,
@@ -3165,6 +3177,9 @@ function WorldInstancesLayer({
   readonly gumballPreviewSourceId: string;
   readonly sharedGumballPreview: WorldGumballTransformPreview | null;
   readonly onGumballDraggingChanged: (dragging: boolean) => void;
+  /** ⚡️ The document owns the mid-drag pose (see `WorldSelectionRecord.gumballLiveDispatch`): no local
+   * instance preview is written or shared, the instances draw whatever `instancesJson` says. */
+  readonly gumballLiveDispatch: boolean;
   readonly onGumballDragStart?: (kind: GumballHandleKind, before: GumballPose) => void;
   readonly onGumballDrag?: (kind: GumballHandleKind, pose: GumballPose) => void;
   readonly onGumballDragEnd: (kind: GumballHandleKind, before: GumballPose, after: GumballPose) => void;
@@ -3434,6 +3449,12 @@ function WorldInstancesLayer({
 
   const handleGumballDragStart = useCallback(
     (kind: GumballHandleKind, before: GumballPose) => {
+      if (gumballLiveDispatch) {
+        gumballLiveBasesRef.current.clear();
+        gumballCommitHoldRef.current.clear();
+        onGumballDragStart?.(kind, before);
+        return;
+      }
       gumballPreviewPivotRef.current = selection.gumballTarget ?? [before.position[0], before.position[1], before.position[2]];
       const bases = new Map<string, WorldGumballLivePose>();
       for (const id of selectedIds) {
@@ -3453,11 +3474,15 @@ function WorldInstancesLayer({
       publishGumballPreview(before, before, kind, selectedIds);
       onGumballDragStart?.(kind, before);
     },
-    [onGumballDragStart, publishGumballPreview, selectedIds, selection.gumballTarget],
+    [gumballLiveDispatch, onGumballDragStart, publishGumballPreview, selectedIds, selection.gumballTarget],
   );
 
   const handleGumballDrag = useCallback(
     (kind: GumballHandleKind, pose: GumballPose) => {
+      if (gumballLiveDispatch) {
+        onGumballDrag?.(kind, pose);
+        return;
+      }
       const before = gumballLiveStartPoseRef.current ?? pose;
       gumballLiveStartPoseRef.current = before;
       gumballLivePoseRef.current = pose;
@@ -3465,11 +3490,15 @@ function WorldInstancesLayer({
       applyGumballLivePreview(before, pose, kind);
       onGumballDrag?.(kind, pose);
     },
-    [applyGumballLivePreview, onGumballDrag],
+    [applyGumballLivePreview, gumballLiveDispatch, onGumballDrag],
   );
 
   const handleGumballDragEnd = useCallback(
     (kind: GumballHandleKind, before: GumballPose, after: GumballPose) => {
+      if (gumballLiveDispatch) {
+        onGumballDragEnd(kind, before, after);
+        return;
+      }
       const start = gumballLiveStartPoseRef.current ?? before;
       const finals = applyGumballLivePreview(start, after, kind);
       gumballCommitHoldRef.current = finals;
@@ -3480,7 +3509,7 @@ function WorldInstancesLayer({
       clearWorldGumballTransformPreview(controllerId, gumballPreviewSourceId);
       onGumballDragEnd(kind, before, after);
     },
-    [applyGumballLivePreview, controllerId, gumballPreviewSourceId, onGumballDragEnd],
+    [applyGumballLivePreview, controllerId, gumballLiveDispatch, gumballPreviewSourceId, onGumballDragEnd],
   );
 
   // 🪪️ Stable across renders, like every other `WorldInstanceNode` prop: an inline function here defeated the node's memo, so
@@ -5251,6 +5280,33 @@ export function interactionTargetsForInstances(instances: readonly WorldInstance
   return targets;
 }
 
+/** 🎯️ The `{ granularity, id }` interaction target one rendered instance stands for — the record's own
+ * `interactionGranularityId`/`interactionId` win, else the scene's default granularity and the id itself. */
+export function world3dInstanceInteractionTarget(instances: readonly WorldInstanceRecord[], id: string, defaultGranularity: string): { readonly granularity: string; readonly id: string } {
+  const record = instances.find((entry) => entry.id === id);
+  return { granularity: record?.interactionGranularityId ?? defaultGranularity, id: record?.interactionId ?? id };
+}
+
+/** 🎯️ Every rendered instance id resolved onto its interaction target, deduplicated and order-preserving,
+ * each under its OWN granularity — the marquee's shape of {@link interactionTargetsForInstances}. */
+export function world3dInstanceInteractionTargets(instances: readonly WorldInstanceRecord[], ids: readonly string[], defaultGranularity: string): readonly { readonly granularity: string; readonly id: string }[] {
+  const seen = new Set<string>();
+  const targets: { readonly granularity: string; readonly id: string }[] = [];
+  for (const id of ids) {
+    const target = world3dInstanceInteractionTarget(instances, id, defaultGranularity);
+    const key = `${target.granularity}\u0000${target.id}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    targets.push(target);
+  }
+  return targets;
+}
+
+/** 🎯️ `interactionSelect` args over already-resolved `{ granularity, id }` targets. */
+export function world3dSelectionTargetsActionArgs(domainId: string, targets: readonly { readonly granularity: string; readonly id: string }[], merge: MergeMode, method: "pick" | "rectangle" = "pick") {
+  return { domainId, targets: JSON.stringify(targets), merge, method };
+}
+
 /** 🧿️ The pickable non-instance layers of a `World3dScene`, each named after the scene field it is
  * parsed from (`vorticesJson`, `attractionsJson`, `targetVolumesJson`, `referencesJson`). */
 export type World3dMarkerLayer = "vortex" | "attraction" | "targetVolume" | "reference";
@@ -5572,8 +5628,17 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
    * gumball's local preview). */
   const relocateSessionRef = useRef<World3dRelocateSession | null>(null);
   const gumballDragStartPoseRef = useRef<GumballPose | null>(null);
-  /** 🧲️ Serialized WASM begin/end chain — mid-drag is local-only; one absolute start→end delta commits on drag end. */
+  /** 🧲️ Serialized WASM begin/end chain — mid-drag is local-only unless the selection record asks for
+   * live dispatch; either way every delta and the closing `transformEnd` ride this one FIFO. */
   const gumballDragChainRef = useRef(Promise.resolve());
+  /** ⚡️ Live-dispatch bookkeeping: the last pose a delta was ENQUEUED from, the newest pose the pointer
+   * reported, the handle kind, and whether a mid-drag round trip is outstanding. Latest pose wins: a
+   * pointer that outruns the guest collapses every skipped pose into the next delta. */
+  const gumballLiveDispatch = Boolean(selection.gumballLiveDispatch);
+  const gumballLiveCommittedPoseRef = useRef<GumballPose | null>(null);
+  const gumballLiveLatestPoseRef = useRef<GumballPose | null>(null);
+  const gumballLiveHandleKindRef = useRef<GumballHandleKind | null>(null);
+  const gumballLiveInFlightRef = useRef(false);
   const selectionMode = selection.selectionMode ?? selection.granularity ?? "mesh";
   const gridSnapEnabled = lod.gridSnapEnabled ?? false;
   const suggestionMenuOpen = Boolean(interaction.suggestionMenu?.open);
@@ -6084,7 +6149,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
         return;
       }
       if (interactionDomainId) {
-        dispatch("interactionSelect", world3dSelectionActionArgs(interactionDomainId, "object", [record?.interactionId ?? id], merge));
+        dispatch("interactionSelect", world3dSelectionTargetsActionArgs(interactionDomainId, [world3dInstanceInteractionTarget(instances, id, interactionGranularity)], merge));
         return;
       }
       if (selectionMode === "mesh" || selectionMode === "object") {
@@ -6108,8 +6173,9 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
       createCoalescingActionDispatcher<string | null>((id) => {
         if (interactionDomainId) {
           if (id == null && leftoverBrushRetainGuestHoverV1(activeUtility, leftoverWorldWindowOverlayV1(windowInstanceId))) return undefined;
-          const target = id == null ? null : (instancesRef.current.find((entry) => entry.id === id)?.interactionId ?? id);
-          return dispatchSettled("interactionHover", world3dHoverActionArgs(interactionDomainId, interactionGranularity, target));
+          if (id == null) return dispatchSettled("interactionHover", world3dHoverActionArgs(interactionDomainId, interactionGranularity, null));
+          const target = world3dInstanceInteractionTarget(instancesRef.current, id, interactionGranularity);
+          return dispatchSettled("interactionHover", world3dHoverActionArgs(interactionDomainId, target.granularity, target.id));
         }
         if (id == null) return dispatchSettled("setHover", {});
         return dispatchSettled("setHover", { objectId: id, mode: "mesh", id: 0 });
@@ -6503,26 +6569,56 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
       (globalThis as { __gumballDragEntered?: boolean }).__gumballDragEntered = true;
       console.info("[DEBUG] gumball drag entered", { kind: _kind, ids: selectionArgs().ids });
       gumballDragStartPoseRef.current = before;
+      gumballLiveCommittedPoseRef.current = before;
+      gumballLiveLatestPoseRef.current = before;
+      gumballLiveHandleKindRef.current = _kind;
       void enqueueGumballDispatch(() => Promise.resolve(dispatch("transformBegin")));
     },
     [dispatch, enqueueGumballDispatch, selectionArgs],
   );
 
-  const handleGumballDrag = useCallback((_kind: GumballHandleKind, _pose: GumballPose) => {
-    // ⚡️ Mid-drag stays local (WorldInstancesLayer imperative preview) — no WASM/React composite rebuild.
-  }, []);
+  /** ⚡️ Enqueues ONE incremental delta from the last enqueued pose to the newest one, at most one in
+   * flight; when it settles, whatever pose arrived meanwhile is folded into the next. */
+  const pumpGumballLiveDispatch = useCallback(() => {
+    if (gumballLiveInFlightRef.current) return;
+    const committed = gumballLiveCommittedPoseRef.current;
+    const latest = gumballLiveLatestPoseRef.current;
+    const kind = gumballLiveHandleKindRef.current;
+    if (!committed || !latest || !kind || gumballPosesEqual(committed, latest)) return;
+    gumballLiveInFlightRef.current = true;
+    gumballLiveCommittedPoseRef.current = latest;
+    void enqueueGumballDispatch(() => dispatchGumballPoseDelta(kind, committed, latest)).finally(() => {
+      gumballLiveInFlightRef.current = false;
+      pumpGumballLiveDispatch();
+    });
+  }, [dispatchGumballPoseDelta, enqueueGumballDispatch]);
+
+  const handleGumballDrag = useCallback(
+    (kind: GumballHandleKind, pose: GumballPose) => {
+      // ⚡️ Without live dispatch mid-drag stays local (WorldInstancesLayer imperative preview) — no WASM/React composite rebuild.
+      if (!gumballLiveDispatch) return;
+      gumballLiveLatestPoseRef.current = pose;
+      gumballLiveHandleKindRef.current = kind;
+      pumpGumballLiveDispatch();
+    },
+    [gumballLiveDispatch, pumpGumballLiveDispatch],
+  );
 
   const handleGumballDragEnd = useCallback(
     (kind: GumballHandleKind, before: GumballPose, after: GumballPose) => {
-      const startPose = gumballDragStartPoseRef.current ?? before;
+      // ⚡️ Live dispatch already committed everything up to the last enqueued pose; the tail is the remaining delta.
+      const startPose = gumballLiveDispatch ? (gumballLiveCommittedPoseRef.current ?? before) : (gumballDragStartPoseRef.current ?? before);
       gumballDragStartPoseRef.current = null;
+      gumballLiveCommittedPoseRef.current = null;
+      gumballLiveLatestPoseRef.current = null;
+      gumballLiveHandleKindRef.current = null;
       void enqueueGumballDispatch(async () => {
-        // One absolute start→end delta — the app commits it directly; `transformEnd` only closes the host bracket.
-        await dispatchGumballPoseDelta(kind, startPose, after);
+        // One absolute delta — the app commits it directly; `transformEnd` only closes the host bracket.
+        if (!gumballPosesEqual(startPose, after)) await dispatchGumballPoseDelta(kind, startPose, after);
         await Promise.resolve(dispatch("transformEnd"));
       });
     },
-    [dispatch, dispatchGumballPoseDelta, enqueueGumballDispatch],
+    [dispatch, dispatchGumballPoseDelta, enqueueGumballDispatch, gumballLiveDispatch],
   );
 
   const handleFaceDragStart = useCallback((args: { objectId: string; faceId: number; normal: readonly [number, number, number]; point: readonly [number, number, number]; faceExtent?: readonly [number, number] }) => {
@@ -6691,9 +6787,9 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
     marqueeFinalizeOnceRef.current = true;
     if (preview.mergedInstanceIds?.length) {
       setMarqueeCommitHold({ mergedComponentIds: null, mergedInstanceIds: preview.mergedInstanceIds });
-      const domainTargets = interactionTargetsForInstances(instancesRef.current, preview.mergedInstanceIds);
+      const domainTargets = world3dInstanceInteractionTargets(instancesRef.current, preview.mergedInstanceIds, interactionGranularity);
       const marqueeSelect = interactionDomainId
-        ? dispatch("interactionSelect", world3dSelectionActionArgs(interactionDomainId, "object", domainTargets, "replace"))
+        ? dispatch("interactionSelect", world3dSelectionTargetsActionArgs(interactionDomainId, domainTargets, "replace", "rectangle"))
         : dispatch("worldSelect", { ids: preview.mergedInstanceIds, merge: "replace" });
       void Promise.resolve(marqueeSelect).finally(() => {
         window.setTimeout(() => setMarqueeCommitHold((hold) => (hold?.mergedInstanceIds === preview.mergedInstanceIds ? null : hold)), 250);
@@ -7188,6 +7284,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
                 gumballPreviewSourceId={gumballTransformPreviewSourceId}
                 sharedGumballPreview={sharedGumballTransformPreview}
                 onGumballDraggingChanged={setGumballDragActive}
+                gumballLiveDispatch={gumballLiveDispatch}
                 onGumballDragStart={handleGumballDragStart}
                 onGumballDrag={handleGumballDrag}
                 onGumballDragEnd={handleGumballDragEnd}

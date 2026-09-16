@@ -57,6 +57,32 @@ async fn catalogue_reflects_workshop_after_machine_removal() {
     assert!(!after.contains("Circular Saw"), "removed machine must disappear from the catalogue tree");
 }
 
+/// ⚖️ The real four-extension pack pushed through `setContributions` renders each catalog id ONCE —
+/// the shipped `process-extension-*` bundles re-contribute the ids this build compiles in, and before
+/// `installed_catalogs` deduped them the Werkstatt showed nine sections instead of five.
+#[semio_framework_async_macros::async_test]
+async fn the_real_extension_pack_renders_each_catalog_section_once() {
+    use crate::editor::process3d::commands::contribution::set_contributions;
+    let mut app = context::app();
+    let pack = crate::editor::process3d::unit_tests::demonstrator_contributions_pack();
+    let distilled = crate::editor::process3d::installable_contributions(&pack, crate::editor::process3d::PROCESS3D_CONFIG_CONTRIBUTIONS_BYTES);
+    context::dispatch(&mut app, Process3dCommand::SetContributions(set_contributions::SetContributions { json: distilled }));
+    let rendered = context::render(&mut app, PROCESS_3D_PLAY_BODY_WORKSHOP);
+    let marker = "\"key\":\"process3d-play-workshop.catalog.";
+    let mut rendered_ids: Vec<String> = Vec::new();
+    for (index, _) in rendered.match_indices(marker) {
+        let rest = &rendered[index + marker.len()..];
+        rendered_ids.push(rest[..rest.find('"').expect("section key terminator")].to_string());
+    }
+    let mut unique = rendered_ids.clone();
+    unique.sort();
+    unique.dedup();
+    assert_eq!(rendered_ids.len(), unique.len(), "no catalog id may open two sections: {rendered_ids:?}");
+    assert!(rendered_ids.iter().any(|id| id == "metal"), "the metal catalog still has machines left to add: {rendered_ids:?}");
+    let builtin: Vec<String> = installed_catalogs("[]").iter().map(|catalog| catalog.catalog_id().to_string()).collect();
+    assert!(rendered_ids.iter().all(|id| builtin.contains(id)), "the shipped packs re-contribute built-in ids, so nothing new may appear: {rendered_ids:?}");
+}
+
 /// 🔧 `measure_for_capability` sizing a cut tool from a capability's own edited parameter,
 /// asserted directly (the full "edit a machine parameter, then AddStep, then read the sized
 /// tool back off the document" path is covered end to end by the `🎮️commands/🪜️step` tests).

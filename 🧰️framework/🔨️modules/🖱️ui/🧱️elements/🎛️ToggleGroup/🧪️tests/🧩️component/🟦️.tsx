@@ -4,7 +4,7 @@ import { fireEvent, render } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import { ToggleGroup } from "../../🟦️.tsx";
-import { chromeControlGroupShellClass, chromeControlItemBaseClass } from "../../../../🔨️modules/🎛️chrome-control-presentation/🟦️.ts";
+import { chromeControlGroupShellClass, chromeControlGroupSiblingDividerClass, chromeControlItemBaseClass } from "../../../../🔨️modules/🎛️chrome-control-presentation/🟦️.ts";
 // #endregion 🔌️Adapters
 
 // #region 🎛️Fixture
@@ -168,6 +168,18 @@ describe("ToggleGroup", () => {
     expect(chromeControlItemBaseClass).toContain("h-full");
     expect(chromeControlItemBaseClass).toContain("overflow-visible");
     expect(chromeControlGroupShellClass).toContain("items-stretch");
+  });
+
+  it("paints a logical-end divider between sibling toggle items", () => {
+    const markup = renderToStaticMarkup(
+      <ToggleGroup
+        items={[
+          { value: "a", icon: "check" },
+          { value: "b", icon: "x" },
+        ]}
+      />,
+    );
+    expect(markup).toContain(chromeControlGroupSiblingDividerClass);
   });
 
   it("renders toggle group items without aspect-square", () => {

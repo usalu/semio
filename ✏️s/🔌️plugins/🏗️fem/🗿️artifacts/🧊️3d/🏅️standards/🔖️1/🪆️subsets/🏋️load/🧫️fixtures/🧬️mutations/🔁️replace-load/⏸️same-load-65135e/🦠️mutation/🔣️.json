@@ -1,0 +1,13 @@
+{
+  "mutation": "replaceLoad",
+  "caseId": "dead",
+  "loadId": "g2",
+  "newLoad": {
+    "kind": "memberUdl",
+    "id": "g2",
+    "elementId": "f1",
+    "wx": 0.0,
+    "wy": 0.0,
+    "wz": -8.0
+  }
+}

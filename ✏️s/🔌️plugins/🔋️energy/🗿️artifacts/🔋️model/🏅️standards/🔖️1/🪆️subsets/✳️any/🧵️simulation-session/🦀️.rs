@@ -227,6 +227,17 @@ pub const ENERGY_SURFACE_PAYLOAD_ROW_BYTES: usize = 20;
 /// model with more surfaces than this publishes its first 8 192 rows rather than failing the tick.
 pub const ENERGY_SURFACE_PAYLOAD_MAXIMUM_ROWS: usize = 8_192;
 
+/// 🧱️ How many computed timesteps may pass before the map is republished, on top of the tier
+/// boundaries and the completing tick.
+///
+/// 🌱️ Tier boundaries alone are NOT enough and this constant is the fix for why: the first (and for a
+/// design-day run the only intermediate) tier fires at `EnergyJobStage::StartRun`, i.e. BEFORE a single
+/// run timestep has been integrated, so the map published there is all zeros — every surface equal,
+/// every surface on the same colour band, frozen for the rest of the run. That is exactly what the
+/// browser timeline recorded (48 vertices in one bucket, stable for the whole run). Republishing every
+/// 16 timesteps keeps the map live at ~40 KB per refresh for a 2 000-surface model.
+pub const ENERGY_SURFACE_PAYLOAD_TICK_INTERVAL: u64 = 16;
+
 /// 🧱️ Byte length of a payload carrying `rows` rows.
 pub const fn energy_surface_payload_bytes(rows: usize) -> usize {
     ENERGY_SURFACE_PAYLOAD_HEADER_BYTES + rows * ENERGY_SURFACE_PAYLOAD_ROW_BYTES
@@ -1099,6 +1110,8 @@ pub struct EnergySimulationRunJob {
     generation: Generation,
     numerical_sequence: u64,
     cursor: EnergyRunCursor,
+    /// 🧱️ Computed timesteps since the per-surface map was last published into a tick.
+    ticks_since_surface_payload: u64,
     settled: Option<StepOutcome>,
     closing: bool,
 }
@@ -1120,6 +1133,7 @@ impl EnergySimulationRunJob {
             generation: Generation(u64::from(identity.generation)),
             numerical_sequence: 0,
             cursor: EnergyRunCursor::new(),
+            ticks_since_surface_payload: 0,
             settled: None,
             closing: false,
         }
@@ -1269,14 +1283,22 @@ impl InteractiveJob for EnergySimulationRunJob {
             return StepOutcome::Yield;
         }
         let state = if matches!(settled, Some(StepOutcome::Complete(_))) { ToolRunState::Complete } else { ToolRunState::Running };
-        // 🧱️ On a tier boundary and at completion, republish the per-surface map so the 3d model
-        // window can recolour. The numerical job still owns its `SimulationModel` here — it is only
+        // 🧱️ Republish the per-surface map on a tier boundary, at completion, and every
+        // `ENERGY_SURFACE_PAYLOAD_TICK_INTERVAL` computed timesteps in between, so the 3d model window
+        // recolours WHILE the run advances rather than freezing on the all-zero map the first tier
+        // boundary carries. The numerical job still owns its `SimulationModel` here — it is only
         // released by the job's own bounded `close_step` retirement.
         let complete = matches!(settled, Some(StepOutcome::Complete(_)));
-        if std::mem::take(&mut self.cursor.surface_payload_due) || complete {
+        self.ticks_since_surface_payload = self.ticks_since_surface_payload.saturating_add(u64::from(computed));
+        let interval_due = self.ticks_since_surface_payload >= ENERGY_SURFACE_PAYLOAD_TICK_INTERVAL;
+        if std::mem::take(&mut self.cursor.surface_payload_due) || interval_due || complete {
             if let Some(table) = self.numerical.as_ref().and_then(|job| job.per_surface_energy()) {
-                if !table.is_empty() {
+                // 🎨️ An all-zero table is the pre-run state: publishing it would paint every surface the
+                // same band and a window cannot tell that from a real, uniform result. Hold the payload
+                // back until the run period has actually integrated something.
+                if table.has_energy() {
                     self.writer.payload(encode_surface_energy_payload(table.summaries()));
+                    self.ticks_since_surface_payload = 0;
                 }
             }
         }

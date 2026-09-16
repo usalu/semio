@@ -1,0 +1,14 @@
+syntax = "proto3";
+package semio.app.energy.model.model3d_viewer_window.config.mutations;
+
+import "energy_model3d_viewer_window_config.proto";
+
+message SetCamera {
+  semio.app.energy.model.model3d_viewer_window.config.EnergyModelViewerCameraPose camera = 1;
+}
+
+message EnergyModelViewerWindowConfigMutation {
+  oneof mutation {
+    SetCamera set_camera = 1;
+  }
+}

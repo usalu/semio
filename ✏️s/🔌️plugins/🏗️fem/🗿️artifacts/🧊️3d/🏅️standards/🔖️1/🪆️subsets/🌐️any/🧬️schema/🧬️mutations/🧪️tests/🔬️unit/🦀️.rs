@@ -147,6 +147,41 @@ async fn combination_create_and_delete_round_trip() {
 }
 
 #[semio_framework_async_macros::async_test]
+async fn node_replace_round_trips_and_keeps_the_topology() {
+    let (base, ..) = cantilever_fixture();
+    let moved = round_trip(&base, &Fem3dMutation::ReplaceNode(replace_node::ReplaceNode { id: "n2".into(), new_node: FemNode { id: "n2".into(), x: 3.0, y: 0.0, z: 0.5 } }));
+    assert_eq!(moved.nodes[1].z, 0.5);
+    assert_eq!(moved.elements, base.elements, "moving a node an element names never rewires the element");
+    assert_eq!(moved.load_cases, base.load_cases, "moving a node a nodal load names never rewires the load");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn load_replace_round_trips_in_place() {
+    let (base, ..) = cantilever_fixture();
+    let replaced = FemLoad::Nodal { id: "l1".into(), node_id: "n2".into(), dof: FemDof::Ty, value: -750.0 };
+    let after = round_trip(&base, &Fem3dMutation::ReplaceLoad(replace_load::ReplaceLoad { case_id: "point".into(), load_id: "l1".into(), new_load: Box::new(replaced.clone()) }));
+    assert_eq!(after.load_cases[0].loads, vec![replaced], "the load is swapped in its own slot");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn load_case_name_change_round_trips() {
+    let (base, ..) = cantilever_fixture();
+    let after = round_trip(&base, &Fem3dMutation::ChangeLoadCaseName(change_load_case_name::ChangeLoadCaseName { case_id: "point".into(), new_name: "Tip Load".into() }));
+    assert_eq!(after.load_cases[0].name, "Tip Load");
+    assert_eq!(after.load_cases[0].id, "point", "a rename never touches the id");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn combination_replace_round_trips() {
+    let (base, ..) = cantilever_fixture();
+    let combination = FemCombination { id: "uls".into(), name: "ULS".into(), terms: BTreeMap::from([("point".into(), 1.35)]) };
+    let with_combination = round_trip(&base, &Fem3dMutation::CreateCombination(create_combination::CreateCombination { combination }));
+    let reweighted = FemCombination { id: "uls".into(), name: "ULS (wind)".into(), terms: BTreeMap::from([("point".into(), 1.5)]) };
+    let after = round_trip(&with_combination, &Fem3dMutation::ReplaceCombination(replace_combination::ReplaceCombination { id: "uls".into(), new_combination: reweighted.clone() }));
+    assert_eq!(after.combinations, vec![reweighted]);
+}
+
+#[semio_framework_async_macros::async_test]
 async fn analysis_settings_update_round_trips() {
     let base = Fem3dSnapshot::default();
     let settings = FemAnalysisSettings { modal_count: 5, buckling_count: 2, deformation_scale: 25.0 };
@@ -241,6 +276,17 @@ async fn fem3d_op_text_round_trips_every_variant() {
         combination: FemCombination { id: "uls".into(), name: "ULS".into(), terms: BTreeMap::from([("point".into(), 1.35), ("live".into(), 1.5)]) },
     }));
     semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem3dMutation::DeleteCombination(delete_combination::DeleteCombination { id: "uls".into() }));
+    semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem3dMutation::ReplaceNode(replace_node::ReplaceNode { id: "n1".into(), new_node: FemNode { id: "n1".into(), x: 1.5, y: -2.0, z: 3.25 } }));
+    semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem3dMutation::ReplaceLoad(replace_load::ReplaceLoad {
+        case_id: "dead".into(),
+        load_id: "l1".into(),
+        new_load: Box::new(FemLoad::MemberUdl { id: "l1".into(), element_id: "e1".into(), wx: 0.0, wy: 0.0, wz: -900.0 }),
+    }));
+    semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem3dMutation::ChangeLoadCaseName(change_load_case_name::ChangeLoadCaseName { case_id: "dead".into(), new_name: "Dead Load".into() }));
+    semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem3dMutation::ReplaceCombination(replace_combination::ReplaceCombination {
+        id: "uls".into(),
+        new_combination: FemCombination { id: "uls".into(), name: "ULS".into(), terms: BTreeMap::from([("dead".into(), 1.35), ("live".into(), 1.5)]) },
+    }));
     semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem3dMutation::UpdateAnalysisSettings(update_analysis_settings::UpdateAnalysisSettings {
         settings: FemAnalysisSettings { modal_count: 5, buckling_count: 2, deformation_scale: 10.0 },
     }));
@@ -281,7 +327,7 @@ async fn mutation_law_add_load_inverse_and_diff_absorb() {
 async fn every_mutation_registers_a_semantic_descriptor() {
     register_fem3d_mutation_descriptors(::semio_framework_os_kernel::StateClass::Artifact).expect("mutation descriptor registration");
     let kinds = <Fem3dMutation as protocol::SemanticMutation<Fem3dSnapshot>>::kinds();
-    assert_eq!(kinds.len(), 25, "every semantic mutation kind must be registered exactly once");
+    assert_eq!(kinds.len(), 29, "every semantic mutation kind must be registered exactly once");
     for descriptor in kinds {
         assert!(protocol::is_approved_verb(descriptor.verb), "verb '{}' must be in APPROVED_VERBS", descriptor.verb);
     }
@@ -331,6 +377,38 @@ async fn remove_load_missing_case_is_error() {
 async fn change_load_case_self_weight_missing_target_is_error() {
     let base = Fem3dSnapshot::default();
     protocol::os_spr::protocol_laws::assert_missing_target_is_error(&base, &Fem3dMutation::ChangeLoadCaseSelfWeight(change_load_case_self_weight::ChangeLoadCaseSelfWeight { case_id: "ghost".into(), new_self_weight: true })).await;
+}
+
+#[semio_framework_async_macros::async_test]
+async fn replace_node_missing_target_is_error() {
+    let base = Fem3dSnapshot::default();
+    protocol::os_spr::protocol_laws::assert_missing_target_is_error(&base, &Fem3dMutation::ReplaceNode(replace_node::ReplaceNode { id: "ghost".into(), new_node: FemNode { id: "ghost".into(), x: 0.0, y: 0.0, z: 0.0 } })).await;
+}
+
+#[semio_framework_async_macros::async_test]
+async fn replace_load_missing_load_is_error() {
+    let (base, ..) = cantilever_fixture();
+    protocol::os_spr::protocol_laws::assert_missing_target_is_error(&base, &Fem3dMutation::ReplaceLoad(replace_load::ReplaceLoad { case_id: "point".into(), load_id: "ghost".into(), new_load: Box::new(FemLoad::Nodal { id: "ghost".into(), node_id: "n1".into(), dof: FemDof::Tz, value: 1.0 }) })).await;
+}
+
+#[semio_framework_async_macros::async_test]
+async fn change_load_case_name_missing_target_is_error() {
+    let base = Fem3dSnapshot::default();
+    protocol::os_spr::protocol_laws::assert_missing_target_is_error(&base, &Fem3dMutation::ChangeLoadCaseName(change_load_case_name::ChangeLoadCaseName { case_id: "ghost".into(), new_name: "x".into() })).await;
+}
+
+#[semio_framework_async_macros::async_test]
+async fn replace_combination_missing_target_is_error() {
+    let base = Fem3dSnapshot::default();
+    protocol::os_spr::protocol_laws::assert_missing_target_is_error(&base, &Fem3dMutation::ReplaceCombination(replace_combination::ReplaceCombination { id: "ghost".into(), new_combination: FemCombination { id: "ghost".into(), name: "x".into(), terms: BTreeMap::new() } })).await;
+}
+
+#[semio_framework_async_macros::async_test]
+async fn replace_node_rename_is_fatal() {
+    let (base, ..) = cantilever_fixture();
+    let outcome = Fem3dMutation::ReplaceNode(replace_node::ReplaceNode { id: "n1".into(), new_node: FemNode { id: "n9".into(), x: 0.0, y: 0.0, z: 0.0 } }).diff(&base);
+    protocol::os_spr::protocol_laws::assert_fatal_never_applies(&outcome).await;
+    assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
 }
 
 #[semio_framework_async_macros::async_test]

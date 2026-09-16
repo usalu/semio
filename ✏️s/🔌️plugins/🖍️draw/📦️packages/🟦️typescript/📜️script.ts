@@ -6,21 +6,23 @@ import { BundleScript, ScriptRouter, runBundleScriptMain, runCmd } from "../../.
 /** 🔤️ The Rust variant name of one kebab lane/disposition from `framework.ui`'s shared vocabulary. */
 const variant = (value: string): string => value.split("-").map((part) => `${part[0]!.toUpperCase()}${part.slice(1)}`).join("");
 
-type Lane = "artifact" | "config" | "draft" | "presence" | "transient" | "child" | "host-only";
+type Lane = "artifact" | "config" | "draft" | "presence" | "transient" | "window-config" | "window-transient" | "child" | "interaction" | "host-only";
 type Route = { id: string; lanes: Lane[]; frameworkInjected?: true };
 type AppAuthority = { owner: string; toolIdsConstants: string[]; source: string; routes: Route[]; laws: Record<string, boolean>; ui: { locales: ["en", "de"]; accessibleLabels: boolean; customizableUi: boolean } };
 type Fixture = { schema: string; apps: AppAuthority[] };
 
-/** 🖍️ Every anchor draw's two-factory publication apparatus must carry verbatim: the proof catalogs, both
- * owned factories, both one-item store preparation authorities, their freshness guards and their
- * incremental close, plus the accessible bilingual UI surface. */
+/** 🖍️ Every anchor draw's publication apparatus must carry verbatim: the proof catalogs, both owned
+ * factories, the one-item artifact store preparation authority, the exact Canvas window config +
+ * transient owner registrations (the view lanes since 2026-09-15 — there is no plugin config store),
+ * their freshness guards and their incremental close, plus the accessible bilingual UI surface. */
 const ANCHORS = [
   "semio_framework_plugin::bounded_first_step_tool_proofs!",
   "factory_type:",
   "ToolExecutionContract::bounded_first_step",
   "ToolExecutionContract::resumable",
   "build_artifact_store_one_item_preparation_factory",
-  "build_config_store_one_item_preparation_factory",
+  "fn register_window_config_owners(",
+  "fn register_window_transient_owners(",
   "register_tool_job_factories",
   "build_tool_job",
   "request.operation != request.authority.operation()",
@@ -42,8 +44,9 @@ const contractPattern = (id: string): RegExp => new RegExp(`ArtifactToolPublicat
 
 /** ⚖️ One app's routes must be the same set in its tool-id constants, its publication contracts and its
  * `Migrated` classifications — the exact three-way join `validate_tool_job_rows` demands. A route the
- * framework injects already classified (`setActiveUtility`) is excluded from the classification side
- * only: it still needs its constant row and its publication contract. */
+ * framework injects already classified is excluded from the classification side only: it still needs
+ * its constant row and its publication contract (draw has none today — the shell's utility swap is a
+ * window-transient edit, not a routed tool). */
 function appOracle(app: AppAuthority, source: string): boolean {
   const ids = app.toolIdsConstants.flatMap((constant) => [...(source.match(new RegExp(`${constant}: &\\[&str\\] = &\\[([^\\]]*)\\]`, "s"))?.[1]?.matchAll(/"([^"]+)"/g) ?? [])].map((match) => match[1]!));
   const contracts = [...source.matchAll(/ArtifactToolPublicationContract \{ tool_id: "([^"]+)", lanes: &\[([^\]]*)\] \}/g)].map((match) => `${match[1]}:${[...match[2]!.matchAll(/ArtifactToolPublicationLane::(\w+)/g)].map((lane) => lane[1]).sort().join("+")}`);
@@ -70,7 +73,7 @@ function hostileSources(app: AppAuthority, source: string): string[] {
     source.replace(contractPattern(last.id), ""),
     source.replaceAll("request.base_revision != request.authority.base_revision()", ""),
     source.replace(`.action_interactive_job("${second.id}", semio_framework_plugin::InteractiveJobClassification::Migrated)`, ""),
-    source.replaceAll("build_config_store_one_item_preparation_factory", "build_unowned_config_preparation_factory"),
+    source.replace("fn register_window_config_owners(", "fn register_window_config_owners_detached("),
   ];
 }
 

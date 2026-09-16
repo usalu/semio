@@ -1,0 +1,20 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/app/energy/model/model3d-viewer-window/config/mutation/set-camera/schema.json",
+  "title": "SetCamera",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["camera"],
+  "properties": {
+    "camera": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["position", "target", "zoom"],
+      "properties": {
+        "position": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 },
+        "target": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 },
+        "zoom": { "type": "number", "exclusiveMinimum": 0 }
+      }
+    }
+  }
+}

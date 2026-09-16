@@ -111,12 +111,13 @@ const boardVitals = () =>
         surface: el.getAttribute("data-surface-id") ?? "?",
         nodes: Number(el.getAttribute("data-board-nodes") ?? "-1"),
         edges: Number(el.getAttribute("data-board-edges") ?? "-1"),
+        handles: Number(el.getAttribute("data-board-handles") ?? "-1"),
         selection: el.getAttribute("data-board-selection-json") ?? "",
         camera: el.getAttribute("data-board-camera-json") ?? "",
         hovered: el.getAttribute("data-board-hovered-id") ?? "",
         utility: el.getAttribute("data-board-active-utility") ?? "",
       })),
-    [] as { surface: string; nodes: number; edges: number; selection: string; camera: string; hovered: string; utility: string }[],
+    [] as { surface: string; nodes: number; edges: number; handles: number; selection: string; camera: string; hovered: string; utility: string }[],
   );
 
 const inventory = () =>
@@ -192,14 +193,14 @@ const waitUntil = async <T,>(read: () => Promise<T>, settled: (value: T) => bool
   return { value, waitedMs: Date.now() - start, ok: settled(value) };
 };
 
-const overviewCanvas = () => page.locator('[data-surface-id$=".2d-overview"] canvas').first();
+const overviewCanvas = () => page.locator('[data-surface-id="window:2d-overview"] canvas').first();
 const overviewBox = async () => (await overviewCanvas().boundingBox()) ?? { x: 0, y: 0, width: 1, height: 1 };
-const overviewVitals = async () => (await boardVitals()).find((v) => v.surface.endsWith(".2d-overview"));
+const overviewVitals = async () => (await boardVitals()).find((v) => v.surface === "window:2d-overview");
 
 /** 🎯️ The screen position of a node id in the overview pane, read through the pane's published camera. */
 const nodeScreen = async (id: string) => {
   const vitals = await overviewVitals();
-  const positions = JSON.parse(vitals?.camera ? (await evalSafe(() => document.querySelector('[data-surface-id$=".2d-overview"]')?.getAttribute("data-board-positions-json") ?? "{}", "{}")) : "{}") as Record<string, [number, number]>;
+  const positions = JSON.parse(vitals?.camera ? (await evalSafe(() => document.querySelector('[data-surface-id="window:2d-overview"]')?.getAttribute("data-board-positions-json") ?? "{}", "{}")) : "{}") as Record<string, [number, number]>;
   const position = positions[id];
   if (!position || !vitals) return null;
   const camera = JSON.parse(vitals.camera) as { x: number; y: number; zoom: number };
@@ -246,6 +247,18 @@ type Step = { name: string; group: "read" | "mutate" | "replace"; run: () => Pro
 const steps: Step[] = [];
 const register = (name: string, group: Step["group"], run: () => Promise<void>) => steps.push({ name, group, run });
 
+register("example-inventory", "read", async () => {
+  const trigger = page.locator('[id="playground.navbar.fixture"]').first();
+  const current = (await trigger.innerText().catch(() => "")).trim();
+  await trigger.click({ timeout: 3000 }).catch(() => {});
+  await page.waitForTimeout(600);
+  const options = await evalSafe(() => Array.from(document.querySelectorAll('[role="option"]')).map((o) => (o as HTMLElement).innerText.replace(/\s+/g, " ").trim()), [] as string[]);
+  await page.keyboard.press("Escape");
+  const positions = JSON.parse(await evalSafe(() => document.querySelector('[data-surface-id="window:2d-overview"]')?.getAttribute("data-board-positions-json") ?? "{}", "{}")) as Record<string, unknown>;
+  const keys = Object.keys(positions);
+  verdict("5-examples", "picker-inventory", options.length >= 2, { current, options, positions: keys.length, firstIds: keys.slice(0, 3), vitals: await overviewVitals() });
+});
+
 register("windows", "read", async () => {
   const s = await snapshot();
   verdict("1-windows", "three-boards", s.windows.length >= 3 && s.canvases >= 3, { windows: s.windows, canvases: s.canvases });
@@ -255,13 +268,13 @@ register("windows", "read", async () => {
 
 register("example-concrete-forest", "replace", async () => {
   const label = await selectExample(/concrete/i);
-  const r = await waitUntil(overviewVitals, (v) => (v?.nodes ?? -1) > 0, 30000);
+  const r = await waitUntil(overviewVitals, (v) => (v?.nodes ?? -1) === 1, 30000);
   verdict("5-examples", "concrete-forest-loads", Boolean(label) && r.ok, { label, nodes: r.value?.nodes, edges: r.value?.edges, waitedMs: r.waitedMs });
 });
 
 register("example-nakagin", "replace", async () => {
   const label = await selectExample(/nakagin/i);
-  const r = await waitUntil(overviewVitals, (v) => (v?.nodes ?? -1) >= 100, 90000);
+  const r = await waitUntil(overviewVitals, (v) => (v?.nodes ?? -1) === 180 && v?.edges === 179, 90000);
   verdict("5-examples", "nakagin-loads", Boolean(label) && r.ok, { label, nodes: r.value?.nodes, edges: r.value?.edges, waitedMs: r.waitedMs });
   const s = await snapshot();
   verdict("5-examples", "nakagin-no-recovery-card", !s.recovery.some((x) => x && x !== "?"), { recovery: s.recovery });
@@ -286,7 +299,7 @@ register("camera-wheel", "read", async () => {
 });
 
 register("click-select", "read", async () => {
-  const ids = JSON.parse(await evalSafe(() => document.querySelector('[data-surface-id$=".2d-overview"]')?.getAttribute("data-board-positions-json") ?? "{}", "{}")) as Record<string, [number, number]>;
+  const ids = JSON.parse(await evalSafe(() => document.querySelector('[data-surface-id="window:2d-overview"]')?.getAttribute("data-board-positions-json") ?? "{}", "{}")) as Record<string, [number, number]>;
   const first = Object.keys(ids)[0];
   const at = first ? await nodeScreen(first) : null;
   if (!at) {
@@ -296,18 +309,23 @@ register("click-select", "read", async () => {
   await page.mouse.click(at.x, at.y);
   const r = await waitUntil(overviewVitals, (v) => (v?.selection ?? "").includes(first), 15000);
   verdict("6-selection", "click-select", r.ok, { id: first, at, selection: r.value?.selection, waitedMs: r.waitedMs });
-  const inspection = await (async () => {
-    await clickTab("framework.panel.inspection");
-    return snapshot();
-  })();
-  verdict("16-inspection", "inspector-shows-selected-node", inspection.body.includes(first) || (await evalSafe(() => document.body.innerText, "")).includes(first), { id: first });
+  await clickTab("framework.panel.inspection");
+  await settle(2);
+  const rows = await evalSafe(() => Array.from(document.querySelectorAll('[data-slot="tree-item"], [role="treeitem"]')).map((r) => `${r.id || "?"}=${(r as HTMLElement).innerText.replace(/\s+/g, " ").trim().slice(0, 60)}`), [] as string[]);
+  const inspector = rows.filter((row) => row.includes("puzzle2d-play-inspector"));
+  verdict("16-inspection", "inspector-shows-selected-node", inspector.some((row) => row.includes(first)), { id: first, inspector: inspector.slice(0, 16) });
 });
 
 register("marquee", "read", async () => {
+  if (((await overviewVitals())?.nodes ?? 0) < 2) {
+    await selectExample(/nakagin/i);
+    await waitUntil(overviewVitals, (v) => (v?.nodes ?? -1) === 180, 90000);
+  }
   const box = await overviewBox();
-  await page.mouse.move(box.x + 20, box.y + 20);
+  // 🎯️ Start clear of the pane chrome (Actions/Search toggles at the top) and of the node column.
+  await page.mouse.move(box.x + 24, box.y + 160);
   await page.mouse.down();
-  await page.mouse.move(box.x + box.width - 20, box.y + box.height - 20, { steps: 12 });
+  await page.mouse.move(box.x + box.width - 24, box.y + box.height - 40, { steps: 12 });
   await page.mouse.up();
   const r = await waitUntil(overviewVitals, (v) => (JSON.parse(v?.selection || "[]") as unknown[]).length >= 2, 15000);
   verdict("6-selection", "marquee-selects-many", r.ok, { selected: (JSON.parse(r.value?.selection || "[]") as unknown[]).length, waitedMs: r.waitedMs });
@@ -317,7 +335,7 @@ register("marquee", "read", async () => {
 });
 
 register("drag-node", "mutate", async () => {
-  const ids = JSON.parse(await evalSafe(() => document.querySelector('[data-surface-id$=".2d-overview"]')?.getAttribute("data-board-positions-json") ?? "{}", "{}")) as Record<string, [number, number]>;
+  const ids = JSON.parse(await evalSafe(() => document.querySelector('[data-surface-id="window:2d-overview"]')?.getAttribute("data-board-positions-json") ?? "{}", "{}")) as Record<string, [number, number]>;
   const first = Object.keys(ids)[0];
   const at = first ? await nodeScreen(first) : null;
   if (!at) {
@@ -330,14 +348,23 @@ register("drag-node", "mutate", async () => {
   await page.mouse.move(at.x + 80, at.y + 40, { steps: 10 });
   await page.mouse.up();
   const r = await waitUntil(
-    async () => JSON.parse(await evalSafe(() => document.querySelector('[data-surface-id$=".2d-overview"]')?.getAttribute("data-board-positions-json") ?? "{}", "{}")) as Record<string, [number, number]>,
+    async () => JSON.parse(await evalSafe(() => document.querySelector('[data-surface-id="window:2d-overview"]')?.getAttribute("data-board-positions-json") ?? "{}", "{}")) as Record<string, [number, number]>,
     (p) => Boolean(p[first]) && (Math.abs(p[first][0] - before[0]) > 1 || Math.abs(p[first][1] - before[1]) > 1),
     20000,
   );
   verdict("8-transform", "drag-node-moves-document", r.ok, { id: first, before, after: r.value[first], waitedMs: r.waitedMs });
 });
 
+const unfoldUtilities = async () => {
+  const unfold = page.locator('[id="framework.window.2dOverview.utilityBar.unfold"]').first();
+  if (await countSafe(unfold)) {
+    await unfold.click({ timeout: 3000 }).catch(() => {});
+    await settle(1);
+  }
+};
+
 register("utilities", "read", async () => {
+  await unfoldUtilities();
   const s = await snapshot();
   const ids = s.toggles.map((t) => t.split("=")[0]);
   verdict("9-brush", "utility-toggles-present", ids.some((id) => /brush/i.test(id)) && ids.some((id) => /select/i.test(id)), { toggles: s.toggles.slice(0, 30) });
@@ -350,50 +377,74 @@ register("utilities", "read", async () => {
 });
 
 register("fill", "mutate", async () => {
+  // 🪣️ Fill needs open handles: Nakagin is fully connected (358 handles, 179 edges), Concrete Forest is one
+  // node with 11 free handles.
+  if (((await overviewVitals())?.nodes ?? 0) !== 1) {
+    await selectExample(/concrete/i);
+    await waitUntil(overviewVitals, (v) => (v?.nodes ?? -1) === 1, 60000);
+  }
+  await clickTab("framework.category.tool");
   const toggle = page.locator('[data-slot="toggle-group-item"][id="tool.fill"], [id="tool.fill"]').first();
   const present = await countSafe(toggle);
   verdict("12-fill", "fill-tab-present", present > 0);
   if (!present) return;
-  await toggle.click({ timeout: 3000 }).catch(() => {});
+  const pressed = await toggle.getAttribute("aria-pressed").catch(() => null);
+  if (pressed !== "true") await toggle.click({ timeout: 3000 }).catch(() => {});
   await settle(2);
   const count = page.locator('[id*="puzzle2d-fill-count"] input, input[id*="fill-count"]').first();
   verdict("12-fill", "fill-count-measure", (await countSafe(count)) > 0);
+  const weights = await evalSafe(() => document.body.innerText.includes("Node Weights") && document.body.innerText.includes("Handle Weights"), false);
+  verdict("12-fill", "fill-distribution-groups", weights);
+  await clickTab("framework.panel.toolRun");
+  await settle(1);
   const before = (await overviewVitals())?.nodes ?? -1;
-  const start = page.locator("button", { hasText: /^(start|run|apply|finalize)$/i }).first();
+  const start = page.locator("button", { hasText: /^start$/i }).first();
   const startPresent = await countSafe(start);
   if (startPresent) await start.click({ timeout: 3000 }).catch(() => {});
-  const r = await waitUntil(overviewVitals, (v) => (v?.nodes ?? -1) > before, 60000);
-  verdict("12-fill", "fill-run-places-nodes", r.ok, { before, after: r.value?.nodes, startPresent, waitedMs: r.waitedMs });
+  const r = await waitUntil(overviewVitals, (v) => (v?.nodes ?? -1) > before, 90000);
+  const status = await evalSafe(() => (document.querySelector('[data-slot="panel"]') as HTMLElement | null)?.innerText.replace(/\s+/g, " ").slice(0, 200) ?? "", "");
+  verdict("12-fill", "fill-run-places-nodes", r.ok, { before, after: r.value?.nodes, startPresent, waitedMs: r.waitedMs, status });
+  const finalize = page.locator("button", { hasText: /^finalize$/i }).first();
+  if (await countSafe(finalize)) {
+    await finalize.click({ timeout: 3000 }).catch(() => {});
+    await settle(3);
+  }
+  const after = (await overviewVitals())?.nodes ?? -1;
+  verdict("12-fill", "fill-finalize-keeps-placements", after > before, { before, after });
 });
 
 register("delete", "mutate", async () => {
-  const ids = JSON.parse(await evalSafe(() => document.querySelector('[data-surface-id$=".2d-overview"]')?.getAttribute("data-board-positions-json") ?? "{}", "{}")) as Record<string, [number, number]>;
+  const ids = JSON.parse(await evalSafe(() => document.querySelector('[data-surface-id="window:2d-overview"]')?.getAttribute("data-board-positions-json") ?? "{}", "{}")) as Record<string, [number, number]>;
   const first = Object.keys(ids)[0];
   const at = first ? await nodeScreen(first) : null;
   if (!at) {
     verdict("22-delete", "delete-selection", false, { reason: "no node position" });
     return;
   }
-  const before = (await overviewVitals())?.nodes ?? -1;
+  const entities = (v: Awaited<ReturnType<typeof overviewVitals>>) => (v ? v.nodes + v.edges + v.handles : -1);
+  const before = entities(await overviewVitals());
   await page.mouse.click(at.x, at.y);
-  await settle(1);
+  const picked = await waitUntil(overviewVitals, (v) => (v?.selection ?? "[]") !== "[]", 10000);
   await page.keyboard.press("Delete");
-  const r = await waitUntil(overviewVitals, (v) => (v?.nodes ?? -1) === before - 1, 20000);
-  verdict("22-delete", "delete-selection", r.ok, { id: first, before, after: r.value?.nodes, waitedMs: r.waitedMs });
+  const r = await waitUntil(overviewVitals, (v) => entities(v) < before, 20000);
+  const cleared = await waitUntil(overviewVitals, (v) => (v?.selection ?? "") === "[]", 10000);
+  verdict("22-delete", "delete-selection", r.ok, { id: first, picked: picked.value?.selection, before, after: entities(r.value), waitedMs: r.waitedMs });
+  verdict("22-delete", "selection-cleared-after-delete", cleared.ok, { selection: cleared.value?.selection });
 });
 
 register("undo", "replace", async () => {
-  const before = (await overviewVitals())?.nodes ?? -1;
+  const entities = (v: Awaited<ReturnType<typeof overviewVitals>>) => (v ? v.nodes + v.edges + v.handles : -1);
+  const before = entities(await overviewVitals());
   const opened = await clickTab("framework.panel.history");
   const undo = page.locator('[id="framework.history.undo"], button', { hasText: /^undo$/i }).first();
   const present = await countSafe(undo);
   if (present) await undo.click({ timeout: 3000 }).catch(() => {});
-  const r = await waitUntil(overviewVitals, (v) => (v?.nodes ?? -1) !== before, 20000);
-  verdict("20-history", "undo-changes-document", opened && present > 0 && r.ok, { before, after: r.value?.nodes, waitedMs: r.waitedMs });
+  const r = await waitUntil(overviewVitals, (v) => entities(v) !== before, 20000);
+  verdict("20-history", "undo-changes-document", opened && present > 0 && r.ok, { before, after: entities(r.value), waitedMs: r.waitedMs });
 });
 
 register("context-menu", "read", async () => {
-  const ids = JSON.parse(await evalSafe(() => document.querySelector('[data-surface-id$=".2d-overview"]')?.getAttribute("data-board-positions-json") ?? "{}", "{}")) as Record<string, [number, number]>;
+  const ids = JSON.parse(await evalSafe(() => document.querySelector('[data-surface-id="window:2d-overview"]')?.getAttribute("data-board-positions-json") ?? "{}", "{}")) as Record<string, [number, number]>;
   const first = Object.keys(ids)[0];
   const at = first ? await nodeScreen(first) : null;
   if (!at) {
@@ -410,7 +461,7 @@ register("context-menu", "read", async () => {
 register("catalogue-add", "mutate", async () => {
   await clickTab("framework.panel.catalogue");
   const before = (await overviewVitals())?.nodes ?? -1;
-  const row = page.locator('[data-slot="tree-item"][id^="puzzle2d-play-kinds.nodes."], [role="treeitem"][id^="puzzle2d-play-kinds.nodes."]').first();
+  const row = page.locator('[data-slot="tree-item"][id*="puzzle2d-play-kinds.nodes."], [role="treeitem"][id*="puzzle2d-play-kinds.nodes."]').first();
   const present = await countSafe(row);
   if (present) await row.click({ timeout: 3000 }).catch(() => {});
   const r = await waitUntil(overviewVitals, (v) => (v?.nodes ?? -1) === before + 1, 20000);

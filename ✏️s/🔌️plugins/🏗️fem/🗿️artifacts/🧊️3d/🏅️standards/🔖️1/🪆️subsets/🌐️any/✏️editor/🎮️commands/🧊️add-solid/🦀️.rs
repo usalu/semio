@@ -19,10 +19,11 @@ pub struct AddSolid {
     pub base_z: Option<f64>,
     pub layers: Option<u32>,
     pub mesh_size: Option<f64>,
+    pub axis: Option<crate::FemAxis>,
 }
 
-/// 🧱️ Builds a rectangular footprint `[x,y]..[x+width,y+depth]` with `base_z`/`layers`/`mesh_size`
-/// defaulted to `0.0`/`1`/`0.5` when unspecified — mirrors the pre-migration `handle_action` defaults.
+/// 🧱️ Builds a rectangular footprint `[x,y]..[x+width,y+depth]` with `base_z`/`layers`/`mesh_size`/`axis`
+/// defaulted to `0.0`/`1`/`0.5`/`Z` when unspecified — mirrors the pre-migration `handle_action` defaults.
 pub fn handle(payload: &AddSolid, doc: &ArtifactView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<Fem3dMutation, NoConfigMutation>, Fault> {
     let snapshot = doc.snapshot;
     let id = crate::app_surface::next_id(snapshot.solids.iter().map(|s| s.id.clone()), "sol");
@@ -37,7 +38,7 @@ pub fn handle(payload: &AddSolid, doc: &ArtifactView<'_, Fem3dSnapshot>, _cfg: &
         layers: payload.layers.map_or(1, |v| v as usize),
         mesh_size: payload.mesh_size.unwrap_or(0.5),
         material_id: payload.material_id.clone(),
-        axis: crate::FemAxis::Z,
+        axis: payload.axis.unwrap_or_default(),
     };
     Ok(Emit::mutations(vec![Fem3dMutation::CreateSolid(crate::standards::v1::subsets::any::schema::mutations::create_solid::CreateSolid { solid })]))
 }

@@ -24,13 +24,16 @@ export interface EnergyModelSetStructureField {
   value: string;
 }
 
-/** 🌳️ The window's authored verbs beside the generic `set-node` kit action — the typed twin of
- * `🦀️.rs`'s `structure_actions()`. */
+/** 🌳️ The verbs reachable while this window is active. Everything but `assign-surface-construction`
+ * is declared APP-level in Rust (`window_shared_action_definitions`/`inspector_action_definitions`)
+ * and copied onto every window kind by `build_definition` — an action a window declares ITSELF stops
+ * being copied onto the others, which is what made the inspector's controls refuse. */
 export const ENERGY_MODEL_STRUCTURE_ACTIONS = [
   { id: "create-surface", label: { en: "Create surface", de: "Fläche anlegen" } },
   { id: "delete-surface", label: { en: "Delete surface", de: "Fläche löschen" } },
   { id: "assign-surface-construction", label: { en: "Assign construction", de: "Konstruktion zuweisen" } },
   { id: "set-material-property", label: { en: "Set material property", de: "Materialeigenschaft setzen" } },
+  { id: "set-construction-property", label: { en: "Set construction property", de: "Konstruktionseigenschaft setzen" } },
   { id: "set-surface-property", label: { en: "Set surface property", de: "Flächeneigenschaft setzen" } },
   { id: "set-fenestration-property", label: { en: "Set window property", de: "Fenstereigenschaft setzen" } },
   { id: "set-zone-property", label: { en: "Set zone property", de: "Zoneneigenschaft setzen" } },
@@ -38,10 +41,14 @@ export const ENERGY_MODEL_STRUCTURE_ACTIONS = [
   { id: "set-gas-material-property", label: { en: "Set gas gap property", de: "Gasfüllungs-Eigenschaft setzen" } },
   { id: "set-thermostat-setpoints", label: { en: "Set thermostat setpoints", de: "Thermostat-Sollwerte setzen" } },
   { id: "set-site", label: { en: "Set site", de: "Standort setzen" } },
+  { id: "set-result-field", label: { en: "Set result field", de: "Ergebnisfeld setzen" } },
 ] as const;
 
-/** 🧱️ The seven SI-range-checked scalars `set-material-property` addresses. */
+/** 🧱️ The material record's whole addressable surface. `value` is TEXT, so the name and the roughness
+ * class travel over the same verb as the seven SI-range-checked scalars. */
 export type EnergyModelMaterialProperty =
+  | "name"
+  | "roughness"
   | "thicknessM"
   | "conductivityWMK"
   | "densityKgM3"
@@ -50,9 +57,17 @@ export type EnergyModelMaterialProperty =
   | "solarAbsorptance"
   | "visibleAbsorptance";
 
+/** 🧱️ Every roughness class, in `SurfaceRoughness` declaration order. */
+export type EnergyModelSurfaceRoughness = "veryRough" | "rough" | "mediumRough" | "mediumSmooth" | "smooth" | "verySmooth";
+
+/** 🧱️ `set-construction-property`: the name, or ONE list edit of the layer stack. The layer verbs
+ * carry their operand in `value` — a material id for `addLayer`/`replaceLayer:<index>`, a layer index
+ * for `removeLayer`/`moveLayerUp`/`moveLayerDown`. */
+export type EnergyModelConstructionProperty = "name" | "addLayer" | "removeLayer" | "moveLayerUp" | "moveLayerDown" | `replaceLayer:${number}`;
+
 /** 🔍️ The properties the three generic inspector verbs address. `value` is TEXT for all of them:
  * one verb has to carry a name, an enum spelling, a flag and a scalar alike. */
-export type EnergyModelSurfaceProperty = "name" | "class" | "boundary" | "construction" | "sunExposed" | "windExposed" | "multiplier";
+export type EnergyModelSurfaceProperty = "name" | "class" | "boundary" | "construction" | "sunExposed" | "windExposed" | "multiplier" | "interzonePartner";
 
 export type EnergyModelFenestrationProperty =
   | "name"

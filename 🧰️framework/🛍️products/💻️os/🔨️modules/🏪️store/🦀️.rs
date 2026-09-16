@@ -1642,6 +1642,13 @@ fn advance_returned_snapshot_read<P: Send + Sync + 'static>(
 
 const ARTIFACT_STORE_DISPLACED_RETIREMENT_CAPACITY: usize = 1_024;
 const ARTIFACT_STORE_DISPLACED_RESERVATION_CAPACITY: usize = 8;
+/// 🌡️ Displaced-owner occupancy at which a store reports maintenance PRESSURE — a quarter of the
+/// fixed queue. Every commit displaces its envelope, current snapshot and dag (three owners, more
+/// with a tail undo entry) and the round-robin maintenance pump drains ONE owner step per visit, so
+/// a live cadence of coalesced commits (a playback tick, a gumball drag step) fills the queue a
+/// hundred times faster than the fair rotation empties it. Above this mark the host drains the
+/// pressured queue out of turn and in bursts until it is back under.
+pub const ARTIFACT_STORE_DISPLACED_PRESSURE_OCCUPANCY: usize = ARTIFACT_STORE_DISPLACED_RETIREMENT_CAPACITY / 4;
 
 struct ArtifactStoreDisplacedRetirements {
     owners: std::mem::ManuallyDrop<VecDeque<Box<dyn ErasedSnapshotRetirement>>>,
@@ -1778,6 +1785,10 @@ impl ArtifactStoreDisplacedRetirements {
     fn terminal_is_empty(&self) -> bool {
         self.owners.is_empty() && self.candidate_reservation.is_none() && self.owner_reservations.iter().all(Option::is_none)
     }
+
+    fn under_pressure(&self) -> bool {
+        self.owners.len() >= ARTIFACT_STORE_DISPLACED_PRESSURE_OCCUPANCY
+    }
 }
 
 impl Drop for ArtifactStoreDisplacedRetirements {
@@ -1813,6 +1824,10 @@ where
 
     pub fn maintenance_retirements_terminal_is_empty(&self) -> bool {
         self.store.maintenance_retirements_terminal_is_empty()
+    }
+
+    pub fn maintenance_retirements_under_pressure(&self) -> bool {
+        self.store.maintenance_retirements_under_pressure()
     }
 
     pub fn take_returned_snapshot_read_retirement(&mut self) -> Result<Option<Box<dyn ErasedSnapshotRetirement>>, VcsError> {
@@ -16005,6 +16020,11 @@ where
 
     pub fn maintenance_retirements_terminal_is_empty(&self) -> bool {
         self.displaced_retirements.terminal_is_empty()
+    }
+
+    /// 🌡️ True while the displaced-owner queue holds at least [`ARTIFACT_STORE_DISPLACED_PRESSURE_OCCUPANCY`] owners.
+    pub fn maintenance_retirements_under_pressure(&self) -> bool {
+        self.displaced_retirements.under_pressure()
     }
 
     /// 🧹️ Advances the exact store disposer under the caller's retirement grant.

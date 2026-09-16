@@ -12,7 +12,7 @@ import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.t
 import { styleVariants } from "../../🔨️modules/🧬️style-variants/🟦️.ts";
 import { surfaceClass } from "../../🔨️modules/🌈️surface-presentation/🟦️.ts";
 import { ControlHotkeyBadge } from "../../🔨️modules/⌨️control-hotkey-presentation/🟦️.tsx";
-import { chromeControlGroupClass, chromeControlItemClass, chromeControlItemOnClass } from "../../🔨️modules/🎛️chrome-control-presentation/🟦️.ts";
+import { chromeControlGroupClass, chromeControlGroupSiblingDividerClass, chromeControlItemClass, chromeControlItemOnClass } from "../../🔨️modules/🎛️chrome-control-presentation/🟦️.ts";
 import { type Level, useLevel } from "../🌈️Surface/🟦️.tsx";
 import { Label, useControlInlineText, useControlAccessibleLabel, useControlTooltipText } from "../🏷️Label/🟦️.tsx";
 import { renderControlIcon, type ControlIcon } from "../🔣️Icons/🟦️.tsx";
@@ -183,7 +183,7 @@ function ToggleGroupItem({ className, id, icon, text, action, value, disabled = 
   const ariaLabel = suppliedAriaLabel ?? (inlineText ? undefined : accessibleLabel);
   const title = suppliedTitle ?? tooltipText;
   return (
-    <div data-slot="toggle-group-item-shell" className={action ? "flex min-w-0 flex-1 items-stretch" : "contents"}>
+    <div data-slot="toggle-group-item-shell" className={action ? cn("flex min-w-0 flex-1 items-stretch", chromeControlGroupSiblingDividerClass) : "contents"}>
       <button
         {...props}
         ref={ref}
@@ -202,6 +202,7 @@ function ToggleGroupItem({ className, id, icon, text, action, value, disabled = 
         data-orientation={context.orientation}
         className={cn(
           toggleVariants(),
+          !action && chromeControlGroupSiblingDividerClass,
           inlineText ? "w-auto shrink-0 focus:z-panel focus-visible:z-panel" : "min-w-medium flex-1 shrink-0 focus:z-panel focus-visible:z-panel",
           (inlineText || action) && "flex items-center gap-single py-single px-double aspect-auto",
           inlineText && "w-auto",

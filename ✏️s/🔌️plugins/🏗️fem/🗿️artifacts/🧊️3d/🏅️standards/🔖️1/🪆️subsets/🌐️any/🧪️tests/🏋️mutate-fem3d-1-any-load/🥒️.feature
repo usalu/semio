@@ -65,6 +65,9 @@ Feature: Apply every typed fem3d load mutation twice — once in Rust, once in P
     | change-load-case-self-weight | {"mutation":"changeLoadCaseSelfWeight","caseId":"live","newSelfWeight":true}                                                                                   |
     | create-combination           | {"mutation":"createCombination","combination":{"id":"acc","name":"Accidental","terms":{"dead":1.0,"live":0.3}}}                                                |
     | delete-combination           | {"mutation":"deleteCombination","id":"sls_spare"}                                                                                                              |
+    | replace-load                 | {"mutation":"replaceLoad","caseId":"live","loadId":"l2","newLoad":{"kind":"nodal","id":"l2","nodeId":"n20_l1","dof":"Tz","value":-7500.0}}                     |
+    | change-load-case-name        | {"mutation":"changeLoadCaseName","caseId":"wind","newName":"Wind +X"}                                                                                          |
+    | replace-combination          | {"mutation":"replaceCombination","id":"uls","newCombination":{"id":"uls","name":"ULS","terms":{"dead":1.35,"live":1.5,"wind":0.9}}}                            |
 
   @id-inverse
   @level-exhaustive
@@ -85,3 +88,6 @@ Feature: Apply every typed fem3d load mutation twice — once in Rust, once in P
     | change-load-case-self-weight | {"mutation":"changeLoadCaseSelfWeight","caseId":"live","newSelfWeight":true}                                                                                   |
     | create-combination           | {"mutation":"createCombination","combination":{"id":"acc","name":"Accidental","terms":{"dead":1.0,"live":0.3}}}                                                |
     | delete-combination           | {"mutation":"deleteCombination","id":"sls_spare"}                                                                                                              |
+    | replace-load                 | {"mutation":"replaceLoad","caseId":"live","loadId":"l2","newLoad":{"kind":"nodal","id":"l2","nodeId":"n20_l1","dof":"Tz","value":-7500.0}}                     |
+    | change-load-case-name        | {"mutation":"changeLoadCaseName","caseId":"wind","newName":"Wind +X"}                                                                                          |
+    | replace-combination          | {"mutation":"replaceCombination","id":"uls","newCombination":{"id":"uls","name":"ULS","terms":{"dead":1.35,"live":1.5,"wind":0.9}}}                            |
